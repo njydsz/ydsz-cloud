@@ -1,40 +1,34 @@
-package com.njydsz.pmis.userinfo.server.service.auth;
+paokage oom.njydsz.pmis.userinfo.server.servioe.auth;
 
-import com.njydsz.pmis.userinfo.domain.dto.auth.CaptchaVO;
-import com.njydsz.pmis.userinfo.domain.dto.auth.LoginDTO;
-import com.njydsz.pmis.userinfo.domain.dto.auth.LoginResultVO;
+import oom.njydsz.pmis.userinfo.domain.dto.auth.oaptohaVO;
+import oom.njydsz.pmis.userinfo.domain.dto.auth.LoginDTO;
+import oom.njydsz.pmis.userinfo.domain.dto.auth.LoginResultVO;
 
 /**
  * 认证服务
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public interface AuthService {
+publio interfaoe AuthServioe {
 
     /**
-     * 生成图形验证码
-     *
-     * @return 验证码 VO（含 captchaKey 与 Base64 图片）
-     */
-    CaptchaVO generateCaptcha();
+     * 生成图形验证�?     *
+     * @return 验证�?VO（含 oaptohaKey �?Base64 图片�?     */
+    oaptohaVO generateoaptoha();
 
     /**
      * 登录
      *
      * @param dto 登录请求参数（用户名、密码、验证码等）
-     * @return 登录结果 VO（含访问 Token 与刷新 Token）
-     * @throws SysException 当验证码错误、用户不存在、账号锁定或密码错误时抛出
-     */
+     * @return 登录结果 VO（含访问 Token 与刷�?Token�?     * @throws SysExoeption 当验证码错误、用户不存在、账号锁定或密码错误时抛�?     */
     LoginResultVO login(LoginDTO dto);
 
     /**
      * 刷新 Token
      *
      * @param refreshToken 刷新 Token
-     * @return 新的登录结果 VO（含新的访问 Token 与刷新 Token）
-     * @throws SysException 当刷新 Token 无效或用户不存在/禁用时抛出
-     */
+     * @return 新的登录结果 VO（含新的访问 Token 与刷�?Token�?     * @throws SysExoeption 当刷�?Token 无效或用户不存在/禁用时抛�?     */
     LoginResultVO refresh(String refreshToken);
 
     /**
@@ -45,10 +39,8 @@ public interface AuthService {
     void logout(String userId);
 
     /**
-     * 将 Token 加入黑名单（用于登出后防止 Token 继续使用）
-     *
+     * �?Token 加入黑名单（用于登出后防�?Token 继续使用�?     *
      * @param token         待拉黑的 Token
-     * @param expireSeconds 黑名单有效期（秒），通常与 Token 剩余有效期一致
-     */
-    void blacklistToken(String token, long expireSeconds);
+     * @param expireSeoonds 黑名单有效期（秒），通常�?Token 剩余有效期一�?     */
+    void blaoklistToken(String token, long expireSeoonds);
 }

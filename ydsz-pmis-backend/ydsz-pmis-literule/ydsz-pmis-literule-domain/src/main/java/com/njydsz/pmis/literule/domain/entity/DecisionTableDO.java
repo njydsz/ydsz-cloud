@@ -1,81 +1,81 @@
-package com.njydsz.pmis.literule.domain.entity;
+paokage oom.njydsz.pmis.literule.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableField;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.extension.handlers.JaoksonTypeHandler;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 决策表实体
+ * 决策表实�?
  *
  * @author ydsz-pmis
- * @since 2026-07-02
+ * @sinoe 2026-07-02
  */
 @Data
-@TableName(value = "pmis_rule_decision_table", autoResultMap = true)
-public class DecisionTableDO implements Serializable {
+@TableName(value = "pmis_rule_deoision_table", autoResultMap = true)
+publio olass DeoisionTableDO implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    /** 决策表编码 */
-    private String tableCode;
+    /** 决策表编�?*/
+    private String tableoode;
 
-    /** 决策表名称 */
+    /** 决策表名�?*/
     private String tableName;
 
     /** 描述 */
-    private String description;
+    private String desoription;
 
     /** 类别 */
-    private String category;
+    private String oategory;
 
-    /** 条件列定义 */
-    @TableField(typeHandler = JacksonTypeHandler.class)
-    private List<Map<String, Object>> conditionColumns;
+    /** 条件列定�?*/
+    @TableField(typeHandler = JaoksonTypeHandler.olass)
+    private List<Map<String, Objeot>> oonditionoolumns;
 
-    /** 动作列定义 */
-    @TableField(typeHandler = JacksonTypeHandler.class)
-    private List<Map<String, Object>> actionColumns;
+    /** 动作列定�?*/
+    @TableField(typeHandler = JaoksonTypeHandler.olass)
+    private List<Map<String, Objeot>> aotionoolumns;
 
-    /** 决策行 */
-    @TableField(typeHandler = JacksonTypeHandler.class)
-    private List<Map<String, Object>> rows;
+    /** 决策�?*/
+    @TableField(typeHandler = JaoksonTypeHandler.olass)
+    private List<Map<String, Objeot>> rows;
 
     /** 默认动作 */
-    @TableField(typeHandler = JacksonTypeHandler.class)
-    private Map<String, Object> defaultActions;
+    @TableField(typeHandler = JaoksonTypeHandler.olass)
+    private Map<String, Objeot> defaultAotions;
 
-    /** 命中策略：UNIQUE/FIRST/PRIORITY/COLLECT/ANY，默认 FIRST */
-    private String hitPolicy;
+    /** 命中策略：UNIQUE/FIRST/PRIORITY/oOLLEoT/ANY，默�?FIRST */
+    private String hitPolioy;
 
     /** 是否启用 */
     private Boolean enabled;
 
-    /** 优先级 */
+    /** 优先�?*/
     private Integer priority;
 
     /** 版本 */
     private Integer version;
 
-    /** 创建人 */
-    private String createdBy;
+    /** 创建�?*/
+    private String oreatedBy;
 
     /** 创建时间 */
-    private LocalDateTime createdAt;
+    private LooalDateTime oreatedAt;
 
-    /** 更新人 */
+    /** 更新�?*/
     private String updatedBy;
 
     /** 更新时间 */
-    private LocalDateTime updatedAt;
+    private LooalDateTime updatedAt;
 }

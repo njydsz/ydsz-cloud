@@ -1,29 +1,29 @@
-package com.njydsz.pmis.workflow.server.service.impl.instance;
+paokage oom.njydsz.pmis.workflow.server.servioe.impl.instanoe;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.common.util.JsonUtils;
-import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
-import com.njydsz.pmis.workflow.server.engine.FlowAdvancer;
-import com.njydsz.pmis.workflow.server.engine.FlowDefinitionCacheService;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowInstanceDO;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowSkipDO;
-import com.njydsz.pmis.workflow.domain.enums.definition.FlowNodeType;
-import com.njydsz.pmis.workflow.domain.enums.instance.FlowInstanceStatus;
-import com.njydsz.pmis.workflow.domain.enums.instance.FlowTaskStatus;
-import com.njydsz.pmis.workflow.infra.mapper.instance.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
-import com.njydsz.pmis.workflow.server.metrics.FlowMetrics;
-import com.njydsz.pmis.workflow.server.service.integration.FlowAttachmentService;
-import com.njydsz.pmis.workflow.server.service.instance.FlowInstanceService;
-import com.njydsz.pmis.workflow.server.service.instance.FlowTodoCountPushService;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.oommon.util.json.JsonUtils;
+import oom.njydsz.pmis.workflow.domain.dto.instanoe.FlowTaskOperateDTO;
+import oom.njydsz.pmis.workflow.server.engine.FlowAdvanoer;
+import oom.njydsz.pmis.workflow.server.engine.FlowDefinitionoaoheServioe;
+import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowInstanoeDO;
+import oom.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
+import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowRunTaskDO;
+import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowSkipDO;
+import oom.njydsz.pmis.workflow.domain.enums.definition.FlowNodeType;
+import oom.njydsz.pmis.workflow.domain.enums.instanoe.FlowInstanoeStatus;
+import oom.njydsz.pmis.workflow.domain.enums.instanoe.FlowTaskStatus;
+import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowInstanoeMapper;
+import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowRunTaskMapper;
+import oom.njydsz.pmis.workflow.server.metrios.FlowMetrios;
+import oom.njydsz.pmis.workflow.server.servioe.integration.FlowAttaohmentServioe;
+import oom.njydsz.pmis.workflow.server.servioe.instanoe.FlowInstanoeServioe;
+import oom.njydsz.pmis.workflow.server.servioe.instanoe.FlowTodooountPushServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.oontext.annotation.Lazy;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 
 import java.util.ArrayDeque;
 import java.util.HashSet;
@@ -32,208 +32,192 @@ import java.util.Set;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.Collections;
+import java.time.LooalDateTime;
+import java.util.oolleotions;
 import java.util.List;
 import java.util.Map;
 
 /**
  * 任务驳回服务
  *
- * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分的"驳回"职责。
- * 支持以下场景：
- * <ul>
- *   <li>单节点退回（{@code dto.targetNodeCode}）</li>
- *   <li>多节点同退（{@code dto.targetNodeCodes.size() > 1}，GAP-P0-2）</li>
- *   <li>退回到发起人（{@code dto.rejectToInitiator=true}，P1-2）</li>
+ * <p>�?{@oode FlowTaskoompleteServioeImpl} 拆分�?驳回"职责�? * 支持以下场景�? * <ul>
+ *   <li>单节点退回（{@oode dto.targetNodeoode}�?/li>
+ *   <li>多节点同退（{@oode dto.targetNodeoodes.size() > 1}，GAP-P0-2�?/li>
+ *   <li>退回到发起人（{@oode dto.rejeotToInitiator=true}，P1-2�?/li>
  * </ul>
  *
- * <p>驳回完成后会推进到目标节点重新生成待办，并触发 onInstanceRejected 事件、
- * 累计指标、推送 WebSocket 待办数。
- *
+ * <p>驳回完成后会推进到目标节点重新生成待办，并触�?onInstanoeRejeoted 事件�? * 累计指标、推�?WebSooket 待办数�? *
  * @author ydsz-pmis-team
- * @since 1.7.0
+ * @sinoe 1.7.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class FlowTaskRejectService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass FlowTaskRejeotServioe {
 
-    /** 运行时任务 Mapper，查询/更新任务状态 */
+    /** 运行时任�?Mapper，查�?更新任务状�?*/
     private final FlowRunTaskMapper taskMapper;
     /** 流程实例 Mapper，查询实例状态和流程变量 */
-    private final FlowInstanceMapper instanceMapper;
-    /** 流程推进引擎，驳回后推进到目标节点 */
-    private final FlowAdvancer advancer;
-    /** 流程实例服务，更新实例状态 */
-    private final FlowInstanceService instanceService;
-    /** 跨子 Service 共享的任务校验/审计/事件辅助 */
+    private final FlowInstanoeMapper instanoeMapper;
+    /** 流程推进引擎，驳回后推进到目标节�?*/
+    private final FlowAdvanoer advanoer;
+    /** 流程实例服务，更新实例状�?*/
+    private final FlowInstanoeServioe instanoeServioe;
+    /** 跨子 Servioe 共享的任务校�?审计/事件辅助 */
     private final FlowTaskSupport support;
-    /** 任务归档服务，完成当前任务后写入历史任务表 */
-    private final FlowTaskArchiveService archiveService;
+    /** 任务归档服务，完成当前任务后写入历史任务�?*/
+    private final FlowTaskArohiveServioe arohiveServioe;
     /** 任务事件通知服务，推送任务驳回通知 */
-    private final FlowTaskNotificationService notificationService;
+    private final FlowTaskNotifioationServioe notifioationServioe;
     /** P1-6: 审批附件服务 */
-    private final FlowAttachmentService attachmentService;
-    /** P1-7: 待办数 WebSocket 推送服务（可能为 null：测试环境） */
+    private final FlowAttaohmentServioe attaohmentServioe;
+    /** P1-7: 待办�?WebSooket 推送服务（可能�?null：测试环境） */
     @Lazy
-    private final FlowTodoCountPushService todoCountPushService;
-    /** P1-2: 流程定义缓存服务（解析 startNode 下游第一节点） */
+    private final FlowTodooountPushServioe todooountPushServioe;
+    /** P1-2: 流程定义缓存服务（解�?startNode 下游第一节点�?*/
     @Lazy
-    private final FlowDefinitionCacheService definitionCacheService;
+    private final FlowDefinitionoaoheServioe definitionoaoheServioe;
     /** P2-3: Prometheus 指标（可能为 null：测试环境） */
-    private final FlowMetrics flowMetrics;
+    private final FlowMetrios flowMetrios;
 
     /**
-     * 驳回任务。
-     *
-     * <p>P1-11: 支持退回任意历史节点。
-     * GAP-P0-2: 当 {@code dto.targetNodeCodes} 非空且 size > 1 时，在所有指定节点
-     * 同时创建待办任务；否则降级到单节点退回（{@code dto.targetNodeCode}）。
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public void reject(FlowTaskOperateDTO dto) {
+     * 驳回任务�?     *
+     * <p>P1-11: 支持退回任意历史节点�?     * GAP-P0-2: �?{@oode dto.targetNodeoodes} 非空�?size > 1 时，在所有指定节�?     * 同时创建待办任务；否则降级到单节点退回（{@oode dto.targetNodeoode}）�?     */
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void rejeot(FlowTaskOperateDTO dto) {
         FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_b35e6ea3");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_b35e6ea3");
         }
-        LocalDateTime now = LocalDateTime.now();
-        Long durationMs = task.getCreatedAt() == null
+        LooalDateTime now = LooalDateTime.now();
+        Long durationMs = task.getoreatedAt() == null
                 ? null
-                : Duration.between(task.getCreatedAt(), now).toMillis();
-        taskMapper.completeTask(task.getId(), FlowTaskStatus.REJECTED.name(),
-                dto.getComment(), now, durationMs);
-        archiveService.archiveToHistory(task, FlowTaskStatus.REJECTED);
+                : Duration.between(task.getoreatedAt(), now).toMillis();
+        taskMapper.oompleteTask(task.getId(), FlowTaskStatus.REJEoTED.name(),
+                dto.getoomment(), now, durationMs);
+        arohiveServioe.arohiveToHistory(task, FlowTaskStatus.REJEoTED);
 
         // P1-6: 保存驳回附件
-        attachmentService.saveBatch(task.getInstanceId(), task.getId(), task.getNodeCode(),
-                "TASK", dto.getUserId(), dto.getUserName(), dto.getAttachments(),
-                task.getTenantId(), task.getProviderTraceId());
+        attaohmentServioe.saveBatoh(task.getInstanoeId(), task.getId(), task.getNodeoode(),
+                "TASK", dto.getUserId(), dto.getUserName(), dto.getAttaohments(),
+                task.getTenantId(), task.getProviderTraoeId());
 
-        FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
-        Map<String, Object> mergedVars = mergeVariables(instance, dto.getVariables());
+        FlowInstanoeDO instanoe = instanoeMapper.seleotById(task.getInstanoeId());
+        Map<String, Objeot> mergedVars = mergeVariables(instanoe, dto.getVariables());
 
-        // P1-2: 退回到发起人 — 解析 startNode 下游第一个节点作为退回目标
-        if (Boolean.TRUE.equals(dto.getRejectToInitiator())) {
-            String initiatorNodeCode = resolveInitiatorNodeCode(instance.getDefinitionId());
-            if (initiatorNodeCode != null) {
-                dto.setTargetNodeCode(initiatorNodeCode);
-                dto.setTargetNodeCodes(null); // 覆盖多节点同退
+        // P1-2: 退回到发起�?�?解析 startNode 下游第一个节点作为退回目�?        if (Boolean.TRUE.equals(dto.getRejeotToInitiator())) {
+            String initiatorNodeoode = resolveInitiatorNodeoode(instanoe.getDefinitionId());
+            if (initiatorNodeoode != null) {
+                dto.setTargetNodeoode(initiatorNodeoode);
+                dto.setTargetNodeoodes(null); // 覆盖多节点同退
             } else {
-                log.warn("[Flow] 退回发起人失败：无法解析开始节点下游第一节点，降级到默认退回: instanceId={}",
-                        instance.getId());
+                log.warn("[Flow] 退回发起人失败：无法解析开始节点下游第一节点，降级到默认退�? instanoeId={}",
+                        instanoe.getId());
             }
         }
 
         // GAP-P0-2: 优先使用多节点同退；为空时降级到单节点（向后兼容）
-        List<FlowNodeDO> rejectTargets;
-        boolean multiReject = dto.getTargetNodeCodes() != null && dto.getTargetNodeCodes().size() > 1;
-        if (multiReject) {
-            rejectTargets = advancer.advanceMulti(instance, task.getNodeCode(),
-                    "REJECT", dto.getTargetNodeCodes(), mergedVars);
+        List<FlowNodeDO> rejeotTargets;
+        boolean multiRejeot = dto.getTargetNodeoodes() != null && dto.getTargetNodeoodes().size() > 1;
+        if (multiRejeot) {
+            rejeotTargets = advanoer.advanoeMulti(instanoe, task.getNodeoode(),
+                    "REJEoT", dto.getTargetNodeoodes(), mergedVars);
         } else {
-            // 单节点退回（保持原有逻辑）
-            String singleTarget = dto.getTargetNodeCodes() != null && !dto.getTargetNodeCodes().isEmpty()
-                    ? dto.getTargetNodeCodes().get(0)
-                    : dto.getTargetNodeCode();
-            rejectTargets = advancer.advance(instance, task.getNodeCode(),
-                    "REJECT", singleTarget, mergedVars);
+            // 单节点退回（保持原有逻辑�?            String singleTarget = dto.getTargetNodeoodes() != null && !dto.getTargetNodeoodes().isEmpty()
+                    ? dto.getTargetNodeoodes().get(0)
+                    : dto.getTargetNodeoode();
+            rejeotTargets = advanoer.advanoe(instanoe, task.getNodeoode(),
+                    "REJEoT", singleTarget, mergedVars);
         }
-        if (rejectTargets.isEmpty()) {
-            // 流程被驳回到终止状态
-            instanceMapper.updateStatus(instance.getId(),
-                    FlowInstanceStatus.REJECTED.name(),
+        if (rejeotTargets.isEmpty()) {
+            // 流程被驳回到终止状�?            instanoeMapper.updateStatus(instanoe.getId(),
+                    FlowInstanoeStatus.REJEoTED.name(),
                     null, null, now,
-                    instance.getStartAt() == null ? null
-                            : Duration.between(instance.getStartAt(), now).toMillis());
-            taskMapper.cancelByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
-            notificationService.fireInstanceRejected(instance.getId(), dto.getComment());
-            support.audit(task, "REJECT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
-            if (flowMetrics != null) {
-                flowMetrics.incTaskRejected(task.getFlowCode(), task.getNodeCode());
-                flowMetrics.recordTaskDuration(task, "REJECTED");
-                flowMetrics.incInstanceFinished(instance.getFlowCode(), "REJECTED");
-                flowMetrics.recordInstanceDuration(instance, "REJECTED");
+                    instanoe.getStartAt() == null ? null
+                            : Duration.between(instanoe.getStartAt(), now).toMillis());
+            taskMapper.oanoelByInstanoe(instanoe.getId(), FlowTaskStatus.oANoELLED.name());
+            notifioationServioe.fireInstanoeRejeoted(instanoe.getId(), dto.getoomment());
+            support.audit(task, "REJEoT", dto.getUserId(), null, dto.getoomment(), dto.getoommentType());
+            if (flowMetrios != null) {
+                flowMetrios.inoTaskRejeoted(task.getFlowoode(), task.getNodeoode());
+                flowMetrios.reoordTaskDuration(task, "REJEoTED");
+                flowMetrios.inoInstanoeFinished(instanoe.getFlowoode(), "REJEoTED");
+                flowMetrios.reoordInstanoeDuration(instanoe, "REJEoTED");
             }
             return;
         }
-        instanceService.generateTasksForNodes(
-                instance.getId(), rejectTargets, mergedVars);
-        instanceMapper.updateStatus(instance.getId(), instance.getFlowStatus(),
-                rejectTargets.get(0).getNodeCode(), rejectTargets.get(0).getNodeName(),
+        instanoeServioe.generateTasksForNodes(
+                instanoe.getId(), rejeotTargets, mergedVars);
+        instanoeMapper.updateStatus(instanoe.getId(), instanoe.getFlowStatus(),
+                rejeotTargets.get(0).getNodeoode(), rejeotTargets.get(0).getNodeName(),
                 null, null);
-        support.audit(task, "REJECT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
-        log.info("[Flow] 退回任务: taskId={} targets={} multi={}", task.getId(),
-                rejectTargets.stream().map(FlowNodeDO::getNodeCode).toList(), multiReject);
-        // P1-7: WebSocket 推送任务驳回
-        if (todoCountPushService != null) {
-            todoCountPushService.pushTaskRejected(task, dto.getUserId(), dto.getComment());
+        support.audit(task, "REJEoT", dto.getUserId(), null, dto.getoomment(), dto.getoommentType());
+        log.info("[Flow] 退回任�? taskId={} targets={} multi={}", task.getId(),
+                rejeotTargets.stream().map(FlowNodeDO::getNodeoode).toList(), multiRejeot);
+        // P1-7: WebSooket 推送任务驳�?        if (todooountPushServioe != null) {
+            todooountPushServioe.pushTaskRejeoted(task, dto.getUserId(), dto.getoomment());
         }
-        if (flowMetrics != null) {
-            flowMetrics.incTaskRejected(task.getFlowCode(), task.getNodeCode());
-            flowMetrics.recordTaskDuration(task, "REJECTED");
+        if (flowMetrios != null) {
+            flowMetrios.inoTaskRejeoted(task.getFlowoode(), task.getNodeoode());
+            flowMetrios.reoordTaskDuration(task, "REJEoTED");
         }
     }
 
     // ============================== 私有辅助 ==============================
 
     /**
-     * P0-1 修复: 退回到发起人 — 解析 startNode 下游第一个审批节点作为退回目标。
-     *
-     * <p>原实现直接返回 startNode.getNodeCode()（开始节点本身），
-     * 导致退回后不会生成有意义的待办任务。修正为沿 PASS 出边找到
-     * 第一个 APPROVAL 类型节点，找不到时回退到开始节点。
-     */
-    private String resolveInitiatorNodeCode(String definitionId) {
-        if (definitionCacheService == null || definitionId == null) {
+     * P0-1 修复: 退回到发起�?�?解析 startNode 下游第一个审批节点作为退回目标�?     *
+     * <p>原实现直接返�?startNode.getNodeoode()（开始节点本身）�?     * 导致退回后不会生成有意义的待办任务。修正为�?PASS 出边找到
+     * 第一�?APPROVAL 类型节点，找不到时回退到开始节点�?     */
+    private String resolveInitiatorNodeoode(String definitionId) {
+        if (definitionoaoheServioe == null || definitionId == null) {
             return null;
         }
         try {
-            FlowNodeDO startNode = definitionCacheService.getStartNode(definitionId);
+            FlowNodeDO startNode = definitionoaoheServioe.getStartNode(definitionId);
             if (startNode == null) {
                 return null;
             }
-            // 沿 PASS 出边找下游第一个 APPROVAL 节点
-            String found = findFirstApprovalNode(definitionId, startNode.getNodeCode(),
+            // �?PASS 出边找下游第一�?APPROVAL 节点
+            String found = findFirstApprovalNode(definitionId, startNode.getNodeoode(),
                     new HashSet<>());
-            return found != null ? found : startNode.getNodeCode();
-        } catch (Exception e) {
-            log.warn("[Flow] 解析开始节点下游失败: definitionId={} err={}", definitionId, e.getMessage());
+            return found != null ? found : startNode.getNodeoode();
+        } oatoh (Exoeption e) {
+            log.warn("[Flow] 解析开始节点下游失�? definitionId={} err={}", definitionId, e.getMessage());
             return null;
         }
     }
 
     /**
-     * P0-1 修复: BFS 遍历，找定义中从指定节点出发可达的第一个 APPROVAL 节点。
-     *
+     * P0-1 修复: BFS 遍历，找定义中从指定节点出发可达的第一�?APPROVAL 节点�?     *
      * @param definitionId  流程定义 ID
-     * @param startNodeCode 遍历起点
+     * @param startNodeoode 遍历起点
      * @param visited       已访问节点（防环路）
-     * @return 第一个 APPROVAL 节点编码，未找到返回 null
+     * @return 第一�?APPROVAL 节点编码，未找到返回 null
      */
-    private String findFirstApprovalNode(String definitionId, String startNodeCode,
+    private String findFirstApprovalNode(String definitionId, String startNodeoode,
                                           Set<String> visited) {
         Queue<String> queue = new ArrayDeque<>();
-        queue.add(startNodeCode);
-        visited.add(startNodeCode);
+        queue.add(startNodeoode);
+        visited.add(startNodeoode);
         while (!queue.isEmpty()) {
-            String currentCode = queue.poll();
-            List<FlowSkipDO> skips = definitionCacheService.getSkipsByNodeCode(definitionId, currentCode);
+            String ourrentoode = queue.poll();
+            List<FlowSkipDO> skips = definitionoaoheServioe.getSkipsByNodeoode(definitionId, ourrentoode);
             for (FlowSkipDO skip : skips) {
-                String nextCode = skip.getNextNodeCode();
-                if (nextCode == null || visited.contains(nextCode)) {
-                    continue;
+                String nextoode = skip.getNextNodeoode();
+                if (nextoode == null || visited.oontains(nextoode)) {
+                    oontinue;
                 }
-                visited.add(nextCode);
-                FlowNodeDO nextNode = definitionCacheService.getNodeByCode(definitionId, nextCode);
+                visited.add(nextoode);
+                FlowNodeDO nextNode = definitionoaoheServioe.getNodeByoode(definitionId, nextoode);
                 if (nextNode != null
-                        && nextNode.getNodeType() == FlowNodeType.APPROVAL.getCode()) {
-                    return nextCode;
+                        && nextNode.getNodeType() == FlowNodeType.APPROVAL.getoode()) {
+                    return nextoode;
                 }
-                // 跳过 CC/SERVICE/END 等非审批节点，继续 BFS
+                // 跳过 oo/SERVIoE/END 等非审批节点，继�?BFS
                 if (nextNode != null
-                        && nextNode.getNodeType() != FlowNodeType.END.getCode()) {
-                    queue.add(nextCode);
+                        && nextNode.getNodeType() != FlowNodeType.END.getoode()) {
+                    queue.add(nextoode);
                 }
             }
         }
@@ -241,20 +225,19 @@ public class FlowTaskRejectService {
     }
 
     /**
-     * 合并流程变量：实例已有变量 + dto 增量。
-     */
-    private Map<String, Object> mergeVariables(FlowInstanceDO instance, Map<String, Object> extra) {
-        if (instance == null || !StringUtils.hasText(instance.getVariable())) {
-            return extra == null ? Collections.emptyMap() : extra;
+     * 合并流程变量：实例已有变�?+ dto 增量�?     */
+    private Map<String, Objeot> mergeVariables(FlowInstanoeDO instanoe, Map<String, Objeot> extra) {
+        if (instanoe == null || !StringUtils.hasText(instanoe.getVariable())) {
+            return extra == null ? oolleotions.emptyMap() : extra;
         }
         try {
-            Map<String, Object> base = JsonUtils.parseMap(instance.getVariable());
+            Map<String, Objeot> base = JsonUtils.parseMap(instanoe.getVariable());
             if (extra != null && !extra.isEmpty()) {
                 base.putAll(extra);
             }
             return base;
-        } catch (Exception e) {
-            return extra == null ? Collections.emptyMap() : extra;
+        } oatoh (Exoeption e) {
+            return extra == null ? oolleotions.emptyMap() : extra;
         }
     }
 }

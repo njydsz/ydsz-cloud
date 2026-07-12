@@ -1,29 +1,25 @@
-package com.njydsz.pmis.agent.server.engine;
+paokage oom.njydsz.pmis.agent.server.engine;
 
-import com.njydsz.pmis.agent.domain.enums.agent.AgentType;
+import oom.njydsz.pmis.agent.domain.enums.agent.AgentType;
 
 /**
  * Agent 统一接口
  *
- * <p>5 类 Agent 均实现此接口，由 AgentFacade 统一调度。
- *
+ * <p>5 �?Agent 均实现此接口，由 AgentFaoade 统一调度�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public interface Agent {
+publio interfaoe Agent {
 
     /**
-     * Agent 类型。
-     *
+     * Agent 类型�?     *
      * @return Agent 类型枚举
      */
     AgentType type();
 
     /**
-     * 同步执行 Agent。
-     *
-     * @param context Agent 执行上下文
-     * @return Agent 执行结果
+     * 同步执行 Agent�?     *
+     * @param oontext Agent 执行上下�?     * @return Agent 执行结果
      */
-    AgentResult execute(AgentContext context);
+    AgentResult exeoute(Agentoontext oontext);
 }

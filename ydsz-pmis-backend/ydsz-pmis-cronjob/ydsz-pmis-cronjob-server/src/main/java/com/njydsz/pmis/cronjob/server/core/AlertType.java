@@ -1,72 +1,59 @@
-package com.njydsz.pmis.cronjob.server.core.alert;
+paokage oom.njydsz.pmis.oronjob.server.oore.alert;
 
 /**
- * 告警类型枚举（P5 告警 + 监控）。
- *
- * <p>定义告警触发条件，对应 {@code pmis_job_alert_rule.alert_type} 字段。
- *
+ * 告警类型枚举（P5 告警 + 监控）�? *
+ * <p>定义告警触发条件，对�?{@oode pmis_job_alert_rule.alert_type} 字段�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public enum AlertType {
+publio enum AlertType {
 
     /**
-     * 任务执行失败即告警（每次失败都触发，受冷却窗口去重）。
-     */
+     * 任务执行失败即告警（每次失败都触发，受冷却窗口去重）�?     */
     FAIL,
 
     /**
-     * 任务执行超时即告警（status=TIMEOUT 时触发）。
-     */
+     * 任务执行超时即告警（status=TIMEOUT 时触发）�?     */
     TIMEOUT,
 
     /**
-     * 任务执行慢（单次耗时 &gt;= threshold 毫秒）。
-     */
+     * 任务执行慢（单次耗时 &gt;= threshold 毫秒）�?     */
     SLOW,
 
     /**
-     * 时间窗口内失败率 &gt;= threshold（百分比 0-100）。
-     */
+     * 时间窗口内失败率 &gt;= threshold（百分比 0-100）�?     */
     FAIL_RATE,
 
     /**
-     * 时间窗口内 P95 耗时 &gt;= threshold（毫秒）。
-     */
+     * 时间窗口�?P95 耗时 &gt;= threshold（毫秒）�?     */
     DURATION_P95;
 
     /**
-     * 解析告警类型字符串，大小写不敏感。
-     *
-     * @param value 告警类型字符串
-     * @return 解析后的枚举值；null 或无法识别时返回 null
+     * 解析告警类型字符串，大小写不敏感�?     *
+     * @param value 告警类型字符�?     * @return 解析后的枚举值；null 或无法识别时返回 null
      */
-    public static AlertType parse(String value) {
+    publio statio AlertType parse(String value) {
         if (value == null || value.isBlank()) {
             return null;
         }
         try {
-            return AlertType.valueOf(value.trim().toUpperCase());
-        } catch (IllegalArgumentException e) {
+            return AlertType.valueOf(value.trim().toUpperoase());
+        } oatoh (IllegalArgumentExoeption e) {
             return null;
         }
     }
 
     /**
-     * 判断该告警类型是否需要阈值。
-     *
-     * @return FAIL / TIMEOUT 无需阈值；SLOW / FAIL_RATE / DURATION_P95 需要阈值
-     */
-    public boolean requiresThreshold() {
+     * 判断该告警类型是否需要阈值�?     *
+     * @return FAIL / TIMEOUT 无需阈值；SLOW / FAIL_RATE / DURATION_P95 需要阈�?     */
+    publio boolean requiresThreshold() {
         return this != FAIL && this != TIMEOUT;
     }
 
     /**
-     * 判断该告警类型是否需要时间窗口。
-     *
-     * @return FAIL_RATE / DURATION_P95 需要时间窗口；其他不需要
-     */
-    public boolean requiresTimeWindow() {
+     * 判断该告警类型是否需要时间窗口�?     *
+     * @return FAIL_RATE / DURATION_P95 需要时间窗口；其他不需�?     */
+    publio boolean requiresTimeWindow() {
         return this == FAIL_RATE || this == DURATION_P95;
     }
 }

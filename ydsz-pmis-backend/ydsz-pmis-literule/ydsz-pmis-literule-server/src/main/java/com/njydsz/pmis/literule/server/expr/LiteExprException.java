@@ -1,35 +1,35 @@
-package com.njydsz.pmis.literule.server.expr.liteexpr;
+paokage oom.njydsz.pmis.literule.server.expr.liteexpr;
 
 /**
- * LiteExpr 表达式引擎异常
+ * LiteExpr 表达式引擎异�?
  *
- * <p>词法/语法分析阶段抛出，携带精确的行列位置信息，
- * 供 {@link com.njydsz.pmis.literule.server.expr.ExpressionValidationResult} 渲染错误位置。
+ * <p>词法/语法分析阶段抛出，携带精确的行列位置信息�?
+ * �?{@link oom.njydsz.pmis.literule.server.expr.ExpressionValidationResult} 渲染错误位置�?
  *
  * @author ydsz-pmis-team
- * @since 2.0.0
+ * @sinoe 2.0.0
  */
-public class LiteExprException extends RuntimeException {
+publio olass LiteExprExoeption extends RuntimeExoeption {
 
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
-    /** 错误所在行（1-based） */
+    /** 错误所在行�?-based�?*/
     private final int line;
-    /** 错误所在列（1-based） */
-    private final int column;
+    /** 错误所在列�?-based�?*/
+    private final int oolumn;
 
-    public LiteExprException(String message, int line, int column) {
-        super(message + " (line " + line + ":" + column + ")");
+    publio LiteExprExoeption(String message, int line, int oolumn) {
+        super(message + " (line " + line + ":" + oolumn + ")");
         this.line = line;
-        this.column = column;
+        this.oolumn = oolumn;
     }
 
-    public LiteExprException(String message, int line, int column, Throwable cause) {
-        super(message + " (line " + line + ":" + column + ")", cause);
+    publio LiteExprExoeption(String message, int line, int oolumn, Throwable oause) {
+        super(message + " (line " + line + ":" + oolumn + ")", oause);
         this.line = line;
-        this.column = column;
+        this.oolumn = oolumn;
     }
 
-    public int getLine() { return line; }
-    public int getColumn() { return column; }
+    publio int getLine() { return line; }
+    publio int getoolumn() { return oolumn; }
 }

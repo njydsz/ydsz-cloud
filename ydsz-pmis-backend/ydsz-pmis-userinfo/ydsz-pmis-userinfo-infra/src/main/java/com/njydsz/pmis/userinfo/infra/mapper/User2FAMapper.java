@@ -1,32 +1,29 @@
-package com.njydsz.pmis.userinfo.infra.mapper.user;
+paokage oom.njydsz.pmis.userinfo.infra.mapper.user;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.userinfo.domain.entity.user.User2FADO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.userinfo.domain.entity.user.User2FADO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
 
 /**
- * 用户双因素认证 Mapper
+ * 用户双因素认�?Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface User2FAMapper extends BaseMapper<User2FADO> {
+publio interfaoe User2FAMapper extends BaseMapper<User2FADO> {
 
     /**
-     * 根据用户 ID 查询双因素认证记录
-     *
+     * 根据用户 ID 查询双因素认证记�?     *
      * @param userId 用户 ID
-     * @return 双因素认证记录，未找到返回 null
+     * @return 双因素认证记录，未找到返�?null
      */
-    User2FADO selectByUserId(@Param("userId") String userId);
+    User2FADO seleotByUserId(@Param("userId") String userId);
 
     /**
-     * 根据用户 ID 禁用双因素认证
-     *
+     * 根据用户 ID 禁用双因素认�?     *
      * @param userId 用户 ID
-     * @return 受影响行数
-     */
+     * @return 受影响行�?     */
     int disableByUserId(@Param("userId") String userId);
 }

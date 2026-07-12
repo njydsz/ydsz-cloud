@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -12,8 +12,17 @@
     <name>ydsz-pmis-project-api</name>
     <description>DDD Module</description>
     <dependencies>
-        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-common-core</artifactId></dependency>
-        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-common-feign</artifactId></dependency>
-        <dependency><groupId>io.swagger.core.v3</groupId><artifactId>swagger-annotations-jakarta</artifactId></dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-feign</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
+        </dependency>
     </dependencies>
 </project>

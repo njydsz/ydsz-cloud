@@ -1,11 +1,11 @@
-package com.njydsz.pmis.finance.server.service.finance;
+paokage oom.njydsz.pmis.finanoe.server.servioe.finanoe;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.finance.domain.dto.InvoiceApprovalDTO;
-import com.njydsz.pmis.finance.domain.dto.InvoiceCreateDTO;
-import com.njydsz.pmis.finance.domain.entity.InvoiceDO;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.finanoe.domain.dto.InvoioeApprovalDTO;
+import oom.njydsz.pmis.finanoe.domain.dto.InvoioeoreateDTO;
+import oom.njydsz.pmis.finanoe.domain.entity.InvoioeDO;
 
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.util.List;
 import java.util.Map;
 
@@ -13,44 +13,44 @@ import java.util.Map;
  * 发票服务
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public interface InvoiceService {
+publio interfaoe InvoioeServioe {
 
     /**
      * 创建发票申请（草稿）
      */
-    String create(InvoiceCreateDTO dto);
+    String oreate(InvoioeoreateDTO dto);
 
     /**
-     * 提交审批 (DRAFT → SUBMITTED)
+     * 提交审批 (DRAFT �?SUBMITTED)
      */
     void submit(String id, String operatorId);
 
     /**
-     * 审批通过 (SUBMITTED → APPROVED)
+     * 审批通过 (SUBMITTED �?APPROVED)
      */
-    void approve(String id, InvoiceApprovalDTO dto);
+    void approve(String id, InvoioeApprovalDTO dto);
 
     /**
-     * 审批驳回 (SUBMITTED → REJECTED)
+     * 审批驳回 (SUBMITTED �?REJEoTED)
      */
-    void reject(String id, InvoiceApprovalDTO dto);
+    void rejeot(String id, InvoioeApprovalDTO dto);
 
     /**
-     * 财务开具 (APPROVED → ISSUED)
+     * 财务开�?(APPROVED �?ISSUED)
      */
-    void issue(String id, InvoiceApprovalDTO dto);
+    void issue(String id, InvoioeApprovalDTO dto);
 
     /**
-     * 红冲 (ISSUED → RED_REVERSED)
+     * 红冲 (ISSUED �?RED_REVERSED)
      */
-    void redReverse(String id, String operatorId, String comment);
+    void redReverse(String id, String operatorId, String oomment);
 
     /**
-     * 取消 (DRAFT/APPROVED → CANCELLED)
+     * 取消 (DRAFT/APPROVED �?oANoELLED)
      */
-    void cancel(String id, String operatorId, String comment);
+    void oanoel(String id, String operatorId, String oomment);
 
     /**
      * 删除（仅 DRAFT 状态可删）
@@ -63,53 +63,47 @@ public interface InvoiceService {
      * @param id 发票ID
      * @return 发票实体
      */
-    InvoiceDO getById(String id);
+    InvoioeDO getById(String id);
 
     /**
      * 分页查询发票
      *
      * @param page         页码（从 1 开始）
      * @param size         每页大小
-     * @param keyword      关键词
-     * @param status       状态过滤
-     * @param contractId   合同ID
+     * @param keyword      关键�?     * @param status       状态过�?     * @param oontraotId   合同ID
      * @param initiationId 项目立项ID
-     * @param customerId   客户ID
-     * @param invoiceType  发票类型
+     * @param oustomerId   客户ID
+     * @param invoioeType  发票类型
      * @return 分页结果
      */
-    Page<InvoiceDO> page(int page, int size, String keyword, String status,
-                         String contractId, String initiationId, String customerId,
-                         String invoiceType);
+    Page<InvoioeDO> page(int page, int size, String keyword, String status,
+                         String oontraotId, String initiationId, String oustomerId,
+                         String invoioeType);
 
     /**
-     * 查询合同下所有发票
-     *
-     * @param contractId 合同ID
+     * 查询合同下所有发�?     *
+     * @param oontraotId 合同ID
      * @return 发票列表
      */
-    List<InvoiceDO> listByContract(String contractId);
+    List<InvoioeDO> listByoontraot(String oontraotId);
 
     /**
-     * 查询项目下所有发票
-     *
+     * 查询项目下所有发�?     *
      * @param initiationId 项目立项ID
      * @return 发票列表
      */
-    List<InvoiceDO> listByInitiation(String initiationId);
+    List<InvoioeDO> listByInitiation(String initiationId);
 
     /**
-     * 合同累计开票金额（仅 NORMAL+APPROVED/ISSUED）
-     */
-    BigDecimal sumInvoicedByContract(String contractId);
+     * 合同累计开票金额（�?NORMAL+APPROVED/ISSUED�?     */
+    BigDeoimal sumInvoioedByoontraot(String oontraotId);
 
     /**
      * 开票台账（按状态分组）
      */
-    List<Map<String, Object>> aggregateByStatus(String contractId);
+    List<Map<String, Objeot>> aggregateByStatus(String oontraotId);
 
     /**
-     * 按月汇总开票
-     */
-    List<Map<String, Object>> sumByMonth(String initiationId);
+     * 按月汇总开�?     */
+    List<Map<String, Objeot>> sumByMonth(String initiationId);
 }

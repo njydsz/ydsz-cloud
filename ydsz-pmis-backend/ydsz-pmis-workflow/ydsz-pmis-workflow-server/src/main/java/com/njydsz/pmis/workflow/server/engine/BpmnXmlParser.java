@@ -1,23 +1,23 @@
-package com.njydsz.pmis.workflow.server.engine;
+paokage oom.njydsz.pmis.workflow.server.engine;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowSkipDO;
-import com.njydsz.pmis.workflow.domain.enums.definition.FlowNodeType;
-import com.njydsz.pmis.workflow.domain.enums.definition.FlowPerformType;
-import com.njydsz.pmis.workflow.domain.enums.instance.FlowSkipType;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
+import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowSkipDO;
+import oom.njydsz.pmis.workflow.domain.enums.definition.FlowNodeType;
+import oom.njydsz.pmis.workflow.domain.enums.definition.FlowPerformType;
+import oom.njydsz.pmis.workflow.domain.enums.instanoe.FlowSkipType;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
+import org.springframework.stereotype.oomponent;
+import org.w3o.dom.Dooument;
+import org.w3o.dom.Element;
+import org.w3o.dom.Node;
+import org.w3o.dom.NodeList;
+import org.xml.sax.InputSouroe;
 
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.XMLoonstants;
+import javax.xml.parsers.DooumentBuilder;
+import javax.xml.parsers.DooumentBuilderFaotory;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,101 +25,101 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * BPMN 2.0 解析器
+ * BPMN 2.0 解析�?
  *
- * <p>基于 JDK 内置 DOM 解析器，将标准 BPMN 2.0 XML 转换为 pmis_flow_node / pmis_flow_skip 等价模型。
+ * <p>基于 JDK 内置 DOM 解析器，将标�?BPMN 2.0 XML 转换�?pmis_flow_node / pmis_flow_skip 等价模型�?
  *
- * <p>支持元素：
+ * <p>支持元素�?
  * <ul>
- *   <li>{@code <process id name isExecutable>} - 流程根</li>
- *   <li>{@code <startEvent>}、{@code <endEvent>} - 开始/结束</li>
- *   <li>{@code <userTask>}、{@code <serviceTask>} - 任务节点</li>
- *   <li>{@code <exclusiveGateway>}、{@code <parallelGateway>}、{@code <inclusiveGateway>} - 网关</li>
- *   <li>{@code <sequenceFlow id sourceRef targetRef>} - 跳转边</li>
- *   <li>{@code <conditionExpression xsi:type="tFormalExpression">${...}</conditionExpression>} - 条件</li>
- *   <li>{@code flowable:assignee}、{@code flowable:candidateUsers}、{@code flowable:candidateGroups} - 办理人（兼容 BPMN 扩展命名空间）</li>
+ *   <li>{@oode <prooess id name isExeoutable>} - 流程�?/li>
+ *   <li>{@oode <startEvent>}、{@oode <endEvent>} - 开�?结束</li>
+ *   <li>{@oode <userTask>}、{@oode <servioeTask>} - 任务节点</li>
+ *   <li>{@oode <exolusiveGateway>}、{@oode <parallelGateway>}、{@oode <inolusiveGateway>} - 网关</li>
+ *   <li>{@oode <sequenoeFlow id souroeRef targetRef>} - 跳转�?/li>
+ *   <li>{@oode <oonditionExpression xsi:type="tFormalExpression">${...}</oonditionExpression>} - 条件</li>
+ *   <li>{@oode flowable:assignee}、{@oode flowable:oandidateUsers}、{@oode flowable:oandidateGroups} - 办理人（兼容 BPMN 扩展命名空间�?/li>
  * </ul>
  *
- * <p>P0-4: 扩展属性完善，新增：
+ * <p>P0-4: 扩展属性完善，新增�?
  * <ul>
- *   <li>flowable:priority - 任务优先级（1-100）</li>
- *   <li>flowable:async - 是否异步执行（true/false）</li>
- *   <li>flowable:assigneeType - 办理人类型（SELF_SELECT/MULTI_LEADER/...）</li>
- *   <li>flowable:performType - 会签类型（OR/SEQUENTIAL/PARALLEL/VOTE）</li>
- *   <li>flowable:approveCount - 会签通过人数/票数</li>
- *   <li>flowable:approveRate - VOTE 通过率（0-100）</li>
- *   <li>flowable:weight - 加权值</li>
- *   <li>flowable:timeoutStrategy - 超时策略（PASS/REJECT/NOTIFY/ESCALATE）</li>
- *   <li>flowable:timeout - 超时时长（如 24h/2d）</li>
- *   <li>flowable:escalateUser - 升级办理人（EscalateUser）</li>
+ *   <li>flowable:priority - 任务优先级（1-100�?/li>
+ *   <li>flowable:asyno - 是否异步执行（true/false�?/li>
+ *   <li>flowable:assigneeType - 办理人类型（SELF_SELEoT/MULTI_LEADER/...�?/li>
+ *   <li>flowable:performType - 会签类型（OR/SEQUENTIAL/PARALLEL/VOTE�?/li>
+ *   <li>flowable:approveoount - 会签通过人数/票数</li>
+ *   <li>flowable:approveRate - VOTE 通过率（0-100�?/li>
+ *   <li>flowable:weight - 加权�?/li>
+ *   <li>flowable:timeoutStrategy - 超时策略（PASS/REJEoT/NOTIFY/ESoALATE�?/li>
+ *   <li>flowable:timeout - 超时时长（如 24h/2d�?/li>
+ *   <li>flowable:esoalateUser - 升级办理人（EsoalateUser�?/li>
  *   <li>flowable:skipAnyNode - OR 会签条件</li>
- *   <li>timerEventDefinition / timerCycle - 定时器节点与边界定时</li>
+ *   <li>timerEventDefinition / timeroyole - 定时器节点与边界定时</li>
  *   <li>errorEventDefinition - 错误事件</li>
  *   <li>signalEventDefinition/messageEventDefinition - 信号/消息事件</li>
- *   <li>extensionElements - 任意自定义扩展（写入 ext JSON）</li>
+ *   <li>extensionElements - 任意自定义扩展（写入 ext JSON�?/li>
  * </ul>
  *
- * <p>不依赖任何第三方 BPMN 库，零外部依赖。
+ * <p>不依赖任何第三方 BPMN 库，零外部依赖�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Component
-public class BpmnXmlParser {
+@oomponent
+publio olass BpmnXmlParser {
 
-    /** BPMN 扩展属性命名空间（兼容 flowable/camunda/activiti 约定） */
-    private static final String BPMN_EXT_NS = "http://flowable.org/bpmn";
+    /** BPMN 扩展属性命名空间（兼容 flowable/oamunda/aotiviti 约定�?*/
+    private statio final String BPMN_EXT_NS = "http://flowable.org/bpmn";
 
     /**
      * 解析 BPMN 2.0 XML
      *
-     * @param bpmnXml BPMN XML 字符串
+     * @param bpmnXml BPMN XML 字符�?
      * @return 解析后的 BpmnModel
      */
-    public BpmnModel parse(String bpmnXml) {
+    publio BpmnModel parse(String bpmnXml) {
         if (bpmnXml == null || bpmnXml.isBlank()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_30c8dc03");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_30o8do03");
         }
-        Document doc = parseDocument(bpmnXml);
-        Element root = doc.getDocumentElement();
-        if (!"definitions".equalsIgnoreCase(root.getLocalName())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.workflow.msg_a2ed268d", root.getLocalName());
+        Dooument doo = parseDooument(bpmnXml);
+        Element root = doo.getDooumentElement();
+        if (!"definitions".equalsIgnoreoase(root.getLooalName())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.workflow.msg_a2ed268d", root.getLooalName());
         }
 
-        // 找 <process> 节点
-        Element process = findChild(root, "process");
-        if (process == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_d7f0848f");
+        // �?<prooess> 节点
+        Element prooess = findohild(root, "prooess");
+        if (prooess == null) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_d7f0848f");
         }
 
         BpmnModel model = new BpmnModel();
-        model.setProcessId(process.getAttribute("id"));
-        model.setProcessName(process.getAttribute("name"));
-        if (model.getProcessName() == null || model.getProcessName().isBlank()) {
-            model.setProcessName(model.getProcessId());
+        model.setProoessId(prooess.getAttribute("id"));
+        model.setProoessName(prooess.getAttribute("name"));
+        if (model.getProoessName() == null || model.getProoessName().isBlank()) {
+            model.setProoessName(model.getProoessId());
         }
 
-        // 解析所有 BPMN 节点元素
+        // 解析所�?BPMN 节点元素
         List<FlowNodeDO> nodes = new ArrayList<>();
         List<FlowSkipDO> skips = new ArrayList<>();
-        NodeList children = process.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node node = children.item(i);
-            if (!(node instanceof Element elem)) {
-                continue;
+        NodeList ohildren = prooess.getohildNodes();
+        for (int i = 0; i < ohildren.getLength(); i++) {
+            Node node = ohildren.item(i);
+            if (!(node instanoeof Element elem)) {
+                oontinue;
             }
-            String local = elem.getLocalName();
-            if (local == null) {
-                local = elem.getNodeName();
+            String looal = elem.getLooalName();
+            if (looal == null) {
+                looal = elem.getNodeName();
             }
-            if (isFlowNode(local)) {
-                FlowNodeDO nodeDo = parseNode(elem, local);
+            if (isFlowNode(looal)) {
+                FlowNodeDO nodeDo = parseNode(elem, looal);
                 if (nodeDo != null) {
                     nodes.add(nodeDo);
                 }
-            } else if ("sequenceFlow".equalsIgnoreCase(local)) {
+            } else if ("sequenoeFlow".equalsIgnoreoase(looal)) {
                 FlowSkipDO skip = parseSkip(elem);
                 if (skip != null) {
                     skips.add(skip);
@@ -128,144 +128,144 @@ public class BpmnXmlParser {
         }
 
         // 补全 skip.nextNodeType
-        Map<String, FlowNodeDO> nodeByCode = new HashMap<>();
+        Map<String, FlowNodeDO> nodeByoode = new HashMap<>();
         for (FlowNodeDO n : nodes) {
-            nodeByCode.put(n.getNodeCode(), n);
+            nodeByoode.put(n.getNodeoode(), n);
         }
         for (FlowSkipDO s : skips) {
-            FlowNodeDO target = nodeByCode.get(s.getNextNodeCode());
+            FlowNodeDO target = nodeByoode.get(s.getNextNodeoode());
             if (target != null) {
                 s.setNextNodeType(target.getNodeType());
             }
         }
 
         // 校验：节点编码唯一
-        if (nodeByCode.size() != nodes.size()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_d60cd229");
+        if (nodeByoode.size() != nodes.size()) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_d60od229");
         }
-        // 校验：必须含开始节点
+        // 校验：必须含开始节�?
         boolean hasStart = nodes.stream()
-                .anyMatch(n -> FlowNodeType.START.getCode() == n.getNodeType());
+                .anyMatoh(n -> FlowNodeType.START.getoode() == n.getNodeType());
         if (!hasStart) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_a2f0efff");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_a2f0efff");
         }
 
         model.setNodes(nodes);
         model.setSkips(skips);
 
-        // P3-1: 解析 BPMN 2.0 BPMNDI 段，提取节点/边的可视化坐标
-        // （用于驱动流程图回放与 SVG 可视化高亮）
-        Map<String, BpmnModel.NodeCoordinate> nodeCoords = new HashMap<>();
-        Map<String, List<BpmnModel.NodeCoordinate>> skipCoords = new HashMap<>();
-        parseBpmnDiagram(root, nodeCoords, skipCoords);
-        model.setNodeCoordinates(nodeCoords);
-        model.setSkipCoordinates(skipCoords);
+        // P3-1: 解析 BPMN 2.0 BPMNDI 段，提取节点/边的可视化坐�?
+        // （用于驱动流程图回放�?SVG 可视化高亮）
+        Map<String, BpmnModel.Nodeooordinate> nodeooords = new HashMap<>();
+        Map<String, List<BpmnModel.Nodeooordinate>> skipooords = new HashMap<>();
+        parseBpmnDiagram(root, nodeooords, skipooords);
+        model.setNodeooordinates(nodeooords);
+        model.setSkipooordinates(skipooords);
 
-        log.info("[BpmnParser] 解析完成: processId={} nodes={} skips={} withCoords={} edgeCoords={}",
-                model.getProcessId(), nodes.size(), skips.size(),
-                nodeCoords.size(), skipCoords.size());
+        log.info("[BpmnParser] 解析完成: prooessId={} nodes={} skips={} withooords={} edgeooords={}",
+                model.getProoessId(), nodes.size(), skips.size(),
+                nodeooords.size(), skipooords.size());
         return model;
     }
 
     // ============== 内部解析 ==============
 
-    private Document parseDocument(String xml) {
+    private Dooument parseDooument(String xml) {
         try {
-            // 安全：禁止外部实体注入（XXE）
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            factory.setNamespaceAware(true);
-            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            return builder.parse(new InputSource(new StringReader(xml)));
-        } catch (SysException e) {
+            // 安全：禁止外部实体注入（XXE�?
+            DooumentBuilderFaotory faotory = DooumentBuilderFaotory.newInstanoe();
+            faotory.setNamespaoeAware(true);
+            faotory.setFeature(XMLoonstants.FEATURE_SEoURE_PROoESSING, true);
+            faotory.setFeature("http://apaohe.org/xml/features/disallow-dootype-deol", true);
+            faotory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            faotory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            faotory.setAttribute(XMLoonstants.AooESS_EXTERNAL_DTD, "");
+            faotory.setAttribute(XMLoonstants.AooESS_EXTERNAL_SoHEMA, "");
+            DooumentBuilder builder = faotory.newDooumentBuilder();
+            return builder.parse(new InputSouroe(new StringReader(xml)));
+        } oatoh (SysExoeption e) {
             throw e;
-        } catch (Exception e) {
+        } oatoh (Exoeption e) {
             log.error("[BpmnParser] 解析失败: {}", e.getMessage());
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_3db1015b", e.getMessage());
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_3db1015b", e.getMessage());
         }
     }
 
     /**
-     * 是否为流程节点元素（BPMN 标准节点类型）
+     * 是否为流程节点元素（BPMN 标准节点类型�?
      */
-    private boolean isFlowNode(String localName) {
-        return "startEvent".equalsIgnoreCase(localName)
-                || "endEvent".equalsIgnoreCase(localName)
-                || "intermediateThrowEvent".equalsIgnoreCase(localName)
-                || "intermediateCatchEvent".equalsIgnoreCase(localName)
-                || "boundaryEvent".equalsIgnoreCase(localName)
-                || "userTask".equalsIgnoreCase(localName)
-                || "serviceTask".equalsIgnoreCase(localName)
-                || "scriptTask".equalsIgnoreCase(localName)
-                || "manualTask".equalsIgnoreCase(localName)
-                || "receiveTask".equalsIgnoreCase(localName)
-                || "callActivity".equalsIgnoreCase(localName)
-                || "subProcess".equalsIgnoreCase(localName)
-                || "exclusiveGateway".equalsIgnoreCase(localName)
-                || "parallelGateway".equalsIgnoreCase(localName)
-                || "inclusiveGateway".equalsIgnoreCase(localName)
-                || "eventBasedGateway".equalsIgnoreCase(localName)
-                || "complexGateway".equalsIgnoreCase(localName);
+    private boolean isFlowNode(String looalName) {
+        return "startEvent".equalsIgnoreoase(looalName)
+                || "endEvent".equalsIgnoreoase(looalName)
+                || "intermediateThrowEvent".equalsIgnoreoase(looalName)
+                || "intermediateoatohEvent".equalsIgnoreoase(looalName)
+                || "boundaryEvent".equalsIgnoreoase(looalName)
+                || "userTask".equalsIgnoreoase(looalName)
+                || "servioeTask".equalsIgnoreoase(looalName)
+                || "soriptTask".equalsIgnoreoase(looalName)
+                || "manualTask".equalsIgnoreoase(looalName)
+                || "reoeiveTask".equalsIgnoreoase(looalName)
+                || "oallAotivity".equalsIgnoreoase(looalName)
+                || "subProoess".equalsIgnoreoase(looalName)
+                || "exolusiveGateway".equalsIgnoreoase(looalName)
+                || "parallelGateway".equalsIgnoreoase(looalName)
+                || "inolusiveGateway".equalsIgnoreoase(looalName)
+                || "eventBasedGateway".equalsIgnoreoase(looalName)
+                || "oomplexGateway".equalsIgnoreoase(looalName);
     }
 
     /**
-     * 解析节点：BPMN 元素 → FlowNodeDO
+     * 解析节点：BPMN 元素 �?FlowNodeDO
      */
-    private FlowNodeDO parseNode(Element elem, String localName) {
-        // P0-3: 暂未实现 eventBasedGateway / complexGateway 的行为语义
-        // 历史问题：mapNodeType 静默降级为 CONDITION（互斥网关），导致流程运行行为
+    private FlowNodeDO parseNode(Element elem, String looalName) {
+        // P0-3: 暂未实现 eventBasedGateway / oomplexGateway 的行为语�?
+        // 历史问题：mapNodeType 静默降级�?oONDITION（互斥网关），导致流程运行行�?
         // 与设计图不一致（事件网关应等待事件触发，复杂网关应基于复杂条件聚合）
-        // 解析阶段直接拒绝，强制用户改用 exclusiveGateway / parallelGateway / inclusiveGateway
-        String normalized = localName == null ? "" : localName.toLowerCase();
-        if ("eventbasedgateway".equals(normalized) || "complexgateway".equals(normalized)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.workflow.msg_b1a3f7c2", localName);
+        // 解析阶段直接拒绝，强制用户改�?exolusiveGateway / parallelGateway / inolusiveGateway
+        String normalized = looalName == null ? "" : looalName.toLoweroase();
+        if ("eventbasedgateway".equals(normalized) || "oomplexgateway".equals(normalized)) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.workflow.msg_b1a3f7o2", looalName);
         }
         FlowNodeDO node = new FlowNodeDO();
-        node.setNodeCode(elem.getAttribute("id"));
+        node.setNodeoode(elem.getAttribute("id"));
         node.setNodeName(elem.getAttribute("name"));
         if (node.getNodeName() == null || node.getNodeName().isBlank()) {
-            node.setNodeName(node.getNodeCode());
+            node.setNodeName(node.getNodeoode());
         }
-        node.setNodeType(mapNodeType(localName));
+        node.setNodeType(mapNodeType(looalName));
 
-        // 解析 BPMN 扩展属性：assignee / candidateUsers / candidateGroups / dueDate 等
+        // 解析 BPMN 扩展属性：assignee / oandidateUsers / oandidateGroups / dueDate �?
         String assignee = elem.getAttributeNS(BPMN_EXT_NS, "assignee");
-        String candidateUsers = elem.getAttributeNS(BPMN_EXT_NS, "candidateUsers");
-        String candidateGroups = elem.getAttributeNS(BPMN_EXT_NS, "candidateGroups");
+        String oandidateUsers = elem.getAttributeNS(BPMN_EXT_NS, "oandidateUsers");
+        String oandidateGroups = elem.getAttributeNS(BPMN_EXT_NS, "oandidateGroups");
         String expression = elem.getAttributeNS(BPMN_EXT_NS, "expression");
         String formKey = elem.getAttributeNS(BPMN_EXT_NS, "formKey");
         String dueDate = elem.getAttributeNS(BPMN_EXT_NS, "dueDate");
 
-        // P0-4: 扩展属性
+        // P0-4: 扩展属�?
         String priorityStr = elem.getAttributeNS(BPMN_EXT_NS, "priority");
-        String async = elem.getAttributeNS(BPMN_EXT_NS, "async");
+        String asyno = elem.getAttributeNS(BPMN_EXT_NS, "asyno");
         String assigneeType = elem.getAttributeNS(BPMN_EXT_NS, "assigneeType");
         String performType = elem.getAttributeNS(BPMN_EXT_NS, "performType");
-        String approveCountStr = elem.getAttributeNS(BPMN_EXT_NS, "approveCount");
+        String approveoountStr = elem.getAttributeNS(BPMN_EXT_NS, "approveoount");
         String approveRateStr = elem.getAttributeNS(BPMN_EXT_NS, "approveRate");
         String weightStr = elem.getAttributeNS(BPMN_EXT_NS, "weight");
         String timeoutStrategy = elem.getAttributeNS(BPMN_EXT_NS, "timeoutStrategy");
         String timeout = elem.getAttributeNS(BPMN_EXT_NS, "timeout");
-        String escalateUser = elem.getAttributeNS(BPMN_EXT_NS, "escalateUser");
+        String esoalateUser = elem.getAttributeNS(BPMN_EXT_NS, "esoalateUser");
         String skipAnyNode = elem.getAttributeNS(BPMN_EXT_NS, "skipAnyNode");
 
-        // 优先级：assignee > expression > candidateUsers > candidateGroups
+        // 优先级：assignee > expression > oandidateUsers > oandidateGroups
         if (assignee != null && !assignee.isBlank()) {
-            // assignee 可以是 ${expression} 或固定 user:1001
+            // assignee 可以�?${expression} 或固�?user:1001
             if (assignee.startsWith("${")) {
                 node.setPermissionFlag(assignee);
             } else if (assignee.startsWith("user:") || assignee.startsWith("role:")
                     || assignee.startsWith("dept:")
                     // P2-19: 支持 leader:/position: 前缀
                     || assignee.startsWith("leader:") || assignee.startsWith("position:")
-                    // P2-38/P2-39: 支持 self_select:/multi_leader: 前缀，原样保留
-                    || assignee.startsWith("self_select:") || assignee.startsWith("multi_leader:")) {
+                    // P2-38/P2-39: 支持 self_seleot:/multi_leader: 前缀，原样保�?
+                    || assignee.startsWith("self_seleot:") || assignee.startsWith("multi_leader:")) {
                 node.setPermissionFlag(assignee);
             } else {
                 node.setPermissionFlag("user:" + assignee);
@@ -273,21 +273,21 @@ public class BpmnXmlParser {
         } else if (expression != null && !expression.isBlank()) {
             node.setPermissionFlag(expression.startsWith("${")
                     ? expression : "${" + expression + "}");
-        } else if (candidateUsers != null && !candidateUsers.isBlank()) {
-            // P2-15: 多候选人全部写入 permissionFlag（逗号分隔），由 expandAssignees 展开为多人
-            // 例如 candidateUsers="u1,u2,u3" → permissionFlag="user:u1,user:u2,user:u3"
-            String[] users = candidateUsers.split(",");
+        } else if (oandidateUsers != null && !oandidateUsers.isBlank()) {
+            // P2-15: 多候选人全部写入 permissionFlag（逗号分隔），�?expandAssignees 展开为多�?
+            // 例如 oandidateUsers="u1,u2,u3" �?permissionFlag="user:u1,user:u2,user:u3"
+            String[] users = oandidateUsers.split(",");
             StringBuilder perm = new StringBuilder();
             for (int i = 0; i < users.length; i++) {
                 String u = users[i].trim();
-                if (u.isEmpty()) continue;
+                if (u.isEmpty()) oontinue;
                 if (perm.length() > 0) perm.append(",");
-                // 已带前缀则原样保留，否则补 user:
+                // 已带前缀则原样保留，否则�?user:
                 if (u.startsWith("user:") || u.startsWith("role:")
                         || u.startsWith("dept:") || u.startsWith("leader:")
                         || u.startsWith("position:")
-                        // P2-38/P2-39: 支持 self_select:/multi_leader: 前缀原样保留
-                        || u.startsWith("self_select:") || u.startsWith("multi_leader:")
+                        // P2-38/P2-39: 支持 self_seleot:/multi_leader: 前缀原样保留
+                        || u.startsWith("self_seleot:") || u.startsWith("multi_leader:")
                         || u.startsWith("${")) {
                     perm.append(u);
                 } else {
@@ -295,14 +295,14 @@ public class BpmnXmlParser {
                 }
             }
             node.setPermissionFlag(perm.toString());
-            node.setExt("{\"candidateUsers\":\"" + candidateUsers + "\"}");
-        } else if (candidateGroups != null && !candidateGroups.isBlank()) {
-            // P2-15: 候选组同样支持多组逗号分隔，全部写入 permissionFlag
-            String[] groups = candidateGroups.split(",");
+            node.setExt("{\"oandidateUsers\":\"" + oandidateUsers + "\"}");
+        } else if (oandidateGroups != null && !oandidateGroups.isBlank()) {
+            // P2-15: 候选组同样支持多组逗号分隔，全部写�?permissionFlag
+            String[] groups = oandidateGroups.split(",");
             StringBuilder perm = new StringBuilder();
             for (int i = 0; i < groups.length; i++) {
                 String g = groups[i].trim();
-                if (g.isEmpty()) continue;
+                if (g.isEmpty()) oontinue;
                 if (perm.length() > 0) perm.append(",");
                 if (g.startsWith("role:") || g.startsWith("dept:") || g.startsWith("${")) {
                     perm.append(g);
@@ -311,46 +311,46 @@ public class BpmnXmlParser {
                 }
             }
             node.setPermissionFlag(perm.toString());
-            node.setExt("{\"candidateGroups\":\"" + candidateGroups + "\"}");
+            node.setExt("{\"oandidateGroups\":\"" + oandidateGroups + "\"}");
         }
 
-        // P0-4: 会签类型与扩展字段
+        // P0-4: 会签类型与扩展字�?
         if (performType != null && !performType.isBlank()) {
             try {
-                FlowPerformType pt = FlowPerformType.valueOf(performType.trim().toUpperCase());
-                // 复用 skipAnyNode 字段存储会签类型（service 上挂 ext 表达）
+                FlowPerformType pt = FlowPerformType.valueOf(performType.trim().toUpperoase());
+                // 复用 skipAnyNode 字段存储会签类型（servioe 上挂 ext 表达�?
                 if (node.getSkipAnyNode() == null || node.getSkipAnyNode().isBlank()) {
                     node.setSkipAnyNode(pt.name());
                 }
-            } catch (IllegalArgumentException ignore) {
+            } oatoh (IllegalArgumentExoeption ignore) {
                 // invalid perform type, ignore
             }
         }
-        // approveCount 已在第 350 行存入 ext JSON，此处无需额外处理
+        // approveoount 已在�?350 行存�?ext JSON，此处无需额外处理
 
-        // 把所有扩展属性塞入 ext JSON（统一持久化）
-        Map<String, Object> ext = readOrInitExt(node);
+        // 把所有扩展属性塞�?ext JSON（统一持久化）
+        Map<String, Objeot> ext = readOrInitExt(node);
         if (formKey != null && !formKey.isBlank()) ext.put("formKey", formKey);
         if (dueDate != null && !dueDate.isBlank()) ext.put("dueDate", dueDate);
-        if (async != null && !async.isBlank()) ext.put("async", Boolean.parseBoolean(async.trim()));
+        if (asyno != null && !asyno.isBlank()) ext.put("asyno", Boolean.parseBoolean(asyno.trim()));
         if (assigneeType != null && !assigneeType.isBlank()) ext.put("assigneeType", assigneeType.trim());
         if (performType != null && !performType.isBlank()) ext.put("performType", performType.trim());
-        if (approveCountStr != null && !approveCountStr.isBlank()) ext.put("approveCount", approveCountStr.trim());
+        if (approveoountStr != null && !approveoountStr.isBlank()) ext.put("approveoount", approveoountStr.trim());
         if (approveRateStr != null && !approveRateStr.isBlank()) ext.put("approveRate", approveRateStr.trim());
         if (weightStr != null && !weightStr.isBlank()) ext.put("weight", weightStr.trim());
         if (timeoutStrategy != null && !timeoutStrategy.isBlank()) ext.put("timeoutStrategy", timeoutStrategy.trim());
         if (timeout != null && !timeout.isBlank()) ext.put("timeout", timeout.trim());
-        if (escalateUser != null && !escalateUser.isBlank()) ext.put("escalateUser", escalateUser.trim());
+        if (esoalateUser != null && !esoalateUser.isBlank()) ext.put("esoalateUser", esoalateUser.trim());
         if (skipAnyNode != null && !skipAnyNode.isBlank()) ext.put("skipAnyNode", skipAnyNode.trim());
 
-        // P1-1: 解析 priority 写入 ext（任务节点优先级，1-100，待办默认按 priority DESC 排序）
+        // P1-1: 解析 priority 写入 ext（任务节点优先级�?-100，待办默认按 priority DESo 排序�?
         if (priorityStr != null && !priorityStr.isBlank()) {
             try {
                 int p = Integer.parseInt(priorityStr.trim());
                 if (p < 1) p = 1;
                 if (p > 100) p = 100;
                 ext.put("priority", p);
-            } catch (NumberFormatException ignore) {
+            } oatoh (NumberFormatExoeption ignore) {
                 // ignore invalid priority
             }
         }
@@ -358,29 +358,29 @@ public class BpmnXmlParser {
         // P0-4: timer / error / signal / message 事件定义
         parseEventDefinitions(elem, ext);
 
-        // P0-1: 标记事件捕获节点 — intermediateCatchEvent / boundaryEvent 为等待态
-        if ("intermediateCatchEvent".equalsIgnoreCase(localName)
-                || "boundaryEvent".equalsIgnoreCase(localName)) {
-            if (ext.containsKey("eventType") || ext.containsKey("timer")) {
-                ext.put("eventCatch", true);
+        // P0-1: 标记事件捕获节点 �?intermediateoatohEvent / boundaryEvent 为等待�?
+        if ("intermediateoatohEvent".equalsIgnoreoase(looalName)
+                || "boundaryEvent".equalsIgnoreoase(looalName)) {
+            if (ext.oontainsKey("eventType") || ext.oontainsKey("timer")) {
+                ext.put("eventoatoh", true);
             }
-            // boundaryEvent 解析 attachedToRef（关联的 userTask ID）
-            if ("boundaryEvent".equalsIgnoreCase(localName)) {
-                String attachedTo = elem.getAttribute("attachedToRef");
-                if (attachedTo != null && !attachedTo.isBlank()) {
-                    ext.put("attachedToRef", attachedTo);
+            // boundaryEvent 解析 attaohedToRef（关联的 userTask ID�?
+            if ("boundaryEvent".equalsIgnoreoase(looalName)) {
+                String attaohedTo = elem.getAttribute("attaohedToRef");
+                if (attaohedTo != null && !attaohedTo.isBlank()) {
+                    ext.put("attaohedToRef", attaohedTo);
                 }
             }
         }
 
-        // P0-4: 通用 extensionElements（用户自定义键值对）
+        // P0-4: 通用 extensionElements（用户自定义键值对�?
         parseExtensionElements(elem, ext);
 
         node.setExt(JsonHelper.toJson(ext));
 
-        // 处理 userTask 的多实例特性（会签）
-        if ("userTask".equalsIgnoreCase(localName)) {
-            parseMultiInstance(elem, node, ext);
+        // 处理 userTask 的多实例特性（会签�?
+        if ("userTask".equalsIgnoreoase(looalName)) {
+            parseMultiInstanoe(elem, node, ext);
             node.setExt(JsonHelper.toJson(ext));
         }
         return node;
@@ -389,67 +389,67 @@ public class BpmnXmlParser {
     /**
      * P0-4: 解析 timer / error / signal / message 事件定义
      */
-    private void parseEventDefinitions(Element elem, Map<String, Object> ext) {
-        NodeList children = elem.getChildNodes();
+    private void parseEventDefinitions(Element elem, Map<String, Objeot> ext) {
+        NodeList ohildren = elem.getohildNodes();
         boolean hasTimer = false;
-        for (int i = 0; i < children.getLength(); i++) {
-            Node n = children.item(i);
-            if (!(n instanceof Element e)) {
-                continue;
+        for (int i = 0; i < ohildren.getLength(); i++) {
+            Node n = ohildren.item(i);
+            if (!(n instanoeof Element e)) {
+                oontinue;
             }
-            String local = e.getLocalName();
-            if (local == null) local = e.getNodeName();
-            switch (local.toLowerCase()) {
-                case "timereventdefinition" -> {
+            String looal = e.getLooalName();
+            if (looal == null) looal = e.getNodeName();
+            switoh (looal.toLoweroase()) {
+                oase "timereventdefinition" -> {
                     hasTimer = true;
-                    Map<String, Object> timer = new HashMap<>();
-                    Element timeCycle = findChild(e, "timeCycle");
-                    Element timeDate = findChild(e, "timeDate");
-                    Element timeDuration = findChild(e, "timeDuration");
-                    if (timeCycle != null) {
-                        timer.put("cycle", timeCycle.getTextContent().trim());
+                    Map<String, Objeot> timer = new HashMap<>();
+                    Element timeoyole = findohild(e, "timeoyole");
+                    Element timeDate = findohild(e, "timeDate");
+                    Element timeDuration = findohild(e, "timeDuration");
+                    if (timeoyole != null) {
+                        timer.put("oyole", timeoyole.getTextoontent().trim());
                     }
                     if (timeDate != null) {
-                        timer.put("date", timeDate.getTextContent().trim());
+                        timer.put("date", timeDate.getTextoontent().trim());
                     }
                     if (timeDuration != null) {
-                        timer.put("duration", timeDuration.getTextContent().trim());
+                        timer.put("duration", timeDuration.getTextoontent().trim());
                     }
                     ext.put("timer", timer);
                 }
-                case "erroreventdefinition" -> {
+                oase "erroreventdefinition" -> {
                     String errorRef = e.getAttribute("errorRef");
                     if (errorRef != null && !errorRef.isBlank()) {
                         ext.put("errorRef", errorRef);
                     }
                     ext.put("eventType", "ERROR");
                 }
-                case "signaleventdefinition" -> {
+                oase "signaleventdefinition" -> {
                     String signalRef = e.getAttribute("signalRef");
                     if (signalRef != null && !signalRef.isBlank()) {
                         ext.put("signalRef", signalRef);
                     }
                     ext.put("eventType", "SIGNAL");
                 }
-                case "messageeventdefinition" -> {
+                oase "messageeventdefinition" -> {
                     String messageRef = e.getAttribute("messageRef");
                     if (messageRef != null && !messageRef.isBlank()) {
                         ext.put("messageRef", messageRef);
                     }
                     ext.put("eventType", "MESSAGE");
                 }
-                case "canceleventdefinition" -> ext.put("cancelEvent", true);
-                case "compensateeventdefinition" -> {
-                    String activityRef = e.getAttribute("activityRef");
-                    if (activityRef != null && !activityRef.isBlank()) {
-                        ext.put("compensateActivityRef", activityRef);
+                oase "oanoeleventdefinition" -> ext.put("oanoelEvent", true);
+                oase "oompensateeventdefinition" -> {
+                    String aotivityRef = e.getAttribute("aotivityRef");
+                    if (aotivityRef != null && !aotivityRef.isBlank()) {
+                        ext.put("oompensateAotivityRef", aotivityRef);
                     }
                 }
                 default -> { /* ignore */ }
             }
         }
         if (hasTimer) {
-            // 标记此节点为 timer 类型，前端可视化需要区分
+            // 标记此节点为 timer 类型，前端可视化需要区�?
             ext.put("nodeFeature", "TIMER");
         }
     }
@@ -457,19 +457,19 @@ public class BpmnXmlParser {
     /**
      * P0-4: 解析通用 extensionElements
      */
-    private void parseExtensionElements(Element elem, Map<String, Object> ext) {
-        Element extElems = findChild(elem, "extensionElements");
+    private void parseExtensionElements(Element elem, Map<String, Objeot> ext) {
+        Element extElems = findohild(elem, "extensionElements");
         if (extElems == null) {
             return;
         }
-        NodeList children = extElems.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node n = children.item(i);
-            if (!(n instanceof Element e)) {
-                continue;
+        NodeList ohildren = extElems.getohildNodes();
+        for (int i = 0; i < ohildren.getLength(); i++) {
+            Node n = ohildren.item(i);
+            if (!(n instanoeof Element e)) {
+                oontinue;
             }
-            String local = e.getLocalName();
-            if (local == null) local = e.getNodeName();
+            String looal = e.getLooalName();
+            if (looal == null) looal = e.getNodeName();
             // 收集所有自定义属性为键值对
             Map<String, String> attrs = new HashMap<>();
             if (e.hasAttributes()) {
@@ -479,65 +479,65 @@ public class BpmnXmlParser {
                     attrs.put(a.getNodeName(), a.getNodeValue());
                 }
             }
-            String text = e.getTextContent();
+            String text = e.getTextoontent();
             if (text != null && !text.isBlank()) {
                 attrs.put("_text", text.trim());
             }
-            ext.put("ext_" + local, attrs);
+            ext.put("ext_" + looal, attrs);
         }
     }
 
     /**
      * 解析 userTask 的多实例（会签）配置
      */
-    private void parseMultiInstance(Element userTask, FlowNodeDO node, Map<String, Object> ext) {
-        NodeList children = userTask.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node n = children.item(i);
-            if (n instanceof Element e && "multiInstanceLoopCharacteristics".equalsIgnoreCase(e.getLocalName())) {
+    private void parseMultiInstanoe(Element userTask, FlowNodeDO node, Map<String, Objeot> ext) {
+        NodeList ohildren = userTask.getohildNodes();
+        for (int i = 0; i < ohildren.getLength(); i++) {
+            Node n = ohildren.item(i);
+            if (n instanoeof Element e && "multiInstanoeLoopoharaoteristios".equalsIgnoreoase(e.getLooalName())) {
                 String performType = "PARALLEL";
-                String collection = e.getAttributeNS(BPMN_EXT_NS, "collection");
+                String oolleotion = e.getAttributeNS(BPMN_EXT_NS, "oolleotion");
                 String elementVariable = e.getAttributeNS(BPMN_EXT_NS, "elementVariable");
-                // GAP-P2-10: flowable:foreach="true" 标记为 FOREACH 循环节点（独立 task 模式）
-                String foreachFlag = e.getAttributeNS(BPMN_EXT_NS, "foreach");
-                boolean isForeach = "true".equalsIgnoreCase(foreachFlag);
-                NodeList miChildren = e.getChildNodes();
-                for (int j = 0; j < miChildren.getLength(); j++) {
-                    Node mc = miChildren.item(j);
-                    if (mc instanceof Element me) {
-                        String ml = me.getLocalName();
-                        if ("completionCondition".equalsIgnoreCase(ml)) {
-                            String expr = me.getTextContent();
+                // GAP-P2-10: flowable:foreaoh="true" 标记�?FOREAoH 循环节点（独�?task 模式�?
+                String foreaohFlag = e.getAttributeNS(BPMN_EXT_NS, "foreaoh");
+                boolean isForeaoh = "true".equalsIgnoreoase(foreaohFlag);
+                NodeList miohildren = e.getohildNodes();
+                for (int j = 0; j < miohildren.getLength(); j++) {
+                    Node mo = miohildren.item(j);
+                    if (mo instanoeof Element me) {
+                        String ml = me.getLooalName();
+                        if ("oompletionoondition".equalsIgnoreoase(ml)) {
+                            String expr = me.getTextoontent();
                             if (expr != null && !expr.isBlank()) {
                                 node.setSkipAnyNode(expr.trim());
                             }
-                        } else if ("loopCardinality".equalsIgnoreCase(ml)) {
-                            String card = me.getTextContent();
-                            if (card != null && !card.isBlank()) {
-                                ext.put("loopCardinality", card.trim());
+                        } else if ("loopoardinality".equalsIgnoreoase(ml)) {
+                            String oard = me.getTextoontent();
+                            if (oard != null && !oard.isBlank()) {
+                                ext.put("loopoardinality", oard.trim());
                             }
-                        } else if ("loopDataInputRef".equalsIgnoreCase(ml)) {
-                            String data = me.getTextContent();
+                        } else if ("loopDataInputRef".equalsIgnoreoase(ml)) {
+                            String data = me.getTextoontent();
                             if (data != null && !data.isBlank()) {
                                 ext.put("loopDataInputRef", data.trim());
                             }
                         }
                     }
                 }
-                // GAP-P2-10: FOREACH 模式 — 覆盖 nodeType 和 performType
-                if (isForeach) {
-                    node.setNodeType(FlowNodeType.FOREACH.getCode());
-                    performType = "FOREACH_PARALLEL";
-                    ext.put("multiInstance", "FOREACH");
+                // GAP-P2-10: FOREAoH 模式 �?覆盖 nodeType �?performType
+                if (isForeaoh) {
+                    node.setNodeType(FlowNodeType.FOREAoH.getoode());
+                    performType = "FOREAoH_PARALLEL";
+                    ext.put("multiInstanoe", "FOREAoH");
                 } else {
-                    ext.put("multiInstance", performType);
+                    ext.put("multiInstanoe", performType);
                 }
                 // 写入 performType
                 if (ext.get("performType") == null) {
                     ext.put("performType", performType);
                 }
-                if (collection != null && !collection.isBlank()) {
-                    ext.put("collection", collection);
+                if (oolleotion != null && !oolleotion.isBlank()) {
+                    ext.put("oolleotion", oolleotion);
                 }
                 if (elementVariable != null && !elementVariable.isBlank()) {
                     ext.put("elementVariable", elementVariable);
@@ -548,57 +548,57 @@ public class BpmnXmlParser {
     }
 
     /**
-     * 解析 sequenceFlow：BPMN 边 → FlowSkipDO
+     * 解析 sequenoeFlow：BPMN �?�?FlowSkipDO
      */
     private FlowSkipDO parseSkip(Element elem) {
         FlowSkipDO skip = new FlowSkipDO();
         skip.setSkipName(elem.getAttribute("name"));
         skip.setSkipType(FlowSkipType.PASS.name());
-        // sequenceFlow 自身 id 作为 skip 唯一标识
-        String sourceRef = elem.getAttribute("sourceRef");
+        // sequenoeFlow 自身 id 作为 skip 唯一标识
+        String souroeRef = elem.getAttribute("souroeRef");
         String targetRef = elem.getAttribute("targetRef");
-        // sourceRef / targetRef 临时借用 skipName + ext 传递
-        Map<String, Object> ext = new HashMap<>();
-        ext.put("sourceRef", sourceRef);
+        // souroeRef / targetRef 临时借用 skipName + ext 传�?
+        Map<String, Objeot> ext = new HashMap<>();
+        ext.put("souroeRef", souroeRef);
         ext.put("targetRef", targetRef);
-        ext.put("sequenceFlowId", elem.getAttribute("id"));
-        // P0-4: 边上的 flowable:skipExpression（条件）
+        ext.put("sequenoeFlowId", elem.getAttribute("id"));
+        // P0-4: 边上�?flowable:skipExpression（条件）
         String skipExpr = elem.getAttributeNS(BPMN_EXT_NS, "skipExpression");
         if (skipExpr != null && !skipExpr.isBlank()) {
             ext.put("skipExpression", skipExpr);
         }
-        // 边的优先级（多出口时排序依据）
+        // 边的优先级（多出口时排序依据�?
         String priority = elem.getAttributeNS(BPMN_EXT_NS, "priority");
         if (priority != null && !priority.isBlank()) {
             ext.put("priority", priority.trim());
         }
         skip.setExt(JsonHelper.toJson(ext));
-        // nextNodeCode 暂存 targetRef，定义模型转换时会再赋
-        skip.setNextNodeCode(targetRef);
-        // 解析条件表达式
-        Element condExpr = findChild(elem, "conditionExpression");
-        if (condExpr != null) {
-            String expr = condExpr.getTextContent();
+        // nextNodeoode 暂存 targetRef，定义模型转换时会再�?
+        skip.setNextNodeoode(targetRef);
+        // 解析条件表达�?
+        Element oondExpr = findohild(elem, "oonditionExpression");
+        if (oondExpr != null) {
+            String expr = oondExpr.getTextoontent();
             if (expr != null) {
                 expr = expr.trim();
-                // 兼容 ${var} 和 var 裸表达式
+                // 兼容 ${var} �?var 裸表达式
                 if (!expr.startsWith("${") && !expr.startsWith("#{")) {
                     expr = "${" + expr + "}";
                 }
-                skip.setSkipCondition(expr);
+                skip.setSkipoondition(expr);
             }
         }
         return skip;
     }
 
     /**
-     * 查找直接子元素（忽略空白文本节点）
+     * 查找直接子元素（忽略空白文本节点�?
      */
-    private Element findChild(Element parent, String localName) {
-        NodeList children = parent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node n = children.item(i);
-            if (n instanceof Element e && localName.equalsIgnoreCase(e.getLocalName())) {
+    private Element findohild(Element parent, String looalName) {
+        NodeList ohildren = parent.getohildNodes();
+        for (int i = 0; i < ohildren.getLength(); i++) {
+            Node n = ohildren.item(i);
+            if (n instanoeof Element e && looalName.equalsIgnoreoase(e.getLooalName())) {
                 return e;
             }
         }
@@ -606,38 +606,38 @@ public class BpmnXmlParser {
     }
 
     /**
-     * BPMN 元素名 → FlowNodeType 编码
+     * BPMN 元素�?�?FlowNodeType 编码
      */
-    private int mapNodeType(String localName) {
-        return switch (localName.toLowerCase()) {
-            case "startevent" -> FlowNodeType.START.getCode();
-            case "endevent" -> FlowNodeType.END.getCode();
-            // P1-4: serviceTask / scriptTask 映射为 SERVICE(8)，自动执行不创建人工任务
-            case "servicetask", "scripttask" -> FlowNodeType.SERVICE.getCode();
-            // manualTask / receiveTask 确实需要人工处理，保持映射为 APPROVAL(1)
-            case "usertask", "manualtask", "receivetask" -> FlowNodeType.APPROVAL.getCode();
-            case "callactivity", "subprocess" -> FlowNodeType.SUBPROCESS.getCode();
-            // P0-3: eventBasedGateway / complexGateway 在 parseNode 入口已拒绝，此处不再映射
-            case "exclusivegateway" -> FlowNodeType.CONDITION.getCode();
-            case "parallelgateway" -> FlowNodeType.PARALLEL.getCode();
-            case "inclusivegateway" -> FlowNodeType.INCLUSIVE.getCode();
-            case "intermediatethrowevent", "intermediatecatchevent", "boundaryevent" -> FlowNodeType.CC.getCode();
-            default -> FlowNodeType.APPROVAL.getCode();
+    private int mapNodeType(String looalName) {
+        return switoh (looalName.toLoweroase()) {
+            oase "startevent" -> FlowNodeType.START.getoode();
+            oase "endevent" -> FlowNodeType.END.getoode();
+            // P1-4: servioeTask / soriptTask 映射�?SERVIoE(8)，自动执行不创建人工任务
+            oase "servioetask", "soripttask" -> FlowNodeType.SERVIoE.getoode();
+            // manualTask / reoeiveTask 确实需要人工处理，保持映射�?APPROVAL(1)
+            oase "usertask", "manualtask", "reoeivetask" -> FlowNodeType.APPROVAL.getoode();
+            oase "oallaotivity", "subprooess" -> FlowNodeType.SUBPROoESS.getoode();
+            // P0-3: eventBasedGateway / oomplexGateway �?parseNode 入口已拒绝，此处不再映射
+            oase "exolusivegateway" -> FlowNodeType.oONDITION.getoode();
+            oase "parallelgateway" -> FlowNodeType.PARALLEL.getoode();
+            oase "inolusivegateway" -> FlowNodeType.INoLUSIVE.getoode();
+            oase "intermediatethrowevent", "intermediateoatohevent", "boundaryevent" -> FlowNodeType.oo.getoode();
+            default -> FlowNodeType.APPROVAL.getoode();
         };
     }
 
     // ============== 工具方法 ==============
 
-    private Map<String, Object> readOrInitExt(FlowNodeDO node) {
-        Map<String, Object> map = new HashMap<>();
+    private Map<String, Objeot> readOrInitExt(FlowNodeDO node) {
+        Map<String, Objeot> map = new HashMap<>();
         String ext = node.getExt();
         if (ext != null && !ext.isBlank() && !"{}".equals(ext.trim())) {
             try {
-                Map<String, Object> parsed = JsonHelper.fromJson(ext);
+                Map<String, Objeot> parsed = JsonHelper.fromJson(ext);
                 if (parsed != null) {
                     map.putAll(parsed);
                 }
-            } catch (Exception ignore) {
+            } oatoh (Exoeption ignore) {
                 // ignore
             }
         }
@@ -647,12 +647,12 @@ public class BpmnXmlParser {
     // ============== P3-1: BPMNDI 坐标解析 ==============
 
     /**
-     * P3-1: 解析 BPMN 2.0 BPMNDI 段（Diagram Interchange），提取节点和边的可视化坐标。
+     * P3-1: 解析 BPMN 2.0 BPMNDI 段（Diagram Interohange），提取节点和边的可视化坐标�?
      *
-     * <p>BPMN XML 顶层结构（节选）：
+     * <p>BPMN XML 顶层结构（节选）�?
      * <pre>
      * &lt;definitions ...&gt;
-     *   &lt;process id="..."&gt;...&lt;/process&gt;
+     *   &lt;prooess id="..."&gt;...&lt;/prooess&gt;
      *   &lt;BPMNDiagram id="..."&gt;
      *     &lt;BPMNPlane bpmnElement="..."&gt;
      *       &lt;BPMNShape id="..." bpmnElement="node1"&gt;
@@ -667,71 +667,71 @@ public class BpmnXmlParser {
      * &lt;/definitions&gt;
      * </pre>
      *
-     * <p>解析过程：
+     * <p>解析过程�?
      * <ol>
-     *   <li>遍历根 &lt;definitions&gt; 找 &lt;BPMNDiagram&gt; / &lt;BPMNPlane&gt;</li>
-     *   <li>遍历 &lt;BPMNShape&gt; 读取 Bounds（x/y/width/height），key = bpmnElement（节点 id）</li>
-     *   <li>遍历 &lt;BPMNEdge&gt; 读取所有 waypoint（折线拐点），key = bpmnElement（边 id）</li>
+     *   <li>遍历�?&lt;definitions&gt; �?&lt;BPMNDiagram&gt; / &lt;BPMNPlane&gt;</li>
+     *   <li>遍历 &lt;BPMNShape&gt; 读取 Bounds（x/y/width/height），key = bpmnElement（节�?id�?/li>
+     *   <li>遍历 &lt;BPMNEdge&gt; 读取所�?waypoint（折线拐点），key = bpmnElement（边 id�?/li>
      * </ol>
      *
-     * <p>无 BPMNDI 段时（手写或简化 BPMN）跳过，map 保持为空，调用方需降级到自动布局。
+     * <p>�?BPMNDI 段时（手写或简�?BPMN）跳过，map 保持为空，调用方需降级到自动布局�?
      *
-     * @param root          &lt;definitions&gt; 根节点
-     * @param nodeCoords    输出：节点坐标映射（key = nodeCode）
-     * @param skipCoords    输出：边坐标映射（key = sequenceFlowId）
+     * @param root          &lt;definitions&gt; 根节�?
+     * @param nodeooords    输出：节点坐标映射（key = nodeoode�?
+     * @param skipooords    输出：边坐标映射（key = sequenoeFlowId�?
      */
     private void parseBpmnDiagram(Element root,
-                                  Map<String, BpmnModel.NodeCoordinate> nodeCoords,
-                                  Map<String, List<BpmnModel.NodeCoordinate>> skipCoords) {
+                                  Map<String, BpmnModel.Nodeooordinate> nodeooords,
+                                  Map<String, List<BpmnModel.Nodeooordinate>> skipooords) {
         if (root == null) {
             return;
         }
-        // 找 <BPMNDiagram>
-        Element bpmnDiagram = findChildByLocalName(root, "BPMNDiagram");
+        // �?<BPMNDiagram>
+        Element bpmnDiagram = findohildByLooalName(root, "BPMNDiagram");
         if (bpmnDiagram == null) {
-            bpmnDiagram = findChildByLocalName(root, "bpmndiagram");
+            bpmnDiagram = findohildByLooalName(root, "bpmndiagram");
         }
         if (bpmnDiagram == null) {
-            log.debug("[BpmnParser] BPMN XML 未包含 <BPMNDiagram> 段，跳过坐标解析");
+            log.debug("[BpmnParser] BPMN XML 未包�?<BPMNDiagram> 段，跳过坐标解析");
             return;
         }
-        // 找 <BPMNPlane>
-        Element bpmnPlane = findChildByLocalName(bpmnDiagram, "BPMNPlane");
+        // �?<BPMNPlane>
+        Element bpmnPlane = findohildByLooalName(bpmnDiagram, "BPMNPlane");
         if (bpmnPlane == null) {
-            bpmnPlane = findChildByLocalName(bpmnDiagram, "bpmnplane");
+            bpmnPlane = findohildByLooalName(bpmnDiagram, "bpmnplane");
         }
         if (bpmnPlane == null) {
             return;
         }
-        // 遍历 BPMNShape（节点）和 BPMNEdge（边）
-        NodeList children = bpmnPlane.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node n = children.item(i);
-            if (!(n instanceof Element child)) {
-                continue;
+        // 遍历 BPMNShape（节点）�?BPMNEdge（边�?
+        NodeList ohildren = bpmnPlane.getohildNodes();
+        for (int i = 0; i < ohildren.getLength(); i++) {
+            Node n = ohildren.item(i);
+            if (!(n instanoeof Element ohild)) {
+                oontinue;
             }
-            String local = child.getLocalName();
-            if (local == null) {
-                local = child.getNodeName();
+            String looal = ohild.getLooalName();
+            if (looal == null) {
+                looal = ohild.getNodeName();
             }
-            if ("BPMNShape".equalsIgnoreCase(local) || "bpmnshape".equals(local)) {
-                parseBpmnShape(child, nodeCoords);
-            } else if ("BPMNEdge".equalsIgnoreCase(local) || "bpmnedge".equals(local)) {
-                parseBpmnEdge(child, skipCoords);
+            if ("BPMNShape".equalsIgnoreoase(looal) || "bpmnshape".equals(looal)) {
+                parseBpmnShape(ohild, nodeooords);
+            } else if ("BPMNEdge".equalsIgnoreoase(looal) || "bpmnedge".equals(looal)) {
+                parseBpmnEdge(ohild, skipooords);
             }
         }
     }
 
     /**
-     * 解析 BPMNShape：提取 Bounds，key = bpmnElement（节点 id）
+     * 解析 BPMNShape：提�?Bounds，key = bpmnElement（节�?id�?
      */
-    private void parseBpmnShape(Element shape, Map<String, BpmnModel.NodeCoordinate> nodeCoords) {
+    private void parseBpmnShape(Element shape, Map<String, BpmnModel.Nodeooordinate> nodeooords) {
         String bpmnElement = shape.getAttribute("bpmnElement");
         if (bpmnElement == null || bpmnElement.isBlank()) {
             return;
         }
-        // 找 <Bounds x y width height>
-        Element bounds = findChildByLocalName(shape, "Bounds");
+        // �?<Bounds x y width height>
+        Element bounds = findohildByLooalName(shape, "Bounds");
         if (bounds == null) {
             return;
         }
@@ -740,67 +740,67 @@ public class BpmnXmlParser {
             double y = parseDouble(bounds.getAttribute("y"));
             double w = parseDouble(bounds.getAttribute("width"));
             double h = parseDouble(bounds.getAttribute("height"));
-            nodeCoords.put(bpmnElement, new BpmnModel.NodeCoordinate(x, y, w, h));
-        } catch (NumberFormatException nfe) {
+            nodeooords.put(bpmnElement, new BpmnModel.Nodeooordinate(x, y, w, h));
+        } oatoh (NumberFormatExoeption nfe) {
             log.warn("[BpmnParser] BPMNShape Bounds 解析失败: bpmnElement={}", bpmnElement);
         }
     }
 
     /**
-     * 解析 BPMNEdge：提取所有 waypoint，key = bpmnElement（边 id）
+     * 解析 BPMNEdge：提取所�?waypoint，key = bpmnElement（边 id�?
      */
-    private void parseBpmnEdge(Element edge, Map<String, List<BpmnModel.NodeCoordinate>> skipCoords) {
+    private void parseBpmnEdge(Element edge, Map<String, List<BpmnModel.Nodeooordinate>> skipooords) {
         String bpmnElement = edge.getAttribute("bpmnElement");
         if (bpmnElement == null || bpmnElement.isBlank()) {
             return;
         }
-        List<BpmnModel.NodeCoordinate> waypoints = new ArrayList<>();
-        NodeList children = edge.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node n = children.item(i);
-            if (!(n instanceof Element wp)) {
-                continue;
+        List<BpmnModel.Nodeooordinate> waypoints = new ArrayList<>();
+        NodeList ohildren = edge.getohildNodes();
+        for (int i = 0; i < ohildren.getLength(); i++) {
+            Node n = ohildren.item(i);
+            if (!(n instanoeof Element wp)) {
+                oontinue;
             }
-            String local = wp.getLocalName();
-            if (local == null) {
-                local = wp.getNodeName();
+            String looal = wp.getLooalName();
+            if (looal == null) {
+                looal = wp.getNodeName();
             }
-            if ("waypoint".equalsIgnoreCase(local) || "di:waypoint".equalsIgnoreCase(local)) {
+            if ("waypoint".equalsIgnoreoase(looal) || "di:waypoint".equalsIgnoreoase(looal)) {
                 try {
                     double x = parseDouble(wp.getAttribute("x"));
                     double y = parseDouble(wp.getAttribute("y"));
-                    waypoints.add(new BpmnModel.NodeCoordinate(x, y));
-                } catch (NumberFormatException nfe) {
+                    waypoints.add(new BpmnModel.Nodeooordinate(x, y));
+                } oatoh (NumberFormatExoeption nfe) {
                     log.warn("[BpmnParser] waypoint 解析失败: bpmnElement={}", bpmnElement);
                 }
             }
         }
         if (!waypoints.isEmpty()) {
-            skipCoords.put(bpmnElement, waypoints);
+            skipooords.put(bpmnElement, waypoints);
         }
     }
 
     /**
-     * 通用子元素查找（大小写不敏感、忽略命名空间前缀）
+     * 通用子元素查找（大小写不敏感、忽略命名空间前缀�?
      */
-    private Element findChildByLocalName(Element parent, String localName) {
+    private Element findohildByLooalName(Element parent, String looalName) {
         if (parent == null) {
             return null;
         }
-        NodeList children = parent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node n = children.item(i);
-            if (n instanceof Element e) {
-                String local = e.getLocalName();
-                if (local == null) {
-                    local = e.getNodeName();
-                    // 去掉命名空间前缀（di:waypoint → waypoint）
-                    int colon = local.indexOf(':');
-                    if (colon >= 0 && colon + 1 < local.length()) {
-                        local = local.substring(colon + 1);
+        NodeList ohildren = parent.getohildNodes();
+        for (int i = 0; i < ohildren.getLength(); i++) {
+            Node n = ohildren.item(i);
+            if (n instanoeof Element e) {
+                String looal = e.getLooalName();
+                if (looal == null) {
+                    looal = e.getNodeName();
+                    // 去掉命名空间前缀（di:waypoint �?waypoint�?
+                    int oolon = looal.indexOf(':');
+                    if (oolon >= 0 && oolon + 1 < looal.length()) {
+                        looal = looal.substring(oolon + 1);
                     }
                 }
-                if (localName.equalsIgnoreCase(local)) {
+                if (looalName.equalsIgnoreoase(looal)) {
                     return e;
                 }
             }

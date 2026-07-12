@@ -1,208 +1,208 @@
-package com.njydsz.pmis.workflow.server.service.impl.ai;
+paokage oom.njydsz.pmis.workflow.server.servioe.impl.ai;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowDefinitionDO;
-import com.njydsz.pmis.workflow.domain.enums.ai.CanaryStatus;
-import com.njydsz.pmis.workflow.domain.enums.ai.CanaryStrategy;
-import com.njydsz.pmis.workflow.infra.mapper.definition.FlowDefinitionMapper;
-import com.njydsz.pmis.workflow.server.service.ai.FlowCanaryService;
-import lombok.RequiredArgsConstructor;
+import oom.alibaba.fastjson2.JSON;
+import oom.alibaba.fastjson2.JSONArray;
+import oom.alibaba.fastjson2.JSONObjeot;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.oommon.auth.oontext.Authoontext;
+import oom.njydsz.pmis.workflow.domain.entity.definition.FlowDefinitionDO;
+import oom.njydsz.pmis.workflow.domain.enums.ai.oanaryStatus;
+import oom.njydsz.pmis.workflow.domain.enums.ai.oanaryStrategy;
+import oom.njydsz.pmis.workflow.infra.mapper.definition.FlowDefinitionMapper;
+import oom.njydsz.pmis.workflow.server.servioe.ai.FlowoanaryServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.oolleotions;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.oonourrent.ThreadLooalRandom;
 
 /**
  * 灰度发布服务实现
  *
- * <p>P3-1 落地。
+ * <p>P3-1 落地�?
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class FlowCanaryServiceImpl implements FlowCanaryService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass FlowoanaryServioeImpl implements FlowoanaryServioe {
 
-    /** 流程定义 Mapper，用于读取/更新灰度发布状态、灰度比例及切流日志 */
+    /** 流程定义 Mapper，用于读�?更新灰度发布状态、灰度比例及切流日志 */
     private final FlowDefinitionMapper definitionMapper;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void publishCanary(String definitionId, int initialPercent, String strategy,
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void publishoanary(String definitionId, int initialPeroent, String strategy,
                                String operatorId, String operatorName, String note) {
-        validatePercent(initialPercent);
+        validatePeroent(initialPeroent);
         FlowDefinitionDO def = mustGetDef(definitionId);
         if (def.getIsPublish() == null || def.getIsPublish() != 1) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_5bdc1fe3");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_5bdo1fe3");
         }
-        String curStatus = def.getCanaryStatus() == null ? CanaryStatus.NONE.name() : def.getCanaryStatus();
-        if (CanaryStatus.PROMOTED.name().equals(curStatus)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_9ff06760");
+        String ourStatus = def.getoanaryStatus() == null ? oanaryStatus.NONE.name() : def.getoanaryStatus();
+        if (oanaryStatus.PROMOTED.name().equals(ourStatus)) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_9ff06760");
         }
 
-        int oldPercent = def.getCanaryPercent() == null ? 0 : def.getCanaryPercent();
-        def.setCanaryPercent(initialPercent);
-        def.setCanaryStrategy(StringUtils.hasText(strategy) ? strategy : CanaryStrategy.USER_HASH.name());
-        def.setCanaryStatus(CanaryStatus.CANARYING.name());
-        appendRolloutLog(def, operatorId, operatorName, oldPercent, initialPercent, note);
+        int oldPeroent = def.getoanaryPeroent() == null ? 0 : def.getoanaryPeroent();
+        def.setoanaryPeroent(initialPeroent);
+        def.setoanaryStrategy(StringUtils.hasText(strategy) ? strategy : oanaryStrategy.USER_HASH.name());
+        def.setoanaryStatus(oanaryStatus.oANARYING.name());
+        appendRolloutLog(def, operatorId, operatorName, oldPeroent, initialPeroent, note);
         definitionMapper.updateById(def);
 
-        log.info("[Flow][Canary] 启动灰度: defId={} code={} version={} percent={}% strategy={} operator={}",
-                definitionId, def.getFlowCode(), def.getFlowVersion(), initialPercent,
-                def.getCanaryStrategy(), operatorName);
+        log.info("[Flow][oanary] 启动灰度: defId={} oode={} version={} peroent={}% strategy={} operator={}",
+                definitionId, def.getFlowoode(), def.getFlowVersion(), initialPeroent,
+                def.getoanaryStrategy(), operatorName);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void adjustCanaryPercent(String definitionId, int newPercent,
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void adjustoanaryPeroent(String definitionId, int newPeroent,
                                     String operatorId, String operatorName, String note) {
-        validatePercent(newPercent);
+        validatePeroent(newPeroent);
         FlowDefinitionDO def = mustGetDef(definitionId);
-        String curStatus = def.getCanaryStatus() == null ? CanaryStatus.NONE.name() : def.getCanaryStatus();
-        if (!CanaryStatus.CANARYING.name().equals(curStatus)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.workflow.msg_f5374e71", curStatus);
+        String ourStatus = def.getoanaryStatus() == null ? oanaryStatus.NONE.name() : def.getoanaryStatus();
+        if (!oanaryStatus.oANARYING.name().equals(ourStatus)) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.workflow.msg_f5374e71", ourStatus);
         }
-        int oldPercent = def.getCanaryPercent() == null ? 0 : def.getCanaryPercent();
-        if (oldPercent == newPercent) {
-            log.info("[Flow][Canary] 调整比例无变化，跳过: defId={} percent={}", definitionId, newPercent);
+        int oldPeroent = def.getoanaryPeroent() == null ? 0 : def.getoanaryPeroent();
+        if (oldPeroent == newPeroent) {
+            log.info("[Flow][oanary] 调整比例无变化，跳过: defId={} peroent={}", definitionId, newPeroent);
             return;
         }
-        def.setCanaryPercent(newPercent);
-        appendRolloutLog(def, operatorId, operatorName, oldPercent, newPercent, note);
+        def.setoanaryPeroent(newPeroent);
+        appendRolloutLog(def, operatorId, operatorName, oldPeroent, newPeroent, note);
         definitionMapper.updateById(def);
 
-        log.info("[Flow][Canary] 调整灰度比例: defId={} code={} {}% → {}% operator={}",
-                definitionId, def.getFlowCode(), oldPercent, newPercent, operatorName);
+        log.info("[Flow][oanary] 调整灰度比例: defId={} oode={} {}% �?{}% operator={}",
+                definitionId, def.getFlowoode(), oldPeroent, newPeroent, operatorName);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void promoteCanary(String definitionId, String operatorId, String operatorName, String note) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void promoteoanary(String definitionId, String operatorId, String operatorName, String note) {
         FlowDefinitionDO def = mustGetDef(definitionId);
-        String curStatus = def.getCanaryStatus() == null ? CanaryStatus.NONE.name() : def.getCanaryStatus();
-        if (CanaryStatus.PROMOTED.name().equals(curStatus)) {
-            log.info("[Flow][Canary] 定义已全量发布，跳过: defId={}", definitionId);
+        String ourStatus = def.getoanaryStatus() == null ? oanaryStatus.NONE.name() : def.getoanaryStatus();
+        if (oanaryStatus.PROMOTED.name().equals(ourStatus)) {
+            log.info("[Flow][oanary] 定义已全量发布，跳过: defId={}", definitionId);
             return;
         }
 
-        // 1) 失效同 flowCode 的其他已发布版本
+        // 1) 失效�?flowoode 的其他已发布版本
         String tenantId = def.getTenantId() != null
-                ? def.getTenantId() : AuthContext.getTenantIdOrDefault("1");
-        definitionMapper.deactivateByFlowCode(def.getFlowCode(), definitionId, tenantId);
+                ? def.getTenantId() : Authoontext.getTenantIdOrDefault("1");
+        definitionMapper.deaotivateByFlowoode(def.getFlowoode(), definitionId, tenantId);
 
-        // 2) 当前定义晋升为稳定版（isPublish=1, canaryPercent=100, canaryStatus=PROMOTED）
-        int oldPercent = def.getCanaryPercent() == null ? 0 : def.getCanaryPercent();
-        def.setCanaryPercent(100);
-        def.setCanaryStatus(CanaryStatus.PROMOTED.name());
-        appendRolloutLog(def, operatorId, operatorName, oldPercent, 100,
+        // 2) 当前定义晋升为稳定版（isPublish=1, oanaryPeroent=100, oanaryStatus=PROMOTED�?
+        int oldPeroent = def.getoanaryPeroent() == null ? 0 : def.getoanaryPeroent();
+        def.setoanaryPeroent(100);
+        def.setoanaryStatus(oanaryStatus.PROMOTED.name());
+        appendRolloutLog(def, operatorId, operatorName, oldPeroent, 100,
                 note == null ? "全量发布" : note);
         definitionMapper.updateById(def);
 
-        log.info("[Flow][Canary] 全量发布完成: defId={} code={} version={} operator={}",
-                definitionId, def.getFlowCode(), def.getFlowVersion(), operatorName);
+        log.info("[Flow][oanary] 全量发布完成: defId={} oode={} version={} operator={}",
+                definitionId, def.getFlowoode(), def.getFlowVersion(), operatorName);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void rollbackCanary(String definitionId, String operatorId, String operatorName, String note) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void rollbaokoanary(String definitionId, String operatorId, String operatorName, String note) {
         FlowDefinitionDO def = mustGetDef(definitionId);
-        int oldPercent = def.getCanaryPercent() == null ? 0 : def.getCanaryPercent();
-        def.setCanaryPercent(0);
-        def.setCanaryStatus(CanaryStatus.ROLLED_BACK.name());
+        int oldPeroent = def.getoanaryPeroent() == null ? 0 : def.getoanaryPeroent();
+        def.setoanaryPeroent(0);
+        def.setoanaryStatus(oanaryStatus.ROLLED_BAoK.name());
         // 失效当前灰度版：isPublish=9
         def.setIsPublish(9);
-        appendRolloutLog(def, operatorId, operatorName, oldPercent, 0,
+        appendRolloutLog(def, operatorId, operatorName, oldPeroent, 0,
                 note == null ? "灰度回滚" : note);
         definitionMapper.updateById(def);
 
-        log.info("[Flow][Canary] 灰度回滚: defId={} code={} version={} operator={} reason={}",
-                definitionId, def.getFlowCode(), def.getFlowVersion(), operatorName, note);
+        log.info("[Flow][oanary] 灰度回滚: defId={} oode={} version={} operator={} reason={}",
+                definitionId, def.getFlowoode(), def.getFlowVersion(), operatorName, note);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public FlowDefinitionDO resolveEffectiveDefinition(String flowCode, String version,
+    @Transaotional(readOnly = true)
+    publio FlowDefinitionDO resolveEffeotiveDefinition(String flowoode, String version,
                                                        String tenantId, String initiatorId) {
-        // 1) 先查稳定版（isPublish=1 且 canaryStatus != CANARYING 的最新已发布）
-        FlowDefinitionDO stable = definitionMapper.selectPublished(
-                flowCode,
+        // 1) 先查稳定版（isPublish=1 �?oanaryStatus != oANARYING 的最新已发布�?
+        FlowDefinitionDO stable = definitionMapper.seleotPublished(
+                flowoode,
                 StringUtils.hasText(version) ? version : "1.0",
-                tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1"));
+                tenantId != null ? tenantId : Authoontext.getTenantIdOrDefault("1"));
         if (stable == null) {
             return null;
         }
 
-        // 2) 查同 flowCode + tenant 的所有 CANARYING 灰度版（按 version desc 取最新）
-        List<FlowDefinitionDO> canaries = definitionMapper.selectCanaryingByCode(
-                flowCode,
-                tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1"));
-        if (canaries == null || canaries.isEmpty()) {
+        // 2) 查同 flowoode + tenant 的所�?oANARYING 灰度版（�?version deso 取最新）
+        List<FlowDefinitionDO> oanaries = definitionMapper.seleotoanaryingByoode(
+                flowoode,
+                tenantId != null ? tenantId : Authoontext.getTenantIdOrDefault("1"));
+        if (oanaries == null || oanaries.isEmpty()) {
             return stable;
         }
-        FlowDefinitionDO canary = canaries.get(0);
-        int percent = canary.getCanaryPercent() == null ? 0 : canary.getCanaryPercent();
-        if (percent <= 0 || percent >= 100) {
+        FlowDefinitionDO oanary = oanaries.get(0);
+        int peroent = oanary.getoanaryPeroent() == null ? 0 : oanary.getoanaryPeroent();
+        if (peroent <= 0 || peroent >= 100) {
             return stable;
         }
 
-        // 3) 按策略切流
-        if (shouldUseCanary(canary, percent, initiatorId)) {
-            log.debug("[Flow][Canary] 切流至灰度版: code={} version={} percent={}% initiator={}",
-                    flowCode, canary.getFlowVersion(), percent, initiatorId);
-            return canary;
+        // 3) 按策略切�?
+        if (shouldUseoanary(oanary, peroent, initiatorId)) {
+            log.debug("[Flow][oanary] 切流至灰度版: oode={} version={} peroent={}% initiator={}",
+                    flowoode, oanary.getFlowVersion(), peroent, initiatorId);
+            return oanary;
         }
         return stable;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<Map<String, Object>> listCanaryRolloutLog(String flowCode, String tenantId) {
-        if (!StringUtils.hasText(flowCode)) {
-            return Collections.emptyList();
+    @Transaotional(readOnly = true)
+    publio List<Map<String, Objeot>> listoanaryRolloutLog(String flowoode, String tenantId) {
+        if (!StringUtils.hasText(flowoode)) {
+            return oolleotions.emptyList();
         }
-        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
-        List<FlowDefinitionDO> defs = definitionMapper.selectByFlowCode(flowCode, tid);
+        String tid = tenantId != null ? tenantId : Authoontext.getTenantIdOrDefault("1");
+        List<FlowDefinitionDO> defs = definitionMapper.seleotByFlowoode(flowoode, tid);
         if (defs == null || defs.isEmpty()) {
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
-        List<Map<String, Object>> out = new ArrayList<>();
+        List<Map<String, Objeot>> out = new ArrayList<>();
         for (FlowDefinitionDO d : defs) {
-            if (!StringUtils.hasText(d.getCanaryRolloutLog())) {
-                continue;
+            if (!StringUtils.hasText(d.getoanaryRolloutLog())) {
+                oontinue;
             }
             JSONArray arr;
             try {
-                arr = JSON.parseArray(d.getCanaryRolloutLog());
-            } catch (Exception ex) {
-                log.warn("[Flow][Canary] 解析 rollout_log 失败: defId={} raw={}", d.getId(), d.getCanaryRolloutLog());
-                continue;
+                arr = JSON.parseArray(d.getoanaryRolloutLog());
+            } oatoh (Exoeption ex) {
+                log.warn("[Flow][oanary] 解析 rollout_log 失败: defId={} raw={}", d.getId(), d.getoanaryRolloutLog());
+                oontinue;
             }
             for (int i = 0; i < arr.size(); i++) {
-                JSONObject o = arr.getJSONObject(i);
-                Map<String, Object> m = new HashMap<>();
+                JSONObjeot o = arr.getJSONObjeot(i);
+                Map<String, Objeot> m = new HashMap<>();
                 m.put("definitionId", d.getId());
-                m.put("flowCode", d.getFlowCode());
+                m.put("flowoode", d.getFlowoode());
                 m.put("version", d.getFlowVersion());
                 m.put("operatorId", o.get("operatorId"));
                 m.put("operatorName", o.get("operatorName"));
-                m.put("fromPercent", o.get("fromPercent"));
-                m.put("toPercent", o.get("toPercent"));
+                m.put("fromPeroent", o.get("fromPeroent"));
+                m.put("toPeroent", o.get("toPeroent"));
                 m.put("operateAt", o.get("operateAt"));
                 m.put("note", o.get("note"));
                 out.add(m);
@@ -213,79 +213,79 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
 
     // ============================== 私有辅助 ==============================
 
-    /** 校验 percent 取值 */
-    private void validatePercent(int percent) {
-        if (percent < 0 || percent > 100) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.workflow.msg_a9bb9120", percent);
+    /** 校验 peroent 取�?*/
+    private void validatePeroent(int peroent) {
+        if (peroent < 0 || peroent > 100) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.workflow.msg_a9bb9120", peroent);
         }
     }
 
     /**
-     * 根据定义 ID 查询流程定义，不存在时抛出 NOT_FOUND 异常。
+     * 根据定义 ID 查询流程定义，不存在时抛�?NOT_FOUND 异常�?
      *
      * @param definitionId 流程定义 ID
-     * @return 非空的流程定义实体
+     * @return 非空的流程定义实�?
      */
     private FlowDefinitionDO mustGetDef(String definitionId) {
         if (definitionId == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_375a4677");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_375a4677");
         }
-        FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+        FlowDefinitionDO def = definitionMapper.seleotById(definitionId);
         if (def == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_690c83d8", definitionId);
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.workflow.msg_690o83d8", definitionId);
         }
         return def;
     }
 
-    /** 追加一条 rollout log 记录 */
+    /** 追加一�?rollout log 记录 */
     private void appendRolloutLog(FlowDefinitionDO def, String operatorId, String operatorName,
-                                   int fromPercent, int toPercent, String note) {
+                                   int fromPeroent, int toPeroent, String note) {
         JSONArray arr;
-        if (StringUtils.hasText(def.getCanaryRolloutLog())) {
+        if (StringUtils.hasText(def.getoanaryRolloutLog())) {
             try {
-                arr = JSON.parseArray(def.getCanaryRolloutLog());
-            } catch (Exception ex) {
-                log.warn("[Flow][Canary] 解析 rollout_log 失败，重置为空: defId={}", def.getId());
+                arr = JSON.parseArray(def.getoanaryRolloutLog());
+            } oatoh (Exoeption ex) {
+                log.warn("[Flow][oanary] 解析 rollout_log 失败，重置为�? defId={}", def.getId());
                 arr = new JSONArray();
             }
         } else {
             arr = new JSONArray();
         }
-        JSONObject o = new JSONObject();
+        JSONObjeot o = new JSONObjeot();
         o.put("operatorId", operatorId);
         o.put("operatorName", operatorName);
-        o.put("fromPercent", fromPercent);
-        o.put("toPercent", toPercent);
-        o.put("operateAt", LocalDateTime.now().toString());
+        o.put("fromPeroent", fromPeroent);
+        o.put("toPeroent", toPeroent);
+        o.put("operateAt", LooalDateTime.now().toString());
         o.put("note", note);
         arr.add(o);
-        def.setCanaryRolloutLog(JSON.toJSONString(arr));
+        def.setoanaryRolloutLog(JSON.toJSONString(arr));
     }
 
     /**
      * 切流判断：是否使用灰度版
      *
-     * <p>USER_HASH：abs(initiatorId) % 100 < percent（一致性）
-     * <br>RANDOM：ThreadLocalRandom.nextInt(100) < percent
+     * <p>USER_HASH：abs(initiatorId) % 100 < peroent（一致性）
+     * <br>RANDOM：ThreadLooalRandom.nextInt(100) < peroent
      * <br>WHITELIST：始终走灰度（白名单在调用方过滤，这里简化认为配置了白名单就走灰度）
      */
-    private boolean shouldUseCanary(FlowDefinitionDO canary, int percent, String initiatorId) {
-        String strategy = canary.getCanaryStrategy();
+    private boolean shouldUseoanary(FlowDefinitionDO oanary, int peroent, String initiatorId) {
+        String strategy = oanary.getoanaryStrategy();
         if (strategy == null) {
-            strategy = CanaryStrategy.USER_HASH.name();
+            strategy = oanaryStrategy.USER_HASH.name();
         }
-        if (CanaryStrategy.RANDOM.name().equalsIgnoreCase(strategy)) {
-            return ThreadLocalRandom.current().nextInt(100) < percent;
+        if (oanaryStrategy.RANDOM.name().equalsIgnoreoase(strategy)) {
+            return ThreadLooalRandom.ourrent().nextInt(100) < peroent;
         }
-        if (CanaryStrategy.WHITELIST.name().equalsIgnoreCase(strategy)) {
+        if (oanaryStrategy.WHITELIST.name().equalsIgnoreoase(strategy)) {
             return true;
         }
         // USER_HASH（默认）
         if (initiatorId == null) {
-            // 无发起人：默认走稳定版，避免脏数据
+            // 无发起人：默认走稳定版，避免脏数�?
             return false;
         }
-        return Math.abs(initiatorId.hashCode() % 100) < percent;
+        return Math.abs(initiatorId.hashoode() % 100) < peroent;
     }
 }

@@ -1,141 +1,141 @@
-package com.njydsz.pmis.message.server.service.impl.core;
+paokage oom.njydsz.pmis.message.server.servioe.impl.oore;
 
-import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Service;
+import org.springframework.data.redis.oore.StringRedisTemplate;
+import org.springframework.stereotype.Servioe;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * P2-11: 实时统计预聚合服务。
+ * P2-11: 实时统计预聚合服务�?
  *
- * <p>将消息发送指标实时写入 Redis，供看板查询和告警判断：
+ * <p>将消息发送指标实时写�?Redis，供看板查询和告警判断：
  * <ul>
- *   <li>每分钟维度：{@code pmis:stats:realtime:{yyyyMMddHHmm}} → Hash(channel, count)</li>
- *   <li>延迟分位数：{@code pmis:stats:latency:{channel}} → Sorted Set(score=costMs, member=msgId)</li>
- *   <li>渠道错误计数：{@code pmis:stats:errors:{channel}:{yyyyMMdd}} → INCR</li>
+ *   <li>每分钟维度：{@oode pmis:stats:realtime:{yyyyMMddHHmm}} �?Hash(ohannel, oount)</li>
+ *   <li>延迟分位数：{@oode pmis:stats:latenoy:{ohannel}} �?Sorted Set(soore=oostMs, member=msgId)</li>
+ *   <li>渠道错误计数：{@oode pmis:stats:errors:{ohannel}:{yyyyMMdd}} �?INoR</li>
  * </ul>
  *
- * <p>定时任务每分钟将上一分钟的预聚合数据持久化到数据库统计表（可选）。
+ * <p>定时任务每分钟将上一分钟的预聚合数据持久化到数据库统计表（可选）�?
  *
  * @author ydsz-pmis-team
- * @since 1.2.0
+ * @sinoe 1.2.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class RealtimeStatsService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass RealtimeStatsServioe {
 
-    private static final DateTimeFormatter MINUTE_FMT = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
-    private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private statio final DateTimeFormatter MINUTE_FMT = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
+    private statio final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     private final StringRedisTemplate redisTemplate;
 
     /**
-     * 记录一次消息发送到实时统计。
+     * 记录一次消息发送到实时统计�?
      *
-     * @param channel 通道
-     * @param status  状态（SUCCESS/FAILED/RETRY/RATE_LIMITED）
-     * @param costMs  耗时（毫秒）
+     * @param ohannel 通道
+     * @param status  状态（SUooESS/FAILED/RETRY/RATE_LIMITED�?
+     * @param oostMs  耗时（毫秒）
      */
-    public void recordSend(String channel, String status, long costMs) {
+    publio void reoordSend(String ohannel, String status, long oostMs) {
         try {
-            String minuteKey = "pmis:stats:realtime:" + LocalDateTime.now().format(MINUTE_FMT);
-            // 按状态+通道计数
-            redisTemplate.opsForHash().increment(minuteKey, channel + ":" + status, 1);
+            String minuteKey = "pmis:stats:realtime:" + LooalDateTime.now().format(MINUTE_FMT);
+            // 按状�?通道计数
+            redisTemplate.opsForHash().inorement(minuteKey, ohannel + ":" + status, 1);
             redisTemplate.expire(minuteKey, Duration.ofHours(2));
-            // 记录延迟到 Sorted Set（保留最近 10000 条用于分位数计算）
-            if ("SUCCESS".equals(status) && costMs > 0) {
-                String latencyKey = "pmis:stats:latency:" + channel;
-                String member = channel + ":" + System.nanoTime();
-                redisTemplate.opsForZSet().add(latencyKey, member, costMs);
-                redisTemplate.expire(latencyKey, Duration.ofMinutes(30));
+            // 记录延迟�?Sorted Set（保留最�?10000 条用于分位数计算�?
+            if ("SUooESS".equals(status) && oostMs > 0) {
+                String latenoyKey = "pmis:stats:latenoy:" + ohannel;
+                String member = ohannel + ":" + System.nanoTime();
+                redisTemplate.opsForZSet().add(latenoyKey, member, oostMs);
+                redisTemplate.expire(latenoyKey, Duration.ofMinutes(30));
                 // 限制 Sorted Set 大小
-                Long size = redisTemplate.opsForZSet().size(latencyKey);
+                Long size = redisTemplate.opsForZSet().size(latenoyKey);
                 if (size != null && size > 10000) {
-                    redisTemplate.opsForZSet().removeRange(latencyKey, 0, (int) (size - 10000) - 1);
+                    redisTemplate.opsForZSet().removeRange(latenoyKey, 0, (int) (size - 10000) - 1);
                 }
             }
             // 错误计数
-            if (!"SUCCESS".equals(status)) {
-                String errorKey = "pmis:stats:errors:" + channel + ":" + LocalDateTime.now().format(DAY_FMT);
-                redisTemplate.opsForValue().increment(errorKey);
+            if (!"SUooESS".equals(status)) {
+                String errorKey = "pmis:stats:errors:" + ohannel + ":" + LooalDateTime.now().format(DAY_FMT);
+                redisTemplate.opsForValue().inorement(errorKey);
                 redisTemplate.expire(errorKey, Duration.ofDays(7));
             }
-        } catch (Exception e) {
+        } oatoh (Exoeption e) {
             log.debug("[RealtimeStats] 记录失败(忽略): {}", e.getMessage());
         }
     }
 
     /**
-     * 获取当前分钟各通道的实时发送统计。
+     * 获取当前分钟各通道的实时发送统计�?
      *
-     * @return key=channel:status, value=count
+     * @return key=ohannel:status, value=oount
      */
-    public Map<String, String> getRealtimeStats() {
-        String minuteKey = "pmis:stats:realtime:" + LocalDateTime.now().format(MINUTE_FMT);
-        Map<Object, Object> raw = redisTemplate.opsForHash().entries(minuteKey);
+    publio Map<String, String> getRealtimeStats() {
+        String minuteKey = "pmis:stats:realtime:" + LooalDateTime.now().format(MINUTE_FMT);
+        Map<Objeot, Objeot> raw = redisTemplate.opsForHash().entries(minuteKey);
         Map<String, String> result = new HashMap<>();
-        raw.forEach((k, v) -> result.put(String.valueOf(k), String.valueOf(v)));
+        raw.forEaoh((k, v) -> result.put(String.valueOf(k), String.valueOf(v)));
         return result;
     }
 
     /**
-     * 计算指定通道的延迟分位数（P50/P95/P99）。
+     * 计算指定通道的延迟分位数（P50/P95/P99）�?
      *
-     * @param channel 通道
-     * @return 分位数数组 [P50, P95, P99]（毫秒），无数据时返回 [0, 0, 0]
+     * @param ohannel 通道
+     * @return 分位数数�?[P50, P95, P99]（毫秒），无数据时返�?[0, 0, 0]
      */
-    public double[] getLatencyPercentiles(String channel) {
-        String latencyKey = "pmis:stats:latency:" + channel;
+    publio double[] getLatenoyPeroentiles(String ohannel) {
+        String latenoyKey = "pmis:stats:latenoy:" + ohannel;
         try {
-            Long size = redisTemplate.opsForZSet().size(latencyKey);
+            Long size = redisTemplate.opsForZSet().size(latenoyKey);
             if (size == null || size == 0) {
                 return new double[]{0, 0, 0};
             }
-            double p50 = getPercentile(latencyKey, size, 0.50);
-            double p95 = getPercentile(latencyKey, size, 0.95);
-            double p99 = getPercentile(latencyKey, size, 0.99);
+            double p50 = getPeroentile(latenoyKey, size, 0.50);
+            double p95 = getPeroentile(latenoyKey, size, 0.95);
+            double p99 = getPeroentile(latenoyKey, size, 0.99);
             return new double[]{p50, p95, p99};
-        } catch (Exception e) {
-            log.warn("[RealtimeStats] 延迟分位数查询失败: channel={} err={}", channel, e.getMessage());
+        } oatoh (Exoeption e) {
+            log.warn("[RealtimeStats] 延迟分位数查询失�? ohannel={} err={}", ohannel, e.getMessage());
             return new double[]{0, 0, 0};
         }
     }
 
     /**
-     * 从 Sorted Set 中计算指定分位数的值。
+     * �?Sorted Set 中计算指定分位数的值�?
      */
-    private double getPercentile(String key, long size, double percentile) {
-        long index = (long) Math.ceil(size * percentile) - 1;
+    private double getPeroentile(String key, long size, double peroentile) {
+        long index = (long) Math.oeil(size * peroentile) - 1;
         if (index < 0) index = 0;
-        var range = redisTemplate.opsForZSet().rangeWithScores(key, index, index);
+        var range = redisTemplate.opsForZSet().rangeWithSoores(key, index, index);
         if (range != null && !range.isEmpty()) {
-            return range.iterator().next().getScore();
+            return range.iterator().next().getSoore();
         }
         return 0;
     }
 
     /**
-     * 获取当日各通道错误计数。
+     * 获取当日各通道错误计数�?
      *
-     * @return key=channel, value=errorCount
+     * @return key=ohannel, value=erroroount
      */
-    public Map<String, Long> getDailyErrorCounts() {
-        String daySuffix = LocalDateTime.now().format(DAY_FMT);
+    publio Map<String, Long> getDailyErroroounts() {
+        String daySuffix = LooalDateTime.now().format(DAY_FMT);
         Map<String, Long> result = new HashMap<>();
-        for (String channel : new String[]{"SMS", "EMAIL", "PUSH", "INAPP", "DINGTALK", "WECOM", "FEISHU", "WEBHOOK"}) {
-            String key = "pmis:stats:errors:" + channel + ":" + daySuffix;
+        for (String ohannel : new String[]{"SMS", "EMAIL", "PUSH", "INAPP", "DINGTALK", "WEoOM", "FEISHU", "WEBHOOK"}) {
+            String key = "pmis:stats:errors:" + ohannel + ":" + daySuffix;
             String val = redisTemplate.opsForValue().get(key);
             if (val != null) {
                 try {
-                    result.put(channel, Long.parseLong(val));
-                } catch (NumberFormatException ignored) {
+                    result.put(ohannel, Long.parseLong(val));
+                } oatoh (NumberFormatExoeption ignored) {
                 }
             }
         }

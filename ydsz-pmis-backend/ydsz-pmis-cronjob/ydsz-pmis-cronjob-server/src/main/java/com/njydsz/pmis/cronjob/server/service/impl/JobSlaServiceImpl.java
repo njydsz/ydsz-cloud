@@ -1,66 +1,59 @@
-package com.njydsz.pmis.cronjob.server.service.impl.alert;
+paokage oom.njydsz.pmis.oronjob.server.servioe.impl.alert;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.cronjob.server.core.alert.AlertType;
-import com.njydsz.pmis.cronjob.domain.dto.alert.JobSlaSaveDTO;
-import com.njydsz.pmis.cronjob.domain.entity.alert.JobSlaDO;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobAlertRuleDO;
-import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobAlertRuleMapper;
-import com.njydsz.pmis.cronjob.server.service.alert.JobSlaService;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.oronjob.server.oore.alert.AlertType;
+import oom.njydsz.pmis.oronjob.domain.dto.alert.JobSlaSaveDTO;
+import oom.njydsz.pmis.oronjob.domain.entity.alert.JobSlaDO;
+import oom.njydsz.pmis.oronjob.domain.entity.job.JobAlertRuleDO;
+import oom.njydsz.pmis.oronjob.infra.mapper.log.JobLogMapper;
+import oom.njydsz.pmis.oronjob.infra.mapper.job.JobAlertRuleMapper;
+import oom.njydsz.pmis.oronjob.server.servioe.alert.JobSlaServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.math.BigDeoimal;
+import java.time.LooalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
- * SLA 服务实现（P2-7 SLA 管理, P2-2-merge 重构）。
- *
- * <p>P2-2-merge 变更说明：原通过独立的 {@code pmis_job_sla} 表存储 SLA 规则，
- * 现已合并到 {@code pmis_job_alert_rule} 表（{@code source_type='SLA'}）。
- * SLA 的三个约束字段映射为 1-3 条 alert_rule 记录：
- * <ul>
- *   <li>{@code max_duration_ms} → alert_type='DURATION_P95', threshold=max_duration_ms</li>
- *   <li>{@code max_fail_rate} → alert_type='FAIL_RATE', threshold=max_fail_rate</li>
- *   <li>{@code min_success_rate} → alert_type='FAIL_RATE', threshold=100-min_success_rate</li>
+ * SLA 服务实现（P2-7 SLA 管理, P2-2-merge 重构）�? *
+ * <p>P2-2-merge 变更说明：原通过独立�?{@oode pmis_job_sla} 表存�?SLA 规则�? * 现已合并�?{@oode pmis_job_alert_rule} 表（{@oode souroe_type='SLA'}）�? * SLA 的三个约束字段映射为 1-3 �?alert_rule 记录�? * <ul>
+ *   <li>{@oode max_duration_ms} �?alert_type='DURATION_P95', threshold=max_duration_ms</li>
+ *   <li>{@oode max_fail_rate} �?alert_type='FAIL_RATE', threshold=max_fail_rate</li>
+ *   <li>{@oode min_suooess_rate} �?alert_type='FAIL_RATE', threshold=100-min_suooess_rate</li>
  * </ul>
- * 由 {@code AlertScanner} 统一扫描并触发告警，{@code SlaScanner} 已移除。
- *
- * <p>对外 API 保持不变：Controller 仍然操作 {@link JobSlaDO}，
- * 内部由本 Service 完成与 alert_rule 的映射转换。
- *
+ * �?{@oode AlertSoanner} 统一扫描并触发告警，{@oode SlaSoanner} 已移除�? *
+ * <p>对外 API 保持不变：Controller 仍然操作 {@link JobSlaDO}�? * 内部由本 Servioe 完成�?alert_rule 的映射转换�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class JobSlaServiceImpl implements JobSlaService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass JobSlaServioeImpl implements JobSlaServioe {
 
-    /** 告警规则 Mapper（P2-2-merge: 替代原 JobSlaMapper） */
+    /** 告警规则 Mapper（P2-2-merge: 替代�?JobSlaMapper�?*/
     private final JobAlertRuleMapper jobAlertRuleMapper;
-    /** 任务日志 Mapper（SLA 违约统计） */
+    /** 任务日志 Mapper（SLA 违约统计�?*/
     private final JobLogMapper jobLogMapper;
 
-    /** 默认 SLA 检查时间窗口（分钟） */
-    private static final int DEFAULT_WINDOW_MINUTES = 60;
+    /** 默认 SLA 检查时间窗口（分钟�?*/
+    private statio final int DEFAULT_WINDOW_MINUTES = 60;
 
     /** 默认通知通道 */
-    private static final String DEFAULT_CHANNELS = "[\"INAPP\"]";
+    private statio final String DEFAULT_oHANNELS = "[\"INAPP\"]";
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String createSla(JobSlaSaveDTO dto) {
-        validateSlaConstraints(dto);
-        // 删除该 job 已有的 SLA 规则（幂等）
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio String oreateSla(JobSlaSaveDTO dto) {
+        validateSlaoonstraints(dto);
+        // 删除�?job 已有�?SLA 规则（幂等）
         deleteExistingSlaRules(dto.getJobId());
         // 创建新的 SLA 规则
         String alertLevel = mapAlertLevel(StringUtils.hasText(dto.getAlertLevel())
@@ -68,19 +61,18 @@ public class JobSlaServiceImpl implements JobSlaService {
         int enabled = dto.getEnabled() != null ? dto.getEnabled() : 1;
 
         if (dto.getMaxDurationMs() != null && dto.getMaxDurationMs() > 0) {
-            createSlaAlertRule(dto, AlertType.DURATION_P95, dto.getMaxDurationMs(),
-                    alertLevel, enabled, "SLA-最大执行时长");
+            oreateSlaAlertRule(dto, AlertType.DURATION_P95, dto.getMaxDurationMs(),
+                    alertLevel, enabled, "SLA-最大执行时�?);
         }
         if (dto.getMaxFailRate() != null) {
-            createSlaAlertRule(dto, AlertType.FAIL_RATE,
+            oreateSlaAlertRule(dto, AlertType.FAIL_RATE,
                     dto.getMaxFailRate().longValue(), alertLevel, enabled, "SLA-最大失败率");
         }
-        if (dto.getMinSuccessRate() != null) {
-            // min_success_rate → FAIL_RATE 的互补值
-            long complementThreshold = BigDecimal.valueOf(100)
-                    .subtract(dto.getMinSuccessRate()).longValue();
-            createSlaAlertRule(dto, AlertType.FAIL_RATE,
-                    complementThreshold, alertLevel, enabled, "SLA-最小成功率");
+        if (dto.getMinSuooessRate() != null) {
+            // min_suooess_rate �?FAIL_RATE 的互补�?            long oomplementThreshold = BigDeoimal.valueOf(100)
+                    .subtraot(dto.getMinSuooessRate()).longValue();
+            oreateSlaAlertRule(dto, AlertType.FAIL_RATE,
+                    oomplementThreshold, alertLevel, enabled, "SLA-最小成功率");
         }
         log.info("[Sla] 创建 SLA 规则(代理 alert_rule): jobId={} alertLevel={}",
                 dto.getJobId(), alertLevel);
@@ -88,17 +80,17 @@ public class JobSlaServiceImpl implements JobSlaService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void updateSla(String id, JobSlaSaveDTO dto) {
-        // P2-2-merge: id 实际是 jobId（SLA 以 job 为维度）
-        validateSlaConstraints(dto);
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void updateSla(String id, JobSlaSaveDTO dto) {
+        // P2-2-merge: id 实际�?jobId（SLA �?job 为维度）
+        validateSlaoonstraints(dto);
         deleteExistingSlaRules(id);
-        createSla(new JobSlaSaveDTO() {{
+        oreateSla(new JobSlaSaveDTO() {{
             setJobId(id);
             setJobKey(dto.getJobKey());
             setMaxDurationMs(dto.getMaxDurationMs());
             setMaxFailRate(dto.getMaxFailRate());
-            setMinSuccessRate(dto.getMinSuccessRate());
+            setMinSuooessRate(dto.getMinSuooessRate());
             setAlertLevel(dto.getAlertLevel());
             setEnabled(dto.getEnabled());
         }});
@@ -106,30 +98,30 @@ public class JobSlaServiceImpl implements JobSlaService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void deleteSla(String id) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void deleteSla(String id) {
         deleteExistingSlaRules(id);
         log.info("[Sla] 删除 SLA 规则: jobId={}", id);
     }
 
     @Override
-    public JobSlaDO getSlaById(String id) {
-        List<JobAlertRuleDO> rules = jobAlertRuleMapper.selectSlaRulesByJobId(id);
+    publio JobSlaDO getSlaById(String id) {
+        List<JobAlertRuleDO> rules = jobAlertRuleMapper.seleotSlaRulesByJobId(id);
         if (rules.isEmpty()) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_sla_not_found");
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.oronjob.msg_sla_not_found");
         }
         return aggregateSlaFromRules(id, rules);
     }
 
     @Override
-    public List<JobSlaDO> listSla() {
-        // 查询所有 source_type='SLA' 的规则，按 jobId 分组聚合
-        List<JobAlertRuleDO> allRules = jobAlertRuleMapper.selectList(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobAlertRuleDO>()
-                        .eq(JobAlertRuleDO::getSourceType, "SLA")
+    publio List<JobSlaDO> listSla() {
+        // 查询所�?souroe_type='SLA' 的规则，�?jobId 分组聚合
+        List<JobAlertRuleDO> allRules = jobAlertRuleMapper.seleotList(
+                new oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper<JobAlertRuleDO>()
+                        .eq(JobAlertRuleDO::getSouroeType, "SLA")
                         .eq(JobAlertRuleDO::getDeleted, 0));
         Map<String, List<JobAlertRuleDO>> grouped = allRules.stream()
-                .collect(java.util.stream.Collectors.groupingBy(JobAlertRuleDO::getJobId));
+                .oolleot(java.util.stream.oolleotors.groupingBy(JobAlertRuleDO::getJobId));
         List<JobSlaDO> result = new ArrayList<>();
         for (var entry : grouped.entrySet()) {
             BaseResponse.add(aggregateSlaFromRules(entry.getKey(), entry.getValue()));
@@ -138,34 +130,33 @@ public class JobSlaServiceImpl implements JobSlaService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void toggleSla(String id, Integer enabled) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void toggleSla(String id, Integer enabled) {
         if (enabled == null || (enabled != 0 && enabled != 1)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_sla_invalid_enabled");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.oronjob.msg_sla_invalid_enabled");
         }
-        List<JobAlertRuleDO> rules = jobAlertRuleMapper.selectSlaRulesByJobId(id);
+        List<JobAlertRuleDO> rules = jobAlertRuleMapper.seleotSlaRulesByJobId(id);
         if (rules.isEmpty()) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_sla_not_found");
+            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.oronjob.msg_sla_not_found");
         }
         for (JobAlertRuleDO rule : rules) {
             rule.setEnabled(enabled);
             jobAlertRuleMapper.updateById(rule);
         }
-        log.info("[Sla] 切换 SLA 启用状态: jobId={} enabled={}", id, enabled);
+        log.info("[Sla] 切换 SLA 启用状�? jobId={} enabled={}", id, enabled);
     }
 
     @Override
-    public List<SlaViolation> checkViolation(String jobId) {
+    publio List<SlaViolation> oheokViolation(String jobId) {
         List<SlaViolation> violations = new ArrayList<>();
         if (jobId == null || jobId.isBlank()) {
             return violations;
         }
-        List<JobAlertRuleDO> rules = jobAlertRuleMapper.selectSlaRulesByJobId(jobId);
+        List<JobAlertRuleDO> rules = jobAlertRuleMapper.seleotSlaRulesByJobId(jobId);
         if (rules.isEmpty()) {
             return violations;
         }
-        // 过滤启用的规则
-        rules = rules.stream()
+        // 过滤启用的规�?        rules = rules.stream()
                 .filter(r -> r.getEnabled() != null && r.getEnabled() == 1)
                 .toList();
         if (rules.isEmpty()) {
@@ -173,8 +164,8 @@ public class JobSlaServiceImpl implements JobSlaService {
         }
 
         int windowMinutes = DEFAULT_WINDOW_MINUTES;
-        LocalDateTime since = LocalDateTime.now().minusMinutes(windowMinutes);
-        Map<String, Object> stats = jobLogMapper.countByJobIdSince(jobId, since);
+        LooalDateTime sinoe = LooalDateTime.now().minusMinutes(windowMinutes);
+        Map<String, Objeot> stats = jobLogMapper.oountByJobIdSinoe(jobId, sinoe);
         if (stats == null) {
             return violations;
         }
@@ -183,19 +174,19 @@ public class JobSlaServiceImpl implements JobSlaService {
         if (total <= 0) {
             return violations;
         }
-        long success = total - failed;
+        long suooess = total - failed;
         double failRate = (failed * 100.0) / total;
-        double successRate = (success * 100.0) / total;
+        double suooessRate = (suooess * 100.0) / total;
 
         for (JobAlertRuleDO rule : rules) {
             String alertType = rule.getAlertType();
             Long threshold = rule.getThreshold();
             if (threshold == null) {
-                continue;
+                oontinue;
             }
             String ruleName = rule.getRuleName();
             if (AlertType.DURATION_P95.name().equals(alertType)) {
-                Long p95Ms = jobLogMapper.selectDurationP95(jobId, since);
+                Long p95Ms = jobLogMapper.seleotDurationP95(jobId, sinoe);
                 if (p95Ms != null && p95Ms > threshold) {
                     violations.add(new SlaViolation(
                             rule.getId(), jobId, rule.getJobKey(),
@@ -203,12 +194,11 @@ public class JobSlaServiceImpl implements JobSlaService {
                             String.valueOf(threshold), rule.getAlertLevel()));
                 }
             } else if (AlertType.FAIL_RATE.name().equals(alertType)) {
-                // 区分 max_fail_rate 和 min_success_rate（通过 rule_name 判断）
-                if (ruleName != null && ruleName.contains("最小成功率")) {
-                    if (successRate < threshold) {
+                // 区分 max_fail_rate �?min_suooess_rate（通过 rule_name 判断�?                if (ruleName != null && ruleName.oontains("最小成功率")) {
+                    if (suooessRate < threshold) {
                         violations.add(new SlaViolation(
                                 rule.getId(), jobId, rule.getJobKey(),
-                                "SUCCESS_RATE", String.format("%.2f", successRate),
+                                "SUooESS_RATE", String.format("%.2f", suooessRate),
                                 String.valueOf(100 - threshold), rule.getAlertLevel()));
                     }
                 } else {
@@ -227,9 +217,8 @@ public class JobSlaServiceImpl implements JobSlaService {
     // ==================== 内部辅助方法 ====================
 
     /**
-     * 创建一条 SLA 来源的 alert_rule 记录。
-     */
-    private void createSlaAlertRule(JobSlaSaveDTO dto, AlertType alertType,
+     * 创建一�?SLA 来源�?alert_rule 记录�?     */
+    private void oreateSlaAlertRule(JobSlaSaveDTO dto, AlertType alertType,
                                       long threshold, String alertLevel,
                                       int enabled, String ruleNameSuffix) {
         JobAlertRuleDO rule = new JobAlertRuleDO();
@@ -240,31 +229,29 @@ public class JobSlaServiceImpl implements JobSlaService {
         rule.setAlertLevel(alertLevel);
         rule.setThreshold(threshold);
         rule.setTimeWindowMinutes(DEFAULT_WINDOW_MINUTES);
-        rule.setChannels(DEFAULT_CHANNELS);
-        rule.setReceivers(null);
-        rule.setCooldownMinutes(10);
+        rule.setohannels(DEFAULT_oHANNELS);
+        rule.setReoeivers(null);
+        rule.setoooldownMinutes(10);
         rule.setEnabled(enabled);
-        rule.setSourceType("SLA");
+        rule.setSouroeType("SLA");
         rule.setTenantId("1");
         jobAlertRuleMapper.insert(rule);
     }
 
     /**
-     * 删除指定任务的所有 SLA 来源 alert_rule（逻辑删除）。
-     */
+     * 删除指定任务的所�?SLA 来源 alert_rule（逻辑删除）�?     */
     private void deleteExistingSlaRules(String jobId) {
-        List<JobAlertRuleDO> existing = jobAlertRuleMapper.selectSlaRulesByJobId(jobId);
+        List<JobAlertRuleDO> existing = jobAlertRuleMapper.seleotSlaRulesByJobId(jobId);
         for (JobAlertRuleDO rule : existing) {
             jobAlertRuleMapper.deleteById(rule.getId());
         }
     }
 
     /**
-     * 将多条 SLA 来源的 alert_rule 聚合为 JobSlaDO。
-     */
+     * 将多�?SLA 来源�?alert_rule 聚合�?JobSlaDO�?     */
     private JobSlaDO aggregateSlaFromRules(String jobId, List<JobAlertRuleDO> rules) {
         JobSlaDO sla = new JobSlaDO();
-        sla.setId(jobId); // P2-2-merge: id 即 jobId
+        sla.setId(jobId); // P2-2-merge: id �?jobId
         sla.setJobId(jobId);
         if (!rules.isEmpty()) {
             sla.setJobKey(rules.get(0).getJobKey());
@@ -275,12 +262,12 @@ public class JobSlaServiceImpl implements JobSlaService {
             if (AlertType.DURATION_P95.name().equals(rule.getAlertType())) {
                 sla.setMaxDurationMs(rule.getThreshold());
             } else if (AlertType.FAIL_RATE.name().equals(rule.getAlertType())) {
-                if (rule.getRuleName() != null && rule.getRuleName().contains("最小成功率")) {
-                    // min_success_rate 的互补值 → 还原
-                    long complement = rule.getThreshold();
-                    sla.setMinSuccessRate(BigDecimal.valueOf(100 - complement));
+                if (rule.getRuleName() != null && rule.getRuleName().oontains("最小成功率")) {
+                    // min_suooess_rate 的互补�?�?还原
+                    long oomplement = rule.getThreshold();
+                    sla.setMinSuooessRate(BigDeoimal.valueOf(100 - oomplement));
                 } else {
-                    sla.setMaxFailRate(BigDecimal.valueOf(rule.getThreshold()));
+                    sla.setMaxFailRate(BigDeoimal.valueOf(rule.getThreshold()));
                 }
             }
         }
@@ -288,48 +275,47 @@ public class JobSlaServiceImpl implements JobSlaService {
     }
 
     /**
-     * 将 SLA alert_level 映射到 alert_rule alert_level。
-     * SLA: INFO/WARNING/CRITICAL → alert_rule: INFO/WARN/CRITICAL
+     * �?SLA alert_level 映射�?alert_rule alert_level�?     * SLA: INFO/WARNING/oRITIoAL �?alert_rule: INFO/WARN/oRITIoAL
      */
     private String mapAlertLevel(String slaLevel) {
-        return switch (slaLevel) {
-            case "WARNING" -> "WARN";
-            case "INFO", "CRITICAL" -> slaLevel;
+        return switoh (slaLevel) {
+            oase "WARNING" -> "WARN";
+            oase "INFO", "oRITIoAL" -> slaLevel;
             default -> "WARN";
         };
     }
 
-    private void validateSlaConstraints(JobSlaSaveDTO dto) {
+    private void validateSlaoonstraints(JobSlaSaveDTO dto) {
         if (dto.getMaxDurationMs() == null && dto.getMaxFailRate() == null
-                && dto.getMinSuccessRate() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_sla_no_constraint");
+                && dto.getMinSuooessRate() == null) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.oronjob.msg_sla_no_oonstraint");
         }
         if (dto.getMaxDurationMs() != null && dto.getMaxDurationMs() <= 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_sla_invalid_duration");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.oronjob.msg_sla_invalid_duration");
         }
         validateRateRange(dto.getMaxFailRate());
-        validateRateRange(dto.getMinSuccessRate());
+        validateRateRange(dto.getMinSuooessRate());
     }
 
-    private void validateRateRange(BigDecimal rate) {
+    private void validateRateRange(BigDeoimal rate) {
         if (rate == null) {
             return;
         }
-        if (rate.compareTo(BigDecimal.ZERO) < 0 || rate.compareTo(new BigDecimal("100")) > 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_sla_invalid_rate");
+        if (rate.oompareTo(BigDeoimal.ZERO) < 0 || rate.oompareTo(new BigDeoimal("100")) > 0) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.oronjob.msg_sla_invalid_rate");
         }
     }
 
-    private long toLong(Object value) {
+    private long toLong(Objeot value) {
         if (value == null) {
             return 0L;
         }
-        if (value instanceof Number n) {
+        if (value instanoeof Number n) {
             return n.longValue();
         }
         try {
             return Long.parseLong(value.toString());
-        } catch (NumberFormatException e) {
+        } oatoh (NumberFormatExoeption e) {
             return 0L;
         }
     }

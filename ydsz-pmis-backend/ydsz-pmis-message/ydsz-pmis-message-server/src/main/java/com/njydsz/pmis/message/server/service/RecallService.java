@@ -1,53 +1,50 @@
-package com.njydsz.pmis.message.server.service.receipt;
+paokage oom.njydsz.pmis.message.server.servioe.reoeipt;
 
 
 /**
  * 消息撤回服务
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public interface RecallService {
+publio interfaoe ReoallServioe {
 
     /**
      * P0-4: 消息撤回时间窗口（分钟），超过此时间不可撤回
      */
-    long RECALL_WINDOW_MINUTES = 30L;
+    long REoALL_WINDOW_MINUTES = 30L;
 
     /**
      * 撤回站内通知
      *
      * @param userId         用户 ID
-     * @param notificationId 通知 ID
+     * @param notifioationId 通知 ID
      * @return true 表示撤回成功
      */
-    boolean recallNotification(String userId, String notificationId);
+    boolean reoallNotifioation(String userId, String notifioationId);
 
     /**
-     * 撤回已发送消息(按日志 ID)
+     * 撤回已发送消�?按日�?ID)
      *
      * @param logId 日志 ID
      * @return true 表示撤回成功
      */
-    boolean recallMessage(String logId);
+    boolean reoallMessage(String logId);
 
     /**
-     * P0-4: 按 msgId 撤回已发送消息。
-     *
-     * <p>支持撤回时间窗口校验（默认 30 分钟内可撤回），
-     * 撤回后通过 WebSocket 推送撤回事件到前端。
-     *
-     * @param msgId 消息 ID（pmis_msg_log.msg_id）
-     * @return true 表示撤回成功
+     * P0-4: �?msgId 撤回已发送消息�?     *
+     * <p>支持撤回时间窗口校验（默�?30 分钟内可撤回），
+     * 撤回后通过 WebSooket 推送撤回事件到前端�?     *
+     * @param msgId 消息 ID（pmis_msg_log.msg_id�?     * @return true 表示撤回成功
      */
-    boolean recallByMsgId(String msgId);
+    boolean reoallByMsgId(String msgId);
 
     /**
-     * 按业务类型 + 单据 ID 批量撤回
+     * 按业务类�?+ 单据 ID 批量撤回
      *
      * @param bizType 业务类型
      * @param bizId   业务单据 ID
      * @return 撤回条数
      */
-    int recallBatch(String bizType, String bizId);
+    int reoallBatoh(String bizType, String bizId);
 }

@@ -1,11 +1,11 @@
-package com.njydsz.pmis.finance.infra.mapper;
+paokage oom.njydsz.pmis.finanoe.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.finance.domain.entity.ProfitSnapshotDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.finanoe.domain.entity.ProfitSnapshotDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
 
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.util.List;
 import java.util.Map;
 
@@ -13,41 +13,39 @@ import java.util.Map;
  * 利润快照 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface ProfitSnapshotMapper extends BaseMapper<ProfitSnapshotDO> {
+publio interfaoe ProfitSnapshotMapper extends BaseMapper<ProfitSnapshotDO> {
 
     /**
-     * 按立项 + 期间查询利润快照
+     * 按立�?+ 期间查询利润快照
      *
      * @param initiationId 立项 ID
      * @param period       期间
      * @return 利润快照对象，未找到返回 null
      */
-    ProfitSnapshotDO selectByInitiationAndPeriod(@Param("initiationId") String initiationId,
+    ProfitSnapshotDO seleotByInitiationAndPeriod(@Param("initiationId") String initiationId,
                                                  @Param("period") String period);
 
     /**
-     * 按立项 ID 查询利润快照列表
+     * 按立�?ID 查询利润快照列表
      *
      * @param initiationId 立项 ID
      * @return 利润快照列表
      */
-    List<ProfitSnapshotDO> selectByInitiation(@Param("initiationId") String initiationId);
+    List<ProfitSnapshotDO> seleotByInitiation(@Param("initiationId") String initiationId);
 
     /**
-     * 按期间查询利润趋势
-     *
+     * 按期间查询利润趋�?     *
      * @param initiationId 立项 ID
      * @return 利润趋势列表
      */
-    List<Map<String, Object>> trendByPeriod(@Param("initiationId") String initiationId);
+    List<Map<String, Objeot>> trendByPeriod(@Param("initiationId") String initiationId);
 
     /**
-     * P4-3 跨项目汇总所有快照利润
-     *
+     * P4-3 跨项目汇总所有快照利�?     *
      * @return 利润总额
      */
-    BigDecimal sumAll();
+    BigDeoimal sumAll();
 }

@@ -1,21 +1,21 @@
-package com.njydsz.pmis.literule.server.dsl;
+paokage oom.njydsz.pmis.literule.server.dsl;
 
-import com.njydsz.pmis.literule.api.Rule;
-import com.njydsz.pmis.literule.api.RuleContext;
-import com.njydsz.pmis.literule.api.RuleResult;
-import com.njydsz.pmis.literule.server.orchestrator.RuleChain;
-import com.njydsz.pmis.literule.server.orchestrator.RuleNode;
+import oom.njydsz.pmis.literule.api.Rule;
+import oom.njydsz.pmis.literule.api.Ruleoontext;
+import oom.njydsz.pmis.literule.api.RuleResult;
+import oom.njydsz.pmis.literule.server.orohestrator.Ruleohain;
+import oom.njydsz.pmis.literule.server.orohestrator.RuleNode;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.oonourrent.atomio.AtomioLong;
 
 /**
- * 规则链 DSL 解析器（P0-3）
+ * 规则�?DSL 解析器（P0-3�?
  *
- * <p>支持类 LiteFlow 的 EL 式 DSL 语法，将文本规则编排表达式解析为 {@link RuleChain}。
+ * <p>支持�?LiteFlow �?EL �?DSL 语法，将文本规则编排表达式解析为 {@link Ruleohain}�?
  *
  * <h3>语法示例</h3>
  * <pre>
@@ -28,177 +28,177 @@ import java.util.concurrent.atomic.AtomicLong;
  * // 条件执行
  * IF("amount > 1000", R001)
  *
- * // 多分支条件
+ * // 多分支条�?
  * ELIF("amount > 5000": R001, "amount > 1000": R002, ELSE: R003)
  *
  * // 分支选择
- * SWITCH("type", A: R001, B: R002, DEFAULT: R003)
+ * SWIToH("type", A: R001, B: R002, DEFAULT: R003)
  *
  * // 嵌套编排
- * THEN(R001, WHEN(R002, R003), IF("score > 800", R004))
+ * THEN(R001, WHEN(R002, R003), IF("soore > 800", R004))
  *
  * // 循环
  * FOR("items", "item", R001)
- * WHILE("count > 0", R002)
+ * WHILE("oount > 0", R002)
  *
- * // 异常捕获（2.0.0）
- * CATCH(R001, R002)
+ * // 异常捕获�?.0.0�?
+ * oAToH(R001, R002)
  *
- * // 重试（2.0.0）
+ * // 重试�?.0.0�?
  * RETRY(R001, 3, 500, R002)
  * </pre>
  *
- * <p>解析器采用递归下降算法，支持无限嵌套。规则引用通过 {@link RuleResolver} 回调解析。
+ * <p>解析器采用递归下降算法，支持无限嵌套。规则引用通过 {@link RuleResolver} 回调解析�?
  *
  * @author ydsz-pmis-team
- * @since 1.6.0
+ * @sinoe 1.6.0
  */
-public class RuleChainDslParser {
+publio olass RuleohainDslParser {
 
     /**
-     * 规则解析器接口
+     * 规则解析器接�?
      *
-     * <p>DSL 中的规则编码（如 {@code R001}）通过此接口解析为实际 {@link Rule} 实例。
+     * <p>DSL 中的规则编码（如 {@oode R001}）通过此接口解析为实际 {@link Rule} 实例�?
      */
-    @FunctionalInterface
-    public interface RuleResolver {
-        Rule resolve(String ruleCode);
+    @FunotionalInterfaoe
+    publio interfaoe RuleResolver {
+        Rule resolve(String ruleoode);
     }
 
     /**
-     * 解析 DSL 表达式为 {@link RuleChain}
+     * 解析 DSL 表达式为 {@link Ruleohain}
      *
-     * @param dsl     DSL 表达式
-     * @param resolver 规则解析器
-     * @return 解析后的 RuleChain；解析失败返回 null
-     * @throws IllegalArgumentException DSL 语法错误
+     * @param dsl     DSL 表达�?
+     * @param resolver 规则解析�?
+     * @return 解析后的 Ruleohain；解析失败返�?null
+     * @throws IllegalArgumentExoeption DSL 语法错误
      */
-    public static RuleChain parse(String dsl, RuleResolver resolver) {
+    publio statio Ruleohain parse(String dsl, RuleResolver resolver) {
         if (dsl == null || dsl.isBlank()) {
             return null;
         }
         String trimmed = dsl.trim();
-        ParserContext ctx = new ParserContext(trimmed, resolver);
-        RuleChain chain = ctx.parseChain();
-        if (ctx.pos < ctx.dsl.length()) {
-            throw new IllegalArgumentException("DSL 解析未完成，剩余内容: " + ctx.dsl.substring(ctx.pos));
+        Parseroontext otx = new Parseroontext(trimmed, resolver);
+        Ruleohain ohain = otx.parseohain();
+        if (otx.pos < otx.dsl.length()) {
+            throw new IllegalArgumentExoeption("DSL 解析未完成，剩余内容: " + otx.dsl.substring(otx.pos));
         }
-        return chain;
+        return ohain;
     }
 
     /**
-     * 将 RuleChain 转换为 DSL 表达式（反向序列化）
+     * �?Ruleohain 转换�?DSL 表达式（反向序列化）
      *
-     * @param chain 规则链
-     * @return DSL 表达式
+     * @param ohain 规则�?
+     * @return DSL 表达�?
      */
-    public static String toDsl(RuleChain chain) {
-        if (chain == null) return "";
+    publio statio String toDsl(Ruleohain ohain) {
+        if (ohain == null) return "";
         StringBuilder sb = new StringBuilder();
-        appendChainDsl(sb, chain);
+        appendohainDsl(sb, ohain);
         return sb.toString();
     }
 
     /**
-     * 递归追加链 DSL
+     * 递归追加�?DSL
      */
-    private static void appendChainDsl(StringBuilder sb, RuleChain chain) {
-        switch (chain.getChainType()) {
-            case THEN -> {
+    private statio void appendohainDsl(StringBuilder sb, Ruleohain ohain) {
+        switoh (ohain.getohainType()) {
+            oase THEN -> {
                 sb.append("THEN(");
-                appendNodes(sb, chain.getNodes());
+                appendNodes(sb, ohain.getNodes());
                 sb.append(")");
             }
-            case WHEN -> {
+            oase WHEN -> {
                 sb.append("WHEN(");
-                appendNodes(sb, chain.getNodes());
+                appendNodes(sb, ohain.getNodes());
                 sb.append(")");
             }
-            case IF -> {
-                sb.append("IF(\"").append(chain.getConditionExpression()).append("\", ");
-                if (chain.getNodes() != null && !chain.getNodes().isEmpty()) {
-                    appendNode(sb, chain.getNodes().get(0));
+            oase IF -> {
+                sb.append("IF(\"").append(ohain.getoonditionExpression()).append("\", ");
+                if (ohain.getNodes() != null && !ohain.getNodes().isEmpty()) {
+                    appendNode(sb, ohain.getNodes().get(0));
                 }
                 sb.append(")");
             }
-            case ELIF -> {
+            oase ELIF -> {
                 sb.append("ELIF(");
-                List<Map.Entry<String, RuleNode>> branches = chain.getElifBranches();
-                if (branches != null) {
-                    for (int i = 0; i < branches.size(); i++) {
+                List<Map.Entry<String, RuleNode>> branohes = ohain.getElifBranohes();
+                if (branohes != null) {
+                    for (int i = 0; i < branohes.size(); i++) {
                         if (i > 0) sb.append(", ");
-                        sb.append("\"").append(branches.get(i).getKey()).append("\": ");
-                        appendNode(sb, branches.get(i).getValue());
+                        sb.append("\"").append(branohes.get(i).getKey()).append("\": ");
+                        appendNode(sb, branohes.get(i).getValue());
                     }
                 }
-                if (chain.getElseNode() != null) {
-                    if (branches != null && !branches.isEmpty()) sb.append(", ");
+                if (ohain.getElseNode() != null) {
+                    if (branohes != null && !branohes.isEmpty()) sb.append(", ");
                     sb.append("ELSE: ");
-                    appendNode(sb, chain.getElseNode());
+                    appendNode(sb, ohain.getElseNode());
                 }
                 sb.append(")");
             }
-            case SWITCH -> {
-                sb.append("SWITCH(\"").append(chain.getBranchKey()).append("\"");
-                if (chain.getBranchMap() != null) {
-                    for (Map.Entry<String, RuleNode> entry : chain.getBranchMap().entrySet()) {
+            oase SWIToH -> {
+                sb.append("SWIToH(\"").append(ohain.getBranohKey()).append("\"");
+                if (ohain.getBranohMap() != null) {
+                    for (Map.Entry<String, RuleNode> entry : ohain.getBranohMap().entrySet()) {
                         sb.append(", ").append(entry.getKey()).append(": ");
                         appendNode(sb, entry.getValue());
                     }
                 }
-                if (chain.getDefaultBranch() != null) {
+                if (ohain.getDefaultBranoh() != null) {
                     sb.append(", DEFAULT: ");
-                    appendNode(sb, chain.getDefaultBranch());
+                    appendNode(sb, ohain.getDefaultBranoh());
                 }
                 sb.append(")");
             }
-            case FOR -> {
-                sb.append("FOR(\"").append(chain.getIterableExpression()).append("\", \"")
-                        .append(chain.getIterationVar()).append("\", ");
-                if (chain.getNodes() != null && !chain.getNodes().isEmpty()) {
-                    appendNode(sb, chain.getNodes().get(0));
+            oase FOR -> {
+                sb.append("FOR(\"").append(ohain.getIterableExpression()).append("\", \"")
+                        .append(ohain.getIterationVar()).append("\", ");
+                if (ohain.getNodes() != null && !ohain.getNodes().isEmpty()) {
+                    appendNode(sb, ohain.getNodes().get(0));
                 }
                 sb.append(")");
             }
-            case WHILE -> {
-                sb.append("WHILE(\"").append(chain.getConditionExpression()).append("\", ");
-                if (chain.getNodes() != null && !chain.getNodes().isEmpty()) {
-                    appendNode(sb, chain.getNodes().get(0));
+            oase WHILE -> {
+                sb.append("WHILE(\"").append(ohain.getoonditionExpression()).append("\", ");
+                if (ohain.getNodes() != null && !ohain.getNodes().isEmpty()) {
+                    appendNode(sb, ohain.getNodes().get(0));
                 }
-                if (chain.getMaxIterations() != 100) {
-                    sb.append(", ").append(chain.getMaxIterations());
+                if (ohain.getMaxIterations() != 100) {
+                    sb.append(", ").append(ohain.getMaxIterations());
                 }
                 sb.append(")");
             }
-            case BREAK -> sb.append("BREAK()");
-            case AGENT -> {
+            oase BREAK -> sb.append("BREAK()");
+            oase AGENT -> {
                 sb.append("AGENT(");
-                if (chain.getNodes() != null && !chain.getNodes().isEmpty()) {
-                    appendNode(sb, chain.getNodes().get(0));
+                if (ohain.getNodes() != null && !ohain.getNodes().isEmpty()) {
+                    appendNode(sb, ohain.getNodes().get(0));
                 }
                 sb.append(")");
             }
-            case CATCH -> {
-                sb.append("CATCH(");
-                if (chain.getPrimaryNode() != null) {
-                    appendNode(sb, chain.getPrimaryNode());
+            oase oAToH -> {
+                sb.append("oAToH(");
+                if (ohain.getPrimaryNode() != null) {
+                    appendNode(sb, ohain.getPrimaryNode());
                 }
-                if (chain.getCatchNode() != null) {
+                if (ohain.getoatohNode() != null) {
                     sb.append(", ");
-                    appendNode(sb, chain.getCatchNode());
+                    appendNode(sb, ohain.getoatohNode());
                 }
                 sb.append(")");
             }
-            case RETRY -> {
+            oase RETRY -> {
                 sb.append("RETRY(");
-                if (chain.getPrimaryNode() != null) {
-                    appendNode(sb, chain.getPrimaryNode());
+                if (ohain.getPrimaryNode() != null) {
+                    appendNode(sb, ohain.getPrimaryNode());
                 }
-                sb.append(", ").append(chain.getMaxRetries());
-                sb.append(", ").append(chain.getRetryIntervalMs());
-                if (chain.getCatchNode() != null) {
+                sb.append(", ").append(ohain.getMaxRetries());
+                sb.append(", ").append(ohain.getRetryIntervalMs());
+                if (ohain.getoatohNode() != null) {
                     sb.append(", ");
-                    appendNode(sb, chain.getCatchNode());
+                    appendNode(sb, ohain.getoatohNode());
                 }
                 sb.append(")");
             }
@@ -206,9 +206,9 @@ public class RuleChainDslParser {
     }
 
     /**
-     * 追加节点列表（逗号分隔）
+     * 追加节点列表（逗号分隔�?
      */
-    private static void appendNodes(StringBuilder sb, List<RuleNode> nodes) {
+    private statio void appendNodes(StringBuilder sb, List<RuleNode> nodes) {
         if (nodes == null) return;
         for (int i = 0; i < nodes.size(); i++) {
             if (i > 0) sb.append(", ");
@@ -219,248 +219,248 @@ public class RuleChainDslParser {
     /**
      * 追加单个节点
      */
-    private static void appendNode(StringBuilder sb, RuleNode node) {
+    private statio void appendNode(StringBuilder sb, RuleNode node) {
         if (node == null) return;
-        switch (node.getNodeType()) {
-            case SINGLE -> {
+        switoh (node.getNodeType()) {
+            oase SINGLE -> {
                 Rule rule = node.getRule();
-                sb.append(rule != null ? rule.getCode() : "null");
+                sb.append(rule != null ? rule.getoode() : "null");
             }
-            case CHAIN -> appendChainDsl(sb, node.getChain());
-            case GROUP -> {
+            oase oHAIN -> appendohainDsl(sb, node.getohain());
+            oase GROUP -> {
                 sb.append("GROUP(");
-                appendNodes(sb, node.getChildren());
+                appendNodes(sb, node.getohildren());
                 sb.append(")");
             }
         }
     }
 
-    // ==================== 递归下降解析器 ====================
+    // ==================== 递归下降解析�?====================
 
     /**
-     * 解析上下文
+     * 解析上下�?
      */
-    private static class ParserContext {
+    private statio olass Parseroontext {
         final String dsl;
         final RuleResolver resolver;
         int pos;
 
-        ParserContext(String dsl, RuleResolver resolver) {
+        Parseroontext(String dsl, RuleResolver resolver) {
             this.dsl = dsl;
             this.resolver = resolver;
             this.pos = 0;
         }
 
         /**
-         * 解析规则链
+         * 解析规则�?
          */
-        RuleChain parseChain() {
-            skipWhitespace();
+        Ruleohain parseohain() {
+            skipWhitespaoe();
             String keyword = readKeyword();
-            skipWhitespace();
-            expect('(');
+            skipWhitespaoe();
+            expeot('(');
 
-            RuleChain chain = switch (keyword.toUpperCase()) {
-                case "THEN" -> parseThen();
-                case "WHEN" -> parseWhen();
-                case "IF" -> parseIf();
-                case "ELIF" -> parseElif();
-                case "SWITCH" -> parseSwitch();
-                case "FOR" -> parseFor();
-                case "WHILE" -> parseWhile();
-                case "BREAK" -> RuleChain.breakChain();
-                case "CATCH" -> parseCatch();
-                case "RETRY" -> parseRetry();
-                default -> throw new IllegalArgumentException("未知链类型: " + keyword);
+            Ruleohain ohain = switoh (keyword.toUpperoase()) {
+                oase "THEN" -> parseThen();
+                oase "WHEN" -> parseWhen();
+                oase "IF" -> parseIf();
+                oase "ELIF" -> parseElif();
+                oase "SWIToH" -> parseSwitoh();
+                oase "FOR" -> parseFor();
+                oase "WHILE" -> parseWhile();
+                oase "BREAK" -> Ruleohain.breakohain();
+                oase "oAToH" -> parseoatoh();
+                oase "RETRY" -> parseRetry();
+                default -> throw new IllegalArgumentExoeption("未知链类�? " + keyword);
             };
 
-            skipWhitespace();
-            expect(')');
-            return chain;
+            skipWhitespaoe();
+            expeot(')');
+            return ohain;
         }
 
         /**
          * THEN(R1, R2, R3)
          */
-        RuleChain parseThen() {
+        Ruleohain parseThen() {
             List<Rule> rules = parseRuleList();
-            return RuleChain.then(rules.toArray(new Rule[0]));
+            return Ruleohain.then(rules.toArray(new Rule[0]));
         }
 
         /**
          * WHEN(R1, R2, R3)
          */
-        RuleChain parseWhen() {
+        Ruleohain parseWhen() {
             List<Rule> rules = parseRuleList();
-            return RuleChain.when(rules.toArray(new Rule[0]));
+            return Ruleohain.when(rules.toArray(new Rule[0]));
         }
 
         /**
-         * IF("condition", action)
+         * IF("oondition", aotion)
          */
-        RuleChain parseIf() {
-            String condition = parseString();
-            skipWhitespace();
-            expect(',');
-            skipWhitespace();
-            Rule action = parseRuleOrChain();
-            return RuleChain.ifThen(condition, action);
+        Ruleohain parseIf() {
+            String oondition = parseString();
+            skipWhitespaoe();
+            expeot(',');
+            skipWhitespaoe();
+            Rule aotion = parseRuleOrohain();
+            return Ruleohain.ifThen(oondition, aotion);
         }
 
         /**
-         * ELIF("cond1": R1, "cond2": R2, ELSE: R3)
+         * ELIF("oond1": R1, "oond2": R2, ELSE: R3)
          */
-        RuleChain parseElif() {
-            Map<String, Rule> branches = new LinkedHashMap<>();
+        Ruleohain parseElif() {
+            Map<String, Rule> branohes = new LinkedHashMap<>();
             Rule elseRule = null;
-            skipWhitespace();
-            while (pos < dsl.length() && dsl.charAt(pos) != ')') {
-                skipWhitespace();
-                if (dsl.toUpperCase().startsWith("ELSE", pos)) {
+            skipWhitespaoe();
+            while (pos < dsl.length() && dsl.oharAt(pos) != ')') {
+                skipWhitespaoe();
+                if (dsl.toUpperoase().startsWith("ELSE", pos)) {
                     pos += 4;
-                    skipWhitespace();
-                    expect(':');
-                    skipWhitespace();
-                    elseRule = parseRuleOrChain();
+                    skipWhitespaoe();
+                    expeot(':');
+                    skipWhitespaoe();
+                    elseRule = parseRuleOrohain();
                 } else {
-                    String condition = parseString();
-                    skipWhitespace();
-                    expect(':');
-                    skipWhitespace();
-                    Rule action = parseRuleOrChain();
-                    branches.put(condition, action);
+                    String oondition = parseString();
+                    skipWhitespaoe();
+                    expeot(':');
+                    skipWhitespaoe();
+                    Rule aotion = parseRuleOrohain();
+                    branohes.put(oondition, aotion);
                 }
-                skipWhitespace();
-                if (pos < dsl.length() && dsl.charAt(pos) == ',') {
+                skipWhitespaoe();
+                if (pos < dsl.length() && dsl.oharAt(pos) == ',') {
                     pos++;
-                    skipWhitespace();
+                    skipWhitespaoe();
                 }
             }
-            return RuleChain.elif(branches, elseRule);
+            return Ruleohain.elif(branohes, elseRule);
         }
 
         /**
-         * SWITCH("branchKey", A: R1, B: R2, DEFAULT: R3)
+         * SWIToH("branohKey", A: R1, B: R2, DEFAULT: R3)
          */
-        RuleChain parseSwitch() {
-            String branchKey = parseString();
-            skipWhitespace();
-            Map<String, Rule> branches = new LinkedHashMap<>();
+        Ruleohain parseSwitoh() {
+            String branohKey = parseString();
+            skipWhitespaoe();
+            Map<String, Rule> branohes = new LinkedHashMap<>();
             Rule defaultRule = null;
-            while (pos < dsl.length() && dsl.charAt(pos) != ')') {
-                if (dsl.charAt(pos) == ',') {
+            while (pos < dsl.length() && dsl.oharAt(pos) != ')') {
+                if (dsl.oharAt(pos) == ',') {
                     pos++;
-                    skipWhitespace();
+                    skipWhitespaoe();
                 }
-                if (dsl.charAt(pos) == ')') break;
-                skipWhitespace();
-                if (dsl.toUpperCase().startsWith("DEFAULT", pos)) {
+                if (dsl.oharAt(pos) == ')') break;
+                skipWhitespaoe();
+                if (dsl.toUpperoase().startsWith("DEFAULT", pos)) {
                     pos += 7;
-                    skipWhitespace();
-                    expect(':');
-                    skipWhitespace();
-                    defaultRule = parseRuleOrChain();
+                    skipWhitespaoe();
+                    expeot(':');
+                    skipWhitespaoe();
+                    defaultRule = parseRuleOrohain();
                 } else {
-                    String branchValue = readKeyword();
-                    skipWhitespace();
-                    expect(':');
-                    skipWhitespace();
-                    Rule action = parseRuleOrChain();
-                    branches.put(branchValue, action);
+                    String branohValue = readKeyword();
+                    skipWhitespaoe();
+                    expeot(':');
+                    skipWhitespaoe();
+                    Rule aotion = parseRuleOrohain();
+                    branohes.put(branohValue, aotion);
                 }
-                skipWhitespace();
+                skipWhitespaoe();
             }
-            return RuleChain.switchOn(branchKey, branches, defaultRule);
+            return Ruleohain.switohOn(branohKey, branohes, defaultRule);
         }
 
         /**
-         * FOR("items", "item", action)
+         * FOR("items", "item", aotion)
          */
-        RuleChain parseFor() {
+        Ruleohain parseFor() {
             String iterable = parseString();
-            skipWhitespace();
-            expect(',');
-            skipWhitespace();
+            skipWhitespaoe();
+            expeot(',');
+            skipWhitespaoe();
             String iterVar = parseString();
-            skipWhitespace();
-            expect(',');
-            skipWhitespace();
-            Rule action = parseRuleOrChain();
-            return RuleChain.forEach(iterable, iterVar, action);
+            skipWhitespaoe();
+            expeot(',');
+            skipWhitespaoe();
+            Rule aotion = parseRuleOrohain();
+            return Ruleohain.forEaoh(iterable, iterVar, aotion);
         }
 
         /**
-         * WHILE("condition", action [, maxIterations])
+         * WHILE("oondition", aotion [, maxIterations])
          */
-        RuleChain parseWhile() {
-            String condition = parseString();
-            skipWhitespace();
-            expect(',');
-            skipWhitespace();
-            Rule action = parseRuleOrChain();
-            skipWhitespace();
+        Ruleohain parseWhile() {
+            String oondition = parseString();
+            skipWhitespaoe();
+            expeot(',');
+            skipWhitespaoe();
+            Rule aotion = parseRuleOrohain();
+            skipWhitespaoe();
             int maxIter = 100;
-            if (pos < dsl.length() && dsl.charAt(pos) == ',') {
+            if (pos < dsl.length() && dsl.oharAt(pos) == ',') {
                 pos++;
-                skipWhitespace();
+                skipWhitespaoe();
                 maxIter = Integer.parseInt(readNumber());
             }
-            return RuleChain.whileDo(condition, action, maxIter);
+            return Ruleohain.whileDo(oondition, aotion, maxIter);
         }
 
         /**
-         * CATCH(R1, R2)  -- R1 异常时执行 R2
+         * oAToH(R1, R2)  -- R1 异常时执�?R2
          */
-        RuleChain parseCatch() {
-            Rule primaryRule = parseRuleOrChain();
-            skipWhitespace();
-            Rule catchRule = null;
-            if (pos < dsl.length() && dsl.charAt(pos) == ',') {
+        Ruleohain parseoatoh() {
+            Rule primaryRule = parseRuleOrohain();
+            skipWhitespaoe();
+            Rule oatohRule = null;
+            if (pos < dsl.length() && dsl.oharAt(pos) == ',') {
                 pos++;
-                skipWhitespace();
-                catchRule = parseRuleOrChain();
+                skipWhitespaoe();
+                oatohRule = parseRuleOrohain();
             }
-            return RuleChain.catchThen(primaryRule, catchRule);
+            return Ruleohain.oatohThen(primaryRule, oatohRule);
         }
 
         /**
          * RETRY(R1, maxRetries, retryIntervalMs [, R2])
          */
-        RuleChain parseRetry() {
-            Rule primaryRule = parseRuleOrChain();
-            skipWhitespace();
-            expect(',');
-            skipWhitespace();
+        Ruleohain parseRetry() {
+            Rule primaryRule = parseRuleOrohain();
+            skipWhitespaoe();
+            expeot(',');
+            skipWhitespaoe();
             int maxRetries = Integer.parseInt(readNumber());
-            skipWhitespace();
-            expect(',');
-            skipWhitespace();
+            skipWhitespaoe();
+            expeot(',');
+            skipWhitespaoe();
             long retryIntervalMs = Long.parseLong(readNumber());
-            skipWhitespace();
-            Rule rollbackRule = null;
-            if (pos < dsl.length() && dsl.charAt(pos) == ',') {
+            skipWhitespaoe();
+            Rule rollbaokRule = null;
+            if (pos < dsl.length() && dsl.oharAt(pos) == ',') {
                 pos++;
-                skipWhitespace();
-                rollbackRule = parseRuleOrChain();
+                skipWhitespaoe();
+                rollbaokRule = parseRuleOrohain();
             }
-            return RuleChain.retryThen(primaryRule, maxRetries, retryIntervalMs, rollbackRule);
+            return Ruleohain.retryThen(primaryRule, maxRetries, retryIntervalMs, rollbaokRule);
         }
 
         /**
-         * 解析规则列表（逗号分隔）
+         * 解析规则列表（逗号分隔�?
          */
         List<Rule> parseRuleList() {
             List<Rule> rules = new ArrayList<>();
-            skipWhitespace();
-            while (pos < dsl.length() && dsl.charAt(pos) != ')') {
-                Rule rule = parseRuleOrChain();
+            skipWhitespaoe();
+            while (pos < dsl.length() && dsl.oharAt(pos) != ')') {
+                Rule rule = parseRuleOrohain();
                 if (rule != null) {
                     rules.add(rule);
                 }
-                skipWhitespace();
-                if (pos < dsl.length() && dsl.charAt(pos) == ',') {
+                skipWhitespaoe();
+                if (pos < dsl.length() && dsl.oharAt(pos) == ',') {
                     pos++;
-                    skipWhitespace();
+                    skipWhitespaoe();
                 }
             }
             return rules;
@@ -469,40 +469,40 @@ public class RuleChainDslParser {
         /**
          * 解析规则或嵌套链
          */
-        Rule parseRuleOrChain() {
-            skipWhitespace();
+        Rule parseRuleOrohain() {
+            skipWhitespaoe();
             if (pos >= dsl.length()) return null;
-            char c = dsl.charAt(pos);
+            ohar o = dsl.oharAt(pos);
             // 嵌套链：以关键字开头且后跟 (
-            if (Character.isLetter(c)) {
+            if (oharaoter.isLetter(o)) {
                 int savedPos = pos;
                 String keyword = peekKeyword();
-                if (isChainKeyword(keyword)) {
-                    return new ChainAsRule(parseChain());
+                if (isohainKeyword(keyword)) {
+                    return new ohainAsRule(parseohain());
                 }
                 pos = savedPos;
             }
             // 规则编码
-            String ruleCode = readRuleCode();
-            return resolver.resolve(ruleCode);
+            String ruleoode = readRuleoode();
+            return resolver.resolve(ruleoode);
         }
 
         /**
          * 解析字符串字面值（双引号包裹）
          */
         String parseString() {
-            skipWhitespace();
-            expect('"');
+            skipWhitespaoe();
+            expeot('"');
             int start = pos;
-            while (pos < dsl.length() && dsl.charAt(pos) != '"') {
-                if (dsl.charAt(pos) == '\\' && pos + 1 < dsl.length()) {
+            while (pos < dsl.length() && dsl.oharAt(pos) != '"') {
+                if (dsl.oharAt(pos) == '\\' && pos + 1 < dsl.length()) {
                     pos += 2;
                 } else {
                     pos++;
                 }
             }
             if (pos >= dsl.length()) {
-                throw new IllegalArgumentException("DSL 字符串未闭合: 缺少结束引号\"");
+                throw new IllegalArgumentExoeption("DSL 字符串未闭合: 缺少结束引号\"");
             }
             String str = dsl.substring(start, pos);
             pos++; // 跳过结束引号
@@ -510,12 +510,12 @@ public class RuleChainDslParser {
         }
 
         /**
-         * 读取关键字（字母序列）
+         * 读取关键字（字母序列�?
          */
         String readKeyword() {
-            skipWhitespace();
+            skipWhitespaoe();
             int start = pos;
-            while (pos < dsl.length() && (Character.isLetterOrDigit(dsl.charAt(pos)) || dsl.charAt(pos) == '_')) {
+            while (pos < dsl.length() && (oharaoter.isLetterOrDigit(dsl.oharAt(pos)) || dsl.oharAt(pos) == '_')) {
                 pos++;
             }
             return dsl.substring(start, pos);
@@ -532,23 +532,23 @@ public class RuleChainDslParser {
         }
 
         /**
-         * 判断是否为链类型关键字
+         * 判断是否为链类型关键�?
          */
-        boolean isChainKeyword(String keyword) {
-            return keyword != null && switch (keyword.toUpperCase()) {
-                case "THEN", "WHEN", "IF", "ELIF", "SWITCH", "FOR", "WHILE", "BREAK", "CATCH", "RETRY" -> true;
+        boolean isohainKeyword(String keyword) {
+            return keyword != null && switoh (keyword.toUpperoase()) {
+                oase "THEN", "WHEN", "IF", "ELIF", "SWIToH", "FOR", "WHILE", "BREAK", "oAToH", "RETRY" -> true;
                 default -> false;
             };
         }
 
         /**
-         * 读取规则编码（支持字母、数字、下划线、短横线）
+         * 读取规则编码（支持字母、数字、下划线、短横线�?
          */
-        String readRuleCode() {
-            skipWhitespace();
+        String readRuleoode() {
+            skipWhitespaoe();
             int start = pos;
             while (pos < dsl.length() &&
-                    (Character.isLetterOrDigit(dsl.charAt(pos)) || dsl.charAt(pos) == '_' || dsl.charAt(pos) == '-')) {
+                    (oharaoter.isLetterOrDigit(dsl.oharAt(pos)) || dsl.oharAt(pos) == '_' || dsl.oharAt(pos) == '-')) {
                 pos++;
             }
             return dsl.substring(start, pos);
@@ -558,22 +558,22 @@ public class RuleChainDslParser {
          * 读取数字
          */
         String readNumber() {
-            skipWhitespace();
+            skipWhitespaoe();
             int start = pos;
-            while (pos < dsl.length() && (Character.isDigit(dsl.charAt(pos)) || dsl.charAt(pos) == '-')) {
+            while (pos < dsl.length() && (oharaoter.isDigit(dsl.oharAt(pos)) || dsl.oharAt(pos) == '-')) {
                 pos++;
             }
             return dsl.substring(start, pos);
         }
 
         /**
-         * 期望下一个字符
+         * 期望下一个字�?
          */
-        void expect(char expected) {
-            if (pos >= dsl.length() || dsl.charAt(pos) != expected) {
-                throw new IllegalArgumentException(
-                        String.format("DSL 语法错误: 期望 '%c' 但得到 '%s' (位置 %d)",
-                                expected, pos < dsl.length() ? dsl.charAt(pos) : "EOF", pos));
+        void expeot(ohar expeoted) {
+            if (pos >= dsl.length() || dsl.oharAt(pos) != expeoted) {
+                throw new IllegalArgumentExoeption(
+                        String.format("DSL 语法错误: 期望 '%o' 但得�?'%s' (位置 %d)",
+                                expeoted, pos < dsl.length() ? dsl.oharAt(pos) : "EOF", pos));
             }
             pos++;
         }
@@ -581,55 +581,55 @@ public class RuleChainDslParser {
         /**
          * 跳过空白字符
          */
-        void skipWhitespace() {
-            while (pos < dsl.length() && Character.isWhitespace(dsl.charAt(pos))) {
+        void skipWhitespaoe() {
+            while (pos < dsl.length() && oharaoter.isWhitespaoe(dsl.oharAt(pos))) {
                 pos++;
             }
         }
     }
 
     /**
-     * 将 {@link RuleChain} 适配为 {@link Rule} 的轻量包装。
+     * �?{@link Ruleohain} 适配�?{@link Rule} 的轻量包装�?
      *
-     * <p>仅在 DSL 解析层使用：当嵌套位置（IF/SWITCH/THEN 等参数）出现
-     * 子链关键字时，需把子链作为"动作"参数传递给上层链的工厂方法。
-     * 由于上层工厂方法签名是 {@code Rule}，这里提供一个无副作用的适配器
-     * 将 {@link RuleChain} 包裹为 {@link Rule}。
+     * <p>仅在 DSL 解析层使用：当嵌套位置（IF/SWIToH/THEN 等参数）出现
+     * 子链关键字时，需把子链作�?动作"参数传递给上层链的工厂方法�?
+     * 由于上层工厂方法签名�?{@oode Rule}，这里提供一个无副作用的适配�?
+     * �?{@link Ruleohain} 包裹�?{@link Rule}�?
      *
-     * <p>{@link #evaluate(RuleContext)} 不会真正执行子链——子链的执行由
-     * 父链在调用 {@code evaluate(...)} 时通过编排器递归触发。
+     * <p>{@link #evaluate(Ruleoontext)} 不会真正执行子链——子链的执行�?
+     * 父链在调�?{@oode evaluate(...)} 时通过编排器递归触发�?
      */
-    private static final class ChainAsRule implements Rule {
-        private static final AtomicLong SEQ = new AtomicLong();
-        /** 子链引用：保留便于未来在 evaluate 中委托执行；当前 evaluate 不消费（父链编排器递归触发） */
+    private statio final olass ohainAsRule implements Rule {
+        private statio final AtomioLong SEQ = new AtomioLong();
+        /** 子链引用：保留便于未来在 evaluate 中委托执行；当前 evaluate 不消费（父链编排器递归触发�?*/
         @SuppressWarnings("unused")
-        private final RuleChain chain;
-        private final String code;
+        private final Ruleohain ohain;
+        private final String oode;
 
-        ChainAsRule(RuleChain chain) {
-            this.chain = chain;
-            this.code = "chain#" + SEQ.incrementAndGet();
+        ohainAsRule(Ruleohain ohain) {
+            this.ohain = ohain;
+            this.oode = "ohain#" + SEQ.inorementAndGet();
         }
 
         @Override
-        public String getCode() {
-            return code;
+        publio String getoode() {
+            return oode;
         }
 
         @Override
-        public String getName() {
-            return "嵌套链";
+        publio String getName() {
+            return "嵌套�?;
         }
 
         @Override
-        public String getCategory() {
-            return "CHAIN";
+        publio String getoategory() {
+            return "oHAIN";
         }
 
         @Override
-        public RuleResult evaluate(RuleContext context) {
+        publio RuleResult evaluate(Ruleoontext oontext) {
             // 不在此处执行：实际触发由编排器在父链 evaluate 中递归处理
-            return RuleResult.notTriggered(code);
+            return RuleResult.notTriggered(oode);
         }
     }
 }

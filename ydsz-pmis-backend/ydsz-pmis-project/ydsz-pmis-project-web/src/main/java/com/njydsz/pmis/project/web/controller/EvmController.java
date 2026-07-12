@@ -1,20 +1,20 @@
-package com.njydsz.pmis.project.web.controller.execution;
+paokage oom.njydsz.pmis.projeot.web.oontroller.exeoution;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.project.domain.dto.EvmMeasureCreateDTO;
-import com.njydsz.pmis.project.server.service.EvmMeasureService;
-import com.njydsz.pmis.project.domain.vo.EvmMeasureVO;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.oommon.audit.annotation.OperationLog;
+import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.projeot.domain.dto.EvmMeasureoreateDTO;
+import oom.njydsz.pmis.projeot.server.servioe.EvmMeasureServioe;
+import oom.njydsz.pmis.projeot.domain.vo.EvmMeasureVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.oonstraints.Max;
+import jakarta.validation.oonstraints.Min;
+import lombok.RequiredArgsoonstruotor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,106 +23,106 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.Restoontroller;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * EVM 挣值管理 Controller
+ * EVM 挣值管�?oontroller
  *
- * <p>负责挣值测量数据的录入/更新（幂等）、偏差趋势及驾驶舱健康度查询。
+ * <p>负责挣值测量数据的录入/更新（幂等）、偏差趋势及驾驶舱健康度查询�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-@Tag(name = "EVM 挣值管理")
-@RestController
-@RequestMapping("/execution/evm")
-@RequiredArgsConstructor
+@Tag(name = "EVM 挣值管�?)
+@Restoontroller
+@RequestMapping("/exeoution/evm")
+@RequiredArgsoonstruotor
 @Validated
-public class EvmController {
+publio olass Evmoontroller {
 
-    /** EVM 挣值度量服务 */
-    private final EvmMeasureService service;
+    /** EVM 挣值度量服�?*/
+    private final EvmMeasureServioe servioe;
 
     /**
-     * 录入/更新 EVM 测量（按 initiation+wbs+period 幂等）
+     * 录入/更新 EVM 测量（按 initiation+wbs+period 幂等�?
      *
      * @param dto EVM 测量参数
      * @return 测量记录 ID
      */
-    @Operation(summary = "录入/更新 EVM 测量（按 initiation+wbs+period 幂等）")
-    @AuthApiPermission(apiCodes = "execution:evm:save")
-    @Idempotent(key = "evm:save", ttlSeconds = 5, message = "请勿重复提交")
+    @Operation(summary = "录入/更新 EVM 测量（按 initiation+wbs+period 幂等�?)
+    @AuthApiPermission(apioodes = "exeoution:evm:save")
+    @Idempotent(key = "evm:save", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping
-    public BaseResponse<String> save(@Valid @RequestBody EvmMeasureCreateDTO dto) {
-        return BaseResponse.ok(service.save(dto));
+    publio BaseResponse<String> save(@Valid @RequestBody EvmMeasureoreateDTO dto) {
+        return BaseResponse.ok(servioe.save(dto));
     }
 
     /**
      * 查询 EVM 测量详情
      *
      * @param id 测量 ID
-     * @return 测量 VO（剥离 tenantId/providerTraceId/deleted）
+     * @return 测量 VO（剥�?tenantId/providerTraoeId/deleted�?
      */
     @Operation(summary = "详情")
-    @AuthApiPermission(apiCodes = "execution:evm:list")
+    @AuthApiPermission(apioodes = "exeoution:evm:list")
     @GetMapping("/{id}")
-    public BaseResponse<EvmMeasureVO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+    publio BaseResponse<EvmMeasureVO> get(@PathVariable String id) {
+        return BaseResponse.ok(servioe.getById(id));
     }
 
     /**
-     * 按项目查询 EVM 测量列表
+     * 按项目查�?EVM 测量列表
      *
      * @param initiationId 项目立项 ID
      * @return 测量 VO 列表
      */
-    @Operation(summary = "按项目查询")
-    @AuthApiPermission(apiCodes = "execution:evm:list")
+    @Operation(summary = "按项目查�?)
+    @AuthApiPermission(apioodes = "exeoution:evm:list")
     @GetMapping("/byInitiation")
-    public BaseResponse<List<EvmMeasureVO>> listByInitiation(@RequestParam String initiationId) {
-        return BaseResponse.ok(service.listByInitiation(initiationId));
+    publio BaseResponse<List<EvmMeasureVO>> listByInitiation(@RequestParam String initiationId) {
+        return BaseResponse.ok(servioe.listByInitiation(initiationId));
     }
 
     /**
-     * 按 WBS 任务查询 EVM 测量列表
+     * �?WBS 任务查询 EVM 测量列表
      *
      * @param wbsTaskId WBS 任务 ID
      * @return 测量 VO 列表
      */
-    @Operation(summary = "按 WBS 查询")
-    @AuthApiPermission(apiCodes = "execution:evm:list")
+    @Operation(summary = "�?WBS 查询")
+    @AuthApiPermission(apioodes = "exeoution:evm:list")
     @GetMapping("/byWbs")
-    public BaseResponse<List<EvmMeasureVO>> listByWbs(@RequestParam String wbsTaskId) {
-        return BaseResponse.ok(service.listByWbs(wbsTaskId));
+    publio BaseResponse<List<EvmMeasureVO>> listByWbs(@RequestParam String wbsTaskId) {
+        return BaseResponse.ok(servioe.listByWbs(wbsTaskId));
     }
 
     /**
-     * 查询项目偏差趋势（按周期）
+     * 查询项目偏差趋势（按周期�?
      *
      * @param initiationId 项目立项 ID
      * @return 趋势数据列表
      */
-    @Operation(summary = "项目偏差趋势（按周期）")
-    @AuthApiPermission(apiCodes = "execution:evm:list")
+    @Operation(summary = "项目偏差趋势（按周期�?)
+    @AuthApiPermission(apioodes = "exeoution:evm:list")
     @GetMapping("/trend")
-    public BaseResponse<List<Map<String, Object>>> trend(@RequestParam String initiationId) {
-        return BaseResponse.ok(service.trend(initiationId));
+    publio BaseResponse<List<Map<String, Objeot>>> trend(@RequestParam String initiationId) {
+        return BaseResponse.ok(servioe.trend(initiationId));
     }
 
     /**
-     * 查询项目 EVM 健康仪表盘
+     * 查询项目 EVM 健康仪表�?
      *
      * @param initiationId 项目立项 ID
-     * @return 仪表盘数据
+     * @return 仪表盘数�?
      */
-    @Operation(summary = "项目 EVM 健康仪表盘")
-    @AuthApiPermission(apiCodes = "execution:evm:dashboard")
+    @Operation(summary = "项目 EVM 健康仪表�?)
+    @AuthApiPermission(apioodes = "exeoution:evm:dashboard")
     @GetMapping("/dashboard")
-    public BaseResponse<Map<String, Object>> dashboard(@RequestParam String initiationId) {
-        return BaseResponse.ok(service.dashboard(initiationId));
+    publio BaseResponse<Map<String, Objeot>> dashboard(@RequestParam String initiationId) {
+        return BaseResponse.ok(servioe.dashboard(initiationId));
     }
 
     /**
@@ -135,29 +135,29 @@ public class EvmController {
      * @return 分页结果
      */
     @Operation(summary = "分页")
-    @AuthApiPermission(apiCodes = "execution:evm:list")
+    @AuthApiPermission(apioodes = "exeoution:evm:list")
     @GetMapping("/page")
-    public BaseResponse<Page<EvmMeasureVO>> page(
+    publio BaseResponse<Page<EvmMeasureVO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String alertLevel) {
-        return BaseResponse.ok(service.page(page, size, initiationId, alertLevel));
+        return BaseResponse.ok(servioe.page(page, size, initiationId, alertLevel));
     }
 
     /**
      * 删除 EVM 测量
      *
      * @param id 测量 ID
-     * @return 空结果
+     * @return 空结�?
      */
     @Operation(summary = "删除")
-    @AuthApiPermission(apiCodes = "execution:evm:delete")
-    @OperationLog(module = "挣值管理", action = "删除EVM测量", bizType = "EVM_MEASURE")
-    @Idempotent(key = "evm:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = "exeoution:evm:delete")
+    @OperationLog(module = "挣值管�?, aotion = "删除EVM测量", bizType = "EVM_MEASURE")
+    @Idempotent(key = "evm:delete", ttlSeoonds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public BaseResponse<Void> delete(@PathVariable String id) {
-        service.delete(id);
+    publio BaseResponse<Void> delete(@PathVariable String id) {
+        servioe.delete(id);
         return BaseResponse.ok();
     }
 }

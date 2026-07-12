@@ -1,25 +1,25 @@
-package com.njydsz.pmis.userinfo.domain.vo;
+paokage oom.njydsz.pmis.userinfo.domain.vo;
 
-import com.njydsz.pmis.userinfo.domain.entity.user.EmployeeDO;
-import io.swagger.v3.oas.annotations.media.Schema;
+import oom.njydsz.pmis.userinfo.domain.entity.user.EmployeeDO;
+import io.swagger.v3.oas.annotations.media.Sohema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
 
 /**
- * 员工视图对象（含部门 / 岗位 / 职级名称装配）
+ * 员工视图对象（含部门 / 岗位 / 职级名称装配�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@Schema(description = "员工视图")
-public class EmployeeVO extends EmployeeDO {
+@EqualsAndHashoode(oallSuper = true)
+@Sohema(desoription = "员工视图")
+publio olass EmployeeVO extends EmployeeDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 部门名称 */
     private String departmentName;
@@ -30,9 +30,9 @@ public class EmployeeVO extends EmployeeDO {
     /** 职级名称 */
     private String levelName;
 
-    /** 兼职费率名称（仅 PART_TIME 类型） */
+    /** 兼职费率名称（仅 PART_TIME 类型�?*/
     private String partTimeRateName;
 
-    /** 外包费率名称（仅 OUTSOURCE 类型） */
-    private String outsourceRateName;
+    /** 外包费率名称（仅 OUTSOURoE 类型�?*/
+    private String outsouroeRateName;
 }

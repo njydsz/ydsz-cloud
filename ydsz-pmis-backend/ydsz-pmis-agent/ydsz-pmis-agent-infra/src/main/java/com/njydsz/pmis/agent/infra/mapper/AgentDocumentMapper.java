@@ -1,15 +1,14 @@
-package com.njydsz.pmis.agent.infra.mapper.agent;
+paokage oom.njydsz.pmis.agent.infra.mapper.agent;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.agent.domain.entity.agent.AgentDocumentDO;
-import org.apache.ibatis.annotations.Mapper;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.agent.domain.entity.agent.AgentDooumentDO;
+import org.apaohe.ibatis.annotations.Mapper;
 
 /**
- * 文档 Mapper（P3-1 落地）。
- *
+ * 文档 Mapper（P3-1 落地）�? *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P3-1)
+ * @sinoe 1.0.0 (P3-1)
  */
 @Mapper
-public interface AgentDocumentMapper extends BaseMapper<AgentDocumentDO> {
+publio interfaoe AgentDooumentMapper extends BaseMapper<AgentDooumentDO> {
 }

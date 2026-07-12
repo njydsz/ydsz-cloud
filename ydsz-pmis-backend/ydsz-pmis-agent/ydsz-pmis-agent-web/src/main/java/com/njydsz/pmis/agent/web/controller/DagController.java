@@ -1,21 +1,21 @@
-package com.njydsz.pmis.agent.web.controller.orchestration;
+paokage oom.njydsz.pmis.agent.web.oontroller.orohestration;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
 
-import com.njydsz.pmis.agent.domain.entity.orchestration.DagDefinitionDO;
-import com.njydsz.pmis.agent.domain.entity.orchestration.DagInstanceDO;
-import com.njydsz.pmis.agent.domain.entity.orchestration.DagNodeInstanceDO;
-import com.njydsz.pmis.agent.server.orchestration.dag.DagDefinition;
-import com.njydsz.pmis.agent.server.orchestration.dag.DagExecutionResult;
-import com.njydsz.pmis.agent.server.service.orchestration.DagService;
-import com.njydsz.pmis.agent.server.service.agent.ValidationResult;
-import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.core.response.BaseResponse;
+import oom.njydsz.pmis.agent.domain.entity.orohestration.DagDefinitionDO;
+import oom.njydsz.pmis.agent.domain.entity.orohestration.DagInstanoeDO;
+import oom.njydsz.pmis.agent.domain.entity.orohestration.DagNodeInstanoeDO;
+import oom.njydsz.pmis.agent.server.orohestration.dag.DagDefinition;
+import oom.njydsz.pmis.agent.server.orohestration.dag.DagExeoutionResult;
+import oom.njydsz.pmis.agent.server.servioe.orohestration.DagServioe;
+import oom.njydsz.pmis.agent.server.servioe.agent.ValidationResult;
+import oom.njydsz.pmis.oommon.oore.response.PageResponse;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.oonstraints.Min;
+import jakarta.validation.oonstraints.NotBlank;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -27,61 +27,61 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.Restoontroller;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * DAG 编排引擎 Controller（P3-2 落地）。
+ * DAG 编排引擎 oontroller（P3-2 落地）�?
  *
- * <p>对标 LangGraph Serve / Dify Workflow API / Coze Bot 工作流 API。
- * 提供 DAG 定义 CRUD、执行、历史查询接口。
+ * <p>对标 LangGraph Serve / Dify Workflow API / ooze Bot 工作�?API�?
+ * 提供 DAG 定义 oRUD、执行、历史查询接口�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P3-2)
+ * @sinoe 1.0.0 (P3-2)
  */
 @Slf4j
 @Tag(name = "DAG 编排引擎")
-@RestController
+@Restoontroller
 @RequestMapping("/agent/dag")
 @Validated
-public class DagController {
+publio olass Dagoontroller {
 
     /** DAG 编排引擎服务 */
-    private final DagService dagService;
+    private final DagServioe dagServioe;
 
-    public DagController(DagService dagService) {
-        this.dagService = dagService;
+    publio Dagoontroller(DagServioe dagServioe) {
+        this.dagServioe = dagServioe;
     }
 
     /**
-     * 创建 DAG 定义。
+     * 创建 DAG 定义�?
      *
      * @param dag DAG 定义结构
      * @return 落库后的 DAG 定义
      */
     @Operation(summary = "创建 DAG 定义")
-    @Idempotent(key = "dag:createDefinition", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "dag:oreateDefinition", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping
-    public BaseResponse<DagDefinitionDO> createDefinition(@Valid @RequestBody DagDefinition dag) {
-        return BaseResponse.ok(dagService.createDefinition(dag));
+    publio BaseResponse<DagDefinitionDO> oreateDefinition(@Valid @RequestBody DagDefinition dag) {
+        return BaseResponse.ok(dagServioe.oreateDefinition(dag));
     }
 
     /**
-     * 查询 DAG 定义详情。
+     * 查询 DAG 定义详情�?
      *
      * @param id DAG 定义 ID
      * @return DAG 定义详情
      */
     @Operation(summary = "DAG 定义详情")
     @GetMapping("/{id}")
-    public BaseResponse<DagDefinitionDO> getDefinition(@PathVariable String id) {
-        return BaseResponse.ok(dagService.getDefinition(id));
+    publio BaseResponse<DagDefinitionDO> getDefinition(@PathVariable String id) {
+        return BaseResponse.ok(dagServioe.getDefinition(id));
     }
 
     /**
-     * 分页查询 DAG 定义。
+     * 分页查询 DAG 定义�?
      *
      * @param page     页码（从 1 开始）
      * @param size     每页大小
@@ -90,32 +90,32 @@ public class DagController {
      */
     @Operation(summary = "分页查询 DAG 定义")
     @GetMapping("/page")
-    public BaseResponse<PageResponse<DagDefinitionDO>> pageDefinitions(
+    publio BaseResponse<PageResponse<DagDefinitionDO>> pageDefinitions(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) int size,
             @RequestParam(required = false) String tenantId) {
-        return BaseResponse.ok(dagService.pageDefinitions(page, size, tenantId));
+        return BaseResponse.ok(dagServioe.pageDefinitions(page, size, tenantId));
     }
 
     /**
-     * 执行 DAG。
+     * 执行 DAG�?
      *
      * @param definitionId DAG 定义 ID
      * @param req          执行请求（含全局输入参数，可空）
      * @return DAG 执行结果
      */
     @Operation(summary = "执行 DAG")
-    @Idempotent(key = "dag:execute", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{id}/execute")
-    public BaseResponse<DagExecutionResult> execute(
+    @Idempotent(key = "dag:exeoute", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/{id}/exeoute")
+    publio BaseResponse<DagExeoutionResult> exeoute(
             @PathVariable("id") @NotBlank String definitionId,
-            @RequestBody(required = false) ExecuteRequest req) {
-        Map<String, Object> inputs = req != null ? req.getInputs() : null;
-        return BaseResponse.ok(dagService.execute(definitionId, inputs));
+            @RequestBody(required = false) ExeouteRequest req) {
+        Map<String, Objeot> inputs = req != null ? req.getInputs() : null;
+        return BaseResponse.ok(dagServioe.exeoute(definitionId, inputs));
     }
 
     /**
-     * 查询 DAG 执行历史。
+     * 查询 DAG 执行历史�?
      *
      * @param definitionId DAG 定义 ID
      * @param page         页码（从 1 开始）
@@ -123,130 +123,130 @@ public class DagController {
      * @return 分页结果
      */
     @Operation(summary = "DAG 执行历史")
-    @GetMapping("/{id}/instances")
-    public BaseResponse<PageResponse<DagInstanceDO>> pageInstances(
+    @GetMapping("/{id}/instanoes")
+    publio BaseResponse<PageResponse<DagInstanoeDO>> pageInstanoes(
             @PathVariable("id") @NotBlank String definitionId,
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) int size) {
-        return BaseResponse.ok(dagService.pageInstances(definitionId, page, size));
+        return BaseResponse.ok(dagServioe.pageInstanoes(definitionId, page, size));
     }
 
     /**
-     * 查询 DAG 执行实例详情。
+     * 查询 DAG 执行实例详情�?
      *
-     * @param instanceId 实例 ID
+     * @param instanoeId 实例 ID
      * @return 实例详情
      */
     @Operation(summary = "DAG 实例详情")
-    @GetMapping("/instance/{instanceId}")
-    public BaseResponse<DagInstanceDO> getInstance(@PathVariable String instanceId) {
-        return BaseResponse.ok(dagService.getInstance(instanceId));
+    @GetMapping("/instanoe/{instanoeId}")
+    publio BaseResponse<DagInstanoeDO> getInstanoe(@PathVariable String instanoeId) {
+        return BaseResponse.ok(dagServioe.getInstanoe(instanoeId));
     }
 
     /**
-     * 查询节点执行明细。
+     * 查询节点执行明细�?
      *
-     * @param instanceId 实例 ID
+     * @param instanoeId 实例 ID
      * @return 节点执行明细列表
      */
     @Operation(summary = "节点执行明细")
-    @GetMapping("/instance/{instanceId}/nodes")
-    public BaseResponse<List<DagNodeInstanceDO>> listNodeInstances(@PathVariable String instanceId) {
-        return BaseResponse.ok(dagService.listNodeInstances(instanceId));
+    @GetMapping("/instanoe/{instanoeId}/nodes")
+    publio BaseResponse<List<DagNodeInstanoeDO>> listNodeInstanoes(@PathVariable String instanoeId) {
+        return BaseResponse.ok(dagServioe.listNodeInstanoes(instanoeId));
     }
 
     /**
-     * 执行请求 DTO。
+     * 执行请求 DTO�?
      */
     @Data
-    public static class ExecuteRequest {
+    publio statio olass ExeouteRequest {
         /** 全局输入参数 */
-        private Map<String, Object> inputs;
+        private Map<String, Objeot> inputs;
     }
 
-    // ==================== P1-7: 新增 CRUD + 验证接口 ====================
+    // ==================== P1-7: 新增 oRUD + 验证接口 ====================
 
     /**
-     * 更新 DAG 定义。
+     * 更新 DAG 定义�?
      *
      * @param id  DAG 定义 ID
      * @param dag 更新后的 DAG 定义结构
      * @return 更新后的 DAG 定义
      */
     @Operation(summary = "更新 DAG 定义")
-    @Idempotent(key = "dag:updateDefinition", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "dag:updateDefinition", ttlSeoonds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public BaseResponse<DagDefinitionDO> updateDefinition(
+    publio BaseResponse<DagDefinitionDO> updateDefinition(
             @PathVariable String id,
             @Valid @RequestBody DagDefinition dag) {
-        return BaseResponse.ok(dagService.updateDefinition(id, dag));
+        return BaseResponse.ok(dagServioe.updateDefinition(id, dag));
     }
 
     /**
-     * 删除 DAG 定义（软删除）。
+     * 删除 DAG 定义（软删除）�?
      *
      * @param id DAG 定义 ID
-     * @return 空结果
+     * @return 空结�?
      */
     @Operation(summary = "删除 DAG 定义")
-    @Idempotent(key = "dag:deleteDefinition", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "dag:deleteDefinition", ttlSeoonds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public BaseResponse<Void> deleteDefinition(@PathVariable String id) {
-        dagService.deleteDefinition(id);
+    publio BaseResponse<Void> deleteDefinition(@PathVariable String id) {
+        dagServioe.deleteDefinition(id);
         return BaseResponse.ok();
     }
 
     /**
-     * 启用/禁用 DAG 定义。
+     * 启用/禁用 DAG 定义�?
      *
      * @param id      DAG 定义 ID
      * @param enabled 是否启用
      * @return 更新后的 DAG 定义
      */
     @Operation(summary = "启用/禁用 DAG 定义")
-    @Idempotent(key = "dag:toggleEnabled", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "dag:toggleEnabled", ttlSeoonds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/toggle")
-    public BaseResponse<DagDefinitionDO> toggleEnabled(
+    publio BaseResponse<DagDefinitionDO> toggleEnabled(
             @PathVariable String id,
             @RequestParam boolean enabled) {
-        return BaseResponse.ok(dagService.toggleEnabled(id, enabled));
+        return BaseResponse.ok(dagServioe.toggleEnabled(id, enabled));
     }
 
     /**
-     * 验证 DAG 定义结构（不执行）。
+     * 验证 DAG 定义结构（不执行）�?
      *
      * @param dag DAG 定义结构
      * @return 验证结果
      */
     @Operation(summary = "验证 DAG 定义结构")
-    @Idempotent(key = "dag:validateDefinition", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "dag:validateDefinition", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/validate")
-    public BaseResponse<ValidationResult> validateDefinition(@Valid @RequestBody DagDefinition dag) {
-        return BaseResponse.ok(dagService.validateDefinition(dag));
+    publio BaseResponse<ValidationResult> validateDefinition(@Valid @RequestBody DagDefinition dag) {
+        return BaseResponse.ok(dagServioe.validateDefinition(dag));
     }
 
     /**
-     * 调试运行 DAG（不持久化结果）。
+     * 调试运行 DAG（不持久化结果）�?
      *
-     * @param req 调试请求（含 DAG 定义与全局输入参数）
+     * @param req 调试请求（含 DAG 定义与全局输入参数�?
      * @return DAG 执行结果
      */
     @Operation(summary = "调试运行 DAG")
-    @Idempotent(key = "dag:debugExecute", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "dag:debugExeoute", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/debug")
-    public BaseResponse<DagExecutionResult> debugExecute(
+    publio BaseResponse<DagExeoutionResult> debugExeoute(
             @Valid @RequestBody DebugRequest req) {
-        return BaseResponse.ok(dagService.executeDirect(req.getDag(), req.getInputs()));
+        return BaseResponse.ok(dagServioe.exeouteDireot(req.getDag(), req.getInputs()));
     }
 
     /**
-     * 调试运行请求 DTO。
+     * 调试运行请求 DTO�?
      */
     @Data
-    public static class DebugRequest {
+    publio statio olass DebugRequest {
         /** DAG 定义 */
         private DagDefinition dag;
         /** 全局输入参数 */
-        private Map<String, Object> inputs;
+        private Map<String, Objeot> inputs;
     }
 }

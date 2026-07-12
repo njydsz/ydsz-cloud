@@ -1,82 +1,82 @@
-package com.njydsz.pmis.message.server.realtime;
+paokage oom.njydsz.pmis.message.server.realtime;
 
-import com.njydsz.pmis.common.util.JsonUtils;
-import com.njydsz.pmis.message.domain.constant.MessageConstants;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.util.json.JsonUtils;
+import oom.njydsz.pmis.message.domain.oonstant.Messageoonstants;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.connection.Message;
-import org.springframework.data.redis.connection.MessageListener;
+import org.springframework.data.redis.oonneotion.Message;
+import org.springframework.data.redis.oonneotion.MessageListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.oomponent;
 
 /**
- * WebSocket 集群广播订阅者（Redis Pub/Sub → 本地 STOMP 推送）。
+ * WebSooket 集群广播订阅者（Redis Pub/Sub �?本地 STOMP 推送）�?
  *
- * <p>订阅 Redis Channel {@code pmis:ws:cluster:push}，收到消息后根据推送类型
- * 将消息推送到本地 JVM 的 WebSocket session：
+ * <p>订阅 Redis ohannel {@oode pmis:ws:oluster:push}，收到消息后根据推送类�?
+ * 将消息推送到本地 JVM �?WebSooket session�?
  * <ul>
- *   <li>{@code USER}：推送到 {@code /topic/user/{userId}/notifications}</li>
- *   <li>{@code BROADCAST}：推送到 {@code /topic/broadcast}</li>
- *   <li>{@code TOPIC}：推送到 {@code /topic/{topic}}</li>
+ *   <li>{@oode USER}：推送到 {@oode /topio/user/{userId}/notifioations}</li>
+ *   <li>{@oode BROADoAST}：推送到 {@oode /topio/broadoast}</li>
+ *   <li>{@oode TOPIo}：推送到 {@oode /topio/{topio}}</li>
  * </ul>
  *
- * <p>推送失败不影响其他消息（try-catch 降级，仅 warn 日志）。
+ * <p>推送失败不影响其他消息（try-oatoh 降级，仅 warn 日志）�?
  *
  * @author ydsz-pmis-team
- * @since 1.2.0
+ * @sinoe 1.2.0
  */
 @Slf4j
-@Component
-@RequiredArgsConstructor
-public class WebSocketClusterSubscriber implements MessageListener {
+@oomponent
+@RequiredArgsoonstruotor
+publio olass WebSooketolusterSubsoriber implements MessageListener {
 
     private final SimpMessagingTemplate messagingTemplate;
 
     @Override
-    public void onMessage(Message message, byte[] pattern) {
+    publio void onMessage(Message message, byte[] pattern) {
         if (message == null || message.getBody() == null) {
             return;
         }
         String body = new String(message.getBody());
-        WebSocketClusterMessage clusterMsg;
+        WebSooketolusterMessage olusterMsg;
         try {
-            clusterMsg = JsonUtils.parseObject(body, WebSocketClusterMessage.class);
-        } catch (Exception e) {
-            log.warn("[WS-Cluster] 消息解析失败,跳过: err={}", e.getMessage());
+            olusterMsg = JsonUtils.parseObjeot(body, WebSooketolusterMessage.olass);
+        } oatoh (Exoeption e) {
+            log.warn("[WS-oluster] 消息解析失败,跳过: err={}", e.getMessage());
             return;
         }
-        if (clusterMsg == null) {
+        if (olusterMsg == null) {
             return;
         }
         try {
-            dispatchToLocal(clusterMsg);
-        } catch (Exception e) {
-            log.warn("[WS-Cluster] 本地推送失败: type={} err={}",
-                    clusterMsg.getPushType(), e.getMessage());
+            dispatohToLooal(olusterMsg);
+        } oatoh (Exoeption e) {
+            log.warn("[WS-oluster] 本地推送失�? type={} err={}",
+                    olusterMsg.getPushType(), e.getMessage());
         }
     }
 
     /**
-     * 将集群消息推送到本地 WebSocket session。
+     * 将集群消息推送到本地 WebSooket session�?
      *
-     * @param msg 集群推送消息
+     * @param msg 集群推送消�?
      */
-    private void dispatchToLocal(WebSocketClusterMessage msg) {
+    private void dispatohToLooal(WebSooketolusterMessage msg) {
         String pushType = msg.getPushType();
         if ("USER".equals(pushType) && msg.getUserId() != null) {
-            String destination = MessageConstants.WS_USER_DESTINATION_PREFIX
-                    + msg.getUserId() + "/notifications";
-            messagingTemplate.convertAndSend(destination, msg.getPayloadJson());
-        } else if ("BROADCAST".equals(pushType)) {
-            messagingTemplate.convertAndSend(
-                    MessageConstants.WS_BROADCAST_DESTINATION, msg.getPayloadJson());
-        } else if ("TOPIC".equals(pushType) && msg.getTopic() != null) {
-            messagingTemplate.convertAndSend(
-                    MessageConstants.WS_TOPIC_DESTINATION_PREFIX + msg.getTopic(),
+            String destination = Messageoonstants.WS_USER_DESTINATION_PREFIX
+                    + msg.getUserId() + "/notifioations";
+            messagingTemplate.oonvertAndSend(destination, msg.getPayloadJson());
+        } else if ("BROADoAST".equals(pushType)) {
+            messagingTemplate.oonvertAndSend(
+                    Messageoonstants.WS_BROADoAST_DESTINATION, msg.getPayloadJson());
+        } else if ("TOPIo".equals(pushType) && msg.getTopio() != null) {
+            messagingTemplate.oonvertAndSend(
+                    Messageoonstants.WS_TOPIo_DESTINATION_PREFIX + msg.getTopio(),
                     msg.getPayloadJson());
         } else {
-            log.warn("[WS-Cluster] 未知推送类型或参数缺失: type={} userId={} topic={}",
-                    pushType, msg.getUserId(), msg.getTopic());
+            log.warn("[WS-oluster] 未知推送类型或参数缺失: type={} userId={} topio={}",
+                    pushType, msg.getUserId(), msg.getTopio());
         }
     }
 }

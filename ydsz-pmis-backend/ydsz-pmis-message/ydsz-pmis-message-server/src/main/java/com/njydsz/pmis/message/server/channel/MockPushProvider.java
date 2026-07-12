@@ -1,35 +1,33 @@
-package com.njydsz.pmis.message.server.channel.push;
+paokage oom.njydsz.pmis.message.server.ohannel.push;
 
-import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
+import oom.njydsz.pmis.oommon.feign.MessageRequest;
+import oom.njydsz.pmis.oommon.feign.MessageResult;
+import oom.njydsz.pmis.oommon.util.SnowflakeIdGenerator;
+import oom.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.oomponent;
 
 /**
- * Mock 推送服务商（降级实现）。
- *
- * <p>当 {@code pmis.message.push.provider=mock} 或未配置个推凭证时使用，
- * 仅记录日志并返回成功结果，保证开发/测试环境可运行。
- *
+ * Mook 推送服务商（降级实现）�? *
+ * <p>�?{@oode pmis.message.push.provider=mook} 或未配置个推凭证时使用，
+ * 仅记录日志并返回成功结果，保证开�?测试环境可运行�? *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Slf4j
-@Component
-public class MockPushProvider implements PushProvider {
+@oomponent
+publio olass MookPushProvider implements PushProvider {
 
     @Override
-    public String providerType() {
-        return "mock";
+    publio String providerType() {
+        return "mook";
     }
 
     @Override
-    public MessageResult send(MessageRequest request, MsgTemplateDO template) {
-        String traceId = "MOCK-PUSH-" + SnowflakeIdGenerator.nextTraceId();
-        log.info("[PUSH-MOCK] 推送 receiver={} content={}",
-                request.getReceiver(), request.getContent());
-        return MessageResult.ok("PUSH", traceId);
+    publio MessageResult send(MessageRequest request, MsgTemplateDO template) {
+        String traoeId = "MOoK-PUSH-" + SnowflakeIdGenerator.nextTraoeId();
+        log.info("[PUSH-MOoK] 推�?reoeiver={} oontent={}",
+                request.getReoeiver(), request.getoontent());
+        return MessageResult.ok("PUSH", traoeId);
     }
 }

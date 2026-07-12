@@ -1,10 +1,10 @@
-package com.njydsz.pmis.message.server.service.config;
+paokage oom.njydsz.pmis.message.server.servioe.oonfig;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.entity.PageQuery;
-import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.message.domain.dto.config.RouteRuleUpsertDTO;
-import com.njydsz.pmis.message.domain.entity.config.MsgRouteRuleDO;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.oommon.domain.query.PageQuery;
+import oom.njydsz.pmis.oommon.feign.MessageRequest;
+import oom.njydsz.pmis.message.domain.dto.oonfig.RouteRuleUpsertDTO;
+import oom.njydsz.pmis.message.domain.entity.oonfig.MsgRouteRuleDO;
 
 import java.util.List;
 
@@ -12,9 +12,9 @@ import java.util.List;
  * 消息路由规则服务
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public interface RouteRuleService {
+publio interfaoe RouteRuleServioe {
 
     /**
      * 创建路由规则
@@ -22,7 +22,7 @@ public interface RouteRuleService {
      * @param dto 规则参数
      * @return 已创建的规则
      */
-    MsgRouteRuleDO create(RouteRuleUpsertDTO dto);
+    MsgRouteRuleDO oreate(RouteRuleUpsertDTO dto);
 
     /**
      * 更新路由规则
@@ -64,10 +64,10 @@ public interface RouteRuleService {
     List<MsgRouteRuleDO> listEnabled();
 
     /**
-     * 按 priority 升序遍历 enabled 规则,SpEL 求值命中即返回
+     * �?priority 升序遍历 enabled 规则,SpEL 求值命中即返回
      *
      * @param request 消息请求
-     * @return 命中的路由规则,未命中返回 null
+     * @return 命中的路由规�?未命中返�?null
      */
-    MsgRouteRuleDO match(MessageRequest request);
+    MsgRouteRuleDO matoh(MessageRequest request);
 }

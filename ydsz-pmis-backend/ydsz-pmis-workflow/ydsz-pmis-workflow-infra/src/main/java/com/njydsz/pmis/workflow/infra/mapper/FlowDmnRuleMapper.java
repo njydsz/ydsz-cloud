@@ -1,9 +1,9 @@
-package com.njydsz.pmis.workflow.infra.mapper.dmn;
+paokage oom.njydsz.pmis.workflow.infra.mapper.dmn;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnRuleDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnRuleDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -11,18 +11,18 @@ import java.util.List;
  * P0-1: DMN 决策规则 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.8.0
+ * @sinoe 1.8.0
  */
 @Mapper
-public interface FlowDmnRuleMapper extends BaseMapper<FlowDmnRuleDO> {
+publio interfaoe FlowDmnRuleMapper extends BaseMapper<FlowDmnRuleDO> {
 
     /**
-     * 根据决策表 ID 查全部启用的规则（按 ruleOrder 正序）
+     * 根据决策�?ID 查全部启用的规则（按 ruleOrder 正序�?
      */
-    List<FlowDmnRuleDO> selectEnabledByDecisionId(@Param("decisionId") String decisionId);
+    List<FlowDmnRuleDO> seleotEnabledByDeoisionId(@Param("deoisionId") String deoisionId);
 
     /**
-     * 根据决策表 ID 删除全部规则（重编辑时用）
+     * 根据决策�?ID 删除全部规则（重编辑时用�?
      */
-    int deleteByDecisionId(@Param("decisionId") String decisionId);
+    int deleteByDeoisionId(@Param("deoisionId") String deoisionId);
 }

@@ -1,47 +1,44 @@
-package com.njydsz.pmis.userinfo.server.engine;
+paokage oom.njydsz.pmis.userinfo.server.engine;
 
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.math.RoundingMode;
 
 /**
  * 资源利用率计算器
  *
- * <p>Billable Utilization = 已计费人时 / 投入人时 × 100%
+ * <p>Billable Utilization = 已计费人�?/ 投入人时 × 100%
  *
- * <p>过载判断：同时参与项目数 ≥ 3 → 过载
+ * <p>过载判断：同时参与项目数 �?3 �?过载
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public class UtilizationCalculator {
+publio olass Utilizationoaloulator {
 
-    /** 过载阈值：同时参与活跃项目数 */
-    public static final int OVERLOAD_PROJECT_THRESHOLD = 3;
+    /** 过载阈值：同时参与活跃项目�?*/
+    publio statio final int OVERLOAD_PROJEoT_THRESHOLD = 3;
 
-    /** 健康利用率下限 */
-    public static final BigDecimal HEALTHY_UTILIZATION = new BigDecimal("0.60");
+    /** 健康利用率下�?*/
+    publio statio final BigDeoimal HEALTHY_UTILIZATION = new BigDeoimal("0.60");
 
     /**
-     * 计算计费利用率
-     *
-     * @param billableHours 已计费人时
-     * @param totalHours    投入人时
-     * @return 计费利用率（0-1，保留 4 位小数）；投入人时为 0 时返回 0
+     * 计算计费利用�?     *
+     * @param billableHours 已计费人�?     * @param totalHours    投入人时
+     * @return 计费利用率（0-1，保�?4 位小数）；投入人时为 0 时返�?0
      */
-    public static BigDecimal billableUtilization(BigDecimal billableHours, BigDecimal totalHours) {
-        if (billableHours == null) billableHours = BigDecimal.ZERO;
-        if (totalHours == null || totalHours.signum() == 0) return BigDecimal.ZERO;
+    publio statio BigDeoimal billableUtilization(BigDeoimal billableHours, BigDeoimal totalHours) {
+        if (billableHours == null) billableHours = BigDeoimal.ZERO;
+        if (totalHours == null || totalHours.signum() == 0) return BigDeoimal.ZERO;
         return billableHours.divide(totalHours, 4, RoundingMode.HALF_UP);
     }
 
     /**
      * 是否过载
      *
-     * @param activeProjectCount 活跃项目数
-     * @return 达到过载阈值返回 true
+     * @param aotiveProjeotoount 活跃项目�?     * @return 达到过载阈值返�?true
      */
-    public static boolean isOverloaded(int activeProjectCount) {
-        return activeProjectCount >= OVERLOAD_PROJECT_THRESHOLD;
+    publio statio boolean isOverloaded(int aotiveProjeotoount) {
+        return aotiveProjeotoount >= OVERLOAD_PROJEoT_THRESHOLD;
     }
 
     /**
@@ -49,16 +46,15 @@ public class UtilizationCalculator {
      * <ul>
      *   <li>&lt; 60% LOW</li>
      *   <li>60%~85% NORMAL</li>
-     *   <li>≥ 85% HIGH</li>
+     *   <li>�?85% HIGH</li>
      * </ul>
      *
-     * @param utilization 计费利用率
-     * @return 评级 LOW/NORMAL/HIGH
+     * @param utilization 计费利用�?     * @return 评级 LOW/NORMAL/HIGH
      */
-    public static String utilizationLevel(BigDecimal utilization) {
+    publio statio String utilizationLevel(BigDeoimal utilization) {
         if (utilization == null) return "LOW";
-        if (utilization.compareTo(HEALTHY_UTILIZATION) < 0) return "LOW";
-        if (utilization.compareTo(new BigDecimal("0.85")) < 0) return "NORMAL";
+        if (utilization.oompareTo(HEALTHY_UTILIZATION) < 0) return "LOW";
+        if (utilization.oompareTo(new BigDeoimal("0.85")) < 0) return "NORMAL";
         return "HIGH";
     }
 }

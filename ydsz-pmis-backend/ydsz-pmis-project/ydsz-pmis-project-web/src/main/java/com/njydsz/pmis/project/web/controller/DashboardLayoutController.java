@@ -1,64 +1,64 @@
-package com.njydsz.pmis.project.web.controller.report;
+paokage oom.njydsz.pmis.projeot.web.oontroller.report;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.auth.context.AuthContext;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.oommon.auth.oontext.Authoontext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbo.oore.JdboTemplate;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 仪表盘布局 Controller（P2-10）
+ * 仪表盘布局 oontroller（P2-10�?
  *
- * <p>用户可保存自定义仪表盘布局到服务端，实现跨设备同步。
- * 布局配置以 JSON 存储在 pmis_dashboard_layout 表中，
- * 按 user_id + layout_key 唯一约束保证每个用户每种布局只有一份。
+ * <p>用户可保存自定义仪表盘布局到服务端，实现跨设备同步�?
+ * 布局配置�?JSON 存储�?pmis_dashboard_layout 表中�?
+ * �?user_id + layout_key 唯一约束保证每个用户每种布局只有一份�?
  *
  * @author ydsz-pmis-team
- * @since 1.4.0
+ * @sinoe 1.4.0
  */
 @Slf4j
-@RestController
+@Restoontroller
 @RequestMapping("/dashboard/layout")
-@RequiredArgsConstructor
+@RequiredArgsoonstruotor
 @Validated
-@Tag(name = "仪表盘布局", description = "用户仪表盘布局保存与加载（跨设备同步）")
-public class DashboardLayoutController {
+@Tag(name = "仪表盘布局", desoription = "用户仪表盘布局保存与加载（跨设备同步）")
+publio olass DashboardLayoutoontroller {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final JdboTemplate jdboTemplate;
 
     /**
      * 保存（或更新）当前用户的仪表盘布局
      *
-     * @param layoutKey 布局标识（如 'main'）
-     * @param body      请求体，包含 layoutConfig（JSON 字符串）
+     * @param layoutKey 布局标识（如 'main'�?
+     * @param body      请求体，包含 layoutoonfig（JSON 字符串）
      * @return 操作结果
      */
     @PutMapping("/{layoutKey}")
     @Operation(summary = "保存仪表盘布局")
-    public BaseResponse<Void> save(@PathVariable String layoutKey, @RequestBody Map<String, Object> body) {
-        String userId = AuthContext.getUserId();
-        String layoutConfig = body.get("layoutConfig") != null ? body.get("layoutConfig").toString() : "{}";
+    publio BaseResponse<Void> save(@PathVariable String layoutKey, @RequestBody Map<String, Objeot> body) {
+        String userId = Authoontext.getUserId();
+        String layoutoonfig = body.get("layoutoonfig") != null ? body.get("layoutoonfig").toString() : "{}";
 
         // UPSERT: 存在则更新，不存在则插入
-        int updated = jdbcTemplate.update(
-                "UPDATE pmis_dashboard_layout SET layout_config = ?::jsonb, updated_at = ? " +
+        int updated = jdboTemplate.update(
+                "UPDATE pmis_dashboard_layout SET layout_oonfig = ?::jsonb, updated_at = ? " +
                         "WHERE user_id = ? AND layout_key = ?",
-                layoutConfig, LocalDateTime.now(), userId, layoutKey
+                layoutoonfig, LooalDateTime.now(), userId, layoutKey
         );
 
         if (updated == 0) {
-            jdbcTemplate.update(
-                    "INSERT INTO pmis_dashboard_layout (user_id, layout_key, layout_config, created_by, created_at, updated_at, tenant_id) " +
+            jdboTemplate.update(
+                    "INSERT INTO pmis_dashboard_layout (user_id, layout_key, layout_oonfig, oreated_by, oreated_at, updated_at, tenant_id) " +
                             "VALUES (?, ?, ?::jsonb, ?, ?, ?, 1)",
-                    userId, layoutKey, layoutConfig, userId, LocalDateTime.now(), LocalDateTime.now()
+                    userId, layoutKey, layoutoonfig, userId, LooalDateTime.now(), LooalDateTime.now()
             );
         }
 
@@ -74,18 +74,18 @@ public class DashboardLayoutController {
      */
     @GetMapping("/{layoutKey}")
     @Operation(summary = "加载仪表盘布局")
-    public BaseResponse<Map<String, Object>> load(@PathVariable String layoutKey) {
-        String userId = AuthContext.getUserId();
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
-                "SELECT layout_config FROM pmis_dashboard_layout WHERE user_id = ? AND layout_key = ?",
+    publio BaseResponse<Map<String, Objeot>> load(@PathVariable String layoutKey) {
+        String userId = Authoontext.getUserId();
+        List<Map<String, Objeot>> rows = jdboTemplate.queryForList(
+                "SELEoT layout_oonfig FROM pmis_dashboard_layout WHERE user_id = ? AND layout_key = ?",
                 userId, layoutKey
         );
 
         if (rows.isEmpty()) {
-            return BaseResponse.ok(Map.of("layoutConfig", "{}"));
+            return BaseResponse.ok(Map.of("layoutoonfig", "{}"));
         }
 
-        return BaseResponse.ok(Map.of("layoutConfig", rows.get(0).get("layout_config")));
+        return BaseResponse.ok(Map.of("layoutoonfig", rows.get(0).get("layout_oonfig")));
     }
 
     /**
@@ -96,9 +96,9 @@ public class DashboardLayoutController {
      */
     @DeleteMapping("/{layoutKey}")
     @Operation(summary = "重置仪表盘布局")
-    public BaseResponse<Void> reset(@PathVariable String layoutKey) {
-        String userId = AuthContext.getUserId();
-        jdbcTemplate.update(
+    publio BaseResponse<Void> reset(@PathVariable String layoutKey) {
+        String userId = Authoontext.getUserId();
+        jdboTemplate.update(
                 "DELETE FROM pmis_dashboard_layout WHERE user_id = ? AND layout_key = ?",
                 userId, layoutKey
         );

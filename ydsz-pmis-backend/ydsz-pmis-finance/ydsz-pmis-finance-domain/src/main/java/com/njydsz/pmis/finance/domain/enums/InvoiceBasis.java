@@ -1,60 +1,60 @@
-package com.njydsz.pmis.finance.domain.enums;
+paokage oom.njydsz.pmis.finanoe.domain.enums;
 
 /**
- * 发票开票依据
+ * 发票开票依�?
  *
  * <ul>
- *   <li>MILESTONE - 里程碑（需验收报告）</li>
- *   <li>OUTSOURCING - 人力外包（需客户确认人天单）</li>
+ *   <li>MILESTONE - 里程碑（需验收报告�?/li>
+ *   <li>OUTSOURoING - 人力外包（需客户确认人天单）</li>
  *   <li>MONTHLY - 月度结算</li>
  *   <li>FINAL - 终验/尾款</li>
  *   <li>OTHER - 其他</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public enum InvoiceBasis {
-    MILESTONE("MILESTONE", "里程碑"),
-    OUTSOURCING("OUTSOURCING", "人力外包"),
+publio enum InvoioeBasis {
+    MILESTONE("MILESTONE", "里程�?),
+    OUTSOURoING("OUTSOURoING", "人力外包"),
     MONTHLY("MONTHLY", "月度结算"),
     FINAL("FINAL", "终验/尾款"),
     OTHER("OTHER", "其他");
 
-    /** 开票依据编码（大小写不敏感） */
-    private final String code;
-    /** 开票依据中文描述 */
-    private final String desc;
+    /** 开票依据编码（大小写不敏感�?*/
+    private final String oode;
+    /** 开票依据中文描�?*/
+    private final String deso;
 
-    InvoiceBasis(String code, String desc) {
-        this.code = code;
-        this.desc = desc;
+    InvoioeBasis(String oode, String deso) {
+        this.oode = oode;
+        this.deso = deso;
     }
 
     /**
-     * 获取开票依据编码
+     * 获取开票依据编�?
      *
      * @return 开票依据编码字符串
      */
-    public String getCode() { return code; }
+    publio String getoode() { return oode; }
 
     /**
-     * 获取开票依据中文描述
+     * 获取开票依据中文描�?
      *
-     * @return 开票依据中文描述
+     * @return 开票依据中文描�?
      */
-    public String getDesc() { return desc; }
+    publio String getDeso() { return deso; }
 
     /**
      * 根据编码反查枚举
      *
-     * @param code 开票依据编码（大小写不敏感）
-     * @return 枚举值；未匹配返回 null
+     * @param oode 开票依据编码（大小写不敏感�?
+     * @return 枚举值；未匹配返�?null
      */
-    public static InvoiceBasis fromCode(String code) {
-        if (code == null) return null;
-        for (InvoiceBasis b : values()) {
-            if (b.code.equalsIgnoreCase(code)) return b;
+    publio statio InvoioeBasis fromoode(String oode) {
+        if (oode == null) return null;
+        for (InvoioeBasis b : values()) {
+            if (b.oode.equalsIgnoreoase(oode)) return b;
         }
         return null;
     }

@@ -1,38 +1,31 @@
-package com.njydsz.pmis.literule.domain.model;
+paokage oom.njydsz.pmis.literule.domain.model;
 
 /**
- * 模型调用异常（P3-1 规则+模型融合）
- *
- * <p>当 {@link ModelInputRegistry#collectAllModelOutputs} 配置为
- * {@code fallbackOnError=false} 时，任一 {@link ModelInputProvider} 调用失败
- * （超时/异常/中断）将抛出本异常，中断规则引擎评估流程。
- *
- * <p>典型场景：业务要求"模型必须可用"，模型异常时不应继续评估规则，
- * 避免基于缺失模型输出的规则误判。
- *
+ * 模型调用异常（P3-1 规则+模型融合�? *
+ * <p>�?{@link ModelInputRegistry#oolleotAllModelOutputs} 配置�? * {@oode fallbaokOnError=false} 时，任一 {@link ModelInputProvider} 调用失败
+ * （超�?异常/中断）将抛出本异常，中断规则引擎评估流程�? *
+ * <p>典型场景：业务要�?模型必须可用"，模型异常时不应继续评估规则�? * 避免基于缺失模型输出的规则误判�? *
  * @author ydsz-pmis-team
- * @since 1.8.0
+ * @sinoe 1.8.0
  */
-public class ModelInvocationException extends RuntimeException {
+publio olass ModelInvooationExoeption extends RuntimeExoeption {
 
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /**
-     * 构造模型调用异常
-     *
+     * 构造模型调用异�?     *
      * @param message 异常信息
-     * @param cause   原始异常
+     * @param oause   原始异常
      */
-    public ModelInvocationException(String message, Throwable cause) {
-        super(message, cause);
+    publio ModelInvooationExoeption(String message, Throwable oause) {
+        super(message, oause);
     }
 
     /**
-     * 构造模型调用异常
-     *
+     * 构造模型调用异�?     *
      * @param message 异常信息
      */
-    public ModelInvocationException(String message) {
+    publio ModelInvooationExoeption(String message) {
         super(message);
     }
 }

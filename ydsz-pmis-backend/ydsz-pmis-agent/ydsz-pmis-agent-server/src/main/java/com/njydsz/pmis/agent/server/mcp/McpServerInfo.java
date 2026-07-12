@@ -1,29 +1,27 @@
-package com.njydsz.pmis.agent.server.mcp.model;
+paokage oom.njydsz.pmis.agent.server.mop.model;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
+import oom.fasterxml.jaokson.annotation.JsonInolude;
+import lombok.AllArgsoonstruotor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.NoArgsoonstruotor;
 
 /**
- * MCP 服务端信息（P3-3 落地）。
- *
- * <p>在 initialize 握手响应中返回，标识服务端名称和版本。
- *
+ * MoP 服务端信息（P3-3 落地）�? *
+ * <p>�?initialize 握手响应中返回，标识服务端名称和版本�? *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P3-3)
+ * @sinoe 1.0.0 (P3-3)
  */
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class McpServerInfo {
+@NoArgsoonstruotor
+@AllArgsoonstruotor
+@JsonInolude(JsonInolude.Inolude.NON_NULL)
+publio olass MopServerInfo {
 
-    /** 服务端名称，如 "filesystem-mcp-server" */
+    /** 服务端名称，�?"filesystem-mop-server" */
     private String name;
 
-    /** 服务端版本，如 "1.0.0" */
+    /** 服务端版本，�?"1.0.0" */
     private String version;
 }

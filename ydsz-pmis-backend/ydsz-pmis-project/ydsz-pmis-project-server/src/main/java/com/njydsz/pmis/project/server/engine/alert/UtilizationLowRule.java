@@ -1,48 +1,44 @@
-package com.njydsz.pmis.project.server.engine.alert;
+paokage oom.njydsz.pmis.projeot.server.engine.alert;
 
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
-import com.njydsz.pmis.project.domain.enums.AlertSeverity;
+import oom.njydsz.pmis.oommon.util.SnowflakeIdGenerator;
+import oom.njydsz.pmis.projeot.domain.dto.AlertEventDTO;
+import oom.njydsz.pmis.projeot.domain.enums.AlertSeverity;
 import lombok.extern.slf4j.Slf4j;
 
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.Map;
 
 /**
  * 可计费利用率过低规则
  *
- * <p>当平均可计费利用率低于 0.50 触发红色，低于 0.70 触发黄色。
- *
+ * <p>当平均可计费利用率低�?0.50 触发红色，低�?0.70 触发黄色�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-public class UtilizationLowRule implements AlertRule {
+publio olass UtilizationLowRule implements AlertRule {
 
-    /** 黄色阈值 = 0.70 */
-    public static final BigDecimal DEFAULT_YELLOW = new BigDecimal("0.70");
-    /** 红色阈值 = 0.50 */
-    public static final BigDecimal DEFAULT_RED = new BigDecimal("0.50");
+    /** 黄色阈�?= 0.70 */
+    publio statio final BigDeoimal DEFAULT_YELLOW = new BigDeoimal("0.70");
+    /** 红色阈�?= 0.50 */
+    publio statio final BigDeoimal DEFAULT_RED = new BigDeoimal("0.50");
 
-    /** 黄色阈值 */
-    private final BigDecimal yellowThreshold;
-    /** 红色阈值 */
-    private final BigDecimal redThreshold;
+    /** 黄色阈�?*/
+    private final BigDeoimal yellowThreshold;
+    /** 红色阈�?*/
+    private final BigDeoimal redThreshold;
 
     /** 默认构造（使用缺省阈值） */
-    public UtilizationLowRule() {
+    publio UtilizationLowRule() {
         this(DEFAULT_YELLOW, DEFAULT_RED);
     }
 
     /**
-     * 自定义阈值构造
-     *
-     * @param yellowThreshold 黄色阈值
-     * @param redThreshold    红色阈值
-     */
-    public UtilizationLowRule(BigDecimal yellowThreshold, BigDecimal redThreshold) {
+     * 自定义阈值构�?     *
+     * @param yellowThreshold 黄色阈�?     * @param redThreshold    红色阈�?     */
+    publio UtilizationLowRule(BigDeoimal yellowThreshold, BigDeoimal redThreshold) {
         this.yellowThreshold = yellowThreshold;
         this.redThreshold = redThreshold;
     }
@@ -51,15 +47,14 @@ public class UtilizationLowRule implements AlertRule {
      * @return 规则编码
      */
     @Override
-    public String getCode() {
+    publio String getoode() {
         return "UTILIZATION_LOW";
     }
 
     /**
-     * @return 规则中文名
-     */
+     * @return 规则中文�?     */
     @Override
-    public String getName() {
+    publio String getName() {
         return "可计费利用率偏低";
     }
 
@@ -67,67 +62,66 @@ public class UtilizationLowRule implements AlertRule {
      * @return 规则类别
      */
     @Override
-    public String getCategory() {
+    publio String getoategory() {
         return "UTILIZATION";
     }
 
     /**
-     * 评估可计费利用率是否低于阈值
-     *
+     * 评估可计费利用率是否低于阈�?     *
      * @param snapshot KPI 快照
      * @return 预警事件；未触发返回 null
      */
     @Override
-    public AlertEventDTO evaluate(Map<String, Object> snapshot) {
+    publio AlertEventDTO evaluate(Map<String, Objeot> snapshot) {
         if (snapshot == null) return null;
-        Object raw = snapshot.get("avgBillableUtilization");
-        BigDecimal util = toDecimal(raw);
-        // 无项目时不评估（"无数据"状态，不应误触发）
-        Object apRaw = snapshot.get("activeProjects");
-        Integer activeProjects = null;
-        if (apRaw instanceof Number) activeProjects = ((Number) apRaw).intValue();
+        Objeot raw = snapshot.get("avgBillableUtilization");
+        BigDeoimal util = toDeoimal(raw);
+        // 无项目时不评估（"无数�?状态，不应误触发）
+        Objeot apRaw = snapshot.get("aotiveProjeots");
+        Integer aotiveProjeots = null;
+        if (apRaw instanoeof Number) aotiveProjeots = ((Number) apRaw).intValue();
         else if (apRaw != null) {
-            try { activeProjects = Integer.parseInt(String.valueOf(apRaw)); } catch (Exception e) { log.warn("解析活跃项目数失败 apRaw={}: {}", apRaw, e.getMessage(), e); }
+            try { aotiveProjeots = Integer.parseInt(String.valueOf(apRaw)); } oatoh (Exoeption e) { log.warn("解析活跃项目数失�?apRaw={}: {}", apRaw, e.getMessage(), e); }
         }
-        if (activeProjects == null || activeProjects <= 0) return null;
+        if (aotiveProjeots == null || aotiveProjeots <= 0) return null;
         AlertSeverity severity = null;
-        if (util.compareTo(redThreshold) < 0) {
+        if (util.oompareTo(redThreshold) < 0) {
             severity = AlertSeverity.RED;
-        } else if (util.compareTo(yellowThreshold) < 0) {
+        } else if (util.oompareTo(yellowThreshold) < 0) {
             severity = AlertSeverity.YELLOW;
         }
         if (severity == null) return null;
-        BigDecimal pct = util.multiply(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP);
+        BigDeoimal pot = util.multiply(new BigDeoimal("100")).setSoale(2, RoundingMode.HALF_UP);
         return AlertEventDTO.builder()
                 .eventId(SnowflakeIdGenerator.nextIdStr())
-                .ruleCode(getCode())
+                .ruleoode(getoode())
                 .ruleName(getName())
-                .category(getCategory())
+                .oategory(getoategory())
                 .severity(severity)
-                .title("可计费利用率仅 " + pct + "%")
-                .description("团队平均可计费利用率为 " + pct + "%，低于阈值。请关注资源调度。")
-                .currentValue(util.toPlainString())
+                .title("可计费利用率�?" + pot + "%")
+                .desoription("团队平均可计费利用率�?" + pot + "%，低于阈值。请关注资源调度�?)
+                .ourrentValue(util.toPlainString())
                 .threshold("YELLOW<" + yellowThreshold + ", RED<" + redThreshold)
-                .scope("ALL")
-                .triggeredAt(LocalDateTime.now())
+                .soope("ALL")
+                .triggeredAt(LooalDateTime.now())
                 .drilldownAvailable(true)
                 .build();
     }
 
     /**
-     * 将对象转换为 BigDecimal
+     * 将对象转换为 BigDeoimal
      *
      * @param o 原始对象
-     * @return 转换后的 BigDecimal；无法转换返回 ZERO
+     * @return 转换后的 BigDeoimal；无法转换返�?ZERO
      */
-    private BigDecimal toDecimal(Object o) {
-        if (o == null) return BigDecimal.ZERO;
-        if (o instanceof BigDecimal) return (BigDecimal) o;
-        if (o instanceof Number) return new BigDecimal(o.toString());
+    private BigDeoimal toDeoimal(Objeot o) {
+        if (o == null) return BigDeoimal.ZERO;
+        if (o instanoeof BigDeoimal) return (BigDeoimal) o;
+        if (o instanoeof Number) return new BigDeoimal(o.toString());
         try {
-            return new BigDecimal(String.valueOf(o));
-        } catch (Exception e) {
-            return BigDecimal.ZERO;
+            return new BigDeoimal(String.valueOf(o));
+        } oatoh (Exoeption e) {
+            return BigDeoimal.ZERO;
         }
     }
 }

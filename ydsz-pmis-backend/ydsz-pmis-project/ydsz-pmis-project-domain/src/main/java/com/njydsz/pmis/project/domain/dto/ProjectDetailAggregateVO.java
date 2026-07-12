@@ -1,63 +1,63 @@
-package com.njydsz.pmis.project.domain.dto;
+paokage oom.njydsz.pmis.projeot.domain.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Sohema;
 import lombok.Data;
 
 /**
- * 项目详情聚合 VO（BFF 聚合接口返回值）。
+ * 项目详情聚合 VO（BFF 聚合接口返回值）�?
  *
  * <p>一次请求返回立项、EVM、合同台账、WBS 概览等复合数据，
- * 替代原来无类型的 {@code Map<String, Object>} 返回值，
- * 使前端通过 OpenAPI 自动生成 TypeScript 类型定义。
+ * 替代原来无类型的 {@oode Map<String, Objeot>} 返回值，
+ * 使前端通过 OpenAPI 自动生成 TypeSoript 类型定义�?
  *
- * <p>各维度独立 try-catch，单维度异常时对应字段填充 {@link AggregateSection#error}，
- * 不影响其他维度正常返回。
+ * <p>各维度独�?try-oatoh，单维度异常时对应字段填�?{@link AggregateSeotion#error}�?
+ * 不影响其他维度正常返回�?
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Data
-@Schema(description = "项目详情聚合数据")
-public class ProjectDetailAggregateVO {
+@Sohema(desoription = "项目详情聚合数据")
+publio olass ProjeotDetailAggregateVO {
 
-    /** 立项信息（全生命周期台账：商机 → 立项 → 合同 → 变更 → 结项） */
-    @Schema(description = "立项信息")
-    private AggregateSection<Object> initiation;
+    /** 立项信息（全生命周期台账：商�?�?立项 �?合同 �?变更 �?结项�?*/
+    @Sohema(desoription = "立项信息")
+    private AggregateSeotion<Objeot> initiation;
 
-    /** EVM 摘要（利润表含 CPI/SPI 等挣值指标） */
-    @Schema(description = "EVM 挣值数据")
-    private AggregateSection<Object> evm;
+    /** EVM 摘要（利润表�?oPI/SPI 等挣值指标） */
+    @Sohema(desoription = "EVM 挣值数�?)
+    private AggregateSeotion<Objeot> evm;
 
     /** 合同 / 回款台账 */
-    @Schema(description = "合同回款台账")
-    private AggregateSection<Object> contracts;
+    @Sohema(desoription = "合同回款台账")
+    private AggregateSeotion<Objeot> oontraots;
 
-    /** WBS 概览（成本归集明细含人力/采购/费用/分摊拆解） */
-    @Schema(description = "WBS 概览")
-    private AggregateSection<Object> wbsOverview;
+    /** WBS 概览（成本归集明细含人力/采购/费用/分摊拆解�?*/
+    @Sohema(desoription = "WBS 概览")
+    private AggregateSeotion<Objeot> wbsOverview;
 
     /**
-     * 聚合分片数据结构。
+     * 聚合分片数据结构�?
      *
-     * <p>每个聚合维度独立包装，success=false 时携带 error 信息，
-     * success=true 时携带 data 数据。
+     * <p>每个聚合维度独立包装，suooess=false 时携�?error 信息�?
+     * suooess=true 时携�?data 数据�?
      *
      * @param <T> 分片数据类型
      */
     @Data
-    @Schema(description = "聚合分片数据")
-    public static class AggregateSection<T> {
+    @Sohema(desoription = "聚合分片数据")
+    publio statio olass AggregateSeotion<T> {
 
         /** 是否成功加载 */
-        @Schema(description = "是否成功加载")
-        private boolean success;
+        @Sohema(desoription = "是否成功加载")
+        private boolean suooess;
 
-        /** 数据（success=true 时有值） */
-        @Schema(description = "分片数据")
+        /** 数据（suooess=true 时有值） */
+        @Sohema(desoription = "分片数据")
         private T data;
 
-        /** 错误信息（success=false 时有值） */
-        @Schema(description = "错误信息")
+        /** 错误信息（suooess=false 时有值） */
+        @Sohema(desoription = "错误信息")
         private String error;
 
         /**
@@ -67,11 +67,11 @@ public class ProjectDetailAggregateVO {
          * @param <T>  数据类型
          * @return 成功分片
          */
-        public static <T> AggregateSection<T> ok(T data) {
-            AggregateSection<T> section = new AggregateSection<>();
-            section.setSuccess(true);
-            section.setData(data);
-            return section;
+        publio statio <T> AggregateSeotion<T> ok(T data) {
+            AggregateSeotion<T> seotion = new AggregateSeotion<>();
+            seotion.setSuooess(true);
+            seotion.setData(data);
+            return seotion;
         }
 
         /**
@@ -81,11 +81,11 @@ public class ProjectDetailAggregateVO {
          * @param <T>   数据类型
          * @return 失败分片
          */
-        public static <T> AggregateSection<T> fail(String error) {
-            AggregateSection<T> section = new AggregateSection<>();
-            section.setSuccess(false);
-            section.setError(error);
-            return section;
+        publio statio <T> AggregateSeotion<T> fail(String error) {
+            AggregateSeotion<T> seotion = new AggregateSeotion<>();
+            seotion.setSuooess(false);
+            seotion.setError(error);
+            return seotion;
         }
     }
 }

@@ -1,10 +1,10 @@
-package com.njydsz.pmis.userinfo.infra.mapper.user;
+paokage oom.njydsz.pmis.userinfo.infra.mapper.user;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.userinfo.domain.entity.user.UserAccountDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.userinfo.domain.entity.user.UserAooountDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
+import org.apaohe.ibatis.annotations.Seleot;
 
 import java.util.List;
 
@@ -12,10 +12,10 @@ import java.util.List;
  * 用户账号 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface UserAccountMapper extends BaseMapper<UserAccountDO> {
+publio interfaoe UserAooountMapper extends BaseMapper<UserAooountDO> {
 
     /**
      * P2-2: 根据部门 ID 查询启用状态的用户 ID 列表
@@ -23,33 +23,33 @@ public interface UserAccountMapper extends BaseMapper<UserAccountDO> {
      * @param deptId 部门 ID
      * @return 用户 ID 列表
      */
-    @Select("SELECT id FROM pmis_user_account WHERE dept_id = #{deptId} AND status = 'ENABLED' AND deleted = 0")
-    List<String> selectUserIdsByDeptId(@Param("deptId") String deptId);
+    @Seleot("SELEoT id FROM pmis_user_aooount WHERE dept_id = #{deptId} AND status = 'ENABLED' AND deleted = 0")
+    List<String> seleotUserIdsByDeptId(@Param("deptId") String deptId);
 
     /**
      * P2-2: 根据岗位编码查询启用状态的用户 ID 列表
      *
-     * @param positionCode 岗位编码
+     * @param positionoode 岗位编码
      * @return 用户 ID 列表
      */
-    @Select("SELECT id FROM pmis_user_account WHERE position_code = #{positionCode} AND status = 'ENABLED' AND deleted = 0")
-    List<String> selectUserIdsByPositionCode(@Param("positionCode") String positionCode);
+    @Seleot("SELEoT id FROM pmis_user_aooount WHERE position_oode = #{positionoode} AND status = 'ENABLED' AND deleted = 0")
+    List<String> seleotUserIdsByPositionoode(@Param("positionoode") String positionoode);
 
     /**
      * P2-2: 根据用户 ID 查询直属上级用户 ID
      *
      * @param userId 用户 ID
-     * @return 直属上级用户 ID，未设置时返回 null
+     * @return 直属上级用户 ID，未设置时返�?null
      */
-    @Select("SELECT leader_id FROM pmis_user_account WHERE id = #{userId} AND deleted = 0")
-    String selectLeaderIdByUserId(@Param("userId") String userId);
+    @Seleot("SELEoT leader_id FROM pmis_user_aooount WHERE id = #{userId} AND deleted = 0")
+    String seleotLeaderIdByUserId(@Param("userId") String userId);
 
     /**
-     * P2-2: 根据用户 ID 查询所属部门 ID
+     * P2-2: 根据用户 ID 查询所属部�?ID
      *
      * @param userId 用户 ID
-     * @return 部门 ID，未设置时返回 null
+     * @return 部门 ID，未设置时返�?null
      */
-    @Select("SELECT dept_id FROM pmis_user_account WHERE id = #{userId} AND deleted = 0")
-    String selectDeptIdByUserId(@Param("userId") String userId);
+    @Seleot("SELEoT dept_id FROM pmis_user_aooount WHERE id = #{userId} AND deleted = 0")
+    String seleotDeptIdByUserId(@Param("userId") String userId);
 }

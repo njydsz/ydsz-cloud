@@ -1,37 +1,37 @@
-package com.njydsz.pmis.project.domain.dto;
+paokage oom.njydsz.pmis.projeot.domain.dto;
 
 import lombok.Data;
 
-import java.time.LocalDate;
+import java.time.LooalDate;
 
 /**
- * 质保期创建 DTO
+ * 质保期创�?DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-public class WarrantyCreateDTO {
-    /** 业务编码（WY-YYYYMMDD-XXXX） */
-    private String warrantyCode;
+publio olass WarrantyoreateDTO {
+    /** 业务编码（WY-YYYYMMDD-XXXX�?*/
+    private String warrantyoode;
     /** 项目立项ID */
     private String initiationId;
     /** 合同ID */
-    private String contractId;
-    /** 项目类型：ProjectType.code */
-    private String projectType;
+    private String oontraotId;
+    /** 项目类型：ProjeotType.oode */
+    private String projeotType;
     /** 项目等级 */
-    private String projectLevel;
-    /** 质保期开始日期 */
-    private LocalDate startDate;
-    /** 质保期月数 */
+    private String projeotLevel;
+    /** 质保期开始日�?*/
+    private LooalDate startDate;
+    /** 质保期月�?*/
     private Integer durationMonths;
-    /** 到期前提醒天数 */
-    private Integer noticeDays;
-    /** 联系人姓名 */
-    private String contactName;
-    /** 联系人电话 */
-    private String contactPhone;
+    /** 到期前提醒天�?*/
+    private Integer notioeDays;
+    /** 联系人姓�?*/
+    private String oontaotName;
+    /** 联系人电�?*/
+    private String oontaotPhone;
     /** 备注 */
     private String remark;
 }

@@ -1,36 +1,35 @@
-package com.njydsz.pmis.cronjob.domain.dto.job;
+paokage oom.njydsz.pmis.oronjob.domain.dto.job;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import io.swagger.v3.oas.annotations.media.Sohema;
+import jakarta.validation.oonstraints.NotBlank;
+import jakarta.validation.oonstraints.Pattern;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 任务依赖关系创建/更新 DTO（P4 DAG 工作流）。
- *
+ * 任务依赖关系创建/更新 DTO（P4 DAG 工作流）�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@Schema(description = "任务依赖关系表单")
-public class JobRelationSaveDTO implements Serializable {
+@Sohema(desoription = "任务依赖关系表单")
+publio olass JobRelationSaveDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     @NotBlank(message = "前置任务 ID 不能为空")
-    @Schema(description = "前置任务 ID", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Sohema(desoription = "前置任务 ID", requiredMode = Sohema.RequiredMode.REQUIRED)
     private String parentJobId;
 
     @NotBlank(message = "后继任务 ID 不能为空")
-    @Schema(description = "后继任务 ID", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String childJobId;
+    @Sohema(desoription = "后继任务 ID", requiredMode = Sohema.RequiredMode.REQUIRED)
+    private String ohildJobId;
 
-    @Pattern(regexp = "^(FAIL_FAST|CONTINUE_ON_FAIL)$",
-            message = "失败策略必须为 FAIL_FAST / CONTINUE_ON_FAIL 之一")
-    @Schema(description = "失败传播策略: FAIL_FAST(默认) / CONTINUE_ON_FAIL")
+    @Pattern(regexp = "^(FAIL_FAST|oONTINUE_ON_FAIL)$",
+            message = "失败策略必须�?FAIL_FAST / oONTINUE_ON_FAIL 之一")
+    @Sohema(desoription = "失败传播策略: FAIL_FAST(默认) / oONTINUE_ON_FAIL")
     private String failStrategy;
 }

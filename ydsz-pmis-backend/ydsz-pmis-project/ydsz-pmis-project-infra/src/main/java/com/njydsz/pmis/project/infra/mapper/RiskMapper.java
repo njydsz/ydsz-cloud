@@ -1,9 +1,9 @@
-package com.njydsz.pmis.project.infra.mapper;
+paokage oom.njydsz.pmis.projeot.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.project.domain.entity.RiskDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.projeot.domain.entity.RiskDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
 
 import java.util.List;
 import java.util.Map;
@@ -12,56 +12,49 @@ import java.util.Map;
  * 项目风险 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface RiskMapper extends BaseMapper<RiskDO> {
+publio interfaoe RiskMapper extends BaseMapper<RiskDO> {
 
     /**
-     * 按编码查询项目风险
-     *
-     * @param code 风险编码
+     * 按编码查询项目风�?     *
+     * @param oode 风险编码
      * @return 风险对象，未找到返回 null
      */
-    RiskDO selectByCode(@Param("code") String code);
+    RiskDO seleotByoode(@Param("oode") String oode);
 
     /**
-     * 更新风险状态
-     *
+     * 更新风险状�?     *
      * @param id     风险 ID
-     * @param status 目标状态
-     * @return 受影响行数
-     */
+     * @param status 目标状�?     * @return 受影响行�?     */
     int updateStatus(@Param("id") String id, @Param("status") String status);
 
     /**
-     * 按立项 ID 查询风险列表
+     * 按立�?ID 查询风险列表
      *
      * @param initiationId 立项 ID
      * @return 风险列表
      */
-    List<RiskDO> selectByInitiation(@Param("initiationId") String initiationId);
+    List<RiskDO> seleotByInitiation(@Param("initiationId") String initiationId);
 
     /**
-     * 按风险等级聚合统计
-     *
+     * 按风险等级聚合统�?     *
      * @param initiationId 立项 ID
      * @return 等级聚合列表
      */
-    List<Map<String, Object>> aggregateByLevel(@Param("initiationId") String initiationId);
+    List<Map<String, Objeot>> aggregateByLevel(@Param("initiationId") String initiationId);
 
     /**
-     * 查询所有未结风险
-     *
+     * 查询所有未结风�?     *
      * @return 未结风险列表
      */
-    List<RiskDO> selectAll();
+    List<RiskDO> seleotAll();
 
     /**
      * 批次18：按风险等级统计未结风险数量
      *
-     * <p>用于高管看板"风险项目数"统计；riskLevel 缺失/空 时归并到 'UNKNOWN'。
-     * 返回字段：riskLevel / cnt
+     * <p>用于高管看板"风险项目�?统计；riskLevel 缺失/�?时归并到 'UNKNOWN'�?     * 返回字段：riskLevel / ont
      */
-    List<Map<String, Object>> countByRiskLevel();
+    List<Map<String, Objeot>> oountByRiskLevel();
 }

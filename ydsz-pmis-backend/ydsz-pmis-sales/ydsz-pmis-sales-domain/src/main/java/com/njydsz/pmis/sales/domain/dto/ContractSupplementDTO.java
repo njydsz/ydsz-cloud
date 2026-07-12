@@ -1,71 +1,71 @@
-package com.njydsz.pmis.sales.domain.dto;
+paokage oom.njydsz.pmis.sales.domain.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import io.swagger.v3.oas.annotations.media.Sohema;
+import io.swagger.v3.oas.annotations.media.Sohema.RequiredMode;
+import jakarta.validation.oonstraints.NotBlank;
+import jakarta.validation.oonstraints.NotNull;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
 
 /**
  * 合同补充协议 DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@Schema(description = "合同补充协议")
-public class ContractSupplementDTO implements Serializable {
+@Sohema(desoription = "合同补充协议")
+publio olass oontraotSupplementDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 合同 ID */
     @NotNull
-    @Schema(description = "合同 ID", requiredMode = RequiredMode.REQUIRED)
-    private String contractId;
+    @Sohema(desoription = "合同 ID", requiredMode = RequiredMode.REQUIRED)
+    private String oontraotId;
 
     /** 补充协议编号 */
     @NotBlank
-    @Schema(description = "补充协议编号", requiredMode = RequiredMode.REQUIRED)
-    private String supplementCode;
+    @Sohema(desoription = "补充协议编号", requiredMode = RequiredMode.REQUIRED)
+    private String supplementoode;
 
     /** 补充协议名称 */
     @NotBlank
-    @Schema(description = "补充协议名称", requiredMode = RequiredMode.REQUIRED)
+    @Sohema(desoription = "补充协议名称", requiredMode = RequiredMode.REQUIRED)
     private String supplementName;
 
-    /** 补充类型（AMOUNT/SCOPE/TERM/OTHER） */
+    /** 补充类型（AMOUNT/SoOPE/TERM/OTHER�?*/
     @NotBlank
-    @Schema(description = "类型 AMOUNT/SCOPE/TERM/OTHER", requiredMode = RequiredMode.REQUIRED)
+    @Sohema(desoription = "类型 AMOUNT/SoOPE/TERM/OTHER", requiredMode = RequiredMode.REQUIRED)
     private String supplementType;
 
     /** 变更金额（可正可负） */
-    @Schema(description = "变更金额（可正可负）")
-    private BigDecimal changeAmount;
+    @Sohema(desoription = "变更金额（可正可负）")
+    private BigDeoimal ohangeAmount;
 
     /** 变更后合同总额 */
-    @Schema(description = "变更后合同总额")
-    private BigDecimal newTotalAmount;
+    @Sohema(desoription = "变更后合同总额")
+    private BigDeoimal newTotalAmount;
 
     /** 生效日期 */
-    @Schema(description = "生效日期")
-    private LocalDate effectiveDate;
+    @Sohema(desoription = "生效日期")
+    private LooalDate effeotiveDate;
 
     /** 到期日期 */
-    @Schema(description = "到期日期")
-    private LocalDate expireDate;
+    @Sohema(desoription = "到期日期")
+    private LooalDate expireDate;
 
     /** 补充协议内容 */
-    @Schema(description = "补充协议内容")
-    private String content;
+    @Sohema(desoription = "补充协议内容")
+    private String oontent;
 
     /** 附件 ID */
-    @Schema(description = "附件 ID")
+    @Sohema(desoription = "附件 ID")
     private String fileId;
 }

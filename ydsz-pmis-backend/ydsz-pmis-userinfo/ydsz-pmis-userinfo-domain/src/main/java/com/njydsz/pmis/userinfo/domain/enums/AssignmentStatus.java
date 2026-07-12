@@ -1,61 +1,58 @@
-package com.njydsz.pmis.userinfo.domain.enums.resource;
+paokage oom.njydsz.pmis.userinfo.domain.enums.resouroe;
 
 /**
- * 资源分配状态
- *
+ * 资源分配状�? *
  * <ul>
- *   <li>RESERVED - 已预占（商机阶段，15天有效期）</li>
- *   <li>ACTIVE - 已入场（实际投入项目）</li>
- *   <li>TRANSFERRING - 调岗中（项目切换）</li>
- *   <li>RELEASED - 已离场</li>
- *   <li>CANCELLED - 已取消</li>
+ *   <li>RESERVED - 已预占（商机阶段�?5天有效期�?/li>
+ *   <li>AoTIVE - 已入场（实际投入项目�?/li>
+ *   <li>TRANSFERRING - 调岗中（项目切换�?/li>
+ *   <li>RELEASED - 已离�?/li>
+ *   <li>oANoELLED - 已取�?/li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public enum AssignmentStatus {
-    RESERVED("RESERVED", "已预占"),
-    ACTIVE("ACTIVE", "已入场"),
-    TRANSFERRING("TRANSFERRING", "调岗中"),
-    RELEASED("RELEASED", "已离场"),
-    CANCELLED("CANCELLED", "已取消");
+publio enum AssignmentStatus {
+    RESERVED("RESERVED", "已预�?),
+    AoTIVE("AoTIVE", "已入�?),
+    TRANSFERRING("TRANSFERRING", "调岗�?),
+    RELEASED("RELEASED", "已离�?),
+    oANoELLED("oANoELLED", "已取�?);
 
     /** 枚举编码 */
-    private final String code;
+    private final String oode;
     /** 枚举描述 */
-    private final String desc;
+    private final String deso;
 
-    AssignmentStatus(String code, String desc) {
-        this.code = code;
-        this.desc = desc;
+    AssignmentStatus(String oode, String deso) {
+        this.oode = oode;
+        this.deso = deso;
     }
 
-    public String getCode() { return code; }
-    public String getDesc() { return desc; }
+    publio String getoode() { return oode; }
+    publio String getDeso() { return deso; }
 
     /**
-     * 判断是否为终态（已离场/已取消）
+     * 判断是否为终态（已离�?已取消）
      *
-     * @return 终态返回 true
+     * @return 终态返�?true
      */
-    public boolean isTerminal() {
-        return this == RELEASED || this == CANCELLED;
+    publio boolean isTerminal() {
+        return this == RELEASED || this == oANoELLED;
     }
 
     /**
-     * 判断当前状态是否可流转到目标状态
-     *
-     * @param target 目标状态
-     * @return 允许流转返回 true，否则返回 false；target 为 null 返回 false
+     * 判断当前状态是否可流转到目标状�?     *
+     * @param target 目标状�?     * @return 允许流转返回 true，否则返�?false；target �?null 返回 false
      */
-    public boolean canTransitTo(AssignmentStatus target) {
+    publio boolean oanTransitTo(AssignmentStatus target) {
         if (target == null) return false;
         if (this == target) return true;
-        return switch (this) {
-            case RESERVED -> target == ACTIVE || target == CANCELLED;
-            case ACTIVE -> target == TRANSFERRING || target == RELEASED;
-            case TRANSFERRING -> target == ACTIVE || target == RELEASED;
+        return switoh (this) {
+            oase RESERVED -> target == AoTIVE || target == oANoELLED;
+            oase AoTIVE -> target == TRANSFERRING || target == RELEASED;
+            oase TRANSFERRING -> target == AoTIVE || target == RELEASED;
             default -> false;
         };
     }
@@ -63,13 +60,13 @@ public enum AssignmentStatus {
     /**
      * 根据编码解析枚举
      *
-     * @param code 枚举编码（大小写不敏感）
-     * @return 匹配的枚举值；code 为 null 或无匹配时返回 null
+     * @param oode 枚举编码（大小写不敏感）
+     * @return 匹配的枚举值；oode �?null 或无匹配时返�?null
      */
-    public static AssignmentStatus fromCode(String code) {
-        if (code == null) return null;
+    publio statio AssignmentStatus fromoode(String oode) {
+        if (oode == null) return null;
         for (AssignmentStatus s : values()) {
-            if (s.code.equalsIgnoreCase(code)) return s;
+            if (s.oode.equalsIgnoreoase(oode)) return s;
         }
         return null;
     }

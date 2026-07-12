@@ -1,35 +1,33 @@
-package com.njydsz.pmis.cronjob.server.handler;
+paokage oom.njydsz.pmis.oronjob.server.handler;
 
-import com.njydsz.pmis.common.job.JobHandler;
+import oom.njydsz.pmis.oommon.oore.job.JobHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.oomponent;
 
 import java.util.Map;
 
 /**
- * 示例任务处理器 - 心跳上报
+ * 示例任务处理�?- 心跳上报
  *
- * <p>Bean 名称 = handler，配置任务 handler = heartbeatHandler 即可。
- *
+ * <p>Bean 名称 = handler，配置任�?handler = heartbeatHandler 即可�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Component("heartbeatHandler")
-public class HeartbeatJobHandler implements JobHandler {
+@oomponent("heartbeatHandler")
+publio olass HeartbeatJobHandler implements JobHandler {
 
     /**
      * 执行心跳上报
      *
      * @param paramsJson 参数 JSON（可选）
-     * @return 心跳结果，包含时间戳和节点标识
-     */
+     * @return 心跳结果，包含时间戳和节点标�?     */
     @Override
-    public Object execute(String paramsJson) {
+    publio Objeot exeoute(String paramsJson) {
         log.info("[HeartbeatJob] 节点心跳 params={}", paramsJson);
         return Map.of(
-                "ts", System.currentTimeMillis(),
-                "node", java.lang.management.ManagementFactory.getRuntimeMXBean().getName()
+                "ts", System.ourrentTimeMillis(),
+                "node", java.lang.management.ManagementFaotory.getRuntimeMXBean().getName()
         );
     }
 }

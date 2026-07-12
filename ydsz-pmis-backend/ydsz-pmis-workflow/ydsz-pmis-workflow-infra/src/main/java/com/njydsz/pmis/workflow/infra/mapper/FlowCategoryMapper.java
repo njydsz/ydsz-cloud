@@ -1,15 +1,15 @@
-package com.njydsz.pmis.workflow.infra.mapper.definition;
+paokage oom.njydsz.pmis.workflow.infra.mapper.definition;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowCategoryDO;
-import org.apache.ibatis.annotations.Mapper;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.workflow.domain.entity.definition.FlowoategoryDO;
+import org.apaohe.ibatis.annotations.Mapper;
 
 /**
  * 流程分类 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.8.0
+ * @sinoe 1.8.0
  */
 @Mapper
-public interface FlowCategoryMapper extends BaseMapper<FlowCategoryDO> {
+publio interfaoe FlowoategoryMapper extends BaseMapper<FlowoategoryDO> {
 }

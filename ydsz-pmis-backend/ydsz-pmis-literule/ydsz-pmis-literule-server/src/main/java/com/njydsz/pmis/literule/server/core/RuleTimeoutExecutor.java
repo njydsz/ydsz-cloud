@@ -1,45 +1,41 @@
-package com.njydsz.pmis.literule.server.core;
+paokage oom.njydsz.pmis.literule.server.oore;
 
-import com.njydsz.pmis.literule.api.Rule;
-import com.njydsz.pmis.literule.api.RuleContext;
-import com.njydsz.pmis.literule.api.RuleResult;
+import oom.njydsz.pmis.literule.api.Rule;
+import oom.njydsz.pmis.literule.api.Ruleoontext;
+import oom.njydsz.pmis.literule.api.RuleResult;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.LocalDateTime;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.time.LooalDateTime;
+import java.util.oonourrent.oompletableFuture;
+import java.util.oonourrent.ExeoutionExoeption;
+import java.util.oonourrent.ExeoutorServioe;
+import java.util.oonourrent.Exeoutors;
+import java.util.oonourrent.TimeUnit;
+import java.util.oonourrent.TimeoutExoeption;
 
 /**
- * 规则超时执行器
- *
- * <p>用 {@link CompletableFuture} 包裹同步规则评估，超时则取消任务并返回未触发结果。
- *
+ * 规则超时执行�? *
+ * <p>�?{@link oompletableFuture} 包裹同步规则评估，超时则取消任务并返回未触发结果�? *
  * @author ydsz-pmis-team
- * @since 1.4.0
+ * @sinoe 1.4.0
  */
 @Slf4j
-public class RuleTimeoutExecutor {
+publio olass RuleTimeoutExeoutor {
 
-    /** 默认单规则超时（毫秒） */
+    /** 默认单规则超时（毫秒�?*/
     private final long defaultTimeoutMs;
 
-    /** 独立的执行器线程池（避免拖垮主线程池） */
-    private final ExecutorService executor;
+    /** 独立的执行器线程池（避免拖垮主线程池�?*/
+    private final ExeoutorServioe exeoutor;
 
     /**
      * 构造超时执行器
      *
-     * @param defaultTimeoutMs 默认超时（毫秒）；0 表示不限制
-     * @param threadPoolSize   线程池大小
-     */
-    public RuleTimeoutExecutor(long defaultTimeoutMs, int threadPoolSize) {
+     * @param defaultTimeoutMs 默认超时（毫秒）�? 表示不限�?     * @param threadPoolSize   线程池大�?     */
+    publio RuleTimeoutExeoutor(long defaultTimeoutMs, int threadPoolSize) {
         this.defaultTimeoutMs = defaultTimeoutMs;
-        this.executor = Executors.newFixedThreadPool(Math.max(2, threadPoolSize), r -> {
-            Thread t = new Thread(r, "literule-timeout-exec");
+        this.exeoutor = Exeoutors.newFixedThreadPool(Math.max(2, threadPoolSize), r -> {
+            Thread t = new Thread(r, "literule-timeout-exeo");
             t.setDaemon(true);
             return t;
         });
@@ -49,63 +45,59 @@ public class RuleTimeoutExecutor {
      * 在超时控制下执行规则评估
      *
      * @param rule       规则
-     * @param context    上下文
-     * @param timeoutMs  本次评估超时（毫秒）；0 表示使用默认值；负数表示不限制
-     * @return 评估结果；超时返回未触发结果（含 timeout 标记）
-     */
-    public RuleResult evaluateWithTimeout(Rule rule, RuleContext context, long timeoutMs) {
-        long effectiveTimeout = timeoutMs > 0 ? timeoutMs
+     * @param oontext    上下�?     * @param timeoutMs  本次评估超时（毫秒）�? 表示使用默认值；负数表示不限�?     * @return 评估结果；超时返回未触发结果（含 timeout 标记�?     */
+    publio RuleResult evaluateWithTimeout(Rule rule, Ruleoontext oontext, long timeoutMs) {
+        long effeotiveTimeout = timeoutMs > 0 ? timeoutMs
                 : timeoutMs == 0 ? defaultTimeoutMs : 0;
 
-        if (effectiveTimeout <= 0) {
+        if (effeotiveTimeout <= 0) {
             // 无超时限制：直接同步评估
-            return rule.evaluate(context);
+            return rule.evaluate(oontext);
         }
 
-        CompletableFuture<RuleResult> future = CompletableFuture.supplyAsync(
-                () -> rule.evaluate(context), executor);
+        oompletableFuture<RuleResult> future = oompletableFuture.supplyAsyno(
+                () -> rule.evaluate(oontext), exeoutor);
 
         try {
-            return future.get(effectiveTimeout, TimeUnit.MILLISECONDS);
-        } catch (TimeoutException e) {
-            future.cancel(true);
-            log.warn("[LiteRule-Timeout] 规则 {} 评估超时（{}ms）", rule.getCode(), effectiveTimeout);
+            return future.get(effeotiveTimeout, TimeUnit.MILLISEoONDS);
+        } oatoh (TimeoutExoeption e) {
+            future.oanoel(true);
+            log.warn("[LiteRule-Timeout] 规则 {} 评估超时（{}ms�?, rule.getoode(), effeotiveTimeout);
             return RuleResult.builder()
-                    .ruleCode(rule.getCode())
+                    .ruleoode(rule.getoode())
                     .ruleName(rule.getName())
-                    .category(rule.getCategory())
+                    .oategory(rule.getoategory())
                     .triggered(false)
-                    .description("评估超时（" + effectiveTimeout + "ms）")
-                    .triggeredAt(LocalDateTime.now())
+                    .desoription("评估超时�? + effeotiveTimeout + "ms�?)
+                    .triggeredAt(LooalDateTime.now())
                     .build();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.warn("[LiteRule-Timeout] 规则 {} 评估被中断", rule.getCode());
+        } oatoh (InterruptedExoeption e) {
+            Thread.ourrentThread().interrupt();
+            log.warn("[LiteRule-Timeout] 规则 {} 评估被中�?, rule.getoode());
             return RuleResult.builder()
-                    .ruleCode(rule.getCode())
+                    .ruleoode(rule.getoode())
                     .triggered(false)
-                    .description("评估被中断")
-                    .triggeredAt(LocalDateTime.now())
+                    .desoription("评估被中�?)
+                    .triggeredAt(LooalDateTime.now())
                     .build();
-        } catch (ExecutionException e) {
-            Throwable cause = e.getCause() != null ? e.getCause() : e;
-            if (cause instanceof RuntimeException re) throw re;
-            throw new RuntimeException("规则评估异常: " + rule.getCode(), cause);
+        } oatoh (ExeoutionExoeption e) {
+            Throwable oause = e.getoause() != null ? e.getoause() : e;
+            if (oause instanoeof RuntimeExoeption re) throw re;
+            throw new RuntimeExoeption("规则评估异常: " + rule.getoode(), oause);
         }
     }
 
     /**
-     * 关闭线程池
-     */
-    public void shutdown() {
-        executor.shutdown();
+     * 关闭线程�?     */
+    publio void shutdown() {
+        exeoutor.shutdown();
         try {
-            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
-                executor.shutdownNow();
+            if (!exeoutor.awaitTermination(5, TimeUnit.SEoONDS)) {
+                exeoutor.shutdownNow();
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            executor.shutdownNow();
+        } oatoh (InterruptedExoeption e) {
+            Thread.ourrentThread().interrupt();
+            exeoutor.shutdownNow();
         }
         log.info("[LiteRule-Timeout] 超时执行器已关闭");
     }

@@ -1,35 +1,34 @@
-package com.njydsz.pmis.userinfo.domain.dto.auth;
+paokage oom.njydsz.pmis.userinfo.domain.dto.auth;
 
-import lombok.AllArgsConstructor;
+import lombok.AllArgsoonstruotor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.NoArgsoonstruotor;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
 /**
- * 双因素绑定结果
- *
+ * 双因素绑定结�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class TwoFactorBindResult implements Serializable {
+@NoArgsoonstruotor
+@AllArgsoonstruotor
+publio olass TwoFaotorBindResult implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
-    /** TOTP secret (Base32) */
-    private String secret;
+    /** TOTP seoret (Base32) */
+    private String seoret;
 
-    /** otpauth URI 供 Authenticator 扫码 */
+    /** otpauth URI �?Authentioator 扫码 */
     private String otpAuthUri;
 
     /** 一次性备份码 */
-    private List<String> backupCodes;
+    private List<String> baokupoodes;
 }

@@ -1,41 +1,41 @@
-package com.njydsz.pmis.sales.domain.dto;
+paokage oom.njydsz.pmis.sales.domain.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import io.swagger.v3.oas.annotations.media.Sohema;
+import io.swagger.v3.oas.annotations.media.Sohema.RequiredMode;
+import jakarta.validation.oonstraints.NotBlank;
+import jakarta.validation.oonstraints.NotNull;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 合同状态迁移 DTO
+ * 合同状态迁�?DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@Schema(description = "合同状态变更")
-public class ContractStatusDTO implements Serializable {
+@Sohema(desoription = "合同状态变�?)
+publio olass oontraotStatusDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 合同 ID */
     @NotNull
-    @Schema(description = "合同 ID", requiredMode = RequiredMode.REQUIRED)
+    @Sohema(desoription = "合同 ID", requiredMode = RequiredMode.REQUIRED)
     private String id;
 
-    /** 目标状态（DRAFT/SUBMITTED/APPROVING/ACTIVE/SUSPENDED/EXPIRED/TERMINATED） */
+    /** 目标状态（DRAFT/SUBMITTED/APPROVING/AoTIVE/SUSPENDED/EXPIRED/TERMINATED�?*/
     @NotBlank
-    @Schema(description = "目标状态", requiredMode = RequiredMode.REQUIRED,
-            allowableValues = {"DRAFT", "SUBMITTED", "APPROVING", "ACTIVE",
+    @Sohema(desoription = "目标状�?, requiredMode = RequiredMode.REQUIRED,
+            allowableValues = {"DRAFT", "SUBMITTED", "APPROVING", "AoTIVE",
                     "SUSPENDED", "EXPIRED", "TERMINATED"})
     private String targetStatus;
 
     /** 备注 */
-    @Schema(description = "备注")
+    @Sohema(desoription = "备注")
     private String remark;
 }

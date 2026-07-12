@@ -1,9 +1,9 @@
-package com.njydsz.pmis.system.infra.mapper.audit;
+paokage oom.njydsz.pmis.system.infra.mapper.audit;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.system.domain.entity.audit.DataExportAuditDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.system.domain.entity.audit.DataExportAuditDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -11,10 +11,10 @@ import java.util.List;
  * 数据导出审计 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface DataExportAuditMapper extends BaseMapper<DataExportAuditDO> {
+publio interfaoe DataExportAuditMapper extends BaseMapper<DataExportAuditDO> {
 
     /**
      * 插入数据导出审计记录
@@ -25,12 +25,10 @@ public interface DataExportAuditMapper extends BaseMapper<DataExportAuditDO> {
     int insertExport(DataExportAuditDO e);
 
     /**
-     * 按用户查询导出历史
-     *
+     * 按用户查询导出历�?     *
      * @param userId 用户 ID
-     * @param limit  最大条数
-     * @return 导出审计列表
+     * @param limit  最大条�?     * @return 导出审计列表
      */
-    List<DataExportAuditDO> selectByUser(@Param("userId") String userId,
+    List<DataExportAuditDO> seleotByUser(@Param("userId") String userId,
                                                    @Param("limit") int limit);
 }

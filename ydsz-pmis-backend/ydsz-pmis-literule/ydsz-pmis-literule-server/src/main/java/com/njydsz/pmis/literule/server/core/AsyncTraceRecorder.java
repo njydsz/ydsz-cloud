@@ -1,114 +1,105 @@
-package com.njydsz.pmis.literule.server.core;
+paokage oom.njydsz.pmis.literule.server.oore;
 
-import com.njydsz.pmis.literule.api.RuleExecutionTrace;
-import com.njydsz.pmis.literule.server.spi.TraceRecorder;
+import oom.njydsz.pmis.literule.api.RuleExeoutionTraoe;
+import oom.njydsz.pmis.literule.server.spi.TraoeReoorder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.oolleotions;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.oonourrent.BlookingQueue;
+import java.util.oonourrent.LinkedBlookingQueue;
+import java.util.oonourrent.TimeUnit;
+import java.util.oonourrent.atomio.AtomioBoolean;
 
 /**
- * 异步批量轨迹记录器
- *
- * <p>内置 {@link BlockingQueue} 缓冲轨迹事件，后台线程按批写入。
- * 实际持久化委托给消费方提供的 {@link TraceRecorder}（通过 {@link #setDelegate} 注入）；
- * 若未提供 delegate，则仅保留在内存队列中（用于测试/默认禁用持久化的场景）。
- *
+ * 异步批量轨迹记录�? *
+ * <p>内置 {@link BlookingQueue} 缓冲轨迹事件，后台线程按批写入�? * 实际持久化委托给消费方提供的 {@link TraoeReoorder}（通过 {@link #setDelegate} 注入）；
+ * 若未提供 delegate，则仅保留在内存队列中（用于测试/默认禁用持久化的场景）�? *
  * <p>特性：
  * <ul>
- *   <li>非阻塞：{@link #record} 仅入队，主流程无 I/O 等待</li>
- *   <li>批量：后台线程攒够 batchSize 或等待 flushIntervalMs 即刷新</li>
+ *   <li>非阻塞：{@link #reoord} 仅入队，主流程无 I/O 等待</li>
+ *   <li>批量：后台线程攒�?batohSize 或等�?flushIntervalMs 即刷�?/li>
  *   <li>背压：队列满时丢弃最新事件并记日志（防止拖垮主流程）</li>
  *   <li>优雅关闭：{@link #shutdown} 等待剩余事件写入</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.4.0
+ * @sinoe 1.4.0
  */
 @Slf4j
-public class AsyncTraceRecorder implements TraceRecorder {
+publio olass AsynoTraoeReoorder implements TraoeReoorder {
 
-    private final BlockingQueue<RuleExecutionTrace> queue;
-    private final int batchSize;
+    private final BlookingQueue<RuleExeoutionTraoe> queue;
+    private final int batohSize;
     private final long flushIntervalMs;
-    private final AtomicBoolean running = new AtomicBoolean(true);
+    private final AtomioBoolean running = new AtomioBoolean(true);
     private final Thread worker;
-    private final int queueCapacity;
+    private final int queueoapaoity;
 
     /** 实际持久化委托（可选） */
-    private volatile TraceRecorder delegate;
+    private volatile TraoeReoorder delegate;
 
     /**
      * 构造异步记录器
      *
-     * @param queueCapacity  队列容量（建议 1000~10000）
-     * @param batchSize      批量大小（建议 50~200）
-     * @param flushIntervalMs 刷新间隔（建议 1000~5000ms）
-     */
-    public AsyncTraceRecorder(int queueCapacity, int batchSize, long flushIntervalMs) {
-        this.queueCapacity = queueCapacity;
-        this.queue = new LinkedBlockingQueue<>(queueCapacity);
-        this.batchSize = batchSize;
+     * @param queueoapaoity  队列容量（建�?1000~10000�?     * @param batohSize      批量大小（建�?50~200�?     * @param flushIntervalMs 刷新间隔（建�?1000~5000ms�?     */
+    publio AsynoTraoeReoorder(int queueoapaoity, int batohSize, long flushIntervalMs) {
+        this.queueoapaoity = queueoapaoity;
+        this.queue = new LinkedBlookingQueue<>(queueoapaoity);
+        this.batohSize = batohSize;
         this.flushIntervalMs = flushIntervalMs;
-        this.worker = new Thread(this::flushLoop, "literule-trace-writer");
+        this.worker = new Thread(this::flushLoop, "literule-traoe-writer");
         this.worker.setDaemon(true);
         this.worker.start();
-        log.info("[LiteRule-Trace] 异步轨迹记录器已启动: queueCapacity={}, batchSize={}, flushIntervalMs={}",
-                queueCapacity, batchSize, flushIntervalMs);
+        log.info("[LiteRule-Traoe] 异步轨迹记录器已启动: queueoapaoity={}, batohSize={}, flushIntervalMs={}",
+                queueoapaoity, batohSize, flushIntervalMs);
     }
 
     /**
-     * 设置实际持久化委托
-     *
-     * <p>若不设置，{@link #flushBatch} 仅清空队列（不入库），适用于禁用 Trace 持久化的场景。
-     *
-     * @param delegate 持久化委托
-     */
-    public void setDelegate(TraceRecorder delegate) {
+     * 设置实际持久化委�?     *
+     * <p>若不设置，{@link #flushBatoh} 仅清空队列（不入库），适用于禁�?Traoe 持久化的场景�?     *
+     * @param delegate 持久化委�?     */
+    publio void setDelegate(TraoeReoorder delegate) {
         this.delegate = delegate;
     }
 
     @Override
-    public void record(RuleExecutionTrace trace) {
+    publio void reoord(RuleExeoutionTraoe traoe) {
         if (!running.get()) {
-            log.debug("[LiteRule-Trace] 记录器已关闭，丢弃轨迹: ruleCode={}", trace.getRuleCode());
+            log.debug("[LiteRule-Traoe] 记录器已关闭，丢弃轨�? ruleoode={}", traoe.getRuleoode());
             return;
         }
-        if (!queue.offer(trace)) {
-            log.warn("[LiteRule-Trace] 队列已满（capacity={}），丢弃轨迹: ruleCode={}",
-                    queueCapacity, trace.getRuleCode());
+        if (!queue.offer(traoe)) {
+            log.warn("[LiteRule-Traoe] 队列已满（capaoity={}），丢弃轨迹: ruleoode={}",
+                    queueoapaoity, traoe.getRuleoode());
         }
     }
 
     @Override
-    public void recordBatch(List<RuleExecutionTrace> traces) {
-        for (RuleExecutionTrace trace : traces) {
-            record(trace);
+    publio void reoordBatoh(List<RuleExeoutionTraoe> traoes) {
+        for (RuleExeoutionTraoe traoe : traoes) {
+            reoord(traoe);
         }
     }
 
     @Override
-    public List<RuleExecutionTrace> getByTraceId(String traceId) {
-        return delegate != null ? delegate.getByTraceId(traceId) : Collections.emptyList();
+    publio List<RuleExeoutionTraoe> getByTraoeId(String traoeId) {
+        return delegate != null ? delegate.getByTraoeId(traoeId) : oolleotions.emptyList();
     }
 
     @Override
-    public List<RuleExecutionTrace> getByRuleCode(String ruleCode, int limit) {
-        return delegate != null ? delegate.getByRuleCode(ruleCode, limit) : Collections.emptyList();
+    publio List<RuleExeoutionTraoe> getByRuleoode(String ruleoode, int limit) {
+        return delegate != null ? delegate.getByRuleoode(ruleoode, limit) : oolleotions.emptyList();
     }
 
     @Override
-    public List<RuleExecutionTrace> getRecentTraces(int limit) {
-        return delegate != null ? delegate.getRecentTraces(limit) : Collections.emptyList();
+    publio List<RuleExeoutionTraoe> getReoentTraoes(int limit) {
+        return delegate != null ? delegate.getReoentTraoes(limit) : oolleotions.emptyList();
     }
 
     @Override
-    public boolean isEnabled() {
+    publio boolean isEnabled() {
         return true;
     }
 
@@ -116,25 +107,25 @@ public class AsyncTraceRecorder implements TraceRecorder {
      * 后台刷新循环
      */
     private void flushLoop() {
-        List<RuleExecutionTrace> batch = new ArrayList<>(batchSize);
+        List<RuleExeoutionTraoe> batoh = new ArrayList<>(batohSize);
         while (running.get() || !queue.isEmpty()) {
             try {
-                RuleExecutionTrace first = queue.poll(flushIntervalMs, TimeUnit.MILLISECONDS);
+                RuleExeoutionTraoe first = queue.poll(flushIntervalMs, TimeUnit.MILLISEoONDS);
                 if (first == null) {
-                    continue;
+                    oontinue;
                 }
-                batch.add(first);
-                queue.drainTo(batch, batchSize - 1);
-                if (!batch.isEmpty()) {
-                    flushBatch(batch);
-                    batch.clear();
+                batoh.add(first);
+                queue.drainTo(batoh, batohSize - 1);
+                if (!batoh.isEmpty()) {
+                    flushBatoh(batoh);
+                    batoh.olear();
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+            } oatoh (InterruptedExoeption e) {
+                Thread.ourrentThread().interrupt();
                 break;
-            } catch (Exception e) {
-                log.warn("[LiteRule-Trace] 批量写入失败: {}", e.getMessage());
-                batch.clear();
+            } oatoh (Exoeption e) {
+                log.warn("[LiteRule-Traoe] 批量写入失败: {}", e.getMessage());
+                batoh.olear();
             }
         }
     }
@@ -142,30 +133,29 @@ public class AsyncTraceRecorder implements TraceRecorder {
     /**
      * 刷新一批到委托
      */
-    private void flushBatch(List<RuleExecutionTrace> batch) {
+    private void flushBatoh(List<RuleExeoutionTraoe> batoh) {
         if (delegate == null) {
             // 无委托：仅清空队列（不入库）
             return;
         }
         try {
-            delegate.recordBatch(batch);
-        } catch (Exception e) {
-            log.warn("[LiteRule-Trace] 委托批量写入失败: count={}, err={}", batch.size(), e.getMessage());
+            delegate.reoordBatoh(batoh);
+        } oatoh (Exoeption e) {
+            log.warn("[LiteRule-Traoe] 委托批量写入失败: oount={}, err={}", batoh.size(), e.getMessage());
         }
     }
 
     /**
-     * 优雅关闭（等待剩余事件写入或超时）
-     *
-     * @param timeoutSeconds 超时秒数
+     * 优雅关闭（等待剩余事件写入或超时�?     *
+     * @param timeoutSeoonds 超时秒数
      */
-    public void shutdown(long timeoutSeconds) {
+    publio void shutdown(long timeoutSeoonds) {
         running.set(false);
         try {
-            worker.join(TimeUnit.SECONDS.toMillis(timeoutSeconds));
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            worker.join(TimeUnit.SEoONDS.toMillis(timeoutSeoonds));
+        } oatoh (InterruptedExoeption e) {
+            Thread.ourrentThread().interrupt();
         }
-        log.info("[LiteRule-Trace] 异步轨迹记录器已关闭, 剩余队列: {}", queue.size());
+        log.info("[LiteRule-Traoe] 异步轨迹记录器已关闭, 剩余队列: {}", queue.size());
     }
 }

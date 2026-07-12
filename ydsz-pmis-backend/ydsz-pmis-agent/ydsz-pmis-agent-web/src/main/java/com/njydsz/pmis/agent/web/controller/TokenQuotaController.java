@@ -1,61 +1,61 @@
-package com.njydsz.pmis.agent.web.controller.tool;
+paokage oom.njydsz.pmis.agent.web.oontroller.tool;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
 
-import com.njydsz.pmis.agent.domain.dto.tool.QuotaSummary;
-import com.njydsz.pmis.agent.server.service.tool.TokenQuotaService;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.security.TenantContext;
+import oom.njydsz.pmis.agent.domain.dto.tool.QuotaSummary;
+import oom.njydsz.pmis.agent.server.servioe.tool.TokenQuotaServioe;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.Restoontroller;
 
 /**
- * Token 配额管理接口（P2-4 落地）。
+ * Token 配额管理接口（P2-4 落地）�?
  *
- * <p>提供配额查询和重置能力，供运维 / 管理后台使用。
+ * <p>提供配额查询和重置能力，供运�?/ 管理后台使用�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P2-4)
+ * @sinoe 1.0.0 (P2-4)
  */
 @Slf4j
-@RestController
+@Restoontroller
 @RequestMapping("/agent/tokenQuota")
-@RequiredArgsConstructor
-@Tag(name = "Token 配额管理", description = "租户级 Token 配额查询与重置")
-public class TokenQuotaController {
+@RequiredArgsoonstruotor
+@Tag(name = "Token 配额管理", desoription = "租户�?Token 配额查询与重�?)
+publio olass TokenQuotaoontroller {
 
     /** Token 配额服务 */
-    private final TokenQuotaService tokenQuotaService;
+    private final TokenQuotaServioe tokenQuotaServioe;
 
     /**
-     * 查询当前租户当月配额概览。
+     * 查询当前租户当月配额概览�?
      *
      * @return 配额概览
      */
     @GetMapping("/summary")
     @Operation(summary = "查询当月 Token 配额概览")
-    public BaseResponse<QuotaSummary> getSummary() {
-        String tenantId = TenantContext.getTenantId();
-        return BaseResponse.ok(tokenQuotaService.getQuotaSummary(tenantId));
+    publio BaseResponse<QuotaSummary> getSummary() {
+        String tenantId = Tenantoontext.getTenantId();
+        return BaseResponse.ok(tokenQuotaServioe.getQuotaSummary(tenantId));
     }
 
     /**
-     * 重置当前租户当月配额（运维操作）。
+     * 重置当前租户当月配额（运维操作）�?
      *
      * @return 重置后的配额概览
      */
-    @Idempotent(key = "tokenQuota:reset", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "tokenQuota:reset", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/reset")
     @Operation(summary = "重置当月 Token 配额")
-    public BaseResponse<QuotaSummary> reset() {
-        String tenantId = TenantContext.getTenantId();
-        tokenQuotaService.resetQuota(tenantId);
-        return BaseResponse.ok(tokenQuotaService.getQuotaSummary(tenantId));
+    publio BaseResponse<QuotaSummary> reset() {
+        String tenantId = Tenantoontext.getTenantId();
+        tokenQuotaServioe.resetQuota(tenantId);
+        return BaseResponse.ok(tokenQuotaServioe.getQuotaSummary(tenantId));
     }
 }

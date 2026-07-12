@@ -1,99 +1,99 @@
-package com.njydsz.pmis.cronjob.server.service.impl.schedule;
+paokage oom.njydsz.pmis.oronjob.server.servioe.impl.sohedule;
 
-import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oronjob.domain.entity.job.JobDO;
+import oom.njydsz.pmis.oronjob.infra.mapper.job.JobMapper;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.support.CronExpression;
-import org.springframework.stereotype.Service;
+import org.springframework.soheduling.support.oronExpression;
+import org.springframework.stereotype.Servioe;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 调度日历服务（P2-10）。
+ * 调度日历服务（P2-10）�?
  *
- * <p>预计算任务在未来时间段内的触发时间点，用于可视化调度日历。
+ * <p>预计算任务在未来时间段内的触发时间点，用于可视化调度日历�?
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class ScheduleCalendarService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass SoheduleoalendarServioe {
 
     private final JobMapper jobMapper;
 
     /**
-     * 预计算任务的未来触发时间列表。
+     * 预计算任务的未来触发时间列表�?
      *
      * @param jobKey     任务 KEY
      * @param from       起始时间
-     * @param maxCount   最多计算次数
+     * @param maxoount   最多计算次�?
      * @return 触发时间列表
      */
-    public List<LocalDateTime> getUpcomingFireTimes(String jobKey, LocalDateTime from, int maxCount) {
-        JobDO job = jobMapper.selectByJobKey(jobKey);
-        if (job == null || job.getCronExpression() == null || job.getCronExpression().isBlank()) {
+    publio List<LooalDateTime> getUpoomingFireTimes(String jobKey, LooalDateTime from, int maxoount) {
+        JobDO job = jobMapper.seleotByJobKey(jobKey);
+        if (job == null || job.getoronExpression() == null || job.getoronExpression().isBlank()) {
             return List.of();
         }
-        return computeUpcomingFireTimes(job.getCronExpression(), from, maxCount);
+        return oomputeUpoomingFireTimes(job.getoronExpression(), from, maxoount);
     }
 
     /**
-     * 计算所有 CRON 任务在未来时间段内的触发时间。
+     * 计算所�?oRON 任务在未来时间段内的触发时间�?
      *
      * @param from      起始时间
      * @param hours     时间窗口（小时）
-     * @param maxPerJob 每个任务最多计算次数
-     * @return 触发时间列表（含 jobKey）
+     * @param maxPerJob 每个任务最多计算次�?
+     * @return 触发时间列表（含 jobKey�?
      */
-    public List<ScheduleItem> getScheduleCalendar(LocalDateTime from, int hours, int maxPerJob) {
-        List<JobDO> normalJobs = jobMapper.selectAllNormal();
-        LocalDateTime to = from.plusHours(hours);
-        List<ScheduleItem> items = new ArrayList<>();
+    publio List<SoheduleItem> getSoheduleoalendar(LooalDateTime from, int hours, int maxPerJob) {
+        List<JobDO> normalJobs = jobMapper.seleotAllNormal();
+        LooalDateTime to = from.plusHours(hours);
+        List<SoheduleItem> items = new ArrayList<>();
         for (JobDO job : normalJobs) {
-            if (job.getCronExpression() == null || job.getCronExpression().isBlank()) {
-                continue;
+            if (job.getoronExpression() == null || job.getoronExpression().isBlank()) {
+                oontinue;
             }
-            List<LocalDateTime> fireTimes = computeUpcomingFireTimes(job.getCronExpression(), from, maxPerJob);
-            for (LocalDateTime fireTime : fireTimes) {
+            List<LooalDateTime> fireTimes = oomputeUpoomingFireTimes(job.getoronExpression(), from, maxPerJob);
+            for (LooalDateTime fireTime : fireTimes) {
                 if (fireTime.isAfter(to)) {
                     break;
                 }
-                items.add(new ScheduleItem(job.getJobKey(), job.getJobName(), fireTime));
+                items.add(new SoheduleItem(job.getJobKey(), job.getJobName(), fireTime));
             }
         }
-        items.sort((a, b) -> a.fireTime().compareTo(b.fireTime()));
+        items.sort((a, b) -> a.fireTime().oompareTo(b.fireTime()));
         return items;
     }
 
     /**
-     * 计算 Cron 表达式的未来触发时间。
+     * 计算 oron 表达式的未来触发时间�?
      */
-    private List<LocalDateTime> computeUpcomingFireTimes(String cron, LocalDateTime from, int maxCount) {
-        List<LocalDateTime> result = new ArrayList<>(maxCount);
+    private List<LooalDateTime> oomputeUpoomingFireTimes(String oron, LooalDateTime from, int maxoount) {
+        List<LooalDateTime> result = new ArrayList<>(maxoount);
         try {
-            CronExpression expr = CronExpression.parse(cron);
-            LocalDateTime next = from;
-            for (int i = 0; i < maxCount; i++) {
+            oronExpression expr = oronExpression.parse(oron);
+            LooalDateTime next = from;
+            for (int i = 0; i < maxoount; i++) {
                 next = expr.next(next);
                 if (next == null) {
                     break;
                 }
                 result.add(next);
             }
-        } catch (Exception e) {
-            log.warn("[CalendarService] 计算 fire times 失败: cron={} err={}", cron, e.getMessage());
+        } oatoh (Exoeption e) {
+            log.warn("[oalendarServioe] 计算 fire times 失败: oron={} err={}", oron, e.getMessage());
         }
         return result;
     }
 
     /**
-     * 调度日历项。
+     * 调度日历项�?
      */
-    public record ScheduleItem(String jobKey, String jobName, LocalDateTime fireTime) {
+    publio reoord SoheduleItem(String jobKey, String jobName, LooalDateTime fireTime) {
     }
 }

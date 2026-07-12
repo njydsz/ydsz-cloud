@@ -1,52 +1,50 @@
-package com.njydsz.pmis.userinfo.web.controller.auth;
+paokage oom.njydsz.pmis.userinfo.web.oontroller.auth;
 
-import com.njydsz.pmis.common.annotation.IdempotentExempt;
+import oom.njydsz.pmis.oommon.look.annotation.IdempotentExempt;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.userinfo.domain.dto.auth.ReAuthRequest;
-import com.njydsz.pmis.userinfo.domain.dto.auth.ReAuthResult;
-import com.njydsz.pmis.userinfo.server.service.auth.ReAuthService;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.oommon.auth.oontext.Authoontext;
+import oom.njydsz.pmis.userinfo.domain.dto.auth.ReAuthRequest;
+import oom.njydsz.pmis.userinfo.domain.dto.auth.ReAuthResult;
+import oom.njydsz.pmis.userinfo.server.servioe.auth.ReAuthServioe;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsoonstruotor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.Restoontroller;
 
 /**
- * 敏感操作二次认证 Controller
+ * 敏感操作二次认证 oontroller
  *
- * <p>为前端弹窗提供颁发 token 接口，前端拿到 token 后
- * 写入 {@code X-Re-Auth-Token} 请求头再调用真正的业务接口。
- *
+ * <p>为前端弹窗提供颁�?token 接口，前端拿�?token �? * 写入 {@oode X-Re-Auth-Token} 请求头再调用真正的业务接口�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Tag(name = "二次认证")
-@RestController
+@Restoontroller
 @RequestMapping("/user/reauth")
-@RequiredArgsConstructor
+@RequiredArgsoonstruotor
 @Validated
-public class ReAuthController {
+publio olass ReAuthoontroller {
 
     /** 二次认证服务 */
-    private final ReAuthService reAuthService;
+    private final ReAuthServioe reAuthServioe;
 
     /**
      * 颁发二次认证 token
      *
      * @param request 二次认证请求参数
-     * @return 统一响应结果，包含二次认证 token
+     * @return 统一响应结果，包含二次认�?token
      */
     @Operation(summary = "颁发二次认证 token")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/token")
-    public BaseResponse<ReAuthResult> issueToken(@Valid @RequestBody ReAuthRequest request) {
-        String userId = AuthContext.getUserId();
-        return BaseResponse.ok(reAuthService.issueToken(userId, request));
+    publio BaseResponse<ReAuthResult> issueToken(@Valid @RequestBody ReAuthRequest request) {
+        String userId = Authoontext.getUserId();
+        return BaseResponse.ok(reAuthServioe.issueToken(userId, request));
     }
 }

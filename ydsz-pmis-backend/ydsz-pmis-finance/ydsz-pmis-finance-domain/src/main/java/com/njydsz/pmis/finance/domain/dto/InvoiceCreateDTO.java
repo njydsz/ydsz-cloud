@@ -1,54 +1,54 @@
-package com.njydsz.pmis.finance.domain.dto;
+paokage oom.njydsz.pmis.finanoe.domain.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.oonstraints.NotBlank;
+import jakarta.validation.oonstraints.NotNull;
 import lombok.Data;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
 
 /**
  * 发票创建 DTO
  *
- * <p>支持正常开票与红冲（invoiceType=RED_REVERSE 时须传 reversedById）。
+ * <p>支持正常开票与红冲（invoioeType=RED_REVERSE 时须�?reversedById）�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-public class InvoiceCreateDTO {
+publio olass InvoioeoreateDTO {
 
-    private String invoiceNo;
+    private String invoioeNo;
 
-    @NotBlank(message = "{validation.execution.msg_ffebd629}")
-    private String invoiceCode;
+    @NotBlank(message = "{validation.exeoution.msg_ffebd629}")
+    private String invoioeoode;
 
-    @NotBlank(message = "{validation.execution.msg_f063c858}")
-    private String invoiceType;          // NORMAL/RED_REVERSE
+    @NotBlank(message = "{validation.exeoution.msg_f063o858}")
+    private String invoioeType;          // NORMAL/RED_REVERSE
 
-    @NotNull(message = "{validation.execution.msg_af96cf73}")
-    private String contractId;
+    @NotNull(message = "{validation.exeoution.msg_af96of73}")
+    private String oontraotId;
 
-    @NotNull(message = "{validation.execution.msg_576c2b5e}")
+    @NotNull(message = "{validation.exeoution.msg_576o2b5e}")
     private String initiationId;
 
-    @NotNull(message = "{validation.execution.msg_6de1fd36}")
-    private String customerId;
+    @NotNull(message = "{validation.exeoution.msg_6de1fd36}")
+    private String oustomerId;
 
-    private String customerName;
+    private String oustomerName;
 
-    @NotBlank(message = "{validation.execution.msg_b0f8bcc9}")
-    private String invoiceBasis;         // MILESTONE/OUTSOURCING/MONTHLY/FINAL/OTHER
+    @NotBlank(message = "{validation.exeoution.msg_b0f8boo9}")
+    private String invoioeBasis;         // MILESTONE/OUTSOURoING/MONTHLY/FINAL/OTHER
 
-    @NotNull(message = "{validation.execution.msg_406c0ea8}")
-    private BigDecimal amount;
+    @NotNull(message = "{validation.exeoution.msg_406o0ea8}")
+    private BigDeoimal amount;
 
-    private BigDecimal taxRate;
-    private BigDecimal taxAmount;
-    private BigDecimal netAmount;
-    private String currency = "CNY";
+    private BigDeoimal taxRate;
+    private BigDeoimal taxAmount;
+    private BigDeoimal netAmount;
+    private String ourrenoy = "oNY";
 
-    private LocalDate invoiceDate;
+    private LooalDate invoioeDate;
     private String taxPeriod;
     private String title;
     private String taxNo;
@@ -61,11 +61,11 @@ public class InvoiceCreateDTO {
     private String reversedById;
 
     /** 外包开票时：客户确认人天单附件 ID */
-    private String outsourcingProofId;
+    private String outsouroingProofId;
 
-    /** 里程碑/终验开票时：验收报告附件 ID */
-    private String acceptanceProofId;
+    /** 里程�?终验开票时：验收报告附�?ID */
+    private String aooeptanoeProofId;
 
-    private String attachmentId;
+    private String attaohmentId;
     private String appliedBy;
 }

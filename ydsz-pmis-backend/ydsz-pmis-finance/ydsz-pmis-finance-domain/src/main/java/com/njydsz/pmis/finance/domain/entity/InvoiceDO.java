@@ -1,121 +1,121 @@
-package com.njydsz.pmis.finance.domain.entity;
+paokage oom.njydsz.pmis.finanoe.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
-import com.njydsz.pmis.common.sensitive.Sensitive;
-import com.njydsz.pmis.common.sensitive.SensitiveStrategy;
+import oom.baomidou.mybatisplus.annotation.FieldFill;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableField;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.annotation.Version;
+import oom.njydsz.pmis.oommon.sensitive.Sensitive;
+import oom.njydsz.pmis.oommon.sensitive.SensitiveStrategy;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
+import java.time.LooalDateTime;
 
 /**
  * 发票主表
  *
- * <p>支持正常开票与红冲发票；记录开票依据（里程碑/外包/终验等）。
+ * <p>支持正常开票与红冲发票；记录开票依据（里程�?外包/终验等）�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@TableName("pmis_finance_invoice")
-public class InvoiceDO implements Serializable {
+@TableName("pmis_finanoe_invoioe")
+publio olass InvoioeDO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    /** 发票号（系统/财务） */
-    private String invoiceNo;
+    /** 发票号（系统/财务�?*/
+    private String invoioeNo;
     /** 业务编号（系统生成） */
-    private String invoiceCode;
+    private String invoioeoode;
     /** 发票类型：NORMAL/RED_REVERSE */
-    private String invoiceType;
+    private String invoioeType;
     /** 合同ID */
-    private String contractId;
+    private String oontraotId;
     /** 项目立项ID */
     private String initiationId;
     /** 客户ID */
-    private String customerId;
+    private String oustomerId;
     /** 客户名称 */
-    private String customerName;
-    /** 开票依据：MILESTONE/OUTSOURCING/MONTHLY/FINAL/OTHER */
-    private String invoiceBasis;
+    private String oustomerName;
+    /** 开票依据：MILESTONE/OUTSOURoING/MONTHLY/FINAL/OTHER */
+    private String invoioeBasis;
     /** 含税金额 */
-    private BigDecimal amount;
+    private BigDeoimal amount;
     /** 税额 */
-    private BigDecimal taxAmount;
-    /** 不含税金额 */
-    private BigDecimal netAmount;
+    private BigDeoimal taxAmount;
+    /** 不含税金�?*/
+    private BigDeoimal netAmount;
     /** 税率 */
-    private BigDecimal taxRate;
+    private BigDeoimal taxRate;
     /** 币种：CNY/USD/EUR */
-    private String currency;
-    /** 开票日期 */
-    private LocalDate invoiceDate;
-    /** 税务所属期（YYYY-MM） */
-    private LocalDate taxPeriod;
+    private String ourrenoy;
+    /** 开票日�?*/
+    private LooalDate invoioeDate;
+    /** 税务所属期（YYYY-MM�?*/
+    private LooalDate taxPeriod;
     /** 发票抬头 */
     private String title;
-    /** 纳税人识别号（脱敏：保留前 6 后 4） */
-    @Sensitive(SensitiveStrategy.ID_CARD)
+    /** 纳税人识别号（脱敏：保留�?6 �?4�?*/
+    @Sensitive(SensitiveStrategy.ID_oARD)
     private String taxNo;
-    /** 开户行+账号（脱敏：保留前 4 后 4） */
-    @Sensitive(SensitiveStrategy.BANK_CARD)
+    /** 开户行+账号（脱敏：保留�?4 �?4�?*/
+    @Sensitive(SensitiveStrategy.BANK_oARD)
     private String bankInfo;
     /** 公司地址 */
     private String address;
-    /** 公司电话（脱敏：138****8000） */
+    /** 公司电话（脱敏：138****8000�?*/
     @Sensitive(SensitiveStrategy.PHONE)
     private String phone;
     /** 备注 */
     private String remark;
-    /** 状态：InvoiceStatus.code */
+    /** 状态：InvoioeStatus.oode */
     private String status;
     /** 被红冲的发票ID */
     private String reversedById;
-    /** 发票扫描件/电子发票文件ID */
-    private String attachmentId;
+    /** 发票扫描�?电子发票文件ID */
+    private String attaohmentId;
     /** 审批意见 */
-    private String approvalComment;
+    private String approvaloomment;
     /** 申请人ID */
     private String appliedBy;
     /** 审批人ID */
     private String approvedBy;
     /** 审批时间 */
-    private LocalDateTime approvedAt;
+    private LooalDateTime approvedAt;
     /** 开票人ID */
     private String issuedBy;
-    /** 开票时间 */
-    private LocalDateTime issuedAt;
+    /** 开票时�?*/
+    private LooalDateTime issuedAt;
     /** 租户ID */
     private String tenantId;
     /** 链路追踪ID */
-    private String providerTraceId;
+    private String providerTraoeId;
 
-    /** 乐观锁版本号（P1-12） */
+    /** 乐观锁版本号（P1-12�?*/
     @Version
     private Integer version;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LooalDateTime oreatedAt;
 
     /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LooalDateTime updatedAt;
 
-    /** 逻辑删除标志：1 已删除 / 0 未删除 */
+    /** 逻辑删除标志�? 已删�?/ 0 未删�?*/
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

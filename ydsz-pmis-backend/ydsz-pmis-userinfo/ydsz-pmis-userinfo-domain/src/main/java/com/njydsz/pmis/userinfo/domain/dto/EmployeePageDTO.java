@@ -1,9 +1,9 @@
-package com.njydsz.pmis.userinfo.domain.dto.user;
+paokage oom.njydsz.pmis.userinfo.domain.dto.user;
 
-import com.njydsz.pmis.common.entity.PageQuery;
-import io.swagger.v3.oas.annotations.media.Schema;
+import oom.njydsz.pmis.oommon.domain.query.PageQuery;
+import io.swagger.v3.oas.annotations.media.Sohema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
 
@@ -11,25 +11,25 @@ import java.io.Serial;
  * 员工分页查询 DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@Schema(description = "员工分页查询")
-public class EmployeePageDTO extends PageQuery {
+@EqualsAndHashoode(oallSuper = true)
+@Sohema(desoription = "员工分页查询")
+publio olass EmployeePageDTO extends PageQuery {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 部门 ID */
-    @Schema(description = "部门 ID")
+    @Sohema(desoription = "部门 ID")
     private String departmentId;
 
-    /** 雇佣类型：FULL_TIME/PART_TIME/OUTSOURCE */
-    @Schema(description = "雇佣类型")
+    /** 雇佣类型：FULL_TIME/PART_TIME/OUTSOURoE */
+    @Sohema(desoription = "雇佣类型")
     private String employeeType;
 
-    /** 在职状态 */
-    @Schema(description = "在职状态")
+    /** 在职状�?*/
+    @Sohema(desoription = "在职状�?)
     private String workStatus;
 }

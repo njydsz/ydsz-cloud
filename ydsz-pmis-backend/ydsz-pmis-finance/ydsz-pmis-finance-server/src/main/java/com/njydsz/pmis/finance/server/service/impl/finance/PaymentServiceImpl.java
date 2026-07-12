@@ -1,32 +1,32 @@
-package com.njydsz.pmis.finance.server.service.impl.finance;
+paokage oom.njydsz.pmis.finanoe.server.servioe.impl.finanoe;
 
-import com.njydsz.pmis.common.security.TenantContext;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.DataScope;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.common.security.DataScopeHelper;
-import com.njydsz.pmis.finance.domain.dto.PaymentAllocationDTO;
-import com.njydsz.pmis.finance.domain.dto.PaymentCreateDTO;
-import com.njydsz.pmis.finance.domain.entity.InvoiceDO;
-import com.njydsz.pmis.finance.domain.entity.PaymentDO;
-import com.njydsz.pmis.finance.domain.enums.InvoiceStatus;
-import com.njydsz.pmis.finance.domain.enums.PaymentStatus;
-import com.njydsz.pmis.finance.infra.mapper.InvoiceMapper;
-import com.njydsz.pmis.finance.infra.mapper.PaymentMapper;
-import com.njydsz.pmis.finance.server.service.finance.PaymentService;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.oommon.auth.annotation.DataSoope;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.oommon.seourity.DataSoopeHelper;
+import oom.njydsz.pmis.finanoe.domain.dto.PaymentAllooationDTO;
+import oom.njydsz.pmis.finanoe.domain.dto.PaymentoreateDTO;
+import oom.njydsz.pmis.finanoe.domain.entity.InvoioeDO;
+import oom.njydsz.pmis.finanoe.domain.entity.PaymentDO;
+import oom.njydsz.pmis.finanoe.domain.enums.InvoioeStatus;
+import oom.njydsz.pmis.finanoe.domain.enums.PaymentStatus;
+import oom.njydsz.pmis.finanoe.infra.mapper.InvoioeMapper;
+import oom.njydsz.pmis.finanoe.infra.mapper.PaymentMapper;
+import oom.njydsz.pmis.finanoe.server.servioe.finanoe.PaymentServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LooalDate;
+import java.time.LooalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,306 +36,306 @@ import java.util.Map;
  * 回款服务实现
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class PaymentServiceImpl implements PaymentService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass PaymentServioeImpl implements PaymentServioe {
 
     /** 回款 Mapper */
     private final PaymentMapper paymentMapper;
-    /** 发票 Mapper（核销关联） */
-    private final InvoiceMapper invoiceMapper;
+    /** 发票 Mapper（核销关联�?*/
+    private final InvoioeMapper invoioeMapper;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String record(PaymentCreateDTO dto) {
-        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
-        if (!StringUtils.hasText(dto.getPaymentCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d55e99b3");
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio String reoord(PaymentoreateDTO dto) {
+        if (dto == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d9712a58");
+        if (!StringUtils.hasText(dto.getPaymentoode())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d55e99b3");
         }
         if (dto.getAmount() == null || dto.getAmount().signum() <= 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_9209b7d6");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_9209b7d6");
         }
         if (dto.getPaymentDate() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_4fa8fbb5");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_4fa8fbb5");
         }
-        if (paymentMapper.selectByCode(dto.getPaymentCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY,
-                    "error.execution.msg_bf666ece", dto.getPaymentCode());
+        if (paymentMapper.seleotByoode(dto.getPaymentoode()) != null) {
+            throw new SysExoeption(StandardResultoode.DUPLIoATE_KEY,
+                    "error.exeoution.msg_bf666eoe", dto.getPaymentoode());
         }
         PaymentDO p = new PaymentDO();
-        BeanUtils.copyProperties(dto, p);
-        if (p.getStatus() == null) p.setStatus(PaymentStatus.PENDING.getCode());
-        if (p.getCurrency() == null) p.setCurrency("CNY");
+        BeanUtils.oopyProperties(dto, p);
+        if (p.getStatus() == null) p.setStatus(PaymentStatus.PENDING.getoode());
+        if (p.getourrenoy() == null) p.setourrenoy("oNY");
         if (p.getPaymentMethod() == null) p.setPaymentMethod("BANK_TRANSFER");
-        if (p.getTenantId() == null) p.setTenantId(TenantContext.getTenantId());
-        if (p.getProviderTraceId() == null) p.setProviderTraceId("");
+        if (p.getTenantId() == null) p.setTenantId(Tenantoontext.getTenantId());
+        if (p.getProviderTraoeId() == null) p.setProviderTraoeId("");
 
-        BigDecimal allocated = p.getAllocatedAmount() == null ? BigDecimal.ZERO : p.getAllocatedAmount();
-        if (allocated.signum() > 0) {
-            if (allocated.compareTo(p.getAmount()) > 0) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d482d05e");
+        BigDeoimal allooated = p.getAllooatedAmount() == null ? BigDeoimal.ZERO : p.getAllooatedAmount();
+        if (allooated.signum() > 0) {
+            if (allooated.oompareTo(p.getAmount()) > 0) {
+                throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d482d05e");
             }
-            p.setUnallocatedAmount(p.getAmount().subtract(allocated));
+            p.setUnallooatedAmount(p.getAmount().subtraot(allooated));
         } else {
-            p.setUnallocatedAmount(p.getAmount());
-            p.setAllocatedAmount(BigDecimal.ZERO);
+            p.setUnallooatedAmount(p.getAmount());
+            p.setAllooatedAmount(BigDeoimal.ZERO);
         }
         paymentMapper.insert(p);
-        log.info("[Payment] 录入回款: code={} amount={}", p.getPaymentCode(), p.getAmount());
+        log.info("[Payment] 录入回款: oode={} amount={}", p.getPaymentoode(), p.getAmount());
         return p.getId();
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void confirm(String id, String operatorId) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void oonfirm(String id, String operatorId) {
         PaymentDO p = getById(id);
-        transit(p, PaymentStatus.CONFIRMED, operatorId);
-        p.setConfirmedBy(operatorId);
-        p.setConfirmedAt(LocalDateTime.now());
+        transit(p, PaymentStatus.oONFIRMED, operatorId);
+        p.setoonfirmedBy(operatorId);
+        p.setoonfirmedAt(LooalDateTime.now());
         paymentMapper.updateById(p);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void cancel(String id, String operatorId, String reason) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void oanoel(String id, String operatorId, String reason) {
         PaymentDO p = getById(id);
-        if (p.getAllocatedAmount() != null && p.getAllocatedAmount().signum() > 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_1ccbb047");
+        if (p.getAllooatedAmount() != null && p.getAllooatedAmount().signum() > 0) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_1oobb047");
         }
-        transit(p, PaymentStatus.CANCELLED, operatorId);
+        transit(p, PaymentStatus.oANoELLED, operatorId);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void delete(String id) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void delete(String id) {
         PaymentDO p = getById(id);
-        if (PaymentStatus.ALLOCATED.getCode().equals(p.getStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_0eaf2466");
+        if (PaymentStatus.ALLOoATED.getoode().equals(p.getStatus())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_0eaf2466");
         }
         paymentMapper.deleteById(id);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void allocate(PaymentAllocationDTO dto) {
-        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void allooate(PaymentAllooationDTO dto) {
+        if (dto == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d9712a58");
         if (dto.getAmount() == null || dto.getAmount().signum() <= 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_7226580a");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_7226580a");
         }
         PaymentDO p = getById(dto.getPaymentId());
-        if (!PaymentStatus.CONFIRMED.getCode().equals(p.getStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_9abfa102");
+        if (!PaymentStatus.oONFIRMED.getoode().equals(p.getStatus())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_9abfa102");
         }
-        InvoiceDO inv = invoiceMapper.selectById(dto.getInvoiceId());
-        if (inv == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_1b0f0829");
-        if (!InvoiceStatus.ISSUED.getCode().equals(inv.getStatus())
-                && !InvoiceStatus.APPROVED.getCode().equals(inv.getStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_b5b5f6d2");
+        InvoioeDO inv = invoioeMapper.seleotById(dto.getInvoioeId());
+        if (inv == null) throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_1b0f0829");
+        if (!InvoioeStatus.ISSUED.getoode().equals(inv.getStatus())
+                && !InvoioeStatus.APPROVED.getoode().equals(inv.getStatus())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_b5b5f6d2");
         }
-        BigDecimal remain = p.getUnallocatedAmount() == null
-                ? p.getAmount().subtract(p.getAllocatedAmount() == null ? BigDecimal.ZERO : p.getAllocatedAmount())
-                : p.getUnallocatedAmount();
-        if (dto.getAmount().compareTo(remain) > 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.execution.msg_8036953c", dto.getAmount(), remain);
+        BigDeoimal remain = p.getUnallooatedAmount() == null
+                ? p.getAmount().subtraot(p.getAllooatedAmount() == null ? BigDeoimal.ZERO : p.getAllooatedAmount())
+                : p.getUnallooatedAmount();
+        if (dto.getAmount().oompareTo(remain) > 0) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.exeoution.msg_8036953o", dto.getAmount(), remain);
         }
-        String existing = p.getInvoiceAllocation();
+        String existing = p.getInvoioeAllooation();
         String updated = (existing == null || existing.isBlank())
-                ? String.valueOf(dto.getInvoiceId())
-                : existing + "," + dto.getInvoiceId();
-        BigDecimal newAllocated = p.getAllocatedAmount().add(dto.getAmount());
-        BigDecimal newUnalloc = p.getAmount().subtract(newAllocated);
-        p.setInvoiceAllocation(updated);
-        p.setAllocatedAmount(newAllocated);
-        p.setUnallocatedAmount(newUnalloc);
+                ? String.valueOf(dto.getInvoioeId())
+                : existing + "," + dto.getInvoioeId();
+        BigDeoimal newAllooated = p.getAllooatedAmount().add(dto.getAmount());
+        BigDeoimal newUnalloo = p.getAmount().subtraot(newAllooated);
+        p.setInvoioeAllooation(updated);
+        p.setAllooatedAmount(newAllooated);
+        p.setUnallooatedAmount(newUnalloo);
         int rows = paymentMapper.updateById(p);
         if (rows == 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
                 "并发冲突：回款核销失败，其他用户已修改该回款记录，请重试。paymentId=" + p.getId());
         }
 
-        if (newUnalloc.signum() == 0) {
-            transit(p, PaymentStatus.ALLOCATED, dto.getOperatorId());
+        if (newUnalloo.signum() == 0) {
+            transit(p, PaymentStatus.ALLOoATED, dto.getOperatorId());
         }
-        log.info("[Payment] 核销: paymentId={} invoiceId={} amount={}",
-                p.getId(), dto.getInvoiceId(), dto.getAmount());
+        log.info("[Payment] 核销: paymentId={} invoioeId={} amount={}",
+                p.getId(), dto.getInvoioeId(), dto.getAmount());
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public int autoAllocate(String customerId, String operatorId) {
-        if (customerId == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_6de1fd36");
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio int autoAllooate(String oustomerId, String operatorId) {
+        if (oustomerId == null) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_6de1fd36");
         }
-        List<PaymentDO> pool = paymentMapper.selectUnallocated(customerId);
+        List<PaymentDO> pool = paymentMapper.seleotUnallooated(oustomerId);
         if (pool == null || pool.isEmpty()) return 0;
-        // 取出客户所有 ISSUED/APPROVED 发票，按开票日期升序
-        List<InvoiceDO> invoices = invoiceMapper.selectByCustomer(customerId);
-        if (invoices == null || invoices.isEmpty()) return 0;
-        invoices = invoices.stream()
-                .filter(i -> InvoiceStatus.ISSUED.getCode().equals(i.getStatus())
-                        || InvoiceStatus.APPROVED.getCode().equals(i.getStatus()))
-                .filter(i -> "NORMAL".equalsIgnoreCase(i.getInvoiceType()))
-                .sorted((a, b) -> a.getInvoiceDate().compareTo(b.getInvoiceDate()))
+        // 取出客户所�?ISSUED/APPROVED 发票，按开票日期升�?
+        List<InvoioeDO> invoioes = invoioeMapper.seleotByoustomer(oustomerId);
+        if (invoioes == null || invoioes.isEmpty()) return 0;
+        invoioes = invoioes.stream()
+                .filter(i -> InvoioeStatus.ISSUED.getoode().equals(i.getStatus())
+                        || InvoioeStatus.APPROVED.getoode().equals(i.getStatus()))
+                .filter(i -> "NORMAL".equalsIgnoreoase(i.getInvoioeType()))
+                .sorted((a, b) -> a.getInvoioeDate().oompareTo(b.getInvoioeDate()))
                 .toList();
-        if (invoices.isEmpty()) return 0;
+        if (invoioes.isEmpty()) return 0;
 
-        // 跟踪每张发票已核销金额（基于现有 payment.invoice_allocation）
-        Map<String, BigDecimal> invoiceAllocated = new HashMap<>();
-        for (InvoiceDO inv : invoices) {
-            invoiceAllocated.put(inv.getId(), BigDecimal.ZERO);
+        // 跟踪每张发票已核销金额（基于现�?payment.invoioe_allooation�?
+        Map<String, BigDeoimal> invoioeAllooated = new HashMap<>();
+        for (InvoioeDO inv : invoioes) {
+            invoioeAllooated.put(inv.getId(), BigDeoimal.ZERO);
         }
-        List<PaymentDO> allPayments = paymentMapper.selectByCustomer(customerId);
+        List<PaymentDO> allPayments = paymentMapper.seleotByoustomer(oustomerId);
         for (PaymentDO pay : allPayments) {
-            if (pay.getInvoiceAllocation() == null) continue;
-            String[] ids = pay.getInvoiceAllocation().split(",");
-            // 简化：等额分配到每张已分配的发票
-            int cnt = ids.length;
-            if (cnt == 0) continue;
-            BigDecimal each = pay.getAllocatedAmount() == null
-                    ? BigDecimal.ZERO
-                    : pay.getAllocatedAmount().divide(new BigDecimal(cnt), 2, RoundingMode.HALF_UP);
+            if (pay.getInvoioeAllooation() == null) oontinue;
+            String[] ids = pay.getInvoioeAllooation().split(",");
+            // 简化：等额分配到每张已分配的发�?
+            int ont = ids.length;
+            if (ont == 0) oontinue;
+            BigDeoimal eaoh = pay.getAllooatedAmount() == null
+                    ? BigDeoimal.ZERO
+                    : pay.getAllooatedAmount().divide(new BigDeoimal(ont), 2, RoundingMode.HALF_UP);
             for (String idStr : ids) {
-                invoiceAllocated.merge(idStr.trim(), each, BigDecimal::add);
+                invoioeAllooated.merge(idStr.trim(), eaoh, BigDeoimal::add);
             }
         }
 
-        int count = 0;
+        int oount = 0;
         for (PaymentDO p : pool) {
-            BigDecimal remain = p.getUnallocatedAmount();
-            for (InvoiceDO inv : invoices) {
+            BigDeoimal remain = p.getUnallooatedAmount();
+            for (InvoioeDO inv : invoioes) {
                 if (remain.signum() <= 0) break;
-                BigDecimal already = invoiceAllocated.getOrDefault(inv.getId(), BigDecimal.ZERO);
-                BigDecimal invoiceRemain = inv.getAmount().subtract(already);
-                if (invoiceRemain.signum() <= 0) continue;
-                BigDecimal take = remain.min(invoiceRemain);
-                PaymentAllocationDTO all = new PaymentAllocationDTO();
+                BigDeoimal already = invoioeAllooated.getOrDefault(inv.getId(), BigDeoimal.ZERO);
+                BigDeoimal invoioeRemain = inv.getAmount().subtraot(already);
+                if (invoioeRemain.signum() <= 0) oontinue;
+                BigDeoimal take = remain.min(invoioeRemain);
+                PaymentAllooationDTO all = new PaymentAllooationDTO();
                 all.setPaymentId(p.getId());
-                all.setInvoiceId(inv.getId());
+                all.setInvoioeId(inv.getId());
                 all.setAmount(take);
                 all.setOperatorId(operatorId);
-                allocate(all);
-                invoiceAllocated.merge(inv.getId(), take, BigDecimal::add);
-                remain = remain.subtract(take);
-                count++;
+                allooate(all);
+                invoioeAllooated.merge(inv.getId(), take, BigDeoimal::add);
+                remain = remain.subtraot(take);
+                oount++;
             }
         }
-        return count;
+        return oount;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<Map<String, Object>> forecastCashFlow(String initiationId, int months) {
+    @Transaotional(readOnly = true)
+    publio List<Map<String, Objeot>> foreoastoashFlow(String initiationId, int months) {
         if (initiationId == null) return List.of();
         if (months <= 0) months = 3;
         if (months > 12) months = 12;
-        // 1) 历史按月回款均值
-        List<Map<String, Object>> history = paymentMapper.aggregateByMonth(initiationId);
-        BigDecimal avg = BigDecimal.ZERO;
+        // 1) 历史按月回款均�?
+        List<Map<String, Objeot>> history = paymentMapper.aggregateByMonth(initiationId);
+        BigDeoimal avg = BigDeoimal.ZERO;
         if (history != null && !history.isEmpty()) {
-            BigDecimal total = BigDecimal.ZERO;
-            for (Map<String, Object> h : history) {
-                Object amt = h.get("amount");
-                if (amt != null) total = total.add(new BigDecimal(amt.toString()));
+            BigDeoimal total = BigDeoimal.ZERO;
+            for (Map<String, Objeot> h : history) {
+                Objeot amt = h.get("amount");
+                if (amt != null) total = total.add(new BigDeoimal(amt.toString()));
             }
-            avg = total.divide(new BigDecimal(history.size()), 2, RoundingMode.HALF_UP);
+            avg = total.divide(new BigDeoimal(history.size()), 2, RoundingMode.HALF_UP);
         }
         // 2) 应收余额
-        List<InvoiceDO> invoices = invoiceMapper.selectByInitiation(initiationId);
-        BigDecimal receivable = BigDecimal.ZERO;
-        if (invoices != null) {
-            for (InvoiceDO inv : invoices) {
-                if (InvoiceStatus.ISSUED.getCode().equals(inv.getStatus())
-                        && "NORMAL".equalsIgnoreCase(inv.getInvoiceType())) {
-                    receivable = receivable.add(inv.getAmount());
+        List<InvoioeDO> invoioes = invoioeMapper.seleotByInitiation(initiationId);
+        BigDeoimal reoeivable = BigDeoimal.ZERO;
+        if (invoioes != null) {
+            for (InvoioeDO inv : invoioes) {
+                if (InvoioeStatus.ISSUED.getoode().equals(inv.getStatus())
+                        && "NORMAL".equalsIgnoreoase(inv.getInvoioeType())) {
+                    reoeivable = reoeivable.add(inv.getAmount());
                 }
             }
         }
-        BigDecimal already = paymentMapper.sumReceivedByContract(null);
-        if (already == null) already = BigDecimal.ZERO;
+        BigDeoimal already = paymentMapper.sumReoeivedByoontraot(null);
+        if (already == null) already = BigDeoimal.ZERO;
 
-        // 3) 简单线性预测：未来 N 个月每月 = min(均值, 应收余额剩余/N)
-        List<Map<String, Object>> result = new ArrayList<>();
-        LocalDate base = LocalDate.now().withDayOfMonth(1);
-        BigDecimal perMonth = history != null && !history.isEmpty()
+        // 3) 简单线性预测：未来 N 个月每月 = min(均�? 应收余额剩余/N)
+        List<Map<String, Objeot>> result = new ArrayList<>();
+        LooalDate base = LooalDate.now().withDayOfMonth(1);
+        BigDeoimal perMonth = history != null && !history.isEmpty()
                 ? avg
-                : receivable.divide(new BigDecimal(months), 2, RoundingMode.HALF_UP);
+                : reoeivable.divide(new BigDeoimal(months), 2, RoundingMode.HALF_UP);
         for (int i = 1; i <= months; i++) {
-            Map<String, Object> m = new HashMap<>();
+            Map<String, Objeot> m = new HashMap<>();
             m.put("month", base.plusMonths(i).toString().substring(0, 7));
-            m.put("forecastAmount", perMonth);
+            m.put("foreoastAmount", perMonth);
             BaseResponse.add(m);
         }
         return result;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public PaymentDO getById(String id) {
-        PaymentDO p = paymentMapper.selectById(id);
-        if (p == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_22203a1e");
+    @Transaotional(readOnly = true)
+    publio PaymentDO getById(String id) {
+        PaymentDO p = paymentMapper.seleotById(id);
+        if (p == null) throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_22203a1e");
         return p;
     }
 
     @Override
-    @DataScope(userColumn = "recorded_by")
-    @Transactional(readOnly = true)
-    public Page<PaymentDO> page(int page, int size, String keyword, String status,
-                                String contractId, String customerId, String initiationId) {
+    @DataSoope(useroolumn = "reoorded_by")
+    @Transaotional(readOnly = true)
+    publio Page<PaymentDO> page(int page, int size, String keyword, String status,
+                                String oontraotId, String oustomerId, String initiationId) {
         Page<PaymentDO> p = new Page<>(page, size);
         LambdaQueryWrapper<PaymentDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
-            w.and(qw -> qw.like(PaymentDO::getPaymentCode, keyword)
+            w.and(qw -> qw.like(PaymentDO::getPaymentoode, keyword)
                     .or().like(PaymentDO::getPaymentNo, keyword)
-                    .or().like(PaymentDO::getBankReference, keyword));
+                    .or().like(PaymentDO::getBankReferenoe, keyword));
         }
         if (StringUtils.hasText(status)) w.eq(PaymentDO::getStatus, status);
-        if (contractId != null) w.eq(PaymentDO::getContractId, contractId);
-        if (customerId != null) w.eq(PaymentDO::getCustomerId, customerId);
+        if (oontraotId != null) w.eq(PaymentDO::getoontraotId, oontraotId);
+        if (oustomerId != null) w.eq(PaymentDO::getoustomerId, oustomerId);
         if (initiationId != null) w.eq(PaymentDO::getInitiationId, initiationId);
         // 数据权限 SQL 注入
-        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "recorded_by");
+        String ds = DataSoopeHelper.buildSqlFragment("", "", "dept_id", "reoorded_by");
         if (!ds.isEmpty()) w.apply(ds);
-        w.orderByDesc(PaymentDO::getPaymentDate, PaymentDO::getId);
-        return paymentMapper.selectPage(p, w);
+        w.orderByDeso(PaymentDO::getPaymentDate, PaymentDO::getId);
+        return paymentMapper.seleotPage(p, w);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public BigDecimal sumReceivedByContract(String contractId) {
-        if (contractId == null) return BigDecimal.ZERO;
-        BigDecimal v = paymentMapper.sumReceivedByContract(contractId);
-        return v == null ? BigDecimal.ZERO : v;
+    @Transaotional(readOnly = true)
+    publio BigDeoimal sumReoeivedByoontraot(String oontraotId) {
+        if (oontraotId == null) return BigDeoimal.ZERO;
+        BigDeoimal v = paymentMapper.sumReoeivedByoontraot(oontraotId);
+        return v == null ? BigDeoimal.ZERO : v;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByMonth(String initiationId) {
+    @Transaotional(readOnly = true)
+    publio List<Map<String, Objeot>> aggregateByMonth(String initiationId) {
         if (initiationId == null) return List.of();
         return paymentMapper.aggregateByMonth(initiationId);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByCustomer() {
-        return paymentMapper.aggregateByCustomer();
+    @Transaotional(readOnly = true)
+    publio List<Map<String, Objeot>> aggregateByoustomer() {
+        return paymentMapper.aggregateByoustomer();
     }
 
     private void transit(PaymentDO p, PaymentStatus target, String operatorId) {
-        PaymentStatus from = PaymentStatus.fromCode(p.getStatus());
+        PaymentStatus from = PaymentStatus.fromoode(p.getStatus());
         if (from == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.execution.msg_2e33226a", p.getStatus());
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.exeoution.msg_2e33226a", p.getStatus());
         }
-        if (!from.canTransitTo(target)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.execution.msg_93d51f1f", from.getDesc(), target.getDesc());
+        if (!from.oanTransitTo(target)) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.exeoution.msg_93d51f1f", from.getDeso(), target.getDeso());
         }
-        paymentMapper.updateStatus(p.getId(), target.getCode(), operatorId);
-        p.setStatus(target.getCode());
-        log.info("[Payment] 状态迁移: id={} {} -> {}", p.getId(), from.getCode(), target.getCode());
+        paymentMapper.updateStatus(p.getId(), target.getoode(), operatorId);
+        p.setStatus(target.getoode());
+        log.info("[Payment] 状态迁�? id={} {} -> {}", p.getId(), from.getoode(), target.getoode());
     }
 }

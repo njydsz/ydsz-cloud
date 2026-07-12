@@ -1,30 +1,30 @@
-package com.njydsz.pmis.project.domain.dto;
+paokage oom.njydsz.pmis.projeot.domain.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.oonstraints.NotBlank;
+import jakarta.validation.oonstraints.NotNull;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 项目变更状态迁移 DTO
+ * 项目变更状态迁�?DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-public class ProjectChangeStatusDTO implements Serializable {
+publio olass ProjeotohangeStatusDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 变更 ID */
-    @NotNull(message = "{validation.project.msg_ad21f8c7}")
+    @NotNull(message = "{validation.projeot.msg_ad21f8o7}")
     private String id;
 
-    /** 目标状态（ChangeStatus.code） */
-    @NotBlank(message = "{validation.project.msg_8304cf7d}")
+    /** 目标状态（ohangeStatus.oode�?*/
+    @NotBlank(message = "{validation.projeot.msg_8304of7d}")
     private String targetStatus;
 }

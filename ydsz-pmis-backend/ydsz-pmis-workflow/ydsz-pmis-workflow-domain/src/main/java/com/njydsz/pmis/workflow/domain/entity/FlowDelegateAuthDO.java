@@ -1,31 +1,29 @@
-package com.njydsz.pmis.workflow.domain.entity.delegate;
+paokage oom.njydsz.pmis.workflow.domain.entity.delegate;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
  * 流程委派代理（长期授权） DO
  *
- * <p>P1-4: 长期授权委派，区别于单任务委派（{@code FlowTaskServiceImpl.delegate}）。
- * <p>用户预先设置规则：在 [startTime, endTime] 区间内到达的匹配任务自动转给被代理人。
- *
+ * <p>P1-4: 长期授权委派，区别于单任务委派（{@oode FlowTaskServioeImpl.delegate}）�? * <p>用户预先设置规则：在 [startTime, endTime] 区间内到达的匹配任务自动转给被代理人�? *
  * @author ydsz-pmis-team
- * @since 1.2.0
+ * @sinoe 1.2.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashoode(oallSuper = true)
 @TableName("pmis_flow_delegate_auth")
-public class FlowDelegateAuthDO extends BaseDO {
+publio olass FlowDelegateAuthDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
@@ -36,7 +34,7 @@ public class FlowDelegateAuthDO extends BaseDO {
     /** 授权人（原办理人）ID */
     private String ownerUserId;
 
-    /** 授权人姓名 */
+    /** 授权人姓�?*/
     private String ownerUserName;
 
     /** 被授权人（代理人）ID */
@@ -46,22 +44,22 @@ public class FlowDelegateAuthDO extends BaseDO {
     private String delegateUserName;
 
     /** 匹配模式：ALL/FLOW/FLOW_NODE/ROLE */
-    private String scopeType;
+    private String soopeType;
 
-    /** 流程编码（FLOW/FLOW_NODE 模式必填） */
-    private String flowCode;
+    /** 流程编码（FLOW/FLOW_NODE 模式必填�?*/
+    private String flowoode;
 
-    /** 节点编码（FLOW_NODE 模式必填） */
-    private String nodeCode;
+    /** 节点编码（FLOW_NODE 模式必填�?*/
+    private String nodeoode;
 
-    /** 角色编码（ROLE 模式必填） */
-    private String roleCode;
+    /** 角色编码（ROLE 模式必填�?*/
+    private String roleoode;
 
-    /** 生效开始时间 */
-    private LocalDateTime startTime;
+    /** 生效开始时�?*/
+    private LooalDateTime startTime;
 
     /** 生效结束时间 */
-    private LocalDateTime endTime;
+    private LooalDateTime endTime;
 
     /** 状态：ENABLED/DISABLED/EXPIRED/REVOKED */
     private String authStatus;
@@ -70,5 +68,5 @@ public class FlowDelegateAuthDO extends BaseDO {
     private String reason;
 
     /** 链路追踪 ID */
-    private String providerTraceId;
+    private String providerTraoeId;
 }

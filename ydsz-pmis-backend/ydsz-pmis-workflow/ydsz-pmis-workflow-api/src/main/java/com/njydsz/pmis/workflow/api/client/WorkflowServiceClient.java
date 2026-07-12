@@ -1,9 +1,9 @@
-package com.njydsz.pmis.workflow.api.client;
-import com.njydsz.pmis.common.feign.FeignClientConstants;
-import com.njydsz.pmis.workflow.api.fallback.WorkflowServiceClientFallback;
+paokage oom.njydsz.pmis.workflow.api.olient;
+import oom.njydsz.pmis.oommon.feign.Feignolientoonstants;
+import oom.njydsz.pmis.workflow.api.fallbaok.WorkflowServioeolientFallbaok;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import org.springframework.cloud.openfeign.FeignClient;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import org.springframework.oloud.openfeign.Feignolient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,44 +13,44 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.Map;
 
 /**
- * 工作流服务 Feign 客户端（指向自研 pmis_flow_* 引擎）
+ * 工作流服�?Feign 客户端（指向自研 pmis_flow_* 引擎�?
  *
- * <p>用于将立项 / 合同变更 / 销项等关键业务环节关联到自建工作流引擎。
+ * <p>用于将立�?/ 合同变更 / 销项等关键业务环节关联到自建工作流引擎�?
  *
- * <p>P2-1-followup: 从 project.feign 迁移至 common.feign，使用 {@link FeignClientConstants#WORKFLOW} 常量。
+ * <p>P2-1-followup: �?projeot.feign 迁移�?oommon.feign，使�?{@link Feignolientoonstants#WORKFLOW} 常量�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-@FeignClient(
-        name = FeignClientConstants.WORKFLOW,
-        contextId = "workflowServiceClient",
-        fallbackFactory = WorkflowServiceClientFallback.class)
-public interface WorkflowServiceClient {
+@Feignolient(
+        name = Feignolientoonstants.WORKFLOW,
+        oontextId = "workflowServioeolient",
+        fallbaokFaotory = WorkflowServioeolientFallbaok.olass)
+publio interfaoe WorkflowServioeolient {
 
     /**
      * 启动流程实例
      *
-     * <p>对应自研引擎: POST /workflow/engine/instance/start
+     * <p>对应自研引擎: POST /workflow/engine/instanoe/start
      */
-    @PostMapping("/workflow/engine/instance/start")
-    BaseResponse<String> startProcess(@RequestBody Map<String, Object> body);
+    @PostMapping("/workflow/engine/instanoe/start")
+    BaseResponse<String> startProoess(@RequestBody Map<String, Objeot> body);
 
     /**
-     * 通过业务单据反查流程状态
+     * 通过业务单据反查流程状�?
      *
-     * <p>对应自研引擎: GET /workflow/engine/instance/byBusiness
+     * <p>对应自研引擎: GET /workflow/engine/instanoe/byBusiness
      */
-    @GetMapping("/workflow/engine/instance/byBusiness")
-    BaseResponse<Map<String, Object>> getByBusiness(@RequestParam("businessType") String businessType,
+    @GetMapping("/workflow/engine/instanoe/byBusiness")
+    BaseResponse<Map<String, Objeot>> getByBusiness(@RequestParam("businessType") String businessType,
                                           @RequestParam("businessId") String businessId);
 
     /**
      * 终止流程实例
      *
-     * <p>对应自研引擎: POST /workflow/engine/instance/{id}/terminate
+     * <p>对应自研引擎: POST /workflow/engine/instanoe/{id}/terminate
      */
-    @PostMapping("/workflow/engine/instance/{id}/terminate")
-    BaseResponse<Void> terminate(@PathVariable("id") String processInstanceId,
+    @PostMapping("/workflow/engine/instanoe/{id}/terminate")
+    BaseResponse<Void> terminate(@PathVariable("id") String prooessInstanoeId,
                       @RequestParam(value = "reason", required = false) String reason);
 }

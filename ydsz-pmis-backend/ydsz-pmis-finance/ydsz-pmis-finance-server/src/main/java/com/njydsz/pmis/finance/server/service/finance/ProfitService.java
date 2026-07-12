@@ -1,7 +1,7 @@
-package com.njydsz.pmis.finance.server.service.finance;
+paokage oom.njydsz.pmis.finanoe.server.servioe.finanoe;
 
-import com.njydsz.pmis.finance.domain.dto.ProfitSnapshotDTO;
-import com.njydsz.pmis.finance.domain.entity.ProfitSnapshotDO;
+import oom.njydsz.pmis.finanoe.domain.dto.ProfitSnapshotDTO;
+import oom.njydsz.pmis.finanoe.domain.entity.ProfitSnapshotDO;
 
 import java.util.List;
 import java.util.Map;
@@ -9,12 +9,11 @@ import java.util.Map;
 /**
  * 利润核算服务
  *
- * <p>提供项目月度利润快照生成、趋势分析及健康度评估能力。
- *
+ * <p>提供项目月度利润快照生成、趋势分析及健康度评估能力�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public interface ProfitService {
+publio interfaoe ProfitServioe {
 
     /**
      * 生成/更新项目月度利润快照
@@ -27,17 +26,15 @@ public interface ProfitService {
     ProfitSnapshotDO getByInitiationAndPeriod(String initiationId, String period);
 
     /**
-     * 项目所有快照
-     */
+     * 项目所有快�?     */
     List<ProfitSnapshotDO> listByInitiation(String initiationId);
 
     /**
      * 趋势分析
      */
-    List<Map<String, Object>> trendByPeriod(String initiationId);
+    List<Map<String, Objeot>> trendByPeriod(String initiationId);
 
     /**
-     * 项目健康度评分
-     */
-    int healthScore(String initiationId, String period);
+     * 项目健康度评�?     */
+    int healthSoore(String initiationId, String period);
 }

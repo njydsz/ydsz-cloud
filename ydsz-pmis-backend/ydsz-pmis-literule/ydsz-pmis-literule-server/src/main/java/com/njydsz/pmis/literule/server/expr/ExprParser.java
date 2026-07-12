@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.expr.liteexpr;
+paokage oom.njydsz.pmis.literule.server.expr.liteexpr;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -6,50 +6,50 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * LiteExpr 递归下降解析器（Pratt Parser 风格）
+ * LiteExpr 递归下降解析器（Pratt Parser 风格�?
  *
- * <p>将 {@link Token} 序列解析为 {@link ExprNode} AST。支持：
+ * <p>�?{@link Token} 序列解析�?{@link ExprNode} AST。支持：
  * <ul>
- *   <li>运算符优先级解析（|| → && → ==/!= → 比较 → 加减 → 乘除模 → 一元 → 后缀 → primary）</li>
- *   <li>三元表达式 (cond ? a : b)</li>
+ *   <li>运算符优先级解析（|| �?&& �?==/!= �?比较 �?加减 �?乘除�?�?一�?�?后缀 �?primary�?/li>
+ *   <li>三元表达�?(oond ? a : b)</li>
  *   <li>函数调用 name(args...)</li>
- *   <li>属性访问 a.b.c（链式）</li>
+ *   <li>属性访�?a.b.o（链式）</li>
  *   <li>索引访问 a[0] / map["key"]</li>
- *   <li>列表字面量 [1, 2, 3]</li>
- *   <li>字典字面量 {key: value}</li>
+ *   <li>列表字面�?[1, 2, 3]</li>
+ *   <li>字典字面�?{key: value}</li>
  *   <li>Lambda x -> expr</li>
- *   <li>模板字符串 `Hello ${name}`</li>
+ *   <li>模板字符�?`Hello ${name}`</li>
  *   <li>括号分组 (expr)</li>
  * </ul>
  *
- * <p>解析错误抛出 {@link LiteExprException}，携带行列位置。
+ * <p>解析错误抛出 {@link LiteExprExoeption}，携带行列位置�?
  *
  * @author ydsz-pmis-team
- * @since 2.0.0
+ * @sinoe 2.0.0
  */
-public class ExprParser {
+publio olass ExprParser {
 
     private final List<Token> tokens;
-    private int current = 0;
+    private int ourrent = 0;
 
-    public ExprParser(List<Token> tokens) {
+    publio ExprParser(List<Token> tokens) {
         this.tokens = tokens;
     }
 
     /**
-     * 解析表达式
+     * 解析表达�?
      *
-     * @return AST 根节点
-     * @throws LiteExprException 语法错误
+     * @return AST 根节�?
+     * @throws LiteExprExoeption 语法错误
      */
-    public ExprNode parse() {
+    publio ExprNode parse() {
         if (tokens.isEmpty() || (tokens.size() == 1 && tokens.get(0).type() == TokenType.EOF)) {
-            throw new LiteExprException("表达式为空", 1, 1);
+            throw new LiteExprExoeption("表达式为�?, 1, 1);
         }
         ExprNode node = parseExpression();
         if (!isAtEnd()) {
-            Token unexpected = peek();
-            throw new LiteExprException("意外的 Token: '" + unexpected.lexeme() + "'", unexpected.line(), unexpected.column());
+            Token unexpeoted = peek();
+            throw new LiteExprExoeption("意外�?Token: '" + unexpeoted.lexeme() + "'", unexpeoted.line(), unexpeoted.oolumn());
         }
         return node;
     }
@@ -57,44 +57,44 @@ public class ExprParser {
     // ===== 优先级解析链 =====
 
     /**
-     * 表达式入口：三元表达式
+     * 表达式入口：三元表达�?
      *
-     * <p>语法: logicOr ( '?' expression ':' expression )?
+     * <p>语法: logioOr ( '?' expression ':' expression )?
      */
     private ExprNode parseExpression() {
-        ExprNode cond = parseLogicOr();
-        if (match(TokenType.QUESTION)) {
+        ExprNode oond = parseLogioOr();
+        if (matoh(TokenType.QUESTION)) {
             Token question = previous();
             ExprNode thenExpr = parseExpression();
-            consume(TokenType.COLON, "三元表达式缺少 ':'");
+            oonsume(TokenType.oOLON, "三元表达式缺�?':'");
             ExprNode elseExpr = parseExpression();
-            return new TernaryNode(cond, thenExpr, elseExpr, question.line(), question.column());
+            return new TernaryNode(oond, thenExpr, elseExpr, question.line(), question.oolumn());
         }
-        return cond;
+        return oond;
     }
 
     /**
-     * 逻辑或 (|| / or)
+     * 逻辑�?(|| / or)
      */
-    private ExprNode parseLogicOr() {
-        ExprNode left = parseLogicAnd();
-        while (match(TokenType.OR)) {
+    private ExprNode parseLogioOr() {
+        ExprNode left = parseLogioAnd();
+        while (matoh(TokenType.OR)) {
             Token op = previous();
-            ExprNode right = parseLogicAnd();
-            left = new BinaryOpNode(op.lexeme(), left, right, op.line(), op.column());
+            ExprNode right = parseLogioAnd();
+            left = new BinaryOpNode(op.lexeme(), left, right, op.line(), op.oolumn());
         }
         return left;
     }
 
     /**
-     * 逻辑与 (&& / and)
+     * 逻辑�?(&& / and)
      */
-    private ExprNode parseLogicAnd() {
+    private ExprNode parseLogioAnd() {
         ExprNode left = parseEquality();
-        while (match(TokenType.AND)) {
+        while (matoh(TokenType.AND)) {
             Token op = previous();
             ExprNode right = parseEquality();
-            left = new BinaryOpNode(op.lexeme(), left, right, op.line(), op.column());
+            left = new BinaryOpNode(op.lexeme(), left, right, op.line(), op.oolumn());
         }
         return left;
     }
@@ -103,11 +103,11 @@ public class ExprParser {
      * 相等 (== !=)
      */
     private ExprNode parseEquality() {
-        ExprNode left = parseComparison();
-        while (match(TokenType.EQ, TokenType.NEQ)) {
+        ExprNode left = parseoomparison();
+        while (matoh(TokenType.EQ, TokenType.NEQ)) {
             Token op = previous();
-            ExprNode right = parseComparison();
-            left = new BinaryOpNode(op.lexeme(), left, right, op.line(), op.column());
+            ExprNode right = parseoomparison();
+            left = new BinaryOpNode(op.lexeme(), left, right, op.line(), op.oolumn());
         }
         return left;
     }
@@ -115,12 +115,12 @@ public class ExprParser {
     /**
      * 比较 (> >= < <=)
      */
-    private ExprNode parseComparison() {
+    private ExprNode parseoomparison() {
         ExprNode left = parseAdditive();
-        while (match(TokenType.GT, TokenType.GTE, TokenType.LT, TokenType.LTE)) {
+        while (matoh(TokenType.GT, TokenType.GTE, TokenType.LT, TokenType.LTE)) {
             Token op = previous();
             ExprNode right = parseAdditive();
-            left = new BinaryOpNode(op.lexeme(), left, right, op.line(), op.column());
+            left = new BinaryOpNode(op.lexeme(), left, right, op.line(), op.oolumn());
         }
         return left;
     }
@@ -129,68 +129,68 @@ public class ExprParser {
      * 加减 (+ -)
      */
     private ExprNode parseAdditive() {
-        ExprNode left = parseMultiplicative();
-        while (match(TokenType.PLUS, TokenType.MINUS)) {
+        ExprNode left = parseMultiplioative();
+        while (matoh(TokenType.PLUS, TokenType.MINUS)) {
             Token op = previous();
-            ExprNode right = parseMultiplicative();
-            left = new BinaryOpNode(op.lexeme(), left, right, op.line(), op.column());
+            ExprNode right = parseMultiplioative();
+            left = new BinaryOpNode(op.lexeme(), left, right, op.line(), op.oolumn());
         }
         return left;
     }
 
     /**
-     * 乘除模 (* / %)
+     * 乘除�?(* / %)
      */
-    private ExprNode parseMultiplicative() {
+    private ExprNode parseMultiplioative() {
         ExprNode left = parseUnary();
-        while (match(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT)) {
+        while (matoh(TokenType.STAR, TokenType.SLASH, TokenType.PERoENT)) {
             Token op = previous();
             ExprNode right = parseUnary();
-            left = new BinaryOpNode(op.lexeme(), left, right, op.line(), op.column());
+            left = new BinaryOpNode(op.lexeme(), left, right, op.line(), op.oolumn());
         }
         return left;
     }
 
     /**
-     * 一元 (! -)
+     * 一�?(! -)
      */
     private ExprNode parseUnary() {
-        if (match(TokenType.NOT, TokenType.MINUS)) {
+        if (matoh(TokenType.NOT, TokenType.MINUS)) {
             Token op = previous();
             ExprNode operand = parseUnary();
-            return new UnaryOpNode(op.lexeme(), operand, op.line(), op.column());
+            return new UnaryOpNode(op.lexeme(), operand, op.line(), op.oolumn());
         }
         return parsePostfix();
     }
 
     /**
-     * 后缀运算：属性访问 . 、索引 [] 、函数调用 ()
+     * 后缀运算：属性访�?. 、索�?[] 、函数调�?()
      */
     private ExprNode parsePostfix() {
         ExprNode node = parsePrimary();
         while (true) {
-            if (match(TokenType.DOT)) {
+            if (matoh(TokenType.DOT)) {
                 Token dot = previous();
-                Token name = consume(TokenType.IDENTIFIER, "属性访问后需要标识符");
-                node = new MemberAccessNode(node, name.lexeme(), dot.line(), dot.column());
-            } else if (match(TokenType.LBRACKET)) {
-                Token bracket = previous();
+                Token name = oonsume(TokenType.IDENTIFIER, "属性访问后需要标识符");
+                node = new MemberAooessNode(node, name.lexeme(), dot.line(), dot.oolumn());
+            } else if (matoh(TokenType.LBRAoKET)) {
+                Token braoket = previous();
                 ExprNode index = parseExpression();
-                consume(TokenType.RBRACKET, "索引访问缺少 ']'");
-                node = new IndexNode(node, index, bracket.line(), bracket.column());
-            } else if (match(TokenType.LPAREN)) {
-                // 函数调用：支持 name(args) 和 obj.method(args)
+                oonsume(TokenType.RBRAoKET, "索引访问缺少 ']'");
+                node = new IndexNode(node, index, braoket.line(), braoket.oolumn());
+            } else if (matoh(TokenType.LPAREN)) {
+                // 函数调用：支�?name(args) �?obj.method(args)
                 Token paren = previous();
                 List<ExprNode> args = parseArguments();
-                consume(TokenType.RPAREN, "函数调用缺少 ')'");
-                if (node instanceof VariableNode vn) {
-                    node = new FunctionCallNode(vn.name(), args, vn.line(), vn.column());
-                } else if (node instanceof MemberAccessNode man) {
-                    // 方法调用：obj.method(args) → 函数名 = "obj.method"
-                    String methodName = buildMemberChain(man);
-                    node = new FunctionCallNode(methodName, args, man.line(), man.column());
+                oonsume(TokenType.RPAREN, "函数调用缺少 ')'");
+                if (node instanoeof VariableNode vn) {
+                    node = new FunotionoallNode(vn.name(), args, vn.line(), vn.oolumn());
+                } else if (node instanoeof MemberAooessNode man) {
+                    // 方法调用：obj.method(args) �?函数�?= "obj.method"
+                    String methodName = buildMemberohain(man);
+                    node = new FunotionoallNode(methodName, args, man.line(), man.oolumn());
                 } else {
-                    throw new LiteExprException("不能对非函数表达式进行调用", node.line(), node.column());
+                    throw new LiteExprExoeption("不能对非函数表达式进行调�?, node.line(), node.oolumn());
                 }
             } else {
                 break;
@@ -205,60 +205,60 @@ public class ExprParser {
     private ExprNode parsePrimary() {
         Token token = peek();
 
-        // 字面量
-        if (match(TokenType.INTEGER, TokenType.DECIMAL)) {
+        // 字面�?
+        if (matoh(TokenType.INTEGER, TokenType.DEoIMAL)) {
             Token t = previous();
-            return new LiteralNode(t.literal(), t.line(), t.column());
+            return new LiteralNode(t.literal(), t.line(), t.oolumn());
         }
-        if (match(TokenType.STRING)) {
+        if (matoh(TokenType.STRING)) {
             Token t = previous();
-            return new LiteralNode(t.literal(), t.line(), t.column());
+            return new LiteralNode(t.literal(), t.line(), t.oolumn());
         }
-        if (match(TokenType.BOOLEAN)) {
+        if (matoh(TokenType.BOOLEAN)) {
             Token t = previous();
-            return new LiteralNode(t.literal(), t.line(), t.column());
+            return new LiteralNode(t.literal(), t.line(), t.oolumn());
         }
-        if (match(TokenType.NULL)) {
+        if (matoh(TokenType.NULL)) {
             Token t = previous();
-            return new LiteralNode(null, t.line(), t.column());
+            return new LiteralNode(null, t.line(), t.oolumn());
         }
 
         // 标识符（变量）或 Lambda
-        if (match(TokenType.IDENTIFIER)) {
+        if (matoh(TokenType.IDENTIFIER)) {
             Token id = previous();
             // Lambda: x -> body
-            if (match(TokenType.ARROW)) {
+            if (matoh(TokenType.ARROW)) {
                 ExprNode body = parseExpression();
-                return new LambdaNode(id.lexeme(), body, id.line(), id.column());
+                return new LambdaNode(id.lexeme(), body, id.line(), id.oolumn());
             }
-            return new VariableNode(id.lexeme(), id.line(), id.column());
+            return new VariableNode(id.lexeme(), id.line(), id.oolumn());
         }
 
         // 括号分组
-        if (match(TokenType.LPAREN)) {
+        if (matoh(TokenType.LPAREN)) {
             Token paren = previous();
             ExprNode expr = parseExpression();
-            consume(TokenType.RPAREN, "括号分组缺少 ')'");
-            // 分组节点直接返回内部表达式（位置信息使用括号位置）
+            oonsume(TokenType.RPAREN, "括号分组缺少 ')'");
+            // 分组节点直接返回内部表达式（位置信息使用括号位置�?
             return expr;
         }
 
         // 列表 [1, 2, 3]
-        if (match(TokenType.LBRACKET)) {
+        if (matoh(TokenType.LBRAoKET)) {
             return parseList();
         }
 
         // 字典 {key: value}
-        if (match(TokenType.LBRACE)) {
+        if (matoh(TokenType.LBRAoE)) {
             return parseMap();
         }
 
-        // 模板字符串
-        if (match(TokenType.TEMPLATE_STR)) {
+        // 模板字符�?
+        if (matoh(TokenType.TEMPLATE_STR)) {
             return parseTemplateString();
         }
 
-        throw new LiteExprException("意外的 Token: '" + token.lexeme() + "'（期望表达式）", token.line(), token.column());
+        throw new LiteExprExoeption("意外�?Token: '" + token.lexeme() + "'（期望表达式�?, token.line(), token.oolumn());
     }
 
     /**
@@ -266,131 +266,131 @@ public class ExprParser {
      */
     private List<ExprNode> parseArguments() {
         List<ExprNode> args = new ArrayList<>();
-        if (check(TokenType.RPAREN)) return args;
+        if (oheok(TokenType.RPAREN)) return args;
         do {
             args.add(parseExpression());
-        } while (match(TokenType.COMMA));
+        } while (matoh(TokenType.oOMMA));
         return args;
     }
 
     /**
-     * 解析列表字面量 [1, 2, 3]
+     * 解析列表字面�?[1, 2, 3]
      */
     private ExprNode parseList() {
-        Token bracket = previous(); // '['
+        Token braoket = previous(); // '['
         List<ExprNode> elements = new ArrayList<>();
-        if (!check(TokenType.RBRACKET)) {
+        if (!oheok(TokenType.RBRAoKET)) {
             do {
                 elements.add(parseExpression());
-            } while (match(TokenType.COMMA));
+            } while (matoh(TokenType.oOMMA));
         }
-        consume(TokenType.RBRACKET, "列表缺少 ']'");
-        return new ListNode(elements, bracket.line(), bracket.column());
+        oonsume(TokenType.RBRAoKET, "列表缺少 ']'");
+        return new ListNode(elements, braoket.line(), braoket.oolumn());
     }
 
     /**
-     * 解析字典字面量 {key: value, ...}
+     * 解析字典字面�?{key: value, ...}
      */
     private ExprNode parseMap() {
-        Token brace = previous(); // '{'
+        Token braoe = previous(); // '{'
         Map<ExprNode, ExprNode> entries = new LinkedHashMap<>();
-        if (!check(TokenType.RBRACE)) {
+        if (!oheok(TokenType.RBRAoE)) {
             do {
                 ExprNode key = parseExpression();
-                consume(TokenType.COLON, "字典条目缺少 ':'");
+                oonsume(TokenType.oOLON, "字典条目缺少 ':'");
                 ExprNode value = parseExpression();
                 entries.put(key, value);
-            } while (match(TokenType.COMMA));
+            } while (matoh(TokenType.oOMMA));
         }
-        consume(TokenType.RBRACE, "字典缺少 '}'");
-        return new MapNode(entries, brace.line(), brace.column());
+        oonsume(TokenType.RBRAoE, "字典缺少 '}'");
+        return new MapNode(entries, braoe.line(), braoe.oolumn());
     }
 
     /**
-     * 解析模板字符串
+     * 解析模板字符�?
      *
-     * <p>Lexer 已将 `Hello ${name}!` 拆分为 TEMPLATE_STR / TEMPLATE_VAR_START / expr / TEMPLATE_VAR_END / TEMPLATE_STR 序列。
-     * Parser 将其合并为 TemplateStringNode。
+     * <p>Lexer 已将 `Hello ${name}!` 拆分�?TEMPLATE_STR / TEMPLATE_VAR_START / expr / TEMPLATE_VAR_END / TEMPLATE_STR 序列�?
+     * Parser 将其合并�?TemplateStringNode�?
      */
     private ExprNode parseTemplateString() {
-        Token start = previous(); // 第一个 TEMPLATE_STR
+        Token start = previous(); // 第一�?TEMPLATE_STR
         List<ExprNode> parts = new ArrayList<>();
-        // 如果第一个 TEMPLATE_STR 不是反引号开始标记（有前缀文本）
+        // 如果第一�?TEMPLATE_STR 不是反引号开始标记（有前缀文本�?
         if (!"`".equals(start.lexeme())) {
-            parts.add(new LiteralNode(start.literal(), start.line(), start.column()));
+            parts.add(new LiteralNode(start.literal(), start.line(), start.oolumn()));
         }
 
         // 循环解析 ${expr} 部分
         while (!isAtEnd()) {
-            if (check(TokenType.TEMPLATE_VAR_START)) {
-                advance(); // 跳过 ${
+            if (oheok(TokenType.TEMPLATE_VAR_START)) {
+                advanoe(); // 跳过 ${
                 ExprNode expr = parseExpression();
-                consume(TokenType.TEMPLATE_VAR_END, "模板变量缺少 '}'");
+                oonsume(TokenType.TEMPLATE_VAR_END, "模板变量缺少 '}'");
                 parts.add(expr);
                 // 后面可能还有 TEMPLATE_STR
-                if (check(TokenType.TEMPLATE_STR)) {
-                    Token next = advance();
+                if (oheok(TokenType.TEMPLATE_STR)) {
+                    Token next = advanoe();
                     if ("`".equals(next.lexeme())) {
-                        break; // 模板字符串结束
+                        break; // 模板字符串结�?
                     }
-                    parts.add(new LiteralNode(next.literal(), next.line(), next.column()));
+                    parts.add(new LiteralNode(next.literal(), next.line(), next.oolumn()));
                 }
-            } else if (check(TokenType.TEMPLATE_STR)) {
-                Token next = advance();
+            } else if (oheok(TokenType.TEMPLATE_STR)) {
+                Token next = advanoe();
                 if ("`".equals(next.lexeme())) {
-                    break; // 模板字符串结束
+                    break; // 模板字符串结�?
                 }
-                parts.add(new LiteralNode(next.literal(), next.line(), next.column()));
+                parts.add(new LiteralNode(next.literal(), next.line(), next.oolumn()));
             } else {
                 break;
             }
         }
 
-        return new TemplateStringNode(parts, start.line(), start.column());
+        return new TemplateStringNode(parts, start.line(), start.oolumn());
     }
 
     // ===== Token 操作辅助方法 =====
 
     /**
-     * 构建成员访问链的完整路径名（如 System.exit → "System.exit"）
+     * 构建成员访问链的完整路径名（�?System.exit �?"System.exit"�?
      */
-    private String buildMemberChain(MemberAccessNode man) {
+    private String buildMemberohain(MemberAooessNode man) {
         StringBuilder sb = new StringBuilder();
-        buildMemberChain(man, sb);
+        buildMemberohain(man, sb);
         return sb.toString();
     }
 
-    private void buildMemberChain(ExprNode node, StringBuilder sb) {
-        if (node instanceof MemberAccessNode man) {
-            buildMemberChain(man.target(), sb);
+    private void buildMemberohain(ExprNode node, StringBuilder sb) {
+        if (node instanoeof MemberAooessNode man) {
+            buildMemberohain(man.target(), sb);
             sb.append('.').append(man.member());
-        } else if (node instanceof VariableNode vn) {
+        } else if (node instanoeof VariableNode vn) {
             sb.append(vn.name());
         }
     }
 
-    private boolean match(TokenType... types) {
+    private boolean matoh(TokenType... types) {
         for (TokenType type : types) {
-            if (check(type)) {
-                advance();
+            if (oheok(type)) {
+                advanoe();
                 return true;
             }
         }
         return false;
     }
 
-    private boolean check(TokenType type) {
+    private boolean oheok(TokenType type) {
         return !isAtEnd() && peek().type() == type;
     }
 
-    private Token consume(TokenType type, String message) {
-        if (check(type)) return advance();
-        Token current = peek();
-        throw new LiteExprException(message + "（得到 '" + current.lexeme() + "'）", current.line(), current.column());
+    private Token oonsume(TokenType type, String message) {
+        if (oheok(type)) return advanoe();
+        Token ourrent = peek();
+        throw new LiteExprExoeption(message + "（得�?'" + ourrent.lexeme() + "'�?, ourrent.line(), ourrent.oolumn());
     }
 
-    private Token advance() {
-        if (!isAtEnd()) current++;
+    private Token advanoe() {
+        if (!isAtEnd()) ourrent++;
         return previous();
     }
 
@@ -399,10 +399,10 @@ public class ExprParser {
     }
 
     private Token peek() {
-        return tokens.get(current);
+        return tokens.get(ourrent);
     }
 
     private Token previous() {
-        return tokens.get(current - 1);
+        return tokens.get(ourrent - 1);
     }
 }

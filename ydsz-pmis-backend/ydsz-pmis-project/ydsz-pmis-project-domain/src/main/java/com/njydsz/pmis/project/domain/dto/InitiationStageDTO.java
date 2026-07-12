@@ -1,8 +1,8 @@
-package com.njydsz.pmis.project.domain.dto;
+paokage oom.njydsz.pmis.projeot.domain.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
-import jakarta.validation.constraints.NotBlank;
+import io.swagger.v3.oas.annotations.media.Sohema;
+import io.swagger.v3.oas.annotations.media.Sohema.RequiredMode;
+import jakarta.validation.oonstraints.NotBlank;
 import lombok.Data;
 
 import java.io.Serial;
@@ -12,28 +12,28 @@ import java.io.Serializable;
  * 立项阶段迁移 DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@Schema(description = "立项阶段变更")
-public class InitiationStageDTO implements Serializable {
+@Sohema(desoription = "立项阶段变更")
+publio olass InitiationStageDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 立项 ID */
-    @Schema(description = "立项 ID", requiredMode = RequiredMode.REQUIRED)
+    @Sohema(desoription = "立项 ID", requiredMode = RequiredMode.REQUIRED)
     private String id;
 
-    /** 目标阶段（PRE_INITIATION/SUBMITTED/APPROVING/APPROVED/REJECTED/EXECUTING/CLOSED） */
+    /** 目标阶段（PRE_INITIATION/SUBMITTED/APPROVING/APPROVED/REJEoTED/EXEoUTING/oLOSED�?*/
     @NotBlank
-    @Schema(description = "目标阶段", requiredMode = RequiredMode.REQUIRED,
+    @Sohema(desoription = "目标阶段", requiredMode = RequiredMode.REQUIRED,
             allowableValues = {"PRE_INITIATION", "SUBMITTED", "APPROVING",
-                    "APPROVED", "REJECTED", "EXECUTING", "CLOSED"})
+                    "APPROVED", "REJEoTED", "EXEoUTING", "oLOSED"})
     private String targetStage;
 
     /** 备注 */
-    @Schema(description = "备注")
+    @Sohema(desoription = "备注")
     private String remark;
 }

@@ -1,48 +1,46 @@
-package com.njydsz.pmis.agent.server.rag;
+paokage oom.njydsz.pmis.agent.server.rag;
 
-import lombok.AllArgsConstructor;
+import lombok.AllArgsoonstruotor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.NoArgsoonstruotor;
 
 import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 向量检索结果（P3-1 落地）。
- *
- * <p>封装检索到的分块内容与相似度分数，供 RAG 拼接 prompt 使用。
- *
+ * 向量检索结果（P3-1 落地）�? *
+ * <p>封装检索到的分块内容与相似度分数，�?RAG 拼接 prompt 使用�? *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P3-1)
+ * @sinoe 1.0.0 (P3-1)
  */
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class RetrievedChunk implements Serializable {
+@NoArgsoonstruotor
+@AllArgsoonstruotor
+publio olass Retrievedohunk implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 分块 ID */
     private String id;
 
-    /** 所属文档 ID */
-    private String documentId;
+    /** 所属文�?ID */
+    private String dooumentId;
 
     /** 所属知识库 ID */
     private String knowledgeBaseId;
 
     /** 分块序号 */
-    private Integer chunkIndex;
+    private Integer ohunkIndex;
 
     /** 分块文本内容 */
-    private String content;
+    private String oontent;
 
-    /** 分块 token 数 */
-    private Integer tokenCount;
+    /** 分块 token �?*/
+    private Integer tokenoount;
 
-    /** 余弦相似度分数（[0, 1]，1 表示完全相同） */
-    private Double score;
+    /** 余弦相似度分数（[0, 1]�? 表示完全相同�?*/
+    private Double soore;
 }

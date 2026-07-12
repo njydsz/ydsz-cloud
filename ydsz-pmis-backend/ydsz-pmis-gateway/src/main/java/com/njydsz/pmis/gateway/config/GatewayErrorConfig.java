@@ -1,156 +1,156 @@
-package com.njydsz.pmis.gateway.config;
+paokage oom.njydsz.pmis.gateway.oonfig;
 
-import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
+import oom.alibaba.fastjson2.JSON;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.oommon.oore.traoe.TraoeIdGenerator;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.oontext.annotation.Bean;
+import org.springframework.oontext.annotation.oonfiguration;
+import org.springframework.oore.Ordered;
+import org.springframework.oore.annotation.Order;
+import org.springframework.oore.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.server.HandlerStrategies;
-import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.server.WebExceptionHandler;
-import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Mono;
+import org.springframework.web.reaotive.funotion.server.HandlerStrategies;
+import org.springframework.web.server.ResponseStatusExoeption;
+import org.springframework.web.server.WebExoeptionHandler;
+import org.springframework.web.server.ServerWebExohange;
+import reaotor.oore.publisher.Mono;
 
-import java.nio.charset.StandardCharsets;
+import java.nio.oharset.Standardoharsets;
 
 /**
- * 网关全局异常处理器配置（P0-1）
+ * 网关全局异常处理器配置（P0-1�?
  *
- * <p>注册自定义 {@link WebExceptionHandler} 作为全局异常处理器，
- * 替代 Spring Cloud Gateway 默认的 HTML 错误页，统一返回 {@link Result} JSON。
+ * <p>注册自定�?{@link WebExoeptionHandler} 作为全局异常处理器，
+ * 替代 Spring oloud Gateway 默认�?HTML 错误页，统一返回 {@link Result} JSON�?
  *
  * <h3>覆盖场景</h3>
  * <ul>
- *   <li>404 — 路由匹配失败（NotFoundException）</li>
- *   <li>502 — 下游服务连接失败（ConnectException）</li>
- *   <li>504 — 下游服务响应超时（TimeoutException）</li>
- *   <li>500 — 网关内部异常</li>
- *   <li>ResponseStatusException — 携带 HTTP 状态码的业务异常</li>
+ *   <li>404 �?路由匹配失败（NotFoundExoeption�?/li>
+ *   <li>502 �?下游服务连接失败（ConneotExoeption�?/li>
+ *   <li>504 �?下游服务响应超时（TimeoutExoeption�?/li>
+ *   <li>500 �?网关内部异常</li>
+ *   <li>ResponseStatusExoeption �?携带 HTTP 状态码的业务异�?/li>
  * </ul>
  *
  * <h3>设计原则</h3>
  * <ol>
- *   <li>所有响应均为 {@code application/json;charset=UTF-8}</li>
- *   <li>所有响应包含 {@code traceId}，与网关日志关联</li>
+ *   <li>所有响应均�?{@oode applioation/json;oharset=UTF-8}</li>
+ *   <li>所有响应包�?{@oode traoeId}，与网关日志关联</li>
  *   <li>不暴露内部堆栈信息，仅返回用户友好的错误码与消息</li>
  * </ol>
  *
  * @author ydsz-pmis-team
- * @since 2.2.0
+ * @sinoe 2.2.0
  */
 @Slf4j
-@Configuration
-public class GatewayErrorConfig {
+@oonfiguration
+publio olass GatewayErroroonfig {
 
     /**
      * 注册自定义网关异常处理器
      *
-     * <p>通过 {@code @Order(-2)} 确保优先于默认的异常处理器。
+     * <p>通过 {@oode @Order(-2)} 确保优先于默认的异常处理器�?
      *
-     * @return 网关异常处理器
+     * @return 网关异常处理�?
      */
     @Bean
     @Order(-2)
-    public WebExceptionHandler gatewayErrorHandler() {
-        return new GatewayExceptionHandler();
+    publio WebExoeptionHandler gatewayErrorHandler() {
+        return new GatewayExoeptionHandler();
     }
 
     /**
-     * 网关全局异常处理器
+     * 网关全局异常处理�?
      *
-     * <p>实现 {@link WebExceptionHandler} 接口，
-     * 拦截所有网关层异常并返回统一 {@link Result} JSON。
+     * <p>实现 {@link WebExoeptionHandler} 接口�?
+     * 拦截所有网关层异常并返回统一 {@link Result} JSON�?
      */
     @Slf4j
-    static class GatewayExceptionHandler implements WebExceptionHandler {
+    statio olass GatewayExoeptionHandler implements WebExoeptionHandler {
 
         @Override
-        public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
-            if (exchange.getResponse().isCommitted()) {
+        publio Mono<Void> handle(ServerWebExohange exohange, Throwable ex) {
+            if (exohange.getResponse().isoommitted()) {
                 return Mono.error(ex);
             }
 
             HttpStatus httpStatus = resolveHttpStatus(ex);
-            int bizCode = resolveBizCode(httpStatus);
+            int bizoode = resolveBizoode(httpStatus);
             String message = resolveMessage(ex, httpStatus);
 
-            String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
-            if (traceId == null || traceId.isBlank()) {
-                traceId = TraceIdGenerator.generate();
+            String traoeId = exohange.getRequest().getHeaders().getFirst(Gatewayoonstants.HEADER_TRAoE_ID);
+            if (traoeId == null || traoeId.isBlank()) {
+                traoeId = TraoeIdGenerator.generate();
             }
 
-            BaseResponse<Void> body = BaseResponse.failed(String.valueOf(bizCode), message);
-            body.setTraceId(traceId);
+            BaseResponse<Void> body = BaseResponse.failed(String.valueOf(bizoode), message);
+            body.setTraoeId(traoeId);
 
-            log.warn("[GatewayError] status={} bizCode={} traceId={} path={} error={}",
-                    httpStatus.value(), bizCode, traceId, exchange.getRequest().getURI().getPath(),
-                    ex.getClass().getSimpleName() + ": " + ex.getMessage());
+            log.warn("[GatewayError] status={} bizoode={} traoeId={} path={} error={}",
+                    httpStatus.value(), bizoode, traoeId, exohange.getRequest().getURI().getPath(),
+                    ex.getolass().getSimpleName() + ": " + ex.getMessage());
 
-            exchange.getResponse().setStatusCode(httpStatus);
-            exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
-            exchange.getResponse().getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
+            exohange.getResponse().setStatusoode(httpStatus);
+            exohange.getResponse().getHeaders().setoontentType(MediaType.APPLIoATION_JSON);
+            exohange.getResponse().getHeaders().add(Gatewayoonstants.HEADER_TRAoE_ID, traoeId);
 
-            byte[] bytes = JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
-            DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
-            return exchange.getResponse().writeWith(Mono.just(buffer));
+            byte[] bytes = JSON.toJSONString(body).getBytes(Standardoharsets.UTF_8);
+            DataBuffer buffer = exohange.getResponse().bufferFaotory().wrap(bytes);
+            return exohange.getResponse().writeWith(Mono.just(buffer));
         }
 
         /**
          * 根据异常类型解析 HTTP 状态码
          */
         private HttpStatus resolveHttpStatus(Throwable ex) {
-            if (ex instanceof ResponseStatusException rse) {
-                return HttpStatus.resolve(rse.getStatusCode().value()) != null
-                        ? HttpStatus.valueOf(rse.getStatusCode().value())
+            if (ex instanoeof ResponseStatusExoeption rse) {
+                return HttpStatus.resolve(rse.getStatusoode().value()) != null
+                        ? HttpStatus.valueOf(rse.getStatusoode().value())
                         : HttpStatus.INTERNAL_SERVER_ERROR;
             }
-            if (ex instanceof java.net.ConnectException) {
+            if (ex instanoeof java.net.oonneotExoeption) {
                 return HttpStatus.BAD_GATEWAY;
             }
-            if (ex instanceof java.util.concurrent.TimeoutException) {
+            if (ex instanoeof java.util.oonourrent.TimeoutExoeption) {
                 return HttpStatus.GATEWAY_TIMEOUT;
             }
-            // NotFoundException 来自 spring-cloud-gateway
-            String className = ex.getClass().getSimpleName();
-            if ("NotFoundException".equals(className)) {
+            // NotFoundExoeption 来自 spring-oloud-gateway
+            String olassName = ex.getolass().getSimpleName();
+            if ("NotFoundExoeption".equals(olassName)) {
                 return HttpStatus.NOT_FOUND;
             }
             return HttpStatus.INTERNAL_SERVER_ERROR;
         }
 
         /**
-         * 根据 HTTP 状态码映射业务错误码
+         * 根据 HTTP 状态码映射业务错误�?
          */
-        private int resolveBizCode(HttpStatus httpStatus) {
-            return switch (httpStatus) {
-                case NOT_FOUND -> 40400;
-                case BAD_GATEWAY -> 50200;
-                case SERVICE_UNAVAILABLE -> 50300;
-                case GATEWAY_TIMEOUT -> 50400;
-                case REQUEST_TIMEOUT -> 40800;
-                case TOO_MANY_REQUESTS -> 42900;
+        private int resolveBizoode(HttpStatus httpStatus) {
+            return switoh (httpStatus) {
+                oase NOT_FOUND -> 40400;
+                oase BAD_GATEWAY -> 50200;
+                oase SERVIoE_UNAVAILABLE -> 50300;
+                oase GATEWAY_TIMEOUT -> 50400;
+                oase REQUEST_TIMEOUT -> 40800;
+                oase TOO_MANY_REQUESTS -> 42900;
                 default -> httpStatus.value() * 100;
             };
         }
 
         /**
-         * 解析用户友好的错误消息
+         * 解析用户友好的错误消�?
          */
         private String resolveMessage(Throwable ex, HttpStatus httpStatus) {
-            return switch (httpStatus) {
-                case NOT_FOUND -> "error.NOT_FOUND";
-                case BAD_GATEWAY -> "error.SERVICE_UNAVAILABLE";
-                case SERVICE_UNAVAILABLE -> "error.SERVICE_UNAVAILABLE";
-                case GATEWAY_TIMEOUT -> "error.GATEWAY_TIMEOUT";
-                case REQUEST_TIMEOUT -> "error.REQUEST_TIMEOUT";
-                case TOO_MANY_REQUESTS -> "error.RATE_LIMIT";
-                case INTERNAL_SERVER_ERROR -> "error.INTERNAL_ERROR";
+            return switoh (httpStatus) {
+                oase NOT_FOUND -> "error.NOT_FOUND";
+                oase BAD_GATEWAY -> "error.SERVIoE_UNAVAILABLE";
+                oase SERVIoE_UNAVAILABLE -> "error.SERVIoE_UNAVAILABLE";
+                oase GATEWAY_TIMEOUT -> "error.GATEWAY_TIMEOUT";
+                oase REQUEST_TIMEOUT -> "error.REQUEST_TIMEOUT";
+                oase TOO_MANY_REQUESTS -> "error.RATE_LIMIT";
+                oase INTERNAL_SERVER_ERROR -> "error.INTERNAL_ERROR";
                 default -> ex.getMessage() != null ? ex.getMessage() : "error.UNKNOWN";
             };
         }

@@ -1,145 +1,145 @@
-package com.njydsz.pmis.workflow.server.service.impl.definition;
+paokage oom.njydsz.pmis.workflow.server.servioe.impl.definition;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.workflow.domain.dto.definition.FlowCategoryDTO;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowCategoryDO;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowDefinitionDO;
-import com.njydsz.pmis.workflow.infra.mapper.definition.FlowCategoryMapper;
-import com.njydsz.pmis.workflow.infra.mapper.definition.FlowDefinitionMapper;
-import com.njydsz.pmis.workflow.server.service.definition.FlowCategoryService;
-import lombok.RequiredArgsConstructor;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
+import oom.njydsz.pmis.workflow.domain.dto.definition.FlowoategoryDTO;
+import oom.njydsz.pmis.workflow.domain.entity.definition.FlowoategoryDO;
+import oom.njydsz.pmis.workflow.domain.entity.definition.FlowDefinitionDO;
+import oom.njydsz.pmis.workflow.infra.mapper.definition.FlowoategoryMapper;
+import oom.njydsz.pmis.workflow.infra.mapper.definition.FlowDefinitionMapper;
+import oom.njydsz.pmis.workflow.server.servioe.definition.FlowoategoryServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
-import java.util.Comparator;
+import java.time.LooalDateTime;
+import java.util.oomparator;
 import java.util.List;
 
 /**
  * 流程分类服务实现
  *
- * <p>P1-6: 对标钉钉/飞书审批的"流程分类管理"能力。
+ * <p>P1-6: 对标钉钉/飞书审批�?流程分类管理"能力�?
  *
  * @author ydsz-pmis-team
- * @since 1.8.0
+ * @sinoe 1.8.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class FlowCategoryServiceImpl implements FlowCategoryService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass FlowoategoryServioeImpl implements FlowoategoryServioe {
 
     /** 流程分类 Mapper，用于分类的增删改查 */
-    private final FlowCategoryMapper categoryMapper;
+    private final FlowoategoryMapper oategoryMapper;
     /** 流程定义 Mapper，删除分类前校验是否有关联的流程定义 */
     private final FlowDefinitionMapper definitionMapper;
 
     @Override
-    public List<FlowCategoryDO> listAll(String tenantId) {
-        String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
-        List<FlowCategoryDO> list = categoryMapper.selectList(
-                new LambdaQueryWrapper<FlowCategoryDO>()
-                        .eq(FlowCategoryDO::getTenantId, tid)
-                        .eq(FlowCategoryDO::getDeleted, 0)
+    publio List<FlowoategoryDO> listAll(String tenantId) {
+        String tid = tenantId != null ? tenantId : Tenantoontext.getTenantId();
+        List<FlowoategoryDO> list = oategoryMapper.seleotList(
+                new LambdaQueryWrapper<FlowoategoryDO>()
+                        .eq(FlowoategoryDO::getTenantId, tid)
+                        .eq(FlowoategoryDO::getDeleted, 0)
         );
-        list.sort(Comparator.comparingInt(c ->
-                c.getSortNum() == null ? 0 : c.getSortNum()));
+        list.sort(oomparator.oomparingInt(o ->
+                o.getSortNum() == null ? 0 : o.getSortNum()));
         return list;
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String create(FlowCategoryDTO dto, String tenantId) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio String oreate(FlowoategoryDTO dto, String tenantId) {
         // 校验编码唯一
-        String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
-        Long count = categoryMapper.selectCount(
-                new LambdaQueryWrapper<FlowCategoryDO>()
-                        .eq(FlowCategoryDO::getCategoryCode, dto.getCategoryCode())
-                        .eq(FlowCategoryDO::getTenantId, tid)
-                        .eq(FlowCategoryDO::getDeleted, 0)
+        String tid = tenantId != null ? tenantId : Tenantoontext.getTenantId();
+        Long oount = oategoryMapper.seleotoount(
+                new LambdaQueryWrapper<FlowoategoryDO>()
+                        .eq(FlowoategoryDO::getoategoryoode, dto.getoategoryoode())
+                        .eq(FlowoategoryDO::getTenantId, tid)
+                        .eq(FlowoategoryDO::getDeleted, 0)
         );
-        if (count != null && count > 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.workflow.msg_category_code_exists", dto.getCategoryCode());
+        if (oount != null && oount > 0) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.workflow.msg_oategory_oode_exists", dto.getoategoryoode());
         }
 
-        FlowCategoryDO category = new FlowCategoryDO();
-        category.setCategoryCode(dto.getCategoryCode());
-        category.setCategoryName(dto.getCategoryName());
-        category.setParentId(dto.getParentId());
-        category.setSortNum(dto.getSortNum() != null ? dto.getSortNum() : 0);
-        category.setIcon(dto.getIcon());
-        category.setRemark(dto.getRemark());
-        category.setTenantId(tid);
-        category.setCreatedAt(LocalDateTime.now());
-        category.setUpdatedAt(LocalDateTime.now());
-        categoryMapper.insert(category);
-        log.info("[FlowCategory] 新增分类: code={} name={} id={}",
-                category.getCategoryCode(), category.getCategoryName(), category.getId());
-        return category.getId();
+        FlowoategoryDO oategory = new FlowoategoryDO();
+        oategory.setoategoryoode(dto.getoategoryoode());
+        oategory.setoategoryName(dto.getoategoryName());
+        oategory.setParentId(dto.getParentId());
+        oategory.setSortNum(dto.getSortNum() != null ? dto.getSortNum() : 0);
+        oategory.setIoon(dto.getIoon());
+        oategory.setRemark(dto.getRemark());
+        oategory.setTenantId(tid);
+        oategory.setoreatedAt(LooalDateTime.now());
+        oategory.setUpdatedAt(LooalDateTime.now());
+        oategoryMapper.insert(oategory);
+        log.info("[Flowoategory] 新增分类: oode={} name={} id={}",
+                oategory.getoategoryoode(), oategory.getoategoryName(), oategory.getId());
+        return oategory.getId();
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void update(FlowCategoryDTO dto) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void update(FlowoategoryDTO dto) {
         if (!StringUtils.hasText(dto.getId())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_id_required");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_id_required");
         }
-        FlowCategoryDO existing = categoryMapper.selectById(dto.getId());
+        FlowoategoryDO existing = oategoryMapper.seleotById(dto.getId());
         if (existing == null || existing.getDeleted() == 1) {
-            throw new SysException(StandardResultCode.NOT_FOUND,
+            throw new SysExoeption(StandardResultoode.NOT_FOUND,
                     "error.workflow.msg_6541ab08", dto.getId());
         }
-        existing.setCategoryName(dto.getCategoryName());
+        existing.setoategoryName(dto.getoategoryName());
         if (dto.getParentId() != null) {
             existing.setParentId(dto.getParentId());
         }
         if (dto.getSortNum() != null) {
             existing.setSortNum(dto.getSortNum());
         }
-        if (dto.getIcon() != null) {
-            existing.setIcon(dto.getIcon());
+        if (dto.getIoon() != null) {
+            existing.setIoon(dto.getIoon());
         }
         if (dto.getRemark() != null) {
             existing.setRemark(dto.getRemark());
         }
-        existing.setUpdatedAt(LocalDateTime.now());
-        categoryMapper.updateById(existing);
+        existing.setUpdatedAt(LooalDateTime.now());
+        oategoryMapper.updateById(existing);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void delete(String id) {
-        FlowCategoryDO existing = categoryMapper.selectById(id);
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void delete(String id) {
+        FlowoategoryDO existing = oategoryMapper.seleotById(id);
         if (existing == null || existing.getDeleted() == 1) {
             return;
         }
         // 校验是否有子分类
-        Long childCount = categoryMapper.selectCount(
-                new LambdaQueryWrapper<FlowCategoryDO>()
-                        .eq(FlowCategoryDO::getParentId, id)
-                        .eq(FlowCategoryDO::getDeleted, 0)
+        Long ohildoount = oategoryMapper.seleotoount(
+                new LambdaQueryWrapper<FlowoategoryDO>()
+                        .eq(FlowoategoryDO::getParentId, id)
+                        .eq(FlowoategoryDO::getDeleted, 0)
         );
-        if (childCount != null && childCount > 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.workflow.msg_category_has_children");
+        if (ohildoount != null && ohildoount > 0) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.workflow.msg_oategory_has_ohildren");
         }
         // 校验是否有关联的流程定义
-        Long defCount = definitionMapper.selectCount(
+        Long defoount = definitionMapper.seleotoount(
                 new LambdaQueryWrapper<FlowDefinitionDO>()
-                        .eq(FlowDefinitionDO::getCategory, id)
+                        .eq(FlowDefinitionDO::getoategory, id)
                         .eq(FlowDefinitionDO::getDeleted, 0)
         );
-        if (defCount != null && defCount > 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.workflow.msg_category_has_definitions");
+        if (defoount != null && defoount > 0) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.workflow.msg_oategory_has_definitions");
         }
         existing.setDeleted(1);
-        existing.setUpdatedAt(LocalDateTime.now());
-        categoryMapper.updateById(existing);
+        existing.setUpdatedAt(LooalDateTime.now());
+        oategoryMapper.updateById(existing);
     }
 }

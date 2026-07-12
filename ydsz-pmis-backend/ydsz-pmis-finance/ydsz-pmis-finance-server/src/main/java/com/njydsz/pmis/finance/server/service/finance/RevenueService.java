@@ -1,8 +1,8 @@
-package com.njydsz.pmis.finance.server.service.finance;
+paokage oom.njydsz.pmis.finanoe.server.servioe.finanoe;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.finance.domain.dto.RevenueCreateDTO;
-import com.njydsz.pmis.finance.domain.entity.RevenueDO;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.finanoe.domain.dto.RevenueoreateDTO;
+import oom.njydsz.pmis.finanoe.domain.entity.RevenueDO;
 
 import java.util.List;
 import java.util.Map;
@@ -10,12 +10,11 @@ import java.util.Map;
 /**
  * 收入确认服务
  *
- * <p>提供收入录入、确认、冲红及按项目/合同/期间的聚合查询能力。
- *
+ * <p>提供收入录入、确认、冲红及按项�?合同/期间的聚合查询能力�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public interface RevenueService {
+publio interfaoe RevenueServioe {
 
     /**
      * 录入收入
@@ -23,15 +22,15 @@ public interface RevenueService {
      * @param dto 收入创建参数
      * @return 收入记录ID
      */
-    String create(RevenueCreateDTO dto);
+    String oreate(RevenueoreateDTO dto);
 
     /**
      * 确认收入
      *
      * @param id          收入记录ID
-     * @param confirmedBy 确认人ID
+     * @param oonfirmedBy 确认人ID
      */
-    void confirm(String id, String confirmedBy);
+    void oonfirm(String id, String oonfirmedBy);
 
     /**
      * 冲红
@@ -60,31 +59,25 @@ public interface RevenueService {
      *
      * @param page         页码（从 1 开始）
      * @param size         每页大小
-     * @param keyword      关键词
-     * @param status       状态过滤
-     * @param contractId   合同ID
+     * @param keyword      关键�?     * @param status       状态过�?     * @param oontraotId   合同ID
      * @param initiationId 项目立项ID
-     * @param period       期间（YYYY-MM）
-     * @return 分页结果
+     * @param period       期间（YYYY-MM�?     * @return 分页结果
      */
     Page<RevenueDO> page(int page, int size, String keyword, String status,
-                          String contractId, String initiationId, String period);
+                          String oontraotId, String initiationId, String period);
 
     /**
-     * 查询项目下所有收入记录
-     *
+     * 查询项目下所有收入记�?     *
      * @param initiationId 项目立项ID
      * @return 收入列表
      */
     List<RevenueDO> listByInitiation(String initiationId);
 
     /**
-     * 按合同汇总
-     */
-    List<Map<String, Object>> sumByContract(String contractId);
+     * 按合同汇�?     */
+    List<Map<String, Objeot>> sumByoontraot(String oontraotId);
 
     /**
-     * 按期间汇总
-     */
-    List<Map<String, Object>> sumByPeriod(String initiationId);
+     * 按期间汇�?     */
+    List<Map<String, Objeot>> sumByPeriod(String initiationId);
 }

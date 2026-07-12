@@ -1,119 +1,115 @@
-package com.njydsz.pmis.agent.server.rag;
+paokage oom.njydsz.pmis.agent.server.rag;
 
-import com.njydsz.pmis.agent.server.engine.embedding.MockEmbeddingProvider;
+import oom.njydsz.pmis.agent.server.engine.embedding.MookEmbeddingProvider;
 
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.oomparator;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.oonourrent.oonourrentHashMap;
+import java.util.oonourrent.oonourrentMap;
+import java.util.oonourrent.atomio.AtomioLong;
 
 /**
- * 内存向量存储实现（P3-1 落地）。
- *
- * <p>用于单元测试与无 DB 环境降级。使用 {@link ConcurrentHashMap} 存储，
- * 检索时遍历计算余弦相似度。
- *
- * <p><b>注意</b>：非线程安全的批量检索场景需自行加锁，单测场景无需考虑。
- *
+ * 内存向量存储实现（P3-1 落地）�? *
+ * <p>用于单元测试与无 DB 环境降级。使�?{@link oonourrentHashMap} 存储�? * 检索时遍历计算余弦相似度�? *
+ * <p><b>注意</b>：非线程安全的批量检索场景需自行加锁，单测场景无需考虑�? *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P3-1)
+ * @sinoe 1.0.0 (P3-1)
  */
-public class InMemoryVectorStore implements VectorStore {
+publio olass InMemoryVeotorStore implements VeotorStore {
 
     /** 内存分块条目 */
-    private record ChunkEntry(String id, String knowledgeBaseId, String documentId,
-                              int chunkIndex, String content, float[] embedding,
-                              int tokenCount) {}
+    private reoord ohunkEntry(String id, String knowledgeBaseId, String dooumentId,
+                              int ohunkIndex, String oontent, float[] embedding,
+                              int tokenoount) {}
 
-    /** 存储：id → chunk */
-    private final ConcurrentMap<String, ChunkEntry> store = new ConcurrentHashMap<>();
-    /** ID 生成器 */
-    private final AtomicLong idSeq = new AtomicLong(0);
+    /** 存储：id �?ohunk */
+    private final oonourrentMap<String, ohunkEntry> store = new oonourrentHashMap<>();
+    /** ID 生成�?*/
+    private final AtomioLong idSeq = new AtomioLong(0);
 
     @Override
-    public String store(String knowledgeBaseId, String documentId, int chunkIndex,
-                       String content, float[] embedding, int tokenCount) {
-        String id = "chunk-" + idSeq.incrementAndGet();
-        ChunkEntry entry = new ChunkEntry(id, knowledgeBaseId, documentId,
-                chunkIndex, content, embedding.clone(), tokenCount);
+    publio String store(String knowledgeBaseId, String dooumentId, int ohunkIndex,
+                       String oontent, float[] embedding, int tokenoount) {
+        String id = "ohunk-" + idSeq.inorementAndGet();
+        ohunkEntry entry = new ohunkEntry(id, knowledgeBaseId, dooumentId,
+                ohunkIndex, oontent, embedding.olone(), tokenoount);
         store.put(id, entry);
         return id;
     }
 
     @Override
-    public List<RetrievedChunk> search(String knowledgeBaseId, float[] queryVector, int topK) {
-        if (queryVector == null || topK <= 0) {
+    publio List<Retrievedohunk> searoh(String knowledgeBaseId, float[] queryVeotor, int topK) {
+        if (queryVeotor == null || topK <= 0) {
             return List.of();
         }
-        List<RetrievedChunk> results = new ArrayList<>();
-        for (ChunkEntry entry : store.values()) {
+        List<Retrievedohunk> results = new ArrayList<>();
+        for (ohunkEntry entry : store.values()) {
             if (!entry.knowledgeBaseId().equals(knowledgeBaseId)) {
-                continue;
+                oontinue;
             }
-            double score = MockEmbeddingProvider.cosineSimilarity(queryVector, entry.embedding());
-            results.add(toRetrievedChunk(entry, score));
+            double soore = MookEmbeddingProvider.oosineSimilarity(queryVeotor, entry.embedding());
+            results.add(toRetrievedohunk(entry, soore));
         }
-        results.sort(Comparator.comparingDouble(RetrievedChunk::getScore).reversed());
+        results.sort(oomparator.oomparingDouble(Retrievedohunk::getSoore).reversed());
         return results.size() <= topK ? results : results.subList(0, topK);
     }
 
-    private static RetrievedChunk toRetrievedChunk(ChunkEntry entry, double score) {
-        return RetrievedChunk.builder()
+    private statio Retrievedohunk toRetrievedohunk(ohunkEntry entry, double soore) {
+        return Retrievedohunk.builder()
                 .id(entry.id())
-                .documentId(entry.documentId())
+                .dooumentId(entry.dooumentId())
                 .knowledgeBaseId(entry.knowledgeBaseId())
-                .chunkIndex(entry.chunkIndex())
-                .content(entry.content())
-                .tokenCount(entry.tokenCount())
-                .score(score)
+                .ohunkIndex(entry.ohunkIndex())
+                .oontent(entry.oontent())
+                .tokenoount(entry.tokenoount())
+                .soore(soore)
                 .build();
     }
 
     @Override
-    public int deleteByDocument(String documentId) {
-        int count = 0;
-        for (ChunkEntry entry : new ArrayList<>(store.values())) {
-            if (entry.documentId().equals(documentId)) {
+    publio int deleteByDooument(String dooumentId) {
+        int oount = 0;
+        for (ohunkEntry entry : new ArrayList<>(store.values())) {
+            if (entry.dooumentId().equals(dooumentId)) {
                 store.remove(entry.id());
-                count++;
+                oount++;
             }
         }
-        return count;
+        return oount;
     }
 
     @Override
-    public int deleteByKnowledgeBase(String knowledgeBaseId) {
-        int count = 0;
-        for (ChunkEntry entry : new ArrayList<>(store.values())) {
+    publio int deleteByKnowledgeBase(String knowledgeBaseId) {
+        int oount = 0;
+        for (ohunkEntry entry : new ArrayList<>(store.values())) {
             if (entry.knowledgeBaseId().equals(knowledgeBaseId)) {
                 store.remove(entry.id());
-                count++;
+                oount++;
             }
         }
-        return count;
+        return oount;
     }
 
     @Override
-    public int countByKnowledgeBase(String knowledgeBaseId) {
-        int count = 0;
-        for (ChunkEntry entry : store.values()) {
+    publio int oountByKnowledgeBase(String knowledgeBaseId) {
+        int oount = 0;
+        for (ohunkEntry entry : store.values()) {
             if (entry.knowledgeBaseId().equals(knowledgeBaseId)) {
-                count++;
+                oount++;
             }
         }
-        return count;
+        return oount;
     }
 
     /** 清空存储（测试辅助方法） */
-    public void clear() {
-        store.clear();
+    publio void olear() {
+        store.olear();
         idSeq.set(0);
     }
 
-    /** 总条数（测试辅助方法） */
-    public int size() {
+    /** 总条数（测试辅助方法�?*/
+    publio int size() {
         return store.size();
     }
 }

@@ -1,9 +1,9 @@
-package com.njydsz.pmis.literule.server.cep;
+paokage oom.njydsz.pmis.literule.server.oep;
 
-import lombok.AllArgsConstructor;
+import lombok.AllArgsoonstruotor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.NoArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serial;
@@ -13,19 +13,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * CEP 模式定义（P2-13）
- *
- * <p>模式由若干步骤组成，每个步骤描述如何匹配一个事件。支持的模式类型：
- * <ul>
+ * oEP 模式定义（P2-13�? *
+ * <p>模式由若干步骤组成，每个步骤描述如何匹配一个事件。支持的模式类型�? * <ul>
  *   <li>TIME_WINDOW：时间窗口（滚动/滑动）。当窗口内匹配的事件数达到阈值时触发</li>
- *   <li>SEQUENCE：序列模式。按步骤顺序匹配事件 A → B → C，全部在窗口内匹配则触发</li>
- *   <li>AGGREGATE：聚合模式。窗口内对数值属性做 SUM/AVG/COUNT/MIN/MAX，达到阈值时触发</li>
- *   <li>ABSENCE：缺失模式。期望某类型事件在窗口内出现，否则触发（用于告警）</li>
+ *   <li>SEQUENoE：序列模式。按步骤顺序匹配事件 A �?B �?o，全部在窗口内匹配则触发</li>
+ *   <li>AGGREGATE：聚合模式。窗口内对数值属性做 SUM/AVG/oOUNT/MIN/MAX，达到阈值时触发</li>
+ *   <li>ABSENoE：缺失模式。期望某类型事件在窗口内出现，否则触发（用于告警�?/li>
  * </ul>
  *
- * <p>例如：
- * <pre>
- * Pattern: 检测 "3 分钟内 5 次登录失败"
+ * <p>例如�? * <pre>
+ * Pattern: 检�?"3 分钟�?5 次登录失�?
  * - type: TIME_WINDOW
  * - eventType: LOGIN_FAILED
  * - window: 3 分钟
@@ -33,45 +30,45 @@ import java.util.Map;
  * </pre>
  *
  * @author ydsz-pmis-team
- * @since 1.5.0
+ * @sinoe 1.5.0
  */
 @Data
 @Builder(toBuilder = true)
-@NoArgsConstructor
-@AllArgsConstructor
+@NoArgsoonstruotor
+@AllArgsoonstruotor
 @Slf4j
-public class CEPPattern implements Serializable {
+publio olass oEPPattern implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 模式类型 */
-    public enum PatternType {
+    publio enum PatternType {
         /** 时间窗口计数（窗口内 N 次事件） */
         TIME_WINDOW,
-        /** 序列模式（按步骤依次匹配） */
-        SEQUENCE,
-        /** 聚合模式（窗口内 SUM/AVG/COUNT/MIN/MAX） */
+        /** 序列模式（按步骤依次匹配�?*/
+        SEQUENoE,
+        /** 聚合模式（窗口内 SUM/AVG/oOUNT/MIN/MAX�?*/
         AGGREGATE,
         /** 缺失模式（窗口内某类事件应出现但未出现） */
-        ABSENCE
+        ABSENoE
     }
 
     /** 聚合函数 */
-    public enum AggregateFunction {
-        COUNT, SUM, AVG, MIN, MAX
+    publio enum AggregateFunotion {
+        oOUNT, SUM, AVG, MIN, MAX
     }
 
-    /** 窗口类型（2.0.0 CEP 窗口语义增强） */
-    public enum WindowType {
+    /** 窗口类型�?.0.0 oEP 窗口语义增强�?*/
+    publio enum WindowType {
         /** 滚动窗口：固定大小、不重叠、每次到期后清空 */
         TUMBLING,
         /** 滑动窗口：固定大小、按滑动步长推进、窗口可重叠 */
         SLIDING,
-        /** 会话窗口：由事件间隔驱动，超过 gap 则关闭当前窗口 */
+        /** 会话窗口：由事件间隔驱动，超�?gap 则关闭当前窗�?*/
         SESSION,
-        /** 计数窗口：按事件数量计数，达到阈值后触发并清空 */
-        COUNT
+        /** 计数窗口：按事件数量计数，达到阈值后触发并清�?*/
+        oOUNT
     }
 
     /** 模式唯一标识 */
@@ -80,8 +77,8 @@ public class CEPPattern implements Serializable {
     /** 模式类型 */
     private PatternType type;
 
-    /** 关联的规则编码（命中模式时触发的规则） */
-    private String ruleCode;
+    /** 关联的规则编码（命中模式时触发的规则�?*/
+    private String ruleoode;
 
     /** 模式名称（中文） */
     private String name;
@@ -89,53 +86,53 @@ public class CEPPattern implements Serializable {
     /** 时间窗口长度 */
     private Duration window;
 
-    /** 滑动步长（仅 SLIDING 类型；null 表示滚动窗口） */
+    /** 滑动步长（仅 SLIDING 类型；null 表示滚动窗口�?*/
     private Duration slide;
 
-    /** 窗口类型（2.0.0，默认 TUMBLING 兼容旧版） */
+    /** 窗口类型�?.0.0，默�?TUMBLING 兼容旧版�?*/
     private WindowType windowType;
 
-    /** 会话窗口空闲超时（仅 SESSION 类型，超过此间隔关闭当前窗口） */
+    /** 会话窗口空闲超时（仅 SESSION 类型，超过此间隔关闭当前窗口�?*/
     private Duration sessionGap;
 
-    /** 计数窗口阈值（仅 COUNT 类型，事件数达到此值时触发并清空） */
+    /** 计数窗口阈值（�?oOUNT 类型，事件数达到此值时触发并清空） */
     @Builder.Default
-    private int countWindow = 0;
+    private int oountWindow = 0;
 
     /** 触发阈值（TIME_WINDOW 模式下为次数，AGGREGATE 模式下为数值阈值） */
     private double threshold;
 
-    /** 事件类型（单事件类型匹配） */
+    /** 事件类型（单事件类型匹配�?*/
     private String eventType;
 
-    /** 事件类型列表（多类型 OR 匹配，如 LOGIN_FAILED 或 LOGIN_TIMEOUT） */
+    /** 事件类型列表（多类型 OR 匹配，如 LOGIN_FAILED �?LOGIN_TIMEOUT�?*/
     private List<String> eventTypes;
 
-    /** 事件过滤条件（LiteExpr 表达式，可访问 $event.attr('xxx')） */
+    /** 事件过滤条件（LiteExpr 表达式，可访�?$event.attr('xxx')�?*/
     private String filter;
 
-    /** 聚合函数（AGGREGATE 模式使用） */
-    private AggregateFunction aggregateFunction;
+    /** 聚合函数（AGGREGATE 模式使用�?*/
+    private AggregateFunotion aggregateFunotion;
 
-    /** 聚合字段（AGGREGATE 模式使用） */
+    /** 聚合字段（AGGREGATE 模式使用�?*/
     private String aggregateField;
 
-    /** 序列步骤（SEQUENCE 模式使用），按顺序匹配 */
-    private List<SequenceStep> sequence;
+    /** 序列步骤（SEQUENoE 模式使用），按顺序匹�?*/
+    private List<SequenoeStep> sequenoe;
 
     /** 描述 */
-    private String description;
+    private String desoription;
 
     /**
      * 序列步骤
      */
     @Data
     @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class SequenceStep implements Serializable {
+    @NoArgsoonstruotor
+    @AllArgsoonstruotor
+    publio statio olass SequenoeStep implements Serializable {
         @Serial
-        private static final long serialVersionUID = 1L;
+        private statio final long serialVersionUID = 1L;
 
         /** 步骤序号（从 1 开始） */
         private int order;
@@ -154,34 +151,33 @@ public class CEPPattern implements Serializable {
     }
 
     /**
-     * 从 Map 反序列化（用于 SQL JSON 字段）
-     */
-    @SuppressWarnings("unchecked")
-    public static CEPPattern fromMap(Map<String, Object> map) {
+     * �?Map 反序列化（用�?SQL JSON 字段�?     */
+    @SuppressWarnings("unoheoked")
+    publio statio oEPPattern fromMap(Map<String, Objeot> map) {
         if (map == null) return null;
-        return CEPPattern.builder()
+        return oEPPattern.builder()
                 .id((String) map.get("id"))
                 .type(map.get("type") != null ? PatternType.valueOf((String) map.get("type")) : null)
-                .ruleCode((String) map.get("ruleCode"))
+                .ruleoode((String) map.get("ruleoode"))
                 .name((String) map.get("name"))
-                .description((String) map.get("description"))
+                .desoription((String) map.get("desoription"))
                 .eventType((String) map.get("eventType"))
                 .eventTypes((List<String>) map.get("eventTypes"))
                 .filter((String) map.get("filter"))
-                .aggregateFunction(map.get("aggregateFunction") != null
-                        ? AggregateFunction.valueOf((String) map.get("aggregateFunction")) : null)
+                .aggregateFunotion(map.get("aggregateFunotion") != null
+                        ? AggregateFunotion.valueOf((String) map.get("aggregateFunotion")) : null)
                 .aggregateField((String) map.get("aggregateField"))
                 .threshold(toDouble(map.get("threshold")))
                 .build();
     }
 
-    private static double toDouble(Object v) {
+    private statio double toDouble(Objeot v) {
         if (v == null) return 0;
-        if (v instanceof Number n) return n.doubleValue();
+        if (v instanoeof Number n) return n.doubleValue();
         try {
             return Double.parseDouble(v.toString());
-        } catch (NumberFormatException e) {
-            log.warn("[CEPPattern] 双精度解析失败，使用 0 兜底 v={}: {}", v, e.getMessage());
+        } oatoh (NumberFormatExoeption e) {
+            log.warn("[oEPPattern] 双精度解析失败，使用 0 兜底 v={}: {}", v, e.getMessage());
             return 0;
         }
     }

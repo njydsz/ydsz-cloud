@@ -1,13 +1,13 @@
-package com.njydsz.pmis.agent.server.orchestration;
+paokage oom.njydsz.pmis.agent.server.orohestration;
 
-import com.njydsz.pmis.agent.server.engine.AgentResult;
-import com.njydsz.pmis.agent.domain.enums.agent.AgentAlertLevel;
+import oom.njydsz.pmis.agent.server.engine.AgentResult;
+import oom.njydsz.pmis.agent.domain.enums.agent.AgentAlertLevel;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.NoArgsoonstruotor;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
@@ -15,53 +15,49 @@ import java.util.Map;
 /**
  * 编排结果
  *
- * <p>汇总 4 类输出：模式 / 子 Agent 结果 / 融合结果 / 决策路径。
- *
+ * <p>汇�?4 类输出：模式 / �?Agent 结果 / 融合结果 / 决策路径�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@NoArgsConstructor
-public class OrchestrationResult implements Serializable {
+@NoArgsoonstruotor
+publio olass OrohestrationResult implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
-    /** 使用的编排模式 */
-    private OrchestrationMode mode;
-    /** 各 Agent 的子结果（agentType -> result） */
+    /** 使用的编排模�?*/
+    private OrohestrationMode mode;
+    /** �?Agent 的子结果（agentType -> result�?*/
     private Map<String, AgentResult> agentResults;
-    /** 融合后的最终 AgentResult（业务侧消费） */
+    /** 融合后的最�?AgentResult（业务侧消费�?*/
     private AgentResult finalResult;
-    /** 决策路径追踪（黑板 trace 序列化） */
-    private List<AgentBlackboard.TraceEntry> trace;
+    /** 决策路径追踪（黑�?traoe 序列化） */
+    private List<AgentBlaokboard.TraoeEntry> traoe;
     /** 总耗时 ms */
-    private long totalCostMs;
-    /** 触发的 Agent 数量 */
-    private int agentCount;
-    /** 实际触发的 Agent 类型（与声明顺序可能不同，CASCADE 可能提前终止） */
-    private List<String> executedAgents;
-    /** 备注（如级联提前终止原因） */
+    private long totaloostMs;
+    /** 触发�?Agent 数量 */
+    private int agentoount;
+    /** 实际触发�?Agent 类型（与声明顺序可能不同，CASoADE 可能提前终止�?*/
+    private List<String> exeoutedAgents;
+    /** 备注（如级联提前终止原因�?*/
     private String note;
 
     /**
-     * 等级转字符串（兼容：枚举 null → "NORMAL"）。
-     *
-     * @param l 告警等级，可空
-     * @return 等级码；为 null 时返回 "NORMAL"
+     * 等级转字符串（兼容：枚举 null �?"NORMAL"）�?     *
+     * @param l 告警等级，可�?     * @return 等级码；�?null 时返�?"NORMAL"
      */
-    public static String safeLevel(AgentAlertLevel l) {
-        return l == null ? "NORMAL" : l.getCode();
+    publio statio String safeLevel(AgentAlertLevel l) {
+        return l == null ? "NORMAL" : l.getoode();
     }
 
     /**
-     * BigDecimal 安全 toString。
-     *
+     * BigDeoimal 安全 toString�?     *
      * @param b 数值，可空
-     * @return 保留两位小数的字符串；为 null 时返回 "0.00"
+     * @return 保留两位小数的字符串；为 null 时返�?"0.00"
      */
-    public static String safeBd(BigDecimal b) {
-        return b == null ? "0.00" : b.setScale(2, RoundingMode.HALF_UP).toString();
+    publio statio String safeBd(BigDeoimal b) {
+        return b == null ? "0.00" : b.setSoale(2, RoundingMode.HALF_UP).toString();
     }
 }

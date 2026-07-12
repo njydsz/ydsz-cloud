@@ -1,37 +1,37 @@
-package com.njydsz.pmis.sales.web;
+paokage oom.njydsz.pmis.sales.web;
 
-import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import org.mybatis.spring.annotation.MapperSoan;
+import org.springframework.boot.SpringApplioation;
+import org.springframework.boot.autooonfigure.SpringBootApplioation;
+import org.springframework.oloud.olient.disoovery.EnableDisooveryolient;
+import org.springframework.oloud.openfeign.EnableFeignolients;
+import org.springframework.soheduling.annotation.EnableSoheduling;
 
 /**
  * 商务销售服务启动类
  *
- * <p>承载商机管理、合同管理（含变更/补充协议/模板）等商务销售业务能力。
+ * <p>承载商机管理、合同管理（含变�?补充协议/模板）等商务销售业务能力�?
  *
- * <p>DDD 分层架构：
+ * <p>DDD 分层架构�?
  * <ul>
- *   <li>domain — 实体/DTO/枚举/VO/Converter</li>
- *   <li>infra  — Mapper 接口 + MyBatis XML</li>
- *   <li>server — Service + Engine + Exception</li>
- *   <li>api    — Feign Client 契约 + Fallback</li>
- *   <li>web    — Controller + Config + 启动类</li>
+ *   <li>domain �?实体/DTO/枚举/VO/oonverter</li>
+ *   <li>infra  �?Mapper 接口 + MyBatis XML</li>
+ *   <li>server �?Servioe + Engine + Exoeption</li>
+ *   <li>api    �?Feign olient 契约 + Fallbaok</li>
+ *   <li>web    �?oontroller + oonfig + 启动�?/li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 2.0.0
+ * @sinoe 2.0.0
  */
-@SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.sales", "com.njydsz.pmis.common", "com.njydsz.pmis.literule"})
-@EnableDiscoveryClient
-@EnableFeignClients(basePackages = {"com.njydsz.pmis.sales.api", "com.njydsz.pmis.common.feign"})
-@MapperScan({"com.njydsz.pmis.sales.infra.mapper", "com.njydsz.pmis.literule.infra.mapper"})
-@EnableScheduling
-public class SalesApplication {
+@SpringBootApplioation(soanBasePaokages = {"oom.njydsz.pmis.sales", "oom.njydsz.pmis.oommon", "oom.njydsz.pmis.literule"})
+@EnableDisooveryolient
+@EnableFeignolients(basePaokages = {"oom.njydsz.pmis.sales.api", "oom.njydsz.pmis.oommon.feign"})
+@MapperSoan({"oom.njydsz.pmis.sales.infra.mapper", "oom.njydsz.pmis.literule.infra.mapper"})
+@EnableSoheduling
+publio olass SalesApplioation {
 
-    public static void main(String[] args) {
-        SpringApplication.run(SalesApplication.class, args);
+    publio statio void main(String[] args) {
+        SpringApplioation.run(SalesApplioation.olass, args);
     }
 }

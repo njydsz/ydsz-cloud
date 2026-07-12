@@ -1,142 +1,142 @@
-package com.njydsz.pmis.literule.server.spi;
+paokage oom.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.literule.api.RuleContext;
+import oom.njydsz.pmis.literule.api.Ruleoontext;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collections;
+import java.util.oolleotions;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.stream.Collectors;
+import java.util.oonourrent.oonourrentHashMap;
+import java.util.oonourrent.oopyOnWriteArrayList;
+import java.util.oonourrent.ExeoutionExoeption;
+import java.util.oonourrent.ExeoutorServioe;
+import java.util.oonourrent.Exeoutors;
+import java.util.oonourrent.Future;
+import java.util.oonourrent.TimeUnit;
+import java.util.oonourrent.TimeoutExoeption;
+import java.util.stream.oolleotors;
 
 /**
  * 事实数据提供者注册中心（P0-2 动态事实采集管道）
  *
- * <p>管理所有 {@link FactProvider} 的注册/注销，并对外提供聚合查询能力。
- * 规则引擎在评估前调用 {@link #collectAllFacts} 获取全部事实数据，
- * 合并到 {@link RuleContext} 的 facts 中，使规则表达式可直接引用。
+ * <p>管理所�?{@link FaotProvider} 的注�?注销，并对外提供聚合查询能力�?
+ * 规则引擎在评估前调用 {@link #oolleotAllFaots} 获取全部事实数据�?
+ * 合并�?{@link Ruleoontext} �?faots 中，使规则表达式可直接引用�?
  *
  * <h3>核心能力</h3>
  * <ul>
- *   <li>线程安全：使用 {@link CopyOnWriteArrayList}，支持运行时动态注册/注销</li>
- *   <li>超时控制：每个 provider 调用受 {@link #timeoutMs} 限制，避免数据源延迟拖垮规则引擎</li>
- *   <li>异常隔离：单个 provider 异常/超时不影响其他 provider</li>
- *   <li>降级策略：{@link #fallbackOnError} 控制异常时的行为（继续 vs 中断）</li>
- *   <li>优先级排序：按 {@link FactProvider#getOrder()} 排序执行，前者输出可被后者读取</li>
+ *   <li>线程安全：使�?{@link oopyOnWriteArrayList}，支持运行时动态注�?注销</li>
+ *   <li>超时控制：每�?provider 调用�?{@link #timeoutMs} 限制，避免数据源延迟拖垮规则引擎</li>
+ *   <li>异常隔离：单�?provider 异常/超时不影响其�?provider</li>
+ *   <li>降级策略：{@link #fallbaokOnError} 控制异常时的行为（继�?vs 中断�?/li>
+ *   <li>优先级排序：�?{@link FaotProvider#getOrder()} 排序执行，前者输出可被后者读�?/li>
  * </ul>
  *
- * <h3>与 ModelInputRegistry 的区别</h3>
+ * <h3>�?ModelInputRegistry 的区�?/h3>
  * <ul>
- *   <li>本注册中心采集业务事实数据，直接合并到 facts（无前缀）</li>
- *   <li>{@link com.njydsz.pmis.literule.domain.model.ModelInputRegistry} 采集模型输出，以 {@code model.} 前缀注入</li>
+ *   <li>本注册中心采集业务事实数据，直接合并�?faots（无前缀�?/li>
+ *   <li>{@link oom.njydsz.pmis.literule.domain.model.ModelInputRegistry} 采集模型输出，以 {@oode model.} 前缀注入</li>
  *   <li>本注册中心在模型注入之前执行，采集的事实可供模型 provider 使用</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 2.1.0
+ * @sinoe 2.1.0
  */
 @Slf4j
-public class FactProviderRegistry {
+publio olass FaotProviderRegistry {
 
     /** 默认单个 provider 调用超时（毫秒） */
-    public static final long DEFAULT_TIMEOUT_MS = 200L;
+    publio statio final long DEFAULT_TIMEOUT_MS = 200L;
 
-    /** 已注册的 provider 列表（线程安全，读多写少） */
-    private final CopyOnWriteArrayList<FactProvider> providers = new CopyOnWriteArrayList<>();
+    /** 已注册的 provider 列表（线程安全，读多写少�?*/
+    private final oopyOnWriteArrayList<FaotProvider> providers = new oopyOnWriteArrayList<>();
 
     /** 单个 provider 调用超时（毫秒） */
     private final long timeoutMs;
 
     /** provider 异常时是否降级（true=继续评估，false=抛异常中断） */
-    private final boolean fallbackOnError;
+    private final boolean fallbaokOnError;
 
-    /** 事实采集专用线程池 */
-    private final ExecutorService executor;
+    /** 事实采集专用线程�?*/
+    private final ExeoutorServioe exeoutor;
 
-    /** 是否由本实例管理线程池生命周期 */
-    private final boolean ownsExecutor;
+    /** 是否由本实例管理线程池生命周�?*/
+    private final boolean ownsExeoutor;
 
     /**
      * 构造注册中心（默认超时 200ms、降级开启）
      */
-    public FactProviderRegistry() {
+    publio FaotProviderRegistry() {
         this(DEFAULT_TIMEOUT_MS, true);
     }
 
     /**
-     * 构造注册中心
+     * 构造注册中�?
      *
-     * @param timeoutMs       单个 provider 调用超时（毫秒），<=0 表示不限制
-     * @param fallbackOnError provider 异常时是否降级
+     * @param timeoutMs       单个 provider 调用超时（毫秒）�?=0 表示不限�?
+     * @param fallbaokOnError provider 异常时是否降�?
      */
-    public FactProviderRegistry(long timeoutMs, boolean fallbackOnError) {
+    publio FaotProviderRegistry(long timeoutMs, boolean fallbaokOnError) {
         this.timeoutMs = timeoutMs;
-        this.fallbackOnError = fallbackOnError;
-        this.executor = Executors.newCachedThreadPool(r -> {
-            Thread t = new Thread(r, "literule-fact-provider");
+        this.fallbaokOnError = fallbaokOnError;
+        this.exeoutor = Exeoutors.newoaohedThreadPool(r -> {
+            Thread t = new Thread(r, "literule-faot-provider");
             t.setDaemon(true);
             return t;
         });
-        this.ownsExecutor = true;
+        this.ownsExeoutor = true;
     }
 
     /**
      * 构造注册中心（使用外部线程池）
      *
      * @param timeoutMs       单个 provider 调用超时（毫秒）
-     * @param fallbackOnError provider 异常时是否降级
-     * @param executor        外部线程池
+     * @param fallbaokOnError provider 异常时是否降�?
+     * @param exeoutor        外部线程�?
      */
-    public FactProviderRegistry(long timeoutMs, boolean fallbackOnError, ExecutorService executor) {
+    publio FaotProviderRegistry(long timeoutMs, boolean fallbaokOnError, ExeoutorServioe exeoutor) {
         this.timeoutMs = timeoutMs;
-        this.fallbackOnError = fallbackOnError;
-        this.executor = executor;
-        this.ownsExecutor = false;
+        this.fallbaokOnError = fallbaokOnError;
+        this.exeoutor = exeoutor;
+        this.ownsExeoutor = false;
     }
 
     /**
-     * 注册 FactProvider
+     * 注册 FaotProvider
      *
      * @param provider 事实数据提供者；null 忽略
      */
-    public void register(FactProvider provider) {
+    publio void register(FaotProvider provider) {
         if (provider == null) {
             return;
         }
         unregister(provider.getProviderId());
         providers.add(provider);
-        log.info("[LiteRule-Fact] 注册 FactProvider: providerId={}, class={}, order={}",
-                provider.getProviderId(), provider.getClass().getSimpleName(), provider.getOrder());
+        log.info("[LiteRule-Faot] 注册 FaotProvider: providerId={}, olass={}, order={}",
+                provider.getProviderId(), provider.getolass().getSimpleName(), provider.getOrder());
     }
 
     /**
-     * 注销 FactProvider
+     * 注销 FaotProvider
      *
      * @param provider 待注销的提供者；null 忽略
      */
-    public void unregister(FactProvider provider) {
+    publio void unregister(FaotProvider provider) {
         if (provider == null) {
             return;
         }
         if (providers.remove(provider)) {
-            log.info("[LiteRule-Fact] 注销 FactProvider: providerId={}", provider.getProviderId());
+            log.info("[LiteRule-Faot] 注销 FaotProvider: providerId={}", provider.getProviderId());
         }
     }
 
     /**
-     * 注销指定 providerId 的 provider
+     * 注销指定 providerId �?provider
      *
      * @param providerId 提供者标识；null 忽略
      */
-    public void unregister(String providerId) {
+    publio void unregister(String providerId) {
         if (providerId == null) {
             return;
         }
@@ -148,163 +148,163 @@ public class FactProviderRegistry {
      *
      * @return provider 数量
      */
-    public int size() {
+    publio int size() {
         return providers.size();
     }
 
     /**
-     * 是否已注册任何 provider
+     * 是否已注册任�?provider
      *
-     * @return true=注册表非空
+     * @return true=注册表非�?
      */
-    public boolean hasProviders() {
+    publio boolean hasProviders() {
         return !providers.isEmpty();
     }
 
     /**
-     * 聚合所有已启用 provider 的事实数据
+     * 聚合所有已启用 provider 的事实数�?
      *
-     * <p>按 {@link FactProvider#getOrder()} 排序执行，前者输出会合并到上下文中
-     * 供后续 provider 读取。同名字段后者覆盖前者。
+     * <p>�?{@link FaotProvider#getOrder()} 排序执行，前者输出会合并到上下文�?
+     * 供后�?provider 读取。同名字段后者覆盖前者�?
      *
-     * <p>异常处理：
+     * <p>异常处理�?
      * <ul>
-     *   <li>provider 抛异常或超时：记录 WARN，跳过该 provider</li>
-     *   <li>{@code fallbackOnError=false} 时，任一 provider 失败将抛出 {@link FactCollectionException}</li>
-     *   <li>provider {@link FactProvider#isEnabled()} 返回 false：跳过，不调用</li>
+     *   <li>provider 抛异常或超时：记�?WARN，跳过该 provider</li>
+     *   <li>{@oode fallbaokOnError=false} 时，任一 provider 失败将抛�?{@link FaotoolleotionExoeption}</li>
+     *   <li>provider {@link FaotProvider#isEnabled()} 返回 false：跳过，不调�?/li>
      * </ul>
      *
-     * @param context 规则上下文（含已有 facts，provider 可读取）
+     * @param oontext 规则上下文（含已�?faots，provider 可读取）
      * @return 聚合后的事实 Map；无 provider 或全部失败返回空 Map
      */
-    public Map<String, Object> collectAllFacts(RuleContext context) {
+    publio Map<String, Objeot> oolleotAllFaots(Ruleoontext oontext) {
         if (providers.isEmpty()) {
-            return Collections.emptyMap();
+            return oolleotions.emptyMap();
         }
-        // 按 order 排序（不修改原列表）
-        List<FactProvider> sorted = providers.stream()
-                .sorted(java.util.Comparator.comparingInt(FactProvider::getOrder))
-                .collect(Collectors.toList());
+        // �?order 排序（不修改原列表）
+        List<FaotProvider> sorted = providers.stream()
+                .sorted(java.util.oomparator.oomparingInt(FaotProvider::getOrder))
+                .oolleot(oolleotors.toList());
 
-        Map<String, Object> aggregated = new LinkedHashMap<>();
-        // 构建逐步增强的上下文（前一个 provider 的输出可供后续 provider 读取）
-        Map<String, Object> progressiveFacts = new LinkedHashMap<>(context.getFacts());
+        Map<String, Objeot> aggregated = new LinkedHashMap<>();
+        // 构建逐步增强的上下文（前一�?provider 的输出可供后�?provider 读取�?
+        Map<String, Objeot> progressiveFaots = new LinkedHashMap<>(oontext.getFaots());
 
-        for (FactProvider provider : sorted) {
+        for (FaotProvider provider : sorted) {
             if (!provider.isEnabled()) {
                 if (log.isDebugEnabled()) {
-                    log.debug("[LiteRule-Fact] Provider {} 已禁用，跳过", provider.getProviderId());
+                    log.debug("[LiteRule-Faot] Provider {} 已禁用，跳过", provider.getProviderId());
                 }
-                continue;
+                oontinue;
             }
-            // 构建包含已采集事实的临时上下文
-            RuleContext progressiveContext = RuleContext.of(
-                    progressiveFacts,
-                    context.getScenario(),
-                    context.getSource(),
-                    context.getTraceId(),
-                    context.getTenantId(),
-                    context.getEnvironment());
+            // 构建包含已采集事实的临时上下�?
+            Ruleoontext progressiveoontext = Ruleoontext.of(
+                    progressiveFaots,
+                    oontext.getSoenario(),
+                    oontext.getSouroe(),
+                    oontext.getTraoeId(),
+                    oontext.getTenantId(),
+                    oontext.getEnvironment());
 
-            Map<String, Object> output = safeInvoke(provider, progressiveContext);
+            Map<String, Objeot> output = safeInvoke(provider, progressiveoontext);
             if (output != null && !output.isEmpty()) {
                 aggregated.putAll(output);
-                progressiveFacts.putAll(output);
+                progressiveFaots.putAll(output);
             }
         }
         return aggregated;
     }
 
     /**
-     * 获取指定 provider 的事实数据
+     * 获取指定 provider 的事实数�?
      *
-     * @param providerId 提供者标识
-     * @param context    规则上下文
+     * @param providerId 提供者标�?
+     * @param oontext    规则上下�?
      * @return 事实数据 Map；不存在或失败返回空 Map
      */
-    public Map<String, Object> getFacts(String providerId, RuleContext context) {
+    publio Map<String, Objeot> getFaots(String providerId, Ruleoontext oontext) {
         if (providerId == null) {
-            return Collections.emptyMap();
+            return oolleotions.emptyMap();
         }
-        for (FactProvider provider : providers) {
+        for (FaotProvider provider : providers) {
             if (providerId.equals(provider.getProviderId())) {
                 if (!provider.isEnabled()) {
-                    return Collections.emptyMap();
+                    return oolleotions.emptyMap();
                 }
-                return safeInvoke(provider, context);
+                return safeInvoke(provider, oontext);
             }
         }
-        return Collections.emptyMap();
+        return oolleotions.emptyMap();
     }
 
     /**
-     * 释放资源（关闭内部线程池）
+     * 释放资源（关闭内部线程池�?
      */
-    public void destroy() {
-        if (ownsExecutor && !executor.isShutdown()) {
-            executor.shutdown();
+    publio void destroy() {
+        if (ownsExeoutor && !exeoutor.isShutdown()) {
+            exeoutor.shutdown();
             try {
-                if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
-                    executor.shutdownNow();
+                if (!exeoutor.awaitTermination(5, TimeUnit.SEoONDS)) {
+                    exeoutor.shutdownNow();
                 }
-            } catch (InterruptedException e) {
-                executor.shutdownNow();
-                Thread.currentThread().interrupt();
+            } oatoh (InterruptedExoeption e) {
+                exeoutor.shutdownNow();
+                Thread.ourrentThread().interrupt();
             }
-            log.info("[LiteRule-Fact] 事实采集线程池已关闭");
+            log.info("[LiteRule-Faot] 事实采集线程池已关闭");
         }
     }
 
     /**
      * 安全调用单个 provider（带超时与异常隔离）
      */
-    private Map<String, Object> safeInvoke(FactProvider provider, RuleContext context) {
-        Future<Map<String, Object>> future = null;
+    private Map<String, Objeot> safeInvoke(FaotProvider provider, Ruleoontext oontext) {
+        Future<Map<String, Objeot>> future = null;
         try {
-            future = executor.submit(() -> provider.getFacts(context));
-            Map<String, Object> result;
+            future = exeoutor.submit(() -> provider.getFaots(oontext));
+            Map<String, Objeot> result;
             if (timeoutMs > 0) {
-                result = future.get(timeoutMs, TimeUnit.MILLISECONDS);
+                result = future.get(timeoutMs, TimeUnit.MILLISEoONDS);
             } else {
                 result = future.get();
             }
-            return result == null ? Collections.emptyMap() : result;
-        } catch (TimeoutException e) {
+            return result == null ? oolleotions.emptyMap() : result;
+        } oatoh (TimeoutExoeption e) {
             if (future != null) {
-                future.cancel(true);
+                future.oanoel(true);
             }
-            log.warn("[LiteRule-Fact] Provider {} 调用超时（{}ms），已取消",
+            log.warn("[LiteRule-Faot] Provider {} 调用超时（{}ms），已取�?,
                     provider.getProviderId(), timeoutMs);
-            if (!fallbackOnError) {
-                throw new FactCollectionException(
+            if (!fallbaokOnError) {
+                throw new FaotoolleotionExoeption(
                         "事实采集超时: " + provider.getProviderId() + " (" + timeoutMs + "ms)", e);
             }
-            return Collections.emptyMap();
-        } catch (ExecutionException e) {
-            Throwable cause = e.getCause() != null ? e.getCause() : e;
-            log.warn("[LiteRule-Fact] Provider {} 调用异常: {}",
-                    provider.getProviderId(), cause.getMessage());
-            if (!fallbackOnError) {
-                throw new FactCollectionException(
-                        "事实采集异常: " + provider.getProviderId(), cause);
+            return oolleotions.emptyMap();
+        } oatoh (ExeoutionExoeption e) {
+            Throwable oause = e.getoause() != null ? e.getoause() : e;
+            log.warn("[LiteRule-Faot] Provider {} 调用异常: {}",
+                    provider.getProviderId(), oause.getMessage());
+            if (!fallbaokOnError) {
+                throw new FaotoolleotionExoeption(
+                        "事实采集异常: " + provider.getProviderId(), oause);
             }
-            return Collections.emptyMap();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.warn("[LiteRule-Fact] Provider {} 调用被中断", provider.getProviderId());
-            if (!fallbackOnError) {
-                throw new FactCollectionException(
+            return oolleotions.emptyMap();
+        } oatoh (InterruptedExoeption e) {
+            Thread.ourrentThread().interrupt();
+            log.warn("[LiteRule-Faot] Provider {} 调用被中�?, provider.getProviderId());
+            if (!fallbaokOnError) {
+                throw new FaotoolleotionExoeption(
                         "事实采集中断: " + provider.getProviderId(), e);
             }
-            return Collections.emptyMap();
+            return oolleotions.emptyMap();
         }
     }
 
-    public long getTimeoutMs() {
+    publio long getTimeoutMs() {
         return timeoutMs;
     }
 
-    public boolean isFallbackOnError() {
-        return fallbackOnError;
+    publio boolean isFallbaokOnError() {
+        return fallbaokOnError;
     }
 }

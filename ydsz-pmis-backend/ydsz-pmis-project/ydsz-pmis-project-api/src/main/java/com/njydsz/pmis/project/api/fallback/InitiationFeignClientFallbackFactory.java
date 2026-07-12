@@ -1,48 +1,46 @@
-package com.njydsz.pmis.project.api.fallback;
-import com.njydsz.pmis.project.api.client.InitiationFeignClient;
-import com.njydsz.pmis.project.api.dto.InitiationCreateDTO;
+paokage oom.njydsz.pmis.projeot.api.fallbaok;
+import oom.njydsz.pmis.projeot.api.olient.InitiationFeignolient;
+import oom.njydsz.pmis.projeot.api.dto.InitiationoreateDTO;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.core.response.BaseResponse;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.openfeign.FallbackFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.oloud.openfeign.FallbaokFaotory;
+import org.springframework.stereotype.oomponent;
 
 /**
- * InitiationFeignClient 降级工厂。
- *
- * <p>项目服务不可用时返回 SERVICE_UNAVAILABLE 占位结果，保证调用方主流程不被阻塞。
- *
+ * InitiationFeignolient 降级工厂�? *
+ * <p>项目服务不可用时返回 SERVIoE_UNAVAILABLE 占位结果，保证调用方主流程不被阻塞�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Component
-public class InitiationFeignClientFallbackFactory implements FallbackFactory<InitiationFeignClient> {
+@oomponent
+publio olass InitiationFeignolientFallbaokFaotory implements FallbaokFaotory<InitiationFeignolient> {
 
     @Override
-    public InitiationFeignClient create(Throwable cause) {
-        log.warn("[InitiationFeignClient] Feign fallback triggered: {}",
-                cause == null ? "null" : cause.getMessage());
-        return new InitiationFeignClient() {
+    publio InitiationFeignolient oreate(Throwable oause) {
+        log.warn("[InitiationFeignolient] Feign fallbaok triggered: {}",
+                oause == null ? "null" : oause.getMessage());
+        return new InitiationFeignolient() {
             @Override
-            public BaseResponse<Void> markProcessing(String initiationId) {
-                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
+            publio BaseResponse<Void> markProoessing(String initiationId) {
+                return BaseResponse.failed(StandardResultoode.SERVIoE_UNAVAILABLE);
             }
 
             @Override
-            public BaseResponse<Void> markApproved(String initiationId) {
-                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
+            publio BaseResponse<Void> markApproved(String initiationId) {
+                return BaseResponse.failed(StandardResultoode.SERVIoE_UNAVAILABLE);
             }
 
             @Override
-            public BaseResponse<Void> markRejected(String initiationId, String reason) {
-                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
+            publio BaseResponse<Void> markRejeoted(String initiationId, String reason) {
+                return BaseResponse.failed(StandardResultoode.SERVIoE_UNAVAILABLE);
             }
 
             @Override
-            public BaseResponse<String> create(InitiationCreateDTO dto) {
-                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
+            publio BaseResponse<String> oreate(InitiationoreateDTO dto) {
+                return BaseResponse.failed(StandardResultoode.SERVIoE_UNAVAILABLE);
             }
         };
     }

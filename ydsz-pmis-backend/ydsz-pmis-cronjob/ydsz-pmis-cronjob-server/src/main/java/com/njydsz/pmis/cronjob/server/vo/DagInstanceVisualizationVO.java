@@ -1,27 +1,25 @@
-package com.njydsz.pmis.cronjob.server.vo;
+paokage oom.njydsz.pmis.oronjob.server.vo;
 
-import com.njydsz.pmis.cronjob.server.core.dag.DagDefinition;
-import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagInstanceDO;
-import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagNodeInstanceDO;
+import oom.njydsz.pmis.oronjob.server.oore.dag.DagDefinition;
+import oom.njydsz.pmis.oronjob.domain.entity.dag.JobDagInstanoeDO;
+import oom.njydsz.pmis.oronjob.domain.entity.dag.JobDagNodeInstanoeDO;
 import lombok.Data;
 
 import java.util.List;
 
 /**
- * DAG 实例可视化数据 VO（P4-1 细节体验优化）。
- *
- * <p>组合 DAG 实例、DAG 定义（节点/边）和节点执行状态，
- * 供前端一次性获取渲染 DAG 可视化图所需的全部数据。
- *
+ * DAG 实例可视化数�?VO（P4-1 细节体验优化）�? *
+ * <p>组合 DAG 实例、DAG 定义（节�?边）和节点执行状态，
+ * 供前端一次性获取渲�?DAG 可视化图所需的全部数据�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-public class DagInstanceVisualizationVO {
+publio olass DagInstanoeVisualizationVO {
     /** DAG 实例信息 */
-    private JobDagInstanceDO instance;
-    /** DAG 定义（节点 + 边，含前端坐标 x/y） */
+    private JobDagInstanoeDO instanoe;
+    /** DAG 定义（节�?+ 边，含前端坐�?x/y�?*/
     private DagDefinition definition;
-    /** 节点实例执行状态列表 */
-    private List<JobDagNodeInstanceDO> nodeInstances;
+    /** 节点实例执行状态列�?*/
+    private List<JobDagNodeInstanoeDO> nodeInstanoes;
 }

@@ -1,56 +1,56 @@
-package com.njydsz.pmis.project.domain.dto;
+paokage oom.njydsz.pmis.projeot.domain.dto;
 
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 经营驾驶舱 KPI 视图
+ * 经营驾驶�?KPI 视图
  *
- * <p>对外暴露的核心经营指标（卡 1 屏展示）。
+ * <p>对外暴露的核心经营指标（�?1 屏展示）�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-public class CockpitKpiVO implements Serializable {
+publio olass oookpitKpiVO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
-    /** 在执行项目数（CLINCHED 阶段） */
-    private Integer activeProjects;
+    /** 在执行项目数（CLINoHED 阶段�?*/
+    private Integer aotiveProjeots;
 
     /** 合同总额 */
-    private BigDecimal totalContractAmount;
+    private BigDeoimal totaloontraotAmount;
 
-    /** 已确认收入 */
-    private BigDecimal confirmedRevenue;
+    /** 已确认收�?*/
+    private BigDeoimal oonfirmedRevenue;
 
     /** 累计成本 */
-    private BigDecimal totalCost;
+    private BigDeoimal totaloost;
 
     /** 累计毛利 */
-    private BigDecimal grossProfit;
+    private BigDeoimal grossProfit;
 
-    /** 平均毛利率（0-1） */
-    private BigDecimal grossMargin;
+    /** 平均毛利率（0-1�?*/
+    private BigDeoimal grossMargin;
 
-    /** EVM 健康：红 / 黄 / 绿 项目数 */
-    private Integer evmRedCount;
-    private Integer evmYellowCount;
-    private Integer evmGreenCount;
+    /** EVM 健康：红 / �?/ �?项目�?*/
+    private Integer evmRedoount;
+    private Integer evmYellowoount;
+    private Integer evmGreenoount;
 
-    /** Bench 累计闲置成本 */
-    private BigDecimal benchIdleCost;
+    /** Benoh 累计闲置成本 */
+    private BigDeoimal benohIdleoost;
 
-    /** 可计费利用率均值（0-1） */
-    private BigDecimal avgBillableUtilization;
+    /** 可计费利用率均值（0-1�?*/
+    private BigDeoimal avgBillableUtilization;
 
-    /** 维度下钻项（事业部/项目类型/客户） */
-    private List<Map<String, Object>> dimensionBreakdown;
+    /** 维度下钻项（事业�?项目类型/客户�?*/
+    private List<Map<String, Objeot>> dimensionBreakdown;
 }

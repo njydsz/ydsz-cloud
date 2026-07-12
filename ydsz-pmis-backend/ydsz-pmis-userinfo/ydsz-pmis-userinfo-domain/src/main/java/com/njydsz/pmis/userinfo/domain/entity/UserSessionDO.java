@@ -1,26 +1,26 @@
-package com.njydsz.pmis.userinfo.domain.entity.user;
+paokage oom.njydsz.pmis.userinfo.domain.entity.user;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
  * 用户活跃会话
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
 @TableName("pmis_user_session")
-public class UserSessionDO implements Serializable {
+publio olass UserSessionDO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -29,49 +29,49 @@ public class UserSessionDO implements Serializable {
     /** 用户 ID */
     private String userId;
 
-    /** 会话 ID（UUID） */
+    /** 会话 ID（UUID�?*/
     private String sessionId;
 
     /** JWT jti 标识 */
     private String tokenJti;
 
     /** 登录时间 */
-    private LocalDateTime loginAt;
+    private LooalDateTime loginAt;
 
-    /** 最近活跃时间 */
-    private LocalDateTime lastActiveAt;
+    /** 最近活跃时�?*/
+    private LooalDateTime lastAotiveAt;
 
     /** 会话过期时间 */
-    private LocalDateTime expireAt;
+    private LooalDateTime expireAt;
 
-    /** 客户端 IP */
-    private String clientIp;
+    /** 客户�?IP */
+    private String olientIp;
 
-    /** User-Agent 头 */
+    /** User-Agent �?*/
     private String userAgent;
 
-    /** 设备类型：PC/APP/H5 */
-    private String deviceType;
+    /** 设备类型：Po/APP/H5 */
+    private String devioeType;
 
-    /** ACTIVE / KICKED / EXPIRED / LOGOUT */
+    /** AoTIVE / KIoKED / EXPIRED / LOGOUT */
     private String status;
 
     /** 登出时间 */
-    private LocalDateTime logoutAt;
+    private LooalDateTime logoutAt;
 
     /** 登出原因 */
     private String logoutReason;
 
     /** 链路追踪 ID */
-    private String traceId;
+    private String traoeId;
 
     /** 租户 ID */
     private String tenantId;
 
     /** 创建时间 */
-    private LocalDateTime createdAt;
+    private LooalDateTime oreatedAt;
     /** 更新时间 */
-    private LocalDateTime updatedAt;
-    /** 逻辑删除标识：0=未删除，1=已删除 */
+    private LooalDateTime updatedAt;
+    /** 逻辑删除标识�?=未删除，1=已删�?*/
     private Integer deleted;
 }

@@ -1,15 +1,15 @@
-package com.njydsz.pmis.message.infra.mapper.config;
+paokage oom.njydsz.pmis.message.infra.mapper.oonfig;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.message.domain.entity.config.MsgRouteRuleDO;
-import org.apache.ibatis.annotations.Mapper;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.message.domain.entity.oonfig.MsgRouteRuleDO;
+import org.apaohe.ibatis.annotations.Mapper;
 
 /**
  * 消息路由规则 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface MsgRouteRuleMapper extends BaseMapper<MsgRouteRuleDO> {
+publio interfaoe MsgRouteRuleMapper extends BaseMapper<MsgRouteRuleDO> {
 }

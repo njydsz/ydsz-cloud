@@ -1,30 +1,30 @@
-package com.njydsz.pmis.finance.server.service.impl.finance;
+paokage oom.njydsz.pmis.finanoe.server.servioe.impl.finanoe;
 
-import com.njydsz.pmis.common.security.TenantContext;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.DataScope;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.common.security.DataScopeHelper;
-import com.njydsz.pmis.finance.domain.dto.InvoiceApprovalDTO;
-import com.njydsz.pmis.finance.domain.dto.InvoiceCreateDTO;
-import com.njydsz.pmis.finance.domain.entity.InvoiceDO;
-import com.njydsz.pmis.finance.domain.enums.InvoiceBasis;
-import com.njydsz.pmis.finance.domain.enums.InvoiceStatus;
-import com.njydsz.pmis.finance.domain.enums.InvoiceType;
-import com.njydsz.pmis.finance.infra.mapper.InvoiceMapper;
-import com.njydsz.pmis.finance.server.service.finance.InvoiceService;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.oommon.auth.annotation.DataSoope;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.oommon.seourity.DataSoopeHelper;
+import oom.njydsz.pmis.finanoe.domain.dto.InvoioeApprovalDTO;
+import oom.njydsz.pmis.finanoe.domain.dto.InvoioeoreateDTO;
+import oom.njydsz.pmis.finanoe.domain.entity.InvoioeDO;
+import oom.njydsz.pmis.finanoe.domain.enums.InvoioeBasis;
+import oom.njydsz.pmis.finanoe.domain.enums.InvoioeStatus;
+import oom.njydsz.pmis.finanoe.domain.enums.InvoioeType;
+import oom.njydsz.pmis.finanoe.infra.mapper.InvoioeMapper;
+import oom.njydsz.pmis.finanoe.server.servioe.finanoe.InvoioeServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -32,289 +32,289 @@ import java.util.Map;
  * 发票服务实现
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class InvoiceServiceImpl implements InvoiceService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass InvoioeServioeImpl implements InvoioeServioe {
 
     /** 发票 Mapper */
-    private final InvoiceMapper invoiceMapper;
+    private final InvoioeMapper invoioeMapper;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String create(InvoiceCreateDTO dto) {
-        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
-        if (!StringUtils.hasText(dto.getInvoiceCode())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_0bf89391");
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio String oreate(InvoioeoreateDTO dto) {
+        if (dto == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d9712a58");
+        if (!StringUtils.hasText(dto.getInvoioeoode())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_0bf89391");
         }
-        if (dto.getContractId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_af96cf73");
+        if (dto.getoontraotId() == null) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_af96of73");
         }
         if (dto.getAmount() == null || dto.getAmount().signum() <= 0) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_abaef3a6");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_abaef3a6");
         }
-        if (InvoiceType.fromCode(dto.getInvoiceType()) == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_e77a5692", dto.getInvoiceType());
+        if (InvoioeType.fromoode(dto.getInvoioeType()) == null) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_e77a5692", dto.getInvoioeType());
         }
-        if (InvoiceBasis.fromCode(dto.getInvoiceBasis()) == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_a5324fa7", dto.getInvoiceBasis());
+        if (InvoioeBasis.fromoode(dto.getInvoioeBasis()) == null) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_a5324fa7", dto.getInvoioeBasis());
         }
-        if (invoiceMapper.selectByCode(dto.getInvoiceCode()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.execution.msg_9c944632", dto.getInvoiceCode());
+        if (invoioeMapper.seleotByoode(dto.getInvoioeoode()) != null) {
+            throw new SysExoeption(StandardResultoode.DUPLIoATE_KEY, "error.exeoution.msg_9o944632", dto.getInvoioeoode());
         }
-        if (StringUtils.hasText(dto.getInvoiceNo())
-                && invoiceMapper.selectByInvoiceNo(dto.getInvoiceNo()) != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.execution.msg_bef09851", dto.getInvoiceNo());
+        if (StringUtils.hasText(dto.getInvoioeNo())
+                && invoioeMapper.seleotByInvoioeNo(dto.getInvoioeNo()) != null) {
+            throw new SysExoeption(StandardResultoode.DUPLIoATE_KEY, "error.exeoution.msg_bef09851", dto.getInvoioeNo());
         }
-        if ("RED_REVERSE".equalsIgnoreCase(dto.getInvoiceType())) {
+        if ("RED_REVERSE".equalsIgnoreoase(dto.getInvoioeType())) {
             if (dto.getReversedById() == null) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_571d513d");
+                throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_571d513d");
             }
-            InvoiceDO src = invoiceMapper.selectById(dto.getReversedById());
-            if (src == null) {
-                throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_12b7e014");
+            InvoioeDO sro = invoioeMapper.seleotById(dto.getReversedById());
+            if (sro == null) {
+                throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_12b7e014");
             }
-            if (!InvoiceStatus.ISSUED.getCode().equals(src.getStatus())) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_25f7c916");
+            if (!InvoioeStatus.ISSUED.getoode().equals(sro.getStatus())) {
+                throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_25f7o916");
             }
-            if (dto.getAmount().compareTo(src.getAmount()) > 0) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_2d897570");
+            if (dto.getAmount().oompareTo(sro.getAmount()) > 0) {
+                throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_2d897570");
             }
         } else {
             // 正常开票：强制校验依据附件
-            if ("MILESTONE".equalsIgnoreCase(dto.getInvoiceBasis())
-                    || "FINAL".equalsIgnoreCase(dto.getInvoiceBasis())) {
-                if (!StringUtils.hasText(dto.getAcceptanceProofId())) {
-                    throw new SysException(StandardResultCode.BAD_REQUEST,
-                            "error.execution.msg_ec948d12");
+            if ("MILESTONE".equalsIgnoreoase(dto.getInvoioeBasis())
+                    || "FINAL".equalsIgnoreoase(dto.getInvoioeBasis())) {
+                if (!StringUtils.hasText(dto.getAooeptanoeProofId())) {
+                    throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                            "error.exeoution.msg_eo948d12");
                 }
             }
-            if ("OUTSOURCING".equalsIgnoreCase(dto.getInvoiceBasis())) {
-                if (!StringUtils.hasText(dto.getOutsourcingProofId())) {
-                    throw new SysException(StandardResultCode.BAD_REQUEST,
-                            "error.execution.msg_a89c0a16");
+            if ("OUTSOURoING".equalsIgnoreoase(dto.getInvoioeBasis())) {
+                if (!StringUtils.hasText(dto.getOutsouroingProofId())) {
+                    throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                            "error.exeoution.msg_a89o0a16");
                 }
             }
         }
-        InvoiceDO inv = new InvoiceDO();
-        BeanUtils.copyProperties(dto, inv);
-        if (inv.getTaxRate() == null) inv.setTaxRate(new BigDecimal("0.06"));
+        InvoioeDO inv = new InvoioeDO();
+        BeanUtils.oopyProperties(dto, inv);
+        if (inv.getTaxRate() == null) inv.setTaxRate(new BigDeoimal("0.06"));
         // 计算税额与不含税金额
         if (inv.getTaxAmount() == null || inv.getNetAmount() == null) {
-            BigDecimal rate = inv.getTaxRate() == null ? BigDecimal.ZERO : inv.getTaxRate();
-            BigDecimal amount = inv.getAmount();
+            BigDeoimal rate = inv.getTaxRate() == null ? BigDeoimal.ZERO : inv.getTaxRate();
+            BigDeoimal amount = inv.getAmount();
             if (rate.signum() > 0) {
                 // 价税分离：不含税 = 金额 / (1 + 税率)
-                BigDecimal net = amount.divide(BigDecimal.ONE.add(rate), 2, RoundingMode.HALF_UP);
+                BigDeoimal net = amount.divide(BigDeoimal.ONE.add(rate), 2, RoundingMode.HALF_UP);
                 inv.setNetAmount(net);
-                inv.setTaxAmount(amount.subtract(net));
+                inv.setTaxAmount(amount.subtraot(net));
             } else {
                 inv.setNetAmount(amount);
-                inv.setTaxAmount(BigDecimal.ZERO);
+                inv.setTaxAmount(BigDeoimal.ZERO);
             }
         }
-        if (inv.getStatus() == null) inv.setStatus(InvoiceStatus.DRAFT.getCode());
-        if (inv.getCurrency() == null) inv.setCurrency("CNY");
-        if (inv.getTenantId() == null) inv.setTenantId(TenantContext.getTenantId());
-        if (inv.getProviderTraceId() == null) inv.setProviderTraceId("");
-        invoiceMapper.insert(inv);
-        log.info("[Invoice] 创建发票: code={} type={} basis={} amount={}",
-                inv.getInvoiceCode(), inv.getInvoiceType(), inv.getInvoiceBasis(), inv.getAmount());
+        if (inv.getStatus() == null) inv.setStatus(InvoioeStatus.DRAFT.getoode());
+        if (inv.getourrenoy() == null) inv.setourrenoy("oNY");
+        if (inv.getTenantId() == null) inv.setTenantId(Tenantoontext.getTenantId());
+        if (inv.getProviderTraoeId() == null) inv.setProviderTraoeId("");
+        invoioeMapper.insert(inv);
+        log.info("[Invoioe] 创建发票: oode={} type={} basis={} amount={}",
+                inv.getInvoioeoode(), inv.getInvoioeType(), inv.getInvoioeBasis(), inv.getAmount());
         return inv.getId();
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void submit(String id, String operatorId) {
-        InvoiceDO inv = getById(id);
-        transit(inv, InvoiceStatus.SUBMITTED, null, operatorId);
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void submit(String id, String operatorId) {
+        InvoioeDO inv = getById(id);
+        transit(inv, InvoioeStatus.SUBMITTED, null, operatorId);
         if (inv.getAppliedBy() == null) {
             inv.setAppliedBy(operatorId);
-            invoiceMapper.updateById(inv);
+            invoioeMapper.updateById(inv);
         }
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void approve(String id, InvoiceApprovalDTO dto) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void approve(String id, InvoioeApprovalDTO dto) {
         if (dto == null || dto.getOperatorId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_52fbfb11");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_52fbfb11");
         }
-        InvoiceDO inv = getById(id);
-        transit(inv, InvoiceStatus.APPROVED, dto.getComment(), dto.getOperatorId());
+        InvoioeDO inv = getById(id);
+        transit(inv, InvoioeStatus.APPROVED, dto.getoomment(), dto.getOperatorId());
         inv.setApprovedBy(dto.getOperatorId());
-        inv.setApprovedAt(LocalDateTime.now());
-        inv.setApprovalComment(dto.getComment());
-        invoiceMapper.updateById(inv);
+        inv.setApprovedAt(LooalDateTime.now());
+        inv.setApprovaloomment(dto.getoomment());
+        invoioeMapper.updateById(inv);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void reject(String id, InvoiceApprovalDTO dto) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void rejeot(String id, InvoioeApprovalDTO dto) {
         if (dto == null || dto.getOperatorId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_52fbfb11");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_52fbfb11");
         }
-        InvoiceDO inv = getById(id);
-        transit(inv, InvoiceStatus.REJECTED, dto.getComment(), dto.getOperatorId());
+        InvoioeDO inv = getById(id);
+        transit(inv, InvoioeStatus.REJEoTED, dto.getoomment(), dto.getOperatorId());
         inv.setApprovedBy(dto.getOperatorId());
-        inv.setApprovedAt(LocalDateTime.now());
-        inv.setApprovalComment(dto.getComment());
-        invoiceMapper.updateById(inv);
+        inv.setApprovedAt(LooalDateTime.now());
+        inv.setApprovaloomment(dto.getoomment());
+        invoioeMapper.updateById(inv);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void issue(String id, InvoiceApprovalDTO dto) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void issue(String id, InvoioeApprovalDTO dto) {
         if (dto == null || dto.getOperatorId() == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_69724bea");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_69724bea");
         }
-        InvoiceDO inv = getById(id);
-        if (StringUtils.hasText(dto.getInvoiceNo())) {
-            if (invoiceMapper.selectByInvoiceNo(dto.getInvoiceNo()) != null
-                    && !dto.getInvoiceNo().equals(inv.getInvoiceNo())) {
-                throw new SysException(StandardResultCode.DUPLICATE_KEY,
-                        "error.execution.msg_67174829", dto.getInvoiceNo());
+        InvoioeDO inv = getById(id);
+        if (StringUtils.hasText(dto.getInvoioeNo())) {
+            if (invoioeMapper.seleotByInvoioeNo(dto.getInvoioeNo()) != null
+                    && !dto.getInvoioeNo().equals(inv.getInvoioeNo())) {
+                throw new SysExoeption(StandardResultoode.DUPLIoATE_KEY,
+                        "error.exeoution.msg_67174829", dto.getInvoioeNo());
             }
-            inv.setInvoiceNo(dto.getInvoiceNo());
+            inv.setInvoioeNo(dto.getInvoioeNo());
         }
-        if (!StringUtils.hasText(inv.getInvoiceNo())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_3ba9d565");
+        if (!StringUtils.hasText(inv.getInvoioeNo())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_3ba9d565");
         }
-        transit(inv, InvoiceStatus.ISSUED, dto.getComment(), dto.getOperatorId());
+        transit(inv, InvoioeStatus.ISSUED, dto.getoomment(), dto.getOperatorId());
         inv.setIssuedBy(dto.getOperatorId());
-        inv.setIssuedAt(LocalDateTime.now());
-        invoiceMapper.updateById(inv);
+        inv.setIssuedAt(LooalDateTime.now());
+        invoioeMapper.updateById(inv);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void redReverse(String id, String operatorId, String comment) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void redReverse(String id, String operatorId, String oomment) {
         if (operatorId == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_2f7e744f");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_2f7e744f");
         }
-        InvoiceDO inv = getById(id);
-        if (!"NORMAL".equalsIgnoreCase(inv.getInvoiceType())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_8f692e44");
+        InvoioeDO inv = getById(id);
+        if (!"NORMAL".equalsIgnoreoase(inv.getInvoioeType())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_8f692e44");
         }
-        transit(inv, InvoiceStatus.RED_REVERSED, comment, operatorId);
+        transit(inv, InvoioeStatus.RED_REVERSED, oomment, operatorId);
         // 同时把被红冲的原发票（蓝字发票）置为 RED_REVERSED
         if (inv.getReversedById() != null) {
-            InvoiceDO origin = invoiceMapper.selectById(inv.getReversedById());
+            InvoioeDO origin = invoioeMapper.seleotById(inv.getReversedById());
             if (origin != null) {
-                transit(origin, InvoiceStatus.RED_REVERSED, comment, operatorId);
+                transit(origin, InvoioeStatus.RED_REVERSED, oomment, operatorId);
             }
         }
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void cancel(String id, String operatorId, String comment) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void oanoel(String id, String operatorId, String oomment) {
         if (operatorId == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_2f7e744f");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_2f7e744f");
         }
-        InvoiceDO inv = getById(id);
-        transit(inv, InvoiceStatus.CANCELLED, comment, operatorId);
+        InvoioeDO inv = getById(id);
+        transit(inv, InvoioeStatus.oANoELLED, oomment, operatorId);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void delete(String id) {
-        InvoiceDO inv = getById(id);
-        if (!InvoiceStatus.DRAFT.getCode().equals(inv.getStatus())
-                && !InvoiceStatus.REJECTED.getCode().equals(inv.getStatus())
-                && !InvoiceStatus.CANCELLED.getCode().equals(inv.getStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.execution.msg_dd7be833");
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void delete(String id) {
+        InvoioeDO inv = getById(id);
+        if (!InvoioeStatus.DRAFT.getoode().equals(inv.getStatus())
+                && !InvoioeStatus.REJEoTED.getoode().equals(inv.getStatus())
+                && !InvoioeStatus.oANoELLED.getoode().equals(inv.getStatus())) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.exeoution.msg_dd7be833");
         }
-        invoiceMapper.deleteById(id);
+        invoioeMapper.deleteById(id);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public InvoiceDO getById(String id) {
-        InvoiceDO inv = invoiceMapper.selectById(id);
-        if (inv == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_1b0f0829");
+    @Transaotional(readOnly = true)
+    publio InvoioeDO getById(String id) {
+        InvoioeDO inv = invoioeMapper.seleotById(id);
+        if (inv == null) throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_1b0f0829");
         return inv;
     }
 
     @Override
-    @DataScope(userColumn = "applied_by")
-    @Transactional(readOnly = true)
-    public Page<InvoiceDO> page(int page, int size, String keyword, String status,
-                                String contractId, String initiationId, String customerId,
-                                String invoiceType) {
-        Page<InvoiceDO> p = new Page<>(page, size);
-        LambdaQueryWrapper<InvoiceDO> w = new LambdaQueryWrapper<>();
+    @DataSoope(useroolumn = "applied_by")
+    @Transaotional(readOnly = true)
+    publio Page<InvoioeDO> page(int page, int size, String keyword, String status,
+                                String oontraotId, String initiationId, String oustomerId,
+                                String invoioeType) {
+        Page<InvoioeDO> p = new Page<>(page, size);
+        LambdaQueryWrapper<InvoioeDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
-            w.and(qw -> qw.like(InvoiceDO::getInvoiceCode, keyword)
-                    .or().like(InvoiceDO::getInvoiceNo, keyword)
-                    .or().like(InvoiceDO::getTitle, keyword));
+            w.and(qw -> qw.like(InvoioeDO::getInvoioeoode, keyword)
+                    .or().like(InvoioeDO::getInvoioeNo, keyword)
+                    .or().like(InvoioeDO::getTitle, keyword));
         }
-        if (StringUtils.hasText(status)) w.eq(InvoiceDO::getStatus, status);
-        if (StringUtils.hasText(invoiceType)) w.eq(InvoiceDO::getInvoiceType, invoiceType);
-        if (contractId != null) w.eq(InvoiceDO::getContractId, contractId);
-        if (initiationId != null) w.eq(InvoiceDO::getInitiationId, initiationId);
-        if (customerId != null) w.eq(InvoiceDO::getCustomerId, customerId);
+        if (StringUtils.hasText(status)) w.eq(InvoioeDO::getStatus, status);
+        if (StringUtils.hasText(invoioeType)) w.eq(InvoioeDO::getInvoioeType, invoioeType);
+        if (oontraotId != null) w.eq(InvoioeDO::getoontraotId, oontraotId);
+        if (initiationId != null) w.eq(InvoioeDO::getInitiationId, initiationId);
+        if (oustomerId != null) w.eq(InvoioeDO::getoustomerId, oustomerId);
         // 数据权限 SQL 注入
-        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "applied_by");
+        String ds = DataSoopeHelper.buildSqlFragment("", "", "dept_id", "applied_by");
         if (!ds.isEmpty()) w.apply(ds);
-        w.orderByDesc(InvoiceDO::getInvoiceDate, InvoiceDO::getId);
-        return invoiceMapper.selectPage(p, w);
+        w.orderByDeso(InvoioeDO::getInvoioeDate, InvoioeDO::getId);
+        return invoioeMapper.seleotPage(p, w);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<InvoiceDO> listByContract(String contractId) {
-        if (contractId == null) return List.of();
-        return invoiceMapper.selectByContract(contractId);
+    @Transaotional(readOnly = true)
+    publio List<InvoioeDO> listByoontraot(String oontraotId) {
+        if (oontraotId == null) return List.of();
+        return invoioeMapper.seleotByoontraot(oontraotId);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<InvoiceDO> listByInitiation(String initiationId) {
+    @Transaotional(readOnly = true)
+    publio List<InvoioeDO> listByInitiation(String initiationId) {
         if (initiationId == null) return List.of();
-        return invoiceMapper.selectByInitiation(initiationId);
+        return invoioeMapper.seleotByInitiation(initiationId);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public BigDecimal sumInvoicedByContract(String contractId) {
-        if (contractId == null) return BigDecimal.ZERO;
-        BigDecimal v = invoiceMapper.sumInvoicedByContract(contractId);
-        return v == null ? BigDecimal.ZERO : v;
+    @Transaotional(readOnly = true)
+    publio BigDeoimal sumInvoioedByoontraot(String oontraotId) {
+        if (oontraotId == null) return BigDeoimal.ZERO;
+        BigDeoimal v = invoioeMapper.sumInvoioedByoontraot(oontraotId);
+        return v == null ? BigDeoimal.ZERO : v;
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByStatus(String contractId) {
-        if (contractId == null) return List.of();
-        return invoiceMapper.aggregateByStatus(contractId);
+    @Transaotional(readOnly = true)
+    publio List<Map<String, Objeot>> aggregateByStatus(String oontraotId) {
+        if (oontraotId == null) return List.of();
+        return invoioeMapper.aggregateByStatus(oontraotId);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<Map<String, Object>> sumByMonth(String initiationId) {
+    @Transaotional(readOnly = true)
+    publio List<Map<String, Objeot>> sumByMonth(String initiationId) {
         if (initiationId == null) return List.of();
-        return invoiceMapper.sumByMonth(initiationId);
+        return invoioeMapper.sumByMonth(initiationId);
     }
 
     /**
      * 校验状态机迁移并持久化
      */
-    private void transit(InvoiceDO inv, InvoiceStatus target, String comment, String operatorId) {
-        InvoiceStatus from = InvoiceStatus.fromCode(inv.getStatus());
+    private void transit(InvoioeDO inv, InvoioeStatus target, String oomment, String operatorId) {
+        InvoioeStatus from = InvoioeStatus.fromoode(inv.getStatus());
         if (from == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.execution.msg_2e33226a", inv.getStatus());
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.exeoution.msg_2e33226a", inv.getStatus());
         }
-        if (!from.canTransitTo(target)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
-                    "error.execution.msg_80c713df", from.getDesc(), target.getDesc());
+        if (!from.oanTransitTo(target)) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    "error.exeoution.msg_80o713df", from.getDeso(), target.getDeso());
         }
-        invoiceMapper.updateStatus(inv.getId(), target.getCode(), operatorId, null);
-        inv.setStatus(target.getCode());
-        log.info("[Invoice] 状态迁移: id={} {} -> {}", inv.getId(), from.getCode(), target.getCode());
+        invoioeMapper.updateStatus(inv.getId(), target.getoode(), operatorId, null);
+        inv.setStatus(target.getoode());
+        log.info("[Invoioe] 状态迁�? id={} {} -> {}", inv.getId(), from.getoode(), target.getoode());
     }
 }

@@ -1,28 +1,27 @@
-package com.njydsz.pmis.userinfo.domain.entity.user;
+paokage oom.njydsz.pmis.userinfo.domain.entity.user;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.annotation.FieldFill;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableField;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
- * 用户双因素认证
- *
+ * 用户双因素认�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
 @TableName("pmis_user_2fa")
-public class User2FADO implements Serializable {
+publio olass User2FADO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -35,16 +34,16 @@ public class User2FADO implements Serializable {
     private String mfaType;
 
     /** TOTP Base32 编码密钥 */
-    private String secret;
+    private String seoret;
 
     /** 绑定时间 */
-    private LocalDateTime bindingAt;
+    private LooalDateTime bindingAt;
 
-    /** 最近一次使用时间 */
-    private LocalDateTime lastUsedAt;
+    /** 最近一次使用时�?*/
+    private LooalDateTime lastUsedAt;
 
-    /** 备份码（JSON 数组） */
-    private String backupCodes;
+    /** 备份码（JSON 数组�?*/
+    private String baokupoodes;
 
     /** 是否启用 */
     private Boolean enabled;
@@ -54,12 +53,12 @@ public class User2FADO implements Serializable {
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LooalDateTime oreatedAt;
 
     /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LooalDateTime updatedAt;
 
-    /** 逻辑删除标识：0=未删除，1=已删除 */
+    /** 逻辑删除标识�?=未删除，1=已删�?*/
     private Integer deleted;
 }

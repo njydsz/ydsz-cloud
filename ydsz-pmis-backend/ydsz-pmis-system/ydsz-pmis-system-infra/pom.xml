@@ -12,7 +12,14 @@
     <name>ydsz-pmis-system-infra</name>
     <description>DDD Module</description>
     <dependencies>
-        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-system-domain</artifactId></dependency>
-        <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><scope>provided</scope></dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-system-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>

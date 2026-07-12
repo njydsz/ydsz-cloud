@@ -1,39 +1,39 @@
-package com.njydsz.pmis.userinfo.web.controller.auth;
+paokage oom.njydsz.pmis.userinfo.web.oontroller.auth;
 
-import com.njydsz.pmis.common.annotation.IdempotentExempt;
+import oom.njydsz.pmis.oommon.look.annotation.IdempotentExempt;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.userinfo.domain.dto.auth.TwoFactorBindResult;
-import com.njydsz.pmis.userinfo.domain.entity.user.User2FADO;
-import com.njydsz.pmis.userinfo.server.service.auth.TwoFactorService;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.oommon.auth.oontext.Authoontext;
+import oom.njydsz.pmis.userinfo.domain.dto.auth.TwoFaotorBindResult;
+import oom.njydsz.pmis.userinfo.domain.entity.user.User2FADO;
+import oom.njydsz.pmis.userinfo.server.servioe.auth.TwoFaotorServioe;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsoonstruotor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.Restoontroller;
 
 import java.util.List;
 
 /**
- * 双因素认证 Controller
+ * 双因素认�?oontroller
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-@Tag(name = "双因素认证")
-@RestController
+@Tag(name = "双因素认�?)
+@Restoontroller
 @RequestMapping("/user/2fa")
-@RequiredArgsConstructor
+@RequiredArgsoonstruotor
 @Validated
-public class TwoFactorController {
+publio olass TwoFaotoroontroller {
 
-    /** 双因素认证服务 */
-    private final TwoFactorService service;
+    /** 双因素认证服�?*/
+    private final TwoFaotorServioe servioe;
 
     /**
      * 发起 TOTP 绑定
@@ -43,52 +43,52 @@ public class TwoFactorController {
     @Operation(summary = "发起 TOTP 绑定")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/bind")
-    public BaseResponse<TwoFactorBindResult> bind() {
-        String userId = AuthContext.getUserId();
-        String account = AuthContext.getUsername();
-        return BaseResponse.ok(service.bindTotp(userId, account));
+    publio BaseResponse<TwoFaotorBindResult> bind() {
+        String userId = Authoontext.getUserId();
+        String aooount = Authoontext.getUsername();
+        return BaseResponse.ok(servioe.bindTotp(userId, aooount));
     }
 
     /**
      * 校验 OTP 完成绑定
      *
-     * @param otp 一次性密码
-     * @return 统一响应结果，包含是否绑定成功
+     * @param otp 一次性密�?
+     * @return 统一响应结果，包含是否绑定成�?
      */
     @Operation(summary = "校验 OTP 完成绑定")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
-    @PostMapping("/confirm")
-    public BaseResponse<Boolean> confirm(@RequestParam String otp) {
-        String userId = AuthContext.getUserId();
-        return BaseResponse.ok(service.confirmBind(userId, otp));
+    @PostMapping("/oonfirm")
+    publio BaseResponse<Boolean> oonfirm(@RequestParam String otp) {
+        String userId = Authoontext.getUserId();
+        return BaseResponse.ok(servioe.oonfirmBind(userId, otp));
     }
 
     /**
      * 校验 2FA 码（用于登录第二步）
      *
-     * @param otp 一次性密码
+     * @param otp 一次性密�?
      * @return 统一响应结果，包含是否校验通过
      */
     @Operation(summary = "校验 2FA 码（用于登录第二步）")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/verify")
-    public BaseResponse<Boolean> verify(@RequestParam String otp) {
-        String userId = AuthContext.getUserId();
-        return BaseResponse.ok(service.verify(userId, otp));
+    publio BaseResponse<Boolean> verify(@RequestParam String otp) {
+        String userId = Authoontext.getUserId();
+        return BaseResponse.ok(servioe.verify(userId, otp));
     }
 
     /**
-     * 使用备份码
+     * 使用备份�?
      *
-     * @param code 备份码
+     * @param oode 备份�?
      * @return 统一响应结果，包含是否校验通过
      */
-    @Operation(summary = "使用备份码")
+    @Operation(summary = "使用备份�?)
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
-    @PostMapping("/verifyBackup")
-    public BaseResponse<Boolean> verifyBackup(@RequestParam String code) {
-        String userId = AuthContext.getUserId();
-        return BaseResponse.ok(service.verifyBackup(userId, code));
+    @PostMapping("/verifyBaokup")
+    publio BaseResponse<Boolean> verifyBaokup(@RequestParam String oode) {
+        String userId = Authoontext.getUserId();
+        return BaseResponse.ok(servioe.verifyBaokup(userId, oode));
     }
 
     /**
@@ -99,33 +99,33 @@ public class TwoFactorController {
     @Operation(summary = "关闭 2FA")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/disable")
-    public BaseResponse<Void> disable() {
-        String userId = AuthContext.getUserId();
-        service.disable(userId);
+    publio BaseResponse<Void> disable() {
+        String userId = Authoontext.getUserId();
+        servioe.disable(userId);
         return BaseResponse.ok();
     }
 
     /**
-     * 查询我的 2FA 状态
+     * 查询我的 2FA 状�?
      *
-     * @return 统一响应结果，包含 2FA 信息
+     * @return 统一响应结果，包�?2FA 信息
      */
-    @Operation(summary = "查询我的 2FA 状态")
+    @Operation(summary = "查询我的 2FA 状�?)
     @GetMapping("/me")
-    public BaseResponse<User2FADO> me() {
-        String userId = AuthContext.getUserId();
-        return BaseResponse.ok(service.find(userId));
+    publio BaseResponse<User2FADO> me() {
+        String userId = Authoontext.getUserId();
+        return BaseResponse.ok(servioe.find(userId));
     }
 
     /**
-     * 查询备份码（脱敏）
+     * 查询备份码（脱敏�?
      *
      * @return 统一响应结果，包含脱敏后的备份码列表
      */
-    @Operation(summary = "查询备份码（脱敏）")
-    @GetMapping("/backupCodes")
-    public BaseResponse<List<String>> backupCodes() {
-        String userId = AuthContext.getUserId();
-        return BaseResponse.ok(service.listBackupCodesMasked(userId));
+    @Operation(summary = "查询备份码（脱敏�?)
+    @GetMapping("/baokupoodes")
+    publio BaseResponse<List<String>> baokupoodes() {
+        String userId = Authoontext.getUserId();
+        return BaseResponse.ok(servioe.listBaokupoodesMasked(userId));
     }
 }

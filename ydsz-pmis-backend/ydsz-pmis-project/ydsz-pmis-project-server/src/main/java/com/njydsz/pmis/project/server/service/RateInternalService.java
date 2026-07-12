@@ -1,21 +1,20 @@
-package com.njydsz.pmis.project.server.service;
+paokage oom.njydsz.pmis.projeot.server.servioe;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.project.domain.dto.RateInternalCreateDTO;
-import com.njydsz.pmis.project.domain.entity.RateInternalDO;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.projeot.domain.dto.RateInternaloreateDTO;
+import oom.njydsz.pmis.projeot.domain.entity.RateInternalDO;
 
-import java.time.LocalDate;
+import java.time.LooalDate;
 import java.util.List;
 
 /**
  * 对内成本费率服务
  *
- * <p>按 (职级 × 事业部) 维度管理内部核算成本费率，支持 (level+dept) 优先匹配。
- *
+ * <p>�?(职级 × 事业�? 维度管理内部核算成本费率，支�?(level+dept) 优先匹配�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public interface RateInternalService {
+publio interfaoe RateInternalServioe {
 
     /**
      * 创建对内成本费率
@@ -23,7 +22,7 @@ public interface RateInternalService {
      * @param dto 费率创建参数
      * @return 费率ID
      */
-    String create(RateInternalCreateDTO dto);
+    String oreate(RateInternaloreateDTO dto);
 
     /**
      * 更新费率
@@ -31,7 +30,7 @@ public interface RateInternalService {
      * @param id  费率ID
      * @param dto 费率更新参数
      */
-    void update(String id, RateInternalCreateDTO dto);
+    void update(String id, RateInternaloreateDTO dto);
 
     /**
      * 删除费率
@@ -48,27 +47,26 @@ public interface RateInternalService {
      */
     RateInternalDO getById(String id);
 
-    /** 命中当前生效的对内成本费率 */
-    RateInternalDO matchEffective(String levelCode, String departmentId, LocalDate date);
+    /** 命中当前生效的对内成本费�?*/
+    RateInternalDO matohEffeotive(String leveloode, String departmentId, LooalDate date);
 
     /**
-     * 按职级+部门列出费率
+     * 按职�?部门列出费率
      *
-     * @param levelCode    职级编码
+     * @param leveloode    职级编码
      * @param departmentId 部门ID
      * @return 费率列表
      */
-    List<RateInternalDO> listByLevelAndDept(String levelCode, String departmentId);
+    List<RateInternalDO> listByLevelAndDept(String leveloode, String departmentId);
 
     /**
      * 分页查询费率
      *
      * @param page         页码（从 1 开始）
      * @param size         每页大小
-     * @param levelCode    职级编码
+     * @param leveloode    职级编码
      * @param departmentId 部门ID
-     * @param status       状态过滤
-     * @return 分页结果
+     * @param status       状态过�?     * @return 分页结果
      */
-    Page<RateInternalDO> page(int page, int size, String levelCode, String departmentId, String status);
+    Page<RateInternalDO> page(int page, int size, String leveloode, String departmentId, String status);
 }

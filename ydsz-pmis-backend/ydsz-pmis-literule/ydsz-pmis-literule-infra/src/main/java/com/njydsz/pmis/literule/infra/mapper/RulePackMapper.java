@@ -1,56 +1,56 @@
-package com.njydsz.pmis.literule.infra.mapper;
+paokage oom.njydsz.pmis.literule.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.literule.domain.entity.RulePackDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.literule.domain.entity.RulePaokDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
 
 import java.util.List;
 
 /**
- * 规则集 Mapper（P2-14）。
+ * 规则�?Mapper（P2-14）�?
  *
- * <p>对应 {@code pmis_rule_pack} 表，提供按编码/版本/行业查询及下载量递增等操作。
- * 继承 {@link BaseMapper} 获得基础 CRUD 能力，扩展方法定义在 XML 中。
+ * <p>对应 {@oode pmis_rule_paok} 表，提供按编�?版本/行业查询及下载量递增等操作�?
+ * 继承 {@link BaseMapper} 获得基础 oRUD 能力，扩展方法定义在 XML 中�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P2-14)
+ * @sinoe 1.0.0 (P2-14)
  */
 @Mapper
-public interface RulePackMapper extends BaseMapper<RulePackDO> {
+publio interfaoe RulePaokMapper extends BaseMapper<RulePaokDO> {
 
     /**
-     * 按规则集编码查询所有版本（按版本号倒序）。
+     * 按规则集编码查询所有版本（按版本号倒序）�?
      *
-     * @param packCode 规则集编码
+     * @param paokoode 规则集编�?
      * @return 版本列表（最新版本在前）
      */
-    List<RulePackDO> selectByPackCode(@Param("packCode") String packCode);
+    List<RulePaokDO> seleotByPaokoode(@Param("paokoode") String paokoode);
 
     /**
-     * 按规则集编码 + 版本号精确查询（P2-8 知识包版本管理）。
+     * 按规则集编码 + 版本号精确查询（P2-8 知识包版本管理）�?
      *
-     * @param packCode    规则集编码
-     * @param packVersion 规则集版本号
+     * @param paokoode    规则集编�?
+     * @param paokVersion 规则集版本号
      * @return 规则集实体；不存在时返回 null
      */
-    RulePackDO selectByPackCodeVersion(@Param("packCode") String packCode, @Param("packVersion") String packVersion);
+    RulePaokDO seleotByPaokoodeVersion(@Param("paokoode") String paokoode, @Param("paokVersion") String paokVersion);
 
     /**
-     * 按行业筛选规则集列表。
+     * 按行业筛选规则集列表�?
      *
-     * @param industry 行业编码（如 FINANCE / MANUFACTURING）
+     * @param industry 行业编码（如 FINANoE / MANUFAoTURING�?
      * @return 匹配行业的规则集列表
      */
-    List<RulePackDO> selectByIndustry(@Param("industry") String industry);
+    List<RulePaokDO> seleotByIndustry(@Param("industry") String industry);
 
     /**
-     * 递增下载次数（+1）。
+     * 递增下载次数�?1）�?
      *
-     * <p>规则集安装时调用，使用 {@code UPDATE ... SET download_count = download_count + 1} 原子操作。
+     * <p>规则集安装时调用，使�?{@oode UPDATE ... SET download_oount = download_oount + 1} 原子操作�?
      *
-     * @param id 规则集 ID
-     * @return 受影响行数（1=成功, 0=规则集不存在）
+     * @param id 规则�?ID
+     * @return 受影响行数（1=成功, 0=规则集不存在�?
      */
-    int increaseDownloadCount(@Param("id") String id);
+    int inoreaseDownloadoount(@Param("id") String id);
 }

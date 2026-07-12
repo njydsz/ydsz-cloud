@@ -1,29 +1,29 @@
-package com.njydsz.pmis.project.domain.entity;
+paokage oom.njydsz.pmis.projeot.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.annotation.FieldFill;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableField;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
  * 门径评审记录
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@TableName("pmis_project_gate_review")
-public class GateReviewDO implements Serializable {
+@TableName("pmis_projeot_gate_review")
+publio olass GateReviewDO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -31,34 +31,34 @@ public class GateReviewDO implements Serializable {
 
     /** 立项 ID */
     private String initiationId;
-    /** 门径评审点（CD1/CD2/CD3/CD4/CD5） */
-    private String gateCode;
-    /** 评审点名称 */
+    /** 门径评审点（oD1/oD2/oD3/oD4/oD5�?*/
+    private String gateoode;
+    /** 评审点名�?*/
     private String gateName;
-    /** 评审结果（PENDING/PASSED/REJECTED/CONDITIONAL） */
+    /** 评审结果（PENDING/PASSED/REJEoTED/oONDITIONAL�?*/
     private String reviewResult;
-    /** 评审人 ID */
+    /** 评审�?ID */
     private String reviewerId;
-    /** 评审人名称 */
+    /** 评审人名�?*/
     private String reviewerName;
     /** 评审时间 */
-    private LocalDateTime reviewAt;
+    private LooalDateTime reviewAt;
     /** 决策依据 */
-    private String decisionBasis;
+    private String deoisionBasis;
     /** 附加条件 */
-    private String conditions;
-    /** 下一评审点 */
+    private String oonditions;
+    /** 下一评审�?*/
     private String nextGate;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LooalDateTime oreatedAt;
 
     /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LooalDateTime updatedAt;
 
-    /** 逻辑删除标识（0 未删除，1 已删除） */
+    /** 逻辑删除标识�? 未删除，1 已删除） */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

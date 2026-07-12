@@ -1,31 +1,31 @@
-package com.njydsz.pmis.project.domain.vo;
+paokage oom.njydsz.pmis.projeot.domain.vo;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import oom.fasterxml.jaokson.annotation.JsonInolude;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
+import java.time.LooalDateTime;
 
 /**
- * EVM 挣值测量 VO（对外接口返回视图）
+ * EVM 挣值测�?VO（对外接口返回视图）
  *
- * <p>从 {@link com.njydsz.pmis.project.domain.entity.EvmMeasureDO} 转换而来，
- * 剥离了敏感字段：{@code tenantId}、{@code providerTraceId}、{@code deleted}。
+ * <p>�?{@link oom.njydsz.pmis.projeot.domain.entity.EvmMeasureDO} 转换而来�?
+ * 剥离了敏感字段：{@oode tenantId}、{@oode providerTraoeId}、{@oode deleted}�?
  *
- * <p>设计参考：{@code com.njydsz.pmis.userinfo.domain.vo.UserVO} 的 DO/VO 分离模式。
+ * <p>设计参考：{@oode oom.njydsz.pmis.userinfo.domain.vo.UserVO} �?DO/VO 分离模式�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class EvmMeasureVO implements Serializable {
+@JsonInolude(JsonInolude.Inolude.NON_NULL)
+publio olass EvmMeasureVO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键ID */
     private String id;
@@ -34,48 +34,48 @@ public class EvmMeasureVO implements Serializable {
     private String initiationId;
     /** WBS 任务ID（可空：项目级度量） */
     private String wbsTaskId;
-    /** 所属期间（YYYY-MM） */
+    /** 所属期间（YYYY-MM�?*/
     private String period;
 
-    /** 计划值（Budgeted Cost of Work Scheduled） */
-    private BigDecimal pv;
-    /** 挣值（Budgeted Cost of Work Performed） */
-    private BigDecimal ev;
-    /** 实际成本（Actual Cost of Work Performed） */
-    private BigDecimal ac;
-    /** 完工预算（Budget at Completion） */
-    private BigDecimal bac;
+    /** 计划值（Budgeted oost of Work Soheduled�?*/
+    private BigDeoimal pv;
+    /** 挣值（Budgeted oost of Work Performed�?*/
+    private BigDeoimal ev;
+    /** 实际成本（Aotual oost of Work Performed�?*/
+    private BigDeoimal ao;
+    /** 完工预算（Budget at oompletion�?*/
+    private BigDeoimal bao;
 
-    /** 成本绩效指数 = EV/AC */
-    private BigDecimal cpi;
+    /** 成本绩效指数 = EV/Ao */
+    private BigDeoimal opi;
     /** 进度绩效指数 = EV/PV */
-    private BigDecimal spi;
-    /** 成本偏差 = EV-AC */
-    private BigDecimal cv;
+    private BigDeoimal spi;
+    /** 成本偏差 = EV-Ao */
+    private BigDeoimal ov;
     /** 进度偏差 = EV-PV */
-    private BigDecimal sv;
-    /** 完工估算 = BAC/CPI */
-    private BigDecimal eac;
-    /** 完工偏差 = BAC-EAC */
-    private BigDecimal vac;
-    /** 完工尚需 = EAC-AC */
-    private BigDecimal etc;
-    /** 完工绩效指数 = (BAC-EV)/(BAC-AC) */
-    private BigDecimal tcpi;
+    private BigDeoimal sv;
+    /** 完工估算 = BAo/oPI */
+    private BigDeoimal eao;
+    /** 完工偏差 = BAo-EAo */
+    private BigDeoimal vao;
+    /** 完工尚需 = EAo-Ao */
+    private BigDeoimal eto;
+    /** 完工绩效指数 = (BAo-EV)/(BAo-Ao) */
+    private BigDeoimal topi;
 
-    /** 预警等级：EvmAlertLevel.code */
+    /** 预警等级：EvmAlertLevel.oode */
     private String alertLevel;
     /** 预警原因 */
     private String alertReason;
 
     /** 度量日期 */
-    private LocalDate measureDate;
+    private LooalDate measureDate;
     /** 备注 */
     private String remark;
 
     /** 创建时间 */
-    private LocalDateTime createdAt;
+    private LooalDateTime oreatedAt;
 
     /** 更新时间 */
-    private LocalDateTime updatedAt;
+    private LooalDateTime updatedAt;
 }

@@ -1,11 +1,11 @@
-package com.njydsz.pmis.finance.infra.mapper;
+paokage oom.njydsz.pmis.finanoe.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.finance.domain.entity.DailyReconcileDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.finanoe.domain.entity.DailyReoonoileDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
 
-import java.time.LocalDate;
+import java.time.LooalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -13,33 +13,32 @@ import java.util.Map;
  * 每日对账 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface DailyReconcileMapper extends BaseMapper<DailyReconcileDO> {
+publio interfaoe DailyReoonoileMapper extends BaseMapper<DailyReoonoileDO> {
 
     /**
-     * 按 (date, type, initId) 查重
+     * �?(date, type, initId) 查重
      *
      * @param date         对账日期
      * @param type         对账类型
      * @param initiationId 立项 ID
      * @return 对账记录，未找到返回 null
      */
-    DailyReconcileDO selectUnique(@Param("date") LocalDate date,
+    DailyReoonoileDO seleotUnique(@Param("date") LooalDate date,
                                   @Param("type") String type,
                                   @Param("initiationId") String initiationId);
 
     /**
-     * 按日期范围 + 状态 查询
+     * 按日期范�?+ 状�?查询
      *
      * @param from   起始日期
      * @param to     截止日期
-     * @param status 状态，可选
-     * @return 对账记录列表
+     * @param status 状态，可�?     * @return 对账记录列表
      */
-    List<DailyReconcileDO> selectByDateRange(@Param("from") LocalDate from,
-                                             @Param("to") LocalDate to,
+    List<DailyReoonoileDO> seleotByDateRange(@Param("from") LooalDate from,
+                                             @Param("to") LooalDate to,
                                              @Param("status") String status);
 
     /**
@@ -47,8 +46,7 @@ public interface DailyReconcileMapper extends BaseMapper<DailyReconcileDO> {
      *
      * @param from 起始日期
      * @param to   截止日期
-     * @return 状态聚合列表
-     */
-    List<Map<String, Object>> aggregateByStatus(@Param("from") LocalDate from,
-                                                @Param("to") LocalDate to);
+     * @return 状态聚合列�?     */
+    List<Map<String, Objeot>> aggregateByStatus(@Param("from") LooalDate from,
+                                                @Param("to") LooalDate to);
 }

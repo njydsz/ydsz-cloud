@@ -1,29 +1,28 @@
-package com.njydsz.pmis.workflow.domain.entity.notification;
+paokage oom.njydsz.pmis.workflow.domain.entity.notifioation;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
 
 /**
- * 流程抄送规则 DO
+ * 流程抄送规�?DO
  *
- * <p>P0-3: 自动抄送规则配置（如：变更金额>1万自动抄送 CEO）。
- *
+ * <p>P0-3: 自动抄送规则配置（如：变更金额>1万自动抄�?oEO）�? *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName("pmis_flow_cc_rule")
-public class FlowCcRuleDO extends BaseDO {
+@EqualsAndHashoode(oallSuper = true)
+@TableName("pmis_flow_oo_rule")
+publio olass FlowooRuleDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
@@ -32,10 +31,10 @@ public class FlowCcRuleDO extends BaseDO {
     private String tenantId;
 
     /** 流程编码 */
-    private String flowCode;
+    private String flowoode;
 
     /** 节点编码 */
-    private String nodeCode;
+    private String nodeoode;
 
     /** 规则类型：USER/ROLE/DEPT/SPEL */
     private String ruleType;
@@ -47,5 +46,5 @@ public class FlowCcRuleDO extends BaseDO {
     private Integer enabled;
 
     /** 链路追踪 ID */
-    private String providerTraceId;
+    private String providerTraoeId;
 }

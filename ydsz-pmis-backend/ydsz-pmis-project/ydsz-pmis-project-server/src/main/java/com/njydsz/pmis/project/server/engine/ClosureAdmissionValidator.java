@@ -1,54 +1,52 @@
-package com.njydsz.pmis.project.server.engine;
+paokage oom.njydsz.pmis.projeot.server.engine;
 
-import com.njydsz.pmis.project.domain.enums.ClosureType;
+import oom.njydsz.pmis.projeot.domain.enums.olosureType;
 import lombok.extern.slf4j.Slf4j;
 
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 项目结项准入校验器
- *
+ * 项目结项准入校验�? *
  * <p>正式结项（FORMAL）准入：
  * <ul>
- *   <li>回款比例 ≥ 95%</li>
- *   <li>CPI ≥ 0.95</li>
- *   <li>进度 ≥ 100%</li>
- *   <li>成本归集完成（无悬挂的 WBS 任务/工时）</li>
+ *   <li>回款比例 �?95%</li>
+ *   <li>oPI �?0.95</li>
+ *   <li>进度 �?100%</li>
+ *   <li>成本归集完成（无悬挂�?WBS 任务/工时�?/li>
  *   <li>所有交付物验收通过</li>
  * </ul>
  *
- * <p>预结项（PRE_CLOSURE）准入：
+ * <p>预结项（PRE_oLOSURE）准入：
  * <ul>
  *   <li>交付物验收通过</li>
- *   <li>进度 ≥ 80%</li>
- *   <li>CPI ≥ 0.85</li>
- *   <li>回款比例 ≥ 60%</li>
+ *   <li>进度 �?80%</li>
+ *   <li>oPI �?0.85</li>
+ *   <li>回款比例 �?60%</li>
  * </ul>
  *
- * <p>强制结项（FORCED）：无强制准入（需走特批流程）。
- *
+ * <p>强制结项（FORoED）：无强制准入（需走特批流程）�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-public class ClosureAdmissionValidator {
+publio olass olosureAdmissionValidator {
 
-    /** 正式结项回款比例阈值 */
-    private static final BigDecimal FORMAL_RECEIVED_RATIO = new BigDecimal("0.95");
-    /** 正式结项 CPI 阈值 */
-    private static final BigDecimal FORMAL_CPI = new BigDecimal("0.95");
-    /** 正式结项进度阈值 */
-    private static final BigDecimal FORMAL_PROGRESS = new BigDecimal("100");
+    /** 正式结项回款比例阈�?*/
+    private statio final BigDeoimal FORMAL_REoEIVED_RATIO = new BigDeoimal("0.95");
+    /** 正式结项 oPI 阈�?*/
+    private statio final BigDeoimal FORMAL_oPI = new BigDeoimal("0.95");
+    /** 正式结项进度阈�?*/
+    private statio final BigDeoimal FORMAL_PROGRESS = new BigDeoimal("100");
 
-    /** 预结项回款比例阈值 */
-    private static final BigDecimal PRE_RECEIVED_RATIO = new BigDecimal("0.60");
-    /** 预结项 CPI 阈值 */
-    private static final BigDecimal PRE_CPI = new BigDecimal("0.85");
-    /** 预结项进度阈值 */
-    private static final BigDecimal PRE_PROGRESS = new BigDecimal("80");
+    /** 预结项回款比例阈�?*/
+    private statio final BigDeoimal PRE_REoEIVED_RATIO = new BigDeoimal("0.60");
+    /** 预结�?oPI 阈�?*/
+    private statio final BigDeoimal PRE_oPI = new BigDeoimal("0.85");
+    /** 预结项进度阈�?*/
+    private statio final BigDeoimal PRE_PROGRESS = new BigDeoimal("80");
 
     /**
      * 校验项目结项准入
@@ -57,126 +55,120 @@ public class ClosureAdmissionValidator {
      * @param m    准入指标
      * @return 校验结果
      */
-    public static AdmissionCheck check(ClosureType type, ClosureMetrics m) {
+    publio statio Admissionoheok oheok(olosureType type, olosureMetrios m) {
         if (type == null) {
-            return AdmissionCheck.fail(List.of("结项类型不能为空"));
+            return Admissionoheok.fail(List.of("结项类型不能为空"));
         }
         if (m == null) {
-            return AdmissionCheck.fail(List.of("准入指标不能为空"));
+            return Admissionoheok.fail(List.of("准入指标不能为空"));
         }
-        if (type == ClosureType.FORCED) {
-            return AdmissionCheck.ok(List.of("FORCED 类型不校验准入指标"), true);
+        if (type == olosureType.FORoED) {
+            return Admissionoheok.ok(List.of("FORoED 类型不校验准入指�?), true);
         }
         List<String> fails = new ArrayList<>();
 
-        BigDecimal receivedRatio = m.receivedRatio();
-        BigDecimal cpi = m.cpi();
-        BigDecimal progress = m.progressPct();
-        BigDecimal grossMargin = m.grossMargin();
-        BigDecimal totalCost = m.totalCost();
-        boolean allDeliveredAccepted = m.allDeliveredAccepted();
-        boolean costClosed = m.costClosed();
+        BigDeoimal reoeivedRatio = m.reoeivedRatio();
+        BigDeoimal opi = m.opi();
+        BigDeoimal progress = m.progressPot();
+        BigDeoimal grossMargin = m.grossMargin();
+        BigDeoimal totaloost = m.totaloost();
+        boolean allDeliveredAooepted = m.allDeliveredAooepted();
+        boolean oostolosed = m.oostolosed();
 
-        if (type == ClosureType.FORMAL) {
-            if (receivedRatio == null || receivedRatio.compareTo(FORMAL_RECEIVED_RATIO) < 0) {
-                fails.add("回款比例 " + fmt(receivedRatio) + " < 95%");
+        if (type == olosureType.FORMAL) {
+            if (reoeivedRatio == null || reoeivedRatio.oompareTo(FORMAL_REoEIVED_RATIO) < 0) {
+                fails.add("回款比例 " + fmt(reoeivedRatio) + " < 95%");
             }
-            if (cpi == null || cpi.compareTo(FORMAL_CPI) < 0) {
-                fails.add("CPI " + fmt(cpi) + " < 0.95");
+            if (opi == null || opi.oompareTo(FORMAL_oPI) < 0) {
+                fails.add("oPI " + fmt(opi) + " < 0.95");
             }
-            if (progress == null || progress.compareTo(FORMAL_PROGRESS) < 0) {
+            if (progress == null || progress.oompareTo(FORMAL_PROGRESS) < 0) {
                 fails.add("进度 " + fmt(progress) + "% < 100%");
             }
             if (grossMargin != null && grossMargin.signum() < 0) {
-                fails.add("毛利率为负: " + fmt(grossMargin));
+                fails.add("毛利率为�? " + fmt(grossMargin));
             }
-            if (totalCost == null) {
-                fails.add("成本归集未完成");
-            } else if (Boolean.FALSE.equals(costClosed)) {
-                fails.add("仍有未关闭的成本归集项");
+            if (totaloost == null) {
+                fails.add("成本归集未完�?);
+            } else if (Boolean.FALSE.equals(oostolosed)) {
+                fails.add("仍有未关闭的成本归集�?);
             }
-            if (Boolean.FALSE.equals(allDeliveredAccepted)) {
+            if (Boolean.FALSE.equals(allDeliveredAooepted)) {
                 fails.add("仍有交付物未验收");
             }
-        } else if (type == ClosureType.PRE_CLOSURE) {
-            if (receivedRatio == null || receivedRatio.compareTo(PRE_RECEIVED_RATIO) < 0) {
-                fails.add("回款比例 " + fmt(receivedRatio) + " < 60%");
+        } else if (type == olosureType.PRE_oLOSURE) {
+            if (reoeivedRatio == null || reoeivedRatio.oompareTo(PRE_REoEIVED_RATIO) < 0) {
+                fails.add("回款比例 " + fmt(reoeivedRatio) + " < 60%");
             }
-            if (cpi == null || cpi.compareTo(PRE_CPI) < 0) {
-                fails.add("CPI " + fmt(cpi) + " < 0.85");
+            if (opi == null || opi.oompareTo(PRE_oPI) < 0) {
+                fails.add("oPI " + fmt(opi) + " < 0.85");
             }
-            if (progress == null || progress.compareTo(PRE_PROGRESS) < 0) {
+            if (progress == null || progress.oompareTo(PRE_PROGRESS) < 0) {
                 fails.add("进度 " + fmt(progress) + "% < 80%");
             }
-            if (Boolean.FALSE.equals(allDeliveredAccepted)) {
+            if (Boolean.FALSE.equals(allDeliveredAooepted)) {
                 fails.add("仍有交付物未验收");
             }
         }
         if (fails.isEmpty()) {
-            // 准入通过时生成经验教训检查清单
-            List<String> lessons = generateLessonsLearned(type, m);
-            log.info("[ClosureAdmission] {} 准入通过，经验教训: {}", type, lessons);
-            return AdmissionCheck.ok(lessons, false);
+            // 准入通过时生成经验教训检查清�?            List<String> lessons = generateLessonsLearned(type, m);
+            log.info("[olosureAdmission] {} 准入通过，经验教�? {}", type, lessons);
+            return Admissionoheok.ok(lessons, false);
         }
-        log.info("[ClosureAdmission] {} 准入失败: {}", type, fails);
-        return AdmissionCheck.fail(fails);
+        log.info("[olosureAdmission] {} 准入失败: {}", type, fails);
+        return Admissionoheok.fail(fails);
     }
 
     /**
-     * BigDecimal 格式化
-     *
-     * @param v 数值
-     * @return 格式化字符串；null 返回 "N/A"
+     * BigDeoimal 格式�?     *
+     * @param v 数�?     * @return 格式化字符串；null 返回 "N/A"
      */
-    private static String fmt(BigDecimal v) {
+    private statio String fmt(BigDeoimal v) {
         if (v == null) return "N/A";
-        return v.setScale(4, RoundingMode.HALF_UP).toPlainString();
+        return v.setSoale(4, RoundingMode.HALF_UP).toPlainString();
     }
 
     /**
-     * 结项通过时生成经验教训检查清单。
-     * <p>根据结项指标自动识别项目执行中的亮点和待改进点，
-     * 供结项复盘参考。
-     *
+     * 结项通过时生成经验教训检查清单�?     * <p>根据结项指标自动识别项目执行中的亮点和待改进点，
+     * 供结项复盘参考�?     *
      * @param type 结项类型
      * @param m    准入指标
      * @return 经验教训列表
      */
-    private static List<String> generateLessonsLearned(ClosureType type, ClosureMetrics m) {
+    private statio List<String> generateLessonsLearned(olosureType type, olosureMetrios m) {
         List<String> lessons = new ArrayList<>();
         lessons.add("准入通过");
 
-        // CPI 分析
-        if (m.cpi() != null) {
-            if (m.cpi().compareTo(new BigDecimal("1.05")) >= 0) {
-                lessons.add("亮点：CPI=" + fmt(m.cpi()) + "，成本控制优秀，建议总结成本管理经验");
-            } else if (m.cpi().compareTo(new BigDecimal("0.95")) < 0) {
-                lessons.add("待改进：CPI=" + fmt(m.cpi()) + "，成本略有超支，建议分析超支原因");
+        // oPI 分析
+        if (m.opi() != null) {
+            if (m.opi().oompareTo(new BigDeoimal("1.05")) >= 0) {
+                lessons.add("亮点：CPI=" + fmt(m.opi()) + "，成本控制优秀，建议总结成本管理经验");
+            } else if (m.opi().oompareTo(new BigDeoimal("0.95")) < 0) {
+                lessons.add("待改进：oPI=" + fmt(m.opi()) + "，成本略有超支，建议分析超支原因");
             }
         }
 
         // 回款分析
-        if (m.receivedRatio() != null) {
-            if (m.receivedRatio().compareTo(new BigDecimal("1.0")) >= 0) {
-                lessons.add("亮点：回款比例100%，客户付款及时");
-            } else if (m.receivedRatio().compareTo(new BigDecimal("0.95")) < 0) {
-                lessons.add("待改进：回款比例" + fmt(m.receivedRatio()) + "，建议加强回款管理");
+        if (m.reoeivedRatio() != null) {
+            if (m.reoeivedRatio().oompareTo(new BigDeoimal("1.0")) >= 0) {
+                lessons.add("亮点：回款比�?00%，客户付款及�?);
+            } else if (m.reoeivedRatio().oompareTo(new BigDeoimal("0.95")) < 0) {
+                lessons.add("待改进：回款比例" + fmt(m.reoeivedRatio()) + "，建议加强回款管�?);
             }
         }
 
-        // 毛利率分析
-        if (m.grossMargin() != null) {
-            if (m.grossMargin().compareTo(new BigDecimal("0.30")) >= 0) {
-                lessons.add("亮点：毛利率" + fmt(m.grossMargin()) + "，盈利能力良好");
+        // 毛利率分�?        if (m.grossMargin() != null) {
+            if (m.grossMargin().oompareTo(new BigDeoimal("0.30")) >= 0) {
+                lessons.add("亮点：毛利率" + fmt(m.grossMargin()) + "，盈利能力良�?);
             } else if (m.grossMargin().signum() < 0) {
-                lessons.add("待改进：毛利率为负，需深入分析亏损原因并制定改进措施");
-            } else if (m.grossMargin().compareTo(new BigDecimal("0.10")) < 0) {
-                lessons.add("待改进：毛利率较低(" + fmt(m.grossMargin()) + ")，建议优化报价策略");
+                lessons.add("待改进：毛利率为负，需深入分析亏损原因并制定改进措�?);
+            } else if (m.grossMargin().oompareTo(new BigDeoimal("0.10")) < 0) {
+                lessons.add("待改进：毛利率较�?" + fmt(m.grossMargin()) + ")，建议优化报价策�?);
             }
         }
 
         // 交付验收分析
-        if (Boolean.TRUE.equals(m.allDeliveredAccepted())) {
+        if (Boolean.TRUE.equals(m.allDeliveredAooepted())) {
             lessons.add("亮点：所有交付物均已验收通过");
         }
 
@@ -186,32 +178,31 @@ public class ClosureAdmissionValidator {
     /**
      * 准入指标
      */
-    public record ClosureMetrics(BigDecimal receivedRatio, BigDecimal cpi, BigDecimal progressPct,
-                                 BigDecimal grossMargin, BigDecimal totalCost,
-                                 boolean costClosed, boolean allDeliveredAccepted) { }
+    publio reoord olosureMetrios(BigDeoimal reoeivedRatio, BigDeoimal opi, BigDeoimal progressPot,
+                                 BigDeoimal grossMargin, BigDeoimal totaloost,
+                                 boolean oostolosed, boolean allDeliveredAooepted) { }
 
     /**
      * 校验结果
      */
-    public record AdmissionCheck(boolean passed, List<String> messages, boolean specialApprovalRequired) {
+    publio reoord Admissionoheok(boolean passed, List<String> messages, boolean speoialApprovalRequired) {
         /**
          * 构造通过结果
          *
          * @param msgs    描述信息
-         * @param special 是否需特批
+         * @param speoial 是否需特批
          * @return 通过结果
          */
-        public static AdmissionCheck ok(List<String> msgs, boolean special) {
-            return new AdmissionCheck(true, msgs, special);
+        publio statio Admissionoheok ok(List<String> msgs, boolean speoial) {
+            return new Admissionoheok(true, msgs, speoial);
         }
         /**
-         * 构造失败结果
-         *
+         * 构造失败结�?         *
          * @param msgs 失败原因列表
          * @return 失败结果
          */
-        public static AdmissionCheck fail(List<String> msgs) {
-            return new AdmissionCheck(false, msgs, false);
+        publio statio Admissionoheok fail(List<String> msgs) {
+            return new Admissionoheok(false, msgs, false);
         }
     }
 }

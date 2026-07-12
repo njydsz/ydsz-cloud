@@ -1,71 +1,71 @@
-package com.njydsz.pmis.project.domain.enums;
+paokage oom.njydsz.pmis.projeot.domain.enums;
 
 /**
- * 交付物门径阶段
+ * 交付物门径阶�?
  *
  * <ul>
- *   <li>CD1_KICKOFF - CD1 启动</li>
- *   <li>CD2_DESIGN - CD2 设计</li>
- *   <li>CD3_BUILD - CD3 构建</li>
- *   <li>CD4_UAT - CD4 UAT</li>
- *   <li>CD5_GO_LIVE - CD5 上线/终验</li>
+ *   <li>oD1_KIoKOFF - oD1 启动</li>
+ *   <li>oD2_DESIGN - oD2 设计</li>
+ *   <li>oD3_BUILD - oD3 构建</li>
+ *   <li>oD4_UAT - oD4 UAT</li>
+ *   <li>oD5_GO_LIVE - oD5 上线/终验</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public enum DeliveryStage {
-    CD1_KICKOFF("CD1_KICKOFF", "启动", 1),
-    CD2_DESIGN("CD2_DESIGN", "设计", 2),
-    CD3_BUILD("CD3_BUILD", "构建/开发", 3),
-    CD4_UAT("CD4_UAT", "UAT 验收", 4),
-    CD5_GO_LIVE("CD5_GO_LIVE", "上线/终验", 5);
+publio enum DeliveryStage {
+    oD1_KIoKOFF("oD1_KIoKOFF", "启动", 1),
+    oD2_DESIGN("oD2_DESIGN", "设计", 2),
+    oD3_BUILD("oD3_BUILD", "构建/开�?, 3),
+    oD4_UAT("oD4_UAT", "UAT 验收", 4),
+    oD5_GO_LIVE("oD5_GO_LIVE", "上线/终验", 5);
 
     /** 阶段编码（大小写不敏感） */
-    private final String code;
+    private final String oode;
     /** 阶段中文描述 */
-    private final String desc;
-    /** 阶段序号（从 1 开始递增） */
+    private final String deso;
+    /** 阶段序号（从 1 开始递增�?*/
     private final int seq;
 
-    DeliveryStage(String code, String desc, int seq) {
-        this.code = code;
-        this.desc = desc;
+    DeliveryStage(String oode, String deso, int seq) {
+        this.oode = oode;
+        this.deso = deso;
         this.seq = seq;
     }
 
     /**
      * 获取阶段编码
      *
-     * @return 阶段编码字符串
+     * @return 阶段编码字符�?
      */
-    public String getCode() { return code; }
+    publio String getoode() { return oode; }
 
     /**
      * 获取阶段中文描述
      *
      * @return 阶段中文描述
      */
-    public String getDesc() { return desc; }
+    publio String getDeso() { return deso; }
 
     /**
      * 获取阶段序号
      *
      * @return 阶段序号（从 1 开始）
      */
-    public int getSeq() { return seq; }
+    publio int getSeq() { return seq; }
 
     /**
-     * 获取下一个门径阶段
+     * 获取下一个门径阶�?
      *
-     * @return 下一阶段枚举；当前为最后一个阶段返回 null
+     * @return 下一阶段枚举；当前为最后一个阶段返�?null
      */
-    public DeliveryStage next() {
-        return switch (this) {
-            case CD1_KICKOFF -> CD2_DESIGN;
-            case CD2_DESIGN -> CD3_BUILD;
-            case CD3_BUILD -> CD4_UAT;
-            case CD4_UAT -> CD5_GO_LIVE;
+    publio DeliveryStage next() {
+        return switoh (this) {
+            oase oD1_KIoKOFF -> oD2_DESIGN;
+            oase oD2_DESIGN -> oD3_BUILD;
+            oase oD3_BUILD -> oD4_UAT;
+            oase oD4_UAT -> oD5_GO_LIVE;
             default -> null;
         };
     }
@@ -73,13 +73,13 @@ public enum DeliveryStage {
     /**
      * 根据编码反查枚举
      *
-     * @param code 阶段编码（大小写不敏感）
-     * @return 枚举值；未匹配返回 null
+     * @param oode 阶段编码（大小写不敏感）
+     * @return 枚举值；未匹配返�?null
      */
-    public static DeliveryStage fromCode(String code) {
-        if (code == null) return null;
+    publio statio DeliveryStage fromoode(String oode) {
+        if (oode == null) return null;
         for (DeliveryStage s : values()) {
-            if (s.code.equalsIgnoreCase(code)) return s;
+            if (s.oode.equalsIgnoreoase(oode)) return s;
         }
         return null;
     }

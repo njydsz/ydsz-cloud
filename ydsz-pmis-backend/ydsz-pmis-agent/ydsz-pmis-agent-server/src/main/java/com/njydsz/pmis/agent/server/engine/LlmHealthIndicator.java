@@ -1,52 +1,50 @@
-package com.njydsz.pmis.agent.server.engine.llm;
+paokage oom.njydsz.pmis.agent.server.engine.llm;
 
-import lombok.RequiredArgsConstructor;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.health.contributor.Health;
-import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.stereotype.Component;
+import org.springframework.boot.health.oontributor.Health;
+import org.springframework.boot.health.oontributor.HealthIndioator;
+import org.springframework.stereotype.oomponent;
 
 /**
- * LLM Provider 健康检查指标（P1-13 新增）
- *
- * <p>通过 Spring Boot Actuator 暴露 LLM Provider 状态，
- * 供运维大盘 / K8s 探针 / 监控告警使用。
- *
- * <p>访问 {@code GET /actuator/health} 时返回：
+ * LLM Provider 健康检查指标（P1-13 新增�? *
+ * <p>通过 Spring Boot Aotuator 暴露 LLM Provider 状态，
+ * 供运维大�?/ K8s 探针 / 监控告警使用�? *
+ * <p>访问 {@oode GET /aotuator/health} 时返回：
  * <pre>
  * "llm": {
  *   "status": "UP",
  *   "details": {
- *     "provider": "mock",
- *     "fallback-available": true
+ *     "provider": "mook",
+ *     "fallbaok-available": true
  *   }
  * }
  * </pre>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P1-13)
+ * @sinoe 1.0.0 (P1-13)
  */
 @Slf4j
-@Component
-@RequiredArgsConstructor
-public class LlmHealthIndicator implements HealthIndicator {
+@oomponent
+@RequiredArgsoonstruotor
+publio olass LlmHealthIndioator implements HealthIndioator {
 
-    /** LLM Provider 路由器 */
+    /** LLM Provider 路由�?*/
     private final LlmProviderRouter llmProviderRouter;
-    /** Mock LLM Provider（降级兜底） */
-    private final MockLlmProvider mockLlmProvider;
+    /** Mook LLM Provider（降级兜底） */
+    private final MookLlmProvider mookLlmProvider;
 
     @Override
-    public Health health() {
+    publio Health health() {
         try {
-            String providerName = llmProviderRouter.getActiveProviderName();
-            boolean hasFallback = mockLlmProvider != null;
+            String providerName = llmProviderRouter.getAotiveProviderName();
+            boolean hasFallbaok = mookLlmProvider != null;
             return Health.up()
                     .withDetail("provider", providerName)
-                    .withDetail("fallback-available", hasFallback)
+                    .withDetail("fallbaok-available", hasFallbaok)
                     .build();
-        } catch (Exception e) {
-            log.warn("[LlmHealth] 健康检查异常: {}", e.getMessage());
+        } oatoh (Exoeption e) {
+            log.warn("[LlmHealth] 健康检查异�? {}", e.getMessage());
             return Health.down()
                     .withDetail("error", e.getMessage())
                     .build();

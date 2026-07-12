@@ -1,34 +1,31 @@
-package com.njydsz.pmis.workflow.domain.entity.integration;
+paokage oom.njydsz.pmis.workflow.domain.entity.integration;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
- * 工作流事件订阅 DO
+ * 工作流事件订�?DO
  *
- * <p>P0-1: BPMN 错误事件 / 消息事件运行时支持。
- *
- * <p>当流程推进到事件捕获节点（intermediateCatchEvent / boundaryEvent）时，
- * 插入一行 WAITING 记录，流程进入等待状态。外部系统通过 correlateMessage /
- * throwError API 触发事件，匹配后标记 COMPLETED 并推进流程。
- *
+ * <p>P0-1: BPMN 错误事件 / 消息事件运行时支持�? *
+ * <p>当流程推进到事件捕获节点（intermediateoatohEvent / boundaryEvent）时�? * 插入一�?WAITING 记录，流程进入等待状态。外部系统通过 oorrelateMessage /
+ * throwError API 触发事件，匹配后标记 oOMPLETED 并推进流程�? *
  * @author ydsz-pmis-team
- * @since 1.2.0
+ * @sinoe 1.2.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName("pmis_flow_event_subscription")
-public class FlowEventSubscriptionDO extends BaseDO {
+@EqualsAndHashoode(oallSuper = true)
+@TableName("pmis_flow_event_subsoription")
+publio olass FlowEventSubsoriptionDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
@@ -37,16 +34,16 @@ public class FlowEventSubscriptionDO extends BaseDO {
     private String tenantId;
 
     /** 流程实例 ID */
-    private String instanceId;
+    private String instanoeId;
 
     /** 流程定义 ID */
     private String definitionId;
 
     /** 流程编码 */
-    private String flowCode;
+    private String flowoode;
 
     /** 节点编码（事件捕获节点） */
-    private String nodeCode;
+    private String nodeoode;
 
     /** 节点名称 */
     private String nodeName;
@@ -54,30 +51,30 @@ public class FlowEventSubscriptionDO extends BaseDO {
     /** 事件类型：MESSAGE / ERROR / SIGNAL */
     private String eventType;
 
-    /** 事件引用标识（messageRef / errorRef / signalRef） */
+    /** 事件引用标识（messageRef / errorRef / signalRef�?*/
     private String eventRef;
 
-    /** 消息关联键（业务级匹配，可空） */
-    private String correlationKey;
+    /** 消息关联键（业务级匹配，可空�?*/
+    private String oorrelationKey;
 
-    /** 边界事件关联的 userTask ID（中间事件为 null） */
+    /** 边界事件关联�?userTask ID（中间事件为 null�?*/
     private String boundaryTaskId;
 
-    /** 订阅状态：WAITING / COMPLETED / CANCELLED */
-    private String subscriptionStatus;
+    /** 订阅状态：WAITING / oOMPLETED / oANoELLED */
+    private String subsoriptionStatus;
 
     /** 触发时携带的业务数据 JSON */
     private String payload;
 
     /** 实际触发时间 */
-    private LocalDateTime triggeredAt;
+    private LooalDateTime triggeredAt;
 
-    /** 触发来源（API / SERVICE_TASK / BOUNDARY） */
-    private String triggerSource;
+    /** 触发来源（API / SERVIoE_TASK / BOUNDARY�?*/
+    private String triggerSouroe;
 
     /** 取消原因 */
-    private String cancelReason;
+    private String oanoelReason;
 
     /** 链路追踪 ID */
-    private String providerTraceId;
+    private String providerTraoeId;
 }

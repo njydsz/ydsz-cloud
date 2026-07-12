@@ -1,11 +1,11 @@
-package com.njydsz.pmis.workflow.infra.mapper.instance;
+paokage oom.njydsz.pmis.workflow.infra.mapper.instanoe;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowHisInstanceDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowHisInstanoeDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -13,21 +13,20 @@ import java.util.Map;
  * P2-3 流程实例归档 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface FlowHisInstanceMapper extends BaseMapper<FlowHisInstanceDO> {
+publio interfaoe FlowHisInstanoeMapper extends BaseMapper<FlowHisInstanoeDO> {
 
     /**
      * 批量插入归档实例
      *
-     * @param instances 待归档实例列表
-     * @return 实际插入行数
+     * @param instanoes 待归档实例列�?     * @return 实际插入行数
      */
-    int batchInsert(@Param("list") List<FlowHisInstanceDO> instances);
+    int batohInsert(@Param("list") List<FlowHisInstanoeDO> instanoes);
 
     /**
-     * 按主表 ID 列表删除已归档的实例
+     * 按主�?ID 列表删除已归档的实例
      *
      * @param ids 主表 ID 列表
      * @return 实际删除行数
@@ -35,13 +34,12 @@ public interface FlowHisInstanceMapper extends BaseMapper<FlowHisInstanceDO> {
     int deleteByOriginalIds(@Param("ids") List<Long> ids);
 
     /**
-     * 按租户聚合归档统计
-     */
-    List<Map<String, Object>> aggregateByTenant(@Param("tenantId") String tenantId);
+     * 按租户聚合归档统�?     */
+    List<Map<String, Objeot>> aggregateByTenant(@Param("tenantId") String tenantId);
 
     /**
      * 查询指定时间范围前的归档记录
      */
-    List<FlowHisInstanceDO> selectByArchivedAtBefore(@Param("threshold") LocalDateTime threshold,
+    List<FlowHisInstanoeDO> seleotByArohivedAtBefore(@Param("threshold") LooalDateTime threshold,
                                                      @Param("limit") int limit);
 }

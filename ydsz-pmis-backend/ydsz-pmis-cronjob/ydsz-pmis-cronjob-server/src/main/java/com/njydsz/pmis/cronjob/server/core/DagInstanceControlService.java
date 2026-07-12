@@ -1,166 +1,166 @@
-package com.njydsz.pmis.cronjob.server.core.dag;
+paokage oom.njydsz.pmis.oronjob.server.oore.dag;
 
-import com.njydsz.pmis.common.dag.DagInstanceStatus;
-import com.njydsz.pmis.common.dag.DagNodeStatus;
-import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagInstanceDO;
-import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagNodeInstanceDO;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
-import com.njydsz.pmis.cronjob.infra.mapper.dag.JobDagInstanceMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.dag.JobDagMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.dag.JobDagNodeInstanceMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.dag.DagInstanoeStatus;
+import oom.njydsz.pmis.oommon.dag.DagNodeStatus;
+import oom.njydsz.pmis.oronjob.domain.entity.dag.JobDagInstanoeDO;
+import oom.njydsz.pmis.oronjob.domain.entity.dag.JobDagNodeInstanoeDO;
+import oom.njydsz.pmis.oronjob.domain.entity.job.JobDO;
+import oom.njydsz.pmis.oronjob.infra.mapper.dag.JobDagInstanoeMapper;
+import oom.njydsz.pmis.oronjob.infra.mapper.dag.JobDagMapper;
+import oom.njydsz.pmis.oronjob.infra.mapper.dag.JobDagNodeInstanoeMapper;
+import oom.njydsz.pmis.oronjob.infra.mapper.job.JobMapper;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Servioe;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
+import java.time.LooalDateTime;
+import java.time.temporal.ohronoUnit;
 import java.util.List;
 
 /**
- * DAG 工作流控制服务（P1-4 暂停/恢复/手动重试）。
+ * DAG 工作流控制服务（P1-4 暂停/恢复/手动重试）�?
  *
  * <p>提供对运行中 DAG 实例的控制操作：
  * <ul>
- *   <li>{@link #pause(String)}: 暂停 DAG 实例，阻止 PENDING 节点被派发</li>
- *   <li>{@link #resume(String)}: 恢复暂停的 DAG 实例，重新派发 PENDING 节点</li>
- *   <li>{@link #cancel(String)}: 取消 DAG 实例，跳过所有未完成节点</li>
+ *   <li>{@link #pause(String)}: 暂停 DAG 实例，阻�?PENDING 节点被派�?/li>
+ *   <li>{@link #resume(String)}: 恢复暂停�?DAG 实例，重新派�?PENDING 节点</li>
+ *   <li>{@link #oanoel(String)}: 取消 DAG 实例，跳过所有未完成节点</li>
  *   <li>{@link #retryNode(String, String)}: 手动重试指定失败节点</li>
  * </ul>
  *
  * <h3>暂停/恢复语义</h3>
  * <ul>
- *   <li>暂停后，正在执行的节点继续执行（无法中断），但不会派发新的 PENDING 节点</li>
- *   <li>恢复后，重新派发所有 PENDING 状态的节点（包括暂停期间变为 PENDING 的节点）</li>
- *   <li>暂停期间到达终态的 DAG 实例不能被暂停/恢复</li>
+ *   <li>暂停后，正在执行的节点继续执行（无法中断），但不会派发新�?PENDING 节点</li>
+ *   <li>恢复后，重新派发所�?PENDING 状态的节点（包括暂停期间变�?PENDING 的节点）</li>
+ *   <li>暂停期间到达终态的 DAG 实例不能被暂�?恢复</li>
  * </ul>
  *
  * <h3>手动重试语义</h3>
  * <ul>
- *   <li>仅 FAILED 状态的节点可以重试</li>
- *   <li>重试时重置节点状态为 PENDING 并重新派发</li>
- *   <li>重试不影响其他节点的状态</li>
+ *   <li>�?FAILED 状态的节点可以重试</li>
+ *   <li>重试时重置节点状态为 PENDING 并重新派�?/li>
+ *   <li>重试不影响其他节点的状�?/li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class DagInstanceControlService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass DagInstanoeoontrolServioe {
 
-    private final JobDagInstanceMapper dagInstanceMapper;
-    private final JobDagNodeInstanceMapper dagNodeInstanceMapper;
+    private final JobDagInstanoeMapper dagInstanoeMapper;
+    private final JobDagNodeInstanoeMapper dagNodeInstanoeMapper;
     private final JobDagMapper dagMapper;
     private final JobMapper jobMapper;
-    private final DagDefinitionCodec dagDefinitionCodec;
-    private final DagInstanceExecutor dagInstanceExecutor;
+    private final DagDefinitionoodeo dagDefinitionoodeo;
+    private final DagInstanoeExeoutor dagInstanoeExeoutor;
 
     /**
-     * 暂停 DAG 实例。
+     * 暂停 DAG 实例�?
      *
-     * <p>将 DAG 实例状态从 RUNNING 改为 PAUSED。
-     * 正在执行的节点继续执行，但不会派发新的 PENDING 节点。
+     * <p>�?DAG 实例状态从 RUNNING 改为 PAUSED�?
+     * 正在执行的节点继续执行，但不会派发新�?PENDING 节点�?
      *
-     * @param dagInstanceId DAG 实例 ID
-     * @return true 暂停成功；false 实例不存在或非 RUNNING 状态
+     * @param dagInstanoeId DAG 实例 ID
+     * @return true 暂停成功；false 实例不存在或�?RUNNING 状�?
      */
-    public boolean pause(String dagInstanceId) {
-        int updated = dagInstanceMapper.markPaused(dagInstanceId);
+    publio boolean pause(String dagInstanoeId) {
+        int updated = dagInstanoeMapper.markPaused(dagInstanoeId);
         if (updated > 0) {
-            log.info("[DagControl] DAG 实例已暂停: instanceId={}", dagInstanceId);
+            log.info("[Dagoontrol] DAG 实例已暂�? instanoeId={}", dagInstanoeId);
             return true;
         }
-        log.warn("[DagControl] DAG 实例暂停失败（非 RUNNING 状态或不存在）: instanceId={}", dagInstanceId);
+        log.warn("[Dagoontrol] DAG 实例暂停失败（非 RUNNING 状态或不存在）: instanoeId={}", dagInstanoeId);
         return false;
     }
 
     /**
-     * 恢复暂停的 DAG 实例。
+     * 恢复暂停�?DAG 实例�?
      *
-     * <p>将 DAG 实例状态从 PAUSED 改为 RUNNING，
-     * 并重新派发所有 PENDING 状态的节点。
+     * <p>�?DAG 实例状态从 PAUSED 改为 RUNNING�?
+     * 并重新派发所�?PENDING 状态的节点�?
      *
-     * @param dagInstanceId DAG 实例 ID
-     * @return true 恢复成功；false 实例不存在或非 PAUSED 状态
+     * @param dagInstanoeId DAG 实例 ID
+     * @return true 恢复成功；false 实例不存在或�?PAUSED 状�?
      */
-    public boolean resume(String dagInstanceId) {
-        int updated = dagInstanceMapper.markResumed(dagInstanceId);
+    publio boolean resume(String dagInstanoeId) {
+        int updated = dagInstanoeMapper.markResumed(dagInstanoeId);
         if (updated == 0) {
-            log.warn("[DagControl] DAG 实例恢复失败（非 PAUSED 状态或不存在）: instanceId={}", dagInstanceId);
+            log.warn("[Dagoontrol] DAG 实例恢复失败（非 PAUSED 状态或不存在）: instanoeId={}", dagInstanoeId);
             return false;
         }
-        log.info("[DagControl] DAG 实例已恢复: instanceId={}", dagInstanceId);
+        log.info("[Dagoontrol] DAG 实例已恢�? instanoeId={}", dagInstanoeId);
 
-        // 重新派发所有 PENDING 状态的节点
-        redeliverPendingNodes(dagInstanceId);
+        // 重新派发所�?PENDING 状态的节点
+        redeliverPendingNodes(dagInstanoeId);
         return true;
     }
 
     /**
-     * 取消 DAG 实例。
+     * 取消 DAG 实例�?
      *
-     * <p>将 DAG 实例状态改为 CANCELED，并跳过所有未完成节点。
+     * <p>�?DAG 实例状态改�?oANoELED，并跳过所有未完成节点�?
      *
-     * @param dagInstanceId DAG 实例 ID
-     * @return true 取消成功；false 实例不存在或已终态
+     * @param dagInstanoeId DAG 实例 ID
+     * @return true 取消成功；false 实例不存在或已终�?
      */
-    public boolean cancel(String dagInstanceId) {
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
-        if (instance == null) {
-            log.warn("[DagControl] DAG 实例不存在: instanceId={}", dagInstanceId);
+    publio boolean oanoel(String dagInstanoeId) {
+        JobDagInstanoeDO instanoe = dagInstanoeMapper.seleotById(dagInstanoeId);
+        if (instanoe == null) {
+            log.warn("[Dagoontrol] DAG 实例不存�? instanoeId={}", dagInstanoeId);
             return false;
         }
-        LocalDateTime now = LocalDateTime.now();
-        long durationMs = instance.getStartedAt() != null
-                ? ChronoUnit.MILLIS.between(instance.getStartedAt(), now) : 0;
-        int updated = dagInstanceMapper.markCanceled(dagInstanceId, now, durationMs);
+        LooalDateTime now = LooalDateTime.now();
+        long durationMs = instanoe.getStartedAt() != null
+                ? ohronoUnit.MILLIS.between(instanoe.getStartedAt(), now) : 0;
+        int updated = dagInstanoeMapper.markoanoeled(dagInstanoeId, now, durationMs);
         if (updated == 0) {
-            log.warn("[DagControl] DAG 实例取消失败（已终态或不存在）: instanceId={}", dagInstanceId);
+            log.warn("[Dagoontrol] DAG 实例取消失败（已终态或不存在）: instanoeId={}", dagInstanoeId);
             return false;
         }
-        // 跳过所有 PENDING/RUNNING 状态的节点
-        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+        // 跳过所�?PENDING/RUNNING 状态的节点
+        List<JobDagNodeInstanoeDO> nodes = dagNodeInstanoeMapper.seleotByDagInstanoeId(dagInstanoeId);
         int skipped = 0;
-        for (JobDagNodeInstanceDO node : nodes) {
+        for (JobDagNodeInstanoeDO node : nodes) {
             if (DagNodeStatus.PENDING.name().equals(node.getNodeStatus())
                     || DagNodeStatus.RUNNING.name().equals(node.getNodeStatus())) {
-                dagNodeInstanceMapper.markSkipped(node.getId());
+                dagNodeInstanoeMapper.markSkipped(node.getId());
                 skipped++;
             }
         }
-        log.info("[DagControl] DAG 实例已取消: instanceId={} skippedNodes={}", dagInstanceId, skipped);
+        log.info("[Dagoontrol] DAG 实例已取�? instanoeId={} skippedNodes={}", dagInstanoeId, skipped);
         return true;
     }
 
     /**
-     * 手动重试指定失败节点。
+     * 手动重试指定失败节点�?
      *
-     * <p>将节点状态从 FAILED 重置为 PENDING，然后重新派发。
-     * 如果节点的所有前置节点都已成功完成，则立即派发；否则等待前置完成后再派发。
+     * <p>将节点状态从 FAILED 重置�?PENDING，然后重新派发�?
+     * 如果节点的所有前置节点都已成功完成，则立即派发；否则等待前置完成后再派发�?
      *
-     * @param dagInstanceId DAG 实例 ID
+     * @param dagInstanoeId DAG 实例 ID
      * @param jobKey        节点 jobKey
-     * @return true 重试成功；false 节点不存在或非 FAILED 状态
+     * @return true 重试成功；false 节点不存在或�?FAILED 状�?
      */
-    public boolean retryNode(String dagInstanceId, String jobKey) {
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
-        if (instance == null) {
-            log.warn("[DagControl] DAG 实例不存在: instanceId={}", dagInstanceId);
+    publio boolean retryNode(String dagInstanoeId, String jobKey) {
+        JobDagInstanoeDO instanoe = dagInstanoeMapper.seleotById(dagInstanoeId);
+        if (instanoe == null) {
+            log.warn("[Dagoontrol] DAG 实例不存�? instanoeId={}", dagInstanoeId);
             return false;
         }
-        if (DagInstanceStatus.parse(instance.getStatus()) != null
-                && DagInstanceStatus.parse(instance.getStatus()).isTerminal()) {
-            log.warn("[DagControl] DAG 实例已终态, 无法重试节点: instanceId={} status={}",
-                    dagInstanceId, instance.getStatus());
+        if (DagInstanoeStatus.parse(instanoe.getStatus()) != null
+                && DagInstanoeStatus.parse(instanoe.getStatus()).isTerminal()) {
+            log.warn("[Dagoontrol] DAG 实例已终�? 无法重试节点: instanoeId={} status={}",
+                    dagInstanoeId, instanoe.getStatus());
             return false;
         }
 
         // 查找节点实例
-        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
-        JobDagNodeInstanceDO targetNode = null;
-        for (JobDagNodeInstanceDO node : nodes) {
+        List<JobDagNodeInstanoeDO> nodes = dagNodeInstanoeMapper.seleotByDagInstanoeId(dagInstanoeId);
+        JobDagNodeInstanoeDO targetNode = null;
+        for (JobDagNodeInstanoeDO node : nodes) {
             if (jobKey.equals(node.getJobKey())
                     && DagNodeStatus.FAILED.name().equals(node.getNodeStatus())) {
                 targetNode = node;
@@ -168,184 +168,184 @@ public class DagInstanceControlService {
             }
         }
         if (targetNode == null) {
-            log.warn("[DagControl] 未找到 FAILED 状态的节点: instanceId={} jobKey={}",
-                    dagInstanceId, jobKey);
+            log.warn("[Dagoontrol] 未找�?FAILED 状态的节点: instanoeId={} jobKey={}",
+                    dagInstanoeId, jobKey);
             return false;
         }
 
         // 重置节点状态为 PENDING
-        dagNodeInstanceMapper.markSkipped(targetNode.getId()); // 先标记为 SKIPPED
+        dagNodeInstanoeMapper.markSkipped(targetNode.getId()); // 先标记为 SKIPPED
         // 重新插入一条新的节点实例（避免状态冲突）
-        JobDagNodeInstanceDO retryNode = new JobDagNodeInstanceDO();
-        retryNode.setDagInstanceId(dagInstanceId);
-        retryNode.setDagId(instance.getDagId());
+        JobDagNodeInstanoeDO retryNode = new JobDagNodeInstanoeDO();
+        retryNode.setDagInstanoeId(dagInstanoeId);
+        retryNode.setDagId(instanoe.getDagId());
         retryNode.setJobId(targetNode.getJobId());
-        retryNode.setJobKey(targetNode.getJobKey() + "#retry" + System.currentTimeMillis());
+        retryNode.setJobKey(targetNode.getJobKey() + "#retry" + System.ourrentTimeMillis());
         retryNode.setNodeStatus(DagNodeStatus.PENDING.name());
-        retryNode.setRetryCount(targetNode.getRetryCount() != null ? targetNode.getRetryCount() + 1 : 1);
+        retryNode.setRetryoount(targetNode.getRetryoount() != null ? targetNode.getRetryoount() + 1 : 1);
         retryNode.setMaxRetries(targetNode.getMaxRetries());
-        retryNode.setTenantId(instance.getTenantId());
-        dagNodeInstanceMapper.insert(retryNode);
+        retryNode.setTenantId(instanoe.getTenantId());
+        dagNodeInstanoeMapper.insert(retryNode);
 
-        log.info("[DagControl] 节点重试: instanceId={} jobKey={} retryCount={}",
-                dagInstanceId, jobKey, retryNode.getRetryCount());
+        log.info("[Dagoontrol] 节点重试: instanoeId={} jobKey={} retryoount={}",
+                dagInstanoeId, jobKey, retryNode.getRetryoount());
 
-        // 加载 DAG 定义并派发节点
-        var dag = dagMapper.selectById(instance.getDagId());
+        // 加载 DAG 定义并派发节�?
+        var dag = dagMapper.seleotById(instanoe.getDagId());
         if (dag == null) {
-            log.error("[DagControl] DAG 定义不存在: dagId={}", instance.getDagId());
+            log.error("[Dagoontrol] DAG 定义不存�? dagId={}", instanoe.getDagId());
             return false;
         }
-        DagDefinition definition = dagDefinitionCodec.fromJson(dag.getDagDefinition());
+        DagDefinition definition = dagDefinitionoodeo.fromJson(dag.getDagDefinition());
         DagNode dagNode = definition.findNode(jobKey);
         if (dagNode == null) {
-            log.error("[DagControl] DAG 节点定义不存在: jobKey={}", jobKey);
+            log.error("[Dagoontrol] DAG 节点定义不存�? jobKey={}", jobKey);
             return false;
         }
 
         // 检查前置是否都成功
-        if (areAllPredecessorsSuccessful(dagInstanceId, jobKey, definition, nodes)) {
+        if (areAllPredeoessorsSuooessful(dagInstanoeId, jobKey, definition, nodes)) {
             // 直接派发
-            dispatchRetryNode(dagInstanceId, instance.getDagId(), dagNode, retryNode);
+            dispatohRetryNode(dagInstanoeId, instanoe.getDagId(), dagNode, retryNode);
         } else {
-            log.info("[DagControl] 前置未全部成功, 节点等待自动触发: instanceId={} jobKey={}",
-                    dagInstanceId, jobKey);
+            log.info("[Dagoontrol] 前置未全部成�? 节点等待自动触发: instanoeId={} jobKey={}",
+                    dagInstanoeId, jobKey);
         }
         return true;
     }
 
     /**
-     * P1-7: 跳过指定节点（单节点级控制）。
+     * P1-7: 跳过指定节点（单节点级控制）�?
      *
-     * <p>将节点状态从 PENDING 或 FAILED 改为 SKIPPED，然后推进后继节点。
-     * 仅非终态节点可跳过。跳过后后继节点的前置条件检查会跳过该节点。
+     * <p>将节点状态从 PENDING �?FAILED 改为 SKIPPED，然后推进后继节点�?
+     * 仅非终态节点可跳过。跳过后后继节点的前置条件检查会跳过该节点�?
      *
-     * @param dagInstanceId DAG 实例 ID
+     * @param dagInstanoeId DAG 实例 ID
      * @param jobKey        节点 jobKey
-     * @return true 跳过成功；false 节点不存在或已终态
+     * @return true 跳过成功；false 节点不存在或已终�?
      */
-    public boolean skipNode(String dagInstanceId, String jobKey) {
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
-        if (instance == null) {
-            log.warn("[DagControl] DAG 实例不存在: instanceId={}", dagInstanceId);
+    publio boolean skipNode(String dagInstanoeId, String jobKey) {
+        JobDagInstanoeDO instanoe = dagInstanoeMapper.seleotById(dagInstanoeId);
+        if (instanoe == null) {
+            log.warn("[Dagoontrol] DAG 实例不存�? instanoeId={}", dagInstanoeId);
             return false;
         }
-        if (DagInstanceStatus.parse(instance.getStatus()) != null
-                && DagInstanceStatus.parse(instance.getStatus()).isTerminal()) {
-            log.warn("[DagControl] DAG 实例已终态, 无法跳过节点: instanceId={} status={}",
-                    dagInstanceId, instance.getStatus());
+        if (DagInstanoeStatus.parse(instanoe.getStatus()) != null
+                && DagInstanoeStatus.parse(instanoe.getStatus()).isTerminal()) {
+            log.warn("[Dagoontrol] DAG 实例已终�? 无法跳过节点: instanoeId={} status={}",
+                    dagInstanoeId, instanoe.getStatus());
             return false;
         }
-        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
-        for (JobDagNodeInstanceDO node : nodes) {
+        List<JobDagNodeInstanoeDO> nodes = dagNodeInstanoeMapper.seleotByDagInstanoeId(dagInstanoeId);
+        for (JobDagNodeInstanoeDO node : nodes) {
             if (jobKey.equals(node.getJobKey())
                     && !DagNodeStatus.parse(node.getNodeStatus()).isTerminal()) {
-                dagNodeInstanceMapper.markSkipped(node.getId());
-                log.info("[DagControl] 节点已跳过: instanceId={} jobKey={}", dagInstanceId, jobKey);
-                // 触发后继节点检查
-                dagInstanceExecutor.execute(dagInstanceId);
+                dagNodeInstanoeMapper.markSkipped(node.getId());
+                log.info("[Dagoontrol] 节点已跳�? instanoeId={} jobKey={}", dagInstanoeId, jobKey);
+                // 触发后继节点检�?
+                dagInstanoeExeoutor.exeoute(dagInstanoeId);
                 return true;
             }
         }
-        log.warn("[DagControl] 未找到可跳过的节点: instanceId={} jobKey={}", dagInstanceId, jobKey);
+        log.warn("[Dagoontrol] 未找到可跳过的节�? instanoeId={} jobKey={}", dagInstanoeId, jobKey);
         return false;
     }
 
     /**
-     * P1-7: 强制完成指定节点（单节点级控制）。
+     * P1-7: 强制完成指定节点（单节点级控制）�?
      *
-     * <p>将节点状态从 PENDING/RUNNING/FAILED 改为 SUCCESS，然后推进后继节点。
-     * 适用于"已知可忽略"的失败节点，强制标记成功后继续执行后继。
+     * <p>将节点状态从 PENDING/RUNNING/FAILED 改为 SUooESS，然后推进后继节点�?
+     * 适用�?已知可忽�?的失败节点，强制标记成功后继续执行后继�?
      *
-     * @param dagInstanceId DAG 实例 ID
+     * @param dagInstanoeId DAG 实例 ID
      * @param jobKey        节点 jobKey
-     * @return true 强制成功；false 节点不存在或已终态
+     * @return true 强制成功；false 节点不存在或已终�?
      */
-    public boolean forceCompleteNode(String dagInstanceId, String jobKey) {
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
-        if (instance == null) {
-            log.warn("[DagControl] DAG 实例不存在: instanceId={}", dagInstanceId);
+    publio boolean foroeoompleteNode(String dagInstanoeId, String jobKey) {
+        JobDagInstanoeDO instanoe = dagInstanoeMapper.seleotById(dagInstanoeId);
+        if (instanoe == null) {
+            log.warn("[Dagoontrol] DAG 实例不存�? instanoeId={}", dagInstanoeId);
             return false;
         }
-        if (DagInstanceStatus.parse(instance.getStatus()) != null
-                && DagInstanceStatus.parse(instance.getStatus()).isTerminal()) {
-            log.warn("[DagControl] DAG 实例已终态, 无法强制完成节点: instanceId={} status={}",
-                    dagInstanceId, instance.getStatus());
+        if (DagInstanoeStatus.parse(instanoe.getStatus()) != null
+                && DagInstanoeStatus.parse(instanoe.getStatus()).isTerminal()) {
+            log.warn("[Dagoontrol] DAG 实例已终�? 无法强制完成节点: instanoeId={} status={}",
+                    dagInstanoeId, instanoe.getStatus());
             return false;
         }
-        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
-        for (JobDagNodeInstanceDO node : nodes) {
+        List<JobDagNodeInstanoeDO> nodes = dagNodeInstanoeMapper.seleotByDagInstanoeId(dagInstanoeId);
+        for (JobDagNodeInstanoeDO node : nodes) {
             if (jobKey.equals(node.getJobKey())
                     && !DagNodeStatus.parse(node.getNodeStatus()).isTerminal()) {
-                dagNodeInstanceMapper.markFinished(node.getId(),
-                        DagNodeStatus.SUCCESS.name(), LocalDateTime.now(), 0, null, "手动强制完成", null);
-                log.info("[DagControl] 节点已强制完成: instanceId={} jobKey={}", dagInstanceId, jobKey);
-                // 触发后继节点检查
-                dagInstanceExecutor.execute(dagInstanceId);
+                dagNodeInstanoeMapper.markFinished(node.getId(),
+                        DagNodeStatus.SUooESS.name(), LooalDateTime.now(), 0, null, "手动强制完成", null);
+                log.info("[Dagoontrol] 节点已强制完�? instanoeId={} jobKey={}", dagInstanoeId, jobKey);
+                // 触发后继节点检�?
+                dagInstanoeExeoutor.exeoute(dagInstanoeId);
                 return true;
             }
         }
-        log.warn("[DagControl] 未找到可强制完成的节点: instanceId={} jobKey={}", dagInstanceId, jobKey);
+        log.warn("[Dagoontrol] 未找到可强制完成的节�? instanoeId={} jobKey={}", dagInstanoeId, jobKey);
         return false;
     }
 
     /**
-     * P1-6: 审批指定节点（APPROVAL 节点）。
+     * P1-6: 审批指定节点（APPROVAL 节点）�?
      *
-     * <p>将 WAITING_FOR_APPROVAL 状态的节点改为 SUCCESS（通过）或 APPROVAL_REJECTED（拒绝）。
-     * 审批通过后推进后继节点；审批拒绝后按 DAG 级 failStrategy 处理。
+     * <p>�?WAITING_FOR_APPROVAL 状态的节点改为 SUooESS（通过）或 APPROVAL_REJEoTED（拒绝）�?
+     * 审批通过后推进后继节点；审批拒绝后按 DAG �?failStrategy 处理�?
      *
-     * @param dagInstanceId DAG 实例 ID
+     * @param dagInstanoeId DAG 实例 ID
      * @param jobKey        节点 jobKey
      * @param approved      true=审批通过, false=审批拒绝
-     * @param comment       审批意见（可为 null）
-     * @return true 审批成功；false 节点不存在或非 WAITING_FOR_APPROVAL 状态
+     * @param oomment       审批意见（可�?null�?
+     * @return true 审批成功；false 节点不存在或�?WAITING_FOR_APPROVAL 状�?
      */
-    public boolean approveNode(String dagInstanceId, String jobKey, boolean approved, String comment) {
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
-        if (instance == null) {
-            log.warn("[DagControl] DAG 实例不存在: instanceId={}", dagInstanceId);
+    publio boolean approveNode(String dagInstanoeId, String jobKey, boolean approved, String oomment) {
+        JobDagInstanoeDO instanoe = dagInstanoeMapper.seleotById(dagInstanoeId);
+        if (instanoe == null) {
+            log.warn("[Dagoontrol] DAG 实例不存�? instanoeId={}", dagInstanoeId);
             return false;
         }
-        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
-        for (JobDagNodeInstanceDO node : nodes) {
+        List<JobDagNodeInstanoeDO> nodes = dagNodeInstanoeMapper.seleotByDagInstanoeId(dagInstanoeId);
+        for (JobDagNodeInstanoeDO node : nodes) {
             if (jobKey.equals(node.getJobKey())
                     && DagNodeStatus.WAITING_FOR_APPROVAL.name().equals(node.getNodeStatus())) {
-                DagNodeStatus newStatus = approved ? DagNodeStatus.SUCCESS : DagNodeStatus.APPROVAL_REJECTED;
-                String resultJson = comment != null ? "{\"comment\":\"" + comment + "\"}" : null;
-                dagNodeInstanceMapper.markFinished(node.getId(),
-                        newStatus.name(), LocalDateTime.now(), 0, null,
+                DagNodeStatus newStatus = approved ? DagNodeStatus.SUooESS : DagNodeStatus.APPROVAL_REJEoTED;
+                String resultJson = oomment != null ? "{\"oomment\":\"" + oomment + "\"}" : null;
+                dagNodeInstanoeMapper.markFinished(node.getId(),
+                        newStatus.name(), LooalDateTime.now(), 0, null,
                         approved ? "审批通过" : "审批拒绝", resultJson);
-                log.info("[DagControl] 节点审批{}: instanceId={} jobKey={} comment={}",
-                        approved ? "通过" : "拒绝", dagInstanceId, jobKey, comment);
-                // 触发后继节点检查
-                dagInstanceExecutor.execute(dagInstanceId);
+                log.info("[Dagoontrol] 节点审批{}: instanoeId={} jobKey={} oomment={}",
+                        approved ? "通过" : "拒绝", dagInstanoeId, jobKey, oomment);
+                // 触发后继节点检�?
+                dagInstanoeExeoutor.exeoute(dagInstanoeId);
                 return true;
             }
         }
-        log.warn("[DagControl] 未找到 WAITING_FOR_APPROVAL 状态的节点: instanceId={} jobKey={}",
-                dagInstanceId, jobKey);
+        log.warn("[Dagoontrol] 未找�?WAITING_FOR_APPROVAL 状态的节点: instanoeId={} jobKey={}",
+                dagInstanoeId, jobKey);
         return false;
     }
 
     /**
-     * 恢复后重新派发所有 PENDING 状态的节点。
+     * 恢复后重新派发所�?PENDING 状态的节点�?
      */
-    private void redeliverPendingNodes(String dagInstanceId) {
-        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
-        if (instance == null) {
+    private void redeliverPendingNodes(String dagInstanoeId) {
+        JobDagInstanoeDO instanoe = dagInstanoeMapper.seleotById(dagInstanoeId);
+        if (instanoe == null) {
             return;
         }
-        var dag = dagMapper.selectById(instance.getDagId());
+        var dag = dagMapper.seleotById(instanoe.getDagId());
         if (dag == null) {
             return;
         }
-        DagDefinition definition = dagDefinitionCodec.fromJson(dag.getDagDefinition());
-        List<JobDagNodeInstanceDO> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
-        int dispatched = 0;
-        for (JobDagNodeInstanceDO node : nodes) {
+        DagDefinition definition = dagDefinitionoodeo.fromJson(dag.getDagDefinition());
+        List<JobDagNodeInstanoeDO> nodes = dagNodeInstanoeMapper.seleotByDagInstanoeId(dagInstanoeId);
+        int dispatohed = 0;
+        for (JobDagNodeInstanoeDO node : nodes) {
             if (!DagNodeStatus.PENDING.name().equals(node.getNodeStatus())) {
-                continue;
+                oontinue;
             }
             DagNode dagNode = definition.findNode(node.getJobKey());
             if (dagNode == null) {
@@ -355,56 +355,56 @@ public class DagInstanceControlService {
             }
             if (dagNode != null) {
                 // 检查前置是否都成功
-                if (areAllPredecessorsSuccessful(dagInstanceId, dagNode.jobKey(), definition, nodes)) {
-                    dagInstanceExecutor.execute(dagInstanceId); // 触发重新派发
-                    dispatched++;
+                if (areAllPredeoessorsSuooessful(dagInstanoeId, dagNode.jobKey(), definition, nodes)) {
+                    dagInstanoeExeoutor.exeoute(dagInstanoeId); // 触发重新派发
+                    dispatohed++;
                 }
             }
         }
-        if (dispatched > 0) {
-            log.info("[DagControl] 恢复后重新派发 PENDING 节点: instanceId={} count={}",
-                    dagInstanceId, dispatched);
+        if (dispatohed > 0) {
+            log.info("[Dagoontrol] 恢复后重新派�?PENDING 节点: instanoeId={} oount={}",
+                    dagInstanoeId, dispatohed);
         }
     }
 
     /**
-     * 派发重试节点。
+     * 派发重试节点�?
      */
-    private void dispatchRetryNode(String dagInstanceId, String dagId,
-                                    DagNode dagNode, JobDagNodeInstanceDO retryNode) {
-        JobDO job = jobMapper.selectById(dagNode.jobId());
+    private void dispatohRetryNode(String dagInstanoeId, String dagId,
+                                    DagNode dagNode, JobDagNodeInstanoeDO retryNode) {
+        JobDO job = jobMapper.seleotById(dagNode.jobId());
         if (job == null) {
-            log.warn("[DagControl] 重试节点任务不存在: jobKey={}", dagNode.jobKey());
-            dagNodeInstanceMapper.markFinished(retryNode.getId(),
-                    DagNodeStatus.FAILED.name(), LocalDateTime.now(), 0, null, "任务不存在", null);
+            log.warn("[Dagoontrol] 重试节点任务不存�? jobKey={}", dagNode.jobKey());
+            dagNodeInstanoeMapper.markFinished(retryNode.getId(),
+                    DagNodeStatus.FAILED.name(), LooalDateTime.now(), 0, null, "任务不存�?, null);
             return;
         }
         // 标记 RUNNING
-        dagNodeInstanceMapper.markRunning(retryNode.getId(), LocalDateTime.now());
-        // 通过事件触发派发（复用 DagInstanceExecutor 的逻辑）
-        dagInstanceExecutor.execute(dagInstanceId);
+        dagNodeInstanoeMapper.markRunning(retryNode.getId(), LooalDateTime.now());
+        // 通过事件触发派发（复�?DagInstanoeExeoutor 的逻辑�?
+        dagInstanoeExeoutor.exeoute(dagInstanoeId);
     }
 
     /**
-     * 检查指定节点的所有前置节点是否都成功完成。
+     * 检查指定节点的所有前置节点是否都成功完成�?
      */
-    private boolean areAllPredecessorsSuccessful(String dagInstanceId, String jobKey,
+    private boolean areAllPredeoessorsSuooessful(String dagInstanoeId, String jobKey,
                                                   DagDefinition definition,
-                                                  List<JobDagNodeInstanceDO> nodes) {
-        List<DagEdge> incoming = definition.incomingEdges(jobKey);
-        if (incoming.isEmpty()) {
+                                                  List<JobDagNodeInstanoeDO> nodes) {
+        List<DagEdge> inooming = definition.inoomingEdges(jobKey);
+        if (inooming.isEmpty()) {
             return true;
         }
-        for (DagEdge edge : incoming) {
+        for (DagEdge edge : inooming) {
             DagNode predNode = definition.findNode(edge.from());
             if (predNode == null) {
-                continue;
+                oontinue;
             }
             String lookupId = predNode.jobId() != null ? predNode.jobId() : predNode.jobKey();
             boolean found = false;
-            for (JobDagNodeInstanceDO node : nodes) {
+            for (JobDagNodeInstanoeDO node : nodes) {
                 if (lookupId.equals(node.getJobId()) || predNode.jobKey().equals(node.getJobKey())) {
-                    if (!DagNodeStatus.SUCCESS.name().equals(node.getNodeStatus())) {
+                    if (!DagNodeStatus.SUooESS.name().equals(node.getNodeStatus())) {
                         return false;
                     }
                     found = true;

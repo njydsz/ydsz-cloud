@@ -1,56 +1,56 @@
-package com.njydsz.pmis.message.domain.entity.canary;
+paokage oom.njydsz.pmis.message.domain.entity.oanary;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
 
 /**
- * 灰度桶表: 按 canary_key(template_code/biz_type)做百分比灰度发布
+ * 灰度桶表: �?oanary_key(template_oode/biz_type)做百分比灰度发布
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName("pmis_msg_canary")
-public class MsgCanaryDO extends BaseDO {
+@EqualsAndHashoode(oallSuper = true)
+@TableName("pmis_msg_oanary")
+publio olass MsgoanaryDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    /** 灰度键(如 template_code 或 biz_type) */
-    private String canaryKey;
+    /** 灰度�?�?template_oode �?biz_type) */
+    private String oanaryKey;
 
     /** 桶总数(默认 100) */
-    private Integer bucketTotal;
+    private Integer buoketTotal;
 
-    /** 命中的桶列表 JSON(如 [0,1,2,...,4] 表示 0-4 号桶命中) */
-    private String bucketSelected;
+    /** 命中的桶列表 JSON(�?[0,1,2,...,4] 表示 0-4 号桶命中) */
+    private String buoketSeleoted;
 
     /** 灰度比例(0-100) */
-    private Integer percentage;
+    private Integer peroentage;
 
-    /** 灰度命中后切换的实验模板编码(可空,空则不切换) */
-    private String experimentTemplateCode;
+    /** 灰度命中后切换的实验模板编码(可空,空则不切�? */
+    private String experimentTemplateoode;
 
-    /** 灰度命中后切换的实验通道(可空,空则不切换) */
-    private String experimentChannel;
+    /** 灰度命中后切换的实验通道(可空,空则不切�? */
+    private String experimentohannel;
 
-    /** 状态: ENABLED 启用 / DISABLED 禁用 */
+    /** 状�? ENABLED 启用 / DISABLED 禁用 */
     private String status;
 
     /** 描述说明 */
-    private String description;
+    private String desoription;
 
-    /** 租户 ID(单租户部署默认 1) */
+    /** 租户 ID(单租户部署默�?1) */
     private String tenantId;
 }

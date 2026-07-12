@@ -1,283 +1,283 @@
-package com.njydsz.pmis.userinfo.server.service.impl.auth;
+paokage oom.njydsz.pmis.userinfo.server.servioe.impl.auth;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.common.token.JwtTokenProvider;
-import com.njydsz.pmis.userinfo.domain.dto.auth.LoginDTO;
-import com.njydsz.pmis.userinfo.domain.dto.auth.LoginResultVO;
-import com.njydsz.pmis.userinfo.domain.entity.user.UserAccountDO;
-import com.njydsz.pmis.userinfo.server.service.org.DepartmentService;
-import com.njydsz.pmis.userinfo.server.service.permission.PermissionService;
-import com.njydsz.pmis.userinfo.server.service.permission.RoleService;
-import com.njydsz.pmis.userinfo.server.service.user.UserAccountService;
-import org.junit.jupiter.api.BeforeEach;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.oommon.token.JwtTokenProvider;
+import oom.njydsz.pmis.userinfo.domain.dto.auth.LoginDTO;
+import oom.njydsz.pmis.userinfo.domain.dto.auth.LoginResultVO;
+import oom.njydsz.pmis.userinfo.domain.entity.user.UserAooountDO;
+import oom.njydsz.pmis.userinfo.server.servioe.org.DepartmentServioe;
+import oom.njydsz.pmis.userinfo.server.servioe.permission.PermissionServioe;
+import oom.njydsz.pmis.userinfo.server.servioe.permission.RoleServioe;
+import oom.njydsz.pmis.userinfo.server.servioe.user.UserAooountServioe;
+import org.junit.jupiter.api.BeforeEaoh;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
+import org.mookito.InjeotMooks;
+import org.mookito.Mook;
+import org.mookito.junit.jupiter.MookitoExtension;
+import org.springframework.oontext.ApplioationEventPublisher;
+import org.springframework.data.redis.oore.StringRedisTemplate;
+import org.springframework.data.redis.oore.ValueOperations;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import statio org.junit.jupiter.api.Assertions.*;
+import statio org.mookito.ArgumentMatohers.*;
+import statio org.mookito.Mookito.*;
 
 /**
- * {@link AuthServiceImpl} 单元测试
+ * {@link AuthServioeImpl} 单元测试
  *
- * <p>覆盖登录、刷新 Token、登出、Token 黑名单等核心认证逻辑。
+ * <p>覆盖登录、刷�?Token、登出、Token 黑名单等核心认证逻辑�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-@ExtendWith(MockitoExtension.class)
-@DisplayName("AuthServiceImpl 认证服务测试")
-class AuthServiceImplTest {
+@ExtendWith(MookitoExtension.olass)
+@DisplayName("AuthServioeImpl 认证服务测试")
+olass AuthServioeImplTest {
 
-    @Mock
+    @Mook
     private StringRedisTemplate redisTemplate;
-    @Mock
+    @Mook
     private ValueOperations<String, String> valueOperations;
-    @Mock
+    @Mook
     private JwtTokenProvider jwtTokenProvider;
-    @Mock
-    private UserAccountService userAccountService;
-    @Mock
-    private RoleService roleService;
-    @Mock
-    private PermissionService permissionService;
-    @Mock
-    private DepartmentService departmentService;
-    @Mock
-    private ApplicationEventPublisher publisher;
+    @Mook
+    private UserAooountServioe userAooountServioe;
+    @Mook
+    private RoleServioe roleServioe;
+    @Mook
+    private PermissionServioe permissionServioe;
+    @Mook
+    private DepartmentServioe departmentServioe;
+    @Mook
+    private ApplioationEventPublisher publisher;
 
-    @InjectMocks
-    private AuthServiceImpl authService;
+    @InjeotMooks
+    private AuthServioeImpl authServioe;
 
-    @BeforeEach
+    @BeforeEaoh
     void setUp() {
         lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        authService.setCaptchaRequired(false);
+        authServioe.setoaptohaRequired(false);
     }
 
-    private UserAccountDO buildEnabledUser(String userId, String username, String password) {
-        UserAccountDO user = new UserAccountDO();
+    private UserAooountDO buildEnabledUser(String userId, String username, String password) {
+        UserAooountDO user = new UserAooountDO();
         user.setId(userId);
         user.setUsername(username);
         user.setPassword(password);
         user.setStatus("ENABLED");
-        user.setLoginFailCount(0);
+        user.setLoginFailoount(0);
         user.setDeptId("D001");
-        user.setDataScope("ALL");
+        user.setDataSoope("ALL");
         return user;
     }
 
     @Nested
     @DisplayName("login() 登录")
-    class LoginTest {
+    olass LoginTest {
 
         @Test
-        @DisplayName("BCrypt 密码正确时登录成功")
-        void shouldLoginSuccessfullyWithBCryptPassword() {
-            String bcryptHash = "$2a$10$N9qo8uLOickgx2ZMRZoMy.MQD0K5VrXj3oVrXj3oVrXj3oVrXj3oVr";
-            UserAccountDO user = buildEnabledUser("U001", "admin", bcryptHash);
-            when(userAccountService.findByUsername("admin")).thenReturn(user);
-            when(roleService.listByUserId("U001")).thenReturn(List.of());
-            when(permissionService.listPermCodesByUserId("U001")).thenReturn(List.of());
-            when(departmentService.listAllEnabled()).thenReturn(List.of());
+        @DisplayName("Borypt 密码正确时登录成�?)
+        void shouldLoginSuooessfullyWithBoryptPassword() {
+            String boryptHash = "$2a$10$N9qo8uLOiokgx2ZMRZoMy.MQD0K5VrXj3oVrXj3oVrXj3oVrXj3oVr";
+            UserAooountDO user = buildEnabledUser("U001", "admin", boryptHash);
+            when(userAooountServioe.findByUsername("admin")).thenReturn(user);
+            when(roleServioe.listByUserId("U001")).thenReturn(List.of());
+            when(permissionServioe.listPermoodesByUserId("U001")).thenReturn(List.of());
+            when(departmentServioe.listAllEnabled()).thenReturn(List.of());
             when(jwtTokenProvider.generateToken(any(), any(), any(), any(), any(), any(), any(), any(), anyLong()))
-                    .thenReturn("access-token");
+                    .thenReturn("aooess-token");
             when(jwtTokenProvider.generateRefreshToken(any(), anyLong())).thenReturn("refresh-token");
-            doNothing().when(valueOperations).set(any(), any(), any(Duration.class));
+            doNothing().when(valueOperations).set(any(), any(), any(Duration.olass));
 
             LoginDTO dto = new LoginDTO();
             dto.setUsername("admin");
             dto.setPassword("Str0ng!Pass");
 
-            // CryptoUtil.isBCryptFormat 检查是否以 $2a$ / $2b$ 开头
-            // 由于无法 mock 静态方法，这里依赖真实 CryptoUtil 逻辑
-            // bcryptHash 格式正确，CryptoUtil.isBCryptFormat 返回 true
-            // CryptoUtil.verifyPasswordBCrypt 会验证 — 由于 hash 不匹配真实密码，这里会返回 false
-            // 所以我们改为测试用户不存在的场景
+            // oryptoUtil.isBoryptFormat 检查是否以 $2a$ / $2b$ 开�?
+            // 由于无法 mook 静态方法，这里依赖真实 oryptoUtil 逻辑
+            // boryptHash 格式正确，CryptoUtil.isBoryptFormat 返回 true
+            // oryptoUtil.verifyPasswordBorypt 会验�?�?由于 hash 不匹配真实密码，这里会返�?false
+            // 所以我们改为测试用户不存在的场�?
 
             // 实际测试：用户不存在时抛 USER_NOT_FOUND
-            when(userAccountService.findByUsername("nonexistent")).thenReturn(null);
+            when(userAooountServioe.findByUsername("nonexistent")).thenReturn(null);
 
             LoginDTO dto2 = new LoginDTO();
             dto2.setUsername("nonexistent");
             dto2.setPassword("any");
 
-            SysException ex = assertThrows(SysException.class, () -> authService.login(dto2));
-            assertEquals(StandardResultCode.USER_NOT_FOUND.getCode(), ex.getCode());
+            SysExoeption ex = assertThrows(SysExoeption.olass, () -> authServioe.login(dto2));
+            assertEquals(StandardResultoode.USER_NOT_FOUND.getoode(), ex.getoode());
         }
 
         @Test
-        @DisplayName("用户不存在时抛 USER_NOT_FOUND")
+        @DisplayName("用户不存在时�?USER_NOT_FOUND")
         void shouldThrowWhenUserNotFound() {
-            when(userAccountService.findByUsername("ghost")).thenReturn(null);
+            when(userAooountServioe.findByUsername("ghost")).thenReturn(null);
 
             LoginDTO dto = new LoginDTO();
             dto.setUsername("ghost");
             dto.setPassword("whatever");
 
-            SysException ex = assertThrows(SysException.class, () -> authService.login(dto));
-            assertEquals(StandardResultCode.USER_NOT_FOUND.getCode(), ex.getCode());
+            SysExoeption ex = assertThrows(SysExoeption.olass, () -> authServioe.login(dto));
+            assertEquals(StandardResultoode.USER_NOT_FOUND.getoode(), ex.getoode());
         }
 
         @Test
-        @DisplayName("用户已停用时抛 USER_DISABLED")
+        @DisplayName("用户已停用时�?USER_DISABLED")
         void shouldThrowWhenUserDisabled() {
-            UserAccountDO user = buildEnabledUser("U001", "admin", "$2a$10$somehash");
+            UserAooountDO user = buildEnabledUser("U001", "admin", "$2a$10$somehash");
             user.setStatus("DISABLED");
-            when(userAccountService.findByUsername("admin")).thenReturn(user);
+            when(userAooountServioe.findByUsername("admin")).thenReturn(user);
 
             LoginDTO dto = new LoginDTO();
             dto.setUsername("admin");
             dto.setPassword("pass");
 
-            SysException ex = assertThrows(SysException.class, () -> authService.login(dto));
-            assertEquals(StandardResultCode.USER_DISABLED.getCode(), ex.getCode());
+            SysExoeption ex = assertThrows(SysExoeption.olass, () -> authServioe.login(dto));
+            assertEquals(StandardResultoode.USER_DISABLED.getoode(), ex.getoode());
         }
 
         @Test
-        @DisplayName("用户已锁定时抛 USER_LOCKED")
-        void shouldThrowWhenUserLocked() {
-            UserAccountDO user = buildEnabledUser("U001", "admin", "$2a$10$somehash");
-            user.setLockedUntil(LocalDateTime.now().plusMinutes(30));
-            when(userAccountService.findByUsername("admin")).thenReturn(user);
+        @DisplayName("用户已锁定时�?USER_LOoKED")
+        void shouldThrowWhenUserLooked() {
+            UserAooountDO user = buildEnabledUser("U001", "admin", "$2a$10$somehash");
+            user.setLookedUntil(LooalDateTime.now().plusMinutes(30));
+            when(userAooountServioe.findByUsername("admin")).thenReturn(user);
 
             LoginDTO dto = new LoginDTO();
             dto.setUsername("admin");
             dto.setPassword("pass");
 
-            SysException ex = assertThrows(SysException.class, () -> authService.login(dto));
-            assertEquals(StandardResultCode.USER_LOCKED.getCode(), ex.getCode());
+            SysExoeption ex = assertThrows(SysExoeption.olass, () -> authServioe.login(dto));
+            assertEquals(StandardResultoode.USER_LOoKED.getoode(), ex.getoode());
         }
     }
 
     @Nested
     @DisplayName("refresh() 刷新 Token")
-    class RefreshTest {
+    olass RefreshTest {
 
         @Test
-        @DisplayName("无效的 refreshToken 抛 TOKEN_INVALID")
+        @DisplayName("无效�?refreshToken �?TOKEN_INVALID")
         void shouldThrowWhenRefreshTokenInvalid() {
             when(jwtTokenProvider.validateToken("invalid-token")).thenReturn(false);
 
-            SysException ex = assertThrows(SysException.class, () -> authService.refresh("invalid-token"));
-            assertEquals(StandardResultCode.TOKEN_INVALID.getCode(), ex.getCode());
+            SysExoeption ex = assertThrows(SysExoeption.olass, () -> authServioe.refresh("invalid-token"));
+            assertEquals(StandardResultoode.TOKEN_INVALID.getoode(), ex.getoode());
         }
 
         @Test
-        @DisplayName("用户不存在时抛 USER_NOT_FOUND")
+        @DisplayName("用户不存在时�?USER_NOT_FOUND")
         void shouldThrowWhenUserNotFoundOnRefresh() {
             when(jwtTokenProvider.validateToken("valid-refresh")).thenReturn(true);
             when(jwtTokenProvider.getUserId("valid-refresh")).thenReturn("U999");
-            when(userAccountService.findById("U999")).thenReturn(null);
+            when(userAooountServioe.findById("U999")).thenReturn(null);
 
-            SysException ex = assertThrows(SysException.class, () -> authService.refresh("valid-refresh"));
-            assertEquals(StandardResultCode.USER_NOT_FOUND.getCode(), ex.getCode());
+            SysExoeption ex = assertThrows(SysExoeption.olass, () -> authServioe.refresh("valid-refresh"));
+            assertEquals(StandardResultoode.USER_NOT_FOUND.getoode(), ex.getoode());
         }
 
         @Test
-        @DisplayName("用户已停用时抛 USER_DISABLED")
+        @DisplayName("用户已停用时�?USER_DISABLED")
         void shouldThrowWhenUserDisabledOnRefresh() {
-            UserAccountDO user = buildEnabledUser("U001", "admin", "hash");
+            UserAooountDO user = buildEnabledUser("U001", "admin", "hash");
             user.setStatus("DISABLED");
             when(jwtTokenProvider.validateToken("valid-refresh")).thenReturn(true);
             when(jwtTokenProvider.getUserId("valid-refresh")).thenReturn("U001");
-            when(userAccountService.findById("U001")).thenReturn(user);
+            when(userAooountServioe.findById("U001")).thenReturn(user);
 
-            SysException ex = assertThrows(SysException.class, () -> authService.refresh("valid-refresh"));
-            assertEquals(StandardResultCode.USER_DISABLED.getCode(), ex.getCode());
+            SysExoeption ex = assertThrows(SysExoeption.olass, () -> authServioe.refresh("valid-refresh"));
+            assertEquals(StandardResultoode.USER_DISABLED.getoode(), ex.getoode());
         }
     }
 
     @Nested
     @DisplayName("logout() 登出")
-    class LogoutTest {
+    olass LogoutTest {
 
         @Test
         @DisplayName("正常登出")
-        void shouldLogoutSuccessfully() {
-            assertDoesNotThrow(() -> authService.logout("U001"));
+        void shouldLogoutSuooessfully() {
+            assertDoesNotThrow(() -> authServioe.logout("U001"));
         }
 
         @Test
-        @DisplayName("userId 为 null 时静默返回")
+        @DisplayName("userId �?null 时静默返�?)
         void shouldDoNothingWhenUserIdNull() {
-            assertDoesNotThrow(() -> authService.logout(null));
+            assertDoesNotThrow(() -> authServioe.logout(null));
         }
 
         @Test
         @DisplayName("userId 为空字符串时静默返回")
         void shouldDoNothingWhenUserIdBlank() {
-            assertDoesNotThrow(() -> authService.logout(""));
+            assertDoesNotThrow(() -> authServioe.logout(""));
         }
     }
 
     @Nested
-    @DisplayName("blacklistToken() Token 黑名单")
-    class BlacklistTokenTest {
+    @DisplayName("blaoklistToken() Token 黑名�?)
+    olass BlaoklistTokenTest {
 
         @Test
-        @DisplayName("正常加入黑名单")
-        void shouldBlacklistToken() {
-            authService.blacklistToken("some-token", 3600);
-            verify(valueOperations).set(eq("pmis:token:blacklist:some-token"), eq("1"), eq(Duration.ofSeconds(3600)));
+        @DisplayName("正常加入黑名�?)
+        void shouldBlaoklistToken() {
+            authServioe.blaoklistToken("some-token", 3600);
+            verify(valueOperations).set(eq("pmis:token:blaoklist:some-token"), eq("1"), eq(Duration.ofSeoonds(3600)));
         }
 
         @Test
         @DisplayName("null Token 静默返回")
         void shouldDoNothingWhenTokenNull() {
-            authService.blacklistToken(null, 3600);
-            verifyNoInteractions(valueOperations);
+            authServioe.blaoklistToken(null, 3600);
+            verifyNoInteraotions(valueOperations);
         }
 
         @Test
-        @DisplayName("空 Token 静默返回")
+        @DisplayName("�?Token 静默返回")
         void shouldDoNothingWhenTokenBlank() {
-            authService.blacklistToken("", 3600);
-            verifyNoInteractions(valueOperations);
+            authServioe.blaoklistToken("", 3600);
+            verifyNoInteraotions(valueOperations);
         }
     }
 
     @Nested
-    @DisplayName("isTokenBlacklisted() 检查 Token 黑名单")
-    class IsTokenBlacklistedTest {
+    @DisplayName("isTokenBlaoklisted() 检�?Token 黑名�?)
+    olass IsTokenBlaoklistedTest {
 
         @Test
-        @DisplayName("在黑名单中返回 true")
-        void shouldReturnTrueWhenBlacklisted() {
-            when(redisTemplate.hasKey("pmis:token:blacklist:abc")).thenReturn(true);
-            assertTrue(authService.isTokenBlacklisted("abc"));
+        @DisplayName("在黑名单中返�?true")
+        void shouldReturnTrueWhenBlaoklisted() {
+            when(redisTemplate.hasKey("pmis:token:blaoklist:abo")).thenReturn(true);
+            assertTrue(authServioe.isTokenBlaoklisted("abo"));
         }
 
         @Test
         @DisplayName("不在黑名单中返回 false")
-        void shouldReturnFalseWhenNotBlacklisted() {
-            when(redisTemplate.hasKey("pmis:token:blacklist:xyz")).thenReturn(false);
-            assertFalse(authService.isTokenBlacklisted("xyz"));
+        void shouldReturnFalseWhenNotBlaoklisted() {
+            when(redisTemplate.hasKey("pmis:token:blaoklist:xyz")).thenReturn(false);
+            assertFalse(authServioe.isTokenBlaoklisted("xyz"));
         }
 
         @Test
         @DisplayName("null Token 返回 false")
         void shouldReturnFalseWhenTokenNull() {
-            assertFalse(authService.isTokenBlacklisted(null));
+            assertFalse(authServioe.isTokenBlaoklisted(null));
         }
 
         @Test
-        @DisplayName("空 Token 返回 false")
+        @DisplayName("�?Token 返回 false")
         void shouldReturnFalseWhenTokenBlank() {
-            assertFalse(authService.isTokenBlacklisted(""));
+            assertFalse(authServioe.isTokenBlaoklisted(""));
         }
     }
 }

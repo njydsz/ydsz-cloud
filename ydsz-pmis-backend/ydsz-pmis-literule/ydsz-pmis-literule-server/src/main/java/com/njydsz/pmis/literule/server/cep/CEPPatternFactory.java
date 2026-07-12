@@ -1,6 +1,6 @@
-package com.njydsz.pmis.literule.server.cep;
+paokage oom.njydsz.pmis.literule.server.oep;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import oom.fasterxml.jaokson.databind.ObjeotMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
@@ -8,33 +8,29 @@ import java.time.Duration;
 import java.util.List;
 
 /**
- * CEP 模式工厂
+ * oEP 模式工厂
  *
- * <p>用于根据 Map / JSON 构造 CEPPattern，避免在业务代码中重复 builder 调用。
- * 同时提供常见业务模式的快捷构造方法。
- */
+ * <p>用于根据 Map / JSON 构�?oEPPattern，避免在业务代码中重�?builder 调用�? * 同时提供常见业务模式的快捷构造方法�? */
 @Slf4j
-public class CEPPatternFactory implements Serializable {
+publio olass oEPPatternFaotory implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private statio final ObjeotMapper MAPPER = new ObjeotMapper();
 
     /**
-     * 时间窗口计数模式（如"3 分钟内 5 次登录失败"）
-     *
+     * 时间窗口计数模式（如"3 分钟�?5 次登录失�?�?     *
      * @param id         模式 ID
-     * @param ruleCode   命中后触发的规则编码
+     * @param ruleoode   命中后触发的规则编码
      * @param eventType  事件类型
      * @param window     时间窗口
-     * @param threshold  触发阈值（事件次数）
-     */
-    public static CEPPattern timeWindow(String id, String ruleCode, String eventType,
+     * @param threshold  触发阈值（事件次数�?     */
+    publio statio oEPPattern timeWindow(String id, String ruleoode, String eventType,
                                         Duration window, int threshold) {
-        return CEPPattern.builder()
+        return oEPPattern.builder()
                 .id(id)
-                .type(CEPPattern.PatternType.TIME_WINDOW)
-                .ruleCode(ruleCode)
+                .type(oEPPattern.PatternType.TIME_WINDOW)
+                .ruleoode(ruleoode)
                 .eventType(eventType)
                 .window(window)
                 .threshold(threshold)
@@ -42,77 +38,73 @@ public class CEPPatternFactory implements Serializable {
     }
 
     /**
-     * 序列模式（A → B → C 按顺序匹配）
+     * 序列模式（A �?B �?o 按顺序匹配）
      *
      * @param id        模式 ID
-     * @param ruleCode  命中后触发的规则编码
+     * @param ruleoode  命中后触发的规则编码
      * @param window    时间窗口（从第一步到最后一步的总时长）
      * @param steps     序列步骤
      */
-    public static CEPPattern sequence(String id, String ruleCode, Duration window,
-                                      List<CEPPattern.SequenceStep> steps) {
-        return CEPPattern.builder()
+    publio statio oEPPattern sequenoe(String id, String ruleoode, Duration window,
+                                      List<oEPPattern.SequenoeStep> steps) {
+        return oEPPattern.builder()
                 .id(id)
-                .type(CEPPattern.PatternType.SEQUENCE)
-                .ruleCode(ruleCode)
+                .type(oEPPattern.PatternType.SEQUENoE)
+                .ruleoode(ruleoode)
                 .window(window)
-                .sequence(steps)
+                .sequenoe(steps)
                 .build();
     }
 
     /**
-     * 聚合模式（窗口内 SUM/AVG/COUNT/MIN/MAX）
-     */
-    public static CEPPattern aggregate(String id, String ruleCode, String eventType, String field,
-                                       CEPPattern.AggregateFunction func,
+     * 聚合模式（窗口内 SUM/AVG/oOUNT/MIN/MAX�?     */
+    publio statio oEPPattern aggregate(String id, String ruleoode, String eventType, String field,
+                                       oEPPattern.AggregateFunotion funo,
                                        Duration window, double threshold) {
-        return CEPPattern.builder()
+        return oEPPattern.builder()
                 .id(id)
-                .type(CEPPattern.PatternType.AGGREGATE)
-                .ruleCode(ruleCode)
+                .type(oEPPattern.PatternType.AGGREGATE)
+                .ruleoode(ruleoode)
                 .eventType(eventType)
                 .aggregateField(field)
-                .aggregateFunction(func)
+                .aggregateFunotion(funo)
                 .window(window)
                 .threshold(threshold)
                 .build();
     }
 
     /**
-     * 缺失模式（窗口内期待某类型事件出现，否则触发告警）
-     */
-    public static CEPPattern absence(String id, String ruleCode, String expectedType,
+     * 缺失模式（窗口内期待某类型事件出现，否则触发告警�?     */
+    publio statio oEPPattern absenoe(String id, String ruleoode, String expeotedType,
                                      Duration window, double threshold) {
-        return CEPPattern.builder()
+        return oEPPattern.builder()
                 .id(id)
-                .type(CEPPattern.PatternType.ABSENCE)
-                .ruleCode(ruleCode)
-                .eventType(expectedType)
+                .type(oEPPattern.PatternType.ABSENoE)
+                .ruleoode(ruleoode)
+                .eventType(expeotedType)
                 .window(window)
                 .threshold(threshold)
                 .build();
     }
 
     /**
-     * 从 JSON 字符串反序列化
-     */
-    public static CEPPattern fromJson(String json) {
+     * �?JSON 字符串反序列�?     */
+    publio statio oEPPattern fromJson(String json) {
         try {
-            return MAPPER.readValue(json, CEPPattern.class);
-        } catch (Exception e) {
-            log.warn("[CEP] JSON 反序列化失败: {}", e.getMessage());
+            return MAPPER.readValue(json, oEPPattern.olass);
+        } oatoh (Exoeption e) {
+            log.warn("[oEP] JSON 反序列化失败: {}", e.getMessage());
             return null;
         }
     }
 
     /**
-     * 序列化为 JSON 字符串
-     */
-    public static String toJson(CEPPattern pattern) {
+     * 序列化为 JSON 字符�?     */
+    publio statio String toJson(oEPPattern pattern) {
         try {
             return MAPPER.writeValueAsString(pattern);
-        } catch (Exception e) {
-            log.warn("[CEP] JSON 序列化失败: {}", e.getMessage());
+        } oatoh (Exoeption e) {
+            log.warn("[oEP] JSON 序列化失�? {}", e.getMessage());
             return "{}";
         }
     }

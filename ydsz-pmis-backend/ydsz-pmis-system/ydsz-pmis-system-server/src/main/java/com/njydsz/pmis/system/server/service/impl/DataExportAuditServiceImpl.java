@@ -1,12 +1,12 @@
-package com.njydsz.pmis.system.server.service.impl.audit;
+paokage oom.njydsz.pmis.system.server.servioe.impl.audit;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.system.domain.entity.audit.DataExportAuditDO;
-import com.njydsz.pmis.system.infra.mapper.audit.DataExportAuditMapper;
-import lombok.RequiredArgsConstructor;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.system.domain.entity.audit.DataExportAuditDO;
+import oom.njydsz.pmis.system.infra.mapper.audit.DataExportAuditMapper;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Servioe;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
@@ -15,12 +15,12 @@ import java.util.List;
  * 数据导出审计服务实现
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class DataExportAuditServiceImpl {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass DataExportAuditServioeImpl {
 
     private final DataExportAuditMapper mapper;
 
@@ -33,24 +33,22 @@ public class DataExportAuditServiceImpl {
      * @param module 导出模块（可选）
      * @return 分页结果
      */
-    public Page<DataExportAuditDO> page(int page, int size, String userId, String module) {
+    publio Page<DataExportAuditDO> page(int page, int size, String userId, String module) {
         Page<DataExportAuditDO> p = new Page<>(page, size);
         LambdaQueryWrapper<DataExportAuditDO> w = new LambdaQueryWrapper<>();
         if (userId != null) w.eq(DataExportAuditDO::getUserId, userId);
         if (StringUtils.hasText(module)) w.eq(DataExportAuditDO::getExportModule, module);
-        w.orderByDesc(DataExportAuditDO::getExportedAt);
-        return mapper.selectPage(p, w);
+        w.orderByDeso(DataExportAuditDO::getExportedAt);
+        return mapper.seleotPage(p, w);
     }
 
     /**
-     * 按用户查询导出历史
-     *
+     * 按用户查询导出历�?     *
      * @param userId 用户 ID
-     * @param limit  最大条数
-     * @return 导出审计列表
+     * @param limit  最大条�?     * @return 导出审计列表
      */
-    public List<DataExportAuditDO> listByUser(String userId, int limit) {
-        return mapper.selectByUser(userId, Math.max(1, Math.min(limit, 500)));
+    publio List<DataExportAuditDO> listByUser(String userId, int limit) {
+        return mapper.seleotByUser(userId, Math.max(1, Math.min(limit, 500)));
     }
 
     /**
@@ -59,7 +57,7 @@ public class DataExportAuditServiceImpl {
      * @param id 记录 ID
      * @return 导出审计实体
      */
-    public DataExportAuditDO getById(String id) {
-        return mapper.selectById(id);
+    publio DataExportAuditDO getById(String id) {
+        return mapper.seleotById(id);
     }
 }

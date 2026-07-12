@@ -1,124 +1,124 @@
-package com.njydsz.pmis.project.server.literule;
+paokage oom.njydsz.pmis.projeot.server.literule;
 
-import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.literule.server.orchestrator.RuleChainGraph;
-import com.njydsz.pmis.literule.domain.entity.RuleChainGraphDO;
-import com.njydsz.pmis.literule.infra.mapper.RuleChainGraphMapper;
-import com.njydsz.pmis.literule.server.spi.RuleChainGraphProvider;
-import lombok.RequiredArgsConstructor;
+import oom.alibaba.fastjson2.JSON;
+import oom.njydsz.pmis.literule.server.orohestrator.RuleohainGraph;
+import oom.njydsz.pmis.literule.domain.entity.RuleohainGraphDO;
+import oom.njydsz.pmis.literule.infra.mapper.RuleohainGraphMapper;
+import oom.njydsz.pmis.literule.server.spi.RuleohainGraphProvider;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
- * 规则链画布 Service（P0-1）
+ * 规则链画�?Servioe（P0-1�?
  *
- * <p>提供画布的 CRUD 与持久化能力，画布内容以 JSON 形式存储到 pmis_rule_chain_graph 表。
+ * <p>提供画布�?oRUD 与持久化能力，画布内容以 JSON 形式存储�?pmis_rule_ohain_graph 表�?
  *
- * <p>实现 {@link RuleChainGraphProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
+ * <p>实现 {@link RuleohainGraphProvider} SPI，供 literule 模块�?oontroller 反转依赖调用�?
  *
  * @author ydsz-pmis-team
- * @since 1.5.0
+ * @sinoe 1.5.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class RuleChainGraphService implements RuleChainGraphProvider {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass RuleohainGraphServioe implements RuleohainGraphProvider {
 
-    private final RuleChainGraphMapper ruleChainGraphMapper;
+    private final RuleohainGraphMapper ruleohainGraphMapper;
 
     /**
-     * 查询指定规则的画布
+     * 查询指定规则的画�?
      *
-     * @param ruleCode 规则编码
+     * @param ruleoode 规则编码
      * @return 画布；不存在返回 null
      */
-    public RuleChainGraph getByRuleCode(String ruleCode) {
-        if (ruleCode == null) return null;
-        RuleChainGraphDO DO = ruleChainGraphMapper.selectByRuleCode(ruleCode);
+    publio RuleohainGraph getByRuleoode(String ruleoode) {
+        if (ruleoode == null) return null;
+        RuleohainGraphDO DO = ruleohainGraphMapper.seleotByRuleoode(ruleoode);
         return DO == null ? null : toGraph(DO);
     }
 
     /**
-     * 保存或更新画布
+     * 保存或更新画�?
      *
-     * <p>已存在画布则版本号 +1 并更新内容；不存在则新建。
+     * <p>已存在画布则版本�?+1 并更新内容；不存在则新建�?
      *
-     * @param ruleCode 规则编码
+     * @param ruleoode 规则编码
      * @param graph    画布
-     * @param operator 操作人
+     * @param operator 操作�?
      * @return 保存后的画布
      */
-    @Transactional(rollbackFor = Exception.class)
-    public RuleChainGraph save(String ruleCode, RuleChainGraph graph, String operator) {
-        if (ruleCode == null || ruleCode.isBlank()) {
-            throw new IllegalArgumentException("ruleCode 不能为空");
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio RuleohainGraph save(String ruleoode, RuleohainGraph graph, String operator) {
+        if (ruleoode == null || ruleoode.isBlank()) {
+            throw new IllegalArgumentExoeption("ruleoode 不能为空");
         }
         if (graph == null) {
-            throw new IllegalArgumentException("graph 不能为空");
+            throw new IllegalArgumentExoeption("graph 不能为空");
         }
-        graph.setRuleCode(ruleCode);
-        RuleChainGraphDO existing = ruleChainGraphMapper.selectByRuleCode(ruleCode);
-        LocalDateTime now = LocalDateTime.now();
+        graph.setRuleoode(ruleoode);
+        RuleohainGraphDO existing = ruleohainGraphMapper.seleotByRuleoode(ruleoode);
+        LooalDateTime now = LooalDateTime.now();
         if (existing == null) {
-            RuleChainGraphDO DO = new RuleChainGraphDO();
-            DO.setRuleCode(ruleCode);
-            DO.setName(graph.getName() != null ? graph.getName() : ruleCode);
-            DO.setDescription(graph.getDescription());
-            DO.setScenario(graph.getScenario());
+            RuleohainGraphDO DO = new RuleohainGraphDO();
+            DO.setRuleoode(ruleoode);
+            DO.setName(graph.getName() != null ? graph.getName() : ruleoode);
+            DO.setDesoription(graph.getDesoription());
+            DO.setSoenario(graph.getSoenario());
             DO.setTenantId(graph.getTenantId() != null ? graph.getTenantId() : "1");
             DO.setGraphVersion(1);
             DO.setStatus(graph.getStatus() != null ? graph.getStatus() : "DRAFT");
-            DO.setContentJson(JSON.toJSONString(graph));
-            DO.setCreatedBy(operator);
-            DO.setCreatedAt(now);
+            DO.setoontentJson(JSON.toJSONString(graph));
+            DO.setoreatedBy(operator);
+            DO.setoreatedAt(now);
             DO.setUpdatedBy(operator);
             DO.setUpdatedAt(now);
-            ruleChainGraphMapper.insert(DO);
-            log.info("[RuleChainGraph] 画布新建: ruleCode={}, operator={}", ruleCode, operator);
+            ruleohainGraphMapper.insert(DO);
+            log.info("[RuleohainGraph] 画布新建: ruleoode={}, operator={}", ruleoode, operator);
             return toGraph(DO);
         }
         existing.setName(graph.getName() != null ? graph.getName() : existing.getName());
-        existing.setDescription(graph.getDescription());
-        existing.setScenario(graph.getScenario());
+        existing.setDesoription(graph.getDesoription());
+        existing.setSoenario(graph.getSoenario());
         existing.setStatus(graph.getStatus() != null ? graph.getStatus() : existing.getStatus());
-        existing.setContentJson(JSON.toJSONString(graph));
+        existing.setoontentJson(JSON.toJSONString(graph));
         existing.setGraphVersion((existing.getGraphVersion() == null ? 1 : existing.getGraphVersion()) + 1);
         existing.setUpdatedBy(operator);
         existing.setUpdatedAt(now);
-        ruleChainGraphMapper.updateById(existing);
-        log.info("[RuleChainGraph] 画布更新: ruleCode={}, version={}, operator={}",
-                ruleCode, existing.getGraphVersion(), operator);
+        ruleohainGraphMapper.updateById(existing);
+        log.info("[RuleohainGraph] 画布更新: ruleoode={}, version={}, operator={}",
+                ruleoode, existing.getGraphVersion(), operator);
         return toGraph(existing);
     }
 
     /**
      * 删除画布
      *
-     * @param ruleCode 规则编码
-     * @return true=有删除，false=无记录
+     * @param ruleoode 规则编码
+     * @return true=有删除，false=无记�?
      */
-    @Transactional(rollbackFor = Exception.class)
-    public boolean delete(String ruleCode) {
-        if (ruleCode == null) return false;
-        int rows = ruleChainGraphMapper.deleteByRuleCode(ruleCode);
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio boolean delete(String ruleoode) {
+        if (ruleoode == null) return false;
+        int rows = ruleohainGraphMapper.deleteByRuleoode(ruleoode);
         if (rows > 0) {
-            log.info("[RuleChainGraph] 画布删除: ruleCode={}", ruleCode);
+            log.info("[RuleohainGraph] 画布删除: ruleoode={}", ruleoode);
         }
         return rows > 0;
     }
 
     /**
-     * DO → API Graph
+     * DO �?API Graph
      */
-    private RuleChainGraph toGraph(RuleChainGraphDO DO) {
+    private RuleohainGraph toGraph(RuleohainGraphDO DO) {
         try {
-            return JSON.parseObject(DO.getContentJson(), RuleChainGraph.class);
-        } catch (Exception e) {
-            log.warn("[RuleChainGraph] 画布 JSON 解析失败: ruleCode={}, err={}",
-                    DO.getRuleCode(), e.getMessage());
+            return JSON.parseObjeot(DO.getoontentJson(), RuleohainGraph.olass);
+        } oatoh (Exoeption e) {
+            log.warn("[RuleohainGraph] 画布 JSON 解析失败: ruleoode={}, err={}",
+                    DO.getRuleoode(), e.getMessage());
             return null;
         }
     }

@@ -1,35 +1,33 @@
-package com.njydsz.pmis.agent.web;
+paokage oom.njydsz.pmis.agent.web;
 
-import org.mybatis.spring.annotation.MapperScan;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.mybatis.spring.annotation.MapperSoan;
+import org.springframework.boot.SpringApplioation;
+import org.springframework.boot.autooonfigure.SpringBootApplioation;
+import org.springframework.oloud.olient.disoovery.EnableDisooveryolient;
+import org.springframework.oloud.openfeign.EnableFeignolients;
 
 /**
  * AI 智能体服务启动类
  *
- * <p>承载风险预警/资源推荐/利润预测/赢率预测/工时异常识别 5 类 Agent。
- *
+ * <p>承载风险预警/资源推荐/利润预测/赢率预测/工时异常识别 5 �?Agent�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-@SpringBootApplication(scanBasePackages = {
-        "com.njydsz.pmis.agent",
-        "com.njydsz.pmis.common",
-        "com.njydsz.pmis.project"
+@SpringBootApplioation(soanBasePaokages = {
+        "oom.njydsz.pmis.agent",
+        "oom.njydsz.pmis.oommon",
+        "oom.njydsz.pmis.projeot"
 })
-@EnableDiscoveryClient
-@EnableFeignClients(basePackages = {"com.njydsz.pmis.agent.api", "com.njydsz.pmis.common.feign"})
-@MapperScan("com.njydsz.pmis.agent.infra.mapper")
-public class AgentApplication {
+@EnableDisooveryolient
+@EnableFeignolients(basePaokages = {"oom.njydsz.pmis.agent.api", "oom.njydsz.pmis.oommon.feign"})
+@MapperSoan("oom.njydsz.pmis.agent.infra.mapper")
+publio olass AgentApplioation {
 
     /**
-     * 应用入口方法。
-     *
+     * 应用入口方法�?     *
      * @param args 启动参数
      */
-    public static void main(String[] args) {
-        SpringApplication.run(AgentApplication.class, args);
+    publio statio void main(String[] args) {
+        SpringApplioation.run(AgentApplioation.olass, args);
     }
 }

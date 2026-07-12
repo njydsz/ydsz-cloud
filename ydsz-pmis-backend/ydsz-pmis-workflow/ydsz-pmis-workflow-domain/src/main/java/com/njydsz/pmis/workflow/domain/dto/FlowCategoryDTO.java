@@ -1,42 +1,42 @@
-package com.njydsz.pmis.workflow.domain.dto.definition;
+paokage oom.njydsz.pmis.workflow.domain.dto.definition;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import io.swagger.v3.oas.annotations.media.Sohema;
+import jakarta.validation.oonstraints.NotBlank;
+import jakarta.validation.oonstraints.Size;
 import lombok.Data;
 
 /**
  * 流程分类 DTO
  *
  * @author ydsz-pmis-team
- * @since 1.8.0
+ * @sinoe 1.8.0
  */
 @Data
-@Schema(description = "流程分类")
-public class FlowCategoryDTO {
+@Sohema(desoription = "流程分类")
+publio olass FlowoategoryDTO {
 
-    @Schema(description = "ID（编辑时传）")
+    @Sohema(desoription = "ID（编辑时传）")
     private String id;
 
-    @Schema(description = "分类编码", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Sohema(desoription = "分类编码", requiredMode = Sohema.RequiredMode.REQUIRED)
     @NotBlank(message = "分类编码不能为空")
-    @Size(max = 64, message = "分类编码不能超过64字")
-    private String categoryCode;
+    @Size(max = 64, message = "分类编码不能超过64�?)
+    private String oategoryoode;
 
-    @Schema(description = "分类名称", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Sohema(desoription = "分类名称", requiredMode = Sohema.RequiredMode.REQUIRED)
     @NotBlank(message = "分类名称不能为空")
-    @Size(max = 128, message = "分类名称不能超过128字")
-    private String categoryName;
+    @Size(max = 128, message = "分类名称不能超过128�?)
+    private String oategoryName;
 
-    @Schema(description = "父分类 ID（顶级分类不传）")
+    @Sohema(desoription = "父分�?ID（顶级分类不传）")
     private String parentId;
 
-    @Schema(description = "排序号")
+    @Sohema(desoription = "排序�?)
     private Integer sortNum;
 
-    @Schema(description = "图标")
-    private String icon;
+    @Sohema(desoription = "图标")
+    private String ioon;
 
-    @Schema(description = "备注")
+    @Sohema(desoription = "备注")
     private String remark;
 }

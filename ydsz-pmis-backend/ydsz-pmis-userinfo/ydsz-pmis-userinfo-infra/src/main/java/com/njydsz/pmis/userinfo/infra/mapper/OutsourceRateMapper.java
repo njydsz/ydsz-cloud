@@ -1,55 +1,55 @@
-package com.njydsz.pmis.userinfo.infra.mapper.rate;
+paokage oom.njydsz.pmis.userinfo.infra.mapper.rate;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.userinfo.domain.entity.rate.OutsourceRateDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.userinfo.domain.entity.rate.OutsouroeRateDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
+import org.apaohe.ibatis.annotations.Seleot;
 
-import java.time.LocalDate;
+import java.time.LooalDate;
 import java.util.List;
 
 /**
- * 外包职级费率 Mapper（V1-V18）
+ * 外包职级费率 Mapper（V1-V18�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface OutsourceRateMapper extends BaseMapper<OutsourceRateDO> {
+publio interfaoe OutsouroeRateMapper extends BaseMapper<OutsouroeRateDO> {
 
     /**
-     * 按级别编码 + 日期匹配生效中的费率（按版本号倒序取最新）
+     * 按级别编�?+ 日期匹配生效中的费率（按版本号倒序取最新）
      *
-     * @param rateCode 级别编码
+     * @param rateoode 级别编码
      * @param date     生效日期
      * @return 生效费率记录，未找到返回 null
      */
-    @Select("""
-            SELECT * FROM pmis_outsource_rate
-            WHERE rate_code = #{rateCode}
-              AND effective_date <= #{date}
+    @Seleot("""
+            SELEoT * FROM pmis_outsouroe_rate
+            WHERE rate_oode = #{rateoode}
+              AND effeotive_date <= #{date}
               AND (expire_date IS NULL OR expire_date >= #{date})
               AND deleted = 0
-              AND status = 'ACTIVE'
-            ORDER BY version DESC
+              AND status = 'AoTIVE'
+            ORDER BY version DESo
             LIMIT 1
             """)
-    OutsourceRateDO selectEffective(@Param("rateCode") String rateCode, @Param("date") LocalDate date);
+    OutsouroeRateDO seleotEffeotive(@Param("rateoode") String rateoode, @Param("date") LooalDate date);
 
     /**
-     * 查询某日期生效中的所有外包费率
+     * 查询某日期生效中的所有外包费�?
      *
      * @param date 生效日期
      * @return 生效费率列表（按排序序号、级别编码升序）
      */
-    @Select("""
-            SELECT * FROM pmis_outsource_rate
-            WHERE effective_date <= #{date}
+    @Seleot("""
+            SELEoT * FROM pmis_outsouroe_rate
+            WHERE effeotive_date <= #{date}
               AND (expire_date IS NULL OR expire_date >= #{date})
               AND deleted = 0
-              AND status = 'ACTIVE'
-            ORDER BY sort_order ASC, rate_code ASC
+              AND status = 'AoTIVE'
+            ORDER BY sort_order ASo, rate_oode ASo
             """)
-    List<OutsourceRateDO> listEffective(@Param("date") LocalDate date);
+    List<OutsouroeRateDO> listEffeotive(@Param("date") LooalDate date);
 }

@@ -1,34 +1,33 @@
-package com.njydsz.pmis.workflow.domain.dto.instance;
+paokage oom.njydsz.pmis.workflow.domain.dto.instanoe;
 
-import lombok.AllArgsConstructor;
+import lombok.AllArgsoonstruotor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.NoArgsoonstruotor;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 
 /**
- * 流程实例视图 DTO（Feign 友好，无内部敏感字段）
- *
+ * 流程实例视图 DTO（Feign 友好，无内部敏感字段�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class FlowInstanceViewDTO implements Serializable {
+@NoArgsoonstruotor
+@AllArgsoonstruotor
+publio olass FlowInstanoeViewDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 实例 ID */
     private String id;
     /** 流程编码 */
-    private String flowCode;
+    private String flowoode;
     /** 流程名称 */
     private String flowName;
     /** 流程版本 */
@@ -41,67 +40,67 @@ public class FlowInstanceViewDTO implements Serializable {
     private String businessNo;
     /** 流程标题 */
     private String title;
-    /** 发起人 ID */
+    /** 发起�?ID */
     private String initiatorId;
-    /** 发起人姓名 */
+    /** 发起人姓�?*/
     private String initiatorName;
     /** 当前节点编码 */
-    private String currentNodeCode;
+    private String ourrentNodeoode;
     /** 当前节点名称 */
-    private String currentNodeName;
-    /** 实例状态（FlowInstanceStatus.name） */
+    private String ourrentNodeName;
+    /** 实例状态（FlowInstanoeStatus.name�?*/
     private String flowStatus;
-    /** 激活状态：0 挂起 / 1 激活 */
-    private Integer activityStatus;
+    /** 激活状态：0 挂起 / 1 激�?*/
+    private Integer aotivityStatus;
     /** 启动时间 */
-    private LocalDateTime startAt;
+    private LooalDateTime startAt;
     /** 结束时间 */
-    private LocalDateTime endAt;
+    private LooalDateTime endAt;
     /** 耗时（毫秒） */
     private Long durationMs;
     /** 流程变量 JSON */
     private String variable;
     /** 当前待办任务列表 */
-    private List<FlowTaskViewDTO> currentTasks;
+    private List<FlowTaskViewDTO> ourrentTasks;
 
     @Data
     @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class FlowTaskViewDTO implements Serializable {
+    @NoArgsoonstruotor
+    @AllArgsoonstruotor
+    publio statio olass FlowTaskViewDTO implements Serializable {
         @Serial
-        private static final long serialVersionUID = 1L;
+        private statio final long serialVersionUID = 1L;
         /** 任务 ID */
         private String id;
         /** 节点编码 */
-        private String nodeCode;
+        private String nodeoode;
         /** 节点名称 */
         private String nodeName;
-        /** 节点类型（FlowNodeType.code） */
+        /** 节点类型（FlowNodeType.oode�?*/
         private Integer nodeType;
-        /** 办理人类型 */
+        /** 办理人类�?*/
         private String assigneeType;
-        /** 办理人 ID */
+        /** 办理�?ID */
         private String assigneeId;
-        /** 办理人姓名 */
+        /** 办理人姓�?*/
         private String assigneeName;
         /** 会签类型 */
         private String performType;
-        /** 任务状态 */
+        /** 任务状�?*/
         private String taskStatus;
         /** 审批意见 */
-        private String comment;
+        private String oomment;
         /** 创建时间 */
-        private LocalDateTime createAt;
+        private LooalDateTime oreateAt;
         /** 签收时间 */
-        private LocalDateTime claimAt;
+        private LooalDateTime olaimAt;
         /** 完成时间 */
-        private LocalDateTime finishAt;
+        private LooalDateTime finishAt;
         /** 耗时（毫秒） */
         private Long durationMs;
         /** 截止时间 */
-        private LocalDateTime dueAt;
-        /** P1-1: 任务优先级（1-100，默认 50） */
+        private LooalDateTime dueAt;
+        /** P1-1: 任务优先级（1-100，默�?50�?*/
         private Integer priority;
     }
 }

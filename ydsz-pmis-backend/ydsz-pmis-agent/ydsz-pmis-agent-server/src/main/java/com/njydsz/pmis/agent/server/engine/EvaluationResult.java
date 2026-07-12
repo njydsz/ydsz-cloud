@@ -1,52 +1,51 @@
-package com.njydsz.pmis.agent.server.engine.eval;
+paokage oom.njydsz.pmis.agent.server.engine.eval;
 
-import lombok.AllArgsConstructor;
+import lombok.AllArgsoonstruotor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.NoArgsoonstruotor;
 
 import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 单个评测用例的执行结果（P4-8 落地）。
- *
+ * 单个评测用例的执行结果（P4-8 落地）�? *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P4-8)
+ * @sinoe 1.0.0 (P4-8)
  */
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class EvaluationResult implements Serializable {
+@NoArgsoonstruotor
+@AllArgsoonstruotor
+publio olass EvaluationResult implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 用例 ID */
-    private String caseId;
+    private String oaseId;
 
     /** 用户输入 */
     private String userInput;
 
     /** 期望输出 */
-    private String expectedOutput;
+    private String expeotedOutput;
 
     /** 实际输出 */
-    private String actualOutput;
+    private String aotualOutput;
 
-    /** 评估分数（0.0 ~ 1.0） */
-    private double score;
+    /** 评估分数�?.0 ~ 1.0�?*/
+    private double soore;
 
-    /** 是否通过（score >= passThreshold） */
+    /** 是否通过（soore >= passThreshold�?*/
     private boolean passed;
 
     /** 耗时（毫秒） */
     private long elapsedMs;
 
     /** 使用的评估器类型 */
-    private EvaluationCase.EvaluatorType evaluatorType;
+    private Evaluationoase.EvaluatorType evaluatorType;
 
-    /** 错误信息（执行异常时填充） */
+    /** 错误信息（执行异常时填充�?*/
     private String errorMessage;
 }

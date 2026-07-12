@@ -1,73 +1,67 @@
-package com.njydsz.pmis.workflow.server.service.impl.instance;
+paokage oom.njydsz.pmis.workflow.server.servioe.impl.instanoe;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.domain.enums.instance.FlowTaskStatus;
-import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
-import com.njydsz.pmis.workflow.server.metrics.FlowMetrics;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowRunTaskDO;
+import oom.njydsz.pmis.workflow.domain.enums.instanoe.FlowTaskStatus;
+import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowRunTaskMapper;
+import oom.njydsz.pmis.workflow.server.metrios.FlowMetrios;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
  * 任务签收服务
  *
- * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分的"任务签收"职责。
- * 签收将 PENDING 任务标记为 CLAIMED，记录签收时间和办理人。
- *
+ * <p>�?{@oode FlowTaskoompleteServioeImpl} 拆分�?任务签收"职责�? * 签收�?PENDING 任务标记�?oLAIMED，记录签收时间和办理人�? *
  * @author ydsz-pmis-team
- * @since 1.7.0
+ * @sinoe 1.7.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class FlowTaskClaimService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass FlowTaskolaimServioe {
 
     private final FlowRunTaskMapper taskMapper;
     private final FlowTaskSupport support;
-    private final FlowTaskAuditService auditService;
+    private final FlowTaskAuditServioe auditServioe;
     /** P2-3: Prometheus 指标（可能为 null：测试环境） */
-    private final FlowMetrics flowMetrics;
+    private final FlowMetrios flowMetrios;
 
     /**
-     * 签收任务。
-     *
-     * <p>校验任务当前状态必须为 PENDING，写入 assigneeId/claimAt 后状态变为 CLAIMED。
-     * 若任务处于其他状态，抛 BAD_REQUEST 异常。
-     *
+     * 签收任务�?     *
+     * <p>校验任务当前状态必须为 PENDING，写�?assigneeId/olaimAt 后状态变�?oLAIMED�?     * 若任务处于其他状态，�?BAD_REQUEST 异常�?     *
      * @param taskId 任务 ID
-     * @param userId 签收人 ID
+     * @param userId 签收�?ID
      */
-    @Transactional(rollbackFor = Exception.class)
-    public void claim(String taskId, String userId) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void olaim(String taskId, String userId) {
         FlowRunTaskDO task = support.getTaskOrThrow(taskId);
         if (!FlowTaskStatus.PENDING.name().equals(task.getTaskStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST,
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
                     "error.workflow.msg_5873f2ae", task.getTaskStatus());
         }
-        applyClaim(task, userId);
+        applyolaim(task, userId);
         taskMapper.updateById(task);
-        support.audit(task, "CLAIM", userId, null, null);
+        support.audit(task, "oLAIM", userId, null, null);
         // P1-4: 记录代理签收日志
-        auditService.logDelegateOperation(task, "CLAIM", "ACT");
+        auditServioe.logDelegateOperation(task, "oLAIM", "AoT");
         log.info("[Flow] 签收任务: taskId={} userId={}", taskId, userId);
         // P2-3: Prometheus 指标
-        if (flowMetrics != null) {
-            flowMetrics.incTaskClaimed(task.getFlowCode(), task.getNodeCode());
+        if (flowMetrios != null) {
+            flowMetrios.inoTaskolaimed(task.getFlowoode(), task.getNodeoode());
         }
     }
 
     /**
-     * 将任务设置为已签收状态（不持久化）。
-     */
-    private FlowRunTaskDO applyClaim(FlowRunTaskDO src, String userId) {
-        src.setAssigneeId(String.valueOf(userId));
-        src.setTaskStatus(FlowTaskStatus.CLAIMED.name());
-        src.setClaimAt(LocalDateTime.now());
-        return src;
+     * 将任务设置为已签收状态（不持久化）�?     */
+    private FlowRunTaskDO applyolaim(FlowRunTaskDO sro, String userId) {
+        sro.setAssigneeId(String.valueOf(userId));
+        sro.setTaskStatus(FlowTaskStatus.oLAIMED.name());
+        sro.setolaimAt(LooalDateTime.now());
+        return sro;
     }
 }

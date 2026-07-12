@@ -1,114 +1,114 @@
-package com.njydsz.pmis.project.domain.entity;
+paokage oom.njydsz.pmis.projeot.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.annotation.FieldFill;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableField;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
+import java.time.LooalDateTime;
 
 /**
  * 项目结项主表
  *
- * <p>支持 FORMAL（正式结项）/PRE_CLOSURE（预结项）/FORCED（强制结项）三种类型。
+ * <p>支持 FORMAL（正式结项）/PRE_oLOSURE（预结项�?FORoED（强制结项）三种类型�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@TableName("pmis_execution_closure")
-public class ProjectClosureDO implements Serializable {
+@TableName("pmis_exeoution_olosure")
+publio olass ProjeotolosureDO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
     /** 结项业务编号 */
-    private String closureCode;
+    private String olosureoode;
     /** 项目立项ID */
     private String initiationId;
-    /** 结项类型：ClosureType.code */
-    private String closureType;
+    /** 结项类型：ClosureType.oode */
+    private String olosureType;
     /** 结项原因 */
-    private String closureReason;
+    private String olosureReason;
 
     // 准入指标
     /** 合同总额 */
-    private BigDecimal contractAmount;
-    /** 已回款金额 */
-    private BigDecimal receivedAmount;
-    /** 回款比例（0-1） */
-    private BigDecimal receivedRatio;
-    /** CPI（成本绩效指数） */
-    private BigDecimal cpi;
+    private BigDeoimal oontraotAmount;
+    /** 已回款金�?*/
+    private BigDeoimal reoeivedAmount;
+    /** 回款比例�?-1�?*/
+    private BigDeoimal reoeivedRatio;
+    /** oPI（成本绩效指数） */
+    private BigDeoimal opi;
     /** SPI（进度绩效指数） */
-    private BigDecimal spi;
-    /** 当前毛利率 */
-    private BigDecimal grossMargin;
-    /** 当前进度（0-100） */
-    private BigDecimal progressPct;
+    private BigDeoimal spi;
+    /** 当前毛利�?*/
+    private BigDeoimal grossMargin;
+    /** 当前进度�?-100�?*/
+    private BigDeoimal progressPot;
     /** 累计成本 */
-    private BigDecimal totalCost;
-    /** 质保期月数 */
-    private BigDecimal warrantyMonths;
-    /** 质保期开始日期 */
-    private LocalDate warrantyStartDate;
-    /** 质保期结束日期 */
-    private LocalDate warrantyEndDate;
+    private BigDeoimal totaloost;
+    /** 质保期月�?*/
+    private BigDeoimal warrantyMonths;
+    /** 质保期开始日�?*/
+    private LooalDate warrantyStartDate;
+    /** 质保期结束日�?*/
+    private LooalDate warrantyEndDate;
 
     // 归档信息
     /** 计划归档日期 */
-    private LocalDate plannedArchiveDate;
+    private LooalDate plannedArohiveDate;
     /** 实际归档日期 */
-    private LocalDate actualArchiveDate;
-    /** 归档文件 ID 列表（JSON） */
-    private String archiveFileIds;
-    /** 是否锁定（归档后不可改）：1 是 / 0 否 */
-    private Integer locked;
-    /** 状态：ClosureStatus.code */
+    private LooalDate aotualArohiveDate;
+    /** 归档文件 ID 列表（JSON�?*/
+    private String arohiveFileIds;
+    /** 是否锁定（归档后不可改）�? �?/ 0 �?*/
+    private Integer looked;
+    /** 状态：olosureStatus.oode */
     private String status;
     /** 备注 */
     private String remark;
 
     // 审批
     /** 申请人ID */
-    private String applicantId;
-    /** 申请人姓名 */
-    private String applicantName;
+    private String applioantId;
+    /** 申请人姓�?*/
+    private String applioantName;
     /** 审批人ID */
     private String approverId;
-    /** 审批人姓名 */
+    /** 审批人姓�?*/
     private String approverName;
     /** 提交时间 */
-    private LocalDateTime submittedAt;
+    private LooalDateTime submittedAt;
     /** 审批时间 */
-    private LocalDateTime approvedAt;
+    private LooalDateTime approvedAt;
     /** 归档时间 */
-    private LocalDateTime archivedAt;
+    private LooalDateTime arohivedAt;
     /** 审批意见 */
-    private String approvalComment;
+    private String approvaloomment;
 
     /** 租户ID */
     private String tenantId;
     /** 链路追踪ID */
-    private String providerTraceId;
+    private String providerTraoeId;
 
     /** 创建人ID */
     @TableField(fill = FieldFill.INSERT)
-    private String createdBy;
+    private String oreatedBy;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LooalDateTime oreatedAt;
 
     /** 更新人ID */
     @TableField(fill = FieldFill.INSERT_UPDATE)
@@ -116,9 +116,9 @@ public class ProjectClosureDO implements Serializable {
 
     /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LooalDateTime updatedAt;
 
-    /** 逻辑删除标志：1 已删除 / 0 未删除 */
+    /** 逻辑删除标志�? 已删�?/ 0 未删�?*/
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

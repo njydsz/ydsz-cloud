@@ -1,15 +1,14 @@
-package com.njydsz.pmis.message.domain.enums.config;
+paokage oom.njydsz.pmis.message.domain.enums.oonfig;
 
 /**
- * 订阅状态枚举。
- *
+ * 订阅状态枚举�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public enum SubscriptionStatusEnum {
+publio enum SubsoriptionStatusEnum {
 
-    /** 已订阅 */
-    SUBSCRIBED,
-    /** 已退订 */
-    UNSUBSCRIBED
+    /** 已订�?*/
+    SUBSoRIBED,
+    /** 已退�?*/
+    UNSUBSoRIBED
 }

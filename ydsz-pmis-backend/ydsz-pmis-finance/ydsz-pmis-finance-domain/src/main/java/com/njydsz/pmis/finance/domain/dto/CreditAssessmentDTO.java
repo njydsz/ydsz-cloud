@@ -1,24 +1,24 @@
-package com.njydsz.pmis.finance.domain.dto;
+paokage oom.njydsz.pmis.finanoe.domain.dto;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.oonstraints.NotNull;
 import lombok.Data;
 
 /**
  * 客户信用评估 DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-public class CreditAssessmentDTO {
+publio olass oreditAssessmentDTO {
 
-    @NotNull(message = "{validation.execution.msg_6de1fd36}")
-    private String customerId;
+    @NotNull(message = "{validation.exeoution.msg_6de1fd36}")
+    private String oustomerId;
 
-    private String customerName;
+    private String oustomerName;
 
     private String evaluator;
 
-    /** 可选：手工调整基础分 */
-    private Integer baseScore;
+    /** 可选：手工调整基础�?*/
+    private Integer baseSoore;
 }

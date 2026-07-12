@@ -1,35 +1,35 @@
-package com.njydsz.pmis.literule.server.sdk;
+paokage oom.njydsz.pmis.literule.server.sdk;
 
-import com.njydsz.pmis.literule.api.RuleEngine;
-import com.njydsz.pmis.literule.server.core.DefaultRuleEngine;
-import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
-import com.njydsz.pmis.literule.server.expr.liteexpr.LiteExprEvaluator;
+import oom.njydsz.pmis.literule.api.RuleEngine;
+import oom.njydsz.pmis.literule.server.oore.DefaultRuleEngine;
+import oom.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
+import oom.njydsz.pmis.literule.server.expr.liteexpr.LiteExprEvaluator;
 
 /**
- * LiteRuleClient 构建器
+ * LiteRuleolient 构建�?
  *
- * <p>链式构建 {@link LiteRuleClient}，支持嵌入式（无 Spring）和 Spring 集成两种模式。
+ * <p>链式构建 {@link LiteRuleolient}，支持嵌入式（无 Spring）和 Spring 集成两种模式�?
  *
- * <h3>嵌入式快速构建</h3>
- * <pre>{@code
- * LiteRuleClient client = LiteRuleClient.builder()
+ * <h3>嵌入式快速构�?/h3>
+ * <pre>{@oode
+ * LiteRuleolient olient = LiteRuleolient.builder()
  *     .tenantId("T001")
  *     .environment("prod")
  *     .build();
  * }</pre>
  *
- * <h3>自定义引擎</h3>
- * <pre>{@code
- * LiteRuleClient client = LiteRuleClient.builder()
+ * <h3>自定义引�?/h3>
+ * <pre>{@oode
+ * LiteRuleolient olient = LiteRuleolient.builder()
  *     .ruleEngine(myEngine)
  *     .evaluator(myEvaluator)
  *     .build();
  * }</pre>
  *
  * @author ydsz-pmis-team
- * @since 2.0.0
+ * @sinoe 2.0.0
  */
-public class LiteRuleClientBuilder {
+publio olass LiteRuleolientBuilder {
 
     private RuleEngine ruleEngine;
     private ExpressionEvaluator evaluator;
@@ -37,9 +37,9 @@ public class LiteRuleClientBuilder {
     private String environment = "default";
 
     /**
-     * 设置自定义规则引擎
+     * 设置自定义规则引�?
      */
-    public LiteRuleClientBuilder ruleEngine(RuleEngine engine) {
+    publio LiteRuleolientBuilder ruleEngine(RuleEngine engine) {
         this.ruleEngine = engine;
         return this;
     }
@@ -47,7 +47,7 @@ public class LiteRuleClientBuilder {
     /**
      * 设置自定义表达式求值器
      */
-    public LiteRuleClientBuilder evaluator(ExpressionEvaluator evaluator) {
+    publio LiteRuleolientBuilder evaluator(ExpressionEvaluator evaluator) {
         this.evaluator = evaluator;
         return this;
     }
@@ -55,7 +55,7 @@ public class LiteRuleClientBuilder {
     /**
      * 设置租户 ID
      */
-    public LiteRuleClientBuilder tenantId(String tenantId) {
+    publio LiteRuleolientBuilder tenantId(String tenantId) {
         this.tenantId = tenantId;
         return this;
     }
@@ -63,24 +63,24 @@ public class LiteRuleClientBuilder {
     /**
      * 设置环境标识
      */
-    public LiteRuleClientBuilder environment(String environment) {
+    publio LiteRuleolientBuilder environment(String environment) {
         this.environment = environment;
         return this;
     }
 
     /**
-     * 构建 LiteRuleClient
+     * 构建 LiteRuleolient
      *
-     * <p>如果未提供 RuleEngine，则自动创建 {@link DefaultRuleEngine}；
-     * 如果未提供 ExpressionEvaluator，则自动创建 {@link LiteExprEvaluator}。
+     * <p>如果未提�?RuleEngine，则自动创建 {@link DefaultRuleEngine}�?
+     * 如果未提�?ExpressionEvaluator，则自动创建 {@link LiteExprEvaluator}�?
      */
-    public LiteRuleClient build() {
+    publio LiteRuleolient build() {
         if (evaluator == null) {
             evaluator = new LiteExprEvaluator();
         }
         if (ruleEngine == null) {
             ruleEngine = new DefaultRuleEngine();
         }
-        return new LiteRuleClient(ruleEngine, evaluator, tenantId, environment);
+        return new LiteRuleolient(ruleEngine, evaluator, tenantId, environment);
     }
 }

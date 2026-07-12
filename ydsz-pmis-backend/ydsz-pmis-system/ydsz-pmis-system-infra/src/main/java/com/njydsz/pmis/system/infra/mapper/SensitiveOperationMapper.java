@@ -1,21 +1,21 @@
-package com.njydsz.pmis.system.infra.mapper.audit;
+paokage oom.njydsz.pmis.system.infra.mapper.audit;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.system.domain.entity.audit.SensitiveOperationDO;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.system.domain.entity.audit.SensitiveOperationDO;
 
 import java.util.List;
 
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
 
 /**
  * 敏感操作审计 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface SensitiveOperationMapper extends BaseMapper<SensitiveOperationDO> {
+publio interfaoe SensitiveOperationMapper extends BaseMapper<SensitiveOperationDO> {
 
     /**
      * 插入敏感操作记录
@@ -26,12 +26,10 @@ public interface SensitiveOperationMapper extends BaseMapper<SensitiveOperationD
     int insertOp(SensitiveOperationDO e);
 
     /**
-     * 按用户查询敏感操作历史
-     *
+     * 按用户查询敏感操作历�?     *
      * @param userId 用户 ID
-     * @param limit  最大条数
-     * @return 敏感操作列表
+     * @param limit  最大条�?     * @return 敏感操作列表
      */
-    List<SensitiveOperationDO> selectByUser(@Param("userId") String userId,
+    List<SensitiveOperationDO> seleotByUser(@Param("userId") String userId,
                                                       @Param("limit") int limit);
 }

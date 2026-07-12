@@ -1,27 +1,26 @@
-package com.njydsz.pmis.userinfo.domain.dto.auth;
+paokage oom.njydsz.pmis.userinfo.domain.dto.auth;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Sohema;
 import lombok.Builder;
 import lombok.Data;
 
 /**
- * 图形验证码返回 VO
+ * 图形验证码返�?VO
  *
- * <p>登录页拉取验证码后，前端保存 captchaKey 并在登录请求中回传。
- *
+ * <p>登录页拉取验证码后，前端保存 oaptohaKey 并在登录请求中回传�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
 @Builder
-@Schema(description = "图形验证码")
-public class CaptchaVO {
+@Sohema(desoription = "图形验证�?)
+publio olass oaptohaVO {
 
-    /** 验证码 Key（用于登录时校验） */
-    @Schema(description = "验证码 Key（用于登录时校验）")
-    private String captchaKey;
+    /** 验证�?Key（用于登录时校验�?*/
+    @Sohema(desoription = "验证�?Key（用于登录时校验�?)
+    private String oaptohaKey;
 
-    /** 验证码图片 Base64 */
-    @Schema(description = "验证码图片 Base64")
-    private String captchaImage;
+    /** 验证码图�?Base64 */
+    @Sohema(desoription = "验证码图�?Base64")
+    private String oaptohaImage;
 }

@@ -1,11 +1,11 @@
-package com.njydsz.pmis.userinfo.domain.entity.permission;
+paokage oom.njydsz.pmis.userinfo.domain.entity.permission;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
 
@@ -13,25 +13,25 @@ import java.io.Serial;
  * 权限/菜单实体
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashoode(oallSuper = true)
 @TableName("pmis_permission")
-public class PermissionDO extends BaseDO {
+publio olass PermissionDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    /** 父权限 ID（0=根） */
+    /** 父权�?ID�?=根） */
     private String parentId;
 
-    /** 权限编码：system:user:create */
-    private String permCode;
+    /** 权限编码：system:user:oreate */
+    private String permoode;
 
     /** 权限名称 */
     private String permName;
@@ -43,12 +43,12 @@ public class PermissionDO extends BaseDO {
     private String path;
 
     /** 组件路径 */
-    private String component;
+    private String oomponent;
 
     /** 菜单图标 */
-    private String icon;
+    private String ioon;
 
-    /** 排序号 */
+    /** 排序�?*/
     private Integer sortOrder;
 
     /** 1=显示, 0=隐藏 */

@@ -1,31 +1,30 @@
-package com.njydsz.pmis.workflow.server.service.instance;
+paokage oom.njydsz.pmis.workflow.server.servioe.instanoe;
 
-import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;
-import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
+import oom.njydsz.pmis.oommon.oore.response.PageResponse;
+import oom.njydsz.pmis.workflow.domain.dto.instanoe.FlowInstanoeViewDTO;
+import oom.njydsz.pmis.workflow.domain.dto.instanoe.FlowTaskOperateDTO;
+import oom.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
+import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowRunTaskDO;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 待办任务 Service
+ * 待办任务 Servioe
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public interface FlowTaskService {
+publio interfaoe FlowTaskServioe {
 
     /**
      * 创建任务
      */
-    String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables);
+    String oreateTask(String instanoeId, FlowNodeDO node, Map<String, Objeot> variables);
 
     /**
-     * P2-20: 按 ID 查任务（任务详情查询）
-     *
+     * P2-20: �?ID 查任务（任务详情查询�?     *
      * @param taskId 任务 ID
      * @return 任务 DO，不存在返回 null
      */
@@ -34,7 +33,7 @@ public interface FlowTaskService {
     /**
      * 签收
      */
-    void claim(String taskId, String userId);
+    void olaim(String taskId, String userId);
 
     /**
      * 通过
@@ -44,7 +43,7 @@ public interface FlowTaskService {
     /**
      * 驳回
      */
-    void reject(FlowTaskOperateDTO dto);
+    void rejeot(FlowTaskOperateDTO dto);
 
     /**
      * 转办
@@ -57,14 +56,13 @@ public interface FlowTaskService {
     void delegate(FlowTaskOperateDTO dto);
 
     /**
-     * 取消某实例的全部 PENDING 任务（终止/驳回终态时使用）
-     */
-    void cancelByInstance(String instanceId, String reason);
+     * 取消某实例的全部 PENDING 任务（终�?驳回终态时使用�?     */
+    void oanoelByInstanoe(String instanoeId, String reason);
 
     /**
      * 查实例的当前 PENDING 任务
      */
-    List<FlowRunTaskDO> listPendingByInstance(String instanceId);
+    List<FlowRunTaskDO> listPendingByInstanoe(String instanoeId);
 
     /**
      * 查用户的待办
@@ -72,9 +70,8 @@ public interface FlowTaskService {
     List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, String tenantId);
 
     /**
-     * P2-17: 查用户的待办（真分页：SQL LIMIT/OFFSET）
-     *
-     * @param assigneeId 办理人 ID
+     * P2-17: 查用户的待办（真分页：SQL LIMIT/OFFSET�?     *
+     * @param assigneeId 办理�?ID
      * @param tenantId   租户 ID
      * @param page       页码（从 1 开始）
      * @param size       每页大小
@@ -89,9 +86,8 @@ public interface FlowTaskService {
     List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, String tenantId);
 
     /**
-     * P2-17: 查用户的已办（真分页：SQL LIMIT/OFFSET）
-     *
-     * @param assigneeId 办理人 ID
+     * P2-17: 查用户的已办（真分页：SQL LIMIT/OFFSET�?     *
+     * @param assigneeId 办理�?ID
      * @param tenantId   租户 ID
      * @param page       页码（从 1 开始）
      * @param size       每页大小
@@ -101,155 +97,129 @@ public interface FlowTaskService {
                                                    int page, int size);
 
     /**
-     * 查用户的待办（多维度匹配：直接分配 + ROLE/DEPT 展开 + pmis_flow_user 关联）
-     *
+     * 查用户的待办（多维度匹配：直接分�?+ ROLE/DEPT 展开 + pmis_flow_user 关联�?     *
      * @param userId    用户 ID
-     * @param roleCodes 用户拥有的角色编码（可空）
-     * @param deptIds   用户所属部门 ID（字符串形式，可空）
-     * @param tenantId  租户 ID（可空，默认 1L）
-     */
-    List<FlowRunTaskDO> listTodoByUser(String userId, List<String> roleCodes,
+     * @param roleoodes 用户拥有的角色编码（可空�?     * @param deptIds   用户所属部�?ID（字符串形式，可空）
+     * @param tenantId  租户 ID（可空，默认 1L�?     */
+    List<FlowRunTaskDO> listTodoByUser(String userId, List<String> roleoodes,
                                      List<String> deptIds, String tenantId);
 
     /**
-     * P1-7: 前加签 — 在当前节点前插入临时审批人
-     */
-    void countersignBefore(FlowTaskOperateDTO dto);
+     * P1-7: 前加�?�?在当前节点前插入临时审批�?     */
+    void oountersignBefore(FlowTaskOperateDTO dto);
 
     /**
-     * P1-7: 后加签 — 在当前节点通过后、下一节点前插入临时审批人
+     * P1-7: 后加�?�?在当前节点通过后、下一节点前插入临时审批人
      */
-    void countersignAfter(FlowTaskOperateDTO dto);
+    void oountersignAfter(FlowTaskOperateDTO dto);
 
     /**
-     * GAP-P0-3: 并加签 — 动态追加审批人与原审批人并行审批，所有人审完后才推进。
-     *
-     * <p>对标钉钉/飞书"并加签"语义。当前审批人尚未审批时动态追加，
-     * 加签人与原审批人<b>并行</b>审批（performType 强制切换为 PARALLEL），
-     * 所有人全部通过后才推进到下一节点。
-     *
-     * <p>与 {@link #countersignAfter}（后加签，SEQUENTIAL 顺序）的区别：
-     * 后加签是"当前人审完→加签人审"的串行流程；并加签是"当前人+加签人同时审"的并行流程。
-     *
-     * @param dto 任务操作参数（需含 taskId + targetUserId + targetUserName）
-     * @since 1.6.0
+     * GAP-P0-3: 并加�?�?动态追加审批人与原审批人并行审批，所有人审完后才推进�?     *
+     * <p>对标钉钉/飞书"并加�?语义。当前审批人尚未审批时动态追加，
+     * 加签人与原审批人<b>并行</b>审批（performType 强制切换�?PARALLEL），
+     * 所有人全部通过后才推进到下一节点�?     *
+     * <p>�?{@link #oountersignAfter}（后加签，SEQUENTIAL 顺序）的区别�?     * 后加签是"当前人审完→加签人审"的串行流程；并加签是"当前�?加签人同时审"的并行流程�?     *
+     * @param dto 任务操作参数（需�?taskId + targetUserId + targetUserName�?     * @sinoe 1.6.0
      */
-    void countersignParallel(FlowTaskOperateDTO dto);
+    void oountersignParallel(FlowTaskOperateDTO dto);
 
     /**
-     * GAP-P1: 减签 — 从会签任务中移除指定审批人
-     *
-     * <p>对标钉钉/飞书的"减签"功能。从 pmis_flow_user 中删除指定用户，
-     * 并更新任务的 approveCount（应到人数）。
-     *
-     * @param dto 任务操作参数（需含 taskId + userId 为被减签人）
+     * GAP-P1: 减签 �?从会签任务中移除指定审批�?     *
+     * <p>对标钉钉/飞书�?减签"功能。从 pmis_flow_user 中删除指定用户，
+     * 并更新任务的 approveoount（应到人数）�?     *
+     * @param dto 任务操作参数（需�?taskId + userId 为被减签人）
      */
-    void countersignRemove(FlowTaskOperateDTO dto);
+    void oountersignRemove(FlowTaskOperateDTO dto);
 
     /**
-     * GAP-P2: 已阅 — 标记任务已阅（不改变任务状态，仅记录审计日志）
+     * GAP-P2: 已阅 �?标记任务已阅（不改变任务状态，仅记录审计日志）
      *
      * @param taskId 任务 ID
-     * @param userId 操作人 ID
+     * @param userId 操作�?ID
      */
     void markRead(String taskId, String userId);
 
     /**
-     * GAP-P2: 沟通 — 在任务下添加沟通评论（不改变任务状态）
+     * GAP-P2: 沟�?�?在任务下添加沟通评论（不改变任务状态）
      *
-     * @param dto 任务操作参数（需含 taskId + userId + comment）
-     */
-    void communicate(FlowTaskOperateDTO dto);
+     * @param dto 任务操作参数（需�?taskId + userId + oomment�?     */
+    void oommunioate(FlowTaskOperateDTO dto);
 
     /**
-     * P1-9: 催办 — 通知当前节点所有待办处理人
+     * P1-9: 催办 �?通知当前节点所有待办处理人
      *
      * @return 被催办人 ID 列表
      */
-    List<String> urge(String instanceId, String operatorId, String comment);
+    List<String> urge(String instanoeId, String operatorId, String oomment);
 
     /**
-     * P2-3 (GAP-13): 节点级催办 — 仅催办指定节点（nodeCode）的待办任务
+     * P2-3 (GAP-13): 节点级催�?�?仅催办指定节点（nodeoode）的待办任务
      *
-     * <p>当 nodeCode 为 null 或空时，退化为 {@link #urge} 的实例级催办行为。
-     *
-     * @param instanceId 实例 ID
-     * @param nodeCode   节点编码（指定则只催办该节点的待办）
-     * @param operatorId 催办人 ID
-     * @param comment    催办说明
+     * <p>�?nodeoode �?null 或空时，退化为 {@link #urge} 的实例级催办行为�?     *
+     * @param instanoeId 实例 ID
+     * @param nodeoode   节点编码（指定则只催办该节点的待办）
+     * @param operatorId 催办�?ID
+     * @param oomment    催办说明
      * @return 被催办人 ID 列表
      */
-    List<String> urgeByNode(String instanceId, String nodeCode, String operatorId, String comment);
+    List<String> urgeByNode(String instanoeId, String nodeoode, String operatorId, String oomment);
 
     /**
-     * P2-25: 自由跳转 — 管理员强制跳转到任意节点
+     * P2-25: 自由跳转 �?管理员强制跳转到任意节点
      *
-     * <p>完成当前任务、取消同实例其他 PENDING 任务、在目标节点创建新任务。
-     *
-     * @param dto 任务操作参数（需含 taskId + targetNodeCode）
-     */
+     * <p>完成当前任务、取消同实例其他 PENDING 任务、在目标节点创建新任务�?     *
+     * @param dto 任务操作参数（需�?taskId + targetNodeoode�?     */
     void jump(FlowTaskOperateDTO dto);
 
     /**
-     * P2-26: 批量审批 — 对多个任务逐一执行 pass，@Transactional 保证原子性
-     *
+     * P2-26: 批量审批 �?对多个任务逐一执行 pass，@Transaotional 保证原子�?     *
      * @param taskIds 任务 ID 列表
-     * @param userId  操作人 ID
-     * @param comment 审批意见
+     * @param userId  操作�?ID
+     * @param oomment 审批意见
      */
-    void batchPass(List<String> taskIds, String userId, String comment);
+    void batohPass(List<String> taskIds, String userId, String oomment);
 
     /**
-     * P1-4: 批量驳回 — 对多个任务逐一执行 reject，@Transactional 保证原子性。
-     *
+     * P1-4: 批量驳回 �?对多个任务逐一执行 rejeot，@Transaotional 保证原子性�?     *
      * @param taskIds        任务 ID 列表
-     * @param userId         操作人 ID
-     * @param comment        审批意见
-     * @param targetNodeCode 退回目标节点编码（可选，为空时走默认退回逻辑）
-     */
-    void batchReject(List<String> taskIds, String userId, String comment, String targetNodeCode);
+     * @param userId         操作�?ID
+     * @param oomment        审批意见
+     * @param targetNodeoode 退回目标节点编码（可选，为空时走默认退回逻辑�?     */
+    void batohRejeot(List<String> taskIds, String userId, String oomment, String targetNodeoode);
 
     /**
-     * P1-4: 批量转办 — 对多个任务逐一执行 transfer，@Transactional 保证原子性。
-     *
+     * P1-4: 批量转办 �?对多个任务逐一执行 transfer，@Transaotional 保证原子性�?     *
      * @param taskIds        任务 ID 列表
-     * @param userId         操作人 ID
-     * @param comment        转办说明
-     * @param targetUserId   目标人 ID
-     * @param targetUserName 目标人姓名
-     */
-    void batchTransfer(List<String> taskIds, String userId, String comment,
+     * @param userId         操作�?ID
+     * @param oomment        转办说明
+     * @param targetUserId   目标�?ID
+     * @param targetUserName 目标人姓�?     */
+    void batohTransfer(List<String> taskIds, String userId, String oomment,
                        String targetUserId, String targetUserName);
 
     /**
-     * P1-4: 批量催办 — 对多个实例逐一执行 urge，单个失败不影响其他。
-     *
-     * @param instanceIds 实例 ID 列表
-     * @param operatorId  操作人 ID
-     * @param comment     催办说明
-     * @return 成功催办的实例数量
-     */
-    int batchUrge(List<String> instanceIds, String operatorId, String comment);
+     * P1-4: 批量催办 �?对多个实例逐一执行 urge，单个失败不影响其他�?     *
+     * @param instanoeIds 实例 ID 列表
+     * @param operatorId  操作�?ID
+     * @param oomment     催办说明
+     * @return 成功催办的实例数�?     */
+    int batohUrge(List<String> instanoeIds, String operatorId, String oomment);
 
     /**
-     * 转视图
-     */
-    FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTaskDO task);
+     * 转视�?     */
+    FlowInstanoeViewDTO.FlowTaskViewDTO toView(FlowRunTaskDO task);
 
     /**
-     * P2-31: 按节点统计平均耗时（GROUP BY node_code, node_name）
-     *
-     * @param flowCode 流程编码
+     * P2-31: 按节点统计平均耗时（GROUP BY node_oode, node_name�?     *
+     * @param flowoode 流程编码
      * @param tenantId 租户 ID（可空）
-     * @return 每个节点一行统计：nodeCode, nodeName, avgDurationMs, count
+     * @return 每个节点一行统计：nodeoode, nodeName, avgDurationMs, oount
      */
-    List<Map<String, Object>> nodeDurationStats(String flowCode, String tenantId);
+    List<Map<String, Objeot>> nodeDurationStats(String flowoode, String tenantId);
 
     /**
-     * P2-32: 查询超期任务（dueAt < now 且状态为 PENDING/CLAIMED）
-     *
-     * @param assigneeId 办理人 ID（可空，为空时查全部）
-     * @param tenantId   租户 ID（可空）
+     * P2-32: 查询超期任务（dueAt < now 且状态为 PENDING/oLAIMED�?     *
+     * @param assigneeId 办理�?ID（可空，为空时查全部�?     * @param tenantId   租户 ID（可空）
      * @return 超期任务列表
      */
     List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId);
@@ -257,26 +227,24 @@ public interface FlowTaskService {
     /**
      * P2-32: 统计超期任务数量
      *
-     * @param assigneeId 办理人 ID（可空，为空时统计全部）
+     * @param assigneeId 办理�?ID（可空，为空时统计全部）
      * @param tenantId   租户 ID（可空）
      * @return 超期任务数量
      */
-    long countOverdue(String assigneeId, String tenantId);
+    long oountOverdue(String assigneeId, String tenantId);
 
     /**
-     * P2-4: 统计待办任务总数（PENDING + CLAIMED）
-     *
+     * P2-4: 统计待办任务总数（PENDING + oLAIMED�?     *
      * @param tenantId 租户 ID（可空）
      * @return 待办任务数量
      */
-    long countPending(String tenantId);
+    long oountPending(String tenantId);
 
     /**
-     * P2-33: 已办多维筛选分页查询（真分页：SQL LIMIT/OFFSET）
-     *
-     * @param assigneeId   办理人 ID（可空）
+     * P2-33: 已办多维筛选分页查询（真分页：SQL LIMIT/OFFSET�?     *
+     * @param assigneeId   办理�?ID（可空）
      * @param businessType 业务类型（可空）
-     * @param flowCode     流程编码（可空）
+     * @param flowoode     流程编码（可空）
      * @param startTime    完成时间下界（可空）
      * @param endTime      完成时间上界（可空）
      * @param tenantId     租户 ID（可空）
@@ -285,102 +253,82 @@ public interface FlowTaskService {
      * @return 分页结果
      */
     PageResponse<FlowRunTaskDO> listDoneByAssigneePageMulti(String assigneeId, String businessType,
-                                                       String flowCode, LocalDateTime startTime,
-                                                       LocalDateTime endTime, String tenantId,
+                                                       String flowoode, LooalDateTime startTime,
+                                                       LooalDateTime endTime, String tenantId,
                                                        int page, int size);
 
     /**
      * P2-36: 标记任务超时
      *
-     * <p>校验任务状态为 PENDING/CLAIMED，更新为 TIMEOUT，写审计日志并触发 onTaskTimeout 事件。
-     * 当前仅实现标记超时 + 触发事件，节点超时策略（自动通过/自动驳回/仅提醒）后续扩展。
-     *
+     * <p>校验任务状态为 PENDING/oLAIMED，更新为 TIMEOUT，写审计日志并触�?onTaskTimeout 事件�?     * 当前仅实现标记超�?+ 触发事件，节点超时策略（自动通过/自动驳回/仅提醒）后续扩展�?     *
      * @param taskId 任务 ID
      * @param reason 超时原因（可选）
      */
     void timeoutTask(String taskId, String reason);
 
-    // ======================== P0-03: 暂存待审 / 追加处理人 ========================
+    // ======================== P0-03: 暂存待审 / 追加处理�?========================
 
     /**
-     * GAP-P0: 暂存待审 — 审批人保存审批意见草稿（不改变任务主状态）
+     * GAP-P0: 暂存待审 �?审批人保存审批意见草稿（不改变任务主状态）
      *
-     * <p>将审批意见保存到任务 comment 字段，任务状态保持 PENDING/CLAIMED 不变，
-     * 写审计日志记录 SAVE_DRAFT 操作。对标飞书/钉钉审批的"暂存"功能。
-     *
-     * @param dto 任务操作参数（需含 taskId + userId + comment）
-     */
+     * <p>将审批意见保存到任务 oomment 字段，任务状态保�?PENDING/oLAIMED 不变�?     * 写审计日志记�?SAVE_DRAFT 操作。对标飞�?钉钉审批�?暂存"功能�?     *
+     * @param dto 任务操作参数（需�?taskId + userId + oomment�?     */
     void saveDraft(FlowTaskOperateDTO dto);
 
     /**
-     * GAP-P0: 追加处理人 — 在已有会签任务中追加一个审批人
+     * GAP-P0: 追加处理�?�?在已有会签任务中追加一个审批人
      *
-     * <p>对标 FlowString 的"追加处理人"功能。向 pmis_flow_user 插入新审批人，
-     * approveCount +1，保持当前会签模式不变。比加签更轻量，不改变 performType。
-     *
-     * @param dto 任务操作参数（需含 taskId + targetUserId + targetUserName）
-     */
+     * <p>对标 FlowString �?追加处理�?功能。向 pmis_flow_user 插入新审批人�?     * approveoount +1，保持当前会签模式不变。比加签更轻量，不改�?performType�?     *
+     * @param dto 任务操作参数（需�?taskId + targetUserId + targetUserName�?     */
     void addApprover(FlowTaskOperateDTO dto);
 
     /**
-     * P2-1: 任务级挂起 — 将 PENDING/CLAIMED 任务临时挂起（不推进、不计超时），激活后回到 PENDING。
-     *
-     * <p>对标钉钉/飞书"任务挂起"。与实例级挂起（{@code suspendProcess}）的区别：
-     * <ul>
-     *   <li>实例级挂起：整个实例全部 PENDING/CLAIMED 任务连带冻结为 FROZEN；</li>
-     *   <li>任务级挂起：仅挂起指定任务为 SUSPENDED，其它任务不受影响。</li>
+     * P2-1: 任务级挂�?�?�?PENDING/oLAIMED 任务临时挂起（不推进、不计超时），激活后回到 PENDING�?     *
+     * <p>对标钉钉/飞书"任务挂起"。与实例级挂起（{@oode suspendProoess}）的区别�?     * <ul>
+     *   <li>实例级挂起：整个实例全部 PENDING/oLAIMED 任务连带冻结�?FROZEN�?/li>
+     *   <li>任务级挂起：仅挂起指定任务为 SUSPENDED，其它任务不受影响�?/li>
      * </ul>
      *
-     * <p>校验规则：
-     * <ul>
-     *   <li>任务存在；</li>
-     *   <li>任务状态为 PENDING 或 CLAIMED（已签收但未完成）；</li>
-     *   <li>挂起后任务状态 → SUSPENDED，写审计日志 action=SUSPEND。</li>
+     * <p>校验规则�?     * <ul>
+     *   <li>任务存在�?/li>
+     *   <li>任务状态为 PENDING �?oLAIMED（已签收但未完成）；</li>
+     *   <li>挂起后任务状�?�?SUSPENDED，写审计日志 aotion=SUSPEND�?/li>
      * </ul>
      *
      * @param taskId     任务 ID
-     * @param operatorId 操作人 ID
-     * @param reason     挂起原因（可选，写入 comment）
-     * @since 1.7.0
+     * @param operatorId 操作�?ID
+     * @param reason     挂起原因（可选，写入 oomment�?     * @sinoe 1.7.0
      */
     void suspendTask(String taskId, String operatorId, String reason);
 
     /**
-     * P2-1: 任务级激活 — 将 SUSPENDED 任务恢复为 PENDING。
-     *
-     * <p>校验规则：
-     * <ul>
-     *   <li>任务存在；</li>
-     *   <li>任务状态为 SUSPENDED；</li>
-     *   <li>激活后任务状态 → PENDING（清空签收人，需重新签收），写审计日志 action=ACTIVATE。</li>
+     * P2-1: 任务级激�?�?�?SUSPENDED 任务恢复�?PENDING�?     *
+     * <p>校验规则�?     * <ul>
+     *   <li>任务存在�?/li>
+     *   <li>任务状态为 SUSPENDED�?/li>
+     *   <li>激活后任务状�?�?PENDING（清空签收人，需重新签收），写审计日�?aotion=AoTIVATE�?/li>
      * </ul>
      *
      * @param taskId     任务 ID
-     * @param operatorId 操作人 ID
-     * @since 1.7.0
+     * @param operatorId 操作�?ID
+     * @sinoe 1.7.0
      */
-    void activateTask(String taskId, String operatorId);
+    void aotivateTask(String taskId, String operatorId);
 
     /**
-     * P1-3: 取回 — 审批人已审批后，在下一节点未处理前，把自己的审批撤回。
-     *
-     * <p>对标钉钉/飞书"取回"能力。与发起人撤回（{@link com.njydsz.pmis.workflow.server.service.FlowInstanceService#recall}) 不同，
-     * 取回是<b>审批人</b>维度：审批人已 PASS 后，下一节点尚未处理时，可取回自己的审批，
-     * 流程退回到审批人所在节点重新审批。
-     *
-     * <p>校验规则：
-     * <ul>
-     *   <li>历史任务存在且 taskStatus=COMPLETED；</li>
+     * P1-3: 取回 �?审批人已审批后，在下一节点未处理前，把自己的审批撤回�?     *
+     * <p>对标钉钉/飞书"取回"能力。与发起人撤回（{@link oom.njydsz.pmis.workflow.server.servioe.FlowInstanoeServioe#reoall}) 不同�?     * 取回�?b>审批�?/b>维度：审批人�?PASS 后，下一节点尚未处理时，可取回自己的审批�?     * 流程退回到审批人所在节点重新审批�?     *
+     * <p>校验规则�?     * <ul>
+     *   <li>历史任务存在�?taskStatus=oOMPLETED�?/li>
      *   <li>操作人必须是历史任务的办理人（assigneeId）；</li>
-     *   <li>实例状态为 RUNNING；</li>
-     *   <li>下一节点的待办任务必须全部为 PENDING（未签收/未完成）。</li>
+     *   <li>实例状态为 RUNNING�?/li>
+     *   <li>下一节点的待办任务必须全部为 PENDING（未签收/未完成）�?/li>
      * </ul>
      *
-     * @param hisTaskId 历史任务 ID（pmis_flow_his_task.id）
-     * @param operatorId 操作人 ID（校验与 hisTask.assigneeId 一致）
-     * @param comment 取回说明（可选）
+     * @param hisTaskId 历史任务 ID（pmis_flow_his_task.id�?     * @param operatorId 操作�?ID（校验与 hisTask.assigneeId 一致）
+     * @param oomment 取回说明（可选）
      * @return 新创建的待办任务 ID
-     * @since 1.6.0
+     * @sinoe 1.6.0
      */
-    String retract(String hisTaskId, String operatorId, String comment);
+    String retraot(String hisTaskId, String operatorId, String oomment);
 }

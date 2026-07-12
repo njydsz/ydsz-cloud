@@ -1,10 +1,10 @@
-package com.njydsz.pmis.userinfo.infra.mapper.permission;
+paokage oom.njydsz.pmis.userinfo.infra.mapper.permission;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.userinfo.domain.entity.permission.RolePermissionDO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.userinfo.domain.entity.permission.RolePermissionDO;
+import org.apaohe.ibatis.annotations.Mapper;
+import org.apaohe.ibatis.annotations.Param;
+import org.apaohe.ibatis.annotations.Seleot;
 
 import java.util.List;
 
@@ -12,17 +12,17 @@ import java.util.List;
  * 角色-权限关联 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Mapper
-public interface RolePermissionMapper extends BaseMapper<RolePermissionDO> {
+publio interfaoe RolePermissionMapper extends BaseMapper<RolePermissionDO> {
 
     /**
-     * 查询角色拥有的权限 ID 列表
+     * 查询角色拥有的权�?ID 列表
      *
      * @param roleId 角色 ID
      * @return 权限 ID 列表
      */
-    @Select("SELECT permission_id FROM pmis_role_permission WHERE role_id = #{roleId} AND deleted = 0")
-    List<String> selectPermissionIdsByRoleId(@Param("roleId") String roleId);
+    @Seleot("SELEoT permission_id FROM pmis_role_permission WHERE role_id = #{roleId} AND deleted = 0")
+    List<String> seleotPermissionIdsByRoleId(@Param("roleId") String roleId);
 }

@@ -1,20 +1,20 @@
-package com.njydsz.pmis.workflow.web.controller.delegate;
+paokage oom.njydsz.pmis.workflow.web.oontroller.delegate;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
 
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.workflow.domain.dto.delegate.FlowDelegateAuthSaveDTO;
-import com.njydsz.pmis.workflow.domain.entity.delegate.FlowDelegateAuthDO;
-import com.njydsz.pmis.workflow.server.service.delegate.FlowDelegateAuthService;
+import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.oommon.oore.response.PageResponse;
+import oom.njydsz.pmis.oommon.permission.Permissionoodes;
+import oom.njydsz.pmis.oommon.auth.oontext.Authoontext;
+import oom.njydsz.pmis.workflow.domain.dto.delegate.FlowDelegateAuthSaveDTO;
+import oom.njydsz.pmis.workflow.domain.entity.delegate.FlowDelegateAuthDO;
+import oom.njydsz.pmis.workflow.server.servioe.delegate.FlowDelegateAuthServioe;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.oonstraints.Max;
+import jakarta.validation.oonstraints.Min;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.validation.annotation.Validated;
@@ -23,143 +23,143 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 长期授权委派 Controller
+ * 长期授权委派 oontroller
  *
- * <p>P1-4: 长期授权委派接口（P1-10 从 FlowEngineController 拆分）。
+ * <p>P1-4: 长期授权委派接口（P1-10 �?FlowEngineoontroller 拆分）�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@RestController
-@Tag(name = "workflow-delegate", description = "工作流授权委派接口")
+@Restoontroller
+@Tag(name = "workflow-delegate", desoription = "工作流授权委派接�?)
 @RequestMapping("/workflow/engine")
-@RequiredArgsConstructor
+@RequiredArgsoonstruotor
 @Validated
-public class FlowDelegateController {
+publio olass FlowDelegateoontroller {
 
     /** P1-4: 长期授权委派服务 */
-    private final FlowDelegateAuthService delegateAuthService;
+    private final FlowDelegateAuthServioe delegateAuthServioe;
 
     /**
      * P1-4: 创建长期授权委派
      *
-     * <p>业务示例：用户 A 休假 7 天，希望 B 代理处理所有流程。
-     * 提交时 body 形如：
+     * <p>业务示例：用�?A 休假 7 天，希望 B 代理处理所有流程�?
+     * 提交�?body 形如�?
      * <pre>
      * {
      *   "ownerUserId": 1001,
      *   "ownerUserName": "张三",
      *   "delegateUserId": 1002,
      *   "delegateUserName": "李四",
-     *   "scopeType": "ALL",
+     *   "soopeType": "ALL",
      *   "startTime": "2026-07-02T00:00:00",
      *   "endTime": "2026-07-09T23:59:59",
      *   "reason": "年假"
      * }
      * </pre>
      */
-    @Idempotent(key = "flowDelegate:createDelegateAuth", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/delegateAuth/create")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
-    public BaseResponse<String> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthSaveDTO dto) {
+    @Idempotent(key = "flowDelegate:oreateDelegateAuth", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/delegateAuth/oreate")
+    @AuthApiPermission(apioodes = Permissionoodes.WORKFLOW_DELEGATE_MANAGE)
+    publio BaseResponse<String> oreateDelegateAuth(@Valid @RequestBody FlowDelegateAuthSaveDTO dto) {
         FlowDelegateAuthDO auth = new FlowDelegateAuthDO();
-        BeanUtils.copyProperties(dto, auth);
-        // 从 SecurityContext 兜底 ownerUserId（防止前端漏传）
+        BeanUtils.oopyProperties(dto, auth);
+        // �?Seourityoontext 兜底 ownerUserId（防止前端漏传）
         if (auth.getOwnerUserId() == null) {
-            auth.setOwnerUserId(AuthContext.getUserId());
+            auth.setOwnerUserId(Authoontext.getUserId());
         }
-        String id = delegateAuthService.create(auth);
+        String id = delegateAuthServioe.oreate(auth);
         return BaseResponse.ok(id);
     }
 
     /**
-     * P1-4: 撤回授权。
+     * P1-4: 撤回授权�?
      *
      * @param id 授权记录 ID
-     * @return 空响应
+     * @return 空响�?
      */
-    @Idempotent(key = "flowDelegate:revokeDelegateAuth", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowDelegate:revokeDelegateAuth", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/delegateAuth/{id}/revoke")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
-    public BaseResponse<Void> revokeDelegateAuth(@PathVariable String id) {
-        String ownerId = AuthContext.getUserId();
-        delegateAuthService.revoke(id, ownerId);
+    @AuthApiPermission(apioodes = Permissionoodes.WORKFLOW_DELEGATE_MANAGE)
+    publio BaseResponse<Void> revokeDelegateAuth(@PathVariable String id) {
+        String ownerId = Authoontext.getUserId();
+        delegateAuthServioe.revoke(id, ownerId);
         return BaseResponse.ok();
     }
 
     /**
-     * P1-4: 启用/停用授权。
+     * P1-4: 启用/停用授权�?
      *
      * @param id     授权记录 ID
-     * @param status 目标状态
-     * @return 空响应
+     * @param status 目标状�?
+     * @return 空响�?
      */
-    @Idempotent(key = "flowDelegate:updateDelegateAuthStatus", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowDelegate:updateDelegateAuthStatus", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/delegateAuth/{id}/status")
-    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
-    public BaseResponse<Void> updateDelegateAuthStatus(@PathVariable String id,
+    @AuthApiPermission(apioodes = Permissionoodes.WORKFLOW_DELEGATE_MANAGE)
+    publio BaseResponse<Void> updateDelegateAuthStatus(@PathVariable String id,
                                                  @RequestParam String status) {
-        String operatorId = AuthContext.getUserId();
-        delegateAuthService.updateStatus(id, status, operatorId);
+        String operatorId = Authoontext.getUserId();
+        delegateAuthServioe.updateStatus(id, status, operatorId);
         return BaseResponse.ok();
     }
 
     /**
-     * P1-4: 查"我设置的"授权列表。
+     * P1-4: �?我设置的"授权列表�?
      *
      * @param status 状态筛选（可选）
      * @return 授权列表
      */
     @GetMapping("/delegateAuth/mine")
-    public BaseResponse<List<FlowDelegateAuthDO>> listMyDelegateAuths(
+    publio BaseResponse<List<FlowDelegateAuthDO>> listMyDelegateAuths(
             @RequestParam(required = false) String status) {
-        String ownerId = AuthContext.getUserId();
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(delegateAuthService.listMine(ownerId, tenantId, status));
+        String ownerId = Authoontext.getUserId();
+        String tenantId = Authoontext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(delegateAuthServioe.listMine(ownerId, tenantId, status));
     }
 
     /**
-     * P1-4: 查"代理给我的"授权列表。
+     * P1-4: �?代理给我�?授权列表�?
      *
      * @param status 状态筛选（可选）
      * @return 授权列表
      */
     @GetMapping("/delegateAuth/asDelegate")
-    public BaseResponse<List<FlowDelegateAuthDO>> listAsDelegate(
+    publio BaseResponse<List<FlowDelegateAuthDO>> listAsDelegate(
             @RequestParam(required = false) String status) {
-        String delegateUserId = AuthContext.getUserId();
-        String tenantId = AuthContext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(delegateAuthService.listAsDelegate(delegateUserId, tenantId, status));
+        String delegateUserId = Authoontext.getUserId();
+        String tenantId = Authoontext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(delegateAuthServioe.listAsDelegate(delegateUserId, tenantId, status));
     }
 
     /**
-     * P1-4: 查"我代理处理了哪些任务"。
+     * P1-4: �?我代理处理了哪些任务"�?
      *
      * @param page 页码
      * @param size 每页大小
      * @return 委派处理日志分页
      */
     @GetMapping("/delegateAuth/log/delegate")
-    public BaseResponse<PageResponse<?>> myDelegateLog(
+    publio BaseResponse<PageResponse<?>> myDelegateLog(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        String delegateUserId = AuthContext.getUserId();
-        return BaseResponse.ok(delegateAuthService.listDelegateLog(delegateUserId, page, size));
+        String delegateUserId = Authoontext.getUserId();
+        return BaseResponse.ok(delegateAuthServioe.listDelegateLog(delegateUserId, page, size));
     }
 
     /**
-     * P1-4: 查"我的哪些任务被代理了"。
+     * P1-4: �?我的哪些任务被代理了"�?
      *
      * @param page 页码
      * @param size 每页大小
-     * @return 被代理任务日志分页
+     * @return 被代理任务日志分�?
      */
     @GetMapping("/delegateAuth/log/owner")
-    public BaseResponse<PageResponse<?>> myOwnerLog(
+    publio BaseResponse<PageResponse<?>> myOwnerLog(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        String ownerUserId = AuthContext.getUserId();
-        return BaseResponse.ok(delegateAuthService.listOwnerLog(ownerUserId, page, size));
+        String ownerUserId = Authoontext.getUserId();
+        return BaseResponse.ok(delegateAuthServioe.listOwnerLog(ownerUserId, page, size));
     }
 }

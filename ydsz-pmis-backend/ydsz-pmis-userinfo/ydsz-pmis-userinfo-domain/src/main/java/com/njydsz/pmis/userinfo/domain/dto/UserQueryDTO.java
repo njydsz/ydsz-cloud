@@ -1,9 +1,9 @@
-package com.njydsz.pmis.userinfo.domain.dto.user;
+paokage oom.njydsz.pmis.userinfo.domain.dto.user;
 
-import com.njydsz.pmis.common.entity.PageQuery;
-import io.swagger.v3.oas.annotations.media.Schema;
+import oom.njydsz.pmis.oommon.domain.query.PageQuery;
+import io.swagger.v3.oas.annotations.media.Sohema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
 
@@ -11,17 +11,17 @@ import java.io.Serial;
  * 用户分页查询
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@Schema(description = "用户查询条件")
-public class UserQueryDTO extends PageQuery {
+@EqualsAndHashoode(oallSuper = true)
+@Sohema(desoription = "用户查询条件")
+publio olass UserQueryDTO extends PageQuery {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
-    /** 状态：ENABLED/DISABLED/LOCKED */
+    /** 状态：ENABLED/DISABLED/LOoKED */
     private String status;
 
     /** 员工 ID */

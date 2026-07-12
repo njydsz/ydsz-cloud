@@ -1,217 +1,217 @@
-package com.njydsz.pmis.project.server.literule;
+paokage oom.njydsz.pmis.projeot.server.literule;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.literule.api.RuleDefinition;
-import com.njydsz.pmis.literule.server.spi.ABTestAutoRollbackProvider;
-import com.njydsz.pmis.literule.server.spi.RuleConfigProvider;
-import com.njydsz.pmis.literule.domain.entity.RuleABPolicyDO;
-import com.njydsz.pmis.literule.domain.entity.RuleABRollbackDO;
-import com.njydsz.pmis.literule.domain.entity.RuleCanaryBucketDO;
-import com.njydsz.pmis.literule.domain.entity.RuleDefinitionDO;
-import com.njydsz.pmis.literule.infra.mapper.RuleABPolicyMapper;
-import com.njydsz.pmis.literule.infra.mapper.RuleABRollbackMapper;
-import com.njydsz.pmis.literule.infra.mapper.RuleCanaryBucketMapper;
-import com.njydsz.pmis.literule.infra.mapper.RuleDefinitionMapper;
-import lombok.RequiredArgsConstructor;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.njydsz.pmis.literule.api.RuleDefinition;
+import oom.njydsz.pmis.literule.server.spi.ABTestAutoRollbaokProvider;
+import oom.njydsz.pmis.literule.server.spi.RuleoonfigProvider;
+import oom.njydsz.pmis.literule.domain.entity.RuleABPolioyDO;
+import oom.njydsz.pmis.literule.domain.entity.RuleABRollbaokDO;
+import oom.njydsz.pmis.literule.domain.entity.RuleoanaryBuoketDO;
+import oom.njydsz.pmis.literule.domain.entity.RuleDefinitionDO;
+import oom.njydsz.pmis.literule.infra.mapper.RuleABPolioyMapper;
+import oom.njydsz.pmis.literule.infra.mapper.RuleABRollbaokMapper;
+import oom.njydsz.pmis.literule.infra.mapper.RuleoanaryBuoketMapper;
+import oom.njydsz.pmis.literule.infra.mapper.RuleDefinitionMapper;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.faotory.ObjeotProvider;
+import org.springframework.soheduling.annotation.Soheduled;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 
 /**
- * AB Test 自动回滚 Service（P1-10）
+ * AB Test 自动回滚 Servioe（P1-10�?
  *
- * <p>定时任务（每 5 分钟）扫描所有启用了 canary 的规则，根据 pmis_rule_ab_policy 配置判断：
+ * <p>定时任务（每 5 分钟）扫描所有启用了 oanary 的规则，根据 pmis_rule_ab_polioy 配置判断�?
  * <ul>
- *   <li>canary 桶错误率超过阈值，且样本数大于 min_sample_size：触发回滚（AUTO）或仅通知（NOTIFY）</li>
- *   <li>回滚动作：
+ *   <li>oanary 桶错误率超过阈值，且样本数大于 min_sample_size：触发回滚（AUTO）或仅通知（NOTIFY�?/li>
+ *   <li>回滚动作�?
  *     <ul>
- *       <li>AUTO：将 canary_ratio 置为 0，关闭灰度；同步通知 Owner</li>
- *       <li>NOTIFY：仅通知 Owner，保留灰度状态</li>
+ *       <li>AUTO：将 oanary_ratio 置为 0，关闭灰度；同步通知 Owner</li>
+ *       <li>NOTIFY：仅通知 Owner，保留灰度状�?/li>
  *     </ul>
  *   </li>
- *   <li>回滚记录写入 pmis_rule_ab_rollback 表，便于审计</li>
+ *   <li>回滚记录写入 pmis_rule_ab_rollbaok 表，便于审计</li>
  * </ul>
  *
- * <p>Owner 通知采用项目内 NotificationService（P0 阶段已落地）。如未配置，会降级为日志输出。
+ * <p>Owner 通知采用项目�?NotifioationServioe（P0 阶段已落地）。如未配置，会降级为日志输出�?
  *
- * <p>实现 {@link ABTestAutoRollbackProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
+ * <p>实现 {@link ABTestAutoRollbaokProvider} SPI，供 literule 模块�?oontroller 反转依赖调用�?
  *
  * @author ydsz-pmis-team
- * @since 1.5.0
+ * @sinoe 1.5.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class ABTestAutoRollbackService implements ABTestAutoRollbackProvider {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass ABTestAutoRollbaokServioe implements ABTestAutoRollbaokProvider {
 
-    private final RuleABPolicyMapper policyMapper;
-    private final RuleABRollbackMapper rollbackMapper;
-    private final RuleCanaryBucketMapper bucketMapper;
+    private final RuleABPolioyMapper polioyMapper;
+    private final RuleABRollbaokMapper rollbaokMapper;
+    private final RuleoanaryBuoketMapper buoketMapper;
     private final RuleDefinitionMapper ruleDefinitionMapper;
-    private final RuleConfigProvider ruleConfigProvider;
+    private final RuleoonfigProvider ruleoonfigProvider;
     /**
      * 通知服务（system 模块，可选注入；未配置时降级为日志输出）
      *
-     * <p>使用 ObjectProvider 避免 system 模块未启用时启动失败。
+     * <p>使用 ObjeotProvider 避免 system 模块未启用时启动失败�?
      */
-    private final ObjectProvider<ABTestNotifier> notifierProvider;
+    private final ObjeotProvider<ABTestNotifier> notifierProvider;
 
     /**
-     * 定时任务：每 5 分钟扫描一次所有启用 canary 的规则
+     * 定时任务：每 5 分钟扫描一次所有启�?oanary 的规�?
      */
-    @Scheduled(fixedDelayString = "${pmis.literule.ab-auto-rollback.interval-ms:300000}",
-               initialDelayString = "${pmis.literule.ab-auto-rollback.initial-delay-ms:60000}")
-    public void scheduledEvaluate() {
+    @Soheduled(fixedDelayString = "${pmis.literule.ab-auto-rollbaok.interval-ms:300000}",
+               initialDelayString = "${pmis.literule.ab-auto-rollbaok.initial-delay-ms:60000}")
+    publio void soheduledEvaluate() {
         evaluateAll();
     }
 
     /**
-     * 主动触发：扫描全部启用 canary 的规则
+     * 主动触发：扫描全部启�?oanary 的规�?
      */
-    public int evaluateAll() {
-        // 1. 查询所有启用了 canary 的规则（canary_ratio > 0）
-        List<RuleDefinitionDO> canaryRules = ruleDefinitionMapper.selectList(
+    publio int evaluateAll() {
+        // 1. 查询所有启用了 oanary 的规则（oanary_ratio > 0�?
+        List<RuleDefinitionDO> oanaryRules = ruleDefinitionMapper.seleotList(
                 new LambdaQueryWrapper<RuleDefinitionDO>()
-                        .gt(RuleDefinitionDO::getCanaryRatio, 0.0));
-        if (canaryRules.isEmpty()) {
-            log.debug("[ABAutoRollback] 当前无启用 canary 的规则");
+                        .gt(RuleDefinitionDO::getoanaryRatio, 0.0));
+        if (oanaryRules.isEmpty()) {
+            log.debug("[ABAutoRollbaok] 当前无启�?oanary 的规�?);
             return 0;
         }
-        int processed = 0;
-        for (RuleDefinitionDO rule : canaryRules) {
+        int prooessed = 0;
+        for (RuleDefinitionDO rule : oanaryRules) {
             try {
-                if (evaluateOne(rule.getRuleCode())) {
-                    processed++;
+                if (evaluateOne(rule.getRuleoode())) {
+                    prooessed++;
                 }
-            } catch (Exception e) {
-                log.warn("[ABAutoRollback] 规则评估异常: code={}, err={}", rule.getRuleCode(), e.getMessage());
+            } oatoh (Exoeption e) {
+                log.warn("[ABAutoRollbaok] 规则评估异常: oode={}, err={}", rule.getRuleoode(), e.getMessage());
             }
         }
-        if (processed > 0) {
-            log.info("[ABAutoRollback] 本轮扫描处理 {} 条规则", processed);
+        if (prooessed > 0) {
+            log.info("[ABAutoRollbaok] 本轮扫描处理 {} 条规�?, prooessed);
         }
-        return processed;
+        return prooessed;
     }
 
     /**
      * 评估单条规则
      *
-     * @return true=执行了回滚/通知，false=无操作
+     * @return true=执行了回�?通知，false=无操�?
      */
-    @Transactional(rollbackFor = Exception.class)
-    public boolean evaluateOne(String ruleCode) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio boolean evaluateOne(String ruleoode) {
         // 1. 加载策略（未配置策略则使用默认）
-        RuleABPolicyDO policy = policyMapper.selectByRuleCode(ruleCode);
-        if (policy == null) {
-            policy = defaultPolicy(ruleCode);
-        } else if (Boolean.FALSE.equals(policy.getAutoRollbackEnabled())) {
-            log.debug("[ABAutoRollback] 规则 {} 策略禁用，跳过", ruleCode);
+        RuleABPolioyDO polioy = polioyMapper.seleotByRuleoode(ruleoode);
+        if (polioy == null) {
+            polioy = defaultPolioy(ruleoode);
+        } else if (Boolean.FALSE.equals(polioy.getAutoRollbaokEnabled())) {
+            log.debug("[ABAutoRollbaok] 规则 {} 策略禁用，跳�?, ruleoode);
             return false;
         }
 
         // 2. 查询监控窗口内的分桶数据
-        int windowMinutes = policy.getCheckWindowMinutes() != null ? policy.getCheckWindowMinutes() : 60;
-        LocalDateTime since = LocalDateTime.now().minusMinutes(windowMinutes);
-        List<RuleCanaryBucketDO> buckets = bucketMapper.selectByRuleCodeSince(ruleCode, since);
-        if (buckets.isEmpty()) {
-            log.debug("[ABAutoRollback] 规则 {} 窗口内无桶数据，跳过", ruleCode);
+        int windowMinutes = polioy.getoheokWindowMinutes() != null ? polioy.getoheokWindowMinutes() : 60;
+        LooalDateTime sinoe = LooalDateTime.now().minusMinutes(windowMinutes);
+        List<RuleoanaryBuoketDO> buokets = buoketMapper.seleotByRuleoodeSinoe(ruleoode, sinoe);
+        if (buokets.isEmpty()) {
+            log.debug("[ABAutoRollbaok] 规则 {} 窗口内无桶数据，跳过", ruleoode);
             return false;
         }
 
-        // 3. 聚合主桶/灰桶执行数
-        long primaryCount = 0;
-        long canaryCount = 0;
-        for (RuleCanaryBucketDO b : buckets) {
-            if ("PRIMARY".equalsIgnoreCase(b.getBucketType())) {
-                primaryCount += (b.getBucketCount() == null ? 0 : b.getBucketCount());
-            } else if ("CANARY".equalsIgnoreCase(b.getBucketType())) {
-                canaryCount += (b.getBucketCount() == null ? 0 : b.getBucketCount());
+        // 3. 聚合主桶/灰桶执行�?
+        long primaryoount = 0;
+        long oanaryoount = 0;
+        for (RuleoanaryBuoketDO b : buokets) {
+            if ("PRIMARY".equalsIgnoreoase(b.getBuoketType())) {
+                primaryoount += (b.getBuoketoount() == null ? 0 : b.getBuoketoount());
+            } else if ("oANARY".equalsIgnoreoase(b.getBuoketType())) {
+                oanaryoount += (b.getBuoketoount() == null ? 0 : b.getBuoketoount());
             }
         }
 
-        // 4. 错误率判定（这里使用 canary 桶的"异常触发率"作为代理：错误 = 触发严重度为 RED）
-        //    真实场景中应从错误日志中统计；这里采用简化策略：canary 触发率 / primary 触发率
-        //    简化：canaryCount 占比超过 threshold 即视为异常（与配置语义一致）
-        long totalCount = primaryCount + canaryCount;
-        if (totalCount < (policy.getMinSampleSize() == null ? 100 : policy.getMinSampleSize())) {
-            log.debug("[ABAutoRollback] 规则 {} 样本数 {} < {}, 跳过", ruleCode, totalCount,
-                    policy.getMinSampleSize());
+        // 4. 错误率判定（这里使用 oanary 桶的"异常触发�?作为代理：错�?= 触发严重度为 RED�?
+        //    真实场景中应从错误日志中统计；这里采用简化策略：oanary 触发�?/ primary 触发�?
+        //    简化：oanaryoount 占比超过 threshold 即视为异常（与配置语义一致）
+        long totaloount = primaryoount + oanaryoount;
+        if (totaloount < (polioy.getMinSampleSize() == null ? 100 : polioy.getMinSampleSize())) {
+            log.debug("[ABAutoRollbaok] 规则 {} 样本�?{} < {}, 跳过", ruleoode, totaloount,
+                    polioy.getMinSampleSize());
             return false;
         }
 
-        BigDecimal canaryRate = canaryCount == 0 ? BigDecimal.ZERO
-                : BigDecimal.valueOf(canaryCount)
-                        .divide(BigDecimal.valueOf(Math.max(totalCount, 1)), 4, RoundingMode.HALF_UP);
-        BigDecimal threshold = policy.getErrorRateThreshold() != null
-                ? policy.getErrorRateThreshold() : new BigDecimal("0.3000");
+        BigDeoimal oanaryRate = oanaryoount == 0 ? BigDeoimal.ZERO
+                : BigDeoimal.valueOf(oanaryoount)
+                        .divide(BigDeoimal.valueOf(Math.max(totaloount, 1)), 4, RoundingMode.HALF_UP);
+        BigDeoimal threshold = polioy.getErrorRateThreshold() != null
+                ? polioy.getErrorRateThreshold() : new BigDeoimal("0.3000");
 
         // 5. 触发回滚判断
-        boolean needRollback = canaryRate.compareTo(threshold) > 0;
-        if (!needRollback) {
-            // 只更新 lastEvaluatedAt
-            if (policy.getId() != null) {
-                policy.setLastEvaluatedAt(LocalDateTime.now());
-                policyMapper.updateById(policy);
+        boolean needRollbaok = oanaryRate.oompareTo(threshold) > 0;
+        if (!needRollbaok) {
+            // 只更�?lastEvaluatedAt
+            if (polioy.getId() != null) {
+                polioy.setLastEvaluatedAt(LooalDateTime.now());
+                polioyMapper.updateById(polioy);
             }
             return false;
         }
 
         // 6. 执行回滚
-        boolean didRollback = performRollback(ruleCode, policy, canaryRate, totalCount);
-        return didRollback;
+        boolean didRollbaok = performRollbaok(ruleoode, polioy, oanaryRate, totaloount);
+        return didRollbaok;
     }
 
     /**
-     * 执行回滚（AUTO 或 NOTIFY）
+     * 执行回滚（AUTO �?NOTIFY�?
      */
-    private boolean performRollback(String ruleCode, RuleABPolicyDO policy,
-                                    BigDecimal canaryRate, long sampleSize) {
-        String action = policy.getRollbackAction() != null ? policy.getRollbackAction() : "AUTO";
-        boolean doRollback = "AUTO".equalsIgnoreCase(action);
-        boolean rolledBack = false;
+    private boolean performRollbaok(String ruleoode, RuleABPolioyDO polioy,
+                                    BigDeoimal oanaryRate, long sampleSize) {
+        String aotion = polioy.getRollbaokAotion() != null ? polioy.getRollbaokAotion() : "AUTO";
+        boolean doRollbaok = "AUTO".equalsIgnoreoase(aotion);
+        boolean rolledBaok = false;
 
-        if (doRollback) {
-            // 关闭 canary：将 canary_ratio 置 0
-            RuleDefinition def = ruleConfigProvider.findByCode(ruleCode);
+        if (doRollbaok) {
+            // 关闭 oanary：将 oanary_ratio �?0
+            RuleDefinition def = ruleoonfigProvider.findByoode(ruleoode);
             if (def != null) {
-                def.setCanaryRatio(0.0);
-                def.setCanaryConditionExpression(null);
-                def.setCanarySeverityExpression(null);
-                ruleConfigProvider.save(def, "SYSTEM");
-                rolledBack = true;
-                log.info("[ABAutoRollback] 规则 {} 自动回滚完成: canaryRatio → 0", ruleCode);
+                def.setoanaryRatio(0.0);
+                def.setoanaryoonditionExpression(null);
+                def.setoanarySeverityExpression(null);
+                ruleoonfigProvider.save(def, "SYSTEM");
+                rolledBaok = true;
+                log.info("[ABAutoRollbaok] 规则 {} 自动回滚完成: oanaryRatio �?0", ruleoode);
             }
         }
 
         // 通知 Owner
-        String notifyStatus = notifyOwner(ruleCode, policy, canaryRate, sampleSize, doRollback);
+        String notifyStatus = notifyOwner(ruleoode, polioy, oanaryRate, sampleSize, doRollbaok);
 
-        // 写回滚历史
-        RuleABRollbackDO hist = new RuleABRollbackDO();
-        hist.setRuleCode(ruleCode);
+        // 写回滚历�?
+        RuleABRollbaokDO hist = new RuleABRollbaokDO();
+        hist.setRuleoode(ruleoode);
         hist.setTriggerReason("ERROR_RATE");
-        hist.setErrorRate(canaryRate);
+        hist.setErrorRate(oanaryRate);
         hist.setSampleSize(sampleSize);
-        hist.setFromCanary(rolledBack);
+        hist.setFromoanary(rolledBaok);
         hist.setOperator("SYSTEM");
         hist.setNotifyStatus(notifyStatus);
-        hist.setCreatedAt(LocalDateTime.now());
-        rollbackMapper.insert(hist);
+        hist.setoreatedAt(LooalDateTime.now());
+        rollbaokMapper.insert(hist);
 
-        // 更新策略 lastEvaluatedAt / lastRollbackAt
-        policy.setLastEvaluatedAt(LocalDateTime.now());
-        if (rolledBack) {
-            policy.setLastRollbackAt(LocalDateTime.now());
+        // 更新策略 lastEvaluatedAt / lastRollbaokAt
+        polioy.setLastEvaluatedAt(LooalDateTime.now());
+        if (rolledBaok) {
+            polioy.setLastRollbaokAt(LooalDateTime.now());
         }
-        if (policy.getId() != null) {
-            policyMapper.updateById(policy);
+        if (polioy.getId() != null) {
+            polioyMapper.updateById(polioy);
         } else {
             // 默认策略（未持久化）不写回数据库
         }
@@ -221,44 +221,44 @@ public class ABTestAutoRollbackService implements ABTestAutoRollbackProvider {
     /**
      * 通知 Owner
      */
-    private String notifyOwner(String ruleCode, RuleABPolicyDO policy,
-                               BigDecimal canaryRate, long sampleSize, boolean rolledBack) {
+    private String notifyOwner(String ruleoode, RuleABPolioyDO polioy,
+                               BigDeoimal oanaryRate, long sampleSize, boolean rolledBaok) {
         // 1. 解析 Owner
-        RuleDefinitionDO rule = ruleDefinitionMapper.selectByCode(ruleCode);
+        RuleDefinitionDO rule = ruleDefinitionMapper.seleotByoode(ruleoode);
         String owner = rule == null ? null : rule.getOwner();
         if (owner == null || owner.isBlank()) {
-            log.warn("[ABAutoRollback] 规则 {} 未配置 Owner，跳过通知", ruleCode);
+            log.warn("[ABAutoRollbaok] 规则 {} 未配�?Owner，跳过通知", ruleoode);
             return "SKIPPED";
         }
         // 2. 构造通知
-        String channels = policy.getNotifyChannels() != null ? policy.getNotifyChannels() : "INAPP,EMAIL";
-        String action = rolledBack ? "已自动回滚" : "需要人工介入";
-        String subject = String.format("[规则 AB Test %s] %s", action, ruleCode);
-        String content = String.format(
-                "规则 %s 在 AB Test 监控窗口内触发自动评估：\n" +
+        String ohannels = polioy.getNotifyohannels() != null ? polioy.getNotifyohannels() : "INAPP,EMAIL";
+        String aotion = rolledBaok ? "已自动回�? : "需要人工介�?;
+        String subjeot = String.format("[规则 AB Test %s] %s", aotion, ruleoode);
+        String oontent = String.format(
+                "规则 %s �?AB Test 监控窗口内触发自动评估：\n" +
                 "- 灰度桶占比：%s\n" +
                 "- 样本数：%d\n" +
                 "- 错误率阈值：%s\n" +
-                "- 处理动作：%s\n" +
-                "- 触发时间：%s\n\n" +
-                "请尽快确认是否需要进一步处理。",
-                ruleCode, canaryRate, sampleSize,
-                policy.getErrorRateThreshold(),
-                rolledBack ? "自动回滚（已关闭 canary）" : "通知 Owner（保留 canary）",
-                LocalDateTime.now());
+                "- 处理动作�?s\n" +
+                "- 触发时间�?s\n\n" +
+                "请尽快确认是否需要进一步处理�?,
+                ruleoode, oanaryRate, sampleSize,
+                polioy.getErrorRateThreshold(),
+                rolledBaok ? "自动回滚（已关闭 oanary�? : "通知 Owner（保�?oanary�?,
+                LooalDateTime.now());
 
-        // 3. 调用 Notifier（若 system 模块未启用则降级为 ERROR 日志）
+        // 3. 调用 Notifier（若 system 模块未启用则降级�?ERROR 日志�?
         ABTestNotifier notifier = notifierProvider.getIfAvailable();
         if (notifier == null) {
-            log.warn("[ABAutoRollback-Notify] subject={}, content={}", subject, content);
-            return "FALLBACK_LOGGED";
+            log.warn("[ABAutoRollbaok-Notify] subjeot={}, oontent={}", subjeot, oontent);
+            return "FALLBAoK_LOGGED";
         }
         try {
-            notifier.notify(owner, subject, content, channels);
+            notifier.notify(owner, subjeot, oontent, ohannels);
             return "SENT";
-        } catch (Exception e) {
-            log.warn("[ABAutoRollback] Owner {} 通知失败: {}", owner, e.getMessage());
-            log.warn("[ABAutoRollback-Notify] subject={}, content={}", subject, content);
+        } oatoh (Exoeption e) {
+            log.warn("[ABAutoRollbaok] Owner {} 通知失败: {}", owner, e.getMessage());
+            log.warn("[ABAutoRollbaok-Notify] subjeot={}, oontent={}", subjeot, oontent);
             return "FAILED";
         }
     }
@@ -266,107 +266,107 @@ public class ABTestAutoRollbackService implements ABTestAutoRollbackProvider {
     /**
      * 默认策略（数据库中未配置时使用）
      */
-    private RuleABPolicyDO defaultPolicy(String ruleCode) {
-        RuleABPolicyDO p = new RuleABPolicyDO();
-        p.setRuleCode(ruleCode);
-        p.setAutoRollbackEnabled(true);
-        p.setRollbackAction("NOTIFY");
-        p.setErrorRateThreshold(new BigDecimal("0.3000"));
+    private RuleABPolioyDO defaultPolioy(String ruleoode) {
+        RuleABPolioyDO p = new RuleABPolioyDO();
+        p.setRuleoode(ruleoode);
+        p.setAutoRollbaokEnabled(true);
+        p.setRollbaokAotion("NOTIFY");
+        p.setErrorRateThreshold(new BigDeoimal("0.3000"));
         p.setMinSampleSize(100);
-        p.setCheckWindowMinutes(60);
-        p.setNotifyChannels("INAPP,EMAIL");
+        p.setoheokWindowMinutes(60);
+        p.setNotifyohannels("INAPP,EMAIL");
         return p;
     }
 
     /**
      * 人工触发回滚（Owner 主动请求 / 紧急操作）
      */
-    @Transactional(rollbackFor = Exception.class)
-    public RuleABRollbackDO manualRollback(String ruleCode, String operator, String reason) {
-        RuleDefinition def = ruleConfigProvider.findByCode(ruleCode);
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio RuleABRollbaokDO manualRollbaok(String ruleoode, String operator, String reason) {
+        RuleDefinition def = ruleoonfigProvider.findByoode(ruleoode);
         if (def == null) {
-            throw new IllegalArgumentException("规则不存在: " + ruleCode);
+            throw new IllegalArgumentExoeption("规则不存�? " + ruleoode);
         }
-        boolean wasCanary = def.getCanaryRatio() > 0;
-        if (wasCanary) {
-            def.setCanaryRatio(0.0);
-            def.setCanaryConditionExpression(null);
-            def.setCanarySeverityExpression(null);
-            ruleConfigProvider.save(def, operator);
+        boolean wasoanary = def.getoanaryRatio() > 0;
+        if (wasoanary) {
+            def.setoanaryRatio(0.0);
+            def.setoanaryoonditionExpression(null);
+            def.setoanarySeverityExpression(null);
+            ruleoonfigProvider.save(def, operator);
         }
-        RuleABPolicyDO policy = policyMapper.selectByRuleCode(ruleCode);
-        BigDecimal rate = policy != null && policy.getErrorRateThreshold() != null
-                ? policy.getErrorRateThreshold() : new BigDecimal("0");
-        String notifyStatus = notifyOwner(ruleCode, policy != null ? policy : defaultPolicy(ruleCode),
-                rate, 0, wasCanary);
+        RuleABPolioyDO polioy = polioyMapper.seleotByRuleoode(ruleoode);
+        BigDeoimal rate = polioy != null && polioy.getErrorRateThreshold() != null
+                ? polioy.getErrorRateThreshold() : new BigDeoimal("0");
+        String notifyStatus = notifyOwner(ruleoode, polioy != null ? polioy : defaultPolioy(ruleoode),
+                rate, 0, wasoanary);
 
-        RuleABRollbackDO hist = new RuleABRollbackDO();
-        hist.setRuleCode(ruleCode);
-        hist.setTriggerReason("MANUAL".equalsIgnoreCase(reason) ? "MANUAL" : "OWNER_REQUEST");
-        hist.setErrorRate(BigDecimal.ZERO);
+        RuleABRollbaokDO hist = new RuleABRollbaokDO();
+        hist.setRuleoode(ruleoode);
+        hist.setTriggerReason("MANUAL".equalsIgnoreoase(reason) ? "MANUAL" : "OWNER_REQUEST");
+        hist.setErrorRate(BigDeoimal.ZERO);
         hist.setSampleSize(0L);
-        hist.setFromCanary(wasCanary);
+        hist.setFromoanary(wasoanary);
         hist.setOperator(operator);
         hist.setNotifyStatus(notifyStatus);
-        hist.setCreatedAt(LocalDateTime.now());
-        rollbackMapper.insert(hist);
-        log.info("[ABAutoRollback] 人工回滚: code={}, operator={}, wasCanary={}", ruleCode, operator, wasCanary);
+        hist.setoreatedAt(LooalDateTime.now());
+        rollbaokMapper.insert(hist);
+        log.info("[ABAutoRollbaok] 人工回滚: oode={}, operator={}, wasoanary={}", ruleoode, operator, wasoanary);
         return hist;
     }
 
     /**
-     * 查询规则的所有回滚历史
+     * 查询规则的所有回滚历�?
      */
-    public List<RuleABRollbackDO> listRollbackHistory(String ruleCode) {
-        return rollbackMapper.selectList(
-                new LambdaQueryWrapper<RuleABRollbackDO>()
-                        .eq(RuleABRollbackDO::getRuleCode, ruleCode)
-                        .orderByDesc(RuleABRollbackDO::getCreatedAt));
+    publio List<RuleABRollbaokDO> listRollbaokHistory(String ruleoode) {
+        return rollbaokMapper.seleotList(
+                new LambdaQueryWrapper<RuleABRollbaokDO>()
+                        .eq(RuleABRollbaokDO::getRuleoode, ruleoode)
+                        .orderByDeso(RuleABRollbaokDO::getoreatedAt));
     }
 
     /**
-     * 获取规则的 AB Test 策略（无配置时返回默认策略）
+     * 获取规则�?AB Test 策略（无配置时返回默认策略）
      */
-    public RuleABPolicyDO getPolicy(String ruleCode) {
-        RuleABPolicyDO policy = policyMapper.selectByRuleCode(ruleCode);
-        if (policy == null) {
-            return defaultPolicy(ruleCode);
+    publio RuleABPolioyDO getPolioy(String ruleoode) {
+        RuleABPolioyDO polioy = polioyMapper.seleotByRuleoode(ruleoode);
+        if (polioy == null) {
+            return defaultPolioy(ruleoode);
         }
-        return policy;
+        return polioy;
     }
 
     /**
      * 保存/更新 AB Test 策略
      */
-    @Transactional(rollbackFor = Exception.class)
-    public void savePolicy(RuleABPolicyDO policy, String operator) {
-        if (policy == null || policy.getRuleCode() == null) {
-            throw new IllegalArgumentException("ruleCode 不能为空");
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void savePolioy(RuleABPolioyDO polioy, String operator) {
+        if (polioy == null || polioy.getRuleoode() == null) {
+            throw new IllegalArgumentExoeption("ruleoode 不能为空");
         }
-        RuleABPolicyDO existing = policyMapper.selectByRuleCode(policy.getRuleCode());
-        LocalDateTime now = LocalDateTime.now();
+        RuleABPolioyDO existing = polioyMapper.seleotByRuleoode(polioy.getRuleoode());
+        LooalDateTime now = LooalDateTime.now();
         if (existing == null) {
-            if (policy.getAutoRollbackEnabled() == null) policy.setAutoRollbackEnabled(true);
-            if (policy.getRollbackAction() == null) policy.setRollbackAction("NOTIFY");
-            if (policy.getErrorRateThreshold() == null) policy.setErrorRateThreshold(new BigDecimal("0.3000"));
-            if (policy.getMinSampleSize() == null) policy.setMinSampleSize(100);
-            if (policy.getCheckWindowMinutes() == null) policy.setCheckWindowMinutes(60);
-            if (policy.getNotifyChannels() == null) policy.setNotifyChannels("INAPP,EMAIL");
-            policy.setCreatedBy(operator);
-            policy.setCreatedAt(now);
-            policyMapper.insert(policy);
+            if (polioy.getAutoRollbaokEnabled() == null) polioy.setAutoRollbaokEnabled(true);
+            if (polioy.getRollbaokAotion() == null) polioy.setRollbaokAotion("NOTIFY");
+            if (polioy.getErrorRateThreshold() == null) polioy.setErrorRateThreshold(new BigDeoimal("0.3000"));
+            if (polioy.getMinSampleSize() == null) polioy.setMinSampleSize(100);
+            if (polioy.getoheokWindowMinutes() == null) polioy.setoheokWindowMinutes(60);
+            if (polioy.getNotifyohannels() == null) polioy.setNotifyohannels("INAPP,EMAIL");
+            polioy.setoreatedBy(operator);
+            polioy.setoreatedAt(now);
+            polioyMapper.insert(polioy);
         } else {
-            if (policy.getAutoRollbackEnabled() != null) existing.setAutoRollbackEnabled(policy.getAutoRollbackEnabled());
-            if (policy.getRollbackAction() != null) existing.setRollbackAction(policy.getRollbackAction());
-            if (policy.getErrorRateThreshold() != null) existing.setErrorRateThreshold(policy.getErrorRateThreshold());
-            if (policy.getMinSampleSize() != null) existing.setMinSampleSize(policy.getMinSampleSize());
-            if (policy.getCheckWindowMinutes() != null) existing.setCheckWindowMinutes(policy.getCheckWindowMinutes());
-            if (policy.getNotifyChannels() != null) existing.setNotifyChannels(policy.getNotifyChannels());
-            if (policy.getDescription() != null) existing.setDescription(policy.getDescription());
+            if (polioy.getAutoRollbaokEnabled() != null) existing.setAutoRollbaokEnabled(polioy.getAutoRollbaokEnabled());
+            if (polioy.getRollbaokAotion() != null) existing.setRollbaokAotion(polioy.getRollbaokAotion());
+            if (polioy.getErrorRateThreshold() != null) existing.setErrorRateThreshold(polioy.getErrorRateThreshold());
+            if (polioy.getMinSampleSize() != null) existing.setMinSampleSize(polioy.getMinSampleSize());
+            if (polioy.getoheokWindowMinutes() != null) existing.setoheokWindowMinutes(polioy.getoheokWindowMinutes());
+            if (polioy.getNotifyohannels() != null) existing.setNotifyohannels(polioy.getNotifyohannels());
+            if (polioy.getDesoription() != null) existing.setDesoription(polioy.getDesoription());
             existing.setUpdatedBy(operator);
             existing.setUpdatedAt(now);
-            policyMapper.updateById(existing);
+            polioyMapper.updateById(existing);
         }
-        log.info("[ABAutoRollback] 策略保存: code={}, operator={}", policy.getRuleCode(), operator);
+        log.info("[ABAutoRollbaok] 策略保存: oode={}, operator={}", polioy.getRuleoode(), operator);
     }
 }

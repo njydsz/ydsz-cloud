@@ -1,56 +1,54 @@
-package com.njydsz.pmis.system.server.listener;
+paokage oom.njydsz.pmis.system.server.listener;
 
-import com.njydsz.pmis.system.domain.entity.audit.DataExportAuditDO;
-import com.njydsz.pmis.system.infra.mapper.audit.DataExportAuditMapper;
-import com.njydsz.pmis.common.security.DataExportAuditEvent;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.system.domain.entity.audit.DataExportAuditDO;
+import oom.njydsz.pmis.system.infra.mapper.audit.DataExportAuditMapper;
+import oom.njydsz.pmis.oommon.seourity.DataExportAuditEvent;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
+import org.springframework.oontext.event.EventListener;
+import org.springframework.soheduling.annotation.Asyno;
+import org.springframework.stereotype.oomponent;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.time.ZoneOffset;
 
 /**
- * 数据导出审计监听器
- *
+ * 数据导出审计监听�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Component
-@RequiredArgsConstructor
-public class DataExportAuditListener {
+@oomponent
+@RequiredArgsoonstruotor
+publio olass DataExportAuditListener {
 
     /** 数据导出审计 Mapper */
     private final DataExportAuditMapper mapper;
 
     /**
-     * 异步消费数据导出审计事件并落库，落库异常被吞掉以避免影响主业务流程。
-     *
+     * 异步消费数据导出审计事件并落库，落库异常被吞掉以避免影响主业务流程�?     *
      * @param e 数据导出审计事件
      */
-    @Async("auditExecutor")
+    @Asyno("auditExeoutor")
     @EventListener
-    public void onExport(DataExportAuditEvent e) {
+    publio void onExport(DataExportAuditEvent e) {
         try {
             DataExportAuditDO d = new DataExportAuditDO();
             d.setUserId(e.getUserId());
             d.setUsername(e.getUsername());
             d.setExportModule(e.getExportModule());
-            d.setExportAction(e.getExportAction());
+            d.setExportAotion(e.getExportAotion());
             d.setBizType(e.getBizType());
-            d.setRowCount(e.getRowCount() == null ? 0 : e.getRowCount());
-            d.setTraceId(e.getTraceId());
-            d.setClientIp(e.getClientIp());
+            d.setRowoount(e.getRowoount() == null ? 0 : e.getRowoount());
+            d.setTraoeId(e.getTraoeId());
+            d.setolientIp(e.getolientIp());
             d.setTenantId(e.getTenantId());
             d.setExportedAt(e.getExportedAt() != null
-                    ? LocalDateTime.ofEpochSecond(e.getExportedAt() / 1000, 0, ZoneOffset.ofHours(8))
-                    : LocalDateTime.now());
-            d.setCreatedAt(LocalDateTime.now());
+                    ? LooalDateTime.ofEpoohSeoond(e.getExportedAt() / 1000, 0, ZoneOffset.ofHours(8))
+                    : LooalDateTime.now());
+            d.setoreatedAt(LooalDateTime.now());
             mapper.insertExport(d);
-        } catch (Exception ex) {
+        } oatoh (Exoeption ex) {
             log.error("[ExportAudit] 落库失败: {}", ex.getMessage(), ex);
         }
     }

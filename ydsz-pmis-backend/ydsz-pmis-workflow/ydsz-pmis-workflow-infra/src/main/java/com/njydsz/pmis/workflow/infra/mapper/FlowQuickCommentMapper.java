@@ -1,15 +1,15 @@
-package com.njydsz.pmis.workflow.infra.mapper.notification;
+paokage oom.njydsz.pmis.workflow.infra.mapper.notifioation;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.workflow.domain.entity.notification.FlowQuickCommentDO;
-import org.apache.ibatis.annotations.Mapper;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.workflow.domain.entity.notifioation.FlowQuiokoommentDO;
+import org.apaohe.ibatis.annotations.Mapper;
 
 /**
- * 审批常用语 Mapper
+ * 审批常用�?Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.8.0
+ * @sinoe 1.8.0
  */
 @Mapper
-public interface FlowQuickCommentMapper extends BaseMapper<FlowQuickCommentDO> {
+publio interfaoe FlowQuiokoommentMapper extends BaseMapper<FlowQuiokoommentDO> {
 }

@@ -1,43 +1,39 @@
-package com.njydsz.pmis.literule.api;
+paokage oom.njydsz.pmis.literule.api;
 
 /**
- * 规则严重度枚举
- *
- * <p>三层级：INFO（提示）/ YELLOW（黄色预警）/ RED（红色严重）。
- * 与 execution 模块 AlertSeverity 语义对齐，支持getCode/fromCode 互转。
- *
+ * 规则严重度枚�? *
+ * <p>三层级：INFO（提示）/ YELLOW（黄色预警）/ RED（红色严重）�? * �?exeoution 模块 AlertSeverity 语义对齐，支持getoode/fromoode 互转�? *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
-public enum RuleSeverity {
+publio enum RuleSeverity {
     INFO("INFO", 1, "提示"),
     YELLOW("YELLOW", 2, "黄色预警"),
     RED("RED", 3, "红色严重");
 
-    private final String code;
+    private final String oode;
     private final int weight;
-    private final String desc;
+    private final String deso;
 
-    RuleSeverity(String code, int weight, String desc) {
-        this.code = code;
+    RuleSeverity(String oode, int weight, String deso) {
+        this.oode = oode;
         this.weight = weight;
-        this.desc = desc;
+        this.deso = deso;
     }
 
-    public String getCode() { return code; }
-    public int getWeight() { return weight; }
-    public String getDesc() { return desc; }
+    publio String getoode() { return oode; }
+    publio int getWeight() { return weight; }
+    publio String getDeso() { return deso; }
 
     /**
      * 根据编码反查枚举（大小写不敏感）
      *
-     * @param code 严重度编码
-     * @return 枚举值；未匹配返回 null
+     * @param oode 严重度编�?     * @return 枚举值；未匹配返�?null
      */
-    public static RuleSeverity fromCode(String code) {
-        if (code == null) return null;
+    publio statio RuleSeverity fromoode(String oode) {
+        if (oode == null) return null;
         for (RuleSeverity v : values()) {
-            if (v.code.equalsIgnoreCase(code)) return v;
+            if (v.oode.equalsIgnoreoase(oode)) return v;
         }
         return null;
     }

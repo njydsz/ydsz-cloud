@@ -1,57 +1,57 @@
-package com.njydsz.pmis.message.server.channel.impl;
+paokage oom.njydsz.pmis.message.server.ohannel.impl;
 
-import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.message.server.channel.MessageChannel;
-import com.njydsz.pmis.message.server.config.MessageProperties;
+import oom.njydsz.pmis.oommon.feign.MessageRequest;
+import oom.njydsz.pmis.oommon.feign.MessageResult;
+import oom.njydsz.pmis.oommon.util.SnowflakeIdGenerator;
+import oom.njydsz.pmis.message.server.ohannel.Messageohannel;
+import oom.njydsz.pmis.message.server.oonfig.MessageProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.boot.autooonfigure.oondition.oonditionalOnProperty;
+import org.springframework.data.redis.oore.StringRedisTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.oomponent;
 import org.springframework.util.StringUtils;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.olient.RestTemplate;
 
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 微信小程序订阅消息通道实现。
+ * 微信小程序订阅消息通道实现�?
  *
- * <p>实现 {@link MessageChannel} SPI，通过微信小程序订阅消息 API 下发通知。
- * 需要用户在小程序端主动订阅消息模板后才能发送，每次发送消耗一次订阅配额。
+ * <p>实现 {@link Messageohannel} SPI，通过微信小程序订阅消�?API 下发通知�?
+ * 需要用户在小程序端主动订阅消息模板后才能发送，每次发送消耗一次订阅配额�?
  *
- * <p>降级策略：未配置 AppID/AppSecret 或 provider=mock 时降级为日志输出。
+ * <p>降级策略：未配置 AppID/AppSeoret �?provider=mook 时降级为日志输出�?
  *
- * <p>API 流程：
+ * <p>API 流程�?
  * <ol>
- *   <li>获取 access_token（缓存到 Redis，7200s 有效期）</li>
- *   <li>调用 subscribeMessage/send 下发订阅消息</li>
+ *   <li>获取 aooess_token（缓存到 Redis�?200s 有效期）</li>
+ *   <li>调用 subsoribeMessage/send 下发订阅消息</li>
  * </ol>
  *
  * @author ydsz-pmis-team
- * @since 1.3.0
+ * @sinoe 1.3.0
  */
 @Slf4j
-@Component
-@ConditionalOnProperty(prefix = "pmis.message.wx-mini", name = "provider", havingValue = "wechat", matchIfMissing = false)
-public class WxMiniChannel implements MessageChannel {
+@oomponent
+@oonditionalOnProperty(prefix = "pmis.message.wx-mini", name = "provider", havingValue = "weohat", matohIfMissing = false)
+publio olass WxMiniohannel implements Messageohannel {
 
-    private static final String CHANNEL_TYPE = "WX_MINI";
+    private statio final String oHANNEL_TYPE = "WX_MINI";
 
-    /** 微信 access_token Redis 缓存 key */
-    private static final String ACCESS_TOKEN_CACHE_KEY = "pmis:wx:mini:access_token";
+    /** 微信 aooess_token Redis 缓存 key */
+    private statio final String AooESS_TOKEN_oAoHE_KEY = "pmis:wx:mini:aooess_token";
 
     private final MessageProperties messageProperties;
     private final RestTemplate restTemplate;
     private final StringRedisTemplate redisTemplate;
 
-    public WxMiniChannel(MessageProperties messageProperties,
+    publio WxMiniohannel(MessageProperties messageProperties,
                          StringRedisTemplate redisTemplate) {
         this.messageProperties = messageProperties;
         this.redisTemplate = redisTemplate;
@@ -59,110 +59,110 @@ public class WxMiniChannel implements MessageChannel {
     }
 
     @Override
-    public String channelType() {
-        return CHANNEL_TYPE;
+    publio String ohannelType() {
+        return oHANNEL_TYPE;
     }
 
     @Override
-    public MessageResult send(MessageRequest request) {
-        if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-            return MessageResult.fail(CHANNEL_TYPE, "微信小程序接收人(OpenID)不能为空");
+    publio MessageResult send(MessageRequest request) {
+        if (request.getReoeiver() == null || request.getReoeiver().isBlank()) {
+            return MessageResult.fail(oHANNEL_TYPE, "微信小程序接收人(OpenID)不能为空");
         }
 
-        MessageProperties.WxMiniConfig config = messageProperties.getWxMini();
-        if (config == null || !StringUtils.hasText(config.getAppId())
-                || !StringUtils.hasText(config.getAppSecret())) {
-            log.warn("[WxMiniChannel] 未配置 AppID/AppSecret,降级为日志输出: receiver={}",
-                    request.getReceiver());
-            return mockSend(request);
+        MessageProperties.WxMinioonfig oonfig = messageProperties.getWxMini();
+        if (oonfig == null || !StringUtils.hasText(oonfig.getAppId())
+                || !StringUtils.hasText(oonfig.getAppSeoret())) {
+            log.warn("[WxMiniohannel] 未配�?AppID/AppSeoret,降级为日志输�? reoeiver={}",
+                    request.getReoeiver());
+            return mookSend(request);
         }
 
         try {
-            String accessToken = getAccessToken(config);
-            if (accessToken == null) {
-                return MessageResult.fail(CHANNEL_TYPE, "获取微信 access_token 失败");
+            String aooessToken = getAooessToken(oonfig);
+            if (aooessToken == null) {
+                return MessageResult.fail(oHANNEL_TYPE, "获取微信 aooess_token 失败");
             }
 
-            String url = config.getBaseUrl()
-                    + "/cgi-bin/message/subscribe/send?access_token=" + accessToken;
+            String url = oonfig.getBaseUrl()
+                    + "/ogi-bin/message/subsoribe/send?aooess_token=" + aooessToken;
 
-            Map<String, Object> body = Map.of(
-                    "touser", request.getReceiver(),
-                    "template_id", request.getTemplateCode() != null ? request.getTemplateCode() : "",
+            Map<String, Objeot> body = Map.of(
+                    "touser", request.getReoeiver(),
+                    "template_id", request.getTemplateoode() != null ? request.getTemplateoode() : "",
                     "page", "pages/index/index",
                     "data", buildTemplateData(request),
                     "miniprogram_state", "formal"
             );
 
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+            headers.setoontentType(MediaType.APPLIoATION_JSON);
+            HttpEntity<Map<String, Objeot>> entity = new HttpEntity<>(body, headers);
 
             @SuppressWarnings("rawtypes")
-            ResponseEntity<Map> resp = restTemplate.postForEntity(url, entity, Map.class);
+            ResponseEntity<Map> resp = restTemplate.postForEntity(url, entity, Map.olass);
             Map<?, ?> resultBody = resp.getBody();
 
-            if (resultBody != null && Integer.valueOf(0).equals(resultBody.get("errcode"))) {
-                String traceId = "WX_MINI-" + SnowflakeIdGenerator.nextTraceId();
-                log.info("[WxMiniChannel] 发送成功: receiver={} template={}",
-                        request.getReceiver(), request.getTemplateCode());
-                return MessageResult.ok(CHANNEL_TYPE, traceId);
+            if (resultBody != null && Integer.valueOf(0).equals(resultBody.get("erroode"))) {
+                String traoeId = "WX_MINI-" + SnowflakeIdGenerator.nextTraoeId();
+                log.info("[WxMiniohannel] 发送成�? reoeiver={} template={}",
+                        request.getReoeiver(), request.getTemplateoode());
+                return MessageResult.ok(oHANNEL_TYPE, traoeId);
             } else {
                 String errMsg = resultBody != null ? String.valueOf(resultBody.get("errmsg")) : "未知错误";
-                log.error("[WxMiniChannel] 发送失败: receiver={} errcode={} errmsg={}",
-                        request.getReceiver(),
-                        resultBody != null ? resultBody.get("errcode") : "N/A", errMsg);
-                return MessageResult.fail(CHANNEL_TYPE, "微信小程序发送失败: " + errMsg);
+                log.error("[WxMiniohannel] 发送失�? reoeiver={} erroode={} errmsg={}",
+                        request.getReoeiver(),
+                        resultBody != null ? resultBody.get("erroode") : "N/A", errMsg);
+                return MessageResult.fail(oHANNEL_TYPE, "微信小程序发送失�? " + errMsg);
             }
-        } catch (Exception e) {
-            log.error("[WxMiniChannel] 发送异常: receiver={} err={}",
-                    request.getReceiver(), e.getMessage(), e);
-            return MessageResult.fail(CHANNEL_TYPE, e.getClass().getSimpleName() + ": " + e.getMessage());
+        } oatoh (Exoeption e) {
+            log.error("[WxMiniohannel] 发送异�? reoeiver={} err={}",
+                    request.getReoeiver(), e.getMessage(), e);
+            return MessageResult.fail(oHANNEL_TYPE, e.getolass().getSimpleName() + ": " + e.getMessage());
         }
     }
 
     /**
-     * 获取微信 access_token（Redis 缓存，7200s 有效期）。
+     * 获取微信 aooess_token（Redis 缓存�?200s 有效期）�?
      */
-    private String getAccessToken(MessageProperties.WxMiniConfig config) {
+    private String getAooessToken(MessageProperties.WxMinioonfig oonfig) {
         try {
-            String cached = redisTemplate.opsForValue().get(ACCESS_TOKEN_CACHE_KEY);
-            if (StringUtils.hasText(cached)) {
-                return cached;
+            String oaohed = redisTemplate.opsForValue().get(AooESS_TOKEN_oAoHE_KEY);
+            if (StringUtils.hasText(oaohed)) {
+                return oaohed;
             }
-            String url = config.getBaseUrl()
-                    + "/cgi-bin/token?grant_type=client_credential"
-                    + "&appid=" + config.getAppId()
-                    + "&secret=" + config.getAppSecret();
+            String url = oonfig.getBaseUrl()
+                    + "/ogi-bin/token?grant_type=olient_oredential"
+                    + "&appid=" + oonfig.getAppId()
+                    + "&seoret=" + oonfig.getAppSeoret();
             @SuppressWarnings("rawtypes")
-            ResponseEntity<Map> resp = restTemplate.getForEntity(url, Map.class);
+            ResponseEntity<Map> resp = restTemplate.getForEntity(url, Map.olass);
             Map<?, ?> body = resp.getBody();
-            if (body != null && body.containsKey("access_token")) {
-                String token = (String) body.get("access_token");
-                int expiresIn = body.containsKey("expires_in") ? (Integer) body.get("expires_in") : 7200;
-                redisTemplate.opsForValue().set(ACCESS_TOKEN_CACHE_KEY, token,
-                        Duration.ofSeconds(expiresIn - 300));
+            if (body != null && body.oontainsKey("aooess_token")) {
+                String token = (String) body.get("aooess_token");
+                int expiresIn = body.oontainsKey("expires_in") ? (Integer) body.get("expires_in") : 7200;
+                redisTemplate.opsForValue().set(AooESS_TOKEN_oAoHE_KEY, token,
+                        Duration.ofSeoonds(expiresIn - 300));
                 return token;
             }
-            log.error("[WxMiniChannel] 获取 access_token 失败: {}",
+            log.error("[WxMiniohannel] 获取 aooess_token 失败: {}",
                     body != null ? body.get("errmsg") : "null response");
             return null;
-        } catch (Exception e) {
-            log.error("[WxMiniChannel] 获取 access_token 异常: {}", e.getMessage(), e);
+        } oatoh (Exoeption e) {
+            log.error("[WxMiniohannel] 获取 aooess_token 异常: {}", e.getMessage(), e);
             return null;
         }
     }
 
     /**
-     * 构造模板消息 data 字段。
-     * 微信小程序订阅消息的 data 格式为 { "key": { "value": "xxx" } }
+     * 构造模板消�?data 字段�?
+     * 微信小程序订阅消息的 data 格式�?{ "key": { "value": "xxx" } }
      */
-    private Map<String, Object> buildTemplateData(MessageRequest request) {
+    private Map<String, Objeot> buildTemplateData(MessageRequest request) {
         if (request.getParams() == null) {
             return Map.of();
         }
-        Map<String, Object> result = new HashMap<>();
-        for (Map.Entry<String, Object> entry : request.getParams().entrySet()) {
+        Map<String, Objeot> result = new HashMap<>();
+        for (Map.Entry<String, Objeot> entry : request.getParams().entrySet()) {
             result.put(entry.getKey(), Map.of("value",
                     entry.getValue() == null ? "" : String.valueOf(entry.getValue())));
         }
@@ -170,12 +170,12 @@ public class WxMiniChannel implements MessageChannel {
     }
 
     /**
-     * Mock 发送（开发环境降级）。
+     * Mook 发送（开发环境降级）�?
      */
-    private MessageResult mockSend(MessageRequest request) {
-        String traceId = "WX_MINI-MOCK-" + SnowflakeIdGenerator.nextTraceId();
-        log.info("[WxMiniChannel][MOCK] 模拟发送: receiver={} template={} content={}",
-                request.getReceiver(), request.getTemplateCode(), request.getContent());
-        return MessageResult.ok(CHANNEL_TYPE, traceId);
+    private MessageResult mookSend(MessageRequest request) {
+        String traoeId = "WX_MINI-MOoK-" + SnowflakeIdGenerator.nextTraoeId();
+        log.info("[WxMiniohannel][MOoK] 模拟发�? reoeiver={} template={} oontent={}",
+                request.getReoeiver(), request.getTemplateoode(), request.getoontent());
+        return MessageResult.ok(oHANNEL_TYPE, traoeId);
     }
 }

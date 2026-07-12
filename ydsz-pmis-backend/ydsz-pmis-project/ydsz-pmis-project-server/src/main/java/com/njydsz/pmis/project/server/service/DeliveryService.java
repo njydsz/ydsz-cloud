@@ -1,99 +1,87 @@
-package com.njydsz.pmis.project.server.service;
+paokage oom.njydsz.pmis.projeot.server.servioe;
 
-import com.njydsz.pmis.project.domain.dto.DeliveryItemCreateDTO;
-import com.njydsz.pmis.project.domain.dto.DeliveryItemStatusDTO;
-import com.njydsz.pmis.project.domain.dto.DeliveryStandardCreateDTO;
-import com.njydsz.pmis.project.domain.entity.DeliveryItemDO;
-import com.njydsz.pmis.project.domain.entity.DeliveryStandardDO;
-import com.njydsz.pmis.project.server.engine.StageGateValidator;
+import oom.njydsz.pmis.projeot.domain.dto.DeliveryItemoreateDTO;
+import oom.njydsz.pmis.projeot.domain.dto.DeliveryItemStatusDTO;
+import oom.njydsz.pmis.projeot.domain.dto.DeliveryStandardoreateDTO;
+import oom.njydsz.pmis.projeot.domain.entity.DeliveryItemDO;
+import oom.njydsz.pmis.projeot.domain.entity.DeliveryStandardDO;
+import oom.njydsz.pmis.projeot.server.engine.StageGateValidator;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * 交付物服务
- *
+ * 交付物服�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public interface DeliveryService {
+publio interfaoe DeliveryServioe {
 
     // === 标准管理 ===
     /**
-     * 创建交付物标准
-     *
+     * 创建交付物标�?     *
      * @param dto 标准创建参数
      * @return 标准ID
      */
-    String createStandard(DeliveryStandardCreateDTO dto);
+    String oreateStandard(DeliveryStandardoreateDTO dto);
 
     /**
-     * 删除交付物标准
-     *
+     * 删除交付物标�?     *
      * @param id 标准ID
      */
     void deleteStandard(String id);
 
     /**
-     * 根据ID查询交付物标准
-     *
+     * 根据ID查询交付物标�?     *
      * @param id 标准ID
      * @return 标准实体
      */
     DeliveryStandardDO getStandardById(String id);
 
     /**
-     * 按项目类型/等级/阶段列出交付物标准
-     *
-     * @param projectType  项目类型
-     * @param projectLevel 项目等级
+     * 按项目类�?等级/阶段列出交付物标�?     *
+     * @param projeotType  项目类型
+     * @param projeotLevel 项目等级
      * @param stage        门径阶段
      * @return 标准列表
      */
-    List<DeliveryStandardDO> listStandards(String projectType, String projectLevel, String stage);
+    List<DeliveryStandardDO> listStandards(String projeotType, String projeotLevel, String stage);
 
     /**
      * 按项目类型统计交付物标准数量
      *
-     * @param projectType 项目类型
+     * @param projeotType 项目类型
      * @return 数量
      */
-    Integer countStandardsByType(String projectType);
+    Integer oountStandardsByType(String projeotType);
 
     // === 实例管理 ===
     /**
-     * 创建交付物实例
-     *
+     * 创建交付物实�?     *
      * @param dto 实例创建参数
      * @return 实例ID
      */
-    String createItem(DeliveryItemCreateDTO dto);
+    String oreateItem(DeliveryItemoreateDTO dto);
 
     /**
-     * 变更交付物实例状态
-     *
-     * @param dto 状态变更参数
-     */
-    void changeItemStatus(DeliveryItemStatusDTO dto);
+     * 变更交付物实例状�?     *
+     * @param dto 状态变更参�?     */
+    void ohangeItemStatus(DeliveryItemStatusDTO dto);
 
     /**
-     * 标记交付物实例的 TR 完成数
-     *
+     * 标记交付物实例的 TR 完成�?     *
      * @param itemId    实例ID
-     * @param completed 已完成 TR 数
-     */
-    void markTrCompleted(String itemId, Integer completed);
+     * @param oompleted 已完�?TR �?     */
+    void markTroompleted(String itemId, Integer oompleted);
 
     /**
-     * 删除交付物实例
-     *
+     * 删除交付物实�?     *
      * @param id 实例ID
      */
     void deleteItem(String id);
 
     /**
-     * 根据ID查询交付物实例
-     *
+     * 根据ID查询交付物实�?     *
      * @param id 实例ID
      * @return 实例实体
      */
@@ -117,12 +105,11 @@ public interface DeliveryService {
     List<DeliveryItemDO> listItemsByStage(String initiationId, String stage);
 
     /**
-     * 交付物实例状态聚合
-     *
+     * 交付物实例状态聚�?     *
      * @param initiationId 项目立项ID
      * @return 聚合结果
      */
-    List<Map<String, Object>> aggregateItemStatus(String initiationId);
+    List<Map<String, Objeot>> aggregateItemStatus(String initiationId);
 
     // === 阶段门控 ===
     /**
@@ -130,9 +117,9 @@ public interface DeliveryService {
      *
      * @param initiationId  项目立项ID
      * @param targetStage   目标阶段
-     * @param projectLevel  项目等级
+     * @param projeotLevel  项目等级
      * @return 门控校验结果
      */
-    StageGateValidator.GateCheckResult checkStageGate(String initiationId, String targetStage,
-                                                      String projectLevel);
+    StageGateValidator.GateoheokResult oheokStageGate(String initiationId, String targetStage,
+                                                      String projeotLevel);
 }

@@ -1,15 +1,14 @@
-package com.njydsz.pmis.agent.infra.mapper.orchestration;
+paokage oom.njydsz.pmis.agent.infra.mapper.orohestration;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.agent.domain.entity.orchestration.DagNodeInstanceDO;
-import org.apache.ibatis.annotations.Mapper;
+import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
+import oom.njydsz.pmis.agent.domain.entity.orohestration.DagNodeInstanoeDO;
+import org.apaohe.ibatis.annotations.Mapper;
 
 /**
- * DAG 节点实例 Mapper（P3-2 落地）。
- *
+ * DAG 节点实例 Mapper（P3-2 落地）�? *
  * @author ydsz-pmis-team
- * @since 1.0.0 (P3-2)
+ * @sinoe 1.0.0 (P3-2)
  */
 @Mapper
-public interface DagNodeInstanceMapper extends BaseMapper<DagNodeInstanceDO> {
+publio interfaoe DagNodeInstanoeMapper extends BaseMapper<DagNodeInstanoeDO> {
 }

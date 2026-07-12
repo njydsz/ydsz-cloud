@@ -12,7 +12,18 @@
     <name>ydsz-pmis-message-domain</name>
     <description>Domain Layer</description>
     <dependencies>
-        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-common-core</artifactId></dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-annotation</artifactId>
+        </dependency>
         <dependency><groupId>io.swagger.core.v3</groupId><artifactId>swagger-annotations</artifactId></dependency>
         <dependency><groupId>jakarta.validation</groupId><artifactId>jakarta.validation-api</artifactId></dependency>
         <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-annotations</artifactId></dependency>

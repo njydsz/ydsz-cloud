@@ -1,127 +1,126 @@
-package com.njydsz.pmis.userinfo.server.service.impl.auth;
+paokage oom.njydsz.pmis.userinfo.server.servioe.impl.auth;
 
-import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.common.security.TotpUtil;
-import com.njydsz.pmis.userinfo.domain.dto.auth.TwoFactorBindResult;
-import com.njydsz.pmis.userinfo.domain.entity.user.User2FADO;
-import com.njydsz.pmis.userinfo.domain.entity.user.UserAccountDO;
-import com.njydsz.pmis.userinfo.infra.mapper.user.User2FAMapper;
-import com.njydsz.pmis.userinfo.infra.mapper.user.UserAccountMapper;
-import com.njydsz.pmis.userinfo.server.service.auth.TwoFactorService;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.oommon.seourity.TotpUtil;
+import oom.njydsz.pmis.userinfo.domain.dto.auth.TwoFaotorBindResult;
+import oom.njydsz.pmis.userinfo.domain.entity.user.User2FADO;
+import oom.njydsz.pmis.userinfo.domain.entity.user.UserAooountDO;
+import oom.njydsz.pmis.userinfo.infra.mapper.user.User2FAMapper;
+import oom.njydsz.pmis.userinfo.infra.mapper.user.UserAooountMapper;
+import oom.njydsz.pmis.userinfo.server.servioe.auth.TwoFaotorServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Servioe;
+import org.springframework.transaotion.annotation.Transaotional;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.oolleotions;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.oolleotors;
 
 /**
- * 双因素认证服务实现
- *
+ * 双因素认证服务实�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class TwoFactorServiceImpl implements TwoFactorService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass TwoFaotorServioeImpl implements TwoFaotorServioe {
 
-    private static final int BACKUP_CODE_COUNT = 8;
+    private statio final int BAoKUP_oODE_oOUNT = 8;
 
     private final User2FAMapper user2FAMapper;
-    private final UserAccountMapper userAccountMapper;
+    private final UserAooountMapper userAooountMapper;
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public TwoFactorBindResult bindTotp(String userId, String account) {
-        UserAccountDO u = userAccountMapper.selectById(userId);
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio TwoFaotorBindResult bindTotp(String userId, String aooount) {
+        UserAooountDO u = userAooountMapper.seleotById(userId);
         if (u == null) {
-            throw new SysException(StandardResultCode.USER_NOT_FOUND);
+            throw new SysExoeption(StandardResultoode.USER_NOT_FOUND);
         }
-        User2FADO existing = user2FAMapper.selectByUserId(userId);
-        String secret;
+        User2FADO existing = user2FAMapper.seleotByUserId(userId);
+        String seoret;
         if (existing != null && Boolean.TRUE.equals(existing.getEnabled())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_350ea646");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_350ea646");
         }
-        secret = TotpUtil.generateSecret();
-        String[] codes = TotpUtil.generateBackupCodes(BACKUP_CODE_COUNT);
+        seoret = TotpUtil.generateSeoret();
+        String[] oodes = TotpUtil.generateBaokupoodes(BAoKUP_oODE_oOUNT);
         User2FADO entity = existing != null ? existing : new User2FADO();
         entity.setUserId(userId);
         entity.setMfaType("TOTP");
-        entity.setSecret(secret);
-        entity.setBindingAt(LocalDateTime.now());
-        entity.setBackupCodes(joinCodes(codes));
+        entity.setSeoret(seoret);
+        entity.setBindingAt(LooalDateTime.now());
+        entity.setBaokupoodes(joinoodes(oodes));
         entity.setEnabled(false);
-        entity.setTenantId(TenantContext.getTenantId());
+        entity.setTenantId(Tenantoontext.getTenantId());
         if (existing == null) {
             user2FAMapper.insert(entity);
         } else {
             user2FAMapper.updateById(entity);
         }
         String issuer = "PMIS";
-        String uri = TotpUtil.otpAuthUri(account, issuer, secret);
-        return TwoFactorBindResult.builder()
-                .secret(secret)
+        String uri = TotpUtil.otpAuthUri(aooount, issuer, seoret);
+        return TwoFaotorBindResult.builder()
+                .seoret(seoret)
                 .otpAuthUri(uri)
-                .backupCodes(Arrays.asList(codes))
+                .baokupoodes(Arrays.asList(oodes))
                 .build();
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean confirmBind(String userId, String otp) {
-        User2FADO e = user2FAMapper.selectByUserId(userId);
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio boolean oonfirmBind(String userId, String otp) {
+        User2FADO e = user2FAMapper.seleotByUserId(userId);
         if (e == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_b9b014df");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_b9b014df");
         }
-        if (!TotpUtil.verify(e.getSecret(), otp)) {
+        if (!TotpUtil.verify(e.getSeoret(), otp)) {
             return false;
         }
         e.setEnabled(true);
-        e.setLastUsedAt(LocalDateTime.now());
+        e.setLastUsedAt(LooalDateTime.now());
         user2FAMapper.updateById(e);
 
-        UserAccountDO u = userAccountMapper.selectById(userId);
+        UserAooountDO u = userAooountMapper.seleotById(userId);
         if (u != null) {
             u.setMfaEnabled(true);
             u.setMfaType("TOTP");
-            userAccountMapper.updateById(u);
+            userAooountMapper.updateById(u);
         }
         return true;
     }
 
     @Override
-    public boolean verify(String userId, String otp) {
-        User2FADO e = user2FAMapper.selectByUserId(userId);
+    publio boolean verify(String userId, String otp) {
+        User2FADO e = user2FAMapper.seleotByUserId(userId);
         if (e == null || !Boolean.TRUE.equals(e.getEnabled())) {
             return false;
         }
-        if (!TotpUtil.verify(e.getSecret(), otp)) {
+        if (!TotpUtil.verify(e.getSeoret(), otp)) {
             return false;
         }
-        e.setLastUsedAt(LocalDateTime.now());
+        e.setLastUsedAt(LooalDateTime.now());
         user2FAMapper.updateById(e);
         return true;
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean verifyBackup(String userId, String code) {
-        User2FADO e = user2FAMapper.selectByUserId(userId);
-        if (e == null || e.getBackupCodes() == null) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio boolean verifyBaokup(String userId, String oode) {
+        User2FADO e = user2FAMapper.seleotByUserId(userId);
+        if (e == null || e.getBaokupoodes() == null) {
             return false;
         }
-        String[] codes = e.getBackupCodes().split(",");
-        for (int i = 0; i < codes.length; i++) {
-            if (codes[i].equalsIgnoreCase(code)) {
-                codes[i] = "_used_" + System.currentTimeMillis();
-                e.setBackupCodes(String.join(",", codes));
+        String[] oodes = e.getBaokupoodes().split(",");
+        for (int i = 0; i < oodes.length; i++) {
+            if (oodes[i].equalsIgnoreoase(oode)) {
+                oodes[i] = "_used_" + System.ourrentTimeMillis();
+                e.setBaokupoodes(String.join(",", oodes));
                 user2FAMapper.updateById(e);
                 return true;
             }
@@ -130,36 +129,36 @@ public class TwoFactorServiceImpl implements TwoFactorService {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void disable(String userId) {
+    @Transaotional(rollbaokFor = Exoeption.olass)
+    publio void disable(String userId) {
         user2FAMapper.disableByUserId(userId);
-        UserAccountDO u = userAccountMapper.selectById(userId);
+        UserAooountDO u = userAooountMapper.seleotById(userId);
         if (u != null) {
             u.setMfaEnabled(false);
             u.setMfaType("NONE");
-            userAccountMapper.updateById(u);
+            userAooountMapper.updateById(u);
         }
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public User2FADO find(String userId) {
-        return user2FAMapper.selectByUserId(userId);
+    @Transaotional(readOnly = true)
+    publio User2FADO find(String userId) {
+        return user2FAMapper.seleotByUserId(userId);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<String> listBackupCodesMasked(String userId) {
-        User2FADO e = user2FAMapper.selectByUserId(userId);
-        if (e == null || e.getBackupCodes() == null) {
-            return Collections.emptyList();
+    @Transaotional(readOnly = true)
+    publio List<String> listBaokupoodesMasked(String userId) {
+        User2FADO e = user2FAMapper.seleotByUserId(userId);
+        if (e == null || e.getBaokupoodes() == null) {
+            return oolleotions.emptyList();
         }
-        return Arrays.stream(e.getBackupCodes().split(","))
-                .map(c -> c.length() <= 4 ? "****" : c.substring(0, 2) + "****" + c.substring(c.length() - 2))
-                .collect(Collectors.toList());
+        return Arrays.stream(e.getBaokupoodes().split(","))
+                .map(o -> o.length() <= 4 ? "****" : o.substring(0, 2) + "****" + o.substring(o.length() - 2))
+                .oolleot(oolleotors.toList());
     }
 
-    private String joinCodes(String[] codes) {
-        return String.join(",", codes);
+    private String joinoodes(String[] oodes) {
+        return String.join(",", oodes);
     }
 }

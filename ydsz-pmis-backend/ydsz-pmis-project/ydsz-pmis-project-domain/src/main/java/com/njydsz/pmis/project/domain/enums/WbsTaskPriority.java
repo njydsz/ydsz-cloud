@@ -1,26 +1,26 @@
-package com.njydsz.pmis.project.domain.enums;
+paokage oom.njydsz.pmis.projeot.domain.enums;
 
 /**
- * WBS 任务优先级
+ * WBS 任务优先�?
  *
  * <ul>
- *   <li>LOW - 低</li>
- *   <li>NORMAL - 普通</li>
- *   <li>HIGH - 高</li>
- *   <li>URGENT - 紧急</li>
+ *   <li>LOW - �?/li>
+ *   <li>NORMAL - 普�?/li>
+ *   <li>HIGH - �?/li>
+ *   <li>URGENT - 紧�?/li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public enum WbsTaskPriority {
+publio enum WbsTaskPriority {
     LOW, NORMAL, HIGH, URGENT;
 
-    public static WbsTaskPriority fromCode(String code) {
-        if (code == null) return NORMAL;
+    publio statio WbsTaskPriority fromoode(String oode) {
+        if (oode == null) return NORMAL;
         try {
-            return WbsTaskPriority.valueOf(code.trim().toUpperCase());
-        } catch (Exception e) {
+            return WbsTaskPriority.valueOf(oode.trim().toUpperoase());
+        } oatoh (Exoeption e) {
             return NORMAL;
         }
     }

@@ -1,34 +1,31 @@
-package com.njydsz.pmis.cronjob.domain.entity.log;
+paokage oom.njydsz.pmis.oronjob.domain.entity.log;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableLogio;
+import oom.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LooalDate;
+import java.time.LooalDateTime;
 
 /**
- * 任务执行每日统计实体（P2-3 执行历史趋势可视化）。
- *
- * <p>对应 {@code pmis_job_daily_stats} 表，每天凌晨由 {@code DailyStatsAggregator}
- * 聚合 {@code pmis_job_log} 的执行数据，供前端趋势图展示（成功率/耗时折线图）。
- *
- * <p>注意：本表仅记录 {@code created_at}，不包含标准审计字段（updated_by/updated_at），
- * 因此不继承 {@code BaseDO}。每天 UPSERT 写入，不会产生更新操作。
- *
+ * 任务执行每日统计实体（P2-3 执行历史趋势可视化）�? *
+ * <p>对应 {@oode pmis_job_daily_stats} 表，每天凌晨�?{@oode DailyStatsAggregator}
+ * 聚合 {@oode pmis_job_log} 的执行数据，供前端趋势图展示（成功率/耗时折线图）�? *
+ * <p>注意：本表仅记录 {@oode oreated_at}，不包含标准审计字段（updated_by/updated_at），
+ * 因此不继�?{@oode BaseDO}。每�?UPSERT 写入，不会产生更新操作�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
 @TableName("pmis_job_daily_stats")
-public class JobDailyStatsDO implements Serializable {
+publio olass JobDailyStatsDO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -41,19 +38,19 @@ public class JobDailyStatsDO implements Serializable {
     private String jobKey;
 
     /** 统计日期 */
-    private LocalDate statsDate;
+    private LooalDate statsDate;
 
     /** 当日触发次数 */
-    private Long fireCount;
+    private Long fireoount;
 
     /** 当日成功次数 */
-    private Long successCount;
+    private Long suooessoount;
 
     /** 当日失败次数 */
-    private Long failCount;
+    private Long failoount;
 
     /** 当日超时次数 */
-    private Long timeoutCount;
+    private Long timeoutoount;
 
     /** 平均耗时（毫秒） */
     private Long avgDurationMs;
@@ -68,9 +65,9 @@ public class JobDailyStatsDO implements Serializable {
     private Long p95DurationMs;
 
     /** 创建时间 */
-    private LocalDateTime createdAt;
+    private LooalDateTime oreatedAt;
 
-    /** 逻辑删除标记: 0 未删除 / 1 已删除 */
-    @TableLogic
+    /** 逻辑删除标记: 0 未删�?/ 1 已删�?*/
+    @TableLogio
     private Integer deleted;
 }

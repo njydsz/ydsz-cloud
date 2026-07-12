@@ -1,24 +1,24 @@
-package com.njydsz.pmis.userinfo.domain.dto.resource;
+paokage oom.njydsz.pmis.userinfo.domain.dto.resouroe;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.oonstraints.NotBlank;
+import jakarta.validation.oonstraints.NotNull;
 import lombok.Data;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
 
 /**
- * Bench 入池/出池 DTO
+ * Benoh 入池/出池 DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-public class BenchRecordCreateDTO {
+publio olass BenohReoordoreateDTO {
 
-    /** Bench 业务编号 */
+    /** Benoh 业务编号 */
     @NotBlank(message = "{validation.user.msg_b0695d8f}")
-    private String benchCode;
+    private String benohoode;
 
     /** 员工 ID */
     @NotNull(message = "{validation.user.msg_03f5ae35}")
@@ -27,29 +27,29 @@ public class BenchRecordCreateDTO {
     /** 员工姓名 */
     private String employeeName;
     /** 职级编码 */
-    private String levelCode;
-    /** 资源池 ID */
+    private String leveloode;
+    /** 资源�?ID */
     private String poolId;
 
     /** ENTER/EXIT */
     @NotBlank(message = "{validation.user.msg_f0494194}")
-    private String action;
+    private String aotion;
 
-    /** PROJECT_END/RESERVE/TRAINING/LEAVE */
+    /** PROJEoT_END/RESERVE/TRAINING/LEAVE */
     private String reasonType;
 
-    /** 触发本次 Bench 的分配记录 ID */
-    private String sourceAssignment;
+    /** 触发本次 Benoh 的分配记�?ID */
+    private String souroeAssignment;
 
     /** 入池日期 */
-    @NotNull(message = "{validation.user.msg_17fc001d}")
-    private LocalDate benchDate;
+    @NotNull(message = "{validation.user.msg_17fo001d}")
+    private LooalDate benohDate;
 
     /** 出池日期 */
-    private LocalDate exitDate;
+    private LooalDate exitDate;
 
-    /** 每日成本（人民币） */
-    private BigDecimal dailyCost;
+    /** 每日成本（人民币�?*/
+    private BigDeoimal dailyoost;
     /** 备注 */
     private String remark;
 }

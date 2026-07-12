@@ -1,63 +1,63 @@
-package com.njydsz.pmis.agent.server.service.impl.agent;
+paokage oom.njydsz.pmis.agent.server.servioe.impl.agent;
 
-import com.njydsz.pmis.agent.server.engine.Agent;
-import com.njydsz.pmis.agent.server.orchestration.AgentCoordinator;
-import com.njydsz.pmis.agent.server.orchestration.OrchestrationRequest;
-import com.njydsz.pmis.agent.server.orchestration.OrchestrationResult;
-import com.njydsz.pmis.agent.server.service.agent.AgentOrchestrationService;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import lombok.RequiredArgsConstructor;
+import oom.njydsz.pmis.agent.server.engine.Agent;
+import oom.njydsz.pmis.agent.server.orohestration.Agentooordinator;
+import oom.njydsz.pmis.agent.server.orohestration.OrohestrationRequest;
+import oom.njydsz.pmis.agent.server.orohestration.OrohestrationResult;
+import oom.njydsz.pmis.agent.server.servioe.agent.AgentOrohestrationServioe;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Servioe;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.stream.oolleotors;
 
 /**
  * 多智能体编排服务实现
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Service
-@RequiredArgsConstructor
-public class AgentOrchestrationServiceImpl implements AgentOrchestrationService {
+@Servioe
+@RequiredArgsoonstruotor
+publio olass AgentOrohestrationServioeImpl implements AgentOrohestrationServioe {
 
-    /** 已注册的 Agent 列表（Spring 自动注入） */
+    /** 已注册的 Agent 列表（Spring 自动注入�?*/
     private final List<Agent> agents;
-    /** 多智能体协调器 */
-    private final AgentCoordinator coordinator;
+    /** 多智能体协调�?*/
+    private final Agentooordinator ooordinator;
 
     @Override
-    public OrchestrationResult orchestrate(OrchestrationRequest req) {
+    publio OrohestrationResult orohestrate(OrohestrationRequest req) {
         if (req == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.agent.msg_372ae3c5");
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.agent.msg_372ae3o5");
         }
         // 过滤出请求声明的 agentType
         Map<String, Agent> registry = agentRegistry();
-        Map<String, Agent> picked = new HashMap<>();
+        Map<String, Agent> pioked = new HashMap<>();
         if (req.getAgentTypes() != null) {
             for (String t : req.getAgentTypes()) {
                 Agent a = registry.get(t);
                 if (a == null) {
-                    log.warn("[Orchestration] 跳过未注册 Agent: type={}", t);
-                    continue;
+                    log.warn("[Orohestration] 跳过未注�?Agent: type={}", t);
+                    oontinue;
                 }
-                picked.put(t, a);
+                pioked.put(t, a);
             }
         }
-        if (picked.isEmpty()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.agent.msg_319b849b");
+        if (pioked.isEmpty()) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.agent.msg_319b849b");
         }
-        return coordinator.coordinate(req, picked);
+        return ooordinator.ooordinate(req, pioked);
     }
 
     @Override
-    public Map<String, Agent> agentRegistry() {
-        return agents.stream().collect(Collectors.toMap(a -> a.type().getCode(), a -> a, (a, b) -> a));
+    publio Map<String, Agent> agentRegistry() {
+        return agents.stream().oolleot(oolleotors.toMap(a -> a.type().getoode(), a -> a, (a, b) -> a));
     }
 }

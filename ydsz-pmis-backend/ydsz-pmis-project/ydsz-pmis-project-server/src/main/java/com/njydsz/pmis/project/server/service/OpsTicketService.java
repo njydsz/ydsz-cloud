@@ -1,64 +1,63 @@
-package com.njydsz.pmis.project.server.service;
+paokage oom.njydsz.pmis.projeot.server.servioe;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.project.domain.dto.OpsTicketAssignDTO;
-import com.njydsz.pmis.project.domain.dto.OpsTicketCreateDTO;
-import com.njydsz.pmis.project.domain.dto.OpsTicketStatusDTO;
-import com.njydsz.pmis.project.domain.entity.OpsTicketDO;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.projeot.domain.dto.OpsTioketAssignDTO;
+import oom.njydsz.pmis.projeot.domain.dto.OpsTioketoreateDTO;
+import oom.njydsz.pmis.projeot.domain.dto.OpsTioketStatusDTO;
+import oom.njydsz.pmis.projeot.domain.entity.OpsTioketDO;
 
-import java.time.LocalDate;
+import java.time.LooalDate;
 import java.util.List;
 import java.util.Map;
 
 /**
  * 运维工单服务
  *
- * <p>P1-P4 SLA 跟踪、超时自动标记 breached；工单关闭后可触发满意度评价。
- *
+ * <p>P1-P4 SLA 跟踪、超时自动标�?breaohed；工单关闭后可触发满意度评价�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public interface OpsTicketService {
+publio interfaoe OpsTioketServioe {
 
-    /** 创建工单（按优先级自动计算 SLA 截止） */
-    String create(OpsTicketCreateDTO dto);
+    /** 创建工单（按优先级自动计�?SLA 截止�?*/
+    String oreate(OpsTioketoreateDTO dto);
 
     /** 派单 */
-    void assign(OpsTicketAssignDTO dto);
+    void assign(OpsTioketAssignDTO dto);
 
-    /** 状态变更（含 SLA 计时刷新） */
-    void changeStatus(OpsTicketStatusDTO dto);
+    /** 状态变更（�?SLA 计时刷新�?*/
+    void ohangeStatus(OpsTioketStatusDTO dto);
 
-    /** SLA 扫描：标记超时工单（用于定时任务） */
-    int scanSlaBreaches();
+    /** SLA 扫描：标记超时工单（用于定时任务�?*/
+    int soanSlaBreaohes();
 
     /** SLA 扫描：按指定基准日期（兼容老接口） */
-    default int scanSlaBreaches(LocalDate baseDate) {
-        return scanSlaBreaches();
+    default int soanSlaBreaohes(LooalDate baseDate) {
+        return soanSlaBreaohes();
     }
 
-    /** 关闭工单并允许评价 */
-    void closeAndEvaluate(OpsTicketStatusDTO dto);
+    /** 关闭工单并允许评�?*/
+    void oloseAndEvaluate(OpsTioketStatusDTO dto);
 
     /** 分页查询 */
-    Page<OpsTicketDO> page(int page, int size, String status, String priority,
+    Page<OpsTioketDO> page(int page, int size, String status, String priority,
                            String initiationId, String assigneeId, String keyword);
 
-    /** 按项目查询 */
-    List<OpsTicketDO> listByInitiation(String initiationId);
+    /** 按项目查�?*/
+    List<OpsTioketDO> listByInitiation(String initiationId);
 
     /** 按质保期查询 */
-    List<OpsTicketDO> listByWarranty(String warrantyId);
+    List<OpsTioketDO> listByWarranty(String warrantyId);
 
     /** 按处理人查询 */
-    List<OpsTicketDO> listByAssignee(String assigneeId, String status);
+    List<OpsTioketDO> listByAssignee(String assigneeId, String status);
 
     /** 工单详情 */
-    OpsTicketDO getById(String id);
+    OpsTioketDO getById(String id);
 
-    /** SLA 达成率统计 */
-    List<Map<String, Object>> slaSummary();
+    /** SLA 达成率统�?*/
+    List<Map<String, Objeot>> slaSummary();
 
-    /** 状态聚合 */
-    List<Map<String, Object>> aggregateByStatus(String initiationId);
+    /** 状态聚�?*/
+    List<Map<String, Objeot>> aggregateByStatus(String initiationId);
 }

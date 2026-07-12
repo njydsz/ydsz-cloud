@@ -1,37 +1,37 @@
-package com.njydsz.pmis.message.domain.entity.core;
+paokage oom.njydsz.pmis.message.domain.entity.oore;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
-import com.njydsz.pmis.common.sensitive.Sensitive;
-import com.njydsz.pmis.common.sensitive.SensitiveStrategy;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
+import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
+import oom.njydsz.pmis.oommon.sensitive.Sensitive;
+import oom.njydsz.pmis.oommon.sensitive.SensitiveStrategy;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.EqualsAndHashoode;
 
 import java.io.Serial;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
- * 消息发送日志: 全通道发送全量记录,支持优先级/聚合/撤回/回执/路由/灰度/重试调度
+ * 消息发送日�? 全通道发送全量记�?支持优先�?聚合/撤回/回执/路由/灰度/重试调度
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashoode(oallSuper = true)
 @TableName("pmis_msg_log")
-public class MsgLogDO extends BaseDO {
+publio olass MsgLogDO extends BaseDO {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    /** 发送通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU */
-    private String channel;
+    /** 发送通道: SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WEoOM/FEISHU */
+    private String ohannel;
 
     /** 业务类型 */
     private String bizType;
@@ -40,93 +40,93 @@ public class MsgLogDO extends BaseDO {
     private String bizId;
 
     /** 接收人（API 响应自动脱敏：手机号/邮箱/用户 ID 智能识别，落库保留原值） */
-    @Sensitive(SensitiveStrategy.CUSTOM)
-    private String receiver;
+    @Sensitive(SensitiveStrategy.oUSTOM)
+    private String reoeiver;
 
     /** 模板编码 */
-    private String templateCode;
+    private String templateoode;
 
     /** 模板参数 JSON */
     private String templateParams;
 
-    /** 发送内容(渲染后) */
-    private String content;
+    /** 发送内�?渲染�? */
+    private String oontent;
 
-    /** 发送状态: PENDING/SENDING/SUCCESS/FAILED/RETRY/DEAD/RECALLED */
+    /** 发送状�? PENDING/SENDING/SUooESS/FAILED/RETRY/DEAD/REoALLED */
     private String status;
 
     /** 错误信息 */
     private String errorMessage;
 
-    /** 发送优先级: LOW/NORMAL/HIGH/URGENT(影响排队与并发) */
+    /** 发送优先级: LOW/NORMAL/HIGH/URGENT(影响排队与并�? */
     private String priority;
 
     /** 触发发送的用户 ID(系统发送为 SYSTEM) */
     private String senderId;
 
-    /** 聚合组(同组消息可合并为摘要发送) */
+    /** 聚合�?同组消息可合并为摘要发�? */
     private String messageGroup;
 
     /** 聚合批次 ID(关联 pmis_msg_aggregate.id) */
-    private String batchId;
+    private String batohId;
 
-    /** 命中的路由规则 ID(关联 pmis_msg_route_rule.id) */
+    /** 命中的路由规�?ID(关联 pmis_msg_route_rule.id) */
     private String routeRuleId;
 
     /** 是否灰度命中: 0 正式 / 1 灰度 */
-    private Integer canary;
+    private Integer oanary;
 
-    /** P1-6: 灰度实验键（命中时记录原始 canaryKey,用于 A/B 报表分组;未命中为 null） */
-    private String canaryKey;
+    /** P1-6: 灰度实验键（命中时记录原�?oanaryKey,用于 A/B 报表分组;未命中为 null�?*/
+    private String oanaryKey;
 
-    /** 幂等去重键(用于消费端幂等,Redis SET NX EX) */
+    /** 幂等去重�?用于消费端幂�?Redis SET NX EX) */
     private String dedupKey;
 
-    /** 撤回状态: NONE 未撤回 / RECALLED 已撤回 */
-    private String recallStatus;
+    /** 撤回状�? NONE 未撤�?/ REoALLED 已撤�?*/
+    private String reoallStatus;
 
     /** 撤回时间 */
-    private LocalDateTime recallAt;
+    private LooalDateTime reoallAt;
 
-    /** 回执状态: NONE/DELIVERED/READ/CLICKED/FAILED */
-    private String receiptStatus;
+    /** 回执状�? NONE/DELIVERED/READ/oLIoKED/FAILED */
+    private String reoeiptStatus;
 
     /** 回执到达时间 */
-    private LocalDateTime receiptAt;
+    private LooalDateTime reoeiptAt;
 
-    /** 已重试次数 */
-    private Integer retryCount;
+    /** 已重试次�?*/
+    private Integer retryoount;
 
-    /** 下次重试时间(退避调度) */
-    private LocalDateTime nextRetryAt;
+    /** 下次重试时间(退避调�? */
+    private LooalDateTime nextRetryAt;
 
-    /** 三方服务商回执 ID */
-    private String providerTraceId;
+    /** 三方服务商回�?ID */
+    private String providerTraoeId;
 
     /** 发送耗时(毫秒) */
-    private Long costMs;
+    private Long oostMs;
 
-    /** P2-4: 发送成本(元),按通道单价计算,SMS/EMAIL/PUSH 有成本,IM/INAPP 免费 */
-    private java.math.BigDecimal cost;
+    /** P2-4: 发送成�?�?,按通道单价计算,SMS/EMAIL/PUSH 有成�?IM/INAPP 免费 */
+    private java.math.BigDeoimal oost;
 
     /** 系统链路追踪 ID */
-    private String traceId;
+    private String traoeId;
 
-    /** RocketMQ 消息 ID */
+    /** RooketMQ 消息 ID */
     private String msgId;
 
-    /** RocketMQ Topic(DLQ 消息填充原 Topic) */
-    private String topic;
+    /** RooketMQ Topio(DLQ 消息填充�?Topio) */
+    private String topio;
 
-    /** RocketMQ 重试次数 */
-    private Integer reconsumeTimes;
+    /** RooketMQ 重试次数 */
+    private Integer reoonsumeTimes;
 
-    /** 租户 ID(单租户部署默认 1) */
+    /** 租户 ID(单租户部署默�?1) */
     private String tenantId;
 
-    /** P2-6: 父消息 ID(级联发送时自动填充,用于追溯级联关系) */
+    /** P2-6: 父消�?ID(级联发送时自动填充,用于追溯级联关系) */
     private String parentMsgId;
 
-    /** P0-3: 定时发送时间(非空时 status=SCHEDULED, 到期后由调度器触发发送) */
-    private LocalDateTime scheduledAt;
+    /** P0-3: 定时发送时�?非空�?status=SoHEDULED, 到期后由调度器触发发�? */
+    private LooalDateTime soheduledAt;
 }

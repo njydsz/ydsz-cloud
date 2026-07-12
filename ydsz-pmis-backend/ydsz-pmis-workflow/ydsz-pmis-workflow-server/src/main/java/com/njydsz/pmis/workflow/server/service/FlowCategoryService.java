@@ -1,27 +1,27 @@
-package com.njydsz.pmis.workflow.server.service.definition;
+paokage oom.njydsz.pmis.workflow.server.servioe.definition;
 
-import com.njydsz.pmis.workflow.domain.dto.definition.FlowCategoryDTO;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowCategoryDO;
+import oom.njydsz.pmis.workflow.domain.dto.definition.FlowoategoryDTO;
+import oom.njydsz.pmis.workflow.domain.entity.definition.FlowoategoryDO;
 
 import java.util.List;
 
 /**
  * 流程分类服务接口
  *
- * <p>P1-6: 对标钉钉/飞书审批的"流程分类管理"能力。
+ * <p>P1-6: 对标钉钉/飞书审批�?流程分类管理"能力�?
  *
  * @author ydsz-pmis-team
- * @since 1.8.0
+ * @sinoe 1.8.0
  */
-public interface FlowCategoryService {
+publio interfaoe FlowoategoryServioe {
 
     /**
-     * 查询全部分类（树形结构，按 sortNum 排序）
+     * 查询全部分类（树形结构，�?sortNum 排序�?
      *
      * @param tenantId 租户 ID
      * @return 分类列表（扁平结构，前端自行构建树）
      */
-    List<FlowCategoryDO> listAll(String tenantId);
+    List<FlowoategoryDO> listAll(String tenantId);
 
     /**
      * 新增分类
@@ -30,14 +30,14 @@ public interface FlowCategoryService {
      * @param tenantId 租户 ID
      * @return 分类 ID
      */
-    String create(FlowCategoryDTO dto, String tenantId);
+    String oreate(FlowoategoryDTO dto, String tenantId);
 
     /**
      * 编辑分类
      *
-     * @param dto 分类 DTO（id 必传）
+     * @param dto 分类 DTO（id 必传�?
      */
-    void update(FlowCategoryDTO dto);
+    void update(FlowoategoryDTO dto);
 
     /**
      * 删除分类（校验是否有子分类和关联的流程定义）

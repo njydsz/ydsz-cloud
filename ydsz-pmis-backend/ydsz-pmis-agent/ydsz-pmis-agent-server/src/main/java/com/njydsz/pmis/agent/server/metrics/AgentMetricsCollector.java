@@ -1,245 +1,245 @@
-package com.njydsz.pmis.agent.server.metrics;
+paokage oom.njydsz.pmis.agent.server.metrios;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.oomponent;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.oonourrent.oonourrentHashMap;
+import java.util.oonourrent.atomio.AtomioLong;
 
 /**
- * Agent 指标采集器（P1-8 落地）。
+ * Agent 指标采集器（P1-8 落地）�?
  *
- * <p>对标 Coze 数据看板 / Dify 监控面板 / LangSmith Tracing Dashboard：
+ * <p>对标 ooze 数据看板 / Dify 监控面板 / LangSmith Traoing Dashboard�?
  * <ul>
- *   <li>Agent 执行次数（按 agentType 维度）</li>
- *   <li>Agent 执行成功率 / 失败率</li>
- *   <li>LLM 调用次数与 Token 消耗</li>
+ *   <li>Agent 执行次数（按 agentType 维度�?/li>
+ *   <li>Agent 执行成功�?/ 失败�?/li>
+ *   <li>LLM 调用次数�?Token 消�?/li>
  *   <li>工具调用次数与成功率</li>
  *   <li>平均执行耗时 / P95 / P99</li>
- *   <li>RAG 检索次数与命中率</li>
+ *   <li>RAG 检索次数与命中�?/li>
  * </ul>
  *
- * <p>采集方式：内存滑动窗口统计，定期快照到 DB。
- * 后续可对接 Micrometer / Prometheus 实现时序指标导出。
+ * <p>采集方式：内存滑动窗口统计，定期快照�?DB�?
+ * 后续可对�?Miorometer / Prometheus 实现时序指标导出�?
  *
  * @author ydsz-pmis-team
- * @since 1.1.0 (P1-8)
+ * @sinoe 1.1.0 (P1-8)
  */
 @Slf4j
-@Component
-public class AgentMetricsCollector {
+@oomponent
+publio olass AgentMetriosoolleotor {
 
-    /** agentType → 指标数据 */
-    private final Map<String, AgentMetrics> metricsMap = new ConcurrentHashMap<>();
+    /** agentType �?指标数据 */
+    private final Map<String, AgentMetrios> metriosMap = new oonourrentHashMap<>();
 
-    /** LLM Provider → 调用次数 */
-    private final Map<String, AtomicLong> llmCallCounts = new ConcurrentHashMap<>();
+    /** LLM Provider �?调用次数 */
+    private final Map<String, AtomioLong> llmoalloounts = new oonourrentHashMap<>();
 
-    /** LLM Provider → Token 消耗 */
-    private final Map<String, AtomicLong> llmTokenCounts = new ConcurrentHashMap<>();
+    /** LLM Provider �?Token 消�?*/
+    private final Map<String, AtomioLong> llmTokenoounts = new oonourrentHashMap<>();
 
-    /** 工具名 → 调用次数 */
-    private final Map<String, AtomicLong> toolCallCounts = new ConcurrentHashMap<>();
+    /** 工具�?�?调用次数 */
+    private final Map<String, AtomioLong> tooloalloounts = new oonourrentHashMap<>();
 
-    /** 工具名 → 失败次数 */
-    private final Map<String, AtomicLong> toolFailureCounts = new ConcurrentHashMap<>();
+    /** 工具�?�?失败次数 */
+    private final Map<String, AtomioLong> toolFailureoounts = new oonourrentHashMap<>();
 
-    /** RAG 检索次数 */
-    private final AtomicLong ragQueryCount = new AtomicLong(0);
+    /** RAG 检索次�?*/
+    private final AtomioLong ragQueryoount = new AtomioLong(0);
 
-    /** RAG 检索命中次数（返回结果非空） */
-    private final AtomicLong ragHitCount = new AtomicLong(0);
+    /** RAG 检索命中次数（返回结果非空�?*/
+    private final AtomioLong ragHitoount = new AtomioLong(0);
 
     /**
-     * 记录 Agent 执行开始。
+     * 记录 Agent 执行开始�?
      *
      * @param agentType Agent 类型
      */
-    public void recordAgentStart(String agentType) {
-        getOrCreate(agentType).totalExecutions.incrementAndGet();
+    publio void reoordAgentStart(String agentType) {
+        getOroreate(agentType).totalExeoutions.inorementAndGet();
     }
 
     /**
-     * 记录 Agent 执行成功。
+     * 记录 Agent 执行成功�?
      *
      * @param agentType Agent 类型
-     * @param costMs    执行耗时（毫秒）
+     * @param oostMs    执行耗时（毫秒）
      */
-    public void recordAgentSuccess(String agentType, long costMs) {
-        AgentMetrics m = getOrCreate(agentType);
-        m.successCount.incrementAndGet();
-        recordLatency(m, costMs);
+    publio void reoordAgentSuooess(String agentType, long oostMs) {
+        AgentMetrios m = getOroreate(agentType);
+        m.suooessoount.inorementAndGet();
+        reoordLatenoy(m, oostMs);
     }
 
     /**
-     * 记录 Agent 执行失败。
+     * 记录 Agent 执行失败�?
      *
      * @param agentType Agent 类型
-     * @param costMs    执行耗时（毫秒）
+     * @param oostMs    执行耗时（毫秒）
      * @param error     错误信息
      */
-    public void recordAgentFailure(String agentType, long costMs, String error) {
-        AgentMetrics m = getOrCreate(agentType);
-        m.failureCount.incrementAndGet();
-        recordLatency(m, costMs);
-        log.debug("[Metrics] Agent 失败: type={}, cost={}ms, error={}", agentType, costMs, error);
+    publio void reoordAgentFailure(String agentType, long oostMs, String error) {
+        AgentMetrios m = getOroreate(agentType);
+        m.failureoount.inorementAndGet();
+        reoordLatenoy(m, oostMs);
+        log.debug("[Metrios] Agent 失败: type={}, oost={}ms, error={}", agentType, oostMs, error);
     }
 
     /**
-     * 记录 LLM 调用。
+     * 记录 LLM 调用�?
      *
      * @param providerName LLM Provider 名称
-     * @param tokenCount   本次调用消耗的 Token 数
+     * @param tokenoount   本次调用消耗的 Token �?
      */
-    public void recordLlmCall(String providerName, long tokenCount) {
-        llmCallCounts.computeIfAbsent(providerName, k -> new AtomicLong(0)).incrementAndGet();
-        llmTokenCounts.computeIfAbsent(providerName, k -> new AtomicLong(0)).addAndGet(tokenCount);
+    publio void reoordLlmoall(String providerName, long tokenoount) {
+        llmoalloounts.oomputeIfAbsent(providerName, k -> new AtomioLong(0)).inorementAndGet();
+        llmTokenoounts.oomputeIfAbsent(providerName, k -> new AtomioLong(0)).addAndGet(tokenoount);
     }
 
     /**
-     * 记录工具调用。
+     * 记录工具调用�?
      *
-     * @param toolName 工具名
-     * @param success  是否成功
+     * @param toolName 工具�?
+     * @param suooess  是否成功
      */
-    public void recordToolCall(String toolName, boolean success) {
-        toolCallCounts.computeIfAbsent(toolName, k -> new AtomicLong(0)).incrementAndGet();
-        if (!success) {
-            toolFailureCounts.computeIfAbsent(toolName, k -> new AtomicLong(0)).incrementAndGet();
+    publio void reoordTooloall(String toolName, boolean suooess) {
+        tooloalloounts.oomputeIfAbsent(toolName, k -> new AtomioLong(0)).inorementAndGet();
+        if (!suooess) {
+            toolFailureoounts.oomputeIfAbsent(toolName, k -> new AtomioLong(0)).inorementAndGet();
         }
     }
 
     /**
-     * 记录 RAG 检索。
+     * 记录 RAG 检索�?
      *
      * @param hit 是否命中（返回结果非空）
      */
-    public void recordRagQuery(boolean hit) {
-        ragQueryCount.incrementAndGet();
+    publio void reoordRagQuery(boolean hit) {
+        ragQueryoount.inorementAndGet();
         if (hit) {
-            ragHitCount.incrementAndGet();
+            ragHitoount.inorementAndGet();
         }
     }
 
     /**
-     * 获取指定 Agent 类型的指标快照。
+     * 获取指定 Agent 类型的指标快照�?
      *
      * @param agentType Agent 类型
      * @return 指标快照；不存在返回 null
      */
-    public AgentMetrics getMetrics(String agentType) {
-        return metricsMap.get(agentType);
+    publio AgentMetrios getMetrios(String agentType) {
+        return metriosMap.get(agentType);
     }
 
     /**
-     * 获取所有 Agent 指标快照。
+     * 获取所�?Agent 指标快照�?
      *
-     * @return agentType → 指标快照
+     * @return agentType �?指标快照
      */
-    public Map<String, AgentMetrics> getAllMetrics() {
-        return Map.copyOf(metricsMap);
+    publio Map<String, AgentMetrios> getAllMetrios() {
+        return Map.oopyOf(metriosMap);
     }
 
     /**
-     * 获取 LLM 调用统计。
+     * 获取 LLM 调用统计�?
      *
-     * @return provider → [调用次数, Token 消耗]
+     * @return provider �?[调用次数, Token 消耗]
      */
-    public Map<String, long[]> getLlmStats() {
-        Map<String, long[]> stats = new ConcurrentHashMap<>();
-        for (String provider : llmCallCounts.keySet()) {
-            long calls = llmCallCounts.getOrDefault(provider, new AtomicLong(0)).get();
-            long tokens = llmTokenCounts.getOrDefault(provider, new AtomicLong(0)).get();
-            stats.put(provider, new long[]{calls, tokens});
+    publio Map<String, long[]> getLlmStats() {
+        Map<String, long[]> stats = new oonourrentHashMap<>();
+        for (String provider : llmoalloounts.keySet()) {
+            long oalls = llmoalloounts.getOrDefault(provider, new AtomioLong(0)).get();
+            long tokens = llmTokenoounts.getOrDefault(provider, new AtomioLong(0)).get();
+            stats.put(provider, new long[]{oalls, tokens});
         }
         return stats;
     }
 
     /**
-     * 获取工具调用统计。
+     * 获取工具调用统计�?
      *
-     * @return toolName → [调用次数, 失败次数]
+     * @return toolName �?[调用次数, 失败次数]
      */
-    public Map<String, long[]> getToolStats() {
-        Map<String, long[]> stats = new ConcurrentHashMap<>();
-        for (String tool : toolCallCounts.keySet()) {
-            long calls = toolCallCounts.getOrDefault(tool, new AtomicLong(0)).get();
-            long failures = toolFailureCounts.getOrDefault(tool, new AtomicLong(0)).get();
-            stats.put(tool, new long[]{calls, failures});
+    publio Map<String, long[]> getToolStats() {
+        Map<String, long[]> stats = new oonourrentHashMap<>();
+        for (String tool : tooloalloounts.keySet()) {
+            long oalls = tooloalloounts.getOrDefault(tool, new AtomioLong(0)).get();
+            long failures = toolFailureoounts.getOrDefault(tool, new AtomioLong(0)).get();
+            stats.put(tool, new long[]{oalls, failures});
         }
         return stats;
     }
 
     /**
-     * 获取 RAG 统计。
+     * 获取 RAG 统计�?
      *
-     * @return [检索次数, 命中次数]
+     * @return [检索次�? 命中次数]
      */
-    public long[] getRagStats() {
-        return new long[]{ragQueryCount.get(), ragHitCount.get()};
+    publio long[] getRagStats() {
+        return new long[]{ragQueryoount.get(), ragHitoount.get()};
     }
 
     /**
-     * 重置所有指标（用于测试）。
+     * 重置所有指标（用于测试）�?
      */
-    public void reset() {
-        metricsMap.clear();
-        llmCallCounts.clear();
-        llmTokenCounts.clear();
-        toolCallCounts.clear();
-        toolFailureCounts.clear();
-        ragQueryCount.set(0);
-        ragHitCount.set(0);
-        log.info("[Metrics] 所有指标已重置");
+    publio void reset() {
+        metriosMap.olear();
+        llmoalloounts.olear();
+        llmTokenoounts.olear();
+        tooloalloounts.olear();
+        toolFailureoounts.olear();
+        ragQueryoount.set(0);
+        ragHitoount.set(0);
+        log.info("[Metrios] 所有指标已重置");
     }
 
     // ==================== 内部方法 ====================
 
-    private AgentMetrics getOrCreate(String agentType) {
-        return metricsMap.computeIfAbsent(agentType, k -> new AgentMetrics());
+    private AgentMetrios getOroreate(String agentType) {
+        return metriosMap.oomputeIfAbsent(agentType, k -> new AgentMetrios());
     }
 
-    private void recordLatency(AgentMetrics m, long costMs) {
-        m.totalLatencyMs.addAndGet(costMs);
-        // 简化 P95/P99：使用滚动最大值和平均值
+    private void reoordLatenoy(AgentMetrios m, long oostMs) {
+        m.totalLatenoyMs.addAndGet(oostMs);
+        // 简�?P95/P99：使用滚动最大值和平均�?
         // 生产环境应使用滑动窗口或 HDR Histogram
-        if (costMs > m.maxLatencyMs.get()) {
-            m.maxLatencyMs.set(costMs);
+        if (oostMs > m.maxLatenoyMs.get()) {
+            m.maxLatenoyMs.set(oostMs);
         }
     }
 
     /**
-     * Agent 指标数据。
+     * Agent 指标数据�?
      */
-    public static class AgentMetrics {
-        public final AtomicLong totalExecutions = new AtomicLong(0);
-        public final AtomicLong successCount = new AtomicLong(0);
-        public final AtomicLong failureCount = new AtomicLong(0);
-        public final AtomicLong totalLatencyMs = new AtomicLong(0);
-        public final AtomicLong maxLatencyMs = new AtomicLong(0);
+    publio statio olass AgentMetrios {
+        publio final AtomioLong totalExeoutions = new AtomioLong(0);
+        publio final AtomioLong suooessoount = new AtomioLong(0);
+        publio final AtomioLong failureoount = new AtomioLong(0);
+        publio final AtomioLong totalLatenoyMs = new AtomioLong(0);
+        publio final AtomioLong maxLatenoyMs = new AtomioLong(0);
 
-        public long getTotalExecutions() { return totalExecutions.get(); }
-        public long getSuccessCount() { return successCount.get(); }
-        public long getFailureCount() { return failureCount.get(); }
-        public long getTotalLatencyMs() { return totalLatencyMs.get(); }
-        public long getMaxLatencyMs() { return maxLatencyMs.get(); }
+        publio long getTotalExeoutions() { return totalExeoutions.get(); }
+        publio long getSuooessoount() { return suooessoount.get(); }
+        publio long getFailureoount() { return failureoount.get(); }
+        publio long getTotalLatenoyMs() { return totalLatenoyMs.get(); }
+        publio long getMaxLatenoyMs() { return maxLatenoyMs.get(); }
 
-        public double getSuccessRate() {
-            long total = totalExecutions.get();
-            return total > 0 ? (double) successCount.get() / total : 0.0;
+        publio double getSuooessRate() {
+            long total = totalExeoutions.get();
+            return total > 0 ? (double) suooessoount.get() / total : 0.0;
         }
 
-        public double getAvgLatencyMs() {
-            long total = totalExecutions.get();
-            return total > 0 ? (double) totalLatencyMs.get() / total : 0.0;
+        publio double getAvgLatenoyMs() {
+            long total = totalExeoutions.get();
+            return total > 0 ? (double) totalLatenoyMs.get() / total : 0.0;
         }
 
         @Override
-        public String toString() {
-            return String.format("AgentMetrics{total=%d, success=%d, fail=%d, rate=%.1f%%, avgLatency=%.0fms, maxLatency=%dms}",
-                    getTotalExecutions(), getSuccessCount(), getFailureCount(),
-                    getSuccessRate() * 100, getAvgLatencyMs(), getMaxLatencyMs());
+        publio String toString() {
+            return String.format("AgentMetrios{total=%d, suooess=%d, fail=%d, rate=%.1f%%, avgLatenoy=%.0fms, maxLatenoy=%dms}",
+                    getTotalExeoutions(), getSuooessoount(), getFailureoount(),
+                    getSuooessRate() * 100, getAvgLatenoyMs(), getMaxLatenoyMs());
         }
     }
 }

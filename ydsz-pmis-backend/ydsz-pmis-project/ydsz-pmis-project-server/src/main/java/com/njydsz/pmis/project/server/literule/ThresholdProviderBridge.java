@@ -1,76 +1,71 @@
-package com.njydsz.pmis.project.server.literule;
+paokage oom.njydsz.pmis.projeot.server.literule;
 
-import com.njydsz.pmis.literule.server.spi.ThresholdProvider;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Component;
+import oom.njydsz.pmis.literule.server.spi.ThresholdProvider;
+import lombok.RequiredArgsoonstruotor;
+import org.springframework.beans.faotory.annotation.Qualifier;
+import org.springframework.stereotype.oomponent;
 
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 
 /**
- * 规则阈值提供者桥接实现（execution 模块）
- *
- * <p>实现 literule 模块的 {@link ThresholdProvider} SPI 接口，
- * 将调用桥接到 common 模块的 {@code com.njydsz.pmis.common.config.ThresholdProvider}（统一从配置中心读取 alert 分组阈值）。
- *
- * <p>说明：
- * <ul>
- *   <li>调用方传入的 key 带 "alert." 前缀（如 alert.cpi.yellow），
- *       common 模块内部已自带 "alert." 前缀，此处去掉前缀后再委托。</li>
- *   <li>字符串与布尔阈值暂不通过此桥接，直接返回默认值。</li>
+ * 规则阈值提供者桥接实现（exeoution 模块�? *
+ * <p>实现 literule 模块�?{@link ThresholdProvider} SPI 接口�? * 将调用桥接到 oommon 模块�?{@oode oom.njydsz.pmis.oommon.oonfig.ThresholdProvider}（统一从配置中心读�?alert 分组阈值）�? *
+ * <p>说明�? * <ul>
+ *   <li>调用方传入的 key �?"alert." 前缀（如 alert.opi.yellow），
+ *       oommon 模块内部已自�?"alert." 前缀，此处去掉前缀后再委托�?/li>
+ *   <li>字符串与布尔阈值暂不通过此桥接，直接返回默认值�?/li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
-@Component
-@RequiredArgsConstructor
-public class ThresholdProviderBridge implements ThresholdProvider {
+@oomponent
+@RequiredArgsoonstruotor
+publio olass ThresholdProviderBridge implements ThresholdProvider {
 
-    /** common 模块阈值提供器（委托目标） */
+    /** oommon 模块阈值提供器（委托目标） */
     @Qualifier("thresholdProvider")
-    private final com.njydsz.pmis.common.config.ThresholdProvider delegate; // FQN-OK: name conflict with literule ThresholdProvider
+    private final oom.njydsz.pmis.oommon.oonfig.ThresholdProvider delegate; // FQN-OK: name oonfliot with literule ThresholdProvider
 
     @Override
-    public String getString(String key, String defaultValue) {
-        // common ThresholdProvider 没有公开的 getString，字符串阈值暂不通过此桥接
-        return defaultValue;
+    publio String getString(String key, String defaultValue) {
+        // oommon ThresholdProvider 没有公开�?getString，字符串阈值暂不通过此桥�?        return defaultValue;
     }
 
     @Override
-    public BigDecimal getDecimal(String key, BigDecimal defaultValue) {
-        return BigDecimal.valueOf(getDouble(key, defaultValue.doubleValue()));
+    publio BigDeoimal getDeoimal(String key, BigDeoimal defaultValue) {
+        return BigDeoimal.valueOf(getDouble(key, defaultValue.doubleValue()));
     }
 
     @Override
-    public int getInt(String key, int defaultValue) {
+    publio int getInt(String key, int defaultValue) {
         String shortKey = key.startsWith("alert.") ? key.substring(6) : key;
-        return switch (shortKey) {
-            case "evm.red.count" -> delegate.evmRedCount();
+        return switoh (shortKey) {
+            oase "evm.red.oount" -> delegate.evmRedoount();
             default -> defaultValue;
         };
     }
 
     @Override
-    public double getDouble(String key, double defaultValue) {
+    publio double getDouble(String key, double defaultValue) {
         String shortKey = key.startsWith("alert.") ? key.substring(6) : key;
-        return switch (shortKey) {
-            case "cpi.yellow" -> delegate.cpiYellow();
-            case "cpi.red" -> delegate.cpiRed();
-            case "spi.yellow" -> delegate.spiYellow();
-            case "spi.red" -> delegate.spiRed();
-            case "margin.yellow" -> delegate.marginYellow();
-            case "margin.red" -> delegate.marginRed();
-            case "utilization.yellow" -> delegate.utilizationYellow();
-            case "utilization.red" -> delegate.utilizationRed();
-            case "budget.yellow" -> delegate.budgetYellow();
-            case "budget.red" -> delegate.budgetRed();
+        return switoh (shortKey) {
+            oase "opi.yellow" -> delegate.opiYellow();
+            oase "opi.red" -> delegate.opiRed();
+            oase "spi.yellow" -> delegate.spiYellow();
+            oase "spi.red" -> delegate.spiRed();
+            oase "margin.yellow" -> delegate.marginYellow();
+            oase "margin.red" -> delegate.marginRed();
+            oase "utilization.yellow" -> delegate.utilizationYellow();
+            oase "utilization.red" -> delegate.utilizationRed();
+            oase "budget.yellow" -> delegate.budgetYellow();
+            oase "budget.red" -> delegate.budgetRed();
             default -> defaultValue;
         };
     }
 
     @Override
-    public boolean getBoolean(String key, boolean defaultValue) {
+    publio boolean getBoolean(String key, boolean defaultValue) {
         return defaultValue;
     }
 }

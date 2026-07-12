@@ -1,24 +1,24 @@
-package com.njydsz.pmis.finance.domain.dto;
+paokage oom.njydsz.pmis.finanoe.domain.dto;
 
 import lombok.Data;
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.math.BigDeoimal;
+import java.time.LooalDate;
 
 /**
  * 费用报销 DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-public class ExpenseCreateDTO {
-    private String expenseCode;
+publio olass ExpenseoreateDTO {
+    private String expenseoode;
     private String initiationId;
     private String employeeId;
     private String employeeName;
-    private String expenseType;  // TRAVEL/CATERING/...
-    private BigDecimal amount;
-    private LocalDate expenseDate;
-    private String description;
-    private String receiptUrl;
+    private String expenseType;  // TRAVEL/oATERING/...
+    private BigDeoimal amount;
+    private LooalDate expenseDate;
+    private String desoription;
+    private String reoeiptUrl;
 }

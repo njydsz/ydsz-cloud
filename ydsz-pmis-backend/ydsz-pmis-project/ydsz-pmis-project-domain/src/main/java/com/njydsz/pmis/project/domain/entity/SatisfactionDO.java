@@ -1,83 +1,83 @@
-package com.njydsz.pmis.project.domain.entity;
+paokage oom.njydsz.pmis.projeot.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.annotation.FieldFill;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableField;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 
 /**
- * 服务满意度评价实体
+ * 服务满意度评价实�?
  *
- * <p>工单关闭 / 质保期结束时可触发；4 维度（专业度/及时性/质量/态度）各 1-5 星 + 总体评分 + 评论。
+ * <p>工单关闭 / 质保期结束时可触发；4 维度（专业度/及时�?质量/态度）各 1-5 �?+ 总体评分 + 评论�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@TableName("pmis_satisfaction")
-public class SatisfactionDO implements Serializable {
+@TableName("pmis_satisfaotion")
+publio olass SatisfaotionDO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    /** 业务编码（SV-YYYYMMDD-XXXX） */
-    private String surveyCode;
+    /** 业务编码（SV-YYYYMMDD-XXXX�?*/
+    private String surveyoode;
     /** 项目立项ID */
     private String initiationId;
     /** 关联工单ID（可空） */
-    private String ticketId;
+    private String tioketId;
     /** 关联质保单ID（可空） */
     private String warrantyId;
     /** 总体评分 1-5 */
-    private Integer score;
-    /** SatisfactionLevel.code */
+    private Integer soore;
+    /** SatisfaotionLevel.oode */
     private String level;
-    /** 专业度评分 1-5 */
+    /** 专业度评�?1-5 */
     private Integer professionalism;
-    /** 及时性评分 1-5 */
+    /** 及时性评�?1-5 */
     private Integer timeliness;
     /** 质量评分 1-5 */
     private Integer quality;
     /** 服务态度评分 1-5 */
     private Integer attitude;
     /** 评价意见 */
-    private String comments;
+    private String oomments;
     /** 改进建议 */
     private String suggest;
     /** 是否匿名评价 */
     private Boolean anonymous;
     /** 评价人ID */
     private String evaluatorId;
-    /** 评价人姓名 */
+    /** 评价人姓�?*/
     private String evaluatorName;
     /** 评价时间 */
-    private LocalDateTime evaluatedAt;
-    /** 是否需要回访 */
+    private LooalDateTime evaluatedAt;
+    /** 是否需要回�?*/
     private Boolean followUp;
     /** 回访记录 */
     private String followUpNote;
     /** 租户ID */
     private String tenantId;
     /** 链路追踪ID */
-    private String providerTraceId;
+    private String providerTraoeId;
 
     /** 创建人ID */
     @TableField(fill = FieldFill.INSERT)
-    private String createdBy;
+    private String oreatedBy;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LooalDateTime oreatedAt;
 
     /** 更新人ID */
     @TableField(fill = FieldFill.INSERT_UPDATE)
@@ -85,9 +85,9 @@ public class SatisfactionDO implements Serializable {
 
     /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LooalDateTime updatedAt;
 
-    /** 逻辑删除标志：1 已删除 / 0 未删除 */
+    /** 逻辑删除标志�? 已删�?/ 0 未删�?*/
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

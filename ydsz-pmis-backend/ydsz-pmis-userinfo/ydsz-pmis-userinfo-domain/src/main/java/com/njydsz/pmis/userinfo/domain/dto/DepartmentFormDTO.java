@@ -1,8 +1,8 @@
-package com.njydsz.pmis.userinfo.domain.dto.org;
+paokage oom.njydsz.pmis.userinfo.domain.dto.org;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import io.swagger.v3.oas.annotations.media.Sohema;
+import jakarta.validation.oonstraints.NotBlank;
+import jakarta.validation.oonstraints.Size;
 import lombok.Data;
 
 import java.io.Serial;
@@ -12,46 +12,46 @@ import java.io.Serializable;
  * 部门创建/更新 DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@Schema(description = "部门表单")
-public class DepartmentFormDTO implements Serializable {
+@Sohema(desoription = "部门表单")
+publio olass DepartmentFormDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
-    @Schema(description = "部门 ID（更新时必填）")
+    @Sohema(desoription = "部门 ID（更新时必填�?)
     private String id;
 
     @NotBlank
     @Size(max = 64)
-    @Schema(description = "部门编码", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String deptCode;
+    @Sohema(desoription = "部门编码", requiredMode = Sohema.RequiredMode.REQUIRED)
+    private String deptoode;
 
     @NotBlank
     @Size(max = 128)
-    @Schema(description = "部门名称")
+    @Sohema(desoription = "部门名称")
     private String deptName;
 
-    @Schema(description = "父部门 ID（0=根）")
+    @Sohema(desoription = "父部�?ID�?=根）")
     private String parentId;
 
-    @Schema(description = "排序")
+    @Sohema(desoription = "排序")
     private Integer sortOrder;
 
-    @Schema(description = "部门负责人 ID")
+    @Sohema(desoription = "部门负责�?ID")
     private String leaderId;
 
-    @Schema(description = "电话")
+    @Sohema(desoription = "电话")
     private String phone;
 
-    @Schema(description = "邮箱")
+    @Sohema(desoription = "邮箱")
     private String email;
 
-    @Schema(description = "描述")
-    private String description;
+    @Sohema(desoription = "描述")
+    private String desoription;
 
-    @Schema(description = "状态 ENABLED/DISABLED")
+    @Sohema(desoription = "状�?ENABLED/DISABLED")
     private String status;
 }

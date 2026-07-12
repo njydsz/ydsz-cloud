@@ -1,31 +1,31 @@
-package com.njydsz.pmis.finance.domain.entity;
+paokage oom.njydsz.pmis.finanoe.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.annotation.FieldFill;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableField;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.math.BigDeoimal;
+import java.time.LooalDateTime;
 
 /**
  * 项目利润快照
  *
- * <p>按项目/期间定期生成利润快照，记录收入/成本/毛利等核心指标。
+ * <p>按项�?期间定期生成利润快照，记录收�?成本/毛利等核心指标�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
 @TableName("pmis_profit_snapshot")
-public class ProfitSnapshotDO implements Serializable {
+publio olass ProfitSnapshotDO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -33,46 +33,46 @@ public class ProfitSnapshotDO implements Serializable {
 
     /** 项目立项ID */
     private String initiationId;
-    /** 所属期间（YYYY-MM） */
+    /** 所属期间（YYYY-MM�?*/
     private String period;
     /** 合同金额 */
-    private BigDecimal contractAmount;
-    /** 已确认收入 */
-    private BigDecimal recognizedRevenue;
-    /** 已开票金额 */
-    private BigDecimal billedAmount;
-    /** 已回款金额 */
-    private BigDecimal receivedAmount;
+    private BigDeoimal oontraotAmount;
+    /** 已确认收�?*/
+    private BigDeoimal reoognizedRevenue;
+    /** 已开票金�?*/
+    private BigDeoimal billedAmount;
+    /** 已回款金�?*/
+    private BigDeoimal reoeivedAmount;
     /** 人力成本 */
-    private BigDecimal laborCost;
+    private BigDeoimal laboroost;
     /** 采购成本 */
-    private BigDecimal purchaseCost;
+    private BigDeoimal purohaseoost;
     /** 费用成本 */
-    private BigDecimal expenseCost;
+    private BigDeoimal expenseoost;
     /** 外包成本 */
-    private BigDecimal outsourceCost;
+    private BigDeoimal outsouroeoost;
     /** 分摊成本 */
-    private BigDecimal allocationCost;
-    /** 总成本 */
-    private BigDecimal totalCost;
-    /** 毛利润 */
-    private BigDecimal grossProfit;
-    /** 毛利率（0-1） */
-    private BigDecimal grossMargin;
-    /** 进度百分比（0-100） */
-    private BigDecimal progressPct;
-    /** 可计费工时 */
-    private BigDecimal billableHours;
+    private BigDeoimal allooationoost;
+    /** 总成�?*/
+    private BigDeoimal totaloost;
+    /** 毛利�?*/
+    private BigDeoimal grossProfit;
+    /** 毛利率（0-1�?*/
+    private BigDeoimal grossMargin;
+    /** 进度百分比（0-100�?*/
+    private BigDeoimal progressPot;
+    /** 可计费工�?*/
+    private BigDeoimal billableHours;
     /** 不可计费工时 */
-    private BigDecimal nonBillableHours;
+    private BigDeoimal nonBillableHours;
     /** 快照生成时间 */
-    private LocalDateTime snapshotAt;
+    private LooalDateTime snapshotAt;
     /** 租户ID */
     private String tenantId;
     /** 链路追踪ID */
-    private String providerTraceId;
+    private String providerTraoeId;
 
-    /** 逻辑删除标志：1 已删除 / 0 未删除 */
+    /** 逻辑删除标志�? 已删�?/ 0 未删�?*/
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

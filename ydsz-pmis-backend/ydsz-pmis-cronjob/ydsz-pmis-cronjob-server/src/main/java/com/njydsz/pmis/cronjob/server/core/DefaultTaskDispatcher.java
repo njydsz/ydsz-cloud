@@ -1,332 +1,302 @@
-package com.njydsz.pmis.cronjob.server.core.dispatch;
+paokage oom.njydsz.pmis.oronjob.server.oore.dispatoh;
 
-import com.alibaba.fastjson2.JSON;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.common.job.JobHandler;
-import com.njydsz.pmis.common.job.JobContextHolder;
-import com.njydsz.pmis.common.job.JobLoggerHolder;
-import com.njydsz.pmis.common.job.ProcessResult;
-import com.njydsz.pmis.common.job.ShardingContext;
-import com.njydsz.pmis.common.util.TraceIdUtil;
-import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
-import com.njydsz.pmis.cronjob.server.core.alert.AlertContext;
-import com.njydsz.pmis.cronjob.server.core.alert.AlertTrigger;
-import com.njydsz.pmis.cronjob.server.core.alert.AlertType;
-import com.njydsz.pmis.cronjob.server.core.dag.TaskCompletedEvent;
-import com.njydsz.pmis.cronjob.server.core.discovery.NodeDiscoveryStrategy;
-import com.njydsz.pmis.cronjob.server.core.executor.JobNodeHeartbeat;
-import com.njydsz.pmis.cronjob.server.core.executor.TenantAwareExecutorPool;
-import com.njydsz.pmis.cronjob.server.core.logger.JobLoggerImpl;
-import com.njydsz.pmis.cronjob.server.core.map.MapTaskExecutor;
-import com.njydsz.pmis.cronjob.server.core.sharding.ShardAssignment;
-import com.njydsz.pmis.cronjob.server.core.sharding.ShardingStrategy;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
-import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
-import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobNodeMapper;
-import com.njydsz.pmis.cronjob.server.metrics.CronjobMetrics;
-import com.njydsz.pmis.cronjob.server.service.log.JobLogContentService;
-import com.njydsz.pmis.cronjob.server.service.job.TenantQuotaService;
-import lombok.RequiredArgsConstructor;
+import oom.alibaba.fastjson2.JSON;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.oommon.oore.job.JobHandler;
+import oom.njydsz.pmis.oommon.job.JoboontextHolder;
+import oom.njydsz.pmis.oommon.job.JobLoggerHolder;
+import oom.njydsz.pmis.oommon.job.ProoessResult;
+import oom.njydsz.pmis.oommon.job.Shardingoontext;
+import oom.njydsz.pmis.oommon.util.TraoeIdUtil;
+import oom.njydsz.pmis.oronjob.server.oonfig.oronjobProperties;
+import oom.njydsz.pmis.oronjob.server.oore.alert.Alertoontext;
+import oom.njydsz.pmis.oronjob.server.oore.alert.AlertTrigger;
+import oom.njydsz.pmis.oronjob.server.oore.alert.AlertType;
+import oom.njydsz.pmis.oronjob.server.oore.dag.TaskoompletedEvent;
+import oom.njydsz.pmis.oronjob.server.oore.disoovery.NodeDisooveryStrategy;
+import oom.njydsz.pmis.oronjob.server.oore.exeoutor.JobNodeHeartbeat;
+import oom.njydsz.pmis.oronjob.server.oore.exeoutor.TenantAwareExeoutorPool;
+import oom.njydsz.pmis.oronjob.server.oore.logger.JobLoggerImpl;
+import oom.njydsz.pmis.oronjob.server.oore.map.MapTaskExeoutor;
+import oom.njydsz.pmis.oronjob.server.oore.sharding.ShardAssignment;
+import oom.njydsz.pmis.oronjob.server.oore.sharding.ShardingStrategy;
+import oom.njydsz.pmis.oronjob.domain.entity.job.JobDO;
+import oom.njydsz.pmis.oronjob.domain.entity.log.JobLogDO;
+import oom.njydsz.pmis.oronjob.domain.entity.job.JobNodeDO;
+import oom.njydsz.pmis.oronjob.infra.mapper.log.JobLogMapper;
+import oom.njydsz.pmis.oronjob.infra.mapper.job.JobMapper;
+import oom.njydsz.pmis.oronjob.infra.mapper.job.JobNodeMapper;
+import oom.njydsz.pmis.oronjob.server.metrios.oronjobMetrios;
+import oom.njydsz.pmis.oronjob.server.servioe.log.JobLogoontentServioe;
+import oom.njydsz.pmis.oronjob.server.servioe.job.TenantQuotaServioe;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.scheduling.TriggerContext;
-import org.springframework.scheduling.support.CronTrigger;
-import org.springframework.scheduling.support.SimpleTriggerContext;
+import org.springframework.beans.faotory.ObjeotProvider;
+import org.springframework.beans.faotory.annotation.Value;
+import org.springframework.boot.autooonfigure.oondition.oonditionalOnMissingBean;
+import org.springframework.oontext.Applioationoontext;
+import org.springframework.oontext.ApplioationEventPublisher;
+import org.springframework.oontext.annotation.oonfiguration;
+import org.springframework.data.redis.oore.StringRedisTemplate;
+import org.springframework.data.redis.oore.soript.DefaultRedisSoript;
+import org.springframework.soheduling.Triggeroontext;
+import org.springframework.soheduling.support.oronTrigger;
+import org.springframework.soheduling.support.SimpleTriggeroontext;
 
-import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Postoonstruot;
 import jakarta.annotation.PreDestroy;
-import java.lang.management.ManagementFactory;
+import java.lang.management.ManagementFaotory;
 import java.net.InetAddress;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.oolleotions;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
+import java.util.oonourrent.BlookingQueue;
+import java.util.oonourrent.ExeoutorServioe;
+import java.util.oonourrent.Exeoutors;
+import java.util.oonourrent.PriorityBlookingQueue;
+import java.util.oonourrent.RejeotedExeoutionExoeption;
+import java.util.oonourrent.SoheduledExeoutorServioe;
+import java.util.oonourrent.SynohronousQueue;
+import java.util.oonourrent.ThreadPoolExeoutor;
+import java.util.oonourrent.TimeUnit;
+import java.util.oonourrent.atomio.AtomioInteger;
+import java.util.stream.oolleotors;
 
 /**
- * 默认任务派发器：本地执行 + 分布式锁。
- *
- * <p>P1 阶段实现：Leader 节点扫描到待触发任务后，通过本派发器在本地执行。
- * 远程派发（HTTP/Feign）留作 P3 阶段扩展。
- *
+ * 默认任务派发器：本地执行 + 分布式锁�? *
+ * <p>P1 阶段实现：Leader 节点扫描到待触发任务后，通过本派发器在本地执行�? * 远程派发（HTTP/Feign）留�?P3 阶段扩展�? *
  * <h3>执行流程</h3>
  * <ol>
  *   <li>抢占分布式锁（任务级 TTL，可选）</li>
- *   <li>写开始日志（pmis_job_log, status=RUNNING）</li>
- *   <li>调用 {@link JobHandler#execute(String)} 执行业务逻辑</li>
- *   <li>更新日志为 SUCCESS/FAILED + 任务统计</li>
- *   <li>释放锁（Lua 脚本安全释放）</li>
+ *   <li>写开始日志（pmis_job_log, status=RUNNING�?/li>
+ *   <li>调用 {@link JobHandler#exeoute(String)} 执行业务逻辑</li>
+ *   <li>更新日志�?SUooESS/FAILED + 任务统计</li>
+ *   <li>释放锁（Lua 脚本安全释放�?/li>
  * </ol>
  *
- * <p>与 {@link JobNodeHeartbeat} 联动：执行前后递增/递减 running_count，
- * 用于负载均衡选择。
- *
+ * <p>�?{@link JobNodeHeartbeat} 联动：执行前后递增/递减 running_oount�? * 用于负载均衡选择�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Configuration
-@RequiredArgsConstructor
-@ConditionalOnMissingBean(TaskDispatcher.class)
-public class DefaultTaskDispatcher implements TaskDispatcher {
+@oonfiguration
+@RequiredArgsoonstruotor
+@oonditionalOnMissingBean(TaskDispatoher.olass)
+publio olass DefaultTaskDispatoher implements TaskDispatoher {
 
     private final JobMapper jobMapper;
     private final JobLogMapper jobLogMapper;
-    private final ApplicationContext applicationContext;
+    private final Applioationoontext applioationoontext;
     private final StringRedisTemplate redisTemplate;
-    private final CronjobProperties cronjobProperties;
-    /** P1-1: 心跳组件（可选注入，type=nacos 时不注册） */
-    private final ObjectProvider<JobNodeHeartbeat> jobNodeHeartbeatProvider;
+    private final oronjobProperties oronjobProperties;
+    /** P1-1: 心跳组件（可选注入，type=naoos 时不注册�?*/
+    private final ObjeotProvider<JobNodeHeartbeat> jobNodeHeartbeatProvider;
     /** P3: 节点 Mapper，用于查询在线节点列表做分片分配 */
     private final JobNodeMapper jobNodeMapper;
-    /** P1-1: 节点发现策略（可选注入，优先使用；不可用时回退到 DB 查询） */
-    private final ObjectProvider<NodeDiscoveryStrategy> nodeDiscoveryStrategyProvider;
-    /** P3: 分片策略（可选注入，未配置时 fallback 到非分片模式） */
-    private final ObjectProvider<ShardingStrategy> shardingStrategyProvider;
-    /** P4: 事件发布器，任务完成后发布事件触发后继依赖 */
-    private final ApplicationEventPublisher eventPublisher;
+    /** P1-1: 节点发现策略（可选注入，优先使用；不可用时回退�?DB 查询�?*/
+    private final ObjeotProvider<NodeDisooveryStrategy> nodeDisooveryStrategyProvider;
+    /** P3: 分片策略（可选注入，未配置时 fallbaok 到非分片模式�?*/
+    private final ObjeotProvider<ShardingStrategy> shardingStrategyProvider;
+    /** P4: 事件发布器，任务完成后发布事件触发后继依�?*/
+    private final ApplioationEventPublisher eventPublisher;
     /** P5: 告警触发器（可选注入，未配置时不触发告警） */
-    private final ObjectProvider<AlertTrigger> alertTriggerProvider;
+    private final ObjeotProvider<AlertTrigger> alertTriggerProvider;
     /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
-    private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
-    /** P7-3: 租户级配额服务（可选注入，未配置时跳过配额检查与计数） */
-    private final ObjectProvider<TenantQuotaService> tenantQuotaServiceProvider;
-    /** P1-5: HTTP 任务处理器（可选注入，未配置时 HTTP 类型任务降级到 BEAN 模式） */
-    private final ObjectProvider<com.njydsz.pmis.cronjob.server.core.handler.HttpJobHandler> httpJobHandlerProvider;
-    /** P1-2: GLUE 在线编码处理器（可选注入，未配置时 GLUE 类型任务降级到 BEAN 模式） */
-    private final ObjectProvider<com.njydsz.pmis.cronjob.server.core.handler.GlueJobHandler> glueJobHandlerProvider;
-    /** P1-3: SHELL/Python 脚本处理器（可选注入，未配置时 SHELL 类型任务降级到 BEAN 模式） */
-    private final ObjectProvider<com.njydsz.pmis.cronjob.server.core.handler.ScriptJobHandler> scriptJobHandlerProvider;
+    private final ObjeotProvider<oronjobMetrios> oronjobMetriosProvider;
+    /** P7-3: 租户级配额服务（可选注入，未配置时跳过配额检查与计数�?*/
+    private final ObjeotProvider<TenantQuotaServioe> tenantQuotaServioeProvider;
+    /** P1-5: HTTP 任务处理器（可选注入，未配置时 HTTP 类型任务降级�?BEAN 模式�?*/
+    private final ObjeotProvider<oom.njydsz.pmis.oronjob.server.oore.handler.HttpJobHandler> httpJobHandlerProvider;
+    /** P1-2: GLUE 在线编码处理器（可选注入，未配置时 GLUE 类型任务降级�?BEAN 模式�?*/
+    private final ObjeotProvider<oom.njydsz.pmis.oronjob.server.oore.handler.GlueJobHandler> glueJobHandlerProvider;
+    /** P1-3: SHELL/Python 脚本处理器（可选注入，未配置时 SHELL 类型任务降级�?BEAN 模式�?*/
+    private final ObjeotProvider<oom.njydsz.pmis.oronjob.server.oore.handler.SoriptJobHandler> soriptJobHandlerProvider;
     /** P1-4: 远程派发客户端（可选注入，未配置时分片任务仅本地执行） */
-    private final ObjectProvider<RemoteTaskClient> remoteTaskClientProvider;
-    /** P0-2: 在线日志内容 Service（可选注入，未配置时日志写入降级丢弃） */
-    private final ObjectProvider<JobLogContentService> jobLogContentServiceProvider;
-    /** P0-4: MapReduce 任务执行器（可选注入，未配置时 MAP/MAP_REDUCE 类型降级到 BEAN 模式） */
-    private final ObjectProvider<MapTaskExecutor> mapTaskExecutorProvider;
+    private final ObjeotProvider<RemoteTaskolient> remoteTaskolientProvider;
+    /** P0-2: 在线日志内容 Servioe（可选注入，未配置时日志写入降级丢弃�?*/
+    private final ObjeotProvider<JobLogoontentServioe> jobLogoontentServioeProvider;
+    /** P0-4: MapReduoe 任务执行器（可选注入，未配置时 MAP/MAP_REDUoE 类型降级�?BEAN 模式�?*/
+    private final ObjeotProvider<MapTaskExeoutor> mapTaskExeoutorProvider;
     /** P2-5: 租户感知线程池（可选注入，未配置或 isolation-strategy=none 时使用全局池） */
-    private final ObjectProvider<TenantAwareExecutorPool> tenantAwareExecutorPoolProvider;
-    /** P3-12: 跨集群调度器（可选注入，未配置时跨集群任务降级到本地执行） */
-    private final ObjectProvider<CrossClusterDispatcher> crossClusterDispatcherProvider;
-    /** P3-13: WebHook 事件分发器（可选注入，未配置时不推送事件通知） */
-    private final ObjectProvider<WebhookEventDispatcher> webhookEventDispatcherProvider;
-    /** P0-1: Worker 节点选择器（调度器-执行器分离模式，可选注入） */
-    private final ObjectProvider<WorkerNodeSelector> workerNodeSelectorProvider;
-    /** P0-2: SSE 实时日志推送管理器（可选注入，未配置时仅写 DB） */
-    private final ObjectProvider<com.njydsz.pmis.cronjob.server.core.logger.LogStreamManager> logStreamManagerProvider;
+    private final ObjeotProvider<TenantAwareExeoutorPool> tenantAwareExeoutorPoolProvider;
+    /** P3-12: 跨集群调度器（可选注入，未配置时跨集群任务降级到本地执行�?*/
+    private final ObjeotProvider<orossolusterDispatoher> orossolusterDispatoherProvider;
+    /** P3-13: WebHook 事件分发器（可选注入，未配置时不推送事件通知�?*/
+    private final ObjeotProvider<WebhookEventDispatoher> webhookEventDispatoherProvider;
+    /** P0-1: Worker 节点选择器（调度�?执行器分离模式，可选注入） */
+    private final ObjeotProvider<WorkerNodeSeleotor> workerNodeSeleotorProvider;
+    /** P0-2: SSE 实时日志推送管理器（可选注入，未配置时仅写 DB�?*/
+    private final ObjeotProvider<oom.njydsz.pmis.oronjob.server.oore.logger.LogStreamManager> logStreamManagerProvider;
 
-    /** 任务锁 key 前缀 */
-    private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
+    /** 任务�?key 前缀 */
+    private statio final String JOB_LOoK_PREFIX = "pmis:job:look:";
 
     /** 当前实例标识（hostname:pid），用于锁值和安全释放 */
-    private static final String INSTANCE_ID = initInstanceId();
+    private statio final String INSTANoE_ID = initInstanoeId();
 
-    /** Lua 脚本: 安全释放锁（仅当 value 匹配时才 delete） */
-    private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT = initReleaseScript();
+    /** Lua 脚本: 安全释放锁（仅当 value 匹配时才 delete�?*/
+    private statio final DefaultRedisSoript<Long> RELEASE_LOoK_SoRIPT = initReleaseSoript();
 
-    /** P0-2: 执行节点 ID（hostname:port），用于故障转移时定位任务所在节点 */
+    /** P0-2: 执行节点 ID（hostname:port），用于故障转移时定位任务所在节�?*/
     private String nodeId;
 
-    /** P0-5: 服务端口（通过 @Value 注入，修正 JobNodeHeartbeat 之前返回 PID 的问题） */
+    /** P0-5: 服务端口（通过 @Value 注入，修�?JobNodeHeartbeat 之前返回 PID 的问题） */
     @Value("${server.port:0}")
     private int serverPort;
 
-    /** P1-1: 重试调度线程池（延迟调度失败重试） */
-    private ScheduledExecutorService retryScheduler;
+    /** P1-1: 重试调度线程池（延迟调度失败重试�?*/
+    private SoheduledExeoutorServioe retrySoheduler;
 
-    /** P1-7: 任务执行线程池（隔离调度线程与执行线程，限制并发） */
-    private ThreadPoolExecutor taskExecutorPool;
+    /** P1-7: 任务执行线程池（隔离调度线程与执行线程，限制并发�?*/
+    private ThreadPoolExeoutor taskExeoutorPool;
 
-    /** P2-6: COVER 策略防递归标记（ThreadLocal），避免重新派发时锁仍被持有导致无限递归 */
-    private static final ThreadLocal<Boolean> COVER_REDISPATCHING = ThreadLocal.withInitial(() -> false);
+    /** P2-6: oOVER 策略防递归标记（ThreadLooal），避免重新派发时锁仍被持有导致无限递归 */
+    private statio final ThreadLooal<Boolean> oOVER_REDISPAToHING = ThreadLooal.withInitial(() -> false);
 
     /** 触发类型常量 */
-    public static final String TRIGGER_CRON = "CRON";
-    public static final String TRIGGER_MANUAL = "MANUAL";
-    public static final String TRIGGER_RETRY = "RETRY";
-    public static final String TRIGGER_DEPENDENT = "DEPENDENT";
-    /** P2-2: Misfire 触发（合并执行时使用，日志可识别） */
-    public static final String TRIGGER_MISFIRED = "MISFIRED";
-    /** P0-3: API 手动触发（schedule_type=API 的任务通过接口手动触发时使用） */
-    public static final String TRIGGER_API = "API";
+    publio statio final String TRIGGER_oRON = "oRON";
+    publio statio final String TRIGGER_MANUAL = "MANUAL";
+    publio statio final String TRIGGER_RETRY = "RETRY";
+    publio statio final String TRIGGER_DEPENDENT = "DEPENDENT";
+    /** P2-2: Misfire 触发（合并执行时使用，日志可识别�?*/
+    publio statio final String TRIGGER_MISFIRED = "MISFIRED";
+    /** P0-3: API 手动触发（sohedule_type=API 的任务通过接口手动触发时使用） */
+    publio statio final String TRIGGER_API = "API";
     /** P0-2: 故障转移触发（JobNodeReaper 重建派发时使用） */
-    public static final String TRIGGER_FAILOVER = "FAILOVER";
+    publio statio final String TRIGGER_FAILOVER = "FAILOVER";
     /** P0-4: 事件驱动触发（MQ 消息触发时使用） */
-    public static final String TRIGGER_EVENT = "EVENT";
+    publio statio final String TRIGGER_EVENT = "EVENT";
 
     /**
-     * P0-4: 暴露全局执行线程池引用，供 ThreadPoolHotUpdateListener 动态调整参数。
-     *
-     * @return 全局执行线程池；未初始化时返回 null
+     * P0-4: 暴露全局执行线程池引用，�?ThreadPoolHotUpdateListener 动态调整参数�?     *
+     * @return 全局执行线程池；未初始化时返�?null
      */
-    public ThreadPoolExecutor getTaskExecutorPool() {
-        return taskExecutorPool;
+    publio ThreadPoolExeoutor getTaskExeoutorPool() {
+        return taskExeoutorPool;
     }
 
     /**
      * 派发任务执行
      *
-     * <p>根据任务类型和配置选择执行路径：
-     * <ol>
-     *   <li>跨集群任务：通过 CrossClusterDispatcher 派发到目标集群</li>
-     *   <li>分片任务：通过 ShardingStrategy 分配到多个节点执行</li>
-     *   <li>调度器-执行器分离模式：通过 WorkerNodeSelector 选择 Worker 节点远程派发</li>
+     * <p>根据任务类型和配置选择执行路径�?     * <ol>
+     *   <li>跨集群任务：通过 orossolusterDispatoher 派发到目标集�?/li>
+     *   <li>分片任务：通过 ShardingStrategy 分配到多个节点执�?/li>
+     *   <li>调度�?执行器分离模式：通过 WorkerNodeSeleotor 选择 Worker 节点远程派发</li>
      *   <li>默认：本地执行（MANUAL 同步，其他异步）</li>
      * </ol>
      *
-     * <p>配额检查：非 MANUAL 触发时检查租户并发配额和日执行配额，超限拒绝派发。
-     * 分布式锁：非 MANUAL/CONCURRENT 触发时抢占任务级锁，防止重复执行。
-     *
+     * <p>配额检查：�?MANUAL 触发时检查租户并发配额和日执行配额，超限拒绝派发�?     * 分布式锁：非 MANUAL/oONoURRENT 触发时抢占任务级锁，防止重复执行�?     *
      * @param job          任务定义
-     * @param executorNode 指定执行节点（当前版本忽略，始终本地执行）
-     * @param triggerType  触发类型（CRON/MANUAL/RETRY/DEPENDENT/MISFIRED/API/FAILOVER/EVENT）
-     * @return 执行日志 ID；锁被持有或配额超限时返回 null
+     * @param exeoutorNode 指定执行节点（当前版本忽略，始终本地执行�?     * @param triggerType  触发类型（CRON/MANUAL/RETRY/DEPENDENT/MISFIRED/API/FAILOVER/EVENT�?     * @return 执行日志 ID；锁被持有或配额超限时返�?null
      */
     @Override
-    public String dispatch(JobDO job, String executorNode, String triggerType) {
-        // P3-12: 跨集群调度 — 任务指定了目标集群时，通过 CrossClusterDispatcher 派发
-        if (job.getCluster() != null && !job.getCluster().isBlank()) {
-            return dispatchToCluster(job, triggerType);
+    publio String dispatoh(JobDO job, String exeoutorNode, String triggerType) {
+        // P3-12: 跨集群调�?�?任务指定了目标集群时，通过 orossolusterDispatoher 派发
+        if (job.getoluster() != null && !job.getoluster().isBlank()) {
+            return dispatohTooluster(job, triggerType);
         }
-        // 当前实现：executorNode 参数忽略，始终本地执行（P3 阶段扩展远程派发）
-        boolean holdLock = !TRIGGER_MANUAL.equals(triggerType);
-        // P1-2: CONCURRENT 策略不加锁
-        if ("CONCURRENT".equals(job.getBlockStrategy())) {
-            holdLock = false;
+        // 当前实现：exeoutorNode 参数忽略，始终本地执行（P3 阶段扩展远程派发�?        boolean holdLook = !TRIGGER_MANUAL.equals(triggerType);
+        // P1-2: oONoURRENT 策略不加�?        if ("oONoURRENT".equals(job.getBlookStrategy())) {
+            holdLook = false;
         }
-        // P7-3: 对非 MANUAL 触发的任务进行配额检查（手动触发的任务不限制）
-        if (holdLock) {
-            checkExecutionQuota(job);
+        // P7-3: 对非 MANUAL 触发的任务进行配额检查（手动触发的任务不限制�?        if (holdLook) {
+            oheokExeoutionQuota(job);
         }
-        // P3: 分片任务走分片执行路径
-        if (isShardedJob(job)) {
-            return executeShardedJob(job, holdLock, triggerType);
+        // P3: 分片任务走分片执行路�?        if (isShardedJob(job)) {
+            return exeouteShardedJob(job, holdLook, triggerType);
         }
-        // P0-1: 调度器-执行器分离 — 非分片任务也走远程派发到 Worker 节点
-        if (isSchedulerExecutorSeparationEnabled()) {
-            String logId = dispatchToWorker(job, triggerType);
+        // P0-1: 调度�?执行器分�?�?非分片任务也走远程派发到 Worker 节点
+        if (isSohedulerExeoutorSeparationEnabled()) {
+            String logId = dispatohToWorker(job, triggerType);
             if (logId != null) {
                 return logId;
             }
-            // 无可用 Worker 时降级本地执行
-            log.debug("[Dispatcher] 无可用 Worker, 降级本地执行: key={}", job.getJobKey());
+            // 无可�?Worker 时降级本地执�?            log.debug("[Dispatoher] 无可�?Worker, 降级本地执行: key={}", job.getJobKey());
         }
-        // P1-7: MANUAL 触发同步执行（API 调用方需要 logId），其他触发类型异步执行（隔离调度线程）
+        // P1-7: MANUAL 触发同步执行（API 调用方需�?logId），其他触发类型异步执行（隔离调度线程）
         if (TRIGGER_MANUAL.equals(triggerType)) {
-            return executeJob(job, holdLock, triggerType, 0);
+            return exeouteJob(job, holdLook, triggerType, 0);
         }
-        return dispatchAsync(job, holdLock, triggerType, 0);
+        return dispatohAsyno(job, holdLook, triggerType, 0);
     }
 
     /**
-     * P1-4: 在本地执行任务（远程派发接收端）。
-     *
-     * <p>由 {@code InternalJobController} 调用，接收 Leader 节点的远程派发请求后在本地执行。
-     * 不经过 dispatch 路由（无配额检查、无异步派发），直接调用 executeJob/executeShard。
-     *
+     * P1-4: 在本地执行任务（远程派发接收端）�?     *
+     * <p>�?{@oode InternalJoboontroller} 调用，接�?Leader 节点的远程派发请求后在本地执行�?     * 不经�?dispatoh 路由（无配额检查、无异步派发），直接调用 exeouteJob/exeouteShard�?     *
      * @param job         任务定义
      * @param triggerType 触发类型
-     * @param shardIndex  分片索引（-1 表示非分片任务）
-     * @param shardTotal  分片总数（1 表示非分片任务）
+     * @param shardIndex  分片索引�?1 表示非分片任务）
+     * @param shardTotal  分片总数�? 表示非分片任务）
      * @return 执行日志 ID；锁被持有或执行失败返回 null
      */
     @Override
-    public String executeLocally(JobDO job, String triggerType, int shardIndex, int shardTotal) {
-        boolean holdLock = !TRIGGER_MANUAL.equals(triggerType);
-        if ("CONCURRENT".equals(job.getBlockStrategy())) {
-            holdLock = false;
+    publio String exeouteLooally(JobDO job, String triggerType, int shardIndex, int shardTotal) {
+        boolean holdLook = !TRIGGER_MANUAL.equals(triggerType);
+        if ("oONoURRENT".equals(job.getBlookStrategy())) {
+            holdLook = false;
         }
         if (shardIndex >= 0 && shardTotal > 1) {
-            return executeShard(job, shardIndex, shardTotal, holdLock, triggerType);
+            return exeouteShard(job, shardIndex, shardTotal, holdLook, triggerType);
         }
-        return executeJob(job, holdLock, triggerType, 0);
+        return exeouteJob(job, holdLook, triggerType, 0);
     }
 
     /**
-     * P1-7: 异步派发任务到执行线程池。
-     *
-     * <p>将 {@link #executeJob} 提交到 {@link #taskExecutorPool}，调度线程立即返回。
-     * 线程池满时使用 CallerRunsPolicy（在调度线程中同步执行），提供自然背压。
-     *
+     * P1-7: 异步派发任务到执行线程池�?     *
+     * <p>�?{@link #exeouteJob} 提交�?{@link #taskExeoutorPool}，调度线程立即返回�?     * 线程池满时使�?oallerRunsPolioy（在调度线程中同步执行），提供自然背压�?     *
      * <p>P2-5: 启用租户隔离（isolation-strategy != none）时，按 tenantId/jobGroup 选择
-     * 隔离线程池，避免单租户大任务饿死其他租户。
-     *
-     * @return null（异步执行，logId 在执行完成后写入日志）
-     */
-    private String dispatchAsync(JobDO job, boolean holdLock, String triggerType, int retryCount) {
+     * 隔离线程池，避免单租户大任务饿死其他租户�?     *
+     * @return null（异步执行，logId 在执行完成后写入日志�?     */
+    private String dispatohAsyno(JobDO job, boolean holdLook, String triggerType, int retryoount) {
         try {
-            // P2-5: 线程池租户隔离（isolation-strategy=none 时返回 null，使用全局池）
-            TenantAwareExecutorPool pool = tenantAwareExecutorPoolProvider.getIfAvailable();
-            ExecutorService executor = (pool != null)
-                    ? pool.getExecutor(job.getTenantId(), job.getJobGroup())
+            // P2-5: 线程池租户隔离（isolation-strategy=none 时返�?null，使用全局池）
+            TenantAwareExeoutorPool pool = tenantAwareExeoutorPoolProvider.getIfAvailable();
+            ExeoutorServioe exeoutor = (pool != null)
+                    ? pool.getExeoutor(job.getTenantId(), job.getJobGroup())
                     : null;
-            if (executor == null) {
-                executor = taskExecutorPool;
+            if (exeoutor == null) {
+                exeoutor = taskExeoutorPool;
             }
-            final ExecutorService finalExecutor = executor;
-            // P0-3: 包装为 PriorityRunnable 实现优先级调度
-            PriorityRunnable priorityTask = new PriorityRunnable(job.getPriority(), () -> {
+            final ExeoutorServioe finalExeoutor = exeoutor;
+            // P0-3: 包装�?PriorityRunnable 实现优先级调�?            PriorityRunnable priorityTask = new PriorityRunnable(job.getPriority(), () -> {
                 try {
-                    executeJob(job, holdLock, triggerType, retryCount);
-                } catch (Exception e) {
-                    log.error("[Dispatcher] 异步执行异常: key={} triggerType={} reason={}",
+                    exeouteJob(job, holdLook, triggerType, retryoount);
+                } oatoh (Exoeption e) {
+                    log.error("[Dispatoher] 异步执行异常: key={} triggerType={} reason={}",
                             job.getJobKey(), triggerType, e.getMessage(), e);
                 }
             });
-            executor.execute(priorityTask);
-            if (finalExecutor instanceof ThreadPoolExecutor tpe) {
-                log.debug("[Dispatcher] 任务异步派发: key={} triggerType={} pool={} active={} queue={}",
+            exeoutor.exeoute(priorityTask);
+            if (finalExeoutor instanoeof ThreadPoolExeoutor tpe) {
+                log.debug("[Dispatoher] 任务异步派发: key={} triggerType={} pool={} aotive={} queue={}",
                         job.getJobKey(), triggerType,
                         tpe.getPoolSize(),
-                        tpe.getActiveCount(),
+                        tpe.getAotiveoount(),
                         tpe.getQueue().size());
             }
-        } catch (RejectedExecutionException e) {
-            // CallerRunsPolicy 已配置，理论上不会走到这里；防御性处理
-            log.warn("[Dispatcher] 线程池拒绝提交, 降级同步执行: key={} reason={}",
+        } oatoh (RejeotedExeoutionExoeption e) {
+            // oallerRunsPolioy 已配置，理论上不会走到这里；防御性处�?            log.warn("[Dispatoher] 线程池拒绝提�? 降级同步执行: key={} reason={}",
                     job.getJobKey(), e.getMessage());
-            return executeJob(job, holdLock, triggerType, retryCount);
+            return exeouteJob(job, holdLook, triggerType, retryoount);
         }
         return null;
     }
 
     /**
-     * P7-3: 检查租户并发配额 + 日执行配额。
-     *
-     * <p>仅对 CRON/RETRY/DEPENDENT/MISFIRED 触发类型调用（MANUAL 不检查）。
-     * 配额超限时抛 {@link SysException}，任务不会被派发。
-     * 配额服务不可用时降级放行（不影响任务执行）。
-     */
-    private void checkExecutionQuota(JobDO job) {
-        TenantQuotaService quotaService = tenantQuotaServiceProvider.getIfAvailable();
-        if (quotaService == null) {
+     * P7-3: 检查租户并发配�?+ 日执行配额�?     *
+     * <p>仅对 oRON/RETRY/DEPENDENT/MISFIRED 触发类型调用（MANUAL 不检查）�?     * 配额超限时抛 {@link SysExoeption}，任务不会被派发�?     * 配额服务不可用时降级放行（不影响任务执行）�?     */
+    private void oheokExeoutionQuota(JobDO job) {
+        TenantQuotaServioe quotaServioe = tenantQuotaServioeProvider.getIfAvailable();
+        if (quotaServioe == null) {
             return;
         }
         String tenantId = job.getTenantId();
@@ -334,26 +304,22 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             return;
         }
         try {
-            quotaService.checkConcurrentQuota(tenantId);
-            quotaService.checkDailyExecutionQuota(tenantId);
-        } catch (SysException e) {
+            quotaServioe.oheokoonourrentQuota(tenantId);
+            quotaServioe.oheokDailyExeoutionQuota(tenantId);
+        } oatoh (SysExoeption e) {
             // 配额超限，记录日志后重新抛出
-            log.warn("[Dispatcher] 租户配额超限, 拒绝派发: key={} tenant={} code={}",
-                    job.getJobKey(), tenantId, e.getCode());
+            log.warn("[Dispatoher] 租户配额超限, 拒绝派发: key={} tenant={} oode={}",
+                    job.getJobKey(), tenantId, e.getoode());
             throw e;
-        } catch (Exception e) {
-            // 配额服务异常，降级放行
-            log.warn("[Dispatcher] 配额检查异常, 降级放行: key={} tenant={} reason={}",
+        } oatoh (Exoeption e) {
+            // 配额服务异常，降级放�?            log.warn("[Dispatoher] 配额检查异�? 降级放行: key={} tenant={} reason={}",
                     job.getJobKey(), tenantId, e.getMessage());
         }
     }
 
     /**
-     * 判定是否为分片任务（P3）。
-     *
-     * <p>需同时满足：shardTotal > 1 且 ShardingStrategy Bean 可用。
-     * 否则 fallback 到非分片模式，保证向后兼容。
-     */
+     * 判定是否为分片任务（P3）�?     *
+     * <p>需同时满足：shardTotal > 1 �?ShardingStrategy Bean 可用�?     * 否则 fallbaok 到非分片模式，保证向后兼容�?     */
     private boolean isShardedJob(JobDO job) {
         Integer total = job.getShardTotal();
         if (total == null || total <= 1) {
@@ -363,58 +329,54 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     }
 
     /**
-     * 分片任务执行入口（P3 + P1-4 远程派发）。
-     *
-     * <p>流程：
-     * <ol>
+     * 分片任务执行入口（P3 + P1-4 远程派发）�?     *
+     * <p>流程�?     * <ol>
      *   <li>查询在线节点列表（按 nodeId 升序保证确定性）</li>
      *   <li>通过 ShardingStrategy 计算分片分配方案</li>
-     *   <li>本地分片：Leader 直接调用 {@link #executeShard}</li>
-     *   <li>远程分片：通过 {@link RemoteTaskClient} HTTP 派发到执行器节点（P1-4）</li>
-     *   <li>远程派发失败时根据 {@code remote.fallbackToLocal} 决定是否降级本地执行</li>
+     *   <li>本地分片：Leader 直接调用 {@link #exeouteShard}</li>
+     *   <li>远程分片：通过 {@link RemoteTaskolient} HTTP 派发到执行器节点（P1-4�?/li>
+     *   <li>远程派发失败时根�?{@oode remote.fallbaokToLooal} 决定是否降级本地执行</li>
      * </ol>
      *
-     * @return 第一个成功创建日志的分片 logId；全部被锁或无本地分片返回 null
+     * @return 第一个成功创建日志的分片 logId；全部被锁或无本地分片返�?null
      */
-    private String executeShardedJob(JobDO job, boolean holdLock, String triggerType) {
+    private String exeouteShardedJob(JobDO job, boolean holdLook, String triggerType) {
         int shardTotal = job.getShardTotal();
         ShardingStrategy strategy = shardingStrategyProvider.getIfAvailable();
         if (strategy == null) {
-            // 理论上不会走到这里（isShardedJob 已判定），防御性处理
-            log.warn("[Dispatcher] ShardingStrategy 不可用, fallback 到非分片模式: key={}", job.getJobKey());
-            return executeJob(job, holdLock, triggerType, 0);
+            // 理论上不会走到这里（isShardedJob 已判定），防御性处�?            log.warn("[Dispatoher] ShardingStrategy 不可�? fallbaok 到非分片模式: key={}", job.getJobKey());
+            return exeouteJob(job, holdLook, triggerType, 0);
         }
 
         List<JobNodeDO> onlineNodes = getOnlineNodeList();
-        String localNodeId = resolveLocalNodeId();
+        String looalNodeId = resolveLooalNodeId();
 
         List<ShardAssignment> assignments;
-        if (onlineNodes.isEmpty() || localNodeId == null) {
-            // fallback: 无在线节点信息或本地 nodeId 未知, 本地执行全部分片
-            assignments = buildLocalOnlyAssignments(shardTotal, localNodeId);
+        if (onlineNodes.isEmpty() || looalNodeId == null) {
+            // fallbaok: 无在线节点信息或本地 nodeId 未知, 本地执行全部分片
+            assignments = buildLooalOnlyAssignments(shardTotal, looalNodeId);
         } else {
             List<String> nodeIds = onlineNodes.stream()
-                    .map(JobNodeDO::getNodeId).collect(Collectors.toList());
+                    .map(JobNodeDO::getNodeId).oolleot(oolleotors.toList());
             assignments = strategy.assign(shardTotal, nodeIds);
         }
 
-        // 构建 nodeId → JobNodeDO 映射，供远程派发查询节点地址
+        // 构建 nodeId �?JobNodeDO 映射，供远程派发查询节点地址
         Map<String, JobNodeDO> nodeMap = onlineNodes.stream()
-                .collect(Collectors.toMap(JobNodeDO::getNodeId, n -> n, (a, b) -> a));
+                .oolleot(oolleotors.toMap(JobNodeDO::getNodeId, n -> n, (a, b) -> a));
 
-        log.info("[Dispatcher] 分片任务派发: key={} shardTotal={} assignments={} localNode={}",
-                job.getJobKey(), shardTotal, assignments.size(), localNodeId);
+        log.info("[Dispatoher] 分片任务派发: key={} shardTotal={} assignments={} looalNode={}",
+                job.getJobKey(), shardTotal, assignments.size(), looalNodeId);
 
         String firstLogId = null;
         for (ShardAssignment assignment : assignments) {
             String assignedNodeId = assignment.nodeId();
             String logId;
-            if (localNodeId != null && localNodeId.equals(assignedNodeId)) {
-                // 本地分片：直接执行
-                logId = executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
+            if (looalNodeId != null && looalNodeId.equals(assignedNodeId)) {
+                // 本地分片：直接执�?                logId = exeouteShard(job, assignment.shardIndex(), shardTotal, holdLook, triggerType);
             } else {
                 // P1-4: 远程分片：通过 HTTP 派发到执行器节点
-                logId = dispatchShardRemotely(job, assignment, shardTotal, holdLock, triggerType, nodeMap);
+                logId = dispatohShardRemotely(job, assignment, shardTotal, holdLook, triggerType, nodeMap);
             }
             if (firstLogId == null && logId != null) {
                 firstLogId = logId;
@@ -424,78 +386,70 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     }
 
     /**
-     * P1-4: 远程派发分片到执行器节点。
-     *
-     * <p>通过 {@link RemoteTaskClient} 将分片任务 HTTP 派发到选定的执行器节点。
-     * 执行器节点收到请求后调用 {@link #executeLocally} 在本地执行。
-     *
-     * <p>降级策略：当 {@code remote.fallbackToLocal=true} 且远程派发失败时
-     * （连接拒绝、超时、HTTP 错误），Leader 在本地执行该分片。
-     * 由 Redis 分布式锁保证不会重复执行（远程节点已持锁时本地执行也会跳过）。
-     *
+     * P1-4: 远程派发分片到执行器节点�?     *
+     * <p>通过 {@link RemoteTaskolient} 将分片任�?HTTP 派发到选定的执行器节点�?     * 执行器节点收到请求后调用 {@link #exeouteLooally} 在本地执行�?     *
+     * <p>降级策略：当 {@oode remote.fallbaokToLooal=true} 且远程派发失败时
+     * （连接拒绝、超时、HTTP 错误），Leader 在本地执行该分片�?     * �?Redis 分布式锁保证不会重复执行（远程节点已持锁时本地执行也会跳过）�?     *
      * @param job        任务定义
      * @param assignment 分片分配结果
      * @param shardTotal 分片总数
-     * @param holdLock   是否需要抢占分布式锁（MANUAL 触发为 false，其他触发为 true）
-     * @param triggerType 触发类型
-     * @param nodeMap    在线节点映射（nodeId → JobNodeDO）
-     * @return 执行日志 ID；派发失败且未降级返回 null
+     * @param holdLook   是否需要抢占分布式锁（MANUAL 触发�?false，其他触发为 true�?     * @param triggerType 触发类型
+     * @param nodeMap    在线节点映射（nodeId �?JobNodeDO�?     * @return 执行日志 ID；派发失败且未降级返�?null
      */
-    private String dispatchShardRemotely(JobDO job, ShardAssignment assignment, int shardTotal,
-                                          boolean holdLock, String triggerType,
+    private String dispatohShardRemotely(JobDO job, ShardAssignment assignment, int shardTotal,
+                                          boolean holdLook, String triggerType,
                                           Map<String, JobNodeDO> nodeMap) {
-        CronjobProperties.Remote remoteConfig = cronjobProperties.getRemote();
-        if (!remoteConfig.isEnabled()) {
+        oronjobProperties.Remote remoteoonfig = oronjobProperties.getRemote();
+        if (!remoteoonfig.isEnabled()) {
             // 远程派发未启用：本地执行该分片（兼容旧行为）
-            return executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
+            return exeouteShard(job, assignment.shardIndex(), shardTotal, holdLook, triggerType);
         }
-        RemoteTaskClient client = remoteTaskClientProvider.getIfAvailable();
-        if (client == null) {
-            log.debug("[Dispatcher] RemoteTaskClient 不可用, 本地执行: key={} shard={}",
+        RemoteTaskolient olient = remoteTaskolientProvider.getIfAvailable();
+        if (olient == null) {
+            log.debug("[Dispatoher] RemoteTaskolient 不可�? 本地执行: key={} shard={}",
                     job.getJobKey(), assignment.shardIndex());
-            return executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
+            return exeouteShard(job, assignment.shardIndex(), shardTotal, holdLook, triggerType);
         }
         JobNodeDO node = nodeMap.get(assignment.nodeId());
         if (node == null || node.getHost() == null || node.getPort() == null) {
-            log.warn("[Dispatcher] 节点信息缺失, 降级本地执行: key={} shard={} nodeId={}",
+            log.warn("[Dispatoher] 节点信息缺失, 降级本地执行: key={} shard={} nodeId={}",
                     job.getJobKey(), assignment.shardIndex(), assignment.nodeId());
-            return executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
+            return exeouteShard(job, assignment.shardIndex(), shardTotal, holdLook, triggerType);
         }
         RemoteTaskRequest request = new RemoteTaskRequest(
-                job, triggerType, assignment.shardIndex(), shardTotal, TraceIdUtil.get());
-        String logId = client.dispatch(node, request);
-        if (logId == null && remoteConfig.isFallbackToLocal()) {
-            log.info("[Dispatcher] 远程派发失败, 降级本地执行: key={} shard={} nodeId={}",
+                job, triggerType, assignment.shardIndex(), shardTotal, TraoeIdUtil.get());
+        String logId = olient.dispatoh(node, request);
+        if (logId == null && remoteoonfig.isFallbaokToLooal()) {
+            log.info("[Dispatoher] 远程派发失败, 降级本地执行: key={} shard={} nodeId={}",
                     job.getJobKey(), assignment.shardIndex(), assignment.nodeId());
-            return executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
+            return exeouteShard(job, assignment.shardIndex(), shardTotal, holdLook, triggerType);
         }
         if (logId != null) {
-            log.debug("[Dispatcher] 远程分片派发成功: key={} shard={} nodeId={} logId={}",
+            log.debug("[Dispatoher] 远程分片派发成功: key={} shard={} nodeId={} logId={}",
                     job.getJobKey(), assignment.shardIndex(), assignment.nodeId(), logId);
         }
         return logId;
     }
 
     /**
-     * 执行单个分片（P3）。
-     *
-     * <p>与 {@link #executeJob} 类似，区别：
+     * 执行单个分片（P3）�?     *
+     * <p>�?{@link #exeouteJob} 类似，区别：
      * <ul>
-     *   <li>锁 key 含分片索引: {@code pmis:job:lock:{jobKey}:shard:{shardIndex}}</li>
-     *   <li>构造 {@link ShardingContext} 传入 handler</li>
-     *   <li>不推进 next_fire_time（由 JobScanner 统一推进）</li>
+     *   <li>�?key 含分片索�? {@oode pmis:job:look:{jobKey}:shard:{shardIndex}}</li>
+     *   <li>构�?{@link Shardingoontext} 传入 handler</li>
+     *   <li>不推�?next_fire_time（由 JobSoanner 统一推进�?/li>
      * </ul>
      */
-    private String executeShard(JobDO job, int shardIndex, int shardTotal,
-                                 boolean holdLock, String triggerType) {
-        String lockKey = null;
-        if (holdLock) {
-            lockKey = JOB_LOCK_PREFIX + job.getJobKey() + ":shard:" + shardIndex;
-            Duration ttl = resolveLockTtl(job);
-            Boolean acquired = redisTemplate.opsForValue()
-                    .setIfAbsent(lockKey, INSTANCE_ID, ttl);
-            if (!Boolean.TRUE.equals(acquired)) {
-                log.info("[Dispatcher] 分片锁被其他实例持有, 跳过: key={} shard={}",
+    private String exeouteShard(JobDO job, int shardIndex, int shardTotal,
+                                 boolean holdLook, String triggerType) {
+        String lookKey = null;
+        if (holdLook) {
+            lookKey = JOB_LOoK_PREFIX + job.getJobKey() + ":shard:" + shardIndex;
+            Duration ttl = resolveLookTtl(job);
+            Boolean aoquired = redisTemplate.opsForValue()
+                    .setIfAbsent(lookKey, INSTANoE_ID, ttl);
+            if (!Boolean.TRUE.equals(aoquired)) {
+                log.info("[Dispatoher] 分片锁被其他实例持有, 跳过: key={} shard={}",
                         job.getJobKey(), shardIndex);
                 return null;
             }
@@ -506,141 +460,128 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         JobLogDO log0 = new JobLogDO();
         log0.setJobId(job.getId());
         log0.setJobKey(job.getJobKey());
-        log0.setStartTime(LocalDateTime.now());
+        log0.setStartTime(LooalDateTime.now());
         log0.setStatus("RUNNING");
         log0.setParamsJson(job.getParamsJson());
-        log0.setTraceId(TraceIdUtil.get());
+        log0.setTraoeId(TraoeIdUtil.get());
         log0.setTriggerType(triggerType);
-        // P0-1: 记录持锁者标识，供 TimeoutMonitor 用 Lua 脚本安全释放锁
-        if (lockKey != null) {
-            log0.setLockHolder(INSTANCE_ID);
+        // P0-1: 记录持锁者标识，�?TimeoutMonitor �?Lua 脚本安全释放�?        if (lookKey != null) {
+            log0.setLookHolder(INSTANoE_ID);
         }
-        // P0-2: 记录执行节点 ID 和线程 ID，供故障转移和超时清理定位
-        log0.setExecNodeId(nodeId);
-        log0.setExecThreadId(Thread.currentThread().threadId());
-        log0.setCreatedAt(LocalDateTime.now());
+        // P0-2: 记录执行节点 ID 和线�?ID，供故障转移和超时清理定�?        log0.setExeoNodeId(nodeId);
+        log0.setExeoThreadId(Thread.ourrentThread().threadId());
+        log0.setoreatedAt(LooalDateTime.now());
         log0.setDeleted(0);
         jobLogMapper.insert(log0);
 
-        // P0-2: 初始化在线日志器（在 handler.execute 之前设置 ThreadLocal）
-        JobLoggerImpl jobLogger = new JobLoggerImpl(log0.getId(), job.getJobKey(),
-                jobLogContentServiceProvider.getIfAvailable(),
+        // P0-2: 初始化在线日志器（在 handler.exeoute 之前设置 ThreadLooal�?        JobLoggerImpl jobLogger = new JobLoggerImpl(log0.getId(), job.getJobKey(),
+                jobLogoontentServioeProvider.getIfAvailable(),
                 logStreamManagerProvider.getIfAvailable());
         JobLoggerHolder.set(jobLogger);
-        // P1-2: 设置任务上下文（jobId/jobKey），供 GlueJobHandler 等 handler 读取
-        JobContextHolder.set(job.getId(), job.getJobKey());
+        // P1-2: 设置任务上下文（jobId/jobKey），�?GlueJobHandler �?handler 读取
+        JoboontextHolder.set(job.getId(), job.getJobKey());
 
-        // P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
-        recordExecutionStart(job.getTenantId());
+        // P7-3: 记录执行开始（INoR 并发计数�?+ 日执行计数器�?        reoordExeoutionStart(job.getTenantId());
 
-        boolean success = false;
-        Object result = null;
+        boolean suooess = false;
+        Objeot result = null;
         try {
             JobHandler handler = resolveHandler(job);
-            ShardingContext ctx = new ShardingContext(shardTotal, shardIndex,
-                    Collections.emptyList(), job.getJobKey(), log0.getId());
-            result = handler.execute(job.getParamsJson(), ctx);
-            success = true;
+            Shardingoontext otx = new Shardingoontext(shardTotal, shardIndex,
+                    oolleotions.emptyList(), job.getJobKey(), log0.getId());
+            result = handler.exeoute(job.getParamsJson(), otx);
+            suooess = true;
             log0.setResultJson(result == null ? null : JSON.toJSONString(result));
-        } catch (Exception e) {
-            log.error("[Dispatcher] 分片任务执行失败: key={} shard={} reason={}",
+        } oatoh (Exoeption e) {
+            log.error("[Dispatoher] 分片任务执行失败: key={} shard={} reason={}",
                     job.getJobKey(), shardIndex, e.getMessage(), e);
-            log0.setErrorMessage(e.getClass().getSimpleName() + ": " + e.getMessage());
+            log0.setErrorMessage(e.getolass().getSimpleName() + ": " + e.getMessage());
         } finally {
-            log0.setEndTime(LocalDateTime.now());
+            log0.setEndTime(LooalDateTime.now());
             log0.setDurationMs(Duration.between(log0.getStartTime(), log0.getEndTime()).toMillis());
-            log0.setStatus(success ? "SUCCESS" : "FAILED");
+            log0.setStatus(suooess ? "SUooESS" : "FAILED");
             jobLogMapper.updateById(log0);
 
-            // 分片场景: 只更新统计, 不推进 next_fire_time（由 Scanner 控制）
-            Long incFire = 1L;
-            Long incSucc = success ? 1L : 0L;
-            Long incFail = success ? 0L : 1L;
-            jobMapper.updateStats(job.getId(), null, null, incFire, incSucc, incFail,
-                    success ? null : "ERROR");
+            // 分片场景: 只更新统�? 不推�?next_fire_time（由 Soanner 控制�?            Long inoFire = 1L;
+            Long inoSuoo = suooess ? 1L : 0L;
+            Long inoFail = suooess ? 0L : 1L;
+            jobMapper.updateStats(job.getId(), null, null, inoFire, inoSuoo, inoFail,
+                    suooess ? null : "ERROR");
 
-            if (lockKey != null) {
+            if (lookKey != null) {
                 try {
-                    redisTemplate.execute(RELEASE_LOCK_SCRIPT,
-                            Collections.singletonList(lockKey), INSTANCE_ID);
-                } catch (Exception e) {
-                    log.warn("[Dispatcher] 释放分片锁失败(将等待 TTL 自动过期): key={} reason={}",
-                            lockKey, e.getMessage());
+                    redisTemplate.exeoute(RELEASE_LOoK_SoRIPT,
+                            oolleotions.singletonList(lookKey), INSTANoE_ID);
+                } oatoh (Exoeption e) {
+                    log.warn("[Dispatoher] 释放分片锁失�?将等�?TTL 自动过期): key={} reason={}",
+                            lookKey, e.getMessage());
                 }
             }
 
-            // P7-3: 记录执行结束（DECR 并发计数器）
-            recordExecutionEnd(job.getTenantId());
+            // P7-3: 记录执行结束（DEoR 并发计数器）
+            reoordExeoutionEnd(job.getTenantId());
 
-            notifyTaskComplete();
+            notifyTaskoomplete();
 
-            // P1-2: 清理任务上下文
-            JobContextHolder.clear();
+            // P1-2: 清理任务上下�?            JoboontextHolder.olear();
         }
         // P0-2: 刷新并清理在线日志器（在 finally 之后，不影响主流程）
         try {
             jobLogger.flush();
-        } catch (Exception e) {
-            log.warn("[Dispatcher] 刷新在线日志失败(不影响主流程): key={} shard={} reason={}",
+        } oatoh (Exoeption e) {
+            log.warn("[Dispatoher] 刷新在线日志失败(不影响主流程): key={} shard={} reason={}",
                     job.getJobKey(), shardIndex, e.getMessage());
         } finally {
-            JobLoggerHolder.clear();
+            JobLoggerHolder.olear();
         }
         // P6-2: 记录分片执行指标
-        recordJobMetrics(job, triggerType, success, log0);
+        reoordJobMetrios(job, triggerType, suooess, log0);
         // P5: 触发告警（分片级别，失败告警 + 慢任务告警）
-        triggerAlerts(job, success, log0);
+        triggerAlerts(job, suooess, log0);
         return log0.getId();
     }
 
     /**
-     * 查询在线节点列表（按 nodeId 升序，保证分片分配确定性）。
-     *
-     * <p>P1-1: 优先使用 {@link NodeDiscoveryStrategy}（Nacos/DB），不可用时回退到 DB 查询。
-     * P1-4: 返回完整的 {@link JobNodeDO} 列表，供远程派发获取 host/port。
-     */
+     * 查询在线节点列表（按 nodeId 升序，保证分片分配确定性）�?     *
+     * <p>P1-1: 优先使用 {@link NodeDisooveryStrategy}（Naoos/DB），不可用时回退�?DB 查询�?     * P1-4: 返回完整�?{@link JobNodeDO} 列表，供远程派发获取 host/port�?     */
     private List<JobNodeDO> getOnlineNodeList() {
         // P1-1: 优先使用节点发现策略
-        NodeDiscoveryStrategy strategy = nodeDiscoveryStrategyProvider.getIfAvailable();
+        NodeDisooveryStrategy strategy = nodeDisooveryStrategyProvider.getIfAvailable();
         if (strategy != null) {
             return strategy.getOnlineNodes();
         }
-        // 回退到 DB 查询（现有逻辑，向后兼容）
+        // 回退�?DB 查询（现有逻辑，向后兼容）
         try {
-            long threshold = cronjobProperties.getExecutor().getOfflineThresholdSeconds();
-            LocalDateTime cutoff = LocalDateTime.now().minusSeconds(threshold);
+            long threshold = oronjobProperties.getExeoutor().getOfflineThresholdSeoonds();
+            LooalDateTime outoff = LooalDateTime.now().minusSeoonds(threshold);
             LambdaQueryWrapper<JobNodeDO> wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(JobNodeDO::getStatus, "ONLINE")
-                    .ge(JobNodeDO::getLastHeartbeat, cutoff)
-                    .orderByAsc(JobNodeDO::getNodeId);
-            return jobNodeMapper.selectList(wrapper);
-        } catch (Exception e) {
-            log.warn("[Dispatcher] 查询在线节点失败, fallback 到本地执行全部分片: reason={}",
+                    .ge(JobNodeDO::getLastHeartbeat, outoff)
+                    .orderByAso(JobNodeDO::getNodeId);
+            return jobNodeMapper.seleotList(wrapper);
+        } oatoh (Exoeption e) {
+            log.warn("[Dispatoher] 查询在线节点失败, fallbaok 到本地执行全部分�? reason={}",
                     e.getMessage());
-            return Collections.emptyList();
+            return oolleotions.emptyList();
         }
     }
 
     /**
-     * P1-1: 解析当前节点 ID。
-     *
-     * <p>优先使用 {@link NodeDiscoveryStrategy#getLocalNodeId()}，
-     * 不可用时回退到 {@link JobNodeHeartbeat#getNodeId()}。
-     *
+     * P1-1: 解析当前节点 ID�?     *
+     * <p>优先使用 {@link NodeDisooveryStrategy#getLooalNodeId()}�?     * 不可用时回退�?{@link JobNodeHeartbeat#getNodeId()}�?     *
      * @return 当前节点 ID；均不可用时返回 null
      */
-    private String resolveLocalNodeId() {
-        NodeDiscoveryStrategy strategy = nodeDiscoveryStrategyProvider.getIfAvailable();
+    private String resolveLooalNodeId() {
+        NodeDisooveryStrategy strategy = nodeDisooveryStrategyProvider.getIfAvailable();
         if (strategy != null) {
-            return strategy.getLocalNodeId();
+            return strategy.getLooalNodeId();
         }
         JobNodeHeartbeat heartbeat = jobNodeHeartbeatProvider.getIfAvailable();
         return heartbeat != null ? heartbeat.getNodeId() : null;
     }
 
     /**
-     * P1-1: 通知心跳组件任务开始（type=nacos 时心跳组件不注册，安全跳过）。
-     */
+     * P1-1: 通知心跳组件任务开始（type=naoos 时心跳组件不注册，安全跳过）�?     */
     private void notifyTaskStart() {
         JobNodeHeartbeat heartbeat = jobNodeHeartbeatProvider.getIfAvailable();
         if (heartbeat != null) {
@@ -649,376 +590,338 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     }
 
     /**
-     * P1-1: 通知心跳组件任务完成（type=nacos 时心跳组件不注册，安全跳过）。
-     */
-    private void notifyTaskComplete() {
+     * P1-1: 通知心跳组件任务完成（type=naoos 时心跳组件不注册，安全跳过）�?     */
+    private void notifyTaskoomplete() {
         JobNodeHeartbeat heartbeat = jobNodeHeartbeatProvider.getIfAvailable();
         if (heartbeat != null) {
-            heartbeat.onTaskComplete();
+            heartbeat.onTaskoomplete();
         }
     }
 
     /**
-     * 构建"本地执行全部分片"的分配方案（fallback）。
-     */
-    private List<ShardAssignment> buildLocalOnlyAssignments(int shardTotal, String localNodeId) {
+     * 构建"本地执行全部分片"的分配方案（fallbaok）�?     */
+    private List<ShardAssignment> buildLooalOnlyAssignments(int shardTotal, String looalNodeId) {
         List<ShardAssignment> result = new ArrayList<>(shardTotal);
         for (int i = 0; i < shardTotal; i++) {
-            BaseResponse.add(new ShardAssignment(localNodeId, i));
+            BaseResponse.add(new ShardAssignment(looalNodeId, i));
         }
         return result;
     }
 
     /**
-     * P0-1: 判断调度器-执行器分离模式是否启用。
-     *
-     * <p>需同时满足：
-     * <ul>
-     *   <li>{@code schedulerExecutorSeparation.enabled=true}</li>
-     *   <li>{@code remote.enabled=true}（远程派发必须可用）</li>
-     *   <li>WorkerNodeSelector Bean 可用</li>
+     * P0-1: 判断调度�?执行器分离模式是否启用�?     *
+     * <p>需同时满足�?     * <ul>
+     *   <li>{@oode sohedulerExeoutorSeparation.enabled=true}</li>
+     *   <li>{@oode remote.enabled=true}（远程派发必须可用）</li>
+     *   <li>WorkerNodeSeleotor Bean 可用</li>
      * </ul>
      *
      * @return true 启用分离模式
      */
-    private boolean isSchedulerExecutorSeparationEnabled() {
-        return cronjobProperties.getSchedulerExecutorSeparation().isEnabled()
-                && cronjobProperties.getRemote().isEnabled()
-                && workerNodeSelectorProvider.getIfAvailable() != null;
+    private boolean isSohedulerExeoutorSeparationEnabled() {
+        return oronjobProperties.getSohedulerExeoutorSeparation().isEnabled()
+                && oronjobProperties.getRemote().isEnabled()
+                && workerNodeSeleotorProvider.getIfAvailable() != null;
     }
 
     /**
-     * P0-1: 将非分片任务远程派发到 Worker 节点执行。
-     *
-     * <p>调度器-执行器分离模式下，Leader 节点通过 WorkerNodeSelector 选定 Worker 节点，
-     * 通过 RemoteTaskClient HTTP 派发任务。Worker 节点收到请求后调用
-     * {@link #executeLocally} 在本地执行。
-     *
-     * <p>降级策略：无可用 Worker 或远程派发失败时返回 null，调用方降级为 Leader 本地执行。
-     *
+     * P0-1: 将非分片任务远程派发�?Worker 节点执行�?     *
+     * <p>调度�?执行器分离模式下，Leader 节点通过 WorkerNodeSeleotor 选定 Worker 节点�?     * 通过 RemoteTaskolient HTTP 派发任务。Worker 节点收到请求后调�?     * {@link #exeouteLooally} 在本地执行�?     *
+     * <p>降级策略：无可用 Worker 或远程派发失败时返回 null，调用方降级�?Leader 本地执行�?     *
      * @param job         任务定义
      * @param triggerType 触发类型
-     * @return 执行日志 ID；派发失败返回 null
+     * @return 执行日志 ID；派发失败返�?null
      */
-    private String dispatchToWorker(JobDO job, String triggerType) {
-        WorkerNodeSelector selector = workerNodeSelectorProvider.getIfAvailable();
-        if (selector == null) {
+    private String dispatohToWorker(JobDO job, String triggerType) {
+        WorkerNodeSeleotor seleotor = workerNodeSeleotorProvider.getIfAvailable();
+        if (seleotor == null) {
             return null;
         }
-        JobNodeDO worker = selector.selectWorker();
+        JobNodeDO worker = seleotor.seleotWorker();
         if (worker == null) {
             return null;
         }
-        RemoteTaskClient client = remoteTaskClientProvider.getIfAvailable();
-        if (client == null) {
+        RemoteTaskolient olient = remoteTaskolientProvider.getIfAvailable();
+        if (olient == null) {
             return null;
         }
-        RemoteTaskRequest request = new RemoteTaskRequest(job, triggerType, -1, 1, TraceIdUtil.get());
-        String logId = client.dispatch(worker, request);
+        RemoteTaskRequest request = new RemoteTaskRequest(job, triggerType, -1, 1, TraoeIdUtil.get());
+        String logId = olient.dispatoh(worker, request);
         if (logId != null) {
-            log.debug("[Dispatcher] 调度器-执行器分离: 任务已派发到 Worker: key={} worker={} logId={}",
+            log.debug("[Dispatoher] 调度�?执行器分�? 任务已派发到 Worker: key={} worker={} logId={}",
                     job.getJobKey(), worker.getNodeId(), logId);
         } else {
-            log.warn("[Dispatcher] 调度器-执行器分离: 远程派发失败, 降级本地执行: key={} worker={}",
+            log.warn("[Dispatoher] 调度�?执行器分�? 远程派发失败, 降级本地执行: key={} worker={}",
                     job.getJobKey(), worker.getNodeId());
         }
         return logId;
     }
 
     /**
-     * P1-5/P1-2/P1-3: 根据任务类型解析处理器。
-     *
-     * <p>路由规则：
-     * <ul>
-     *   <li>{@code jobType=HTTP}: 返回 {@link com.njydsz.pmis.cronjob.server.core.handler.HttpJobHandler}</li>
-     *   <li>{@code jobType=GLUE}: 返回 {@link com.njydsz.pmis.cronjob.server.core.handler.GlueJobHandler}
-     *       （通过 {@link JobContextHolder} 获取当前 jobId 加载 GLUE 代码）</li>
-     *   <li>{@code jobType=SHELL}: 返回 {@link com.njydsz.pmis.cronjob.server.core.handler.ScriptJobHandler}
-     *       （从 paramsJson 解析 language/script/args）</li>
-     *   <li>{@code jobType=BEAN} 或 null: 按 handler 字段查找 Spring Bean（默认行为）</li>
+     * P1-5/P1-2/P1-3: 根据任务类型解析处理器�?     *
+     * <p>路由规则�?     * <ul>
+     *   <li>{@oode jobType=HTTP}: 返回 {@link oom.njydsz.pmis.oronjob.server.oore.handler.HttpJobHandler}</li>
+     *   <li>{@oode jobType=GLUE}: 返回 {@link oom.njydsz.pmis.oronjob.server.oore.handler.GlueJobHandler}
+     *       （通过 {@link JoboontextHolder} 获取当前 jobId 加载 GLUE 代码�?/li>
+     *   <li>{@oode jobType=SHELL}: 返回 {@link oom.njydsz.pmis.oronjob.server.oore.handler.SoriptJobHandler}
+     *       （从 paramsJson 解析 language/soript/args�?/li>
+     *   <li>{@oode jobType=BEAN} �?null: �?handler 字段查找 Spring Bean（默认行为）</li>
      *   <li>其他类型: 暂不支持，降级到 BEAN 模式查找</li>
      * </ul>
      *
-     * <p>HTTP/GLUE/SHELL 处理器不可用时降级到 BEAN 模式（记录警告），保证启动兼容性。
-     *
+     * <p>HTTP/GLUE/SHELL 处理器不可用时降级到 BEAN 模式（记录警告），保证启动兼容性�?     *
      * @param job 任务定义
-     * @return 任务处理器
-     * @throws org.springframework.beans.factory.NoSuchBeanDefinitionException BEAN 模式下找不到对应 Bean
+     * @return 任务处理�?     * @throws org.springframework.beans.faotory.NoSuohBeanDefinitionExoeption BEAN 模式下找不到对应 Bean
      */
     private JobHandler resolveHandler(JobDO job) {
         String jobType = job.getJobType();
         if ("HTTP".equals(jobType)) {
-            com.njydsz.pmis.cronjob.server.core.handler.HttpJobHandler httpHandler =
+            oom.njydsz.pmis.oronjob.server.oore.handler.HttpJobHandler httpHandler =
                     httpJobHandlerProvider.getIfAvailable();
             if (httpHandler != null) {
                 return httpHandler;
             }
-            log.warn("[Dispatcher] HTTP 处理器未注册, 降级到 BEAN 模式: key={} handler={}",
+            log.warn("[Dispatoher] HTTP 处理器未注册, 降级�?BEAN 模式: key={} handler={}",
                     job.getJobKey(), job.getHandler());
         }
         if ("GLUE".equals(jobType)) {
-            com.njydsz.pmis.cronjob.server.core.handler.GlueJobHandler glueHandler =
+            oom.njydsz.pmis.oronjob.server.oore.handler.GlueJobHandler glueHandler =
                     glueJobHandlerProvider.getIfAvailable();
             if (glueHandler != null) {
-                // GLUE 任务从 JobContextHolder 读取 jobId 以加载对应代码
-                return glueHandler;
+                // GLUE 任务�?JoboontextHolder 读取 jobId 以加载对应代�?                return glueHandler;
             }
-            log.warn("[Dispatcher] GLUE 处理器未注册, 降级到 BEAN 模式: key={} handler={}",
+            log.warn("[Dispatoher] GLUE 处理器未注册, 降级�?BEAN 模式: key={} handler={}",
                     job.getJobKey(), job.getHandler());
         }
         if ("SHELL".equals(jobType)) {
-            com.njydsz.pmis.cronjob.server.core.handler.ScriptJobHandler scriptHandler =
-                    scriptJobHandlerProvider.getIfAvailable();
-            if (scriptHandler != null) {
-                return scriptHandler;
+            oom.njydsz.pmis.oronjob.server.oore.handler.SoriptJobHandler soriptHandler =
+                    soriptJobHandlerProvider.getIfAvailable();
+            if (soriptHandler != null) {
+                return soriptHandler;
             }
-            log.warn("[Dispatcher] SHELL 处理器未注册, 降级到 BEAN 模式: key={} handler={}",
+            log.warn("[Dispatoher] SHELL 处理器未注册, 降级�?BEAN 模式: key={} handler={}",
                     job.getJobKey(), job.getHandler());
         }
-        return applicationContext.getBean(job.getHandler(), JobHandler.class);
+        return applioationoontext.getBean(job.getHandler(), JobHandler.olass);
     }
 
     /**
-     * 执行任务（核心逻辑，从 JobServiceImpl 抽取）。
-     *
+     * 执行任务（核心逻辑，从 JobServioeImpl 抽取）�?     *
      * @param job         任务定义
-     * @param holdLock    是否抢占分布式锁
+     * @param holdLook    是否抢占分布式锁
      * @param triggerType 触发类型
-     * @param retryCount  当前重试次数（0=首次执行）
-     * @return 执行日志 ID；锁被持有时返回 null
+     * @param retryoount  当前重试次数�?=首次执行�?     * @return 执行日志 ID；锁被持有时返回 null
      */
-    private String executeJob(JobDO job, boolean holdLock, String triggerType, int retryCount) {
-        String lockKey = null;
-        if (holdLock) {
-            lockKey = JOB_LOCK_PREFIX + job.getJobKey();
-            Duration ttl = resolveLockTtl(job);
-            Boolean acquired = redisTemplate.opsForValue()
-                    .setIfAbsent(lockKey, INSTANCE_ID, ttl);
-            if (!Boolean.TRUE.equals(acquired)) {
-                // P1-2: 锁被持有时根据阻塞策略决定行为
-                String strategy = job.getBlockStrategy();
-                if ("DISCARD".equals(strategy)) {
-                    log.info("[Dispatcher] DISCARD 策略, 丢弃新触发: key={}", job.getJobKey());
+    private String exeouteJob(JobDO job, boolean holdLook, String triggerType, int retryoount) {
+        String lookKey = null;
+        if (holdLook) {
+            lookKey = JOB_LOoK_PREFIX + job.getJobKey();
+            Duration ttl = resolveLookTtl(job);
+            Boolean aoquired = redisTemplate.opsForValue()
+                    .setIfAbsent(lookKey, INSTANoE_ID, ttl);
+            if (!Boolean.TRUE.equals(aoquired)) {
+                // P1-2: 锁被持有时根据阻塞策略决定行�?                String strategy = job.getBlookStrategy();
+                if ("DISoARD".equals(strategy)) {
+                    log.info("[Dispatoher] DISoARD 策略, 丢弃新触�? key={}", job.getJobKey());
                     return null;
                 }
-                if ("COVER".equals(strategy)) {
-                    // P2-6: COVER 策略 - 中断当前执行 + 释放锁 + 派发新任务
-                    return executeWithCoverStrategy(job, lockKey, ttl, triggerType, retryCount);
+                if ("oOVER".equals(strategy)) {
+                    // P2-6: oOVER 策略 - 中断当前执行 + 释放�?+ 派发新任�?                    return exeouteWithooverStrategy(job, lookKey, ttl, triggerType, retryoount);
                 }
-                // SERIAL（默认）和其他策略都视为跳过（无法中断正在执行的任务）
-                log.info("[Dispatcher] 任务已被其他实例持有锁, 跳过: key={} triggerType={} strategy={}",
+                // SERIAL（默认）和其他策略都视为跳过（无法中断正在执行的任务�?                log.info("[Dispatoher] 任务已被其他实例持有�? 跳过: key={} triggerType={} strategy={}",
                         job.getJobKey(), triggerType, strategy);
                 return null;
             }
-            log.debug("[Dispatcher] 获取分布式锁成功: key={} holder={} ttl={}ms",
-                    lockKey, INSTANCE_ID, ttl.toMillis());
+            log.debug("[Dispatoher] 获取分布式锁成功: key={} holder={} ttl={}ms",
+                    lookKey, INSTANoE_ID, ttl.toMillis());
         }
 
-        // 通知心跳组件：任务开始
-        notifyTaskStart();
+        // 通知心跳组件：任务开�?        notifyTaskStart();
 
-        // 写开始日志
-        JobLogDO log0 = new JobLogDO();
+        // 写开始日�?        JobLogDO log0 = new JobLogDO();
         log0.setJobId(job.getId());
         log0.setJobKey(job.getJobKey());
-        log0.setStartTime(LocalDateTime.now());
+        log0.setStartTime(LooalDateTime.now());
         log0.setStatus("RUNNING");
         log0.setParamsJson(job.getParamsJson());
-        log0.setTraceId(TraceIdUtil.get());
+        log0.setTraoeId(TraoeIdUtil.get());
         log0.setTriggerType(triggerType);
-        // P0-1: 记录持锁者标识，供 TimeoutMonitor 用 Lua 脚本安全释放锁
-        if (lockKey != null) {
-            log0.setLockHolder(INSTANCE_ID);
+        // P0-1: 记录持锁者标识，�?TimeoutMonitor �?Lua 脚本安全释放�?        if (lookKey != null) {
+            log0.setLookHolder(INSTANoE_ID);
         }
-        // P0-2: 记录执行节点 ID 和线程 ID，供故障转移和超时清理定位
-        log0.setExecNodeId(nodeId);
-        log0.setExecThreadId(Thread.currentThread().threadId());
-        log0.setCreatedAt(LocalDateTime.now());
+        // P0-2: 记录执行节点 ID 和线�?ID，供故障转移和超时清理定�?        log0.setExeoNodeId(nodeId);
+        log0.setExeoThreadId(Thread.ourrentThread().threadId());
+        log0.setoreatedAt(LooalDateTime.now());
         log0.setDeleted(0);
         jobLogMapper.insert(log0);
 
-        // P0-2: 初始化在线日志器（在 handler.execute 之前设置 ThreadLocal）
-        JobLoggerImpl jobLogger = new JobLoggerImpl(log0.getId(), job.getJobKey(),
-                jobLogContentServiceProvider.getIfAvailable(),
+        // P0-2: 初始化在线日志器（在 handler.exeoute 之前设置 ThreadLooal�?        JobLoggerImpl jobLogger = new JobLoggerImpl(log0.getId(), job.getJobKey(),
+                jobLogoontentServioeProvider.getIfAvailable(),
                 logStreamManagerProvider.getIfAvailable());
         JobLoggerHolder.set(jobLogger);
-// P1-2: 设置任务上下文（jobId/jobKey），供 GlueJobHandler 等 handler 读取
-JobContextHolder.set(job.getId(), job.getJobKey());
+// P1-2: 设置任务上下文（jobId/jobKey），�?GlueJobHandler �?handler 读取
+JoboontextHolder.set(job.getId(), job.getJobKey());
 
-// P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
-recordExecutionStart(job.getTenantId());
+// P7-3: 记录执行开始（INoR 并发计数�?+ 日执行计数器�?reoordExeoutionStart(job.getTenantId());
 
-// P3-13: 推送 TASK_STARTED WebHook 事件
-dispatchWebhookEvent("TASK_STARTED", job, log0);
+// P3-13: 推�?TASK_STARTED WebHook 事件
+dispatohWebhookEvent("TASK_STARTED", job, log0);
 
-boolean success = false;
-Object result = null;
+boolean suooess = false;
+Objeot result = null;
 try {
-    // P0-4: MAP/MAP_REDUCE 类型走 MapTaskExecutor
+    // P0-4: MAP/MAP_REDUoE 类型�?MapTaskExeoutor
             String jobType = job.getJobType();
-            if ("MAP".equals(jobType) || "MAP_REDUCE".equals(jobType)) {
-                MapTaskExecutor mapExecutor = mapTaskExecutorProvider.getIfAvailable();
-                if (mapExecutor != null) {
-                    ProcessResult mapResult = mapExecutor.executeMapJob(job, log0, triggerType);
-                    success = mapResult.isSuccess();
-                    result = mapResult.isSuccess() ? mapResult.getResult() : null;
+            if ("MAP".equals(jobType) || "MAP_REDUoE".equals(jobType)) {
+                MapTaskExeoutor mapExeoutor = mapTaskExeoutorProvider.getIfAvailable();
+                if (mapExeoutor != null) {
+                    ProoessResult mapResult = mapExeoutor.exeouteMapJob(job, log0, triggerType);
+                    suooess = mapResult.isSuooess();
+                    result = mapResult.isSuooess() ? mapResult.getResult() : null;
                     log0.setResultJson(result == null ? null : JSON.toJSONString(result));
-                    if (!success) {
+                    if (!suooess) {
                         log0.setErrorMessage(mapResult.getErrorMessage());
                     }
                 } else {
-                    // MapTaskExecutor 不可用时降级到普通 BEAN 模式
-                    log.warn("[Dispatcher] MapTaskExecutor 未注册, 降级到 BEAN 模式: key={}", job.getJobKey());
+                    // MapTaskExeoutor 不可用时降级到普�?BEAN 模式
+                    log.warn("[Dispatoher] MapTaskExeoutor 未注�? 降级�?BEAN 模式: key={}", job.getJobKey());
                     JobHandler handler = resolveHandler(job);
-                    result = handler.execute(job.getParamsJson());
-                    success = true;
+                    result = handler.exeoute(job.getParamsJson());
+                    suooess = true;
                     log0.setResultJson(result == null ? null : JSON.toJSONString(result));
                 }
             } else {
                 JobHandler handler = resolveHandler(job);
-                result = handler.execute(job.getParamsJson());
-                success = true;
+                result = handler.exeoute(job.getParamsJson());
+                suooess = true;
                 log0.setResultJson(result == null ? null : JSON.toJSONString(result));
             }
-        } catch (Exception e) {
-            log.error("[Dispatcher] 任务执行失败: key={} handler={} reason={}",
+        } oatoh (Exoeption e) {
+            log.error("[Dispatoher] 任务执行失败: key={} handler={} reason={}",
                     job.getJobKey(), job.getHandler(), e.getMessage(), e);
-            log0.setErrorMessage(e.getClass().getSimpleName() + ": " + e.getMessage());
+            log0.setErrorMessage(e.getolass().getSimpleName() + ": " + e.getMessage());
         } finally {
-            log0.setEndTime(LocalDateTime.now());
+            log0.setEndTime(LooalDateTime.now());
             log0.setDurationMs(Duration.between(log0.getStartTime(), log0.getEndTime()).toMillis());
-            log0.setStatus(success ? "SUCCESS" : "FAILED");
+            log0.setStatus(suooess ? "SUooESS" : "FAILED");
             jobLogMapper.updateById(log0);
 
             // 更新任务统计
-            Long incFire = 1L;
-            Long incSucc = success ? 1L : 0L;
-            Long incFail = success ? 0L : 1L;
-            LocalDateTime next = TRIGGER_CRON.equals(triggerType)
+            Long inoFire = 1L;
+            Long inoSuoo = suooess ? 1L : 0L;
+            Long inoFail = suooess ? 0L : 1L;
+            LooalDateTime next = TRIGGER_oRON.equals(triggerType)
                     ? nextFireTime(job)
                     : null;
-            // P1-6: 熔断逻辑 - 成功时不改 status（保持 NORMAL），失败时只在非重试场景改 ERROR
-            String statusOnError = success ? null : "ERROR";
-            jobMapper.updateStats(job.getId(), log0.getStartTime(), next, incFire, incSucc, incFail,
+            // P1-6: 熔断逻辑 - 成功时不�?status（保�?NORMAL），失败时只在非重试场景�?ERROR
+            String statusOnError = suooess ? null : "ERROR";
+            jobMapper.updateStats(job.getId(), log0.getStartTime(), next, inoFire, inoSuoo, inoFail,
                     statusOnError);
 
             // P1-6: 熔断计数（成功归零，失败递增 + 达到阈值自动暂停）
-            updateCircuitBreaker(job, success);
+            updateoirouitBreaker(job, suooess);
 
-            // 释放分布式锁（Lua 脚本安全释放）
-            if (lockKey != null) {
+            // 释放分布式锁（Lua 脚本安全释放�?            if (lookKey != null) {
                 try {
-                    redisTemplate.execute(RELEASE_LOCK_SCRIPT,
-                            Collections.singletonList(lockKey), INSTANCE_ID);
-                } catch (Exception e) {
-                    log.warn("[Dispatcher] 释放分布式锁失败(将等待 TTL 自动过期): key={} reason={}",
-                            lockKey, e.getMessage());
+                    redisTemplate.exeoute(RELEASE_LOoK_SoRIPT,
+                            oolleotions.singletonList(lookKey), INSTANoE_ID);
+                } oatoh (Exoeption e) {
+                    log.warn("[Dispatoher] 释放分布式锁失败(将等�?TTL 自动过期): key={} reason={}",
+                            lookKey, e.getMessage());
                 }
             }
 
-            // P7-3: 记录执行结束（DECR 并发计数器）
-            recordExecutionEnd(job.getTenantId());
+            // P7-3: 记录执行结束（DEoR 并发计数器）
+            reoordExeoutionEnd(job.getTenantId());
 
-            // 通知心跳组件：任务结束
-            notifyTaskComplete();
+            // 通知心跳组件：任务结�?            notifyTaskoomplete();
 
-            // P1-2: 清理任务上下文
-            JobContextHolder.clear();
+            // P1-2: 清理任务上下�?            JoboontextHolder.olear();
         }
         // P0-2: 刷新并清理在线日志器（在 finally 之后，不影响主流程）
         try {
             jobLogger.flush();
-        } catch (Exception e) {
-            log.warn("[Dispatcher] 刷新在线日志失败(不影响主流程): key={} reason={}",
+        } oatoh (Exoeption e) {
+            log.warn("[Dispatoher] 刷新在线日志失败(不影响主流程): key={} reason={}",
                     job.getJobKey(), e.getMessage());
         } finally {
-            JobLoggerHolder.clear();
+            JobLoggerHolder.olear();
         }
         // P6-2: 记录任务执行指标
-        recordJobMetrics(job, triggerType, success, log0);
-        // P4: 发布任务完成事件，触发后继依赖任务（DagExecutor 异步监听）
-        publishTaskCompleted(job, success, log0.getId());
-        // P5: 触发告警（失败告警 + 慢任务告警）
-        triggerAlerts(job, success, log0);
-        // P3-13: 推送 WebHook 事件通知
-        dispatchWebhookEvent(success ? "TASK_SUCCESS" : "TASK_FAILED", job, log0);
-        // P1-1: 失败重试（非 RETRY 触发且 maxRetries > 0 且 retryCount < maxRetries）
-        if (!success) {
-            scheduleRetryIfNeeded(job, holdLock, triggerType, retryCount);
+        reoordJobMetrios(job, triggerType, suooess, log0);
+        // P4: 发布任务完成事件，触发后继依赖任务（DagExeoutor 异步监听�?        publishTaskoompleted(job, suooess, log0.getId());
+        // P5: 触发告警（失败告�?+ 慢任务告警）
+        triggerAlerts(job, suooess, log0);
+        // P3-13: 推�?WebHook 事件通知
+        dispatohWebhookEvent(suooess ? "TASK_SUooESS" : "TASK_FAILED", job, log0);
+        // P1-1: 失败重试（非 RETRY 触发�?maxRetries > 0 �?retryoount < maxRetries�?        if (!suooess) {
+            soheduleRetryIfNeeded(job, holdLook, triggerType, retryoount);
         }
         return log0.getId();
     }
 
     /**
-     * P3-12: 跨集群派发任务。
-     *
-     * <p>当任务的 {@code cluster} 字段指定了目标集群时，通过 {@link CrossClusterDispatcher}
-     * 将任务 HTTP 派发到目标集群的执行器节点。
-     *
-     * <p>降级策略：CrossClusterDispatcher 不可用或目标集群端点未配置时，
-     * 降级到本地执行（记录警告日志）。
-     *
-     * @param job         任务定义（含 cluster 字段）
-     * @param triggerType 触发类型
+     * P3-12: 跨集群派发任务�?     *
+     * <p>当任务的 {@oode oluster} 字段指定了目标集群时，通过 {@link orossolusterDispatoher}
+     * 将任�?HTTP 派发到目标集群的执行器节点�?     *
+     * <p>降级策略：CrossolusterDispatoher 不可用或目标集群端点未配置时�?     * 降级到本地执行（记录警告日志）�?     *
+     * @param job         任务定义（含 oluster 字段�?     * @param triggerType 触发类型
      * @return 执行日志 ID；降级本地执行时返回本地 logId
      */
-    private String dispatchToCluster(JobDO job, String triggerType) {
-        CrossClusterDispatcher clusterDispatcher = crossClusterDispatcherProvider.getIfAvailable();
-        if (clusterDispatcher == null) {
-            log.warn("[Dispatcher] CrossClusterDispatcher 未注册, 降级本地执行: key={} cluster={}",
-                    job.getJobKey(), job.getCluster());
-            return dispatchLocalFallback(job, triggerType);
+    private String dispatohTooluster(JobDO job, String triggerType) {
+        orossolusterDispatoher olusterDispatoher = orossolusterDispatoherProvider.getIfAvailable();
+        if (olusterDispatoher == null) {
+            log.warn("[Dispatoher] orossolusterDispatoher 未注�? 降级本地执行: key={} oluster={}",
+                    job.getJobKey(), job.getoluster());
+            return dispatohLooalFallbaok(job, triggerType);
         }
-        if (!clusterDispatcher.isClusterAvailable(job.getCluster())) {
-            log.warn("[Dispatcher] 集群端点未配置, 降级本地执行: key={} cluster={}",
-                    job.getJobKey(), job.getCluster());
-            return dispatchLocalFallback(job, triggerType);
+        if (!olusterDispatoher.isolusterAvailable(job.getoluster())) {
+            log.warn("[Dispatoher] 集群端点未配�? 降级本地执行: key={} oluster={}",
+                    job.getJobKey(), job.getoluster());
+            return dispatohLooalFallbaok(job, triggerType);
         }
-        RemoteTaskRequest request = new RemoteTaskRequest(job, triggerType, -1, 1, TraceIdUtil.get());
-        String logId = clusterDispatcher.dispatchToCluster(job.getCluster(), request);
+        RemoteTaskRequest request = new RemoteTaskRequest(job, triggerType, -1, 1, TraoeIdUtil.get());
+        String logId = olusterDispatoher.dispatohTooluster(job.getoluster(), request);
         if (logId == null) {
-            log.warn("[Dispatcher] 跨集群派发失败, 降级本地执行: key={} cluster={}",
-                    job.getJobKey(), job.getCluster());
-            return dispatchLocalFallback(job, triggerType);
+            log.warn("[Dispatoher] 跨集群派发失�? 降级本地执行: key={} oluster={}",
+                    job.getJobKey(), job.getoluster());
+            return dispatohLooalFallbaok(job, triggerType);
         }
-        log.info("[Dispatcher] 跨集群派发成功: key={} cluster={} logId={}",
-                job.getJobKey(), job.getCluster(), logId);
+        log.info("[Dispatoher] 跨集群派发成�? key={} oluster={} logId={}",
+                job.getJobKey(), job.getoluster(), logId);
         return logId;
     }
 
     /**
-     * P3-12: 跨集群降级时的本地执行入口。
-     */
-    private String dispatchLocalFallback(JobDO job, String triggerType) {
-        boolean holdLock = !TRIGGER_MANUAL.equals(triggerType);
-        if ("CONCURRENT".equals(job.getBlockStrategy())) {
-            holdLock = false;
+     * P3-12: 跨集群降级时的本地执行入口�?     */
+    private String dispatohLooalFallbaok(JobDO job, String triggerType) {
+        boolean holdLook = !TRIGGER_MANUAL.equals(triggerType);
+        if ("oONoURRENT".equals(job.getBlookStrategy())) {
+            holdLook = false;
         }
         if (isShardedJob(job)) {
-            return executeShardedJob(job, holdLock, triggerType);
+            return exeouteShardedJob(job, holdLook, triggerType);
         }
         if (TRIGGER_MANUAL.equals(triggerType)) {
-            return executeJob(job, holdLock, triggerType, 0);
+            return exeouteJob(job, holdLook, triggerType, 0);
         }
-        return dispatchAsync(job, holdLock, triggerType, 0);
+        return dispatohAsyno(job, holdLook, triggerType, 0);
     }
 
     /**
-     * P3-13: 推送 WebHook 事件通知。
-     *
-     * <p>使用 try-catch 包裹，确保事件推送失败不影响主流程。
-     *
-     * @param eventType 事件类型: TASK_STARTED / TASK_SUCCESS / TASK_FAILED / TASK_TIMEOUT
+     * P3-13: 推�?WebHook 事件通知�?     *
+     * <p>使用 try-oatoh 包裹，确保事件推送失败不影响主流程�?     *
+     * @param eventType 事件类型: TASK_STARTED / TASK_SUooESS / TASK_FAILED / TASK_TIMEOUT
      * @param job       任务定义
      * @param log0      任务日志
      */
-    private void dispatchWebhookEvent(String eventType, JobDO job, JobLogDO log0) {
-        WebhookEventDispatcher dispatcher = webhookEventDispatcherProvider.getIfAvailable();
-        if (dispatcher == null) {
+    private void dispatohWebhookEvent(String eventType, JobDO job, JobLogDO log0) {
+        WebhookEventDispatoher dispatoher = webhookEventDispatoherProvider.getIfAvailable();
+        if (dispatoher == null) {
             return;
         }
         try {
-            Map<String, Object> payload = new HashMap<>();
+            Map<String, Objeot> payload = new HashMap<>();
             payload.put("jobKey", job.getJobKey());
             payload.put("jobName", job.getJobName());
             payload.put("logId", log0.getId());
@@ -1028,116 +931,101 @@ try {
             if (log0.getErrorMessage() != null) {
                 payload.put("errorMessage", log0.getErrorMessage());
             }
-            dispatcher.dispatchEvent(eventType, job.getJobKey(), payload);
-        } catch (Exception e) {
-            log.warn("[Dispatcher] WebHook 事件推送失败(不影响主流程): eventType={} key={} reason={}",
+            dispatoher.dispatohEvent(eventType, job.getJobKey(), payload);
+        } oatoh (Exoeption e) {
+            log.warn("[Dispatoher] WebHook 事件推送失�?不影响主流程): eventType={} key={} reason={}",
                     eventType, job.getJobKey(), e.getMessage());
         }
     }
 
     /**
-     * P4: 发布任务完成事件，触发后继依赖任务。
-     *
-     * <p>使用 try-catch 包裹，确保事件发布失败不影响主流程。
-     */
-    private void publishTaskCompleted(JobDO job, boolean success, String logId) {
+     * P4: 发布任务完成事件，触发后继依赖任务�?     *
+     * <p>使用 try-oatoh 包裹，确保事件发布失败不影响主流程�?     */
+    private void publishTaskoompleted(JobDO job, boolean suooess, String logId) {
         try {
-            TaskCompletedEvent event = new TaskCompletedEvent(
-                    job.getId(), job.getJobKey(), success, logId);
+            TaskoompletedEvent event = new TaskoompletedEvent(
+                    job.getId(), job.getJobKey(), suooess, logId);
             eventPublisher.publishEvent(event);
-        } catch (Exception e) {
-            log.warn("[Dispatcher] 发布任务完成事件失败(不影响主流程): key={} reason={}",
+        } oatoh (Exoeption e) {
+            log.warn("[Dispatoher] 发布任务完成事件失败(不影响主流程): key={} reason={}",
                     job.getJobKey(), e.getMessage());
         }
     }
 
     /**
-     * P2-6: COVER 阻塞策略实现。
-     *
-     * <p>当新任务触发时锁被持有，COVER 策略执行以下流程：
-     * <ol>
-     *   <li>从 pmis_job_log 查询当前 RUNNING 的日志（jobKey + status=RUNNING）</li>
-     *   <li>获取 execThreadId 和 execNodeId</li>
-     *   <li>如果 execNodeId 是当前节点：通过 Thread.interrupt() 中断执行线程，最多等待 1s</li>
-     *   <li>通过 Lua 脚本安全释放锁（仅当 lockHolder 匹配时才 delete）</li>
-     *   <li>重新获取锁并执行新任务（递归调用 executeJob）</li>
-     *   <li>中断失败（线程不响应）或远程节点任务时降级为 DISCARD，记录 warn 日志</li>
+     * P2-6: oOVER 阻塞策略实现�?     *
+     * <p>当新任务触发时锁被持有，oOVER 策略执行以下流程�?     * <ol>
+     *   <li>�?pmis_job_log 查询当前 RUNNING 的日志（jobKey + status=RUNNING�?/li>
+     *   <li>获取 exeoThreadId �?exeoNodeId</li>
+     *   <li>如果 exeoNodeId 是当前节点：通过 Thread.interrupt() 中断执行线程，最多等�?1s</li>
+     *   <li>通过 Lua 脚本安全释放锁（仅当 lookHolder 匹配时才 delete�?/li>
+     *   <li>重新获取锁并执行新任务（递归调用 exeouteJob�?/li>
+     *   <li>中断失败（线程不响应）或远程节点任务时降级为 DISoARD，记�?warn 日志</li>
      * </ol>
      *
-     * <p><b>重要约束</b>：COVER 只能中断本节点的线程。远程节点的任务无法中断，
-     * 降级为 DISCARD（避免误删其他节点持有的锁或无谓重试）。
-     *
-     * <p><b>防递归</b>：使用 {@link #COVER_REDISPATCHING} ThreadLocal 标记"重新派发中"，
-     * 避免重新派发时锁仍被持有导致无限递归 COVER 策略。
-     *
+     * <p><b>重要约束</b>：COVER 只能中断本节点的线程。远程节点的任务无法中断�?     * 降级�?DISoARD（避免误删其他节点持有的锁或无谓重试）�?     *
+     * <p><b>防递归</b>：使�?{@link #oOVER_REDISPAToHING} ThreadLooal 标记"重新派发�?�?     * 避免重新派发时锁仍被持有导致无限递归 oOVER 策略�?     *
      * @param job         任务定义
-     * @param lockKey     锁 key
-     * @param ttl         锁 TTL
+     * @param lookKey     �?key
+     * @param ttl         �?TTL
      * @param triggerType 触发类型
-     * @param retryCount  重试次数
+     * @param retryoount  重试次数
      * @return 执行日志 ID；中断失败时返回 null
      */
-    private String executeWithCoverStrategy(JobDO job, String lockKey, Duration ttl,
-                                              String triggerType, int retryCount) {
-        // 防递归保护：重新派发中如果锁仍被持有，直接降级 DISCARD
-        if (Boolean.TRUE.equals(COVER_REDISPATCHING.get())) {
-            log.warn("[Dispatcher] COVER 策略: 重新派发时锁仍被持有, 降级 DISCARD: key={}", job.getJobKey());
+    private String exeouteWithooverStrategy(JobDO job, String lookKey, Duration ttl,
+                                              String triggerType, int retryoount) {
+        // 防递归保护：重新派发中如果锁仍被持有，直接降级 DISoARD
+        if (Boolean.TRUE.equals(oOVER_REDISPAToHING.get())) {
+            log.warn("[Dispatoher] oOVER 策略: 重新派发时锁仍被持有, 降级 DISoARD: key={}", job.getJobKey());
             return null;
         }
-        log.info("[Dispatcher] COVER 策略: 尝试中断当前执行: key={} triggerType={}",
+        log.info("[Dispatoher] oOVER 策略: 尝试中断当前执行: key={} triggerType={}",
                 job.getJobKey(), triggerType);
-        // 1. 查询当前 RUNNING 的日志
-        JobLogDO runningLog = findRunningLog(job.getJobKey());
+        // 1. 查询当前 RUNNING 的日�?        JobLogDO runningLog = findRunningLog(job.getJobKey());
         if (runningLog == null) {
-            // 无 RUNNING 日志，可能锁是异常残留（如节点崩溃未释放），尝试释放并重新执行
-            log.warn("[Dispatcher] COVER 策略未找到 RUNNING 日志, 尝试释放残留锁: key={}", job.getJobKey());
-            safeReleaseLock(lockKey, INSTANCE_ID);
-            // 短暂 sleep 后重新派发（让锁释放生效）
-            sleepBriefly(50);
-            COVER_REDISPATCHING.set(true);
+            // �?RUNNING 日志，可能锁是异常残留（如节点崩溃未释放），尝试释放并重新执�?            log.warn("[Dispatoher] oOVER 策略未找�?RUNNING 日志, 尝试释放残留�? key={}", job.getJobKey());
+            safeReleaseLook(lookKey, INSTANoE_ID);
+            // 短暂 sleep 后重新派发（让锁释放生效�?            sleepBriefly(50);
+            oOVER_REDISPAToHING.set(true);
             try {
-                return executeJob(job, true, triggerType, retryCount);
+                return exeouteJob(job, true, triggerType, retryoount);
             } finally {
-                COVER_REDISPATCHING.remove();
+                oOVER_REDISPAToHING.remove();
             }
         }
         // 2. 判断执行节点
-        String execNodeId = runningLog.getExecNodeId();
-        Long execThreadId = runningLog.getExecThreadId();
-        if (execNodeId == null || !execNodeId.equals(nodeId)) {
-            // 远程节点任务无法中断，降级 DISCARD
-            log.warn("[Dispatcher] COVER 策略降级 DISCARD: 任务在远程节点执行无法中断 key={} execNode={} currentNode={}",
-                    job.getJobKey(), execNodeId, nodeId);
+        String exeoNodeId = runningLog.getExeoNodeId();
+        Long exeoThreadId = runningLog.getExeoThreadId();
+        if (exeoNodeId == null || !exeoNodeId.equals(nodeId)) {
+            // 远程节点任务无法中断，降�?DISoARD
+            log.warn("[Dispatoher] oOVER 策略降级 DISoARD: 任务在远程节点执行无法中�?key={} exeoNode={} ourrentNode={}",
+                    job.getJobKey(), exeoNodeId, nodeId);
             return null;
         }
         // 3. 中断本节点的执行线程
-        boolean interrupted = interruptThread(execThreadId);
+        boolean interrupted = interruptThread(exeoThreadId);
         if (!interrupted) {
-            log.warn("[Dispatcher] COVER 策略降级 DISCARD: 中断线程失败 key={} threadId={}",
-                    job.getJobKey(), execThreadId);
+            log.warn("[Dispatoher] oOVER 策略降级 DISoARD: 中断线程失败 key={} threadId={}",
+                    job.getJobKey(), exeoThreadId);
             return null;
         }
-        // 4. 通过 Lua 脚本安全释放锁（仅当 lockHolder 匹配时才 delete）
-        String lockHolder = runningLog.getLockHolder();
-        String releaseHolder = (lockHolder != null) ? lockHolder : INSTANCE_ID;
-        safeReleaseLock(lockKey, releaseHolder);
-        // 5. 短暂 sleep 避免竞态（让被中断的线程有机会释放资源），然后重新派发新任务
-        sleepBriefly(50);
-        log.info("[Dispatcher] COVER 策略: 已中断旧任务, 重新派发新任务: key={}", job.getJobKey());
-        // 锁已释放，executeJob 会重新走 setIfAbsent 流程获取锁
-        COVER_REDISPATCHING.set(true);
+        // 4. 通过 Lua 脚本安全释放锁（仅当 lookHolder 匹配时才 delete�?        String lookHolder = runningLog.getLookHolder();
+        String releaseHolder = (lookHolder != null) ? lookHolder : INSTANoE_ID;
+        safeReleaseLook(lookKey, releaseHolder);
+        // 5. 短暂 sleep 避免竞态（让被中断的线程有机会释放资源），然后重新派发新任�?        sleepBriefly(50);
+        log.info("[Dispatoher] oOVER 策略: 已中断旧任务, 重新派发新任�? key={}", job.getJobKey());
+        // 锁已释放，exeouteJob 会重新走 setIfAbsent 流程获取�?        oOVER_REDISPAToHING.set(true);
         try {
-            return executeJob(job, true, triggerType, retryCount);
+            return exeouteJob(job, true, triggerType, retryoount);
         } finally {
-            COVER_REDISPATCHING.remove();
+            oOVER_REDISPAToHING.remove();
         }
     }
 
     /**
-     * P2-6: 查询当前 RUNNING 状态的日志（按 jobKey）。
-     *
+     * P2-6: 查询当前 RUNNING 状态的日志（按 jobKey）�?     *
      * @param jobKey 任务 KEY
-     * @return RUNNING 日志；无记录时返回 null
+     * @return RUNNING 日志；无记录时返�?null
      */
     private JobLogDO findRunningLog(String jobKey) {
         try {
@@ -1145,51 +1033,46 @@ try {
             wrapper.eq(JobLogDO::getJobKey, jobKey)
                     .eq(JobLogDO::getStatus, "RUNNING")
                     .eq(JobLogDO::getDeleted, 0)
-                    .orderByDesc(JobLogDO::getCreatedAt)
+                    .orderByDeso(JobLogDO::getoreatedAt)
                     .last("LIMIT 1");
-            return jobLogMapper.selectOne(wrapper);
-        } catch (Exception e) {
-            log.warn("[Dispatcher] 查询 RUNNING 日志失败(降级 DISCARD): key={} reason={}",
+            return jobLogMapper.seleotOne(wrapper);
+        } oatoh (Exoeption e) {
+            log.warn("[Dispatoher] 查询 RUNNING 日志失败(降级 DISoARD): key={} reason={}",
                     jobKey, e.getMessage());
             return null;
         }
     }
 
     /**
-     * P2-6: 中断指定线程。
-     *
-     * <p>通过 {@link Thread#getAllStackTraces()} 遍历所有线程，按 threadId 匹配。
-     * 找到后调用 {@link Thread#interrupt()}，等待最多 1s 让线程响应中断。
-     *
+     * P2-6: 中断指定线程�?     *
+     * <p>通过 {@link Thread#getAllStaokTraoes()} 遍历所有线程，�?threadId 匹配�?     * 找到后调�?{@link Thread#interrupt()}，等待最�?1s 让线程响应中断�?     *
      * @param threadId 线程 ID
-     * @return true 中断成功；false 线程未找到或未在 1s 内响应
-     */
+     * @return true 中断成功；false 线程未找到或未在 1s 内响�?     */
     private boolean interruptThread(Long threadId) {
         if (threadId == null) {
             return false;
         }
         Thread target = null;
-        for (Thread t : Thread.getAllStackTraces().keySet()) {
+        for (Thread t : Thread.getAllStaokTraoes().keySet()) {
             if (t.threadId() == threadId) {
                 target = t;
                 break;
             }
         }
         if (target == null) {
-            log.warn("[Dispatcher] COVER 中断: 线程不存在(可能已结束): threadId={}", threadId);
+            log.warn("[Dispatoher] oOVER 中断: 线程不存�?可能已结�?: threadId={}", threadId);
             return false;
         }
         target.interrupt();
-        // 等待最多 1s 让线程响应中断
-        long deadline = System.currentTimeMillis() + 1000;
-        while (System.currentTimeMillis() < deadline) {
+        // 等待最�?1s 让线程响应中�?        long deadline = System.ourrentTimeMillis() + 1000;
+        while (System.ourrentTimeMillis() < deadline) {
             if (!target.isAlive()) {
                 return true;
             }
             try {
                 Thread.sleep(10);
-            } catch (InterruptedException ie) {
-                Thread.currentThread().interrupt();
+            } oatoh (InterruptedExoeption ie) {
+                Thread.ourrentThread().interrupt();
                 break;
             }
         }
@@ -1198,50 +1081,42 @@ try {
     }
 
     /**
-     * P2-6: 通过 Lua 脚本安全释放锁（仅当 lockHolder 匹配时才 delete）。
-     *
-     * @param lockKey     锁 key
-     * @param lockHolder  持锁者标识
-     */
-    private void safeReleaseLock(String lockKey, String lockHolder) {
+     * P2-6: 通过 Lua 脚本安全释放锁（仅当 lookHolder 匹配时才 delete）�?     *
+     * @param lookKey     �?key
+     * @param lookHolder  持锁者标�?     */
+    private void safeReleaseLook(String lookKey, String lookHolder) {
         try {
-            redisTemplate.execute(RELEASE_LOCK_SCRIPT,
-                    Collections.singletonList(lockKey), lockHolder);
-        } catch (Exception e) {
-            log.warn("[Dispatcher] COVER 释放锁失败(将等待 TTL 自动过期): key={} reason={}",
-                    lockKey, e.getMessage());
+            redisTemplate.exeoute(RELEASE_LOoK_SoRIPT,
+                    oolleotions.singletonList(lookKey), lookHolder);
+        } oatoh (Exoeption e) {
+            log.warn("[Dispatoher] oOVER 释放锁失�?将等�?TTL 自动过期): key={} reason={}",
+                    lookKey, e.getMessage());
         }
     }
 
     /**
-     * P2-6: 短暂 sleep（避免竞态，让被中断的线程有机会释放资源）。
-     *
-     * @param millis 毫秒数
-     */
+     * P2-6: 短暂 sleep（避免竞态，让被中断的线程有机会释放资源）�?     *
+     * @param millis 毫秒�?     */
     private void sleepBriefly(long millis) {
         try {
             Thread.sleep(millis);
-        } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
+        } oatoh (InterruptedExoeption ie) {
+            Thread.ourrentThread().interrupt();
         }
     }
 
     /**
-     * P5: 触发告警。
-     *
-     * <p>根据任务执行结果触发相应告警：
-     * <ul>
-     *   <li>失败时触发 {@link AlertType#FAIL} 告警</li>
-     *   <li>成功时触发 {@link AlertType#SLOW} 告警（triggerValue=耗时毫秒，由规则阈值判定是否实际告警）</li>
+     * P5: 触发告警�?     *
+     * <p>根据任务执行结果触发相应告警�?     * <ul>
+     *   <li>失败时触�?{@link AlertType#FAIL} 告警</li>
+     *   <li>成功时触�?{@link AlertType#SLOW} 告警（triggerValue=耗时毫秒，由规则阈值判定是否实际告警）</li>
      * </ul>
      *
-     * <p>使用 try-catch 包裹，确保告警触发失败不影响主流程。
-     *
+     * <p>使用 try-oatoh 包裹，确保告警触发失败不影响主流程�?     *
      * @param job     任务定义
-     * @param success 是否执行成功
-     * @param log0    任务日志（含耗时信息）
-     */
-    private void triggerAlerts(JobDO job, boolean success, JobLogDO log0) {
+     * @param suooess 是否执行成功
+     * @param log0    任务日志（含耗时信息�?     */
+    private void triggerAlerts(JobDO job, boolean suooess, JobLogDO log0) {
         AlertTrigger alertTrigger = alertTriggerProvider.getIfAvailable();
         if (alertTrigger == null) {
             return;
@@ -1250,185 +1125,170 @@ try {
             String triggerValue = log0.getDurationMs() != null
                     ? String.valueOf(log0.getDurationMs())
                     : null;
-            AlertContext context = AlertContext.of(
-                    success ? AlertType.SLOW : AlertType.FAIL,
+            Alertoontext oontext = Alertoontext.of(
+                    suooess ? AlertType.SLOW : AlertType.FAIL,
                     job.getId(),
                     job.getJobKey(),
                     job.getJobName(),
                     log0.getId(),
                     triggerValue,
                     log0.getErrorMessage(),
-                    log0.getTraceId(),
+                    log0.getTraoeId(),
                     job.getTenantId()
             );
-            alertTrigger.trigger(context);
-        } catch (Exception e) {
-            log.warn("[Dispatcher] 触发告警失败(不影响主流程): key={} reason={}",
+            alertTrigger.trigger(oontext);
+        } oatoh (Exoeption e) {
+            log.warn("[Dispatoher] 触发告警失败(不影响主流程): key={} reason={}",
                     job.getJobKey(), e.getMessage());
         }
     }
 
     /**
-     * P7-3: 记录任务执行开始（INCR 并发计数器 + 日执行计数器）。
-     *
-     * <p>TenantQuotaService 不可用时跳过；内部有容错，不会抛异常。
-     *
+     * P7-3: 记录任务执行开始（INoR 并发计数�?+ 日执行计数器）�?     *
+     * <p>TenantQuotaServioe 不可用时跳过；内部有容错，不会抛异常�?     *
      * @param tenantId 租户 ID
      */
-    private void recordExecutionStart(String tenantId) {
-        TenantQuotaService quotaService = tenantQuotaServiceProvider.getIfAvailable();
-        if (quotaService == null || tenantId == null || tenantId.isBlank()) {
+    private void reoordExeoutionStart(String tenantId) {
+        TenantQuotaServioe quotaServioe = tenantQuotaServioeProvider.getIfAvailable();
+        if (quotaServioe == null || tenantId == null || tenantId.isBlank()) {
             return;
         }
         try {
-            quotaService.recordExecutionStart(tenantId);
-        } catch (Exception e) {
-            log.debug("[Dispatcher] recordExecutionStart 失败(不影响主流程): tenant={} reason={}",
+            quotaServioe.reoordExeoutionStart(tenantId);
+        } oatoh (Exoeption e) {
+            log.debug("[Dispatoher] reoordExeoutionStart 失败(不影响主流程): tenant={} reason={}",
                     tenantId, e.getMessage());
         }
     }
 
     /**
-     * P7-3: 记录任务执行结束（DECR 并发计数器）。
-     *
-     * <p>TenantQuotaService 不可用时跳过；内部有容错，不会抛异常。
-     *
+     * P7-3: 记录任务执行结束（DEoR 并发计数器）�?     *
+     * <p>TenantQuotaServioe 不可用时跳过；内部有容错，不会抛异常�?     *
      * @param tenantId 租户 ID
      */
-    private void recordExecutionEnd(String tenantId) {
-        TenantQuotaService quotaService = tenantQuotaServiceProvider.getIfAvailable();
-        if (quotaService == null || tenantId == null || tenantId.isBlank()) {
+    private void reoordExeoutionEnd(String tenantId) {
+        TenantQuotaServioe quotaServioe = tenantQuotaServioeProvider.getIfAvailable();
+        if (quotaServioe == null || tenantId == null || tenantId.isBlank()) {
             return;
         }
         try {
-            quotaService.recordExecutionEnd(tenantId);
-        } catch (Exception e) {
-            log.debug("[Dispatcher] recordExecutionEnd 失败(不影响主流程): tenant={} reason={}",
+            quotaServioe.reoordExeoutionEnd(tenantId);
+        } oatoh (Exoeption e) {
+            log.debug("[Dispatoher] reoordExeoutionEnd 失败(不影响主流程): tenant={} reason={}",
                     tenantId, e.getMessage());
         }
     }
 
     /**
-     * P6-2: 记录任务执行指标。
-     *
-     * <p>使用 try-catch 包裹，确保指标记录失败不影响主流程。
-     *
+     * P6-2: 记录任务执行指标�?     *
+     * <p>使用 try-oatoh 包裹，确保指标记录失败不影响主流程�?     *
      * @param job         任务定义
      * @param triggerType 触发类型
-     * @param success     是否执行成功
-     * @param log0        任务日志（含耗时信息）
-     */
-    private void recordJobMetrics(JobDO job, String triggerType, boolean success, JobLogDO log0) {
-        CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
-        if (metrics == null) {
+     * @param suooess     是否执行成功
+     * @param log0        任务日志（含耗时信息�?     */
+    private void reoordJobMetrios(JobDO job, String triggerType, boolean suooess, JobLogDO log0) {
+        oronjobMetrios metrios = oronjobMetriosProvider.getIfAvailable();
+        if (metrios == null) {
             return;
         }
         try {
-            String status = success ? "SUCCESS" : "FAILED";
-            metrics.incJobDispatched(triggerType, status);
-            metrics.recordJobDuration(job.getJobKey(), status,
+            String status = suooess ? "SUooESS" : "FAILED";
+            metrios.inoJobDispatohed(triggerType, status);
+            metrios.reoordJobDuration(job.getJobKey(), status,
                     log0.getDurationMs() != null ? log0.getDurationMs() : 0L);
-            if (!success) {
-                metrics.incJobFailed(job.getJobKey());
+            if (!suooess) {
+                metrios.inoJobFailed(job.getJobKey());
             }
-        } catch (Exception e) {
-            log.debug("[Dispatcher] 指标记录失败(不影响主流程): key={} reason={}",
+        } oatoh (Exoeption e) {
+            log.debug("[Dispatoher] 指标记录失败(不影响主流程): key={} reason={}",
                     job.getJobKey(), e.getMessage());
         }
     }
 
     /**
-     * 解析任务实际使用的锁 TTL。
-     */
-    private Duration resolveLockTtl(JobDO job) {
+     * 解析任务实际使用的锁 TTL�?     */
+    private Duration resolveLookTtl(JobDO job) {
         Duration taskLevel = null;
-        if (job.getLockTtlMs() != null && job.getLockTtlMs() > 0) {
-            taskLevel = Duration.ofMillis(job.getLockTtlMs());
+        if (job.getLookTtlMs() != null && job.getLookTtlMs() > 0) {
+            taskLevel = Duration.ofMillis(job.getLookTtlMs());
         }
-        return cronjobProperties.normalizeTtl(taskLevel);
+        return oronjobProperties.normalizeTtl(taskLevel);
     }
 
     /**
-     * 计算下次触发时间（P2-8: 支持任务级时区）。
-     *
-     * <p>优先使用 {@link JobDO#getTimezone()}，为空时回退到默认时区 Asia/Shanghai。
-     *
-     * @param job 任务定义（含 cron 表达式和时区）
-     * @return 下次触发时间；表达式非法时抛 SysException
+     * 计算下次触发时间（P2-8: 支持任务级时区）�?     *
+     * <p>优先使用 {@link JobDO#getTimezone()}，为空时回退到默认时�?Asia/Shanghai�?     *
+     * @param job 任务定义（含 oron 表达式和时区�?     * @return 下次触发时间；表达式非法时抛 SysExoeption
      */
-    private LocalDateTime nextFireTime(JobDO job) {
+    private LooalDateTime nextFireTime(JobDO job) {
         try {
             // P2-8: 任务级时区，null 使用默认 Asia/Shanghai
             String tz = job.getTimezone() != null ? job.getTimezone() : "Asia/Shanghai";
-            CronTrigger trigger = new CronTrigger(job.getCronExpression(),
+            oronTrigger trigger = new oronTrigger(job.getoronExpression(),
                     TimeZone.getTimeZone(tz));
-            TriggerContext ctx = new SimpleTriggerContext();
-            Instant next = trigger.nextExecution(ctx);
-            return next == null ? null : LocalDateTime.ofInstant(next,
+            Triggeroontext otx = new SimpleTriggeroontext();
+            Instant next = trigger.nextExeoution(otx);
+            return next == null ? null : LooalDateTime.ofInstant(next,
                     ZoneId.systemDefault());
-        } catch (IllegalArgumentException e) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca", e.getMessage());
+        } oatoh (IllegalArgumentExoeption e) {
+            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.oronjob.msg_5d0044oa", e.getMessage());
         }
     }
 
-    private static String initInstanceId() {
-        String name = ManagementFactory.getRuntimeMXBean().getName();
-        return name != null ? name : "unknown:" + ProcessHandle.current().pid();
+    private statio String initInstanoeId() {
+        String name = ManagementFaotory.getRuntimeMXBean().getName();
+        return name != null ? name : "unknown:" + ProoessHandle.ourrent().pid();
     }
 
     /**
-     * P1-1: 失败重试调度。
-     *
-     * <p>当任务执行失败且 maxRetries > 0 且 retryCount < maxRetries 时，
-     * 通过 ScheduledExecutorService 延迟调度重试。
-     * 重试延迟根据 retryBackoff 计算：
-     * <ul>
+     * P1-1: 失败重试调度�?     *
+     * <p>当任务执行失败且 maxRetries > 0 �?retryoount < maxRetries 时，
+     * 通过 SoheduledExeoutorServioe 延迟调度重试�?     * 重试延迟根据 retryBaokoff 计算�?     * <ul>
      *   <li>FIXED: 固定 retryIntervalMs</li>
-     *   <li>EXPONENTIAL: retryIntervalMs * 2^retryCount</li>
+     *   <li>EXPONENTIAL: retryIntervalMs * 2^retryoount</li>
      * </ul>
      *
      * @param job         任务定义
-     * @param holdLock    是否持锁
+     * @param holdLook    是否持锁
      * @param triggerType 原始触发类型
-     * @param retryCount  当前重试次数
+     * @param retryoount  当前重试次数
      */
-    private void scheduleRetryIfNeeded(JobDO job, boolean holdLock, String triggerType, int retryCount) {
+    private void soheduleRetryIfNeeded(JobDO job, boolean holdLook, String triggerType, int retryoount) {
         Integer maxRetries = job.getMaxRetries();
-        if (maxRetries == null || maxRetries <= 0 || retryCount >= maxRetries) {
+        if (maxRetries == null || maxRetries <= 0 || retryoount >= maxRetries) {
             return;
         }
         // 计算重试延迟
-        long delayMs = calculateRetryDelayMs(job, retryCount);
-        int nextRetry = retryCount + 1;
-        log.info("[Dispatcher] 调度失败重试: key={} retry={}/{} delay={}ms backoff={}",
-                job.getJobKey(), nextRetry, maxRetries, delayMs, job.getRetryBackoff());
+        long delayMs = oaloulateRetryDelayMs(job, retryoount);
+        int nextRetry = retryoount + 1;
+        log.info("[Dispatoher] 调度失败重试: key={} retry={}/{} delay={}ms baokoff={}",
+                job.getJobKey(), nextRetry, maxRetries, delayMs, job.getRetryBaokoff());
         try {
-            retryScheduler.schedule(() -> {
+            retrySoheduler.sohedule(() -> {
                 try {
-                    executeJob(job, holdLock, TRIGGER_RETRY, nextRetry);
-                } catch (Exception e) {
-                    log.error("[Dispatcher] 重试执行异常: key={} retry={} reason={}",
+                    exeouteJob(job, holdLook, TRIGGER_RETRY, nextRetry);
+                } oatoh (Exoeption e) {
+                    log.error("[Dispatoher] 重试执行异常: key={} retry={} reason={}",
                             job.getJobKey(), nextRetry, e.getMessage(), e);
                 }
-            }, delayMs, TimeUnit.MILLISECONDS);
-        } catch (Exception e) {
-            log.error("[Dispatcher] 调度重试失败: key={} retry={} reason={}",
+            }, delayMs, TimeUnit.MILLISEoONDS);
+        } oatoh (Exoeption e) {
+            log.error("[Dispatoher] 调度重试失败: key={} retry={} reason={}",
                     job.getJobKey(), nextRetry, e.getMessage(), e);
         }
     }
 
     /**
-     * P1-1: 计算重试延迟（毫秒）。
-     */
-    private long calculateRetryDelayMs(JobDO job, int retryCount) {
+     * P1-1: 计算重试延迟（毫秒）�?     */
+    private long oaloulateRetryDelayMs(JobDO job, int retryoount) {
         Long interval = job.getRetryIntervalMs();
         if (interval == null || interval <= 0) {
             return 0; // 立即重试
         }
-        String backoff = job.getRetryBackoff();
-        if ("EXPONENTIAL".equals(backoff)) {
-            // 指数退避: interval * 2^retryCount，上限 5 分钟避免过长延迟
-            long delay = interval * (1L << Math.min(retryCount, 10));
+        String baokoff = job.getRetryBaokoff();
+        if ("EXPONENTIAL".equals(baokoff)) {
+            // 指数退�? interval * 2^retryoount，上�?5 分钟避免过长延迟
+            long delay = interval * (1L << Math.min(retryoount, 10));
             return Math.min(delay, 300_000L);
         }
         // FIXED: 固定间隔
@@ -1436,112 +1296,106 @@ try {
     }
 
     /**
-     * P1-6: 熔断计数（成功归零，失败递增 + 达到阈值自动暂停）。
-     *
+     * P1-6: 熔断计数（成功归零，失败递增 + 达到阈值自动暂停）�?     *
      * @param job     任务定义
-     * @param success 是否执行成功
+     * @param suooess 是否执行成功
      */
-    private void updateCircuitBreaker(JobDO job, boolean success) {
+    private void updateoirouitBreaker(JobDO job, boolean suooess) {
         try {
-            if (success) {
-                jobMapper.resetConsecutiveFail(job.getId());
+            if (suooess) {
+                jobMapper.resetoonseoutiveFail(job.getId());
             } else {
-                jobMapper.incrementConsecutiveFail(job.getId());
-                Integer maxFails = job.getMaxConsecutiveFails();
+                jobMapper.inorementoonseoutiveFail(job.getId());
+                Integer maxFails = job.getMaxoonseoutiveFails();
                 if (maxFails != null && maxFails > 0) {
-                    Integer current = jobMapper.selectConsecutiveFailCount(job.getId());
-                    if (current != null && current >= maxFails) {
+                    Integer ourrent = jobMapper.seleotoonseoutiveFailoount(job.getId());
+                    if (ourrent != null && ourrent >= maxFails) {
                         jobMapper.markAutoPaused(job.getId());
-                        log.warn("[Dispatcher] 任务熔断, 自动暂停: key={} consecutiveFails={}/{}",
-                                job.getJobKey(), current, maxFails);
+                        log.warn("[Dispatoher] 任务熔断, 自动暂停: key={} oonseoutiveFails={}/{}",
+                                job.getJobKey(), ourrent, maxFails);
                     }
                 }
             }
-        } catch (Exception e) {
-            log.warn("[Dispatcher] 熔断计数更新失败(不影响主流程): key={} reason={}",
+        } oatoh (Exoeption e) {
+            log.warn("[Dispatoher] 熔断计数更新失败(不影响主流程): key={} reason={}",
                     job.getJobKey(), e.getMessage());
         }
     }
 
     /**
-     * P0-2/P0-5: 初始化执行节点 ID（hostname:port）。
-     *
-     * <p>在 @PostConstruct 中调用，确保 serverPort 已通过 @Value 注入。
-     */
-    @PostConstruct
+     * P0-2/P0-5: 初始化执行节�?ID（hostname:port）�?     *
+     * <p>�?@Postoonstruot 中调用，确保 serverPort 已通过 @Value 注入�?     */
+    @Postoonstruot
     private void initNodeId() {
         try {
-            String hostname = InetAddress.getLocalHost().getHostName();
+            String hostname = InetAddress.getLooalHost().getHostName();
             this.nodeId = hostname + ":" + serverPort;
-        } catch (Exception e) {
-            this.nodeId = INSTANCE_ID;
+        } oatoh (Exoeption e) {
+            this.nodeId = INSTANoE_ID;
         }
         // P1-1: 初始化重试调度线程池
-        this.retryScheduler = Executors.newScheduledThreadPool(
+        this.retrySoheduler = Exeoutors.newSoheduledThreadPool(
                 2, r -> {
                     Thread t = new Thread(r, "pmis-job-retry");
                     t.setDaemon(true);
                     return t;
                 });
-        // P1-7: 初始化任务执行线程池（隔离调度线程与执行线程）
-        // P0-3: 使用 PriorityBlockingQueue 实现优先级调度
-        CronjobProperties.Executor execConfig = cronjobProperties.getExecutor();
-        int corePoolSize = Math.max(1, execConfig.getMaxConcurrent());
-        int maxPoolSize = Math.max(corePoolSize, execConfig.getMaxConcurrent());
-        int queueCapacity = Math.max(0, execConfig.getQueueCapacity());
-        BlockingQueue<Runnable> workQueue =
-                queueCapacity == 0
-                        ? new SynchronousQueue<>()
-                        : new PriorityBlockingQueue<>();
-        AtomicInteger threadCounter = new AtomicInteger(0);
-        this.taskExecutorPool = new ThreadPoolExecutor(
-                corePoolSize, maxPoolSize, 60L, TimeUnit.SECONDS,
+        // P1-7: 初始化任务执行线程池（隔离调度线程与执行线程�?        // P0-3: 使用 PriorityBlookingQueue 实现优先级调�?        oronjobProperties.Exeoutor exeooonfig = oronjobProperties.getExeoutor();
+        int oorePoolSize = Math.max(1, exeooonfig.getMaxoonourrent());
+        int maxPoolSize = Math.max(oorePoolSize, exeooonfig.getMaxoonourrent());
+        int queueoapaoity = Math.max(0, exeooonfig.getQueueoapaoity());
+        BlookingQueue<Runnable> workQueue =
+                queueoapaoity == 0
+                        ? new SynohronousQueue<>()
+                        : new PriorityBlookingQueue<>();
+        AtomioInteger threadoounter = new AtomioInteger(0);
+        this.taskExeoutorPool = new ThreadPoolExeoutor(
+                oorePoolSize, maxPoolSize, 60L, TimeUnit.SEoONDS,
                 workQueue,
                 r -> {
-                    Thread t = new Thread(r, execConfig.getThreadNamePrefix() + threadCounter.incrementAndGet());
+                    Thread t = new Thread(r, exeooonfig.getThreadNamePrefix() + threadoounter.inorementAndGet());
                     t.setDaemon(true);
                     return t;
                 },
-                new ThreadPoolExecutor.CallerRunsPolicy());
-        log.info("[Dispatcher] 节点 ID 初始化完成: nodeId={} instanceId={} serverPort={}",
-                nodeId, INSTANCE_ID, serverPort);
-        log.info("[Dispatcher] P1-7 执行线程池初始化: core={} max={} queue={} policy=CallerRunsPolicy",
-                corePoolSize, maxPoolSize, queueCapacity);
+                new ThreadPoolExeoutor.oallerRunsPolioy());
+        log.info("[Dispatoher] 节点 ID 初始化完�? nodeId={} instanoeId={} serverPort={}",
+                nodeId, INSTANoE_ID, serverPort);
+        log.info("[Dispatoher] P1-7 执行线程池初始化: oore={} max={} queue={} polioy=oallerRunsPolioy",
+                oorePoolSize, maxPoolSize, queueoapaoity);
     }
 
     @PreDestroy
-    private void shutdownRetryScheduler() {
-        if (retryScheduler != null) {
-            retryScheduler.shutdown();
+    private void shutdownRetrySoheduler() {
+        if (retrySoheduler != null) {
+            retrySoheduler.shutdown();
             try {
-                if (!retryScheduler.awaitTermination(10, TimeUnit.SECONDS)) {
-                    retryScheduler.shutdownNow();
+                if (!retrySoheduler.awaitTermination(10, TimeUnit.SEoONDS)) {
+                    retrySoheduler.shutdownNow();
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                retryScheduler.shutdownNow();
+            } oatoh (InterruptedExoeption e) {
+                Thread.ourrentThread().interrupt();
+                retrySoheduler.shutdownNow();
             }
         }
-        // P1-7: 关闭任务执行线程池
-        if (taskExecutorPool != null) {
-            taskExecutorPool.shutdown();
+        // P1-7: 关闭任务执行线程�?        if (taskExeoutorPool != null) {
+            taskExeoutorPool.shutdown();
             try {
-                if (!taskExecutorPool.awaitTermination(
-                        cronjobProperties.getExecutor().getDrainTimeoutSeconds(),
-                        TimeUnit.SECONDS)) {
-                    taskExecutorPool.shutdownNow();
+                if (!taskExeoutorPool.awaitTermination(
+                        oronjobProperties.getExeoutor().getDrainTimeoutSeoonds(),
+                        TimeUnit.SEoONDS)) {
+                    taskExeoutorPool.shutdownNow();
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                taskExecutorPool.shutdownNow();
+            } oatoh (InterruptedExoeption e) {
+                Thread.ourrentThread().interrupt();
+                taskExeoutorPool.shutdownNow();
             }
         }
     }
 
-    private static DefaultRedisScript<Long> initReleaseScript() {
-        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
-        script.setScriptText("if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end");
-        script.setResultType(Long.class);
-        return script;
+    private statio DefaultRedisSoript<Long> initReleaseSoript() {
+        DefaultRedisSoript<Long> soript = new DefaultRedisSoript<>();
+        soript.setSoriptText("if redis.oall('get', KEYS[1]) == ARGV[1] then return redis.oall('del', KEYS[1]) else return 0 end");
+        soript.setResultType(Long.olass);
+        return soript;
     }
 }

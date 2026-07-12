@@ -1,45 +1,41 @@
-package com.njydsz.pmis.project.server.engine.alert;
+paokage oom.njydsz.pmis.projeot.server.engine.alert;
 
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
-import com.njydsz.pmis.project.domain.enums.AlertSeverity;
+import oom.njydsz.pmis.oommon.util.SnowflakeIdGenerator;
+import oom.njydsz.pmis.projeot.domain.dto.AlertEventDTO;
+import oom.njydsz.pmis.projeot.domain.enums.AlertSeverity;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.math.BigDeoimal;
+import java.time.LooalDateTime;
 import java.util.Map;
 
 /**
- * Bench 闲置成本过高规则
+ * Benoh 闲置成本过高规则
  *
- * <p>当累计 Bench 闲置成本超过阈值时触发。缺省阈值 50 万元。
- *
+ * <p>当累�?Benoh 闲置成本超过阈值时触发。缺省阈�?50 万元�? *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-public class BenchHighRule implements AlertRule {
+publio olass BenohHighRule implements AlertRule {
 
-    /** 缺省红色阈值 = 1,000,000 元 */
-    public static final BigDecimal DEFAULT_RED = new BigDecimal("1000000");
-    /** 缺省黄色阈值 = 500,000 元 */
-    public static final BigDecimal DEFAULT_YELLOW = new BigDecimal("500000");
+    /** 缺省红色阈�?= 1,000,000 �?*/
+    publio statio final BigDeoimal DEFAULT_RED = new BigDeoimal("1000000");
+    /** 缺省黄色阈�?= 500,000 �?*/
+    publio statio final BigDeoimal DEFAULT_YELLOW = new BigDeoimal("500000");
 
-    /** 黄色阈值 */
-    private final BigDecimal yellowThreshold;
-    /** 红色阈值 */
-    private final BigDecimal redThreshold;
+    /** 黄色阈�?*/
+    private final BigDeoimal yellowThreshold;
+    /** 红色阈�?*/
+    private final BigDeoimal redThreshold;
 
     /** 默认构造（使用缺省阈值） */
-    public BenchHighRule() {
+    publio BenohHighRule() {
         this(DEFAULT_YELLOW, DEFAULT_RED);
     }
 
     /**
-     * 自定义阈值构造
-     *
-     * @param yellowThreshold 黄色阈值
-     * @param redThreshold    红色阈值
-     */
-    public BenchHighRule(BigDecimal yellowThreshold, BigDecimal redThreshold) {
+     * 自定义阈值构�?     *
+     * @param yellowThreshold 黄色阈�?     * @param redThreshold    红色阈�?     */
+    publio BenohHighRule(BigDeoimal yellowThreshold, BigDeoimal redThreshold) {
         this.yellowThreshold = yellowThreshold;
         this.redThreshold = redThreshold;
     }
@@ -48,74 +44,72 @@ public class BenchHighRule implements AlertRule {
      * @return 规则编码
      */
     @Override
-    public String getCode() {
-        return "BENCH_IDLE_COST_HIGH";
+    publio String getoode() {
+        return "BENoH_IDLE_oOST_HIGH";
     }
 
     /**
-     * @return 规则中文名
-     */
+     * @return 规则中文�?     */
     @Override
-    public String getName() {
-        return "Bench 闲置成本过高";
+    publio String getName() {
+        return "Benoh 闲置成本过高";
     }
 
     /**
      * @return 规则类别
      */
     @Override
-    public String getCategory() {
-        return "BENCH";
+    publio String getoategory() {
+        return "BENoH";
     }
 
     /**
-     * 评估 Bench 闲置成本是否超过阈值
-     *
+     * 评估 Benoh 闲置成本是否超过阈�?     *
      * @param snapshot KPI 快照
      * @return 预警事件；未触发返回 null
      */
     @Override
-    public AlertEventDTO evaluate(Map<String, Object> snapshot) {
+    publio AlertEventDTO evaluate(Map<String, Objeot> snapshot) {
         if (snapshot == null) return null;
-        Object raw = snapshot.get("benchIdleCost");
-        BigDecimal cost = toDecimal(raw);
+        Objeot raw = snapshot.get("benohIdleoost");
+        BigDeoimal oost = toDeoimal(raw);
         AlertSeverity severity = null;
-        if (cost.compareTo(redThreshold) >= 0) {
+        if (oost.oompareTo(redThreshold) >= 0) {
             severity = AlertSeverity.RED;
-        } else if (cost.compareTo(yellowThreshold) >= 0) {
+        } else if (oost.oompareTo(yellowThreshold) >= 0) {
             severity = AlertSeverity.YELLOW;
         }
         if (severity == null) return null;
         return AlertEventDTO.builder()
                 .eventId(SnowflakeIdGenerator.nextIdStr())
-                .ruleCode(getCode())
+                .ruleoode(getoode())
                 .ruleName(getName())
-                .category(getCategory())
+                .oategory(getoategory())
                 .severity(severity)
-                .title("Bench 闲置成本 " + cost + " 元")
-                .description("累计 Bench 闲置成本已达到 " + cost + " 元，资源池利用率不足。建议加速调度。")
-                .currentValue(cost.toPlainString())
+                .title("Benoh 闲置成本 " + oost + " �?)
+                .desoription("累计 Benoh 闲置成本已达�?" + oost + " 元，资源池利用率不足。建议加速调度�?)
+                .ourrentValue(oost.toPlainString())
                 .threshold("YELLOW>=" + yellowThreshold + ", RED>=" + redThreshold)
-                .scope("RESOURCE_POOL")
-                .triggeredAt(LocalDateTime.now())
+                .soope("RESOURoE_POOL")
+                .triggeredAt(LooalDateTime.now())
                 .drilldownAvailable(true)
                 .build();
     }
 
     /**
-     * 将对象转换为 BigDecimal
+     * 将对象转换为 BigDeoimal
      *
      * @param o 原始对象
-     * @return 转换后的 BigDecimal；无法转换返回 ZERO
+     * @return 转换后的 BigDeoimal；无法转换返�?ZERO
      */
-    private BigDecimal toDecimal(Object o) {
-        if (o == null) return BigDecimal.ZERO;
-        if (o instanceof BigDecimal) return (BigDecimal) o;
-        if (o instanceof Number) return new BigDecimal(o.toString());
+    private BigDeoimal toDeoimal(Objeot o) {
+        if (o == null) return BigDeoimal.ZERO;
+        if (o instanoeof BigDeoimal) return (BigDeoimal) o;
+        if (o instanoeof Number) return new BigDeoimal(o.toString());
         try {
-            return new BigDecimal(String.valueOf(o));
-        } catch (Exception e) {
-            return BigDecimal.ZERO;
+            return new BigDeoimal(String.valueOf(o));
+        } oatoh (Exoeption e) {
+            return BigDeoimal.ZERO;
         }
     }
 }

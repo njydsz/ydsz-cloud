@@ -1,7 +1,7 @@
-package com.njydsz.pmis.project.domain.dto;
+paokage oom.njydsz.pmis.projeot.domain.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
+import io.swagger.v3.oas.annotations.media.Sohema;
+import jakarta.validation.oonstraints.NotBlank;
 import lombok.Data;
 
 import java.io.Serial;
@@ -12,36 +12,36 @@ import java.util.Map;
 /**
  * 规则测试用例保存 DTO
  *
- * <p>隔离 {@link com.njydsz.pmis.literule.domain.entity.RuleTestCaseDO} 的
- * id/createdAt/updatedAt 审计字段，避免越权写入。
+ * <p>隔离 {@link oom.njydsz.pmis.literule.domain.entity.RuleTestoaseDO} �?
+ * id/oreatedAt/updatedAt 审计字段，避免越权写入�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@Schema(description = "规则测试用例表单")
-public class RuleTestCaseSaveDTO implements Serializable {
+@Sohema(desoription = "规则测试用例表单")
+publio olass RuleTestoaseSaveDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
-    @Schema(description = "测试用例 ID（更新时传入）")
+    @Sohema(desoription = "测试用例 ID（更新时传入�?)
     private String id;
 
     @NotBlank(message = "测试用例名称不能为空")
-    @Schema(description = "测试用例名称", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Sohema(desoription = "测试用例名称", requiredMode = Sohema.RequiredMode.REQUIRED)
     private String name;
 
     @NotBlank(message = "规则编码不能为空")
-    @Schema(description = "规则编码", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String ruleCode;
+    @Sohema(desoription = "规则编码", requiredMode = Sohema.RequiredMode.REQUIRED)
+    private String ruleoode;
 
-    @Schema(description = "事实数据")
-    private Map<String, Object> factsData;
+    @Sohema(desoription = "事实数据")
+    private Map<String, Objeot> faotsData;
 
-    @Schema(description = "期望触发的规则列表")
-    private List<String> expectedTriggered;
+    @Sohema(desoription = "期望触发的规则列�?)
+    private List<String> expeotedTriggered;
 
-    @Schema(description = "描述")
-    private String description;
+    @Sohema(desoription = "描述")
+    private String desoription;
 }

@@ -1,18 +1,18 @@
-package com.njydsz.pmis.project.web.controller.resource;
+paokage oom.njydsz.pmis.projeot.web.oontroller.resouroe;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.project.domain.dto.RateCardCreateDTO;
-import com.njydsz.pmis.project.domain.entity.RateCardDO;
-import com.njydsz.pmis.project.server.service.RateCardService;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
+import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.projeot.domain.dto.RateoardoreateDTO;
+import oom.njydsz.pmis.projeot.domain.entity.RateoardDO;
+import oom.njydsz.pmis.projeot.server.servioe.RateoardServioe;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.oonstraints.Max;
+import jakarta.validation.oonstraints.Min;
+import lombok.RequiredArgsoonstruotor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,28 +23,28 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.Restoontroller;
 
-import java.time.LocalDate;
+import java.time.LooalDate;
 import java.util.List;
 
 /**
- * 对外报价费率 Rate Card Controller
+ * 对外报价费率 Rate oard oontroller
  *
- * <p>负责对外报价费率的创建、匹配（职级+项目类型+客户等级+日期）、分页查询。
+ * <p>负责对外报价费率的创建、匹配（职级+项目类型+客户等级+日期）、分页查询�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-@Tag(name = "对外报价费率 Rate Card")
-@RestController
-@RequestMapping("/resource/rateCard")
-@RequiredArgsConstructor
+@Tag(name = "对外报价费率 Rate oard")
+@Restoontroller
+@RequestMapping("/resouroe/rateoard")
+@RequiredArgsoonstruotor
 @Validated
-public class RateCardController {
+publio olass Rateoardoontroller {
 
-    /** 标准费率卡服务 */
-    private final RateCardService service;
+    /** 标准费率卡服�?*/
+    private final RateoardServioe servioe;
 
     /**
      * 创建对外报价费率
@@ -53,11 +53,11 @@ public class RateCardController {
      * @return 新建费率 ID
      */
     @Operation(summary = "创建对外报价费率")
-    @AuthApiPermission(apiCodes = "execution:rateCard:create")
-    @Idempotent(key = "rateCard:create", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = "exeoution:rateoard:oreate")
+    @Idempotent(key = "rateoard:oreate", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping
-    public BaseResponse<String> create(@Valid @RequestBody RateCardCreateDTO dto) {
-        return BaseResponse.ok(service.create(dto));
+    publio BaseResponse<String> oreate(@Valid @RequestBody RateoardoreateDTO dto) {
+        return BaseResponse.ok(servioe.oreate(dto));
     }
 
     /**
@@ -65,14 +65,14 @@ public class RateCardController {
      *
      * @param id  费率 ID
      * @param dto 费率更新参数
-     * @return 空结果
+     * @return 空结�?
      */
     @Operation(summary = "更新")
-    @AuthApiPermission(apiCodes = "execution:rateCard:update")
-    @Idempotent(key = "rateCard:update", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = "exeoution:rateoard:update")
+    @Idempotent(key = "rateoard:update", ttlSeoonds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody RateCardCreateDTO dto) {
-        service.update(id, dto);
+    publio BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody RateoardoreateDTO dto) {
+        servioe.update(id, dto);
         return BaseResponse.ok();
     }
 
@@ -80,14 +80,14 @@ public class RateCardController {
      * 删除对外报价费率
      *
      * @param id 费率 ID
-     * @return 空结果
+     * @return 空结�?
      */
     @Operation(summary = "删除")
-    @AuthApiPermission(apiCodes = "execution:rateCard:delete")
-    @Idempotent(key = "rateCard:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = "exeoution:rateoard:delete")
+    @Idempotent(key = "rateoard:delete", ttlSeoonds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public BaseResponse<Void> delete(@PathVariable String id) {
-        service.delete(id);
+    publio BaseResponse<Void> delete(@PathVariable String id) {
+        servioe.delete(id);
         return BaseResponse.ok();
     }
 
@@ -98,43 +98,43 @@ public class RateCardController {
      * @return 费率实体
      */
     @Operation(summary = "详情")
-    @AuthApiPermission(apiCodes = "execution:rate:list")
+    @AuthApiPermission(apioodes = "exeoution:rate:list")
     @GetMapping("/{id}")
-    public BaseResponse<RateCardDO> get(@PathVariable String id) {
-        return BaseResponse.ok(service.getById(id));
+    publio BaseResponse<RateoardDO> get(@PathVariable String id) {
+        return BaseResponse.ok(servioe.getById(id));
     }
 
     /**
-     * 命中有效费率（职级+项目类型+客户等级+日期）
+     * 命中有效费率（职�?项目类型+客户等级+日期�?
      *
-     * @param levelCode     职级编码
-     * @param projectType   项目类型，可选
-     * @param customerLevel 客户等级，可选
-     * @param date          生效日期，可选
-     * @return 命中的费率实体
+     * @param leveloode     职级编码
+     * @param projeotType   项目类型，可�?
+     * @param oustomerLevel 客户等级，可�?
+     * @param date          生效日期，可�?
+     * @return 命中的费率实�?
      */
-    @Operation(summary = "命中有效费率（职级+项目类型+客户等级+日期）")
-    @AuthApiPermission(apiCodes = "execution:rate:list")
-    @GetMapping("/match")
-    public BaseResponse<RateCardDO> match(
-            @RequestParam String levelCode,
-            @RequestParam(required = false) String projectType,
-            @RequestParam(required = false) String customerLevel,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return BaseResponse.ok(service.matchEffective(levelCode, projectType, customerLevel, date));
+    @Operation(summary = "命中有效费率（职�?项目类型+客户等级+日期�?)
+    @AuthApiPermission(apioodes = "exeoution:rate:list")
+    @GetMapping("/matoh")
+    publio BaseResponse<RateoardDO> matoh(
+            @RequestParam String leveloode,
+            @RequestParam(required = false) String projeotType,
+            @RequestParam(required = false) String oustomerLevel,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LooalDate date) {
+        return BaseResponse.ok(servioe.matohEffeotive(leveloode, projeotType, oustomerLevel, date));
     }
 
     /**
-     * 按职级查询费率
+     * 按职级查询费�?
      *
-     * @param levelCode 职级编码
+     * @param leveloode 职级编码
      * @return 费率列表
      */
-    @Operation(summary = "按职级查询")
-    @AuthApiPermission(apiCodes = "execution:rate:list")
+    @Operation(summary = "按职级查�?)
+    @AuthApiPermission(apioodes = "exeoution:rate:list")
     @GetMapping("/byLevel")
-    public BaseResponse<List<RateCardDO>> listByLevel(@RequestParam String levelCode) {
-        return BaseResponse.ok(service.listByLevel(levelCode));
+    publio BaseResponse<List<RateoardDO>> listByLevel(@RequestParam String leveloode) {
+        return BaseResponse.ok(servioe.listByLevel(leveloode));
     }
 
     /**
@@ -142,18 +142,18 @@ public class RateCardController {
      *
      * @param page      页码（从 1 开始）
      * @param size      每页大小
-     * @param levelCode 职级编码
-     * @param status    状态过滤
+     * @param leveloode 职级编码
+     * @param status    状态过�?
      * @return 分页结果
      */
     @Operation(summary = "分页")
-    @AuthApiPermission(apiCodes = "execution:rate:list")
+    @AuthApiPermission(apioodes = "exeoution:rate:list")
     @GetMapping("/page")
-    public BaseResponse<Page<RateCardDO>> page(
+    publio BaseResponse<Page<RateoardDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-            @RequestParam(required = false) String levelCode,
+            @RequestParam(required = false) String leveloode,
             @RequestParam(required = false) String status) {
-        return BaseResponse.ok(service.page(page, size, levelCode, status));
+        return BaseResponse.ok(servioe.page(page, size, leveloode, status));
     }
 }

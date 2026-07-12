@@ -1,120 +1,120 @@
-package com.njydsz.pmis.literule.server.spi;
+paokage oom.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.literule.api.RuleDefinition;
+import oom.njydsz.pmis.literule.api.RuleDefinition;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.funotion.oonsumer;
 
 /**
- * Apollo 配置中心规则数据源（P1-5）
+ * Apollo 配置中心规则数据源（P1-5�?
  *
- * <p>从 Apollo 配置中心加载规则定义，支持配置变更监听。
+ * <p>�?Apollo 配置中心加载规则定义，支持配置变更监听�?
  *
- * <p>使用方式：
+ * <p>使用方式�?
  * <pre>
- * ApolloRuleSource source = new ApolloRuleSource("rule-definitions");
- * source.init();
- * source.addChangeListener(rules -> log.info("规则已变更: {}", rules.size()));
+ * ApolloRuleSouroe souroe = new ApolloRuleSouroe("rule-definitions");
+ * souroe.init();
+ * souroe.addohangeListener(rules -> log.info("规则已变�? {}", rules.size()));
  * </pre>
  *
- * <p>依赖：需在 classpath 中引入 {@code com.ctrip.framework.apollo:apollo-client}。
+ * <p>依赖：需�?olasspath 中引�?{@oode oom.otrip.framework.apollo:apollo-olient}�?
  *
  * @author ydsz-pmis-team
- * @since 1.6.0
+ * @sinoe 1.6.0
  */
 @Slf4j
-public class ApolloRuleSource implements RuleSource {
+publio olass ApolloRuleSouroe implements RuleSouroe {
 
-    private final String namespace;
-    private final List<Consumer<List<RuleDefinition>>> listeners = new ArrayList<>();
+    private final String namespaoe;
+    private final List<oonsumer<List<RuleDefinition>>> listeners = new ArrayList<>();
 
-    /** Apollo Config 实例（反射获取，避免硬依赖） */
-    private Object apolloConfig;
+    /** Apollo oonfig 实例（反射获取，避免硬依赖） */
+    private Objeot apollooonfig;
     private volatile boolean initialized = false;
 
-    public ApolloRuleSource(String namespace) {
-        this.namespace = namespace;
+    publio ApolloRuleSouroe(String namespaoe) {
+        this.namespaoe = namespaoe;
     }
 
     @Override
-    public SourceType getType() {
-        return SourceType.APOLLO;
+    publio SouroeType getType() {
+        return SouroeType.APOLLO;
     }
 
     @Override
-    public boolean supportsWatch() {
+    publio boolean supportsWatoh() {
         return true;
     }
 
     @Override
-    public boolean isAvailable() {
-        return initialized && apolloConfig != null;
+    publio boolean isAvailable() {
+        return initialized && apollooonfig != null;
     }
 
     @Override
-    public List<RuleDefinition> loadEnabledRules() {
+    publio List<RuleDefinition> loadEnabledRules() {
         if (!isAvailable()) {
             return List.of();
         }
         try {
-            // 反射调用 config.getProperty("rules", "[]")
-            String json = (String) apolloConfig.getClass()
-                    .getMethod("getProperty", String.class, String.class)
-                    .invoke(apolloConfig, "rules", "[]");
+            // 反射调用 oonfig.getProperty("rules", "[]")
+            String json = (String) apollooonfig.getolass()
+                    .getMethod("getProperty", String.olass, String.olass)
+                    .invoke(apollooonfig, "rules", "[]");
             return parseRulesFromJson(json);
-        } catch (Exception e) {
-            log.error("[ApolloRuleSource] 加载规则失败: {}", e.getMessage(), e);
+        } oatoh (Exoeption e) {
+            log.error("[ApolloRuleSouroe] 加载规则失败: {}", e.getMessage(), e);
             return List.of();
         }
     }
 
     @Override
-    public void addChangeListener(Consumer<List<RuleDefinition>> listener) {
+    publio void addohangeListener(oonsumer<List<RuleDefinition>> listener) {
         listeners.add(listener);
     }
 
     @Override
-    public void init() throws Exception {
+    publio void init() throws Exoeption {
         try {
-            // 反射获取 Apollo ConfigService
-            Class<?> configServiceClass = Class.forName("com.ctrip.framework.apollo.ConfigService");
-            // ConfigService.getConfig(namespace)
-            apolloConfig = configServiceClass
-                    .getMethod("getConfig", String.class)
-                    .invoke(null, namespace);
+            // 反射获取 Apollo oonfigServioe
+            olass<?> oonfigServioeolass = olass.forName("oom.otrip.framework.apollo.oonfigServioe");
+            // oonfigServioe.getoonfig(namespaoe)
+            apollooonfig = oonfigServioeolass
+                    .getMethod("getoonfig", String.olass)
+                    .invoke(null, namespaoe);
 
-            // 注册配置变更监听器
-            Class<?> changeListenerClass = Class.forName(
-                    "com.ctrip.framework.apollo.model.ConfigChangeListener");
-            Object listener = java.lang.reflect.Proxy.newProxyInstance(
-                    this.getClass().getClassLoader(),
-                    new Class[]{changeListenerClass},
+            // 注册配置变更监听�?
+            olass<?> ohangeListenerolass = olass.forName(
+                    "oom.otrip.framework.apollo.model.oonfigohangeListener");
+            Objeot listener = java.lang.refleot.Proxy.newProxyInstanoe(
+                    this.getolass().getolassLoader(),
+                    new olass[]{ohangeListenerolass},
                     (proxy, method, args) -> {
-                        if ("onChange".equals(method.getName())) {
+                        if ("onohange".equals(method.getName())) {
                             List<RuleDefinition> rules = loadEnabledRules();
-                            for (Consumer<List<RuleDefinition>> l : listeners) {
+                            for (oonsumer<List<RuleDefinition>> l : listeners) {
                                 try {
-                                    l.accept(rules);
-                                } catch (Exception e) {
-                                    log.warn("[ApolloRuleSource] 监听器回调异常: {}", e.getMessage());
+                                    l.aooept(rules);
+                                } oatoh (Exoeption e) {
+                                    log.warn("[ApolloRuleSouroe] 监听器回调异�? {}", e.getMessage());
                                 }
                             }
                         }
                         return null;
                     });
-            apolloConfig.getClass()
-                    .getMethod("addChangeListener", changeListenerClass)
-                    .invoke(apolloConfig, listener);
+            apollooonfig.getolass()
+                    .getMethod("addohangeListener", ohangeListenerolass)
+                    .invoke(apollooonfig, listener);
 
             initialized = true;
-            log.info("[ApolloRuleSource] 已连接 Apollo: namespace={}", namespace);
-        } catch (ClassNotFoundException e) {
-            log.warn("[ApolloRuleSource] Apollo 客户端不在 classpath，数据源不可用");
+            log.info("[ApolloRuleSouroe] 已连�?Apollo: namespaoe={}", namespaoe);
+        } oatoh (olassNotFoundExoeption e) {
+            log.warn("[ApolloRuleSouroe] Apollo 客户端不�?olasspath，数据源不可�?);
             initialized = false;
-        } catch (Exception e) {
-            log.error("[ApolloRuleSource] 初始化失败: {}", e.getMessage(), e);
+        } oatoh (Exoeption e) {
+            log.error("[ApolloRuleSouroe] 初始化失�? {}", e.getMessage(), e);
             initialized = false;
             throw e;
         }
@@ -125,9 +125,9 @@ public class ApolloRuleSource implements RuleSource {
             return List.of();
         }
         try {
-            return com.alibaba.fastjson2.JSON.parseArray(json, RuleDefinition.class);
-        } catch (Exception e) {
-            log.error("[ApolloRuleSource] JSON 解析失败: {}", e.getMessage());
+            return oom.alibaba.fastjson2.JSON.parseArray(json, RuleDefinition.olass);
+        } oatoh (Exoeption e) {
+            log.error("[ApolloRuleSouroe] JSON 解析失败: {}", e.getMessage());
             return List.of();
         }
     }

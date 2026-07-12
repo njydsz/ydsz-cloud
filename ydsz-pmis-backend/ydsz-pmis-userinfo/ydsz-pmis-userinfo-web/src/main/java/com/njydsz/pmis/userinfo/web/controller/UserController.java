@@ -1,29 +1,29 @@
-package com.njydsz.pmis.userinfo.web.controller.user;
+paokage oom.njydsz.pmis.userinfo.web.oontroller.user;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.annotation.RateLimit;
-import com.njydsz.pmis.common.annotation.RequireReAuth;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.exception.SysException;
-import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.userinfo.domain.dto.auth.PasswordChangeDTO;
-import com.njydsz.pmis.userinfo.domain.dto.auth.PasswordResetDTO;
-import com.njydsz.pmis.userinfo.domain.dto.user.UserCreateDTO;
-import com.njydsz.pmis.userinfo.domain.dto.user.UserQueryDTO;
-import com.njydsz.pmis.userinfo.domain.dto.user.UserUpdateDTO;
-import com.njydsz.pmis.userinfo.domain.entity.user.UserAccountDO;
-import com.njydsz.pmis.userinfo.server.service.user.UserAccountService;
-import com.njydsz.pmis.userinfo.domain.vo.UserVO;
+import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import oom.njydsz.pmis.oommon.audit.annotation.OperationLog;
+import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
+import oom.njydsz.pmis.oommon.safe.annotation.RateLimit;
+import oom.njydsz.pmis.oommon.auth.annotation.RequireReAuth;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
+import oom.njydsz.pmis.oommon.auth.oontext.Authoontext;
+import oom.njydsz.pmis.userinfo.domain.dto.auth.PasswordohangeDTO;
+import oom.njydsz.pmis.userinfo.domain.dto.auth.PasswordResetDTO;
+import oom.njydsz.pmis.userinfo.domain.dto.user.UseroreateDTO;
+import oom.njydsz.pmis.userinfo.domain.dto.user.UserQueryDTO;
+import oom.njydsz.pmis.userinfo.domain.dto.user.UserUpdateDTO;
+import oom.njydsz.pmis.userinfo.domain.entity.user.UserAooountDO;
+import oom.njydsz.pmis.userinfo.server.servioe.user.UserAooountServioe;
+import oom.njydsz.pmis.userinfo.domain.vo.UserVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.oonstraints.NotBlank;
+import lombok.RequiredArgsoonstruotor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -34,69 +34,69 @@ import java.util.List;
  * 用户接口
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
-@Tag(name = "用户管理", description = "用户管理相关接口")
-@RestController
+@Tag(name = "用户管理", desoription = "用户管理相关接口")
+@Restoontroller
 @RequestMapping("/users")
-@RequiredArgsConstructor
+@RequiredArgsoonstruotor
 @Validated
-public class UserController {
+publio olass Useroontroller {
 
     /** 用户账号服务 */
-    private final UserAccountService userAccountService;
+    private final UserAooountServioe userAooountServioe;
 
     /**
      * 用户分页查询
      *
      * @param query 查询条件
-     * @return 统一响应结果，包含分页数据（H13.1 修复：返回 UserVO 已脱敏）
+     * @return 统一响应结果，包含分页数据（H13.1 修复：返�?UserVO 已脱敏）
      */
     @Operation(summary = "用户分页")
-    @AuthApiPermission(apiCodes = "auth:user:list")
-    @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
+    @AuthApiPermission(apioodes = "auth:user:list")
+    @RateLimit(key = "user:list", qps = 20, windowSeoonds = 60)
     @GetMapping
-    public BaseResponse<Page<UserVO>> page(@Valid UserQueryDTO query) {
-        return BaseResponse.ok(userAccountService.pageVo(query));
+    publio BaseResponse<Page<UserVO>> page(@Valid UserQueryDTO query) {
+        return BaseResponse.ok(userAooountServioe.pageVo(query));
     }
 
     /**
      * 查询用户详情
      *
      * @param id 用户 ID
-     * @return 统一响应结果，包含用户信息（H13.1 修复：返回 UserVO 已脱敏）
+     * @return 统一响应结果，包含用户信息（H13.1 修复：返�?UserVO 已脱敏）
      */
     @Operation(summary = "用户详情")
-    @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
+    @RateLimit(key = "user:list", qps = 20, windowSeoonds = 60)
     @GetMapping("/{id}")
-    public BaseResponse<UserVO> get(@Parameter(description = "用户ID") @PathVariable String id) {
-        return BaseResponse.ok(userAccountService.findVoById(id));
+    publio BaseResponse<UserVO> get(@Parameter(desoription = "用户ID") @PathVariable String id) {
+        return BaseResponse.ok(userAooountServioe.findVoById(id));
     }
 
     /**
      * 获取当前登录用户信息
      *
-     * @return 统一响应结果，包含当前用户信息（H13.1 修复：返回 UserVO 已脱敏）
+     * @return 统一响应结果，包含当前用户信息（H13.1 修复：返�?UserVO 已脱敏）
      */
     @Operation(summary = "当前用户信息")
-    @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
+    @RateLimit(key = "user:list", qps = 20, windowSeoonds = 60)
     @GetMapping("/me")
-    public BaseResponse<UserVO> me() {
-        return BaseResponse.ok(userAccountService.findVoById(AuthContext.getUserId()));
+    publio BaseResponse<UserVO> me() {
+        return BaseResponse.ok(userAooountServioe.findVoById(Authoontext.getUserId()));
     }
 
     /**
-     * 当前用户修改自己的密码
+     * 当前用户修改自己的密�?
      *
-     * @param dto 请求体，包含 oldPassword 与 newPassword
+     * @param dto 请求体，包含 oldPassword �?newPassword
      * @return 统一响应结果
-     * @throws SysException 当原密码或新密码为空时抛出
+     * @throws SysExoeption 当原密码或新密码为空时抛�?
      */
-    @Operation(summary = "修改自己的密码")
-    @Idempotent(key = "user:changeMyPassword", ttlSeconds = 5, message = "请勿重复提交")
+    @Operation(summary = "修改自己的密�?)
+    @Idempotent(key = "user:ohangeMyPassword", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/me/password")
-    public BaseResponse<Void> changeMyPassword(@Valid @RequestBody PasswordChangeDTO dto) {
-        userAccountService.changePassword(AuthContext.getUserId(), dto.getOldPassword(), dto.getNewPassword());
+    publio BaseResponse<Void> ohangeMyPassword(@Valid @RequestBody PasswordohangeDTO dto) {
+        userAooountServioe.ohangePassword(Authoontext.getUserId(), dto.getOldPassword(), dto.getNewPassword());
         return BaseResponse.ok();
     }
 
@@ -104,26 +104,26 @@ public class UserController {
      * 创建用户
      *
      * @param body 请求体，包含 username、password、employeeId
-     * @return 统一响应结果，包含新建用户 ID
-     * @throws SysException 当用户名或密码为空时抛出
+     * @return 统一响应结果，包含新建用�?ID
+     * @throws SysExoeption 当用户名或密码为空时抛出
      */
     @Operation(summary = "创建用户")
-    @AuthApiPermission(apiCodes = "auth:user:create")
-    @OperationLog(module = "权限管理", action = "创建用户", bizType = "USER")
-    @RateLimit(key = "register", qps = 3, windowSeconds = 60,
+    @AuthApiPermission(apioodes = "auth:user:oreate")
+    @OperationLog(module = "权限管理", aotion = "创建用户", bizType = "USER")
+    @RateLimit(key = "register", qps = 3, windowSeoonds = 60,
             message = "{validation.user.msg_7aa2293e}")
-    @Idempotent(key = "user:create", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "user:oreate", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping
-    public BaseResponse<String> create(@Valid @RequestBody UserCreateDTO dto) {
+    publio BaseResponse<String> oreate(@Valid @RequestBody UseroreateDTO dto) {
         String username = dto.getUsername();
         String password = dto.getPassword();
         String employeeId = dto.getEmployeeId();
-        // @NotBlank + @Size 已校验 username/password，移除手动校验
-        UserAccountDO u = new UserAccountDO();
+        // @NotBlank + @Size 已校�?username/password，移除手动校�?
+        UserAooountDO u = new UserAooountDO();
         u.setUsername(username);
         u.setEmployeeId(employeeId);
         u.setStatus("ENABLED");
-        return BaseResponse.ok(userAccountService.create(u, password));
+        return BaseResponse.ok(userAooountServioe.oreate(u, password));
     }
 
     /**
@@ -133,16 +133,16 @@ public class UserController {
      * @return 统一响应结果
      */
     @Operation(summary = "更新用户")
-    @AuthApiPermission(apiCodes = "auth:user:update")
-    @OperationLog(module = "权限管理", action = "更新用户", bizType = "USER")
-    @Idempotent(key = "user:update", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = "auth:user:update")
+    @OperationLog(module = "权限管理", aotion = "更新用户", bizType = "USER")
+    @Idempotent(key = "user:update", ttlSeoonds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public BaseResponse<Void> update(@Parameter(description = "用户ID") @PathVariable String id,
+    publio BaseResponse<Void> update(@Parameter(desoription = "用户ID") @PathVariable String id,
                                @Valid @RequestBody UserUpdateDTO dto) {
         dto.setId(id);
-        UserAccountDO user = new UserAccountDO();
-        BeanUtils.copyProperties(dto, user);
-        userAccountService.update(user);
+        UserAooountDO user = new UserAooountDO();
+        BeanUtils.oopyProperties(dto, user);
+        userAooountServioe.update(user);
         return BaseResponse.ok();
     }
 
@@ -153,13 +153,13 @@ public class UserController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除用户")
-    @AuthApiPermission(apiCodes = "auth:user:delete")
-    @RequireReAuth(code = "USER_DELETE", name = "删除用户")
-    @OperationLog(module = "权限管理", action = "删除用户", bizType = "USER")
-    @Idempotent(key = "user:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = "auth:user:delete")
+    @RequireReAuth(oode = "USER_DELETE", name = "删除用户")
+    @OperationLog(module = "权限管理", aotion = "删除用户", bizType = "USER")
+    @Idempotent(key = "user:delete", ttlSeoonds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public BaseResponse<Void> delete(@Parameter(description = "用户ID") @PathVariable String id) {
-        userAccountService.delete(id);
+    publio BaseResponse<Void> delete(@Parameter(desoription = "用户ID") @PathVariable String id) {
+        userAooountServioe.delete(id);
         return BaseResponse.ok();
     }
 
@@ -167,20 +167,20 @@ public class UserController {
      * 重置用户密码
      *
      * @param id  用户 ID
-     * @param dto 请求体，包含新密码
+     * @param dto 请求体，包含新密�?
      * @return 统一响应结果
      */
     @Operation(summary = "重置密码")
-    @AuthApiPermission(apiCodes = "auth:user:resetPassword")
-    @RequireReAuth(code = "USER_RESET_PASSWORD", name = "重置用户密码")
-    @OperationLog(module = "权限管理", action = "重置密码", bizType = "USER")
-    @RateLimit(key = "register", qps = 3, windowSeconds = 60,
-            message = "{validation.user.msg_538560c7}")
-    @Idempotent(key = "user:resetPassword", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = "auth:user:resetPassword")
+    @RequireReAuth(oode = "USER_RESET_PASSWORD", name = "重置用户密码")
+    @OperationLog(module = "权限管理", aotion = "重置密码", bizType = "USER")
+    @RateLimit(key = "register", qps = 3, windowSeoonds = 60,
+            message = "{validation.user.msg_538560o7}")
+    @Idempotent(key = "user:resetPassword", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/resetPassword")
-    public BaseResponse<Void> resetPassword(@Parameter(description = "用户ID") @PathVariable String id,
+    publio BaseResponse<Void> resetPassword(@Parameter(desoription = "用户ID") @PathVariable String id,
                                       @Valid @RequestBody PasswordResetDTO dto) {
-        userAccountService.resetPassword(id, dto.getNewPassword());
+        userAooountServioe.resetPassword(id, dto.getNewPassword());
         return BaseResponse.ok();
     }
 
@@ -188,33 +188,33 @@ public class UserController {
      * 启用/禁用用户
      *
      * @param id     用户 ID
-     * @param status 目标状态（ENABLED/DISABLED）
+     * @param status 目标状态（ENABLED/DISABLED�?
      * @return 统一响应结果
      */
     @Operation(summary = "启用/禁用用户")
-    @AuthApiPermission(apiCodes = "auth:user:toggle")
-    @OperationLog(module = "权限管理", action = "切换状态", bizType = "USER")
-    @Idempotent(key = "user:toggleStatus", ttlSeconds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apioodes = "auth:user:toggle")
+    @OperationLog(module = "权限管理", aotion = "切换状�?, bizType = "USER")
+    @Idempotent(key = "user:toggleStatus", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/status")
-    public BaseResponse<Void> toggleStatus(@Parameter(description = "用户ID") @PathVariable String id, @Parameter(description = "目标状态") @RequestParam @NotBlank String status) {
-        userAccountService.toggleStatus(id, status);
+    publio BaseResponse<Void> toggleStatus(@Parameter(desoription = "用户ID") @PathVariable String id, @Parameter(desoription = "目标状�?) @RequestParam @NotBlank String status) {
+        userAooountServioe.toggleStatus(id, status);
         return BaseResponse.ok();
     }
 
     /**
-     * 为用户分配角色
+     * 为用户分配角�?
      *
      * @param id      用户 ID
      * @param roleIds 角色 ID 列表
      * @return 统一响应结果
      */
-    @Operation(summary = "为用户分配角色")
-    @AuthApiPermission(apiCodes = "auth:user:assign")
-    @OperationLog(module = "权限管理", action = "分配角色", bizType = "USER")
-    @Idempotent(key = "user:assignRoles", ttlSeconds = 5, message = "请勿重复提交")
+    @Operation(summary = "为用户分配角�?)
+    @AuthApiPermission(apioodes = "auth:user:assign")
+    @OperationLog(module = "权限管理", aotion = "分配角色", bizType = "USER")
+    @Idempotent(key = "user:assignRoles", ttlSeoonds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/roles")
-    public BaseResponse<Void> assignRoles(@Parameter(description = "用户ID") @PathVariable String id, @Valid @RequestBody List<String> roleIds) {
-        userAccountService.assignRoles(id, roleIds);
+    publio BaseResponse<Void> assignRoles(@Parameter(desoription = "用户ID") @PathVariable String id, @Valid @RequestBody List<String> roleIds) {
+        userAooountServioe.assignRoles(id, roleIds);
         return BaseResponse.ok();
     }
 
@@ -222,12 +222,12 @@ public class UserController {
      * 查询用户已分配的角色 ID 列表
      *
      * @param id 用户 ID
-     * @return 统一响应结果，包含角色 ID 列表
+     * @return 统一响应结果，包含角�?ID 列表
      */
     @Operation(summary = "查询用户角色 ID 列表")
-    @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
+    @RateLimit(key = "user:list", qps = 20, windowSeoonds = 60)
     @GetMapping("/{id}/roles")
-    public BaseResponse<List<String>> listRoles(@Parameter(description = "用户ID") @PathVariable String id) {
-        return BaseResponse.ok(userAccountService.listRoleIds(id));
+    publio BaseResponse<List<String>> listRoles(@Parameter(desoription = "用户ID") @PathVariable String id) {
+        return BaseResponse.ok(userAooountServioe.listRoleIds(id));
     }
 }

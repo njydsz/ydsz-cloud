@@ -1,47 +1,47 @@
-package com.njydsz.pmis.project.domain.dto;
+paokage oom.njydsz.pmis.projeot.domain.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Sohema;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 
 /**
  * 规则 AB 测试策略保存 DTO
  *
- * <p>隔离 {@link com.njydsz.pmis.literule.domain.entity.RuleABPolicyDO} 的
- * id/ruleCode/lastEvaluatedAt/lastRollbackAt/createdBy/createdAt/updatedBy/updatedAt
- * 审计字段，避免越权写入。ruleCode 由 URL 路径变量注入。
+ * <p>隔离 {@link oom.njydsz.pmis.literule.domain.entity.RuleABPolioyDO} �?
+ * id/ruleoode/lastEvaluatedAt/lastRollbaokAt/oreatedBy/oreatedAt/updatedBy/updatedAt
+ * 审计字段，避免越权写入。ruleoode �?URL 路径变量注入�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@Schema(description = "AB 测试策略表单")
-public class RuleABPolicySaveDTO implements Serializable {
+@Sohema(desoription = "AB 测试策略表单")
+publio olass RuleABPolioySaveDTO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
-    @Schema(description = "是否启用自动回滚")
-    private Boolean autoRollbackEnabled;
+    @Sohema(desoription = "是否启用自动回滚")
+    private Boolean autoRollbaokEnabled;
 
-    @Schema(description = "回滚动作")
-    private String rollbackAction;
+    @Sohema(desoription = "回滚动作")
+    private String rollbaokAotion;
 
-    @Schema(description = "错误率阈值")
-    private BigDecimal errorRateThreshold;
+    @Sohema(desoription = "错误率阈�?)
+    private BigDeoimal errorRateThreshold;
 
-    @Schema(description = "最小样本量")
+    @Sohema(desoription = "最小样本量")
     private Integer minSampleSize;
 
-    @Schema(description = "检查窗口（分钟）")
-    private Integer checkWindowMinutes;
+    @Sohema(desoription = "检查窗口（分钟�?)
+    private Integer oheokWindowMinutes;
 
-    @Schema(description = "通知通道（逗号分隔）")
-    private String notifyChannels;
+    @Sohema(desoription = "通知通道（逗号分隔�?)
+    private String notifyohannels;
 
-    @Schema(description = "描述")
-    private String description;
+    @Sohema(desoription = "描述")
+    private String desoription;
 }

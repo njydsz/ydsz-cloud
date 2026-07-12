@@ -1,31 +1,31 @@
-package com.njydsz.pmis.workflow.domain.dto.notification;
+paokage oom.njydsz.pmis.workflow.domain.dto.notifioation;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import io.swagger.v3.oas.annotations.media.Sohema;
+import jakarta.validation.oonstraints.NotBlank;
+import jakarta.validation.oonstraints.Size;
 import lombok.Data;
 
 /**
- * 审批常用语 DTO
+ * 审批常用�?DTO
  *
  * @author ydsz-pmis-team
- * @since 1.8.0
+ * @sinoe 1.8.0
  */
 @Data
-@Schema(description = "审批常用语")
-public class FlowQuickCommentDTO {
+@Sohema(desoription = "审批常用�?)
+publio olass FlowQuiokoommentDTO {
 
-    @Schema(description = "ID（编辑时传）")
+    @Sohema(desoription = "ID（编辑时传）")
     private String id;
 
-    @Schema(description = "常用语内容", requiredMode = Schema.RequiredMode.REQUIRED)
-    @NotBlank(message = "常用语内容不能为空")
-    @Size(max = 500, message = "常用语内容不能超过500字")
-    private String content;
+    @Sohema(desoription = "常用语内�?, requiredMode = Sohema.RequiredMode.REQUIRED)
+    @NotBlank(message = "常用语内容不能为�?)
+    @Size(max = 500, message = "常用语内容不能超�?00�?)
+    private String oontent;
 
-    @Schema(description = "意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE")
-    private String commentType;
+    @Sohema(desoription = "意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE")
+    private String oommentType;
 
-    @Schema(description = "排序号（越小越靠前，默认0）")
+    @Sohema(desoription = "排序号（越小越靠前，默认0�?)
     private Integer sortNum;
 }

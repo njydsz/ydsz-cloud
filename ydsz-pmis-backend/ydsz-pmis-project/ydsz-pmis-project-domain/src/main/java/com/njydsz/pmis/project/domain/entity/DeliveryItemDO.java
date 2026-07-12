@@ -1,92 +1,92 @@
-package com.njydsz.pmis.project.domain.entity;
+paokage oom.njydsz.pmis.projeot.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.annotation.FieldFill;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableField;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LooalDate;
+import java.time.LooalDateTime;
 
 /**
- * 项目交付物实例
+ * 项目交付物实�?
  *
- * <p>每个项目每个交付物一条记录，记录提交时间、验收状态、附件。
+ * <p>每个项目每个交付物一条记录，记录提交时间、验收状态、附件�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@TableName("pmis_execution_delivery_item")
-public class DeliveryItemDO implements Serializable {
+@TableName("pmis_exeoution_delivery_item")
+publio olass DeliveryItemDO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 主键ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    /** 交付物业务编号 */
-    private String itemCode;
+    /** 交付物业务编�?*/
+    private String itemoode;
     /** 项目立项ID */
     private String initiationId;
     /** 关联交付物标准ID */
     private String standardId;
-    /** 项目类型：ProjectType.code */
-    private String projectType;
+    /** 项目类型：ProjeotType.oode */
+    private String projeotType;
     /** 项目等级 */
-    private String projectLevel;
-    /** 交付物名称 */
+    private String projeotLevel;
+    /** 交付物名�?*/
     private String deliveryName;
-    /** 交付物分类 */
-    private String deliveryCategory;
-    /** 所属门径阶段：DeliveryStage.code */
+    /** 交付物分�?*/
+    private String deliveryoategory;
+    /** 所属门径阶段：DeliveryStage.oode */
     private String stage;
-    /** 是否必交付：1 是 / 0 否 */
+    /** 是否必交付：1 �?/ 0 �?*/
     private Integer required;
     /** 计划提交日期 */
-    private LocalDate plannedSubmitDate;
+    private LooalDate plannedSubmitDate;
     /** 实际提交日期 */
-    private LocalDate actualSubmitDate;
+    private LooalDate aotualSubmitDate;
     /** 验收日期 */
-    private LocalDate acceptedDate;
+    private LooalDate aooeptedDate;
     /** 提交人ID */
     private String submitterId;
-    /** 提交人姓名 */
+    /** 提交人姓�?*/
     private String submitterName;
     /** 评审人ID */
     private String reviewerId;
-    /** 评审人姓名 */
+    /** 评审人姓�?*/
     private String reviewerName;
     /** 评审意见 */
-    private String reviewComment;
-    /** 状态：DeliveryItemStatus.code */
+    private String reviewoomment;
+    /** 状态：DeliveryItemStatus.oode */
     private String status;
-    /** 是否触发技术评审 TR：1 是 / 0 否 */
+    /** 是否触发技术评�?TR�? �?/ 0 �?*/
     private Integer trRequired;
-    /** TR 是否完成：1 是 / 0 否 */
-    private Integer trCompleted;
-    /** 附件 ID 列表（JSON 数组） */
+    /** TR 是否完成�? �?/ 0 �?*/
+    private Integer troompleted;
+    /** 附件 ID 列表（JSON 数组�?*/
     private String fileIds;
     /** 备注 */
     private String remark;
     /** 租户ID */
     private String tenantId;
     /** 链路追踪ID */
-    private String providerTraceId;
+    private String providerTraoeId;
 
     /** 创建人ID */
     @TableField(fill = FieldFill.INSERT)
-    private String createdBy;
+    private String oreatedBy;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LooalDateTime oreatedAt;
 
     /** 更新人ID */
     @TableField(fill = FieldFill.INSERT_UPDATE)
@@ -94,9 +94,9 @@ public class DeliveryItemDO implements Serializable {
 
     /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
+    private LooalDateTime updatedAt;
 
-    /** 逻辑删除标志：1 已删除 / 0 未删除 */
+    /** 逻辑删除标志�? 已删�?/ 0 未删�?*/
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

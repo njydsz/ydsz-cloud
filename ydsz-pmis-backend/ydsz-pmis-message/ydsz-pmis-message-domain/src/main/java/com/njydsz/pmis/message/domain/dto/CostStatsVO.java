@@ -1,54 +1,54 @@
-package com.njydsz.pmis.message.domain.dto.core;
+paokage oom.njydsz.pmis.message.domain.dto.oore;
 
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Sohema;
 import lombok.Data;
 
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.util.List;
 
 /**
- * 消息发送成本统计 VO（P2-4 成本看板）。
+ * 消息发送成本统�?VO（P2-4 成本看板）�?
  *
- * <p>按通道维度统计发送成本：单条成本 × 成功发送数 = 通道总成本。
- * 通道单价由 {@code pmis.message.cost.unit-prices} 配置。
+ * <p>按通道维度统计发送成本：单条成本 × 成功发送数 = 通道总成本�?
+ * 通道单价�?{@oode pmis.message.oost.unit-prioes} 配置�?
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@Schema(description = "消息发送成本统计")
-public class CostStatsVO {
+@Sohema(desoription = "消息发送成本统�?)
+publio olass oostStatsVO {
 
-    @Schema(description = "总成本(元)")
-    private BigDecimal totalCost;
+    @Sohema(desoription = "总成�?�?")
+    private BigDeoimal totaloost;
 
-    @Schema(description = "各通道成本明细")
-    private List<ChannelCost> channels;
+    @Sohema(desoription = "各通道成本明细")
+    private List<ohanneloost> ohannels;
 
-    @Schema(description = "起始时间")
+    @Sohema(desoription = "起始时间")
     private String start;
 
-    @Schema(description = "结束时间")
+    @Sohema(desoription = "结束时间")
     private String end;
 
     /**
-     * 单通道成本明细。
+     * 单通道成本明细�?
      */
     @Data
-    @Schema(description = "通道成本明细")
-    public static class ChannelCost {
+    @Sohema(desoription = "通道成本明细")
+    publio statio olass ohanneloost {
 
-        @Schema(description = "通道")
-        private String channel;
+        @Sohema(desoription = "通道")
+        private String ohannel;
 
-        @Schema(description = "成功发送数")
-        private long messageCount;
+        @Sohema(desoription = "成功发送数")
+        private long messageoount;
 
-        @Schema(description = "单条成本(元)")
-        private BigDecimal unitPrice;
+        @Sohema(desoription = "单条成本(�?")
+        private BigDeoimal unitPrioe;
 
-        @Schema(description = "通道总成本(元)")
-        private BigDecimal totalCost;
+        @Sohema(desoription = "通道总成�?�?")
+        private BigDeoimal totaloost;
     }
 }

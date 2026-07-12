@@ -1,147 +1,147 @@
-package com.njydsz.pmis.literule.server.spi;
+paokage oom.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.common.alert.UnifiedAlertEvent;
-import com.njydsz.pmis.literule.api.RuleContext;
-import com.njydsz.pmis.literule.api.RuleResult;
-import com.njydsz.pmis.literule.api.RuleSeverity;
+import oom.njydsz.pmis.oommon.alert.UnifiedAlertEvent;
+import oom.njydsz.pmis.literule.api.Ruleoontext;
+import oom.njydsz.pmis.literule.api.RuleResult;
+import oom.njydsz.pmis.literule.api.RuleSeverity;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.oontext.ApplioationEventPublisher;
 
-import java.time.LocalDateTime;
+import java.time.LooalDateTime;
 import java.util.List;
 
 /**
- * 默认告警动作处理器（P1-1 规则与消息通知联动）
+ * 默认告警动作处理器（P1-1 规则与消息通知联动�?
  *
- * <p>当规则触发时，将 {@link RuleResult} 转换为 {@link UnifiedAlertEvent}
- * 并通过 Spring {@link ApplicationEventPublisher} 发布。
- * 由 common 模块的 {@code UnifiedAlertDispatcher} 统一消费，
- * 委托到 message 模块发送通知（站内信、邮件、WebSocket 推送等）。
+ * <p>当规则触发时，将 {@link RuleResult} 转换�?{@link UnifiedAlertEvent}
+ * 并通过 Spring {@link ApplioationEventPublisher} 发布�?
+ * �?oommon 模块�?{@oode UnifiedAlertDispatoher} 统一消费�?
+ * 委托�?message 模块发送通知（站内信、邮件、WebSooket 推送等）�?
  *
  * <h3>联动链路</h3>
  * <pre>
  * RuleEngine.evaluate
- *   → DefaultAlertActionHandler.onTriggered
- *     → ApplicationEventPublisher.publishEvent(UnifiedAlertEvent)
- *       → UnifiedAlertDispatcher(@EventListener @Async)
- *         → MessageServiceClient Feign → message 模块
- *         → NotificationClient Feign → WebSocket 实时推送
+ *   �?DefaultAlertAotionHandler.onTriggered
+ *     �?ApplioationEventPublisher.publishEvent(UnifiedAlertEvent)
+ *       �?UnifiedAlertDispatoher(@EventListener @Asyno)
+ *         �?MessageServioeolient Feign �?message 模块
+ *         �?Notifioationolient Feign �?WebSooket 实时推�?
  * </pre>
  *
- * <h3>严重度映射</h3>
+ * <h3>严重度映�?/h3>
  * <ul>
- *   <li>{@code RED} → alertLevel="RED"，通道路由 INAPP+EMAIL，目标角色 PMO/GM/CFO</li>
- *   <li>{@code YELLOW} → alertLevel="YELLOW"，通道路由 INAPP，目标角色 PM/PMO</li>
- *   <li>{@code INFO} → alertLevel="INFO"，通道路由 INAPP，目标角色 PM</li>
+ *   <li>{@oode RED} �?alertLevel="RED"，通道路由 INAPP+EMAIL，目标角�?PMO/GM/oFO</li>
+ *   <li>{@oode YELLOW} �?alertLevel="YELLOW"，通道路由 INAPP，目标角�?PM/PMO</li>
+ *   <li>{@oode INFO} �?alertLevel="INFO"，通道路由 INAPP，目标角�?PM</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 2.1.0
+ * @sinoe 2.1.0
  */
 @Slf4j
-public class DefaultAlertActionHandler implements RuleActionHandler {
+publio olass DefaultAlertAotionHandler implements RuleAotionHandler {
 
-    private final ApplicationEventPublisher eventPublisher;
+    private final ApplioationEventPublisher eventPublisher;
 
-    public DefaultAlertActionHandler(ApplicationEventPublisher eventPublisher) {
+    publio DefaultAlertAotionHandler(ApplioationEventPublisher eventPublisher) {
         this.eventPublisher = eventPublisher;
     }
 
     @Override
-    public void onTriggered(List<RuleResult> results, RuleContext context) {
+    publio void onTriggered(List<RuleResult> results, Ruleoontext oontext) {
         if (results == null || results.isEmpty()) {
             return;
         }
         for (RuleResult result : results) {
             if (!result.isTriggered()) {
-                continue;
+                oontinue;
             }
             try {
-                publishAlertEvent(result, context);
-            } catch (Exception e) {
-                log.warn("[LiteRule-Action] 发布告警事件失败: ruleCode={}, error={}",
-                        result.getRuleCode(), e.getMessage());
+                publishAlertEvent(result, oontext);
+            } oatoh (Exoeption e) {
+                log.warn("[LiteRule-Aotion] 发布告警事件失败: ruleoode={}, error={}",
+                        result.getRuleoode(), e.getMessage());
             }
         }
     }
 
     @Override
-    public String getHandlerId() {
+    publio String getHandlerId() {
         return "default-alert";
     }
 
     @Override
-    public boolean isAsync() {
+    publio boolean isAsyno() {
         return true;
     }
 
     @Override
-    public int getOrder() {
+    publio int getOrder() {
         return 0;
     }
 
     /**
-     * 将 RuleResult 转换为 UnifiedAlertEvent 并发布
+     * �?RuleResult 转换�?UnifiedAlertEvent 并发�?
      *
-     * <p>直接构造 {@link UnifiedAlertEvent}，由 common 模块的
-     * {@code UnifiedAlertDispatcher} 消费并路由到 message 模块。
+     * <p>直接构�?{@link UnifiedAlertEvent}，由 oommon 模块�?
+     * {@oode UnifiedAlertDispatoher} 消费并路由到 message 模块�?
      */
-    private void publishAlertEvent(RuleResult result, RuleContext context) {
+    private void publishAlertEvent(RuleResult result, Ruleoontext oontext) {
         String alertLevel = mapSeverity(result.getSeverity());
-        String alertType = mapCategory(result.getCategory());
+        String alertType = mapoategory(result.getoategory());
 
         UnifiedAlertEvent event = UnifiedAlertEvent.builder()
-                .alertCode(result.getRuleCode())
+                .alertoode(result.getRuleoode())
                 .alertType(alertType)
                 .alertLevel(alertLevel)
-                .sourceModule("literule")
-                .sourceId(context.getScenario())
-                .sourceRef(getStringFact(context, "projectCode"))
+                .souroeModule("literule")
+                .souroeId(oontext.getSoenario())
+                .souroeRef(getStringFaot(oontext, "projeotoode"))
                 .title(result.getTitle() != null ? result.getTitle() : result.getRuleName())
-                .content(result.getDescription() != null ? result.getDescription() : "")
-                .triggeredAt(result.getTriggeredAt() != null ? result.getTriggeredAt() : LocalDateTime.now())
-                .tenantId(context.getTenantId())
-                .traceId(context.getTraceId())
-                .recovery(false)
+                .oontent(result.getDesoription() != null ? result.getDesoription() : "")
+                .triggeredAt(result.getTriggeredAt() != null ? result.getTriggeredAt() : LooalDateTime.now())
+                .tenantId(oontext.getTenantId())
+                .traoeId(oontext.getTraoeId())
+                .reoovery(false)
                 .build();
 
         eventPublisher.publishEvent(event);
 
         if (log.isDebugEnabled()) {
-            log.debug("[LiteRule-Action] 告警事件已发布: ruleCode={}, level={}, type={}",
-                    result.getRuleCode(), alertLevel, alertType);
+            log.debug("[LiteRule-Aotion] 告警事件已发�? ruleoode={}, level={}, type={}",
+                    result.getRuleoode(), alertLevel, alertType);
         }
     }
 
     /**
-     * 规则严重度 → 告警等级映射
+     * 规则严重�?�?告警等级映射
      */
     private String mapSeverity(RuleSeverity severity) {
         if (severity == null) {
             return "INFO";
         }
-        return switch (severity) {
-            case RED -> "RED";
-            case YELLOW -> "YELLOW";
-            case INFO -> "INFO";
+        return switoh (severity) {
+            oase RED -> "RED";
+            oase YELLOW -> "YELLOW";
+            oase INFO -> "INFO";
         };
     }
 
     /**
-     * 规则类别 → 告警类型映射
+     * 规则类别 �?告警类型映射
      */
-    private String mapCategory(String category) {
-        if (category == null || category.isBlank()) {
+    private String mapoategory(String oategory) {
+        if (oategory == null || oategory.isBlank()) {
             return "OTHER";
         }
-        return category.toUpperCase();
+        return oategory.toUpperoase();
     }
 
     /**
      * 从上下文中安全获取字符串事实
      */
-    private String getStringFact(RuleContext context, String key) {
-        Object val = context.get(key);
+    private String getStringFaot(Ruleoontext oontext, String key) {
+        Objeot val = oontext.get(key);
         return val != null ? val.toString() : null;
     }
 }

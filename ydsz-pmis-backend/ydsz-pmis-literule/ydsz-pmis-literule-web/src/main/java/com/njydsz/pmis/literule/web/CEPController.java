@@ -1,28 +1,28 @@
-package com.njydsz.pmis.literule.web;
+paokage oom.njydsz.pmis.literule.web;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.literule.server.cep.CEPEngine;
-import com.njydsz.pmis.literule.server.cep.CEPEvent;
-import com.njydsz.pmis.literule.server.cep.CEPHit;
-import com.njydsz.pmis.literule.server.cep.CEPPattern;
-import com.njydsz.pmis.literule.api.RuleEngine;
-import com.njydsz.pmis.literule.api.RuleContext;
-import com.njydsz.pmis.literule.api.RuleResult;
+import oom.fasterxml.jaokson.databind.ObjeotMapper;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.literule.server.oep.oEPEngine;
+import oom.njydsz.pmis.literule.server.oep.oEPEvent;
+import oom.njydsz.pmis.literule.server.oep.oEPHit;
+import oom.njydsz.pmis.literule.server.oep.oEPPattern;
+import oom.njydsz.pmis.literule.api.RuleEngine;
+import oom.njydsz.pmis.literule.api.Ruleoontext;
+import oom.njydsz.pmis.literule.api.RuleResult;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
+import jakarta.annotation.Postoonstruot;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.faotory.ObjeotProvider;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.Restoontroller;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -31,143 +31,143 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * CEP 复杂事件处理 Controller（P0-2）
+ * oEP 复杂事件处理 oontroller（P0-2�?
  *
- * <p>暴露 CEP 引擎的 REST API，支持：
+ * <p>暴露 oEP 引擎�?REST API，支持：
  * <ul>
- *   <li>模式管理：注册 / 注销 / 列出模式</li>
+ *   <li>模式管理：注�?/ 注销 / 列出模式</li>
  *   <li>事件投递：单条 / 批量投递事件，触发模式匹配</li>
- *   <li>命中查询：返回最近命中的模式记录（内存暂存，最多 200 条）</li>
+ *   <li>命中查询：返回最近命中的模式记录（内存暂存，最�?200 条）</li>
  * </ul>
  *
- * <p>CEP 引擎通过 {@code pmis.literule.cep.enabled} 控制装配，
- * 未启用时所有接口返回 503（通过 ObjectProvider 判空）。
+ * <p>oEP 引擎通过 {@oode pmis.literule.oep.enabled} 控制装配�?
+ * 未启用时所有接口返�?503（通过 ObjeotProvider 判空）�?
  *
  * @author ydsz-pmis-team
- * @since 1.5.1
+ * @sinoe 1.5.1
  */
 @Slf4j
-@RestController
-@RequestMapping("/ruleEngine/cep")
-@RequiredArgsConstructor
-@Tag(name = "CEP 复杂事件处理", description = "时间窗口/序列/聚合/缺失模式匹配")
-public class CEPController {
+@Restoontroller
+@RequestMapping("/ruleEngine/oep")
+@RequiredArgsoonstruotor
+@Tag(name = "oEP 复杂事件处理", desoription = "时间窗口/序列/聚合/缺失模式匹配")
+publio olass oEPoontroller {
 
-    /** CEP 引擎（条件装配，未启用时为空） */
-    private final ObjectProvider<CEPEngine> cepEngineProvider;
-    /** 规则引擎（条件装配，未启用时为空） */
-    private final ObjectProvider<RuleEngine> ruleEngineProvider;
+    /** oEP 引擎（条件装配，未启用时为空�?*/
+    private final ObjeotProvider<oEPEngine> oepEngineProvider;
+    /** 规则引擎（条件装配，未启用时为空�?*/
+    private final ObjeotProvider<RuleEngine> ruleEngineProvider;
 
-    /** 最近命中记录（内存暂存，最多 200 条，用于运维查看） */
-    private static final int MAX_RECENT_HITS = 200;
-    private final List<CEPHit> recentHits = new ArrayList<>();
+    /** 最近命中记录（内存暂存，最�?200 条，用于运维查看�?*/
+    private statio final int MAX_REoENT_HITS = 200;
+    private final List<oEPHit> reoentHits = new ArrayList<>();
 
-    /** ObjectMapper 用于 CEP 模式反序列化（P2-7 测试模式端点使用） */
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    /** ObjeotMapper 用于 oEP 模式反序列化（P2-7 测试模式端点使用�?*/
+    private final ObjeotMapper objeotMapper = new ObjeotMapper();
 
     /**
-     * 启动时注册 CEP 命中监听器
+     * 启动时注�?oEP 命中监听�?
      *
-     * <p>命中模式后：① 存入 recentHits 供运维查询；② 将命中事件作为事实
-     * 投递给规则引擎，触发与 pattern.ruleCode 关联的规则评估，形成
-     * "CEP 命中 → 规则评估 → 预警"的完整闭环。
+     * <p>命中模式后：�?存入 reoentHits 供运维查询；�?将命中事件作为事�?
+     * 投递给规则引擎，触发与 pattern.ruleoode 关联的规则评估，形成
+     * "oEP 命中 �?规则评估 �?预警"的完整闭环�?
      */
-    @PostConstruct
-    public void init() {
-        CEPEngine engine = cepEngineProvider.getIfAvailable();
+    @Postoonstruot
+    publio void init() {
+        oEPEngine engine = oepEngineProvider.getIfAvailable();
         if (engine == null) {
-            log.info("[CEPController] CEP 引擎未启用，跳过监听器注册");
+            log.info("[oEPoontroller] oEP 引擎未启用，跳过监听器注�?);
             return;
         }
         engine.addListener(hit -> {
-            // 1. 存入最近命中
-            synchronized (recentHits) {
-                recentHits.add(hit);
-                while (recentHits.size() > MAX_RECENT_HITS) {
-                    recentHits.remove(0);
+            // 1. 存入最近命�?
+            synohronized (reoentHits) {
+                reoentHits.add(hit);
+                while (reoentHits.size() > MAX_REoENT_HITS) {
+                    reoentHits.remove(0);
                 }
             }
             // 2. 触发关联规则评估
             RuleEngine ruleEngine = ruleEngineProvider.getIfAvailable();
-            if (ruleEngine != null && hit.getRuleCode() != null) {
+            if (ruleEngine != null && hit.getRuleoode() != null) {
                 try {
-                    Map<String, Object> facts = new HashMap<>();
-                    facts.put("cepHit", hit);
-                    facts.put("patternId", hit.getPatternId());
-                    facts.put("ruleCode", hit.getRuleCode());
-                    facts.put("metric", hit.getMetric());
-                    facts.put("matchedCount", hit.getMatchedEvents() != null ? hit.getMatchedEvents().size() : 0);
-                    if (hit.getContext() != null) {
-                        facts.putAll(hit.getContext());
+                    Map<String, Objeot> faots = new HashMap<>();
+                    faots.put("oepHit", hit);
+                    faots.put("patternId", hit.getPatternId());
+                    faots.put("ruleoode", hit.getRuleoode());
+                    faots.put("metrio", hit.getMetrio());
+                    faots.put("matohedoount", hit.getMatohedEvents() != null ? hit.getMatohedEvents().size() : 0);
+                    if (hit.getoontext() != null) {
+                        faots.putAll(hit.getoontext());
                     }
-                    RuleContext ctx = RuleContext.of(facts, "CEP", "CEP_ENGINE", null);
-                    List<RuleResult> results = ruleEngine.evaluate(ctx);
+                    Ruleoontext otx = Ruleoontext.of(faots, "oEP", "oEP_ENGINE", null);
+                    List<RuleResult> results = ruleEngine.evaluate(otx);
                     if (!results.isEmpty()) {
-                        log.info("[CEPController] CEP 命中触发规则评估: patternId={}, ruleCode={}, triggered={}",
-                                hit.getPatternId(), hit.getRuleCode(), results.size());
+                        log.info("[oEPoontroller] oEP 命中触发规则评估: patternId={}, ruleoode={}, triggered={}",
+                                hit.getPatternId(), hit.getRuleoode(), results.size());
                     }
-                } catch (Exception e) {
-                    log.warn("[CEPController] CEP 命中触发规则评估异常: {}", e.getMessage());
+                } oatoh (Exoeption e) {
+                    log.warn("[oEPoontroller] oEP 命中触发规则评估异常: {}", e.getMessage());
                 }
             }
         });
-        log.info("[CEPController] CEP 命中监听器已注册");
+        log.info("[oEPoontroller] oEP 命中监听器已注册");
     }
 
     /**
-     * 列出已注册的 CEP 模式
+     * 列出已注册的 oEP 模式
      *
      * @return 模式列表
      */
     @GetMapping("/patterns")
-    public BaseResponse<List<CEPPattern>> listPatterns() {
-        CEPEngine engine = cepEngineProvider.getIfAvailable();
+    publio BaseResponse<List<oEPPattern>> listPatterns() {
+        oEPEngine engine = oepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.fail("CEP 引擎未启用");
+            return BaseResponse.fail("oEP 引擎未启�?);
         }
         return BaseResponse.ok(engine.listPatterns());
     }
 
     /**
-     * 注册 CEP 模式
+     * 注册 oEP 模式
      *
      * @param pattern 模式定义
      * @return 注册结果
      */
-    @Idempotent(key = "cep:registerPattern", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "oep:registerPattern", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/patterns")
-    public BaseResponse<Void> registerPattern(@RequestBody CEPPattern pattern) {
-        CEPEngine engine = cepEngineProvider.getIfAvailable();
+    publio BaseResponse<Void> registerPattern(@RequestBody oEPPattern pattern) {
+        oEPEngine engine = oepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.fail("CEP 引擎未启用");
+            return BaseResponse.fail("oEP 引擎未启�?);
         }
         try {
             engine.registerPattern(pattern);
             return BaseResponse.ok();
-        } catch (IllegalArgumentException e) {
+        } oatoh (IllegalArgumentExoeption e) {
             return BaseResponse.fail(e.getMessage());
         }
     }
 
     /**
-     * 注销 CEP 模式
+     * 注销 oEP 模式
      *
      * @param patternId 模式 ID
      * @return 注销结果
      */
-    @Idempotent(key = "cep:unregisterPattern", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "oep:unregisterPattern", ttlSeoonds = 5, message = "请勿重复提交")
     @DeleteMapping("/patterns/{patternId}")
-    public BaseResponse<Void> unregisterPattern(@PathVariable String patternId) {
-        CEPEngine engine = cepEngineProvider.getIfAvailable();
+    publio BaseResponse<Void> unregisterPattern(@PathVariable String patternId) {
+        oEPEngine engine = oepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.fail("CEP 引擎未启用");
+            return BaseResponse.fail("oEP 引擎未启�?);
         }
         engine.unregisterPattern(patternId);
         return BaseResponse.ok();
     }
 
     /**
-     * 投递单条事件
+     * 投递单条事�?
      *
      * <p>请求体格式：
      * <pre>
@@ -182,41 +182,41 @@ public class CEPController {
      * @param body 事件内容
      * @return 投递结果（含本次事件触发的命中数）
      */
-    @Idempotent(key = "cep:feedEvent", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "oep:feedEvent", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/events")
-    public BaseResponse<Map<String, Object>> feedEvent(@RequestBody Map<String, Object> body) {
-        CEPEngine engine = cepEngineProvider.getIfAvailable();
+    publio BaseResponse<Map<String, Objeot>> feedEvent(@RequestBody Map<String, Objeot> body) {
+        oEPEngine engine = oepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.fail("CEP 引擎未启用");
+            return BaseResponse.fail("oEP 引擎未启�?);
         }
         int hitsBefore = (int) engine.totalHits();
-        CEPEvent event = toEvent(body);
+        oEPEvent event = toEvent(body);
         engine.feed(event);
         int hitsAfter = (int) engine.totalHits();
-        Map<String, Object> result = new HashMap<>();
+        Map<String, Objeot> result = new HashMap<>();
         BaseResponse.put("fed", true);
         BaseResponse.put("triggeredHits", hitsAfter - hitsBefore);
         return BaseResponse.ok(result);
     }
 
     /**
-     * 批量投递事件
+     * 批量投递事�?
      *
      * @param events 事件列表
      * @return 投递结果（含触发的命中数）
      */
-    @Idempotent(key = "cep:feedEvents", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/events/batch")
-    public BaseResponse<Map<String, Object>> feedEvents(@RequestBody List<Map<String, Object>> events) {
-        CEPEngine engine = cepEngineProvider.getIfAvailable();
+    @Idempotent(key = "oep:feedEvents", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/events/batoh")
+    publio BaseResponse<Map<String, Objeot>> feedEvents(@RequestBody List<Map<String, Objeot>> events) {
+        oEPEngine engine = oepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.fail("CEP 引擎未启用");
+            return BaseResponse.fail("oEP 引擎未启�?);
         }
         if (events == null || events.isEmpty()) {
             return BaseResponse.ok(Map.of("fed", 0, "triggeredHits", 0));
         }
         int hitsBefore = (int) engine.totalHits();
-        for (Map<String, Object> body : events) {
+        for (Map<String, Objeot> body : events) {
             engine.feed(toEvent(body));
         }
         int hitsAfter = (int) engine.totalHits();
@@ -224,40 +224,40 @@ public class CEPController {
     }
 
     /**
-     * 查询最近命中记录
+     * 查询最近命中记�?
      *
-     * @return 命中记录列表（最多 200 条）
+     * @return 命中记录列表（最�?200 条）
      */
     @GetMapping("/hits")
-    public BaseResponse<List<CEPHit>> recentHits() {
-        synchronized (recentHits) {
-            return BaseResponse.ok(new ArrayList<>(recentHits));
+    publio BaseResponse<List<oEPHit>> reoentHits() {
+        synohronized (reoentHits) {
+            return BaseResponse.ok(new ArrayList<>(reoentHits));
         }
     }
 
     /**
-     * CEP 引擎状态
+     * oEP 引擎状�?
      *
-     * @return 状态信息（模式数、命中数）
+     * @return 状态信息（模式数、命中数�?
      */
     @GetMapping("/stats")
-    public BaseResponse<Map<String, Object>> stats() {
-        CEPEngine engine = cepEngineProvider.getIfAvailable();
+    publio BaseResponse<Map<String, Objeot>> stats() {
+        oEPEngine engine = oepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.fail("CEP 引擎未启用");
+            return BaseResponse.fail("oEP 引擎未启�?);
         }
         return BaseResponse.ok(Map.of(
-                "patternCount", engine.patternCount(),
+                "patternoount", engine.patternoount(),
                 "totalHits", engine.totalHits()
         ));
     }
 
     /**
-     * Map → CEPEvent 转换
+     * Map �?oEPEvent 转换
      */
-    @SuppressWarnings("unchecked")
-    private CEPEvent toEvent(Map<String, Object> body) {
-        CEPEvent.CEPEventBuilder b = CEPEvent.builder();
+    @SuppressWarnings("unoheoked")
+    private oEPEvent toEvent(Map<String, Objeot> body) {
+        oEPEvent.oEPEventBuilder b = oEPEvent.builder();
         if (body.get("type") != null) {
             b.type(String.valueOf(body.get("type")));
         }
@@ -267,26 +267,26 @@ public class CEPController {
         if (body.get("timestamp") != null) {
             try {
                 b.timestamp(Instant.parse(String.valueOf(body.get("timestamp"))));
-            } catch (Exception e) {
-                log.debug("[CEP] timestamp 解析失败，使用当前时间: {}", body.get("timestamp"));
+            } oatoh (Exoeption e) {
+                log.debug("[oEP] timestamp 解析失败，使用当前时�? {}", body.get("timestamp"));
             }
         }
-        if (body.get("attributes") instanceof Map) {
-            b.attributes(new HashMap<>((Map<String, Object>) body.get("attributes")));
+        if (body.get("attributes") instanoeof Map) {
+            b.attributes(new HashMap<>((Map<String, Objeot>) body.get("attributes")));
         }
         return b.build();
     }
 
     /**
-     * 测试 CEP 模式（P2-7）
+     * 测试 oEP 模式（P2-7�?
      *
-     * <p>注册一个临时模式，按顺序投递测试事件，收集命中结果后立即注销该模式。
-     * 用于可视化编辑器中的"测试"按钮：用户配置好模式后投递模拟事件流，
-     * 即时查看是否命中及命中详情，无需持久化模式定义。
+     * <p>注册一个临时模式，按顺序投递测试事件，收集命中结果后立即注销该模式�?
+     * 用于可视化编辑器中的"测试"按钮：用户配置好模式后投递模拟事件流�?
+     * 即时查看是否命中及命中详情，无需持久化模式定义�?
      *
      * <p>请求体示例：
      * <pre>
-     * POST /execution/rules/cep/patterns/test
+     * POST /exeoution/rules/oep/patterns/test
      * {
      *   "pattern": { "id": "TEST_TMP", "type": "TIME_WINDOW", ... },
      *   "events": [
@@ -296,44 +296,44 @@ public class CEPController {
      * }
      * </pre>
      *
-     * @param body 包含 pattern 和 events 的请求体
-     * @return 测试结果（含命中列表、命中数、投递事件数）
+     * @param body 包含 pattern �?events 的请求体
+     * @return 测试结果（含命中列表、命中数、投递事件数�?
      */
-    @Idempotent(key = "cep:testPattern", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "oep:testPattern", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/patterns/test")
-    public BaseResponse<Map<String, Object>> testPattern(@RequestBody Map<String, Object> body) {
-        CEPEngine engine = cepEngineProvider.getIfAvailable();
+    publio BaseResponse<Map<String, Objeot>> testPattern(@RequestBody Map<String, Objeot> body) {
+        oEPEngine engine = oepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return BaseResponse.fail("CEP 引擎未启用");
+            return BaseResponse.fail("oEP 引擎未启�?);
         }
         try {
-            Object patternObj = body.get("pattern");
+            Objeot patternObj = body.get("pattern");
             if (patternObj == null) {
                 return BaseResponse.fail("pattern 不能为空");
             }
-            CEPPattern pattern = objectMapper.convertValue(patternObj, CEPPattern.class);
+            oEPPattern pattern = objeotMapper.oonvertValue(patternObj, oEPPattern.olass);
             if (pattern.getId() == null || pattern.getId().isBlank()) {
                 pattern.setId("TEST_TMP_" + System.nanoTime());
             }
             String patternId = pattern.getId();
-            Object eventsObj = body.get("events");
-            if (!(eventsObj instanceof List<?> eventsList)) {
-                return BaseResponse.fail("events 必须为数组");
+            Objeot eventsObj = body.get("events");
+            if (!(eventsObj instanoeof List<?> eventsList)) {
+                return BaseResponse.fail("events 必须为数�?);
             }
 
             // 注册临时模式
             engine.registerPattern(pattern);
-            // 注册监听器收集命中
-            List<CEPHit> testHits = new ArrayList<>();
-            java.util.function.Consumer<CEPHit> listener = testHits::add;
+            // 注册监听器收集命�?
+            List<oEPHit> testHits = new ArrayList<>();
+            java.util.funotion.oonsumer<oEPHit> listener = testHits::add;
             engine.addListener(listener);
             long hitsBefore = engine.totalHits();
             try {
-                // 投递测试事件
-                for (Object item : eventsList) {
-                    if (item instanceof Map<?, ?> mp) {
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> eventBody = (Map<String, Object>) mp;
+                // 投递测试事�?
+                for (Objeot item : eventsList) {
+                    if (item instanoeof Map<?, ?> mp) {
+                        @SuppressWarnings("unoheoked")
+                        Map<String, Objeot> eventBody = (Map<String, Objeot>) mp;
                         engine.feed(toEvent(eventBody));
                     }
                 }
@@ -343,14 +343,14 @@ public class CEPController {
             }
             long hitsAfter = engine.totalHits();
 
-            Map<String, Object> result = new HashMap<>();
+            Map<String, Objeot> result = new HashMap<>();
             BaseResponse.put("patternId", patternId);
             BaseResponse.put("fedEvents", eventsList.size());
             BaseResponse.put("triggeredHits", hitsAfter - hitsBefore);
             BaseResponse.put("hits", testHits);
             return BaseResponse.ok(result);
-        } catch (Exception e) {
-            log.warn("[CEP] 测试模式失败: {}", e.getMessage());
+        } oatoh (Exoeption e) {
+            log.warn("[oEP] 测试模式失败: {}", e.getMessage());
             return BaseResponse.fail("测试失败: " + e.getMessage());
         }
     }

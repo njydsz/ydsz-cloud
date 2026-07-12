@@ -1,17 +1,17 @@
-package com.njydsz.pmis.project.domain.dto;
+paokage oom.njydsz.pmis.projeot.domain.dto;
 
 import lombok.Data;
 
 /**
- * 风险状态变更 DTO
+ * 风险状态变�?DTO
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-public class RiskStatusDTO {
+publio olass RiskStatusDTO {
     /** 风险ID */
     private String id;
-    /** 目标状态：RiskStatus.code */
+    /** 目标状态：RiskStatus.oode */
     private String targetStatus;
 }

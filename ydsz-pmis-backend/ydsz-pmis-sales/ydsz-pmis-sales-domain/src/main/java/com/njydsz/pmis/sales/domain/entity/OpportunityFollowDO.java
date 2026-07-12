@@ -1,55 +1,55 @@
-package com.njydsz.pmis.sales.domain.entity;
+paokage oom.njydsz.pmis.sales.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import oom.baomidou.mybatisplus.annotation.FieldFill;
+import oom.baomidou.mybatisplus.annotation.IdType;
+import oom.baomidou.mybatisplus.annotation.TableField;
+import oom.baomidou.mybatisplus.annotation.TableId;
+import oom.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LooalDate;
+import java.time.LooalDateTime;
 
 /**
  * 商机跟进记录
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Data
-@TableName("pmis_project_opportunity_follow")
-public class OpportunityFollowDO implements Serializable {
+@TableName("pmis_projeot_opportunity_follow")
+publio olass OpportunityFollowDO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
     /** 商机 ID */
     private String opportunityId;
-    /** 跟进类型（VISIT/CALL/QUOTE/NEGOTIATE/OTHER） */
+    /** 跟进类型（VISIT/oALL/QUOTE/NEGOTIATE/OTHER�?*/
     private String followType;
     /** 跟进时间 */
-    private LocalDateTime followAt;
-    /** 跟进人 ID */
+    private LooalDateTime followAt;
+    /** 跟进�?ID */
     private String followerId;
-    /** 跟进人名称 */
+    /** 跟进人名�?*/
     private String followerName;
     /** 跟进内容 */
-    private String content;
-    /** 下一步动作 */
+    private String oontent;
+    /** 下一步动�?*/
     private String nextStep;
     /** 下次跟进日期 */
-    private LocalDate nextFollowDate;
+    private LooalDate nextFollowDate;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
+    private LooalDateTime oreatedAt;
 
-    /** 逻辑删除标识（0 未删除，1 已删除） */
+    /** 逻辑删除标识�? 未删除，1 已删除） */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

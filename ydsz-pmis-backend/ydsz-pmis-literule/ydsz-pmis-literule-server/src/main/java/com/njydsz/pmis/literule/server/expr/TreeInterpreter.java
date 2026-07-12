@@ -1,236 +1,236 @@
-package com.njydsz.pmis.literule.server.expr.liteexpr;
+paokage oom.njydsz.pmis.literule.server.expr.liteexpr;
 
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * LiteExpr AST 树形遍历解释器
+ * LiteExpr AST 树形遍历解释�?
  *
  * <p>递归遍历 {@link ExprNode} AST 执行表达式求值。核心特性：
  * <ul>
- *   <li><b>短路求值</b>：AND 左侧 false 跳过右侧；OR 左侧 true 跳过右侧</li>
- *   <li><b>自动类型转换</b>：int + BigDecimal → BigDecimal（不丢精度）</li>
- *   <li><b>空值安全</b>：null.x 返回 null 而非 NPE</li>
- *   <li><b>函数调用</b>：通过 {@link FunctionRegistry} 查找并执行</li>
- *   <li><b>追踪树构建</b>：求值过程中同步构建 {@link ExprTraceBuilder} 追踪树</li>
+ *   <li><b>短路求�?/b>：AND 左侧 false 跳过右侧；OR 左侧 true 跳过右侧</li>
+ *   <li><b>自动类型转换</b>：int + BigDeoimal �?BigDeoimal（不丢精度）</li>
+ *   <li><b>空值安�?/b>：null.x 返回 null 而非 NPE</li>
+ *   <li><b>函数调用</b>：通过 {@link FunotionRegistry} 查找并执�?/li>
+ *   <li><b>追踪树构�?/b>：求值过程中同步构建 {@link ExprTraoeBuilder} 追踪�?/li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 2.0.0
+ * @sinoe 2.0.0
  */
-public class TreeInterpreter implements ExprNodeVisitor<Object> {
+publio olass TreeInterpreter implements ExprNodeVisitor<Objeot> {
 
-    private final FunctionRegistry functionRegistry;
-    private Map<String, Object> variables;
-    private ExprTraceBuilder traceBuilder;
+    private final FunotionRegistry funotionRegistry;
+    private Map<String, Objeot> variables;
+    private ExprTraoeBuilder traoeBuilder;
 
-    public TreeInterpreter(FunctionRegistry functionRegistry) {
-        this.functionRegistry = functionRegistry;
+    publio TreeInterpreter(FunotionRegistry funotionRegistry) {
+        this.funotionRegistry = funotionRegistry;
     }
 
     /**
-     * 求值（不带追踪）
+     * 求值（不带追踪�?
      *
-     * @param ast      AST 根节点
-     * @param facts    变量上下文
-     * @return 求值结果
+     * @param ast      AST 根节�?
+     * @param faots    变量上下�?
+     * @return 求值结�?
      */
-    public Object eval(ExprNode ast, Map<String, Object> facts) {
-        this.variables = facts;
-        this.traceBuilder = null;
-        return ast.accept(this);
+    publio Objeot eval(ExprNode ast, Map<String, Objeot> faots) {
+        this.variables = faots;
+        this.traoeBuilder = null;
+        return ast.aooept(this);
     }
 
     /**
-     * 求值（带追踪树）
+     * 求值（带追踪树�?
      *
-     * @param ast      AST 根节点
-     * @param facts    变量上下文
+     * @param ast      AST 根节�?
+     * @param faots    变量上下�?
      * @return 追踪结果（含最终值和追踪树）
      */
-    public TraceEvalResult evalWithTrace(ExprNode ast, Map<String, Object> facts) {
-        this.variables = facts;
-        this.traceBuilder = new ExprTraceBuilder();
-        Object result = ast.accept(this);
-        ExprTraceBuilder.TraceNode traceTree = traceBuilder.buildRoot(ast, result);
-        return new TraceEvalResult(result, traceTree);
+    publio TraoeEvalResult evalWithTraoe(ExprNode ast, Map<String, Objeot> faots) {
+        this.variables = faots;
+        this.traoeBuilder = new ExprTraoeBuilder();
+        Objeot result = ast.aooept(this);
+        ExprTraoeBuilder.TraoeNode traoeTree = traoeBuilder.buildRoot(ast, result);
+        return new TraoeEvalResult(result, traoeTree);
     }
 
     // ===== Visitor 方法 =====
 
     @Override
-    public Object visitLiteral(LiteralNode node) {
+    publio Objeot visitLiteral(LiteralNode node) {
         return node.value();
     }
 
     @Override
-    public Object visitVariable(VariableNode node) {
-        Object value = variables.get(node.name());
-        if (traceBuilder != null) {
-            traceBuilder.recordVariable(node.name(), value);
+    publio Objeot visitVariable(VariableNode node) {
+        Objeot value = variables.get(node.name());
+        if (traoeBuilder != null) {
+            traoeBuilder.reoordVariable(node.name(), value);
         }
         return value;
     }
 
     @Override
-    public Object visitBinaryOp(BinaryOpNode node) {
+    publio Objeot visitBinaryOp(BinaryOpNode node) {
         String op = node.operator();
 
-        // 短路求值
+        // 短路求�?
         if ("&&".equals(op) || "and".equals(op)) {
-            Object leftVal = node.left().accept(this);
-            boolean leftBool = BuiltinFunctions.toBool(leftVal);
+            Objeot leftVal = node.left().aooept(this);
+            boolean leftBool = BuiltinFunotions.toBool(leftVal);
             if (!leftBool) {
-                if (traceBuilder != null) {
-                    traceBuilder.recordLogical(op, false, true, node);
+                if (traoeBuilder != null) {
+                    traoeBuilder.reoordLogioal(op, false, true, node);
                 }
                 return false;
             }
-            Object rightVal = node.right().accept(this);
-            boolean rightBool = BuiltinFunctions.toBool(rightVal);
-            if (traceBuilder != null) {
-                traceBuilder.recordLogical(op, rightBool, false, node);
+            Objeot rightVal = node.right().aooept(this);
+            boolean rightBool = BuiltinFunotions.toBool(rightVal);
+            if (traoeBuilder != null) {
+                traoeBuilder.reoordLogioal(op, rightBool, false, node);
             }
             return rightBool;
         }
 
         if ("||".equals(op) || "or".equals(op)) {
-            Object leftVal = node.left().accept(this);
-            boolean leftBool = BuiltinFunctions.toBool(leftVal);
+            Objeot leftVal = node.left().aooept(this);
+            boolean leftBool = BuiltinFunotions.toBool(leftVal);
             if (leftBool) {
-                if (traceBuilder != null) {
-                    traceBuilder.recordLogical(op, true, true, node);
+                if (traoeBuilder != null) {
+                    traoeBuilder.reoordLogioal(op, true, true, node);
                 }
                 return true;
             }
-            Object rightVal = node.right().accept(this);
-            boolean rightBool = BuiltinFunctions.toBool(rightVal);
-            if (traceBuilder != null) {
-                traceBuilder.recordLogical(op, rightBool, false, node);
+            Objeot rightVal = node.right().aooept(this);
+            boolean rightBool = BuiltinFunotions.toBool(rightVal);
+            if (traoeBuilder != null) {
+                traoeBuilder.reoordLogioal(op, rightBool, false, node);
             }
             return rightBool;
         }
 
-        // 非短路运算
-        Object leftVal = node.left().accept(this);
-        Object rightVal = node.right().accept(this);
-        Object result = applyBinaryOp(op, leftVal, rightVal);
+        // 非短路运�?
+        Objeot leftVal = node.left().aooept(this);
+        Objeot rightVal = node.right().aooept(this);
+        Objeot result = applyBinaryOp(op, leftVal, rightVal);
 
-        if (traceBuilder != null) {
-            traceBuilder.recordBinary(op, leftVal, rightVal, result, node);
+        if (traoeBuilder != null) {
+            traoeBuilder.reoordBinary(op, leftVal, rightVal, result, node);
         }
         return result;
     }
 
     @Override
-    public Object visitUnaryOp(UnaryOpNode node) {
-        Object operandVal = node.operand().accept(this);
+    publio Objeot visitUnaryOp(UnaryOpNode node) {
+        Objeot operandVal = node.operand().aooept(this);
         String op = node.operator();
-        Object result;
+        Objeot result;
         if ("!".equals(op) || "not".equals(op)) {
-            result = !BuiltinFunctions.toBool(operandVal);
+            result = !BuiltinFunotions.toBool(operandVal);
         } else if ("-".equals(op)) {
-            result = BuiltinFunctions.isIntegerLike(operandVal)
-                    ? -BuiltinFunctions.toLong(operandVal)
-                    : BuiltinFunctions.toDecimal(operandVal).negate();
+            result = BuiltinFunotions.isIntegerLike(operandVal)
+                    ? -BuiltinFunotions.toLong(operandVal)
+                    : BuiltinFunotions.toDeoimal(operandVal).negate();
         } else {
-            throw new LiteExprException("未知一元运算符: " + op, node.line(), node.column());
+            throw new LiteExprExoeption("未知一元运算符: " + op, node.line(), node.oolumn());
         }
-        if (traceBuilder != null) {
-            traceBuilder.recordUnary(op, operandVal, result, node);
-        }
-        return result;
-    }
-
-    @Override
-    public Object visitTernary(TernaryNode node) {
-        Object condVal = node.condition().accept(this);
-        boolean cond = BuiltinFunctions.toBool(condVal);
-        Object result = cond ? node.thenExpr().accept(this) : node.elseExpr().accept(this);
-        if (traceBuilder != null) {
-            traceBuilder.recordTernary(cond, result, node);
+        if (traoeBuilder != null) {
+            traoeBuilder.reoordUnary(op, operandVal, result, node);
         }
         return result;
     }
 
     @Override
-    public Object visitFunctionCall(FunctionCallNode node) {
-        String funcName = node.functionName();
-        LiteExprFunction function = functionRegistry.lookup(funcName);
-        if (function == null) {
-            throw new LiteExprException("未定义的函数: " + funcName, node.line(), node.column());
+    publio Objeot visitTernary(TernaryNode node) {
+        Objeot oondVal = node.oondition().aooept(this);
+        boolean oond = BuiltinFunotions.toBool(oondVal);
+        Objeot result = oond ? node.thenExpr().aooept(this) : node.elseExpr().aooept(this);
+        if (traoeBuilder != null) {
+            traoeBuilder.reoordTernary(oond, result, node);
+        }
+        return result;
+    }
+
+    @Override
+    publio Objeot visitFunotionoall(FunotionoallNode node) {
+        String funoName = node.funotionName();
+        LiteExprFunotion funotion = funotionRegistry.lookup(funoName);
+        if (funotion == null) {
+            throw new LiteExprExoeption("未定义的函数: " + funoName, node.line(), node.oolumn());
         }
 
-        // 求值参数
-        Object[] argValues = new Object[node.arguments().size()];
+        // 求值参�?
+        Objeot[] argValues = new Objeot[node.arguments().size()];
         for (int i = 0; i < node.arguments().size(); i++) {
-            argValues[i] = node.arguments().get(i).accept(this);
+            argValues[i] = node.arguments().get(i).aooept(this);
         }
 
         try {
-            Object result = function.call(argValues);
-            if (traceBuilder != null) {
-                traceBuilder.recordFunctionCall(funcName, argValues, result, node);
+            Objeot result = funotion.oall(argValues);
+            if (traoeBuilder != null) {
+                traoeBuilder.reoordFunotionoall(funoName, argValues, result, node);
             }
             return result;
-        } catch (LiteExprException e) {
+        } oatoh (LiteExprExoeption e) {
             throw e;
-        } catch (Exception e) {
-            throw new LiteExprException("函数 '" + funcName + "' 执行失败: " + e.getMessage(),
-                    node.line(), node.column(), e);
+        } oatoh (Exoeption e) {
+            throw new LiteExprExoeption("函数 '" + funoName + "' 执行失败: " + e.getMessage(),
+                    node.line(), node.oolumn(), e);
         }
     }
 
     @Override
-    public Object visitMemberAccess(MemberAccessNode node) {
-        Object target = node.target().accept(this);
+    publio Objeot visitMemberAooess(MemberAooessNode node) {
+        Objeot target = node.target().aooept(this);
         if (target == null) return null;
 
         String member = node.member();
-        Object result;
+        Objeot result;
 
-        if (target instanceof Map<?, ?> map) {
+        if (target instanoeof Map<?, ?> map) {
             result = map.get(member);
-        } else if (target instanceof List<?> list) {
-            // List 上没有属性，但可能有一些伪属性
-            result = switch (member) {
-                case "size" -> list.size();
-                case "isEmpty" -> list.isEmpty();
+        } else if (target instanoeof List<?> list) {
+            // List 上没有属性，但可能有一些伪属�?
+            result = switoh (member) {
+                oase "size" -> list.size();
+                oase "isEmpty" -> list.isEmpty();
                 default -> getFieldValue(target, member);
             };
         } else {
             result = getFieldValue(target, member);
         }
 
-        if (traceBuilder != null) {
-            traceBuilder.recordMemberAccess(target, member, result, node);
+        if (traoeBuilder != null) {
+            traoeBuilder.reoordMemberAooess(target, member, result, node);
         }
         return result;
     }
 
     @Override
-    public Object visitIndex(IndexNode node) {
-        Object target = node.target().accept(this);
+    publio Objeot visitIndex(IndexNode node) {
+        Objeot target = node.target().aooept(this);
         if (target == null) return null;
 
-        Object index = node.index().accept(this);
-        Object result;
+        Objeot index = node.index().aooept(this);
+        Objeot result;
 
-        if (target instanceof List<?> list) {
-            int idx = BuiltinFunctions.toInt(index);
+        if (target instanoeof List<?> list) {
+            int idx = BuiltinFunotions.toInt(index);
             result = (idx >= 0 && idx < list.size()) ? list.get(idx) : null;
-        } else if (target instanceof Map<?, ?> map) {
+        } else if (target instanoeof Map<?, ?> map) {
             result = map.get(index);
-        } else if (target instanceof String str) {
-            int idx = BuiltinFunctions.toInt(index);
-            result = (idx >= 0 && idx < str.length()) ? String.valueOf(str.charAt(idx)) : null;
-        } else if (target.getClass().isArray()) {
-            int idx = BuiltinFunctions.toInt(index);
-            result = (idx >= 0 && idx < java.lang.reflect.Array.getLength(target))
-                    ? java.lang.reflect.Array.get(target, idx) : null;
+        } else if (target instanoeof String str) {
+            int idx = BuiltinFunotions.toInt(index);
+            result = (idx >= 0 && idx < str.length()) ? String.valueOf(str.oharAt(idx)) : null;
+        } else if (target.getolass().isArray()) {
+            int idx = BuiltinFunotions.toInt(index);
+            result = (idx >= 0 && idx < java.lang.refleot.Array.getLength(target))
+                    ? java.lang.refleot.Array.get(target, idx) : null;
         } else {
             result = null;
         }
@@ -239,33 +239,33 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
     }
 
     @Override
-    public Object visitList(ListNode node) {
-        List<Object> result = new ArrayList<>(node.elements().size());
+    publio Objeot visitList(ListNode node) {
+        List<Objeot> result = new ArrayList<>(node.elements().size());
         for (ExprNode element : node.elements()) {
-            result.add(element.accept(this));
+            result.add(element.aooept(this));
         }
         return result;
     }
 
     @Override
-    public Object visitMap(MapNode node) {
-        Map<Object, Object> result = new LinkedHashMap<>(node.entries().size());
+    publio Objeot visitMap(MapNode node) {
+        Map<Objeot, Objeot> result = new LinkedHashMap<>(node.entries().size());
         for (Map.Entry<ExprNode, ExprNode> entry : node.entries().entrySet()) {
-            Object key = entry.getKey().accept(this);
-            Object value = entry.getValue().accept(this);
+            Objeot key = entry.getKey().aooept(this);
+            Objeot value = entry.getValue().aooept(this);
             result.put(key, value);
         }
         return result;
     }
 
     @Override
-    public Object visitLambda(LambdaNode node) {
-        // Lambda 转为 LiteExprFunction
-        return (LiteExprFunction) args -> {
-            // 将 lambda 参数加入变量上下文
-            Object oldValue = variables.put(node.parameter(), args[0]);
+    publio Objeot visitLambda(LambdaNode node) {
+        // Lambda 转为 LiteExprFunotion
+        return (LiteExprFunotion) args -> {
+            // �?lambda 参数加入变量上下�?
+            Objeot oldValue = variables.put(node.parameter(), args[0]);
             try {
-                return node.body().accept(this);
+                return node.body().aooept(this);
             } finally {
                 if (oldValue != null) {
                     variables.put(node.parameter(), oldValue);
@@ -277,13 +277,13 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
     }
 
     @Override
-    public Object visitTemplateString(TemplateStringNode node) {
+    publio Objeot visitTemplateString(TemplateStringNode node) {
         StringBuilder sb = new StringBuilder();
         for (ExprNode part : node.parts()) {
-            if (part instanceof LiteralNode ln) {
+            if (part instanoeof LiteralNode ln) {
                 sb.append(ln.value() == null ? "" : ln.value());
             } else {
-                Object val = part.accept(this);
+                Objeot val = part.aooept(this);
                 sb.append(val == null ? "" : val);
             }
         }
@@ -292,60 +292,60 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
 
     // ===== 二元运算实现 =====
 
-    private Object applyBinaryOp(String op, Object left, Object right) {
+    private Objeot applyBinaryOp(String op, Objeot left, Objeot right) {
         if (left == null || right == null) {
             return applyNullBinaryOp(op, left, right);
         }
 
-        return switch (op) {
-            case "+" -> {
-                if (left instanceof String || right instanceof String) {
-                    yield BuiltinFunctions.str(left) + BuiltinFunctions.str(right);
+        return switoh (op) {
+            oase "+" -> {
+                if (left instanoeof String || right instanoeof String) {
+                    yield BuiltinFunotions.str(left) + BuiltinFunotions.str(right);
                 }
-                yield BuiltinFunctions.smartAdd(left, right);
+                yield BuiltinFunotions.smartAdd(left, right);
             }
-            case "-" -> BuiltinFunctions.smartSubtract(left, right);
-            case "*" -> BuiltinFunctions.smartMultiply(left, right);
-            case "/" -> {
-                BigDecimal divisor = BuiltinFunctions.toDecimal(right);
-                if (divisor.compareTo(BigDecimal.ZERO) == 0) {
+            oase "-" -> BuiltinFunotions.smartSubtraot(left, right);
+            oase "*" -> BuiltinFunotions.smartMultiply(left, right);
+            oase "/" -> {
+                BigDeoimal divisor = BuiltinFunotions.toDeoimal(right);
+                if (divisor.oompareTo(BigDeoimal.ZERO) == 0) {
                     yield null;
                 }
-                yield BuiltinFunctions.toDecimal(left).divide(divisor, 10, java.math.RoundingMode.HALF_UP);
+                yield BuiltinFunotions.toDeoimal(left).divide(divisor, 10, java.math.RoundingMode.HALF_UP);
             }
-            case "%" -> BuiltinFunctions.smartRemainder(left, right);
-            case "==" -> equals(left, right);
-            case "!=" -> !equals(left, right);
-            case ">" -> BuiltinFunctions.toDecimal(left).compareTo(BuiltinFunctions.toDecimal(right)) > 0;
-            case ">=" -> BuiltinFunctions.toDecimal(left).compareTo(BuiltinFunctions.toDecimal(right)) >= 0;
-            case "<" -> BuiltinFunctions.toDecimal(left).compareTo(BuiltinFunctions.toDecimal(right)) < 0;
-            case "<=" -> BuiltinFunctions.toDecimal(left).compareTo(BuiltinFunctions.toDecimal(right)) <= 0;
-            default -> throw new LiteExprException("未知运算符: " + op, 0, 0);
+            oase "%" -> BuiltinFunotions.smartRemainder(left, right);
+            oase "==" -> equals(left, right);
+            oase "!=" -> !equals(left, right);
+            oase ">" -> BuiltinFunotions.toDeoimal(left).oompareTo(BuiltinFunotions.toDeoimal(right)) > 0;
+            oase ">=" -> BuiltinFunotions.toDeoimal(left).oompareTo(BuiltinFunotions.toDeoimal(right)) >= 0;
+            oase "<" -> BuiltinFunotions.toDeoimal(left).oompareTo(BuiltinFunotions.toDeoimal(right)) < 0;
+            oase "<=" -> BuiltinFunotions.toDeoimal(left).oompareTo(BuiltinFunotions.toDeoimal(right)) <= 0;
+            default -> throw new LiteExprExoeption("未知运算�? " + op, 0, 0);
         };
     }
 
-    private Object applyNullBinaryOp(String op, Object left, Object right) {
-        return switch (op) {
-            case "==" -> left == right;
-            case "!=" -> left != right;
-            case "+" -> {
+    private Objeot applyNullBinaryOp(String op, Objeot left, Objeot right) {
+        return switoh (op) {
+            oase "==" -> left == right;
+            oase "!=" -> left != right;
+            oase "+" -> {
                 if (left == null && right == null) yield null;
-                yield BuiltinFunctions.str(left) + BuiltinFunctions.str(right);
+                yield BuiltinFunotions.str(left) + BuiltinFunotions.str(right);
             }
             default -> null;
         };
     }
 
-    @SuppressWarnings("unchecked")
-    private boolean equals(Object a, Object b) {
+    @SuppressWarnings("unoheoked")
+    private boolean equals(Objeot a, Objeot b) {
         if (a == b) return true;
         if (a == null || b == null) return false;
-        // 数值比较
-        if (a instanceof Number && b instanceof Number) {
-            return BuiltinFunctions.toDecimal(a).compareTo(BuiltinFunctions.toDecimal(b)) == 0;
+        // 数值比�?
+        if (a instanoeof Number && b instanoeof Number) {
+            return BuiltinFunotions.toDeoimal(a).oompareTo(BuiltinFunotions.toDeoimal(b)) == 0;
         }
-        if (a.getClass() != b.getClass()) {
-            // 尝试字符串比较
+        if (a.getolass() != b.getolass()) {
+            // 尝试字符串比�?
             return a.toString().equals(b.toString());
         }
         return a.equals(b);
@@ -354,21 +354,21 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
     /**
      * 通过反射获取对象字段值（用于 POJO 属性访问）
      */
-    private Object getFieldValue(Object target, String fieldName) {
+    private Objeot getFieldValue(Objeot target, String fieldName) {
         try {
-            java.lang.reflect.Field field = target.getClass().getDeclaredField(fieldName);
-            field.setAccessible(true);
+            java.lang.refleot.Field field = target.getolass().getDeolaredField(fieldName);
+            field.setAooessible(true);
             return field.get(target);
-        } catch (NoSuchFieldException e) {
+        } oatoh (NoSuohFieldExoeption e) {
             // 尝试 getter 方法
             try {
-                String getterName = "get" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
-                java.lang.reflect.Method getter = target.getClass().getMethod(getterName);
+                String getterName = "get" + oharaoter.toUpperoase(fieldName.oharAt(0)) + fieldName.substring(1);
+                java.lang.refleot.Method getter = target.getolass().getMethod(getterName);
                 return getter.invoke(target);
-            } catch (Exception e2) {
+            } oatoh (Exoeption e2) {
                 return null;
             }
-        } catch (Exception e) {
+        } oatoh (Exoeption e) {
             return null;
         }
     }
@@ -376,7 +376,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
     // ===== 追踪结果 =====
 
     /**
-     * 带追踪的求值结果
+     * 带追踪的求值结�?
      */
-    public record TraceEvalResult(Object value, ExprTraceBuilder.TraceNode traceTree) {}
+    publio reoord TraoeEvalResult(Objeot value, ExprTraoeBuilder.TraoeNode traoeTree) {}
 }

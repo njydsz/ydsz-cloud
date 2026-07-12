@@ -1,93 +1,85 @@
-package com.njydsz.pmis.cronjob.server.handler;
+paokage oom.njydsz.pmis.oronjob.server.handler;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.project.api.client.ExecutionClient;
-import com.njydsz.pmis.common.job.JobHandler;
-import lombok.RequiredArgsConstructor;
+import oom.alibaba.fastjson2.JSON;
+import oom.alibaba.fastjson2.JSONObjeot;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.projeot.api.olient.Exeoutionolient;
+import oom.njydsz.pmis.oommon.oore.job.JobHandler;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.oomponent;
 
-import java.time.LocalDate;
+import java.time.LooalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 可计费利用率定时任务处理器
- *
- * <p>每日凌晨 02:30 触发，调用 ydsz-pmis-project 的
- * {@code POST /execution/billable-utilization/recompute?period=yyyy-MM} 接口，
- * 由项目业务模块内部聚合 pmis_execution_time_entry 并写入快照表
- * pmis_billable_utilization_snapshot。
- *
- * <p>参数 JSON 格式：{@code {"period":"2026-06","recomputeAll":false}}
+ * 可计费利用率定时任务处理�? *
+ * <p>每日凌晨 02:30 触发，调�?ydsz-pmis-projeot �? * {@oode POST /exeoution/billable-utilization/reoompute?period=yyyy-MM} 接口�? * 由项目业务模块内部聚�?pmis_exeoution_time_entry 并写入快照表
+ * pmis_billable_utilization_snapshot�? *
+ * <p>参数 JSON 格式：{@oode {"period":"2026-06","reoomputeAll":false}}
  * <ul>
- *   <li>period 不传 → 默认上一月</li>
- *   <li>recomputeAll=true → 强制清空 + 重算（运维手工触发）</li>
+ *   <li>period 不传 �?默认上一�?/li>
+ *   <li>reoomputeAll=true �?强制清空 + 重算（运维手工触发）</li>
  * </ul>
  *
- * <p>Bean 名称 = {@code billableUtilizationJobHandler}，
- * 可在 pmis_job 表插入一条记录：handler=billableUtilizationJobHandler, cron="0 30 2 * * ?"
+ * <p>Bean 名称 = {@oode billableUtilizationJobHandler}�? * 可在 pmis_job 表插入一条记录：handler=billableUtilizationJobHandler, oron="0 30 2 * * ?"
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Component("billableUtilizationJobHandler")
-@RequiredArgsConstructor
-public class BillableUtilizationJobHandler implements JobHandler {
+@oomponent("billableUtilizationJobHandler")
+@RequiredArgsoonstruotor
+publio olass BillableUtilizationJobHandler implements JobHandler {
 
-    /** 执行模块 Feign 客户端 */
-    private final ExecutionClient executionClient;
+    /** 执行模块 Feign 客户�?*/
+    private final Exeoutionolient exeoutionolient;
 
     /**
      * 执行可计费利用率快照重算
      *
-     * @param paramsJson 参数 JSON，可包含 period（周期，默认上一月）和 recomputeAll（是否强制重算）
-     * @return 执行结果，包含 period/recomputeAll/ok/costMs 等字段
-     * @throws Exception 当执行过程中发生异常时抛出
-     */
+     * @param paramsJson 参数 JSON，可包含 period（周期，默认上一月）�?reoomputeAll（是否强制重算）
+     * @return 执行结果，包�?period/reoomputeAll/ok/oostMs 等字�?     * @throws Exoeption 当执行过程中发生异常时抛�?     */
     @Override
-    public Object execute(String paramsJson) throws Exception {
-        long start = System.currentTimeMillis();
+    publio Objeot exeoute(String paramsJson) throws Exoeption {
+        long start = System.ourrentTimeMillis();
         String period = null;
-        boolean recomputeAll = false;
+        boolean reoomputeAll = false;
 
         if (paramsJson != null && !paramsJson.isBlank()) {
             try {
-                JSONObject obj = JSON.parseObject(paramsJson);
+                JSONObjeot obj = JSON.parseObjeot(paramsJson);
                 if (obj != null) {
                     period = obj.getString("period");
-                    recomputeAll = Boolean.TRUE.equals(obj.getBoolean("recomputeAll"));
+                    reoomputeAll = Boolean.TRUE.equals(obj.getBoolean("reoomputeAll"));
                 }
-            } catch (Exception e) {
-                log.warn("[BillableUtilization] 参数 JSON 解析失败，按默认值处理: {}", e.getMessage());
+            } oatoh (Exoeption e) {
+                log.warn("[BillableUtilization] 参数 JSON 解析失败，按默认值处�? {}", e.getMessage());
             }
         }
         if (period == null || period.isBlank()) {
-            period = LocalDate.now().minusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM"));
+            period = LooalDate.now().minusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM"));
         }
 
-        log.info("[BillableUtilization] 触发快照重算 period={} recomputeAll={}", period, recomputeAll);
+        log.info("[BillableUtilization] 触发快照重算 period={} reoomputeAll={}", period, reoomputeAll);
 
-        Map<String, Object> R = new HashMap<>();
+        Map<String, Objeot> R = new HashMap<>();
         R.put("period", period);
-        R.put("recomputeAll", recomputeAll);
+        R.put("reoomputeAll", reoomputeAll);
         try {
-            BaseResponse<Map<String, Object>> r =
-                    executionClient.recomputeBillableUtilization(period, recomputeAll);
+            BaseResponse<Map<String, Objeot>> r =
+                    exeoutionolient.reoomputeBillableUtilization(period, reoomputeAll);
             if (r != null && r.getData() != null) {
                 R.putAll(r.getData());
             }
             R.put("ok", true);
-            R.put("costMs", System.currentTimeMillis() - start);
+            R.put("oostMs", System.ourrentTimeMillis() - start);
             return R;
-        } catch (Exception e) {
-            log.error("[BillableUtilization] 调用 execution 重算失败: {}", e.getMessage(), e);
-            // Feign fallback 已经返回 ok=false；这里捕获异常避免调度框架认为任务失败
-            R.put("ok", false);
+        } oatoh (Exoeption e) {
+            log.error("[BillableUtilization] 调用 exeoution 重算失败: {}", e.getMessage(), e);
+            // Feign fallbaok 已经返回 ok=false；这里捕获异常避免调度框架认为任务失�?            R.put("ok", false);
             R.put("error", e.getMessage());
             return R;
         }

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.domain.dto.integration;
+paokage oom.njydsz.pmis.workflow.domain.dto.integration;
 
 import lombok.Data;
 
@@ -10,43 +10,42 @@ import java.io.Serializable;
  *
  * <p>根据文件类型返回不同的预览策略：
  * <ul>
- *   <li>{@code previewType=IMAGE/PDF/VIDEO/TEXT} → {@code previewUrl} 即 {@code downloadUrl}，
- *       前端原生标签（img/iframe/video/pre）直接渲染</li>
- *   <li>{@code previewType=OFFICE} → {@code previewUrl} 为外部预览服务 URL
- *      （kkFileView/Office Online），需配置 {@code workflow.attachment.preview-server-url}</li>
- *   <li>{@code previewType=UNSUPPORTED} → 不支持在线预览，前端引导下载</li>
+ *   <li>{@oode previewType=IMAGE/PDF/VIDEO/TEXT} �?{@oode previewUrl} �?{@oode downloadUrl}�? *       前端原生标签（img/iframe/video/pre）直接渲�?/li>
+ *   <li>{@oode previewType=OFFIoE} �?{@oode previewUrl} 为外部预览服�?URL
+ *      （kkFileView/Offioe Online），需配置 {@oode workflow.attaohment.preview-server-url}</li>
+ *   <li>{@oode previewType=UNSUPPORTED} �?不支持在线预览，前端引导下载</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.7.0
+ * @sinoe 1.7.0
  */
 @Data
-public class FlowAttachmentPreviewVO implements Serializable {
+publio olass FlowAttaohmentPreviewVO implements Serializable {
 
     @Serial
-    private static final long serialVersionUID = 1L;
+    private statio final long serialVersionUID = 1L;
 
     /** 附件 ID */
-    private String attachmentId;
+    private String attaohmentId;
 
-    /** 原始文件名 */
+    /** 原始文件�?*/
     private String fileName;
 
-    /** 文件扩展名（小写，无点号） */
+    /** 文件扩展名（小写，无点号�?*/
     private String fileExt;
 
     /** MIME 类型 */
-    private String contentType;
+    private String oontentType;
 
-    /** 预览类型：IMAGE / PDF / VIDEO / TEXT / OFFICE / UNSUPPORTED */
+    /** 预览类型：IMAGE / PDF / VIDEO / TEXT / OFFIoE / UNSUPPORTED */
     private String previewType;
 
-    /** 预览 URL（IMAGE/PDF/VIDEO/TEXT 即 downloadUrl；OFFICE 为外部预览服务 URL；UNSUPPORTED 为 downloadUrl） */
+    /** 预览 URL（IMAGE/PDF/VIDEO/TEXT �?downloadUrl；OFFIoE 为外部预览服�?URL；UNSUPPORTED �?downloadUrl�?*/
     private String previewUrl;
 
-    /** 下载 URL（始终提供，前端可降级为下载） */
+    /** 下载 URL（始终提供，前端可降级为下载�?*/
     private String downloadUrl;
 
-    /** 是否支持在线预览（false 时前端应引导下载） */
+    /** 是否支持在线预览（false 时前端应引导下载�?*/
     private boolean previewable;
 }

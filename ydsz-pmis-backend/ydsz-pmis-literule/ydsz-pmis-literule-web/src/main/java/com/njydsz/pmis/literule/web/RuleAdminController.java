@@ -1,95 +1,95 @@
-package com.njydsz.pmis.literule.web;
+paokage oom.njydsz.pmis.literule.web;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.IdempotentExempt;
-import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.literule.server.adaptive.AdaptiveThresholdService;
-import com.njydsz.pmis.literule.server.adaptive.ThresholdAnalysis;
-import com.njydsz.pmis.literule.server.agent.ReActAgentExecutor;
-import com.njydsz.pmis.literule.server.ai.AttributionReport;
-import com.njydsz.pmis.literule.server.ai.RuleAttributionService;
-import com.njydsz.pmis.literule.server.ai.RuleHealthScore;
-import com.njydsz.pmis.literule.server.ai.RuleHealthScoreService;
-import com.njydsz.pmis.literule.server.ai.RuleLLMService;
-import com.njydsz.pmis.literule.server.ai.RuleRecommendation;
-import com.njydsz.pmis.literule.server.ai.RuleRecommendationService;
-import com.njydsz.pmis.literule.api.DecisionTableDefinition;
-import com.njydsz.pmis.literule.api.RuleDefinition;
-import com.njydsz.pmis.literule.api.RuleEngine;
-import com.njydsz.pmis.literule.api.RuleEngineStats;
-import com.njydsz.pmis.literule.api.RulePack;
-import com.njydsz.pmis.literule.api.RuleResult;
-import com.njydsz.pmis.literule.api.RuleSeverity;
-import com.njydsz.pmis.literule.api.RuleStatus;
-import com.njydsz.pmis.literule.api.dto.ExpressionValidateDTO;
-import com.njydsz.pmis.literule.api.dto.RuleABTestDTO;
-import com.njydsz.pmis.literule.api.dto.RuleAiGenerateDTO;
-import com.njydsz.pmis.literule.api.dto.RuleApproveDTO;
-import com.njydsz.pmis.literule.api.dto.RuleBatchCategoryDTO;
-import com.njydsz.pmis.literule.api.dto.RuleBatchPriorityDTO;
-import com.njydsz.pmis.literule.api.dto.RuleBatchToggleDTO;
-import com.njydsz.pmis.literule.api.dto.RuleDelegateDTO;
-import com.njydsz.pmis.literule.api.dto.RuleDependencyAddDTO;
-import com.njydsz.pmis.literule.api.dto.RuleImportDTO;
-import com.njydsz.pmis.literule.api.dto.RuleNL2RuleDTO;
-import com.njydsz.pmis.literule.api.dto.RuleRejectDTO;
-import com.njydsz.pmis.literule.api.dto.RuleStatusChangeDTO;
-import com.njydsz.pmis.literule.api.dto.RuleSubmitReviewDTO;
-import com.njydsz.pmis.literule.api.dto.TestCaseBatchRunDTO;
-import com.njydsz.pmis.literule.server.approval.ApprovalFlow;
-import com.njydsz.pmis.literule.server.approval.ApprovalRecord;
-import com.njydsz.pmis.literule.server.approval.RuleApprovalService;
-import com.njydsz.pmis.literule.server.benchmark.RuleStressTestService;
-import com.njydsz.pmis.literule.server.config.ABTestService;
-import com.njydsz.pmis.literule.server.config.DecisionTableAdminService;
-import com.njydsz.pmis.literule.server.config.RuleAdminService;
-import com.njydsz.pmis.literule.domain.entity.DecisionTableDO;
-import com.njydsz.pmis.literule.domain.entity.RuleABPolicyDO;
-import com.njydsz.pmis.literule.domain.entity.RuleABRollbackDO;
-import com.njydsz.pmis.literule.domain.entity.RuleDependencyDO;
-import com.njydsz.pmis.literule.domain.entity.RuleExecutionTraceDO;
-import com.njydsz.pmis.literule.domain.entity.RuleTemplateDO;
-import com.njydsz.pmis.literule.domain.entity.RuleTestCaseDO;
-import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
-import com.njydsz.pmis.literule.server.expr.ExpressionFunctionDef;
-import com.njydsz.pmis.literule.server.expr.ExpressionPreviewResult;
-import com.njydsz.pmis.literule.server.expr.ExpressionValidationResult;
-import com.njydsz.pmis.literule.server.expr.ExpressionValidationService;
-import com.njydsz.pmis.literule.infra.mapper.DecisionTableMapper;
-import com.njydsz.pmis.literule.infra.mapper.RuleExecutionTraceMapper;
-import com.njydsz.pmis.literule.infra.mapper.RuleTestCaseMapper;
-import com.njydsz.pmis.literule.server.orchestrator.RuleChainGraph;
-import com.njydsz.pmis.literule.server.orchestrator.RuleGraphValidator;
-import com.njydsz.pmis.literule.server.spi.ABTestAutoRollbackProvider;
-import com.njydsz.pmis.literule.server.spi.DecisionTableEvalProvider;
-import com.njydsz.pmis.literule.server.spi.GraphExecutionProvider;
-import com.njydsz.pmis.literule.server.spi.RuleCategoryProvider;
-import com.njydsz.pmis.literule.server.spi.RuleChainGraphProvider;
-import com.njydsz.pmis.literule.server.spi.RuleConflictDetectorProvider;
-import com.njydsz.pmis.literule.server.spi.RuleConflictDetectorProvider.RuleConflictInfo;
-import com.njydsz.pmis.literule.server.spi.RuleDependencyProvider;
-import com.njydsz.pmis.literule.server.spi.RuleGenerationProvider;
-import com.njydsz.pmis.literule.server.spi.RulePackProvider;
-import com.njydsz.pmis.literule.server.spi.RulePackProvider.InstallResult;
-import com.njydsz.pmis.literule.server.spi.RulePackProvider.PackDiff;
-import com.njydsz.pmis.literule.server.spi.RulePackProvider.PackUpdateInfo;
-import com.njydsz.pmis.literule.server.spi.RuleCategoryProvider.CategoryNode;
-import com.njydsz.pmis.literule.server.spi.RuleTemplateProvider;
-import com.njydsz.pmis.literule.server.spi.RuleVersion;
-import com.njydsz.pmis.literule.server.version.RuleVersionDiff;
-import com.njydsz.pmis.literule.server.version.RuleVersionDiffService;
+import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
+import oom.fasterxml.jaokson.databind.ObjeotMapper;
+import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
+import oom.njydsz.pmis.oommon.look.annotation.IdempotentExempt;
+import oom.njydsz.pmis.oommon.audit.annotation.OperationLog;
+import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
+import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import oom.njydsz.pmis.literule.server.adaptive.AdaptiveThresholdServioe;
+import oom.njydsz.pmis.literule.server.adaptive.ThresholdAnalysis;
+import oom.njydsz.pmis.literule.server.agent.ReAotAgentExeoutor;
+import oom.njydsz.pmis.literule.server.ai.AttributionReport;
+import oom.njydsz.pmis.literule.server.ai.RuleAttributionServioe;
+import oom.njydsz.pmis.literule.server.ai.RuleHealthSoore;
+import oom.njydsz.pmis.literule.server.ai.RuleHealthSooreServioe;
+import oom.njydsz.pmis.literule.server.ai.RuleLLMServioe;
+import oom.njydsz.pmis.literule.server.ai.RuleReoommendation;
+import oom.njydsz.pmis.literule.server.ai.RuleReoommendationServioe;
+import oom.njydsz.pmis.literule.api.DeoisionTableDefinition;
+import oom.njydsz.pmis.literule.api.RuleDefinition;
+import oom.njydsz.pmis.literule.api.RuleEngine;
+import oom.njydsz.pmis.literule.api.RuleEngineStats;
+import oom.njydsz.pmis.literule.api.RulePaok;
+import oom.njydsz.pmis.literule.api.RuleResult;
+import oom.njydsz.pmis.literule.api.RuleSeverity;
+import oom.njydsz.pmis.literule.api.RuleStatus;
+import oom.njydsz.pmis.literule.api.dto.ExpressionValidateDTO;
+import oom.njydsz.pmis.literule.api.dto.RuleABTestDTO;
+import oom.njydsz.pmis.literule.api.dto.RuleAiGenerateDTO;
+import oom.njydsz.pmis.literule.api.dto.RuleApproveDTO;
+import oom.njydsz.pmis.literule.api.dto.RuleBatohoategoryDTO;
+import oom.njydsz.pmis.literule.api.dto.RuleBatohPriorityDTO;
+import oom.njydsz.pmis.literule.api.dto.RuleBatohToggleDTO;
+import oom.njydsz.pmis.literule.api.dto.RuleDelegateDTO;
+import oom.njydsz.pmis.literule.api.dto.RuleDependenoyAddDTO;
+import oom.njydsz.pmis.literule.api.dto.RuleImportDTO;
+import oom.njydsz.pmis.literule.api.dto.RuleNL2RuleDTO;
+import oom.njydsz.pmis.literule.api.dto.RuleRejeotDTO;
+import oom.njydsz.pmis.literule.api.dto.RuleStatusohangeDTO;
+import oom.njydsz.pmis.literule.api.dto.RuleSubmitReviewDTO;
+import oom.njydsz.pmis.literule.api.dto.TestoaseBatohRunDTO;
+import oom.njydsz.pmis.literule.server.approval.ApprovalFlow;
+import oom.njydsz.pmis.literule.server.approval.ApprovalReoord;
+import oom.njydsz.pmis.literule.server.approval.RuleApprovalServioe;
+import oom.njydsz.pmis.literule.server.benohmark.RuleStressTestServioe;
+import oom.njydsz.pmis.literule.server.oonfig.ABTestServioe;
+import oom.njydsz.pmis.literule.server.oonfig.DeoisionTableAdminServioe;
+import oom.njydsz.pmis.literule.server.oonfig.RuleAdminServioe;
+import oom.njydsz.pmis.literule.domain.entity.DeoisionTableDO;
+import oom.njydsz.pmis.literule.domain.entity.RuleABPolioyDO;
+import oom.njydsz.pmis.literule.domain.entity.RuleABRollbaokDO;
+import oom.njydsz.pmis.literule.domain.entity.RuleDependenoyDO;
+import oom.njydsz.pmis.literule.domain.entity.RuleExeoutionTraoeDO;
+import oom.njydsz.pmis.literule.domain.entity.RuleTemplateDO;
+import oom.njydsz.pmis.literule.domain.entity.RuleTestoaseDO;
+import oom.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
+import oom.njydsz.pmis.literule.server.expr.ExpressionFunotionDef;
+import oom.njydsz.pmis.literule.server.expr.ExpressionPreviewResult;
+import oom.njydsz.pmis.literule.server.expr.ExpressionValidationResult;
+import oom.njydsz.pmis.literule.server.expr.ExpressionValidationServioe;
+import oom.njydsz.pmis.literule.infra.mapper.DeoisionTableMapper;
+import oom.njydsz.pmis.literule.infra.mapper.RuleExeoutionTraoeMapper;
+import oom.njydsz.pmis.literule.infra.mapper.RuleTestoaseMapper;
+import oom.njydsz.pmis.literule.server.orohestrator.RuleohainGraph;
+import oom.njydsz.pmis.literule.server.orohestrator.RuleGraphValidator;
+import oom.njydsz.pmis.literule.server.spi.ABTestAutoRollbaokProvider;
+import oom.njydsz.pmis.literule.server.spi.DeoisionTableEvalProvider;
+import oom.njydsz.pmis.literule.server.spi.GraphExeoutionProvider;
+import oom.njydsz.pmis.literule.server.spi.RuleoategoryProvider;
+import oom.njydsz.pmis.literule.server.spi.RuleohainGraphProvider;
+import oom.njydsz.pmis.literule.server.spi.RuleoonfliotDeteotorProvider;
+import oom.njydsz.pmis.literule.server.spi.RuleoonfliotDeteotorProvider.RuleoonfliotInfo;
+import oom.njydsz.pmis.literule.server.spi.RuleDependenoyProvider;
+import oom.njydsz.pmis.literule.server.spi.RuleGenerationProvider;
+import oom.njydsz.pmis.literule.server.spi.RulePaokProvider;
+import oom.njydsz.pmis.literule.server.spi.RulePaokProvider.InstallResult;
+import oom.njydsz.pmis.literule.server.spi.RulePaokProvider.PaokDiff;
+import oom.njydsz.pmis.literule.server.spi.RulePaokProvider.PaokUpdateInfo;
+import oom.njydsz.pmis.literule.server.spi.RuleoategoryProvider.oategoryNode;
+import oom.njydsz.pmis.literule.server.spi.RuleTemplateProvider;
+import oom.njydsz.pmis.literule.server.spi.RuleVersion;
+import oom.njydsz.pmis.literule.server.version.RuleVersionDiff;
+import oom.njydsz.pmis.literule.server.version.RuleVersionDiffServioe;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import lombok.RequiredArgsConstructor;
+import jakarta.validation.oonstraints.Max;
+import jakarta.validation.oonstraints.Min;
+import lombok.RequiredArgsoonstruotor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.faotory.ObjeotProvider;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -103,13 +103,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.Restoontroller;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
+import java.io.IOExoeption;
+import java.net.URLEnooder;
+import java.nio.oharset.Standardoharsets;
+import java.time.LooalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -117,94 +117,94 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Objeots;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.funotion.Funotion;
+import java.util.stream.oolleotors;
 
 /**
- * 规则管理 Controller
+ * 规则管理 oontroller
  *
- * <p>提供规则 CRUD、启停、版本管理、dry-run 仿真、执行监控等 REST API。
+ * <p>提供规则 oRUD、启停、版本管理、dry-run 仿真、执行监控等 REST API�?
  *
- * <p>1.6.0 起从 project 模块迁移至 literule 模块，通过 SPI 接口反转依赖，
- * 避免 literule 直接依赖 project 模块。10 个原 project 服务依赖替换为对应 SPI：
+ * <p>1.6.0 起从 projeot 模块迁移�?literule 模块，通过 SPI 接口反转依赖�?
+ * 避免 literule 直接依赖 projeot 模块�?0 个原 projeot 服务依赖替换为对�?SPI�?
  * <ul>
  *   <li>{@link RuleTemplateProvider} - 规则模板市场</li>
  *   <li>{@link RuleGenerationProvider} - AI 辅助规则生成</li>
- *   <li>{@link RuleConflictDetectorProvider} - 规则冲突检测</li>
- *   <li>{@link DecisionTableEvalProvider} - 决策表评估</li>
- *   <li>{@link RuleChainGraphProvider} - 规则链画布</li>
- *   <li>{@link GraphExecutionProvider} - 画布执行</li>
- *   <li>{@link RuleDependencyProvider} - 规则依赖关系</li>
- *   <li>{@link RuleCategoryProvider} - 规则目录树</li>
- *   <li>{@link ABTestAutoRollbackProvider} - AB Test 自动回滚</li>
- *   <li>{@link RulePackProvider} - 规则集市场</li>
+ *   <li>{@link RuleoonfliotDeteotorProvider} - 规则冲突检�?/li>
+ *   <li>{@link DeoisionTableEvalProvider} - 决策表评�?/li>
+ *   <li>{@link RuleohainGraphProvider} - 规则链画�?/li>
+ *   <li>{@link GraphExeoutionProvider} - 画布执行</li>
+ *   <li>{@link RuleDependenoyProvider} - 规则依赖关系</li>
+ *   <li>{@link RuleoategoryProvider} - 规则目录�?/li>
+ *   <li>{@link ABTestAutoRollbaokProvider} - AB Test 自动回滚</li>
+ *   <li>{@link RulePaokProvider} - 规则集市�?/li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @sinoe 1.1.0
  */
 @Slf4j
-@RestController
+@Restoontroller
 @RequestMapping("/ruleEngine/rules")
-@RequiredArgsConstructor
+@RequiredArgsoonstruotor
 @Validated
-@Tag(name = "规则引擎管理", description = "规则 CRUD、版本、dry-run、冲突检测、画布、模板市场、AI 增强、规则集市场")
-public class RuleAdminController {
+@Tag(name = "规则引擎管理", desoription = "规则 oRUD、版本、dry-run、冲突检测、画布、模板市场、AI 增强、规则集市场")
+publio olass RuleAdminoontroller {
 
     /** 规则管理服务 */
-    private final RuleAdminService ruleAdminService;
+    private final RuleAdminServioe ruleAdminServioe;
     /** A/B 测试服务 */
-    private final ABTestService abTestService;
+    private final ABTestServioe abTestServioe;
     /** 规则引擎 */
     private final RuleEngine ruleEngine;
-    /** 规则模板服务（SPI，由 project 模块提供实现） */
+    /** 规则模板服务（SPI，由 projeot 模块提供实现�?*/
     private final RuleTemplateProvider ruleTemplateProvider;
-    /** 规则生成服务（SPI，由 project 模块提供实现） */
+    /** 规则生成服务（SPI，由 projeot 模块提供实现�?*/
     private final RuleGenerationProvider ruleGenerationProvider;
-    /** 规则冲突检测器（SPI，由 project 模块提供实现） */
-    private final RuleConflictDetectorProvider ruleConflictDetectorProvider;
+    /** 规则冲突检测器（SPI，由 projeot 模块提供实现�?*/
+    private final RuleoonfliotDeteotorProvider ruleoonfliotDeteotorProvider;
     /** 规则测试用例 Mapper */
-    private final RuleTestCaseMapper ruleTestCaseMapper;
+    private final RuleTestoaseMapper ruleTestoaseMapper;
     /** 规则执行轨迹 Mapper */
-    private final RuleExecutionTraceMapper ruleExecutionTraceMapper;
-    /** 决策表 Mapper */
-    private final DecisionTableMapper decisionTableMapper;
+    private final RuleExeoutionTraoeMapper ruleExeoutionTraoeMapper;
+    /** 决策�?Mapper */
+    private final DeoisionTableMapper deoisionTableMapper;
     /** JSON 序列化器 */
-    private final ObjectMapper objectMapper;
-    /** 决策表评估服务（SPI，由 project 模块提供实现） */
-    private final DecisionTableEvalProvider decisionTableEvalProvider;
-    /** 表达式校验服务 */
-    private final ExpressionValidationService expressionValidationService;
-    /** 规则链图服务（SPI，由 project 模块提供实现） */
-    private final RuleChainGraphProvider ruleChainGraphProvider;
-    /** 图执行服务（SPI，由 project 模块提供实现） */
-    private final GraphExecutionProvider graphExecutionProvider;
-    /** 规则依赖服务（SPI，由 project 模块提供实现） */
-    private final RuleDependencyProvider ruleDependencyProvider;
-    /** 规则分类树服务（SPI，由 project 模块提供实现） */
-    private final RuleCategoryProvider ruleCategoryProvider;
-    /** A/B 测试自动回滚服务（SPI，由 project 模块提供实现） */
-    private final ABTestAutoRollbackProvider abTestAutoRollbackProvider;
-    /** 规则包服务（SPI，由 project 模块提供实现） */
-    private final RulePackProvider rulePackProvider;
-    // 规则压测服务（P2-9）：可选注入，RuleAdminService 未装配时为空
-    private final ObjectProvider<RuleStressTestService> ruleStressTestServiceProvider;
-    // 决策表管理服务（P0-3）：可选注入，未启用决策表时为空
-    private final ObjectProvider<DecisionTableAdminService> decisionTableAdminServiceProvider;
-    // AI 增强（P2-15）：可选注入，未启用 AI 时为空
-    private final ObjectProvider<RuleLLMService> ruleLLMServiceProvider;
-    private final ObjectProvider<RuleHealthScoreService> ruleHealthScoreServiceProvider;
-    private final ObjectProvider<RuleRecommendationService> ruleRecommendationServiceProvider;
-    // 归因分析服务（P3-3）：可选注入，未启用 AI 时为空
-    private final ObjectProvider<RuleAttributionService> ruleAttributionServiceProvider;
-    // 多级审批流服务（P1-3）：可选注入，未配置 RuleConfigProvider 时为空
-    private final ObjectProvider<RuleApprovalService> ruleApprovalServiceProvider;
-    // ReAct Agent 执行器（P3-5）：可选注入，未启用 AI 时为空
-    private final ObjectProvider<ReActAgentExecutor> reActAgentExecutorProvider;
-    // 自适应阈值分析服务（P3-4）：可选注入，未配置 TraceDataProvider 时为空
-    private final ObjectProvider<AdaptiveThresholdService> adaptiveThresholdServiceProvider;
+    private final ObjeotMapper objeotMapper;
+    /** 决策表评估服务（SPI，由 projeot 模块提供实现�?*/
+    private final DeoisionTableEvalProvider deoisionTableEvalProvider;
+    /** 表达式校验服�?*/
+    private final ExpressionValidationServioe expressionValidationServioe;
+    /** 规则链图服务（SPI，由 projeot 模块提供实现�?*/
+    private final RuleohainGraphProvider ruleohainGraphProvider;
+    /** 图执行服务（SPI，由 projeot 模块提供实现�?*/
+    private final GraphExeoutionProvider graphExeoutionProvider;
+    /** 规则依赖服务（SPI，由 projeot 模块提供实现�?*/
+    private final RuleDependenoyProvider ruleDependenoyProvider;
+    /** 规则分类树服务（SPI，由 projeot 模块提供实现�?*/
+    private final RuleoategoryProvider ruleoategoryProvider;
+    /** A/B 测试自动回滚服务（SPI，由 projeot 模块提供实现�?*/
+    private final ABTestAutoRollbaokProvider abTestAutoRollbaokProvider;
+    /** 规则包服务（SPI，由 projeot 模块提供实现�?*/
+    private final RulePaokProvider rulePaokProvider;
+    // 规则压测服务（P2-9）：可选注入，RuleAdminServioe 未装配时为空
+    private final ObjeotProvider<RuleStressTestServioe> ruleStressTestServioeProvider;
+    // 决策表管理服务（P0-3）：可选注入，未启用决策表时为�?
+    private final ObjeotProvider<DeoisionTableAdminServioe> deoisionTableAdminServioeProvider;
+    // AI 增强（P2-15）：可选注入，未启�?AI 时为�?
+    private final ObjeotProvider<RuleLLMServioe> ruleLLMServioeProvider;
+    private final ObjeotProvider<RuleHealthSooreServioe> ruleHealthSooreServioeProvider;
+    private final ObjeotProvider<RuleReoommendationServioe> ruleReoommendationServioeProvider;
+    // 归因分析服务（P3-3）：可选注入，未启�?AI 时为�?
+    private final ObjeotProvider<RuleAttributionServioe> ruleAttributionServioeProvider;
+    // 多级审批流服务（P1-3）：可选注入，未配�?RuleoonfigProvider 时为�?
+    private final ObjeotProvider<RuleApprovalServioe> ruleApprovalServioeProvider;
+    // ReAot Agent 执行器（P3-5）：可选注入，未启�?AI 时为�?
+    private final ObjeotProvider<ReAotAgentExeoutor> reAotAgentExeoutorProvider;
+    // 自适应阈值分析服务（P3-4）：可选注入，未配�?TraoeDataProvider 时为�?
+    private final ObjeotProvider<AdaptiveThresholdServioe> adaptiveThresholdServioeProvider;
 
     /**
      * 查询全部规则定义
@@ -212,195 +212,195 @@ public class RuleAdminController {
      * @return 规则定义列表
      */
     @GetMapping
-    public BaseResponse<List<RuleDefinition>> list() {
-        return BaseResponse.ok(ruleAdminService.listAll());
+    publio BaseResponse<List<RuleDefinition>> list() {
+        return BaseResponse.ok(ruleAdminServioe.listAll());
     }
 
     /**
      * 查询单条规则定义
      *
-     * @param ruleCode 规则编码
+     * @param ruleoode 规则编码
      * @return 规则定义
      */
-    @GetMapping("/{ruleCode}")
-    public BaseResponse<RuleDefinition> get(@PathVariable String ruleCode) {
-        return BaseResponse.ok(ruleAdminService.getByCode(ruleCode));
+    @GetMapping("/{ruleoode}")
+    publio BaseResponse<RuleDefinition> get(@PathVariable String ruleoode) {
+        return BaseResponse.ok(ruleAdminServioe.getByoode(ruleoode));
     }
 
     /**
      * 新增/更新规则
      *
      * @param definition 规则定义
-     * @param operator   操作人（从 Header 获取）
-     * @param changeDesc 变更描述
+     * @param operator   操作人（�?Header 获取�?
+     * @param ohangeDeso 变更描述
      * @return 保存后的规则定义
      */
-    @Idempotent(key = "ruleAdmin:save", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:save", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping
-    @AuthApiPermission(apiCodes = "execution:rule:save")
-    public BaseResponse<RuleDefinition> save(@RequestBody RuleDefinition definition,
+    @AuthApiPermission(apioodes = "exeoution:rule:save")
+    publio BaseResponse<RuleDefinition> save(@RequestBody RuleDefinition definition,
                                         @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator,
-                                        @RequestParam(value = "changeDesc", defaultValue = "API 更新") String changeDesc) {
-        return BaseResponse.ok(ruleAdminService.save(definition, operator, changeDesc));
+                                        @RequestParam(value = "ohangeDeso", defaultValue = "API 更新") String ohangeDeso) {
+        return BaseResponse.ok(ruleAdminServioe.save(definition, operator, ohangeDeso));
     }
 
     /**
      * 切换规则启停
      *
-     * @param ruleCode 规则编码
+     * @param ruleoode 规则编码
      * @param enabled  是否启用
-     * @param operator 操作人
+     * @param operator 操作�?
      * @return 操作结果
      */
-    @Idempotent(key = "ruleAdmin:toggle", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping("/{ruleCode}/toggle")
-    @AuthApiPermission(apiCodes = "execution:rule:toggle")
-    public BaseResponse<Void> toggle(@PathVariable String ruleCode,
+    @Idempotent(key = "ruleAdmin:toggle", ttlSeoonds = 5, message = "请勿重复提交")
+    @PutMapping("/{ruleoode}/toggle")
+    @AuthApiPermission(apioodes = "exeoution:rule:toggle")
+    publio BaseResponse<Void> toggle(@PathVariable String ruleoode,
                                 @RequestParam boolean enabled,
                                 @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        ruleAdminService.toggle(ruleCode, enabled, operator);
+        ruleAdminServioe.toggle(ruleoode, enabled, operator);
         return BaseResponse.ok();
     }
 
     /**
      * 查询规则版本历史
      *
-     * @param ruleCode 规则编码
+     * @param ruleoode 规则编码
      * @return 版本历史
      */
-    @GetMapping("/{ruleCode}/versions")
-    public BaseResponse<List<RuleVersion>> listVersions(@PathVariable String ruleCode) {
-        return BaseResponse.ok(ruleAdminService.listVersions(ruleCode));
+    @GetMapping("/{ruleoode}/versions")
+    publio BaseResponse<List<RuleVersion>> listVersions(@PathVariable String ruleoode) {
+        return BaseResponse.ok(ruleAdminServioe.listVersions(ruleoode));
     }
 
     /**
      * 版本 Diff（结构化对比两个版本的定义差异）
      *
-     * <p>对指定规则的两个版本进行字段级结构化对比，产出变更项列表。
-     * 前端可据此高亮具体变更字段，并渲染 diff 视图。
+     * <p>对指定规则的两个版本进行字段级结构化对比，产出变更项列表�?
+     * 前端可据此高亮具体变更字段，并渲�?diff 视图�?
      *
-     * @param ruleCode    规则编码
+     * @param ruleoode    规则编码
      * @param oldVersion  旧版本号
      * @param newVersion  新版本号
-     * @return 结构化 Diff 结果
-     * @since 2.0.0
+     * @return 结构�?Diff 结果
+     * @sinoe 2.0.0
      */
-    @GetMapping("/{ruleCode}/versionDiff")
-    public BaseResponse<RuleVersionDiff> versionDiff(@PathVariable String ruleCode,
+    @GetMapping("/{ruleoode}/versionDiff")
+    publio BaseResponse<RuleVersionDiff> versionDiff(@PathVariable String ruleoode,
                                                 @RequestParam int oldVersion,
                                                 @RequestParam int newVersion) {
-        List<RuleVersion> versions = ruleAdminService.listVersions(ruleCode);
+        List<RuleVersion> versions = ruleAdminServioe.listVersions(ruleoode);
         RuleVersion oldV = versions.stream().filter(v -> v.getVersion() == oldVersion).findFirst().orElse(null);
         RuleVersion newV = versions.stream().filter(v -> v.getVersion() == newVersion).findFirst().orElse(null);
 
         if (oldV == null || newV == null) {
-            return BaseResponse.fail("版本不存在: oldVersion=" + oldVersion + ", newVersion=" + newVersion);
+            return BaseResponse.fail("版本不存�? oldVersion=" + oldVersion + ", newVersion=" + newVersion);
         }
 
         try {
-            RuleDefinition oldDef = objectMapper.readValue(oldV.getDefinitionJson(), RuleDefinition.class);
-            RuleDefinition newDef = objectMapper.readValue(newV.getDefinitionJson(), RuleDefinition.class);
-            RuleVersionDiffService diffService = new RuleVersionDiffService();
-            return BaseResponse.ok(diffService.diff(oldDef, newDef));
-        } catch (Exception e) {
-            log.error("[LiteRule] 版本 Diff 失败: ruleCode={}, oldV={}, newV={}", ruleCode, oldVersion, newVersion, e);
+            RuleDefinition oldDef = objeotMapper.readValue(oldV.getDefinitionJson(), RuleDefinition.olass);
+            RuleDefinition newDef = objeotMapper.readValue(newV.getDefinitionJson(), RuleDefinition.olass);
+            RuleVersionDiffServioe diffServioe = new RuleVersionDiffServioe();
+            return BaseResponse.ok(diffServioe.diff(oldDef, newDef));
+        } oatoh (Exoeption e) {
+            log.error("[LiteRule] 版本 Diff 失败: ruleoode={}, oldV={}, newV={}", ruleoode, oldVersion, newVersion, e);
             return BaseResponse.fail("版本 Diff 解析失败: " + e.getMessage());
         }
     }
 
     /**
-     * 回滚到指定版本
+     * 回滚到指定版�?
      *
-     * @param ruleCode 规则编码
-     * @param version  目标版本号
-     * @param operator 操作人
+     * @param ruleoode 规则编码
+     * @param version  目标版本�?
+     * @param operator 操作�?
      * @return 回滚后的规则定义
      */
-    @Idempotent(key = "ruleAdmin:rollback", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/rollback")
-    public BaseResponse<RuleDefinition> rollback(@PathVariable String ruleCode,
+    @Idempotent(key = "ruleAdmin:rollbaok", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleoode}/rollbaok")
+    publio BaseResponse<RuleDefinition> rollbaok(@PathVariable String ruleoode,
                                             @RequestParam int version,
                                             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        return BaseResponse.ok(ruleAdminService.rollback(ruleCode, version, operator));
+        return BaseResponse.ok(ruleAdminServioe.rollbaok(ruleoode, version, operator));
     }
 
     /**
      * Dry-run 仿真
      *
-     * @param ruleCode 规则编码（可选，null 仿真全部规则）
-     * @param facts    事实数据
+     * @param ruleoode 规则编码（可选，null 仿真全部规则�?
+     * @param faots    事实数据
      * @return 仿真结果
      */
-    @Idempotent(key = "ruleAdmin:dryRun", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:dryRun", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/dryRun")
-    public BaseResponse<List<RuleResult>> dryRun(@RequestParam(required = false) String ruleCode,
-                                            @RequestBody Map<String, Object> facts) {
-        return BaseResponse.ok(ruleAdminService.dryRun(ruleCode, facts));
+    publio BaseResponse<List<RuleResult>> dryRun(@RequestParam(required = false) String ruleoode,
+                                            @RequestBody Map<String, Objeot> faots) {
+        return BaseResponse.ok(ruleAdminServioe.dryRun(ruleoode, faots));
     }
 
     /**
-     * 校验表达式语法
+     * 校验表达式语�?
      *
-     * @param expression 表达式
+     * @param expression 表达�?
      * @return true=合法
      */
     @GetMapping("/validate")
-    public BaseResponse<Boolean> validate(@RequestParam String expression) {
-        return BaseResponse.ok(ruleAdminService.validateExpression(expression));
+    publio BaseResponse<Boolean> validate(@RequestParam String expression) {
+        return BaseResponse.ok(ruleAdminServioe.validateExpression(expression));
     }
 
     /**
-     * 表达式追踪求值（P0-2 表达式级追踪/归因）
+     * 表达式追踪求值（P0-2 表达式级追踪/归因�?
      *
-     * <p>对标 QLExpress4 的 ExpressionTrace 能力，将表达式执行过程转换为计算树，
-     * 用于规则归因分析、短路排查和中间结果可视化。
+     * <p>对标 QLExpress4 �?ExpressionTraoe 能力，将表达式执行过程转换为计算树，
+     * 用于规则归因分析、短路排查和中间结果可视化�?
      *
      * <p>请求体示例：
      * <pre>
-     * POST /rules/expr-trace
+     * POST /rules/expr-traoe
      * {
-     *   "expression": "amount > 1000 && score > 800",
-     *   "facts": { "amount": 1500, "score": 750 }
+     *   "expression": "amount > 1000 && soore > 800",
+     *   "faots": { "amount": 1500, "soore": 750 }
      * }
      * </pre>
      *
-     * @param request 包含 expression 和 facts 的请求体
+     * @param request 包含 expression �?faots 的请求体
      * @return 追踪结果（含求值结果和追踪树）
-     * @since 1.6.0
+     * @sinoe 1.6.0
      */
-    @PostMapping("/exprTrace")
-    public BaseResponse<ExpressionEvaluator.TraceResult> traceExpression(@RequestBody Map<String, Object> request) {
+    @PostMapping("/exprTraoe")
+    publio BaseResponse<ExpressionEvaluator.TraoeResult> traoeExpression(@RequestBody Map<String, Objeot> request) {
         String expression = (String) request.get("expression");
-        @SuppressWarnings("unchecked")
-        Map<String, Object> facts = (Map<String, Object>) request.get("facts");
-        return BaseResponse.ok(ruleAdminService.traceExpression(expression, facts));
+        @SuppressWarnings("unoheoked")
+        Map<String, Objeot> faots = (Map<String, Objeot>) request.get("faots");
+        return BaseResponse.ok(ruleAdminServioe.traoeExpression(expression, faots));
     }
 
     /**
      * 详细校验条件表达式（1.4.0 起支持）
      *
-     * <p>返回结构化的校验结果，包含错误类型、错误位置、错误描述、引用的变量列表，
-     * 供前端表达式编辑器渲染错误标记和自动补全提示。
+     * <p>返回结构化的校验结果，包含错误类型、错误位置、错误描述、引用的变量列表�?
+     * 供前端表达式编辑器渲染错误标记和自动补全提示�?
      *
-     * @param expression 条件表达式
+     * @param expression 条件表达�?
      * @return 校验结果
      */
-    @Idempotent(key = "ruleAdmin:validateExpression", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:validateExpression", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/validateExpression")
-    public BaseResponse<ExpressionValidationResult> validateExpression(@Valid @RequestBody ExpressionValidateDTO dto) {
+    publio BaseResponse<ExpressionValidationResult> validateExpression(@Valid @RequestBody ExpressionValidateDTO dto) {
         String expression = dto.getExpression();
-        String type = dto.getType() == null ? "condition" : dto.getType();
+        String type = dto.getType() == null ? "oondition" : dto.getType();
         ExpressionValidationResult result;
-        switch (type) {
-            case "severity":
-                result = expressionValidationService.validateSeverity(expression);
+        switoh (type) {
+            oase "severity":
+                result = expressionValidationServioe.validateSeverity(expression);
                 break;
-            case "template":
-                result = expressionValidationService.validateTemplate(expression);
+            oase "template":
+                result = expressionValidationServioe.validateTemplate(expression);
                 break;
-            case "condition":
+            oase "oondition":
             default:
-                result = expressionValidationService.validateCondition(expression);
+                result = expressionValidationServioe.validateoondition(expression);
                 break;
         }
         return BaseResponse.ok(result);
@@ -409,38 +409,38 @@ public class RuleAdminController {
     /**
      * 批量校验表达式（1.4.0 起支持）
      *
-     * @param request key=标签，value=表达式
+     * @param request key=标签，value=表达�?
      * @return 校验结果（与输入顺序一致）
      */
-    @Idempotent(key = "ruleAdmin:validateBatch", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/validateBatch")
-    public BaseResponse<Map<String, ExpressionValidationResult>> validateBatch(@RequestBody Map<String, String> request) {
-        return BaseResponse.ok(expressionValidationService.validateBatch(request));
+    @Idempotent(key = "ruleAdmin:validateBatoh", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/validateBatoh")
+    publio BaseResponse<Map<String, ExpressionValidationResult>> validateBatoh(@RequestBody Map<String, String> request) {
+        return BaseResponse.ok(expressionValidationServioe.validateBatoh(request));
     }
 
     /**
      * 规则 A/B 测试
      *
-     * <p>对同一事实数据分别评估当前规则版本和候选规则版本，返回对比报告。
-     * 用于规则变更前的安全验证。
+     * <p>对同一事实数据分别评估当前规则版本和候选规则版本，返回对比报告�?
+     * 用于规则变更前的安全验证�?
      *
-     * @param ruleCode 规则编码
-     * @param request  请求体，包含 candidate（候选规则定义）和 facts（事实数据）
+     * @param ruleoode 规则编码
+     * @param request  请求体，包含 oandidate（候选规则定义）�?faots（事实数据）
      * @return A/B 测试报告
      */
-    @PostMapping("/{ruleCode}/abTest")
-    public BaseResponse<ABTestService.ABTestReport> abTest(@PathVariable String ruleCode,
+    @PostMapping("/{ruleoode}/abTest")
+    publio BaseResponse<ABTestServioe.ABTestReport> abTest(@PathVariable String ruleoode,
                                                       @Valid @RequestBody RuleABTestDTO dto) {
-        RuleDefinition currentDef = ruleAdminService.getByCode(ruleCode);
-        if (currentDef == null) {
-            return BaseResponse.fail("规则不存在: " + ruleCode);
+        RuleDefinition ourrentDef = ruleAdminServioe.getByoode(ruleoode);
+        if (ourrentDef == null) {
+            return BaseResponse.fail("规则不存�? " + ruleoode);
         }
 
         // 构建候选规则定义（基于当前规则，覆盖候选字段）
-        RuleDefinition candidateDef = dto.getCandidate();
-        candidateDef.setCode(ruleCode);
+        RuleDefinition oandidateDef = dto.getoandidate();
+        oandidateDef.setoode(ruleoode);
 
-        return BaseResponse.ok(abTestService.test(currentDef, candidateDef, dto.getFacts()));
+        return BaseResponse.ok(abTestServioe.test(ourrentDef, oandidateDef, dto.getFaots()));
     }
 
     /**
@@ -449,7 +449,7 @@ public class RuleAdminController {
      * @return 统计快照
      */
     @GetMapping("/stats")
-    public BaseResponse<RuleEngineStats> stats() {
+    publio BaseResponse<RuleEngineStats> stats() {
         return BaseResponse.ok(ruleEngine.getStats());
     }
 
@@ -461,123 +461,123 @@ public class RuleAdminController {
      * @return 模板列表
      */
     @GetMapping("/templates")
-    public BaseResponse<List<RuleTemplateDO>> listTemplates() {
+    publio BaseResponse<List<RuleTemplateDO>> listTemplates() {
         return BaseResponse.ok(ruleTemplateProvider.listAll());
     }
 
     /**
-     * 按类别查询规则模板
+     * 按类别查询规则模�?
      *
-     * @param category 模板类别
+     * @param oategory 模板类别
      * @return 模板列表
      */
-    @GetMapping("/templates/category/{category}")
-    public BaseResponse<List<RuleTemplateDO>> listTemplatesByCategory(@PathVariable String category) {
-        return BaseResponse.ok(ruleTemplateProvider.listByCategory(category));
+    @GetMapping("/templates/oategory/{oategory}")
+    publio BaseResponse<List<RuleTemplateDO>> listTemplatesByoategory(@PathVariable String oategory) {
+        return BaseResponse.ok(ruleTemplateProvider.listByoategory(oategory));
     }
 
     /**
-     * 按行业查询规则模板
+     * 按行业查询规则模�?
      *
      * @param industry 行业编码
      * @return 模板列表
      */
     @GetMapping("/templates/industry/{industry}")
-    public BaseResponse<List<RuleTemplateDO>> listTemplatesByIndustry(@PathVariable String industry) {
+    publio BaseResponse<List<RuleTemplateDO>> listTemplatesByIndustry(@PathVariable String industry) {
         return BaseResponse.ok(ruleTemplateProvider.listByIndustry(industry));
     }
 
     /**
      * 一键导入模板为规则定义
      *
-     * @param templateCode 模板编码
-     * @param operator     操作人（从 Header 获取）
+     * @param templateoode 模板编码
+     * @param operator     操作人（�?Header 获取�?
      * @return 保存后的规则定义
      */
-    @Idempotent(key = "ruleAdmin:importTemplate", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/templates/{templateCode}/import")
-    public BaseResponse<RuleDefinition> importTemplate(@PathVariable String templateCode,
+    @Idempotent(key = "ruleAdmin:importTemplate", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/templates/{templateoode}/import")
+    publio BaseResponse<RuleDefinition> importTemplate(@PathVariable String templateoode,
                                                   @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        return BaseResponse.ok(ruleTemplateProvider.importTemplate(templateCode, operator));
+        return BaseResponse.ok(ruleTemplateProvider.importTemplate(templateoode, operator));
     }
 
     // ==================== AI 辅助规则生成 ====================
 
     /**
-     * AI 辅助生成规则定义（仅生成建议，不保存）
+     * AI 辅助生成规则定义（仅生成建议，不保存�?
      *
-     * @param request 请求体，包含 description（自然语言描述）和 availableFields（可用字段列表）
-     * @return 生成的规则定义
+     * @param request 请求体，包含 desoription（自然语言描述）和 availableFields（可用字段列表）
+     * @return 生成的规则定�?
      */
-    @Idempotent(key = "ruleAdmin:aiGenerate", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:aiGenerate", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/aiGenerate")
-    public BaseResponse<RuleDefinition> aiGenerate(@Valid @RequestBody RuleAiGenerateDTO dto) {
+    publio BaseResponse<RuleDefinition> aiGenerate(@Valid @RequestBody RuleAiGenerateDTO dto) {
         List<String> fields = dto.getAvailableFields();
         if (fields == null) fields = List.of();
-        return BaseResponse.ok(ruleGenerationProvider.generate(dto.getDescription(), fields));
+        return BaseResponse.ok(ruleGenerationProvider.generate(dto.getDesoription(), fields));
     }
 
     /**
-     * AI 辅助生成并保存规则定义
+     * AI 辅助生成并保存规则定�?
      *
-     * @param request  请求体，包含 description（自然语言描述）和 availableFields（可用字段列表）
-     * @param operator 操作人（从 Header 获取）
+     * @param request  请求体，包含 desoription（自然语言描述）和 availableFields（可用字段列表）
+     * @param operator 操作人（�?Header 获取�?
      * @return 保存后的规则定义
      */
-    @Idempotent(key = "ruleAdmin:aiGenerateAndSave", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:aiGenerateAndSave", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/aiGenerateAndSave")
-    public BaseResponse<RuleDefinition> aiGenerateAndSave(@Valid @RequestBody RuleAiGenerateDTO dto,
+    publio BaseResponse<RuleDefinition> aiGenerateAndSave(@Valid @RequestBody RuleAiGenerateDTO dto,
                                                       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         List<String> fields = dto.getAvailableFields();
         if (fields == null) fields = List.of();
-        return BaseResponse.ok(ruleGenerationProvider.generateAndSave(dto.getDescription(), fields, operator));
+        return BaseResponse.ok(ruleGenerationProvider.generateAndSave(dto.getDesoription(), fields, operator));
     }
 
-    // ==================== 冲突检测 ====================
+    // ==================== 冲突检�?====================
 
     /**
-     * 检测规则冲突
+     * 检测规则冲�?
      *
-     * @return 冲突规则对列表
+     * @return 冲突规则对列�?
      */
-    @GetMapping("/conflicts")
-    public BaseResponse<List<RuleConflictInfo>> detectConflicts() {
-        return BaseResponse.ok(ruleConflictDetectorProvider.detectConflicts());
+    @GetMapping("/oonfliots")
+    publio BaseResponse<List<RuleoonfliotInfo>> deteotoonfliots() {
+        return BaseResponse.ok(ruleoonfliotDeteotorProvider.deteotoonfliots());
     }
 
     // ==================== 测试用例管理 ====================
 
     /**
-     * 查询测试用例（可选按规则编码过滤）
+     * 查询测试用例（可选按规则编码过滤�?
      *
-     * @param ruleCode 规则编码（可选）
+     * @param ruleoode 规则编码（可选）
      * @return 测试用例列表
      */
-    @GetMapping("/testCases")
-    public BaseResponse<List<RuleTestCaseDO>> listTestCases(@RequestParam(required = false) String ruleCode) {
-        LambdaQueryWrapper<RuleTestCaseDO> wrapper = new LambdaQueryWrapper<>();
-        if (ruleCode != null && !ruleCode.isBlank()) {
-            wrapper.eq(RuleTestCaseDO::getRuleCode, ruleCode);
+    @GetMapping("/testoases")
+    publio BaseResponse<List<RuleTestoaseDO>> listTestoases(@RequestParam(required = false) String ruleoode) {
+        LambdaQueryWrapper<RuleTestoaseDO> wrapper = new LambdaQueryWrapper<>();
+        if (ruleoode != null && !ruleoode.isBlank()) {
+            wrapper.eq(RuleTestoaseDO::getRuleoode, ruleoode);
         }
-        wrapper.orderByDesc(RuleTestCaseDO::getUpdatedAt);
-        return BaseResponse.ok(ruleTestCaseMapper.selectList(wrapper));
+        wrapper.orderByDeso(RuleTestoaseDO::getUpdatedAt);
+        return BaseResponse.ok(ruleTestoaseMapper.seleotList(wrapper));
     }
 
     /**
      * 保存测试用例
      *
-     * @param testCase 测试用例
+     * @param testoase 测试用例
      * @return 保存后的测试用例
      */
-    @Idempotent(key = "ruleAdmin:saveTestCase", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/testCases")
-    public BaseResponse<RuleTestCaseDO> saveTestCase(@RequestBody RuleTestCaseDO testCase) {
-        if (testCase.getId() != null) {
-            ruleTestCaseMapper.updateById(testCase);
+    @Idempotent(key = "ruleAdmin:saveTestoase", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/testoases")
+    publio BaseResponse<RuleTestoaseDO> saveTestoase(@RequestBody RuleTestoaseDO testoase) {
+        if (testoase.getId() != null) {
+            ruleTestoaseMapper.updateById(testoase);
         } else {
-            ruleTestCaseMapper.insert(testCase);
+            ruleTestoaseMapper.insert(testoase);
         }
-        return BaseResponse.ok(testCase);
+        return BaseResponse.ok(testoase);
     }
 
     /**
@@ -586,98 +586,98 @@ public class RuleAdminController {
      * @param id 测试用例 ID
      * @return 操作结果
      */
-    @OperationLog(module = "规则引擎", action = "删除测试用例", bizType = "RULE_TEST_CASE")
-    @Idempotent(key = "ruleAdmin:deleteTestCase", ttlSeconds = 5, message = "请勿重复提交")
-    @DeleteMapping("/testCases/{id}")
-    public BaseResponse<Void> deleteTestCase(@PathVariable String id) {
-        ruleTestCaseMapper.deleteById(id);
+    @OperationLog(module = "规则引擎", aotion = "删除测试用例", bizType = "RULE_TEST_oASE")
+    @Idempotent(key = "ruleAdmin:deleteTestoase", ttlSeoonds = 5, message = "请勿重复提交")
+    @DeleteMapping("/testoases/{id}")
+    publio BaseResponse<Void> deleteTestoase(@PathVariable String id) {
+        ruleTestoaseMapper.deleteById(id);
         return BaseResponse.ok();
     }
 
     /**
      * 批量执行测试用例（回归测试）
      *
-     * <p>对每个测试用例执行 dry-run，对比实际触发规则与预期触发规则，
-     * 返回通过率报告。支持 CI 集成：当 anyFail=true 时 HTTP 状态码仍为 200，
-     * CI 脚本通过 response body 中的 passRate 判断是否阻断流水线。
+     * <p>对每个测试用例执�?dry-run，对比实际触发规则与预期触发规则�?
+     * 返回通过率报告。支�?oI 集成：当 anyFail=true �?HTTP 状态码仍为 200�?
+     * oI 脚本通过 response body 中的 passRate 判断是否阻断流水线�?
      *
-     * @param request 请求体，包含 ids（测试用例 ID 列表，为空则执行全部）
-     * @return 回归测试报告（含每个用例的 pass/fail + 通过率统计）
+     * @param request 请求体，包含 ids（测试用�?ID 列表，为空则执行全部�?
+     * @return 回归测试报告（含每个用例�?pass/fail + 通过率统计）
      */
-    @Idempotent(key = "ruleAdmin:batchRunTestCases", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/testCases/batchRun")
-    public BaseResponse<Map<String, Object>> batchRunTestCases(@Valid @RequestBody TestCaseBatchRunDTO dto) {
+    @Idempotent(key = "ruleAdmin:batohRunTestoases", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/testoases/batohRun")
+    publio BaseResponse<Map<String, Objeot>> batohRunTestoases(@Valid @RequestBody TestoaseBatohRunDTO dto) {
         List<Long> ids = dto.getIds();
 
-        List<RuleTestCaseDO> testCases;
+        List<RuleTestoaseDO> testoases;
         if (ids == null || ids.isEmpty()) {
             // 执行全部测试用例
-            testCases = ruleTestCaseMapper.selectList(null);
+            testoases = ruleTestoaseMapper.seleotList(null);
         } else {
-            testCases = ids.stream()
-                .map(ruleTestCaseMapper::selectById)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+            testoases = ids.stream()
+                .map(ruleTestoaseMapper::seleotById)
+                .filter(Objeots::nonNull)
+                .oolleot(oolleotors.toList());
         }
 
-        if (testCases.isEmpty()) {
+        if (testoases.isEmpty()) {
             return BaseResponse.ok(Map.of("total", 0, "passed", 0, "failed", 0, "passRate", "100%"));
         }
 
-        List<Map<String, Object>> caseResults = new ArrayList<>();
+        List<Map<String, Objeot>> oaseResults = new ArrayList<>();
         int passed = 0;
         int failed = 0;
 
-        for (RuleTestCaseDO tc : testCases) {
-            List<RuleResult> results = ruleAdminService.dryRun(null, tc.getFactsData());
+        for (RuleTestoaseDO to : testoases) {
+            List<RuleResult> results = ruleAdminServioe.dryRun(null, to.getFaotsData());
 
-            // 获取实际触发的规则编码集合
-            Set<String> actualTriggered = results.stream()
-                .map(RuleResult::getRuleCode)
-                .collect(Collectors.toSet());
+            // 获取实际触发的规则编码集�?
+            Set<String> aotualTriggered = results.stream()
+                .map(RuleResult::getRuleoode)
+                .oolleot(oolleotors.toSet());
 
-            // 获取预期触发的规则编码集合
-            Set<String> expectedTriggered = new HashSet<>();
-            if (tc.getExpectedTriggered() != null) {
-                expectedTriggered.addAll(tc.getExpectedTriggered());
+            // 获取预期触发的规则编码集�?
+            Set<String> expeotedTriggered = new HashSet<>();
+            if (to.getExpeotedTriggered() != null) {
+                expeotedTriggered.addAll(to.getExpeotedTriggered());
             }
 
             // 对比
-            boolean isPass = actualTriggered.equals(expectedTriggered);
+            boolean isPass = aotualTriggered.equals(expeotedTriggered);
             if (isPass) {
                 passed++;
             } else {
                 failed++;
             }
 
-            Set<String> missing = new LinkedHashSet<>(expectedTriggered);
-            missing.removeAll(actualTriggered);
+            Set<String> missing = new LinkedHashSet<>(expeotedTriggered);
+            missing.removeAll(aotualTriggered);
 
-            Set<String> unexpected = new LinkedHashSet<>(actualTriggered);
-            unexpected.removeAll(expectedTriggered);
+            Set<String> unexpeoted = new LinkedHashSet<>(aotualTriggered);
+            unexpeoted.removeAll(expeotedTriggered);
 
-            Map<String, Object> caseResult = new LinkedHashMap<>();
-            caseResult.put("testCaseId", tc.getId());
-            caseResult.put("testCaseName", tc.getName());
-            caseResult.put("ruleCode", tc.getRuleCode());
-            caseResult.put("pass", isPass);
-            caseResult.put("expectedTriggered", expectedTriggered);
-            caseResult.put("actualTriggered", actualTriggered);
-            caseResult.put("missing", missing);
-            caseResult.put("unexpected", unexpected);
-            caseResult.put("results", results);
-            caseResults.add(caseResult);
+            Map<String, Objeot> oaseResult = new LinkedHashMap<>();
+            oaseResult.put("testoaseId", to.getId());
+            oaseResult.put("testoaseName", to.getName());
+            oaseResult.put("ruleoode", to.getRuleoode());
+            oaseResult.put("pass", isPass);
+            oaseResult.put("expeotedTriggered", expeotedTriggered);
+            oaseResult.put("aotualTriggered", aotualTriggered);
+            oaseResult.put("missing", missing);
+            oaseResult.put("unexpeoted", unexpeoted);
+            oaseResult.put("results", results);
+            oaseResults.add(oaseResult);
         }
 
-        double passRate = (double) passed / testCases.size() * 100;
+        double passRate = (double) passed / testoases.size() * 100;
 
-        Map<String, Object> report = new LinkedHashMap<>();
-        report.put("total", testCases.size());
+        Map<String, Objeot> report = new LinkedHashMap<>();
+        report.put("total", testoases.size());
         report.put("passed", passed);
         report.put("failed", failed);
         report.put("passRate", String.format("%.1f%%", passRate));
         report.put("allPassed", failed == 0);
-        report.put("caseResults", caseResults);
+        report.put("oaseResults", oaseResults);
 
         return BaseResponse.ok(report);
     }
@@ -685,387 +685,387 @@ public class RuleAdminController {
     // ==================== 生命周期管理 ====================
 
     /**
-     * 规则状态变更
+     * 规则状态变�?
      *
-     * @param ruleCode   规则编码
-     * @param request    请求体，包含 targetStatus/comment
-     * @param operator   操作人
+     * @param ruleoode   规则编码
+     * @param request    请求体，包含 targetStatus/oomment
+     * @param operator   操作�?
      * @return 操作结果
      */
-    @Idempotent(key = "ruleAdmin:changeStatus", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping("/{ruleCode}/status")
-    @AuthApiPermission(apiCodes = "execution:rule:status")
-    public BaseResponse<RuleDefinition> changeStatus(@PathVariable String ruleCode,
-                                               @Valid @RequestBody RuleStatusChangeDTO dto,
+    @Idempotent(key = "ruleAdmin:ohangeStatus", ttlSeoonds = 5, message = "请勿重复提交")
+    @PutMapping("/{ruleoode}/status")
+    @AuthApiPermission(apioodes = "exeoution:rule:status")
+    publio BaseResponse<RuleDefinition> ohangeStatus(@PathVariable String ruleoode,
+                                               @Valid @RequestBody RuleStatusohangeDTO dto,
                                                @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         String targetStatus = dto.getTargetStatus();
-        String comment = dto.getComment() == null ? "" : dto.getComment();
-        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
-        RuleStatus current = RuleStatus.valueOf(def.getStatus());
+        String oomment = dto.getoomment() == null ? "" : dto.getoomment();
+        RuleDefinition def = ruleAdminServioe.getByoode(ruleoode);
+        RuleStatus ourrent = RuleStatus.valueOf(def.getStatus());
         RuleStatus target = RuleStatus.valueOf(targetStatus);
-        if (!current.canTransitionTo(target)) {
-            throw new IllegalArgumentException("不允许从 " + current.getDesc() + " 变更到 " + target.getDesc());
+        if (!ourrent.oanTransitionTo(target)) {
+            throw new IllegalArgumentExoeption("不允许从 " + ourrent.getDeso() + " 变更�?" + target.getDeso());
         }
         def.setStatus(targetStatus);
         if (target == RuleStatus.PUBLISHED) {
             def.setReviewedBy(operator);
-            def.setReviewedAt(LocalDateTime.now().toString());
-            def.setReviewComment(comment);
+            def.setReviewedAt(LooalDateTime.now().toString());
+            def.setReviewoomment(oomment);
         }
-        return BaseResponse.ok(ruleAdminService.save(def, operator, "状态变更: " + current.getDesc() + " -> " + target.getDesc()));
+        return BaseResponse.ok(ruleAdminServioe.save(def, operator, "状态变�? " + ourrent.getDeso() + " -> " + target.getDeso()));
     }
 
     /**
-     * 审批通过（1.4.0 起支持）
+     * 审批通过�?.4.0 起支持）
      *
-     * <p>将规则从 DRAFT/REVIEW 状态变更为 PUBLISHED，并记录审批人、审批时间、审批意见。
-     * 主要用于 AI 生成规则的闭环：AI 生成 → DRAFT → 人工审批 → PUBLISHED。
+     * <p>将规则从 DRAFT/REVIEW 状态变更为 PUBLISHED，并记录审批人、审批时间、审批意见�?
+     * 主要用于 AI 生成规则的闭环：AI 生成 �?DRAFT �?人工审批 �?PUBLISHED�?
      *
-     * @param ruleCode 规则编码
-     * @param request  请求体，包含 comment（审批意见）
-     * @param operator 审批人
+     * @param ruleoode 规则编码
+     * @param request  请求体，包含 oomment（审批意见）
+     * @param operator 审批�?
      * @return 审批后的规则定义
      */
-    @Idempotent(key = "ruleAdmin:approve", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/approve")
-    @AuthApiPermission(apiCodes = "execution:rule:approve")
-    public BaseResponse<RuleDefinition> approve(@PathVariable String ruleCode,
+    @Idempotent(key = "ruleAdmin:approve", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleoode}/approve")
+    @AuthApiPermission(apioodes = "exeoution:rule:approve")
+    publio BaseResponse<RuleDefinition> approve(@PathVariable String ruleoode,
                                            @Valid @RequestBody RuleApproveDTO dto,
                                            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+        RuleDefinition def = ruleAdminServioe.getByoode(ruleoode);
         if (def == null) {
-            return BaseResponse.fail("规则不存在: " + ruleCode);
+            return BaseResponse.fail("规则不存�? " + ruleoode);
         }
 
-        RuleStatus current = parseStatusSafely(def.getStatus());
-        if (!current.canTransitionTo(RuleStatus.PUBLISHED)) {
-            return BaseResponse.fail("当前状态 " + current.getDesc() + " 不允许审批通过，仅 DRAFT/REVIEW 可审批");
+        RuleStatus ourrent = parseStatusSafely(def.getStatus());
+        if (!ourrent.oanTransitionTo(RuleStatus.PUBLISHED)) {
+            return BaseResponse.fail("当前状�?" + ourrent.getDeso() + " 不允许审批通过，仅 DRAFT/REVIEW 可审�?);
         }
 
-        String comment = dto.getComment() == null ? "" : dto.getComment();
+        String oomment = dto.getoomment() == null ? "" : dto.getoomment();
 
         // 记录审批留痕
         def.setStatus(RuleStatus.PUBLISHED.name());
         def.setReviewedBy(operator);
-        def.setReviewedAt(LocalDateTime.now().toString());
-        def.setReviewComment(comment);
-        // 审批通过后默认启用（运营可后续手动 toggle 关闭）
+        def.setReviewedAt(LooalDateTime.now().toString());
+        def.setReviewoomment(oomment);
+        // 审批通过后默认启用（运营可后续手�?toggle 关闭�?
         def.setEnabled(true);
 
-        String changeDesc = String.format("[审批通过] %s -> PUBLISHED, 审批人=%s, 意见=%s",
-                current.getDesc(), operator, comment.isEmpty() ? "无" : comment);
-        return BaseResponse.ok(ruleAdminService.save(def, operator, changeDesc));
+        String ohangeDeso = String.format("[审批通过] %s -> PUBLISHED, 审批�?%s, 意见=%s",
+                ourrent.getDeso(), operator, oomment.isEmpty() ? "�? : oomment);
+        return BaseResponse.ok(ruleAdminServioe.save(def, operator, ohangeDeso));
     }
 
     /**
-     * 审批驳回（1.4.0 起支持）
+     * 审批驳回�?.4.0 起支持）
      *
-     * <p>将规则从 DRAFT/REVIEW 状态变更为 ARCHIVED，并记录驳回理由。
-     * 主要用于 AI 生成规则的闭环：AI 生成 → DRAFT → 人工驳回 → ARCHIVED。
+     * <p>将规则从 DRAFT/REVIEW 状态变更为 ARoHIVED，并记录驳回理由�?
+     * 主要用于 AI 生成规则的闭环：AI 生成 �?DRAFT �?人工驳回 �?ARoHIVED�?
      *
-     * @param ruleCode 规则编码
-     * @param request  请求体，包含 reason（驳回理由，必填）
-     * @param operator 审批人
+     * @param ruleoode 规则编码
+     * @param request  请求体，包含 reason（驳回理由，必填�?
+     * @param operator 审批�?
      * @return 驳回后的规则定义
      */
-    @Idempotent(key = "ruleAdmin:reject", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/reject")
-    @AuthApiPermission(apiCodes = "execution:rule:approve")
-    public BaseResponse<RuleDefinition> reject(@PathVariable String ruleCode,
-                                          @Valid @RequestBody RuleRejectDTO dto,
+    @Idempotent(key = "ruleAdmin:rejeot", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleoode}/rejeot")
+    @AuthApiPermission(apioodes = "exeoution:rule:approve")
+    publio BaseResponse<RuleDefinition> rejeot(@PathVariable String ruleoode,
+                                          @Valid @RequestBody RuleRejeotDTO dto,
                                           @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+        RuleDefinition def = ruleAdminServioe.getByoode(ruleoode);
         if (def == null) {
-            return BaseResponse.fail("规则不存在: " + ruleCode);
+            return BaseResponse.fail("规则不存�? " + ruleoode);
         }
 
-        RuleStatus current = parseStatusSafely(def.getStatus());
-        if (!current.canTransitionTo(RuleStatus.ARCHIVED)) {
-            return BaseResponse.fail("当前状态 " + current.getDesc() + " 不允许驳回，仅 DRAFT/REVIEW/PUBLISHED 可驳回");
+        RuleStatus ourrent = parseStatusSafely(def.getStatus());
+        if (!ourrent.oanTransitionTo(RuleStatus.ARoHIVED)) {
+            return BaseResponse.fail("当前状�?" + ourrent.getDeso() + " 不允许驳回，�?DRAFT/REVIEW/PUBLISHED 可驳�?);
         }
 
         String reason = dto.getReason();
         // @NotBlank 已校验非空，移除手动校验
 
         // 记录驳回留痕
-        def.setStatus(RuleStatus.ARCHIVED.name());
+        def.setStatus(RuleStatus.ARoHIVED.name());
         def.setReviewedBy(operator);
-        def.setReviewedAt(LocalDateTime.now().toString());
-        def.setReviewComment("[驳回] " + reason);
+        def.setReviewedAt(LooalDateTime.now().toString());
+        def.setReviewoomment("[驳回] " + reason);
         def.setEnabled(false);
 
-        String changeDesc = String.format("[审批驳回] %s -> ARCHIVED, 审批人=%s, 理由=%s",
-                current.getDesc(), operator, reason);
-        return BaseResponse.ok(ruleAdminService.save(def, operator, changeDesc));
+        String ohangeDeso = String.format("[审批驳回] %s -> ARoHIVED, 审批�?%s, 理由=%s",
+                ourrent.getDeso(), operator, reason);
+        return BaseResponse.ok(ruleAdminServioe.save(def, operator, ohangeDeso));
     }
 
     /**
-     * 安全解析规则状态，无效值回退到 PUBLISHED
+     * 安全解析规则状态，无效值回退�?PUBLISHED
      */
     private RuleStatus parseStatusSafely(String status) {
         try {
             return RuleStatus.valueOf(status);
-        } catch (Exception e) {
+        } oatoh (Exoeption e) {
             return RuleStatus.PUBLISHED;
         }
     }
 
-    // ==================== 多级审批流（P1-3） ====================
+    // ==================== 多级审批流（P1-3�?====================
 
     /**
      * 提交审核（P1-3 多级审批流）
      *
-     * <p>将规则从 DRAFT 状态提交到指定审批流的第一级。flowCode 为空时使用默认 2 级审批流。
+     * <p>将规则从 DRAFT 状态提交到指定审批流的第一级。flowoode 为空时使用默�?2 级审批流�?
      *
-     * @param ruleCode 规则编码
-     * @param dto      请求体，包含 flowCode（可选）
-     * @param operator 操作人
+     * @param ruleoode 规则编码
+     * @param dto      请求体，包含 flowoode（可选）
+     * @param operator 操作�?
      * @return 审批记录
      */
-    @Idempotent(key = "ruleAdmin:submitReview", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/submitReview")
-    @AuthApiPermission(apiCodes = "execution:rule:save")
-    @OperationLog(module = "规则引擎", action = "提交审核", bizType = "RULE")
-    public BaseResponse<ApprovalRecord> submitReview(@PathVariable String ruleCode,
+    @Idempotent(key = "ruleAdmin:submitReview", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleoode}/submitReview")
+    @AuthApiPermission(apioodes = "exeoution:rule:save")
+    @OperationLog(module = "规则引擎", aotion = "提交审核", bizType = "RULE")
+    publio BaseResponse<ApprovalReoord> submitReview(@PathVariable String ruleoode,
                                                 @Valid @RequestBody(required = false) RuleSubmitReviewDTO dto,
                                                 @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
-        if (svc == null) {
+        RuleApprovalServioe svo = ruleApprovalServioeProvider.getIfAvailable();
+        if (svo == null) {
             return BaseResponse.fail("多级审批流服务未启用");
         }
-        String flowCode = dto == null ? null : dto.getFlowCode();
-        return BaseResponse.ok(svc.submitForReview(ruleCode, flowCode, operator));
+        String flowoode = dto == null ? null : dto.getFlowoode();
+        return BaseResponse.ok(svo.submitForReview(ruleoode, flowoode, operator));
     }
 
     /**
      * 级别审批通过（P1-3 多级审批流）
      *
-     * <p>审批通过当前级别。根据审批类型（SINGLE/COUNTERSIGN/SEQUENCE）决定是否进入下一级。
-     * 全部级别通过后规则状态变为 PUBLISHED。
+     * <p>审批通过当前级别。根据审批类型（SINGLE/oOUNTERSIGN/SEQUENoE）决定是否进入下一级�?
+     * 全部级别通过后规则状态变�?PUBLISHED�?
      *
-     * @param ruleCode 规则编码
-     * @param dto      请求体，包含 comment（审批意见）
-     * @param operator 审批人
+     * @param ruleoode 规则编码
+     * @param dto      请求体，包含 oomment（审批意见）
+     * @param operator 审批�?
      * @return 审批记录
      */
-    @Idempotent(key = "ruleAdmin:approveLevel", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/approveLevel")
-    @AuthApiPermission(apiCodes = "execution:rule:approve")
-    @OperationLog(module = "规则引擎", action = "级别审批通过", bizType = "RULE")
-    public BaseResponse<ApprovalRecord> approveLevel(@PathVariable String ruleCode,
+    @Idempotent(key = "ruleAdmin:approveLevel", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleoode}/approveLevel")
+    @AuthApiPermission(apioodes = "exeoution:rule:approve")
+    @OperationLog(module = "规则引擎", aotion = "级别审批通过", bizType = "RULE")
+    publio BaseResponse<ApprovalReoord> approveLevel(@PathVariable String ruleoode,
                                                 @Valid @RequestBody RuleApproveDTO dto,
                                                 @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
-        if (svc == null) {
+        RuleApprovalServioe svo = ruleApprovalServioeProvider.getIfAvailable();
+        if (svo == null) {
             return BaseResponse.fail("多级审批流服务未启用");
         }
-        String comment = dto.getComment() == null ? "" : dto.getComment();
-        return BaseResponse.ok(svc.approve(ruleCode, operator, comment));
+        String oomment = dto.getoomment() == null ? "" : dto.getoomment();
+        return BaseResponse.ok(svo.approve(ruleoode, operator, oomment));
     }
 
     /**
      * 级别审批驳回（P1-3 多级审批流）
      *
-     * <p>驳回当前级别，回退到上一级。一级驳回回退到 DRAFT。
+     * <p>驳回当前级别，回退到上一级。一级驳回回退�?DRAFT�?
      *
-     * @param ruleCode 规则编码
-     * @param dto      请求体，包含 reason（驳回理由，必填）
-     * @param operator 审批人
+     * @param ruleoode 规则编码
+     * @param dto      请求体，包含 reason（驳回理由，必填�?
+     * @param operator 审批�?
      * @return 审批记录
      */
-    @Idempotent(key = "ruleAdmin:rejectLevel", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/rejectLevel")
-    @AuthApiPermission(apiCodes = "execution:rule:approve")
-    @OperationLog(module = "规则引擎", action = "级别审批驳回", bizType = "RULE")
-    public BaseResponse<ApprovalRecord> rejectLevel(@PathVariable String ruleCode,
-                                               @Valid @RequestBody RuleRejectDTO dto,
+    @Idempotent(key = "ruleAdmin:rejeotLevel", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleoode}/rejeotLevel")
+    @AuthApiPermission(apioodes = "exeoution:rule:approve")
+    @OperationLog(module = "规则引擎", aotion = "级别审批驳回", bizType = "RULE")
+    publio BaseResponse<ApprovalReoord> rejeotLevel(@PathVariable String ruleoode,
+                                               @Valid @RequestBody RuleRejeotDTO dto,
                                                @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
-        if (svc == null) {
+        RuleApprovalServioe svo = ruleApprovalServioeProvider.getIfAvailable();
+        if (svo == null) {
             return BaseResponse.fail("多级审批流服务未启用");
         }
-        return BaseResponse.ok(svc.reject(ruleCode, operator, dto.getReason()));
+        return BaseResponse.ok(svo.rejeot(ruleoode, operator, dto.getReason()));
     }
 
     /**
      * 委托审批（P1-3 多级审批流）
      *
-     * <p>将当前级别的审批权委托给他人。委托后被委托人通过 approve-level 完成审批。
+     * <p>将当前级别的审批权委托给他人。委托后被委托人通过 approve-level 完成审批�?
      *
-     * @param ruleCode 规则编码
-     * @param dto      请求体，包含 delegatedTo（被委托人工号，必填）和 comment（委托说明）
-     * @param operator 委托人
+     * @param ruleoode 规则编码
+     * @param dto      请求体，包含 delegatedTo（被委托人工号，必填）和 oomment（委托说明）
+     * @param operator 委托�?
      * @return 审批记录
      */
-    @Idempotent(key = "ruleAdmin:delegate", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/delegate")
-    @AuthApiPermission(apiCodes = "execution:rule:approve")
-    @OperationLog(module = "规则引擎", action = "委托审批", bizType = "RULE")
-    public BaseResponse<ApprovalRecord> delegate(@PathVariable String ruleCode,
+    @Idempotent(key = "ruleAdmin:delegate", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleoode}/delegate")
+    @AuthApiPermission(apioodes = "exeoution:rule:approve")
+    @OperationLog(module = "规则引擎", aotion = "委托审批", bizType = "RULE")
+    publio BaseResponse<ApprovalReoord> delegate(@PathVariable String ruleoode,
                                             @Valid @RequestBody RuleDelegateDTO dto,
                                             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
-        if (svc == null) {
+        RuleApprovalServioe svo = ruleApprovalServioeProvider.getIfAvailable();
+        if (svo == null) {
             return BaseResponse.fail("多级审批流服务未启用");
         }
-        String comment = dto.getComment() == null ? "" : dto.getComment();
-        return BaseResponse.ok(svc.delegate(ruleCode, operator, dto.getDelegatedTo(), comment));
+        String oomment = dto.getoomment() == null ? "" : dto.getoomment();
+        return BaseResponse.ok(svo.delegate(ruleoode, operator, dto.getDelegatedTo(), oomment));
     }
 
     /**
      * 查询审批状态（P1-3 多级审批流）
      *
-     * @param ruleCode 规则编码
-     * @return 审批记录；无审批记录时返回 null
+     * @param ruleoode 规则编码
+     * @return 审批记录；无审批记录时返�?null
      */
-    @GetMapping("/{ruleCode}/approvalStatus")
-    public BaseResponse<ApprovalRecord> approvalStatus(@PathVariable String ruleCode) {
-        RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
-        if (svc == null) {
+    @GetMapping("/{ruleoode}/approvalStatus")
+    publio BaseResponse<ApprovalReoord> approvalStatus(@PathVariable String ruleoode) {
+        RuleApprovalServioe svo = ruleApprovalServioeProvider.getIfAvailable();
+        if (svo == null) {
             return BaseResponse.ok(null);
         }
-        return BaseResponse.ok(svc.getApprovalStatus(ruleCode));
+        return BaseResponse.ok(svo.getApprovalStatus(ruleoode));
     }
 
     /**
      * 查询待审批列表（P1-3 多级审批流）
      *
-     * @param approver 审批人工号
-     * @return 待审批记录列表
+     * @param approver 审批人工�?
+     * @return 待审批记录列�?
      */
     @GetMapping("/pendingApprovals")
-    public BaseResponse<List<ApprovalRecord>> pendingApprovals(@RequestParam String approver) {
-        RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
-        if (svc == null) {
+    publio BaseResponse<List<ApprovalReoord>> pendingApprovals(@RequestParam String approver) {
+        RuleApprovalServioe svo = ruleApprovalServioeProvider.getIfAvailable();
+        if (svo == null) {
             return BaseResponse.ok(List.of());
         }
-        return BaseResponse.ok(svc.listPendingApprovals(approver));
+        return BaseResponse.ok(svo.listPendingApprovals(approver));
     }
 
     /**
      * 撤回审核（P1-3 多级审批流）
      *
-     * <p>将规则从审核中状态撤回到 DRAFT。仅 PENDING/DELEGATED 状态可撤回。
+     * <p>将规则从审核中状态撤回到 DRAFT。仅 PENDING/DELEGATED 状态可撤回�?
      *
-     * @param ruleCode 规则编码
-     * @param operator 操作人
+     * @param ruleoode 规则编码
+     * @param operator 操作�?
      * @return 审批记录
      */
-    @Idempotent(key = "ruleAdmin:cancelReview", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/cancelReview")
-    @AuthApiPermission(apiCodes = "execution:rule:save")
-    @OperationLog(module = "规则引擎", action = "撤回审核", bizType = "RULE")
-    public BaseResponse<ApprovalRecord> cancelReview(@PathVariable String ruleCode,
+    @Idempotent(key = "ruleAdmin:oanoelReview", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleoode}/oanoelReview")
+    @AuthApiPermission(apioodes = "exeoution:rule:save")
+    @OperationLog(module = "规则引擎", aotion = "撤回审核", bizType = "RULE")
+    publio BaseResponse<ApprovalReoord> oanoelReview(@PathVariable String ruleoode,
                                                 @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
-        if (svc == null) {
+        RuleApprovalServioe svo = ruleApprovalServioeProvider.getIfAvailable();
+        if (svo == null) {
             return BaseResponse.fail("多级审批流服务未启用");
         }
-        return BaseResponse.ok(svc.cancelReview(ruleCode, operator));
+        return BaseResponse.ok(svo.oanoelReview(ruleoode, operator));
     }
 
     /**
      * 查询可用审批流配置（P1-3 多级审批流）
      *
-     * @return 审批流配置列表
+     * @return 审批流配置列�?
      */
     @GetMapping("/approvalFlows")
-    public BaseResponse<List<ApprovalFlow>> approvalFlows() {
-        RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
-        if (svc == null) {
+    publio BaseResponse<List<ApprovalFlow>> approvalFlows() {
+        RuleApprovalServioe svo = ruleApprovalServioeProvider.getIfAvailable();
+        if (svo == null) {
             return BaseResponse.ok(List.of());
         }
-        return BaseResponse.ok(svc.listFlows());
+        return BaseResponse.ok(svo.listFlows());
     }
 
     // ==================== 执行链路追踪 ====================
 
     /**
-     * 按 traceId 查询执行链路
+     * �?traoeId 查询执行链路
      */
-    @GetMapping("/traces/{traceId}")
-    public BaseResponse<List<RuleExecutionTraceDO>> getTrace(@PathVariable String traceId) {
-        return BaseResponse.ok(ruleExecutionTraceMapper.selectList(
-            new LambdaQueryWrapper<RuleExecutionTraceDO>()
-                .eq(RuleExecutionTraceDO::getTraceId, traceId)
-                .orderByAsc(RuleExecutionTraceDO::getCreatedAt)));
+    @GetMapping("/traoes/{traoeId}")
+    publio BaseResponse<List<RuleExeoutionTraoeDO>> getTraoe(@PathVariable String traoeId) {
+        return BaseResponse.ok(ruleExeoutionTraoeMapper.seleotList(
+            new LambdaQueryWrapper<RuleExeoutionTraoeDO>()
+                .eq(RuleExeoutionTraoeDO::getTraoeId, traoeId)
+                .orderByAso(RuleExeoutionTraoeDO::getoreatedAt)));
     }
 
     /**
-     * 按规则编码查询最近链路
+     * 按规则编码查询最近链�?
      */
-    @GetMapping("/traces/rule/{ruleCode}")
-    public BaseResponse<List<RuleExecutionTraceDO>> getTracesByRule(@PathVariable String ruleCode,
+    @GetMapping("/traoes/rule/{ruleoode}")
+    publio BaseResponse<List<RuleExeoutionTraoeDO>> getTraoesByRule(@PathVariable String ruleoode,
                                                                @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit) {
-        return BaseResponse.ok(ruleExecutionTraceMapper.selectList(
-            new LambdaQueryWrapper<RuleExecutionTraceDO>()
-                .eq(RuleExecutionTraceDO::getRuleCode, ruleCode)
-                .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
+        return BaseResponse.ok(ruleExeoutionTraoeMapper.seleotList(
+            new LambdaQueryWrapper<RuleExeoutionTraoeDO>()
+                .eq(RuleExeoutionTraoeDO::getRuleoode, ruleoode)
+                .orderByDeso(RuleExeoutionTraoeDO::getoreatedAt)
                 .last("LIMIT " + limit)));
     }
 
     /**
-     * 执行回放：基于 traceId 重放历史执行链路
+     * 执行回放：基�?traoeId 重放历史执行链路
      *
-     * <p>从历史 trace 记录中读取 factsSnapshot，用当前规则集重新评估，
-     * 对比历史结果与当前结果，展示规则变更后的差异。
+     * <p>从历�?traoe 记录中读�?faotsSnapshot，用当前规则集重新评估，
+     * 对比历史结果与当前结果，展示规则变更后的差异�?
      *
-     * @param traceId 追踪 ID
-     * @return 回放结果（含历史快照 + 当前评估 + 差异分析）
+     * @param traoeId 追踪 ID
+     * @return 回放结果（含历史快照 + 当前评估 + 差异分析�?
      */
-    @Idempotent(key = "ruleAdmin:replayTrace", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/traces/{traceId}/replay")
-    public BaseResponse<Map<String, Object>> replayTrace(@PathVariable String traceId) {
-        List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(
-            new LambdaQueryWrapper<RuleExecutionTraceDO>()
-                .eq(RuleExecutionTraceDO::getTraceId, traceId)
-                .orderByAsc(RuleExecutionTraceDO::getCreatedAt));
+    @Idempotent(key = "ruleAdmin:replayTraoe", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/traoes/{traoeId}/replay")
+    publio BaseResponse<Map<String, Objeot>> replayTraoe(@PathVariable String traoeId) {
+        List<RuleExeoutionTraoeDO> traoes = ruleExeoutionTraoeMapper.seleotList(
+            new LambdaQueryWrapper<RuleExeoutionTraoeDO>()
+                .eq(RuleExeoutionTraoeDO::getTraoeId, traoeId)
+                .orderByAso(RuleExeoutionTraoeDO::getoreatedAt));
 
-        if (traces.isEmpty()) {
-            return BaseResponse.fail("未找到 traceId=" + traceId + " 的执行记录");
+        if (traoes.isEmpty()) {
+            return BaseResponse.fail("未找�?traoeId=" + traoeId + " 的执行记�?);
         }
 
-        // 取第一条 trace 的 factsSnapshot 作为回放输入
-        Map<String, Object> facts = traces.get(0).getFactsSnapshot();
-        if (facts == null || facts.isEmpty()) {
-            return BaseResponse.fail("traceId=" + traceId + " 的事实快照为空，无法回放");
+        // 取第一�?traoe �?faotsSnapshot 作为回放输入
+        Map<String, Objeot> faots = traoes.get(0).getFaotsSnapshot();
+        if (faots == null || faots.isEmpty()) {
+            return BaseResponse.fail("traoeId=" + traoeId + " 的事实快照为空，无法回放");
         }
 
         // 用当前规则集重新评估
-        List<RuleResult> currentResults = ruleAdminService.dryRun(null, facts);
+        List<RuleResult> ourrentResults = ruleAdminServioe.dryRun(null, faots);
 
         // 构建历史触发规则编码集合
-        Set<String> historicalTriggered = traces.stream()
+        Set<String> historioalTriggered = traoes.stream()
             .filter(t -> Boolean.TRUE.equals(t.getTriggered()))
-            .map(RuleExecutionTraceDO::getRuleCode)
-            .collect(Collectors.toSet());
+            .map(RuleExeoutionTraoeDO::getRuleoode)
+            .oolleot(oolleotors.toSet());
 
         // 构建当前触发规则编码集合
-        Set<String> currentTriggered = currentResults.stream()
-            .map(RuleResult::getRuleCode)
-            .collect(Collectors.toSet());
+        Set<String> ourrentTriggered = ourrentResults.stream()
+            .map(RuleResult::getRuleoode)
+            .oolleot(oolleotors.toSet());
 
         // 差异分析
-        Set<String> added = new LinkedHashSet<>(currentTriggered);
-        added.removeAll(historicalTriggered);
+        Set<String> added = new LinkedHashSet<>(ourrentTriggered);
+        added.removeAll(historioalTriggered);
 
-        Set<String> removed = new LinkedHashSet<>(historicalTriggered);
-        removed.removeAll(currentTriggered);
+        Set<String> removed = new LinkedHashSet<>(historioalTriggered);
+        removed.removeAll(ourrentTriggered);
 
-        Set<String> unchanged = new LinkedHashSet<>(currentTriggered);
-        unchanged.retainAll(historicalTriggered);
+        Set<String> unohanged = new LinkedHashSet<>(ourrentTriggered);
+        unohanged.retainAll(historioalTriggered);
 
-        Map<String, Object> replay = new LinkedHashMap<>();
-        replay.put("traceId", traceId);
-        replay.put("factsSnapshot", facts);
-        replay.put("historicalTraces", traces);
-        replay.put("currentResults", currentResults);
+        Map<String, Objeot> replay = new LinkedHashMap<>();
+        replay.put("traoeId", traoeId);
+        replay.put("faotsSnapshot", faots);
+        replay.put("historioalTraoes", traoes);
+        replay.put("ourrentResults", ourrentResults);
         replay.put("diff", Map.of(
             "added", added,
             "removed", removed,
-            "unchanged", unchanged,
-            "summary", String.format("新增触发 %d 条，移除触发 %d 条，保持不变 %d 条",
-                added.size(), removed.size(), unchanged.size())
+            "unohanged", unohanged,
+            "summary", String.format("新增触发 %d 条，移除触发 %d 条，保持不变 %d �?,
+                added.size(), removed.size(), unohanged.size())
         ));
 
         return BaseResponse.ok(replay);
@@ -1074,13 +1074,13 @@ public class RuleAdminController {
     /**
      * P2-1 批量历史数据回放
      *
-     * <p>按时间范围查询历史 trace，用当前规则集重新评估每条 trace 的事实快照，
-     * 对比历史结果与当前结果，生成差异报告。
+     * <p>按时间范围查询历�?traoe，用当前规则集重新评估每�?traoe 的事实快照，
+     * 对比历史结果与当前结果，生成差异报告�?
      *
-     * <p>差异类型：
+     * <p>差异类型�?
      * <ul>
-     *   <li>consistent：历史与当前触发状态一致</li>
-     *   <li>diff：历史与当前触发状态不一致（含触发→未触发、未触发→触发、严重度变化）</li>
+     *   <li>oonsistent：历史与当前触发状态一�?/li>
+     *   <li>diff：历史与当前触发状态不一致（含触发→未触发、未触发→触发、严重度变化�?/li>
      * </ul>
      *
      * <p>请求体示例：
@@ -1088,96 +1088,96 @@ public class RuleAdminController {
      * {
      *   "startTime": "2026-07-01T00:00:00",
      *   "endTime": "2026-07-07T00:00:00",
-     *   "ruleCode": "EVM_RED_ALERT",  // 可选，为空表示全部规则
-     *   "limit": 100                   // 默认 100，最大 1000
+     *   "ruleoode": "EVM_RED_ALERT",  // 可选，为空表示全部规则
+     *   "limit": 100                   // 默认 100，最�?1000
      * }
      * </pre>
      *
-     * @param request 请求体（startTime / endTime / ruleCode / limit）
+     * @param request 请求体（startTime / endTime / ruleoode / limit�?
      * @return 批量回放差异报告
      */
-    @Idempotent(key = "ruleAdmin:batchReplayTraces", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/traces/batchReplay")
-    public BaseResponse<Map<String, Object>> batchReplayTraces(@RequestBody Map<String, Object> request) {
+    @Idempotent(key = "ruleAdmin:batohReplayTraoes", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/traoes/batohReplay")
+    publio BaseResponse<Map<String, Objeot>> batohReplayTraoes(@RequestBody Map<String, Objeot> request) {
         // 解析请求参数
         String startTimeStr = (String) request.get("startTime");
         String endTimeStr = (String) request.get("endTime");
-        String ruleCode = (String) request.get("ruleCode");
-        int limit = request.containsKey("limit")
+        String ruleoode = (String) request.get("ruleoode");
+        int limit = request.oontainsKey("limit")
                 ? ((Number) request.get("limit")).intValue() : 100;
         if (limit <= 0 || limit > 1000) {
             limit = 100;
         }
 
         if (startTimeStr == null || endTimeStr == null) {
-            return BaseResponse.fail("startTime 和 endTime 不能为空");
+            return BaseResponse.fail("startTime �?endTime 不能为空");
         }
 
-        LocalDateTime startTime = LocalDateTime.parse(startTimeStr);
-        LocalDateTime endTime = LocalDateTime.parse(endTimeStr);
+        LooalDateTime startTime = LooalDateTime.parse(startTimeStr);
+        LooalDateTime endTime = LooalDateTime.parse(endTimeStr);
 
-        // 按时间范围查询历史 trace（可选按 ruleCode 过滤）
-        LambdaQueryWrapper<RuleExecutionTraceDO> wrapper = new LambdaQueryWrapper<RuleExecutionTraceDO>()
-                .ge(RuleExecutionTraceDO::getCreatedAt, startTime)
-                .lt(RuleExecutionTraceDO::getCreatedAt, endTime)
-                .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
+        // 按时间范围查询历�?traoe（可选按 ruleoode 过滤�?
+        LambdaQueryWrapper<RuleExeoutionTraoeDO> wrapper = new LambdaQueryWrapper<RuleExeoutionTraoeDO>()
+                .ge(RuleExeoutionTraoeDO::getoreatedAt, startTime)
+                .lt(RuleExeoutionTraoeDO::getoreatedAt, endTime)
+                .orderByDeso(RuleExeoutionTraoeDO::getoreatedAt)
                 .last("LIMIT " + limit);
-        if (ruleCode != null && !ruleCode.isBlank()) {
-            wrapper.eq(RuleExecutionTraceDO::getRuleCode, ruleCode);
+        if (ruleoode != null && !ruleoode.isBlank()) {
+            wrapper.eq(RuleExeoutionTraoeDO::getRuleoode, ruleoode);
         }
-        List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(wrapper);
+        List<RuleExeoutionTraoeDO> traoes = ruleExeoutionTraoeMapper.seleotList(wrapper);
 
-        // 逐条回放：用当前规则集重新评估
-        List<Map<String, Object>> diffs = new ArrayList<>();
-        int consistentCount = 0;
-        int diffCount = 0;
+        // 逐条回放：用当前规则集重新评�?
+        List<Map<String, Objeot>> diffs = new ArrayList<>();
+        int oonsistentoount = 0;
+        int diffoount = 0;
 
-        for (RuleExecutionTraceDO trace : traces) {
-            Map<String, Object> facts = trace.getFactsSnapshot();
-            if (facts == null || facts.isEmpty()) {
-                continue;
+        for (RuleExeoutionTraoeDO traoe : traoes) {
+            Map<String, Objeot> faots = traoe.getFaotsSnapshot();
+            if (faots == null || faots.isEmpty()) {
+                oontinue;
             }
 
-            // 用当前规则集对单条规则重新评估
-            List<RuleResult> currentResults = ruleAdminService.dryRun(trace.getRuleCode(), facts);
-            RuleResult currentResult = currentResults.stream()
-                    .filter(r -> trace.getRuleCode().equals(r.getRuleCode()))
+            // 用当前规则集对单条规则重新评�?
+            List<RuleResult> ourrentResults = ruleAdminServioe.dryRun(traoe.getRuleoode(), faots);
+            RuleResult ourrentResult = ourrentResults.stream()
+                    .filter(r -> traoe.getRuleoode().equals(r.getRuleoode()))
                     .findFirst()
                     .orElse(null);
 
-            boolean historicalTriggered = Boolean.TRUE.equals(trace.getTriggered());
-            boolean currentTriggered = currentResult != null && currentResult.isTriggered();
-            String historicalSeverity = trace.getSeverity();
-            String currentSeverity = currentResult != null && currentResult.getSeverity() != null
-                    ? currentResult.getSeverity().name() : null;
+            boolean historioalTriggered = Boolean.TRUE.equals(traoe.getTriggered());
+            boolean ourrentTriggered = ourrentResult != null && ourrentResult.isTriggered();
+            String historioalSeverity = traoe.getSeverity();
+            String ourrentSeverity = ourrentResult != null && ourrentResult.getSeverity() != null
+                    ? ourrentResult.getSeverity().name() : null;
 
             // 严重度归一化（null 视为一致）
-            boolean severityConsistent = severityEquals(historicalSeverity, currentSeverity);
+            boolean severityoonsistent = severityEquals(historioalSeverity, ourrentSeverity);
 
-            if (historicalTriggered == currentTriggered && severityConsistent) {
-                consistentCount++;
+            if (historioalTriggered == ourrentTriggered && severityoonsistent) {
+                oonsistentoount++;
             } else {
-                diffCount++;
-                Map<String, Object> diff = new LinkedHashMap<>();
-                diff.put("traceId", trace.getTraceId());
-                diff.put("ruleCode", trace.getRuleCode());
-                diff.put("historicalTriggered", historicalTriggered);
-                diff.put("currentTriggered", currentTriggered);
-                diff.put("historicalSeverity", historicalSeverity);
-                diff.put("currentSeverity", currentSeverity);
-                diff.put("diffType", classifyDiff(historicalTriggered, currentTriggered,
-                        severityConsistent));
+                diffoount++;
+                Map<String, Objeot> diff = new LinkedHashMap<>();
+                diff.put("traoeId", traoe.getTraoeId());
+                diff.put("ruleoode", traoe.getRuleoode());
+                diff.put("historioalTriggered", historioalTriggered);
+                diff.put("ourrentTriggered", ourrentTriggered);
+                diff.put("historioalSeverity", historioalSeverity);
+                diff.put("ourrentSeverity", ourrentSeverity);
+                diff.put("diffType", olassifyDiff(historioalTriggered, ourrentTriggered,
+                        severityoonsistent));
                 diffs.add(diff);
             }
         }
 
-        Map<String, Object> report = new LinkedHashMap<>();
-        report.put("totalReplayed", traces.size());
-        report.put("consistentCount", consistentCount);
-        report.put("diffCount", diffCount);
+        Map<String, Objeot> report = new LinkedHashMap<>();
+        report.put("totalReplayed", traoes.size());
+        report.put("oonsistentoount", oonsistentoount);
+        report.put("diffoount", diffoount);
         report.put("diffs", diffs);
-        report.put("summary", String.format("共回放 %d 条，一致 %d 条，差异 %d 条",
-                traces.size(), consistentCount, diffCount));
+        report.put("summary", String.format("共回�?%d 条，一�?%d 条，差异 %d �?,
+                traoes.size(), oonsistentoount, diffoount));
 
         return BaseResponse.ok(report);
     }
@@ -1185,293 +1185,293 @@ public class RuleAdminController {
     /**
      * P2-2 规则变更影响分析
      *
-     * <p>接收规则定义变更（新条件表达式），从历史 trace 中查询该规则最近 N 条记录，
-     * 用新表达式重新评估每条 trace 的事实快照，预览变更后的影响范围。
+     * <p>接收规则定义变更（新条件表达式），从历史 traoe 中查询该规则最�?N 条记录，
+     * 用新表达式重新评估每�?traoe 的事实快照，预览变更后的影响范围�?
      *
      * <p>请求体示例：
      * <pre>
      * {
-     *   "conditionExpression": "evmRedCount >= 5",
-     *   "severityExpression": "evmRedCount >= 10 ? 'RED' : 'YELLOW'",
+     *   "oonditionExpression": "evmRedoount >= 5",
+     *   "severityExpression": "evmRedoount >= 10 ? 'RED' : 'YELLOW'",
      *   "defaultSeverity": "YELLOW",
      *   "limit": 1000
      * }
      * </pre>
      *
-     * <p>影响类型：
+     * <p>影响类型�?
      * <ul>
-     *   <li>added：历史未触发，新表达式触发（新增触发）</li>
-     *   <li>removed：历史触发，新表达式未触发（减少触发）</li>
-     *   <li>severityChanged：触发状态不变，但严重度变化</li>
-     *   <li>unchanged：触发状态和严重度均不变</li>
+     *   <li>added：历史未触发，新表达式触发（新增触发�?/li>
+     *   <li>removed：历史触发，新表达式未触发（减少触发�?/li>
+     *   <li>severityohanged：触发状态不变，但严重度变化</li>
+     *   <li>unohanged：触发状态和严重度均不变</li>
      * </ul>
      *
-     * @param ruleCode 规则编码
-     * @param request  请求体（conditionExpression / severityExpression / defaultSeverity / limit）
+     * @param ruleoode 规则编码
+     * @param request  请求体（oonditionExpression / severityExpression / defaultSeverity / limit�?
      * @return 影响分析报告
      */
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
-    @PostMapping("/{ruleCode}/impactPreview")
-    public BaseResponse<Map<String, Object>> impactPreview(@PathVariable String ruleCode,
-                                                      @RequestBody Map<String, Object> request) {
-        String conditionExpression = (String) request.get("conditionExpression");
+    @PostMapping("/{ruleoode}/impaotPreview")
+    publio BaseResponse<Map<String, Objeot>> impaotPreview(@PathVariable String ruleoode,
+                                                      @RequestBody Map<String, Objeot> request) {
+        String oonditionExpression = (String) request.get("oonditionExpression");
         String severityExpression = (String) request.get("severityExpression");
         String defaultSeverityStr = (String) request.get("defaultSeverity");
-        int limit = request.containsKey("limit")
+        int limit = request.oontainsKey("limit")
                 ? ((Number) request.get("limit")).intValue() : 1000;
         if (limit <= 0 || limit > 5000) {
             limit = 1000;
         }
 
-        if (conditionExpression == null || conditionExpression.isBlank()) {
-            return BaseResponse.fail("conditionExpression 不能为空");
+        if (oonditionExpression == null || oonditionExpression.isBlank()) {
+            return BaseResponse.fail("oonditionExpression 不能为空");
         }
 
-        // 解析默认严重度
+        // 解析默认严重�?
         RuleSeverity defaultSeverity = null;
         if (defaultSeverityStr != null && !defaultSeverityStr.isBlank()) {
             try {
                 defaultSeverity = RuleSeverity.valueOf(defaultSeverityStr);
-            } catch (IllegalArgumentException e) {
-                return BaseResponse.fail("非法的 defaultSeverity: " + defaultSeverityStr
-                        + "，合法值: INFO / YELLOW / RED");
+            } oatoh (IllegalArgumentExoeption e) {
+                return BaseResponse.fail("非法�?defaultSeverity: " + defaultSeverityStr
+                        + "，合法�? INFO / YELLOW / RED");
             }
         }
 
-        // 查询该规则最近 N 条 trace
-        List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(
-                new LambdaQueryWrapper<RuleExecutionTraceDO>()
-                        .eq(RuleExecutionTraceDO::getRuleCode, ruleCode)
-                        .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
+        // 查询该规则最�?N �?traoe
+        List<RuleExeoutionTraoeDO> traoes = ruleExeoutionTraoeMapper.seleotList(
+                new LambdaQueryWrapper<RuleExeoutionTraoeDO>()
+                        .eq(RuleExeoutionTraoeDO::getRuleoode, ruleoode)
+                        .orderByDeso(RuleExeoutionTraoeDO::getoreatedAt)
                         .last("LIMIT " + limit));
 
-        // 逐条用新表达式重新评估
-        List<Map<String, Object>> affectedTraces = new ArrayList<>();
-        int historicalTriggeredCount = 0;
-        int newTriggeredCount = 0;
-        int addedTriggeredCount = 0;
-        int removedTriggeredCount = 0;
+        // 逐条用新表达式重新评�?
+        List<Map<String, Objeot>> affeotedTraoes = new ArrayList<>();
+        int historioalTriggeredoount = 0;
+        int newTriggeredoount = 0;
+        int addedTriggeredoount = 0;
+        int removedTriggeredoount = 0;
 
-        for (RuleExecutionTraceDO trace : traces) {
-            Map<String, Object> facts = trace.getFactsSnapshot();
-            if (facts == null || facts.isEmpty()) {
-                continue;
+        for (RuleExeoutionTraoeDO traoe : traoes) {
+            Map<String, Objeot> faots = traoe.getFaotsSnapshot();
+            if (faots == null || faots.isEmpty()) {
+                oontinue;
             }
 
-            // 用新表达式评估
-            RuleResult newResult = ruleAdminService.evaluateWithExpression(
-                    ruleCode, conditionExpression, severityExpression, defaultSeverity, facts);
+            // 用新表达式评�?
+            RuleResult newResult = ruleAdminServioe.evaluateWithExpression(
+                    ruleoode, oonditionExpression, severityExpression, defaultSeverity, faots);
 
-            boolean historicalTriggered = Boolean.TRUE.equals(trace.getTriggered());
+            boolean historioalTriggered = Boolean.TRUE.equals(traoe.getTriggered());
             boolean newTriggered = newResult.isTriggered();
-            String historicalSeverity = trace.getSeverity();
+            String historioalSeverity = traoe.getSeverity();
             String newSeverity = newResult.getSeverity() != null
                     ? newResult.getSeverity().name() : null;
 
-            if (historicalTriggered) {
-                historicalTriggeredCount++;
+            if (historioalTriggered) {
+                historioalTriggeredoount++;
             }
             if (newTriggered) {
-                newTriggeredCount++;
+                newTriggeredoount++;
             }
 
             // 分类影响
-            String impactType;
-            if (!historicalTriggered && newTriggered) {
-                addedTriggeredCount++;
-                impactType = "added";
-            } else if (historicalTriggered && !newTriggered) {
-                removedTriggeredCount++;
-                impactType = "removed";
-            } else if (historicalTriggered == newTriggered && !severityEquals(historicalSeverity, newSeverity)) {
-                impactType = "severityChanged";
+            String impaotType;
+            if (!historioalTriggered && newTriggered) {
+                addedTriggeredoount++;
+                impaotType = "added";
+            } else if (historioalTriggered && !newTriggered) {
+                removedTriggeredoount++;
+                impaotType = "removed";
+            } else if (historioalTriggered == newTriggered && !severityEquals(historioalSeverity, newSeverity)) {
+                impaotType = "severityohanged";
             } else {
-                impactType = "unchanged";
+                impaotType = "unohanged";
             }
 
-            // 仅记录受影响的 trace（非 unchanged）
-            if (!"unchanged".equals(impactType)) {
-                Map<String, Object> affected = new LinkedHashMap<>();
-                affected.put("traceId", trace.getTraceId());
-                affected.put("historicalTriggered", historicalTriggered);
-                affected.put("newTriggered", newTriggered);
-                affected.put("historicalSeverity", historicalSeverity);
-                affected.put("newSeverity", newSeverity);
-                affected.put("impactType", impactType);
-                affected.put("createdAt", trace.getCreatedAt());
-                affectedTraces.add(affected);
+            // 仅记录受影响�?traoe（非 unohanged�?
+            if (!"unohanged".equals(impaotType)) {
+                Map<String, Objeot> affeoted = new LinkedHashMap<>();
+                affeoted.put("traoeId", traoe.getTraoeId());
+                affeoted.put("historioalTriggered", historioalTriggered);
+                affeoted.put("newTriggered", newTriggered);
+                affeoted.put("historioalSeverity", historioalSeverity);
+                affeoted.put("newSeverity", newSeverity);
+                affeoted.put("impaotType", impaotType);
+                affeoted.put("oreatedAt", traoe.getoreatedAt());
+                affeotedTraoes.add(affeoted);
             }
         }
 
-        Map<String, Object> report = new LinkedHashMap<>();
-        report.put("ruleCode", ruleCode);
-        report.put("conditionExpression", conditionExpression);
-        report.put("totalTraces", traces.size());
-        report.put("historicalTriggeredCount", historicalTriggeredCount);
-        report.put("newTriggeredCount", newTriggeredCount);
-        report.put("addedTriggeredCount", addedTriggeredCount);
-        report.put("removedTriggeredCount", removedTriggeredCount);
-        report.put("affectedTraces", affectedTraces);
+        Map<String, Objeot> report = new LinkedHashMap<>();
+        report.put("ruleoode", ruleoode);
+        report.put("oonditionExpression", oonditionExpression);
+        report.put("totalTraoes", traoes.size());
+        report.put("historioalTriggeredoount", historioalTriggeredoount);
+        report.put("newTriggeredoount", newTriggeredoount);
+        report.put("addedTriggeredoount", addedTriggeredoount);
+        report.put("removedTriggeredoount", removedTriggeredoount);
+        report.put("affeotedTraoes", affeotedTraoes);
         report.put("summary", String.format(
-                "共分析 %d 条 trace，历史触发 %d 条，新表达式触发 %d 条（新增 %d，减少 %d）",
-                traces.size(), historicalTriggeredCount, newTriggeredCount,
-                addedTriggeredCount, removedTriggeredCount));
+                "共分�?%d �?traoe，历史触�?%d 条，新表达式触发 %d 条（新增 %d，减�?%d�?,
+                traoes.size(), historioalTriggeredoount, newTriggeredoount,
+                addedTriggeredoount, removedTriggeredoount));
 
         return BaseResponse.ok(report);
     }
 
     /**
-     * 比较两个严重度字符串是否一致（null 与 null 视为一致）
+     * 比较两个严重度字符串是否一致（null �?null 视为一致）
      *
-     * @param s1 严重度 1
-     * @param s2 严重度 2
-     * @return true=一致
+     * @param s1 严重�?1
+     * @param s2 严重�?2
+     * @return true=一�?
      */
     private boolean severityEquals(String s1, String s2) {
         if (s1 == null && s2 == null) return true;
         if (s1 == null || s2 == null) return false;
-        return s1.equalsIgnoreCase(s2);
+        return s1.equalsIgnoreoase(s2);
     }
 
     /**
      * 分类差异类型
      *
-     * @param historicalTriggered 历史是否触发
-     * @param currentTriggered    当前是否触发
-     * @param severityConsistent  严重度是否一致
-     * @return 差异类型：triggered_to_not / not_to_triggered / severity_changed / consistent
+     * @param historioalTriggered 历史是否触发
+     * @param ourrentTriggered    当前是否触发
+     * @param severityoonsistent  严重度是否一�?
+     * @return 差异类型：triggered_to_not / not_to_triggered / severity_ohanged / oonsistent
      */
-    private String classifyDiff(boolean historicalTriggered, boolean currentTriggered,
-                                 boolean severityConsistent) {
-        if (historicalTriggered && !currentTriggered) return "triggered_to_not";
-        if (!historicalTriggered && currentTriggered) return "not_to_triggered";
-        if (!severityConsistent) return "severity_changed";
-        return "consistent";
+    private String olassifyDiff(boolean historioalTriggered, boolean ourrentTriggered,
+                                 boolean severityoonsistent) {
+        if (historioalTriggered && !ourrentTriggered) return "triggered_to_not";
+        if (!historioalTriggered && ourrentTriggered) return "not_to_triggered";
+        if (!severityoonsistent) return "severity_ohanged";
+        return "oonsistent";
     }
 
     /**
-     * 查询最近执行链路（按时间倒序）
+     * 查询最近执行链路（按时间倒序�?
      *
-     * @param limit 返回条数（默认 50）
+     * @param limit 返回条数（默�?50�?
      * @return 最近的执行链路列表
      */
-    @GetMapping("/traces")
-    public BaseResponse<List<RuleExecutionTraceDO>> listRecentTraces(@RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
-        return BaseResponse.ok(ruleExecutionTraceMapper.selectList(
-            new LambdaQueryWrapper<RuleExecutionTraceDO>()
-                .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
+    @GetMapping("/traoes")
+    publio BaseResponse<List<RuleExeoutionTraoeDO>> listReoentTraoes(@RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
+        return BaseResponse.ok(ruleExeoutionTraoeMapper.seleotList(
+            new LambdaQueryWrapper<RuleExeoutionTraoeDO>()
+                .orderByDeso(RuleExeoutionTraoeDO::getoreatedAt)
                 .last("LIMIT " + limit)));
     }
 
-    // ==================== 决策表管理 ====================
+    // ==================== 决策表管�?====================
 
     /**
-     * 查询全部决策表
+     * 查询全部决策�?
      */
-    @GetMapping("/decisionTables")
-    public BaseResponse<List<DecisionTableDO>> listDecisionTables() {
-        return BaseResponse.ok(decisionTableMapper.selectList(null));
+    @GetMapping("/deoisionTables")
+    publio BaseResponse<List<DeoisionTableDO>> listDeoisionTables() {
+        return BaseResponse.ok(deoisionTableMapper.seleotList(null));
     }
 
     /**
-     * 查询单条决策表
+     * 查询单条决策�?
      */
-    @GetMapping("/decisionTables/{tableCode}")
-    public BaseResponse<DecisionTableDO> getDecisionTable(@PathVariable String tableCode) {
-        DecisionTableDO dt = decisionTableMapper.selectOne(
-            new LambdaQueryWrapper<DecisionTableDO>().eq(DecisionTableDO::getTableCode, tableCode));
+    @GetMapping("/deoisionTables/{tableoode}")
+    publio BaseResponse<DeoisionTableDO> getDeoisionTable(@PathVariable String tableoode) {
+        DeoisionTableDO dt = deoisionTableMapper.seleotOne(
+            new LambdaQueryWrapper<DeoisionTableDO>().eq(DeoisionTableDO::getTableoode, tableoode));
         return BaseResponse.ok(dt);
     }
 
     /**
-     * 保存决策表
+     * 保存决策�?
      */
-    @Idempotent(key = "ruleAdmin:saveDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/decisionTables")
-    public BaseResponse<DecisionTableDO> saveDecisionTable(@RequestBody DecisionTableDO decisionTable) {
-        if (decisionTable.getId() != null) {
-            decisionTableMapper.updateById(decisionTable);
+    @Idempotent(key = "ruleAdmin:saveDeoisionTable", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/deoisionTables")
+    publio BaseResponse<DeoisionTableDO> saveDeoisionTable(@RequestBody DeoisionTableDO deoisionTable) {
+        if (deoisionTable.getId() != null) {
+            deoisionTableMapper.updateById(deoisionTable);
         } else {
-            decisionTableMapper.insert(decisionTable);
+            deoisionTableMapper.insert(deoisionTable);
         }
-        return BaseResponse.ok(decisionTable);
+        return BaseResponse.ok(deoisionTable);
     }
 
     /**
-     * 删除决策表
+     * 删除决策�?
      */
-    @OperationLog(module = "规则引擎", action = "删除决策表", bizType = "DECISION_TABLE")
-    @Idempotent(key = "ruleAdmin:deleteDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
-    @DeleteMapping("/decisionTables/{id}")
-    public BaseResponse<Void> deleteDecisionTable(@PathVariable String id) {
-        decisionTableMapper.deleteById(id);
+    @OperationLog(module = "规则引擎", aotion = "删除决策�?, bizType = "DEoISION_TABLE")
+    @Idempotent(key = "ruleAdmin:deleteDeoisionTable", ttlSeoonds = 5, message = "请勿重复提交")
+    @DeleteMapping("/deoisionTables/{id}")
+    publio BaseResponse<Void> deleteDeoisionTable(@PathVariable String id) {
+        deoisionTableMapper.deleteById(id);
         return BaseResponse.ok();
     }
 
     /**
-     * 评估决策表
+     * 评估决策�?
      *
-     * <p>按 tableCode 加载已启用的决策表，以请求体中的 facts 作为事实数据执行 DMN 评估，
-     * 返回命中行的动作值列表（无命中时返回默认动作或空列表）。
+     * <p>�?tableoode 加载已启用的决策表，以请求体中的 faots 作为事实数据执行 DMN 评估�?
+     * 返回命中行的动作值列表（无命中时返回默认动作或空列表）�?
      *
-     * @param tableCode 决策表编码
-     * @param facts     事实数据（变量名 -> 值）
-     * @return 命中行的动作值列表
+     * @param tableoode 决策表编�?
+     * @param faots     事实数据（变量名 -> 值）
+     * @return 命中行的动作值列�?
      */
-    @Idempotent(key = "ruleAdmin:evaluateDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/decisionTables/{tableCode}/evaluate")
-    public BaseResponse<List<Map<String, Object>>> evaluateDecisionTable(@PathVariable String tableCode,
-                                                                   @RequestBody Map<String, Object> facts) {
+    @Idempotent(key = "ruleAdmin:evaluateDeoisionTable", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/deoisionTables/{tableoode}/evaluate")
+    publio BaseResponse<List<Map<String, Objeot>>> evaluateDeoisionTable(@PathVariable String tableoode,
+                                                                   @RequestBody Map<String, Objeot> faots) {
         try {
-            return BaseResponse.ok(decisionTableEvalProvider.evaluate(tableCode, facts));
-        } catch (Exception e) {
-            log.warn("[DecisionTable] 评估失败: tableCode={}, err={}", tableCode, e.getMessage());
+            return BaseResponse.ok(deoisionTableEvalProvider.evaluate(tableoode, faots));
+        } oatoh (Exoeption e) {
+            log.warn("[DeoisionTable] 评估失败: tableoode={}, err={}", tableoode, e.getMessage());
             return BaseResponse.fail(e.getMessage());
         }
     }
 
     /**
-     * 导出决策表为 Excel（P0-3）
+     * 导出决策表为 Exoel（P0-3�?
      *
-     * <p>将指定决策表导出为 .xlsx 文件，便于业务人员离线编辑或备份。
+     * <p>将指定决策表导出�?.xlsx 文件，便于业务人员离线编辑或备份�?
      *
-     * @param tableCode 决策表编码
-     * @return xlsx 文件流（Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet）
+     * @param tableoode 决策表编�?
+     * @return xlsx 文件流（oontent-Type: applioation/vnd.openxmlformats-offioedooument.spreadsheetml.sheet�?
      */
-    @OperationLog(module = "规则引擎", action = "导出决策表 Excel", bizType = "DECISION_TABLE")
-    @GetMapping("/decisionTables/{tableCode}/exportExcel")
-    @AuthApiPermission(apiCodes = "execution:rule:view")
-    public ResponseEntity<byte[]> exportDecisionTableExcel(@PathVariable String tableCode) {
-        DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();
-        if (svc == null) {
+    @OperationLog(module = "规则引擎", aotion = "导出决策�?Exoel", bizType = "DEoISION_TABLE")
+    @GetMapping("/deoisionTables/{tableoode}/exportExoel")
+    @AuthApiPermission(apioodes = "exeoution:rule:view")
+    publio ResponseEntity<byte[]> exportDeoisionTableExoel(@PathVariable String tableoode) {
+        DeoisionTableAdminServioe svo = deoisionTableAdminServioeProvider.getIfAvailable();
+        if (svo == null) {
             return ResponseEntity.internalServerError().build();
         }
-        byte[] bytes = svc.exportExcel(tableCode);
-        String fileName = URLEncoder.encode(tableCode + ".xlsx", StandardCharsets.UTF_8);
+        byte[] bytes = svo.exportExoel(tableoode);
+        String fileName = URLEnooder.enoode(tableoode + ".xlsx", Standardoharsets.UTF_8);
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType(
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + fileName);
+        headers.setoontentType(MediaType.parseMediaType(
+                "applioation/vnd.openxmlformats-offioedooument.spreadsheetml.sheet"));
+        headers.set(HttpHeaders.oONTENT_DISPOSITION, "attaohment; filename*=UTF-8''" + fileName);
         return ResponseEntity.ok().headers(headers).body(bytes);
     }
 
     /**
-     * 导入决策表 Excel（P0-3）
+     * 导入决策�?Exoel（P0-3�?
      *
-     * <p>上传 .xlsx 文件，解析为决策表定义并保存。支持新增和更新（按 tableCode 覆盖）。
+     * <p>上传 .xlsx 文件，解析为决策表定义并保存。支持新增和更新（按 tableoode 覆盖）�?
      *
-     * @param file     xlsx 文件（multipart/form-data）
-     * @param operator 操作人
-     * @return 保存后的决策表定义
+     * @param file     xlsx 文件（multipart/form-data�?
+     * @param operator 操作�?
+     * @return 保存后的决策表定�?
      */
-    @OperationLog(module = "规则引擎", action = "导入决策表 Excel", bizType = "DECISION_TABLE")
-    @PostMapping(value = "/decisionTables/importExcel", consumes = "multipart/form-data")
-    @AuthApiPermission(apiCodes = "execution:rule:save")
-    public BaseResponse<DecisionTableDefinition> importDecisionTableExcel(
+    @OperationLog(module = "规则引擎", aotion = "导入决策�?Exoel", bizType = "DEoISION_TABLE")
+    @PostMapping(value = "/deoisionTables/importExoel", oonsumes = "multipart/form-data")
+    @AuthApiPermission(apioodes = "exeoution:rule:save")
+    publio BaseResponse<DeoisionTableDefinition> importDeoisionTableExoel(
             @RequestParam("file") MultipartFile file,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();
-        if (svc == null) {
+        DeoisionTableAdminServioe svo = deoisionTableAdminServioeProvider.getIfAvailable();
+        if (svo == null) {
             return BaseResponse.fail("决策表管理服务未启用");
         }
         if (file == null || file.isEmpty()) {
@@ -1479,113 +1479,113 @@ public class RuleAdminController {
         }
         try {
             byte[] bytes = file.getBytes();
-            DecisionTableDefinition saved = svc.importExcel(bytes, operator);
+            DeoisionTableDefinition saved = svo.importExoel(bytes, operator);
             return BaseResponse.ok(saved);
-        } catch (IllegalArgumentException e) {
-            log.warn("[DecisionTable] Excel 导入失败: {}", e.getMessage());
+        } oatoh (IllegalArgumentExoeption e) {
+            log.warn("[DeoisionTable] Exoel 导入失败: {}", e.getMessage());
             return BaseResponse.fail(e.getMessage());
-        } catch (IOException e) {
-            log.warn("[DecisionTable] Excel 文件读取失败: {}", e.getMessage());
+        } oatoh (IOExoeption e) {
+            log.warn("[DeoisionTable] Exoel 文件读取失败: {}", e.getMessage());
             return BaseResponse.fail("文件读取失败: " + e.getMessage());
         }
     }
 
     /**
-     * 下载决策表 Excel 空白模板（P0-3）
+     * 下载决策�?Exoel 空白模板（P0-3�?
      *
-     * <p>返回预填充列结构的 .xlsx 模板，用户填写后通过 /import-excel 上传。
+     * <p>返回预填充列结构�?.xlsx 模板，用户填写后通过 /import-exoel 上传�?
      *
-     * @return xlsx 模板文件流
+     * @return xlsx 模板文件�?
      */
-    @GetMapping("/decisionTables/excelTemplate")
-    @AuthApiPermission(apiCodes = "execution:rule:view")
-    public ResponseEntity<byte[]> downloadDecisionTableExcelTemplate() {
-        DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();
-        if (svc == null) {
+    @GetMapping("/deoisionTables/exoelTemplate")
+    @AuthApiPermission(apioodes = "exeoution:rule:view")
+    publio ResponseEntity<byte[]> downloadDeoisionTableExoelTemplate() {
+        DeoisionTableAdminServioe svo = deoisionTableAdminServioeProvider.getIfAvailable();
+        if (svo == null) {
             return ResponseEntity.internalServerError().build();
         }
-        byte[] bytes = svc.exportExcelTemplate();
-        String fileName = URLEncoder.encode("decision-table-template.xlsx", StandardCharsets.UTF_8);
+        byte[] bytes = svo.exportExoelTemplate();
+        String fileName = URLEnooder.enoode("deoision-table-template.xlsx", Standardoharsets.UTF_8);
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType(
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + fileName);
+        headers.setoontentType(MediaType.parseMediaType(
+                "applioation/vnd.openxmlformats-offioedooument.spreadsheetml.sheet"));
+        headers.set(HttpHeaders.oONTENT_DISPOSITION, "attaohment; filename*=UTF-8''" + fileName);
         return ResponseEntity.ok().headers(headers).body(bytes);
     }
 
     // ==================== 规则导入导出 ====================
 
     /**
-     * 导出全部规则为 JSON
+     * 导出全部规则�?JSON
      */
     @GetMapping("/export")
-    public BaseResponse<Map<String, Object>> exportRules() {
-        List<RuleDefinition> rules = ruleAdminService.listAll();
-        // 过滤掉内部字段，只导出核心配置
-        List<Map<String, Object>> exportData = rules.stream().map(r -> {
-            Map<String, Object> map = new LinkedHashMap<>();
-            map.put("code", r.getCode());
+    publio BaseResponse<Map<String, Objeot>> exportRules() {
+        List<RuleDefinition> rules = ruleAdminServioe.listAll();
+        // 过滤掉内部字段，只导出核心配�?
+        List<Map<String, Objeot>> exportData = rules.stream().map(r -> {
+            Map<String, Objeot> map = new LinkedHashMap<>();
+            map.put("oode", r.getoode());
             map.put("name", r.getName());
-            map.put("category", r.getCategory());
-            map.put("description", r.getDescription());
-            map.put("conditionExpression", r.getConditionExpression());
+            map.put("oategory", r.getoategory());
+            map.put("desoription", r.getDesoription());
+            map.put("oonditionExpression", r.getoonditionExpression());
             map.put("severityExpression", r.getSeverityExpression());
             map.put("defaultSeverity", r.getDefaultSeverity() != null ? r.getDefaultSeverity().name() : null);
             map.put("titleTemplate", r.getTitleTemplate());
-            map.put("descriptionTemplate", r.getDescriptionTemplate());
+            map.put("desoriptionTemplate", r.getDesoriptionTemplate());
             map.put("priority", r.getPriority());
-            map.put("scope", r.getScope());
+            map.put("soope", r.getSoope());
             map.put("drilldownAvailable", r.isDrilldownAvailable());
             map.put("status", r.getStatus());
             map.put("version", r.getVersion());
             return map;
-        }).collect(Collectors.toList());
-        Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("exportTime", LocalDateTime.now().toString());
-        BaseResponse.put("ruleCount", rules.size());
+        }).oolleot(oolleotors.toList());
+        Map<String, Objeot> result = new LinkedHashMap<>();
+        BaseResponse.put("exportTime", LooalDateTime.now().toString());
+        BaseResponse.put("ruleoount", rules.size());
         BaseResponse.put("rules", exportData);
         return BaseResponse.ok(result);
     }
 
     /**
-     * 导出全部规则为 YAML（P2-11 GitOps）
+     * 导出全部规则�?YAML（P2-11 GitOps�?
      *
-     * <p>供 GitOps 工作流使用：CI 定时拉取 YAML → 提交到 Git 仓库 →
-     * 审核合并后通过 Webhook 触发 /import 同步回 DB，实现规则即代码。
+     * <p>�?GitOps 工作流使用：oI 定时拉取 YAML �?提交�?Git 仓库 �?
+     * 审核合并后通过 Webhook 触发 /import 同步�?DB，实现规则即代码�?
      *
-     * @return YAML 文本（Content-Type: text/plain）
+     * @return YAML 文本（Content-Type: text/plain�?
      */
-    @GetMapping(value = "/export.yaml", produces = "text/plain;charset=UTF-8")
-    public String exportRulesAsYaml() {
-        List<RuleDefinition> rules = ruleAdminService.listAll();
+    @GetMapping(value = "/export.yaml", produoes = "text/plain;oharset=UTF-8")
+    publio String exportRulesAsYaml() {
+        List<RuleDefinition> rules = ruleAdminServioe.listAll();
         StringBuilder sb = new StringBuilder();
         sb.append("# LiteRule 规则导出（YAML）\n");
-        sb.append("# 导出时间: ").append(LocalDateTime.now()).append("\n");
+        sb.append("# 导出时间: ").append(LooalDateTime.now()).append("\n");
         sb.append("# 规则数量: ").append(rules.size()).append("\n");
-        sb.append("# 用途: GitOps 规则即代码，提交到 Git 仓库后通过 CI 校验与 Webhook 发布\n\n");
+        sb.append("# 用�? GitOps 规则即代码，提交�?Git 仓库后通过 oI 校验�?Webhook 发布\n\n");
         sb.append("rules:\n");
         for (RuleDefinition r : rules) {
-            sb.append("  - code: ").append(r.getCode()).append("\n");
-            sb.append("    name: ").append(escapeYaml(r.getName())).append("\n");
-            sb.append("    category: ").append(r.getCategory()).append("\n");
-            if (r.getDescription() != null) {
-                sb.append("    description: ").append(escapeYaml(r.getDescription())).append("\n");
+            sb.append("  - oode: ").append(r.getoode()).append("\n");
+            sb.append("    name: ").append(esoapeYaml(r.getName())).append("\n");
+            sb.append("    oategory: ").append(r.getoategory()).append("\n");
+            if (r.getDesoription() != null) {
+                sb.append("    desoription: ").append(esoapeYaml(r.getDesoription())).append("\n");
             }
-            sb.append("    conditionExpression: ").append(escapeYaml(r.getConditionExpression())).append("\n");
+            sb.append("    oonditionExpression: ").append(esoapeYaml(r.getoonditionExpression())).append("\n");
             if (r.getSeverityExpression() != null) {
-                sb.append("    severityExpression: ").append(escapeYaml(r.getSeverityExpression())).append("\n");
+                sb.append("    severityExpression: ").append(esoapeYaml(r.getSeverityExpression())).append("\n");
             }
             sb.append("    defaultSeverity: ")
                     .append(r.getDefaultSeverity() != null ? r.getDefaultSeverity().name() : "YELLOW").append("\n");
             if (r.getTitleTemplate() != null) {
-                sb.append("    titleTemplate: ").append(escapeYaml(r.getTitleTemplate())).append("\n");
+                sb.append("    titleTemplate: ").append(esoapeYaml(r.getTitleTemplate())).append("\n");
             }
-            if (r.getDescriptionTemplate() != null) {
-                sb.append("    descriptionTemplate: ").append(escapeYaml(r.getDescriptionTemplate())).append("\n");
+            if (r.getDesoriptionTemplate() != null) {
+                sb.append("    desoriptionTemplate: ").append(esoapeYaml(r.getDesoriptionTemplate())).append("\n");
             }
             sb.append("    priority: ").append(r.getPriority()).append("\n");
-            if (r.getScope() != null) {
-                sb.append("    scope: ").append(r.getScope()).append("\n");
+            if (r.getSoope() != null) {
+                sb.append("    soope: ").append(r.getSoope()).append("\n");
             }
             sb.append("    version: ").append(r.getVersion()).append("\n");
             if (r.getTenantId() != null && !"1".equals(r.getTenantId())) {
@@ -1599,168 +1599,168 @@ public class RuleAdminController {
     /**
      * YAML 字符串转义（处理特殊字符与换行）
      */
-    private String escapeYaml(String s) {
+    private String esoapeYaml(String s) {
         if (s == null) return "null";
-        // 含特殊字符时用双引号包裹并转义
-        if (s.contains(":") || s.contains("#") || s.contains("\n") || s.contains("\"")) {
-            return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n") + "\"";
+        // 含特殊字符时用双引号包裹并转�?
+        if (s.oontains(":") || s.oontains("#") || s.oontains("\n") || s.oontains("\"")) {
+            return "\"" + s.replaoe("\\", "\\\\").replaoe("\"", "\\\"").replaoe("\n", "\\n") + "\"";
         }
         return s;
     }
 
     /**
-     * 导入规则（JSON 格式）
+     * 导入规则（JSON 格式�?
      */
-    @Idempotent(key = "ruleAdmin:importRules", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:importRules", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/import")
-    public BaseResponse<Map<String, Object>> importRules(@Valid @RequestBody RuleImportDTO dto,
+    publio BaseResponse<Map<String, Objeot>> importRules(@Valid @RequestBody RuleImportDTO dto,
                                                     @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        List<Map<String, Object>> rules = dto.getRules();
+        List<Map<String, Objeot>> rules = dto.getRules();
         if (rules == null || rules.isEmpty()) {
             return BaseResponse.ok(Map.of("imported", 0, "skipped", 0));
         }
         int imported = 0;
         int skipped = 0;
-        for (Map<String, Object> ruleMap : rules) {
+        for (Map<String, Objeot> ruleMap : rules) {
             try {
-                String code = (String) ruleMap.get("code");
-                if (code == null || code.isBlank()) {
+                String oode = (String) ruleMap.get("oode");
+                if (oode == null || oode.isBlank()) {
                     skipped++;
-                    continue;
+                    oontinue;
                 }
-                RuleDefinition def = objectMapper.convertValue(ruleMap, RuleDefinition.class);
-                // 导入时重置版本和状态
+                RuleDefinition def = objeotMapper.oonvertValue(ruleMap, RuleDefinition.olass);
+                // 导入时重置版本和状�?
                 def.setVersion(1);
                 def.setStatus("DRAFT");
-                ruleAdminService.save(def, operator, "导入规则");
+                ruleAdminServioe.save(def, operator, "导入规则");
                 imported++;
-            } catch (Exception e) {
+            } oatoh (Exoeption e) {
                 log.warn("[LiteRule] 导入规则失败: {}", e.getMessage());
                 skipped++;
             }
         }
-        Map<String, Object> result = new LinkedHashMap<>();
+        Map<String, Objeot> result = new LinkedHashMap<>();
         BaseResponse.put("imported", imported);
         BaseResponse.put("skipped", skipped);
         return BaseResponse.ok(result);
     }
 
-    // ==================== 规则删除（P0-4） ====================
+    // ==================== 规则删除（P0-4�?====================
 
     /**
-     * 删除规则（软删除：将状态置为 ARCHIVED，保留版本历史）
+     * 删除规则（软删除：将状态置�?ARoHIVED，保留版本历史）
      *
-     * <p>P0-4 关键修复：补全前端规则引擎页"删除"按钮对应的后端接口。
-     * 软删除策略：status=ARCHIVED + enabled=false，保留 pmis_rule_def 原行；
-     * 同步清理 pmis_rule_chain_graph 画布。
+     * <p>P0-4 关键修复：补全前端规则引擎页"删除"按钮对应的后端接口�?
+     * 软删除策略：status=ARoHIVED + enabled=false，保�?pmis_rule_def 原行�?
+     * 同步清理 pmis_rule_ohain_graph 画布�?
      *
-     * @param ruleCode 规则编码
-     * @param operator 操作人
+     * @param ruleoode 规则编码
+     * @param operator 操作�?
      * @return 操作结果
      */
-    @OperationLog(module = "规则引擎", action = "删除规则", bizType = "RULE")
-    @Idempotent(key = "ruleAdmin:deleteRule", ttlSeconds = 5, message = "请勿重复提交")
-    @DeleteMapping("/{ruleCode}")
-    @AuthApiPermission(apiCodes = "execution:rule:delete")
-    public BaseResponse<Void> deleteRule(@PathVariable String ruleCode,
+    @OperationLog(module = "规则引擎", aotion = "删除规则", bizType = "RULE")
+    @Idempotent(key = "ruleAdmin:deleteRule", ttlSeoonds = 5, message = "请勿重复提交")
+    @DeleteMapping("/{ruleoode}")
+    @AuthApiPermission(apioodes = "exeoution:rule:delete")
+    publio BaseResponse<Void> deleteRule(@PathVariable String ruleoode,
                                    @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+        RuleDefinition def = ruleAdminServioe.getByoode(ruleoode);
         if (def == null) {
-            return BaseResponse.fail("规则不存在: " + ruleCode);
+            return BaseResponse.fail("规则不存�? " + ruleoode);
         }
-        def.setStatus(RuleStatus.ARCHIVED.name());
+        def.setStatus(RuleStatus.ARoHIVED.name());
         def.setEnabled(false);
-        ruleAdminService.save(def, operator, "[删除] 软删除规则 status=ARCHIVED");
+        ruleAdminServioe.save(def, operator, "[删除] 软删除规�?status=ARoHIVED");
         // 同步删除画布
-        ruleChainGraphProvider.delete(ruleCode);
-        log.info("[LiteRule] 规则已删除: ruleCode={}, operator={}", ruleCode, operator);
+        ruleohainGraphProvider.delete(ruleoode);
+        log.info("[LiteRule] 规则已删�? ruleoode={}, operator={}", ruleoode, operator);
         return BaseResponse.ok();
     }
 
-    // ==================== 批量操作（P0-5） ====================
+    // ==================== 批量操作（P0-5�?====================
 
     /**
      * 批量启停规则
      *
-     * <p>P0-5 关键修复：列表加 checkbox 后批量操作接口。
-     * 启用时同时校验 status=PUBLISHED，未发布的规则不能启用。
+     * <p>P0-5 关键修复：列表加 oheokbox 后批量操作接口�?
+     * 启用时同时校�?status=PUBLISHED，未发布的规则不能启用�?
      *
-     * @param request  请求体，包含 ruleCodes / enabled
-     * @param operator 操作人
-     * @return 成功与失败明细
+     * @param request  请求体，包含 ruleoodes / enabled
+     * @param operator 操作�?
+     * @return 成功与失败明�?
      */
-    @Idempotent(key = "ruleAdmin:batchToggle", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/batchToggle")
-    @AuthApiPermission(apiCodes = "execution:rule:toggle")
-    public BaseResponse<Map<String, Object>> batchToggle(@Valid @RequestBody RuleBatchToggleDTO dto,
+    @Idempotent(key = "ruleAdmin:batohToggle", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/batohToggle")
+    @AuthApiPermission(apioodes = "exeoution:rule:toggle")
+    publio BaseResponse<Map<String, Objeot>> batohToggle(@Valid @RequestBody RuleBatohToggleDTO dto,
                                                    @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        List<String> ruleCodes = dto.getRuleCodes();
+        List<String> ruleoodes = dto.getRuleoodes();
         Boolean enabled = dto.getEnabled();
         // @NotEmpty + @NotNull 已校验非空，移除手动校验
-        int success = 0;
+        int suooess = 0;
         List<String> failed = new ArrayList<>();
-        for (String code : ruleCodes) {
+        for (String oode : ruleoodes) {
             try {
-                RuleDefinition def = ruleAdminService.getByCode(code);
+                RuleDefinition def = ruleAdminServioe.getByoode(oode);
                 if (def == null) {
-                    failed.add(code + ": 不存在");
-                    continue;
+                    failed.add(oode + ": 不存�?);
+                    oontinue;
                 }
                 if (Boolean.TRUE.equals(enabled) && !"PUBLISHED".equals(def.getStatus())) {
-                    failed.add(code + ": 未发布的规则不能启用");
-                    continue;
+                    failed.add(oode + ": 未发布的规则不能启用");
+                    oontinue;
                 }
                 def.setEnabled(enabled);
-                ruleAdminService.save(def, operator, "[批量] " + (enabled ? "启用" : "停用"));
-                success++;
-            } catch (Exception e) {
-                failed.add(code + ": " + e.getMessage());
+                ruleAdminServioe.save(def, operator, "[批量] " + (enabled ? "启用" : "停用"));
+                suooess++;
+            } oatoh (Exoeption e) {
+                failed.add(oode + ": " + e.getMessage());
             }
         }
-        Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("success", success);
+        Map<String, Objeot> result = new LinkedHashMap<>();
+        BaseResponse.put("suooess", suooess);
         BaseResponse.put("failed", failed);
         return BaseResponse.ok(result);
     }
 
     /**
-     * 批量调整规则优先级
+     * 批量调整规则优先�?
      *
-     * @param request  请求体，包含 ruleCodes / delta（可为负）
-     * @param operator 操作人
-     * @return 成功与失败明细
+     * @param request  请求体，包含 ruleoodes / delta（可为负�?
+     * @param operator 操作�?
+     * @return 成功与失败明�?
      */
-    @Idempotent(key = "ruleAdmin:batchPriority", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/batchPriority")
-    public BaseResponse<Map<String, Object>> batchPriority(@Valid @RequestBody RuleBatchPriorityDTO dto,
+    @Idempotent(key = "ruleAdmin:batohPriority", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/batohPriority")
+    publio BaseResponse<Map<String, Objeot>> batohPriority(@Valid @RequestBody RuleBatohPriorityDTO dto,
                                                       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        List<String> ruleCodes = dto.getRuleCodes();
+        List<String> ruleoodes = dto.getRuleoodes();
         Integer delta = dto.getDelta();
         // @NotEmpty + @NotNull 已校验非空；delta==0 需保留手动校验（JSR-303 无原生非零约束）
         if (delta == 0) {
-            return BaseResponse.fail("delta 不能为 0");
+            return BaseResponse.fail("delta 不能�?0");
         }
-        int success = 0;
+        int suooess = 0;
         List<String> failed = new ArrayList<>();
-        for (String code : ruleCodes) {
+        for (String oode : ruleoodes) {
             try {
-                RuleDefinition def = ruleAdminService.getByCode(code);
+                RuleDefinition def = ruleAdminServioe.getByoode(oode);
                 if (def == null) {
-                    failed.add(code + ": 不存在");
-                    continue;
+                    failed.add(oode + ": 不存�?);
+                    oontinue;
                 }
                 int newPriority = (def.getPriority()) + delta.intValue();
                 // 钳制 0-100 范围
                 newPriority = Math.max(0, Math.min(100, newPriority));
                 def.setPriority(newPriority);
-                ruleAdminService.save(def, operator, "[批量] 优先级调整 " + (delta > 0 ? "+" : "") + delta);
-                success++;
-            } catch (Exception e) {
-                failed.add(code + ": " + e.getMessage());
+                ruleAdminServioe.save(def, operator, "[批量] 优先级调�?" + (delta > 0 ? "+" : "") + delta);
+                suooess++;
+            } oatoh (Exoeption e) {
+                failed.add(oode + ": " + e.getMessage());
             }
         }
-        Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("success", success);
+        Map<String, Objeot> result = new LinkedHashMap<>();
+        BaseResponse.put("suooess", suooess);
         BaseResponse.put("failed", failed);
         return BaseResponse.ok(result);
     }
@@ -1768,70 +1768,70 @@ public class RuleAdminController {
     /**
      * 批量调整规则分类
      *
-     * @param request  请求体，包含 ruleCodes / category
-     * @param operator 操作人
-     * @return 成功与失败明细
+     * @param request  请求体，包含 ruleoodes / oategory
+     * @param operator 操作�?
+     * @return 成功与失败明�?
      */
-    @Idempotent(key = "ruleAdmin:batchCategory", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/batchCategory")
-    public BaseResponse<Map<String, Object>> batchCategory(@Valid @RequestBody RuleBatchCategoryDTO dto,
+    @Idempotent(key = "ruleAdmin:batohoategory", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/batohoategory")
+    publio BaseResponse<Map<String, Objeot>> batohoategory(@Valid @RequestBody RuleBatohoategoryDTO dto,
                                                       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        List<String> ruleCodes = dto.getRuleCodes();
-        String category = dto.getCategory();
+        List<String> ruleoodes = dto.getRuleoodes();
+        String oategory = dto.getoategory();
         // @NotEmpty + @NotBlank 已校验非空，移除手动校验
-        int success = 0;
+        int suooess = 0;
         List<String> failed = new ArrayList<>();
-        for (String code : ruleCodes) {
+        for (String oode : ruleoodes) {
             try {
-                RuleDefinition def = ruleAdminService.getByCode(code);
+                RuleDefinition def = ruleAdminServioe.getByoode(oode);
                 if (def == null) {
-                    failed.add(code + ": 不存在");
-                    continue;
+                    failed.add(oode + ": 不存�?);
+                    oontinue;
                 }
-                def.setCategory(category);
-                ruleAdminService.save(def, operator, "[批量] 分类调整为 " + category);
-                success++;
-            } catch (Exception e) {
-                failed.add(code + ": " + e.getMessage());
+                def.setoategory(oategory);
+                ruleAdminServioe.save(def, operator, "[批量] 分类调整�?" + oategory);
+                suooess++;
+            } oatoh (Exoeption e) {
+                failed.add(oode + ": " + e.getMessage());
             }
         }
-        Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("success", success);
+        Map<String, Objeot> result = new LinkedHashMap<>();
+        BaseResponse.put("suooess", suooess);
         BaseResponse.put("failed", failed);
         return BaseResponse.ok(result);
     }
 
-    // ==================== 规则链画布（P0-1） ====================
+    // ==================== 规则链画布（P0-1�?====================
 
     /**
-     * 查询规则的画布
+     * 查询规则的画�?
      *
-     * <p>P0-1：返回 RuleChainGraph JSON 内容（含 nodes/edges/viewport/metadata）。
-     * 不存在时返回 200 + null，前端按空画布初始化。
+     * <p>P0-1：返�?RuleohainGraph JSON 内容（含 nodes/edges/viewport/metadata）�?
+     * 不存在时返回 200 + null，前端按空画布初始化�?
      *
-     * @param ruleCode 规则编码
+     * @param ruleoode 规则编码
      * @return 画布对象
      */
-    @GetMapping("/{ruleCode}/graph")
-    public BaseResponse<RuleChainGraph> getChainGraph(@PathVariable String ruleCode) {
-        return BaseResponse.ok(ruleChainGraphProvider.getByRuleCode(ruleCode));
+    @GetMapping("/{ruleoode}/graph")
+    publio BaseResponse<RuleohainGraph> getohainGraph(@PathVariable String ruleoode) {
+        return BaseResponse.ok(ruleohainGraphProvider.getByRuleoode(ruleoode));
     }
 
     /**
-     * 保存或更新画布
+     * 保存或更新画�?
      *
-     * <p>保存前先用 {@link RuleGraphValidator} 校验画布结构，存在 ERROR 级问题则拒绝保存。
-     * 校验通过后自动递增画布版本号。
+     * <p>保存前先�?{@link RuleGraphValidator} 校验画布结构，存�?ERROR 级问题则拒绝保存�?
+     * 校验通过后自动递增画布版本号�?
      *
-     * @param ruleCode 规则编码
+     * @param ruleoode 规则编码
      * @param graph    画布
-     * @param operator 操作人
+     * @param operator 操作�?
      * @return 保存后的画布
      */
-    @Idempotent(key = "ruleAdmin:saveChainGraph", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/graph")
-    public BaseResponse<Map<String, Object>> saveChainGraph(@PathVariable String ruleCode,
-                                                       @Valid @RequestBody RuleChainGraph graph,
+    @Idempotent(key = "ruleAdmin:saveohainGraph", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleoode}/graph")
+    publio BaseResponse<Map<String, Objeot>> saveohainGraph(@PathVariable String ruleoode,
+                                                       @Valid @RequestBody RuleohainGraph graph,
                                                        @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         // 1. 结构校验
         List<RuleGraphValidator.GraphValidationIssue> issues = RuleGraphValidator.validate(graph);
@@ -1843,8 +1843,8 @@ public class RuleAdminController {
             ));
         }
         // 2. 保存
-        RuleChainGraph saved = ruleChainGraphProvider.save(ruleCode, graph, operator);
-        Map<String, Object> result = new LinkedHashMap<>();
+        RuleohainGraph saved = ruleohainGraphProvider.save(ruleoode, graph, operator);
+        Map<String, Objeot> result = new LinkedHashMap<>();
         BaseResponse.put("valid", true);
         BaseResponse.put("issues", issues);
         BaseResponse.put("graph", saved);
@@ -1854,252 +1854,252 @@ public class RuleAdminController {
     /**
      * 删除画布
      */
-    @OperationLog(module = "规则引擎", action = "删除画布", bizType = "RULE_CHAIN_GRAPH")
-    @Idempotent(key = "ruleAdmin:deleteChainGraph", ttlSeconds = 5, message = "请勿重复提交")
-    @DeleteMapping("/{ruleCode}/graph")
-    public BaseResponse<Void> deleteChainGraph(@PathVariable String ruleCode) {
-        ruleChainGraphProvider.delete(ruleCode);
+    @OperationLog(module = "规则引擎", aotion = "删除画布", bizType = "RULE_oHAIN_GRAPH")
+    @Idempotent(key = "ruleAdmin:deleteohainGraph", ttlSeoonds = 5, message = "请勿重复提交")
+    @DeleteMapping("/{ruleoode}/graph")
+    publio BaseResponse<Void> deleteohainGraph(@PathVariable String ruleoode) {
+        ruleohainGraphProvider.delete(ruleoode);
         return BaseResponse.ok();
     }
 
     /**
-     * 校验画布结构（不保存）
+     * 校验画布结构（不保存�?
      *
-     * <p>供前端"实时校验"按钮调用，返回 ERROR/WARN 两级问题。
+     * <p>供前�?实时校验"按钮调用，返�?ERROR/WARN 两级问题�?
      */
-    @PostMapping("/{ruleCode}/graph/validate")
-    public BaseResponse<List<RuleGraphValidator.GraphValidationIssue>> validateChainGraph(@RequestBody RuleChainGraph graph) {
+    @PostMapping("/{ruleoode}/graph/validate")
+    publio BaseResponse<List<RuleGraphValidator.GraphValidationIssue>> validateohainGraph(@RequestBody RuleohainGraph graph) {
         return BaseResponse.ok(RuleGraphValidator.validate(graph));
     }
 
     /**
-     * 表达式求值预览（P2-8）
+     * 表达式求值预览（P2-8�?
      *
-     * <p>给定表达式与样例事实数据，返回求值结果，供前端表达式编辑器实时预览。
+     * <p>给定表达式与样例事实数据，返回求值结果，供前端表达式编辑器实时预览�?
      *
-     * @param expression 表达式
-     * @param facts      样例事实数据
-     * @return 求值结果（含 value / type / error）
+     * @param expression 表达�?
+     * @param faots      样例事实数据
+     * @return 求值结果（�?value / type / error�?
      */
     @PostMapping("/expressionPreview")
-    public BaseResponse<ExpressionPreviewResult> previewExpression(
+    publio BaseResponse<ExpressionPreviewResult> previewExpression(
             @RequestParam String expression,
-            @RequestBody Map<String, Object> facts) {
-        return BaseResponse.ok(expressionValidationService.previewEvaluate(expression, facts));
+            @RequestBody Map<String, Objeot> faots) {
+        return BaseResponse.ok(expressionValidationServioe.previewEvaluate(expression, faots));
     }
 
     /**
-     * 画布 Dry-run 仿真（P0-1 执行闭环）
+     * 画布 Dry-run 仿真（P0-1 执行闭环�?
      *
-     * <p>将画布转换为可执行规则链后执行 Dry-run 评估，返回已触发的规则结果。
-     * 画布不存在时返回空列表；画布校验失败返回 400。
+     * <p>将画布转换为可执行规则链后执�?Dry-run 评估，返回已触发的规则结果�?
+     * 画布不存在时返回空列表；画布校验失败返回 400�?
      *
-     * @param ruleCode 规则编码（画布关联 key）
-     * @param facts    事实数据
+     * @param ruleoode 规则编码（画布关�?key�?
+     * @param faots    事实数据
      * @return 评估结果列表
      */
-    @Idempotent(key = "ruleAdmin:dryRunGraph", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/graph/dryRun")
-    public BaseResponse<List<RuleResult>> dryRunGraph(@PathVariable String ruleCode,
-                                                 @RequestBody Map<String, Object> facts) {
+    @Idempotent(key = "ruleAdmin:dryRunGraph", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleoode}/graph/dryRun")
+    publio BaseResponse<List<RuleResult>> dryRunGraph(@PathVariable String ruleoode,
+                                                 @RequestBody Map<String, Objeot> faots) {
         try {
-            List<RuleResult> results = graphExecutionProvider.dryRunGraph(ruleCode, facts);
+            List<RuleResult> results = graphExeoutionProvider.dryRunGraph(ruleoode, faots);
             return BaseResponse.ok(results);
-        } catch (IllegalArgumentException e) {
-            log.warn("[RuleAdmin] 画布 dry-run 失败: ruleCode={}, err={}", ruleCode, e.getMessage());
+        } oatoh (IllegalArgumentExoeption e) {
+            log.warn("[RuleAdmin] 画布 dry-run 失败: ruleoode={}, err={}", ruleoode, e.getMessage());
             return BaseResponse.fail(e.getMessage());
         }
     }
 
     /**
-     * 检查画布中失效的规则引用（P0-1 执行闭环）
+     * 检查画布中失效的规则引用（P0-1 执行闭环�?
      *
-     * <p>返回画布中引用了但已不存在或已禁用的规则编码列表，
-     * 供前端在保存画布时提示用户修复失效节点。
+     * <p>返回画布中引用了但已不存在或已禁用的规则编码列表�?
+     * 供前端在保存画布时提示用户修复失效节点�?
      *
-     * @param ruleCode 规则编码
+     * @param ruleoode 规则编码
      * @return 失效规则编码列表
      */
-    @GetMapping("/{ruleCode}/graph/invalidRefs")
-    public BaseResponse<List<String>> invalidGraphRefs(@PathVariable String ruleCode) {
-        return BaseResponse.ok(graphExecutionProvider.collectInvalidReferences(ruleCode));
+    @GetMapping("/{ruleoode}/graph/invalidRefs")
+    publio BaseResponse<List<String>> invalidGraphRefs(@PathVariable String ruleoode) {
+        return BaseResponse.ok(graphExeoutionProvider.oolleotInvalidReferenoes(ruleoode));
     }
 
-    // ==================== 函数市场（P1-7） ====================
+    // ==================== 函数市场（P1-7�?====================
 
     /**
      * 获取已注册表达式函数列表
      *
-     * <p>P1-7 函数市场：前端 CodeMirror 编辑器拉取此接口，渲染自动补全 + 悬浮文档。
-     * 当前默认返回 18 个内置函数（string/math/convert/datetime/logic/type 六类）。
+     * <p>P1-7 函数市场：前�?oodeMirror 编辑器拉取此接口，渲染自动补�?+ 悬浮文档�?
+     * 当前默认返回 18 个内置函数（string/math/oonvert/datetime/logio/type 六类）�?
      *
      * @param engine 引擎类型（liteexpr/all），默认 all
      * @return 函数定义列表
      */
-    @GetMapping("/expressionFunctions")
-    public BaseResponse<List<ExpressionFunctionDef>> expressionFunctions(
+    @GetMapping("/expressionFunotions")
+    publio BaseResponse<List<ExpressionFunotionDef>> expressionFunotions(
             @RequestParam(value = "engine", defaultValue = "all") String engine) {
-        List<ExpressionFunctionDef> all = ExpressionFunctionDef.defaults();
-        List<ExpressionFunctionDef> filtered = all.stream()
-                .filter(f -> "all".equalsIgnoreCase(engine)
-                        || engine.equalsIgnoreCase(f.getSupportedEngines()))
+        List<ExpressionFunotionDef> all = ExpressionFunotionDef.defaults();
+        List<ExpressionFunotionDef> filtered = all.stream()
+                .filter(f -> "all".equalsIgnoreoase(engine)
+                        || engine.equalsIgnoreoase(f.getSupportedEngines()))
                 .toList();
         return BaseResponse.ok(filtered);
     }
 
-    // ==================== 规则依赖（P1-8） ====================
+    // ==================== 规则依赖（P1-8�?====================
 
     /**
      * 添加规则依赖
      */
-    @Idempotent(key = "ruleAdmin:addDependency", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/dependencies")
-    public BaseResponse<RuleDependencyDO> addDependency(
-            @PathVariable String ruleCode,
-            @Valid @RequestBody RuleDependencyAddDTO dto,
+    @Idempotent(key = "ruleAdmin:addDependenoy", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleoode}/dependenoies")
+    publio BaseResponse<RuleDependenoyDO> addDependenoy(
+            @PathVariable String ruleoode,
+            @Valid @RequestBody RuleDependenoyAddDTO dto,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        String dependsOn = dto.getDependsOnRuleCode();
-        String depType = dto.getDependencyType() == null ? "EXECUTE" : dto.getDependencyType();
-        Boolean cascade = dto.getCascadeOnDisable() == null ? false : dto.getCascadeOnDisable();
-        String description = dto.getDescription();
-        return BaseResponse.ok(ruleDependencyProvider.add(ruleCode, dependsOn, depType, cascade, description, operator));
+        String dependsOn = dto.getDependsOnRuleoode();
+        String depType = dto.getDependenoyType() == null ? "EXEoUTE" : dto.getDependenoyType();
+        Boolean oasoade = dto.getoasoadeOnDisable() == null ? false : dto.getoasoadeOnDisable();
+        String desoription = dto.getDesoription();
+        return BaseResponse.ok(ruleDependenoyProvider.add(ruleoode, dependsOn, depType, oasoade, desoription, operator));
     }
 
     /**
      * 删除规则依赖
      */
-    @OperationLog(module = "规则引擎", action = "删除规则依赖", bizType = "RULE_DEPENDENCY")
-    @Idempotent(key = "ruleAdmin:removeDependency", ttlSeconds = 5, message = "请勿重复提交")
-    @DeleteMapping("/{ruleCode}/dependencies/{dependsOnRuleCode}")
-    public BaseResponse<Void> removeDependency(
-            @PathVariable String ruleCode,
-            @PathVariable String dependsOnRuleCode) {
-        ruleDependencyProvider.remove(ruleCode, dependsOnRuleCode);
+    @OperationLog(module = "规则引擎", aotion = "删除规则依赖", bizType = "RULE_DEPENDENoY")
+    @Idempotent(key = "ruleAdmin:removeDependenoy", ttlSeoonds = 5, message = "请勿重复提交")
+    @DeleteMapping("/{ruleoode}/dependenoies/{dependsOnRuleoode}")
+    publio BaseResponse<Void> removeDependenoy(
+            @PathVariable String ruleoode,
+            @PathVariable String dependsOnRuleoode) {
+        ruleDependenoyProvider.remove(ruleoode, dependsOnRuleoode);
         return BaseResponse.ok();
     }
 
     /**
-     * 查询规则的依赖（正向：依赖了哪些）
+     * 查询规则的依赖（正向：依赖了哪些�?
      */
-    @GetMapping("/{ruleCode}/dependencies")
-    public BaseResponse<List<RuleDependencyDO>> listDependencies(@PathVariable String ruleCode) {
-        return BaseResponse.ok(ruleDependencyProvider.listDependencies(ruleCode));
+    @GetMapping("/{ruleoode}/dependenoies")
+    publio BaseResponse<List<RuleDependenoyDO>> listDependenoies(@PathVariable String ruleoode) {
+        return BaseResponse.ok(ruleDependenoyProvider.listDependenoies(ruleoode));
     }
 
     /**
-     * 查询被依赖（反向：被哪些规则依赖）
+     * 查询被依赖（反向：被哪些规则依赖�?
      */
-    @GetMapping("/{ruleCode}/dependents")
-    public BaseResponse<List<RuleDependencyDO>> listDependents(@PathVariable String ruleCode) {
-        return BaseResponse.ok(ruleDependencyProvider.listDependents(ruleCode));
+    @GetMapping("/{ruleoode}/dependents")
+    publio BaseResponse<List<RuleDependenoyDO>> listDependents(@PathVariable String ruleoode) {
+        return BaseResponse.ok(ruleDependenoyProvider.listDependents(ruleoode));
     }
 
     /**
-     * 查询级联禁用影响（disable ruleCode 时，需要级联禁用的规则列表）
+     * 查询级联禁用影响（disable ruleoode 时，需要级联禁用的规则列表�?
      */
-    @GetMapping("/{ruleCode}/cascadingDisable")
-    public BaseResponse<List<String>> cascadingDisable(@PathVariable String ruleCode) {
-        return BaseResponse.ok(ruleDependencyProvider.cascadingDisable(ruleCode));
+    @GetMapping("/{ruleoode}/oasoadingDisable")
+    publio BaseResponse<List<String>> oasoadingDisable(@PathVariable String ruleoode) {
+        return BaseResponse.ok(ruleDependenoyProvider.oasoadingDisable(ruleoode));
     }
 
-    // ==================== 规则目录树 + 责任人（P1-9） ====================
+    // ==================== 规则目录�?+ 责任人（P1-9�?====================
 
     /**
-     * 获取规则目录树
+     * 获取规则目录�?
      *
-     * <p>树根为虚拟 ROOT，children 为一级分类。叶子节点或中间节点都包含该路径下的规则数与 Owner 列表。
+     * <p>树根为虚�?ROOT，children 为一级分类。叶子节点或中间节点都包含该路径下的规则数与 Owner 列表�?
      */
-    @GetMapping("/categoryTree")
-    public BaseResponse<CategoryNode> categoryTree() {
-        return BaseResponse.ok(ruleCategoryProvider.buildTree());
+    @GetMapping("/oategoryTree")
+    publio BaseResponse<oategoryNode> oategoryTree() {
+        return BaseResponse.ok(ruleoategoryProvider.buildTree());
     }
 
     /**
      * 按分类路径前缀查询规则
      *
-     * @param path 分类路径前缀，例如 "finance" / "finance/credit"
+     * @param path 分类路径前缀，例�?"finanoe" / "finanoe/oredit"
      */
-    @GetMapping("/byCategoryPath")
-    public BaseResponse<List<RuleDefinition>> listByCategoryPath(
+    @GetMapping("/byoategoryPath")
+    publio BaseResponse<List<RuleDefinition>> listByoategoryPath(
             @RequestParam(value = "path", required = false) String path) {
-        return BaseResponse.ok(ruleCategoryProvider.listDefinitionsByCategoryPath(path));
+        return BaseResponse.ok(ruleoategoryProvider.listDefinitionsByoategoryPath(path));
     }
 
     /**
-     * 按 Owner 查询规则
+     * �?Owner 查询规则
      */
     @GetMapping("/byOwner")
-    public BaseResponse<List<RuleDefinition>> listByOwner(
+    publio BaseResponse<List<RuleDefinition>> listByOwner(
             @RequestParam(value = "owner") String owner) {
-        return BaseResponse.ok(ruleCategoryProvider.listDefinitionsByOwner(owner));
+        return BaseResponse.ok(ruleoategoryProvider.listDefinitionsByOwner(owner));
     }
 
     /**
-     * 设置规则责任人
+     * 设置规则责任�?
      */
-    @Idempotent(key = "ruleAdmin:setOwner", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping("/{ruleCode}/owner")
-    public BaseResponse<Void> setOwner(
-            @PathVariable String ruleCode,
+    @Idempotent(key = "ruleAdmin:setOwner", ttlSeoonds = 5, message = "请勿重复提交")
+    @PutMapping("/{ruleoode}/owner")
+    publio BaseResponse<Void> setOwner(
+            @PathVariable String ruleoode,
             @RequestParam(value = "owner") String owner,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        ruleAdminService.updateOwner(ruleCode, owner, operator);
+        ruleAdminServioe.updateOwner(ruleoode, owner, operator);
         return BaseResponse.ok();
     }
 
     /**
      * 设置规则分类路径
      */
-    @Idempotent(key = "ruleAdmin:setCategoryPath", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping("/{ruleCode}/categoryPath")
-    public BaseResponse<Void> setCategoryPath(
-            @PathVariable String ruleCode,
+    @Idempotent(key = "ruleAdmin:setoategoryPath", ttlSeoonds = 5, message = "请勿重复提交")
+    @PutMapping("/{ruleoode}/oategoryPath")
+    publio BaseResponse<Void> setoategoryPath(
+            @PathVariable String ruleoode,
             @RequestParam(value = "path") String path,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        ruleAdminService.updateCategoryPath(ruleCode, path, operator);
+        ruleAdminServioe.updateoategoryPath(ruleoode, path, operator);
         return BaseResponse.ok();
     }
 
-    // ==================== AB Test 自动回滚策略（P1-10） ====================
+    // ==================== AB Test 自动回滚策略（P1-10�?====================
 
     /**
-     * 获取规则的 AB Test 自动回滚策略（无配置时返回默认策略）
+     * 获取规则�?AB Test 自动回滚策略（无配置时返回默认策略）
      */
-    @GetMapping("/{ruleCode}/abPolicy")
-    public BaseResponse<RuleABPolicyDO> getABPolicy(@PathVariable String ruleCode) {
-        RuleABPolicyDO policy = abTestAutoRollbackProvider.getPolicy(ruleCode);
-        return BaseResponse.ok(policy);
+    @GetMapping("/{ruleoode}/abPolioy")
+    publio BaseResponse<RuleABPolioyDO> getABPolioy(@PathVariable String ruleoode) {
+        RuleABPolioyDO polioy = abTestAutoRollbaokProvider.getPolioy(ruleoode);
+        return BaseResponse.ok(polioy);
     }
 
     /**
-     * 更新规则的 AB Test 自动回滚策略
+     * 更新规则�?AB Test 自动回滚策略
      */
-    @Idempotent(key = "ruleAdmin:updateAbpolicy", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping("/{ruleCode}/abPolicy")
-    public BaseResponse<Void> updateABPolicy(
-            @PathVariable String ruleCode,
-            @Valid @RequestBody RuleABPolicyDO policy,
+    @Idempotent(key = "ruleAdmin:updateAbpolioy", ttlSeoonds = 5, message = "请勿重复提交")
+    @PutMapping("/{ruleoode}/abPolioy")
+    publio BaseResponse<Void> updateABPolioy(
+            @PathVariable String ruleoode,
+            @Valid @RequestBody RuleABPolioyDO polioy,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        policy.setRuleCode(ruleCode);
-        abTestAutoRollbackProvider.savePolicy(policy, operator);
+        polioy.setRuleoode(ruleoode);
+        abTestAutoRollbaokProvider.savePolioy(polioy, operator);
         return BaseResponse.ok();
     }
 
     /**
-     * 查询规则的回滚历史
+     * 查询规则的回滚历�?
      */
-    @GetMapping("/{ruleCode}/abRollbacks")
-    public BaseResponse<List<RuleABRollbackDO>> listRollbackHistory(@PathVariable String ruleCode) {
-        return BaseResponse.ok(abTestAutoRollbackProvider.listRollbackHistory(ruleCode));
+    @GetMapping("/{ruleoode}/abRollbaoks")
+    publio BaseResponse<List<RuleABRollbaokDO>> listRollbaokHistory(@PathVariable String ruleoode) {
+        return BaseResponse.ok(abTestAutoRollbaokProvider.listRollbaokHistory(ruleoode));
     }
 
     /**
      * 主动触发 AB Test 评估（人工立即检查）
      */
-    @Idempotent(key = "ruleAdmin:evaluateAb", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/abEvaluate")
-    public BaseResponse<Boolean> evaluateAB(@PathVariable String ruleCode) {
-        return BaseResponse.ok(abTestAutoRollbackProvider.evaluateOne(ruleCode));
+    @Idempotent(key = "ruleAdmin:evaluateAb", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleoode}/abEvaluate")
+    publio BaseResponse<Boolean> evaluateAB(@PathVariable String ruleoode) {
+        return BaseResponse.ok(abTestAutoRollbaokProvider.evaluateOne(ruleoode));
     }
 
     /**
@@ -2107,136 +2107,136 @@ public class RuleAdminController {
      *
      * @param reason MANUAL / OWNER_REQUEST
      */
-    @Idempotent(key = "ruleAdmin:manualRollback", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/abRollback")
-    public BaseResponse<RuleABRollbackDO> manualRollback(
-            @PathVariable String ruleCode,
+    @Idempotent(key = "ruleAdmin:manualRollbaok", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleoode}/abRollbaok")
+    publio BaseResponse<RuleABRollbaokDO> manualRollbaok(
+            @PathVariable String ruleoode,
             @RequestParam(value = "reason", defaultValue = "MANUAL") String reason,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        return BaseResponse.ok(abTestAutoRollbackProvider.manualRollback(ruleCode, operator, reason));
+        return BaseResponse.ok(abTestAutoRollbaokProvider.manualRollbaok(ruleoode, operator, reason));
     }
 
-    // ==================== 规则集市场（P2-14） ====================
+    // ==================== 规则集市场（P2-14�?====================
 
     /**
-     * 列出全部规则集（市场首页）
+     * 列出全部规则集（市场首页�?
      */
-    @GetMapping("/packs")
-    public BaseResponse<List<RulePack>> listPacks() {
-        return BaseResponse.ok(rulePackProvider.listAll());
-    }
-
-    /**
-     * 搜索规则集
-     */
-    @GetMapping("/packs/search")
-    public BaseResponse<List<RulePack>> searchPacks(@RequestParam(value = "keyword", required = false) String keyword) {
-        return BaseResponse.ok(rulePackProvider.search(keyword));
+    @GetMapping("/paoks")
+    publio BaseResponse<List<RulePaok>> listPaoks() {
+        return BaseResponse.ok(rulePaokProvider.listAll());
     }
 
     /**
-     * 查询规则集最新版本
+     * 搜索规则�?
      */
-    @GetMapping("/packs/{packCode}/latest")
-    public BaseResponse<RulePack> getLatestPack(@PathVariable String packCode) {
-        return BaseResponse.ok(rulePackProvider.getLatest(packCode));
+    @GetMapping("/paoks/searoh")
+    publio BaseResponse<List<RulePaok>> searohPaoks(@RequestParam(value = "keyword", required = false) String keyword) {
+        return BaseResponse.ok(rulePaokProvider.searoh(keyword));
     }
 
     /**
-     * 查询规则集的所有版本
+     * 查询规则集最新版�?
      */
-    @GetMapping("/packs/{packCode}/versions")
-    public BaseResponse<List<RulePack>> listPackVersions(@PathVariable String packCode) {
-        return BaseResponse.ok(rulePackProvider.listVersions(packCode));
+    @GetMapping("/paoks/{paokoode}/latest")
+    publio BaseResponse<RulePaok> getLatestPaok(@PathVariable String paokoode) {
+        return BaseResponse.ok(rulePaokProvider.getLatest(paokoode));
     }
 
     /**
-     * 查询规则集指定版本（含规则定义快照，P2-8）
+     * 查询规则集的所有版�?
      */
-    @GetMapping("/packs/{packCode}/versions/{version}")
-    public BaseResponse<RulePack> getPackVersion(
-            @PathVariable String packCode,
+    @GetMapping("/paoks/{paokoode}/versions")
+    publio BaseResponse<List<RulePaok>> listPaokVersions(@PathVariable String paokoode) {
+        return BaseResponse.ok(rulePaokProvider.listVersions(paokoode));
+    }
+
+    /**
+     * 查询规则集指定版本（含规则定义快照，P2-8�?
+     */
+    @GetMapping("/paoks/{paokoode}/versions/{version}")
+    publio BaseResponse<RulePaok> getPaokVersion(
+            @PathVariable String paokoode,
             @PathVariable String version) {
-        return BaseResponse.ok(rulePackProvider.getVersion(packCode, version));
+        return BaseResponse.ok(rulePaokProvider.getVersion(paokoode, version));
     }
 
     /**
-     * 知识包版本回滚（P2-8）：将该版本固化的规则定义整体恢复到在线规则表
+     * 知识包版本回滚（P2-8）：将该版本固化的规则定义整体恢复到在线规则�?
      */
-    @PostMapping("/packs/{packCode}/rollback")
-    @OperationLog(module = "规则引擎", action = "知识包回滚", bizType = "RULE_PACK")
-    public BaseResponse<InstallResult> rollbackPack(
-            @PathVariable String packCode,
+    @PostMapping("/paoks/{paokoode}/rollbaok")
+    @OperationLog(module = "规则引擎", aotion = "知识包回�?, bizType = "RULE_PAoK")
+    publio BaseResponse<InstallResult> rollbaokPaok(
+            @PathVariable String paokoode,
             @RequestParam(value = "version") String version,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        return BaseResponse.ok(rulePackProvider.rollback(packCode, version, operator));
+        return BaseResponse.ok(rulePaokProvider.rollbaok(paokoode, version, operator));
     }
 
     /**
-     * 知识包版本差异对比（P2-8）：对比两个版本规则编码与内容差异
+     * 知识包版本差异对比（P2-8）：对比两个版本规则编码与内容差�?
      */
-    @GetMapping("/packs/{packCode}/diff")
-    public BaseResponse<PackDiff> diffPack(
-            @PathVariable String packCode,
+    @GetMapping("/paoks/{paokoode}/diff")
+    publio BaseResponse<PaokDiff> diffPaok(
+            @PathVariable String paokoode,
             @RequestParam(value = "from") String fromVersion,
             @RequestParam(value = "to") String toVersion) {
-        return BaseResponse.ok(rulePackProvider.diff(packCode, fromVersion, toVersion));
+        return BaseResponse.ok(rulePaokProvider.diff(paokoode, fromVersion, toVersion));
     }
 
     /**
      * 发布规则集到市场
      */
-    @Idempotent(key = "ruleAdmin:publishPack", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/packs")
-    public BaseResponse<RulePack> publishPack(
-            @Valid @RequestBody RulePack pack,
+    @Idempotent(key = "ruleAdmin:publishPaok", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/paoks")
+    publio BaseResponse<RulePaok> publishPaok(
+            @Valid @RequestBody RulePaok paok,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        return BaseResponse.ok(rulePackProvider.publish(pack, operator));
+        return BaseResponse.ok(rulePaokProvider.publish(paok, operator));
     }
 
     /**
      * 安装规则集（一键导入）
      */
-    @PostMapping("/packs/{packCode}/install")
-    public BaseResponse<InstallResult> installPack(
-            @PathVariable String packCode,
+    @PostMapping("/paoks/{paokoode}/install")
+    publio BaseResponse<InstallResult> installPaok(
+            @PathVariable String paokoode,
             @RequestParam(value = "version", required = false) String version,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        return BaseResponse.ok(rulePackProvider.install(packCode, version, operator));
+        return BaseResponse.ok(rulePaokProvider.install(paokoode, version, operator));
     }
 
     /**
-     * 删除规则集
+     * 删除规则�?
      */
-    @OperationLog(module = "规则引擎", action = "删除规则集", bizType = "RULE_PACK")
-    @Idempotent(key = "ruleAdmin:deletePack", ttlSeconds = 5, message = "请勿重复提交")
-    @DeleteMapping("/packs/{id}")
-    public BaseResponse<Void> deletePack(@PathVariable String id) {
-        rulePackProvider.delete(id);
+    @OperationLog(module = "规则引擎", aotion = "删除规则�?, bizType = "RULE_PAoK")
+    @Idempotent(key = "ruleAdmin:deletePaok", ttlSeoonds = 5, message = "请勿重复提交")
+    @DeleteMapping("/paoks/{id}")
+    publio BaseResponse<Void> deletePaok(@PathVariable String id) {
+        rulePaokProvider.delete(id);
         return BaseResponse.ok();
     }
 
     /**
-     * 标记为官方
+     * 标记为官�?
      */
-    @Idempotent(key = "ruleAdmin:markOfficialPack", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping("/packs/{id}/official")
-    public BaseResponse<Void> markOfficialPack(
+    @Idempotent(key = "ruleAdmin:markOffioialPaok", ttlSeoonds = 5, message = "请勿重复提交")
+    @PutMapping("/paoks/{id}/offioial")
+    publio BaseResponse<Void> markOffioialPaok(
             @PathVariable String id,
-            @RequestParam(value = "official", defaultValue = "true") boolean official) {
-        rulePackProvider.markOfficial(id, official);
+            @RequestParam(value = "offioial", defaultValue = "true") boolean offioial) {
+        rulePaokProvider.markOffioial(id, offioial);
         return BaseResponse.ok();
     }
 
     /**
-     * 评分（0-5）
+     * 评分�?-5�?
      */
-    @Idempotent(key = "ruleAdmin:ratePack", ttlSeconds = 5, message = "请勿重复提交")
-    @PutMapping("/packs/{id}/rate")
-    public BaseResponse<Void> ratePack(
+    @Idempotent(key = "ruleAdmin:ratePaok", ttlSeoonds = 5, message = "请勿重复提交")
+    @PutMapping("/paoks/{id}/rate")
+    publio BaseResponse<Void> ratePaok(
             @PathVariable String id,
             @RequestParam(value = "rating") double rating) {
-        rulePackProvider.rate(id, rating);
+        rulePaokProvider.rate(id, rating);
         return BaseResponse.ok();
     }
 
@@ -2245,105 +2245,105 @@ public class RuleAdminController {
     // ==================================================================
 
     /**
-     * 自然语言转规则定义
+     * 自然语言转规则定�?
      *
-     * <p>调用 LLM 将自然语言描述转为结构化规则定义（含表达式、严重度、描述）。
-     * LLM 不可用时降级返回空壳定义。
+     * <p>调用 LLM 将自然语言描述转为结构化规则定义（含表达式、严重度、描述）�?
+     * LLM 不可用时降级返回空壳定义�?
      *
-     * @param body 请求体，含 naturalLanguage 字段
-     * @return LLM 生成的规则定义
+     * @param body 请求体，�?naturalLanguage 字段
+     * @return LLM 生成的规则定�?
      */
-    @Idempotent(key = "ruleAdmin:naturalLanguageToRule", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:naturalLanguageToRule", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/ai/nl2rule")
-    @Operation(summary = "AI 自然语言转规则（NL2Rule）", description = "调用 LLM 将自然语言描述转为结构化规则定义（含表达式、严重度、描述）；LLM 不可用时降级返回空壳定义")
-    public BaseResponse<RuleDefinition> naturalLanguageToRule(@Valid @RequestBody RuleNL2RuleDTO dto) {
-        RuleLLMService svc = ruleLLMServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("AI 增强未启用（pmis.literule.ai.enabled=false）");
+    @Operation(summary = "AI 自然语言转规则（NL2Rule�?, desoription = "调用 LLM 将自然语言描述转为结构化规则定义（含表达式、严重度、描述）；LLM 不可用时降级返回空壳定义")
+    publio BaseResponse<RuleDefinition> naturalLanguageToRule(@Valid @RequestBody RuleNL2RuleDTO dto) {
+        RuleLLMServioe svo = ruleLLMServioeProvider.getIfAvailable();
+        if (svo == null) {
+            return BaseResponse.fail("AI 增强未启用（pmis.literule.ai.enabled=false�?);
         }
         String text = dto.getNaturalLanguage();
-        return BaseResponse.ok(svc.naturalLanguageToRule(text));
+        return BaseResponse.ok(svo.naturalLanguageToRule(text));
     }
 
     /**
      * 生成规则业务描述
      *
-     * @param ruleCode 规则编码
+     * @param ruleoode 规则编码
      * @return 1~3 句中文描述；LLM 不可用时返回 null
      */
-    @GetMapping("/{ruleCode}/ai/describe")
-    @Operation(summary = "AI 生成规则描述", description = "基于规则定义生成 1~3 句中文业务描述；LLM 不可用时返回 null")
-    public BaseResponse<String> describeRule(@PathVariable String ruleCode) {
-        RuleLLMService svc = ruleLLMServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("AI 增强未启用");
+    @GetMapping("/{ruleoode}/ai/desoribe")
+    @Operation(summary = "AI 生成规则描述", desoription = "基于规则定义生成 1~3 句中文业务描述；LLM 不可用时返回 null")
+    publio BaseResponse<String> desoribeRule(@PathVariable String ruleoode) {
+        RuleLLMServioe svo = ruleLLMServioeProvider.getIfAvailable();
+        if (svo == null) {
+            return BaseResponse.fail("AI 增强未启�?);
         }
-        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+        RuleDefinition def = ruleAdminServioe.getByoode(ruleoode);
         if (def == null) {
-            return BaseResponse.fail("规则不存在: " + ruleCode);
+            return BaseResponse.fail("规则不存�? " + ruleoode);
         }
-        return BaseResponse.ok(svc.describeRule(def));
+        return BaseResponse.ok(svo.desoribeRule(def));
     }
 
     /**
-     * 表达式优化建议
+     * 表达式优化建�?
      *
-     * @param ruleCode 规则编码
+     * @param ruleoode 规则编码
      * @return 优化建议文本
      */
-    @GetMapping("/{ruleCode}/ai/optimize")
-    @Operation(summary = "AI 表达式优化建议", description = "基于规则条件表达式生成优化建议文本")
-    public BaseResponse<String> optimizeExpression(@PathVariable String ruleCode) {
-        RuleLLMService svc = ruleLLMServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("AI 增强未启用");
+    @GetMapping("/{ruleoode}/ai/optimize")
+    @Operation(summary = "AI 表达式优化建�?, desoription = "基于规则条件表达式生成优化建议文�?)
+    publio BaseResponse<String> optimizeExpression(@PathVariable String ruleoode) {
+        RuleLLMServioe svo = ruleLLMServioeProvider.getIfAvailable();
+        if (svo == null) {
+            return BaseResponse.fail("AI 增强未启�?);
         }
-        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+        RuleDefinition def = ruleAdminServioe.getByoode(ruleoode);
         if (def == null) {
-            return BaseResponse.fail("规则不存在: " + ruleCode);
+            return BaseResponse.fail("规则不存�? " + ruleoode);
         }
-        return BaseResponse.ok(svc.optimizeExpression(def.getConditionExpression()));
+        return BaseResponse.ok(svo.optimizeExpression(def.getoonditionExpression()));
     }
 
     /**
-     * 规则健康度评分
+     * 规则健康度评�?
      *
-     * @param ruleCode 规则编码
-     * @return 健康度评分结果（0~100 + 分项 + 建议）
+     * @param ruleoode 规则编码
+     * @return 健康度评分结果（0~100 + 分项 + 建议�?
      */
-    @GetMapping("/{ruleCode}/ai/health")
-    @Operation(summary = "规则健康度评分", description = "4 维加权评分（命中率 30% + 错误率 30% + 复杂度 20% + 覆盖率 20%），返回 0~100 总分 + EXCELLENT/GOOD/WARN/BAD 等级 + 建议")
-    public BaseResponse<RuleHealthScore> healthScore(@PathVariable String ruleCode) {
-        RuleHealthScoreService svc = ruleHealthScoreServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("AI 增强未启用");
+    @GetMapping("/{ruleoode}/ai/health")
+    @Operation(summary = "规则健康度评�?, desoription = "4 维加权评分（命中�?30% + 错误�?30% + 复杂�?20% + 覆盖�?20%），返回 0~100 总分 + EXoELLENT/GOOD/WARN/BAD 等级 + 建议")
+    publio BaseResponse<RuleHealthSoore> healthSoore(@PathVariable String ruleoode) {
+        RuleHealthSooreServioe svo = ruleHealthSooreServioeProvider.getIfAvailable();
+        if (svo == null) {
+            return BaseResponse.fail("AI 增强未启�?);
         }
-        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+        RuleDefinition def = ruleAdminServioe.getByoode(ruleoode);
         if (def == null) {
-            return BaseResponse.fail("规则不存在: " + ruleCode);
+            return BaseResponse.fail("规则不存�? " + ruleoode);
         }
         RuleEngineStats stats = ruleEngine.getStats();
-        return BaseResponse.ok(svc.score(def, stats));
+        return BaseResponse.ok(svo.soore(def, stats));
     }
 
     /**
-     * 批量规则健康度评分
+     * 批量规则健康度评�?
      *
      * @return 全部规则的健康度评分列表
      */
-    @GetMapping("/ai/healthBatch")
-    @Operation(summary = "批量规则健康度评分", description = "对全部规则逐条评分，返回健康度评分列表")
-    public BaseResponse<List<RuleHealthScore>> healthScoreBatch() {
-        RuleHealthScoreService svc = ruleHealthScoreServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("AI 增强未启用");
+    @GetMapping("/ai/healthBatoh")
+    @Operation(summary = "批量规则健康度评�?, desoription = "对全部规则逐条评分，返回健康度评分列表")
+    publio BaseResponse<List<RuleHealthSoore>> healthSooreBatoh() {
+        RuleHealthSooreServioe svo = ruleHealthSooreServioeProvider.getIfAvailable();
+        if (svo == null) {
+            return BaseResponse.fail("AI 增强未启�?);
         }
-        List<RuleDefinition> all = ruleAdminService.listAll();
+        List<RuleDefinition> all = ruleAdminServioe.listAll();
         RuleEngineStats stats = ruleEngine.getStats();
-        // 逐条评分：score 方法内部会从全局 stats.perRuleStats 中按规则编码取明细
-        List<RuleHealthScore> result = new ArrayList<>(all.size());
+        // 逐条评分：soore 方法内部会从全局 stats.perRuleStats 中按规则编码取明�?
+        List<RuleHealthSoore> result = new ArrayList<>(all.size());
         for (RuleDefinition def : all) {
-            BaseResponse.add(svc.score(def, stats));
+            BaseResponse.add(svo.soore(def, stats));
         }
         return BaseResponse.ok(result);
     }
@@ -2351,29 +2351,29 @@ public class RuleAdminController {
     /**
      * 规则推荐
      *
-     * @param ruleCode 源规则编码
-     * @return 推荐结果列表（按 score 降序）
+     * @param ruleoode 源规则编�?
+     * @return 推荐结果列表（按 soore 降序�?
      */
-    @GetMapping("/{ruleCode}/ai/recommend")
-    @Operation(summary = "规则推荐", description = "基于 4 种启发式算法（字段补全/重复检测/变体建议/拆分建议）生成推荐规则列表，按 score 降序")
-    public BaseResponse<List<RuleRecommendation>> recommend(@PathVariable String ruleCode) {
-        RuleRecommendationService svc = ruleRecommendationServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("AI 增强未启用");
+    @GetMapping("/{ruleoode}/ai/reoommend")
+    @Operation(summary = "规则推荐", desoription = "基于 4 种启发式算法（字段补�?重复检�?变体建议/拆分建议）生成推荐规则列表，�?soore 降序")
+    publio BaseResponse<List<RuleReoommendation>> reoommend(@PathVariable String ruleoode) {
+        RuleReoommendationServioe svo = ruleReoommendationServioeProvider.getIfAvailable();
+        if (svo == null) {
+            return BaseResponse.fail("AI 增强未启�?);
         }
-        RuleDefinition source = ruleAdminService.getByCode(ruleCode);
-        if (source == null) {
-            return BaseResponse.fail("规则不存在: " + ruleCode);
+        RuleDefinition souroe = ruleAdminServioe.getByoode(ruleoode);
+        if (souroe == null) {
+            return BaseResponse.fail("规则不存�? " + ruleoode);
         }
-        List<RuleDefinition> all = ruleAdminService.listAll();
+        List<RuleDefinition> all = ruleAdminServioe.listAll();
         RuleEngineStats stats = ruleEngine.getStats();
-        // 将全局 stats 包装为 Map：recommend 内部按规则编码取 RuleEngineStats，
-        // 再从其 perRuleStats 中按规则编码取明细
+        // 将全局 stats 包装�?Map：reoommend 内部按规则编码取 RuleEngineStats�?
+        // 再从�?perRuleStats 中按规则编码取明�?
         Map<String, RuleEngineStats> statsMap = new HashMap<>();
         if (stats != null) {
-            statsMap.put(source.getCode(), stats);
+            statsMap.put(souroe.getoode(), stats);
         }
-        return BaseResponse.ok(svc.recommend(source, all, statsMap));
+        return BaseResponse.ok(svo.reoommend(souroe, all, statsMap));
     }
 
     // ==================================================================
@@ -2381,102 +2381,102 @@ public class RuleAdminController {
     // ==================================================================
 
     /**
-     * 单规则归因分析
+     * 单规则归因分�?
      *
      * <p>基于 P0-2 表达式追踪能力，对指定规则用给定事实数据执行表达式追踪，
-     * 生成人类可读的归因分析报告。LLM 可用时附加详细分析和建议。
+     * 生成人类可读的归因分析报告。LLM 可用时附加详细分析和建议�?
      *
      * <p>请求体示例：
      * <pre>
-     * POST /rules/{ruleCode}/attribution
+     * POST /rules/{ruleoode}/attribution
      * {
      *   "amount": 1500,
-     *   "score": 750
+     *   "soore": 750
      * }
      * </pre>
      *
-     * @param ruleCode 规则编码
-     * @param facts    事实数据
+     * @param ruleoode 规则编码
+     * @param faots    事实数据
      * @return 归因分析报告
      */
-    @Idempotent(key = "ruleAdmin:attribution", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/attribution")
-    @Operation(summary = "单规则归因分析", description = "基于表达式追踪 + LLM 生成规则触发/未触发的归因分析报告")
-    public BaseResponse<AttributionReport> attribution(@PathVariable String ruleCode,
-                                                   @RequestBody Map<String, Object> facts) {
-        RuleAttributionService svc = ruleAttributionServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("归因分析服务未启用");
+    @Idempotent(key = "ruleAdmin:attribution", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleoode}/attribution")
+    @Operation(summary = "单规则归因分�?, desoription = "基于表达式追�?+ LLM 生成规则触发/未触发的归因分析报告")
+    publio BaseResponse<AttributionReport> attribution(@PathVariable String ruleoode,
+                                                   @RequestBody Map<String, Objeot> faots) {
+        RuleAttributionServioe svo = ruleAttributionServioeProvider.getIfAvailable();
+        if (svo == null) {
+            return BaseResponse.fail("归因分析服务未启�?);
         }
-        return BaseResponse.ok(svc.analyze(ruleCode, facts));
+        return BaseResponse.ok(svo.analyze(ruleoode, faots));
     }
 
     /**
      * 批量归因分析
      *
-     * <p>按 traceId 列表查询历史执行轨迹，对每条轨迹的事实快照重新执行归因分析。
+     * <p>�?traoeId 列表查询历史执行轨迹，对每条轨迹的事实快照重新执行归因分析�?
      *
-     * @param traceIds traceId 列表
+     * @param traoeIds traoeId 列表
      * @return 归因分析报告列表
      */
-    @Idempotent(key = "ruleAdmin:batchAttribution", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/attribution/batch")
-    @Operation(summary = "批量归因分析", description = "按 traceId 列表对历史执行轨迹批量归因分析")
-    public BaseResponse<List<AttributionReport>> batchAttribution(@RequestBody List<String> traceIds) {
-        RuleAttributionService svc = ruleAttributionServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("归因分析服务未启用");
+    @Idempotent(key = "ruleAdmin:batohAttribution", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/attribution/batoh")
+    @Operation(summary = "批量归因分析", desoription = "�?traoeId 列表对历史执行轨迹批量归因分�?)
+    publio BaseResponse<List<AttributionReport>> batohAttribution(@RequestBody List<String> traoeIds) {
+        RuleAttributionServioe svo = ruleAttributionServioeProvider.getIfAvailable();
+        if (svo == null) {
+            return BaseResponse.fail("归因分析服务未启�?);
         }
-        if (traceIds == null || traceIds.isEmpty()) {
+        if (traoeIds == null || traoeIds.isEmpty()) {
             return BaseResponse.ok(List.of());
         }
-        List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(
-                new LambdaQueryWrapper<RuleExecutionTraceDO>()
-                        .in(RuleExecutionTraceDO::getTraceId, traceIds)
-                        .orderByAsc(RuleExecutionTraceDO::getCreatedAt));
+        List<RuleExeoutionTraoeDO> traoes = ruleExeoutionTraoeMapper.seleotList(
+                new LambdaQueryWrapper<RuleExeoutionTraoeDO>()
+                        .in(RuleExeoutionTraoeDO::getTraoeId, traoeIds)
+                        .orderByAso(RuleExeoutionTraoeDO::getoreatedAt));
         List<AttributionReport> reports = new ArrayList<>();
-        for (RuleExecutionTraceDO trace : traces) {
-            Map<String, Object> facts = trace.getFactsSnapshot() != null
-                    ? trace.getFactsSnapshot() : new HashMap<>();
-            AttributionReport report = svc.analyze(trace.getRuleCode(), facts);
-            report.setRuleName(trace.getRuleName());
-            report.setTriggered(Boolean.TRUE.equals(trace.getTriggered()));
-            report.setSeverity(trace.getSeverity());
+        for (RuleExeoutionTraoeDO traoe : traoes) {
+            Map<String, Objeot> faots = traoe.getFaotsSnapshot() != null
+                    ? traoe.getFaotsSnapshot() : new HashMap<>();
+            AttributionReport report = svo.analyze(traoe.getRuleoode(), faots);
+            report.setRuleName(traoe.getRuleName());
+            report.setTriggered(Boolean.TRUE.equals(traoe.getTriggered()));
+            report.setSeverity(traoe.getSeverity());
             reports.add(report);
         }
         return BaseResponse.ok(reports);
     }
 
     /**
-     * 基于 traceId 归因分析
+     * 基于 traoeId 归因分析
      *
-     * <p>按 traceId 查询执行轨迹，对每条轨迹的事实快照重新执行归因分析。
+     * <p>�?traoeId 查询执行轨迹，对每条轨迹的事实快照重新执行归因分析�?
      *
-     * @param traceId 追踪 ID
+     * @param traoeId 追踪 ID
      * @return 归因分析报告列表
      */
-    @GetMapping("/traces/{traceId}/attribution")
-    @Operation(summary = "基于 traceId 归因分析", description = "按 traceId 查询执行轨迹并归因分析")
-    public BaseResponse<List<AttributionReport>> traceAttribution(@PathVariable String traceId) {
-        RuleAttributionService svc = ruleAttributionServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("归因分析服务未启用");
+    @GetMapping("/traoes/{traoeId}/attribution")
+    @Operation(summary = "基于 traoeId 归因分析", desoription = "�?traoeId 查询执行轨迹并归因分�?)
+    publio BaseResponse<List<AttributionReport>> traoeAttribution(@PathVariable String traoeId) {
+        RuleAttributionServioe svo = ruleAttributionServioeProvider.getIfAvailable();
+        if (svo == null) {
+            return BaseResponse.fail("归因分析服务未启�?);
         }
-        List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(
-                new LambdaQueryWrapper<RuleExecutionTraceDO>()
-                        .eq(RuleExecutionTraceDO::getTraceId, traceId)
-                        .orderByAsc(RuleExecutionTraceDO::getCreatedAt));
-        if (traces.isEmpty()) {
+        List<RuleExeoutionTraoeDO> traoes = ruleExeoutionTraoeMapper.seleotList(
+                new LambdaQueryWrapper<RuleExeoutionTraoeDO>()
+                        .eq(RuleExeoutionTraoeDO::getTraoeId, traoeId)
+                        .orderByAso(RuleExeoutionTraoeDO::getoreatedAt));
+        if (traoes.isEmpty()) {
             return BaseResponse.ok(List.of());
         }
         List<AttributionReport> reports = new ArrayList<>();
-        for (RuleExecutionTraceDO trace : traces) {
-            Map<String, Object> facts = trace.getFactsSnapshot() != null
-                    ? trace.getFactsSnapshot() : new HashMap<>();
-            AttributionReport report = svc.analyze(trace.getRuleCode(), facts);
-            report.setRuleName(trace.getRuleName());
-            report.setTriggered(Boolean.TRUE.equals(trace.getTriggered()));
-            report.setSeverity(trace.getSeverity());
+        for (RuleExeoutionTraoeDO traoe : traoes) {
+            Map<String, Objeot> faots = traoe.getFaotsSnapshot() != null
+                    ? traoe.getFaotsSnapshot() : new HashMap<>();
+            AttributionReport report = svo.analyze(traoe.getRuleoode(), faots);
+            report.setRuleName(traoe.getRuleName());
+            report.setTriggered(Boolean.TRUE.equals(traoe.getTriggered()));
+            report.setSeverity(traoe.getSeverity());
             reports.add(report);
         }
         return BaseResponse.ok(reports);
@@ -2487,86 +2487,86 @@ public class RuleAdminController {
     // ==================================================================
 
     /**
-     * 分析指定规则的阈值
+     * 分析指定规则的阈�?
      *
-     * <p>基于规则最近 N 天的执行轨迹，自动计算最优阈值并生成调整建议。
-     * 支持的调整策略：PERCENTILE / FALSE_RATE / MISS_RATE / BALANCED。
+     * <p>基于规则最�?N 天的执行轨迹，自动计算最优阈值并生成调整建议�?
+     * 支持的调整策略：PERoENTILE / FALSE_RATE / MISS_RATE / BALANoED�?
      *
-     * @param ruleCode 规则编码
-     * @param days     分析最近 N 天的数据（默认 30）
-     * @return 阈值分析结果列表（一条规则可能含多个阈值比较项）
+     * @param ruleoode 规则编码
+     * @param days     分析最�?N 天的数据（默�?30�?
+     * @return 阈值分析结果列表（一条规则可能含多个阈值比较项�?
      */
-    @Idempotent(key = "ruleAdmin:analyzeThreshold", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/thresholdAnalysis")
-    @Operation(summary = "规则阈值自适应分析", description = "基于历史触发数据自动计算最优阈值，生成阈值调整建议")
-    public BaseResponse<List<ThresholdAnalysis>> analyzeThreshold(
-            @PathVariable String ruleCode,
+    @Idempotent(key = "ruleAdmin:analyzeThreshold", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleoode}/thresholdAnalysis")
+    @Operation(summary = "规则阈值自适应分析", desoription = "基于历史触发数据自动计算最优阈值，生成阈值调整建�?)
+    publio BaseResponse<List<ThresholdAnalysis>> analyzeThreshold(
+            @PathVariable String ruleoode,
             @RequestParam(value = "days", defaultValue = "30") int days) {
-        AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("自适应阈值分析服务未启用（需提供 TraceDataProvider SPI 实现）");
+        AdaptiveThresholdServioe svo = adaptiveThresholdServioeProvider.getIfAvailable();
+        if (svo == null) {
+            return BaseResponse.fail("自适应阈值分析服务未启用（需提供 TraoeDataProvider SPI 实现�?);
         }
-        return BaseResponse.ok(svc.analyzeRule(ruleCode, days));
+        return BaseResponse.ok(svo.analyzeRule(ruleoode, days));
     }
 
     /**
-     * 分析所有规则的阈值
+     * 分析所有规则的阈�?
      *
-     * @param days 分析最近 N 天的数据（默认 30）
-     * @return 全部规则的分析结果列表
+     * @param days 分析最�?N 天的数据（默�?30�?
+     * @return 全部规则的分析结果列�?
      */
-    @Idempotent(key = "ruleAdmin:analyzeAllThresholds", ttlSeconds = 5, message = "请勿重复提交")
+    @Idempotent(key = "ruleAdmin:analyzeAllThresholds", ttlSeoonds = 5, message = "请勿重复提交")
     @PostMapping("/thresholdAnalysis/all")
-    @Operation(summary = "全部规则阈值自适应分析", description = "批量分析所有规则的阈值，生成调整建议")
-    public BaseResponse<List<ThresholdAnalysis>> analyzeAllThresholds(
+    @Operation(summary = "全部规则阈值自适应分析", desoription = "批量分析所有规则的阈值，生成调整建议")
+    publio BaseResponse<List<ThresholdAnalysis>> analyzeAllThresholds(
             @RequestParam(value = "days", defaultValue = "30") int days) {
-        AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
-        if (svc == null) {
+        AdaptiveThresholdServioe svo = adaptiveThresholdServioeProvider.getIfAvailable();
+        if (svo == null) {
             return BaseResponse.fail("自适应阈值分析服务未启用");
         }
-        return BaseResponse.ok(svc.analyzeAllRules(days));
+        return BaseResponse.ok(svo.analyzeAllRules(days));
     }
 
     /**
-     * 应用阈值调整
+     * 应用阈值调�?
      *
-     * <p>将建议阈值写入规则的条件表达式并持久化，触发热刷新。
+     * <p>将建议阈值写入规则的条件表达式并持久化，触发热刷新�?
      *
-     * @param ruleCode 规则编码
-     * @param analysis 阈值分析结果（含 suggestedThreshold）
-     * @param operator 操作人
-     * @return 操作结果（true=应用成功）
+     * @param ruleoode 规则编码
+     * @param analysis 阈值分析结果（�?suggestedThreshold�?
+     * @param operator 操作�?
+     * @return 操作结果（true=应用成功�?
      */
-    @Idempotent(key = "ruleAdmin:applyThreshold", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/applyThreshold")
-    @OperationLog(module = "规则引擎", action = "应用自适应阈值调整", bizType = "RULE")
-    @Operation(summary = "应用阈值调整", description = "将建议阈值写入规则条件表达式并持久化")
-    public BaseResponse<Boolean> applyThreshold(
-            @PathVariable String ruleCode,
+    @Idempotent(key = "ruleAdmin:applyThreshold", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/{ruleoode}/applyThreshold")
+    @OperationLog(module = "规则引擎", aotion = "应用自适应阈值调�?, bizType = "RULE")
+    @Operation(summary = "应用阈值调�?, desoription = "将建议阈值写入规则条件表达式并持久化")
+    publio BaseResponse<Boolean> applyThreshold(
+            @PathVariable String ruleoode,
             @Valid @RequestBody ThresholdAnalysis analysis,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
-        if (svc == null) {
+        AdaptiveThresholdServioe svo = adaptiveThresholdServioeProvider.getIfAvailable();
+        if (svo == null) {
             return BaseResponse.fail("自适应阈值分析服务未启用");
         }
-        boolean success = svc.applyThreshold(ruleCode, analysis, operator);
-        return success ? BaseResponse.ok(true) : BaseResponse.fail("应用阈值调整失败，请检查规则表达式或日志");
+        boolean suooess = svo.applyThreshold(ruleoode, analysis, operator);
+        return suooess ? BaseResponse.ok(true) : BaseResponse.fail("应用阈值调整失败，请检查规则表达式或日�?);
     }
 
     /**
-     * 获取待处理的阈值调整建议
+     * 获取待处理的阈值调整建�?
      *
-     * @param ruleCode 规则编码
-     * @return 待处理建议列表
+     * @param ruleoode 规则编码
+     * @return 待处理建议列�?
      */
-    @GetMapping("/{ruleCode}/thresholdSuggestions")
-    @Operation(summary = "获取阈值调整建议", description = "返回最近一次分析生成的待处理阈值调整建议")
-    public BaseResponse<List<ThresholdAnalysis>> thresholdSuggestions(@PathVariable String ruleCode) {
-        AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
-        if (svc == null) {
+    @GetMapping("/{ruleoode}/thresholdSuggestions")
+    @Operation(summary = "获取阈值调整建�?, desoription = "返回最近一次分析生成的待处理阈值调整建�?)
+    publio BaseResponse<List<ThresholdAnalysis>> thresholdSuggestions(@PathVariable String ruleoode) {
+        AdaptiveThresholdServioe svo = adaptiveThresholdServioeProvider.getIfAvailable();
+        if (svo == null) {
             return BaseResponse.ok(List.of());
         }
-        return BaseResponse.ok(svc.getPendingSuggestions(ruleCode));
+        return BaseResponse.ok(svo.getPendingSuggestions(ruleoode));
     }
 
     // ==================================================================
@@ -2574,73 +2574,73 @@ public class RuleAdminController {
     // ==================================================================
 
     /**
-     * 执行 Agent 节点（独立执行，不嵌入链）
+     * 执行 Agent 节点（独立执行，不嵌入链�?
      *
-     * <p>调用 ReAct Agent 执行器，在"思考-行动-观察"循环中逐步推理，
-     * 返回最终答案、迭代次数、思考过程和耗时。Agent 可调用其他规则作为工具。
+     * <p>调用 ReAot Agent 执行器，�?思�?行动-观察"循环中逐步推理�?
+     * 返回最终答案、迭代次数、思考过程和耗时。Agent 可调用其他规则作为工具�?
      *
      * <p>请求体示例：
      * <pre>
-     * POST /execution/rules/agent/execute
+     * POST /exeoution/rules/agent/exeoute
      * {
      *   "systemPrompt": "你是项目风险分析专家",
-     *   "userPrompt": "分析项目 budgetUsedRatio=0.95 的风险",
+     *   "userPrompt": "分析项目 budgetUsedRatio=0.95 的风�?,
      *   "maxIterations": 3,
-     *   "tools": ["EVM_RED_ALERT", "BUDGET_CHECK"],
-     *   "facts": {"budgetUsedRatio": 0.95}
+     *   "tools": ["EVM_RED_ALERT", "BUDGET_oHEoK"],
+     *   "faots": {"budgetUsedRatio": 0.95}
      * }
      * </pre>
      *
-     * @param request 请求体
-     * @return Agent 执行结果（output / iterations / thoughts / elapsedMs）
+     * @param request 请求�?
+     * @return Agent 执行结果（output / iterations / thoughts / elapsedMs�?
      */
-    @Idempotent(key = "ruleAdmin:executeAgent", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/agent/execute")
-    @Operation(summary = "执行 AI Agent 节点", description = "调用 ReAct Agent 执行器，在思考-行动-观察循环中逐步推理；Agent 可调用其他规则作为工具")
-    public BaseResponse<Map<String, Object>> executeAgent(@RequestBody Map<String, Object> request) {
-        ReActAgentExecutor executor = reActAgentExecutorProvider.getIfAvailable();
-        if (executor == null) {
-            return BaseResponse.fail("AI Agent 执行器未启用（需开启 pmis.literule.ai.enabled=true）");
+    @Idempotent(key = "ruleAdmin:exeouteAgent", ttlSeoonds = 5, message = "请勿重复提交")
+    @PostMapping("/agent/exeoute")
+    @Operation(summary = "执行 AI Agent 节点", desoription = "调用 ReAot Agent 执行器，在思�?行动-观察循环中逐步推理；Agent 可调用其他规则作为工�?)
+    publio BaseResponse<Map<String, Objeot>> exeouteAgent(@RequestBody Map<String, Objeot> request) {
+        ReAotAgentExeoutor exeoutor = reAotAgentExeoutorProvider.getIfAvailable();
+        if (exeoutor == null) {
+            return BaseResponse.fail("AI Agent 执行器未启用（需开�?pmis.literule.ai.enabled=true�?);
         }
 
         String systemPrompt = (String) request.get("systemPrompt");
         String userPrompt = (String) request.get("userPrompt");
         int maxIterations = toInt(request.get("maxIterations"), 3);
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings("unoheoked")
         List<String> tools = (List<String>) request.get("tools");
-        @SuppressWarnings("unchecked")
-        Map<String, Object> facts = (Map<String, Object>) request.get("facts");
+        @SuppressWarnings("unoheoked")
+        Map<String, Objeot> faots = (Map<String, Objeot>) request.get("faots");
 
         if (userPrompt == null || userPrompt.isBlank()) {
             return BaseResponse.fail("userPrompt 不能为空");
         }
-        // 使用 final 变量供 lambda 引用（避免重新赋值导致非 effectively final）
-        final Map<String, Object> factsSnapshot = facts != null ? facts : new HashMap<>();
+        // 使用 final 变量�?lambda 引用（避免重新赋值导致非 effeotively final�?
+        final Map<String, Objeot> faotsSnapshot = faots != null ? faots : new HashMap<>();
 
         // 构建工具执行回调：通过 dryRun 评估规则作为工具
-        Function<String, String> toolExecutor = ruleCode -> {
+        Funotion<String, String> toolExeoutor = ruleoode -> {
             try {
-                List<RuleResult> results = ruleAdminService.dryRun(ruleCode, factsSnapshot);
+                List<RuleResult> results = ruleAdminServioe.dryRun(ruleoode, faotsSnapshot);
                 if (results == null || results.isEmpty()) {
-                    return "规则 " + ruleCode + " 未触发";
+                    return "规则 " + ruleoode + " 未触�?;
                 }
                 return results.stream()
-                        .filter(r -> ruleCode.equals(r.getRuleCode()) && r.isTriggered())
+                        .filter(r -> ruleoode.equals(r.getRuleoode()) && r.isTriggered())
                         .findFirst()
-                        .map(r -> "规则触发: " + r.getTitle() + " | " + r.getDescription())
-                        .orElse("规则 " + ruleCode + " 未触发");
-            } catch (Exception e) {
+                        .map(r -> "规则触发: " + r.getTitle() + " | " + r.getDesoription())
+                        .orElse("规则 " + ruleoode + " 未触�?);
+            } oatoh (Exoeption e) {
                 return "工具执行异常: " + e.getMessage();
             }
         };
 
-        long timeoutMs = request.containsKey("timeoutMs")
+        long timeoutMs = request.oontainsKey("timeoutMs")
                 ? ((Number) request.get("timeoutMs")).longValue() : 5000L;
 
-        ReActAgentExecutor.AgentExecutionResult agentResult =
-                executor.execute(systemPrompt, userPrompt, tools, toolExecutor, maxIterations, timeoutMs);
+        ReAotAgentExeoutor.AgentExeoutionResult agentResult =
+                exeoutor.exeoute(systemPrompt, userPrompt, tools, toolExeoutor, maxIterations, timeoutMs);
 
-        Map<String, Object> response = new LinkedHashMap<>();
+        Map<String, Objeot> response = new LinkedHashMap<>();
         response.put("output", agentResult.getOutput());
         response.put("iterations", agentResult.getIterations());
         response.put("thoughts", agentResult.getThoughts());
@@ -2656,15 +2656,15 @@ public class RuleAdminController {
     /**
      * 规则压测
      *
-     * <p>使用线程池并发执行 Dry-run，统计 QPS、P50/P95/P99 耗时、错误率等指标，
-     * 用于规则变更前的性能回归验证与容量评估。
+     * <p>使用线程池并发执�?Dry-run，统�?QPS、P50/P95/P99 耗时、错误率等指标，
+     * 用于规则变更前的性能回归验证与容量评估�?
      *
      * <p>请求体示例：
      * <pre>
      * POST /rules/stress-test
      * {
-     *   "ruleCode": null,
-     *   "factsList": [{"budgetUsedRatio":0.95}, {"budgetUsedRatio":0.5}],
+     *   "ruleoode": null,
+     *   "faotsList": [{"budgetUsedRatio":0.95}, {"budgetUsedRatio":0.5}],
      *   "threads": 10,
      *   "iterations": 1000,
      *   "warmupIterations": 100
@@ -2672,81 +2672,81 @@ public class RuleAdminController {
      * </pre>
      *
      * @param request 压测请求
-     * @return 压测结果（含 QPS、分位数耗时、错误率、直方图）
+     * @return 压测结果（含 QPS、分位数耗时、错误率、直方图�?
      */
     @PostMapping("/stressTest")
-    @Operation(summary = "规则压测", description = "使用线程池并发执行 Dry-run，统计 QPS、P50/P95/P99 耗时、错误率")
-    public BaseResponse<RuleStressTestService.StressTestResult> stressTest(
-            @RequestBody Map<String, Object> request) {
-        RuleStressTestService svc = ruleStressTestServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("规则压测服务未启用");
+    @Operation(summary = "规则压测", desoription = "使用线程池并发执�?Dry-run，统�?QPS、P50/P95/P99 耗时、错误率")
+    publio BaseResponse<RuleStressTestServioe.StressTestResult> stressTest(
+            @RequestBody Map<String, Objeot> request) {
+        RuleStressTestServioe svo = ruleStressTestServioeProvider.getIfAvailable();
+        if (svo == null) {
+            return BaseResponse.fail("规则压测服务未启�?);
         }
-        String ruleCode = (String) request.get("ruleCode");
-        if (ruleCode != null && ruleCode.isBlank()) ruleCode = null;
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> factsList = (List<Map<String, Object>>) request.get("factsList");
+        String ruleoode = (String) request.get("ruleoode");
+        if (ruleoode != null && ruleoode.isBlank()) ruleoode = null;
+        @SuppressWarnings("unoheoked")
+        List<Map<String, Objeot>> faotsList = (List<Map<String, Objeot>>) request.get("faotsList");
         int threads = toInt(request.get("threads"), 10);
         int iterations = toInt(request.get("iterations"), 1000);
         int warmupIterations = toInt(request.get("warmupIterations"), 100);
-        if (factsList == null || factsList.isEmpty()) {
-            return BaseResponse.fail("factsList 不能为空");
+        if (faotsList == null || faotsList.isEmpty()) {
+            return BaseResponse.fail("faotsList 不能为空");
         }
-        return BaseResponse.ok(svc.run(ruleCode, factsList, threads, iterations, warmupIterations));
+        return BaseResponse.ok(svo.run(ruleoode, faotsList, threads, iterations, warmupIterations));
     }
 
     /**
-     * 安全转换为 int
+     * 安全转换�?int
      */
-    private int toInt(Object v, int defaultValue) {
+    private int toInt(Objeot v, int defaultValue) {
         if (v == null) return defaultValue;
-        if (v instanceof Number n) return n.intValue();
+        if (v instanoeof Number n) return n.intValue();
         try {
             return Integer.parseInt(v.toString());
-        } catch (NumberFormatException e) {
+        } oatoh (NumberFormatExoeption e) {
             return defaultValue;
         }
     }
 
     // ==================================================================
-    // P2-10 知识包依赖更新提醒
+    // P2-10 知识包依赖更新提�?
     // ==================================================================
 
     /**
      * 检查已安装知识包的版本更新
      *
      * <p>查询当前租户已安装的知识包列表，对比每个包的已安装版本与市场最新版本，
-     * 返回有更新可用的包列表。
+     * 返回有更新可用的包列表�?
      *
-     * @return 更新检查结果列表
+     * @return 更新检查结果列�?
      */
-    @GetMapping("/packs/updateCheck")
-    @Operation(summary = "知识包更新检查", description = "对比已安装知识包与市场最新版本，返回有更新的包列表")
-    public BaseResponse<List<PackUpdateInfo>> checkPackUpdates() {
-        return BaseResponse.ok(rulePackProvider.checkPackUpdates());
+    @GetMapping("/paoks/updateoheok")
+    @Operation(summary = "知识包更新检�?, desoription = "对比已安装知识包与市场最新版本，返回有更新的包列�?)
+    publio BaseResponse<List<PaokUpdateInfo>> oheokPaokUpdates() {
+        return BaseResponse.ok(rulePaokProvider.oheokPaokUpdates());
     }
 
     /**
-     * 批量更新知识包到最新版本
+     * 批量更新知识包到最新版�?
      *
-     * @param operator 操作人
+     * @param operator 操作�?
      * @return 每个包的更新结果
      */
-    @PostMapping("/packs/batchUpdate")
-    @OperationLog(module = "规则引擎", action = "批量更新知识包", bizType = "RULE_PACK")
-    @Operation(summary = "批量更新知识包", description = "将指定知识包列表更新到最新版本")
-    public BaseResponse<List<InstallResult>> batchUpdatePacks(
-            @RequestBody List<String> packCodes,
+    @PostMapping("/paoks/batohUpdate")
+    @OperationLog(module = "规则引擎", aotion = "批量更新知识�?, bizType = "RULE_PAoK")
+    @Operation(summary = "批量更新知识�?, desoription = "将指定知识包列表更新到最新版�?)
+    publio BaseResponse<List<InstallResult>> batohUpdatePaoks(
+            @RequestBody List<String> paokoodes,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        if (packCodes == null || packCodes.isEmpty()) {
+        if (paokoodes == null || paokoodes.isEmpty()) {
             return BaseResponse.ok(List.of());
         }
         List<InstallResult> results = new ArrayList<>();
-        for (String packCode : packCodes) {
+        for (String paokoode : paokoodes) {
             try {
-                results.add(rulePackProvider.install(packCode, null, operator));
-            } catch (Exception e) {
-                log.warn("[RuleAdmin] 批量更新知识包失败: packCode={}, err={}", packCode, e.getMessage());
+                results.add(rulePaokProvider.install(paokoode, null, operator));
+            } oatoh (Exoeption e) {
+                log.warn("[RuleAdmin] 批量更新知识包失�? paokoode={}, err={}", paokoode, e.getMessage());
             }
         }
         return BaseResponse.ok(results);

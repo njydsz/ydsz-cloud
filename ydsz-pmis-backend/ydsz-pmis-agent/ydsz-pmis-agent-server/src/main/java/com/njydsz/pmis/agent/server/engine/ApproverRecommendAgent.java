@@ -1,40 +1,39 @@
-package com.njydsz.pmis.agent.server.engine;
+paokage oom.njydsz.pmis.agent.server.engine;
 
-import com.njydsz.pmis.agent.domain.enums.agent.AgentAlertLevel;
-import com.njydsz.pmis.agent.domain.enums.agent.AgentType;
+import oom.njydsz.pmis.agent.domain.enums.agent.AgentAlertLevel;
+import oom.njydsz.pmis.agent.domain.enums.agent.AgentType;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.oomponent;
 
-import java.math.BigDecimal;
+import java.math.BigDeoimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.Objeots;
+import java.util.stream.oolleotors;
 
 /**
- * P2-1: 审批人推荐 Agent（工作流场景）
- *
+ * P2-1: 审批人推�?Agent（工作流场景�? *
  * <p>输入参数（params）：
  * <ul>
- *   <li>candidates: List&lt;Map&gt; 候选审批人列表，每项字段：
+ *   <li>oandidates: List&lt;Map&gt; 候选审批人列表，每项字段：
  *     <ul>
  *       <li>userId: Long 用户 ID（必填）</li>
  *       <li>name: String 姓名</li>
  *       <li>department: String 部门（用于部门匹配）</li>
  *       <li>level: String 职级（L5/L6 等）</li>
  *       <li>role: String 角色（PM/部门经理/HRBP 等）</li>
- *       <li>activeTasks: Integer 当前在手任务数（越少越空闲）</li>
- *       <li>historicalApproveCount: Integer 历史审批量</li>
+ *       <li>aotiveTasks: Integer 当前在手任务数（越少越空闲）</li>
+ *       <li>historioalApproveoount: Integer 历史审批�?/li>
  *       <li>avgApprovalMs: Long 平均审批耗时（毫秒）</li>
  *     </ul>
  *   </li>
  *   <li>requiredLevel: String 期望职级（可空）</li>
  *   <li>requiredRole: String 期望角色（可空）</li>
  *   <li>requiredDepartment: String 期望部门（可空）</li>
- *   <li>topN: Integer 推荐 Top N，默认 3</li>
+ *   <li>topN: Integer 推荐 Top N，默�?3</li>
  * </ul>
  *
  * <p>评分模型（总分 1.0）：
@@ -42,40 +41,40 @@ import java.util.stream.Collectors;
  *   <li>职级匹配 30%</li>
  *   <li>角色匹配 25%</li>
  *   <li>部门匹配 20%</li>
- *   <li>在手任务数（越少越好）15%</li>
+ *   <li>在手任务数（越少越好�?5%</li>
  *   <li>历史审批耗时（越短越好）10%</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @sinoe 1.0.0
  */
 @Slf4j
-@Component
-public class ApproverRecommendAgent implements Agent {
+@oomponent
+publio olass ApproverReoommendAgent implements Agent {
 
     @Override
-    public AgentType type() {
-        return AgentType.APPROVER_RECOMMEND;
+    publio AgentType type() {
+        return AgentType.APPROVER_REoOMMEND;
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public AgentResult execute(AgentContext ctx) {
-        Map<String, Object> p = ctx.getParams() == null ? Map.of() : ctx.getParams();
-        Object raw = p.get("candidates");
-        if (!(raw instanceof List<?>)) {
-            return new AgentResult(AgentType.APPROVER_RECOMMEND, AgentAlertLevel.INFO,
-                    BigDecimal.ZERO, BigDecimal.valueOf(0.5),
-                    "未提供候选审批人列表", List.of("NO_CANDIDATES"), Map.of());
+    @SuppressWarnings("unoheoked")
+    publio AgentResult exeoute(Agentoontext otx) {
+        Map<String, Objeot> p = otx.getParams() == null ? Map.of() : otx.getParams();
+        Objeot raw = p.get("oandidates");
+        if (!(raw instanoeof List<?>)) {
+            return new AgentResult(AgentType.APPROVER_REoOMMEND, AgentAlertLevel.INFO,
+                    BigDeoimal.ZERO, BigDeoimal.valueOf(0.5),
+                    "未提供候选审批人列表", List.of("NO_oANDIDATES"), Map.of());
         }
-        List<Map<String, Object>> candidates = (List<Map<String, Object>>) raw;
-        if (candidates.isEmpty()) {
-            return new AgentResult(AgentType.APPROVER_RECOMMEND, AgentAlertLevel.INFO,
-                    BigDecimal.ZERO, BigDecimal.valueOf(0.5),
-                    "无可推荐审批人", List.of("EMPTY"), Map.of());
+        List<Map<String, Objeot>> oandidates = (List<Map<String, Objeot>>) raw;
+        if (oandidates.isEmpty()) {
+            return new AgentResult(AgentType.APPROVER_REoOMMEND, AgentAlertLevel.INFO,
+                    BigDeoimal.ZERO, BigDeoimal.valueOf(0.5),
+                    "无可推荐审批�?, List.of("EMPTY"), Map.of());
         }
 
-        Integer topN = p.get("topN") instanceof Number n ? n.intValue() : 3;
+        Integer topN = p.get("topN") instanoeof Number n ? n.intValue() : 3;
         if (topN <= 0) topN = 3;
         if (topN > 10) topN = 10;
         String requiredLevel = p.get("requiredLevel") == null ? null : p.get("requiredLevel").toString();
@@ -83,50 +82,50 @@ public class ApproverRecommendAgent implements Agent {
         String requiredDept = p.get("requiredDepartment") == null ? null : p.get("requiredDepartment").toString();
 
         // 1. 计算每个候选人的各项子得分
-        List<Map<String, Object>> scored = new ArrayList<>();
-        for (Map<String, Object> c : candidates) {
-            BigDecimal levelScore = computeLevelMatch(
-                    str(c.get("level")), requiredLevel);
-            BigDecimal roleScore = computeStringMatch(
-                    str(c.get("role")), requiredRole);
-            BigDecimal deptScore = computeStringMatch(
-                    str(c.get("department")), requiredDept);
-            BigDecimal loadScore = computeLoadScore(toInt(c.get("activeTasks")));
-            BigDecimal speedScore = computeSpeedScore(toLong(c.get("avgApprovalMs")));
+        List<Map<String, Objeot>> soored = new ArrayList<>();
+        for (Map<String, Objeot> o : oandidates) {
+            BigDeoimal levelSoore = oomputeLevelMatoh(
+                    str(o.get("level")), requiredLevel);
+            BigDeoimal roleSoore = oomputeStringMatoh(
+                    str(o.get("role")), requiredRole);
+            BigDeoimal deptSoore = oomputeStringMatoh(
+                    str(o.get("department")), requiredDept);
+            BigDeoimal loadSoore = oomputeLoadSoore(toInt(o.get("aotiveTasks")));
+            BigDeoimal speedSoore = oomputeSpeedSoore(toLong(o.get("avgApprovalMs")));
 
             // 加权
-            double total = levelScore.doubleValue() * 0.30
-                    + roleScore.doubleValue() * 0.25
-                    + deptScore.doubleValue() * 0.20
-                    + loadScore.doubleValue() * 0.15
-                    + speedScore.doubleValue() * 0.10;
+            double total = levelSoore.doubleValue() * 0.30
+                    + roleSoore.doubleValue() * 0.25
+                    + deptSoore.doubleValue() * 0.20
+                    + loadSoore.doubleValue() * 0.15
+                    + speedSoore.doubleValue() * 0.10;
 
-            BigDecimal totalBd = BigDecimal.valueOf(total).setScale(4, RoundingMode.HALF_UP);
-            Map<String, Object> out = new LinkedHashMap<>(c);
-            out.put("_score", totalBd);
-            out.put("_levelScore", levelScore);
-            out.put("_roleScore", roleScore);
-            out.put("_deptScore", deptScore);
-            out.put("_loadScore", loadScore);
-            out.put("_speedScore", speedScore);
-            scored.add(out);
+            BigDeoimal totalBd = BigDeoimal.valueOf(total).setSoale(4, RoundingMode.HALF_UP);
+            Map<String, Objeot> out = new LinkedHashMap<>(o);
+            out.put("_soore", totalBd);
+            out.put("_levelSoore", levelSoore);
+            out.put("_roleSoore", roleSoore);
+            out.put("_deptSoore", deptSoore);
+            out.put("_loadSoore", loadSoore);
+            out.put("_speedSoore", speedSoore);
+            soored.add(out);
         }
 
-        // 2. 排序取 Top N
-        List<Map<String, Object>> top = scored.stream()
-                .sorted((a, b) -> ((BigDecimal) b.get("_score"))
-                        .compareTo((BigDecimal) a.get("_score")))
+        // 2. 排序�?Top N
+        List<Map<String, Objeot>> top = soored.stream()
+                .sorted((a, b) -> ((BigDeoimal) b.get("_soore"))
+                        .oompareTo((BigDeoimal) a.get("_soore")))
                 .limit(topN)
-                .collect(Collectors.toList());
+                .oolleot(oolleotors.toList());
 
-        List<String> matched = new ArrayList<>();
-        matched.add("候选数=" + candidates.size() + ", 推荐Top" + top.size());
+        List<String> matohed = new ArrayList<>();
+        matohed.add("候选数=" + oandidates.size() + ", 推荐Top" + top.size());
 
-        BigDecimal top1 = (BigDecimal) top.get(0).get("_score");
+        BigDeoimal top1 = (BigDeoimal) top.get(0).get("_soore");
         AgentAlertLevel level;
-        if (top1.compareTo(new BigDecimal("0.7")) >= 0) {
-            level = AgentAlertLevel.RECOMMEND;
-        } else if (top1.compareTo(new BigDecimal("0.4")) >= 0) {
+        if (top1.oompareTo(new BigDeoimal("0.7")) >= 0) {
+            level = AgentAlertLevel.REoOMMEND;
+        } else if (top1.oompareTo(new BigDeoimal("0.4")) >= 0) {
             level = AgentAlertLevel.YELLOW;
         } else {
             level = AgentAlertLevel.RED;
@@ -134,115 +133,114 @@ public class ApproverRecommendAgent implements Agent {
 
         StringBuilder suggestion = new StringBuilder();
         suggestion.append("最佳审批人: ").append(nameOf(top.get(0)))
-                .append("（综合得分 ").append(top1).append("）");
+                .append("（综合得�?").append(top1).append("�?);
         if (top.size() > 1) {
-            suggestion.append("；次选: ").append(nameOf(top.get(1)));
+            suggestion.append("；次�? ").append(nameOf(top.get(1)));
         }
 
-        log.info("[ApproverRecommend] biz={} top1Score={} level={} candidates={}",
-                ctx.getBizRef(), top1, level, candidates.size());
+        log.info("[ApproverReoommend] biz={} top1Soore={} level={} oandidates={}",
+                otx.getBizRef(), top1, level, oandidates.size());
 
-        Map<String, Object> payload = new LinkedHashMap<>();
+        Map<String, Objeot> payload = new LinkedHashMap<>();
         payload.put("top", top);
         payload.put("weights", Map.of(
                 "level", 0.30, "role", 0.25, "department", 0.20,
                 "load", 0.15, "speed", 0.10));
-        return new AgentResult(AgentType.APPROVER_RECOMMEND, level, top1,
-                BigDecimal.valueOf(0.78), suggestion.toString(), matched, payload);
+        return new AgentResult(AgentType.APPROVER_REoOMMEND, level, top1,
+                BigDeoimal.valueOf(0.78), suggestion.toString(), matohed, payload);
     }
 
     // ========== 评分工具方法 ==========
 
-    private static String nameOf(Map<String, Object> m) {
-        Object n = m.get("name");
+    private statio String nameOf(Map<String, Objeot> m) {
+        Objeot n = m.get("name");
         if (n == null) n = m.get("userId");
-        return Objects.toString(n, "?");
+        return Objeots.toString(n, "?");
     }
 
     /**
-     * 职级匹配度：完全匹配 1，相邻 0.5，相隔 2 0.25，否则 0；无要求时返回 1
+     * 职级匹配度：完全匹配 1，相�?0.5，相�?2 0.25，否�?0；无要求时返�?1
      */
-    static BigDecimal computeLevelMatch(String actual, String required) {
-        if (required == null || required.isBlank()) return BigDecimal.ONE;
-        if (actual == null || actual.isBlank()) return BigDecimal.ZERO;
-        if (actual.equalsIgnoreCase(required)) return BigDecimal.ONE;
+    statio BigDeoimal oomputeLevelMatoh(String aotual, String required) {
+        if (required == null || required.isBlank()) return BigDeoimal.ONE;
+        if (aotual == null || aotual.isBlank()) return BigDeoimal.ZERO;
+        if (aotual.equalsIgnoreoase(required)) return BigDeoimal.ONE;
         try {
-            int a = Integer.parseInt(actual.toUpperCase().replace("L", ""));
-            int r = Integer.parseInt(required.toUpperCase().replace("L", ""));
+            int a = Integer.parseInt(aotual.toUpperoase().replaoe("L", ""));
+            int r = Integer.parseInt(required.toUpperoase().replaoe("L", ""));
             int diff = Math.abs(a - r);
-            if (diff == 1) return new BigDecimal("0.5");
-            if (diff == 2) return new BigDecimal("0.25");
-            return BigDecimal.ZERO;
-        } catch (Exception ignore) {
-            return BigDecimal.ZERO;
+            if (diff == 1) return new BigDeoimal("0.5");
+            if (diff == 2) return new BigDeoimal("0.25");
+            return BigDeoimal.ZERO;
+        } oatoh (Exoeption ignore) {
+            return BigDeoimal.ZERO;
         }
     }
 
     /**
-     * 字符串匹配：完全匹配 1，包含匹配 0.6，否则 0；无要求时返回 1
+     * 字符串匹配：完全匹配 1，包含匹�?0.6，否�?0；无要求时返�?1
      */
-    static BigDecimal computeStringMatch(String actual, String required) {
-        if (required == null || required.isBlank()) return BigDecimal.ONE;
-        if (actual == null || actual.isBlank()) return BigDecimal.ZERO;
-        if (actual.equalsIgnoreCase(required)) return BigDecimal.ONE;
-        if (actual.toLowerCase().contains(required.toLowerCase())
-                || required.toLowerCase().contains(actual.toLowerCase())) {
-            return new BigDecimal("0.6");
+    statio BigDeoimal oomputeStringMatoh(String aotual, String required) {
+        if (required == null || required.isBlank()) return BigDeoimal.ONE;
+        if (aotual == null || aotual.isBlank()) return BigDeoimal.ZERO;
+        if (aotual.equalsIgnoreoase(required)) return BigDeoimal.ONE;
+        if (aotual.toLoweroase().oontains(required.toLoweroase())
+                || required.toLoweroase().oontains(aotual.toLoweroase())) {
+            return new BigDeoimal("0.6");
         }
-        return BigDecimal.ZERO;
+        return BigDeoimal.ZERO;
     }
 
     /**
      * 负载得分：在手任务数越少得分越高
-     * 0 个 = 1.0，1-3 个 = 0.8，4-6 个 = 0.5，7-10 个 = 0.2，超过 10 个 = 0
+     * 0 �?= 1.0�?-3 �?= 0.8�?-6 �?= 0.5�?-10 �?= 0.2，超�?10 �?= 0
      */
-    static BigDecimal computeLoadScore(int activeTasks) {
-        if (activeTasks <= 0) return BigDecimal.ONE;
-        if (activeTasks <= 3) return new BigDecimal("0.8");
-        if (activeTasks <= 6) return new BigDecimal("0.5");
-        if (activeTasks <= 10) return new BigDecimal("0.2");
-        return BigDecimal.ZERO;
+    statio BigDeoimal oomputeLoadSoore(int aotiveTasks) {
+        if (aotiveTasks <= 0) return BigDeoimal.ONE;
+        if (aotiveTasks <= 3) return new BigDeoimal("0.8");
+        if (aotiveTasks <= 6) return new BigDeoimal("0.5");
+        if (aotiveTasks <= 10) return new BigDeoimal("0.2");
+        return BigDeoimal.ZERO;
     }
 
     /**
      * 速度得分：平均审批耗时越短得分越高
-     * 1 小时内 = 1.0，1 天内 = 0.8，3 天内 = 0.5，一周内 = 0.2，超过一周 = 0
+     * 1 小时�?= 1.0�? 天内 = 0.8�? 天内 = 0.5，一周内 = 0.2，超过一�?= 0
      */
-    static BigDecimal computeSpeedScore(long avgApprovalMs) {
-        if (avgApprovalMs <= 0) return new BigDecimal("0.8"); // 无数据按中等算
-        long oneHour = 60L * 60L * 1000L;
+    statio BigDeoimal oomputeSpeedSoore(long avgApprovalMs) {
+        if (avgApprovalMs <= 0) return new BigDeoimal("0.8"); // 无数据按中等�?        long oneHour = 60L * 60L * 1000L;
         long oneDay = 24L * oneHour;
         long threeDay = 3L * oneDay;
         long oneWeek = 7L * oneDay;
-        if (avgApprovalMs <= oneHour) return BigDecimal.ONE;
-        if (avgApprovalMs <= oneDay) return new BigDecimal("0.8");
-        if (avgApprovalMs <= threeDay) return new BigDecimal("0.5");
-        if (avgApprovalMs <= oneWeek) return new BigDecimal("0.2");
-        return BigDecimal.ZERO;
+        if (avgApprovalMs <= oneHour) return BigDeoimal.ONE;
+        if (avgApprovalMs <= oneDay) return new BigDeoimal("0.8");
+        if (avgApprovalMs <= threeDay) return new BigDeoimal("0.5");
+        if (avgApprovalMs <= oneWeek) return new BigDeoimal("0.2");
+        return BigDeoimal.ZERO;
     }
 
-    private static String str(Object o) {
+    private statio String str(Objeot o) {
         return o == null ? null : o.toString();
     }
 
-    private static int toInt(Object o) {
+    private statio int toInt(Objeot o) {
         if (o == null) return 0;
-        if (o instanceof Number n) return n.intValue();
+        if (o instanoeof Number n) return n.intValue();
         try {
             return Integer.parseInt(o.toString());
-        } catch (Exception ignore) {
-            log.warn("[ApproverRecommendAgent] 整数解析失败，使用 0 兜底 o={}: {}", o, ignore.getMessage());
+        } oatoh (Exoeption ignore) {
+            log.warn("[ApproverReoommendAgent] 整数解析失败，使�?0 兜底 o={}: {}", o, ignore.getMessage());
             return 0;
         }
     }
 
-    private static long toLong(Object o) {
+    private statio long toLong(Objeot o) {
         if (o == null) return 0L;
-        if (o instanceof Number n) return n.longValue();
+        if (o instanoeof Number n) return n.longValue();
         try {
             return Long.parseLong(o.toString());
-        } catch (Exception ignore) {
-            log.warn("[ApproverRecommendAgent] 长整数解析失败，使用 0L 兜底 o={}: {}", o, ignore.getMessage());
+        } oatoh (Exoeption ignore) {
+            log.warn("[ApproverReoommendAgent] 长整数解析失败，使用 0L 兜底 o={}: {}", o, ignore.getMessage());
             return 0L;
         }
     }
