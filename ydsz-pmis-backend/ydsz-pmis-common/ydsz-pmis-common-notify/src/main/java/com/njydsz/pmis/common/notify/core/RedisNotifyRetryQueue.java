@@ -150,7 +150,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
                     continue;
                 }
 
-                RetryMessage msg = JsonUtils.fromJson(msgJson, RetryMessage.class);
+                RetryMessage msg = JsonUtils.parseObject(msgJson, RetryMessage.class);
                 if (msg == null) {
                     stringRedisTemplate.delete(msgKey);
                     continue;

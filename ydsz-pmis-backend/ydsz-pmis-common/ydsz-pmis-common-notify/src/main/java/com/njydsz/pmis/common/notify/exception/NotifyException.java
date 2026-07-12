@@ -1,7 +1,8 @@
 package com.njydsz.pmis.common.notify.exception;
 
-import com.njydsz.pmis.common.exception.code.ExceptionCode;
-import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.pmis.common.exception.custom.AbstractPmisException;
+import com.njydsz.pmis.common.exception.enums.ExceptionCategory;
+import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
 
 /**
  * 通知发送异常
@@ -9,33 +10,27 @@ import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-public class NotifyException extends RuntimeException {
+public class NotifyException extends AbstractPmisException {
 
     private static final long serialVersionUID = 1L;
 
-    private final ExceptionCode exceptionCode;
+    private static final String DEFAULT_CODE = "NOTIFY_ERROR";
 
     public NotifyException(String message) {
         super(message);
-        this.exceptionCode = UnifiedExceptionCode.BAD_REQUEST;
+        this.httpStatus = 400;
+        this.level = ExceptionLevel.ERROR;
+        this.category = ExceptionCategory.BUSINESS;
+        this.code = DEFAULT_CODE;
+        this.params = new Object[]{};
     }
 
     public NotifyException(String message, Throwable cause) {
         super(message, cause);
-        this.exceptionCode = UnifiedExceptionCode.BAD_REQUEST;
-    }
-
-    public NotifyException(ExceptionCode code, String message) {
-        super(message);
-        this.exceptionCode = code;
-    }
-
-    public NotifyException(ExceptionCode code, String message, Throwable cause) {
-        super(message, cause);
-        this.exceptionCode = code;
-    }
-
-    public ExceptionCode getExceptionCode() {
-        return exceptionCode;
+        this.httpStatus = 400;
+        this.level = ExceptionLevel.ERROR;
+        this.category = ExceptionCategory.BUSINESS;
+        this.code = DEFAULT_CODE;
+        this.params = new Object[]{};
     }
 }

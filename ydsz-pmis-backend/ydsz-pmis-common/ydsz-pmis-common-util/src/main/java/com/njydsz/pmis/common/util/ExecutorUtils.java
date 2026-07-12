@@ -78,6 +78,21 @@ public final class ExecutorUtils {
     }
 
     /**
+     * 创建虚拟线程执行器（Java 21+）
+     *
+     * <p>使用虚拟线程池，每个任务在一个虚拟线程中执行，
+     * 线程名以 namePrefix 开头，便于排查问题。
+     *
+     * @param namePrefix 线程名前缀
+     * @return 基于虚拟线程的 ExecutorService
+     */
+    public static ExecutorService newVirtualThreadExecutor(String namePrefix) {
+        return Executors.newThreadPerTaskExecutor(
+                Thread.ofVirtual().name(namePrefix, 0).factory()
+        );
+    }
+
+    /**
      * 命名线程工厂
      */
     public static class NamedThreadFactory implements ThreadFactory {

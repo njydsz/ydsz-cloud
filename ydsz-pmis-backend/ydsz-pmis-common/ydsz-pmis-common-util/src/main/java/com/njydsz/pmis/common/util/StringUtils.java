@@ -27,6 +27,20 @@ public final class StringUtils {
     }
 
     /**
+     * 判断字符串是否非空且非空白
+     */
+    public static boolean isNotBlank(String str) {
+        return !isBlank(str);
+    }
+
+    /**
+     * 判断字符串是否非空
+     */
+    public static boolean isNotEmpty(String str) {
+        return !isEmpty(str);
+    }
+
+    /**
      * 驼峰转下划线（camelCase → snake_case）
      */
     public static String camelToSnake(String camelCase) {

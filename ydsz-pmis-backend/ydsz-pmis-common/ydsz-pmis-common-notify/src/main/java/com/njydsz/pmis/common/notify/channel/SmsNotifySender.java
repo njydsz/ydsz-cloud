@@ -234,7 +234,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 			return NotifySendResult.success("sent", channelName());
 		}
 		try {
-			JsonNode json = JsonUtils.getMapper().readTree(response);
+			JsonNode json = JsonUtils.getObjectMapper().readTree(response);
 			String code = json.has("code") ? json.get("code").asText() : null;
 			if ("0".equals(code) || "OK".equals(code) || "SUCCESS".equals(code)) {
 				String messageId = json.has("messageId") ? json.get("messageId").asText() : null;

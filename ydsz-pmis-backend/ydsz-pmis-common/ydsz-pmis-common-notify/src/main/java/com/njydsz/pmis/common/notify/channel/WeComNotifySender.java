@@ -70,7 +70,7 @@ public class WeComNotifySender implements NotifyChannelStrategy {
 			// 校验企业微信响应 errcode
 			if (response != null && !response.isEmpty()) {
 				try {
-					JsonNode respJson = JsonUtils.getMapper().readTree(response);
+					JsonNode respJson = JsonUtils.getObjectMapper().readTree(response);
 					int errcode = respJson.has("errcode") ? respJson.get("errcode").asInt(-1) : -1;
 					if (errcode != 0) {
 						String errmsg = respJson.has("errmsg") ? respJson.get("errmsg").asText() : "";
