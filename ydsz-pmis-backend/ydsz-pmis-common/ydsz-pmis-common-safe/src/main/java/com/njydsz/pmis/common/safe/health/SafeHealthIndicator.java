@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.health;
+package com.njydsz.pmis.common.safe.health;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.health.contributor.Health;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.annotation;
+package com.njydsz.pmis.common.file.annotation;
 
 import com.njydsz.pmis.common.file.config.FileConfiguration;
 import org.springframework.context.annotation.Import;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.exception.metrics;
+package com.njydsz.pmis.common.exception.metrics;
 
 import com.njydsz.pmis.common.exception.custom.AbstractYdszException;
 import io.micrometer.core.instrument.Counter;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.doc.config;
+package com.njydsz.pmis.common.doc.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

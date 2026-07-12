@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.lock.config;
+package com.njydsz.pmis.common.lock.config;
 
 import com.njydsz.pmis.common.lock.aspect.DistributedLockAspect;
 import com.njydsz.pmis.common.lock.metrics.LockMetrics;

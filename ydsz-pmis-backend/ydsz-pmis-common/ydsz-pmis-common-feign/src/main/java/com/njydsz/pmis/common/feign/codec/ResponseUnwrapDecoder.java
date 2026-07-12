@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.codec;
+package com.njydsz.pmis.common.feign.codec;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.core.response.IResponse;

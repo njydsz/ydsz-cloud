@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.http;
+package com.njydsz.pmis.common.util.http;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

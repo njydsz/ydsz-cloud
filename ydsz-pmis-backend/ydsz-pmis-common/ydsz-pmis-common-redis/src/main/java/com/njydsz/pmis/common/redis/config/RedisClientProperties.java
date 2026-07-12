@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.config;
+package com.njydsz.pmis.common.redis.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

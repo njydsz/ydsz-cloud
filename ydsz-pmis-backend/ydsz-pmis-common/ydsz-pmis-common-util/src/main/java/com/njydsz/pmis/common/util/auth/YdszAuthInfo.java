@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.auth;
+package com.njydsz.pmis.common.util.auth;
 
 import com.njydsz.pmis.common.core.enums.ServiceType;
 import com.njydsz.pmis.common.core.enums.DataScopeType;

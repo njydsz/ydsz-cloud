@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.mq.active;
+package com.njydsz.pmis.common.queue.mq.active;
 
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import lombok.Data;
@@ -18,7 +18,7 @@ import lombok.EqualsAndHashCode;
  *       broker-url: tcp://localhost:61616
  *       username: admin
  *       password: admin
- *       queue-name: remi-activemq-queue
+ *       queue-name: ydsz-activemq-queue
  *       concurrent-consumers: 5
  *       max-concurrent-consumers: 10
  * }</pre>

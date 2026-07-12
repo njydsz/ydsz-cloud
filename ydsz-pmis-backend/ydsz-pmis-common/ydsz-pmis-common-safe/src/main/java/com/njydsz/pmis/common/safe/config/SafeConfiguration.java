@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.config;
+package com.njydsz.pmis.common.safe.config;
 
 import com.njydsz.pmis.common.redis.service.RedisService;
 import com.njydsz.pmis.common.safe.csrf.CsrfTokenGenerator;

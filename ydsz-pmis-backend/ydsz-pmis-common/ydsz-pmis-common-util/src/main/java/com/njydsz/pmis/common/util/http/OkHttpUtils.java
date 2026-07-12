@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.http;
+package com.njydsz.pmis.common.util.http;
 
 import com.njydsz.pmis.common.util.classloader.ClassUtils;
 import lombok.extern.slf4j.Slf4j;

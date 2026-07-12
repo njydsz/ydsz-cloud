@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.core.config;
+package com.njydsz.pmis.common.core.config;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

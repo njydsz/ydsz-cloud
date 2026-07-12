@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.aspect;
+package com.njydsz.pmis.common.feign.aspect;
 
 import feign.Logger;
 import org.slf4j.LoggerFactory;

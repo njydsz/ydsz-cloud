@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.warmup;
+package com.njydsz.pmis.common.auth.warmup;
 
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.model.RolePermissions;

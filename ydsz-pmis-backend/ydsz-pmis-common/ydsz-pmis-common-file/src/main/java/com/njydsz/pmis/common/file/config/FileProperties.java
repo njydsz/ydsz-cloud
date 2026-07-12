@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.config;
+package com.njydsz.pmis.common.file.config;
 
 import com.njydsz.pmis.common.file.storage.StorageType;
 import jakarta.validation.constraints.Max;
@@ -25,7 +25,7 @@ import java.util.List;
  *     endpoint: http://localhost:9000
  *     access-key: minioadmin
  *     secret-key: minioadmin
- *     bucket: remi-files
+ *     bucket: ydsz-files
  *     domain: https://files.example.com
  *     allowed-suffixes: png,jpg,pdf,docx
  *     max-file-size: 104857600

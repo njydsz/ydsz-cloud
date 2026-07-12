@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.annotation;
+package com.njydsz.pmis.common.queue.annotation;
 
 import com.njydsz.pmis.common.queue.config.QueueConfiguration;
 import org.springframework.context.annotation.Import;

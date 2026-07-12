@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.crypto;
+package com.njydsz.pmis.common.safe.crypto;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;

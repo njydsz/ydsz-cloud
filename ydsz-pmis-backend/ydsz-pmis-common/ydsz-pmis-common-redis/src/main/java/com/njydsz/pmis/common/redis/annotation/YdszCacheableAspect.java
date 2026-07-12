@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.annotation;
+package com.njydsz.pmis.common.redis.annotation;
 
 import com.njydsz.pmis.common.redis.service.RedisService;
 import org.aspectj.lang.ProceedingJoinPoint;

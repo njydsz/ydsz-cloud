@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.lifecycle;
+package com.njydsz.pmis.common.file.lifecycle;
 
 import com.njydsz.pmis.common.file.storage.IFileStorage;
 import com.njydsz.pmis.common.file.storage.IStorageFactory;

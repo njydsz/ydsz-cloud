@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.health;
+package com.njydsz.pmis.common.notify.health;
 
 import com.njydsz.pmis.common.notify.config.NotifyProperties;
 import lombok.extern.slf4j.Slf4j;

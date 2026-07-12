@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.sensitive.remi;
+package com.njydsz.pmis.common.safe.sensitive.ydsz;
 
 import com.njydsz.pmis.common.safe.sensitive.SensitiveDataProcessor;
 import com.njydsz.pmis.common.util.json.JsonUtils;

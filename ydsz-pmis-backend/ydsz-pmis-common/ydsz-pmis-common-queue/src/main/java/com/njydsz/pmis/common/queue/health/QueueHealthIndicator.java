@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.health;
+package com.njydsz.pmis.common.queue.health;
 
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import com.njydsz.pmis.common.queue.enums.QueueType;

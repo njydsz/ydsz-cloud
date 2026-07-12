@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.annotation;
+package com.njydsz.pmis.common.feign.annotation;
 
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.core.annotation.AliasFor;

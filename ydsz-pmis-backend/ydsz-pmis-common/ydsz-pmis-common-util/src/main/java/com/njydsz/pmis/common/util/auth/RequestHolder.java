@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.auth;
+package com.njydsz.pmis.common.util.auth;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
 import lombok.extern.slf4j.Slf4j;

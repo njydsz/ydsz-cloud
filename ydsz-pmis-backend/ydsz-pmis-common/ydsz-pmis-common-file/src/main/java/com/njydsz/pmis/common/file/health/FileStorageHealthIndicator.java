@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.health;
+package com.njydsz.pmis.common.file.health;
 
 import com.njydsz.pmis.common.file.config.FileProperties;
 import com.njydsz.pmis.common.file.storage.IFileStorage;

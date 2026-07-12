@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.id;
+package com.njydsz.pmis.common.util.id;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -19,7 +19,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *       worker-id: 1
  *       datacenter-id: 0
  *       worker-id-source: CONFIG
- *       environment-variable-name: REMI_SNOWFLAKE_WORKER_ID
+ *       environment-variable-name: YDSZ_SNOWFLAKE_WORKER_ID
  * }</pre>
  *
  * <p><b>配置说明：</b>
@@ -33,7 +33,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *       <li>INSTANCE_INDEX：从 Spring Cloud 实例索引读取</li>
  *     </ul>
  *   </li>
- *   <li>environmentVariableName：环境变量名，默认 REMI_SNOWFLAKE_WORKER_ID</li>
+ *   <li>environmentVariableName：环境变量名，默认 YDSZ_SNOWFLAKE_WORKER_ID</li>
  * </ul>
  *
  * @author Marvin Lee
@@ -70,9 +70,9 @@ public class SnowflakeProperties {
     /**
      * 环境变量名
      * <p>当 workerIdSource 为 ENVIRONMENT_VARIABLE 时使用
-     * <p>默认值：REMI_SNOWFLAKE_WORKER_ID
+     * <p>默认值：YDSZ_SNOWFLAKE_WORKER_ID
      */
-    private String environmentVariableName = "REMI_SNOWFLAKE_WORKER_ID";
+    private String environmentVariableName = "YDSZ_SNOWFLAKE_WORKER_ID";
 
     /**
      * workerId 来源策略枚举

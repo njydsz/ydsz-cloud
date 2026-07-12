@@ -48,7 +48,7 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
             "    return 1 " +
             "elseif redis.call('HLEN', key) == 0 then " +
             "    redis.call('HSET', key, clientId, 1) " +
-            "    redis.call('HSET', key, '__remi_lease_ms__', leaseTimeMs) " +
+            "    redis.call('HSET', key, '__ydsz_lease_ms__', leaseTimeMs) " +
             "    redis.call('PEXPIRE', key, leaseTimeMs) " +
             "    return 1 " +
             "else " +
@@ -67,13 +67,13 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
             "end " +
             "local count = redis.call('HINCRBY', key, clientId, -1) " +
             "if count > 0 then " +
-            "    local leaseTimeMs = redis.call('HGET', key, '__remi_lease_ms__') " +
+            "    local leaseTimeMs = redis.call('HGET', key, '__ydsz_lease_ms__') " +
             "    if leaseTimeMs then " +
             "        redis.call('PEXPIRE', key, leaseTimeMs) " +
             "    end " +
             "    return 1 " +
             "else " +
-            "    redis.call('HDEL', key, '__remi_lease_ms__') " +
+            "    redis.call('HDEL', key, '__ydsz_lease_ms__') " +
             "    redis.call('DEL', key) " +
             "    return 1 " +
             "end";

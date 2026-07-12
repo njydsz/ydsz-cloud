@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.alert;
+package com.njydsz.pmis.common.safe.alert;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

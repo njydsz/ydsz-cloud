@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.lock.core;
+package com.njydsz.pmis.common.lock.core;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;

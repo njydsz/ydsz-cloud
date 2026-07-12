@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.ops;
+package com.njydsz.pmis.common.redis.ops;
 
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;

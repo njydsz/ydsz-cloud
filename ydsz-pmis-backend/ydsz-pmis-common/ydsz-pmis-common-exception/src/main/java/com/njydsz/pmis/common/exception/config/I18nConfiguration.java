@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.exception.config;
+package com.njydsz.pmis.common.exception.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

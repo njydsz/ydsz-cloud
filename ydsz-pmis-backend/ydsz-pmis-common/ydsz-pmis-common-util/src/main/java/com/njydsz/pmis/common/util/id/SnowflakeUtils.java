@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.id;
+package com.njydsz.pmis.common.util.id;
 
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.pmis.common.util.security.DigestUtils;

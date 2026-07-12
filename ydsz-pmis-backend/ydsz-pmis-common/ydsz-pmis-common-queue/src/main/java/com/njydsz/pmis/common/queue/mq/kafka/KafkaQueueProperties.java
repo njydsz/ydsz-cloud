@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.mq.kafka;
+package com.njydsz.pmis.common.queue.mq.kafka;
 
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import lombok.Data;
@@ -15,8 +15,8 @@ import lombok.EqualsAndHashCode;
  *   queue:
  *     kafka:
  *       bootstrap-servers: localhost:9092
- *       group-id: remi-consumer-group
- *       topic: remi-topic
+ *       group-id: ydsz-consumer-group
+ *       topic: ydsz-topic
  *       enable-auto-commit: false
  *       auto-offset-reset: earliest
  *       max-poll-records: 10

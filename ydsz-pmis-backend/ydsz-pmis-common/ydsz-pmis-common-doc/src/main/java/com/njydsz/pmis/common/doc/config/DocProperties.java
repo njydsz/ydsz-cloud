@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.doc.config;
+package com.njydsz.pmis.common.doc.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

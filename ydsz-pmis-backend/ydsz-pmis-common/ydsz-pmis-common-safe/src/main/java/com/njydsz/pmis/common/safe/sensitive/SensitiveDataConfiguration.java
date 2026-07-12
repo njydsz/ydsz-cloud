@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.sensitive;
+package com.njydsz.pmis.common.safe.sensitive;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

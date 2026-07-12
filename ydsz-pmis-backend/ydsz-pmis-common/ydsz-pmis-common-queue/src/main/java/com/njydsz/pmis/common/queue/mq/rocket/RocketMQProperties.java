@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.mq.rocket;
+package com.njydsz.pmis.common.queue.mq.rocket;
 
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import lombok.Data;
@@ -15,8 +15,8 @@ import lombok.EqualsAndHashCode;
  *   queue:
  *     rocketmq:
  *       namesrv-addr: localhost:9876
- *       group-id: remi-consumer-group
- *       topic: remi-topic
+ *       group-id: ydsz-consumer-group
+ *       topic: ydsz-topic
  *       access-key: your-access-key
  *       secret-key: your-secret-key
  * }</pre>

@@ -44,7 +44,7 @@ import java.util.function.Function;
 public final class ReactiveRequestContext {
 
     /** 响应式 Context 中的 key 标识 */
-    public static final String CONTEXT_KEY = "REMI_REQUEST_CONTEXT";
+    public static final String CONTEXT_KEY = "YDSZ_REQUEST_CONTEXT";
 
     /** 兜底 TTL，避免响应式链不在订阅时丢失上下文 */
     private static final ThreadLocal<Map<String, Object>> FALLBACK = new TransmittableThreadLocal<>();

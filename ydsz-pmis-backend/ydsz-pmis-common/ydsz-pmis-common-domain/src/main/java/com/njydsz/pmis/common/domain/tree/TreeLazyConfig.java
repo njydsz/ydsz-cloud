@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.tree;
+package com.njydsz.pmis.common.domain.tree;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

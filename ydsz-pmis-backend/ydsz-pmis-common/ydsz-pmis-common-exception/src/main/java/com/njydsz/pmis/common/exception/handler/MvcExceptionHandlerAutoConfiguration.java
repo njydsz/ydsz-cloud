@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.exception.handler;
+package com.njydsz.pmis.common.exception.handler;
 
 import com.njydsz.pmis.common.exception.metrics.ExceptionMetrics;
 import jakarta.servlet.http.HttpServletRequest;

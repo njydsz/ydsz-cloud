@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.core.constant;
+package com.njydsz.pmis.common.core.constant;
 
 import java.util.Collections;
 import java.util.Set;

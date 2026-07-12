@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.event;
+package com.njydsz.pmis.common.auth.event;
 
 import com.njydsz.pmis.common.auth.service.ColumnPermissionResolver;
 import com.njydsz.pmis.common.auth.service.DataPermissionResolver;

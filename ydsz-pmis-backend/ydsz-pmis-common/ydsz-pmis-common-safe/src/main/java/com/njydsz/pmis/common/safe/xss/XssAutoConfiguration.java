@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.xss;
+package com.njydsz.pmis.common.safe.xss;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.util.json.JsonUtils;

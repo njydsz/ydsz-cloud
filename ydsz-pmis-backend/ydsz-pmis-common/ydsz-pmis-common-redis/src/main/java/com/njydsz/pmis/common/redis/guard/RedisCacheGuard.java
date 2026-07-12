@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.guard;
+package com.njydsz.pmis.common.redis.guard;
 
 import com.njydsz.pmis.common.redis.ops.ValueOps;
 import org.slf4j.Logger;

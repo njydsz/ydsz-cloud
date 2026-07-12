@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.base.config;
+package com.njydsz.pmis.common.base.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.util.json.JsonUtils;

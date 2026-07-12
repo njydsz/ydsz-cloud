@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.app.config;
+package com.njydsz.pmis.common.app.config;
 
 import com.njydsz.pmis.common.base.config.BaseTraceProperties;
 import lombok.Data;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.config;
+package com.njydsz.pmis.common.feign.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.context.environment.EnvironmentChangeEvent;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.mq.rabbit;
+package com.njydsz.pmis.common.queue.mq.rabbit;
 
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import lombok.Data;
@@ -19,8 +19,8 @@ import lombok.EqualsAndHashCode;
  *       username: guest
  *       password: guest
  *       virtual-host: /
- *       queue-name: remi-queue
- *       exchange-name: remi-exchange
+ *       queue-name: ydsz-queue
+ *       exchange-name: ydsz-exchange
  *       routing-key: ydsz.routing.key
  * }</pre>
  *

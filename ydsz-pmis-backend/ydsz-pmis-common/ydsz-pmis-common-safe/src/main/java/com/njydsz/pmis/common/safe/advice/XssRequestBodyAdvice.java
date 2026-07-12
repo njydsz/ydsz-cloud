@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.advice;
+package com.njydsz.pmis.common.safe.advice;
 
 import com.njydsz.pmis.common.safe.config.SafeXssProperties;
 import com.njydsz.pmis.common.safe.core.JsonBodyXssCleaner;

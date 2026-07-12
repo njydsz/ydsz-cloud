@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.queue.config;
+package com.njydsz.pmis.common.queue.config;
 
 import com.njydsz.pmis.common.queue.manager.QueueManager;
 import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
@@ -47,7 +47,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * ydsz:
  *   queue:
  *     enabled: true
- *     stream-group: remi-group
+ *     stream-group: ydsz-group
  * }</pre>
  *
  * @author Marvin Lee

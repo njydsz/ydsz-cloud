@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.listener;
+package com.njydsz.pmis.common.auth.listener;
 
 import com.njydsz.pmis.common.auth.service.RbacPermissionEvaluator;
 import com.njydsz.pmis.common.util.string.StringUtils;
@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
  * <ol>
  *   <li>Redis 开启 notify-keyspace-events 配置（至少包含 KEA）</li>
  *   <li>监听 __keyevent@0__:set、__keyevent@0__:del、__keyevent@0__:expired 频道</li>
- *   <li>当 remi-auth:role-* 相关的 key 发生变更时，解析 roleCode 并清理缓存</li>
+ *   <li>当 ydsz-auth:role-* 相关的 key 发生变更时，解析 roleCode 并清理缓存</li>
  * </ol>
  *
  * <p><b>配置要求：</b>
@@ -38,7 +38,7 @@ public class PermissionKeyspaceNotificationListener {
 
     /**
      * 匹配 role 相关 key 的正则，提取 roleCode。
-     * Key 格式示例：remi-auth:role-menu:admin, remi-auth:role-api:admin
+     * Key 格式示例：ydsz-auth:role-menu:admin, ydsz-auth:role-api:admin
      */
     private static final Pattern ROLE_KEY_PATTERN = Pattern.compile(
             "ydsz-auth:role-(?:menu|api|row|col):([^:]+)");

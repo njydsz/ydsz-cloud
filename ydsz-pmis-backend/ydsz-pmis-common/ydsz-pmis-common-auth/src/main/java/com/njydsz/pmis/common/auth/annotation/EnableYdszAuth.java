@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.annotation;
+package com.njydsz.pmis.common.auth.annotation;
 
 import com.njydsz.pmis.common.auth.config.AuthConfiguration;
 import com.njydsz.pmis.common.auth.config.AuthFilterConfiguration;

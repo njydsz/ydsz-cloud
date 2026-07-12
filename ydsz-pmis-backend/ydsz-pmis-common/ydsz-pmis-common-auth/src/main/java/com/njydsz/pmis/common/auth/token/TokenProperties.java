@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.token;
+package com.njydsz.pmis.common.auth.token;
 
 import jakarta.annotation.PostConstruct;
 import lombok.Data;

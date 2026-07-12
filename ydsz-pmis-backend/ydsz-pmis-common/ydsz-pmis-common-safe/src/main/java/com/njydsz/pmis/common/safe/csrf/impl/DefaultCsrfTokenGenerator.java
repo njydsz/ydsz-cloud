@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.csrf.impl;
+package com.njydsz.pmis.common.safe.csrf.impl;
 
 import com.njydsz.pmis.common.exception.custom.YdszSecurityException;
 import com.njydsz.pmis.common.safe.csrf.CsrfToken;

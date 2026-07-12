@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.core.config;
+package com.njydsz.pmis.common.core.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
