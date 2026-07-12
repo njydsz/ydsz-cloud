@@ -15,9 +15,25 @@
     <description>DDD Module</description>
 
     <dependencies>
+        <!--
+            P0-1: gateway 为 reactive 栈（WebFlux + Netty），禁止依赖 ydsz-pmis-common-web
+            （servlet 栈，会引入 spring-boot-starter-web/Tomcat 与 jakarta.servlet-api，造成双栈冲突）。
+            按需挑选细粒度子模块：
+              - common-core:    BaseResponse / TraceIdGenerator
+              - common-exception: WebFluxExceptionHandler / ProblemDetail
+              - common-auth:    UserInfo / TokenService / JwtTokenProvider（JWT 鉴权）
+        -->
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-common-web</artifactId>
+            <artifactId>ydsz-pmis-common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-exception</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-auth</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>

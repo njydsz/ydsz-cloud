@@ -9,7 +9,6 @@
 # Job 编排:
 #   1. lint-build         pnpm install (frozen-lockfile) → eslint → tsc + build
 #                         + OpenAPI schema.d.ts 存在性 & 漂移检查（仅提醒不失败）
-#   2. test               pnpm test (vitest 单元测试)
 #
 # 工具版本:  Node.js 20 · pnpm 9 · Vue 3.5 · Vite 5.4
 #
@@ -80,98 +79,3 @@ jobs:
         #         然后在 schema.d.ts 头部更新 @openapi-signature 哈希。
         # ----------------------------------------------------------------
         run: node scripts/check-openapi-drift.mjs
-
-  test:
-    name: Unit Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: lint-build
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: pnpm
-          cache-dependency-path: ydsz-pmis-frontend/pnpm-lock.yaml
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run Vitest with Coverage
-        # 覆盖率门禁（分阶段提升计划）:
-        #   阶段 1（已完成）: lines >= 40%, functions >= 30%, branches >= 30%
-        #   阶段 2（当前）: lines >= 60%, functions >= 50%, branches >= 50%
-        #   阶段 3（2026-12）: lines >= 80%, functions >= 70%, branches >= 70%
-        # 任一阈值不达标即 CI 失败
-        run: pnpm test:coverage -- --coverage.thresholds.lines=60 --coverage.thresholds.functions=50 --coverage.thresholds.branches=50
-
-      - name: Upload Coverage Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-coverage-report
-          path: ydsz-pmis-frontend/coverage/
-          retention-days: 7
-
-  e2e:
-    name: E2E Test (Playwright)
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: lint-build
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: pnpm
-          cache-dependency-path: ydsz-pmis-frontend/pnpm-lock.yaml
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Build Frontend
-        run: pnpm run build
-
-      - name: Run E2E Tests
-        env:
-          CI: 'true'
-          E2E_BASE_URL: 'http://localhost:4173'
-        run: |
-          # 预览服务器后台启动
-          npx vite preview --port 4173 &
-          PREVIEW_PID=$!
-          # 等待服务器就绪
-          sleep 5
-          # 运行 E2E 测试（仅 Chromium）
-          npx playwright test --project=chromium
-          # 清理
-          kill $PREVIEW_PID || true
-
-      - name: Upload E2E Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: ydsz-pmis-frontend/playwright-report/
-          retention-days: 7

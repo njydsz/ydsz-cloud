@@ -1,7 +1,7 @@
 /**
  * userinfo 模块持久化实体包。
  *
- * <p>与数据库表一一对应的 DO（Data Object）对象，统一继承 {@code com.njydsz.pmis.common.entity.BaseDO}
+ * <p>与数据库表一一对应的 DO（Data Object）对象，统一继承 {@code com.njydsz.pmis.common.domain.entity.BaseDO}
  * 获得审计字段（创建人/时间、修改人/时间、逻辑删除标记、租户 ID），主键采用 MyBatis-Plus
  * {@code ASSIGN_ID} 雪花算法。所有敏感字段（密码、盐值、IP、手机号、邮箱）均通过
  * {@code @JsonIgnore} 或 {@code @Sensitive} 注解做脱敏防护。

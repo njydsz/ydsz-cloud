@@ -85,10 +85,6 @@
             <artifactId>ydsz-pmis-common-web</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-common-app</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.alibaba.fastjson2</groupId>
             <artifactId>fastjson2</artifactId>
         </dependency>

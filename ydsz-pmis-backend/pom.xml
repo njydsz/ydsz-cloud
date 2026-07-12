@@ -67,6 +67,7 @@
         <jjwt.version>0.12.6</jjwt.version>
         <bcprov.version>1.81.1</bcprov.version>
         <knife4j.version>4.5.0</knife4j.version>
+        <springdoc.version>3.0.3</springdoc.version>
         <easyexcel.version>4.0.3</easyexcel.version>
         <commons-csv.version>1.11.0</commons-csv.version>
         <commons-io.version>2.16.1</commons-io.version>

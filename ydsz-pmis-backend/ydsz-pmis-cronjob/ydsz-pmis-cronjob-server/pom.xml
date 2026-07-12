@@ -86,10 +86,6 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-common-app</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-message-api</artifactId>
             <version>${project.version}</version>
         </dependency>

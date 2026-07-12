@@ -3,7 +3,7 @@ package com.njydsz.pmis.userinfo.domain.entity.user;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.BaseDO;
+import com.njydsz.pmis.common.domain.entity.BaseDO;
 import com.njydsz.pmis.common.sensitive.Sensitive;
 import com.njydsz.pmis.common.sensitive.SensitiveStrategy;
 import lombok.Data;
