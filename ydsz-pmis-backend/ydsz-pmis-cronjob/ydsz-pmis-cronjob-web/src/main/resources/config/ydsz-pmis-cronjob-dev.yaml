@@ -5,14 +5,6 @@
 #  端口:      9005
 # =====================================================================
 
-server:
-  port: 9005
-  servlet:
-    context-path: /
-
-spring:
-  profiles: dev
-
 # MinIO
 minio:
   endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9100}
@@ -24,16 +16,6 @@ minio:
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
   type-aliases-package: com.njydsz.pmis.cronjob.entity
-  configuration:
-    map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
-  global-config:
-    banner: false
-    db-config:
-      id-type: AUTO
-      logic-delete-field: deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
 
 # 调度服务配置
 pmis:
@@ -88,29 +70,3 @@ pmis:
       retention-days: 30
       batch-size: 1000
       cron: "0 0 3 * * ?"
-
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-
-logging:
-  level:
-    root: INFO
-    com.njydsz.pmis: DEBUG
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,prometheus
-  metrics:
-    tags:
-      application: ${spring.application.name}
-    export:
-      prometheus:
-        enabled: true
-  endpoint:
-    health:
-      show-details: when-authorized

@@ -5,19 +5,7 @@
 #  端口:      9003
 # =====================================================================
 
-server:
-  port: 9003
-  servlet:
-    context-path: /
-
-spring:
-  profiles: dev
-  jackson:
-    date-format: yyyy-MM-dd HH:mm:ss
-    time-zone: GMT+8
-    default-property-inclusion: NON_NULL
-
-# MinIO
+# MinIO 对象存储
 minio:
   endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9100}
   access-key: ${MINIO_ACCESS_KEY:minioadmin}
@@ -28,19 +16,6 @@ minio:
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
   type-aliases-package: com.njydsz.pmis.project.entity
-  configuration:
-    map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
-  global-config:
-    banner: false
-    db-config:
-      id-type: AUTO
-
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-  api-docs:
-    path: /v3/api-docs
 
 # Seata 分布式事务（AT 模式）
 seata:
@@ -66,24 +41,3 @@ seata:
       pmis-tx-group: default
     grouplist:
       default: ${SEATA_SERVER_ADDR:127.0.0.1:8091}
-
-logging:
-  level:
-    root: INFO
-    "[com.njydsz.pmis]": DEBUG
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,prometheus
-  metrics:
-    tags:
-      application: ${spring.application.name}
-  prometheus:
-    metrics:
-      export:
-        enabled: true
-  endpoint:
-    health:
-      show-details: when-authorized

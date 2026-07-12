@@ -5,18 +5,7 @@
 #  端口:      9003
 # =====================================================================
 
-server:
-  port: 9003
-  servlet:
-    context-path: /
-
-spring:
-  profiles: uat
-  jackson:
-    date-format: yyyy-MM-dd HH:mm:ss
-    time-zone: GMT+8
-    default-property-inclusion: NON_NULL
-
+# MinIO 对象存储（UAT 环境密钥由环境变量注入）
 minio:
   endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9100}
   access-key: ${MINIO_ACCESS_KEY:}
@@ -27,14 +16,8 @@ minio:
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
   type-aliases-package: com.njydsz.pmis.project.entity
-  configuration:
-    map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
-  global-config:
-    banner: false
-    db-config:
-      id-type: AUTO
 
+# UAT 环境关闭文档 UI
 springdoc:
   swagger-ui:
     enabled: false
@@ -43,6 +26,7 @@ springdoc:
 knife4j:
   production: true
 
+# Seata 分布式事务（AT 模式）
 seata:
   enabled: true
   application-id: ${spring.application.name}
@@ -67,23 +51,7 @@ seata:
     grouplist:
       default: ${SEATA_SERVER_ADDR:127.0.0.1:8091}
 
+# UAT 环境 PMIS 业务日志降为 INFO
 logging:
   level:
-    root: INFO
     "[com.njydsz.pmis]": INFO
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,prometheus
-  metrics:
-    tags:
-      application: ${spring.application.name}
-  prometheus:
-    metrics:
-      export:
-        enabled: true
-  endpoint:
-    health:
-      show-details: when-authorized

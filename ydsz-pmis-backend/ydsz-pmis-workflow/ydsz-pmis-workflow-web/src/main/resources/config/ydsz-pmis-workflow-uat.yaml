@@ -5,17 +5,7 @@
 #  端口:      9006
 # =====================================================================
 
-server:
-  port: 9006
-  servlet:
-    context-path: /
-
 spring:
-  profiles: uat
-  jackson:
-    date-format: yyyy-MM-dd HH:mm:ss
-    time-zone: GMT+8
-    default-property-inclusion: NON_NULL
   servlet:
     multipart:
       max-file-size: 50MB
@@ -24,45 +14,17 @@ spring:
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml,classpath*:mapper/flow/**/*.xml
   type-aliases-package: com.njydsz.pmis.workflow.entity
-  configuration:
-    map-underscore-to-camel-case: true
-    cache-enabled: false
-    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
-  global-config:
-    banner: false
-    db-config:
-      id-type: AUTO
-      logic-delete-field: deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
 
+# UAT 环境关闭文档 UI
 springdoc:
-  api-docs:
-    path: /v3/api-docs
-    enabled: true
   swagger-ui:
-    path: /swagger-ui.html
     enabled: false
+  api-docs:
+    enabled: true
 knife4j:
   production: true
 
+# UAT 环境 PMIS 业务日志降为 INFO
 logging:
   level:
-    root: INFO
     "[com.njydsz.pmis]": INFO
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-  metrics:
-    tags:
-      application: ${spring.application.name}
-  prometheus:
-    metrics:
-      export:
-        enabled: true
-  endpoint:
-    health:
-      show-details: always

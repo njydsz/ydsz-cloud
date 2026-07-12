@@ -5,22 +5,13 @@
 #  端口:      9002
 # =====================================================================
 
-server:
-  port: 9002
-  servlet:
-    context-path: /
-
 spring:
-  profiles: sit
-  jackson:
-    date-format: yyyy-MM-dd HH:mm:ss
-    time-zone: GMT+8
-    default-property-inclusion: NON_NULL
   servlet:
     multipart:
       max-file-size: 200MB
       max-request-size: 500MB
 
+# MinIO 对象存储（SIT 环境密钥由环境变量注入）
 minio:
   endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9100}
   access-key: ${MINIO_ACCESS_KEY:}
@@ -31,43 +22,17 @@ minio:
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
   type-aliases-package: com.njydsz.pmis.system.entity
-  configuration:
-    map-underscore-to-camel-case: true
-    cache-enabled: false
-    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
-  global-config:
-    banner: false
-    db-config:
-      id-type: AUTO
-      logic-delete-field: deleted
-      logic-delete-value: 1
-      logic-not-delete-value: 0
 
-# SIT 关闭文档 UI
+# SIT 环境关闭文档 UI
 springdoc:
-  api-docs:
-    path: /v3/api-docs
-    enabled: true
   swagger-ui:
-    path: /swagger-ui.html
     enabled: false
+  api-docs:
+    enabled: true
 knife4j:
   production: true
 
+# SIT 环境 PMIS 业务日志降为 INFO
 logging:
   level:
-    root: INFO
     "[com.njydsz.pmis]": INFO
-
-management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info,metrics,prometheus
-  metrics:
-    tags:
-      application: ${spring.application.name}
-  prometheus:
-    metrics:
-      export:
-        enabled: true
