@@ -32,6 +32,25 @@
             <artifactId>ydsz-pmis-common-safe</artifactId>
         </dependency>
 
+        <!-- Redis 模块（BloomFilterConfig / BloomFilterService） -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-redis</artifactId>
+        </dependency>
+
+        <!-- Infra 模块（KMS / Chaos / FeatureFlag / Async / Sentinel / TransactionPostProcessor / OperationLogEvent） -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-infra</artifactId>
+        </dependency>
+
+        <!-- Doc 模块（OpenApiConfig / Knife4jConfig） -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-doc</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Jackson 由 spring-boot-starter-web 传递依赖引入，无需显式声明 -->
 
         <!-- 异常模块（用于 BizErrorCode） -->
@@ -53,10 +72,77 @@
             </exclusions>
         </dependency>
 
+        <!-- Spring Boot Actuator（健康检查 / 指标） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- spring-boot-health（Spring Boot 4.x: Health/HealthIndicator 迁移到独立模块） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+        </dependency>
+
+        <!-- Micrometer（ApiMetricsAspect 使用 MeterRegistry） -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
+
+        <!-- MyBatis-Plus（OperationLogAspect 使用 IPage） -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Jasypt（CommonAutoConfiguration 使用 StringEncryptor） -->
+        <dependency>
+            <groupId>com.github.ulisesbocchio</groupId>
+            <artifactId>jasypt-spring-boot-starter</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Redisson（CommonAutoConfiguration 使用 RedissonClient / RBloomFilter） -->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-boot-starter</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- EasyExcel（ExcelTemplate / ExcelUtil） -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>easyexcel</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Apache POI（ExcelTemplate 使用 ss.usermodel） -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- HikariCP（DatabaseHealthIndicator 使用 HikariDataSource） -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- User-Agent 解析器（Web 端特有） -->
         <dependency>
             <groupId>nl.basjes.parse.useragent</groupId>
             <artifactId>yauaa</artifactId>
+        </dependency>
+
+        <!-- jakarta.servlet-api（编译时需要） -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Lombok 简化代码 -->

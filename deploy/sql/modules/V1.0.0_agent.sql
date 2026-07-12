@@ -8,7 +8,7 @@
 -- =====================================================
 -- 6. AI 智能体预测/推荐结果表 pmis_agent_prediction
 -- =====================================================
--- P1-6: 宸插簾寮?鏃犻渶 DROP), 鏍囪淇濈暀浠ヨ褰曞巻鍙?DROP TABLE IF EXISTS pmis_agent_prediction; -- 已废弃
+-- P1-6: 已废弃（无需 DROP），标记保留以记录历史。DROP TABLE IF EXISTS pmis_agent_prediction; -- 已废弃
 CREATE TABLE IF NOT EXISTS pmis_agent_prediction(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     task_code           VARCHAR(64)  NOT NULL,

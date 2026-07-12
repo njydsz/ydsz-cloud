@@ -8,18 +8,20 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * DAG 瀹炰緥鍙鍖栨暟鎹?VO锛圥4-1 缁嗚妭浣撻獙浼樺寲锛夈€? *
- * <p>缁勫悎 DAG 瀹炰緥銆丏AG 瀹氫箟锛堣妭鐐?杈癸級鍜岃妭鐐规墽琛岀姸鎬侊紝
- * 渚涘墠绔竴娆℃€ц幏鍙栨覆鏌?DAG 鍙鍖栧浘鎵€闇€鐨勫叏閮ㄦ暟鎹€? *
+ * DAG 实例可视化数据 VO（P4-1 细节体验优化）。
+ *
+ * <p>组合 DAG 实例、DAG 定义（节点/边）和节点执行状态，
+ * 供前端一次性获取渲染 DAG 可视化图所需的全部数据。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Data
 public class DagInstanceVisualizationVO {
-    /** DAG 瀹炰緥淇℃伅 */
+    /** DAG 实例信息 */
     private JobDagInstanceDO instance;
-    /** DAG 瀹氫箟锛堣妭鐐?+ 杈癸紝鍚墠绔潗鏍?x/y锛?*/
+    /** DAG 定义（节点 + 边，含前端坐标 x/y） */
     private DagDefinition definition;
-    /** 鑺傜偣瀹炰緥鎵ц鐘舵€佸垪琛?*/
+    /** 节点实例执行状态列表 */
     private List<JobDagNodeInstanceDO> nodeInstances;
 }

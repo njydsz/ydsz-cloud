@@ -4655,7 +4655,7 @@ CREATE INDEX IF NOT EXISTS idx_pec_tenant_type_status
 -- =====================================================
 -- 6. AI 智能体预测/推荐结果表 pmis_agent_prediction
 -- =====================================================
--- P1-6: 宸插簾寮?鏃犻渶 DROP), 鏍囪淇濈暀浠ヨ褰曞巻鍙?DROP TABLE IF EXISTS pmis_agent_prediction; -- 已废弃
+-- P1-6: 已废弃（无需 DROP），标记保留以记录历史。DROP TABLE IF EXISTS pmis_agent_prediction; -- 已废弃
 CREATE TABLE IF NOT EXISTS pmis_agent_prediction(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     task_code           VARCHAR(64)  NOT NULL,
@@ -5580,7 +5580,7 @@ CREATE INDEX IF NOT EXISTS idx_pfcc_tenant_updated
 -- =====================================================
 -- 1. EVM 挣值测量表 pmis_evm_measure
 -- =====================================================
--- P1-6: 宸插簾寮?鏃犻渶 DROP), 鏍囪淇濈暀浠ヨ褰曞巻鍙?DROP TABLE IF EXISTS pmis_evm_measure; -- 已废弃
+-- P1-6: 已废弃（无需 DROP），标记保留以记录历史。DROP TABLE IF EXISTS pmis_evm_measure; -- 已废弃
 CREATE TABLE IF NOT EXISTS pmis_evm_measure(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     initiation_id       VARCHAR(20)       NOT NULL,
@@ -5655,7 +5655,7 @@ CREATE INDEX IF NOT EXISTS idx_pem_tenant_alert_measure_date
 -- =====================================================
 -- 2. 对外报价费率表 pmis_rate_card
 -- =====================================================
--- P1-6: 宸插簾寮?鏃犻渶 DROP), 鏍囪淇濈暀浠ヨ褰曞巻鍙?DROP TABLE IF EXISTS pmis_rate_card; -- 已废弃
+-- P1-6: 已废弃（无需 DROP），标记保留以记录历史。DROP TABLE IF EXISTS pmis_rate_card; -- 已废弃
 CREATE TABLE IF NOT EXISTS pmis_rate_card(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     rate_code           VARCHAR(64)  NOT NULL,
@@ -5925,7 +5925,7 @@ ALTER TABLE pmis_employee_tag
 -- =====================================================
 -- 1. 资源池主表 pmis_resource_pool
 -- =====================================================
--- P1-6: 宸插簾寮?鏃犻渶 DROP), 鏍囪淇濈暀浠ヨ褰曞巻鍙?DROP TABLE IF EXISTS pmis_resource_pool; -- 已废弃
+-- P1-6: 已废弃（无需 DROP），标记保留以记录历史。DROP TABLE IF EXISTS pmis_resource_pool; -- 已废弃
 CREATE TABLE IF NOT EXISTS pmis_resource_pool(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     pool_code           VARCHAR(64)  NOT NULL,

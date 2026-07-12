@@ -2129,7 +2129,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_bench_record_trace
 -- =====================================================
 -- 1. 资源池主表 pmis_resource_pool
 -- =====================================================
--- P1-6: 宸插簾寮?鏃犻渶 DROP), 鏍囪淇濈暀浠ヨ褰曞巻鍙?DROP TABLE IF EXISTS pmis_resource_pool; -- 已废弃
+-- P1-6: 已废弃（无需 DROP），标记保留以记录历史。DROP TABLE IF EXISTS pmis_resource_pool; -- 已废弃
 CREATE TABLE IF NOT EXISTS pmis_resource_pool(
     id                  VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
     pool_code           VARCHAR(64)  NOT NULL,
