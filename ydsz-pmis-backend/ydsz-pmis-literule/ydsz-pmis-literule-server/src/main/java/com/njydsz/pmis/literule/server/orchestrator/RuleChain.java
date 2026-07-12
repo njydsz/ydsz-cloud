@@ -484,7 +484,6 @@ public class RuleChain {
             case FOR -> evaluateFor(context, evaluator, statsRecorder);
             case WHILE -> evaluateWhile(context, evaluator, statsRecorder);
             case BREAK -> evaluateBreak(context, evaluator);
-            case AGENT -> evaluateAgent(context, evaluator, statsRecorder);
             case CATCH -> evaluateCatch(context, evaluator, statsRecorder);
             case RETRY -> evaluateRetry(context, evaluator, statsRecorder);
         };
@@ -754,30 +753,6 @@ public class RuleChain {
         breakResult.setSeverity(RuleSeverity.INFO);
         breakResult.setTitle("BREAK 终止循环");
         return Collections.singletonList(breakResult);
-    }
-
-    /**
-     * AGENT 语义：执行单个 AI Agent 节点（P3-5）
-     *
-     * <p>AGENT 链包装单个 {@link AgentRuleNode}（以 SINGLE 节点形式存储在 nodes 中），
-     * 评估时委托给 {@link #evaluateNode}，由 SINGLE 分支调用 AgentRuleNode.evaluate 执行 ReAct 循环。
-     * 节点异常将被隔离，不影响规则链整体流程。
-     *
-     * @param context   规则上下文
-     * @param evaluator 表达式求值器（AGENT 链不直接使用，传递给嵌套节点）
-     * @return Agent 评估结果列表
-     * @since 1.8.0
-     */
-    private List<RuleResult> evaluateAgent(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
-        List<RuleResult> results = new ArrayList<>();
-        if (nodes == null || nodes.isEmpty()) {
-            return results;
-        }
-        // AGENT 链只包含单个 Agent 节点，复用 evaluateNode（SINGLE 分支）执行
-        for (RuleNode node : nodes) {
-            results.addAll(evaluateNode(node, context, evaluator, statsRecorder));
-        }
-        return results;
     }
 
     // ============================== 编排容错执行逻辑 (2.0.0) ==============================

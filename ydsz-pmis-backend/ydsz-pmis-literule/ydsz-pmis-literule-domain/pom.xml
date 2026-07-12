@@ -18,6 +18,10 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-exception</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-jdbc</artifactId>
         </dependency>
         <dependency>

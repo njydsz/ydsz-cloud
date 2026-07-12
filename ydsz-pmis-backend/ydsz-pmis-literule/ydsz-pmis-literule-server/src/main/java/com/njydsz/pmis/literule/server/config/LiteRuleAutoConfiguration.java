@@ -46,7 +46,6 @@ import com.njydsz.pmis.literule.server.replay.ExecutionReplayService;
 import com.njydsz.pmis.literule.server.audit.RuleAuditLogService;
 import com.njydsz.pmis.literule.server.spi.ScorecardConfigProvider;
 import com.njydsz.pmis.literule.server.spi.ScriptConfigProvider;
-import com.njydsz.pmis.literule.server.spi.TraceDataProvider;
 import com.njydsz.pmis.literule.server.spi.TraceRecorder;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
