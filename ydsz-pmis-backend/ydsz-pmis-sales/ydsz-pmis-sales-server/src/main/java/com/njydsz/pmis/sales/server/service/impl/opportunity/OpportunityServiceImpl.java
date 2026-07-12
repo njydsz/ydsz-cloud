@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.DataScope;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.sales.server.assembler.NameAssembler;
@@ -72,7 +72,7 @@ public class OpportunityServiceImpl implements OpportunityService {
     public String create(OpportunityCreateDTO dto) {
         validate(dto);
         if (opportunityMapper.selectByCode(dto.getOpportunityCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY,
+            throw new BizException(StandardResultCode.DUPLICATE_KEY,
                     "商机编号已存在: " + dto.getOpportunityCode());
         }
         OpportunityDO o = new OpportunityDO();
@@ -113,11 +113,11 @@ public class OpportunityServiceImpl implements OpportunityService {
     @Transactional(rollbackFor = Exception.class)
     public void update(OpportunityUpdateDTO dto) {
         if (dto.getId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "商机 ID 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "商机 ID 不能为空");
         }
         OpportunityDO o = opportunityMapper.selectById(dto.getId());
         if (o == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "商机不存在");
+            throw new BizException(StandardResultCode.NOT_FOUND, "商机不存在");
         }
         if (StringUtils.hasText(dto.getOpportunityName())) o.setOpportunityName(dto.getOpportunityName());
         if (StringUtils.hasText(dto.getLevel())) o.setLevel(dto.getLevel());
@@ -149,17 +149,17 @@ public class OpportunityServiceImpl implements OpportunityService {
         OpportunityStatus from = OpportunityStatus.fromCode(o.getStatus());
         OpportunityStatus to = OpportunityStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "未知状态: " + dto.getTargetStatus());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "未知状态: " + dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "商机当前状态非法: " + o.getStatus());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "商机当前状态非法: " + o.getStatus());
         }
         if (!from.canTransitTo(to)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "状态不允许迁移: " + from.getDesc() + " → " + to.getDesc());
         }
         if (to == OpportunityStatus.LOST && !StringUtils.hasText(dto.getLostReason())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "输单原因不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "输单原因不能为空");
         }
         opportunityMapper.updateStatus(o.getId(), to.getCode(), dto.getLostReason());
         log.info("[Opportunity] 状态迁移: id={} {} -> {}", o.getId(), from.getCode(), to.getCode());
@@ -190,7 +190,7 @@ public class OpportunityServiceImpl implements OpportunityService {
     public OpportunityDO getById(String id) {
         OpportunityDO o = opportunityMapper.selectById(id);
         if (o == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "商机不存在");
+            throw new BizException(StandardResultCode.NOT_FOUND, "商机不存在");
         }
         return o;
     }
@@ -279,19 +279,19 @@ public class OpportunityServiceImpl implements OpportunityService {
      */
     private void validate(OpportunityCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "请求不能为空");
         }
         if (!StringUtils.hasText(dto.getOpportunityCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "商机编号不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "商机编号不能为空");
         }
         if (!StringUtils.hasText(dto.getOpportunityName())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "商机名称不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "商机名称不能为空");
         }
         if (dto.getCustomerId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "客户 ID 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "客户 ID 不能为空");
         }
         if (dto.getOwnerId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "负责人 ID 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "负责人 ID 不能为空");
         }
     }
 
@@ -332,19 +332,19 @@ public class OpportunityServiceImpl implements OpportunityService {
     @Transactional(rollbackFor = Exception.class)
     public String convertToInitiation(String opportunityId, String sponsorId, String pmId) {
         if (opportunityId == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "商机 ID 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "商机 ID 不能为空");
         }
         OpportunityDO opp = opportunityMapper.selectById(opportunityId);
         if (opp == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "商机不存在: " + opportunityId);
+            throw new BizException(StandardResultCode.NOT_FOUND, "商机不存在: " + opportunityId);
         }
         OpportunityStatus cur = OpportunityStatus.fromCode(opp.getStatus());
         if (cur != OpportunityStatus.WON) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "仅已赢单(WON)状态的商机可转立项，当前状态: " + (cur == null ? "未知" : cur.getDesc()));
         }
         if (opp.getCustomerId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "商机客户为空，无法转立项");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "商机客户为空，无法转立项");
         }
 
         // 1. 装配立项草稿

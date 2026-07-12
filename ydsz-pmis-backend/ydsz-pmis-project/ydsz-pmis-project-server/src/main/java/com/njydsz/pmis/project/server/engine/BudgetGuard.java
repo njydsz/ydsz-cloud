@@ -1,6 +1,6 @@
 package com.njydsz.pmis.project.server.engine;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
 import com.njydsz.pmis.finance.api.client.FinanceDataClient;
@@ -87,7 +87,7 @@ public class BudgetGuard {
                 initiationId, bizType, delta, budget, used, purchaseUsed, expenseUsed, allocatedUsed, afterUsed, ratio.multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP));
 
         if (afterUsed.compareTo(budget) > 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     String.format("[预算强管控] 项目[%s] 累计 %s 元已超出预算 %s 元（采购 %s + 费用 %s + 已归集 %s + 本次 %s）",
                             snap.get("projectCode"), afterUsed.toPlainString(), budget.toPlainString(),
                             purchaseUsed.toPlainString(), expenseUsed.toPlainString(),

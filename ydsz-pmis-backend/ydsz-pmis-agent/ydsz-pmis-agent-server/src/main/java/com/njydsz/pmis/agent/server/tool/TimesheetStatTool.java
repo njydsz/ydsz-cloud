@@ -2,7 +2,7 @@ package com.njydsz.pmis.agent.server.tool;
 
 import com.njydsz.pmis.agent.server.engine.AgentContext;
 import com.njydsz.pmis.project.api.client.ProjectServiceClient;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -149,13 +149,13 @@ public class TimesheetStatTool implements AgentTool {
         }
 
         try {
-            Result<Map<String, Object>> result = projectServiceClient.timeEntryAbnormalStat(projectId, month);
-            if (result == null || !result.isSuccess() || result.getData() == null) {
+            BaseResponse<Map<String, Object>> result = projectServiceClient.timeEntryAbnormalStat(projectId, month);
+            if (result == null || !BaseResponse.isSuccess() || BaseResponse.getData() == null) {
                 log.warn("[TimesheetStatTool] Feign 调用失败或返回空 projectId={}, result={}",
-                        projectId, result == null ? "null" : result.getCode());
+                        projectId, result == null ? "null" : BaseResponse.getCode());
                 return data;
             }
-            Map<String, Object> remote = result.getData();
+            Map<String, Object> remote = BaseResponse.getData();
             data.put("overtimeCount", toInt(remote.get("overtimeCount")));
             data.put("missingCount", toInt(remote.get("missingCount")));
             data.put("abnormalCount", toInt(remote.get("abnormalCount")));

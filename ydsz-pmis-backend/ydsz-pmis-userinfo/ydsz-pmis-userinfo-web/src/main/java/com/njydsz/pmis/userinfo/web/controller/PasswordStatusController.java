@@ -1,7 +1,7 @@
 package com.njydsz.pmis.userinfo.web.controller.auth;
 
-import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.userinfo.domain.entity.user.UserAccountDO;
 import com.njydsz.pmis.userinfo.infra.mapper.user.UserAccountMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -53,15 +53,15 @@ public class PasswordStatusController {
      */
     @Operation(summary = "查询当前用户密码过期状态")
     @GetMapping
-    public Result<Map<String, Object>> getPasswordStatus() {
-        String userId = SecurityContext.getUserId();
+    public BaseResponse<Map<String, Object>> getPasswordStatus() {
+        String userId = AuthContext.getUserId();
         if (userId == null || userId.isEmpty()) {
-            return Result.ok(Map.of("status", "UNKNOWN"));
+            return BaseResponse.ok(Map.of("status", "UNKNOWN"));
         }
 
         UserAccountDO account = userAccountMapper.selectById(userId);
         if (account == null) {
-            return Result.ok(Map.of("status", "UNKNOWN"));
+            return BaseResponse.ok(Map.of("status", "UNKNOWN"));
         }
 
         Map<String, Object> result = new LinkedHashMap<>();
@@ -72,41 +72,41 @@ public class PasswordStatusController {
         LocalDateTime lastChange = account.getLastPwdChangeAt();
 
         if (isInitial) {
-            result.put("status", "INITIAL");
-            result.put("message", "您使用的是初始密码，请尽快修改");
-            result.put("daysRemaining", 0);
-            result.put("mustChange", true);
+            BaseResponse.put("status", "INITIAL");
+            BaseResponse.put("message", "您使用的是初始密码，请尽快修改");
+            BaseResponse.put("daysRemaining", 0);
+            BaseResponse.put("mustChange", true);
         } else if (lastChange == null) {
-            result.put("status", "EXPIRED");
-            result.put("message", "密码已过期，请立即修改");
-            result.put("daysRemaining", 0);
-            result.put("mustChange", true);
+            BaseResponse.put("status", "EXPIRED");
+            BaseResponse.put("message", "密码已过期，请立即修改");
+            BaseResponse.put("daysRemaining", 0);
+            BaseResponse.put("mustChange", true);
         } else {
             long daysSinceChange = ChronoUnit.DAYS.between(lastChange, now);
             long daysRemaining = PASSWORD_EXPIRE_DAYS - daysSinceChange;
 
             if (daysRemaining <= 0) {
-                result.put("status", "EXPIRED");
-                result.put("message", "密码已过期 " + Math.abs(daysRemaining) + " 天，请立即修改");
-                result.put("daysRemaining", 0);
-                result.put("mustChange", true);
+                BaseResponse.put("status", "EXPIRED");
+                BaseResponse.put("message", "密码已过期 " + Math.abs(daysRemaining) + " 天，请立即修改");
+                BaseResponse.put("daysRemaining", 0);
+                BaseResponse.put("mustChange", true);
             } else if (daysRemaining <= EXPIRING_SOON_DAYS) {
-                result.put("status", "EXPIRING_SOON");
-                result.put("message", "密码将在 " + daysRemaining + " 天后过期，建议尽快修改");
-                result.put("daysRemaining", daysRemaining);
-                result.put("mustChange", false);
+                BaseResponse.put("status", "EXPIRING_SOON");
+                BaseResponse.put("message", "密码将在 " + daysRemaining + " 天后过期，建议尽快修改");
+                BaseResponse.put("daysRemaining", daysRemaining);
+                BaseResponse.put("mustChange", false);
             } else {
-                result.put("status", "HEALTHY");
-                result.put("message", "");
-                result.put("daysRemaining", daysRemaining);
-                result.put("mustChange", false);
+                BaseResponse.put("status", "HEALTHY");
+                BaseResponse.put("message", "");
+                BaseResponse.put("daysRemaining", daysRemaining);
+                BaseResponse.put("mustChange", false);
             }
         }
 
-        result.put("lastPwdChangeAt", lastChange);
-        result.put("pwdChangeCount", account.getPwdChangeCount());
-        result.put("expireDays", PASSWORD_EXPIRE_DAYS);
+        BaseResponse.put("lastPwdChangeAt", lastChange);
+        BaseResponse.put("pwdChangeCount", account.getPwdChangeCount());
+        BaseResponse.put("expireDays", PASSWORD_EXPIRE_DAYS);
 
-        return Result.ok(result);
+        return BaseResponse.ok(result);
     }
 }

@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.aspect;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.LoginUser;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -37,10 +37,10 @@ public class PermissionAspect {
      */
     @Around("@annotation(prePermission)")
     public Object around(ProceedingJoinPoint pjp, PrePermission prePermission) throws Throwable {
-        LoginUser user = SecurityContext.getCurrentOrNull();
+        LoginUser user = AuthContext.getCurrentOrNull();
 
         if (prePermission.requireLogin() && user == null) {
-            throw new BizException(BizErrorCode.UNAUTHORIZED);
+            throw new BizException(StandardResultCode.UNAUTHORIZED);
         }
 
         if (user != null && prePermission.value().length > 0) {
@@ -55,7 +55,7 @@ public class PermissionAspect {
             if (!pass) {
                 log.warn("[Permission] 用户 {} 无权限访问 {} {}",
                         user.getUsername(), pjp.getSignature().toShortString(), Arrays.toString(requiredPerms));
-                throw new BizException(BizErrorCode.FORBIDDEN, "error.common.msg_1e40057e", Arrays.toString(requiredPerms));
+                throw new BizException(StandardResultCode.FORBIDDEN, "error.common.msg_1e40057e", Arrays.toString(requiredPerms));
             }
         }
 

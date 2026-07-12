@@ -3,7 +3,7 @@ package com.njydsz.pmis.finance.web.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.finance.domain.dto.ProfitSimulationCreateDTO;
 import com.njydsz.pmis.finance.domain.dto.SimulationStatusDTO;
 import com.njydsz.pmis.finance.domain.entity.ProfitSimulationDO;
@@ -56,8 +56,8 @@ public class ProfitSimulationController {
     @PrePermission("execution:simulation:create")
     @Idempotent(key = "profitSimulation:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody ProfitSimulationCreateDTO dto) {
-        return Result.ok(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody ProfitSimulationCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
@@ -70,9 +70,9 @@ public class ProfitSimulationController {
     @PrePermission("execution:simulation:approve")
     @Idempotent(key = "profitSimulation:changeStatus", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
-    public Result<Void> changeStatus(@Valid @RequestBody SimulationStatusDTO dto) {
+    public BaseResponse<Void> changeStatus(@Valid @RequestBody SimulationStatusDTO dto) {
         service.changeStatus(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -85,9 +85,9 @@ public class ProfitSimulationController {
     @PrePermission("execution:simulation:delete")
     @Idempotent(key = "profitSimulation:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -99,8 +99,8 @@ public class ProfitSimulationController {
     @Operation(summary = "详情")
     @PrePermission("execution:simulation:list")
     @GetMapping("/{id}")
-    public Result<ProfitSimulationDO> get(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<ProfitSimulationDO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -112,8 +112,8 @@ public class ProfitSimulationController {
     @Operation(summary = "按项目查询所有版本")
     @PrePermission("execution:simulation:list")
     @GetMapping("/byInitiation")
-    public Result<List<ProfitSimulationDO>> listByInitiation(@RequestParam String initiationId) {
-        return Result.ok(service.listByInitiation(initiationId));
+    public BaseResponse<List<ProfitSimulationDO>> listByInitiation(@RequestParam String initiationId) {
+        return BaseResponse.ok(service.listByInitiation(initiationId));
     }
 
     /**
@@ -125,8 +125,8 @@ public class ProfitSimulationController {
     @Operation(summary = "多版本对比")
     @PrePermission("execution:simulation:list")
     @GetMapping("/compare")
-    public Result<List<Map<String, Object>>> compare(@RequestParam String initiationId) {
-        return Result.ok(service.compare(initiationId));
+    public BaseResponse<List<Map<String, Object>>> compare(@RequestParam String initiationId) {
+        return BaseResponse.ok(service.compare(initiationId));
     }
 
     /**
@@ -142,12 +142,12 @@ public class ProfitSimulationController {
     @Operation(summary = "分页")
     @PrePermission("execution:simulation:list")
     @GetMapping("/page")
-    public Result<Page<ProfitSimulationDO>> page(
+    public BaseResponse<Page<ProfitSimulationDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String scenarioType,
             @RequestParam(required = false) String status) {
-        return Result.ok(service.page(page, size, initiationId, scenarioType, status));
+        return BaseResponse.ok(service.page(page, size, initiationId, scenarioType, status));
     }
 }

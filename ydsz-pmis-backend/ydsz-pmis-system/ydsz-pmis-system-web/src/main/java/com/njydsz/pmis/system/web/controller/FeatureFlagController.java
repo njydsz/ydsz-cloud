@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.featureflag.FeatureFlag;
 import com.njydsz.pmis.common.featureflag.FeatureFlagService;
 import com.njydsz.pmis.common.featureflag.FeatureFlagSnapshot;
@@ -54,8 +54,8 @@ public class FeatureFlagController {
     @Operation(summary = "获取全量 flag 快照")
     @PrePermission("sys:featureFlag:view")
     @GetMapping("/snapshot")
-    public Result<List<FeatureFlagSnapshot>> snapshot() {
-        return Result.ok(featureFlagService.snapshot());
+    public BaseResponse<List<FeatureFlagSnapshot>> snapshot() {
+        return BaseResponse.ok(featureFlagService.snapshot());
     }
 
     /**
@@ -66,8 +66,8 @@ public class FeatureFlagController {
     @Operation(summary = "按分类聚合快照")
     @PrePermission("sys:featureFlag:view")
     @GetMapping("/snapshot/grouped")
-    public Result<Map<String, List<FeatureFlagSnapshot>>> snapshotByCategory() {
-        return Result.ok(featureFlagService.snapshotByCategory());
+    public BaseResponse<Map<String, List<FeatureFlagSnapshot>>> snapshotByCategory() {
+        return BaseResponse.ok(featureFlagService.snapshotByCategory());
     }
 
     /**
@@ -79,16 +79,16 @@ public class FeatureFlagController {
      */
     @Operation(summary = "业务方判断 flag 是否启用 (无权限校验)")
     @GetMapping("/check")
-    public Result<Boolean> check(
+    public BaseResponse<Boolean> check(
             @Parameter(description = "flag 键") @RequestParam @NotNull String key,
             @Parameter(description = "用户ID（可选，用于灰度判断）") @RequestParam(required = false) String userId) {
         FeatureFlag flag;
         try {
             flag = FeatureFlag.valueOf(key);
         } catch (IllegalArgumentException e) {
-            return Result.ok(false);
+            return BaseResponse.ok(false);
         }
-        return Result.ok(featureFlagService.isEnabled(flag, userId));
+        return BaseResponse.ok(featureFlagService.isEnabled(flag, userId));
     }
 
     /**
@@ -103,12 +103,12 @@ public class FeatureFlagController {
     @OperationLog(module = "特性开关", action = "更新开关", bizType = "FEATURE_FLAG")
     @Idempotent(key = "featureFlag:setEnabled", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{key}/enabled")
-    public Result<Boolean> setEnabled(
+    public BaseResponse<Boolean> setEnabled(
             @Parameter(description = "flag 键") @PathVariable String key,
             @Parameter(description = "是否启用") @RequestParam boolean enabled) {
         FeatureFlag flag = parseFlag(key);
         boolean effective = featureFlagService.setEnabled(flag, enabled);
-        return Result.ok(effective);
+        return BaseResponse.ok(effective);
     }
 
     /**
@@ -123,12 +123,12 @@ public class FeatureFlagController {
     @OperationLog(module = "特性开关", action = "更新灰度", bizType = "FEATURE_FLAG")
     @Idempotent(key = "featureFlag:setRollout", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{key}/rollout")
-    public Result<Integer> setRollout(
+    public BaseResponse<Integer> setRollout(
             @Parameter(description = "flag 键") @PathVariable String key,
             @Parameter(description = "灰度百分比（0-100）") @RequestParam @Min(0) @Max(100) int percentage) {
         FeatureFlag flag = parseFlag(key);
         int clamped = featureFlagService.setRolloutPercentage(flag, percentage);
-        return Result.ok(clamped);
+        return BaseResponse.ok(clamped);
     }
 
     /**
@@ -141,9 +141,9 @@ public class FeatureFlagController {
     @OperationLog(module = "特性开关", action = "刷新缓存", bizType = "FEATURE_FLAG")
     @Idempotent(key = "featureFlag:refresh", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/refresh")
-    public Result<Void> refresh() {
+    public BaseResponse<Void> refresh() {
         featureFlagService.refresh();
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**

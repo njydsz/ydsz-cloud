@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.instance;
 
-import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowInstanceDO;
@@ -175,7 +175,7 @@ public interface FlowInstanceService {
      * @param pageSize     每页大小
      * @return 分页结果
      */
-    PageResult<FlowInstanceDO> page(String businessType, String initiatorId, String flowStatus,
+    PageResponse<FlowInstanceDO> page(String businessType, String initiatorId, String flowStatus,
                                     LocalDateTime startTime, LocalDateTime endTime,
                                     String tenantId, int pageNo, int pageSize);
 

@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -161,7 +161,7 @@ public class StrictContentTypeFilter extends OncePerRequestFilter {
         response.setStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");
-        Result<Void> body = Result.failed(BizErrorCode.UNSUPPORTED_MEDIA_TYPE);
+        BaseResponse<Void> body = BaseResponse.failed(StandardResultCode.UNSUPPORTED_MEDIA_TYPE);
         response.getWriter().write(OBJECT_MAPPER.writeValueAsString(body));
         response.getWriter().flush();
     }

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.userinfo.web.controller.auth;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.auth.PasswordScanResultDTO;
 import com.njydsz.pmis.userinfo.server.service.auth.PasswordScanService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,8 +36,8 @@ public class PasswordScanController {
      */
     @Operation(summary = "扫描密码健康度（过期/即将过期/初始密码）")
     @GetMapping("/scan")
-    public Result<PasswordScanResultDTO> scan(
+    public BaseResponse<PasswordScanResultDTO> scan(
             @RequestParam(defaultValue = "90") int expireDays) {
-        return Result.ok(scanService.scan(expireDays));
+        return BaseResponse.ok(scanService.scan(expireDays));
     }
 }

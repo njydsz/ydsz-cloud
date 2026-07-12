@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.server.token;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.CryptoUtil;
 import com.njydsz.pmis.message.server.config.MessageProperties;
@@ -57,7 +57,7 @@ public class UnsubscribeTokenUtil {
      */
     public String generate(String userId, String topicCode, String channel) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode) || !StringUtils.hasText(channel)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
         }
         int ttlDays = Math.max(1, messageProperties.getUnsubscribe().getTtlDays());
         long expiresAt = Instant.now().plus(ttlDays, ChronoUnit.DAYS).getEpochSecond();
@@ -82,11 +82,11 @@ public class UnsubscribeTokenUtil {
      */
     public UnsubscribeTokenPayload parseAndVerify(String token) {
         if (!StringUtils.hasText(token)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "退订 token 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "退订 token 不能为空");
         }
         String[] parts = token.split("\\.");
         if (parts.length != 2) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "退订 token 格式非法");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "退订 token 格式非法");
         }
         String payloadB64 = parts[0];
         String sig = parts[1];
@@ -94,15 +94,15 @@ public class UnsubscribeTokenUtil {
         try {
             payload = new String(CryptoUtil.base64UrlDecode(payloadB64), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "退订 token 解码失败");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "退订 token 解码失败");
         }
         String expectedSig = sign(payload);
         if (!CryptoUtil.constantTimeEquals(expectedSig, sig)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "退订 token 签名校验失败");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "退订 token 签名校验失败");
         }
         UnsubscribeTokenPayload result = parsePayload(payload);
-        if (Instant.now().getEpochSecond() > result.getExpiresAt()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "退订 token 已过期");
+        if (Instant.now().getEpochSecond() > BaseResponse.getExpiresAt()) {
+            throw new BizException(StandardResultCode.BAD_REQUEST, "退订 token 已过期");
         }
         return result;
     }
@@ -131,13 +131,13 @@ public class UnsubscribeTokenUtil {
     private UnsubscribeTokenPayload parsePayload(String payload) {
         String[] parts = payload.split("\\" + SEP, -1);
         if (parts.length != 4) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "退订 token 载荷格式非法");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "退订 token 载荷格式非法");
         }
         long expiresAt;
         try {
             expiresAt = Long.parseLong(parts[3]);
         } catch (NumberFormatException e) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "退订 token 载荷格式非法");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "退订 token 载荷格式非法");
         }
         return new UnsubscribeTokenPayload(parts[0], parts[1], parts[2], expiresAt);
     }

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.web.controller.canary;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.canary.CanaryReportVO;
 import com.njydsz.pmis.message.server.service.canary.CanaryReportService;
@@ -48,11 +48,11 @@ public class CanaryReportController {
     @Operation(summary = "获取灰度A/B实验报表")
     @PrePermission(PermissionCodes.MESSAGE_CANARY_REPORT)
     @GetMapping
-    public Result<CanaryReportVO> getReport(
+    public BaseResponse<CanaryReportVO> getReport(
             @Parameter(description = "灰度键(原始模板编码)", required = true)
             @RequestParam String canaryKey,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
-        return Result.ok(canaryReportService.getReport(canaryKey, start, end));
+        return BaseResponse.ok(canaryReportService.getReport(canaryKey, start, end));
     }
 }

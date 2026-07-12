@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.resource.BenchRecordCreateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.resource.BenchRecordDO;
 import com.njydsz.pmis.userinfo.server.service.resource.BenchService;
@@ -59,8 +59,8 @@ public class BenchController {
     @OperationLog(module = "Bench 池", action = "入/出池", bizType = "BENCH_RECORD")
     @Idempotent(key = "bench:act", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/act")
-    public Result<String> act(@Valid @RequestBody BenchRecordCreateDTO dto) {
-        return Result.ok(benchService.act(dto));
+    public BaseResponse<String> act(@Valid @RequestBody BenchRecordCreateDTO dto) {
+        return BaseResponse.ok(benchService.act(dto));
     }
 
     /**
@@ -71,8 +71,8 @@ public class BenchController {
      */
     @Operation(summary = "Bench 详情")
     @GetMapping("/{id}")
-    public Result<BenchRecordDO> get(@PathVariable String id) {
-        return Result.ok(benchService.getById(id));
+    public BaseResponse<BenchRecordDO> get(@PathVariable String id) {
+        return BaseResponse.ok(benchService.getById(id));
     }
 
     /**
@@ -83,8 +83,8 @@ public class BenchController {
      */
     @Operation(summary = "员工当前 Bench 记录")
     @GetMapping("/active/{employeeId}")
-    public Result<BenchRecordDO> getActiveByEmployee(@PathVariable String employeeId) {
-        return Result.ok(benchService.getActiveByEmployee(employeeId));
+    public BaseResponse<BenchRecordDO> getActiveByEmployee(@PathVariable String employeeId) {
+        return BaseResponse.ok(benchService.getActiveByEmployee(employeeId));
     }
 
     /**
@@ -94,8 +94,8 @@ public class BenchController {
      */
     @Operation(summary = "按池汇总")
     @GetMapping("/aggregate/byPool")
-    public Result<List<Map<String, Object>>> aggregateByPool() {
-        return Result.ok(benchService.aggregateByPool());
+    public BaseResponse<List<Map<String, Object>>> aggregateByPool() {
+        return BaseResponse.ok(benchService.aggregateByPool());
     }
 
     /**
@@ -107,10 +107,10 @@ public class BenchController {
      */
     @Operation(summary = "流动统计（按日期区间）")
     @GetMapping("/flow")
-    public Result<List<Map<String, Object>>> flowByDateRange(
+    public BaseResponse<List<Map<String, Object>>> flowByDateRange(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return Result.ok(benchService.flowByDateRange(from, to));
+        return BaseResponse.ok(benchService.flowByDateRange(from, to));
     }
 
     /**
@@ -124,12 +124,12 @@ public class BenchController {
      */
     @Operation(summary = "分页查询")
     @GetMapping("/page")
-    public Result<Page<BenchRecordDO>> page(
+    public BaseResponse<Page<BenchRecordDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String poolId,
             @RequestParam(required = false) String status) {
-        return Result.ok(benchService.page(page, size, poolId, status));
+        return BaseResponse.ok(benchService.page(page, size, poolId, status));
     }
 
     /**
@@ -139,8 +139,8 @@ public class BenchController {
      */
     @Operation(summary = "累计闲置成本")
     @GetMapping("/totalIdleCost")
-    public Result<BigDecimal> totalIdleCost() {
-        return Result.ok(benchService.totalIdleCost());
+    public BaseResponse<BigDecimal> totalIdleCost() {
+        return BaseResponse.ok(benchService.totalIdleCost());
     }
 
     /**
@@ -150,13 +150,13 @@ public class BenchController {
      */
     @Operation(summary = "Bench 仪表盘汇总")
     @GetMapping("/dashboard")
-    public Result<Map<String, Object>> dashboard() {
+    public BaseResponse<Map<String, Object>> dashboard() {
         if (benchService instanceof BenchServiceImpl impl) {
-            return Result.ok(impl.dashboard());
+            return BaseResponse.ok(impl.dashboard());
         }
         Map<String, Object> out = new HashMap<>();
         out.put("activePools", benchService.aggregateByPool());
         out.put("totalIdleCost", benchService.totalIdleCost());
-        return Result.ok(out);
+        return BaseResponse.ok(out);
     }
 }

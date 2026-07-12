@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.server.service.impl;
 import com.njydsz.pmis.common.alert.UnifiedAlertEvent;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.domain.dto.AlertDispatchDTO;
 import com.njydsz.pmis.project.domain.entity.AlertDispatchDO;
@@ -59,17 +59,17 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
     @Transactional(rollbackFor = Exception.class)
     public String submit(AlertDispatchDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         if (!StringUtils.hasText(dto.getAlertType())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_fc360b56");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_fc360b56");
         }
         String level = StringUtils.hasText(dto.getAlertLevel()) ? dto.getAlertLevel().toUpperCase() : "YELLOW";
         if (!isValidLevel(level)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_edec9e26", level);
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_edec9e26", level);
         }
         if (!StringUtils.hasText(dto.getTitle())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_a39a1acf");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_a39a1acf");
         }
 
         AlertDispatchDO d = new AlertDispatchDO();
@@ -108,11 +108,11 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
     @Transactional(rollbackFor = Exception.class)
     public boolean dispatchNow(String id) {
         if (id == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
         }
         AlertDispatchDO d = mapper.selectById(id);
         if (d == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_6a72742d");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_6a72742d");
         }
         if ("SENT".equals(d.getStatus()) || "CANCELLED".equals(d.getStatus())) {
             return true;
@@ -196,14 +196,14 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
     @Transactional(rollbackFor = Exception.class)
     public void cancel(String id, String reason) {
         if (id == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
         }
         AlertDispatchDO d = mapper.selectById(id);
         if (d == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_6a72742d");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_6a72742d");
         }
         if ("SENT".equals(d.getStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_811c5693");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_811c5693");
         }
         AlertDispatchDO update = new AlertDispatchDO();
         update.setId(id);

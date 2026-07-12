@@ -1,8 +1,8 @@
 package com.njydsz.pmis.project.web.controller.report;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -48,9 +48,9 @@ public class ReportSubscriptionController {
     @Idempotent(key = "reportSub:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "创建报表订阅")
-    public Result<String> create(@Valid @RequestBody ReportSubscriptionDTO dto) {
+    public BaseResponse<String> create(@Valid @RequestBody ReportSubscriptionDTO dto) {
         String id = "RS-" + UUID.randomUUID().toString().substring(0, 8);
-        String userId = SecurityContext.getUserId();
+        String userId = AuthContext.getUserId();
 
         jdbcTemplate.update(
                 "INSERT INTO pmis_report_subscription " +
@@ -63,7 +63,7 @@ public class ReportSubscriptionController {
         );
 
         log.info("[ReportSubscription] 创建订阅: id={}, reportType={}, cron={}", id, dto.getReportType(), dto.getCronExpression());
-        return Result.ok(id);
+        return BaseResponse.ok(id);
     }
 
     /**
@@ -73,8 +73,8 @@ public class ReportSubscriptionController {
      */
     @GetMapping("/list")
     @Operation(summary = "查询我的订阅列表")
-    public Result<List<Map<String, Object>>> list() {
-        String userId = SecurityContext.getUserId();
+    public BaseResponse<List<Map<String, Object>>> list() {
+        String userId = AuthContext.getUserId();
         List<Map<String, Object>> list = jdbcTemplate.queryForList(
                 "SELECT id, report_type, report_name, cron_expression, delivery_channels, " +
                         "delivery_emails, params, status, last_run_at, last_run_status, " +
@@ -83,7 +83,7 @@ public class ReportSubscriptionController {
                         "WHERE created_by = ? AND deleted = 0 ORDER BY created_at DESC",
                 userId
         );
-        return Result.ok(list);
+        return BaseResponse.ok(list);
     }
 
     /**
@@ -95,12 +95,12 @@ public class ReportSubscriptionController {
     @Idempotent(key = "reportSub:toggle", ttlSeconds = 3, message = "请勿重复提交")
     @PutMapping("/{id}/status")
     @Operation(summary = "暂停/恢复订阅")
-    public Result<Void> toggleStatus(@PathVariable String id, @RequestParam String status) {
+    public BaseResponse<Void> toggleStatus(@PathVariable String id, @RequestParam String status) {
         jdbcTemplate.update(
                 "UPDATE pmis_report_subscription SET status = ?, updated_at = ? WHERE id = ?",
                 status, LocalDateTime.now(), id
         );
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -111,12 +111,12 @@ public class ReportSubscriptionController {
     @Idempotent(key = "reportSub:delete", ttlSeconds = 3, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除订阅")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         jdbcTemplate.update(
                 "UPDATE pmis_report_subscription SET deleted = 1, updated_at = ? WHERE id = ?",
                 LocalDateTime.now(), id
         );
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -128,7 +128,7 @@ public class ReportSubscriptionController {
      */
     @GetMapping("/{id}/history")
     @Operation(summary = "查询订阅执行历史")
-    public Result<List<Map<String, Object>>> history(
+    public BaseResponse<List<Map<String, Object>>> history(
             @PathVariable String id,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
@@ -140,7 +140,7 @@ public class ReportSubscriptionController {
                         "WHERE subscription_id = ? ORDER BY run_at DESC LIMIT ? OFFSET ?",
                 id, size, offset
         );
-        return Result.ok(history);
+        return BaseResponse.ok(history);
     }
 
     /**

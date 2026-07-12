@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.server.service.impl;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.datasource.DataSourceConstants;
 import com.njydsz.pmis.finance.api.client.FinanceDataClient;
 import com.njydsz.pmis.project.domain.entity.CostAllocationDO;
@@ -154,7 +154,7 @@ public class ReportServiceImpl implements ReportService {
         // 跨域 Feign 调用财务服务获取收入明细
         BigDecimal totalRevenue = BigDecimal.ZERO;
         try {
-            Result<List<Map<String, Object>>> resp = financeDataClient.revenueByInitiation(initiationId);
+            BaseResponse<List<Map<String, Object>>> resp = financeDataClient.revenueByInitiation(initiationId);
             if (resp != null && resp.getData() != null) {
                 for (Map<String, Object> r : resp.getData()) {
                     if ("CONFIRMED".equals(String.valueOf(r.get("status")))) {
@@ -168,7 +168,7 @@ public class ReportServiceImpl implements ReportService {
         // 跨域 Feign 调用获取期间汇总
         List<Map<String, Object>> byMonth = new ArrayList<>();
         try {
-            Result<List<Map<String, Object>>> resp = financeDataClient.revenueSumByPeriod(initiationId);
+            BaseResponse<List<Map<String, Object>>> resp = financeDataClient.revenueSumByPeriod(initiationId);
             if (resp != null && resp.getData() != null) {
                 byMonth = resp.getData();
             }
@@ -193,7 +193,7 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public List<Map<String, Object>> profitSummaryAll() {
         try {
-            Result<List<Map<String, Object>>> resp = financeDataClient.profitSnapshotSummaryAll();
+            BaseResponse<List<Map<String, Object>>> resp = financeDataClient.profitSnapshotSummaryAll();
             if (resp != null && resp.getData() != null) {
                 return resp.getData();
             }
@@ -204,7 +204,7 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public List<Map<String, Object>> profitRank(int top, String sortBy, String period) {
         try {
-            Result<List<Map<String, Object>>> resp = financeDataClient.profitSnapshotRank(top, sortBy, period);
+            BaseResponse<List<Map<String, Object>>> resp = financeDataClient.profitSnapshotRank(top, sortBy, period);
             if (resp != null && resp.getData() != null) {
                 List<Map<String, Object>> rows = new ArrayList<>(resp.getData());
                 // 健康度简易派生：毛利率 >= 0.30 = 绿；0.10-0.30 = 黄；< 0.10 = 红
@@ -232,7 +232,7 @@ public class ReportServiceImpl implements ReportService {
 
     private Map<String, Object> latestSnapshot(String initiationId, String period) {
         try {
-            Result<Map<String, Object>> resp = financeDataClient.latestProfitSnapshot(initiationId, period);
+            BaseResponse<Map<String, Object>> resp = financeDataClient.latestProfitSnapshot(initiationId, period);
             if (resp != null && resp.getData() != null && !resp.getData().isEmpty()) {
                 return resp.getData();
             }
@@ -244,7 +244,7 @@ public class ReportServiceImpl implements ReportService {
 
     private BigDecimal sumRevenue(String initiationId, String period) {
         try {
-            Result<BigDecimal> resp = financeDataClient.sumRevenue(initiationId, period);
+            BaseResponse<BigDecimal> resp = financeDataClient.sumRevenue(initiationId, period);
             return resp != null && resp.getData() != null ? resp.getData() : BigDecimal.ZERO;
         } catch (Exception e) {
             log.error("[Report] 收入汇总查询失败: {}", e.getMessage());
@@ -254,7 +254,7 @@ public class ReportServiceImpl implements ReportService {
 
     private BigDecimal sumExpense(String initiationId, String period) {
         try {
-            Result<BigDecimal> resp = financeDataClient.sumExpense(initiationId, period);
+            BaseResponse<BigDecimal> resp = financeDataClient.sumExpense(initiationId, period);
             return resp != null && resp.getData() != null ? resp.getData() : BigDecimal.ZERO;
         } catch (Exception e) {
             log.error("[Report] 费用汇总查询失败: {}", e.getMessage());

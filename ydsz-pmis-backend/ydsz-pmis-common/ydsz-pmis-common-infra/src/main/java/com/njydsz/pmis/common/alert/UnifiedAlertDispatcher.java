@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.alert;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.feign.MessageServiceClient;
@@ -133,7 +133,7 @@ public class UnifiedAlertDispatcher {
         req.setReceiver(receiver);
 
         try {
-            Result<MessageResult> r = messageServiceClient.send(req);
+            BaseResponse<MessageResult> r = messageServiceClient.send(req);
             if (r == null || !r.isSuccess() || r.getData() == null) {
                 log.warn("[UnifiedAlertDispatcher] Feign 返回失败: channel={} code={} r={}",
                         channel, event.getAlertCode(), r == null ? "null" : r.getCode());

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.web.controller.report;
 
-import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -43,8 +43,8 @@ public class DashboardLayoutController {
      */
     @PutMapping("/{layoutKey}")
     @Operation(summary = "保存仪表盘布局")
-    public Result<Void> save(@PathVariable String layoutKey, @RequestBody Map<String, Object> body) {
-        String userId = SecurityContext.getUserId();
+    public BaseResponse<Void> save(@PathVariable String layoutKey, @RequestBody Map<String, Object> body) {
+        String userId = AuthContext.getUserId();
         String layoutConfig = body.get("layoutConfig") != null ? body.get("layoutConfig").toString() : "{}";
 
         // UPSERT: 存在则更新，不存在则插入
@@ -63,7 +63,7 @@ public class DashboardLayoutController {
         }
 
         log.info("[DashboardLayout] 保存布局: userId={}, key={}", userId, layoutKey);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -74,18 +74,18 @@ public class DashboardLayoutController {
      */
     @GetMapping("/{layoutKey}")
     @Operation(summary = "加载仪表盘布局")
-    public Result<Map<String, Object>> load(@PathVariable String layoutKey) {
-        String userId = SecurityContext.getUserId();
+    public BaseResponse<Map<String, Object>> load(@PathVariable String layoutKey) {
+        String userId = AuthContext.getUserId();
         List<Map<String, Object>> rows = jdbcTemplate.queryForList(
                 "SELECT layout_config FROM pmis_dashboard_layout WHERE user_id = ? AND layout_key = ?",
                 userId, layoutKey
         );
 
         if (rows.isEmpty()) {
-            return Result.ok(Map.of("layoutConfig", "{}"));
+            return BaseResponse.ok(Map.of("layoutConfig", "{}"));
         }
 
-        return Result.ok(Map.of("layoutConfig", rows.get(0).get("layout_config")));
+        return BaseResponse.ok(Map.of("layoutConfig", rows.get(0).get("layout_config")));
     }
 
     /**
@@ -96,13 +96,13 @@ public class DashboardLayoutController {
      */
     @DeleteMapping("/{layoutKey}")
     @Operation(summary = "重置仪表盘布局")
-    public Result<Void> reset(@PathVariable String layoutKey) {
-        String userId = SecurityContext.getUserId();
+    public BaseResponse<Void> reset(@PathVariable String layoutKey) {
+        String userId = AuthContext.getUserId();
         jdbcTemplate.update(
                 "DELETE FROM pmis_dashboard_layout WHERE user_id = ? AND layout_key = ?",
                 userId, layoutKey
         );
         log.info("[DashboardLayout] 重置布局: userId={}, key={}", userId, layoutKey);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 }

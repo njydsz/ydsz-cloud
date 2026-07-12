@@ -6,7 +6,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.IdempotentExempt;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.literule.server.adaptive.AdaptiveThresholdService;
 import com.njydsz.pmis.literule.server.adaptive.ThresholdAnalysis;
 import com.njydsz.pmis.literule.server.agent.ReActAgentExecutor;
@@ -212,8 +212,8 @@ public class RuleAdminController {
      * @return 规则定义列表
      */
     @GetMapping
-    public Result<List<RuleDefinition>> list() {
-        return Result.ok(ruleAdminService.listAll());
+    public BaseResponse<List<RuleDefinition>> list() {
+        return BaseResponse.ok(ruleAdminService.listAll());
     }
 
     /**
@@ -223,8 +223,8 @@ public class RuleAdminController {
      * @return 规则定义
      */
     @GetMapping("/{ruleCode}")
-    public Result<RuleDefinition> get(@PathVariable String ruleCode) {
-        return Result.ok(ruleAdminService.getByCode(ruleCode));
+    public BaseResponse<RuleDefinition> get(@PathVariable String ruleCode) {
+        return BaseResponse.ok(ruleAdminService.getByCode(ruleCode));
     }
 
     /**
@@ -238,10 +238,10 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:save", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @PrePermission("execution:rule:save")
-    public Result<RuleDefinition> save(@RequestBody RuleDefinition definition,
+    public BaseResponse<RuleDefinition> save(@RequestBody RuleDefinition definition,
                                         @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator,
                                         @RequestParam(value = "changeDesc", defaultValue = "API 更新") String changeDesc) {
-        return Result.ok(ruleAdminService.save(definition, operator, changeDesc));
+        return BaseResponse.ok(ruleAdminService.save(definition, operator, changeDesc));
     }
 
     /**
@@ -255,11 +255,11 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:toggle", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{ruleCode}/toggle")
     @PrePermission("execution:rule:toggle")
-    public Result<Void> toggle(@PathVariable String ruleCode,
+    public BaseResponse<Void> toggle(@PathVariable String ruleCode,
                                 @RequestParam boolean enabled,
                                 @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         ruleAdminService.toggle(ruleCode, enabled, operator);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -269,8 +269,8 @@ public class RuleAdminController {
      * @return 版本历史
      */
     @GetMapping("/{ruleCode}/versions")
-    public Result<List<RuleVersion>> listVersions(@PathVariable String ruleCode) {
-        return Result.ok(ruleAdminService.listVersions(ruleCode));
+    public BaseResponse<List<RuleVersion>> listVersions(@PathVariable String ruleCode) {
+        return BaseResponse.ok(ruleAdminService.listVersions(ruleCode));
     }
 
     /**
@@ -286,7 +286,7 @@ public class RuleAdminController {
      * @since 2.0.0
      */
     @GetMapping("/{ruleCode}/versionDiff")
-    public Result<RuleVersionDiff> versionDiff(@PathVariable String ruleCode,
+    public BaseResponse<RuleVersionDiff> versionDiff(@PathVariable String ruleCode,
                                                 @RequestParam int oldVersion,
                                                 @RequestParam int newVersion) {
         List<RuleVersion> versions = ruleAdminService.listVersions(ruleCode);
@@ -294,17 +294,17 @@ public class RuleAdminController {
         RuleVersion newV = versions.stream().filter(v -> v.getVersion() == newVersion).findFirst().orElse(null);
 
         if (oldV == null || newV == null) {
-            return Result.fail("版本不存在: oldVersion=" + oldVersion + ", newVersion=" + newVersion);
+            return BaseResponse.fail("版本不存在: oldVersion=" + oldVersion + ", newVersion=" + newVersion);
         }
 
         try {
             RuleDefinition oldDef = objectMapper.readValue(oldV.getDefinitionJson(), RuleDefinition.class);
             RuleDefinition newDef = objectMapper.readValue(newV.getDefinitionJson(), RuleDefinition.class);
             RuleVersionDiffService diffService = new RuleVersionDiffService();
-            return Result.ok(diffService.diff(oldDef, newDef));
+            return BaseResponse.ok(diffService.diff(oldDef, newDef));
         } catch (Exception e) {
             log.error("[LiteRule] 版本 Diff 失败: ruleCode={}, oldV={}, newV={}", ruleCode, oldVersion, newVersion, e);
-            return Result.fail("版本 Diff 解析失败: " + e.getMessage());
+            return BaseResponse.fail("版本 Diff 解析失败: " + e.getMessage());
         }
     }
 
@@ -318,10 +318,10 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:rollback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/rollback")
-    public Result<RuleDefinition> rollback(@PathVariable String ruleCode,
+    public BaseResponse<RuleDefinition> rollback(@PathVariable String ruleCode,
                                             @RequestParam int version,
                                             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        return Result.ok(ruleAdminService.rollback(ruleCode, version, operator));
+        return BaseResponse.ok(ruleAdminService.rollback(ruleCode, version, operator));
     }
 
     /**
@@ -333,9 +333,9 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:dryRun", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/dryRun")
-    public Result<List<RuleResult>> dryRun(@RequestParam(required = false) String ruleCode,
+    public BaseResponse<List<RuleResult>> dryRun(@RequestParam(required = false) String ruleCode,
                                             @RequestBody Map<String, Object> facts) {
-        return Result.ok(ruleAdminService.dryRun(ruleCode, facts));
+        return BaseResponse.ok(ruleAdminService.dryRun(ruleCode, facts));
     }
 
     /**
@@ -345,8 +345,8 @@ public class RuleAdminController {
      * @return true=合法
      */
     @GetMapping("/validate")
-    public Result<Boolean> validate(@RequestParam String expression) {
-        return Result.ok(ruleAdminService.validateExpression(expression));
+    public BaseResponse<Boolean> validate(@RequestParam String expression) {
+        return BaseResponse.ok(ruleAdminService.validateExpression(expression));
     }
 
     /**
@@ -369,11 +369,11 @@ public class RuleAdminController {
      * @since 1.6.0
      */
     @PostMapping("/exprTrace")
-    public Result<ExpressionEvaluator.TraceResult> traceExpression(@RequestBody Map<String, Object> request) {
+    public BaseResponse<ExpressionEvaluator.TraceResult> traceExpression(@RequestBody Map<String, Object> request) {
         String expression = (String) request.get("expression");
         @SuppressWarnings("unchecked")
         Map<String, Object> facts = (Map<String, Object>) request.get("facts");
-        return Result.ok(ruleAdminService.traceExpression(expression, facts));
+        return BaseResponse.ok(ruleAdminService.traceExpression(expression, facts));
     }
 
     /**
@@ -387,7 +387,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:validateExpression", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/validateExpression")
-    public Result<ExpressionValidationResult> validateExpression(@Valid @RequestBody ExpressionValidateDTO dto) {
+    public BaseResponse<ExpressionValidationResult> validateExpression(@Valid @RequestBody ExpressionValidateDTO dto) {
         String expression = dto.getExpression();
         String type = dto.getType() == null ? "condition" : dto.getType();
         ExpressionValidationResult result;
@@ -403,7 +403,7 @@ public class RuleAdminController {
                 result = expressionValidationService.validateCondition(expression);
                 break;
         }
-        return Result.ok(result);
+        return BaseResponse.ok(result);
     }
 
     /**
@@ -414,8 +414,8 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:validateBatch", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/validateBatch")
-    public Result<Map<String, ExpressionValidationResult>> validateBatch(@RequestBody Map<String, String> request) {
-        return Result.ok(expressionValidationService.validateBatch(request));
+    public BaseResponse<Map<String, ExpressionValidationResult>> validateBatch(@RequestBody Map<String, String> request) {
+        return BaseResponse.ok(expressionValidationService.validateBatch(request));
     }
 
     /**
@@ -429,18 +429,18 @@ public class RuleAdminController {
      * @return A/B 测试报告
      */
     @PostMapping("/{ruleCode}/abTest")
-    public Result<ABTestService.ABTestReport> abTest(@PathVariable String ruleCode,
+    public BaseResponse<ABTestService.ABTestReport> abTest(@PathVariable String ruleCode,
                                                       @Valid @RequestBody RuleABTestDTO dto) {
         RuleDefinition currentDef = ruleAdminService.getByCode(ruleCode);
         if (currentDef == null) {
-            return Result.fail("规则不存在: " + ruleCode);
+            return BaseResponse.fail("规则不存在: " + ruleCode);
         }
 
         // 构建候选规则定义（基于当前规则，覆盖候选字段）
         RuleDefinition candidateDef = dto.getCandidate();
         candidateDef.setCode(ruleCode);
 
-        return Result.ok(abTestService.test(currentDef, candidateDef, dto.getFacts()));
+        return BaseResponse.ok(abTestService.test(currentDef, candidateDef, dto.getFacts()));
     }
 
     /**
@@ -449,8 +449,8 @@ public class RuleAdminController {
      * @return 统计快照
      */
     @GetMapping("/stats")
-    public Result<RuleEngineStats> stats() {
-        return Result.ok(ruleEngine.getStats());
+    public BaseResponse<RuleEngineStats> stats() {
+        return BaseResponse.ok(ruleEngine.getStats());
     }
 
     // ==================== 规则模板市场 ====================
@@ -461,8 +461,8 @@ public class RuleAdminController {
      * @return 模板列表
      */
     @GetMapping("/templates")
-    public Result<List<RuleTemplateDO>> listTemplates() {
-        return Result.ok(ruleTemplateProvider.listAll());
+    public BaseResponse<List<RuleTemplateDO>> listTemplates() {
+        return BaseResponse.ok(ruleTemplateProvider.listAll());
     }
 
     /**
@@ -472,8 +472,8 @@ public class RuleAdminController {
      * @return 模板列表
      */
     @GetMapping("/templates/category/{category}")
-    public Result<List<RuleTemplateDO>> listTemplatesByCategory(@PathVariable String category) {
-        return Result.ok(ruleTemplateProvider.listByCategory(category));
+    public BaseResponse<List<RuleTemplateDO>> listTemplatesByCategory(@PathVariable String category) {
+        return BaseResponse.ok(ruleTemplateProvider.listByCategory(category));
     }
 
     /**
@@ -483,8 +483,8 @@ public class RuleAdminController {
      * @return 模板列表
      */
     @GetMapping("/templates/industry/{industry}")
-    public Result<List<RuleTemplateDO>> listTemplatesByIndustry(@PathVariable String industry) {
-        return Result.ok(ruleTemplateProvider.listByIndustry(industry));
+    public BaseResponse<List<RuleTemplateDO>> listTemplatesByIndustry(@PathVariable String industry) {
+        return BaseResponse.ok(ruleTemplateProvider.listByIndustry(industry));
     }
 
     /**
@@ -496,9 +496,9 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:importTemplate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/templates/{templateCode}/import")
-    public Result<RuleDefinition> importTemplate(@PathVariable String templateCode,
+    public BaseResponse<RuleDefinition> importTemplate(@PathVariable String templateCode,
                                                   @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        return Result.ok(ruleTemplateProvider.importTemplate(templateCode, operator));
+        return BaseResponse.ok(ruleTemplateProvider.importTemplate(templateCode, operator));
     }
 
     // ==================== AI 辅助规则生成 ====================
@@ -511,10 +511,10 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:aiGenerate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/aiGenerate")
-    public Result<RuleDefinition> aiGenerate(@Valid @RequestBody RuleAiGenerateDTO dto) {
+    public BaseResponse<RuleDefinition> aiGenerate(@Valid @RequestBody RuleAiGenerateDTO dto) {
         List<String> fields = dto.getAvailableFields();
         if (fields == null) fields = List.of();
-        return Result.ok(ruleGenerationProvider.generate(dto.getDescription(), fields));
+        return BaseResponse.ok(ruleGenerationProvider.generate(dto.getDescription(), fields));
     }
 
     /**
@@ -526,11 +526,11 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:aiGenerateAndSave", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/aiGenerateAndSave")
-    public Result<RuleDefinition> aiGenerateAndSave(@Valid @RequestBody RuleAiGenerateDTO dto,
+    public BaseResponse<RuleDefinition> aiGenerateAndSave(@Valid @RequestBody RuleAiGenerateDTO dto,
                                                       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         List<String> fields = dto.getAvailableFields();
         if (fields == null) fields = List.of();
-        return Result.ok(ruleGenerationProvider.generateAndSave(dto.getDescription(), fields, operator));
+        return BaseResponse.ok(ruleGenerationProvider.generateAndSave(dto.getDescription(), fields, operator));
     }
 
     // ==================== 冲突检测 ====================
@@ -541,8 +541,8 @@ public class RuleAdminController {
      * @return 冲突规则对列表
      */
     @GetMapping("/conflicts")
-    public Result<List<RuleConflictInfo>> detectConflicts() {
-        return Result.ok(ruleConflictDetectorProvider.detectConflicts());
+    public BaseResponse<List<RuleConflictInfo>> detectConflicts() {
+        return BaseResponse.ok(ruleConflictDetectorProvider.detectConflicts());
     }
 
     // ==================== 测试用例管理 ====================
@@ -554,13 +554,13 @@ public class RuleAdminController {
      * @return 测试用例列表
      */
     @GetMapping("/testCases")
-    public Result<List<RuleTestCaseDO>> listTestCases(@RequestParam(required = false) String ruleCode) {
+    public BaseResponse<List<RuleTestCaseDO>> listTestCases(@RequestParam(required = false) String ruleCode) {
         LambdaQueryWrapper<RuleTestCaseDO> wrapper = new LambdaQueryWrapper<>();
         if (ruleCode != null && !ruleCode.isBlank()) {
             wrapper.eq(RuleTestCaseDO::getRuleCode, ruleCode);
         }
         wrapper.orderByDesc(RuleTestCaseDO::getUpdatedAt);
-        return Result.ok(ruleTestCaseMapper.selectList(wrapper));
+        return BaseResponse.ok(ruleTestCaseMapper.selectList(wrapper));
     }
 
     /**
@@ -571,13 +571,13 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:saveTestCase", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/testCases")
-    public Result<RuleTestCaseDO> saveTestCase(@RequestBody RuleTestCaseDO testCase) {
+    public BaseResponse<RuleTestCaseDO> saveTestCase(@RequestBody RuleTestCaseDO testCase) {
         if (testCase.getId() != null) {
             ruleTestCaseMapper.updateById(testCase);
         } else {
             ruleTestCaseMapper.insert(testCase);
         }
-        return Result.ok(testCase);
+        return BaseResponse.ok(testCase);
     }
 
     /**
@@ -589,9 +589,9 @@ public class RuleAdminController {
     @OperationLog(module = "规则引擎", action = "删除测试用例", bizType = "RULE_TEST_CASE")
     @Idempotent(key = "ruleAdmin:deleteTestCase", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/testCases/{id}")
-    public Result<Void> deleteTestCase(@PathVariable String id) {
+    public BaseResponse<Void> deleteTestCase(@PathVariable String id) {
         ruleTestCaseMapper.deleteById(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -606,7 +606,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:batchRunTestCases", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/testCases/batchRun")
-    public Result<Map<String, Object>> batchRunTestCases(@Valid @RequestBody TestCaseBatchRunDTO dto) {
+    public BaseResponse<Map<String, Object>> batchRunTestCases(@Valid @RequestBody TestCaseBatchRunDTO dto) {
         List<Long> ids = dto.getIds();
 
         List<RuleTestCaseDO> testCases;
@@ -621,7 +621,7 @@ public class RuleAdminController {
         }
 
         if (testCases.isEmpty()) {
-            return Result.ok(Map.of("total", 0, "passed", 0, "failed", 0, "passRate", "100%"));
+            return BaseResponse.ok(Map.of("total", 0, "passed", 0, "failed", 0, "passRate", "100%"));
         }
 
         List<Map<String, Object>> caseResults = new ArrayList<>();
@@ -679,7 +679,7 @@ public class RuleAdminController {
         report.put("allPassed", failed == 0);
         report.put("caseResults", caseResults);
 
-        return Result.ok(report);
+        return BaseResponse.ok(report);
     }
 
     // ==================== 生命周期管理 ====================
@@ -695,7 +695,7 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:changeStatus", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{ruleCode}/status")
     @PrePermission("execution:rule:status")
-    public Result<RuleDefinition> changeStatus(@PathVariable String ruleCode,
+    public BaseResponse<RuleDefinition> changeStatus(@PathVariable String ruleCode,
                                                @Valid @RequestBody RuleStatusChangeDTO dto,
                                                @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         String targetStatus = dto.getTargetStatus();
@@ -712,7 +712,7 @@ public class RuleAdminController {
             def.setReviewedAt(LocalDateTime.now().toString());
             def.setReviewComment(comment);
         }
-        return Result.ok(ruleAdminService.save(def, operator, "状态变更: " + current.getDesc() + " -> " + target.getDesc()));
+        return BaseResponse.ok(ruleAdminService.save(def, operator, "状态变更: " + current.getDesc() + " -> " + target.getDesc()));
     }
 
     /**
@@ -729,17 +729,17 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/approve")
     @PrePermission("execution:rule:approve")
-    public Result<RuleDefinition> approve(@PathVariable String ruleCode,
+    public BaseResponse<RuleDefinition> approve(@PathVariable String ruleCode,
                                            @Valid @RequestBody RuleApproveDTO dto,
                                            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleDefinition def = ruleAdminService.getByCode(ruleCode);
         if (def == null) {
-            return Result.fail("规则不存在: " + ruleCode);
+            return BaseResponse.fail("规则不存在: " + ruleCode);
         }
 
         RuleStatus current = parseStatusSafely(def.getStatus());
         if (!current.canTransitionTo(RuleStatus.PUBLISHED)) {
-            return Result.fail("当前状态 " + current.getDesc() + " 不允许审批通过，仅 DRAFT/REVIEW 可审批");
+            return BaseResponse.fail("当前状态 " + current.getDesc() + " 不允许审批通过，仅 DRAFT/REVIEW 可审批");
         }
 
         String comment = dto.getComment() == null ? "" : dto.getComment();
@@ -754,7 +754,7 @@ public class RuleAdminController {
 
         String changeDesc = String.format("[审批通过] %s -> PUBLISHED, 审批人=%s, 意见=%s",
                 current.getDesc(), operator, comment.isEmpty() ? "无" : comment);
-        return Result.ok(ruleAdminService.save(def, operator, changeDesc));
+        return BaseResponse.ok(ruleAdminService.save(def, operator, changeDesc));
     }
 
     /**
@@ -771,17 +771,17 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/reject")
     @PrePermission("execution:rule:approve")
-    public Result<RuleDefinition> reject(@PathVariable String ruleCode,
+    public BaseResponse<RuleDefinition> reject(@PathVariable String ruleCode,
                                           @Valid @RequestBody RuleRejectDTO dto,
                                           @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleDefinition def = ruleAdminService.getByCode(ruleCode);
         if (def == null) {
-            return Result.fail("规则不存在: " + ruleCode);
+            return BaseResponse.fail("规则不存在: " + ruleCode);
         }
 
         RuleStatus current = parseStatusSafely(def.getStatus());
         if (!current.canTransitionTo(RuleStatus.ARCHIVED)) {
-            return Result.fail("当前状态 " + current.getDesc() + " 不允许驳回，仅 DRAFT/REVIEW/PUBLISHED 可驳回");
+            return BaseResponse.fail("当前状态 " + current.getDesc() + " 不允许驳回，仅 DRAFT/REVIEW/PUBLISHED 可驳回");
         }
 
         String reason = dto.getReason();
@@ -796,7 +796,7 @@ public class RuleAdminController {
 
         String changeDesc = String.format("[审批驳回] %s -> ARCHIVED, 审批人=%s, 理由=%s",
                 current.getDesc(), operator, reason);
-        return Result.ok(ruleAdminService.save(def, operator, changeDesc));
+        return BaseResponse.ok(ruleAdminService.save(def, operator, changeDesc));
     }
 
     /**
@@ -826,15 +826,15 @@ public class RuleAdminController {
     @PostMapping("/{ruleCode}/submitReview")
     @PrePermission("execution:rule:save")
     @OperationLog(module = "规则引擎", action = "提交审核", bizType = "RULE")
-    public Result<ApprovalRecord> submitReview(@PathVariable String ruleCode,
+    public BaseResponse<ApprovalRecord> submitReview(@PathVariable String ruleCode,
                                                 @Valid @RequestBody(required = false) RuleSubmitReviewDTO dto,
                                                 @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("多级审批流服务未启用");
+            return BaseResponse.fail("多级审批流服务未启用");
         }
         String flowCode = dto == null ? null : dto.getFlowCode();
-        return Result.ok(svc.submitForReview(ruleCode, flowCode, operator));
+        return BaseResponse.ok(svc.submitForReview(ruleCode, flowCode, operator));
     }
 
     /**
@@ -852,15 +852,15 @@ public class RuleAdminController {
     @PostMapping("/{ruleCode}/approveLevel")
     @PrePermission("execution:rule:approve")
     @OperationLog(module = "规则引擎", action = "级别审批通过", bizType = "RULE")
-    public Result<ApprovalRecord> approveLevel(@PathVariable String ruleCode,
+    public BaseResponse<ApprovalRecord> approveLevel(@PathVariable String ruleCode,
                                                 @Valid @RequestBody RuleApproveDTO dto,
                                                 @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("多级审批流服务未启用");
+            return BaseResponse.fail("多级审批流服务未启用");
         }
         String comment = dto.getComment() == null ? "" : dto.getComment();
-        return Result.ok(svc.approve(ruleCode, operator, comment));
+        return BaseResponse.ok(svc.approve(ruleCode, operator, comment));
     }
 
     /**
@@ -877,14 +877,14 @@ public class RuleAdminController {
     @PostMapping("/{ruleCode}/rejectLevel")
     @PrePermission("execution:rule:approve")
     @OperationLog(module = "规则引擎", action = "级别审批驳回", bizType = "RULE")
-    public Result<ApprovalRecord> rejectLevel(@PathVariable String ruleCode,
+    public BaseResponse<ApprovalRecord> rejectLevel(@PathVariable String ruleCode,
                                                @Valid @RequestBody RuleRejectDTO dto,
                                                @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("多级审批流服务未启用");
+            return BaseResponse.fail("多级审批流服务未启用");
         }
-        return Result.ok(svc.reject(ruleCode, operator, dto.getReason()));
+        return BaseResponse.ok(svc.reject(ruleCode, operator, dto.getReason()));
     }
 
     /**
@@ -901,15 +901,15 @@ public class RuleAdminController {
     @PostMapping("/{ruleCode}/delegate")
     @PrePermission("execution:rule:approve")
     @OperationLog(module = "规则引擎", action = "委托审批", bizType = "RULE")
-    public Result<ApprovalRecord> delegate(@PathVariable String ruleCode,
+    public BaseResponse<ApprovalRecord> delegate(@PathVariable String ruleCode,
                                             @Valid @RequestBody RuleDelegateDTO dto,
                                             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("多级审批流服务未启用");
+            return BaseResponse.fail("多级审批流服务未启用");
         }
         String comment = dto.getComment() == null ? "" : dto.getComment();
-        return Result.ok(svc.delegate(ruleCode, operator, dto.getDelegatedTo(), comment));
+        return BaseResponse.ok(svc.delegate(ruleCode, operator, dto.getDelegatedTo(), comment));
     }
 
     /**
@@ -919,12 +919,12 @@ public class RuleAdminController {
      * @return 审批记录；无审批记录时返回 null
      */
     @GetMapping("/{ruleCode}/approvalStatus")
-    public Result<ApprovalRecord> approvalStatus(@PathVariable String ruleCode) {
+    public BaseResponse<ApprovalRecord> approvalStatus(@PathVariable String ruleCode) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.ok(null);
+            return BaseResponse.ok(null);
         }
-        return Result.ok(svc.getApprovalStatus(ruleCode));
+        return BaseResponse.ok(svc.getApprovalStatus(ruleCode));
     }
 
     /**
@@ -934,12 +934,12 @@ public class RuleAdminController {
      * @return 待审批记录列表
      */
     @GetMapping("/pendingApprovals")
-    public Result<List<ApprovalRecord>> pendingApprovals(@RequestParam String approver) {
+    public BaseResponse<List<ApprovalRecord>> pendingApprovals(@RequestParam String approver) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
-        return Result.ok(svc.listPendingApprovals(approver));
+        return BaseResponse.ok(svc.listPendingApprovals(approver));
     }
 
     /**
@@ -955,13 +955,13 @@ public class RuleAdminController {
     @PostMapping("/{ruleCode}/cancelReview")
     @PrePermission("execution:rule:save")
     @OperationLog(module = "规则引擎", action = "撤回审核", bizType = "RULE")
-    public Result<ApprovalRecord> cancelReview(@PathVariable String ruleCode,
+    public BaseResponse<ApprovalRecord> cancelReview(@PathVariable String ruleCode,
                                                 @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("多级审批流服务未启用");
+            return BaseResponse.fail("多级审批流服务未启用");
         }
-        return Result.ok(svc.cancelReview(ruleCode, operator));
+        return BaseResponse.ok(svc.cancelReview(ruleCode, operator));
     }
 
     /**
@@ -970,12 +970,12 @@ public class RuleAdminController {
      * @return 审批流配置列表
      */
     @GetMapping("/approvalFlows")
-    public Result<List<ApprovalFlow>> approvalFlows() {
+    public BaseResponse<List<ApprovalFlow>> approvalFlows() {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
-        return Result.ok(svc.listFlows());
+        return BaseResponse.ok(svc.listFlows());
     }
 
     // ==================== 执行链路追踪 ====================
@@ -984,8 +984,8 @@ public class RuleAdminController {
      * 按 traceId 查询执行链路
      */
     @GetMapping("/traces/{traceId}")
-    public Result<List<RuleExecutionTraceDO>> getTrace(@PathVariable String traceId) {
-        return Result.ok(ruleExecutionTraceMapper.selectList(
+    public BaseResponse<List<RuleExecutionTraceDO>> getTrace(@PathVariable String traceId) {
+        return BaseResponse.ok(ruleExecutionTraceMapper.selectList(
             new LambdaQueryWrapper<RuleExecutionTraceDO>()
                 .eq(RuleExecutionTraceDO::getTraceId, traceId)
                 .orderByAsc(RuleExecutionTraceDO::getCreatedAt)));
@@ -995,9 +995,9 @@ public class RuleAdminController {
      * 按规则编码查询最近链路
      */
     @GetMapping("/traces/rule/{ruleCode}")
-    public Result<List<RuleExecutionTraceDO>> getTracesByRule(@PathVariable String ruleCode,
+    public BaseResponse<List<RuleExecutionTraceDO>> getTracesByRule(@PathVariable String ruleCode,
                                                                @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit) {
-        return Result.ok(ruleExecutionTraceMapper.selectList(
+        return BaseResponse.ok(ruleExecutionTraceMapper.selectList(
             new LambdaQueryWrapper<RuleExecutionTraceDO>()
                 .eq(RuleExecutionTraceDO::getRuleCode, ruleCode)
                 .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
@@ -1015,20 +1015,20 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:replayTrace", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/traces/{traceId}/replay")
-    public Result<Map<String, Object>> replayTrace(@PathVariable String traceId) {
+    public BaseResponse<Map<String, Object>> replayTrace(@PathVariable String traceId) {
         List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(
             new LambdaQueryWrapper<RuleExecutionTraceDO>()
                 .eq(RuleExecutionTraceDO::getTraceId, traceId)
                 .orderByAsc(RuleExecutionTraceDO::getCreatedAt));
 
         if (traces.isEmpty()) {
-            return Result.fail("未找到 traceId=" + traceId + " 的执行记录");
+            return BaseResponse.fail("未找到 traceId=" + traceId + " 的执行记录");
         }
 
         // 取第一条 trace 的 factsSnapshot 作为回放输入
         Map<String, Object> facts = traces.get(0).getFactsSnapshot();
         if (facts == null || facts.isEmpty()) {
-            return Result.fail("traceId=" + traceId + " 的事实快照为空，无法回放");
+            return BaseResponse.fail("traceId=" + traceId + " 的事实快照为空，无法回放");
         }
 
         // 用当前规则集重新评估
@@ -1068,7 +1068,7 @@ public class RuleAdminController {
                 added.size(), removed.size(), unchanged.size())
         ));
 
-        return Result.ok(replay);
+        return BaseResponse.ok(replay);
     }
 
     /**
@@ -1098,7 +1098,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:batchReplayTraces", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/traces/batchReplay")
-    public Result<Map<String, Object>> batchReplayTraces(@RequestBody Map<String, Object> request) {
+    public BaseResponse<Map<String, Object>> batchReplayTraces(@RequestBody Map<String, Object> request) {
         // 解析请求参数
         String startTimeStr = (String) request.get("startTime");
         String endTimeStr = (String) request.get("endTime");
@@ -1110,7 +1110,7 @@ public class RuleAdminController {
         }
 
         if (startTimeStr == null || endTimeStr == null) {
-            return Result.fail("startTime 和 endTime 不能为空");
+            return BaseResponse.fail("startTime 和 endTime 不能为空");
         }
 
         LocalDateTime startTime = LocalDateTime.parse(startTimeStr);
@@ -1179,7 +1179,7 @@ public class RuleAdminController {
         report.put("summary", String.format("共回放 %d 条，一致 %d 条，差异 %d 条",
                 traces.size(), consistentCount, diffCount));
 
-        return Result.ok(report);
+        return BaseResponse.ok(report);
     }
 
     /**
@@ -1212,7 +1212,7 @@ public class RuleAdminController {
      */
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/{ruleCode}/impactPreview")
-    public Result<Map<String, Object>> impactPreview(@PathVariable String ruleCode,
+    public BaseResponse<Map<String, Object>> impactPreview(@PathVariable String ruleCode,
                                                       @RequestBody Map<String, Object> request) {
         String conditionExpression = (String) request.get("conditionExpression");
         String severityExpression = (String) request.get("severityExpression");
@@ -1224,7 +1224,7 @@ public class RuleAdminController {
         }
 
         if (conditionExpression == null || conditionExpression.isBlank()) {
-            return Result.fail("conditionExpression 不能为空");
+            return BaseResponse.fail("conditionExpression 不能为空");
         }
 
         // 解析默认严重度
@@ -1233,7 +1233,7 @@ public class RuleAdminController {
             try {
                 defaultSeverity = RuleSeverity.valueOf(defaultSeverityStr);
             } catch (IllegalArgumentException e) {
-                return Result.fail("非法的 defaultSeverity: " + defaultSeverityStr
+                return BaseResponse.fail("非法的 defaultSeverity: " + defaultSeverityStr
                         + "，合法值: INFO / YELLOW / RED");
             }
         }
@@ -1317,7 +1317,7 @@ public class RuleAdminController {
                 traces.size(), historicalTriggeredCount, newTriggeredCount,
                 addedTriggeredCount, removedTriggeredCount));
 
-        return Result.ok(report);
+        return BaseResponse.ok(report);
     }
 
     /**
@@ -1356,8 +1356,8 @@ public class RuleAdminController {
      * @return 最近的执行链路列表
      */
     @GetMapping("/traces")
-    public Result<List<RuleExecutionTraceDO>> listRecentTraces(@RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
-        return Result.ok(ruleExecutionTraceMapper.selectList(
+    public BaseResponse<List<RuleExecutionTraceDO>> listRecentTraces(@RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
+        return BaseResponse.ok(ruleExecutionTraceMapper.selectList(
             new LambdaQueryWrapper<RuleExecutionTraceDO>()
                 .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
                 .last("LIMIT " + limit)));
@@ -1369,18 +1369,18 @@ public class RuleAdminController {
      * 查询全部决策表
      */
     @GetMapping("/decisionTables")
-    public Result<List<DecisionTableDO>> listDecisionTables() {
-        return Result.ok(decisionTableMapper.selectList(null));
+    public BaseResponse<List<DecisionTableDO>> listDecisionTables() {
+        return BaseResponse.ok(decisionTableMapper.selectList(null));
     }
 
     /**
      * 查询单条决策表
      */
     @GetMapping("/decisionTables/{tableCode}")
-    public Result<DecisionTableDO> getDecisionTable(@PathVariable String tableCode) {
+    public BaseResponse<DecisionTableDO> getDecisionTable(@PathVariable String tableCode) {
         DecisionTableDO dt = decisionTableMapper.selectOne(
             new LambdaQueryWrapper<DecisionTableDO>().eq(DecisionTableDO::getTableCode, tableCode));
-        return Result.ok(dt);
+        return BaseResponse.ok(dt);
     }
 
     /**
@@ -1388,13 +1388,13 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:saveDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/decisionTables")
-    public Result<DecisionTableDO> saveDecisionTable(@RequestBody DecisionTableDO decisionTable) {
+    public BaseResponse<DecisionTableDO> saveDecisionTable(@RequestBody DecisionTableDO decisionTable) {
         if (decisionTable.getId() != null) {
             decisionTableMapper.updateById(decisionTable);
         } else {
             decisionTableMapper.insert(decisionTable);
         }
-        return Result.ok(decisionTable);
+        return BaseResponse.ok(decisionTable);
     }
 
     /**
@@ -1403,9 +1403,9 @@ public class RuleAdminController {
     @OperationLog(module = "规则引擎", action = "删除决策表", bizType = "DECISION_TABLE")
     @Idempotent(key = "ruleAdmin:deleteDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/decisionTables/{id}")
-    public Result<Void> deleteDecisionTable(@PathVariable String id) {
+    public BaseResponse<Void> deleteDecisionTable(@PathVariable String id) {
         decisionTableMapper.deleteById(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -1420,13 +1420,13 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:evaluateDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/decisionTables/{tableCode}/evaluate")
-    public Result<List<Map<String, Object>>> evaluateDecisionTable(@PathVariable String tableCode,
+    public BaseResponse<List<Map<String, Object>>> evaluateDecisionTable(@PathVariable String tableCode,
                                                                    @RequestBody Map<String, Object> facts) {
         try {
-            return Result.ok(decisionTableEvalProvider.evaluate(tableCode, facts));
+            return BaseResponse.ok(decisionTableEvalProvider.evaluate(tableCode, facts));
         } catch (Exception e) {
             log.warn("[DecisionTable] 评估失败: tableCode={}, err={}", tableCode, e.getMessage());
-            return Result.fail(e.getMessage());
+            return BaseResponse.fail(e.getMessage());
         }
     }
 
@@ -1467,26 +1467,26 @@ public class RuleAdminController {
     @OperationLog(module = "规则引擎", action = "导入决策表 Excel", bizType = "DECISION_TABLE")
     @PostMapping(value = "/decisionTables/importExcel", consumes = "multipart/form-data")
     @PrePermission("execution:rule:save")
-    public Result<DecisionTableDefinition> importDecisionTableExcel(
+    public BaseResponse<DecisionTableDefinition> importDecisionTableExcel(
             @RequestParam("file") MultipartFile file,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("决策表管理服务未启用");
+            return BaseResponse.fail("决策表管理服务未启用");
         }
         if (file == null || file.isEmpty()) {
-            return Result.fail("上传文件不能为空");
+            return BaseResponse.fail("上传文件不能为空");
         }
         try {
             byte[] bytes = file.getBytes();
             DecisionTableDefinition saved = svc.importExcel(bytes, operator);
-            return Result.ok(saved);
+            return BaseResponse.ok(saved);
         } catch (IllegalArgumentException e) {
             log.warn("[DecisionTable] Excel 导入失败: {}", e.getMessage());
-            return Result.fail(e.getMessage());
+            return BaseResponse.fail(e.getMessage());
         } catch (IOException e) {
             log.warn("[DecisionTable] Excel 文件读取失败: {}", e.getMessage());
-            return Result.fail("文件读取失败: " + e.getMessage());
+            return BaseResponse.fail("文件读取失败: " + e.getMessage());
         }
     }
 
@@ -1519,7 +1519,7 @@ public class RuleAdminController {
      * 导出全部规则为 JSON
      */
     @GetMapping("/export")
-    public Result<Map<String, Object>> exportRules() {
+    public BaseResponse<Map<String, Object>> exportRules() {
         List<RuleDefinition> rules = ruleAdminService.listAll();
         // 过滤掉内部字段，只导出核心配置
         List<Map<String, Object>> exportData = rules.stream().map(r -> {
@@ -1541,10 +1541,10 @@ public class RuleAdminController {
             return map;
         }).collect(Collectors.toList());
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("exportTime", LocalDateTime.now().toString());
-        result.put("ruleCount", rules.size());
-        result.put("rules", exportData);
-        return Result.ok(result);
+        BaseResponse.put("exportTime", LocalDateTime.now().toString());
+        BaseResponse.put("ruleCount", rules.size());
+        BaseResponse.put("rules", exportData);
+        return BaseResponse.ok(result);
     }
 
     /**
@@ -1613,11 +1613,11 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:importRules", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/import")
-    public Result<Map<String, Object>> importRules(@Valid @RequestBody RuleImportDTO dto,
+    public BaseResponse<Map<String, Object>> importRules(@Valid @RequestBody RuleImportDTO dto,
                                                     @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         List<Map<String, Object>> rules = dto.getRules();
         if (rules == null || rules.isEmpty()) {
-            return Result.ok(Map.of("imported", 0, "skipped", 0));
+            return BaseResponse.ok(Map.of("imported", 0, "skipped", 0));
         }
         int imported = 0;
         int skipped = 0;
@@ -1640,9 +1640,9 @@ public class RuleAdminController {
             }
         }
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("imported", imported);
-        result.put("skipped", skipped);
-        return Result.ok(result);
+        BaseResponse.put("imported", imported);
+        BaseResponse.put("skipped", skipped);
+        return BaseResponse.ok(result);
     }
 
     // ==================== 规则删除（P0-4） ====================
@@ -1662,11 +1662,11 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:deleteRule", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{ruleCode}")
     @PrePermission("execution:rule:delete")
-    public Result<Void> deleteRule(@PathVariable String ruleCode,
+    public BaseResponse<Void> deleteRule(@PathVariable String ruleCode,
                                    @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleDefinition def = ruleAdminService.getByCode(ruleCode);
         if (def == null) {
-            return Result.fail("规则不存在: " + ruleCode);
+            return BaseResponse.fail("规则不存在: " + ruleCode);
         }
         def.setStatus(RuleStatus.ARCHIVED.name());
         def.setEnabled(false);
@@ -1674,7 +1674,7 @@ public class RuleAdminController {
         // 同步删除画布
         ruleChainGraphProvider.delete(ruleCode);
         log.info("[LiteRule] 规则已删除: ruleCode={}, operator={}", ruleCode, operator);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     // ==================== 批量操作（P0-5） ====================
@@ -1692,7 +1692,7 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:batchToggle", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batchToggle")
     @PrePermission("execution:rule:toggle")
-    public Result<Map<String, Object>> batchToggle(@Valid @RequestBody RuleBatchToggleDTO dto,
+    public BaseResponse<Map<String, Object>> batchToggle(@Valid @RequestBody RuleBatchToggleDTO dto,
                                                    @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         List<String> ruleCodes = dto.getRuleCodes();
         Boolean enabled = dto.getEnabled();
@@ -1718,9 +1718,9 @@ public class RuleAdminController {
             }
         }
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("success", success);
-        result.put("failed", failed);
-        return Result.ok(result);
+        BaseResponse.put("success", success);
+        BaseResponse.put("failed", failed);
+        return BaseResponse.ok(result);
     }
 
     /**
@@ -1732,13 +1732,13 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:batchPriority", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batchPriority")
-    public Result<Map<String, Object>> batchPriority(@Valid @RequestBody RuleBatchPriorityDTO dto,
+    public BaseResponse<Map<String, Object>> batchPriority(@Valid @RequestBody RuleBatchPriorityDTO dto,
                                                       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         List<String> ruleCodes = dto.getRuleCodes();
         Integer delta = dto.getDelta();
         // @NotEmpty + @NotNull 已校验非空；delta==0 需保留手动校验（JSR-303 无原生非零约束）
         if (delta == 0) {
-            return Result.fail("delta 不能为 0");
+            return BaseResponse.fail("delta 不能为 0");
         }
         int success = 0;
         List<String> failed = new ArrayList<>();
@@ -1760,9 +1760,9 @@ public class RuleAdminController {
             }
         }
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("success", success);
-        result.put("failed", failed);
-        return Result.ok(result);
+        BaseResponse.put("success", success);
+        BaseResponse.put("failed", failed);
+        return BaseResponse.ok(result);
     }
 
     /**
@@ -1774,7 +1774,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:batchCategory", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batchCategory")
-    public Result<Map<String, Object>> batchCategory(@Valid @RequestBody RuleBatchCategoryDTO dto,
+    public BaseResponse<Map<String, Object>> batchCategory(@Valid @RequestBody RuleBatchCategoryDTO dto,
                                                       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         List<String> ruleCodes = dto.getRuleCodes();
         String category = dto.getCategory();
@@ -1796,9 +1796,9 @@ public class RuleAdminController {
             }
         }
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("success", success);
-        result.put("failed", failed);
-        return Result.ok(result);
+        BaseResponse.put("success", success);
+        BaseResponse.put("failed", failed);
+        return BaseResponse.ok(result);
     }
 
     // ==================== 规则链画布（P0-1） ====================
@@ -1813,8 +1813,8 @@ public class RuleAdminController {
      * @return 画布对象
      */
     @GetMapping("/{ruleCode}/graph")
-    public Result<RuleChainGraph> getChainGraph(@PathVariable String ruleCode) {
-        return Result.ok(ruleChainGraphProvider.getByRuleCode(ruleCode));
+    public BaseResponse<RuleChainGraph> getChainGraph(@PathVariable String ruleCode) {
+        return BaseResponse.ok(ruleChainGraphProvider.getByRuleCode(ruleCode));
     }
 
     /**
@@ -1830,13 +1830,13 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:saveChainGraph", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/graph")
-    public Result<Map<String, Object>> saveChainGraph(@PathVariable String ruleCode,
+    public BaseResponse<Map<String, Object>> saveChainGraph(@PathVariable String ruleCode,
                                                        @Valid @RequestBody RuleChainGraph graph,
                                                        @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         // 1. 结构校验
         List<RuleGraphValidator.GraphValidationIssue> issues = RuleGraphValidator.validate(graph);
         if (!RuleGraphValidator.isValid(issues)) {
-            return Result.ok(Map.of(
+            return BaseResponse.ok(Map.of(
                     "valid", false,
                     "issues", issues,
                     "message", "画布结构不合法，请先修复错误"
@@ -1845,10 +1845,10 @@ public class RuleAdminController {
         // 2. 保存
         RuleChainGraph saved = ruleChainGraphProvider.save(ruleCode, graph, operator);
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("valid", true);
-        result.put("issues", issues);
-        result.put("graph", saved);
-        return Result.ok(result);
+        BaseResponse.put("valid", true);
+        BaseResponse.put("issues", issues);
+        BaseResponse.put("graph", saved);
+        return BaseResponse.ok(result);
     }
 
     /**
@@ -1857,9 +1857,9 @@ public class RuleAdminController {
     @OperationLog(module = "规则引擎", action = "删除画布", bizType = "RULE_CHAIN_GRAPH")
     @Idempotent(key = "ruleAdmin:deleteChainGraph", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{ruleCode}/graph")
-    public Result<Void> deleteChainGraph(@PathVariable String ruleCode) {
+    public BaseResponse<Void> deleteChainGraph(@PathVariable String ruleCode) {
         ruleChainGraphProvider.delete(ruleCode);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -1868,8 +1868,8 @@ public class RuleAdminController {
      * <p>供前端"实时校验"按钮调用，返回 ERROR/WARN 两级问题。
      */
     @PostMapping("/{ruleCode}/graph/validate")
-    public Result<List<RuleGraphValidator.GraphValidationIssue>> validateChainGraph(@RequestBody RuleChainGraph graph) {
-        return Result.ok(RuleGraphValidator.validate(graph));
+    public BaseResponse<List<RuleGraphValidator.GraphValidationIssue>> validateChainGraph(@RequestBody RuleChainGraph graph) {
+        return BaseResponse.ok(RuleGraphValidator.validate(graph));
     }
 
     /**
@@ -1882,10 +1882,10 @@ public class RuleAdminController {
      * @return 求值结果（含 value / type / error）
      */
     @PostMapping("/expressionPreview")
-    public Result<ExpressionPreviewResult> previewExpression(
+    public BaseResponse<ExpressionPreviewResult> previewExpression(
             @RequestParam String expression,
             @RequestBody Map<String, Object> facts) {
-        return Result.ok(expressionValidationService.previewEvaluate(expression, facts));
+        return BaseResponse.ok(expressionValidationService.previewEvaluate(expression, facts));
     }
 
     /**
@@ -1900,14 +1900,14 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:dryRunGraph", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/graph/dryRun")
-    public Result<List<RuleResult>> dryRunGraph(@PathVariable String ruleCode,
+    public BaseResponse<List<RuleResult>> dryRunGraph(@PathVariable String ruleCode,
                                                  @RequestBody Map<String, Object> facts) {
         try {
             List<RuleResult> results = graphExecutionProvider.dryRunGraph(ruleCode, facts);
-            return Result.ok(results);
+            return BaseResponse.ok(results);
         } catch (IllegalArgumentException e) {
             log.warn("[RuleAdmin] 画布 dry-run 失败: ruleCode={}, err={}", ruleCode, e.getMessage());
-            return Result.fail(e.getMessage());
+            return BaseResponse.fail(e.getMessage());
         }
     }
 
@@ -1921,8 +1921,8 @@ public class RuleAdminController {
      * @return 失效规则编码列表
      */
     @GetMapping("/{ruleCode}/graph/invalidRefs")
-    public Result<List<String>> invalidGraphRefs(@PathVariable String ruleCode) {
-        return Result.ok(graphExecutionProvider.collectInvalidReferences(ruleCode));
+    public BaseResponse<List<String>> invalidGraphRefs(@PathVariable String ruleCode) {
+        return BaseResponse.ok(graphExecutionProvider.collectInvalidReferences(ruleCode));
     }
 
     // ==================== 函数市场（P1-7） ====================
@@ -1937,14 +1937,14 @@ public class RuleAdminController {
      * @return 函数定义列表
      */
     @GetMapping("/expressionFunctions")
-    public Result<List<ExpressionFunctionDef>> expressionFunctions(
+    public BaseResponse<List<ExpressionFunctionDef>> expressionFunctions(
             @RequestParam(value = "engine", defaultValue = "all") String engine) {
         List<ExpressionFunctionDef> all = ExpressionFunctionDef.defaults();
         List<ExpressionFunctionDef> filtered = all.stream()
                 .filter(f -> "all".equalsIgnoreCase(engine)
                         || engine.equalsIgnoreCase(f.getSupportedEngines()))
                 .toList();
-        return Result.ok(filtered);
+        return BaseResponse.ok(filtered);
     }
 
     // ==================== 规则依赖（P1-8） ====================
@@ -1954,7 +1954,7 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:addDependency", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/dependencies")
-    public Result<RuleDependencyDO> addDependency(
+    public BaseResponse<RuleDependencyDO> addDependency(
             @PathVariable String ruleCode,
             @Valid @RequestBody RuleDependencyAddDTO dto,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -1962,7 +1962,7 @@ public class RuleAdminController {
         String depType = dto.getDependencyType() == null ? "EXECUTE" : dto.getDependencyType();
         Boolean cascade = dto.getCascadeOnDisable() == null ? false : dto.getCascadeOnDisable();
         String description = dto.getDescription();
-        return Result.ok(ruleDependencyProvider.add(ruleCode, dependsOn, depType, cascade, description, operator));
+        return BaseResponse.ok(ruleDependencyProvider.add(ruleCode, dependsOn, depType, cascade, description, operator));
     }
 
     /**
@@ -1971,35 +1971,35 @@ public class RuleAdminController {
     @OperationLog(module = "规则引擎", action = "删除规则依赖", bizType = "RULE_DEPENDENCY")
     @Idempotent(key = "ruleAdmin:removeDependency", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{ruleCode}/dependencies/{dependsOnRuleCode}")
-    public Result<Void> removeDependency(
+    public BaseResponse<Void> removeDependency(
             @PathVariable String ruleCode,
             @PathVariable String dependsOnRuleCode) {
         ruleDependencyProvider.remove(ruleCode, dependsOnRuleCode);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
      * 查询规则的依赖（正向：依赖了哪些）
      */
     @GetMapping("/{ruleCode}/dependencies")
-    public Result<List<RuleDependencyDO>> listDependencies(@PathVariable String ruleCode) {
-        return Result.ok(ruleDependencyProvider.listDependencies(ruleCode));
+    public BaseResponse<List<RuleDependencyDO>> listDependencies(@PathVariable String ruleCode) {
+        return BaseResponse.ok(ruleDependencyProvider.listDependencies(ruleCode));
     }
 
     /**
      * 查询被依赖（反向：被哪些规则依赖）
      */
     @GetMapping("/{ruleCode}/dependents")
-    public Result<List<RuleDependencyDO>> listDependents(@PathVariable String ruleCode) {
-        return Result.ok(ruleDependencyProvider.listDependents(ruleCode));
+    public BaseResponse<List<RuleDependencyDO>> listDependents(@PathVariable String ruleCode) {
+        return BaseResponse.ok(ruleDependencyProvider.listDependents(ruleCode));
     }
 
     /**
      * 查询级联禁用影响（disable ruleCode 时，需要级联禁用的规则列表）
      */
     @GetMapping("/{ruleCode}/cascadingDisable")
-    public Result<List<String>> cascadingDisable(@PathVariable String ruleCode) {
-        return Result.ok(ruleDependencyProvider.cascadingDisable(ruleCode));
+    public BaseResponse<List<String>> cascadingDisable(@PathVariable String ruleCode) {
+        return BaseResponse.ok(ruleDependencyProvider.cascadingDisable(ruleCode));
     }
 
     // ==================== 规则目录树 + 责任人（P1-9） ====================
@@ -2010,8 +2010,8 @@ public class RuleAdminController {
      * <p>树根为虚拟 ROOT，children 为一级分类。叶子节点或中间节点都包含该路径下的规则数与 Owner 列表。
      */
     @GetMapping("/categoryTree")
-    public Result<CategoryNode> categoryTree() {
-        return Result.ok(ruleCategoryProvider.buildTree());
+    public BaseResponse<CategoryNode> categoryTree() {
+        return BaseResponse.ok(ruleCategoryProvider.buildTree());
     }
 
     /**
@@ -2020,18 +2020,18 @@ public class RuleAdminController {
      * @param path 分类路径前缀，例如 "finance" / "finance/credit"
      */
     @GetMapping("/byCategoryPath")
-    public Result<List<RuleDefinition>> listByCategoryPath(
+    public BaseResponse<List<RuleDefinition>> listByCategoryPath(
             @RequestParam(value = "path", required = false) String path) {
-        return Result.ok(ruleCategoryProvider.listDefinitionsByCategoryPath(path));
+        return BaseResponse.ok(ruleCategoryProvider.listDefinitionsByCategoryPath(path));
     }
 
     /**
      * 按 Owner 查询规则
      */
     @GetMapping("/byOwner")
-    public Result<List<RuleDefinition>> listByOwner(
+    public BaseResponse<List<RuleDefinition>> listByOwner(
             @RequestParam(value = "owner") String owner) {
-        return Result.ok(ruleCategoryProvider.listDefinitionsByOwner(owner));
+        return BaseResponse.ok(ruleCategoryProvider.listDefinitionsByOwner(owner));
     }
 
     /**
@@ -2039,12 +2039,12 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:setOwner", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{ruleCode}/owner")
-    public Result<Void> setOwner(
+    public BaseResponse<Void> setOwner(
             @PathVariable String ruleCode,
             @RequestParam(value = "owner") String owner,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         ruleAdminService.updateOwner(ruleCode, owner, operator);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -2052,12 +2052,12 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:setCategoryPath", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{ruleCode}/categoryPath")
-    public Result<Void> setCategoryPath(
+    public BaseResponse<Void> setCategoryPath(
             @PathVariable String ruleCode,
             @RequestParam(value = "path") String path,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         ruleAdminService.updateCategoryPath(ruleCode, path, operator);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     // ==================== AB Test 自动回滚策略（P1-10） ====================
@@ -2066,9 +2066,9 @@ public class RuleAdminController {
      * 获取规则的 AB Test 自动回滚策略（无配置时返回默认策略）
      */
     @GetMapping("/{ruleCode}/abPolicy")
-    public Result<RuleABPolicyDO> getABPolicy(@PathVariable String ruleCode) {
+    public BaseResponse<RuleABPolicyDO> getABPolicy(@PathVariable String ruleCode) {
         RuleABPolicyDO policy = abTestAutoRollbackProvider.getPolicy(ruleCode);
-        return Result.ok(policy);
+        return BaseResponse.ok(policy);
     }
 
     /**
@@ -2076,21 +2076,21 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:updateAbpolicy", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{ruleCode}/abPolicy")
-    public Result<Void> updateABPolicy(
+    public BaseResponse<Void> updateABPolicy(
             @PathVariable String ruleCode,
             @Valid @RequestBody RuleABPolicyDO policy,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         policy.setRuleCode(ruleCode);
         abTestAutoRollbackProvider.savePolicy(policy, operator);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
      * 查询规则的回滚历史
      */
     @GetMapping("/{ruleCode}/abRollbacks")
-    public Result<List<RuleABRollbackDO>> listRollbackHistory(@PathVariable String ruleCode) {
-        return Result.ok(abTestAutoRollbackProvider.listRollbackHistory(ruleCode));
+    public BaseResponse<List<RuleABRollbackDO>> listRollbackHistory(@PathVariable String ruleCode) {
+        return BaseResponse.ok(abTestAutoRollbackProvider.listRollbackHistory(ruleCode));
     }
 
     /**
@@ -2098,8 +2098,8 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:evaluateAb", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/abEvaluate")
-    public Result<Boolean> evaluateAB(@PathVariable String ruleCode) {
-        return Result.ok(abTestAutoRollbackProvider.evaluateOne(ruleCode));
+    public BaseResponse<Boolean> evaluateAB(@PathVariable String ruleCode) {
+        return BaseResponse.ok(abTestAutoRollbackProvider.evaluateOne(ruleCode));
     }
 
     /**
@@ -2109,11 +2109,11 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:manualRollback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/abRollback")
-    public Result<RuleABRollbackDO> manualRollback(
+    public BaseResponse<RuleABRollbackDO> manualRollback(
             @PathVariable String ruleCode,
             @RequestParam(value = "reason", defaultValue = "MANUAL") String reason,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        return Result.ok(abTestAutoRollbackProvider.manualRollback(ruleCode, operator, reason));
+        return BaseResponse.ok(abTestAutoRollbackProvider.manualRollback(ruleCode, operator, reason));
     }
 
     // ==================== 规则集市场（P2-14） ====================
@@ -2122,42 +2122,42 @@ public class RuleAdminController {
      * 列出全部规则集（市场首页）
      */
     @GetMapping("/packs")
-    public Result<List<RulePack>> listPacks() {
-        return Result.ok(rulePackProvider.listAll());
+    public BaseResponse<List<RulePack>> listPacks() {
+        return BaseResponse.ok(rulePackProvider.listAll());
     }
 
     /**
      * 搜索规则集
      */
     @GetMapping("/packs/search")
-    public Result<List<RulePack>> searchPacks(@RequestParam(value = "keyword", required = false) String keyword) {
-        return Result.ok(rulePackProvider.search(keyword));
+    public BaseResponse<List<RulePack>> searchPacks(@RequestParam(value = "keyword", required = false) String keyword) {
+        return BaseResponse.ok(rulePackProvider.search(keyword));
     }
 
     /**
      * 查询规则集最新版本
      */
     @GetMapping("/packs/{packCode}/latest")
-    public Result<RulePack> getLatestPack(@PathVariable String packCode) {
-        return Result.ok(rulePackProvider.getLatest(packCode));
+    public BaseResponse<RulePack> getLatestPack(@PathVariable String packCode) {
+        return BaseResponse.ok(rulePackProvider.getLatest(packCode));
     }
 
     /**
      * 查询规则集的所有版本
      */
     @GetMapping("/packs/{packCode}/versions")
-    public Result<List<RulePack>> listPackVersions(@PathVariable String packCode) {
-        return Result.ok(rulePackProvider.listVersions(packCode));
+    public BaseResponse<List<RulePack>> listPackVersions(@PathVariable String packCode) {
+        return BaseResponse.ok(rulePackProvider.listVersions(packCode));
     }
 
     /**
      * 查询规则集指定版本（含规则定义快照，P2-8）
      */
     @GetMapping("/packs/{packCode}/versions/{version}")
-    public Result<RulePack> getPackVersion(
+    public BaseResponse<RulePack> getPackVersion(
             @PathVariable String packCode,
             @PathVariable String version) {
-        return Result.ok(rulePackProvider.getVersion(packCode, version));
+        return BaseResponse.ok(rulePackProvider.getVersion(packCode, version));
     }
 
     /**
@@ -2165,22 +2165,22 @@ public class RuleAdminController {
      */
     @PostMapping("/packs/{packCode}/rollback")
     @OperationLog(module = "规则引擎", action = "知识包回滚", bizType = "RULE_PACK")
-    public Result<InstallResult> rollbackPack(
+    public BaseResponse<InstallResult> rollbackPack(
             @PathVariable String packCode,
             @RequestParam(value = "version") String version,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        return Result.ok(rulePackProvider.rollback(packCode, version, operator));
+        return BaseResponse.ok(rulePackProvider.rollback(packCode, version, operator));
     }
 
     /**
      * 知识包版本差异对比（P2-8）：对比两个版本规则编码与内容差异
      */
     @GetMapping("/packs/{packCode}/diff")
-    public Result<PackDiff> diffPack(
+    public BaseResponse<PackDiff> diffPack(
             @PathVariable String packCode,
             @RequestParam(value = "from") String fromVersion,
             @RequestParam(value = "to") String toVersion) {
-        return Result.ok(rulePackProvider.diff(packCode, fromVersion, toVersion));
+        return BaseResponse.ok(rulePackProvider.diff(packCode, fromVersion, toVersion));
     }
 
     /**
@@ -2188,21 +2188,21 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:publishPack", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/packs")
-    public Result<RulePack> publishPack(
+    public BaseResponse<RulePack> publishPack(
             @Valid @RequestBody RulePack pack,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        return Result.ok(rulePackProvider.publish(pack, operator));
+        return BaseResponse.ok(rulePackProvider.publish(pack, operator));
     }
 
     /**
      * 安装规则集（一键导入）
      */
     @PostMapping("/packs/{packCode}/install")
-    public Result<InstallResult> installPack(
+    public BaseResponse<InstallResult> installPack(
             @PathVariable String packCode,
             @RequestParam(value = "version", required = false) String version,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        return Result.ok(rulePackProvider.install(packCode, version, operator));
+        return BaseResponse.ok(rulePackProvider.install(packCode, version, operator));
     }
 
     /**
@@ -2211,9 +2211,9 @@ public class RuleAdminController {
     @OperationLog(module = "规则引擎", action = "删除规则集", bizType = "RULE_PACK")
     @Idempotent(key = "ruleAdmin:deletePack", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/packs/{id}")
-    public Result<Void> deletePack(@PathVariable String id) {
+    public BaseResponse<Void> deletePack(@PathVariable String id) {
         rulePackProvider.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -2221,11 +2221,11 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:markOfficialPack", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/packs/{id}/official")
-    public Result<Void> markOfficialPack(
+    public BaseResponse<Void> markOfficialPack(
             @PathVariable String id,
             @RequestParam(value = "official", defaultValue = "true") boolean official) {
         rulePackProvider.markOfficial(id, official);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -2233,11 +2233,11 @@ public class RuleAdminController {
      */
     @Idempotent(key = "ruleAdmin:ratePack", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/packs/{id}/rate")
-    public Result<Void> ratePack(
+    public BaseResponse<Void> ratePack(
             @PathVariable String id,
             @RequestParam(value = "rating") double rating) {
         rulePackProvider.rate(id, rating);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     // ==================================================================
@@ -2256,13 +2256,13 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:naturalLanguageToRule", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/ai/nl2rule")
     @Operation(summary = "AI 自然语言转规则（NL2Rule）", description = "调用 LLM 将自然语言描述转为结构化规则定义（含表达式、严重度、描述）；LLM 不可用时降级返回空壳定义")
-    public Result<RuleDefinition> naturalLanguageToRule(@Valid @RequestBody RuleNL2RuleDTO dto) {
+    public BaseResponse<RuleDefinition> naturalLanguageToRule(@Valid @RequestBody RuleNL2RuleDTO dto) {
         RuleLLMService svc = ruleLLMServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("AI 增强未启用（pmis.literule.ai.enabled=false）");
+            return BaseResponse.fail("AI 增强未启用（pmis.literule.ai.enabled=false）");
         }
         String text = dto.getNaturalLanguage();
-        return Result.ok(svc.naturalLanguageToRule(text));
+        return BaseResponse.ok(svc.naturalLanguageToRule(text));
     }
 
     /**
@@ -2273,16 +2273,16 @@ public class RuleAdminController {
      */
     @GetMapping("/{ruleCode}/ai/describe")
     @Operation(summary = "AI 生成规则描述", description = "基于规则定义生成 1~3 句中文业务描述；LLM 不可用时返回 null")
-    public Result<String> describeRule(@PathVariable String ruleCode) {
+    public BaseResponse<String> describeRule(@PathVariable String ruleCode) {
         RuleLLMService svc = ruleLLMServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("AI 增强未启用");
+            return BaseResponse.fail("AI 增强未启用");
         }
         RuleDefinition def = ruleAdminService.getByCode(ruleCode);
         if (def == null) {
-            return Result.fail("规则不存在: " + ruleCode);
+            return BaseResponse.fail("规则不存在: " + ruleCode);
         }
-        return Result.ok(svc.describeRule(def));
+        return BaseResponse.ok(svc.describeRule(def));
     }
 
     /**
@@ -2293,16 +2293,16 @@ public class RuleAdminController {
      */
     @GetMapping("/{ruleCode}/ai/optimize")
     @Operation(summary = "AI 表达式优化建议", description = "基于规则条件表达式生成优化建议文本")
-    public Result<String> optimizeExpression(@PathVariable String ruleCode) {
+    public BaseResponse<String> optimizeExpression(@PathVariable String ruleCode) {
         RuleLLMService svc = ruleLLMServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("AI 增强未启用");
+            return BaseResponse.fail("AI 增强未启用");
         }
         RuleDefinition def = ruleAdminService.getByCode(ruleCode);
         if (def == null) {
-            return Result.fail("规则不存在: " + ruleCode);
+            return BaseResponse.fail("规则不存在: " + ruleCode);
         }
-        return Result.ok(svc.optimizeExpression(def.getConditionExpression()));
+        return BaseResponse.ok(svc.optimizeExpression(def.getConditionExpression()));
     }
 
     /**
@@ -2313,17 +2313,17 @@ public class RuleAdminController {
      */
     @GetMapping("/{ruleCode}/ai/health")
     @Operation(summary = "规则健康度评分", description = "4 维加权评分（命中率 30% + 错误率 30% + 复杂度 20% + 覆盖率 20%），返回 0~100 总分 + EXCELLENT/GOOD/WARN/BAD 等级 + 建议")
-    public Result<RuleHealthScore> healthScore(@PathVariable String ruleCode) {
+    public BaseResponse<RuleHealthScore> healthScore(@PathVariable String ruleCode) {
         RuleHealthScoreService svc = ruleHealthScoreServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("AI 增强未启用");
+            return BaseResponse.fail("AI 增强未启用");
         }
         RuleDefinition def = ruleAdminService.getByCode(ruleCode);
         if (def == null) {
-            return Result.fail("规则不存在: " + ruleCode);
+            return BaseResponse.fail("规则不存在: " + ruleCode);
         }
         RuleEngineStats stats = ruleEngine.getStats();
-        return Result.ok(svc.score(def, stats));
+        return BaseResponse.ok(svc.score(def, stats));
     }
 
     /**
@@ -2333,19 +2333,19 @@ public class RuleAdminController {
      */
     @GetMapping("/ai/healthBatch")
     @Operation(summary = "批量规则健康度评分", description = "对全部规则逐条评分，返回健康度评分列表")
-    public Result<List<RuleHealthScore>> healthScoreBatch() {
+    public BaseResponse<List<RuleHealthScore>> healthScoreBatch() {
         RuleHealthScoreService svc = ruleHealthScoreServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("AI 增强未启用");
+            return BaseResponse.fail("AI 增强未启用");
         }
         List<RuleDefinition> all = ruleAdminService.listAll();
         RuleEngineStats stats = ruleEngine.getStats();
         // 逐条评分：score 方法内部会从全局 stats.perRuleStats 中按规则编码取明细
         List<RuleHealthScore> result = new ArrayList<>(all.size());
         for (RuleDefinition def : all) {
-            result.add(svc.score(def, stats));
+            BaseResponse.add(svc.score(def, stats));
         }
-        return Result.ok(result);
+        return BaseResponse.ok(result);
     }
 
     /**
@@ -2356,14 +2356,14 @@ public class RuleAdminController {
      */
     @GetMapping("/{ruleCode}/ai/recommend")
     @Operation(summary = "规则推荐", description = "基于 4 种启发式算法（字段补全/重复检测/变体建议/拆分建议）生成推荐规则列表，按 score 降序")
-    public Result<List<RuleRecommendation>> recommend(@PathVariable String ruleCode) {
+    public BaseResponse<List<RuleRecommendation>> recommend(@PathVariable String ruleCode) {
         RuleRecommendationService svc = ruleRecommendationServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("AI 增强未启用");
+            return BaseResponse.fail("AI 增强未启用");
         }
         RuleDefinition source = ruleAdminService.getByCode(ruleCode);
         if (source == null) {
-            return Result.fail("规则不存在: " + ruleCode);
+            return BaseResponse.fail("规则不存在: " + ruleCode);
         }
         List<RuleDefinition> all = ruleAdminService.listAll();
         RuleEngineStats stats = ruleEngine.getStats();
@@ -2373,7 +2373,7 @@ public class RuleAdminController {
         if (stats != null) {
             statsMap.put(source.getCode(), stats);
         }
-        return Result.ok(svc.recommend(source, all, statsMap));
+        return BaseResponse.ok(svc.recommend(source, all, statsMap));
     }
 
     // ==================================================================
@@ -2402,13 +2402,13 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:attribution", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/attribution")
     @Operation(summary = "单规则归因分析", description = "基于表达式追踪 + LLM 生成规则触发/未触发的归因分析报告")
-    public Result<AttributionReport> attribution(@PathVariable String ruleCode,
+    public BaseResponse<AttributionReport> attribution(@PathVariable String ruleCode,
                                                    @RequestBody Map<String, Object> facts) {
         RuleAttributionService svc = ruleAttributionServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("归因分析服务未启用");
+            return BaseResponse.fail("归因分析服务未启用");
         }
-        return Result.ok(svc.analyze(ruleCode, facts));
+        return BaseResponse.ok(svc.analyze(ruleCode, facts));
     }
 
     /**
@@ -2422,13 +2422,13 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:batchAttribution", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/attribution/batch")
     @Operation(summary = "批量归因分析", description = "按 traceId 列表对历史执行轨迹批量归因分析")
-    public Result<List<AttributionReport>> batchAttribution(@RequestBody List<String> traceIds) {
+    public BaseResponse<List<AttributionReport>> batchAttribution(@RequestBody List<String> traceIds) {
         RuleAttributionService svc = ruleAttributionServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("归因分析服务未启用");
+            return BaseResponse.fail("归因分析服务未启用");
         }
         if (traceIds == null || traceIds.isEmpty()) {
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
         List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(
                 new LambdaQueryWrapper<RuleExecutionTraceDO>()
@@ -2444,7 +2444,7 @@ public class RuleAdminController {
             report.setSeverity(trace.getSeverity());
             reports.add(report);
         }
-        return Result.ok(reports);
+        return BaseResponse.ok(reports);
     }
 
     /**
@@ -2457,17 +2457,17 @@ public class RuleAdminController {
      */
     @GetMapping("/traces/{traceId}/attribution")
     @Operation(summary = "基于 traceId 归因分析", description = "按 traceId 查询执行轨迹并归因分析")
-    public Result<List<AttributionReport>> traceAttribution(@PathVariable String traceId) {
+    public BaseResponse<List<AttributionReport>> traceAttribution(@PathVariable String traceId) {
         RuleAttributionService svc = ruleAttributionServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("归因分析服务未启用");
+            return BaseResponse.fail("归因分析服务未启用");
         }
         List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(
                 new LambdaQueryWrapper<RuleExecutionTraceDO>()
                         .eq(RuleExecutionTraceDO::getTraceId, traceId)
                         .orderByAsc(RuleExecutionTraceDO::getCreatedAt));
         if (traces.isEmpty()) {
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
         List<AttributionReport> reports = new ArrayList<>();
         for (RuleExecutionTraceDO trace : traces) {
@@ -2479,7 +2479,7 @@ public class RuleAdminController {
             report.setSeverity(trace.getSeverity());
             reports.add(report);
         }
-        return Result.ok(reports);
+        return BaseResponse.ok(reports);
     }
 
     // ==================================================================
@@ -2499,14 +2499,14 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:analyzeThreshold", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/thresholdAnalysis")
     @Operation(summary = "规则阈值自适应分析", description = "基于历史触发数据自动计算最优阈值，生成阈值调整建议")
-    public Result<List<ThresholdAnalysis>> analyzeThreshold(
+    public BaseResponse<List<ThresholdAnalysis>> analyzeThreshold(
             @PathVariable String ruleCode,
             @RequestParam(value = "days", defaultValue = "30") int days) {
         AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("自适应阈值分析服务未启用（需提供 TraceDataProvider SPI 实现）");
+            return BaseResponse.fail("自适应阈值分析服务未启用（需提供 TraceDataProvider SPI 实现）");
         }
-        return Result.ok(svc.analyzeRule(ruleCode, days));
+        return BaseResponse.ok(svc.analyzeRule(ruleCode, days));
     }
 
     /**
@@ -2518,13 +2518,13 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:analyzeAllThresholds", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/thresholdAnalysis/all")
     @Operation(summary = "全部规则阈值自适应分析", description = "批量分析所有规则的阈值，生成调整建议")
-    public Result<List<ThresholdAnalysis>> analyzeAllThresholds(
+    public BaseResponse<List<ThresholdAnalysis>> analyzeAllThresholds(
             @RequestParam(value = "days", defaultValue = "30") int days) {
         AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("自适应阈值分析服务未启用");
+            return BaseResponse.fail("自适应阈值分析服务未启用");
         }
-        return Result.ok(svc.analyzeAllRules(days));
+        return BaseResponse.ok(svc.analyzeAllRules(days));
     }
 
     /**
@@ -2541,16 +2541,16 @@ public class RuleAdminController {
     @PostMapping("/{ruleCode}/applyThreshold")
     @OperationLog(module = "规则引擎", action = "应用自适应阈值调整", bizType = "RULE")
     @Operation(summary = "应用阈值调整", description = "将建议阈值写入规则条件表达式并持久化")
-    public Result<Boolean> applyThreshold(
+    public BaseResponse<Boolean> applyThreshold(
             @PathVariable String ruleCode,
             @Valid @RequestBody ThresholdAnalysis analysis,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("自适应阈值分析服务未启用");
+            return BaseResponse.fail("自适应阈值分析服务未启用");
         }
         boolean success = svc.applyThreshold(ruleCode, analysis, operator);
-        return success ? Result.ok(true) : Result.fail("应用阈值调整失败，请检查规则表达式或日志");
+        return success ? BaseResponse.ok(true) : BaseResponse.fail("应用阈值调整失败，请检查规则表达式或日志");
     }
 
     /**
@@ -2561,12 +2561,12 @@ public class RuleAdminController {
      */
     @GetMapping("/{ruleCode}/thresholdSuggestions")
     @Operation(summary = "获取阈值调整建议", description = "返回最近一次分析生成的待处理阈值调整建议")
-    public Result<List<ThresholdAnalysis>> thresholdSuggestions(@PathVariable String ruleCode) {
+    public BaseResponse<List<ThresholdAnalysis>> thresholdSuggestions(@PathVariable String ruleCode) {
         AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
-        return Result.ok(svc.getPendingSuggestions(ruleCode));
+        return BaseResponse.ok(svc.getPendingSuggestions(ruleCode));
     }
 
     // ==================================================================
@@ -2597,10 +2597,10 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:executeAgent", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/agent/execute")
     @Operation(summary = "执行 AI Agent 节点", description = "调用 ReAct Agent 执行器，在思考-行动-观察循环中逐步推理；Agent 可调用其他规则作为工具")
-    public Result<Map<String, Object>> executeAgent(@RequestBody Map<String, Object> request) {
+    public BaseResponse<Map<String, Object>> executeAgent(@RequestBody Map<String, Object> request) {
         ReActAgentExecutor executor = reActAgentExecutorProvider.getIfAvailable();
         if (executor == null) {
-            return Result.fail("AI Agent 执行器未启用（需开启 pmis.literule.ai.enabled=true）");
+            return BaseResponse.fail("AI Agent 执行器未启用（需开启 pmis.literule.ai.enabled=true）");
         }
 
         String systemPrompt = (String) request.get("systemPrompt");
@@ -2612,7 +2612,7 @@ public class RuleAdminController {
         Map<String, Object> facts = (Map<String, Object>) request.get("facts");
 
         if (userPrompt == null || userPrompt.isBlank()) {
-            return Result.fail("userPrompt 不能为空");
+            return BaseResponse.fail("userPrompt 不能为空");
         }
         // 使用 final 变量供 lambda 引用（避免重新赋值导致非 effectively final）
         final Map<String, Object> factsSnapshot = facts != null ? facts : new HashMap<>();
@@ -2646,7 +2646,7 @@ public class RuleAdminController {
         response.put("thoughts", agentResult.getThoughts());
         response.put("elapsedMs", agentResult.getElapsedMs());
         response.put("degraded", agentResult.isDegraded());
-        return Result.ok(response);
+        return BaseResponse.ok(response);
     }
 
     // ==================================================================
@@ -2676,11 +2676,11 @@ public class RuleAdminController {
      */
     @PostMapping("/stressTest")
     @Operation(summary = "规则压测", description = "使用线程池并发执行 Dry-run，统计 QPS、P50/P95/P99 耗时、错误率")
-    public Result<RuleStressTestService.StressTestResult> stressTest(
+    public BaseResponse<RuleStressTestService.StressTestResult> stressTest(
             @RequestBody Map<String, Object> request) {
         RuleStressTestService svc = ruleStressTestServiceProvider.getIfAvailable();
         if (svc == null) {
-            return Result.fail("规则压测服务未启用");
+            return BaseResponse.fail("规则压测服务未启用");
         }
         String ruleCode = (String) request.get("ruleCode");
         if (ruleCode != null && ruleCode.isBlank()) ruleCode = null;
@@ -2690,9 +2690,9 @@ public class RuleAdminController {
         int iterations = toInt(request.get("iterations"), 1000);
         int warmupIterations = toInt(request.get("warmupIterations"), 100);
         if (factsList == null || factsList.isEmpty()) {
-            return Result.fail("factsList 不能为空");
+            return BaseResponse.fail("factsList 不能为空");
         }
-        return Result.ok(svc.run(ruleCode, factsList, threads, iterations, warmupIterations));
+        return BaseResponse.ok(svc.run(ruleCode, factsList, threads, iterations, warmupIterations));
     }
 
     /**
@@ -2722,8 +2722,8 @@ public class RuleAdminController {
      */
     @GetMapping("/packs/updateCheck")
     @Operation(summary = "知识包更新检查", description = "对比已安装知识包与市场最新版本，返回有更新的包列表")
-    public Result<List<PackUpdateInfo>> checkPackUpdates() {
-        return Result.ok(rulePackProvider.checkPackUpdates());
+    public BaseResponse<List<PackUpdateInfo>> checkPackUpdates() {
+        return BaseResponse.ok(rulePackProvider.checkPackUpdates());
     }
 
     /**
@@ -2735,11 +2735,11 @@ public class RuleAdminController {
     @PostMapping("/packs/batchUpdate")
     @OperationLog(module = "规则引擎", action = "批量更新知识包", bizType = "RULE_PACK")
     @Operation(summary = "批量更新知识包", description = "将指定知识包列表更新到最新版本")
-    public Result<List<InstallResult>> batchUpdatePacks(
+    public BaseResponse<List<InstallResult>> batchUpdatePacks(
             @RequestBody List<String> packCodes,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         if (packCodes == null || packCodes.isEmpty()) {
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
         List<InstallResult> results = new ArrayList<>();
         for (String packCode : packCodes) {
@@ -2749,6 +2749,6 @@ public class RuleAdminController {
                 log.warn("[RuleAdmin] 批量更新知识包失败: packCode={}, err={}", packCode, e.getMessage());
             }
         }
-        return Result.ok(results);
+        return BaseResponse.ok(results);
     }
 }

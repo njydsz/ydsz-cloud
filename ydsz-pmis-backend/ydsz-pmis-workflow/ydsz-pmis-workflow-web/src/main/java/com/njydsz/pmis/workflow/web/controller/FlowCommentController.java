@@ -3,9 +3,9 @@ package com.njydsz.pmis.workflow.web.controller.notification;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.domain.dto.notification.FlowCommentCreateDTO;
 import com.njydsz.pmis.workflow.domain.entity.notification.FlowCommentDO;
 import com.njydsz.pmis.workflow.server.service.notification.FlowCommentService;
@@ -61,11 +61,11 @@ public class FlowCommentController {
     @PostMapping
     @Operation(summary = "发表评论/回复")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<String> addComment(@Valid @RequestBody FlowCommentCreateDTO dto) {
-        String userId = SecurityContext.getUserId();
-        String userName = SecurityContext.getUsername();
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(commentService.addComment(dto, userId, userName, tenantId));
+    public BaseResponse<String> addComment(@Valid @RequestBody FlowCommentCreateDTO dto) {
+        String userId = AuthContext.getUserId();
+        String userName = AuthContext.getUsername();
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(commentService.addComment(dto, userId, userName, tenantId));
     }
 
     /**
@@ -76,9 +76,9 @@ public class FlowCommentController {
      */
     @GetMapping("/instance/{instanceId}")
     @Operation(summary = "查询实例全部评论（树结构）")
-    public Result<List<FlowCommentDO>> listByInstance(@PathVariable String instanceId) {
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(commentService.listByInstance(tenantId, instanceId));
+    public BaseResponse<List<FlowCommentDO>> listByInstance(@PathVariable String instanceId) {
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(commentService.listByInstance(tenantId, instanceId));
     }
 
     /**
@@ -89,9 +89,9 @@ public class FlowCommentController {
      */
     @GetMapping("/root/{instanceId}")
     @Operation(summary = "查询实例一级评论")
-    public Result<List<FlowCommentDO>> listRootComments(@PathVariable String instanceId) {
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(commentService.listRootComments(tenantId, instanceId));
+    public BaseResponse<List<FlowCommentDO>> listRootComments(@PathVariable String instanceId) {
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(commentService.listRootComments(tenantId, instanceId));
     }
 
     /**
@@ -102,8 +102,8 @@ public class FlowCommentController {
      */
     @GetMapping("/replies/{parentCommentId}")
     @Operation(summary = "查询父评论下的回复")
-    public Result<List<FlowCommentDO>> listReplies(@PathVariable String parentCommentId) {
-        return Result.ok(commentService.listReplies(parentCommentId));
+    public BaseResponse<List<FlowCommentDO>> listReplies(@PathVariable String parentCommentId) {
+        return BaseResponse.ok(commentService.listReplies(parentCommentId));
     }
 
     /**
@@ -116,8 +116,8 @@ public class FlowCommentController {
     @DeleteMapping("/{commentId}")
     @Operation(summary = "删除评论（仅本人）")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Boolean> deleteComment(@PathVariable String commentId) {
-        String userId = SecurityContext.getUserId();
-        return Result.ok(commentService.deleteComment(commentId, userId));
+    public BaseResponse<Boolean> deleteComment(@PathVariable String commentId) {
+        String userId = AuthContext.getUserId();
+        return BaseResponse.ok(commentService.deleteComment(commentId, userId));
     }
 }

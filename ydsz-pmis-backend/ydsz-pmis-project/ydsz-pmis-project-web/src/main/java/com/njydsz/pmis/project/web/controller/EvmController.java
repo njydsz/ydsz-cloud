@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.EvmMeasureCreateDTO;
 import com.njydsz.pmis.project.server.service.EvmMeasureService;
 import com.njydsz.pmis.project.domain.vo.EvmMeasureVO;
@@ -56,8 +56,8 @@ public class EvmController {
     @PrePermission("execution:evm:save")
     @Idempotent(key = "evm:save", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> save(@Valid @RequestBody EvmMeasureCreateDTO dto) {
-        return Result.ok(service.save(dto));
+    public BaseResponse<String> save(@Valid @RequestBody EvmMeasureCreateDTO dto) {
+        return BaseResponse.ok(service.save(dto));
     }
 
     /**
@@ -69,8 +69,8 @@ public class EvmController {
     @Operation(summary = "详情")
     @PrePermission("execution:evm:list")
     @GetMapping("/{id}")
-    public Result<EvmMeasureVO> get(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<EvmMeasureVO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -82,8 +82,8 @@ public class EvmController {
     @Operation(summary = "按项目查询")
     @PrePermission("execution:evm:list")
     @GetMapping("/byInitiation")
-    public Result<List<EvmMeasureVO>> listByInitiation(@RequestParam String initiationId) {
-        return Result.ok(service.listByInitiation(initiationId));
+    public BaseResponse<List<EvmMeasureVO>> listByInitiation(@RequestParam String initiationId) {
+        return BaseResponse.ok(service.listByInitiation(initiationId));
     }
 
     /**
@@ -95,8 +95,8 @@ public class EvmController {
     @Operation(summary = "按 WBS 查询")
     @PrePermission("execution:evm:list")
     @GetMapping("/byWbs")
-    public Result<List<EvmMeasureVO>> listByWbs(@RequestParam String wbsTaskId) {
-        return Result.ok(service.listByWbs(wbsTaskId));
+    public BaseResponse<List<EvmMeasureVO>> listByWbs(@RequestParam String wbsTaskId) {
+        return BaseResponse.ok(service.listByWbs(wbsTaskId));
     }
 
     /**
@@ -108,8 +108,8 @@ public class EvmController {
     @Operation(summary = "项目偏差趋势（按周期）")
     @PrePermission("execution:evm:list")
     @GetMapping("/trend")
-    public Result<List<Map<String, Object>>> trend(@RequestParam String initiationId) {
-        return Result.ok(service.trend(initiationId));
+    public BaseResponse<List<Map<String, Object>>> trend(@RequestParam String initiationId) {
+        return BaseResponse.ok(service.trend(initiationId));
     }
 
     /**
@@ -121,8 +121,8 @@ public class EvmController {
     @Operation(summary = "项目 EVM 健康仪表盘")
     @PrePermission("execution:evm:dashboard")
     @GetMapping("/dashboard")
-    public Result<Map<String, Object>> dashboard(@RequestParam String initiationId) {
-        return Result.ok(service.dashboard(initiationId));
+    public BaseResponse<Map<String, Object>> dashboard(@RequestParam String initiationId) {
+        return BaseResponse.ok(service.dashboard(initiationId));
     }
 
     /**
@@ -137,12 +137,12 @@ public class EvmController {
     @Operation(summary = "分页")
     @PrePermission("execution:evm:list")
     @GetMapping("/page")
-    public Result<Page<EvmMeasureVO>> page(
+    public BaseResponse<Page<EvmMeasureVO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String alertLevel) {
-        return Result.ok(service.page(page, size, initiationId, alertLevel));
+        return BaseResponse.ok(service.page(page, size, initiationId, alertLevel));
     }
 
     /**
@@ -156,8 +156,8 @@ public class EvmController {
     @OperationLog(module = "挣值管理", action = "删除EVM测量", bizType = "EVM_MEASURE")
     @Idempotent(key = "evm:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 }

@@ -7,7 +7,7 @@ import com.njydsz.pmis.userinfo.domain.dto.auth.LoginResultVO;
 import com.njydsz.pmis.userinfo.domain.dto.auth.CaptchaVO;
 import com.njydsz.pmis.userinfo.server.service.auth.AuthService;
 import com.njydsz.pmis.common.annotation.RateLimit;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -42,8 +42,8 @@ public class AuthController {
      */
     @Operation(summary = "获取图形验证码")
     @GetMapping("/captcha")
-    public Result<CaptchaVO> captcha() {
-        return Result.ok(authService.generateCaptcha());
+    public BaseResponse<CaptchaVO> captcha() {
+        return BaseResponse.ok(authService.generateCaptcha());
     }
 
     /**
@@ -57,8 +57,8 @@ public class AuthController {
             message = "{validation.auth.msg_aea5163a}")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/login")
-    public Result<LoginResultVO> login(@Valid @RequestBody LoginDTO dto) {
-        return Result.ok(authService.login(dto));
+    public BaseResponse<LoginResultVO> login(@Valid @RequestBody LoginDTO dto) {
+        return BaseResponse.ok(authService.login(dto));
     }
 
     /**
@@ -70,8 +70,8 @@ public class AuthController {
     @Operation(summary = "刷新 Token")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/refresh")
-    public Result<LoginResultVO> refresh(@Parameter(description = "刷新Token") @RequestParam String refreshToken) {
-        return Result.ok(authService.refresh(refreshToken));
+    public BaseResponse<LoginResultVO> refresh(@Parameter(description = "刷新Token") @RequestParam String refreshToken) {
+        return BaseResponse.ok(authService.refresh(refreshToken));
     }
 
     /**
@@ -84,7 +84,7 @@ public class AuthController {
     @Operation(summary = "登出")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/logout")
-    public Result<Void> logout(@RequestHeader(value = "X-User-Id", required = false) String userId,
+    public BaseResponse<Void> logout(@RequestHeader(value = "X-User-Id", required = false) String userId,
                           @RequestHeader(value = "Authorization", required = false) String authorization) {
         // 把当前 Token 加入黑名单（TTL 按 Token 实际剩余有效期计算，已过期则无需拉黑）
         if (authorization != null && authorization.startsWith("Bearer ")) {
@@ -95,6 +95,6 @@ public class AuthController {
             }
         }
         authService.logout(userId);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 }

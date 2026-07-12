@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.api.fallback;
 import com.njydsz.pmis.project.api.client.ExecutionClient;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -33,18 +33,18 @@ public class ExecutionClientFallback implements FallbackFactory<ExecutionClient>
         log.warn("[ExecutionClientFallback] 触发降级：{}", cause == null ? "unknown" : cause.toString());
         return new ExecutionClient() {
             @Override
-            public Result<Map<String, Object>> recomputeBillableUtilization(String period, boolean recomputeAll) {
+            public BaseResponse<Map<String, Object>> recomputeBillableUtilization(String period, boolean recomputeAll) {
                 Map<String, Object> data = new HashMap<>();
                 data.put("ok", false);
                 data.put("period", period);
                 data.put("recomputeAll", recomputeAll);
                 data.put("error", "execution 模块不可用");
                 data.put("source", "FALLBACK");
-                return Result.ok(data);
+                return BaseResponse.ok(data);
             }
 
             @Override
-            public Result<Map<String, Object>> snapshotAverage(String period) {
+            public BaseResponse<Map<String, Object>> snapshotAverage(String period) {
                 Map<String, Object> data = new HashMap<>();
                 data.put("avg_pct", 0);
                 data.put("sum_total", 0);
@@ -53,7 +53,7 @@ public class ExecutionClientFallback implements FallbackFactory<ExecutionClient>
                 data.put("headcount", 0);
                 data.put("source", "DOWN");
                 data.put("period", period);
-                return Result.ok(data);
+                return BaseResponse.ok(data);
             }
         };
     }

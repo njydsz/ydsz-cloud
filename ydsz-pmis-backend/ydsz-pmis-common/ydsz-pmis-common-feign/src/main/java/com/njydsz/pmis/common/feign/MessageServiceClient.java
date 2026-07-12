@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.feign;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -28,5 +28,5 @@ public interface MessageServiceClient {
      * @return message send result
      */
     @PostMapping("/message/send")
-    Result<MessageResult> send(@RequestBody MessageRequest request);
+    BaseResponse<MessageResult> send(@RequestBody MessageRequest request);
 }

@@ -7,7 +7,7 @@ import com.njydsz.pmis.agent.domain.entity.knowledge.KnowledgeBaseDO;
 import com.njydsz.pmis.agent.infra.mapper.agent.AgentDocumentMapper;
 import com.njydsz.pmis.agent.infra.mapper.knowledge.KnowledgeBaseMapper;
 import com.njydsz.pmis.agent.server.rag.RAGService;
-import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.common.core.response.PageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
@@ -83,10 +83,10 @@ public class KnowledgeBaseService {
     /**
      * 分页查询知识库。
      */
-    public PageResult<KnowledgeBaseDO> page(int pageNum, int pageSize, String tenantId) {
+    public PageResponse<KnowledgeBaseDO> page(int pageNum, int pageSize, String tenantId) {
         KnowledgeBaseMapper mapper = kbMapperProvider.getIfAvailable();
         if (mapper == null) {
-            return PageResult.empty();
+            return PageResponse.empty();
         }
         LambdaQueryWrapper<KnowledgeBaseDO> wrapper = new LambdaQueryWrapper<>();
         if (tenantId != null && !tenantId.isBlank()) {
@@ -94,7 +94,7 @@ public class KnowledgeBaseService {
         }
         wrapper.orderByDesc(KnowledgeBaseDO::getCreatedAt);
         Page<KnowledgeBaseDO> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
-        return PageResult.of(page.getRecords(), page.getTotal(), pageNum, pageSize);
+        return PageResponse.of(page.getRecords(), page.getTotal(), pageNum, pageSize);
     }
 
     /**

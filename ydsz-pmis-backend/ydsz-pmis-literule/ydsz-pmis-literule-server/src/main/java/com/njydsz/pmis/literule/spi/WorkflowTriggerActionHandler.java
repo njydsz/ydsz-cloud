@@ -1,6 +1,6 @@
 package com.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.workflow.api.client.WorkflowServiceClient;
@@ -68,7 +68,7 @@ public class WorkflowTriggerActionHandler implements RuleActionHandler {
             return;
         }
         for (RuleResult result : results) {
-            if (!result.isTriggered()) {
+            if (!BaseResponse.isTriggered()) {
                 continue;
             }
             String processKey = resolveProcessKey(result, context);
@@ -77,18 +77,18 @@ public class WorkflowTriggerActionHandler implements RuleActionHandler {
             }
             try {
                 Map<String, Object> body = buildStartProcessBody(processKey, result, context);
-                Result<String> startResult = workflowServiceClient.startProcess(body);
+                BaseResponse<String> startResult = workflowServiceClient.startProcess(body);
                 if (startResult != null && startResult.isSuccess() && startResult.getData() != null) {
                     log.info("[LiteRule-Workflow] 工作流已启动: ruleCode={}, processKey={}, instanceId={}",
-                            result.getRuleCode(), processKey, startResult.getData());
+                            BaseResponse.getRuleCode(), processKey, startResult.getData());
                 } else {
                     log.warn("[LiteRule-Workflow] 工作流启动失败: ruleCode={}, processKey={}, result={}",
-                            result.getRuleCode(), processKey,
+                            BaseResponse.getRuleCode(), processKey,
                             startResult == null ? "null" : startResult.getCode());
                 }
             } catch (Exception e) {
                 log.warn("[LiteRule-Workflow] 工作流启动异常: ruleCode={}, processKey={}, error={}",
-                        result.getRuleCode(), processKey, e.getMessage());
+                        BaseResponse.getRuleCode(), processKey, e.getMessage());
             }
         }
     }
@@ -129,16 +129,16 @@ public class WorkflowTriggerActionHandler implements RuleActionHandler {
         if (businessId == null) {
             businessId = context.get("projectCode");
         }
-        body.put("businessId", businessId != null ? businessId.toString() : result.getRuleCode());
+        body.put("businessId", businessId != null ? businessId.toString() : BaseResponse.getRuleCode());
 
         // 规则上下文变量
         Map<String, Object> variables = new HashMap<>();
-        variables.put("ruleCode", result.getRuleCode());
-        variables.put("ruleName", result.getRuleName());
-        variables.put("ruleSeverity", result.getSeverity() != null ? result.getSeverity().getCode() : "INFO");
-        variables.put("ruleDescription", result.getDescription() != null ? result.getDescription() : "");
-        variables.put("ruleTitle", result.getTitle() != null ? result.getTitle() : "");
-        variables.put("triggeredAt", result.getTriggeredAt() != null ? result.getTriggeredAt().toString() : "");
+        variables.put("ruleCode", BaseResponse.getRuleCode());
+        variables.put("ruleName", BaseResponse.getRuleName());
+        variables.put("ruleSeverity", BaseResponse.getSeverity() != null ? BaseResponse.getSeverity().getCode() : "INFO");
+        variables.put("ruleDescription", BaseResponse.getDescription() != null ? BaseResponse.getDescription() : "");
+        variables.put("ruleTitle", BaseResponse.getTitle() != null ? BaseResponse.getTitle() : "");
+        variables.put("triggeredAt", BaseResponse.getTriggeredAt() != null ? BaseResponse.getTriggeredAt().toString() : "");
         variables.put("traceId", context.getTraceId());
         variables.put("tenantId", context.getTenantId());
         // 透传 facts 中的关键字段
@@ -168,7 +168,7 @@ public class WorkflowTriggerActionHandler implements RuleActionHandler {
     @SuppressWarnings("unchecked")
     private String resolveProcessKey(RuleResult result, RuleContext context) {
         // 1. 从 scope 字段解析 "workflow:{processKey}"
-        String scope = result.getScope();
+        String scope = BaseResponse.getScope();
         if (scope != null && scope.startsWith("workflow:")) {
             String processKey = scope.substring("workflow:".length()).trim();
             if (!processKey.isEmpty()) {

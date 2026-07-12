@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.api.client;
 import com.njydsz.pmis.common.feign.FeignClientConstants;
 import com.njydsz.pmis.project.api.fallback.ProjectServiceClientFallback;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -41,7 +41,7 @@ public interface ProjectServiceClient {
      * @return 异常统计 Map（overtimeCount/missingCount/abnormalCount/totalHours）
      */
     @GetMapping("/execution/timeEntry/abnormalStat")
-    Result<Map<String, Object>> timeEntryAbnormalStat(
+    BaseResponse<Map<String, Object>> timeEntryAbnormalStat(
             @RequestParam("initiationId") String initiationId,
             @RequestParam(value = "month", required = false) String month);
 
@@ -55,7 +55,7 @@ public interface ProjectServiceClient {
      * @return 分页结果 Map（含 records 列表与 total 总数）
      */
     @GetMapping("/execution/risk/page")
-    Result<Map<String, Object>> riskPage(
+    BaseResponse<Map<String, Object>> riskPage(
             @RequestParam(value = "page", defaultValue = "1") int page,
             @RequestParam(value = "size", defaultValue = "100") int size,
             @RequestParam(value = "initiationId", required = false) String initiationId,
@@ -68,5 +68,5 @@ public interface ProjectServiceClient {
      * @return 仪表盘 Map（含 latestCpi/latestSpi/latestVac/measureCount 等）
      */
     @GetMapping("/execution/evm/dashboard")
-    Result<Map<String, Object>> evmDashboard(@RequestParam("initiationId") String initiationId);
+    BaseResponse<Map<String, Object>> evmDashboard(@RequestParam("initiationId") String initiationId);
 }

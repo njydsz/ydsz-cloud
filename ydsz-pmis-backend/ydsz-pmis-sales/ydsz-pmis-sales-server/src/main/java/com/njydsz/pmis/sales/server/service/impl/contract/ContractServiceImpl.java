@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.DataScope;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.aspect.DataScopeAspect;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
@@ -60,7 +60,7 @@ public class ContractServiceImpl implements ContractService {
     public String create(ContractCreateDTO dto) {
         validate(dto);
         if (contractMapper.selectByCode(dto.getContractCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.project.msg_f038adba", dto.getContractCode());
+            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.project.msg_f038adba", dto.getContractCode());
         }
         ContractDO c = new ContractDO();
         BeanUtils.copyProperties(dto, c);
@@ -95,13 +95,13 @@ public class ContractServiceImpl implements ContractService {
         ContractStatus from = ContractStatus.fromCode(c.getStatus());
         ContractStatus to = ContractStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_2e33226a", c.getStatus());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_2e33226a", c.getStatus());
         }
         if (!from.canTransitTo(to)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.project.msg_01c65a70", from.getDesc(), to.getDesc());
         }
         contractMapper.updateStatus(c.getId(), to.getCode());
@@ -134,7 +134,7 @@ public class ContractServiceImpl implements ContractService {
     public ContractDO getById(String id) {
         ContractDO c = contractMapper.selectById(id);
         if (c == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_22d39b90");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_22d39b90");
         }
         // P0-4: 越权防护 - 非超管只能查看自己创建的合同
         DataScopeAspect.assertAllowByOwner(c.getCreatedBy());
@@ -174,8 +174,8 @@ public class ContractServiceImpl implements ContractService {
         if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(ContractDO::getCreatedAt);
         Page<ContractDO> result = contractMapper.selectPage(p, w);
-        if (result != null && result.getRecords() != null) {
-            batchAssembleNames(result.getRecords());
+        if (result != null && BaseResponse.getRecords() != null) {
+            batchAssembleNames(BaseResponse.getRecords());
         }
         return result;
     }
@@ -230,29 +230,29 @@ public class ContractServiceImpl implements ContractService {
      */
     private void validate(ContractCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (!StringUtils.hasText(dto.getContractCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_8d3e1723");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_8d3e1723");
         }
         if (!StringUtils.hasText(dto.getContractName())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_c6c8edbf");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_c6c8edbf");
         }
         if (!StringUtils.hasText(dto.getCustomerId())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_6de1fd36");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_6de1fd36");
         }
         if (!StringUtils.hasText(dto.getContractType())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_fc52e1b0");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_fc52e1b0");
         }
         if (dto.getTotalAmount() == null || dto.getTotalAmount().signum() < 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_8ece143c");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_8ece143c");
         }
         if (!StringUtils.hasText(dto.getOwnerId())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_26804acb");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_26804acb");
         }
         if (dto.getEffectiveDate() != null && dto.getExpireDate() != null
                 && dto.getExpireDate().isBefore(dto.getEffectiveDate())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_40094d71");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_40094d71");
         }
     }
 

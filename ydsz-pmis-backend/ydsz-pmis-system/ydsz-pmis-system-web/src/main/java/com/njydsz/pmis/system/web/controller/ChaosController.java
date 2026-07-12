@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.chaos.ChaosExperiment;
 import com.njydsz.pmis.common.chaos.ChaosOutcome;
 import com.njydsz.pmis.common.chaos.ChaosService;
@@ -71,8 +71,8 @@ public class ChaosController {
     @Operation(summary = "列出全部已注册实验")
     @PrePermission("sys:chaos:view")
     @GetMapping("/experiments")
-    public Result<List<ChaosExperiment>> list() {
-        return Result.ok(chaosService.list());
+    public BaseResponse<List<ChaosExperiment>> list() {
+        return BaseResponse.ok(chaosService.list());
     }
 
     /**
@@ -84,13 +84,13 @@ public class ChaosController {
     @Operation(summary = "按 target 查询实验")
     @PrePermission("sys:chaos:view")
     @GetMapping("/experiments/{target}")
-    public Result<ChaosExperiment> get(
+    public BaseResponse<ChaosExperiment> get(
             @Parameter(description = "实验目标标识") @PathVariable @NotBlank String target) {
         ChaosExperiment found = chaosService.list().stream()
                 .filter(e -> target.equals(e.getTarget()))
                 .findFirst()
                 .orElse(null);
-        return Result.ok(found);
+        return BaseResponse.ok(found);
     }
 
     /**
@@ -104,9 +104,9 @@ public class ChaosController {
     @OperationLog(module = "混沌工程", action = "注册实验", bizType = "CHAOS_EXPERIMENT")
     @Idempotent(key = "chaos:register", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/experiments")
-    public Result<Void> register(@RequestBody @Valid ChaosExperiment experiment) {
+    public BaseResponse<Void> register(@RequestBody @Valid ChaosExperiment experiment) {
         chaosService.register(experiment);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -121,12 +121,12 @@ public class ChaosController {
     @OperationLog(module = "混沌工程", action = "更新实验", bizType = "CHAOS_EXPERIMENT")
     @Idempotent(key = "chaos:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/experiments/{target}")
-    public Result<Void> update(
+    public BaseResponse<Void> update(
             @Parameter(description = "实验目标标识") @PathVariable @NotBlank String target,
             @RequestBody @Valid ChaosExperiment experiment) {
         experiment.setTarget(target);
         chaosService.register(experiment);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -141,7 +141,7 @@ public class ChaosController {
     @OperationLog(module = "混沌工程", action = "启停实验", bizType = "CHAOS_EXPERIMENT")
     @Idempotent(key = "chaos:toggle", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/experiments/{target}/enabled")
-    public Result<Void> toggle(
+    public BaseResponse<Void> toggle(
             @Parameter(description = "实验目标标识") @PathVariable @NotBlank String target,
             @Parameter(description = "是否启用") @RequestParam boolean enabled) {
         ChaosExperiment exp = chaosService.list().stream()
@@ -150,7 +150,7 @@ public class ChaosController {
                 .orElseThrow(() -> new IllegalArgumentException("实验不存在: " + target));
         exp.setEnabled(enabled);
         chaosService.register(exp);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -164,10 +164,10 @@ public class ChaosController {
     @OperationLog(module = "混沌工程", action = "注销实验", bizType = "CHAOS_EXPERIMENT")
     @Idempotent(key = "chaos:unregister", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/experiments/{target}")
-    public Result<Void> unregister(
+    public BaseResponse<Void> unregister(
             @Parameter(description = "实验目标标识") @PathVariable @NotBlank String target) {
         chaosService.unregister(target);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -178,8 +178,8 @@ public class ChaosController {
     @Operation(summary = "查看最近 100 条实验历史")
     @PrePermission("sys:chaos:view")
     @GetMapping("/history")
-    public Result<List<ChaosService.ChaosEvent>> history() {
-        return Result.ok(chaosService.recentHistory());
+    public BaseResponse<List<ChaosService.ChaosEvent>> history() {
+        return BaseResponse.ok(chaosService.recentHistory());
     }
 
     /**
@@ -192,9 +192,9 @@ public class ChaosController {
     @OperationLog(module = "混沌工程", action = "清空实验历史", bizType = "CHAOS_EXPERIMENT")
     @Idempotent(key = "chaos:clearHistory", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/history/clear")
-    public Result<Void> clearHistory() {
+    public BaseResponse<Void> clearHistory() {
         chaosService.clearHistory();
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -207,7 +207,7 @@ public class ChaosController {
     @PrePermission("sys:chaos:trigger")
     @Idempotent(key = "chaos:dryRun", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/dryRun")
-    public Result<Map<String, Object>> dryRun(
+    public BaseResponse<Map<String, Object>> dryRun(
             @Parameter(description = "实验目标标识") @RequestParam @NotBlank String target) {
         // 包装异常: ChaosService 注入时会抛, 这里把异常转成 outcome 字符串
         ChaosOutcome outcome;
@@ -218,7 +218,7 @@ public class ChaosController {
             outcome = ChaosOutcome.INJECTED;
             error = ex.getClass().getName() + ": " + ex.getMessage();
         }
-        return Result.ok(Map.of(
+        return BaseResponse.ok(Map.of(
                 "target", target,
                 "outcome", outcome.name(),
                 "error", error == null ? "" : error

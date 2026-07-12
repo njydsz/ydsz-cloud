@@ -12,7 +12,7 @@ import com.njydsz.pmis.agent.domain.entity.hitl.AgentPredictionDO;
 import com.njydsz.pmis.agent.infra.mapper.hitl.AgentPredictionMapper;
 import com.njydsz.pmis.agent.server.service.agent.AgentService;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.constant.AsyncExecutorNames;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -85,8 +85,8 @@ public class AgentController {
     @PrePermission("agent:task:run")
     @Idempotent(key = "agent:run", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/run")
-    public Result<AgentPredictionDO> run(@Valid @RequestBody AgentRunRequestDTO req) {
-        return Result.ok(service.run(req));
+    public BaseResponse<AgentPredictionDO> run(@Valid @RequestBody AgentRunRequestDTO req) {
+        return BaseResponse.ok(service.run(req));
     }
 
     /**
@@ -99,9 +99,9 @@ public class AgentController {
     @PrePermission("agent:task:run")
     @Idempotent(key = "agent:runAsync", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/runAsync")
-    public Result<Void> runAsync(@Valid @RequestBody AgentRunRequestDTO req) {
+    public BaseResponse<Void> runAsync(@Valid @RequestBody AgentRunRequestDTO req) {
         service.runAsync(req);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -115,9 +115,9 @@ public class AgentController {
     @PrePermission("agent:task:run")
     @Idempotent(key = "agent:inMemory", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/inMemory")
-    public Result<AgentResult> inMemory(@RequestParam String agentType,
+    public BaseResponse<AgentResult> inMemory(@RequestParam String agentType,
                                     @Valid @RequestBody AgentContext ctx) {
-        return Result.ok(service.executeInMemory(agentType, ctx));
+        return BaseResponse.ok(service.executeInMemory(agentType, ctx));
     }
 
     /**
@@ -206,8 +206,8 @@ public class AgentController {
     @Operation(summary = "记录详情")
     @PrePermission("agent:task:view")
     @GetMapping("/{id}")
-    public Result<AgentPredictionDO> get(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<AgentPredictionDO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -225,7 +225,7 @@ public class AgentController {
     @Operation(summary = "分页查询")
     @PrePermission("agent:task:list")
     @GetMapping("/page")
-    public Result<Page<AgentPredictionDO>> page(
+    public BaseResponse<Page<AgentPredictionDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String agentType,
@@ -233,7 +233,7 @@ public class AgentController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String bizType,
             @RequestParam(required = false) String bizId) {
-        return Result.ok(service.page(page, size, agentType, alertLevel, status, bizType, bizId));
+        return BaseResponse.ok(service.page(page, size, agentType, alertLevel, status, bizType, bizId));
     }
 
     /**
@@ -247,11 +247,11 @@ public class AgentController {
     @Operation(summary = "最近记录")
     @PrePermission("agent:task:list")
     @GetMapping("/recent")
-    public Result<List<AgentPredictionDO>> recent(
+    public BaseResponse<List<AgentPredictionDO>> recent(
             @RequestParam(required = false) String agentType,
             @RequestParam(required = false) String alertLevel,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) Integer limit) {
-        return Result.ok(service.listRecent(agentType, alertLevel, limit));
+        return BaseResponse.ok(service.listRecent(agentType, alertLevel, limit));
     }
 
     /**
@@ -263,8 +263,8 @@ public class AgentController {
     @Operation(summary = "按类型/告警等级聚合")
     @PrePermission("agent:task:list")
     @GetMapping("/aggregate/type")
-    public Result<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) String tenantId) {
-        return Result.ok(service.aggregateByType(tenantId));
+    public BaseResponse<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) String tenantId) {
+        return BaseResponse.ok(service.aggregateByType(tenantId));
     }
 
     /**
@@ -278,11 +278,11 @@ public class AgentController {
     @Operation(summary = "告警计数")
     @PrePermission("agent:task:list")
     @GetMapping("/count")
-    public Result<String> countByAlertLevel(
+    public BaseResponse<String> countByAlertLevel(
             @RequestParam(required = false) String alertLevel,
             @RequestParam(required = false) String agentType,
             @RequestParam(required = false) String tenantId) {
-        return Result.ok(service.countByAlertLevel(alertLevel, agentType, tenantId));
+        return BaseResponse.ok(service.countByAlertLevel(alertLevel, agentType, tenantId));
     }
 
     /**
@@ -292,12 +292,12 @@ public class AgentController {
     @Operation(summary = "AI Agent 执行耗时统计 (P50/P90/P95)")
     @PrePermission("agent:task:list")
     @GetMapping("/durationStats")
-    public Result<Map<String, Object>> durationStats(
+    public BaseResponse<Map<String, Object>> durationStats(
             @RequestParam(required = false) String agentType,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime to,
             @RequestParam(required = false) String tenantId) {
-        return Result.ok(predictionMapper.selectDurationStats(agentType, from, to, tenantId));
+        return BaseResponse.ok(predictionMapper.selectDurationStats(agentType, from, to, tenantId));
     }
 
     /**
@@ -306,11 +306,11 @@ public class AgentController {
     @Operation(summary = "按 Agent 类型统计耗时")
     @PrePermission("agent:task:list")
     @GetMapping("/durationStats/byAgentType")
-    public Result<List<Map<String, Object>>> durationStatsByAgentType(
+    public BaseResponse<List<Map<String, Object>>> durationStatsByAgentType(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime to,
             @RequestParam(required = false) String tenantId) {
-        return Result.ok(predictionMapper.selectDurationStatsByAgentType(from, to, tenantId));
+        return BaseResponse.ok(predictionMapper.selectDurationStatsByAgentType(from, to, tenantId));
     }
 
     // ===========================================
@@ -333,13 +333,13 @@ public class AgentController {
     @Operation(summary = "[内部] 同步执行 Agent（Feign 入口）")
     @Idempotent(key = "agent:internalExecute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/internal/execute")
-    public Result<Map<String, Object>> internalExecute(
+    public BaseResponse<Map<String, Object>> internalExecute(
             @Valid @RequestBody AgentInternalExecuteDTO dto,
             @RequestHeader(value = "X-Internal-Sig", required = false) String internalSig) {
         // 安全加固：校验内部签名头，拦截绕过网关/Feign 的外部直接调用
         if (internalSig == null || internalSig.isBlank()) {
             log.warn("[Security] internal/execute 被外部直接调用，缺少 X-Internal-Sig 头");
-            return Result.failed(403, "禁止外部直接访问内部接口");
+            return BaseResponse.failed(403, "禁止外部直接访问内部接口");
         }
         // @NotBlank 已校验 agentType 非空，移除手动校验
         String agentType = dto.getAgentType();
@@ -360,13 +360,13 @@ public class AgentController {
         AgentResult result = service.executeInMemory(agentType, ctx);
 
         Map<String, Object> data = new LinkedHashMap<>();
-        data.put("agentType", result.getAgentType() == null ? null : result.getAgentType().getCode());
-        data.put("alertLevel", result.getAlertLevel() == null ? null : result.getAlertLevel().getCode());
-        data.put("score", result.getScore());
-        data.put("confidence", result.getConfidence());
-        data.put("suggestion", result.getSuggestion());
-        data.put("matchedRules", result.getMatchedRules());
-        data.put("payload", result.getPayload());
-        return Result.ok(data);
+        data.put("agentType", BaseResponse.getAgentType() == null ? null : BaseResponse.getAgentType().getCode());
+        data.put("alertLevel", BaseResponse.getAlertLevel() == null ? null : BaseResponse.getAlertLevel().getCode());
+        data.put("score", BaseResponse.getScore());
+        data.put("confidence", BaseResponse.getConfidence());
+        data.put("suggestion", BaseResponse.getSuggestion());
+        data.put("matchedRules", BaseResponse.getMatchedRules());
+        data.put("payload", BaseResponse.getPayload());
+        return BaseResponse.ok(data);
     }
 }

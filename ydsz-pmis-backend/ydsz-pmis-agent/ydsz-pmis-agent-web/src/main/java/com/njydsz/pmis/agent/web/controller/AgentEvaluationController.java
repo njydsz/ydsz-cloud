@@ -10,7 +10,7 @@ import com.njydsz.pmis.agent.server.engine.eval.EvaluationCase;
 import com.njydsz.pmis.agent.server.engine.eval.EvaluationReport;
 import com.njydsz.pmis.agent.server.engine.eval.EvaluableAgent;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
@@ -57,13 +57,13 @@ public class AgentEvaluationController {
     @PrePermission("agent:task:run")
     @Idempotent(key = "agentEvaluation:runEvaluation", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/run")
-    public Result<EvaluationReport> runEvaluation(@RequestBody EvaluationRunRequest req) {
+    public BaseResponse<EvaluationReport> runEvaluation(@RequestBody EvaluationRunRequest req) {
         if (req.getAgentType() == null || req.getAgentType().isBlank()) {
-            return Result.fail("agentType 不能为空");
+            return BaseResponse.fail("agentType 不能为空");
         }
         Agent agent = agentMap.get(req.getAgentType());
         if (agent == null) {
-            return Result.fail("Agent 类型不存在: " + req.getAgentType());
+            return BaseResponse.fail("Agent 类型不存在: " + req.getAgentType());
         }
 
         List<EvaluationCase> cases = new ArrayList<>();
@@ -81,7 +81,7 @@ public class AgentEvaluationController {
         try (AgentEvaluationFramework framework = new AgentEvaluationFramework(
                 toEvaluable(agent), null, req.getParallelism() > 0 ? req.getParallelism() : 1)) {
             EvaluationReport report = framework.run(cases);
-            return Result.ok(report);
+            return BaseResponse.ok(report);
         }
     }
 
@@ -101,7 +101,7 @@ public class AgentEvaluationController {
             }
             params.put("userInput", input);
             AgentResult result = agent.execute(context);
-            return result.getSuggestion() != null ? result.getSuggestion() : result.toString();
+            return BaseResponse.getSuggestion() != null ? BaseResponse.getSuggestion() : BaseResponse.toString();
         };
     }
 
@@ -113,7 +113,7 @@ public class AgentEvaluationController {
     @Operation(summary = "评估器类型列表")
     @PrePermission("agent:task:list")
     @GetMapping("/evaluators")
-    public Result<List<Map<String, String>>> listEvaluators() {
+    public BaseResponse<List<Map<String, String>>> listEvaluators() {
         List<Map<String, String>> evaluators = new ArrayList<>();
         for (EvaluationCase.EvaluatorType type : EvaluationCase.EvaluatorType.values()) {
             evaluators.add(Map.of(
@@ -121,7 +121,7 @@ public class AgentEvaluationController {
                     "desc", getEvaluatorDesc(type)
             ));
         }
-        return Result.ok(evaluators);
+        return BaseResponse.ok(evaluators);
     }
 
     /**

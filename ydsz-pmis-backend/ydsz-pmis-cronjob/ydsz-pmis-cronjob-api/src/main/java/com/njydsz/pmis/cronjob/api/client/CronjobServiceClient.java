@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.api.client;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.feign.FeignClientConstants;
 import com.njydsz.pmis.cronjob.api.fallback.CronjobServiceClientFallback;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -43,7 +43,7 @@ public interface CronjobServiceClient {
      * @return 执行日志 ID（触发失败时为 null）
      */
     @PostMapping("/cronjob/{id}/trigger")
-    Result<String> trigger(@PathVariable("id") String jobId);
+    BaseResponse<String> trigger(@PathVariable("id") String jobId);
 
     /**
      * 立即触发执行一次定时任务（可选抢占分布式锁）
@@ -53,6 +53,6 @@ public interface CronjobServiceClient {
      * @return 执行日志 ID
      */
     @PostMapping("/cronjob/{id}/trigger")
-    Result<String> trigger(@PathVariable("id") String jobId,
+    BaseResponse<String> trigger(@PathVariable("id") String jobId,
                            @RequestParam("holdLock") boolean holdLock);
 }

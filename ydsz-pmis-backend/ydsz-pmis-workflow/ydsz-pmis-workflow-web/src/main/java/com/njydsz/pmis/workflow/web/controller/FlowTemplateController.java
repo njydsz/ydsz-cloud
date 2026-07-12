@@ -3,8 +3,8 @@ package com.njydsz.pmis.workflow.web.controller.definition;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.IdempotentExempt;
 
-import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.server.service.definition.FlowTemplateRecommendService;
 import com.njydsz.pmis.workflow.server.service.definition.FlowTemplateService;
 import org.springframework.validation.annotation.Validated;
@@ -58,9 +58,9 @@ public class FlowTemplateController {
      */
     @Operation(summary = "模板列表")
     @GetMapping("/list")
-    public Result<List<Map<String, Object>>> listTemplates(
+    public BaseResponse<List<Map<String, Object>>> listTemplates(
             @RequestParam(required = false) String category) {
-        return Result.ok(templateService.listTemplates(category));
+        return BaseResponse.ok(templateService.listTemplates(category));
     }
 
     /**
@@ -71,8 +71,8 @@ public class FlowTemplateController {
      */
     @Operation(summary = "模板详情（含 BPMN XML）")
     @GetMapping("/{templateCode}")
-    public Result<Map<String, Object>> getTemplate(@PathVariable String templateCode) {
-        return Result.ok(templateService.getTemplate(templateCode));
+    public BaseResponse<Map<String, Object>> getTemplate(@PathVariable String templateCode) {
+        return BaseResponse.ok(templateService.getTemplate(templateCode));
     }
 
     /**
@@ -88,9 +88,9 @@ public class FlowTemplateController {
     @Operation(summary = "导入模板")
     @Idempotent(key = "flowTemplate:importTemplate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{templateCode}/import")
-    public Result<String> importTemplate(@PathVariable String templateCode,
+    public BaseResponse<String> importTemplate(@PathVariable String templateCode,
                                           @RequestParam(required = false) String flowName) {
-        return Result.ok(templateService.importTemplate(templateCode, flowName));
+        return BaseResponse.ok(templateService.importTemplate(templateCode, flowName));
     }
 
     /**
@@ -107,11 +107,11 @@ public class FlowTemplateController {
     @Operation(summary = "导出为模板")
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/export/{definitionId}")
-    public Result<Void> exportAsTemplate(@PathVariable String definitionId,
+    public BaseResponse<Void> exportAsTemplate(@PathVariable String definitionId,
                                          @RequestParam String templateName,
                                          @RequestParam(required = false, defaultValue = "GENERAL") String category) {
         templateService.exportAsTemplate(definitionId, templateName, category);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     // ============================== P2-9: 模板继承与版本化 ==============================
@@ -124,8 +124,8 @@ public class FlowTemplateController {
      */
     @Operation(summary = "P2-9: 列出模板全部版本")
     @GetMapping("/{templateCode}/versions")
-    public Result<List<Map<String, Object>>> listTemplateVersions(@PathVariable String templateCode) {
-        return Result.ok(templateService.listTemplateVersions(templateCode));
+    public BaseResponse<List<Map<String, Object>>> listTemplateVersions(@PathVariable String templateCode) {
+        return BaseResponse.ok(templateService.listTemplateVersions(templateCode));
     }
 
     /**
@@ -137,9 +137,9 @@ public class FlowTemplateController {
      */
     @Operation(summary = "P2-9: 获取指定版本模板详情")
     @GetMapping("/{templateCode}/versions/{version}")
-    public Result<Map<String, Object>> getTemplateVersion(@PathVariable String templateCode,
+    public BaseResponse<Map<String, Object>> getTemplateVersion(@PathVariable String templateCode,
                                                           @PathVariable Integer version) {
-        return Result.ok(templateService.getTemplateVersion(templateCode, version));
+        return BaseResponse.ok(templateService.getTemplateVersion(templateCode, version));
     }
 
     /**
@@ -154,9 +154,9 @@ public class FlowTemplateController {
     @Operation(summary = "P2-9: 创建模板新版本")
     @Idempotent(key = "flowTemplate:createNewVersion", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{templateCode}/newVersion")
-    public Result<Integer> createNewVersion(@PathVariable String templateCode,
+    public BaseResponse<Integer> createNewVersion(@PathVariable String templateCode,
                                             @RequestParam(required = false) String versionLabel) {
-        return Result.ok(templateService.createNewVersion(templateCode, versionLabel));
+        return BaseResponse.ok(templateService.createNewVersion(templateCode, versionLabel));
     }
 
     /**
@@ -173,11 +173,11 @@ public class FlowTemplateController {
     @Operation(summary = "P2-9: 克隆模板为独立新模板")
     @Idempotent(key = "flowTemplate:cloneTemplate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{templateCode}/clone")
-    public Result<String> cloneTemplate(@PathVariable String templateCode,
+    public BaseResponse<String> cloneTemplate(@PathVariable String templateCode,
                                         @RequestParam String newTemplateCode,
                                         @RequestParam String newTemplateName,
                                         @RequestParam(required = false) String newCategory) {
-        return Result.ok(templateService.cloneTemplate(templateCode, newTemplateCode,
+        return BaseResponse.ok(templateService.cloneTemplate(templateCode, newTemplateCode,
                 newTemplateName, newCategory));
     }
 
@@ -195,11 +195,11 @@ public class FlowTemplateController {
     @Operation(summary = "P2-9: 从父模板继承创建子模板")
     @Idempotent(key = "flowTemplate:inheritFromParent", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{parentTemplateCode}/inherit")
-    public Result<String> inheritFromParent(@PathVariable String parentTemplateCode,
+    public BaseResponse<String> inheritFromParent(@PathVariable String parentTemplateCode,
                                             @RequestParam String newTemplateCode,
                                             @RequestParam String newTemplateName,
                                             @RequestParam(required = false) String newCategory) {
-        return Result.ok(templateService.inheritFromParent(parentTemplateCode, newTemplateCode,
+        return BaseResponse.ok(templateService.inheritFromParent(parentTemplateCode, newTemplateCode,
                 newTemplateName, newCategory));
     }
 
@@ -211,9 +211,9 @@ public class FlowTemplateController {
      */
     @Operation(summary = "P2-9: 列出继承自指定父模板的子模板")
     @GetMapping("/{parentTemplateCode}/inherited")
-    public Result<List<Map<String, Object>>> listInheritedTemplates(
+    public BaseResponse<List<Map<String, Object>>> listInheritedTemplates(
             @PathVariable String parentTemplateCode) {
-        return Result.ok(templateService.listInheritedTemplates(parentTemplateCode));
+        return BaseResponse.ok(templateService.listInheritedTemplates(parentTemplateCode));
     }
 
     /**
@@ -228,8 +228,8 @@ public class FlowTemplateController {
     @Operation(summary = "P2-9: 子模板同步父模板最新版本")
     @Idempotent(key = "flowTemplate:syncFromParent", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{childTemplateCode}/sync")
-    public Result<Integer> syncFromParent(@PathVariable String childTemplateCode) {
-        return Result.ok(templateService.syncFromParent(childTemplateCode));
+    public BaseResponse<Integer> syncFromParent(@PathVariable String childTemplateCode) {
+        return BaseResponse.ok(templateService.syncFromParent(childTemplateCode));
     }
 
     // ============================== P2-2: 模板智能推荐 ==============================
@@ -245,11 +245,11 @@ public class FlowTemplateController {
      */
     @Operation(summary = "P2-2: 智能推荐模板")
     @GetMapping("/recommend")
-    public Result<List<Map<String, Object>>> recommend(
+    public BaseResponse<List<Map<String, Object>>> recommend(
             @RequestParam(defaultValue = "5") int topN) {
-        String userId = SecurityContext.getUserId();
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(recommendService.recommendTemplates(userId, tenantId, topN));
+        String userId = AuthContext.getUserId();
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(recommendService.recommendTemplates(userId, tenantId, topN));
     }
 
     /**
@@ -261,11 +261,11 @@ public class FlowTemplateController {
      */
     @Operation(summary = "P2-2: 按业务类型推荐模板")
     @GetMapping("/recommend/byBusinessType")
-    public Result<List<Map<String, Object>>> recommendByBusinessType(
+    public BaseResponse<List<Map<String, Object>>> recommendByBusinessType(
             @RequestParam String businessType,
             @RequestParam(defaultValue = "5") int topN) {
-        String userId = SecurityContext.getUserId();
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(recommendService.recommendByBusinessType(userId, tenantId, businessType, topN));
+        String userId = AuthContext.getUserId();
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(recommendService.recommendByBusinessType(userId, tenantId, businessType, topN));
     }
 }

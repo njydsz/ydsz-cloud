@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.web.controller.resource;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.RateCardCreateDTO;
 import com.njydsz.pmis.project.domain.entity.RateCardDO;
 import com.njydsz.pmis.project.server.service.RateCardService;
@@ -56,8 +56,8 @@ public class RateCardController {
     @PrePermission("execution:rateCard:create")
     @Idempotent(key = "rateCard:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody RateCardCreateDTO dto) {
-        return Result.ok(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody RateCardCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
@@ -71,9 +71,9 @@ public class RateCardController {
     @PrePermission("execution:rateCard:update")
     @Idempotent(key = "rateCard:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public Result<Void> update(@PathVariable String id, @Valid @RequestBody RateCardCreateDTO dto) {
+    public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody RateCardCreateDTO dto) {
         service.update(id, dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -86,9 +86,9 @@ public class RateCardController {
     @PrePermission("execution:rateCard:delete")
     @Idempotent(key = "rateCard:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -100,8 +100,8 @@ public class RateCardController {
     @Operation(summary = "详情")
     @PrePermission("execution:rate:list")
     @GetMapping("/{id}")
-    public Result<RateCardDO> get(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<RateCardDO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -116,12 +116,12 @@ public class RateCardController {
     @Operation(summary = "命中有效费率（职级+项目类型+客户等级+日期）")
     @PrePermission("execution:rate:list")
     @GetMapping("/match")
-    public Result<RateCardDO> match(
+    public BaseResponse<RateCardDO> match(
             @RequestParam String levelCode,
             @RequestParam(required = false) String projectType,
             @RequestParam(required = false) String customerLevel,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return Result.ok(service.matchEffective(levelCode, projectType, customerLevel, date));
+        return BaseResponse.ok(service.matchEffective(levelCode, projectType, customerLevel, date));
     }
 
     /**
@@ -133,8 +133,8 @@ public class RateCardController {
     @Operation(summary = "按职级查询")
     @PrePermission("execution:rate:list")
     @GetMapping("/byLevel")
-    public Result<List<RateCardDO>> listByLevel(@RequestParam String levelCode) {
-        return Result.ok(service.listByLevel(levelCode));
+    public BaseResponse<List<RateCardDO>> listByLevel(@RequestParam String levelCode) {
+        return BaseResponse.ok(service.listByLevel(levelCode));
     }
 
     /**
@@ -149,11 +149,11 @@ public class RateCardController {
     @Operation(summary = "分页")
     @PrePermission("execution:rate:list")
     @GetMapping("/page")
-    public Result<Page<RateCardDO>> page(
+    public BaseResponse<Page<RateCardDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String levelCode,
             @RequestParam(required = false) String status) {
-        return Result.ok(service.page(page, size, levelCode, status));
+        return BaseResponse.ok(service.page(page, size, levelCode, status));
     }
 }

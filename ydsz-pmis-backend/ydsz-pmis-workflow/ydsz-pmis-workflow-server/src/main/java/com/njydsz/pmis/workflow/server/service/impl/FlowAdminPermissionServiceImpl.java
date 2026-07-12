@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.analytics;
 
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.workflow.domain.entity.analytics.FlowAdminRoleDO;
 import com.njydsz.pmis.workflow.infra.mapper.analytics.FlowAdminRoleMapper;
@@ -104,7 +104,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
     @Transactional(rollbackFor = Exception.class)
     public void grantRole(String userId, String roleCode, String tenantId) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(roleCode)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "用户 ID 和角色编码不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "用户 ID 和角色编码不能为空");
         }
         // 检查是否已存在
         FlowAdminRoleDO existing = adminRoleMapper.selectByUserAndRole(userId, roleCode, tenantId);

@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.web.controller.report;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.annotation.RateLimit;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.server.service.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -45,9 +45,9 @@ public class ReportController {
     @PrePermission("report:profit:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/profit")
-    public Result<Map<String, Object>> profit(@RequestParam String initiationId,
+    public BaseResponse<Map<String, Object>> profit(@RequestParam String initiationId,
                                          @RequestParam(required = false) String period) {
-        return Result.ok(service.projectProfitReport(initiationId, period));
+        return BaseResponse.ok(service.projectProfitReport(initiationId, period));
     }
 
     /**
@@ -61,9 +61,9 @@ public class ReportController {
     @PrePermission("report:cost:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/cost")
-    public Result<Map<String, Object>> cost(@RequestParam String initiationId,
+    public BaseResponse<Map<String, Object>> cost(@RequestParam String initiationId,
                                        @RequestParam(required = false) String period) {
-        return Result.ok(service.costDetailReport(initiationId, period));
+        return BaseResponse.ok(service.costDetailReport(initiationId, period));
     }
 
     /**
@@ -76,8 +76,8 @@ public class ReportController {
     @PrePermission("report:paymentLedger:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/paymentLedger")
-    public Result<Map<String, Object>> paymentLedger(@RequestParam String initiationId) {
-        return Result.ok(service.paymentLedgerReport(initiationId));
+    public BaseResponse<Map<String, Object>> paymentLedger(@RequestParam String initiationId) {
+        return BaseResponse.ok(service.paymentLedgerReport(initiationId));
     }
 
     /**
@@ -90,8 +90,8 @@ public class ReportController {
     @PrePermission("report:lifecycle:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/lifecycle")
-    public Result<Map<String, Object>> lifecycle(@RequestParam String initiationId) {
-        return Result.ok(service.projectLifecycleReport(initiationId));
+    public BaseResponse<Map<String, Object>> lifecycle(@RequestParam String initiationId) {
+        return BaseResponse.ok(service.projectLifecycleReport(initiationId));
     }
 
     /**
@@ -103,8 +103,8 @@ public class ReportController {
     @PrePermission("report:profit:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/profitSummary")
-    public Result<List<Map<String, Object>>> profitSummary() {
-        return Result.ok(service.profitSummaryAll());
+    public BaseResponse<List<Map<String, Object>>> profitSummary() {
+        return BaseResponse.ok(service.profitSummaryAll());
     }
 
     /**
@@ -119,10 +119,10 @@ public class ReportController {
     @PrePermission("report:profit:view")
     @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/profitRank")
-    public Result<List<Map<String, Object>>> profitRank(
+    public BaseResponse<List<Map<String, Object>>> profitRank(
             @RequestParam(defaultValue = "10") int top,
             @RequestParam(required = false) String sortBy,
             @RequestParam(required = false) String period) {
-        return Result.ok(service.profitRank(top, sortBy, period));
+        return BaseResponse.ok(service.profitRank(top, sortBy, period));
     }
 }

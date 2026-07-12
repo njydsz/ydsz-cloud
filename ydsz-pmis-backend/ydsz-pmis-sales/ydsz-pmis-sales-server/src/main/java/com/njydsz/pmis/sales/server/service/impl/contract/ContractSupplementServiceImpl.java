@@ -3,7 +3,7 @@ package com.njydsz.pmis.sales.server.service.impl.contract;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.sales.domain.dto.ContractSupplementDTO;
 import com.njydsz.pmis.sales.domain.entity.ContractDO;
@@ -55,10 +55,10 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
     public String create(ContractSupplementDTO dto) {
         validate(dto);
         if (contractMapper.selectById(dto.getContractId()) == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_22d39b90");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_22d39b90");
         }
         if (supplementMapper.selectByCode(dto.getSupplementCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.project.msg_3592a4cc");
+            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.project.msg_3592a4cc");
         }
         ContractSupplementDO s = new ContractSupplementDO();
         BeanUtils.copyProperties(dto, s);
@@ -93,7 +93,7 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
     public void delete(String id) {
         ContractSupplementDO s = supplementMapper.selectById(id);
         if (s == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_163e0077");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_163e0077");
         }
         supplementMapper.deleteById(id);
     }
@@ -110,7 +110,7 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
     public ContractSupplementDO getById(String id) {
         ContractSupplementDO s = supplementMapper.selectById(id);
         if (s == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_163e0077");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_163e0077");
         }
         return s;
     }
@@ -154,19 +154,19 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
      */
     private void validate(ContractSupplementDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (!StringUtils.hasText(dto.getContractId())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_af96cf73");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_af96cf73");
         }
         if (!StringUtils.hasText(dto.getSupplementCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_9b9ada20");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_9b9ada20");
         }
         if (!StringUtils.hasText(dto.getSupplementName())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_33d967a0");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_33d967a0");
         }
         if (!TYPES.contains(dto.getSupplementType().toUpperCase())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_3820d28c", dto.getSupplementType());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_3820d28c", dto.getSupplementType());
         }
     }
 }

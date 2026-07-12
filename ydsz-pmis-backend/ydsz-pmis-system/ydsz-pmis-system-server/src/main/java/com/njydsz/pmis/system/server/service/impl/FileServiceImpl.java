@@ -2,7 +2,7 @@ package com.njydsz.pmis.system.server.service.impl.file;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.config.MinioConfig;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -63,7 +63,7 @@ public class FileServiceImpl implements FileService {
     @Transactional(rollbackFor = Exception.class)
     public FileDO upload(MultipartFile file, FileUploadDTO dto) throws Exception {
         if (file == null || file.isEmpty()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "文件不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "文件不能为空");
         }
         return uploadInternal(
                 file.getOriginalFilename(),
@@ -87,7 +87,7 @@ public class FileServiceImpl implements FileService {
     @Transactional(rollbackFor = Exception.class)
     public FileDO uploadBytes(String originalName, byte[] content, String contentType, FileUploadDTO dto) throws Exception {
         if (content == null || content.length == 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "文件内容不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "文件内容不能为空");
         }
         return uploadInternal(originalName, content, contentType, dto);
     }
@@ -172,7 +172,7 @@ public class FileServiceImpl implements FileService {
     public void delete(String id) throws Exception {
         FileDO f = fileMapper.selectById(id);
         if (f == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "文件不存在");
+            throw new BizException(StandardResultCode.NOT_FOUND, "文件不存在");
         }
         deleteFromMinio(f);
         fileMapper.deleteById(id);
@@ -212,7 +212,7 @@ public class FileServiceImpl implements FileService {
     public FileDO getById(String id) {
         FileDO f = fileMapper.selectById(id);
         if (f == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "文件不存在");
+            throw new BizException(StandardResultCode.NOT_FOUND, "文件不存在");
         }
         return f;
     }
@@ -243,7 +243,7 @@ public class FileServiceImpl implements FileService {
             return url;
         } catch (Exception e) {
             log.error("[File] 生成预签名 URL 失败: {}", e.getMessage(), e);
-            throw new BizException(BizErrorCode.INTERNAL_ERROR, "生成预签名 URL 失败: " + e.getMessage());
+            throw new BizException(StandardResultCode.INTERNAL_ERROR, "生成预签名 URL 失败: " + e.getMessage());
         }
     }
 

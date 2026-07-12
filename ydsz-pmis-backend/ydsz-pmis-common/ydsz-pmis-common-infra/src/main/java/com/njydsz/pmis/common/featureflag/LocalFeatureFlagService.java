@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.featureflag;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.feign.ConfigClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -231,7 +231,7 @@ public class LocalFeatureFlagService implements FeatureFlagService {
             return new HashMap<>(testStore);
         }
         try {
-            Result<Map<String, String>> resp = configClient.getGroup(CONFIG_GROUP);
+            BaseResponse<Map<String, String>> resp = configClient.getGroup(CONFIG_GROUP);
             if (resp == null || resp.getData() == null) {
                 return new HashMap<>(testStore);
             }

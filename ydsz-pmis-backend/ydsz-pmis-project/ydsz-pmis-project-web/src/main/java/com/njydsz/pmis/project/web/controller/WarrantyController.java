@@ -2,8 +2,8 @@ package com.njydsz.pmis.project.web.controller.aftersales;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.WarrantyCreateDTO;
 import com.njydsz.pmis.project.domain.dto.WarrantyTerminateDTO;
 import com.njydsz.pmis.project.domain.entity.WarrantyDO;
@@ -47,62 +47,62 @@ public class WarrantyController {
     @PrePermission("aftersales:warranty:create")
     @Idempotent(key = "warranty:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody WarrantyCreateDTO dto) {
-        return Result.ok(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody WarrantyCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     @Operation(summary = "手动提前终止质保期")
     @PrePermission("aftersales:warranty:terminate")
     @Idempotent(key = "warranty:update", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/terminate")
-    public Result<Void> terminate(@Valid @RequestBody WarrantyTerminateDTO dto) {
+    public BaseResponse<Void> terminate(@Valid @RequestBody WarrantyTerminateDTO dto) {
         service.terminate(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     @Operation(summary = "扫描即将到期（≤ today + noticeDays 天）")
     @PrePermission("aftersales:warranty:scan")
     @Idempotent(key = "warranty:scanExpiring", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/scan/expiring")
-    public Result<Integer> scanExpiring(
+    public BaseResponse<Integer> scanExpiring(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate today,
             @RequestParam(defaultValue = "30") int noticeDays) {
-        return Result.ok(service.scanExpiring(today, noticeDays));
+        return BaseResponse.ok(service.scanExpiring(today, noticeDays));
     }
 
     @Operation(summary = "扫描已过期")
     @PrePermission("aftersales:warranty:scan")
     @Idempotent(key = "warranty:scanOverdue", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/scan/overdue")
-    public Result<Integer> scanOverdue(
+    public BaseResponse<Integer> scanOverdue(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate today) {
-        return Result.ok(service.scanOverdue(today));
+        return BaseResponse.ok(service.scanOverdue(today));
     }
 
     @Operation(summary = "即将到期列表")
     @PrePermission("aftersales:warranty:list")
     @GetMapping("/expiring")
-    public Result<List<WarrantyDO>> listExpiring(
+    public BaseResponse<List<WarrantyDO>> listExpiring(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate until) {
-        return Result.ok(service.listExpiring(until));
+        return BaseResponse.ok(service.listExpiring(until));
     }
 
     @Operation(summary = "质保期分页")
     @PrePermission("aftersales:warranty:list")
     @GetMapping("/page")
-    public Result<PageResult<WarrantyDO>> page(
+    public BaseResponse<PageResponse<WarrantyDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String keyword) {
-        return Result.ok(PageResult.ofPage(service.page(page, size, status, initiationId, keyword)));
+        return BaseResponse.ok(PageResponse.ofPage(service.page(page, size, status, initiationId, keyword)));
     }
 
     @Operation(summary = "质保期详情")
     @PrePermission("aftersales:warranty:list")
     @GetMapping("/{id}")
-    public Result<WarrantyDO> getById(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<WarrantyDO> getById(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 }

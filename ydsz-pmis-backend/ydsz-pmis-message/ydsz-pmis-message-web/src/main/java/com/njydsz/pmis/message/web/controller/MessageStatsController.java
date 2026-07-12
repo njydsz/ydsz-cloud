@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.web.controller.core;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.core.ChannelStatsVO;
@@ -52,10 +52,10 @@ public class MessageStatsController {
     @Operation(summary = "发送总览统计")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/overview")
-    public Result<MessageStatsVO> overview(
+    public BaseResponse<MessageStatsVO> overview(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
-        return Result.ok(messageStatsService.getOverview(start, end));
+        return BaseResponse.ok(messageStatsService.getOverview(start, end));
     }
 
     /**
@@ -68,10 +68,10 @@ public class MessageStatsController {
     @Operation(summary = "通道维度发送统计")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/channel")
-    public Result<List<ChannelStatsVO>> channelStats(
+    public BaseResponse<List<ChannelStatsVO>> channelStats(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
-        return Result.ok(messageStatsService.getChannelStats(start, end));
+        return BaseResponse.ok(messageStatsService.getChannelStats(start, end));
     }
 
     /**
@@ -84,10 +84,10 @@ public class MessageStatsController {
     @Operation(summary = "回执统计")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/receipt")
-    public Result<ReceiptStatsVO> receiptStats(
+    public BaseResponse<ReceiptStatsVO> receiptStats(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
-        return Result.ok(messageStatsService.getReceiptStats(start, end));
+        return BaseResponse.ok(messageStatsService.getReceiptStats(start, end));
     }
 
     /**
@@ -105,12 +105,12 @@ public class MessageStatsController {
     @Operation(summary = "消息转化漏斗分析")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/funnel")
-    public Result<FunnelStatsVO> funnel(
+    public BaseResponse<FunnelStatsVO> funnel(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end,
             @RequestParam(required = false) String channel,
             @RequestParam(required = false) String templateCode) {
-        return Result.ok(messageStatsService.getFunnel(start, end, channel, templateCode));
+        return BaseResponse.ok(messageStatsService.getFunnel(start, end, channel, templateCode));
     }
 
     /**
@@ -125,9 +125,9 @@ public class MessageStatsController {
     @Operation(summary = "成本看板")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/cost")
-    public Result<CostStatsVO> cost(
+    public BaseResponse<CostStatsVO> cost(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
-        return Result.ok(messageStatsService.getCostStats(start, end));
+        return BaseResponse.ok(messageStatsService.getCostStats(start, end));
     }
 }

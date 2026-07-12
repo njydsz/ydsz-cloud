@@ -1,7 +1,7 @@
 package com.njydsz.pmis.finance.api.fallback;
 import com.njydsz.pmis.finance.api.client.FinanceDataClient;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -24,104 +24,104 @@ import java.util.Map;
 public class FinanceDataClientFallback implements FinanceDataClient {
 
     @Override
-    public Result<BigDecimal> sumInvoiceAmount() {
+    public BaseResponse<BigDecimal> sumInvoiceAmount() {
         log.warn("[FinanceDataClient] 降级: sumInvoiceAmount 返回零值");
-        return Result.ok(BigDecimal.ZERO);
+        return BaseResponse.ok(BigDecimal.ZERO);
     }
 
     @Override
-    public Result<BigDecimal> sumAllocatedPayment() {
+    public BaseResponse<BigDecimal> sumAllocatedPayment() {
         log.warn("[FinanceDataClient] 降级: sumAllocatedPayment 返回零值");
-        return Result.ok(BigDecimal.ZERO);
+        return BaseResponse.ok(BigDecimal.ZERO);
     }
 
     @Override
-    public Result<BigDecimal> sumExpenseAmount() {
+    public BaseResponse<BigDecimal> sumExpenseAmount() {
         log.warn("[FinanceDataClient] 降级: sumExpenseAmount 返回零值");
-        return Result.ok(BigDecimal.ZERO);
+        return BaseResponse.ok(BigDecimal.ZERO);
     }
 
     @Override
-    public Result<Integer> countDistinctInitiation() {
+    public BaseResponse<Integer> countDistinctInitiation() {
         log.warn("[FinanceDataClient] 降级: countDistinctInitiation 返回零值");
-        return Result.ok(0);
+        return BaseResponse.ok(0);
     }
 
     @Override
-    public Result<List<Map<String, Object>>> sumInvoiceByDepartment() {
+    public BaseResponse<List<Map<String, Object>>> sumInvoiceByDepartment() {
         log.warn("[FinanceDataClient] 降级: sumInvoiceByDepartment 返回空列表");
-        return Result.ok(Collections.emptyList());
+        return BaseResponse.ok(Collections.emptyList());
     }
 
     @Override
-    public Result<List<Map<String, Object>>> sumInvoiceByProjectType() {
+    public BaseResponse<List<Map<String, Object>>> sumInvoiceByProjectType() {
         log.warn("[FinanceDataClient] 降级: sumInvoiceByProjectType 返回空列表");
-        return Result.ok(Collections.emptyList());
+        return BaseResponse.ok(Collections.emptyList());
     }
 
     @Override
-    public Result<List<Map<String, Object>>> sumInvoiceByCustomer() {
+    public BaseResponse<List<Map<String, Object>>> sumInvoiceByCustomer() {
         log.warn("[FinanceDataClient] 降级: sumInvoiceByCustomer 返回空列表");
-        return Result.ok(Collections.emptyList());
+        return BaseResponse.ok(Collections.emptyList());
     }
 
     @Override
-    public Result<List<Map<String, Object>>> sumInvoiceByYear() {
+    public BaseResponse<List<Map<String, Object>>> sumInvoiceByYear() {
         log.warn("[FinanceDataClient] 降级: sumInvoiceByYear 返回空列表");
-        return Result.ok(Collections.emptyList());
+        return BaseResponse.ok(Collections.emptyList());
     }
 
     @Override
-    public Result<List<Map<String, Object>>> sumInvoiceByRecentMonth(Integer limit) {
+    public BaseResponse<List<Map<String, Object>>> sumInvoiceByRecentMonth(Integer limit) {
         log.warn("[FinanceDataClient] 降级: sumInvoiceByRecentMonth 返回空列表");
-        return Result.ok(Collections.emptyList());
+        return BaseResponse.ok(Collections.emptyList());
     }
 
     @Override
-    public Result<List<Map<String, Object>>> aggregatePaymentByRecentMonth(Integer limit) {
+    public BaseResponse<List<Map<String, Object>>> aggregatePaymentByRecentMonth(Integer limit) {
         log.warn("[FinanceDataClient] 降级: aggregatePaymentByRecentMonth 返回空列表");
-        return Result.ok(Collections.emptyList());
+        return BaseResponse.ok(Collections.emptyList());
     }
 
     @Override
-    public Result<BigDecimal> sumRevenue(String initiationId, String period) {
+    public BaseResponse<BigDecimal> sumRevenue(String initiationId, String period) {
         log.warn("[FinanceDataClient] 降级: sumRevenue 返回零值, initiationId={}", initiationId);
-        return Result.ok(BigDecimal.ZERO);
+        return BaseResponse.ok(BigDecimal.ZERO);
     }
 
     @Override
-    public Result<BigDecimal> sumExpense(String initiationId, String period) {
+    public BaseResponse<BigDecimal> sumExpense(String initiationId, String period) {
         log.warn("[FinanceDataClient] 降级: sumExpense 返回零值, initiationId={}", initiationId);
-        return Result.ok(BigDecimal.ZERO);
+        return BaseResponse.ok(BigDecimal.ZERO);
     }
 
     @Override
-    public Result<Map<String, Object>> latestProfitSnapshot(String initiationId, String period) {
+    public BaseResponse<Map<String, Object>> latestProfitSnapshot(String initiationId, String period) {
         log.warn("[FinanceDataClient] 降级: latestProfitSnapshot 返回空Map, initiationId={}", initiationId);
-        return Result.ok(Collections.emptyMap());
+        return BaseResponse.ok(Collections.emptyMap());
     }
 
     @Override
-    public Result<List<Map<String, Object>>> profitSnapshotSummaryAll() {
+    public BaseResponse<List<Map<String, Object>>> profitSnapshotSummaryAll() {
         log.warn("[FinanceDataClient] 降级: profitSnapshotSummaryAll 返回空列表");
-        return Result.ok(Collections.emptyList());
+        return BaseResponse.ok(Collections.emptyList());
     }
 
     @Override
-    public Result<List<Map<String, Object>>> profitSnapshotRank(Integer top, String sortBy, String period) {
+    public BaseResponse<List<Map<String, Object>>> profitSnapshotRank(Integer top, String sortBy, String period) {
         log.warn("[FinanceDataClient] 降级: profitSnapshotRank 返回空列表");
-        return Result.ok(Collections.emptyList());
+        return BaseResponse.ok(Collections.emptyList());
     }
 
     @Override
-    public Result<List<Map<String, Object>>> revenueByInitiation(String initiationId) {
+    public BaseResponse<List<Map<String, Object>>> revenueByInitiation(String initiationId) {
         log.warn("[FinanceDataClient] 降级: revenueByInitiation 返回空列表, initiationId={}", initiationId);
-        return Result.ok(Collections.emptyList());
+        return BaseResponse.ok(Collections.emptyList());
     }
 
     @Override
-    public Result<List<Map<String, Object>>> revenueSumByPeriod(String initiationId) {
+    public BaseResponse<List<Map<String, Object>>> revenueSumByPeriod(String initiationId) {
         log.warn("[FinanceDataClient] 降级: revenueSumByPeriod 返回空列表, initiationId={}", initiationId);
-        return Result.ok(Collections.emptyList());
+        return BaseResponse.ok(Collections.emptyList());
     }
 }

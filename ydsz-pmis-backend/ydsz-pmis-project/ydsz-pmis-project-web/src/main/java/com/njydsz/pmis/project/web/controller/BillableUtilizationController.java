@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.web.controller.resource;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.server.service.BillableUtilizationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -48,10 +48,10 @@ public class BillableUtilizationController {
     @Operation(summary = "按月聚合所有员工利用率明细")
     @PrePermission("execution:utilization:view")
     @GetMapping("/aggregate")
-    public Result<List<Map<String, Object>>> aggregate(
+    public BaseResponse<List<Map<String, Object>>> aggregate(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return Result.ok(service.aggregate(from, to));
+        return BaseResponse.ok(service.aggregate(from, to));
     }
 
     /**
@@ -65,11 +65,11 @@ public class BillableUtilizationController {
     @Operation(summary = "个人利用率（from-to 汇总）")
     @PrePermission("execution:utilization:view")
     @GetMapping("/personal")
-    public Result<Map<String, Object>> personal(
+    public BaseResponse<Map<String, Object>> personal(
             @RequestParam String employeeId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return Result.ok(service.personal(employeeId, from, to));
+        return BaseResponse.ok(service.personal(employeeId, from, to));
     }
 
     /**
@@ -83,11 +83,11 @@ public class BillableUtilizationController {
     @Operation(summary = "排行榜（按 utilizationPct 倒序）")
     @PrePermission("execution:utilization:view")
     @GetMapping("/rank")
-    public Result<List<Map<String, Object>>> rank(
+    public BaseResponse<List<Map<String, Object>>> rank(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(defaultValue = "20") int top) {
-        return Result.ok(service.rank(from, to, top));
+        return BaseResponse.ok(service.rank(from, to, top));
     }
 
     /**
@@ -100,10 +100,10 @@ public class BillableUtilizationController {
     @Operation(summary = "公司/团队整体均值")
     @PrePermission("execution:utilization:view")
     @GetMapping("/overall")
-    public Result<Map<String, Object>> overall(
+    public BaseResponse<Map<String, Object>> overall(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return Result.ok(service.overall(from, to));
+        return BaseResponse.ok(service.overall(from, to));
     }
 
     /**
@@ -116,10 +116,10 @@ public class BillableUtilizationController {
     @Operation(summary = "扫描预警员工（WARN/CRITICAL）")
     @PrePermission("execution:utilization:view")
     @GetMapping("/alerts")
-    public Result<List<Map<String, Object>>> alerts(
+    public BaseResponse<List<Map<String, Object>>> alerts(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return Result.ok(service.scanAlerts(from, to));
+        return BaseResponse.ok(service.scanAlerts(from, to));
     }
 
     /**
@@ -132,10 +132,10 @@ public class BillableUtilizationController {
     @Operation(summary = "纯计算评估：给 total/billable 小时数返回利用率与考核等级")
     @PrePermission("execution:utilization:view")
     @GetMapping("/evaluate")
-    public Result<Map<String, Object>> evaluate(
+    public BaseResponse<Map<String, Object>> evaluate(
             @RequestParam double totalHours,
             @RequestParam double billableHours) {
-        return Result.ok(service.evaluate(totalHours, billableHours));
+        return BaseResponse.ok(service.evaluate(totalHours, billableHours));
     }
 
     /**
@@ -149,10 +149,10 @@ public class BillableUtilizationController {
     @PrePermission("execution:utilization:recompute")
     @Idempotent(key = "billableUtilization:recompute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/recompute")
-    public Result<Map<String, Object>> recompute(
+    public BaseResponse<Map<String, Object>> recompute(
             @RequestParam(required = false) String period,
             @RequestParam(defaultValue = "false") boolean recomputeAll) {
-        return Result.ok(service.recompute(period, recomputeAll));
+        return BaseResponse.ok(service.recompute(period, recomputeAll));
     }
 
     /**
@@ -164,8 +164,8 @@ public class BillableUtilizationController {
     @Operation(summary = "读取最新一期快照均值（驾驶舱取数，快照为空时实时聚合兜底）")
     @PrePermission("execution:utilization:view")
     @GetMapping("/snapshotAverage")
-    public Result<Map<String, Object>> snapshotAverage(
+    public BaseResponse<Map<String, Object>> snapshotAverage(
             @RequestParam(required = false) String period) {
-        return Result.ok(service.snapshotAverage(period));
+        return BaseResponse.ok(service.snapshotAverage(period));
     }
 }

@@ -6,8 +6,8 @@ import com.njydsz.pmis.agent.domain.dto.tool.PromptTemplateCreateDTO;
 import com.njydsz.pmis.agent.domain.dto.tool.PromptTemplateQueryDTO;
 import com.njydsz.pmis.agent.domain.entity.agent.AgentPromptTemplateDO;
 import com.njydsz.pmis.agent.server.service.tool.PromptTemplateService;
-import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -48,8 +48,8 @@ public class PromptTemplateController {
     @Idempotent(key = "promptTemplate:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "创建模板", description = "创建新的 Prompt 模板（默认非生效，需手动激活）")
-    public Result<AgentPromptTemplateDO> create(@Valid @RequestBody PromptTemplateCreateDTO dto) {
-        return Result.ok(service.create(dto));
+    public BaseResponse<AgentPromptTemplateDO> create(@Valid @RequestBody PromptTemplateCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
@@ -61,8 +61,8 @@ public class PromptTemplateController {
     @Idempotent(key = "promptTemplate:activate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/activate")
     @Operation(summary = "激活模板", description = "激活指定模板版本，同 code 的其他版本自动失效")
-    public Result<AgentPromptTemplateDO> activate(@PathVariable String id) {
-        return Result.ok(service.activate(id));
+    public BaseResponse<AgentPromptTemplateDO> activate(@PathVariable String id) {
+        return BaseResponse.ok(service.activate(id));
     }
 
     /**
@@ -73,8 +73,8 @@ public class PromptTemplateController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "查询模板详情")
-    public Result<AgentPromptTemplateDO> getById(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<AgentPromptTemplateDO> getById(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -85,8 +85,8 @@ public class PromptTemplateController {
      */
     @GetMapping
     @Operation(summary = "分页查询模板")
-    public Result<PageResult<AgentPromptTemplateDO>> page(PromptTemplateQueryDTO query) {
-        return Result.ok(service.page(query));
+    public BaseResponse<PageResponse<AgentPromptTemplateDO>> page(PromptTemplateQueryDTO query) {
+        return BaseResponse.ok(service.page(query));
     }
 
     /**
@@ -98,8 +98,8 @@ public class PromptTemplateController {
     @Idempotent(key = "promptTemplate:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除模板", description = "软删除指定模板")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 }

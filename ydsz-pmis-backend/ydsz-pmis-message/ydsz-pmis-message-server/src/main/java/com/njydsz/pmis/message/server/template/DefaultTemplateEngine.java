@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.server.template;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import org.springframework.stereotype.Component;
 
@@ -116,11 +116,11 @@ public class DefaultTemplateEngine implements TemplateEngine {
         for (String key : requiredKeys) {
             Object value = resolve(params, key);
             if (value == null) {
-                throw new BizException(BizErrorCode.MISSING_PARAMETER,
+                throw new BizException(StandardResultCode.MISSING_PARAMETER,
                         "模板必填参数缺失: " + key);
             }
             if (value instanceof String s && s.isBlank()) {
-                throw new BizException(BizErrorCode.MISSING_PARAMETER,
+                throw new BizException(StandardResultCode.MISSING_PARAMETER,
                         "模板必填参数为空: " + key);
             }
         }

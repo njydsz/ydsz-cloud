@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.web.controller.archive;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
@@ -35,7 +35,7 @@ public class MessageArchiveController {
     @Operation(summary = "全文搜索消息日志")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping
-    public Result<Page<MsgLogDO>> search(
+    public BaseResponse<Page<MsgLogDO>> search(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String channel,
             @RequestParam(required = false) String status,
@@ -46,6 +46,6 @@ public class MessageArchiveController {
             @RequestParam(defaultValue = "20") int pageSize) {
         Page<MsgLogDO> result = messageArchiveService.search(keyword, channel, status, bizType,
                 startTime, endTime, TenantContext.getTenantId(), pageNum, pageSize);
-        return Result.ok(result);
+        return BaseResponse.ok(result);
     }
 }

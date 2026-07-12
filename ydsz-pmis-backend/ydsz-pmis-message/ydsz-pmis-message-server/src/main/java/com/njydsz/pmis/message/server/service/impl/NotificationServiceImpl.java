@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.impl.core;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.constant.SystemConstants;
 import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.exception.BizException;
@@ -52,7 +52,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional(rollbackFor = Exception.class)
     public int send(NotificationSendDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "通知参数不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "通知参数不能为空");
         }
         List<String> receiverIds = resolveReceiverIds(dto);
         int count = 0;
@@ -70,7 +70,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public Page<MsgNotificationDO> inbox(String userId, NotificationQueryDTO query) {
         if (!StringUtils.hasText(userId)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "用户 ID 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "用户 ID 不能为空");
         }
         Page<MsgNotificationDO> page = new Page<>(
                 query == null ? 1 : query.getPage(),
@@ -163,7 +163,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         Page<NotificationGroupVO> result = new Page<>(allPage.getCurrent(), allPage.getSize(), allPage.getTotal());
-        result.setRecords(new ArrayList<>(groupMap.values()));
+        BaseResponse.setRecords(new ArrayList<>(groupMap.values()));
         return result;
     }
 
@@ -185,7 +185,7 @@ public class NotificationServiceImpl implements NotificationService {
             receiverIds = List.of(dto.getReceiverId());
         }
         if (CollectionUtils.isEmpty(receiverIds)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "接收人不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "接收人不能为空");
         }
         return receiverIds;
     }

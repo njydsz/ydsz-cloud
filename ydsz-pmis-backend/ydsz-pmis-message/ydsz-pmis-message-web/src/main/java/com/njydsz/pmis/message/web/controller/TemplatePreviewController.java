@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.web.controller.template;
 
-import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
 import com.njydsz.pmis.message.server.service.template.TemplateService;
@@ -39,9 +39,9 @@ public class TemplatePreviewController {
 
     @Operation(summary = "按模板编码预览渲染结果")
     @PostMapping("/by-code")
-    public Result<Map<String, String>> previewByCode(@RequestBody PreviewRequest req) {
+    public BaseResponse<Map<String, String>> previewByCode(@RequestBody PreviewRequest req) {
         if (req == null || !StringUtils.hasText(req.getTemplateCode())) {
-            return Result.fail("模板编码不能为空");
+            return BaseResponse.fail("模板编码不能为空");
         }
         MsgTemplateDO template = templateService.loadByCodeAndChannel(
                 req.getTemplateCode(),
@@ -49,7 +49,7 @@ public class TemplatePreviewController {
                 StringUtils.hasText(req.getLocale()) ? req.getLocale() : "zh-CN",
                 TenantContext.getTenantId());
         if (template == null) {
-            return Result.fail("模板不存在: " + req.getTemplateCode());
+            return BaseResponse.fail("模板不存在: " + req.getTemplateCode());
         }
 
         Map<String, Object> params = req.getParams() == null ? new HashMap<>() : new HashMap<>(req.getParams());
@@ -63,21 +63,21 @@ public class TemplatePreviewController {
         }
 
         Map<String, String> result = new HashMap<>();
-        result.put("content", templateEngine.render(template.getContent(), params));
-        result.put("subject", templateEngine.render(
+        BaseResponse.put("content", templateEngine.render(template.getContent(), params));
+        BaseResponse.put("subject", templateEngine.render(
                 template.getSubject() == null ? "" : template.getSubject(), params));
-        return Result.ok(result);
+        return BaseResponse.ok(result);
     }
 
     @Operation(summary = "预览自定义模板内容")
     @PostMapping("/raw")
-    public Result<String> previewRaw(@RequestBody RawPreviewRequest req) {
+    public BaseResponse<String> previewRaw(@RequestBody RawPreviewRequest req) {
         if (req == null || !StringUtils.hasText(req.getTemplate())) {
-            return Result.fail("模板内容不能为空");
+            return BaseResponse.fail("模板内容不能为空");
         }
         Map<String, Object> params = req.getParams() == null ? new HashMap<>() : req.getParams();
         String rendered = templateEngine.render(req.getTemplate(), params);
-        return Result.ok(rendered);
+        return BaseResponse.ok(rendered);
     }
 
     @lombok.Data

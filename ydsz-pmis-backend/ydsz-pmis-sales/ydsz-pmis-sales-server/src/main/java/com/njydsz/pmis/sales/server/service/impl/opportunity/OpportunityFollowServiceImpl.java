@@ -2,7 +2,7 @@ package com.njydsz.pmis.sales.server.service.impl.opportunity;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.sales.domain.dto.OpportunityFollowDTO;
 import com.njydsz.pmis.sales.domain.entity.OpportunityFollowDO;
@@ -46,7 +46,7 @@ public class OpportunityFollowServiceImpl implements OpportunityFollowService {
     public String record(OpportunityFollowDTO dto) {
         validate(dto);
         if (opportunityMapper.selectById(dto.getOpportunityId()) == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_69bdeff3");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_69bdeff3");
         }
         OpportunityFollowDO f = new OpportunityFollowDO();
         BeanUtils.copyProperties(dto, f);
@@ -82,13 +82,13 @@ public class OpportunityFollowServiceImpl implements OpportunityFollowService {
      */
     private void validate(OpportunityFollowDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (dto.getOpportunityId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_5cdeabc1");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_5cdeabc1");
         }
         if (!StringUtils.hasText(dto.getFollowType())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_5b2e099f");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_5b2e099f");
         }
     }
 }

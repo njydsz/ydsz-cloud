@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.web.controller.execution;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.server.engine.BudgetGuard;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -42,7 +42,7 @@ public class BudgetController {
     @Operation(summary = "查询项目预算占用率与告警级别")
     @PrePermission("execution:budget:view")
     @GetMapping("/occupancy")
-    public Result<Map<String, Object>> occupancy(@RequestParam String initiationId) {
-        return Result.ok(budgetGuard.occupancy(initiationId));
+    public BaseResponse<Map<String, Object>> occupancy(@RequestParam String initiationId) {
+        return BaseResponse.ok(budgetGuard.occupancy(initiationId));
     }
 }

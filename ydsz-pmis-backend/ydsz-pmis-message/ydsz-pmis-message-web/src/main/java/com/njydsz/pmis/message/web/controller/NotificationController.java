@@ -4,9 +4,9 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.message.domain.dto.core.NotificationQueryDTO;
 import com.njydsz.pmis.message.domain.dto.core.NotificationSendDTO;
 import com.njydsz.pmis.message.domain.entity.core.MsgNotificationDO;
@@ -59,8 +59,8 @@ public class NotificationController {
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "notification:send", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send")
-    public Result<Integer> send(@Valid @RequestBody NotificationSendDTO dto) {
-        return Result.ok(notificationService.send(dto));
+    public BaseResponse<Integer> send(@Valid @RequestBody NotificationSendDTO dto) {
+        return BaseResponse.ok(notificationService.send(dto));
     }
 
     /**
@@ -72,8 +72,8 @@ public class NotificationController {
     @Operation(summary = "收件箱分页")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/inbox")
-    public Result<Page<MsgNotificationDO>> inbox(NotificationQueryDTO query) {
-        return Result.ok(notificationService.inbox(SecurityContext.getUserId(), query));
+    public BaseResponse<Page<MsgNotificationDO>> inbox(NotificationQueryDTO query) {
+        return BaseResponse.ok(notificationService.inbox(AuthContext.getUserId(), query));
     }
 
     /**
@@ -84,8 +84,8 @@ public class NotificationController {
     @Operation(summary = "未读数量")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/unreadCount")
-    public Result<Long> countUnread() {
-        return Result.ok(notificationService.countUnread(SecurityContext.getUserId()));
+    public BaseResponse<Long> countUnread() {
+        return BaseResponse.ok(notificationService.countUnread(AuthContext.getUserId()));
     }
 
     /**
@@ -98,8 +98,8 @@ public class NotificationController {
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "notification:markRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/read")
-    public Result<Boolean> markRead(@PathVariable String id) {
-        return Result.ok(notificationService.markRead(SecurityContext.getUserId(), id));
+    public BaseResponse<Boolean> markRead(@PathVariable String id) {
+        return BaseResponse.ok(notificationService.markRead(AuthContext.getUserId(), id));
     }
 
     /**
@@ -111,8 +111,8 @@ public class NotificationController {
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "notification:markAllRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/readAll")
-    public Result<Integer> markAllRead() {
-        return Result.ok(notificationService.markAllRead(SecurityContext.getUserId()));
+    public BaseResponse<Integer> markAllRead() {
+        return BaseResponse.ok(notificationService.markAllRead(AuthContext.getUserId()));
     }
 
     /**
@@ -125,9 +125,9 @@ public class NotificationController {
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_DELETE)
     @Idempotent(key = "notification:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping
-    public Result<Void> delete(@Valid @RequestBody List<String> ids) {
-        notificationService.delete(SecurityContext.getUserId(), ids);
-        return Result.ok();
+    public BaseResponse<Void> delete(@Valid @RequestBody List<String> ids) {
+        notificationService.delete(AuthContext.getUserId(), ids);
+        return BaseResponse.ok();
     }
 
     /**
@@ -140,8 +140,8 @@ public class NotificationController {
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_RECALL)
     @Idempotent(key = "notification:recall", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/recall")
-    public Result<Boolean> recall(@PathVariable String id) {
-        return Result.ok(recallService.recallNotification(SecurityContext.getUserId(), id));
+    public BaseResponse<Boolean> recall(@PathVariable String id) {
+        return BaseResponse.ok(recallService.recallNotification(AuthContext.getUserId(), id));
     }
 
     /**
@@ -156,13 +156,13 @@ public class NotificationController {
     @PrePermission(PermissionCodes.NOTIF_PUSH)
     @Idempotent(key = "notification:push", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/push")
-    public Result<Map<String, Object>> push(
+    public BaseResponse<Map<String, Object>> push(
             @RequestParam String userId,
             @RequestParam String type,
             @Valid @RequestBody RealtimePushDTO payload) {
         Object data = payload != null ? payload.getData() : null;
         realtimePushService.pushToUser(userId, type, data);
-        return Result.ok(Map.of("success", true, "userId", userId, "type", type));
+        return BaseResponse.ok(Map.of("success", true, "userId", userId, "type", type));
     }
 
     /**
@@ -176,10 +176,10 @@ public class NotificationController {
     @PrePermission(PermissionCodes.NOTIF_BROADCAST)
     @Idempotent(key = "notification:broadcast", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/broadcast")
-    public Result<Map<String, Object>> broadcast(
+    public BaseResponse<Map<String, Object>> broadcast(
             @RequestParam String type,
             @Valid @RequestBody Object payload) {
         realtimePushService.broadcast(type, payload);
-        return Result.ok(Map.of("success", true, "type", type));
+        return BaseResponse.ok(Map.of("success", true, "type", type));
     }
 }

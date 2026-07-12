@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.server.service.impl.job;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.cronjob.server.core.dag.DagParser;
 import com.njydsz.pmis.cronjob.server.core.dag.FailStrategy;
@@ -52,12 +52,12 @@ public class JobRelationServiceImpl implements JobRelationService {
         validateJobExists(childJobId, "后继任务");
         // 校验自依赖
         if (parentJobId.equals(childJobId)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_dag_self_ref");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_self_ref");
         }
         // 环检测：添加 parent→child 后是否形成环
         List<JobRelationDO> existing = jobRelationMapper.selectAllRelations();
         if (dagParser.wouldCreateCycle(parentJobId, childJobId, existing)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_dag_cycle",
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_cycle",
                     parentJobId, childJobId);
         }
         JobRelationDO relation = new JobRelationDO();
@@ -74,7 +74,7 @@ public class JobRelationServiceImpl implements JobRelationService {
     public void removeRelation(String relationId) {
         JobRelationDO relation = jobRelationMapper.selectById(relationId);
         if (relation == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.cronjob.msg_dag_not_found");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_dag_not_found");
         }
         jobRelationMapper.deleteById(relationId);
         log.info("[DagRelation] 删除依赖: id={} parent={} child={}",
@@ -101,7 +101,7 @@ public class JobRelationServiceImpl implements JobRelationService {
 
     private void validateJobExists(String jobId, String label) {
         if (jobMapper.selectById(jobId) == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.cronjob.msg_dag_job_not_found", label, jobId);
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_dag_job_not_found", label, jobId);
         }
     }
 }

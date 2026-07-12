@@ -3,7 +3,7 @@ package com.njydsz.pmis.sales.web.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.sales.domain.dto.ContractChangeDTO;
 import com.njydsz.pmis.sales.domain.entity.ContractChangeDO;
 import com.njydsz.pmis.sales.server.service.contract.ContractChangeService;
@@ -51,8 +51,8 @@ public class ContractChangeController {
     @PrePermission("project:contractChange:create")
     @Idempotent(key = "contractChange:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> apply(@Valid @RequestBody ContractChangeDTO dto) {
-        return Result.ok(service.apply(dto));
+    public BaseResponse<String> apply(@Valid @RequestBody ContractChangeDTO dto) {
+        return BaseResponse.ok(service.apply(dto));
     }
 
     /**
@@ -65,9 +65,9 @@ public class ContractChangeController {
     @PrePermission("project:contractChange:approve")
     @Idempotent(key = "contractChange:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/submit")
-    public Result<Void> submit(@PathVariable String id) {
+    public BaseResponse<Void> submit(@PathVariable String id) {
         service.submit(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -82,11 +82,11 @@ public class ContractChangeController {
     @PrePermission("project:contractChange:approve")
     @Idempotent(key = "contractChange:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/approve")
-    public Result<Void> approve(@PathVariable String id,
+    public BaseResponse<Void> approve(@PathVariable String id,
                            @RequestParam String approverId,
                            @RequestParam String approverName) {
         service.approve(id, approverId, approverName);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -102,12 +102,12 @@ public class ContractChangeController {
     @PrePermission("project:contractChange:approve")
     @Idempotent(key = "contractChange:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/reject")
-    public Result<Void> reject(@PathVariable String id,
+    public BaseResponse<Void> reject(@PathVariable String id,
                           @RequestParam String approverId,
                           @RequestParam String approverName,
                           @RequestParam(required = false) String reason) {
         service.reject(id, approverId, approverName, reason);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -119,8 +119,8 @@ public class ContractChangeController {
     @Operation(summary = "变更详情")
     @PrePermission("project:contractChange:list")
     @GetMapping("/{id}")
-    public Result<ContractChangeDO> get(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<ContractChangeDO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -135,12 +135,12 @@ public class ContractChangeController {
     @Operation(summary = "分页查询")
     @PrePermission("project:contractChange:list")
     @GetMapping("/page")
-    public Result<Page<ContractChangeDO>> page(
+    public BaseResponse<Page<ContractChangeDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String contractId,
             @RequestParam(required = false) String status) {
-        return Result.ok(service.page(page, size, contractId, status));
+        return BaseResponse.ok(service.page(page, size, contractId, status));
     }
 
     /**
@@ -152,7 +152,7 @@ public class ContractChangeController {
     @Operation(summary = "按合同列出")
     @PrePermission("project:contractChange:list")
     @GetMapping("/list")
-    public Result<List<ContractChangeDO>> listByContract(@RequestParam String contractId) {
-        return Result.ok(service.listByContract(contractId));
+    public BaseResponse<List<ContractChangeDO>> listByContract(@RequestParam String contractId) {
+        return BaseResponse.ok(service.listByContract(contractId));
     }
 }

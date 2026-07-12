@@ -3,10 +3,10 @@ package com.njydsz.pmis.workflow.web.controller.instance;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.WorkflowFacade;
 import com.njydsz.pmis.workflow.domain.dto.ai.FlowAiDraftCommentDTO;
 import com.njydsz.pmis.workflow.domain.dto.ai.FlowAiRecommendApproversDTO;
@@ -71,8 +71,8 @@ public class FlowTaskController {
      */
     @PrePermission(PermissionCodes.WORKFLOW_TASK_VIEW)
     @GetMapping("/task/{taskId}")
-    public Result<Map<String, Object>> taskDetail(@PathVariable String taskId) {
-        return Result.ok(workflowFacade.getTaskDetail(taskId));
+    public BaseResponse<Map<String, Object>> taskDetail(@PathVariable String taskId) {
+        return BaseResponse.ok(workflowFacade.getTaskDetail(taskId));
     }
 
     /**
@@ -86,9 +86,9 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:claim", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/claim")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> claim(@RequestParam String taskId) {
-        workflowFacade.claimTask(taskId, SecurityContext.getUserId());
-        return Result.ok();
+    public BaseResponse<Void> claim(@RequestParam String taskId) {
+        workflowFacade.claimTask(taskId, AuthContext.getUserId());
+        return BaseResponse.ok();
     }
 
     /**
@@ -100,11 +100,11 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:pass", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/pass")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> pass(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(SecurityContext.getUserId());
-        dto.setUserName(SecurityContext.getUsername());
+    public BaseResponse<Void> pass(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(AuthContext.getUserId());
+        dto.setUserName(AuthContext.getUsername());
         workflowFacade.completeTask(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -116,11 +116,11 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/reject")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> reject(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(SecurityContext.getUserId());
-        dto.setUserName(SecurityContext.getUsername());
+    public BaseResponse<Void> reject(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(AuthContext.getUserId());
+        dto.setUserName(AuthContext.getUsername());
         workflowFacade.rejectTask(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -132,13 +132,13 @@ public class FlowTaskController {
      * @return 该任务所属实例经过的历史节点列表（按首次完成时间正序）
      */
     @GetMapping("/task/{taskId}/rejectableNodes")
-    public Result<List<Map<String, Object>>> rejectableNodes(@PathVariable String taskId) {
+    public BaseResponse<List<Map<String, Object>>> rejectableNodes(@PathVariable String taskId) {
         FlowRunTaskDO task = taskService.getById(taskId);
         if (task == null) {
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
         List<Map<String, Object>> nodes = hisTaskMapper.listPassedNodes(task.getInstanceId());
-        return Result.ok(nodes);
+        return BaseResponse.ok(nodes);
     }
 
     /**
@@ -150,11 +150,11 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:transfer", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/transfer")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> transfer(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(SecurityContext.getUserId());
-        dto.setUserName(SecurityContext.getUsername());
+    public BaseResponse<Void> transfer(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(AuthContext.getUserId());
+        dto.setUserName(AuthContext.getUsername());
         workflowFacade.transferTask(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -166,11 +166,11 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:delegate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/delegate")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> delegate(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(SecurityContext.getUserId());
-        dto.setUserName(SecurityContext.getUsername());
+    public BaseResponse<Void> delegate(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(AuthContext.getUserId());
+        dto.setUserName(AuthContext.getUsername());
         workflowFacade.delegateTask(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -182,11 +182,11 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:countersignBefore", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/countersignBefore")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> countersignBefore(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(SecurityContext.getUserId());
-        dto.setUserName(SecurityContext.getUsername());
+    public BaseResponse<Void> countersignBefore(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(AuthContext.getUserId());
+        dto.setUserName(AuthContext.getUsername());
         workflowFacade.countersignBeforeTask(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -198,11 +198,11 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:countersignAfter", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/countersignAfter")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> countersignAfter(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(SecurityContext.getUserId());
-        dto.setUserName(SecurityContext.getUsername());
+    public BaseResponse<Void> countersignAfter(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(AuthContext.getUserId());
+        dto.setUserName(AuthContext.getUsername());
         workflowFacade.countersignAfterTask(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -215,11 +215,11 @@ public class FlowTaskController {
     @PostMapping("/task/countersignParallel")
     @Operation(summary = "并加签（与原审批人并行审批）")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> countersignParallel(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(SecurityContext.getUserId());
-        dto.setUserName(SecurityContext.getUsername());
+    public BaseResponse<Void> countersignParallel(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(AuthContext.getUserId());
+        dto.setUserName(AuthContext.getUsername());
         workflowFacade.countersignParallelTask(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -231,11 +231,11 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:jump", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/jump")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
-    public Result<Void> jump(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(SecurityContext.getUserId());
-        dto.setUserName(SecurityContext.getUsername());
+    public BaseResponse<Void> jump(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(AuthContext.getUserId());
+        dto.setUserName(AuthContext.getUsername());
         workflowFacade.jumpTask(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -254,12 +254,12 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:freeJump", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/freeJump")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_FREE_JUMP)
-    public Result<Void> freeJump(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(SecurityContext.getUserId());
-        dto.setUserName(SecurityContext.getUsername());
+    public BaseResponse<Void> freeJump(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(AuthContext.getUserId());
+        dto.setUserName(AuthContext.getUsername());
         dto.setAction("JUMP");
         workflowFacade.jumpTask(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -274,10 +274,10 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:batchPass", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/batchPass")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> batchPass(@RequestParam List<String> taskIds,
+    public BaseResponse<Void> batchPass(@RequestParam List<String> taskIds,
                                   @RequestParam(required = false) String comment) {
-        workflowFacade.batchPassTasks(taskIds, SecurityContext.getUserId(), comment);
-        return Result.ok();
+        workflowFacade.batchPassTasks(taskIds, AuthContext.getUserId(), comment);
+        return BaseResponse.ok();
     }
 
     /**
@@ -291,11 +291,11 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:batchReject", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/batchReject")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> batchReject(@RequestParam List<String> taskIds,
+    public BaseResponse<Void> batchReject(@RequestParam List<String> taskIds,
                                     @RequestParam(required = false) String comment,
                                     @RequestParam(required = false) String targetNodeCode) {
-        taskService.batchReject(taskIds, SecurityContext.getUserId(), comment, targetNodeCode);
-        return Result.ok();
+        taskService.batchReject(taskIds, AuthContext.getUserId(), comment, targetNodeCode);
+        return BaseResponse.ok();
     }
 
     /**
@@ -310,13 +310,13 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:batchTransfer", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/batchTransfer")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> batchTransfer(@RequestParam List<String> taskIds,
+    public BaseResponse<Void> batchTransfer(@RequestParam List<String> taskIds,
                                       @RequestParam(required = false) String comment,
                                       @RequestParam String targetUserId,
                                       @RequestParam(required = false) String targetUserName) {
-        taskService.batchTransfer(taskIds, SecurityContext.getUserId(), comment,
+        taskService.batchTransfer(taskIds, AuthContext.getUserId(), comment,
                 targetUserId, targetUserName);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -329,9 +329,9 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:batchUrge", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/batchUrge")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Integer> batchUrge(@RequestParam List<String> instanceIds,
+    public BaseResponse<Integer> batchUrge(@RequestParam List<String> instanceIds,
                                      @RequestParam(required = false) String comment) {
-        return Result.ok(taskService.batchUrge(instanceIds, SecurityContext.getUserId(), comment));
+        return BaseResponse.ok(taskService.batchUrge(instanceIds, AuthContext.getUserId(), comment));
     }
 
     /**
@@ -345,8 +345,8 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:passAll", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/passAll")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Integer> passAll(@RequestParam(required = false) String comment) {
-        return Result.ok(workflowFacade.passAllTodoTasks(SecurityContext.getUserId(), comment));
+    public BaseResponse<Integer> passAll(@RequestParam(required = false) String comment) {
+        return BaseResponse.ok(workflowFacade.passAllTodoTasks(AuthContext.getUserId(), comment));
     }
 
     /**
@@ -359,9 +359,9 @@ public class FlowTaskController {
      * @return 统一响应结果，包含待办任务列表
      */
     @GetMapping("/task/todo")
-    public Result<List<Map<String, Object>>> todo(@RequestParam(defaultValue = "1") @Min(1) int page,
+    public BaseResponse<List<Map<String, Object>>> todo(@RequestParam(defaultValue = "1") @Min(1) int page,
                                               @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        return Result.ok(workflowFacade.listTodoTasks(SecurityContext.getUserId(), page, size));
+        return BaseResponse.ok(workflowFacade.listTodoTasks(AuthContext.getUserId(), page, size));
     }
 
     /**
@@ -374,9 +374,9 @@ public class FlowTaskController {
      * @return 统一响应结果，包含已办任务列表
      */
     @GetMapping("/task/done")
-    public Result<List<Map<String, Object>>> done(@RequestParam(defaultValue = "1") @Min(1) int page,
+    public BaseResponse<List<Map<String, Object>>> done(@RequestParam(defaultValue = "1") @Min(1) int page,
                                               @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        return Result.ok(workflowFacade.listDoneTasks(SecurityContext.getUserId(), page, size));
+        return BaseResponse.ok(workflowFacade.listDoneTasks(AuthContext.getUserId(), page, size));
     }
 
     /**
@@ -387,10 +387,10 @@ public class FlowTaskController {
      * @return 统一响应结果，包含超期任务列表
      */
     @GetMapping("/task/overdue")
-    public Result<List<FlowRunTaskDO>> overdue(@RequestParam(required = false) String assigneeId,
+    public BaseResponse<List<FlowRunTaskDO>> overdue(@RequestParam(required = false) String assigneeId,
                                          @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(taskService.listOverdue(assigneeId, tid));
+        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(taskService.listOverdue(assigneeId, tid));
     }
 
     /**
@@ -402,10 +402,10 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:timeoutTask", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/{taskId}/timeout")
-    public Result<Void> timeoutTask(@PathVariable String taskId,
+    public BaseResponse<Void> timeoutTask(@PathVariable String taskId,
                                     @RequestParam(required = false) String reason) {
         taskService.timeoutTask(taskId, reason);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -422,7 +422,7 @@ public class FlowTaskController {
      * @return 统一响应结果，包含分页已办列表
      */
     @GetMapping("/task/done/search")
-    public Result<PageResult<FlowRunTaskDO>> doneSearch(
+    public BaseResponse<PageResponse<FlowRunTaskDO>> doneSearch(
             @RequestParam(required = false) String assigneeId,
             @RequestParam(required = false) String businessType,
             @RequestParam(required = false) String flowCode,
@@ -431,8 +431,8 @@ public class FlowTaskController {
             @RequestParam(required = false) String tenantId,
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
+        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
                 flowCode, startTime, endTime, tid, pageNo, pageSize));
     }
 
@@ -447,11 +447,11 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:countersignRemove", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/countersignRemove")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> countersignRemove(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(SecurityContext.getUserId());
-        dto.setUserName(SecurityContext.getUsername());
+    public BaseResponse<Void> countersignRemove(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(AuthContext.getUserId());
+        dto.setUserName(AuthContext.getUsername());
         taskService.countersignRemove(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -462,10 +462,10 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:markRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/{taskId}/read")
-    public Result<Void> markRead(@PathVariable String taskId) {
-        String userId = SecurityContext.getUserId();
+    public BaseResponse<Void> markRead(@PathVariable String taskId) {
+        String userId = AuthContext.getUserId();
         taskService.markRead(taskId, userId);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -477,11 +477,11 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:communicate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/communicate")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> communicate(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(SecurityContext.getUserId());
-        dto.setUserName(SecurityContext.getUsername());
+    public BaseResponse<Void> communicate(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(AuthContext.getUserId());
+        dto.setUserName(AuthContext.getUsername());
         taskService.communicate(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -493,11 +493,11 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:saveDraft", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/saveDraft")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> saveDraft(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(SecurityContext.getUserId());
-        dto.setUserName(SecurityContext.getUsername());
+    public BaseResponse<Void> saveDraft(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(AuthContext.getUserId());
+        dto.setUserName(AuthContext.getUsername());
         workflowFacade.saveDraft(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -509,11 +509,11 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:addApprover", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/addApprover")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> addApprover(@Valid @RequestBody FlowTaskOperateDTO dto) {
-        dto.setUserId(SecurityContext.getUserId());
-        dto.setUserName(SecurityContext.getUsername());
+    public BaseResponse<Void> addApprover(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(AuthContext.getUserId());
+        dto.setUserName(AuthContext.getUsername());
         workflowFacade.addApprover(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -528,9 +528,9 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:retract", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/{hisTaskId}/retract")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<String> retract(@PathVariable String hisTaskId,
+    public BaseResponse<String> retract(@PathVariable String hisTaskId,
                                   @RequestParam(required = false) String comment) {
-        return Result.ok(taskService.retract(hisTaskId, SecurityContext.getUserId(), comment));
+        return BaseResponse.ok(taskService.retract(hisTaskId, AuthContext.getUserId(), comment));
     }
 
     /**
@@ -546,10 +546,10 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:suspendTask", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/{taskId}/suspend")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> suspendTask(@PathVariable String taskId,
+    public BaseResponse<Void> suspendTask(@PathVariable String taskId,
                                     @RequestParam(required = false) String reason) {
-        workflowFacade.suspendTask(taskId, SecurityContext.getUserId(), reason);
-        return Result.ok();
+        workflowFacade.suspendTask(taskId, AuthContext.getUserId(), reason);
+        return BaseResponse.ok();
     }
 
     /**
@@ -561,9 +561,9 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:activateTask", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/task/{taskId}/activate")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> activateTask(@PathVariable String taskId) {
-        workflowFacade.activateTask(taskId, SecurityContext.getUserId());
-        return Result.ok();
+    public BaseResponse<Void> activateTask(@PathVariable String taskId) {
+        workflowFacade.activateTask(taskId, AuthContext.getUserId());
+        return BaseResponse.ok();
     }
 
     // ============== P1-7: WebSocket 待办数实时推送 ==============
@@ -574,16 +574,16 @@ public class FlowTaskController {
      * @return 包含 todoCount、userId、timestamp 的响应
      */
     @GetMapping("/todo/count")
-    public Result<Map<String, Object>> myTodoCount() {
-        String userId = SecurityContext.getUserId();
+    public BaseResponse<Map<String, Object>> myTodoCount() {
+        String userId = AuthContext.getUserId();
         if (userId == null) {
-            return Result.ok(Map.of("userId", 0, "todoCount", 0));
+            return BaseResponse.ok(Map.of("userId", 0, "todoCount", 0));
         }
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
         // P0-1 修复：移除 countOverdue 死代码（结果被覆盖），直接用 listTodoByUser 计算待办数
         var tasks = taskService.listTodoByUser(userId, null, null, tenantId);
         long count = tasks == null ? 0 : tasks.size();
-        return Result.ok(Map.of(
+        return BaseResponse.ok(Map.of(
                 "userId", userId,
                 "todoCount", count,
                 "timestamp", System.currentTimeMillis()
@@ -597,13 +597,13 @@ public class FlowTaskController {
      */
     @Idempotent(key = "flowTask:pushMyTodoCount", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/todo/pushMine")
-    public Result<Boolean> pushMyTodoCount() {
-        String userId = SecurityContext.getUserId();
+    public BaseResponse<Boolean> pushMyTodoCount() {
+        String userId = AuthContext.getUserId();
         if (userId == null) {
-            return Result.ok(false);
+            return BaseResponse.ok(false);
         }
         todoCountPushService.pushTodoCount(userId);
-        return Result.ok(true);
+        return BaseResponse.ok(true);
     }
 
     // ============== P2-1: 智能审批辅助 ==============
@@ -619,7 +619,7 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:recommendApprovers", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/ai/recommendApprovers")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<List<Map<String, Object>>> recommendApprovers(
+    public BaseResponse<List<Map<String, Object>>> recommendApprovers(
             @Valid @RequestBody FlowAiRecommendApproversDTO dto) {
         Map<String, Object> ctx = new LinkedHashMap<>();
         ctx.put("taskId", dto.getTaskId());
@@ -629,7 +629,7 @@ public class FlowTaskController {
         List<Map<String, Object>> candidates = List.of();
         int topN = 3;
         List<Map<String, Object>> top = aiAssistService.recommendApprovers(ctx, candidates, topN);
-        return Result.ok(top);
+        return BaseResponse.ok(top);
     }
 
     /**
@@ -643,7 +643,7 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:draftComment", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/ai/draftComment")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Map<String, Object>> draftComment(@Valid @RequestBody FlowAiDraftCommentDTO dto) {
+    public BaseResponse<Map<String, Object>> draftComment(@Valid @RequestBody FlowAiDraftCommentDTO dto) {
         Map<String, Object> params = new LinkedHashMap<>();
         params.put("taskId", dto.getTaskId());
         params.put("action", dto.getApproveAction());
@@ -651,7 +651,7 @@ public class FlowTaskController {
             params.put("hint", dto.getHint());
         }
         Map<String, Object> result = aiAssistService.draftComment(params);
-        return Result.ok(result);
+        return BaseResponse.ok(result);
     }
 
     /**
@@ -660,8 +660,8 @@ public class FlowTaskController {
      * @return AI 可用状态与支持的 Agent 列表
      */
     @GetMapping("/ai/status")
-    public Result<Map<String, Object>> aiStatus() {
-        return Result.ok(Map.of(
+    public BaseResponse<Map<String, Object>> aiStatus() {
+        return BaseResponse.ok(Map.of(
                 "available", aiAssistService.isAiAvailable(),
                 "agents", List.of("APPROVER_RECOMMEND", "COMMENT_DRAFT")
         ));
@@ -697,11 +697,11 @@ public class FlowTaskController {
     @Idempotent(key = "flowTask:recordApproverFeedback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/ai/approverFeedback")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Map<String, Object>> recordApproverFeedback(@RequestBody Map<String, Object> body) {
+    public BaseResponse<Map<String, Object>> recordApproverFeedback(@RequestBody Map<String, Object> body) {
         log.info("[FlowTask] 记录推荐反馈: traceId={} userId={} action={}",
                 body.get("traceId"), body.get("recommendedUserId"), body.get("action"));
         String feedbackId = aiAssistService.recordApproverFeedback(body);
-        return Result.ok(Map.of("feedbackId", feedbackId));
+        return BaseResponse.ok(Map.of("feedbackId", feedbackId));
     }
 
     /**
@@ -715,7 +715,7 @@ public class FlowTaskController {
      */
     @GetMapping("/ai/approverFeedback/stats")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Map<String, Object>> approverFeedbackStats(
+    public BaseResponse<Map<String, Object>> approverFeedbackStats(
             @RequestParam(required = false) String recommendedUserId,
             @RequestParam(required = false) String tenantId) {
         Map<String, Object> params = new LinkedHashMap<>();
@@ -725,7 +725,7 @@ public class FlowTaskController {
         if (tenantId != null && !tenantId.isBlank()) {
             params.put("tenantId", tenantId);
         }
-        return Result.ok(aiAssistService.getApproverFeedbackStats(params));
+        return BaseResponse.ok(aiAssistService.getApproverFeedbackStats(params));
     }
 
     // ============== P2-31/32/33: 审计运营统计 ==============
@@ -738,11 +738,11 @@ public class FlowTaskController {
      * @return 统一响应结果，包含每个节点的平均耗时统计
      */
     @GetMapping("/stats/nodeDuration")
-    public Result<List<Map<String, Object>>> nodeDurationStats(
+    public BaseResponse<List<Map<String, Object>>> nodeDurationStats(
             @RequestParam String flowCode,
             @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(taskService.nodeDurationStats(flowCode, tid));
+        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(taskService.nodeDurationStats(flowCode, tid));
     }
 
     /**
@@ -752,9 +752,9 @@ public class FlowTaskController {
      * @return 超期任务列表
      */
     @GetMapping("/stats/overdue")
-    public Result<List<FlowRunTaskDO>> statsOverdue(
+    public BaseResponse<List<FlowRunTaskDO>> statsOverdue(
             @RequestParam(required = false) String assigneeId) {
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(taskService.listOverdue(assigneeId, tenantId));
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(taskService.listOverdue(assigneeId, tenantId));
     }
 }

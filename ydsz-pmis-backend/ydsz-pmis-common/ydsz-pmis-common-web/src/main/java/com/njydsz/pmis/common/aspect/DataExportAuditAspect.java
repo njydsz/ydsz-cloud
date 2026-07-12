@@ -3,7 +3,7 @@ package com.njydsz.pmis.common.aspect;
 import com.njydsz.pmis.common.annotation.DataExportAudit;
 import com.njydsz.pmis.common.security.DataExportAuditEvent;
 import com.njydsz.pmis.common.security.LoginUser;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -71,7 +71,7 @@ public class DataExportAuditAspect {
     void publish(ProceedingJoinPoint pjp, DataExportAudit ann, Object result) {
         ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attrs != null ? attrs.getRequest() : null;
-        LoginUser user = SecurityContext.getCurrentOrNull();
+        LoginUser user = AuthContext.getCurrentOrNull();
 
         int rowCount = 0;
         if (result instanceof Collection<?> col) {

@@ -1,9 +1,9 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.domain.dto.instance.InstanceMigrationDTO;
 import com.njydsz.pmis.workflow.domain.dto.instance.InstanceMigrationResultDTO;
 import com.njydsz.pmis.workflow.domain.dto.instance.InstanceMigrationResultDTO.MigrationDetail;
@@ -76,9 +76,9 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     @Transactional(readOnly = true)
     public List<String> findRunningInstances(String definitionId, String tenantId) {
         if (definitionId == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "definitionId 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "definitionId 不能为空");
         }
-        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
         LambdaQueryWrapper<FlowInstanceDO> w = new LambdaQueryWrapper<>();
         w.eq(FlowInstanceDO::getDefinitionId, definitionId)
                 .eq(FlowInstanceDO::getFlowStatus, FlowInstanceStatus.RUNNING.name())
@@ -97,7 +97,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     @Transactional(readOnly = true)
     public Map<String, String> autoMapNodes(Long sourceDefId, Long targetDefId) {
         if (sourceDefId == null || targetDefId == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "sourceDefId/targetDefId 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "sourceDefId/targetDefId 不能为空");
         }
         List<FlowNodeDO> sourceNodes = nodeMapper.selectByDefinitionId(String.valueOf(sourceDefId));
         List<FlowNodeDO> targetNodes = nodeMapper.selectByDefinitionId(String.valueOf(targetDefId));
@@ -142,11 +142,11 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
         // 1. 参数校验
         if (dto == null || dto.getSourceDefinitionId() == null
                 || dto.getTargetDefinitionId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "sourceDefinitionId / targetDefinitionId 不能为空");
         }
         if (Objects.equals(dto.getSourceDefinitionId(), dto.getTargetDefinitionId())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "源定义与目标定义不能相同");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "源定义与目标定义不能相同");
         }
 
         boolean dryRun = Boolean.TRUE.equals(dto.getDryRun()) || forceDry;
@@ -154,7 +154,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
         String targetDefId = dto.getTargetDefinitionId();
         String tenantId = dto.getTenantId() != null
                 ? dto.getTenantId()
-                : SecurityContext.getTenantIdOrDefault("1");
+                : AuthContext.getTenantIdOrDefault("1");
         Map<String, String> nodeMapping = dto.getNodeMapping() != null
                 ? dto.getNodeMapping()
                 : Collections.emptyMap();
@@ -162,14 +162,14 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
         // 2. 校验源/目标定义存在且 flowCode 一致
         FlowDefinitionDO sourceDef = definitionMapper.selectById(sourceDefId);
         if (sourceDef == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "源流程定义不存在: " + sourceDefId);
+            throw new BizException(StandardResultCode.NOT_FOUND, "源流程定义不存在: " + sourceDefId);
         }
         FlowDefinitionDO targetDef = definitionMapper.selectById(targetDefId);
         if (targetDef == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "目标流程定义不存在: " + targetDefId);
+            throw new BizException(StandardResultCode.NOT_FOUND, "目标流程定义不存在: " + targetDefId);
         }
         if (!Objects.equals(sourceDef.getFlowCode(), targetDef.getFlowCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "源定义与目标定义 flowCode 不一致: source="
                             + sourceDef.getFlowCode() + " target=" + targetDef.getFlowCode());
         }
@@ -257,17 +257,17 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
 
         // 6. 组装结果
         InstanceMigrationResultDTO result = new InstanceMigrationResultDTO();
-        result.setTotalInstances(instances == null ? 0 : instances.size());
-        result.setMigratedCount(migratedCount);
-        result.setSkippedCount(skippedCount);
-        result.setFailedCount(failedCount);
-        result.setDetails(details);
-        result.setNodeMappingApplied(nodeMapping);
+        BaseResponse.setTotalInstances(instances == null ? 0 : instances.size());
+        BaseResponse.setMigratedCount(migratedCount);
+        BaseResponse.setSkippedCount(skippedCount);
+        BaseResponse.setFailedCount(failedCount);
+        BaseResponse.setDetails(details);
+        BaseResponse.setNodeMappingApplied(nodeMapping);
 
         log.info("[Flow-Migrate] 迁移完成: sourceDefId={} targetDefId={} dryRun={} "
                         + "total={} migrated={} skipped={} failed={}",
                 sourceDefId, targetDefId, dryRun,
-                result.getTotalInstances(), migratedCount, skippedCount, failedCount);
+                BaseResponse.getTotalInstances(), migratedCount, skippedCount, failedCount);
         return result;
     }
 

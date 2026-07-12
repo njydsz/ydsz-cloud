@@ -13,8 +13,8 @@ import com.njydsz.pmis.agent.server.tool.HttpApiTool;
 import com.njydsz.pmis.agent.server.tool.OpenApiSpecParser;
 import com.njydsz.pmis.agent.server.tool.ToolRegistry;
 import com.njydsz.pmis.agent.server.tool.ToolResult;
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.exception.BizException;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -119,7 +119,7 @@ public class ToolMarketServiceImpl implements ToolMarketService {
         // 校验工具名唯一性
         ToolMarketEntryDO existing = mapper.selectByToolName(dto.getToolName());
         if (existing != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "工具名称已存在: " + dto.getToolName());
+            throw new BizException(StandardResultCode.DUPLICATE_KEY, "工具名称已存在: " + dto.getToolName());
         }
 
         ToolMarketEntryDO entry = new ToolMarketEntryDO();
@@ -174,7 +174,7 @@ public class ToolMarketServiceImpl implements ToolMarketService {
     @Transactional(rollbackFor = Exception.class)
     public List<ToolMarketEntryDO> registerFromOpenApi(String specUrl) {
         if (!StringUtils.hasText(specUrl)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "OpenAPI 规范 URL 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "OpenAPI 规范 URL 不能为空");
         }
 
         log.info("[ToolMarket] 开始从 OpenAPI 导入: url={}", specUrl);
@@ -185,7 +185,7 @@ public class ToolMarketServiceImpl implements ToolMarketService {
         try {
             dtos = parser.parseFromUrl(specUrl);
         } catch (Exception e) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "OpenAPI 规范解析失败: " + e.getMessage());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "OpenAPI 规范解析失败: " + e.getMessage());
         }
 
         if (dtos.isEmpty()) {
@@ -228,7 +228,7 @@ public class ToolMarketServiceImpl implements ToolMarketService {
                 HttpApiTool tool = buildToolFromEntry(entry);
                 toolRegistry.register(tool);
 
-                result.add(entry);
+                BaseResponse.add(entry);
                 log.info("[ToolMarket] OpenAPI 工具导入成功: name={}", entry.getToolName());
             } catch (Exception e) {
                 log.warn("[ToolMarket] OpenAPI 工具导入失败: name={}, error={}",
@@ -236,7 +236,7 @@ public class ToolMarketServiceImpl implements ToolMarketService {
             }
         }
 
-        log.info("[ToolMarket] OpenAPI 导入完成: 成功={}, 总计={}", result.size(), dtos.size());
+        log.info("[ToolMarket] OpenAPI 导入完成: 成功={}, 总计={}", BaseResponse.size(), dtos.size());
         return result;
     }
 
@@ -253,7 +253,7 @@ public class ToolMarketServiceImpl implements ToolMarketService {
     public void unregister(String toolName) {
         ToolMarketEntryDO entry = mapper.selectByToolName(toolName);
         if (entry == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "工具不存在: " + toolName);
+            throw new BizException(StandardResultCode.NOT_FOUND, "工具不存在: " + toolName);
         }
 
         // 从 ToolRegistry 移除
@@ -277,7 +277,7 @@ public class ToolMarketServiceImpl implements ToolMarketService {
     public ToolMarketEntryDO enable(String toolName) {
         ToolMarketEntryDO entry = mapper.selectByToolName(toolName);
         if (entry == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "工具不存在: " + toolName);
+            throw new BizException(StandardResultCode.NOT_FOUND, "工具不存在: " + toolName);
         }
 
         entry.setEnabled(true);
@@ -290,7 +290,7 @@ public class ToolMarketServiceImpl implements ToolMarketService {
             log.info("[ToolMarket] 工具已启用: name={}", toolName);
         } catch (Exception e) {
             log.error("[ToolMarket] 工具启用失败: name={}, error={}", toolName, e.getMessage(), e);
-            throw new BizException(BizErrorCode.INTERNAL_ERROR, "工具启用失败: " + e.getMessage());
+            throw new BizException(StandardResultCode.INTERNAL_ERROR, "工具启用失败: " + e.getMessage());
         }
 
         return entry;
@@ -308,7 +308,7 @@ public class ToolMarketServiceImpl implements ToolMarketService {
     public ToolMarketEntryDO disable(String toolName) {
         ToolMarketEntryDO entry = mapper.selectByToolName(toolName);
         if (entry == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "工具不存在: " + toolName);
+            throw new BizException(StandardResultCode.NOT_FOUND, "工具不存在: " + toolName);
         }
 
         entry.setEnabled(false);
@@ -334,7 +334,7 @@ public class ToolMarketServiceImpl implements ToolMarketService {
     public ToolMarketEntryDO getById(String id) {
         ToolMarketEntryDO entry = mapper.selectById(id);
         if (entry == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "工具不存在: " + id);
+            throw new BizException(StandardResultCode.NOT_FOUND, "工具不存在: " + id);
         }
         return entry;
     }
@@ -348,7 +348,7 @@ public class ToolMarketServiceImpl implements ToolMarketService {
      * @return 分页结果
      */
     @Override
-    public PageResult<ToolMarketEntryDO> page(ToolMarketQueryDTO query) {
+    public PageResponse<ToolMarketEntryDO> page(ToolMarketQueryDTO query) {
         LambdaQueryWrapper<ToolMarketEntryDO> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(query.getToolName())) {
             wrapper.like(ToolMarketEntryDO::getToolName, query.getToolName());
@@ -367,7 +367,7 @@ public class ToolMarketServiceImpl implements ToolMarketService {
         int pageNum = query.getPage() == null || query.getPage() < 1 ? 1 : query.getPage();
         int pageSize = query.getSize() == null || query.getSize() < 1 ? 20 : query.getSize();
         Page<ToolMarketEntryDO> page = new Page<>(pageNum, pageSize);
-        return PageResult.ofPage(mapper.selectPage(page, wrapper));
+        return PageResponse.ofPage(mapper.selectPage(page, wrapper));
     }
 
     // ==================== 测试 ====================
@@ -387,7 +387,7 @@ public class ToolMarketServiceImpl implements ToolMarketService {
     public ToolResult testTool(String toolName, Map<String, Object> parameters) {
         ToolMarketEntryDO entry = mapper.selectByToolName(toolName);
         if (entry == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "工具不存在: " + toolName);
+            throw new BizException(StandardResultCode.NOT_FOUND, "工具不存在: " + toolName);
         }
 
         HttpApiTool tool = buildToolFromEntry(entry);

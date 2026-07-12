@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.impl.config;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.feign.MessageRequest;
@@ -54,14 +54,14 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     @Override
     public MsgRouteRuleDO create(RouteRuleUpsertDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getRuleCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "规则编码不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "规则编码不能为空");
         }
         MsgRouteRuleDO existing = msgRouteRuleMapper.selectOne(new LambdaQueryWrapper<MsgRouteRuleDO>()
                 .eq(MsgRouteRuleDO::getRuleCode, dto.getRuleCode())
                 .eq(MsgRouteRuleDO::getTenantId, TenantContext.getTenantId())
                 .last("LIMIT 1"));
         if (existing != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "规则编码已存在: " + dto.getRuleCode());
+            throw new BizException(StandardResultCode.DUPLICATE_KEY, "规则编码已存在: " + dto.getRuleCode());
         }
         MsgRouteRuleDO entity = toEntity(dto);
         msgRouteRuleMapper.insert(entity);
@@ -73,7 +73,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     @Override
     public MsgRouteRuleDO update(String id, RouteRuleUpsertDTO dto) {
         if (!StringUtils.hasText(id) || dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "规则 ID 与参数不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "规则 ID 与参数不能为空");
         }
         MsgRouteRuleDO entity = getById(id);
         if (StringUtils.hasText(dto.getRuleName())) {
@@ -114,7 +114,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     @Override
     public void delete(String id) {
         if (!StringUtils.hasText(id)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "规则 ID 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "规则 ID 不能为空");
         }
         msgRouteRuleMapper.deleteById(id);
         evictCache();
@@ -123,11 +123,11 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     @Override
     public MsgRouteRuleDO getById(String id) {
         if (!StringUtils.hasText(id)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "规则 ID 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "规则 ID 不能为空");
         }
         MsgRouteRuleDO entity = msgRouteRuleMapper.selectById(id);
         if (entity == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "路由规则不存在: " + id);
+            throw new BizException(StandardResultCode.NOT_FOUND, "路由规则不存在: " + id);
         }
         return entity;
     }

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.agent.web.controller.agent;
 
 import com.njydsz.pmis.agent.server.service.agent.AgentService;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.security.TenantContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -46,7 +46,7 @@ public class AgentOperationsController {
      */
     @GetMapping("/cost/summary")
     @Operation(summary = "Token 成本概览")
-    public Result<Map<String, Object>> costSummary(
+    public BaseResponse<Map<String, Object>> costSummary(
             @RequestParam(defaultValue = "") String startDate,
             @RequestParam(defaultValue = "") String endDate) {
         Map<String, Object> result = new LinkedHashMap<>();
@@ -66,7 +66,7 @@ public class AgentOperationsController {
                             "WHERE tenant_id = ? AND created_at >= ? AND created_at < ? + 1",
                     tenantId, start, end
             );
-            result.put("totals", totals);
+            BaseResponse.put("totals", totals);
 
             // 按模型分组
             List<Map<String, Object>> byModel = jdbcTemplate.queryForList(
@@ -78,7 +78,7 @@ public class AgentOperationsController {
                             "GROUP BY model_name ORDER BY cost DESC",
                     tenantId, start, end
             );
-            result.put("byModel", byModel);
+            BaseResponse.put("byModel", byModel);
 
             // 按日期趋势
             List<Map<String, Object>> dailyTrend = jdbcTemplate.queryForList(
@@ -90,16 +90,16 @@ public class AgentOperationsController {
                             "GROUP BY DATE(created_at) ORDER BY date",
                     tenantId, start, end
             );
-            result.put("dailyTrend", dailyTrend);
+            BaseResponse.put("dailyTrend", dailyTrend);
 
         } catch (Exception e) {
             log.warn("[AgentOperations] 成本概览查询失败: {}", e.getMessage());
-            result.put("totals", Map.of("total_tokens", 0, "total_cost", 0, "avg_cost", 0, "call_count", 0));
-            result.put("byModel", List.of());
-            result.put("dailyTrend", List.of());
+            BaseResponse.put("totals", Map.of("total_tokens", 0, "total_cost", 0, "avg_cost", 0, "call_count", 0));
+            BaseResponse.put("byModel", List.of());
+            BaseResponse.put("dailyTrend", List.of());
         }
 
-        return Result.ok(result);
+        return BaseResponse.ok(result);
     }
 
     /**
@@ -111,7 +111,7 @@ public class AgentOperationsController {
      */
     @GetMapping("/conversations/stats")
     @Operation(summary = "对话量统计")
-    public Result<Map<String, Object>> conversationStats(
+    public BaseResponse<Map<String, Object>> conversationStats(
             @RequestParam(defaultValue = "") String startDate,
             @RequestParam(defaultValue = "") String endDate) {
         Map<String, Object> result = new LinkedHashMap<>();
@@ -130,7 +130,7 @@ public class AgentOperationsController {
                             "WHERE tenant_id = ? AND created_at >= ? AND created_at < ? + 1",
                     tenantId, start, end
             );
-            result.put("totals", totals);
+            BaseResponse.put("totals", totals);
 
             // 按 Agent 分组
             List<Map<String, Object>> byAgent = jdbcTemplate.queryForList(
@@ -143,15 +143,15 @@ public class AgentOperationsController {
                             "GROUP BY agent_id, agent_name ORDER BY sessions DESC LIMIT 20",
                     tenantId, start, end
             );
-            result.put("byAgent", byAgent);
+            BaseResponse.put("byAgent", byAgent);
 
         } catch (Exception e) {
             log.warn("[AgentOperations] 对话量统计查询失败: {}", e.getMessage());
-            result.put("totals", Map.of("total_sessions", 0, "total_messages", 0, "unique_users", 0));
-            result.put("byAgent", List.of());
+            BaseResponse.put("totals", Map.of("total_sessions", 0, "total_messages", 0, "unique_users", 0));
+            BaseResponse.put("byAgent", List.of());
         }
 
-        return Result.ok(result);
+        return BaseResponse.ok(result);
     }
 
     /**
@@ -163,7 +163,7 @@ public class AgentOperationsController {
      */
     @GetMapping("/latency/stats")
     @Operation(summary = "模型延迟分布")
-    public Result<List<Map<String, Object>>> latencyStats(
+    public BaseResponse<List<Map<String, Object>>> latencyStats(
             @RequestParam(defaultValue = "") String startDate,
             @RequestParam(defaultValue = "") String endDate) {
         try {
@@ -184,10 +184,10 @@ public class AgentOperationsController {
                             "GROUP BY model_name ORDER BY avg_latency DESC",
                     tenantId, start, end
             );
-            return Result.ok(stats);
+            return BaseResponse.ok(stats);
         } catch (Exception e) {
             log.warn("[AgentOperations] 延迟统计查询失败: {}", e.getMessage());
-            return Result.ok(new ArrayList<>());
+            return BaseResponse.ok(new ArrayList<>());
         }
     }
 
@@ -204,7 +204,7 @@ public class AgentOperationsController {
      */
     @GetMapping("/conversations/search")
     @Operation(summary = "对话搜索")
-    public Result<Map<String, Object>> searchConversations(
+    public BaseResponse<Map<String, Object>> searchConversations(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String agentId,
             @RequestParam(defaultValue = "") String startDate,
@@ -238,7 +238,7 @@ public class AgentOperationsController {
                     "SELECT COUNT(*) FROM agent_trace " + whereClause,
                     Long.class, params.toArray()
             );
-            result.put("total", total != null ? total : 0);
+            BaseResponse.put("total", total != null ? total : 0);
 
             // 分页数据
             int offset = (page - 1) * size;
@@ -253,18 +253,18 @@ public class AgentOperationsController {
                             " ORDER BY created_at DESC LIMIT ? OFFSET ?",
                     params.toArray()
             );
-            result.put("records", records);
-            result.put("page", page);
-            result.put("size", size);
+            BaseResponse.put("records", records);
+            BaseResponse.put("page", page);
+            BaseResponse.put("size", size);
 
         } catch (Exception e) {
             log.warn("[AgentOperations] 对话搜索查询失败: {}", e.getMessage());
-            result.put("total", 0);
-            result.put("records", new ArrayList<>());
-            result.put("page", page);
-            result.put("size", size);
+            BaseResponse.put("total", 0);
+            BaseResponse.put("records", new ArrayList<>());
+            BaseResponse.put("page", page);
+            BaseResponse.put("size", size);
         }
 
-        return Result.ok(result);
+        return BaseResponse.ok(result);
     }
 }

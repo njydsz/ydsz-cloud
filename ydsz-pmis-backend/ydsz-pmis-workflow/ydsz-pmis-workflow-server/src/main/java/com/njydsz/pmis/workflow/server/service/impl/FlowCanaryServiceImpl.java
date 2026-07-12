@@ -3,9 +3,9 @@ package com.njydsz.pmis.workflow.server.service.impl.ai;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.domain.entity.definition.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.domain.enums.ai.CanaryStatus;
 import com.njydsz.pmis.workflow.domain.enums.ai.CanaryStrategy;
@@ -48,11 +48,11 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         validatePercent(initialPercent);
         FlowDefinitionDO def = mustGetDef(definitionId);
         if (def.getIsPublish() == null || def.getIsPublish() != 1) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5bdc1fe3");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_5bdc1fe3");
         }
         String curStatus = def.getCanaryStatus() == null ? CanaryStatus.NONE.name() : def.getCanaryStatus();
         if (CanaryStatus.PROMOTED.name().equals(curStatus)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_9ff06760");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_9ff06760");
         }
 
         int oldPercent = def.getCanaryPercent() == null ? 0 : def.getCanaryPercent();
@@ -75,7 +75,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         FlowDefinitionDO def = mustGetDef(definitionId);
         String curStatus = def.getCanaryStatus() == null ? CanaryStatus.NONE.name() : def.getCanaryStatus();
         if (!CanaryStatus.CANARYING.name().equals(curStatus)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.workflow.msg_f5374e71", curStatus);
         }
         int oldPercent = def.getCanaryPercent() == null ? 0 : def.getCanaryPercent();
@@ -103,7 +103,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
 
         // 1) 失效同 flowCode 的其他已发布版本
         String tenantId = def.getTenantId() != null
-                ? def.getTenantId() : SecurityContext.getTenantIdOrDefault("1");
+                ? def.getTenantId() : AuthContext.getTenantIdOrDefault("1");
         definitionMapper.deactivateByFlowCode(def.getFlowCode(), definitionId, tenantId);
 
         // 2) 当前定义晋升为稳定版（isPublish=1, canaryPercent=100, canaryStatus=PROMOTED）
@@ -143,7 +143,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         FlowDefinitionDO stable = definitionMapper.selectPublished(
                 flowCode,
                 StringUtils.hasText(version) ? version : "1.0",
-                tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1"));
+                tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1"));
         if (stable == null) {
             return null;
         }
@@ -151,7 +151,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         // 2) 查同 flowCode + tenant 的所有 CANARYING 灰度版（按 version desc 取最新）
         List<FlowDefinitionDO> canaries = definitionMapper.selectCanaryingByCode(
                 flowCode,
-                tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1"));
+                tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1"));
         if (canaries == null || canaries.isEmpty()) {
             return stable;
         }
@@ -176,7 +176,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         if (!StringUtils.hasText(flowCode)) {
             return Collections.emptyList();
         }
-        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
         List<FlowDefinitionDO> defs = definitionMapper.selectByFlowCode(flowCode, tid);
         if (defs == null || defs.isEmpty()) {
             return Collections.emptyList();
@@ -216,7 +216,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     /** 校验 percent 取值 */
     private void validatePercent(int percent) {
         if (percent < 0 || percent > 100) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.workflow.msg_a9bb9120", percent);
         }
     }
@@ -229,11 +229,11 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
      */
     private FlowDefinitionDO mustGetDef(String definitionId) {
         if (definitionId == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_375a4677");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_375a4677");
         }
         FlowDefinitionDO def = definitionMapper.selectById(definitionId);
         if (def == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_690c83d8", definitionId);
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.workflow.msg_690c83d8", definitionId);
         }
         return def;
     }

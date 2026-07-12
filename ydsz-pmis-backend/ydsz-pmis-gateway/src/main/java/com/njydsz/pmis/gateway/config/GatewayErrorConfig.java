@@ -1,7 +1,7 @@
 package com.njydsz.pmis.gateway.config;
 
 import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.constant.CommonConstants;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -86,7 +86,7 @@ public class GatewayErrorConfig {
                 traceId = TraceIdUtil.generate();
             }
 
-            Result<Void> body = Result.failed(bizCode, message);
+            BaseResponse<Void> body = BaseResponse.failed(bizCode, message);
             body.setTraceId(traceId);
 
             log.warn("[GatewayError] status={} bizCode={} traceId={} path={} error={}",

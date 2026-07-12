@@ -16,7 +16,7 @@ import com.njydsz.pmis.agent.server.orchestration.dag.DagExecutionResult;
 import com.njydsz.pmis.agent.server.orchestration.dag.DagExecutor;
 import com.njydsz.pmis.common.dag.DagNodeStatus;
 import com.njydsz.pmis.agent.server.service.agent.ValidationResult;
-import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.common.core.response.PageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
@@ -281,10 +281,10 @@ public class DagService {
      * @param tenantId 租户 ID（可选）
      * @return 分页结果
      */
-    public PageResult<DagDefinitionDO> pageDefinitions(int pageNum, int pageSize, String tenantId) {
+    public PageResponse<DagDefinitionDO> pageDefinitions(int pageNum, int pageSize, String tenantId) {
         DagDefinitionMapper mapper = defMapperProvider.getIfAvailable();
         if (mapper == null) {
-            return PageResult.empty();
+            return PageResponse.empty();
         }
         LambdaQueryWrapper<DagDefinitionDO> wrapper = new LambdaQueryWrapper<>();
         if (tenantId != null && !tenantId.isBlank()) {
@@ -292,7 +292,7 @@ public class DagService {
         }
         wrapper.orderByDesc(DagDefinitionDO::getCreatedAt);
         Page<DagDefinitionDO> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
-        return PageResult.of(page.getRecords(), page.getTotal(), pageNum, pageSize);
+        return PageResponse.of(page.getRecords(), page.getTotal(), pageNum, pageSize);
     }
 
     // ==================== DAG 执行 ====================
@@ -356,16 +356,16 @@ public class DagService {
      * @param pageSize     每页大小
      * @return 分页结果
      */
-    public PageResult<DagInstanceDO> pageInstances(String definitionId, int pageNum, int pageSize) {
+    public PageResponse<DagInstanceDO> pageInstances(String definitionId, int pageNum, int pageSize) {
         DagInstanceMapper mapper = instMapperProvider.getIfAvailable();
         if (mapper == null) {
-            return PageResult.empty();
+            return PageResponse.empty();
         }
         LambdaQueryWrapper<DagInstanceDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(DagInstanceDO::getDagDefinitionId, definitionId);
         wrapper.orderByDesc(DagInstanceDO::getCreatedAt);
         Page<DagInstanceDO> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
-        return PageResult.of(page.getRecords(), page.getTotal(), pageNum, pageSize);
+        return PageResponse.of(page.getRecords(), page.getTotal(), pageNum, pageSize);
     }
 
     /**
@@ -435,15 +435,15 @@ public class DagService {
         inst.setDagDefinitionId(defDO.getId());
         inst.setDagName(defDO.getName());
         inst.setBizType(defDO.getBizType());
-        inst.setStatus(result.getStatus() != null ? result.getStatus().name() : "UNKNOWN");
+        inst.setStatus(BaseResponse.getStatus() != null ? BaseResponse.getStatus().name() : "UNKNOWN");
         inst.setGlobalInputsJson(serialize(globalInputs));
-        inst.setNodeOutputsJson(serialize(result.getNodeOutputs()));
-        inst.setTotalCostMs(result.getTotalCostMs());
-        inst.setSuccessCount(result.getSuccessCount());
-        inst.setFailedCount(result.getFailedCount());
-        inst.setSkippedCount(result.getSkippedCount());
-        inst.setTotalNodes(result.getTotalNodes());
-        inst.setNote(result.getNote());
+        inst.setNodeOutputsJson(serialize(BaseResponse.getNodeOutputs()));
+        inst.setTotalCostMs(BaseResponse.getTotalCostMs());
+        inst.setSuccessCount(BaseResponse.getSuccessCount());
+        inst.setFailedCount(BaseResponse.getFailedCount());
+        inst.setSkippedCount(BaseResponse.getSkippedCount());
+        inst.setTotalNodes(BaseResponse.getTotalNodes());
+        inst.setNote(BaseResponse.getNote());
         instMapper.insert(inst);
 
         // 2. 持久化节点实例
@@ -451,21 +451,21 @@ public class DagService {
             log.warn("[DAG] DagNodeInstanceMapper 不可用，跳过节点明细持久化");
             return;
         }
-        if (result.getNodeStatuses() != null) {
-            for (Map.Entry<String, DagNodeStatus> entry : result.getNodeStatuses().entrySet()) {
+        if (BaseResponse.getNodeStatuses() != null) {
+            for (Map.Entry<String, DagNodeStatus> entry : BaseResponse.getNodeStatuses().entrySet()) {
                 DagNodeInstanceDO nodeDO = new DagNodeInstanceDO();
                 nodeDO.setTenantId(defDO.getTenantId());
                 nodeDO.setDagInstanceId(inst.getId());
                 nodeDO.setNodeName(entry.getKey());
                 nodeDO.setStatus(entry.getValue().name());
-                Object output = result.getNodeOutputs() != null
-                        ? result.getNodeOutputs().get(entry.getKey()) : null;
+                Object output = BaseResponse.getNodeOutputs() != null
+                        ? BaseResponse.getNodeOutputs().get(entry.getKey()) : null;
                 nodeDO.setOutputJson(serialize(output));
-                String error = result.getNodeErrors() != null
-                        ? result.getNodeErrors().get(entry.getKey()) : null;
+                String error = BaseResponse.getNodeErrors() != null
+                        ? BaseResponse.getNodeErrors().get(entry.getKey()) : null;
                 nodeDO.setErrorMessage(error);
-                Integer retryCount = result.getNodeRetryCounts() != null
-                        ? result.getNodeRetryCounts().get(entry.getKey()) : 0;
+                Integer retryCount = BaseResponse.getNodeRetryCounts() != null
+                        ? BaseResponse.getNodeRetryCounts().get(entry.getKey()) : 0;
                 nodeDO.setRetryCount(retryCount != null ? retryCount : 0);
                 nodeMapper.insert(nodeDO);
             }

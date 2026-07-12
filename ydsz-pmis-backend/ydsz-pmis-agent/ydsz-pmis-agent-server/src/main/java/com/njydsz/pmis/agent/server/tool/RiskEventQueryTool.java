@@ -2,7 +2,7 @@ package com.njydsz.pmis.agent.server.tool;
 
 import com.njydsz.pmis.agent.server.engine.AgentContext;
 import com.njydsz.pmis.project.api.client.ProjectServiceClient;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -171,13 +171,13 @@ public class RiskEventQueryTool implements AgentTool {
         // ALL 时不传 riskLevel 过滤参数
         String riskLevelFilter = "ALL".equals(severity) ? null : severity;
         try {
-            Result<Map<String, Object>> result = projectServiceClient.riskPage(1, 100, projectId, riskLevelFilter);
-            if (result == null || !result.isSuccess() || result.getData() == null) {
+            BaseResponse<Map<String, Object>> result = projectServiceClient.riskPage(1, 100, projectId, riskLevelFilter);
+            if (result == null || !BaseResponse.isSuccess() || BaseResponse.getData() == null) {
                 log.warn("[RiskEventQueryTool] Feign 调用失败或返回空 projectId={}, result={}",
-                        projectId, result == null ? "null" : result.getCode());
+                        projectId, result == null ? "null" : BaseResponse.getCode());
                 return List.of();
             }
-            Map<String, Object> pageData = result.getData();
+            Map<String, Object> pageData = BaseResponse.getData();
             Object recordsObj = pageData.get("records");
             if (!(recordsObj instanceof List<?> rawRecords)) {
                 return List.of();

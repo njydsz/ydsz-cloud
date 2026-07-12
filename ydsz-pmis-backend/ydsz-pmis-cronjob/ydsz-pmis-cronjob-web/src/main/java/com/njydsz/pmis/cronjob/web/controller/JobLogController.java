@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.web.controller.log;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.cronjob.domain.entity.log.JobLogContentDO;
 import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
 import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
@@ -55,11 +55,11 @@ public class JobLogController {
      */
     @Operation(summary = "分页查询日志内容")
     @GetMapping("/content/page")
-    public Result<List<JobLogContentDO>> pageContent(
+    public BaseResponse<List<JobLogContentDO>> pageContent(
             @RequestParam String logId,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "100") int size) {
-        return Result.ok(jobLogContentService.pageByLogId(logId, page, size));
+        return BaseResponse.ok(jobLogContentService.pageByLogId(logId, page, size));
     }
 
     /**
@@ -90,8 +90,8 @@ public class JobLogController {
      */
     @Operation(summary = "统计日志行数")
     @GetMapping("/content/count")
-    public Result<Integer> countContent(@RequestParam String logId) {
-        return Result.ok(jobLogContentService.countByLogId(logId));
+    public BaseResponse<Integer> countContent(@RequestParam String logId) {
+        return BaseResponse.ok(jobLogContentService.countByLogId(logId));
     }
 
     // ==================== 内部辅助方法 ====================

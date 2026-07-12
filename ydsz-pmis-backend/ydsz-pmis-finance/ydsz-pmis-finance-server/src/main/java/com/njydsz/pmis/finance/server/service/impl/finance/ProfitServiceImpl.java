@@ -1,7 +1,7 @@
 package com.njydsz.pmis.finance.server.service.impl.finance;
 
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.finance.domain.dto.ProfitSnapshotDTO;
 import com.njydsz.pmis.finance.server.engine.ProfitCalculator;
@@ -39,7 +39,7 @@ public class ProfitServiceImpl implements ProfitService {
     public String generateSnapshot(ProfitSnapshotDTO dto) {
         if (dto == null || dto.getInitiationId() == null
                 || !StringUtils.hasText(dto.getPeriod())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_99e1d335");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_99e1d335");
         }
         ProfitSnapshotDO snap = snapshotMapper.selectByInitiationAndPeriod(
                 dto.getInitiationId(), dto.getPeriod());

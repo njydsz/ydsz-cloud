@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.web.controller.execution;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.ApprovalDTO;
 import com.njydsz.pmis.project.domain.dto.PurchaseCreateDTO;
 import com.njydsz.pmis.project.domain.entity.PurchaseDO;
@@ -53,8 +53,8 @@ public class PurchaseController {
     @PrePermission("execution:purchase:create")
     @Idempotent(key = "purchase:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody PurchaseCreateDTO dto) {
-        return Result.ok(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody PurchaseCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
@@ -67,9 +67,9 @@ public class PurchaseController {
     @PrePermission("execution:purchase:status")
     @Idempotent(key = "purchase:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
-    public Result<Void> changeStatus(@Valid @RequestBody ApprovalDTO dto) {
+    public BaseResponse<Void> changeStatus(@Valid @RequestBody ApprovalDTO dto) {
         service.changeStatus(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -82,9 +82,9 @@ public class PurchaseController {
     @PrePermission("execution:purchase:delete")
     @Idempotent(key = "purchase:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -96,8 +96,8 @@ public class PurchaseController {
     @Operation(summary = "详情")
     @PrePermission("execution:purchase:list")
     @GetMapping("/{id}")
-    public Result<PurchaseDO> get(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<PurchaseDO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -113,12 +113,12 @@ public class PurchaseController {
     @Operation(summary = "分页")
     @PrePermission("execution:purchase:list")
     @GetMapping("/page")
-    public Result<Page<PurchaseDO>> page(
+    public BaseResponse<Page<PurchaseDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String initiationId) {
-        return Result.ok(service.page(page, size, keyword, status, initiationId));
+        return BaseResponse.ok(service.page(page, size, keyword, status, initiationId));
     }
 }

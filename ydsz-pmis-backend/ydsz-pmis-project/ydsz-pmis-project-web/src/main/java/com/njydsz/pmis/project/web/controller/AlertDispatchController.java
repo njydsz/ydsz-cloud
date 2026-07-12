@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.web.controller.common;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.AlertDispatchDTO;
 import com.njydsz.pmis.project.domain.entity.AlertDispatchDO;
 import com.njydsz.pmis.project.server.service.AlertDispatchService;
@@ -50,8 +50,8 @@ public class AlertDispatchController {
     @Operation(summary = "提交预警（自动按 level 解析目标角色）")
     @Idempotent(key = "alertDispatch:submit", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> submit(@Valid @RequestBody AlertDispatchDTO dto) {
-        return Result.ok(service.submit(dto));
+    public BaseResponse<String> submit(@Valid @RequestBody AlertDispatchDTO dto) {
+        return BaseResponse.ok(service.submit(dto));
     }
 
     /**
@@ -63,8 +63,8 @@ public class AlertDispatchController {
     @Operation(summary = "立即分发")
     @Idempotent(key = "alertDispatch:dispatchNow", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/dispatch")
-    public Result<Boolean> dispatchNow(@PathVariable String id) {
-        return Result.ok(service.dispatchNow(id));
+    public BaseResponse<Boolean> dispatchNow(@PathVariable String id) {
+        return BaseResponse.ok(service.dispatchNow(id));
     }
 
     /**
@@ -76,8 +76,8 @@ public class AlertDispatchController {
     @Operation(summary = "重试失败预警")
     @Idempotent(key = "alertDispatch:retryFailed", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/retry")
-    public Result<Integer> retryFailed(@RequestParam(defaultValue = "3") int maxRetry) {
-        return Result.ok(service.retryFailed(maxRetry));
+    public BaseResponse<Integer> retryFailed(@RequestParam(defaultValue = "3") int maxRetry) {
+        return BaseResponse.ok(service.retryFailed(maxRetry));
     }
 
     /**
@@ -90,9 +90,9 @@ public class AlertDispatchController {
     @Operation(summary = "取消预警")
     @Idempotent(key = "alertDispatch:cancel", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/cancel")
-    public Result<Void> cancel(@PathVariable String id, @RequestParam(required = false) String reason) {
+    public BaseResponse<Void> cancel(@PathVariable String id, @RequestParam(required = false) String reason) {
         service.cancel(id, reason);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -104,9 +104,9 @@ public class AlertDispatchController {
      */
     @Operation(summary = "按等级+状态查询")
     @GetMapping("/list")
-    public Result<List<AlertDispatchDO>> list(@RequestParam(required = false) String level,
+    public BaseResponse<List<AlertDispatchDO>> list(@RequestParam(required = false) String level,
                                          @RequestParam(required = false) String status) {
-        return Result.ok(service.listByLevelAndStatus(level, status));
+        return BaseResponse.ok(service.listByLevelAndStatus(level, status));
     }
 
     /**
@@ -117,8 +117,8 @@ public class AlertDispatchController {
      */
     @Operation(summary = "按类型 × 等级 聚合统计")
     @GetMapping("/aggregate")
-    public Result<List<Map<String, Object>>> aggregate(@RequestParam(required = false) String tenantId) {
-        return Result.ok(service.aggregateByTypeAndLevel(tenantId));
+    public BaseResponse<List<Map<String, Object>>> aggregate(@RequestParam(required = false) String tenantId) {
+        return BaseResponse.ok(service.aggregateByTypeAndLevel(tenantId));
     }
 
     /**
@@ -129,7 +129,7 @@ public class AlertDispatchController {
      */
     @Operation(summary = "解析等级对应目标角色（黄 → PM/PMO；红 → PMO/GM/CFO）")
     @GetMapping("/resolveRoles")
-    public Result<List<String>> resolveRoles(@RequestParam String level) {
-        return Result.ok(service.resolveTargetRoles(level));
+    public BaseResponse<List<String>> resolveRoles(@RequestParam String level) {
+        return BaseResponse.ok(service.resolveTargetRoles(level));
     }
 }

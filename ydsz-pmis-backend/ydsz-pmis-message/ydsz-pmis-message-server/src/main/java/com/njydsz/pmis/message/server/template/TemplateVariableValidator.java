@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.server.template;
 
 import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -104,7 +104,7 @@ public class TemplateVariableValidator {
         }
 
         if (!errors.isEmpty()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "模板变量校验失败[" + templateCode + "]: " + String.join("; ", errors));
         }
     }

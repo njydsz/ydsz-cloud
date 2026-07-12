@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.web.controller.connector;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.cronjob.server.core.connector.ConnectorConfig;
@@ -45,8 +45,8 @@ public class ConnectorController {
     @Operation(summary = "查询已注册连接器类型")
     @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/types")
-    public Result<List<String>> types() {
-        return Result.ok(connectorManager.getRegisteredTypes());
+    public BaseResponse<List<String>> types() {
+        return BaseResponse.ok(connectorManager.getRegisteredTypes());
     }
 
     /**
@@ -55,13 +55,13 @@ public class ConnectorController {
     @Operation(summary = "测试连接")
     @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
     @PostMapping("/test")
-    public Result<Boolean> testConnection(@RequestBody ConnectorConfig config,
+    public BaseResponse<Boolean> testConnection(@RequestBody ConnectorConfig config,
                                            @RequestParam String type) {
         JobConnector connector = connectorManager.getConnector(type);
         if (connector == null) {
-            return Result.fail("不支持的连接器类型: " + type);
+            return BaseResponse.fail("不支持的连接器类型: " + type);
         }
-        return Result.ok(connector.testConnection(config));
+        return BaseResponse.ok(connector.testConnection(config));
     }
 
     /**
@@ -70,13 +70,13 @@ public class ConnectorController {
     @Operation(summary = "查询远程任务列表")
     @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
     @PostMapping("/remote-tasks")
-    public Result<List<ConnectorTaskInfo>> listRemoteTasks(@RequestBody ConnectorConfig config,
+    public BaseResponse<List<ConnectorTaskInfo>> listRemoteTasks(@RequestBody ConnectorConfig config,
                                                             @RequestParam String type) {
         JobConnector connector = connectorManager.getConnector(type);
         if (connector == null) {
-            return Result.fail("不支持的连接器类型: " + type);
+            return BaseResponse.fail("不支持的连接器类型: " + type);
         }
-        return Result.ok(connector.listRemoteTasks(config));
+        return BaseResponse.ok(connector.listRemoteTasks(config));
     }
 
     /**
@@ -85,13 +85,13 @@ public class ConnectorController {
     @Operation(summary = "导入任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_CREATE)
     @PostMapping("/import")
-    public Result<List<ConnectorTaskInfo>> importTasks(@RequestBody ConnectorConfig config,
+    public BaseResponse<List<ConnectorTaskInfo>> importTasks(@RequestBody ConnectorConfig config,
                                                         @RequestParam String type) {
         JobConnector connector = connectorManager.getConnector(type);
         if (connector == null) {
-            return Result.fail("不支持的连接器类型: " + type);
+            return BaseResponse.fail("不支持的连接器类型: " + type);
         }
-        return Result.ok(connector.importTasks(config));
+        return BaseResponse.ok(connector.importTasks(config));
     }
 
     /**
@@ -100,12 +100,12 @@ public class ConnectorController {
     @Operation(summary = "导出任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_VIEW)
     @PostMapping("/export")
-    public Result<ConnectorExportResult> exportTasks(@RequestBody ExportRequest request) {
+    public BaseResponse<ConnectorExportResult> exportTasks(@RequestBody ExportRequest request) {
         JobConnector connector = connectorManager.getConnector(request.getType());
         if (connector == null) {
-            return Result.fail("不支持的连接器类型: " + request.getType());
+            return BaseResponse.fail("不支持的连接器类型: " + request.getType());
         }
-        return Result.ok(connector.exportTasks(request.getTasks(), request.getConfig()));
+        return BaseResponse.ok(connector.exportTasks(request.getTasks(), request.getConfig()));
     }
 
     /**

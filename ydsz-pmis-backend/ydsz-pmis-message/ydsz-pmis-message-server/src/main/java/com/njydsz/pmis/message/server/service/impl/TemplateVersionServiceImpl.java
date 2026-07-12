@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.server.service.impl.template;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -61,7 +61,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     @Override
     public List<MsgTemplateVersionDO> listVersions(String templateCode) {
         if (!StringUtils.hasText(templateCode)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "模板编码不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "模板编码不能为空");
         }
         return versionMapper.selectList(new LambdaQueryWrapper<MsgTemplateVersionDO>()
                 .eq(MsgTemplateVersionDO::getTemplateCode, templateCode)
@@ -124,13 +124,13 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
                 .eq(MsgTemplateVersionDO::getVersion, version)
                 .last("LIMIT 1"));
         if (versionDO == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "版本不存在: " + version);
+            throw new BizException(StandardResultCode.NOT_FOUND, "版本不存在: " + version);
         }
         MsgTemplateDO template = templateMapper.selectOne(new LambdaQueryWrapper<MsgTemplateDO>()
                 .eq(MsgTemplateDO::getTemplateCode, templateCode)
                 .last("LIMIT 1"));
         if (template == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "模板不存在: " + templateCode);
+            throw new BizException(StandardResultCode.NOT_FOUND, "模板不存在: " + templateCode);
         }
         template.setContent(versionDO.getContent());
         templateMapper.updateById(template);
@@ -150,19 +150,19 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     @Override
     public String preview(TemplatePreviewDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "预览参数不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "预览参数不能为空");
         }
         String content = dto.getContent();
         if (!StringUtils.hasText(content)) {
             // 从模板加载
             if (!StringUtils.hasText(dto.getTemplateCode())) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "templateCode 和 content 不能同时为空");
+                throw new BizException(StandardResultCode.BAD_REQUEST, "templateCode 和 content 不能同时为空");
             }
             MsgTemplateDO template = templateMapper.selectOne(new LambdaQueryWrapper<MsgTemplateDO>()
                     .eq(MsgTemplateDO::getTemplateCode, dto.getTemplateCode())
                     .last("LIMIT 1"));
             if (template == null) {
-                throw new BizException(BizErrorCode.NOT_FOUND, "模板不存在: " + dto.getTemplateCode());
+                throw new BizException(StandardResultCode.NOT_FOUND, "模板不存在: " + dto.getTemplateCode());
             }
             content = template.getContent();
         }
@@ -179,10 +179,10 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     @Override
     public MessageResult testSend(TemplateTestSendDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getTemplateCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "模板编码不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "模板编码不能为空");
         }
         if (!StringUtils.hasText(dto.getTestReceiver())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "测试接收人不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "测试接收人不能为空");
         }
         MessageRequest request = new MessageRequest();
         request.setTemplateCode(dto.getTemplateCode());

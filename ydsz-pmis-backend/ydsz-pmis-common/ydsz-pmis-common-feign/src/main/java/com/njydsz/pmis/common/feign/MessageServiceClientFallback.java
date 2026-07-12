@@ -1,7 +1,7 @@
 package com.njydsz.pmis.common.feign;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -24,16 +24,16 @@ public class MessageServiceClientFallback implements FallbackFactory<MessageServ
         log.warn("[Feign] MessageServiceClient degraded: {}", cause == null ? "?" : cause.getMessage());
         return new MessageServiceClient() {
             @Override
-            public Result<MessageResult> send(MessageRequest request) {
+            public BaseResponse<MessageResult> send(MessageRequest request) {
                 if (request == null) {
-                    return Result.ok(MessageResult.fail("UNKNOWN", "Degraded: empty request"));
+                    return BaseResponse.ok(MessageResult.fail("UNKNOWN", "Degraded: empty request"));
                 }
                 log.warn("[Feign] Degraded send: bizType={} bizId={} channel={} template={}",
                         request.getBizType(), request.getBizId(),
                         request.getChannel(), request.getTemplateCode());
                 MessageResult r = MessageResult.fail(request.getChannel(),
-                        BizErrorCode.SERVICE_UNAVAILABLE.getMessage());
-                return Result.ok(r);
+                        StandardResultCode.SERVICE_UNAVAILABLE.getMessage());
+                return BaseResponse.ok(r);
             }
         };
     }

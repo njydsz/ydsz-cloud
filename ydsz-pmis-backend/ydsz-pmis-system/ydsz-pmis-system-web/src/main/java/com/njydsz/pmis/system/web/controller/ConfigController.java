@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.annotation.RateLimit;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.system.domain.dto.config.ConfigFormDTO;
 import com.njydsz.pmis.system.domain.dto.config.ConfigQueryDTO;
 import com.njydsz.pmis.system.domain.entity.config.ConfigDO;
@@ -49,8 +49,8 @@ public class ConfigController {
     @PrePermission("sys:config:list")
     @RateLimit(key = "config", qps = 50, windowSeconds = 60)
     @GetMapping
-    public Result<Page<ConfigDO>> page(@Valid ConfigQueryDTO query) {
-        return Result.ok(configService.page(query));
+    public BaseResponse<Page<ConfigDO>> page(@Valid ConfigQueryDTO query) {
+        return BaseResponse.ok(configService.page(query));
     }
 
     @Operation(summary = "按 group+key 查配置")
@@ -63,10 +63,10 @@ public class ConfigController {
      * @param key   配置键
      * @return 统一响应结果，包含配置实体
      */
-    public Result<ConfigDO> getByKey(
+    public BaseResponse<ConfigDO> getByKey(
             @Parameter(description = "配置分组") @RequestParam String group,
             @Parameter(description = "配置键") @RequestParam String key) {
-        return Result.ok(configService.getByKey(group, key));
+        return BaseResponse.ok(configService.getByKey(group, key));
     }
 
     @Operation(summary = "按 group 查全部配置（key-value 形式）")
@@ -78,9 +78,9 @@ public class ConfigController {
      * @param group 配置分组
      * @return 统一响应结果，包含 key-value 映射
      */
-    public Result<Map<String, String>> getGroup(
+    public BaseResponse<Map<String, String>> getGroup(
             @Parameter(description = "配置分组") @PathVariable String group) {
-        return Result.ok(configService.getGroupAsMap(group));
+        return BaseResponse.ok(configService.getGroupAsMap(group));
     }
 
     @Operation(summary = "公开配置（前端可见）")
@@ -91,8 +91,8 @@ public class ConfigController {
      *
      * @return 统一响应结果，包含公开配置列表
      */
-    public Result<List<ConfigDO>> publicConfigs() {
-        return Result.ok(configService.listPublic());
+    public BaseResponse<List<ConfigDO>> publicConfigs() {
+        return BaseResponse.ok(configService.listPublic());
     }
 
     @Operation(summary = "创建配置")
@@ -106,8 +106,8 @@ public class ConfigController {
      * @param dto 配置表单
      * @return 统一响应结果，包含新增配置 ID
      */
-    public Result<String> create(@Valid @RequestBody ConfigFormDTO dto) {
-        return Result.ok(configService.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody ConfigFormDTO dto) {
+        return BaseResponse.ok(configService.create(dto));
     }
 
     @Operation(summary = "更新配置")
@@ -121,9 +121,9 @@ public class ConfigController {
      * @param dto 配置表单
      * @return 统一响应结果
      */
-    public Result<Void> update(@Valid @RequestBody ConfigFormDTO dto) {
+    public BaseResponse<Void> update(@Valid @RequestBody ConfigFormDTO dto) {
         configService.update(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     @Operation(summary = "删除配置")
@@ -137,10 +137,10 @@ public class ConfigController {
      * @param id 配置 ID
      * @return 统一响应结果
      */
-    public Result<Void> delete(
+    public BaseResponse<Void> delete(
             @Parameter(description = "配置ID") @PathVariable @NotBlank String id) {
         configService.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     @Operation(summary = "按分组批量删除")
@@ -154,9 +154,9 @@ public class ConfigController {
      * @param group 配置分组
      * @return 统一响应结果，包含删除条数
      */
-    public Result<Integer> deleteByGroup(
+    public BaseResponse<Integer> deleteByGroup(
             @Parameter(description = "配置分组") @PathVariable String group) {
-        return Result.ok(configService.deleteByGroup(group));
+        return BaseResponse.ok(configService.deleteByGroup(group));
     }
 
     @Operation(summary = "按分组批量启停")
@@ -171,10 +171,10 @@ public class ConfigController {
      * @param status 目标状态
      * @return 统一响应结果，包含受影响条数
      */
-    public Result<Integer> updateStatusByGroup(
+    public BaseResponse<Integer> updateStatusByGroup(
             @Parameter(description = "配置分组") @PathVariable String group,
             @Parameter(description = "状态") @PathVariable String status) {
-        return Result.ok(configService.updateStatusByGroup(group, status));
+        return BaseResponse.ok(configService.updateStatusByGroup(group, status));
     }
 
     @Operation(summary = "刷新缓存")
@@ -187,8 +187,8 @@ public class ConfigController {
      *
      * @return 统一响应结果
      */
-    public Result<Void> refresh() {
+    public BaseResponse<Void> refresh() {
         configService.refreshCache();
-        return Result.ok();
+        return BaseResponse.ok();
     }
 }

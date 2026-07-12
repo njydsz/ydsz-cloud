@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.web.controller.analytics;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.workflow.server.service.analytics.FlowAnalyticsService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,10 +37,10 @@ public class FlowAnalyticsController {
      */
     @GetMapping("/overview")
     @Operation(summary = "审批总览仪表盘")
-    public Result<Object> overview(
+    public BaseResponse<Object> overview(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime) {
-        return Result.ok(analyticsService.overview(startTime, endTime, TenantContext.getTenantId()));
+        return BaseResponse.ok(analyticsService.overview(startTime, endTime, TenantContext.getTenantId()));
     }
 
     /**
@@ -53,11 +53,11 @@ public class FlowAnalyticsController {
      */
     @GetMapping("/approverEfficiency")
     @Operation(summary = "办理人效率排行")
-    public Result<Object> approverEfficiency(
+    public BaseResponse<Object> approverEfficiency(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
             @RequestParam(defaultValue = "20") int limit) {
-        return Result.ok(analyticsService.approverEfficiency(startTime, endTime, TenantContext.getTenantId(), limit));
+        return BaseResponse.ok(analyticsService.approverEfficiency(startTime, endTime, TenantContext.getTenantId(), limit));
     }
 
     /**
@@ -69,10 +69,10 @@ public class FlowAnalyticsController {
      */
     @GetMapping("/flowEfficiency")
     @Operation(summary = "流程效率对比")
-    public Result<Object> flowEfficiency(
+    public BaseResponse<Object> flowEfficiency(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime) {
-        return Result.ok(analyticsService.flowEfficiencyComparison(startTime, endTime, TenantContext.getTenantId()));
+        return BaseResponse.ok(analyticsService.flowEfficiencyComparison(startTime, endTime, TenantContext.getTenantId()));
     }
 
     /**
@@ -83,8 +83,8 @@ public class FlowAnalyticsController {
      */
     @GetMapping("/nodeDuration")
     @Operation(summary = "节点耗时分析")
-    public Result<Object> nodeDuration(@RequestParam String flowCode) {
-        return Result.ok(analyticsService.nodeDurationStats(flowCode, TenantContext.getTenantId()));
+    public BaseResponse<Object> nodeDuration(@RequestParam String flowCode) {
+        return BaseResponse.ok(analyticsService.nodeDurationStats(flowCode, TenantContext.getTenantId()));
     }
 
     /**
@@ -97,10 +97,10 @@ public class FlowAnalyticsController {
      */
     @GetMapping("/approvalTrend")
     @Operation(summary = "审批趋势分析")
-    public Result<Object> approvalTrend(
+    public BaseResponse<Object> approvalTrend(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
             @RequestParam(defaultValue = "DAY") String granularity) {
-        return Result.ok(analyticsService.approvalTrend(startTime, endTime, TenantContext.getTenantId(), granularity));
+        return BaseResponse.ok(analyticsService.approvalTrend(startTime, endTime, TenantContext.getTenantId(), granularity));
     }
 }

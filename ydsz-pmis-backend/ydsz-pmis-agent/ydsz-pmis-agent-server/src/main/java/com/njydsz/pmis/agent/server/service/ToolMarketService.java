@@ -4,7 +4,7 @@ import com.njydsz.pmis.agent.domain.dto.tool.ToolMarketQueryDTO;
 import com.njydsz.pmis.agent.domain.dto.tool.ToolRegisterDTO;
 import com.njydsz.pmis.agent.domain.entity.tool.ToolMarketEntryDO;
 import com.njydsz.pmis.agent.server.tool.ToolResult;
-import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.common.core.response.PageResponse;
 
 import java.util.List;
 import java.util.Map;
@@ -73,7 +73,7 @@ public interface ToolMarketService {
      * @param query 查询条件
      * @return 分页结果
      */
-    PageResult<ToolMarketEntryDO> page(ToolMarketQueryDTO query);
+    PageResponse<ToolMarketEntryDO> page(ToolMarketQueryDTO query);
 
     /**
      * 测试工具调用（不影响 ToolRegistry）。

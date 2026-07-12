@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.WorkflowFacade;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
@@ -46,7 +46,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     @Transactional(rollbackFor = Exception.class)
     public String mergeInstances(List<String> instanceIds, String operatorId, String tenantId) {
         if (instanceIds == null || instanceIds.size() < 2) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5a6b7c8d");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_5a6b7c8d");
         }
         String tid = tenantId != null ? tenantId : "1";
 
@@ -55,15 +55,15 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         for (String instanceId : instanceIds) {
             FlowInstanceDO instance = instanceMapper.selectById(instanceId);
             if (instance == null) {
-                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_9e8f0a1b", instanceId);
+                throw new BizException(StandardResultCode.NOT_FOUND, "error.workflow.msg_9e8f0a1b", instanceId);
             }
             if (!"RUNNING".equals(instance.getFlowStatus())) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_2b3c4d5e");
+                throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_2b3c4d5e");
             }
             flowCodes.add(instance.getFlowCode());
         }
         if (flowCodes.size() > 1) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_6c7d8e9f");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_6c7d8e9f");
         }
 
         // 生成合并组 ID
@@ -156,12 +156,12 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
                 .entries(MERGE_GROUP_DETAIL_KEY + mergeGroupId);
 
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("mergeGroupId", mergeGroupId);
-        result.put("instanceIds", new ArrayList<>(instanceIds));
-        result.put("instanceCount", instanceIds.size());
-        result.put("operatorId", detail.get("operatorId"));
-        result.put("flowCode", detail.get("flowCode"));
-        result.put("createdAt", detail.get("createdAt"));
+        BaseResponse.put("mergeGroupId", mergeGroupId);
+        BaseResponse.put("instanceIds", new ArrayList<>(instanceIds));
+        BaseResponse.put("instanceCount", instanceIds.size());
+        BaseResponse.put("operatorId", detail.get("operatorId"));
+        BaseResponse.put("flowCode", detail.get("flowCode"));
+        BaseResponse.put("createdAt", detail.get("createdAt"));
 
         // 获取实例摘要
         List<Map<String, Object>> instanceDetails = new ArrayList<>();
@@ -177,7 +177,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
                 instanceDetails.add(info);
             }
         }
-        result.put("instances", instanceDetails);
+        BaseResponse.put("instances", instanceDetails);
         return result;
     }
 
@@ -207,7 +207,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
                         .map(FlowRunTaskDO::getId)
                         .collect(Collectors.toList());
                 group.put("taskIds", taskIds);
-                result.add(group);
+                BaseResponse.add(group);
             }
         }
         return result;

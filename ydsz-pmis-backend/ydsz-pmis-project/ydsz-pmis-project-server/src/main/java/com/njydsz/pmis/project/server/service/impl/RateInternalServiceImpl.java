@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.server.service.impl;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.domain.dto.RateInternalCreateDTO;
 import com.njydsz.pmis.project.domain.entity.RateInternalDO;
@@ -42,7 +42,7 @@ public class RateInternalServiceImpl implements RateInternalService {
     public String create(RateInternalCreateDTO dto) {
         validate(dto);
         if (rateMapper.selectByCode(dto.getRateCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_f713b711", dto.getRateCode());
+            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.execution.msg_f713b711", dto.getRateCode());
         }
         RateInternalDO r = new RateInternalDO();
         BeanUtils.copyProperties(dto, r);
@@ -60,9 +60,9 @@ public class RateInternalServiceImpl implements RateInternalService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(String id, RateInternalCreateDTO dto) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
+        if (id == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
         RateInternalDO r = rateMapper.selectById(id);
-        if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_c90e3407");
+        if (r == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_c90e3407");
         if (dto.getCostAmount() != null) r.setCostAmount(dto.getCostAmount());
         if (dto.getBillingUnit() != null) r.setBillingUnit(dto.getBillingUnit());
         if (dto.getCurrency() != null) r.setCurrency(dto.getCurrency());
@@ -78,16 +78,16 @@ public class RateInternalServiceImpl implements RateInternalService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(String id) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
+        if (id == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
         rateMapper.deleteById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public RateInternalDO getById(String id) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
+        if (id == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
         RateInternalDO r = rateMapper.selectById(id);
-        if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_c90e3407");
+        if (r == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_c90e3407");
         return r;
     }
 
@@ -119,21 +119,21 @@ public class RateInternalServiceImpl implements RateInternalService {
     }
 
     private void validate(RateInternalCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (dto == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getRateCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_3fbd3c07");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_3fbd3c07");
         }
         if (!StringUtils.hasText(dto.getLevelCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_11653d4c");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_11653d4c");
         }
         if (!StringUtils.hasText(dto.getBillingUnit())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_8e68458a");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_8e68458a");
         }
         if (dto.getCostAmount() == null || dto.getCostAmount().signum() < 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_a0286c2d");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_a0286c2d");
         }
         if (dto.getEffectiveDate() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_c10e0b62");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_c10e0b62");
         }
     }
 }

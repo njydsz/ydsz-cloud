@@ -1,7 +1,7 @@
 package com.njydsz.pmis.userinfo.server.service.impl.org;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.datasource.DataSourceConstants;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.userinfo.domain.dto.org.DepartmentFormDTO;
@@ -40,7 +40,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     @DS(DataSourceConstants.SLAVE)
     @Transactional(readOnly = true)
-    @Cacheable(value = CACHE_NAME, key = "'tree'", unless = "#result == null || #result.isEmpty()")
+    @Cacheable(value = CACHE_NAME, key = "'tree'", unless = "#result == null || #BaseResponse.isEmpty()")
     public List<DepartmentTreeVO> tree() {
         List<DepartmentDO> all = departmentMapper.selectAllEnabled();
         Map<String, DepartmentTreeVO> map = new HashMap<>();
@@ -67,7 +67,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     @DS(DataSourceConstants.SLAVE)
     @Transactional(readOnly = true)
-    @Cacheable(value = CACHE_NAME, key = "'listAllEnabled'", unless = "#result == null || #result.isEmpty()")
+    @Cacheable(value = CACHE_NAME, key = "'listAllEnabled'", unless = "#result == null || #BaseResponse.isEmpty()")
     public List<DepartmentDO> listAllEnabled() {
         return departmentMapper.selectAllEnabled();
     }
@@ -78,7 +78,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     public DepartmentDO getById(String id) {
         DepartmentDO d = departmentMapper.selectById(id);
         if (d == null) {
-            throw new BizException(BizErrorCode.DEPARTMENT_NOT_FOUND);
+            throw new BizException(StandardResultCode.DEPARTMENT_NOT_FOUND);
         }
         return d;
     }
@@ -90,14 +90,14 @@ public class DepartmentServiceImpl implements DepartmentService {
         // 编码唯一
         DepartmentDO exists = departmentMapper.selectByCode(dto.getDeptCode());
         if (exists != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_58b44529", dto.getDeptCode());
+            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.user.msg_58b44529", dto.getDeptCode());
         }
         // 父部门校验
         String parentId = dto.getParentId() == null ? "0" : dto.getParentId();
         if (!"0".equals(parentId)) {
             DepartmentDO parent = departmentMapper.selectById(parentId);
             if (parent == null) {
-                throw new BizException(BizErrorCode.DEPARTMENT_NOT_FOUND, "error.user.msg_b2cadf60");
+                throw new BizException(StandardResultCode.DEPARTMENT_NOT_FOUND, "error.user.msg_b2cadf60");
             }
         }
         DepartmentDO entity = new DepartmentDO();
@@ -123,15 +123,15 @@ public class DepartmentServiceImpl implements DepartmentService {
     @CacheEvict(value = CACHE_NAME, allEntries = true)
     public void update(DepartmentFormDTO dto) {
         if (dto.getId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_c04220b1");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_c04220b1");
         }
         DepartmentDO exists = departmentMapper.selectById(dto.getId());
         if (exists == null) {
-            throw new BizException(BizErrorCode.DEPARTMENT_NOT_FOUND);
+            throw new BizException(StandardResultCode.DEPARTMENT_NOT_FOUND);
         }
         // 不允许将父部门改为自身或子部门
         if (dto.getParentId() != null && Objects.equals(dto.getParentId(), dto.getId())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_abd06050");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_abd06050");
         }
         DepartmentDO entity = new DepartmentDO();
         BeanUtils.copyProperties(dto, entity);
@@ -144,12 +144,12 @@ public class DepartmentServiceImpl implements DepartmentService {
     public void delete(String id) {
         DepartmentDO d = departmentMapper.selectById(id);
         if (d == null) {
-            throw new BizException(BizErrorCode.DEPARTMENT_NOT_FOUND);
+            throw new BizException(StandardResultCode.DEPARTMENT_NOT_FOUND);
         }
         // 子部门校验
         List<DepartmentDO> children = departmentMapper.selectByParentId(id);
         if (!children.isEmpty()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_6b5e31bd");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_6b5e31bd");
         }
         departmentMapper.deleteById(id);
     }

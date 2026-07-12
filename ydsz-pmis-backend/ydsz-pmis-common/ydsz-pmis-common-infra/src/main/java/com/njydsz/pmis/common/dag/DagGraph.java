@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.dag;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 
 import java.util.ArrayDeque;
@@ -94,7 +94,7 @@ public final class DagGraph {
         List<String> result = new ArrayList<>(adj.size());
         while (!queue.isEmpty()) {
             String node = queue.poll();
-            result.add(node);
+            BaseResponse.add(node);
             for (String child : adj.getOrDefault(node, Collections.emptyList())) {
                 int newDegree = inDegree.merge(child, -1, (a, b) -> a + b);
                 if (newDegree == 0) {
@@ -157,7 +157,7 @@ public final class DagGraph {
         }
 
         if (completed.size() != adj.size()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.common.msg_dag_cycle_detected");
         }
         return layers;
@@ -285,27 +285,27 @@ public final class DagGraph {
      */
     public static void validate(Map<String, List<String>> adj, String dagName) {
         if (adj == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.common.msg_dag_null");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.common.msg_dag_null");
         }
         if (adj.isEmpty()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.common.msg_dag_empty_nodes", dagName);
         }
         for (Map.Entry<String, List<String>> entry : adj.entrySet()) {
             String from = entry.getKey();
             for (String to : entry.getValue()) {
                 if (from.equals(to)) {
-                    throw new BizException(BizErrorCode.BAD_REQUEST,
+                    throw new BizException(StandardResultCode.BAD_REQUEST,
                             "error.common.msg_dag_self_dep", from, dagName);
                 }
                 if (!adj.containsKey(to)) {
-                    throw new BizException(BizErrorCode.BAD_REQUEST,
+                    throw new BizException(StandardResultCode.BAD_REQUEST,
                             "error.common.msg_dag_missing_dep", from, to, dagName);
                 }
             }
         }
         if (hasCycle(adj)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.common.msg_dag_cycle_detected", dagName);
         }
     }

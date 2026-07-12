@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.agent.domain.dto.tool.QuotaSummary;
 import com.njydsz.pmis.agent.server.service.tool.TokenQuotaService;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.security.TenantContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,9 +40,9 @@ public class TokenQuotaController {
      */
     @GetMapping("/summary")
     @Operation(summary = "查询当月 Token 配额概览")
-    public Result<QuotaSummary> getSummary() {
+    public BaseResponse<QuotaSummary> getSummary() {
         String tenantId = TenantContext.getTenantId();
-        return Result.ok(tokenQuotaService.getQuotaSummary(tenantId));
+        return BaseResponse.ok(tokenQuotaService.getQuotaSummary(tenantId));
     }
 
     /**
@@ -53,9 +53,9 @@ public class TokenQuotaController {
     @Idempotent(key = "tokenQuota:reset", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/reset")
     @Operation(summary = "重置当月 Token 配额")
-    public Result<QuotaSummary> reset() {
+    public BaseResponse<QuotaSummary> reset() {
         String tenantId = TenantContext.getTenantId();
         tokenQuotaService.resetQuota(tenantId);
-        return Result.ok(tokenQuotaService.getQuotaSummary(tenantId));
+        return BaseResponse.ok(tokenQuotaService.getQuotaSummary(tenantId));
     }
 }

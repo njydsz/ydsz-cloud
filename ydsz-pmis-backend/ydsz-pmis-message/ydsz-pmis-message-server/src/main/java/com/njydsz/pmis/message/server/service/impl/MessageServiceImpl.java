@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.impl.core;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.constant.SystemConstants;
 import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.exception.BizException;
@@ -267,19 +267,19 @@ public class MessageServiceImpl implements MessageService {
         // ⑥-1 通道+bizType 维度令牌桶（全局配额）
         if (!rateLimitService.tryAcquire(buildRateLimitKey(channel, bizType), 1)) {
             messageMetrics.recordSend(channel, "FAILED", 0);
-            throw new BizException(BizErrorCode.RATE_LIMIT, "发送限流，请稍后重试");
+            throw new BizException(StandardResultCode.RATE_LIMIT, "发送限流，请稍后重试");
         }
         // ⑥-2 P2-5/P0-5: 多维度令牌桶（receiver/templateCode/tenant），优先级感知
         if (!rateLimitService.checkSendLimit(channel, receiver, templateCode,
                 TenantContext.getTenantId(), request.getPriority())) {
             messageMetrics.recordSend(channel, "RATE_LIMITED", 0);
-            throw new BizException(BizErrorCode.RATE_LIMIT, "多维度限流：receiver/template/tenant 超限");
+            throw new BizException(StandardResultCode.RATE_LIMIT, "多维度限流：receiver/template/tenant 超限");
         }
         // ⑥-3 用户偏好频率（每日/每小时上限）
         if (StringUtils.hasText(receiver)
                 && !rateLimitService.checkFrequency(receiver, channel, bizType)) {
             messageMetrics.recordSend(channel, "FAILED", 0);
-            throw new BizException(BizErrorCode.RATE_LIMIT, "发送频率超限");
+            throw new BizException(StandardResultCode.RATE_LIMIT, "发送频率超限");
         }
 
         // ⑦ 加载模板（有 templateCode 时，使用偏好 locale）
@@ -424,7 +424,7 @@ public class MessageServiceImpl implements MessageService {
         // ⑩ 通道分发
         MessageResult result = doDispatch(logDO, matchedRule, receiver);
         // P2-6: 父消息发送成功后触发级联发送(聚合消息不触发级联,由聚合 flush 时自行处理)
-        if (result != null && result.isSuccess()) {
+        if (result != null && BaseResponse.isSuccess()) {
             triggerCascade(request, logDO, depth);
         }
         return result;
@@ -537,16 +537,16 @@ public class MessageServiceImpl implements MessageService {
                     continue;
                 }
                 String upper = trimmed.toUpperCase();
-                if (!upper.equalsIgnoreCase(currentChannel) && !result.contains(upper)) {
-                    result.add(upper);
+                if (!upper.equalsIgnoreCase(currentChannel) && !BaseResponse.contains(upper)) {
+                    BaseResponse.add(upper);
                 }
             }
         }
-        if (result.isEmpty()) {
+        if (BaseResponse.isEmpty()) {
             String single = matchedRule.getFallbackChannel();
             if (StringUtils.hasText(single)
                     && !single.equalsIgnoreCase(currentChannel)) {
-                result.add(single.trim().toUpperCase());
+                BaseResponse.add(single.trim().toUpperCase());
             }
         }
         return result;
@@ -646,11 +646,11 @@ public class MessageServiceImpl implements MessageService {
         }
         // 限制单批最大 100 条,防止阻塞过久
         int limit = Math.min(requests.size(), MessageConstants.BATCH_SEND_MAX_SIZE);
-        result.setTotal(limit);
+        BaseResponse.setTotal(limit);
         for (int i = 0; i < limit; i++) {
             MessageRequest req = requests.get(i);
             if (req == null) {
-                result.incSkipped();
+                BaseResponse.incSkipped();
                 continue;
             }
             // 统一设置 bizId = batchId 便于进度查询
@@ -658,18 +658,18 @@ public class MessageServiceImpl implements MessageService {
             try {
                 MessageResult r = send(req);
                 if (r != null && r.isSuccess()) {
-                    result.incSuccess();
+                    BaseResponse.incSuccess();
                 } else {
-                    result.incFailed();
+                    BaseResponse.incFailed();
                 }
             } catch (Exception e) {
                 log.warn("[Message] 批量发送单条失败: batchId={} idx={} err={}",
                         batchId, i, e.getMessage());
-                result.incFailed();
+                BaseResponse.incFailed();
             }
         }
         log.info("[Message] 批量发送完成: batchId={} total={} success={} failed={} skipped={}",
-                batchId, result.getTotal(), result.getSuccess(), result.getFailed(), result.getSkipped());
+                batchId, BaseResponse.getTotal(), BaseResponse.getSuccess(), BaseResponse.getFailed(), BaseResponse.getSkipped());
         return result;
     }
 
@@ -879,7 +879,7 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public MessageResult sendTransactionally(MessageRequest request) {
         if (request == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "消息请求不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "消息请求不能为空");
         }
         RocketMQMessageProducer mqProducer = mqProducerProvider.getIfAvailable();
         if (mqProducer == null) {

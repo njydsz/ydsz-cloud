@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.web.controller.report;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.annotation.RateLimit;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.CockpitAlertSummaryVO;
 import com.njydsz.pmis.project.domain.dto.CockpitDrillDownDTO;
 import com.njydsz.pmis.project.domain.dto.CockpitKpiVO;
@@ -49,9 +49,9 @@ public class CockpitReportController {
     @PrePermission("cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/overview")
-    public Result<CockpitKpiVO> overview(@RequestParam(required = false) String period,
+    public BaseResponse<CockpitKpiVO> overview(@RequestParam(required = false) String period,
                                      CockpitDrillDownDTO drillDown) {
-        return Result.ok(service.overview(period, drillDown));
+        return BaseResponse.ok(service.overview(period, drillDown));
     }
 
     /**
@@ -65,9 +65,9 @@ public class CockpitReportController {
     @PrePermission("cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/evmHealth")
-    public Result<Map<String, Integer>> evmHealth(@RequestParam(required = false) String period,
+    public BaseResponse<Map<String, Integer>> evmHealth(@RequestParam(required = false) String period,
                                              CockpitDrillDownDTO drillDown) {
-        return Result.ok(service.evmHealthDistribution(period, drillDown));
+        return BaseResponse.ok(service.evmHealthDistribution(period, drillDown));
     }
 
     /**
@@ -80,8 +80,8 @@ public class CockpitReportController {
     @PrePermission("cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/benchCost")
-    public Result<Map<String, Object>> benchCost(CockpitDrillDownDTO drillDown) {
-        return Result.ok(service.benchCostSummary(drillDown));
+    public BaseResponse<Map<String, Object>> benchCost(CockpitDrillDownDTO drillDown) {
+        return BaseResponse.ok(service.benchCostSummary(drillDown));
     }
 
     /**
@@ -94,8 +94,8 @@ public class CockpitReportController {
     @PrePermission("cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/utilization")
-    public Result<Map<String, Object>> utilization(CockpitDrillDownDTO drillDown) {
-        return Result.ok(service.utilizationSummary(drillDown));
+    public BaseResponse<Map<String, Object>> utilization(CockpitDrillDownDTO drillDown) {
+        return BaseResponse.ok(service.utilizationSummary(drillDown));
     }
 
     /**
@@ -108,8 +108,8 @@ public class CockpitReportController {
     @PrePermission("cockpit:drilldown:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/drill/dept")
-    public Result<List<Map<String, Object>>> drillDept(@RequestParam(required = false) String period) {
-        return Result.ok(service.drillByDept(period));
+    public BaseResponse<List<Map<String, Object>>> drillDept(@RequestParam(required = false) String period) {
+        return BaseResponse.ok(service.drillByDept(period));
     }
 
     /**
@@ -122,8 +122,8 @@ public class CockpitReportController {
     @PrePermission("cockpit:drilldown:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/drill/projectType")
-    public Result<List<Map<String, Object>>> drillProjectType(@RequestParam(required = false) String period) {
-        return Result.ok(service.drillByProjectType(period));
+    public BaseResponse<List<Map<String, Object>>> drillProjectType(@RequestParam(required = false) String period) {
+        return BaseResponse.ok(service.drillByProjectType(period));
     }
 
     /**
@@ -136,8 +136,8 @@ public class CockpitReportController {
     @PrePermission("cockpit:drilldown:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/drill/customer")
-    public Result<List<Map<String, Object>>> drillCustomer(@RequestParam(required = false) String period) {
-        return Result.ok(service.drillByCustomer(period));
+    public BaseResponse<List<Map<String, Object>>> drillCustomer(@RequestParam(required = false) String period) {
+        return BaseResponse.ok(service.drillByCustomer(period));
     }
 
     /**
@@ -149,8 +149,8 @@ public class CockpitReportController {
     @PrePermission("cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/contractYearlyTrend")
-    public Result<Map<String, Object>> contractYearlyTrend() {
-        return Result.ok(service.contractAmountYearlyTrend());
+    public BaseResponse<Map<String, Object>> contractYearlyTrend() {
+        return BaseResponse.ok(service.contractAmountYearlyTrend());
     }
 
     // ========== 批次18 增量端点 ==========
@@ -166,9 +166,9 @@ public class CockpitReportController {
     @PrePermission("cockpit:alert:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/alerts")
-    public Result<CockpitAlertSummaryVO> alerts(@RequestParam(required = false) String period,
+    public BaseResponse<CockpitAlertSummaryVO> alerts(@RequestParam(required = false) String period,
                                             CockpitDrillDownDTO drillDown) {
-        return Result.ok(service.alertSummary(period, drillDown));
+        return BaseResponse.ok(service.alertSummary(period, drillDown));
     }
 
     /**
@@ -182,9 +182,9 @@ public class CockpitReportController {
     @PrePermission("cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/projectGroup")
-    public Result<List<ProjectGroupKpiDTO>> projectGroup(@RequestParam(required = false) String period,
+    public BaseResponse<List<ProjectGroupKpiDTO>> projectGroup(@RequestParam(required = false) String period,
                                                       CockpitDrillDownDTO drillDown) {
-        return Result.ok(service.projectGroupOverview(period, drillDown));
+        return BaseResponse.ok(service.projectGroupOverview(period, drillDown));
     }
 
     /**
@@ -198,9 +198,9 @@ public class CockpitReportController {
     @PrePermission("cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/executive")
-    public Result<ExecutiveOverviewVO> executive(@RequestParam(required = false) String period,
+    public BaseResponse<ExecutiveOverviewVO> executive(@RequestParam(required = false) String period,
                                              CockpitDrillDownDTO drillDown) {
-        return Result.ok(service.executiveOverview(period, drillDown));
+        return BaseResponse.ok(service.executiveOverview(period, drillDown));
     }
 
     /**
@@ -213,7 +213,7 @@ public class CockpitReportController {
     @PrePermission("cockpit:overview:view")
     @RateLimit(key = "cockpit", qps = 5, windowSeconds = 60)
     @GetMapping("/kpiTrend")
-    public Result<KpiTrendVO> kpiTrend(@RequestParam(required = false, defaultValue = "12") Integer months) {
-        return Result.ok(service.kpiTrend(months));
+    public BaseResponse<KpiTrendVO> kpiTrend(@RequestParam(required = false, defaultValue = "12") Integer months) {
+        return BaseResponse.ok(service.kpiTrend(months));
     }
 }

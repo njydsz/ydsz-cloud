@@ -2,8 +2,8 @@ package com.njydsz.pmis.userinfo.web.controller.auth;
 
 import com.njydsz.pmis.common.annotation.IdempotentExempt;
 
-import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.userinfo.domain.dto.auth.TwoFactorBindResult;
 import com.njydsz.pmis.userinfo.domain.entity.user.User2FADO;
 import com.njydsz.pmis.userinfo.server.service.auth.TwoFactorService;
@@ -43,10 +43,10 @@ public class TwoFactorController {
     @Operation(summary = "发起 TOTP 绑定")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/bind")
-    public Result<TwoFactorBindResult> bind() {
-        String userId = SecurityContext.getUserId();
-        String account = SecurityContext.getUsername();
-        return Result.ok(service.bindTotp(userId, account));
+    public BaseResponse<TwoFactorBindResult> bind() {
+        String userId = AuthContext.getUserId();
+        String account = AuthContext.getUsername();
+        return BaseResponse.ok(service.bindTotp(userId, account));
     }
 
     /**
@@ -58,9 +58,9 @@ public class TwoFactorController {
     @Operation(summary = "校验 OTP 完成绑定")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/confirm")
-    public Result<Boolean> confirm(@RequestParam String otp) {
-        String userId = SecurityContext.getUserId();
-        return Result.ok(service.confirmBind(userId, otp));
+    public BaseResponse<Boolean> confirm(@RequestParam String otp) {
+        String userId = AuthContext.getUserId();
+        return BaseResponse.ok(service.confirmBind(userId, otp));
     }
 
     /**
@@ -72,9 +72,9 @@ public class TwoFactorController {
     @Operation(summary = "校验 2FA 码（用于登录第二步）")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/verify")
-    public Result<Boolean> verify(@RequestParam String otp) {
-        String userId = SecurityContext.getUserId();
-        return Result.ok(service.verify(userId, otp));
+    public BaseResponse<Boolean> verify(@RequestParam String otp) {
+        String userId = AuthContext.getUserId();
+        return BaseResponse.ok(service.verify(userId, otp));
     }
 
     /**
@@ -86,9 +86,9 @@ public class TwoFactorController {
     @Operation(summary = "使用备份码")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/verifyBackup")
-    public Result<Boolean> verifyBackup(@RequestParam String code) {
-        String userId = SecurityContext.getUserId();
-        return Result.ok(service.verifyBackup(userId, code));
+    public BaseResponse<Boolean> verifyBackup(@RequestParam String code) {
+        String userId = AuthContext.getUserId();
+        return BaseResponse.ok(service.verifyBackup(userId, code));
     }
 
     /**
@@ -99,10 +99,10 @@ public class TwoFactorController {
     @Operation(summary = "关闭 2FA")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/disable")
-    public Result<Void> disable() {
-        String userId = SecurityContext.getUserId();
+    public BaseResponse<Void> disable() {
+        String userId = AuthContext.getUserId();
         service.disable(userId);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -112,9 +112,9 @@ public class TwoFactorController {
      */
     @Operation(summary = "查询我的 2FA 状态")
     @GetMapping("/me")
-    public Result<User2FADO> me() {
-        String userId = SecurityContext.getUserId();
-        return Result.ok(service.find(userId));
+    public BaseResponse<User2FADO> me() {
+        String userId = AuthContext.getUserId();
+        return BaseResponse.ok(service.find(userId));
     }
 
     /**
@@ -124,8 +124,8 @@ public class TwoFactorController {
      */
     @Operation(summary = "查询备份码（脱敏）")
     @GetMapping("/backupCodes")
-    public Result<List<String>> backupCodes() {
-        String userId = SecurityContext.getUserId();
-        return Result.ok(service.listBackupCodesMasked(userId));
+    public BaseResponse<List<String>> backupCodes() {
+        String userId = AuthContext.getUserId();
+        return BaseResponse.ok(service.listBackupCodesMasked(userId));
     }
 }

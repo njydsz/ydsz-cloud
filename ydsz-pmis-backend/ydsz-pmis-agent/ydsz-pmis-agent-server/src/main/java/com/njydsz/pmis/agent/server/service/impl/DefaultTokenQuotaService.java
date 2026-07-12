@@ -8,7 +8,7 @@ import com.njydsz.pmis.agent.domain.entity.tool.TokenUsageLogDO;
 import com.njydsz.pmis.agent.infra.mapper.tool.TokenQuotaMapper;
 import com.njydsz.pmis.agent.infra.mapper.tool.TokenUsageLogMapper;
 import com.njydsz.pmis.agent.server.service.tool.TokenQuotaService;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import lombok.extern.slf4j.Slf4j;
@@ -91,7 +91,7 @@ public class DefaultTokenQuotaService implements TokenQuotaService {
         if (estimatedTokens > remaining) {
             log.warn("[TokenQuota] 配额不足: tenant={} month={} needed={} remaining={}",
                     tenantId, month, estimatedTokens, remaining);
-            throw new BizException(BizErrorCode.QUOTA_EXCEEDED,
+            throw new BizException(StandardResultCode.QUOTA_EXCEEDED,
                     "error.agent.token_quota_exceeded",
                     tenantId, month, estimatedTokens, remaining);
         }

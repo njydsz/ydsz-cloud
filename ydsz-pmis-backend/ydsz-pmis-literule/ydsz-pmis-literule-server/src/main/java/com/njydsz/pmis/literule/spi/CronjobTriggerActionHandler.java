@@ -1,6 +1,6 @@
 package com.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.cronjob.api.client.CronjobServiceClient;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleResult;
@@ -56,7 +56,7 @@ public class CronjobTriggerActionHandler implements RuleActionHandler {
             return;
         }
         for (RuleResult result : results) {
-            if (!result.isTriggered()) {
+            if (!BaseResponse.isTriggered()) {
                 continue;
             }
             String jobId = resolveJobId(result, context);
@@ -64,17 +64,17 @@ public class CronjobTriggerActionHandler implements RuleActionHandler {
                 continue;
             }
             try {
-                Result<String> triggerResult = cronjobServiceClient.trigger(jobId);
+                BaseResponse<String> triggerResult = cronjobServiceClient.trigger(jobId);
                 if (triggerResult != null && triggerResult.isSuccess() && triggerResult.getData() != null) {
                     log.info("[LiteRule-Cronjob] 定时任务已触发: ruleCode={}, jobId={}, logId={}",
-                            result.getRuleCode(), jobId, triggerResult.getData());
+                            BaseResponse.getRuleCode(), jobId, triggerResult.getData());
                 } else {
                     log.warn("[LiteRule-Cronjob] 定时任务触发失败: ruleCode={}, jobId={}, result={}",
-                            result.getRuleCode(), jobId, triggerResult == null ? "null" : triggerResult.getCode());
+                            BaseResponse.getRuleCode(), jobId, triggerResult == null ? "null" : triggerResult.getCode());
                 }
             } catch (Exception e) {
                 log.warn("[LiteRule-Cronjob] 定时任务触发异常: ruleCode={}, jobId={}, error={}",
-                        result.getRuleCode(), jobId, e.getMessage());
+                        BaseResponse.getRuleCode(), jobId, e.getMessage());
             }
         }
     }
@@ -111,7 +111,7 @@ public class CronjobTriggerActionHandler implements RuleActionHandler {
     @SuppressWarnings("unchecked")
     private String resolveJobId(RuleResult result, RuleContext context) {
         // 1. 从 scope 字段解析 "cronjob:{jobId}"
-        String scope = result.getScope();
+        String scope = BaseResponse.getScope();
         if (scope != null && scope.startsWith("cronjob:")) {
             String jobId = scope.substring("cronjob:".length()).trim();
             if (!jobId.isEmpty()) {

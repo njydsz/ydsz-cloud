@@ -2,8 +2,8 @@ package com.njydsz.pmis.workflow.web.controller.integration;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.WorkflowFacade;
 import com.njydsz.pmis.workflow.domain.entity.integration.FlowEventSubscriptionDO;
 import com.njydsz.pmis.workflow.server.service.integration.FlowEventSubscriptionService;
@@ -48,8 +48,8 @@ public class FlowEventController {
      */
     @GetMapping("/info")
     @Operation(summary = "查询工作流引擎信息")
-    public Result<Map<String, Object>> info() {
-        return Result.ok(Map.of(
+    public BaseResponse<Map<String, Object>> info() {
+        return BaseResponse.ok(Map.of(
                 "engineType", workflowFacade.engineType(),
                 "available", true
         ));
@@ -73,13 +73,13 @@ public class FlowEventController {
      */
     @Idempotent(key = "flowEvent:correlateMessage", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/event/correlateMessage")
-    public Result<Integer> correlateMessage(
+    public BaseResponse<Integer> correlateMessage(
             @RequestParam String messageName,
             @RequestParam(required = false) String correlationKey,
             @RequestBody(required = false) String payload,
             @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(eventSubscriptionService.correlateMessage(tid, messageName, correlationKey, payload));
+        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(eventSubscriptionService.correlateMessage(tid, messageName, correlationKey, payload));
     }
 
     /**
@@ -96,13 +96,13 @@ public class FlowEventController {
      */
     @Idempotent(key = "flowEvent:throwError", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/event/throwError")
-    public Result<Integer> throwError(
+    public BaseResponse<Integer> throwError(
             @RequestParam String errorCode,
             @RequestParam(required = false) String instanceId,
             @RequestBody(required = false) String payload,
             @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(eventSubscriptionService.throwError(tid, instanceId, errorCode, payload));
+        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(eventSubscriptionService.throwError(tid, instanceId, errorCode, payload));
     }
 
     /**
@@ -112,8 +112,8 @@ public class FlowEventController {
      * @return 订阅列表（含 WAITING / COMPLETED / CANCELLED 状态）
      */
     @GetMapping("/instance/{instanceId}/eventSubscriptions")
-    public Result<List<FlowEventSubscriptionDO>> listEventSubscriptions(
+    public BaseResponse<List<FlowEventSubscriptionDO>> listEventSubscriptions(
             @PathVariable String instanceId) {
-        return Result.ok(eventSubscriptionService.listByInstance(instanceId));
+        return BaseResponse.ok(eventSubscriptionService.listByInstance(instanceId));
     }
 }

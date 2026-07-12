@@ -2,7 +2,7 @@ package com.njydsz.pmis.finance.api.client;
 import com.njydsz.pmis.common.feign.FeignClientConstants;
 import com.njydsz.pmis.finance.api.fallback.FinanceDataClientFallback;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,7 +36,7 @@ public interface FinanceDataClient {
      * @return 发票总金额
      */
     @GetMapping("/finance/data/invoice/sumAmount")
-    Result<BigDecimal> sumInvoiceAmount();
+    BaseResponse<BigDecimal> sumInvoiceAmount();
 
     /**
      * 已分配回款总金额
@@ -44,7 +44,7 @@ public interface FinanceDataClient {
      * @return 已分配回款总金额
      */
     @GetMapping("/finance/data/payment/sumAllocated")
-    Result<BigDecimal> sumAllocatedPayment();
+    BaseResponse<BigDecimal> sumAllocatedPayment();
 
     /**
      * 费用报销总金额
@@ -52,7 +52,7 @@ public interface FinanceDataClient {
      * @return 费用报销总金额
      */
     @GetMapping("/finance/data/expense/sumAmount")
-    Result<BigDecimal> sumExpenseAmount();
+    BaseResponse<BigDecimal> sumExpenseAmount();
 
     /**
      * 按项目统计独立立项数（有发票记录的）
@@ -60,7 +60,7 @@ public interface FinanceDataClient {
      * @return 独立立项数
      */
     @GetMapping("/finance/data/invoice/countDistinctInitiation")
-    Result<Integer> countDistinctInitiation();
+    BaseResponse<Integer> countDistinctInitiation();
 
     /**
      * 按部门统计发票金额
@@ -68,7 +68,7 @@ public interface FinanceDataClient {
      * @return 部门维度发票金额列表
      */
     @GetMapping("/finance/data/invoice/sumByDepartment")
-    Result<List<Map<String, Object>>> sumInvoiceByDepartment();
+    BaseResponse<List<Map<String, Object>>> sumInvoiceByDepartment();
 
     /**
      * 按项目类型统计发票金额
@@ -76,7 +76,7 @@ public interface FinanceDataClient {
      * @return 项目类型维度发票金额列表
      */
     @GetMapping("/finance/data/invoice/sumByProjectType")
-    Result<List<Map<String, Object>>> sumInvoiceByProjectType();
+    BaseResponse<List<Map<String, Object>>> sumInvoiceByProjectType();
 
     /**
      * 按客户统计发票金额
@@ -84,7 +84,7 @@ public interface FinanceDataClient {
      * @return 客户维度发票金额列表
      */
     @GetMapping("/finance/data/invoice/sumByCustomer")
-    Result<List<Map<String, Object>>> sumInvoiceByCustomer();
+    BaseResponse<List<Map<String, Object>>> sumInvoiceByCustomer();
 
     /**
      * 按年度统计发票金额
@@ -92,7 +92,7 @@ public interface FinanceDataClient {
      * @return 年度维度发票金额列表
      */
     @GetMapping("/finance/data/invoice/sumByYear")
-    Result<List<Map<String, Object>>> sumInvoiceByYear();
+    BaseResponse<List<Map<String, Object>>> sumInvoiceByYear();
 
     /**
      * 按最近月份统计发票金额
@@ -101,7 +101,7 @@ public interface FinanceDataClient {
      * @return 月度维度发票金额列表
      */
     @GetMapping("/finance/data/invoice/sumByRecentMonth")
-    Result<List<Map<String, Object>>> sumInvoiceByRecentMonth(@RequestParam("limit") Integer limit);
+    BaseResponse<List<Map<String, Object>>> sumInvoiceByRecentMonth(@RequestParam("limit") Integer limit);
 
     /**
      * 按最近月份统计回款金额
@@ -110,7 +110,7 @@ public interface FinanceDataClient {
      * @return 月度维度回款金额列表
      */
     @GetMapping("/finance/data/payment/aggregateByRecentMonth")
-    Result<List<Map<String, Object>>> aggregatePaymentByRecentMonth(@RequestParam("limit") Integer limit);
+    BaseResponse<List<Map<String, Object>>> aggregatePaymentByRecentMonth(@RequestParam("limit") Integer limit);
 
     /**
      * 按项目查询收入总额
@@ -120,7 +120,7 @@ public interface FinanceDataClient {
      * @return 收入总额
      */
     @GetMapping("/finance/data/revenue/sumByInitiation")
-    Result<BigDecimal> sumRevenue(@RequestParam("initiationId") String initiationId,
+    BaseResponse<BigDecimal> sumRevenue(@RequestParam("initiationId") String initiationId,
                                    @RequestParam(value = "period", required = false) String period);
 
     /**
@@ -131,7 +131,7 @@ public interface FinanceDataClient {
      * @return 费用总额
      */
     @GetMapping("/finance/data/expense/sumByInitiation")
-    Result<BigDecimal> sumExpense(@RequestParam("initiationId") String initiationId,
+    BaseResponse<BigDecimal> sumExpense(@RequestParam("initiationId") String initiationId,
                                    @RequestParam(value = "period", required = false) String period);
 
     /**
@@ -142,7 +142,7 @@ public interface FinanceDataClient {
      * @return 利润快照 Map
      */
     @GetMapping("/finance/data/profitSnapshot/latest")
-    Result<Map<String, Object>> latestProfitSnapshot(@RequestParam("initiationId") String initiationId,
+    BaseResponse<Map<String, Object>> latestProfitSnapshot(@RequestParam("initiationId") String initiationId,
                                                        @RequestParam(value = "period", required = false) String period);
 
     /**
@@ -151,7 +151,7 @@ public interface FinanceDataClient {
      * @return 利润快照列表
      */
     @GetMapping("/finance/data/profitSnapshot/summaryAll")
-    Result<List<Map<String, Object>>> profitSnapshotSummaryAll();
+    BaseResponse<List<Map<String, Object>>> profitSnapshotSummaryAll();
 
     /**
      * 利润排名（按毛利率/利润额排序）
@@ -162,7 +162,7 @@ public interface FinanceDataClient {
      * @return 排名列表
      */
     @GetMapping("/finance/data/profitSnapshot/rank")
-    Result<List<Map<String, Object>>> profitSnapshotRank(@RequestParam("top") Integer top,
+    BaseResponse<List<Map<String, Object>>> profitSnapshotRank(@RequestParam("top") Integer top,
                                                           @RequestParam("sortBy") String sortBy,
                                                           @RequestParam(value = "period", required = false) String period);
 
@@ -173,7 +173,7 @@ public interface FinanceDataClient {
      * @return 收入明细列表
      */
     @GetMapping("/finance/data/revenue/selectByInitiation")
-    Result<List<Map<String, Object>>> revenueByInitiation(@RequestParam("initiationId") String initiationId);
+    BaseResponse<List<Map<String, Object>>> revenueByInitiation(@RequestParam("initiationId") String initiationId);
 
     /**
      * 按项目查询收入期间汇总
@@ -182,5 +182,5 @@ public interface FinanceDataClient {
      * @return 期间汇总列表
      */
     @GetMapping("/finance/data/revenue/sumByPeriod")
-    Result<List<Map<String, Object>>> revenueSumByPeriod(@RequestParam("initiationId") String initiationId);
+    BaseResponse<List<Map<String, Object>>> revenueSumByPeriod(@RequestParam("initiationId") String initiationId);
 }

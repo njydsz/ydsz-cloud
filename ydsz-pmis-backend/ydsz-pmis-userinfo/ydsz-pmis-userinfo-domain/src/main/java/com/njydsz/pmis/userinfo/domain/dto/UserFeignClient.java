@@ -1,6 +1,6 @@
 package com.njydsz.pmis.userinfo.domain.dto.user;
 
-import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.userinfo.domain.vo.UserVO;
 
 import java.util.List;
@@ -37,5 +37,5 @@ public interface UserFeignClient {
      * @param query 查询条件
      * @return 分页结果
      */
-    PageResult<UserVO> page(UserQueryDTO query);
+    PageResponse<UserVO> page(UserQueryDTO query);
 }

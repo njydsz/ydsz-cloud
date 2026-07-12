@@ -2,7 +2,7 @@ package com.njydsz.pmis.sales.api.client;
 import com.njydsz.pmis.common.feign.FeignClientConstants;
 import com.njydsz.pmis.sales.api.fallback.SalesDataClientFallback;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -35,7 +35,7 @@ public interface SalesDataClient {
      * @return 合同总金额
      */
     @GetMapping("/sales/data/contract/sumAmount")
-    Result<BigDecimal> sumContractAmount();
+    BaseResponse<BigDecimal> sumContractAmount();
 
     /**
      * 按项目查询合同金额
@@ -44,7 +44,7 @@ public interface SalesDataClient {
      * @return 合同金额
      */
     @GetMapping("/sales/data/contract/sumByInitiation")
-    Result<BigDecimal> sumContractAmountByInitiation(@RequestParam("initiationId") String initiationId);
+    BaseResponse<BigDecimal> sumContractAmountByInitiation(@RequestParam("initiationId") String initiationId);
 
     /**
      * 按客户统计合同金额
@@ -52,7 +52,7 @@ public interface SalesDataClient {
      * @return 客户维度合同金额列表
      */
     @GetMapping("/sales/data/contract/sumByCustomer")
-    Result<List<Map<String, Object>>> sumContractByCustomer();
+    BaseResponse<List<Map<String, Object>>> sumContractByCustomer();
 
     /**
      * 按年度统计合同金额
@@ -60,7 +60,7 @@ public interface SalesDataClient {
      * @return 年度维度合同金额列表
      */
     @GetMapping("/sales/data/contract/sumByYear")
-    Result<List<Map<String, Object>>> sumContractByYear();
+    BaseResponse<List<Map<String, Object>>> sumContractByYear();
 
     /**
      * 按最近月份统计合同金额
@@ -69,7 +69,7 @@ public interface SalesDataClient {
      * @return 月度维度合同金额列表
      */
     @GetMapping("/sales/data/contract/sumByRecentMonth")
-    Result<List<Map<String, Object>>> sumContractByRecentMonth(@RequestParam("limit") Integer limit);
+    BaseResponse<List<Map<String, Object>>> sumContractByRecentMonth(@RequestParam("limit") Integer limit);
 
     /**
      * 商机总数
@@ -77,7 +77,7 @@ public interface SalesDataClient {
      * @return 商机总数
      */
     @GetMapping("/sales/data/opportunity/count")
-    Result<Integer> countOpportunities();
+    BaseResponse<Integer> countOpportunities();
 
     /**
      * 按项目类型统计合同金额
@@ -85,5 +85,5 @@ public interface SalesDataClient {
      * @return 项目类型维度合同金额列表
      */
     @GetMapping("/sales/data/contract/sumByProjectType")
-    Result<List<Map<String, Object>>> sumContractByProjectType();
+    BaseResponse<List<Map<String, Object>>> sumContractByProjectType();
 }

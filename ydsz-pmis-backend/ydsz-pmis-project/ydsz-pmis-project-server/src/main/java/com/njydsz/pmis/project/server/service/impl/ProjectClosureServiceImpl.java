@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.server.service.impl;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.domain.dto.ProjectClosureCreateDTO;
 import com.njydsz.pmis.project.domain.dto.ProjectClosureStatusDTO;
@@ -46,7 +46,7 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
     public String create(ProjectClosureCreateDTO dto) {
         validate(dto);
         if (closureMapper.selectByCode(dto.getClosureCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY,
+            throw new BizException(StandardResultCode.DUPLICATE_KEY,
                     "error.execution.msg_404a2e2f", dto.getClosureCode());
         }
         ProjectClosureDO c = new ProjectClosureDO();
@@ -69,13 +69,13 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
         ClosureStatus from = ClosureStatus.fromCode(c.getStatus());
         ClosureStatus to = ClosureStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2e33226a", c.getStatus());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_2e33226a", c.getStatus());
         }
         if (!from.canTransitTo(to)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.execution.msg_85e97de8", from.getDesc(), to.getDesc());
         }
         LocalDateTime now = LocalDateTime.now();
@@ -101,10 +101,10 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
         ProjectClosureDO c = getById(id);
         ClosureStatus st = ClosureStatus.fromCode(c.getStatus());
         if (st == ClosureStatus.ARCHIVED) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_6039c566");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_6039c566");
         }
         if (Integer.valueOf(1).equals(c.getLocked())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_82f90b0e");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_82f90b0e");
         }
         closureMapper.deleteById(id);
     }
@@ -114,7 +114,7 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
     public ProjectClosureDO getById(String id) {
         ProjectClosureDO c = closureMapper.selectById(id);
         if (c == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_d234ab69");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_d234ab69");
         }
         return c;
     }
@@ -175,16 +175,16 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
 
     private void validate(ProjectClosureCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         if (ClosureType.fromCode(dto.getClosureType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_85b85c9e", dto.getClosureType());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_85b85c9e", dto.getClosureType());
         }
         if (dto.getApplicantId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_98bc5a1a");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_98bc5a1a");
         }
         if (dto.getWarrantyMonths() != null && dto.getWarrantyMonths().signum() < 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_47202ff0");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_47202ff0");
         }
     }
 

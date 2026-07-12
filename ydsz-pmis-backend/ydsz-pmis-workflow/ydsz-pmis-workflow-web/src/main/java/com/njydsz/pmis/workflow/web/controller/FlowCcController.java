@@ -4,10 +4,10 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.IdempotentExempt;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.domain.dto.notification.FlowCcQueryDTO;
 import com.njydsz.pmis.workflow.domain.entity.notification.FlowCcDO;
 import com.njydsz.pmis.workflow.server.service.notification.FlowCcService;
@@ -46,12 +46,12 @@ public class FlowCcController {
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/cc/page")
     @PrePermission(PermissionCodes.WORKFLOW_CC_VIEW)
-    public Result<PageResult<FlowCcDO>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
-        String userId = SecurityContext.getUserId();
+    public BaseResponse<PageResponse<FlowCcDO>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String userId = AuthContext.getUserId();
         int pageNo = (int) query.getPage();
         int pageSize = (int) query.getSize();
-        return Result.ok(ccService.listCcByUser(userId, query.getReadStatus(),
+        return BaseResponse.ok(ccService.listCcByUser(userId, query.getReadStatus(),
                 query.getFlowCode(), tenantId, pageNo, pageSize));
     }
 
@@ -61,10 +61,10 @@ public class FlowCcController {
      * @return 未读抄送条数
      */
     @GetMapping("/cc/unreadCount")
-    public Result<Long> ccUnreadCount() {
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
-        String userId = SecurityContext.getUserId();
-        return Result.ok(ccService.countUnread(userId, tenantId));
+    public BaseResponse<Long> ccUnreadCount() {
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String userId = AuthContext.getUserId();
+        return BaseResponse.ok(ccService.countUnread(userId, tenantId));
     }
 
     /**
@@ -75,11 +75,11 @@ public class FlowCcController {
      */
     @Idempotent(key = "flowCc:ccMarkRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/cc/{id}/read")
-    public Result<Boolean> ccMarkRead(@PathVariable String id) {
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
-        String userId = SecurityContext.getUserId();
+    public BaseResponse<Boolean> ccMarkRead(@PathVariable String id) {
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String userId = AuthContext.getUserId();
         ccService.markRead(tenantId, userId, id);
-        return Result.ok(Boolean.TRUE);
+        return BaseResponse.ok(Boolean.TRUE);
     }
 
     /**
@@ -89,9 +89,9 @@ public class FlowCcController {
      */
     @Idempotent(key = "flowCc:ccMarkAllRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/cc/readAll")
-    public Result<Integer> ccMarkAllRead() {
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
-        String userId = SecurityContext.getUserId();
-        return Result.ok(ccService.markAllRead(tenantId, userId));
+    public BaseResponse<Integer> ccMarkAllRead() {
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        String userId = AuthContext.getUserId();
+        return BaseResponse.ok(ccService.markAllRead(tenantId, userId));
     }
 }

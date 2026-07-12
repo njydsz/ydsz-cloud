@@ -1,6 +1,6 @@
 package com.njydsz.pmis.literule.web;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.literule.api.dto.RuleDashboardDistributionVO;
 import com.njydsz.pmis.literule.api.dto.RuleDashboardOverviewVO;
 import com.njydsz.pmis.literule.api.dto.RuleDashboardRealtimeVO;
@@ -52,8 +52,8 @@ public class RuleDashboardController {
      */
     @GetMapping("/overview")
     @Operation(summary = "概览指标", description = "规则数量、触发率、P99 耗时、错误率等首屏卡片指标")
-    public Result<RuleDashboardOverviewVO> overview() {
-        return Result.ok(dashboardService.getOverview());
+    public BaseResponse<RuleDashboardOverviewVO> overview() {
+        return BaseResponse.ok(dashboardService.getOverview());
     }
 
     /**
@@ -64,9 +64,9 @@ public class RuleDashboardController {
      */
     @GetMapping("/trends")
     @Operation(summary = "趋势指标", description = "按时间维度（小时/天）展示触发次数、P99 耗时、错误率趋势")
-    public Result<RuleDashboardTrendVO> trends(
+    public BaseResponse<RuleDashboardTrendVO> trends(
             @RequestParam(value = "timeRange", defaultValue = "24h") String timeRange) {
-        return Result.ok(dashboardService.getTrends(timeRange));
+        return BaseResponse.ok(dashboardService.getTrends(timeRange));
     }
 
     /**
@@ -76,8 +76,8 @@ public class RuleDashboardController {
      */
     @GetMapping("/distribution")
     @Operation(summary = "分布指标", description = "按状态/类别/严重度/场景/租户/责任人分组的规则分布")
-    public Result<RuleDashboardDistributionVO> distribution() {
-        return Result.ok(dashboardService.getDistribution());
+    public BaseResponse<RuleDashboardDistributionVO> distribution() {
+        return BaseResponse.ok(dashboardService.getDistribution());
     }
 
     /**
@@ -89,10 +89,10 @@ public class RuleDashboardController {
      */
     @GetMapping("/topRules")
     @Operation(summary = "Top 规则列表", description = "按触发次数/平均耗时/错误率排序的 Top 规则")
-    public Result<List<RuleDashboardTopRuleVO>> topRules(
+    public BaseResponse<List<RuleDashboardTopRuleVO>> topRules(
             @RequestParam(value = "type", defaultValue = "triggered") String type,
             @RequestParam(value = "limit", defaultValue = "10") @Min(1) @Max(50) int limit) {
-        return Result.ok(dashboardService.getTopRules(type, limit));
+        return BaseResponse.ok(dashboardService.getTopRules(type, limit));
     }
 
     /**
@@ -102,7 +102,7 @@ public class RuleDashboardController {
      */
     @GetMapping("/realtime")
     @Operation(summary = "实时指标", description = "当前 QPS、活跃规则数、注册规则数等秒级实时指标")
-    public Result<RuleDashboardRealtimeVO> realtime() {
-        return Result.ok(dashboardService.getRealtime());
+    public BaseResponse<RuleDashboardRealtimeVO> realtime() {
+        return BaseResponse.ok(dashboardService.getRealtime());
     }
 }

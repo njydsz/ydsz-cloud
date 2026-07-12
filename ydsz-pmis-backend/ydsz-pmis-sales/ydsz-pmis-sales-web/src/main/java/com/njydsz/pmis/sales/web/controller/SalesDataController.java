@@ -1,6 +1,6 @@
 package com.njydsz.pmis.sales.web.controller;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.sales.infra.mapper.ContractMapper;
 import com.njydsz.pmis.sales.infra.mapper.OpportunityMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,78 +37,78 @@ public class SalesDataController {
 
     @GetMapping("/contract/sumAmount")
     @Operation(summary = "合同总金额")
-    public Result<BigDecimal> sumContractAmount() {
+    public BaseResponse<BigDecimal> sumContractAmount() {
         try {
-            return Result.ok(nz(contractMapper.sumAllAmount()));
+            return BaseResponse.ok(nz(contractMapper.sumAllAmount()));
         } catch (Exception e) {
             log.error("[SalesData] sumContractAmount 失败: {}", e.getMessage());
-            return Result.ok(BigDecimal.ZERO);
+            return BaseResponse.ok(BigDecimal.ZERO);
         }
     }
 
     @GetMapping("/contract/sumByInitiation")
     @Operation(summary = "按项目查询合同金额")
-    public Result<BigDecimal> sumContractAmountByInitiation(@RequestParam("initiationId") String initiationId) {
+    public BaseResponse<BigDecimal> sumContractAmountByInitiation(@RequestParam("initiationId") String initiationId) {
         try {
-            return Result.ok(nz(contractMapper.sumByInitiation(initiationId)));
+            return BaseResponse.ok(nz(contractMapper.sumByInitiation(initiationId)));
         } catch (Exception e) {
             log.error("[SalesData] sumContractAmountByInitiation 失败: {}", e.getMessage());
-            return Result.ok(BigDecimal.ZERO);
+            return BaseResponse.ok(BigDecimal.ZERO);
         }
     }
 
     @GetMapping("/contract/sumByCustomer")
     @Operation(summary = "按客户统计合同金额")
-    public Result<List<Map<String, Object>>> sumContractByCustomer() {
+    public BaseResponse<List<Map<String, Object>>> sumContractByCustomer() {
         try {
-            return Result.ok(contractMapper.sumByCustomer());
+            return BaseResponse.ok(contractMapper.sumByCustomer());
         } catch (Exception e) {
             log.error("[SalesData] sumContractByCustomer 失败: {}", e.getMessage());
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
     }
 
     @GetMapping("/contract/sumByYear")
     @Operation(summary = "按年度统计合同金额")
-    public Result<List<Map<String, Object>>> sumContractByYear() {
+    public BaseResponse<List<Map<String, Object>>> sumContractByYear() {
         try {
-            return Result.ok(contractMapper.sumByYear());
+            return BaseResponse.ok(contractMapper.sumByYear());
         } catch (Exception e) {
             log.error("[SalesData] sumContractByYear 失败: {}", e.getMessage());
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
     }
 
     @GetMapping("/contract/sumByRecentMonth")
     @Operation(summary = "按最近月份统计合同金额")
-    public Result<List<Map<String, Object>>> sumContractByRecentMonth(@RequestParam("limit") Integer limit) {
+    public BaseResponse<List<Map<String, Object>>> sumContractByRecentMonth(@RequestParam("limit") Integer limit) {
         try {
-            return Result.ok(contractMapper.sumByRecentMonth(limit));
+            return BaseResponse.ok(contractMapper.sumByRecentMonth(limit));
         } catch (Exception e) {
             log.error("[SalesData] sumContractByRecentMonth 失败: {}", e.getMessage());
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
     }
 
     @GetMapping("/opportunity/count")
     @Operation(summary = "商机总数")
-    public Result<Integer> countOpportunities() {
+    public BaseResponse<Integer> countOpportunities() {
         try {
-            return Result.ok(opportunityMapper.selectCount(null).intValue());
+            return BaseResponse.ok(opportunityMapper.selectCount(null).intValue());
         } catch (Exception e) {
             log.error("[SalesData] countOpportunities 失败: {}", e.getMessage());
-            return Result.ok(0);
+            return BaseResponse.ok(0);
         }
     }
 
     @GetMapping("/contract/sumByProjectType")
     @Operation(summary = "按项目类型统计合同金额")
-    public Result<List<Map<String, Object>>> sumContractByProjectType() {
+    public BaseResponse<List<Map<String, Object>>> sumContractByProjectType() {
         try {
-            return Result.ok(contractMapper.sumByProjectType());
+            return BaseResponse.ok(contractMapper.sumByProjectType());
         } catch (Exception e) {
             log.error("[SalesData] sumContractByProjectType 失败: {}", e.getMessage());
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
     }
 

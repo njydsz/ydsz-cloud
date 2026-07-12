@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.web.controller.receipt;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.receipt.RecallRequestDTO;
 import com.njydsz.pmis.message.server.service.receipt.RecallService;
@@ -44,9 +44,9 @@ public class RecallController {
     @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
     @Idempotent(key = "recall:recallNotification", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/notification")
-    public Result<Boolean> recallNotification(@RequestParam String userId,
+    public BaseResponse<Boolean> recallNotification(@RequestParam String userId,
                                               @Valid @RequestBody RecallRequestDTO dto) {
-        return Result.ok(recallService.recallNotification(userId, dto.getId()));
+        return BaseResponse.ok(recallService.recallNotification(userId, dto.getId()));
     }
 
     /**
@@ -59,8 +59,8 @@ public class RecallController {
     @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
     @Idempotent(key = "recall:recallMessage", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/message/{logId}")
-    public Result<Boolean> recallMessage(@PathVariable String logId) {
-        return Result.ok(recallService.recallMessage(logId));
+    public BaseResponse<Boolean> recallMessage(@PathVariable String logId) {
+        return BaseResponse.ok(recallService.recallMessage(logId));
     }
 
     /**
@@ -75,8 +75,8 @@ public class RecallController {
     @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
     @Idempotent(key = "recall:recallByMsgId", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/msg/{msgId}")
-    public Result<Boolean> recallByMsgId(@PathVariable String msgId) {
-        return Result.ok(recallService.recallByMsgId(msgId));
+    public BaseResponse<Boolean> recallByMsgId(@PathVariable String msgId) {
+        return BaseResponse.ok(recallService.recallByMsgId(msgId));
     }
 
     /**
@@ -89,7 +89,7 @@ public class RecallController {
     @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
     @Idempotent(key = "recall:recallBatch", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch")
-    public Result<Integer> recallBatch(@Valid @RequestBody RecallRequestDTO dto) {
-        return Result.ok(recallService.recallBatch(dto.getBizType(), dto.getBizId()));
+    public BaseResponse<Integer> recallBatch(@Valid @RequestBody RecallRequestDTO dto) {
+        return BaseResponse.ok(recallService.recallBatch(dto.getBizType(), dto.getBizId()));
     }
 }

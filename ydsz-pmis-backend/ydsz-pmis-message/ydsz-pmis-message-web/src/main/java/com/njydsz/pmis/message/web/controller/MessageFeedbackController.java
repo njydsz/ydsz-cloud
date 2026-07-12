@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.core.MessageFeedbackDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgFeedbackDO;
@@ -48,8 +48,8 @@ public class MessageFeedbackController {
     @Operation(summary = "提交消息反馈")
     @Idempotent(key = "messageFeedback:submitFeedback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> submitFeedback(@Valid @RequestBody MessageFeedbackDTO dto) {
-        return Result.ok(messageFeedbackService.submitFeedback(dto));
+    public BaseResponse<String> submitFeedback(@Valid @RequestBody MessageFeedbackDTO dto) {
+        return BaseResponse.ok(messageFeedbackService.submitFeedback(dto));
     }
 
     /**
@@ -62,12 +62,12 @@ public class MessageFeedbackController {
     @Operation(summary = "查询用户平均评分")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/rating")
-    public Result<Map<String, Double>> getAverageRating(@RequestParam String userId,
+    public BaseResponse<Map<String, Double>> getAverageRating(@RequestParam String userId,
                                                          @RequestParam(required = false) String channel) {
         double userRating = messageFeedbackService.getAverageRating(userId);
         double channelRating = channel != null
                 ? messageFeedbackService.getAverageRatingByChannel(channel) : 0;
-        return Result.ok(Map.of(
+        return BaseResponse.ok(Map.of(
                 "userRating", userRating,
                 "channelRating", channelRating));
     }
@@ -84,11 +84,11 @@ public class MessageFeedbackController {
     @Operation(summary = "分页查询反馈记录")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/page")
-    public Result<Page<MsgFeedbackDO>> pageFeedback(@RequestParam(defaultValue = "1") int page,
+    public BaseResponse<Page<MsgFeedbackDO>> pageFeedback(@RequestParam(defaultValue = "1") int page,
                                                       @RequestParam(defaultValue = "20") int size,
                                                       @RequestParam(required = false) String channel,
                                                       @RequestParam(required = false) String userId) {
-        return Result.ok(messageFeedbackService.pageFeedback(page, size, channel, userId));
+        return BaseResponse.ok(messageFeedbackService.pageFeedback(page, size, channel, userId));
     }
 
     /**
@@ -100,7 +100,7 @@ public class MessageFeedbackController {
     @Operation(summary = "检查用户是否需要降频")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/shouldReduceFreq")
-    public Result<Map<String, Boolean>> shouldReduceFrequency(@RequestParam String userId) {
-        return Result.ok(Map.of("shouldReduce", messageFeedbackService.shouldReduceFrequency(userId)));
+    public BaseResponse<Map<String, Boolean>> shouldReduceFrequency(@RequestParam String userId) {
+        return BaseResponse.ok(Map.of("shouldReduce", messageFeedbackService.shouldReduceFrequency(userId)));
     }
 }

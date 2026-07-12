@@ -2,7 +2,7 @@ package com.njydsz.pmis.cronjob.server.handler;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.api.client.ExecutionClient;
 import com.njydsz.pmis.common.job.JobHandler;
 import lombok.RequiredArgsConstructor;
@@ -76,7 +76,7 @@ public class BillableUtilizationJobHandler implements JobHandler {
         R.put("period", period);
         R.put("recomputeAll", recomputeAll);
         try {
-            Result<Map<String, Object>> r =
+            BaseResponse<Map<String, Object>> r =
                     executionClient.recomputeBillableUtilization(period, recomputeAll);
             if (r != null && r.getData() != null) {
                 R.putAll(r.getData());

@@ -5,8 +5,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.system.domain.entity.audit.SensitiveOperationDO;
 import com.njydsz.pmis.system.infra.mapper.audit.SensitiveOperationMapper;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -50,7 +50,7 @@ public class SensitiveOperationController {
     @Operation(summary = "分页查询")
     @PrePermission("audit:sensitive:view")
     @GetMapping("/page")
-    public Result<PageResult<SensitiveOperationDO>> page(
+    public BaseResponse<PageResponse<SensitiveOperationDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "用户ID") @RequestParam(required = false) String userId,
@@ -60,7 +60,7 @@ public class SensitiveOperationController {
         if (userId != null) w.eq(SensitiveOperationDO::getUserId, userId);
         if (StringUtils.hasText(opType)) w.eq(SensitiveOperationDO::getBizType, opType);
         w.orderByDesc(SensitiveOperationDO::getVerifiedAt);
-        return Result.ok(PageResult.ofPage(mapper.selectPage(p, w)));
+        return BaseResponse.ok(PageResponse.ofPage(mapper.selectPage(p, w)));
     }
 
     @Operation(summary = "按用户查询敏感操作历史")
@@ -73,9 +73,9 @@ public class SensitiveOperationController {
      * @param limit  最大条数
      * @return 统一响应结果，包含敏感操作审计列表
      */
-    public Result<List<SensitiveOperationDO>> byUser(
+    public BaseResponse<List<SensitiveOperationDO>> byUser(
             @Parameter(description = "用户ID") @RequestParam String userId,
             @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
-        return Result.ok(mapper.selectByUser(userId, Math.min(limit, 200)));
+        return BaseResponse.ok(mapper.selectByUser(userId, Math.min(limit, 200)));
     }
 }

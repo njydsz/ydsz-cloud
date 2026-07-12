@@ -8,7 +8,7 @@ import com.njydsz.pmis.agent.server.engine.react.ReActResult;
 import com.njydsz.pmis.agent.domain.entity.hitl.HitlApprovalRequestDO;
 import com.njydsz.pmis.agent.server.hitl.HitlApprovalService;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -68,14 +68,14 @@ public class HitlApprovalController {
     @Operation(summary = "分页查询审批请求")
     @PrePermission("agent:hitl:list")
     @GetMapping("/page")
-    public Result<Page<HitlApprovalRequestDO>> page(
+    public BaseResponse<Page<HitlApprovalRequestDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String agentType,
             @RequestParam(required = false) String bizType,
             @RequestParam(required = false) String bizId) {
-        return Result.ok(service.page(page, size, status, agentType, bizType, bizId));
+        return BaseResponse.ok(service.page(page, size, status, agentType, bizType, bizId));
     }
 
     /**
@@ -87,9 +87,9 @@ public class HitlApprovalController {
     @Operation(summary = "待审批请求列表")
     @PrePermission("agent:hitl:list")
     @GetMapping("/pending")
-    public Result<List<HitlApprovalRequestDO>> pending(
+    public BaseResponse<List<HitlApprovalRequestDO>> pending(
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit) {
-        return Result.ok(service.listPending(limit));
+        return BaseResponse.ok(service.listPending(limit));
     }
 
     /**
@@ -101,8 +101,8 @@ public class HitlApprovalController {
     @Operation(summary = "审批请求详情")
     @PrePermission("agent:hitl:list")
     @GetMapping("/{id}")
-    public Result<HitlApprovalRequestDO> get(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<HitlApprovalRequestDO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -116,9 +116,9 @@ public class HitlApprovalController {
     @PrePermission("agent:hitl:approve")
     @Idempotent(key = "hitlApproval:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/approve")
-    public Result<ReActResult> approve(@PathVariable String id,
+    public BaseResponse<ReActResult> approve(@PathVariable String id,
                                        @Valid @RequestBody HitlApprovalActionDTO dto) {
-        return Result.ok(service.approve(id, dto.getApproverId(), dto.getApproverName(), dto.getComment()));
+        return BaseResponse.ok(service.approve(id, dto.getApproverId(), dto.getApproverName(), dto.getComment()));
     }
 
     /**
@@ -132,9 +132,9 @@ public class HitlApprovalController {
     @PrePermission("agent:hitl:approve")
     @Idempotent(key = "hitlApproval:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/reject")
-    public Result<ReActResult> reject(@PathVariable String id,
+    public BaseResponse<ReActResult> reject(@PathVariable String id,
                                       @Valid @RequestBody HitlApprovalActionDTO dto) {
-        return Result.ok(service.reject(id, dto.getApproverId(), dto.getApproverName(), dto.getComment()));
+        return BaseResponse.ok(service.reject(id, dto.getApproverId(), dto.getApproverName(), dto.getComment()));
     }
 
     /**
@@ -148,9 +148,9 @@ public class HitlApprovalController {
     @PrePermission("agent:hitl:approve")
     @Idempotent(key = "hitlApproval:cancel", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/cancel")
-    public Result<Void> cancel(@PathVariable String id,
+    public BaseResponse<Void> cancel(@PathVariable String id,
                                @Valid @RequestBody HitlApprovalActionDTO dto) {
         service.cancel(id, dto.getApproverId(), dto.getApproverName(), dto.getComment());
-        return Result.ok();
+        return BaseResponse.ok();
     }
 }

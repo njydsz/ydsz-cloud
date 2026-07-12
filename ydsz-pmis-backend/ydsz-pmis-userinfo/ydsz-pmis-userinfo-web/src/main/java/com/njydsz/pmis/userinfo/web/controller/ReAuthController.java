@@ -2,8 +2,8 @@ package com.njydsz.pmis.userinfo.web.controller.auth;
 
 import com.njydsz.pmis.common.annotation.IdempotentExempt;
 
-import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.userinfo.domain.dto.auth.ReAuthRequest;
 import com.njydsz.pmis.userinfo.domain.dto.auth.ReAuthResult;
 import com.njydsz.pmis.userinfo.server.service.auth.ReAuthService;
@@ -45,8 +45,8 @@ public class ReAuthController {
     @Operation(summary = "颁发二次认证 token")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @PostMapping("/token")
-    public Result<ReAuthResult> issueToken(@Valid @RequestBody ReAuthRequest request) {
-        String userId = SecurityContext.getUserId();
-        return Result.ok(reAuthService.issueToken(userId, request));
+    public BaseResponse<ReAuthResult> issueToken(@Valid @RequestBody ReAuthRequest request) {
+        String userId = AuthContext.getUserId();
+        return BaseResponse.ok(reAuthService.issueToken(userId, request));
     }
 }

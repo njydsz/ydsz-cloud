@@ -2,8 +2,8 @@ package com.njydsz.pmis.workflow.web.controller.definition;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.server.service.definition.FlowCustomButtonService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -39,10 +39,10 @@ public class FlowCustomButtonController {
      */
     @GetMapping
     @Operation(summary = "获取节点的自定义按钮列表")
-    public Result<List<Map<String, Object>>> list(
+    public BaseResponse<List<Map<String, Object>>> list(
             @RequestParam String definitionId,
             @RequestParam String nodeCode) {
-        return Result.ok(customButtonService.getCustomButtons(definitionId, nodeCode));
+        return BaseResponse.ok(customButtonService.getCustomButtons(definitionId, nodeCode));
     }
 
     /**
@@ -56,12 +56,12 @@ public class FlowCustomButtonController {
     @Idempotent(key = "flowCustomButton:save", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "保存节点的自定义按钮配置")
-    public Result<Void> save(
+    public BaseResponse<Void> save(
             @RequestParam String definitionId,
             @RequestParam String nodeCode,
             @RequestBody List<Map<String, Object>> buttons) {
         customButtonService.saveCustomButtons(definitionId, nodeCode, buttons);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -76,12 +76,12 @@ public class FlowCustomButtonController {
     @Idempotent(key = "flowCustomButton:execute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/execute")
     @Operation(summary = "执行自定义按钮操作")
-    public Result<Map<String, Object>> execute(
+    public BaseResponse<Map<String, Object>> execute(
             @RequestParam String taskId,
             @RequestParam String buttonCode,
             @RequestParam(required = false) String comment,
             @RequestBody(required = false) Map<String, Object> variables) {
-        String userId = SecurityContext.getUserId();
-        return Result.ok(customButtonService.executeButton(taskId, buttonCode, userId, comment, variables));
+        String userId = AuthContext.getUserId();
+        return BaseResponse.ok(customButtonService.executeButton(taskId, buttonCode, userId, comment, variables));
     }
 }

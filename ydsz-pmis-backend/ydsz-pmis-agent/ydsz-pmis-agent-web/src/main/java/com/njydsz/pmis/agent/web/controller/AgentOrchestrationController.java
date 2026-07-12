@@ -6,7 +6,7 @@ import com.njydsz.pmis.agent.server.orchestration.OrchestrationRequest;
 import com.njydsz.pmis.agent.server.orchestration.OrchestrationResult;
 import com.njydsz.pmis.agent.server.service.agent.AgentOrchestrationService;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -44,7 +44,7 @@ public class AgentOrchestrationController {
     @PrePermission("agent:orchestration:run")
     @Idempotent(key = "agentOrchestration:coordinate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/coordinate")
-    public Result<OrchestrationResult> coordinate(@RequestBody OrchestrationRequest req) {
-        return Result.ok(service.orchestrate(req));
+    public BaseResponse<OrchestrationResult> coordinate(@RequestBody OrchestrationRequest req) {
+        return BaseResponse.ok(service.orchestrate(req));
     }
 }

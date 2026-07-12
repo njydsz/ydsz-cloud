@@ -1,7 +1,7 @@
 package com.njydsz.pmis.finance.web.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.finance.domain.entity.ProfitSnapshot;
 import com.njydsz.pmis.finance.infra.mapper.InvoiceMapper;
 import com.njydsz.pmis.finance.infra.mapper.PaymentMapper;
@@ -47,165 +47,165 @@ public class FinanceDataController {
 
     @GetMapping("/invoice/sumAmount")
     @Operation(summary = "发票总金额")
-    public Result<BigDecimal> sumInvoiceAmount() {
+    public BaseResponse<BigDecimal> sumInvoiceAmount() {
         try {
-            return Result.ok(nz(invoiceMapper.sumInvoicedAmount()));
+            return BaseResponse.ok(nz(invoiceMapper.sumInvoicedAmount()));
         } catch (Exception e) {
             log.error("[FinanceData] sumInvoiceAmount 失败: {}", e.getMessage());
-            return Result.ok(BigDecimal.ZERO);
+            return BaseResponse.ok(BigDecimal.ZERO);
         }
     }
 
     @GetMapping("/payment/sumAllocated")
     @Operation(summary = "已分配回款总金额")
-    public Result<BigDecimal> sumAllocatedPayment() {
+    public BaseResponse<BigDecimal> sumAllocatedPayment() {
         try {
-            return Result.ok(nz(paymentMapper.sumAllocatedAmount()));
+            return BaseResponse.ok(nz(paymentMapper.sumAllocatedAmount()));
         } catch (Exception e) {
             log.error("[FinanceData] sumAllocatedPayment 失败: {}", e.getMessage());
-            return Result.ok(BigDecimal.ZERO);
+            return BaseResponse.ok(BigDecimal.ZERO);
         }
     }
 
     @GetMapping("/expense/sumAmount")
     @Operation(summary = "费用报销总金额")
-    public Result<BigDecimal> sumExpenseAmount() {
+    public BaseResponse<BigDecimal> sumExpenseAmount() {
         try {
-            return Result.ok(nz(expenseMapper.sumAllAmount()));
+            return BaseResponse.ok(nz(expenseMapper.sumAllAmount()));
         } catch (Exception e) {
             log.error("[FinanceData] sumExpenseAmount 失败: {}", e.getMessage());
-            return Result.ok(BigDecimal.ZERO);
+            return BaseResponse.ok(BigDecimal.ZERO);
         }
     }
 
     @GetMapping("/invoice/countDistinctInitiation")
     @Operation(summary = "按项目统计独立立项数")
-    public Result<Integer> countDistinctInitiation() {
+    public BaseResponse<Integer> countDistinctInitiation() {
         try {
-            return Result.ok(invoiceMapper.countDistinctInitiation());
+            return BaseResponse.ok(invoiceMapper.countDistinctInitiation());
         } catch (Exception e) {
             log.error("[FinanceData] countDistinctInitiation 失败: {}", e.getMessage());
-            return Result.ok(0);
+            return BaseResponse.ok(0);
         }
     }
 
     @GetMapping("/invoice/sumByDepartment")
     @Operation(summary = "按部门统计发票金额")
-    public Result<List<Map<String, Object>>> sumByDepartment() {
+    public BaseResponse<List<Map<String, Object>>> sumByDepartment() {
         try {
-            return Result.ok(invoiceMapper.sumByDepartment());
+            return BaseResponse.ok(invoiceMapper.sumByDepartment());
         } catch (Exception e) {
             log.error("[FinanceData] sumByDepartment 失败: {}", e.getMessage());
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
     }
 
     @GetMapping("/invoice/sumByProjectType")
     @Operation(summary = "按项目类型统计发票金额")
-    public Result<List<Map<String, Object>>> sumByProjectType() {
+    public BaseResponse<List<Map<String, Object>>> sumByProjectType() {
         try {
-            return Result.ok(invoiceMapper.sumByProjectType());
+            return BaseResponse.ok(invoiceMapper.sumByProjectType());
         } catch (Exception e) {
             log.error("[FinanceData] sumByProjectType 失败: {}", e.getMessage());
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
     }
 
     @GetMapping("/invoice/sumByCustomer")
     @Operation(summary = "按客户统计发票金额")
-    public Result<List<Map<String, Object>>> sumByCustomer() {
+    public BaseResponse<List<Map<String, Object>>> sumByCustomer() {
         try {
-            return Result.ok(invoiceMapper.sumByCustomer());
+            return BaseResponse.ok(invoiceMapper.sumByCustomer());
         } catch (Exception e) {
             log.error("[FinanceData] sumByCustomer 失败: {}", e.getMessage());
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
     }
 
     @GetMapping("/invoice/sumByYear")
     @Operation(summary = "按年度统计发票金额")
-    public Result<List<Map<String, Object>>> sumByYear() {
+    public BaseResponse<List<Map<String, Object>>> sumByYear() {
         try {
-            return Result.ok(invoiceMapper.sumByYear());
+            return BaseResponse.ok(invoiceMapper.sumByYear());
         } catch (Exception e) {
             log.error("[FinanceData] sumByYear 失败: {}", e.getMessage());
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
     }
 
     @GetMapping("/invoice/sumByRecentMonth")
     @Operation(summary = "按最近月份统计发票金额")
-    public Result<List<Map<String, Object>>> sumByRecentMonth(@RequestParam("limit") Integer limit) {
+    public BaseResponse<List<Map<String, Object>>> sumByRecentMonth(@RequestParam("limit") Integer limit) {
         try {
-            return Result.ok(invoiceMapper.sumByRecentMonth(limit));
+            return BaseResponse.ok(invoiceMapper.sumByRecentMonth(limit));
         } catch (Exception e) {
             log.error("[FinanceData] sumByRecentMonth 失败: {}", e.getMessage());
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
     }
 
     @GetMapping("/payment/aggregateByRecentMonth")
     @Operation(summary = "按最近月份统计回款金额")
-    public Result<List<Map<String, Object>>> aggregatePaymentByRecentMonth(@RequestParam("limit") Integer limit) {
+    public BaseResponse<List<Map<String, Object>>> aggregatePaymentByRecentMonth(@RequestParam("limit") Integer limit) {
         try {
-            return Result.ok(paymentMapper.aggregateByRecentMonth(limit));
+            return BaseResponse.ok(paymentMapper.aggregateByRecentMonth(limit));
         } catch (Exception e) {
             log.error("[FinanceData] aggregatePaymentByRecentMonth 失败: {}", e.getMessage());
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
     }
 
     @GetMapping("/revenue/sumByInitiation")
     @Operation(summary = "按项目查询收入总额")
-    public Result<BigDecimal> sumRevenue(
+    public BaseResponse<BigDecimal> sumRevenue(
             @RequestParam("initiationId") String initiationId,
             @RequestParam(value = "period", required = false) String period) {
         try {
-            return Result.ok(nz(revenueMapper.sumByInitiation(initiationId, period)));
+            return BaseResponse.ok(nz(revenueMapper.sumByInitiation(initiationId, period)));
         } catch (Exception e) {
             log.error("[FinanceData] sumRevenue 失败: {}", e.getMessage());
-            return Result.ok(BigDecimal.ZERO);
+            return BaseResponse.ok(BigDecimal.ZERO);
         }
     }
 
     @GetMapping("/expense/sumByInitiation")
     @Operation(summary = "按项目查询费用总额")
-    public Result<BigDecimal> sumExpense(
+    public BaseResponse<BigDecimal> sumExpense(
             @RequestParam("initiationId") String initiationId,
             @RequestParam(value = "period", required = false) String period) {
         try {
-            return Result.ok(nz(expenseMapper.sumByInitiation(initiationId, period)));
+            return BaseResponse.ok(nz(expenseMapper.sumByInitiation(initiationId, period)));
         } catch (Exception e) {
             log.error("[FinanceData] sumExpense 失败: {}", e.getMessage());
-            return Result.ok(BigDecimal.ZERO);
+            return BaseResponse.ok(BigDecimal.ZERO);
         }
     }
 
     @GetMapping("/profitSnapshot/latest")
     @Operation(summary = "按项目查询利润快照")
-    public Result<Map<String, Object>> latestProfitSnapshot(
+    public BaseResponse<Map<String, Object>> latestProfitSnapshot(
             @RequestParam("initiationId") String initiationId,
             @RequestParam(value = "period", required = false) String period) {
         try {
             var snapshot = profitSnapshotMapper.selectLatest(initiationId, period);
             if (snapshot == null) {
-                return Result.ok(Map.of());
+                return BaseResponse.ok(Map.of());
             }
-            return Result.ok(Map.of("snapshotId", snapshot.getId(), "grossProfit", snapshot.getGrossProfit()));
+            return BaseResponse.ok(Map.of("snapshotId", snapshot.getId(), "grossProfit", snapshot.getGrossProfit()));
         } catch (Exception e) {
             log.error("[FinanceData] latestProfitSnapshot 失败: {}", e.getMessage());
-            return Result.ok(Map.of());
+            return BaseResponse.ok(Map.of());
         }
     }
 
     @GetMapping("/profitSnapshot/summaryAll")
     @Operation(summary = "利润快照汇总")
-    public Result<List<Map<String, Object>>> profitSnapshotSummaryAll() {
+    public BaseResponse<List<Map<String, Object>>> profitSnapshotSummaryAll() {
         try {
             var wrapper = new LambdaQueryWrapper<ProfitSnapshot>();
             wrapper.orderByDesc(ProfitSnapshot::getSnapshotAt).last("LIMIT 200");
             var snaps = profitSnapshotMapper.selectList(wrapper);
-            if (snaps == null) return Result.ok(List.of());
+            if (snaps == null) return BaseResponse.ok(List.of());
             List<Map<String, Object>> result = new java.util.ArrayList<>();
             for (var s : snaps) {
                 Map<String, Object> m = new java.util.HashMap<>();
@@ -213,18 +213,18 @@ public class FinanceDataController {
                 m.put("period", s.getPeriod());
                 m.put("totalCost", s.getTotalCost());
                 m.put("grossMargin", s.getGrossMargin());
-                result.add(m);
+                BaseResponse.add(m);
             }
-            return Result.ok(result);
+            return BaseResponse.ok(result);
         } catch (Exception e) {
             log.error("[FinanceData] profitSnapshotSummaryAll 失败: {}", e.getMessage());
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
     }
 
     @GetMapping("/profitSnapshot/rank")
     @Operation(summary = "利润排名")
-    public Result<List<Map<String, Object>>> profitSnapshotRank(
+    public BaseResponse<List<Map<String, Object>>> profitSnapshotRank(
             @RequestParam("top") Integer top,
             @RequestParam("sortBy") String sortBy,
             @RequestParam(value = "period", required = false) String period) {
@@ -234,7 +234,7 @@ public class FinanceDataController {
                 wrapper.eq(ProfitSnapshot::getPeriod, period);
             }
             var all = profitSnapshotMapper.selectList(wrapper);
-            if (all == null) return Result.ok(List.of());
+            if (all == null) return BaseResponse.ok(List.of());
             // Deduplicate by initiationId, keeping latest snapshot
             Map<String, com.njydsz.pmis.finance.domain.entity.ProfitSnapshot> latest = new java.util.HashMap<>();
             for (var s : all) {
@@ -268,19 +268,19 @@ public class FinanceDataController {
             rows.sort(cmp.reversed());
             int limit = top <= 0 ? 10 : top;
             if (rows.size() > limit) rows = rows.subList(0, limit);
-            return Result.ok(rows);
+            return BaseResponse.ok(rows);
         } catch (Exception e) {
             log.error("[FinanceData] profitSnapshotRank 失败: {}", e.getMessage());
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
     }
 
     @GetMapping("/revenue/selectByInitiation")
     @Operation(summary = "按项目查询收入明细列表")
-    public Result<List<Map<String, Object>>> revenueByInitiation(@RequestParam("initiationId") String initiationId) {
+    public BaseResponse<List<Map<String, Object>>> revenueByInitiation(@RequestParam("initiationId") String initiationId) {
         try {
             var revs = revenueMapper.selectByInitiation(initiationId);
-            if (revs == null) return Result.ok(List.of());
+            if (revs == null) return BaseResponse.ok(List.of());
             List<Map<String, Object>> result = new java.util.ArrayList<>();
             for (var r : revs) {
                 Map<String, Object> m = new java.util.HashMap<>();
@@ -288,23 +288,23 @@ public class FinanceDataController {
                 m.put("status", r.getStatus());
                 m.put("amount", r.getAmount());
                 m.put("period", r.getPeriod());
-                result.add(m);
+                BaseResponse.add(m);
             }
-            return Result.ok(result);
+            return BaseResponse.ok(result);
         } catch (Exception e) {
             log.error("[FinanceData] revenueByInitiation 失败: {}", e.getMessage());
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
     }
 
     @GetMapping("/revenue/sumByPeriod")
     @Operation(summary = "按项目查询收入期间汇总")
-    public Result<List<Map<String, Object>>> revenueSumByPeriod(@RequestParam("initiationId") String initiationId) {
+    public BaseResponse<List<Map<String, Object>>> revenueSumByPeriod(@RequestParam("initiationId") String initiationId) {
         try {
-            return Result.ok(revenueMapper.sumByPeriod(initiationId));
+            return BaseResponse.ok(revenueMapper.sumByPeriod(initiationId));
         } catch (Exception e) {
             log.error("[FinanceData] revenueSumByPeriod 失败: {}", e.getMessage());
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
     }
 

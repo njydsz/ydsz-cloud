@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.impl.core;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.dto.core.MessageFeedbackDTO;
@@ -38,16 +38,16 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
     @Override
     public String submitFeedback(MessageFeedbackDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "反馈内容不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "反馈内容不能为空");
         }
         if (!StringUtils.hasText(dto.getMsgId()) && !StringUtils.hasText(dto.getNotificationId())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "消息 ID 或通知 ID 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "消息 ID 或通知 ID 不能为空");
         }
         if (!StringUtils.hasText(dto.getUserId())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "用户 ID 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "用户 ID 不能为空");
         }
         if (dto.getRating() == null || dto.getRating() < 1 || dto.getRating() > 5) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "评分必须在 1-5 之间");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "评分必须在 1-5 之间");
         }
 
         MsgFeedbackDO feedback = new MsgFeedbackDO();

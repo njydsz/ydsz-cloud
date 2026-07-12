@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.web.controller.common;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.server.service.ImportService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -61,7 +61,7 @@ public class ImportExportController {
     public void downloadTemplate(@PathVariable String bizType, HttpServletResponse response) throws IOException {
         // 白名单校验：防止非法 bizType 导致路径穿越或未预期的分派
         if (!ALLOWED_BIZ_TYPES.contains(bizType)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_f7d2a1b3", bizType);
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_f7d2a1b3", bizType);
         }
         ImportService.TemplateBundle bundle = importService.buildTemplate(bizType);
 
@@ -89,16 +89,16 @@ public class ImportExportController {
      */
     @Operation(summary = "批量导入（限频 1 次/秒）")
     @PostMapping("/{bizType}")
-    public Result<ImportService.ImportResult> importFile(
+    public BaseResponse<ImportService.ImportResult> importFile(
             @PathVariable String bizType,
             @RequestParam("file") MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
-            return Result.failed(400, "上传文件为空");
+            return BaseResponse.failed(400, "上传文件为空");
         }
         ImportService.ImportResult R = importService.importFile(bizType, file);
         log.info("[ImportFile] bizType={} fileSize={} success={} failed={}",
                 bizType, file.getSize(), R.successCount(), R.failedCount());
-        return Result.ok(R);
+        return BaseResponse.ok(R);
     }
 
 }

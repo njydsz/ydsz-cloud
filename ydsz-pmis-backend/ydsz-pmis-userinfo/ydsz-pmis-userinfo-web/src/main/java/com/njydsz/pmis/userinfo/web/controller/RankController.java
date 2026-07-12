@@ -1,6 +1,6 @@
 package com.njydsz.pmis.userinfo.web.controller.rate;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.entity.rate.RankDO;
 import com.njydsz.pmis.userinfo.domain.entity.rate.RankRateDO;
 import com.njydsz.pmis.userinfo.server.service.rate.RankService;
@@ -37,8 +37,8 @@ public class RankController {
      */
     @Operation(summary = "所有职级 (L1-L18)")
     @GetMapping
-    public Result<List<RankDO>> list() {
-        return Result.ok(rankService.listAllLevels());
+    public BaseResponse<List<RankDO>> list() {
+        return BaseResponse.ok(rankService.listAllLevels());
     }
 
     /**
@@ -50,10 +50,10 @@ public class RankController {
      */
     @Operation(summary = "查询生效的职级费率")
     @GetMapping("/rate")
-    public Result<RankRateDO> getRate(@RequestParam String levelCode,
+    public BaseResponse<RankRateDO> getRate(@RequestParam String levelCode,
                                  @RequestParam(required = false)
                                  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return Result.ok(rankService.getEffectiveRate(levelCode, date));
+        return BaseResponse.ok(rankService.getEffectiveRate(levelCode, date));
     }
 
     /**
@@ -64,7 +64,7 @@ public class RankController {
      */
     @Operation(summary = "查询某职级所有版本")
     @GetMapping("/rate/versions")
-    public Result<List<RankRateDO>> listVersions(@RequestParam String levelCode) {
-        return Result.ok(rankService.listAllVersions(levelCode));
+    public BaseResponse<List<RankRateDO>> listVersions(@RequestParam String levelCode) {
+        return BaseResponse.ok(rankService.listAllVersions(levelCode));
     }
 }

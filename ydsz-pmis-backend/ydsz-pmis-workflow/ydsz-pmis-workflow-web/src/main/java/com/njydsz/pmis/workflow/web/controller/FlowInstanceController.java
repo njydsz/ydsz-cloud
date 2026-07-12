@@ -3,10 +3,10 @@ package com.njydsz.pmis.workflow.web.controller.instance;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.WorkflowFacade;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceVariablesDTO;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;
@@ -58,8 +58,8 @@ public class FlowInstanceController {
     @Idempotent(key = "flowInstance:startProcess", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/start")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_START)
-    public Result<String> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
-        return Result.ok(workflowFacade.startProcess(dto));
+    public BaseResponse<String> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
+        return BaseResponse.ok(workflowFacade.startProcess(dto));
     }
 
     /**
@@ -81,9 +81,9 @@ public class FlowInstanceController {
     @PostMapping("/instance/batchStart")
     @Operation(summary = "批量启动流程实例")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_START)
-    public Result<Map<String, Object>> batchStartInstances(
+    public BaseResponse<Map<String, Object>> batchStartInstances(
             @Valid @RequestBody List<FlowStartProcessDTO> dtos) {
-        return Result.ok(instanceService.batchStartInstances(dtos));
+        return BaseResponse.ok(instanceService.batchStartInstances(dtos));
     }
 
     /**
@@ -94,9 +94,9 @@ public class FlowInstanceController {
      * @return 统一响应结果，包含流程实例视图
      */
     @GetMapping("/instance/byBusiness")
-    public Result<FlowInstanceViewDTO> getByBusiness(@RequestParam String businessType,
+    public BaseResponse<FlowInstanceViewDTO> getByBusiness(@RequestParam String businessType,
                                                  @RequestParam String businessId) {
-        return Result.ok(workflowFacade.getByBusiness(businessType, businessId));
+        return BaseResponse.ok(workflowFacade.getByBusiness(businessType, businessId));
     }
 
     /**
@@ -109,9 +109,9 @@ public class FlowInstanceController {
     @Idempotent(key = "flowInstance:terminate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/terminate")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
-    public Result<Void> terminate(@PathVariable String id, @RequestParam(required = false) String reason) {
+    public BaseResponse<Void> terminate(@PathVariable String id, @RequestParam(required = false) String reason) {
         workflowFacade.terminateProcess(id, reason);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -123,9 +123,9 @@ public class FlowInstanceController {
     @Idempotent(key = "flowInstance:suspend", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/suspend")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
-    public Result<Void> suspend(@PathVariable String id) {
+    public BaseResponse<Void> suspend(@PathVariable String id) {
         workflowFacade.suspendProcess(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -137,9 +137,9 @@ public class FlowInstanceController {
     @Idempotent(key = "flowInstance:activate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/activate")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
-    public Result<Void> activate(@PathVariable String id) {
+    public BaseResponse<Void> activate(@PathVariable String id) {
         workflowFacade.activateProcess(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -156,9 +156,9 @@ public class FlowInstanceController {
     @Idempotent(key = "flowInstance:recall", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/recall")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_START)
-    public Result<Boolean> recall(@PathVariable String id,
+    public BaseResponse<Boolean> recall(@PathVariable String id,
                                   @RequestParam(required = false) String targetNodeCode) {
-        return Result.ok(instanceService.recall(id, SecurityContext.getUserId(), targetNodeCode));
+        return BaseResponse.ok(instanceService.recall(id, AuthContext.getUserId(), targetNodeCode));
     }
 
     /**
@@ -171,8 +171,8 @@ public class FlowInstanceController {
      */
     @GetMapping("/instance/{id}/recallableNodes")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_START)
-    public Result<List<Map<String, Object>>> listRecallableNodes(@PathVariable String id) {
-        return Result.ok(instanceService.listRecallableNodes(id, SecurityContext.getUserId()));
+    public BaseResponse<List<Map<String, Object>>> listRecallableNodes(@PathVariable String id) {
+        return BaseResponse.ok(instanceService.listRecallableNodes(id, AuthContext.getUserId()));
     }
 
     /**
@@ -191,10 +191,10 @@ public class FlowInstanceController {
     @Idempotent(key = "flowInstance:rollback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/rollback")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_ROLLBACK)
-    public Result<Boolean> rollback(@PathVariable String id,
+    public BaseResponse<Boolean> rollback(@PathVariable String id,
                                     @RequestParam String reason,
                                     @RequestParam(required = false, defaultValue = "7") int maxRollbackDays) {
-        return Result.ok(instanceService.rollback(id, SecurityContext.getUserId(), reason, maxRollbackDays));
+        return BaseResponse.ok(instanceService.rollback(id, AuthContext.getUserId(), reason, maxRollbackDays));
     }
 
     /**
@@ -212,11 +212,11 @@ public class FlowInstanceController {
     @Idempotent(key = "flowInstance:resubmit", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/resubmit")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_RESUBMIT)
-    public Result<String> resubmit(@PathVariable String id,
+    public BaseResponse<String> resubmit(@PathVariable String id,
                                     @RequestParam(required = false) String comment,
                                     @RequestParam(required = false, defaultValue = "RESTART") String redoMode,
                                     @RequestBody(required = false) java.util.Map<String, Object> variables) {
-        return Result.ok(workflowFacade.resubmitProcess(id, SecurityContext.getUserId(),
+        return BaseResponse.ok(workflowFacade.resubmitProcess(id, AuthContext.getUserId(),
                 variables, comment, redoMode));
     }
 
@@ -227,8 +227,8 @@ public class FlowInstanceController {
      * @return 统一响应结果，包含审计轨迹列表
      */
     @GetMapping("/instance/{id}/auditTrail")
-    public Result<List<Map<String, Object>>> auditTrail(@PathVariable String id) {
-        return Result.ok(workflowFacade.listAuditTrail(id));
+    public BaseResponse<List<Map<String, Object>>> auditTrail(@PathVariable String id) {
+        return BaseResponse.ok(workflowFacade.listAuditTrail(id));
     }
 
     /**
@@ -238,8 +238,8 @@ public class FlowInstanceController {
      * @return 统一响应结果，包含时间线列表
      */
     @GetMapping("/instance/{id}/timeline")
-    public Result<List<Map<String, Object>>> timeline(@PathVariable String id) {
-        return Result.ok(workflowFacade.getTimeline(id));
+    public BaseResponse<List<Map<String, Object>>> timeline(@PathVariable String id) {
+        return BaseResponse.ok(workflowFacade.getTimeline(id));
     }
 
     /**
@@ -249,8 +249,8 @@ public class FlowInstanceController {
      * @return 统一响应结果，包含 definition / nodes / skips，nodes 中每个节点带 active 标记
      */
     @GetMapping("/instance/{id}/diagram")
-    public Result<Map<String, Object>> diagram(@PathVariable String id) {
-        return Result.ok(workflowFacade.getDiagram(id));
+    public BaseResponse<Map<String, Object>> diagram(@PathVariable String id) {
+        return BaseResponse.ok(workflowFacade.getDiagram(id));
     }
 
     /**
@@ -263,8 +263,8 @@ public class FlowInstanceController {
      * @return 步骤列表（按 timestamp 升序）
      */
     @GetMapping("/instance/{id}/replay")
-    public Result<List<Map<String, Object>>> replay(@PathVariable String id) {
-        return Result.ok(workflowFacade.getReplaySteps(id));
+    public BaseResponse<List<Map<String, Object>>> replay(@PathVariable String id) {
+        return BaseResponse.ok(workflowFacade.getReplaySteps(id));
     }
 
     /**
@@ -281,7 +281,7 @@ public class FlowInstanceController {
      * @return 统一响应结果，包含分页实例列表
      */
     @GetMapping("/instance/page")
-    public Result<PageResult<FlowInstanceDO>> instancePage(
+    public BaseResponse<PageResponse<FlowInstanceDO>> instancePage(
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
             @RequestParam(required = false) String businessType,
@@ -290,8 +290,8 @@ public class FlowInstanceController {
             @RequestParam(required = false) LocalDateTime startTime,
             @RequestParam(required = false) LocalDateTime endTime,
             @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(instanceService.page(businessType, initiatorId, flowStatus,
+        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(instanceService.page(businessType, initiatorId, flowStatus,
                 startTime, endTime, tid, pageNo, pageSize));
     }
 
@@ -315,7 +315,7 @@ public class FlowInstanceController {
      * @return 统一响应结果，包含分页实例列表
      */
     @GetMapping("/instance/my")
-    public Result<PageResult<FlowInstanceDO>> instanceMy(
+    public BaseResponse<PageResponse<FlowInstanceDO>> instanceMy(
             @RequestParam(required = false) String flowCode,
             @RequestParam(required = false) String flowName,
             @RequestParam(required = false) String status,
@@ -323,8 +323,8 @@ public class FlowInstanceController {
             @RequestParam(required = false) LocalDateTime endTime,
             @RequestParam(defaultValue = "1") @Min(1) int pageNum,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-        return Result.ok(instanceService.page(null, SecurityContext.getUserId(), status,
-                startTime, endTime, SecurityContext.getTenantIdOrDefault("1"),
+        return BaseResponse.ok(instanceService.page(null, AuthContext.getUserId(), status,
+                startTime, endTime, AuthContext.getTenantIdOrDefault("1"),
                 pageNum, pageSize));
     }
 
@@ -335,7 +335,7 @@ public class FlowInstanceController {
      * 与 {@code /instance/page} 的区别：本端点语义为"管理员看全部"，强制不按 initiatorId 过滤，
      * 返回精简 Map 结构（避免泄露定义内部字段）。
      *
-     * <p>P0-2 修复：返回类型由 {@code List<Map>} 改为 {@code PageResult<Map>}，
+     * <p>P0-2 修复：返回类型由 {@code List<Map>} 改为 {@code PageResponse<Map>}，
      * 保留 total / page / size，避免前端假分页。
      *
      * @param page         页码
@@ -348,14 +348,14 @@ public class FlowInstanceController {
      */
     @GetMapping("/instance/all")
     @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
-    public Result<PageResult<Map<String, Object>>> instanceAll(
+    public BaseResponse<PageResponse<Map<String, Object>>> instanceAll(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String businessType,
             @RequestParam(required = false) String flowStatus,
             @RequestParam(required = false) LocalDateTime startTime,
             @RequestParam(required = false) LocalDateTime endTime) {
-        return Result.ok(workflowFacade.listAllInstances(businessType, flowStatus,
+        return BaseResponse.ok(workflowFacade.listAllInstances(businessType, flowStatus,
                 startTime, endTime, page, size));
     }
 
@@ -366,8 +366,8 @@ public class FlowInstanceController {
      * @return 统一响应结果，包含变量 Map
      */
     @GetMapping("/instance/{id}/variables")
-    public Result<Map<String, Object>> getVariables(@PathVariable String id) {
-        return Result.ok(instanceService.getVariables(id));
+    public BaseResponse<Map<String, Object>> getVariables(@PathVariable String id) {
+        return BaseResponse.ok(instanceService.getVariables(id));
     }
 
     /**
@@ -382,10 +382,10 @@ public class FlowInstanceController {
     @Idempotent(key = "flowInstance:setVariables", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/variables")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
-    public Result<Void> setVariables(@PathVariable String id,
+    public BaseResponse<Void> setVariables(@PathVariable String id,
                                      @Valid @RequestBody FlowInstanceVariablesDTO dto) {
         instanceService.setVariables(id, dto.getVariables());
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -400,9 +400,9 @@ public class FlowInstanceController {
     @Idempotent(key = "flowInstance:urge", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/urge")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_VIEW)
-    public Result<List<String>> urge(@PathVariable String id,
+    public BaseResponse<List<String>> urge(@PathVariable String id,
                                  @RequestParam(required = false) String comment) {
-        return Result.ok(workflowFacade.urgeTask(id, SecurityContext.getUserId(), comment));
+        return BaseResponse.ok(workflowFacade.urgeTask(id, AuthContext.getUserId(), comment));
     }
 
     /**
@@ -413,10 +413,10 @@ public class FlowInstanceController {
     @Idempotent(key = "flowInstance:urgeByNode", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/instance/{id}/urge/node")
     @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_VIEW)
-    public Result<List<String>> urgeByNode(@PathVariable String id,
+    public BaseResponse<List<String>> urgeByNode(@PathVariable String id,
                                            @RequestParam(required = false) String nodeCode,
                                            @RequestParam(required = false) String comment) {
-        return Result.ok(workflowFacade.urgeNodeTask(id, nodeCode, SecurityContext.getUserId(), comment));
+        return BaseResponse.ok(workflowFacade.urgeNodeTask(id, nodeCode, AuthContext.getUserId(), comment));
     }
 
     /**
@@ -427,9 +427,9 @@ public class FlowInstanceController {
      * @return 渲染数据（nodeCode / formFieldsConfig / variables）
      */
     @GetMapping("/instance/{instanceId}/formRender")
-    public Result<Map<String, Object>> getFormRenderData(
+    public BaseResponse<Map<String, Object>> getFormRenderData(
             @PathVariable String instanceId,
             @RequestParam(required = false) String taskId) {
-        return Result.ok(instanceService.getFormRenderData(instanceId, taskId));
+        return BaseResponse.ok(instanceService.getFormRenderData(instanceId, taskId));
     }
 }

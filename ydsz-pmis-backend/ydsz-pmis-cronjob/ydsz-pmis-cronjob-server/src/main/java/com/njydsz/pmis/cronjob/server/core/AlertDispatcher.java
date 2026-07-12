@@ -2,7 +2,7 @@ package com.njydsz.pmis.cronjob.server.core.alert;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.feign.MessageServiceClient;
@@ -303,13 +303,13 @@ public class AlertDispatcher {
         params.put("receivers", receivers);
         request.setParams(params);
         try {
-            Result<MessageResult> result = messageServiceClient.send(request);
-            if (result == null || !result.isSuccess()) {
-                String reason = result != null && result.getMessage() != null
-                         ? result.getMessage() : "unknown";
+            BaseResponse<MessageResult> result = messageServiceClient.send(request);
+            if (result == null || !BaseResponse.isSuccess()) {
+                String reason = result != null && BaseResponse.getMessage() != null
+                         ? BaseResponse.getMessage() : "unknown";
                 throw new AlertSendException("message module returned failure: " + reason);
             }
-            MessageResult msgResult = result.getData();
+            MessageResult msgResult = BaseResponse.getData();
             if (msgResult != null && !msgResult.isSuccess()) {
                 throw new AlertSendException(
                          msgResult.getErrorMessage() != null ? msgResult.getErrorMessage() : "send failed");

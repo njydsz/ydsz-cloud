@@ -2,7 +2,7 @@ package com.njydsz.pmis.userinfo.api.client;
 import com.njydsz.pmis.common.feign.FeignClientConstants;
 import com.njydsz.pmis.userinfo.api.fallback.BenchResourceClientFallback;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,7 +36,7 @@ public interface BenchResourceClient {
      * @return Bench 仪表盘汇总数据
      */
     @GetMapping("/bench/dashboard")
-    Result<Map<String, Object>> getBenchDashboard();
+    BaseResponse<Map<String, Object>> getBenchDashboard();
 
     /**
      * 按项目查询资源分配（甘特图数据源）
@@ -45,6 +45,6 @@ public interface BenchResourceClient {
      * @return 资源分配列表（每条记录为一个 Map）
      */
     @GetMapping("/resourceAssignments/byInitiation/{initiationId}")
-    Result<List<Map<String, Object>>> listResourceAssignmentsByInitiation(
+    BaseResponse<List<Map<String, Object>>> listResourceAssignmentsByInitiation(
             @PathVariable("initiationId") String initiationId);
 }

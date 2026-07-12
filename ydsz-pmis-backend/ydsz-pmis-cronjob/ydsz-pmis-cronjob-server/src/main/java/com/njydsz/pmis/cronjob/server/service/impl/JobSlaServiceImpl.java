@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.server.service.impl.alert;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertType;
 import com.njydsz.pmis.cronjob.domain.dto.alert.JobSlaSaveDTO;
@@ -116,7 +116,7 @@ public class JobSlaServiceImpl implements JobSlaService {
     public JobSlaDO getSlaById(String id) {
         List<JobAlertRuleDO> rules = jobAlertRuleMapper.selectSlaRulesByJobId(id);
         if (rules.isEmpty()) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.cronjob.msg_sla_not_found");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_sla_not_found");
         }
         return aggregateSlaFromRules(id, rules);
     }
@@ -132,7 +132,7 @@ public class JobSlaServiceImpl implements JobSlaService {
                 .collect(java.util.stream.Collectors.groupingBy(JobAlertRuleDO::getJobId));
         List<JobSlaDO> result = new ArrayList<>();
         for (var entry : grouped.entrySet()) {
-            result.add(aggregateSlaFromRules(entry.getKey(), entry.getValue()));
+            BaseResponse.add(aggregateSlaFromRules(entry.getKey(), entry.getValue()));
         }
         return result;
     }
@@ -141,11 +141,11 @@ public class JobSlaServiceImpl implements JobSlaService {
     @Transactional(rollbackFor = Exception.class)
     public void toggleSla(String id, Integer enabled) {
         if (enabled == null || (enabled != 0 && enabled != 1)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_sla_invalid_enabled");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_sla_invalid_enabled");
         }
         List<JobAlertRuleDO> rules = jobAlertRuleMapper.selectSlaRulesByJobId(id);
         if (rules.isEmpty()) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.cronjob.msg_sla_not_found");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_sla_not_found");
         }
         for (JobAlertRuleDO rule : rules) {
             rule.setEnabled(enabled);
@@ -302,10 +302,10 @@ public class JobSlaServiceImpl implements JobSlaService {
     private void validateSlaConstraints(JobSlaSaveDTO dto) {
         if (dto.getMaxDurationMs() == null && dto.getMaxFailRate() == null
                 && dto.getMinSuccessRate() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_sla_no_constraint");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_sla_no_constraint");
         }
         if (dto.getMaxDurationMs() != null && dto.getMaxDurationMs() <= 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_sla_invalid_duration");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_sla_invalid_duration");
         }
         validateRateRange(dto.getMaxFailRate());
         validateRateRange(dto.getMinSuccessRate());
@@ -316,7 +316,7 @@ public class JobSlaServiceImpl implements JobSlaService {
             return;
         }
         if (rate.compareTo(BigDecimal.ZERO) < 0 || rate.compareTo(new BigDecimal("100")) > 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_sla_invalid_rate");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_sla_invalid_rate");
         }
     }
 

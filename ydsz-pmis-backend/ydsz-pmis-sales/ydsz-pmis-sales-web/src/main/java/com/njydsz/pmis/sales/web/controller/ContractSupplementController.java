@@ -3,7 +3,7 @@ package com.njydsz.pmis.sales.web.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.sales.domain.dto.ContractSupplementDTO;
 import com.njydsz.pmis.sales.domain.entity.ContractSupplementDO;
 import com.njydsz.pmis.sales.server.service.contract.ContractSupplementService;
@@ -50,8 +50,8 @@ public class ContractSupplementController {
     @Operation(summary = "创建补充协议")
     @Idempotent(key = "contractSupplement:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody ContractSupplementDTO dto) {
-        return Result.ok(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody ContractSupplementDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
@@ -64,9 +64,9 @@ public class ContractSupplementController {
     @OperationLog(module = "合同管理", action = "删除补充协议", bizType = "CONTRACT_SUPPLEMENT")
     @Idempotent(key = "contractSupplement:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -77,8 +77,8 @@ public class ContractSupplementController {
      */
     @Operation(summary = "补充协议详情")
     @GetMapping("/{id}")
-    public Result<ContractSupplementDO> get(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<ContractSupplementDO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -89,8 +89,8 @@ public class ContractSupplementController {
      */
     @Operation(summary = "按合同列出")
     @GetMapping("/list")
-    public Result<List<ContractSupplementDO>> listByContract(@RequestParam String contractId) {
-        return Result.ok(service.listByContract(contractId));
+    public BaseResponse<List<ContractSupplementDO>> listByContract(@RequestParam String contractId) {
+        return BaseResponse.ok(service.listByContract(contractId));
     }
 
     /**
@@ -103,10 +103,10 @@ public class ContractSupplementController {
      */
     @Operation(summary = "分页查询")
     @GetMapping("/page")
-    public Result<Page<ContractSupplementDO>> page(
+    public BaseResponse<Page<ContractSupplementDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String contractId) {
-        return Result.ok(service.page(page, size, contractId));
+        return BaseResponse.ok(service.page(page, size, contractId));
     }
 }

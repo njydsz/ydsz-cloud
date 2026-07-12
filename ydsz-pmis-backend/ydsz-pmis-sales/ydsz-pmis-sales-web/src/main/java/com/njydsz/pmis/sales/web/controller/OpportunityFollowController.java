@@ -2,7 +2,7 @@ package com.njydsz.pmis.sales.web.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.sales.domain.dto.OpportunityFollowDTO;
 import com.njydsz.pmis.sales.domain.entity.OpportunityFollowDO;
 import com.njydsz.pmis.sales.server.service.opportunity.OpportunityFollowService;
@@ -45,8 +45,8 @@ public class OpportunityFollowController {
     @Operation(summary = "记录跟进")
     @Idempotent(key = "opportunityFollow:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> record(@Valid @RequestBody OpportunityFollowDTO dto) {
-        return Result.ok(service.record(dto));
+    public BaseResponse<String> record(@Valid @RequestBody OpportunityFollowDTO dto) {
+        return BaseResponse.ok(service.record(dto));
     }
 
     /**
@@ -59,10 +59,10 @@ public class OpportunityFollowController {
      */
     @Operation(summary = "分页查询")
     @GetMapping("/page")
-    public Result<Page<OpportunityFollowDO>> page(
+    public BaseResponse<Page<OpportunityFollowDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String opportunityId) {
-        return Result.ok(service.page(page, size, opportunityId));
+        return BaseResponse.ok(service.page(page, size, opportunityId));
     }
 }

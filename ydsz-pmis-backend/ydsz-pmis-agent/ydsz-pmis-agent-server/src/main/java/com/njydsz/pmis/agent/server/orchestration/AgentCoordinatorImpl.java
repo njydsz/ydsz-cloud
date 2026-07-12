@@ -2,7 +2,7 @@ package com.njydsz.pmis.agent.server.orchestration;
 
 import com.njydsz.pmis.agent.server.engine.Agent;
 import com.njydsz.pmis.agent.server.orchestration.strategy.OrchestrationStrategy;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -55,17 +55,17 @@ public class AgentCoordinatorImpl implements AgentCoordinator {
     @Override
     public OrchestrationResult coordinate(OrchestrationRequest req, Map<String, Agent> agents) {
         if (req == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.agent.msg_372ae3c5");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.agent.msg_372ae3c5");
         }
         if (req.getMode() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.agent.msg_934fa86f");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.agent.msg_934fa86f");
         }
         if (agents == null || agents.isEmpty()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.agent.msg_1619a3b0");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.agent.msg_1619a3b0");
         }
         OrchestrationStrategy strategy = strategyMap.get(req.getMode());
         if (strategy == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.agent.msg_2eda11e6", req.getMode().getCode());
         }
         AgentBlackboard blackboard = new AgentBlackboard(req.getFacts());

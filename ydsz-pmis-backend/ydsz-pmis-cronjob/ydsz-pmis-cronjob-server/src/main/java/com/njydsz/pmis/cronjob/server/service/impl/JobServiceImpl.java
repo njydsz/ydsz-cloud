@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
@@ -258,7 +258,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         }
         validate(job);
         if (jobMapper.selectByJobKey(job.getJobKey()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.cronjob.msg_7e5ef640", job.getJobKey());
+            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.cronjob.msg_7e5ef640", job.getJobKey());
         }
         if (job.getStatus() == null) {
             job.setStatus("NORMAL");
@@ -312,11 +312,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     @Transactional(rollbackFor = Exception.class)
     public void update(JobDO job) {
         if (job.getId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_ce91ca69");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_ce91ca69");
         }
         JobDO exists = jobMapper.selectById(job.getId());
         if (exists == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
         }
         // P1-6: 保存历史版本（在更新之前保存当前快照）
         JobHistoryService historyService = jobHistoryServiceProvider.getIfAvailable();
@@ -344,14 +344,14 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             }
         } else if (type == ScheduleType.FIXED_RATE) {
             if (exists.getFixedRateMs() == null || exists.getFixedRateMs() <= 0) {
-                throw new BizException(BizErrorCode.BAD_REQUEST,
+                throw new BizException(StandardResultCode.BAD_REQUEST,
                         "error.cronjob.msg_5d0044ca", "fixedRateMs 必须为正数");
             }
             // FIXED_RATE 类型清空 nextFireTime（由 SecondLevelScheduler 管理）
             exists.setNextFireTime(null);
         } else if (type == ScheduleType.FIXED_DELAY) {
             if (exists.getFixedDelayMs() == null || exists.getFixedDelayMs() <= 0) {
-                throw new BizException(BizErrorCode.BAD_REQUEST,
+                throw new BizException(StandardResultCode.BAD_REQUEST,
                         "error.cronjob.msg_5d0044ca", "fixedDelayMs 必须为正数");
             }
             // FIXED_DELAY 类型清空 nextFireTime（由 SecondLevelScheduler 管理）
@@ -404,7 +404,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     public void delete(String id) {
         JobDO j = jobMapper.selectById(id);
         if (j == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
         }
         unregister(j.getJobKey());
         // P0-3: 注销 SecondLevelScheduler 中的调度（FIXED_RATE/FIXED_DELAY）
@@ -780,7 +780,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     public JobDO getById(String id) {
         JobDO j = jobMapper.selectById(id);
         if (j == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
         }
         return j;
     }
@@ -958,17 +958,17 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     private void validate(JobDO job) {
         if (!StringUtils.hasText(job.getJobKey())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_884214e7");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_884214e7");
         }
         if (!StringUtils.hasText(job.getHandler())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_04ebee77");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_04ebee77");
         }
         // P2-8: 校验任务级时区（非空时必须为有效时区 ID）
         if (StringUtils.hasText(job.getTimezone())) {
             try {
                 ZoneId.of(job.getTimezone());
             } catch (Exception e) {
-                throw new BizException(BizErrorCode.BAD_REQUEST,
+                throw new BizException(StandardResultCode.BAD_REQUEST,
                         "error.cronjob.msg_5d0044ca", "无效的时区 ID: " + job.getTimezone());
             }
         }
@@ -979,13 +979,13 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
                 break;
             case FIXED_RATE:
                 if (job.getFixedRateMs() == null || job.getFixedRateMs() <= 0) {
-                    throw new BizException(BizErrorCode.BAD_REQUEST,
+                    throw new BizException(StandardResultCode.BAD_REQUEST,
                             "error.cronjob.msg_5d0044ca", "fixedRateMs 必须为正数");
                 }
                 break;
             case FIXED_DELAY:
                 if (job.getFixedDelayMs() == null || job.getFixedDelayMs() <= 0) {
-                    throw new BizException(BizErrorCode.BAD_REQUEST,
+                    throw new BizException(StandardResultCode.BAD_REQUEST,
                             "error.cronjob.msg_5d0044ca", "fixedDelayMs 必须为正数");
                 }
                 break;
@@ -1006,12 +1006,12 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     private void validateCron(String cron) {
         if (!StringUtils.hasText(cron)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_35ac148f");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_35ac148f");
         }
         try {
             new CronTrigger(cron);
         } catch (Exception e) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca", e.getMessage());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca", e.getMessage());
         }
     }
 

@@ -3,7 +3,7 @@ package com.njydsz.pmis.literule.web;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.literule.server.cep.CEPEngine;
 import com.njydsz.pmis.literule.server.cep.CEPEvent;
 import com.njydsz.pmis.literule.server.cep.CEPHit;
@@ -120,12 +120,12 @@ public class CEPController {
      * @return 模式列表
      */
     @GetMapping("/patterns")
-    public Result<List<CEPPattern>> listPatterns() {
+    public BaseResponse<List<CEPPattern>> listPatterns() {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return Result.fail("CEP 引擎未启用");
+            return BaseResponse.fail("CEP 引擎未启用");
         }
-        return Result.ok(engine.listPatterns());
+        return BaseResponse.ok(engine.listPatterns());
     }
 
     /**
@@ -136,16 +136,16 @@ public class CEPController {
      */
     @Idempotent(key = "cep:registerPattern", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/patterns")
-    public Result<Void> registerPattern(@RequestBody CEPPattern pattern) {
+    public BaseResponse<Void> registerPattern(@RequestBody CEPPattern pattern) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return Result.fail("CEP 引擎未启用");
+            return BaseResponse.fail("CEP 引擎未启用");
         }
         try {
             engine.registerPattern(pattern);
-            return Result.ok();
+            return BaseResponse.ok();
         } catch (IllegalArgumentException e) {
-            return Result.fail(e.getMessage());
+            return BaseResponse.fail(e.getMessage());
         }
     }
 
@@ -157,13 +157,13 @@ public class CEPController {
      */
     @Idempotent(key = "cep:unregisterPattern", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/patterns/{patternId}")
-    public Result<Void> unregisterPattern(@PathVariable String patternId) {
+    public BaseResponse<Void> unregisterPattern(@PathVariable String patternId) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return Result.fail("CEP 引擎未启用");
+            return BaseResponse.fail("CEP 引擎未启用");
         }
         engine.unregisterPattern(patternId);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -184,19 +184,19 @@ public class CEPController {
      */
     @Idempotent(key = "cep:feedEvent", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/events")
-    public Result<Map<String, Object>> feedEvent(@RequestBody Map<String, Object> body) {
+    public BaseResponse<Map<String, Object>> feedEvent(@RequestBody Map<String, Object> body) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return Result.fail("CEP 引擎未启用");
+            return BaseResponse.fail("CEP 引擎未启用");
         }
         int hitsBefore = (int) engine.totalHits();
         CEPEvent event = toEvent(body);
         engine.feed(event);
         int hitsAfter = (int) engine.totalHits();
         Map<String, Object> result = new HashMap<>();
-        result.put("fed", true);
-        result.put("triggeredHits", hitsAfter - hitsBefore);
-        return Result.ok(result);
+        BaseResponse.put("fed", true);
+        BaseResponse.put("triggeredHits", hitsAfter - hitsBefore);
+        return BaseResponse.ok(result);
     }
 
     /**
@@ -207,20 +207,20 @@ public class CEPController {
      */
     @Idempotent(key = "cep:feedEvents", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/events/batch")
-    public Result<Map<String, Object>> feedEvents(@RequestBody List<Map<String, Object>> events) {
+    public BaseResponse<Map<String, Object>> feedEvents(@RequestBody List<Map<String, Object>> events) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return Result.fail("CEP 引擎未启用");
+            return BaseResponse.fail("CEP 引擎未启用");
         }
         if (events == null || events.isEmpty()) {
-            return Result.ok(Map.of("fed", 0, "triggeredHits", 0));
+            return BaseResponse.ok(Map.of("fed", 0, "triggeredHits", 0));
         }
         int hitsBefore = (int) engine.totalHits();
         for (Map<String, Object> body : events) {
             engine.feed(toEvent(body));
         }
         int hitsAfter = (int) engine.totalHits();
-        return Result.ok(Map.of("fed", events.size(), "triggeredHits", hitsAfter - hitsBefore));
+        return BaseResponse.ok(Map.of("fed", events.size(), "triggeredHits", hitsAfter - hitsBefore));
     }
 
     /**
@@ -229,9 +229,9 @@ public class CEPController {
      * @return 命中记录列表（最多 200 条）
      */
     @GetMapping("/hits")
-    public Result<List<CEPHit>> recentHits() {
+    public BaseResponse<List<CEPHit>> recentHits() {
         synchronized (recentHits) {
-            return Result.ok(new ArrayList<>(recentHits));
+            return BaseResponse.ok(new ArrayList<>(recentHits));
         }
     }
 
@@ -241,12 +241,12 @@ public class CEPController {
      * @return 状态信息（模式数、命中数）
      */
     @GetMapping("/stats")
-    public Result<Map<String, Object>> stats() {
+    public BaseResponse<Map<String, Object>> stats() {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return Result.fail("CEP 引擎未启用");
+            return BaseResponse.fail("CEP 引擎未启用");
         }
-        return Result.ok(Map.of(
+        return BaseResponse.ok(Map.of(
                 "patternCount", engine.patternCount(),
                 "totalHits", engine.totalHits()
         ));
@@ -301,15 +301,15 @@ public class CEPController {
      */
     @Idempotent(key = "cep:testPattern", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/patterns/test")
-    public Result<Map<String, Object>> testPattern(@RequestBody Map<String, Object> body) {
+    public BaseResponse<Map<String, Object>> testPattern(@RequestBody Map<String, Object> body) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();
         if (engine == null) {
-            return Result.fail("CEP 引擎未启用");
+            return BaseResponse.fail("CEP 引擎未启用");
         }
         try {
             Object patternObj = body.get("pattern");
             if (patternObj == null) {
-                return Result.fail("pattern 不能为空");
+                return BaseResponse.fail("pattern 不能为空");
             }
             CEPPattern pattern = objectMapper.convertValue(patternObj, CEPPattern.class);
             if (pattern.getId() == null || pattern.getId().isBlank()) {
@@ -318,7 +318,7 @@ public class CEPController {
             String patternId = pattern.getId();
             Object eventsObj = body.get("events");
             if (!(eventsObj instanceof List<?> eventsList)) {
-                return Result.fail("events 必须为数组");
+                return BaseResponse.fail("events 必须为数组");
             }
 
             // 注册临时模式
@@ -344,14 +344,14 @@ public class CEPController {
             long hitsAfter = engine.totalHits();
 
             Map<String, Object> result = new HashMap<>();
-            result.put("patternId", patternId);
-            result.put("fedEvents", eventsList.size());
-            result.put("triggeredHits", hitsAfter - hitsBefore);
-            result.put("hits", testHits);
-            return Result.ok(result);
+            BaseResponse.put("patternId", patternId);
+            BaseResponse.put("fedEvents", eventsList.size());
+            BaseResponse.put("triggeredHits", hitsAfter - hitsBefore);
+            BaseResponse.put("hits", testHits);
+            return BaseResponse.ok(result);
         } catch (Exception e) {
             log.warn("[CEP] 测试模式失败: {}", e.getMessage());
-            return Result.fail("测试失败: " + e.getMessage());
+            return BaseResponse.fail("测试失败: " + e.getMessage());
         }
     }
 }

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.integration;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.domain.dto.integration.FlowAttachmentDTO;
 import com.njydsz.pmis.workflow.domain.dto.integration.FlowAttachmentPreviewVO;
@@ -120,7 +120,7 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
     public FlowAttachmentPreviewVO previewAttachment(String attachmentId) {
         FlowAttachmentDO attachment = attachmentMapper.selectById(attachmentId);
         if (attachment == null || (attachment.getDeleted() != null && attachment.getDeleted() == 1)) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_c5d6e7f8", attachmentId);
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.workflow.msg_c5d6e7f8", attachmentId);
         }
 
         String ext = attachment.getFileExt() == null ? "" : attachment.getFileExt().toLowerCase();

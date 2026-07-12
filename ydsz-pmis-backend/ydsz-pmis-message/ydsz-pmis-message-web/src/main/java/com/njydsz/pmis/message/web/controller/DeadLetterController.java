@@ -4,8 +4,8 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
@@ -54,12 +54,12 @@ public class DeadLetterController {
     @Operation(summary = "分页查询死信列表")
     @PrePermission(PermissionCodes.MESSAGE_DEAD_LETTER_VIEW)
     @GetMapping("/page")
-    public Result<Page<MsgLogDO>> page(MessageLogQueryDTO query) {
+    public BaseResponse<Page<MsgLogDO>> page(MessageLogQueryDTO query) {
         if (query == null) {
             query = new MessageLogQueryDTO();
         }
         query.setStatus(MessageStatusEnum.DEAD.name());
-        return Result.ok(messageLogService.page(query));
+        return BaseResponse.ok(messageLogService.page(query));
     }
 
     /**
@@ -75,11 +75,11 @@ public class DeadLetterController {
     @PrePermission(PermissionCodes.MESSAGE_DEAD_LETTER_RESEND)
     @Idempotent(key = "deadLetter:resend", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{logId}/resend")
-    public Result<Void> resend(@PathVariable String logId) {
+    public BaseResponse<Void> resend(@PathVariable String logId) {
         if (logId == null || logId.isBlank()) {
-            return Result.failed(BizErrorCode.BAD_REQUEST, "死信日志 ID 不能为空");
+            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "死信日志 ID 不能为空");
         }
         messageLogService.resendDead(logId);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 }

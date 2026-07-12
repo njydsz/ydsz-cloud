@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.integration;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.domain.dto.integration.EmbeddedApprovalActionDTO;
 import com.njydsz.pmis.workflow.domain.dto.integration.EmbeddedApprovalViewDTO;
@@ -62,7 +62,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     public EmbeddedApprovalViewDTO loadPanel(String businessType, String businessId, String userId) {
         if (businessType == null || businessType.isBlank()
                 || businessId == null || businessId.isBlank()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "businessType / businessId 不能为空");
         }
 
@@ -139,15 +139,15 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     @Override
     public void quickAction(EmbeddedApprovalActionDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_afb63fa5");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_afb63fa5");
         }
         String action = dto.getAction() == null ? "" : dto.getAction().toUpperCase();
         FlowInstanceDO instance = instanceService.getByBusiness(dto.getBusinessType(), dto.getBusinessId());
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_b72e8598");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.workflow.msg_b72e8598");
         }
         if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BIZ_ERROR, "error.workflow.msg_8243ec9a");
+            throw new BizException(StandardResultCode.BIZ_ERROR, "error.workflow.msg_8243ec9a");
         }
 
         switch (action) {
@@ -157,7 +157,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
             case "DELEGATE": {
                 FlowRunTaskDO mine = findMyTask(instance.getId(), dto.getUserId());
                 if (mine == null) {
-                    throw new BizException(BizErrorCode.FORBIDDEN,
+                    throw new BizException(StandardResultCode.FORBIDDEN,
                             "error.workflow.msg_1440b2f2");
                 }
                 FlowTaskOperateDTO op = new FlowTaskOperateDTO();
@@ -176,13 +176,13 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
                     taskService.reject(op);
                 } else if ("TRANSFER".equals(action)) {
                     if (dto.getTargetUserId() == null) {
-                        throw new BizException(BizErrorCode.BAD_REQUEST,
+                        throw new BizException(StandardResultCode.BAD_REQUEST,
                                 "error.workflow.msg_df306e2b");
                     }
                     taskService.transfer(op);
                 } else { // DELEGATE
                     if (dto.getTargetUserId() == null) {
-                        throw new BizException(BizErrorCode.BAD_REQUEST,
+                        throw new BizException(StandardResultCode.BAD_REQUEST,
                                 "委派操作必须指定 targetUserId");
                     }
                     taskService.delegate(op);
@@ -198,13 +198,13 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
             case "WITHDRAW": {
                 boolean ok = instanceService.recall(instance.getId(), dto.getUserId());
                 if (!ok) {
-                    throw new BizException(BizErrorCode.BIZ_ERROR,
+                    throw new BizException(StandardResultCode.BIZ_ERROR,
                             "error.workflow.msg_ad7c50c2");
                 }
                 break;
             }
             default:
-                throw new BizException(BizErrorCode.BAD_REQUEST,
+                throw new BizException(StandardResultCode.BAD_REQUEST,
                         "error.workflow.msg_3adf9016", dto.getAction());
         }
     }

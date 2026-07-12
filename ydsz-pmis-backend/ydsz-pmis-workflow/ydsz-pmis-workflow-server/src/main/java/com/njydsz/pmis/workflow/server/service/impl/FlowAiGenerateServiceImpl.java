@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.ai;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.agent.api.client.AgentClient;
 import com.njydsz.pmis.workflow.server.service.ai.FlowAiGenerateService;
 import lombok.RequiredArgsConstructor;
@@ -49,8 +49,8 @@ public class FlowAiGenerateServiceImpl implements FlowAiGenerateService {
         body.put("params", params);
 
         try {
-            Result<Map<String, Object>> res = agentClient.execute(body);
-            if (res == null || res.getCode() != 0) {
+            BaseResponse<Map<String, Object>> res = agentClient.execute(body);
+            if (res == null || res.isSuccess() == false) {
                 log.warn("[FlowAiGenerate] Agent 调用失败: code={} msg={}",
                         res == null ? "null" : res.getCode(),
                         res == null ? "" : res.getMessage());

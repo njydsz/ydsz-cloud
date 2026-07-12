@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.facade;
 
-import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.WorkflowFacade;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowStartProcessDTO;
@@ -111,18 +111,18 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     @Override
     public List<Map<String, Object>> listTodoTasks(String userId, int page, int size) {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
-        PageResult<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
-                String.valueOf(userId), SecurityContext.getTenantIdOrDefault("1"), page, size);
-        return pageResult.getList().stream().map(this::toMap).toList();
+        PageResponse<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
+                String.valueOf(userId), AuthContext.getTenantIdOrDefault("1"), page, size);
+        return PageResponse.getList().stream().map(this::toMap).toList();
     }
 
     @Override
     public List<Map<String, Object>> listDoneTasks(String userId, int page, int size) {
         // P0-3: 已办走历史表（FlowTaskServiceImpl 内部已切换到 FlowHisTaskMapper）
         // P2-17: 真分页（SQL LIMIT/OFFSET）
-        PageResult<FlowRunTaskDO> pageResult = taskService.listDoneByAssigneePage(
-                String.valueOf(userId), SecurityContext.getTenantIdOrDefault("1"), page, size);
-        return pageResult.getList().stream().map(this::toMap).toList();
+        PageResponse<FlowRunTaskDO> pageResult = taskService.listDoneByAssigneePage(
+                String.valueOf(userId), AuthContext.getTenantIdOrDefault("1"), page, size);
+        return PageResponse.getList().stream().map(this::toMap).toList();
     }
 
     // ============================== GAP-P0-1: 全部流程实例（管理员视图） ==============================
@@ -136,14 +136,14 @@ public class PmisWorkflowFacade implements WorkflowFacade {
      * <p>P0-2 修复：返回 {@link PageResult}，保留 total / page / size，避免前端假分页。
      */
     @Override
-    public PageResult<Map<String, Object>> listAllInstances(String businessType, String flowStatus,
+    public PageResponse<Map<String, Object>> listAllInstances(String businessType, String flowStatus,
                                                             LocalDateTime startTime, LocalDateTime endTime,
                                                             int page, int size) {
-        PageResult<FlowInstanceDO> pageResult = instanceService.page(
+        PageResponse<FlowInstanceDO> pageResult = instanceService.page(
                 businessType, null, flowStatus, startTime, endTime,
-                SecurityContext.getTenantIdOrDefault("1"), page, size);
-        List<Map<String, Object>> list = pageResult.getList().stream().map(this::instanceToMap).toList();
-        return PageResult.of(list, pageResult.getTotal(), pageResult.getPage(), pageResult.getSize());
+                AuthContext.getTenantIdOrDefault("1"), page, size);
+        List<Map<String, Object>> list = PageResponse.getList().stream().map(this::instanceToMap).toList();
+        return PageResponse.of(list, PageResponse.getTotal(), PageResponse.getPage(), PageResponse.getSize());
     }
 
     @Override
@@ -217,10 +217,10 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     /** GAP-P0-4: 一键通过所有待办 */
     @Override
     public int passAllTodoTasks(String userId, String comment) {
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
-        PageResult<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        PageResponse<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), tenantId, 1, 100);
-        List<FlowRunTaskDO> todos = pageResult.getList();
+        List<FlowRunTaskDO> todos = PageResponse.getList();
         if (todos.isEmpty()) {
             return 0;
         }
@@ -262,10 +262,10 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         }
         // 附带实例当前状态信息
         Map<String, Object> result = new HashMap<>(detail);
-        result.put("instanceId", instance.getId());
-        result.put("flowStatus", instance.getFlowStatus());
-        result.put("currentNodeCode", currentNodeCode);
-        result.put("currentNodeName", instance.getCurrentNodeName());
+        BaseResponse.put("instanceId", instance.getId());
+        BaseResponse.put("flowStatus", instance.getFlowStatus());
+        BaseResponse.put("currentNodeCode", currentNodeCode);
+        BaseResponse.put("currentNodeName", instance.getCurrentNodeName());
         return result;
     }
 
@@ -666,7 +666,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
             try {
                 Map<String, Object> parsed = JsonHelper.fromJson(coord);
                 if (parsed != null && !parsed.isEmpty()) {
-                    result.put(n.getNodeCode(), parsed);
+                    BaseResponse.put(n.getNodeCode(), parsed);
                 }
             } catch (Exception ignore) {
                 // coordinate 解析失败：跳过此节点

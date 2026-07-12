@@ -8,8 +8,8 @@ import com.njydsz.pmis.agent.domain.entity.knowledge.KnowledgeBaseDO;
 import com.njydsz.pmis.agent.server.rag.RetrievedChunk;
 import com.njydsz.pmis.agent.server.rag.Retriever;
 import com.njydsz.pmis.agent.server.service.knowledge.KnowledgeBaseService;
-import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -65,8 +65,8 @@ public class KnowledgeBaseController {
     @Operation(summary = "创建知识库")
     @Idempotent(key = "knowledgeBase:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<KnowledgeBaseDO> create(@Valid @RequestBody KnowledgeBaseDO kb) {
-        return Result.ok(kbService.create(kb));
+    public BaseResponse<KnowledgeBaseDO> create(@Valid @RequestBody KnowledgeBaseDO kb) {
+        return BaseResponse.ok(kbService.create(kb));
     }
 
     /**
@@ -77,8 +77,8 @@ public class KnowledgeBaseController {
      */
     @Operation(summary = "知识库详情")
     @GetMapping("/{id}")
-    public Result<KnowledgeBaseDO> get(@PathVariable String id) {
-        return Result.ok(kbService.getById(id));
+    public BaseResponse<KnowledgeBaseDO> get(@PathVariable String id) {
+        return BaseResponse.ok(kbService.getById(id));
     }
 
     /**
@@ -91,11 +91,11 @@ public class KnowledgeBaseController {
      */
     @Operation(summary = "分页查询知识库")
     @GetMapping("/page")
-    public Result<PageResult<KnowledgeBaseDO>> page(
+    public BaseResponse<PageResponse<KnowledgeBaseDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) int size,
             @RequestParam(required = false) String tenantId) {
-        return Result.ok(kbService.page(page, size, tenantId));
+        return BaseResponse.ok(kbService.page(page, size, tenantId));
     }
 
     /**
@@ -108,10 +108,10 @@ public class KnowledgeBaseController {
     @Operation(summary = "上传文档")
     @Idempotent(key = "knowledgeBase:uploadDocument", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/documents")
-    public Result<AgentDocumentDO> uploadDocument(
+    public BaseResponse<AgentDocumentDO> uploadDocument(
             @PathVariable("id") @NotBlank String knowledgeBaseId,
             @Valid @RequestBody UploadDocumentRequest req) {
-        return Result.ok(kbService.uploadDocument(knowledgeBaseId, req.getName(),
+        return BaseResponse.ok(kbService.uploadDocument(knowledgeBaseId, req.getName(),
                 req.getSourceType(), req.getContent()));
     }
 
@@ -123,8 +123,8 @@ public class KnowledgeBaseController {
      */
     @Operation(summary = "文档列表")
     @GetMapping("/{id}/documents")
-    public Result<List<AgentDocumentDO>> listDocuments(@PathVariable("id") String knowledgeBaseId) {
-        return Result.ok(kbService.listDocuments(knowledgeBaseId));
+    public BaseResponse<List<AgentDocumentDO>> listDocuments(@PathVariable("id") String knowledgeBaseId) {
+        return BaseResponse.ok(kbService.listDocuments(knowledgeBaseId));
     }
 
     /**
@@ -137,14 +137,14 @@ public class KnowledgeBaseController {
     @Operation(summary = "检索知识库")
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/{id}/search")
-    public Result<List<RetrievedChunk>> search(
+    public BaseResponse<List<RetrievedChunk>> search(
             @PathVariable("id") @NotBlank String knowledgeBaseId,
             @Valid @RequestBody SearchRequest req) {
         Retriever retriever = retrieverProvider.getIfAvailable();
         if (retriever == null) {
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
-        return Result.ok(retriever.retrieve(knowledgeBaseId, req.getQuery()));
+        return BaseResponse.ok(retriever.retrieve(knowledgeBaseId, req.getQuery()));
     }
 
     /**

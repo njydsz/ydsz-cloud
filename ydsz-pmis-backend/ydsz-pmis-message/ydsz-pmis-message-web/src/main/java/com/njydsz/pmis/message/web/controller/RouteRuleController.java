@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.message.domain.dto.config.RouteRuleUpsertDTO;
@@ -50,8 +50,8 @@ public class RouteRuleController {
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_CREATE)
     @Idempotent(key = "routeRule:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<MsgRouteRuleDO> create(@Valid @RequestBody RouteRuleUpsertDTO dto) {
-        return Result.ok(routeRuleService.create(dto));
+    public BaseResponse<MsgRouteRuleDO> create(@Valid @RequestBody RouteRuleUpsertDTO dto) {
+        return BaseResponse.ok(routeRuleService.create(dto));
     }
 
     /**
@@ -65,8 +65,8 @@ public class RouteRuleController {
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_UPDATE)
     @Idempotent(key = "routeRule:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public Result<MsgRouteRuleDO> update(@PathVariable String id, @Valid @RequestBody RouteRuleUpsertDTO dto) {
-        return Result.ok(routeRuleService.update(id, dto));
+    public BaseResponse<MsgRouteRuleDO> update(@PathVariable String id, @Valid @RequestBody RouteRuleUpsertDTO dto) {
+        return BaseResponse.ok(routeRuleService.update(id, dto));
     }
 
     /**
@@ -79,9 +79,9 @@ public class RouteRuleController {
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_DELETE)
     @Idempotent(key = "routeRule:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         routeRuleService.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -93,8 +93,8 @@ public class RouteRuleController {
     @Operation(summary = "路由规则详情")
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_VIEW)
     @GetMapping("/{id}")
-    public Result<MsgRouteRuleDO> getById(@PathVariable String id) {
-        return Result.ok(routeRuleService.getById(id));
+    public BaseResponse<MsgRouteRuleDO> getById(@PathVariable String id) {
+        return BaseResponse.ok(routeRuleService.getById(id));
     }
 
     /**
@@ -106,8 +106,8 @@ public class RouteRuleController {
     @Operation(summary = "路由规则分页")
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/page")
-    public Result<Page<MsgRouteRuleDO>> page(PageQuery query) {
-        return Result.ok(routeRuleService.page(query));
+    public BaseResponse<Page<MsgRouteRuleDO>> page(PageQuery query) {
+        return BaseResponse.ok(routeRuleService.page(query));
     }
 
     /**
@@ -118,7 +118,7 @@ public class RouteRuleController {
     @Operation(summary = "查询启用的路由规则")
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/enabled")
-    public Result<List<MsgRouteRuleDO>> listEnabled() {
-        return Result.ok(routeRuleService.listEnabled());
+    public BaseResponse<List<MsgRouteRuleDO>> listEnabled() {
+        return BaseResponse.ok(routeRuleService.listEnabled());
     }
 }

@@ -3,8 +3,8 @@ package com.njydsz.pmis.workflow.web.controller.analytics;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.server.service.analytics.FlowSlaService;
@@ -44,9 +44,9 @@ public class FlowSlaController {
     @Idempotent(key = "flowSla:slaScan", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/sla/scan")
     @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
-    public Result<Integer> slaScan() {
+    public BaseResponse<Integer> slaScan() {
         int processed = slaService.scanAndProcess();
-        return Result.ok(processed);
+        return BaseResponse.ok(processed);
     }
 
     /**
@@ -58,12 +58,12 @@ public class FlowSlaController {
     @Idempotent(key = "flowSla:slaProcess", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/sla/process/{taskId}")
     @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
-    public Result<Boolean> slaProcess(@PathVariable String taskId) {
+    public BaseResponse<Boolean> slaProcess(@PathVariable String taskId) {
         FlowRunTaskDO task = taskService.getById(taskId);
         if (task == null) {
-            return Result.failed(BizErrorCode.NOT_FOUND, "任务不存在: " + taskId);
+            return BaseResponse.failed(StandardResultCode.NOT_FOUND, "任务不存在: " + taskId);
         }
         boolean ok = slaService.processOverdue(task);
-        return Result.ok(ok);
+        return BaseResponse.ok(ok);
     }
 }

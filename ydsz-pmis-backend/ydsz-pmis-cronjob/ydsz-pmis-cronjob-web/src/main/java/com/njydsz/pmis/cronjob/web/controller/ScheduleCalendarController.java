@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.web.controller.schedule;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.cronjob.server.service.impl.schedule.ScheduleCalendarService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,11 +40,11 @@ public class ScheduleCalendarController {
      */
     @Operation(summary = "查询任务未来触发时间")
     @GetMapping("/fireTimes")
-    public Result<List<LocalDateTime>> getUpcomingFireTimes(
+    public BaseResponse<List<LocalDateTime>> getUpcomingFireTimes(
             @RequestParam String jobKey,
             @RequestParam(defaultValue = "24") int hours,
             @RequestParam(defaultValue = "100") int maxCount) {
-        return Result.ok(scheduleCalendarService.getUpcomingFireTimes(
+        return BaseResponse.ok(scheduleCalendarService.getUpcomingFireTimes(
                 jobKey, LocalDateTime.now(), maxCount));
     }
 
@@ -57,10 +57,10 @@ public class ScheduleCalendarController {
      */
     @Operation(summary = "查询调度日历")
     @GetMapping("/schedule")
-    public Result<List<ScheduleCalendarService.ScheduleItem>> getScheduleCalendar(
+    public BaseResponse<List<ScheduleCalendarService.ScheduleItem>> getScheduleCalendar(
             @RequestParam(defaultValue = "24") int hours,
             @RequestParam(defaultValue = "50") int maxPerJob) {
-        return Result.ok(scheduleCalendarService.getScheduleCalendar(
+        return BaseResponse.ok(scheduleCalendarService.getScheduleCalendar(
                 LocalDateTime.now(), hours, maxPerJob));
     }
 }

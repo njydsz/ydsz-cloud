@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.instance;
 
-import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
@@ -80,7 +80,7 @@ public interface FlowTaskService {
      * @param size       每页大小
      * @return 分页结果
      */
-    PageResult<FlowRunTaskDO> listTodoByAssigneePage(String assigneeId, String tenantId,
+    PageResponse<FlowRunTaskDO> listTodoByAssigneePage(String assigneeId, String tenantId,
                                                    int page, int size);
 
     /**
@@ -97,7 +97,7 @@ public interface FlowTaskService {
      * @param size       每页大小
      * @return 分页结果
      */
-    PageResult<FlowRunTaskDO> listDoneByAssigneePage(String assigneeId, String tenantId,
+    PageResponse<FlowRunTaskDO> listDoneByAssigneePage(String assigneeId, String tenantId,
                                                    int page, int size);
 
     /**
@@ -284,7 +284,7 @@ public interface FlowTaskService {
      * @param size         每页大小
      * @return 分页结果
      */
-    PageResult<FlowRunTaskDO> listDoneByAssigneePageMulti(String assigneeId, String businessType,
+    PageResponse<FlowRunTaskDO> listDoneByAssigneePageMulti(String assigneeId, String businessType,
                                                        String flowCode, LocalDateTime startTime,
                                                        LocalDateTime endTime, String tenantId,
                                                        int page, int size);

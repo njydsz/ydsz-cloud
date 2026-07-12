@@ -2,8 +2,8 @@ package com.njydsz.pmis.message.server.service.impl.config;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.message.server.config.MessageProperties;
@@ -79,7 +79,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
     @Override
     public MsgSubscriptionDO unsubscribeByToken(String token) {
         if (!messageProperties.getUnsubscribe().isEnabled()) {
-            throw new BizException(BizErrorCode.BIZ_ERROR, "退订中心已关闭");
+            throw new BizException(StandardResultCode.BIZ_ERROR, "退订中心已关闭");
         }
         UnsubscribeTokenPayload payload = unsubscribeTokenUtil.parseAndVerify(token);
         log.info("[Unsubscribe] token 退订: user={} topic={} channel={}",
@@ -94,7 +94,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
      * @return 分页结果
      */
     @Override
-    public PageResult<MsgSubscriptionDO> pageUnsubscribed(UnsubscribeQueryDTO query) {
+    public PageResponse<MsgSubscriptionDO> pageUnsubscribed(UnsubscribeQueryDTO query) {
         if (query == null) {
             query = new UnsubscribeQueryDTO();
         }
@@ -109,7 +109,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
                 .eq(StringUtils.hasText(query.getTenantId()), MsgSubscriptionDO::getTenantId, query.getTenantId())
                 .orderByDesc(MsgSubscriptionDO::getUnsubscribedAt);
         Page<MsgSubscriptionDO> result = msgSubscriptionMapper.selectPage(page, w);
-        return PageResult.ofPage(result);
+        return PageResponse.ofPage(result);
     }
 
     /**
@@ -126,7 +126,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
     @Override
     public void resubscribe(String userId, String topicCode, String channel) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode) || !StringUtils.hasText(channel)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
         }
         MsgSubscriptionDO existing = msgSubscriptionMapper.selectOne(new LambdaQueryWrapper<MsgSubscriptionDO>()
                 .eq(MsgSubscriptionDO::getUserId, userId)

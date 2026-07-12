@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.cronjob.domain.dto.job.JobRelationSaveDTO;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobRelationDO;
@@ -49,8 +49,8 @@ public class JobRelationController {
     @OperationLog(module = "任务调度", action = "添加任务依赖", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobRelation:addRelation", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> addRelation(@Valid @RequestBody JobRelationSaveDTO dto) {
-        return Result.ok(jobRelationService.addRelation(
+    public BaseResponse<String> addRelation(@Valid @RequestBody JobRelationSaveDTO dto) {
+        return BaseResponse.ok(jobRelationService.addRelation(
                 dto.getParentJobId(), dto.getChildJobId(), dto.getFailStrategy()));
     }
 
@@ -65,9 +65,9 @@ public class JobRelationController {
     @OperationLog(module = "任务调度", action = "删除任务依赖", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobRelation:removeRelation", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{relationId}")
-    public Result<Void> removeRelation(@PathVariable String relationId) {
+    public BaseResponse<Void> removeRelation(@PathVariable String relationId) {
         jobRelationService.removeRelation(relationId);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -78,8 +78,8 @@ public class JobRelationController {
      */
     @Operation(summary = "查询任务后继依赖")
     @GetMapping("/children/{parentJobId}")
-    public Result<List<JobRelationDO>> getChildren(@PathVariable String parentJobId) {
-        return Result.ok(jobRelationService.getChildren(parentJobId));
+    public BaseResponse<List<JobRelationDO>> getChildren(@PathVariable String parentJobId) {
+        return BaseResponse.ok(jobRelationService.getChildren(parentJobId));
     }
 
     /**
@@ -90,8 +90,8 @@ public class JobRelationController {
      */
     @Operation(summary = "查询任务前置依赖")
     @GetMapping("/parents/{childJobId}")
-    public Result<List<JobRelationDO>> getParents(@PathVariable String childJobId) {
-        return Result.ok(jobRelationService.getParents(childJobId));
+    public BaseResponse<List<JobRelationDO>> getParents(@PathVariable String childJobId) {
+        return BaseResponse.ok(jobRelationService.getParents(childJobId));
     }
 
     /**
@@ -101,7 +101,7 @@ public class JobRelationController {
      */
     @Operation(summary = "查询全部依赖关系（DAG 全图）")
     @GetMapping("/all")
-    public Result<List<JobRelationDO>> getAllRelations() {
-        return Result.ok(jobRelationService.getAllRelations());
+    public BaseResponse<List<JobRelationDO>> getAllRelations() {
+        return BaseResponse.ok(jobRelationService.getAllRelations());
     }
 }

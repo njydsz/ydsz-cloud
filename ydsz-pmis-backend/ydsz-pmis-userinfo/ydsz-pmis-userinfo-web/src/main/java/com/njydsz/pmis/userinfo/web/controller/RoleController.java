@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.annotation.RateLimit;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.permission.RoleFormDTO;
 import com.njydsz.pmis.userinfo.domain.dto.permission.RoleQueryDTO;
 import com.njydsz.pmis.userinfo.domain.entity.permission.RoleDO;
@@ -47,8 +47,8 @@ public class RoleController {
     @PrePermission("auth:role:list")
     @RateLimit(key = "role:list", qps = 30, windowSeconds = 60)
     @GetMapping
-    public Result<Page<RoleDO>> page(@Valid RoleQueryDTO query) {
-        return Result.ok(roleService.page(query));
+    public BaseResponse<Page<RoleDO>> page(@Valid RoleQueryDTO query) {
+        return BaseResponse.ok(roleService.page(query));
     }
 
     /**
@@ -59,8 +59,8 @@ public class RoleController {
     @Operation(summary = "所有启用的角色")
     @RateLimit(key = "role:list", qps = 30, windowSeconds = 60)
     @GetMapping("/all")
-    public Result<List<RoleDO>> listAll() {
-        return Result.ok(roleService.listAllEnabled());
+    public BaseResponse<List<RoleDO>> listAll() {
+        return BaseResponse.ok(roleService.listAllEnabled());
     }
 
     /**
@@ -72,8 +72,8 @@ public class RoleController {
     @Operation(summary = "角色详情")
     @RateLimit(key = "role:list", qps = 30, windowSeconds = 60)
     @GetMapping("/{id}")
-    public Result<RoleDO> get(@Parameter(description = "角色ID") @PathVariable String id) {
-        return Result.ok(roleService.getById(id));
+    public BaseResponse<RoleDO> get(@Parameter(description = "角色ID") @PathVariable String id) {
+        return BaseResponse.ok(roleService.getById(id));
     }
 
     /**
@@ -87,8 +87,8 @@ public class RoleController {
     @OperationLog(module = "权限管理", action = "创建角色", bizType = "ROLE")
     @Idempotent(key = "role:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody RoleFormDTO dto) {
-        return Result.ok(roleService.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody RoleFormDTO dto) {
+        return BaseResponse.ok(roleService.create(dto));
     }
 
     /**
@@ -102,9 +102,9 @@ public class RoleController {
     @OperationLog(module = "权限管理", action = "更新角色", bizType = "ROLE")
     @Idempotent(key = "role:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
-    public Result<Void> update(@Valid @RequestBody RoleFormDTO dto) {
+    public BaseResponse<Void> update(@Valid @RequestBody RoleFormDTO dto) {
         roleService.update(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -118,9 +118,9 @@ public class RoleController {
     @OperationLog(module = "权限管理", action = "删除角色", bizType = "ROLE")
     @Idempotent(key = "role:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@Parameter(description = "角色ID") @PathVariable String id) {
+    public BaseResponse<Void> delete(@Parameter(description = "角色ID") @PathVariable String id) {
         roleService.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -135,9 +135,9 @@ public class RoleController {
     @OperationLog(module = "权限管理", action = "分配权限", bizType = "ROLE")
     @Idempotent(key = "role:assignPermissions", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/permissions")
-    public Result<Void> assignPermissions(@Parameter(description = "角色ID") @PathVariable String id, @Valid @RequestBody List<String> permissionIds) {
+    public BaseResponse<Void> assignPermissions(@Parameter(description = "角色ID") @PathVariable String id, @Valid @RequestBody List<String> permissionIds) {
         roleService.assignPermissions(id, permissionIds);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -149,7 +149,7 @@ public class RoleController {
     @Operation(summary = "查询角色的权限 ID 列表")
     @RateLimit(key = "role:list", qps = 30, windowSeconds = 60)
     @GetMapping("/{id}/permissions")
-    public Result<List<String>> listPermissions(@Parameter(description = "角色ID") @PathVariable String id) {
-        return Result.ok(roleService.listPermissionIds(id));
+    public BaseResponse<List<String>> listPermissions(@Parameter(description = "角色ID") @PathVariable String id) {
+        return BaseResponse.ok(roleService.listPermissionIds(id));
     }
 }

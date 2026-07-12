@@ -3,9 +3,9 @@ package com.njydsz.pmis.message.web.controller.config;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.config.UnsubscribeQueryDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgSubscriptionDO;
@@ -61,11 +61,11 @@ public class UnsubscribeController {
     @PrePermission(PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
     @Idempotent(key = "unsubscribe:oneClick", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/oneClick")
-    public Result<MsgSubscriptionDO> oneClick(@RequestParam String token) {
+    public BaseResponse<MsgSubscriptionDO> oneClick(@RequestParam String token) {
         if (token == null || token.isBlank()) {
-            return Result.failed(BizErrorCode.BAD_REQUEST, "退订 token 不能为空");
+            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "退订 token 不能为空");
         }
-        return Result.ok(unsubscribeService.unsubscribeByToken(token));
+        return BaseResponse.ok(unsubscribeService.unsubscribeByToken(token));
     }
 
     /**
@@ -80,11 +80,11 @@ public class UnsubscribeController {
     @Operation(summary = "预览退订 token")
     @PrePermission(PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
     @GetMapping("/preview")
-    public Result<UnsubscribeTokenPayload> preview(@RequestParam String token) {
+    public BaseResponse<UnsubscribeTokenPayload> preview(@RequestParam String token) {
         if (token == null || token.isBlank()) {
-            return Result.failed(BizErrorCode.BAD_REQUEST, "退订 token 不能为空");
+            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "退订 token 不能为空");
         }
-        return Result.ok(unsubscribeService.previewToken(token));
+        return BaseResponse.ok(unsubscribeService.previewToken(token));
     }
 
     /**
@@ -96,8 +96,8 @@ public class UnsubscribeController {
     @Operation(summary = "分页查询已退订记录")
     @PrePermission(PermissionCodes.MESSAGE_UNSUBSCRIBE_VIEW)
     @GetMapping("/page")
-    public Result<PageResult<MsgSubscriptionDO>> page(UnsubscribeQueryDTO query) {
-        return Result.ok(unsubscribeService.pageUnsubscribed(query));
+    public BaseResponse<PageResponse<MsgSubscriptionDO>> page(UnsubscribeQueryDTO query) {
+        return BaseResponse.ok(unsubscribeService.pageUnsubscribed(query));
     }
 
     /**
@@ -112,15 +112,15 @@ public class UnsubscribeController {
     @PrePermission(PermissionCodes.MESSAGE_UNSUBSCRIBE_ACT)
     @Idempotent(key = "unsubscribe:resubscribe", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/resubscribe")
-    public Result<Void> resubscribe(@RequestParam String userId,
+    public BaseResponse<Void> resubscribe(@RequestParam String userId,
                                     @RequestParam String topicCode,
                                     @RequestParam String channel) {
         if (userId == null || userId.isBlank()
                 || topicCode == null || topicCode.isBlank()
                 || channel == null || channel.isBlank()) {
-            return Result.failed(BizErrorCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
+            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
         }
         unsubscribeService.resubscribe(userId, topicCode, channel);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 }

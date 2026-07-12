@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.web.controller.common;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.RateLimit;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.util.SortBy;
 import com.njydsz.pmis.project.domain.query.ProjectSearchVO;
 import com.njydsz.pmis.project.domain.query.UniversalSearchVO;
@@ -52,11 +52,11 @@ public class SearchController {
     @Operation(summary = "全文检索项目")
     @RateLimit(key = "search", qps = 10, windowSeconds = 60)
     @GetMapping("/projects")
-    public Result<Page<ProjectSearchVO>> searchProjects(
+    public BaseResponse<Page<ProjectSearchVO>> searchProjects(
             @RequestParam @NotBlank(message = "{validation.execution.msg_ede12b69}") String keyword,
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.execution.msg_9aaebb77}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.execution.msg_15154512}") @Max(100) int size) {
-        return Result.ok(searchService.searchProjects(keyword,
+        return BaseResponse.ok(searchService.searchProjects(keyword,
                 PageRequest.of(page - 1, size, SortBy.desc(ProjectSearchVO::getCreatedAt))));
     }
 
@@ -68,9 +68,9 @@ public class SearchController {
     @Operation(summary = "重建索引")
     @Idempotent(key = "search:reindex", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/reindex")
-    public Result<String> reindex() {
+    public BaseResponse<String> reindex() {
         searchService.reindexAll();
-        return Result.ok("reindex started");
+        return BaseResponse.ok("reindex started");
     }
 
     /**
@@ -86,9 +86,9 @@ public class SearchController {
     @Operation(summary = "统一搜索（跨实体）")
     @RateLimit(key = "search-all", qps = 10, windowSeconds = 60)
     @GetMapping("/all")
-    public Result<List<UniversalSearchVO>> searchAll(
+    public BaseResponse<List<UniversalSearchVO>> searchAll(
             @RequestParam @NotBlank(message = "{validation.execution.msg_ede12b69}") String keyword,
             @RequestParam(defaultValue = "5") @Min(value = 1, message = "{validation.execution.msg_15154512}") @Max(20) int size) {
-        return Result.ok(searchService.searchAll(keyword, size));
+        return BaseResponse.ok(searchService.searchAll(keyword, size));
     }
 }

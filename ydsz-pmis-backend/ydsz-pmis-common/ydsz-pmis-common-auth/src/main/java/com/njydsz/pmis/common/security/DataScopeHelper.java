@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.security;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,7 +28,7 @@ public final class DataScopeHelper {
      * @return 当前登录用户的数据权限上下文
      */
     public static DataScopeContext current() {
-        LoginUser user = SecurityContext.getCurrentOrNull();
+        LoginUser user = AuthContext.getCurrentOrNull();
         return DataScopeContext.from(user);
     }
 
@@ -52,7 +52,7 @@ public final class DataScopeHelper {
         if (ctx.getCustomDeptIds() != null && ctx.getCustomDeptIds().contains(targetDeptId)) {
             return;
         }
-        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_e107b337");
+        throw new BizException(StandardResultCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_e107b337");
     }
 
     /**
@@ -75,7 +75,7 @@ public final class DataScopeHelper {
         if (ctx.getUserId() != null && ctx.getUserId().equals(ownerUserId)) {
             return;
         }
-        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_4982e9ba");
+        throw new BizException(StandardResultCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_4982e9ba");
     }
 
     /**

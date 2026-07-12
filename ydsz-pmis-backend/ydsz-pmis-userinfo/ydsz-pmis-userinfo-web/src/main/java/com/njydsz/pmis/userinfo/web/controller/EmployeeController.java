@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.user.EmployeeCreateDTO;
 import com.njydsz.pmis.userinfo.domain.dto.user.EmployeePageDTO;
 import com.njydsz.pmis.userinfo.domain.dto.user.EmployeeUpdateDTO;
@@ -57,8 +57,8 @@ public class EmployeeController {
     @OperationLog(module = "员工管理", action = "创建员工", bizType = "EMPLOYEE")
     @Idempotent(key = "employee:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody EmployeeCreateDTO dto) {
-        return Result.ok(employeeService.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody EmployeeCreateDTO dto) {
+        return BaseResponse.ok(employeeService.create(dto));
     }
 
     /**
@@ -73,10 +73,10 @@ public class EmployeeController {
     @OperationLog(module = "员工管理", action = "更新员工", bizType = "EMPLOYEE")
     @Idempotent(key = "employee:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public Result<Void> update(@Parameter(description = "员工 ID") @PathVariable String id,
+    public BaseResponse<Void> update(@Parameter(description = "员工 ID") @PathVariable String id,
                                @Valid @RequestBody EmployeeUpdateDTO dto) {
         employeeService.update(id, dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -90,9 +90,9 @@ public class EmployeeController {
     @OperationLog(module = "员工管理", action = "删除员工", bizType = "EMPLOYEE")
     @Idempotent(key = "employee:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@Parameter(description = "员工 ID") @PathVariable String id) {
+    public BaseResponse<Void> delete(@Parameter(description = "员工 ID") @PathVariable String id) {
         employeeService.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -103,8 +103,8 @@ public class EmployeeController {
      */
     @Operation(summary = "员工详情")
     @GetMapping("/{id}")
-    public Result<EmployeeVO> get(@Parameter(description = "员工 ID") @PathVariable String id) {
-        return Result.ok(employeeService.assemble(employeeService.getById(id)));
+    public BaseResponse<EmployeeVO> get(@Parameter(description = "员工 ID") @PathVariable String id) {
+        return BaseResponse.ok(employeeService.assemble(employeeService.getById(id)));
     }
 
     /**
@@ -115,7 +115,7 @@ public class EmployeeController {
      */
     @Operation(summary = "分页查询员工")
     @GetMapping
-    public Result<Page<EmployeeVO>> page(@Valid @ModelAttribute EmployeePageDTO query) {
+    public BaseResponse<Page<EmployeeVO>> page(@Valid @ModelAttribute EmployeePageDTO query) {
         Page<EmployeeDO> doPage = employeeService.page(
                 (int) query.getPage(),
                 (int) query.getSize(),
@@ -125,7 +125,7 @@ public class EmployeeController {
                 query.getWorkStatus());
         Page<EmployeeVO> voPage = new Page<>(doPage.getCurrent(), doPage.getSize(), doPage.getTotal());
         voPage.setRecords(doPage.getRecords().stream().map(employeeService::assemble).toList());
-        return Result.ok(voPage);
+        return BaseResponse.ok(voPage);
     }
 
     /**
@@ -136,8 +136,8 @@ public class EmployeeController {
      */
     @Operation(summary = "按部门查询员工")
     @GetMapping("/byDepartment/{departmentId}")
-    public Result<List<EmployeeDO>> listByDepartment(
+    public BaseResponse<List<EmployeeDO>> listByDepartment(
             @Parameter(description = "部门 ID") @PathVariable String departmentId) {
-        return Result.ok(employeeService.listByDepartment(departmentId));
+        return BaseResponse.ok(employeeService.listByDepartment(departmentId));
     }
 }

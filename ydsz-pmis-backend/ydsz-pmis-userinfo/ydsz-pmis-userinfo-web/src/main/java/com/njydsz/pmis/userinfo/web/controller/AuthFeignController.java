@@ -1,6 +1,6 @@
 package com.njydsz.pmis.userinfo.web.controller.auth;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginContextDTO;
 import com.njydsz.pmis.userinfo.domain.entity.permission.RoleDO;
 import com.njydsz.pmis.userinfo.domain.entity.user.UserAccountDO;
@@ -48,9 +48,9 @@ public class AuthFeignController {
      */
     @Operation(summary = "根据用户名加载登录上下文")
     @GetMapping("/context/byUsername")
-    public Result<LoginContextDTO> getLoginContextByUsername(@RequestParam String username) {
+    public BaseResponse<LoginContextDTO> getLoginContextByUsername(@RequestParam String username) {
         UserAccountDO user = userAccountService.findByUsername(username);
-        return Result.ok(buildContext(user));
+        return BaseResponse.ok(buildContext(user));
     }
 
     /**
@@ -61,8 +61,8 @@ public class AuthFeignController {
      */
     @Operation(summary = "根据用户 ID 加载登录上下文")
     @GetMapping("/context/byId")
-    public Result<LoginContextDTO> getLoginContextById(@RequestParam String userId) {
-        return Result.ok(buildContext(userAccountService.findById(userId)));
+    public BaseResponse<LoginContextDTO> getLoginContextById(@RequestParam String userId) {
+        return BaseResponse.ok(buildContext(userAccountService.findById(userId)));
     }
 
     /**

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.project.server.assembler;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.api.client.UserServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ public class NameAssembler {
     public String resolveEmployee(String id) {
         if (id == null) return null;
         try {
-            Result<Map<String, Object>> r = userServiceClient.getEmployee(id);
+            BaseResponse<Map<String, Object>> r = userServiceClient.getEmployee(id);
             if (r != null && r.getData() != null) {
                 Object name = r.getData().get("name");
                 if (name == null) name = r.getData().get("realName");
@@ -55,7 +55,7 @@ public class NameAssembler {
     public String resolveCustomer(String id) {
         if (id == null) return null;
         try {
-            Result<String> r = userServiceClient.getCustomerName(id);
+            BaseResponse<String> r = userServiceClient.getCustomerName(id);
             if (r != null && r.getData() != null) {
                 return r.getData();
             }
@@ -74,7 +74,7 @@ public class NameAssembler {
     public Map<String, String> batchEmployeeName(List<String> ids) {
         if (ids == null || ids.isEmpty()) return Map.of();
         try {
-            Result<Map<String, String>> r = userServiceClient.batchEmployeeName(ids);
+            BaseResponse<Map<String, String>> r = userServiceClient.batchEmployeeName(ids);
             if (r != null && r.getData() != null) {
                 return r.getData();
             }
@@ -93,7 +93,7 @@ public class NameAssembler {
     public Map<String, String> batchCustomerName(List<String> ids) {
         if (ids == null || ids.isEmpty()) return Map.of();
         try {
-            Result<Map<String, String>> r = userServiceClient.batchCustomerName(ids);
+            BaseResponse<Map<String, String>> r = userServiceClient.batchCustomerName(ids);
             if (r != null && r.getData() != null) {
                 return r.getData();
             }

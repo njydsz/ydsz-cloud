@@ -2,8 +2,8 @@ package com.njydsz.pmis.workflow.web.controller.delegate;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.server.service.delegate.FlowOfflineAutoForwardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,8 +36,8 @@ public class FlowOfflineForwardController {
     @Idempotent(key = "flowOfflineForward:autoForward", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/auto")
     @Operation(summary = "按代理授权规则自动转发已有待办")
-    public Result<Integer> autoForward(@RequestParam String authId) {
-        return Result.ok(offlineAutoForwardService.autoForwardByAuth(authId));
+    public BaseResponse<Integer> autoForward(@RequestParam String authId) {
+        return BaseResponse.ok(offlineAutoForwardService.autoForwardByAuth(authId));
     }
 
     /**
@@ -50,10 +50,10 @@ public class FlowOfflineForwardController {
     @Idempotent(key = "flowOfflineForward:manualForward", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/manual")
     @Operation(summary = "手动触发离线转发")
-    public Result<Integer> manualForward(
+    public BaseResponse<Integer> manualForward(
             @RequestParam String userId,
             @RequestParam String delegateUserId) {
-        String operatorId = SecurityContext.getUserId();
-        return Result.ok(offlineAutoForwardService.manualForward(userId, delegateUserId, operatorId));
+        String operatorId = AuthContext.getUserId();
+        return BaseResponse.ok(offlineAutoForwardService.manualForward(userId, delegateUserId, operatorId));
     }
 }

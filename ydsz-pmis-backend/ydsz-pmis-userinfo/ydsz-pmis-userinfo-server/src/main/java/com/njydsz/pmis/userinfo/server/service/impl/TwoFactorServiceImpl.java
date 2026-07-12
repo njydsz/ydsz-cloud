@@ -1,7 +1,7 @@
 package com.njydsz.pmis.userinfo.server.service.impl.auth;
 
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.TotpUtil;
 import com.njydsz.pmis.userinfo.domain.dto.auth.TwoFactorBindResult;
@@ -42,12 +42,12 @@ public class TwoFactorServiceImpl implements TwoFactorService {
     public TwoFactorBindResult bindTotp(String userId, String account) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
-            throw new BizException(BizErrorCode.USER_NOT_FOUND);
+            throw new BizException(StandardResultCode.USER_NOT_FOUND);
         }
         User2FADO existing = user2FAMapper.selectByUserId(userId);
         String secret;
         if (existing != null && Boolean.TRUE.equals(existing.getEnabled())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_350ea646");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_350ea646");
         }
         secret = TotpUtil.generateSecret();
         String[] codes = TotpUtil.generateBackupCodes(BACKUP_CODE_COUNT);
@@ -78,7 +78,7 @@ public class TwoFactorServiceImpl implements TwoFactorService {
     public boolean confirmBind(String userId, String otp) {
         User2FADO e = user2FAMapper.selectByUserId(userId);
         if (e == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_b9b014df");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_b9b014df");
         }
         if (!TotpUtil.verify(e.getSecret(), otp)) {
             return false;

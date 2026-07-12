@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.impl.template;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -41,10 +41,10 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public MsgTemplateDO create(TemplateCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "模板参数不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "模板参数不能为空");
         }
         if (!StringUtils.hasText(dto.getTemplateCode()) || !StringUtils.hasText(dto.getChannel())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "模板编码与通道不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "模板编码与通道不能为空");
         }
         String tenantId = TenantContext.getTenantId();
         String locale = StringUtils.hasText(dto.getLocale()) ? dto.getLocale() : MessageConstants.DEFAULT_LOCALE;
@@ -56,7 +56,7 @@ public class TemplateServiceImpl implements TemplateService {
                 .eq(MsgTemplateDO::getTenantId, tenantId)
                 .last("LIMIT 1"));
         if (existing != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "模板已存在: " + dto.getTemplateCode() + "/" + locale);
+            throw new BizException(StandardResultCode.DUPLICATE_KEY, "模板已存在: " + dto.getTemplateCode() + "/" + locale);
         }
         MsgTemplateDO entity = new MsgTemplateDO();
         entity.setTemplateCode(dto.getTemplateCode());
@@ -82,11 +82,11 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public MsgTemplateDO update(String id, TemplateCreateDTO dto) {
         if (!StringUtils.hasText(id)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "模板 ID 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "模板 ID 不能为空");
         }
         MsgTemplateDO entity = getById(id);
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "模板参数不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "模板参数不能为空");
         }
         if (StringUtils.hasText(dto.getLocale())) {
             entity.setLocale(dto.getLocale());
@@ -125,7 +125,7 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public void delete(String id) {
         if (!StringUtils.hasText(id)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "模板 ID 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "模板 ID 不能为空");
         }
         msgTemplateMapper.deleteById(id);
     }
@@ -133,11 +133,11 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public MsgTemplateDO getById(String id) {
         if (!StringUtils.hasText(id)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "模板 ID 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "模板 ID 不能为空");
         }
         MsgTemplateDO entity = msgTemplateMapper.selectById(id);
         if (entity == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "模板不存在: " + id);
+            throw new BizException(StandardResultCode.NOT_FOUND, "模板不存在: " + id);
         }
         return entity;
     }
@@ -164,7 +164,7 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public MsgTemplateDO loadByCodeAndChannel(String templateCode, String channel, String locale, String tenantId) {
         if (!StringUtils.hasText(templateCode) || !StringUtils.hasText(channel)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "模板编码与通道不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "模板编码与通道不能为空");
         }
         String tid = StringUtils.hasText(tenantId) ? tenantId : TenantContext.getTenantId();
         String loc = StringUtils.hasText(locale) ? locale : MessageConstants.DEFAULT_LOCALE;
@@ -195,13 +195,13 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public void audit(String id, TemplateAuditDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getAuditStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "审核状态不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "审核状态不能为空");
         }
         MsgTemplateDO entity = getById(id);
         TemplateAuditStatusEnum current = parseAuditStatus(entity.getAuditStatus());
         TemplateAuditStatusEnum target = parseAuditStatus(dto.getAuditStatus());
         if (!canTransitAudit(current, target)) {
-            throw new BizException(BizErrorCode.BIZ_ERROR,
+            throw new BizException(StandardResultCode.BIZ_ERROR,
                     "非法审核状态流转: " + current + " -> " + target);
         }
         entity.setAuditStatus(target.name());
@@ -240,7 +240,7 @@ public class TemplateServiceImpl implements TemplateService {
         try {
             return TemplateAuditStatusEnum.valueOf(value);
         } catch (Exception e) {
-            throw new BizException(BizErrorCode.BIZ_ERROR, "非法审核状态: " + value);
+            throw new BizException(StandardResultCode.BIZ_ERROR, "非法审核状态: " + value);
         }
     }
 }

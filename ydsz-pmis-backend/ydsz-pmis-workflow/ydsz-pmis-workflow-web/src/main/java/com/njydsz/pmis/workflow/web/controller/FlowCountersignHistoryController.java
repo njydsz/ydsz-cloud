@@ -1,8 +1,8 @@
 package com.njydsz.pmis.workflow.web.controller.instance;
 
-import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.domain.entity.analytics.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.infra.mapper.analytics.FlowAuditLogMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -65,7 +65,7 @@ public class FlowCountersignHistoryController {
      */
     @GetMapping("/instance/{instanceId}")
     @Operation(summary = "查询流程实例的加签历史")
-    public Result<PageResult<Map<String, Object>>> byInstanceId(
+    public BaseResponse<PageResponse<Map<String, Object>>> byInstanceId(
             @PathVariable String instanceId,
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
@@ -79,7 +79,7 @@ public class FlowCountersignHistoryController {
         int fromIndex = Math.min((pageNo - 1) * pageSize, total);
         int toIndex = Math.min(fromIndex + pageSize, total);
         List<Map<String, Object>> pageData = filtered.subList(fromIndex, toIndex);
-        return Result.ok(PageResult.of(pageData, total, pageNo, pageSize));
+        return BaseResponse.ok(PageResponse.of(pageData, total, pageNo, pageSize));
     }
 
     /**
@@ -92,7 +92,7 @@ public class FlowCountersignHistoryController {
      */
     @GetMapping("/task/{taskId}")
     @Operation(summary = "查询任务的加签历史")
-    public Result<PageResult<Map<String, Object>>> byTaskId(
+    public BaseResponse<PageResponse<Map<String, Object>>> byTaskId(
             @PathVariable String taskId,
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
@@ -106,7 +106,7 @@ public class FlowCountersignHistoryController {
         int fromIndex = Math.min((pageNo - 1) * pageSize, total);
         int toIndex = Math.min(fromIndex + pageSize, total);
         List<Map<String, Object>> pageData = filtered.subList(fromIndex, toIndex);
-        return Result.ok(PageResult.of(pageData, total, pageNo, pageSize));
+        return BaseResponse.ok(PageResponse.of(pageData, total, pageNo, pageSize));
     }
 
     /**
@@ -118,12 +118,12 @@ public class FlowCountersignHistoryController {
      */
     @GetMapping("/myInitiated")
     @Operation(summary = "查询当前用户发起的加签历史")
-    public Result<PageResult<Map<String, Object>>> myInitiated(
+    public BaseResponse<PageResponse<Map<String, Object>>> myInitiated(
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-        String currentUserId = SecurityContext.getUserId();
+        String currentUserId = AuthContext.getUserId();
         if (currentUserId == null) {
-            return Result.ok(PageResult.empty());
+            return BaseResponse.ok(PageResponse.empty());
         }
         List<FlowAuditLogDO> logs = auditLogMapper.selectByOperatorId(currentUserId);
         List<Map<String, Object>> filtered = logs == null ? List.of() :
@@ -135,7 +135,7 @@ public class FlowCountersignHistoryController {
         int fromIndex = Math.min((pageNo - 1) * pageSize, total);
         int toIndex = Math.min(fromIndex + pageSize, total);
         List<Map<String, Object>> pageData = filtered.subList(fromIndex, toIndex);
-        return Result.ok(PageResult.of(pageData, total, pageNo, pageSize));
+        return BaseResponse.ok(PageResponse.of(pageData, total, pageNo, pageSize));
     }
 
     /**
@@ -147,12 +147,12 @@ public class FlowCountersignHistoryController {
      */
     @GetMapping("/myReceived")
     @Operation(summary = "查询当前用户被加签的记录")
-    public Result<PageResult<Map<String, Object>>> myReceived(
+    public BaseResponse<PageResponse<Map<String, Object>>> myReceived(
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-        String currentUserId = SecurityContext.getUserId();
+        String currentUserId = AuthContext.getUserId();
         if (currentUserId == null) {
-            return Result.ok(PageResult.empty());
+            return BaseResponse.ok(PageResponse.empty());
         }
         List<FlowAuditLogDO> logs = auditLogMapper.selectByTargetId(currentUserId);
         List<Map<String, Object>> filtered = logs == null ? List.of() :
@@ -164,7 +164,7 @@ public class FlowCountersignHistoryController {
         int fromIndex = Math.min((pageNo - 1) * pageSize, total);
         int toIndex = Math.min(fromIndex + pageSize, total);
         List<Map<String, Object>> pageData = filtered.subList(fromIndex, toIndex);
-        return Result.ok(PageResult.of(pageData, total, pageNo, pageSize));
+        return BaseResponse.ok(PageResponse.of(pageData, total, pageNo, pageSize));
     }
 
     // ==================== 内部辅助方法 ====================

@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.server.form;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -84,7 +84,7 @@ public class FlowFormEngineService {
                 String fieldKey = entry.getKey();
                 String perm = entry.getValue();
                 if ("HIDDEN".equals(perm) && formData.containsKey(fieldKey)) {
-                    throw new BizException(BizErrorCode.VALIDATION_FAILED,
+                    throw new BizException(StandardResultCode.VALIDATION_FAILED,
                             "字段 " + fieldKey + " 不允许提交");
                 }
             }
@@ -97,7 +97,7 @@ public class FlowFormEngineService {
         List<FlowFormValidationError> errors = formValidator.validate(schema, formData);
         if (!errors.isEmpty()) {
             FlowFormValidationError first = errors.get(0);
-            throw new BizException(BizErrorCode.VALIDATION_FAILED,
+            throw new BizException(StandardResultCode.VALIDATION_FAILED,
                     "表单校验失败: " + first);
         }
     }

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.server.service.impl.dag;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.dag.DagInstanceStatus;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.cronjob.server.core.dag.DagDefinition;
@@ -49,7 +49,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     public JobDagInstanceDO getInstanceById(String instanceId) {
         JobDagInstanceDO instance = jobDagInstanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND,
+            throw new BizException(StandardResultCode.NOT_FOUND,
                     "error.cronjob.msg_dag_instance_not_found", instanceId);
         }
         return instance;
@@ -84,7 +84,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
         int rows = jobDagInstanceMapper.casUpdateStatus(instanceId,
                 DagInstanceStatus.RUNNING.name(), DagInstanceStatus.PAUSED.name());
         if (rows == 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.cronjob.msg_dag_instance_not_running", instanceId);
         }
         log.info("[JobDagInstance] 暂停 DAG 实例: instanceId={}", instanceId);
@@ -97,7 +97,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
         int rows = jobDagInstanceMapper.casUpdateStatus(instanceId,
                 DagInstanceStatus.PAUSED.name(), DagInstanceStatus.RUNNING.name());
         if (rows == 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.cronjob.msg_dag_instance_not_running", instanceId);
         }
         log.info("[JobDagInstance] 恢复 DAG 实例: instanceId={}", instanceId);
@@ -116,7 +116,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
                     DagInstanceStatus.PAUSED.name(), DagInstanceStatus.CANCELED.name());
         }
         if (rows == 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.cronjob.msg_dag_instance_not_running", instanceId);
         }
         log.info("[JobDagInstance] 取消 DAG 实例: instanceId={}", instanceId);
@@ -139,7 +139,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
         // 2. 查询 DAG 定义（通过实例.dagId 关联）
         JobDagDO dag = jobDagMapper.selectById(instance.getDagId());
         if (dag == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND,
+            throw new BizException(StandardResultCode.NOT_FOUND,
                     "error.cronjob.msg_dag_not_found_def", instance.getDagId());
         }
 

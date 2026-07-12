@@ -2,7 +2,7 @@ package com.njydsz.pmis.finance.web.controller;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.finance.domain.dto.ProfitSnapshotDTO;
 import com.njydsz.pmis.finance.domain.entity.ProfitSnapshotDO;
 import com.njydsz.pmis.finance.server.service.finance.ProfitService;
@@ -50,8 +50,8 @@ public class ProfitController {
     @PrePermission("execution:profit:snapshot")
     @Idempotent(key = "profit:snapshot", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/snapshot")
-    public Result<String> snapshot(@Valid @RequestBody ProfitSnapshotDTO dto) {
-        return Result.ok(service.generateSnapshot(dto));
+    public BaseResponse<String> snapshot(@Valid @RequestBody ProfitSnapshotDTO dto) {
+        return BaseResponse.ok(service.generateSnapshot(dto));
     }
 
     /**
@@ -64,8 +64,8 @@ public class ProfitController {
     @Operation(summary = "查询项目某月快照")
     @PrePermission("execution:profit:list")
     @GetMapping("/snapshot")
-    public Result<ProfitSnapshotDO> get(@RequestParam String initiationId, @RequestParam String period) {
-        return Result.ok(service.getByInitiationAndPeriod(initiationId, period));
+    public BaseResponse<ProfitSnapshotDO> get(@RequestParam String initiationId, @RequestParam String period) {
+        return BaseResponse.ok(service.getByInitiationAndPeriod(initiationId, period));
     }
 
     /**
@@ -77,8 +77,8 @@ public class ProfitController {
     @Operation(summary = "项目所有快照")
     @PrePermission("execution:profit:list")
     @GetMapping("/snapshots/{initiationId}")
-    public Result<List<ProfitSnapshotDO>> list(@PathVariable String initiationId) {
-        return Result.ok(service.listByInitiation(initiationId));
+    public BaseResponse<List<ProfitSnapshotDO>> list(@PathVariable String initiationId) {
+        return BaseResponse.ok(service.listByInitiation(initiationId));
     }
 
     /**
@@ -90,8 +90,8 @@ public class ProfitController {
     @Operation(summary = "趋势")
     @PrePermission("execution:profit:list")
     @GetMapping("/trend/{initiationId}")
-    public Result<List<Map<String, Object>>> trend(@PathVariable String initiationId) {
-        return Result.ok(service.trendByPeriod(initiationId));
+    public BaseResponse<List<Map<String, Object>>> trend(@PathVariable String initiationId) {
+        return BaseResponse.ok(service.trendByPeriod(initiationId));
     }
 
     /**
@@ -104,7 +104,7 @@ public class ProfitController {
     @Operation(summary = "项目健康度评分")
     @PrePermission("execution:profit:list")
     @GetMapping("/healthScore")
-    public Result<Integer> healthScore(@RequestParam String initiationId, @RequestParam String period) {
-        return Result.ok(service.healthScore(initiationId, period));
+    public BaseResponse<Integer> healthScore(@RequestParam String initiationId, @RequestParam String period) {
+        return BaseResponse.ok(service.healthScore(initiationId, period));
     }
 }

@@ -2,8 +2,8 @@ package com.njydsz.pmis.workflow.web.controller.ai;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.server.service.ai.FlowAiAssistService;
 import com.njydsz.pmis.workflow.server.service.ai.FlowAiGenerateService;
@@ -63,14 +63,14 @@ public class FlowAiGenerateController {
     @Idempotent(key = "flowAiGenerate:generate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/generate")
     @Operation(summary = "AI一句话生成流程")
-    public Result<Map<String, Object>> generate(@Valid @RequestBody FlowAiGenerateDTO dto) {
+    public BaseResponse<Map<String, Object>> generate(@Valid @RequestBody FlowAiGenerateDTO dto) {
         String description = dto.getDescription();
         log.info("[FlowAiGenerate] 收到生成请求, description.length={}", description.length());
 
         String bpmnXml = flowAiGenerateService.generateBpmnFromDescription(description);
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("bpmnXml", bpmnXml);
-        return Result.ok(data);
+        return BaseResponse.ok(data);
     }
 
     // ============================== P3-1: AI 能力扩展 ==============================
@@ -87,11 +87,11 @@ public class FlowAiGenerateController {
     @Idempotent(key = "flowAiGenerate:predictRisk", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/predictRisk")
     @Operation(summary = "P3-1: 流程风险预测")
-    public Result<Map<String, Object>> predictRisk(@RequestBody Map<String, Object> body) {
+    public BaseResponse<Map<String, Object>> predictRisk(@RequestBody Map<String, Object> body) {
         validateRiskParams(body);
         log.info("[FlowAi] 风险预测请求: instanceId={} flowCode={}",
                 body.get("instanceId"), body.get("flowCode"));
-        return Result.ok(flowAiAssistService.predictRisk(body));
+        return BaseResponse.ok(flowAiAssistService.predictRisk(body));
     }
 
     /**
@@ -106,11 +106,11 @@ public class FlowAiGenerateController {
     @Idempotent(key = "flowAiGenerate:smartRemind", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/smartRemind")
     @Operation(summary = "P3-1: 智能催办")
-    public Result<Map<String, Object>> smartRemind(@RequestBody Map<String, Object> body) {
+    public BaseResponse<Map<String, Object>> smartRemind(@RequestBody Map<String, Object> body) {
         validateRemindParams(body);
         log.info("[FlowAi] 智能催办请求: taskId={} assigneeId={}",
                 body.get("taskId"), body.get("assigneeId"));
-        return Result.ok(flowAiAssistService.smartRemind(body));
+        return BaseResponse.ok(flowAiAssistService.smartRemind(body));
     }
 
     /**
@@ -125,11 +125,11 @@ public class FlowAiGenerateController {
     @Idempotent(key = "flowAiGenerate:predictSla", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/predictSla")
     @Operation(summary = "P3-1: SLA 预测")
-    public Result<Map<String, Object>> predictSla(@RequestBody Map<String, Object> body) {
+    public BaseResponse<Map<String, Object>> predictSla(@RequestBody Map<String, Object> body) {
         validateSlaParams(body);
         log.info("[FlowAi] SLA 预测请求: instanceId={} flowCode={}",
                 body.get("instanceId"), body.get("flowCode"));
-        return Result.ok(flowAiAssistService.predictSla(body));
+        return BaseResponse.ok(flowAiAssistService.predictSla(body));
     }
 
     // ============================== 参数校验 ==============================
@@ -141,11 +141,11 @@ public class FlowAiGenerateController {
      */
     private void validateRiskParams(Map<String, Object> body) {
         if (body == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");
         }
         if (!StringUtils.hasText(String.valueOf(body.getOrDefault("instanceId", "")))
                 && !StringUtils.hasText(String.valueOf(body.getOrDefault("flowCode", "")))) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");
         }
     }
 
@@ -156,11 +156,11 @@ public class FlowAiGenerateController {
      */
     private void validateRemindParams(Map<String, Object> body) {
         if (body == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_d9e0f1a2");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_d9e0f1a2");
         }
         if (!StringUtils.hasText(String.valueOf(body.getOrDefault("taskId", "")))
                 || !StringUtils.hasText(String.valueOf(body.getOrDefault("assigneeId", "")))) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_d9e0f1a2");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_d9e0f1a2");
         }
     }
 
@@ -171,11 +171,11 @@ public class FlowAiGenerateController {
      */
     private void validateSlaParams(Map<String, Object> body) {
         if (body == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");
         }
         if (!StringUtils.hasText(String.valueOf(body.getOrDefault("instanceId", "")))
                 && !StringUtils.hasText(String.valueOf(body.getOrDefault("flowCode", "")))) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");
         }
     }
 }

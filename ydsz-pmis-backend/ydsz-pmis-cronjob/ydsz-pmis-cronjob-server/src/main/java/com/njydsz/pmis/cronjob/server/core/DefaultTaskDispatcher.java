@@ -2,7 +2,7 @@ package com.njydsz.pmis.cronjob.server.core.dispatch;
 
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.common.job.JobContextHolder;
@@ -664,7 +664,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private List<ShardAssignment> buildLocalOnlyAssignments(int shardTotal, String localNodeId) {
         List<ShardAssignment> result = new ArrayList<>(shardTotal);
         for (int i = 0; i < shardTotal; i++) {
-            result.add(new ShardAssignment(localNodeId, i));
+            BaseResponse.add(new ShardAssignment(localNodeId, i));
         }
         return result;
     }
@@ -1367,7 +1367,7 @@ try {
             return next == null ? null : LocalDateTime.ofInstant(next,
                     ZoneId.systemDefault());
         } catch (IllegalArgumentException e) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca", e.getMessage());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca", e.getMessage());
         }
     }
 

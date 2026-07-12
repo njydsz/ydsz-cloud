@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.feign;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.feign.dto.NotificationFeignDTO;
 import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -41,7 +41,7 @@ public interface NotificationClient {
      * @return actual persisted record count
      */
     @PostMapping("/notifications/send")
-    Result<Integer> send(@RequestBody NotificationFeignDTO payload);
+    BaseResponse<Integer> send(@RequestBody NotificationFeignDTO payload);
 
     /**
      * Push realtime message to a specific user (WebSocket).
@@ -56,7 +56,7 @@ public interface NotificationClient {
      * @return push result
      */
     @PostMapping("/notifications/push")
-    Result<Map<String, Object>> pushRealtime(@RequestParam("userId") String userId,
+    BaseResponse<Map<String, Object>> pushRealtime(@RequestParam("userId") String userId,
                                                 @RequestParam("type") String type,
                                                  @RequestBody RealtimePushDTO payload);
 
@@ -71,6 +71,6 @@ public interface NotificationClient {
      * @return push result
      */
     @PostMapping("/notifications/broadcast")
-    Result<Map<String, Object>> broadcast(@RequestParam("type") String type,
+    BaseResponse<Map<String, Object>> broadcast(@RequestParam("type") String type,
                                                  @RequestBody RealtimePushDTO payload);
 }

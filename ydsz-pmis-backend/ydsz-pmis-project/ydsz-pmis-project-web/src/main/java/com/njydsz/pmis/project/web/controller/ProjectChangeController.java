@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.web.controller.initiation;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.ProjectChangeCreateDTO;
 import com.njydsz.pmis.project.domain.dto.ProjectChangeStatusDTO;
 import com.njydsz.pmis.project.domain.entity.ProjectChangeDO;
@@ -58,8 +58,8 @@ public class ProjectChangeController {
     @PrePermission("project:change:create")
     @Idempotent(key = "projectChange:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody ProjectChangeCreateDTO dto) {
-        return Result.ok(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody ProjectChangeCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
@@ -72,9 +72,9 @@ public class ProjectChangeController {
     @PrePermission("project:change:status")
     @Idempotent(key = "projectChange:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
-    public Result<Void> changeStatus(@Valid @RequestBody ProjectChangeStatusDTO dto) {
+    public BaseResponse<Void> changeStatus(@Valid @RequestBody ProjectChangeStatusDTO dto) {
         service.changeStatus(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -87,9 +87,9 @@ public class ProjectChangeController {
     @PrePermission("project:change:delete")
     @Idempotent(key = "projectChange:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -101,8 +101,8 @@ public class ProjectChangeController {
     @Operation(summary = "变更详情")
     @PrePermission("project:change:list")
     @GetMapping("/{id}")
-    public Result<ProjectChangeDO> get(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<ProjectChangeDO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -119,14 +119,14 @@ public class ProjectChangeController {
     @Operation(summary = "分页查询")
     @PrePermission("project:change:list")
     @GetMapping("/page")
-    public Result<Page<ProjectChangeDO>> page(
+    public BaseResponse<Page<ProjectChangeDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String changeType,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String initiationId) {
-        return Result.ok(service.page(page, size, keyword, changeType, status, initiationId));
+        return BaseResponse.ok(service.page(page, size, keyword, changeType, status, initiationId));
     }
 
     /**
@@ -138,8 +138,8 @@ public class ProjectChangeController {
     @Operation(summary = "按项目查询变更列表")
     @PrePermission("project:change:list")
     @GetMapping("/listByInitiation/{initiationId}")
-    public Result<List<ProjectChangeDO>> listByInitiation(@PathVariable String initiationId) {
-        return Result.ok(service.listByInitiation(initiationId));
+    public BaseResponse<List<ProjectChangeDO>> listByInitiation(@PathVariable String initiationId) {
+        return BaseResponse.ok(service.listByInitiation(initiationId));
     }
 
     /**
@@ -151,8 +151,8 @@ public class ProjectChangeController {
     @Operation(summary = "按变更类型聚合")
     @PrePermission("project:change:list")
     @GetMapping("/aggregate/type")
-    public Result<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) String tenantId) {
-        return Result.ok(service.aggregateByType(tenantId));
+    public BaseResponse<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) String tenantId) {
+        return BaseResponse.ok(service.aggregateByType(tenantId));
     }
 
     /**
@@ -164,8 +164,8 @@ public class ProjectChangeController {
     @Operation(summary = "按状态聚合")
     @PrePermission("project:change:list")
     @GetMapping("/aggregate/status")
-    public Result<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) String tenantId) {
-        return Result.ok(service.aggregateByStatus(tenantId));
+    public BaseResponse<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) String tenantId) {
+        return BaseResponse.ok(service.aggregateByStatus(tenantId));
     }
 
     /**
@@ -177,8 +177,8 @@ public class ProjectChangeController {
     @Operation(summary = "统计项目重大变更数")
     @PrePermission("project:change:list")
     @GetMapping("/majorCount/{initiationId}")
-    public Result<Integer> countMajor(@PathVariable String initiationId) {
-        return Result.ok(service.countMajorByInitiation(initiationId));
+    public BaseResponse<Integer> countMajor(@PathVariable String initiationId) {
+        return BaseResponse.ok(service.countMajorByInitiation(initiationId));
     }
 
     /**
@@ -194,20 +194,20 @@ public class ProjectChangeController {
     @Operation(summary = "获取合法状态迁移列表")
     @PrePermission("project:change:list")
     @GetMapping("/{id}/allowedTransitions")
-    public Result<List<String>> getAllowedTransitions(@PathVariable String id) {
+    public BaseResponse<List<String>> getAllowedTransitions(@PathVariable String id) {
         ProjectChangeDO change = service.getById(id);
         if (change == null) {
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
         ChangeStatus current = ChangeStatus.fromCode(change.getStatus());
         if (current == null || current.isTerminal()) {
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
         List<String> allowed = Arrays.stream(ChangeStatus.values())
                 .filter(s -> current.canTransitTo(s))
                 .map(ChangeStatus::getCode)
                 .collect(Collectors.toList());
-        return Result.ok(allowed);
+        return BaseResponse.ok(allowed);
     }
 
     /**
@@ -217,7 +217,7 @@ public class ProjectChangeController {
     @Operation(summary = "获取所有变更状态字典")
     @PrePermission("project:change:list")
     @GetMapping("/statusDict")
-    public Result<List<Map<String, String>>> getStatusDict() {
+    public BaseResponse<List<Map<String, String>>> getStatusDict() {
         List<Map<String, String>> list = new ArrayList<>();
         for (ChangeStatus s : ChangeStatus.values()) {
             list.add(Map.of(
@@ -226,6 +226,6 @@ public class ProjectChangeController {
                 "terminal", String.valueOf(s.isTerminal())
             ));
         }
-        return Result.ok(list);
+        return BaseResponse.ok(list);
     }
 }

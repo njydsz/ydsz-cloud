@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.feign;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.feign.dto.NotificationFeignDTO;
 import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -27,24 +27,24 @@ public class NotificationClientFallback implements FallbackFactory<NotificationC
     public NotificationClient create(Throwable cause) {
         return new NotificationClient() {
             @Override
-            public Result<Integer> send(NotificationFeignDTO payload) {
+            public BaseResponse<Integer> send(NotificationFeignDTO payload) {
                 log.warn("[Feign] NotificationClient 降级 send: title={}",
                         payload == null ? "null" : payload.getTitle());
-                return Result.ok(0);
+                return BaseResponse.ok(0);
             }
 
             @Override
-            public Result<Map<String, Object>> pushRealtime(String userId, String type, RealtimePushDTO payload) {
+            public BaseResponse<Map<String, Object>> pushRealtime(String userId, String type, RealtimePushDTO payload) {
                 log.warn("[Feign] NotificationClient 降级 pushRealtime: userId={} type={} cause={}",
                         userId, type, cause == null ? "null" : cause.getMessage());
-                return Result.ok(Collections.emptyMap());
+                return BaseResponse.ok(Collections.emptyMap());
             }
 
             @Override
-            public Result<Map<String, Object>> broadcast(String type, RealtimePushDTO payload) {
+            public BaseResponse<Map<String, Object>> broadcast(String type, RealtimePushDTO payload) {
                 log.warn("[Feign] NotificationClient fallback broadcast: type={} cause={}",
                         type, cause == null ? "null" : cause.getMessage());
-                return Result.ok(Collections.emptyMap());
+                return BaseResponse.ok(Collections.emptyMap());
             }
         };
     }

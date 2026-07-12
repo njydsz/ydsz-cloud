@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowAssigneeDTO;
@@ -226,7 +226,7 @@ public class FlowTaskCreateService {
     private FlowInstanceDO lookupInstance(String instanceId) {
         FlowInstanceDO instance = instanceService.getById(instanceId);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_fc4b1c16", instanceId);
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.workflow.msg_fc4b1c16", instanceId);
         }
         return instance;
     }
@@ -792,7 +792,7 @@ public class FlowTaskCreateService {
         int depth = AUTO_PASS_DEPTH.get();
         if (depth >= MAX_AUTO_PASS_DEPTH) {
             log.warn("[Flow] AUTO_PASS 递归深度超限: depth={} instanceId={}", depth, instance.getId());
-            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.workflow.msg_fcd55e62");
+            throw new BizException(StandardResultCode.INTERNAL_ERROR, "error.workflow.msg_fcd55e62");
         }
         AUTO_PASS_DEPTH.set(depth + 1);
         try {
@@ -869,7 +869,7 @@ public class FlowTaskCreateService {
             Map<String, Integer> result = new HashMap<>();
             for (Map.Entry<?, ?> e : m.entrySet()) {
                 if (e.getValue() instanceof Number n) {
-                    result.put(String.valueOf(e.getKey()), n.intValue());
+                    BaseResponse.put(String.valueOf(e.getKey()), n.intValue());
                 }
             }
             return result;
@@ -911,11 +911,11 @@ public class FlowTaskCreateService {
                 String s = String.valueOf(uid);
                 String stopAtUserId = (String) extConfig.get("stopAtUserId");
                 if (stopAtUserId != null && stopAtUserId.equals(s)) {
-                    result.add(s);
+                    BaseResponse.add(s);
                     break;
                 }
                 if (seen.add(s)) {
-                    result.add(s);
+                    BaseResponse.add(s);
                 }
             }
             return result;
@@ -1109,7 +1109,7 @@ public class FlowTaskCreateService {
                 List<String> expanded = expandCollectionValue(selfSelectVal);
                 for (String uid : expanded) {
                     if (seen.add(uid)) {
-                        result.add(uid);
+                        BaseResponse.add(uid);
                     }
                 }
                 continue;
@@ -1117,7 +1117,7 @@ public class FlowTaskCreateService {
             if (t.startsWith("user:")) {
                 String uid = t.substring(5).trim();
                 if (!uid.isEmpty() && seen.add(uid)) {
-                    result.add(uid);
+                    BaseResponse.add(uid);
                 }
                 continue;
             }
@@ -1136,7 +1136,7 @@ public class FlowTaskCreateService {
                         for (Long uid : expanded) {
                             String s = String.valueOf(uid);
                             if (seen.add(s)) {
-                                result.add(s);
+                                BaseResponse.add(s);
                             }
                         }
                     }
@@ -1150,7 +1150,7 @@ public class FlowTaskCreateService {
                     if (leaderId != null) {
                         String s = String.valueOf(leaderId);
                         if (seen.add(s)) {
-                            result.add(s);
+                            BaseResponse.add(s);
                         }
                     }
                 }
@@ -1161,7 +1161,7 @@ public class FlowTaskCreateService {
                 for (Long uid : expanded) {
                     String s = String.valueOf(uid);
                     if (seen.add(s)) {
-                        result.add(s);
+                        BaseResponse.add(s);
                     }
                 }
             }
@@ -1182,7 +1182,7 @@ public class FlowTaskCreateService {
                 if (item == null) continue;
                 String s = String.valueOf(item).trim();
                 if (!s.isEmpty()) {
-                    result.add(s);
+                    BaseResponse.add(s);
                 }
             }
         } else if (value instanceof Object[] arr) {
@@ -1190,7 +1190,7 @@ public class FlowTaskCreateService {
                 if (item == null) continue;
                 String s = String.valueOf(item).trim();
                 if (!s.isEmpty()) {
-                    result.add(s);
+                    BaseResponse.add(s);
                 }
             }
         } else {
@@ -1199,7 +1199,7 @@ public class FlowTaskCreateService {
                 for (String part : s.split(",")) {
                     String p = part.trim();
                     if (!p.isEmpty()) {
-                        result.add(p);
+                        BaseResponse.add(p);
                     }
                 }
             }
@@ -1301,41 +1301,41 @@ public class FlowTaskCreateService {
         task.setFinishAt(now);
         task.setDurationMs(0L);
 
-        if (result.success()) {
+        if (BaseResponse.success()) {
             // 3a. 成功：标记 COMPLETED，归档，审计，推进
             task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
-            task.setComment(result.message());
+            task.setComment(BaseResponse.message());
             taskMapper.insert(task);
             archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
             support.audit(task, "SERVICE_EXECUTE", null, null,
-                    "服务节点执行成功: " + result.message());
+                    "服务节点执行成功: " + BaseResponse.message());
             log.info("[Flow] 服务节点执行成功: instanceId={} node={} msg={}",
-                    instance.getId(), node.getNodeCode(), result.message());
+                    instance.getId(), node.getNodeCode(), BaseResponse.message());
             advanceAfterAutoPass(instance, node, variables);
         } else {
             // 3b. 失败：优先尝试触发 error boundary 接管流程
-            boolean errorBoundaryTriggered = triggerErrorBoundaryIfExists(instance, node, result.message());
+            boolean errorBoundaryTriggered = triggerErrorBoundaryIfExists(instance, node, BaseResponse.message());
             task.setTaskStatus(FlowTaskStatus.TIMEOUT.name());
             if (errorBoundaryTriggered) {
-                task.setComment("服务节点失败，error boundary 已触发: " + result.message());
+                task.setComment("服务节点失败，error boundary 已触发: " + BaseResponse.message());
             } else {
-                task.setComment("服务节点执行失败: " + result.message());
+                task.setComment("服务节点执行失败: " + BaseResponse.message());
             }
             taskMapper.insert(task);
             archiveService.archiveToHistory(task, FlowTaskStatus.TIMEOUT);
             if (errorBoundaryTriggered) {
                 support.audit(task, "SERVICE_ERROR_BOUNDARY", null, null,
-                        "服务节点失败，error boundary 触发: " + result.message());
+                        "服务节点失败，error boundary 触发: " + BaseResponse.message());
                 log.info("[Flow] 服务节点失败，error boundary 已触发: instanceId={} node={}",
                         instance.getId(), node.getNodeCode());
             } else {
                 support.audit(task, "SERVICE_ERROR", null, null,
-                        "服务节点执行失败: " + result.message());
+                        "服务节点执行失败: " + BaseResponse.message());
                 instanceMapper.updateStatus(instance.getId(),
                         FlowInstanceStatus.ERROR.name(),
                         node.getNodeCode(), node.getNodeName(), null, null);
                 log.error("[Flow] 服务节点执行失败，实例标记为异常: instanceId={} node={} msg={}",
-                        instance.getId(), node.getNodeCode(), result.message());
+                        instance.getId(), node.getNodeCode(), BaseResponse.message());
             }
         }
         return task.getId();

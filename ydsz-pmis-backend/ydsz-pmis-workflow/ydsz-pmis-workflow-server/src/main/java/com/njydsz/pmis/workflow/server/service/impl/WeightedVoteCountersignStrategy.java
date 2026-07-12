@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.strategy;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
@@ -52,7 +52,7 @@ public class WeightedVoteCountersignStrategy implements CountersignStrategy {
         task.setApproveFinished(finished);
         int updated = taskMapper.updateById(task);
         if (updated == 0) {
-            throw new BizException(BizErrorCode.RESOURCE_CONFLICT,
+            throw new BizException(StandardResultCode.RESOURCE_CONFLICT,
                     "error.workflow.msg_199e8ba1", task.getId());
         }
         archiveService.completeAndArchive(task, dto.getComment());

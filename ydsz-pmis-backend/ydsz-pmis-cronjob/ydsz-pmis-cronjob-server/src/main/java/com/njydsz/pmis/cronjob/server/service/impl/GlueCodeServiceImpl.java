@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.server.service.impl.schedule;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.cronjob.domain.entity.schedule.GlueCodeDO;
 import com.njydsz.pmis.cronjob.infra.mapper.schedule.GlueCodeMapper;
@@ -46,10 +46,10 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     @Transactional(rollbackFor = Exception.class)
     public GlueCodeDO save(String jobId, String sourceCode, String language, String remark) {
         if (!StringUtils.hasText(jobId)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_glue_job_id_required");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_glue_job_id_required");
         }
         if (sourceCode == null || sourceCode.isBlank()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_glue_source_required");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_glue_source_required");
         }
         // 计算新版本号
         GlueCodeDO latest = glueCodeMapper.selectLatestByJobId(jobId);
@@ -89,10 +89,10 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     @Transactional(rollbackFor = Exception.class)
     public GlueCodeDO rollback(String jobId, Integer version) {
         if (!StringUtils.hasText(jobId)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_glue_job_id_required");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_glue_job_id_required");
         }
         if (version == null || version < 1) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_glue_version_invalid");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_glue_version_invalid");
         }
         // 查询目标版本
         LambdaQueryWrapper<GlueCodeDO> wrapper = new LambdaQueryWrapper<>();
@@ -100,7 +100,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
                 .eq(GlueCodeDO::getVersion, version);
         GlueCodeDO target = glueCodeMapper.selectOne(wrapper);
         if (target == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.cronjob.msg_glue_version_not_found");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_glue_version_not_found");
         }
         // 创建新版本（内容为目标版本代码）
         GlueCodeDO latest = glueCodeMapper.selectLatestByJobId(jobId);
@@ -126,8 +126,8 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     public Map<String, Object> testCode(String sourceCode, String language, String paramsJson) {
         Map<String, Object> result = new HashMap<>();
         if (sourceCode == null || sourceCode.isBlank()) {
-            result.put("success", false);
-            result.put("error", "Source code is empty");
+            BaseResponse.put("success", false);
+            BaseResponse.put("error", "Source code is empty");
             return result;
         }
         String lang = StringUtils.hasText(language) ? language.toUpperCase() : "GROOVY";
@@ -135,13 +135,13 @@ public class GlueCodeServiceImpl implements GlueCodeService {
         try {
             // 根据语言选择执行方式
             Object execResult = executeByLanguage(sourceCode, lang, paramsJson);
-            result.put("success", true);
-            result.put("result", execResult);
-            result.put("durationMs", System.currentTimeMillis() - startTime);
+            BaseResponse.put("success", true);
+            BaseResponse.put("result", execResult);
+            BaseResponse.put("durationMs", System.currentTimeMillis() - startTime);
         } catch (Exception e) {
-            result.put("success", false);
-            result.put("error", e.getMessage());
-            result.put("durationMs", System.currentTimeMillis() - startTime);
+            BaseResponse.put("success", false);
+            BaseResponse.put("error", e.getMessage());
+            BaseResponse.put("durationMs", System.currentTimeMillis() - startTime);
             log.warn("[Glue] 测试执行失败: lang={} reason={}", lang, e.getMessage());
         }
         return result;
@@ -218,28 +218,28 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     public Map<String, Object> diffVersions(String jobId, Integer versionA, Integer versionB) {
         Map<String, Object> result = new HashMap<>();
         if (!StringUtils.hasText(jobId) || versionA == null || versionB == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_glue_diff_params_required");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_glue_diff_params_required");
         }
         // 查询两个版本
         GlueCodeDO codeA = getVersion(jobId, versionA);
         GlueCodeDO codeB = getVersion(jobId, versionB);
         if (codeA == null || codeB == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.cronjob.msg_glue_version_not_found");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_glue_version_not_found");
         }
-        result.put("versionA", Map.of(
+        BaseResponse.put("versionA", Map.of(
                 "version", versionA,
                 "sourceCode", codeA.getSourceCode(),
                 "remark", codeA.getRemark() != null ? codeA.getRemark() : "",
                 "createdAt", codeA.getCreatedAt() != null ? codeA.getCreatedAt().toString() : ""
         ));
-        result.put("versionB", Map.of(
+        BaseResponse.put("versionB", Map.of(
                 "version", versionB,
                 "sourceCode", codeB.getSourceCode(),
                 "remark", codeB.getRemark() != null ? codeB.getRemark() : "",
                 "createdAt", codeB.getCreatedAt() != null ? codeB.getCreatedAt().toString() : ""
         ));
         // 计算行级差异
-        result.put("diff", computeLineDiff(codeA.getSourceCode(), codeB.getSourceCode()));
+        BaseResponse.put("diff", computeLineDiff(codeA.getSourceCode(), codeB.getSourceCode()));
         return result;
     }
 

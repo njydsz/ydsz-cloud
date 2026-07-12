@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.web.controller.definition;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.workflow.domain.dto.definition.FlowCategoryDTO;
 import com.njydsz.pmis.workflow.domain.entity.definition.FlowCategoryDO;
@@ -43,8 +43,8 @@ public class FlowCategoryController {
      */
     @GetMapping
     @Operation(summary = "查询全部分类")
-    public Result<List<FlowCategoryDO>> list() {
-        return Result.ok(categoryService.listAll(TenantContext.getTenantId()));
+    public BaseResponse<List<FlowCategoryDO>> list() {
+        return BaseResponse.ok(categoryService.listAll(TenantContext.getTenantId()));
     }
 
     /**
@@ -56,8 +56,8 @@ public class FlowCategoryController {
     @Idempotent(key = "flowCategory:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "新增分类")
-    public Result<String> create(@Valid @RequestBody FlowCategoryDTO dto) {
-        return Result.ok(categoryService.create(dto, TenantContext.getTenantId()));
+    public BaseResponse<String> create(@Valid @RequestBody FlowCategoryDTO dto) {
+        return BaseResponse.ok(categoryService.create(dto, TenantContext.getTenantId()));
     }
 
     /**
@@ -69,9 +69,9 @@ public class FlowCategoryController {
     @Idempotent(key = "flowCategory:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     @Operation(summary = "编辑分类")
-    public Result<Void> update(@Valid @RequestBody FlowCategoryDTO dto) {
+    public BaseResponse<Void> update(@Valid @RequestBody FlowCategoryDTO dto) {
         categoryService.update(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -83,8 +83,8 @@ public class FlowCategoryController {
     @Idempotent(key = "flowCategory:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除分类")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         categoryService.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 }

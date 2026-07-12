@@ -3,7 +3,7 @@ package com.njydsz.pmis.finance.web.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.finance.domain.dto.RevenueCreateDTO;
 import com.njydsz.pmis.finance.domain.entity.RevenueDO;
 import com.njydsz.pmis.finance.server.service.finance.RevenueService;
@@ -55,8 +55,8 @@ public class RevenueController {
     @PrePermission("execution:revenue:create")
     @Idempotent(key = "revenue:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody RevenueCreateDTO dto) {
-        return Result.ok(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody RevenueCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
@@ -70,9 +70,9 @@ public class RevenueController {
     @PrePermission("execution:revenue:update")
     @Idempotent(key = "revenue:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/confirm")
-    public Result<Void> confirm(@PathVariable String id, @RequestParam String confirmedBy) {
+    public BaseResponse<Void> confirm(@PathVariable String id, @RequestParam String confirmedBy) {
         service.confirm(id, confirmedBy);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -85,9 +85,9 @@ public class RevenueController {
     @PrePermission("execution:revenue:update")
     @Idempotent(key = "revenue:reverse", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/reverse")
-    public Result<Void> reverse(@PathVariable String id) {
+    public BaseResponse<Void> reverse(@PathVariable String id) {
         service.reverse(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -100,9 +100,9 @@ public class RevenueController {
     @PrePermission("execution:revenue:delete")
     @Idempotent(key = "revenue:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -114,8 +114,8 @@ public class RevenueController {
     @Operation(summary = "详情")
     @PrePermission("execution:revenue:list")
     @GetMapping("/{id}")
-    public Result<RevenueDO> get(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<RevenueDO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -133,7 +133,7 @@ public class RevenueController {
     @Operation(summary = "分页")
     @PrePermission("execution:revenue:list")
     @GetMapping("/page")
-    public Result<Page<RevenueDO>> page(
+    public BaseResponse<Page<RevenueDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
@@ -141,7 +141,7 @@ public class RevenueController {
             @RequestParam(required = false) String contractId,
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String period) {
-        return Result.ok(service.page(page, size, keyword, status, contractId, initiationId, period));
+        return BaseResponse.ok(service.page(page, size, keyword, status, contractId, initiationId, period));
     }
 
     /**
@@ -153,8 +153,8 @@ public class RevenueController {
     @Operation(summary = "按合同汇总")
     @PrePermission("execution:revenue:list")
     @GetMapping("/aggregate/byContract")
-    public Result<List<Map<String, Object>>> sumByContract(@RequestParam String contractId) {
-        return Result.ok(service.sumByContract(contractId));
+    public BaseResponse<List<Map<String, Object>>> sumByContract(@RequestParam String contractId) {
+        return BaseResponse.ok(service.sumByContract(contractId));
     }
 
     /**
@@ -166,7 +166,7 @@ public class RevenueController {
     @Operation(summary = "按期间汇总")
     @PrePermission("execution:revenue:list")
     @GetMapping("/aggregate/byPeriod")
-    public Result<List<Map<String, Object>>> sumByPeriod(@RequestParam String initiationId) {
-        return Result.ok(service.sumByPeriod(initiationId));
+    public BaseResponse<List<Map<String, Object>>> sumByPeriod(@RequestParam String initiationId) {
+        return BaseResponse.ok(service.sumByPeriod(initiationId));
     }
 }

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.notification;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.feign.MessageServiceClient;
@@ -280,10 +280,10 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
         params.put("webhookUrl", webhookUrl);
         request.setParams(params);
         try {
-            Result<MessageResult> result = messageServiceClient.send(request);
-            if (result != null && result.getData() != null && !result.getData().isSuccess()) {
+            BaseResponse<MessageResult> result = messageServiceClient.send(request);
+            if (result != null && BaseResponse.getData() != null && !BaseResponse.getData().isSuccess()) {
                 log.warn("[FlowNotify][WEBHOOK] 发送失败: userId={} url={} err={}",
-                        userId, webhookUrl, result.getData().getErrorMessage());
+                        userId, webhookUrl, BaseResponse.getData().getErrorMessage());
             }
         } catch (Exception e) {
             log.warn("[FlowNotify][WEBHOOK] 发送异常: userId={} url={} err={}",

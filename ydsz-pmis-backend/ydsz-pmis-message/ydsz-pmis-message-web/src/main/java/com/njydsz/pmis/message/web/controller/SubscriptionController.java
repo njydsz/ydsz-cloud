@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.web.controller.config;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.config.SubscriptionUpsertDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgSubscriptionDO;
@@ -47,8 +47,8 @@ public class SubscriptionController {
     @PrePermission(PermissionCodes.MESSAGE_SUBSCRIPTION_UPDATE)
     @Idempotent(key = "subscription:upsert", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<MsgSubscriptionDO> upsert(@Valid @RequestBody SubscriptionUpsertDTO dto) {
-        return Result.ok(subscriptionService.upsert(dto));
+    public BaseResponse<MsgSubscriptionDO> upsert(@Valid @RequestBody SubscriptionUpsertDTO dto) {
+        return BaseResponse.ok(subscriptionService.upsert(dto));
     }
 
     /**
@@ -60,8 +60,8 @@ public class SubscriptionController {
     @Operation(summary = "查询用户所有订阅")
     @PrePermission(PermissionCodes.MESSAGE_SUBSCRIPTION_LIST)
     @GetMapping("/user/{userId}")
-    public Result<List<MsgSubscriptionDO>> listByUser(@PathVariable String userId) {
-        return Result.ok(subscriptionService.listByUser(userId));
+    public BaseResponse<List<MsgSubscriptionDO>> listByUser(@PathVariable String userId) {
+        return BaseResponse.ok(subscriptionService.listByUser(userId));
     }
 
     /**
@@ -74,9 +74,9 @@ public class SubscriptionController {
     @Operation(summary = "按主题+通道查询订阅")
     @PrePermission(PermissionCodes.MESSAGE_SUBSCRIPTION_LIST)
     @GetMapping("/topic/{topicCode}/{channel}")
-    public Result<List<MsgSubscriptionDO>> listByTopic(@PathVariable String topicCode,
+    public BaseResponse<List<MsgSubscriptionDO>> listByTopic(@PathVariable String topicCode,
                                                        @PathVariable String channel) {
-        return Result.ok(subscriptionService.listByTopic(topicCode, channel));
+        return BaseResponse.ok(subscriptionService.listByTopic(topicCode, channel));
     }
 
     /**
@@ -91,10 +91,10 @@ public class SubscriptionController {
     @PrePermission(PermissionCodes.MESSAGE_SUBSCRIPTION_DELETE)
     @Idempotent(key = "subscription:unsubscribe", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/unsubscribe")
-    public Result<Void> unsubscribe(@RequestParam String userId,
+    public BaseResponse<Void> unsubscribe(@RequestParam String userId,
                                     @RequestParam String topicCode,
                                     @RequestParam String channel) {
         subscriptionService.unsubscribe(userId, topicCode, channel);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 }

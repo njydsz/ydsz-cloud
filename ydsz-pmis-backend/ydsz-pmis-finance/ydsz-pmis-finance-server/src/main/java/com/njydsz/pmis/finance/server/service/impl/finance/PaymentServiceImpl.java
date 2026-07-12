@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.DataScope;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.finance.domain.dto.PaymentAllocationDTO;
@@ -51,18 +51,18 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String record(PaymentCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (dto == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getPaymentCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d55e99b3");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d55e99b3");
         }
         if (dto.getAmount() == null || dto.getAmount().signum() <= 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_9209b7d6");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_9209b7d6");
         }
         if (dto.getPaymentDate() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_4fa8fbb5");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_4fa8fbb5");
         }
         if (paymentMapper.selectByCode(dto.getPaymentCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY,
+            throw new BizException(StandardResultCode.DUPLICATE_KEY,
                     "error.execution.msg_bf666ece", dto.getPaymentCode());
         }
         PaymentDO p = new PaymentDO();
@@ -76,7 +76,7 @@ public class PaymentServiceImpl implements PaymentService {
         BigDecimal allocated = p.getAllocatedAmount() == null ? BigDecimal.ZERO : p.getAllocatedAmount();
         if (allocated.signum() > 0) {
             if (allocated.compareTo(p.getAmount()) > 0) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d482d05e");
+                throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d482d05e");
             }
             p.setUnallocatedAmount(p.getAmount().subtract(allocated));
         } else {
@@ -103,7 +103,7 @@ public class PaymentServiceImpl implements PaymentService {
     public void cancel(String id, String operatorId, String reason) {
         PaymentDO p = getById(id);
         if (p.getAllocatedAmount() != null && p.getAllocatedAmount().signum() > 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_1ccbb047");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_1ccbb047");
         }
         transit(p, PaymentStatus.CANCELLED, operatorId);
     }
@@ -113,7 +113,7 @@ public class PaymentServiceImpl implements PaymentService {
     public void delete(String id) {
         PaymentDO p = getById(id);
         if (PaymentStatus.ALLOCATED.getCode().equals(p.getStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_0eaf2466");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_0eaf2466");
         }
         paymentMapper.deleteById(id);
     }
@@ -121,25 +121,25 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void allocate(PaymentAllocationDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (dto == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (dto.getAmount() == null || dto.getAmount().signum() <= 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7226580a");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_7226580a");
         }
         PaymentDO p = getById(dto.getPaymentId());
         if (!PaymentStatus.CONFIRMED.getCode().equals(p.getStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_9abfa102");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_9abfa102");
         }
         InvoiceDO inv = invoiceMapper.selectById(dto.getInvoiceId());
-        if (inv == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_1b0f0829");
+        if (inv == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_1b0f0829");
         if (!InvoiceStatus.ISSUED.getCode().equals(inv.getStatus())
                 && !InvoiceStatus.APPROVED.getCode().equals(inv.getStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_b5b5f6d2");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_b5b5f6d2");
         }
         BigDecimal remain = p.getUnallocatedAmount() == null
                 ? p.getAmount().subtract(p.getAllocatedAmount() == null ? BigDecimal.ZERO : p.getAllocatedAmount())
                 : p.getUnallocatedAmount();
         if (dto.getAmount().compareTo(remain) > 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.execution.msg_8036953c", dto.getAmount(), remain);
         }
         String existing = p.getInvoiceAllocation();
@@ -153,7 +153,7 @@ public class PaymentServiceImpl implements PaymentService {
         p.setUnallocatedAmount(newUnalloc);
         int rows = paymentMapper.updateById(p);
         if (rows == 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                 "并发冲突：回款核销失败，其他用户已修改该回款记录，请重试。paymentId=" + p.getId());
         }
 
@@ -168,7 +168,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional(rollbackFor = Exception.class)
     public int autoAllocate(String customerId, String operatorId) {
         if (customerId == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_6de1fd36");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_6de1fd36");
         }
         List<PaymentDO> pool = paymentMapper.selectUnallocated(customerId);
         if (pool == null || pool.isEmpty()) return 0;
@@ -267,7 +267,7 @@ public class PaymentServiceImpl implements PaymentService {
             Map<String, Object> m = new HashMap<>();
             m.put("month", base.plusMonths(i).toString().substring(0, 7));
             m.put("forecastAmount", perMonth);
-            result.add(m);
+            BaseResponse.add(m);
         }
         return result;
     }
@@ -276,7 +276,7 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional(readOnly = true)
     public PaymentDO getById(String id) {
         PaymentDO p = paymentMapper.selectById(id);
-        if (p == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_22203a1e");
+        if (p == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_22203a1e");
         return p;
     }
 
@@ -327,11 +327,11 @@ public class PaymentServiceImpl implements PaymentService {
     private void transit(PaymentDO p, PaymentStatus target, String operatorId) {
         PaymentStatus from = PaymentStatus.fromCode(p.getStatus());
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.execution.msg_2e33226a", p.getStatus());
         }
         if (!from.canTransitTo(target)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.execution.msg_93d51f1f", from.getDesc(), target.getDesc());
         }
         paymentMapper.updateStatus(p.getId(), target.getCode(), operatorId);

@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.web.controller.config;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.config.PreferenceUpsertDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgPreferenceDO;
@@ -47,8 +47,8 @@ public class PreferenceController {
     @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_UPDATE)
     @Idempotent(key = "preference:upsert", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<MsgPreferenceDO> upsert(@Valid @RequestBody PreferenceUpsertDTO dto) {
-        return Result.ok(preferenceService.upsert(dto));
+    public BaseResponse<MsgPreferenceDO> upsert(@Valid @RequestBody PreferenceUpsertDTO dto) {
+        return BaseResponse.ok(preferenceService.upsert(dto));
     }
 
     /**
@@ -60,8 +60,8 @@ public class PreferenceController {
     @Operation(summary = "查询用户所有偏好")
     @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_VIEW)
     @GetMapping("/{userId}")
-    public Result<List<MsgPreferenceDO>> listByUser(@PathVariable String userId) {
-        return Result.ok(preferenceService.listByUser(userId));
+    public BaseResponse<List<MsgPreferenceDO>> listByUser(@PathVariable String userId) {
+        return BaseResponse.ok(preferenceService.listByUser(userId));
     }
 
     /**
@@ -75,10 +75,10 @@ public class PreferenceController {
     @Operation(summary = "按用户+通道+业务类型查询偏好")
     @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_VIEW)
     @GetMapping("/{userId}/{channel}/{bizType}")
-    public Result<MsgPreferenceDO> getByUser(@PathVariable String userId,
+    public BaseResponse<MsgPreferenceDO> getByUser(@PathVariable String userId,
                                              @PathVariable String channel,
                                              @PathVariable String bizType) {
-        return Result.ok(preferenceService.getByUser(userId, channel, bizType));
+        return BaseResponse.ok(preferenceService.getByUser(userId, channel, bizType));
     }
 
     /**
@@ -91,8 +91,8 @@ public class PreferenceController {
     @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_DELETE)
     @Idempotent(key = "preference:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         preferenceService.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 }

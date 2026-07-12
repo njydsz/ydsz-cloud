@@ -3,8 +3,8 @@ package com.njydsz.pmis.message.web.controller.template;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.IdempotentExempt;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -54,8 +54,8 @@ public class TemplateVersionController {
     @Operation(summary = "查询模板版本历史")
     @PrePermission(PermissionCodes.NOTIF_TEMPLATE_VIEW)
     @GetMapping("/list/{templateCode}")
-    public Result<List<MsgTemplateVersionDO>> listVersions(@PathVariable String templateCode) {
-        return Result.ok(templateVersionService.listVersions(templateCode));
+    public BaseResponse<List<MsgTemplateVersionDO>> listVersions(@PathVariable String templateCode) {
+        return BaseResponse.ok(templateVersionService.listVersions(templateCode));
     }
 
     /**
@@ -69,8 +69,8 @@ public class TemplateVersionController {
     @PrePermission(PermissionCodes.NOTIF_TEMPLATE_AUDIT)
     @Idempotent(key = "templateVersion:rollback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/rollback")
-    public Result<String> rollback(@RequestParam String templateCode, @RequestParam int version) {
-        return Result.ok(templateVersionService.rollbackToVersion(templateCode, version));
+    public BaseResponse<String> rollback(@RequestParam String templateCode, @RequestParam int version) {
+        return BaseResponse.ok(templateVersionService.rollbackToVersion(templateCode, version));
     }
 
     /**
@@ -83,11 +83,11 @@ public class TemplateVersionController {
     @PrePermission(PermissionCodes.NOTIF_TEMPLATE_VIEW)
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/preview")
-    public Result<String> preview(@Valid @RequestBody TemplatePreviewDTO dto) {
+    public BaseResponse<String> preview(@Valid @RequestBody TemplatePreviewDTO dto) {
         if (dto == null) {
-            return Result.failed(BizErrorCode.BAD_REQUEST, "预览参数为空");
+            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "预览参数为空");
         }
-        return Result.ok(templateVersionService.preview(dto));
+        return BaseResponse.ok(templateVersionService.preview(dto));
     }
 
     /**
@@ -100,10 +100,10 @@ public class TemplateVersionController {
     @PrePermission(PermissionCodes.NOTIF_TEMPLATE_AUDIT)
     @Idempotent(key = "templateVersion:testSend", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/testSend")
-    public Result<MessageResult> testSend(@Valid @RequestBody TemplateTestSendDTO dto) {
+    public BaseResponse<MessageResult> testSend(@Valid @RequestBody TemplateTestSendDTO dto) {
         if (dto == null) {
-            return Result.failed(BizErrorCode.BAD_REQUEST, "试发参数为空");
+            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "试发参数为空");
         }
-        return Result.ok(templateVersionService.testSend(dto));
+        return BaseResponse.ok(templateVersionService.testSend(dto));
     }
 }

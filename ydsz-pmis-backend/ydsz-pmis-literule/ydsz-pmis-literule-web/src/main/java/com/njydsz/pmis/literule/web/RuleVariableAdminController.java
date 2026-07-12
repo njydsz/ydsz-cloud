@@ -3,7 +3,7 @@ package com.njydsz.pmis.literule.web;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.literule.server.expr.ExpressionValidationService;
 import com.njydsz.pmis.literule.server.expr.VariableDefinition;
 import com.njydsz.pmis.literule.server.expr.VariableRegistry;
@@ -43,12 +43,12 @@ public class RuleVariableAdminController {
      * @return 变量定义列表
      */
     @GetMapping
-    public Result<List<VariableDefinition>> list(@RequestParam(required = false) String category) {
+    public BaseResponse<List<VariableDefinition>> list(@RequestParam(required = false) String category) {
         List<VariableDefinition> all = variableRegistry.listAll();
         if (category == null || category.isBlank()) {
-            return Result.ok(all);
+            return BaseResponse.ok(all);
         }
-        return Result.ok(all.stream()
+        return BaseResponse.ok(all.stream()
                 .filter(v -> category.equals(v.getCategory()))
                 .collect(Collectors.toList()));
     }
@@ -60,12 +60,12 @@ public class RuleVariableAdminController {
      * @return 变量定义
      */
     @GetMapping("/{varName}")
-    public Result<VariableDefinition> get(@PathVariable String varName) {
+    public BaseResponse<VariableDefinition> get(@PathVariable String varName) {
         VariableDefinition def = variableRegistry.lookup(varName);
         if (def == null) {
-            return Result.fail("变量不存在: " + varName);
+            return BaseResponse.fail("变量不存在: " + varName);
         }
-        return Result.ok(def);
+        return BaseResponse.ok(def);
     }
 
     /**
@@ -76,12 +76,12 @@ public class RuleVariableAdminController {
      */
     @Idempotent(key = "ruleVariableAdmin:save", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<VariableDefinition> save(@RequestBody VariableDefinition definition) {
+    public BaseResponse<VariableDefinition> save(@RequestBody VariableDefinition definition) {
         if (definition == null || definition.getName() == null || definition.getName().isBlank()) {
-            return Result.fail("变量定义及 name 不能为空");
+            return BaseResponse.fail("变量定义及 name 不能为空");
         }
         variableRegistry.register(definition);
-        return Result.ok(variableRegistry.lookup(definition.getName()));
+        return BaseResponse.ok(variableRegistry.lookup(definition.getName()));
     }
 
     /**
@@ -93,9 +93,9 @@ public class RuleVariableAdminController {
     @OperationLog(module = "规则变量", action = "删除变量定义", bizType = "RULE_VARIABLE")
     @Idempotent(key = "ruleVariableAdmin:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{varName}")
-    public Result<Void> delete(@PathVariable String varName) {
+    public BaseResponse<Void> delete(@PathVariable String varName) {
         variableRegistry.unregister(varName);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -105,9 +105,9 @@ public class RuleVariableAdminController {
      */
     @Idempotent(key = "ruleVariableAdmin:refresh", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/refresh")
-    public Result<Void> refresh() {
+    public BaseResponse<Void> refresh() {
         variableRegistry.refresh();
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -121,7 +121,7 @@ public class RuleVariableAdminController {
      * @return 可用变量定义列表
      */
     @GetMapping("/available")
-    public Result<List<VariableDefinition>> listAvailable() {
-        return Result.ok(expressionValidationService.listAvailableVariables());
+    public BaseResponse<List<VariableDefinition>> listAvailable() {
+        return BaseResponse.ok(expressionValidationService.listAvailableVariables());
     }
 }

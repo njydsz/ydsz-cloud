@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagInstanceDO;
 import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagNodeInstanceDO;
@@ -43,8 +43,8 @@ public class JobDagInstanceController {
     @Operation(summary = "查询 DAG 实例详情")
     @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}")
-    public Result<JobDagInstanceDO> getInstanceById(@PathVariable String instanceId) {
-        return Result.ok(jobDagInstanceService.getInstanceById(instanceId));
+    public BaseResponse<JobDagInstanceDO> getInstanceById(@PathVariable String instanceId) {
+        return BaseResponse.ok(jobDagInstanceService.getInstanceById(instanceId));
     }
 
     /**
@@ -57,9 +57,9 @@ public class JobDagInstanceController {
     @Operation(summary = "查询 DAG 的实例列表")
     @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/dag/{dagId}")
-    public Result<List<JobDagInstanceDO>> listByDagId(@PathVariable String dagId,
+    public BaseResponse<List<JobDagInstanceDO>> listByDagId(@PathVariable String dagId,
                                                        @RequestParam(defaultValue = "20") int limit) {
-        return Result.ok(jobDagInstanceService.listByDagId(dagId, limit));
+        return BaseResponse.ok(jobDagInstanceService.listByDagId(dagId, limit));
     }
 
     /**
@@ -71,8 +71,8 @@ public class JobDagInstanceController {
     @Operation(summary = "按状态查询 DAG 实例")
     @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/status/{status}")
-    public Result<List<JobDagInstanceDO>> listByStatus(@PathVariable String status) {
-        return Result.ok(jobDagInstanceService.listByStatus(status));
+    public BaseResponse<List<JobDagInstanceDO>> listByStatus(@PathVariable String status) {
+        return BaseResponse.ok(jobDagInstanceService.listByStatus(status));
     }
 
     /**
@@ -84,8 +84,8 @@ public class JobDagInstanceController {
     @Operation(summary = "查询 DAG 实例的节点列表")
     @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}/nodes")
-    public Result<List<JobDagNodeInstanceDO>> listNodes(@PathVariable String instanceId) {
-        return Result.ok(jobDagInstanceService.listNodes(instanceId));
+    public BaseResponse<List<JobDagNodeInstanceDO>> listNodes(@PathVariable String instanceId) {
+        return BaseResponse.ok(jobDagInstanceService.listNodes(instanceId));
     }
 
     /**
@@ -97,8 +97,8 @@ public class JobDagInstanceController {
     @Operation(summary = "获取 DAG 实例可视化数据（P4-1）")
     @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
     @GetMapping("/{instanceId}/visualization")
-    public Result<DagInstanceVisualizationVO> getVisualization(@PathVariable String instanceId) {
-        return Result.ok(jobDagInstanceService.getVisualization(instanceId));
+    public BaseResponse<DagInstanceVisualizationVO> getVisualization(@PathVariable String instanceId) {
+        return BaseResponse.ok(jobDagInstanceService.getVisualization(instanceId));
     }
 
     /**
@@ -112,9 +112,9 @@ public class JobDagInstanceController {
     @OperationLog(module = "任务调度", action = "暂停DAG实例", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobDagInstance:pauseInstance", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{instanceId}/pause")
-    public Result<Void> pauseInstance(@PathVariable String instanceId) {
+    public BaseResponse<Void> pauseInstance(@PathVariable String instanceId) {
         jobDagInstanceService.pauseInstance(instanceId);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -128,9 +128,9 @@ public class JobDagInstanceController {
     @OperationLog(module = "任务调度", action = "恢复DAG实例", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobDagInstance:resumeInstance", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{instanceId}/resume")
-    public Result<Void> resumeInstance(@PathVariable String instanceId) {
+    public BaseResponse<Void> resumeInstance(@PathVariable String instanceId) {
         jobDagInstanceService.resumeInstance(instanceId);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -144,9 +144,9 @@ public class JobDagInstanceController {
     @OperationLog(module = "任务调度", action = "取消DAG实例", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobDagInstance:cancelInstance", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{instanceId}/cancel")
-    public Result<Void> cancelInstance(@PathVariable String instanceId) {
+    public BaseResponse<Void> cancelInstance(@PathVariable String instanceId) {
         jobDagInstanceService.cancelInstance(instanceId);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -161,8 +161,8 @@ public class JobDagInstanceController {
     @OperationLog(module = "任务调度", action = "更新DAG实例上下文", bizType = "CRONJOB_DAG")
     @Idempotent(key = "jobDagInstance:updateContext", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{instanceId}/context")
-    public Result<Void> updateContext(@PathVariable String instanceId, @RequestBody String contextJson) {
+    public BaseResponse<Void> updateContext(@PathVariable String instanceId, @RequestBody String contextJson) {
         jobDagInstanceService.updateContext(instanceId, contextJson);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 }

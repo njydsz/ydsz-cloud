@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobWebhookDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobWebhookMapper;
@@ -45,7 +45,7 @@ public class JobWebhookController {
     @OperationLog(module = "任务调度", action = "新增WebHook", bizType = "CRONJOB_WEBHOOK")
     @Idempotent(key = "jobWebhook:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@RequestBody JobWebhookDO webhook) {
+    public BaseResponse<String> create(@RequestBody JobWebhookDO webhook) {
         webhook.setStatus("ACTIVE");
         webhook.setCreatedAt(LocalDateTime.now());
         webhook.setUpdatedAt(LocalDateTime.now());
@@ -54,7 +54,7 @@ public class JobWebhookController {
             webhook.setHttpMethod("POST");
         }
         webhookMapper.insert(webhook);
-        return Result.ok(webhook.getId());
+        return BaseResponse.ok(webhook.getId());
     }
 
     /**
@@ -68,10 +68,10 @@ public class JobWebhookController {
     @OperationLog(module = "任务调度", action = "更新WebHook", bizType = "CRONJOB_WEBHOOK")
     @Idempotent(key = "jobWebhook:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
-    public Result<Void> update(@RequestBody JobWebhookDO webhook) {
+    public BaseResponse<Void> update(@RequestBody JobWebhookDO webhook) {
         webhook.setUpdatedAt(LocalDateTime.now());
         webhookMapper.updateById(webhook);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -85,13 +85,13 @@ public class JobWebhookController {
     @OperationLog(module = "任务调度", action = "删除WebHook", bizType = "CRONJOB_WEBHOOK")
     @Idempotent(key = "jobWebhook:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         JobWebhookDO update = new JobWebhookDO();
         update.setId(id);
         update.setDeleted(1);
         update.setUpdatedAt(LocalDateTime.now());
         webhookMapper.updateById(update);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -105,7 +105,7 @@ public class JobWebhookController {
      */
     @Operation(summary = "分页查询 WebHook 订阅")
     @GetMapping("/page")
-    public Result<Page<JobWebhookDO>> page(
+    public BaseResponse<Page<JobWebhookDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String eventType,
@@ -117,7 +117,7 @@ public class JobWebhookController {
                 .eq(jobKey != null && !jobKey.isBlank(),
                         w -> w.getJobKey(), jobKey)
                 .orderByDesc(w -> w.getCreatedAt());
-        return Result.ok(webhookMapper.selectPage(new Page<>(page, size), wrapper));
+        return BaseResponse.ok(webhookMapper.selectPage(new Page<>(page, size), wrapper));
     }
 
     /**
@@ -128,8 +128,8 @@ public class JobWebhookController {
      */
     @Operation(summary = "查询 WebHook 详情")
     @GetMapping("/{id}")
-    public Result<JobWebhookDO> getById(@PathVariable String id) {
-        return Result.ok(webhookMapper.selectById(id));
+    public BaseResponse<JobWebhookDO> getById(@PathVariable String id) {
+        return BaseResponse.ok(webhookMapper.selectById(id));
     }
 
     /**
@@ -142,13 +142,13 @@ public class JobWebhookController {
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @Idempotent(key = "jobWebhook:testWebhook", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/test")
-    public Result<Void> testWebhook(@PathVariable String id) {
+    public BaseResponse<Void> testWebhook(@PathVariable String id) {
         JobWebhookDO webhook = webhookMapper.selectById(id);
         if (webhook == null) {
-            return Result.fail("WebHook not found");
+            return BaseResponse.fail("WebHook not found");
         }
         // 测试事件通过 WebhookEventDispatcher 发送
         // 这里仅返回成功，实际推送通过 Async 异步执行
-        return Result.ok();
+        return BaseResponse.ok();
     }
 }

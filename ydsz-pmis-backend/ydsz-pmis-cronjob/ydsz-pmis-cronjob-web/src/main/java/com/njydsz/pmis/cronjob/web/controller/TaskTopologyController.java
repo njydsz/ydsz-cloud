@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.web.controller.dag;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.pmis.cronjob.server.core.dag.DagDefinitionCodec;
 import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagInstanceDO;
@@ -74,10 +74,10 @@ public class TaskTopologyController {
      */
     @Operation(summary = "查询DAG实例执行拓扑图")
     @GetMapping("/dagInstance/{dagInstanceId}")
-    public Result<Map<String, Object>> getDagInstanceTopology(@PathVariable String dagInstanceId) {
+    public BaseResponse<Map<String, Object>> getDagInstanceTopology(@PathVariable String dagInstanceId) {
         JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
         if (instance == null) {
-            return Result.ok(null);
+            return BaseResponse.ok(null);
         }
 
         // 加载 DAG 定义
@@ -95,7 +95,7 @@ public class TaskTopologyController {
         topology.put("dagInstance", instance);
         topology.put("nodeInstances", nodeInstances);
 
-        return Result.ok(topology);
+        return BaseResponse.ok(topology);
     }
 
     /**
@@ -106,12 +106,12 @@ public class TaskTopologyController {
      */
     @Operation(summary = "查询任务执行历史")
     @GetMapping("/jobHistory/{jobKey}")
-    public Result<List<JobLogDO>> getJobExecutionHistory(@PathVariable String jobKey) {
+    public BaseResponse<List<JobLogDO>> getJobExecutionHistory(@PathVariable String jobKey) {
         LambdaQueryWrapper<JobLogDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(JobLogDO::getJobKey, jobKey)
                 .eq(JobLogDO::getDeleted, 0)
                 .orderByDesc(JobLogDO::getCreatedAt)
                 .last("LIMIT 20");
-        return Result.ok(jobLogMapper.selectList(wrapper));
+        return BaseResponse.ok(jobLogMapper.selectList(wrapper));
     }
 }

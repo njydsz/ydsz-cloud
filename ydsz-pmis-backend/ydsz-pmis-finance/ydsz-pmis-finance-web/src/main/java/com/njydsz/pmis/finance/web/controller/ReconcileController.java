@@ -1,7 +1,7 @@
 package com.njydsz.pmis.finance.web.controller;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.engine.ReconcileReport;
 import com.njydsz.pmis.project.engine.ReconcileResult;
 import com.njydsz.pmis.finance.server.service.finance.ReconcileService;
@@ -45,11 +45,11 @@ public class ReconcileController {
     @Operation(summary = "全量对账报告")
     @PrePermission("execution:reconcile:view")
     @GetMapping("/report")
-    public Result<ReconcileReport> report(
+    public BaseResponse<ReconcileReport> report(
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return Result.ok(reconcileService.reconcileAll(initiationId, from, to));
+        return BaseResponse.ok(reconcileService.reconcileAll(initiationId, from, to));
     }
 
     /**
@@ -61,8 +61,8 @@ public class ReconcileController {
     @Operation(summary = "工时漏算 / 幽灵成本")
     @PrePermission("execution:reconcile:view")
     @GetMapping("/missingCost")
-    public Result<List<ReconcileResult>> missingCost(@RequestParam(required = false) String initiationId) {
-        return Result.ok(reconcileService.checkMissingCost(initiationId));
+    public BaseResponse<List<ReconcileResult>> missingCost(@RequestParam(required = false) String initiationId) {
+        return BaseResponse.ok(reconcileService.checkMissingCost(initiationId));
     }
 
     /**
@@ -76,10 +76,10 @@ public class ReconcileController {
     @Operation(summary = "工时异常(单日/单周/跨项目)")
     @PrePermission("execution:reconcile:view")
     @GetMapping("/timeAnomaly")
-    public Result<List<ReconcileResult>> timeAnomaly(
+    public BaseResponse<List<ReconcileResult>> timeAnomaly(
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return Result.ok(reconcileService.checkTimeEntryAnomaly(initiationId, from, to));
+        return BaseResponse.ok(reconcileService.checkTimeEntryAnomaly(initiationId, from, to));
     }
 }

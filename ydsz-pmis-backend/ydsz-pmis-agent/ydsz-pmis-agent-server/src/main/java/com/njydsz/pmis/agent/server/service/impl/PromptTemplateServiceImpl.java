@@ -8,8 +8,8 @@ import com.njydsz.pmis.agent.server.engine.prompt.PromptTemplateRegistry;
 import com.njydsz.pmis.agent.domain.entity.agent.AgentPromptTemplateDO;
 import com.njydsz.pmis.agent.infra.mapper.agent.AgentPromptTemplateMapper;
 import com.njydsz.pmis.agent.server.service.tool.PromptTemplateService;
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.exception.BizException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,7 +78,7 @@ public class PromptTemplateServiceImpl implements PromptTemplateService {
     public AgentPromptTemplateDO activate(String id) {
         AgentPromptTemplateDO template = mapper.selectById(id);
         if (template == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "模板不存在: " + id);
+            throw new BizException(StandardResultCode.NOT_FOUND, "模板不存在: " + id);
         }
         // 排他：同 code 的其他版本置为非生效
         mapper.deactivateOthers(template.getTemplateCode(), id);
@@ -112,7 +112,7 @@ public class PromptTemplateServiceImpl implements PromptTemplateService {
      * @return 分页结果
      */
     @Override
-    public PageResult<AgentPromptTemplateDO> page(PromptTemplateQueryDTO query) {
+    public PageResponse<AgentPromptTemplateDO> page(PromptTemplateQueryDTO query) {
         LambdaQueryWrapper<AgentPromptTemplateDO> wrapper = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(query.getTemplateCode())) {
             wrapper.like(AgentPromptTemplateDO::getTemplateCode, query.getTemplateCode());
@@ -131,7 +131,7 @@ public class PromptTemplateServiceImpl implements PromptTemplateService {
         int pageNum = query.getPage() == null || query.getPage() < 1 ? 1 : query.getPage();
         int pageSize = query.getSize() == null || query.getSize() < 1 ? 20 : query.getSize();
         Page<AgentPromptTemplateDO> page = new Page<>(pageNum, pageSize);
-        return PageResult.ofPage(mapper.selectPage(page, wrapper));
+        return PageResponse.ofPage(mapper.selectPage(page, wrapper));
     }
 
     /**

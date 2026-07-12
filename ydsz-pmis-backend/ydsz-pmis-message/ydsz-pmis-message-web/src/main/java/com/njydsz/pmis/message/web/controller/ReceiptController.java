@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.web.controller.receipt;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.receipt.ReceiptCallbackDTO;
 import com.njydsz.pmis.message.domain.entity.receipt.MsgReceiptDO;
@@ -46,9 +46,9 @@ public class ReceiptController {
     @PrePermission(PermissionCodes.MESSAGE_RECEIPT_CALLBACK)
     @Idempotent(key = "receipt:callback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/callback")
-    public Result<Void> callback(@Valid @RequestBody ReceiptCallbackDTO dto) {
+    public BaseResponse<Void> callback(@Valid @RequestBody ReceiptCallbackDTO dto) {
         receiptService.callback(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -60,7 +60,7 @@ public class ReceiptController {
     @Operation(summary = "按日志 ID 查询回执列表")
     @PrePermission(PermissionCodes.MESSAGE_RECEIPT_VIEW)
     @GetMapping("/{logId}")
-    public Result<List<MsgReceiptDO>> listByLogId(@PathVariable String logId) {
-        return Result.ok(receiptService.listByLogId(logId));
+    public BaseResponse<List<MsgReceiptDO>> listByLogId(@PathVariable String logId) {
+        return BaseResponse.ok(receiptService.listByLogId(logId));
     }
 }

@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.web.controller.instance;
 
 import com.njydsz.pmis.common.annotation.IdempotentExempt;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.workflow.domain.dto.instance.InstanceMigrationDTO;
 import com.njydsz.pmis.workflow.domain.dto.instance.InstanceMigrationResultDTO;
 import com.njydsz.pmis.workflow.server.service.instance.FlowInstanceMigrationService;
@@ -49,8 +49,8 @@ public class FlowMigrationController {
      */
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/instance/migrate")
-    public Result<InstanceMigrationResultDTO> migrateInstances(@RequestBody InstanceMigrationDTO dto) {
-        return Result.ok(instanceMigrationService.migrate(dto));
+    public BaseResponse<InstanceMigrationResultDTO> migrateInstances(@RequestBody InstanceMigrationDTO dto) {
+        return BaseResponse.ok(instanceMigrationService.migrate(dto));
     }
 
     /**
@@ -61,8 +61,8 @@ public class FlowMigrationController {
      */
     @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
     @PostMapping("/instance/migrate/preview")
-    public Result<InstanceMigrationResultDTO> previewMigration(@RequestBody InstanceMigrationDTO dto) {
-        return Result.ok(instanceMigrationService.previewMigration(dto));
+    public BaseResponse<InstanceMigrationResultDTO> previewMigration(@RequestBody InstanceMigrationDTO dto) {
+        return BaseResponse.ok(instanceMigrationService.previewMigration(dto));
     }
 
     /**
@@ -76,9 +76,9 @@ public class FlowMigrationController {
      * @return 统一响应结果，包含 旧节点编码 -> 新节点编码 的映射
      */
     @GetMapping("/instance/migrate/autoMap")
-    public Result<Map<String, String>> autoMapNodes(
+    public BaseResponse<Map<String, String>> autoMapNodes(
             @RequestParam Long sourceDefinitionId,
             @RequestParam Long targetDefinitionId) {
-        return Result.ok(instanceMigrationService.autoMapNodes(sourceDefinitionId, targetDefinitionId));
+        return BaseResponse.ok(instanceMigrationService.autoMapNodes(sourceDefinitionId, targetDefinitionId));
     }
 }

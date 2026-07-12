@@ -1,11 +1,11 @@
 package com.njydsz.pmis.common.aspect;
 
 import com.njydsz.pmis.common.annotation.DataScope;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.DataScopeContext;
 import com.njydsz.pmis.common.security.DataScopeHelper;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -61,7 +61,7 @@ public class DataScopeAspect {
         DataScopeContext ctx = CTX.get();
         if (ctx == null) {
             // 兜底：从 SecurityContext 重新构造
-            return DataScopeContext.from(SecurityContext.getCurrentOrNull());
+            return DataScopeContext.from(AuthContext.getCurrentOrNull());
         }
         return ctx;
     }
@@ -86,7 +86,7 @@ public class DataScopeAspect {
         if (ctx.getCustomDeptIds() != null && ctx.getCustomDeptIds().contains(targetDeptId)) {
             return;
         }
-        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_e107b337");
+        throw new BizException(StandardResultCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_e107b337");
     }
 
     /**
@@ -115,6 +115,6 @@ public class DataScopeAspect {
         if (ctx.getUserId() != null && ctx.getUserId().equals(targetOwnerId)) {
             return;
         }
-        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_e107b337");
+        throw new BizException(StandardResultCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_e107b337");
     }
 }

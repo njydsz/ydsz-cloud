@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.server.service.impl;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.constant.CacheConstants;
 import com.njydsz.pmis.common.datasource.DataSourceConstants;
 import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
@@ -231,7 +231,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
 
     @Override
     @Cacheable(value = CacheConstants.COCKPIT_CACHE, key = "'drill:dept::' + (#period ?: 'all')",
-            unless = "#result == null || #result.isEmpty()")
+            unless = "#result == null || #BaseResponse.isEmpty()")
     public List<Map<String, Object>> drillByDept(String period) {
         List<Map<String, Object>> out = new ArrayList<>();
         try {
@@ -245,7 +245,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
 
     @Override
     @Cacheable(value = CacheConstants.COCKPIT_CACHE, key = "'drill:projectType::' + (#period ?: 'all')",
-            unless = "#result == null || #result.isEmpty()")
+            unless = "#result == null || #BaseResponse.isEmpty()")
     public List<Map<String, Object>> drillByProjectType(String period) {
         List<Map<String, Object>> out = new ArrayList<>();
         try {
@@ -259,7 +259,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
 
     @Override
     @Cacheable(value = CacheConstants.COCKPIT_CACHE, key = "'drill:customer::' + (#period ?: 'all')",
-            unless = "#result == null || #result.isEmpty()")
+            unless = "#result == null || #BaseResponse.isEmpty()")
     public List<Map<String, Object>> drillByCustomer(String period) {
         List<Map<String, Object>> out = new ArrayList<>();
         try {
@@ -400,7 +400,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
 
     private BigDecimal benchIdleCostSafe() {
         try {
-            Result<Map<String, Object>> resp = benchResourceClient.getBenchDashboard();
+            BaseResponse<Map<String, Object>> resp = benchResourceClient.getBenchDashboard();
             if (resp == null || resp.getData() == null) {
                 return ZERO;
             }
@@ -916,9 +916,9 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         if (b != null) dedup.addAll(b);
         if (c != null) dedup.addAll(c);
         List<String> result = new ArrayList<>(dedup);
-        result.sort((x, y) -> y.compareTo(x));
-        if (result.size() > limit) {
-            result = result.subList(0, limit);
+        BaseResponse.sort((x, y) -> y.compareTo(x));
+        if (BaseResponse.size() > limit) {
+            result = BaseResponse.subList(0, limit);
         }
         return result;
     }

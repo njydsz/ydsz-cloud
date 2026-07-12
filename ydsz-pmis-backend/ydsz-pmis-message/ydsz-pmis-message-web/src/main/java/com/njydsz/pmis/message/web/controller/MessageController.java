@@ -4,8 +4,8 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -65,8 +65,8 @@ public class MessageController {
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:send", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send")
-    public Result<MessageResult> send(@Valid @RequestBody MessageRequest request) {
-        return Result.ok(messageService.send(request));
+    public BaseResponse<MessageResult> send(@Valid @RequestBody MessageRequest request) {
+        return BaseResponse.ok(messageService.send(request));
     }
 
     /**
@@ -79,8 +79,8 @@ public class MessageController {
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:sendDirect", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/sendDirect")
-    public Result<MessageResult> sendDirect(@Valid @RequestBody MessageSendDTO dto) {
-        return Result.ok(messageService.sendDirect(dto));
+    public BaseResponse<MessageResult> sendDirect(@Valid @RequestBody MessageSendDTO dto) {
+        return BaseResponse.ok(messageService.sendDirect(dto));
     }
 
     /**
@@ -94,25 +94,25 @@ public class MessageController {
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:sendAsync", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/sendAsync")
-    public Result<MessageResult> sendAsync(@Valid @RequestBody MessageRequest request) {
+    public BaseResponse<MessageResult> sendAsync(@Valid @RequestBody MessageRequest request) {
         if (request == null) {
-            return Result.failed(BizErrorCode.BAD_REQUEST, "消息请求为空");
+            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "消息请求为空");
         }
         RocketMQMessageProducer producer = producerProvider.getIfAvailable();
         if (producer == null) {
             // 未启用 RocketMQ 时降级为同步发送
             log.warn("[MessageController] RocketMQ 未启用,降级同步发送");
-            return Result.ok(messageService.send(request));
+            return BaseResponse.ok(messageService.send(request));
         }
         try {
             producer.asyncSend(request);
             // 异步投递成功,返回 messageId 供追踪
             MessageResult result = MessageResult.ok(request.getChannel(), request.getMessageId());
-            result.setErrorMessage("ASYNC_QUEUED");
-            return Result.ok(result);
+            BaseResponse.setErrorMessage("ASYNC_QUEUED");
+            return BaseResponse.ok(result);
         } catch (Exception e) {
             log.error("[MessageController] 异步投递失败,降级同步: err={}", e.getMessage());
-            return Result.ok(messageService.send(request));
+            return BaseResponse.ok(messageService.send(request));
         }
     }
 
@@ -125,8 +125,8 @@ public class MessageController {
     @Operation(summary = "发送日志分页")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/log/page")
-    public Result<Page<MsgLogDO>> pageLog(MessageLogQueryDTO query) {
-        return Result.ok(messageService.pageLog(query));
+    public BaseResponse<Page<MsgLogDO>> pageLog(MessageLogQueryDTO query) {
+        return BaseResponse.ok(messageService.pageLog(query));
     }
 
     /**
@@ -142,8 +142,8 @@ public class MessageController {
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:sendTransactionally", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/sendTransactional")
-    public Result<MessageResult> sendTransactionally(@Valid @RequestBody MessageRequest request) {
-        return Result.ok(messageService.sendTransactionally(request));
+    public BaseResponse<MessageResult> sendTransactionally(@Valid @RequestBody MessageRequest request) {
+        return BaseResponse.ok(messageService.sendTransactionally(request));
     }
 
     /**
@@ -157,12 +157,12 @@ public class MessageController {
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:batchSend", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batchSend")
-    public Result<BatchSendResult> batchSend(@Valid @RequestBody List<MessageRequest> requests,
+    public BaseResponse<BatchSendResult> batchSend(@Valid @RequestBody List<MessageRequest> requests,
                                              @RequestParam String batchId) {
         if (requests == null || requests.isEmpty()) {
-            return Result.failed(BizErrorCode.BAD_REQUEST, "消息列表为空");
+            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "消息列表为空");
         }
-        return Result.ok(messageService.batchSend(requests, batchId));
+        return BaseResponse.ok(messageService.batchSend(requests, batchId));
     }
 
     /**
@@ -176,13 +176,13 @@ public class MessageController {
     @Operation(summary = "查询批次发送进度")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/batch/{batchId}/progress")
-    public Result<Page<MsgLogDO>> batchProgress(@PathVariable String batchId,
+    public BaseResponse<Page<MsgLogDO>> batchProgress(@PathVariable String batchId,
                                                 @RequestParam(defaultValue = "1") long page,
                                                 @RequestParam(defaultValue = "20") long size) {
         MessageLogQueryDTO query = new MessageLogQueryDTO();
         query.setBizId(batchId);
         query.setPage(page);
         query.setSize(size);
-        return Result.ok(messageService.pageLog(query));
+        return BaseResponse.ok(messageService.pageLog(query));
     }
 }

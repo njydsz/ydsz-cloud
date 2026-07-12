@@ -3,7 +3,7 @@ package com.njydsz.pmis.userinfo.web.controller.rate;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.rate.PartTimeRateCreateDTO;
 import com.njydsz.pmis.userinfo.domain.dto.rate.PartTimeRatePageDTO;
 import com.njydsz.pmis.userinfo.domain.dto.rate.PartTimeRateUpdateDTO;
@@ -53,8 +53,8 @@ public class PartTimeRateController {
     @Operation(summary = "创建兼职职级费率")
     @Idempotent(key = "partTimeRate:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody PartTimeRateCreateDTO dto) {
-        return Result.ok(partTimeRateService.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody PartTimeRateCreateDTO dto) {
+        return BaseResponse.ok(partTimeRateService.create(dto));
     }
 
     /**
@@ -67,9 +67,9 @@ public class PartTimeRateController {
     @Operation(summary = "更新兼职职级费率")
     @Idempotent(key = "partTimeRate:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public Result<Void> update(@PathVariable String id, @Valid @RequestBody PartTimeRateUpdateDTO dto) {
+    public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody PartTimeRateUpdateDTO dto) {
         partTimeRateService.update(id, dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -81,9 +81,9 @@ public class PartTimeRateController {
     @Operation(summary = "删除兼职职级费率")
     @Idempotent(key = "partTimeRate:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         partTimeRateService.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -94,8 +94,8 @@ public class PartTimeRateController {
      */
     @Operation(summary = "兼职职级费率详情")
     @GetMapping("/{id}")
-    public Result<PartTimeRateDO> get(@PathVariable String id) {
-        return Result.ok(partTimeRateService.getById(id));
+    public BaseResponse<PartTimeRateDO> get(@PathVariable String id) {
+        return BaseResponse.ok(partTimeRateService.getById(id));
     }
 
     /**
@@ -106,8 +106,8 @@ public class PartTimeRateController {
      */
     @Operation(summary = "兼职职级费率分页")
     @GetMapping
-    public Result<Page<PartTimeRateDO>> page(@Valid PartTimeRatePageDTO query) {
-        return Result.ok(partTimeRateService.page(
+    public BaseResponse<Page<PartTimeRateDO>> page(@Valid PartTimeRatePageDTO query) {
+        return BaseResponse.ok(partTimeRateService.page(
                 (int) query.getPage(),
                 (int) Math.min(query.getSize(), 200),
                 query.getKeyword(),
@@ -124,10 +124,10 @@ public class PartTimeRateController {
      */
     @Operation(summary = "按级别编码 + 日期匹配生效费率")
     @GetMapping("/match")
-    public Result<PartTimeRateDO> matchEffective(@RequestParam String rateCode,
+    public BaseResponse<PartTimeRateDO> matchEffective(@RequestParam String rateCode,
                                                  @RequestParam(required = false)
                                                  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return Result.ok(partTimeRateService.matchEffective(rateCode, date));
+        return BaseResponse.ok(partTimeRateService.matchEffective(rateCode, date));
     }
 
     /**
@@ -138,8 +138,8 @@ public class PartTimeRateController {
      */
     @Operation(summary = "查询某日期生效中的所有兼职费率")
     @GetMapping("/effective")
-    public Result<List<PartTimeRateDO>> listEffective(@RequestParam(required = false)
+    public BaseResponse<List<PartTimeRateDO>> listEffective(@RequestParam(required = false)
                                                       @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return Result.ok(partTimeRateService.listEffective(date));
+        return BaseResponse.ok(partTimeRateService.listEffective(date));
     }
 }

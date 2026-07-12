@@ -1,8 +1,8 @@
 package com.njydsz.pmis.userinfo.api.fallback;
 import com.njydsz.pmis.userinfo.api.client.UserServiceClient;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -28,29 +28,29 @@ public class UserServiceClientFallback implements FallbackFactory<UserServiceCli
         log.warn("[Feign] user 服务降级: {}", cause == null ? "?" : cause.getMessage());
         return new UserServiceClient() {
             @Override
-            public Result<Map<String, Object>> getEmployee(String id) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+            public BaseResponse<Map<String, Object>> getEmployee(String id) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            public Result<String> getCustomerName(String customerId) {
-                return Result.ok("");
+            public BaseResponse<String> getCustomerName(String customerId) {
+                return BaseResponse.ok("");
             }
 
             @Override
-            public Result<Map<String, String>> batchEmployeeName(List<String> ids) {
-                return Result.ok(Map.of());
+            public BaseResponse<Map<String, String>> batchEmployeeName(List<String> ids) {
+                return BaseResponse.ok(Map.of());
             }
 
             @Override
-            public Result<Map<String, String>> batchCustomerName(List<String> customerIds) {
+            public BaseResponse<Map<String, String>> batchCustomerName(List<String> customerIds) {
                 log.warn("[UserServiceClientFallback] batchCustomerName 降级: ids={}", customerIds);
-                return Result.ok(Map.of());
+                return BaseResponse.ok(Map.of());
             }
 
             @Override
-            public Result<BigDecimal> getLevelRate(String levelCode) {
-                return Result.ok(BigDecimal.ZERO);
+            public BaseResponse<BigDecimal> getLevelRate(String levelCode) {
+                return BaseResponse.ok(BigDecimal.ZERO);
             }
         };
     }

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.domain.enums.instance.FlowTaskStatus;
@@ -46,7 +46,7 @@ public class FlowTaskClaimService {
     public void claim(String taskId, String userId) {
         FlowRunTaskDO task = support.getTaskOrThrow(taskId);
         if (!FlowTaskStatus.PENDING.name().equals(task.getTaskStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.workflow.msg_5873f2ae", task.getTaskStatus());
         }
         applyClaim(task, userId);

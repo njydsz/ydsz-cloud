@@ -2,9 +2,9 @@ package com.njydsz.pmis.workflow.web.controller.instance;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.WorkflowFacade;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
@@ -64,17 +64,17 @@ public class FlowMobileController {
      */
     @GetMapping("/home")
     @Operation(summary = "移动端首页聚合数据")
-    public Result<Map<String, Object>> home() {
-        String userId = SecurityContext.getUserId();
+    public BaseResponse<Map<String, Object>> home() {
+        String userId = AuthContext.getUserId();
         if (userId == null) {
-            return Result.ok(Map.of(
+            return BaseResponse.ok(Map.of(
                     "todoCount", 0,
                     "doneCount", 0,
                     "overdueCount", 0,
                     "todoList", List.of()
             ));
         }
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
 
         List<FlowRunTaskDO> todoTasks = taskService.listTodoByUser(userId, null, null, tenantId);
         int todoCount = todoTasks == null ? 0 : todoTasks.size();
@@ -98,12 +98,12 @@ public class FlowMobileController {
                         .toList();
 
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("todoCount", todoCount);
-        result.put("doneCount", doneCount);
-        result.put("overdueCount", overdueCount);
-        result.put("todoList", topTodos);
-        result.put("timestamp", System.currentTimeMillis());
-        return Result.ok(result);
+        BaseResponse.put("todoCount", todoCount);
+        BaseResponse.put("doneCount", doneCount);
+        BaseResponse.put("overdueCount", overdueCount);
+        BaseResponse.put("todoList", topTodos);
+        BaseResponse.put("timestamp", System.currentTimeMillis());
+        return BaseResponse.ok(result);
     }
 
     // ==================== 精简待办列表 ====================
@@ -117,17 +117,17 @@ public class FlowMobileController {
      */
     @GetMapping("/todo")
     @Operation(summary = "移动端待办列表")
-    public Result<List<MobileTodoVO>> todo(
+    public BaseResponse<List<MobileTodoVO>> todo(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size) {
-        String userId = SecurityContext.getUserId();
+        String userId = AuthContext.getUserId();
         if (userId == null) {
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
         List<FlowRunTaskDO> tasks = taskService.listTodoByUser(userId, null, null, tenantId);
         if (tasks == null || tasks.isEmpty()) {
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
         // 按优先级降序、创建时间升序排序
         List<FlowRunTaskDO> sorted = new ArrayList<>(tasks);
@@ -142,7 +142,7 @@ public class FlowMobileController {
         List<MobileTodoVO> result = sorted.subList(fromIndex, toIndex).stream()
                 .map(MobileTodoVO::from)
                 .toList();
-        return Result.ok(result);
+        return BaseResponse.ok(result);
     }
 
     // ==================== 精简已办列表 ====================
@@ -156,17 +156,17 @@ public class FlowMobileController {
      */
     @GetMapping("/done")
     @Operation(summary = "移动端已办列表")
-    public Result<List<MobileTodoVO>> done(
+    public BaseResponse<List<MobileTodoVO>> done(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(50) int size) {
-        String userId = SecurityContext.getUserId();
+        String userId = AuthContext.getUserId();
         if (userId == null) {
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
         List<FlowRunTaskDO> tasks = taskService.listDoneByAssignee(userId, tenantId);
         if (tasks == null || tasks.isEmpty()) {
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
         // 按完成时间降序
         List<FlowRunTaskDO> sorted = new ArrayList<>(tasks);
@@ -179,7 +179,7 @@ public class FlowMobileController {
         List<MobileTodoVO> result = sorted.subList(fromIndex, toIndex).stream()
                 .map(MobileTodoVO::from)
                 .toList();
-        return Result.ok(result);
+        return BaseResponse.ok(result);
     }
 
     // ==================== 精简任务详情 ====================
@@ -193,12 +193,12 @@ public class FlowMobileController {
     @GetMapping("/task/{taskId}")
     @Operation(summary = "移动端任务详情")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_VIEW)
-    public Result<MobileTaskDetailVO> taskDetail(@PathVariable String taskId) {
+    public BaseResponse<MobileTaskDetailVO> taskDetail(@PathVariable String taskId) {
         Map<String, Object> detail = workflowFacade.getTaskDetail(taskId);
         if (detail == null || detail.isEmpty()) {
-            return Result.ok(null);
+            return BaseResponse.ok(null);
         }
-        return Result.ok(MobileTaskDetailVO.from(detail));
+        return BaseResponse.ok(MobileTaskDetailVO.from(detail));
     }
 
     // ==================== 快速操作 ====================
@@ -214,15 +214,15 @@ public class FlowMobileController {
     @PostMapping("/task/{taskId}/quickPass")
     @Operation(summary = "移动端快速通过")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> quickPass(@PathVariable String taskId,
+    public BaseResponse<Void> quickPass(@PathVariable String taskId,
                                     @RequestParam(required = false) String comment) {
         FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
         dto.setTaskId(taskId);
         dto.setComment(comment);
-        dto.setUserId(SecurityContext.getUserId());
-        dto.setUserName(SecurityContext.getUsername());
+        dto.setUserId(AuthContext.getUserId());
+        dto.setUserName(AuthContext.getUsername());
         workflowFacade.completeTask(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -236,15 +236,15 @@ public class FlowMobileController {
     @PostMapping("/task/{taskId}/quickReject")
     @Operation(summary = "移动端快速驳回")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> quickReject(@PathVariable String taskId,
+    public BaseResponse<Void> quickReject(@PathVariable String taskId,
                                       @RequestParam(required = false) String comment) {
         FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
         dto.setTaskId(taskId);
         dto.setComment(comment);
-        dto.setUserId(SecurityContext.getUserId());
-        dto.setUserName(SecurityContext.getUsername());
+        dto.setUserId(AuthContext.getUserId());
+        dto.setUserName(AuthContext.getUsername());
         workflowFacade.rejectTask(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -258,10 +258,10 @@ public class FlowMobileController {
     @PostMapping("/task/batchPass")
     @Operation(summary = "移动端批量通过")
     @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
-    public Result<Void> batchPass(@RequestParam List<String> taskIds,
+    public BaseResponse<Void> batchPass(@RequestParam List<String> taskIds,
                                     @RequestParam(required = false) String comment) {
-        workflowFacade.batchPassTasks(taskIds, SecurityContext.getUserId(), comment);
-        return Result.ok();
+        workflowFacade.batchPassTasks(taskIds, AuthContext.getUserId(), comment);
+        return BaseResponse.ok();
     }
 
     // ==================== 精简审批轨迹 ====================
@@ -274,15 +274,15 @@ public class FlowMobileController {
      */
     @GetMapping("/instance/{instanceId}/timeline")
     @Operation(summary = "移动端审批轨迹")
-    public Result<List<MobileTimelineVO>> timeline(@PathVariable String instanceId) {
+    public BaseResponse<List<MobileTimelineVO>> timeline(@PathVariable String instanceId) {
         List<Map<String, Object>> timeline = workflowFacade.getTimeline(instanceId);
         if (timeline == null || timeline.isEmpty()) {
-            return Result.ok(List.of());
+            return BaseResponse.ok(List.of());
         }
         List<MobileTimelineVO> result = timeline.stream()
                 .map(MobileTimelineVO::from)
                 .toList();
-        return Result.ok(result);
+        return BaseResponse.ok(result);
     }
 
     // ==================== 移动端 VO ====================

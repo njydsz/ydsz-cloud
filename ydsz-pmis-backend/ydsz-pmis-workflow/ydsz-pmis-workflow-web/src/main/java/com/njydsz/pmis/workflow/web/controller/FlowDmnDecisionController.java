@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.web.controller.dmn;
 
-import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnDecisionDO;
 import com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnRuleDO;
 import com.njydsz.pmis.workflow.server.service.dmn.FlowDmnDecisionService;
@@ -33,63 +33,63 @@ public class FlowDmnDecisionController {
 
     @PostMapping("/decision")
     @Operation(summary = "创建决策表")
-    public Result<String> createDecision(@RequestBody CreateDecisionRequest request) {
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
+    public BaseResponse<String> createDecision(@RequestBody CreateDecisionRequest request) {
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
         request.getDecision().setTenantId(tenantId);
         String id = dmnDecisionService.createDecision(request.getDecision(), request.getRules());
-        return Result.ok(id);
+        return BaseResponse.ok(id);
     }
 
     @PutMapping("/decision/{decisionId}")
     @Operation(summary = "更新决策表（仅草稿状态）")
-    public Result<Void> updateDecision(@PathVariable String decisionId,
+    public BaseResponse<Void> updateDecision(@PathVariable String decisionId,
                                         @RequestBody CreateDecisionRequest request) {
-        request.getDecision().setTenantId(SecurityContext.getTenantIdOrDefault("1"));
+        request.getDecision().setTenantId(AuthContext.getTenantIdOrDefault("1"));
         dmnDecisionService.updateDecision(decisionId, request.getDecision(), request.getRules());
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     @PostMapping("/decision/{decisionId}/publish")
     @Operation(summary = "发布决策表")
-    public Result<Void> publish(@PathVariable String decisionId) {
+    public BaseResponse<Void> publish(@PathVariable String decisionId) {
         dmnDecisionService.publish(decisionId);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     @PostMapping("/decision/{decisionId}/deprecate")
     @Operation(summary = "停用决策表")
-    public Result<Void> deprecate(@PathVariable String decisionId) {
+    public BaseResponse<Void> deprecate(@PathVariable String decisionId) {
         dmnDecisionService.deprecate(decisionId);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     @GetMapping("/decision/{decisionId}")
     @Operation(summary = "查询决策表详情（含规则）")
-    public Result<Map<String, Object>> getDetail(@PathVariable String decisionId) {
-        return Result.ok(dmnDecisionService.getDetail(decisionId));
+    public BaseResponse<Map<String, Object>> getDetail(@PathVariable String decisionId) {
+        return BaseResponse.ok(dmnDecisionService.getDetail(decisionId));
     }
 
     @GetMapping("/decisions")
     @Operation(summary = "分页查询决策表列表")
-    public Result<List<FlowDmnDecisionDO>> listDecisions(
+    public BaseResponse<List<FlowDmnDecisionDO>> listDecisions(
             @RequestParam(required = false) String decisionCode) {
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(dmnDecisionService.listDecisions(decisionCode, tenantId));
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(dmnDecisionService.listDecisions(decisionCode, tenantId));
     }
 
     @PostMapping("/evaluate")
     @Operation(summary = "评估决策表")
-    public Result<Map<String, Object>> evaluate(@RequestBody EvaluateRequest request) {
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(dmnDecisionService.evaluate(
+    public BaseResponse<Map<String, Object>> evaluate(@RequestBody EvaluateRequest request) {
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(dmnDecisionService.evaluate(
                 request.getDecisionCode(), request.getVariables(), tenantId));
     }
 
     @PostMapping("/evaluateByNode")
     @Operation(summary = "根据流程+节点评估绑定的决策表")
-    public Result<Map<String, Object>> evaluateByNode(@RequestBody EvaluateByNodeRequest request) {
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(dmnDecisionService.evaluateByNode(
+    public BaseResponse<Map<String, Object>> evaluateByNode(@RequestBody EvaluateByNodeRequest request) {
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(dmnDecisionService.evaluateByNode(
                 request.getFlowCode(), request.getNodeCode(),
                 request.getVariables(), tenantId));
     }

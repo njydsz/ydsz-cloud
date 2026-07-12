@@ -4,9 +4,9 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.IdempotentExempt;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.domain.dto.definition.FlowDefinitionSimulateDTO;
 import com.njydsz.pmis.workflow.domain.dto.definition.FlowDeployProcessDTO;
 import com.njydsz.pmis.workflow.domain.entity.definition.FlowDefinitionDO;
@@ -59,9 +59,9 @@ public class FlowDefinitionController {
     @PostMapping("/definition/deploy")
     @Operation(summary = "部署流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
-    public Result<String> deploy(@Valid @RequestBody FlowDeployProcessDTO dto) {
+    public BaseResponse<String> deploy(@Valid @RequestBody FlowDeployProcessDTO dto) {
         String id = definitionService.deploy(dto);
-        return Result.ok(id);
+        return BaseResponse.ok(id);
     }
 
     /**
@@ -77,16 +77,16 @@ public class FlowDefinitionController {
     @PostMapping(value = "/definition/batchDeployZip", consumes = "multipart/form-data")
     @Operation(summary = "BPMN 部署包 .zip 批量导入")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
-    public Result<Map<String, Object>> batchDeployFromZip(
+    public BaseResponse<Map<String, Object>> batchDeployFromZip(
             @RequestParam("file")
             MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            return Result.fail("zip 文件不能为空");
+            return BaseResponse.fail("zip 文件不能为空");
         }
         try {
-            return Result.ok(definitionService.batchDeployFromZip(file.getBytes(), null));
+            return BaseResponse.ok(definitionService.batchDeployFromZip(file.getBytes(), null));
         } catch (IOException e) {
-            return Result.fail("读取 zip 文件失败: " + e.getMessage());
+            return BaseResponse.fail("读取 zip 文件失败: " + e.getMessage());
         }
     }
 
@@ -100,9 +100,9 @@ public class FlowDefinitionController {
     @PostMapping("/definition/{id}/publish")
     @Operation(summary = "发布流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-    public Result<Void> publish(@PathVariable String id) {
+    public BaseResponse<Void> publish(@PathVariable String id) {
         definitionService.publish(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -115,9 +115,9 @@ public class FlowDefinitionController {
     @PostMapping("/definition/{id}/deprecate")
     @Operation(summary = "废弃流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-    public Result<Void> deprecate(@PathVariable String id) {
+    public BaseResponse<Void> deprecate(@PathVariable String id) {
         definitionService.deprecate(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -130,10 +130,10 @@ public class FlowDefinitionController {
      */
     @GetMapping("/definition/code/{code}")
     @Operation(summary = "按编码查询已发布流程定义")
-    public Result<FlowDefinitionDO> getByCode(@PathVariable String code,
+    public BaseResponse<FlowDefinitionDO> getByCode(@PathVariable String code,
                                           @RequestParam(required = false) String version,
                                           @RequestParam(required = false) String tenantId) {
-        return Result.ok(definitionService.getPublished(code, version, tenantId));
+        return BaseResponse.ok(definitionService.getPublished(code, version, tenantId));
     }
 
     /**
@@ -147,11 +147,11 @@ public class FlowDefinitionController {
      */
     @GetMapping("/definition/page")
     @Operation(summary = "分页查询流程定义")
-    public Result<List<FlowDefinitionDO>> page(@RequestParam(defaultValue = "1") @Min(1) int pageNo,
+    public BaseResponse<List<FlowDefinitionDO>> page(@RequestParam(defaultValue = "1") @Min(1) int pageNo,
                                           @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
                                           @RequestParam(required = false) String category,
                                           @RequestParam(required = false) String flowCode) {
-        return Result.ok(definitionService.page(pageNo, pageSize, category, flowCode));
+        return BaseResponse.ok(definitionService.page(pageNo, pageSize, category, flowCode));
     }
 
     /**
@@ -162,8 +162,8 @@ public class FlowDefinitionController {
      */
     @GetMapping("/definition/{id}")
     @Operation(summary = "查询流程定义详情（含节点与跳转）")
-    public Result<Map<String, Object>> getDefinitionDetail(@PathVariable String id) {
-        return Result.ok(definitionService.getDetail(id));
+    public BaseResponse<Map<String, Object>> getDefinitionDetail(@PathVariable String id) {
+        return BaseResponse.ok(definitionService.getDetail(id));
     }
 
     /**
@@ -174,10 +174,10 @@ public class FlowDefinitionController {
      */
     @GetMapping("/definition/{id}/preview")
     @Operation(summary = "流程定义预览（只读）")
-    public Result<Map<String, Object>> getDefinitionPreview(@PathVariable String id) {
+    public BaseResponse<Map<String, Object>> getDefinitionPreview(@PathVariable String id) {
         Map<String, Object> detail = definitionService.getDetail(id);
         detail.put("readOnly", true);
-        return Result.ok(detail);
+        return BaseResponse.ok(detail);
     }
 
     /**
@@ -192,11 +192,11 @@ public class FlowDefinitionController {
     @PostMapping("/definition/{code}/switchVersion")
     @Operation(summary = "切换流程定义的激活版本")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-    public Result<Void> switchVersion(@PathVariable String code,
+    public BaseResponse<Void> switchVersion(@PathVariable String code,
                                       @RequestParam String definitionId,
                                       @RequestParam(required = false) String tenantId) {
         definitionService.switchActiveVersion(code, definitionId, tenantId);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -209,9 +209,9 @@ public class FlowDefinitionController {
     @PostMapping("/definition/{id}/enable")
     @Operation(summary = "启用流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-    public Result<Void> enable(@PathVariable String id) {
+    public BaseResponse<Void> enable(@PathVariable String id) {
         definitionService.enable(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -224,9 +224,9 @@ public class FlowDefinitionController {
     @PostMapping("/definition/{id}/disable")
     @Operation(summary = "停用流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-    public Result<Void> disable(@PathVariable String id) {
+    public BaseResponse<Void> disable(@PathVariable String id) {
         definitionService.disable(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -241,11 +241,11 @@ public class FlowDefinitionController {
     @PostMapping("/definition/{definitionId}/node/{nodeCode}/coordinate")
     @Operation(summary = "更新流程节点坐标")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-    public Result<Void> updateNodeCoordinate(@PathVariable String definitionId,
+    public BaseResponse<Void> updateNodeCoordinate(@PathVariable String definitionId,
                                              @PathVariable String nodeCode,
                                              @RequestBody String coordinate) {
         definitionService.updateNodeCoordinate(definitionId, nodeCode, coordinate);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -259,10 +259,10 @@ public class FlowDefinitionController {
     @PutMapping("/definition/{id}")
     @Operation(summary = "编辑未发布的流程定义草稿")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-    public Result<Void> updateDefinition(@PathVariable String id,
+    public BaseResponse<Void> updateDefinition(@PathVariable String id,
                                          @Valid @RequestBody FlowDeployProcessDTO dto) {
         definitionService.updateDefinition(id, dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -273,8 +273,8 @@ public class FlowDefinitionController {
      */
     @GetMapping("/definition/{id}/export")
     @Operation(summary = "导出流程定义为 JSON")
-    public Result<String> exportDefinition(@PathVariable String id) {
-        return Result.ok(definitionService.exportDefinition(id));
+    public BaseResponse<String> exportDefinition(@PathVariable String id) {
+        return BaseResponse.ok(definitionService.exportDefinition(id));
     }
 
     /**
@@ -288,10 +288,10 @@ public class FlowDefinitionController {
     @PostMapping("/definition/import")
     @Operation(summary = "从 JSON 导入流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_IMPORT)
-    public Result<String> importDefinition(@RequestBody String json,
+    public BaseResponse<String> importDefinition(@RequestBody String json,
                                          @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(definitionService.importDefinition(json, tid));
+        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(definitionService.importDefinition(json, tid));
     }
 
     /**
@@ -302,8 +302,8 @@ public class FlowDefinitionController {
      */
     @GetMapping("/definition/{id}/versions")
     @Operation(summary = "列出流程定义的所有历史版本")
-    public Result<List<Map<String, Object>>> listVersions(@PathVariable String id) {
-        return Result.ok(definitionService.listVersions(id));
+    public BaseResponse<List<Map<String, Object>>> listVersions(@PathVariable String id) {
+        return BaseResponse.ok(definitionService.listVersions(id));
     }
 
     /**
@@ -316,10 +316,10 @@ public class FlowDefinitionController {
      */
     @GetMapping("/definition/{id}/diff")
     @Operation(summary = "流程定义版本差异对比")
-    public Result<Map<String, Object>> diffVersions(@PathVariable String id,
+    public BaseResponse<Map<String, Object>> diffVersions(@PathVariable String id,
                                                      @RequestParam Integer v1,
                                                      @RequestParam Integer v2) {
-        return Result.ok(definitionService.diffVersions(id, v1, v2));
+        return BaseResponse.ok(definitionService.diffVersions(id, v1, v2));
     }
 
     /**
@@ -334,9 +334,9 @@ public class FlowDefinitionController {
     @PostMapping("/definition/simulate")
     @Operation(summary = "流程模拟运行")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
-    public Result<List<Map<String, Object>>> simulate(@Valid @RequestBody FlowDefinitionSimulateDTO dto) {
-        String tid = SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(instanceService.simulate(dto.getFlowCode(),
+    public BaseResponse<List<Map<String, Object>>> simulate(@Valid @RequestBody FlowDefinitionSimulateDTO dto) {
+        String tid = AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(instanceService.simulate(dto.getFlowCode(),
                 String.valueOf(dto.getVersion()), dto.getVariables(), tid));
     }
 
@@ -360,10 +360,10 @@ public class FlowDefinitionController {
     @GetMapping("/definition/migrationImpact")
     @Operation(summary = "变更影响分析报告（评估版本升级对在途实例的影响）")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-    public Result<Map<String, Object>> analyzeMigrationImpact(
+    public BaseResponse<Map<String, Object>> analyzeMigrationImpact(
             @RequestParam String oldDefinitionId,
             @RequestParam String newDefinitionId) {
-        return Result.ok(definitionService.analyzeMigrationImpact(oldDefinitionId, newDefinitionId));
+        return BaseResponse.ok(definitionService.analyzeMigrationImpact(oldDefinitionId, newDefinitionId));
     }
 
     /**
@@ -378,9 +378,9 @@ public class FlowDefinitionController {
     @PostMapping("/definition/rollback")
     @Operation(summary = "一键回滚流程定义到上一版本")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
-    public Result<Map<String, Object>> rollbackDefinition(
+    public BaseResponse<Map<String, Object>> rollbackDefinition(
             @RequestParam String flowCode) {
-        String tenantId = SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(definitionService.rollbackDefinition(flowCode, tenantId));
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(definitionService.rollbackDefinition(flowCode, tenantId));
     }
 }

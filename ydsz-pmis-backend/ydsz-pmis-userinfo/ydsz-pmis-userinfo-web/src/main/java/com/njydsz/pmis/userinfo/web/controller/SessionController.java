@@ -4,9 +4,9 @@ import com.njydsz.pmis.common.annotation.IdempotentExempt;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.userinfo.domain.entity.user.UserSessionDO;
 import com.njydsz.pmis.userinfo.infra.mapper.user.UserSessionMapper;
 import com.njydsz.pmis.userinfo.server.service.auth.SessionService;
@@ -53,9 +53,9 @@ public class SessionController {
      */
     @Operation(summary = "我的活跃会话")
     @GetMapping("/active")
-    public Result<List<UserSessionDO>> active() {
-        String userId = SecurityContext.getUserId();
-        return Result.ok(sessionService.listActive(userId));
+    public BaseResponse<List<UserSessionDO>> active() {
+        String userId = AuthContext.getUserId();
+        return BaseResponse.ok(sessionService.listActive(userId));
     }
 
     /**
@@ -67,9 +67,9 @@ public class SessionController {
     @Operation(summary = "下线指定会话")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @DeleteMapping("/{sessionId}")
-    public Result<Void> invalidate(@PathVariable String sessionId) {
+    public BaseResponse<Void> invalidate(@PathVariable String sessionId) {
         sessionService.invalidate(sessionId, "用户主动下线");
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -80,9 +80,9 @@ public class SessionController {
     @Operation(summary = "下线其他会话（同账号仅保留当前）")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @DeleteMapping("/others")
-    public Result<Integer> kickOthers() {
-        String userId = SecurityContext.getUserId();
-        return Result.ok(sessionService.kickOthers(userId, ""));
+    public BaseResponse<Integer> kickOthers() {
+        String userId = AuthContext.getUserId();
+        return BaseResponse.ok(sessionService.kickOthers(userId, ""));
     }
 
     /**
@@ -97,7 +97,7 @@ public class SessionController {
      */
     @Operation(summary = "管理员分页查询所有会话（按用户/状态/IP 过滤）")
     @GetMapping("/admin/page")
-    public Result<PageResult<UserSessionDO>> adminPage(
+    public BaseResponse<PageResponse<UserSessionDO>> adminPage(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String userId,
@@ -109,7 +109,7 @@ public class SessionController {
         if (StringUtils.hasText(status)) w.eq(UserSessionDO::getStatus, status);
         if (StringUtils.hasText(clientIp)) w.like(UserSessionDO::getClientIp, clientIp);
         w.orderByDesc(UserSessionDO::getLoginAt);
-        return Result.ok(PageResult.ofPage(sessionMapper.selectPage(p, w)));
+        return BaseResponse.ok(PageResponse.ofPage(sessionMapper.selectPage(p, w)));
     }
 
     /**
@@ -121,8 +121,8 @@ public class SessionController {
     @Operation(summary = "管理员强制下线任意会话")
     @IdempotentExempt("认证/会话/2FA 相关接口，无需幂等")
     @DeleteMapping("/admin/{sessionId}")
-    public Result<Void> adminKick(@PathVariable String sessionId) {
+    public BaseResponse<Void> adminKick(@PathVariable String sessionId) {
         sessionService.invalidate(sessionId, "管理员强制下线");
-        return Result.ok();
+        return BaseResponse.ok();
     }
 }

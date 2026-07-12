@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.server.service.impl;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.config.ThresholdProvider;
 import com.njydsz.pmis.common.datasource.DataSourceConstants;
 import com.njydsz.pmis.project.domain.entity.EvmMeasureDO;
@@ -453,7 +453,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
      */
     private BigDecimal fetchUserBenchIdleCost() {
         try {
-            Result<Map<String, Object>> resp = benchResourceClient.getBenchDashboard();
+            BaseResponse<Map<String, Object>> resp = benchResourceClient.getBenchDashboard();
             if (resp == null || resp.getData() == null) {
                 return ZERO;
             }
@@ -506,7 +506,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         // 跨模块真实聚合：调用 user 服务获取资源分配
         List<Map<String, Object>> assignments;
         try {
-            Result<List<Map<String, Object>>> resp = benchResourceClient.listResourceAssignmentsByInitiation(initiationId);
+            BaseResponse<List<Map<String, Object>>> resp = benchResourceClient.listResourceAssignmentsByInitiation(initiationId);
             assignments = (resp == null || resp.getData() == null) ? List.of() : resp.getData();
         } catch (Exception e) {
             log.error("[AdvancedReport] 资源分配 Feign 调用失败 initiationId={} err={}",
@@ -732,7 +732,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         // 2) 加载 ProfitSnapshot 全量（跨域 Feign 调用财务服务）
         List<Map<String, Object>> snapRows = new ArrayList<>();
         try {
-            Result<List<Map<String, Object>>> resp = financeDataClient.profitSnapshotSummaryAll();
+            BaseResponse<List<Map<String, Object>>> resp = financeDataClient.profitSnapshotSummaryAll();
             if (resp != null && resp.getData() != null) {
                 snapRows = resp.getData();
             }

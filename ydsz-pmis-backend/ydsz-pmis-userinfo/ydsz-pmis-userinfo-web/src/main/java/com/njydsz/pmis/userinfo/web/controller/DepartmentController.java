@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.annotation.RateLimit;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.org.DepartmentFormDTO;
 import com.njydsz.pmis.userinfo.domain.entity.org.DepartmentDO;
 import com.njydsz.pmis.userinfo.server.service.org.DepartmentService;
@@ -44,8 +44,8 @@ public class DepartmentController {
     @Operation(summary = "获取部门树")
     @RateLimit(key = "dept", qps = 30, windowSeconds = 60)
     @GetMapping("/tree")
-    public Result<List<DepartmentTreeVO>> tree() {
-        return Result.ok(departmentService.tree());
+    public BaseResponse<List<DepartmentTreeVO>> tree() {
+        return BaseResponse.ok(departmentService.tree());
     }
 
     /**
@@ -56,8 +56,8 @@ public class DepartmentController {
     @Operation(summary = "获取所有部门（扁平）")
     @RateLimit(key = "dept", qps = 30, windowSeconds = 60)
     @GetMapping
-    public Result<List<DepartmentDO>> list() {
-        return Result.ok(departmentService.listAllEnabled());
+    public BaseResponse<List<DepartmentDO>> list() {
+        return BaseResponse.ok(departmentService.listAllEnabled());
     }
 
     /**
@@ -69,8 +69,8 @@ public class DepartmentController {
     @Operation(summary = "部门详情")
     @RateLimit(key = "dept", qps = 30, windowSeconds = 60)
     @GetMapping("/{id}")
-    public Result<DepartmentDO> get(@Parameter(description = "部门ID") @PathVariable String id) {
-        return Result.ok(departmentService.getById(id));
+    public BaseResponse<DepartmentDO> get(@Parameter(description = "部门ID") @PathVariable String id) {
+        return BaseResponse.ok(departmentService.getById(id));
     }
 
     /**
@@ -84,8 +84,8 @@ public class DepartmentController {
     @OperationLog(module = "组织架构", action = "创建部门", bizType = "DEPARTMENT")
     @Idempotent(key = "department:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody DepartmentFormDTO dto) {
-        return Result.ok(departmentService.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody DepartmentFormDTO dto) {
+        return BaseResponse.ok(departmentService.create(dto));
     }
 
     /**
@@ -99,9 +99,9 @@ public class DepartmentController {
     @OperationLog(module = "组织架构", action = "更新部门", bizType = "DEPARTMENT")
     @Idempotent(key = "department:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
-    public Result<Void> update(@Valid @RequestBody DepartmentFormDTO dto) {
+    public BaseResponse<Void> update(@Valid @RequestBody DepartmentFormDTO dto) {
         departmentService.update(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -115,8 +115,8 @@ public class DepartmentController {
     @OperationLog(module = "组织架构", action = "删除部门", bizType = "DEPARTMENT")
     @Idempotent(key = "department:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@Parameter(description = "部门ID") @PathVariable String id) {
+    public BaseResponse<Void> delete(@Parameter(description = "部门ID") @PathVariable String id) {
         departmentService.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 }

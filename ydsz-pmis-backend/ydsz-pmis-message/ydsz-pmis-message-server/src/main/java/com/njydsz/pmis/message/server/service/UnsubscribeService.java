@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.server.service.config;
 
-import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.message.domain.dto.config.UnsubscribeQueryDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgSubscriptionDO;
 import com.njydsz.pmis.message.server.token.UnsubscribeTokenPayload;
@@ -52,7 +52,7 @@ public interface UnsubscribeService {
      * @param query 查询参数
      * @return 分页结果，仅包含 status=UNSUBSCRIBED 的记录
      */
-    PageResult<MsgSubscriptionDO> pageUnsubscribed(UnsubscribeQueryDTO query);
+    PageResponse<MsgSubscriptionDO> pageUnsubscribed(UnsubscribeQueryDTO query);
 
     /**
      * 恢复订阅（管理后台 / 用户自助）。

@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.server.service.impl.definition;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.server.engine.FlowDefinitionCacheService;
@@ -58,7 +58,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
     public void saveCustomButtons(String definitionId, String nodeCode, List<Map<String, Object>> buttons) {
         FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_node_not_found", nodeCode);
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.workflow.msg_node_not_found", nodeCode);
         }
         // 读取现有 ext JSON
         JSONObject extJson = StringUtils.hasText(node.getExt())
@@ -84,7 +84,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                                               Map<String, Object> variables) {
         FlowRunTaskDO task = taskMapper.selectById(taskId);
         if (task == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_6541ab08", taskId);
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", taskId);
         }
 
         // 获取节点自定义按钮
@@ -92,7 +92,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
         Map<String, Object> button = buttons.stream()
                 .filter(b -> buttonCode.equals(String.valueOf(b.get("code"))))
                 .findFirst()
-                .orElseThrow(() -> new BizException(BizErrorCode.BAD_REQUEST,
+                .orElseThrow(() -> new BizException(StandardResultCode.BAD_REQUEST,
                         "error.workflow.msg_button_not_found", buttonCode));
 
         String action = String.valueOf(button.getOrDefault("action", "CUSTOM")).toUpperCase();
@@ -100,9 +100,9 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                 ? String.valueOf(button.get("targetNodeCode")) : null;
 
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("taskId", taskId);
-        result.put("buttonCode", buttonCode);
-        result.put("action", action);
+        BaseResponse.put("taskId", taskId);
+        BaseResponse.put("buttonCode", buttonCode);
+        BaseResponse.put("action", action);
 
         switch (action) {
             case "PASS" -> {
@@ -112,7 +112,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                 passDto.setComment(comment);
                 passDto.setVariables(variables);
                 taskService.pass(passDto);
-                result.put("result", "PASSED");
+                BaseResponse.put("result", "PASSED");
             }
             case "REJECT" -> {
                 FlowTaskOperateDTO rejectDto = new FlowTaskOperateDTO();
@@ -122,8 +122,8 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                 rejectDto.setTargetNodeCode(targetNodeCode);
                 rejectDto.setVariables(variables);
                 taskService.reject(rejectDto);
-                result.put("result", "REJECTED");
-                result.put("targetNodeCode", targetNodeCode);
+                BaseResponse.put("result", "REJECTED");
+                BaseResponse.put("targetNodeCode", targetNodeCode);
             }
             case "TRANSFER" -> {
                 String targetUserId = variables != null ? String.valueOf(variables.get("targetUserId")) : null;
@@ -136,9 +136,9 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                     transferDto.setTargetUserId(targetUserId);
                     transferDto.setTargetUserName(targetUserName);
                     taskService.transfer(transferDto);
-                    result.put("result", "TRANSFERRED");
+                    BaseResponse.put("result", "TRANSFERRED");
                 } else {
-                    throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_transfer_target_required");
+                    throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_transfer_target_required");
                 }
             }
             case "DELEGATE" -> {
@@ -151,19 +151,19 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                     delegateDto.setTargetUserId(delegateUserId);
                     delegateDto.setTargetUserName(delegateUserName);
                     taskService.delegate(delegateDto);
-                    result.put("result", "DELEGATED");
+                    BaseResponse.put("result", "DELEGATED");
                 } else {
-                    throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_delegate_target_required");
+                    throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_delegate_target_required");
                 }
             }
             case "CUSTOM" -> {
                 // 自定义回调：由前端或事件监听器处理
-                result.put("result", "CUSTOM");
-                result.put("callbackUrl", button.get("callbackUrl"));
+                BaseResponse.put("result", "CUSTOM");
+                BaseResponse.put("callbackUrl", button.get("callbackUrl"));
                 log.info("[CustomButton] 自定义按钮操作: taskId={} buttonCode={} callbackUrl={}",
                         taskId, buttonCode, button.get("callbackUrl"));
             }
-            default -> throw new BizException(BizErrorCode.BAD_REQUEST,
+            default -> throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.workflow.msg_unknown_button_action", action);
         }
 
@@ -192,11 +192,11 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
             if (buttons instanceof List<?> list) {
                 for (Object item : list) {
                     if (item instanceof Map<?, ?> map) {
-                        result.add((Map<String, Object>) map);
+                        BaseResponse.add((Map<String, Object>) map);
                     }
                 }
             }
-            result.sort(Comparator.comparingInt(b ->
+            BaseResponse.sort(Comparator.comparingInt(b ->
                     b.get("sortNum") == null ? 0 : ((Number) b.get("sortNum")).intValue()));
             return result;
         } catch (Exception e) {

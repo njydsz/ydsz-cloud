@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.dmn;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnDecisionDO;
@@ -84,10 +84,10 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
     public void updateDecision(String decisionId, FlowDmnDecisionDO decision, List<FlowDmnRuleDO> rules) {
         FlowDmnDecisionDO existing = decisionMapper.selectById(decisionId);
         if (existing == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "决策表不存在: " + decisionId);
+            throw new BizException(StandardResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
         }
         if (!"DRAFT".equals(existing.getStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "仅草稿状态可编辑，当前状态: " + existing.getStatus());
         }
         decision.setId(decisionId);
@@ -117,7 +117,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
     public void publish(String decisionId) {
         FlowDmnDecisionDO existing = decisionMapper.selectById(decisionId);
         if (existing == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "决策表不存在: " + decisionId);
+            throw new BizException(StandardResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
         }
         existing.setStatus("PUBLISHED");
         existing.setDecisionVersion(
@@ -130,7 +130,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
     public void deprecate(String decisionId) {
         FlowDmnDecisionDO existing = decisionMapper.selectById(decisionId);
         if (existing == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "决策表不存在: " + decisionId);
+            throw new BizException(StandardResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
         }
         existing.setStatus("DEPRECATED");
         decisionMapper.updateById(existing);
@@ -141,12 +141,12 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
     public Map<String, Object> getDetail(String decisionId) {
         FlowDmnDecisionDO decision = decisionMapper.selectById(decisionId);
         if (decision == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "决策表不存在: " + decisionId);
+            throw new BizException(StandardResultCode.NOT_FOUND, "决策表不存在: " + decisionId);
         }
         List<FlowDmnRuleDO> rules = ruleMapper.selectEnabledByDecisionId(decisionId);
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("decision", decision);
-        result.put("rules", rules);
+        BaseResponse.put("decision", decision);
+        BaseResponse.put("rules", rules);
         return result;
     }
 
@@ -161,7 +161,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
         String tid = tenantId != null ? tenantId : "1";
         FlowDmnDecisionDO decision = decisionMapper.selectPublishedByCode(decisionCode, tid);
         if (decision == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND,
+            throw new BizException(StandardResultCode.NOT_FOUND,
                     "已发布决策表不存在: " + decisionCode);
         }
         return doEvaluate(decision, variables);
@@ -209,7 +209,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
                 if ("ANY".equals(hitPolicy) && matchedOutputs.size() > 1) {
                     // ANY 策略：校验所有命中规则输出一致
                     if (!Objects.equals(matchedOutputs.get(0), output)) {
-                        throw new BizException(BizErrorCode.INTERNAL_ERROR,
+                        throw new BizException(StandardResultCode.INTERNAL_ERROR,
                                 "DMN ANY 策略校验失败: 多条命中规则输出不一致");
                     }
                 }
@@ -368,10 +368,10 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
 
     private void validateDecision(FlowDmnDecisionDO decision) {
         if (!StringUtils.hasText(decision.getDecisionCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "决策表编码不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "决策表编码不能为空");
         }
         if (!StringUtils.hasText(decision.getDecisionName())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "决策表名称不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "决策表名称不能为空");
         }
     }
 
@@ -388,7 +388,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
             List<Map<String, Object>> result = new ArrayList<>();
             for (Object item : list) {
                 if (item instanceof Map<?, ?> m) {
-                    result.add((Map<String, Object>) m);
+                    BaseResponse.add((Map<String, Object>) m);
                 }
             }
             return result;
@@ -410,7 +410,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
             }
             List<String> result = new ArrayList<>();
             for (Object item : list) {
-                result.add(item == null ? null : String.valueOf(item));
+                BaseResponse.add(item == null ? null : String.valueOf(item));
             }
             return result;
         } catch (Exception e) {
@@ -422,7 +422,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
             String[] parts = json.split(",");
             List<String> result = new ArrayList<>();
             for (String p : parts) {
-                result.add(p.trim());
+                BaseResponse.add(p.trim());
             }
             return result;
         }

@@ -1,8 +1,8 @@
 package com.njydsz.pmis.agent.api.fallback;
 import com.njydsz.pmis.agent.api.client.AgentClient;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -24,7 +24,7 @@ public class AgentClientFallbackFactory implements FallbackFactory<AgentClient> 
         log.warn("[AgentClient] Feign fallback triggered: {}", cause.getMessage());
         return body -> {
             // 返回一个标准的"服务降级"占位响应
-            return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+            return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
         };
     }
 }

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.userinfo.api.fallback;
 import com.njydsz.pmis.userinfo.api.client.BenchResourceClient;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -40,17 +40,17 @@ public class BenchResourceClientFallback implements FallbackFactory<BenchResourc
                 cause == null ? "unknown" : cause.toString());
         return new BenchResourceClient() {
             @Override
-            public Result<Map<String, Object>> getBenchDashboard() {
+            public BaseResponse<Map<String, Object>> getBenchDashboard() {
                 Map<String, Object> data = new HashMap<>();
                 data.put("source", "DOWN");
                 data.put("activePools", Collections.emptyList());
                 data.put("totalIdleCost", BigDecimal.ZERO);
-                return Result.ok(data);
+                return BaseResponse.ok(data);
             }
 
             @Override
-            public Result<List<Map<String, Object>>> listResourceAssignmentsByInitiation(String initiationId) {
-                return Result.ok(Collections.emptyList());
+            public BaseResponse<List<Map<String, Object>>> listResourceAssignmentsByInitiation(String initiationId) {
+                return BaseResponse.ok(Collections.emptyList());
             }
         };
     }

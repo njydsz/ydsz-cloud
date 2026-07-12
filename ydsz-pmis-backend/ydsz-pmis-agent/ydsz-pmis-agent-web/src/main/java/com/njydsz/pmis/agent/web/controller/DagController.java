@@ -9,8 +9,8 @@ import com.njydsz.pmis.agent.server.orchestration.dag.DagDefinition;
 import com.njydsz.pmis.agent.server.orchestration.dag.DagExecutionResult;
 import com.njydsz.pmis.agent.server.service.orchestration.DagService;
 import com.njydsz.pmis.agent.server.service.agent.ValidationResult;
-import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -64,8 +64,8 @@ public class DagController {
     @Operation(summary = "创建 DAG 定义")
     @Idempotent(key = "dag:createDefinition", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<DagDefinitionDO> createDefinition(@Valid @RequestBody DagDefinition dag) {
-        return Result.ok(dagService.createDefinition(dag));
+    public BaseResponse<DagDefinitionDO> createDefinition(@Valid @RequestBody DagDefinition dag) {
+        return BaseResponse.ok(dagService.createDefinition(dag));
     }
 
     /**
@@ -76,8 +76,8 @@ public class DagController {
      */
     @Operation(summary = "DAG 定义详情")
     @GetMapping("/{id}")
-    public Result<DagDefinitionDO> getDefinition(@PathVariable String id) {
-        return Result.ok(dagService.getDefinition(id));
+    public BaseResponse<DagDefinitionDO> getDefinition(@PathVariable String id) {
+        return BaseResponse.ok(dagService.getDefinition(id));
     }
 
     /**
@@ -90,11 +90,11 @@ public class DagController {
      */
     @Operation(summary = "分页查询 DAG 定义")
     @GetMapping("/page")
-    public Result<PageResult<DagDefinitionDO>> pageDefinitions(
+    public BaseResponse<PageResponse<DagDefinitionDO>> pageDefinitions(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) int size,
             @RequestParam(required = false) String tenantId) {
-        return Result.ok(dagService.pageDefinitions(page, size, tenantId));
+        return BaseResponse.ok(dagService.pageDefinitions(page, size, tenantId));
     }
 
     /**
@@ -107,11 +107,11 @@ public class DagController {
     @Operation(summary = "执行 DAG")
     @Idempotent(key = "dag:execute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/execute")
-    public Result<DagExecutionResult> execute(
+    public BaseResponse<DagExecutionResult> execute(
             @PathVariable("id") @NotBlank String definitionId,
             @RequestBody(required = false) ExecuteRequest req) {
         Map<String, Object> inputs = req != null ? req.getInputs() : null;
-        return Result.ok(dagService.execute(definitionId, inputs));
+        return BaseResponse.ok(dagService.execute(definitionId, inputs));
     }
 
     /**
@@ -124,11 +124,11 @@ public class DagController {
      */
     @Operation(summary = "DAG 执行历史")
     @GetMapping("/{id}/instances")
-    public Result<PageResult<DagInstanceDO>> pageInstances(
+    public BaseResponse<PageResponse<DagInstanceDO>> pageInstances(
             @PathVariable("id") @NotBlank String definitionId,
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) int size) {
-        return Result.ok(dagService.pageInstances(definitionId, page, size));
+        return BaseResponse.ok(dagService.pageInstances(definitionId, page, size));
     }
 
     /**
@@ -139,8 +139,8 @@ public class DagController {
      */
     @Operation(summary = "DAG 实例详情")
     @GetMapping("/instance/{instanceId}")
-    public Result<DagInstanceDO> getInstance(@PathVariable String instanceId) {
-        return Result.ok(dagService.getInstance(instanceId));
+    public BaseResponse<DagInstanceDO> getInstance(@PathVariable String instanceId) {
+        return BaseResponse.ok(dagService.getInstance(instanceId));
     }
 
     /**
@@ -151,8 +151,8 @@ public class DagController {
      */
     @Operation(summary = "节点执行明细")
     @GetMapping("/instance/{instanceId}/nodes")
-    public Result<List<DagNodeInstanceDO>> listNodeInstances(@PathVariable String instanceId) {
-        return Result.ok(dagService.listNodeInstances(instanceId));
+    public BaseResponse<List<DagNodeInstanceDO>> listNodeInstances(@PathVariable String instanceId) {
+        return BaseResponse.ok(dagService.listNodeInstances(instanceId));
     }
 
     /**
@@ -176,10 +176,10 @@ public class DagController {
     @Operation(summary = "更新 DAG 定义")
     @Idempotent(key = "dag:updateDefinition", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public Result<DagDefinitionDO> updateDefinition(
+    public BaseResponse<DagDefinitionDO> updateDefinition(
             @PathVariable String id,
             @Valid @RequestBody DagDefinition dag) {
-        return Result.ok(dagService.updateDefinition(id, dag));
+        return BaseResponse.ok(dagService.updateDefinition(id, dag));
     }
 
     /**
@@ -191,9 +191,9 @@ public class DagController {
     @Operation(summary = "删除 DAG 定义")
     @Idempotent(key = "dag:deleteDefinition", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> deleteDefinition(@PathVariable String id) {
+    public BaseResponse<Void> deleteDefinition(@PathVariable String id) {
         dagService.deleteDefinition(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -206,10 +206,10 @@ public class DagController {
     @Operation(summary = "启用/禁用 DAG 定义")
     @Idempotent(key = "dag:toggleEnabled", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/toggle")
-    public Result<DagDefinitionDO> toggleEnabled(
+    public BaseResponse<DagDefinitionDO> toggleEnabled(
             @PathVariable String id,
             @RequestParam boolean enabled) {
-        return Result.ok(dagService.toggleEnabled(id, enabled));
+        return BaseResponse.ok(dagService.toggleEnabled(id, enabled));
     }
 
     /**
@@ -221,8 +221,8 @@ public class DagController {
     @Operation(summary = "验证 DAG 定义结构")
     @Idempotent(key = "dag:validateDefinition", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/validate")
-    public Result<ValidationResult> validateDefinition(@Valid @RequestBody DagDefinition dag) {
-        return Result.ok(dagService.validateDefinition(dag));
+    public BaseResponse<ValidationResult> validateDefinition(@Valid @RequestBody DagDefinition dag) {
+        return BaseResponse.ok(dagService.validateDefinition(dag));
     }
 
     /**
@@ -234,9 +234,9 @@ public class DagController {
     @Operation(summary = "调试运行 DAG")
     @Idempotent(key = "dag:debugExecute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/debug")
-    public Result<DagExecutionResult> debugExecute(
+    public BaseResponse<DagExecutionResult> debugExecute(
             @Valid @RequestBody DebugRequest req) {
-        return Result.ok(dagService.executeDirect(req.getDag(), req.getInputs()));
+        return BaseResponse.ok(dagService.executeDirect(req.getDag(), req.getInputs()));
     }
 
     /**

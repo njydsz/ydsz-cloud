@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import com.njydsz.pmis.common.redis.lock.DistributedLock;
-import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
@@ -145,7 +145,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public PageResult<FlowRunTaskDO> listTodoByAssigneePage(String assigneeId, String tenantId,
+    public PageResponse<FlowRunTaskDO> listTodoByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         return queryService.listTodoByAssigneePage(assigneeId, tenantId, page, size);
     }
@@ -156,7 +156,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public PageResult<FlowRunTaskDO> listDoneByAssigneePage(String assigneeId, String tenantId,
+    public PageResponse<FlowRunTaskDO> listDoneByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         return queryService.listDoneByAssigneePage(assigneeId, tenantId, page, size);
     }
@@ -297,7 +297,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public PageResult<FlowRunTaskDO> listDoneByAssigneePageMulti(String assigneeId, String businessType,
+    public PageResponse<FlowRunTaskDO> listDoneByAssigneePageMulti(String assigneeId, String businessType,
                                                                String flowCode, LocalDateTime startTime,
                                                                LocalDateTime endTime, String tenantId,
                                                                int page, int size) {

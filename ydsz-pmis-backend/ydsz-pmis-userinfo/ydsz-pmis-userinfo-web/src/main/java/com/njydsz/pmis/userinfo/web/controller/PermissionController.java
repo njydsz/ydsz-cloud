@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.permission.PermissionFormDTO;
 import com.njydsz.pmis.userinfo.domain.entity.permission.PermissionDO;
 import com.njydsz.pmis.userinfo.server.service.permission.PermissionService;
@@ -42,8 +42,8 @@ public class PermissionController {
      */
     @Operation(summary = "查询所有权限")
     @GetMapping
-    public Result<List<PermissionDO>> list() {
-        return Result.ok(permissionService.listAllEnabled());
+    public BaseResponse<List<PermissionDO>> list() {
+        return BaseResponse.ok(permissionService.listAllEnabled());
     }
 
     /**
@@ -54,8 +54,8 @@ public class PermissionController {
      */
     @Operation(summary = "查询当前用户权限编码")
     @GetMapping("/mine")
-    public Result<List<String>> mine(@RequestHeader("X-User-Id") String userId) {
-        return Result.ok(permissionService.listPermCodesByUserId(userId));
+    public BaseResponse<List<String>> mine(@RequestHeader("X-User-Id") String userId) {
+        return BaseResponse.ok(permissionService.listPermCodesByUserId(userId));
     }
 
     /**
@@ -66,8 +66,8 @@ public class PermissionController {
      */
     @Operation(summary = "查询当前用户菜单树")
     @GetMapping("/menuTree")
-    public Result<List<MenuTreeVO>> menuTree(@RequestHeader("X-User-Id") String userId) {
-        return Result.ok(permissionService.listMenuTreeByUserId(userId));
+    public BaseResponse<List<MenuTreeVO>> menuTree(@RequestHeader("X-User-Id") String userId) {
+        return BaseResponse.ok(permissionService.listMenuTreeByUserId(userId));
     }
 
     /**
@@ -77,8 +77,8 @@ public class PermissionController {
      */
     @Operation(summary = "查询所有权限(构建树)")
     @GetMapping("/tree")
-    public Result<List<MenuTreeVO>> tree() {
-        return Result.ok(permissionService.listAllMenuTree());
+    public BaseResponse<List<MenuTreeVO>> tree() {
+        return BaseResponse.ok(permissionService.listAllMenuTree());
     }
 
     /**
@@ -89,8 +89,8 @@ public class PermissionController {
      */
     @Operation(summary = "查询角色的权限")
     @GetMapping("/byRole/{roleId}")
-    public Result<List<PermissionDO>> listByRole(@Parameter(description = "角色ID") @PathVariable String roleId) {
-        return Result.ok(permissionService.listByRoleId(roleId));
+    public BaseResponse<List<PermissionDO>> listByRole(@Parameter(description = "角色ID") @PathVariable String roleId) {
+        return BaseResponse.ok(permissionService.listByRoleId(roleId));
     }
 
     /**
@@ -101,8 +101,8 @@ public class PermissionController {
      */
     @Operation(summary = "权限详情")
     @GetMapping("/{id}")
-    public Result<PermissionDO> get(@Parameter(description = "权限ID") @PathVariable String id) {
-        return Result.ok(permissionService.getById(id));
+    public BaseResponse<PermissionDO> get(@Parameter(description = "权限ID") @PathVariable String id) {
+        return BaseResponse.ok(permissionService.getById(id));
     }
 
     /**
@@ -116,8 +116,8 @@ public class PermissionController {
     @OperationLog(module = "权限管理", action = "创建权限", bizType = "PERM")
     @Idempotent(key = "permission:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody PermissionFormDTO dto) {
-        return Result.ok(permissionService.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody PermissionFormDTO dto) {
+        return BaseResponse.ok(permissionService.create(dto));
     }
 
     /**
@@ -131,9 +131,9 @@ public class PermissionController {
     @OperationLog(module = "权限管理", action = "更新权限", bizType = "PERM")
     @Idempotent(key = "permission:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
-    public Result<Void> update(@Valid @RequestBody PermissionFormDTO dto) {
+    public BaseResponse<Void> update(@Valid @RequestBody PermissionFormDTO dto) {
         permissionService.update(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -147,8 +147,8 @@ public class PermissionController {
     @OperationLog(module = "权限管理", action = "删除权限", bizType = "PERM")
     @Idempotent(key = "permission:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@Parameter(description = "权限ID") @PathVariable String id) {
+    public BaseResponse<Void> delete(@Parameter(description = "权限ID") @PathVariable String id) {
         permissionService.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 }

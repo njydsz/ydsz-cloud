@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.TimeEntryApprovalDTO;
 import com.njydsz.pmis.project.domain.dto.TimeEntryCreateDTO;
 import com.njydsz.pmis.project.domain.entity.TimeEntryDO;
@@ -59,8 +59,8 @@ public class TimeEntryController {
     @PrePermission("execution:time:create")
     @Idempotent(key = "timeEntry:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody TimeEntryCreateDTO dto) {
-        return Result.ok(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody TimeEntryCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
@@ -73,9 +73,9 @@ public class TimeEntryController {
     @PrePermission("execution:time:approve")
     @Idempotent(key = "timeEntry:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/submit")
-    public Result<Void> submit(@PathVariable String id) {
+    public BaseResponse<Void> submit(@PathVariable String id) {
         service.submit(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -88,9 +88,9 @@ public class TimeEntryController {
     @PrePermission("execution:time:approve")
     @Idempotent(key = "timeEntry:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/approve")
-    public Result<Void> approve(@Valid @RequestBody TimeEntryApprovalDTO dto) {
+    public BaseResponse<Void> approve(@Valid @RequestBody TimeEntryApprovalDTO dto) {
         service.approve(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -104,9 +104,9 @@ public class TimeEntryController {
     @Idempotent(key = "timeEntry:delete", ttlSeconds = 5, message = "请勿重复提交")
     @OperationLog(module = "工时管理", action = "删除工时", bizType = "TIME_ENTRY")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -118,8 +118,8 @@ public class TimeEntryController {
     @Operation(summary = "工时详情")
     @PrePermission("execution:time:list")
     @GetMapping("/{id}")
-    public Result<TimeEntryDO> get(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<TimeEntryDO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -139,7 +139,7 @@ public class TimeEntryController {
     @Operation(summary = "分页查询")
     @PrePermission("execution:time:list")
     @GetMapping("/page")
-    public Result<Page<TimeEntryDO>> page(
+    public BaseResponse<Page<TimeEntryDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
@@ -149,7 +149,7 @@ public class TimeEntryController {
             @RequestParam(required = false) String taskId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return Result.ok(service.page(page, size, keyword, status, employeeId, initiationId, taskId, from, to));
+        return BaseResponse.ok(service.page(page, size, keyword, status, employeeId, initiationId, taskId, from, to));
     }
 
     /**
@@ -163,11 +163,11 @@ public class TimeEntryController {
     @Operation(summary = "项目工时按人员+职级聚合")
     @PrePermission("execution:time:list")
     @GetMapping("/aggregate/byEmployeeLevel")
-    public Result<List<Map<String, Object>>> aggregateByEmployeeLevel(
+    public BaseResponse<List<Map<String, Object>>> aggregateByEmployeeLevel(
             @RequestParam String initiationId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return Result.ok(service.aggregateHoursByEmployeeAndLevel(initiationId, from, to));
+        return BaseResponse.ok(service.aggregateHoursByEmployeeAndLevel(initiationId, from, to));
     }
 
     /**
@@ -180,10 +180,10 @@ public class TimeEntryController {
     @Operation(summary = "跨项目冲突检测")
     @PrePermission("execution:time:list")
     @GetMapping("/conflict")
-    public Result<List<Map<String, Object>>> detectCrossProject(
+    public BaseResponse<List<Map<String, Object>>> detectCrossProject(
             @RequestParam String employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate entryDate) {
-        return Result.ok(service.detectCrossProject(employeeId, entryDate));
+        return BaseResponse.ok(service.detectCrossProject(employeeId, entryDate));
     }
 
     /**
@@ -198,9 +198,9 @@ public class TimeEntryController {
     @Operation(summary = "工时异常统计")
     @PrePermission("execution:time:list")
     @GetMapping("/abnormalStat")
-    public Result<Map<String, Object>> abnormalStat(
+    public BaseResponse<Map<String, Object>> abnormalStat(
             @RequestParam String initiationId,
             @RequestParam(required = false) String month) {
-        return Result.ok(service.abnormalStat(initiationId, month));
+        return BaseResponse.ok(service.abnormalStat(initiationId, month));
     }
 }

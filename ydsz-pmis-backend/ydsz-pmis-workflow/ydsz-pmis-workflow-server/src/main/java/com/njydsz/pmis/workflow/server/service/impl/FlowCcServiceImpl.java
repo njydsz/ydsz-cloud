@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.notification;
 
-import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.workflow.domain.dto.notification.FlowCcQueryDTO;
@@ -157,11 +157,11 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResult<FlowCcDO> listCcByUser(String userId, String readStatus, String flowCode,
+    public PageResponse<FlowCcDO> listCcByUser(String userId, String readStatus, String flowCode,
                                              String tenantId, int pageNo, int pageSize) {
         try {
             if (userId == null) {
-                return PageResult.empty();
+                return PageResponse.empty();
             }
             int page = Math.max(pageNo, 1);
             int size = (int) Math.min(Math.max(pageSize, 1), PageQuery.MAX_SIZE);
@@ -170,10 +170,10 @@ public class FlowCcServiceImpl implements FlowCcService {
             List<FlowCcDO> list = ccMapper.selectCcByUserPage(tenantId, userId,
                     readStatus, flowCode, offset, size);
             long total = ccMapper.countCcByUser(tenantId, userId, readStatus, flowCode);
-            return PageResult.of(list, total, page, size);
+            return PageResponse.of(list, total, page, size);
         } catch (Exception e) {
             log.error("[FlowCc] 分页查询异常: userId={} err={}", userId, e.getMessage(), e);
-            return PageResult.empty();
+            return PageResponse.empty();
         }
     }
 

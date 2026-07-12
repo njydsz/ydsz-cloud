@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.RiskCreateDTO;
 import com.njydsz.pmis.project.domain.dto.RiskStatusDTO;
 import com.njydsz.pmis.project.server.service.RiskService;
@@ -58,8 +58,8 @@ public class RiskController {
     @PrePermission("execution:risk:create")
     @Idempotent(key = "risk:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody RiskCreateDTO dto) {
-        return Result.ok(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody RiskCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
@@ -72,9 +72,9 @@ public class RiskController {
     @PrePermission("execution:risk:status")
     @Idempotent(key = "risk:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
-    public Result<Void> changeStatus(@Valid @RequestBody RiskStatusDTO dto) {
+    public BaseResponse<Void> changeStatus(@Valid @RequestBody RiskStatusDTO dto) {
         service.changeStatus(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -88,9 +88,9 @@ public class RiskController {
     @Idempotent(key = "risk:delete", ttlSeconds = 5, message = "请勿重复提交")
     @OperationLog(module = "风险管理", action = "删除风险", bizType = "RISK")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@Parameter(description = "风险ID") @PathVariable String id) {
+    public BaseResponse<Void> delete(@Parameter(description = "风险ID") @PathVariable String id) {
         service.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -102,8 +102,8 @@ public class RiskController {
     @Operation(summary = "详情")
     @PrePermission("execution:risk:list")
     @GetMapping("/{id}")
-    public Result<RiskVO> get(@Parameter(description = "风险ID") @PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<RiskVO> get(@Parameter(description = "风险ID") @PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -120,14 +120,14 @@ public class RiskController {
     @Operation(summary = "分页")
     @PrePermission("execution:risk:list")
     @GetMapping("/page")
-    public Result<Page<RiskVO>> page(
+    public BaseResponse<Page<RiskVO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "风险等级") @RequestParam(required = false) String riskLevel,
             @Parameter(description = "立项ID") @RequestParam(required = false) String initiationId) {
-        return Result.ok(service.page(page, size, keyword, status, riskLevel, initiationId));
+        return BaseResponse.ok(service.page(page, size, keyword, status, riskLevel, initiationId));
     }
 
     /**
@@ -139,7 +139,7 @@ public class RiskController {
     @Operation(summary = "按等级聚合")
     @PrePermission("execution:risk:list")
     @GetMapping("/aggregate/byLevel")
-    public Result<List<Map<String, Object>>> aggregateByLevel(@Parameter(description = "立项ID") @RequestParam String initiationId) {
-        return Result.ok(service.aggregateByLevel(initiationId));
+    public BaseResponse<List<Map<String, Object>>> aggregateByLevel(@Parameter(description = "立项ID") @RequestParam String initiationId) {
+        return BaseResponse.ok(service.aggregateByLevel(initiationId));
     }
 }

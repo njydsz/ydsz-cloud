@@ -1,8 +1,8 @@
 package com.njydsz.pmis.workflow.api.fallback;
 import com.njydsz.pmis.workflow.api.client.WorkflowServiceClient;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -24,18 +24,18 @@ public class WorkflowServiceClientFallback implements FallbackFactory<WorkflowSe
         log.warn("[Feign] workflow 服务降级: {}", cause == null ? "?" : cause.getMessage());
         return new WorkflowServiceClient() {
             @Override
-            public Result<String> startProcess(Map<String, Object> body) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+            public BaseResponse<String> startProcess(Map<String, Object> body) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            public Result<Map<String, Object>> getByBusiness(String businessType, String businessId) {
-                return Result.ok(null);
+            public BaseResponse<Map<String, Object>> getByBusiness(String businessType, String businessId) {
+                return BaseResponse.ok(null);
             }
 
             @Override
-            public Result<Void> terminate(String processInstanceId, String reason) {
-                return Result.ok();
+            public BaseResponse<Void> terminate(String processInstanceId, String reason) {
+                return BaseResponse.ok();
             }
         };
     }

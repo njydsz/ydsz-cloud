@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.integration;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.server.service.integration.FlowFormFieldPermService;
@@ -73,7 +73,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
                 case PERM_HIDDEN:
                     // HIDDEN 字段不允许提交
                     if (submitted.containsKey(fieldKey)) {
-                        throw new BizException(BizErrorCode.BAD_REQUEST,
+                        throw new BizException(StandardResultCode.BAD_REQUEST,
                                 "error.workflow.msg_form_field_hidden", fieldKey);
                     }
                     break;
@@ -83,7 +83,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
                     if (submitted.containsKey(fieldKey)) {
                         Object existingVal = existing.get(fieldKey);
                         if (!Objects.equals(existingVal, submittedVal)) {
-                            throw new BizException(BizErrorCode.BAD_REQUEST,
+                            throw new BizException(StandardResultCode.BAD_REQUEST,
                                     "error.workflow.msg_form_field_readonly", fieldKey);
                         }
                     }
@@ -92,7 +92,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
                 case PERM_REQUIRED:
                     // REQUIRED 字段不能为空
                     if (submittedVal == null || (submittedVal instanceof String s && s.isBlank())) {
-                        throw new BizException(BizErrorCode.BAD_REQUEST,
+                        throw new BizException(StandardResultCode.BAD_REQUEST,
                                 "error.workflow.msg_form_field_required", fieldKey);
                     }
                     break;
@@ -115,7 +115,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
         // 移除 HIDDEN 字段
         for (Map.Entry<String, String> entry : fieldPerms.entrySet()) {
             if (PERM_HIDDEN.equals(entry.getValue())) {
-                result.remove(entry.getKey());
+                BaseResponse.remove(entry.getKey());
             }
         }
         return result;

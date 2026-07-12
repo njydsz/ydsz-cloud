@@ -2,8 +2,8 @@ package com.njydsz.pmis.project.web.controller.aftersales;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.SatisfactionCreateDTO;
 import com.njydsz.pmis.project.domain.entity.SatisfactionDO;
 import com.njydsz.pmis.project.server.service.SatisfactionService;
@@ -44,51 +44,51 @@ public class SatisfactionController {
     @PrePermission("aftersales:satisfaction:submit")
     @Idempotent(key = "satisfaction:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> submit(@Valid @RequestBody SatisfactionCreateDTO dto) {
-        return Result.ok(service.submit(dto));
+    public BaseResponse<String> submit(@Valid @RequestBody SatisfactionCreateDTO dto) {
+        return BaseResponse.ok(service.submit(dto));
     }
 
     @Operation(summary = "标记跟进")
     @PrePermission("aftersales:satisfaction:followUp")
     @Idempotent(key = "satisfaction:markFollowUp", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/followUp")
-    public Result<Void> markFollowUp(@RequestParam String id, @RequestParam(required = false) String note) {
+    public BaseResponse<Void> markFollowUp(@RequestParam String id, @RequestParam(required = false) String note) {
         service.markFollowUp(id, note);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     @Operation(summary = "关闭跟进")
     @PrePermission("aftersales:satisfaction:followUp")
     @Idempotent(key = "satisfaction:closeFollowUp", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/followUp/close")
-    public Result<Void> closeFollowUp(@RequestParam String id) {
+    public BaseResponse<Void> closeFollowUp(@RequestParam String id) {
         service.closeFollowUp(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     @Operation(summary = "整体满意度均值")
     @PrePermission("aftersales:satisfaction:list")
     @GetMapping("/overall")
-    public Result<Map<String, Object>> overall() {
-        return Result.ok(service.overall());
+    public BaseResponse<Map<String, Object>> overall() {
+        return BaseResponse.ok(service.overall());
     }
 
     @Operation(summary = "等级分布")
     @PrePermission("aftersales:satisfaction:list")
     @GetMapping("/levelDistribution")
-    public Result<List<Map<String, Object>>> levelDistribution() {
-        return Result.ok(service.levelDistribution());
+    public BaseResponse<List<Map<String, Object>>> levelDistribution() {
+        return BaseResponse.ok(service.levelDistribution());
     }
 
     @Operation(summary = "分页")
     @PrePermission("aftersales:satisfaction:list")
     @GetMapping("/page")
-    public Result<PageResult<SatisfactionDO>> page(
+    public BaseResponse<PageResponse<SatisfactionDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String level,
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String keyword) {
-        return Result.ok(PageResult.ofPage(service.page(page, size, level, initiationId, keyword)));
+        return BaseResponse.ok(PageResponse.ofPage(service.page(page, size, level, initiationId, keyword)));
     }
 }

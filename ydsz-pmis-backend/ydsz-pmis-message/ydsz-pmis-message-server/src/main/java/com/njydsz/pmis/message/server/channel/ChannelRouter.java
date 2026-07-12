@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.server.channel;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -90,11 +90,11 @@ public class ChannelRouter {
      */
     public MessageChannel route(String channel) {
         if (channel == null || channel.isBlank()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "消息通道不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "消息通道不能为空");
         }
         MessageChannel target = channelCache.get(channel.trim().toUpperCase());
         if (target == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "不支持的消息通道: " + channel);
+            throw new BizException(StandardResultCode.BAD_REQUEST, "不支持的消息通道: " + channel);
         }
         return target;
     }
@@ -120,15 +120,15 @@ public class ChannelRouter {
             MessageResult result = target.send(request);
             long cost = System.currentTimeMillis() - start;
             log.info("[ChannelRouter] channel={} status={} costMs={} cbState={}",
-                    channel, result.getStatus(), cost,
+                    channel, BaseResponse.getStatus(), cost,
                     breaker == null ? "N/A" : breaker.getState());
             // 业务失败(非异常)也计入熔断失败率
             if (breaker != null) {
-                if (result.isSuccess()) {
+                if (BaseResponse.isSuccess()) {
                     breaker.onSuccess(cost, java.util.concurrent.TimeUnit.MILLISECONDS);
                 } else {
                     breaker.onError(cost, java.util.concurrent.TimeUnit.MILLISECONDS,
-                            new RuntimeException(result.getErrorMessage()));
+                            new RuntimeException(BaseResponse.getErrorMessage()));
                 }
             }
             return result;
@@ -156,7 +156,7 @@ public class ChannelRouter {
      */
     public String dispatch(MsgLogDO logDO) {
         if (logDO == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "消息日志为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "消息日志为空");
         }
         MessageRequest request = new MessageRequest();
         request.setChannel(logDO.getChannel());
@@ -176,10 +176,10 @@ public class ChannelRouter {
             }
         }
         MessageResult result = dispatch(request);
-        if (!result.isSuccess()) {
-            throw new BizException(result.getErrorMessage());
+        if (!BaseResponse.isSuccess()) {
+            throw new BizException(BaseResponse.getErrorMessage());
         }
-        return result.getProviderTraceId();
+        return BaseResponse.getProviderTraceId();
     }
 
     /**

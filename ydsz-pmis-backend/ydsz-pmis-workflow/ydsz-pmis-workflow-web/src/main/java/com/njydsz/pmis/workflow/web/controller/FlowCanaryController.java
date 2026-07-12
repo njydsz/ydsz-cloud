@@ -3,9 +3,9 @@ package com.njydsz.pmis.workflow.web.controller.ai;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.server.service.ai.FlowCanaryService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -51,14 +51,14 @@ public class FlowCanaryController {
     @Idempotent(key = "flowCanary:publishCanary", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/canary/{definitionId}/publish")
     @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
-    public Result<Void> publishCanary(
+    public BaseResponse<Void> publishCanary(
             @PathVariable String definitionId,
             @RequestParam(defaultValue = "10") int initialPercent,
             @RequestParam(defaultValue = "USER_HASH") String strategy,
             @RequestParam(required = false) String note) {
         canaryService.publishCanary(definitionId, initialPercent, strategy,
-                SecurityContext.getUserId(), SecurityContext.getUsername(), note);
-        return Result.ok();
+                AuthContext.getUserId(), AuthContext.getUsername(), note);
+        return BaseResponse.ok();
     }
 
     /**
@@ -74,13 +74,13 @@ public class FlowCanaryController {
     @Idempotent(key = "flowCanary:adjustCanary", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/canary/{definitionId}/adjust")
     @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
-    public Result<Void> adjustCanary(
+    public BaseResponse<Void> adjustCanary(
             @PathVariable String definitionId,
             @RequestParam int newPercent,
             @RequestParam(required = false) String note) {
         canaryService.adjustCanaryPercent(definitionId, newPercent,
-                SecurityContext.getUserId(), SecurityContext.getUsername(), note);
-        return Result.ok();
+                AuthContext.getUserId(), AuthContext.getUsername(), note);
+        return BaseResponse.ok();
     }
 
     /**
@@ -95,12 +95,12 @@ public class FlowCanaryController {
     @Idempotent(key = "flowCanary:promoteCanary", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/canary/{definitionId}/promote")
     @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
-    public Result<Void> promoteCanary(
+    public BaseResponse<Void> promoteCanary(
             @PathVariable String definitionId,
             @RequestParam(required = false) String note) {
         canaryService.promoteCanary(definitionId,
-                SecurityContext.getUserId(), SecurityContext.getUsername(), note);
-        return Result.ok();
+                AuthContext.getUserId(), AuthContext.getUsername(), note);
+        return BaseResponse.ok();
     }
 
     /**
@@ -115,12 +115,12 @@ public class FlowCanaryController {
     @Idempotent(key = "flowCanary:rollbackCanary", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/canary/{definitionId}/rollback")
     @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
-    public Result<Void> rollbackCanary(
+    public BaseResponse<Void> rollbackCanary(
             @PathVariable String definitionId,
             @RequestParam(required = false) String note) {
         canaryService.rollbackCanary(definitionId,
-                SecurityContext.getUserId(), SecurityContext.getUsername(), note);
-        return Result.ok();
+                AuthContext.getUserId(), AuthContext.getUsername(), note);
+        return BaseResponse.ok();
     }
 
     /**
@@ -131,10 +131,10 @@ public class FlowCanaryController {
      * @return rollout 日志列表
      */
     @GetMapping("/canary/{flowCode}/rolloutLog")
-    public Result<List<Map<String, Object>>> rolloutLog(
+    public BaseResponse<List<Map<String, Object>>> rolloutLog(
             @PathVariable String flowCode,
             @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
-        return Result.ok(canaryService.listCanaryRolloutLog(flowCode, tid));
+        String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(canaryService.listCanaryRolloutLog(flowCode, tid));
     }
 }

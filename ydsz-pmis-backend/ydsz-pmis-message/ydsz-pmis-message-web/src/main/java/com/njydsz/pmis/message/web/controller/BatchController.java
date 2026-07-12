@@ -2,8 +2,8 @@ package com.njydsz.pmis.message.web.controller.batch;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.message.domain.dto.batch.BatchProgressVO;
@@ -55,11 +55,11 @@ public class BatchController {
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "batch:submitBatch", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send")
-    public Result<MsgBatchDO> submitBatch(@Valid @RequestBody BatchSendRequestDTO dto) {
+    public BaseResponse<MsgBatchDO> submitBatch(@Valid @RequestBody BatchSendRequestDTO dto) {
         if (dto == null) {
-            return Result.failed(BizErrorCode.BAD_REQUEST, "批量发送参数为空");
+            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "批量发送参数为空");
         }
-        return Result.ok(batchService.submitBatch(dto));
+        return BaseResponse.ok(batchService.submitBatch(dto));
     }
 
     /**
@@ -71,7 +71,7 @@ public class BatchController {
     @Operation(summary = "查询批次发送进度")
     @PrePermission(PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/progress/{batchId}")
-    public Result<BatchProgressVO> getProgress(@PathVariable String batchId) {
-        return Result.ok(batchService.getProgress(batchId));
+    public BaseResponse<BatchProgressVO> getProgress(@PathVariable String batchId) {
+        return BaseResponse.ok(batchService.getProgress(batchId));
     }
 }

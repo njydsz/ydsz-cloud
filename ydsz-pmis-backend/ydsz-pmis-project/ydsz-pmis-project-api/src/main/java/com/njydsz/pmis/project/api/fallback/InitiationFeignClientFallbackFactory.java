@@ -2,8 +2,8 @@ package com.njydsz.pmis.project.api.fallback;
 import com.njydsz.pmis.project.api.client.InitiationFeignClient;
 import com.njydsz.pmis.project.api.dto.InitiationCreateDTO;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -26,23 +26,23 @@ public class InitiationFeignClientFallbackFactory implements FallbackFactory<Ini
                 cause == null ? "null" : cause.getMessage());
         return new InitiationFeignClient() {
             @Override
-            public Result<Void> markProcessing(String initiationId) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+            public BaseResponse<Void> markProcessing(String initiationId) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            public Result<Void> markApproved(String initiationId) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+            public BaseResponse<Void> markApproved(String initiationId) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            public Result<Void> markRejected(String initiationId, String reason) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+            public BaseResponse<Void> markRejected(String initiationId, String reason) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            public Result<String> create(InitiationCreateDTO dto) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+            public BaseResponse<String> create(InitiationCreateDTO dto) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
         };
     }

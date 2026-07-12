@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.server.service.impl.integration;
 
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.server.engine.FlowAdvancer;
 import com.njydsz.pmis.workflow.server.engine.FlowClusterLockHelper;
@@ -66,15 +66,15 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     @Transactional(rollbackFor = Exception.class)
     public String scheduleIntermediate(String instanceId, String nodeCode, Duration delay) {
         if (instanceId == null || nodeCode == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "instanceId/nodeCode 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "instanceId/nodeCode 不能为空");
         }
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+            throw new BizException(StandardResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
         }
         FlowNodeDO node = nodeMapper.selectByCode(instance.getDefinitionId(), nodeCode);
         if (node == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "节点不存在: " + nodeCode);
+            throw new BizException(StandardResultCode.NOT_FOUND, "节点不存在: " + nodeCode);
         }
         FlowTimerDO timer = new FlowTimerDO();
         timer.setTenantId(instance.getTenantId());
@@ -97,11 +97,11 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     @Transactional(rollbackFor = Exception.class)
     public String scheduleBoundary(String taskId, String instanceId, String nodeCode, Duration delay) {
         if (taskId == null || instanceId == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "taskId/instanceId 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "taskId/instanceId 不能为空");
         }
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+            throw new BizException(StandardResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
         }
         FlowNodeDO node = nodeCode != null
                 ? nodeMapper.selectByCode(instance.getDefinitionId(), nodeCode) : null;

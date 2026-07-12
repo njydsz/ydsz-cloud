@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.api.client;
 import com.njydsz.pmis.common.feign.FeignClientConstants;
 import com.njydsz.pmis.workflow.api.fallback.WorkflowServiceClientFallback;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,7 +34,7 @@ public interface WorkflowServiceClient {
      * <p>对应自研引擎: POST /workflow/engine/instance/start
      */
     @PostMapping("/workflow/engine/instance/start")
-    Result<String> startProcess(@RequestBody Map<String, Object> body);
+    BaseResponse<String> startProcess(@RequestBody Map<String, Object> body);
 
     /**
      * 通过业务单据反查流程状态
@@ -42,7 +42,7 @@ public interface WorkflowServiceClient {
      * <p>对应自研引擎: GET /workflow/engine/instance/byBusiness
      */
     @GetMapping("/workflow/engine/instance/byBusiness")
-    Result<Map<String, Object>> getByBusiness(@RequestParam("businessType") String businessType,
+    BaseResponse<Map<String, Object>> getByBusiness(@RequestParam("businessType") String businessType,
                                           @RequestParam("businessId") String businessId);
 
     /**
@@ -51,6 +51,6 @@ public interface WorkflowServiceClient {
      * <p>对应自研引擎: POST /workflow/engine/instance/{id}/terminate
      */
     @PostMapping("/workflow/engine/instance/{id}/terminate")
-    Result<Void> terminate(@PathVariable("id") String processInstanceId,
+    BaseResponse<Void> terminate(@PathVariable("id") String processInstanceId,
                       @RequestParam(value = "reason", required = false) String reason);
 }

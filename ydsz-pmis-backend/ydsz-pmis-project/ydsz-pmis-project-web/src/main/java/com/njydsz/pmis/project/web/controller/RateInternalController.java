@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.web.controller.resource;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.RateInternalCreateDTO;
 import com.njydsz.pmis.project.domain.entity.RateInternalDO;
 import com.njydsz.pmis.project.server.service.RateInternalService;
@@ -56,8 +56,8 @@ public class RateInternalController {
     @PrePermission("execution:rateInternal:create")
     @Idempotent(key = "rateInternal:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody RateInternalCreateDTO dto) {
-        return Result.ok(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody RateInternalCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
@@ -71,9 +71,9 @@ public class RateInternalController {
     @PrePermission("execution:rateInternal:update")
     @Idempotent(key = "rateInternal:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public Result<Void> update(@PathVariable String id, @Valid @RequestBody RateInternalCreateDTO dto) {
+    public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody RateInternalCreateDTO dto) {
         service.update(id, dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -86,9 +86,9 @@ public class RateInternalController {
     @PrePermission("execution:rateInternal:delete")
     @Idempotent(key = "rateInternal:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -100,8 +100,8 @@ public class RateInternalController {
     @Operation(summary = "详情")
     @PrePermission("execution:rate:list")
     @GetMapping("/{id}")
-    public Result<RateInternalDO> get(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<RateInternalDO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -115,11 +115,11 @@ public class RateInternalController {
     @Operation(summary = "命中有效成本费率（职级+部门+日期）")
     @PrePermission("execution:rate:list")
     @GetMapping("/match")
-    public Result<RateInternalDO> match(
+    public BaseResponse<RateInternalDO> match(
             @RequestParam String levelCode,
             @RequestParam(required = false) String departmentId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return Result.ok(service.matchEffective(levelCode, departmentId, date));
+        return BaseResponse.ok(service.matchEffective(levelCode, departmentId, date));
     }
 
     /**
@@ -132,10 +132,10 @@ public class RateInternalController {
     @Operation(summary = "按职级+部门查询")
     @PrePermission("execution:rate:list")
     @GetMapping("/byLevelDept")
-    public Result<List<RateInternalDO>> listByLevelAndDept(
+    public BaseResponse<List<RateInternalDO>> listByLevelAndDept(
             @RequestParam String levelCode,
             @RequestParam(required = false) String departmentId) {
-        return Result.ok(service.listByLevelAndDept(levelCode, departmentId));
+        return BaseResponse.ok(service.listByLevelAndDept(levelCode, departmentId));
     }
 
     /**
@@ -151,12 +151,12 @@ public class RateInternalController {
     @Operation(summary = "分页")
     @PrePermission("execution:rate:list")
     @GetMapping("/page")
-    public Result<Page<RateInternalDO>> page(
+    public BaseResponse<Page<RateInternalDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String levelCode,
             @RequestParam(required = false) String departmentId,
             @RequestParam(required = false) String status) {
-        return Result.ok(service.page(page, size, levelCode, departmentId, status));
+        return BaseResponse.ok(service.page(page, size, levelCode, departmentId, status));
     }
 }

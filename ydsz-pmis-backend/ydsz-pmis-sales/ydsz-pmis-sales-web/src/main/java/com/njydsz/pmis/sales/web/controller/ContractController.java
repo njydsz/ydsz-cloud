@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.sales.domain.dto.ContractCreateDTO;
 import com.njydsz.pmis.sales.domain.dto.ContractStatusDTO;
 import com.njydsz.pmis.sales.domain.entity.ContractDO;
@@ -57,8 +57,8 @@ public class ContractController {
     @PrePermission("project:contract:create")
     @Idempotent(key = "contract:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody ContractCreateDTO dto) {
-        return Result.ok(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody ContractCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
@@ -71,11 +71,11 @@ public class ContractController {
     @PrePermission("project:contract:status")
     @Idempotent(key = "contract:update", ttlSeconds = 5, message = "请勿重复提交")
     @PatchMapping("/{id}/status")
-    public Result<Void> changeStatus(@Parameter(description = "合同ID") @PathVariable String id,
+    public BaseResponse<Void> changeStatus(@Parameter(description = "合同ID") @PathVariable String id,
                                      @Valid @RequestBody ContractStatusDTO dto) {
         dto.setId(id);
         service.changeStatus(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -89,9 +89,9 @@ public class ContractController {
     @Idempotent(key = "contract:delete", ttlSeconds = 5, message = "请勿重复提交")
     @OperationLog(module = "合同管理", action = "删除合同", bizType = "CONTRACT")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@Parameter(description = "合同ID") @PathVariable String id) {
+    public BaseResponse<Void> delete(@Parameter(description = "合同ID") @PathVariable String id) {
         service.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -103,8 +103,8 @@ public class ContractController {
     @Operation(summary = "合同详情")
     @PrePermission("project:contract:list")
     @GetMapping("/{id}")
-    public Result<ContractDO> get(@Parameter(description = "合同ID") @PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<ContractDO> get(@Parameter(description = "合同ID") @PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -121,14 +121,14 @@ public class ContractController {
     @Operation(summary = "分页查询")
     @PrePermission("project:contract:list")
     @GetMapping("/page")
-    public Result<Page<ContractDO>> page(
+    public BaseResponse<Page<ContractDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "合同类型") @RequestParam(required = false) String contractType,
             @Parameter(description = "风险等级") @RequestParam(required = false) String riskLevel) {
-        return Result.ok(service.page(page, size, keyword, status, contractType, riskLevel));
+        return BaseResponse.ok(service.page(page, size, keyword, status, contractType, riskLevel));
     }
 
     /**
@@ -141,8 +141,8 @@ public class ContractController {
     @PrePermission("project:contract:evaluate")
     @Idempotent(key = "contract:evaluateRisk", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/evaluateRisk")
-    public Result<String> evaluateRisk(@Parameter(description = "合同ID") @PathVariable String id) {
-        return Result.ok(service.evaluateRisk(id));
+    public BaseResponse<String> evaluateRisk(@Parameter(description = "合同ID") @PathVariable String id) {
+        return BaseResponse.ok(service.evaluateRisk(id));
     }
 
     /**
@@ -154,8 +154,8 @@ public class ContractController {
     @Operation(summary = "按状态聚合")
     @PrePermission("project:contract:list")
     @GetMapping("/aggregate/status")
-    public Result<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
-        return Result.ok(service.aggregateByStatus(tenantId));
+    public BaseResponse<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
+        return BaseResponse.ok(service.aggregateByStatus(tenantId));
     }
 
     /**
@@ -167,7 +167,7 @@ public class ContractController {
     @Operation(summary = "按风险等级聚合")
     @PrePermission("project:contract:list")
     @GetMapping("/aggregate/risk")
-    public Result<List<Map<String, Object>>> aggregateByRisk(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
-        return Result.ok(service.aggregateByRisk(tenantId));
+    public BaseResponse<List<Map<String, Object>>> aggregateByRisk(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
+        return BaseResponse.ok(service.aggregateByRisk(tenantId));
     }
 }

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.web.controller.job;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.cronjob.domain.entity.log.JobDailyStatsDO;
@@ -61,11 +61,11 @@ public class JobStatsController {
     @Operation(summary = "查询每日执行统计趋势")
     @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/daily")
-    public Result<List<JobDailyStatsDO>> daily(
+    public BaseResponse<List<JobDailyStatsDO>> daily(
             @RequestParam String jobId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return Result.ok(jobDailyStatsMapper.selectByJobIdAndDateRange(jobId, startDate, endDate));
+        return BaseResponse.ok(jobDailyStatsMapper.selectByJobIdAndDateRange(jobId, startDate, endDate));
     }
 
     /**
@@ -81,7 +81,7 @@ public class JobStatsController {
     @Operation(summary = "查询执行统计汇总")
     @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/summary")
-    public Result<Map<String, Object>> summary(
+    public BaseResponse<Map<String, Object>> summary(
             @RequestParam String jobId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
@@ -119,7 +119,7 @@ public class JobStatsController {
         summary.put("failCount", failCount);
         summary.put("timeoutCount", timeoutCount);
         summary.put("avgDurationMs", durationSamples > 0 ? totalDuration / durationSamples : 0L);
-        return Result.ok(summary);
+        return BaseResponse.ok(summary);
     }
 
     // ==================== P1-2: 运维监控仪表盘增强 ====================
@@ -141,7 +141,7 @@ public class JobStatsController {
     @Operation(summary = "全局监控仪表盘")
     @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/dashboard")
-    public Result<Map<String, Object>> dashboard() {
+    public BaseResponse<Map<String, Object>> dashboard() {
         Map<String, Object> dashboard = new HashMap<>();
         // 1. 任务状态分布
         Map<String, Object> taskStats = new HashMap<>();
@@ -174,7 +174,7 @@ public class JobStatsController {
             dashboard.put("systemMetrics", systemMetrics);
         }
 
-        return Result.ok(dashboard);
+        return BaseResponse.ok(dashboard);
     }
 
     /**
@@ -186,8 +186,8 @@ public class JobStatsController {
     @Operation(summary = "最近失败任务")
     @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/recent-failures")
-    public Result<List<JobLogDO>> recentFailures(@RequestParam(defaultValue = "10") int limit) {
-        return Result.ok(jobLogMapper.selectList(
+    public BaseResponse<List<JobLogDO>> recentFailures(@RequestParam(defaultValue = "10") int limit) {
+        return BaseResponse.ok(jobLogMapper.selectList(
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLogDO>()
                         .eq(JobLogDO::getStatus, "FAILED")
                         .orderByDesc(JobLogDO::getStartTime)
@@ -205,7 +205,7 @@ public class JobStatsController {
     @Operation(summary = "执行热力图（按小时分布）")
     @PrePermission(PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/heatmap")
-    public Result<List<Map<String, Object>>> heatmap(
+    public BaseResponse<List<Map<String, Object>>> heatmap(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         LocalDate queryDate = date != null ? date : LocalDate.now();
         List<Map<String, Object>> heatmap = new java.util.ArrayList<>();
@@ -221,6 +221,6 @@ public class JobStatsController {
             entry.put("count", count);
             heatmap.add(entry);
         }
-        return Result.ok(heatmap);
+        return BaseResponse.ok(heatmap);
     }
 }

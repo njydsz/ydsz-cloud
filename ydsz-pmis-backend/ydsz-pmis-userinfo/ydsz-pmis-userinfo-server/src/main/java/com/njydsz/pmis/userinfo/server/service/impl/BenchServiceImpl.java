@@ -3,7 +3,7 @@ package com.njydsz.pmis.userinfo.server.service.impl.resource;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.userinfo.domain.dto.resource.BenchRecordCreateDTO;
 import com.njydsz.pmis.userinfo.server.engine.BenchCostCalculator;
@@ -40,15 +40,15 @@ public class BenchServiceImpl implements BenchService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String act(BenchRecordCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_d9712a58");
+        if (dto == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_d9712a58");
         if (!StringUtils.hasText(dto.getBenchCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_b0695d8f");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_b0695d8f");
         }
         if (dto.getEmployeeId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_03f5ae35");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         }
         if (benchMapper.selectByCode(dto.getBenchCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_31770192", dto.getBenchCode());
+            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.user.msg_31770192", dto.getBenchCode());
         }
         String action = dto.getAction() == null ? "" : dto.getAction().toUpperCase();
         if ("ENTER".equals(action)) return autoEnter(dto);
@@ -57,7 +57,7 @@ public class BenchServiceImpl implements BenchService {
                     dto.getReasonType(), dto.getExitDate() != null ? dto.getExitDate() : LocalDate.now());
             return null;
         }
-        throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_f4a32874", dto.getAction());
+        throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_f4a32874", dto.getAction());
     }
 
     @Override
@@ -66,7 +66,7 @@ public class BenchServiceImpl implements BenchService {
         // 校验当前没有活跃 Bench
         BenchRecordDO active = benchMapper.selectActiveByEmployee(dto.getEmployeeId());
         if (active != null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_d48cd922", active.getBenchCode());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_d48cd922", active.getBenchCode());
         }
         BenchRecordDO b = new BenchRecordDO();
         BeanUtils.copyProperties(dto, b);
@@ -88,7 +88,7 @@ public class BenchServiceImpl implements BenchService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void autoExit(String employeeId, String sourceAssignment, String reasonType, LocalDate exitDate) {
-        if (employeeId == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_03f5ae35");
+        if (employeeId == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         BenchRecordDO active = benchMapper.selectActiveByEmployee(employeeId);
         if (active == null) {
             log.warn("[Bench] 员工无活跃 Bench 记录，无需出池: emp={}", employeeId);
@@ -110,9 +110,9 @@ public class BenchServiceImpl implements BenchService {
     @Override
     @Transactional(readOnly = true)
     public BenchRecordDO getById(String id) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
+        if (id == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
         BenchRecordDO b = benchMapper.selectById(id);
-        if (b == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_e848f489");
+        if (b == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.user.msg_e848f489");
         return b;
     }
 

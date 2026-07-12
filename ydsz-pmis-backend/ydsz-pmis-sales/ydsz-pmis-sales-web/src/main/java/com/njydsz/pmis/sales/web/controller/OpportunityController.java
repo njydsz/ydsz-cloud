@@ -3,7 +3,7 @@ package com.njydsz.pmis.sales.web.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.sales.domain.dto.OpportunityCreateDTO;
 import com.njydsz.pmis.sales.domain.dto.OpportunityStatusDTO;
 import com.njydsz.pmis.sales.domain.dto.OpportunityUpdateDTO;
@@ -57,8 +57,8 @@ public class OpportunityController {
     @PrePermission("project:opportunity:create")
     @Idempotent(key = "opportunity:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody OpportunityCreateDTO dto) {
-        return Result.ok(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody OpportunityCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
@@ -71,11 +71,11 @@ public class OpportunityController {
     @PrePermission("project:opportunity:update")
     @Idempotent(key = "opportunity:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public Result<Void> update(@Parameter(description = "商机ID") @PathVariable String id,
+    public BaseResponse<Void> update(@Parameter(description = "商机ID") @PathVariable String id,
                                @Valid @RequestBody OpportunityUpdateDTO dto) {
         dto.setId(id);
         service.update(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -88,9 +88,9 @@ public class OpportunityController {
     @PrePermission("project:opportunity:update")
     @Idempotent(key = "opportunity:changeStatus", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
-    public Result<Void> changeStatus(@Valid @RequestBody OpportunityStatusDTO dto) {
+    public BaseResponse<Void> changeStatus(@Valid @RequestBody OpportunityStatusDTO dto) {
         service.changeStatus(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -103,9 +103,9 @@ public class OpportunityController {
     @PrePermission("project:opportunity:delete")
     @Idempotent(key = "opportunity:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@Parameter(description = "商机ID") @PathVariable String id) {
+    public BaseResponse<Void> delete(@Parameter(description = "商机ID") @PathVariable String id) {
         service.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -117,8 +117,8 @@ public class OpportunityController {
     @Operation(summary = "商机详情")
     @PrePermission("project:opportunity:list")
     @GetMapping("/{id}")
-    public Result<OpportunityDO> get(@Parameter(description = "商机ID") @PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<OpportunityDO> get(@Parameter(description = "商机ID") @PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -135,14 +135,14 @@ public class OpportunityController {
     @Operation(summary = "分页查询")
     @PrePermission("project:opportunity:list")
     @GetMapping("/page")
-    public Result<Page<OpportunityDO>> page(
+    public BaseResponse<Page<OpportunityDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "分级") @RequestParam(required = false) String level,
             @Parameter(description = "负责人ID") @RequestParam(required = false) String ownerId) {
-        return Result.ok(service.page(page, size, keyword, status, level, ownerId));
+        return BaseResponse.ok(service.page(page, size, keyword, status, level, ownerId));
     }
 
     /**
@@ -157,10 +157,10 @@ public class OpportunityController {
     @PrePermission("project:opportunity:evaluate")
     @Idempotent(key = "opportunity:evaluateWinRate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/evaluateWinrate")
-    public Result<BigDecimal> evaluateWinRate(@Parameter(description = "商机ID") @PathVariable String id,
+    public BaseResponse<BigDecimal> evaluateWinRate(@Parameter(description = "商机ID") @PathVariable String id,
                                          @Parameter(description = "客户信用") @RequestParam(required = false) String customerCredit,
                                          @Parameter(description = "是否有历史合作") @RequestParam(defaultValue = "false") boolean hasHistory) {
-        return Result.ok(service.evaluateWinRate(id, customerCredit, hasHistory));
+        return BaseResponse.ok(service.evaluateWinRate(id, customerCredit, hasHistory));
     }
 
     /**
@@ -172,8 +172,8 @@ public class OpportunityController {
     @Operation(summary = "按状态聚合")
     @PrePermission("project:opportunity:list")
     @GetMapping("/aggregate/status")
-    public Result<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
-        return Result.ok(service.aggregateByStatus(tenantId));
+    public BaseResponse<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
+        return BaseResponse.ok(service.aggregateByStatus(tenantId));
     }
 
     /**
@@ -185,8 +185,8 @@ public class OpportunityController {
     @Operation(summary = "按分级聚合")
     @PrePermission("project:opportunity:list")
     @GetMapping("/aggregate/level")
-    public Result<List<Map<String, Object>>> aggregateByLevel(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
-        return Result.ok(service.aggregateByLevel(tenantId));
+    public BaseResponse<List<Map<String, Object>>> aggregateByLevel(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
+        return BaseResponse.ok(service.aggregateByLevel(tenantId));
     }
 
     /**
@@ -201,9 +201,9 @@ public class OpportunityController {
     @PrePermission("project:opportunity:convert")
     @Idempotent(key = "opportunity:convertToInitiation", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/convertToInitiation")
-    public Result<String> convertToInitiation(@Parameter(description = "商机ID") @PathVariable String id,
+    public BaseResponse<String> convertToInitiation(@Parameter(description = "商机ID") @PathVariable String id,
                                         @Parameter(description = "发起人ID") @RequestParam(required = false) String sponsorId,
                                         @Parameter(description = "项目经理ID") @RequestParam(required = false) String pmId) {
-        return Result.ok(service.convertToInitiation(id, sponsorId, pmId));
+        return BaseResponse.ok(service.convertToInitiation(id, sponsorId, pmId));
     }
 }

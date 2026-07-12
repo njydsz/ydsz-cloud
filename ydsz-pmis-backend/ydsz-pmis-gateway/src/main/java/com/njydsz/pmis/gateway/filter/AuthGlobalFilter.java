@@ -1,7 +1,7 @@
 package com.njydsz.pmis.gateway.filter;
 
 import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.constant.CommonConstants;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
 import com.njydsz.pmis.common.util.InternalHeaderSigner;
@@ -253,7 +253,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(HttpStatus.BAD_REQUEST);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-        Result<Void> body = Result.failed(400, "error.BAD_REQUEST");
+        BaseResponse<Void> body = BaseResponse.failed(400, "error.BAD_REQUEST");
         byte[] bytes = JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));
@@ -273,7 +273,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
         // traceId 已在 filter 开头统一写入响应头，此处无需重复设置
 
-        Result<Void> body = Result.failed(20001, msg);
+        BaseResponse<Void> body = BaseResponse.failed(20001, msg);
         body.setTraceId(traceId);
         byte[] bytes = JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
 
@@ -302,7 +302,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
      * @return 注入安全头后的完成信号 Mono
      */
     private Mono<Void> withSecurityHeaders(ServerWebExchange exchange, Mono<Void> result) {
-        return result.then(Mono.fromRunnable(() -> {
+        return BaseResponse.then(Mono.fromRunnable(() -> {
             ServerHttpResponse response = exchange.getResponse();
             response.getHeaders().add("X-Content-Type-Options", "nosniff");
             response.getHeaders().add("X-Frame-Options", "DENY");

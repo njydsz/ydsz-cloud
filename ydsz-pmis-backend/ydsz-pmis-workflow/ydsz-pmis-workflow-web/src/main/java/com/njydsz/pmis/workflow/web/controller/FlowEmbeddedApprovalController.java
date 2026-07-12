@@ -2,10 +2,10 @@ package com.njydsz.pmis.workflow.web.controller.integration;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.security.LoginUser;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.domain.dto.integration.EmbeddedApprovalActionDTO;
 import com.njydsz.pmis.workflow.domain.dto.integration.EmbeddedApprovalViewDTO;
 import com.njydsz.pmis.workflow.server.service.integration.FlowEmbeddedApprovalService;
@@ -61,20 +61,20 @@ public class FlowEmbeddedApprovalController {
      */
     @Operation(summary = "加载嵌入式审批面板")
     @GetMapping("/panel")
-    public Result<EmbeddedApprovalViewDTO> loadPanel(@RequestParam String businessType,
+    public BaseResponse<EmbeddedApprovalViewDTO> loadPanel(@RequestParam String businessType,
                                                      @RequestParam String businessId,
                                                      @RequestParam(required = false) String userId) {
         String uid = userId;
         if (uid == null) {
-            LoginUser u = SecurityContext.getCurrentOrNull();
+            LoginUser u = AuthContext.getCurrentOrNull();
             if (u != null) {
                 uid = u.getUserId();
             }
         }
         if (uid == null) {
-            return Result.failed(BizErrorCode.UNAUTHORIZED, "未登录");
+            return BaseResponse.failed(StandardResultCode.UNAUTHORIZED, "未登录");
         }
-        return Result.ok(embeddedApprovalService.loadPanel(businessType, businessId, uid));
+        return BaseResponse.ok(embeddedApprovalService.loadPanel(businessType, businessId, uid));
     }
 
     /**
@@ -93,8 +93,8 @@ public class FlowEmbeddedApprovalController {
     @Operation(summary = "嵌入式快捷操作")
     @Idempotent(key = "flowEmbeddedApproval:quickAction", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/action")
-    public Result<Void> quickAction(@Valid @RequestBody EmbeddedApprovalActionDTO dto) {
-        LoginUser u = SecurityContext.getCurrentOrNull();
+    public BaseResponse<Void> quickAction(@Valid @RequestBody EmbeddedApprovalActionDTO dto) {
+        LoginUser u = AuthContext.getCurrentOrNull();
         if (dto.getUserId() == null && u != null) {
             dto.setUserId(u.getUserId());
         }
@@ -102,7 +102,7 @@ public class FlowEmbeddedApprovalController {
             dto.setUserName(u.getUsername());
         }
         embeddedApprovalService.quickAction(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -118,12 +118,12 @@ public class FlowEmbeddedApprovalController {
     @Operation(summary = "嵌入式快捷操作（按业务类型+业务ID）")
     @Idempotent(key = "flowEmbeddedApproval:quickActionByPath", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{businessType}/{businessId}/action")
-    public Result<Void> quickActionByPath(@PathVariable String businessType,
+    public BaseResponse<Void> quickActionByPath(@PathVariable String businessType,
                                           @PathVariable String businessId,
                                           @RequestBody @Valid EmbeddedApprovalActionDTO dto) {
         dto.setBusinessType(businessType);
         dto.setBusinessId(businessId);
-        LoginUser u = SecurityContext.getCurrentOrNull();
+        LoginUser u = AuthContext.getCurrentOrNull();
         if (dto.getUserId() == null && u != null) {
             dto.setUserId(u.getUserId());
         }
@@ -131,6 +131,6 @@ public class FlowEmbeddedApprovalController {
             dto.setUserName(u.getUsername());
         }
         embeddedApprovalService.quickAction(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 }

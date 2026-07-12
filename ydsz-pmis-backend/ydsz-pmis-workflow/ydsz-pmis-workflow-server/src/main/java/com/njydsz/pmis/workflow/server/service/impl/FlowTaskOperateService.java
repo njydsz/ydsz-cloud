@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
@@ -84,7 +84,7 @@ public class FlowTaskOperateService {
     @Transactional(rollbackFor = Exception.class)
     public void transfer(FlowTaskOperateDTO dto) {
         if (dto.getTargetUserId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_6ddae4d1");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_6ddae4d1");
         }
         FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         String originalAssignorId = parseAssignorId(task.getAssigneeId());
@@ -119,7 +119,7 @@ public class FlowTaskOperateService {
     @Transactional(rollbackFor = Exception.class)
     public void delegate(FlowTaskOperateDTO dto) {
         if (dto.getTargetUserId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_d4faa79e");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_d4faa79e");
         }
         FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         String originalAssigneeId = parseAssignorId(task.getAssigneeId());
@@ -156,26 +156,26 @@ public class FlowTaskOperateService {
     public void jump(FlowTaskOperateDTO dto) {
         FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.workflow.msg_1efc5644", task.getTaskStatus());
         }
         if (!StringUtils.hasText(dto.getTargetNodeCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_09c299d0");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_09c299d0");
         }
         FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND,
+            throw new BizException(StandardResultCode.NOT_FOUND,
                     "error.workflow.msg_fc4b1c16", task.getInstanceId());
         }
         // 校验目标节点存在
         FlowNodeDO targetNode = nodeMapper.selectByCode(task.getDefinitionId(), dto.getTargetNodeCode());
         if (targetNode == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND,
+            throw new BizException(StandardResultCode.NOT_FOUND,
                     "error.workflow.msg_a35217ba", dto.getTargetNodeCode());
         }
         // GAP-P2-9: 节点级 freeJump 白名单校验
         if ("JUMP".equals(dto.getAction()) && !isFreeJumpEnabled(targetNode)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     String.format("目标节点未开启自由跳转白名单: nodeCode=%s", dto.getTargetNodeCode()));
         }
         // 完成当前任务
@@ -214,25 +214,25 @@ public class FlowTaskOperateService {
         // 1. 查历史任务
         FlowHisTaskDO hisTask = hisTaskMapper.selectById(hisTaskId);
         if (hisTask == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_f1a2b3c4", hisTaskId);
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.workflow.msg_f1a2b3c4", hisTaskId);
         }
         // 2. 校验：历史任务状态为 COMPLETED
         if (!FlowTaskStatus.COMPLETED.name().equals(hisTask.getTaskStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.workflow.msg_a2b3c4d5", hisTask.getTaskStatus());
         }
         // 3. 校验：操作人必须是历史任务的办理人
         if (!hisTask.getAssigneeId().equals(operatorId)) {
-            throw new BizException(BizErrorCode.FORBIDDEN, "error.workflow.msg_b3c4d5e6");
+            throw new BizException(StandardResultCode.FORBIDDEN, "error.workflow.msg_b3c4d5e6");
         }
         // 4. 校验：实例存在且为 RUNNING
         FlowInstanceDO instance = instanceMapper.selectById(hisTask.getInstanceId());
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND,
+            throw new BizException(StandardResultCode.NOT_FOUND,
                     "error.workflow.msg_fc4b1c16", hisTask.getInstanceId());
         }
         if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.workflow.msg_c4d5e6f7", instance.getFlowStatus());
         }
         // 5. 校验：下一节点待办必须全部为 PENDING
@@ -241,7 +241,7 @@ public class FlowTaskOperateService {
                 .anyMatch(t -> FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
                         || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
         if (anyProcessed) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_d5e6f7a8");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_d5e6f7a8");
         }
         // 6. 取消下一节点待办
         taskMapper.cancelByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.WbsTaskCreateDTO;
 import com.njydsz.pmis.project.domain.dto.WbsTaskStatusDTO;
 import com.njydsz.pmis.project.domain.entity.WbsTaskDO;
@@ -58,8 +58,8 @@ public class WbsTaskController {
     @PrePermission("execution:wbs:create")
     @Idempotent(key = "wbsTask:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody WbsTaskCreateDTO dto) {
-        return Result.ok(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody WbsTaskCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
@@ -72,9 +72,9 @@ public class WbsTaskController {
     @PrePermission("execution:wbs:status")
     @Idempotent(key = "wbsTask:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
-    public Result<Void> changeStatus(@Valid @RequestBody WbsTaskStatusDTO dto) {
+    public BaseResponse<Void> changeStatus(@Valid @RequestBody WbsTaskStatusDTO dto) {
         service.changeStatus(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -89,11 +89,11 @@ public class WbsTaskController {
     @PrePermission("execution:wbs:update")
     @Idempotent(key = "wbsTask:updateProgress", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/progress")
-    public Result<Void> updateProgress(@PathVariable String id,
+    public BaseResponse<Void> updateProgress(@PathVariable String id,
                                    @RequestParam BigDecimal progressPct,
                                    @RequestParam(required = false) BigDecimal actualEffort) {
         service.updateProgress(id, progressPct, actualEffort);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -107,9 +107,9 @@ public class WbsTaskController {
     @Idempotent(key = "wbsTask:delete", ttlSeconds = 5, message = "请勿重复提交")
     @OperationLog(module = "WBS任务", action = "删除任务", bizType = "WBS_TASK")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -121,8 +121,8 @@ public class WbsTaskController {
     @Operation(summary = "任务详情")
     @PrePermission("execution:wbs:list")
     @GetMapping("/{id}")
-    public Result<WbsTaskDO> get(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<WbsTaskDO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -140,7 +140,7 @@ public class WbsTaskController {
     @Operation(summary = "分页查询")
     @PrePermission("execution:wbs:list")
     @GetMapping("/page")
-    public Result<Page<WbsTaskDO>> page(
+    public BaseResponse<Page<WbsTaskDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
@@ -148,7 +148,7 @@ public class WbsTaskController {
             @RequestParam(required = false) String taskType,
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String ownerId) {
-        return Result.ok(service.page(page, size, keyword, status, taskType, initiationId, ownerId));
+        return BaseResponse.ok(service.page(page, size, keyword, status, taskType, initiationId, ownerId));
     }
 
     /**
@@ -160,8 +160,8 @@ public class WbsTaskController {
     @Operation(summary = "项目下的任务列表")
     @PrePermission("execution:wbs:list")
     @GetMapping("/initiation/{initiationId}")
-    public Result<List<WbsTaskDO>> listByInitiation(@PathVariable String initiationId) {
-        return Result.ok(service.listByInitiation(initiationId));
+    public BaseResponse<List<WbsTaskDO>> listByInitiation(@PathVariable String initiationId) {
+        return BaseResponse.ok(service.listByInitiation(initiationId));
     }
 
     /**
@@ -173,8 +173,8 @@ public class WbsTaskController {
     @Operation(summary = "项目里程碑")
     @PrePermission("execution:wbs:list")
     @GetMapping("/initiation/{initiationId}/milestones")
-    public Result<List<WbsTaskDO>> listMilestones(@PathVariable String initiationId) {
-        return Result.ok(service.listMilestones(initiationId));
+    public BaseResponse<List<WbsTaskDO>> listMilestones(@PathVariable String initiationId) {
+        return BaseResponse.ok(service.listMilestones(initiationId));
     }
 
     /**
@@ -186,8 +186,8 @@ public class WbsTaskController {
     @Operation(summary = "项目整体进度（按工时加权）")
     @PrePermission("execution:wbs:list")
     @GetMapping("/initiation/{initiationId}/overallProgress")
-    public Result<BigDecimal> overallProgress(@PathVariable String initiationId) {
-        return Result.ok(service.calcOverallProgress(initiationId));
+    public BaseResponse<BigDecimal> overallProgress(@PathVariable String initiationId) {
+        return BaseResponse.ok(service.calcOverallProgress(initiationId));
     }
 
     /**
@@ -199,8 +199,8 @@ public class WbsTaskController {
     @Operation(summary = "状态分布")
     @PrePermission("execution:wbs:list")
     @GetMapping("/aggregate/status")
-    public Result<List<Map<String, Object>>> aggregateByStatus(@RequestParam String initiationId) {
-        return Result.ok(service.aggregateByStatus(initiationId));
+    public BaseResponse<List<Map<String, Object>>> aggregateByStatus(@RequestParam String initiationId) {
+        return BaseResponse.ok(service.aggregateByStatus(initiationId));
     }
 
     /**
@@ -222,7 +222,7 @@ public class WbsTaskController {
     @Operation(summary = "甘特图数据（P0-1）")
     @PrePermission("execution:wbs:list")
     @GetMapping("/gantt/{initiationId}")
-    public Result<List<Map<String, Object>>> ganttData(@PathVariable String initiationId) {
-        return Result.ok(service.getGanttData(initiationId));
+    public BaseResponse<List<Map<String, Object>>> ganttData(@PathVariable String initiationId) {
+        return BaseResponse.ok(service.getGanttData(initiationId));
     }
 }

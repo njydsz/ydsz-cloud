@@ -5,8 +5,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.system.domain.entity.audit.DataExportAuditDO;
 import com.njydsz.pmis.system.infra.mapper.audit.DataExportAuditMapper;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -51,7 +51,7 @@ public class DataExportAuditController {
     @Operation(summary = "分页查询")
     @PrePermission("audit:export:view")
     @GetMapping("/page")
-    public Result<PageResult<DataExportAuditDO>> page(
+    public BaseResponse<PageResponse<DataExportAuditDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "用户ID") @RequestParam(required = false) String userId,
@@ -63,7 +63,7 @@ public class DataExportAuditController {
         if (StringUtils.hasText(exportModule)) w.eq(DataExportAuditDO::getExportModule, exportModule);
         if (StringUtils.hasText(exportAction)) w.like(DataExportAuditDO::getExportAction, exportAction);
         w.orderByDesc(DataExportAuditDO::getExportedAt);
-        return Result.ok(PageResult.ofPage(mapper.selectPage(p, w)));
+        return BaseResponse.ok(PageResponse.ofPage(mapper.selectPage(p, w)));
     }
 
     /**
@@ -76,9 +76,9 @@ public class DataExportAuditController {
     @Operation(summary = "按用户查询导出历史")
     @PrePermission("audit:export:view")
     @GetMapping("/byUser")
-    public Result<List<DataExportAuditDO>> byUser(
+    public BaseResponse<List<DataExportAuditDO>> byUser(
             @Parameter(description = "用户ID") @RequestParam String userId,
             @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
-        return Result.ok(mapper.selectByUser(userId, Math.min(limit, 200)));
+        return BaseResponse.ok(mapper.selectByUser(userId, Math.min(limit, 200)));
     }
 }

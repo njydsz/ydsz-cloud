@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.resource.ResourcePoolCreateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.resource.ResourcePoolDO;
 import com.njydsz.pmis.userinfo.server.service.resource.ResourcePoolService;
@@ -57,8 +57,8 @@ public class ResourcePoolController {
     @OperationLog(module = "资源池", action = "创建资源池", bizType = "RESOURCE_POOL")
     @Idempotent(key = "resourcePool:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody ResourcePoolCreateDTO dto) {
-        return Result.ok(poolService.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody ResourcePoolCreateDTO dto) {
+        return BaseResponse.ok(poolService.create(dto));
     }
 
     /**
@@ -73,9 +73,9 @@ public class ResourcePoolController {
     @OperationLog(module = "资源池", action = "更新资源池", bizType = "RESOURCE_POOL")
     @Idempotent(key = "resourcePool:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public Result<Void> update(@PathVariable String id, @Valid @RequestBody ResourcePoolCreateDTO dto) {
+    public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody ResourcePoolCreateDTO dto) {
         poolService.update(id, dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -89,9 +89,9 @@ public class ResourcePoolController {
     @OperationLog(module = "资源池", action = "删除资源池", bizType = "RESOURCE_POOL")
     @Idempotent(key = "resourcePool:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         poolService.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -102,8 +102,8 @@ public class ResourcePoolController {
      */
     @Operation(summary = "资源池详情")
     @GetMapping("/{id}")
-    public Result<ResourcePoolDO> get(@PathVariable String id) {
-        return Result.ok(poolService.getById(id));
+    public BaseResponse<ResourcePoolDO> get(@PathVariable String id) {
+        return BaseResponse.ok(poolService.getById(id));
     }
 
     /**
@@ -114,8 +114,8 @@ public class ResourcePoolController {
      */
     @Operation(summary = "按类型查询")
     @GetMapping("/byType")
-    public Result<List<ResourcePoolDO>> listByType(@RequestParam String poolType) {
-        return Result.ok(poolService.listByType(poolType));
+    public BaseResponse<List<ResourcePoolDO>> listByType(@RequestParam String poolType) {
+        return BaseResponse.ok(poolService.listByType(poolType));
     }
 
     /**
@@ -126,8 +126,8 @@ public class ResourcePoolController {
      */
     @Operation(summary = "按部门查询")
     @GetMapping("/byDept/{departmentId}")
-    public Result<List<ResourcePoolDO>> listByDept(@PathVariable String departmentId) {
-        return Result.ok(poolService.listByDept(departmentId));
+    public BaseResponse<List<ResourcePoolDO>> listByDept(@PathVariable String departmentId) {
+        return BaseResponse.ok(poolService.listByDept(departmentId));
     }
 
     /**
@@ -141,11 +141,11 @@ public class ResourcePoolController {
      */
     @Operation(summary = "分页查询")
     @GetMapping("/page")
-    public Result<Page<ResourcePoolDO>> page(
+    public BaseResponse<Page<ResourcePoolDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String poolType,
             @RequestParam(required = false) String status) {
-        return Result.ok(poolService.page(page, size, poolType, status));
+        return BaseResponse.ok(poolService.page(page, size, poolType, status));
     }
 }

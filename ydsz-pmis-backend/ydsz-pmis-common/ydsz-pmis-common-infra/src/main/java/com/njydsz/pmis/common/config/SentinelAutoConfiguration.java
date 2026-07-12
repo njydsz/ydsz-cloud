@@ -5,8 +5,8 @@ import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import com.njydsz.pmis.common.util.JsonUtils;
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -46,19 +46,19 @@ public class SentinelAutoConfiguration {
     @ConditionalOnMissingBean
     public BlockExceptionHandler sentinelBlockExceptionHandler() {
         return (request, response, origin, e) -> {
-            Result<?> body;
+            BaseResponse<?> body;
             if (e instanceof FlowException) {
                 response.setStatus(429);
-                body = Result.failed(BizErrorCode.RATE_LIMIT);
+                body = BaseResponse.failed(StandardResultCode.RATE_LIMIT);
             } else if (e instanceof DegradeException) {
                 response.setStatus(503);
-                body = Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+                body = BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             } else if (e instanceof SystemBlockException) {
                 response.setStatus(503);
-                body = Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+                body = BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             } else {
                 response.setStatus(429);
-                body = Result.failed(BizErrorCode.RATE_LIMIT);
+                body = BaseResponse.failed(StandardResultCode.RATE_LIMIT);
             }
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.setCharacterEncoding(StandardCharsets.UTF_8.name());

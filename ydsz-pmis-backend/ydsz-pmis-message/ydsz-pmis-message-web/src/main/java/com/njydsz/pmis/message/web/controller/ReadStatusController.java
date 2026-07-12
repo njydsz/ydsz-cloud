@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.web.controller.receipt;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.server.service.receipt.ReadStatusSyncService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,9 +49,9 @@ public class ReadStatusController {
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "readStatus:markRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/read/{msgId}")
-    public Result<Boolean> markRead(@PathVariable String msgId,
+    public BaseResponse<Boolean> markRead(@PathVariable String msgId,
                                      @RequestParam String userId) {
-        return Result.ok(readStatusSyncService.markRead(msgId, userId));
+        return BaseResponse.ok(readStatusSyncService.markRead(msgId, userId));
     }
 
     /**
@@ -65,9 +65,9 @@ public class ReadStatusController {
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "readStatus:markReadBatch", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/readBatch")
-    public Result<Integer> markReadBatch(@Valid @RequestBody List<String> msgIds,
+    public BaseResponse<Integer> markReadBatch(@Valid @RequestBody List<String> msgIds,
                                           @RequestParam String userId) {
-        return Result.ok(readStatusSyncService.markReadBatch(msgIds, userId));
+        return BaseResponse.ok(readStatusSyncService.markReadBatch(msgIds, userId));
     }
 
     /**
@@ -81,9 +81,9 @@ public class ReadStatusController {
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "readStatus:markNotificationRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/notification/{notificationId}")
-    public Result<Boolean> markNotificationRead(@PathVariable String notificationId,
+    public BaseResponse<Boolean> markNotificationRead(@PathVariable String notificationId,
                                                   @RequestParam String userId) {
-        return Result.ok(readStatusSyncService.markNotificationRead(notificationId, userId));
+        return BaseResponse.ok(readStatusSyncService.markNotificationRead(notificationId, userId));
     }
 
     /**
@@ -97,9 +97,9 @@ public class ReadStatusController {
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
     @Idempotent(key = "readStatus:markAllNotificationsRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/notification/readAll")
-    public Result<Integer> markAllNotificationsRead(@RequestParam String userId,
+    public BaseResponse<Integer> markAllNotificationsRead(@RequestParam String userId,
                                                       @RequestParam(required = false) String bizType) {
-        return Result.ok(readStatusSyncService.markAllNotificationsRead(userId, bizType));
+        return BaseResponse.ok(readStatusSyncService.markAllNotificationsRead(userId, bizType));
     }
 
     /**
@@ -112,10 +112,10 @@ public class ReadStatusController {
     @Operation(summary = "查询用户未读消息数量")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_VIEW)
     @GetMapping("/unreadCount")
-    public Result<Map<String, Long>> getUnreadCount(@RequestParam String userId,
+    public BaseResponse<Map<String, Long>> getUnreadCount(@RequestParam String userId,
                                                      @RequestParam(required = false) String channel) {
         long total = readStatusSyncService.getUnreadCount(userId);
         long byChannel = channel != null ? readStatusSyncService.getUnreadCountByChannel(userId, channel) : total;
-        return Result.ok(Map.of("total", total, "byChannel", byChannel));
+        return BaseResponse.ok(Map.of("total", total, "byChannel", byChannel));
     }
 }

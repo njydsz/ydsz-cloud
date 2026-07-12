@@ -4,8 +4,8 @@ import com.alibaba.fastjson2.JSON;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Ticker;
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.agent.api.client.AgentClient;
 import com.njydsz.pmis.workflow.domain.entity.ai.FlowAiFeedbackDO;
@@ -129,8 +129,8 @@ public class FlowAiAssistServiceImpl implements FlowAiAssistService {
         body.put("params", params);
 
         try {
-            Result<Map<String, Object>> res = agentClient.execute(body);
-            if (res == null || res.getCode() != 0) {
+            BaseResponse<Map<String, Object>> res = agentClient.execute(body);
+            if (res == null || res.isSuccess() == false) {
                 log.warn("[FlowAiAssist] recommendApprovers 调用失败: code={} msg={}",
                         res == null ? "null" : res.getCode(),
                         res == null ? "" : res.getMessage());
@@ -180,8 +180,8 @@ public class FlowAiAssistServiceImpl implements FlowAiAssistService {
         body.put("params", params);
 
         try {
-            Result<Map<String, Object>> res = agentClient.execute(body);
-            if (res == null || res.getCode() != 0) {
+            BaseResponse<Map<String, Object>> res = agentClient.execute(body);
+            if (res == null || res.isSuccess() == false) {
                 log.warn("[FlowAiAssist] draftComment 调用失败: code={} msg={}",
                         res == null ? "null" : res.getCode(),
                         res == null ? "" : res.getMessage());
@@ -230,8 +230,8 @@ public class FlowAiAssistServiceImpl implements FlowAiAssistService {
         Map<String, Object> body = buildAgentBody("Risk_Predict".toUpperCase(), "FLOW_INSTANCE",
                 params, "instanceId", "flowCode");
         try {
-            Result<Map<String, Object>> res = agentClient.execute(body);
-            if (res == null || res.getCode() != 0) {
+            BaseResponse<Map<String, Object>> res = agentClient.execute(body);
+            if (res == null || res.isSuccess() == false) {
                 log.warn("[FlowAiAssist] predictRisk 调用失败: code={} msg={}",
                         res == null ? "null" : res.getCode(),
                         res == null ? "" : res.getMessage());
@@ -267,8 +267,8 @@ public class FlowAiAssistServiceImpl implements FlowAiAssistService {
         Map<String, Object> body = buildAgentBody("Smart_Remind".toUpperCase(), "FLOW_TASK",
                 params, "taskId", "flowCode");
         try {
-            Result<Map<String, Object>> res = agentClient.execute(body);
-            if (res == null || res.getCode() != 0) {
+            BaseResponse<Map<String, Object>> res = agentClient.execute(body);
+            if (res == null || res.isSuccess() == false) {
                 log.warn("[FlowAiAssist] smartRemind 调用失败: code={} msg={}",
                         res == null ? "null" : res.getCode(),
                         res == null ? "" : res.getMessage());
@@ -304,8 +304,8 @@ public class FlowAiAssistServiceImpl implements FlowAiAssistService {
         Map<String, Object> body = buildAgentBody("Sla_Predict".toUpperCase(), "FLOW_INSTANCE",
                 params, "instanceId", "flowCode");
         try {
-            Result<Map<String, Object>> res = agentClient.execute(body);
-            if (res == null || res.getCode() != 0) {
+            BaseResponse<Map<String, Object>> res = agentClient.execute(body);
+            if (res == null || res.isSuccess() == false) {
                 log.warn("[FlowAiAssist] predictSla 调用失败: code={} msg={}",
                         res == null ? "null" : res.getCode(),
                         res == null ? "" : res.getMessage());
@@ -413,7 +413,7 @@ public class FlowAiAssistServiceImpl implements FlowAiAssistService {
     @Override
     public String recordApproverFeedback(Map<String, Object> feedback) {
         if (feedback == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_e0f1a2b3");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_e0f1a2b3");
         }
         String traceId = strOrEmpty(feedback.get("traceId"));
         String recommendedUserId = strOrEmpty(feedback.get("recommendedUserId"));
@@ -421,16 +421,16 @@ public class FlowAiAssistServiceImpl implements FlowAiAssistService {
         if (!StringUtils.hasText(traceId)
                 || !StringUtils.hasText(recommendedUserId)
                 || !StringUtils.hasText(action)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_e0f1a2b3");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_e0f1a2b3");
         }
         // 校验 action 合法性
         if (!isValidFeedbackAction(action)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_e0f1a2b3");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_e0f1a2b3");
         }
         // CHOSEN_OTHER 时必须有 actualUserId
         if ("CHOSEN_OTHER".equals(action)
                 && !StringUtils.hasText(strOrEmpty(feedback.get("actualUserId")))) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_e0f1a2b4");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_e0f1a2b4");
         }
 
         FlowAiFeedbackDO entity = new FlowAiFeedbackDO();

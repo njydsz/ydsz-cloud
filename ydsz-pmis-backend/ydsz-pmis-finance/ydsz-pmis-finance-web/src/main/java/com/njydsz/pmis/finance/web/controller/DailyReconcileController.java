@@ -2,7 +2,7 @@ package com.njydsz.pmis.finance.web.controller;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.finance.server.service.finance.DailyReconcileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -44,8 +44,8 @@ public class DailyReconcileController {
     @Operation(summary = "运行某天的对账（默认今天）")
     @Idempotent(key = "dailyReconcile:run", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/run")
-    public Result<Integer> run(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return Result.ok(service.runDaily(date));
+    public BaseResponse<Integer> run(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        return BaseResponse.ok(service.runDaily(date));
     }
 
     /**
@@ -58,11 +58,11 @@ public class DailyReconcileController {
      */
     @Operation(summary = "按日期范围查询对账记录")
     @GetMapping("/query")
-    public Result<List<Map<String, Object>>> query(
+    public BaseResponse<List<Map<String, Object>>> query(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(required = false) String status) {
-        return Result.ok(service.queryByDateRange(from, to, status));
+        return BaseResponse.ok(service.queryByDateRange(from, to, status));
     }
 
     /**
@@ -74,10 +74,10 @@ public class DailyReconcileController {
      */
     @Operation(summary = "状态统计 OK / WARN / ERROR")
     @GetMapping("/aggregate")
-    public Result<List<Map<String, Object>>> aggregate(
+    public BaseResponse<List<Map<String, Object>>> aggregate(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return Result.ok(service.aggregateStatus(from, to));
+        return BaseResponse.ok(service.aggregateStatus(from, to));
     }
 
     /**
@@ -91,11 +91,11 @@ public class DailyReconcileController {
      */
     @Operation(summary = "纯计算：按阈值分类差异（OK / WARN / ERROR）")
     @GetMapping("/classify")
-    public Result<String> classify(
+    public BaseResponse<String> classify(
             @RequestParam double expected,
             @RequestParam double actual,
             @RequestParam(defaultValue = "0.01") double warnPct,
             @RequestParam(defaultValue = "0.05") double errorPct) {
-        return Result.ok(service.classify(expected, actual, warnPct, errorPct));
+        return BaseResponse.ok(service.classify(expected, actual, warnPct, errorPct));
     }
 }

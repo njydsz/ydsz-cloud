@@ -1,6 +1,6 @@
 package com.njydsz.pmis.project.web.controller.report;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.server.service.ReportExportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,8 +49,8 @@ public class ReportExportController {
      */
     @Operation(summary = "查询可导出的列定义")
     @GetMapping("/columns")
-    public Result<List<ReportExportService.ColumnDef>> columns(@RequestParam String type) {
-        return Result.ok(exportService.columnsOf(type));
+    public BaseResponse<List<ReportExportService.ColumnDef>> columns(@RequestParam String type) {
+        return BaseResponse.ok(exportService.columnsOf(type));
     }
 
     /**

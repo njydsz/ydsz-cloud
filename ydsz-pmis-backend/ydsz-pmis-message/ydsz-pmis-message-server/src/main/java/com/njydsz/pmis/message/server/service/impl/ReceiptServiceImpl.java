@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.server.service.impl.receipt;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.dto.receipt.ReceiptCallbackDTO;
@@ -39,7 +39,7 @@ public class ReceiptServiceImpl implements ReceiptService {
     @Override
     public void callback(ReceiptCallbackDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getLogId())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "回执关联日志 ID 不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "回执关联日志 ID 不能为空");
         }
         // P1-3: 回执回调进入追踪上下文（外部回调无原始 traceId，自动生成）
         try (MessageTraceContext ctx = MessageTraceContext.enter(null)) {

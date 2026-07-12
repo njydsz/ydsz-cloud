@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.delegate;
 
-import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.workflow.domain.entity.delegate.FlowDelegateAuthDO;
 
 import java.util.List;
@@ -79,12 +79,12 @@ public interface FlowDelegateAuthService {
     /**
      * 分页查询"我代理处理的日志"
      */
-    PageResult<?> listDelegateLog(String delegateUserId, int page, int size);
+    PageResponse<?> listDelegateLog(String delegateUserId, int page, int size);
 
     /**
      * 分页查询"我的被代理日志"
      */
-    PageResult<?> listOwnerLog(String ownerUserId, int page, int size);
+    PageResponse<?> listOwnerLog(String ownerUserId, int page, int size);
 
     /**
      * P1-7: 链式解析代理人

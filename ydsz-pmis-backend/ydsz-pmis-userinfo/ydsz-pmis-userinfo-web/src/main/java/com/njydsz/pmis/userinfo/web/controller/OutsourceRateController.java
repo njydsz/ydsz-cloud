@@ -3,7 +3,7 @@ package com.njydsz.pmis.userinfo.web.controller.rate;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRateCreateDTO;
 import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRatePageDTO;
 import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRateUpdateDTO;
@@ -53,8 +53,8 @@ public class OutsourceRateController {
     @Operation(summary = "创建外包职级费率")
     @Idempotent(key = "outsourceRate:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody OutsourceRateCreateDTO dto) {
-        return Result.ok(outsourceRateService.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody OutsourceRateCreateDTO dto) {
+        return BaseResponse.ok(outsourceRateService.create(dto));
     }
 
     /**
@@ -67,9 +67,9 @@ public class OutsourceRateController {
     @Operation(summary = "更新外包职级费率")
     @Idempotent(key = "outsourceRate:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public Result<Void> update(@PathVariable String id, @Valid @RequestBody OutsourceRateUpdateDTO dto) {
+    public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody OutsourceRateUpdateDTO dto) {
         outsourceRateService.update(id, dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -81,9 +81,9 @@ public class OutsourceRateController {
     @Operation(summary = "删除外包职级费率")
     @Idempotent(key = "outsourceRate:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         outsourceRateService.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -94,8 +94,8 @@ public class OutsourceRateController {
      */
     @Operation(summary = "外包职级费率详情")
     @GetMapping("/{id}")
-    public Result<OutsourceRateDO> get(@PathVariable String id) {
-        return Result.ok(outsourceRateService.getById(id));
+    public BaseResponse<OutsourceRateDO> get(@PathVariable String id) {
+        return BaseResponse.ok(outsourceRateService.getById(id));
     }
 
     /**
@@ -106,8 +106,8 @@ public class OutsourceRateController {
      */
     @Operation(summary = "外包职级费率分页")
     @GetMapping
-    public Result<Page<OutsourceRateDO>> page(@Valid OutsourceRatePageDTO query) {
-        return Result.ok(outsourceRateService.page(
+    public BaseResponse<Page<OutsourceRateDO>> page(@Valid OutsourceRatePageDTO query) {
+        return BaseResponse.ok(outsourceRateService.page(
                 (int) query.getPage(),
                 (int) Math.min(query.getSize(), 200),
                 query.getKeyword(),
@@ -124,10 +124,10 @@ public class OutsourceRateController {
      */
     @Operation(summary = "按级别编码 + 日期匹配生效费率")
     @GetMapping("/match")
-    public Result<OutsourceRateDO> matchEffective(@RequestParam String rateCode,
+    public BaseResponse<OutsourceRateDO> matchEffective(@RequestParam String rateCode,
                                                    @RequestParam(required = false)
                                                    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return Result.ok(outsourceRateService.matchEffective(rateCode, date));
+        return BaseResponse.ok(outsourceRateService.matchEffective(rateCode, date));
     }
 
     /**
@@ -138,8 +138,8 @@ public class OutsourceRateController {
      */
     @Operation(summary = "查询某日期生效中的所有外包费率")
     @GetMapping("/effective")
-    public Result<List<OutsourceRateDO>> listEffective(@RequestParam(required = false)
+    public BaseResponse<List<OutsourceRateDO>> listEffective(@RequestParam(required = false)
                                                         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return Result.ok(outsourceRateService.listEffective(date));
+        return BaseResponse.ok(outsourceRateService.listEffective(date));
     }
 }

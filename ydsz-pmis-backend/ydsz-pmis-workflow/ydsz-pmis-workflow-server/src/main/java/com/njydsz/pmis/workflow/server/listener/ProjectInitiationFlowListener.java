@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.listener;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.api.client.InitiationFeignClient;
 import com.njydsz.pmis.common.feign.NotificationClient;
 import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
@@ -372,11 +372,11 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
      * @param initiationId 立项 ID
      * @param call         Feign 调用
      */
-    private void linkageWithRetry(String action, String initiationId, Supplier<Result<Void>> call) {
+    private void linkageWithRetry(String action, String initiationId, Supplier<BaseResponse<Void>> call) {
         for (int attempt = 1; attempt <= LINKAGE_MAX_ATTEMPTS; attempt++) {
             try {
-                Result<Void> result = call.get();
-                if (result != null && result.isSuccess()) {
+                BaseResponse<Void> result = call.get();
+                if (result != null && BaseResponse.isSuccess()) {
                     log.info("[FlowListener] 立项状态联动成功: action={} initiationId={} attempt={}",
                             action, initiationId, attempt);
                     return;

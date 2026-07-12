@@ -1,7 +1,7 @@
 package com.njydsz.pmis.gateway.filter;
 
 import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.constant.CommonConstants;
 import com.njydsz.pmis.common.util.IpUtils;
 import com.njydsz.pmis.common.util.TraceIdUtil;
@@ -172,7 +172,7 @@ public class IpWhitelistFilter implements GlobalFilter, Ordered {
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
         response.getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
 
-        Result<Void> body = Result.failed(403, "error.IP_FORBIDDEN");
+        BaseResponse<Void> body = BaseResponse.failed(403, "error.IP_FORBIDDEN");
         body.setTraceId(traceId);
         byte[] bytes = JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);

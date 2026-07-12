@@ -2,7 +2,7 @@ package com.njydsz.pmis.literule.web;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.literule.server.core.DefaultBreakpointHook;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -53,12 +53,12 @@ public class BreakpointController {
      * @return 断点规则编码列表
      */
     @GetMapping
-    public Result<Set<String>> listBreakpoints() {
+    public BaseResponse<Set<String>> listBreakpoints() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return Result.fail("断点调试器未启用");
+            return BaseResponse.fail("断点调试器未启用");
         }
-        return Result.ok(hook.getBreakpoints());
+        return BaseResponse.ok(hook.getBreakpoints());
     }
 
     /**
@@ -69,14 +69,14 @@ public class BreakpointController {
      */
     @Idempotent(key = "breakpoint:addBreakpoint", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}")
-    public Result<Void> addBreakpoint(@PathVariable String ruleCode) {
+    public BaseResponse<Void> addBreakpoint(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return Result.fail("断点调试器未启用");
+            return BaseResponse.fail("断点调试器未启用");
         }
         hook.addBreakpoint(ruleCode);
         log.info("[Breakpoint] 添加断点: ruleCode={}", ruleCode);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -87,14 +87,14 @@ public class BreakpointController {
      */
     @Idempotent(key = "breakpoint:removeBreakpoint", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{ruleCode}")
-    public Result<Void> removeBreakpoint(@PathVariable String ruleCode) {
+    public BaseResponse<Void> removeBreakpoint(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return Result.fail("断点调试器未启用");
+            return BaseResponse.fail("断点调试器未启用");
         }
         hook.removeBreakpoint(ruleCode);
         log.info("[Breakpoint] 移除断点: ruleCode={}", ruleCode);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -104,14 +104,14 @@ public class BreakpointController {
      */
     @Idempotent(key = "breakpoint:clearBreakpoints", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping
-    public Result<Void> clearBreakpoints() {
+    public BaseResponse<Void> clearBreakpoints() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return Result.fail("断点调试器未启用");
+            return BaseResponse.fail("断点调试器未启用");
         }
         hook.clearBreakpoints();
         log.info("[Breakpoint] 已清空全部断点");
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -122,13 +122,13 @@ public class BreakpointController {
      */
     @Idempotent(key = "breakpoint:resume", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/resume")
-    public Result<Boolean> resume(@PathVariable String ruleCode) {
+    public BaseResponse<Boolean> resume(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return Result.fail("断点调试器未启用");
+            return BaseResponse.fail("断点调试器未启用");
         }
         boolean ok = hook.resume(ruleCode);
-        return Result.ok(ok);
+        return BaseResponse.ok(ok);
     }
 
     /**
@@ -139,13 +139,13 @@ public class BreakpointController {
      */
     @Idempotent(key = "breakpoint:stepOver", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{ruleCode}/stepOver")
-    public Result<Boolean> stepOver(@PathVariable String ruleCode) {
+    public BaseResponse<Boolean> stepOver(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return Result.fail("断点调试器未启用");
+            return BaseResponse.fail("断点调试器未启用");
         }
         boolean ok = hook.stepOver(ruleCode);
-        return Result.ok(ok);
+        return BaseResponse.ok(ok);
     }
 
     /**
@@ -154,12 +154,12 @@ public class BreakpointController {
      * @return 挂起规则编码列表
      */
     @GetMapping("/suspended")
-    public Result<Set<String>> suspendedRules() {
+    public BaseResponse<Set<String>> suspendedRules() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return Result.fail("断点调试器未启用");
+            return BaseResponse.fail("断点调试器未启用");
         }
-        return Result.ok(hook.getSuspendedRules());
+        return BaseResponse.ok(hook.getSuspendedRules());
     }
 
     /**
@@ -168,12 +168,12 @@ public class BreakpointController {
      * @return 快照列表（评估前后的上下文，最多 200 条）
      */
     @GetMapping("/snapshots")
-    public Result<List<Map<String, Object>>> snapshots() {
+    public BaseResponse<List<Map<String, Object>>> snapshots() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return Result.fail("断点调试器未启用");
+            return BaseResponse.fail("断点调试器未启用");
         }
-        return Result.ok(hook.getSnapshots());
+        return BaseResponse.ok(hook.getSnapshots());
     }
 
     /**
@@ -183,13 +183,13 @@ public class BreakpointController {
      */
     @Idempotent(key = "breakpoint:clearSnapshots", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/snapshots")
-    public Result<Void> clearSnapshots() {
+    public BaseResponse<Void> clearSnapshots() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return Result.fail("断点调试器未启用");
+            return BaseResponse.fail("断点调试器未启用");
         }
         hook.clearSnapshots();
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -198,16 +198,16 @@ public class BreakpointController {
      * @return 状态信息
      */
     @GetMapping("/status")
-    public Result<Map<String, Object>> status() {
+    public BaseResponse<Map<String, Object>> status() {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {
-            return Result.fail("断点调试器未启用");
+            return BaseResponse.fail("断点调试器未启用");
         }
         Map<String, Object> status = new LinkedHashMap<>();
         status.put("enabled", hook.isEnabled());
         status.put("breakpointCount", hook.getBreakpoints().size());
         status.put("suspendedCount", hook.getSuspendedRules().size());
         status.put("snapshotCount", hook.getSnapshots().size());
-        return Result.ok(status);
+        return BaseResponse.ok(status);
     }
 }

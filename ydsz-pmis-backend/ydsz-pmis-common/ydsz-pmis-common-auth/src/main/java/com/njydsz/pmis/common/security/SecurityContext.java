@@ -1,7 +1,7 @@
 package com.njydsz.pmis.common.security;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.context.RequestContext;
 import com.njydsz.pmis.common.exception.BizException;
 
@@ -53,7 +53,7 @@ public final class SecurityContext {
     public static LoginUser getCurrent() {
         LoginUser user = CONTEXT.get();
         if (user == null) {
-            throw new BizException(BizErrorCode.UNAUTHORIZED, "error.common.msg_1923bd82");
+            throw new BizException(StandardResultCode.UNAUTHORIZED, "error.common.msg_1923bd82");
         }
         return user;
     }
@@ -136,7 +136,7 @@ public final class SecurityContext {
     public static void requirePermission(String perm) {
         LoginUser user = getCurrent();
         if (!user.hasPermission(perm)) {
-            throw new BizException(BizErrorCode.FORBIDDEN, "error.common.msg_1e40057e", perm);
+            throw new BizException(StandardResultCode.FORBIDDEN, "error.common.msg_1e40057e", perm);
         }
     }
 
@@ -153,6 +153,6 @@ public final class SecurityContext {
                 return;
             }
         }
-        throw new BizException(BizErrorCode.FORBIDDEN, "error.common.msg_ad4fff48");
+        throw new BizException(StandardResultCode.FORBIDDEN, "error.common.msg_ad4fff48");
     }
 }

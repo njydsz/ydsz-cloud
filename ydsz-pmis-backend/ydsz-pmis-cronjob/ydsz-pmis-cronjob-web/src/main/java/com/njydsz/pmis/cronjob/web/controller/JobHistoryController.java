@@ -2,7 +2,7 @@ package com.njydsz.pmis.cronjob.web.controller.job;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobHistoryDO;
 import com.njydsz.pmis.cronjob.server.service.job.JobHistoryService;
@@ -43,8 +43,8 @@ public class JobHistoryController {
      */
     @Operation(summary = "获取任务版本列表")
     @GetMapping("/versions")
-    public Result<List<JobHistoryDO>> versions(@RequestParam String jobId) {
-        return Result.ok(jobHistoryService.listVersions(jobId));
+    public BaseResponse<List<JobHistoryDO>> versions(@RequestParam String jobId) {
+        return BaseResponse.ok(jobHistoryService.listVersions(jobId));
     }
 
     /**
@@ -56,9 +56,9 @@ public class JobHistoryController {
      */
     @Operation(summary = "获取指定版本详情")
     @GetMapping("/detail")
-    public Result<JobHistoryDO> detail(@RequestParam String jobId,
+    public BaseResponse<JobHistoryDO> detail(@RequestParam String jobId,
                                         @RequestParam Integer version) {
-        return Result.ok(jobHistoryService.getVersion(jobId, version));
+        return BaseResponse.ok(jobHistoryService.getVersion(jobId, version));
     }
 
     /**
@@ -71,9 +71,9 @@ public class JobHistoryController {
     @Operation(summary = "回滚到指定版本")
     @Idempotent(key = "jobHistory:rollback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/rollback")
-    public Result<JobDO> rollback(@RequestParam String jobId,
+    public BaseResponse<JobDO> rollback(@RequestParam String jobId,
                                    @RequestParam Integer version) {
-        return Result.ok(jobHistoryService.rollback(jobId, version));
+        return BaseResponse.ok(jobHistoryService.rollback(jobId, version));
     }
 
     /**
@@ -86,9 +86,9 @@ public class JobHistoryController {
      */
     @Operation(summary = "对比两个版本差异")
     @GetMapping("/compare")
-    public Result<List<Map<String, Object>>> compare(@RequestParam String jobId,
+    public BaseResponse<List<Map<String, Object>>> compare(@RequestParam String jobId,
                                                       @RequestParam("v1") Integer version1,
                                                       @RequestParam("v2") Integer version2) {
-        return Result.ok(jobHistoryService.compareVersions(jobId, version1, version2));
+        return BaseResponse.ok(jobHistoryService.compareVersions(jobId, version1, version2));
     }
 }

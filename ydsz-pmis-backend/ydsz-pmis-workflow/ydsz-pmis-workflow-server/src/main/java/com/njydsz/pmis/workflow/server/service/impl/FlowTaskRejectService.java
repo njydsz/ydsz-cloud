@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
@@ -95,7 +95,7 @@ public class FlowTaskRejectService {
     public void reject(FlowTaskOperateDTO dto) {
         FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_b35e6ea3");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_b35e6ea3");
         }
         LocalDateTime now = LocalDateTime.now();
         Long durationMs = task.getCreatedAt() == null

@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.entity.batch.MsgAggregateDO;
@@ -42,8 +42,8 @@ public class AggregateController {
     @Operation(summary = "聚合批次分页")
     @PrePermission(PermissionCodes.MESSAGE_AGGREGATE_LIST)
     @GetMapping("/page")
-    public Result<Page<MsgAggregateDO>> page(PageQuery query) {
-        return Result.ok(aggregateService.page(query));
+    public BaseResponse<Page<MsgAggregateDO>> page(PageQuery query) {
+        return BaseResponse.ok(aggregateService.page(query));
     }
 
     /**
@@ -57,8 +57,8 @@ public class AggregateController {
     @PrePermission(PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
     @Idempotent(key = "aggregate:flushByGroup", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/flush")
-    public Result<Integer> flushByGroup(@RequestParam String group, @RequestParam String receiver) {
-        return Result.ok(aggregateService.flushByGroup(group, receiver));
+    public BaseResponse<Integer> flushByGroup(@RequestParam String group, @RequestParam String receiver) {
+        return BaseResponse.ok(aggregateService.flushByGroup(group, receiver));
     }
 
     /**
@@ -70,7 +70,7 @@ public class AggregateController {
     @PrePermission(PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
     @Idempotent(key = "aggregate:flushDue", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/flushDue")
-    public Result<Integer> flushDue() {
-        return Result.ok(aggregateService.flushDue());
+    public BaseResponse<Integer> flushDue() {
+        return BaseResponse.ok(aggregateService.flushDue());
     }
 }

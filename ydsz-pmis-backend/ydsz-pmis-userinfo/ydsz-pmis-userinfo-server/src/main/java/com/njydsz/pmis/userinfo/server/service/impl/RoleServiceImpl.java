@@ -2,7 +2,7 @@ package com.njydsz.pmis.userinfo.server.service.impl.permission;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.userinfo.domain.dto.permission.RoleFormDTO;
@@ -59,7 +59,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = CACHE_NAME, key = "'listAllEnabled'", unless = "#result == null || #result.isEmpty()")
+    @Cacheable(value = CACHE_NAME, key = "'listAllEnabled'", unless = "#result == null || #BaseResponse.isEmpty()")
     public List<RoleDO> listAllEnabled() {
         return roleMapper.selectList(new LambdaQueryWrapper<RoleDO>()
                 .eq(RoleDO::getStatus, "ENABLED")
@@ -72,14 +72,14 @@ public class RoleServiceImpl implements RoleService {
     public RoleDO getById(String id) {
         RoleDO r = roleMapper.selectById(id);
         if (r == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_c3f70e4c");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.user.msg_c3f70e4c");
         }
         return r;
     }
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = CACHE_NAME, key = "'byUserId:' + #userId", unless = "#result == null || #result.isEmpty()")
+    @Cacheable(value = CACHE_NAME, key = "'byUserId:' + #userId", unless = "#result == null || #BaseResponse.isEmpty()")
     public List<RoleDO> listByUserId(String userId) {
         return roleMapper.selectByUserId(userId);
     }
@@ -89,7 +89,7 @@ public class RoleServiceImpl implements RoleService {
     @CacheEvict(value = CACHE_NAME, allEntries = true)
     public String create(RoleFormDTO dto) {
         if (roleMapper.selectByCode(dto.getRoleCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_af20e82e");
+            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.user.msg_af20e82e");
         }
         RoleDO entity = new RoleDO();
         BeanUtils.copyProperties(dto, entity);
@@ -107,11 +107,11 @@ public class RoleServiceImpl implements RoleService {
     @CacheEvict(value = CACHE_NAME, allEntries = true)
     public void update(RoleFormDTO dto) {
         if (dto.getId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_6fe5914e");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_6fe5914e");
         }
         RoleDO exists = roleMapper.selectById(dto.getId());
         if (exists == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_c3f70e4c");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.user.msg_c3f70e4c");
         }
         RoleDO entity = new RoleDO();
         BeanUtils.copyProperties(dto, entity);
@@ -126,12 +126,12 @@ public class RoleServiceImpl implements RoleService {
     @CacheEvict(value = CACHE_NAME, allEntries = true)
     public void delete(String id) {
         if (roleMapper.selectById(id) == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_c3f70e4c");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.user.msg_c3f70e4c");
         }
         // 不允许删除 SUPER_ADMIN
         RoleDO r = roleMapper.selectById(id);
         if ("SUPER_ADMIN".equals(r.getRoleCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_5201576b");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_5201576b");
         }
         roleMapper.deleteById(id);
         // 清除角色权限关联
@@ -158,7 +158,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = CACHE_NAME, key = "'permIds:' + #roleId", unless = "#result == null || #result.isEmpty()")
+    @Cacheable(value = CACHE_NAME, key = "'permIds:' + #roleId", unless = "#result == null || #BaseResponse.isEmpty()")
     public List<String> listPermissionIds(String roleId) {
         return rolePermissionMapper.selectPermissionIdsByRoleId(roleId);
     }

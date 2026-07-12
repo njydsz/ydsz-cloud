@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.domain.enums.instance.FlowTaskStatus;
@@ -54,7 +54,7 @@ public class FlowTaskTimeoutService {
         String status = task.getTaskStatus();
         if (!FlowTaskStatus.PENDING.name().equals(status)
                 && !FlowTaskStatus.CLAIMED.name().equals(status)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_ecc09732", status);
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_ecc09732", status);
         }
         LocalDateTime now = LocalDateTime.now();
         Long durationMs = task.getCreatedAt() == null
@@ -89,7 +89,7 @@ public class FlowTaskTimeoutService {
         String status = task.getTaskStatus();
         if (!FlowTaskStatus.PENDING.name().equals(status)
                 && !FlowTaskStatus.CLAIMED.name().equals(status)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.workflow.msg_d0e1f2a3", status);
         }
         task.setTaskStatus(FlowTaskStatus.SUSPENDED.name());
@@ -110,7 +110,7 @@ public class FlowTaskTimeoutService {
         FlowRunTaskDO task = support.getTaskOrThrow(taskId);
         String status = task.getTaskStatus();
         if (!FlowTaskStatus.SUSPENDED.name().equals(status)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.workflow.msg_e1f2a3b4", status);
         }
         task.setTaskStatus(FlowTaskStatus.PENDING.name());

@@ -3,7 +3,7 @@ package com.njydsz.pmis.finance.web.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.ApprovalDTO;
 import com.njydsz.pmis.finance.domain.dto.ExpenseCreateDTO;
 import com.njydsz.pmis.finance.domain.entity.ExpenseDO;
@@ -53,8 +53,8 @@ public class ExpenseController {
     @PrePermission("execution:expense:create")
     @Idempotent(key = "expense:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody ExpenseCreateDTO dto) {
-        return Result.ok(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody ExpenseCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
@@ -67,9 +67,9 @@ public class ExpenseController {
     @PrePermission("execution:expense:status")
     @Idempotent(key = "expense:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
-    public Result<Void> changeStatus(@Valid @RequestBody ApprovalDTO dto) {
+    public BaseResponse<Void> changeStatus(@Valid @RequestBody ApprovalDTO dto) {
         service.changeStatus(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -82,9 +82,9 @@ public class ExpenseController {
     @PrePermission("execution:expense:delete")
     @Idempotent(key = "expense:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -96,8 +96,8 @@ public class ExpenseController {
     @Operation(summary = "详情")
     @PrePermission("execution:expense:list")
     @GetMapping("/{id}")
-    public Result<ExpenseDO> get(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<ExpenseDO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -115,7 +115,7 @@ public class ExpenseController {
     @Operation(summary = "分页")
     @PrePermission("execution:expense:list")
     @GetMapping("/page")
-    public Result<Page<ExpenseDO>> page(
+    public BaseResponse<Page<ExpenseDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
@@ -123,6 +123,6 @@ public class ExpenseController {
             @RequestParam(required = false) String expenseType,
             @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) String initiationId) {
-        return Result.ok(service.page(page, size, keyword, status, expenseType, employeeId, initiationId));
+        return BaseResponse.ok(service.page(page, size, keyword, status, expenseType, employeeId, initiationId));
     }
 }

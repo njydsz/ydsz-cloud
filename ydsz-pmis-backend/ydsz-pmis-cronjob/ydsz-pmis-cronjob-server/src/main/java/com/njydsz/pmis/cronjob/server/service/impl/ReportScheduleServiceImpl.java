@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.server.service.impl.job;
 
 import com.alibaba.excel.EasyExcel;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.config.MinioConfig;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -311,8 +311,8 @@ public class ReportScheduleServiceImpl implements ReportScheduleService {
             request.setContent("您好，您订阅的 " + reportType + " 报表已生成，下载链接：" + fileKey);
             request.setBizType("REPORT");
             request.setBizId(String.valueOf(subId));
-            Result<MessageResult> result = messageServiceClient.send(request);
-            if (result != null && result.isSuccess()) {
+            BaseResponse<MessageResult> result = messageServiceClient.send(request);
+            if (result != null && BaseResponse.isSuccess()) {
                 log.info("[ReportSchedule] 报表邮件通知发送成功: subId={}, recipients={}", subId, recipients);
             } else {
                 log.warn("[ReportSchedule] 报表邮件通知发送失败: subId={}, result={}", subId, result);

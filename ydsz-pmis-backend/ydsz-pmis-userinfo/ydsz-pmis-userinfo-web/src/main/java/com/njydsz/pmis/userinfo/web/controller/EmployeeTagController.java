@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.userinfo.domain.dto.user.EmployeeTagCreateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.user.EmployeeTagDO;
@@ -53,8 +53,8 @@ public class EmployeeTagController {
     @OperationLog(module = "人员标签", action = "添加标签", bizType = "EMPLOYEE_TAG")
     @Idempotent(key = "employeeTag:add", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> add(@Valid @RequestBody EmployeeTagCreateDTO dto) {
-        return Result.ok(tagService.add(dto));
+    public BaseResponse<String> add(@Valid @RequestBody EmployeeTagCreateDTO dto) {
+        return BaseResponse.ok(tagService.add(dto));
     }
 
     /**
@@ -68,9 +68,9 @@ public class EmployeeTagController {
     @OperationLog(module = "人员标签", action = "删除标签", bizType = "EMPLOYEE_TAG")
     @Idempotent(key = "employeeTag:remove", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> remove(@PathVariable String id) {
+    public BaseResponse<Void> remove(@PathVariable String id) {
         tagService.remove(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -85,10 +85,10 @@ public class EmployeeTagController {
     @OperationLog(module = "人员标签", action = "覆盖员工标签", bizType = "EMPLOYEE_TAG")
     @Idempotent(key = "employeeTag:replaceByEmployee", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/replace/{employeeId}")
-    public Result<Void> replaceByEmployee(@PathVariable String employeeId,
+    public BaseResponse<Void> replaceByEmployee(@PathVariable String employeeId,
                                      @Valid @RequestBody List<EmployeeTagCreateDTO> tags) {
         tagService.replaceByEmployee(employeeId, tags);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -99,8 +99,8 @@ public class EmployeeTagController {
      */
     @Operation(summary = "按员工查询")
     @GetMapping("/byEmployee/{employeeId}")
-    public Result<List<EmployeeTagDO>> listByEmployee(@PathVariable String employeeId) {
-        return Result.ok(tagService.listByEmployee(employeeId));
+    public BaseResponse<List<EmployeeTagDO>> listByEmployee(@PathVariable String employeeId) {
+        return BaseResponse.ok(tagService.listByEmployee(employeeId));
     }
 
     /**
@@ -112,8 +112,8 @@ public class EmployeeTagController {
      */
     @Operation(summary = "按标签筛选候选人")
     @GetMapping("/candidates")
-    public Result<List<EmployeeTagDO>> candidates(@RequestParam String tagType,
+    public BaseResponse<List<EmployeeTagDO>> candidates(@RequestParam String tagType,
                                              @RequestParam(required = false) String tagCode) {
-        return Result.ok(tagService.findCandidates(tagType, tagCode));
+        return BaseResponse.ok(tagService.findCandidates(tagType, tagCode));
     }
 }

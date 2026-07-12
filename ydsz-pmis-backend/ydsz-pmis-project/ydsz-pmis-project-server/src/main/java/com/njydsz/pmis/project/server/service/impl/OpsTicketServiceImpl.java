@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.server.service.impl;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.domain.dto.OpsTicketAssignDTO;
 import com.njydsz.pmis.project.domain.dto.OpsTicketCreateDTO;
@@ -50,10 +50,10 @@ public class OpsTicketServiceImpl implements OpsTicketService {
         validate(dto);
         OpsTicketPriority priority = OpsTicketPriority.fromCode(dto.getPriority());
         if (priority == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d4fa3d01", dto.getPriority());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d4fa3d01", dto.getPriority());
         }
         if (!ALLOWED_CATEGORIES.contains(dto.getCategory() == null ? "OTHER" : dto.getCategory())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_a9b85ade", dto.getCategory());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_a9b85ade", dto.getCategory());
         }
         OpsTicketDO t = new OpsTicketDO();
         BeanUtils.copyProperties(dto, t);
@@ -79,14 +79,14 @@ public class OpsTicketServiceImpl implements OpsTicketService {
     @Transactional(rollbackFor = Exception.class)
     public void assign(OpsTicketAssignDTO dto) {
         if (dto == null || dto.getId() == null || dto.getAssigneeId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_245582df");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_245582df");
         }
         OpsTicketDO t = ticketMapper.selectById(dto.getId());
-        if (t == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_bbe37281");
+        if (t == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_bbe37281");
         OpsTicketStatus st = OpsTicketStatus.fromCode(t.getStatus());
-        if (st == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_9fc0eba4");
+        if (st == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_9fc0eba4");
         if (!st.canTransitTo(OpsTicketStatus.ASSIGNED)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.execution.msg_1893fa52", st.getDesc());
         }
         ticketMapper.updateAssignee(dto.getId(), dto.getAssigneeId(), dto.getAssigneeName(),
@@ -98,16 +98,16 @@ public class OpsTicketServiceImpl implements OpsTicketService {
     @Transactional(rollbackFor = Exception.class)
     public void changeStatus(OpsTicketStatusDTO dto) {
         if (dto == null || dto.getId() == null || !StringUtils.hasText(dto.getTargetStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_40437174");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_40437174");
         }
         OpsTicketDO t = ticketMapper.selectById(dto.getId());
-        if (t == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_bbe37281");
+        if (t == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_bbe37281");
         OpsTicketStatus from = OpsTicketStatus.fromCode(t.getStatus());
         OpsTicketStatus to = OpsTicketStatus.fromCode(dto.getTargetStatus());
-        if (from == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_af717625");
-        if (to == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_57801ca5", dto.getTargetStatus());
+        if (from == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_af717625");
+        if (to == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_57801ca5", dto.getTargetStatus());
         if (!from.canTransitTo(to)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST,
+            throw new BizException(StandardResultCode.BAD_REQUEST,
                     "error.execution.msg_01c65a70", from.getDesc(), to.getDesc());
         }
         LocalDateTime now = LocalDateTime.now();
@@ -172,13 +172,13 @@ public class OpsTicketServiceImpl implements OpsTicketService {
     public void closeAndEvaluate(OpsTicketStatusDTO dto) {
         // 校验必须 RESOLVED → CLOSED
         OpsTicketDO t = ticketMapper.selectById(dto.getId());
-        if (t == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_bbe37281");
+        if (t == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_bbe37281");
         OpsTicketStatus from = OpsTicketStatus.fromCode(t.getStatus());
         if (from != OpsTicketStatus.RESOLVED) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_bd700481");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_bd700481");
         }
         if (dto.getCustomerScore() == null || dto.getCustomerScore() < 1 || dto.getCustomerScore() > 5) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_991982a0");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_991982a0");
         }
         changeStatus(dto);
     }
@@ -236,24 +236,24 @@ public class OpsTicketServiceImpl implements OpsTicketService {
     @Transactional(readOnly = true)
     public OpsTicketDO getById(String id) {
         if (id == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_8f2cc72d");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_8f2cc72d");
         }
         OpsTicketDO t = ticketMapper.selectById(id);
         if (t == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_bbe37281");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_bbe37281");
         }
         return t;
     }
 
     private void validate(OpsTicketCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         if (dto.getInitiationId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (!StringUtils.hasText(dto.getTitle())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_4cfed9e9");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_4cfed9e9");
         }
     }
 }

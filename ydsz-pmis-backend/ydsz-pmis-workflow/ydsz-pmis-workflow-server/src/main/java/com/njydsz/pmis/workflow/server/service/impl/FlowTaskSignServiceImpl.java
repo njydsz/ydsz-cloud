@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
@@ -59,7 +59,7 @@ public class FlowTaskSignServiceImpl {
     public void countersignBefore(FlowTaskOperateDTO dto) {
         FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
         }
         // 前加签：在当前节点前插入临时审批人
         // 实现：为当前任务新增一个审批人记录到 pmis_flow_user，approveCount+1
@@ -98,7 +98,7 @@ public class FlowTaskSignServiceImpl {
     public void countersignAfter(FlowTaskOperateDTO dto) {
         FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
         }
         // P2-29: 后加签真实实现 — 当前审批人通过后，新加签人需要审批，两人都通过后才推进到下一节点
         // 实现方式：
@@ -152,10 +152,10 @@ public class FlowTaskSignServiceImpl {
     public void countersignParallel(FlowTaskOperateDTO dto) {
         FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
         }
         if (dto.getTargetUserId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_2deb2e4f");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_2deb2e4f");
         }
         FlowUserDO fu = new FlowUserDO();
         fu.setTaskId(task.getId());
@@ -196,10 +196,10 @@ public class FlowTaskSignServiceImpl {
     public void countersignRemove(FlowTaskOperateDTO dto) {
         FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_ff1454e4");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_ff1454e4");
         }
         if (dto.getTargetUserId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_7c4a1bdf");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_7c4a1bdf");
         }
         // 从 pmis_flow_user 中删除指定用户
         Map<String, Object> deleteMap = new HashMap<>();
@@ -208,7 +208,7 @@ public class FlowTaskSignServiceImpl {
         deleteMap.put("user_id", String.valueOf(dto.getTargetUserId()));
         int deleted = userMapper.deleteByMap(deleteMap);
         if (deleted == 0) {
-            throw new BizException(BizErrorCode.NOT_FOUND,
+            throw new BizException(StandardResultCode.NOT_FOUND,
                     "error.workflow.msg_a39adc9d", dto.getTargetUserId());
         }
         // approveCount -1，但不低于 1
@@ -265,7 +265,7 @@ public class FlowTaskSignServiceImpl {
     public void saveDraft(FlowTaskOperateDTO dto) {
         FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_8913103b");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_8913103b");
         }
         // 保存审批意见草稿到 comment 字段，不改变任务状态
         task.setComment(dto.getComment());
@@ -286,10 +286,10 @@ public class FlowTaskSignServiceImpl {
     public void addApprover(FlowTaskOperateDTO dto) {
         FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_511d4aaa");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_511d4aaa");
         }
         if (dto.getTargetUserId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_2deb2e4f");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_2deb2e4f");
         }
         // 向 pmis_flow_user 插入新审批人
         FlowUserDO fu = new FlowUserDO();

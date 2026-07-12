@@ -7,8 +7,8 @@ import com.njydsz.pmis.agent.domain.dto.tool.ToolRegisterDTO;
 import com.njydsz.pmis.agent.domain.entity.tool.ToolMarketEntryDO;
 import com.njydsz.pmis.agent.server.service.tool.ToolMarketService;
 import com.njydsz.pmis.agent.server.tool.ToolResult;
-import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -67,8 +67,8 @@ public class ToolMarketController {
     @Idempotent(key = "toolMarket:register", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/register")
     @Operation(summary = "注册工具", description = "手动注册单个 HTTP API 工具到工具市场")
-    public Result<ToolMarketEntryDO> register(@Valid @RequestBody ToolRegisterDTO dto) {
-        return Result.ok(service.register(dto));
+    public BaseResponse<ToolMarketEntryDO> register(@Valid @RequestBody ToolRegisterDTO dto) {
+        return BaseResponse.ok(service.register(dto));
     }
 
     /**
@@ -80,10 +80,10 @@ public class ToolMarketController {
     @Idempotent(key = "toolMarket:registerFromOpenApi", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/registerOpenapi")
     @Operation(summary = "OpenAPI 批量导入", description = "通过 OpenAPI 3.x 规范 URL 批量导入工具")
-    public Result<List<ToolMarketEntryDO>> registerFromOpenApi(
+    public BaseResponse<List<ToolMarketEntryDO>> registerFromOpenApi(
             @Parameter(description = "OpenAPI 规范 URL", required = true)
             @RequestParam String specUrl) {
-        return Result.ok(service.registerFromOpenApi(specUrl));
+        return BaseResponse.ok(service.registerFromOpenApi(specUrl));
     }
 
     /**
@@ -95,9 +95,9 @@ public class ToolMarketController {
     @Idempotent(key = "toolMarket:unregister", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{toolName}")
     @Operation(summary = "注销工具", description = "从工具市场注销指定工具（软删除 + 从 ToolRegistry 移除）")
-    public Result<Void> unregister(@PathVariable String toolName) {
+    public BaseResponse<Void> unregister(@PathVariable String toolName) {
         service.unregister(toolName);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -109,8 +109,8 @@ public class ToolMarketController {
     @Idempotent(key = "toolMarket:enable", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{toolName}/enable")
     @Operation(summary = "启用工具", description = "启用指定工具，注册到 ToolRegistry 供 Agent 调用")
-    public Result<ToolMarketEntryDO> enable(@PathVariable String toolName) {
-        return Result.ok(service.enable(toolName));
+    public BaseResponse<ToolMarketEntryDO> enable(@PathVariable String toolName) {
+        return BaseResponse.ok(service.enable(toolName));
     }
 
     /**
@@ -122,8 +122,8 @@ public class ToolMarketController {
     @Idempotent(key = "toolMarket:disable", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{toolName}/disable")
     @Operation(summary = "禁用工具", description = "禁用指定工具，从 ToolRegistry 移除")
-    public Result<ToolMarketEntryDO> disable(@PathVariable String toolName) {
-        return Result.ok(service.disable(toolName));
+    public BaseResponse<ToolMarketEntryDO> disable(@PathVariable String toolName) {
+        return BaseResponse.ok(service.disable(toolName));
     }
 
     /**
@@ -134,8 +134,8 @@ public class ToolMarketController {
      */
     @GetMapping("/{id}")
     @Operation(summary = "查询工具详情")
-    public Result<ToolMarketEntryDO> getById(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<ToolMarketEntryDO> getById(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -146,8 +146,8 @@ public class ToolMarketController {
      */
     @GetMapping
     @Operation(summary = "分页查询工具列表")
-    public Result<PageResult<ToolMarketEntryDO>> page(ToolMarketQueryDTO query) {
-        return Result.ok(service.page(query));
+    public BaseResponse<PageResponse<ToolMarketEntryDO>> page(ToolMarketQueryDTO query) {
+        return BaseResponse.ok(service.page(query));
     }
 
     /**
@@ -160,9 +160,9 @@ public class ToolMarketController {
     @Idempotent(key = "toolMarket:testTool", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{toolName}/test")
     @Operation(summary = "测试工具调用", description = "使用指定参数测试工具调用，不影响 ToolRegistry 状态")
-    public Result<ToolResult> testTool(
+    public BaseResponse<ToolResult> testTool(
             @PathVariable String toolName,
             @RequestBody Map<String, Object> parameters) {
-        return Result.ok(service.testTool(toolName, parameters));
+        return BaseResponse.ok(service.testTool(toolName, parameters));
     }
 }

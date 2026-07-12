@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowHisTaskDO;
@@ -148,10 +148,10 @@ public class FlowExportServiceImpl implements FlowExportService {
                 "<script>window.onload=function(){window.print();}</script></body>");
 
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("html", printHtml);
-        result.put("instanceId", instanceId);
-        result.put("exportTime", LocalDateTime.now().format(FMT));
-        result.put("exportBy", userName != null ? userName : userId);
+        BaseResponse.put("html", printHtml);
+        BaseResponse.put("instanceId", instanceId);
+        BaseResponse.put("exportTime", LocalDateTime.now().format(FMT));
+        BaseResponse.put("exportBy", userName != null ? userName : userId);
         return result;
     }
 
@@ -160,7 +160,7 @@ public class FlowExportServiceImpl implements FlowExportService {
     private FlowInstanceDO loadInstance(String instanceId) {
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+            throw new BizException(StandardResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
         }
         return instance;
     }

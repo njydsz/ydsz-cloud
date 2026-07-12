@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.engine.impl;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.api.client.OrgQueryClient;
 import com.njydsz.pmis.workflow.server.engine.FlowAssigneeResolver;
 import lombok.RequiredArgsConstructor;
@@ -108,8 +108,8 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
             return Collections.emptyList();
         }
         try {
-            Result<List<String>> resp = orgQueryClient.listRoleCodesByUserId(userId);
-            if (resp == null || resp.getCode() != Result.CODE_SUCCESS || resp.getData() == null) {
+            BaseResponse<List<String>> resp = orgQueryClient.listRoleCodesByUserId(userId);
+            if (resp == null || resp.getCode() != BaseResponse.SUCCESS || resp.getData() == null) {
                 return Collections.emptyList();
             }
             return resp.getData().stream()
@@ -138,8 +138,8 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
             return Collections.emptyList();
         }
         try {
-            Result<List<String>> resp = orgQueryClient.listDeptIdsByUserId(userId);
-            if (resp == null || resp.getCode() != Result.CODE_SUCCESS || resp.getData() == null) {
+            BaseResponse<List<String>> resp = orgQueryClient.listDeptIdsByUserId(userId);
+            if (resp == null || resp.getCode() != BaseResponse.SUCCESS || resp.getData() == null) {
                 return Collections.emptyList();
             }
             return resp.getData().stream()
@@ -176,7 +176,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         visited.add(userId);  // 防止自环
         for (int i = 0; i < maxLevels; i++) {
             try {
-                Result<String> resp = orgQueryClient.getLeaderByUserId(currentUserId);
+                BaseResponse<String> resp = orgQueryClient.getLeaderByUserId(currentUserId);
                 Long leaderId = extractLong(resp);
                 if (leaderId == null) {
                     log.debug("[Flow] multi_leader 链路中断: userId={} level={}", currentUserId, i + 1);
@@ -186,7 +186,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
                     log.warn("[Flow] multi_leader 检测到循环引用: userId={} leaderId={}", currentUserId, leaderId);
                     break;
                 }
-                result.add(leaderId);
+                BaseResponse.add(leaderId);
                 currentUserId = String.valueOf(leaderId);
             } catch (Exception e) {
                 log.warn("[Flow] multi_leader 查询异常: userId={} level={} err={}",
@@ -210,8 +210,8 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         if (roleCode == null || roleCode.isBlank()) {
             return Collections.emptyList();
         }
-        Result<List<Long>> resp = orgQueryClient.listUserIdsByRoleCode(roleCode);
-        if (resp == null || resp.getCode() != Result.CODE_SUCCESS || resp.getData() == null) {
+        BaseResponse<List<Long>> resp = orgQueryClient.listUserIdsByRoleCode(roleCode);
+        if (resp == null || resp.getCode() != BaseResponse.SUCCESS || resp.getData() == null) {
             log.debug("[Flow] 角色展开返回空: roleCode={} resp={}", roleCode,
                     resp == null ? "null" : resp.getCode());
             return Collections.emptyList();
@@ -254,7 +254,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
             return Collections.emptyList();
         }
         List<Long> result = new ArrayList<>(1);
-        result.add(leaderId);
+        BaseResponse.add(leaderId);
         return result;
     }
 
@@ -268,8 +268,8 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         if (positionCode == null || positionCode.isBlank()) {
             return Collections.emptyList();
         }
-        Result<List<Long>> resp = orgQueryClient.listUserIdsByPositionCode(positionCode);
-        if (resp == null || resp.getCode() != Result.CODE_SUCCESS || resp.getData() == null) {
+        BaseResponse<List<Long>> resp = orgQueryClient.listUserIdsByPositionCode(positionCode);
+        if (resp == null || resp.getCode() != BaseResponse.SUCCESS || resp.getData() == null) {
             log.debug("[Flow] 岗位展开返回空: positionCode={} resp={}", positionCode,
                     resp == null ? "null" : resp.getCode());
             return Collections.emptyList();
@@ -296,11 +296,11 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         Long leaderId;
         if (deptToken.matches("\\d+")) {
             // 纯数字：按 deptId 查
-            Result<String> resp = orgQueryClient.getDeptLeaderByDeptId(Long.parseLong(deptToken));
+            BaseResponse<String> resp = orgQueryClient.getDeptLeaderByDeptId(Long.parseLong(deptToken));
             leaderId = extractLong(resp);
         } else {
             // 非数字：按 deptCode 查
-            Result<String> resp = orgQueryClient.getDeptLeaderByDeptCode(deptToken);
+            BaseResponse<String> resp = orgQueryClient.getDeptLeaderByDeptCode(deptToken);
             leaderId = extractLong(resp);
         }
         if (leaderId == null) {
@@ -308,7 +308,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
             return Collections.emptyList();
         }
         List<Long> result = new ArrayList<>(1);
-        result.add(leaderId);
+        BaseResponse.add(leaderId);
         return result;
     }
 
@@ -341,15 +341,15 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
     /**
      * 从 Result 中安全提取 Long 值
      *
-     * <p>Feign 返回 {@code Result<String>}（ID 已迁移为 String），此处解析为 Long
+     * <p>Feign 返回 {@code BaseResponse<String>}（ID 已迁移为 String），此处解析为 Long
      * 以匹配 {@link FlowAssigneeResolver#expandUsers} / {@link FlowAssigneeResolver#expandMultiLeader}
      * 的 {@code List<Long>} 返回类型。
      *
      * @param resp Feign 响应
      * @return Long 值，失败或为空时返回 null
      */
-    private Long extractLong(Result<String> resp) {
-        if (resp == null || resp.getCode() != Result.CODE_SUCCESS) {
+    private Long extractLong(BaseResponse<String> resp) {
+        if (resp == null || resp.getCode() != BaseResponse.SUCCESS) {
             return null;
         }
         String data = resp.getData();

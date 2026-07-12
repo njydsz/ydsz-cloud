@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.cronjob.domain.dto.alert.AlertRuleSaveDTO;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobAlertLogDO;
@@ -48,8 +48,8 @@ public class AlertController {
     @OperationLog(module = "任务调度", action = "创建告警规则", bizType = "CRONJOB_ALERT")
     @Idempotent(key = "alert:createRule", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/rule")
-    public Result<String> createRule(@Valid @RequestBody AlertRuleSaveDTO dto) {
-        return Result.ok(alertService.createRule(dto));
+    public BaseResponse<String> createRule(@Valid @RequestBody AlertRuleSaveDTO dto) {
+        return BaseResponse.ok(alertService.createRule(dto));
     }
 
     /**
@@ -64,9 +64,9 @@ public class AlertController {
     @OperationLog(module = "任务调度", action = "更新告警规则", bizType = "CRONJOB_ALERT")
     @Idempotent(key = "alert:updateRule", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/rule/{id}")
-    public Result<Void> updateRule(@PathVariable String id, @Valid @RequestBody AlertRuleSaveDTO dto) {
+    public BaseResponse<Void> updateRule(@PathVariable String id, @Valid @RequestBody AlertRuleSaveDTO dto) {
         alertService.updateRule(id, dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -80,9 +80,9 @@ public class AlertController {
     @OperationLog(module = "任务调度", action = "删除告警规则", bizType = "CRONJOB_ALERT")
     @Idempotent(key = "alert:deleteRule", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/rule/{id}")
-    public Result<Void> deleteRule(@PathVariable String id) {
+    public BaseResponse<Void> deleteRule(@PathVariable String id) {
         alertService.deleteRule(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -94,8 +94,8 @@ public class AlertController {
     @Operation(summary = "查询告警规则详情")
     @PrePermission(PermissionCodes.CRONJOB_ALERT_VIEW)
     @GetMapping("/rule/{id}")
-    public Result<JobAlertRuleDO> getRuleById(@PathVariable String id) {
-        return Result.ok(alertService.getRuleById(id));
+    public BaseResponse<JobAlertRuleDO> getRuleById(@PathVariable String id) {
+        return BaseResponse.ok(alertService.getRuleById(id));
     }
 
     /**
@@ -106,8 +106,8 @@ public class AlertController {
     @Operation(summary = "查询全部告警规则")
     @PrePermission(PermissionCodes.CRONJOB_ALERT_VIEW)
     @GetMapping("/rules")
-    public Result<List<JobAlertRuleDO>> listRules() {
-        return Result.ok(alertService.listRules());
+    public BaseResponse<List<JobAlertRuleDO>> listRules() {
+        return BaseResponse.ok(alertService.listRules());
     }
 
     /**
@@ -122,9 +122,9 @@ public class AlertController {
     @OperationLog(module = "任务调度", action = "切换告警规则启用状态", bizType = "CRONJOB_ALERT")
     @Idempotent(key = "alert:toggleRule", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/rule/{id}/toggle")
-    public Result<Void> toggleRule(@PathVariable String id, @RequestParam Integer enabled) {
+    public BaseResponse<Void> toggleRule(@PathVariable String id, @RequestParam Integer enabled) {
         alertService.toggleRule(id, enabled);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -137,10 +137,10 @@ public class AlertController {
     @Operation(summary = "查询任务告警历史")
     @PrePermission(PermissionCodes.CRONJOB_ALERT_VIEW)
     @GetMapping("/logs/{jobId}")
-    public Result<List<JobAlertLogDO>> queryAlertLogs(
+    public BaseResponse<List<JobAlertLogDO>> queryAlertLogs(
             @PathVariable String jobId,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime since) {
-        return Result.ok(alertService.queryAlertLogs(jobId, since));
+        return BaseResponse.ok(alertService.queryAlertLogs(jobId, since));
     }
 }

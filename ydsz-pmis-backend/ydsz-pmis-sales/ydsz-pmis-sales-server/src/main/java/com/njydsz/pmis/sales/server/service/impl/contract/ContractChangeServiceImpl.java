@@ -3,7 +3,7 @@ package com.njydsz.pmis.sales.server.service.impl.contract;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.sales.domain.dto.ContractChangeDTO;
 import com.njydsz.pmis.sales.server.engine.ContractRiskEvaluator;
@@ -56,10 +56,10 @@ public class ContractChangeServiceImpl implements ContractChangeService {
     public String apply(ContractChangeDTO dto) {
         validate(dto);
         if (contractMapper.selectById(dto.getContractId()) == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_22d39b90");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_22d39b90");
         }
         if (changeMapper.selectByCode(dto.getChangeCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.project.msg_08a1df2a");
+            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.project.msg_08a1df2a");
         }
         ContractChangeDO c = new ContractChangeDO();
         BeanUtils.copyProperties(dto, c);
@@ -81,7 +81,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
     public void submit(String id) {
         ContractChangeDO c = getById(id);
         if (!"DRAFT".equalsIgnoreCase(c.getStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d85e77c2", c.getStatus());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_d85e77c2", c.getStatus());
         }
         changeMapper.updateStatus(id, "SUBMITTED", null, null);
         log.info("[ContractChange] 提交审批: id={}", id);
@@ -101,7 +101,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
     public void approve(String id, String approverId, String approverName) {
         ContractChangeDO c = getById(id);
         if (!("SUBMITTED".equalsIgnoreCase(c.getStatus()) || "APPROVING".equalsIgnoreCase(c.getStatus()))) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_8a0e5737", c.getStatus());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_8a0e5737", c.getStatus());
         }
         changeMapper.updateStatus(id, "APPROVED", approverId, approverName);
 
@@ -136,7 +136,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
     public void reject(String id, String approverId, String approverName, String reason) {
         ContractChangeDO c = getById(id);
         if (!("SUBMITTED".equalsIgnoreCase(c.getStatus()) || "APPROVING".equalsIgnoreCase(c.getStatus()))) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_a77d8060", c.getStatus());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_a77d8060", c.getStatus());
         }
         changeMapper.updateStatus(id, "REJECTED", approverId, approverName);
         if (StringUtils.hasText(reason)) {
@@ -159,7 +159,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
     public ContractChangeDO getById(String id) {
         ContractChangeDO c = changeMapper.selectById(id);
         if (c == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_49023973");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_49023973");
         }
         return c;
     }
@@ -205,16 +205,16 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      */
     private void validate(ContractChangeDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (!StringUtils.hasText(dto.getContractId())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_af96cf73");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_af96cf73");
         }
         if (!StringUtils.hasText(dto.getChangeCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_00a4ec00");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_00a4ec00");
         }
         if (!CHANGE_TYPES.contains(dto.getChangeType().toUpperCase())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_b246fa8c", dto.getChangeType());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_b246fa8c", dto.getChangeType());
         }
     }
 }

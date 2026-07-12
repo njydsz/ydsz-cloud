@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.canary.CanaryUpsertDTO;
@@ -47,8 +47,8 @@ public class CanaryController {
     @PrePermission(PermissionCodes.MESSAGE_CANARY_UPDATE)
     @Idempotent(key = "canary:upsert", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<MsgCanaryDO> upsert(@Valid @RequestBody CanaryUpsertDTO dto) {
-        return Result.ok(canaryService.upsert(dto));
+    public BaseResponse<MsgCanaryDO> upsert(@Valid @RequestBody CanaryUpsertDTO dto) {
+        return BaseResponse.ok(canaryService.upsert(dto));
     }
 
     /**
@@ -60,8 +60,8 @@ public class CanaryController {
     @Operation(summary = "按灰度键查询灰度桶")
     @PrePermission(PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/{canaryKey}")
-    public Result<MsgCanaryDO> getByKey(@PathVariable String canaryKey) {
-        return Result.ok(canaryService.getByKey(canaryKey));
+    public BaseResponse<MsgCanaryDO> getByKey(@PathVariable String canaryKey) {
+        return BaseResponse.ok(canaryService.getByKey(canaryKey));
     }
 
     /**
@@ -73,8 +73,8 @@ public class CanaryController {
     @Operation(summary = "灰度桶分页")
     @PrePermission(PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/page")
-    public Result<Page<MsgCanaryDO>> page(PageQuery query) {
-        return Result.ok(canaryService.page(query));
+    public BaseResponse<Page<MsgCanaryDO>> page(PageQuery query) {
+        return BaseResponse.ok(canaryService.page(query));
     }
 
     /**
@@ -87,7 +87,7 @@ public class CanaryController {
     @Operation(summary = "判定桶值是否命中灰度")
     @PrePermission(PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/hit")
-    public Result<Boolean> hit(@RequestParam String canaryKey, @RequestParam String bucketValue) {
-        return Result.ok(canaryService.hit(canaryKey, bucketValue));
+    public BaseResponse<Boolean> hit(@RequestParam String canaryKey, @RequestParam String bucketValue) {
+        return BaseResponse.ok(canaryService.hit(canaryKey, bucketValue));
     }
 }

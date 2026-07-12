@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.web.controller.definition;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.workflow.server.service.i18n.FlowI18nService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -38,10 +38,10 @@ public class FlowI18nController {
      */
     @GetMapping("/enum/{enumType}")
     @Operation(summary = "获取枚举类型的全部描述")
-    public Result<List<Map<String, String>>> enumDescriptions(
+    public BaseResponse<List<Map<String, String>>> enumDescriptions(
             @PathVariable String enumType,
             @RequestParam(required = false) String locale) {
-        return Result.ok(i18nService.getEnumDescriptions(enumType, locale));
+        return BaseResponse.ok(i18nService.getEnumDescriptions(enumType, locale));
     }
 
     /**
@@ -54,11 +54,11 @@ public class FlowI18nController {
      */
     @GetMapping("/enum/{enumType}/{enumName}")
     @Operation(summary = "获取单个枚举值的描述")
-    public Result<String> enumDescription(
+    public BaseResponse<String> enumDescription(
             @PathVariable String enumType,
             @PathVariable String enumName,
             @RequestParam(required = false) String locale) {
-        return Result.ok(i18nService.getEnumDescription(enumType, enumName, locale));
+        return BaseResponse.ok(i18nService.getEnumDescription(enumType, enumName, locale));
     }
 
     /**
@@ -68,7 +68,7 @@ public class FlowI18nController {
      */
     @GetMapping("/locales")
     @Operation(summary = "获取支持的语言列表")
-    public Result<List<Map<String, String>>> supportedLocales() {
-        return Result.ok(i18nService.getSupportedLocales());
+    public BaseResponse<List<Map<String, String>>> supportedLocales() {
+        return BaseResponse.ok(i18nService.getSupportedLocales());
     }
 }

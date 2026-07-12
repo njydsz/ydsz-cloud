@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.api.fallback;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.cronjob.api.client.CronjobServiceClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
@@ -24,16 +24,16 @@ public class CronjobServiceClientFallback implements FallbackFactory<CronjobServ
         log.warn("[CronjobServiceClient] 降级触发: {}", cause.getMessage());
         return new CronjobServiceClient() {
             @Override
-            public Result<String> trigger(String jobId) {
+            public BaseResponse<String> trigger(String jobId) {
                 log.warn("[CronjobServiceClient] trigger 降级: jobId={}, reason=cronjob服务不可用", jobId);
-                return Result.ok(null);
+                return BaseResponse.ok(null);
             }
 
             @Override
-            public Result<String> trigger(String jobId, boolean holdLock) {
+            public BaseResponse<String> trigger(String jobId, boolean holdLock) {
                 log.warn("[CronjobServiceClient] trigger 降级: jobId={}, holdLock={}, reason=cronjob服务不可用",
                         jobId, holdLock);
-                return Result.ok(null);
+                return BaseResponse.ok(null);
             }
         };
     }

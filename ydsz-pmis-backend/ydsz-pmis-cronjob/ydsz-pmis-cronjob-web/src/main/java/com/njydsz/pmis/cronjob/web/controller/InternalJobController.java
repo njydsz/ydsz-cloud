@@ -2,7 +2,7 @@ package com.njydsz.pmis.cronjob.web.controller.job;
 
 import com.njydsz.pmis.common.annotation.IdempotentExempt;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.job.MapContext;
 import com.njydsz.pmis.common.job.MapProcessor;
 import com.njydsz.pmis.common.job.ProcessResult;
@@ -73,14 +73,14 @@ public class InternalJobController {
     @Operation(summary = "接收远程派发请求并本地执行")
     @IdempotentExempt("定时触发接口，无需幂等")
     @PostMapping("/execute")
-    public Result<String> execute(@RequestBody RemoteTaskRequest request) {
+    public BaseResponse<String> execute(@RequestBody RemoteTaskRequest request) {
         if (request == null || request.getJob() == null) {
             log.warn("[InternalJob] 远程派发请求参数为空");
-            return Result.failed(400, "请求参数为空");
+            return BaseResponse.failed(400, "请求参数为空");
         }
         if (request.getJob().getJobKey() == null) {
             log.warn("[InternalJob] 远程派发请求 jobKey 为空");
-            return Result.failed(400, "jobKey 不能为空");
+            return BaseResponse.failed(400, "jobKey 不能为空");
         }
         // P1-4: 从请求中恢复 traceId 到 MDC，保证全链路追踪
         String traceId = request.getTraceId();
@@ -96,12 +96,12 @@ public class InternalJobController {
             String logId = taskDispatcher.executeLocally(
                     request.getJob(), request.getTriggerType(),
                     request.getShardIndex(), request.getShardTotal());
-            return Result.ok(logId);
+            return BaseResponse.ok(logId);
         } catch (Exception e) {
             log.error("[InternalJob] 远程派发执行异常: key={} reason={}",
                     request.getJob().getJobKey(), e.getMessage(), e);
             // 执行异常时返回 null（执行器端已记录 FAILED 日志，或锁被持有）
-            return Result.ok(null);
+            return BaseResponse.ok(null);
         } finally {
             TraceIdUtil.clear();
         }
@@ -124,10 +124,10 @@ public class InternalJobController {
     @Operation(summary = "接收 MapReduce 子任务远程派发并本地执行")
     @IdempotentExempt("定时触发接口，无需幂等")
     @PostMapping("/executeSubTask")
-    public Result<ProcessResult> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
+    public BaseResponse<ProcessResult> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
         if (request == null || request.getJobKey() == null || request.getHandler() == null) {
             log.warn("[InternalJob] 子任务请求参数为空");
-            return Result.failed(400, "请求参数为空");
+            return BaseResponse.failed(400, "请求参数为空");
         }
         String traceId = request.getTraceId();
         if (traceId != null && !traceId.isBlank()) {
@@ -145,7 +145,7 @@ public class InternalJobController {
             } catch (Exception e) {
                 log.error("[InternalJob] 获取 MapProcessor Bean 失败: handler={} reason={}",
                         request.getHandler(), e.getMessage());
-                return Result.ok(ProcessResult.failed("获取 MapProcessor Bean 失败: " + e.getMessage()));
+                return BaseResponse.ok(ProcessResult.failed("获取 MapProcessor Bean 失败: " + e.getMessage()));
             }
             // 构造子任务上下文并执行
             MapContext context = new MapContext(
@@ -162,7 +162,7 @@ public class InternalJobController {
                         request.getJobKey(), request.getTaskName(), e.getMessage(), e);
                 result = ProcessResult.failed(e.getClass().getSimpleName() + ": " + e.getMessage());
             }
-            return Result.ok(result);
+            return BaseResponse.ok(result);
         } finally {
             TraceIdUtil.clear();
         }

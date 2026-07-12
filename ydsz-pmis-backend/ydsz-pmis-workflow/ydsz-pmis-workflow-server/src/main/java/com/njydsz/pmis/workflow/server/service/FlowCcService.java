@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.notification;
 
-import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.workflow.domain.dto.notification.FlowCcQueryDTO;
 import com.njydsz.pmis.workflow.domain.entity.notification.FlowCcDO;
 import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
@@ -80,7 +80,7 @@ public interface FlowCcService {
      * @param pageSize   每页大小
      * @return 抄送记录分页
      */
-    PageResult<FlowCcDO> listCcByUser(String userId, String readStatus, String flowCode,
+    PageResponse<FlowCcDO> listCcByUser(String userId, String readStatus, String flowCode,
                                       String tenantId, int pageNo, int pageSize);
 
     /**

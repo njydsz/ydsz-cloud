@@ -1,6 +1,6 @@
 package com.njydsz.pmis.system.web.controller.config;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
@@ -34,8 +34,8 @@ public class ChangelogController {
      */
     @Operation(summary = "查询系统变更日志")
     @GetMapping
-    public Result<List<ChangelogEntry>> getChangelog() {
-        return Result.ok(CHANGELOG_ENTRIES);
+    public BaseResponse<List<ChangelogEntry>> getChangelog() {
+        return BaseResponse.ok(CHANGELOG_ENTRIES);
     }
 
     /** 变更日志条目 */

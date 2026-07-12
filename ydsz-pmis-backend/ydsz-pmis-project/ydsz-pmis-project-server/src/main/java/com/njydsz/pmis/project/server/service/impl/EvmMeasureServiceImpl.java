@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.server.service.impl;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.config.ThresholdProvider;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.domain.dto.EvmMeasureCreateDTO;
@@ -52,15 +52,15 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String save(EvmMeasureCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (dto == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (dto.getInitiationId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (!StringUtils.hasText(dto.getPeriod())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d53b5f27");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d53b5f27");
         }
         if (dto.getPv() == null || dto.getEv() == null || dto.getAc() == null || dto.getBac() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_e52f5250");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_e52f5250");
         }
         if (dto.getMeasureDate() == null) dto.setMeasureDate(LocalDate.now());
 
@@ -108,9 +108,9 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
     @Override
     @Transactional(readOnly = true)
     public EvmMeasureVO getById(String id) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
+        if (id == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
         EvmMeasureDO m = evmMapper.selectById(id);
-        if (m == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_c14ffd5d");
+        if (m == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_c14ffd5d");
         return toVo(m);
     }
 
@@ -198,7 +198,7 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(String id) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
+        if (id == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
         evmMapper.deleteById(id);
     }
 
@@ -206,20 +206,20 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
     public Map<String, Object> recalculateBaseline(String initiationId, String reason) {
         Map<String, Object> result = new HashMap<>();
         if (initiationId == null) {
-            result.put("ok", false);
-            result.put("reason", "initiationId 不能为空");
+            BaseResponse.put("ok", false);
+            BaseResponse.put("reason", "initiationId 不能为空");
             return result;
         }
         int affected = (int) countByInitiation(initiationId);
         int version = baselineVersions
                 .computeIfAbsent(initiationId, k -> new AtomicInteger(0))
                 .incrementAndGet();
-        result.put("ok", true);
-        result.put("initiationId", initiationId);
-        result.put("baselineVersion", version);
-        result.put("affectedMeasures", affected);
-        result.put("recalcReason", reason);
-        result.put("recalcAt", System.currentTimeMillis());
+        BaseResponse.put("ok", true);
+        BaseResponse.put("initiationId", initiationId);
+        BaseResponse.put("baselineVersion", version);
+        BaseResponse.put("affectedMeasures", affected);
+        BaseResponse.put("recalcReason", reason);
+        BaseResponse.put("recalcAt", System.currentTimeMillis());
         log.info("[EVM] 基线重算: initiation={} version={} affected={} reason={}",
                 initiationId, version, affected, reason);
         return result;

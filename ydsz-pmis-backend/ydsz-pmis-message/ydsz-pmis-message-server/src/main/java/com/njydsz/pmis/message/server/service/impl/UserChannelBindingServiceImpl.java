@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.server.service.impl.config;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.dto.config.UserChannelBindingDTO;
@@ -31,7 +31,7 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
     @Override
     public MsgUserChannelDO upsert(UserChannelBindingDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getUserId()) || !StringUtils.hasText(dto.getChannelType())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "用户ID和通道类型不能为空");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "用户ID和通道类型不能为空");
         }
         String tenantId = TenantContext.getTenantId();
         String channelType = dto.getChannelType().trim().toUpperCase();

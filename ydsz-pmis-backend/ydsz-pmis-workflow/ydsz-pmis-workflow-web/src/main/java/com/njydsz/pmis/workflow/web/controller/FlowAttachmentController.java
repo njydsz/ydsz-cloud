@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.web.controller.integration;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.workflow.domain.dto.integration.FlowAttachmentPreviewVO;
 import com.njydsz.pmis.workflow.domain.entity.integration.FlowAttachmentDO;
 import com.njydsz.pmis.workflow.server.service.integration.FlowAttachmentService;
@@ -47,8 +47,8 @@ public class FlowAttachmentController {
      * @return 附件列表
      */
     @GetMapping("/attachment/task/{taskId}")
-    public Result<List<FlowAttachmentDO>> listByTask(@PathVariable String taskId) {
-        return Result.ok(attachmentService.listByTask(taskId));
+    public BaseResponse<List<FlowAttachmentDO>> listByTask(@PathVariable String taskId) {
+        return BaseResponse.ok(attachmentService.listByTask(taskId));
     }
 
     /**
@@ -58,8 +58,8 @@ public class FlowAttachmentController {
      * @return 附件列表
      */
     @GetMapping("/attachment/instance/{instanceId}")
-    public Result<List<FlowAttachmentDO>> listByInstance(@PathVariable String instanceId) {
-        return Result.ok(attachmentService.listByInstance(instanceId));
+    public BaseResponse<List<FlowAttachmentDO>> listByInstance(@PathVariable String instanceId) {
+        return BaseResponse.ok(attachmentService.listByInstance(instanceId));
     }
 
     /**
@@ -71,10 +71,10 @@ public class FlowAttachmentController {
      */
     @Idempotent(key = "flowAttachment:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/attachment/{attachmentId}")
-    public Result<Void> delete(@PathVariable String attachmentId,
+    public BaseResponse<Void> delete(@PathVariable String attachmentId,
                                @RequestParam String operatorId) {
         attachmentService.delete(attachmentId, operatorId);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -95,7 +95,7 @@ public class FlowAttachmentController {
      */
     @GetMapping("/attachment/{attachmentId}/preview")
     @Operation(summary = "附件在线预览（根据文件类型返回预览策略）")
-    public Result<FlowAttachmentPreviewVO> preview(@PathVariable String attachmentId) {
-        return Result.ok(attachmentService.previewAttachment(attachmentId));
+    public BaseResponse<FlowAttachmentPreviewVO> preview(@PathVariable String attachmentId) {
+        return BaseResponse.ok(attachmentService.previewAttachment(attachmentId));
     }
 }

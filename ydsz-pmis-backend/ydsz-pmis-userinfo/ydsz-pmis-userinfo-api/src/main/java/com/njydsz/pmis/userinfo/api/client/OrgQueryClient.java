@@ -2,7 +2,7 @@ package com.njydsz.pmis.userinfo.api.client;
 import com.njydsz.pmis.common.feign.FeignClientConstants;
 import com.njydsz.pmis.userinfo.api.fallback.OrgQueryClientFallbackFactory;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,7 +34,7 @@ public interface OrgQueryClient {
      * @return 用户 ID 列表（无匹配时返回空列表）
      */
     @GetMapping("/usersByRole")
-    Result<List<Long>> listUserIdsByRoleCode(@RequestParam("roleCode") String roleCode);
+    BaseResponse<List<Long>> listUserIdsByRoleCode(@RequestParam("roleCode") String roleCode);
 
     /**
      * 根据部门 ID 查询部门负责人用户 ID
@@ -43,7 +43,7 @@ public interface OrgQueryClient {
      * @return 部门负责人用户 ID，未设置时返回 null
      */
     @GetMapping("/deptLeader")
-    Result<String> getDeptLeaderByDeptId(@RequestParam("deptId") Long deptId);
+    BaseResponse<String> getDeptLeaderByDeptId(@RequestParam("deptId") Long deptId);
 
     /**
      * 根据部门编码查询部门负责人用户 ID
@@ -52,7 +52,7 @@ public interface OrgQueryClient {
      * @return 部门负责人用户 ID，未设置时返回 null
      */
     @GetMapping("/deptLeaderByCode")
-    Result<String> getDeptLeaderByDeptCode(@RequestParam("deptCode") String deptCode);
+    BaseResponse<String> getDeptLeaderByDeptCode(@RequestParam("deptCode") String deptCode);
 
     /**
      * 查询用户拥有的角色编码列表（用于待办反查）
@@ -61,7 +61,7 @@ public interface OrgQueryClient {
      * @return 角色编码列表
      */
     @GetMapping("/userRoleCodes")
-    Result<List<String>> listRoleCodesByUserId(@RequestParam("userId") String userId);
+    BaseResponse<List<String>> listRoleCodesByUserId(@RequestParam("userId") String userId);
 
     /**
      * 根据用户 ID 查询其所属部门 ID 列表（用于待办反查）
@@ -72,7 +72,7 @@ public interface OrgQueryClient {
      * @return 部门 ID 列表（字符串形式，便于 permissionFlag 字符串匹配）
      */
     @GetMapping("/userDeptIds")
-    Result<List<String>> listDeptIdsByUserId(@RequestParam("userId") String userId);
+    BaseResponse<List<String>> listDeptIdsByUserId(@RequestParam("userId") String userId);
 
     /**
      * P2-2: 根据部门 ID 查询启用状态的用户 ID 列表
@@ -81,7 +81,7 @@ public interface OrgQueryClient {
      * @return 用户 ID 列表
      */
     @GetMapping("/usersByDept")
-    Result<List<Long>> listUserIdsByDeptId(@RequestParam("deptId") Long deptId);
+    BaseResponse<List<Long>> listUserIdsByDeptId(@RequestParam("deptId") Long deptId);
 
     /**
      * P2-2: 根据岗位编码查询启用状态的用户 ID 列表
@@ -90,7 +90,7 @@ public interface OrgQueryClient {
      * @return 用户 ID 列表
      */
     @GetMapping("/usersByPosition")
-    Result<List<Long>> listUserIdsByPositionCode(@RequestParam("positionCode") String positionCode);
+    BaseResponse<List<Long>> listUserIdsByPositionCode(@RequestParam("positionCode") String positionCode);
 
     /**
      * P2-2: 根据用户 ID 查询直属上级用户 ID
@@ -99,5 +99,5 @@ public interface OrgQueryClient {
      * @return 直属上级用户 ID，未设置时返回 null
      */
     @GetMapping("/leaderByUser")
-    Result<String> getLeaderByUserId(@RequestParam("userId") String userId);
+    BaseResponse<String> getLeaderByUserId(@RequestParam("userId") String userId);
 }

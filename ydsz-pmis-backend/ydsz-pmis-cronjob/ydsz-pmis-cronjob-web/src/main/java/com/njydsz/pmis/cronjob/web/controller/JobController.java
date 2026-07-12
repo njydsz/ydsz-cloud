@@ -6,7 +6,7 @@ import com.njydsz.pmis.common.annotation.IdempotentExempt;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.cronjob.domain.dto.job.JobBatchDTO;
 import com.njydsz.pmis.cronjob.domain.dto.job.JobSaveDTO;
@@ -54,10 +54,10 @@ public class JobController {
     @OperationLog(module = "任务调度", action = "新增任务", bizType = "CRONJOB_JOB", saveResult = true)
     @Idempotent(key = "job:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody JobSaveDTO dto) {
+    public BaseResponse<String> create(@Valid @RequestBody JobSaveDTO dto) {
         JobDO job = new JobDO();
         BeanUtils.copyProperties(dto, job);
-        return Result.ok(jobService.create(job));
+        return BaseResponse.ok(jobService.create(job));
     }
 
     /**
@@ -71,11 +71,11 @@ public class JobController {
     @OperationLog(module = "任务调度", action = "更新任务", bizType = "CRONJOB_JOB", saveDiff = true)
     @Idempotent(key = "job:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
-    public Result<Void> update(@Valid @RequestBody JobSaveDTO dto) {
+    public BaseResponse<Void> update(@Valid @RequestBody JobSaveDTO dto) {
         JobDO job = new JobDO();
         BeanUtils.copyProperties(dto, job);
         jobService.update(job);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -89,9 +89,9 @@ public class JobController {
     @OperationLog(module = "任务调度", action = "删除任务", bizType = "CRONJOB_JOB")
     @Idempotent(key = "job:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         jobService.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -105,9 +105,9 @@ public class JobController {
     @OperationLog(module = "任务调度", action = "暂停任务", bizType = "CRONJOB_JOB")
     @Idempotent(key = "job:pause", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/pause")
-    public Result<Void> pause(@PathVariable String id) {
+    public BaseResponse<Void> pause(@PathVariable String id) {
         jobService.pause(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -121,9 +121,9 @@ public class JobController {
     @OperationLog(module = "任务调度", action = "恢复任务", bizType = "CRONJOB_JOB")
     @Idempotent(key = "job:resume", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/resume")
-    public Result<Void> resume(@PathVariable String id) {
+    public BaseResponse<Void> resume(@PathVariable String id) {
         jobService.resume(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -139,9 +139,9 @@ public class JobController {
     @OperationLog(module = "任务调度", action = "手动触发任务", bizType = "CRONJOB_JOB", saveParams = false)
     @IdempotentExempt("定时触发接口，无需幂等")
     @PostMapping("/{id}/trigger")
-    public Result<String> trigger(@PathVariable String id,
+    public BaseResponse<String> trigger(@PathVariable String id,
                                    @RequestParam(defaultValue = "false") boolean holdLock) {
-        return Result.ok(jobService.trigger(id, holdLock));
+        return BaseResponse.ok(jobService.trigger(id, holdLock));
     }
 
     /**
@@ -154,8 +154,8 @@ public class JobController {
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @Idempotent(key = "job:batchPause", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch/pause")
-    public Result<Integer> batchPause(@RequestBody @Valid JobBatchDTO dto) {
-        return Result.ok(jobService.batchPause(dto.getJobIds()));
+    public BaseResponse<Integer> batchPause(@RequestBody @Valid JobBatchDTO dto) {
+        return BaseResponse.ok(jobService.batchPause(dto.getJobIds()));
     }
 
     /**
@@ -168,8 +168,8 @@ public class JobController {
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @Idempotent(key = "job:batchResume", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch/resume")
-    public Result<Integer> batchResume(@RequestBody @Valid JobBatchDTO dto) {
-        return Result.ok(jobService.batchResume(dto.getJobIds()));
+    public BaseResponse<Integer> batchResume(@RequestBody @Valid JobBatchDTO dto) {
+        return BaseResponse.ok(jobService.batchResume(dto.getJobIds()));
     }
 
     /**
@@ -182,8 +182,8 @@ public class JobController {
     @PrePermission(PermissionCodes.CRONJOB_JOB_TRIGGER)
     @IdempotentExempt("定时触发接口，无需幂等")
     @PostMapping("/batch/trigger")
-    public Result<Integer> batchTrigger(@RequestBody @Valid JobBatchDTO dto) {
-        return Result.ok(jobService.batchTrigger(dto.getJobIds()));
+    public BaseResponse<Integer> batchTrigger(@RequestBody @Valid JobBatchDTO dto) {
+        return BaseResponse.ok(jobService.batchTrigger(dto.getJobIds()));
     }
 
     /**
@@ -197,8 +197,8 @@ public class JobController {
     @OperationLog(module = "任务调度", action = "批量删除任务", bizType = "CRONJOB_JOB")
     @Idempotent(key = "job:batchDelete", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batch/delete")
-    public Result<Integer> batchDelete(@RequestBody @Valid JobBatchDTO dto) {
-        return Result.ok(jobService.batchDelete(dto.getJobIds()));
+    public BaseResponse<Integer> batchDelete(@RequestBody @Valid JobBatchDTO dto) {
+        return BaseResponse.ok(jobService.batchDelete(dto.getJobIds()));
     }
 
     /**
@@ -209,8 +209,8 @@ public class JobController {
      */
     @Operation(summary = "任务详情")
     @GetMapping("/{id}")
-    public Result<JobDO> getById(@PathVariable String id) {
-        return Result.ok(jobService.getById(id));
+    public BaseResponse<JobDO> getById(@PathVariable String id) {
+        return BaseResponse.ok(jobService.getById(id));
     }
 
     /**
@@ -225,13 +225,13 @@ public class JobController {
      */
     @Operation(summary = "分页查询任务")
     @GetMapping("/page")
-    public Result<Page<JobDO>> page(
+    public BaseResponse<Page<JobDO>> page(
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String group) {
-        return Result.ok(jobService.page(page, size, keyword, status, group));
+        return BaseResponse.ok(jobService.page(page, size, keyword, status, group));
     }
 
     /**
@@ -245,12 +245,12 @@ public class JobController {
      */
     @Operation(summary = "分页查询任务执行日志")
     @GetMapping("/log/page")
-    public Result<Page<JobLogDO>> pageLog(
+    public BaseResponse<Page<JobLogDO>> pageLog(
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size,
             @RequestParam(required = false) String jobKey,
             @RequestParam(required = false) String status) {
-        return Result.ok(jobService.pageLog(page, size, jobKey, status));
+        return BaseResponse.ok(jobService.pageLog(page, size, jobKey, status));
     }
 
     /**
@@ -262,8 +262,8 @@ public class JobController {
     @PrePermission(PermissionCodes.CRONJOB_JOB_RELOAD)
     @Idempotent(key = "job:reload", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/reload")
-    public Result<Map<String, Object>> reload() {
+    public BaseResponse<Map<String, Object>> reload() {
         jobService.loadOnStartup();
-        return Result.ok(Map.of("message", "ok"));
+        return BaseResponse.ok(Map.of("message", "ok"));
     }
 }

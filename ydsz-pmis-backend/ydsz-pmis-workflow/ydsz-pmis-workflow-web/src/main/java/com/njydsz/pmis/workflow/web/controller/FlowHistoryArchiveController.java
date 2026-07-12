@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.web.controller.analytics;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.workflow.server.service.analytics.FlowHistoryArchiveService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -54,8 +54,8 @@ public class FlowHistoryArchiveController {
      */
     @Operation(summary = "查询归档配置")
     @GetMapping("/config")
-    public Result<Map<String, Object>> getConfig() {
-        return Result.ok(archiveService.getArchiveConfig());
+    public BaseResponse<Map<String, Object>> getConfig() {
+        return BaseResponse.ok(archiveService.getArchiveConfig());
     }
 
     /**
@@ -73,12 +73,12 @@ public class FlowHistoryArchiveController {
     @OperationLog(module = "流程历史归档", action = "手动触发归档", bizType = "FLOW_HISTORY_ARCHIVE")
     @Idempotent(key = "flowHistoryArchive:archive", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/archive")
-    public Result<Map<String, Object>> archive(@RequestParam(required = false) @Min(1) Integer retentionDays,
+    public BaseResponse<Map<String, Object>> archive(@RequestParam(required = false) @Min(1) Integer retentionDays,
                                                   @RequestParam(required = false) @Min(1) @Max(1000) Integer batchSize,
                                                   @RequestParam(required = false) Long maxProcessMs) {
         log.info("[FlowHistoryArchiveController] 手动触发归档 retentionDays={} batchSize={} maxProcessMs={}",
                 retentionDays, batchSize, maxProcessMs);
-        return Result.ok(archiveService.archive(retentionDays, batchSize, maxProcessMs));
+        return BaseResponse.ok(archiveService.archive(retentionDays, batchSize, maxProcessMs));
     }
 
     /**
@@ -94,8 +94,8 @@ public class FlowHistoryArchiveController {
     @OperationLog(module = "流程历史归档", action = "手动触发清理", bizType = "FLOW_HISTORY_PURGE")
     @Idempotent(key = "flowHistoryArchive:purge", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/purge")
-    public Result<Map<String, Object>> purge(@RequestParam(required = false) Integer purgeDays) {
+    public BaseResponse<Map<String, Object>> purge(@RequestParam(required = false) Integer purgeDays) {
         log.info("[FlowHistoryArchiveController] 手动触发清理 purgeDays={}", purgeDays);
-        return Result.ok(archiveService.purge(purgeDays));
+        return BaseResponse.ok(archiveService.purge(purgeDays));
     }
 }

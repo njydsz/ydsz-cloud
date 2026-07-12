@@ -7,9 +7,9 @@ import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.annotation.RequireReAuth;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.userinfo.domain.dto.auth.PasswordChangeDTO;
 import com.njydsz.pmis.userinfo.domain.dto.auth.PasswordResetDTO;
 import com.njydsz.pmis.userinfo.domain.dto.user.UserCreateDTO;
@@ -56,8 +56,8 @@ public class UserController {
     @PrePermission("auth:user:list")
     @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping
-    public Result<Page<UserVO>> page(@Valid UserQueryDTO query) {
-        return Result.ok(userAccountService.pageVo(query));
+    public BaseResponse<Page<UserVO>> page(@Valid UserQueryDTO query) {
+        return BaseResponse.ok(userAccountService.pageVo(query));
     }
 
     /**
@@ -69,8 +69,8 @@ public class UserController {
     @Operation(summary = "用户详情")
     @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping("/{id}")
-    public Result<UserVO> get(@Parameter(description = "用户ID") @PathVariable String id) {
-        return Result.ok(userAccountService.findVoById(id));
+    public BaseResponse<UserVO> get(@Parameter(description = "用户ID") @PathVariable String id) {
+        return BaseResponse.ok(userAccountService.findVoById(id));
     }
 
     /**
@@ -81,8 +81,8 @@ public class UserController {
     @Operation(summary = "当前用户信息")
     @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping("/me")
-    public Result<UserVO> me() {
-        return Result.ok(userAccountService.findVoById(SecurityContext.getUserId()));
+    public BaseResponse<UserVO> me() {
+        return BaseResponse.ok(userAccountService.findVoById(AuthContext.getUserId()));
     }
 
     /**
@@ -95,9 +95,9 @@ public class UserController {
     @Operation(summary = "修改自己的密码")
     @Idempotent(key = "user:changeMyPassword", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/me/password")
-    public Result<Void> changeMyPassword(@Valid @RequestBody PasswordChangeDTO dto) {
-        userAccountService.changePassword(SecurityContext.getUserId(), dto.getOldPassword(), dto.getNewPassword());
-        return Result.ok();
+    public BaseResponse<Void> changeMyPassword(@Valid @RequestBody PasswordChangeDTO dto) {
+        userAccountService.changePassword(AuthContext.getUserId(), dto.getOldPassword(), dto.getNewPassword());
+        return BaseResponse.ok();
     }
 
     /**
@@ -114,7 +114,7 @@ public class UserController {
             message = "{validation.user.msg_7aa2293e}")
     @Idempotent(key = "user:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody UserCreateDTO dto) {
+    public BaseResponse<String> create(@Valid @RequestBody UserCreateDTO dto) {
         String username = dto.getUsername();
         String password = dto.getPassword();
         String employeeId = dto.getEmployeeId();
@@ -123,7 +123,7 @@ public class UserController {
         u.setUsername(username);
         u.setEmployeeId(employeeId);
         u.setStatus("ENABLED");
-        return Result.ok(userAccountService.create(u, password));
+        return BaseResponse.ok(userAccountService.create(u, password));
     }
 
     /**
@@ -137,13 +137,13 @@ public class UserController {
     @OperationLog(module = "权限管理", action = "更新用户", bizType = "USER")
     @Idempotent(key = "user:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public Result<Void> update(@Parameter(description = "用户ID") @PathVariable String id,
+    public BaseResponse<Void> update(@Parameter(description = "用户ID") @PathVariable String id,
                                @Valid @RequestBody UserUpdateDTO dto) {
         dto.setId(id);
         UserAccountDO user = new UserAccountDO();
         BeanUtils.copyProperties(dto, user);
         userAccountService.update(user);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -158,9 +158,9 @@ public class UserController {
     @OperationLog(module = "权限管理", action = "删除用户", bizType = "USER")
     @Idempotent(key = "user:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@Parameter(description = "用户ID") @PathVariable String id) {
+    public BaseResponse<Void> delete(@Parameter(description = "用户ID") @PathVariable String id) {
         userAccountService.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -178,10 +178,10 @@ public class UserController {
             message = "{validation.user.msg_538560c7}")
     @Idempotent(key = "user:resetPassword", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/resetPassword")
-    public Result<Void> resetPassword(@Parameter(description = "用户ID") @PathVariable String id,
+    public BaseResponse<Void> resetPassword(@Parameter(description = "用户ID") @PathVariable String id,
                                       @Valid @RequestBody PasswordResetDTO dto) {
         userAccountService.resetPassword(id, dto.getNewPassword());
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -196,9 +196,9 @@ public class UserController {
     @OperationLog(module = "权限管理", action = "切换状态", bizType = "USER")
     @Idempotent(key = "user:toggleStatus", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/status")
-    public Result<Void> toggleStatus(@Parameter(description = "用户ID") @PathVariable String id, @Parameter(description = "目标状态") @RequestParam @NotBlank String status) {
+    public BaseResponse<Void> toggleStatus(@Parameter(description = "用户ID") @PathVariable String id, @Parameter(description = "目标状态") @RequestParam @NotBlank String status) {
         userAccountService.toggleStatus(id, status);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -213,9 +213,9 @@ public class UserController {
     @OperationLog(module = "权限管理", action = "分配角色", bizType = "USER")
     @Idempotent(key = "user:assignRoles", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/roles")
-    public Result<Void> assignRoles(@Parameter(description = "用户ID") @PathVariable String id, @Valid @RequestBody List<String> roleIds) {
+    public BaseResponse<Void> assignRoles(@Parameter(description = "用户ID") @PathVariable String id, @Valid @RequestBody List<String> roleIds) {
         userAccountService.assignRoles(id, roleIds);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -227,7 +227,7 @@ public class UserController {
     @Operation(summary = "查询用户角色 ID 列表")
     @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping("/{id}/roles")
-    public Result<List<String>> listRoles(@Parameter(description = "用户ID") @PathVariable String id) {
-        return Result.ok(userAccountService.listRoleIds(id));
+    public BaseResponse<List<String>> listRoles(@Parameter(description = "用户ID") @PathVariable String id) {
+        return BaseResponse.ok(userAccountService.listRoleIds(id));
     }
 }

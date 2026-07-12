@@ -3,7 +3,7 @@ package com.njydsz.pmis.agent.server.service.tool;
 import com.njydsz.pmis.agent.domain.dto.tool.PromptTemplateCreateDTO;
 import com.njydsz.pmis.agent.domain.dto.tool.PromptTemplateQueryDTO;
 import com.njydsz.pmis.agent.domain.entity.agent.AgentPromptTemplateDO;
-import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.common.core.response.PageResponse;
 
 /**
  * Prompt 模板管理服务（P2-2 落地）。
@@ -45,7 +45,7 @@ public interface PromptTemplateService {
      * @param query 查询条件
      * @return 分页结果
      */
-    PageResult<AgentPromptTemplateDO> page(PromptTemplateQueryDTO query);
+    PageResponse<AgentPromptTemplateDO> page(PromptTemplateQueryDTO query);
 
     /**
      * 删除模板（软删除）。

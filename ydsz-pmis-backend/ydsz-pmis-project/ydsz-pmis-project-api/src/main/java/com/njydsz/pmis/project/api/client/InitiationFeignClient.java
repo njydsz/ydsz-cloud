@@ -3,7 +3,7 @@ import com.njydsz.pmis.common.feign.FeignClientConstants;
 import com.njydsz.pmis.project.api.dto.InitiationCreateDTO;
 import com.njydsz.pmis.project.api.fallback.InitiationFeignClientFallbackFactory;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,7 +35,7 @@ public interface InitiationFeignClient {
      * @return 操作结果
      */
     @PostMapping("/{id}/markProcessing")
-    Result<Void> markProcessing(@PathVariable("id") String initiationId);
+    BaseResponse<Void> markProcessing(@PathVariable("id") String initiationId);
 
     /**
      * 标记立项为已批准。
@@ -44,7 +44,7 @@ public interface InitiationFeignClient {
      * @return 操作结果
      */
     @PostMapping("/{id}/markApproved")
-    Result<Void> markApproved(@PathVariable("id") String initiationId);
+    BaseResponse<Void> markApproved(@PathVariable("id") String initiationId);
 
     /**
      * 标记立项为已驳回。
@@ -54,7 +54,7 @@ public interface InitiationFeignClient {
      * @return 操作结果
      */
     @PostMapping("/{id}/markRejected")
-    Result<Void> markRejected(@PathVariable("id") String initiationId,
+    BaseResponse<Void> markRejected(@PathVariable("id") String initiationId,
                               @RequestParam(value = "reason", required = false) String reason);
 
     /**
@@ -64,5 +64,5 @@ public interface InitiationFeignClient {
      * @return 立项 ID
      */
     @PostMapping
-    Result<String> create(@RequestBody InitiationCreateDTO dto);
+    BaseResponse<String> create(@RequestBody InitiationCreateDTO dto);
 }

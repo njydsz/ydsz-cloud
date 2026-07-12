@@ -7,8 +7,8 @@ import com.njydsz.pmis.system.server.service.audit.OperationLogServiceImpl;
 import com.njydsz.pmis.system.server.util.DiffCalculator;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.entity.CursorPageResult;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import io.swagger.v3.oas.annotations.Operation;
@@ -61,7 +61,7 @@ public class OperationLogController {
     @Operation(summary = "分页查询")
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/page")
-    public Result<PageResult<OperationLogDO>> page(
+    public BaseResponse<PageResponse<OperationLogDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "用户ID") @RequestParam(required = false) String userId,
@@ -74,7 +74,7 @@ public class OperationLogController {
             @Parameter(description = "截止时间") @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime endTime) {
-        return Result.ok(PageResult.ofPage(service.page(page, size, userId, bizType, status, module, startTime, endTime)));
+        return BaseResponse.ok(PageResponse.ofPage(service.page(page, size, userId, bizType, status, module, startTime, endTime)));
     }
 
     /**
@@ -96,7 +96,7 @@ public class OperationLogController {
     @Operation(summary = "游标分页查询（深翻优化）")
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/cursorPage")
-    public Result<CursorPageResult<OperationLogDO>> cursorPage(
+    public BaseResponse<CursorPageResult<OperationLogDO>> cursorPage(
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "游标（首次请求不传）") @RequestParam(required = false) String cursor,
             @Parameter(description = "用户ID") @RequestParam(required = false) String userId,
@@ -109,7 +109,7 @@ public class OperationLogController {
             @Parameter(description = "截止时间") @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime endTime) {
-        return Result.ok(service.pageByCursor(size, cursor, userId, bizType, status, module, startTime, endTime));
+        return BaseResponse.ok(service.pageByCursor(size, cursor, userId, bizType, status, module, startTime, endTime));
     }
 
     /**
@@ -122,10 +122,10 @@ public class OperationLogController {
     @Operation(summary = "按用户查询")
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/byUser")
-    public Result<List<OperationLogDO>> byUser(
+    public BaseResponse<List<OperationLogDO>> byUser(
             @Parameter(description = "用户ID") @RequestParam String userId,
             @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
-        return Result.ok(service.listByUser(userId, limit));
+        return BaseResponse.ok(service.listByUser(userId, limit));
     }
 
     /**
@@ -139,11 +139,11 @@ public class OperationLogController {
     @Operation(summary = "按业务查询")
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/byBiz")
-    public Result<List<OperationLogDO>> byBiz(
+    public BaseResponse<List<OperationLogDO>> byBiz(
             @Parameter(description = "业务类型") @RequestParam String bizType,
             @Parameter(description = "业务单据ID") @RequestParam String bizId,
             @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
-        return Result.ok(service.listByBiz(bizType, bizId, limit));
+        return BaseResponse.ok(service.listByBiz(bizType, bizId, limit));
     }
 
     /**
@@ -157,9 +157,9 @@ public class OperationLogController {
     @OperationLog(module = "操作日志", action = "清理历史日志", bizType = "AUDIT_LOG", saveParams = true)
     @IdempotentExempt("审计清理接口，无需幂等")
     @PostMapping("/clean")
-    public Result<Integer> clean(
+    public BaseResponse<Integer> clean(
             @Parameter(description = "保留天数") @RequestParam(defaultValue = "90") int days) {
-        return Result.ok(service.cleanBefore(days));
+        return BaseResponse.ok(service.cleanBefore(days));
     }
 
     /**

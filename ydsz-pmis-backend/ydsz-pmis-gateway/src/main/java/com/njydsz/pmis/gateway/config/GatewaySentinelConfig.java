@@ -7,7 +7,7 @@ import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.constant.CommonConstants;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import jakarta.annotation.PostConstruct;
@@ -77,7 +77,7 @@ public class GatewaySentinelConfig {
                 message = "error.INTERNAL_ERROR";
             }
 
-            Result<Void> body = Result.failed(bizCode, message);
+            BaseResponse<Void> body = BaseResponse.failed(bizCode, message);
             body.setTraceId(traceId);
 
             log.warn("[SentinelBlock] status={} bizCode={} traceId={} path={} ex={}",

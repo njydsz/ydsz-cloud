@@ -1,8 +1,8 @@
 package com.njydsz.pmis.userinfo.api.fallback;
 import com.njydsz.pmis.userinfo.api.client.OrgQueryClient;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -29,43 +29,43 @@ public class OrgQueryClientFallbackFactory implements FallbackFactory<OrgQueryCl
                 cause == null ? "null" : cause.getMessage());
         return new OrgQueryClient() {
             @Override
-            public Result<List<Long>> listUserIdsByRoleCode(String roleCode) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+            public BaseResponse<List<Long>> listUserIdsByRoleCode(String roleCode) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            public Result<String> getDeptLeaderByDeptId(Long deptId) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+            public BaseResponse<String> getDeptLeaderByDeptId(Long deptId) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            public Result<String> getDeptLeaderByDeptCode(String deptCode) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+            public BaseResponse<String> getDeptLeaderByDeptCode(String deptCode) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            public Result<List<String>> listRoleCodesByUserId(String userId) {
-                return Result.ok(Collections.emptyList());
+            public BaseResponse<List<String>> listRoleCodesByUserId(String userId) {
+                return BaseResponse.ok(Collections.emptyList());
             }
 
             @Override
-            public Result<List<String>> listDeptIdsByUserId(String userId) {
-                return Result.ok(Collections.emptyList());
+            public BaseResponse<List<String>> listDeptIdsByUserId(String userId) {
+                return BaseResponse.ok(Collections.emptyList());
             }
 
             @Override
-            public Result<List<Long>> listUserIdsByDeptId(Long deptId) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+            public BaseResponse<List<Long>> listUserIdsByDeptId(Long deptId) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            public Result<List<Long>> listUserIdsByPositionCode(String positionCode) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+            public BaseResponse<List<Long>> listUserIdsByPositionCode(String positionCode) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            public Result<String> getLeaderByUserId(String userId) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+            public BaseResponse<String> getLeaderByUserId(String userId) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
         };
     }

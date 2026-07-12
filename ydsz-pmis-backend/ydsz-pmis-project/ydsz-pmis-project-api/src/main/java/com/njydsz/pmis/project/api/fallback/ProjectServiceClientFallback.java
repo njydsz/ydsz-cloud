@@ -1,8 +1,8 @@
 package com.njydsz.pmis.project.api.fallback;
 import com.njydsz.pmis.project.api.client.ProjectServiceClient;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -27,18 +27,18 @@ public class ProjectServiceClientFallback implements FallbackFactory<ProjectServ
         log.warn("[Feign] project 服务降级: {}", cause == null ? "?" : cause.getMessage());
         return new ProjectServiceClient() {
             @Override
-            public Result<Map<String, Object>> timeEntryAbnormalStat(String initiationId, String month) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+            public BaseResponse<Map<String, Object>> timeEntryAbnormalStat(String initiationId, String month) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            public Result<Map<String, Object>> riskPage(int page, int size, String initiationId, String riskLevel) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+            public BaseResponse<Map<String, Object>> riskPage(int page, int size, String initiationId, String riskLevel) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            public Result<Map<String, Object>> evmDashboard(String initiationId) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+            public BaseResponse<Map<String, Object>> evmDashboard(String initiationId) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
         };
     }

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.sales.domain.dto.ContractTemplateCreateDTO;
 import com.njydsz.pmis.sales.domain.dto.ContractTemplateStatusDTO;
 import com.njydsz.pmis.sales.domain.entity.ContractTemplateDO;
@@ -54,8 +54,8 @@ public class ContractTemplateController {
     @PrePermission("project:contractTemplate:create")
     @Idempotent(key = "contractTemplate:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody ContractTemplateCreateDTO dto) {
-        return Result.ok(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody ContractTemplateCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
@@ -68,9 +68,9 @@ public class ContractTemplateController {
     @PrePermission("project:contractTemplate:publish")
     @Idempotent(key = "contractTemplate:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
-    public Result<Void> changeStatus(@Valid @RequestBody ContractTemplateStatusDTO dto) {
+    public BaseResponse<Void> changeStatus(@Valid @RequestBody ContractTemplateStatusDTO dto) {
         service.changeStatus(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -84,9 +84,9 @@ public class ContractTemplateController {
     @Idempotent(key = "contractTemplate:delete", ttlSeconds = 5, message = "请勿重复提交")
     @OperationLog(module = "合同模板", action = "删除模板", bizType = "CONTRACT_TEMPLATE")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         service.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -98,8 +98,8 @@ public class ContractTemplateController {
     @Operation(summary = "模板详情")
     @PrePermission("project:contractTemplate:list")
     @GetMapping("/{id}")
-    public Result<ContractTemplateDO> get(@PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<ContractTemplateDO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -115,13 +115,13 @@ public class ContractTemplateController {
     @Operation(summary = "分页查询")
     @PrePermission("project:contractTemplate:list")
     @GetMapping("/page")
-    public Result<Page<ContractTemplateDO>> page(
+    public BaseResponse<Page<ContractTemplateDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String contractType,
             @RequestParam(required = false) String status) {
-        return Result.ok(service.page(page, size, keyword, contractType, status));
+        return BaseResponse.ok(service.page(page, size, keyword, contractType, status));
     }
 
     /**
@@ -134,9 +134,9 @@ public class ContractTemplateController {
     @Operation(summary = "按合同类型查询模板")
     @PrePermission("project:contractTemplate:list")
     @GetMapping("/listByType")
-    public Result<List<ContractTemplateDO>> listByType(
+    public BaseResponse<List<ContractTemplateDO>> listByType(
             @RequestParam(required = false) String contractType,
             @RequestParam(required = false) String status) {
-        return Result.ok(service.listByType(contractType, status));
+        return BaseResponse.ok(service.listByType(contractType, status));
     }
 }

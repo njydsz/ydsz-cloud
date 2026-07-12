@@ -2,7 +2,7 @@ package com.njydsz.pmis.agent.server.tool;
 
 import com.njydsz.pmis.agent.server.engine.AgentContext;
 import com.njydsz.pmis.project.api.client.ProjectServiceClient;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -173,7 +173,7 @@ public class ProjectStatusTool implements AgentTool {
 
         // 1. 调用 EVM 仪表盘获取 CPI / SPI
         try {
-            Result<Map<String, Object>> dashResult = projectServiceClient.evmDashboard(projectId);
+            BaseResponse<Map<String, Object>> dashResult = projectServiceClient.evmDashboard(projectId);
             if (dashResult != null && dashResult.isSuccess() && dashResult.getData() != null) {
                 Map<String, Object> dash = dashResult.getData();
                 double cpi = toDouble(dash.get("latestCpi"));
@@ -192,7 +192,7 @@ public class ProjectStatusTool implements AgentTool {
 
         // 2. 调用风险分页获取风险事件总数
         try {
-            Result<Map<String, Object>> riskResult = projectServiceClient.riskPage(1, 1, projectId, null);
+            BaseResponse<Map<String, Object>> riskResult = projectServiceClient.riskPage(1, 1, projectId, null);
             if (riskResult != null && riskResult.isSuccess() && riskResult.getData() != null) {
                 Object totalObj = riskResult.getData().get("total");
                 data.put("riskEventCount", toInt(totalObj));

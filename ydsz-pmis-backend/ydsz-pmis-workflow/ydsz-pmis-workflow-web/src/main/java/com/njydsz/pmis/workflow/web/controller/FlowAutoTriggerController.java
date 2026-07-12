@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.web.controller.integration;
 import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.workflow.domain.entity.integration.FlowAutoTriggerDO;
 import com.njydsz.pmis.workflow.server.service.integration.FlowAutoTriggerService;
 import com.njydsz.pmis.workflow.domain.dto.integration.FlowAutoTriggerCreateDTO;
@@ -45,8 +45,8 @@ public class FlowAutoTriggerController {
      */
     @Operation(summary = "列出所有触发规则")
     @GetMapping("/list")
-    public Result<List<FlowAutoTriggerDO>> list() {
-        return Result.ok(autoTriggerService.listAll());
+    public BaseResponse<List<FlowAutoTriggerDO>> list() {
+        return BaseResponse.ok(autoTriggerService.listAll());
     }
 
     /**
@@ -58,12 +58,12 @@ public class FlowAutoTriggerController {
     @Operation(summary = "创建触发规则")
     @Idempotent(key = "flowAutoTrigger:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<Void> create(@Valid @RequestBody FlowAutoTriggerCreateDTO dto) {
+    public BaseResponse<Void> create(@Valid @RequestBody FlowAutoTriggerCreateDTO dto) {
         String sourceFlowCode = dto.getSourceFlowCode();
         String targetFlowCode = dto.getTargetFlowCode();
         String conditionExpression = dto.getConditionExpression();
         autoTriggerService.registerTrigger(sourceFlowCode, targetFlowCode, conditionExpression);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -76,9 +76,9 @@ public class FlowAutoTriggerController {
     @OperationLog(module = "工作流", action = "删除触发规则", bizType = "FLOW_AUTO_TRIGGER")
     @Idempotent(key = "flowAutoTrigger:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable String id) {
+    public BaseResponse<Void> delete(@PathVariable String id) {
         autoTriggerService.deleteById(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -90,8 +90,8 @@ public class FlowAutoTriggerController {
     @Operation(summary = "启用/禁用触发规则")
     @Idempotent(key = "flowAutoTrigger:toggle", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/toggle")
-    public Result<Map<String, Object>> toggle(@PathVariable String id) {
+    public BaseResponse<Map<String, Object>> toggle(@PathVariable String id) {
         boolean enabled = autoTriggerService.toggleEnabled(id);
-        return Result.ok(Map.of("id", id, "enabled", enabled));
+        return BaseResponse.ok(Map.of("id", id, "enabled", enabled));
     }
 }

@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.web.controller.execution;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.domain.dto.DeliveryItemCreateDTO;
 import com.njydsz.pmis.project.domain.dto.DeliveryItemStatusDTO;
 import com.njydsz.pmis.project.domain.dto.DeliveryStandardCreateDTO;
@@ -57,8 +57,8 @@ public class DeliveryController {
     @PrePermission("execution:delivery:create")
     @Idempotent(key = "delivery:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/standard")
-    public Result<String> createStandard(@Valid @RequestBody DeliveryStandardCreateDTO dto) {
-        return Result.ok(service.createStandard(dto));
+    public BaseResponse<String> createStandard(@Valid @RequestBody DeliveryStandardCreateDTO dto) {
+        return BaseResponse.ok(service.createStandard(dto));
     }
 
     /**
@@ -72,9 +72,9 @@ public class DeliveryController {
     @OperationLog(module = "交付物管理", action = "删除交付物标准", bizType = "DELIVERY_STANDARD")
     @Idempotent(key = "delivery:deleteStandard", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/standard/{id}")
-    public Result<Void> deleteStandard(@PathVariable String id) {
+    public BaseResponse<Void> deleteStandard(@PathVariable String id) {
         service.deleteStandard(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -86,8 +86,8 @@ public class DeliveryController {
     @Operation(summary = "交付物标准详情")
     @PrePermission("execution:delivery:list")
     @GetMapping("/standard/{id}")
-    public Result<DeliveryStandardDO> getStandard(@PathVariable String id) {
-        return Result.ok(service.getStandardById(id));
+    public BaseResponse<DeliveryStandardDO> getStandard(@PathVariable String id) {
+        return BaseResponse.ok(service.getStandardById(id));
     }
 
     /**
@@ -101,11 +101,11 @@ public class DeliveryController {
     @Operation(summary = "按类型/阶段查询交付物标准")
     @PrePermission("execution:delivery:list")
     @GetMapping("/standard/list")
-    public Result<List<DeliveryStandardDO>> listStandards(
+    public BaseResponse<List<DeliveryStandardDO>> listStandards(
             @RequestParam(required = false) String projectType,
             @RequestParam(required = false) String projectLevel,
             @RequestParam(required = false) String stage) {
-        return Result.ok(service.listStandards(projectType, projectLevel, stage));
+        return BaseResponse.ok(service.listStandards(projectType, projectLevel, stage));
     }
 
     /**
@@ -117,8 +117,8 @@ public class DeliveryController {
     @Operation(summary = "统计项目类型的标准数")
     @PrePermission("execution:delivery:list")
     @GetMapping("/standard/count")
-    public Result<Integer> countStandardsByType(@RequestParam String projectType) {
-        return Result.ok(service.countStandardsByType(projectType));
+    public BaseResponse<Integer> countStandardsByType(@RequestParam String projectType) {
+        return BaseResponse.ok(service.countStandardsByType(projectType));
     }
 
     // ========== 实例管理 ==========
@@ -133,8 +133,8 @@ public class DeliveryController {
     @PrePermission("execution:delivery:create")
     @Idempotent(key = "delivery:createItem", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/item")
-    public Result<String> createItem(@Valid @RequestBody DeliveryItemCreateDTO dto) {
-        return Result.ok(service.createItem(dto));
+    public BaseResponse<String> createItem(@Valid @RequestBody DeliveryItemCreateDTO dto) {
+        return BaseResponse.ok(service.createItem(dto));
     }
 
     /**
@@ -147,9 +147,9 @@ public class DeliveryController {
     @PrePermission("execution:delivery:status")
     @Idempotent(key = "delivery:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/item/status")
-    public Result<Void> changeItemStatus(@Valid @RequestBody DeliveryItemStatusDTO dto) {
+    public BaseResponse<Void> changeItemStatus(@Valid @RequestBody DeliveryItemStatusDTO dto) {
         service.changeItemStatus(dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -163,10 +163,10 @@ public class DeliveryController {
     @PrePermission("execution:delivery:status")
     @Idempotent(key = "delivery:markTrCompleted", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/item/{id}/trCompleted")
-    public Result<Void> markTrCompleted(@PathVariable String id,
+    public BaseResponse<Void> markTrCompleted(@PathVariable String id,
                                    @RequestParam Integer completed) {
         service.markTrCompleted(id, completed);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -180,9 +180,9 @@ public class DeliveryController {
     @OperationLog(module = "交付物管理", action = "删除交付物实例", bizType = "DELIVERY_ITEM")
     @Idempotent(key = "delivery:deleteItem", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/item/{id}")
-    public Result<Void> deleteItem(@PathVariable String id) {
+    public BaseResponse<Void> deleteItem(@PathVariable String id) {
         service.deleteItem(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -194,8 +194,8 @@ public class DeliveryController {
     @Operation(summary = "交付物实例详情")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/{id}")
-    public Result<DeliveryItemDO> getItem(@PathVariable String id) {
-        return Result.ok(service.getItemById(id));
+    public BaseResponse<DeliveryItemDO> getItem(@PathVariable String id) {
+        return BaseResponse.ok(service.getItemById(id));
     }
 
     /**
@@ -207,8 +207,8 @@ public class DeliveryController {
     @Operation(summary = "按项目查询所有交付物")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/listByInitiation/{initiationId}")
-    public Result<List<DeliveryItemDO>> listItemsByInitiation(@PathVariable String initiationId) {
-        return Result.ok(service.listItemsByInitiation(initiationId));
+    public BaseResponse<List<DeliveryItemDO>> listItemsByInitiation(@PathVariable String initiationId) {
+        return BaseResponse.ok(service.listItemsByInitiation(initiationId));
     }
 
     /**
@@ -221,9 +221,9 @@ public class DeliveryController {
     @Operation(summary = "按项目+阶段查询交付物")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/listByStage")
-    public Result<List<DeliveryItemDO>> listItemsByStage(@RequestParam String initiationId,
+    public BaseResponse<List<DeliveryItemDO>> listItemsByStage(@RequestParam String initiationId,
                                                     @RequestParam String stage) {
-        return Result.ok(service.listItemsByStage(initiationId, stage));
+        return BaseResponse.ok(service.listItemsByStage(initiationId, stage));
     }
 
     /**
@@ -235,8 +235,8 @@ public class DeliveryController {
     @Operation(summary = "按状态聚合交付物")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/aggregate/status")
-    public Result<List<Map<String, Object>>> aggregateItemStatus(@RequestParam String initiationId) {
-        return Result.ok(service.aggregateItemStatus(initiationId));
+    public BaseResponse<List<Map<String, Object>>> aggregateItemStatus(@RequestParam String initiationId) {
+        return BaseResponse.ok(service.aggregateItemStatus(initiationId));
     }
 
     // ========== 阶段门控 ==========
@@ -252,10 +252,10 @@ public class DeliveryController {
     @Operation(summary = "阶段门控校验")
     @PrePermission("execution:delivery:status")
     @GetMapping("/stageGate/check")
-    public Result<StageGateValidator.GateCheckResult> checkStageGate(
+    public BaseResponse<StageGateValidator.GateCheckResult> checkStageGate(
             @RequestParam String initiationId,
             @RequestParam String targetStage,
             @RequestParam(required = false) String projectLevel) {
-        return Result.ok(service.checkStageGate(initiationId, targetStage, projectLevel));
+        return BaseResponse.ok(service.checkStageGate(initiationId, targetStage, projectLevel));
     }
 }

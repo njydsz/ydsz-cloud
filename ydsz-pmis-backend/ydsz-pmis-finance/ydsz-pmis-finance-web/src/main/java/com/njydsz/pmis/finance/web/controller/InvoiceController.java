@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.finance.domain.dto.InvoiceApprovalDTO;
 import com.njydsz.pmis.finance.domain.dto.InvoiceCreateDTO;
 import com.njydsz.pmis.finance.domain.entity.InvoiceDO;
@@ -60,8 +60,8 @@ public class InvoiceController {
     @OperationLog(module = "发票管理", action = "创建发票申请", bizType = "INVOICE", saveResult = true)
     @Idempotent(key = "invoice:create", ttlSeconds = 10, message = "请勿重复提交发票申请")
     @PostMapping
-    public Result<String> create(@Valid @RequestBody InvoiceCreateDTO dto) {
-        return Result.ok(service.create(dto));
+    public BaseResponse<String> create(@Valid @RequestBody InvoiceCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
@@ -76,9 +76,9 @@ public class InvoiceController {
     @OperationLog(module = "发票管理", action = "提交发票审批", bizType = "INVOICE")
     @Idempotent(key = "invoice:submit", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/submit")
-    public Result<Void> submit(@Parameter(description = "发票ID") @PathVariable String id, @Parameter(description = "操作人ID") @RequestParam String operatorId) {
+    public BaseResponse<Void> submit(@Parameter(description = "发票ID") @PathVariable String id, @Parameter(description = "操作人ID") @RequestParam String operatorId) {
         service.submit(id, operatorId);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -93,9 +93,9 @@ public class InvoiceController {
     @OperationLog(module = "发票管理", action = "审批通过", bizType = "INVOICE")
     @Idempotent(key = "invoice:approve", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/approve")
-    public Result<Void> approve(@Parameter(description = "发票ID") @PathVariable String id, @Valid @RequestBody InvoiceApprovalDTO dto) {
+    public BaseResponse<Void> approve(@Parameter(description = "发票ID") @PathVariable String id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.approve(id, dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -110,9 +110,9 @@ public class InvoiceController {
     @OperationLog(module = "发票管理", action = "审批驳回", bizType = "INVOICE")
     @Idempotent(key = "invoice:reject", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/reject")
-    public Result<Void> reject(@Parameter(description = "发票ID") @PathVariable String id, @Valid @RequestBody InvoiceApprovalDTO dto) {
+    public BaseResponse<Void> reject(@Parameter(description = "发票ID") @PathVariable String id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.reject(id, dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -127,9 +127,9 @@ public class InvoiceController {
     @OperationLog(module = "发票管理", action = "财务开具发票", bizType = "INVOICE")
     @Idempotent(key = "invoice:issue", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/issue")
-    public Result<Void> issue(@Parameter(description = "发票ID") @PathVariable String id, @Valid @RequestBody InvoiceApprovalDTO dto) {
+    public BaseResponse<Void> issue(@Parameter(description = "发票ID") @PathVariable String id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.issue(id, dto);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -145,11 +145,11 @@ public class InvoiceController {
     @OperationLog(module = "发票管理", action = "红冲发票", bizType = "INVOICE")
     @Idempotent(key = "invoice:redReverse", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/reverse")
-    public Result<Void> redReverse(@Parameter(description = "发票ID") @PathVariable String id,
+    public BaseResponse<Void> redReverse(@Parameter(description = "发票ID") @PathVariable String id,
                               @Parameter(description = "操作人ID") @RequestParam String operatorId,
                               @Parameter(description = "红冲备注") @RequestParam(required = false) String comment) {
         service.redReverse(id, operatorId, comment);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -165,11 +165,11 @@ public class InvoiceController {
     @OperationLog(module = "发票管理", action = "取消发票", bizType = "INVOICE")
     @Idempotent(key = "invoice:cancel", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/cancel")
-    public Result<Void> cancel(@Parameter(description = "发票ID") @PathVariable String id,
+    public BaseResponse<Void> cancel(@Parameter(description = "发票ID") @PathVariable String id,
                           @Parameter(description = "操作人ID") @RequestParam String operatorId,
                           @Parameter(description = "取消备注") @RequestParam(required = false) String comment) {
         service.cancel(id, operatorId, comment);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -183,9 +183,9 @@ public class InvoiceController {
     @OperationLog(module = "发票管理", action = "删除发票", bizType = "INVOICE")
     @Idempotent(key = "invoice:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@Parameter(description = "发票ID") @PathVariable String id) {
+    public BaseResponse<Void> delete(@Parameter(description = "发票ID") @PathVariable String id) {
         service.delete(id);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     /**
@@ -197,8 +197,8 @@ public class InvoiceController {
     @Operation(summary = "详情")
     @PrePermission("finance:invoice:list")
     @GetMapping("/{id}")
-    public Result<InvoiceDO> get(@Parameter(description = "发票ID") @PathVariable String id) {
-        return Result.ok(service.getById(id));
+    public BaseResponse<InvoiceDO> get(@Parameter(description = "发票ID") @PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -217,7 +217,7 @@ public class InvoiceController {
     @Operation(summary = "分页")
     @PrePermission("finance:invoice:list")
     @GetMapping("/page")
-    public Result<Page<InvoiceDO>> page(
+    public BaseResponse<Page<InvoiceDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
             @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
@@ -226,7 +226,7 @@ public class InvoiceController {
             @Parameter(description = "立项ID") @RequestParam(required = false) String initiationId,
             @Parameter(description = "客户ID") @RequestParam(required = false) String customerId,
             @Parameter(description = "发票类型") @RequestParam(required = false) String invoiceType) {
-        return Result.ok(service.page(page, size, keyword, status, contractId, initiationId, customerId, invoiceType));
+        return BaseResponse.ok(service.page(page, size, keyword, status, contractId, initiationId, customerId, invoiceType));
     }
 
     /**
@@ -238,8 +238,8 @@ public class InvoiceController {
     @Operation(summary = "按合同汇总开票金额")
     @PrePermission("finance:invoice:list")
     @GetMapping("/sum/byContract")
-    public Result<BigDecimal> sumByContract(@Parameter(description = "合同ID") @RequestParam String contractId) {
-        return Result.ok(service.sumInvoicedByContract(contractId));
+    public BaseResponse<BigDecimal> sumByContract(@Parameter(description = "合同ID") @RequestParam String contractId) {
+        return BaseResponse.ok(service.sumInvoicedByContract(contractId));
     }
 
     /**
@@ -251,7 +251,7 @@ public class InvoiceController {
     @Operation(summary = "按状态分组台账")
     @PrePermission("finance:invoice:list")
     @GetMapping("/aggregate/byStatus")
-    public Result<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "合同ID") @RequestParam String contractId) {
-        return Result.ok(service.aggregateByStatus(contractId));
+    public BaseResponse<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "合同ID") @RequestParam String contractId) {
+        return BaseResponse.ok(service.aggregateByStatus(contractId));
     }
 }

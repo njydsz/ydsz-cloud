@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.web.controller.job;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobTaskDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobTaskMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,8 +44,8 @@ public class JobTaskController {
      */
     @Operation(summary = "查询子任务列表")
     @GetMapping("/list")
-    public Result<List<JobTaskDO>> list(@RequestParam String logId) {
-        return Result.ok(jobTaskMapper.selectByLogId(logId));
+    public BaseResponse<List<JobTaskDO>> list(@RequestParam String logId) {
+        return BaseResponse.ok(jobTaskMapper.selectByLogId(logId));
     }
 
     /**
@@ -58,7 +58,7 @@ public class JobTaskController {
      */
     @Operation(summary = "分页查询子任务")
     @GetMapping("/page")
-    public Result<Page<JobTaskDO>> page(
+    public BaseResponse<Page<JobTaskDO>> page(
             @RequestParam String logId,
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size) {
@@ -68,6 +68,6 @@ public class JobTaskController {
         wrapper.eq(JobTaskDO::getLogId, logId)
                 .eq(JobTaskDO::getDeleted, 0)
                 .orderByAsc(JobTaskDO::getCreatedAt);
-        return Result.ok(jobTaskMapper.selectPage(pageObj, wrapper));
+        return BaseResponse.ok(jobTaskMapper.selectPage(pageObj, wrapper));
     }
 }

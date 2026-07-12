@@ -2,7 +2,7 @@ package com.njydsz.pmis.agent.api.client;
 import com.njydsz.pmis.common.feign.FeignClientConstants;
 import com.njydsz.pmis.agent.api.fallback.AgentClientFallbackFactory;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,5 +41,5 @@ public interface AgentClient {
      * @return Agent 执行结果，data.payload 包含结构化输出
      */
     @PostMapping("/internal/execute")
-    Result<Map<String, Object>> execute(@RequestBody Map<String, Object> body);
+    BaseResponse<Map<String, Object>> execute(@RequestBody Map<String, Object> body);
 }

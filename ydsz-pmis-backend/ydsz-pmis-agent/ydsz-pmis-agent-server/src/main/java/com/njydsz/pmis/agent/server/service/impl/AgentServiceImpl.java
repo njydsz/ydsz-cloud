@@ -25,7 +25,7 @@ import com.njydsz.pmis.agent.domain.enums.agent.AgentRunStatus;
 import com.njydsz.pmis.agent.domain.enums.agent.AgentType;
 import com.njydsz.pmis.agent.infra.mapper.hitl.AgentPredictionMapper;
 import com.njydsz.pmis.agent.server.service.agent.AgentService;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.constant.AsyncExecutorNames;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
@@ -142,28 +142,28 @@ public class AgentServiceImpl implements AgentService {
             predictionMapper.updateById(record);
             // P2-3: 记录异常终止 span
             tracer.error(traceCtx, e);
-            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.agent.msg_eaf40df5", e.getMessage());
+            throw new BizException(StandardResultCode.INTERNAL_ERROR, "error.agent.msg_eaf40df5", e.getMessage());
         }
         long cost = System.currentTimeMillis() - t0;
         // P1-4: 从 AgentContext 读取 LLM Provider 返回的 traceId，用于审计/账单核对
         record.setProviderTraceId(resolveProviderTraceId(ctx));
-        record.setAlertLevel(result.getAlertLevel() == null ? AgentAlertLevel.NORMAL.getCode()
-                : result.getAlertLevel().getCode());
-        record.setScore(result.getScore());
-        record.setConfidence(result.getConfidence());
-        record.setSuggestion(result.getSuggestion());
-        record.setMatchedRules(result.getMatchedRules() == null ? null
-                : safeJson(result.getMatchedRules()));
-        record.setOutputResult(safeJson(result.getPayload()));
+        record.setAlertLevel(BaseResponse.getAlertLevel() == null ? AgentAlertLevel.NORMAL.getCode()
+                : BaseResponse.getAlertLevel().getCode());
+        record.setScore(BaseResponse.getScore());
+        record.setConfidence(BaseResponse.getConfidence());
+        record.setSuggestion(BaseResponse.getSuggestion());
+        record.setMatchedRules(BaseResponse.getMatchedRules() == null ? null
+                : safeJson(BaseResponse.getMatchedRules()));
+        record.setOutputResult(safeJson(BaseResponse.getPayload()));
         record.setCostMs(cost);
         record.setStatus(AgentRunStatus.SUCCESS.getCode());
         predictionMapper.updateById(record);
 
         // P2-3: 结束 Agent 链路追踪
-        tracer.endAgent(traceCtx, safeJson(result.getPayload()), true);
+        tracer.endAgent(traceCtx, safeJson(BaseResponse.getPayload()), true);
 
         log.info("[Agent] 执行成功: type={} biz={} score={} level={} cost={}ms",
-                type, req.getBizRef(), result.getScore(), result.getAlertLevel(), cost);
+                type, req.getBizRef(), BaseResponse.getScore(), BaseResponse.getAlertLevel(), cost);
         return record;
     }
 
@@ -187,7 +187,7 @@ public class AgentServiceImpl implements AgentService {
      */
     public AgentPredictionDO runBlockHandler(AgentRunRequestDTO req, BlockException ex) {
         log.warn("[Agent] Sentinel 限流: {}", ex.getClass().getSimpleName());
-        throw new BizException(BizErrorCode.RATE_LIMIT, "error.agent.msg_e12dc2f2");
+        throw new BizException(StandardResultCode.RATE_LIMIT, "error.agent.msg_e12dc2f2");
     }
 
     /**
@@ -199,7 +199,7 @@ public class AgentServiceImpl implements AgentService {
      */
     public AgentPredictionDO runFallback(AgentRunRequestDTO req, Throwable e) {
         log.error("[Agent] Sentinel 降级: {}", e.getMessage());
-        throw new BizException(BizErrorCode.SERVICE_UNAVAILABLE, "error.agent.msg_8536a322");
+        throw new BizException(StandardResultCode.SERVICE_UNAVAILABLE, "error.agent.msg_8536a322");
     }
 
     /**
@@ -247,7 +247,7 @@ public class AgentServiceImpl implements AgentService {
     public AgentResult executeInMemory(String agentType, AgentContext context) {
         AgentType type = AgentType.fromCode(agentType);
         if (type == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.agent.msg_3e4d9788", agentType);
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.agent.msg_3e4d9788", agentType);
         }
         Agent agent = findAgent(type);
         return agent.execute(context);
@@ -280,7 +280,7 @@ public class AgentServiceImpl implements AgentService {
         }
         AgentType type = AgentType.fromCode(agentType);
         if (type == null) {
-            BizException ex = new BizException(BizErrorCode.BAD_REQUEST,
+            BizException ex = new BizException(StandardResultCode.BAD_REQUEST,
                     "error.agent.msg_3e4d9788", agentType);
             listener.onError(0, ex);
             listener.onComplete(ReActResult.failure("无效 agentType: " + agentType, List.of()));
@@ -312,10 +312,10 @@ public class AgentServiceImpl implements AgentService {
                     signalGuard.onComplete(ReActResult.failure("执行异常: " + e.getMessage(), List.of()));
                     throw e;
                 }
-                signalGuard.onFinalAnswer(1, result.getSuggestion() == null ? "" : result.getSuggestion());
-                signalGuard.onComplete(ReActResult.success(result.getSuggestion(), List.of()));
+                signalGuard.onFinalAnswer(1, BaseResponse.getSuggestion() == null ? "" : BaseResponse.getSuggestion());
+                signalGuard.onComplete(ReActResult.success(BaseResponse.getSuggestion(), List.of()));
             }
-            tracer.endAgent(traceCtx, safeJson(result.getPayload()), true);
+            tracer.endAgent(traceCtx, safeJson(BaseResponse.getPayload()), true);
             return result;
         } catch (RuntimeException e) {
             log.error("[Agent] 流式执行失败: type={} biz={}", type, context.getBizRef(), e);
@@ -340,7 +340,7 @@ public class AgentServiceImpl implements AgentService {
     public AgentPredictionDO getById(String id) {
         AgentPredictionDO r = predictionMapper.selectById(id);
         if (r == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.agent.msg_99e3df42");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.agent.msg_99e3df42");
         }
         return r;
     }
@@ -428,7 +428,7 @@ public class AgentServiceImpl implements AgentService {
         return agents.stream()
                 .filter(a -> a.type() == type)
                 .findFirst()
-                .orElseThrow(() -> new BizException(BizErrorCode.BAD_REQUEST,
+                .orElseThrow(() -> new BizException(StandardResultCode.BAD_REQUEST,
                         "未注册 Agent: " + type.getCode()));
     }
 
@@ -441,11 +441,11 @@ public class AgentServiceImpl implements AgentService {
      */
     private AgentType validate(AgentRunRequestDTO req) {
         if (req == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.agent.msg_d9712a58");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.agent.msg_d9712a58");
         }
         AgentType type = AgentType.fromCode(req.getAgentType());
         if (type == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.agent.msg_3e4d9788", req.getAgentType());
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.agent.msg_3e4d9788", req.getAgentType());
         }
         return type;
     }

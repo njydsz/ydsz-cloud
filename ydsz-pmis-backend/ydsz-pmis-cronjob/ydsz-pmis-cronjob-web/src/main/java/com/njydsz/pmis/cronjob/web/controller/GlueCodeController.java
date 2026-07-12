@@ -2,7 +2,7 @@ package com.njydsz.pmis.cronjob.web.controller.schedule;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.cronjob.domain.entity.schedule.GlueCodeDO;
 import com.njydsz.pmis.cronjob.server.service.schedule.GlueCodeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,8 +46,8 @@ public class GlueCodeController {
     @Operation(summary = "保存 GLUE 代码（新版本）")
     @Idempotent(key = "glueCode:save", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/save")
-    public Result<GlueCodeDO> save(@RequestBody GlueCodeSaveRequest request) {
-        return Result.ok(glueCodeService.save(
+    public BaseResponse<GlueCodeDO> save(@RequestBody GlueCodeSaveRequest request) {
+        return BaseResponse.ok(glueCodeService.save(
                 request.getJobId(),
                 request.getSourceCode(),
                 request.getLanguage(),
@@ -62,8 +62,8 @@ public class GlueCodeController {
      */
     @Operation(summary = "获取最新版本 GLUE 代码")
     @GetMapping("/latest")
-    public Result<GlueCodeDO> latest(@RequestParam String jobId) {
-        return Result.ok(glueCodeService.getLatest(jobId));
+    public BaseResponse<GlueCodeDO> latest(@RequestParam String jobId) {
+        return BaseResponse.ok(glueCodeService.getLatest(jobId));
     }
 
     /**
@@ -74,8 +74,8 @@ public class GlueCodeController {
      */
     @Operation(summary = "获取 GLUE 代码版本列表")
     @GetMapping("/versions")
-    public Result<List<GlueCodeDO>> versions(@RequestParam String jobId) {
-        return Result.ok(glueCodeService.listVersions(jobId));
+    public BaseResponse<List<GlueCodeDO>> versions(@RequestParam String jobId) {
+        return BaseResponse.ok(glueCodeService.listVersions(jobId));
     }
 
     /**
@@ -87,8 +87,8 @@ public class GlueCodeController {
     @Operation(summary = "回滚到指定版本")
     @Idempotent(key = "glueCode:rollback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/rollback")
-    public Result<GlueCodeDO> rollback(@RequestBody GlueCodeRollbackRequest request) {
-        return Result.ok(glueCodeService.rollback(request.getJobId(), request.getVersion()));
+    public BaseResponse<GlueCodeDO> rollback(@RequestBody GlueCodeRollbackRequest request) {
+        return BaseResponse.ok(glueCodeService.rollback(request.getJobId(), request.getVersion()));
     }
 
     /**
@@ -102,8 +102,8 @@ public class GlueCodeController {
      */
     @Operation(summary = "在线测试 GLUE 代码")
     @PostMapping("/test")
-    public Result<Map<String, Object>> test(@RequestBody GlueTestRequest request) {
-        return Result.ok(glueCodeService.testCode(
+    public BaseResponse<Map<String, Object>> test(@RequestBody GlueTestRequest request) {
+        return BaseResponse.ok(glueCodeService.testCode(
                 request.getSourceCode(),
                 request.getLanguage(),
                 request.getParamsJson()));
@@ -119,8 +119,8 @@ public class GlueCodeController {
      */
     @Operation(summary = "获取代码模板")
     @GetMapping("/template")
-    public Result<Map<String, String>> template(@RequestParam(defaultValue = "GROOVY") String language) {
-        return Result.ok(glueCodeService.getCodeTemplate(language));
+    public BaseResponse<Map<String, String>> template(@RequestParam(defaultValue = "GROOVY") String language) {
+        return BaseResponse.ok(glueCodeService.getCodeTemplate(language));
     }
 
     /**
@@ -133,10 +133,10 @@ public class GlueCodeController {
      */
     @Operation(summary = "对比版本差异")
     @GetMapping("/diff")
-    public Result<Map<String, Object>> diff(@RequestParam String jobId,
+    public BaseResponse<Map<String, Object>> diff(@RequestParam String jobId,
                                              @RequestParam Integer versionA,
                                              @RequestParam Integer versionB) {
-        return Result.ok(glueCodeService.diffVersions(jobId, versionA, versionB));
+        return BaseResponse.ok(glueCodeService.diffVersions(jobId, versionA, versionB));
     }
 
     /**

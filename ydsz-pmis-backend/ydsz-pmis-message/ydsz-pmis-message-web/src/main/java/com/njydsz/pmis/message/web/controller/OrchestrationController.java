@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.web.controller.core;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.core.OrchestrationFlowDTO;
@@ -46,7 +46,7 @@ public class OrchestrationController {
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "orchestration:execute", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/execute")
-    public Result<OrchestrationResultVO> execute(@Valid @RequestBody OrchestrationFlowDTO flow) {
-        return Result.ok(orchestrationService.execute(flow));
+    public BaseResponse<OrchestrationResultVO> execute(@Valid @RequestBody OrchestrationFlowDTO flow) {
+        return BaseResponse.ok(orchestrationService.execute(flow));
     }
 }

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.userinfo.server.service.impl.permission;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.userinfo.domain.dto.permission.PermissionFormDTO;
 import com.njydsz.pmis.userinfo.domain.entity.permission.PermissionDO;
@@ -56,7 +56,7 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = CACHE_ALL_ENABLED, unless = "#result == null || #result.isEmpty()")
+    @Cacheable(value = CACHE_ALL_ENABLED, unless = "#result == null || #BaseResponse.isEmpty()")
     public List<PermissionDO> listAllEnabled() {
         return permissionMapper.selectList(new LambdaQueryWrapper<PermissionDO>()
                 .eq(PermissionDO::getStatus, "ENABLED")
@@ -65,14 +65,14 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = CACHE_PERM_CODES, key = "#userId", unless = "#result == null || #result.isEmpty()")
+    @Cacheable(value = CACHE_PERM_CODES, key = "#userId", unless = "#result == null || #BaseResponse.isEmpty()")
     public List<String> listPermCodesByUserId(String userId) {
         return permissionMapper.selectPermCodesByUserId(userId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = CACHE_MENU_TREE, key = "#userId", unless = "#result == null || #result.isEmpty()")
+    @Cacheable(value = CACHE_MENU_TREE, key = "#userId", unless = "#result == null || #BaseResponse.isEmpty()")
     public List<MenuTreeVO> listMenuTreeByUserId(String userId) {
         // 1. 拉取该用户所有权限
         List<PermissionDO> perms = permissionMapper.selectByUserId(userId);
@@ -84,7 +84,7 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = CACHE_ALL_MENU_TREE, unless = "#result == null || #result.isEmpty()")
+    @Cacheable(value = CACHE_ALL_MENU_TREE, unless = "#result == null || #BaseResponse.isEmpty()")
     public List<MenuTreeVO> listAllMenuTree() {
         return buildMenuTree(listAllEnabled());
     }
@@ -136,7 +136,7 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     @Transactional(readOnly = true)
-    @Cacheable(value = CACHE_NAME, key = "#roleId", unless = "#result == null || #result.isEmpty()")
+    @Cacheable(value = CACHE_NAME, key = "#roleId", unless = "#result == null || #BaseResponse.isEmpty()")
     public List<PermissionDO> listByRoleId(String roleId) {
         return permissionMapper.selectByRoleId(roleId);
     }
@@ -147,7 +147,7 @@ public class PermissionServiceImpl implements PermissionService {
     public PermissionDO getById(String id) {
         PermissionDO p = permissionMapper.selectById(id);
         if (p == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_bf562d6f");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.user.msg_bf562d6f");
         }
         return p;
     }
@@ -156,7 +156,7 @@ public class PermissionServiceImpl implements PermissionService {
     @CacheEvict(value = {CACHE_ALL_ENABLED, CACHE_PERM_CODES, CACHE_MENU_TREE, CACHE_ALL_MENU_TREE, CACHE_NAME}, allEntries = true)
     public String create(PermissionFormDTO dto) {
         if (permissionMapper.selectByCode(dto.getPermCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_7b343d30");
+            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.user.msg_7b343d30");
         }
         PermissionDO entity = new PermissionDO();
         BeanUtils.copyProperties(dto, entity);
@@ -171,11 +171,11 @@ public class PermissionServiceImpl implements PermissionService {
     @CacheEvict(value = {CACHE_ALL_ENABLED, CACHE_PERM_CODES, CACHE_MENU_TREE, CACHE_ALL_MENU_TREE, CACHE_NAME}, allEntries = true)
     public void update(PermissionFormDTO dto) {
         if (dto.getId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_965c9a30");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_965c9a30");
         }
         PermissionDO exists = permissionMapper.selectById(dto.getId());
         if (exists == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_bf562d6f");
+            throw new BizException(StandardResultCode.NOT_FOUND, "error.user.msg_bf562d6f");
         }
         PermissionDO entity = new PermissionDO();
         BeanUtils.copyProperties(dto, entity);
@@ -189,7 +189,7 @@ public class PermissionServiceImpl implements PermissionService {
         Long childCount = permissionMapper.selectCount(new LambdaQueryWrapper<PermissionDO>()
                 .eq(PermissionDO::getParentId, id));
         if (childCount != null && childCount > 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_72018d8a");
+            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_72018d8a");
         }
         permissionMapper.deleteById(id);
     }

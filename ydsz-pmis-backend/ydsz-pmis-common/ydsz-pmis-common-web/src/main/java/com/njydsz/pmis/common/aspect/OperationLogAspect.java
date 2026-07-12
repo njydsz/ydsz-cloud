@@ -6,7 +6,7 @@ import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.event.OperationLogEvent;
 import com.njydsz.pmis.common.log.OperationLogContext;
 import com.njydsz.pmis.common.security.LoginUser;
-import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -129,7 +129,7 @@ public class OperationLogAspect {
 
         MethodSignature signature = (MethodSignature) pjp.getSignature();
         Method method = signature.getMethod();
-        LoginUser user = SecurityContext.getCurrentOrNull();
+        LoginUser user = AuthContext.getCurrentOrNull();
 
         String params = "";
         if (ann.saveParams()) {

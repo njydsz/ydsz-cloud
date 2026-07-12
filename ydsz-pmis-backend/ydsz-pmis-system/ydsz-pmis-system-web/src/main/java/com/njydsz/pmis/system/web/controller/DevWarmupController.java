@@ -1,6 +1,6 @@
 package com.njydsz.pmis.system.web.controller.config;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -56,21 +56,21 @@ public class DevWarmupController {
      */
     @Operation(summary = "执行全量预热（数据库+Redis+JIT）")
     @PostMapping
-    public Result<Map<String, Object>> warmupAll() {
+    public BaseResponse<Map<String, Object>> warmupAll() {
         Map<String, Object> result = new LinkedHashMap<>();
         log.info("[DevWarmup] 开始全量预热...");
 
         // 1. 数据库预热
-        result.put("database", warmupDatabase());
+        BaseResponse.put("database", warmupDatabase());
 
         // 2. Redis 预热
-        result.put("redis", warmupRedis());
+        BaseResponse.put("redis", warmupRedis());
 
         // 3. JIT 预热（Thread.sleep 触发 JIT 编译）
-        result.put("jit", warmupJit());
+        BaseResponse.put("jit", warmupJit());
 
         log.info("[DevWarmup] 全量预热完成: {}", result);
-        return Result.ok(result);
+        return BaseResponse.ok(result);
     }
 
     /**
@@ -80,26 +80,26 @@ public class DevWarmupController {
      */
     @Operation(summary = "查询预热状态")
     @GetMapping("/status")
-    public Result<Map<String, Object>> status() {
+    public BaseResponse<Map<String, Object>> status() {
         Map<String, Object> result = new LinkedHashMap<>();
 
         // 检查数据库连接
         try {
             jdbcTemplate.queryForObject("SELECT 1", Integer.class);
-            result.put("database", "UP");
+            BaseResponse.put("database", "UP");
         } catch (Exception e) {
-            result.put("database", "DOWN: " + e.getMessage());
+            BaseResponse.put("database", "DOWN: " + e.getMessage());
         }
 
         // 检查 Redis 连接
         try {
             String pong = redisTemplate.getConnectionFactory().getConnection().ping();
-            result.put("redis", "UP");
+            BaseResponse.put("redis", "UP");
         } catch (Exception e) {
-            result.put("redis", "DOWN: " + e.getMessage());
+            BaseResponse.put("redis", "DOWN: " + e.getMessage());
         }
 
-        return Result.ok(result);
+        return BaseResponse.ok(result);
     }
 
     /** 数据库预热 */
