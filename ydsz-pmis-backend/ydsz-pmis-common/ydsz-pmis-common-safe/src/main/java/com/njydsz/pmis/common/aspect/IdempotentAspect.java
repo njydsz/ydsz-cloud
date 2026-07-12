@@ -2,7 +2,6 @@ package com.njydsz.pmis.common.aspect;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.common.security.SecurityContext;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -19,8 +18,6 @@ import java.time.Duration;
 /**
  * 幂等切面 — 基于 Redis SETNX 实现防重提交。
  *
- * <p>拦截标注了 {@link Idempotent} 的方法，在指定时间窗口内同一 key 仅允许一次成功执行。
- *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -29,6 +26,7 @@ import java.time.Duration;
 public class IdempotentAspect {
 
     private static final Logger log = LoggerFactory.getLogger(IdempotentAspect.class);
+    private static final String USER_ID_HEADER = "X-User-Id";
 
     private final StringRedisTemplate redisTemplate;
 
@@ -57,8 +55,7 @@ public class IdempotentAspect {
         StringBuilder sb = new StringBuilder("idempotent:");
         sb.append(idempotent.key());
         if (idempotent.useUser()) {
-            String userId = SecurityContext.getUserId();
-            sb.append(":").append(userId != null ? userId : "anonymous");
+            sb.append(":").append(getUserId());
         }
         ServletRequestAttributes attrs =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -67,5 +64,19 @@ public class IdempotentAspect {
             sb.append(":").append(req.getRequestURI());
         }
         return sb.toString();
+    }
+
+    private String getUserId() {
+        try {
+            ServletRequestAttributes attrs =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attrs != null) {
+                String userId = attrs.getRequest().getHeader(USER_ID_HEADER);
+                return userId != null ? userId : "anonymous";
+            }
+        } catch (Exception ignored) {
+            // 非 Web 上下文
+        }
+        return "anonymous";
     }
 }

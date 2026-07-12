@@ -1,24 +1,27 @@
 package com.njydsz.pmis.common.config;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
-import com.njydsz.pmis.common.security.SecurityContext;
+import jakarta.servlet.http.HttpServletRequest;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
 
 /**
  * MyBatis-Plus 审计字段自动填充器。
- * <p>
- * 自动填充 createdAt、updatedAt、createdBy、updatedBy 字段。
- * 从 {@link SecurityContext} 获取当前操作人。
- * </p>
+ *
+ * <p>自动填充 createdAt、updatedAt、createdBy、updatedBy 字段。
+ * 从请求头 X-User-Id 获取当前操作人，未登录返回 "system"。
  *
  * @author njydsz
  * @since 1.0.0
  */
 @Component
 public class AuditFieldFiller implements MetaObjectHandler {
+
+    private static final String USER_ID_HEADER = "X-User-Id";
 
     @Override
     public void insertFill(MetaObject metaObject) {
@@ -45,10 +48,16 @@ public class AuditFieldFiller implements MetaObjectHandler {
      */
     private String getCurrentUser() {
         try {
-            String userId = SecurityContext.getUserId();
-            return userId != null ? userId : "system";
-        } catch (Exception e) {
-            return "system";
+            ServletRequestAttributes attrs =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+            if (attrs != null) {
+                HttpServletRequest req = attrs.getRequest();
+                String userId = req.getHeader(USER_ID_HEADER);
+                return userId != null ? userId : "system";
+            }
+        } catch (Exception ignored) {
+            // 非 Web 上下文
         }
+        return "system";
     }
 }

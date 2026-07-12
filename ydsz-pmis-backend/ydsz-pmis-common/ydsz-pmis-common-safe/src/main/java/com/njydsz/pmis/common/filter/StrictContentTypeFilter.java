@@ -3,7 +3,6 @@ package com.njydsz.pmis.common.filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.security.CsrfSecurityPolicy;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -70,7 +69,7 @@ public class StrictContentTypeFilter extends OncePerRequestFilter {
         String method = request.getMethod();
 
         // 仅对写操作校验
-        if (CsrfSecurityPolicy.isSafeMethod(method)) {
+        if (isSafeMethod(method)) {
             chain.doFilter(request, response);
             return;
         }
@@ -94,6 +93,19 @@ public class StrictContentTypeFilter extends OncePerRequestFilter {
         }
 
         chain.doFilter(request, response);
+    }
+
+    /**
+     * 判断是否为安全 HTTP 方法（不修改资源状态）
+     *
+     * @param method HTTP 方法名
+     * @return true 表示安全方法
+     */
+    private boolean isSafeMethod(String method) {
+        return "GET".equalsIgnoreCase(method)
+                || "HEAD".equalsIgnoreCase(method)
+                || "OPTIONS".equalsIgnoreCase(method)
+                || "TRACE".equalsIgnoreCase(method);
     }
 
     /**
