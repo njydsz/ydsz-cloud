@@ -31,39 +31,39 @@ public final class JdbcExceptionTranslator {
      */
     public static BizException translate(SQLException ex) {
         if (ex == null) {
-            return new BizException(500, "Unknown database error");
+            return new BizException("500", "Unknown database error");
         }
 
         // 唯一键冲突
         if (ex instanceof SQLIntegrityConstraintViolationException) {
             String message = ex.getMessage();
             if (message != null && message.contains("Duplicate entry")) {
-                return new BizException(409, "数据已存在，请勿重复操作");
+                return new BizException("409", "数据已存在，请勿重复操作");
             }
             if (message != null && message.contains("foreign key")) {
-                return new BizException(409, "存在关联数据，无法删除");
+                return new BizException("409", "存在关联数据，无法删除");
             }
-            return new BizException(409, "数据约束冲突");
+            return new BizException("409", "数据约束冲突");
         }
 
         // 连接异常
         if (ex instanceof SQLRecoverableException) {
-            return new BizException(503, "数据库连接异常，请稍后重试");
+            return new BizException("503", "数据库连接异常，请稍后重试");
         }
 
         // 超时
         if (ex instanceof SQLTimeoutException) {
-            return new BizException(504, "数据库操作超时");
+            return new BizException("504", "数据库操作超时");
         }
 
         // 死锁
         String message = ex.getMessage();
         if (message != null && message.toLowerCase().contains("deadlock")) {
-            return new BizException(409, "操作冲突，请重试");
+            return new BizException("409", "操作冲突，请重试");
         }
 
         // 其他
-        return new BizException(500, "数据库操作异常: " + ex.getSQLState());
+        return new BizException("500", "数据库操作异常: " + ex.getSQLState());
     }
 
     /**
@@ -74,22 +74,22 @@ public final class JdbcExceptionTranslator {
      */
     public static BizException translate(DataAccessException ex) {
         if (ex == null) {
-            return new BizException(500, "Unknown data access error");
+            return new BizException("500", "Unknown data access error");
         }
 
         // 唯一键冲突
         if (ex instanceof DuplicateKeyException) {
-            return new BizException(409, "数据已存在，请勿重复操作");
+            return new BizException("409", "数据已存在，请勿重复操作");
         }
 
         // 乐观锁
         if (ex instanceof ObjectOptimisticLockingFailureException) {
-            return new BizException(409, "数据已被修改，请刷新后重试");
+            return new BizException("409", "数据已被修改，请刷新后重试");
         }
 
         // 超时
         if (ex instanceof QueryTimeoutException) {
-            return new BizException(504, "查询超时");
+            return new BizException("504", "查询超时");
         }
 
         // 连接
@@ -97,6 +97,6 @@ public final class JdbcExceptionTranslator {
             return translate((SQLException) ex.getCause());
         }
 
-        return new BizException(500, ex.getMessage());
+        return new BizException("500", ex.getMessage());
     }
 }

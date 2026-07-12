@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
+import org.slf4j.MDC;
 
 import java.io.Serializable;
 import java.time.Clock;
@@ -50,7 +51,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @SuperBuilder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({"code", "msg", "data", "timestamp"})
+@JsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp"})
 public class BaseResponse<T> implements IResponse<T>, Serializable {
 
     private static final long serialVersionUID = 3L;
@@ -101,6 +102,11 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     private Long timestamp;
 
     /**
+     * 链路追踪 ID
+     */
+    private String traceId;
+
+    /**
      * 时钟提供者 - 使用 AtomicReference 保证线程安全和性能
      * <p>相比 volatile 字段，AtomicReference 提供更好的内存可见性语义和更低的读取开销
      */
@@ -112,6 +118,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      */
     public BaseResponse() {
         this.timestamp = CLOCK_HOLDER.get().millis();
+        this.traceId = MDC.get("traceId");
     }
 
     /**
@@ -126,6 +133,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         this.msg = msg;
         this.data = data;
         this.timestamp = CLOCK_HOLDER.get().millis();
+        this.traceId = MDC.get("traceId");
     }
 
     /**
@@ -358,5 +366,121 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     @Override
     public boolean isSuccess() {
         return SUCCESS.equals(this.code);
+    }
+
+    /**
+     * 判断是否失败
+     *
+     * @return 失败返回true，否则返回false
+     */
+    public boolean isFailed() {
+        return !isSuccess();
+    }
+
+    /**
+     * 获取消息（getMessage 别名，兼容旧代码调用）
+     *
+     * @return 响应消息
+     */
+    public String getMessage() {
+        return msg;
+    }
+
+    // ==================== 工厂方法别名（兼容旧 Result API） ====================
+
+    /**
+     * 构建成功响应（无数据载荷）
+     *
+     * @param <T> 数据类型
+     * @return 成功响应
+     * @see #success()
+     */
+    public static <T> BaseResponse<T> ok() {
+        return success();
+    }
+
+    /**
+     * 构建成功响应（带数据）
+     *
+     * @param data 响应数据
+     * @param <T>  数据类型
+     * @return 成功响应
+     * @see #success(Object)
+     */
+    public static <T> BaseResponse<T> ok(T data) {
+        return success(data);
+    }
+
+    /**
+     * 构建成功响应（带数据与自定义提示信息）
+     *
+     * @param data    响应数据
+     * @param message 提示信息
+     * @param <T>     数据类型
+     * @return 成功响应
+     */
+    public static <T> BaseResponse<T> ok(T data, String message) {
+        return of(SUCCESS, message, data);
+    }
+
+    /**
+     * 失败响应（快捷别名，等价 error(message)）
+     *
+     * @param message 错误信息
+     * @param <T>     数据类型
+     * @return 失败结果
+     * @see #error(String)
+     */
+    public static <T> BaseResponse<T> fail(String message) {
+        return error(message);
+    }
+
+    /**
+     * 构建失败响应（指定状态码与提示信息）
+     *
+     * @param code    状态码
+     * @param message 提示信息
+     * @param <T>     数据类型
+     * @return 失败响应
+     * @see #error(String, String)
+     */
+    public static <T> BaseResponse<T> failed(String code, String message) {
+        return error(code, message);
+    }
+
+    /**
+     * 失败响应（基于结果码）
+     *
+     * @param resultCode 结果码
+     * @param <T>        数据类型
+     * @return 失败结果
+     * @see #error(ResultCode)
+     */
+    public static <T> BaseResponse<T> failed(ResultCode resultCode) {
+        return error(resultCode);
+    }
+
+    /**
+     * 构建失败响应（基于结果码并覆盖提示信息）
+     *
+     * @param resultCode 结果码
+     * @param message    提示信息
+     * @param <T>        数据类型
+     * @return 失败响应
+     * @see #error(ResultCode, String)
+     */
+    public static <T> BaseResponse<T> failed(ResultCode resultCode, String message) {
+        return error(resultCode, message);
+    }
+
+    /**
+     * 构建失败响应（基于异常）
+     *
+     * @param throwable 异常
+     * @param <T>       数据类型
+     * @return 失败响应
+     */
+    public static <T> BaseResponse<T> failed(Throwable throwable) {
+        return error(throwable.getMessage());
     }
 }

@@ -103,13 +103,14 @@ public class ExceptionBuilder {
      * @return BizException
      */
     public BizException build() {
+        String codeStr = String.valueOf(httpStatus);
         BizException ex;
         if (cause != null) {
-            ex = new BizException(httpStatus, message != null ? message : cause.getMessage());
+            ex = new BizException(codeStr, message != null ? message : cause.getMessage());
         } else if (message != null) {
-            ex = new BizException(httpStatus, message);
+            ex = new BizException(codeStr, message);
         } else {
-            ex = new BizException(httpStatus, "Unknown error");
+            ex = new BizException(codeStr, "Unknown error");
         }
         return ex;
     }

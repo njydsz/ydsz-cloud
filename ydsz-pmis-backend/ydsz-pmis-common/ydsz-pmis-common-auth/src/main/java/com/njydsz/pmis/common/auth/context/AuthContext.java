@@ -2,29 +2,34 @@ package com.njydsz.pmis.common.auth.context;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
 import com.njydsz.pmis.common.auth.model.ColumnPermissionInfo;
+import com.njydsz.pmis.common.context.RequestContext;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.LoginUser;
 
 /**
- * 统一权限上下文持有者
+ * 统一认证与权限上下文持有者
  *
- * <p>合并原 PermissionContextHolder 和 ColumnPermissionContext，提供统一的线程级权限上下文管理。
+ * <p>合并原 SecurityContext 和 PermissionContextHolder/ColumnPermissionContext，
+ * 提供统一的线程级用户身份与权限上下文管理。
  * 使用 TransmittableThreadLocal 保证在线程池场景下的正确传递。
  *
  * <p><b>存储内容：</b>
  * <ul>
+ *   <li>loginUser: 登录用户信息（userId/username/deptId/tenantId/roles/permissions 等）</li>
  *   <li>tenantId: 租户ID，用于多租户场景下的数据隔离</li>
  *   <li>columnPermission: 列权限信息，用于字段级权限控制</li>
  * </ul>
  *
  * <p><b>生命周期：</b>
  * <ul>
- *   <li>在 Filter/Interceptor 中初始化</li>
- *   <li>在业务逻辑中读取</li>
+ *   <li>在 Filter/Interceptor 中初始化（解析 Token 后调用 {@link #setCurrent}）</li>
+ *   <li>在业务逻辑中读取（如 {@link #getUserId()}, {@link #requirePermission(String)}）</li>
  *   <li>在请求结束时必须调用 {@link #clear()} 清理，防止内存泄漏</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 public final class AuthContext {
 
@@ -32,6 +37,142 @@ public final class AuthContext {
 
     private AuthContext() {
     }
+
+    // ==================== LoginUser 管理 ====================
+
+    /**
+     * 设置当前登录用户
+     *
+     * <p>同时同步关键信息到 {@link RequestContext}，便于跨模块统一访问。
+     *
+     * @param user 登录用户
+     */
+    public static void setCurrent(LoginUser user) {
+        ContextData data = getOrCreate();
+        data.loginUser = user;
+        // 同步关键信息到 RequestContext
+        if (user != null) {
+            RequestContext.ContextData ctx = RequestContext.getOrDefault();
+            ctx.setUserId(user.getUserId());
+            ctx.setUsername(user.getUsername());
+            ctx.setRealName(user.getRealName());
+            ctx.setDeptId(user.getDeptId());
+            if (user.getTenantId() != null) {
+                ctx.setTenantId(user.getTenantId());
+            }
+        }
+    }
+
+    /**
+     * 获取当前登录用户
+     *
+     * @return 当前登录用户
+     * @throws BizException 未登录时抛出
+     */
+    public static LoginUser getCurrent() {
+        LoginUser user = getCurrentOrNull();
+        if (user == null) {
+            throw new BizException(StandardResultCode.UNAUTHORIZED, "error.common.msg_1923bd82");
+        }
+        return user;
+    }
+
+    /**
+     * 获取当前登录用户（允许为空）
+     *
+     * @return 当前登录用户；未登录时返回 null
+     */
+    public static LoginUser getCurrentOrNull() {
+        ContextData data = CONTEXT.get();
+        return data != null ? data.loginUser : null;
+    }
+
+    /**
+     * 当前用户 ID（雪花算法字符串）
+     *
+     * @return 当前用户 ID
+     * @throws BizException 未登录时抛出
+     */
+    public static String getUserId() {
+        return getCurrent().getUserId();
+    }
+
+    /**
+     * 当前用户名
+     *
+     * @return 当前用户名
+     * @throws BizException 未登录时抛出
+     */
+    public static String getUsername() {
+        return getCurrent().getUsername();
+    }
+
+    /**
+     * 当前部门 ID（雪花算法字符串）
+     *
+     * @return 当前部门 ID
+     * @throws BizException 未登录时抛出
+     */
+    public static String getDeptId() {
+        return getCurrent().getDeptId();
+    }
+
+    /**
+     * 当前租户 ID（多租户上下文）
+     *
+     * <p>从登录用户上下文获取 tenantId。未登录或上下文为空时返回默认值 "1"。
+     * 适用于后台任务、单元测试等无 HTTP 请求上下文的场景。
+     *
+     * @return 当前租户 ID；未登录时返回 "1"
+     */
+    public static String getTenantIdOrDefault() {
+        return getTenantIdOrDefault("1");
+    }
+
+    /**
+     * 当前租户 ID（带自定义默认值）
+     *
+     * @param defaultTenantId 默认租户 ID（未登录时使用）
+     * @return 当前租户 ID；未登录时返回 defaultTenantId
+     */
+    public static String getTenantIdOrDefault(String defaultTenantId) {
+        LoginUser user = getCurrentOrNull();
+        if (user == null || user.getTenantId() == null || user.getTenantId().isEmpty()) {
+            return defaultTenantId == null || defaultTenantId.isEmpty() ? "1" : defaultTenantId;
+        }
+        return user.getTenantId();
+    }
+
+    /**
+     * 校验权限
+     *
+     * @param perm 权限编码
+     * @throws BizException 无权限时抛出
+     */
+    public static void requirePermission(String perm) {
+        LoginUser user = getCurrent();
+        if (!user.hasPermission(perm)) {
+            throw new BizException(StandardResultCode.FORBIDDEN, "error.common.msg_1e40057e", perm);
+        }
+    }
+
+    /**
+     * 校验任一权限
+     *
+     * @param perms 权限编码列表
+     * @throws BizException 全部权限都不拥有时抛出
+     */
+    public static void requireAnyPermission(String... perms) {
+        LoginUser user = getCurrent();
+        for (String p : perms) {
+            if (user.hasPermission(p)) {
+                return;
+            }
+        }
+        throw new BizException(StandardResultCode.FORBIDDEN, "error.common.msg_ad4fff48");
+    }
+
+    // ==================== 列权限管理（原有功能） ====================
 
     /**
      * 获取当前线程的上下文数据
@@ -67,11 +208,7 @@ public final class AuthContext {
      * @param tenantId 租户ID
      */
     public static void setTenantId(String tenantId) {
-        ContextData data = CONTEXT.get();
-        if (data == null) {
-            data = new ContextData();
-            CONTEXT.set(data);
-        }
+        ContextData data = getOrCreate();
         data.setTenantId(tenantId);
     }
 
@@ -91,11 +228,7 @@ public final class AuthContext {
      * @param columnPermission 列权限信息
      */
     public static void setColumnPermission(ColumnPermissionInfo columnPermission) {
-        ContextData data = CONTEXT.get();
-        if (data == null) {
-            data = new ContextData();
-            CONTEXT.set(data);
-        }
+        ContextData data = getOrCreate();
         data.setColumnPermission(columnPermission);
     }
 
@@ -119,12 +252,32 @@ public final class AuthContext {
         CONTEXT.remove();
     }
 
+    // ==================== 内部方法 ====================
+
+    private static ContextData getOrCreate() {
+        ContextData data = CONTEXT.get();
+        if (data == null) {
+            data = new ContextData();
+            CONTEXT.set(data);
+        }
+        return data;
+    }
+
     /**
      * 上下文数据载体
      */
     public static class ContextData {
+        private LoginUser loginUser;
         private String tenantId;
         private ColumnPermissionInfo columnPermission;
+
+        public LoginUser getLoginUser() {
+            return loginUser;
+        }
+
+        public void setLoginUser(LoginUser loginUser) {
+            this.loginUser = loginUser;
+        }
 
         public String getTenantId() {
             return tenantId;

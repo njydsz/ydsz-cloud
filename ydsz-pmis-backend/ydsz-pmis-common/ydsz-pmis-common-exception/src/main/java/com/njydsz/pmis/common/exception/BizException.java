@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.exception;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.core.response.ResultCode;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.code.ExceptionCode;
 import lombok.Getter;
 
@@ -24,8 +25,8 @@ public class BizException extends RuntimeException {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 业务错误码 */
-    private final int code;
+    /** 业务错误码（字符串类型，如 "A10001"） */
+    private final String code;
 
     /** 错误提示信息（或 i18n key，由 GlobalExceptionHandler 决定如何解析） */
     private final String errorMessage;
@@ -34,49 +35,49 @@ public class BizException extends RuntimeException {
     private final transient Object[] args;
 
     /**
-     * 根据业务错误码构造异常
+     * 根据结果码构造异常
      *
-     * @param errorCode 业务错误码
+     * @param resultCode 结果码
      */
-    public BizException(BizErrorCode errorCode) {
-        super(errorCode.getMessage());
-        this.code = errorCode.getCode();
-        this.errorMessage = errorCode.getMessage();
+    public BizException(ResultCode resultCode) {
+        super(resultCode.getMsg());
+        this.code = resultCode.getCode();
+        this.errorMessage = resultCode.getMsg();
         this.args = null;
     }
 
     /**
-     * 根据业务错误码与自定义提示信息构造异常
+     * 根据结果码与自定义提示信息构造异常
      *
      * <p>当 {@code message} 以 "error." 开头时，会被视为 i18n key，
      * 由 GlobalExceptionHandler 通过 MessageSource 解析；否则作为最终消息直接展示。
      *
-     * @param errorCode 业务错误码
-     * @param message   自定义提示信息（或 i18n key）
+     * @param resultCode 结果码
+     * @param message    自定义提示信息（或 i18n key）
      */
-    public BizException(BizErrorCode errorCode, String message) {
+    public BizException(ResultCode resultCode, String message) {
         super(message);
-        this.code = errorCode.getCode();
+        this.code = resultCode.getCode();
         this.errorMessage = message;
         this.args = null;
     }
 
     /**
-     * 根据业务错误码与 i18n key + 占位符参数构造异常
+     * 根据结果码与 i18n key + 占位符参数构造异常
      *
-     * <p>用法：{@code throw new BizException(BizErrorCode.NOT_FOUND, "error.xxx.msg_yyy", id);}
+     * <p>用法：{@code throw new BizException(StandardResultCode.NOT_FOUND, "error.xxx.msg_yyy", id);}
      * 对应 properties 中：{@code error.xxx.msg_yyy=资源不存在: {0}}
      *
      * <p>注意：本构造器使用 varargs，仅在传入 3 个及以上参数时被 Java 重载解析选中；
-     * 仅传 2 个参数时会优先匹配 {@link #BizException(BizErrorCode, String)}。
+     * 仅传 2 个参数时会优先匹配 {@link #BizException(ResultCode, String)}。
      *
-     * @param errorCode    业务错误码
-     * @param messageKey   i18n 消息 key（应以 "error." 开头）
-     * @param args         占位符参数，与 properties 中的 {0} {1} ... 一一对应
+     * @param resultCode  结果码
+     * @param messageKey  i18n 消息 key（应以 "error." 开头）
+     * @param args        占位符参数，与 properties 中的 {0} {1} ... 一一对应
      */
-    public BizException(BizErrorCode errorCode, String messageKey, Object... args) {
+    public BizException(ResultCode resultCode, String messageKey, Object... args) {
         super(messageKey);
-        this.code = errorCode.getCode();
+        this.code = resultCode.getCode();
         this.errorMessage = messageKey;
         this.args = args;
     }
@@ -84,10 +85,10 @@ public class BizException extends RuntimeException {
     /**
      * 根据状态码与提示信息构造异常
      *
-     * @param code    状态码
+     * @param code    状态码（字符串类型）
      * @param message 提示信息
      */
-    public BizException(int code, String message) {
+    public BizException(String code, String message) {
         super(message);
         this.code = code;
         this.errorMessage = message;
@@ -101,7 +102,7 @@ public class BizException extends RuntimeException {
      */
     public BizException(String message) {
         super(message);
-        this.code = BizErrorCode.INTERNAL_ERROR.getCode();
+        this.code = StandardResultCode.INTERNAL_ERROR.getCode();
         this.errorMessage = message;
         this.args = null;
     }
@@ -114,7 +115,7 @@ public class BizException extends RuntimeException {
      */
     public BizException(String message, Throwable cause) {
         super(message, cause);
-        this.code = BizErrorCode.INTERNAL_ERROR.getCode();
+        this.code = StandardResultCode.INTERNAL_ERROR.getCode();
         this.errorMessage = message;
         this.args = null;
     }
@@ -126,7 +127,7 @@ public class BizException extends RuntimeException {
      */
     public BizException(ExceptionCode code) {
         super(code.getKey());
-        this.code = code.getHttpStatus();
+        this.code = code.getCode();
         this.errorMessage = code.getKey();
         this.args = null;
     }
@@ -139,7 +140,7 @@ public class BizException extends RuntimeException {
      */
     public BizException(ExceptionCode code, String message) {
         super(message);
-        this.code = code.getHttpStatus();
+        this.code = code.getCode();
         this.errorMessage = message;
         this.args = null;
     }
@@ -153,7 +154,7 @@ public class BizException extends RuntimeException {
      */
     public BizException(ExceptionCode code, String message, Throwable cause) {
         super(message, cause);
-        this.code = code.getHttpStatus();
+        this.code = code.getCode();
         this.errorMessage = message;
         this.args = null;
     }

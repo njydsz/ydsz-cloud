@@ -3,8 +3,6 @@ package com.njydsz.pmis.common.core.response;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
-import java.io.Serializable;
-
 /**
  * 分页响应结果封装类
  *
@@ -147,7 +145,7 @@ public class PageResponse<T> extends BaseResponse<T> {
      * @param <T>  数据类型
      * @return 失败分页响应
      */
-    public static <T extends Serializable> PageResponse<T> fail(String code, String msg) {
+    public static <T> PageResponse<T> fail(String code, String msg) {
         return of(code, msg, 0L, 0L, 0L, null);
     }
 
@@ -158,7 +156,7 @@ public class PageResponse<T> extends BaseResponse<T> {
      * @param <T> 数据类型
      * @return 失败分页响应
      */
-    public static <T extends Serializable> PageResponse<T> fail(String msg) {
+    public static <T> PageResponse<T> fail(String msg) {
         return fail(BaseResponse.ERROR, msg);
     }
 
