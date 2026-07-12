@@ -1,40 +1,41 @@
 package com.njydsz.pmis.common.notify.exception;
 
-import com.njydsz.pmis.common.exception.custom.BusinessException;
-import com.njydsz.pmis.common.exception.enums.ExceptionCategory;
-import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
+import com.njydsz.pmis.common.exception.code.ExceptionCode;
+import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 
 /**
- * 通知发送异常
+ * 通知发送异�?
  *
  * @author ydsz-pmis-team
- * 
- * 
  * @since 1.0.0
  */
-public class NotifyException extends BusinessException {
+public class NotifyException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    private static final String DEFAULT_CODE = "NOTIFY_ERROR";
+    private final ExceptionCode exceptionCode;
 
     public NotifyException(String message) {
-        super();
-        this.httpStatus = 400;
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.BUSINESS;
-        this.code = DEFAULT_CODE;
-        this.message = message;
-        this.params = new Object[]{};
+        super(message);
+        this.exceptionCode = UnifiedExceptionCode.BAD_REQUEST;
     }
 
     public NotifyException(String message, Throwable cause) {
-        super(cause);
-        this.httpStatus = 400;
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.BUSINESS;
-        this.code = DEFAULT_CODE;
-        this.message = message;
-        this.params = new Object[]{};
+        super(message, cause);
+        this.exceptionCode = UnifiedExceptionCode.BAD_REQUEST;
+    }
+
+    public NotifyException(ExceptionCode code, String message) {
+        super(message);
+        this.exceptionCode = code;
+    }
+
+    public NotifyException(ExceptionCode code, String message, Throwable cause) {
+        super(message, cause);
+        this.exceptionCode = code;
+    }
+
+    public ExceptionCode getExceptionCode() {
+        return exceptionCode;
     }
 }

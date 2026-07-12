@@ -14,8 +14,8 @@ import java.util.Map;
 /**
  * 通知模块配置属性类
  *
- * <p>绑定 application.yml 中 remi.notify 前缀的配置项，
- * 支持邮件、短信、企业微信、钉钉、飞书、站内信等多种通知渠道的配置。</p>
+ * <p>绑定 application.yml �?remi.notify 前缀的配置项�?
+ * 支持邮件、短信、企业微信、钉钉、飞书、站内信等多种通知渠道的配置�?/p>
  *
  * @author ydsz-pmis-team
  * 
@@ -44,7 +44,7 @@ public class NotifyProperties {
 	/** 飞书渠道配置 */
 	private FeishuConfig feishu = new FeishuConfig();
 
-	/** 站内信渠道配置 */
+	/** 站内信渠道配�?*/
 	private InsiteConfig insite = new InsiteConfig();
 
 	/** 重试队列配置 */
@@ -63,7 +63,7 @@ public class NotifyProperties {
 		@Min(1)
 		private int capacity = 10000;
 
-		/** 最大重试次数 */
+		/** 最大重试次�?*/
 		@Min(0)
 		@Max(10)
 		private int maxRetries = 5;
@@ -72,7 +72,7 @@ public class NotifyProperties {
 		@Min(1)
 		private int batchSize = 100;
 
-		/** 是否使用 Redis 持久化重试队列，开启后服务重启不会丢失待重试消息 */
+		/** 是否使用 Redis 持久化重试队列，开启后服务重启不会丢失待重试消�?*/
 		private boolean persistent = false;
 
 		/** Redis Key 前缀 */
@@ -97,10 +97,10 @@ public class NotifyProperties {
 		/** 发件人邮箱地址 */
 		private String fromMail;
 
-		/** 发件人显示名称 */
+		/** 发件人显示名�?*/
 		private String fromName;
 
-		/** 邮箱密码/授权码 */
+		/** 邮箱密码/授权�?*/
 		private String password;
 
 		/** 连接超时时间（毫秒） */
@@ -112,7 +112,7 @@ public class NotifyProperties {
 		/** 写入超时时间（毫秒） */
 		private int writeTimeout = 10000;
 
-		/** 是否需要认证 */
+		/** 是否需要认�?*/
 		private boolean auth = true;
 
 		/** 是否启用 STARTTLS */
@@ -143,7 +143,7 @@ public class NotifyProperties {
 		/** SSL 协议版本 */
 		private String protocols = "TLSv1.2";
 
-		/** 是否校验服务器身份 */
+		/** 是否校验服务器身�?*/
 		private boolean checkServerIdentity = true;
 
 		/** 信任存储路径 */
@@ -159,7 +159,7 @@ public class NotifyProperties {
 		/** 是否启用短信渠道 */
 		private boolean enabled;
 
-		/** 短信服务提供商 */
+		/** 短信服务提供�?*/
 		private String provider = "aliyun";
 
 		/** AccessKey ID */
@@ -196,7 +196,7 @@ public class NotifyProperties {
 		/** Webhook 密钥 */
 		private String webhookKey;
 
-		/** Token 刷新间隔（秒） */
+		/** Token 刷新间隔（秒�?*/
 		private long tokenRefreshInterval = 7200;
 	}
 
@@ -245,18 +245,18 @@ public class NotifyProperties {
 	}
 
 	/**
-	 * 站内信渠道配置
+	 * 站内信渠道配�?
 	 */
 	@Data
 	public static class InsiteConfig {
 
-		/** 是否启用站内信渠道 */
+		/** 是否启用站内信渠�?*/
 		private boolean enabled = true;
 
 		/** 存储类型 */
 		private String storageType = "redis";
 
-		/** 最大队列大小 */
+		/** 最大队列大�?*/
 		private int maxQueueSize = 10000;
 
 		/** 过期时间（分钟） */
@@ -266,7 +266,7 @@ public class NotifyProperties {
 	/**
 	 * 限流配置
 	 *
-	 * <p>控制通知发送频率，防止渠道过载。
+	 * <p>控制通知发送频率，防止渠道过载�?
 	 *
 	 * <p><b>配置示例（application.yml）：</b>
 	 * <pre>{@code
@@ -299,7 +299,7 @@ public class NotifyProperties {
 		@Min(1)
 		private int defaultMaxRequests = 100;
 
-		/** 默认时间窗口（秒） */
+		/** 默认时间窗口（秒�?*/
 		@Min(1)
 		private int defaultWindowSeconds = 60;
 
@@ -308,7 +308,7 @@ public class NotifyProperties {
 	}
 
 	/**
-	 * 渠道级限流配置
+	 * 渠道级限流配�?
 	 */
 	@Getter
 	@Setter
@@ -318,7 +318,7 @@ public class NotifyProperties {
 		@Min(1)
 		private int maxRequests = 100;
 
-		/** 时间窗口（秒） */
+		/** 时间窗口（秒�?*/
 		@Min(1)
 		private int windowSeconds = 60;
 	}

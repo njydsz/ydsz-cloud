@@ -13,13 +13,13 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import java.util.Properties;
 
 /**
- * 邮件配置类
+ * 邮件配置�?
  *
  * <p>负责邮件发送能力的自动装配，核心功能包括：
  * <ul>
- *   <li>创建并配置 JavaMailSenderImpl 实例</li>
- *   <li>设置 SMTP 连接参数（认证、TLS/SSL、超时等）</li>
- *   <li>支持通过配置文件自定义邮件发送行为</li>
+ *   <li>创建并配�?JavaMailSenderImpl 实例</li>
+ *   <li>设置 SMTP 连接参数（认证、TLS/SSL、超时等�?/li>
+ *   <li>支持通过配置文件自定义邮件发送行�?/li>
  * </ul>
  *
  * <p><b>配置示例（application.yml）：</b>
@@ -40,11 +40,11 @@ import java.util.Properties;
  *       protocols: TLSv1.2
  * }</pre>
  *
- * <h3>端口与加密方式对应关系</h3>
+ * <h3>端口与加密方式对应关�?/h3>
  * <ul>
  *   <li><b>465 (SSL)</b>：ssl.enabled=true, starttls=false</li>
  *   <li><b>587 (STARTTLS)</b>：ssl.enabled=false, starttls=true</li>
- *   <li><b>25 (非加密)</b>：ssl.enabled=false, starttls=false（不推荐）</li>
+ *   <li><b>25 (非加�?</b>：ssl.enabled=false, starttls=false（不推荐�?/li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -69,7 +69,7 @@ public class EmailConfiguration {
     }
 
     /**
-     * 创建并配置 JavaMailSender 实例
+     * 创建并配�?JavaMailSender 实例
      *
      * @return 配置好的 JavaMailSenderImpl 实例
      */
@@ -99,12 +99,12 @@ public class EmailConfiguration {
     }
 
     /**
-     * 构建邮件发送属性配置
+     * 构建邮件发送属性配�?
      *
-     * <p>根据 EmailProperties 配置项，组装 JavaMail 所需的 Properties，
-     * 包括 SMTP 认证、STARTTLS、SSL、超时等参数。
+     * <p>根据 EmailProperties 配置项，组装 JavaMail 所需�?Properties�?
+     * 包括 SMTP 认证、STARTTLS、SSL、超时等参数�?
      *
-     * @return 邮件发送属性配置
+     * @return 邮件发送属性配�?
      */
     private Properties buildMailProperties() {
         Properties props = new Properties();

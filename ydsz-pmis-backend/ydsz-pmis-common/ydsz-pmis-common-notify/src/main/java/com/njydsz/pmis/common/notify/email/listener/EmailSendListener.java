@@ -6,8 +6,8 @@ import com.njydsz.pmis.common.email.domain.SendResult;
 /**
  * 邮件发送监听器接口
  *
- * <p>提供邮件发送过程的关键节点回调，支持在发送前验证、发送后记录等场景。
- * 可通过 {@link com.njydsz.pmis.common.email.service.EmailService#registerListener} 注册多个监听器。</p>
+ * <p>提供邮件发送过程的关键节点回调，支持在发送前验证、发送后记录等场景�?
+ * 可通过 {@link com.njydsz.pmis.common.email.service.EmailService#registerListener} 注册多个监听器�?/p>
  *
  * <h3>使用示例</h3>
  * <pre>{@code
@@ -21,14 +21,14 @@ import com.njydsz.pmis.common.email.domain.SendResult;
  *
  *     @Override
  *     public void onSuccess(Email email, SendResult result) {
- *         // 发送成功后更新任务状态
+ *         // 发送成功后更新任务状�?
  *         taskService.updateStatus(result.getMessageId());
  *     }
  *
  *     @Override
  *     public void onFailure(Email email, Throwable exception) {
- *         // 发送失败后重试或告警
- *         alertService.send("邮件发送失败: " + exception.getMessage());
+ *         // 发送失败后重试或告�?
+ *         alertService.send("邮件发送失�? " + exception.getMessage());
  *     }
  * });
  * }</pre>
@@ -56,23 +56,23 @@ public interface EmailSendListener {
     }
 
     /**
-     * 发送成功回调
+     * 发送成功回�?
      *
      * <p>在邮件发送成功之后调用，可用于：
      * <ul>
      *   <li>日志记录</li>
-     *   <li>更新任务状态</li>
+     *   <li>更新任务状�?/li>
      *   <li>发送确认通知</li>
      * </ul>
      *
      * @param email 已发送的邮件对象
-     * @param result 发送结果
+     * @param result 发送结�?
      */
     default void onSuccess(Email email, SendResult result) {
     }
 
     /**
-     * 发送失败回调
+     * 发送失败回�?
      *
      * <p>在邮件发送失败之后调用，可用于：
      * <ul>
@@ -88,11 +88,11 @@ public interface EmailSendListener {
     }
 
     /**
-     * 获取监听器执行顺序
+     * 获取监听器执行顺�?
      *
      * <p>数值越小越先执行，默认值为 0</p>
      *
-     * @return 监听器顺序
+     * @return 监听器顺�?
      */
     default int getOrder() {
         return 0;

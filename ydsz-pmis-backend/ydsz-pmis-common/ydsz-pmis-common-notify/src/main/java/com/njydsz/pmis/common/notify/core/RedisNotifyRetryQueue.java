@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.notify.core;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +14,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * 基于 Redis 的持久化重试队列实现
  *
- * <p>支持多实例部署时重试数据共享，服务重启后数据不丢失。
- * 使用 ZSET 按重试时间排序，Hash 存储消息详情。
+ * <p>支持多实例部署时重试数据共享，服务重启后数据不丢失�?
+ * 使用 ZSET 按重试时间排序，Hash 存储消息详情�?
  *
  * @author ydsz-pmis-team
  * 
@@ -30,19 +30,19 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
     private static final int DEFAULT_BATCH_SIZE = 100;
     private static final long BASE_BACKOFF_MS = 1000;
 
-    /** ZSET 键：按 nextRetryTime 排序 */
+    /** ZSET 键：�?nextRetryTime 排序 */
     private final String zsetKey;
-    /** Hash 键前缀：存储消息详情 */
+    /** Hash 键前缀：存储消息详�?*/
     private final String hashKeyPrefix;
     /** 计数器键前缀 */
     private final String counterQueued;
     private final String counterPermanent;
     private final String counterDropped;
 
-    /** 消息 TTL（30 天） */
+    /** 消息 TTL�?0 天） */
     private static final long MSG_TTL_SECONDS = 30 * 24 * 3600;
 
-    /** Lua 脚本：原子地将消息加入重试队列（ZADD + HSET + INCR） */
+    /** Lua 脚本：原子地将消息加入重试队列（ZADD + HSET + INCR�?*/
     private static final String LUA_OFFER_SCRIPT =
             "redis.call('SET', KEYS[1], ARGV[1])\n" +
             "redis.call('EXPIRE', KEYS[1], ARGV[3])\n" +
@@ -50,7 +50,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
             "redis.call('INCR', KEYS[3])\n" +
             "return 1";
 
-    /** Lua 脚本：原子地重新入队（ZADD + SET） */
+    /** Lua 脚本：原子地重新入队（ZADD + SET�?*/
     private static final String LUA_REQUEUE_SCRIPT =
             "redis.call('SET', KEYS[1], ARGV[1])\n" +
             "redis.call('EXPIRE', KEYS[1], ARGV[3])\n" +
@@ -61,7 +61,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
     private final int maxRetries;
     private final int batchSize;
 
-    /** 本地计数器缓存（避免每次都查 Redis） */
+    /** 本地计数器缓存（避免每次都查 Redis�?*/
     private final AtomicInteger queuedCount = new AtomicInteger(0);
     private final AtomicInteger permanentFailCount = new AtomicInteger(0);
     private final AtomicInteger droppedCount = new AtomicInteger(0);
@@ -98,7 +98,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
             String msgJson = JsonUtils.toJson(msg);
             String msgKey = hashKeyPrefix + msg.id;
 
-            // 使用 Lua 脚本保证 ZADD + SET + INCR 原子性
+            // 使用 Lua 脚本保证 ZADD + SET + INCR 原子�?
             Long result = stringRedisTemplate.execute(
                     new DefaultRedisScript<>(LUA_OFFER_SCRIPT, Long.class),
                     Arrays.asList(msgKey, zsetKey, counterQueued),
@@ -138,7 +138,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
             }
 
             for (String id : ids) {
-                // 原子性从 ZSET 中移除
+                // 原子性从 ZSET 中移�?
                 Long removed = stringRedisTemplate.opsForZSet().remove(zsetKey, id);
                 if (removed == null || removed <= 0) {
                     continue;
@@ -177,7 +177,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
         }
 
         if (processed > 0) {
-            log.debug("[NotifyRetryQueue] Redis 批量重试完成, 处理消息数={}", processed);
+            log.debug("[NotifyRetryQueue] Redis 批量重试完成, 处理消息�?{}", processed);
         }
         return processed;
     }
@@ -208,14 +208,14 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
 
         try {
             String msgJson = JsonUtils.toJson(msg);
-            // 使用 Lua 脚本保证 SET + ZADD 原子性
+            // 使用 Lua 脚本保证 SET + ZADD 原子�?
             stringRedisTemplate.execute(
                     new DefaultRedisScript<>(LUA_REQUEUE_SCRIPT, Long.class),
                     Arrays.asList(hashKeyPrefix + id, zsetKey),
                     msgJson, String.valueOf(msg.nextRetryTime), String.valueOf(MSG_TTL_SECONDS), id
             );
 
-            log.warn("[NotifyRetryQueue] 重试失败，重新入队 ({}/{}), id={}, channel={}, receiver={}, nextRetryIn={}ms",
+            log.warn("[NotifyRetryQueue] 重试失败，重新入�?({}/{}), id={}, channel={}, receiver={}, nextRetryIn={}ms",
                     msg.retryCount, maxRetries, id, msg.channel.getName(), msg.receiver, backoffMs);
         } catch (Exception e) {
             log.error("[NotifyRetryQueue] 重新入队失败, id={}, error={}", id, e.getMessage());
@@ -240,7 +240,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
                 return Integer.parseInt(val);
             }
         } catch (Exception e) {
-            log.warn("[NotifyRetryQueue] 读取 Redis 入队计数失败，降级返回本地计数 | error={}", e.getMessage());
+            log.warn("[NotifyRetryQueue] 读取 Redis 入队计数失败，降级返回本地计�?| error={}", e.getMessage());
         }
         return queuedCount.get();
     }
@@ -253,7 +253,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
                 return Integer.parseInt(val);
             }
         } catch (Exception e) {
-            log.warn("[NotifyRetryQueue] 读取 Redis 永久失败计数失败，降级返回本地计数 | error={}", e.getMessage());
+            log.warn("[NotifyRetryQueue] 读取 Redis 永久失败计数失败，降级返回本地计�?| error={}", e.getMessage());
         }
         return permanentFailCount.get();
     }
@@ -266,14 +266,14 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
                 return Integer.parseInt(val);
             }
         } catch (Exception e) {
-            log.warn("[NotifyRetryQueue] 读取 Redis 丢弃计数失败，降级返回本地计数 | error={}", e.getMessage());
+            log.warn("[NotifyRetryQueue] 读取 Redis 丢弃计数失败，降级返回本地计�?| error={}", e.getMessage());
         }
         return droppedCount.get();
     }
 
     @Override
     public int getCapacity() {
-        return Integer.MAX_VALUE; // Redis 队列容量理论上无限
+        return Integer.MAX_VALUE; // Redis 队列容量理论上无�?
     }
 
     @Override
@@ -282,7 +282,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
     }
 
     /**
-     * 重试消息数据（序列化到 Redis）
+     * 重试消息数据（序列化�?Redis�?
      */
     @SuppressWarnings("unused")
     private static class RetryMessage {
@@ -290,17 +290,17 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
         String id;
         /** 通知渠道 */
         NotifyChannel channel;
-        /** 接收者 */
+        /** 接收�?*/
         String receiver;
         /** 消息标题 */
         String title;
         /** 消息内容 */
         String content;
-        /** 已重试次数 */
+        /** 已重试次�?*/
         int retryCount;
-        /** 最后错误信息 */
+        /** 最后错误信�?*/
         String lastError;
-        /** 下次重试时间（毫秒时间戳） */
+        /** 下次重试时间（毫秒时间戳�?*/
         long nextRetryTime;
 
         RetryMessage() {

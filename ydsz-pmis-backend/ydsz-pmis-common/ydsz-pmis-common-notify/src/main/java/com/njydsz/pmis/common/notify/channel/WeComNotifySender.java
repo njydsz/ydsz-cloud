@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.notify.channel;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
@@ -21,7 +21,7 @@ import java.util.Map;
 /**
  * 企业微信通知发送器
  *
- * <p>通过企业微信群机器人 Webhook 发送消息。
+ * <p>通过企业微信群机器人 Webhook 发送消息�?
  *
  * @author ydsz-pmis-team
  * 
@@ -55,7 +55,7 @@ public class WeComNotifySender implements NotifyChannelStrategy {
 	@Override
 	public NotifySendResult send(String receiver, String title, String content) {
 		if (!isEnabled()) {
-			return NotifySendResult.failure("企业微信通知未启用", channelName());
+			return NotifySendResult.failure("企业微信通知未启�?, channelName());
 		}
 		try {
 			Map<String, Object> body = Map.of(
@@ -78,14 +78,14 @@ public class WeComNotifySender implements NotifyChannelStrategy {
 						return NotifySendResult.failure("企业微信响应错误: errcode=" + errcode + ", errmsg=" + errmsg, channelName());
 					}
 				} catch (Exception parseEx) {
-					log.warn("企业微信响应解析失败: {}, 按成功处理", parseEx.getMessage());
+					log.warn("企业微信响应解析失败: {}, 按成功处�?, parseEx.getMessage());
 				}
 			}
 
-			log.debug("企业微信通知发送成功: {}", title);
+			log.debug("企业微信通知发送成�? {}", title);
 			return NotifySendResult.success(response, channelName());
 		} catch (Exception e) {
-			log.error("企业微信通知发送失败: {}", e.getMessage(), e);
+			log.error("企业微信通知发送失�? {}", e.getMessage(), e);
 			return NotifySendResult.failure(e.getMessage(), channelName());
 		}
 	}
@@ -99,23 +99,23 @@ public class WeComNotifySender implements NotifyChannelStrategy {
 	}
 
 	/**
-	 * 批量发送企业微信通知（群机器人一次发送即通知全员）
+	 * 批量发送企业微信通知（群机器人一次发送即通知全员�?
 	 *
-	 * @param receivers 接收者列表
+	 * @param receivers 接收者列�?
 	 * @param title     消息标题
 	 * @param content   消息内容
-	 * @return 发送结果
+	 * @return 发送结�?
 	 */
 	@Override
 	public NotifySendResult batchSend(List<String> receivers, String title, String content) {
-		// 企业微信群机器人一次 webhook 调用即可通知到群内所有人
+		// 企业微信群机器人一�?webhook 调用即可通知到群内所有人
 		return send(null, title, content);
 	}
 
 	/**
 	 * 判断企业微信渠道是否启用
 	 *
-	 * @return 启用返回 true，否则返回 false
+	 * @return 启用返回 true，否则返�?false
 	 */
 	@Override
 	public boolean isEnabled() {
@@ -132,9 +132,9 @@ public class WeComNotifySender implements NotifyChannelStrategy {
 	}
 
     /**
-     * 构建 JSON 请求头
+     * 构建 JSON 请求�?
      *
-     * @return Content-Type 为 application/json 的 HTTP 请求头
+     * @return Content-Type �?application/json �?HTTP 请求�?
      */
     private HttpHeaders jsonHeaders() {
 		HttpHeaders headers = new HttpHeaders();

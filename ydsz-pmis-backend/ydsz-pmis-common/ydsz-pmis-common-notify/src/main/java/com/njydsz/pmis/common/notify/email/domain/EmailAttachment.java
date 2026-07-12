@@ -6,27 +6,27 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.io.File;
 /**
- * 邮件附件封装类
+ * 邮件附件封装�?
  *
- * <p>用于封装邮件附件的完整信息，包括文件路径、文件名和 File 对象。
- * 支持两种构造方式：直接指定文件路径，或提供完整的 File 对象。</p>
+ * <p>用于封装邮件附件的完整信息，包括文件路径、文件名�?File 对象�?
+ * 支持两种构造方式：直接指定文件路径，或提供完整�?File 对象�?/p>
  *
  * <h3>使用示例</h3>
  * <pre>{@code
- * // 方式1：通过路径构造
+ * // 方式1：通过路径构�?
  * EmailAttachment attachment = EmailAttachment.builder()
  *         .filePath("D:/tmp/report.xlsx")
  *         .build();
  *
- * // 方式2：通过 File 对象构造
+ * // 方式2：通过 File 对象构�?
  * EmailAttachment attachment = EmailAttachment.builder()
  *         .file(new File("D:/tmp/report.xlsx"))
  *         .build();
  *
- * // 方式3：指定自定义文件名
+ * // 方式3：指定自定义文件�?
  * EmailAttachment attachment = EmailAttachment.builder()
  *         .filePath("D:/tmp/report.xlsx")
- *         .fileName("自定义名称.xlsx")
+ *         .fileName("自定义名�?xlsx")
  *         .build();
  * }</pre>
  *
@@ -52,12 +52,12 @@ public class EmailAttachment {
     private File file;
 
     /**
-     * 附件显示文件名，为空时使用 File 原始名称
+     * 附件显示文件名，为空时使�?File 原始名称
      */
     private String fileName;
 
     /**
-     * MIME 类型，例如 application/pdf，留空时由 FileNameMap 推断
+     * MIME 类型，例�?application/pdf，留空时�?FileNameMap 推断
      */
     private String contentType;
 
@@ -68,7 +68,7 @@ public class EmailAttachment {
         if (this.filePath != null && !this.filePath.isBlank()) {
             return new File(this.filePath);
         }
-        throw new IllegalStateException("附件文件未设置，请指定 filePath 或 file");
+        throw new IllegalStateException("附件文件未设置，请指�?filePath �?file");
     }
 
     public String getDisplayName() {
@@ -79,9 +79,9 @@ public class EmailAttachment {
     }
 
     /**
-     * 判断附件是否有效（至少有 filePath 或 file）
+     * 判断附件是否有效（至少有 filePath �?file�?
      *
-     * @return 有效返回 true，否则返回 false
+     * @return 有效返回 true，否则返�?false
      */
     public boolean isValid() {
         return (filePath != null && !filePath.isBlank()) || file != null;

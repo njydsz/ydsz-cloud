@@ -13,20 +13,20 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 /**
- * 邮件实体类
+ * 邮件实体�?
  *
- * <p>封装邮件发送所需的完整信息，包括收件人、抄送、密送、主题、内容、
- * 附件、内嵌资源以及模板渲染所需的变量等。</p>
+ * <p>封装邮件发送所需的完整信息，包括收件人、抄送、密送、主题、内容�?
+ * 附件、内嵌资源以及模板渲染所需的变量等�?/p>
  *
- * <p>支持两种构建方式：
+ * <p>支持两种构建方式�?
  * <ul>
  *   <li>使用 {@link #builder()} 链式构建</li>
- *   <li>直接使用构造方法</li>
+ *   <li>直接使用构造方�?/li>
  * </ul>
  *
  * <h3>使用示例</h3>
  * <pre>{@code
- * // 构建简单文本邮件
+ * // 构建简单文本邮�?
  * Email email = Email.builder()
  *         .to("a@example.com,b@example.com")
  *         .subject("主题")
@@ -70,7 +70,7 @@ import java.util.Map;
 public class Email {
 
     /** 收件人，多个以逗号分隔 */
-    @NotBlank(message = "收件人不能为空")
+    @NotBlank(message = "收件人不能为�?)
     private String to;
 
     /** 抄送人，多个以逗号分隔 */
@@ -81,7 +81,7 @@ public class Email {
 
     /** 邮件主题 */
     @NotBlank(message = "邮件主题不能为空")
-    @Size(max = 200, message = "邮件主题长度不能超过200个字符")
+    @Size(max = 200, message = "邮件主题长度不能超过200个字�?)
     private String subject;
 
     /** 邮件正文内容 */
@@ -104,22 +104,22 @@ public class Email {
     private Map<String, Object> variables;
 
     /** 回复地址 */
-    @jakarta.validation.constraints.Email(message = "回复地址格式不正确")
+    @jakarta.validation.constraints.Email(message = "回复地址格式不正�?)
     private String replyTo;
 
-    /** 发件人显示名称 */
+    /** 发件人显示名�?*/
     private String fromName;
 
     /** 优先级（1=最高，5=最低） */
     @Builder.Default
     private Integer priority = 3;
 
-    /** 是否需要已读回执 */
+    /** 是否需要已读回�?*/
     @Builder.Default
     private boolean readReceipt = false;
 
     /**
-     * 获取收件人数组
+     * 获取收件人数�?
      *
      * @return 收件人字符串数组
      */
@@ -154,9 +154,9 @@ public class Email {
     }
 
     /**
-     * 判断是否有内嵌资源
+     * 判断是否有内嵌资�?
      *
-     * @return 有内嵌资源返回 true，否则返回 false
+     * @return 有内嵌资源返�?true，否则返�?false
      */
     public boolean hasInlineResources() {
         return inlineResources != null && !inlineResources.isEmpty();

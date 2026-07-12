@@ -5,7 +5,7 @@ import java.util.Map;
 /**
  * 通知模板引擎接口
  *
- * <p>提供模板注册和渲染能力，支持基于模板 ID 渲染消息内容。
+ * <p>提供模板注册和渲染能力，支持基于模板 ID 渲染消息内容�?
  *
  * @author ydsz-pmis-team
  * 
@@ -15,12 +15,12 @@ import java.util.Map;
 public interface TemplateEngine {
 
     /**
-     * 根据模板 ID 和变量渲染模板
+     * 根据模板 ID 和变量渲染模�?
      *
      * @param templateId 模板 ID
      * @param variables  模板变量
      * @return 渲染后的内容
-     * @throws IllegalArgumentException 如果模板不存在
+     * @throws IllegalArgumentException 如果模板不存�?
      */
     String render(String templateId, Map<String, Object> variables);
 
@@ -43,7 +43,7 @@ public interface TemplateEngine {
      * 获取模板定义
      *
      * @param templateId 模板 ID
-     * @return 模板定义，不存在时返回 null
+     * @return 模板定义，不存在时返�?null
      */
     NotifyTemplate getTemplate(String templateId);
 
@@ -67,11 +67,11 @@ public interface TemplateEngine {
      * @param templateId 模板 ID
      */
     default void unregister(String templateId) {
-        // 默认空实现，子类可覆盖
+        // 默认空实现，子类可覆�?
     }
 
     /**
-     * 获取所有已注册的模板
+     * 获取所有已注册的模�?
      *
      * @return 模板 Map
      */

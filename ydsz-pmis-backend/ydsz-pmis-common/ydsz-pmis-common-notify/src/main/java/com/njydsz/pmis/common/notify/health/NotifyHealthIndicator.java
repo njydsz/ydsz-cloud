@@ -15,12 +15,12 @@ import java.util.Map;
  * 通知模块健康检查指示器
  *
  * <p>检查通知渠道（邮件、短信、企业微信等）配置状态，
- * 暴露 /actuator/health/notify 端点。
+ * 暴露 /actuator/health/notify 端点�?
  *
- * <p><b>检测逻辑：</b>
+ * <p><b>检测逻辑�?/b>
  * <ul>
  *   <li>检查各通知渠道是否已启用并完成必要配置</li>
- *   <li>返回各渠道配置就绪状态</li>
+ *   <li>返回各渠道配置就绪状�?/li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -111,7 +111,7 @@ public class NotifyHealthIndicator implements HealthIndicator {
                 channels.put("feishu", "disabled");
             }
 
-            // 站内信渠道
+            // 站内信渠�?
             NotifyProperties.InsiteConfig insite = notifyProperties.getInsite();
             if (insite != null && insite.isEnabled()) {
                 channels.put("insite", "ready");
@@ -135,7 +135,7 @@ public class NotifyHealthIndicator implements HealthIndicator {
 
             return builder.build();
         } catch (Exception e) {
-            log.error("【通知模块】健康检查失败 | error={}", e.getMessage());
+            log.error("【通知模块】健康检查失�?| error={}", e.getMessage());
             return Health.down()
                     .withDetail("module", "notify")
                     .withDetail("error", e.getMessage())

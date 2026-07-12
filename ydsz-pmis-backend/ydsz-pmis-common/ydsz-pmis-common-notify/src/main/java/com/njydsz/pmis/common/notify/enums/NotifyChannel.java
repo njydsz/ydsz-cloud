@@ -17,12 +17,12 @@ public enum NotifyChannel {
 
 	EMAIL(1, "邮件"),
 
-	/** 短信渠道。当前版本暂未实现短信渠道，将在后续版本补充。 */
+	/** 短信渠道。当前版本暂未实现短信渠道，将在后续版本补充�?*/
 	SMS(2, "短信"),
 	WECOM(3, "企业微信"),
 	DINGTALK(4, "钉钉"),
 	FEISHU(5, "飞书"),
-	INSITE(6, "站内信");
+	INSITE(6, "站内�?);
 
 	private final int code;
 
