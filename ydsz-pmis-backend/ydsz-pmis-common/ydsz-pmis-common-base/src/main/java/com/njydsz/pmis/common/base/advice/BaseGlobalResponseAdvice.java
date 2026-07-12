@@ -15,16 +15,16 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 /**
- * 鍏ㄥ眬鍝嶅簲鍖呰鍩虹被锛圵eb/App 鍏变韩锛?
+ * 全局响应包装基类（Web/App 共享）
  *
- * <p>鑷姩灏嗛潪 {@link BaseResponse} 绫诲瀷鐨勮繑鍥炲€煎寘瑁呬负 {@link BaseResponse#success(Object)} 鏍煎紡銆?
+ * <p>自动将非 {@link BaseResponse} 类型的返回值包装为 {@link BaseResponse#success(Object)} 格式。
  *
- * <p>瀛愮被瑕嗙洊 {@link #wrapStringBody(String)} 澶勭悊 String 绫诲瀷杩斿洖鍊肩殑宸紓锛?
- * Web 绔皟鐢?{@code BaseResponse.success(msg)}锛孉pp 绔皟鐢?{@code BaseResponse.successMsg(msg)}銆?
+ * <p>子类覆盖 {@link #wrapStringBody(String)} 处理 String 类型返回值的差异：
+ * Web 端调用 {@code BaseResponse.success(msg)}，App 端调用 {@code BaseResponse.successMsg(msg)}。
  *
- * <p><b>浼樺寲璇存槑锛?/b>
- * <p>鏀寔閫氳繃鏋勯€犲櫒娉ㄥ叆鑷畾涔?ObjectMapper锛屾彁鍗囧彲娴嬭瘯鎬у拰鐏垫椿鎬с€?
- * 鑻ユ湭娉ㄥ叆锛屽垯浣跨敤 JsonUtils 鐨勯粯璁?ObjectMapper銆?
+ * <p><b>优化说明：</b>
+ * <p>支持通过构造器注入自定义 ObjectMapper，提升可测试性和灵活性。
+ * 若未注入，则使用 JsonUtils 的默认 ObjectMapper。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -33,21 +33,21 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Object> {
 
     /**
-     * JSON 搴忓垪鍖栧櫒锛堝彲閫夋敞鍏ワ級
+     * JSON 序列化器（可选注入）
      */
     private final ObjectMapper objectMapper;
 
     /**
-     * 榛樿鏋勯€犲櫒锛堜娇鐢?JsonUtils 鐨勯粯璁?ObjectMapper锛?
+     * 默认构造器（使用 JsonUtils 的默认 ObjectMapper）
      */
     protected BaseGlobalResponseAdvice() {
         this.objectMapper = null;
     }
 
     /**
-     * 鏋勯€犲櫒娉ㄥ叆鑷畾涔?ObjectMapper
+     * 构造器注入自定义 ObjectMapper
      *
-     * @param objectMapper JSON 搴忓垪鍖栧櫒
+     * @param objectMapper JSON 序列化器
      */
     protected BaseGlobalResponseAdvice(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -80,7 +80,7 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
     }
 
     /**
-     * 瀛愮被瑕嗙洊姝ゆ柟娉曞鐞?String 绫诲瀷杩斿洖鍊肩殑鍖呰宸紓
+     * 子类覆盖此方法处理 String 类型返回值的包装差异
      */
     protected abstract BaseResponse<String> wrapStringBody(String body);
 }

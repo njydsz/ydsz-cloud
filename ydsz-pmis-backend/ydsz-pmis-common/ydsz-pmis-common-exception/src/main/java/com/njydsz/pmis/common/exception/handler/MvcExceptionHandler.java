@@ -36,15 +36,20 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Spring MVC 鍏ㄥ眬寮傚父澶勭悊鍣紙闈?Validation 閮ㄥ垎锛? *
- * <p>澶勭悊涓氬姟寮傚父銆佺郴缁熷紓甯搞€佸畨鍏ㄥ紓甯哥瓑閫氱敤寮傚父銆? * Validation 鐩稿叧寮傚父澶勭悊鐢?{@link ValidationExceptionHandler} 璐熻矗锛堜粎鍦?jakarta.validation 瀛樺湪鏃舵敞鍐岋級銆? *
- * <p><b>鑱岃矗鍒嗗眰锛?/b>
+ * Spring MVC 全局异常处理器（非 Validation 部分）
+ *
+ * <p>处理业务异常、系统异常、安全异常等通用异常。
+ * Validation 相关异常处理由 {@link ValidationExceptionHandler} 负责（仅在 jakarta.validation 存在时注册）。
+ *
+ * <p><b>职责分层：</b>
  * <ul>
- *   <li>鏈被锛氬鐞嗘鏋剁骇銆佷笟鍔＄骇銆佸畨鍏ㄧ骇寮傚父锛堟渶楂樹紭鍏堢骇锛?/li>
- *   <li>{@link ValidationExceptionHandler}锛氬鐞嗗弬鏁版牎楠屽紓甯?/li>
+ *   <li>本类：处理框架级、业务级、安全级异常（最高优先级）</li>
+ *   <li>{@link ValidationExceptionHandler}：处理参数校验异常</li>
  * </ul>
  *
- * <p><b>瑁呴厤锛?/b>鏈被宸蹭笉鍐嶇洿鎺ユ爣娉?{@code @AutoConfiguration}锛? * 鏀圭敱 {@link MvcExceptionHandlerAutoConfiguration} 璐熻矗鏉′欢瑁呴厤涓?Bean 娉ㄥ叆銆? *
+ * <p><b>装配：</b>本类已不再直接标注 {@code @AutoConfiguration}，
+ * 改由 {@link MvcExceptionHandlerAutoConfiguration} 负责条件装配与 Bean 注入。
+ *
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
@@ -69,7 +74,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 璁板綍寮傚父鎸囨爣
+     * 记录异常指标
      */
     private void recordExceptionMetrics(Throwable throwable) {
         if (exceptionMetrics != null) {
@@ -79,13 +84,13 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
 
     @Override
     protected String getLogPrefix() {
-        return "銆愬叏灞€銆?;
+        return "【全局】";
     }
 
     /**
-     * 浠?HttpServletRequest / MDC 鎻愬彇 traceId
+     * 从 HttpServletRequest / MDC 提取 traceId
      *
-     * <p>浼樺厛绾э細MDC > Request Header
+     * <p>优先级：MDC > Request Header
      */
     private String extractTraceId(HttpServletRequest request) {
         String traceId = TraceContext.getTraceId();
@@ -98,15 +103,15 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         return traceId;
     }
 
-    // ============================ 寮傚父澶勭悊鏂规硶 ============================
+    // ============================ 异常处理方法 ============================
 
     /**
-     * 澶勭悊涓氬姟寮傚父
+     * 处理业务异常
      */
     @ExceptionHandler(BusinessException.class)
     public BaseResponse<?> handleBusinessException(BusinessException e, HttpServletRequest request) {
         recordExceptionMetrics(e);
-        log.warn("{}涓氬姟寮傚父 | 璺緞: {} | 閿欒鐮? {} | 娑堟伅: {}",
+        log.warn("{}业务异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
@@ -114,12 +119,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 澶勭悊骞跺彂鍐茬獊寮傚父
+     * 处理并发冲突异常
      */
     @ExceptionHandler(ConcurrencyException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public BaseResponse<?> handleConcurrencyException(ConcurrencyException e, HttpServletRequest request) {
-        log.warn("{}骞跺彂鍐茬獊寮傚父 | 璺緞: {} | 閿欒鐮? {} | 娑堟伅: {}",
+        log.warn("{}并发冲突异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
@@ -127,12 +132,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 澶勭悊閲嶅鎻愪氦寮傚父
+     * 处理重复提交异常
      */
     @ExceptionHandler(DuplicateException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public BaseResponse<?> handleDuplicateException(DuplicateException e, HttpServletRequest request) {
-        log.warn("{}閲嶅鎻愪氦寮傚父 | 璺緞: {} | 閿欒鐮? {} | 娑堟伅: {}",
+        log.warn("{}重复提交异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
@@ -140,30 +145,31 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 澶勭悊闄愭祦寮傚父
+     * 处理限流异常
      */
     @ExceptionHandler(RateLimitException.class)
     @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
     public BaseResponse<?> handleRateLimitException(RateLimitException e, HttpServletRequest request) {
-        log.warn("{}闄愭祦寮傚父 | 璺緞: {} | 閿欒鐮? {} | 娑堟伅: {}",
+        log.warn("{}限流异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
         return BaseResponse.error(e.getCode(), e.getMessage(), info);
     }
 
-    // Validation 鐩稿叧寮傚父澶勭悊宸茬Щ鑷?ValidationExceptionHandler
+    // Validation 相关异常处理已移至 ValidationExceptionHandler
 
     /**
-     * 澶勭悊璇锋眰浣撹В鏋愬紓甯?     */
+     * 处理请求体解析异常
+     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public BaseResponse<?> handleHttpMessageNotReadableException(
             HttpMessageNotReadableException e, HttpServletRequest request) {
-        log.error("{}璇锋眰浣撹В鏋愬紓甯?| 璺緞: {} | 娑堟伅: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
+        log.error("{}请求体解析异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
         String message = messageSource.getMessage("invalid.request.format", null,
-                "璇锋眰鏍煎紡閿欒", LocaleContextHolder.getLocale());
+                "请求格式错误", LocaleContextHolder.getLocale());
 
         ExceptionInfo info = new ExceptionInfo(
                 UnifiedExceptionCode.INVALID_REQUEST_FORMAT.getCode(),
@@ -180,70 +186,73 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 澶勭悊缂哄皯璇锋眰鍙傛暟寮傚父
+     * 处理缺少请求参数异常
      */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public BaseResponse<?> handleMissingServletRequestParameterException(
             MissingServletRequestParameterException e, HttpServletRequest request) {
         String message = messageSource.getMessage("missing.request.parameter",
-                new Object[]{e.getParameterName()}, "缂哄皯璇锋眰鍙傛暟", LocaleContextHolder.getLocale());
+                new Object[]{e.getParameterName()}, "缺少请求参数", LocaleContextHolder.getLocale());
         return buildValidationErrorResponse(
                 UnifiedExceptionCode.ILLEGAL_ARGUMENT, message, HttpStatus.BAD_REQUEST.value(),
                 request.getRequestURI(), e);
     }
 
     /**
-     * 澶勭悊璇锋眰鍙傛暟绫诲瀷涓嶅尮閰嶅紓甯?     */
+     * 处理请求参数类型不匹配异常
+     */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public BaseResponse<?> handleMethodArgumentTypeMismatchException(
             MethodArgumentTypeMismatchException e, HttpServletRequest request) {
         Class<?> requiredType = e.getRequiredType();
         String message = messageSource.getMessage("type.mismatch",
-                new Object[]{e.getName(), requiredType != null ? requiredType.getSimpleName() : "鏈煡"},
-                "鍙傛暟绫诲瀷涓嶅尮閰?, LocaleContextHolder.getLocale());
+                new Object[]{e.getName(), requiredType != null ? requiredType.getSimpleName() : "未知"},
+                "参数类型不匹配", LocaleContextHolder.getLocale());
         return buildValidationErrorResponse(
                 UnifiedExceptionCode.ILLEGAL_ARGUMENT, message, HttpStatus.BAD_REQUEST.value(),
                 request.getRequestURI(), e);
     }
 
     /**
-     * 澶勭悊缂哄皯璇锋眰澶村紓甯?     */
+     * 处理缺少请求头异常
+     */
     @ExceptionHandler(MissingRequestHeaderException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public BaseResponse<?> handleMissingRequestHeaderException(
             MissingRequestHeaderException e, HttpServletRequest request) {
         String message = messageSource.getMessage("missing.request.header",
-                new Object[]{e.getHeaderName()}, "缂哄皯璇锋眰澶?, LocaleContextHolder.getLocale());
+                new Object[]{e.getHeaderName()}, "缺少请求头", LocaleContextHolder.getLocale());
         return buildValidationErrorResponse(
                 UnifiedExceptionCode.ILLEGAL_ARGUMENT, message, HttpStatus.BAD_REQUEST.value(),
                 request.getRequestURI(), e);
     }
 
     /**
-     * 澶勭悊璇锋眰鏂规硶涓嶆敮鎸佸紓甯?     */
+     * 处理请求方法不支持异常
+     */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     public BaseResponse<?> handleHttpRequestMethodNotSupportedException(
             HttpRequestMethodNotSupportedException e, HttpServletRequest request) {
         String message = messageSource.getMessage("method.not.supported",
-                new Object[]{e.getMethod()}, "涓嶆敮鎸佺殑璇锋眰鏂规硶", LocaleContextHolder.getLocale());
+                new Object[]{e.getMethod()}, "不支持的请求方法", LocaleContextHolder.getLocale());
         return buildValidationErrorResponse(
                 UnifiedExceptionCode.ILLEGAL_ARGUMENT, message, HttpStatus.METHOD_NOT_ALLOWED.value(),
                 request.getRequestURI(), e);
     }
 
     /**
-     * 澶勭悊鏂囦欢涓婁紶澶у皬瓒呴檺寮傚父
+     * 处理文件上传大小超限异常
      */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     @ResponseStatus(HttpStatus.CONTENT_TOO_LARGE)
     public BaseResponse<?> handleMaxUploadSizeExceededException(
             MaxUploadSizeExceededException e, HttpServletRequest request) {
         String message = messageSource.getMessage("file.size.exceeded.message", null,
-                "涓婁紶鏂囦欢澶у皬瓒呭嚭闄愬埗", LocaleContextHolder.getLocale());
-        log.error("{}鏂囦欢涓婁紶瓒呴檺 | 璺緞: {} | 娑堟伅: {}", getLogPrefix(), request.getRequestURI(), message, e);
+                "上传文件大小超出限制", LocaleContextHolder.getLocale());
+        log.error("{}文件上传超限 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), message, e);
 
         ExceptionInfo info = new ExceptionInfo(
                 UnifiedExceptionCode.FILE_SIZE_EXCEEDED.getCode(),
@@ -260,15 +269,15 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 澶勭悊 404 寮傚父
+     * 处理 404 异常
      */
     @ExceptionHandler(NoHandlerFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public BaseResponse<?> handleNoHandlerFoundException(
             NoHandlerFoundException e, HttpServletRequest request) {
         String message = messageSource.getMessage("resource.not.found.detail",
-                new Object[]{request.getRequestURI()}, "璧勬簮涓嶅瓨鍦?, LocaleContextHolder.getLocale());
-        log.error("{}璧勬簮涓嶅瓨鍦?| 璺緞: {} | 娑堟伅: {}", getLogPrefix(), request.getRequestURI(), message, e);
+                new Object[]{request.getRequestURI()}, "资源不存在", LocaleContextHolder.getLocale());
+        log.error("{}资源不存在 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), message, e);
 
         ExceptionInfo info = new ExceptionInfo(
                 UnifiedExceptionCode.RESOURCE_NOT_FOUND.getCode(),
@@ -285,13 +294,13 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 澶勭悊闈炴硶鍙傛暟寮傚父
+     * 处理非法参数异常
      */
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public BaseResponse<?> handleIllegalArgumentException(
             IllegalArgumentException e, HttpServletRequest request) {
-        log.error("{}闈炴硶鍙傛暟寮傚父 | 璺緞: {} | 娑堟伅: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
+        log.error("{}非法参数异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
         ExceptionInfo info = new ExceptionInfo(
                 UnifiedExceptionCode.ILLEGAL_ARGUMENT.getCode(),
@@ -308,12 +317,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 澶勭悊绯荤粺寮傚父
+     * 处理系统异常
      */
     @ExceptionHandler(SysException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public BaseResponse<?> handleSysException(SysException e, HttpServletRequest request) {
-        log.error("{}绯荤粺寮傚父 | 璺緞: {} | 閿欒鐮? {} | 娑堟伅: {}",
+        log.error("{}系统异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
@@ -322,12 +331,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 澶勭悊瀹夊叏寮傚父
+     * 处理安全异常
      */
     @ExceptionHandler(RemiSecurityException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public BaseResponse<?> handleSecurityException(RemiSecurityException e, HttpServletRequest request) {
-        log.warn("{}瀹夊叏寮傚父 | 璺緞: {} | 閿欒鐮? {} | 娑堟伅: {}",
+        log.warn("{}安全异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
@@ -336,12 +345,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 澶勭悊鏍￠獙寮傚父
+     * 处理校验异常
      */
     @ExceptionHandler(ValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public BaseResponse<?> handleValidationException(ValidationException e, HttpServletRequest request) {
-        log.warn("{}鏍￠獙寮傚父 | 璺緞: {} | 閿欒鐮? {} | 娑堟伅: {}",
+        log.warn("{}校验异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
@@ -350,12 +359,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 澶勭悊瓒呮椂寮傚父
+     * 处理超时异常
      */
     @ExceptionHandler(RemiTimeoutException.class)
     @ResponseStatus(HttpStatus.GATEWAY_TIMEOUT)
     public BaseResponse<?> handleTimeoutException(RemiTimeoutException e, HttpServletRequest request) {
-        log.error("{}瓒呮椂寮傚父 | 璺緞: {} | 閿欒鐮? {} | 娑堟伅: {}",
+        log.error("{}超时异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
@@ -364,12 +373,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 澶勭悊澶栭儴鏈嶅姟寮傚父
+     * 处理外部服务异常
      */
     @ExceptionHandler(ExternalException.class)
     @ResponseStatus(HttpStatus.BAD_GATEWAY)
     public BaseResponse<?> handleExternalException(ExternalException e, HttpServletRequest request) {
-        log.error("{}澶栭儴鏈嶅姟寮傚父 | 璺緞: {} | 閿欒鐮? {} | 娑堟伅: {}",
+        log.error("{}外部服务异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
@@ -378,12 +387,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 澶勭悊鍩虹璁炬柦寮傚父
+     * 处理基础设施异常
      */
     @ExceptionHandler(InfrastructureException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public BaseResponse<?> handleInfrastructureException(InfrastructureException e, HttpServletRequest request) {
-        log.error("{}鍩虹璁炬柦寮傚父 | 璺緞: {} | 閿欒鐮? {} | 娑堟伅: {}",
+        log.error("{}基础设施异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
@@ -392,16 +401,19 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 澶勭悊闈炴硶鐘舵€佸紓甯?     *
-     * <p>IllegalStateException 灞炰簬绯荤粺绾у紓甯革紙闈炰笟鍔″紓甯革級锛岀粺涓€杩斿洖 SYSTEM_ERROR锛?     * 閬垮厤鏆撮湶鍐呴儴鐘舵€佷俊鎭€備笟鍔″眰鐨?鐘舵€佹棤鏁?搴斾娇鐢?{@link BusinessException}銆?     */
+     * 处理非法状态异常
+     *
+     * <p>IllegalStateException 属于系统级异常（非业务异常），统一返回 SYSTEM_ERROR，
+     * 避免暴露内部状态信息。业务层的"状态无效"应使用 {@link BusinessException}。
+     */
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public BaseResponse<?> handleIllegalStateException(
             IllegalStateException e, HttpServletRequest request) {
-        log.error("{}闈炴硶鐘舵€佸紓甯?| 璺緞: {} | 娑堟伅: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
+        log.error("{}非法状态异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
         String message = messageSource.getMessage("system.error", null,
-                "绯荤粺寮傚父锛岃鑱旂郴绠＄悊鍛?, LocaleContextHolder.getLocale());
+                "系统异常，请联系管理员", LocaleContextHolder.getLocale());
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
         info.setCode(UnifiedExceptionCode.SYSTEM_ERROR.getCode());
@@ -415,15 +427,16 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 澶勭悊绌烘寚閽堝紓甯?     */
+     * 处理空指针异常
+     */
     @ExceptionHandler(NullPointerException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public BaseResponse<?> handleNullPointerException(
             NullPointerException e, HttpServletRequest request) {
-        log.error("{}绌烘寚閽堝紓甯?| 璺緞: {} | 娑堟伅: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
+        log.error("{}空指针异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
         String message = messageSource.getMessage("system.error", null,
-                "绯荤粺寮傚父锛岃鑱旂郴绠＄悊鍛?, LocaleContextHolder.getLocale());
+                "系统异常，请联系管理员", LocaleContextHolder.getLocale());
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
         info.setCode(UnifiedExceptionCode.SYSTEM_ERROR.getCode());
@@ -437,15 +450,16 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 澶勭悊鎵€鏈夋湭鎹曡幏鐨勫紓甯?     */
+     * 处理所有未捕获的异常
+     */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public BaseResponse<?> handleException(Exception e, HttpServletRequest request) {
-        log.error("{}绯荤粺寮傚父 | 璺緞: {} | 绫诲瀷: {} | 娑堟伅: {}",
+        log.error("{}系统异常 | 路径: {} | 类型: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getClass().getName(), e.getMessage(), e);
 
         String message = messageSource.getMessage("system.error", null,
-                "绯荤粺寮傚父锛岃鑱旂郴绠＄悊鍛?, LocaleContextHolder.getLocale());
+                "系统异常，请联系管理员", LocaleContextHolder.getLocale());
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
 

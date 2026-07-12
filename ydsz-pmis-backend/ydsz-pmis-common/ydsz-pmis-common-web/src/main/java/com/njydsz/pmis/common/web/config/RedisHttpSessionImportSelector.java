@@ -5,10 +5,10 @@ import org.springframework.core.type.AnnotationMetadata;
 import org.jspecify.annotations.NonNull;
 
 /**
- * Redis HttpSession 瀵煎叆閫夋嫨鍣?
+ * Redis HttpSession 导入选择器
  *
- * <p>閫氳繃瀛楃涓插紩鐢ㄩ伩鍏嶇紪璇戞湡渚濊禆 spring-session-data-redis锛?
- * 浠呭湪杩愯鏃?classpath 涓瓨鍦ㄥ搴旂被鏃剁敓鏁堛€?
+ * <p>通过字符串引用避免编译期依赖 spring-session-data-redis，
+ * 仅在运行时 classpath 中存在对应类时生效。
  *
  * @author Marvin Lee
  * @email limw1888@126.com

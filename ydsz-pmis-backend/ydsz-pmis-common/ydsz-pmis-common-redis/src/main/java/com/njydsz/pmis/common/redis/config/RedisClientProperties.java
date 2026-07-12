@@ -4,12 +4,12 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Redis 瀹㈡埛绔厤缃睘鎬х被
+ * Redis 客户端配置属性类
  *
- * <p>鎻愪緵 Redis 瀹㈡埛绔€夋嫨鍙婄浉鍏抽厤缃紝鏀寔閫氳繃 application.yml 涓殑
- * {@code remi.redis.client} 鍓嶇紑娉ㄥ叆閰嶇疆銆?
+ * <p>提供 Redis 客户端选择及相关配置，支持通过 application.yml 中的
+ * {@code remi.redis.client} 前缀注入配置。
  *
- * <p><b>閰嶇疆绀轰緥锛坅pplication.yml锛夛細</b>
+ * <p><b>配置示例（application.yml）：</b>
  * <pre>{@code
  * remi:
  *   redis:
@@ -35,88 +35,88 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class RedisClientProperties {
 
     /**
-     * 瀹㈡埛绔被鍨嬶紙榛樿 JEDIS锛?
+     * 客户端类型（默认 JEDIS）
      */
     private RedisClientType type = RedisClientType.JEDIS;
 
     /**
-     * 杩炴帴姹犻厤缃?
+     * 连接池配置
      */
     private Pool pool = new Pool();
 
     /**
-     * SSL 閰嶇疆
+     * SSL 配置
      */
     private Ssl ssl = new Ssl();
 
     /**
-     * 璇荤瓥鐣ワ紙浠?Lettuce 瀹㈡埛绔敓鏁堬紝鐢ㄤ簬璇诲啓鍒嗙鍦烘櫙锛?
-     * <p>鍙€夊€硷細MASTER銆丮ASTER_PREFERRED銆丷EPLICA_PREFERRED銆丷EPLICA銆丯EAREST
-     * <p>榛樿鍊硷細MASTER锛堜粎浠庝富鑺傜偣璇诲彇锛?
+     * 读策略（仅 Lettuce 客户端生效，用于读写分离场景）
+     * <p>可选值：MASTER、MASTER_PREFERRED、REPLICA_PREFERRED、REPLICA、NEAREST
+     * <p>默认值：MASTER（仅从主节点读取）
      */
     private ReadFrom readFrom = ReadFrom.MASTER;
 
     /**
-     * Redis 璇荤瓥鐣ユ灇涓撅紙瀵瑰簲 Lettuce 鐨?io.lettuce.core.ReadFrom锛?
-     * <p>MASTER / MASTER_PREFERRED 宸插純鐢紝寤鸿浣跨敤 UPSTREAM / UPSTREAM_PREFERRED
+     * Redis 读策略枚举（对应 Lettuce 的 io.lettuce.core.ReadFrom）
+     * <p>MASTER / MASTER_PREFERRED 已弃用，建议使用 UPSTREAM / UPSTREAM_PREFERRED
      */
     public enum ReadFrom {
-        /** 浠呬粠涓昏妭鐐硅鍙栵紙宸插純鐢紝璇蜂娇鐢?UPSTREAM锛?*/
+        /** 仅从主节点读取（已弃用，请使用 UPSTREAM） */
         MASTER,
-        /** 浼樺厛浠庝富鑺傜偣璇诲彇锛屼富鑺傜偣涓嶅彲鐢ㄦ椂浠庡壇鏈鍙栵紙宸插純鐢紝璇蜂娇鐢?UPSTREAM_PREFERRED锛?*/
+        /** 优先从主节点读取，主节点不可用时从副本读取（已弃用，请使用 UPSTREAM_PREFERRED） */
         MASTER_PREFERRED,
-        /** 浠呬粠涓婃父锛堜富锛夎妭鐐硅鍙?*/
+        /** 仅从上游（主）节点读取 */
         UPSTREAM,
-        /** 浼樺厛浠庝笂娓革紙涓伙級鑺傜偣璇诲彇锛屼富鑺傜偣涓嶅彲鐢ㄦ椂浠庡壇鏈鍙?*/
+        /** 优先从上游（主）节点读取，主节点不可用时从副本读取 */
         UPSTREAM_PREFERRED,
-        /** 浼樺厛浠庡壇鏈鍙栵紝鍓湰涓嶅彲鐢ㄦ椂浠庝富鑺傜偣璇诲彇 */
+        /** 优先从副本读取，副本不可用时从主节点读取 */
         REPLICA_PREFERRED,
-        /** 浠呬粠鍓湰璇诲彇 */
+        /** 仅从副本读取 */
         REPLICA,
-        /** 浠庣綉缁滄嫇鎵戞渶杩戠殑鑺傜偣璇诲彇 */
+        /** 从网络拓扑最近的节点读取 */
         NEAREST
     }
 
     /**
-     * 杩炴帴姹犻厤缃被
+     * 连接池配置类
      */
     @Data
     public static class Pool {
 
         /**
-         * 鏈€澶ц繛鎺ユ暟锛堥粯璁?16锛?
+         * 最大连接数（默认 16）
          */
         private int maxActive = 16;
 
         /**
-         * 鏈€澶х┖闂茶繛鎺ユ暟锛堥粯璁?8锛?
+         * 最大空闲连接数（默认 8）
          */
         private int maxIdle = 8;
 
         /**
-         * 鏈€灏忕┖闂茶繛鎺ユ暟锛堥粯璁?2锛?
+         * 最小空闲连接数（默认 2）
          */
         private int minIdle = 2;
 
         /**
-         * 鑾峰彇杩炴帴鏈€澶х瓑寰呮椂闂达紙姣锛夛紝-1 琛ㄧず鏃犻檺鍒?
+         * 获取连接最大等待时间（毫秒），-1 表示无限制
          */
         private long maxWait = -1;
 
         /**
-         * 鏄惁鍚敤杩炴帴姹狅紙榛樿鍚敤锛?
+         * 是否启用连接池（默认启用）
          */
         private boolean enabled = true;
     }
 
     /**
-     * SSL 閰嶇疆绫?
+     * SSL 配置类
      */
     @Data
     public static class Ssl {
 
         /**
-         * 鏄惁鍚敤 SSL锛堥粯璁?false锛?
+         * 是否启用 SSL（默认 false）
          */
         private boolean enabled = false;
     }

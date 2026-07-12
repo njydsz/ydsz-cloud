@@ -10,16 +10,16 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * 韬唤绫诲瀷鏋氫妇
+ * 身份类型枚举
  *
- * <p>瀹氫箟绯荤粺涓敤鎴风殑韬唤绫诲瀷锛岀敤浜庡尯鍒嗕笉鍚岀骇鍒殑鐢ㄦ埛璁块棶鏉冮檺銆?
- * 鏀寔鐟炵背杞欢璐﹀彿銆侀泦鍥㈠叕鍙歌处鎴枫€佹父瀹綋楠岃处鍙蜂笁绉嶇被鍨嬨€?
+ * <p>定义系统中用户的身份类型，用于区分不同级别的用户访问权限。
+ * 支持瑞米软件账号、集团公司账户、游客体验账号三种类型。
  *
- * <p><b>浣跨敤鍦烘櫙锛?/b>
+ * <p><b>使用场景：</b>
  * <ul>
- *   <li>閰嶅悎 HeaderConstants.X_IDENTITY_TYPE 璇锋眰澶翠娇鐢?/li>
- *   <li>鍖哄垎涓嶅悓韬唤鐢ㄦ埛鐨勮闂帶鍒跺拰鏁版嵁鏉冮檺</li>
- *   <li>鐢ㄦ埛娉ㄥ唽鍜岀櫥褰曟椂鐨勮韩浠介獙璇?/li>
+ *   <li>配合 HeaderConstants.X_IDENTITY_TYPE 请求头使用</li>
+ *   <li>区分不同身份用户的访问控制和数据权限</li>
+ *   <li>用户注册和登录时的身份验证</li>
  * </ul>
  *
  * @author Marvin Lee
@@ -31,13 +31,13 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public enum IdentityType implements TypeEnum<String> {
 
-    njydsz.pmis("njydsz.pmis", "鐟炵背杞欢璐﹀彿"),
-    COMPANY("company", "闆嗗洟鍏徃璐︽埛"),
-    VISITOR("visitor", "娓稿浣撻獙璐﹀彿");
+    REMISOFT("remisoft", "瑞米软件账号"),
+    COMPANY("company", "集团公司账户"),
+    VISITOR("visitor", "游客体验账号");
 
-    /** 韬唤绫诲瀷缂栫爜 */
+    /** 身份类型编码 */
     private final String code;
-    /** 韬唤绫诲瀷鎻忚堪 */
+    /** 身份类型描述 */
     private final String desc;
 
     private static final Map<String, IdentityType> CODE_MAP;
@@ -50,10 +50,10 @@ public enum IdentityType implements TypeEnum<String> {
     }
 
     /**
-     * 鏍规嵁缂栫爜鑾峰彇韬唤绫诲瀷锛堝畨鍏ㄧ増鏈級
+     * 根据编码获取身份类型（安全版本）
      *
-     * @param code 缂栫爜鍊?
-     * @return 瀵瑰簲鐨勬灇涓惧€硷紝鏈壘鍒拌繑鍥?null
+     * @param code 编码值
+     * @return 对应的枚举值，未找到返回 null
      */
     public static IdentityType of(String code) {
         if (code == null) {
@@ -63,11 +63,11 @@ public enum IdentityType implements TypeEnum<String> {
     }
 
     /**
-     * 鏍规嵁缂栫爜鑾峰彇韬唤绫诲瀷
+     * 根据编码获取身份类型
      *
-     * @param code 缂栫爜鍊?
-     * @return 瀵瑰簲鐨勬灇涓惧€?
-     * @throws IllegalArgumentException 褰撶紪鐮佷笉瀛樺湪鏃舵姏鍑?
+     * @param code 编码值
+     * @return 对应的枚举值
+     * @throws IllegalArgumentException 当编码不存在时抛出
      */
     public static IdentityType codeOf(String code) {
         IdentityType value = of(code);
@@ -78,10 +78,10 @@ public enum IdentityType implements TypeEnum<String> {
     }
 
     /**
-     * 妫€鏌ョ紪鐮佹槸鍚︽湁鏁?
+     * 检查编码是否有效
      *
-     * @param code 缂栫爜鍊?
-     * @return 鏈夋晥杩斿洖 true锛屽惁鍒欒繑鍥?false
+     * @param code 编码值
+     * @return 有效返回 true，否则返回 false
      */
     public static boolean isValidCode(String code) {
         return of(code) != null;

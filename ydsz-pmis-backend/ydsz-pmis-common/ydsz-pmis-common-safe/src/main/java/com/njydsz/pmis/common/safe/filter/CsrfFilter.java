@@ -19,32 +19,32 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * CSRF 闃叉姢杩囨护鍣?
+ * CSRF 防护过滤器
  * <p>
- * 闃叉璺ㄧ珯璇锋眰浼€狅紙CSRF锛夋敾鍑伙紝鍩轰簬 Token 鏈哄埗銆係ynchronizer Token Pattern
- * 鏄綋鍓嶆渶鎴愮啛鐨?CSRF 闃插尽鏂规锛圤WASP 鎺ㄨ崘锛夈€?
+ * 防止跨站请求伪造（CSRF）攻击，基于 Token 机制。Synchronizer Token Pattern
+ * 是当前最成熟的 CSRF 防御方案（OWASP 推荐）。
  * </p>
  *
- * <p><b>濞佽儊妯″瀷锛?/b>鐢ㄦ埛宸茬櫥褰曠洰鏍囩珯鐐癸紝鏀诲嚮鑰呴€氳繃绗笁鏂圭珯鐐硅瀵肩敤鎴锋祻瑙堝櫒
- * 鍙戦€佽法鍩熻姹傦紙鎼哄甫鐩爣绔欑偣鐨?Cookie锛夛紝瀹屾垚鏈巿鏉冪殑鍐欐搷浣溿€?/p>
+ * <p><b>威胁模型：</b>用户已登录目标站点，攻击者通过第三方站点诱导用户浏览器
+ * 发送跨域请求（携带目标站点的 Cookie），完成未授权的写操作。</p>
  *
- * <p><b>闃叉姢鍘熺悊锛?/b></p>
+ * <p><b>防护原理：</b></p>
  * <ul>
- *   <li>鏈嶅姟绔敓鎴愬敮涓€鐨?CSRF 浠ょ墝骞跺啓鍏?Cookie/Response Header</li>
- *   <li>瀹㈡埛绔湪璇锋眰涓惡甯︿护鐗岋紙Header 鎴?Parameter锛?/li>
- *   <li>鏈嶅姟绔獙璇佷护鐗屾湁鏁堟€э紙鏀诲嚮鑰呮棤娉曢€氳繃璺ㄥ煙鑴氭湰鑾峰彇 Token锛?/li>
- *   <li>Token 涓€娆℃€т娇鐢紝楠岃瘉鍚庣珛鍗崇敓鎴愭柊 Token 闃查噸鏀?/li>
+ *   <li>服务端生成唯一的 CSRF 令牌并写入 Cookie/Response Header</li>
+ *   <li>客户端在请求中携带令牌（Header 或 Parameter）</li>
+ *   <li>服务端验证令牌有效性（攻击者无法通过跨域脚本获取 Token）</li>
+ *   <li>Token 一次性使用，验证后立即生成新 Token 防重放</li>
  * </ul>
  *
- * <p><b>浣跨敤鏂瑰紡锛?/b></p>
+ * <p><b>使用方式：</b></p>
  * <pre>{@code
- * 1. 鍓嶇鍦ㄩ〉闈㈠姞杞芥椂浠?Cookie/Header 鑾峰彇 CSRF 浠ょ墝
- * 2. 鍙戣捣璇锋眰鏃跺湪 Header 鎴?Parameter 涓惡甯︿护鐗?
- * 3. 鏈嶅姟绔嚜鍔ㄩ獙璇佷护鐗屾湁鏁堟€?
+ * 1. 前端在页面加载时从 Cookie/Header 获取 CSRF 令牌
+ * 2. 发起请求时在 Header 或 Parameter 中携带令牌
+ * 3. 服务端自动验证令牌有效性
  * }</pre>
  *
- * <p><b>鎬ц兘褰卞搷锛?/b>姣忔闈?GET 璇锋眰閮戒細璋冪敤涓€娆?Redis 鏍￠獙銆傚缓璁敓浜х幆澧?
- * 鍚敤 Redis 瀛樺偍鑰岄潪鍐呭瓨瀛樺偍锛屽惁鍒欏瀹炰緥涓?Token 涓嶄竴鑷淬€?/p>
+ * <p><b>性能影响：</b>每次非 GET 请求都会调用一次 Redis 校验。建议生产环境
+ * 启用 Redis 存储而非内存存储，否则多实例下 Token 不一致。</p>
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -57,19 +57,19 @@ public class CsrfFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(CsrfFilter.class);
 
-    /** CSRF Cookie 鍚嶇О */
+    /** CSRF Cookie 名称 */
     private static final String CSRF_TOKEN_COOKIE = "CSRF-TOKEN";
 
-    /** CSRF 閰嶇疆灞炴€?*/
+    /** CSRF 配置属性 */
     private final CsrfProperties properties;
-    /** CSRF 浠ょ墝瀛樺偍搴擄紙Redis / 鍐呭瓨锛?*/
+    /** CSRF 令牌存储库（Redis / 内存） */
     private final CsrfTokenRepository tokenRepository;
 
     /**
-     * 鏋勯€?CSRF 闃叉姢杩囨护鍣?
+     * 构造 CSRF 防护过滤器
      *
-     * @param properties      CSRF 閰嶇疆灞炴€?
-     * @param tokenRepository CSRF 浠ょ墝瀛樺偍搴?
+     * @param properties      CSRF 配置属性
+     * @param tokenRepository CSRF 令牌存储库
      */
     public CsrfFilter(CsrfProperties properties, CsrfTokenRepository tokenRepository) {
         this.properties = properties;
@@ -77,19 +77,19 @@ public class CsrfFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 杩囨护鍣ㄦ牳蹇冮€昏緫
+     * 过滤器核心逻辑
      * <ol>
-     *   <li>绂佺敤 / 鎺掗櫎璺緞锛氱洿鎺ユ斁琛?/li>
-     *   <li>GET 璇锋眰锛氱敓鎴愭柊 Token锛屽啓鍏?Cookie 鍜?Response Header</li>
-     *   <li>HEAD / OPTIONS 璇锋眰锛氭斁琛岋紙涓嶆惡甯︿笟鍔¤涔夛級</li>
-     *   <li>鍏朵粬璇锋眰锛氶獙璇?Token锛岄獙璇侀€氳繃鍚庡埛鏂?Token 闃查噸鏀?/li>
+     *   <li>禁用 / 排除路径：直接放行</li>
+     *   <li>GET 请求：生成新 Token，写入 Cookie 和 Response Header</li>
+     *   <li>HEAD / OPTIONS 请求：放行（不携带业务语义）</li>
+     *   <li>其他请求：验证 Token，验证通过后刷新 Token 防重放</li>
      * </ol>
      *
-     * @param httpRequest  HTTP 璇锋眰
-     * @param httpResponse HTTP 鍝嶅簲
-     * @param chain        杩囨护鍣ㄩ摼
-     * @throws IOException      IO 寮傚父
-     * @throws ServletException Servlet 寮傚父
+     * @param httpRequest  HTTP 请求
+     * @param httpResponse HTTP 响应
+     * @param chain        过滤器链
+     * @throws IOException      IO 异常
+     * @throws ServletException Servlet 异常
      */
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest httpRequest, @NonNull HttpServletResponse httpResponse,
@@ -116,9 +116,9 @@ public class CsrfFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Origin/Referer 鏍￠獙锛堢浜岄亾闃茬嚎锛屽湪 Token 鏍￠獙涔嬪墠鎵ц锛?
+        // Origin/Referer 校验（第二道防线，在 Token 校验之前执行）
         if (properties.isCheckOrigin() && !validateOrigin(httpRequest)) {
-            logger.warn("CSRF Origin 鏍￠獙澶辫触 | URI: {} | Origin: {} | Referer: {}",
+            logger.warn("CSRF Origin 校验失败 | URI: {} | Origin: {} | Referer: {}",
                     httpRequest.getRequestURI(),
                     httpRequest.getHeader("Origin"),
                     httpRequest.getHeader("Referer"));
@@ -130,7 +130,7 @@ public class CsrfFilter extends OncePerRequestFilter {
         }
 
         if (!validateCsrfToken(httpRequest)) {
-            logger.warn("CSRF 楠岃瘉澶辫触: {}", httpRequest.getRequestURI());
+            logger.warn("CSRF 验证失败: {}", httpRequest.getRequestURI());
             httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
             httpResponse.setHeader("X-Content-Type-Options", "nosniff");
             httpResponse.setContentType("application/json;charset=UTF-8");
@@ -138,7 +138,7 @@ public class CsrfFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 楠岃瘉閫氳繃鍚庡埛鏂?CSRF token锛岄槻姝㈠悓涓€ token 琚噸鏀炬敾鍑?
+        // 验证通过后刷新 CSRF token，防止同一 token 被重放攻击
         String newToken = (String) httpRequest.getAttribute("NEW_CSRF_TOKEN");
         if (newToken != null) {
             Cookie cookie = buildCsrfCookie(newToken, httpRequest);
@@ -164,18 +164,18 @@ public class CsrfFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 鏋勫缓 CSRF Cookie锛岀粺涓€ Cookie 瀹夊叏灞炴€ч厤缃?
+     * 构建 CSRF Cookie，统一 Cookie 安全属性配置
      *
-     * @param token   CSRF 浠ょ墝鍊?
-     * @param request HTTP 璇锋眰锛堢敤浜庡姩鎬佸垽鏂?Secure 鏍囧織锛?
-     * @return 閰嶇疆濂藉畨鍏ㄥ睘鎬х殑 Cookie
+     * @param token   CSRF 令牌值
+     * @param request HTTP 请求（用于动态判断 Secure 标志）
+     * @return 配置好安全属性的 Cookie
      */
     private Cookie buildCsrfCookie(String token, HttpServletRequest request) {
         Cookie cookie = new Cookie(CSRF_TOKEN_COOKIE, token);
         cookie.setPath("/");
-        // 鍓嶇闇€瑕佽鍙?CSRF Token锛屼笉鑳借缃?HttpOnly
+        // 前端需要读取 CSRF Token，不能设置 HttpOnly
         cookie.setHttpOnly(false);
-        // Secure 鏍囧織锛氶厤缃紭鍏堬紝鏈厤缃椂鏍规嵁璇锋眰鍗忚鍔ㄦ€佸喅瀹?
+        // Secure 标志：配置优先，未配置时根据请求协议动态决定
         Boolean cookieSecure = properties.getCookieSecure();
         if (cookieSecure != null) {
             cookie.setSecure(cookieSecure);
@@ -188,25 +188,25 @@ public class CsrfFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 鏍￠獙璇锋眰鏉ユ簮锛圤rigin/Referer锛夛紝鎷掔粷璺ㄧ珯璇锋眰
+     * 校验请求来源（Origin/Referer），拒绝跨站请求
      *
-     * <p>鏍￠獙閫昏緫锛?
+     * <p>校验逻辑：
      * <ol>
-     *   <li>浼樺厛鏍￠獙 Origin 澶达紝涓虹┖鏃跺洖閫€鍒?Referer 澶?/li>
-     *   <li>濡傛灉閰嶇疆浜?allowedOrigins锛屾牎楠屾潵婧愭槸鍚﹀湪鐧藉悕鍗曚腑</li>
-     *   <li>濡傛灉鏈厤缃?allowedOrigins锛屾牎楠屾潵婧愭槸鍚︿笌璇锋眰 Host 鍚屾簮</li>
+     *   <li>优先校验 Origin 头，为空时回退到 Referer 头</li>
+     *   <li>如果配置了 allowedOrigins，校验来源是否在白名单中</li>
+     *   <li>如果未配置 allowedOrigins，校验来源是否与请求 Host 同源</li>
      * </ol>
      *
-     * @param request HTTP 璇锋眰
-     * @return 鍚屾簮鎴栧湪鐧藉悕鍗曚腑杩斿洖 true锛岃法绔欒繑鍥?false
+     * @param request HTTP 请求
+     * @return 同源或在白名单中返回 true，跨站返回 false
      */
     private boolean validateOrigin(HttpServletRequest request) {
         String origin = request.getHeader("Origin");
-        // Origin 涓虹┖鏃跺洖閫€鍒?Referer
+        // Origin 为空时回退到 Referer
         if (origin == null || origin.isEmpty()) {
             String referer = request.getHeader("Referer");
             if (referer == null || referer.isEmpty()) {
-                // 鏃?Origin 鍜?Referer锛屽彲鑳芥槸鍚屾簮璇锋眰鎴栭潪娴忚鍣ㄥ鎴风锛屾斁琛?
+                // 无 Origin 和 Referer，可能是同源请求或非浏览器客户端，放行
                 return true;
             }
             origin = extractOrigin(referer);
@@ -214,7 +214,7 @@ public class CsrfFilter extends OncePerRequestFilter {
 
         List<String> allowedOrigins = properties.getAllowedOrigins();
         if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
-            // 閰嶇疆浜嗙櫧鍚嶅崟锛屾牎楠屾槸鍚﹀尮閰?
+            // 配置了白名单，校验是否匹配
             for (String allowed : allowedOrigins) {
                 if (matchesOrigin(origin, allowed)) {
                     return true;
@@ -223,13 +223,13 @@ public class CsrfFilter extends OncePerRequestFilter {
             return false;
         }
 
-        // 鏈厤缃櫧鍚嶅崟锛屾牎楠屾槸鍚﹀悓婧愶紙Origin 鐨?host:port 涓庤姹?Host 涓€鑷达級
+        // 未配置白名单，校验是否同源（Origin 的 host:port 与请求 Host 一致）
         String requestHost = request.getServerName() + ":" + request.getServerPort();
         return isSameOrigin(origin, requestHost, request.getScheme(), request.getServerName(), request.getServerPort());
     }
 
     /**
-     * 浠?Referer URL 涓彁鍙?Origin锛坰cheme://host:port锛?
+     * 从 Referer URL 中提取 Origin（scheme://host:port）
      */
     private String extractOrigin(String referer) {
         int pathIdx = referer.indexOf('/', referer.indexOf("://") + 3);
@@ -237,11 +237,11 @@ public class CsrfFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 鏍￠獙 Origin 鏄惁鍖归厤鍏佽鐨勬ā寮忥紙鏀寔閫氶厤绗︼級
+     * 校验 Origin 是否匹配允许的模式（支持通配符）
      */
     private boolean matchesOrigin(String origin, String allowed) {
         if (allowed.contains("*")) {
-            // 閫氶厤绗﹀尮閰嶏紝濡?https://*.example.com
+            // 通配符匹配，如 https://*.example.com
             String pattern = allowed.replace(".", "\\.").replace("*", ".*");
             return origin.matches(pattern);
         }
@@ -249,16 +249,16 @@ public class CsrfFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 鏍￠獙鏄惁鍚屾簮
+     * 校验是否同源
      */
     private boolean isSameOrigin(String origin, String requestHost, String scheme, String serverName, int serverPort) {
-        // 瑙ｆ瀽 Origin锛歴cheme://host:port
+        // 解析 Origin：scheme://host:port
         try {
             java.net.URI originUri = new java.net.URI(origin);
             String originHost = originUri.getHost();
             int originPort = originUri.getPort();
             if (originPort == -1) {
-                // 榛樿绔彛澶勭悊
+                // 默认端口处理
                 if ("https".equals(originUri.getScheme())) {
                     originPort = 443;
                 } else if ("http".equals(originUri.getScheme())) {
@@ -269,7 +269,7 @@ public class CsrfFilter extends OncePerRequestFilter {
                     && originHost != null && originHost.equalsIgnoreCase(serverName)
                     && originPort == serverPort;
         } catch (java.net.URISyntaxException e) {
-            logger.debug("Origin 瑙ｆ瀽澶辫触: {}", origin);
+            logger.debug("Origin 解析失败: {}", origin);
             return false;
         }
     }
@@ -292,7 +292,7 @@ public class CsrfFilter extends OncePerRequestFilter {
 
         boolean valid = tokenRepository.validateToken(token, sessionId);
         if (valid) {
-            // 楠岃瘉閫氳繃鍚庣敓鎴愭柊 token锛岄€氳繃 request 灞炴€т紶閫掔粰 doFilterInternal 鍐欏叆 response
+            // 验证通过后生成新 token，通过 request 属性传递给 doFilterInternal 写入 response
             CsrfToken newToken = tokenRepository.createToken(sessionId);
             request.setAttribute("NEW_CSRF_TOKEN", newToken.getToken());
         }
@@ -333,7 +333,7 @@ public class CsrfFilter extends OncePerRequestFilter {
         try {
             cookie.setAttribute("SameSite", value);
         } catch (NoSuchMethodError e) {
-            // Servlet 5.0 浠ヤ笅鐗堟湰涓嶆敮鎸?setAttribute锛屽拷鐣?
+            // Servlet 5.0 以下版本不支持 setAttribute，忽略
         }
     }
 

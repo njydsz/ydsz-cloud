@@ -13,10 +13,10 @@ import org.springframework.web.servlet.ModelAndView;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * 璇锋眰鏃ュ織鎷︽埅鍣紙Web/App 鍏变韩锛?
+ * 请求日志拦截器（Web/App 共享）
  *
- * <p>瀛愮被瑕嗙洊 {@link #resolveRequestId(HttpServletRequest)} 鎻愪緵涓嶅悓鐨?ID 鏉ユ簮锛?
- * 瑕嗙洊 {@link #getLogger()} 鎻愪緵涓嶅悓鐨勬棩蹇楀疄渚嬨€?
+ * <p>子类覆盖 {@link #resolveRequestId(HttpServletRequest)} 提供不同的 ID 来源，
+ * 覆盖 {@link #getLogger()} 提供不同的日志实例。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -115,12 +115,12 @@ public abstract class BaseRequestLogInterceptor implements HandlerInterceptor {
     }
 
     /**
-     * 瀛愮被瑕嗙洊姝ゆ柟娉曟彁渚涘叿浣撶殑璇锋眰 ID 瑙ｆ瀽閫昏緫
+     * 子类覆盖此方法提供具体的请求 ID 解析逻辑
      */
     protected abstract String resolveRequestId(HttpServletRequest request);
 
     /**
-     * 瀛愮被瑕嗙洊姝ゆ柟娉曟彁渚涘叿浣撶殑鏃ュ織瀹炰緥
+     * 子类覆盖此方法提供具体的日志实例
      */
     protected abstract Logger getLogger();
 

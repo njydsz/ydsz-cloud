@@ -20,16 +20,16 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 瀛楁鑴辨晱鏈嶅姟銆?
+ * 字段脱敏服务。
  *
- * <p>鑱岃矗锛?
+ * <p>职责：
  * <ul>
- *   <li>浠?Redis role-col-key 瑙ｆ瀽鑴辨晱瑙勫垯閰嶇疆</li>
- *   <li>鎸夎鑹插姞杞藉苟鍚堝苟鑴辨晱瑙勫垯</li>
- *   <li>鎻愪緵鑴辨晱涓婁笅鏂囨煡璇?/li>
+ *   <li>从 Redis role-col-key 解析脱敏规则配置</li>
+ *   <li>按角色加载并合并脱敏规则</li>
+ *   <li>提供脱敏上下文查询</li>
  * </ul>
  *
- * <p><b>Redis 閰嶇疆鏍煎紡锛?/b>
+ * <p><b>Redis 配置格式：</b>
  * <pre>{@code
  * {
  *   "visibleColumns": {
@@ -69,10 +69,10 @@ public class ColumnDesensitizationService {
     }
 
     /**
-     * 鏍规嵁瑙掕壊缂栫爜鍔犺浇鑴辨晱涓婁笅鏂囥€?
+     * 根据角色编码加载脱敏上下文。
      *
-     * @param roleCode 瑙掕壊缂栫爜
-     * @return 鑴辨晱涓婁笅鏂?
+     * @param roleCode 角色编码
+     * @return 脱敏上下文
      */
     public ColumnDesensitizationContext loadByRoleCode(String roleCode) {
         if (StringUtils.isBlank(roleCode)) {
@@ -96,10 +96,10 @@ public class ColumnDesensitizationService {
     }
 
     /**
-     * 鏍规嵁澶氫釜瑙掕壊缂栫爜鍔犺浇鑴辨晱涓婁笅鏂囷紙鍚堝苟瑙勫垯锛夈€?
+     * 根据多个角色编码加载脱敏上下文（合并规则）。
      *
-     * @param roleCodes 瑙掕壊缂栫爜闆嗗悎
-     * @return 鍚堝苟鍚庣殑鑴辨晱涓婁笅鏂?
+     * @param roleCodes 角色编码集合
+     * @return 合并后的脱敏上下文
      */
     public ColumnDesensitizationContext loadByRoleCodes(Set<String> roleCodes) {
         if (roleCodes == null || roleCodes.isEmpty()) {
@@ -115,11 +115,11 @@ public class ColumnDesensitizationService {
     }
 
     /**
-     * 鏍规嵁褰撳墠璁块棶浠ょ墝鍔犺浇鑴辨晱涓婁笅鏂囥€?
+     * 根据当前访问令牌加载脱敏上下文。
      *
-     * @param userId 褰撳墠鐢ㄦ埛ID
-     * @param accessToken 璁块棶浠ょ墝
-     * @return 鑴辨晱涓婁笅鏂?
+     * @param userId 当前用户ID
+     * @param accessToken 访问令牌
+     * @return 脱敏上下文
      */
     public ColumnDesensitizationContext loadByToken(String userId, String accessToken) {
         if (StringUtils.isBlank(accessToken)) {
@@ -144,9 +144,9 @@ public class ColumnDesensitizationService {
     }
 
     /**
-     * 娓呴櫎鎸囧畾瑙掕壊鐨勭紦瀛樸€?
+     * 清除指定角色的缓存。
      *
-     * @param roleCode 瑙掕壊缂栫爜
+     * @param roleCode 角色编码
      */
     public void invalidate(String roleCode) {
         if (StringUtils.isNotBlank(roleCode)) {
@@ -155,7 +155,7 @@ public class ColumnDesensitizationService {
     }
 
     /**
-     * 娓呴櫎鎵€鏈夌紦瀛樸€?
+     * 清除所有缓存。
      */
     public void invalidateAll() {
         cache.invalidateAll();
@@ -185,7 +185,7 @@ public class ColumnDesensitizationService {
             }
 
         } catch (Exception e) {
-            log.warn("瑙ｆ瀽鑴辨晱瑙勫垯澶辫触锛歿}, error={}", json, e.getMessage());
+            log.warn("解析脱敏规则失败：{}, error={}", json, e.getMessage());
         }
     }
 

@@ -11,16 +11,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Feign 閰嶇疆鍒锋柊鐩戝惉鍣ㄣ€?
+ * Feign 配置刷新监听器。
  *
- * <p>鐩戝惉 Spring Cloud 鐨?{@link EnvironmentChangeEvent} 浜嬩欢锛?
- * 褰?Feign 鐩稿叧閰嶇疆鍙戠敓鍙樺寲鏃讹紝鑷姩閲嶅缓 Feign 瀹㈡埛绔疄渚嬨€?
+ * <p>监听 Spring Cloud 的 {@link EnvironmentChangeEvent} 事件，
+ * 当 Feign 相关配置发生变化时，自动重建 Feign 客户端实例。
  *
- * <p>宸ヤ綔鍘熺悊锛?
+ * <p>工作原理：
  * <ol>
- *   <li>鐩戝惉鐜閰嶇疆鍙樻洿浜嬩欢</li>
- *   <li>鍒ゆ柇鍙樻洿鐨勯厤缃槸鍚︿笌 Feign 鐩稿叧</li>
- *   <li>濡傛灉鏄紝鍒欓€氳繃 {@link DynamicFeignClientFactory} 閲嶅缓瀹㈡埛绔?/li>
+ *   <li>监听环境配置变更事件</li>
+ *   <li>判断变更的配置是否与 Feign 相关</li>
+ *   <li>如果是，则通过 {@link DynamicFeignClientFactory} 重建客户端</li>
  * </ol>
  *
  * @author Marvin Lee
@@ -39,10 +39,10 @@ public class FeignConfigRefresher implements ApplicationListener<EnvironmentChan
     private final DynamicFeignClientFactory clientFactory;
 
     /**
-     * 鏋勯€犲嚱鏁般€?
+     * 构造函数。
      *
-     * @param applicationContext Spring 搴旂敤涓婁笅鏂?
-     * @param clientFactory      鍔ㄦ€?Feign 瀹㈡埛绔伐鍘?
+     * @param applicationContext Spring 应用上下文
+     * @param clientFactory      动态 Feign 客户端工厂
      */
     public FeignConfigRefresher(ApplicationContext applicationContext,
                                 DynamicFeignClientFactory clientFactory) {
@@ -51,15 +51,15 @@ public class FeignConfigRefresher implements ApplicationListener<EnvironmentChan
     }
 
     /**
-     * 澶勭悊鐜閰嶇疆鍙樻洿浜嬩欢锛屽綋 Feign 鐩稿叧閰嶇疆鍙戠敓鍙樺寲鏃跺埛鏂板鎴风銆?
+     * 处理环境配置变更事件，当 Feign 相关配置发生变化时刷新客户端。
      *
-     * @param event 鐜閰嶇疆鍙樻洿浜嬩欢
+     * @param event 环境配置变更事件
      */
     @Override
     public void onApplicationEvent(@NonNull EnvironmentChangeEvent event) {
         FeignProperties properties = applicationContext.getBean(FeignProperties.class);
         if (!properties.getRefresh().isEnabled()) {
-            log.debug("[Feign] 鍔ㄦ€佸埛鏂版湭鍚敤锛岃烦杩囬厤缃埛鏂?);
+            log.debug("[Feign] 动态刷新未启用，跳过配置刷新");
             return;
         }
 
@@ -69,15 +69,15 @@ public class FeignConfigRefresher implements ApplicationListener<EnvironmentChan
             return;
         }
 
-        log.info("[Feign] 妫€娴嬪埌 Feign 閰嶇疆鍙樻洿锛屽紑濮嬪埛鏂? {}", relevantKeys);
+        log.info("[Feign] 检测到 Feign 配置变更，开始刷新: {}", relevantKeys);
         refreshFeignClients(relevantKeys, new HashSet<>(properties.getRefresh().getExclude()));
     }
 
     /**
-     * 杩囨护鍑轰笌 Feign 鐩稿叧鐨勯厤缃彉鏇撮敭銆?
+     * 过滤出与 Feign 相关的配置变更键。
      *
-     * @param keys 鎵€鏈夊彉鏇寸殑閰嶇疆閿?
-     * @return 涓?Feign 鐩稿叧鐨勯厤缃敭闆嗗悎
+     * @param keys 所有变更的配置键
+     * @return 与 Feign 相关的配置键集合
      */
     private Set<String> filterRelevantKeys(Set<String> keys) {
         Set<String> relevant = new HashSet<>();
@@ -90,15 +90,15 @@ public class FeignConfigRefresher implements ApplicationListener<EnvironmentChan
     }
 
     /**
-     * 鍒锋柊 Feign 瀹㈡埛绔€?
+     * 刷新 Feign 客户端。
      *
-     * @param changedKeys 鍙樻洿鐨勯厤缃敭
-     * @param excludeSet 鎺掗櫎鐨勫鎴风鍚嶇О闆嗗悎
+     * @param changedKeys 变更的配置键
+     * @param excludeSet 排除的客户端名称集合
      */
     private void refreshFeignClients(Set<String> changedKeys, Set<String> excludeSet) {
-        // 娓呴櫎缂撳瓨骞堕噸寤?Feign Builder
+        // 清除缓存并重建 Feign Builder
         clientFactory.clearCache(excludeSet);
 
-        log.info("[Feign] Feign 瀹㈡埛绔埛鏂板畬鎴愶紝鍙楀奖鍝嶇殑閰嶇疆: {}", changedKeys);
+        log.info("[Feign] Feign 客户端刷新完成，受影响的配置: {}", changedKeys);
     }
 }

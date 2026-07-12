@@ -5,12 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Feign 鍝嶅簲鎷︽埅鍣? *
- * <p>缁熶竴澶勭悊 Feign 瀹㈡埛绔殑鍝嶅簲锛屾彁渚涗互涓嬭兘鍔涳細
+ * Feign 响应拦截器
+ *
+ * <p>统一处理 Feign 客户端的响应，提供以下能力：
  * <ul>
- *   <li>鍝嶅簲鏃ュ織璁板綍锛堢姸鎬佺爜銆佽€楁椂銆佹柟娉曚俊鎭級</li>
- *   <li>鍝嶅簲鎸囨爣閲囬泦锛堢敤浜?Micrometer 鐩戞帶锛?/li>
- *   <li>寮傚父鍝嶅簲缁熶竴澶勭悊</li>
+ *   <li>响应日志记录（状态码、耗时、方法信息）</li>
+ *   <li>响应指标采集（用于 Micrometer 监控）</li>
+ *   <li>异常响应统一处理</li>
  * </ul>
  *
  * @author Marvin Lee
@@ -56,17 +57,17 @@ public class FeignResponseInterceptor implements feign.ResponseInterceptor {
     }
 
     /**
-     * 璁板綍鎴愬姛鍝嶅簲
+     * 记录成功响应
      */
     private void recordSuccess(String serviceName, String httpMethod, Response response, long duration) {
         if (logEnabled && response != null) {
-            log.info("[Feign] 鍝嶅簲鎴愬姛 | service={} | method={} | status={} | duration={}ms",
+            log.info("[Feign] 响应成功 | service={} | method={} | status={} | duration={}ms",
                     serviceName, httpMethod, response.status(), duration);
         }
 
-        // P2: 鎱㈣皟鐢ㄦ娴?鈥?瓒呰繃闃堝€兼椂杈撳嚭 WARN 鏃ュ織
+        // P2: 慢调用检测 — 超过阈值时输出 WARN 日志
         if (slowCallThresholdMillis > 0 && duration >= slowCallThresholdMillis) {
-            log.warn("[Feign] 鎱㈣皟鐢ㄥ憡璀?| service={} | method={} | status={} | duration={}ms | threshold={}ms",
+            log.warn("[Feign] 慢调用告警 | service={} | method={} | status={} | duration={}ms | threshold={}ms",
                     serviceName, httpMethod, response != null ? response.status() : "N/A",
                     duration, slowCallThresholdMillis);
             if (metrics != null) {
@@ -85,18 +86,18 @@ public class FeignResponseInterceptor implements feign.ResponseInterceptor {
     }
 
     /**
-     * 璁板綍澶辫触鍝嶅簲
+     * 记录失败响应
      */
     private void recordFailure(String serviceName, String httpMethod, Response response, long duration, Exception e) {
-        log.warn("[Feign] 鍝嶅簲澶辫触 | service={} | method={} | status={} | duration={}ms | error={}",
+        log.warn("[Feign] 响应失败 | service={} | method={} | status={} | duration={}ms | error={}",
                 serviceName, httpMethod,
                 response != null ? response.status() : "N/A",
                 duration,
                 e.getMessage());
 
-        // P2: 澶辫触鍦烘櫙涔熸娴嬫參璋冪敤
+        // P2: 失败场景也检测慢调用
         if (slowCallThresholdMillis > 0 && duration >= slowCallThresholdMillis) {
-            log.warn("[Feign] 鎱㈣皟鐢ㄥ憡璀?| service={} | method={} | duration={}ms | threshold={}ms | error={}",
+            log.warn("[Feign] 慢调用告警 | service={} | method={} | duration={}ms | threshold={}ms | error={}",
                     serviceName, httpMethod, duration, slowCallThresholdMillis, e.getClass().getSimpleName());
             if (metrics != null) {
                 metrics.recordSlowCall(serviceName, httpMethod, duration, slowCallThresholdMillis);
@@ -115,8 +116,8 @@ public class FeignResponseInterceptor implements feign.ResponseInterceptor {
     }
 
     /**
-     * 浠?configKey 鎻愬彇鏈嶅姟鍚嶇О
-     * configKey 鏍煎紡涓?"ServiceName#methodName(params)"
+     * 从 configKey 提取服务名称
+     * configKey 格式为 "ServiceName#methodName(params)"
      */
     private String extractServiceName(feign.InvocationContext context) {
         try {
@@ -132,7 +133,7 @@ public class FeignResponseInterceptor implements feign.ResponseInterceptor {
     }
 
     /**
-     * 鎻愬彇 HTTP 鏂规硶
+     * 提取 HTTP 方法
      */
     private String extractMethod(feign.InvocationContext context) {
         try {
@@ -151,38 +152,40 @@ public class FeignResponseInterceptor implements feign.ResponseInterceptor {
     }
 
     /**
-     * Feign 鍝嶅簲鎸囨爣鎺ュ彛
+     * Feign 响应指标接口
      *
-     * <p>鐢ㄤ簬闆嗘垚 Micrometer 鎴栧叾浠栫洃鎺х郴缁?     */
+     * <p>用于集成 Micrometer 或其他监控系统
+     */
     public interface FeignResponseMetrics {
         /**
-         * 璁板綍鎴愬姛鍝嶅簲
+         * 记录成功响应
          *
-         * @param service  鏈嶅姟鍚嶇О
-         * @param method   HTTP 鏂规硶
-         * @param status   HTTP 鐘舵€佺爜
-         * @param duration 鑰楁椂锛堟绉掞級
+         * @param service  服务名称
+         * @param method   HTTP 方法
+         * @param status   HTTP 状态码
+         * @param duration 耗时（毫秒）
          */
         void recordSuccess(String service, String method, int status, long duration);
 
         /**
-         * 璁板綍澶辫触鍝嶅簲
+         * 记录失败响应
          *
-         * @param service   鏈嶅姟鍚嶇О
-         * @param method    HTTP 鏂规硶
-         * @param status    HTTP 鐘舵€佺爜
-         * @param duration  鑰楁椂锛堟绉掞級
-         * @param errorType 閿欒绫诲瀷
+         * @param service   服务名称
+         * @param method    HTTP 方法
+         * @param status    HTTP 状态码
+         * @param duration  耗时（毫秒）
+         * @param errorType 错误类型
          */
         void recordFailure(String service, String method, int status, long duration, String errorType);
 
         /**
-         * 璁板綍鎱㈣皟鐢紙P2 鍙娴嬫€у寮猴級
+         * 记录慢调用（P2 可观测性增强）
          *
-         * @param service    鏈嶅姟鍚嶇О
-         * @param method     HTTP 鏂规硶
-         * @param duration   鑰楁椂锛堟绉掞級
-         * @param threshold  鎱㈣皟鐢ㄩ槇鍊硷紙姣锛?         */
+         * @param service    服务名称
+         * @param method     HTTP 方法
+         * @param duration   耗时（毫秒）
+         * @param threshold  慢调用阈值（毫秒）
+         */
         void recordSlowCall(String service, String method, long duration, long threshold);
     }
 }

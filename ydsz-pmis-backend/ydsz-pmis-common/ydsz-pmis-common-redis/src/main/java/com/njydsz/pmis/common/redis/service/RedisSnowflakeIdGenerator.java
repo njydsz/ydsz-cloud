@@ -13,24 +13,28 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * 鍒嗗竷寮忛洩鑺?ID 鐢熸垚鍣? *
- * <p>鍩轰簬 Twitter Snowflake 绠楁硶锛? * <ul>
- *   <li>1 浣嶇鍙蜂綅锛堝浐瀹?0锛?/li>
- *   <li>41 浣嶆椂闂存埑锛堟绉掔骇锛岀害 69 骞达級</li>
- *   <li>10 浣嶅伐浣滄満鍣?ID锛? 浣嶆暟鎹腑蹇?+ 5 浣嶅伐浣滆妭鐐癸級</li>
- *   <li>12 浣嶅簭鍒楀彿锛堟瘡姣 4096 涓?ID锛?/li>
- * </ul>
+ * 分布式雪花 ID 生成器
  *
- * <p><b>workerId 鍒嗛厤锛?/b>閫氳繃 Redis INCR 鍏ㄥ眬閫掑鍒嗛厤锛岀‘淇濋泦缇や腑姣忎釜瀹炰緥鐨?workerId 鍞竴銆? * 鏀寔鑷畾涔?datacenterId锛?~31锛夊拰 workerId 涓婇檺妫€娴嬨€? *
- * <p><b>鐗规€э細</b>
+ * <p>基于 Twitter Snowflake 算法：
  * <ul>
- *   <li>鍏ㄥ眬鍞竴锛歸orkerId + sequence + timestamp 缁勫悎淇濊瘉鍞竴</li>
- *   <li>瓒嬪娍閫掑锛氬悓涓€姣鍐呭簭鍒楅€掑锛屾暣浣撴寜鏃堕棿鍗曡皟閫掑</li>
- *   <li>楂樺悶鍚愶細鍗曞疄渚嬪嘲鍊煎彲杈?4096 * 1000 = 409.6 涓?QPS</li>
- *   <li>楂樺彲鐢細Redis 涓嶅彲鐢ㄦ椂闄嶇骇涓烘湰鍦板簭鍒楃敓鎴?/li>
+ *   <li>1 位符号位（固定 0）</li>
+ *   <li>41 位时间戳（毫秒级，约 69 年）</li>
+ *   <li>10 位工作机器 ID（5 位数据中心 + 5 位工作节点）</li>
+ *   <li>12 位序列号（每毫秒 4096 个 ID）</li>
  * </ul>
  *
- * <p><b>浣跨敤绀轰緥锛?/b>
+ * <p><b>workerId 分配：</b>通过 Redis INCR 全局递增分配，确保集群中每个实例的 workerId 唯一。
+ * 支持自定义 datacenterId（0~31）和 workerId 上限检测。
+ *
+ * <p><b>特性：</b>
+ * <ul>
+ *   <li>全局唯一：workerId + sequence + timestamp 组合保证唯一</li>
+ *   <li>趋势递增：同一毫秒内序列递增，整体按时间单调递增</li>
+ *   <li>高吞吐：单实例峰值可达 4096 * 1000 = 409.6 万 QPS</li>
+ *   <li>高可用：Redis 不可用时降级为本地序列生成</li>
+ * </ul>
+ *
+ * <p><b>使用示例：</b>
  * <pre>{@code
  * @Autowired
  * private RedisSnowflakeIdGenerator idGenerator;
@@ -49,37 +53,37 @@ import java.util.concurrent.atomic.AtomicLong;
 @Component
 public class RedisSnowflakeIdGenerator {
 
-    /** 璧峰鏃堕棿鎴筹紙2024-01-01锛?*/
+    /** 起始时间戳（2024-01-01） */
     private static final long EPOCH = 1704038400000L;
 
-    /** 宸ヤ綔鏈哄櫒 ID 鍗犵敤浣嶆暟 */
+    /** 工作机器 ID 占用位数 */
     private static final long WORKER_ID_BITS = 5L;
 
-    /** 鏁版嵁涓績 ID 鍗犵敤浣嶆暟 */
+    /** 数据中心 ID 占用位数 */
     private static final long DATACENTER_ID_BITS = 5L;
 
-    /** 搴忓垪鍙峰崰鐢ㄤ綅鏁?*/
+    /** 序列号占用位数 */
     private static final long SEQUENCE_BITS = 12L;
 
-    /** 鏈€澶у伐浣滄満鍣?ID锛?1锛?*/
+    /** 最大工作机器 ID（31） */
     private static final long MAX_WORKER_ID = ~(-1L << WORKER_ID_BITS);
 
-    /** 鏈€澶ф暟鎹腑蹇?ID锛?1锛?*/
+    /** 最大数据中心 ID（31） */
     private static final long MAX_DATACENTER_ID = ~(-1L << DATACENTER_ID_BITS);
 
-    /** 搴忓垪鍙锋帺鐮侊紙4095锛?*/
+    /** 序列号掩码（4095） */
     private static final long SEQUENCE_MASK = ~(-1L << SEQUENCE_BITS);
 
-    /** 宸ヤ綔鏈哄櫒 ID 宸︾Щ浣嶆暟 */
+    /** 工作机器 ID 左移位数 */
     private static final long WORKER_ID_SHIFT = SEQUENCE_BITS;
 
-    /** 鏁版嵁涓績 ID 宸︾Щ浣嶆暟 */
+    /** 数据中心 ID 左移位数 */
     private static final long DATACENTER_ID_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS;
 
-    /** 鏃堕棿鎴冲乏绉讳綅鏁?*/
+    /** 时间戳左移位数 */
     private static final long TIMESTAMP_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS + DATACENTER_ID_BITS;
 
-    /** Redis 鍒嗛厤 workerId 鐨?Lua 鑴氭湰锛堝師瀛愰€掑 + 涓婇檺淇濇姢锛?*/
+    /** Redis 分配 workerId 的 Lua 脚本（原子递增 + 上限保护） */
     private static final String ALLOCATE_WORKER_LUA =
             "local current = redis.call('INCR', KEYS[1]) " +
             "if current > tonumber(ARGV[1]) then " +
@@ -89,7 +93,9 @@ public class RedisSnowflakeIdGenerator {
             "return current - 1";
 
     /**
-     * Redis 蹇冭烦缁害 Lua 鑴氭湰锛?     * 浠呭綋 key 瀛樺湪鏃舵墠缁害锛圗XPIRE锛夛紝閬垮厤宸查噴鏀剧殑 workerId 琚敊璇画绾?     */
+     * Redis 心跳续约 Lua 脚本：
+     * 仅当 key 存在时才续约（EXPIRE），避免已释放的 workerId 被错误续约
+     */
     private static final String HEARTBEAT_LUA =
             "if redis.call('EXISTS', KEYS[1]) == 1 then " +
             "  redis.call('EXPIRE', KEYS[1], tonumber(ARGV[1])) " +
@@ -97,10 +103,10 @@ public class RedisSnowflakeIdGenerator {
             "end " +
             "return 0";
 
-    /** workerId 蹇冭烦闂撮殧锛堢锛夛細榛樿 30 绉?*/
+    /** workerId 心跳间隔（秒）：默认 30 秒 */
     private static final long HEARTBEAT_INTERVAL_SECONDS = 30L;
 
-    /** workerId 蹇冭烦 TTL锛堢锛夛細榛樿 90 绉掞紝瓒呰繃 3 涓績璺冲懆鏈熸湭缁害鍒欒嚜鍔ㄩ噴鏀?*/
+    /** workerId 心跳 TTL（秒）：默认 90 秒，超过 3 个心跳周期未续约则自动释放 */
     private static final long HEARTBEAT_TTL_SECONDS = 90L;
 
     private final RedisTemplate<String, Object> redisTemplate;
@@ -112,10 +118,10 @@ public class RedisSnowflakeIdGenerator {
 
     private final ConcurrentHashMap<String, DefaultRedisScript<Long>> scriptCache = new ConcurrentHashMap<>();
 
-    /** 蹇冭烦瀹氭椂浠诲姟鎵ц鍣?*/
+    /** 心跳定时任务执行器 */
     private ScheduledExecutorService heartbeatExecutor;
 
-    /** 鏍囪褰撳墠瀹炰緥鏄惁宸插叧闂紝鐢ㄤ簬蹇冭烦浠诲姟閫€鍑哄垽鏂?*/
+    /** 标记当前实例是否已关闭，用于心跳任务退出判断 */
     private volatile boolean shutdown = false;
 
     public RedisSnowflakeIdGenerator(RedisTemplate<String, Object> redisTemplate,
@@ -124,10 +130,12 @@ public class RedisSnowflakeIdGenerator {
     }
 
     /**
-     * 鏋勯€犳柟娉?     *
-     * @param redisTemplate  Redis 瀹㈡埛绔?     * @param redisProperties Redis 閰嶇疆
-     * @param datacenterId   鏁版嵁涓績 ID锛?~31锛夛紝-1 琛ㄧず鑷姩鍒嗛厤
-     * @param autoAllocateWorkerId 鏄惁鑷姩閫氳繃 Redis 鍒嗛厤 workerId
+     * 构造方法
+     *
+     * @param redisTemplate  Redis 客户端
+     * @param redisProperties Redis 配置
+     * @param datacenterId   数据中心 ID（0~31），-1 表示自动分配
+     * @param autoAllocateWorkerId 是否自动通过 Redis 分配 workerId
      */
     public RedisSnowflakeIdGenerator(RedisTemplate<String, Object> redisTemplate,
                                      RedisProperties redisProperties,
@@ -145,16 +153,16 @@ public class RedisSnowflakeIdGenerator {
         if (autoAllocateWorkerId) {
             try {
                 wId = allocateWorkerIdFromRedis();
-                // 鍒嗛厤鎴愬姛鍚庣珛鍗宠缃績璺?TTL锛屽苟鍚姩缁害浠诲姟
+                // 分配成功后立即设置心跳 TTL，并启动续约任务
                 setWorkerIdHeartbeat(wId);
                 startHeartbeatScheduler(wId);
             } catch (Exception e) {
-                log.warn("銆怱nowflake銆戜粠 Redis 鍒嗛厤 workerId 澶辫触锛岄檷绾т负鏈湴鐢熸垚 | error={}", e);
+                log.warn("【Snowflake】从 Redis 分配 workerId 失败，降级为本地生成 | error={}", e);
                 wId = Math.abs(Thread.currentThread().threadId()) % (MAX_WORKER_ID + 1);
             }
         }
         this.workerId = wId;
-        log.info("銆怱nowflake銆慖D 鐢熸垚鍣ㄥ垵濮嬪寲瀹屾垚 | datacenterId={} | workerId={}", this.datacenterId, this.workerId);
+        log.info("【Snowflake】ID 生成器初始化完成 | datacenterId={} | workerId={}", this.datacenterId, this.workerId);
     }
 
     private long allocateWorkerIdFromRedis() {
@@ -171,21 +179,21 @@ public class RedisSnowflakeIdGenerator {
     }
 
     /**
-     * 涓?workerId 璁剧疆鍒濆蹇冭烦 TTL
+     * 为 workerId 设置初始心跳 TTL
      *
-     * @param workerId 宸ヤ綔鑺傜偣 ID
+     * @param workerId 工作节点 ID
      */
     private void setWorkerIdHeartbeat(long workerId) {
         String key = formatKey("snowflake:worker:" + workerId);
         redisTemplate.opsForValue().set(key, String.valueOf(System.currentTimeMillis()),
                 Duration.ofSeconds(HEARTBEAT_TTL_SECONDS));
-        log.debug("銆怱nowflake銆戣缃?workerId 蹇冭烦 TTL | workerId={} | ttl={}s", workerId, HEARTBEAT_TTL_SECONDS);
+        log.debug("【Snowflake】设置 workerId 心跳 TTL | workerId={} | ttl={}s", workerId, HEARTBEAT_TTL_SECONDS);
     }
 
     /**
-     * 鍚姩 workerId 蹇冭烦缁害瀹氭椂浠诲姟
+     * 启动 workerId 心跳续约定时任务
      *
-     * @param workerId 宸ヤ綔鑺傜偣 ID
+     * @param workerId 工作节点 ID
      */
     private void startHeartbeatScheduler(long workerId) {
         heartbeatExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -201,18 +209,18 @@ public class RedisSnowflakeIdGenerator {
             try {
                 renewWorkerIdHeartbeat(workerId);
             } catch (Exception e) {
-                log.warn("銆怱nowflake銆憌orkerId 蹇冭烦缁害澶辫触 | workerId={} | error={}", workerId, e.getMessage());
+                log.warn("【Snowflake】workerId 心跳续约失败 | workerId={} | error={}", workerId, e.getMessage());
             }
         }, HEARTBEAT_INTERVAL_SECONDS, HEARTBEAT_INTERVAL_SECONDS, TimeUnit.SECONDS);
 
-        log.info("銆怱nowflake銆戝惎鍔?workerId 蹇冭烦缁害浠诲姟 | workerId={} | interval={}s",
+        log.info("【Snowflake】启动 workerId 心跳续约任务 | workerId={} | interval={}s",
                 workerId, HEARTBEAT_INTERVAL_SECONDS);
     }
 
     /**
-     * 缁害 workerId 蹇冭烦锛堜娇鐢?Lua 鑴氭湰纭繚鍘熷瓙鎬э級
+     * 续约 workerId 心跳（使用 Lua 脚本确保原子性）
      *
-     * @param workerId 宸ヤ綔鑺傜偣 ID
+     * @param workerId 工作节点 ID
      */
     private void renewWorkerIdHeartbeat(long workerId) {
         String key = formatKey("snowflake:worker:" + workerId);
@@ -227,23 +235,24 @@ public class RedisSnowflakeIdGenerator {
                 String.valueOf(HEARTBEAT_TTL_SECONDS));
 
         if (result != null && result == 1L) {
-            log.debug("銆怱nowflake銆憌orkerId 蹇冭烦缁害鎴愬姛 | workerId={}", workerId);
+            log.debug("【Snowflake】workerId 心跳续约成功 | workerId={}", workerId);
         } else {
-            log.warn("銆怱nowflake銆憌orkerId 宸茶繃鏈熸垨琚噴鏀撅紝灏濊瘯閲嶆柊鍒嗛厤 | workerId={}", workerId);
-            // workerId 宸插け鏁堬紝灏濊瘯閲嶆柊鍒嗛厤
+            log.warn("【Snowflake】workerId 已过期或被释放，尝试重新分配 | workerId={}", workerId);
+            // workerId 已失效，尝试重新分配
             try {
                 long newWorkerId = allocateWorkerIdFromRedis();
                 setWorkerIdHeartbeat(newWorkerId);
-                log.info("銆怱nowflake銆戦噸鏂板垎閰?workerId 鎴愬姛 | oldWorkerId={} | newWorkerId={}",
+                log.info("【Snowflake】重新分配 workerId 成功 | oldWorkerId={} | newWorkerId={}",
                         workerId, newWorkerId);
             } catch (Exception e) {
-                log.error("銆怱nowflake銆戦噸鏂板垎閰?workerId 澶辫触 | error={}", e.getMessage());
+                log.error("【Snowflake】重新分配 workerId 失败 | error={}", e.getMessage());
             }
         }
     }
 
     /**
-     * 搴旂敤鍏抽棴鏃舵竻鐞嗗績璺充换鍔?     */
+     * 应用关闭时清理心跳任务
+     */
     @PreDestroy
     public void shutdown() {
         shutdown = true;
@@ -257,42 +266,42 @@ public class RedisSnowflakeIdGenerator {
                 heartbeatExecutor.shutdownNow();
                 Thread.currentThread().interrupt();
             }
-            log.info("銆怱nowflake銆戝仠姝?workerId 蹇冭烦缁害浠诲姟 | workerId={}", workerId);
+            log.info("【Snowflake】停止 workerId 心跳续约任务 | workerId={}", workerId);
         }
     }
 
     /**
-     * 鐢熸垚涓嬩竴涓敮涓€ ID
+     * 生成下一个唯一 ID
      *
-     * @return 64 浣?Long 绫诲瀷 ID
+     * @return 64 位 Long 类型 ID
      */
     public synchronized long nextId() {
         long timestamp = currentTimeMillis();
 
         if (timestamp < lastTimestamp.get()) {
-            // 鏃堕挓鍥炴嫧澶勭悊锛氱瓑寰呭埌鏈€鍚庢椂闂存埑
+            // 时钟回拨处理：等待到最后时间戳
             long offset = lastTimestamp.get() - timestamp;
             if (offset <= 5) {
                 try {
                     Thread.sleep(offset << 1);
                     timestamp = currentTimeMillis();
                     if (timestamp < lastTimestamp.get()) {
-                        throw new RuntimeException("鏃堕挓鍥炴嫧瓒呰繃 5ms锛屾嫆缁濈敓鎴?ID");
+                        throw new RuntimeException("时钟回拨超过 5ms，拒绝生成 ID");
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    throw new RuntimeException("ID 鐢熸垚琚腑鏂?, e);
+                    throw new RuntimeException("ID 生成被中断", e);
                 }
             } else {
                 throw new RuntimeException(
-                        String.format("鏃堕挓鍥炴嫧 %d ms锛屾嫆缁濈敓鎴?ID", offset));
+                        String.format("时钟回拨 %d ms，拒绝生成 ID", offset));
             }
         }
 
         if (timestamp == lastTimestamp.get()) {
             long seq = (sequence.incrementAndGet()) & SEQUENCE_MASK;
             if (seq == 0) {
-                // 褰撳墠姣搴忓垪鍙风敤灏斤紝绛夊緟涓嬩竴姣
+                // 当前毫秒序列号用尽，等待下一毫秒
                 timestamp = waitNextMillis(lastTimestamp.get());
             }
             sequence.set(seq);
@@ -309,27 +318,29 @@ public class RedisSnowflakeIdGenerator {
     }
 
     /**
-     * 瑙ｆ瀽 ID 涓殑鏃堕棿鎴?     */
+     * 解析 ID 中的时间戳
+     */
     public static long parseTimestamp(long id) {
         return (id >> TIMESTAMP_SHIFT) + EPOCH;
     }
 
     /**
-     * 瑙ｆ瀽 ID 涓殑鏁版嵁涓績 ID
+     * 解析 ID 中的数据中心 ID
      */
     public static long parseDatacenterId(long id) {
         return (id >> DATACENTER_ID_SHIFT) & MAX_DATACENTER_ID;
     }
 
     /**
-     * 瑙ｆ瀽 ID 涓殑宸ヤ綔鑺傜偣 ID
+     * 解析 ID 中的工作节点 ID
      */
     public static long parseWorkerId(long id) {
         return (id >> WORKER_ID_SHIFT) & MAX_WORKER_ID;
     }
 
     /**
-     * 瑙ｆ瀽 ID 涓殑搴忓垪鍙?     */
+     * 解析 ID 中的序列号
+     */
     public static long parseSequence(long id) {
         return id & SEQUENCE_MASK;
     }

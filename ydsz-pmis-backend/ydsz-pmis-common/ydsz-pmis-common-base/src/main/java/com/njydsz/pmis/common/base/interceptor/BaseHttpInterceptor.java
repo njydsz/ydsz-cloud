@@ -7,21 +7,21 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
- * 璇锋眰缁撴潫娓呯悊鎷︽埅鍣紙Web/App 鍏变韩锛?
+ * 请求结束清理拦截器（Web/App 共享）
  *
- * <p>浣滀负榛樿鐨?{@link HandlerInterceptor} 瀹炵幇锛屽畾涔夊湪鎷︽埅鍣ㄩ摼鐨勬渶鏈锛?
- * 鐢ㄤ簬鍦ㄨ姹傚畬鎴愬悗鎵ц娓呯悊鍔ㄤ綔銆?
+ * <p>作为默认的 {@link HandlerInterceptor} 实现，定义在拦截器链的最末端，
+ * 用于在请求完成后执行清理动作。
  *
- * <p><b>鑱岃矗璇存槑锛?/b>
+ * <p><b>职责说明：</b>
  * <ul>
- *   <li>{@link RequestHolder#remove()} 绛?ThreadLocal 娓呯悊鐢?
- *       {@code BaseAuthFilter.doFilterInternal()} 鐨?finally 鍧楃粺涓€璐熻矗</li>
- *   <li>姝ょ被浠呬綔涓哄崰浣嶆嫤鎴櫒锛屽彲鐢变笟鍔℃柟閫氳繃瑕嗙洊
+ *   <li>{@link RequestHolder#remove()} 等 ThreadLocal 清理由
+ *       {@code BaseAuthFilter.doFilterInternal()} 的 finally 块统一负责</li>
+ *   <li>此类仅作为占位拦截器，可由业务方通过覆盖
  *       {@link #afterCompletion(HttpServletRequest, HttpServletResponse, Object, Exception)}
- *       鎵╁睍鑷畾涔夋竻鐞嗛€昏緫</li>
+ *       扩展自定义清理逻辑</li>
  * </ul>
  *
- * <p>鎷︽埅鍣ㄦ墽琛岄『搴忓弬鑰?{@code docs/BASE_INTERCEPTOR_ORDER.md}銆?
+ * <p>拦截器执行顺序参考 {@code docs/BASE_INTERCEPTOR_ORDER.md}。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -31,18 +31,18 @@ import org.springframework.web.servlet.HandlerInterceptor;
 public class BaseHttpInterceptor implements HandlerInterceptor {
 
     /**
-     * 璇锋眰瀹屾垚鍚庡洖璋?
+     * 请求完成后回调
      *
-     * <p>榛樿绌哄疄鐜帮紝涓氬姟鏂瑰彲閫氳繃缁ф壙姝ゆ嫤鎴櫒骞惰鐩栨鏂规硶瀹炵幇鑷畾涔夋竻鐞嗐€?
+     * <p>默认空实现，业务方可通过继承此拦截器并覆盖此方法实现自定义清理。
      *
-     * @param request  HTTP 璇锋眰
-     * @param response HTTP 鍝嶅簲
-     * @param handler  澶勭悊鍣?
-     * @param ex       澶勭悊杩囩▼涓姏鍑虹殑寮傚父锛堟棤寮傚父鏃朵负 null锛?
+     * @param request  HTTP 请求
+     * @param response HTTP 响应
+     * @param handler  处理器
+     * @param ex       处理过程中抛出的异常（无异常时为 null）
      */
     @Override
     public void afterCompletion(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
                                 @NonNull Object handler, @Nullable Exception ex) {
-        // RequestHolder.remove() 鐢?BaseAuthFilter.doFilterInternal() 鐨?finally 鍧楄礋璐ｆ竻鐞嗭紝姝ゅ涓嶅啀閲嶅璋冪敤
+        // RequestHolder.remove() 由 BaseAuthFilter.doFilterInternal() 的 finally 块负责清理，此处不再重复调用
     }
 }

@@ -21,27 +21,27 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 鏁忔劅鏁版嵁鑴辨晱 AOP 鎷︽埅鍣?
+ * 敏感数据脱敏 AOP 拦截器
  *
- * <p>鍩轰簬 Spring {@link ResponseBodyAdvice} 瀹炵幇锛屽湪 Controller 鏂规硶杩斿洖鍊?
- * 鍐欏叆 HTTP 鍝嶅簲浣撲箣鍓嶏紝鑷姩瀵硅繑鍥炲€间腑鐨勬晱鎰熷瓧娈佃繘琛岃劚鏁忓鐞嗐€?
+ * <p>基于 Spring {@link ResponseBodyAdvice} 实现，在 Controller 方法返回值
+ * 写入 HTTP 响应体之前，自动对返回值中的敏感字段进行脱敏处理。
  *
- * <p><b>宸ヤ綔鍘熺悊锛?/b>
+ * <p><b>工作原理：</b>
  * <ul>
- *   <li>鎷︽埅鎵€鏈夊甫鏈?{@link SensitiveData} 娉ㄨВ瀛楁鐨勬柟娉曡繑鍥炲€?/li>
- *   <li>鏀寔鍏ㄥ眬鑴辨晱瑙勫垯锛堥€氳繃瀛楁鍚嶅尮閰嶏級</li>
- *   <li>鍦ㄥ簭鍒楀寲鍓嶈皟鐢?{@link SensitiveDataProcessor} 杩涜鑴辨晱</li>
- *   <li>鏀寔閰嶇疆寮€鍏?{@code remi.safe.sensitive.enabled} 鎺у埗鏄惁鍚敤</li>
- *   <li>浣跨敤缂撳瓨鏈哄埗閬垮厤閲嶅妫€鏌ュ悓涓€涓被</li>
+ *   <li>拦截所有带有 {@link SensitiveData} 注解字段的方法返回值</li>
+ *   <li>支持全局脱敏规则（通过字段名匹配）</li>
+ *   <li>在序列化前调用 {@link SensitiveDataProcessor} 进行脱敏</li>
+ *   <li>支持配置开关 {@code remi.safe.sensitive.enabled} 控制是否启用</li>
+ *   <li>使用缓存机制避免重复检查同一个类</li>
  * </ul>
  *
- * <p><b>浣跨敤绀轰緥锛?/b>
+ * <p><b>使用示例：</b>
  * <pre>{@code
  * @RestController
  * public class UserController {
  *     @GetMapping("/user/{id}")
  *     public UserVO getUser(@PathVariable Long id) {
- *         // 杩斿洖鐨?UserVO 涓甫鏈?@SensitiveData 娉ㄨВ鐨勫瓧娈典細鑷姩鑴辨晱
+ *         // 返回的 UserVO 中带有 @SensitiveData 注解的字段会自动脱敏
  *         return userService.findById(id);
  *     }
  * }
@@ -55,14 +55,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * }
  * }</pre>
  *
- * <p><b>閰嶇疆寮€鍏筹細</b>
+ * <p><b>配置开关：</b>
  * <pre>{@code
  * remi:
  *   safe:
  *     sensitive:
- *       enabled: true  # 榛樿鍚敤
- *       max-depth: 10  # 鏈€澶ч€掑綊娣卞害
- *       # 鍏ㄥ眬鑴辨晱瑙勫垯锛堝彲閫夛級
+ *       enabled: true  # 默认启用
+ *       max-depth: 10  # 最大递归深度
+ *       # 全局脱敏规则（可选）
  *       global-rules:
  *         - field-name: phone
  *           type: PHONE
@@ -85,8 +85,8 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
     private final SensitiveDataConfiguration configuration;
 
     /**
-     * 缂撳瓨绫荤殑鏁忔劅瀛楁妫€鏌ョ粨鏋滐紝閬垮厤閲嶅鍙嶅皠妫€鏌?
-     * Key: Class瀵硅薄锛孷alue: 鏄惁鍖呭惈鏁忔劅瀛楁
+     * 缓存类的敏感字段检查结果，避免重复反射检查
+     * Key: Class对象，Value: 是否包含敏感字段
      */
     private final Map<Class<?>, Boolean> sensitiveClassCache = new ConcurrentHashMap<>();
 
@@ -97,12 +97,12 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
     @Override
     public boolean supports(@NonNull MethodParameter returnType,
                             @NonNull Class<? extends HttpMessageConverter<?>> converterType) {
-        // 濡傛灉鏈惎鐢ㄨ劚鏁忥紝鐩存帴璺宠繃
+        // 如果未启用脱敏，直接跳过
         if (!configuration.isEnabled()) {
             return false;
         }
 
-        // 妫€鏌ヨ繑鍥炵被鍨嬪強鍏跺瓧娈垫槸鍚﹀寘鍚?@SensitiveData 娉ㄨВ鎴栧尮閰嶅叏灞€瑙勫垯
+        // 检查返回类型及其字段是否包含 @SensitiveData 注解或匹配全局规则
         Class<?> returnTypeClass = returnType.getParameterType();
         return containsSensitiveAnnotation(returnTypeClass, returnType);
     }
@@ -120,65 +120,65 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
         }
 
         try {
-            log.debug("寮€濮嬪杩斿洖鍊艰繘琛屾晱鎰熸暟鎹劚鏁? {}", returnType.getParameterType().getName());
+            log.debug("开始对返回值进行敏感数据脱敏: {}", returnType.getParameterType().getName());
             return SensitiveDataProcessor.process(body, configuration.getMaxDepth());
         } catch (Exception e) {
-            // 鑴辨晱澶辫触杩斿洖绌哄璞★紝闃叉鍘熷鏈劚鏁忔暟鎹硠闇?
-            log.error("鏁忔劅鏁版嵁鑴辨晱澶勭悊澶辫触锛岃繑鍥炵┖瀵硅薄浠ラ伩鍏嶆暟鎹硠闇? {}", e.getMessage(), e);
+            // 脱敏失败返回空对象，防止原始未脱敏数据泄露
+            log.error("敏感数据脱敏处理失败，返回空对象以避免数据泄露: {}", e.getMessage(), e);
             return createEmptyObject(body.getClass());
         }
     }
 
     /**
-     * 鍒涘缓鎸囧畾绫诲瀷鐨勭┖瀵硅薄锛岀敤浜庤劚鏁忓け璐ユ椂杩斿洖
-     * 閬垮厤鍘熷鏁版嵁娉勯湶
+     * 创建指定类型的空对象，用于脱敏失败时返回
+     * 避免原始数据泄露
      */
     private Object createEmptyObject(Class<?> clazz) {
         try {
             return clazz.getDeclaredConstructor().newInstance();
         } catch (Exception ex) {
-            log.error("鍒涘缓绌哄璞″け璐? {}", clazz.getName(), ex);
+            log.error("创建空对象失败: {}", clazz.getName(), ex);
             return null;
         }
     }
 
     /**
-     * 閫掑綊妫€鏌ョ被鍙婂叾瀛楁鏄惁鍖呭惈 {@link SensitiveData} 娉ㄨВ鎴栧尮閰嶅叏灞€瑙勫垯
+     * 递归检查类及其字段是否包含 {@link SensitiveData} 注解或匹配全局规则
      *
-     * @param clazz 寰呮鏌ョ殑绫?
-     * @param methodParameter 鏂规硶鍙傛暟锛堢敤浜庤幏鍙栨硾鍨嬩俊鎭級
-     * @return 鏄惁鍖呭惈鏁忔劅鏁版嵁娉ㄨВ
+     * @param clazz 待检查的类
+     * @param methodParameter 方法参数（用于获取泛型信息）
+     * @return 是否包含敏感数据注解
      */
     private boolean containsSensitiveAnnotation(Class<?> clazz, MethodParameter methodParameter) {
-        // 浣跨敤缂撳瓨閬垮厤閲嶅妫€鏌?
+        // 使用缓存避免重复检查
         return sensitiveClassCache.computeIfAbsent(clazz, c -> 
             doCheckSensitiveAnnotation(c, methodParameter, 0));
     }
 
     /**
-     * 瀹為檯鎵ц鏁忔劅娉ㄨВ妫€鏌?
+     * 实际执行敏感注解检查
      */
     private boolean doCheckSensitiveAnnotation(Class<?> clazz, MethodParameter methodParameter, int depth) {
         if (clazz == null || clazz == Object.class || depth > configuration.getMaxDepth()) {
             return false;
         }
 
-        // 妫€鏌ュ綋鍓嶇被鐨勬墍鏈夊瓧娈?
+        // 检查当前类的所有字段
         for (Field field : clazz.getDeclaredFields()) {
-            // 妫€鏌ュ瓧娈垫槸鍚︽湁 @SensitiveData 娉ㄨВ
+            // 检查字段是否有 @SensitiveData 注解
             if (field.isAnnotationPresent(SensitiveData.class)) {
                 return true;
             }
 
-            // 妫€鏌ュ瓧娈垫槸鍚﹀尮閰嶅叏灞€鑴辨晱瑙勫垯
+            // 检查字段是否匹配全局脱敏规则
             if (matchesGlobalRule(field.getName())) {
                 return true;
             }
 
-            // 妫€鏌ュ祵濂楀璞＄殑瀛楁
+            // 检查嵌套对象的字段
             Class<?> fieldType = field.getType();
             
-            // 澶勭悊闆嗗悎绫诲瀷锛屽皾璇曡幏鍙栨硾鍨嬪弬鏁?
+            // 处理集合类型，尝试获取泛型参数
             if (Collection.class.isAssignableFrom(fieldType)) {
                 Type genericType = field.getGenericType();
                 if (genericType instanceof ParameterizedType) {
@@ -191,11 +191,11 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
                         }
                     }
                 }
-                // 鏃犳硶鑾峰彇娉涘瀷淇℃伅鏃讹紝淇濆畧杩斿洖 true
+                // 无法获取泛型信息时，保守返回 true
                 return true;
             }
             
-            // 澶勭悊 Map 绫诲瀷锛屽皾璇曡幏鍙栧€肩殑娉涘瀷鍙傛暟
+            // 处理 Map 类型，尝试获取值的泛型参数
             if (Map.class.isAssignableFrom(fieldType)) {
                 Type genericType = field.getGenericType();
                 if (genericType instanceof ParameterizedType) {
@@ -208,11 +208,11 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
                         }
                     }
                 }
-                // 鏃犳硶鑾峰彇娉涘瀷淇℃伅鏃讹紝淇濆畧杩斿洖 true
+                // 无法获取泛型信息时，保守返回 true
                 return true;
             }
             
-            // 澶勭悊鏅€氬璞＄被鍨?
+            // 处理普通对象类型
             if (!isSimpleType(fieldType)) {
                 if (doCheckSensitiveAnnotation(fieldType, methodParameter, depth + 1)) {
                     return true;
@@ -220,15 +220,15 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
             }
         }
 
-        // 妫€鏌ョ埗绫?
+        // 检查父类
         return doCheckSensitiveAnnotation(clazz.getSuperclass(), methodParameter, depth + 1);
     }
 
     /**
-     * 妫€鏌ュ瓧娈靛悕鏄惁鍖归厤鍏ㄥ眬鑴辨晱瑙勫垯
+     * 检查字段名是否匹配全局脱敏规则
      *
-     * @param fieldName 瀛楁鍚?
-     * @return 鏄惁鍖归厤鍏ㄥ眬瑙勫垯
+     * @param fieldName 字段名
+     * @return 是否匹配全局规则
      */
     private boolean matchesGlobalRule(String fieldName) {
         if (configuration.getGlobalRules() == null || configuration.getGlobalRules().isEmpty()) {
@@ -241,23 +241,23 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
     }
 
     /**
-     * 鍖归厤瀛楁鍚嶏紙鏀寔閫氶厤绗︼級
+     * 匹配字段名（支持通配符）
      *
-     * @param fieldName 瀹為檯瀛楁鍚?
-     * @param pattern 鍖归厤妯″紡锛堟敮鎸?* 閫氶厤绗︼級
-     * @return 鏄惁鍖归厤
+     * @param fieldName 实际字段名
+     * @param pattern 匹配模式（支持 * 通配符）
+     * @return 是否匹配
      */
     private boolean matchesFieldName(String fieldName, String pattern) {
         if (pattern == null || pattern.isEmpty()) {
             return false;
         }
 
-        // 绮剧‘鍖归厤
+        // 精确匹配
         if (!pattern.contains("*")) {
             return fieldName.equals(pattern);
         }
 
-        // 閫氶厤绗﹀尮閰?
+        // 通配符匹配
         String regex = pattern
             .replace(".", "\\.")
             .replace("*", ".*")
@@ -266,10 +266,10 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
     }
 
     /**
-     * 鍒ゆ柇鏄惁涓虹畝鍗曠被鍨嬶紙鏃犻渶妫€鏌ユ敞瑙ｏ級
+     * 判断是否为简单类型（无需检查注解）
      *
-     * @param clazz 绫诲瀷
-     * @return 鏄惁涓虹畝鍗曠被鍨?
+     * @param clazz 类型
+     * @return 是否为简单类型
      */
     private boolean isSimpleType(Class<?> clazz) {
         return clazz.isPrimitive()

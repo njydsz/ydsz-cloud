@@ -12,17 +12,17 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * Redis 浜嬪姟鎿嶄綔缁勪欢
+ * Redis 事务操作组件
  *
- * <p>鎻愪緵 Redis 浜嬪姟鎿嶄綔鎺ュ彛锛屽寘鎷細
+ * <p>提供 Redis 事务操作接口，包括：
  * <ul>
- *   <li>浜嬪姟鎵ц锛坋xecuteInTransaction锛?/li>
+ *   <li>事务执行（executeInTransaction）</li>
  * </ul>
  *
- * <p>浣跨敤 RedisTemplate 鐨?{@link SessionCallback} 瀹炵幇浜嬪姟锛?
- * 鎵€鏈夊湪鍥炶皟涓殑鎿嶄綔灏嗕綔涓轰竴涓師瀛愪簨鍔℃墽琛屻€?
+ * <p>使用 RedisTemplate 的 {@link SessionCallback} 实现事务，
+ * 所有在回调中的操作将作为一个原子事务执行。
  *
- * <p><b>浣跨敤绀轰緥锛?/b>
+ * <p><b>使用示例：</b>
  * <pre>{@code
  * redisTransactionOps.executeInTransaction(operations -> {
  *     operations.opsForValue().set("key1", "value1");
@@ -43,25 +43,25 @@ public class RedisTransactionOps {
     private final RedisTemplate<String, Object> redisTemplate;
 
     public RedisTransactionOps(RedisTemplate<String, Object> redisTemplate) {
-        this.redisTemplate = Objects.requireNonNull(redisTemplate, "RedisTemplate 涓嶈兘涓?null");
+        this.redisTemplate = Objects.requireNonNull(redisTemplate, "RedisTemplate 不能为 null");
     }
 
     /**
-     * 鍦?Redis 浜嬪姟涓墽琛屾搷浣?
+     * 在 Redis 事务中执行操作
      *
-     * <p>浣跨敤 MULTI/EXEC 鍖呰９鍥炶皟涓殑鎵€鏈夋搷浣滐紝淇濊瘉鍘熷瓙鎬с€?
-     * 鍥炶皟涓€氳繃浼犲叆鐨?{@link RedisTemplate} 鎵ц鐨勬墍鏈夊懡浠ゅ皢鍦ㄤ竴涓簨鍔′腑鎵ц銆?
+     * <p>使用 MULTI/EXEC 包裹回调中的所有操作，保证原子性。
+     * 回调中通过传入的 {@link RedisTemplate} 执行的所有命令将在一个事务中执行。
      *
-     * <p><b>娉ㄦ剰锛?/b>浜嬪姟涓殑鍛戒护涓嶄細绔嬪嵆鎵ц锛岃€屾槸鍦?EXEC 鏃舵壒閲忔墽琛岋紝
-     * 鍥犳浜嬪姟涓棤娉曡幏鍙栦腑闂寸粨鏋滐紙濡?GET 鐨勮繑鍥炲€硷級銆?
+     * <p><b>注意：</b>事务中的命令不会立即执行，而是在 EXEC 时批量执行，
+     * 因此事务中无法获取中间结果（如 GET 的返回值）。
      *
-     * @param callback 浜嬪姟鍥炶皟鍑芥暟锛屽弬鏁颁负 RedisTemplate 瀹炰緥
-     * @param <T>      鍥炶皟杩斿洖鍊肩被鍨?
-     * @return 浜嬪姟鎵ц缁撴灉鍒楄〃锛圗XEC 杩斿洖鍊硷級锛屽け璐ユ椂杩斿洖 null
+     * @param callback 事务回调函数，参数为 RedisTemplate 实例
+     * @param <T>      回调返回值类型
+     * @return 事务执行结果列表（EXEC 返回值），失败时返回 null
      */
     public <T> List<Object> executeInTransaction(Function<RedisTemplate<String, Object>, T> callback) {
         if (callback == null) {
-            log.warn("銆怰edis銆戜簨鍔℃墽琛屽け璐ワ細鍥炶皟鍑芥暟涓嶈兘涓虹┖");
+            log.warn("【Redis】事务执行失败：回调函数不能为空");
             return null;
         }
         try {
@@ -80,23 +80,23 @@ public class RedisTransactionOps {
                 }
             });
         } catch (Exception e) {
-            log.error("銆怰edis銆戜簨鍔℃墽琛屽け璐?| error={}", e.getMessage());
+            log.error("【Redis】事务执行失败 | error={}", e.getMessage());
             return null;
         }
     }
 
     /**
-     * 鍦?Redis 浜嬪姟涓墽琛屾搷浣滐紙鏃犺繑鍥炲€肩増鏈級
+     * 在 Redis 事务中执行操作（无返回值版本）
      *
-     * <p>浣跨敤 MULTI/EXEC 鍖呰９鍥炶皟涓殑鎵€鏈夋搷浣滐紝淇濊瘉鍘熷瓙鎬с€?
-     * 閫傜敤浜庝笉闇€瑕佸鐞嗕簨鍔¤繑鍥炵粨鏋滅殑鍦烘櫙銆?
+     * <p>使用 MULTI/EXEC 包裹回调中的所有操作，保证原子性。
+     * 适用于不需要处理事务返回结果的场景。
      *
-     * @param callback 浜嬪姟鍥炶皟鍑芥暟锛屽弬鏁颁负 RedisTemplate 瀹炰緥
-     * @return true-浜嬪姟鎵ц鎴愬姛锛宖alse-浜嬪姟鎵ц澶辫触
+     * @param callback 事务回调函数，参数为 RedisTemplate 实例
+     * @return true-事务执行成功，false-事务执行失败
      */
     public boolean executeInTransaction(Runnable callback) {
         if (callback == null) {
-            log.warn("銆怰edis銆戜簨鍔℃墽琛屽け璐ワ細鍥炶皟鍑芥暟涓嶈兘涓虹┖");
+            log.warn("【Redis】事务执行失败：回调函数不能为空");
             return false;
         }
         try {
@@ -116,7 +116,7 @@ public class RedisTransactionOps {
             });
             return results != null;
         } catch (Exception e) {
-            log.error("銆怰edis銆戜簨鍔℃墽琛屽け璐?| error={}", e.getMessage());
+            log.error("【Redis】事务执行失败 | error={}", e.getMessage());
             return false;
         }
     }

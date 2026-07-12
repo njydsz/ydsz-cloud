@@ -13,21 +13,26 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * 瀹夊叏鍝嶅簲澶磋繃婊ゅ櫒
+ * 安全响应头过滤器
  *
- * <p>涓?HTTP 鍝嶅簲娣诲姞瀹夊叏鐩稿叧鐨勫ご閮紝闃叉甯歌 Web 瀹夊叏濞佽儊锛? * <ul>
- *   <li>X-Content-Type-Options: nosniff - 闃叉 MIME 绫诲瀷鍡呮帰</li>
- *   <li>X-Frame-Options: DENY - 闃叉鐐瑰嚮鍔寔</li>
- *   <li>X-XSS-Protection: 1; mode=block - 鍚敤娴忚鍣?XSS 杩囨护</li>
- *   <li>Strict-Transport-Security - 寮哄埗 HTTPS</li>
- *   <li>Content-Security-Policy - 鍐呭瀹夊叏绛栫暐</li>
- *   <li>Referrer-Policy - 鎺у埗 Referer 澶?/li>
+ * <p>为 HTTP 响应添加安全相关的头部，防止常见 Web 安全威胁：
+ * <ul>
+ *   <li>X-Content-Type-Options: nosniff - 防止 MIME 类型嗅探</li>
+ *   <li>X-Frame-Options: DENY - 防止点击劫持</li>
+ *   <li>X-XSS-Protection: 1; mode=block - 启用浏览器 XSS 过滤</li>
+ *   <li>Strict-Transport-Security - 强制 HTTPS</li>
+ *   <li>Content-Security-Policy - 内容安全策略</li>
+ *   <li>Referrer-Policy - 控制 Referer 头</li>
  * </ul>
  *
- * <p>鎵€鏈夊ご閮ㄥ€煎潎閫氳繃 {@link BaseSecurityHeadersProperties} 閰嶇疆锛屾敮鎸佹帓闄ょ壒瀹氳矾寰勩€? *
- * <p>鎵ц椤哄簭锛歿@code Ordered.HIGHEST_PRECEDENCE + 20}锛岀‘淇濆湪涓氬姟閫昏緫涔嬪墠鎵ц銆? *
- * <p><b>涓?safe 妯″潡鐨勫叧绯伙細</b>
- * 鏈繃婊ゅ櫒涓?base 妯″潡鐨勫厹搴曞疄鐜帮紝浠呭湪鏈紩鍏?safe/web/app 妯″潡鏃剁敓鏁堛€? * 褰撻」鐩腑瀛樺湪 web/app 妯″潡鏃讹紝瀹夊叏鍝嶅簲澶寸敱 safe 妯″潡鐨?{@code SecurityHeaderFilter} 缁熶竴绠＄悊銆? *
+ * <p>所有头部值均通过 {@link BaseSecurityHeadersProperties} 配置，支持排除特定路径。
+ *
+ * <p>执行顺序：{@code Ordered.HIGHEST_PRECEDENCE + 20}，确保在业务逻辑之前执行。
+ *
+ * <p><b>与 safe 模块的关系：</b>
+ * 本过滤器为 base 模块的兜底实现，仅在未引入 safe/web/app 模块时生效。
+ * 当项目中存在 web/app 模块时，安全响应头由 safe 模块的 {@code SecurityHeaderFilter} 统一管理。
+ *
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
@@ -45,8 +50,10 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
     private final BaseSecurityHeadersProperties properties;
 
     /**
-     * 鏋勯€犲畨鍏ㄥ搷搴斿ご杩囨护鍣?     *
-     * @param properties 瀹夊叏澶撮儴閰嶇疆灞炴€?     */
+     * 构造安全响应头过滤器
+     *
+     * @param properties 安全头部配置属性
+     */
     public SecurityHeadersFilter(BaseSecurityHeadersProperties properties) {
         this.properties = properties;
     }
@@ -62,8 +69,9 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 娣诲姞瀹夊叏鍝嶅簲澶?     *
-     * @param response HTTP 鍝嶅簲瀵硅薄
+     * 添加安全响应头
+     *
+     * @param response HTTP 响应对象
      */
     private void addSecurityHeaders(HttpServletResponse response) {
         addHeaderIfNotEmpty(response, HEADER_X_CONTENT_TYPE_OPTIONS, properties.getContentTypeOptions());
@@ -81,9 +89,11 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 鍒ゆ柇璇锋眰璺緞鏄惁闇€瑕佹帓闄ゅ畨鍏ㄥご閮?     *
-     * @param request HTTP 璇锋眰
-     * @return 鏄惁闇€瑕佹帓闄?     */
+     * 判断请求路径是否需要排除安全头部
+     *
+     * @param request HTTP 请求
+     * @return 是否需要排除
+     */
     private boolean isExcluded(HttpServletRequest request) {
         List<String> excludes = properties.getExcludes();
         if (excludes == null || excludes.isEmpty()) {

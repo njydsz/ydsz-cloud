@@ -11,14 +11,14 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 import java.io.IOException;
 
 /**
- * 璇锋眰浣撶紦瀛樿繃婊ゅ櫒鎶借薄鍩虹被
+ * 请求体缓存过滤器抽象基类
  *
- * <p>鍖呰璇锋眰涓?{@link ContentCachingRequestWrapper}锛屾敮鎸佽姹備綋澶氭璇诲彇銆?
- * 璺宠繃 multipart 璇锋眰锛岄伩鍏嶅ぇ鏂囦欢涓婁紶鍦烘櫙涓嬬殑鍐呭瓨闂銆?/p>
+ * <p>包装请求为 {@link ContentCachingRequestWrapper}，支持请求体多次读取。
+ * 跳过 multipart 请求，避免大文件上传场景下的内存问题。</p>
  *
- * <p>榛樿缂撳瓨瀹归噺 512KB锛岃秴杩囬儴鍒嗕笉缂撳瓨锛堜笉浼?OOM锛夈€傚彲鐢卞瓙绫绘瀯閫犲櫒鑷畾涔夈€?/p>
+ * <p>默认缓存容量 512KB，超过部分不缓存（不会 OOM）。可由子类构造器自定义。</p>
  *
- * <p>Web 绔拰 App 绔户鎵挎鍩虹被鍗冲彲锛屾棤闇€閲嶅瀹炵幇銆?/p>
+ * <p>Web 端和 App 端继承此基类即可，无需重复实现。</p>
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -27,30 +27,30 @@ import java.io.IOException;
 public abstract class AbstractContentCachingFilter extends OncePerRequestFilter {
 
     /**
-     * 榛樿缂撳瓨瀹归噺锛堝瓧鑺傦紝512KB锛夈€?
+     * 默认缓存容量（字节，512KB）。
      *
-     * <p>璇存槑锛欳ontentCachingRequestWrapper 鍦ㄨ秴杩?cacheCapacity 鏃朵笉浼氭姏閿欙紝
-     * 鍙槸鎴柇缂撳瓨銆?12KB 閫傚悎鍏稿瀷 JSON 璇锋眰浣擄紱濡傞渶鏀寔鏇村ぇ璇锋眰锛?
-     * 鍙敱瀛愮被浼犲叆鏇村ぇ鐨?cacheCapacity銆?/p>
+     * <p>说明：ContentCachingRequestWrapper 在超过 cacheCapacity 时不会抛错，
+     * 只是截断缓存。512KB 适合典型 JSON 请求体；如需支持更大请求，
+     * 可由子类传入更大的 cacheCapacity。</p>
      */
     protected static final int DEFAULT_CACHE_CAPACITY = 512 * 1024;
 
     /**
-     * 缂撳瓨瀹归噺锛堝瓧鑺傦級
+     * 缓存容量（字节）
      */
     private int cacheCapacity;
 
     /**
-     * 浣跨敤榛樿缂撳瓨瀹归噺鏋勯€?
+     * 使用默认缓存容量构造
      */
     protected AbstractContentCachingFilter() {
         this(DEFAULT_CACHE_CAPACITY);
     }
 
     /**
-     * 浣跨敤鎸囧畾缂撳瓨瀹归噺鏋勯€?
+     * 使用指定缓存容量构造
      *
-     * @param cacheCapacity 缂撳瓨瀹归噺锛堝瓧鑺傦級
+     * @param cacheCapacity 缓存容量（字节）
      */
     protected AbstractContentCachingFilter(int cacheCapacity) {
         this.cacheCapacity = cacheCapacity > 0 ? cacheCapacity : DEFAULT_CACHE_CAPACITY;
@@ -68,7 +68,7 @@ public abstract class AbstractContentCachingFilter extends OncePerRequestFilter 
     }
 
     /**
-     * 鍒ゆ柇鏄惁涓?multipart 璇锋眰
+     * 判断是否为 multipart 请求
      */
     protected boolean isMultipart(HttpServletRequest request) {
         String contentType = request.getContentType();
@@ -76,9 +76,9 @@ public abstract class AbstractContentCachingFilter extends OncePerRequestFilter 
     }
 
     /**
-     * 鑾峰彇缂撳瓨瀹归噺锛堝彲鐢卞瓙绫婚噸鍐欎互鏀寔鍔ㄦ€侀厤缃級
+     * 获取缓存容量（可由子类重写以支持动态配置）
      *
-     * @return 缂撳瓨瀹归噺锛堝瓧鑺傦級
+     * @return 缓存容量（字节）
      */
     protected int getCacheCapacity() {
         return cacheCapacity;

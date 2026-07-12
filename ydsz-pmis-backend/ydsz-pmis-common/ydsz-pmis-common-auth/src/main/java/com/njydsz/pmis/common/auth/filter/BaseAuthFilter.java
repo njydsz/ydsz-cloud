@@ -17,8 +17,9 @@ import java.io.IOException;
 import java.util.Set;
 
 /**
- * 璁よ瘉杩囨护鍣ㄦ娊璞″熀绫? *
- * <p>鎻愬彇 Web 绔拰 App 绔璇佽繃婊ゅ櫒鐨勫叕鍏遍€昏緫銆?/p>
+ * 认证过滤器抽象基类
+ *
+ * <p>提取 Web 端和 App 端认证过滤器的公共逻辑。</p>
  *
  * @author Marvin Lee
  * @version 3.5.0
@@ -40,13 +41,13 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
         String servletPath = request.getServletPath();
         doPreAuth(request, response);
         if (shouldSkipAuth(request)) {
-            log.debug("{}[璺宠繃璁よ瘉] 璇锋眰璺緞: {}", getLogPrefix(), servletPath);
+            log.debug("{}[跳过认证] 请求路径: {}", getLogPrefix(), servletPath);
             filterChain.doFilter(request, response);
             return;
         }
         long startTime = System.currentTimeMillis();
         AuthInfo authInfo = resolveAuthInfo(request, response);
-        log.debug("{}璇锋眰璺緞: {}, 璁よ瘉淇℃伅宸插啓鍏ヤ笂涓嬫枃", getLogPrefix(), servletPath);
+        log.debug("{}请求路径: {}, 认证信息已写入上下文", getLogPrefix(), servletPath);
         RequestHolder.add(authInfo);
         RequestHolder.add(request);
         try {

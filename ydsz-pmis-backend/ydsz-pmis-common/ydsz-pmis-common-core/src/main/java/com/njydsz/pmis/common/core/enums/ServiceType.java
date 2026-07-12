@@ -35,7 +35,7 @@ public enum ServiceType implements TypeEnum<String> {
      * 管理端服务
      * <p>用于Web管理后台的请求，路径前缀为 /web-api/**
      */
-    WEB_SERVICE("webService", "/web-api/**", "管理端服务"),
+    WEB_SERVICE("webService", "/web-api/**", "网页端服务"),
 
     /**
      * 移动端服务

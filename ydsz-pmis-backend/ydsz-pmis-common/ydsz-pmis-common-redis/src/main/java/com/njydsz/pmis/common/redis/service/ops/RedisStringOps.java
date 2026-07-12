@@ -25,17 +25,17 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
- * Redis String / Bitmap 鎿嶄綔缁勪欢
+ * Redis String / Bitmap 操作组件
  *
- * <p>浠?{@code RedisService} 鎸夋暟鎹被鍨嬫媶鍒嗚€屾潵锛岃亴璐ｅ崟涓€锛屼究浜庣淮鎶ゃ€?
- * 鍖呭惈锛氶€氱敤鎿嶄綔銆丼tring 鎿嶄綔銆丅itmap 鎿嶄綔銆?
+ * <p>从 {@code RedisService} 按数据类型拆分而来，职责单一，便于维护。
+ * 包含：通用操作、String 操作、Bitmap 操作。
  *
- * <p><b>澧炲己鐗规€э細</b>
+ * <p><b>增强特性：</b>
  * <ul>
- *   <li>Lua 鑴氭湰淇濊瘉 getOrCompute 閿侀噴鏀剧殑鍘熷瓙鎬?/li>
- *   <li>Micrometer 鎸囨爣閲囬泦锛堝彲閫夛級</li>
- *   <li>杩囨湡鏃堕棿闅忔満鍋忕Щ闃叉缂撳瓨闆穿</li>
- *   <li>缁熶竴 Key 鍓嶇紑锛屾敮鎸佸搴旂敤鍏变韩 Redis</li>
+ *   <li>Lua 脚本保证 getOrCompute 锁释放的原子性</li>
+ *   <li>Micrometer 指标采集（可选）</li>
+ *   <li>过期时间随机偏移防止缓存雪崩</li>
+ *   <li>统一 Key 前缀，支持多应用共享 Redis</li>
  * </ul>
  *
  * @author Marvin Lee
@@ -58,13 +58,13 @@ public class RedisStringOps {
     private final RedisProperties redisProperties;
     private final RedisMetricsCollector metricsCollector;
 
-    /** Lua 鑴氭湰 SHA1 缂撳瓨锛岄伩鍏嶆瘡娆℃墽琛岄兘鍙戦€佸畬鏁磋剼鏈?*/
+    /** Lua 脚本 SHA1 缓存，避免每次执行都发送完整脚本 */
     private final ConcurrentHashMap<String, String> scriptShaCache = new ConcurrentHashMap<>();
 
-    // ============================ 閫氱敤鎿嶄綔 =============================
+    // ============================ 通用操作 =============================
 
     /**
-     * 鏍煎紡鍖?Key锛屾坊鍔犵粺涓€鍓嶇紑
+     * 格式化 Key，添加统一前缀
      */
     private String formatKey(String key) {
         if (key == null) {
@@ -79,14 +79,14 @@ public class RedisStringOps {
 
     @PostConstruct
     public void init() {
-        Objects.requireNonNull(redisTemplate, "RedisTemplate 鏈纭垵濮嬪寲");
-        Objects.requireNonNull(redisTemplate.getConnectionFactory(), "RedisConnectionFactory 鏈厤缃?);
+        Objects.requireNonNull(redisTemplate, "RedisTemplate 未正确初始化");
+        Objects.requireNonNull(redisTemplate.getConnectionFactory(), "RedisConnectionFactory 未配置");
         String prefix = redisProperties != null ? redisProperties.getKeyPrefix() : null;
-        log.info("銆怰edis銆慠edisStringOps 鍒濆鍖栧畬鎴?| keyPrefix={}", prefix == null || prefix.isEmpty() ? "鏃? : prefix);
+        log.info("【Redis】RedisStringOps 初始化完成 | keyPrefix={}", prefix == null || prefix.isEmpty() ? "无" : prefix);
     }
 
     /**
-     * 鎵归噺鏍煎紡鍖?Keys
+     * 批量格式化 Keys
      */
     private List<String> formatKeys(Collection<String> keys) {
         if (keys == null) {
@@ -96,11 +96,11 @@ public class RedisStringOps {
     }
 
     /**
-     * 璁剧疆閿殑杩囨湡鏃堕棿
+     * 设置键的过期时间
      *
-     * @param key  閿?
-     * @param time 杩囨湡鏃堕棿锛堢锛?
-     * @return true-璁剧疆鎴愬姛锛宖alse-璁剧疆澶辫触鎴栭敭涓嶅瓨鍦?
+     * @param key  键
+     * @param time 过期时间（秒）
+     * @return true-设置成功，false-设置失败或键不存在
      */
     public boolean expire(String key, long time) {
         if (key == null || time <= 0) {
@@ -113,17 +113,17 @@ public class RedisStringOps {
                     : Boolean.TRUE.equals(redisTemplate.expire(formattedKey, Duration.ofSeconds(time)));
         } catch (Exception e) {
             recordError("expire", e);
-            log.error("銆怰edis銆戣缃繃鏈熸椂闂村け璐?| key={} | time={} | error={}", key, time, e);
+            log.error("【Redis】设置过期时间失败 | key={} | time={} | error={}", key, time, e);
             return false;
         }
     }
 
     /**
-     * 璁剧疆閿殑杩囨湡鏃堕棿锛堜娇鐢?Duration锛?
+     * 设置键的过期时间（使用 Duration）
      *
-     * @param key     閿?
-     * @param duration 杩囨湡鏃堕棿
-     * @return true-璁剧疆鎴愬姛锛宖alse-璁剧疆澶辫触
+     * @param key     键
+     * @param duration 过期时间
+     * @return true-设置成功，false-设置失败
      */
     public boolean expire(String key, Duration duration) {
         if (key == null || duration == null || duration.isNegative() || duration.isZero()) {
@@ -136,16 +136,16 @@ public class RedisStringOps {
                     : Boolean.TRUE.equals(redisTemplate.expire(formattedKey, duration));
         } catch (Exception e) {
             recordError("expire", e);
-            log.error("銆怰edis銆戣缃繃鏈熸椂闂村け璐?| key={} | duration={} | error={}", key, duration, e);
+            log.error("【Redis】设置过期时间失败 | key={} | duration={} | error={}", key, duration, e);
             return false;
         }
     }
 
     /**
-     * 鑾峰彇閿殑杩囨湡鏃堕棿
+     * 获取键的过期时间
      *
-     * @param key 閿?
-     * @return 杩囨湡鏃堕棿锛堢锛夛紝-1-姘镐箙鏈夋晥锛?2-閿笉瀛樺湪
+     * @param key 键
+     * @return 过期时间（秒），-1-永久有效，-2-键不存在
      */
     public long getExpire(String key) {
         if (key == null) {
@@ -161,16 +161,16 @@ public class RedisStringOps {
                     : Optional.ofNullable(redisTemplate.getExpire(formattedKey, TimeUnit.SECONDS)).orElse(-2L);
         } catch (Exception e) {
             recordError("getExpire", e);
-            log.error("銆怰edis銆戣幏鍙栬繃鏈熸椂闂村け璐?| key={} | error={}", key, e);
+            log.error("【Redis】获取过期时间失败 | key={} | error={}", key, e);
             return -2;
         }
     }
 
     /**
-     * 妫€鏌ラ敭鏄惁瀛樺湪
+     * 检查键是否存在
      *
-     * @param key 閿?
-     * @return true-瀛樺湪锛宖alse-涓嶅瓨鍦?
+     * @param key 键
+     * @return true-存在，false-不存在
      */
     public boolean hasKey(String key) {
         if (key == null) {
@@ -183,15 +183,15 @@ public class RedisStringOps {
                     : Boolean.TRUE.equals(redisTemplate.hasKey(formattedKey));
         } catch (Exception e) {
             recordError("hasKey", e);
-            log.error("銆怰edis銆戞鏌ラ敭鏄惁瀛樺湪澶辫触 | key={} | error={}", key, e);
+            log.error("【Redis】检查键是否存在失败 | key={} | error={}", key, e);
             return false;
         }
     }
 
     /**
-     * 鍒犻櫎閿?
+     * 删除键
      *
-     * @param keys 閿暟缁?
+     * @param keys 键数组
      */
     public void del(String... keys) {
         if (keys == null || keys.length == 0) {
@@ -213,14 +213,14 @@ public class RedisStringOps {
             }
         } catch (Exception e) {
             recordError("del", e);
-            log.error("銆怰edis銆戝垹闄ら敭澶辫触 | keys={} | error={}", Arrays.toString(keys), e);
+            log.error("【Redis】删除键失败 | keys={} | error={}", Arrays.toString(keys), e);
         }
     }
 
     /**
-     * 鍒犻櫎閿紙闆嗗悎褰㈠紡锛?
+     * 删除键（集合形式）
      *
-     * @param keys 閿泦鍚?
+     * @param keys 键集合
      */
     public void del(Collection<String> keys) {
         if (CollectionUtils.isEmpty(keys)) {
@@ -235,15 +235,15 @@ public class RedisStringOps {
             }
         } catch (Exception e) {
             recordError("del", e);
-            log.error("銆怰edis銆戝垹闄ら敭澶辫触 | keys={} | error={}", keys, e);
+            log.error("【Redis】删除键失败 | keys={} | error={}", keys, e);
         }
     }
 
     /**
-     * 鎵归噺鍒犻櫎鍖归厤妯″紡鐨勯敭锛堜娇鐢?SCAN锛屽畨鍏級
+     * 批量删除匹配模式的键（使用 SCAN，安全）
      *
-     * @param pattern 鍖归厤妯″紡锛屽 "user:*"
-     * @return 鍒犻櫎鐨勯敭鏁伴噺
+     * @param pattern 匹配模式，如 "user:*"
+     * @return 删除的键数量
      */
     public long delByPattern(String pattern) {
         if (pattern == null || pattern.isEmpty()) {
@@ -258,29 +258,29 @@ public class RedisStringOps {
             return 0;
         } catch (Exception e) {
             recordError("delByPattern", e);
-            log.error("銆怰edis銆戞壒閲忓垹闄ら敭澶辫触 | pattern={} | error={}", pattern, e);
+            log.error("【Redis】批量删除键失败 | pattern={} | error={}", pattern, e);
             return 0;
         }
     }
 
     /**
-     * 浣跨敤 SCAN 鍛戒护鎼滅储閿紙閬垮厤 KEYS 鍛戒护闃诲锛?
+     * 使用 SCAN 命令搜索键（避免 KEYS 命令阻塞）
      *
-     * <p>榛樿闄愬埗鏈€澶ц繑鍥炴暟閲忎负 10000锛岄槻姝㈠ぇ鏁版嵁閲忓満鏅?OOM銆?
+     * <p>默认限制最大返回数量为 10000，防止大数据量场景 OOM。
      *
-     * @param pattern 鍖归厤妯″紡
-     * @return 鍖归厤鐨勯敭闆嗗悎
+     * @param pattern 匹配模式
+     * @return 匹配的键集合
      */
     public Set<String> scan(String pattern) {
         return scan(pattern, 10000);
     }
 
     /**
-     * 浣跨敤 SCAN 鍛戒护鎼滅储閿紙閬垮厤 KEYS 鍛戒护闃诲锛?
+     * 使用 SCAN 命令搜索键（避免 KEYS 命令阻塞）
      *
-     * @param pattern 鍖归厤妯″紡
-     * @param maxKeys 鏈€澶ц繑鍥為敭鏁伴噺锛堥槻姝?OOM锛?
-     * @return 鍖归厤鐨勯敭闆嗗悎
+     * @param pattern 匹配模式
+     * @param maxKeys 最大返回键数量（防止 OOM）
+     * @return 匹配的键集合
      */
     public Set<String> scan(String pattern, int maxKeys) {
         if (pattern == null || pattern.isEmpty()) {
@@ -305,17 +305,17 @@ public class RedisStringOps {
             return keys;
         } catch (Exception e) {
             recordError("scan", e);
-            log.error("銆怰edis銆慡CAN 鎿嶄綔澶辫触 | pattern={} | error={}", pattern, e);
+            log.error("【Redis】SCAN 操作失败 | pattern={} | error={}", pattern, e);
             return Collections.emptySet();
         }
     }
 
     /**
-     * 閲嶅懡鍚嶉敭
+     * 重命名键
      *
-     * @param oldKey 鏃ч敭鍚?
-     * @param newKey 鏂伴敭鍚?
-     * @return true-閲嶅懡鍚嶆垚鍔?
+     * @param oldKey 旧键名
+     * @param newKey 新键名
+     * @return true-重命名成功
      */
     public boolean rename(String oldKey, String newKey) {
         if (oldKey == null || newKey == null) {
@@ -334,17 +334,17 @@ public class RedisStringOps {
             return true;
         } catch (Exception e) {
             recordError("rename", e);
-            log.error("銆怰edis銆戦噸鍛藉悕閿け璐?| oldKey={} | newKey={} | error={}", oldKey, newKey, e);
+            log.error("【Redis】重命名键失败 | oldKey={} | newKey={} | error={}", oldKey, newKey, e);
             return false;
         }
     }
 
     /**
-     * 褰撴柊閿笉瀛樺湪鏃堕噸鍛藉悕
+     * 当新键不存在时重命名
      *
-     * @param oldKey 鏃ч敭鍚?
-     * @param newKey 鏂伴敭鍚?
-     * @return true-閲嶅懡鍚嶆垚鍔?
+     * @param oldKey 旧键名
+     * @param newKey 新键名
+     * @return true-重命名成功
      */
     public boolean renameIfAbsent(String oldKey, String newKey) {
         if (oldKey == null || newKey == null) {
@@ -358,18 +358,18 @@ public class RedisStringOps {
                     : Boolean.TRUE.equals(redisTemplate.renameIfAbsent(formattedOldKey, formattedNewKey));
         } catch (Exception e) {
             recordError("renameIfAbsent", e);
-            log.error("銆怰edis銆戞潯浠堕噸鍛藉悕澶辫触 | oldKey={} | newKey={} | error={}", oldKey, newKey, e);
+            log.error("【Redis】条件重命名失败 | oldKey={} | newKey={} | error={}", oldKey, newKey, e);
             return false;
         }
     }
 
-    // ============================ String 鎿嶄綔 =============================
+    // ============================ String 操作 =============================
 
     /**
-     * 鑾峰彇鍊?
+     * 获取值
      *
-     * @param key 閿?
-     * @return 鍊硷紝涓嶅瓨鍦ㄦ椂杩斿洖 null銆傚闇€绫诲瀷瀹夊叏杞崲锛岃浣跨敤 {@link #get(String, Class)}
+     * @param key 键
+     * @return 值，不存在时返回 null。如需类型安全转换，请使用 {@link #get(String, Class)}
      */
     public Object get(String key) {
         if (key == null) {
@@ -382,25 +382,25 @@ public class RedisStringOps {
                     : redisTemplate.opsForValue().get(formattedKey);
         } catch (RedisConnectionFailureException e) {
             recordError("get", e);
-            log.error("銆怰edis銆戣繛鎺ュけ璐ワ紝GET 鎿嶄綔闄嶇骇杩斿洖 null | key={} | error={}", key, e);
+            log.error("【Redis】连接失败，GET 操作降级返回 null | key={} | error={}", key, e);
             return null;
         } catch (Exception e) {
             recordError("get", e);
-            log.error("銆怰edis銆慓ET 鎿嶄綔澶辫触 | key={} | error={}", key, e);
+            log.error("【Redis】GET 操作失败 | key={} | error={}", key, e);
             return null;
         }
     }
 
     /**
-     * 鑾峰彇鍊硷紙甯︾被鍨嬭浆鎹級
+     * 获取值（带类型转换）
      *
-     * @param key   閿?
-     * @param clazz 鐩爣绫诲瀷
-     * @param <T>   鍊肩被鍨?
-     * @return 鍊?
+     * @param key   键
+     * @param clazz 目标类型
+     * @param <T>   值类型
+     * @return 值
      */
     public <T> T get(String key, Class<T> clazz) {
-        Objects.requireNonNull(clazz, "鐩爣绫诲瀷涓嶈兘涓?null");
+        Objects.requireNonNull(clazz, "目标类型不能为 null");
         if (key == null) {
             return null;
         }
@@ -415,17 +415,17 @@ public class RedisStringOps {
             String json = JsonUtils.toJson(value);
             return JsonUtils.fromJson(json, clazz);
         } catch (Exception e) {
-            log.error("銆怰edis銆戠被鍨嬭浆鎹㈠け璐?| key={} | targetClass={} | error={}", key, clazz.getName(), e);
+            log.error("【Redis】类型转换失败 | key={} | targetClass={} | error={}", key, clazz.getName(), e);
             return null;
         }
     }
 
     /**
-     * 璁剧疆鍊?
+     * 设置值
      *
-     * @param key   閿?
-     * @param value 鍊?
-     * @return true-璁剧疆鎴愬姛
+     * @param key   键
+     * @param value 值
+     * @return true-设置成功
      */
     public boolean set(String key, Object value) {
         if (key == null) {
@@ -441,22 +441,22 @@ public class RedisStringOps {
             return true;
         } catch (RedisConnectionFailureException e) {
             recordError("set", e);
-            log.error("銆怰edis銆戣繛鎺ュけ璐ワ紝SET 鎿嶄綔闄嶇骇杩斿洖 false | key={} | error={}", key, e);
+            log.error("【Redis】连接失败，SET 操作降级返回 false | key={} | error={}", key, e);
             return false;
         } catch (Exception e) {
             recordError("set", e);
-            log.error("銆怰edis銆慡ET 鎿嶄綔澶辫触 | key={} | error={}", key, e);
+            log.error("【Redis】SET 操作失败 | key={} | error={}", key, e);
             return false;
         }
     }
 
     /**
-     * 璁剧疆鍊硷紙甯﹁繃鏈熸椂闂达紝鑷姩娣诲姞闅忔満鍋忕Щ闃叉闆穿锛?
+     * 设置值（带过期时间，自动添加随机偏移防止雪崩）
      *
-     * @param key   閿?
-     * @param value 鍊?
-     * @param time  杩囨湡鏃堕棿锛堢锛?
-     * @return true-璁剧疆鎴愬姛
+     * @param key   键
+     * @param value 值
+     * @param time  过期时间（秒）
+     * @return true-设置成功
      */
     public boolean set(String key, Object value, long time) {
         if (key == null) {
@@ -474,22 +474,22 @@ public class RedisStringOps {
             return true;
         } catch (RedisConnectionFailureException e) {
             recordError("set", e);
-            log.error("銆怰edis銆戣繛鎺ュけ璐ワ紝SET 鎿嶄綔闄嶇骇杩斿洖 false | key={} | time={} | error={}", key, time, e);
+            log.error("【Redis】连接失败，SET 操作降级返回 false | key={} | time={} | error={}", key, time, e);
             return false;
         } catch (Exception e) {
             recordError("set", e);
-            log.error("銆怰edis銆慡ET 鎿嶄綔澶辫触 | key={} | time={} | error={}", key, time, e);
+            log.error("【Redis】SET 操作失败 | key={} | time={} | error={}", key, time, e);
             return false;
         }
     }
 
     /**
-     * 璁剧疆鍊硷紙甯﹁繃鏈熸椂闂?Duration锛?
+     * 设置值（带过期时间 Duration）
      *
-     * @param key      閿?
-     * @param value    鍊?
-     * @param duration 杩囨湡鏃堕棿
-     * @return true-璁剧疆鎴愬姛
+     * @param key      键
+     * @param value    值
+     * @param duration 过期时间
+     * @return true-设置成功
      */
     public boolean set(String key, Object value, Duration duration) {
         if (key == null || duration == null) {
@@ -507,22 +507,22 @@ public class RedisStringOps {
             return true;
         } catch (RedisConnectionFailureException e) {
             recordError("set", e);
-            log.error("銆怰edis銆戣繛鎺ュけ璐ワ紝SET 鎿嶄綔闄嶇骇杩斿洖 false | key={} | duration={} | error={}", key, duration, e);
+            log.error("【Redis】连接失败，SET 操作降级返回 false | key={} | duration={} | error={}", key, duration, e);
             return false;
         } catch (Exception e) {
             recordError("set", e);
-            log.error("銆怰edis銆慡ET 鎿嶄綔澶辫触 | key={} | duration={} | error={}", key, duration, e);
+            log.error("【Redis】SET 操作失败 | key={} | duration={} | error={}", key, duration, e);
             return false;
         }
     }
 
     /**
-     * 鍙湁鍦ㄩ敭涓嶅瓨鍦ㄦ椂璁剧疆
+     * 只有在键不存在时设置
      *
-     * @param key    閿?
-     * @param value  鍊?
-     * @param expire 杩囨湡鏃堕棿锛堢锛?
-     * @return true-璁剧疆鎴愬姛锛堥敭鍘熸湰涓嶅瓨鍦級
+     * @param key    键
+     * @param value  值
+     * @param expire 过期时间（秒）
+     * @return true-设置成功（键原本不存在）
      */
     public boolean setIfAbsent(String key, Object value, long expire) {
         if (key == null) {
@@ -542,18 +542,18 @@ public class RedisStringOps {
             }
         } catch (Exception e) {
             recordError("setIfAbsent", e);
-            log.error("銆怰edis銆慡ETNX 鎿嶄綔澶辫触 | key={} | expire={} | error={}", key, expire, e);
+            log.error("【Redis】SETNX 操作失败 | key={} | expire={} | error={}", key, expire, e);
             return false;
         }
     }
 
     /**
-     * 鍙湁鍦ㄩ敭瀛樺湪鏃惰缃?
+     * 只有在键存在时设置
      *
-     * @param key    閿?
-     * @param value  鍊?
-     * @param expire 杩囨湡鏃堕棿锛堢锛?
-     * @return true-璁剧疆鎴愬姛锛堥敭鍘熸湰瀛樺湪锛?
+     * @param key    键
+     * @param value  值
+     * @param expire 过期时间（秒）
+     * @return true-设置成功（键原本存在）
      */
     public boolean setIfPresent(String key, Object value, long expire) {
         if (key == null) {
@@ -573,22 +573,22 @@ public class RedisStringOps {
             }
         } catch (Exception e) {
             recordError("setIfPresent", e);
-            log.error("銆怰edis銆慡ETXX 鎿嶄綔澶辫触 | key={} | expire={} | error={}", key, expire, e);
+            log.error("【Redis】SETXX 操作失败 | key={} | expire={} | error={}", key, expire, e);
             return false;
         }
     }
 
     /**
-     * 缂撳瓨绌块€忎繚鎶わ細鑾峰彇缂撳瓨锛岃嫢涓嶅瓨鍦ㄥ垯閫氳繃 supplier 鑾峰彇骞剁紦瀛?
+     * 缓存穿透保护：获取缓存，若不存在则通过 supplier 获取并缓存
      *
-     * <p>浣跨敤 Lua 鑴氭湰淇濊瘉閿侀噴鏀剧殑鍘熷瓙鎬э紙鏍￠獙閿佹寔鏈夎€咃級锛岄槻姝㈣鍒犲叾浠栫嚎绋嬬殑閿併€?
+     * <p>使用 Lua 脚本保证锁释放的原子性（校验锁持有者），防止误删其他线程的锁。
      *
-     * @param key      缂撳瓨閿?
-     * @param expire   杩囨湡鏃堕棿锛堢锛?
-     * @param supplier 鏁版嵁鎻愪緵鍑芥暟
-     * @param clazz    鍊肩被鍨?
-     * @param <T>      鍊肩被鍨?
-     * @return 缂撳瓨鍊?
+     * @param key      缓存键
+     * @param expire   过期时间（秒）
+     * @param supplier 数据提供函数
+     * @param clazz    值类型
+     * @param <T>      值类型
+     * @return 缓存值
      */
     @SuppressWarnings("unchecked")
     public <T> T getOrCompute(String key, long expire, Supplier<T> supplier, Class<T> clazz) {
@@ -651,30 +651,30 @@ public class RedisStringOps {
     }
 
     /**
-     * 缂撳瓨绌块€忎繚鎶わ細鑾峰彇缂撳瓨锛岃嫢涓嶅瓨鍦ㄥ垯閫氳繃 supplier 鑾峰彇骞剁紦瀛橈紙浣跨敤鏋氫妇 Key锛?
+     * 缓存穿透保护：获取缓存，若不存在则通过 supplier 获取并缓存（使用枚举 Key）
      *
-     * @param keyEnum  閿灇涓?
-     * @param arg      閿弬鏁?
-     * @param expire   杩囨湡鏃堕棿锛堢锛?
-     * @param supplier 鏁版嵁鎻愪緵鍑芥暟
-     * @param clazz    鍊肩被鍨?
-     * @param <T>      鍊肩被鍨?
-     * @return 缂撳瓨鍊?
+     * @param keyEnum  键枚举
+     * @param arg      键参数
+     * @param expire   过期时间（秒）
+     * @param supplier 数据提供函数
+     * @param clazz    值类型
+     * @param <T>      值类型
+     * @return 缓存值
      */
     public <T> T getOrCompute(RedisKeysEnum keyEnum, Object arg, long expire, Supplier<T> supplier, Class<T> clazz) {
         return getOrCompute(keyEnum.join(arg), expire, supplier, clazz);
     }
 
     /**
-     * 閫掑鎿嶄綔
+     * 递增操作
      *
-     * @param key   閿?
-     * @param delta 澧為噺锛堝繀椤诲ぇ浜?0锛?
-     * @return 閫掑鍚庣殑鍊?
+     * @param key   键
+     * @param delta 增量（必须大于 0）
+     * @return 递增后的值
      */
     public long incr(String key, long delta) {
         if (key == null || delta <= 0) {
-            throw new IllegalArgumentException("澧為噺蹇呴』澶т簬 0");
+            throw new IllegalArgumentException("增量必须大于 0");
         }
         String formattedKey = formatKey(key);
         try {
@@ -686,21 +686,21 @@ public class RedisStringOps {
                     : Optional.ofNullable(redisTemplate.opsForValue().increment(formattedKey, delta)).orElse(0L);
         } catch (Exception e) {
             recordError("incr", e);
-            log.error("銆怰edis銆慖NCR 鎿嶄綔澶辫触 | key={} | delta={} | error={}", key, delta, e);
+            log.error("【Redis】INCR 操作失败 | key={} | delta={} | error={}", key, delta, e);
             return 0;
         }
     }
 
     /**
-     * 閫掑噺鎿嶄綔
+     * 递减操作
      *
-     * @param key   閿?
-     * @param delta 鍑忛噺锛堝繀椤诲ぇ浜?0锛?
-     * @return 閫掑噺鍚庣殑鍊?
+     * @param key   键
+     * @param delta 减量（必须大于 0）
+     * @return 递减后的值
      */
     public long decr(String key, long delta) {
         if (key == null || delta <= 0) {
-            throw new IllegalArgumentException("鍑忛噺蹇呴』澶т簬 0");
+            throw new IllegalArgumentException("减量必须大于 0");
         }
         String formattedKey = formatKey(key);
         try {
@@ -712,21 +712,21 @@ public class RedisStringOps {
                     : Optional.ofNullable(redisTemplate.opsForValue().increment(formattedKey, -delta)).orElse(0L);
         } catch (Exception e) {
             recordError("decr", e);
-            log.error("銆怰edis銆慏ECR 鎿嶄綔澶辫触 | key={} | delta={} | error={}", key, delta, e);
+            log.error("【Redis】DECR 操作失败 | key={} | delta={} | error={}", key, delta, e);
             return 0;
         }
     }
 
     /**
-     * 鍘熷瓙閫掑锛堟诞鐐规暟锛?
+     * 原子递增（浮点数）
      *
-     * @param key   閿?
-     * @param delta 澧為噺
-     * @return 閫掑鍚庣殑鍊?
+     * @param key   键
+     * @param delta 增量
+     * @return 递增后的值
      */
     public double incrByFloat(String key, double delta) {
         if (key == null) {
-            throw new IllegalArgumentException("閿笉鑳戒负绌?);
+            throw new IllegalArgumentException("键不能为空");
         }
         String formattedKey = formatKey(key);
         try {
@@ -738,16 +738,16 @@ public class RedisStringOps {
                     : Optional.ofNullable(redisTemplate.opsForValue().increment(formattedKey, delta)).orElse(0.0);
         } catch (Exception e) {
             recordError("incrByFloat", e);
-            log.error("銆怰edis銆慖NCRBYFLOAT 鎿嶄綔澶辫触 | key={} | delta={} | error={}", key, delta, e);
+            log.error("【Redis】INCRBYFLOAT 操作失败 | key={} | delta={} | error={}", key, delta, e);
             return 0.0;
         }
     }
 
     /**
-     * 鎵归噺鑾峰彇鍊?
+     * 批量获取值
      *
-     * @param keys 閿泦鍚?
-     * @return 鍊煎垪琛紙涓?keys 椤哄簭瀵瑰簲锛?
+     * @param keys 键集合
+     * @return 值列表（与 keys 顺序对应）
      */
     public List<String> mget(List<String> keys) {
         if (CollectionUtils.isEmpty(keys)) {
@@ -769,18 +769,18 @@ public class RedisStringOps {
                     .collect(Collectors.toList());
         } catch (Exception e) {
             recordError("mget", e);
-            log.error("銆怰edis銆慚GET 鎿嶄綔澶辫触 | keys={} | error={}", keys, e);
+            log.error("【Redis】MGET 操作失败 | keys={} | error={}", keys, e);
             return Collections.emptyList();
         }
     }
 
     /**
-     * 鎵归噺鑾峰彇鍊硷紙娉涘瀷鐗堟湰锛?
+     * 批量获取值（泛型版本）
      *
-     * @param keys  閿泦鍚?
-     * @param clazz 鍊肩被鍨?
-     * @param <T>   鍊肩被鍨?
-     * @return 鍊煎垪琛?
+     * @param keys  键集合
+     * @param clazz 值类型
+     * @param <T>   值类型
+     * @return 值列表
      */
     public <T> List<T> mgetObjects(List<String> keys, Class<T> clazz) {
         if (CollectionUtils.isEmpty(keys)) {
@@ -795,20 +795,20 @@ public class RedisStringOps {
             return rawResults.stream().map(clazz::cast).collect(Collectors.toList());
         } catch (Exception e) {
             recordError("mgetObjects", e);
-            log.error("銆怰edis銆慚GET 鎿嶄綔澶辫触 | keys={} | error={}", keys, e);
+            log.error("【Redis】MGET 操作失败 | keys={} | error={}", keys, e);
             return Collections.emptyList();
         }
     }
 
-    // ============================ Bitmap 鎿嶄綔 =============================
+    // ============================ Bitmap 操作 =============================
 
     /**
-     * 璁剧疆浣嶅浘
+     * 设置位图
      *
-     * @param key    閿?
-     * @param offset 鍋忕Щ閲?
-     * @param value  鍊硷紙true-1锛宖alse-0锛?
-     * @return true-璁剧疆鎴愬姛
+     * @param key    键
+     * @param offset 偏移量
+     * @param value  值（true-1，false-0）
+     * @return true-设置成功
      */
     public boolean setBit(String key, long offset, boolean value) {
         if (key == null) {
@@ -821,17 +821,17 @@ public class RedisStringOps {
                     : Boolean.TRUE.equals(redisTemplate.opsForValue().setBit(formattedKey, offset, value));
         } catch (Exception e) {
             recordError("setBit", e);
-            log.error("銆怰edis銆慡ETBIT 鎿嶄綔澶辫触 | key={} | offset={} | error={}", key, offset, e);
+            log.error("【Redis】SETBIT 操作失败 | key={} | offset={} | error={}", key, offset, e);
             return false;
         }
     }
 
     /**
-     * 鑾峰彇浣嶅浘鍊?
+     * 获取位图值
      *
-     * @param key    閿?
-     * @param offset 鍋忕Щ閲?
-     * @return 浣嶅浘鍊?
+     * @param key    键
+     * @param offset 偏移量
+     * @return 位图值
      */
     public boolean getBit(String key, long offset) {
         if (key == null) {
@@ -844,16 +844,16 @@ public class RedisStringOps {
                     : Boolean.TRUE.equals(redisTemplate.opsForValue().getBit(formattedKey, offset));
         } catch (Exception e) {
             recordError("getBit", e);
-            log.error("銆怰edis銆慓ETBIT 鎿嶄綔澶辫触 | key={} | offset={} | error={}", key, offset, e);
+            log.error("【Redis】GETBIT 操作失败 | key={} | offset={} | error={}", key, offset, e);
             return false;
         }
     }
 
     /**
-     * 缁熻浣嶅浘涓€间负 1 鐨勪綅鏁?
+     * 统计位图中值为 1 的位数
      *
-     * @param key 閿?
-     * @return 1 鐨勪綅鏁?
+     * @param key 键
+     * @return 1 的位数
      */
     public long bitCount(String key) {
         if (key == null) {
@@ -871,42 +871,42 @@ public class RedisStringOps {
                             connection.stringCommands().bitCount(formattedKey.getBytes(StandardCharsets.UTF_8)))).orElse(0L);
         } catch (Exception e) {
             recordError("bitCount", e);
-            log.error("銆怰edis銆態ITCOUNT 鎿嶄綔澶辫触 | key={} | error={}", key, e);
+            log.error("【Redis】BITCOUNT 操作失败 | key={} | error={}", key, e);
             return 0;
         }
     }
 
-    // ============================ 鍐呴儴杈呭姪鏂规硶 =============================
+    // ============================ 内部辅助方法 =============================
 
     /**
-     * 浣跨敤 Lua 鑴氭湰瀹夊叏閲婃斁鍒嗗竷寮忛攣锛堟牎楠岄攣鎸佹湁鑰咃級
+     * 使用 Lua 脚本安全释放分布式锁（校验锁持有者）
      *
-     * <p>浣跨敤 EVALSHA 浼樺寲锛氫紭鍏堜娇鐢ㄧ紦瀛樼殑 SHA1 鎵ц鑴氭湰锛屽け璐ユ椂鍥為€€鍒?EVAL銆?
+     * <p>使用 EVALSHA 优化：优先使用缓存的 SHA1 执行脚本，失败时回退到 EVAL。
      *
-     * @param lockKey   閿侀敭
-     * @param lockValue 閿佸€硷紙UUID锛?
+     * @param lockKey   锁键
+     * @param lockValue 锁值（UUID）
      */
     private void releaseLock(String lockKey, String lockValue) {
         try {
             executeScriptWithShaCache(UNLOCK_LUA, Long.class,
                     Collections.singletonList(formatKey(lockKey)), lockValue);
         } catch (Exception e) {
-            log.error("銆怰edis銆戦噴鏀鹃攣澶辫触 | lockKey={} | error={}", lockKey, e);
+            log.error("【Redis】释放锁失败 | lockKey={} | error={}", lockKey, e);
         }
     }
 
     /**
-     * 鎵ц Lua 鑴氭湰锛堝甫 EVALSHA 浼樺寲锛?
+     * 执行 Lua 脚本（带 EVALSHA 优化）
      *
-     * <p>棣栨鎵ц浣跨敤 EVAL 鍙戦€佸畬鏁磋剼鏈紝骞剁紦瀛樿剼鏈殑 SHA1 鍊硷紱
-     * 鍚庣画鎵ц浼樺厛浣跨敤 EVALSHA锛岃嫢 Redis 涓剼鏈凡涓㈠け锛堝閲嶅惎锛夊垯鍥為€€鍒?EVAL銆?
+     * <p>首次执行使用 EVAL 发送完整脚本，并缓存脚本的 SHA1 值；
+     * 后续执行优先使用 EVALSHA，若 Redis 中脚本已丢失（如重启）则回退到 EVAL。
      *
-     * @param script     Lua 鑴氭湰鍐呭
-     * @param returnType 杩斿洖鍊肩被鍨?
-     * @param keys       閿垪琛?
-     * @param args       鍙傛暟鍒楄〃
-     * @param <T>        杩斿洖鍊肩被鍨?
-     * @return 鑴氭湰鎵ц缁撴灉
+     * @param script     Lua 脚本内容
+     * @param returnType 返回值类型
+     * @param keys       键列表
+     * @param args       参数列表
+     * @param <T>        返回值类型
+     * @return 脚本执行结果
      */
     public <T> T executeScriptWithShaCache(String script, Class<T> returnType,
                                             List<String> keys, Object... args) {
@@ -916,36 +916,36 @@ public class RedisStringOps {
         try {
             String cachedSha1 = scriptShaCache.get(script);
             if (cachedSha1 != null) {
-                // 浼樺厛浣跨敤 EVALSHA
+                // 优先使用 EVALSHA
                 try {
                     DefaultRedisScript<T> evalShaScript = new DefaultRedisScript<>(script, returnType);
                     T result = redisTemplate.execute(evalShaScript, keys, args);
                     return result;
                 } catch (Exception e) {
-                    log.debug("銆怰edis銆慐VALSHA 鎵ц澶辫触锛屽洖閫€鍒?EVAL | sha1={} | error={}", cachedSha1, e);
+                    log.debug("【Redis】EVALSHA 执行失败，回退到 EVAL | sha1={} | error={}", cachedSha1, e);
                     scriptShaCache.remove(script);
                 }
             }
-            // 棣栨鎵ц鎴?EVALSHA 鍥為€€锛氫娇鐢?EVAL 鍙戦€佸畬鏁磋剼鏈?
+            // 首次执行或 EVALSHA 回退：使用 EVAL 发送完整脚本
             DefaultRedisScript<T> redisScript = new DefaultRedisScript<>(script, returnType);
             T result = redisTemplate.execute(redisScript, keys, args);
-            // 缂撳瓨 SHA1
+            // 缓存 SHA1
             String computedSha = computeSha1(script);
             if (computedSha != null) {
                 scriptShaCache.put(script, computedSha);
             }
             return result;
         } catch (Exception e) {
-            log.error("銆怰edis銆慙ua 鑴氭湰鎵ц澶辫触 | error={}", e);
+            log.error("【Redis】Lua 脚本执行失败 | error={}", e);
             return null;
         }
     }
 
     /**
-     * 璁＄畻 Lua 鑴氭湰鐨?SHA1 鍊?
+     * 计算 Lua 脚本的 SHA1 值
      *
-     * @param script Lua 鑴氭湰鍐呭
-     * @return SHA1 鍗佸叚杩涘埗瀛楃涓?
+     * @param script Lua 脚本内容
+     * @return SHA1 十六进制字符串
      */
     private String computeSha1(String script) {
         try {
@@ -957,16 +957,16 @@ public class RedisStringOps {
             }
             return sb.toString();
         } catch (NoSuchAlgorithmException e) {
-            log.warn("銆怰edis銆慡HA1 绠楁硶涓嶅彲鐢紝璺宠繃 EVALSHA 缂撳瓨 | error={}", e);
+            log.warn("【Redis】SHA1 算法不可用，跳过 EVALSHA 缓存 | error={}", e);
             return null;
         }
     }
 
     /**
-     * 涓鸿繃鏈熸椂闂存坊鍔犻殢鏈哄亸绉伙紝闃叉缂撳瓨闆穿
+     * 为过期时间添加随机偏移，防止缓存雪崩
      *
-     * @param baseSeconds 鍩虹杩囨湡鏃堕棿锛堢锛?
-     * @return 娣诲姞鍋忕Щ鍚庣殑杩囨湡鏃堕棿
+     * @param baseSeconds 基础过期时间（秒）
+     * @return 添加偏移后的过期时间
      */
     private long addJitter(long baseSeconds) {
         if (baseSeconds <= 0) {
@@ -980,10 +980,10 @@ public class RedisStringOps {
     }
 
     /**
-     * 涓?Duration 娣诲姞闅忔満鍋忕Щ
+     * 为 Duration 添加随机偏移
      *
-     * @param base 鍩虹杩囨湡鏃堕棿
-     * @return 娣诲姞鍋忕Щ鍚庣殑 Duration
+     * @param base 基础过期时间
+     * @return 添加偏移后的 Duration
      */
     private Duration addJitter(Duration base) {
         if (base == null || base.isZero() || base.isNegative()) {
@@ -995,7 +995,7 @@ public class RedisStringOps {
     }
 
     /**
-     * 璁板綍鎸囨爣閿欒
+     * 记录指标错误
      */
     private void recordError(String operationType, Throwable e) {
         if (metricsCollector != null) {

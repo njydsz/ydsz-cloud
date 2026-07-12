@@ -18,19 +18,19 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Redis 杩炴帴宸ュ巶閰嶇疆鍣?
+ * Redis 连接工厂配置器
  *
- * <p>鏍规嵁 {@link RedisClientProperties} 涓殑 clientType 閰嶇疆锛?
- * 鑷姩閫夋嫨骞跺垱寤哄搴旂殑杩炴帴宸ュ巶锛圝edis 鎴?Lettuce锛夈€?
+ * <p>根据 {@link RedisClientProperties} 中的 clientType 配置，
+ * 自动选择并创建对应的连接工厂（Jedis 或 Lettuce）。
  *
- * <p>鏀寔鐨勫姛鑳斤細
+ * <p>支持的功能：
  * <ul>
- *   <li>鏍规嵁瀹㈡埛绔被鍨嬭嚜鍔ㄩ€夋嫨 JedisConnectionFactory 鎴?LettuceConnectionFactory</li>
- *   <li>瀹㈡埛绔敮涓€鎬ф牎楠岋細鍚姩鏃舵娴?classpath 涓槸鍚﹀瓨鍦ㄥ涓?Redis 瀹㈡埛绔紝閬垮厤鍐茬獊</li>
- *   <li>缁熶竴鐨勮繛鎺ユ睜閰嶇疆锛坈ommons-pool2锛?/li>
- *   <li>SSL 閰嶇疆鏀寔</li>
- *   <li>闆嗙兢鎷撴墤鑷€傚簲鍒锋柊锛圠ettuce锛?/li>
- *   <li>瓒呮椂閰嶇疆</li>
+ *   <li>根据客户端类型自动选择 JedisConnectionFactory 或 LettuceConnectionFactory</li>
+ *   <li>客户端唯一性校验：启动时检测 classpath 中是否存在多个 Redis 客户端，避免冲突</li>
+ *   <li>统一的连接池配置（commons-pool2）</li>
+ *   <li>SSL 配置支持</li>
+ *   <li>集群拓扑自适应刷新（Lettuce）</li>
+ *   <li>超时配置</li>
  * </ul>
  *
  * @author Marvin Lee
@@ -47,20 +47,20 @@ public class RedisConnectionFactoryConfigurer {
     private static final String JEDIS_CLIENT_CLASS = "redis.clients.jedis.Jedis";
 
     /**
-     * 瀹㈡埛绔敮涓€鎬ф牎楠屾爣璁帮紝纭繚鍙墽琛屼竴娆?
+     * 客户端唯一性校验标记，确保只执行一次
      */
     private static final AtomicBoolean CLIENT_VALIDATED = new AtomicBoolean(false);
 
     /**
-     * 鏍规嵁瀹㈡埛绔被鍨嬪垱寤鸿繛鎺ュ伐鍘?
+     * 根据客户端类型创建连接工厂
      *
-     * <p>鍒涘缓鍓嶄細鎵ц瀹㈡埛绔敮涓€鎬ф牎楠岋紝纭繚 classpath 涓笉浼氬悓鏃跺瓨鍦?
-     * Lettuce 鍜?Jedis 涓や釜瀹㈡埛绔簱锛岄伩鍏嶈繍琛屾椂鍐茬獊銆?
+     * <p>创建前会执行客户端唯一性校验，确保 classpath 中不会同时存在
+     * Lettuce 和 Jedis 两个客户端库，避免运行时冲突。
      *
-     * @param properties       Redis 閰嶇疆灞炴€?
-     * @param clientProperties 瀹㈡埛绔厤缃睘鎬?
-     * @return RedisConnectionFactory 瀹炰緥
-     * @throws IllegalStateException 濡傛灉妫€娴嬪埌澶氫釜 Redis 瀹㈡埛绔?
+     * @param properties       Redis 配置属性
+     * @param clientProperties 客户端配置属性
+     * @return RedisConnectionFactory 实例
+     * @throws IllegalStateException 如果检测到多个 Redis 客户端
      */
     public RedisConnectionFactory createConnectionFactory(RedisProperties properties,
                                                           RedisClientProperties clientProperties) {
@@ -84,19 +84,19 @@ public class RedisConnectionFactoryConfigurer {
     }
 
     /**
-     * 鏍￠獙 Redis 瀹㈡埛绔敮涓€鎬?
+     * 校验 Redis 客户端唯一性
      *
-     * <p>妫€娴?classpath 涓槸鍚﹀悓鏃跺瓨鍦?Lettuce 鍜?Jedis 涓や釜瀹㈡埛绔簱銆?
-     * 濡傛灉鍚屾椂瀛樺湪锛屾姏鍑哄紓甯告彁绀虹敤鎴锋帓闄ゅ叾涓竴涓紝閬垮厤杩愯鏃跺啿绐併€?
+     * <p>检测 classpath 中是否同时存在 Lettuce 和 Jedis 两个客户端库。
+     * 如果同时存在，抛出异常提示用户排除其中一个，避免运行时冲突。
      *
-     * <p>鏍￠獙閫昏緫锛?
+     * <p>校验逻辑：
      * <ul>
-     *   <li>浣跨敤 CAS 纭繚鍙墽琛屼竴娆℃牎楠?/li>
-     *   <li>閫氳繃 ClassUtils.isPresent 妫€娴嬬被鏄惁瀛樺湪</li>
-     *   <li>鍚屾椂瀛樺湪鏃舵姏鍑?IllegalStateException</li>
+     *   <li>使用 CAS 确保只执行一次校验</li>
+     *   <li>通过 ClassUtils.isPresent 检测类是否存在</li>
+     *   <li>同时存在时抛出 IllegalStateException</li>
      * </ul>
      *
-     * @throws IllegalStateException 濡傛灉鍚屾椂妫€娴嬪埌 Lettuce 鍜?Jedis
+     * @throws IllegalStateException 如果同时检测到 Lettuce 和 Jedis
      */
     private void validateClientUniqueness() {
         if (CLIENT_VALIDATED.compareAndSet(false, true)) {
@@ -105,8 +105,8 @@ public class RedisConnectionFactoryConfigurer {
 
             if (lettucePresent && jedisPresent) {
                 throw new IllegalStateException(
-                        "妫€娴嬪埌 Redis 瀹㈡埛绔啿绐侊細classpath 涓悓鏃跺瓨鍦?Lettuce 鍜?Jedis銆? +
-                        "璇峰湪 pom.xml 涓帓闄ゅ叾涓竴涓紝渚嬪锛? +
+                        "检测到 Redis 客户端冲突：classpath 中同时存在 Lettuce 和 Jedis。" +
+                        "请在 pom.xml 中排除其中一个，例如：" +
                         " <exclusion><groupId>redis.clients</groupId><artifactId>jedis</artifactId></exclusion>"
                 );
             }
@@ -114,7 +114,7 @@ public class RedisConnectionFactoryConfigurer {
     }
 
     /**
-     * 鍒涘缓 Jedis 杩炴帴宸ュ巶
+     * 创建 Jedis 连接工厂
      */
     private JedisConnectionFactory createJedisConnectionFactory(RedisProperties properties,
                                                                  RedisClientProperties clientProperties,
@@ -138,7 +138,7 @@ public class RedisConnectionFactoryConfigurer {
     }
 
     /**
-     * 鍒涘缓 Lettuce 杩炴帴宸ュ巶
+     * 创建 Lettuce 连接工厂
      */
     private LettuceConnectionFactory createLettuceConnectionFactory(RedisProperties properties,
                                                                      RedisClientProperties clientProperties,
@@ -168,7 +168,7 @@ public class RedisConnectionFactoryConfigurer {
     }
 
     /**
-     * 鏋勫缓 Jedis 瀹㈡埛绔厤缃?
+     * 构建 Jedis 客户端配置
      */
     @SuppressWarnings("rawtypes")
     private JedisClientConfiguration buildJedisClientConfiguration(RedisClientProperties clientProperties,
@@ -193,7 +193,7 @@ public class RedisConnectionFactoryConfigurer {
     }
 
     /**
-     * 鏋勫缓 Lettuce 瀹㈡埛绔厤缃?
+     * 构建 Lettuce 客户端配置
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
     private LettuceClientConfiguration buildLettuceClientConfiguration(RedisProperties properties,
@@ -240,7 +240,7 @@ public class RedisConnectionFactoryConfigurer {
     }
 
     /**
-     * 灏嗛厤缃枃浠剁殑璇荤瓥鐣ユ槧灏勪负 Lettuce 鐨?ReadFrom
+     * 将配置文件的读策略映射为 Lettuce 的 ReadFrom
      */
     private ReadFrom resolveReadFrom(RedisClientProperties clientProperties) {
         if (clientProperties == null || clientProperties.getReadFrom() == null) {
@@ -248,7 +248,7 @@ public class RedisConnectionFactoryConfigurer {
         }
         RedisClientProperties.ReadFrom configured = clientProperties.getReadFrom();
         return switch (configured) {
-            case MASTER, UPSTREAM -> null; // Lettuce 榛樿灏辨槸 UPSTREAM锛屾棤闇€鏄惧紡璁剧疆
+            case MASTER, UPSTREAM -> null; // Lettuce 默认就是 UPSTREAM，无需显式设置
             case MASTER_PREFERRED, UPSTREAM_PREFERRED -> ReadFrom.UPSTREAM_PREFERRED;
             case REPLICA_PREFERRED -> ReadFrom.REPLICA_PREFERRED;
             case REPLICA -> ReadFrom.REPLICA;
@@ -258,7 +258,7 @@ public class RedisConnectionFactoryConfigurer {
     }
 
     /**
-     * 鏋勫缓閫氱敤杩炴帴姹犻厤缃?
+     * 构建通用连接池配置
      */
     @SuppressWarnings("rawtypes")
     private GenericObjectPoolConfig buildGenericPoolConfig(RedisClientProperties.Pool poolConfig) {
@@ -277,13 +277,13 @@ public class RedisConnectionFactoryConfigurer {
     }
 
     /**
-     * 鏋勫缓 Lettuce 瀹㈡埛绔€夐」锛氳嚜鍔ㄩ噸杩?+ 闆嗙兢鎷撴墤鍒锋柊
+     * 构建 Lettuce 客户端选项：自动重连 + 集群拓扑刷新
      */
     private ClientOptions buildLettuceClientOptions(RedisProperties properties) {
         if (properties.getCluster() != null && properties.getCluster().getNodes() != null
                 && !properties.getCluster().getNodes().isEmpty()) {
-            // Lettuce 7.x: 鑷€傚簲鍒锋柊瑙﹀彂鍣ㄩ粯璁ゅ叏閮ㄥ惎鐢紙DEFAULT_ADAPTIVE_REFRESH_TRIGGERS锛夛紝
-            // 鏃犻渶鏄惧紡璋冪敤 enableAdaptiveRefreshTrigger锛堝凡寮冪敤锛夛紝浠呴渶閰嶇疆鍛ㄦ湡鍒锋柊
+            // Lettuce 7.x: 自适应刷新触发器默认全部启用（DEFAULT_ADAPTIVE_REFRESH_TRIGGERS），
+            // 无需显式调用 enableAdaptiveRefreshTrigger（已弃用），仅需配置周期刷新
             ClusterTopologyRefreshOptions topologyRefreshOptions = ClusterTopologyRefreshOptions.builder()
                     .enablePeriodicRefresh(Duration.ofSeconds(DEFAULT_TOPOLOGY_REFRESH_SECONDS))
                     .build();
@@ -301,7 +301,7 @@ public class RedisConnectionFactoryConfigurer {
     }
 
     /**
-     * 鍒ゆ柇鏄惁鍚敤 SSL
+     * 判断是否启用 SSL
      */
     private boolean isSslEnabled(RedisClientProperties clientProperties) {
         if (clientProperties != null && clientProperties.getSsl() != null) {
@@ -311,7 +311,7 @@ public class RedisConnectionFactoryConfigurer {
     }
 
     /**
-     * 鏋勫缓鍗曟満妯″紡閰嶇疆
+     * 构建单机模式配置
      */
     private RedisStandaloneConfiguration buildStandaloneConfig(RedisProperties properties) {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
@@ -326,7 +326,7 @@ public class RedisConnectionFactoryConfigurer {
     }
 
     /**
-     * 鏋勫缓闆嗙兢妯″紡閰嶇疆
+     * 构建集群模式配置
      */
     private RedisClusterConfiguration buildClusterConfig(RedisProperties properties) {
         if (properties.getCluster() == null || properties.getCluster().getNodes() == null
@@ -341,7 +341,7 @@ public class RedisConnectionFactoryConfigurer {
     }
 
     /**
-     * 鏋勫缓鍝ㄥ叺妯″紡閰嶇疆
+     * 构建哨兵模式配置
      */
     private RedisSentinelConfiguration buildSentinelConfig(RedisProperties properties) {
         if (properties.getSentinel() == null || properties.getSentinel().getMaster() == null) {
@@ -356,7 +356,7 @@ public class RedisConnectionFactoryConfigurer {
     }
 
     /**
-     * 鏋勫缓 Redis 鑺傜偣鍒楄〃
+     * 构建 Redis 节点列表
      */
     private java.util.List<RedisNode> buildRedisNodes(java.util.Collection<String> nodes) {
         java.util.List<RedisNode> redisNodes = new java.util.ArrayList<>();

@@ -15,7 +15,8 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * 瀹夊叏鍝嶅簲澶磋繃婊ゅ櫒锛圵eb/App 鍏变韩鎶借薄鍩虹被锛? *
+ * 安全响应头过滤器（Web/App 共享抽象基类）
+ *
  * @author Marvin Lee
  * @version 3.5.0
  */
@@ -35,7 +36,7 @@ public class BaseSecurityHeaderFilter extends OncePerRequestFilter {
         }
         addSecurityHeaders(response);
         filterChain.doFilter(request, response);
-        log.debug("瀹夊叏鍝嶅簲澶村凡娣诲姞鍒拌姹?{} 鐨勫搷搴斾腑", request.getRequestURI());
+        log.debug("安全响应头已添加到请求 {} 的响应中", request.getRequestURI());
     }
 
     private void addSecurityHeaders(HttpServletResponse response) {

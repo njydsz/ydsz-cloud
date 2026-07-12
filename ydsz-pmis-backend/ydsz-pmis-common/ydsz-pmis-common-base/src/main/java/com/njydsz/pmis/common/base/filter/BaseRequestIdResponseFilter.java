@@ -13,9 +13,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 /**
- * 璇锋眰ID鍝嶅簲澶磋繃婊ゅ櫒锛圵eb/App 鍏变韩锛?
+ * 请求ID响应头过滤器（Web/App 共享）
  *
- * <p>瀛愮被瑕嗙洊 {@link #resolveRequestId(HttpServletRequest)} 鎻愪緵涓嶅悓鐨?ID 鏉ユ簮銆?
+ * <p>子类覆盖 {@link #resolveRequestId(HttpServletRequest)} 提供不同的 ID 来源。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -41,7 +41,7 @@ public abstract class BaseRequestIdResponseFilter extends OncePerRequestFilter {
                 String requestId = resolveRequestId(request);
                 if (requestId != null && !requestId.isBlank()) {
                     response.setHeader(HEADER_REQUEST_ID, requestId);
-                    log.debug("璇锋眰ID [{}] 宸叉坊鍔犲埌璇锋眰 {} 鐨勫搷搴斿ご涓?, requestId, request.getRequestURI());
+                    log.debug("请求ID [{}] 已添加到请求 {} 的响应头中", requestId, request.getRequestURI());
                 }
             }
             filterChain.doFilter(request, response);
@@ -51,14 +51,14 @@ public abstract class BaseRequestIdResponseFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 瀛愮被瑕嗙洊姝ゆ柟娉曟彁渚涘叿浣撶殑璇锋眰 ID 瑙ｆ瀽閫昏緫
+     * 子类覆盖此方法提供具体的请求 ID 解析逻辑
      */
     protected abstract String resolveRequestId(HttpServletRequest request);
 
     /**
-     * 璇锋眰缁撴潫鍚庢竻鐞嗭紙榛樿绌哄疄鐜帮紝瀛愮被鍙鐩栵級
+     * 请求结束后清理（默认空实现，子类可覆盖）
      */
     protected void afterFilter(HttpServletRequest request, HttpServletResponse response) {
-        // 榛樿绌哄疄鐜?
+        // 默认空实现
     }
 }

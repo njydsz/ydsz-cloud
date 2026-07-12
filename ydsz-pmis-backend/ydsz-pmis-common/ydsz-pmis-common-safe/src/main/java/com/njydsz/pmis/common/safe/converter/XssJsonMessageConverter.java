@@ -21,79 +21,96 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * 甯?XSS 闃叉姢鐨?Jackson HTTP 娑堟伅杞崲鍣? *
- * <p>缁ф壙 {@link MappingJackson2HttpMessageConverter}锛屽湪鍙嶅簭鍒楀寲 JSON 璇锋眰浣撴椂瀵瑰瓧绗︿覆鍊艰繘琛?XSS 杩囨护銆? * 閫氳繃閲嶅啓 {@link #read} 鏂规硶锛屽湪 Jackson 鍙嶅簭鍒楀寲鍓嶅鍘熷 JSON 瀛楃涓茶繘琛屾竻娲楋紝
- * 纭繚鎵€鏈夊瓧绗︿覆绫诲瀷鐨勫€奸兘缁忚繃 XSS 杩囨护銆? *
- * <p><b>杩囨护瑙勫垯锛?/b>
+ * 带 XSS 防护的 Jackson HTTP 消息转换器
+ *
+ * <p>继承 {@link MappingJackson2HttpMessageConverter}，在反序列化 JSON 请求体时对字符串值进行 XSS 过滤。
+ * 通过重写 {@link #read} 方法，在 Jackson 反序列化前对原始 JSON 字符串进行清洗，
+ * 确保所有字符串类型的值都经过 XSS 过滤。
+ *
+ * <p><b>过滤规则：</b>
  * <ul>
- *   <li>绉婚櫎 {@code <script>} 鏍囩鍙婂叾鍐呭</li>
- *   <li>绉婚櫎 {@code javascript:}銆亄@code vbscript:}銆亄@code data:} 绛夊嵄闄╁崗璁?/li>
- *   <li>绉婚櫎 {@code on*} 浜嬩欢灞炴€э紙濡?onclick銆乷nload 绛夛級</li>
- *   <li>HTML 瀹炰綋缂栫爜鐗规畩瀛楃锛歿@code < > " ' &}</li>
+ *   <li>移除 {@code <script>} 标签及其内容</li>
+ *   <li>移除 {@code javascript:}、{@code vbscript:}、{@code data:} 等危险协议</li>
+ *   <li>移除 {@code on*} 事件属性（如 onclick、onload 等）</li>
+ *   <li>HTML 实体编码特殊字符：{@code < > " ' &}</li>
  * </ul>
  *
- * <p><b>浣跨敤鍦烘櫙锛?/b>
- * 褰?{@code remi.safe.xss.mode=converter} 鏃讹紝姝よ浆鎹㈠櫒浼氭浛鎹㈤粯璁ょ殑 JSON 杞崲鍣紝
- * 鍦ㄥ弽搴忓垪鍖栭樁娈靛畬鎴?XSS 杩囨护锛屼笌 Filter 妯″紡鍜?Advice 妯″紡浜掓枼銆? *
+ * <p><b>使用场景：</b>
+ * 当 {@code remi.safe.xss.mode=converter} 时，此转换器会替换默认的 JSON 转换器，
+ * 在反序列化阶段完成 XSS 过滤，与 Filter 模式和 Advice 模式互斥。
+ *
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 4.0.0
  * @see MappingJackson2HttpMessageConverter
  * @see EscapeUtils
  */
-// NOTE: MappingJackson2HttpMessageConverter 鍦?Spring 7.0 宸插純鐢ㄥ苟鏍囪 forRemoval锛?// 寰呴」鐩粠 Jackson 2.x 杩佺Щ鑷?Jackson 3.x 鍚庢浛鎹负 JacksonJsonHttpMessageConverter
+// NOTE: MappingJackson2HttpMessageConverter 在 Spring 7.0 已弃用并标记 forRemoval，
+// 待项目从 Jackson 2.x 迁移至 Jackson 3.x 后替换为 JacksonJsonHttpMessageConverter
 @SuppressWarnings("deprecation")
 public class XssJsonMessageConverter extends MappingJackson2HttpMessageConverter implements Ordered {
 
     private static final Logger log = LoggerFactory.getLogger(XssJsonMessageConverter.class);
 
     /**
-     * 杞崲鍣ㄤ紭鍏堢骇锛岃涓烘渶楂樹紭鍏堢骇纭繚 XSS 杩囨护鏈€鍏堟墽琛?     */
+     * 转换器优先级，设为最高优先级确保 XSS 过滤最先执行
+     */
     private static final int ORDER = Ordered.HIGHEST_PRECEDENCE + 10;
 
     /**
-     * 鏀寔鐨勫獟浣撶被鍨嬪垪琛?     */
+     * 支持的媒体类型列表
+     */
     private static final List<MediaType> SUPPORTED_MEDIA_TYPES = Arrays.asList(
             MediaType.APPLICATION_JSON,
             new MediaType("application", "*+json")
     );
 
     /**
-     * 鏋勯€犳柟娉?     *
-     * <p>浣跨敤榛樿閰嶇疆鍒涘缓 XSS 闃叉姢鐨勬秷鎭浆鎹㈠櫒銆?     */
+     * 构造方法
+     *
+     * <p>使用默认配置创建 XSS 防护的消息转换器。
+     */
     public XssJsonMessageConverter() {
         super();
     }
 
     /**
-     * 鏋勯€犳柟娉?     *
-     * <p>浣跨敤鎸囧畾鐨?ObjectMapper 鍒涘缓 XSS 闃叉姢鐨勬秷鎭浆鎹㈠櫒銆?     *
-     * @param objectMapper 寰呬娇鐢ㄧ殑 ObjectMapper
+     * 构造方法
+     *
+     * <p>使用指定的 ObjectMapper 创建 XSS 防护的消息转换器。
+     *
+     * @param objectMapper 待使用的 ObjectMapper
      */
     public XssJsonMessageConverter(ObjectMapper objectMapper) {
         super(objectMapper);
     }
 
     /**
-     * 閲嶅啓鏀寔鐨勫獟浣撶被鍨?     *
-     * <p>杩斿洖姝よ浆鎹㈠櫒鏀寔鐨勫獟浣撶被鍨嬪垪琛細application/json 鍜?application/*+json
+     * 重写支持的媒体类型
      *
-     * @return 鏀寔鐨勫獟浣撶被鍨嬪垪琛?     */
+     * <p>返回此转换器支持的媒体类型列表：application/json 和 application/*+json
+     *
+     * @return 支持的媒体类型列表
+     */
     @Override
     public List<MediaType> getSupportedMediaTypes() {
         return SUPPORTED_MEDIA_TYPES;
     }
 
     /**
-     * 璇诲彇骞跺弽搴忓垪鍖?JSON 璇锋眰浣?     *
-     * <p>閲嶅啓鐖剁被鏂规硶锛屽湪鍙嶅簭鍒楀寲鍓嶅 JSON 瀛楃涓插€艰繘琛?XSS 杩囨护銆?     * 浣跨敤 {@link EscapeUtils#cleanJsonValue} 杩涜娴佸紡 JSON 瑙ｆ瀽鍜屾竻娲楋紝
-     * 纭繚浠呮竻娲楀瓧绗︿覆鍊硷紝涓嶇牬鍧?JSON 缁撴瀯銆?     *
-     * @param type          鐩爣绫诲瀷
-     * @param contextClass  涓婁笅鏂囩被
-     * @param inputMessage  HTTP 杈撳叆娑堟伅
-     * @return 鍙嶅簭鍒楀寲鍚庣殑瀵硅薄
-     * @throws IOException                     IO寮傚父
-     * @throws HttpMessageNotReadableException 娑堟伅涓嶅彲璇诲紓甯?     */
+     * 读取并反序列化 JSON 请求体
+     *
+     * <p>重写父类方法，在反序列化前对 JSON 字符串值进行 XSS 过滤。
+     * 使用 {@link EscapeUtils#cleanJsonValue} 进行流式 JSON 解析和清洗，
+     * 确保仅清洗字符串值，不破坏 JSON 结构。
+     *
+     * @param type          目标类型
+     * @param contextClass  上下文类
+     * @param inputMessage  HTTP 输入消息
+     * @return 反序列化后的对象
+     * @throws IOException                     IO异常
+     * @throws HttpMessageNotReadableException 消息不可读异常
+     */
     @Override
     public Object read(Type type, Class<?> contextClass, HttpInputMessage inputMessage)
             throws IOException, HttpMessageNotReadableException {
@@ -108,7 +125,7 @@ public class XssJsonMessageConverter extends MappingJackson2HttpMessageConverter
         String cleanedJson = EscapeUtils.cleanJsonValue(originalJson);
 
         if (!cleanedJson.equals(originalJson)) {
-            log.debug("[XssJsonMessageConverter] JSON Body XSS 杩囨护瀹屾垚");
+            log.debug("[XssJsonMessageConverter] JSON Body XSS 过滤完成");
         }
 
         byte[] cleanedBytes = cleanedJson.getBytes(StandardCharsets.UTF_8);
@@ -117,7 +134,7 @@ public class XssJsonMessageConverter extends MappingJackson2HttpMessageConverter
     }
 
     /**
-     * 搴忓垪鍖栧璞′负 JSON 鍝嶅簲浣擄紙涓嶄慨鏀癸級
+     * 序列化对象为 JSON 响应体（不修改）
      */
     @Override
     protected void writeInternal(Object object, HttpOutputMessage outputMessage)
@@ -131,9 +148,10 @@ public class XssJsonMessageConverter extends MappingJackson2HttpMessageConverter
     }
 
     /**
-     * 鍩轰簬 ByteArrayInputStream 鐨?HttpInputMessage 瀹炵幇
+     * 基于 ByteArrayInputStream 的 HttpInputMessage 实现
      *
-     * <p>鐢ㄤ簬鍖呰娓呮礂鍚庣殑 JSON 瀛楄妭鏁扮粍锛屼緵 Jackson 鍙嶅簭鍒楀寲浣跨敤銆?     */
+     * <p>用于包装清洗后的 JSON 字节数组，供 Jackson 反序列化使用。
+     */
     private static class XssByteArrayInputMessage implements HttpInputMessage {
 
         private final byte[] body;

@@ -26,22 +26,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 鍩轰簬 Redis 浠ょ墝妗剁殑鍏ㄥ眬闄愭祦 Filter銆?
+ * 基于 Redis 令牌桶的全局限流 Filter。
  *
- * <p>鏀寔鎸?IP / 鐢ㄦ埛 / 鍏ㄥ眬涓夌缁村害杩涜闄愭祦銆?
- * 浣跨敤 Redis + Lua 瀹炵幇婊戝姩绐楀彛闄愭祦锛屼繚璇佸垎甯冨紡鐜涓嬬殑绮剧‘闄愭祦銆?
- * 缁ф壙 {@link OncePerRequestFilter}锛岀‘淇濇瘡娆¤姹傚彧鎵ц涓€娆°€?
+ * <p>支持按 IP / 用户 / 全局三种维度进行限流。
+ * 使用 Redis + Lua 实现滑动窗口限流，保证分布式环境下的精确限流。
+ * 继承 {@link OncePerRequestFilter}，确保每次请求只执行一次。
  *
- * <p><b>闄愭祦缁村害锛?/b>
+ * <p><b>限流维度：</b>
  * <ul>
- *   <li>IP - 鎸夊鎴风 IP 闄愭祦锛堥粯璁わ級</li>
- *   <li>USER - 鎸夌櫥褰曠敤鎴烽檺娴侊紝浠庤姹傚ご X-User-Id 鑾峰彇</li>
- *   <li>GLOBAL - 鍏ㄥ眬鍏变韩闄愭祦</li>
+ *   <li>IP - 按客户端 IP 限流（默认）</li>
+ *   <li>USER - 按登录用户限流，从请求头 X-User-Id 获取</li>
+ *   <li>GLOBAL - 全局共享限流</li>
  * </ul>
  *
- * <p><b>瀹炵幇鍘熺悊锛?/b>
- * 浣跨敤 Redis ZSet 瀹炵幇婊戝姩绐楀彛绠楁硶锛屽皢姣忎釜璇锋眰鐨勬椂闂存埑浣滀负 score 瀛樺叆 ZSet锛?
- * 閫氳繃缁熻绐楀彛鍐呯殑璇锋眰鏁板垽鏂槸鍚﹁秴闄愩€?
+ * <p><b>实现原理：</b>
+ * 使用 Redis ZSet 实现滑动窗口算法，将每个请求的时间戳作为 score 存入 ZSet，
+ * 通过统计窗口内的请求数判断是否超限。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -81,7 +81,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final SecurityEventPublisher eventPublisher;
     private final SafeAlertProperties alertProperties;
 
-    /** JSON 搴忓垪鍖栧櫒锛岀敤浜庣敓鎴愰檺娴佸搷搴斾綋 */
+    /** JSON 序列化器，用于生成限流响应体 */
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     public RateLimitFilter(RateLimitProperties properties,
@@ -127,14 +127,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
             boolean allowed = result != null && result == 1L;
 
             if (!allowed) {
-                log.warn("銆愬畨鍏ㄦā鍧椼€戣姹傝闄愭祦 | key={}, uri={}, ip={}", rateLimitKey, request.getRequestURI(), getClientIp(request));
+                log.warn("【安全模块】请求被限流 | key={}, uri={}, ip={}", rateLimitKey, request.getRequestURI(), getClientIp(request));
                 publishRateLimitEvent(request);
                 writeRateLimitResponse(response);
                 return;
             }
         } catch (Exception e) {
-            // Redis 寮傚父鏃?fail-open锛氶檺娴佹槸淇濇姢鎬ф帾鏂借€岄潪瀹夊叏鎬ф帾鏂斤紝鏀捐璇锋眰涓嶄腑鏂湇鍔?
-            log.warn("銆愬畨鍏ㄦā鍧椼€慠edis 闄愭祦涓嶅彲鐢紝鏀捐璇锋眰 | key={}, uri={}, error={}",
+            // Redis 异常时 fail-open：限流是保护性措施而非安全性措施，放行请求不中断服务
+            log.warn("【安全模块】Redis 限流不可用，放行请求 | key={}, uri={}, error={}",
                     rateLimitKey, request.getRequestURI(), e.getMessage());
         }
 
@@ -142,7 +142,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 鍐欏叆闄愭祦鍝嶅簲锛圝SON 鏍煎紡 BaseResponse锛孒TTP 429锛?
+     * 写入限流响应（JSON 格式 BaseResponse，HTTP 429）
      */
     private void writeRateLimitResponse(HttpServletResponse response) throws IOException {
         response.setStatus(429);
@@ -153,10 +153,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 鏍规嵁閰嶇疆鐨勭淮搴﹁В鏋愰檺娴?Key銆?
+     * 根据配置的维度解析限流 Key。
      *
-     * <p>涓哄噺灏戠鎾烇紝IP 缁村害缁勫悎浣跨敤 IP + 鐢ㄦ埛ID锛堝鏈夛級+ URI锛?
-     * USER 缁村害缁勫悎浣跨敤 鐢ㄦ埛ID + URI銆?
+     * <p>为减少碰撞，IP 维度组合使用 IP + 用户ID（如有）+ URI；
+     * USER 维度组合使用 用户ID + URI。
      */
     private String resolveRateLimitKey(HttpServletRequest request) {
         String uri = request.getRequestURI();
@@ -174,7 +174,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 return properties.getGlobalKey();
             case IP:
             default:
-                // 缁勫悎 IP + 鐢ㄦ埛ID锛堝鏈夛級+ URI锛屽噺灏?NAT 鍑哄彛鍏变韩 IP 瀵艰嚧鐨勮闄?
+                // 组合 IP + 用户ID（如有）+ URI，减少 NAT 出口共享 IP 导致的误限
                 StringBuilder key = new StringBuilder(properties.getIpKey()).append(clientIp);
                 if (StringUtils.hasText(userId)) {
                     key.append(":").append(userId);
@@ -185,19 +185,19 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 鑾峰彇瀹㈡埛绔湡瀹?IP銆?
+     * 获取客户端真实 IP。
      *
-     * <p>鍒ゆ柇閫昏緫锛?
+     * <p>判断逻辑：
      * <ol>
-     *   <li>鑾峰彇鐩磋繛 IP锛坮equest.getRemoteAddr()锛屼笉鍙吉閫狅級</li>
-     *   <li>濡傛灉鐩磋繛 IP 鏄彲淇′唬鐞嗭紙鏈湴鍥炵幆鎴栧唴缃戠鏈夊湴鍧€锛夛紝鎵嶄俊浠?X-Forwarded-For / X-Real-IP</li>
-     *   <li>鍚﹀垯鐩存帴浣跨敤鐩磋繛 IP</li>
+     *   <li>获取直连 IP（request.getRemoteAddr()，不可伪造）</li>
+     *   <li>如果直连 IP 是可信代理（本地回环或内网私有地址），才信任 X-Forwarded-For / X-Real-IP</li>
+     *   <li>否则直接使用直连 IP</li>
      * </ol>
-     * 杩欐牱鍙互闃叉澶栭儴瀹㈡埛绔吉閫?X-Forwarded-For 缁曡繃 IP 闄愭祦銆?
+     * 这样可以防止外部客户端伪造 X-Forwarded-For 绕过 IP 限流。
      */
     private String getClientIp(HttpServletRequest request) {
         String directIp = request.getRemoteAddr();
-        // 濡傛灉鐩磋繛 IP 鏄彲淇′唬鐞嗭紙鏈湴鍥炵幆鎴栧唴缃戠鏈夊湴鍧€锛夛紝鎵嶄俊浠?X-Forwarded-For
+        // 如果直连 IP 是可信代理（本地回环或内网私有地址），才信任 X-Forwarded-For
         if (directIp != null && isTrustedProxy(directIp)) {
             String ip = request.getHeader("X-Forwarded-For");
             if (StringUtils.hasText(ip) && !"unknown".equalsIgnoreCase(ip)) {
@@ -216,24 +216,24 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 鍒ゆ柇 IP 鏄惁涓哄彲淇′唬鐞嗐€?
+     * 判断 IP 是否为可信代理。
      *
-     * <p>鍙俊浠ｇ悊鍖呮嫭锛?
+     * <p>可信代理包括：
      * <ul>
-     *   <li>鏈湴鍥炵幆锛?27.0.0.0/8, ::1</li>
-     *   <li>鍐呯綉绉佹湁锛?0.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16</li>
-     *   <li>Docker 榛樿缃戞锛?72.17.0.0/16</li>
+     *   <li>本地回环：127.0.0.0/8, ::1</li>
+     *   <li>内网私有：10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16</li>
+     *   <li>Docker 默认网段：172.17.0.0/16</li>
      * </ul>
      */
     private static boolean isTrustedProxy(String ip) {
         if (ip == null || ip.isEmpty()) {
             return false;
         }
-        // 鏈湴鍥炵幆
+        // 本地回环
         if ("127.0.0.1".equals(ip) || "0:0:0:0:0:0:0:1".equals(ip) || "::1".equals(ip)) {
             return true;
         }
-        // 鍐呯綉绉佹湁鍦板潃锛堢畝鍗曞垽鏂紝CIDR 绮剧‘鍖归厤鍙悗缁寮猴級
+        // 内网私有地址（简单判断，CIDR 精确匹配可后续增强）
         if (ip.startsWith("10.") || ip.startsWith("192.168.")) {
             return true;
         }
@@ -245,14 +245,14 @@ public class RateLimitFilter extends OncePerRequestFilter {
                     return true;
                 }
             } catch (NumberFormatException | ArrayIndexOutOfBoundsException ignored) {
-                // 瑙ｆ瀽澶辫触锛屼笉瑙嗕负鍙俊浠ｇ悊
+                // 解析失败，不视为可信代理
             }
         }
         return false;
     }
 
     /**
-     * 鍒ゆ柇璇锋眰璺緞鏄惁闇€瑕佹帓闄ら檺娴併€?
+     * 判断请求路径是否需要排除限流。
      */
     private boolean isExcluded(HttpServletRequest request) {
         String servletPath = request.getServletPath();
@@ -260,7 +260,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 鍙戝竷闄愭祦瀹夊叏浜嬩欢銆?
+     * 发布限流安全事件。
      */
     private void publishRateLimitEvent(HttpServletRequest request) {
         if (eventPublisher == null || alertProperties == null || !alertProperties.isEnabled()) {
