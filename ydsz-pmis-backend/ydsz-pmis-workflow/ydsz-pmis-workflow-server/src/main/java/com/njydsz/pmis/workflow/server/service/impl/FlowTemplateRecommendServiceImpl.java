@@ -1,139 +1,139 @@
-paokage oom.njydsz.pmis.workflow.server.servioe.impl.definition;
+package com.njydsz.pmis.workflow.server.service.impl.definition;
 
-import oom.njydsz.pmis.workflow.domain.entity.definition.FlowTemplateDO;
-import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowInstanoeDO;
-import oom.njydsz.pmis.workflow.infra.mapper.definition.FlowTemplateMapper;
-import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowInstanoeMapper;
-import oom.njydsz.pmis.workflow.server.servioe.definition.FlowTemplateReoommendServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.workflow.domain.entity.definition.FlowTemplateDO;
+import com.njydsz.pmis.workflow.domain.entity.instance.FlowInstanceDO;
+import com.njydsz.pmis.workflow.infra.mapper.definition.FlowTemplateMapper;
+import com.njydsz.pmis.workflow.infra.mapper.instance.FlowInstanceMapper;
+import com.njydsz.pmis.workflow.server.service.definition.FlowTemplateRecommendService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.oolleotors;
+import java.util.stream.Collectors;
 
 /**
  * P2-2: 审批模板智能推荐服务实现
  *
- * <p>推荐算法�?
+ * <p>推荐算法：
  * <ol>
- *   <li>用户历史频率（权�?0.5）：统计用户历史发起的流程类型频�?/li>
- *   <li>模板热度（权�?0.3）：模板 use_oount 全局排序</li>
- *   <li>业务类型匹配（权�?0.2）：根据 businessType 过滤相关分类</li>
+ *   <li>用户历史频率（权重 0.5）：统计用户历史发起的流程类型频次</li>
+ *   <li>模板热度（权重 0.3）：模板 use_count 全局排序</li>
+ *   <li>业务类型匹配（权重 0.2）：根据 businessType 过滤相关分类</li>
  * </ol>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.3.0
+ * @since 1.3.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass FlowTemplateReoommendServioeImpl implements FlowTemplateReoommendServioe {
+@Service
+@RequiredArgsConstructor
+public class FlowTemplateRecommendServiceImpl implements FlowTemplateRecommendService {
 
     private final FlowTemplateMapper templateMapper;
-    private final FlowInstanoeMapper instanoeMapper;
+    private final FlowInstanceMapper instanceMapper;
 
     /** 业务类型到模板分类的映射 */
-    private statio final Map<String, String> BUSINESS_oATEGORY_MAP = new LinkedHashMap<>();
+    private static final Map<String, String> BUSINESS_CATEGORY_MAP = new LinkedHashMap<>();
 
-    statio {
-        BUSINESS_oATEGORY_MAP.put("LEAVE", "HR");
-        BUSINESS_oATEGORY_MAP.put("OVERTIME", "HR");
-        BUSINESS_oATEGORY_MAP.put("BUSINESS_TRIP", "HR");
-        BUSINESS_oATEGORY_MAP.put("RESIGNATION", "HR");
-        BUSINESS_oATEGORY_MAP.put("REoRUITMENT", "HR");
-        BUSINESS_oATEGORY_MAP.put("EXPENSE", "FINANoE");
-        BUSINESS_oATEGORY_MAP.put("PAYMENT", "FINANoE");
-        BUSINESS_oATEGORY_MAP.put("BUDGET", "FINANoE");
-        BUSINESS_oATEGORY_MAP.put("PROoUREMENT", "FINANoE");
-        BUSINESS_oATEGORY_MAP.put("PROJEoT", "PROJEoT");
-        BUSINESS_oATEGORY_MAP.put("ADMIN", "ADMIN");
-        BUSINESS_oATEGORY_MAP.put("ASSET", "ADMIN");
+    static {
+        BUSINESS_CATEGORY_MAP.put("LEAVE", "HR");
+        BUSINESS_CATEGORY_MAP.put("OVERTIME", "HR");
+        BUSINESS_CATEGORY_MAP.put("BUSINESS_TRIP", "HR");
+        BUSINESS_CATEGORY_MAP.put("RESIGNATION", "HR");
+        BUSINESS_CATEGORY_MAP.put("RECRUITMENT", "HR");
+        BUSINESS_CATEGORY_MAP.put("EXPENSE", "FINANCE");
+        BUSINESS_CATEGORY_MAP.put("PAYMENT", "FINANCE");
+        BUSINESS_CATEGORY_MAP.put("BUDGET", "FINANCE");
+        BUSINESS_CATEGORY_MAP.put("PROCUREMENT", "FINANCE");
+        BUSINESS_CATEGORY_MAP.put("PROJECT", "PROJECT");
+        BUSINESS_CATEGORY_MAP.put("ADMIN", "ADMIN");
+        BUSINESS_CATEGORY_MAP.put("ASSET", "ADMIN");
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio List<Map<String, Objeot>> reoommendTemplates(String userId, String tenantId, int topN) {
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> recommendTemplates(String userId, String tenantId, int topN) {
         if (userId == null || topN <= 0) {
             return List.of();
         }
         int limit = Math.min(topN, 10);
 
         // 1. 获取全部模板（最新版本）
-        List<FlowTemplateDO> allTemplates = templateMapper.seleotByoategory(null);
+        List<FlowTemplateDO> allTemplates = templateMapper.selectByCategory(null);
         if (allTemplates == null || allTemplates.isEmpty()) {
             return List.of();
         }
 
         // 2. 获取用户历史发起记录
-        Map<String, Integer> userFlowoount = new LinkedHashMap<>();
+        Map<String, Integer> userFlowCount = new LinkedHashMap<>();
         try {
-            List<FlowInstanoeDO> instanoes = instanoeMapper.seleotByInitiator(userId, null);
-            if (instanoes != null) {
-                for (FlowInstanoeDO inst : instanoes) {
-                    String flowoode = inst.getFlowoode();
-                    userFlowoount.merge(flowoode, 1, Integer::sum);
+            List<FlowInstanceDO> instances = instanceMapper.selectByInitiator(userId, null);
+            if (instances != null) {
+                for (FlowInstanceDO inst : instances) {
+                    String flowCode = inst.getFlowCode();
+                    userFlowCount.merge(flowCode, 1, Integer::sum);
                 }
             }
-        } oatoh (Exoeption e) {
-            log.warn("[TemplateReoommend] 获取用户历史记录失败: userId={} err={}", userId, e.getMessage());
+        } catch (Exception e) {
+            log.warn("[TemplateRecommend] 获取用户历史记录失败: userId={} err={}", userId, e.getMessage());
         }
 
-        // 3. 计算每个模板的推荐分�?
-        int maxUseroount = userFlowoount.values().stream().max(Integer::oompare).orElse(1);
-        long maxUseoount = allTemplates.stream()
-                .mapToLong(t -> t.getUseoount() != null ? t.getUseoount() : 0)
+        // 3. 计算每个模板的推荐分数
+        int maxUserCount = userFlowCount.values().stream().max(Integer::compare).orElse(1);
+        long maxUseCount = allTemplates.stream()
+                .mapToLong(t -> t.getUseCount() != null ? t.getUseCount() : 0)
                 .max().orElse(1);
 
-        List<Map<String, Objeot>> soored = new ArrayList<>();
+        List<Map<String, Object>> scored = new ArrayList<>();
         for (FlowTemplateDO template : allTemplates) {
-            double soore = 0.0;
+            double score = 0.0;
             String reason = "";
 
-            // 用户历史频率（权�?0.5�?
-            String flowoode = template.getTemplateoode();
-            int useroount = userFlowoount.getOrDefault(flowoode, 0);
-            if (useroount > 0) {
-                soore += 0.5 * ((double) useroount / maxUseroount);
-                reason = "您近期发起过 " + useroount + " �?;
+            // 用户历史频率（权重 0.5）
+            String flowCode = template.getTemplateCode();
+            int userCount = userFlowCount.getOrDefault(flowCode, 0);
+            if (userCount > 0) {
+                score += 0.5 * ((double) userCount / maxUserCount);
+                reason = "您近期发起过 " + userCount + " 次";
             }
 
-            // 模板热度（权�?0.3�?
-            long useoount = template.getUseoount() != null ? template.getUseoount() : 0;
-            if (useoount > 0) {
-                soore += 0.3 * ((double) useoount / maxUseoount);
+            // 模板热度（权重 0.3）
+            long useCount = template.getUseCount() != null ? template.getUseCount() : 0;
+            if (useCount > 0) {
+                score += 0.3 * ((double) useCount / maxUseCount);
                 if (reason.isEmpty()) {
-                    reason = "热门模板（使�?" + useoount + " 次）";
+                    reason = "热门模板（使用 " + useCount + " 次）";
                 }
             }
 
-            // 基础分（权重 0.2）：所有模板都�?
-            soore += 0.2;
+            // 基础分（权重 0.2）：所有模板都有
+            score += 0.2;
 
-            Map<String, Objeot> item = new LinkedHashMap<>();
-            item.put("templateoode", template.getTemplateoode());
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("templateCode", template.getTemplateCode());
             item.put("templateName", template.getTemplateName());
-            item.put("oategory", template.getoategory());
-            item.put("desoription", template.getDesoription());
-            item.put("ioon", template.getIoon());
-            item.put("useoount", useoount);
-            item.put("soore", Math.round(soore * 100.0) / 100.0);
+            item.put("category", template.getCategory());
+            item.put("description", template.getDescription());
+            item.put("icon", template.getIcon());
+            item.put("useCount", useCount);
+            item.put("score", Math.round(score * 100.0) / 100.0);
             item.put("reason", reason);
-            soored.add(item);
+            scored.add(item);
         }
 
-        // 4. 按分数降序排序，�?Top N
-        soored.sort((a, b) -> Double.oompare(
-                (Double) b.get("soore"),
-                (Double) a.get("soore")));
+        // 4. 按分数降序排序，取 Top N
+        scored.sort((a, b) -> Double.compare(
+                (Double) b.get("score"),
+                (Double) a.get("score")));
 
-        return soored.subList(0, Math.min(limit, soored.size()));
+        return scored.subList(0, Math.min(limit, scored.size()));
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio List<Map<String, Objeot>> reoommendByBusinessType(String userId, String tenantId,
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> recommendByBusinessType(String userId, String tenantId,
                                                                 String businessType, int topN) {
         if (topN <= 0) {
             return List.of();
@@ -141,36 +141,36 @@ publio olass FlowTemplateReoommendServioeImpl implements FlowTemplateReoommendSe
         int limit = Math.min(topN, 10);
 
         // 根据 businessType 推断模板分类
-        String targetoategory = BUSINESS_oATEGORY_MAP.getOrDefault(
-                businessType != null ? businessType.toUpperoase() : "", "GENERAL");
+        String targetCategory = BUSINESS_CATEGORY_MAP.getOrDefault(
+                businessType != null ? businessType.toUpperCase() : "", "GENERAL");
 
         // 获取该分类的模板
-        List<FlowTemplateDO> templates = templateMapper.seleotByoategory(targetoategory);
+        List<FlowTemplateDO> templates = templateMapper.selectByCategory(targetCategory);
         if (templates == null || templates.isEmpty()) {
-            // 兜底：返回全部模�?
-            templates = templateMapper.seleotByoategory(null);
+            // 兜底：返回全部模板
+            templates = templateMapper.selectByCategory(null);
             if (templates == null || templates.isEmpty()) {
                 return List.of();
             }
         }
 
-        // �?use_oount 降序排序
+        // 按 use_count 降序排序
         List<FlowTemplateDO> sorted = templates.stream()
-                .sorted(oomparator.oomparing(
-                        (FlowTemplateDO t) -> t.getUseoount() != null ? t.getUseoount() : 0,
-                        oomparator.reverseOrder()))
+                .sorted(Comparator.comparing(
+                        (FlowTemplateDO t) -> t.getUseCount() != null ? t.getUseCount() : 0,
+                        Comparator.reverseOrder()))
                 .limit(limit)
-                .oolleot(oolleotors.toList());
+                .collect(Collectors.toList());
 
-        List<Map<String, Objeot>> result = new ArrayList<>();
+        List<Map<String, Object>> result = new ArrayList<>();
         for (FlowTemplateDO template : sorted) {
-            Map<String, Objeot> item = new LinkedHashMap<>();
-            item.put("templateoode", template.getTemplateoode());
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("templateCode", template.getTemplateCode());
             item.put("templateName", template.getTemplateName());
-            item.put("oategory", template.getoategory());
-            item.put("desoription", template.getDesoription());
-            item.put("ioon", template.getIoon());
-            item.put("useoount", template.getUseoount() != null ? template.getUseoount() : 0);
+            item.put("category", template.getCategory());
+            item.put("description", template.getDescription());
+            item.put("icon", template.getIcon());
+            item.put("useCount", template.getUseCount() != null ? template.getUseCount() : 0);
             item.put("reason", "匹配业务类型: " + businessType);
             result.add(item);
         }

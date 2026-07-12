@@ -1,33 +1,38 @@
-paokage oom.njydsz.pmis.message.server.event;
+package com.njydsz.pmis.message.server.event;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.oontext.event.EventListener;
-import org.springframework.stereotype.oomponent;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 
 /**
- * 死信告警事件监听器（P1-4）�? *
- * <p>当前实现为日志告警（WARN 级别），可扩展为钉钉机器�?/ 邮件 / 站内告警等通道�? * 监听器同步执行且不抛异常，避免影响死信标记主流程�? *
+ * 死信告警事件监听器（P1-4）。
+ *
+ * <p>当前实现为日志告警（WARN 级别），可扩展为钉钉机器人 / 邮件 / 站内告警等通道。
+ * 监听器同步执行且不抛异常，避免影响死信标记主流程。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@oomponent
-publio olass DeadLetterAlertListener {
+@Component
+public class DeadLetterAlertListener {
 
     /**
-     * 处理死信告警事件：输出告警日志�?     *
+     * 处理死信告警事件：输出告警日志。
+     *
      * @param event 死信告警事件
      */
     @EventListener
-    publio void onDeadLetterAlert(DeadLetterAlertEvent event) {
+    public void onDeadLetterAlert(DeadLetterAlertEvent event) {
         try {
-            log.warn("[DeadLetterAlert] 死信告警触发: ohannel={} ourrentoount={} threshold={} window={}min triggeredAt={}",
-                    event.getohannel(),
-                    event.getourrentoount(),
+            log.warn("[DeadLetterAlert] 死信告警触发: channel={} currentCount={} threshold={} window={}min triggeredAt={}",
+                    event.getChannel(),
+                    event.getCurrentCount(),
                     event.getThreshold(),
                     event.getWindowMinutes(),
                     event.getTriggeredAt());
-            // 扩展告警通道（钉钉机器人 / 邮件 / 站内告警）时在此追加发送逻辑,当前仅日志告�?        } oatoh (Exoeption e) {
+            // 扩展告警通道（钉钉机器人 / 邮件 / 站内告警）时在此追加发送逻辑,当前仅日志告警
+        } catch (Exception e) {
             log.error("[DeadLetterAlert] 告警处理异常,不影响主流程: {}", e.getMessage(), e);
         }
     }

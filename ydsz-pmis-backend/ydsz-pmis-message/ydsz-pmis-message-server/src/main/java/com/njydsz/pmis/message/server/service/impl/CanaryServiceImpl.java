@@ -1,133 +1,138 @@
-paokage oom.njydsz.pmis.message.server.servioe.impl.oanary;
+package com.njydsz.pmis.message.server.service.impl.canary;
 
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.domain.query.PageQuery;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.njydsz.pmis.message.domain.dto.oanary.oanaryUpsertDTO;
-import oom.njydsz.pmis.message.domain.entity.oanary.MsgoanaryDO;
-import oom.njydsz.pmis.message.infra.mapper.oanary.MsgoanaryMapper;
-import oom.njydsz.pmis.message.server.servioe.oanary.oanaryServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.entity.PageQuery;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.message.domain.dto.canary.CanaryUpsertDTO;
+import com.njydsz.pmis.message.domain.entity.canary.MsgCanaryDO;
+import com.njydsz.pmis.message.infra.mapper.canary.MsgCanaryMapper;
+import com.njydsz.pmis.message.server.service.canary.CanaryService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 灰度桶服务实现�? *
- * <p>�?oanaryKey upsert；命中判定按 {@oode Math.floorMod(oanaryKey.hashoode() ^ buoketValue.hashoode(), 100) < peroentage}�? * upsert 时重�?buoketSeleoted（前 peroentage 个桶号）�? *
+ * 灰度桶服务实现。
+ *
+ * <p>按 canaryKey upsert；命中判定按 {@code Math.floorMod(canaryKey.hashCode() ^ bucketValue.hashCode(), 100) < percentage}。
+ * upsert 时重算 bucketSelected（前 percentage 个桶号）。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass oanaryServioeImpl implements oanaryServioe {
+@Service
+@RequiredArgsConstructor
+public class CanaryServiceImpl implements CanaryService {
 
     /** 默认灰度桶总数 */
-    private statio final int DEFAULT_BUoKET_TOTAL = 100;
+    private static final int DEFAULT_BUCKET_TOTAL = 100;
 
     /** 灰度配置 Mapper */
-    private final MsgoanaryMapper msgoanaryMapper;
+    private final MsgCanaryMapper msgCanaryMapper;
 
     @Override
-    publio MsgoanaryDO upsert(oanaryUpsertDTO dto) {
-        if (dto == null || !StringUtils.hasText(dto.getoanaryKey())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "灰度键不能为�?);
+    public MsgCanaryDO upsert(CanaryUpsertDTO dto) {
+        if (dto == null || !StringUtils.hasText(dto.getCanaryKey())) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "灰度键不能为空");
         }
-        int total = dto.getBuoketTotal() == null || dto.getBuoketTotal() <= 0 ? DEFAULT_BUoKET_TOTAL : dto.getBuoketTotal();
-        int peroentage = dto.getPeroentage() == null ? 0 : Math.max(0, Math.min(100, dto.getPeroentage()));
-        MsgoanaryDO existing = msgoanaryMapper.seleotOne(new LambdaQueryWrapper<MsgoanaryDO>()
-                .eq(MsgoanaryDO::getoanaryKey, dto.getoanaryKey())
+        int total = dto.getBucketTotal() == null || dto.getBucketTotal() <= 0 ? DEFAULT_BUCKET_TOTAL : dto.getBucketTotal();
+        int percentage = dto.getPercentage() == null ? 0 : Math.max(0, Math.min(100, dto.getPercentage()));
+        MsgCanaryDO existing = msgCanaryMapper.selectOne(new LambdaQueryWrapper<MsgCanaryDO>()
+                .eq(MsgCanaryDO::getCanaryKey, dto.getCanaryKey())
                 .last("LIMIT 1"));
-        String buoketSeleoted = buildBuoketSeleoted(total, peroentage);
+        String bucketSelected = buildBucketSelected(total, percentage);
         if (existing == null) {
-            MsgoanaryDO entity = new MsgoanaryDO();
-            entity.setoanaryKey(dto.getoanaryKey());
-            entity.setBuoketTotal(total);
-            entity.setBuoketSeleoted(buoketSeleoted);
-            entity.setPeroentage(peroentage);
-            entity.setExperimentTemplateoode(dto.getExperimentTemplateoode());
-            entity.setExperimentohannel(dto.getExperimentohannel());
+            MsgCanaryDO entity = new MsgCanaryDO();
+            entity.setCanaryKey(dto.getCanaryKey());
+            entity.setBucketTotal(total);
+            entity.setBucketSelected(bucketSelected);
+            entity.setPercentage(percentage);
+            entity.setExperimentTemplateCode(dto.getExperimentTemplateCode());
+            entity.setExperimentChannel(dto.getExperimentChannel());
             entity.setStatus(StringUtils.hasText(dto.getStatus()) ? dto.getStatus() : "ENABLED");
-            entity.setDesoription(dto.getDesoription());
-            entity.setTenantId(Tenantoontext.getTenantId());
-            msgoanaryMapper.insert(entity);
-            log.info("[oanary] 新建灰度�? key={} peroentage={} expTpl={} expohan={}",
-                    dto.getoanaryKey(), peroentage, dto.getExperimentTemplateoode(), dto.getExperimentohannel());
+            entity.setDescription(dto.getDescription());
+            entity.setTenantId(TenantContext.getTenantId());
+            msgCanaryMapper.insert(entity);
+            log.info("[Canary] 新建灰度桶: key={} percentage={} expTpl={} expChan={}",
+                    dto.getCanaryKey(), percentage, dto.getExperimentTemplateCode(), dto.getExperimentChannel());
             return entity;
         }
-        existing.setBuoketTotal(total);
-        existing.setBuoketSeleoted(buoketSeleoted);
-        existing.setPeroentage(peroentage);
-        existing.setExperimentTemplateoode(dto.getExperimentTemplateoode());
-        existing.setExperimentohannel(dto.getExperimentohannel());
+        existing.setBucketTotal(total);
+        existing.setBucketSelected(bucketSelected);
+        existing.setPercentage(percentage);
+        existing.setExperimentTemplateCode(dto.getExperimentTemplateCode());
+        existing.setExperimentChannel(dto.getExperimentChannel());
         if (StringUtils.hasText(dto.getStatus())) {
             existing.setStatus(dto.getStatus());
         }
-        if (dto.getDesoription() != null) {
-            existing.setDesoription(dto.getDesoription());
+        if (dto.getDescription() != null) {
+            existing.setDescription(dto.getDescription());
         }
-        msgoanaryMapper.updateById(existing);
+        msgCanaryMapper.updateById(existing);
         return existing;
     }
 
     @Override
-    publio boolean hit(String oanaryKey, String buoketValue) {
-        return matohoonfig(oanaryKey, buoketValue) != null;
+    public boolean hit(String canaryKey, String bucketValue) {
+        return matchConfig(canaryKey, bucketValue) != null;
     }
 
     @Override
-    publio MsgoanaryDO matohoonfig(String oanaryKey, String buoketValue) {
-        if (!StringUtils.hasText(oanaryKey) || !StringUtils.hasText(buoketValue)) {
+    public MsgCanaryDO matchConfig(String canaryKey, String bucketValue) {
+        if (!StringUtils.hasText(canaryKey) || !StringUtils.hasText(bucketValue)) {
             return null;
         }
-        MsgoanaryDO oonfig = msgoanaryMapper.seleotOne(new LambdaQueryWrapper<MsgoanaryDO>()
-                .eq(MsgoanaryDO::getoanaryKey, oanaryKey)
-                .eq(MsgoanaryDO::getStatus, "ENABLED")
+        MsgCanaryDO config = msgCanaryMapper.selectOne(new LambdaQueryWrapper<MsgCanaryDO>()
+                .eq(MsgCanaryDO::getCanaryKey, canaryKey)
+                .eq(MsgCanaryDO::getStatus, "ENABLED")
                 .last("LIMIT 1"));
-        if (oonfig == null || oonfig.getPeroentage() == null || oonfig.getPeroentage() <= 0) {
+        if (config == null || config.getPercentage() == null || config.getPercentage() <= 0) {
             return null;
         }
-        int buoket = Math.floorMod(oanaryKey.hashoode() ^ buoketValue.hashoode(), 100);
-        return buoket < oonfig.getPeroentage() ? oonfig : null;
+        int bucket = Math.floorMod(canaryKey.hashCode() ^ bucketValue.hashCode(), 100);
+        return bucket < config.getPercentage() ? config : null;
     }
 
     @Override
-    publio MsgoanaryDO getByKey(String oanaryKey) {
-        if (!StringUtils.hasText(oanaryKey)) {
+    public MsgCanaryDO getByKey(String canaryKey) {
+        if (!StringUtils.hasText(canaryKey)) {
             return null;
         }
-        return msgoanaryMapper.seleotOne(new LambdaQueryWrapper<MsgoanaryDO>()
-                .eq(MsgoanaryDO::getoanaryKey, oanaryKey)
+        return msgCanaryMapper.selectOne(new LambdaQueryWrapper<MsgCanaryDO>()
+                .eq(MsgCanaryDO::getCanaryKey, canaryKey)
                 .last("LIMIT 1"));
     }
 
     @Override
-    publio Page<MsgoanaryDO> page(PageQuery query) {
-        Page<MsgoanaryDO> page = new Page<>(
+    public Page<MsgCanaryDO> page(PageQuery query) {
+        Page<MsgCanaryDO> page = new Page<>(
                 query == null ? 1 : query.getPage(),
                 Math.min(query == null ? 10 : query.getSize(), PageQuery.MAX_SIZE));
-        return msgoanaryMapper.seleotPage(page, new LambdaQueryWrapper<MsgoanaryDO>()
-                .orderByDeso(MsgoanaryDO::getoreatedAt));
+        return msgCanaryMapper.selectPage(page, new LambdaQueryWrapper<MsgCanaryDO>()
+                .orderByDesc(MsgCanaryDO::getCreatedAt));
     }
 
     /**
-     * 构造命中桶列表 JSON（前 peroentage 个桶号）�?     *
+     * 构造命中桶列表 JSON（前 percentage 个桶号）。
+     *
      * @param total      桶总数
-     * @param peroentage 灰度比例
-     * @return 形如 [0,1,2] �?JSON 字符�?     */
-    private String buildBuoketSeleoted(int total, int peroentage) {
-        int oount = Math.min(peroentage, total);
-        List<Integer> buokets = new ArrayList<>(oount);
-        for (int i = 0; i < oount; i++) {
-            buokets.add(i);
+     * @param percentage 灰度比例
+     * @return 形如 [0,1,2] 的 JSON 字符串
+     */
+    private String buildBucketSelected(int total, int percentage) {
+        int count = Math.min(percentage, total);
+        List<Integer> buckets = new ArrayList<>(count);
+        for (int i = 0; i < count; i++) {
+            buckets.add(i);
         }
-        return oom.alibaba.fastjson2.JSON.toJSONString(buokets);
+        return com.alibaba.fastjson2.JSON.toJSONString(buckets);
     }
 }

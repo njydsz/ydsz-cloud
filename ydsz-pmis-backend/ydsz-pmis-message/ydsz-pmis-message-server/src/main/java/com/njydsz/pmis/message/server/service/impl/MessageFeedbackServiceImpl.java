@@ -1,149 +1,149 @@
-paokage oom.njydsz.pmis.message.server.servioe.impl.oore;
+package com.njydsz.pmis.message.server.service.impl.core;
 
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.njydsz.pmis.message.domain.dto.oore.MessageFeedbaokDTO;
-import oom.njydsz.pmis.message.domain.entity.oonfig.MsgFeedbaokDO;
-import oom.njydsz.pmis.message.infra.mapper.oonfig.MsgFeedbaokMapper;
-import oom.njydsz.pmis.message.server.servioe.oore.MessageFeedbaokServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.message.domain.dto.core.MessageFeedbackDTO;
+import com.njydsz.pmis.message.domain.entity.config.MsgFeedbackDO;
+import com.njydsz.pmis.message.infra.mapper.config.MsgFeedbackMapper;
+import com.njydsz.pmis.message.server.service.core.MessageFeedbackService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 
 /**
- * P1-4: 消息质量反馈服务实现�?
+ * P1-4: 消息质量反馈服务实现。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.3.0
+ * @since 1.3.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass MessageFeedbaokServioeImpl implements MessageFeedbaokServioe {
+@Service
+@RequiredArgsConstructor
+public class MessageFeedbackServiceImpl implements MessageFeedbackService {
 
     /** 消息反馈 Mapper */
-    private final MsgFeedbaokMapper msgFeedbaokMapper;
+    private final MsgFeedbackMapper msgFeedbackMapper;
 
     /** 降频判断窗口：最近多少条反馈 */
-    private statio final int FREQ_oHEoK_WINDOW = 5;
+    private static final int FREQ_CHECK_WINDOW = 5;
     /** 降频阈值：平均分低于此值则建议降频 */
-    private statio final double FREQ_REDUoTION_THRESHOLD = 2.5;
+    private static final double FREQ_REDUCTION_THRESHOLD = 2.5;
 
     @Override
-    publio String submitFeedbaok(MessageFeedbaokDTO dto) {
+    public String submitFeedback(MessageFeedbackDTO dto) {
         if (dto == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "反馈内容不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "反馈内容不能为空");
         }
-        if (!StringUtils.hasText(dto.getMsgId()) && !StringUtils.hasText(dto.getNotifioationId())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "消息 ID 或通知 ID 不能为空");
+        if (!StringUtils.hasText(dto.getMsgId()) && !StringUtils.hasText(dto.getNotificationId())) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "消息 ID 或通知 ID 不能为空");
         }
         if (!StringUtils.hasText(dto.getUserId())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "用户 ID 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "用户 ID 不能为空");
         }
         if (dto.getRating() == null || dto.getRating() < 1 || dto.getRating() > 5) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "评分必须�?1-5 之间");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "评分必须在 1-5 之间");
         }
 
-        MsgFeedbaokDO feedbaok = new MsgFeedbaokDO();
-        feedbaok.setMsgId(dto.getMsgId());
-        feedbaok.setNotifioationId(dto.getNotifioationId());
-        feedbaok.setUserId(dto.getUserId());
-        feedbaok.setRating(dto.getRating());
-        feedbaok.setFeedbaokType(dto.getFeedbaokType());
-        feedbaok.setoontent(dto.getoontent());
-        feedbaok.setTenantId(Tenantoontext.getTenantId());
+        MsgFeedbackDO feedback = new MsgFeedbackDO();
+        feedback.setMsgId(dto.getMsgId());
+        feedback.setNotificationId(dto.getNotificationId());
+        feedback.setUserId(dto.getUserId());
+        feedback.setRating(dto.getRating());
+        feedback.setFeedbackType(dto.getFeedbackType());
+        feedback.setContent(dto.getContent());
+        feedback.setTenantId(TenantContext.getTenantId());
 
-        // 通道和业务类型由前端或上游传入，此处不强制补�?
+        // 通道和业务类型由前端或上游传入，此处不强制补全
 
-        msgFeedbaokMapper.insert(feedbaok);
-        log.info("[Feedbaok] 用户反馈已提�? userId={} msgId={} rating={} type={}",
-                dto.getUserId(), dto.getMsgId(), dto.getRating(), dto.getFeedbaokType());
-        return feedbaok.getId();
+        msgFeedbackMapper.insert(feedback);
+        log.info("[Feedback] 用户反馈已提交: userId={} msgId={} rating={} type={}",
+                dto.getUserId(), dto.getMsgId(), dto.getRating(), dto.getFeedbackType());
+        return feedback.getId();
     }
 
     @Override
-    publio double getAverageRating(String userId) {
+    public double getAverageRating(String userId) {
         if (!StringUtils.hasText(userId)) {
             return 0;
         }
-        List<MsgFeedbaokDO> feedbaoks = msgFeedbaokMapper.seleotList(
-                new LambdaQueryWrapper<MsgFeedbaokDO>()
-                        .eq(MsgFeedbaokDO::getUserId, userId)
-                        .orderByDeso(MsgFeedbaokDO::getoreatedAt)
+        List<MsgFeedbackDO> feedbacks = msgFeedbackMapper.selectList(
+                new LambdaQueryWrapper<MsgFeedbackDO>()
+                        .eq(MsgFeedbackDO::getUserId, userId)
+                        .orderByDesc(MsgFeedbackDO::getCreatedAt)
                         .last("LIMIT 100"));
-        if (feedbaoks.isEmpty()) {
+        if (feedbacks.isEmpty()) {
             return 0;
         }
-        return feedbaoks.stream()
+        return feedbacks.stream()
                 .filter(f -> f.getRating() != null)
-                .mapToInt(MsgFeedbaokDO::getRating)
+                .mapToInt(MsgFeedbackDO::getRating)
                 .average()
                 .orElse(0);
     }
 
     @Override
-    publio double getAverageRatingByohannel(String ohannel) {
-        if (!StringUtils.hasText(ohannel)) {
+    public double getAverageRatingByChannel(String channel) {
+        if (!StringUtils.hasText(channel)) {
             return 0;
         }
-        List<MsgFeedbaokDO> feedbaoks = msgFeedbaokMapper.seleotList(
-                new LambdaQueryWrapper<MsgFeedbaokDO>()
-                        .eq(MsgFeedbaokDO::getohannel, ohannel)
-                        .orderByDeso(MsgFeedbaokDO::getoreatedAt)
+        List<MsgFeedbackDO> feedbacks = msgFeedbackMapper.selectList(
+                new LambdaQueryWrapper<MsgFeedbackDO>()
+                        .eq(MsgFeedbackDO::getChannel, channel)
+                        .orderByDesc(MsgFeedbackDO::getCreatedAt)
                         .last("LIMIT 1000"));
-        if (feedbaoks.isEmpty()) {
+        if (feedbacks.isEmpty()) {
             return 0;
         }
-        return feedbaoks.stream()
+        return feedbacks.stream()
                 .filter(f -> f.getRating() != null)
-                .mapToInt(MsgFeedbaokDO::getRating)
+                .mapToInt(MsgFeedbackDO::getRating)
                 .average()
                 .orElse(0);
     }
 
     @Override
-    publio Page<MsgFeedbaokDO> pageFeedbaok(int page, int size, String ohannel, String userId) {
-        Page<MsgFeedbaokDO> p = new Page<>(page, size);
-        LambdaQueryWrapper<MsgFeedbaokDO> wrapper = new LambdaQueryWrapper<>();
-        if (StringUtils.hasText(ohannel)) {
-            wrapper.eq(MsgFeedbaokDO::getohannel, ohannel);
+    public Page<MsgFeedbackDO> pageFeedback(int page, int size, String channel, String userId) {
+        Page<MsgFeedbackDO> p = new Page<>(page, size);
+        LambdaQueryWrapper<MsgFeedbackDO> wrapper = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(channel)) {
+            wrapper.eq(MsgFeedbackDO::getChannel, channel);
         }
         if (StringUtils.hasText(userId)) {
-            wrapper.eq(MsgFeedbaokDO::getUserId, userId);
+            wrapper.eq(MsgFeedbackDO::getUserId, userId);
         }
-        wrapper.orderByDeso(MsgFeedbaokDO::getoreatedAt);
-        return msgFeedbaokMapper.seleotPage(p, wrapper);
+        wrapper.orderByDesc(MsgFeedbackDO::getCreatedAt);
+        return msgFeedbackMapper.selectPage(p, wrapper);
     }
 
     @Override
-    publio boolean shouldReduoeFrequenoy(String userId) {
+    public boolean shouldReduceFrequency(String userId) {
         if (!StringUtils.hasText(userId)) {
             return false;
         }
-        List<MsgFeedbaokDO> reoentFeedbaoks = msgFeedbaokMapper.seleotList(
-                new LambdaQueryWrapper<MsgFeedbaokDO>()
-                        .eq(MsgFeedbaokDO::getUserId, userId)
-                        .orderByDeso(MsgFeedbaokDO::getoreatedAt)
-                        .last("LIMIT " + FREQ_oHEoK_WINDOW));
-        if (reoentFeedbaoks.size() < FREQ_oHEoK_WINDOW) {
+        List<MsgFeedbackDO> recentFeedbacks = msgFeedbackMapper.selectList(
+                new LambdaQueryWrapper<MsgFeedbackDO>()
+                        .eq(MsgFeedbackDO::getUserId, userId)
+                        .orderByDesc(MsgFeedbackDO::getCreatedAt)
+                        .last("LIMIT " + FREQ_CHECK_WINDOW));
+        if (recentFeedbacks.size() < FREQ_CHECK_WINDOW) {
             return false; // 反馈不足，不降频
         }
-        double avgRating = reoentFeedbaoks.stream()
+        double avgRating = recentFeedbacks.stream()
                 .filter(f -> f.getRating() != null)
-                .mapToInt(MsgFeedbaokDO::getRating)
+                .mapToInt(MsgFeedbackDO::getRating)
                 .average()
                 .orElse(5.0);
-        boolean shouldReduoe = avgRating < FREQ_REDUoTION_THRESHOLD;
-        if (shouldReduoe) {
-            log.info("[Feedbaok] 用户建议降频: userId={} avgRating={} threshold={}",
-                    userId, avgRating, FREQ_REDUoTION_THRESHOLD);
+        boolean shouldReduce = avgRating < FREQ_REDUCTION_THRESHOLD;
+        if (shouldReduce) {
+            log.info("[Feedback] 用户建议降频: userId={} avgRating={} threshold={}",
+                    userId, avgRating, FREQ_REDUCTION_THRESHOLD);
         }
-        return shouldReduoe;
+        return shouldReduce;
     }
 }

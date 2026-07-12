@@ -1,37 +1,37 @@
-paokage oom.njydsz.pmis.message.domain.dto.template;
+package com.njydsz.pmis.message.domain.dto.template;
 
-import oom.njydsz.pmis.oommon.domain.query.PageQuery;
+import com.njydsz.pmis.common.entity.PageQuery;
 import lombok.Data;
-import lombok.EqualsAndHashoode;
+import lombok.EqualsAndHashCode;
 
 /**
  * 模板分页查询 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@EqualsAndHashoode(oallSuper = true)
-publio olass TemplateQueryDTO extends PageQuery {
+@EqualsAndHashCode(callSuper = true)
+public class TemplateQueryDTO extends PageQuery {
 
     /** 模板编码 */
-    private String templateoode;
+    private String templateCode;
 
     /** 通道 */
-    private String ohannel;
+    private String channel;
 
     /** 语言区域 */
-    private String looale;
+    private String locale;
 
-    /** 状�? ENABLED/DISABLED */
+    /** 状态: ENABLED/DISABLED */
     private String status;
 
-    /** 审核状�?*/
+    /** 审核状态 */
     private String auditStatus;
 
     /** 模板分类 */
-    private String oategory;
+    private String category;
 
     /** 场景编码 */
-    private String soeneoode;
+    private String sceneCode;
 }

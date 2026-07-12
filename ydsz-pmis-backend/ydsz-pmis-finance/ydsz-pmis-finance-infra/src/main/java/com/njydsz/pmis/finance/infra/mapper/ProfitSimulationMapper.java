@@ -1,9 +1,9 @@
-paokage oom.njydsz.pmis.finanoe.infra.mapper;
+package com.njydsz.pmis.finance.infra.mapper;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.finanoe.domain.entity.ProfitSimulationDO;
-import org.apaohe.ibatis.annotations.Mapper;
-import org.apaohe.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.finance.domain.entity.ProfitSimulationDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -11,25 +11,26 @@ import java.util.List;
  * 利润模拟 Mapper
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Mapper
-publio interfaoe ProfitSimulationMapper extends BaseMapper<ProfitSimulationDO> {
+public interface ProfitSimulationMapper extends BaseMapper<ProfitSimulationDO> {
 
     /**
-     * 按编码查询利润模拟记�?     *
-     * @param oode 模拟编码
+     * 按编码查询利润模拟记录
+     *
+     * @param code 模拟编码
      * @return 利润模拟对象，未找到返回 null
      */
-    ProfitSimulationDO seleotByoode(@Param("oode") String oode);
+    ProfitSimulationDO selectByCode(@Param("code") String code);
 
     /**
-     * 按立�?ID 查询利润模拟列表
+     * 按立项 ID 查询利润模拟列表
      *
      * @param initiationId 立项 ID
      * @return 利润模拟列表
      */
-    List<ProfitSimulationDO> seleotByInitiation(@Param("initiationId") String initiationId);
+    List<ProfitSimulationDO> selectByInitiation(@Param("initiationId") String initiationId);
 
     /**
      * 同项目下最大版本号

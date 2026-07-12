@@ -1,50 +1,52 @@
-paokage oom.njydsz.pmis.message.server.servioe.impl.oonfig;
+package com.njydsz.pmis.message.server.service.impl.config;
 
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.njydsz.pmis.message.domain.oonstant.Messageoonstants;
-import oom.njydsz.pmis.message.domain.dto.oonfig.PreferenoeUpsertDTO;
-import oom.njydsz.pmis.message.domain.entity.oonfig.MsgPreferenoeDO;
-import oom.njydsz.pmis.message.infra.mapper.oonfig.MsgPreferenoeMapper;
-import oom.njydsz.pmis.message.server.servioe.oonfig.PreferenoeServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.message.domain.constant.MessageConstants;
+import com.njydsz.pmis.message.domain.dto.config.PreferenceUpsertDTO;
+import com.njydsz.pmis.message.domain.entity.config.MsgPreferenceDO;
+import com.njydsz.pmis.message.infra.mapper.config.MsgPreferenceMapper;
+import com.njydsz.pmis.message.server.service.config.PreferenceService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 
 /**
- * 用户消息偏好服务实现�? *
- * <p>�?(userId, ohannel, bizType) upsert；查询优先精�?bizType，回退 {@oode __DEFAULT__}�? *
+ * 用户消息偏好服务实现。
+ *
+ * <p>按 (userId, channel, bizType) upsert；查询优先精确 bizType，回退 {@code __DEFAULT__}。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass PreferenoeServioeImpl implements PreferenoeServioe {
+@Service
+@RequiredArgsConstructor
+public class PreferenceServiceImpl implements PreferenceService {
 
     /** 用户消息偏好 Mapper */
-    private final MsgPreferenoeMapper msgPreferenoeMapper;
+    private final MsgPreferenceMapper msgPreferenceMapper;
 
     @Override
-    publio MsgPreferenoeDO upsert(PreferenoeUpsertDTO dto) {
-        if (dto == null || !StringUtils.hasText(dto.getUserId()) || !StringUtils.hasText(dto.getohannel())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "用户 ID 与通道不能为空");
+    public MsgPreferenceDO upsert(PreferenceUpsertDTO dto) {
+        if (dto == null || !StringUtils.hasText(dto.getUserId()) || !StringUtils.hasText(dto.getChannel())) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "用户 ID 与通道不能为空");
         }
-        String bizType = StringUtils.hasText(dto.getBizType()) ? dto.getBizType() : Messageoonstants.DEFAULT_BIZ_TYPE;
-        MsgPreferenoeDO existing = msgPreferenoeMapper.seleotOne(new LambdaQueryWrapper<MsgPreferenoeDO>()
-                .eq(MsgPreferenoeDO::getUserId, dto.getUserId())
-                .eq(MsgPreferenoeDO::getohannel, dto.getohannel())
-                .eq(MsgPreferenoeDO::getBizType, bizType)
+        String bizType = StringUtils.hasText(dto.getBizType()) ? dto.getBizType() : MessageConstants.DEFAULT_BIZ_TYPE;
+        MsgPreferenceDO existing = msgPreferenceMapper.selectOne(new LambdaQueryWrapper<MsgPreferenceDO>()
+                .eq(MsgPreferenceDO::getUserId, dto.getUserId())
+                .eq(MsgPreferenceDO::getChannel, dto.getChannel())
+                .eq(MsgPreferenceDO::getBizType, bizType)
                 .last("LIMIT 1"));
         if (existing == null) {
-            MsgPreferenoeDO entity = new MsgPreferenoeDO();
+            MsgPreferenceDO entity = new MsgPreferenceDO();
             entity.setUserId(dto.getUserId());
-            entity.setohannel(dto.getohannel());
+            entity.setChannel(dto.getChannel());
             entity.setBizType(bizType);
             entity.setEnabled(dto.getEnabled() == null ? 1 : dto.getEnabled());
             entity.setDndEnabled(dto.getDndEnabled() == null ? 0 : dto.getDndEnabled());
@@ -53,12 +55,12 @@ publio olass PreferenoeServioeImpl implements PreferenoeServioe {
             entity.setDailyLimit(dto.getDailyLimit());
             entity.setHourlyLimit(dto.getHourlyLimit());
             entity.setDigestEnabled(dto.getDigestEnabled() == null ? 0 : dto.getDigestEnabled());
-            entity.setDigestFrequenoy(dto.getDigestFrequenoy());
-            entity.setLooale(dto.getLooale());
+            entity.setDigestFrequency(dto.getDigestFrequency());
+            entity.setLocale(dto.getLocale());
             entity.setExtra(dto.getExtra());
-            entity.setTenantId(Tenantoontext.getTenantId());
-            msgPreferenoeMapper.insert(entity);
-            log.info("[Preferenoe] 新建偏好: user={} ohannel={} bizType={}", dto.getUserId(), dto.getohannel(), bizType);
+            entity.setTenantId(TenantContext.getTenantId());
+            msgPreferenceMapper.insert(entity);
+            log.info("[Preference] 新建偏好: user={} channel={} bizType={}", dto.getUserId(), dto.getChannel(), bizType);
             return entity;
         }
         existing.setEnabled(dto.getEnabled() == null ? existing.getEnabled() : dto.getEnabled());
@@ -68,54 +70,54 @@ publio olass PreferenoeServioeImpl implements PreferenoeServioe {
         existing.setDailyLimit(dto.getDailyLimit());
         existing.setHourlyLimit(dto.getHourlyLimit());
         existing.setDigestEnabled(dto.getDigestEnabled() == null ? existing.getDigestEnabled() : dto.getDigestEnabled());
-        existing.setDigestFrequenoy(dto.getDigestFrequenoy());
-        existing.setLooale(dto.getLooale());
+        existing.setDigestFrequency(dto.getDigestFrequency());
+        existing.setLocale(dto.getLocale());
         existing.setExtra(dto.getExtra());
-        msgPreferenoeMapper.updateById(existing);
+        msgPreferenceMapper.updateById(existing);
         return existing;
     }
 
     @Override
-    publio MsgPreferenoeDO getByUser(String userId, String ohannel, String bizType) {
-        if (!StringUtils.hasText(userId) || !StringUtils.hasText(ohannel)) {
+    public MsgPreferenceDO getByUser(String userId, String channel, String bizType) {
+        if (!StringUtils.hasText(userId) || !StringUtils.hasText(channel)) {
             return null;
         }
-        String bt = StringUtils.hasText(bizType) ? bizType : Messageoonstants.DEFAULT_BIZ_TYPE;
+        String bt = StringUtils.hasText(bizType) ? bizType : MessageConstants.DEFAULT_BIZ_TYPE;
         // 优先精确 bizType
-        MsgPreferenoeDO entity = msgPreferenoeMapper.seleotOne(new LambdaQueryWrapper<MsgPreferenoeDO>()
-                .eq(MsgPreferenoeDO::getUserId, userId)
-                .eq(MsgPreferenoeDO::getohannel, ohannel)
-                .eq(MsgPreferenoeDO::getBizType, bt)
+        MsgPreferenceDO entity = msgPreferenceMapper.selectOne(new LambdaQueryWrapper<MsgPreferenceDO>()
+                .eq(MsgPreferenceDO::getUserId, userId)
+                .eq(MsgPreferenceDO::getChannel, channel)
+                .eq(MsgPreferenceDO::getBizType, bt)
                 .last("LIMIT 1"));
         if (entity != null) {
             return entity;
         }
         // 回退默认
-        if (!Messageoonstants.DEFAULT_BIZ_TYPE.equals(bt)) {
-            entity = msgPreferenoeMapper.seleotOne(new LambdaQueryWrapper<MsgPreferenoeDO>()
-                    .eq(MsgPreferenoeDO::getUserId, userId)
-                    .eq(MsgPreferenoeDO::getohannel, ohannel)
-                    .eq(MsgPreferenoeDO::getBizType, Messageoonstants.DEFAULT_BIZ_TYPE)
+        if (!MessageConstants.DEFAULT_BIZ_TYPE.equals(bt)) {
+            entity = msgPreferenceMapper.selectOne(new LambdaQueryWrapper<MsgPreferenceDO>()
+                    .eq(MsgPreferenceDO::getUserId, userId)
+                    .eq(MsgPreferenceDO::getChannel, channel)
+                    .eq(MsgPreferenceDO::getBizType, MessageConstants.DEFAULT_BIZ_TYPE)
                     .last("LIMIT 1"));
         }
         return entity;
     }
 
     @Override
-    publio List<MsgPreferenoeDO> listByUser(String userId) {
+    public List<MsgPreferenceDO> listByUser(String userId) {
         if (!StringUtils.hasText(userId)) {
             return List.of();
         }
-        return msgPreferenoeMapper.seleotList(new LambdaQueryWrapper<MsgPreferenoeDO>()
-                .eq(MsgPreferenoeDO::getUserId, userId)
-                .orderByAso(MsgPreferenoeDO::getohannel));
+        return msgPreferenceMapper.selectList(new LambdaQueryWrapper<MsgPreferenceDO>()
+                .eq(MsgPreferenceDO::getUserId, userId)
+                .orderByAsc(MsgPreferenceDO::getChannel));
     }
 
     @Override
-    publio void delete(String id) {
+    public void delete(String id) {
         if (!StringUtils.hasText(id)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "偏好 ID 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "偏好 ID 不能为空");
         }
-        msgPreferenoeMapper.deleteById(id);
+        msgPreferenceMapper.deleteById(id);
     }
 }

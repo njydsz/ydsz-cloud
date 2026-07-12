@@ -1,73 +1,77 @@
-paokage oom.njydsz.pmis.oronjob.server.oore.disoovery;
+package com.njydsz.pmis.cronjob.server.core.discovery;
 
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.njydsz.pmis.oronjob.server.oonfig.oronjobProperties;
-import oom.njydsz.pmis.oronjob.domain.entity.job.JobNodeDO;
-import oom.njydsz.pmis.oronjob.infra.mapper.job.JobNodeMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
+import com.njydsz.pmis.cronjob.infra.mapper.job.JobNodeMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.faotory.annotation.Value;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnProperty;
-import org.springframework.stereotype.oomponent;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
 import java.net.InetAddress;
-import java.time.LooalDateTime;
-import java.util.oolleotions;
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 /**
- * 基于心跳表的节点发现策略（P1-1，向后兼容）�? *
- * <p>查询 {@oode pmis_job_node} 表中 {@oode last_heartbeat} 在阈值内的节点，
- * �?{@link oom.njydsz.pmis.oronjob.server.oore.exeoutor.JobNodeHeartbeat} + 
- * {@link oom.njydsz.pmis.oronjob.server.oore.exeoutor.JobNodeReaper} 配合使用�? *
- * <p>通过 {@oode pmis.oronjob.node-disoovery.type=db} 启用�? * 启用�?JobNodeHeartbeat �?JobNodeReaper 也会自动注册�? *
+ * 基于心跳表的节点发现策略（P1-1，向后兼容）。
+ *
+ * <p>查询 {@code pmis_job_node} 表中 {@code last_heartbeat} 在阈值内的节点，
+ * 与 {@link com.njydsz.pmis.cronjob.server.core.executor.JobNodeHeartbeat} + 
+ * {@link com.njydsz.pmis.cronjob.server.core.executor.JobNodeReaper} 配合使用。
+ *
+ * <p>通过 {@code pmis.cronjob.node-discovery.type=db} 启用，
+ * 启用时 JobNodeHeartbeat 和 JobNodeReaper 也会自动注册。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@oomponent
-@oonditionalOnProperty(name = "pmis.oronjob.node-disoovery.type", havingValue = "db")
-publio olass DbNodeDisooveryStrategy implements NodeDisooveryStrategy {
+@Component
+@ConditionalOnProperty(name = "pmis.cronjob.node-discovery.type", havingValue = "db")
+public class DbNodeDiscoveryStrategy implements NodeDiscoveryStrategy {
 
     private final JobNodeMapper jobNodeMapper;
-    private final oronjobProperties oronjobProperties;
+    private final CronjobProperties cronjobProperties;
 
     /** 当前节点 ID（hostname:port，与 JobNodeHeartbeat 保持一致） */
-    private final String looalNodeId;
+    private final String localNodeId;
 
-    publio DbNodeDisooveryStrategy(JobNodeMapper jobNodeMapper,
-                                   oronjobProperties oronjobProperties,
+    public DbNodeDiscoveryStrategy(JobNodeMapper jobNodeMapper,
+                                   CronjobProperties cronjobProperties,
                                    @Value("${server.port:0}") int serverPort) {
         this.jobNodeMapper = jobNodeMapper;
-        this.oronjobProperties = oronjobProperties;
-        this.looalNodeId = resolveHostName() + ":" + serverPort;
-        log.info("[DbNodeDisoovery] 初始化完�? looalNodeId={}", looalNodeId);
+        this.cronjobProperties = cronjobProperties;
+        this.localNodeId = resolveHostName() + ":" + serverPort;
+        log.info("[DbNodeDiscovery] 初始化完成, localNodeId={}", localNodeId);
     }
 
     @Override
-    publio List<JobNodeDO> getOnlineNodes() {
+    public List<JobNodeDO> getOnlineNodes() {
         try {
-            long threshold = oronjobProperties.getExeoutor().getOfflineThresholdSeoonds();
-            LooalDateTime outoff = LooalDateTime.now().minusSeoonds(threshold);
+            long threshold = cronjobProperties.getExecutor().getOfflineThresholdSeconds();
+            LocalDateTime cutoff = LocalDateTime.now().minusSeconds(threshold);
             LambdaQueryWrapper<JobNodeDO> wrapper = new LambdaQueryWrapper<>();
             wrapper.eq(JobNodeDO::getStatus, "ONLINE")
-                    .ge(JobNodeDO::getLastHeartbeat, outoff)
-                    .orderByAso(JobNodeDO::getNodeId);
-            return jobNodeMapper.seleotList(wrapper);
-        } oatoh (Exoeption e) {
-            log.warn("[DbNodeDisoovery] 查询在线节点失败, 返回空列�? reason={}", e.getMessage());
-            return oolleotions.emptyList();
+                    .ge(JobNodeDO::getLastHeartbeat, cutoff)
+                    .orderByAsc(JobNodeDO::getNodeId);
+            return jobNodeMapper.selectList(wrapper);
+        } catch (Exception e) {
+            log.warn("[DbNodeDiscovery] 查询在线节点失败, 返回空列表: reason={}", e.getMessage());
+            return Collections.emptyList();
         }
     }
 
     @Override
-    publio String getLooalNodeId() {
-        return looalNodeId;
+    public String getLocalNodeId() {
+        return localNodeId;
     }
 
     private String resolveHostName() {
         try {
-            return InetAddress.getLooalHost().getHostName();
-        } oatoh (Exoeption e) {
+            return InetAddress.getLocalHost().getHostName();
+        } catch (Exception e) {
             return "unknown";
         }
     }

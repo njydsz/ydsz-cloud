@@ -1,44 +1,45 @@
-paokage oom.njydsz.pmis.message.domain.dto.batoh;
+package com.njydsz.pmis.message.domain.dto.batch;
 
 
-import lombok.AllArgsoonstruotor;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsoonstruotor;
+import lombok.NoArgsConstructor;
 
 /**
- * 批量发送结果�? *
+ * 批量发送结果。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@NoArgsoonstruotor
-@AllArgsoonstruotor
-publio olass BatohSendResult {
+@NoArgsConstructor
+@AllArgsConstructor
+public class BatchSendResult {
 
-    /** 批次 ID（业务侧生成,用于关联进度查询�?*/
-    private String batohId;
+    /** 批次 ID（业务侧生成,用于关联进度查询） */
+    private String batchId;
 
     /** 总数 */
     private int total;
 
-    /** 成功�?*/
-    private int suooess;
+    /** 成功数 */
+    private int success;
 
-    /** 失败�?*/
+    /** 失败数 */
     private int failed;
 
-    /** 被限�?拦截�?*/
+    /** 被限流/拦截数 */
     private int skipped;
 
-    publio void inoSuooess() {
-        this.suooess++;
+    public void incSuccess() {
+        this.success++;
     }
 
-    publio void inoFailed() {
+    public void incFailed() {
         this.failed++;
     }
 
-    publio void inoSkipped() {
+    public void incSkipped() {
         this.skipped++;
     }
 }

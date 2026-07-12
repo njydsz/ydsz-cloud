@@ -1,62 +1,63 @@
-paokage oom.njydsz.pmis.message.domain.entity.batoh;
+package com.njydsz.pmis.message.domain.entity.batch;
 
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
-import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashoode;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 
 /**
- * 聚合批次�? �?aggregate_group+reoeiver 的消息按频率合并为摘要发�? *
+ * 聚合批次表: 同 aggregate_group+receiver 的消息按频率合并为摘要发送
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@EqualsAndHashoode(oallSuper = true)
+@EqualsAndHashCode(callSuper = true)
 @TableName("pmis_msg_aggregate")
-publio olass MsgAggregateDO extends BaseDO {
+public class MsgAggregateDO extends BaseDO {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    /** 聚合�?*/
+    /** 聚合组 */
     private String aggregateGroup;
 
-    /** 接收�?*/
-    private String reoeiver;
+    /** 接收人 */
+    private String receiver;
 
     /** 通道 */
-    private String ohannel;
+    private String channel;
 
-    /** 批次状�? PENDING 攒批�?/ READY 就绪待发 / SENT 已发�?/ oANoELLED 已取�?*/
-    private String batohStatus;
+    /** 批次状态: PENDING 攒批中 / READY 就绪待发 / SENT 已发送 / CANCELLED 已取消 */
+    private String batchStatus;
 
     /** 消息数量 */
-    private Integer messageoount;
+    private Integer messageCount;
 
     /** 首条消息时间 */
-    private LooalDateTime firstMessageAt;
+    private LocalDateTime firstMessageAt;
 
     /** 末条消息时间 */
-    private LooalDateTime lastMessageAt;
+    private LocalDateTime lastMessageAt;
 
-    /** 计划发送时�?到达后触发摘要发�? */
-    private LooalDateTime soheduledSendAt;
+    /** 计划发送时间(到达后触发摘要发送) */
+    private LocalDateTime scheduledSendAt;
 
-    /** 实际发送时�?*/
-    private LooalDateTime sentAt;
+    /** 实际发送时间 */
+    private LocalDateTime sentAt;
 
-    /** 聚合后摘要内�?渲染�? */
-    private String digestoontent;
+    /** 聚合后摘要内容(渲染后) */
+    private String digestContent;
 
-    /** 租户 ID(单租户部署默�?1) */
+    /** 租户 ID(单租户部署默认 1) */
     private String tenantId;
 }

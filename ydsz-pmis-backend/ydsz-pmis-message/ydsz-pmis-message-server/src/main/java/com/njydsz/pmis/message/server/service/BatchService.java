@@ -1,40 +1,40 @@
-paokage oom.njydsz.pmis.message.server.servioe.batoh;
+package com.njydsz.pmis.message.server.service.batch;
 
 
-import oom.njydsz.pmis.message.domain.dto.batoh.BatohProgressVO;
-import oom.njydsz.pmis.message.domain.dto.batoh.BatohSendRequestDTO;
-import oom.njydsz.pmis.message.domain.entity.batoh.MsgBatohDO;
+import com.njydsz.pmis.message.domain.dto.batch.BatchProgressVO;
+import com.njydsz.pmis.message.domain.dto.batch.BatchSendRequestDTO;
+import com.njydsz.pmis.message.domain.entity.batch.MsgBatchDO;
 
 /**
- * 消息批次服务�?
+ * 消息批次服务。
  *
- * <p>管理异步批量发送的批次创建、进度查询、状态更新�?
+ * <p>管理异步批量发送的批次创建、进度查询、状态更新。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.2.0
+ * @since 1.2.0
  */
-publio interfaoe BatohServioe {
+public interface BatchService {
 
     /**
-     * 创建批次并异步发送（异步模式立即返回，后台处理）�?
+     * 创建批次并异步发送（异步模式立即返回，后台处理）。
      *
-     * @param dto 批量发送请�?
-     * @return 批次实体（含 batohId 与初始状态）
+     * @param dto 批量发送请求
+     * @return 批次实体（含 batchId 与初始状态）
      */
-    MsgBatohDO submitBatoh(BatohSendRequestDTO dto);
+    MsgBatchDO submitBatch(BatchSendRequestDTO dto);
 
     /**
-     * 查询批次进度�?
+     * 查询批次进度。
      *
-     * @param batohId 批次 ID
+     * @param batchId 批次 ID
      * @return 进度 VO
      */
-    BatohProgressVO getProgress(String batohId);
+    BatchProgressVO getProgress(String batchId);
 
     /**
-     * 异步执行批次发送（后台线程调用）�?
+     * 异步执行批次发送（后台线程调用）。
      *
-     * @param batohId 批次 ID
+     * @param batchId 批次 ID
      */
-    void exeouteBatoh(String batohId);
+    void executeBatch(String batchId);
 }

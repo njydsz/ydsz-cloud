@@ -1,28 +1,28 @@
-paokage oom.njydsz.pmis.system.server.servioe.impl.oonfig;
+package com.njydsz.pmis.system.server.service.impl.config;
 
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.alibaba.fastjson2.JSON;
-import oom.alibaba.fastjson2.TypeReferenoe;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.domain.query.PageQuery;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.system.domain.dto.oonfig.oonfigFormDTO;
-import oom.njydsz.pmis.system.domain.dto.oonfig.oonfigQueryDTO;
-import oom.njydsz.pmis.system.domain.entity.oonfig.oonfigDO;
-import oom.njydsz.pmis.system.infra.mapper.oonfig.oonfigMapper;
-import oom.njydsz.pmis.system.server.servioe.oonfig.oonfigServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.TypeReference;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.entity.PageQuery;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.system.domain.dto.config.ConfigFormDTO;
+import com.njydsz.pmis.system.domain.dto.config.ConfigQueryDTO;
+import com.njydsz.pmis.system.domain.entity.config.ConfigDO;
+import com.njydsz.pmis.system.infra.mapper.config.ConfigMapper;
+import com.njydsz.pmis.system.server.service.config.ConfigService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.oaohe.annotation.oaoheEviot;
-import org.springframework.oaohe.annotation.oaoheable;
-import org.springframework.data.redis.oore.StringRedisTemplate;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
@@ -32,28 +32,28 @@ import java.util.Set;
 /**
  * 配置中心服务实现
  *
- * <p>使用 Redis 缓存 10 分钟，变更后主动失效缓存�?
+ * <p>使用 Redis 缓存 10 分钟，变更后主动失效缓存。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass oonfigServioeImpl implements oonfigServioe {
+@Service
+@RequiredArgsConstructor
+public class ConfigServiceImpl implements ConfigService {
 
-    /** Spring oaohe 配置缓存名称 */
-    publio statio final String oAoHE_NAME = "oonfig";
+    /** Spring Cache 配置缓存名称 */
+    public static final String CACHE_NAME = "config";
 
     /** 单条配置缓存 Key 前缀 */
-    private statio final String oAoHE_PREFIX = "pmis:ofg:";
+    private static final String CACHE_PREFIX = "pmis:cfg:";
     /** 分组配置缓存 Key 前缀 */
-    private statio final String oAoHE_GROUP_PREFIX = "pmis:ofg:group:";
-    /** 缓存有效�?*/
-    private statio final Duration oAoHE_TTL = Duration.ofMinutes(10);
+    private static final String CACHE_GROUP_PREFIX = "pmis:cfg:group:";
+    /** 缓存有效期 */
+    private static final Duration CACHE_TTL = Duration.ofMinutes(10);
 
     /** 配置 Mapper */
-    private final oonfigMapper oonfigMapper;
+    private final ConfigMapper configMapper;
     /** Redis 操作模板（配置缓存） */
     private final StringRedisTemplate redisTemplate;
 
@@ -64,88 +64,88 @@ publio olass oonfigServioeImpl implements oonfigServioe {
      * @return 分页结果
      */
     @Override
-    @Transaotional(readOnly = true)
-    publio Page<oonfigDO> page(oonfigQueryDTO query) {
-        Page<oonfigDO> page = new Page<>(query.getPage(), Math.min(query.getSize(), PageQuery.MAX_SIZE));
-        LambdaQueryWrapper<oonfigDO> w = new LambdaQueryWrapper<>();
+    @Transactional(readOnly = true)
+    public Page<ConfigDO> page(ConfigQueryDTO query) {
+        Page<ConfigDO> page = new Page<>(query.getPage(), Math.min(query.getSize(), PageQuery.MAX_SIZE));
+        LambdaQueryWrapper<ConfigDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(query.getKeyword())) {
-            w.and(qw -> qw.like(oonfigDO::getoonfigKey, query.getKeyword())
-                    .or().like(oonfigDO::getoonfigValue, query.getKeyword())
-                    .or().like(oonfigDO::getDesoription, query.getKeyword()));
+            w.and(qw -> qw.like(ConfigDO::getConfigKey, query.getKeyword())
+                    .or().like(ConfigDO::getConfigValue, query.getKeyword())
+                    .or().like(ConfigDO::getDescription, query.getKeyword()));
         }
-        if (StringUtils.hasText(query.getoonfigGroup())) {
-            w.eq(oonfigDO::getoonfigGroup, query.getoonfigGroup());
+        if (StringUtils.hasText(query.getConfigGroup())) {
+            w.eq(ConfigDO::getConfigGroup, query.getConfigGroup());
         }
         if (StringUtils.hasText(query.getStatus())) {
-            w.eq(oonfigDO::getStatus, query.getStatus());
+            w.eq(ConfigDO::getStatus, query.getStatus());
         }
-        if (query.getIsPublio() != null) {
-            w.eq(oonfigDO::getIsPublio, query.getIsPublio());
+        if (query.getIsPublic() != null) {
+            w.eq(ConfigDO::getIsPublic, query.getIsPublic());
         }
-        w.orderByAso(oonfigDO::getoonfigGroup).orderByAso(oonfigDO::getSortOrder);
-        return oonfigMapper.seleotPage(page, w);
+        w.orderByAsc(ConfigDO::getConfigGroup).orderByAsc(ConfigDO::getSortOrder);
+        return configMapper.selectPage(page, w);
     }
 
     /**
-     * �?ID 查配�?
+     * 按 ID 查配置
      *
      * @param id 配置 ID
      * @return 配置实体
-     * @throws SysExoeption 当配置不存在时抛�?
+     * @throws SysException 当配置不存在时抛出
      */
     @Override
-    @Transaotional(readOnly = true)
-    publio oonfigDO getById(String id) {
-        oonfigDO o = oonfigMapper.seleotById(id);
-        if (o == null) {
-            throw new SysExoeption(StandardResultoode.NOT_FOUND, "配置不存�?);
+    @Transactional(readOnly = true)
+    public ConfigDO getById(String id) {
+        ConfigDO c = configMapper.selectById(id);
+        if (c == null) {
+            throw new SysException(StandardResultCode.NOT_FOUND, "配置不存在");
         }
-        return o;
+        return c;
     }
 
     /**
-     * �?group + key 查配置（优先读缓存）
+     * 按 group + key 查配置（优先读缓存）
      *
      * @param group 配置分组
-     * @param key   配置�?
-     * @return 配置实体，无则返�?null
+     * @param key   配置键
+     * @return 配置实体，无则返回 null
      */
     @Override
-    @Transaotional(readOnly = true)
-    @oaoheable(value = oAoHE_NAME, key = "#group + ':' + #key", unless = "#result == null")
-    publio oonfigDO getByKey(String group, String key) {
-        String oaoheKey = oAoHE_PREFIX + group + ":" + key;
-        String oaohed = redisTemplate.opsForValue().get(oaoheKey);
-        if (oaohed != null) {
-            return JSON.parseObjeot(oaohed, oonfigDO.olass);
+    @Transactional(readOnly = true)
+    @Cacheable(value = CACHE_NAME, key = "#group + ':' + #key", unless = "#result == null")
+    public ConfigDO getByKey(String group, String key) {
+        String cacheKey = CACHE_PREFIX + group + ":" + key;
+        String cached = redisTemplate.opsForValue().get(cacheKey);
+        if (cached != null) {
+            return JSON.parseObject(cached, ConfigDO.class);
         }
-        oonfigDO o = oonfigMapper.seleotByGroupAndKey(group, key);
-        if (o != null) {
-            redisTemplate.opsForValue().set(oaoheKey, JSON.toJSONString(o), oAoHE_TTL);
+        ConfigDO c = configMapper.selectByGroupAndKey(group, key);
+        if (c != null) {
+            redisTemplate.opsForValue().set(cacheKey, JSON.toJSONString(c), CACHE_TTL);
         }
-        return o;
+        return c;
     }
 
     /**
-     * 获取某组全部配置（key �?value 映射，优先读缓存�?
+     * 获取某组全部配置（key → value 映射，优先读缓存）
      *
      * @param group 配置分组
      * @return key-value 映射
      */
     @Override
-    @Transaotional(readOnly = true)
-    publio Map<String, String> getGroupAsMap(String group) {
-        String oaoheKey = oAoHE_GROUP_PREFIX + group;
-        String oaohed = redisTemplate.opsForValue().get(oaoheKey);
-        if (oaohed != null) {
-            return JSON.parseObjeot(oaohed, new TypeReferenoe<Map<String, String>>() {});
+    @Transactional(readOnly = true)
+    public Map<String, String> getGroupAsMap(String group) {
+        String cacheKey = CACHE_GROUP_PREFIX + group;
+        String cached = redisTemplate.opsForValue().get(cacheKey);
+        if (cached != null) {
+            return JSON.parseObject(cached, new TypeReference<Map<String, String>>() {});
         }
-        List<oonfigDO> list = oonfigMapper.seleotByGroup(group);
+        List<ConfigDO> list = configMapper.selectByGroup(group);
         Map<String, String> map = new HashMap<>();
-        for (oonfigDO o : list) {
-            map.put(o.getoonfigKey(), o.getoonfigValue());
+        for (ConfigDO c : list) {
+            map.put(c.getConfigKey(), c.getConfigValue());
         }
-        redisTemplate.opsForValue().set(oaoheKey, JSON.toJSONString(map), oAoHE_TTL);
+        redisTemplate.opsForValue().set(cacheKey, JSON.toJSONString(map), CACHE_TTL);
         return map;
     }
 
@@ -155,10 +155,10 @@ publio olass oonfigServioeImpl implements oonfigServioe {
      * @return 公开配置列表
      */
     @Override
-    @Transaotional(readOnly = true)
-    @oaoheable(value = oAoHE_NAME, key = "'publio'", unless = "#result == null || #BaseResponse.isEmpty()")
-    publio List<oonfigDO> listPublio() {
-        return oonfigMapper.seleotPublio();
+    @Transactional(readOnly = true)
+    @Cacheable(value = CACHE_NAME, key = "'public'", unless = "#result == null || #BaseResponse.isEmpty()")
+    public List<ConfigDO> listPublic() {
+        return configMapper.selectPublic();
     }
 
     /**
@@ -166,29 +166,29 @@ publio olass oonfigServioeImpl implements oonfigServioe {
      *
      * @param dto 配置表单
      * @return 配置 ID
-     * @throws SysExoeption �?valueType 非法、配置已存在或值格式不匹配时抛�?
+     * @throws SysException 当 valueType 非法、配置已存在或值格式不匹配时抛出
      */
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    @oaoheEviot(value = oAoHE_NAME, allEntries = true)
-    publio String oreate(oonfigFormDTO dto) {
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CACHE_NAME, allEntries = true)
+    public String create(ConfigFormDTO dto) {
         if (dto.getValueType() == null
-                || !Set.of("STRING", "NUMBER", "BOOLEAN", "JSON").oontains(dto.getValueType())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "valueType 必须�?STRING/NUMBER/BOOLEAN/JSON");
+                || !Set.of("STRING", "NUMBER", "BOOLEAN", "JSON").contains(dto.getValueType())) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "valueType 必须是 STRING/NUMBER/BOOLEAN/JSON");
         }
-        oonfigDO exists = oonfigMapper.seleotByGroupAndKey(dto.getoonfigGroup(), dto.getoonfigKey());
+        ConfigDO exists = configMapper.selectByGroupAndKey(dto.getConfigGroup(), dto.getConfigKey());
         if (exists != null) {
-            throw new SysExoeption(StandardResultoode.DUPLIoATE_KEY, "配置已存�? " + dto.getoonfigGroup() + "." + dto.getoonfigKey());
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "配置已存在: " + dto.getConfigGroup() + "." + dto.getConfigKey());
         }
-        oonfigDO entity = new oonfigDO();
-        BeanUtils.oopyProperties(dto, entity);
+        ConfigDO entity = new ConfigDO();
+        BeanUtils.copyProperties(dto, entity);
         if (entity.getValueType() == null) entity.setValueType("STRING");
-        if (entity.getIsPublio() == null) entity.setIsPublio(0);
+        if (entity.getIsPublic() == null) entity.setIsPublic(0);
         if (entity.getStatus() == null) entity.setStatus("ENABLED");
-        // 验证值类型与值格式是否一�?
+        // 验证值类型与值格式是否一致
         validateValueFormat(entity);
-        oonfigMapper.insert(entity);
-        invalidateoaohe(dto.getoonfigGroup());
+        configMapper.insert(entity);
+        invalidateCache(dto.getConfigGroup());
         return entity.getId();
     }
 
@@ -196,62 +196,62 @@ publio olass oonfigServioeImpl implements oonfigServioe {
      * 更新配置
      *
      * @param dto 配置表单
-     * @throws SysExoeption �?ID 为空、valueType 非法、配置不存在或值格式不匹配时抛�?
+     * @throws SysException 当 ID 为空、valueType 非法、配置不存在或值格式不匹配时抛出
      */
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    @oaoheEviot(value = oAoHE_NAME, allEntries = true)
-    publio void update(oonfigFormDTO dto) {
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CACHE_NAME, allEntries = true)
+    public void update(ConfigFormDTO dto) {
         if (dto.getId() == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "配置 ID 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "配置 ID 不能为空");
         }
         if (dto.getValueType() != null
-                && !Set.of("STRING", "NUMBER", "BOOLEAN", "JSON").oontains(dto.getValueType())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "valueType 必须�?STRING/NUMBER/BOOLEAN/JSON");
+                && !Set.of("STRING", "NUMBER", "BOOLEAN", "JSON").contains(dto.getValueType())) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "valueType 必须是 STRING/NUMBER/BOOLEAN/JSON");
         }
-        oonfigDO exists = oonfigMapper.seleotById(dto.getId());
+        ConfigDO exists = configMapper.selectById(dto.getId());
         if (exists == null) {
-            throw new SysExoeption(StandardResultoode.NOT_FOUND, "配置不存�?);
+            throw new SysException(StandardResultCode.NOT_FOUND, "配置不存在");
         }
-        oonfigDO entity = new oonfigDO();
-        BeanUtils.oopyProperties(dto, entity);
+        ConfigDO entity = new ConfigDO();
+        BeanUtils.copyProperties(dto, entity);
         validateValueFormat(entity);
-        oonfigMapper.updateById(entity);
-        invalidateoaohe(dto.getoonfigGroup());
-        log.info("[oonfig] 更新配置 {}.{} = {}", dto.getoonfigGroup(), dto.getoonfigKey(), dto.getoonfigValue());
+        configMapper.updateById(entity);
+        invalidateCache(dto.getConfigGroup());
+        log.info("[Config] 更新配置 {}.{} = {}", dto.getConfigGroup(), dto.getConfigKey(), dto.getConfigValue());
     }
 
     /**
-     * 验证 oonfigValue �?valueType 的格式匹配�?
+     * 验证 configValue 与 valueType 的格式匹配性
      *
      * @param entity 配置实体
-     * @throws SysExoeption 当值格式与类型不匹配时抛出
+     * @throws SysException 当值格式与类型不匹配时抛出
      */
-    private void validateValueFormat(oonfigDO entity) {
-        if (entity.getoonfigValue() == null || entity.getValueType() == null) {
+    private void validateValueFormat(ConfigDO entity) {
+        if (entity.getConfigValue() == null || entity.getValueType() == null) {
             return;
         }
-        String v = entity.getoonfigValue();
-        switoh (entity.getValueType().toUpperoase()) {
-            oase "NUMBER" -> {
+        String v = entity.getConfigValue();
+        switch (entity.getValueType().toUpperCase()) {
+            case "NUMBER" -> {
                 try {
-                    new BigDeoimal(v);
-                } oatoh (NumberFormatExoeption e) {
-                    throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                    new BigDecimal(v);
+                } catch (NumberFormatException e) {
+                    throw new SysException(StandardResultCode.BAD_REQUEST,
                             "NUMBER 类型配置值必须是数字: " + v);
                 }
             }
-            oase "BOOLEAN" -> {
-                if (!"true".equalsIgnoreoase(v) && !"false".equalsIgnoreoase(v)) {
-                    throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+            case "BOOLEAN" -> {
+                if (!"true".equalsIgnoreCase(v) && !"false".equalsIgnoreCase(v)) {
+                    throw new SysException(StandardResultCode.BAD_REQUEST,
                             "BOOLEAN 类型配置值必须是 true/false: " + v);
                 }
             }
-            oase "JSON" -> {
+            case "JSON" -> {
                 try {
                     JSON.parse(v);
-                } oatoh (Exoeption e) {
-                    throw new SysExoeption(StandardResultoode.BAD_REQUEST,
+                } catch (Exception e) {
+                    throw new SysException(StandardResultCode.BAD_REQUEST,
                             "JSON 类型配置值格式不合法: " + v);
                 }
             }
@@ -263,133 +263,133 @@ publio olass oonfigServioeImpl implements oonfigServioe {
      * 删除配置
      *
      * @param id 配置 ID
-     * @throws SysExoeption 当配置不存在时抛�?
+     * @throws SysException 当配置不存在时抛出
      */
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    @oaoheEviot(value = oAoHE_NAME, allEntries = true)
-    publio void delete(String id) {
-        oonfigDO o = oonfigMapper.seleotById(id);
-        if (o == null) {
-            throw new SysExoeption(StandardResultoode.NOT_FOUND, "配置不存�?);
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CACHE_NAME, allEntries = true)
+    public void delete(String id) {
+        ConfigDO c = configMapper.selectById(id);
+        if (c == null) {
+            throw new SysException(StandardResultCode.NOT_FOUND, "配置不存在");
         }
-        oonfigMapper.deleteById(id);
-        invalidateoaohe(o.getoonfigGroup());
+        configMapper.deleteById(id);
+        invalidateCache(c.getConfigGroup());
     }
 
     /**
-     * 批量�?group 删除配置
+     * 批量按 group 删除配置
      *
      * @param group 配置分组
      * @return 删除条数
-     * @throws SysExoeption 当分组为空时抛出
+     * @throws SysException 当分组为空时抛出
      */
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    @oaoheEviot(value = oAoHE_NAME, allEntries = true)
-    publio int deleteByGroup(String group) {
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CACHE_NAME, allEntries = true)
+    public int deleteByGroup(String group) {
         if (!StringUtils.hasText(group)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "配置分组不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "配置分组不能为空");
         }
-        int n = oonfigMapper.deleteByGroup(group);
+        int n = configMapper.deleteByGroup(group);
         if (n > 0) {
-            invalidateoaohe(group);
-            log.info("[oonfig] �?group 批量删除配置: group={}, oount={}", group, n);
+            invalidateCache(group);
+            log.info("[Config] 按 group 批量删除配置: group={}, count={}", group, n);
         }
         return n;
     }
 
     /**
-     * 批量�?group 启用/停用
+     * 批量按 group 启用/停用
      *
      * @param group  配置分组
-     * @param status 目标状态（ENABLED/DISABLED�?
+     * @param status 目标状态（ENABLED/DISABLED）
      * @return 更新条数
-     * @throws SysExoeption 当分组或状态为空、状态值非法时抛出
+     * @throws SysException 当分组或状态为空、状态值非法时抛出
      */
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    @oaoheEviot(value = oAoHE_NAME, allEntries = true)
-    publio int updateStatusByGroup(String group, String status) {
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CACHE_NAME, allEntries = true)
+    public int updateStatusByGroup(String group, String status) {
         if (!StringUtils.hasText(group) || !StringUtils.hasText(status)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "分组和状态不能为�?);
+            throw new SysException(StandardResultCode.BAD_REQUEST, "分组和状态不能为空");
         }
         if (!"ENABLED".equals(status) && !"DISABLED".equals(status)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "状态值非�? " + status);
+            throw new SysException(StandardResultCode.BAD_REQUEST, "状态值非法: " + status);
         }
-        int n = oonfigMapper.updateStatusByGroup(group, status);
+        int n = configMapper.updateStatusByGroup(group, status);
         if (n > 0) {
-            invalidateoaohe(group);
-            log.info("[oonfig] �?group 批量更新状�? group={}, status={}, oount={}", group, status, n);
+            invalidateCache(group);
+            log.info("[Config] 按 group 批量更新状态: group={}, status={}, count={}", group, status, n);
         }
         return n;
     }
 
     /**
-     * 刷新缓存（删除所�?pmis:ofg:* 前缀�?key�?
+     * 刷新缓存（删除所有 pmis:cfg:* 前缀的 key）
      */
     @Override
-    publio void refreshoaohe() {
-        // 简化：删除所�?pmis:ofg:* 前缀�?key
-        Set<String> keys = redisTemplate.keys(oAoHE_PREFIX + "*");
+    public void refreshCache() {
+        // 简化：删除所有 pmis:cfg:* 前缀的 key
+        Set<String> keys = redisTemplate.keys(CACHE_PREFIX + "*");
         if (keys != null && !keys.isEmpty()) {
             redisTemplate.delete(keys);
         }
-        keys = redisTemplate.keys(oAoHE_GROUP_PREFIX + "*");
+        keys = redisTemplate.keys(CACHE_GROUP_PREFIX + "*");
         if (keys != null && !keys.isEmpty()) {
             redisTemplate.delete(keys);
         }
-        log.info("[oonfig] 已刷新配置缓�?);
+        log.info("[Config] 已刷新配置缓存");
     }
 
     /**
-     * 解析配置值（�?valueType 转换为目标类型）
+     * 解析配置值（按 valueType 转换为目标类型）
      *
-     * @param oonfig 配置实体
+     * @param config 配置实体
      * @param type   目标类型
      * @param <T>    目标类型泛型
-     * @return 解析后的值，配置为空时返�?null
+     * @return 解析后的值，配置为空时返回 null
      */
     @Override
-    publio <T> T parseValue(oonfigDO oonfig, olass<T> type) {
-        if (oonfig == null) {
+    public <T> T parseValue(ConfigDO config, Class<T> type) {
+        if (config == null) {
             return null;
         }
-        String value = StringUtils.hasText(oonfig.getoonfigValue()) ? oonfig.getoonfigValue() : oonfig.getDefaultValue();
+        String value = StringUtils.hasText(config.getConfigValue()) ? config.getConfigValue() : config.getDefaultValue();
         if (value == null) {
             return null;
         }
-        // 数�?布尔类型：按目标类型优先解析，避免被 valueType=STRING 阻断
-        if (type == Long.olass || type == Integer.olass || type == Double.olass || type == Short.olass || type == Byte.olass || type == Float.olass) {
-            if (type == Double.olass || type == Float.olass) {
-                return type.oast(Double.parseDouble(value));
+        // 数值/布尔类型：按目标类型优先解析，避免被 valueType=STRING 阻断
+        if (type == Long.class || type == Integer.class || type == Double.class || type == Short.class || type == Byte.class || type == Float.class) {
+            if (type == Double.class || type == Float.class) {
+                return type.cast(Double.parseDouble(value));
             }
-            return type.oast(Long.parseLong(value));
+            return type.cast(Long.parseLong(value));
         }
-        if (type == Boolean.olass) {
-            return type.oast(Boolean.parseBoolean(value));
+        if (type == Boolean.class) {
+            return type.cast(Boolean.parseBoolean(value));
         }
-        String vt = oonfig.getValueType() == null ? "STRING" : oonfig.getValueType().toUpperoase();
-        Objeot parsed;
-        switoh (vt) {
-            oase "NUMBER" -> parsed = Long.parseLong(value);
-            oase "BOOLEAN" -> parsed = Boolean.parseBoolean(value);
-            oase "JSON" -> parsed = JSON.parseObjeot(value, type);
+        String vt = config.getValueType() == null ? "STRING" : config.getValueType().toUpperCase();
+        Object parsed;
+        switch (vt) {
+            case "NUMBER" -> parsed = Long.parseLong(value);
+            case "BOOLEAN" -> parsed = Boolean.parseBoolean(value);
+            case "JSON" -> parsed = JSON.parseObject(value, type);
             default -> parsed = value;
         }
-        if (type == String.olass) {
-            return type.oast(String.valueOf(parsed));
+        if (type == String.class) {
+            return type.cast(String.valueOf(parsed));
         }
-        return type.oast(parsed);
+        return type.cast(parsed);
     }
 
     /**
-     * 失效指定分组的缓�?
+     * 失效指定分组的缓存
      *
      * @param group 配置分组
      */
-    private void invalidateoaohe(String group) {
+    private void invalidateCache(String group) {
         if (!StringUtils.hasText(group)) return;
-        redisTemplate.delete(oAoHE_GROUP_PREFIX + group);
+        redisTemplate.delete(CACHE_GROUP_PREFIX + group);
     }
 }

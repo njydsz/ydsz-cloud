@@ -1,77 +1,77 @@
-paokage oom.njydsz.pmis.projeot.domain.enums;
+package com.njydsz.pmis.project.domain.enums;
 
 /**
- * EVM 挣值告警等�?
+ * EVM 挣值告警等级
  *
  * <ul>
- *   <li>NORMAL - 健康（CPI�?.95 �?SPI�?.95�?/li>
- *   <li>YELLOW - 预警（CPI/SPI 任意一�?<0.95�?/li>
- *   <li>RED - 严重（CPI/SPI 任意一�?<0.85 或成本偏�?10%�?/li>
+ *   <li>NORMAL - 健康（CPI≥0.95 且 SPI≥0.95）</li>
+ *   <li>YELLOW - 预警（CPI/SPI 任意一项 <0.95）</li>
+ *   <li>RED - 严重（CPI/SPI 任意一项 <0.85 或成本偏差>10%）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum EvmAlertLevel {
+public enum EvmAlertLevel {
     NORMAL("NORMAL", "健康"),
     YELLOW("YELLOW", "预警"),
     RED("RED", "严重");
 
     /** 告警等级编码（大小写不敏感） */
-    private final String oode;
+    private final String code;
     /** 告警等级中文描述 */
-    private final String deso;
+    private final String desc;
 
-    EvmAlertLevel(String oode, String deso) {
-        this.oode = oode;
-        this.deso = deso;
+    EvmAlertLevel(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
     }
 
     /**
      * 获取告警等级编码
      *
-     * @return 告警等级编码字符�?
+     * @return 告警等级编码字符串
      */
-    publio String getoode() { return oode; }
+    public String getCode() { return code; }
 
     /**
      * 获取告警等级中文描述
      *
      * @return 告警等级中文描述
      */
-    publio String getDeso() { return deso; }
+    public String getDesc() { return desc; }
 
     /**
-     * 根据 oPI/SPI 与阈值评估告警等�?
+     * 根据 CPI/SPI 与阈值评估告警等级
      *
-     * @param opi       成本绩效指数
+     * @param cpi       成本绩效指数
      * @param spi       进度绩效指数
-     * @param opiYellow oPI 黄色阈�?
-     * @param opiRed    oPI 红色阈�?
-     * @param spiYellow SPI 黄色阈�?
-     * @param spiRed    SPI 红色阈�?
-     * @return 告警等级（任一指标跌破红色阈值返�?RED；任一跌破黄色阈值返�?YELLOW；否�?NORMAL�?
+     * @param cpiYellow CPI 黄色阈值
+     * @param cpiRed    CPI 红色阈值
+     * @param spiYellow SPI 黄色阈值
+     * @param spiRed    SPI 红色阈值
+     * @return 告警等级（任一指标跌破红色阈值返回 RED；任一跌破黄色阈值返回 YELLOW；否则 NORMAL）
      */
-    publio statio EvmAlertLevel evaluate(double opi, double spi,
-                                         double opiYellow, double opiRed,
+    public static EvmAlertLevel evaluate(double cpi, double spi,
+                                         double cpiYellow, double cpiRed,
                                          double spiYellow, double spiRed) {
-        // 任一指标跌破红色阈�?
-        if (opi < opiRed || spi < spiRed) return RED;
-        // 任一指标跌破黄色阈�?
-        if (opi < opiYellow || spi < spiYellow) return YELLOW;
+        // 任一指标跌破红色阈值
+        if (cpi < cpiRed || spi < spiRed) return RED;
+        // 任一指标跌破黄色阈值
+        if (cpi < cpiYellow || spi < spiYellow) return YELLOW;
         return NORMAL;
     }
 
     /**
      * 根据编码反查枚举
      *
-     * @param oode 告警等级编码（大小写不敏感）
-     * @return 枚举值；未匹配返�?null
+     * @param code 告警等级编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
      */
-    publio statio EvmAlertLevel fromoode(String oode) {
-        if (oode == null) return null;
+    public static EvmAlertLevel fromCode(String code) {
+        if (code == null) return null;
         for (EvmAlertLevel v : values()) {
-            if (v.oode.equalsIgnoreoase(oode)) return v;
+            if (v.code.equalsIgnoreCase(code)) return v;
         }
         return null;
     }

@@ -1,60 +1,60 @@
-paokage oom.njydsz.pmis.finanoe.domain.enums;
+package com.njydsz.pmis.finance.domain.enums;
 
 /**
  * 收入确认方法
  *
  * <ul>
  *   <li>MILESTONE - 里程碑法</li>
- *   <li>PERoENTAGE - 完工百分比法</li>
- *   <li>PERoENT_oOMPLETE - 进度比例�?/li>
- *   <li>POINTS - 人天点数�?/li>
+ *   <li>PERCENTAGE - 完工百分比法</li>
+ *   <li>PERCENT_COMPLETE - 进度比例法</li>
+ *   <li>POINTS - 人天点数法</li>
  *   <li>MANUAL - 手工确认</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum RevenueReoognitionMethod {
+public enum RevenueRecognitionMethod {
     MILESTONE("MILESTONE", "里程碑法"),
-    PERoENTAGE("PERoENTAGE", "完工百分比法"),
-    PERoENT_oOMPLETE("PERoENT_oOMPLETE", "进度比例�?),
-    POINTS("POINTS", "人天点数�?),
+    PERCENTAGE("PERCENTAGE", "完工百分比法"),
+    PERCENT_COMPLETE("PERCENT_COMPLETE", "进度比例法"),
+    POINTS("POINTS", "人天点数法"),
     MANUAL("MANUAL", "手工确认");
 
     /** 方法编码（大小写不敏感） */
-    private final String oode;
+    private final String code;
     /** 方法中文描述 */
-    private final String deso;
+    private final String desc;
 
-    RevenueReoognitionMethod(String oode, String deso) {
-        this.oode = oode;
-        this.deso = deso;
+    RevenueRecognitionMethod(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
     }
 
     /**
      * 获取方法编码
      *
-     * @return 方法编码字符�?
+     * @return 方法编码字符串
      */
-    publio String getoode() { return oode; }
+    public String getCode() { return code; }
 
     /**
      * 获取方法中文描述
      *
      * @return 方法中文描述
      */
-    publio String getDeso() { return deso; }
+    public String getDesc() { return desc; }
 
     /**
      * 根据编码反查枚举
      *
-     * @param oode 方法编码（大小写不敏感）
-     * @return 枚举值；未匹配返�?null
+     * @param code 方法编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
      */
-    publio statio RevenueReoognitionMethod fromoode(String oode) {
-        if (oode == null) return null;
-        for (RevenueReoognitionMethod r : values()) {
-            if (r.oode.equalsIgnoreoase(oode)) return r;
+    public static RevenueRecognitionMethod fromCode(String code) {
+        if (code == null) return null;
+        for (RevenueRecognitionMethod r : values()) {
+            if (r.code.equalsIgnoreCase(code)) return r;
         }
         return null;
     }

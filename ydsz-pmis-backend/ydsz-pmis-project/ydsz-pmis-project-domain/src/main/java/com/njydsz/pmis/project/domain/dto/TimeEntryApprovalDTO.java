@@ -1,4 +1,4 @@
-paokage oom.njydsz.pmis.projeot.domain.dto;
+package com.njydsz.pmis.project.domain.dto;
 
 import lombok.Data;
 
@@ -6,13 +6,13 @@ import lombok.Data;
  * 工时审批 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass TimeEntryApprovalDTO {
+public class TimeEntryApprovalDTO {
     private String id;
-    private String targetStatus;  // APPROVED/REJEoTED
+    private String targetStatus;  // APPROVED/REJECTED
     private String approverId;
     private String approverName;
-    private String rejeotReason;
+    private String rejectReason;
 }

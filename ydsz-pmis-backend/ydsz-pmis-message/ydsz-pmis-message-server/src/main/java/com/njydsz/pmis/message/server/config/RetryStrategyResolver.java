@@ -1,85 +1,95 @@
-paokage oom.njydsz.pmis.message.server.oonfig;
+package com.njydsz.pmis.message.server.config;
 
-import oom.njydsz.pmis.message.domain.oonstant.Messageoonstants;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.message.domain.constant.MessageConstants;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 
 /**
- * P1-7: 重试策略解析器�? *
- * <p>根据通道解析生效的重试策略（{@link MessageProperties.RetryPolioy}），
- * 替代原先硬编码的 {@link Messageoonstants#MAX_RETRY_oOUNT} �? * {@link Messageoonstants#RETRY_BASE_BAoKOFF_MS}�? *
+ * P1-7: 重试策略解析器。
+ *
+ * <p>根据通道解析生效的重试策略（{@link MessageProperties.RetryPolicy}），
+ * 替代原先硬编码的 {@link MessageConstants#MAX_RETRY_COUNT} 与
+ * {@link MessageConstants#RETRY_BASE_BACKOFF_MS}。
+ *
  * <p>解析优先级：
  * <ol>
- *   <li>{@oode pmis.message.ohannel-retry-polioies.{oHANNEL}} 通道级覆�?/li>
- *   <li>{@oode pmis.message.default-retry-polioy} 全局默认</li>
- *   <li>代码兜底默认值（maxRetryoount=3, baseBaokoffMs=2000, multiplier=2.0, maxBaokoffMs=60000�?/li>
+ *   <li>{@code pmis.message.channel-retry-policies.{CHANNEL}} 通道级覆盖</li>
+ *   <li>{@code pmis.message.default-retry-policy} 全局默认</li>
+ *   <li>代码兜底默认值（maxRetryCount=3, baseBackoffMs=2000, multiplier=2.0, maxBackoffMs=60000）</li>
  * </ol>
  *
- * <p>退避公式：{@oode baokoff = min(baseBaokoffMs * baokoffMultiplier^retryoount, maxBaokoffMs)}�? *
+ * <p>退避公式：{@code backoff = min(baseBackoffMs * backoffMultiplier^retryCount, maxBackoffMs)}。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
 @Slf4j
-@oomponent
-@RequiredArgsoonstruotor
-publio olass RetryStrategyResolver {
+@Component
+@RequiredArgsConstructor
+public class RetryStrategyResolver {
 
     private final MessageProperties messageProperties;
 
     /**
-     * 解析指定通道的重试策略�?     *
-     * @param ohannel 通道类型（大小写无关），为空时返回全局默认
-     * @return 生效的重试策略（永不返回 null�?     */
-    publio MessageProperties.RetryPolioy resolve(String ohannel) {
-        MessageProperties.RetryPolioy def = messageProperties.getDefaultRetryPolioy();
+     * 解析指定通道的重试策略。
+     *
+     * @param channel 通道类型（大小写无关），为空时返回全局默认
+     * @return 生效的重试策略（永不返回 null）
+     */
+    public MessageProperties.RetryPolicy resolve(String channel) {
+        MessageProperties.RetryPolicy def = messageProperties.getDefaultRetryPolicy();
         if (def == null) {
-            def = new MessageProperties.RetryPolioy();
+            def = new MessageProperties.RetryPolicy();
         }
-        if (ohannel == null || ohannel.isBlank()) {
+        if (channel == null || channel.isBlank()) {
             return def;
         }
-        java.util.Map<String, MessageProperties.RetryPolioy> map =
-                messageProperties.getohannelRetryPolioies();
+        java.util.Map<String, MessageProperties.RetryPolicy> map =
+                messageProperties.getChannelRetryPolicies();
         if (map == null || map.isEmpty()) {
             return def;
         }
-        MessageProperties.RetryPolioy override = map.get(ohannel.trim().toUpperoase());
+        MessageProperties.RetryPolicy override = map.get(channel.trim().toUpperCase());
         return override != null ? override : def;
     }
 
     /**
-     * 判断是否已达最大重试次数�?     *
-     * @param retryoount 当前重试次数（从 0 起）
-     * @param ohannel    通道
-     * @return true 表示已达上限，应转死�?失败
+     * 判断是否已达最大重试次数。
+     *
+     * @param retryCount 当前重试次数（从 0 起）
+     * @param channel    通道
+     * @return true 表示已达上限，应转死信/失败
      */
-    publio boolean isMaxRetriesReaohed(int retryoount, String ohannel) {
-        return retryoount >= resolve(ohannel).getMaxRetryoount();
+    public boolean isMaxRetriesReached(int retryCount, String channel) {
+        return retryCount >= resolve(channel).getMaxRetryCount();
     }
 
     /**
-     * 计算下一次重试时间（指数退�?+ 上限封顶）�?     *
-     * @param retryoount 当前重试次数（即将进入第 retryoount+1 次重试）
-     * @param ohannel    通道
+     * 计算下一次重试时间（指数退避 + 上限封顶）。
+     *
+     * @param retryCount 当前重试次数（即将进入第 retryCount+1 次重试）
+     * @param channel    通道
      * @return 下次重试时间
      */
-    publio LooalDateTime oaloNextRetryAt(int retryoount, String ohannel) {
-        return LooalDateTime.now().plusNanos(oaloBaokoffMs(retryoount, ohannel) * 1_000_000L);
+    public LocalDateTime calcNextRetryAt(int retryCount, String channel) {
+        return LocalDateTime.now().plusNanos(calcBackoffMs(retryCount, channel) * 1_000_000L);
     }
 
     /**
-     * 计算退避毫秒数：{@oode min(base * multiplier^retryoount, maxBaokoffMs)}�?     *
-     * @param retryoount 当前重试次数
-     * @param ohannel    通道
-     * @return 退避毫�?     */
-    publio long oaloBaokoffMs(int retryoount, String ohannel) {
-        MessageProperties.RetryPolioy p = resolve(ohannel);
-        int exp = Math.max(retryoount, 0);
-        double raw = p.getBaseBaokoffMs() * Math.pow(p.getBaokoffMultiplier(), exp);
-        long baokoff = (long) raw;
-        return Math.min(baokoff, p.getMaxBaokoffMs());
+     * 计算退避毫秒数：{@code min(base * multiplier^retryCount, maxBackoffMs)}。
+     *
+     * @param retryCount 当前重试次数
+     * @param channel    通道
+     * @return 退避毫秒
+     */
+    public long calcBackoffMs(int retryCount, String channel) {
+        MessageProperties.RetryPolicy p = resolve(channel);
+        int exp = Math.max(retryCount, 0);
+        double raw = p.getBaseBackoffMs() * Math.pow(p.getBackoffMultiplier(), exp);
+        long backoff = (long) raw;
+        return Math.min(backoff, p.getMaxBackoffMs());
     }
 }

@@ -1,7 +1,7 @@
-paokage oom.njydsz.pmis.userinfo.domain.vo;
+package com.njydsz.pmis.userinfo.domain.vo;
 
-import oom.njydsz.pmis.userinfo.domain.entity.org.DepartmentDO;
-import io.swagger.v3.oas.annotations.media.Sohema;
+import com.njydsz.pmis.userinfo.domain.entity.org.DepartmentDO;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serial;
@@ -10,30 +10,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 部门树节�?VO
+ * 部门树节点 VO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@Sohema(desoription = "部门树节�?)
-publio olass DepartmentTreeVO implements Serializable {
+@Schema(description = "部门树节点")
+public class DepartmentTreeVO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    @Sohema(desoription = "部门")
+    @Schema(description = "部门")
     private DepartmentDO department;
 
-    @Sohema(desoription = "子部�?)
-    private List<DepartmentTreeVO> ohildren = new ArrayList<>();
+    @Schema(description = "子部门")
+    private List<DepartmentTreeVO> children = new ArrayList<>();
 
     /**
      * 根据部门实体构建树节点（不含子节点）
      *
      * @param d 部门实体
-     * @return 部门树节�?     */
-    publio statio DepartmentTreeVO of(DepartmentDO d) {
+     * @return 部门树节点
+     */
+    public static DepartmentTreeVO of(DepartmentDO d) {
         DepartmentTreeVO v = new DepartmentTreeVO();
         v.setDepartment(d);
         return v;

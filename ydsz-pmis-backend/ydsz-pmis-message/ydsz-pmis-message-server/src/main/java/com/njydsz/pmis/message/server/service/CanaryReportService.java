@@ -1,25 +1,31 @@
-paokage oom.njydsz.pmis.message.server.servioe.oanary;
+package com.njydsz.pmis.message.server.service.canary;
 
 
-import oom.njydsz.pmis.message.domain.dto.oanary.oanaryReportVO;
+import com.njydsz.pmis.message.domain.dto.canary.CanaryReportVO;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 
 /**
- * 灰度 A/B 报表服务（P1-6）�? *
- * <p>基于 {@oode pmis_msg_log} 表的 {@oode oanary_key} / {@oode template_oode} / {@oode oanary} 字段
- * 聚合统计对照组与实验组的发�?回执指标,供运营对比实验效果�? *
+ * 灰度 A/B 报表服务（P1-6）。
+ *
+ * <p>基于 {@code pmis_msg_log} 表的 {@code canary_key} / {@code template_code} / {@code canary} 字段
+ * 聚合统计对照组与实验组的发送/回执指标,供运营对比实验效果。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio interfaoe oanaryReportServioe {
+public interface CanaryReportService {
 
     /**
-     * 获取灰度 A/B 实验报表�?     *
-     * <p>实验�?= {@oode oanary_key = oanaryKey}（命中灰�?已切换实验模�?通道）；
-     * 对照�?= {@oode template_oode = oanaryKey AND oanary = 0 AND oanary_key IS NULL}（未命中,使用基线模板）�?     *
-     * @param oanaryKey 灰度键（原始模板编码），不可为空
-     * @param start     起始时间（含），null 则默认最�?7 �?     * @param end       结束时间（含），null 则当前时�?     * @return A/B 报表（含对照组与实验组统计）
+     * 获取灰度 A/B 实验报表。
+     *
+     * <p>实验组 = {@code canary_key = canaryKey}（命中灰度,已切换实验模板/通道）；
+     * 对照组 = {@code template_code = canaryKey AND canary = 0 AND canary_key IS NULL}（未命中,使用基线模板）。
+     *
+     * @param canaryKey 灰度键（原始模板编码），不可为空
+     * @param start     起始时间（含），null 则默认最近 7 天
+     * @param end       结束时间（含），null 则当前时间
+     * @return A/B 报表（含对照组与实验组统计）
      */
-    oanaryReportVO getReport(String oanaryKey, LooalDateTime start, LooalDateTime end);
+    CanaryReportVO getReport(String canaryKey, LocalDateTime start, LocalDateTime end);
 }

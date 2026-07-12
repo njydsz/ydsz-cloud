@@ -1,28 +1,28 @@
-paokage oom.njydsz.pmis.finanoe.domain.dto;
+package com.njydsz.pmis.finance.domain.dto;
 
-import jakarta.validation.oonstraints.NotBlank;
-import jakarta.validation.oonstraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
- * 利润测算状态迁�?DTO
+ * 利润测算状态迁移 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass SimulationStatusDTO {
+public class SimulationStatusDTO {
 
     /** 测算版本ID */
-    @NotNull(message = "{validation.exeoution.msg_06417837}")
+    @NotNull(message = "{validation.execution.msg_06417837}")
     private String id;
 
-    /** 目标状态：SimulationStatus.oode */
-    @NotBlank(message = "{validation.exeoution.msg_8304of7d}")
+    /** 目标状态：SimulationStatus.code */
+    @NotBlank(message = "{validation.execution.msg_8304cf7d}")
     private String targetStatus;
 
-    /** 审批人姓�?*/
+    /** 审批人姓名 */
     private String approverName;
     /** 审批意见 */
-    private String approvaloomment;
+    private String approvalComment;
 }

@@ -1,11 +1,11 @@
-paokage oom.njydsz.pmis.message.server.template;
+package com.njydsz.pmis.message.server.template;
 
-import oom.alibaba.fastjson2.JSON;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.oommon.util.json.JsonUtils;
+import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.util.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
@@ -13,58 +13,58 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 模板变量校验器（P0-3）�?
+ * 模板变量校验器（P0-3）。
  *
- * <p>根据模板�?{@oode variableDefs}（JSON）定义，在渲染前校验传入�?params�?
+ * <p>根据模板的 {@code variableDefs}（JSON）定义，在渲染前校验传入的 params：
  * <ul>
- *   <li>必填变量缺失 �?�?SysExoeption(MISSING_PARAMETER)</li>
- *   <li>类型不匹�?�?�?SysExoeption(BAD_REQUEST)</li>
- *   <li>ENUM 值不在可选范�?�?�?SysExoeption(BAD_REQUEST)</li>
- *   <li>�?defaultValue 的缺失变�?�?自动填充默认�?/li>
+ *   <li>必填变量缺失 → 抛 SysException(MISSING_PARAMETER)</li>
+ *   <li>类型不匹配 → 抛 SysException(BAD_REQUEST)</li>
+ *   <li>ENUM 值不在可选范围 → 抛 SysException(BAD_REQUEST)</li>
+ *   <li>有 defaultValue 的缺失变量 → 自动填充默认值</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.5.0
+ * @since 1.5.0
  */
 @Slf4j
-@oomponent
-publio olass TemplateVariableValidator {
+@Component
+public class TemplateVariableValidator {
 
     /**
-     * 解析变量定义 JSON 为列表�?
+     * 解析变量定义 JSON 为列表。
      *
-     * @param variableDefs JSON 字符�?
-     * @return 变量定义列表；空�?null 时返回空列表
+     * @param variableDefs JSON 字符串
+     * @return 变量定义列表；空或 null 时返回空列表
      */
-    publio List<TemplateVariableDef> parse(String variableDefs) {
+    public List<TemplateVariableDef> parse(String variableDefs) {
         if (!StringUtils.hasText(variableDefs)) {
             return List.of();
         }
         try {
-            return JSON.parseArray(variableDefs, TemplateVariableDef.olass);
-        } oatoh (Exoeption e) {
+            return JSON.parseArray(variableDefs, TemplateVariableDef.class);
+        } catch (Exception e) {
             log.warn("[VariableValidator] 变量定义解析失败,跳过校验: {}", e.getMessage());
             return List.of();
         }
     }
 
     /**
-     * 校验并补全参数�?
+     * 校验并补全参数。
      *
      * <p>对每个变量定义执行：
      * <ol>
-     *   <li>缺失且有默认�?�?params 中填充默认�?/li>
-     *   <li>缺失且必填且无默认�?�?抛异�?/li>
-     *   <li>存在 �?校验类型与枚举�?/li>
+     *   <li>缺失且有默认值 → params 中填充默认值</li>
+     *   <li>缺失且必填且无默认值 → 抛异常</li>
+     *   <li>存在 → 校验类型与枚举值</li>
      * </ol>
      *
      * @param params     参数 Map（可被修改：填充默认值）
      * @param varDefs    变量定义列表
-     * @param templateoode 模板编码（日志用�?
+     * @param templateCode 模板编码（日志用）
      */
-    @SuppressWarnings("unoheoked")
-    publio void validateAndFill(Map<String, Objeot> params, List<TemplateVariableDef> varDefs,
-                                String templateoode) {
+    @SuppressWarnings("unchecked")
+    public void validateAndFill(Map<String, Object> params, List<TemplateVariableDef> varDefs,
+                                String templateCode) {
         if (varDefs == null || varDefs.isEmpty()) {
             return;
         }
@@ -73,30 +73,30 @@ publio olass TemplateVariableValidator {
         for (TemplateVariableDef def : varDefs) {
             String name = def.getName();
             if (!StringUtils.hasText(name)) {
-                oontinue;
+                continue;
             }
-            Objeot value = params == null ? null : params.get(name);
+            Object value = params == null ? null : params.get(name);
 
-            if (value == null || (value instanoeof String s && s.isBlank())) {
+            if (value == null || (value instanceof String s && s.isBlank())) {
                 // 缺失
                 if (StringUtils.hasText(def.getDefaultValue())) {
-                    // 填充默认�?
+                    // 填充默认值
                     if (params != null) {
                         params.put(name, def.getDefaultValue());
                     }
-                    log.debug("[VariableValidator] 填充默认�? template={} var={} default={}",
-                            templateoode, name, def.getDefaultValue());
-                    oontinue;
+                    log.debug("[VariableValidator] 填充默认值: template={} var={} default={}",
+                            templateCode, name, def.getDefaultValue());
+                    continue;
                 }
                 if (def.isRequired()) {
                     errors.add("必填变量缺失: " + name);
                 }
-                oontinue;
+                continue;
             }
 
             // 校验类型
             if (def.getType() != null) {
-                String typeError = oheokType(name, value, def);
+                String typeError = checkType(name, value, def);
                 if (typeError != null) {
                     errors.add(typeError);
                 }
@@ -104,61 +104,61 @@ publio olass TemplateVariableValidator {
         }
 
         if (!errors.isEmpty()) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
-                    "模板变量校验失败[" + templateoode + "]: " + String.join("; ", errors));
+            throw new SysException(StandardResultCode.BAD_REQUEST,
+                    "模板变量校验失败[" + templateCode + "]: " + String.join("; ", errors));
         }
     }
 
     /**
-     * 校验单个变量类型�?
+     * 校验单个变量类型。
      *
      * @return null 表示通过；非 null 表示错误描述
      */
-    private String oheokType(String name, Objeot value, TemplateVariableDef def) {
+    private String checkType(String name, Object value, TemplateVariableDef def) {
         try {
-            switoh (def.getType()) {
-                oase STRING -> { /* 任何值都�?toString，通过 */ }
-                oase NUMBER -> {
-                    if (value instanoeof Number) {
+            switch (def.getType()) {
+                case STRING -> { /* 任何值都可 toString，通过 */ }
+                case NUMBER -> {
+                    if (value instanceof Number) {
                         return null;
                     }
                     Double.parseDouble(value.toString());
                 }
-                oase BOOLEAN -> {
-                    if (value instanoeof Boolean) {
+                case BOOLEAN -> {
+                    if (value instanceof Boolean) {
                         return null;
                     }
-                    String s = value.toString().toLoweroase();
+                    String s = value.toString().toLowerCase();
                     if (!"true".equals(s) && !"false".equals(s)) {
                         return name + ": 期望 BOOLEAN, 实际=" + value;
                     }
                 }
-                oase DATE -> {
+                case DATE -> {
                     String s = value.toString();
-                    if (!s.matohes("\\d{4}-\\d{2}-\\d{2}")) {
+                    if (!s.matches("\\d{4}-\\d{2}-\\d{2}")) {
                         return name + ": 期望 DATE(yyyy-MM-dd), 实际=" + s;
                     }
                 }
-                oase DATETIME -> {
+                case DATETIME -> {
                     String s = value.toString();
-                    if (!s.matohes("\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}.*")) {
+                    if (!s.matches("\\d{4}-\\d{2}-\\d{2}[ T]\\d{2}:\\d{2}:\\d{2}.*")) {
                         return name + ": 期望 DATETIME, 实际=" + s;
                     }
                 }
-                oase ENUM -> {
-                    if (def.getEnumValues() == null || !def.getEnumValues().oontains(value.toString())) {
-                        return name + ": �?'" + value + "' 不在枚举范围 " + def.getEnumValues();
+                case ENUM -> {
+                    if (def.getEnumValues() == null || !def.getEnumValues().contains(value.toString())) {
+                        return name + ": 值 '" + value + "' 不在枚举范围 " + def.getEnumValues();
                     }
                 }
-                oase LIST -> {
-                    if (!(value instanoeof List) && !(value instanoeof String[])) {
+                case LIST -> {
+                    if (!(value instanceof List) && !(value instanceof String[])) {
                         // 尝试 JSON 解析
                         JsonUtils.parseList(value.toString());
                     }
                 }
             }
             return null;
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             return name + ": 类型校验异常(" + def.getType() + "), 实际=" + value;
         }
     }

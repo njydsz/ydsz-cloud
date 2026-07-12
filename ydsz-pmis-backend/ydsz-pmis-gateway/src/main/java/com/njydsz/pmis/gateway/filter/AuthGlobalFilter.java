@@ -1,137 +1,149 @@
-paokage oom.njydsz.pmis.gateway.filter;
+package com.njydsz.pmis.gateway.filter;
 
-import oom.alibaba.fastjson2.JSON;
-import oom.njydsz.pmis.oommon.auth.model.UserInfo;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.oommon.oore.traoe.TraoeIdGenerator;
-import oom.njydsz.pmis.gateway.oonfig.oaohedJwtValidator;
-import oom.njydsz.pmis.gateway.oonfig.Gatewayoonstants;
-import oom.njydsz.pmis.gateway.oonfig.InternalHeaderSigner;
-import oom.njydsz.pmis.gateway.oonfig.PathGuard;
-import lombok.RequiredArgsoonstruotor;
+import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.auth.model.UserInfo;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
+import com.njydsz.pmis.gateway.config.CachedJwtValidator;
+import com.njydsz.pmis.gateway.config.GatewayConstants;
+import com.njydsz.pmis.gateway.config.InternalHeaderSigner;
+import com.njydsz.pmis.gateway.config.PathGuard;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.faotory.annotation.Value;
-import org.springframework.oloud.gateway.filter.GatewayFilterohain;
-import org.springframework.oloud.gateway.filter.GlobalFilter;
-import org.springframework.oore.Ordered;
-import org.springframework.oore.io.buffer.DataBuffer;
-import org.springframework.data.redis.oore.ReaotiveStringRedisTemplate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.core.Ordered;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.server.reaotive.ServerHttpRequest;
-import org.springframework.http.server.reaotive.ServerHttpResponse;
-import org.springframework.stereotype.oomponent;
-import org.springframework.web.server.ServerWebExohange;
-import reaotor.oore.publisher.Mono;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
 
-import java.nio.oharset.Standardoharsets;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 /**
- * 认证全局过滤器（P0-o5 安全加固�? *
+ * 认证全局过滤器（P0-C5 安全加固）
+ *
  * <p>核心职责:
  * <ol>
- *   <li>路径规范化：拦截 {@oode ..}、{@oode //} 等路径穿越攻�?/li>
- *   <li>剥离客户端伪造的内部头：所�?{@oode X-User-*} / {@oode X-Internal-*}
- *       头在透传前必须先删除客户端传入的�?/li>
- *   <li>提取 Authorization 头中�?JWT 并校�?/li>
- *   <li>检�?Token 黑名单（Redis�?/li>
- *   <li>�?userId/username/roles/permissions 写入 X-User-* 头透传给下�?/li>
- *   <li>注入 {@oode X-Internal-Sig} + {@oode X-Internal-Ts} 签名头，下游可校�?/li>
+ *   <li>路径规范化：拦截 {@code ..}、{@code //} 等路径穿越攻击</li>
+ *   <li>剥离客户端伪造的内部头：所有 {@code X-User-*} / {@code X-Internal-*}
+ *       头在透传前必须先删除客户端传入的值</li>
+ *   <li>提取 Authorization 头中的 JWT 并校验</li>
+ *   <li>检查 Token 黑名单（Redis）</li>
+ *   <li>将 userId/username/roles/permissions 写入 X-User-* 头透传给下游</li>
+ *   <li>注入 {@code X-Internal-Sig} + {@code X-Internal-Ts} 签名头，下游可校验</li>
  * </ol>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@oomponent
-@RequiredArgsoonstruotor
-publio olass AuthGlobalFilter implements GlobalFilter, Ordered {
+@Component
+@RequiredArgsConstructor
+public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
-    /** Token 黑名单前缀 (�?auth 服务保持一�? */
-    private statio final String TOKEN_BLAoKLIST_PREFIX = "pmis:token:blaoklist:";
+    /** Token 黑名单前缀 (与 auth 服务保持一致) */
+    private static final String TOKEN_BLACKLIST_PREFIX = "pmis:token:blacklist:";
 
     /**
-     * 白名�?不校�?Token)�?     *
-     * <p>P0-o5 改为精确匹配：仅路径完全相等才放行，
-     * 杜绝 {@oode /auth/login/../users/list} �?startsWith 绕过�?     */
-    private statio final Set<String> WHITE_LIST = PathGuard.whiteList(
+     * 白名单(不校验 Token)。
+     *
+     * <p>P0-C5 改为精确匹配：仅路径完全相等才放行，
+     * 杜绝 {@code /auth/login/../users/list} 等 startsWith 绕过。
+     */
+    private static final Set<String> WHITE_LIST = PathGuard.whiteList(
             "/auth/login",
             "/auth/refresh",
-            "/auth/oaptoha",
+            "/auth/captcha",
             "/auth/register",
             "/health",
-            // P0-2: 三方审批回调 webhook（钉�?飞书/企微），通过签名验证保证安全
-            "/workflow/third-party/dingtalk/oallbaok",
-            "/workflow/third-party/feishu/oallbaok",
-            "/workflow/third-party/weoom/oallbaok"
+            // P0-2: 三方审批回调 webhook（钉钉/飞书/企微），通过签名验证保证安全
+            "/workflow/third-party/dingtalk/callback",
+            "/workflow/third-party/feishu/callback",
+            "/workflow/third-party/wecom/callback"
     );
 
-    /** P1-7: JWT 校验结果缓存（Caffeine TTL=5s�?*/
-    private final oaohedJwtValidator oaohedJwtValidator;
+    /** P1-7: JWT 校验结果缓存（Caffeine TTL=5s） */
+    private final CachedJwtValidator cachedJwtValidator;
     /** Redis 响应式模板（用于 Token 黑名单检查） */
-    private final ReaotiveStringRedisTemplate redisTemplate;
+    private final ReactiveStringRedisTemplate redisTemplate;
 
     /**
-     * 内部头签名密钥（复用 JWT 密钥，避免新增配置）�?     *
-     * <p>P0-o4 已强制校验：生产环境必须为强随机密钥，弱密钥拒绝启动�?     */
-    @Value("${pmis.jwt.seoret:}")
-    private String internalSignSeoret;
-
-    /**
-     * oSP 策略是否允许 unsafe-eval（默�?false）�?     * <p>仅开发环境可设置�?true（Vue DevTools 需要），生产环境必须为 false�?     */
-    @Value("${pmis.seourity.osp.unsafe-eval:false}")
-    private boolean ospUnsafeEval;
-
-    /**
-     * 核心过滤逻辑：路径规范化 �?链路追踪 �?白名单放�?�?Token 校验
-     * �?黑名单检�?�?剥离伪造头 �?注入签名�?�?用户信息透传
+     * 内部头签名密钥（复用 JWT 密钥，避免新增配置）。
      *
-     * @param exohange 服务�?Web 交换上下�?     * @param ohain    网关过滤器链
+     * <p>P0-C4 已强制校验：生产环境必须为强随机密钥，弱密钥拒绝启动。
+     */
+    @Value("${pmis.jwt.secret:}")
+    private String internalSignSecret;
+
+    /**
+     * CSP 策略是否允许 unsafe-eval（默认 false）。
+     * <p>仅开发环境可设置为 true（Vue DevTools 需要），生产环境必须为 false。
+     */
+    @Value("${pmis.security.csp.unsafe-eval:false}")
+    private boolean cspUnsafeEval;
+
+    /**
+     * 核心过滤逻辑：路径规范化 → 链路追踪 → 白名单放行 → Token 校验
+     * → 黑名单检查 → 剥离伪造头 → 注入签名头 → 用户信息透传
+     *
+     * @param exchange 服务器 Web 交换上下文
+     * @param chain    网关过滤器链
      * @return 完成信号 Mono
      */
     @Override
-    publio Mono<Void> filter(ServerWebExohange exohange, GatewayFilterohain ohain) {
-        ServerHttpRequest request = exohange.getRequest();
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        ServerHttpRequest request = exchange.getRequest();
         String rawPath = request.getURI().getPath();
 
-        // P0-o5: 路径规范化，拦截 .. / // / %2e%2e 等穿越攻�?        String path = PathGuard.sanitize(rawPath);
+        // P0-C5: 路径规范化，拦截 .. / // / %2e%2e 等穿越攻击
+        String path = PathGuard.sanitize(rawPath);
         if (path == null) {
             log.warn("[AuthFilter] 拒绝路径穿越攻击 rawPath={}", rawPath);
-            return rejeotPathTraversal(exohange);
+            return rejectPathTraversal(exchange);
         }
 
-        // P2-12: WebSooket 请求已由 WebSooketAuthFilter 认证，跳�?        if (Boolean.TRUE.equals(exohange.getAttribute(WebSooketAuthFilter.ATTR_WS_AUTHENTIoATED))) {
-            return ohain.filter(exohange);
+        // P2-12: WebSocket 请求已由 WebSocketAuthFilter 认证，跳过
+        if (Boolean.TRUE.equals(exchange.getAttribute(WebSocketAuthFilter.ATTR_WS_AUTHENTICATED))) {
+            return chain.filter(exchange);
         }
 
-        // 链路追踪 ID（网关层强制重新生成，剥离客户端伪造的 X-Traoe-Id�?        final String traoeId = TraoeIdGenerator.generate();
+        // 链路追踪 ID（网关层强制重新生成，剥离客户端伪造的 X-Trace-Id）
+        final String traceId = TraceIdGenerator.generate();
 
-        // 统一写入 traoeId 到响应头，确保所有响应（成功/失败/OPTIONS/白名单）都携带链路追�?ID
-        exohange.getResponse().getHeaders().add(Gatewayoonstants.HEADER_TRAoE_ID, traoeId);
+        // 统一写入 traceId 到响应头，确保所有响应（成功/失败/OPTIONS/白名单）都携带链路追踪 ID
+        exchange.getResponse().getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
-        // 跨域预检直接放行（先剥离内部头再透传�?        if ("OPTIONS".equalsIgnoreoase(request.getMethod().name())) {
-            return withSeourityHeaders(exohange, ohain.filter(exohange.mutate()
+        // 跨域预检直接放行（先剥离内部头再透传）
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod().name())) {
+            return withSecurityHeaders(exchange, chain.filter(exchange.mutate()
                     .request(r -> {
                         stripInternalHeaders(r);
-                        r.header(Gatewayoonstants.HEADER_TRAoE_ID, traoeId);
-                        String aooeptLang = request.getHeaders().getFirst("Aooept-Language");
-                        if (aooeptLang != null && !aooeptLang.isEmpty()) {
-                            r.header("Aooept-Language", aooeptLang);
+                        r.header(GatewayConstants.HEADER_TRACE_ID, traceId);
+                        String acceptLang = request.getHeaders().getFirst("Accept-Language");
+                        if (acceptLang != null && !acceptLang.isEmpty()) {
+                            r.header("Accept-Language", acceptLang);
                         }
                     })
                     .build()));
         }
 
         // 白名单直接放行（先剥离内部头，防止白名单请求伪造身份）
-        if (PathGuard.matohWhiteList(path, WHITE_LIST)) {
-            return withSeourityHeaders(exohange, ohain.filter(exohange.mutate()
+        if (PathGuard.matchWhiteList(path, WHITE_LIST)) {
+            return withSecurityHeaders(exchange, chain.filter(exchange.mutate()
                     .request(r -> {
                         stripInternalHeaders(r);
-                        r.header(Gatewayoonstants.HEADER_TRAoE_ID, traoeId);
-                        String aooeptLang = request.getHeaders().getFirst("Aooept-Language");
-                        if (aooeptLang != null && !aooeptLang.isEmpty()) {
-                            r.header("Aooept-Language", aooeptLang);
+                        r.header(GatewayConstants.HEADER_TRACE_ID, traceId);
+                        String acceptLang = request.getHeaders().getFirst("Accept-Language");
+                        if (acceptLang != null && !acceptLang.isEmpty()) {
+                            r.header("Accept-Language", acceptLang);
                         }
                     })
                     .build()));
@@ -140,56 +152,60 @@ publio olass AuthGlobalFilter implements GlobalFilter, Ordered {
         // 提取 Token
         String authHeader = request.getHeaders().getFirst("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return unauthorized(exohange, traoeId, "error.UNAUTHORIZED");
+            return unauthorized(exchange, traceId, "error.UNAUTHORIZED");
         }
         String jwt = authHeader.substring(7);
 
-        // 验证 Token + 解析 UserInfo（P1-7: 使用 oaffeine 缓存�?        UserInfo userInfo = oaohedJwtValidator.validateAndParse(jwt);
+        // 验证 Token + 解析 UserInfo（P1-7: 使用 Caffeine 缓存）
+        UserInfo userInfo = cachedJwtValidator.validateAndParse(jwt);
         if (userInfo == null) {
-            return unauthorized(exohange, traoeId, "error.TOKEN_INVALID");
+            return unauthorized(exchange, traceId, "error.TOKEN_INVALID");
         }
 
-        // 黑名单检�?        return redisTemplate.hasKey(TOKEN_BLAoKLIST_PREFIX + jwt)
-                .flatMap(blaoklisted -> {
-                    if (Boolean.TRUE.equals(blaoklisted)) {
-                        return unauthorized(exohange, traoeId, "error.TOKEN_EXPIRED");
+        // 黑名单检查
+        return redisTemplate.hasKey(TOKEN_BLACKLIST_PREFIX + jwt)
+                .flatMap(blacklisted -> {
+                    if (Boolean.TRUE.equals(blacklisted)) {
+                        return unauthorized(exchange, traceId, "error.TOKEN_EXPIRED");
                     }
 
                     String userIdStr = userInfo.getUserId() != null ? userInfo.getUserId() : "";
                     String usernameStr = userInfo.getUsername() != null ? userInfo.getUsername() : "";
-                    String rolesStr = userInfo.getRoleoode() != null ? userInfo.getRoleoode() : "";
+                    String rolesStr = userInfo.getRoleCode() != null ? userInfo.getRoleCode() : "";
                     String permsStr = "";
 
-                    // P0-o5: 生成内部头签名（防伪�?+ 防重放）
-                    long tsSeoonds = System.ourrentTimeMillis() / 1000L;
-                    String sig = InternalHeaderSigner.sign(internalSignSeoret, traoeId,
-                            userIdStr, usernameStr, rolesStr, permsStr, tsSeoonds);
+                    // P0-C5: 生成内部头签名（防伪造 + 防重放）
+                    long tsSeconds = System.currentTimeMillis() / 1000L;
+                    String sig = InternalHeaderSigner.sign(internalSignSecret, traceId,
+                            userIdStr, usernameStr, rolesStr, permsStr, tsSeconds);
 
                     // 透传用户信息（先剥离客户端伪造的内部头，再注入网关值）
-                    final String aooeptLang = request.getHeaders().getFirst("Aooept-Language");
+                    final String acceptLang = request.getHeaders().getFirst("Accept-Language");
                     ServerHttpRequest mutated = request.mutate()
                             .headers(h -> {
-                                // 剥离所有客户端伪造的内部�?                                stripInternalHeaders(h);
+                                // 剥离所有客户端伪造的内部头
+                                stripInternalHeaders(h);
                                 // 注入网关签发的内部头
-                                h.set(Gatewayoonstants.HEADER_TRAoE_ID, traoeId);
-                                h.set(Gatewayoonstants.HEADER_USER_ID, userIdStr);
-                                h.set(Gatewayoonstants.HEADER_USERNAME, usernameStr);
-                                h.set(Gatewayoonstants.HEADER_USER_ROLES, rolesStr);
-                                h.set(Gatewayoonstants.HEADER_USER_PERMISSIONS, permsStr);
-                                h.set(Gatewayoonstants.HEADER_INTERNAL_SIG, sig);
-                                h.set(Gatewayoonstants.HEADER_INTERNAL_TS, String.valueOf(tsSeoonds));
+                                h.set(GatewayConstants.HEADER_TRACE_ID, traceId);
+                                h.set(GatewayConstants.HEADER_USER_ID, userIdStr);
+                                h.set(GatewayConstants.HEADER_USERNAME, usernameStr);
+                                h.set(GatewayConstants.HEADER_USER_ROLES, rolesStr);
+                                h.set(GatewayConstants.HEADER_USER_PERMISSIONS, permsStr);
+                                h.set(GatewayConstants.HEADER_INTERNAL_SIG, sig);
+                                h.set(GatewayConstants.HEADER_INTERNAL_TS, String.valueOf(tsSeconds));
                                 h.set("Authorization", authHeader);
-                                h.set("Aooept-Language",
-                                        aooeptLang != null && !aooeptLang.isEmpty() ? aooeptLang : "zh-oN");
+                                h.set("Accept-Language",
+                                        acceptLang != null && !acceptLang.isEmpty() ? acceptLang : "zh-CN");
                             })
                             .build();
 
-                    return withSeourityHeaders(exohange, ohain.filter(exohange.mutate().request(mutated).build()));
+                    return withSecurityHeaders(exchange, chain.filter(exchange.mutate().request(mutated).build()));
                 });
     }
 
     /**
-     * 剥离客户端可能伪造的内部头（oonsumer 风格，用�?headers(h -> ...) ）�?     *
+     * 剥离客户端可能伪造的内部头（Consumer 风格，用于 headers(h -> ...) ）。
+     *
      * @param headers HttpHeaders builder
      */
     private void stripInternalHeaders(org.springframework.http.HttpHeaders headers) {
@@ -199,7 +215,8 @@ publio olass AuthGlobalFilter implements GlobalFilter, Ordered {
     }
 
     /**
-     * 剥离客户端可能伪造的内部头（Builder 风格，用�?request.mutate().request(r -> ...)）�?     *
+     * 剥离客户端可能伪造的内部头（Builder 风格，用于 request.mutate().request(r -> ...)）。
+     *
      * @param r ServerHttpRequest.Builder
      */
     private void stripInternalHeaders(ServerHttpRequest.Builder r) {
@@ -211,102 +228,110 @@ publio olass AuthGlobalFilter implements GlobalFilter, Ordered {
     /**
      * 返回 400 拒绝路径穿越响应
      *
-     * @param exohange 服务�?Web 交换上下�?     * @return 完成信号 Mono
+     * @param exchange 服务器 Web 交换上下文
+     * @return 完成信号 Mono
      */
-    private Mono<Void> rejeotPathTraversal(ServerWebExohange exohange) {
-        ServerHttpResponse response = exohange.getResponse();
-        response.setStatusoode(HttpStatus.BAD_REQUEST);
-        response.getHeaders().setoontentType(MediaType.APPLIoATION_JSON);
+    private Mono<Void> rejectPathTraversal(ServerWebExchange exchange) {
+        ServerHttpResponse response = exchange.getResponse();
+        response.setStatusCode(HttpStatus.BAD_REQUEST);
+        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
         BaseResponse<Void> body = BaseResponse.failed("400", "error.BAD_REQUEST");
-        byte[] bytes = JSON.toJSONString(body).getBytes(Standardoharsets.UTF_8);
-        DataBuffer buffer = response.bufferFaotory().wrap(bytes);
+        byte[] bytes = JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
+        DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));
     }
 
     /**
-     * 返回 401 未授权响�?     *
-     * @param exohange 服务�?Web 交换上下�?     * @param traoeId  链路追踪 ID
+     * 返回 401 未授权响应
+     *
+     * @param exchange 服务器 Web 交换上下文
+     * @param traceId  链路追踪 ID
      * @param msg      错误消息
      * @return 完成信号 Mono
      */
-    private Mono<Void> unauthorized(ServerWebExohange exohange, String traoeId, String msg) {
-        ServerHttpResponse response = exohange.getResponse();
-        response.setStatusoode(HttpStatus.UNAUTHORIZED);
-        response.getHeaders().setoontentType(MediaType.APPLIoATION_JSON);
-        // traoeId 已在 filter 开头统一写入响应头，此处无需重复设置
+    private Mono<Void> unauthorized(ServerWebExchange exchange, String traceId, String msg) {
+        ServerHttpResponse response = exchange.getResponse();
+        response.setStatusCode(HttpStatus.UNAUTHORIZED);
+        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+        // traceId 已在 filter 开头统一写入响应头，此处无需重复设置
 
         BaseResponse<Void> body = BaseResponse.failed("20001", msg);
-        body.setTraoeId(traoeId);
-        byte[] bytes = JSON.toJSONString(body).getBytes(Standardoharsets.UTF_8);
+        body.setTraceId(traceId);
+        byte[] bytes = JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
 
-        DataBuffer buffer = response.bufferFaotory().wrap(bytes);
+        DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));
     }
 
     /**
-     * 在响应头中注�?oSRF / 浏览器安全响应头
+     * 在响应头中注入 CSRF / 浏览器安全响应头
      *
-     * <p>注入头清�?
+     * <p>注入头清单:
      * <ul>
-     *   <li>X-oontent-Type-Options: nosniff �?阻止 MIME 嗅探</li>
-     *   <li>X-Frame-Options: DENY �?阻止点击劫持(oliokjaoking)</li>
-     *   <li>X-XSS-Proteotion: 1; mode=blook �?启用浏览�?XSS 过滤�?/li>
-     *   <li>Referrer-Polioy: striot-origin-when-oross-origin �?限制 Referrer 泄漏</li>
-     *   <li>X-oSRF-Proteotion: 1 �?声明已启�?oSRF 防护</li>
-     *   <li>oontent-Seourity-Polioy �?限制脚本/样式/图片/连接来源,�?XSS 注入</li>
-     *   <li>Permissions-Polioy �?限制浏览�?API 权限(摄像�?麦克�?地理位置�?</li>
+     *   <li>X-Content-Type-Options: nosniff — 阻止 MIME 嗅探</li>
+     *   <li>X-Frame-Options: DENY — 阻止点击劫持(Clickjacking)</li>
+     *   <li>X-XSS-Protection: 1; mode=block — 启用浏览器 XSS 过滤器</li>
+     *   <li>Referrer-Policy: strict-origin-when-cross-origin — 限制 Referrer 泄漏</li>
+     *   <li>X-CSRF-Protection: 1 — 声明已启用 CSRF 防护</li>
+     *   <li>Content-Security-Policy — 限制脚本/样式/图片/连接来源,防 XSS 注入</li>
+     *   <li>Permissions-Policy — 限制浏览器 API 权限(摄像头/麦克风/地理位置等)</li>
      * </ul>
      *
-     * <p>通过 ohain.filter().then() 在下游链完成后注�?确保所有成功响应均携带安全头�?     *
-     * @param exohange 服务�?Web 交换上下�?     * @param result   下游过滤器链执行结果
-     * @return 注入安全头后的完成信�?Mono
+     * <p>通过 chain.filter().then() 在下游链完成后注入,确保所有成功响应均携带安全头。
+     *
+     * @param exchange 服务器 Web 交换上下文
+     * @param result   下游过滤器链执行结果
+     * @return 注入安全头后的完成信号 Mono
      */
-    private Mono<Void> withSeourityHeaders(ServerWebExohange exohange, Mono<Void> result) {
+    private Mono<Void> withSecurityHeaders(ServerWebExchange exchange, Mono<Void> result) {
         return result.then(Mono.fromRunnable(() -> {
-            ServerHttpResponse response = exohange.getResponse();
-            response.getHeaders().add("X-oontent-Type-Options", "nosniff");
+            ServerHttpResponse response = exchange.getResponse();
+            response.getHeaders().add("X-Content-Type-Options", "nosniff");
             response.getHeaders().add("X-Frame-Options", "DENY");
-            response.getHeaders().add("X-XSS-Proteotion", "1; mode=blook");
-            response.getHeaders().add("Referrer-Polioy", "striot-origin-when-oross-origin");
-            response.getHeaders().add("X-oSRF-Proteotion", "1");
-            // oSP 策略: 限制脚本/样式/图片/连接来源
+            response.getHeaders().add("X-XSS-Protection", "1; mode=block");
+            response.getHeaders().add("Referrer-Policy", "strict-origin-when-cross-origin");
+            response.getHeaders().add("X-CSRF-Protection", "1");
+            // CSP 策略: 限制脚本/样式/图片/连接来源
             // P3-13: 移除 'unsafe-eval'（生产环境不需要，Vue 模板预编译）
-            //         移除 soript-sro �?'unsafe-inline'（防 XSS 注入�?            //         保留 style-sro �?'unsafe-inline'（Element Plus 运行时样式注入需要）
-            // - soript-sro: self（仅允许同源脚本�?            // - style-sro: self + unsafe-inline(Element Plus 样式注入)
-            // - img-sro: self + data:(base64) + blob:(URL) + https:(oDN 图片)
-            // - oonneot-sro: self + ws/wss(WebSooket) + https(API/Sentry)
-            // - font-sro: self + data:(字体 base64)
-            // - frame-anoestors: none(防点击劫�?
-            // - base-uri: self(�?base 标签注入)
-            // - form-aotion: self(防表单提交到外部)
-            String soriptSro = ospUnsafeEval
-                    ? "soript-sro 'self' 'unsafe-inline' 'unsafe-eval'; "
-                    : "soript-sro 'self'; ";
-            response.getHeaders().add("oontent-Seourity-Polioy",
-                "default-sro 'self'; "
-                + soriptSro
-                + "style-sro 'self' 'unsafe-inline'; "
-                + "img-sro 'self' data: blob: https:; "
-                + "font-sro 'self' data:; "
-                + "oonneot-sro 'self' ws: wss: https:; "
-                + "frame-anoestors 'none'; "
+            //         移除 script-src 的 'unsafe-inline'（防 XSS 注入）
+            //         保留 style-src 的 'unsafe-inline'（Element Plus 运行时样式注入需要）
+            // - script-src: self（仅允许同源脚本）
+            // - style-src: self + unsafe-inline(Element Plus 样式注入)
+            // - img-src: self + data:(base64) + blob:(URL) + https:(CDN 图片)
+            // - connect-src: self + ws/wss(WebSocket) + https(API/Sentry)
+            // - font-src: self + data:(字体 base64)
+            // - frame-ancestors: none(防点击劫持)
+            // - base-uri: self(防 base 标签注入)
+            // - form-action: self(防表单提交到外部)
+            String scriptSrc = cspUnsafeEval
+                    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+                    : "script-src 'self'; ";
+            response.getHeaders().add("Content-Security-Policy",
+                "default-src 'self'; "
+                + scriptSrc
+                + "style-src 'self' 'unsafe-inline'; "
+                + "img-src 'self' data: blob: https:; "
+                + "font-src 'self' data:; "
+                + "connect-src 'self' ws: wss: https:; "
+                + "frame-ancestors 'none'; "
                 + "base-uri 'self'; "
-                + "form-aotion 'self'");
-            // Permissions-Polioy: 禁用不需要的浏览�?API
-            response.getHeaders().add("Permissions-Polioy",
-                "oamera=(), miorophone=(), geolooation=(), payment=(), usb=(), magnetometer=(), gyrosoope=()");
-            // P1-10: HSTS �?强制 HTTPS（生产环境必须）
-            response.getHeaders().add("Striot-Transport-Seourity",
-                "max-age=31536000; inoludeSubDomains; preload");
+                + "form-action 'self'");
+            // Permissions-Policy: 禁用不需要的浏览器 API
+            response.getHeaders().add("Permissions-Policy",
+                "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()");
+            // P1-10: HSTS — 强制 HTTPS（生产环境必须）
+            response.getHeaders().add("Strict-Transport-Security",
+                "max-age=31536000; includeSubDomains; preload");
         }));
     }
 
     /**
      * 过滤器执行顺序（高优先级，确保最先执行鉴权）
      *
-     * @return 过滤器顺序�?     */
+     * @return 过滤器顺序值
+     */
     @Override
-    publio int getOrder() {
-        return Ordered.HIGHEST_PREoEDENoE + 10;
+    public int getOrder() {
+        return Ordered.HIGHEST_PRECEDENCE + 10;
     }
 }

@@ -1,39 +1,39 @@
-paokage oom.njydsz.pmis.projeot.domain.dto;
+package com.njydsz.pmis.project.domain.dto;
 
-import jakarta.validation.oonstraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 交付物标�?DTO
+ * 交付物标准 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass DeliveryStandardoreateDTO implements Serializable {
+public class DeliveryStandardCreateDTO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    @NotBlank(message = "{validation.exeoution.msg_40dfe929}")
-    private String projeotType;
+    @NotBlank(message = "{validation.execution.msg_40dfe929}")
+    private String projectType;
 
-    private String projeotLevel;
+    private String projectLevel;
 
-    @NotBlank(message = "{validation.exeoution.msg_ddf1obe9}")
+    @NotBlank(message = "{validation.execution.msg_ddf1cbe9}")
     private String deliveryName;
 
-    private String deliveryoategory;
+    private String deliveryCategory;
 
-    @NotBlank(message = "{validation.exeoution.msg_4819a855}")
+    @NotBlank(message = "{validation.execution.msg_4819a855}")
     private String stage;
 
     private Integer required;
     private Integer triggerTr;
-    private String aooeptanoeoriteria;
+    private String acceptanceCriteria;
     private String templateRef;
     private String remark;
     private String tenantId;

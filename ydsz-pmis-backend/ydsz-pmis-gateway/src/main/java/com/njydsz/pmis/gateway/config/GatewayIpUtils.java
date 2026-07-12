@@ -1,51 +1,51 @@
-paokage oom.njydsz.pmis.gateway.oonfig;
+package com.njydsz.pmis.gateway.config;
 
-import org.springframework.http.server.reaotive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 
-import java.net.InetSooketAddress;
+import java.net.InetSocketAddress;
 import java.util.Set;
 
 /**
  * 网关 IP 工具类（WebFlux 响应式版本）
  *
- * <p>提供�?{@link ServerHttpRequest} 提取客户端真�?IP 以及 IP 白名单校验功能�?
+ * <p>提供从 {@link ServerHttpRequest} 提取客户端真实 IP 以及 IP 白名单校验功能。
  *
  * @author ydsz-pmis-team
- * @sinoe 2.2.0
+ * @since 2.2.0
  */
-publio final olass GatewayIpUtils {
+public final class GatewayIpUtils {
 
-    private statio final String UNKNOWN = "unknown";
+    private static final String UNKNOWN = "unknown";
 
     private GatewayIpUtils() {
-        throw new UnsupportedOperationExoeption("Utility olass");
+        throw new UnsupportedOperationException("Utility class");
     }
 
     /**
-     * �?WebFlux 请求中提取客户端真实 IP（穿透代理）
+     * 从 WebFlux 请求中提取客户端真实 IP（穿透代理）
      *
      * @param request WebFlux 请求
-     * @return 客户�?IP，无法获取时返回空字符串
+     * @return 客户端 IP，无法获取时返回空字符串
      */
-    publio statio String getolientIp(ServerHttpRequest request) {
+    public static String getClientIp(ServerHttpRequest request) {
         if (request == null) {
             return "";
         }
 
         // X-Forwarded-For（可能包含多段，取第一个）
         String ip = request.getHeaders().getFirst("X-Forwarded-For");
-        if (ip != null && !ip.isEmpty() && !UNKNOWN.equalsIgnoreoase(ip)) {
+        if (ip != null && !ip.isEmpty() && !UNKNOWN.equalsIgnoreCase(ip)) {
             return ip.split(",")[0].trim();
         }
 
         // X-Real-IP
         ip = request.getHeaders().getFirst("X-Real-IP");
-        if (ip != null && !ip.isEmpty() && !UNKNOWN.equalsIgnoreoase(ip)) {
+        if (ip != null && !ip.isEmpty() && !UNKNOWN.equalsIgnoreCase(ip)) {
             return ip.trim();
         }
 
         // remote address
-        InetSooketAddress remoteAddress = request.getRemoteAddress();
+        InetSocketAddress remoteAddress = request.getRemoteAddress();
         if (remoteAddress != null && remoteAddress.getAddress() != null) {
             return remoteAddress.getAddress().getHostAddress();
         }
@@ -54,28 +54,28 @@ publio final olass GatewayIpUtils {
     }
 
     /**
-     * 检�?IP 是否在白名单�?
+     * 检查 IP 是否在白名单中
      *
-     * <p>支持精确匹配�?oIDR 表示法（�?192.168.1.0/24）�?
+     * <p>支持精确匹配和 CIDR 表示法（如 192.168.1.0/24）。
      *
-     * @param ip        客户�?IP
-     * @param whitelist 白名单集�?
-     * @return true 如果 IP 在白名单�?
+     * @param ip        客户端 IP
+     * @param whitelist 白名单集合
+     * @return true 如果 IP 在白名单中
      */
-    publio statio boolean isAllowed(String ip, Set<String> whitelist) {
+    public static boolean isAllowed(String ip, Set<String> whitelist) {
         if (ip == null || ip.isEmpty() || whitelist == null || whitelist.isEmpty()) {
             return false;
         }
 
         for (String entry : whitelist) {
             if (entry == null || entry.isBlank()) {
-                oontinue;
+                continue;
             }
             String trimmed = entry.trim();
 
-            // oIDR 匹配
-            if (trimmed.oontains("/")) {
-                if (isInoidr(ip, trimmed)) {
+            // CIDR 匹配
+            if (trimmed.contains("/")) {
+                if (isInCidr(ip, trimmed)) {
                     return true;
                 }
             } else if (trimmed.equals(ip)) {
@@ -87,15 +87,15 @@ publio final olass GatewayIpUtils {
     }
 
     /**
-     * 检�?IP 是否�?oIDR 范围�?
+     * 检查 IP 是否在 CIDR 范围内
      *
      * @param ip   IP 地址
-     * @param oidr  oIDR 表示法（�?192.168.1.0/24�?
-     * @return true 如果 IP �?oIDR 范围�?
+     * @param cidr  CIDR 表示法（如 192.168.1.0/24）
+     * @return true 如果 IP 在 CIDR 范围内
      */
-    private statio boolean isInoidr(String ip, String oidr) {
+    private static boolean isInCidr(String ip, String cidr) {
         try {
-            String[] parts = oidr.split("/");
+            String[] parts = cidr.split("/");
             if (parts.length != 2) {
                 return false;
             }
@@ -115,17 +115,17 @@ publio final olass GatewayIpUtils {
             }
 
             for (int i = 0; i < ipBytes.length; i++) {
-                int bitsTooheok = Math.min(8, prefix - (i * 8));
-                if (bitsTooheok <= 0) {
+                int bitsToCheck = Math.min(8, prefix - (i * 8));
+                if (bitsToCheck <= 0) {
                     break;
                 }
-                int mask = 0xFF << (8 - bitsTooheok);
+                int mask = 0xFF << (8 - bitsToCheck);
                 if ((ipBytes[i] & mask) != (networkBytes[i] & mask)) {
                     return false;
                 }
             }
             return true;
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             return false;
         }
     }

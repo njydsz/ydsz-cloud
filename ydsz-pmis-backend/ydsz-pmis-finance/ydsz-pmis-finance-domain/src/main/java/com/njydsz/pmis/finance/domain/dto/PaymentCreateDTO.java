@@ -1,55 +1,55 @@
-paokage oom.njydsz.pmis.finanoe.domain.dto;
+package com.njydsz.pmis.finance.domain.dto;
 
-import jakarta.validation.oonstraints.NotBlank;
-import jakarta.validation.oonstraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.math.BigDeoimal;
-import java.time.LooalDate;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * 回款录入 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass PaymentoreateDTO {
+public class PaymentCreateDTO {
 
-    @NotBlank(message = "{validation.exeoution.msg_d55e99b3}")
-    private String paymentoode;
+    @NotBlank(message = "{validation.execution.msg_d55e99b3}")
+    private String paymentCode;
 
     private String paymentNo;
 
-    @NotNull(message = "{validation.exeoution.msg_af96of73}")
-    private String oontraotId;
+    @NotNull(message = "{validation.execution.msg_af96cf73}")
+    private String contractId;
 
-    @NotNull(message = "{validation.exeoution.msg_576o2b5e}")
+    @NotNull(message = "{validation.execution.msg_576c2b5e}")
     private String initiationId;
 
-    @NotNull(message = "{validation.exeoution.msg_6de1fd36}")
-    private String oustomerId;
+    @NotNull(message = "{validation.execution.msg_6de1fd36}")
+    private String customerId;
 
-    private String oustomerName;
+    private String customerName;
 
-    @NotNull(message = "{validation.exeoution.msg_406o0ea8}")
-    private BigDeoimal amount;
+    @NotNull(message = "{validation.execution.msg_406c0ea8}")
+    private BigDecimal amount;
 
-    private String ourrenoy = "oNY";
+    private String currency = "CNY";
 
-    private String paymentMethod = "BANK_TRANSFER";  // BANK_TRANSFER/oHEoK/oASH/OTHER
+    private String paymentMethod = "BANK_TRANSFER";  // BANK_TRANSFER/CHECK/CASH/OTHER
 
-    @NotNull(message = "{validation.exeoution.msg_4fa8fbb5}")
-    private LooalDate paymentDate;
+    @NotNull(message = "{validation.execution.msg_4fa8fbb5}")
+    private LocalDate paymentDate;
 
-    private String bankAooount;
-    private String ourBankAooount;
-    private String bankReferenoe;
+    private String bankAccount;
+    private String ourBankAccount;
+    private String bankReference;
     private String remark;
 
     /** 预分配的发票 ID（可选） */
-    private String invoioeAllooation;
-    private BigDeoimal allooatedAmount;
+    private String invoiceAllocation;
+    private BigDecimal allocatedAmount;
 
-    private String reoordedBy;
+    private String recordedBy;
 }

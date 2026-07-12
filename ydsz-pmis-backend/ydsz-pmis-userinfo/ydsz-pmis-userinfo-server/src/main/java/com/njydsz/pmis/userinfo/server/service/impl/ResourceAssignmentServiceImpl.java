@@ -1,25 +1,25 @@
-paokage oom.njydsz.pmis.userinfo.server.servioe.impl.resouroe;
+package com.njydsz.pmis.userinfo.server.service.impl.resource;
 
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.userinfo.domain.dto.resouroe.ResouroeAssignmentoreateDTO;
-import oom.njydsz.pmis.userinfo.server.engine.Utilizationoaloulator;
-import oom.njydsz.pmis.userinfo.domain.entity.resouroe.ResouroeAssignmentDO;
-import oom.njydsz.pmis.userinfo.domain.enums.resouroe.AssignmentStatus;
-import oom.njydsz.pmis.userinfo.infra.mapper.resouroe.ResouroeAssignmentMapper;
-import oom.njydsz.pmis.userinfo.server.servioe.resouroe.ResouroeAssignmentServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.userinfo.domain.dto.resource.ResourceAssignmentCreateDTO;
+import com.njydsz.pmis.userinfo.server.engine.UtilizationCalculator;
+import com.njydsz.pmis.userinfo.domain.entity.resource.ResourceAssignmentDO;
+import com.njydsz.pmis.userinfo.domain.enums.resource.AssignmentStatus;
+import com.njydsz.pmis.userinfo.infra.mapper.resource.ResourceAssignmentMapper;
+import com.njydsz.pmis.userinfo.server.service.resource.ResourceAssignmentService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDeoimal;
-import java.time.LooalDate;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,143 +27,145 @@ import java.util.Map;
 /**
  * 资源分配服务实现
  *
- * <p>通过单一 {@oode aot()} 入口分发 RESERVE/START/TRANSFER/RELEASE/oANoEL 五种业务动作�? *
+ * <p>通过单一 {@code act()} 入口分发 RESERVE/START/TRANSFER/RELEASE/CANCEL 五种业务动作。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass ResouroeAssignmentServioeImpl implements ResouroeAssignmentServioe {
+@Service
+@RequiredArgsConstructor
+public class ResourceAssignmentServiceImpl implements ResourceAssignmentService {
 
-    private final ResouroeAssignmentMapper assignmentMapper;
+    private final ResourceAssignmentMapper assignmentMapper;
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio String aot(ResouroeAssignmentoreateDTO dto) {
-        if (dto == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_d9712a58");
-        if (!StringUtils.hasText(dto.getAotion())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_f0494194");
+    @Transactional(rollbackFor = Exception.class)
+    public String act(ResourceAssignmentCreateDTO dto) {
+        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_d9712a58");
+        if (!StringUtils.hasText(dto.getAction())) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_f0494194");
         }
         if (dto.getEmployeeId() == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_03f5ae35");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         }
-        if (assignmentMapper.seleotByoode(dto.getAssignmentoode()) != null) {
-            throw new SysExoeption(StandardResultoode.DUPLIoATE_KEY, "error.user.msg_o59015da", dto.getAssignmentoode());
+        if (assignmentMapper.selectByCode(dto.getAssignmentCode()) != null) {
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.user.msg_c59015da", dto.getAssignmentCode());
         }
-        // RESERVE 阶段要求 opportunity �?initiation 任一存在
-        String aotion = dto.getAotion().toUpperoase();
-        if ("RESERVE".equals(aotion) && dto.getOpportunityId() == null && dto.getInitiationId() == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_278176o3");
+        // RESERVE 阶段要求 opportunity 或 initiation 任一存在
+        String action = dto.getAction().toUpperCase();
+        if ("RESERVE".equals(action) && dto.getOpportunityId() == null && dto.getInitiationId() == null) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_278176c3");
         }
         // START/TRANSFER/RELEASE 阶段要求 initiation
-        if (("START".equals(aotion) || "TRANSFER".equals(aotion) || "RELEASE".equals(aotion))
+        if (("START".equals(action) || "TRANSFER".equals(action) || "RELEASE".equals(action))
                 && dto.getInitiationId() == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_52d7045f");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_52d7045f");
         }
-        // 过载检�?        if ("START".equals(aotion) || "RESERVE".equals(aotion)) {
-            int aotive = assignmentMapper.oountAotiveByEmployee(dto.getEmployeeId());
-            if (Utilizationoaloulator.isOverloaded(aotive + 1)) {
-                log.warn("[Resouroe] 员工过载预警: emp={} aotive={}", dto.getEmployeeId(), aotive + 1);
+        // 过载检测
+        if ("START".equals(action) || "RESERVE".equals(action)) {
+            int active = assignmentMapper.countActiveByEmployee(dto.getEmployeeId());
+            if (UtilizationCalculator.isOverloaded(active + 1)) {
+                log.warn("[Resource] 员工过载预警: emp={} active={}", dto.getEmployeeId(), active + 1);
             }
         }
-        ResouroeAssignmentDO a = new ResouroeAssignmentDO();
-        BeanUtils.oopyProperties(dto, a);
-        a.setStatus(mapAotionToStatus(aotion));
-        if (a.getAllooation() == null) a.setAllooation(new BigDeoimal("1.0"));
-        if (a.getDailyHours() == null) a.setDailyHours(new BigDeoimal("8.0"));
+        ResourceAssignmentDO a = new ResourceAssignmentDO();
+        BeanUtils.copyProperties(dto, a);
+        a.setStatus(mapActionToStatus(action));
+        if (a.getAllocation() == null) a.setAllocation(new BigDecimal("1.0"));
+        if (a.getDailyHours() == null) a.setDailyHours(new BigDecimal("8.0"));
         if (a.getBillable() == null) a.setBillable(1);
-        if (a.getTenantId() == null) a.setTenantId(Tenantoontext.getTenantId());
-        if (a.getProviderTraoeId() == null) a.setProviderTraoeId("");
-        if ("START".equals(aotion) && a.getAotualStartDate() == null) {
-            a.setAotualStartDate(LooalDate.now());
+        if (a.getTenantId() == null) a.setTenantId(TenantContext.getTenantId());
+        if (a.getProviderTraceId() == null) a.setProviderTraceId("");
+        if ("START".equals(action) && a.getActualStartDate() == null) {
+            a.setActualStartDate(LocalDate.now());
         }
-        if ("RELEASE".equals(aotion) && a.getAotualEndDate() == null) {
-            a.setAotualEndDate(LooalDate.now());
+        if ("RELEASE".equals(action) && a.getActualEndDate() == null) {
+            a.setActualEndDate(LocalDate.now());
         }
         assignmentMapper.insert(a);
-        log.info("[Resouroe] 分配: oode={} emp={} aotion={} status={}",
-                a.getAssignmentoode(), a.getEmployeeId(), aotion, a.getStatus());
+        log.info("[Resource] 分配: code={} emp={} action={} status={}",
+                a.getAssignmentCode(), a.getEmployeeId(), action, a.getStatus());
         return a.getId();
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio ResouroeAssignmentDO getById(String id) {
-        if (id == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_411b6827");
-        ResouroeAssignmentDO a = assignmentMapper.seleotById(id);
-        if (a == null) throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.user.msg_3d429777");
+    @Transactional(readOnly = true)
+    public ResourceAssignmentDO getById(String id) {
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
+        ResourceAssignmentDO a = assignmentMapper.selectById(id);
+        if (a == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_3d429777");
         return a;
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio List<ResouroeAssignmentDO> listByEmployee(String employeeId) {
+    @Transactional(readOnly = true)
+    public List<ResourceAssignmentDO> listByEmployee(String employeeId) {
         if (employeeId == null) return List.of();
-        return assignmentMapper.seleotByEmployee(employeeId);
+        return assignmentMapper.selectByEmployee(employeeId);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio List<ResouroeAssignmentDO> listByInitiation(String initiationId) {
+    @Transactional(readOnly = true)
+    public List<ResourceAssignmentDO> listByInitiation(String initiationId) {
         if (initiationId == null) return List.of();
-        return assignmentMapper.seleotByInitiation(initiationId);
+        return assignmentMapper.selectByInitiation(initiationId);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio int aotiveoount(String employeeId) {
+    @Transactional(readOnly = true)
+    public int activeCount(String employeeId) {
         if (employeeId == null) return 0;
-        Integer o = assignmentMapper.oountAotiveByEmployee(employeeId);
-        return o == null ? 0 : o;
+        Integer c = assignmentMapper.countActiveByEmployee(employeeId);
+        return c == null ? 0 : c;
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio Map<String, Objeot> utilization(String employeeId) {
-        Map<String, Objeot> out = new HashMap<>();
+    @Transactional(readOnly = true)
+    public Map<String, Object> utilization(String employeeId) {
+        Map<String, Object> out = new HashMap<>();
         if (employeeId == null) return out;
-        List<ResouroeAssignmentDO> all = assignmentMapper.seleotByEmployee(employeeId);
-        BigDeoimal totalAllooation = BigDeoimal.ZERO;
-        int aotive = 0;
-        for (ResouroeAssignmentDO a : all) {
+        List<ResourceAssignmentDO> all = assignmentMapper.selectByEmployee(employeeId);
+        BigDecimal totalAllocation = BigDecimal.ZERO;
+        int active = 0;
+        for (ResourceAssignmentDO a : all) {
             String s = a.getStatus();
-            if ("RESERVED".equals(s) || "AoTIVE".equals(s) || "TRANSFERRING".equals(s)) {
-                if (a.getAllooation() != null) totalAllooation = totalAllooation.add(a.getAllooation());
-                aotive++;
+            if ("RESERVED".equals(s) || "ACTIVE".equals(s) || "TRANSFERRING".equals(s)) {
+                if (a.getAllocation() != null) totalAllocation = totalAllocation.add(a.getAllocation());
+                active++;
             }
         }
-        out.put("aotiveoount", aotive);
-        out.put("totalAllooation", totalAllooation);
-        out.put("overloaded", Utilizationoaloulator.isOverloaded(aotive));
+        out.put("activeCount", active);
+        out.put("totalAllocation", totalAllocation);
+        out.put("overloaded", UtilizationCalculator.isOverloaded(active));
         out.put("utilizationLevel",
-                Utilizationoaloulator.utilizationLevel(
-                        totalAllooation.oompareTo(new BigDeoimal("1.0")) > 0
-                                ? new BigDeoimal("1.0")
-                                : totalAllooation));
+                UtilizationCalculator.utilizationLevel(
+                        totalAllocation.compareTo(new BigDecimal("1.0")) > 0
+                                ? new BigDecimal("1.0")
+                                : totalAllocation));
         return out;
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio Page<ResouroeAssignmentDO> page(int page, int size, String employeeId, String initiationId, String status) {
-        Page<ResouroeAssignmentDO> p = new Page<>(page, size);
-        LambdaQueryWrapper<ResouroeAssignmentDO> w = new LambdaQueryWrapper<>();
-        if (employeeId != null) w.eq(ResouroeAssignmentDO::getEmployeeId, employeeId);
-        if (initiationId != null) w.eq(ResouroeAssignmentDO::getInitiationId, initiationId);
-        if (StringUtils.hasText(status)) w.eq(ResouroeAssignmentDO::getStatus, status);
-        w.orderByDeso(ResouroeAssignmentDO::getoreatedAt);
-        return assignmentMapper.seleotPage(p, w);
+    @Transactional(readOnly = true)
+    public Page<ResourceAssignmentDO> page(int page, int size, String employeeId, String initiationId, String status) {
+        Page<ResourceAssignmentDO> p = new Page<>(page, size);
+        LambdaQueryWrapper<ResourceAssignmentDO> w = new LambdaQueryWrapper<>();
+        if (employeeId != null) w.eq(ResourceAssignmentDO::getEmployeeId, employeeId);
+        if (initiationId != null) w.eq(ResourceAssignmentDO::getInitiationId, initiationId);
+        if (StringUtils.hasText(status)) w.eq(ResourceAssignmentDO::getStatus, status);
+        w.orderByDesc(ResourceAssignmentDO::getCreatedAt);
+        return assignmentMapper.selectPage(p, w);
     }
 
-    private String mapAotionToStatus(String aotion) {
-        return switoh (aotion) {
-            oase "RESERVE" -> AssignmentStatus.RESERVED.getoode();
-            oase "START" -> AssignmentStatus.AoTIVE.getoode();
-            oase "TRANSFER" -> AssignmentStatus.TRANSFERRING.getoode();
-            oase "RELEASE" -> AssignmentStatus.RELEASED.getoode();
-            oase "oANoEL" -> AssignmentStatus.oANoELLED.getoode();
-            default -> AssignmentStatus.RESERVED.getoode();
+    private String mapActionToStatus(String action) {
+        return switch (action) {
+            case "RESERVE" -> AssignmentStatus.RESERVED.getCode();
+            case "START" -> AssignmentStatus.ACTIVE.getCode();
+            case "TRANSFER" -> AssignmentStatus.TRANSFERRING.getCode();
+            case "RELEASE" -> AssignmentStatus.RELEASED.getCode();
+            case "CANCEL" -> AssignmentStatus.CANCELLED.getCode();
+            default -> AssignmentStatus.RESERVED.getCode();
         };
     }
 }

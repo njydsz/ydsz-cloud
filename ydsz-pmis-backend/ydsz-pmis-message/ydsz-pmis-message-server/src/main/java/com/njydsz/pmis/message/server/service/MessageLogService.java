@@ -1,17 +1,18 @@
-paokage oom.njydsz.pmis.message.server.servioe.oore;
+package com.njydsz.pmis.message.server.service.core;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.message.domain.dto.oore.MessageLogQueryDTO;
-import oom.njydsz.pmis.message.domain.entity.oore.MsgLogDO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.message.domain.dto.core.MessageLogQueryDTO;
+import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 
 /**
- * 消息发送日志服�? *
+ * 消息发送日志服务
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio interfaoe MessageLogServioe {
+public interface MessageLogService {
 
     /**
      * 根据 ID 查询日志
@@ -30,14 +31,16 @@ publio interfaoe MessageLogServioe {
     Page<MsgLogDO> page(MessageLogQueryDTO query);
 
     /**
-     * 标记日志为重试中,并设置下次重试时�?     *
+     * 标记日志为重试中,并设置下次重试时间
+     *
      * @param id           日志 ID
      * @param nextRetryAt  下次重试时间
      */
-    void markRetry(String id, LooalDateTime nextRetryAt);
+    void markRetry(String id, LocalDateTime nextRetryAt);
 
     /**
-     * 标记日志为死�?     *
+     * 标记日志为死信
+     *
      * @param id           日志 ID
      * @param errorMessage 错误信息
      */
@@ -47,23 +50,26 @@ publio interfaoe MessageLogServioe {
      * 更新回执状态与回执时间
      *
      * @param id            日志 ID
-     * @param reoeiptStatus 回执状�?     * @param reoeiptAt     回执时间
+     * @param receiptStatus 回执状态
+     * @param receiptAt     回执时间
      */
-    void updateReoeipt(String id, String reoeiptStatus, LooalDateTime reoeiptAt);
+    void updateReceipt(String id, String receiptStatus, LocalDateTime receiptAt);
 
     /**
      * 标记日志为已撤回
      *
      * @param id 日志 ID
      */
-    void markReoalled(String id);
+    void markRecalled(String id);
 
     /**
-     * P1-4: 手动重发死信�?     *
-     * <p>�?DEAD 状态可重发。重�?retryoount / errorMessage / nextRetryAt�?     * 流转�?SENDING 后立即通过 {@oode ohannelRouter} 重新投递：
+     * P1-4: 手动重发死信。
+     *
+     * <p>仅 DEAD 状态可重发。重置 retryCount / errorMessage / nextRetryAt，
+     * 流转为 SENDING 后立即通过 {@code ChannelRouter} 重新投递：
      * <ul>
-     *   <li>投递成�?�?SUooESS</li>
-     *   <li>投递失�?�?RETRY（进入正常重试调�?以全�?retryoount 计数�?/li>
+     *   <li>投递成功 → SUCCESS</li>
+     *   <li>投递失败 → RETRY（进入正常重试调度,以全新 retryCount 计数）</li>
      * </ul>
      *
      * @param logId 日志 ID

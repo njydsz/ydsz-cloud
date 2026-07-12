@@ -1,20 +1,20 @@
-paokage oom.njydsz.pmis.userinfo.web.oontroller.resouroe;
+package com.njydsz.pmis.userinfo.web.controller.resource;
 
-import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.Idempotent;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.audit.annotation.OperationLog;
-import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.userinfo.domain.dto.resouroe.ResouroePooloreateDTO;
-import oom.njydsz.pmis.userinfo.domain.entity.resouroe.ResouroePoolDO;
-import oom.njydsz.pmis.userinfo.server.servioe.resouroe.ResouroePoolServioe;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.OperationLog;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.userinfo.domain.dto.resource.ResourcePoolCreateDTO;
+import com.njydsz.pmis.userinfo.domain.entity.resource.ResourcePoolDO;
+import com.njydsz.pmis.userinfo.server.service.resource.ResourcePoolService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.oonstraints.Max;
-import jakarta.validation.oonstraints.Min;
-import lombok.RequiredArgsoonstruotor;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,98 +24,98 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.Restoontroller;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 /**
- * 资源�?oontroller
+ * 资源池 Controller
  *
- * <p>三级资源池（总部/事业�?备用）管理�?
+ * <p>三级资源池（总部/事业部/备用）管理。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-@Tag(name = "资源池管�?)
-@Restoontroller
-@RequestMapping("/resouroePools")
-@RequiredArgsoonstruotor
+@Tag(name = "资源池管理")
+@RestController
+@RequestMapping("/resourcePools")
+@RequiredArgsConstructor
 @Validated
-publio olass ResouroePooloontroller {
+public class ResourcePoolController {
 
-    /** 资源池服�?*/
-    private final ResouroePoolServioe poolServioe;
+    /** 资源池服务 */
+    private final ResourcePoolService poolService;
 
     /**
-     * 创建资源�?
+     * 创建资源池
      *
-     * @param dto 资源池创建参�?
+     * @param dto 资源池创建参数
      * @return 统一响应结果，包含新建资源池 ID
      */
-    @Operation(summary = "创建资源�?)
-    @AuthApiPermission(apioodes = "resouroe:pool:oreate")
-    @OperationLog(module = "资源�?, aotion = "创建资源�?, bizType = "RESOURoE_POOL")
-    @Idempotent(key = "resouroePool:oreate", ttlSeoonds = 5, message = "请勿重复提交")
+    @Operation(summary = "创建资源池")
+    @AuthApiPermission(apiCodes = "resource:pool:create")
+    @OperationLog(module = "资源池", action = "创建资源池", bizType = "RESOURCE_POOL")
+    @Idempotent(key = "resourcePool:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    publio BaseResponse<String> oreate(@Valid @RequestBody ResouroePooloreateDTO dto) {
-        return BaseResponse.ok(poolServioe.oreate(dto));
+    public BaseResponse<String> create(@Valid @RequestBody ResourcePoolCreateDTO dto) {
+        return BaseResponse.ok(poolService.create(dto));
     }
 
     /**
-     * 更新资源�?
+     * 更新资源池
      *
-     * @param id  资源�?ID
-     * @param dto 资源池更新参�?
+     * @param id  资源池 ID
+     * @param dto 资源池更新参数
      * @return 统一响应结果
      */
-    @Operation(summary = "更新资源�?)
-    @AuthApiPermission(apioodes = "resouroe:pool:update")
-    @OperationLog(module = "资源�?, aotion = "更新资源�?, bizType = "RESOURoE_POOL")
-    @Idempotent(key = "resouroePool:update", ttlSeoonds = 5, message = "请勿重复提交")
+    @Operation(summary = "更新资源池")
+    @AuthApiPermission(apiCodes = "resource:pool:update")
+    @OperationLog(module = "资源池", action = "更新资源池", bizType = "RESOURCE_POOL")
+    @Idempotent(key = "resourcePool:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    publio BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody ResouroePooloreateDTO dto) {
-        poolServioe.update(id, dto);
+    public BaseResponse<Void> update(@PathVariable String id, @Valid @RequestBody ResourcePoolCreateDTO dto) {
+        poolService.update(id, dto);
         return BaseResponse.ok();
     }
 
     /**
-     * 删除资源�?
+     * 删除资源池
      *
-     * @param id 资源�?ID
+     * @param id 资源池 ID
      * @return 统一响应结果
      */
-    @Operation(summary = "删除资源�?)
-    @AuthApiPermission(apioodes = "resouroe:pool:delete")
-    @OperationLog(module = "资源�?, aotion = "删除资源�?, bizType = "RESOURoE_POOL")
-    @Idempotent(key = "resouroePool:delete", ttlSeoonds = 5, message = "请勿重复提交")
+    @Operation(summary = "删除资源池")
+    @AuthApiPermission(apiCodes = "resource:pool:delete")
+    @OperationLog(module = "资源池", action = "删除资源池", bizType = "RESOURCE_POOL")
+    @Idempotent(key = "resourcePool:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    publio BaseResponse<Void> delete(@PathVariable String id) {
-        poolServioe.delete(id);
+    public BaseResponse<Void> delete(@PathVariable String id) {
+        poolService.delete(id);
         return BaseResponse.ok();
     }
 
     /**
-     * 查询资源池详�?
+     * 查询资源池详情
      *
-     * @param id 资源�?ID
+     * @param id 资源池 ID
      * @return 统一响应结果，包含资源池信息
      */
-    @Operation(summary = "资源池详�?)
+    @Operation(summary = "资源池详情")
     @GetMapping("/{id}")
-    publio BaseResponse<ResouroePoolDO> get(@PathVariable String id) {
-        return BaseResponse.ok(poolServioe.getById(id));
+    public BaseResponse<ResourcePoolDO> get(@PathVariable String id) {
+        return BaseResponse.ok(poolService.getById(id));
     }
 
     /**
      * 按类型查询资源池
      *
-     * @param poolType 资源池类�?
+     * @param poolType 资源池类型
      * @return 统一响应结果，包含资源池列表
      */
-    @Operation(summary = "按类型查�?)
+    @Operation(summary = "按类型查询")
     @GetMapping("/byType")
-    publio BaseResponse<List<ResouroePoolDO>> listByType(@RequestParam String poolType) {
-        return BaseResponse.ok(poolServioe.listByType(poolType));
+    public BaseResponse<List<ResourcePoolDO>> listByType(@RequestParam String poolType) {
+        return BaseResponse.ok(poolService.listByType(poolType));
     }
 
     /**
@@ -124,28 +124,28 @@ publio olass ResouroePooloontroller {
      * @param departmentId 部门 ID
      * @return 统一响应结果，包含资源池列表
      */
-    @Operation(summary = "按部门查�?)
+    @Operation(summary = "按部门查询")
     @GetMapping("/byDept/{departmentId}")
-    publio BaseResponse<List<ResouroePoolDO>> listByDept(@PathVariable String departmentId) {
-        return BaseResponse.ok(poolServioe.listByDept(departmentId));
+    public BaseResponse<List<ResourcePoolDO>> listByDept(@PathVariable String departmentId) {
+        return BaseResponse.ok(poolService.listByDept(departmentId));
     }
 
     /**
-     * 分页查询资源�?
+     * 分页查询资源池
      *
      * @param page     页码
      * @param size     每页大小
      * @param poolType 资源池类型（可选）
      * @param status   状态（可选）
-     * @return 统一响应结果，包含分页数�?
+     * @return 统一响应结果，包含分页数据
      */
     @Operation(summary = "分页查询")
     @GetMapping("/page")
-    publio BaseResponse<Page<ResouroePoolDO>> page(
+    public BaseResponse<Page<ResourcePoolDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String poolType,
             @RequestParam(required = false) String status) {
-        return BaseResponse.ok(poolServioe.page(page, size, poolType, status));
+        return BaseResponse.ok(poolService.page(page, size, poolType, status));
     }
 }

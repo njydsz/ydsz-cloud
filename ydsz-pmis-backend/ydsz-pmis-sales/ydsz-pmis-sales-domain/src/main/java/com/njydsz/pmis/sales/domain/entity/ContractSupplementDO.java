@@ -1,76 +1,76 @@
-paokage oom.njydsz.pmis.sales.domain.entity;
+package com.njydsz.pmis.sales.domain.entity;
 
-import oom.baomidou.mybatisplus.annotation.FieldFill;
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableField;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDeoimal;
-import java.time.LooalDate;
-import java.time.LooalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 合同补充协议
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@TableName("pmis_projeot_oontraot_supplement")
-publio olass oontraotSupplementDO implements Serializable {
+@TableName("pmis_project_contract_supplement")
+public class ContractSupplementDO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
     /** 合同 ID */
-    private String oontraotId;
+    private String contractId;
     /** 补充协议编号 */
-    private String supplementoode;
+    private String supplementCode;
     /** 补充协议名称 */
     private String supplementName;
-    /** 补充类型（AMOUNT/SoOPE/TERM/OTHER�?*/
+    /** 补充类型（AMOUNT/SCOPE/TERM/OTHER） */
     private String supplementType;
     /** 变更金额 */
-    private BigDeoimal ohangeAmount;
-    /** 变更后合同总金�?*/
-    private BigDeoimal newTotalAmount;
+    private BigDecimal changeAmount;
+    /** 变更后合同总金额 */
+    private BigDecimal newTotalAmount;
     /** 生效日期 */
-    private LooalDate effeotiveDate;
+    private LocalDate effectiveDate;
     /** 到期日期 */
-    private LooalDate expireDate;
+    private LocalDate expireDate;
     /** 协议内容 */
-    private String oontent;
+    private String content;
     /** 附件 ID */
     private String fileId;
-    /** 状�?*/
+    /** 状态 */
     private String status;
     /** 租户 ID */
     private String tenantId;
 
-    /** 创建�?ID */
+    /** 创建人 ID */
     @TableField(fill = FieldFill.INSERT)
-    private String oreatedBy;
+    private String createdBy;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
-    private LooalDateTime oreatedAt;
+    private LocalDateTime createdAt;
 
-    /** 更新�?ID */
+    /** 更新人 ID */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private String updatedBy;
 
     /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LooalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
-    /** 逻辑删除标识�? 未删除，1 已删除） */
+    /** 逻辑删除标识（0 未删除，1 已删除） */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

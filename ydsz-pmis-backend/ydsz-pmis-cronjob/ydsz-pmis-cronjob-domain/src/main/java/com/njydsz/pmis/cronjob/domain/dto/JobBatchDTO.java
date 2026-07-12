@@ -1,7 +1,7 @@
-paokage oom.njydsz.pmis.oronjob.domain.dto.job;
+package com.njydsz.pmis.cronjob.domain.dto.job;
 
-import io.swagger.v3.oas.annotations.media.Sohema;
-import jakarta.validation.oonstraints.NotEmpty;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
 import java.io.Serial;
@@ -11,18 +11,19 @@ import java.util.List;
 /**
  * 任务批量操作 DTO
  *
- * <p>用于批量暂停/恢复/触发/删除任务的请求参数�? *
+ * <p>用于批量暂停/恢复/触发/删除任务的请求参数。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@Sohema(desoription = "任务批量操作 DTO")
-publio olass JobBatohDTO implements Serializable {
+@Schema(description = "任务批量操作 DTO")
+public class JobBatchDTO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     @NotEmpty(message = "任务 ID 列表不能为空")
-    @Sohema(desoription = "任务 ID 列表", requiredMode = Sohema.RequiredMode.REQUIRED)
+    @Schema(description = "任务 ID 列表", requiredMode = Schema.RequiredMode.REQUIRED)
     private List<String> jobIds;
 }

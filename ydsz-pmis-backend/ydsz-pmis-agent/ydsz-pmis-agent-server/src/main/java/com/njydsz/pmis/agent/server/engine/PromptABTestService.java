@@ -1,92 +1,92 @@
-paokage oom.njydsz.pmis.agent.server.engine.prompt;
+package com.njydsz.pmis.agent.server.engine.prompt;
 
-import lombok.AllArgsoonstruotor;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsoonstruotor;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.oonourrent.oonourrentHashMap;
-import java.util.oonourrent.ThreadLooalRandom;
-import java.util.oonourrent.atomio.AtomioLong;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Prompt A/B 测试服务（P2-11 落地）�?
+ * Prompt A/B 测试服务（P2-11 落地）。
  *
- * <p>对标 ooze Prompt 实验 / Dify Prompt 调优 / LangSmith Playground�?
+ * <p>对标 Coze Prompt 实验 / Dify Prompt 调优 / LangSmith Playground：
  * <ul>
- *   <li>为同一�?Prompt oode 注册多个变体（Variant A / B / o�?/li>
+ *   <li>为同一个 Prompt Code 注册多个变体（Variant A / B / C）</li>
  *   <li>按流量比例分配请求到不同变体</li>
  *   <li>记录每个变体的执行结果和用户反馈</li>
  *   <li>统计各变体的成功率、平均耗时、满意度</li>
  * </ul>
  *
- * <p>典型用法�?
+ * <p>典型用法：
  * <pre>
  * // 注册 A/B 测试
- * abTestServioe.registerExperiment("FLOW_GENERATOR_SYSTEM", List.of(
- *     PromptVariant.builder().name("A").oontent("原始 Prompt").weight(50).build(),
- *     PromptVariant.builder().name("B").oontent("优化 Prompt").weight(50).build()
+ * abTestService.registerExperiment("FLOW_GENERATOR_SYSTEM", List.of(
+ *     PromptVariant.builder().name("A").content("原始 Prompt").weight(50).build(),
+ *     PromptVariant.builder().name("B").content("优化 Prompt").weight(50).build()
  * ));
  *
- * // 获取分配的变�?
- * PromptVariant variant = abTestServioe.assignVariant("FLOW_GENERATOR_SYSTEM");
- * String prompt = variant.getoontent();
+ * // 获取分配的变体
+ * PromptVariant variant = abTestService.assignVariant("FLOW_GENERATOR_SYSTEM");
+ * String prompt = variant.getContent();
  *
  * // 记录结果
- * abTestServioe.reoordResult("FLOW_GENERATOR_SYSTEM", variant.getName(), true, 1500);
+ * abTestService.recordResult("FLOW_GENERATOR_SYSTEM", variant.getName(), true, 1500);
  * </pre>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.2.0 (P2-11)
+ * @since 1.2.0 (P2-11)
  */
 @Slf4j
-@oomponent
-publio olass PromptABTestServioe {
+@Component
+public class PromptABTestService {
 
-    /** experimentoode �?Experiment */
-    private final Map<String, Experiment> experiments = new oonourrentHashMap<>();
+    /** experimentCode → Experiment */
+    private final Map<String, Experiment> experiments = new ConcurrentHashMap<>();
 
     /**
-     * 注册 A/B 测试实验�?
+     * 注册 A/B 测试实验。
      *
-     * @param oode     实验编码（通常�?PromptTemplateoode 对应�?
+     * @param code     实验编码（通常与 PromptTemplateCode 对应）
      * @param variants 变体列表
      */
-    publio void registerExperiment(String oode, List<PromptVariant> variants) {
-        if (oode == null || oode.isBlank()) {
-            throw new IllegalArgumentExoeption("实验编码不能为空");
+    public void registerExperiment(String code, List<PromptVariant> variants) {
+        if (code == null || code.isBlank()) {
+            throw new IllegalArgumentException("实验编码不能为空");
         }
         if (variants == null || variants.size() < 2) {
-            throw new IllegalArgumentExoeption("至少需�?2 个变�?);
+            throw new IllegalArgumentException("至少需要 2 个变体");
         }
 
-        // 归一化权�?
+        // 归一化权重
         int totalWeight = variants.stream().mapToInt(PromptVariant::getWeight).sum();
         if (totalWeight <= 0) {
-            // 等权�?
+            // 等权重
             int equalWeight = 100 / variants.size();
             for (PromptVariant v : variants) {
                 v.setWeight(equalWeight);
             }
         }
 
-        Experiment experiment = new Experiment(oode, variants);
-        experiments.put(oode, experiment);
-        log.info("[ABTest] 注册实验: oode={}, variants={}",
-                oode, variants.stream().map(PromptVariant::getName).toList());
+        Experiment experiment = new Experiment(code, variants);
+        experiments.put(code, experiment);
+        log.info("[ABTest] 注册实验: code={}, variants={}",
+                code, variants.stream().map(PromptVariant::getName).toList());
     }
 
     /**
-     * 分配变体（按权重随机选择）�?
+     * 分配变体（按权重随机选择）。
      *
-     * @param oode 实验编码
-     * @return 分配的变体；实验不存在返�?null
+     * @param code 实验编码
+     * @return 分配的变体；实验不存在返回 null
      */
-    publio PromptVariant assignVariant(String oode) {
-        Experiment experiment = experiments.get(oode);
+    public PromptVariant assignVariant(String code) {
+        Experiment experiment = experiments.get(code);
         if (experiment == null) {
             return null;
         }
@@ -97,12 +97,12 @@ publio olass PromptABTestServioe {
             return variants.get(0);
         }
 
-        int random = ThreadLooalRandom.ourrent().nextInt(totalWeight);
-        int oumulative = 0;
+        int random = ThreadLocalRandom.current().nextInt(totalWeight);
+        int cumulative = 0;
         for (PromptVariant v : variants) {
-            oumulative += v.getWeight();
-            if (random < oumulative) {
-                v.getAssignmentoount().inorementAndGet();
+            cumulative += v.getWeight();
+            if (random < cumulative) {
+                v.getAssignmentCount().incrementAndGet();
                 return v;
             }
         }
@@ -111,58 +111,58 @@ publio olass PromptABTestServioe {
     }
 
     /**
-     * 记录变体执行结果�?
+     * 记录变体执行结果。
      *
-     * @param oode       实验编码
+     * @param code       实验编码
      * @param variantName 变体名称
-     * @param suooess    是否成功
-     * @param oostMs     执行耗时
+     * @param success    是否成功
+     * @param costMs     执行耗时
      */
-    publio void reoordResult(String oode, String variantName, boolean suooess, long oostMs) {
-        Experiment experiment = experiments.get(oode);
+    public void recordResult(String code, String variantName, boolean success, long costMs) {
+        Experiment experiment = experiments.get(code);
         if (experiment == null) {
             return;
         }
 
-        VariantStats stats = experiment.getStats().oomputeIfAbsent(variantName,
+        VariantStats stats = experiment.getStats().computeIfAbsent(variantName,
                 k -> new VariantStats());
-        stats.getTotaloount().inorementAndGet();
-        if (suooess) {
-            stats.getSuooessoount().inorementAndGet();
+        stats.getTotalCount().incrementAndGet();
+        if (success) {
+            stats.getSuccessCount().incrementAndGet();
         }
-        stats.getTotalLatenoyMs().addAndGet(oostMs);
+        stats.getTotalLatencyMs().addAndGet(costMs);
 
-        log.debug("[ABTest] 记录结果: oode={}, variant={}, suooess={}, oost={}ms",
-                oode, variantName, suooess, oostMs);
+        log.debug("[ABTest] 记录结果: code={}, variant={}, success={}, cost={}ms",
+                code, variantName, success, costMs);
     }
 
     /**
-     * 记录用户反馈（满意度评分 1-5）�?
+     * 记录用户反馈（满意度评分 1-5）。
      *
-     * @param oode        实验编码
+     * @param code        实验编码
      * @param variantName 变体名称
-     * @param rating      评分�?-5�?
+     * @param rating      评分（1-5）
      */
-    publio void reoordFeedbaok(String oode, String variantName, int rating) {
-        Experiment experiment = experiments.get(oode);
+    public void recordFeedback(String code, String variantName, int rating) {
+        Experiment experiment = experiments.get(code);
         if (experiment == null) {
             return;
         }
 
-        VariantStats stats = experiment.getStats().oomputeIfAbsent(variantName,
+        VariantStats stats = experiment.getStats().computeIfAbsent(variantName,
                 k -> new VariantStats());
-        stats.getFeedbaokSum().addAndGet(rating);
-        stats.getFeedbaokoount().inorementAndGet();
+        stats.getFeedbackSum().addAndGet(rating);
+        stats.getFeedbackCount().incrementAndGet();
     }
 
     /**
-     * 获取实验统计报告�?
+     * 获取实验统计报告。
      *
-     * @param oode 实验编码
+     * @param code 实验编码
      * @return 统计报告；实验不存在返回 null
      */
-    publio ExperimentReport getReport(String oode) {
-        Experiment experiment = experiments.get(oode);
+    public ExperimentReport getReport(String code) {
+        Experiment experiment = experiments.get(code);
         if (experiment == null) {
             return null;
         }
@@ -173,118 +173,118 @@ publio olass PromptABTestServioe {
             if (stats == null) {
                 variantReports.add(new VariantReport(
                         variant.getName(), 0, 0, 0.0, 0.0, 0.0, 0));
-                oontinue;
+                continue;
             }
 
-            long total = stats.getTotaloount().get();
-            long suooess = stats.getSuooessoount().get();
-            double suooessRate = total > 0 ? (double) suooess / total : 0.0;
-            double avgLatenoy = total > 0 ? (double) stats.getTotalLatenoyMs().get() / total : 0.0;
-            long feedbaokoount = stats.getFeedbaokoount().get();
-            double avgRating = feedbaokoount > 0
-                    ? (double) stats.getFeedbaokSum().get() / feedbaokoount : 0.0;
+            long total = stats.getTotalCount().get();
+            long success = stats.getSuccessCount().get();
+            double successRate = total > 0 ? (double) success / total : 0.0;
+            double avgLatency = total > 0 ? (double) stats.getTotalLatencyMs().get() / total : 0.0;
+            long feedbackCount = stats.getFeedbackCount().get();
+            double avgRating = feedbackCount > 0
+                    ? (double) stats.getFeedbackSum().get() / feedbackCount : 0.0;
 
             variantReports.add(new VariantReport(
                     variant.getName(),
                     total,
-                    suooess,
-                    suooessRate,
-                    avgLatenoy,
+                    success,
+                    successRate,
+                    avgLatency,
                     avgRating,
-                    feedbaokoount));
+                    feedbackCount));
         }
 
-        return new ExperimentReport(oode, variantReports);
+        return new ExperimentReport(code, variantReports);
     }
 
     /**
-     * 移除实验�?
+     * 移除实验。
      *
-     * @param oode 实验编码
+     * @param code 实验编码
      */
-    publio void removeExperiment(String oode) {
-        experiments.remove(oode);
-        log.info("[ABTest] 移除实验: oode={}", oode);
+    public void removeExperiment(String code) {
+        experiments.remove(code);
+        log.info("[ABTest] 移除实验: code={}", code);
     }
 
-    // ==================== 内部�?====================
+    // ==================== 内部类 ====================
 
     /**
-     * 实验定义�?
+     * 实验定义。
      */
     @Data
-    @AllArgsoonstruotor
-    publio statio olass Experiment {
-        private String oode;
+    @AllArgsConstructor
+    public static class Experiment {
+        private String code;
         private List<PromptVariant> variants;
-        /** variantName �?stats */
-        private final Map<String, VariantStats> stats = new oonourrentHashMap<>();
+        /** variantName → stats */
+        private final Map<String, VariantStats> stats = new ConcurrentHashMap<>();
     }
 
     /**
-     * Prompt 变体�?
+     * Prompt 变体。
      */
     @Data
     @Builder
-    @NoArgsoonstruotor
-    @AllArgsoonstruotor
-    publio statio olass PromptVariant {
-        /** 变体名称（如 A / B / o�?*/
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class PromptVariant {
+        /** 变体名称（如 A / B / C） */
         private String name;
         /** Prompt 内容 */
-        private String oontent;
-        /** 流量权重（百分比，如 50 表示 50% 流量�?*/
+        private String content;
+        /** 流量权重（百分比，如 50 表示 50% 流量） */
         @Builder.Default
         private int weight = 50;
         /** 分配次数计数 */
-        private final AtomioLong assignmentoount = new AtomioLong(0);
+        private final AtomicLong assignmentCount = new AtomicLong(0);
 
-        publio AtomioLong getAssignmentoount() {
-            return assignmentoount;
+        public AtomicLong getAssignmentCount() {
+            return assignmentCount;
         }
     }
 
     /**
-     * 变体统计数据�?
+     * 变体统计数据。
      */
     @Data
-    publio statio olass VariantStats {
-        private final AtomioLong totaloount = new AtomioLong(0);
-        private final AtomioLong suooessoount = new AtomioLong(0);
-        private final AtomioLong totalLatenoyMs = new AtomioLong(0);
-        private final AtomioLong feedbaokSum = new AtomioLong(0);
-        private final AtomioLong feedbaokoount = new AtomioLong(0);
+    public static class VariantStats {
+        private final AtomicLong totalCount = new AtomicLong(0);
+        private final AtomicLong successCount = new AtomicLong(0);
+        private final AtomicLong totalLatencyMs = new AtomicLong(0);
+        private final AtomicLong feedbackSum = new AtomicLong(0);
+        private final AtomicLong feedbackCount = new AtomicLong(0);
     }
 
     /**
-     * 变体统计报告�?
+     * 变体统计报告。
      *
      * @param variantName  变体名称
-     * @param totalExeoutions 总执行次�?
-     * @param suooessoount 成功次数
-     * @param suooessRate  成功�?
-     * @param avgLatenoyMs 平均耗时
+     * @param totalExecutions 总执行次数
+     * @param successCount 成功次数
+     * @param successRate  成功率
+     * @param avgLatencyMs 平均耗时
      * @param avgRating    平均评分
-     * @param feedbaokoount 反馈�?
+     * @param feedbackCount 反馈数
      */
-    publio reoord VariantReport(
+    public record VariantReport(
             String variantName,
-            long totalExeoutions,
-            long suooessoount,
-            double suooessRate,
-            double avgLatenoyMs,
+            long totalExecutions,
+            long successCount,
+            double successRate,
+            double avgLatencyMs,
             double avgRating,
-            long feedbaokoount
+            long feedbackCount
     ) {}
 
     /**
-     * 实验报告�?
+     * 实验报告。
      *
-     * @param oode      实验编码
-     * @param variants  各变体报�?
+     * @param code      实验编码
+     * @param variants  各变体报告
      */
-    publio reoord ExperimentReport(
-            String oode,
+    public record ExperimentReport(
+            String code,
             List<VariantReport> variants
     ) {}
 }

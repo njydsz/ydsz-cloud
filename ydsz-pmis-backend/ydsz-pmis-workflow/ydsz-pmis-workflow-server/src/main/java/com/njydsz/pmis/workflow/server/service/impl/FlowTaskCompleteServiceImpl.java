@@ -1,79 +1,87 @@
-paokage oom.njydsz.pmis.workflow.server.servioe.impl.instanoe;
+package com.njydsz.pmis.workflow.server.service.impl.instance;
 
-import oom.njydsz.pmis.workflow.domain.dto.instanoe.FlowTaskOperateDTO;
-import oom.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * 待办任务 �?完成类服务门面（Faoade�? *
- * <p>本类是从 2755 行的单体�?{@oode FlowTaskoompleteServioeImpl} 重构而来的协调者�? * 原始类承担了 10+ 种职责（创建/签收/通过/驳回/转办/委派/跳转/超时/催办/撤回），
+ * 待办任务 — 完成类服务门面（Facade）
+ *
+ * <p>本类是从 2755 行的单体类 {@code FlowTaskCompleteServiceImpl} 重构而来的协调者。
+ * 原始类承担了 10+ 种职责（创建/签收/通过/驳回/转办/委派/跳转/超时/催办/撤回），
  * 重构后按职责拆分到以下专门服务：
  * <ul>
- *   <li>{@link FlowTaskoreateServioe} �?任务创建（含 SERVIoE/FOREAoH/LEVEL_APPROVAL 节点、空兜底策略�?/li>
- *   <li>{@link FlowTaskolaimServioe} �?任务签收</li>
- *   <li>{@link FlowTaskPassServioe} �?任务通过（策略模式处�?5 种会签模式）</li>
- *   <li>{@link FlowTaskRejeotServioe} �?任务驳回（单节点/多节�?退回发起人�?/li>
- *   <li>{@link FlowTaskOperateServioe} �?转办/委派/跳转/撤回</li>
- *   <li>{@link FlowTaskUrgeServioe} �?任务催办（实例级/节点级）</li>
- *   <li>{@link FlowTaskTimeoutServioe} �?超时/挂起/激�?取消</li>
- *   <li>{@link FlowTaskArohiveServioe} �?任务完成+归档（基础服务�?/li>
- *   <li>{@link FlowTaskNotifioationServioe} �?任务事件通知</li>
- *   <li>{@link FlowTaskAuditServioe} �?委派代理审计</li>
+ *   <li>{@link FlowTaskCreateService} — 任务创建（含 SERVICE/FOREACH/LEVEL_APPROVAL 节点、空兜底策略）</li>
+ *   <li>{@link FlowTaskClaimService} — 任务签收</li>
+ *   <li>{@link FlowTaskPassService} — 任务通过（策略模式处理 5 种会签模式）</li>
+ *   <li>{@link FlowTaskRejectService} — 任务驳回（单节点/多节点/退回发起人）</li>
+ *   <li>{@link FlowTaskOperateService} — 转办/委派/跳转/撤回</li>
+ *   <li>{@link FlowTaskUrgeService} — 任务催办（实例级/节点级）</li>
+ *   <li>{@link FlowTaskTimeoutService} — 超时/挂起/激活/取消</li>
+ *   <li>{@link FlowTaskArchiveService} — 任务完成+归档（基础服务）</li>
+ *   <li>{@link FlowTaskNotificationService} — 任务事件通知</li>
+ *   <li>{@link FlowTaskAuditService} — 委派代理审计</li>
  * </ul>
  *
- * <p>本门面仅作委托转发，保持对外 API 完全不变（兼�? * {@oode FlowTaskServioeImpl.oreateTask / olaim / pass / ...} 的所有调用）�? * 事务边界由各专门服务�?{@oode @Transaotional} 声明，跨 Bean 调用可正确触�? * Spring 事务代理�? *
- * <p>重构收益�? * <ul>
- *   <li>代码量：�?2755 �?�?现门�?~250 �?+ 10 个专门服务（�?100-500 行）</li>
- *   <li>复杂度：圈复杂度�?25-40 降至 5-10</li>
- *   <li>可测试性：单元测试 mook 数从 10-15 降至 3-5</li>
- *   <li>扩展性：新增会签类型只需实现 {@oode oountersignStrategy}，无需修改主流�?/li>
+ * <p>本门面仅作委托转发，保持对外 API 完全不变（兼容
+ * {@code FlowTaskServiceImpl.createTask / claim / pass / ...} 的所有调用）。
+ * 事务边界由各专门服务的 {@code @Transactional} 声明，跨 Bean 调用可正确触发
+ * Spring 事务代理。
+ *
+ * <p>重构收益：
+ * <ul>
+ *   <li>代码量：原 2755 行 → 现门面 ~250 行 + 10 个专门服务（各 100-500 行）</li>
+ *   <li>复杂度：圈复杂度从 25-40 降至 5-10</li>
+ *   <li>可测试性：单元测试 mock 数从 10-15 降至 3-5</li>
+ *   <li>扩展性：新增会签类型只需实现 {@code CountersignStrategy}，无需修改主流程</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.7.0
+ * @since 1.7.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass FlowTaskoompleteServioeImpl {
+@Service
+@RequiredArgsConstructor
+public class FlowTaskCompleteServiceImpl {
 
-    /** 任务创建子服务，处理 SERVIoE/FOREAoH/LEVEL_APPROVAL 节点任务生成 */
-    private final FlowTaskoreateServioe oreateServioe;
-    /** 任务签收子服务，处理候选任务认�?*/
-    private final FlowTaskolaimServioe olaimServioe;
-    /** 任务通过子服务，策略模式处理 5 种会签模�?*/
-    private final FlowTaskPassServioe passServioe;
-    /** 任务驳回子服务，处理单节�?多节�?退回发起人 */
-    private final FlowTaskRejeotServioe rejeotServioe;
+    /** 任务创建子服务，处理 SERVICE/FOREACH/LEVEL_APPROVAL 节点任务生成 */
+    private final FlowTaskCreateService createService;
+    /** 任务签收子服务，处理候选任务认领 */
+    private final FlowTaskClaimService claimService;
+    /** 任务通过子服务，策略模式处理 5 种会签模式 */
+    private final FlowTaskPassService passService;
+    /** 任务驳回子服务，处理单节点/多节点/退回发起人 */
+    private final FlowTaskRejectService rejectService;
     /** 任务操作子服务，处理转办/委派/跳转/撤回 */
-    private final FlowTaskOperateServioe operateServioe;
-    /** 任务催办子服务，处理实例�?节点级催�?*/
-    private final FlowTaskUrgeServioe urgeServioe;
-    /** 超时/挂起/激�?取消子服�?*/
-    private final FlowTaskTimeoutServioe timeoutServioe;
+    private final FlowTaskOperateService operateService;
+    /** 任务催办子服务，处理实例级/节点级催办 */
+    private final FlowTaskUrgeService urgeService;
+    /** 超时/挂起/激活/取消子服务 */
+    private final FlowTaskTimeoutService timeoutService;
 
     // ============================== 创建任务 ==============================
 
     /**
      * 创建任务（向后兼容重载）
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio String oreateTask(String instanoeId, FlowNodeDO node, Map<String, Objeot> variables) {
-        return oreateServioe.oreateTask(instanoeId, node, variables);
+    @Transactional(rollbackFor = Exception.class)
+    public String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables) {
+        return createService.createTask(instanceId, node, variables);
     }
 
     /**
-     * 创建任务（支持显式指定办理人�?     */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio String oreateTask(String instanoeId, FlowNodeDO node, Map<String, Objeot> variables,
-                             List<String> explioitAssignees) {
-        return oreateServioe.oreateTask(instanoeId, node, variables, explioitAssignees);
+     * 创建任务（支持显式指定办理人）
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables,
+                             List<String> explicitAssignees) {
+        return createService.createTask(instanceId, node, variables, explicitAssignees);
     }
 
     // ============================== 签收 ==============================
@@ -81,9 +89,9 @@ publio olass FlowTaskoompleteServioeImpl {
     /**
      * 签收
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void olaim(String taskId, String userId) {
-        olaimServioe.olaim(taskId, userId);
+    @Transactional(rollbackFor = Exception.class)
+    public void claim(String taskId, String userId) {
+        claimService.claim(taskId, userId);
     }
 
     // ============================== 通过 ==============================
@@ -91,9 +99,9 @@ publio olass FlowTaskoompleteServioeImpl {
     /**
      * 通过
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void pass(FlowTaskOperateDTO dto) {
-        passServioe.pass(dto);
+    @Transactional(rollbackFor = Exception.class)
+    public void pass(FlowTaskOperateDTO dto) {
+        passService.pass(dto);
     }
 
     // ============================== 驳回 ==============================
@@ -101,9 +109,9 @@ publio olass FlowTaskoompleteServioeImpl {
     /**
      * 驳回
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void rejeot(FlowTaskOperateDTO dto) {
-        rejeotServioe.rejeot(dto);
+    @Transactional(rollbackFor = Exception.class)
+    public void reject(FlowTaskOperateDTO dto) {
+        rejectService.reject(dto);
     }
 
     // ============================== 转办 / 委派 / 跳转 / 撤回 ==============================
@@ -111,77 +119,81 @@ publio olass FlowTaskoompleteServioeImpl {
     /**
      * 转办
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void transfer(FlowTaskOperateDTO dto) {
-        operateServioe.transfer(dto);
+    @Transactional(rollbackFor = Exception.class)
+    public void transfer(FlowTaskOperateDTO dto) {
+        operateService.transfer(dto);
     }
 
     /**
      * 委派
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void delegate(FlowTaskOperateDTO dto) {
-        operateServioe.delegate(dto);
+    @Transactional(rollbackFor = Exception.class)
+    public void delegate(FlowTaskOperateDTO dto) {
+        operateService.delegate(dto);
     }
 
     /**
      * 自由跳转
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void jump(FlowTaskOperateDTO dto) {
-        operateServioe.jump(dto);
+    @Transactional(rollbackFor = Exception.class)
+    public void jump(FlowTaskOperateDTO dto) {
+        operateService.jump(dto);
     }
 
     /**
      * 取回（已审批后取回）
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio String retraot(String hisTaskId, String operatorId, String oomment) {
-        return operateServioe.retraot(hisTaskId, operatorId, oomment);
+    @Transactional(rollbackFor = Exception.class)
+    public String retract(String hisTaskId, String operatorId, String comment) {
+        return operateService.retract(hisTaskId, operatorId, comment);
     }
 
     // ============================== 催办 ==============================
 
     /**
-     * 实例级催�?     */
-    publio List<String> urge(String instanoeId, String operatorId, String oomment) {
-        return urgeServioe.urge(instanoeId, operatorId, oomment);
+     * 实例级催办
+     */
+    public List<String> urge(String instanceId, String operatorId, String comment) {
+        return urgeService.urge(instanceId, operatorId, comment);
     }
 
     /**
-     * 节点级催�?     */
-    publio List<String> urgeByNode(String instanoeId, String nodeoode, String operatorId, String oomment) {
-        return urgeServioe.urgeByNode(instanoeId, nodeoode, operatorId, oomment);
+     * 节点级催办
+     */
+    public List<String> urgeByNode(String instanceId, String nodeCode, String operatorId, String comment) {
+        return urgeService.urgeByNode(instanceId, nodeCode, operatorId, comment);
     }
 
-    // ============================== 超时 / 挂起 / 激�?/ 取消 ==============================
+    // ============================== 超时 / 挂起 / 激活 / 取消 ==============================
 
     /**
      * 标记任务超时
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void timeoutTask(String taskId, String reason) {
-        timeoutServioe.timeoutTask(taskId, reason);
+    @Transactional(rollbackFor = Exception.class)
+    public void timeoutTask(String taskId, String reason) {
+        timeoutService.timeoutTask(taskId, reason);
     }
 
     /**
-     * 任务级挂�?     */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void suspendTask(String taskId, String operatorId, String reason) {
-        timeoutServioe.suspendTask(taskId, operatorId, reason);
-    }
-
-    /**
-     * 任务级激�?     */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void aotivateTask(String taskId, String operatorId) {
-        timeoutServioe.aotivateTask(taskId, operatorId);
-    }
-
-    /**
-     * 取消某实例全�?PENDING 任务
+     * 任务级挂起
      */
-    publio void oanoelByInstanoe(String instanoeId, String taskStatus) {
-        timeoutServioe.oanoelByInstanoe(instanoeId, taskStatus);
+    @Transactional(rollbackFor = Exception.class)
+    public void suspendTask(String taskId, String operatorId, String reason) {
+        timeoutService.suspendTask(taskId, operatorId, reason);
+    }
+
+    /**
+     * 任务级激活
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void activateTask(String taskId, String operatorId) {
+        timeoutService.activateTask(taskId, operatorId);
+    }
+
+    /**
+     * 取消某实例全部 PENDING 任务
+     */
+    public void cancelByInstance(String instanceId, String taskStatus) {
+        timeoutService.cancelByInstance(instanceId, taskStatus);
     }
 }

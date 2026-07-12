@@ -1,24 +1,24 @@
-paokage oom.njydsz.pmis.finanoe.server.servioe.impl.finanoe;
+package com.njydsz.pmis.finance.server.service.impl.finance;
 
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.finanoe.domain.dto.RevenueoreateDTO;
-import oom.njydsz.pmis.finanoe.domain.entity.RevenueDO;
-import oom.njydsz.pmis.finanoe.domain.enums.RevenueReoognitionMethod;
-import oom.njydsz.pmis.finanoe.infra.mapper.RevenueMapper;
-import oom.njydsz.pmis.finanoe.server.servioe.finanoe.RevenueServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.finance.domain.dto.RevenueCreateDTO;
+import com.njydsz.pmis.finance.domain.entity.RevenueDO;
+import com.njydsz.pmis.finance.domain.enums.RevenueRecognitionMethod;
+import com.njydsz.pmis.finance.infra.mapper.RevenueMapper;
+import com.njydsz.pmis.finance.server.service.finance.RevenueService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDeoimal;
-import java.time.LooalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -26,126 +26,126 @@ import java.util.Map;
  * 收入确认服务实现
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass RevenueServioeImpl implements RevenueServioe {
+@Service
+@RequiredArgsConstructor
+public class RevenueServiceImpl implements RevenueService {
 
     /** 收入确认 Mapper */
     private final RevenueMapper revenueMapper;
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio String oreate(RevenueoreateDTO dto) {
-        if (dto == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d9712a58");
-        if (!StringUtils.hasText(dto.getRevenueoode())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_378203d4");
+    @Transactional(rollbackFor = Exception.class)
+    public String create(RevenueCreateDTO dto) {
+        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (!StringUtils.hasText(dto.getRevenueCode())) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_378203d4");
         }
-        if (dto.getoontraotId() == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_af96of73");
+        if (dto.getContractId() == null) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_af96cf73");
         }
         if (dto.getInitiationId() == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_576o2b5e");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (dto.getAmount() == null || dto.getAmount().signum() <= 0) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_a853o0o6");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_a853c0c6");
         }
-        if (RevenueReoognitionMethod.fromoode(dto.getReoognitionMethod()) == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_9a58a1bo", dto.getReoognitionMethod());
+        if (RevenueRecognitionMethod.fromCode(dto.getRecognitionMethod()) == null) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_9a58a1bc", dto.getRecognitionMethod());
         }
-        if (revenueMapper.seleotByoode(dto.getRevenueoode()) != null) {
-            throw new SysExoeption(StandardResultoode.DUPLIoATE_KEY, "error.exeoution.msg_52o2d527", dto.getRevenueoode());
+        if (revenueMapper.selectByCode(dto.getRevenueCode()) != null) {
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.execution.msg_52c2d527", dto.getRevenueCode());
         }
         RevenueDO r = new RevenueDO();
-        BeanUtils.oopyProperties(dto, r);
+        BeanUtils.copyProperties(dto, r);
         if (!StringUtils.hasText(r.getStatus())) r.setStatus("DRAFT");
-        if (r.getPeroentoomplete() == null) r.setPeroentoomplete(BigDeoimal.ZERO);
-        if (r.getTenantId() == null) r.setTenantId(Tenantoontext.getTenantId());
-        if (r.getProviderTraoeId() == null) r.setProviderTraoeId("");
+        if (r.getPercentComplete() == null) r.setPercentComplete(BigDecimal.ZERO);
+        if (r.getTenantId() == null) r.setTenantId(TenantContext.getTenantId());
+        if (r.getProviderTraceId() == null) r.setProviderTraceId("");
         revenueMapper.insert(r);
-        log.info("[Revenue] 创建收入确认: oode={} amount={}", r.getRevenueoode(), r.getAmount());
+        log.info("[Revenue] 创建收入确认: code={} amount={}", r.getRevenueCode(), r.getAmount());
         return r.getId();
     }
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void oonfirm(String id, String oonfirmedBy) {
+    @Transactional(rollbackFor = Exception.class)
+    public void confirm(String id, String confirmedBy) {
         RevenueDO r = getById(id);
         if (!"DRAFT".equals(r.getStatus())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_0f0b1394");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_0f0b1394");
         }
-        revenueMapper.updateStatus(id, "oONFIRMED", oonfirmedBy);
-        r.setoonfirmedBy(oonfirmedBy);
-        r.setoonfirmedAt(LooalDateTime.now());
+        revenueMapper.updateStatus(id, "CONFIRMED", confirmedBy);
+        r.setConfirmedBy(confirmedBy);
+        r.setConfirmedAt(LocalDateTime.now());
         revenueMapper.updateById(r);
         log.info("[Revenue] 确认收入: id={} amount={}", id, r.getAmount());
     }
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void reverse(String id) {
+    @Transactional(rollbackFor = Exception.class)
+    public void reverse(String id) {
         RevenueDO r = getById(id);
-        if (!"oONFIRMED".equals(r.getStatus())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_1971a360");
+        if (!"CONFIRMED".equals(r.getStatus())) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_1971a360");
         }
         revenueMapper.updateStatus(id, "REVERSED", null);
         log.info("[Revenue] 冲销收入: id={}", id);
     }
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void delete(String id) {
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(String id) {
         RevenueDO r = getById(id);
-        if ("oONFIRMED".equals(r.getStatus())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_6891a16a");
+        if ("CONFIRMED".equals(r.getStatus())) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_6891a16a");
         }
         revenueMapper.deleteById(id);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio RevenueDO getById(String id) {
-        RevenueDO r = revenueMapper.seleotById(id);
-        if (r == null) throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_4924d9b4");
+    @Transactional(readOnly = true)
+    public RevenueDO getById(String id) {
+        RevenueDO r = revenueMapper.selectById(id);
+        if (r == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_4924d9b4");
         return r;
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio Page<RevenueDO> page(int page, int size, String keyword, String status,
-                                 String oontraotId, String initiationId, String period) {
+    @Transactional(readOnly = true)
+    public Page<RevenueDO> page(int page, int size, String keyword, String status,
+                                 String contractId, String initiationId, String period) {
         Page<RevenueDO> p = new Page<>(page, size);
         LambdaQueryWrapper<RevenueDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
-            w.and(qw -> qw.like(RevenueDO::getRevenueoode, keyword)
+            w.and(qw -> qw.like(RevenueDO::getRevenueCode, keyword)
                     .or().like(RevenueDO::getMilestone, keyword));
         }
         if (StringUtils.hasText(status)) w.eq(RevenueDO::getStatus, status);
-        if (oontraotId != null) w.eq(RevenueDO::getoontraotId, oontraotId);
+        if (contractId != null) w.eq(RevenueDO::getContractId, contractId);
         if (initiationId != null) w.eq(RevenueDO::getInitiationId, initiationId);
         if (StringUtils.hasText(period)) w.eq(RevenueDO::getPeriod, period);
-        w.orderByDeso(RevenueDO::getReoognitionDate);
-        return revenueMapper.seleotPage(p, w);
+        w.orderByDesc(RevenueDO::getRecognitionDate);
+        return revenueMapper.selectPage(p, w);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio List<RevenueDO> listByInitiation(String initiationId) {
-        return revenueMapper.seleotByInitiation(initiationId);
+    @Transactional(readOnly = true)
+    public List<RevenueDO> listByInitiation(String initiationId) {
+        return revenueMapper.selectByInitiation(initiationId);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio List<Map<String, Objeot>> sumByoontraot(String oontraotId) {
-        if (oontraotId == null) return List.of();
-        return revenueMapper.sumByoontraot(oontraotId);
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> sumByContract(String contractId) {
+        if (contractId == null) return List.of();
+        return revenueMapper.sumByContract(contractId);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio List<Map<String, Objeot>> sumByPeriod(String initiationId) {
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> sumByPeriod(String initiationId) {
         if (initiationId == null) return List.of();
         return revenueMapper.sumByPeriod(initiationId);
     }

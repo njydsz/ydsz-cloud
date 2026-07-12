@@ -1,18 +1,18 @@
-paokage oom.njydsz.pmis.finanoe.web.oontroller;
+package com.njydsz.pmis.finance.web.controller;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
-import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.finanoe.domain.dto.RevenueoreateDTO;
-import oom.njydsz.pmis.finanoe.domain.entity.RevenueDO;
-import oom.njydsz.pmis.finanoe.server.servioe.finanoe.RevenueServioe;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.finance.domain.dto.RevenueCreateDTO;
+import com.njydsz.pmis.finance.domain.entity.RevenueDO;
+import com.njydsz.pmis.finance.server.service.finance.RevenueService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.oonstraints.Max;
-import jakarta.validation.oonstraints.Min;
-import lombok.RequiredArgsoonstruotor;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,28 +22,28 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.Restoontroller;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * 收入确认 oontroller
+ * 收入确认 Controller
  *
- * <p>负责收入录入、确认、状态迁移及按项�?合同/周期的聚合查询�?
+ * <p>负责收入录入、确认、状态迁移及按项目/合同/周期的聚合查询。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Tag(name = "收入确认")
-@Restoontroller
-@RequestMapping("/finanoe/revenue")
-@RequiredArgsoonstruotor
+@RestController
+@RequestMapping("/finance/revenue")
+@RequiredArgsConstructor
 @Validated
-publio olass Revenueoontroller {
+public class RevenueController {
 
     /** 收入确认服务 */
-    private final RevenueServioe servioe;
+    private final RevenueService service;
 
     /**
      * 录入收入
@@ -52,26 +52,26 @@ publio olass Revenueoontroller {
      * @return 新建收入记录 ID
      */
     @Operation(summary = "录入收入")
-    @AuthApiPermission(apioodes = "exeoution:revenue:oreate")
-    @Idempotent(key = "revenue:oreate", ttlSeoonds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apiCodes = "execution:revenue:create")
+    @Idempotent(key = "revenue:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    publio BaseResponse<String> oreate(@Valid @RequestBody RevenueoreateDTO dto) {
-        return BaseResponse.ok(servioe.oreate(dto));
+    public BaseResponse<String> create(@Valid @RequestBody RevenueCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
      * 确认收入
      *
      * @param id          收入记录 ID
-     * @param oonfirmedBy 确认�?ID
-     * @return 空结�?
+     * @param confirmedBy 确认人 ID
+     * @return 空结果
      */
     @Operation(summary = "确认收入")
-    @AuthApiPermission(apioodes = "exeoution:revenue:update")
-    @Idempotent(key = "revenue:update", ttlSeoonds = 5, message = "请勿重复提交")
-    @PutMapping("/{id}/oonfirm")
-    publio BaseResponse<Void> oonfirm(@PathVariable String id, @RequestParam String oonfirmedBy) {
-        servioe.oonfirm(id, oonfirmedBy);
+    @AuthApiPermission(apiCodes = "execution:revenue:update")
+    @Idempotent(key = "revenue:update", ttlSeconds = 5, message = "请勿重复提交")
+    @PutMapping("/{id}/confirm")
+    public BaseResponse<Void> confirm(@PathVariable String id, @RequestParam String confirmedBy) {
+        service.confirm(id, confirmedBy);
         return BaseResponse.ok();
     }
 
@@ -79,14 +79,14 @@ publio olass Revenueoontroller {
      * 冲销收入
      *
      * @param id 收入记录 ID
-     * @return 空结�?
+     * @return 空结果
      */
     @Operation(summary = "冲销收入")
-    @AuthApiPermission(apioodes = "exeoution:revenue:update")
-    @Idempotent(key = "revenue:reverse", ttlSeoonds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apiCodes = "execution:revenue:update")
+    @Idempotent(key = "revenue:reverse", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/reverse")
-    publio BaseResponse<Void> reverse(@PathVariable String id) {
-        servioe.reverse(id);
+    public BaseResponse<Void> reverse(@PathVariable String id) {
+        service.reverse(id);
         return BaseResponse.ok();
     }
 
@@ -94,14 +94,14 @@ publio olass Revenueoontroller {
      * 删除收入
      *
      * @param id 收入记录 ID
-     * @return 空结�?
+     * @return 空结果
      */
     @Operation(summary = "删除")
-    @AuthApiPermission(apioodes = "exeoution:revenue:delete")
-    @Idempotent(key = "revenue:delete", ttlSeoonds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apiCodes = "execution:revenue:delete")
+    @Idempotent(key = "revenue:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    publio BaseResponse<Void> delete(@PathVariable String id) {
-        servioe.delete(id);
+    public BaseResponse<Void> delete(@PathVariable String id) {
+        service.delete(id);
         return BaseResponse.ok();
     }
 
@@ -112,10 +112,10 @@ publio olass Revenueoontroller {
      * @return 收入实体
      */
     @Operation(summary = "详情")
-    @AuthApiPermission(apioodes = "exeoution:revenue:list")
+    @AuthApiPermission(apiCodes = "execution:revenue:list")
     @GetMapping("/{id}")
-    publio BaseResponse<RevenueDO> get(@PathVariable String id) {
-        return BaseResponse.ok(servioe.getById(id));
+    public BaseResponse<RevenueDO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -123,50 +123,50 @@ publio olass Revenueoontroller {
      *
      * @param page         页码（从 1 开始）
      * @param size         每页大小
-     * @param keyword      关键�?
-     * @param status       状态过�?
-     * @param oontraotId   合同 ID
+     * @param keyword      关键词
+     * @param status       状态过滤
+     * @param contractId   合同 ID
      * @param initiationId 项目立项 ID
-     * @param period       所属期间（YYYY-MM�?
+     * @param period       所属期间（YYYY-MM）
      * @return 分页结果
      */
     @Operation(summary = "分页")
-    @AuthApiPermission(apioodes = "exeoution:revenue:list")
+    @AuthApiPermission(apiCodes = "execution:revenue:list")
     @GetMapping("/page")
-    publio BaseResponse<Page<RevenueDO>> page(
+    public BaseResponse<Page<RevenueDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String oontraotId,
+            @RequestParam(required = false) String contractId,
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String period) {
-        return BaseResponse.ok(servioe.page(page, size, keyword, status, oontraotId, initiationId, period));
+        return BaseResponse.ok(service.page(page, size, keyword, status, contractId, initiationId, period));
     }
 
     /**
-     * 按合同汇总收�?
+     * 按合同汇总收入
      *
-     * @param oontraotId 合同 ID
-     * @return 汇总结果列�?
+     * @param contractId 合同 ID
+     * @return 汇总结果列表
      */
-    @Operation(summary = "按合同汇�?)
-    @AuthApiPermission(apioodes = "exeoution:revenue:list")
-    @GetMapping("/aggregate/byoontraot")
-    publio BaseResponse<List<Map<String, Objeot>>> sumByoontraot(@RequestParam String oontraotId) {
-        return BaseResponse.ok(servioe.sumByoontraot(oontraotId));
+    @Operation(summary = "按合同汇总")
+    @AuthApiPermission(apiCodes = "execution:revenue:list")
+    @GetMapping("/aggregate/byContract")
+    public BaseResponse<List<Map<String, Object>>> sumByContract(@RequestParam String contractId) {
+        return BaseResponse.ok(service.sumByContract(contractId));
     }
 
     /**
-     * 按期间汇总收�?
+     * 按期间汇总收入
      *
      * @param initiationId 项目立项 ID
-     * @return 汇总结果列�?
+     * @return 汇总结果列表
      */
-    @Operation(summary = "按期间汇�?)
-    @AuthApiPermission(apioodes = "exeoution:revenue:list")
+    @Operation(summary = "按期间汇总")
+    @AuthApiPermission(apiCodes = "execution:revenue:list")
     @GetMapping("/aggregate/byPeriod")
-    publio BaseResponse<List<Map<String, Objeot>>> sumByPeriod(@RequestParam String initiationId) {
-        return BaseResponse.ok(servioe.sumByPeriod(initiationId));
+    public BaseResponse<List<Map<String, Object>>> sumByPeriod(@RequestParam String initiationId) {
+        return BaseResponse.ok(service.sumByPeriod(initiationId));
     }
 }

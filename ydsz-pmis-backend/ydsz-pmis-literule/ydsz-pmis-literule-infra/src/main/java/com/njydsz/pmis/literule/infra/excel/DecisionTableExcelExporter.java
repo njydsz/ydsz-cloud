@@ -1,304 +1,316 @@
-paokage oom.njydsz.pmis.literule.infra.exoel;
+package com.njydsz.pmis.literule.infra.excel;
 
-import oom.njydsz.pmis.literule.api.DeoisionTableDefinition;
-import oom.njydsz.pmis.literule.api.HitPolioy;
+import com.njydsz.pmis.literule.api.DecisionTableDefinition;
+import com.njydsz.pmis.literule.api.HitPolicy;
 import lombok.extern.slf4j.Slf4j;
-import org.apaohe.poi.ss.usermodel.oell;
-import org.apaohe.poi.ss.usermodel.oellStyle;
-import org.apaohe.poi.ss.usermodel.Font;
-import org.apaohe.poi.ss.usermodel.Row;
-import org.apaohe.poi.ss.usermodel.Sheet;
-import org.apaohe.poi.ss.usermodel.Workbook;
-import org.apaohe.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOExoeption;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.oolleotions;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 决策�?Exoel 导入导出器（P0-3�? *
- * <p>�?{@link DeoisionTableDefinition} �?Exoel�?xlsx）双向转换，
- * 对标 Drools/URule 的决策表 Exoel 格式，便于业务人员通过 Exoel 维护决策表�? *
- * <h3>Exoel 结构</h3>
+ * 决策表 Excel 导入导出器（P0-3）
+ *
+ * <p>将 {@link DecisionTableDefinition} 与 Excel（.xlsx）双向转换，
+ * 对标 Drools/URule 的决策表 Excel 格式，便于业务人员通过 Excel 维护决策表。
+ *
+ * <h3>Excel 结构</h3>
  * <pre>
- * | HitPolioy: FIRST  | Tableoode: DT_PROJEoT_RISK | TableName: 项目风险等级决策�?|
- * | oategory: RISK    | Desoription: ...          | Priority: 100              |
- * |----条件�?---|----条件�?---|----动作�?---|----动作�?---|
- * | o:evmRedoount | o:grossMargin | A:severity   | A:title      |
- * | EVM 红灯�?   | 毛利�?       | 严重�?      | 标题         |
+ * | HitPolicy: FIRST  | TableCode: DT_PROJECT_RISK | TableName: 项目风险等级决策表 |
+ * | Category: RISK    | Description: ...          | Priority: 100              |
+ * |----条件列----|----条件列----|----动作列----|----动作列----|
+ * | C:evmRedCount | C:grossMargin | A:severity   | A:title      |
+ * | EVM 红灯数    | 毛利率        | 严重度       | 标题         |
  * | number        | number        | string       | string       |
  * | &gt;=3          |               | RED          | EVM 严重偏离  |
- * |               | &lt;0.05       | YELLOW       | 毛利率过�?   |
+ * |               | &lt;0.05       | YELLOW       | 毛利率过低    |
  * | DEFAULT       |               | INFO         | 正常         |
  * </pre>
  *
  * <ul>
- *   <li>�?1-2 行：元数据（HitPolioy/Tableoode/TableName/oategory/Desoription/Priority/Soope�?/li>
- *   <li>�?3 行：列头（条件列�?"o:" 前缀，动作列�?"A:" 前缀�?/li>
- *   <li>�?4 行：列显示名（label�?/li>
- *   <li>�?5 行：列类型（number/string/boolean�?/li>
- *   <li>�?6 行起：决策行（空单元格表示该列不参与该行条件�?/li>
- *   <li>最后行：默认动作（第一个单元格标记 "DEFAULT"�?/li>
+ *   <li>第 1-2 行：元数据（HitPolicy/TableCode/TableName/Category/Description/Priority/Scope）</li>
+ *   <li>第 3 行：列头（条件列用 "C:" 前缀，动作列用 "A:" 前缀）</li>
+ *   <li>第 4 行：列显示名（label）</li>
+ *   <li>第 5 行：列类型（number/string/boolean）</li>
+ *   <li>第 6 行起：决策行（空单元格表示该列不参与该行条件）</li>
+ *   <li>最后行：默认动作（第一个单元格标记 "DEFAULT"）</li>
  * </ul>
  *
  * <h3>异常约定</h3>
  * <ul>
- *   <li>导出失败�?{@link RuntimeExoeption}</li>
- *   <li>导入失败�?{@link IllegalArgumentExoeption}</li>
+ *   <li>导出失败抛 {@link RuntimeException}</li>
+ *   <li>导入失败抛 {@link IllegalArgumentException}</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.6.0
+ * @since 1.6.0
  */
 @Slf4j
-publio olass DeoisionTableExoelExporter {
+public class DecisionTableExcelExporter {
 
-    /** 元数据行数（HitPolioy/Tableoode 等占 2 行） */
-    private statio final int METADATA_ROWS = 2;
+    /** 元数据行数（HitPolicy/TableCode 等占 2 行） */
+    private static final int METADATA_ROWS = 2;
     /** 列头行、显示名行、类型行 */
-    private statio final int HEADER_ROWS = 3;
-    /** 决策行起始索引（0-based，第 6 行对�?rowIdx=5�?*/
-    private statio final int DATA_ROW_START = METADATA_ROWS + HEADER_ROWS;
+    private static final int HEADER_ROWS = 3;
+    /** 决策行起始索引（0-based，第 6 行对应 rowIdx=5） */
+    private static final int DATA_ROW_START = METADATA_ROWS + HEADER_ROWS;
 
     /** 默认动作标记 */
-    private statio final String DEFAULT_MARKER = "DEFAULT";
+    private static final String DEFAULT_MARKER = "DEFAULT";
     /** 条件列前缀 */
-    private statio final String oONDITION_PREFIX = "o:";
+    private static final String CONDITION_PREFIX = "C:";
     /** 动作列前缀 */
-    private statio final String AoTION_PREFIX = "A:";
+    private static final String ACTION_PREFIX = "A:";
 
     /**
-     * 导出决策表为 Exoel 字节数组
+     * 导出决策表为 Excel 字节数组
      *
-     * @param definition 决策表定�?     * @return xlsx 字节数组
-     * @throws RuntimeExoeption 导出失败
+     * @param definition 决策表定义
+     * @return xlsx 字节数组
+     * @throws RuntimeException 导出失败
      */
-    publio byte[] exportToExoel(DeoisionTableDefinition definition) {
+    public byte[] exportToExcel(DecisionTableDefinition definition) {
         if (definition == null) {
-            throw new RuntimeExoeption("决策表定义不能为 null");
+            throw new RuntimeException("决策表定义不能为 null");
         }
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            Sheet sheet = workbook.oreateSheet(safeSheetName(definition.getTableoode()));
-            oellStyle headerStyle = oreateHeaderStyle(workbook);
+            Sheet sheet = workbook.createSheet(safeSheetName(definition.getTableCode()));
+            CellStyle headerStyle = createHeaderStyle(workbook);
 
-            List<DeoisionTableDefinition.oolumn> oonditionoolumns =
-                    nullToEmpty(definition.getoonditionoolumns());
-            List<DeoisionTableDefinition.oolumn> aotionoolumns =
-                    nullToEmpty(definition.getAotionoolumns());
-            int totalools = oonditionoolumns.size() + aotionoolumns.size();
+            List<DecisionTableDefinition.Column> conditionColumns =
+                    nullToEmpty(definition.getConditionColumns());
+            List<DecisionTableDefinition.Column> actionColumns =
+                    nullToEmpty(definition.getActionColumns());
+            int totalCols = conditionColumns.size() + actionColumns.size();
 
-            // �?1 行：HitPolioy | Tableoode | TableName
-            Row metaRow1 = sheet.oreateRow(0);
-            setoell(metaRow1, 0, "HitPolioy: " + hitPolioyName(definition.getHitPolioy()), headerStyle);
-            setoell(metaRow1, 1, "Tableoode: " + nullToEmpty(definition.getTableoode()), headerStyle);
-            setoell(metaRow1, 2, "TableName: " + nullToEmpty(definition.getTableName()), headerStyle);
+            // 第 1 行：HitPolicy | TableCode | TableName
+            Row metaRow1 = sheet.createRow(0);
+            setCell(metaRow1, 0, "HitPolicy: " + hitPolicyName(definition.getHitPolicy()), headerStyle);
+            setCell(metaRow1, 1, "TableCode: " + nullToEmpty(definition.getTableCode()), headerStyle);
+            setCell(metaRow1, 2, "TableName: " + nullToEmpty(definition.getTableName()), headerStyle);
 
-            // �?2 行：oategory | Desoription | Priority | Soope
-            Row metaRow2 = sheet.oreateRow(1);
-            setoell(metaRow2, 0, "oategory: " + nullToEmpty(definition.getoategory()), headerStyle);
-            setoell(metaRow2, 1, "Desoription: " + nullToEmpty(definition.getDesoription()), headerStyle);
-            setoell(metaRow2, 2, "Priority: " + definition.getPriority(), headerStyle);
-            if (definition.getSoope() != null && !definition.getSoope().isBlank()) {
-                setoell(metaRow2, 3, "Soope: " + definition.getSoope(), headerStyle);
+            // 第 2 行：Category | Description | Priority | Scope
+            Row metaRow2 = sheet.createRow(1);
+            setCell(metaRow2, 0, "Category: " + nullToEmpty(definition.getCategory()), headerStyle);
+            setCell(metaRow2, 1, "Description: " + nullToEmpty(definition.getDescription()), headerStyle);
+            setCell(metaRow2, 2, "Priority: " + definition.getPriority(), headerStyle);
+            if (definition.getScope() != null && !definition.getScope().isBlank()) {
+                setCell(metaRow2, 3, "Scope: " + definition.getScope(), headerStyle);
             }
 
-            // �?3 行：列头（C:name / A:name�?            Row headerRow = sheet.oreateRow(2);
-            int oolIdx = 0;
-            for (DeoisionTableDefinition.oolumn ool : oonditionoolumns) {
-                setoell(headerRow, oolIdx, oONDITION_PREFIX + nullToEmpty(ool.getName()), headerStyle);
-                oolIdx++;
+            // 第 3 行：列头（C:name / A:name）
+            Row headerRow = sheet.createRow(2);
+            int colIdx = 0;
+            for (DecisionTableDefinition.Column col : conditionColumns) {
+                setCell(headerRow, colIdx, CONDITION_PREFIX + nullToEmpty(col.getName()), headerStyle);
+                colIdx++;
             }
-            for (DeoisionTableDefinition.oolumn ool : aotionoolumns) {
-                setoell(headerRow, oolIdx, AoTION_PREFIX + nullToEmpty(ool.getName()), headerStyle);
-                oolIdx++;
-            }
-
-            // �?4 行：列显示名（label�?            Row labelRow = sheet.oreateRow(3);
-            oolIdx = 0;
-            for (DeoisionTableDefinition.oolumn ool : oonditionoolumns) {
-                setoell(labelRow, oolIdx, nullToEmpty(ool.getLabel()));
-                oolIdx++;
-            }
-            for (DeoisionTableDefinition.oolumn ool : aotionoolumns) {
-                setoell(labelRow, oolIdx, nullToEmpty(ool.getLabel()));
-                oolIdx++;
+            for (DecisionTableDefinition.Column col : actionColumns) {
+                setCell(headerRow, colIdx, ACTION_PREFIX + nullToEmpty(col.getName()), headerStyle);
+                colIdx++;
             }
 
-            // �?5 行：列类�?            Row typeRow = sheet.oreateRow(4);
-            oolIdx = 0;
-            for (DeoisionTableDefinition.oolumn ool : oonditionoolumns) {
-                setoell(typeRow, oolIdx, nullToEmpty(ool.getType()));
-                oolIdx++;
+            // 第 4 行：列显示名（label）
+            Row labelRow = sheet.createRow(3);
+            colIdx = 0;
+            for (DecisionTableDefinition.Column col : conditionColumns) {
+                setCell(labelRow, colIdx, nullToEmpty(col.getLabel()));
+                colIdx++;
             }
-            for (DeoisionTableDefinition.oolumn ool : aotionoolumns) {
-                setoell(typeRow, oolIdx, nullToEmpty(ool.getType()));
-                oolIdx++;
+            for (DecisionTableDefinition.Column col : actionColumns) {
+                setCell(labelRow, colIdx, nullToEmpty(col.getLabel()));
+                colIdx++;
             }
 
-            // �?6 行起：决策行
-            List<DeoisionTableDefinition.Row> rows = nullToEmpty(definition.getRows());
+            // 第 5 行：列类型
+            Row typeRow = sheet.createRow(4);
+            colIdx = 0;
+            for (DecisionTableDefinition.Column col : conditionColumns) {
+                setCell(typeRow, colIdx, nullToEmpty(col.getType()));
+                colIdx++;
+            }
+            for (DecisionTableDefinition.Column col : actionColumns) {
+                setCell(typeRow, colIdx, nullToEmpty(col.getType()));
+                colIdx++;
+            }
+
+            // 第 6 行起：决策行
+            List<DecisionTableDefinition.Row> rows = nullToEmpty(definition.getRows());
             int rowIdx = DATA_ROW_START;
-            for (DeoisionTableDefinition.Row row : rows) {
-                writeDataRow(sheet, rowIdx, row, oonditionoolumns, aotionoolumns);
+            for (DecisionTableDefinition.Row row : rows) {
+                writeDataRow(sheet, rowIdx, row, conditionColumns, actionColumns);
                 rowIdx++;
             }
 
             // 默认动作行（第一个单元格标记 DEFAULT，后续单元格为动作值）
-            Map<String, Objeot> defaultAotions = definition.getDefaultAotions();
-            if (defaultAotions != null && !defaultAotions.isEmpty()) {
-                Row defaultRow = sheet.oreateRow(rowIdx);
-                setoell(defaultRow, 0, DEFAULT_MARKER);
-                int aotionStart = oonditionoolumns.size();
-                for (int i = 0; i < aotionoolumns.size(); i++) {
-                    DeoisionTableDefinition.oolumn ool = aotionoolumns.get(i);
-                    Objeot val = defaultAotions.get(ool.getName());
-                    setoell(defaultRow, aotionStart + i, val == null ? "" : val.toString());
+            Map<String, Object> defaultActions = definition.getDefaultActions();
+            if (defaultActions != null && !defaultActions.isEmpty()) {
+                Row defaultRow = sheet.createRow(rowIdx);
+                setCell(defaultRow, 0, DEFAULT_MARKER);
+                int actionStart = conditionColumns.size();
+                for (int i = 0; i < actionColumns.size(); i++) {
+                    DecisionTableDefinition.Column col = actionColumns.get(i);
+                    Object val = defaultActions.get(col.getName());
+                    setCell(defaultRow, actionStart + i, val == null ? "" : val.toString());
                 }
             }
 
             // 自适应列宽
-            for (int i = 0; i < Math.max(totalools, 4); i++) {
-                sheet.autoSizeoolumn(i);
+            for (int i = 0; i < Math.max(totalCols, 4); i++) {
+                sheet.autoSizeColumn(i);
             }
 
             workbook.write(out);
-            log.debug("[Exoel导出] 决策�?{} 导出完成，共 {} �?, definition.getTableoode(), rows.size());
+            log.debug("[Excel导出] 决策表 {} 导出完成，共 {} 行", definition.getTableCode(), rows.size());
             return out.toByteArray();
-        } oatoh (IOExoeption e) {
-            throw new RuntimeExoeption("导出决策�?Exoel 失败: " + definition.getTableoode(), e);
+        } catch (IOException e) {
+            throw new RuntimeException("导出决策表 Excel 失败: " + definition.getTableCode(), e);
         }
     }
 
     /**
-     * �?Exoel 字节数组导入决策�?     *
-     * @param exoelBytes xlsx 字节数组
-     * @return 决策表定�?     * @throws IllegalArgumentExoeption 导入失败（格式错�?数据缺失�?     */
-    publio DeoisionTableDefinition importFromExoel(byte[] exoelBytes) {
-        if (exoelBytes == null || exoelBytes.length == 0) {
-            throw new IllegalArgumentExoeption("Exoel 数据不能为空");
+     * 从 Excel 字节数组导入决策表
+     *
+     * @param excelBytes xlsx 字节数组
+     * @return 决策表定义
+     * @throws IllegalArgumentException 导入失败（格式错误/数据缺失）
+     */
+    public DecisionTableDefinition importFromExcel(byte[] excelBytes) {
+        if (excelBytes == null || excelBytes.length == 0) {
+            throw new IllegalArgumentException("Excel 数据不能为空");
         }
-        try (Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(exoelBytes))) {
+        try (Workbook workbook = new XSSFWorkbook(new ByteArrayInputStream(excelBytes))) {
             Sheet sheet = workbook.getSheetAt(0);
             if (sheet == null) {
-                throw new IllegalArgumentExoeption("Exoel 文件不包含任何工作表");
+                throw new IllegalArgumentException("Excel 文件不包含任何工作表");
             }
 
-            // 解析元数�?            Map<String, String> meta = parseMetadata(sheet);
-            String tableoode = meta.getOrDefault("Tableoode", "");
+            // 解析元数据
+            Map<String, String> meta = parseMetadata(sheet);
+            String tableCode = meta.getOrDefault("TableCode", "");
             String tableName = meta.getOrDefault("TableName", "");
-            String oategory = meta.getOrDefault("oategory", "");
-            String desoription = meta.getOrDefault("Desoription", "");
-            String soope = meta.getOrDefault("Soope", null);
-            HitPolioy hitPolioy = HitPolioy.fromoode(meta.getOrDefault("HitPolioy", "FIRST"));
+            String category = meta.getOrDefault("Category", "");
+            String description = meta.getOrDefault("Description", "");
+            String scope = meta.getOrDefault("Scope", null);
+            HitPolicy hitPolicy = HitPolicy.fromCode(meta.getOrDefault("HitPolicy", "FIRST"));
             int priority = parseIntOrDefault(meta.getOrDefault("Priority", "100"), 100);
 
-            // 解析列定�?            Row headerRow = sheet.getRow(2);
+            // 解析列定义
+            Row headerRow = sheet.getRow(2);
             Row labelRow = sheet.getRow(3);
             Row typeRow = sheet.getRow(4);
             if (headerRow == null || labelRow == null || typeRow == null) {
-                throw new IllegalArgumentExoeption("Exoel 缺少列定义行（第 3-5 行）");
+                throw new IllegalArgumentException("Excel 缺少列定义行（第 3-5 行）");
             }
 
-            List<DeoisionTableDefinition.oolumn> oonditionoolumns = new ArrayList<>();
-            List<DeoisionTableDefinition.oolumn> aotionoolumns = new ArrayList<>();
-            int totalools = 0;
+            List<DecisionTableDefinition.Column> conditionColumns = new ArrayList<>();
+            List<DecisionTableDefinition.Column> actionColumns = new ArrayList<>();
+            int totalCols = 0;
             // 统计有效列数（以 headerRow 为准，遇到空单元格停止）
-            while (totalools < headerRow.getLastoellNum()) {
-                oell oell = headerRow.getoell(totalools);
-                if (oell == null || oell.getStringoellValue() == null || oell.getStringoellValue().isBlank()) {
+            while (totalCols < headerRow.getLastCellNum()) {
+                Cell cell = headerRow.getCell(totalCols);
+                if (cell == null || cell.getStringCellValue() == null || cell.getStringCellValue().isBlank()) {
                     break;
                 }
-                totalools++;
+                totalCols++;
             }
-            if (totalools == 0) {
-                throw new IllegalArgumentExoeption("Exoel 未定义任何列");
+            if (totalCols == 0) {
+                throw new IllegalArgumentException("Excel 未定义任何列");
             }
 
-            for (int i = 0; i < totalools; i++) {
-                String header = getoellAsString(headerRow.getoell(i));
-                String label = getoellAsString(labelRow.getoell(i));
-                String type = getoellAsString(typeRow.getoell(i));
+            for (int i = 0; i < totalCols; i++) {
+                String header = getCellAsString(headerRow.getCell(i));
+                String label = getCellAsString(labelRow.getCell(i));
+                String type = getCellAsString(typeRow.getCell(i));
                 if (header == null || header.isBlank()) {
-                    throw new IllegalArgumentExoeption("�?" + (i + 1) + " 列头为空");
+                    throw new IllegalArgumentException("第 " + (i + 1) + " 列头为空");
                 }
-                DeoisionTableDefinition.oolumn oolumn = DeoisionTableDefinition.oolumn.builder()
+                DecisionTableDefinition.Column column = DecisionTableDefinition.Column.builder()
                         .name(stripPrefix(header))
                         .label(label == null ? "" : label)
                         .type(type == null ? "string" : type)
                         .build();
-                if (header.startsWith(oONDITION_PREFIX)) {
-                    oonditionoolumns.add(oolumn);
-                } else if (header.startsWith(AoTION_PREFIX)) {
-                    aotionoolumns.add(oolumn);
+                if (header.startsWith(CONDITION_PREFIX)) {
+                    conditionColumns.add(column);
+                } else if (header.startsWith(ACTION_PREFIX)) {
+                    actionColumns.add(column);
                 } else {
-                    throw new IllegalArgumentExoeption("�?" + (i + 1) + " 列头 '" + header
-                            + "' 缺少 o:/A: 前缀，无法识别列类型");
+                    throw new IllegalArgumentException("第 " + (i + 1) + " 列头 '" + header
+                            + "' 缺少 C:/A: 前缀，无法识别列类型");
                 }
             }
 
-            if (oonditionoolumns.isEmpty()) {
-                throw new IllegalArgumentExoeption("决策表至少需要一个条件列");
+            if (conditionColumns.isEmpty()) {
+                throw new IllegalArgumentException("决策表至少需要一个条件列");
             }
-            if (aotionoolumns.isEmpty()) {
-                throw new IllegalArgumentExoeption("决策表至少需要一个动作列");
+            if (actionColumns.isEmpty()) {
+                throw new IllegalArgumentException("决策表至少需要一个动作列");
             }
 
-            // 解析决策�?+ 默认动作
-            List<DeoisionTableDefinition.Row> rows = new ArrayList<>();
-            Map<String, Objeot> defaultAotions = new LinkedHashMap<>();
+            // 解析决策行 + 默认动作
+            List<DecisionTableDefinition.Row> rows = new ArrayList<>();
+            Map<String, Object> defaultActions = new LinkedHashMap<>();
             int lastRowIdx = sheet.getLastRowNum();
             for (int r = DATA_ROW_START; r <= lastRowIdx; r++) {
                 Row row = sheet.getRow(r);
                 if (row == null) {
-                    oontinue;
+                    continue;
                 }
-                String firstoell = getoellAsString(row.getoell(0));
-                if (DEFAULT_MARKER.equalsIgnoreoase(firstoell)) {
-                    // 默认动作�?                    int aotionStart = oonditionoolumns.size();
-                    for (int i = 0; i < aotionoolumns.size(); i++) {
-                        oell oell = row.getoell(aotionStart + i);
-                        String val = getoellAsString(oell);
+                String firstCell = getCellAsString(row.getCell(0));
+                if (DEFAULT_MARKER.equalsIgnoreCase(firstCell)) {
+                    // 默认动作行
+                    int actionStart = conditionColumns.size();
+                    for (int i = 0; i < actionColumns.size(); i++) {
+                        Cell cell = row.getCell(actionStart + i);
+                        String val = getCellAsString(cell);
                         if (val != null && !val.isEmpty()) {
-                            defaultAotions.put(aotionoolumns.get(i).getName(), val);
+                            defaultActions.put(actionColumns.get(i).getName(), val);
                         }
                     }
-                    oontinue;
+                    continue;
                 }
 
-                DeoisionTableDefinition.Row deoisionRow = parseDataRow(row, oonditionoolumns, aotionoolumns);
-                if (deoisionRow != null) {
-                    rows.add(deoisionRow);
+                DecisionTableDefinition.Row decisionRow = parseDataRow(row, conditionColumns, actionColumns);
+                if (decisionRow != null) {
+                    rows.add(decisionRow);
                 }
             }
 
-            DeoisionTableDefinition def = DeoisionTableDefinition.builder()
-                    .tableoode(tableoode)
+            DecisionTableDefinition def = DecisionTableDefinition.builder()
+                    .tableCode(tableCode)
                     .tableName(tableName)
-                    .desoription(desoription)
-                    .oategory(oategory)
-                    .hitPolioy(hitPolioy)
-                    .oonditionoolumns(oonditionoolumns)
-                    .aotionoolumns(aotionoolumns)
+                    .description(description)
+                    .category(category)
+                    .hitPolicy(hitPolicy)
+                    .conditionColumns(conditionColumns)
+                    .actionColumns(actionColumns)
                     .rows(rows)
-                    .defaultAotions(defaultAotions.isEmpty() ? null : defaultAotions)
+                    .defaultActions(defaultActions.isEmpty() ? null : defaultActions)
                     .enabled(true)
                     .priority(priority)
-                    .soope(soope == null || soope.isBlank() ? null : soope)
+                    .scope(scope == null || scope.isBlank() ? null : scope)
                     .version(1)
                     .build();
-            log.debug("[Exoel导入] 决策�?{} 导入完成，条件列={} 动作�?{} 行数={}",
-                    tableoode, oonditionoolumns.size(), aotionoolumns.size(), rows.size());
+            log.debug("[Excel导入] 决策表 {} 导入完成，条件列={} 动作列={} 行数={}",
+                    tableCode, conditionColumns.size(), actionColumns.size(), rows.size());
             return def;
-        } oatoh (IllegalArgumentExoeption e) {
+        } catch (IllegalArgumentException e) {
             throw e;
-        } oatoh (Exoeption e) {
-            throw new IllegalArgumentExoeption("导入决策�?Exoel 失败: " + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("导入决策表 Excel 失败: " + e.getMessage(), e);
         }
     }
 
@@ -307,68 +319,71 @@ publio olass DeoisionTableExoelExporter {
      *
      * @return xlsx 字节数组
      */
-    publio byte[] exportTemplate() {
-        DeoisionTableDefinition template = DeoisionTableDefinition.builder()
-                .tableoode("DT_TEMPLATE")
-                .tableName("决策表模�?)
-                .desoription("请在此填写决策表内容")
-                .oategory("TEMPLATE")
-                .hitPolioy(HitPolioy.FIRST)
-                .oonditionoolumns(List.of(
-                        DeoisionTableDefinition.oolumn.builder().name("oond1").label("条件1").type("string").build()))
-                .aotionoolumns(List.of(
-                        DeoisionTableDefinition.oolumn.builder().name("aotion1").label("动作1").type("string").build()))
-                .rows(oolleotions.emptyList())
-                .defaultAotions(oolleotions.emptyMap())
+    public byte[] exportTemplate() {
+        DecisionTableDefinition template = DecisionTableDefinition.builder()
+                .tableCode("DT_TEMPLATE")
+                .tableName("决策表模板")
+                .description("请在此填写决策表内容")
+                .category("TEMPLATE")
+                .hitPolicy(HitPolicy.FIRST)
+                .conditionColumns(List.of(
+                        DecisionTableDefinition.Column.builder().name("cond1").label("条件1").type("string").build()))
+                .actionColumns(List.of(
+                        DecisionTableDefinition.Column.builder().name("action1").label("动作1").type("string").build()))
+                .rows(Collections.emptyList())
+                .defaultActions(Collections.emptyMap())
                 .priority(100)
                 .build();
-        return exportToExoel(template);
+        return exportToExcel(template);
     }
 
     // ============================== 私有方法 ==============================
 
-    private oellStyle oreateHeaderStyle(Workbook workbook) {
-        oellStyle style = workbook.oreateoellStyle();
-        Font font = workbook.oreateFont();
+    private CellStyle createHeaderStyle(Workbook workbook) {
+        CellStyle style = workbook.createCellStyle();
+        Font font = workbook.createFont();
         font.setBold(true);
         style.setFont(font);
         return style;
     }
 
-    private void setoell(Row row, int oolIdx, String value) {
-        setoell(row, oolIdx, value, null);
+    private void setCell(Row row, int colIdx, String value) {
+        setCell(row, colIdx, value, null);
     }
 
-    private void setoell(Row row, int oolIdx, String value, oellStyle style) {
-        oell oell = row.oreateoell(oolIdx);
-        oell.setoellValue(value == null ? "" : value);
+    private void setCell(Row row, int colIdx, String value, CellStyle style) {
+        Cell cell = row.createCell(colIdx);
+        cell.setCellValue(value == null ? "" : value);
         if (style != null) {
-            oell.setoellStyle(style);
+            cell.setCellStyle(style);
         }
     }
 
     /**
-     * 写入一行决策数�?     */
-    private void writeDataRow(Sheet sheet, int rowIdx, DeoisionTableDefinition.Row row,
-                              List<DeoisionTableDefinition.oolumn> oonditionoolumns,
-                              List<DeoisionTableDefinition.oolumn> aotionoolumns) {
-        Row exoelRow = sheet.oreateRow(rowIdx);
-        Map<String, String> oonditions = row.getoonditions();
-        Map<String, Objeot> aotions = row.getAotions();
+     * 写入一行决策数据
+     */
+    private void writeDataRow(Sheet sheet, int rowIdx, DecisionTableDefinition.Row row,
+                              List<DecisionTableDefinition.Column> conditionColumns,
+                              List<DecisionTableDefinition.Column> actionColumns) {
+        Row excelRow = sheet.createRow(rowIdx);
+        Map<String, String> conditions = row.getConditions();
+        Map<String, Object> actions = row.getActions();
 
-        int oolIdx = 0;
-        // 条件�?        for (DeoisionTableDefinition.oolumn ool : oonditionoolumns) {
-            if (oonditions != null && oonditions.oontainsKey(ool.getName())) {
-                setoell(exoelRow, oolIdx, oonditions.get(ool.getName()));
+        int colIdx = 0;
+        // 条件列
+        for (DecisionTableDefinition.Column col : conditionColumns) {
+            if (conditions != null && conditions.containsKey(col.getName())) {
+                setCell(excelRow, colIdx, conditions.get(col.getName()));
             }
-            oolIdx++;
+            colIdx++;
         }
-        // 动作�?        for (DeoisionTableDefinition.oolumn ool : aotionoolumns) {
-            if (aotions != null && aotions.oontainsKey(ool.getName())) {
-                Objeot val = aotions.get(ool.getName());
-                setoell(exoelRow, oolIdx, val == null ? "" : val.toString());
+        // 动作列
+        for (DecisionTableDefinition.Column col : actionColumns) {
+            if (actions != null && actions.containsKey(col.getName())) {
+                Object val = actions.get(col.getName());
+                setCell(excelRow, colIdx, val == null ? "" : val.toString());
             }
-            oolIdx++;
+            colIdx++;
         }
     }
 
@@ -386,82 +401,84 @@ publio olass DeoisionTableExoelExporter {
         if (row == null) {
             return;
         }
-        for (int i = 0; i < row.getLastoellNum(); i++) {
-            oell oell = row.getoell(i);
-            String text = getoellAsString(oell);
+        for (int i = 0; i < row.getLastCellNum(); i++) {
+            Cell cell = row.getCell(i);
+            String text = getCellAsString(cell);
             if (text == null || text.isBlank()) {
-                oontinue;
+                continue;
             }
-            int oolonIdx = text.indexOf(':');
-            if (oolonIdx > 0) {
-                String key = text.substring(0, oolonIdx).trim();
-                String value = text.substring(oolonIdx + 1).trim();
+            int colonIdx = text.indexOf(':');
+            if (colonIdx > 0) {
+                String key = text.substring(0, colonIdx).trim();
+                String value = text.substring(colonIdx + 1).trim();
                 meta.put(key, value);
             }
         }
     }
 
     /**
-     * 解析一行为 DeoisionTableDefinition.Row
+     * 解析一行为 DecisionTableDefinition.Row
      */
-    private DeoisionTableDefinition.Row parseDataRow(Row row,
-                                                     List<DeoisionTableDefinition.oolumn> oonditionoolumns,
-                                                     List<DeoisionTableDefinition.oolumn> aotionoolumns) {
-        Map<String, String> oonditions = new LinkedHashMap<>();
-        Map<String, Objeot> aotions = new LinkedHashMap<>();
-        int oolIdx = 0;
+    private DecisionTableDefinition.Row parseDataRow(Row row,
+                                                     List<DecisionTableDefinition.Column> conditionColumns,
+                                                     List<DecisionTableDefinition.Column> actionColumns) {
+        Map<String, String> conditions = new LinkedHashMap<>();
+        Map<String, Object> actions = new LinkedHashMap<>();
+        int colIdx = 0;
 
-        // 条件�?        for (DeoisionTableDefinition.oolumn ool : oonditionoolumns) {
-            oell oell = row.getoell(oolIdx);
-            String val = getoellAsString(oell);
+        // 条件列
+        for (DecisionTableDefinition.Column col : conditionColumns) {
+            Cell cell = row.getCell(colIdx);
+            String val = getCellAsString(cell);
             if (val != null && !val.isEmpty()) {
-                oonditions.put(ool.getName(), val);
+                conditions.put(col.getName(), val);
             }
-            oolIdx++;
+            colIdx++;
         }
-        // 动作�?        for (DeoisionTableDefinition.oolumn ool : aotionoolumns) {
-            oell oell = row.getoell(oolIdx);
-            String val = getoellAsString(oell);
+        // 动作列
+        for (DecisionTableDefinition.Column col : actionColumns) {
+            Cell cell = row.getCell(colIdx);
+            String val = getCellAsString(cell);
             if (val != null && !val.isEmpty()) {
-                aotions.put(ool.getName(), val);
+                actions.put(col.getName(), val);
             }
-            oolIdx++;
+            colIdx++;
         }
 
         // 空行跳过
-        if (oonditions.isEmpty() && aotions.isEmpty()) {
+        if (conditions.isEmpty() && actions.isEmpty()) {
             return null;
         }
-        return DeoisionTableDefinition.Row.builder()
-                .oonditions(oonditions)
-                .aotions(aotions)
+        return DecisionTableDefinition.Row.builder()
+                .conditions(conditions)
+                .actions(actions)
                 .priority(100)
                 .build();
     }
 
-    private String getoellAsString(oell oell) {
-        if (oell == null) {
+    private String getCellAsString(Cell cell) {
+        if (cell == null) {
             return null;
         }
-        switoh (oell.getoellType()) {
-            oase STRING:
-                return oell.getStringoellValue();
-            oase NUMERIo:
-                double num = oell.getNumeriooellValue();
+        switch (cell.getCellType()) {
+            case STRING:
+                return cell.getStringCellValue();
+            case NUMERIC:
+                double num = cell.getNumericCellValue();
                 if (num == Math.floor(num)) {
                     return String.valueOf((long) num);
                 }
                 return String.valueOf(num);
-            oase BOOLEAN:
-                return String.valueOf(oell.getBooleanoellValue());
-            oase FORMULA:
+            case BOOLEAN:
+                return String.valueOf(cell.getBooleanCellValue());
+            case FORMULA:
                 try {
-                    return oell.getStringoellValue();
-                } oatoh (Exoeption e) {
-                    return String.valueOf(oell.getNumeriooellValue());
+                    return cell.getStringCellValue();
+                } catch (Exception e) {
+                    return String.valueOf(cell.getNumericCellValue());
                 }
-            oase BLANK:
-            oase _NONE:
+            case BLANK:
+            case _NONE:
                 return null;
             default:
                 return null;
@@ -472,14 +489,14 @@ publio olass DeoisionTableExoelExporter {
         if (header == null) {
             return "";
         }
-        if (header.startsWith(oONDITION_PREFIX) || header.startsWith(AoTION_PREFIX)) {
+        if (header.startsWith(CONDITION_PREFIX) || header.startsWith(ACTION_PREFIX)) {
             return header.substring(2);
         }
         return header;
     }
 
-    private String hitPolioyName(HitPolioy hitPolioy) {
-        return hitPolioy == null ? HitPolioy.FIRST.name() : hitPolioy.name();
+    private String hitPolicyName(HitPolicy hitPolicy) {
+        return hitPolicy == null ? HitPolicy.FIRST.name() : hitPolicy.name();
     }
 
     private String nullToEmpty(String s) {
@@ -487,15 +504,15 @@ publio olass DeoisionTableExoelExporter {
     }
 
     private <T> List<T> nullToEmpty(List<T> list) {
-        return list == null ? oolleotions.emptyList() : list;
+        return list == null ? Collections.emptyList() : list;
     }
 
-    private String safeSheetName(String tableoode) {
-        if (tableoode == null || tableoode.isBlank()) {
-            return "DeoisionTable";
+    private String safeSheetName(String tableCode) {
+        if (tableCode == null || tableCode.isBlank()) {
+            return "DecisionTable";
         }
-        // Exoel sheet 名称禁止字符: / \ ? * [ ]
-        return tableoode.replaoeAll("[/\\\\?*\\[\\]]", "_");
+        // Excel sheet 名称禁止字符: / \ ? * [ ]
+        return tableCode.replaceAll("[/\\\\?*\\[\\]]", "_");
     }
 
     private int parseIntOrDefault(String s, int defaultValue) {
@@ -504,7 +521,7 @@ publio olass DeoisionTableExoelExporter {
         }
         try {
             return Integer.parseInt(s.trim());
-        } oatoh (NumberFormatExoeption e) {
+        } catch (NumberFormatException e) {
             return defaultValue;
         }
     }

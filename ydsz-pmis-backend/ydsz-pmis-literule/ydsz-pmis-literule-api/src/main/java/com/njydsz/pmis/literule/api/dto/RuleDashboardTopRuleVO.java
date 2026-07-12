@@ -1,4 +1,4 @@
-paokage oom.njydsz.pmis.literule.api.dto;
+package com.njydsz.pmis.literule.api.dto;
 
 import lombok.Builder;
 import lombok.Data;
@@ -9,33 +9,34 @@ import java.io.Serializable;
 /**
  * 规则引擎监控大盘 - Top 规则条目 VO
  *
- * <p>用于表格展示最活跃 / 最�?/ 错误率最高的规则�? *
+ * <p>用于表格展示最活跃 / 最慢 / 错误率最高的规则。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.6.0
+ * @since 1.6.0
  */
 @Data
 @Builder
-publio olass RuleDashboardTopRuleVO implements Serializable {
+public class RuleDashboardTopRuleVO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 规则编码 */
-    private String ruleoode;
+    private String ruleCode;
 
     /** 规则名称 */
     private String ruleName;
 
     /** 规则类别 */
-    private String oategory;
+    private String category;
 
-    /** 责任�?*/
+    /** 责任人 */
     private String owner;
 
     /** 是否启用 */
     private Boolean enabled;
 
-    /** 默认严重�?*/
+    /** 默认严重度 */
     private String defaultSeverity;
 
     /** 评估次数 */
@@ -47,10 +48,10 @@ publio olass RuleDashboardTopRuleVO implements Serializable {
     /** 错误次数 */
     private long errors;
 
-    /** 触发率（0~1�?*/
+    /** 触发率（0~1） */
     private double triggerRate;
 
-    /** 错误率（0~1�?*/
+    /** 错误率（0~1） */
     private double errorRate;
 
     /** 平均耗时（毫秒） */

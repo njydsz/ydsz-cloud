@@ -1,103 +1,103 @@
-paokage oom.njydsz.pmis.message.server.servioe.arohive.impl;
+package com.njydsz.pmis.message.server.service.archive.impl;
 
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.util.json.JsonUtils;
-import oom.njydsz.pmis.message.domain.entity.oore.MsgLogDO;
-import oom.njydsz.pmis.message.infra.mapper.oore.MsgLogMapper;
-import oom.njydsz.pmis.message.server.servioe.arohive.MessageArohiveServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
+import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.pmis.message.server.service.archive.MessageArchiveService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.faotory.annotation.Value;
-import org.springframework.stereotype.Servioe;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 消息归档搜索服务实现（P0-5）�?
+ * 消息归档搜索服务实现（P0-5）。
  *
- * <p>�?ES 可用时使�?Elastiosearoh 全文搜索；不可用时降级为数据�?LIKE 查询�?
- * 通过 {@oode pmis.message.arohive.es-enabled} 配置开关�?
+ * <p>当 ES 可用时使用 Elasticsearch 全文搜索；不可用时降级为数据库 LIKE 查询。
+ * 通过 {@code pmis.message.archive.es-enabled} 配置开关。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.5.0
+ * @since 1.5.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass MessageArohiveServioeImpl implements MessageArohiveServioe {
+@Service
+@RequiredArgsConstructor
+public class MessageArchiveServiceImpl implements MessageArchiveService {
 
     private final MsgLogMapper msgLogMapper;
 
-    @Value("${pmis.message.arohive.es-enabled:false}")
+    @Value("${pmis.message.archive.es-enabled:false}")
     private boolean esEnabled;
 
     @Override
-    publio void index(MsgLogDO logDO) {
+    public void index(MsgLogDO logDO) {
         if (!esEnabled || logDO == null) {
             return;
         }
-        // ES 索引逻辑（当 ES 可用时通过 ElastiosearohRestTemplate 索引�?
-        // 当前�?mook 降级，仅记录日志
-        log.debug("[Arohive] 索引消息: id={} ohannel={} status={}",
-                logDO.getId(), logDO.getohannel(), logDO.getStatus());
+        // ES 索引逻辑（当 ES 可用时通过 ElasticsearchRestTemplate 索引）
+        // 当前为 mock 降级，仅记录日志
+        log.debug("[Archive] 索引消息: id={} channel={} status={}",
+                logDO.getId(), logDO.getChannel(), logDO.getStatus());
     }
 
     @Override
-    publio void batohIndex(List<MsgLogDO> logList) {
+    public void batchIndex(List<MsgLogDO> logList) {
         if (!esEnabled || logList == null || logList.isEmpty()) {
             return;
         }
-        log.debug("[Arohive] 批量索引: oount={}", logList.size());
+        log.debug("[Archive] 批量索引: count={}", logList.size());
         for (MsgLogDO logDO : logList) {
             index(logDO);
         }
     }
 
     @Override
-    publio Page<MsgLogDO> searoh(String keyword, String ohannel, String status, String bizType,
-                                 LooalDateTime startTime, LooalDateTime endTime,
+    public Page<MsgLogDO> search(String keyword, String channel, String status, String bizType,
+                                 LocalDateTime startTime, LocalDateTime endTime,
                                  String tenantId, int pageNum, int pageSize) {
         if (esEnabled) {
             // ES 全文搜索（ES 可用时实现）
-            log.info("[Arohive] ES 搜索: keyword={} ohannel={} status={}", keyword, ohannel, status);
+            log.info("[Archive] ES 搜索: keyword={} channel={} status={}", keyword, channel, status);
         }
         // 降级：数据库 LIKE 查询
-        return searohByDatabase(keyword, ohannel, status, bizType,
+        return searchByDatabase(keyword, channel, status, bizType,
                 startTime, endTime, tenantId, pageNum, pageSize);
     }
 
     @Override
-    publio void delete(String id) {
+    public void delete(String id) {
         if (!esEnabled || !StringUtils.hasText(id)) {
             return;
         }
-        log.debug("[Arohive] 删除索引: id={}", id);
+        log.debug("[Archive] 删除索引: id={}", id);
     }
 
     /**
-     * 数据�?LIKE 降级搜索�?
+     * 数据库 LIKE 降级搜索。
      */
-    private Page<MsgLogDO> searohByDatabase(String keyword, String ohannel, String status, String bizType,
-                                            LooalDateTime startTime, LooalDateTime endTime,
+    private Page<MsgLogDO> searchByDatabase(String keyword, String channel, String status, String bizType,
+                                            LocalDateTime startTime, LocalDateTime endTime,
                                             String tenantId, int pageNum, int pageSize) {
         Page<MsgLogDO> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<MsgLogDO> wrapper = new LambdaQueryWrapper<MsgLogDO>()
                 .eq(MsgLogDO::getTenantId, tenantId)
-                .eq(StringUtils.hasText(ohannel), MsgLogDO::getohannel, ohannel)
+                .eq(StringUtils.hasText(channel), MsgLogDO::getChannel, channel)
                 .eq(StringUtils.hasText(status), MsgLogDO::getStatus, status)
                 .eq(StringUtils.hasText(bizType), MsgLogDO::getBizType, bizType)
-                .ge(startTime != null, MsgLogDO::getoreatedAt, startTime)
-                .le(endTime != null, MsgLogDO::getoreatedAt, endTime)
+                .ge(startTime != null, MsgLogDO::getCreatedAt, startTime)
+                .le(endTime != null, MsgLogDO::getCreatedAt, endTime)
                 .and(StringUtils.hasText(keyword), w -> w
-                        .like(MsgLogDO::getoontent, keyword)
-                        .or().like(MsgLogDO::getReoeiver, keyword)
-                        .or().like(MsgLogDO::getTemplateoode, keyword)
+                        .like(MsgLogDO::getContent, keyword)
+                        .or().like(MsgLogDO::getReceiver, keyword)
+                        .or().like(MsgLogDO::getTemplateCode, keyword)
                         .or().like(MsgLogDO::getBizId, keyword))
-                .orderByDeso(MsgLogDO::getoreatedAt);
+                .orderByDesc(MsgLogDO::getCreatedAt);
 
-        return msgLogMapper.seleotPage(page, wrapper);
+        return msgLogMapper.selectPage(page, wrapper);
     }
 }

@@ -1,7 +1,7 @@
-paokage oom.njydsz.pmis.userinfo.server.servioe.user;
+package com.njydsz.pmis.userinfo.server.service.user;
 
-import oom.njydsz.pmis.userinfo.domain.dto.user.EmployeeTagoreateDTO;
-import oom.njydsz.pmis.userinfo.domain.entity.user.EmployeeTagDO;
+import com.njydsz.pmis.userinfo.domain.dto.user.EmployeeTagCreateDTO;
+import com.njydsz.pmis.userinfo.domain.entity.user.EmployeeTagDO;
 
 import java.util.List;
 
@@ -9,9 +9,9 @@ import java.util.List;
  * 人员标签服务
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio interfaoe EmployeeTagServioe {
+public interface EmployeeTagService {
 
     /**
      * 新增标签
@@ -19,7 +19,7 @@ publio interfaoe EmployeeTagServioe {
      * @param dto 标签表单
      * @return 新建标签 ID
      */
-    String add(EmployeeTagoreateDTO dto);
+    String add(EmployeeTagCreateDTO dto);
 
     /**
      * 删除标签
@@ -34,7 +34,7 @@ publio interfaoe EmployeeTagServioe {
      * @param employeeId 员工 ID
      * @param tags       标签表单列表
      */
-    void replaoeByEmployee(String employeeId, List<EmployeeTagoreateDTO> tags);
+    void replaceByEmployee(String employeeId, List<EmployeeTagCreateDTO> tags);
 
     /**
      * 查询员工标签列表
@@ -45,8 +45,11 @@ publio interfaoe EmployeeTagServioe {
     List<EmployeeTagDO> listByEmployee(String employeeId);
 
     /**
-     * 按标签类型与编码查询候选人�?     *
-     * @param tagType 标签类型（TagType.oode�?     * @param tagoode 标签编码
-     * @return 候选人员标签列�?     */
-    List<EmployeeTagDO> findoandidates(String tagType, String tagoode);
+     * 按标签类型与编码查询候选人员
+     *
+     * @param tagType 标签类型（TagType.code）
+     * @param tagCode 标签编码
+     * @return 候选人员标签列表
+     */
+    List<EmployeeTagDO> findCandidates(String tagType, String tagCode);
 }

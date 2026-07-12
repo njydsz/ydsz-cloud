@@ -1,54 +1,58 @@
-paokage oom.njydsz.pmis.agent.domain.enums.agent;
+package com.njydsz.pmis.agent.domain.enums.agent;
 
 /**
  * AI 预测/推荐结果风险等级
  *
- * <p>严重性顺序：RED(3) > YELLOW(2) > INFO = NORMAL = REoOMMEND(1)�? *
+ * <p>严重性顺序：RED(3) > YELLOW(2) > INFO = NORMAL = RECOMMEND(1)。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum AgentAlertLevel {
+public enum AgentAlertLevel {
     /** 提示信息 */
     INFO("INFO", "提示"),
     /** 黄色预警 */
     YELLOW("YELLOW", "黄色预警"),
-    /** 红色预警（最高严重度�?*/
+    /** 红色预警（最高严重度） */
     RED("RED", "红色预警"),
     /** 正常 */
     NORMAL("NORMAL", "正常"),
     /** 推荐 */
-    REoOMMEND("REoOMMEND", "推荐");
+    RECOMMEND("RECOMMEND", "推荐");
 
     /** 枚举编码 */
-    private final String oode;
+    private final String code;
     /** 枚举描述 */
-    private final String deso;
+    private final String desc;
 
-    AgentAlertLevel(String oode, String deso) {
-        this.oode = oode;
-        this.deso = deso;
+    AgentAlertLevel(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
     }
 
     /**
-     * 获取枚举编码�?     *
+     * 获取枚举编码。
+     *
      * @return 枚举编码
      */
-    publio String getoode() { return oode; }
+    public String getCode() { return code; }
     /**
-     * 获取枚举描述�?     *
+     * 获取枚举描述。
+     *
      * @return 枚举描述
      */
-    publio String getDeso() { return deso; }
+    public String getDesc() { return desc; }
 
     /**
-     * 根据状态码解析枚举�?     *
-     * @param oode 状态码，大小写不敏感，�?null 时返�?null
-     * @return 匹配到的枚举值；未匹配返�?null
+     * 根据状态码解析枚举。
+     *
+     * @param code 状态码，大小写不敏感，为 null 时返回 null
+     * @return 匹配到的枚举值；未匹配返回 null
      */
-    publio statio AgentAlertLevel fromoode(String oode) {
-        if (oode == null) return null;
+    public static AgentAlertLevel fromCode(String code) {
+        if (code == null) return null;
         for (AgentAlertLevel s : values()) {
-            if (s.oode.equalsIgnoreoase(oode)) return s;
+            if (s.code.equalsIgnoreCase(code)) return s;
         }
         return null;
     }

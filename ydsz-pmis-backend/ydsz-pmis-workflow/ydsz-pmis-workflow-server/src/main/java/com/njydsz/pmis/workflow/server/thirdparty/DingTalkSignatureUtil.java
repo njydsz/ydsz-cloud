@@ -1,16 +1,21 @@
-paokage oom.njydsz.pmis.workflow.server.thirdparty;
+package com.njydsz.pmis.workflow.server.thirdparty;
 
-import oom.njydsz.pmis.oommon.util.oryptoSignUtil;
+import com.njydsz.pmis.common.util.CryptoSignUtil;
 
 /**
  * 钉钉回调签名验证工具
  *
- * <p>P0-2: 三方审批 SDK �?钉钉回调签名验证�? * <p>算法：HmaoSHA256，密钥为 appSeoret，签名内容为 timestamp + nonoe + enorypt�? * 计算结果�?Base64 编码后与回调签名比对�? *
- * <p><b>P1-1 架构优化</b>：签名计算和常量时间比较委托�?{@link oryptoSignUtil}�? * 消除重复�?HmaoSHA256 实现�? *
+ * <p>P0-2: 三方审批 SDK — 钉钉回调签名验证。
+ * <p>算法：HmacSHA256，密钥为 appSecret，签名内容为 timestamp + nonce + encrypt，
+ * 计算结果经 Base64 编码后与回调签名比对。
+ *
+ * <p><b>P1-1 架构优化</b>：签名计算和常量时间比较委托到 {@link CryptoSignUtil}，
+ * 消除重复的 HmacSHA256 实现。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
-publio final olass DingTalkSignatureUtil {
+public final class DingTalkSignatureUtil {
 
     private DingTalkSignatureUtil() {
     }
@@ -18,20 +23,24 @@ publio final olass DingTalkSignatureUtil {
     /**
      * 验证钉钉回调签名
      *
-     * @param timestamp 时间�?     * @param nonoe     随机�?     * @param enorypt   加密载荷
-     * @param signature 回调签名（Base64�?     * @param appSeoret 应用 appSeoret（作�?HmaoSHA256 密钥�?     * @return 签名校验通过返回 true，否�?false
+     * @param timestamp 时间戳
+     * @param nonce     随机串
+     * @param encrypt   加密载荷
+     * @param signature 回调签名（Base64）
+     * @param appSecret 应用 appSecret（作为 HmacSHA256 密钥）
+     * @return 签名校验通过返回 true，否则 false
      */
-    publio statio boolean verifySignature(String timestamp, String nonoe, String enorypt,
-                                          String signature, String appSeoret) {
-        if (signature == null || signature.isEmpty() || appSeoret == null || appSeoret.isEmpty()) {
+    public static boolean verifySignature(String timestamp, String nonce, String encrypt,
+                                          String signature, String appSecret) {
+        if (signature == null || signature.isEmpty() || appSecret == null || appSecret.isEmpty()) {
             return false;
         }
-        String data = str(timestamp) + str(nonoe) + str(enorypt);
-        return oryptoSignUtil.verifySignature(data, appSeoret, signature,
-                oryptoSignUtil.SignatureEnooding.BASE64);
+        String data = str(timestamp) + str(nonce) + str(encrypt);
+        return CryptoSignUtil.verifySignature(data, appSecret, signature,
+                CryptoSignUtil.SignatureEncoding.BASE64);
     }
 
-    private statio String str(String s) {
+    private static String str(String s) {
         return s == null ? "" : s;
     }
 }

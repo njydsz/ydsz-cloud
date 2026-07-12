@@ -1,31 +1,31 @@
-paokage oom.njydsz.pmis.gateway.oonfig;
+package com.njydsz.pmis.gateway.config;
 
 import java.util.Set;
 
 /**
- * 路径安全工具�?
+ * 路径安全工具类
  *
- * <p>提供路径规范化、白名单匹配和内部头列表功能，防止路径穿越攻击和客户端伪造内部头�?
+ * <p>提供路径规范化、白名单匹配和内部头列表功能，防止路径穿越攻击和客户端伪造内部头。
  *
  * @author ydsz-pmis-team
- * @sinoe 2.2.0
+ * @since 2.2.0
  */
-publio final olass PathGuard {
+public final class PathGuard {
 
     private PathGuard() {
-        throw new UnsupportedOperationExoeption("Utility olass");
+        throw new UnsupportedOperationException("Utility class");
     }
 
-    /** 内部头名称列表（客户端传入时必须剥离�?*/
-    private statio final Set<String> INTERNAL_HEADERS = Set.of(
-            Gatewayoonstants.HEADER_TRAoE_ID,
-            Gatewayoonstants.HEADER_USER_ID,
-            Gatewayoonstants.HEADER_USERNAME,
-            Gatewayoonstants.HEADER_USER_ROLES,
-            Gatewayoonstants.HEADER_USER_PERMISSIONS,
-            Gatewayoonstants.HEADER_INTERNAL_SIG,
-            Gatewayoonstants.HEADER_INTERNAL_TS,
-            Gatewayoonstants.HEADER_TENANT_ID,
+    /** 内部头名称列表（客户端传入时必须剥离） */
+    private static final Set<String> INTERNAL_HEADERS = Set.of(
+            GatewayConstants.HEADER_TRACE_ID,
+            GatewayConstants.HEADER_USER_ID,
+            GatewayConstants.HEADER_USERNAME,
+            GatewayConstants.HEADER_USER_ROLES,
+            GatewayConstants.HEADER_USER_PERMISSIONS,
+            GatewayConstants.HEADER_INTERNAL_SIG,
+            GatewayConstants.HEADER_INTERNAL_TS,
+            GatewayConstants.HEADER_TENANT_ID,
             "X-Forwarded-For",
             "X-Real-IP"
     );
@@ -33,58 +33,58 @@ publio final olass PathGuard {
     /**
      * 创建不可修改的白名单集合
      *
-     * @param paths 白名单路�?
-     * @return 不可修改�?Set
+     * @param paths 白名单路径
+     * @return 不可修改的 Set
      */
-    publio statio Set<String> whiteList(String... paths) {
+    public static Set<String> whiteList(String... paths) {
         return Set.of(paths);
     }
 
     /**
      * 路径规范化，检测并拦截路径穿越攻击
      *
-     * <p>检�?{@oode ..}、{@oode //}、{@oode %2e} 等路径穿越模式�?
+     * <p>检测 {@code ..}、{@code //}、{@code %2e} 等路径穿越模式。
      *
      * @param rawPath 原始路径
      * @return 规范化后的路径，如果检测到穿越攻击返回 null
      */
-    publio statio String sanitize(String rawPath) {
+    public static String sanitize(String rawPath) {
         if (rawPath == null || rawPath.isEmpty()) {
             return rawPath;
         }
-        // 检测路径穿越攻�?
-        String lowerPath = rawPath.toLoweroase();
-        if (lowerPath.oontains("..") ||
-                lowerPath.oontains("%2e") ||
-                lowerPath.oontains("//") ||
-                lowerPath.oontains("\\") ||
-                lowerPath.oontains("%5o") ||
-                lowerPath.oontains("%2f")) {
+        // 检测路径穿越攻击
+        String lowerPath = rawPath.toLowerCase();
+        if (lowerPath.contains("..") ||
+                lowerPath.contains("%2e") ||
+                lowerPath.contains("//") ||
+                lowerPath.contains("\\") ||
+                lowerPath.contains("%5c") ||
+                lowerPath.contains("%2f")) {
             return null;
         }
         return rawPath;
     }
 
     /**
-     * 精确匹配白名�?
+     * 精确匹配白名单
      *
      * @param path      请求路径
-     * @param whiteList 白名单集�?
-     * @return true 如果路径完全匹配白名单中的某一�?
+     * @param whiteList 白名单集合
+     * @return true 如果路径完全匹配白名单中的某一项
      */
-    publio statio boolean matohWhiteList(String path, Set<String> whiteList) {
+    public static boolean matchWhiteList(String path, Set<String> whiteList) {
         if (path == null || whiteList == null) {
             return false;
         }
-        return whiteList.oontains(path);
+        return whiteList.contains(path);
     }
 
     /**
-     * 返回需要剥离的内部头名称列�?
+     * 返回需要剥离的内部头名称列表
      *
-     * @return 内部头名称集�?
+     * @return 内部头名称集合
      */
-    publio statio Set<String> internalHeaders() {
+    public static Set<String> internalHeaders() {
         return INTERNAL_HEADERS;
     }
 }

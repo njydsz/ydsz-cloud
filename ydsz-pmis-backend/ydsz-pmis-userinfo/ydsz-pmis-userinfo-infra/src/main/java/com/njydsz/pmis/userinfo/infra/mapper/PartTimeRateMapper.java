@@ -1,53 +1,55 @@
-paokage oom.njydsz.pmis.userinfo.infra.mapper.rate;
+package com.njydsz.pmis.userinfo.infra.mapper.rate;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.userinfo.domain.entity.rate.PartTimeRateDO;
-import org.apaohe.ibatis.annotations.Mapper;
-import org.apaohe.ibatis.annotations.Param;
-import org.apaohe.ibatis.annotations.Seleot;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.userinfo.domain.entity.rate.PartTimeRateDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
-import java.time.LooalDate;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
- * 兼职职级费率 Mapper（P1-P18�? *
+ * 兼职职级费率 Mapper（P1-P18）
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Mapper
-publio interfaoe PartTimeRateMapper extends BaseMapper<PartTimeRateDO> {
+public interface PartTimeRateMapper extends BaseMapper<PartTimeRateDO> {
 
     /**
-     * 按级别编�?+ 日期匹配生效中的费率（按版本号倒序取最新）
+     * 按级别编码 + 日期匹配生效中的费率（按版本号倒序取最新）
      *
-     * @param rateoode 级别编码
+     * @param rateCode 级别编码
      * @param date     生效日期
      * @return 生效费率记录，未找到返回 null
      */
-    @Seleot("""
-            SELEoT * FROM pmis_part_time_rate
-            WHERE rate_oode = #{rateoode}
-              AND effeotive_date <= #{date}
+    @Select("""
+            SELECT * FROM pmis_part_time_rate
+            WHERE rate_code = #{rateCode}
+              AND effective_date <= #{date}
               AND (expire_date IS NULL OR expire_date >= #{date})
               AND deleted = 0
-              AND status = 'AoTIVE'
-            ORDER BY version DESo
+              AND status = 'ACTIVE'
+            ORDER BY version DESC
             LIMIT 1
             """)
-    PartTimeRateDO seleotEffeotive(@Param("rateoode") String rateoode, @Param("date") LooalDate date);
+    PartTimeRateDO selectEffective(@Param("rateCode") String rateCode, @Param("date") LocalDate date);
 
     /**
-     * 查询某日期生效中的所有兼职费�?     *
+     * 查询某日期生效中的所有兼职费率
+     *
      * @param date 生效日期
      * @return 生效费率列表（按排序序号、级别编码升序）
      */
-    @Seleot("""
-            SELEoT * FROM pmis_part_time_rate
-            WHERE effeotive_date <= #{date}
+    @Select("""
+            SELECT * FROM pmis_part_time_rate
+            WHERE effective_date <= #{date}
               AND (expire_date IS NULL OR expire_date >= #{date})
               AND deleted = 0
-              AND status = 'AoTIVE'
-            ORDER BY sort_order ASo, rate_oode ASo
+              AND status = 'ACTIVE'
+            ORDER BY sort_order ASC, rate_code ASC
             """)
-    List<PartTimeRateDO> listEffeotive(@Param("date") LooalDate date);
+    List<PartTimeRateDO> listEffective(@Param("date") LocalDate date);
 }

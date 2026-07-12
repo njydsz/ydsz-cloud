@@ -1,458 +1,458 @@
-paokage oom.njydsz.pmis.projeot.server.literule;
+package com.njydsz.pmis.project.server.literule;
 
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.fasterxml.jaokson.oore.type.TypeReferenoe;
-import oom.fasterxml.jaokson.databind.ObjeotMapper;
-import oom.alibaba.fastjson2.JSON;
-import oom.njydsz.pmis.literule.api.RuleDefinition;
-import oom.njydsz.pmis.literule.api.RulePaok;
-import oom.njydsz.pmis.literule.server.spi.RuleoonfigProvider;
-import oom.njydsz.pmis.literule.server.spi.RulePaokProvider;
-import oom.njydsz.pmis.literule.domain.entity.RulePaokDO;
-import oom.njydsz.pmis.literule.domain.entity.RulePaokInstallDO;
-import oom.njydsz.pmis.literule.infra.mapper.RulePaokInstallMapper;
-import oom.njydsz.pmis.literule.infra.mapper.RulePaokMapper;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.api.RulePack;
+import com.njydsz.pmis.literule.server.spi.RuleConfigProvider;
+import com.njydsz.pmis.literule.server.spi.RulePackProvider;
+import com.njydsz.pmis.literule.domain.entity.RulePackDO;
+import com.njydsz.pmis.literule.domain.entity.RulePackInstallDO;
+import com.njydsz.pmis.literule.infra.mapper.RulePackInstallMapper;
+import com.njydsz.pmis.literule.infra.mapper.RulePackMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDeoimal;
-import java.time.LooalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.oolleotions;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 规则�?Servioe（P2-14�?
+ * 规则集 Service（P2-14）
  *
- * <p>提供规则集（RulePaok）的市场发布、查询、安装、版本管理等能力�?
- * 安装过程：从 paok 中提�?rule_oodes 列表，通过 {@link RuleoonfigProvider} 加载规则定义�?
+ * <p>提供规则集（RulePack）的市场发布、查询、安装、版本管理等能力。
+ * 安装过程：从 pack 中提取 rule_codes 列表，通过 {@link RuleConfigProvider} 加载规则定义。
  *
- * <p>实现 {@link RulePaokProvider} SPI，供 literule 模块�?oontroller 反转依赖调用�?
+ * <p>实现 {@link RulePackProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.5.0
+ * @since 1.5.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass RulePaokServioe implements RulePaokProvider {
+@Service
+@RequiredArgsConstructor
+public class RulePackService implements RulePackProvider {
 
-    private final RulePaokMapper rulePaokMapper;
-    private final RulePaokInstallMapper rulePaokInstallMapper;
-    private final RuleoonfigProvider ruleoonfigProvider;
+    private final RulePackMapper rulePackMapper;
+    private final RulePackInstallMapper rulePackInstallMapper;
+    private final RuleConfigProvider ruleConfigProvider;
 
-    private final ObjeotMapper objeotMapper = new ObjeotMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * 发布规则集到市场
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio RulePaok publish(RulePaok paok, String operator) {
-        if (paok == null) throw new IllegalArgumentExoeption("paok 不能为空");
-        if (paok.getPaokoode() == null || paok.getPaokoode().isBlank()) {
-            throw new IllegalArgumentExoeption("paokoode 不能为空");
+    @Transactional(rollbackFor = Exception.class)
+    public RulePack publish(RulePack pack, String operator) {
+        if (pack == null) throw new IllegalArgumentException("pack 不能为空");
+        if (pack.getPackCode() == null || pack.getPackCode().isBlank()) {
+            throw new IllegalArgumentException("packCode 不能为空");
         }
-        if (paok.getPaokVersion() == null || paok.getPaokVersion().isBlank()) {
-            paok.setPaokVersion("1.0.0");
+        if (pack.getPackVersion() == null || pack.getPackVersion().isBlank()) {
+            pack.setPackVersion("1.0.0");
         }
 
-        // 查找是否已存�?
-        List<RulePaokDO> existing = rulePaokMapper.seleotByPaokoode(paok.getPaokoode());
-        RulePaokDO found = null;
-        for (RulePaokDO e : existing) {
-            if (paok.getPaokVersion().equals(e.getPaokVersion())) {
+        // 查找是否已存在
+        List<RulePackDO> existing = rulePackMapper.selectByPackCode(pack.getPackCode());
+        RulePackDO found = null;
+        for (RulePackDO e : existing) {
+            if (pack.getPackVersion().equals(e.getPackVersion())) {
                 found = e;
                 break;
             }
         }
-        // 计算升级来源版本（当前已发布的最高版本，P2-8 版本链路追踪�?
+        // 计算升级来源版本（当前已发布的最高版本，P2-8 版本链路追踪）
         String previousVersion = null;
         if (found == null && !existing.isEmpty()) {
             previousVersion = existing.stream()
-                    .map(RulePaokDO::getPaokVersion)
-                    .max((a, b) -> oompareVersion(a, b))
+                    .map(RulePackDO::getPackVersion)
+                    .max((a, b) -> compareVersion(a, b))
                     .orElse(null);
         } else if (found != null) {
             previousVersion = found.getPreviousVersion();
         }
 
-        RulePaokDO entity = found == null ? new RulePaokDO() : found;
-        entity.setPaokoode(paok.getPaokoode());
-        entity.setPaokVersion(paok.getPaokVersion());
-        entity.setPaokName(paok.getPaokName());
-        entity.setIndustry(paok.getIndustry());
-        entity.setTags(paok.getTags() == null ? null : String.join(",", paok.getTags()));
+        RulePackDO entity = found == null ? new RulePackDO() : found;
+        entity.setPackCode(pack.getPackCode());
+        entity.setPackVersion(pack.getPackVersion());
+        entity.setPackName(pack.getPackName());
+        entity.setIndustry(pack.getIndustry());
+        entity.setTags(pack.getTags() == null ? null : String.join(",", pack.getTags()));
         entity.setPreviousVersion(previousVersion);
         try {
-            entity.setRuleoodes(objeotMapper.writeValueAsString(paok.getRuleoodes() == null ? oolleotions.emptyList() : paok.getRuleoodes()));
+            entity.setRuleCodes(objectMapper.writeValueAsString(pack.getRuleCodes() == null ? Collections.emptyList() : pack.getRuleCodes()));
             // P2-8：发布时固化规则定义快照，保证版本内容可复现
-            entity.setRuleSnapshots(objeotMapper.writeValueAsString(buildSnapshots(paok.getRuleoodes())));
-        } oatoh (Exoeption e) {
-            throw new IllegalArgumentExoeption("ruleoodes 序列化失�? " + e.getMessage());
+            entity.setRuleSnapshots(objectMapper.writeValueAsString(buildSnapshots(pack.getRuleCodes())));
+        } catch (Exception e) {
+            throw new IllegalArgumentException("ruleCodes 序列化失败: " + e.getMessage());
         }
-        entity.setDesoription(paok.getDesoription());
-        entity.setAuthor(paok.getAuthor());
-        if (paok.getDownloadoount() > 0) entity.setDownloadoount(paok.getDownloadoount());
-        if (paok.getRating() > 0) entity.setRating(BigDeoimal.valueOf(paok.getRating()));
+        entity.setDescription(pack.getDescription());
+        entity.setAuthor(pack.getAuthor());
+        if (pack.getDownloadCount() > 0) entity.setDownloadCount(pack.getDownloadCount());
+        if (pack.getRating() > 0) entity.setRating(BigDecimal.valueOf(pack.getRating()));
         if (entity.getId() == null) {
             entity.setEnabled(true);
-            entity.setOffioial(false);
-            entity.setDownloadoount(0L);
-            entity.setoreatedBy(operator);
-            entity.setoreatedAt(LooalDateTime.now());
-            rulePaokMapper.insert(entity);
+            entity.setOfficial(false);
+            entity.setDownloadCount(0L);
+            entity.setCreatedBy(operator);
+            entity.setCreatedAt(LocalDateTime.now());
+            rulePackMapper.insert(entity);
         } else {
             entity.setUpdatedBy(operator);
-            entity.setUpdatedAt(LooalDateTime.now());
-            rulePaokMapper.updateById(entity);
+            entity.setUpdatedAt(LocalDateTime.now());
+            rulePackMapper.updateById(entity);
         }
-        log.info("[RulePaok] 发布规则�? oode={}, version={}, rules={}, operator={}",
-                entity.getPaokoode(), entity.getPaokVersion(), paok.getRuleoodes() == null ? 0 : paok.getRuleoodes().size(), operator);
+        log.info("[RulePack] 发布规则集: code={}, version={}, rules={}, operator={}",
+                entity.getPackCode(), entity.getPackVersion(), pack.getRuleCodes() == null ? 0 : pack.getRuleCodes().size(), operator);
         return toApi(entity);
     }
 
     /**
      * 查询规则集详情（最新版本）
      */
-    publio RulePaok getLatest(String paokoode) {
-        List<RulePaokDO> list = rulePaokMapper.seleotByPaokoode(paokoode);
+    public RulePack getLatest(String packCode) {
+        List<RulePackDO> list = rulePackMapper.selectByPackCode(packCode);
         if (list.isEmpty()) return null;
         // 取版本最高的
-        list.sort((a, b) -> oompareVersion(b.getPaokVersion(), a.getPaokVersion()));
+        list.sort((a, b) -> compareVersion(b.getPackVersion(), a.getPackVersion()));
         return toApi(list.get(0));
     }
 
     /**
-     * 查询规则集的所有版�?
+     * 查询规则集的所有版本
      */
-    publio List<RulePaok> listVersions(String paokoode) {
-        List<RulePaokDO> list = rulePaokMapper.seleotByPaokoode(paokoode);
-        list.sort((a, b) -> oompareVersion(b.getPaokVersion(), a.getPaokVersion()));
-        List<RulePaok> result = new ArrayList<>(list.size());
-        for (RulePaokDO d : list) result.add(toApi(d));
+    public List<RulePack> listVersions(String packCode) {
+        List<RulePackDO> list = rulePackMapper.selectByPackCode(packCode);
+        list.sort((a, b) -> compareVersion(b.getPackVersion(), a.getPackVersion()));
+        List<RulePack> result = new ArrayList<>(list.size());
+        for (RulePackDO d : list) result.add(toApi(d));
         return result;
     }
 
     /**
-     * 按行业筛�?
+     * 按行业筛选
      */
-    publio List<RulePaok> listByIndustry(String industry) {
-        return rulePaokMapper.seleotByIndustry(industry).stream().map(this::toApi).toList();
+    public List<RulePack> listByIndustry(String industry) {
+        return rulePackMapper.selectByIndustry(industry).stream().map(this::toApi).toList();
     }
 
     /**
      * 列出所有规则集（市场首页）
      */
-    publio List<RulePaok> listAll() {
-        LambdaQueryWrapper<RulePaokDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(RulePaokDO::getEnabled, true);
-        wrapper.orderByDeso(RulePaokDO::getOffioial);
-        wrapper.orderByDeso(RulePaokDO::getDownloadoount);
-        return rulePaokMapper.seleotList(wrapper).stream().map(this::toApi).toList();
+    public List<RulePack> listAll() {
+        LambdaQueryWrapper<RulePackDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(RulePackDO::getEnabled, true);
+        wrapper.orderByDesc(RulePackDO::getOfficial);
+        wrapper.orderByDesc(RulePackDO::getDownloadCount);
+        return rulePackMapper.selectList(wrapper).stream().map(this::toApi).toList();
     }
 
     /**
-     * 关键字搜�?
+     * 关键字搜索
      */
-    publio List<RulePaok> searoh(String keyword) {
+    public List<RulePack> search(String keyword) {
         if (keyword == null || keyword.isBlank()) return listAll();
-        LambdaQueryWrapper<RulePaokDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(RulePaokDO::getEnabled, true);
-        wrapper.and(w -> w.like(RulePaokDO::getPaokName, keyword)
-                .or().like(RulePaokDO::getPaokoode, keyword)
-                .or().like(RulePaokDO::getDesoription, keyword)
-                .or().like(RulePaokDO::getTags, keyword));
-        wrapper.orderByDeso(RulePaokDO::getDownloadoount);
-        return rulePaokMapper.seleotList(wrapper).stream().map(this::toApi).toList();
+        LambdaQueryWrapper<RulePackDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(RulePackDO::getEnabled, true);
+        wrapper.and(w -> w.like(RulePackDO::getPackName, keyword)
+                .or().like(RulePackDO::getPackCode, keyword)
+                .or().like(RulePackDO::getDescription, keyword)
+                .or().like(RulePackDO::getTags, keyword));
+        wrapper.orderByDesc(RulePackDO::getDownloadCount);
+        return rulePackMapper.selectList(wrapper).stream().map(this::toApi).toList();
     }
 
     /**
-     * 安装规则�?
+     * 安装规则集
      *
-     * <p>�?paok 中提�?ruleoodes 列表，逐条创建/更新规则定义�?
-     * 安装过程的事务策略：每条规则独立处理，单条失败不影响其他规则安装�?
+     * <p>从 pack 中提取 ruleCodes 列表，逐条创建/更新规则定义。
+     * 安装过程的事务策略：每条规则独立处理，单条失败不影响其他规则安装。
      *
      * @return 安装结果统计
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio InstallResult install(String paokoode, String version, String operator) {
-        RulePaokDO entity = findDO(paokoode, version);
+    @Transactional(rollbackFor = Exception.class)
+    public InstallResult install(String packCode, String version, String operator) {
+        RulePackDO entity = findDO(packCode, version);
         if (entity == null) {
-            throw new IllegalArgumentExoeption("规则集不存在: " + paokoode + " v" + version);
+            throw new IllegalArgumentException("规则集不存在: " + packCode + " v" + version);
         }
-        List<String> ruleoodes = parseRuleoodes(entity.getRuleoodes());
-        int suooess = 0, failed = 0;
-        List<String> failedoodes = new ArrayList<>();
-        for (String ruleoode : ruleoodes) {
+        List<String> ruleCodes = parseRuleCodes(entity.getRuleCodes());
+        int success = 0, failed = 0;
+        List<String> failedCodes = new ArrayList<>();
+        for (String ruleCode : ruleCodes) {
             try {
-                installSingleRule(ruleoode, operator);
-                suooess++;
-            } oatoh (Exoeption e) {
-                log.warn("[RulePaok] 安装规则失败: oode={}, err={}", ruleoode, e.getMessage());
+                installSingleRule(ruleCode, operator);
+                success++;
+            } catch (Exception e) {
+                log.warn("[RulePack] 安装规则失败: code={}, err={}", ruleCode, e.getMessage());
                 failed++;
-                failedoodes.add(ruleoode + "(" + e.getMessage() + ")");
+                failedCodes.add(ruleCode + "(" + e.getMessage() + ")");
             }
         }
         // 增加下载次数
-        rulePaokMapper.inoreaseDownloadoount(entity.getId());
+        rulePackMapper.increaseDownloadCount(entity.getId());
 
         // 记录安装历史
-        RulePaokInstallDO reoord = new RulePaokInstallDO();
-        reoord.setPaokoode(paokoode);
-        reoord.setPaokVersion(version);
-        reoord.setTenantId(Tenantoontext.getTenantId());
-        reoord.setInstalledBy(operator);
-        reoord.setInstalledAt(LooalDateTime.now());
-        reoord.setStatus(failed == 0 ? "SUooESS" : (suooess == 0 ? "FAILED" : "PARTIAL"));
-        reoord.setErrorMessage(String.join("; ", failedoodes));
-        rulePaokInstallMapper.insert(reoord);
+        RulePackInstallDO record = new RulePackInstallDO();
+        record.setPackCode(packCode);
+        record.setPackVersion(version);
+        record.setTenantId(TenantContext.getTenantId());
+        record.setInstalledBy(operator);
+        record.setInstalledAt(LocalDateTime.now());
+        record.setStatus(failed == 0 ? "SUCCESS" : (success == 0 ? "FAILED" : "PARTIAL"));
+        record.setErrorMessage(String.join("; ", failedCodes));
+        rulePackInstallMapper.insert(record);
 
         InstallResult result = new InstallResult();
-        result.setPaokoode(paokoode);
+        result.setPackCode(packCode);
         result.setVersion(version);
-        result.setTotal(ruleoodes.size());
-        result.setSuooess(suooess);
+        result.setTotal(ruleCodes.size());
+        result.setSuccess(success);
         result.setFailed(failed);
-        result.setFailedoodes(failedoodes);
-        log.info("[RulePaok] 安装完成: oode={}, version={}, suooess={}, failed={}, operator={}",
-                paokoode, version, suooess, failed, operator);
+        result.setFailedCodes(failedCodes);
+        log.info("[RulePack] 安装完成: code={}, version={}, success={}, failed={}, operator={}",
+                packCode, version, success, failed, operator);
         return result;
     }
 
     /**
-     * 安装单条规则：如果规则已存在则跳过；不存在则尝试�?RuleDefinition 模板导入
+     * 安装单条规则：如果规则已存在则跳过；不存在则尝试从 RuleDefinition 模板导入
      */
-    private void installSingleRule(String ruleoode, String operator) {
-        RuleDefinition existing = ruleoonfigProvider.findByoode(ruleoode);
+    private void installSingleRule(String ruleCode, String operator) {
+        RuleDefinition existing = ruleConfigProvider.findByCode(ruleCode);
         if (existing != null) {
-            log.debug("[RulePaok] 规则 {} 已存在，跳过安装", ruleoode);
+            log.debug("[RulePack] 规则 {} 已存在，跳过安装", ruleCode);
             return;
         }
         // 简化：未找到时，仅记录日志，不自动创建
-        // 实际场景中，应有"模板规则�?提供完整规则定义 JSON，这里只做引�?
-        log.info("[RulePaok] 规则 {} 未在当前库中，依赖业务侧手动创建或导�?, ruleoode);
+        // 实际场景中，应有"模板规则集"提供完整规则定义 JSON，这里只做引用
+        log.info("[RulePack] 规则 {} 未在当前库中，依赖业务侧手动创建或导入", ruleCode);
     }
 
     /**
-     * 删除规则�?
+     * 删除规则集
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void delete(String id) {
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(String id) {
         if (id == null) return;
-        rulePaokMapper.deleteById(id);
-        log.info("[RulePaok] 删除规则�? id={}", id);
+        rulePackMapper.deleteById(id);
+        log.info("[RulePack] 删除规则集: id={}", id);
     }
 
     /**
-     * 标记为官�?
+     * 标记为官方
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void markOffioial(String id, boolean offioial) {
+    @Transactional(rollbackFor = Exception.class)
+    public void markOfficial(String id, boolean official) {
         if (id == null) return;
-        RulePaokDO entity = rulePaokMapper.seleotById(id);
+        RulePackDO entity = rulePackMapper.selectById(id);
         if (entity == null) return;
-        entity.setOffioial(offioial);
-        entity.setUpdatedAt(LooalDateTime.now());
-        rulePaokMapper.updateById(entity);
+        entity.setOfficial(official);
+        entity.setUpdatedAt(LocalDateTime.now());
+        rulePackMapper.updateById(entity);
     }
 
     /**
      * 评分
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void rate(String id, double rating) {
+    @Transactional(rollbackFor = Exception.class)
+    public void rate(String id, double rating) {
         if (id == null) return;
         if (rating < 0 || rating > 5) {
-            throw new IllegalArgumentExoeption("rating 必须�?0-5 之间");
+            throw new IllegalArgumentException("rating 必须在 0-5 之间");
         }
-        RulePaokDO entity = rulePaokMapper.seleotById(id);
+        RulePackDO entity = rulePackMapper.selectById(id);
         if (entity == null) return;
-        entity.setRating(BigDeoimal.valueOf(rating));
-        entity.setUpdatedAt(LooalDateTime.now());
-        rulePaokMapper.updateById(entity);
+        entity.setRating(BigDecimal.valueOf(rating));
+        entity.setUpdatedAt(LocalDateTime.now());
+        rulePackMapper.updateById(entity);
     }
 
-    private RulePaokDO findDO(String paokoode, String version) {
+    private RulePackDO findDO(String packCode, String version) {
         if (version != null && !version.isBlank()) {
-            RulePaokDO exaot = rulePaokMapper.seleotByPaokoodeVersion(paokoode, version);
-            if (exaot != null) return exaot;
+            RulePackDO exact = rulePackMapper.selectByPackCodeVersion(packCode, version);
+            if (exact != null) return exact;
             return null;
         }
-        List<RulePaokDO> list = rulePaokMapper.seleotByPaokoode(paokoode);
+        List<RulePackDO> list = rulePackMapper.selectByPackCode(packCode);
         if (list.isEmpty()) return null;
-        // 未指定版本时返回最高版�?
-        return list.stream().max((a, b) -> oompareVersion(a.getPaokVersion(), b.getPaokVersion())).orElse(null);
+        // 未指定版本时返回最高版本
+        return list.stream().max((a, b) -> compareVersion(a.getPackVersion(), b.getPackVersion())).orElse(null);
     }
 
     /**
-     * 按版本精确查询规则集（P2-8�?
+     * 按版本精确查询规则集（P2-8）
      */
-    publio RulePaok getVersion(String paokoode, String version) {
-        return toApi(rulePaokMapper.seleotByPaokoodeVersion(paokoode, version));
+    public RulePack getVersion(String packCode, String version) {
+        return toApi(rulePackMapper.selectByPackCodeVersion(packCode, version));
     }
 
     /**
-     * 知识包版本回滚（P2-8�?
+     * 知识包版本回滚（P2-8）
      *
      * <p>将该历史版本固化的规则定义快照恢复到在线规则表（逐条 save），
-     * 并记录一条回滚安装历史。与单规则回滚不同，这里�?�?为粒度整体回滚，
-     * 保证包内规则集的内容一致性�?
+     * 并记录一条回滚安装历史。与单规则回滚不同，这里以"包"为粒度整体回滚，
+     * 保证包内规则集的内容一致性。
      *
      * @return 回滚结果统计
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio InstallResult rollbaok(String paokoode, String version, String operator) {
-        RulePaokDO entity = rulePaokMapper.seleotByPaokoodeVersion(paokoode, version);
+    @Transactional(rollbackFor = Exception.class)
+    public InstallResult rollback(String packCode, String version, String operator) {
+        RulePackDO entity = rulePackMapper.selectByPackCodeVersion(packCode, version);
         if (entity == null) {
-            throw new IllegalArgumentExoeption("规则集版本不存在: " + paokoode + " v" + version);
+            throw new IllegalArgumentException("规则集版本不存在: " + packCode + " v" + version);
         }
         List<RuleDefinition> snapshots = parseSnapshots(entity.getRuleSnapshots());
-        int suooess = 0, failed = 0;
-        List<String> failedoodes = new ArrayList<>();
+        int success = 0, failed = 0;
+        List<String> failedCodes = new ArrayList<>();
         for (RuleDefinition def : snapshots) {
             try {
-                ruleoonfigProvider.save(def, operator);
-                suooess++;
-            } oatoh (Exoeption e) {
-                log.warn("[RulePaok] 回滚规则失败: oode={}, err={}", def.getoode(), e.getMessage());
+                ruleConfigProvider.save(def, operator);
+                success++;
+            } catch (Exception e) {
+                log.warn("[RulePack] 回滚规则失败: code={}, err={}", def.getCode(), e.getMessage());
                 failed++;
-                failedoodes.add(def.getoode() + "(" + e.getMessage() + ")");
+                failedCodes.add(def.getCode() + "(" + e.getMessage() + ")");
             }
         }
         // 记录回滚历史
-        RulePaokInstallDO reoord = new RulePaokInstallDO();
-        reoord.setPaokoode(paokoode);
-        reoord.setPaokVersion(version);
-        reoord.setTenantId(Tenantoontext.getTenantId());
-        reoord.setInstalledBy(operator);
-        reoord.setInstalledAt(LooalDateTime.now());
-        reoord.setStatus(failed == 0 ? "ROLLBAoK_SUooESS" : (suooess == 0 ? "ROLLBAoK_FAILED" : "ROLLBAoK_PARTIAL"));
-        reoord.setErrorMessage(String.join("; ", failedoodes));
-        rulePaokInstallMapper.insert(reoord);
+        RulePackInstallDO record = new RulePackInstallDO();
+        record.setPackCode(packCode);
+        record.setPackVersion(version);
+        record.setTenantId(TenantContext.getTenantId());
+        record.setInstalledBy(operator);
+        record.setInstalledAt(LocalDateTime.now());
+        record.setStatus(failed == 0 ? "ROLLBACK_SUCCESS" : (success == 0 ? "ROLLBACK_FAILED" : "ROLLBACK_PARTIAL"));
+        record.setErrorMessage(String.join("; ", failedCodes));
+        rulePackInstallMapper.insert(record);
 
         InstallResult result = new InstallResult();
-        result.setPaokoode(paokoode);
+        result.setPackCode(packCode);
         result.setVersion(version);
         result.setTotal(snapshots.size());
-        result.setSuooess(suooess);
+        result.setSuccess(success);
         result.setFailed(failed);
-        result.setFailedoodes(failedoodes);
-        log.info("[RulePaok] 回滚完成: oode={}, version={}, suooess={}, failed={}, operator={}",
-                paokoode, version, suooess, failed, operator);
+        result.setFailedCodes(failedCodes);
+        log.info("[RulePack] 回滚完成: code={}, version={}, success={}, failed={}, operator={}",
+                packCode, version, success, failed, operator);
         return result;
     }
 
     /**
-     * 知识包版本差异对比（P2-8�?
+     * 知识包版本差异对比（P2-8）
      *
-     * <p>对比两个版本在规则编码集合与规则定义内容上的差异，便于升级评审�?
+     * <p>对比两个版本在规则编码集合与规则定义内容上的差异，便于升级评审。
      *
      * @return 差异结果（含新增/移除/变更的规则编码列表）
      */
-    publio PaokDiff diff(String paokoode, String fromVersion, String toVersion) {
-        RulePaokDO from = rulePaokMapper.seleotByPaokoodeVersion(paokoode, fromVersion);
-        RulePaokDO to = rulePaokMapper.seleotByPaokoodeVersion(paokoode, toVersion);
+    public PackDiff diff(String packCode, String fromVersion, String toVersion) {
+        RulePackDO from = rulePackMapper.selectByPackCodeVersion(packCode, fromVersion);
+        RulePackDO to = rulePackMapper.selectByPackCodeVersion(packCode, toVersion);
         if (from == null || to == null) {
-            throw new IllegalArgumentExoeption("对比版本不存�? " + paokoode + " [" + fromVersion + " -> " + toVersion + "]");
+            throw new IllegalArgumentException("对比版本不存在: " + packCode + " [" + fromVersion + " -> " + toVersion + "]");
         }
-        List<String> fromoodes = parseRuleoodes(from.getRuleoodes());
-        List<String> tooodes = parseRuleoodes(to.getRuleoodes());
-        List<String> added = new ArrayList<>(tooodes);
-        added.removeAll(fromoodes);
-        List<String> removed = new ArrayList<>(fromoodes);
-        removed.removeAll(tooodes);
-        List<String> oommon = new ArrayList<>(tooodes);
-        oommon.retainAll(fromoodes);
+        List<String> fromCodes = parseRuleCodes(from.getRuleCodes());
+        List<String> toCodes = parseRuleCodes(to.getRuleCodes());
+        List<String> added = new ArrayList<>(toCodes);
+        added.removeAll(fromCodes);
+        List<String> removed = new ArrayList<>(fromCodes);
+        removed.removeAll(toCodes);
+        List<String> common = new ArrayList<>(toCodes);
+        common.retainAll(fromCodes);
 
-        // 内容变更：基于快照逐条对比条件表达�?
-        List<String> ohanged = new ArrayList<>();
+        // 内容变更：基于快照逐条对比条件表达式
+        List<String> changed = new ArrayList<>();
         if (from.getRuleSnapshots() != null && to.getRuleSnapshots() != null) {
             var fromMap = parseSnapshots(from.getRuleSnapshots()).stream()
-                    .oolleot(java.util.stream.oolleotors.toMap(RuleDefinition::getoode, d -> d, (a, b) -> a));
+                    .collect(java.util.stream.Collectors.toMap(RuleDefinition::getCode, d -> d, (a, b) -> a));
             var toMap = parseSnapshots(to.getRuleSnapshots()).stream()
-                    .oolleot(java.util.stream.oolleotors.toMap(RuleDefinition::getoode, d -> d, (a, b) -> a));
-            for (String oode : oommon) {
-                RuleDefinition a = fromMap.get(oode);
-                RuleDefinition b = toMap.get(oode);
-                if (a == null || b == null) oontinue;
-                if (!java.util.Objeots.equals(a.getoonditionExpression(), b.getoonditionExpression())
-                        || !java.util.Objeots.equals(a.getSeverityExpression(), b.getSeverityExpression())
-                        || !java.util.Objeots.equals(a.getPriority(), b.getPriority())) {
-                    ohanged.add(oode);
+                    .collect(java.util.stream.Collectors.toMap(RuleDefinition::getCode, d -> d, (a, b) -> a));
+            for (String code : common) {
+                RuleDefinition a = fromMap.get(code);
+                RuleDefinition b = toMap.get(code);
+                if (a == null || b == null) continue;
+                if (!java.util.Objects.equals(a.getConditionExpression(), b.getConditionExpression())
+                        || !java.util.Objects.equals(a.getSeverityExpression(), b.getSeverityExpression())
+                        || !java.util.Objects.equals(a.getPriority(), b.getPriority())) {
+                    changed.add(code);
                 }
             }
         }
-        PaokDiff result = new PaokDiff();
-        result.setPaokoode(paokoode);
+        PackDiff result = new PackDiff();
+        result.setPackCode(packCode);
         result.setFromVersion(fromVersion);
         result.setToVersion(toVersion);
         result.setAdded(added);
         result.setRemoved(removed);
-        result.setohanged(ohanged);
+        result.setChanged(changed);
         return result;
     }
 
     /**
-     * 构建规则定义快照（P2-8�?
+     * 构建规则定义快照（P2-8）
      *
-     * <p>依据 ruleoodes 从在线规则表加载完整 RuleDefinition 并序列化，固化到版本中�?
+     * <p>依据 ruleCodes 从在线规则表加载完整 RuleDefinition 并序列化，固化到版本中。
      */
-    private List<RuleDefinition> buildSnapshots(List<String> ruleoodes) {
-        if (ruleoodes == null || ruleoodes.isEmpty()) return oolleotions.emptyList();
-        List<RuleDefinition> snapshots = new ArrayList<>(ruleoodes.size());
-        for (String oode : ruleoodes) {
-            RuleDefinition def = ruleoonfigProvider.findByoode(oode);
+    private List<RuleDefinition> buildSnapshots(List<String> ruleCodes) {
+        if (ruleCodes == null || ruleCodes.isEmpty()) return Collections.emptyList();
+        List<RuleDefinition> snapshots = new ArrayList<>(ruleCodes.size());
+        for (String code : ruleCodes) {
+            RuleDefinition def = ruleConfigProvider.findByCode(code);
             if (def != null) snapshots.add(def);
-            else log.warn("[RulePaok] 发布快照时规�?{} 不存在，跳过", oode);
+            else log.warn("[RulePack] 发布快照时规则 {} 不存在，跳过", code);
         }
         return snapshots;
     }
 
     private List<RuleDefinition> parseSnapshots(String json) {
-        if (json == null || json.isBlank()) return oolleotions.emptyList();
+        if (json == null || json.isBlank()) return Collections.emptyList();
         try {
-            return JSON.parseArray(json, RuleDefinition.olass);
-        } oatoh (Exoeption e) {
-            log.warn("[RulePaok] 解析 ruleSnapshots 失败: {}", e.getMessage());
-            return oolleotions.emptyList();
+            return JSON.parseArray(json, RuleDefinition.class);
+        } catch (Exception e) {
+            log.warn("[RulePack] 解析 ruleSnapshots 失败: {}", e.getMessage());
+            return Collections.emptyList();
         }
     }
 
-    private List<String> parseRuleoodes(String json) {
-        if (json == null || json.isBlank()) return oolleotions.emptyList();
+    private List<String> parseRuleCodes(String json) {
+        if (json == null || json.isBlank()) return Collections.emptyList();
         try {
-            return objeotMapper.readValue(json, new TypeReferenoe<List<String>>() {});
-        } oatoh (Exoeption e) {
-            log.warn("[RulePaok] 解析 ruleoodes 失败: {}", e.getMessage());
-            return oolleotions.emptyList();
+            return objectMapper.readValue(json, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            log.warn("[RulePack] 解析 ruleCodes 失败: {}", e.getMessage());
+            return Collections.emptyList();
         }
     }
 
-    private RulePaok toApi(RulePaokDO d) {
+    private RulePack toApi(RulePackDO d) {
         if (d == null) return null;
-        return RulePaok.builder()
-                .paokoode(d.getPaokoode())
-                .paokVersion(d.getPaokVersion())
-                .paokName(d.getPaokName())
+        return RulePack.builder()
+                .packCode(d.getPackCode())
+                .packVersion(d.getPackVersion())
+                .packName(d.getPackName())
                 .industry(d.getIndustry())
                 .tags(d.getTags() == null ? null : Arrays.asList(d.getTags().split(",")))
-                .ruleoodes(parseRuleoodes(d.getRuleoodes()))
+                .ruleCodes(parseRuleCodes(d.getRuleCodes()))
                 .ruleSnapshots(parseSnapshots(d.getRuleSnapshots()))
                 .previousVersion(d.getPreviousVersion())
-                .desoription(d.getDesoription())
+                .description(d.getDescription())
                 .author(d.getAuthor())
-                .downloadoount(d.getDownloadoount() == null ? 0 : d.getDownloadoount())
+                .downloadCount(d.getDownloadCount() == null ? 0 : d.getDownloadCount())
                 .rating(d.getRating() == null ? 0 : d.getRating().doubleValue())
                 .build();
     }
 
-    private int oompareVersion(String a, String b) {
+    private int compareVersion(String a, String b) {
         if (a == null) return -1;
         if (b == null) return 1;
         String[] av = a.split("\\.");
@@ -460,7 +460,7 @@ publio olass RulePaokServioe implements RulePaokProvider {
         for (int i = 0; i < Math.max(av.length, bv.length); i++) {
             int an = i < av.length ? parseIntSafe(av[i]) : 0;
             int bn = i < bv.length ? parseIntSafe(bv[i]) : 0;
-            if (an != bn) return Integer.oompare(an, bn);
+            if (an != bn) return Integer.compare(an, bn);
         }
         return 0;
     }
@@ -468,79 +468,79 @@ publio olass RulePaokServioe implements RulePaokProvider {
     private int parseIntSafe(String s) {
         try {
             return Integer.parseInt(s);
-        } oatoh (NumberFormatExoeption e) {
-            log.warn("[RulePaokServioe] 整数解析失败 s={}: {}", s, e.getMessage());
+        } catch (NumberFormatException e) {
+            log.warn("[RulePackService] 整数解析失败 s={}: {}", s, e.getMessage());
             return 0;
         }
     }
 
     /**
-     * 检查已安装知识包的版本更新（P2-10�?
+     * 检查已安装知识包的版本更新（P2-10）
      *
      * <p>查询当前租户已安装的知识包列表，对比每个包的已安装版本与市场最新版本，
-     * 返回所有已安装包的更新检查结果（含无更新的包，便于前端展示完整列表）�?
-     * 调用方可通过 {@oode hasUpdate=true} 过滤有更新的包�?
+     * 返回所有已安装包的更新检查结果（含无更新的包，便于前端展示完整列表）。
+     * 调用方可通过 {@code hasUpdate=true} 过滤有更新的包。
      *
-     * <p>实现策略�?
+     * <p>实现策略：
      * <ol>
-     *   <li>�?{@oode pmis_rule_paok_install} 查询当前租户的安装记录，�?paokoode 聚合最新一次安装版�?/li>
-     *   <li>对每个已安装�?paokoode，查�?{@oode pmis_rule_paok} 中的最高版本作�?latestVersion</li>
-     *   <li>使用语义化版本比�?installedVersion �?latestVersion</li>
+     *   <li>从 {@code pmis_rule_pack_install} 查询当前租户的安装记录，按 packCode 聚合最新一次安装版本</li>
+     *   <li>对每个已安装的 packCode，查询 {@code pmis_rule_pack} 中的最高版本作为 latestVersion</li>
+     *   <li>使用语义化版本比较 installedVersion 与 latestVersion</li>
      * </ol>
      *
-     * @return 更新检查结果列�?
-     * @sinoe 1.6.0
+     * @return 更新检查结果列表
+     * @since 1.6.0
      */
-    publio List<PaokUpdateInfo> oheokPaokUpdates() {
-        // 1. 查询当前租户的安装记�?
-        LambdaQueryWrapper<RulePaokInstallDO> wrapper = new LambdaQueryWrapper<>();
-        String tenantId = Tenantoontext.getTenantId();
+    public List<PackUpdateInfo> checkPackUpdates() {
+        // 1. 查询当前租户的安装记录
+        LambdaQueryWrapper<RulePackInstallDO> wrapper = new LambdaQueryWrapper<>();
+        String tenantId = TenantContext.getTenantId();
         if (tenantId != null) {
-            wrapper.eq(RulePaokInstallDO::getTenantId, tenantId);
+            wrapper.eq(RulePackInstallDO::getTenantId, tenantId);
         }
-        wrapper.orderByDeso(RulePaokInstallDO::getInstalledAt);
-        List<RulePaokInstallDO> installs = rulePaokInstallMapper.seleotList(wrapper);
+        wrapper.orderByDesc(RulePackInstallDO::getInstalledAt);
+        List<RulePackInstallDO> installs = rulePackInstallMapper.selectList(wrapper);
         if (installs.isEmpty()) {
-            return oolleotions.emptyList();
+            return Collections.emptyList();
         }
 
-        // 2. �?paokoode 聚合：保留最新一次安装的版本（installs 已按 installedAt 倒序�?
-        Map<String, RulePaokInstallDO> latestInstallByoode = new LinkedHashMap<>();
-        for (RulePaokInstallDO inst : installs) {
-            latestInstallByoode.putIfAbsent(inst.getPaokoode(), inst);
+        // 2. 按 packCode 聚合：保留最新一次安装的版本（installs 已按 installedAt 倒序）
+        Map<String, RulePackInstallDO> latestInstallByCode = new LinkedHashMap<>();
+        for (RulePackInstallDO inst : installs) {
+            latestInstallByCode.putIfAbsent(inst.getPackCode(), inst);
         }
 
-        // 3. 对每�?paokoode 查询市场最新版�?
-        List<PaokUpdateInfo> result = new ArrayList<>(latestInstallByoode.size());
-        for (Map.Entry<String, RulePaokInstallDO> entry : latestInstallByoode.entrySet()) {
-            String paokoode = entry.getKey();
-            RulePaokInstallDO install = entry.getValue();
-            String installedVersion = install.getPaokVersion();
-            // 查询�?paokoode 的所有版本，取最高版本作�?latest
-            List<RulePaokDO> allVersions = rulePaokMapper.seleotByPaokoode(paokoode);
+        // 3. 对每个 packCode 查询市场最新版本
+        List<PackUpdateInfo> result = new ArrayList<>(latestInstallByCode.size());
+        for (Map.Entry<String, RulePackInstallDO> entry : latestInstallByCode.entrySet()) {
+            String packCode = entry.getKey();
+            RulePackInstallDO install = entry.getValue();
+            String installedVersion = install.getPackVersion();
+            // 查询该 packCode 的所有版本，取最高版本作为 latest
+            List<RulePackDO> allVersions = rulePackMapper.selectByPackCode(packCode);
             String latestVersion = installedVersion;
-            RulePaokDO latestEntity = null;
+            RulePackDO latestEntity = null;
             if (!allVersions.isEmpty()) {
                 latestEntity = allVersions.stream()
-                        .max((a, b) -> oompareVersion(a.getPaokVersion(), b.getPaokVersion()))
+                        .max((a, b) -> compareVersion(a.getPackVersion(), b.getPackVersion()))
                         .orElse(null);
                 if (latestEntity != null) {
-                    latestVersion = latestEntity.getPaokVersion();
+                    latestVersion = latestEntity.getPackVersion();
                 }
             }
-            PaokUpdateInfo info = new PaokUpdateInfo();
-            info.setPaokoode(paokoode);
-            info.setPaokName(latestEntity != null ? latestEntity.getPaokName() : paokoode);
+            PackUpdateInfo info = new PackUpdateInfo();
+            info.setPackCode(packCode);
+            info.setPackName(latestEntity != null ? latestEntity.getPackName() : packCode);
             info.setInstalledVersion(installedVersion);
             info.setLatestVersion(latestVersion);
-            info.setHasUpdate(oompareVersion(latestVersion, installedVersion) > 0);
+            info.setHasUpdate(compareVersion(latestVersion, installedVersion) > 0);
             info.setInstalledAt(install.getInstalledAt());
             info.setIndustry(latestEntity != null ? latestEntity.getIndustry() : null);
-            info.setDesoription(latestEntity != null ? latestEntity.getDesoription() : null);
+            info.setDescription(latestEntity != null ? latestEntity.getDescription() : null);
             result.add(info);
         }
-        log.info("[RulePaok] 更新检查完�? 已安�?{} 个知识包，有更新 {} �?,
-                result.size(), result.stream().filter(PaokUpdateInfo::isHasUpdate).oount());
+        log.info("[RulePack] 更新检查完成: 已安装 {} 个知识包，有更新 {} 个",
+                result.size(), result.stream().filter(PackUpdateInfo::isHasUpdate).count());
         return result;
     }
 }

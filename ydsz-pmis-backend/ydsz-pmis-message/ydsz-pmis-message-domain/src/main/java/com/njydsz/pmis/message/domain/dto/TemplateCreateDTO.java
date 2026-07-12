@@ -1,4 +1,4 @@
-paokage oom.njydsz.pmis.message.domain.dto.template;
+package com.njydsz.pmis.message.domain.dto.template;
 
 
 import lombok.Data;
@@ -7,36 +7,36 @@ import lombok.Data;
  * 模板创建/更新 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass TemplateoreateDTO {
+public class TemplateCreateDTO {
 
     /** 模板编码 */
-    private String templateoode;
+    private String templateCode;
 
     /** 通道 */
-    private String ohannel;
+    private String channel;
 
     /** 语言区域 */
-    private String looale;
+    private String locale;
 
     /** 语义版本 */
     private String version;
 
     /** 模板分类 */
-    private String oategory;
+    private String category;
 
     /** 场景编码 */
-    private String soeneoode;
+    private String sceneCode;
 
     /** 主题(EMAIL 专用) */
-    private String subjeot;
+    private String subject;
 
     /** 模板内容 */
-    private String oontent;
+    private String content;
 
-    /** 供应�?*/
+    /** 供应商 */
     private String provider;
 
     /** 供应商侧模板 ID */
@@ -46,5 +46,5 @@ publio olass TemplateoreateDTO {
     private String signName;
 
     /** 描述说明 */
-    private String desoription;
+    private String description;
 }

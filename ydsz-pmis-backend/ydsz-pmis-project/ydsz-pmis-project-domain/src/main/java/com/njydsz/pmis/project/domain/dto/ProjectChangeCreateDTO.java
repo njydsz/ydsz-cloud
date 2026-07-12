@@ -1,65 +1,65 @@
-paokage oom.njydsz.pmis.projeot.domain.dto;
+package com.njydsz.pmis.project.domain.dto;
 
-import jakarta.validation.oonstraints.NotBlank;
-import jakarta.validation.oonstraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 
 /**
  * 项目变更创建 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass ProjeotohangeoreateDTO implements Serializable {
+public class ProjectChangeCreateDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 变更编号 */
-    @NotBlank(message = "{validation.projeot.msg_00a4eo00}")
-    private String ohangeoode;
+    @NotBlank(message = "{validation.project.msg_00a4ec00}")
+    private String changeCode;
 
     /** 立项 ID */
-    @NotNull(message = "{validation.projeot.msg_576o2b5e}")
+    @NotNull(message = "{validation.project.msg_576c2b5e}")
     private String initiationId;
 
-    /** 变更类型（ChangeType.oode�?*/
-    @NotBlank(message = "{validation.projeot.msg_970fff4b}")
-    private String ohangeType;
+    /** 变更类型（ChangeType.code） */
+    @NotBlank(message = "{validation.project.msg_970fff4b}")
+    private String changeType;
 
     /** 变更标题 */
-    @NotBlank(message = "{validation.projeot.msg_a38138of}")
-    private String ohangeTitle;
+    @NotBlank(message = "{validation.project.msg_a38138cf}")
+    private String changeTitle;
 
     /** 变更原因 */
-    private String ohangeReason;
+    private String changeReason;
     /** 变更描述 */
-    private String ohangeDeso;
-    /** 预算影响（正=增加，负=减少�?*/
-    private BigDeoimal budgetImpaot;
+    private String changeDesc;
+    /** 预算影响（正=增加，负=减少） */
+    private BigDecimal budgetImpact;
     /** 合同金额影响 */
-    private BigDeoimal oontraotImpaot;
+    private BigDecimal contractImpact;
     /** 进度影响天数 */
-    private Integer soheduleImpaotDays;
+    private Integer scheduleImpactDays;
     /** 利润影响 */
-    private BigDeoimal profitImpaot;
-    /** 影响�?WBS 任务�?*/
-    private Integer affeotedWbsoount;
+    private BigDecimal profitImpact;
+    /** 影响的 WBS 任务数 */
+    private Integer affectedWbsCount;
     /** 影响的人员数 */
-    private Integer affeotedStaffoount;
+    private Integer affectedStaffCount;
     /** 关联合同 ID（可选） */
-    private String oontraotId;
-    /** 申请�?ID */
-    private String applioantId;
-    /** 申请人名�?*/
-    private String applioantName;
-    /** 状态（ohangeStatus.oode�?*/
+    private String contractId;
+    /** 申请人 ID */
+    private String applicantId;
+    /** 申请人名称 */
+    private String applicantName;
+    /** 状态（ChangeStatus.code） */
     private String status;
     /** 备注 */
     private String remark;

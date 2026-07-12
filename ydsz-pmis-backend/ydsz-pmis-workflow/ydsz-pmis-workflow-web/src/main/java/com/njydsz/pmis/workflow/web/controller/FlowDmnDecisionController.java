@@ -1,13 +1,13 @@
-paokage oom.njydsz.pmis.workflow.web.oontroller.dmn;
+package com.njydsz.pmis.workflow.web.controller.dmn;
 
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.oommon.auth.oontext.Authoontext;
-import oom.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnDeoisionDO;
-import oom.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnRuleDO;
-import oom.njydsz.pmis.workflow.server.servioe.dmn.FlowDmnDeoisionServioe;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.auth.context.AuthContext;
+import com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnDecisionDO;
+import com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnRuleDO;
+import com.njydsz.pmis.workflow.server.service.dmn.FlowDmnDecisionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsoonstruotor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,103 +15,103 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * P0-1: DMN 决策�?oontroller
+ * P0-1: DMN 决策表 Controller
  *
- * <p>提供决策表的 oRUD、发布、评�?RESTful API�?
+ * <p>提供决策表的 CRUD、发布、评估 RESTful API。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.8.0
+ * @since 1.8.0
  */
 @Slf4j
-@Restoontroller
-@Tag(name = "workflow-dmn", desoription = "DMN 决策表引擎接�?)
+@RestController
+@Tag(name = "workflow-dmn", description = "DMN 决策表引擎接口")
 @RequestMapping("/workflow/dmn")
-@RequiredArgsoonstruotor
-publio olass FlowDmnDeoisionoontroller {
+@RequiredArgsConstructor
+public class FlowDmnDecisionController {
 
-    private final FlowDmnDeoisionServioe dmnDeoisionServioe;
+    private final FlowDmnDecisionService dmnDecisionService;
 
-    @PostMapping("/deoision")
-    @Operation(summary = "创建决策�?)
-    publio BaseResponse<String> oreateDeoision(@RequestBody oreateDeoisionRequest request) {
-        String tenantId = Authoontext.getTenantIdOrDefault("1");
-        request.getDeoision().setTenantId(tenantId);
-        String id = dmnDeoisionServioe.oreateDeoision(request.getDeoision(), request.getRules());
+    @PostMapping("/decision")
+    @Operation(summary = "创建决策表")
+    public BaseResponse<String> createDecision(@RequestBody CreateDecisionRequest request) {
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        request.getDecision().setTenantId(tenantId);
+        String id = dmnDecisionService.createDecision(request.getDecision(), request.getRules());
         return BaseResponse.ok(id);
     }
 
-    @PutMapping("/deoision/{deoisionId}")
+    @PutMapping("/decision/{decisionId}")
     @Operation(summary = "更新决策表（仅草稿状态）")
-    publio BaseResponse<Void> updateDeoision(@PathVariable String deoisionId,
-                                        @RequestBody oreateDeoisionRequest request) {
-        request.getDeoision().setTenantId(Authoontext.getTenantIdOrDefault("1"));
-        dmnDeoisionServioe.updateDeoision(deoisionId, request.getDeoision(), request.getRules());
+    public BaseResponse<Void> updateDecision(@PathVariable String decisionId,
+                                        @RequestBody CreateDecisionRequest request) {
+        request.getDecision().setTenantId(AuthContext.getTenantIdOrDefault("1"));
+        dmnDecisionService.updateDecision(decisionId, request.getDecision(), request.getRules());
         return BaseResponse.ok();
     }
 
-    @PostMapping("/deoision/{deoisionId}/publish")
-    @Operation(summary = "发布决策�?)
-    publio BaseResponse<Void> publish(@PathVariable String deoisionId) {
-        dmnDeoisionServioe.publish(deoisionId);
+    @PostMapping("/decision/{decisionId}/publish")
+    @Operation(summary = "发布决策表")
+    public BaseResponse<Void> publish(@PathVariable String decisionId) {
+        dmnDecisionService.publish(decisionId);
         return BaseResponse.ok();
     }
 
-    @PostMapping("/deoision/{deoisionId}/depreoate")
-    @Operation(summary = "停用决策�?)
-    publio BaseResponse<Void> depreoate(@PathVariable String deoisionId) {
-        dmnDeoisionServioe.depreoate(deoisionId);
+    @PostMapping("/decision/{decisionId}/deprecate")
+    @Operation(summary = "停用决策表")
+    public BaseResponse<Void> deprecate(@PathVariable String decisionId) {
+        dmnDecisionService.deprecate(decisionId);
         return BaseResponse.ok();
     }
 
-    @GetMapping("/deoision/{deoisionId}")
+    @GetMapping("/decision/{decisionId}")
     @Operation(summary = "查询决策表详情（含规则）")
-    publio BaseResponse<Map<String, Objeot>> getDetail(@PathVariable String deoisionId) {
-        return BaseResponse.ok(dmnDeoisionServioe.getDetail(deoisionId));
+    public BaseResponse<Map<String, Object>> getDetail(@PathVariable String decisionId) {
+        return BaseResponse.ok(dmnDecisionService.getDetail(decisionId));
     }
 
-    @GetMapping("/deoisions")
-    @Operation(summary = "分页查询决策表列�?)
-    publio BaseResponse<List<FlowDmnDeoisionDO>> listDeoisions(
-            @RequestParam(required = false) String deoisionoode) {
-        String tenantId = Authoontext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(dmnDeoisionServioe.listDeoisions(deoisionoode, tenantId));
+    @GetMapping("/decisions")
+    @Operation(summary = "分页查询决策表列表")
+    public BaseResponse<List<FlowDmnDecisionDO>> listDecisions(
+            @RequestParam(required = false) String decisionCode) {
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(dmnDecisionService.listDecisions(decisionCode, tenantId));
     }
 
     @PostMapping("/evaluate")
-    @Operation(summary = "评估决策�?)
-    publio BaseResponse<Map<String, Objeot>> evaluate(@RequestBody EvaluateRequest request) {
-        String tenantId = Authoontext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(dmnDeoisionServioe.evaluate(
-                request.getDeoisionoode(), request.getVariables(), tenantId));
+    @Operation(summary = "评估决策表")
+    public BaseResponse<Map<String, Object>> evaluate(@RequestBody EvaluateRequest request) {
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(dmnDecisionService.evaluate(
+                request.getDecisionCode(), request.getVariables(), tenantId));
     }
 
     @PostMapping("/evaluateByNode")
     @Operation(summary = "根据流程+节点评估绑定的决策表")
-    publio BaseResponse<Map<String, Objeot>> evaluateByNode(@RequestBody EvaluateByNodeRequest request) {
-        String tenantId = Authoontext.getTenantIdOrDefault("1");
-        return BaseResponse.ok(dmnDeoisionServioe.evaluateByNode(
-                request.getFlowoode(), request.getNodeoode(),
+    public BaseResponse<Map<String, Object>> evaluateByNode(@RequestBody EvaluateByNodeRequest request) {
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        return BaseResponse.ok(dmnDecisionService.evaluateByNode(
+                request.getFlowCode(), request.getNodeCode(),
                 request.getVariables(), tenantId));
     }
 
     // ============================== 请求/响应 DTO ==============================
 
     @lombok.Data
-    publio statio olass oreateDeoisionRequest {
-        private FlowDmnDeoisionDO deoision;
+    public static class CreateDecisionRequest {
+        private FlowDmnDecisionDO decision;
         private List<FlowDmnRuleDO> rules;
     }
 
     @lombok.Data
-    publio statio olass EvaluateRequest {
-        private String deoisionoode;
-        private Map<String, Objeot> variables;
+    public static class EvaluateRequest {
+        private String decisionCode;
+        private Map<String, Object> variables;
     }
 
     @lombok.Data
-    publio statio olass EvaluateByNodeRequest {
-        private String flowoode;
-        private String nodeoode;
-        private Map<String, Objeot> variables;
+    public static class EvaluateByNodeRequest {
+        private String flowCode;
+        private String nodeCode;
+        private Map<String, Object> variables;
     }
 }

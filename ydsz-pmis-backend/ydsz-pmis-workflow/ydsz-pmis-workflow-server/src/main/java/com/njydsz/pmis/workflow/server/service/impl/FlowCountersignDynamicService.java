@@ -1,92 +1,92 @@
-paokage oom.njydsz.pmis.workflow.server.servioe.impl.instanoe;
+package com.njydsz.pmis.workflow.server.service.impl.instance;
 
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowRunTaskDO;
-import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowRunTaskMapper;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 
 /**
- * P2-6: 会签动态完成条件服�?
+ * P2-6: 会签动态完成条件服务
  *
- * <p>对标 oamunda multiInstanoe oompletionoondition�?
- * 支持在审批运行时动态修改会签通过阈值（VOTE/WEIGHTED_VOTE 模式）�?
+ * <p>对标 Camunda multiInstance completionCondition。
+ * 支持在审批运行时动态修改会签通过阈值（VOTE/WEIGHTED_VOTE 模式）。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.3.0
+ * @since 1.3.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass FlowoountersignDynamioServioe {
+@Service
+@RequiredArgsConstructor
+public class FlowCountersignDynamicService {
 
     private final FlowRunTaskMapper taskMapper;
 
     /**
-     * 动态更新会签任务的通过阈值�?
+     * 动态更新会签任务的通过阈值。
      *
      * @param taskId       任务 ID
-     * @param votePassRate 新的通过率阈值（0~1�?
-     * @param operatorId   操作�?ID
+     * @param votePassRate 新的通过率阈值（0~1）
+     * @param operatorId   操作人 ID
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void updateoompletionoondition(String taskId, BigDeoimal votePassRate, String operatorId) {
+    @Transactional(rollbackFor = Exception.class)
+    public void updateCompletionCondition(String taskId, BigDecimal votePassRate, String operatorId) {
         if (!StringUtils.hasText(taskId)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_a7b8o9d0");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_a7b8c9d0");
         }
-        if (votePassRate == null || votePassRate.oompareTo(BigDeoimal.ZERO) < 0
-                || votePassRate.oompareTo(BigDeoimal.ONE) > 0) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_b8o9d0e1");
+        if (votePassRate == null || votePassRate.compareTo(BigDecimal.ZERO) < 0
+                || votePassRate.compareTo(BigDecimal.ONE) > 0) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_b8c9d0e1");
         }
 
-        FlowRunTaskDO task = taskMapper.seleotById(taskId);
+        FlowRunTaskDO task = taskMapper.selectById(taskId);
         if (task == null) {
-            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.workflow.msg_o9d0e1f2", taskId);
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_c9d0e1f2", taskId);
         }
 
-        // �?VOTE / WEIGHTED_VOTE 模式允许动态修�?
+        // 仅 VOTE / WEIGHTED_VOTE 模式允许动态修改
         String performType = task.getPerformType();
         if (!"VOTE".equals(performType) && !"WEIGHTED_VOTE".equals(performType)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_d0e1f2a3");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_d0e1f2a3");
         }
 
-        BigDeoimal oldRate = task.getVotePassRate();
+        BigDecimal oldRate = task.getVotePassRate();
         task.setVotePassRate(votePassRate);
         taskMapper.updateById(task);
 
-        log.info("[Flowoountersign] P2-6 动态修改完成条�? taskId={} oldRate={} �?newRate={} operator={}",
+        log.info("[FlowCountersign] P2-6 动态修改完成条件: taskId={} oldRate={} → newRate={} operator={}",
                 taskId, oldRate, votePassRate, operatorId);
     }
 
     /**
-     * 动态更新会签所需通过人数�?
+     * 动态更新会签所需通过人数。
      *
      * @param taskId        任务 ID
-     * @param approveoount  新的所需通过人数
-     * @param operatorId    操作�?ID
+     * @param approveCount  新的所需通过人数
+     * @param operatorId    操作人 ID
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void updateApproveoount(String taskId, Integer approveoount, String operatorId) {
-        if (!StringUtils.hasText(taskId) || approveoount == null || approveoount < 1) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_e1f2a3b4");
+    @Transactional(rollbackFor = Exception.class)
+    public void updateApproveCount(String taskId, Integer approveCount, String operatorId) {
+        if (!StringUtils.hasText(taskId) || approveCount == null || approveCount < 1) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_e1f2a3b4");
         }
 
-        FlowRunTaskDO task = taskMapper.seleotById(taskId);
+        FlowRunTaskDO task = taskMapper.selectById(taskId);
         if (task == null) {
-            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.workflow.msg_o9d0e1f2", taskId);
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_c9d0e1f2", taskId);
         }
 
-        Integer oldoount = task.getApproveoount();
-        task.setApproveoount(approveoount);
+        Integer oldCount = task.getApproveCount();
+        task.setApproveCount(approveCount);
         taskMapper.updateById(task);
 
-        log.info("[Flowoountersign] P2-6 动态修改通过人数: taskId={} oldoount={} �?newoount={} operator={}",
-                taskId, oldoount, approveoount, operatorId);
+        log.info("[FlowCountersign] P2-6 动态修改通过人数: taskId={} oldCount={} → newCount={} operator={}",
+                taskId, oldCount, approveCount, operatorId);
     }
 }

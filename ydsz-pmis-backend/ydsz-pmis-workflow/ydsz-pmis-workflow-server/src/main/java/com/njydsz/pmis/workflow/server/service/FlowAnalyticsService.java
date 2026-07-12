@@ -1,31 +1,31 @@
-paokage oom.njydsz.pmis.workflow.server.servioe.analytios;
+package com.njydsz.pmis.workflow.server.service.analytics;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
- * 审批数据分析服务接口（P2-2）�?
+ * 审批数据分析服务接口（P2-2）。
  *
- * <p>对标钉钉/飞书审批�?数据分析"仪表盘，聚合审批效率、驳回率�?
- * 办理人排行、流程效率对比等核心指标�?
+ * <p>对标钉钉/飞书审批的"数据分析"仪表盘，聚合审批效率、驳回率、
+ * 办理人排行、流程效率对比等核心指标。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.8.0
+ * @since 1.8.0
  */
-publio interfaoe FlowAnalytiosServioe {
+public interface FlowAnalyticsService {
 
     /**
-     * 审批总览仪表�?
+     * 审批总览仪表盘
      *
      * <p>汇总指定时间范围内的核心指标：
      * <ul>
-     *   <li>totalTasks �?任务总数</li>
-     *   <li>oompletedTasks �?通过�?/li>
-     *   <li>rejeotedTasks �?驳回�?/li>
-     *   <li>pendingTasks �?待办�?/li>
-     *   <li>avgDurationMs �?平均处理耗时</li>
-     *   <li>rejeotionRate �?驳回�?/li>
-     *   <li>overdueoount �?超期�?/li>
+     *   <li>totalTasks — 任务总数</li>
+     *   <li>completedTasks — 通过数</li>
+     *   <li>rejectedTasks — 驳回数</li>
+     *   <li>pendingTasks — 待办数</li>
+     *   <li>avgDurationMs — 平均处理耗时</li>
+     *   <li>rejectionRate — 驳回率</li>
+     *   <li>overdueCount — 超期数</li>
      * </ul>
      *
      * @param startTime 起始时间（可空）
@@ -33,18 +33,18 @@ publio interfaoe FlowAnalytiosServioe {
      * @param tenantId  租户 ID（可空）
      * @return 指标 Map
      */
-    Map<String, Objeot> overview(LooalDateTime startTime, LooalDateTime endTime, String tenantId);
+    Map<String, Object> overview(LocalDateTime startTime, LocalDateTime endTime, String tenantId);
 
     /**
-     * 办理人效率排�?
+     * 办理人效率排行
      *
      * @param startTime 起始时间
      * @param endTime   截止时间
      * @param tenantId  租户 ID
-     * @param limit     返回条数（默�?20�?
-     * @return 办理人效率列�?
+     * @param limit     返回条数（默认 20）
+     * @return 办理人效率列表
      */
-    Objeot approverEffioienoy(LooalDateTime startTime, LooalDateTime endTime, String tenantId, int limit);
+    Object approverEfficiency(LocalDateTime startTime, LocalDateTime endTime, String tenantId, int limit);
 
     /**
      * 流程效率对比
@@ -54,19 +54,19 @@ publio interfaoe FlowAnalytiosServioe {
      * @param tenantId  租户 ID
      * @return 流程效率列表
      */
-    Objeot flowEffioienoyoomparison(LooalDateTime startTime, LooalDateTime endTime, String tenantId);
+    Object flowEfficiencyComparison(LocalDateTime startTime, LocalDateTime endTime, String tenantId);
 
     /**
      * 节点耗时分析
      *
-     * @param flowoode 流程编码
+     * @param flowCode 流程编码
      * @param tenantId 租户 ID
      * @return 节点耗时统计列表
      */
-    Objeot nodeDurationStats(String flowoode, String tenantId);
+    Object nodeDurationStats(String flowCode, String tenantId);
 
     /**
-     * 审批趋势分析（按�?�?月聚合）
+     * 审批趋势分析（按天/周/月聚合）
      *
      * @param startTime 起始时间
      * @param endTime   截止时间
@@ -74,5 +74,5 @@ publio interfaoe FlowAnalytiosServioe {
      * @param granularity 粒度：DAY / WEEK / MONTH
      * @return 趋势数据列表
      */
-    Objeot approvalTrend(LooalDateTime startTime, LooalDateTime endTime, String tenantId, String granularity);
+    Object approvalTrend(LocalDateTime startTime, LocalDateTime endTime, String tenantId, String granularity);
 }

@@ -1,53 +1,53 @@
-paokage oom.njydsz.pmis.oronjob.server.oore.sharding;
+package com.njydsz.pmis.cronjob.server.core.sharding;
 
-import oom.njydsz.pmis.oronjob.domain.entity.job.JobNodeDO;
-import oom.njydsz.pmis.oronjob.server.oore.disoovery.NodeDisooveryStrategy;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
+import com.njydsz.pmis.cronjob.server.core.discovery.NodeDiscoveryStrategy;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnProperty;
-import org.springframework.oontext.annotation.oonfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.ArrayList;
-import java.util.oolleotions;
+import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
 
 /**
- * 权重分片策略（P1-6 分片策略丰富化）�?
+ * 权重分片策略（P1-6 分片策略丰富化）。
  *
- * <p>根据节点�?oPU 使用率和运行任务数计算权重，将分片分配到负载较低的节点：
+ * <p>根据节点的 CPU 使用率和运行任务数计算权重，将分片分配到负载较低的节点：
  * <ul>
- *   <li>权重 = (100 - opuUsage) * (1 + 1/(runningoount+1))</li>
- *   <li>使用加权轮询算法，负载低的节点分配更多分�?/li>
+ *   <li>权重 = (100 - cpuUsage) * (1 + 1/(runningCount+1))</li>
+ *   <li>使用加权轮询算法，负载低的节点分配更多分片</li>
  * </ul>
  *
- * <p>启用方式：{@oode pmis.oronjob.sharding-strategy=weighted}
+ * <p>启用方式：{@code pmis.cronjob.sharding-strategy=weighted}
  *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
 @Slf4j
-@oonfiguration
-@RequiredArgsoonstruotor
-@oonditionalOnProperty(name = "pmis.oronjob.sharding-strategy", havingValue = "weighted")
-publio olass WeightedShardingStrategy implements ShardingStrategy {
+@Configuration
+@RequiredArgsConstructor
+@ConditionalOnProperty(name = "pmis.cronjob.sharding-strategy", havingValue = "weighted")
+public class WeightedShardingStrategy implements ShardingStrategy {
 
-    private final NodeDisooveryStrategy nodeDisooveryStrategy;
+    private final NodeDiscoveryStrategy nodeDiscoveryStrategy;
 
     @Override
-    publio List<ShardAssignment> assign(int shardTotal, List<String> onlineNodes) {
+    public List<ShardAssignment> assign(int shardTotal, List<String> onlineNodes) {
         if (shardTotal < 1) {
-            throw new IllegalArgumentExoeption("shardTotal 必须 >= 1, 实际: " + shardTotal);
+            throw new IllegalArgumentException("shardTotal 必须 >= 1, 实际: " + shardTotal);
         }
         if (onlineNodes == null || onlineNodes.isEmpty()) {
-            throw new IllegalArgumentExoeption("onlineNodes 不能为空");
+            throw new IllegalArgumentException("onlineNodes 不能为空");
         }
 
         // 获取节点负载信息
-        List<JobNodeDO> allNodes = nodeDisooveryStrategy.getOnlineNodes();
+        List<JobNodeDO> allNodes = nodeDiscoveryStrategy.getOnlineNodes();
         TreeMap<String, Double> nodeWeights = new TreeMap<>();
         for (String nodeId : onlineNodes) {
-            double weight = oaloulateNodeWeight(nodeId, allNodes);
+            double weight = calculateNodeWeight(nodeId, allNodes);
             nodeWeights.put(nodeId, weight);
         }
 
@@ -67,30 +67,30 @@ publio olass WeightedShardingStrategy implements ShardingStrategy {
         while (assigned < shardTotal) {
             // 分配给权重最高的节点
             String maxNode = nodeWeights.entrySet().stream()
-                    .max((e1, e2) -> Double.oompare(e1.getValue(), e2.getValue()))
+                    .max((e1, e2) -> Double.compare(e1.getValue(), e2.getValue()))
                     .map(e -> e.getKey())
                     .orElse(onlineNodes.get(0));
             result.add(new ShardAssignment(maxNode, assigned++));
         }
-        return oolleotions.unmodifiableList(result);
+        return Collections.unmodifiableList(result);
     }
 
     /**
-     * 计算节点权重（负载越低权重越高）�?
+     * 计算节点权重（负载越低权重越高）。
      */
-    private double oaloulateNodeWeight(String nodeId, List<JobNodeDO> allNodes) {
+    private double calculateNodeWeight(String nodeId, List<JobNodeDO> allNodes) {
         for (JobNodeDO node : allNodes) {
             if (nodeId.equals(node.getNodeId())) {
-                double opuUsage = node.getopuUsage() != null ? node.getopuUsage().doubleValue() : 50.0;
-                int runningoount = node.getRunningoount() != null ? node.getRunningoount() : 0;
-                // 权重 = (100 - opuUsage) * (1 + 1/(runningoount+1))
-                // oPU �?+ 运行�?= 高权�?
-                double opuFaotor = Math.max(1.0, 100.0 - opuUsage);
-                double loadFaotor = 1.0 + 1.0 / (runningoount + 1);
-                return opuFaotor * loadFaotor;
+                double cpuUsage = node.getCpuUsage() != null ? node.getCpuUsage().doubleValue() : 50.0;
+                int runningCount = node.getRunningCount() != null ? node.getRunningCount() : 0;
+                // 权重 = (100 - cpuUsage) * (1 + 1/(runningCount+1))
+                // CPU 低 + 运行少 = 高权重
+                double cpuFactor = Math.max(1.0, 100.0 - cpuUsage);
+                double loadFactor = 1.0 + 1.0 / (runningCount + 1);
+                return cpuFactor * loadFactor;
             }
         }
-        // 节点不在列表中，给默认权�?
+        // 节点不在列表中，给默认权重
         return 1.0;
     }
 }

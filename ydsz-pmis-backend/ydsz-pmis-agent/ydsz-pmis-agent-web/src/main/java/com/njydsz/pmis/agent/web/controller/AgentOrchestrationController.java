@@ -1,50 +1,50 @@
-paokage oom.njydsz.pmis.agent.web.oontroller.agent;
+package com.njydsz.pmis.agent.web.controller.agent;
 
-import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.Idempotent;
 
-import oom.njydsz.pmis.agent.server.orohestration.OrohestrationRequest;
-import oom.njydsz.pmis.agent.server.orohestration.OrohestrationResult;
-import oom.njydsz.pmis.agent.server.servioe.agent.AgentOrohestrationServioe;
-import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import com.njydsz.pmis.agent.server.orchestration.OrchestrationRequest;
+import com.njydsz.pmis.agent.server.orchestration.OrchestrationResult;
+import com.njydsz.pmis.agent.server.service.agent.AgentOrchestrationService;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsoonstruotor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.Restoontroller;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 多智能体编排 oontroller（AgentSoope 模式�?
+ * 多智能体编排 Controller（AgentScope 模式）
  *
- * <p>借鉴 AgentSoope 多智能体协同设计思想，对外提供统一编排入口�?
+ * <p>借鉴 AgentScope 多智能体协同设计思想，对外提供统一编排入口。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Tag(name = "AI 多智能体编排")
-@Restoontroller
-@RequestMapping("/agent/orohestration")
-@RequiredArgsoonstruotor
+@RestController
+@RequestMapping("/agent/orchestration")
+@RequiredArgsConstructor
 @Validated
-publio olass AgentOrohestrationoontroller {
+public class AgentOrchestrationController {
 
     /** 多智能体编排服务 */
-    private final AgentOrohestrationServioe servioe;
+    private final AgentOrchestrationService service;
 
     /**
-     * 协调�?Agent 编排执行�?
+     * 协调多 Agent 编排执行。
      *
-     * @param req 编排请求（包含模式、Agent 列表、输入等�?
+     * @param req 编排请求（包含模式、Agent 列表、输入等）
      * @return 编排结果
      */
-    @Operation(summary = "协调�?Agent 编排执行")
-    @AuthApiPermission(apioodes = "agent:orohestration:run")
-    @Idempotent(key = "agentOrohestration:ooordinate", ttlSeoonds = 5, message = "请勿重复提交")
-    @PostMapping("/ooordinate")
-    publio BaseResponse<OrohestrationResult> ooordinate(@RequestBody OrohestrationRequest req) {
-        return BaseResponse.ok(servioe.orohestrate(req));
+    @Operation(summary = "协调多 Agent 编排执行")
+    @AuthApiPermission(apiCodes = "agent:orchestration:run")
+    @Idempotent(key = "agentOrchestration:coordinate", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/coordinate")
+    public BaseResponse<OrchestrationResult> coordinate(@RequestBody OrchestrationRequest req) {
+        return BaseResponse.ok(service.orchestrate(req));
     }
 }

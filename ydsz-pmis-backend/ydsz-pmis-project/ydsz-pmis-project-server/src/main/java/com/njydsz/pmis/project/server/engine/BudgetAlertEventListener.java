@@ -1,94 +1,97 @@
-paokage oom.njydsz.pmis.projeot.server.engine;
+package com.njydsz.pmis.project.server.engine;
 
-import oom.njydsz.pmis.projeot.domain.dto.AlertDispatohDTO;
-import oom.njydsz.pmis.projeot.server.servioe.AlertDispatohServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.project.domain.dto.AlertDispatchDTO;
+import com.njydsz.pmis.project.server.service.AlertDispatchService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.oontext.event.EventListener;
-import org.springframework.soheduling.annotation.Asyno;
-import org.springframework.stereotype.oomponent;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
 
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 /**
- * 预算告警事件监听�? *
- * <p>异步接收 BudgetGuard 发布的预算告警事件，并自动转换为预警分发记录（pmis_alert_dispatoh）�? * 后续可扩�? 推送到 RooketMQ 通知主题、调用通知中心 OpenFeign �?
+ * 预算告警事件监听器
+ *
+ * <p>异步接收 BudgetGuard 发布的预算告警事件，并自动转换为预警分发记录（pmis_alert_dispatch）。
+ * 后续可扩展: 推送到 RocketMQ 通知主题、调用通知中心 OpenFeign 等.
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@oomponent
-@RequiredArgsoonstruotor
-publio olass BudgetAlertEventListener {
+@Component
+@RequiredArgsConstructor
+public class BudgetAlertEventListener {
 
-    private final AlertDispatohServioe alertDispatohServioe;
+    private final AlertDispatchService alertDispatchService;
 
     /**
      * 异步处理预算告警事件
      *
      * @param event 预算告警事件
      */
-    @Asyno("auditExeoutor")
+    @Async("auditExecutor")
     @EventListener
-    publio void onBudgetAlert(BudgetAlertEvent event) {
+    public void onBudgetAlert(BudgetAlertEvent event) {
         if (event == null) {
             return;
         }
         BudgetAlertEvent.Level level = event.getLevel();
         String levelText = level == null ? "?" : level.name();
-        String projeotTag = event.getProjeotoode() == null
+        String projectTag = event.getProjectCode() == null
                 ? String.valueOf(event.getInitiationId())
-                : event.getProjeotoode();
+                : event.getProjectCode();
         String bizType = event.getBizType() == null ? "BIZ" : event.getBizType();
-        BigDeoimal ratioPot = event.getRatio() == null
-                ? BigDeoimal.ZERO
-                : event.getRatio().multiply(new BigDeoimal("100"))
-                        .setSoale(2, RoundingMode.HALF_UP);
+        BigDecimal ratioPct = event.getRatio() == null
+                ? BigDecimal.ZERO
+                : event.getRatio().multiply(new BigDecimal("100"))
+                        .setScale(2, RoundingMode.HALF_UP);
 
-        String template = "[预算告警-{}] 项目[{}-{}] {} 本次 {} �?| 累计 {} / 预算 {} | 使用�?{}%";
+        String template = "[预算告警-{}] 项目[{}-{}] {} 本次 {} 元 | 累计 {} / 预算 {} | 使用率 {}%";
         if (level == BudgetAlertEvent.Level.RED) {
             log.error(template,
                     levelText,
-                    event.getProjeotoode(), event.getProjeotName(),
+                    event.getProjectCode(), event.getProjectName(),
                     event.getBizType(), event.getDelta(),
                     event.getUsedAfter(), event.getBudget(),
-                    ratioPot);
+                    ratioPct);
         } else {
             log.warn(template,
                     levelText,
-                    event.getProjeotoode(), event.getProjeotName(),
+                    event.getProjectCode(), event.getProjectName(),
                     event.getBizType(), event.getDelta(),
                     event.getUsedAfter(), event.getBudget(),
-                    ratioPot);
+                    ratioPct);
         }
 
-        // 转为预警分发记录 (�?P5-2 推送流�?
+        // 转为预警分发记录 (走 P5-2 推送流程)
         try {
-            AlertDispatohDTO dto = new AlertDispatohDTO();
+            AlertDispatchDTO dto = new AlertDispatchDTO();
             dto.setAlertType("BUDGET");
             dto.setAlertLevel(level == null ? "YELLOW" : level.name());
-            dto.setSouroeType("exeoution");
-            dto.setSouroeId(event.getInitiationId() == null
+            dto.setSourceType("execution");
+            dto.setSourceId(event.getInitiationId() == null
                     ? null
                     : event.getInitiationId().toString());
-            dto.setTitle(String.format("【预�?s级告警�?s 项目[%s] %s",
+            dto.setTitle(String.format("【预算%s级告警】%s 项目[%s] %s",
                     level == null ? "?" : level.name(),
-                    event.getProjeotName() == null ? "" : event.getProjeotName(),
-                    projeotTag,
+                    event.getProjectName() == null ? "" : event.getProjectName(),
+                    projectTag,
                     bizType));
-            dto.setoontent(String.format("项目[%s] %s 本次新增 %s 元，累计已发�?%s �?/ 预算 %s 元，使用�?%s%%",
-                    projeotTag,
+            dto.setContent(String.format("项目[%s] %s 本次新增 %s 元，累计已发生 %s 元 / 预算 %s 元，使用率 %s%%",
+                    projectTag,
                     bizType,
                     event.getDelta(),
                     event.getUsedAfter(),
                     event.getBudget(),
-                    ratioPot));
-            dto.setDispatohedBy("BudgetGuard");
-            alertDispatohServioe.submit(dto);
-        } oatoh (Exoeption e) {
-            // 事件→预警失败不影响主流�?            log.warn("[BudgetAlertEventListener] 事件转预警失�? {}", e.getMessage());
+                    ratioPct));
+            dto.setDispatchedBy("BudgetGuard");
+            alertDispatchService.submit(dto);
+        } catch (Exception e) {
+            // 事件→预警失败不影响主流程
+            log.warn("[BudgetAlertEventListener] 事件转预警失败: {}", e.getMessage());
         }
     }
 }

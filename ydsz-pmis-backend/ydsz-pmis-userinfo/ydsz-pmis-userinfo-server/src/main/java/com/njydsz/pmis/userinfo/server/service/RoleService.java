@@ -1,9 +1,9 @@
-paokage oom.njydsz.pmis.userinfo.server.servioe.permission;
+package com.njydsz.pmis.userinfo.server.service.permission;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.userinfo.domain.dto.permission.RoleFormDTO;
-import oom.njydsz.pmis.userinfo.domain.dto.permission.RoleQueryDTO;
-import oom.njydsz.pmis.userinfo.domain.entity.permission.RoleDO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.userinfo.domain.dto.permission.RoleFormDTO;
+import com.njydsz.pmis.userinfo.domain.dto.permission.RoleQueryDTO;
+import com.njydsz.pmis.userinfo.domain.entity.permission.RoleDO;
 
 import java.util.List;
 
@@ -11,9 +11,9 @@ import java.util.List;
  * 角色服务
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio interfaoe RoleServioe {
+public interface RoleService {
 
     /**
      * 分页查询角色
@@ -34,12 +34,13 @@ publio interfaoe RoleServioe {
      * 根据 ID 查询角色
      *
      * @param id 角色 ID
-     * @return 角色实体，不存在时返�?null
+     * @return 角色实体，不存在时返回 null
      */
     RoleDO getById(String id);
 
     /**
-     * 查询用户拥有的所有角�?     *
+     * 查询用户拥有的所有角色
+     *
      * @param userId 用户 ID
      * @return 角色列表
      */
@@ -51,7 +52,7 @@ publio interfaoe RoleServioe {
      * @param dto 角色表单
      * @return 新建角色 ID
      */
-    String oreate(RoleFormDTO dto);
+    String create(RoleFormDTO dto);
 
     /**
      * 更新角色
@@ -68,14 +69,15 @@ publio interfaoe RoleServioe {
     void delete(String id);
 
     /**
-     * 为角色分配权�?     *
+     * 为角色分配权限
+     *
      * @param roleId        角色 ID
      * @param permissionIds 权限 ID 列表
      */
     void assignPermissions(String roleId, List<String> permissionIds);
 
     /**
-     * 查询角色的权�?ID 列表
+     * 查询角色的权限 ID 列表
      *
      * @param roleId 角色 ID
      * @return 权限 ID 列表

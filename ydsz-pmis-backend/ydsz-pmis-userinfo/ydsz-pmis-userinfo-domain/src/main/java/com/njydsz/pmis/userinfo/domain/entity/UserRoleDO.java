@@ -1,11 +1,11 @@
-paokage oom.njydsz.pmis.userinfo.domain.entity.user;
+package com.njydsz.pmis.userinfo.domain.entity.user;
 
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
-import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashoode;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
 
@@ -13,15 +13,15 @@ import java.io.Serial;
  * 用户-角色关联
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@EqualsAndHashoode(oallSuper = true)
+@EqualsAndHashCode(callSuper = true)
 @TableName("pmis_user_role")
-publio olass UserRoleDO extends BaseDO {
+public class UserRoleDO extends BaseDO {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)

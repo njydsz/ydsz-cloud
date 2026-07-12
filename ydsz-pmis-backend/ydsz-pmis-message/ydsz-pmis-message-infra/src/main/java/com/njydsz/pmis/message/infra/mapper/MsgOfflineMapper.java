@@ -1,22 +1,22 @@
-paokage oom.njydsz.pmis.message.infra.mapper.oonfig;
+package com.njydsz.pmis.message.infra.mapper.config;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.message.domain.entity.oonfig.MsgOfflineDO;
-import org.apaohe.ibatis.annotations.Mapper;
-import org.apaohe.ibatis.annotations.Param;
-import org.apaohe.ibatis.annotations.Update;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.message.domain.entity.config.MsgOfflineDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 /**
- * P0-3: 离线消息持久�?Mapper
+ * P0-3: 离线消息持久化 Mapper
  *
  * @author ydsz-pmis-team
- * @sinoe 1.3.0
+ * @since 1.3.0
  */
 @Mapper
-publio interfaoe MsgOfflineMapper extends BaseMapper<MsgOfflineDO> {
+public interface MsgOfflineMapper extends BaseMapper<MsgOfflineDO> {
 
     /**
-     * 批量标记已推送�?
+     * 批量标记已推送。
      *
      * @param userId 用户 ID
      * @return 更新行数
@@ -26,7 +26,7 @@ publio interfaoe MsgOfflineMapper extends BaseMapper<MsgOfflineDO> {
     int markPushedByUser(@Param("userId") String userId);
 
     /**
-     * 清理过期消息（状态改�?EXPIRED）�?
+     * 清理过期消息（状态改为 EXPIRED）。
      *
      * @return 更新行数
      */

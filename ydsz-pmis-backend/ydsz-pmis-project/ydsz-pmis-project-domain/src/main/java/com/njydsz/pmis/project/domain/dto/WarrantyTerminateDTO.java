@@ -1,15 +1,15 @@
-paokage oom.njydsz.pmis.projeot.domain.dto;
+package com.njydsz.pmis.project.domain.dto;
 
 import lombok.Data;
 
 /**
- * 质保期终止请�?
+ * 质保期终止请求
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass WarrantyTerminateDTO {
+public class WarrantyTerminateDTO {
     /** 质保单ID */
     private String id;
     /** 提前终止原因 */

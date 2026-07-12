@@ -1,222 +1,222 @@
-paokage oom.njydsz.pmis.oronjob.server.oore.oonfig;
+package com.njydsz.pmis.cronjob.server.core.config;
 
-import oom.njydsz.pmis.oronjob.server.oonfig.oronjobProperties;
-import oom.njydsz.pmis.oronjob.server.oore.dispatoh.DefaultTaskDispatoher;
-import oom.njydsz.pmis.oronjob.server.oore.exeoutor.TenantAwareExeoutorPool;
-import oom.alibaba.naoos.api.oonfig.annotation.NaoosoonfigListener;
-import oom.alibaba.fastjson2.JSON;
-import oom.alibaba.fastjson2.JSONObjeot;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.core.dispatch.DefaultTaskDispatcher;
+import com.njydsz.pmis.cronjob.server.core.executor.TenantAwareExecutorPool;
+import com.alibaba.nacos.api.config.annotation.NacosConfigListener;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 
-import java.util.oonourrent.ThreadPoolExeoutor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
- * 线程池热更新监听器（P0-4）�?
+ * 线程池热更新监听器（P0-4）。
  *
- * <p>监听 Naoos 配置变更，动态调整任务执行线程池的核心参数：
+ * <p>监听 Nacos 配置变更，动态调整任务执行线程池的核心参数：
  * <ul>
- *   <li>{@oode exeoutor.maxoonourrent}：最大并发数（调�?oorePoolSize / maxPoolSize�?/li>
- *   <li>{@oode exeoutor.queueoapaoity}：队列容�?/li>
- *   <li>{@oode exeoutor.isolationStrategy}：租户隔离策略（none / tenant / job_group�?/li>
- *   <li>{@oode exeoutor.tenantPoolSize}：租户隔离线程池大小</li>
- *   <li>{@oode exeoutor.tenantPoolQueueoapaoity}：租户隔离队列容�?/li>
+ *   <li>{@code executor.maxConcurrent}：最大并发数（调整 corePoolSize / maxPoolSize）</li>
+ *   <li>{@code executor.queueCapacity}：队列容量</li>
+ *   <li>{@code executor.isolationStrategy}：租户隔离策略（none / tenant / job_group）</li>
+ *   <li>{@code executor.tenantPoolSize}：租户隔离线程池大小</li>
+ *   <li>{@code executor.tenantPoolQueueCapacity}：租户隔离队列容量</li>
  * </ul>
  *
  * <h3>设计要点</h3>
  * <ul>
- *   <li>通过 {@link ThreadPoolExeoutor#setoorePoolSize} / {@link ThreadPoolExeoutor#setMaximumPoolSize}
+ *   <li>通过 {@link ThreadPoolExecutor#setCorePoolSize} / {@link ThreadPoolExecutor#setMaximumPoolSize}
  *       实现线程池参数的运行时调整，无需重启</li>
- *   <li>队列容量无法动态调整（BlookingQueue 不支�?resize），仅记录新值，下次创建线程池时生效</li>
- *   <li>隔离策略变更时，清空旧的租户线程池缓存，下次 getExeoutor 时按新策略创�?/li>
- *   <li>使用 try-oatoh 包裹，确保配置解析异常不影响应用启动</li>
+ *   <li>队列容量无法动态调整（BlockingQueue 不支持 resize），仅记录新值，下次创建线程池时生效</li>
+ *   <li>隔离策略变更时，清空旧的租户线程池缓存，下次 getExecutor 时按新策略创建</li>
+ *   <li>使用 try-catch 包裹，确保配置解析异常不影响应用启动</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.2.0
+ * @since 1.2.0
  */
 @Slf4j
-@oomponent
-@RequiredArgsoonstruotor
-publio olass ThreadPoolHotUpdateListener {
+@Component
+@RequiredArgsConstructor
+public class ThreadPoolHotUpdateListener {
 
-    private final oronjobProperties oronjobProperties;
-    private final DefaultTaskDispatoher defaultTaskDispatoher;
-    private final TenantAwareExeoutorPool tenantAwareExeoutorPool;
+    private final CronjobProperties cronjobProperties;
+    private final DefaultTaskDispatcher defaultTaskDispatcher;
+    private final TenantAwareExecutorPool tenantAwareExecutorPool;
 
     /**
-     * Naoos 配置变更监听�?
+     * Nacos 配置变更监听。
      *
-     * <p>监听 {@oode pmis-oronjob.yml}（或对应�?dataId），当检测到 exeoutor 相关配置变更时，
-     * 解析新配置并应用到运行中的线程池�?
+     * <p>监听 {@code pmis-cronjob.yml}（或对应的 dataId），当检测到 executor 相关配置变更时，
+     * 解析新配置并应用到运行中的线程池。
      *
-     * @param oonfigInfo Naoos 下发的配置内容（YAML �?JSON�?
+     * @param configInfo Nacos 下发的配置内容（YAML 或 JSON）
      */
-    @NaoosoonfigListener(dataId = "${pmis.oronjob.oonfig-data-id:pmis-oronjob.yml}", timeout = 5000)
-    publio void onoonfigohange(String oonfigInfo) {
-        if (oonfigInfo == null || oonfigInfo.isBlank()) {
+    @NacosConfigListener(dataId = "${pmis.cronjob.config-data-id:pmis-cronjob.yml}", timeout = 5000)
+    public void onConfigChange(String configInfo) {
+        if (configInfo == null || configInfo.isBlank()) {
             return;
         }
-        log.info("[ThreadPoolHotUpdate] 收到配置变更通知, 开始解�?..");
+        log.info("[ThreadPoolHotUpdate] 收到配置变更通知, 开始解析...");
         try {
-            JSONObjeot oonfig = parseoonfig(oonfigInfo);
-            if (oonfig == null) {
+            JSONObject config = parseConfig(configInfo);
+            if (config == null) {
                 return;
             }
-            applyExeoutoroonfigohanges(oonfig);
-        } oatoh (Exoeption e) {
-            log.error("[ThreadPoolHotUpdate] 配置热更新失�? reason={}", e.getMessage(), e);
+            applyExecutorConfigChanges(config);
+        } catch (Exception e) {
+            log.error("[ThreadPoolHotUpdate] 配置热更新失败: reason={}", e.getMessage(), e);
         }
     }
 
     /**
-     * 解析配置内容（支�?JSON 格式）�?
+     * 解析配置内容（支持 JSON 格式）。
      *
-     * <p>YAML 格式�?Naoos 客户端自动转换为 JSON，此处统一�?JSON 解析�?
-     * 兼容两层嵌套：顶�?pmis.oronjob.exeoutor 或直�?exeoutor�?
+     * <p>YAML 格式由 Nacos 客户端自动转换为 JSON，此处统一按 JSON 解析。
+     * 兼容两层嵌套：顶层 pmis.cronjob.executor 或直接 executor。
      *
-     * @param oonfigInfo 配置内容
-     * @return exeoutor 配置 JSON 对象；解析失败返�?null
+     * @param configInfo 配置内容
+     * @return executor 配置 JSON 对象；解析失败返回 null
      */
-    private JSONObjeot parseoonfig(String oonfigInfo) {
+    private JSONObject parseConfig(String configInfo) {
         try {
-            JSONObjeot root = JSON.parseObjeot(oonfigInfo);
-            // 尝试 pmis.oronjob.exeoutor 路径
-            JSONObjeot pmis = root.getJSONObjeot("pmis");
+            JSONObject root = JSON.parseObject(configInfo);
+            // 尝试 pmis.cronjob.executor 路径
+            JSONObject pmis = root.getJSONObject("pmis");
             if (pmis != null) {
-                JSONObjeot oronjob = pmis.getJSONObjeot("oronjob");
-                if (oronjob != null) {
-                    JSONObjeot exeoutor = oronjob.getJSONObjeot("exeoutor");
-                    if (exeoutor != null) {
-                        return exeoutor;
+                JSONObject cronjob = pmis.getJSONObject("cronjob");
+                if (cronjob != null) {
+                    JSONObject executor = cronjob.getJSONObject("executor");
+                    if (executor != null) {
+                        return executor;
                     }
                 }
             }
-            // 尝试直接 oronjob.exeoutor 路径
-            JSONObjeot oronjobDireot = root.getJSONObjeot("oronjob");
-            if (oronjobDireot != null) {
-                JSONObjeot exeoutor = oronjobDireot.getJSONObjeot("exeoutor");
-                if (exeoutor != null) {
-                    return exeoutor;
+            // 尝试直接 cronjob.executor 路径
+            JSONObject cronjobDirect = root.getJSONObject("cronjob");
+            if (cronjobDirect != null) {
+                JSONObject executor = cronjobDirect.getJSONObject("executor");
+                if (executor != null) {
+                    return executor;
                 }
             }
-            // 尝试直接 exeoutor 路径
-            JSONObjeot exeoutorDireot = root.getJSONObjeot("exeoutor");
-            if (exeoutorDireot != null) {
-                return exeoutorDireot;
+            // 尝试直接 executor 路径
+            JSONObject executorDirect = root.getJSONObject("executor");
+            if (executorDirect != null) {
+                return executorDirect;
             }
-            log.debug("[ThreadPoolHotUpdate] 配置中未找到 exeoutor 节点, 跳过");
+            log.debug("[ThreadPoolHotUpdate] 配置中未找到 executor 节点, 跳过");
             return null;
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             log.warn("[ThreadPoolHotUpdate] 配置解析失败: reason={}", e.getMessage());
             return null;
         }
     }
 
     /**
-     * 应用 exeoutor 配置变更到运行中的线程池�?
+     * 应用 executor 配置变更到运行中的线程池。
      *
-     * @param exeoutoroonfig exeoutor 配置 JSON
+     * @param executorConfig executor 配置 JSON
      */
-    private void applyExeoutoroonfigohanges(JSONObjeot exeoutoroonfig) {
-        boolean ohanged = false;
+    private void applyExecutorConfigChanges(JSONObject executorConfig) {
+        boolean changed = false;
 
-        // 1. maxoonourrent �?动态调整全局线程�?
-        Integer newMaxoonourrent = exeoutoroonfig.getInteger("maxoonourrent");
-        if (newMaxoonourrent != null && newMaxoonourrent > 0) {
-            int oldMax = oronjobProperties.getExeoutor().getMaxoonourrent();
-            if (newMaxoonourrent != oldMax) {
-                oronjobProperties.getExeoutor().setMaxoonourrent(newMaxoonourrent);
-                resizeGlobalThreadPool(newMaxoonourrent);
-                ohanged = true;
-                log.info("[ThreadPoolHotUpdate] maxoonourrent: {} -> {}", oldMax, newMaxoonourrent);
+        // 1. maxConcurrent — 动态调整全局线程池
+        Integer newMaxConcurrent = executorConfig.getInteger("maxConcurrent");
+        if (newMaxConcurrent != null && newMaxConcurrent > 0) {
+            int oldMax = cronjobProperties.getExecutor().getMaxConcurrent();
+            if (newMaxConcurrent != oldMax) {
+                cronjobProperties.getExecutor().setMaxConcurrent(newMaxConcurrent);
+                resizeGlobalThreadPool(newMaxConcurrent);
+                changed = true;
+                log.info("[ThreadPoolHotUpdate] maxConcurrent: {} -> {}", oldMax, newMaxConcurrent);
             }
         }
 
-        // 2. queueoapaoity �?记录新值（队列无法 resize，下次创建时生效�?
-        Integer newQueueoapaoity = exeoutoroonfig.getInteger("queueoapaoity");
-        if (newQueueoapaoity != null && newQueueoapaoity >= 0) {
-            int oldQueue = oronjobProperties.getExeoutor().getQueueoapaoity();
-            if (newQueueoapaoity != oldQueue) {
-                oronjobProperties.getExeoutor().setQueueoapaoity(newQueueoapaoity);
-                ohanged = true;
-                log.info("[ThreadPoolHotUpdate] queueoapaoity: {} -> {} (下次创建线程池时生效)", oldQueue, newQueueoapaoity);
+        // 2. queueCapacity — 记录新值（队列无法 resize，下次创建时生效）
+        Integer newQueueCapacity = executorConfig.getInteger("queueCapacity");
+        if (newQueueCapacity != null && newQueueCapacity >= 0) {
+            int oldQueue = cronjobProperties.getExecutor().getQueueCapacity();
+            if (newQueueCapacity != oldQueue) {
+                cronjobProperties.getExecutor().setQueueCapacity(newQueueCapacity);
+                changed = true;
+                log.info("[ThreadPoolHotUpdate] queueCapacity: {} -> {} (下次创建线程池时生效)", oldQueue, newQueueCapacity);
             }
         }
 
-        // 3. isolationStrategy �?变更时清空租户线程池缓存
-        String newStrategy = exeoutoroonfig.getString("isolationStrategy");
+        // 3. isolationStrategy — 变更时清空租户线程池缓存
+        String newStrategy = executorConfig.getString("isolationStrategy");
         if (newStrategy != null && !newStrategy.isBlank()) {
-            String oldStrategy = oronjobProperties.getExeoutor().getIsolationStrategy();
-            if (!newStrategy.equalsIgnoreoase(oldStrategy)) {
-                oronjobProperties.getExeoutor().setIsolationStrategy(newStrategy);
-                tenantAwareExeoutorPool.eviotAllPools();
-                ohanged = true;
-                log.info("[ThreadPoolHotUpdate] isolationStrategy: {} -> {} (已清空旧隔离�?", oldStrategy, newStrategy);
+            String oldStrategy = cronjobProperties.getExecutor().getIsolationStrategy();
+            if (!newStrategy.equalsIgnoreCase(oldStrategy)) {
+                cronjobProperties.getExecutor().setIsolationStrategy(newStrategy);
+                tenantAwareExecutorPool.evictAllPools();
+                changed = true;
+                log.info("[ThreadPoolHotUpdate] isolationStrategy: {} -> {} (已清空旧隔离池)", oldStrategy, newStrategy);
             }
         }
 
-        // 4. tenantPoolSize �?记录新值（已创建的隔离池需 eviot 后重建）
-        Integer newTenantPoolSize = exeoutoroonfig.getInteger("tenantPoolSize");
+        // 4. tenantPoolSize — 记录新值（已创建的隔离池需 evict 后重建）
+        Integer newTenantPoolSize = executorConfig.getInteger("tenantPoolSize");
         if (newTenantPoolSize != null && newTenantPoolSize > 0) {
-            int oldSize = oronjobProperties.getExeoutor().getTenantPoolSize();
+            int oldSize = cronjobProperties.getExecutor().getTenantPoolSize();
             if (newTenantPoolSize != oldSize) {
-                oronjobProperties.getExeoutor().setTenantPoolSize(newTenantPoolSize);
-                tenantAwareExeoutorPool.eviotAllPools();
-                ohanged = true;
-                log.info("[ThreadPoolHotUpdate] tenantPoolSize: {} -> {} (已清空旧隔离�?", oldSize, newTenantPoolSize);
+                cronjobProperties.getExecutor().setTenantPoolSize(newTenantPoolSize);
+                tenantAwareExecutorPool.evictAllPools();
+                changed = true;
+                log.info("[ThreadPoolHotUpdate] tenantPoolSize: {} -> {} (已清空旧隔离池)", oldSize, newTenantPoolSize);
             }
         }
 
-        // 5. tenantPoolQueueoapaoity �?记录新�?
-        Integer newTenantQueueoap = exeoutoroonfig.getInteger("tenantPoolQueueoapaoity");
-        if (newTenantQueueoap != null && newTenantQueueoap >= 0) {
-            int oldoap = oronjobProperties.getExeoutor().getTenantPoolQueueoapaoity();
-            if (newTenantQueueoap != oldoap) {
-                oronjobProperties.getExeoutor().setTenantPoolQueueoapaoity(newTenantQueueoap);
-                tenantAwareExeoutorPool.eviotAllPools();
-                ohanged = true;
-                log.info("[ThreadPoolHotUpdate] tenantPoolQueueoapaoity: {} -> {} (已清空旧隔离�?", oldoap, newTenantQueueoap);
+        // 5. tenantPoolQueueCapacity — 记录新值
+        Integer newTenantQueueCap = executorConfig.getInteger("tenantPoolQueueCapacity");
+        if (newTenantQueueCap != null && newTenantQueueCap >= 0) {
+            int oldCap = cronjobProperties.getExecutor().getTenantPoolQueueCapacity();
+            if (newTenantQueueCap != oldCap) {
+                cronjobProperties.getExecutor().setTenantPoolQueueCapacity(newTenantQueueCap);
+                tenantAwareExecutorPool.evictAllPools();
+                changed = true;
+                log.info("[ThreadPoolHotUpdate] tenantPoolQueueCapacity: {} -> {} (已清空旧隔离池)", oldCap, newTenantQueueCap);
             }
         }
 
-        if (!ohanged) {
-            log.debug("[ThreadPoolHotUpdate] 配置无变�? 跳过");
+        if (!changed) {
+            log.debug("[ThreadPoolHotUpdate] 配置无变化, 跳过");
         } else {
             log.info("[ThreadPoolHotUpdate] 线程池热更新完成");
         }
     }
 
     /**
-     * 动态调整全局执行线程池大小�?
+     * 动态调整全局执行线程池大小。
      *
-     * <p>通过反射获取 DefaultTaskDispatoher �?taskExeoutorPool 字段�?
-     * 调用 setoorePoolSize / setMaximumPoolSize 实现运行时调整�?
+     * <p>通过反射获取 DefaultTaskDispatcher 的 taskExecutorPool 字段，
+     * 调用 setCorePoolSize / setMaximumPoolSize 实现运行时调整。
      *
-     * @param newMaxoonourrent 新的最大并发数
+     * @param newMaxConcurrent 新的最大并发数
      */
-    private void resizeGlobalThreadPool(int newMaxoonourrent) {
+    private void resizeGlobalThreadPool(int newMaxConcurrent) {
         try {
-            ThreadPoolExeoutor pool = defaultTaskDispatoher.getTaskExeoutorPool();
+            ThreadPoolExecutor pool = defaultTaskDispatcher.getTaskExecutorPool();
             if (pool == null) {
-                log.warn("[ThreadPoolHotUpdate] 全局线程池未初始�? 跳过");
+                log.warn("[ThreadPoolHotUpdate] 全局线程池未初始化, 跳过");
                 return;
             }
-            int newoore = Math.max(1, newMaxoonourrent);
-            // 先扩�?max，再调整 oore（避�?oore > max 抛异常）
-            if (newoore > pool.getMaximumPoolSize()) {
-                pool.setMaximumPoolSize(newoore);
-                pool.setoorePoolSize(newoore);
+            int newCore = Math.max(1, newMaxConcurrent);
+            // 先扩大 max，再调整 core（避免 core > max 抛异常）
+            if (newCore > pool.getMaximumPoolSize()) {
+                pool.setMaximumPoolSize(newCore);
+                pool.setCorePoolSize(newCore);
             } else {
-                pool.setoorePoolSize(newoore);
-                pool.setMaximumPoolSize(newoore);
+                pool.setCorePoolSize(newCore);
+                pool.setMaximumPoolSize(newCore);
             }
-            log.info("[ThreadPoolHotUpdate] 全局线程池已调整: oore={} max={} aotive={} queue={}",
-                    pool.getoorePoolSize(), pool.getMaximumPoolSize(),
-                    pool.getAotiveoount(), pool.getQueue().size());
-        } oatoh (Exoeption e) {
-            log.error("[ThreadPoolHotUpdate] 调整全局线程池失�? reason={}", e.getMessage(), e);
+            log.info("[ThreadPoolHotUpdate] 全局线程池已调整: core={} max={} active={} queue={}",
+                    pool.getCorePoolSize(), pool.getMaximumPoolSize(),
+                    pool.getActiveCount(), pool.getQueue().size());
+        } catch (Exception e) {
+            log.error("[ThreadPoolHotUpdate] 调整全局线程池失败: reason={}", e.getMessage(), e);
         }
     }
 }

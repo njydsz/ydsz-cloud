@@ -1,4 +1,4 @@
-paokage oom.njydsz.pmis.message.domain.dto.oonfig;
+package com.njydsz.pmis.message.domain.dto.config;
 
 
 import lombok.Data;
@@ -7,25 +7,25 @@ import lombok.Data;
  * 订阅关系新增/更新 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass SubsoriptionUpsertDTO {
+public class SubscriptionUpsertDTO {
 
     /** 用户 ID */
     private String userId;
 
     /** 主题编码 */
-    private String topiooode;
+    private String topicCode;
 
     /** 通道 */
-    private String ohannel;
+    private String channel;
 
-    /** 订阅状�? SUBSoRIBED/UNSUBSoRIBED */
+    /** 订阅状态: SUBSCRIBED/UNSUBSCRIBED */
     private String status;
 
     /** 角色范围 */
-    private String roleSoope;
+    private String roleScope;
 
     /** 扩展字段 JSON */
     private String extra;

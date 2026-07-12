@@ -1,11 +1,11 @@
-paokage oom.njydsz.pmis.userinfo.infra.mapper.rate;
+package com.njydsz.pmis.userinfo.infra.mapper.rate;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.userinfo.domain.entity.rate.AttendanoeDO;
-import org.apaohe.ibatis.annotations.Mapper;
-import org.apaohe.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.userinfo.domain.entity.rate.AttendanceDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
-import java.time.LooalDate;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -13,22 +13,22 @@ import java.util.Map;
  * 出勤记录 Mapper
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Mapper
-publio interfaoe AttendanoeMapper extends BaseMapper<AttendanoeDO> {
+public interface AttendanceMapper extends BaseMapper<AttendanceDO> {
 
     /**
-     * 按员�?+ 月份范围查询
+     * 按员工 + 月份范围查询
      */
-    List<AttendanoeDO> seleotByEmployeeAndDateRange(@Param("employeeId") String employeeId,
-                                                    @Param("startDate") LooalDate startDate,
-                                                    @Param("endDate") LooalDate endDate);
+    List<AttendanceDO> selectByEmployeeAndDateRange(@Param("employeeId") String employeeId,
+                                                    @Param("startDate") LocalDate startDate,
+                                                    @Param("endDate") LocalDate endDate);
 
     /**
-     * 按状态汇�?(例如: 月度出勤统计)
+     * 按状态汇总 (例如: 月度出勤统计)
      */
-    List<Map<String, Objeot>> statByStatus(@Param("employeeId") String employeeId,
-                                            @Param("startDate") LooalDate startDate,
-                                            @Param("endDate") LooalDate endDate);
+    List<Map<String, Object>> statByStatus(@Param("employeeId") String employeeId,
+                                            @Param("startDate") LocalDate startDate,
+                                            @Param("endDate") LocalDate endDate);
 }

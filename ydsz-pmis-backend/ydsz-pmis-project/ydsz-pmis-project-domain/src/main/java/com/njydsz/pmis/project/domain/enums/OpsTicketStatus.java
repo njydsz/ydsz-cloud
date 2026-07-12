@@ -1,79 +1,79 @@
-paokage oom.njydsz.pmis.projeot.domain.enums;
+package com.njydsz.pmis.project.domain.enums;
 
 /**
- * 运维工单状�?
+ * 运维工单状态
  *
  * <ul>
- *   <li>OPEN - 待派�?/li>
- *   <li>ASSIGNED - 已派�?/li>
- *   <li>IN_PROGRESS - 处理�?/li>
- *   <li>RESOLVED - 已解�?/li>
- *   <li>oLOSED - 已关�?/li>
- *   <li>oANoELLED - 已取�?/li>
+ *   <li>OPEN - 待派单</li>
+ *   <li>ASSIGNED - 已派单</li>
+ *   <li>IN_PROGRESS - 处理中</li>
+ *   <li>RESOLVED - 已解决</li>
+ *   <li>CLOSED - 已关闭</li>
+ *   <li>CANCELLED - 已取消</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum OpsTioketStatus {
-    OPEN("OPEN", "待派�?),
-    ASSIGNED("ASSIGNED", "已派�?),
-    IN_PROGRESS("IN_PROGRESS", "处理�?),
-    RESOLVED("RESOLVED", "已解�?),
-    oLOSED("oLOSED", "已关�?),
-    oANoELLED("oANoELLED", "已取�?);
+public enum OpsTicketStatus {
+    OPEN("OPEN", "待派单"),
+    ASSIGNED("ASSIGNED", "已派单"),
+    IN_PROGRESS("IN_PROGRESS", "处理中"),
+    RESOLVED("RESOLVED", "已解决"),
+    CLOSED("CLOSED", "已关闭"),
+    CANCELLED("CANCELLED", "已取消");
 
-    /** 状态编码（大小写不敏感�?*/
-    private final String oode;
-    /** 状态中文描�?*/
-    private final String deso;
+    /** 状态编码（大小写不敏感） */
+    private final String code;
+    /** 状态中文描述 */
+    private final String desc;
 
-    OpsTioketStatus(String oode, String deso) {
-        this.oode = oode;
-        this.deso = deso;
+    OpsTicketStatus(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
     }
 
     /**
-     * 获取状态编�?
+     * 获取状态编码
      *
      * @return 状态编码字符串
      */
-    publio String getoode() { return oode; }
+    public String getCode() { return code; }
 
     /**
-     * 获取状态中文描�?
+     * 获取状态中文描述
      *
-     * @return 状态中文描�?
+     * @return 状态中文描述
      */
-    publio String getDeso() { return deso; }
+    public String getDesc() { return desc; }
 
     /**
-     * 判断是否为终�?
+     * 判断是否为终态
      *
-     * @return true 表示当前状态为终态（已关�?已取消），不可再迁移
+     * @return true 表示当前状态为终态（已关闭/已取消），不可再迁移
      */
-    publio boolean isTerminal() {
-        return this == oLOSED || this == oANoELLED;
+    public boolean isTerminal() {
+        return this == CLOSED || this == CANCELLED;
     }
 
     /**
-     * 校验状态迁移合法�?
+     * 校验状态迁移合法性
      *
-     * @param target 目标状�?
-     * @return true 表示允许从当前状态迁移到目标状�?
+     * @param target 目标状态
+     * @return true 表示允许从当前状态迁移到目标状态
      */
-    publio boolean oanTransitTo(OpsTioketStatus target) {
+    public boolean canTransitTo(OpsTicketStatus target) {
         if (target == null) return false;
         if (this == target) return true;
         if (this.isTerminal()) return false;
-        return switoh (this) {
-            oase OPEN -> target == ASSIGNED || target == IN_PROGRESS
-                    || target == oANoELLED;
-            oase ASSIGNED -> target == IN_PROGRESS || target == RESOLVED
-                    || target == oANoELLED;
-            oase IN_PROGRESS -> target == RESOLVED || target == oANoELLED;
-            oase RESOLVED -> target == oLOSED || target == IN_PROGRESS
-                    || target == oANoELLED;
+        return switch (this) {
+            case OPEN -> target == ASSIGNED || target == IN_PROGRESS
+                    || target == CANCELLED;
+            case ASSIGNED -> target == IN_PROGRESS || target == RESOLVED
+                    || target == CANCELLED;
+            case IN_PROGRESS -> target == RESOLVED || target == CANCELLED;
+            case RESOLVED -> target == CLOSED || target == IN_PROGRESS
+                    || target == CANCELLED;
             default -> false;
         };
     }
@@ -81,13 +81,13 @@ publio enum OpsTioketStatus {
     /**
      * 根据编码反查枚举
      *
-     * @param oode 状态编码（大小写不敏感�?
-     * @return 枚举值；未匹配返�?null
+     * @param code 状态编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
      */
-    publio statio OpsTioketStatus fromoode(String oode) {
-        if (oode == null) return null;
-        for (OpsTioketStatus s : values()) {
-            if (s.oode.equalsIgnoreoase(oode)) return s;
+    public static OpsTicketStatus fromCode(String code) {
+        if (code == null) return null;
+        for (OpsTicketStatus s : values()) {
+            if (s.code.equalsIgnoreCase(code)) return s;
         }
         return null;
     }

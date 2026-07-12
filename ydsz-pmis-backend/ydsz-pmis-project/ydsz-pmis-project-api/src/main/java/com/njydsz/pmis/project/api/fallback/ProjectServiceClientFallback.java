@@ -1,44 +1,44 @@
-paokage oom.njydsz.pmis.projeot.api.fallbaok;
-import oom.njydsz.pmis.projeot.api.olient.ProjeotServioeolient;
+package com.njydsz.pmis.project.api.fallback;
+import com.njydsz.pmis.project.api.client.ProjectServiceClient;
 
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.oloud.openfeign.FallbaokFaotory;
-import org.springframework.stereotype.oomponent;
+import org.springframework.cloud.openfeign.FallbackFactory;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
 /**
  * 项目执行模块 Feign 降级工厂
  *
- * <p>projeot 服务不可用时返回空数�?Map，避�?Agent 工具级联失败�?
- * Agent 工具在收到空数据时应安全降级（返回零值统�?/ 空列表）�?
+ * <p>project 服务不可用时返回空数据 Map，避免 Agent 工具级联失败。
+ * Agent 工具在收到空数据时应安全降级（返回零值统计 / 空列表）。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0 (P0-5)
+ * @since 1.0.0 (P0-5)
  */
 @Slf4j
-@oomponent
-publio olass ProjeotServioeolientFallbaok implements FallbaokFaotory<ProjeotServioeolient> {
+@Component
+public class ProjectServiceClientFallback implements FallbackFactory<ProjectServiceClient> {
 
     @Override
-    publio ProjeotServioeolient oreate(Throwable oause) {
-        log.warn("[Feign] projeot 服务降级: {}", oause == null ? "?" : oause.getMessage());
-        return new ProjeotServioeolient() {
+    public ProjectServiceClient create(Throwable cause) {
+        log.warn("[Feign] project 服务降级: {}", cause == null ? "?" : cause.getMessage());
+        return new ProjectServiceClient() {
             @Override
-            publio BaseResponse<Map<String, Objeot>> timeEntryAbnormalStat(String initiationId, String month) {
-                return BaseResponse.failed(StandardResultoode.SERVIoE_UNAVAILABLE);
+            public BaseResponse<Map<String, Object>> timeEntryAbnormalStat(String initiationId, String month) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            publio BaseResponse<Map<String, Objeot>> riskPage(int page, int size, String initiationId, String riskLevel) {
-                return BaseResponse.failed(StandardResultoode.SERVIoE_UNAVAILABLE);
+            public BaseResponse<Map<String, Object>> riskPage(int page, int size, String initiationId, String riskLevel) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            publio BaseResponse<Map<String, Objeot>> evmDashboard(String initiationId) {
-                return BaseResponse.failed(StandardResultoode.SERVIoE_UNAVAILABLE);
+            public BaseResponse<Map<String, Object>> evmDashboard(String initiationId) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
         };
     }

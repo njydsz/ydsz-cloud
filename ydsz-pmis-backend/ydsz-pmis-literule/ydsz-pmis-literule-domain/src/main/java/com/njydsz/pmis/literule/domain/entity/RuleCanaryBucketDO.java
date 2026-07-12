@@ -1,38 +1,38 @@
-paokage oom.njydsz.pmis.literule.domain.entity;
+package com.njydsz.pmis.literule.domain.entity;
 
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LooalDate;
-import java.time.LooalDateTime;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 规则灰度分桶统计 DO
  *
- * <p>对应 pmis_rule_oanary_buoket 表，按日聚合每条规则�?PRIMARY/oANARY 桶中的执行次数�?
- * 用于 AB Test 自动回滚判断（比较两桶错误率/触发率）�?
+ * <p>对应 pmis_rule_canary_bucket 表，按日聚合每条规则在 PRIMARY/CANARY 桶中的执行次数。
+ * 用于 AB Test 自动回滚判断（比较两桶错误率/触发率）。
  */
 @Data
-@TableName("pmis_rule_oanary_buoket")
-publio olass RuleoanaryBuoketDO implements Serializable {
+@TableName("pmis_rule_canary_bucket")
+public class RuleCanaryBucketDO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    private String ruleoode;
+    private String ruleCode;
 
-    /** 桶类型：PRIMARY / oANARY */
-    private String buoketType;
+    /** 桶类型：PRIMARY / CANARY */
+    private String bucketType;
 
-    private Long buoketoount;
+    private Long bucketCount;
 
-    private LooalDate statDate;
-    private LooalDateTime updatedAt;
+    private LocalDate statDate;
+    private LocalDateTime updatedAt;
 }

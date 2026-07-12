@@ -1,38 +1,38 @@
-paokage oom.njydsz.pmis.oronjob.api.fallbaok;
+package com.njydsz.pmis.cronjob.api.fallback;
 
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.oronjob.api.olient.oronjobServioeolient;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.cronjob.api.client.CronjobServiceClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.oloud.openfeign.FallbaokFaotory;
-import org.springframework.stereotype.oomponent;
+import org.springframework.cloud.openfeign.FallbackFactory;
+import org.springframework.stereotype.Component;
 
 /**
- * {@link oronjobServioeolient} �?FallbaokFaotory（P1-2 规则与定时任务联动）
+ * {@link CronjobServiceClient} 的 FallbackFactory（P1-2 规则与定时任务联动）
  *
- * <p>�?oronjob 服务不可用时降级返回 null，仅记录 WARN 日志�?
- * 保证规则引擎主流程不受影响�?
+ * <p>当 cronjob 服务不可用时降级返回 null，仅记录 WARN 日志，
+ * 保证规则引擎主流程不受影响。
  *
  * @author ydsz-pmis-team
- * @sinoe 2.1.0
+ * @since 2.1.0
  */
 @Slf4j
-@oomponent
-publio olass oronjobServioeolientFallbaok implements FallbaokFaotory<oronjobServioeolient> {
+@Component
+public class CronjobServiceClientFallback implements FallbackFactory<CronjobServiceClient> {
 
     @Override
-    publio oronjobServioeolient oreate(Throwable oause) {
-        log.warn("[oronjobServioeolient] 降级触发: {}", oause.getMessage());
-        return new oronjobServioeolient() {
+    public CronjobServiceClient create(Throwable cause) {
+        log.warn("[CronjobServiceClient] 降级触发: {}", cause.getMessage());
+        return new CronjobServiceClient() {
             @Override
-            publio BaseResponse<String> trigger(String jobId) {
-                log.warn("[oronjobServioeolient] trigger 降级: jobId={}, reason=oronjob服务不可�?, jobId);
+            public BaseResponse<String> trigger(String jobId) {
+                log.warn("[CronjobServiceClient] trigger 降级: jobId={}, reason=cronjob服务不可用", jobId);
                 return BaseResponse.ok(null);
             }
 
             @Override
-            publio BaseResponse<String> trigger(String jobId, boolean holdLook) {
-                log.warn("[oronjobServioeolient] trigger 降级: jobId={}, holdLook={}, reason=oronjob服务不可�?,
-                        jobId, holdLook);
+            public BaseResponse<String> trigger(String jobId, boolean holdLock) {
+                log.warn("[CronjobServiceClient] trigger 降级: jobId={}, holdLock={}, reason=cronjob服务不可用",
+                        jobId, holdLock);
                 return BaseResponse.ok(null);
             }
         };

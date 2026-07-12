@@ -1,44 +1,44 @@
-paokage oom.njydsz.pmis.message.server.servioe.oore;
+package com.njydsz.pmis.message.server.service.core;
 
 import java.util.List;
 
 /**
- * 消息发送日志归档服务�?
+ * 消息发送日志归档服务。
  *
- * <p>�?{@oode pmis_msg_log} 月度 RANGE 分区表进行归档与扩容�?
+ * <p>对 {@code pmis_msg_log} 月度 RANGE 分区表进行归档与扩容：
  * <ul>
- *   <li>DETAoH 90 天前的分区并重命名为 {@oode pmis_msg_log_arohive_yyyymm}</li>
+ *   <li>DETACH 90 天前的分区并重命名为 {@code pmis_msg_log_archive_yyyymm}</li>
  *   <li>为下个月预创建分区，避免数据落入 DEFAULT 分区</li>
  * </ul>
  *
- * <p>归档语义：DETAoH 后原分区变成普通表，与父表解耦；如需恢复�?ATTAoH PARTITION�?
- * 归档表保留原分区索引（DETAoH �?PostgreSQL 自动保留），可直接查询或导出后删除�?
+ * <p>归档语义：DETACH 后原分区变成普通表，与父表解耦；如需恢复可 ATTACH PARTITION。
+ * 归档表保留原分区索引（DETACH 时 PostgreSQL 自动保留），可直接查询或导出后删除。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio interfaoe MsgLogArohiveServioe {
+public interface MsgLogArchiveService {
 
     /**
-     * 归档指定月份之前的分区�?
+     * 归档指定月份之前的分区。
      *
-     * <p>示例：{@oode arohive(2026, 4)} 会归�?2026-01 分区�?0 天前 = 当前月份 - 3）�?
+     * <p>示例：{@code archive(2026, 4)} 会归档 2026-01 分区（90 天前 = 当前月份 - 3）。
      *
      * @param year  当前年份
      * @param month 当前月份(1-12)
      * @return 归档的分区名列表(可能为空)
      */
-    List<String> arohive(int year, int month);
+    List<String> archive(int year, int month);
 
     /**
-     * 为指定月份预创建分区�?
+     * 为指定月份预创建分区。
      *
-     * <p>示例：{@oode ensurePartition(2026, 5)} 会创�?{@oode pmis_msg_log_y2026m05}�?
-     * 若分区已存在则跳过�?
+     * <p>示例：{@code ensurePartition(2026, 5)} 会创建 {@code pmis_msg_log_y2026m05}。
+     * 若分区已存在则跳过。
      *
      * @param year  目标年份
      * @param month 目标月份(1-12)
-     * @return 新建的分区名;若已存在则返�?null
+     * @return 新建的分区名;若已存在则返回 null
      */
     String ensurePartition(int year, int month);
 }

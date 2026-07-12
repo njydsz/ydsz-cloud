@@ -1,102 +1,111 @@
-paokage oom.njydsz.pmis.projeot.infra.mapper;
+package com.njydsz.pmis.project.infra.mapper;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.projeot.domain.entity.TimeEntryDO;
-import org.apaohe.ibatis.annotations.Mapper;
-import org.apaohe.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.project.domain.entity.TimeEntryDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
-import java.time.LooalDate;
+import java.time.LocalDate;
 import java.util.List;
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 import java.util.Map;
 
 /**
  * 工时录入 Mapper
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Mapper
-publio interfaoe TimeEntryMapper extends BaseMapper<TimeEntryDO> {
+public interface TimeEntryMapper extends BaseMapper<TimeEntryDO> {
 
     /**
-     * 更新工时状�?     *
+     * 更新工时状态
+     *
      * @param id           工时 ID
-     * @param status       目标状�?     * @param approverId   审批�?ID
-     * @param approverName 审批人姓�?     * @param rejeotReason 驳回原因
-     * @return 受影响行�?     */
+     * @param status       目标状态
+     * @param approverId   审批人 ID
+     * @param approverName 审批人姓名
+     * @param rejectReason 驳回原因
+     * @return 受影响行数
+     */
     int updateStatus(@Param("id") String id, @Param("status") String status,
                      @Param("approverId") String approverId, @Param("approverName") String approverName,
-                     @Param("rejeotReason") String rejeotReason);
+                     @Param("rejectReason") String rejectReason);
 
     /**
-     * 按员�?+ 日期范围查询工时列表
+     * 按员工 + 日期范围查询工时列表
      *
      * @param employeeId 员工 ID
      * @param from       起始日期
      * @param to         截止日期
      * @return 工时列表
      */
-    List<TimeEntryDO> seleotByEmployeeAndDateRange(@Param("employeeId") String employeeId,
-                                                    @Param("from") LooalDate from,
-                                                    @Param("to") LooalDate to);
+    List<TimeEntryDO> selectByEmployeeAndDateRange(@Param("employeeId") String employeeId,
+                                                    @Param("from") LocalDate from,
+                                                    @Param("to") LocalDate to);
 
     /**
-     * 按立�?+ 日期范围查询工时列表
+     * 按立项 + 日期范围查询工时列表
      *
      * @param initiationId 立项 ID
      * @param from         起始日期
      * @param to           截止日期
      * @return 工时列表
      */
-    List<TimeEntryDO> seleotByInitiationAndDateRange(@Param("initiationId") String initiationId,
-                                                     @Param("from") LooalDate from,
-                                                     @Param("to") LooalDate to);
+    List<TimeEntryDO> selectByInitiationAndDateRange(@Param("initiationId") String initiationId,
+                                                     @Param("from") LocalDate from,
+                                                     @Param("to") LocalDate to);
 
     /**
-     * �?WBS 任务 ID 查询工时列表
+     * 按 WBS 任务 ID 查询工时列表
      *
      * @param taskId 任务 ID
      * @return 工时列表
      */
-    List<TimeEntryDO> seleotByTask(@Param("taskId") String taskId);
+    List<TimeEntryDO> selectByTask(@Param("taskId") String taskId);
 
     /**
-     * 按状态查询工时列�?     *
-     * @param status 工时状�?     * @return 工时列表
+     * 按状态查询工时列表
+     *
+     * @param status 工时状态
+     * @return 工时列表
      */
-    List<TimeEntryDO> seleotByStatus(@Param("status") String status);
+    List<TimeEntryDO> selectByStatus(@Param("status") String status);
 
     /**
-     * 聚合工时（按人员+职级�?     *
+     * 聚合工时（按人员+职级）
+     *
      * @param initiationId 立项 ID
      * @param from         起始日期
      * @param to           截止日期
      * @return 工时聚合列表
      */
-    List<Map<String, Objeot>> aggregateHoursByEmployeeAndLevel(@Param("initiationId") String initiationId,
-                                                               @Param("from") LooalDate from,
-                                                               @Param("to") LooalDate to);
+    List<Map<String, Object>> aggregateHoursByEmployeeAndLevel(@Param("initiationId") String initiationId,
+                                                               @Param("from") LocalDate from,
+                                                               @Param("to") LocalDate to);
 
     /**
-     * 按天聚合作业时长，用于异常校验（连续 3 �?0 填报�?     *
+     * 按天聚合作业时长，用于异常校验（连续 3 天 0 填报）
+     *
      * @param employeeId 员工 ID
      * @param from       起始日期
      * @param to         截止日期
      * @return 按天聚合列表
      */
-    List<Map<String, Objeot>> aggregateByDay(@Param("employeeId") String employeeId,
-                                             @Param("from") LooalDate from,
-                                             @Param("to") LooalDate to);
+    List<Map<String, Object>> aggregateByDay(@Param("employeeId") String employeeId,
+                                             @Param("from") LocalDate from,
+                                             @Param("to") LocalDate to);
 
     /**
      * 跨项目冲突检测：员工同一天在多个项目填写工时
      *
      * @param employeeId 员工 ID
      * @param entryDate  填报日期
-     * @return 冲突检测结果列�?     */
-    List<Map<String, Objeot>> deteotorossProjeot(@Param("employeeId") String employeeId,
-                                                 @Param("entryDate") LooalDate entryDate);
+     * @return 冲突检测结果列表
+     */
+    List<Map<String, Object>> detectCrossProject(@Param("employeeId") String employeeId,
+                                                 @Param("entryDate") LocalDate entryDate);
 
     /**
      * P4-1 可计费利用率：按员工 × 月份聚合 billable / total / overtime / leave
@@ -105,23 +114,25 @@ publio interfaoe TimeEntryMapper extends BaseMapper<TimeEntryDO> {
      * @param to   截止日期
      * @return 员工可计费利用率聚合列表
      */
-    List<Map<String, Objeot>> aggregateBillableByEmployee(@Param("from") LooalDate from,
-                                                          @Param("to") LooalDate to);
+    List<Map<String, Object>> aggregateBillableByEmployee(@Param("from") LocalDate from,
+                                                          @Param("to") LocalDate to);
 
     /**
-     * P4-1 单员工可计费利用�?     *
+     * P4-1 单员工可计费利用率
+     *
      * @param employeeId 员工 ID
      * @param from       起始日期
      * @param to         截止日期
-     * @return 单员工可计费利用率数�?     */
-    Map<String, Objeot> aggregateBillableOne(@Param("employeeId") String employeeId,
-                                             @Param("from") LooalDate from,
-                                             @Param("to") LooalDate to);
+     * @return 单员工可计费利用率数据
+     */
+    Map<String, Object> aggregateBillableOne(@Param("employeeId") String employeeId,
+                                             @Param("from") LocalDate from,
+                                             @Param("to") LocalDate to);
 
     /**
      * P4-3 已审批工时总小时数
      *
      * @return 已审批工时总小时数
      */
-    BigDeoimal sumApprovedHours();
+    BigDecimal sumApprovedHours();
 }

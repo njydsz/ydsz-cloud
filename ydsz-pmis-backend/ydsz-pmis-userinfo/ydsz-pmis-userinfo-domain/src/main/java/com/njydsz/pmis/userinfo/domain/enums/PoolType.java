@@ -1,52 +1,55 @@
-paokage oom.njydsz.pmis.userinfo.domain.enums.resouroe;
+package com.njydsz.pmis.userinfo.domain.enums.resource;
 
 /**
- * 资源池类�? *
+ * 资源池类型
+ *
  * <ul>
- *   <li>HQ - 总部池（L13+ 高级资源�?/li>
- *   <li>DIVISION - 事业部池（L4-L12 主力资源�?/li>
- *   <li>RESERVE - 备用池（L1-L3 储备/培训资源�?/li>
+ *   <li>HQ - 总部池（L13+ 高级资源）</li>
+ *   <li>DIVISION - 事业部池（L4-L12 主力资源）</li>
+ *   <li>RESERVE - 备用池（L1-L3 储备/培训资源）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum PoolType {
-    HQ("HQ", "总部�?, 1),
+public enum PoolType {
+    HQ("HQ", "总部池", 1),
     DIVISION("DIVISION", "事业部池", 2),
-    RESERVE("RESERVE", "备用�?, 3);
+    RESERVE("RESERVE", "备用池", 3);
 
     /** 枚举编码 */
-    private final String oode;
+    private final String code;
     /** 枚举描述 */
-    private final String deso;
+    private final String desc;
     /** 优先级（数字越小优先级越高） */
     private final int priority;
 
-    PoolType(String oode, String deso, int priority) {
-        this.oode = oode;
-        this.deso = deso;
+    PoolType(String code, String desc, int priority) {
+        this.code = code;
+        this.desc = desc;
         this.priority = priority;
     }
 
-    publio String getoode() { return oode; }
-    publio String getDeso() { return deso; }
-    publio int getPriority() { return priority; }
+    public String getCode() { return code; }
+    public String getDesc() { return desc; }
+    public int getPriority() { return priority; }
 
     /**
      * 按职级推算默认资源池
      *
-     * <p>L13+ �?HQ 池，L4-L12 �?DIVISION 池，其余�?RESERVE 池�?     *
-     * @param leveloode 职级编码（如 L1、L15�?     * @return 推算出的资源池类型；解析失败时返�?RESERVE
+     * <p>L13+ 归 HQ 池，L4-L12 归 DIVISION 池，其余归 RESERVE 池。
+     *
+     * @param levelCode 职级编码（如 L1、L15）
+     * @return 推算出的资源池类型；解析失败时返回 RESERVE
      */
-    publio statio PoolType inferByLevel(String leveloode) {
-        if (leveloode == null || leveloode.length() < 2) return RESERVE;
+    public static PoolType inferByLevel(String levelCode) {
+        if (levelCode == null || levelCode.length() < 2) return RESERVE;
         try {
-            int lv = Integer.parseInt(leveloode.substring(1));
+            int lv = Integer.parseInt(levelCode.substring(1));
             if (lv >= 13) return HQ;
             if (lv >= 4) return DIVISION;
             return RESERVE;
-        } oatoh (NumberFormatExoeption e) {
+        } catch (NumberFormatException e) {
             return RESERVE;
         }
     }
@@ -54,13 +57,13 @@ publio enum PoolType {
     /**
      * 根据编码解析枚举
      *
-     * @param oode 枚举编码（大小写不敏感）
-     * @return 匹配的枚举值；oode �?null 或无匹配时返�?null
+     * @param code 枚举编码（大小写不敏感）
+     * @return 匹配的枚举值；code 为 null 或无匹配时返回 null
      */
-    publio statio PoolType fromoode(String oode) {
-        if (oode == null) return null;
+    public static PoolType fromCode(String code) {
+        if (code == null) return null;
         for (PoolType p : values()) {
-            if (p.oode.equalsIgnoreoase(oode)) return p;
+            if (p.code.equalsIgnoreCase(code)) return p;
         }
         return null;
     }

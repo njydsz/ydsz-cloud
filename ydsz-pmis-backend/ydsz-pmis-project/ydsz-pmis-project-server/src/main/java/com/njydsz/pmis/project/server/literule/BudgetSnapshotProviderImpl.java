@@ -1,165 +1,192 @@
-paokage oom.njydsz.pmis.projeot.server.literule;
+package com.njydsz.pmis.project.server.literule;
 
-import oom.njydsz.pmis.projeot.infra.mapper.oostAllooationMapper;
-import oom.njydsz.pmis.finanoe.api.olient.FinanoeDataolient;
-import oom.njydsz.pmis.projeot.infra.mapper.PurohaseMapper;
-import oom.njydsz.pmis.projeot.server.servioe.InitiationServioe;
-import oom.njydsz.pmis.literule.server.spi.BudgetSnapshotProvider;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
+import com.njydsz.pmis.finance.api.client.FinanceDataClient;
+import com.njydsz.pmis.project.infra.mapper.PurchaseMapper;
+import com.njydsz.pmis.project.server.service.InitiationService;
+import com.njydsz.pmis.literule.server.spi.BudgetSnapshotProvider;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 
-import java.math.BigDeoimal;
-import java.util.oolleotions;
+import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 预算快照提供者实现（exeoution 模块�? *
- * <p>实现 literule 模块�?{@link BudgetSnapshotProvider} SPI 接口�? * 通过 {@link InitiationServioe} 获取立项预算，通过 Mapper 汇总已发生成本�? *
- * <p>说明�? * <ul>
- *   <li>接口�?projeotId �?String 类型，内部转换为 String initiationId 使用</li>
- *   <li>{@link #getPendingAmount} 简化返�?ZERO，实际申请金额由调用方传�?/li>
+ * 预算快照提供者实现（execution 模块）
+ *
+ * <p>实现 literule 模块的 {@link BudgetSnapshotProvider} SPI 接口，
+ * 通过 {@link InitiationService} 获取立项预算，通过 Mapper 汇总已发生成本。
+ *
+ * <p>说明：
+ * <ul>
+ *   <li>接口中 projectId 为 String 类型，内部转换为 String initiationId 使用</li>
+ *   <li>{@link #getPendingAmount} 简化返回 ZERO，实际申请金额由调用方传入</li>
  *   <li>{@link #getBudgetSnapshots} 暂返回空列表，待接入活跃项目列表查询</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
 @Slf4j
-@oomponent
-@RequiredArgsoonstruotor
-publio olass BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
+@Component
+@RequiredArgsConstructor
+public class BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
 
-    private final InitiationServioe initiationServioe;
-    private final PurohaseMapper purohaseMapper;
-    private final FinanoeDataolient finanoeDataolient;
-    private final oostAllooationMapper oostAllooationMapper;
+    private final InitiationService initiationService;
+    private final PurchaseMapper purchaseMapper;
+    private final FinanceDataClient financeDataClient;
+    private final CostAllocationMapper costAllocationMapper;
 
     /**
      * 获取项目预算总额
      *
-     * <p>通过 {@link InitiationServioe} 查询立项预算快照，提�?budgetAmount 字段�?     *
-     * @param projeotId 项目 ID（对应立�?initiationId 的字符串形式�?     * @return 预算总额；不存在或服务不可用返回 {@link BigDeoimal#ZERO}
+     * <p>通过 {@link InitiationService} 查询立项预算快照，提取 budgetAmount 字段。
+     *
+     * @param projectId 项目 ID（对应立项 initiationId 的字符串形式）
+     * @return 预算总额；不存在或服务不可用返回 {@link BigDecimal#ZERO}
      */
     @Override
-    publio BigDeoimal getTotalBudget(String projeotId) {
-        String initiationId = parseInitiationId(projeotId);
+    public BigDecimal getTotalBudget(String projectId) {
+        String initiationId = parseInitiationId(projectId);
         if (initiationId == null) {
-            return BigDeoimal.ZERO;
+            return BigDecimal.ZERO;
         }
-        Map<String, Objeot> snap = safeBudgetSnapshot(initiationId);
+        Map<String, Object> snap = safeBudgetSnapshot(initiationId);
         if (snap == null) {
-            log.warn("[BudgetSnapshotProvider] 项目 {} 预算快照不可用，返回 ZERO", projeotId);
-            return BigDeoimal.ZERO;
+            log.warn("[BudgetSnapshotProvider] 项目 {} 预算快照不可用，返回 ZERO", projectId);
+            return BigDecimal.ZERO;
         }
-        BigDeoimal budget = toBigDeoimal(snap.get("budgetAmount"));
-        return budget == null ? BigDeoimal.ZERO : budget;
+        BigDecimal budget = toBigDecimal(snap.get("budgetAmount"));
+        return budget == null ? BigDecimal.ZERO : budget;
     }
 
     /**
-     * 获取项目已发生成本（采购 + 费用 + 成本分摊�?     *
-     * <p>汇总三�?Mapper �?sumByInitiation 结果�?     * <ul>
-     *   <li>{@link PurohaseMapper#sumByInitiation(Long)} 采购已发生金�?/li>
-     *   <li>{@link ExpenseMapper#sumByInitiation(Long)} 费用已发生金�?/li>
-     *   <li>{@link oostAllooationMapper#sumByInitiation(Long)} 已归集成本金�?/li>
+     * 获取项目已发生成本（采购 + 费用 + 成本分摊）
+     *
+     * <p>汇总三个 Mapper 的 sumByInitiation 结果：
+     * <ul>
+     *   <li>{@link PurchaseMapper#sumByInitiation(Long)} 采购已发生金额</li>
+     *   <li>{@link ExpenseMapper#sumByInitiation(Long)} 费用已发生金额</li>
+     *   <li>{@link CostAllocationMapper#sumByInitiation(Long)} 已归集成本金额</li>
      * </ul>
      *
-     * @param projeotId 项目 ID（对应立�?initiationId 的字符串形式�?     * @return 已发生成本；查询失败返回 {@link BigDeoimal#ZERO}
+     * @param projectId 项目 ID（对应立项 initiationId 的字符串形式）
+     * @return 已发生成本；查询失败返回 {@link BigDecimal#ZERO}
      */
     @Override
-    publio BigDeoimal getInourredoost(String projeotId) {
-        String initiationId = parseInitiationId(projeotId);
+    public BigDecimal getIncurredCost(String projectId) {
+        String initiationId = parseInitiationId(projectId);
         if (initiationId == null) {
-            return BigDeoimal.ZERO;
+            return BigDecimal.ZERO;
         }
-        BigDeoimal purohaseUsed = nz(purohaseMapper.sumByInitiation(initiationId));
-        BigDeoimal expenseUsed = nz(finanoeDataolient.sumExpense(initiationId, null).getData());
-        BigDeoimal allooatedUsed = nz(oostAllooationMapper.sumByInitiation(initiationId));
-        BigDeoimal inourred = purohaseUsed.add(expenseUsed).add(allooatedUsed);
-        log.debug("[BudgetSnapshotProvider] 项目 {} 已发生成�? 采购 {} + 费用 {} + 已归�?{} = {}",
-                projeotId, purohaseUsed, expenseUsed, allooatedUsed, inourred);
-        return inourred;
+        BigDecimal purchaseUsed = nz(purchaseMapper.sumByInitiation(initiationId));
+        BigDecimal expenseUsed = nz(financeDataClient.sumExpense(initiationId, null).getData());
+        BigDecimal allocatedUsed = nz(costAllocationMapper.sumByInitiation(initiationId));
+        BigDecimal incurred = purchaseUsed.add(expenseUsed).add(allocatedUsed);
+        log.debug("[BudgetSnapshotProvider] 项目 {} 已发生成本: 采购 {} + 费用 {} + 已归集 {} = {}",
+                projectId, purchaseUsed, expenseUsed, allocatedUsed, incurred);
+        return incurred;
     }
 
     /**
      * 获取项目本次申请金额
      *
-     * <p>简化实现：始终返回 {@link BigDeoimal#ZERO}�?     * 实际申请金额由调用方通过 {@oode getUsageRatio(projeotId, pendingAmount)} �?     * pendingAmount 参数传入，无需通过此方法查询�?     *
-     * @param projeotId 项目 ID
-     * @param requestId 申请�?ID
-     * @return 申请金额（简化返�?ZERO�?     */
+     * <p>简化实现：始终返回 {@link BigDecimal#ZERO}。
+     * 实际申请金额由调用方通过 {@code getUsageRatio(projectId, pendingAmount)} 的
+     * pendingAmount 参数传入，无需通过此方法查询。
+     *
+     * @param projectId 项目 ID
+     * @param requestId 申请单 ID
+     * @return 申请金额（简化返回 ZERO）
+     */
     @Override
-    publio BigDeoimal getPendingAmount(String projeotId, String requestId) {
-        // 设计说明：实际申请金额由调用方通过 getUsageRatio(projeotId, pendingAmount) �?pendingAmount 参数传入�?        // 此方法仅作为 SPI 契约的占位，始终返回 ZERO
-        return BigDeoimal.ZERO;
+    public BigDecimal getPendingAmount(String projectId, String requestId) {
+        // 设计说明：实际申请金额由调用方通过 getUsageRatio(projectId, pendingAmount) 的 pendingAmount 参数传入，
+        // 此方法仅作为 SPI 契约的占位，始终返回 ZERO
+        return BigDecimal.ZERO;
     }
 
     /**
-     * 获取全部预算预警相关项目的快�?     *
-     * <p>当前为简化实现，返回空列表�?     * 完整实现需通过 {@link InitiationServioe} 批量查询活跃项目列表�?     * 或查询本地表获取所�?initiationId 后逐个汇总�?     *
-     * @return 项目预算快照列表（当前返回空列表�?     */
+     * 获取全部预算预警相关项目的快照
+     *
+     * <p>当前为简化实现，返回空列表。
+     * 完整实现需通过 {@link InitiationService} 批量查询活跃项目列表，
+     * 或查询本地表获取所有 initiationId 后逐个汇总。
+     *
+     * @return 项目预算快照列表（当前返回空列表）
+     */
     @Override
-    publio List<BudgetSnapshot> getBudgetSnapshots() {
-        // P3 待实现：需通过 InitiationServioe 批量查询活跃项目列表，或查询本地 initiation 表获取所有活�?initiationId 后逐个汇总预算快�?        log.debug("[BudgetSnapshotProvider] getBudgetSnapshots 暂未实现，返回空列表");
-        return oolleotions.emptyList();
+    public List<BudgetSnapshot> getBudgetSnapshots() {
+        // P3 待实现：需通过 InitiationService 批量查询活跃项目列表，或查询本地 initiation 表获取所有活跃 initiationId 后逐个汇总预算快照
+        log.debug("[BudgetSnapshotProvider] getBudgetSnapshots 暂未实现，返回空列表");
+        return Collections.emptyList();
     }
 
     // -------------------- 内部工具方法 --------------------
 
     /**
-     * �?projeotId（String）解析为 initiationId（Long�?     *
-     * @param projeotId 项目 ID 字符�?     * @return 立项 ID；解析失败返�?null
+     * 将 projectId（String）解析为 initiationId（Long）
+     *
+     * @param projectId 项目 ID 字符串
+     * @return 立项 ID；解析失败返回 null
      */
-    private String parseInitiationId(String projeotId) {
-        if (projeotId == null || projeotId.isBlank()) {
+    private String parseInitiationId(String projectId) {
+        if (projectId == null || projectId.isBlank()) {
             return null;
         }
-        return projeotId.trim();
+        return projectId.trim();
     }
 
     /**
-     * 安全获取预算快照（本�?Servioe 调用 + try-oatoh 降级�?     *
-     * <p>P1-9 重构：原通过 InitiationServioeolient Feign 自调�?projeot 服务自身�?     * 现改为直接注�?{@link InitiationServioe} 走本地调用，保留 try-oatoh 以防数据库异常降级�?     *
+     * 安全获取预算快照（本地 Service 调用 + try-catch 降级）
+     *
+     * <p>P1-9 重构：原通过 InitiationServiceClient Feign 自调用 project 服务自身，
+     * 现改为直接注入 {@link InitiationService} 走本地调用，保留 try-catch 以防数据库异常降级。
+     *
      * @param initiationId 项目立项 ID
-     * @return 预算快照 Map；服务不可用或返回空时返�?null
+     * @return 预算快照 Map；服务不可用或返回空时返回 null
      */
-    private Map<String, Objeot> safeBudgetSnapshot(String initiationId) {
+    private Map<String, Object> safeBudgetSnapshot(String initiationId) {
         try {
-            Map<String, Objeot> snap = initiationServioe.budgetSnapshot(initiationId);
+            Map<String, Object> snap = initiationService.budgetSnapshot(initiationId);
             if (snap == null || snap.isEmpty()) {
-                log.warn("[BudgetSnapshotProvider] budgetSnapshot 返回�? initiationId={}", initiationId);
+                log.warn("[BudgetSnapshotProvider] budgetSnapshot 返回空: initiationId={}", initiationId);
                 return null;
             }
             return snap;
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             log.warn("[BudgetSnapshotProvider] budgetSnapshot 调用异常，已降级: {}", e.getMessage());
             return null;
         }
     }
 
     /**
-     * 空值转�?     *
-     * @param v 原始�?     * @return 非空原值；null 返回 {@link BigDeoimal#ZERO}
+     * 空值转零
+     *
+     * @param v 原始值
+     * @return 非空原值；null 返回 {@link BigDecimal#ZERO}
      */
-    private statio BigDeoimal nz(BigDeoimal v) {
-        return v == null ? BigDeoimal.ZERO : v;
+    private static BigDecimal nz(BigDecimal v) {
+        return v == null ? BigDecimal.ZERO : v;
     }
 
     /**
-     * 对象�?BigDeoimal
+     * 对象转 BigDecimal
      *
      * @param o 原始对象
-     * @return BigDeoimal 值；无法转换返回 null
+     * @return BigDecimal 值；无法转换返回 null
      */
-    private statio BigDeoimal toBigDeoimal(Objeot o) {
+    private static BigDecimal toBigDecimal(Object o) {
         if (o == null) return null;
-        if (o instanoeof BigDeoimal) return (BigDeoimal) o;
-        if (o instanoeof Number) return new BigDeoimal(o.toString());
+        if (o instanceof BigDecimal) return (BigDecimal) o;
+        if (o instanceof Number) return new BigDecimal(o.toString());
         try {
-            return new BigDeoimal(o.toString());
-        } oatoh (Exoeption e) {
-            log.warn("[BudgetSnapshotProviderImpl] BigDeoimal 转换失败 o={}: {}", o, e.getMessage());
+            return new BigDecimal(o.toString());
+        } catch (Exception e) {
+            log.warn("[BudgetSnapshotProviderImpl] BigDecimal 转换失败 o={}: {}", o, e.getMessage());
             return null;
         }
     }

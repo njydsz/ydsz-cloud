@@ -1,73 +1,73 @@
-paokage oom.njydsz.pmis.projeot.domain.entity;
+package com.njydsz.pmis.project.domain.entity;
 
-import oom.baomidou.mybatisplus.annotation.FieldFill;
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableField;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDeoimal;
-import java.time.LooalDate;
-import java.time.LooalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
- * 对外报价费率（Rate oard�?
+ * 对外报价费率（Rate Card）
  *
- * <p>�?(职级 × 项目类型 × 客户等级) 三维度定义每�?每小时报价�?
+ * <p>按 (职级 × 项目类型 × 客户等级) 三维度定义每日/每小时报价。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@TableName("pmis_rate_oard")
-publio olass RateoardDO implements Serializable {
+@TableName("pmis_rate_card")
+public class RateCardDO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 主键ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
     /** 业务编号 */
-    private String rateoode;
+    private String rateCode;
     /** 职级 L1-L18 */
-    private String leveloode;
-    /** 项目类型：ProjeotType.oode */
-    private String projeotType;
-    /** 客户等级：A/B/o/D */
-    private String oustomerLevel;
+    private String levelCode;
+    /** 项目类型：ProjectType.code */
+    private String projectType;
+    /** 客户等级：A/B/C/D */
+    private String customerLevel;
     /** 计费单位：DAY/HOUR */
     private String billingUnit;
     /** 报价金额 */
-    private BigDeoimal rateAmount;
+    private BigDecimal rateAmount;
     /** 币种：CNY/USD/EUR */
-    private String ourrenoy;
+    private String currency;
     /** 生效日期 */
-    private LooalDate effeotiveDate;
+    private LocalDate effectiveDate;
     /** 失效日期 */
-    private LooalDate expiryDate;
-    /** 状态：AoTIVE/INAoTIVE */
+    private LocalDate expiryDate;
+    /** 状态：ACTIVE/INACTIVE */
     private String status;
     /** 备注 */
     private String remark;
     /** 租户ID */
     private String tenantId;
     /** 链路追踪ID */
-    private String providerTraoeId;
+    private String providerTraceId;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
-    private LooalDateTime oreatedAt;
+    private LocalDateTime createdAt;
 
     /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LooalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
-    /** 逻辑删除标志�? 已删�?/ 0 未删�?*/
+    /** 逻辑删除标志：1 已删除 / 0 未删除 */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

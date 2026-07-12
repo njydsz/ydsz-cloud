@@ -1,7 +1,7 @@
-paokage oom.njydsz.pmis.message.server.servioe.oonfig;
+package com.njydsz.pmis.message.server.service.config;
 
-import oom.njydsz.pmis.message.domain.dto.oonfig.PreferenoeUpsertDTO;
-import oom.njydsz.pmis.message.domain.entity.oonfig.MsgPreferenoeDO;
+import com.njydsz.pmis.message.domain.dto.config.PreferenceUpsertDTO;
+import com.njydsz.pmis.message.domain.entity.config.MsgPreferenceDO;
 
 import java.util.List;
 
@@ -9,33 +9,35 @@ import java.util.List;
  * 用户消息偏好服务
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio interfaoe PreferenoeServioe {
+public interface PreferenceService {
 
     /**
-     * 新增或更新用户偏�?     *
+     * 新增或更新用户偏好
+     *
      * @param dto 偏好参数
      * @return 偏好实体
      */
-    MsgPreferenoeDO upsert(PreferenoeUpsertDTO dto);
+    MsgPreferenceDO upsert(PreferenceUpsertDTO dto);
 
     /**
-     * 按用�?+ 通道 + 业务类型查询偏好
+     * 按用户 + 通道 + 业务类型查询偏好
      *
      * @param userId  用户 ID
-     * @param ohannel 通道
+     * @param channel 通道
      * @param bizType 业务类型
      * @return 偏好实体
      */
-    MsgPreferenoeDO getByUser(String userId, String ohannel, String bizType);
+    MsgPreferenceDO getByUser(String userId, String channel, String bizType);
 
     /**
-     * 查询用户所有偏�?     *
+     * 查询用户所有偏好
+     *
      * @param userId 用户 ID
      * @return 偏好列表
      */
-    List<MsgPreferenoeDO> listByUser(String userId);
+    List<MsgPreferenceDO> listByUser(String userId);
 
     /**
      * 删除偏好(逻辑删除)

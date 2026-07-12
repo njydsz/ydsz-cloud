@@ -1,94 +1,94 @@
-paokage oom.njydsz.pmis.sales.domain.enums;
+package com.njydsz.pmis.sales.domain.enums;
 
 /**
  * 商机状态机
  *
- * <p>状态转移图�?
+ * <p>状态转移图：
  * <pre>
- *   FOLLOWING ──�?QUOTED ──�?NEGOTIATING ──�?WON ──�?oONVERTED
- *      �?           �?             �?          �?
- *      �?           �?             �?          �?
+ *   FOLLOWING ──► QUOTED ──► NEGOTIATING ──► WON ──► CONVERTED
+ *      │            │              │           │
+ *      ▼            ▼              ▼           ▼
  *    LOST        LOST/INVALID   LOST         LOST
- *      �?
- *      �?
+ *      │
+ *      ▼
  *   INVALID
  * </pre>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum OpportunityStatus {
+public enum OpportunityStatus {
 
-    FOLLOWING("FOLLOWING", "跟进�?),
-    QUOTED("QUOTED", "已报�?),
+    FOLLOWING("FOLLOWING", "跟进中"),
+    QUOTED("QUOTED", "已报价"),
     NEGOTIATING("NEGOTIATING", "商务谈判"),
-    WON("WON", "已赢�?),
-    oONVERTED("oONVERTED", "已转立项"),
-    LOST("LOST", "已输�?),
+    WON("WON", "已赢单"),
+    CONVERTED("CONVERTED", "已转立项"),
+    LOST("LOST", "已输单"),
     INVALID("INVALID", "无效");
 
-    private final String oode;
-    private final String deso;
+    private final String code;
+    private final String desc;
 
-    OpportunityStatus(String oode, String deso) {
-        this.oode = oode;
-        this.deso = deso;
+    OpportunityStatus(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
     }
 
-    publio String getoode() {
-        return oode;
+    public String getCode() {
+        return code;
     }
 
-    publio String getDeso() {
-        return deso;
-    }
-
-    /**
-     * 判断当前状态是否为终态（不可再迁移）�?
-     *
-     * @return 终态返�?true，否则返�?false
-     */
-    publio boolean isTerminal() {
-        return this == oONVERTED || this == LOST || this == INVALID;
+    public String getDesc() {
+        return desc;
     }
 
     /**
-     * 判断是否允许从当前状态迁移到目标状态�?
+     * 判断当前状态是否为终态（不可再迁移）。
      *
-     * <p>终态不可迁移；非终态可迁移�?LOST/INVALID；WON 可迁移到 oONVERTED�?
-     *
-     * @param target 目标状态，�?null 时返�?false
-     * @return 允许迁移返回 true，否则返�?false
+     * @return 终态返回 true，否则返回 false
      */
-    publio boolean oanTransitTo(OpportunityStatus target) {
+    public boolean isTerminal() {
+        return this == CONVERTED || this == LOST || this == INVALID;
+    }
+
+    /**
+     * 判断是否允许从当前状态迁移到目标状态。
+     *
+     * <p>终态不可迁移；非终态可迁移到 LOST/INVALID；WON 可迁移到 CONVERTED。
+     *
+     * @param target 目标状态，为 null 时返回 false
+     * @return 允许迁移返回 true，否则返回 false
+     */
+    public boolean canTransitTo(OpportunityStatus target) {
         if (target == null) return false;
         if (this == target) return true;
-        if (this.isTerminal()) return false;  // 终态不能迁�?
-        // 任何非终态可以转�?LOST/INVALID
+        if (this.isTerminal()) return false;  // 终态不能迁移
+        // 任何非终态可以转为 LOST/INVALID
         if (target == LOST || target == INVALID) return true;
-        // WON 可转�?oONVERTED
-        if (this == WON && target == oONVERTED) return true;
-        return switoh (this) {
-            oase FOLLOWING -> target == QUOTED || target == NEGOTIATING
+        // WON 可转为 CONVERTED
+        if (this == WON && target == CONVERTED) return true;
+        return switch (this) {
+            case FOLLOWING -> target == QUOTED || target == NEGOTIATING
                     || target == LOST || target == INVALID;
-            oase QUOTED -> target == NEGOTIATING || target == WON
+            case QUOTED -> target == NEGOTIATING || target == WON
                     || target == LOST || target == INVALID;
-            oase NEGOTIATING -> target == WON || target == LOST || target == INVALID;
-            oase WON -> target == oONVERTED;
+            case NEGOTIATING -> target == WON || target == LOST || target == INVALID;
+            case WON -> target == CONVERTED;
             default -> false;
         };
     }
 
     /**
-     * 根据状态码解析枚举�?
+     * 根据状态码解析枚举。
      *
-     * @param oode 状态码，大小写不敏感，�?null 时返�?null
-     * @return 匹配到的枚举值；未匹配返�?null
+     * @param code 状态码，大小写不敏感，为 null 时返回 null
+     * @return 匹配到的枚举值；未匹配返回 null
      */
-    publio statio OpportunityStatus fromoode(String oode) {
-        if (oode == null) return null;
+    public static OpportunityStatus fromCode(String code) {
+        if (code == null) return null;
         for (OpportunityStatus s : values()) {
-            if (s.oode.equalsIgnoreoase(oode)) return s;
+            if (s.code.equalsIgnoreCase(code)) return s;
         }
         return null;
     }

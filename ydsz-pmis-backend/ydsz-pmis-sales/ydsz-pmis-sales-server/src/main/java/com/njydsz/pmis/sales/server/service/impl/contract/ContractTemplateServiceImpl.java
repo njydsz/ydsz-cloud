@@ -1,190 +1,190 @@
-paokage oom.njydsz.pmis.sales.server.servioe.impl.oontraot;
+package com.njydsz.pmis.sales.server.service.impl.contract;
 
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.sales.domain.dto.oontraotTemplateoreateDTO;
-import oom.njydsz.pmis.sales.domain.dto.oontraotTemplateStatusDTO;
-import oom.njydsz.pmis.sales.domain.entity.oontraotTemplateDO;
-import oom.njydsz.pmis.sales.domain.enums.oontraotTemplateStatus;
-import oom.njydsz.pmis.sales.domain.enums.oontraotTemplateType;
-import oom.njydsz.pmis.sales.infra.mapper.oontraotTemplateMapper;
-import oom.njydsz.pmis.sales.server.servioe.oontraot.oontraotTemplateServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.sales.domain.dto.ContractTemplateCreateDTO;
+import com.njydsz.pmis.sales.domain.dto.ContractTemplateStatusDTO;
+import com.njydsz.pmis.sales.domain.entity.ContractTemplateDO;
+import com.njydsz.pmis.sales.domain.enums.ContractTemplateStatus;
+import com.njydsz.pmis.sales.domain.enums.ContractTemplateType;
+import com.njydsz.pmis.sales.infra.mapper.ContractTemplateMapper;
+import com.njydsz.pmis.sales.server.service.contract.ContractTemplateService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
  * 合同模板服务实现
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass oontraotTemplateServioeImpl implements oontraotTemplateServioe {
+@Service
+@RequiredArgsConstructor
+public class ContractTemplateServiceImpl implements ContractTemplateService {
 
     /** 合同模板 Mapper */
-    private final oontraotTemplateMapper templateMapper;
+    private final ContractTemplateMapper templateMapper;
 
     /**
-     * 创建合同模板�?
-     * <p>默认版本�?1.0.0、默认状�?DRAFT；租�?ID 缺失时填充默认值�?/p>
+     * 创建合同模板。
+     * <p>默认版本号 1.0.0、默认状态 DRAFT；租户 ID 缺失时填充默认值。</p>
      *
      * @param dto 模板创建参数
      * @return 模板 ID
-     * @throws SysExoeption 模板编码重复或参数非法时抛出
+     * @throws SysException 模板编码重复或参数非法时抛出
      */
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio String oreate(oontraotTemplateoreateDTO dto) {
+    @Transactional(rollbackFor = Exception.class)
+    public String create(ContractTemplateCreateDTO dto) {
         validate(dto);
-        if (templateMapper.seleotByoode(dto.getTemplateoode()) != null) {
-            throw new SysExoeption(StandardResultoode.DUPLIoATE_KEY,
-                    "error.projeot.msg_ba4811d9", dto.getTemplateoode());
+        if (templateMapper.selectByCode(dto.getTemplateCode()) != null) {
+            throw new SysException(StandardResultCode.DUPLICATE_KEY,
+                    "error.project.msg_ba4811d9", dto.getTemplateCode());
         }
-        oontraotTemplateDO t = new oontraotTemplateDO();
-        BeanUtils.oopyProperties(dto, t);
+        ContractTemplateDO t = new ContractTemplateDO();
+        BeanUtils.copyProperties(dto, t);
         if (!StringUtils.hasText(t.getVersion())) t.setVersion("1.0.0");
-        if (!StringUtils.hasText(t.getStatus())) t.setStatus(oontraotTemplateStatus.DRAFT.getoode());
-        if (t.getTenantId() == null) t.setTenantId(Tenantoontext.getTenantId());
+        if (!StringUtils.hasText(t.getStatus())) t.setStatus(ContractTemplateStatus.DRAFT.getCode());
+        if (t.getTenantId() == null) t.setTenantId(TenantContext.getTenantId());
         templateMapper.insert(t);
-        log.info("[oontraotTemplate] 创建模板: oode={} type={}",
-                t.getTemplateoode(), t.getoontraotType());
+        log.info("[ContractTemplate] 创建模板: code={} type={}",
+                t.getTemplateCode(), t.getContractType());
         return t.getId();
     }
 
     /**
-     * 模板状态迁移（遵循 oontraotTemplateStatus 状态机）�?
-     * <p>PUBLISHED �?DRAFT 视为重新编辑，仍允许�?/p>
+     * 模板状态迁移（遵循 ContractTemplateStatus 状态机）。
+     * <p>PUBLISHED → DRAFT 视为重新编辑，仍允许。</p>
      *
-     * @param dto 状态迁移参�?
-     * @throws SysExoeption 模板不存在、目标状态未知或迁移路径非法时抛�?
+     * @param dto 状态迁移参数
+     * @throws SysException 模板不存在、目标状态未知或迁移路径非法时抛出
      */
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void ohangeStatus(oontraotTemplateStatusDTO dto) {
-        oontraotTemplateDO t = getById(dto.getId());
-        oontraotTemplateStatus from = oontraotTemplateStatus.fromoode(t.getStatus());
-        oontraotTemplateStatus to = oontraotTemplateStatus.fromoode(dto.getTargetStatus());
+    @Transactional(rollbackFor = Exception.class)
+    public void changeStatus(ContractTemplateStatusDTO dto) {
+        ContractTemplateDO t = getById(dto.getId());
+        ContractTemplateStatus from = ContractTemplateStatus.fromCode(t.getStatus());
+        ContractTemplateStatus to = ContractTemplateStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_7bo741o6", dto.getTargetStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_2e33226a", t.getStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_2e33226a", t.getStatus());
         }
-        if (!from.oanTransitTo(to)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
-                    "error.projeot.msg_01o65a70", from.getDeso(), to.getDeso());
+        if (!from.canTransitTo(to)) {
+            throw new SysException(StandardResultCode.BAD_REQUEST,
+                    "error.project.msg_01c65a70", from.getDesc(), to.getDesc());
         }
-        // PUBLISHED -> DRAFT 视为重新编辑（仍允许�?
-        templateMapper.updateStatus(t.getId(), to.getoode());
-        log.info("[oontraotTemplate] 状态迁�? id={} {} -> {}", t.getId(), from.getoode(), to.getoode());
+        // PUBLISHED -> DRAFT 视为重新编辑（仍允许）
+        templateMapper.updateStatus(t.getId(), to.getCode());
+        log.info("[ContractTemplate] 状态迁移: id={} {} -> {}", t.getId(), from.getCode(), to.getCode());
     }
 
     /**
-     * 删除模板（逻辑删除）�?
-     * <p>已发布（PUBLISHED）模板不能直接删除，需先下线�?/p>
+     * 删除模板（逻辑删除）。
+     * <p>已发布（PUBLISHED）模板不能直接删除，需先下线。</p>
      *
      * @param id 模板 ID
-     * @throws SysExoeption 模板不存在或处于已发布状态时抛出
+     * @throws SysException 模板不存在或处于已发布状态时抛出
      */
     @Override
-    publio void delete(String id) {
-        oontraotTemplateDO t = getById(id);
-        oontraotTemplateStatus st = oontraotTemplateStatus.fromoode(t.getStatus());
-        if (st == oontraotTemplateStatus.PUBLISHED) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_0b4fd49f");
+    public void delete(String id) {
+        ContractTemplateDO t = getById(id);
+        ContractTemplateStatus st = ContractTemplateStatus.fromCode(t.getStatus());
+        if (st == ContractTemplateStatus.PUBLISHED) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_0b4fd49f");
         }
         templateMapper.deleteById(id);
-        log.info("[oontraotTemplate] 删除模板: id={}", id);
+        log.info("[ContractTemplate] 删除模板: id={}", id);
     }
 
     /**
-     * 根据模板 ID 查询模板详情�?
+     * 根据模板 ID 查询模板详情。
      *
      * @param id 模板 ID
      * @return 模板实体
-     * @throws SysExoeption 模板不存在时抛出
+     * @throws SysException 模板不存在时抛出
      */
     @Override
-    @Transaotional(readOnly = true)
-    publio oontraotTemplateDO getById(String id) {
-        oontraotTemplateDO t = templateMapper.seleotById(id);
+    @Transactional(readOnly = true)
+    public ContractTemplateDO getById(String id) {
+        ContractTemplateDO t = templateMapper.selectById(id);
         if (t == null) {
-            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.projeot.msg_e8185aa1");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_e8185aa1");
         }
         return t;
     }
 
     /**
-     * 分页查询合同模板，按创建时间倒序�?
+     * 分页查询合同模板，按创建时间倒序。
      *
      * @param page         页码（从 1 开始）
      * @param size         每页大小
      * @param keyword      关键词（编码/名称），可空
-     * @param oontraotType 合同类型，可�?
+     * @param contractType 合同类型，可空
      * @param status       模板状态，可空
      * @return 分页结果
      */
     @Override
-    @Transaotional(readOnly = true)
-    publio Page<oontraotTemplateDO> page(int page, int size, String keyword,
-                                         String oontraotType, String status) {
-        Page<oontraotTemplateDO> p = new Page<>(page, size);
-        LambdaQueryWrapper<oontraotTemplateDO> w = new LambdaQueryWrapper<>();
+    @Transactional(readOnly = true)
+    public Page<ContractTemplateDO> page(int page, int size, String keyword,
+                                         String contractType, String status) {
+        Page<ContractTemplateDO> p = new Page<>(page, size);
+        LambdaQueryWrapper<ContractTemplateDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
-            w.and(qw -> qw.like(oontraotTemplateDO::getTemplateoode, keyword)
-                    .or().like(oontraotTemplateDO::getTemplateName, keyword));
+            w.and(qw -> qw.like(ContractTemplateDO::getTemplateCode, keyword)
+                    .or().like(ContractTemplateDO::getTemplateName, keyword));
         }
-        if (StringUtils.hasText(oontraotType)) w.eq(oontraotTemplateDO::getoontraotType, oontraotType);
-        if (StringUtils.hasText(status)) w.eq(oontraotTemplateDO::getStatus, status);
-        w.orderByDeso(oontraotTemplateDO::getoreatedAt);
-        return templateMapper.seleotPage(p, w);
+        if (StringUtils.hasText(contractType)) w.eq(ContractTemplateDO::getContractType, contractType);
+        if (StringUtils.hasText(status)) w.eq(ContractTemplateDO::getStatus, status);
+        w.orderByDesc(ContractTemplateDO::getCreatedAt);
+        return templateMapper.selectPage(p, w);
     }
 
     /**
-     * 按合同类型查询模板列表�?
+     * 按合同类型查询模板列表。
      *
-     * @param oontraotType 合同类型，可�?
+     * @param contractType 合同类型，可空
      * @param status       模板状态，可空
      * @return 模板列表
      */
     @Override
-    @Transaotional(readOnly = true)
-    publio List<oontraotTemplateDO> listByType(String oontraotType, String status) {
-        return templateMapper.seleotByType(oontraotType, status);
+    @Transactional(readOnly = true)
+    public List<ContractTemplateDO> listByType(String contractType, String status) {
+        return templateMapper.selectByType(contractType, status);
     }
 
     /**
-     * 校验合同模板创建参数�?
+     * 校验合同模板创建参数。
      *
      * @param dto 模板创建参数
-     * @throws SysExoeption 参数为空、合同类型非法、账期为负或违约金比例越界时抛出
+     * @throws SysException 参数为空、合同类型非法、账期为负或违约金比例越界时抛出
      */
-    private void validate(oontraotTemplateoreateDTO dto) {
+    private void validate(ContractTemplateCreateDTO dto) {
         if (dto == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_d9712a58");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
-        if (oontraotTemplateType.fromoode(dto.getoontraotType()) == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_d8bb22ao", dto.getoontraotType());
+        if (ContractTemplateType.fromCode(dto.getContractType()) == null) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d8bb22ac", dto.getContractType());
         }
         if (dto.getDefaultPaymentDays() != null && dto.getDefaultPaymentDays() < 0) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_435fof5a");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_435fcf5a");
         }
         if (dto.getDefaultPenaltyRate() != null) {
-            BigDeoimal r = dto.getDefaultPenaltyRate();
-            if (r.signum() < 0 || r.oompareTo(BigDeoimal.ONE) > 0) {
-                throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.projeot.msg_200ob0f7");
+            BigDecimal r = dto.getDefaultPenaltyRate();
+            if (r.signum() < 0 || r.compareTo(BigDecimal.ONE) > 0) {
+                throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_200cb0f7");
             }
         }
     }

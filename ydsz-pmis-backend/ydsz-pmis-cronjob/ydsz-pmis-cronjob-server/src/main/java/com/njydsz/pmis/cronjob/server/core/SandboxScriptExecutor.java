@@ -1,122 +1,122 @@
-paokage oom.njydsz.pmis.oronjob.server.oore.exeoutor;
+package com.njydsz.pmis.cronjob.server.core.executor;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.faotory.annotation.Value;
-import org.springframework.stereotype.oomponent;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.oonourrent.TimeUnit;
+import java.util.concurrent.TimeUnit;
 
 /**
- * 沙箱脚本执行器（P3-11 脚本执行沙箱）�?
+ * 沙箱脚本执行器（P3-11 脚本执行沙箱）。
  *
  * <p>在受限环境中执行 SHELL/GLUE 脚本，提供安全隔离：
  * <ul>
  *   <li>超时控制：脚本执行超过指定时间后强制终止</li>
  *   <li>工作目录隔离：在临时目录中执行，限制文件访问范围</li>
  *   <li>环境变量白名单：仅传递指定的环境变量</li>
- *   <li>输出捕获：捕�?stdout/stderr 并限制大�?/li>
- *   <li>进程隔离：使�?ProoessBuilder 独立进程执行</li>
+ *   <li>输出捕获：捕获 stdout/stderr 并限制大小</li>
+ *   <li>进程隔离：使用 ProcessBuilder 独立进程执行</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
 @Slf4j
-@oomponent
-publio olass SandboxSoriptExeoutor {
+@Component
+public class SandboxScriptExecutor {
 
-    @Value("${pmis.oronjob.sandbox.timeout-seoonds:300}")
-    private int defaultTimeoutSeoonds;
+    @Value("${pmis.cronjob.sandbox.timeout-seconds:300}")
+    private int defaultTimeoutSeconds;
 
-    @Value("${pmis.oronjob.sandbox.max-output-size:1048576}")
+    @Value("${pmis.cronjob.sandbox.max-output-size:1048576}")
     private int maxOutputSize;
 
-    @Value("${pmis.oronjob.sandbox.work-dir:./data/sandbox}")
+    @Value("${pmis.cronjob.sandbox.work-dir:./data/sandbox}")
     private String workDir;
 
     /**
-     * 在沙箱中执行脚本�?
+     * 在沙箱中执行脚本。
      *
-     * @param soriptoontent  脚本内容
-     * @param soriptType     脚本类型: SHELL / PYTHON
-     * @param timeoutSeoonds 超时时间（秒�?
+     * @param scriptContent  脚本内容
+     * @param scriptType     脚本类型: SHELL / PYTHON
+     * @param timeoutSeconds 超时时间（秒）
      * @param envVars        环境变量（白名单传递）
      * @return 执行结果
      */
-    publio SandboxResult exeoute(String soriptoontent, String soriptType,
-                                  int timeoutSeoonds, java.util.Map<String, String> envVars) {
-        Path soriptFile = null;
+    public SandboxResult execute(String scriptContent, String scriptType,
+                                  int timeoutSeconds, java.util.Map<String, String> envVars) {
+        Path scriptFile = null;
         try {
             // 创建临时工作目录
             Path sandboxDir = Path.of(workDir, "sandbox-" + System.nanoTime());
-            Files.oreateDireotories(sandboxDir);
+            Files.createDirectories(sandboxDir);
 
             // 写入脚本文件
-            String fileExtension = "PYTHON".equalsIgnoreoase(soriptType) ? ".py" : ".sh";
-            soriptFile = sandboxDir.resolve("soript" + fileExtension);
-            Files.writeString(soriptFile, soriptoontent);
-            soriptFile.toFile().setExeoutable(true);
+            String fileExtension = "PYTHON".equalsIgnoreCase(scriptType) ? ".py" : ".sh";
+            scriptFile = sandboxDir.resolve("script" + fileExtension);
+            Files.writeString(scriptFile, scriptContent);
+            scriptFile.toFile().setExecutable(true);
 
             // 构建执行命令
-            ProoessBuilder pb;
-            if ("PYTHON".equalsIgnoreoase(soriptType)) {
-                pb = new ProoessBuilder("python3", soriptFile.toString());
+            ProcessBuilder pb;
+            if ("PYTHON".equalsIgnoreCase(scriptType)) {
+                pb = new ProcessBuilder("python3", scriptFile.toString());
             } else {
-                pb = new ProoessBuilder("bash", soriptFile.toString());
+                pb = new ProcessBuilder("bash", scriptFile.toString());
             }
-            pb.direotory(sandboxDir.toFile());
-            pb.redireotErrorStream(true);
+            pb.directory(sandboxDir.toFile());
+            pb.redirectErrorStream(true);
 
-            // 设置白名单环境变�?
-            pb.environment().olear();
+            // 设置白名单环境变量
+            pb.environment().clear();
             if (envVars != null) {
                 pb.environment().putAll(envVars);
             }
-            // 保留必要�?PATH
+            // 保留必要的 PATH
             pb.environment().put("PATH", System.getenv("PATH"));
 
             // 启动进程
-            Prooess prooess = pb.start();
-            int effeotiveTimeout = timeoutSeoonds > 0 ? timeoutSeoonds : defaultTimeoutSeoonds;
+            Process process = pb.start();
+            int effectiveTimeout = timeoutSeconds > 0 ? timeoutSeconds : defaultTimeoutSeconds;
 
             // 读取输出（限制大小）
             StringBuilder output = new StringBuilder();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(prooess.getInputStream()))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     if (output.length() + line.length() > maxOutputSize) {
-                        output.append("\n[OUTPUT TRUNoATED]");
+                        output.append("\n[OUTPUT TRUNCATED]");
                         break;
                     }
                     output.append(line).append("\n");
                 }
             }
 
-            // 等待完成或超�?
-            boolean finished = prooess.waitFor(effeotiveTimeout, TimeUnit.SEoONDS);
+            // 等待完成或超时
+            boolean finished = process.waitFor(effectiveTimeout, TimeUnit.SECONDS);
             if (!finished) {
-                prooess.destroyForoibly();
-                return new SandboxResult(false, output.toString(), "Soript timed out after " + effeotiveTimeout + "s", -1);
+                process.destroyForcibly();
+                return new SandboxResult(false, output.toString(), "Script timed out after " + effectiveTimeout + "s", -1);
             }
 
-            int exitoode = prooess.exitValue();
-            boolean suooess = exitoode == 0;
-            String errorMsg = suooess ? null : "Soript exited with oode " + exitoode;
-            return new SandboxResult(suooess, output.toString(), errorMsg, exitoode);
-        } oatoh (Exoeption e) {
-            log.error("[Sandbox] 脚本执行异常: type={} reason={}", soriptType, e.getMessage(), e);
-            return new SandboxResult(false, "", e.getolass().getSimpleName() + ": " + e.getMessage(), -1);
+            int exitCode = process.exitValue();
+            boolean success = exitCode == 0;
+            String errorMsg = success ? null : "Script exited with code " + exitCode;
+            return new SandboxResult(success, output.toString(), errorMsg, exitCode);
+        } catch (Exception e) {
+            log.error("[Sandbox] 脚本执行异常: type={} reason={}", scriptType, e.getMessage(), e);
+            return new SandboxResult(false, "", e.getClass().getSimpleName() + ": " + e.getMessage(), -1);
         } finally {
             // 清理临时文件
-            if (soriptFile != null) {
+            if (scriptFile != null) {
                 try {
-                    Files.deleteIfExists(soriptFile);
-                    Files.deleteIfExists(soriptFile.getParent());
-                } oatoh (Exoeption ignored) {
+                    Files.deleteIfExists(scriptFile);
+                    Files.deleteIfExists(scriptFile.getParent());
+                } catch (Exception ignored) {
                     // 清理失败不影响主流程
                 }
             }
@@ -124,8 +124,8 @@ publio olass SandboxSoriptExeoutor {
     }
 
     /**
-     * 沙箱执行结果�?
+     * 沙箱执行结果。
      */
-    publio reoord SandboxResult(boolean suooess, String output, String errorMessage, int exitoode) {
+    public record SandboxResult(boolean success, String output, String errorMessage, int exitCode) {
     }
 }

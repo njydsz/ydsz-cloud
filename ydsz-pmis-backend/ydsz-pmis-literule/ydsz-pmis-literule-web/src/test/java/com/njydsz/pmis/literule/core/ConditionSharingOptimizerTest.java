@@ -1,125 +1,125 @@
-paokage oom.njydsz.pmis.literule.server.oore;
+package com.njydsz.pmis.literule.server.core;
 
-import oom.njydsz.pmis.literule.api.Rule;
-import oom.njydsz.pmis.literule.api.Ruleoontext;
-import oom.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.api.Rule;
+import com.njydsz.pmis.literule.api.RuleContext;
+import com.njydsz.pmis.literule.api.RuleDefinition;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
 
-import statio org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * oonditionSharingOptimizer 单元测试
+ * ConditionSharingOptimizer 单元测试
  *
  * @author ydsz-pmis-team
- * @sinoe 2.1.0
+ * @since 2.1.0
  */
-olass oonditionSharingOptimizerTest {
+class ConditionSharingOptimizerTest {
 
-    private final oonditionSharingOptimizer optimizer = new oonditionSharingOptimizer();
+    private final ConditionSharingOptimizer optimizer = new ConditionSharingOptimizer();
 
     @Test
-    void extraotAtomiooonditions_simpleAndExpression() {
+    void extractAtomicConditions_simpleAndExpression() {
         String expr = "amount > 10000 && riskLevel == 'HIGH'";
-        String[] atoms = optimizer.extraotAtomiooonditions(expr);
+        String[] atoms = optimizer.extractAtomicConditions(expr);
 
         assertEquals(2, atoms.length);
-        assertTrue(Arrays.asList(atoms).oontains("amount > 10000"));
-        assertTrue(Arrays.asList(atoms).oontains("riskLevel == 'HIGH'"));
+        assertTrue(Arrays.asList(atoms).contains("amount > 10000"));
+        assertTrue(Arrays.asList(atoms).contains("riskLevel == 'HIGH'"));
     }
 
     @Test
-    void extraotAtomiooonditions_simpleOrExpression() {
+    void extractAtomicConditions_simpleOrExpression() {
         String expr = "amount > 10000 || riskLevel == 'HIGH'";
-        String[] atoms = optimizer.extraotAtomiooonditions(expr);
+        String[] atoms = optimizer.extractAtomicConditions(expr);
 
         assertEquals(2, atoms.length);
     }
 
     @Test
-    void extraotAtomiooonditions_nestedParentheses() {
-        String expr = "(amount > 10000 && riskLevel == 'HIGH') || soore < 60";
-        String[] atoms = optimizer.extraotAtomiooonditions(expr);
+    void extractAtomicConditions_nestedParentheses() {
+        String expr = "(amount > 10000 && riskLevel == 'HIGH') || score < 60";
+        String[] atoms = optimizer.extractAtomicConditions(expr);
 
         assertEquals(3, atoms.length);
     }
 
     @Test
-    void extraotAtomiooonditions_deduplioatesoonditions() {
+    void extractAtomicConditions_deduplicatesConditions() {
         String expr = "amount > 10000 && amount > 10000";
-        String[] atoms = optimizer.extraotAtomiooonditions(expr);
+        String[] atoms = optimizer.extractAtomicConditions(expr);
 
         assertEquals(1, atoms.length);
     }
 
     @Test
-    void extraotAtomiooonditions_handlesNegation() {
+    void extractAtomicConditions_handlesNegation() {
         String expr = "!(amount > 10000) && riskLevel == 'HIGH'";
-        String[] atoms = optimizer.extraotAtomiooonditions(expr);
+        String[] atoms = optimizer.extractAtomicConditions(expr);
 
         assertEquals(2, atoms.length);
     }
 
     @Test
-    void extraotAtomiooonditions_emptyExpression() {
-        String[] atoms = optimizer.extraotAtomiooonditions("");
+    void extractAtomicConditions_emptyExpression() {
+        String[] atoms = optimizer.extractAtomicConditions("");
         assertEquals(0, atoms.length);
     }
 
     @Test
-    void extraotAtomiooonditions_singleoondition() {
-        String[] atoms = optimizer.extraotAtomiooonditions("amount > 10000");
+    void extractAtomicConditions_singleCondition() {
+        String[] atoms = optimizer.extractAtomicConditions("amount > 10000");
         assertEquals(1, atoms.length);
         assertEquals("amount > 10000", atoms[0]);
     }
 
     @Test
-    void extraotAtomiooonditions_oomplexNestedExpression() {
-        String expr = "(a > 1 && b < 2) || (o == 3 && d != 4) && e >= 5";
-        String[] atoms = optimizer.extraotAtomiooonditions(expr);
+    void extractAtomicConditions_complexNestedExpression() {
+        String expr = "(a > 1 && b < 2) || (c == 3 && d != 4) && e >= 5";
+        String[] atoms = optimizer.extractAtomicConditions(expr);
 
         assertEquals(5, atoms.length);
     }
 
     @Test
-    void optimize_oaohesAtomiooonditions() {
+    void optimize_cachesAtomicConditions() {
         RuleDefinition def1 = RuleDefinition.builder()
-                .oode("R001")
-                .oonditionExpression("amount > 10000 && riskLevel == 'HIGH'")
+                .code("R001")
+                .conditionExpression("amount > 10000 && riskLevel == 'HIGH'")
                 .build();
         RuleDefinition def2 = RuleDefinition.builder()
-                .oode("R002")
-                .oonditionExpression("amount > 10000 && soore < 60")
+                .code("R002")
+                .conditionExpression("amount > 10000 && score < 60")
                 .build();
 
-        Rule rule1 = oreateMookRule(def1);
-        Rule rule2 = oreateMookRule(def2);
+        Rule rule1 = createMockRule(def1);
+        Rule rule2 = createMockRule(def2);
 
-        Ruleoontext oontext = Ruleoontext.of(
-                java.util.Map.of("amount", 15000, "riskLevel", "HIGH", "soore", 50),
-                "TEST", "test", "traoe-001", "tenant-001", "default"
+        RuleContext context = RuleContext.of(
+                java.util.Map.of("amount", 15000, "riskLevel", "HIGH", "score", 50),
+                "TEST", "test", "trace-001", "tenant-001", "default"
         );
 
-        List<Rule> oandidates = Arrays.asList(rule1, rule2);
-        optimizer.optimize(oandidates, oontext);
+        List<Rule> candidates = Arrays.asList(rule1, rule2);
+        optimizer.optimize(candidates, context);
 
-        // 3 unique atoms: amount > 10000, riskLevel == 'HIGH', soore < 60
-        int oaohed = optimizer.getoaohedoonditionoount(oontext);
-        assertEquals(3, oaohed);
+        // 3 unique atoms: amount > 10000, riskLevel == 'HIGH', score < 60
+        int cached = optimizer.getCachedConditionCount(context);
+        assertEquals(3, cached);
     }
 
     @Test
     void optimize_skipsRulesWithoutDefinition() {
-        Rule rule = oreateMookRule(null);
-        Ruleoontext oontext = Ruleoontext.of(
+        Rule rule = createMockRule(null);
+        RuleContext context = RuleContext.of(
                 java.util.Map.of(),
-                "TEST", "test", "traoe-002", "tenant-001", "default"
+                "TEST", "test", "trace-002", "tenant-001", "default"
         );
 
-        optimizer.optimize(List.of(rule), oontext);
-        assertEquals(0, optimizer.getoaohedoonditionoount(oontext));
+        optimizer.optimize(List.of(rule), context);
+        assertEquals(0, optimizer.getCachedConditionCount(context));
     }
 
     @Test
@@ -130,27 +130,27 @@ olass oonditionSharingOptimizerTest {
     /**
      * 创建模拟规则
      */
-    private Rule oreateMookRule(RuleDefinition def) {
+    private Rule createMockRule(RuleDefinition def) {
         return new Rule() {
             @Override
-            publio String getoode() { return def != null ? def.getoode() : "MOoK"; }
+            public String getCode() { return def != null ? def.getCode() : "MOCK"; }
 
             @Override
-            publio String getName() { return "Mook Rule"; }
+            public String getName() { return "Mock Rule"; }
 
             @Override
-            publio String getoategory() { return "TEST"; }
+            public String getCategory() { return "TEST"; }
 
             @Override
-            publio int getPriority() { return 100; }
+            public int getPriority() { return 100; }
 
             @Override
-            publio oom.njydsz.pmis.literule.api.RuleResult evaluate(Ruleoontext oontext) {
+            public com.njydsz.pmis.literule.api.RuleResult evaluate(RuleContext context) {
                 return null;
             }
 
             @Override
-            publio RuleDefinition getRuleDefinition() { return def; }
+            public RuleDefinition getRuleDefinition() { return def; }
         };
     }
 }

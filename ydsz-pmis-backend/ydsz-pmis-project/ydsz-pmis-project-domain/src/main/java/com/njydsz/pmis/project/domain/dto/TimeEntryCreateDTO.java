@@ -1,31 +1,31 @@
-paokage oom.njydsz.pmis.projeot.domain.dto;
+package com.njydsz.pmis.project.domain.dto;
 
 import lombok.Data;
-import java.math.BigDeoimal;
-import java.time.LooalDate;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * 工时录入 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass TimeEntryoreateDTO {
-    private LooalDate entryDate;
+public class TimeEntryCreateDTO {
+    private LocalDate entryDate;
     private String employeeId;
     private String employeeName;
-    private String leveloode;
+    private String levelCode;
     private String initiationId;
     private String initiationName;
     private String taskId;
     private String taskName;
-    private BigDeoimal hours;
-    private BigDeoimal overtime;
+    private BigDecimal hours;
+    private BigDecimal overtime;
     private String workType;
-    private String desoription;
-    /** 费率�?ID（可选，前端不传由后端自动匹配） */
+    private String description;
+    /** 费率卡 ID（可选，前端不传由后端自动匹配） */
     private String rateId;
-    /** 人天费率（可选，前端只读展示，由后端自动匹配填入�?*/
-    private BigDeoimal rate;
+    /** 人天费率（可选，前端只读展示，由后端自动匹配填入） */
+    private BigDecimal rate;
 }

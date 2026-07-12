@@ -1,39 +1,39 @@
-paokage oom.njydsz.pmis.agent.domain.dto.tool;
+package com.njydsz.pmis.agent.domain.dto.tool;
 
-import io.swagger.v3.oas.annotations.media.Sohema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
- * 工具市场查询 DTO（P2-12 落地）�?
+ * 工具市场查询 DTO（P2-12 落地）。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0 (P2-12)
+ * @since 1.0.0 (P2-12)
  */
 @Data
-@Sohema(desoription = "工具市场查询条件")
-publio olass ToolMarketQueryDTO {
+@Schema(description = "工具市场查询条件")
+public class ToolMarketQueryDTO {
 
     /** 工具名称（模糊匹配） */
-    @Sohema(desoription = "工具名称（模糊匹配）")
+    @Schema(description = "工具名称（模糊匹配）")
     private String toolName;
 
     /** 工具分类 */
-    @Sohema(desoription = "工具分类")
-    private String oategory;
+    @Schema(description = "工具分类")
+    private String category;
 
     /** 来源类型：MANUAL / OPENAPI */
-    @Sohema(desoription = "来源类型")
-    private String souroeType;
+    @Schema(description = "来源类型")
+    private String sourceType;
 
     /** 是否启用 */
-    @Sohema(desoription = "是否启用")
+    @Schema(description = "是否启用")
     private Boolean enabled;
 
-    /** 页码（默�?1�?*/
-    @Sohema(desoription = "页码", example = "1")
+    /** 页码（默认 1） */
+    @Schema(description = "页码", example = "1")
     private Integer page;
 
-    /** 每页大小（默�?20�?*/
-    @Sohema(desoription = "每页大小", example = "20")
+    /** 每页大小（默认 20） */
+    @Schema(description = "每页大小", example = "20")
     private Integer size;
 }

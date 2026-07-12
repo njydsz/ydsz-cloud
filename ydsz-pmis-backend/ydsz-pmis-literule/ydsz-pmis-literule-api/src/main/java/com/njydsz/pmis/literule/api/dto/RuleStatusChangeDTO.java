@@ -1,30 +1,33 @@
-paokage oom.njydsz.pmis.literule.api.dto;
+package com.njydsz.pmis.literule.api.dto;
 
-import io.swagger.v3.oas.annotations.media.Sohema;
-import jakarta.validation.oonstraints.NotBlank;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 /**
  * 规则状态变更请求体 DTO
  *
- * <p>用于 {@oode /rules/{ruleoode}/status} 接口，切换规则生命周期状�? * （DRAFT / REVIEW / PUBLISHED / ARoHIVED 等）�? *
+ * <p>用于 {@code /rules/{ruleCode}/status} 接口，切换规则生命周期状态
+ * （DRAFT / REVIEW / PUBLISHED / ARCHIVED 等）。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
 @Data
-@Sohema(desoription = "规则状态变更请求体")
-publio olass RuleStatusohangeDTO {
+@Schema(description = "规则状态变更请求体")
+public class RuleStatusChangeDTO {
 
     /**
-     * 目标状态（RuleStatus 枚举名，�?PUBLISHED / ARoHIVED�?     */
-    @Sohema(desoription = "目标状态（RuleStatus 枚举名）", requiredMode = Sohema.RequiredMode.REQUIRED,
+     * 目标状态（RuleStatus 枚举名，如 PUBLISHED / ARCHIVED）
+     */
+    @Schema(description = "目标状态（RuleStatus 枚举名）", requiredMode = Schema.RequiredMode.REQUIRED,
             example = "PUBLISHED")
-    @NotBlank(message = "{validation.projeot.msg_8304of7d}")
+    @NotBlank(message = "{validation.project.msg_8304cf7d}")
     private String targetStatus;
 
     /**
-     * 变更备注（审批意�?驳回理由等，可选）
+     * 变更备注（审批意见/驳回理由等，可选）
      */
-    @Sohema(desoription = "变更备注")
-    private String oomment;
+    @Schema(description = "变更备注")
+    private String comment;
 }

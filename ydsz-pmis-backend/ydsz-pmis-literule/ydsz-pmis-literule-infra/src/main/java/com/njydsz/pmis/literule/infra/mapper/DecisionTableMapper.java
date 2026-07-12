@@ -1,15 +1,15 @@
-paokage oom.njydsz.pmis.literule.infra.mapper;
+package com.njydsz.pmis.literule.infra.mapper;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.literule.domain.entity.DeoisionTableDO;
-import org.apaohe.ibatis.annotations.Mapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.literule.domain.entity.DecisionTableDO;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 决策�?Mapper
+ * 决策表 Mapper
  *
  * @author ydsz-pmis
- * @sinoe 2026-07-02
+ * @since 2026-07-02
  */
 @Mapper
-publio interfaoe DeoisionTableMapper extends BaseMapper<DeoisionTableDO> {
+public interface DecisionTableMapper extends BaseMapper<DecisionTableDO> {
 }

@@ -1,63 +1,69 @@
-paokage oom.njydsz.pmis.message.server.event;
+package com.njydsz.pmis.message.server.event;
 
-import oom.njydsz.pmis.message.server.oonfig.MessageProperties;
-import org.springframework.oontext.ApplioationEvent;
+import com.njydsz.pmis.message.server.config.MessageProperties;
+import org.springframework.context.ApplicationEvent;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 
 /**
- * 死信告警事件（P1-4）�? *
- * <p>当指定时间窗口内某通道死信数量达到 {@link MessageProperties.DeadLetterAlertoonfig#getThreshold()}
- * 时由 {@oode MessageLogServioeImpl.markDead} 发布，由 {@link DeadLetterAlertListener}
- * 消费执行告警动作（日志告�?/ 钉钉机器�?/ 邮件等，可扩展）�? *
+ * 死信告警事件（P1-4）。
+ *
+ * <p>当指定时间窗口内某通道死信数量达到 {@link MessageProperties.DeadLetterAlertConfig#getThreshold()}
+ * 时由 {@code MessageLogServiceImpl.markDead} 发布，由 {@link DeadLetterAlertListener}
+ * 消费执行告警动作（日志告警 / 钉钉机器人 / 邮件等，可扩展）。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio olass DeadLetterAlertEvent extends ApplioationEvent {
+public class DeadLetterAlertEvent extends ApplicationEvent {
 
     /** 触发告警的通道 */
-    private final String ohannel;
-    /** 窗口内当前死信数�?*/
-    private final long ourrentoount;
-    /** 告警阈�?*/
+    private final String channel;
+    /** 窗口内当前死信数量 */
+    private final long currentCount;
+    /** 告警阈值 */
     private final int threshold;
     /** 统计窗口（分钟） */
     private final int windowMinutes;
     /** 触发时间 */
-    private final LooalDateTime triggeredAt;
+    private final LocalDateTime triggeredAt;
 
     /**
-     * 构造死信告警事件�?     *
-     * @param souroe       事件�?     * @param ohannel      触发告警的通道
-     * @param ourrentoount 窗口内当前死信数�?     * @param threshold    告警阈�?     * @param windowMinutes 统计窗口（分钟）
+     * 构造死信告警事件。
+     *
+     * @param source       事件源
+     * @param channel      触发告警的通道
+     * @param currentCount 窗口内当前死信数量
+     * @param threshold    告警阈值
+     * @param windowMinutes 统计窗口（分钟）
      */
-    publio DeadLetterAlertEvent(Objeot souroe, String ohannel, long ourrentoount,
+    public DeadLetterAlertEvent(Object source, String channel, long currentCount,
                                 int threshold, int windowMinutes) {
-        super(souroe);
-        this.ohannel = ohannel;
-        this.ourrentoount = ourrentoount;
+        super(source);
+        this.channel = channel;
+        this.currentCount = currentCount;
         this.threshold = threshold;
         this.windowMinutes = windowMinutes;
-        this.triggeredAt = LooalDateTime.now();
+        this.triggeredAt = LocalDateTime.now();
     }
 
-    publio String getohannel() {
-        return ohannel;
+    public String getChannel() {
+        return channel;
     }
 
-    publio long getourrentoount() {
-        return ourrentoount;
+    public long getCurrentCount() {
+        return currentCount;
     }
 
-    publio int getThreshold() {
+    public int getThreshold() {
         return threshold;
     }
 
-    publio int getWindowMinutes() {
+    public int getWindowMinutes() {
         return windowMinutes;
     }
 
-    publio LooalDateTime getTriggeredAt() {
+    public LocalDateTime getTriggeredAt() {
         return triggeredAt;
     }
 }

@@ -1,4 +1,4 @@
-paokage oom.njydsz.pmis.system.domain.dto.file;
+package com.njydsz.pmis.system.domain.dto.file;
 
 import lombok.Data;
 
@@ -9,13 +9,13 @@ import java.io.Serializable;
  * 文件上传 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass FileUploadDTO implements Serializable {
+public class FileUploadDTO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 业务类型 */
     private String bizType;
@@ -23,15 +23,15 @@ publio olass FileUploadDTO implements Serializable {
     /** 业务单据 ID */
     private String bizId;
 
-    /** 指定 Buoket（可选，默认�?default-buoket�?*/
-    private String buoket;
+    /** 指定 Bucket（可选，默认用 default-bucket） */
+    private String bucket;
 
     /** 描述 */
-    private String desoription;
+    private String description;
 
-    /** 上传�?ID */
+    /** 上传人 ID */
     private String uploaderId;
 
-    /** 上传人姓�?*/
+    /** 上传人姓名 */
     private String uploaderName;
 }

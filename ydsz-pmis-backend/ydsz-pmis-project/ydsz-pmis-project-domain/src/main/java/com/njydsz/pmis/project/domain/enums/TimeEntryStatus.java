@@ -1,70 +1,70 @@
-paokage oom.njydsz.pmis.projeot.domain.enums;
+package com.njydsz.pmis.project.domain.enums;
 
 /**
- * 工时录入状�?
+ * 工时录入状态
  *
  * <ul>
  *   <li>DRAFT - 草稿</li>
- *   <li>SUBMITTED - 已提�?/li>
- *   <li>APPROVED - 已批�?/li>
- *   <li>REJEoTED - 已驳�?/li>
+ *   <li>SUBMITTED - 已提交</li>
+ *   <li>APPROVED - 已批准</li>
+ *   <li>REJECTED - 已驳回</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum TimeEntryStatus {
+public enum TimeEntryStatus {
     DRAFT("DRAFT", "草稿"),
-    SUBMITTED("SUBMITTED", "已提�?),
-    APPROVED("APPROVED", "已批�?),
-    REJEoTED("REJEoTED", "已驳�?);
+    SUBMITTED("SUBMITTED", "已提交"),
+    APPROVED("APPROVED", "已批准"),
+    REJECTED("REJECTED", "已驳回");
 
-    /** 状态编码（大小写不敏感�?*/
-    private final String oode;
-    /** 状态中文描�?*/
-    private final String deso;
+    /** 状态编码（大小写不敏感） */
+    private final String code;
+    /** 状态中文描述 */
+    private final String desc;
 
-    TimeEntryStatus(String oode, String deso) {
-        this.oode = oode;
-        this.deso = deso;
+    TimeEntryStatus(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
     }
 
     /**
-     * 获取状态编�?
+     * 获取状态编码
      *
      * @return 状态编码字符串
      */
-    publio String getoode() { return oode; }
+    public String getCode() { return code; }
 
     /**
-     * 获取状态中文描�?
+     * 获取状态中文描述
      *
-     * @return 状态中文描�?
+     * @return 状态中文描述
      */
-    publio String getDeso() { return deso; }
+    public String getDesc() { return desc; }
 
     /**
-     * 判断是否为终�?
+     * 判断是否为终态
      *
-     * @return true 表示当前状态为终态（已批�?已驳回），不可再迁移
+     * @return true 表示当前状态为终态（已批准/已驳回），不可再迁移
      */
-    publio boolean isTerminal() {
-        return this == APPROVED || this == REJEoTED;
+    public boolean isTerminal() {
+        return this == APPROVED || this == REJECTED;
     }
 
     /**
-     * 校验状态迁移合法�?
+     * 校验状态迁移合法性
      *
-     * @param target 目标状�?
-     * @return true 表示允许从当前状态迁移到目标状�?
+     * @param target 目标状态
+     * @return true 表示允许从当前状态迁移到目标状态
      */
-    publio boolean oanTransitTo(TimeEntryStatus target) {
+    public boolean canTransitTo(TimeEntryStatus target) {
         if (target == null) return false;
         if (this == target) return true;
-        return switoh (this) {
-            oase DRAFT -> target == SUBMITTED;
-            oase SUBMITTED -> target == APPROVED || target == REJEoTED;
-            oase REJEoTED -> target == DRAFT;        // 驳回后允许重新编�?
+        return switch (this) {
+            case DRAFT -> target == SUBMITTED;
+            case SUBMITTED -> target == APPROVED || target == REJECTED;
+            case REJECTED -> target == DRAFT;        // 驳回后允许重新编辑
             default -> false;
         };
     }
@@ -72,13 +72,13 @@ publio enum TimeEntryStatus {
     /**
      * 根据编码反查枚举
      *
-     * @param oode 状态编码（大小写不敏感�?
-     * @return 枚举值；未匹配返�?null
+     * @param code 状态编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
      */
-    publio statio TimeEntryStatus fromoode(String oode) {
-        if (oode == null) return null;
+    public static TimeEntryStatus fromCode(String code) {
+        if (code == null) return null;
         for (TimeEntryStatus s : values()) {
-            if (s.oode.equalsIgnoreoase(oode)) return s;
+            if (s.code.equalsIgnoreCase(code)) return s;
         }
         return null;
     }

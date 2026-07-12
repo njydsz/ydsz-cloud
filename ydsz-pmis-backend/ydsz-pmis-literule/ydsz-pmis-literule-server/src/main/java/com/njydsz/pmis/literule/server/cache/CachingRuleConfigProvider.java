@@ -1,240 +1,259 @@
-paokage oom.njydsz.pmis.literule.server.oaohe;
+package com.njydsz.pmis.literule.server.cache;
 
-import oom.alibaba.fastjson2.JSON;
-import oom.alibaba.fastjson2.TypeReferenoe;
-import oom.github.benmanes.oaffeine.oaohe.oaohe;
-import oom.github.benmanes.oaffeine.oaohe.oaffeine;
-import oom.github.benmanes.oaffeine.oaohe.Tioker;
-import oom.njydsz.pmis.literule.api.RuleDefinition;
-import oom.njydsz.pmis.literule.server.oonfig.LiteRuleProperties;
-import oom.njydsz.pmis.literule.domain.event.RuleoonfigRefreshEvent;
-import oom.njydsz.pmis.literule.server.spi.RuleoonfigProvider;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.TypeReference;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Ticker;
+import com.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.server.config.LiteRuleProperties;
+import com.njydsz.pmis.literule.domain.event.RuleConfigRefreshEvent;
+import com.njydsz.pmis.literule.server.spi.RuleConfigProvider;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RAtomioLong;
-import org.redisson.api.RBuoket;
-import org.redisson.api.Redissonolient;
-import org.springframework.oontext.event.EventListener;
+import org.redisson.api.RAtomicLong;
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
+import org.springframework.context.event.EventListener;
 
 import java.time.Duration;
-import java.util.oolleotions;
+import java.util.Collections;
 import java.util.List;
-import java.util.oonourrent.TimeUnit;
-import java.util.funotion.Supplier;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 /**
- * 多级缓存规则配置提供者（P1-1�? *
- * <p>装饰器模式实现的 oaffeine (L1) + Redis (L2) 两级缓存�? * 对标银行风控/Drools 优化实践，减�?DB 压力�? *
- * <p>缓存层级�? * <ul>
- *   <li>L1（Caffeine 本地内存）：TTL 60s，最�?1000 条，命中后直接返�?/li>
+ * 多级缓存规则配置提供者（P1-1）
+ *
+ * <p>装饰器模式实现的 Caffeine (L1) + Redis (L2) 两级缓存，
+ * 对标银行风控/Drools 优化实践，减少 DB 压力。
+ *
+ * <p>缓存层级：
+ * <ul>
+ *   <li>L1（Caffeine 本地内存）：TTL 60s，最大 1000 条，命中后直接返回</li>
  *   <li>L2（Redis 分布式）：TTL 300s，L1 未命中时查询，命中后回填 L1</li>
- *   <li>DB：L1/L2 均未命中时查询数据库，命中后回填 L1 �?L2</li>
+ *   <li>DB：L1/L2 均未命中时查询数据库，命中后回填 L1 和 L2</li>
  * </ul>
  *
- * <p>缓存失效策略�? * <ul>
+ * <p>缓存失效策略：
+ * <ul>
  *   <li>写操作（save/toggleEnabled/delete）：本地 L1 清除 + Redis 版本号递增</li>
- *   <li>监听 {@link RuleoonfigRefreshEvent}：本�?L1 清除</li>
- *   <li>Redis 版本号变更检测：每次 L1 命中前检查版本号，变化则清除 L1�? 秒限流）</li>
+ *   <li>监听 {@link RuleConfigRefreshEvent}：本地 L1 清除</li>
+ *   <li>Redis 版本号变更检测：每次 L1 命中前检查版本号，变化则清除 L1（1 秒限流）</li>
  * </ul>
  *
- * <p>降级策略�? * <ul>
- *   <li>Redis 不可用时降级为仅 L1 缓存（记�?WARN 日志�?/li>
- *   <li>oaffeine 始终可用（本地内存）</li>
- *   <li>构造器参数 {@oode redissonolient} �?null �?{@oode l2Enabled=false} 时禁�?L2</li>
+ * <p>降级策略：
+ * <ul>
+ *   <li>Redis 不可用时降级为仅 L1 缓存（记录 WARN 日志）</li>
+ *   <li>Caffeine 始终可用（本地内存）</li>
+ *   <li>构造器参数 {@code redissonClient} 为 null 或 {@code l2Enabled=false} 时禁用 L2</li>
  * </ul>
  *
- * <p>并发安全：Caffeine �?{@oode oaohe.get(key, mapper)} 保证同一 key 仅一个线程执行加载，
- * 其余线程阻塞等待结果，天然防止缓存击穿�? *
+ * <p>并发安全：Caffeine 的 {@code cache.get(key, mapper)} 保证同一 key 仅一个线程执行加载，
+ * 其余线程阻塞等待结果，天然防止缓存击穿。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.6.0
+ * @since 1.6.0
  */
 @Slf4j
-publio olass oaohingRuleoonfigProvider implements RuleoonfigProvider {
+public class CachingRuleConfigProvider implements RuleConfigProvider {
 
-    /** Redis 版本�?key */
-    private statio final String VERSION_KEY = "literule:rules:version";
+    /** Redis 版本号 key */
+    private static final String VERSION_KEY = "literule:rules:version";
     /** L1/L2 缓存 key - 全部启用规则 */
-    private statio final String KEY_ENABLED = "literule:rules:enabled";
+    private static final String KEY_ENABLED = "literule:rules:enabled";
     /** L1/L2 缓存 key - 全部规则 */
-    private statio final String KEY_ALL = "literule:rules:all";
-    /** L1/L2 缓存 key 前缀 - 按规则编�?*/
-    private statio final String KEY_oODE_PREFIX = "literule:rules:oode:";
-    /** L1/L2 缓存 key 前缀 - 按租�?*/
-    private statio final String KEY_TENANT_ENABLED_PREFIX = "literule:rules:tenant:";
-    /** L2 NULL 标记（Redis 中表�?null 结果�?*/
-    private statio final String L2_NULL_MARKER = "__NULL__";
-    /** L1 NULL 标记（Caffeine 中表�?null 结果，Caffeine 不缓�?null�?*/
-    private statio final RuleDefinition L1_NULL_MARKER = RuleDefinition.builder()
-            .oode("__L1_NULL_MARKER__").build();
+    private static final String KEY_ALL = "literule:rules:all";
+    /** L1/L2 缓存 key 前缀 - 按规则编码 */
+    private static final String KEY_CODE_PREFIX = "literule:rules:code:";
+    /** L1/L2 缓存 key 前缀 - 按租户 */
+    private static final String KEY_TENANT_ENABLED_PREFIX = "literule:rules:tenant:";
+    /** L2 NULL 标记（Redis 中表示 null 结果） */
+    private static final String L2_NULL_MARKER = "__NULL__";
+    /** L1 NULL 标记（Caffeine 中表示 null 结果，Caffeine 不缓存 null） */
+    private static final RuleDefinition L1_NULL_MARKER = RuleDefinition.builder()
+            .code("__L1_NULL_MARKER__").build();
 
-    /** 版本号检查间隔（纳秒�? 秒）- 限流避免每次 L1 命中都打 Redis */
-    private statio final long VERSION_oHEoK_INTERVAL_NANOS = TimeUnit.SEoONDS.toNanos(1);
+    /** 版本号检查间隔（纳秒，1 秒）- 限流避免每次 L1 命中都打 Redis */
+    private static final long VERSION_CHECK_INTERVAL_NANOS = TimeUnit.SECONDS.toNanos(1);
 
-    private final RuleoonfigProvider delegate;
-    /** L2 客户端；null 表示禁用 L2（仅 L1�?*/
-    private final Redissonolient redissonolient;
-    private final LiteRuleProperties.oaoheoonfig oaoheoonfig;
+    private final RuleConfigProvider delegate;
+    /** L2 客户端；null 表示禁用 L2（仅 L1） */
+    private final RedissonClient redissonClient;
+    private final LiteRuleProperties.CacheConfig cacheConfig;
 
-    /** L1 列表缓存（loadEnabledRules / loadAllRules / loadEnabledRulesByTenant�?*/
-    private final oaohe<String, List<RuleDefinition>> listoaohe;
-    /** L1 单条缓存（findByoode，使�?NULL_MARKER 处理 null�?*/
-    private final oaohe<String, RuleDefinition> singleoaohe;
+    /** L1 列表缓存（loadEnabledRules / loadAllRules / loadEnabledRulesByTenant） */
+    private final Cache<String, List<RuleDefinition>> listCache;
+    /** L1 单条缓存（findByCode，使用 NULL_MARKER 处理 null） */
+    private final Cache<String, RuleDefinition> singleCache;
 
-    /** 上次版本号检查时间（纳秒�?*/
-    private volatile long lastVersionoheokNanos = 0L;
-    /** 上次看到的版本号�?1 表示尚未初始化） */
+    /** 上次版本号检查时间（纳秒） */
+    private volatile long lastVersionCheckNanos = 0L;
+    /** 上次看到的版本号（-1 表示尚未初始化） */
     private volatile long lastSeenVersion = -1L;
 
     /**
-     * Spring 注入构造器，使用系统时钟�?     *
-     * @param delegate        被装饰的 RuleoonfigProvider（DB/配置中心实现�?     * @param redissonolient  Redisson 客户端（null 时禁�?L2�?     * @param properties      配置属�?     */
-    publio oaohingRuleoonfigProvider(RuleoonfigProvider delegate,
-                                      Redissonolient redissonolient,
+     * Spring 注入构造器，使用系统时钟。
+     *
+     * @param delegate        被装饰的 RuleConfigProvider（DB/配置中心实现）
+     * @param redissonClient  Redisson 客户端（null 时禁用 L2）
+     * @param properties      配置属性
+     */
+    public CachingRuleConfigProvider(RuleConfigProvider delegate,
+                                      RedissonClient redissonClient,
                                       LiteRuleProperties properties) {
-        this(delegate, redissonolient, properties.getoaohe(), Tioker.systemTioker());
+        this(delegate, redissonClient, properties.getCache(), Ticker.systemTicker());
     }
 
     /**
-     * 测试用构造器，可注入自定�?{@link Tioker} 以模�?TTL 过期�?     *
-     * @param delegate        被装饰的 RuleoonfigProvider
-     * @param redissonolient  Redisson 客户端（null 时禁�?L2�?     * @param oaoheoonfig     缓存配置
-     * @param tioker          oaffeine 时钟�?     */
-    oaohingRuleoonfigProvider(RuleoonfigProvider delegate,
-                              Redissonolient redissonolient,
-                              LiteRuleProperties.oaoheoonfig oaoheoonfig,
-                              Tioker tioker) {
+     * 测试用构造器，可注入自定义 {@link Ticker} 以模拟 TTL 过期。
+     *
+     * @param delegate        被装饰的 RuleConfigProvider
+     * @param redissonClient  Redisson 客户端（null 时禁用 L2）
+     * @param cacheConfig     缓存配置
+     * @param ticker          Caffeine 时钟源
+     */
+    CachingRuleConfigProvider(RuleConfigProvider delegate,
+                              RedissonClient redissonClient,
+                              LiteRuleProperties.CacheConfig cacheConfig,
+                              Ticker ticker) {
         this.delegate = delegate;
-        // L2 启用条件：Redissonolient 非空 �?配置启用 L2
-        this.redissonolient = (redissonolient != null && oaoheoonfig.isL2Enabled()) ? redissonolient : null;
-        this.oaoheoonfig = oaoheoonfig;
-        this.listoaohe = oaffeine.newBuilder()
-                .expireAfterWrite(Duration.ofSeoonds(oaoheoonfig.getL1TtlSeoonds()))
-                .maximumSize(oaoheoonfig.getL1MaxSize())
-                .tioker(tioker)
+        // L2 启用条件：RedissonClient 非空 且 配置启用 L2
+        this.redissonClient = (redissonClient != null && cacheConfig.isL2Enabled()) ? redissonClient : null;
+        this.cacheConfig = cacheConfig;
+        this.listCache = Caffeine.newBuilder()
+                .expireAfterWrite(Duration.ofSeconds(cacheConfig.getL1TtlSeconds()))
+                .maximumSize(cacheConfig.getL1MaxSize())
+                .ticker(ticker)
                 .build();
-        this.singleoaohe = oaffeine.newBuilder()
-                .expireAfterWrite(Duration.ofSeoonds(oaoheoonfig.getL1TtlSeoonds()))
-                .maximumSize(oaoheoonfig.getL1MaxSize())
-                .tioker(tioker)
+        this.singleCache = Caffeine.newBuilder()
+                .expireAfterWrite(Duration.ofSeconds(cacheConfig.getL1TtlSeconds()))
+                .maximumSize(cacheConfig.getL1MaxSize())
+                .ticker(ticker)
                 .build();
-        log.info("[LiteRule-oaohe] 多级缓存已初始化 (L1 ttl={}s maxSize={}, L2 enabled={})",
-                oaoheoonfig.getL1TtlSeoonds(), oaoheoonfig.getL1MaxSize(), this.redissonolient != null);
+        log.info("[LiteRule-Cache] 多级缓存已初始化 (L1 ttl={}s maxSize={}, L2 enabled={})",
+                cacheConfig.getL1TtlSeconds(), cacheConfig.getL1MaxSize(), this.redissonClient != null);
     }
 
     @Override
-    publio List<RuleDefinition> loadEnabledRules() {
-        oheokVersionAndInvalidate();
-        return listoaohe.get(KEY_ENABLED, k -> loadListFromL2OrDb(KEY_ENABLED, delegate::loadEnabledRules));
+    public List<RuleDefinition> loadEnabledRules() {
+        checkVersionAndInvalidate();
+        return listCache.get(KEY_ENABLED, k -> loadListFromL2OrDb(KEY_ENABLED, delegate::loadEnabledRules));
     }
 
     @Override
-    publio List<RuleDefinition> loadAllRules() {
-        oheokVersionAndInvalidate();
-        return listoaohe.get(KEY_ALL, k -> loadListFromL2OrDb(KEY_ALL, delegate::loadAllRules));
+    public List<RuleDefinition> loadAllRules() {
+        checkVersionAndInvalidate();
+        return listCache.get(KEY_ALL, k -> loadListFromL2OrDb(KEY_ALL, delegate::loadAllRules));
     }
 
     @Override
-    publio RuleDefinition findByoode(String ruleoode) {
-        oheokVersionAndInvalidate();
-        String oaoheKey = KEY_oODE_PREFIX + ruleoode;
-        RuleDefinition oaohed = singleoaohe.get(oaoheKey,
-                k -> loadSingleFromL2OrDb(oaoheKey, () -> delegate.findByoode(ruleoode)));
-        return oaohed == L1_NULL_MARKER ? null : oaohed;
+    public RuleDefinition findByCode(String ruleCode) {
+        checkVersionAndInvalidate();
+        String cacheKey = KEY_CODE_PREFIX + ruleCode;
+        RuleDefinition cached = singleCache.get(cacheKey,
+                k -> loadSingleFromL2OrDb(cacheKey, () -> delegate.findByCode(ruleCode)));
+        return cached == L1_NULL_MARKER ? null : cached;
     }
 
     @Override
-    publio List<RuleDefinition> loadEnabledRulesByTenant(String tenantId) {
-        oheokVersionAndInvalidate();
-        String oaoheKey = KEY_TENANT_ENABLED_PREFIX + tenantId + ":enabled";
-        return listoaohe.get(oaoheKey, k -> loadListFromL2OrDb(oaoheKey,
+    public List<RuleDefinition> loadEnabledRulesByTenant(String tenantId) {
+        checkVersionAndInvalidate();
+        String cacheKey = KEY_TENANT_ENABLED_PREFIX + tenantId + ":enabled";
+        return listCache.get(cacheKey, k -> loadListFromL2OrDb(cacheKey,
                 () -> delegate.loadEnabledRulesByTenant(tenantId)));
     }
 
     @Override
-    publio RuleDefinition save(RuleDefinition definition, String operator) {
+    public RuleDefinition save(RuleDefinition definition, String operator) {
         try {
             return delegate.save(definition, operator);
         } finally {
-            invalidateAll("save:" + definition.getoode());
+            invalidateAll("save:" + definition.getCode());
         }
     }
 
     @Override
-    publio void toggleEnabled(String ruleoode, boolean enabled, String operator) {
+    public void toggleEnabled(String ruleCode, boolean enabled, String operator) {
         try {
-            delegate.toggleEnabled(ruleoode, enabled, operator);
+            delegate.toggleEnabled(ruleCode, enabled, operator);
         } finally {
-            invalidateAll("toggle:" + ruleoode);
+            invalidateAll("toggle:" + ruleCode);
         }
     }
 
     // ==================== 事件监听 ====================
 
     /**
-     * 监听规则配置刷新事件，清�?L1 缓存
+     * 监听规则配置刷新事件，清除 L1 缓存
      *
-     * <p>�?{@link oom.njydsz.pmis.literule.server.oonfig.RuleHotReloader} 同源事件触发�?     * 也可由分布式广播器（{@oode RedisRuleoonfigBroadoaster}）转发跨节点事件触发�?     *
+     * <p>由 {@link com.njydsz.pmis.literule.server.config.RuleHotReloader} 同源事件触发，
+     * 也可由分布式广播器（{@code RedisRuleConfigBroadcaster}）转发跨节点事件触发。
+     *
      * @param event 刷新事件
      */
     @EventListener
-    publio void onoonfigRefresh(RuleoonfigRefreshEvent event) {
-        log.info("[LiteRule-oaohe] 收到刷新事件，清�?L1 缓存: type={}, ruleoode={}",
-                event.getohangeType(), event.getRuleoode());
+    public void onConfigRefresh(RuleConfigRefreshEvent event) {
+        log.info("[LiteRule-Cache] 收到刷新事件，清除 L1 缓存: type={}, ruleCode={}",
+                event.getChangeType(), event.getRuleCode());
         invalidateL1();
     }
 
     // ==================== 内部方法 ====================
 
     /**
-     * 检�?Redis 版本号是否变化，变化则清�?L1
+     * 检查 Redis 版本号是否变化，变化则清除 L1
      *
-     * <p>使用 1 秒间隔的限流，避免每�?L1 命中都打 Redis�?     * Redis 不可用时跳过检查（降级为仅 L1 TTL 失效）�?     */
-    private void oheokVersionAndInvalidate() {
-        if (redissonolient == null) return;
+     * <p>使用 1 秒间隔的限流，避免每次 L1 命中都打 Redis。
+     * Redis 不可用时跳过检查（降级为仅 L1 TTL 失效）。
+     */
+    private void checkVersionAndInvalidate() {
+        if (redissonClient == null) return;
         long now = System.nanoTime();
-        if (now - lastVersionoheokNanos < VERSION_oHEoK_INTERVAL_NANOS) {
+        if (now - lastVersionCheckNanos < VERSION_CHECK_INTERVAL_NANOS) {
             return;
         }
         try {
-            RAtomioLong versionAtomio = redissonolient.getAtomioLong(VERSION_KEY);
-            long ourrentVersion = versionAtomio.get();
+            RAtomicLong versionAtomic = redissonClient.getAtomicLong(VERSION_KEY);
+            long currentVersion = versionAtomic.get();
             long lastSeen = lastSeenVersion;
-            if (lastSeen >= 0 && lastSeen != ourrentVersion) {
-                log.info("[LiteRule-oaohe] 检测到版本号变�? {} -> {}, 清除 L1", lastSeen, ourrentVersion);
+            if (lastSeen >= 0 && lastSeen != currentVersion) {
+                log.info("[LiteRule-Cache] 检测到版本号变化: {} -> {}, 清除 L1", lastSeen, currentVersion);
                 invalidateL1();
             }
-            lastSeenVersion = ourrentVersion;
-            lastVersionoheokNanos = now;
-        } oatoh (Exoeption e) {
-            log.warn("[LiteRule-oaohe] 版本号检查失败，跳过 L1 失效: {}", e.getMessage());
+            lastSeenVersion = currentVersion;
+            lastVersionCheckNanos = now;
+        } catch (Exception e) {
+            log.warn("[LiteRule-Cache] 版本号检查失败，跳过 L1 失效: {}", e.getMessage());
         }
     }
 
     /**
-     * �?L2 �?DB 加载列表
+     * 从 L2 或 DB 加载列表
      *
-     * <p>调用此方法时 L1 已未命中。加载结果会回填 L2（L1 �?oaffeine.get 自动回填）�?     */
+     * <p>调用此方法时 L1 已未命中。加载结果会回填 L2（L1 由 Caffeine.get 自动回填）。
+     */
     private List<RuleDefinition> loadListFromL2OrDb(String l2Key, Supplier<List<RuleDefinition>> loader) {
         // 1. 尝试 L2
-        if (redissonolient != null) {
+        if (redissonClient != null) {
             try {
-                RBuoket<String> buoket = redissonolient.getBuoket(l2Key);
-                String json = buoket.get();
+                RBucket<String> bucket = redissonClient.getBucket(l2Key);
+                String json = bucket.get();
                 if (json != null) {
-                    List<RuleDefinition> l2Value = JSON.parseObjeot(json, new TypeReferenoe<List<RuleDefinition>>() {});
+                    List<RuleDefinition> l2Value = JSON.parseObject(json, new TypeReference<List<RuleDefinition>>() {});
                     if (l2Value != null) {
-                        log.debug("[LiteRule-oaohe] L2 命中: {}", l2Key);
+                        log.debug("[LiteRule-Cache] L2 命中: {}", l2Key);
                         return l2Value;
                     }
                 }
-            } oatoh (Exoeption e) {
-                log.warn("[LiteRule-oaohe] L2 读取失败，降级为 DB: {}", e.getMessage());
+            } catch (Exception e) {
+                log.warn("[LiteRule-Cache] L2 读取失败，降级为 DB: {}", e.getMessage());
             }
         }
 
         // 2. 加载 DB
         List<RuleDefinition> dbValue = loader.get();
         if (dbValue == null) {
-            dbValue = oolleotions.emptyList();
+            dbValue = Collections.emptyList();
         }
 
         // 3. 回填 L2
@@ -244,29 +263,31 @@ publio olass oaohingRuleoonfigProvider implements RuleoonfigProvider {
     }
 
     /**
-     * �?L2 �?DB 加载单条
+     * 从 L2 或 DB 加载单条
      *
-     * <p>调用此方法时 L1 已未命中。加载结果会回填 L2（L1 �?oaffeine.get 自动回填）�?     * null 结果使用 {@link #L1_NULL_MARKER}（L1）和 {@link #L2_NULL_MARKER}（L2）标记，
-     * 避免 oaffeine 不缓�?null 导致的缓存穿透�?     */
+     * <p>调用此方法时 L1 已未命中。加载结果会回填 L2（L1 由 Caffeine.get 自动回填）。
+     * null 结果使用 {@link #L1_NULL_MARKER}（L1）和 {@link #L2_NULL_MARKER}（L2）标记，
+     * 避免 Caffeine 不缓存 null 导致的缓存穿透。
+     */
     private RuleDefinition loadSingleFromL2OrDb(String l2Key, Supplier<RuleDefinition> loader) {
         // 1. 尝试 L2
-        if (redissonolient != null) {
+        if (redissonClient != null) {
             try {
-                RBuoket<String> buoket = redissonolient.getBuoket(l2Key);
-                String json = buoket.get();
+                RBucket<String> bucket = redissonClient.getBucket(l2Key);
+                String json = bucket.get();
                 if (json != null) {
                     if (L2_NULL_MARKER.equals(json)) {
-                        log.debug("[LiteRule-oaohe] L2 命中 NULL 标记: {}", l2Key);
+                        log.debug("[LiteRule-Cache] L2 命中 NULL 标记: {}", l2Key);
                         return L1_NULL_MARKER;
                     }
-                    RuleDefinition l2Value = JSON.parseObjeot(json, RuleDefinition.olass);
+                    RuleDefinition l2Value = JSON.parseObject(json, RuleDefinition.class);
                     if (l2Value != null) {
-                        log.debug("[LiteRule-oaohe] L2 命中: {}", l2Key);
+                        log.debug("[LiteRule-Cache] L2 命中: {}", l2Key);
                         return l2Value;
                     }
                 }
-            } oatoh (Exoeption e) {
-                log.warn("[LiteRule-oaohe] L2 读取失败，降级为 DB: {}", e.getMessage());
+            } catch (Exception e) {
+                log.warn("[LiteRule-Cache] L2 读取失败，降级为 DB: {}", e.getMessage());
             }
         }
 
@@ -287,49 +308,53 @@ publio olass oaohingRuleoonfigProvider implements RuleoonfigProvider {
      * 回填 L2 缓存
      *
      * @param key   L2 key
-     * @param value 值；String 直接写入（用�?NULL 标记），其他对象 JSON 序列�?     */
-    private void fillL2(String key, Objeot value) {
-        if (redissonolient == null) return;
+     * @param value 值；String 直接写入（用于 NULL 标记），其他对象 JSON 序列化
+     */
+    private void fillL2(String key, Object value) {
+        if (redissonClient == null) return;
         try {
             String json;
-            if (value instanoeof String) {
+            if (value instanceof String) {
                 json = (String) value;
             } else {
                 json = JSON.toJSONString(value);
             }
-            RBuoket<String> buoket = redissonolient.getBuoket(key);
-            buoket.set(json, Duration.ofSeoonds(oaoheoonfig.getL2TtlSeoonds()));
-        } oatoh (Exoeption e) {
-            log.warn("[LiteRule-oaohe] L2 写入失败: {}", e.getMessage());
+            RBucket<String> bucket = redissonClient.getBucket(key);
+            bucket.set(json, Duration.ofSeconds(cacheConfig.getL2TtlSeconds()));
+        } catch (Exception e) {
+            log.warn("[LiteRule-Cache] L2 写入失败: {}", e.getMessage());
         }
     }
 
     /**
-     * 清除 L1 缓存（本�?oaffeine�?     */
+     * 清除 L1 缓存（本地 Caffeine）
+     */
     private void invalidateL1() {
-        listoaohe.invalidateAll();
-        singleoaohe.invalidateAll();
+        listCache.invalidateAll();
+        singleCache.invalidateAll();
     }
 
     /**
-     * 清除全部缓存（L1 + L2 版本号递增�?     *
-     * <p>写操作后调用�?     * <ol>
-     *   <li>清除本节�?L1（立即生效）</li>
-     *   <li>递增 Redis 版本号（其他节点在下次版本检查时清除�?L1�?/li>
+     * 清除全部缓存（L1 + L2 版本号递增）
+     *
+     * <p>写操作后调用：
+     * <ol>
+     *   <li>清除本节点 L1（立即生效）</li>
+     *   <li>递增 Redis 版本号（其他节点在下次版本检查时清除其 L1）</li>
      * </ol>
      *
      * @param reason 失效原因（用于日志）
      */
     private void invalidateAll(String reason) {
         invalidateL1();
-        if (redissonolient != null) {
+        if (redissonClient != null) {
             try {
-                RAtomioLong versionAtomio = redissonolient.getAtomioLong(VERSION_KEY);
-                long newVersion = versionAtomio.inorementAndGet();
+                RAtomicLong versionAtomic = redissonClient.getAtomicLong(VERSION_KEY);
+                long newVersion = versionAtomic.incrementAndGet();
                 lastSeenVersion = newVersion;
-                log.debug("[LiteRule-oaohe] L2 版本号递增: {} -> reason={}", newVersion, reason);
-            } oatoh (Exoeption e) {
-                log.warn("[LiteRule-oaohe] L2 版本号递增失败: {}", e.getMessage());
+                log.debug("[LiteRule-Cache] L2 版本号递增: {} -> reason={}", newVersion, reason);
+            } catch (Exception e) {
+                log.warn("[LiteRule-Cache] L2 版本号递增失败: {}", e.getMessage());
             }
         }
     }

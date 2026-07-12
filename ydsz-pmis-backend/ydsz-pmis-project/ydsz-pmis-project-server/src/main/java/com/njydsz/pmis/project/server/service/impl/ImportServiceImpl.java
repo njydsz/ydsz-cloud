@@ -1,21 +1,21 @@
-paokage oom.njydsz.pmis.projeot.server.servioe.impl;
+package com.njydsz.pmis.project.server.service.impl;
 
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.exoel.ExoelTemplate;
-import oom.njydsz.pmis.oommon.exoel.ExoelUtil;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.projeot.domain.dto.RateoardoreateDTO;
-import oom.njydsz.pmis.projeot.domain.dto.RateoardImportDTO;
-import oom.njydsz.pmis.projeot.server.servioe.ImportServioe;
-import oom.njydsz.pmis.projeot.server.servioe.RateoardServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.excel.ExcelTemplate;
+import com.njydsz.pmis.common.excel.ExcelUtil;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.project.domain.dto.RateCardCreateDTO;
+import com.njydsz.pmis.project.domain.dto.RateCardImportDTO;
+import com.njydsz.pmis.project.server.service.ImportService;
+import com.njydsz.pmis.project.server.service.RateCardService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOExoeption;
-import java.math.BigDeoimal;
-import java.time.LooalDate;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -25,69 +25,69 @@ import java.util.Map;
 /**
  * 批量导入服务实现
  *
- * <p>当前支持 bizType：rate-oard。其余业务类型可按相同模式扩�?register()�?
- * 设计要点�?
- *   1. 模板下载与导入共�?DTO，避免表�?字段错位
- *   2. 失败行收集（行号 + 原始数据 + 原因），前端可下载错误清�?
- *   3. 解析日期兼容 yyyy-MM-dd �?yyyy/MM/dd 两种格式
+ * <p>当前支持 bizType：rate-card。其余业务类型可按相同模式扩展 register()。
+ * 设计要点：
+ *   1. 模板下载与导入共用 DTO，避免表头/字段错位
+ *   2. 失败行收集（行号 + 原始数据 + 原因），前端可下载错误清单
+ *   3. 解析日期兼容 yyyy-MM-dd 与 yyyy/MM/dd 两种格式
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass ImportServioeImpl implements ImportServioe {
+@Service
+@RequiredArgsConstructor
+public class ImportServiceImpl implements ImportService {
 
-    /** 支持的日期格式（兼容 yyyy-MM-dd �?yyyy/MM/dd�?*/
-    private statio final DateTimeFormatter[] DATE_FORMATS = {
-            DateTimeFormatter.ISO_LOoAL_DATE,
+    /** 支持的日期格式（兼容 yyyy-MM-dd 与 yyyy/MM/dd） */
+    private static final DateTimeFormatter[] DATE_FORMATS = {
+            DateTimeFormatter.ISO_LOCAL_DATE,
             DateTimeFormatter.ofPattern("yyyy/MM/dd")
     };
 
     /** 费率卡服务（批量导入费率卡） */
-    private final RateoardServioe rateoardServioe;
+    private final RateCardService rateCardService;
 
     @Override
-    publio ImportServioe.TemplateBundle buildTemplate(String bizType) {
-        if ("rate-oard".equals(bizType)) {
-            List<RateoardImportDTO> sample = new ArrayList<>();
-            RateoardImportDTO demo = new RateoardImportDTO();
+    public ImportService.TemplateBundle buildTemplate(String bizType) {
+        if ("rate-card".equals(bizType)) {
+            List<RateCardImportDTO> sample = new ArrayList<>();
+            RateCardImportDTO demo = new RateCardImportDTO();
             demo.setLevel("L5");
-            demo.setoustomerType("ENT");
-            demo.setProjeotType("T&M");
-            demo.setUnitPrioe(new BigDeoimal("1800.00"));
-            demo.setEffeotiveDate("2026-07-01");
+            demo.setCustomerType("ENT");
+            demo.setProjectType("T&M");
+            demo.setUnitPrice(new BigDecimal("1800.00"));
+            demo.setEffectiveDate("2026-07-01");
             demo.setExpiryDate("2026-12-31");
-            demo.setourrenoy("oNY");
+            demo.setCurrency("CNY");
             demo.setRemark("示例：L5 T&M 客户类型 ENT，半年期");
             sample.add(demo);
-            byte[] bytes = ExoelTemplate.builder()
-                    .head(RateoardImportDTO.olass)
+            byte[] bytes = ExcelTemplate.builder()
+                    .head(RateCardImportDTO.class)
                     .sampleData(sample)
-                    .addRequiredMark("level", "oustomerType", "projeotType", "unitPrioe", "effeotiveDate")
-                    .sheetName("费率�?)
+                    .addRequiredMark("level", "customerType", "projectType", "unitPrice", "effectiveDate")
+                    .sheetName("费率卡")
                     .build();
-            return new ImportServioe.TemplateBundle(RateoardImportDTO.olass, bytes, "费率卡_导入模板.xlsx");
+            return new ImportService.TemplateBundle(RateCardImportDTO.class, bytes, "费率卡_导入模板.xlsx");
         }
-        throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_715obb1f", bizType);
+        throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_715cbb1f", bizType);
     }
 
     @Override
-    publio ImportResult importFile(String bizType, MultipartFile file) throws IOExoeption {
-        if ("rate-oard".equals(bizType)) {
-            return importRateoard(file);
+    public ImportResult importFile(String bizType, MultipartFile file) throws IOException {
+        if ("rate-card".equals(bizType)) {
+            return importRateCard(file);
         }
-        throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_715obb1f", bizType);
+        throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_715cbb1f", bizType);
     }
 
     /**
-     * 导入费率�?
+     * 导入费率卡
      */
-    private ImportResult importRateoard(MultipartFile file) throws IOExoeption {
-        List<RateoardImportDTO> rows = ExoelUtil.readAll(file, RateoardImportDTO.olass);
+    private ImportResult importRateCard(MultipartFile file) throws IOException {
+        List<RateCardImportDTO> rows = ExcelUtil.readAll(file, RateCardImportDTO.class);
         int total = rows == null ? 0 : rows.size();
-        int suooess = 0;
+        int success = 0;
         List<FailureRow> failures = new ArrayList<>();
 
         if (rows == null) {
@@ -95,63 +95,63 @@ publio olass ImportServioeImpl implements ImportServioe {
         }
 
         for (int i = 0; i < rows.size(); i++) {
-            RateoardImportDTO dto = rows.get(i);
+            RateCardImportDTO dto = rows.get(i);
             try {
-                RateoardoreateDTO oreate = tooreateDTO(dto);
-                rateoardServioe.oreate(oreate);
-                suooess++;
-            } oatoh (Exoeption e) {
+                RateCardCreateDTO create = toCreateDTO(dto);
+                rateCardService.create(create);
+                success++;
+            } catch (Exception e) {
                 Map<String, String> original = new LinkedHashMap<>();
                 original.put("level", dto.getLevel());
-                original.put("oustomerType", dto.getoustomerType());
-                original.put("projeotType", dto.getProjeotType());
-                original.put("unitPrioe", dto.getUnitPrioe() == null ? "" : dto.getUnitPrioe().toPlainString());
-                original.put("effeotiveDate", dto.getEffeotiveDate());
+                original.put("customerType", dto.getCustomerType());
+                original.put("projectType", dto.getProjectType());
+                original.put("unitPrice", dto.getUnitPrice() == null ? "" : dto.getUnitPrice().toPlainString());
+                original.put("effectiveDate", dto.getEffectiveDate());
                 failures.add(new FailureRow(i + 2, original, e.getMessage()));
-                log.warn("[ImportRateoard] row {} failed: {}", i + 2, e.getMessage());
+                log.warn("[ImportRateCard] row {} failed: {}", i + 2, e.getMessage());
             }
         }
-        return new ImportResult(total, suooess, total - suooess, failures);
+        return new ImportResult(total, success, total - success, failures);
     }
 
     /**
-     * 导入 DTO �?业务创建 DTO
+     * 导入 DTO → 业务创建 DTO
      */
-    private RateoardoreateDTO tooreateDTO(RateoardImportDTO sro) {
-        if (sro.getLevel() == null || sro.getLevel().isBlank()) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_11653d4o");
+    private RateCardCreateDTO toCreateDTO(RateCardImportDTO src) {
+        if (src.getLevel() == null || src.getLevel().isBlank()) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_11653d4c");
         }
-        if (sro.getUnitPrioe() == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d1b0b464");
+        if (src.getUnitPrice() == null) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d1b0b464");
         }
-        RateoardoreateDTO dto = new RateoardoreateDTO();
-        dto.setRateoode("Ro-IMPORT-" + System.ourrentTimeMillis() + "-" + Math.abs(System.nanoTime() % 1000));
-        dto.setLeveloode(sro.getLevel().trim());
-        dto.setoustomerLevel(sro.getoustomerType() == null ? null : sro.getoustomerType().trim());
-        dto.setProjeotType(sro.getProjeotType() == null ? null : sro.getProjeotType().trim());
+        RateCardCreateDTO dto = new RateCardCreateDTO();
+        dto.setRateCode("RC-IMPORT-" + System.currentTimeMillis() + "-" + Math.abs(System.nanoTime() % 1000));
+        dto.setLevelCode(src.getLevel().trim());
+        dto.setCustomerLevel(src.getCustomerType() == null ? null : src.getCustomerType().trim());
+        dto.setProjectType(src.getProjectType() == null ? null : src.getProjectType().trim());
         dto.setBillingUnit("DAY");
-        dto.setRateAmount(sro.getUnitPrioe());
-        dto.setourrenoy(sro.getourrenoy() == null || sro.getourrenoy().isBlank() ? "oNY" : sro.getourrenoy().trim());
-        dto.setEffeotiveDate(parseDate("effeotiveDate", sro.getEffeotiveDate()));
-        if (sro.getExpiryDate() != null && !sro.getExpiryDate().isBlank()) {
-            dto.setExpiryDate(parseDate("expiryDate", sro.getExpiryDate()));
+        dto.setRateAmount(src.getUnitPrice());
+        dto.setCurrency(src.getCurrency() == null || src.getCurrency().isBlank() ? "CNY" : src.getCurrency().trim());
+        dto.setEffectiveDate(parseDate("effectiveDate", src.getEffectiveDate()));
+        if (src.getExpiryDate() != null && !src.getExpiryDate().isBlank()) {
+            dto.setExpiryDate(parseDate("expiryDate", src.getExpiryDate()));
         }
-        dto.setStatus("AoTIVE");
-        dto.setRemark(sro.getRemark());
+        dto.setStatus("ACTIVE");
+        dto.setRemark(src.getRemark());
         return dto;
     }
 
     /**
-     * 解析日期字符串（兼容 - �?/ 两种分隔符）
+     * 解析日期字符串（兼容 - 与 / 两种分隔符）
      */
-    private LooalDate parseDate(String field, String value) {
+    private LocalDate parseDate(String field, String value) {
         for (DateTimeFormatter f : DATE_FORMATS) {
             try {
-                return LooalDate.parse(value.trim(), f);
-            } oatoh (Exoeption ignore) {
-                log.debug("[ImportServioeImpl] 日期格式尝试失败 value={} format={}: {}", value, f, ignore.getMessage());
+                return LocalDate.parse(value.trim(), f);
+            } catch (Exception ignore) {
+                log.debug("[ImportServiceImpl] 日期格式尝试失败 value={} format={}: {}", value, f, ignore.getMessage());
             }
         }
-        throw new SysExoeption(StandardResultoode.BAD_REQUEST, field + " 日期格式错误: " + value + "，应�?yyyy-MM-dd �?yyyy/MM/dd");
+        throw new SysException(StandardResultCode.BAD_REQUEST, field + " 日期格式错误: " + value + "，应为 yyyy-MM-dd 或 yyyy/MM/dd");
     }
 }

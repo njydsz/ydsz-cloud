@@ -1,26 +1,28 @@
-paokage oom.njydsz.pmis.userinfo.infra.mapper.org;
+package com.njydsz.pmis.userinfo.infra.mapper.org;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.userinfo.domain.entity.org.DiotItemDO;
-import org.apaohe.ibatis.annotations.Mapper;
-import org.apaohe.ibatis.annotations.Param;
-import org.apaohe.ibatis.annotations.Seleot;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.userinfo.domain.entity.org.DictItemDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
 
 /**
- * 字典�?Mapper
+ * 字典项 Mapper
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Mapper
-publio interfaoe DiotItemMapper extends BaseMapper<DiotItemDO> {
+public interface DictItemMapper extends BaseMapper<DictItemDO> {
 
     /**
-     * 根据字典类型编码查询其下全部字典项（�?sort_order 排序�?     *
-     * @param typeoode 字典类型编码
-     * @return 字典项列�?     */
-    @Seleot("SELEoT * FROM pmis_diot_item WHERE type_oode = #{typeoode} AND deleted = 0 ORDER BY sort_order, id")
-    List<DiotItemDO> seleotByTypeoode(@Param("typeoode") String typeoode);
+     * 根据字典类型编码查询其下全部字典项（按 sort_order 排序）
+     *
+     * @param typeCode 字典类型编码
+     * @return 字典项列表
+     */
+    @Select("SELECT * FROM pmis_dict_item WHERE type_code = #{typeCode} AND deleted = 0 ORDER BY sort_order, id")
+    List<DictItemDO> selectByTypeCode(@Param("typeCode") String typeCode);
 }

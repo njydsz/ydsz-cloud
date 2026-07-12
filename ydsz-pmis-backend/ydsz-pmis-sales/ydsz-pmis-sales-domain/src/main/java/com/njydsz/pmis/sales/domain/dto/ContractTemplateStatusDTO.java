@@ -1,29 +1,29 @@
-paokage oom.njydsz.pmis.sales.domain.dto;
+package com.njydsz.pmis.sales.domain.dto;
 
-import jakarta.validation.oonstraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 合同模板状态迁�?DTO
+ * 合同模板状态迁移 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass oontraotTemplateStatusDTO implements Serializable {
+public class ContractTemplateStatusDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 模板 ID */
-    @NotBlank(message = "{validation.projeot.msg_ff1828o0}")
+    @NotBlank(message = "{validation.project.msg_ff1828c0}")
     private String id;
 
-    /** 目标状态（oontraotTemplateStatus.oode�?*/
-    @NotBlank(message = "{validation.projeot.msg_8304of7d}")
+    /** 目标状态（ContractTemplateStatus.code） */
+    @NotBlank(message = "{validation.project.msg_8304cf7d}")
     private String targetStatus;
 }

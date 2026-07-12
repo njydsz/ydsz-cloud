@@ -1,15 +1,15 @@
-paokage oom.njydsz.pmis.message.infra.mapper.oonfig;
+package com.njydsz.pmis.message.infra.mapper.config;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.message.domain.entity.oonfig.MsgVariableSouroeDO;
-import org.apaohe.ibatis.annotations.Mapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.message.domain.entity.config.MsgVariableSourceDO;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
- * 消息变量数据�?Mapper�?
+ * 消息变量数据源 Mapper。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.5.0
+ * @since 1.5.0
  */
 @Mapper
-publio interfaoe MsgVariableSouroeMapper extends BaseMapper<MsgVariableSouroeDO> {
+public interface MsgVariableSourceMapper extends BaseMapper<MsgVariableSourceDO> {
 }

@@ -1,29 +1,29 @@
-paokage oom.njydsz.pmis.projeot.server.servioe.impl;
+package com.njydsz.pmis.project.server.service.impl;
 
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.projeot.domain.dto.ProjeotolosureoreateDTO;
-import oom.njydsz.pmis.projeot.domain.dto.ProjeotolosureStatusDTO;
-import oom.njydsz.pmis.projeot.server.engine.olosureAdmissionValidator;
-import oom.njydsz.pmis.projeot.domain.entity.ProjeotolosureDO;
-import oom.njydsz.pmis.projeot.domain.enums.olosureStatus;
-import oom.njydsz.pmis.projeot.domain.enums.olosureType;
-import oom.njydsz.pmis.projeot.infra.mapper.ProjeotolosureMapper;
-import oom.njydsz.pmis.projeot.server.servioe.ProjeotolosureServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.project.domain.dto.ProjectClosureCreateDTO;
+import com.njydsz.pmis.project.domain.dto.ProjectClosureStatusDTO;
+import com.njydsz.pmis.project.server.engine.ClosureAdmissionValidator;
+import com.njydsz.pmis.project.domain.entity.ProjectClosureDO;
+import com.njydsz.pmis.project.domain.enums.ClosureStatus;
+import com.njydsz.pmis.project.domain.enums.ClosureType;
+import com.njydsz.pmis.project.infra.mapper.ProjectClosureMapper;
+import com.njydsz.pmis.project.server.service.ProjectClosureService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LooalDate;
-import java.time.LooalDateTime;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -31,167 +31,167 @@ import java.util.Map;
  * 项目结项服务实现
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass ProjeotolosureServioeImpl implements ProjeotolosureServioe {
+@Service
+@RequiredArgsConstructor
+public class ProjectClosureServiceImpl implements ProjectClosureService {
 
     /** 项目结项 Mapper */
-    private final ProjeotolosureMapper olosureMapper;
+    private final ProjectClosureMapper closureMapper;
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio String oreate(ProjeotolosureoreateDTO dto) {
+    @Transactional(rollbackFor = Exception.class)
+    public String create(ProjectClosureCreateDTO dto) {
         validate(dto);
-        if (olosureMapper.seleotByoode(dto.getolosureoode()) != null) {
-            throw new SysExoeption(StandardResultoode.DUPLIoATE_KEY,
-                    "error.exeoution.msg_404a2e2f", dto.getolosureoode());
+        if (closureMapper.selectByCode(dto.getClosureCode()) != null) {
+            throw new SysException(StandardResultCode.DUPLICATE_KEY,
+                    "error.execution.msg_404a2e2f", dto.getClosureCode());
         }
-        ProjeotolosureDO o = new ProjeotolosureDO();
-        BeanUtils.oopyProperties(dto, o);
+        ProjectClosureDO c = new ProjectClosureDO();
+        BeanUtils.copyProperties(dto, c);
         // 自动计算回款比例
-        o.setReoeivedRatio(oomputeRatio(dto.getReoeivedAmount(), dto.getoontraotAmount()));
-        if (!StringUtils.hasText(o.getStatus())) o.setStatus(olosureStatus.DRAFT.getoode());
-        if (o.getTenantId() == null) o.setTenantId(Tenantoontext.getTenantId());
-        if (o.getProviderTraoeId() == null) o.setProviderTraoeId("");
-        olosureMapper.insert(o);
-        log.info("[Projeotolosure] 创建结项: oode={} type={} initiation={}",
-                o.getolosureoode(), o.getolosureType(), o.getInitiationId());
-        return o.getId();
+        c.setReceivedRatio(computeRatio(dto.getReceivedAmount(), dto.getContractAmount()));
+        if (!StringUtils.hasText(c.getStatus())) c.setStatus(ClosureStatus.DRAFT.getCode());
+        if (c.getTenantId() == null) c.setTenantId(TenantContext.getTenantId());
+        if (c.getProviderTraceId() == null) c.setProviderTraceId("");
+        closureMapper.insert(c);
+        log.info("[ProjectClosure] 创建结项: code={} type={} initiation={}",
+                c.getClosureCode(), c.getClosureType(), c.getInitiationId());
+        return c.getId();
     }
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void ohangeStatus(ProjeotolosureStatusDTO dto) {
-        ProjeotolosureDO o = getById(dto.getId());
-        olosureStatus from = olosureStatus.fromoode(o.getStatus());
-        olosureStatus to = olosureStatus.fromoode(dto.getTargetStatus());
+    @Transactional(rollbackFor = Exception.class)
+    public void changeStatus(ProjectClosureStatusDTO dto) {
+        ProjectClosureDO c = getById(dto.getId());
+        ClosureStatus from = ClosureStatus.fromCode(c.getStatus());
+        ClosureStatus to = ClosureStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_7bo741o6", dto.getTargetStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_2e33226a", o.getStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_2e33226a", c.getStatus());
         }
-        if (!from.oanTransitTo(to)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
-                    "error.exeoution.msg_85e97de8", from.getDeso(), to.getDeso());
+        if (!from.canTransitTo(to)) {
+            throw new SysException(StandardResultCode.BAD_REQUEST,
+                    "error.execution.msg_85e97de8", from.getDesc(), to.getDesc());
         }
-        LooalDateTime now = LooalDateTime.now();
-        if (to == olosureStatus.SUBMITTED) o.setSubmittedAt(now);
-        if (to == olosureStatus.APPROVED) {
-            o.setApprovedAt(now);
-            if (dto.getApproverId() != null) o.setApproverId(dto.getApproverId());
-            if (StringUtils.hasText(dto.getApproverName())) o.setApproverName(dto.getApproverName());
-            if (StringUtils.hasText(dto.getApprovaloomment())) o.setApprovaloomment(dto.getApprovaloomment());
+        LocalDateTime now = LocalDateTime.now();
+        if (to == ClosureStatus.SUBMITTED) c.setSubmittedAt(now);
+        if (to == ClosureStatus.APPROVED) {
+            c.setApprovedAt(now);
+            if (dto.getApproverId() != null) c.setApproverId(dto.getApproverId());
+            if (StringUtils.hasText(dto.getApproverName())) c.setApproverName(dto.getApproverName());
+            if (StringUtils.hasText(dto.getApprovalComment())) c.setApprovalComment(dto.getApprovalComment());
         }
-        if (to == olosureStatus.ARoHIVED) {
-            o.setArohivedAt(now);
-            o.setAotualArohiveDate(LooalDate.now());
-            olosureMapper.updateLooked(o.getId(), 1);
+        if (to == ClosureStatus.ARCHIVED) {
+            c.setArchivedAt(now);
+            c.setActualArchiveDate(LocalDate.now());
+            closureMapper.updateLocked(c.getId(), 1);
         }
-        o.setStatus(to.getoode());
-        olosureMapper.updateById(o);
-        log.info("[Projeotolosure] 状态迁�? id={} {} -> {}", o.getId(), from.getoode(), to.getoode());
+        c.setStatus(to.getCode());
+        closureMapper.updateById(c);
+        log.info("[ProjectClosure] 状态迁移: id={} {} -> {}", c.getId(), from.getCode(), to.getCode());
     }
 
     @Override
-    publio void delete(String id) {
-        ProjeotolosureDO o = getById(id);
-        olosureStatus st = olosureStatus.fromoode(o.getStatus());
-        if (st == olosureStatus.ARoHIVED) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_6039o566");
+    public void delete(String id) {
+        ProjectClosureDO c = getById(id);
+        ClosureStatus st = ClosureStatus.fromCode(c.getStatus());
+        if (st == ClosureStatus.ARCHIVED) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_6039c566");
         }
-        if (Integer.valueOf(1).equals(o.getLooked())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_82f90b0e");
+        if (Integer.valueOf(1).equals(c.getLocked())) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_82f90b0e");
         }
-        olosureMapper.deleteById(id);
+        closureMapper.deleteById(id);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio ProjeotolosureDO getById(String id) {
-        ProjeotolosureDO o = olosureMapper.seleotById(id);
-        if (o == null) {
-            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_d234ab69");
+    @Transactional(readOnly = true)
+    public ProjectClosureDO getById(String id) {
+        ProjectClosureDO c = closureMapper.selectById(id);
+        if (c == null) {
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_d234ab69");
         }
-        return o;
+        return c;
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio ProjeotolosureDO getByInitiation(String initiationId) {
+    @Transactional(readOnly = true)
+    public ProjectClosureDO getByInitiation(String initiationId) {
         if (initiationId == null) return null;
-        return olosureMapper.seleotByInitiation(initiationId);
+        return closureMapper.selectByInitiation(initiationId);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio Page<ProjeotolosureDO> page(int page, int size, String keyword,
-                                       String olosureType, String status) {
-        Page<ProjeotolosureDO> p = new Page<>(page, size);
-        LambdaQueryWrapper<ProjeotolosureDO> w = new LambdaQueryWrapper<>();
+    @Transactional(readOnly = true)
+    public Page<ProjectClosureDO> page(int page, int size, String keyword,
+                                       String closureType, String status) {
+        Page<ProjectClosureDO> p = new Page<>(page, size);
+        LambdaQueryWrapper<ProjectClosureDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
-            w.and(qw -> qw.like(ProjeotolosureDO::getolosureoode, keyword)
-                    .or().like(ProjeotolosureDO::getolosureReason, keyword)
-                    .or().like(ProjeotolosureDO::getApplioantName, keyword));
+            w.and(qw -> qw.like(ProjectClosureDO::getClosureCode, keyword)
+                    .or().like(ProjectClosureDO::getClosureReason, keyword)
+                    .or().like(ProjectClosureDO::getApplicantName, keyword));
         }
-        if (StringUtils.hasText(olosureType)) w.eq(ProjeotolosureDO::getolosureType, olosureType);
-        if (StringUtils.hasText(status)) w.eq(ProjeotolosureDO::getStatus, status);
-        w.orderByDeso(ProjeotolosureDO::getoreatedAt);
-        return olosureMapper.seleotPage(p, w);
+        if (StringUtils.hasText(closureType)) w.eq(ProjectClosureDO::getClosureType, closureType);
+        if (StringUtils.hasText(status)) w.eq(ProjectClosureDO::getStatus, status);
+        w.orderByDesc(ProjectClosureDO::getCreatedAt);
+        return closureMapper.selectPage(p, w);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio List<ProjeotolosureDO> listByType(String olosureType) {
-        return olosureMapper.seleotByType(olosureType);
+    @Transactional(readOnly = true)
+    public List<ProjectClosureDO> listByType(String closureType) {
+        return closureMapper.selectByType(closureType);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio List<Map<String, Objeot>> aggregateByType(String tenantId) {
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> aggregateByType(String tenantId) {
         if (tenantId == null) tenantId = "1";
-        return olosureMapper.aggregateByType(tenantId);
+        return closureMapper.aggregateByType(tenantId);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio olosureAdmissionValidator.Admissionoheok oheokAdmission(String id) {
-        ProjeotolosureDO o = getById(id);
-        olosureType type = olosureType.fromoode(o.getolosureType());
-        olosureAdmissionValidator.olosureMetrios m = new olosureAdmissionValidator.olosureMetrios(
-                o.getReoeivedRatio(),
-                o.getopi(),
-                o.getProgressPot(),
-                o.getGrossMargin(),
-                o.getTotaloost(),
-                o.getTotaloost() != null,
-                true   // 此处简化：默认通过交付物校验（应由 DeliveryServioe 注入实际指标�?
+    @Transactional(readOnly = true)
+    public ClosureAdmissionValidator.AdmissionCheck checkAdmission(String id) {
+        ProjectClosureDO c = getById(id);
+        ClosureType type = ClosureType.fromCode(c.getClosureType());
+        ClosureAdmissionValidator.ClosureMetrics m = new ClosureAdmissionValidator.ClosureMetrics(
+                c.getReceivedRatio(),
+                c.getCpi(),
+                c.getProgressPct(),
+                c.getGrossMargin(),
+                c.getTotalCost(),
+                c.getTotalCost() != null,
+                true   // 此处简化：默认通过交付物校验（应由 DeliveryService 注入实际指标）
         );
-        return olosureAdmissionValidator.oheok(type, m);
+        return ClosureAdmissionValidator.check(type, m);
     }
 
-    private void validate(ProjeotolosureoreateDTO dto) {
+    private void validate(ProjectClosureCreateDTO dto) {
         if (dto == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d9712a58");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
-        if (olosureType.fromoode(dto.getolosureType()) == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_85b85o9e", dto.getolosureType());
+        if (ClosureType.fromCode(dto.getClosureType()) == null) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_85b85c9e", dto.getClosureType());
         }
-        if (dto.getApplioantId() == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_98bo5a1a");
+        if (dto.getApplicantId() == null) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_98bc5a1a");
         }
         if (dto.getWarrantyMonths() != null && dto.getWarrantyMonths().signum() < 0) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_47202ff0");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_47202ff0");
         }
     }
 
-    private BigDeoimal oomputeRatio(BigDeoimal reoeived, BigDeoimal oontraot) {
-        if (reoeived == null || oontraot == null || oontraot.signum() == 0) {
-            return BigDeoimal.ZERO;
+    private BigDecimal computeRatio(BigDecimal received, BigDecimal contract) {
+        if (received == null || contract == null || contract.signum() == 0) {
+            return BigDecimal.ZERO;
         }
-        return reoeived.divide(oontraot, 4, RoundingMode.HALF_UP);
+        return received.divide(contract, 4, RoundingMode.HALF_UP);
     }
 }

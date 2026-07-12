@@ -1,20 +1,20 @@
-paokage oom.njydsz.pmis.projeot.web.oontroller.exeoution;
+package com.njydsz.pmis.project.web.controller.execution;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
-import oom.njydsz.pmis.oommon.audit.annotation.OperationLog;
-import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.projeot.domain.dto.WbsTaskoreateDTO;
-import oom.njydsz.pmis.projeot.domain.dto.WbsTaskStatusDTO;
-import oom.njydsz.pmis.projeot.domain.entity.WbsTaskDO;
-import oom.njydsz.pmis.projeot.server.servioe.WbsTaskServioe;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.OperationLog;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.project.domain.dto.WbsTaskCreateDTO;
+import com.njydsz.pmis.project.domain.dto.WbsTaskStatusDTO;
+import com.njydsz.pmis.project.domain.entity.WbsTaskDO;
+import com.njydsz.pmis.project.server.service.WbsTaskService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.oonstraints.Max;
-import jakarta.validation.oonstraints.Min;
-import lombok.RequiredArgsoonstruotor;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,29 +24,29 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.Restoontroller;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
 /**
- * WBS 任务管理 oontroller
+ * WBS 任务管理 Controller
  *
- * <p>负责任务的创建、状态迁移、进度更新、分页查询及项目整体进度计算�?
+ * <p>负责任务的创建、状态迁移、进度更新、分页查询及项目整体进度计算。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Tag(name = "WBS 任务管理")
-@Restoontroller
-@RequestMapping("/exeoution/wbs")
-@RequiredArgsoonstruotor
+@RestController
+@RequestMapping("/execution/wbs")
+@RequiredArgsConstructor
 @Validated
-publio olass WbsTaskoontroller {
+public class WbsTaskController {
 
     /** WBS 任务服务 */
-    private final WbsTaskServioe servioe;
+    private final WbsTaskService service;
 
     /**
      * 创建 WBS 任务
@@ -55,25 +55,25 @@ publio olass WbsTaskoontroller {
      * @return 新建任务 ID
      */
     @Operation(summary = "创建 WBS 任务")
-    @AuthApiPermission(apioodes = "exeoution:wbs:oreate")
-    @Idempotent(key = "wbsTask:oreate", ttlSeoonds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apiCodes = "execution:wbs:create")
+    @Idempotent(key = "wbsTask:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    publio BaseResponse<String> oreate(@Valid @RequestBody WbsTaskoreateDTO dto) {
-        return BaseResponse.ok(servioe.oreate(dto));
+    public BaseResponse<String> create(@Valid @RequestBody WbsTaskCreateDTO dto) {
+        return BaseResponse.ok(service.create(dto));
     }
 
     /**
-     * 变更任务状�?
+     * 变更任务状态
      *
-     * @param dto 状态变更参�?
-     * @return 空结�?
+     * @param dto 状态变更参数
+     * @return 空结果
      */
-    @Operation(summary = "变更任务状�?)
-    @AuthApiPermission(apioodes = "exeoution:wbs:status")
-    @Idempotent(key = "wbsTask:update", ttlSeoonds = 5, message = "请勿重复提交")
+    @Operation(summary = "变更任务状态")
+    @AuthApiPermission(apiCodes = "execution:wbs:status")
+    @Idempotent(key = "wbsTask:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
-    publio BaseResponse<Void> ohangeStatus(@Valid @RequestBody WbsTaskStatusDTO dto) {
-        servioe.ohangeStatus(dto);
+    public BaseResponse<Void> changeStatus(@Valid @RequestBody WbsTaskStatusDTO dto) {
+        service.changeStatus(dto);
         return BaseResponse.ok();
     }
 
@@ -81,18 +81,18 @@ publio olass WbsTaskoontroller {
      * 更新任务进度
      *
      * @param id           任务 ID
-     * @param progressPot  进度百分比（0-100�?
-     * @param aotualEffort 实际工时（人天），可�?
-     * @return 空结�?
+     * @param progressPct  进度百分比（0-100）
+     * @param actualEffort 实际工时（人天），可选
+     * @return 空结果
      */
     @Operation(summary = "更新任务进度")
-    @AuthApiPermission(apioodes = "exeoution:wbs:update")
-    @Idempotent(key = "wbsTask:updateProgress", ttlSeoonds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apiCodes = "execution:wbs:update")
+    @Idempotent(key = "wbsTask:updateProgress", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/progress")
-    publio BaseResponse<Void> updateProgress(@PathVariable String id,
-                                   @RequestParam BigDeoimal progressPot,
-                                   @RequestParam(required = false) BigDeoimal aotualEffort) {
-        servioe.updateProgress(id, progressPot, aotualEffort);
+    public BaseResponse<Void> updateProgress(@PathVariable String id,
+                                   @RequestParam BigDecimal progressPct,
+                                   @RequestParam(required = false) BigDecimal actualEffort) {
+        service.updateProgress(id, progressPct, actualEffort);
         return BaseResponse.ok();
     }
 
@@ -100,15 +100,15 @@ publio olass WbsTaskoontroller {
      * 删除任务
      *
      * @param id 任务 ID
-     * @return 空结�?
+     * @return 空结果
      */
     @Operation(summary = "删除任务")
-    @AuthApiPermission(apioodes = "exeoution:wbs:delete")
-    @Idempotent(key = "wbsTask:delete", ttlSeoonds = 5, message = "请勿重复提交")
-    @OperationLog(module = "WBS任务", aotion = "删除任务", bizType = "WBS_TASK")
+    @AuthApiPermission(apiCodes = "execution:wbs:delete")
+    @Idempotent(key = "wbsTask:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @OperationLog(module = "WBS任务", action = "删除任务", bizType = "WBS_TASK")
     @DeleteMapping("/{id}")
-    publio BaseResponse<Void> delete(@PathVariable String id) {
-        servioe.delete(id);
+    public BaseResponse<Void> delete(@PathVariable String id) {
+        service.delete(id);
         return BaseResponse.ok();
     }
 
@@ -119,10 +119,10 @@ publio olass WbsTaskoontroller {
      * @return 任务实体
      */
     @Operation(summary = "任务详情")
-    @AuthApiPermission(apioodes = "exeoution:wbs:list")
+    @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/{id}")
-    publio BaseResponse<WbsTaskDO> get(@PathVariable String id) {
-        return BaseResponse.ok(servioe.getById(id));
+    public BaseResponse<WbsTaskDO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -130,17 +130,17 @@ publio olass WbsTaskoontroller {
      *
      * @param page         页码（从 1 开始）
      * @param size         每页大小
-     * @param keyword      关键词（任务名称/编号�?
-     * @param status       状态过�?
+     * @param keyword      关键词（任务名称/编号）
+     * @param status       状态过滤
      * @param taskType     任务类型
      * @param initiationId 项目立项 ID
-     * @param ownerId      责任�?ID
+     * @param ownerId      责任人 ID
      * @return 分页结果
      */
     @Operation(summary = "分页查询")
-    @AuthApiPermission(apioodes = "exeoution:wbs:list")
+    @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/page")
-    publio BaseResponse<Page<WbsTaskDO>> page(
+    public BaseResponse<Page<WbsTaskDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
@@ -148,7 +148,7 @@ publio olass WbsTaskoontroller {
             @RequestParam(required = false) String taskType,
             @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String ownerId) {
-        return BaseResponse.ok(servioe.page(page, size, keyword, status, taskType, initiationId, ownerId));
+        return BaseResponse.ok(service.page(page, size, keyword, status, taskType, initiationId, ownerId));
     }
 
     /**
@@ -158,71 +158,71 @@ publio olass WbsTaskoontroller {
      * @return 任务列表
      */
     @Operation(summary = "项目下的任务列表")
-    @AuthApiPermission(apioodes = "exeoution:wbs:list")
+    @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/initiation/{initiationId}")
-    publio BaseResponse<List<WbsTaskDO>> listByInitiation(@PathVariable String initiationId) {
-        return BaseResponse.ok(servioe.listByInitiation(initiationId));
+    public BaseResponse<List<WbsTaskDO>> listByInitiation(@PathVariable String initiationId) {
+        return BaseResponse.ok(service.listByInitiation(initiationId));
     }
 
     /**
-     * 查询项目下的里程碑任务列�?
+     * 查询项目下的里程碑任务列表
      *
      * @param initiationId 项目立项 ID
-     * @return 里程碑任务列�?
+     * @return 里程碑任务列表
      */
-    @Operation(summary = "项目里程�?)
-    @AuthApiPermission(apioodes = "exeoution:wbs:list")
+    @Operation(summary = "项目里程碑")
+    @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/initiation/{initiationId}/milestones")
-    publio BaseResponse<List<WbsTaskDO>> listMilestones(@PathVariable String initiationId) {
-        return BaseResponse.ok(servioe.listMilestones(initiationId));
+    public BaseResponse<List<WbsTaskDO>> listMilestones(@PathVariable String initiationId) {
+        return BaseResponse.ok(service.listMilestones(initiationId));
     }
 
     /**
-     * 计算项目整体进度（按工时加权�?
+     * 计算项目整体进度（按工时加权）
      *
      * @param initiationId 项目立项 ID
-     * @return 整体进度百分比（0-100�?
+     * @return 整体进度百分比（0-100）
      */
-    @Operation(summary = "项目整体进度（按工时加权�?)
-    @AuthApiPermission(apioodes = "exeoution:wbs:list")
+    @Operation(summary = "项目整体进度（按工时加权）")
+    @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/initiation/{initiationId}/overallProgress")
-    publio BaseResponse<BigDeoimal> overallProgress(@PathVariable String initiationId) {
-        return BaseResponse.ok(servioe.oaloOverallProgress(initiationId));
+    public BaseResponse<BigDecimal> overallProgress(@PathVariable String initiationId) {
+        return BaseResponse.ok(service.calcOverallProgress(initiationId));
     }
 
     /**
-     * 统计项目任务状态分�?
+     * 统计项目任务状态分布
      *
      * @param initiationId 项目立项 ID
-     * @return 各状态任务数量列�?
+     * @return 各状态任务数量列表
      */
-    @Operation(summary = "状态分�?)
-    @AuthApiPermission(apioodes = "exeoution:wbs:list")
+    @Operation(summary = "状态分布")
+    @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/aggregate/status")
-    publio BaseResponse<List<Map<String, Objeot>>> aggregateByStatus(@RequestParam String initiationId) {
-        return BaseResponse.ok(servioe.aggregateByStatus(initiationId));
+    public BaseResponse<List<Map<String, Object>>> aggregateByStatus(@RequestParam String initiationId) {
+        return BaseResponse.ok(service.aggregateByStatus(initiationId));
     }
 
     /**
      * 获取甘特图数据（P0-1：项目甘特图可视化）
      *
-     * <p>返回项目下所�?WBS 任务的甘特图数据，包含：
+     * <p>返回项目下所有 WBS 任务的甘特图数据，包含：
      * <ul>
-     *   <li>树形结构（parent �?ohildren 层级关系�?/li>
+     *   <li>树形结构（parent → children 层级关系）</li>
      *   <li>计划/实际日期范围</li>
-     *   <li>进度百分�?/li>
-     *   <li>前置依赖关系（dependsOn �?taskId 映射�?/li>
-     *   <li>里程碑标�?/li>
+     *   <li>进度百分比</li>
+     *   <li>前置依赖关系（dependsOn → taskId 映射）</li>
+     *   <li>里程碑标记</li>
      *   <li>关键路径标记</li>
      * </ul>
      *
      * @param initiationId 项目立项 ID
-     * @return 甘特图数据结�?
+     * @return 甘特图数据结构
      */
-    @Operation(summary = "甘特图数据（P0-1�?)
-    @AuthApiPermission(apioodes = "exeoution:wbs:list")
+    @Operation(summary = "甘特图数据（P0-1）")
+    @AuthApiPermission(apiCodes = "execution:wbs:list")
     @GetMapping("/gantt/{initiationId}")
-    publio BaseResponse<List<Map<String, Objeot>>> ganttData(@PathVariable String initiationId) {
-        return BaseResponse.ok(servioe.getGanttData(initiationId));
+    public BaseResponse<List<Map<String, Object>>> ganttData(@PathVariable String initiationId) {
+        return BaseResponse.ok(service.getGanttData(initiationId));
     }
 }

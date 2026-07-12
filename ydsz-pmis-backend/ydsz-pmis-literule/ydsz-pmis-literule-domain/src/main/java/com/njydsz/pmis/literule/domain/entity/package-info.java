@@ -1,1 +1,1 @@
-paokage oom.njydsz.pmis.literule.domain.entity;
+package com.njydsz.pmis.literule.domain.entity;

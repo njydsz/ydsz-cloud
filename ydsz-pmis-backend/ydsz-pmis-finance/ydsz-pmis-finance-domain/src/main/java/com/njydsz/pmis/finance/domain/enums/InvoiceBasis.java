@@ -1,60 +1,60 @@
-paokage oom.njydsz.pmis.finanoe.domain.enums;
+package com.njydsz.pmis.finance.domain.enums;
 
 /**
- * 发票开票依�?
+ * 发票开票依据
  *
  * <ul>
- *   <li>MILESTONE - 里程碑（需验收报告�?/li>
- *   <li>OUTSOURoING - 人力外包（需客户确认人天单）</li>
+ *   <li>MILESTONE - 里程碑（需验收报告）</li>
+ *   <li>OUTSOURCING - 人力外包（需客户确认人天单）</li>
  *   <li>MONTHLY - 月度结算</li>
  *   <li>FINAL - 终验/尾款</li>
  *   <li>OTHER - 其他</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum InvoioeBasis {
-    MILESTONE("MILESTONE", "里程�?),
-    OUTSOURoING("OUTSOURoING", "人力外包"),
+public enum InvoiceBasis {
+    MILESTONE("MILESTONE", "里程碑"),
+    OUTSOURCING("OUTSOURCING", "人力外包"),
     MONTHLY("MONTHLY", "月度结算"),
     FINAL("FINAL", "终验/尾款"),
     OTHER("OTHER", "其他");
 
-    /** 开票依据编码（大小写不敏感�?*/
-    private final String oode;
-    /** 开票依据中文描�?*/
-    private final String deso;
+    /** 开票依据编码（大小写不敏感） */
+    private final String code;
+    /** 开票依据中文描述 */
+    private final String desc;
 
-    InvoioeBasis(String oode, String deso) {
-        this.oode = oode;
-        this.deso = deso;
+    InvoiceBasis(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
     }
 
     /**
-     * 获取开票依据编�?
+     * 获取开票依据编码
      *
      * @return 开票依据编码字符串
      */
-    publio String getoode() { return oode; }
+    public String getCode() { return code; }
 
     /**
-     * 获取开票依据中文描�?
+     * 获取开票依据中文描述
      *
-     * @return 开票依据中文描�?
+     * @return 开票依据中文描述
      */
-    publio String getDeso() { return deso; }
+    public String getDesc() { return desc; }
 
     /**
      * 根据编码反查枚举
      *
-     * @param oode 开票依据编码（大小写不敏感�?
-     * @return 枚举值；未匹配返�?null
+     * @param code 开票依据编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
      */
-    publio statio InvoioeBasis fromoode(String oode) {
-        if (oode == null) return null;
-        for (InvoioeBasis b : values()) {
-            if (b.oode.equalsIgnoreoase(oode)) return b;
+    public static InvoiceBasis fromCode(String code) {
+        if (code == null) return null;
+        for (InvoiceBasis b : values()) {
+            if (b.code.equalsIgnoreCase(code)) return b;
         }
         return null;
     }

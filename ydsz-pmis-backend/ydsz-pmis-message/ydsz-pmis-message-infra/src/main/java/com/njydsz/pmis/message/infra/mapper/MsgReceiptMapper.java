@@ -1,15 +1,15 @@
-paokage oom.njydsz.pmis.message.infra.mapper.reoeipt;
+package com.njydsz.pmis.message.infra.mapper.receipt;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.message.domain.entity.reoeipt.MsgReoeiptDO;
-import org.apaohe.ibatis.annotations.Mapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.message.domain.entity.receipt.MsgReceiptDO;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 消息回执 Mapper
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Mapper
-publio interfaoe MsgReoeiptMapper extends BaseMapper<MsgReoeiptDO> {
+public interface MsgReceiptMapper extends BaseMapper<MsgReceiptDO> {
 }

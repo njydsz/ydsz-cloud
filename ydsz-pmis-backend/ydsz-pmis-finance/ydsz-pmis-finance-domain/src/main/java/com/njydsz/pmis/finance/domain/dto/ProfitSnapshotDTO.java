@@ -1,28 +1,28 @@
-paokage oom.njydsz.pmis.finanoe.domain.dto;
+package com.njydsz.pmis.finance.domain.dto;
 
 import lombok.Data;
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 
 /**
  * 利润快照 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass ProfitSnapshotDTO {
+public class ProfitSnapshotDTO {
     private String initiationId;
     private String period;            // YYYY-MM
-    private BigDeoimal oontraotAmount;
-    private BigDeoimal reoognizedRevenue;
-    private BigDeoimal billedAmount;
-    private BigDeoimal reoeivedAmount;
-    private BigDeoimal laboroost;
-    private BigDeoimal purohaseoost;
-    private BigDeoimal expenseoost;
-    private BigDeoimal outsouroeoost;
-    private BigDeoimal allooationoost;
-    private BigDeoimal progressPot;
-    private BigDeoimal billableHours;
-    private BigDeoimal nonBillableHours;
+    private BigDecimal contractAmount;
+    private BigDecimal recognizedRevenue;
+    private BigDecimal billedAmount;
+    private BigDecimal receivedAmount;
+    private BigDecimal laborCost;
+    private BigDecimal purchaseCost;
+    private BigDecimal expenseCost;
+    private BigDecimal outsourceCost;
+    private BigDecimal allocationCost;
+    private BigDecimal progressPct;
+    private BigDecimal billableHours;
+    private BigDecimal nonBillableHours;
 }

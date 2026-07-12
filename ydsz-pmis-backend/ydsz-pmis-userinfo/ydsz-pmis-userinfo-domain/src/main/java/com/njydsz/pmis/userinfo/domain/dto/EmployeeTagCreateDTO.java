@@ -1,36 +1,36 @@
-paokage oom.njydsz.pmis.userinfo.domain.dto.user;
+package com.njydsz.pmis.userinfo.domain.dto.user;
 
-import jakarta.validation.oonstraints.NotBlank;
-import jakarta.validation.oonstraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
  * 人员标签创建/更新 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass EmployeeTagoreateDTO {
+public class EmployeeTagCreateDTO {
 
     /** 员工 ID */
     @NotNull(message = "{validation.user.msg_03f5ae35}")
     private String employeeId;
 
-    /** 标签类型：SKILL/INDUSTRY/DOMAIN/oERT */
+    /** 标签类型：SKILL/INDUSTRY/DOMAIN/CERT */
     @NotBlank(message = "{validation.user.msg_969983ae}")
     private String tagType;
 
     /** 标签编码 */
-    @NotBlank(message = "{validation.user.msg_8faabfao}")
-    private String tagoode;
+    @NotBlank(message = "{validation.user.msg_8faabfac}")
+    private String tagCode;
 
     /** 标签名称 */
     @NotBlank(message = "{validation.user.msg_16eb3ef6}")
     private String tagName;
 
-    /** 熟练�?1-5 */
-    private Integer profioienoy;
+    /** 熟练度 1-5 */
+    private Integer proficiency;
     /** 经验年限 */
     private Integer yearsExp;
     /** 备注 */

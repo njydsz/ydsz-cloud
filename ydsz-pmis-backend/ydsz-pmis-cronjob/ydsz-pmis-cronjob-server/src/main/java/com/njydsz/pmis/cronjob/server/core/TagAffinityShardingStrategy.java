@@ -1,61 +1,61 @@
-paokage oom.njydsz.pmis.oronjob.server.oore.sharding;
+package com.njydsz.pmis.cronjob.server.core.sharding;
 
-import oom.njydsz.pmis.oronjob.server.oore.disoovery.NodeDisooveryStrategy;
-import oom.njydsz.pmis.oronjob.domain.entity.job.JobNodeDO;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.cronjob.server.core.discovery.NodeDiscoveryStrategy;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnProperty;
-import org.springframework.oontext.annotation.oonfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.ArrayList;
-import java.util.oolleotions;
+import java.util.Collections;
 import java.util.List;
 
 /**
- * 标签亲和分片策略（P1-6 分片策略丰富化）�?
+ * 标签亲和分片策略（P1-6 分片策略丰富化）。
  *
- * <p>根据节点的标签（tags）与任务的标签偏好进行匹配，优先分配到标签匹配的节点�?
+ * <p>根据节点的标签（tags）与任务的标签偏好进行匹配，优先分配到标签匹配的节点：
  * <ul>
- *   <li>节点�?tags 字段�?JSON 数组（如 {@oode ["zone-a", "high-mem"]}�?/li>
- *   <li>分片时优先分配到标签匹配的节点，无匹配时降级为平均分�?/li>
- *   <li>标签不匹配的节点不参与分配（除非没有匹配节点�?/li>
+ *   <li>节点的 tags 字段为 JSON 数组（如 {@code ["zone-a", "high-mem"]}）</li>
+ *   <li>分片时优先分配到标签匹配的节点，无匹配时降级为平均分配</li>
+ *   <li>标签不匹配的节点不参与分配（除非没有匹配节点）</li>
  * </ul>
  *
- * <p>启用方式：{@oode pmis.oronjob.sharding-strategy=tag-affinity}
+ * <p>启用方式：{@code pmis.cronjob.sharding-strategy=tag-affinity}
  *
- * <p>适用场景�?
+ * <p>适用场景：
  * <ul>
  *   <li>数据本地化：将处理特定区域数据的任务分配到对应区域的节点</li>
- *   <li>资源隔离：将 GPU 任务分配到有 GPU 标签的节�?/li>
+ *   <li>资源隔离：将 GPU 任务分配到有 GPU 标签的节点</li>
  *   <li>合规要求：将敏感数据处理限制在特定标签的节点</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
 @Slf4j
-@oonfiguration
-@RequiredArgsoonstruotor
-@oonditionalOnProperty(name = "pmis.oronjob.sharding-strategy", havingValue = "tag-affinity")
-publio olass TagAffinityShardingStrategy implements ShardingStrategy {
+@Configuration
+@RequiredArgsConstructor
+@ConditionalOnProperty(name = "pmis.cronjob.sharding-strategy", havingValue = "tag-affinity")
+public class TagAffinityShardingStrategy implements ShardingStrategy {
 
-    private final NodeDisooveryStrategy nodeDisooveryStrategy;
+    private final NodeDiscoveryStrategy nodeDiscoveryStrategy;
 
     @Override
-    publio List<ShardAssignment> assign(int shardTotal, List<String> onlineNodes) {
+    public List<ShardAssignment> assign(int shardTotal, List<String> onlineNodes) {
         if (shardTotal < 1) {
-            throw new IllegalArgumentExoeption("shardTotal 必须 >= 1, 实际: " + shardTotal);
+            throw new IllegalArgumentException("shardTotal 必须 >= 1, 实际: " + shardTotal);
         }
         if (onlineNodes == null || onlineNodes.isEmpty()) {
-            throw new IllegalArgumentExoeption("onlineNodes 不能为空");
+            throw new IllegalArgumentException("onlineNodes 不能为空");
         }
 
         // 标签亲和策略在无标签信息时降级为平均分配
-        // 标签匹配逻辑由调用方在选节点前过滤（通过 NodeSeleotor 实现�?
-        // 这里实现加权平均分配，优先分配到标签匹配的节�?
-        List<JobNodeDO> allNodes = nodeDisooveryStrategy.getOnlineNodes();
+        // 标签匹配逻辑由调用方在选节点前过滤（通过 NodeSelector 实现）
+        // 这里实现加权平均分配，优先分配到标签匹配的节点
+        List<JobNodeDO> allNodes = nodeDiscoveryStrategy.getOnlineNodes();
 
-        // 将节点分为两组：有标签的和无标签�?
+        // 将节点分为两组：有标签的和无标签的
         List<String> taggedNodes = new ArrayList<>();
         List<String> untaggedNodes = new ArrayList<>();
         for (String nodeId : onlineNodes) {
@@ -74,24 +74,24 @@ publio olass TagAffinityShardingStrategy implements ShardingStrategy {
             }
         }
 
-        // 优先分配到有标签的节点，不足时用无标签节点补�?
+        // 优先分配到有标签的节点，不足时用无标签节点补充
         List<String> preferredNodes = taggedNodes.isEmpty() ? onlineNodes : taggedNodes;
         if (preferredNodes.size() < onlineNodes.size() && preferredNodes.size() < shardTotal) {
-            // 有标签节点不够，补充无标签节�?
+            // 有标签节点不够，补充无标签节点
             for (String node : untaggedNodes) {
-                if (!preferredNodes.oontains(node)) {
+                if (!preferredNodes.contains(node)) {
                     preferredNodes.add(node);
                 }
             }
         }
 
-        // 在首选节点列表上做平均分�?
+        // 在首选节点列表上做平均分配
         List<ShardAssignment> result = new ArrayList<>(shardTotal);
-        int nodeoount = preferredNodes.size();
+        int nodeCount = preferredNodes.size();
         for (int i = 0; i < shardTotal; i++) {
-            String node = preferredNodes.get(i % nodeoount);
+            String node = preferredNodes.get(i % nodeCount);
             result.add(new ShardAssignment(node, i));
         }
-        return oolleotions.unmodifiableList(result);
+        return Collections.unmodifiableList(result);
     }
 }

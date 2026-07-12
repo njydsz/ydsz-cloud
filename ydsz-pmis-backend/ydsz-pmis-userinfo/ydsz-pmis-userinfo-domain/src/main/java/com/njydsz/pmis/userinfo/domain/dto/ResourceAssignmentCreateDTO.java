@@ -1,24 +1,24 @@
-paokage oom.njydsz.pmis.userinfo.domain.dto.resouroe;
+package com.njydsz.pmis.userinfo.domain.dto.resource;
 
-import jakarta.validation.oonstraints.NotBlank;
-import jakarta.validation.oonstraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.math.BigDeoimal;
-import java.time.LooalDate;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * 资源分配创建/更新 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass ResouroeAssignmentoreateDTO {
+public class ResourceAssignmentCreateDTO {
 
     /** 分配编号 */
     @NotBlank(message = "{validation.user.msg_4a557f63}")
-    private String assignmentoode;
+    private String assignmentCode;
 
     /** 员工 ID */
     @NotNull(message = "{validation.user.msg_03f5ae35}")
@@ -27,36 +27,36 @@ publio olass ResouroeAssignmentoreateDTO {
     /** 员工姓名 */
     private String employeeName;
     /** 职级编码 */
-    private String leveloode;
+    private String levelCode;
 
-    /** 资源�?ID */
+    /** 资源池 ID */
     private String poolId;
-    /** 冗余池类型便于查�?*/
+    /** 冗余池类型便于查询 */
     private String poolType;
 
     /** 关联项目 ID */
     private String initiationId;
     /** 关联项目名称 */
     private String initiationName;
-    /** 关联商机 ID（预占时�?*/
+    /** 关联商机 ID（预占时） */
     private String opportunityId;
 
-    /** 业务动作：RESERVE/START/TRANSFER/RELEASE/oANoEL */
-    @NotBlank(message = "{validation.user.msg_ao3aoa15}")
-    private String aotion;
+    /** 业务动作：RESERVE/START/TRANSFER/RELEASE/CANCEL */
+    @NotBlank(message = "{validation.user.msg_ac3aca15}")
+    private String action;
 
     /** 投入占比 (0-1) */
-    private BigDeoimal allooation;
-    /** 计划开始日�?*/
-    private LooalDate plannedStartDate;
+    private BigDecimal allocation;
+    /** 计划开始日期 */
+    private LocalDate plannedStartDate;
     /** 计划结束日期 */
-    private LooalDate plannedEndDate;
-    /** 实际开始日�?*/
-    private LooalDate aotualStartDate;
+    private LocalDate plannedEndDate;
+    /** 实际开始日期 */
+    private LocalDate actualStartDate;
     /** 实际结束日期 */
-    private LooalDate aotualEndDate;
-    /** 1=可计�?*/
+    private LocalDate actualEndDate;
+    /** 1=可计费 */
     private Integer billable;
     /** 每日投入工时 */
-    private BigDeoimal dailyHours;
+    private BigDecimal dailyHours;
 }

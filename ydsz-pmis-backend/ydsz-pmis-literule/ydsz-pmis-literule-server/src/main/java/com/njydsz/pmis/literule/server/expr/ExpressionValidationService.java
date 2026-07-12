@@ -1,4 +1,4 @@
-paokage oom.njydsz.pmis.literule.server.expr;
+package com.njydsz.pmis.literule.server.expr;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -6,44 +6,48 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matoher;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 表达式校验服�? *
- * <p>面向前端表达式编辑器的高层校�?API，封�?{@link ExpressionEvaluator#validateDetailed(String)}
- * 并叠加业务语义校验（条件表达式必须返�?boolean、严重度表达式取值合法、模板占位符闭合等）�? *
- * <p>1.4.0 起支�?VariableRegistry（P2-4）：
+ * 表达式校验服务
+ *
+ * <p>面向前端表达式编辑器的高层校验 API，封装 {@link ExpressionEvaluator#validateDetailed(String)}
+ * 并叠加业务语义校验（条件表达式必须返回 boolean、严重度表达式取值合法、模板占位符闭合等）。
+ *
+ * <p>1.4.0 起支持 VariableRegistry（P2-4）：
  * <ul>
- *   <li>当注入非�?{@link VariableRegistry} 时，启用 UNDEFINED_VARIABLE 校验</li>
- *   <li>对条�?严重度表达式中引用的变量，逐一查询 registry，未注册的变量收集为 UNDEFINED_VARIABLE 错误</li>
+ *   <li>当注入非空 {@link VariableRegistry} 时，启用 UNDEFINED_VARIABLE 校验</li>
+ *   <li>对条件/严重度表达式中引用的变量，逐一查询 registry，未注册的变量收集为 UNDEFINED_VARIABLE 错误</li>
  *   <li>对模板表达式中的 ${var} 占位符，同样查询 registry</li>
- *   <li>�?registry �?{@link EmptyVariableRegistry} 时（默认），跳过 UNDEFINED_VARIABLE 校验，保持向后兼�?/li>
+ *   <li>当 registry 为 {@link EmptyVariableRegistry} 时（默认），跳过 UNDEFINED_VARIABLE 校验，保持向后兼容</li>
  * </ul>
  *
- * <p>Bean 装配�?{@link oom.njydsz.pmis.literule.server.oonfig.LiteRuleAutooonfiguration#expressionValidationServioe}�? *
+ * <p>Bean 装配见 {@link com.njydsz.pmis.literule.server.config.LiteRuleAutoConfiguration#expressionValidationService}。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.4.0
+ * @since 1.4.0
  */
 @Slf4j
-publio olass ExpressionValidationServioe {
+public class ExpressionValidationService {
 
-    /** 表达式求值器，执行底�?LiteExpr 表达式编译与求�?*/
+    /** 表达式求值器，执行底层 LiteExpr 表达式编译与求值 */
     private final ExpressionEvaluator evaluator;
-    /** 变量注册表，用于校验表达式中引用的变量是否已声明（为 EmptyVariableRegistry 时跳过该校验�?*/
+    /** 变量注册表，用于校验表达式中引用的变量是否已声明（为 EmptyVariableRegistry 时跳过该校验） */
     private final VariableRegistry variableRegistry;
 
-    /** 模板占位符正则：${var} �?${ a.b.o } */
-    private statio final Pattern TEMPLATE_PLAoEHOLDER_PATTERN = Pattern.oompile("\\$\\{([^}]*)\\}");
+    /** 模板占位符正则：${var} 或 ${ a.b.c } */
+    private static final Pattern TEMPLATE_PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]*)\\}");
 
-    /** 不平衡的 ${ 开占位符（用于检测未闭合�?*/
-    private statio final Pattern UNoLOSED_PLAoEHOLDER_PATTERN = Pattern.oompile("\\$\\{[^}]*$");
+    /** 不平衡的 ${ 开占位符（用于检测未闭合） */
+    private static final Pattern UNCLOSED_PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{[^}]*$");
 
     /**
-     * 构造表达式校验服务（不启用 UNDEFINED_VARIABLE 校验�?     *
+     * 构造表达式校验服务（不启用 UNDEFINED_VARIABLE 校验）
+     *
      * @param evaluator 表达式求值器
      */
-    publio ExpressionValidationServioe(ExpressionEvaluator evaluator) {
+    public ExpressionValidationService(ExpressionEvaluator evaluator) {
         this(evaluator, new EmptyVariableRegistry());
     }
 
@@ -51,54 +55,63 @@ publio olass ExpressionValidationServioe {
      * 构造表达式校验服务
      *
      * @param evaluator 表达式求值器
-     * @param variableRegistry 变量注册表（null 时使�?EmptyVariableRegistry，跳�?UNDEFINED_VARIABLE 校验�?     */
-    publio ExpressionValidationServioe(ExpressionEvaluator evaluator, VariableRegistry variableRegistry) {
+     * @param variableRegistry 变量注册表（null 时使用 EmptyVariableRegistry，跳过 UNDEFINED_VARIABLE 校验）
+     */
+    public ExpressionValidationService(ExpressionEvaluator evaluator, VariableRegistry variableRegistry) {
         this.evaluator = evaluator;
         this.variableRegistry = variableRegistry != null ? variableRegistry : new EmptyVariableRegistry();
         if (!this.variableRegistry.isEmpty()) {
-            log.info("[LiteRule-Expr] 变量空间校验已启用（已注�?{} 个变量）", this.variableRegistry.listAll().size());
+            log.info("[LiteRule-Expr] 变量空间校验已启用（已注册 {} 个变量）", this.variableRegistry.listAll().size());
         }
     }
 
     /**
-     * 校验条件表达式（必须返回 boolean�?     *
-     * <p>当注入非�?{@link VariableRegistry} 时，叠加 UNDEFINED_VARIABLE 校验�?     *
-     * @param expression 条件表达�?     * @return 校验结果
+     * 校验条件表达式（必须返回 boolean）
+     *
+     * <p>当注入非空 {@link VariableRegistry} 时，叠加 UNDEFINED_VARIABLE 校验。
+     *
+     * @param expression 条件表达式
+     * @return 校验结果
      */
-    publio ExpressionValidationResult validateoondition(String expression) {
+    public ExpressionValidationResult validateCondition(String expression) {
         ExpressionValidationResult base = evaluator.validateDetailed(expression);
-        // 语法不通过时直接返回，不进入变量校验阶�?        if (!base.isValid()) {
+        // 语法不通过时直接返回，不进入变量校验阶段
+        if (!base.isValid()) {
             return base;
         }
-        return oheokUndefinedVariables(base);
+        return checkUndefinedVariables(base);
     }
 
     /**
-     * 校验严重度表达式（可选，返回值应�?RED/YELLOW/INFO�?     *
+     * 校验严重度表达式（可选，返回值应为 RED/YELLOW/INFO）
+     *
      * <p>仅校验语法合法性，不强制返回值约束（因为严重度表达式可以返回任意字符串，
-     * �?{@link oom.njydsz.pmis.literule.api.RuleSeverity#fromoode(String)} 解析）�?     *
+     * 由 {@link com.njydsz.pmis.literule.api.RuleSeverity#fromCode(String)} 解析）。
+     *
      * @param expression 严重度表达式
      * @return 校验结果
      */
-    publio ExpressionValidationResult validateSeverity(String expression) {
+    public ExpressionValidationResult validateSeverity(String expression) {
         if (expression == null || expression.isBlank()) {
-            // 严重度表达式可选，为空时使�?defaultSeverity
+            // 严重度表达式可选，为空时使用 defaultSeverity
             return ExpressionValidationResult.ok(expression, 0L, List.of());
         }
         ExpressionValidationResult base = evaluator.validateDetailed(expression);
         if (!base.isValid()) {
             return base;
         }
-        return oheokUndefinedVariables(base);
+        return checkUndefinedVariables(base);
     }
 
     /**
      * 校验模板表达式（支持 ${var} 占位符）
      *
-     * <p>当注入非�?{@link VariableRegistry} 时，�?${var} 中的变量�?UNDEFINED_VARIABLE 校验�?     *
-     * @param template 模板字符�?     * @return 校验结果
+     * <p>当注入非空 {@link VariableRegistry} 时，对 ${var} 中的变量做 UNDEFINED_VARIABLE 校验。
+     *
+     * @param template 模板字符串
+     * @return 校验结果
      */
-    publio ExpressionValidationResult validateTemplate(String template) {
+    public ExpressionValidationResult validateTemplate(String template) {
         long start = System.nanoTime();
         long elapsed;
 
@@ -109,46 +122,50 @@ publio olass ExpressionValidationServioe {
         }
 
         // 检测未闭合的占位符
-        if (UNoLOSED_PLAoEHOLDER_PATTERN.matoher(template).find()) {
+        if (UNCLOSED_PLACEHOLDER_PATTERN.matcher(template).find()) {
             elapsed = (System.nanoTime() - start) / 1_000_000L;
             return ExpressionValidationResult.fail(template,
                     ExpressionValidationResult.ErrorType.TEMPLATE_FORMAT_ERROR,
-                    "模板存在未闭合的占位�?${ ... }，缺�?}", elapsed);
+                    "模板存在未闭合的占位符 ${ ... }，缺少 }", elapsed);
         }
 
-        // 提取占位符中引用的变�?        List<String> referenoedVars = new ArrayList<>();
-        Matoher m = TEMPLATE_PLAoEHOLDER_PATTERN.matoher(template);
+        // 提取占位符中引用的变量
+        List<String> referencedVars = new ArrayList<>();
+        Matcher m = TEMPLATE_PLACEHOLDER_PATTERN.matcher(template);
         while (m.find()) {
             String var = m.group(1).trim();
             if (!var.isEmpty()) {
-                referenoedVars.add(var);
+                referencedVars.add(var);
             }
         }
 
         elapsed = (System.nanoTime() - start) / 1_000_000L;
-        ExpressionValidationResult result = ExpressionValidationResult.ok(template, elapsed, referenoedVars);
+        ExpressionValidationResult result = ExpressionValidationResult.ok(template, elapsed, referencedVars);
 
         // 叠加变量存在性校验（仅当 registry 非空时）
-        return oheokUndefinedVariables(result);
+        return checkUndefinedVariables(result);
     }
 
     /**
      * 校验表达式中的变量是否已注册
      *
-     * <p>�?{@link #variableRegistry} 为空（{@link EmptyVariableRegistry}）时，跳过校验�?     * �?registry 非空时，遍历 referenoedVariables，收集未注册的变量�?     *
-     * @param base 基础校验结果（已通过语法校验�?     * @return 叠加 UNDEFINED_VARIABLE 校验后的结果
+     * <p>当 {@link #variableRegistry} 为空（{@link EmptyVariableRegistry}）时，跳过校验。
+     * 当 registry 非空时，遍历 referencedVariables，收集未注册的变量。
+     *
+     * @param base 基础校验结果（已通过语法校验）
+     * @return 叠加 UNDEFINED_VARIABLE 校验后的结果
      */
-    private ExpressionValidationResult oheokUndefinedVariables(ExpressionValidationResult base) {
+    private ExpressionValidationResult checkUndefinedVariables(ExpressionValidationResult base) {
         if (variableRegistry == null || variableRegistry.isEmpty()) {
             return base;
         }
-        List<String> referenoed = base.getReferenoedVariables();
-        if (referenoed == null || referenoed.isEmpty()) {
+        List<String> referenced = base.getReferencedVariables();
+        if (referenced == null || referenced.isEmpty()) {
             return base;
         }
         List<String> undefined = new ArrayList<>();
-        for (String var : referenoed) {
-            if (!variableRegistry.oontains(var)) {
+        for (String var : referenced) {
+            if (!variableRegistry.contains(var)) {
                 undefined.add(var);
             }
         }
@@ -162,10 +179,10 @@ publio olass ExpressionValidationServioe {
                 .errorType(ExpressionValidationResult.ErrorType.UNDEFINED_VARIABLE)
                 .errorMessage(msg)
                 .errorLine(-1)
-                .erroroolumn(-1)
+                .errorColumn(-1)
                 .expression(base.getExpression())
                 .parseTimeMs(base.getParseTimeMs())
-                .referenoedVariables(referenoed)
+                .referencedVariables(referenced)
                 .build();
     }
 
@@ -175,19 +192,19 @@ publio olass ExpressionValidationServioe {
      * @param expressions 表达式列表（key=标签，value=表达式文本）
      * @return 校验结果列表（与输入顺序一致）
      */
-    publio Map<String, ExpressionValidationResult> validateBatoh(Map<String, String> expressions) {
+    public Map<String, ExpressionValidationResult> validateBatch(Map<String, String> expressions) {
         Map<String, ExpressionValidationResult> results = new LinkedHashMap<>();
         if (expressions == null) {
             return results;
         }
-        expressions.forEaoh((label, expr) -> {
+        expressions.forEach((label, expr) -> {
             ExpressionValidationResult result;
             try {
                 result = evaluator.validateDetailed(expr);
                 if (result.isValid()) {
-                    result = oheokUndefinedVariables(result);
+                    result = checkUndefinedVariables(result);
                 }
-            } oatoh (Exoeption e) {
+            } catch (Exception e) {
                 result = ExpressionValidationResult.fail(expr,
                         ExpressionValidationResult.ErrorType.UNKNOWN,
                         "校验异常: " + e.getMessage(), 0L);
@@ -202,7 +219,7 @@ publio olass ExpressionValidationServioe {
      *
      * @return 变量定义列表
      */
-    publio List<VariableDefinition> listAvailableVariables() {
+    public List<VariableDefinition> listAvailableVariables() {
         if (variableRegistry == null) {
             return List.of();
         }
@@ -212,52 +229,60 @@ publio olass ExpressionValidationServioe {
     /**
      * 按类别查询已注册变量
      *
-     * @param oategory 变量类别
+     * @param category 变量类别
      * @return 变量定义列表
      */
-    publio List<VariableDefinition> listVariablesByoategory(String oategory) {
+    public List<VariableDefinition> listVariablesByCategory(String category) {
         if (variableRegistry == null) {
             return List.of();
         }
-        return variableRegistry.listByoategory(oategory);
+        return variableRegistry.listByCategory(category);
     }
 
     /**
      * 获取变量注册表（暴露给外部用于注册变量）
      *
-     * @return 变量注册�?     */
-    publio VariableRegistry getVariableRegistry() {
+     * @return 变量注册表
+     */
+    public VariableRegistry getVariableRegistry() {
         return variableRegistry;
     }
 
     /**
-     * 表达式求值预览（P2-8�?     *
-     * <p>给定表达式与样例事实数据，返回求值结果，供前端表达式编辑器实时预览�?     * 语法错误或求值异常时返回结构化的错误信息，不抛异常�?     *
-     * @param expression 表达�?     * @param faots      样例事实数据
-     * @return 求值结果（�?value / type / error�?     * @sinoe 1.5.1
+     * 表达式求值预览（P2-8）
+     *
+     * <p>给定表达式与样例事实数据，返回求值结果，供前端表达式编辑器实时预览。
+     * 语法错误或求值异常时返回结构化的错误信息，不抛异常。
+     *
+     * @param expression 表达式
+     * @param facts      样例事实数据
+     * @return 求值结果（含 value / type / error）
+     * @since 1.5.1
      */
-    publio ExpressionPreviewResult previewEvaluate(String expression, Map<String, Objeot> faots) {
+    public ExpressionPreviewResult previewEvaluate(String expression, Map<String, Object> facts) {
         long start = System.nanoTime();
         ExpressionPreviewResult result = new ExpressionPreviewResult();
         result.setExpression(expression);
         if (expression == null || expression.isBlank()) {
-            result.setError("表达式为�?);
+            result.setError("表达式为空");
             return result;
         }
-        // 先校验语�?        ExpressionValidationResult validation = evaluator.validateDetailed(expression);
+        // 先校验语法
+        ExpressionValidationResult validation = evaluator.validateDetailed(expression);
         if (!validation.isValid()) {
             result.setError("语法错误: " + validation.getErrorMessage());
             return result;
         }
-        // 求�?        try {
-            oom.njydsz.pmis.literule.api.Ruleoontext otx =
-                    oom.njydsz.pmis.literule.api.Ruleoontext.of(faots != null ? faots : Map.of());
-            Objeot value = evaluator.eval(expression, otx);
+        // 求值
+        try {
+            com.njydsz.pmis.literule.api.RuleContext ctx =
+                    com.njydsz.pmis.literule.api.RuleContext.of(facts != null ? facts : Map.of());
+            Object value = evaluator.eval(expression, ctx);
             result.setValue(value == null ? "null" : String.valueOf(value));
-            result.setJavaType(value == null ? "null" : value.getolass().getSimpleName());
-            result.setBooleanValue(value instanoeof Boolean b ? b : null);
-        } oatoh (Exoeption e) {
-            result.setError("求值失�? " + e.getMessage());
+            result.setJavaType(value == null ? "null" : value.getClass().getSimpleName());
+            result.setBooleanValue(value instanceof Boolean b ? b : null);
+        } catch (Exception e) {
+            result.setError("求值失败: " + e.getMessage());
         }
         result.setElapsedMs((System.nanoTime() - start) / 1_000_000L);
         return result;

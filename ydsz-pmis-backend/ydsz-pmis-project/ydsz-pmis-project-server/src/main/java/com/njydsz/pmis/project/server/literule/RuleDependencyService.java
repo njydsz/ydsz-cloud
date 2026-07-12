@@ -1,17 +1,17 @@
-paokage oom.njydsz.pmis.projeot.server.literule;
+package com.njydsz.pmis.project.server.literule;
 
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.njydsz.pmis.literule.domain.entity.RuleDependenoyDO;
-import oom.njydsz.pmis.literule.infra.mapper.RuleDependenoyMapper;
-import oom.njydsz.pmis.literule.server.spi.RuleDependenoyProvider;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.literule.domain.entity.RuleDependencyDO;
+import com.njydsz.pmis.literule.infra.mapper.RuleDependencyMapper;
+import com.njydsz.pmis.literule.server.spi.RuleDependencyProvider;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.oolleotions;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -19,137 +19,137 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.oonourrent.oonourrentHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.LinkedList;
 
 /**
- * 规则依赖关系 Servioe（P1-8�?
+ * 规则依赖关系 Service（P1-8）
  *
- * <p>提供规则依赖�?oRUD、循环依赖检测、级联禁用影响范围计算等能力�?
+ * <p>提供规则依赖的 CRUD、循环依赖检测、级联禁用影响范围计算等能力。
  *
- * <p>实现 {@link RuleDependenoyProvider} SPI，供 literule 模块�?oontroller 反转依赖调用�?
+ * <p>实现 {@link RuleDependencyProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.5.0
+ * @since 1.5.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass RuleDependenoyServioe implements RuleDependenoyProvider {
+@Service
+@RequiredArgsConstructor
+public class RuleDependencyService implements RuleDependencyProvider {
 
-    private final RuleDependenoyMapper ruleDependenoyMapper;
+    private final RuleDependencyMapper ruleDependencyMapper;
 
-    /** 循环依赖检测缓存：fromoode �?Set(tooodes) */
-    private final Map<String, Set<String>> oyoleDeteotoaohe = new oonourrentHashMap<>();
+    /** 循环依赖检测缓存：fromCode → Set(toCodes) */
+    private final Map<String, Set<String>> cycleDetectCache = new ConcurrentHashMap<>();
 
     /**
      * 新增依赖
      *
-     * <p>若已存在相同�?(ruleoode, dependsOnRuleoode, dependenoyType) 三元组则直接返回已有记录�?
+     * <p>若已存在相同的 (ruleCode, dependsOnRuleCode, dependencyType) 三元组则直接返回已有记录。
      *
      * @return 保存后的依赖记录
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio RuleDependenoyDO add(String ruleoode, String dependsOnRuleoode, String dependenoyType,
-                                boolean oasoadeOnDisable, String desoription, String operator) {
-        if (ruleoode == null || ruleoode.isBlank()) {
-            throw new IllegalArgumentExoeption("ruleoode 不能为空");
+    @Transactional(rollbackFor = Exception.class)
+    public RuleDependencyDO add(String ruleCode, String dependsOnRuleCode, String dependencyType,
+                                boolean cascadeOnDisable, String description, String operator) {
+        if (ruleCode == null || ruleCode.isBlank()) {
+            throw new IllegalArgumentException("ruleCode 不能为空");
         }
-        if (dependsOnRuleoode == null || dependsOnRuleoode.isBlank()) {
-            throw new IllegalArgumentExoeption("dependsOnRuleoode 不能为空");
+        if (dependsOnRuleCode == null || dependsOnRuleCode.isBlank()) {
+            throw new IllegalArgumentException("dependsOnRuleCode 不能为空");
         }
-        if (ruleoode.equals(dependsOnRuleoode)) {
-            throw new IllegalArgumentExoeption("规则不能依赖自身: " + ruleoode);
+        if (ruleCode.equals(dependsOnRuleCode)) {
+            throw new IllegalArgumentException("规则不能依赖自身: " + ruleCode);
         }
-        String depType = (dependenoyType == null || dependenoyType.isBlank()) ? "EXEoUTE" : dependenoyType;
+        String depType = (dependencyType == null || dependencyType.isBlank()) ? "EXECUTE" : dependencyType;
 
-        // 重复检�?
-        List<RuleDependenoyDO> existing = ruleDependenoyMapper.seleotByRuleoode(ruleoode);
-        for (RuleDependenoyDO d : existing) {
-            if (dependsOnRuleoode.equals(d.getDependsOnRuleoode()) && depType.equals(d.getDependenoyType())) {
-                log.info("[RuleDependenoy] 依赖已存在，直接返回: {} -> {}", ruleoode, dependsOnRuleoode);
+        // 重复检查
+        List<RuleDependencyDO> existing = ruleDependencyMapper.selectByRuleCode(ruleCode);
+        for (RuleDependencyDO d : existing) {
+            if (dependsOnRuleCode.equals(d.getDependsOnRuleCode()) && depType.equals(d.getDependencyType())) {
+                log.info("[RuleDependency] 依赖已存在，直接返回: {} -> {}", ruleCode, dependsOnRuleCode);
                 return d;
             }
         }
 
         // 循环检测：先添加这条，再做 BFS 检测是否形成环
-        RuleDependenoyDO entity = new RuleDependenoyDO();
-        entity.setRuleoode(ruleoode);
-        entity.setDependsOnRuleoode(dependsOnRuleoode);
-        entity.setDependenoyType(depType);
-        entity.setoasoadeOnDisable(oasoadeOnDisable);
-        entity.setDesoription(desoription);
-        entity.setTenantId(Tenantoontext.getTenantId());
-        entity.setoreatedBy(operator == null ? "SYSTEM" : operator);
-        entity.setoreatedAt(LooalDateTime.now());
-        ruleDependenoyMapper.insert(entity);
+        RuleDependencyDO entity = new RuleDependencyDO();
+        entity.setRuleCode(ruleCode);
+        entity.setDependsOnRuleCode(dependsOnRuleCode);
+        entity.setDependencyType(depType);
+        entity.setCascadeOnDisable(cascadeOnDisable);
+        entity.setDescription(description);
+        entity.setTenantId(TenantContext.getTenantId());
+        entity.setCreatedBy(operator == null ? "SYSTEM" : operator);
+        entity.setCreatedAt(LocalDateTime.now());
+        ruleDependencyMapper.insert(entity);
 
         // 重新构建邻接表并检测环
-        invalidateoaohe();
-        List<String> oyole = deteotoyole(ruleoode);
-        if (!oyole.isEmpty()) {
+        invalidateCache();
+        List<String> cycle = detectCycle(ruleCode);
+        if (!cycle.isEmpty()) {
             // 回滚此次新增
-            ruleDependenoyMapper.deleteById(entity.getId());
-            throw new IllegalStateExoeption("检测到循环依赖: " + String.join(" -> ", oyole));
+            ruleDependencyMapper.deleteById(entity.getId());
+            throw new IllegalStateException("检测到循环依赖: " + String.join(" -> ", cycle));
         }
 
-        log.info("[RuleDependenoy] 新增依赖: {} -> {}, type={}, oasoade={}",
-                ruleoode, dependsOnRuleoode, depType, oasoadeOnDisable);
+        log.info("[RuleDependency] 新增依赖: {} -> {}, type={}, cascade={}",
+                ruleCode, dependsOnRuleCode, depType, cascadeOnDisable);
         return entity;
     }
 
     /**
-     * 删除一条依�?
+     * 删除一条依赖
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void remove(String ruleoode, String dependsOnRuleoode) {
-        if (ruleoode == null || dependsOnRuleoode == null) return;
-        List<RuleDependenoyDO> deps = ruleDependenoyMapper.seleotByRuleoode(ruleoode);
-        for (RuleDependenoyDO d : deps) {
-            if (dependsOnRuleoode.equals(d.getDependsOnRuleoode())) {
-                ruleDependenoyMapper.deleteById(d.getId());
-                log.info("[RuleDependenoy] 删除依赖: {} -> {}", ruleoode, dependsOnRuleoode);
-                invalidateoaohe();
+    @Transactional(rollbackFor = Exception.class)
+    public void remove(String ruleCode, String dependsOnRuleCode) {
+        if (ruleCode == null || dependsOnRuleCode == null) return;
+        List<RuleDependencyDO> deps = ruleDependencyMapper.selectByRuleCode(ruleCode);
+        for (RuleDependencyDO d : deps) {
+            if (dependsOnRuleCode.equals(d.getDependsOnRuleCode())) {
+                ruleDependencyMapper.deleteById(d.getId());
+                log.info("[RuleDependency] 删除依赖: {} -> {}", ruleCode, dependsOnRuleCode);
+                invalidateCache();
                 return;
             }
         }
     }
 
     /**
-     * 查询规则的依赖（正向：依赖了哪些�?
+     * 查询规则的依赖（正向：依赖了哪些）
      */
-    publio List<RuleDependenoyDO> listDependenoies(String ruleoode) {
-        if (ruleoode == null) return oolleotions.emptyList();
-        return ruleDependenoyMapper.seleotByRuleoode(ruleoode);
+    public List<RuleDependencyDO> listDependencies(String ruleCode) {
+        if (ruleCode == null) return Collections.emptyList();
+        return ruleDependencyMapper.selectByRuleCode(ruleCode);
     }
 
     /**
-     * 查询被依赖（反向：被哪些规则依赖�?
+     * 查询被依赖（反向：被哪些规则依赖）
      */
-    publio List<RuleDependenoyDO> listDependents(String ruleoode) {
-        if (ruleoode == null) return oolleotions.emptyList();
-        return ruleDependenoyMapper.seleotByDependsOn(ruleoode);
+    public List<RuleDependencyDO> listDependents(String ruleCode) {
+        if (ruleCode == null) return Collections.emptyList();
+        return ruleDependencyMapper.selectByDependsOn(ruleCode);
     }
 
     /**
      * 计算禁用某条规则时，需要级联禁用的规则列表
      *
-     * <p>采用 BFS 沿着反向依赖图传播：X depends on ruleoode �?oasoadeOnDisable=true，则 X 需要级联禁用；
-     * 然后继续�?X 为新的禁用点向下传播�?
+     * <p>采用 BFS 沿着反向依赖图传播：X depends on ruleCode 且 cascadeOnDisable=true，则 X 需要级联禁用；
+     * 然后继续以 X 为新的禁用点向下传播。
      */
-    publio List<String> oasoadingDisable(String ruleoode) {
-        if (ruleoode == null || ruleoode.isBlank()) return oolleotions.emptyList();
+    public List<String> cascadingDisable(String ruleCode) {
+        if (ruleCode == null || ruleCode.isBlank()) return Collections.emptyList();
         List<String> result = new ArrayList<>();
         Set<String> visited = new HashSet<>();
         Queue<String> queue = new LinkedList<>();
-        queue.offer(ruleoode);
-        visited.add(ruleoode);
+        queue.offer(ruleCode);
+        visited.add(ruleCode);
 
         while (!queue.isEmpty()) {
-            String ourrent = queue.poll();
-            List<RuleDependenoyDO> oasoading = ruleDependenoyMapper.seleotoasoadingByDependsOn(ourrent);
-            for (RuleDependenoyDO d : oasoading) {
-                String dependent = d.getRuleoode();
+            String current = queue.poll();
+            List<RuleDependencyDO> cascading = ruleDependencyMapper.selectCascadingByDependsOn(current);
+            for (RuleDependencyDO d : cascading) {
+                String dependent = d.getRuleCode();
                 if (visited.add(dependent)) {
                     result.add(dependent);
                     queue.offer(dependent);
@@ -160,39 +160,39 @@ publio olass RuleDependenoyServioe implements RuleDependenoyProvider {
     }
 
     /**
-     * 检测从 ruleoode 出发是否存在循环依赖
+     * 检测从 ruleCode 出发是否存在循环依赖
      *
      * @return 若存在循环，返回循环路径；否则返回空列表
      */
-    publio List<String> deteotoyole(String ruleoode) {
-        Map<String, Set<String>> adj = buildAdjaoenoyMap();
+    public List<String> detectCycle(String ruleCode) {
+        Map<String, Set<String>> adj = buildAdjacencyMap();
         Set<String> visiting = new HashSet<>();
         Set<String> visited = new HashSet<>();
         List<String> path = new ArrayList<>();
-        if (hasoyoleFrom(ruleoode, adj, visiting, visited, path)) {
+        if (hasCycleFrom(ruleCode, adj, visiting, visited, path)) {
             return path;
         }
-        return oolleotions.emptyList();
+        return Collections.emptyList();
     }
 
-    private boolean hasoyoleFrom(String node, Map<String, Set<String>> adj,
+    private boolean hasCycleFrom(String node, Map<String, Set<String>> adj,
                                  Set<String> visiting, Set<String> visited, List<String> path) {
-        if (visiting.oontains(node)) {
+        if (visiting.contains(node)) {
             int idx = path.indexOf(node);
             if (idx >= 0) {
-                List<String> oyole = new ArrayList<>(path.subList(idx, path.size()));
-                oyole.add(node);
-                path.olear();
-                path.addAll(oyole);
+                List<String> cycle = new ArrayList<>(path.subList(idx, path.size()));
+                cycle.add(node);
+                path.clear();
+                path.addAll(cycle);
             }
             return true;
         }
-        if (visited.oontains(node)) return false;
+        if (visited.contains(node)) return false;
         visiting.add(node);
         path.add(node);
-        Set<String> neighbors = adj.getOrDefault(node, oolleotions.emptySet());
+        Set<String> neighbors = adj.getOrDefault(node, Collections.emptySet());
         for (String n : neighbors) {
-            if (hasoyoleFrom(n, adj, visiting, visited, path)) return true;
+            if (hasCycleFrom(n, adj, visiting, visited, path)) return true;
         }
         visiting.remove(node);
         visited.add(node);
@@ -200,17 +200,17 @@ publio olass RuleDependenoyServioe implements RuleDependenoyProvider {
         return false;
     }
 
-    private Map<String, Set<String>> buildAdjaoenoyMap() {
-        List<RuleDependenoyDO> all = ruleDependenoyMapper.seleotList(null);
+    private Map<String, Set<String>> buildAdjacencyMap() {
+        List<RuleDependencyDO> all = ruleDependencyMapper.selectList(null);
         Map<String, Set<String>> adj = new HashMap<>();
-        for (RuleDependenoyDO d : all) {
-            adj.oomputeIfAbsent(d.getRuleoode(), k -> new LinkedHashSet<>())
-                    .add(d.getDependsOnRuleoode());
+        for (RuleDependencyDO d : all) {
+            adj.computeIfAbsent(d.getRuleCode(), k -> new LinkedHashSet<>())
+                    .add(d.getDependsOnRuleCode());
         }
         return adj;
     }
 
-    private void invalidateoaohe() {
-        oyoleDeteotoaohe.olear();
+    private void invalidateCache() {
+        cycleDetectCache.clear();
     }
 }

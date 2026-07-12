@@ -1,43 +1,43 @@
-paokage oom.njydsz.pmis.userinfo.web.oontroller.auth;
+package com.njydsz.pmis.userinfo.web.controller.auth;
 
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.userinfo.domain.dto.auth.PasswordSoanResultDTO;
-import oom.njydsz.pmis.userinfo.server.servioe.auth.PasswordSoanServioe;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.userinfo.domain.dto.auth.PasswordScanResultDTO;
+import com.njydsz.pmis.userinfo.server.service.auth.PasswordScanService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsoonstruotor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.Restoontroller;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 密码扫描 oontroller（P3-3 运维安全增强�?
+ * 密码扫描 Controller（P3-3 运维安全增强）
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Tag(name = "密码扫描")
-@Restoontroller
-@RequestMapping("/user/passwordSoan")
-@RequiredArgsoonstruotor
+@RestController
+@RequestMapping("/user/passwordScan")
+@RequiredArgsConstructor
 @Validated
-publio olass PasswordSoanoontroller {
+public class PasswordScanController {
 
     /** 密码扫描服务 */
-    private final PasswordSoanServioe soanServioe;
+    private final PasswordScanService scanService;
 
     /**
-     * 扫描密码健康度（过期/即将过期/初始密码�?
+     * 扫描密码健康度（过期/即将过期/初始密码）
      *
-     * @param expireDays 密码过期天数阈值，默认 90 �?
-     * @return 统一响应结果，包含扫描结�?
+     * @param expireDays 密码过期天数阈值，默认 90 天
+     * @return 统一响应结果，包含扫描结果
      */
-    @Operation(summary = "扫描密码健康度（过期/即将过期/初始密码�?)
-    @GetMapping("/soan")
-    publio BaseResponse<PasswordSoanResultDTO> soan(
+    @Operation(summary = "扫描密码健康度（过期/即将过期/初始密码）")
+    @GetMapping("/scan")
+    public BaseResponse<PasswordScanResultDTO> scan(
             @RequestParam(defaultValue = "90") int expireDays) {
-        return BaseResponse.ok(soanServioe.soan(expireDays));
+        return BaseResponse.ok(scanService.scan(expireDays));
     }
 }

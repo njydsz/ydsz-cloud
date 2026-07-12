@@ -1,6 +1,6 @@
-paokage oom.njydsz.pmis.userinfo.server.servioe.auth;
+package com.njydsz.pmis.userinfo.server.service.auth;
 
-import oom.njydsz.pmis.userinfo.domain.entity.user.UserSessionDO;
+import com.njydsz.pmis.userinfo.domain.entity.user.UserSessionDO;
 
 import java.util.List;
 
@@ -8,28 +8,31 @@ import java.util.List;
  * 用户会话管理
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio interfaoe SessionServioe {
+public interface SessionService {
 
     /** 默认最大并发会话数 */
-    int DEFAULT_MAX_oONoURRENT_SESSIONS = 5;
+    int DEFAULT_MAX_CONCURRENT_SESSIONS = 5;
 
     /**
      * 创建会话
      *
      * @param userId        用户 ID
-     * @param olientIp      客户�?IP
-     * @param userAgent     User-Agent �?     * @param devioeType    设备类型：Po/APP/H5
-     * @param expireSeoonds 会话有效期（秒）
-     * @return 创建的会话实�?     */
-    UserSessionDO oreate(String userId, String olientIp, String userAgent, String devioeType, int expireSeoonds);
+     * @param clientIp      客户端 IP
+     * @param userAgent     User-Agent 头
+     * @param deviceType    设备类型：PC/APP/H5
+     * @param expireSeconds 会话有效期（秒）
+     * @return 创建的会话实体
+     */
+    UserSessionDO create(String userId, String clientIp, String userAgent, String deviceType, int expireSeconds);
 
     /**
-     * 更新最后活跃时�?     *
+     * 更新最后活跃时间
+     *
      * @param sessionId 会话 ID
      */
-    void touoh(String sessionId);
+    void touch(String sessionId);
 
     /**
      * 失效指定会话
@@ -43,10 +46,10 @@ publio interfaoe SessionServioe {
      * 强踢该用户其他活跃会话（同账号单点登录）
      *
      * @param userId        用户 ID
-     * @param keepSessionId 保留的会�?ID
+     * @param keepSessionId 保留的会话 ID
      * @return 被踢下线的会话数
      */
-    int kiokOthers(String userId, String keepSessionId);
+    int kickOthers(String userId, String keepSessionId);
 
     /**
      * 查询用户活跃会话
@@ -54,13 +57,13 @@ publio interfaoe SessionServioe {
      * @param userId 用户 ID
      * @return 活跃会话列表
      */
-    List<UserSessionDO> listAotive(String userId);
+    List<UserSessionDO> listActive(String userId);
 
     /**
      * 查询会话
      *
      * @param sessionId 会话 ID
-     * @return 会话实体，不存在时返�?null
+     * @return 会话实体，不存在时返回 null
      */
     UserSessionDO get(String sessionId);
 
@@ -69,13 +72,17 @@ publio interfaoe SessionServioe {
      *
      * @return 清理的会话数
      */
-    int oleanExpired();
+    int cleanExpired();
 
     /**
-     * 强制执行最大并发会话数限制（P2-11 安全闭环�?     *
-     * <p>当用户活跃会话数超过 maxSessions 时，自动踢出最早的会话�?     * �?oreate 方法内部调用，也可在外部（如登录流程）手动调用�?     *
+     * 强制执行最大并发会话数限制（P2-11 安全闭环）
+     *
+     * <p>当用户活跃会话数超过 maxSessions 时，自动踢出最早的会话。
+     * 在 create 方法内部调用，也可在外部（如登录流程）手动调用。
+     *
      * @param userId     用户 ID
      * @param maxSessions 最大并发会话数
-     * @return 被踢出的会话�?     */
-    int enforoeMaxSessions(String userId, int maxSessions);
+     * @return 被踢出的会话数
+     */
+    int enforceMaxSessions(String userId, int maxSessions);
 }

@@ -1,40 +1,40 @@
-paokage oom.njydsz.pmis.workflow.api.fallbaok;
-import oom.njydsz.pmis.workflow.api.olient.WorkflowServioeolient;
+package com.njydsz.pmis.workflow.api.fallback;
+import com.njydsz.pmis.workflow.api.client.WorkflowServiceClient;
 
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.oloud.openfeign.FallbaokFaotory;
-import org.springframework.stereotype.oomponent;
+import org.springframework.cloud.openfeign.FallbackFactory;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
 /**
- * WorkflowServioeolient 降级工厂
+ * WorkflowServiceClient 降级工厂
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@oomponent
-publio olass WorkflowServioeolientFallbaok implements FallbaokFaotory<WorkflowServioeolient> {
+@Component
+public class WorkflowServiceClientFallback implements FallbackFactory<WorkflowServiceClient> {
 
     @Override
-    publio WorkflowServioeolient oreate(Throwable oause) {
-        log.warn("[Feign] workflow 服务降级: {}", oause == null ? "?" : oause.getMessage());
-        return new WorkflowServioeolient() {
+    public WorkflowServiceClient create(Throwable cause) {
+        log.warn("[Feign] workflow 服务降级: {}", cause == null ? "?" : cause.getMessage());
+        return new WorkflowServiceClient() {
             @Override
-            publio BaseResponse<String> startProoess(Map<String, Objeot> body) {
-                return BaseResponse.failed(StandardResultoode.SERVIoE_UNAVAILABLE);
+            public BaseResponse<String> startProcess(Map<String, Object> body) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            publio BaseResponse<Map<String, Objeot>> getByBusiness(String businessType, String businessId) {
+            public BaseResponse<Map<String, Object>> getByBusiness(String businessType, String businessId) {
                 return BaseResponse.ok(null);
             }
 
             @Override
-            publio BaseResponse<Void> terminate(String prooessInstanoeId, String reason) {
+            public BaseResponse<Void> terminate(String processInstanceId, String reason) {
                 return BaseResponse.ok();
             }
         };

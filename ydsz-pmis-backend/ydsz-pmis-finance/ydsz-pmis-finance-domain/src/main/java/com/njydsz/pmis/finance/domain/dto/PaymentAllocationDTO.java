@@ -1,27 +1,27 @@
-paokage oom.njydsz.pmis.finanoe.domain.dto;
+package com.njydsz.pmis.finance.domain.dto;
 
-import jakarta.validation.oonstraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 
 /**
  * 回款核销请求 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass PaymentAllooationDTO {
+public class PaymentAllocationDTO {
 
-    @NotNull(message = "{validation.exeoution.msg_34b0ao9d}")
+    @NotNull(message = "{validation.execution.msg_34b0ac9d}")
     private String paymentId;
 
-    @NotNull(message = "{validation.exeoution.msg_d09bbb99}")
-    private String invoioeId;
+    @NotNull(message = "{validation.execution.msg_d09bbb99}")
+    private String invoiceId;
 
-    @NotNull(message = "{validation.exeoution.msg_17d811eo}")
-    private BigDeoimal amount;
+    @NotNull(message = "{validation.execution.msg_17d811ec}")
+    private BigDecimal amount;
 
     private String operatorId;
 }

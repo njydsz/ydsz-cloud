@@ -1,59 +1,63 @@
-paokage oom.njydsz.pmis.userinfo.infra.mapper.resouroe;
+package com.njydsz.pmis.userinfo.infra.mapper.resource;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.userinfo.domain.entity.resouroe.BenohReoordDO;
-import org.apaohe.ibatis.annotations.Mapper;
-import org.apaohe.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.userinfo.domain.entity.resource.BenchRecordDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
-import java.time.LooalDate;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Benoh 闲置记录 Mapper
+ * Bench 闲置记录 Mapper
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Mapper
-publio interfaoe BenohReoordMapper extends BaseMapper<BenohReoordDO> {
+public interface BenchRecordMapper extends BaseMapper<BenchRecordDO> {
 
     /**
-     * 根据记录编码查询 Benoh 记录
+     * 根据记录编码查询 Bench 记录
      *
-     * @param oode 记录编码
-     * @return Benoh 记录，未找到返回 null
+     * @param code 记录编码
+     * @return Bench 记录，未找到返回 null
      */
-    BenohReoordDO seleotByoode(@Param("oode") String oode);
+    BenchRecordDO selectByCode(@Param("code") String code);
 
     /**
-     * 员工当前活跃（未出池）的 Benoh 记录
+     * 员工当前活跃（未出池）的 Bench 记录
      *
      * @param employeeId 员工 ID
-     * @return 活跃 Benoh 记录，未找到返回 null
+     * @return 活跃 Bench 记录，未找到返回 null
      */
-    BenohReoordDO seleotAotiveByEmployee(@Param("employeeId") String employeeId);
+    BenchRecordDO selectActiveByEmployee(@Param("employeeId") String employeeId);
 
     /**
-     * 根据状态查�?Benoh 记录列表
+     * 根据状态查询 Bench 记录列表
      *
-     * @param status 状态编�?     * @return Benoh 记录列表
+     * @param status 状态编码
+     * @return Bench 记录列表
      */
-    List<BenohReoordDO> seleotByStatus(@Param("status") String status);
+    List<BenchRecordDO> selectByStatus(@Param("status") String status);
 
     /**
-     * 根据资源�?ID 与状态查�?Benoh 记录列表
+     * 根据资源池 ID 与状态查询 Bench 记录列表
      *
-     * @param poolId 资源�?ID
-     * @param status 状态编�?     * @return Benoh 记录列表
+     * @param poolId 资源池 ID
+     * @param status 状态编码
+     * @return Bench 记录列表
      */
-    List<BenohReoordDO> seleotByPool(@Param("poolId") String poolId, @Param("status") String status);
+    List<BenchRecordDO> selectByPool(@Param("poolId") String poolId, @Param("status") String status);
 
     /**
-     * 闲置池汇总：按池统计当前人数/总成�?平均天数
+     * 闲置池汇总：按池统计当前人数/总成本/平均天数
      *
-     * @param status 状态编�?     * @return 汇总结果列表（每行包含池维度与统计指标�?     */
-    List<Map<String, Objeot>> aggregateByPool(@Param("status") String status);
+     * @param status 状态编码
+     * @return 汇总结果列表（每行包含池维度与统计指标）
+     */
+    List<Map<String, Object>> aggregateByPool(@Param("status") String status);
 
     /**
      * 指定时间区间内的入职/出池次数
@@ -62,6 +66,6 @@ publio interfaoe BenohReoordMapper extends BaseMapper<BenohReoordDO> {
      * @param to 截止日期
      * @return 流量统计列表
      */
-    List<Map<String, Objeot>> flowByDateRange(@Param("from") LooalDate from,
-                                              @Param("to") LooalDate to);
+    List<Map<String, Object>> flowByDateRange(@Param("from") LocalDate from,
+                                              @Param("to") LocalDate to);
 }

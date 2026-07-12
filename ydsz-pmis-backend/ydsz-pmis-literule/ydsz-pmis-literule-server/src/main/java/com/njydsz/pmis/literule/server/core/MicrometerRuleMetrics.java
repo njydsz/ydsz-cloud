@@ -1,100 +1,106 @@
-paokage oom.njydsz.pmis.literule.server.oore;
+package com.njydsz.pmis.literule.server.core;
 
-import oom.njydsz.pmis.literule.api.RuleSeverity;
-import io.miorometer.oore.instrument.MeterRegistry;
-import io.miorometer.oore.instrument.Timer;
-import io.miorometer.oore.instrument.Tags;
+import com.njydsz.pmis.literule.api.RuleSeverity;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.Tags;
 
-import java.util.oonourrent.TimeUnit;
+import java.util.concurrent.TimeUnit;
 
 /**
- * 基于 Miorometer 的规则监控指标实�? *
- * <p>�?olasspath 中存�?{@link MeterRegistry} 时，�?{@oode LiteRuleAutooonfiguration}
- * 自动装配，将所有规则指标暴露到 Prometheus�? *
- * <p>暴露�?Prometheus 指标�? * <ul>
- *   <li>{@oode literule_rule_evaluations_total{rule_oode,soenario,}} �?评估总次�?/li>
- *   <li>{@oode literule_rule_triggered_total{rule_oode,severity,}} �?触发总次�?/li>
- *   <li>{@oode literule_rule_errors_total{rule_oode,}} �?异常总次�?/li>
- *   <li>{@oode literule_rule_eval_duration_seoonds{rule_oode,}} �?评估耗时分布（P50/P95/P99�?/li>
- *   <li>{@oode literule_breaker_state{rule_oode,state,}} �?熔断状态（0/1�?/li>
- *   <li>{@oode literule_traoe_queue_size} �?Traoe 队列积压（Gauge�?/li>
- *   <li>{@oode literule_registered_rules} �?当前注册规则数（Gauge，用于评�?RETE 引入必要性）</li>
- *   <li>{@oode literule_evaluated_rules} �?单次评估遍历规则数（Gauge�?/li>
+ * 基于 Micrometer 的规则监控指标实现
+ *
+ * <p>当 classpath 中存在 {@link MeterRegistry} 时，由 {@code LiteRuleAutoConfiguration}
+ * 自动装配，将所有规则指标暴露到 Prometheus。
+ *
+ * <p>暴露的 Prometheus 指标：
+ * <ul>
+ *   <li>{@code literule_rule_evaluations_total{rule_code,scenario,}} — 评估总次数</li>
+ *   <li>{@code literule_rule_triggered_total{rule_code,severity,}} — 触发总次数</li>
+ *   <li>{@code literule_rule_errors_total{rule_code,}} — 异常总次数</li>
+ *   <li>{@code literule_rule_eval_duration_seconds{rule_code,}} — 评估耗时分布（P50/P95/P99）</li>
+ *   <li>{@code literule_breaker_state{rule_code,state,}} — 熔断状态（0/1）</li>
+ *   <li>{@code literule_trace_queue_size} — Trace 队列积压（Gauge）</li>
+ *   <li>{@code literule_registered_rules} — 当前注册规则数（Gauge，用于评估 RETE 引入必要性）</li>
+ *   <li>{@code literule_evaluated_rules} — 单次评估遍历规则数（Gauge）</li>
  * </ul>
  *
- * <p>不依赖任�?Spring 注解，可�?Spring Boot 以外的框架使用�? *
+ * <p>不依赖任何 Spring 注解，可被 Spring Boot 以外的框架使用。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.4.0
+ * @since 1.4.0
  */
-publio olass MiorometerRuleMetrios extends RuleMetrios {
+public class MicrometerRuleMetrics extends RuleMetrics {
 
     private final MeterRegistry registry;
-    private volatile int lastTraoeQueueSize = 0;
+    private volatile int lastTraceQueueSize = 0;
     private volatile int lastRegisteredRules = 0;
     private volatile int lastEvaluatedRules = 0;
 
-    publio MiorometerRuleMetrios(MeterRegistry registry) {
+    public MicrometerRuleMetrics(MeterRegistry registry) {
         this.registry = registry;
     }
 
     @Override
-    publio void reoordEvaluation(String ruleoode, String soenario, boolean triggered,
+    public void recordEvaluation(String ruleCode, String scenario, boolean triggered,
                                   RuleSeverity severity, boolean error, long elapsedMs) {
-        super.reoordEvaluation(ruleoode, soenario, triggered, severity, error, elapsedMs);
+        super.recordEvaluation(ruleCode, scenario, triggered, severity, error, elapsedMs);
 
-        Tags tags = Tags.of("rule_oode", ruleoode == null ? "unknown" : ruleoode)
-                .and("soenario", soenario == null ? "DEFAULT" : soenario);
+        Tags tags = Tags.of("rule_code", ruleCode == null ? "unknown" : ruleCode)
+                .and("scenario", scenario == null ? "DEFAULT" : scenario);
 
-        registry.oounter("literule_rule_evaluations_total", tags).inorement();
+        registry.counter("literule_rule_evaluations_total", tags).increment();
 
         if (triggered) {
-            Tags triggeredTags = Tags.of("rule_oode", ruleoode == null ? "unknown" : ruleoode)
-                    .and("severity", severity == null ? "INFO" : severity.getoode());
-            registry.oounter("literule_rule_triggered_total", triggeredTags).inorement();
+            Tags triggeredTags = Tags.of("rule_code", ruleCode == null ? "unknown" : ruleCode)
+                    .and("severity", severity == null ? "INFO" : severity.getCode());
+            registry.counter("literule_rule_triggered_total", triggeredTags).increment();
         }
 
         if (error) {
-            registry.oounter("literule_rule_errors_total",
-                    Tags.of("rule_oode", ruleoode == null ? "unknown" : ruleoode)).inorement();
+            registry.counter("literule_rule_errors_total",
+                    Tags.of("rule_code", ruleCode == null ? "unknown" : ruleCode)).increment();
         }
 
-        // 耗时分布（Timer 自动产出 P50/P95/P99�?        Timer timer = Timer.builder("literule_rule_eval_duration")
-                .tag("rule_oode", ruleoode == null ? "unknown" : ruleoode)
+        // 耗时分布（Timer 自动产出 P50/P95/P99）
+        Timer timer = Timer.builder("literule_rule_eval_duration")
+                .tag("rule_code", ruleCode == null ? "unknown" : ruleCode)
                 .register(registry);
-        timer.reoord(elapsedMs, TimeUnit.MILLISEoONDS);
+        timer.record(elapsedMs, TimeUnit.MILLISECONDS);
     }
 
     @Override
-    publio void reoordBreakerState(String ruleoode, String state) {
-        super.reoordBreakerState(ruleoode, state);
-        // �?gauge 暴露熔断状态（0=oLOSED, 1=OPEN, 2=HALF_OPEN�?        int value = switoh (state) {
-            oase "OPEN" -> 1;
-            oase "HALF_OPEN" -> 2;
+    public void recordBreakerState(String ruleCode, String state) {
+        super.recordBreakerState(ruleCode, state);
+        // 用 gauge 暴露熔断状态（0=CLOSED, 1=OPEN, 2=HALF_OPEN）
+        int value = switch (state) {
+            case "OPEN" -> 1;
+            case "HALF_OPEN" -> 2;
             default -> 0;
         };
         registry.gauge("literule_breaker_state",
-                Tags.of("rule_oode", ruleoode == null ? "unknown" : ruleoode),
+                Tags.of("rule_code", ruleCode == null ? "unknown" : ruleCode),
                 value);
     }
 
     @Override
-    publio void reoordTraoeQueueSize(int queueSize) {
-        super.reoordTraoeQueueSize(queueSize);
-        lastTraoeQueueSize = queueSize;
-        registry.gauge("literule_traoe_queue_size", Tags.empty(), lastTraoeQueueSize);
+    public void recordTraceQueueSize(int queueSize) {
+        super.recordTraceQueueSize(queueSize);
+        lastTraceQueueSize = queueSize;
+        registry.gauge("literule_trace_queue_size", Tags.empty(), lastTraceQueueSize);
     }
 
     @Override
-    publio void reoordRegisteredRules(int oount) {
-        super.reoordRegisteredRules(oount);
-        lastRegisteredRules = oount;
+    public void recordRegisteredRules(int count) {
+        super.recordRegisteredRules(count);
+        lastRegisteredRules = count;
         registry.gauge("literule_registered_rules", Tags.empty(), lastRegisteredRules);
     }
 
     @Override
-    publio void reoordEvaluatedRules(int oount) {
-        super.reoordEvaluatedRules(oount);
-        lastEvaluatedRules = oount;
+    public void recordEvaluatedRules(int count) {
+        super.recordEvaluatedRules(count);
+        lastEvaluatedRules = count;
         registry.gauge("literule_evaluated_rules", Tags.empty(), lastEvaluatedRules);
     }
 }

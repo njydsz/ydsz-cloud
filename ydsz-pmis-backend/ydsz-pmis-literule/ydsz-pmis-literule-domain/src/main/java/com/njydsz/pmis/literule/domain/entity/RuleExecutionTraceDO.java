@@ -1,69 +1,69 @@
-paokage oom.njydsz.pmis.literule.domain.entity;
+package com.njydsz.pmis.literule.domain.entity;
 
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableField;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
-import oom.baomidou.mybatisplus.extension.handlers.JaoksonTypeHandler;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
  * 规则执行链路追踪实体
  *
  * @author ydsz-pmis
- * @sinoe 2026-07-02
+ * @since 2026-07-02
  */
 @Data
-@TableName(value = "pmis_rule_exeoution_traoe", autoResultMap = true)
-publio olass RuleExeoutionTraoeDO implements Serializable {
+@TableName(value = "pmis_rule_execution_trace", autoResultMap = true)
+public class RuleExecutionTraceDO implements Serializable {
 
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    /** 追踪 ID（同一批次评估共享�?*/
-    private String traoeId;
+    /** 追踪 ID（同一批次评估共享） */
+    private String traceId;
 
     /** 规则编码 */
-    private String ruleoode;
+    private String ruleCode;
 
     /** 规则名称 */
     private String ruleName;
 
     /** 业务场景 */
-    private String soenario;
+    private String scenario;
 
     /** 是否触发 */
     private Boolean triggered;
 
-    /** 触发严重�?*/
+    /** 触发严重度 */
     private String severity;
 
-    /** 条件表达式求值结果描�?*/
-    private String oonditionResult;
+    /** 条件表达式求值结果描述 */
+    private String conditionResult;
 
     /** 执行耗时（毫秒） */
     private Long elapsedMs;
 
     /** 事实数据快照 */
-    @TableField(typeHandler = JaoksonTypeHandler.olass)
-    private Map<String, Objeot> faotsSnapshot;
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private Map<String, Object> factsSnapshot;
 
     /** 结果快照 */
-    @TableField(typeHandler = JaoksonTypeHandler.olass)
-    private Map<String, Objeot> resultSnapshot;
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private Map<String, Object> resultSnapshot;
 
     /** 错误信息 */
     private String errorMessage;
 
-    /** 创建人（VARoHAR(64) 支持工号/SSO 用户名，DEFAULT 'SYSTEM' 表示系统兜底�?*/
-    private String oreatedBy;
+    /** 创建人（VARCHAR(64) 支持工号/SSO 用户名，DEFAULT 'SYSTEM' 表示系统兜底） */
+    private String createdBy;
 
     /** 创建时间 */
-    private LooalDateTime oreatedAt;
+    private LocalDateTime createdAt;
 }

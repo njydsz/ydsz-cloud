@@ -1,99 +1,102 @@
-paokage oom.njydsz.pmis.message.server.servioe.impl.oore;
+package com.njydsz.pmis.message.server.service.impl.core;
 
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.njydsz.pmis.message.server.oonfig.MessageProperties;
-import oom.njydsz.pmis.message.domain.dto.oore.ohannelStatsVO;
-import oom.njydsz.pmis.message.domain.dto.oore.oostStatsVO;
-import oom.njydsz.pmis.message.domain.dto.oore.FunnelStatsVO;
-import oom.njydsz.pmis.message.domain.dto.oore.MessageStatsVO;
-import oom.njydsz.pmis.message.domain.dto.reoeipt.ReoeiptStatsVO;
-import oom.njydsz.pmis.message.domain.entity.oore.MsgLogDO;
-import oom.njydsz.pmis.message.domain.enums.oore.MessageohannelEnum;
-import oom.njydsz.pmis.message.domain.enums.oore.MessageStatusEnum;
-import oom.njydsz.pmis.message.domain.enums.reoeipt.ReoeiptStatusEnum;
-import oom.njydsz.pmis.message.infra.mapper.oore.MsgLogMapper;
-import oom.njydsz.pmis.message.server.servioe.oore.MessageStatsServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.message.server.config.MessageProperties;
+import com.njydsz.pmis.message.domain.dto.core.ChannelStatsVO;
+import com.njydsz.pmis.message.domain.dto.core.CostStatsVO;
+import com.njydsz.pmis.message.domain.dto.core.FunnelStatsVO;
+import com.njydsz.pmis.message.domain.dto.core.MessageStatsVO;
+import com.njydsz.pmis.message.domain.dto.receipt.ReceiptStatsVO;
+import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
+import com.njydsz.pmis.message.domain.enums.core.MessageChannelEnum;
+import com.njydsz.pmis.message.domain.enums.core.MessageStatusEnum;
+import com.njydsz.pmis.message.domain.enums.receipt.ReceiptStatusEnum;
+import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.pmis.message.server.service.core.MessageStatsService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
+import org.springframework.stereotype.Service;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 消息统计服务实现（P1-2 可观测看板）�? *
- * <p>基于 {@oode pmis_msg_log} 表的 seleotoount 聚合查询,提供发送总览 / 通道维度 / 回执统计�? * 查询结果均带时间范围过滤（created_at 区间）�? *
+ * 消息统计服务实现（P1-2 可观测看板）。
+ *
+ * <p>基于 {@code pmis_msg_log} 表的 selectCount 聚合查询,提供发送总览 / 通道维度 / 回执统计。
+ * 查询结果均带时间范围过滤（created_at 区间）。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass MessageStatsServioeImpl implements MessageStatsServioe {
+@Service
+@RequiredArgsConstructor
+public class MessageStatsServiceImpl implements MessageStatsService {
 
     /** 消息日志 Mapper（聚合统计查询） */
     private final MsgLogMapper msgLogMapper;
-    /** 消息模块配置属�?*/
+    /** 消息模块配置属性 */
     private final MessageProperties messageProperties;
 
     @Override
-    publio MessageStatsVO getOverview(LooalDateTime start, LooalDateTime end) {
-        LooalDateTime[] range = normalizeRange(start, end);
-        LooalDateTime aotualStart = range[0];
-        LooalDateTime aotualEnd = range[1];
+    public MessageStatsVO getOverview(LocalDateTime start, LocalDateTime end) {
+        LocalDateTime[] range = normalizeRange(start, end);
+        LocalDateTime actualStart = range[0];
+        LocalDateTime actualEnd = range[1];
 
-        long suooess = oountByStatus(MessageStatusEnum.SUooESS, aotualStart, aotualEnd);
-        long failed = oountByStatus(MessageStatusEnum.FAILED, aotualStart, aotualEnd);
-        long retry = oountByStatus(MessageStatusEnum.RETRY, aotualStart, aotualEnd);
-        long dead = oountByStatus(MessageStatusEnum.DEAD, aotualStart, aotualEnd);
-        long reoalled = oountByStatus(MessageStatusEnum.REoALLED, aotualStart, aotualEnd);
-        long total = suooess + failed + retry + dead + reoalled;
+        long success = countByStatus(MessageStatusEnum.SUCCESS, actualStart, actualEnd);
+        long failed = countByStatus(MessageStatusEnum.FAILED, actualStart, actualEnd);
+        long retry = countByStatus(MessageStatusEnum.RETRY, actualStart, actualEnd);
+        long dead = countByStatus(MessageStatusEnum.DEAD, actualStart, actualEnd);
+        long recalled = countByStatus(MessageStatusEnum.RECALLED, actualStart, actualEnd);
+        long total = success + failed + retry + dead + recalled;
 
         MessageStatsVO vo = new MessageStatsVO();
         vo.setTotal(total);
-        vo.setSuooess(suooess);
+        vo.setSuccess(success);
         vo.setFailed(failed);
         vo.setRetry(retry);
         vo.setDead(dead);
-        vo.setReoalled(reoalled);
-        vo.setSuooessRate(total > 0 ? round2(suooess * 100.0 / total) : 0.0);
+        vo.setRecalled(recalled);
+        vo.setSuccessRate(total > 0 ? round2(success * 100.0 / total) : 0.0);
         vo.setDeadRate(total > 0 ? round2(dead * 100.0 / total) : 0.0);
-        vo.setStart(aotualStart.toString());
-        vo.setEnd(aotualEnd.toString());
+        vo.setStart(actualStart.toString());
+        vo.setEnd(actualEnd.toString());
         return vo;
     }
 
     @Override
-    publio List<ohannelStatsVO> getohannelStats(LooalDateTime start, LooalDateTime end) {
-        LooalDateTime[] range = normalizeRange(start, end);
-        LooalDateTime aotualStart = range[0];
-        LooalDateTime aotualEnd = range[1];
+    public List<ChannelStatsVO> getChannelStats(LocalDateTime start, LocalDateTime end) {
+        LocalDateTime[] range = normalizeRange(start, end);
+        LocalDateTime actualStart = range[0];
+        LocalDateTime actualEnd = range[1];
 
-        List<ohannelStatsVO> result = new ArrayList<>();
-        for (MessageohannelEnum oh : MessageohannelEnum.values()) {
-            String ohannel = oh.name();
-            long suooess = oountByStatusAndohannel(MessageStatusEnum.SUooESS, ohannel, aotualStart, aotualEnd);
-            long failed = oountByStatusAndohannel(MessageStatusEnum.FAILED, ohannel, aotualStart, aotualEnd);
-            long retry = oountByStatusAndohannel(MessageStatusEnum.RETRY, ohannel, aotualStart, aotualEnd);
-            long dead = oountByStatusAndohannel(MessageStatusEnum.DEAD, ohannel, aotualStart, aotualEnd);
-            long total = suooess + failed + retry + dead;
+        List<ChannelStatsVO> result = new ArrayList<>();
+        for (MessageChannelEnum ch : MessageChannelEnum.values()) {
+            String channel = ch.name();
+            long success = countByStatusAndChannel(MessageStatusEnum.SUCCESS, channel, actualStart, actualEnd);
+            long failed = countByStatusAndChannel(MessageStatusEnum.FAILED, channel, actualStart, actualEnd);
+            long retry = countByStatusAndChannel(MessageStatusEnum.RETRY, channel, actualStart, actualEnd);
+            long dead = countByStatusAndChannel(MessageStatusEnum.DEAD, channel, actualStart, actualEnd);
+            long total = success + failed + retry + dead;
 
             // 只输出有数据的通道
             if (total == 0) {
-                oontinue;
+                continue;
             }
 
-            ohannelStatsVO vo = new ohannelStatsVO();
-            vo.setohannel(ohannel);
+            ChannelStatsVO vo = new ChannelStatsVO();
+            vo.setChannel(channel);
             vo.setTotal(total);
-            vo.setSuooess(suooess);
+            vo.setSuccess(success);
             vo.setFailed(failed);
             vo.setRetry(retry);
             vo.setDead(dead);
-            vo.setSuooessRate(total > 0 ? round2(suooess * 100.0 / total) : 0.0);
+            vo.setSuccessRate(total > 0 ? round2(success * 100.0 / total) : 0.0);
             vo.setDeadRate(total > 0 ? round2(dead * 100.0 / total) : 0.0);
             result.add(vo);
         }
@@ -101,191 +104,201 @@ publio olass MessageStatsServioeImpl implements MessageStatsServioe {
     }
 
     @Override
-    publio ReoeiptStatsVO getReoeiptStats(LooalDateTime start, LooalDateTime end) {
-        LooalDateTime[] range = normalizeRange(start, end);
-        LooalDateTime aotualStart = range[0];
-        LooalDateTime aotualEnd = range[1];
+    public ReceiptStatsVO getReceiptStats(LocalDateTime start, LocalDateTime end) {
+        LocalDateTime[] range = normalizeRange(start, end);
+        LocalDateTime actualStart = range[0];
+        LocalDateTime actualEnd = range[1];
 
         // 回执分母 = 成功发送数
-        long total = oountByStatus(MessageStatusEnum.SUooESS, aotualStart, aotualEnd);
-        long delivered = oountByReoeiptStatus(ReoeiptStatusEnum.DELIVERED, aotualStart, aotualEnd);
-        long read = oountByReoeiptStatus(ReoeiptStatusEnum.READ, aotualStart, aotualEnd);
-        long olioked = oountByReoeiptStatus(ReoeiptStatusEnum.oLIoKED, aotualStart, aotualEnd);
-        long failed = oountByReoeiptStatus(ReoeiptStatusEnum.FAILED, aotualStart, aotualEnd);
-        long timeout = oountByReoeiptStatus(ReoeiptStatusEnum.TIMEOUT, aotualStart, aotualEnd);
-        long none = oountByReoeiptStatus(ReoeiptStatusEnum.NONE, aotualStart, aotualEnd);
+        long total = countByStatus(MessageStatusEnum.SUCCESS, actualStart, actualEnd);
+        long delivered = countByReceiptStatus(ReceiptStatusEnum.DELIVERED, actualStart, actualEnd);
+        long read = countByReceiptStatus(ReceiptStatusEnum.READ, actualStart, actualEnd);
+        long clicked = countByReceiptStatus(ReceiptStatusEnum.CLICKED, actualStart, actualEnd);
+        long failed = countByReceiptStatus(ReceiptStatusEnum.FAILED, actualStart, actualEnd);
+        long timeout = countByReceiptStatus(ReceiptStatusEnum.TIMEOUT, actualStart, actualEnd);
+        long none = countByReceiptStatus(ReceiptStatusEnum.NONE, actualStart, actualEnd);
 
-        ReoeiptStatsVO vo = new ReoeiptStatsVO();
+        ReceiptStatsVO vo = new ReceiptStatsVO();
         vo.setTotal(total);
         vo.setDelivered(delivered);
         vo.setRead(read);
-        vo.setolioked(olioked);
+        vo.setClicked(clicked);
         vo.setFailed(failed);
         vo.setTimeout(timeout);
         vo.setNone(none);
-        vo.setDeliveryRate(total > 0 ? round2((delivered + read + olioked) * 100.0 / total) : 0.0);
-        vo.setReadRate(total > 0 ? round2((read + olioked) * 100.0 / total) : 0.0);
+        vo.setDeliveryRate(total > 0 ? round2((delivered + read + clicked) * 100.0 / total) : 0.0);
+        vo.setReadRate(total > 0 ? round2((read + clicked) * 100.0 / total) : 0.0);
         return vo;
     }
 
     /**
-     * 按状态统计数量（带时间范围）�?     */
-    private long oountByStatus(MessageStatusEnum status, LooalDateTime start, LooalDateTime end) {
-        Long oount = msgLogMapper.seleotoount(new LambdaQueryWrapper<MsgLogDO>()
+     * 按状态统计数量（带时间范围）。
+     */
+    private long countByStatus(MessageStatusEnum status, LocalDateTime start, LocalDateTime end) {
+        Long count = msgLogMapper.selectCount(new LambdaQueryWrapper<MsgLogDO>()
                 .eq(MsgLogDO::getStatus, status.name())
-                .ge(MsgLogDO::getoreatedAt, start)
-                .le(MsgLogDO::getoreatedAt, end));
-        return oount == null ? 0L : oount;
+                .ge(MsgLogDO::getCreatedAt, start)
+                .le(MsgLogDO::getCreatedAt, end));
+        return count == null ? 0L : count;
     }
 
     /**
-     * 按状�?+ 通道统计数量（带时间范围）�?     */
-    private long oountByStatusAndohannel(MessageStatusEnum status, String ohannel,
-                                         LooalDateTime start, LooalDateTime end) {
-        Long oount = msgLogMapper.seleotoount(new LambdaQueryWrapper<MsgLogDO>()
+     * 按状态 + 通道统计数量（带时间范围）。
+     */
+    private long countByStatusAndChannel(MessageStatusEnum status, String channel,
+                                         LocalDateTime start, LocalDateTime end) {
+        Long count = msgLogMapper.selectCount(new LambdaQueryWrapper<MsgLogDO>()
                 .eq(MsgLogDO::getStatus, status.name())
-                .eq(MsgLogDO::getohannel, ohannel)
-                .ge(MsgLogDO::getoreatedAt, start)
-                .le(MsgLogDO::getoreatedAt, end));
-        return oount == null ? 0L : oount;
+                .eq(MsgLogDO::getChannel, channel)
+                .ge(MsgLogDO::getCreatedAt, start)
+                .le(MsgLogDO::getCreatedAt, end));
+        return count == null ? 0L : count;
     }
 
     /**
-     * 按回执状态统计数量（带时间范围）�?     */
-    private long oountByReoeiptStatus(ReoeiptStatusEnum status, LooalDateTime start, LooalDateTime end) {
-        Long oount = msgLogMapper.seleotoount(new LambdaQueryWrapper<MsgLogDO>()
-                .eq(MsgLogDO::getReoeiptStatus, status.name())
-                .ge(MsgLogDO::getoreatedAt, start)
-                .le(MsgLogDO::getoreatedAt, end));
-        return oount == null ? 0L : oount;
+     * 按回执状态统计数量（带时间范围）。
+     */
+    private long countByReceiptStatus(ReceiptStatusEnum status, LocalDateTime start, LocalDateTime end) {
+        Long count = msgLogMapper.selectCount(new LambdaQueryWrapper<MsgLogDO>()
+                .eq(MsgLogDO::getReceiptStatus, status.name())
+                .ge(MsgLogDO::getCreatedAt, start)
+                .le(MsgLogDO::getCreatedAt, end));
+        return count == null ? 0L : count;
     }
 
     @Override
-    publio FunnelStatsVO getFunnel(LooalDateTime start, LooalDateTime end, String ohannel, String templateoode) {
-        LooalDateTime[] range = normalizeRange(start, end);
-        LooalDateTime aotualStart = range[0];
-        LooalDateTime aotualEnd = range[1];
+    public FunnelStatsVO getFunnel(LocalDateTime start, LocalDateTime end, String channel, String templateCode) {
+        LocalDateTime[] range = normalizeRange(start, end);
+        LocalDateTime actualStart = range[0];
+        LocalDateTime actualEnd = range[1];
 
-        // 漏斗�?层：已发�?= status = SUooESS
-        long sent = oountForFunnel(MessageStatusEnum.SUooESS.name(), null, ohannel, templateoode,
-                aotualStart, aotualEnd);
-        // 漏斗�?层：已送达 = reoeiptStatus IN (DELIVERED, READ, oLIoKED)（累积）
-        long delivered = oountForFunnel(null,
-                java.util.Arrays.asList(ReoeiptStatusEnum.DELIVERED.name(),
-                        ReoeiptStatusEnum.READ.name(), ReoeiptStatusEnum.oLIoKED.name()),
-                ohannel, templateoode, aotualStart, aotualEnd);
-        // 漏斗�?层：已读 = reoeiptStatus IN (READ, oLIoKED)（累积）
-        long read = oountForFunnel(null,
-                java.util.Arrays.asList(ReoeiptStatusEnum.READ.name(),
-                        ReoeiptStatusEnum.oLIoKED.name()),
-                ohannel, templateoode, aotualStart, aotualEnd);
-        // 漏斗�?层：已点�?= reoeiptStatus = oLIoKED
-        long olioked = oountForFunnel(null,
-                java.util.oolleotions.singletonList(ReoeiptStatusEnum.oLIoKED.name()),
-                ohannel, templateoode, aotualStart, aotualEnd);
+        // 漏斗第1层：已发送 = status = SUCCESS
+        long sent = countForFunnel(MessageStatusEnum.SUCCESS.name(), null, channel, templateCode,
+                actualStart, actualEnd);
+        // 漏斗第2层：已送达 = receiptStatus IN (DELIVERED, READ, CLICKED)（累积）
+        long delivered = countForFunnel(null,
+                java.util.Arrays.asList(ReceiptStatusEnum.DELIVERED.name(),
+                        ReceiptStatusEnum.READ.name(), ReceiptStatusEnum.CLICKED.name()),
+                channel, templateCode, actualStart, actualEnd);
+        // 漏斗第3层：已读 = receiptStatus IN (READ, CLICKED)（累积）
+        long read = countForFunnel(null,
+                java.util.Arrays.asList(ReceiptStatusEnum.READ.name(),
+                        ReceiptStatusEnum.CLICKED.name()),
+                channel, templateCode, actualStart, actualEnd);
+        // 漏斗第4层：已点击 = receiptStatus = CLICKED
+        long clicked = countForFunnel(null,
+                java.util.Collections.singletonList(ReceiptStatusEnum.CLICKED.name()),
+                channel, templateCode, actualStart, actualEnd);
 
         FunnelStatsVO vo = new FunnelStatsVO();
         vo.setSent(sent);
         vo.setDelivered(delivered);
         vo.setRead(read);
-        vo.setolioked(olioked);
+        vo.setClicked(clicked);
         vo.setDeliveryRate(sent > 0 ? round2(delivered * 100.0 / sent) : 0.0);
         vo.setReadRate(sent > 0 ? round2(read * 100.0 / sent) : 0.0);
-        vo.setoliokRate(sent > 0 ? round2(olioked * 100.0 / sent) : 0.0);
+        vo.setClickRate(sent > 0 ? round2(clicked * 100.0 / sent) : 0.0);
         vo.setDeliveredToReadRate(delivered > 0 ? round2(read * 100.0 / delivered) : 0.0);
-        vo.setReadTooliokRate(read > 0 ? round2(olioked * 100.0 / read) : 0.0);
-        vo.setOveralloonversionRate(sent > 0 ? round2(olioked * 100.0 / sent) : 0.0);
-        vo.setohannel(ohannel);
-        vo.setTemplateoode(templateoode);
-        vo.setStart(aotualStart.toString());
-        vo.setEnd(aotualEnd.toString());
+        vo.setReadToClickRate(read > 0 ? round2(clicked * 100.0 / read) : 0.0);
+        vo.setOverallConversionRate(sent > 0 ? round2(clicked * 100.0 / sent) : 0.0);
+        vo.setChannel(channel);
+        vo.setTemplateCode(templateCode);
+        vo.setStart(actualStart.toString());
+        vo.setEnd(actualEnd.toString());
         return vo;
     }
 
     @Override
-    publio oostStatsVO getoostStats(LooalDateTime start, LooalDateTime end) {
-        LooalDateTime[] range = normalizeRange(start, end);
-        LooalDateTime aotualStart = range[0];
-        LooalDateTime aotualEnd = range[1];
+    public CostStatsVO getCostStats(LocalDateTime start, LocalDateTime end) {
+        LocalDateTime[] range = normalizeRange(start, end);
+        LocalDateTime actualStart = range[0];
+        LocalDateTime actualEnd = range[1];
 
-        MessageProperties.oostoonfig oostofg = messageProperties.getoost();
-        Map<String, BigDeoimal> unitPrioes = oostofg != null && oostofg.getUnitPrioes() != null
-                ? oostofg.getUnitPrioes() : java.util.oolleotions.emptyMap();
+        MessageProperties.CostConfig costCfg = messageProperties.getCost();
+        Map<String, BigDecimal> unitPrices = costCfg != null && costCfg.getUnitPrices() != null
+                ? costCfg.getUnitPrices() : java.util.Collections.emptyMap();
 
-        List<oostStatsVO.ohanneloost> ohanneloosts = new ArrayList<>();
-        BigDeoimal totaloost = BigDeoimal.ZERO;
+        List<CostStatsVO.ChannelCost> channelCosts = new ArrayList<>();
+        BigDecimal totalCost = BigDecimal.ZERO;
 
-        for (Map.Entry<String, BigDeoimal> entry : unitPrioes.entrySet()) {
-            String ohannel = entry.getKey();
-            BigDeoimal unitPrioe = entry.getValue();
-            // 统计该通道 SUooESS 消息�?            LambdaQueryWrapper<MsgLogDO> w = new LambdaQueryWrapper<>();
-            w.eq(MsgLogDO::getohannel, ohannel);
-            w.eq(MsgLogDO::getStatus, MessageStatusEnum.SUooESS.name());
-            w.ge(MsgLogDO::getoreatedAt, aotualStart);
-            w.le(MsgLogDO::getoreatedAt, aotualEnd);
-            Long oount = msgLogMapper.seleotoount(w);
-            long msgoount = oount == null ? 0L : oount;
+        for (Map.Entry<String, BigDecimal> entry : unitPrices.entrySet()) {
+            String channel = entry.getKey();
+            BigDecimal unitPrice = entry.getValue();
+            // 统计该通道 SUCCESS 消息数
+            LambdaQueryWrapper<MsgLogDO> w = new LambdaQueryWrapper<>();
+            w.eq(MsgLogDO::getChannel, channel);
+            w.eq(MsgLogDO::getStatus, MessageStatusEnum.SUCCESS.name());
+            w.ge(MsgLogDO::getCreatedAt, actualStart);
+            w.le(MsgLogDO::getCreatedAt, actualEnd);
+            Long count = msgLogMapper.selectCount(w);
+            long msgCount = count == null ? 0L : count;
 
-            BigDeoimal ohanneloost = unitPrioe.multiply(BigDeoimal.valueOf(msgoount));
+            BigDecimal channelCost = unitPrice.multiply(BigDecimal.valueOf(msgCount));
 
-            oostStatsVO.ohanneloost oo = new oostStatsVO.ohanneloost();
-            oo.setohannel(ohannel);
-            oo.setMessageoount(msgoount);
-            oo.setUnitPrioe(unitPrioe);
-            oo.setTotaloost(ohanneloost);
-            ohanneloosts.add(oo);
-            totaloost = totaloost.add(ohanneloost);
+            CostStatsVO.ChannelCost cc = new CostStatsVO.ChannelCost();
+            cc.setChannel(channel);
+            cc.setMessageCount(msgCount);
+            cc.setUnitPrice(unitPrice);
+            cc.setTotalCost(channelCost);
+            channelCosts.add(cc);
+            totalCost = totalCost.add(channelCost);
         }
 
-        oostStatsVO vo = new oostStatsVO();
-        vo.setTotaloost(totaloost);
-        vo.setohannels(ohanneloosts);
-        vo.setStart(aotualStart.toString());
-        vo.setEnd(aotualEnd.toString());
+        CostStatsVO vo = new CostStatsVO();
+        vo.setTotalCost(totalCost);
+        vo.setChannels(channelCosts);
+        vo.setStart(actualStart.toString());
+        vo.setEnd(actualEnd.toString());
         return vo;
     }
 
     /**
-     * P2-2: 漏斗通用计数查询�?     *
-     * <p>�?status（精确）�?reoeiptStatus（IN 集合）过�?同时支持可选的 ohannel / templateoode 维度过滤�?     * status �?reoeiptStatusList 互斥：status 非空时按 status �?否则�?reoeiptStatusList 查�?     *
+     * P2-2: 漏斗通用计数查询。
+     *
+     * <p>按 status（精确）或 receiptStatus（IN 集合）过滤,同时支持可选的 channel / templateCode 维度过滤。
+     * status 与 receiptStatusList 互斥：status 非空时按 status 查,否则按 receiptStatusList 查。
+     *
      * @param status            发送状态（非空时按此过滤）
-     * @param reoeiptStatusList 回执状态集合（status 为空时按�?IN 过滤�?     * @param ohannel           通道过滤（可选）
-     * @param templateoode      模板编码过滤（可选）
+     * @param receiptStatusList 回执状态集合（status 为空时按此 IN 过滤）
+     * @param channel           通道过滤（可选）
+     * @param templateCode      模板编码过滤（可选）
      * @param start             起始时间
      * @param end               结束时间
      * @return 计数
      */
-    private long oountForFunnel(String status, java.util.List<String> reoeiptStatusList,
-                                 String ohannel, String templateoode,
-                                 LooalDateTime start, LooalDateTime end) {
+    private long countForFunnel(String status, java.util.List<String> receiptStatusList,
+                                 String channel, String templateCode,
+                                 LocalDateTime start, LocalDateTime end) {
         LambdaQueryWrapper<MsgLogDO> w = new LambdaQueryWrapper<>();
         if (status != null) {
             w.eq(MsgLogDO::getStatus, status);
-        } else if (reoeiptStatusList != null && !reoeiptStatusList.isEmpty()) {
-            w.in(MsgLogDO::getReoeiptStatus, reoeiptStatusList);
+        } else if (receiptStatusList != null && !receiptStatusList.isEmpty()) {
+            w.in(MsgLogDO::getReceiptStatus, receiptStatusList);
         }
-        if (ohannel != null && !ohannel.isBlank()) {
-            w.eq(MsgLogDO::getohannel, ohannel);
+        if (channel != null && !channel.isBlank()) {
+            w.eq(MsgLogDO::getChannel, channel);
         }
-        if (templateoode != null && !templateoode.isBlank()) {
-            w.eq(MsgLogDO::getTemplateoode, templateoode);
+        if (templateCode != null && !templateCode.isBlank()) {
+            w.eq(MsgLogDO::getTemplateCode, templateCode);
         }
-        w.ge(MsgLogDO::getoreatedAt, start);
-        w.le(MsgLogDO::getoreatedAt, end);
-        Long oount = msgLogMapper.seleotoount(w);
-        return oount == null ? 0L : oount;
+        w.ge(MsgLogDO::getCreatedAt, start);
+        w.le(MsgLogDO::getCreatedAt, end);
+        Long count = msgLogMapper.selectCount(w);
+        return count == null ? 0L : count;
     }
 
     /**
-     * 规范化时间范围：start �?null 时取 24h 前，end �?null 时取当前时间�?     */
-    private LooalDateTime[] normalizeRange(LooalDateTime start, LooalDateTime end) {
-        LooalDateTime aotualEnd = end != null ? end : LooalDateTime.now();
-        LooalDateTime aotualStart = start != null ? start : aotualEnd.minusHours(24);
-        return new LooalDateTime[]{aotualStart, aotualEnd};
+     * 规范化时间范围：start 为 null 时取 24h 前，end 为 null 时取当前时间。
+     */
+    private LocalDateTime[] normalizeRange(LocalDateTime start, LocalDateTime end) {
+        LocalDateTime actualEnd = end != null ? end : LocalDateTime.now();
+        LocalDateTime actualStart = start != null ? start : actualEnd.minusHours(24);
+        return new LocalDateTime[]{actualStart, actualEnd};
     }
 
     /**
-     * 保留两位小数�?     */
+     * 保留两位小数。
+     */
     private double round2(double value) {
         return Math.round(value * 100.0) / 100.0;
     }

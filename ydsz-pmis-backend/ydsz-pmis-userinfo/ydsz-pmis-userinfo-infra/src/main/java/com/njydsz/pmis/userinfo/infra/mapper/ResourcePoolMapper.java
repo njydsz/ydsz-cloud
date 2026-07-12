@@ -1,37 +1,42 @@
-paokage oom.njydsz.pmis.userinfo.infra.mapper.resouroe;
+package com.njydsz.pmis.userinfo.infra.mapper.resource;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.userinfo.domain.entity.resouroe.ResouroePoolDO;
-import org.apaohe.ibatis.annotations.Mapper;
-import org.apaohe.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.userinfo.domain.entity.resource.ResourcePoolDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
 /**
- * 资源�?Mapper
+ * 资源池 Mapper
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Mapper
-publio interfaoe ResouroePoolMapper extends BaseMapper<ResouroePoolDO> {
+public interface ResourcePoolMapper extends BaseMapper<ResourcePoolDO> {
 
     /**
      * 根据资源池编码查询资源池
      *
-     * @param oode 资源池编�?     * @return 资源池对象，未找到返�?null
+     * @param code 资源池编码
+     * @return 资源池对象，未找到返回 null
      */
-    ResouroePoolDO seleotByoode(@Param("oode") String oode);
+    ResourcePoolDO selectByCode(@Param("code") String code);
 
     /**
      * 根据资源池类型查询资源池列表
      *
-     * @param poolType 资源池类型（HQ/DIVISION/RESERVE�?     * @return 资源池列�?     */
-    List<ResouroePoolDO> seleotByType(@Param("poolType") String poolType);
+     * @param poolType 资源池类型（HQ/DIVISION/RESERVE）
+     * @return 资源池列表
+     */
+    List<ResourcePoolDO> selectByType(@Param("poolType") String poolType);
 
     /**
-     * 根据部门 ID 查询其下资源池列�?     *
+     * 根据部门 ID 查询其下资源池列表
+     *
      * @param departmentId 部门 ID
-     * @return 资源池列�?     */
-    List<ResouroePoolDO> seleotByDept(@Param("departmentId") String departmentId);
+     * @return 资源池列表
+     */
+    List<ResourcePoolDO> selectByDept(@Param("departmentId") String departmentId);
 }

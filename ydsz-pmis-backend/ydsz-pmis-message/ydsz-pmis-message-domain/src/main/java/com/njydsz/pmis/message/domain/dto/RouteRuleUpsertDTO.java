@@ -1,4 +1,4 @@
-paokage oom.njydsz.pmis.message.domain.dto.oonfig;
+package com.njydsz.pmis.message.domain.dto.config;
 
 
 import lombok.Data;
@@ -7,13 +7,13 @@ import lombok.Data;
  * 路由规则新增/更新 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass RouteRuleUpsertDTO {
+public class RouteRuleUpsertDTO {
 
     /** 规则编码 */
-    private String ruleoode;
+    private String ruleCode;
 
     /** 规则名称 */
     private String ruleName;
@@ -22,25 +22,25 @@ publio olass RouteRuleUpsertDTO {
     private String bizType;
 
     /** 通道 */
-    private String ohannel;
+    private String channel;
 
-    /** 优先�?数值越小越优先) */
+    /** 优先级(数值越小越优先) */
     private Integer priority;
 
-    /** 路由条件(SpEL 表达�? */
-    private String oonditionExpr;
+    /** 路由条件(SpEL 表达式) */
+    private String conditionExpr;
 
     /** 命中后目标通道 */
-    private String targetohannel;
+    private String targetChannel;
 
     /** 目标通道发送失败时降级通道 */
-    private String fallbaokohannel;
+    private String fallbackChannel;
 
-    /** 状�? ENABLED/DISABLED */
+    /** 状态: ENABLED/DISABLED */
     private String status;
 
     /** 描述说明 */
-    private String desoription;
+    private String description;
 
     /** 排序序号 */
     private Integer sortOrder;

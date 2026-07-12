@@ -1,18 +1,18 @@
-paokage oom.njydsz.pmis.message.server.servioe.template;
+package com.njydsz.pmis.message.server.service.template;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.message.domain.dto.template.TemplateAuditDTO;
-import oom.njydsz.pmis.message.domain.dto.template.TemplateoreateDTO;
-import oom.njydsz.pmis.message.domain.dto.template.TemplateQueryDTO;
-import oom.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.message.domain.dto.template.TemplateAuditDTO;
+import com.njydsz.pmis.message.domain.dto.template.TemplateCreateDTO;
+import com.njydsz.pmis.message.domain.dto.template.TemplateQueryDTO;
+import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
 
 /**
  * 消息模板服务
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio interfaoe TemplateServioe {
+public interface TemplateService {
 
     /**
      * 创建模板
@@ -20,7 +20,7 @@ publio interfaoe TemplateServioe {
      * @param dto 模板创建参数
      * @return 已创建的模板
      */
-    MsgTemplateDO oreate(TemplateoreateDTO dto);
+    MsgTemplateDO create(TemplateCreateDTO dto);
 
     /**
      * 更新模板
@@ -29,7 +29,7 @@ publio interfaoe TemplateServioe {
      * @param dto 模板更新参数
      * @return 更新后的模板
      */
-    MsgTemplateDO update(String id, TemplateoreateDTO dto);
+    MsgTemplateDO update(String id, TemplateCreateDTO dto);
 
     /**
      * 删除模板(逻辑删除)
@@ -55,15 +55,15 @@ publio interfaoe TemplateServioe {
     Page<MsgTemplateDO> page(TemplateQueryDTO query);
 
     /**
-     * 按编�?+ 通道 + 语言加载模板(looale 为空时回退默认 zh-oN)
+     * 按编码 + 通道 + 语言加载模板(locale 为空时回退默认 zh-CN)
      *
-     * @param templateoode 模板编码
-     * @param ohannel      通道
-     * @param looale       语言区域(可为�?
+     * @param templateCode 模板编码
+     * @param channel      通道
+     * @param locale       语言区域(可为空)
      * @param tenantId     租户 ID
      * @return 模板实体
      */
-    MsgTemplateDO loadByoodeAndohannel(String templateoode, String ohannel, String looale, String tenantId);
+    MsgTemplateDO loadByCodeAndChannel(String templateCode, String channel, String locale, String tenantId);
 
     /**
      * 审核模板

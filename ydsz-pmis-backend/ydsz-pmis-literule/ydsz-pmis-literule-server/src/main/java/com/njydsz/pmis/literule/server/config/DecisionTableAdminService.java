@@ -1,198 +1,208 @@
-paokage oom.njydsz.pmis.literule.server.oonfig;
+package com.njydsz.pmis.literule.server.config;
 
-import oom.njydsz.pmis.literule.api.DeoisionTableDefinition;
-import oom.njydsz.pmis.literule.api.HitPolioy;
-import oom.njydsz.pmis.literule.api.Ruleoontext;
-import oom.njydsz.pmis.literule.api.RuleEngine;
-import oom.njydsz.pmis.literule.domain.event.RuleoonfigRefreshEvent;
-import oom.njydsz.pmis.literule.infra.exoel.DeoisionTableExoelExporter;
-import oom.njydsz.pmis.literule.server.impl.DeoisionTableRule;
-import oom.njydsz.pmis.literule.server.spi.DeoisionTableoonfigProvider;
-import oom.njydsz.pmis.literule.server.spi.RuleoonfigBroadoaster;
+import com.njydsz.pmis.literule.api.DecisionTableDefinition;
+import com.njydsz.pmis.literule.api.HitPolicy;
+import com.njydsz.pmis.literule.api.RuleContext;
+import com.njydsz.pmis.literule.api.RuleEngine;
+import com.njydsz.pmis.literule.domain.event.RuleConfigRefreshEvent;
+import com.njydsz.pmis.literule.infra.excel.DecisionTableExcelExporter;
+import com.njydsz.pmis.literule.server.impl.DecisionTableRule;
+import com.njydsz.pmis.literule.server.spi.DecisionTableConfigProvider;
+import com.njydsz.pmis.literule.server.spi.RuleConfigBroadcaster;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.oontext.ApplioationEventPublisher;
+import org.springframework.context.ApplicationEventPublisher;
 
-import java.util.oolleotions;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * 决策表管理服�? *
- * <p>提供决策�?oRUD、启停、dry-run、热刷新等管理操作�? * �?{@link RuleAdminServioe} 解耦，可独立启用�? *
+ * 决策表管理服务
+ *
+ * <p>提供决策表 CRUD、启停、dry-run、热刷新等管理操作。
+ * 与 {@link RuleAdminService} 解耦，可独立启用。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.4.0
+ * @since 1.4.0
  */
 @Slf4j
-publio olass DeoisionTableAdminServioe {
+public class DecisionTableAdminService {
 
     private final RuleEngine ruleEngine;
-    private final DeoisionTableoonfigProvider oonfigProvider;
-    private final ApplioationEventPublisher eventPublisher;
-    private RuleoonfigBroadoaster broadoaster;
+    private final DecisionTableConfigProvider configProvider;
+    private final ApplicationEventPublisher eventPublisher;
+    private RuleConfigBroadcaster broadcaster;
     private String nodeId;
-    /** Exoel 导入导出器（懒加载，避免 POI 不在 olasspath 时初始化失败�?*/
-    private DeoisionTableExoelExporter exoelExporter;
+    /** Excel 导入导出器（懒加载，避免 POI 不在 classpath 时初始化失败） */
+    private DecisionTableExcelExporter excelExporter;
 
-    publio DeoisionTableAdminServioe(RuleEngine ruleEngine,
-                                     DeoisionTableoonfigProvider oonfigProvider,
-                                     ApplioationEventPublisher eventPublisher) {
+    public DecisionTableAdminService(RuleEngine ruleEngine,
+                                     DecisionTableConfigProvider configProvider,
+                                     ApplicationEventPublisher eventPublisher) {
         this.ruleEngine = ruleEngine;
-        this.oonfigProvider = oonfigProvider;
+        this.configProvider = configProvider;
         this.eventPublisher = eventPublisher;
         this.nodeId = UUID.randomUUID().toString().substring(0, 8);
     }
 
-    publio void setBroadoaster(RuleoonfigBroadoaster broadoaster) {
-        this.broadoaster = broadoaster;
+    public void setBroadcaster(RuleConfigBroadcaster broadcaster) {
+        this.broadcaster = broadcaster;
     }
 
-    publio void setNodeId(String nodeId) {
+    public void setNodeId(String nodeId) {
         this.nodeId = nodeId;
     }
 
     /**
-     * 查询全部决策�?     */
-    publio List<DeoisionTableDefinition> listAll() {
-        return oonfigProvider.loadAllTables();
+     * 查询全部决策表
+     */
+    public List<DecisionTableDefinition> listAll() {
+        return configProvider.loadAllTables();
     }
 
     /**
      * 根据编码查询
      */
-    publio DeoisionTableDefinition getByoode(String tableoode) {
-        return oonfigProvider.findByoode(tableoode);
+    public DecisionTableDefinition getByCode(String tableCode) {
+        return configProvider.findByCode(tableCode);
     }
 
     /**
-     * 新增/更新决策�?     */
-    publio DeoisionTableDefinition save(DeoisionTableDefinition definition, String operator, String ohangeDeso) {
+     * 新增/更新决策表
+     */
+    public DecisionTableDefinition save(DecisionTableDefinition definition, String operator, String changeDesc) {
         validate(definition);
-        DeoisionTableDefinition saved = oonfigProvider.save(definition, operator);
-        publishRefreshEvent(RuleoonfigRefreshEvent.of(
-                saved.getTableoode(), RuleoonfigRefreshEvent.ohangeType.UPDATE, operator));
-        log.info("[LiteRule-DeoisionTable] 决策表已保存: oode={}, version={}, operator={}",
-                saved.getTableoode(), saved.getVersion(), operator);
+        DecisionTableDefinition saved = configProvider.save(definition, operator);
+        publishRefreshEvent(RuleConfigRefreshEvent.of(
+                saved.getTableCode(), RuleConfigRefreshEvent.ChangeType.UPDATE, operator));
+        log.info("[LiteRule-DecisionTable] 决策表已保存: code={}, version={}, operator={}",
+                saved.getTableCode(), saved.getVersion(), operator);
         return saved;
     }
 
     /**
      * 切换启停
      */
-    publio void toggle(String tableoode, boolean enabled, String operator) {
-        oonfigProvider.toggleEnabled(tableoode, enabled, operator);
-        publishRefreshEvent(RuleoonfigRefreshEvent.of(
-                tableoode, RuleoonfigRefreshEvent.ohangeType.TOGGLE, operator));
-        log.info("[LiteRule-DeoisionTable] 决策表启停切�? oode={}, enabled={}, operator={}",
-                tableoode, enabled, operator);
+    public void toggle(String tableCode, boolean enabled, String operator) {
+        configProvider.toggleEnabled(tableCode, enabled, operator);
+        publishRefreshEvent(RuleConfigRefreshEvent.of(
+                tableCode, RuleConfigRefreshEvent.ChangeType.TOGGLE, operator));
+        log.info("[LiteRule-DecisionTable] 决策表启停切换: code={}, enabled={}, operator={}",
+                tableCode, enabled, operator);
     }
 
     /**
-     * 删除决策�?     */
-    publio void delete(String tableoode, String operator) {
-        oonfigProvider.delete(tableoode, operator);
-        ruleEngine.unregister(tableoode);
-        publishRefreshEvent(RuleoonfigRefreshEvent.of(
-                tableoode, RuleoonfigRefreshEvent.ohangeType.DELETE, operator));
-        log.info("[LiteRule-DeoisionTable] 决策表已删除: oode={}, operator={}", tableoode, operator);
-    }
-
-    /**
-     * dry-run：构建临�?DeoisionTableRule 评估（不注册到引擎）
+     * 删除决策表
      */
-    publio oom.njydsz.pmis.literule.api.RuleResult dryRun(String tableoode,
-                                                           Map<String, Objeot> faots) {
-        DeoisionTableDefinition def = oonfigProvider.findByoode(tableoode);
+    public void delete(String tableCode, String operator) {
+        configProvider.delete(tableCode, operator);
+        ruleEngine.unregister(tableCode);
+        publishRefreshEvent(RuleConfigRefreshEvent.of(
+                tableCode, RuleConfigRefreshEvent.ChangeType.DELETE, operator));
+        log.info("[LiteRule-DecisionTable] 决策表已删除: code={}, operator={}", tableCode, operator);
+    }
+
+    /**
+     * dry-run：构建临时 DecisionTableRule 评估（不注册到引擎）
+     */
+    public com.njydsz.pmis.literule.api.RuleResult dryRun(String tableCode,
+                                                           Map<String, Object> facts) {
+        DecisionTableDefinition def = configProvider.findByCode(tableCode);
         if (def == null) {
             return null;
         }
-        Ruleoontext oontext =
-                Ruleoontext.of(faots, "DRY_RUN", "MANUAL");
-        DeoisionTableRule rule = new DeoisionTableRule(def, null);
-        return rule.evaluate(oontext);
+        RuleContext context =
+                RuleContext.of(facts, "DRY_RUN", "MANUAL");
+        DecisionTableRule rule = new DecisionTableRule(def, null);
+        return rule.evaluate(context);
     }
 
-    // ==================== Exoel 导入导出（P0-3�?====================
+    // ==================== Excel 导入导出（P0-3） ====================
 
     /**
-     * 导出指定决策表为 Exoel
+     * 导出指定决策表为 Excel
      *
-     * @param tableoode 决策表编�?     * @return xlsx 字节数组
-     * @throws IllegalArgumentExoeption 决策表不存在
-     * @throws RuntimeExoeption         导出失败
+     * @param tableCode 决策表编码
+     * @return xlsx 字节数组
+     * @throws IllegalArgumentException 决策表不存在
+     * @throws RuntimeException         导出失败
      */
-    publio byte[] exportExoel(String tableoode) {
-        DeoisionTableDefinition def = oonfigProvider.findByoode(tableoode);
+    public byte[] exportExcel(String tableCode) {
+        DecisionTableDefinition def = configProvider.findByCode(tableCode);
         if (def == null) {
-            throw new IllegalArgumentExoeption("决策表不存在: " + tableoode);
+            throw new IllegalArgumentException("决策表不存在: " + tableCode);
         }
-        byte[] bytes = getExoelExporter().exportToExoel(def);
-        log.info("[LiteRule-DeoisionTable] 决策表已导出 Exoel: oode={}, bytes={}", tableoode, bytes.length);
+        byte[] bytes = getExcelExporter().exportToExcel(def);
+        log.info("[LiteRule-DecisionTable] 决策表已导出 Excel: code={}, bytes={}", tableCode, bytes.length);
         return bytes;
     }
 
     /**
-     * 导入 Exoel 创建/更新决策�?     *
-     * @param exoelBytes xlsx 字节数组
-     * @param operator   操作�?     * @return 保存后的决策表定�?     * @throws IllegalArgumentExoeption 导入失败
+     * 导入 Excel 创建/更新决策表
+     *
+     * @param excelBytes xlsx 字节数组
+     * @param operator   操作人
+     * @return 保存后的决策表定义
+     * @throws IllegalArgumentException 导入失败
      */
-    publio DeoisionTableDefinition importExoel(byte[] exoelBytes, String operator) {
-        DeoisionTableDefinition def = getExoelExporter().importFromExoel(exoelBytes);
-        DeoisionTableDefinition saved = save(def, operator, "Exoel 导入决策�?);
-        log.info("[LiteRule-DeoisionTable] 决策表已导入 Exoel: oode={}, operator={}",
-                saved.getTableoode(), operator);
+    public DecisionTableDefinition importExcel(byte[] excelBytes, String operator) {
+        DecisionTableDefinition def = getExcelExporter().importFromExcel(excelBytes);
+        DecisionTableDefinition saved = save(def, operator, "Excel 导入决策表");
+        log.info("[LiteRule-DecisionTable] 决策表已导入 Excel: code={}, operator={}",
+                saved.getTableCode(), operator);
         return saved;
     }
 
     /**
-     * 导出空白 Exoel 模板
+     * 导出空白 Excel 模板
      *
      * @return xlsx 字节数组
      */
-    publio byte[] exportExoelTemplate() {
-        byte[] bytes = getExoelExporter().exportTemplate();
-        log.info("[LiteRule-DeoisionTable] Exoel 模板已导�? bytes={}", bytes.length);
+    public byte[] exportExcelTemplate() {
+        byte[] bytes = getExcelExporter().exportTemplate();
+        log.info("[LiteRule-DecisionTable] Excel 模板已导出, bytes={}", bytes.length);
         return bytes;
     }
 
     /**
-     * 获取 Exoel 导入导出器（懒加载）
+     * 获取 Excel 导入导出器（懒加载）
      */
-    private DeoisionTableExoelExporter getExoelExporter() {
-        if (exoelExporter == null) {
-            exoelExporter = new DeoisionTableExoelExporter();
+    private DecisionTableExcelExporter getExcelExporter() {
+        if (excelExporter == null) {
+            excelExporter = new DecisionTableExcelExporter();
         }
-        return exoelExporter;
+        return excelExporter;
     }
 
-    private void validate(DeoisionTableDefinition def) {
-        if (def.getTableoode() == null || def.getTableoode().isBlank()) {
-            throw new IllegalArgumentExoeption("决策表编�?tableoode 不能为空");
+    private void validate(DecisionTableDefinition def) {
+        if (def.getTableCode() == null || def.getTableCode().isBlank()) {
+            throw new IllegalArgumentException("决策表编码 tableCode 不能为空");
         }
         if (def.getTableName() == null || def.getTableName().isBlank()) {
-            throw new IllegalArgumentExoeption("决策表名�?tableName 不能为空");
+            throw new IllegalArgumentException("决策表名称 tableName 不能为空");
         }
-        if (def.getoonditionoolumns() == null || def.getoonditionoolumns().isEmpty()) {
-            throw new IllegalArgumentExoeption("决策表条件列 oonditionoolumns 不能为空");
+        if (def.getConditionColumns() == null || def.getConditionColumns().isEmpty()) {
+            throw new IllegalArgumentException("决策表条件列 conditionColumns 不能为空");
         }
-        if (def.getAotionoolumns() == null || def.getAotionoolumns().isEmpty()) {
-            throw new IllegalArgumentExoeption("决策表动作列 aotionoolumns 不能为空");
+        if (def.getActionColumns() == null || def.getActionColumns().isEmpty()) {
+            throw new IllegalArgumentException("决策表动作列 actionColumns 不能为空");
         }
         if (def.getRows() == null) {
-            def.setRows(oolleotions.emptyList());
+            def.setRows(Collections.emptyList());
         }
-        if (def.getHitPolioy() == null) {
-            def.setHitPolioy(HitPolioy.FIRST);
+        if (def.getHitPolicy() == null) {
+            def.setHitPolicy(HitPolicy.FIRST);
         }
     }
 
-    private void publishRefreshEvent(RuleoonfigRefreshEvent event) {
+    private void publishRefreshEvent(RuleConfigRefreshEvent event) {
         eventPublisher.publishEvent(event);
-        if (broadoaster != null && broadoaster.isAvailable()) {
+        if (broadcaster != null && broadcaster.isAvailable()) {
             try {
-                broadoaster.broadoast(event, nodeId);
-            } oatoh (Exoeption e) {
-                log.warn("[LiteRule-DeoisionTable] 分布式广播失�? {}", e.getMessage());
+                broadcaster.broadcast(event, nodeId);
+            } catch (Exception e) {
+                log.warn("[LiteRule-DecisionTable] 分布式广播失败: {}", e.getMessage());
             }
         }
     }

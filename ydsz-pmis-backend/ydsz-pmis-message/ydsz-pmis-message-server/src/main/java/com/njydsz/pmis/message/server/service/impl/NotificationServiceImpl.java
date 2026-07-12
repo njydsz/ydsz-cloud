@@ -1,26 +1,26 @@
-paokage oom.njydsz.pmis.message.server.servioe.impl.oore;
+package com.njydsz.pmis.message.server.service.impl.core;
 
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.oonstant.Systemoonstants;
-import oom.njydsz.pmis.oommon.domain.query.PageQuery;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.njydsz.pmis.message.domain.dto.oore.NotifioationQueryDTO;
-import oom.njydsz.pmis.message.domain.dto.oore.NotifioationSendDTO;
-import oom.njydsz.pmis.message.domain.entity.oore.MsgNotifioationDO;
-import oom.njydsz.pmis.message.domain.enums.reoeipt.ReoallStatusEnum;
-import oom.njydsz.pmis.message.infra.mapper.oore.MsgNotifioationMapper;
-import oom.njydsz.pmis.message.server.realtime.RealtimePushServioe;
-import oom.njydsz.pmis.message.server.servioe.oore.NotifioationServioe;
-import oom.njydsz.pmis.message.server.servioe.reoeipt.ReoallServioe;
-import oom.njydsz.pmis.message.domain.vo.NotifioationGroupVO;
-import lombok.RequiredArgsoonstruotor;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.constant.SystemConstants;
+import com.njydsz.pmis.common.entity.PageQuery;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.message.domain.dto.core.NotificationQueryDTO;
+import com.njydsz.pmis.message.domain.dto.core.NotificationSendDTO;
+import com.njydsz.pmis.message.domain.entity.core.MsgNotificationDO;
+import com.njydsz.pmis.message.domain.enums.receipt.RecallStatusEnum;
+import com.njydsz.pmis.message.infra.mapper.core.MsgNotificationMapper;
+import com.njydsz.pmis.message.server.realtime.RealtimePushService;
+import com.njydsz.pmis.message.server.service.core.NotificationService;
+import com.njydsz.pmis.message.server.service.receipt.RecallService;
+import com.njydsz.pmis.message.domain.vo.NotificationGroupVO;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
-import org.springframework.util.oolleotionUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
@@ -29,185 +29,189 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 站内通知服务实现�? *
- * <p>send 支持批量接收�?reoeiverIds 优先),逐人入库 + 实时推�?撤回委托 {@link ReoallServioe}�? *
+ * 站内通知服务实现。
+ *
+ * <p>send 支持批量接收人(receiverIds 优先),逐人入库 + 实时推送;撤回委托 {@link RecallService}。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass NotifioationServioeImpl implements NotifioationServioe {
+@Service
+@RequiredArgsConstructor
+public class NotificationServiceImpl implements NotificationService {
 
     /** 站内通知 Mapper */
-    private final MsgNotifioationMapper msgNotifioationMapper;
-    /** 实时推送服务（WebSooket / 离线缓存�?*/
-    private final RealtimePushServioe realtimePushServioe;
+    private final MsgNotificationMapper msgNotificationMapper;
+    /** 实时推送服务（WebSocket / 离线缓存） */
+    private final RealtimePushService realtimePushService;
     /** 消息撤回服务 */
-    private final ReoallServioe reoallServioe;
+    private final RecallService recallService;
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio int send(NotifioationSendDTO dto) {
+    @Transactional(rollbackFor = Exception.class)
+    public int send(NotificationSendDTO dto) {
         if (dto == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "通知参数不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "通知参数不能为空");
         }
-        List<String> reoeiverIds = resolveReoeiverIds(dto);
-        int oount = 0;
-        for (String rid : reoeiverIds) {
-            MsgNotifioationDO entity = buildEntity(dto, rid);
-            msgNotifioationMapper.insert(entity);
-            // 实时推送（P0-4: 离线时自动缓存到 Redis，上线时补偿�?            realtimePushServioe.pushToUserWithOffline(rid, "NOTIFIoATION", entity);
-            oount++;
+        List<String> receiverIds = resolveReceiverIds(dto);
+        int count = 0;
+        for (String rid : receiverIds) {
+            MsgNotificationDO entity = buildEntity(dto, rid);
+            msgNotificationMapper.insert(entity);
+            // 实时推送（P0-4: 离线时自动缓存到 Redis，上线时补偿）
+            realtimePushService.pushToUserWithOffline(rid, "NOTIFICATION", entity);
+            count++;
         }
-        log.info("[Notifioation] 发送通知: title={} oount={} bizType={}", dto.getTitle(), oount, dto.getBizType());
-        return oount;
+        log.info("[Notification] 发送通知: title={} count={} bizType={}", dto.getTitle(), count, dto.getBizType());
+        return count;
     }
 
     @Override
-    publio Page<MsgNotifioationDO> inbox(String userId, NotifioationQueryDTO query) {
+    public Page<MsgNotificationDO> inbox(String userId, NotificationQueryDTO query) {
         if (!StringUtils.hasText(userId)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "用户 ID 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "用户 ID 不能为空");
         }
-        Page<MsgNotifioationDO> page = new Page<>(
+        Page<MsgNotificationDO> page = new Page<>(
                 query == null ? 1 : query.getPage(),
                 Math.min(query == null ? 10 : query.getSize(), PageQuery.MAX_SIZE));
-        LambdaQueryWrapper<MsgNotifioationDO> w = new LambdaQueryWrapper<MsgNotifioationDO>()
-                .eq(MsgNotifioationDO::getReoeiverId, userId);
+        LambdaQueryWrapper<MsgNotificationDO> w = new LambdaQueryWrapper<MsgNotificationDO>()
+                .eq(MsgNotificationDO::getReceiverId, userId);
         if (query != null) {
-            w.eq(StringUtils.hasText(query.getoategory()), MsgNotifioationDO::getoategory, query.getoategory());
-            w.eq(StringUtils.hasText(query.getLevel()), MsgNotifioationDO::getLevel, query.getLevel());
-            w.eq(query.getReadStatus() != null, MsgNotifioationDO::getReadStatus, query.getReadStatus());
+            w.eq(StringUtils.hasText(query.getCategory()), MsgNotificationDO::getCategory, query.getCategory());
+            w.eq(StringUtils.hasText(query.getLevel()), MsgNotificationDO::getLevel, query.getLevel());
+            w.eq(query.getReadStatus() != null, MsgNotificationDO::getReadStatus, query.getReadStatus());
         }
-        w.orderByDeso(MsgNotifioationDO::getoreatedAt);
-        return msgNotifioationMapper.seleotPage(page, w);
+        w.orderByDesc(MsgNotificationDO::getCreatedAt);
+        return msgNotificationMapper.selectPage(page, w);
     }
 
     @Override
-    publio long oountUnread(String userId) {
+    public long countUnread(String userId) {
         if (!StringUtils.hasText(userId)) {
             return 0L;
         }
-        Long oount = msgNotifioationMapper.oountUnread(userId);
-        return oount == null ? 0L : oount;
+        Long count = msgNotificationMapper.countUnread(userId);
+        return count == null ? 0L : count;
     }
 
     @Override
-    publio boolean markRead(String userId, String id) {
+    public boolean markRead(String userId, String id) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(id)) {
             return false;
         }
-        return msgNotifioationMapper.markRead(id, userId) > 0;
+        return msgNotificationMapper.markRead(id, userId) > 0;
     }
 
     @Override
-    publio int markAllRead(String userId) {
+    public int markAllRead(String userId) {
         if (!StringUtils.hasText(userId)) {
             return 0;
         }
-        return msgNotifioationMapper.markAllRead(userId);
+        return msgNotificationMapper.markAllRead(userId);
     }
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void delete(String userId, List<String> ids) {
-        if (!StringUtils.hasText(userId) || oolleotionUtils.isEmpty(ids)) {
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(String userId, List<String> ids) {
+        if (!StringUtils.hasText(userId) || CollectionUtils.isEmpty(ids)) {
             return;
         }
         for (String id : ids) {
-            MsgNotifioationDO n = msgNotifioationMapper.seleotById(id);
-            if (n != null && userId.equals(n.getReoeiverId())) {
-                msgNotifioationMapper.deleteById(id);
+            MsgNotificationDO n = msgNotificationMapper.selectById(id);
+            if (n != null && userId.equals(n.getReceiverId())) {
+                msgNotificationMapper.deleteById(id);
             }
         }
     }
 
     @Override
-    publio boolean reoall(String userId, String id) {
-        return reoallServioe.reoallNotifioation(userId, id);
+    public boolean recall(String userId, String id) {
+        return recallService.recallNotification(userId, id);
     }
 
     @Override
-    publio Page<NotifioationGroupVO> inboxGrouped(String userId, NotifioationQueryDTO query) {
-        // 查询用户全部通知（按时间倒序），�?message_group 折叠
-        Page<MsgNotifioationDO> allPage = inbox(userId, query);
-        Map<String, NotifioationGroupVO> groupMap = new LinkedHashMap<>();
+    public Page<NotificationGroupVO> inboxGrouped(String userId, NotificationQueryDTO query) {
+        // 查询用户全部通知（按时间倒序），按 message_group 折叠
+        Page<MsgNotificationDO> allPage = inbox(userId, query);
+        Map<String, NotificationGroupVO> groupMap = new LinkedHashMap<>();
 
-        for (MsgNotifioationDO n : allPage.getReoords()) {
+        for (MsgNotificationDO n : allPage.getRecords()) {
             String groupKey = n.getMessageGroup();
             if (!StringUtils.hasText(groupKey)) {
-                // 无分组键的消息独立成组（�?id 作为 groupKey�?                groupKey = "UNG:" + n.getId();
+                // 无分组键的消息独立成组（用 id 作为 groupKey）
+                groupKey = "UNG:" + n.getId();
             }
-            NotifioationGroupVO vo = groupMap.get(groupKey);
+            NotificationGroupVO vo = groupMap.get(groupKey);
             if (vo == null) {
-                vo = new NotifioationGroupVO();
+                vo = new NotificationGroupVO();
                 vo.setMessageGroup(groupKey);
                 vo.setLatestId(n.getId());
                 vo.setLatestTitle(n.getTitle());
-                vo.setLatestoontent(n.getoontent());
-                vo.setLatestTime(n.getoreatedAt());
+                vo.setLatestContent(n.getContent());
+                vo.setLatestTime(n.getCreatedAt());
                 vo.setLatestLevel(n.getLevel());
-                vo.setLatestoategory(n.getoategory());
-                vo.setUnreadoount(0);
-                vo.setTotaloount(0);
+                vo.setLatestCategory(n.getCategory());
+                vo.setUnreadCount(0);
+                vo.setTotalCount(0);
                 groupMap.put(groupKey, vo);
             }
-            vo.setTotaloount(vo.getTotaloount() + 1);
+            vo.setTotalCount(vo.getTotalCount() + 1);
             if (n.getReadStatus() != null && n.getReadStatus() == 0) {
-                vo.setUnreadoount(vo.getUnreadoount() + 1);
+                vo.setUnreadCount(vo.getUnreadCount() + 1);
             }
         }
 
-        Page<NotifioationGroupVO> result = new Page<>(allPage.getourrent(), allPage.getSize(), allPage.getTotal());
-        BaseResponse.setReoords(new ArrayList<>(groupMap.values()));
+        Page<NotificationGroupVO> result = new Page<>(allPage.getCurrent(), allPage.getSize(), allPage.getTotal());
+        BaseResponse.setRecords(new ArrayList<>(groupMap.values()));
         return result;
     }
 
     @Override
-    publio List<MsgNotifioationDO> listByGroup(String userId, String messageGroup) {
+    public List<MsgNotificationDO> listByGroup(String userId, String messageGroup) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(messageGroup)) {
             return List.of();
         }
-        return msgNotifioationMapper.seleotList(new LambdaQueryWrapper<MsgNotifioationDO>()
-                .eq(MsgNotifioationDO::getReoeiverId, userId)
-                .eq(MsgNotifioationDO::getMessageGroup, messageGroup)
-                .eq(MsgNotifioationDO::getTenantId, Tenantoontext.getTenantId())
-                .orderByDeso(MsgNotifioationDO::getoreatedAt));
+        return msgNotificationMapper.selectList(new LambdaQueryWrapper<MsgNotificationDO>()
+                .eq(MsgNotificationDO::getReceiverId, userId)
+                .eq(MsgNotificationDO::getMessageGroup, messageGroup)
+                .eq(MsgNotificationDO::getTenantId, TenantContext.getTenantId())
+                .orderByDesc(MsgNotificationDO::getCreatedAt));
     }
 
-    private List<String> resolveReoeiverIds(NotifioationSendDTO dto) {
-        List<String> reoeiverIds = dto.getReoeiverIds();
-        if (oolleotionUtils.isEmpty(reoeiverIds) && dto.getReoeiverId() != null) {
-            reoeiverIds = List.of(dto.getReoeiverId());
+    private List<String> resolveReceiverIds(NotificationSendDTO dto) {
+        List<String> receiverIds = dto.getReceiverIds();
+        if (CollectionUtils.isEmpty(receiverIds) && dto.getReceiverId() != null) {
+            receiverIds = List.of(dto.getReceiverId());
         }
-        if (oolleotionUtils.isEmpty(reoeiverIds)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "接收人不能为�?);
+        if (CollectionUtils.isEmpty(receiverIds)) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "接收人不能为空");
         }
-        return reoeiverIds;
+        return receiverIds;
     }
 
-    private MsgNotifioationDO buildEntity(NotifioationSendDTO dto, String reoeiverId) {
-        MsgNotifioationDO n = new MsgNotifioationDO();
+    private MsgNotificationDO buildEntity(NotificationSendDTO dto, String receiverId) {
+        MsgNotificationDO n = new MsgNotificationDO();
         n.setTitle(dto.getTitle());
-        n.setoontent(dto.getoontent());
+        n.setContent(dto.getContent());
         n.setLevel(StringUtils.hasText(dto.getLevel()) ? dto.getLevel() : "INFO");
-        n.setoategory(StringUtils.hasText(dto.getoategory()) ? dto.getoategory() : "SYSTEM");
+        n.setCategory(StringUtils.hasText(dto.getCategory()) ? dto.getCategory() : "SYSTEM");
         n.setPriority(dto.getPriority());
-        n.setSenderId(StringUtils.hasText(dto.getSenderId()) ? dto.getSenderId() : Systemoonstants.SYSTEM_USER_ID);
-        n.setReoeiverId(reoeiverId);
+        n.setSenderId(StringUtils.hasText(dto.getSenderId()) ? dto.getSenderId() : SystemConstants.SYSTEM_USER_ID);
+        n.setReceiverId(receiverId);
         n.setBizType(dto.getBizType());
         n.setBizId(dto.getBizId());
         n.setMessageGroup(dto.getMessageGroup());
-        n.setAotionUrl(dto.getAotionUrl());
-        n.setAotionText(dto.getAotionText());
-        n.setIoon(dto.getIoon());
+        n.setActionUrl(dto.getActionUrl());
+        n.setActionText(dto.getActionText());
+        n.setIcon(dto.getIcon());
         n.setExtra(dto.getExtra());
-        n.setSouroeModule(dto.getSouroeModule());
+        n.setSourceModule(dto.getSourceModule());
         n.setReadStatus(0);
-        n.setReoallStatus(ReoallStatusEnum.NONE.name());
+        n.setRecallStatus(RecallStatusEnum.NONE.name());
         n.setExpiredAt(dto.getExpiredAt());
-        // P2-7: 补齐租户隔离,与其他消息实体一�?原依�?DB DEFAULT '1',多租户场景会越权)
-        n.setTenantId(Tenantoontext.getTenantId());
+        // P2-7: 补齐租户隔离,与其他消息实体一致(原依赖 DB DEFAULT '1',多租户场景会越权)
+        n.setTenantId(TenantContext.getTenantId());
         return n;
     }
 }

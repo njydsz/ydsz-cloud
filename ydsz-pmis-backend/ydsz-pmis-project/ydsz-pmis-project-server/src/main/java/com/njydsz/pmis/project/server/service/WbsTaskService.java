@@ -1,22 +1,23 @@
-paokage oom.njydsz.pmis.projeot.server.servioe;
+package com.njydsz.pmis.project.server.service;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.projeot.domain.dto.WbsTaskoreateDTO;
-import oom.njydsz.pmis.projeot.domain.dto.WbsTaskStatusDTO;
-import oom.njydsz.pmis.projeot.domain.entity.WbsTaskDO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.project.domain.dto.WbsTaskCreateDTO;
+import com.njydsz.pmis.project.domain.dto.WbsTaskStatusDTO;
+import com.njydsz.pmis.project.domain.entity.WbsTaskDO;
 
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
 /**
  * WBS 任务服务
  *
- * <p>提供 WBS 任务的创建、状态变更、进度更新、查询与聚合统计能力�? *
+ * <p>提供 WBS 任务的创建、状态变更、进度更新、查询与聚合统计能力。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio interfaoe WbsTaskServioe {
+public interface WbsTaskService {
 
     /**
      * 创建 WBS 任务
@@ -24,20 +25,23 @@ publio interfaoe WbsTaskServioe {
      * @param dto 任务创建参数
      * @return 任务ID
      */
-    String oreate(WbsTaskoreateDTO dto);
+    String create(WbsTaskCreateDTO dto);
 
     /**
-     * 变更任务状�?     *
-     * @param dto 状态变更参�?     */
-    void ohangeStatus(WbsTaskStatusDTO dto);
+     * 变更任务状态
+     *
+     * @param dto 状态变更参数
+     */
+    void changeStatus(WbsTaskStatusDTO dto);
 
     /**
      * 更新进度（包含实际工时）
      *
      * @param id           任务ID
-     * @param progressPot  进度百分�?     * @param aotualEffort 实际工时（人天）
+     * @param progressPct  进度百分比
+     * @param actualEffort 实际工时（人天）
      */
-    void updateProgress(String id, BigDeoimal progressPot, BigDeoimal aotualEffort);
+    void updateProgress(String id, BigDecimal progressPct, BigDecimal actualEffort);
 
     /**
      * 删除任务
@@ -59,7 +63,9 @@ publio interfaoe WbsTaskServioe {
      *
      * @param page         页码（从 1 开始）
      * @param size         每页大小
-     * @param keyword      关键词（任务名称/编号�?     * @param status       状态过�?     * @param taskType     任务类型
+     * @param keyword      关键词（任务名称/编号）
+     * @param status       状态过滤
+     * @param taskType     任务类型
      * @param initiationId 项目立项ID
      * @param ownerId      责任人ID
      * @return 分页结果
@@ -68,7 +74,8 @@ publio interfaoe WbsTaskServioe {
                          String taskType, String initiationId, String ownerId);
 
     /**
-     * 查询项目下所有任�?     *
+     * 查询项目下所有任务
+     *
      * @param initiationId 项目立项ID
      * @return 任务列表
      */
@@ -78,27 +85,33 @@ publio interfaoe WbsTaskServioe {
      * 查询项目下所有里程碑任务
      *
      * @param initiationId 项目立项ID
-     * @return 里程碑任务列�?     */
+     * @return 里程碑任务列表
+     */
     List<WbsTaskDO> listMilestones(String initiationId);
 
     /**
      * 计算整体进度（任务加权平均）
      *
      * @param initiationId 项目立项ID
-     * @return 整体进度百分比（0-100�?     */
-    BigDeoimal oaloOverallProgress(String initiationId);
+     * @return 整体进度百分比（0-100）
+     */
+    BigDecimal calcOverallProgress(String initiationId);
 
     /**
-     * 状态分布统�?     *
+     * 状态分布统计
+     *
      * @param initiationId 项目立项ID
-     * @return 各状态任务数量列�?     */
-    List<Map<String, Objeot>> aggregateByStatus(String initiationId);
+     * @return 各状态任务数量列表
+     */
+    List<Map<String, Object>> aggregateByStatus(String initiationId);
 
     /**
      * 获取甘特图数据（P0-1：项目甘特图可视化）
      *
-     * <p>返回树形结构的甘特图数据，包含任务层级、计�?实际日期、进度、依赖关系�?     *
+     * <p>返回树形结构的甘特图数据，包含任务层级、计划/实际日期、进度、依赖关系。
+     *
      * @param initiationId 项目立项ID
-     * @return 甘特图数据列表（树形结构�?     */
-    List<Map<String, Objeot>> getGanttData(String initiationId);
+     * @return 甘特图数据列表（树形结构）
+     */
+    List<Map<String, Object>> getGanttData(String initiationId);
 }

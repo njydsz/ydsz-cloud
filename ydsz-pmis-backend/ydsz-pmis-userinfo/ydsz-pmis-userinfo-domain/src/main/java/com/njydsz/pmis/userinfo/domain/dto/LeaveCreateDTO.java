@@ -1,40 +1,40 @@
-paokage oom.njydsz.pmis.userinfo.domain.dto.rate;
+package com.njydsz.pmis.userinfo.domain.dto.rate;
 
-import io.swagger.v3.oas.annotations.media.Sohema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDeoimal;
-import java.time.LooalDate;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * 请假申请 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@Sohema(desoription = "请假申请表单")
-publio olass LeaveoreateDTO implements Serializable {
+@Schema(description = "请假申请表单")
+public class LeaveCreateDTO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 员工 ID */
     private String employeeId;
     /** 员工姓名 */
     private String employeeName;
-    /** ANNUAL/SIoK/PERSONAL/MARRIAGE/MATERNITY/BEREAVEMENT/OTHER */
+    /** ANNUAL/SICK/PERSONAL/MARRIAGE/MATERNITY/BEREAVEMENT/OTHER */
     private String leaveType;
-    /** 开始日�?*/
-    private LooalDate startDate;
+    /** 开始日期 */
+    private LocalDate startDate;
     /** 结束日期 */
-    private LooalDate endDate;
+    private LocalDate endDate;
     /** 请假天数 */
-    private BigDeoimal leaveDays;
+    private BigDecimal leaveDays;
     /** 请假事由 */
     private String reason;
     /** 附件地址 */
-    private String attaohmentUrl;
+    private String attachmentUrl;
 }

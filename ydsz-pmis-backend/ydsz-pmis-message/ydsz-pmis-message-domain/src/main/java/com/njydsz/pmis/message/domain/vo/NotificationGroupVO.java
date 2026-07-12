@@ -1,44 +1,44 @@
-paokage oom.njydsz.pmis.message.domain.vo;
+package com.njydsz.pmis.message.domain.vo;
 
 import lombok.Data;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 
 /**
- * 收件箱分�?VO（P1-2）�?
+ * 收件箱分组 VO（P1-2）。
  *
- * <p>�?message_group 折叠后的分组视图,包含最新消息和未读计数�?
+ * <p>按 message_group 折叠后的分组视图,包含最新消息和未读计数。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.5.0
+ * @since 1.5.0
  */
 @Data
-publio olass NotifioationGroupVO {
+public class NotificationGroupVO {
 
-    /** 分组�?*/
+    /** 分组键 */
     private String messageGroup;
 
-    /** 最新消息标�?*/
+    /** 最新消息标题 */
     private String latestTitle;
 
-    /** 最新消息内�?*/
-    private String latestoontent;
+    /** 最新消息内容 */
+    private String latestContent;
 
-    /** 最新消息时�?*/
-    private LooalDateTime latestTime;
+    /** 最新消息时间 */
+    private LocalDateTime latestTime;
 
     /** 分组内未读数 */
-    private int unreadoount;
+    private int unreadCount;
 
     /** 分组内消息总数 */
-    private int totaloount;
+    private int totalCount;
 
-    /** 最新消息级�?*/
+    /** 最新消息级别 */
     private String latestLevel;
 
-    /** 最新消息分�?*/
-    private String latestoategory;
+    /** 最新消息分类 */
+    private String latestCategory;
 
-    /** 最新消�?ID */
+    /** 最新消息 ID */
     private String latestId;
 }

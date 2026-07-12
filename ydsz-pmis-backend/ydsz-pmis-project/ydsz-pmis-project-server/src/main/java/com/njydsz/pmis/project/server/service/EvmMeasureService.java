@@ -1,62 +1,69 @@
-paokage oom.njydsz.pmis.projeot.server.servioe;
+package com.njydsz.pmis.project.server.service;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.projeot.domain.dto.EvmMeasureoreateDTO;
-import oom.njydsz.pmis.projeot.domain.vo.EvmMeasureVO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.project.domain.dto.EvmMeasureCreateDTO;
+import com.njydsz.pmis.project.domain.vo.EvmMeasureVO;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * EVM 挣值测量服�? *
- * <p>提供挣值测量数据的录入/更新（幂等）、偏差趋势及驾驶舱健康度查询�? *
+ * EVM 挣值测量服务
+ *
+ * <p>提供挣值测量数据的录入/更新（幂等）、偏差趋势及驾驶舱健康度查询。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio interfaoe EvmMeasureServioe {
+public interface EvmMeasureService {
 
     /**
-     * 录入或更�?EVM 测量（按 initiation+wbs+period 唯一�?     *
+     * 录入或更新 EVM 测量（按 initiation+wbs+period 唯一）
+     *
      * @param dto 测量录入参数
      * @return 测量记录 ID
      */
-    String save(EvmMeasureoreateDTO dto);
+    String save(EvmMeasureCreateDTO dto);
 
     /**
      * 根据ID查询测量记录
      *
      * @param id 记录ID
-     * @return 测量 VO（剥�?tenantId/providerTraoeId/deleted 等敏感字段）
+     * @return 测量 VO（剥离 tenantId/providerTraceId/deleted 等敏感字段）
      */
     EvmMeasureVO getById(String id);
 
     /**
-     * 查询项目下所有测量记�?     *
+     * 查询项目下所有测量记录
+     *
      * @param initiationId 项目立项ID
      * @return 测量 VO 列表
      */
     List<EvmMeasureVO> listByInitiation(String initiationId);
 
     /**
-     * 查询 WBS 节点下所有测量记�?     *
+     * 查询 WBS 节点下所有测量记录
+     *
      * @param wbsTaskId WBS任务ID
      * @return 测量 VO 列表
      */
     List<EvmMeasureVO> listByWbs(String wbsTaskId);
 
     /**
-     * WBS 节点级偏差趋�?     *
+     * WBS 节点级偏差趋势
+     *
      * @param initiationId 项目立项 ID
      * @return 偏差趋势列表
      */
-    List<Map<String, Objeot>> trend(String initiationId);
+    List<Map<String, Object>> trend(String initiationId);
 
     /**
      * 项目 EVM 健康汇总（最新一期）
      *
      * @param initiationId 项目立项 ID
-     * @return EVM 健康汇总数�?     */
-    Map<String, Objeot> dashboard(String initiationId);
+     * @return EVM 健康汇总数据
+     */
+    Map<String, Object> dashboard(String initiationId);
 
     /**
      * 分页查询测量记录
@@ -77,21 +84,22 @@ publio interfaoe EvmMeasureServioe {
     void delete(String id);
 
     /**
-     * 项目变更触发�?EVM 基线重算
+     * 项目变更触发的 EVM 基线重算
      *
-     * <p>�?ProjeotohangeExeoutedEvent 监听器调�? 根据最�?BAo/工期/范围,
-     * 标记该项�?EVM 待重算并刷新基线版本�? 后续新录入的测量自动使用新基�?
+     * <p>由 ProjectChangeExecutedEvent 监听器调用, 根据最新 BAC/工期/范围,
+     * 标记该项目 EVM 待重算并刷新基线版本号, 后续新录入的测量自动使用新基线.
      *
      * @param initiationId 项目立项 ID
-     * @param reason       重算原因 (�?"PROJEoT_oHANGE: ohangeoode")
-     * @return 重算结果 (baselineVersion / affeotedMeasures)
+     * @param reason       重算原因 (如 "PROJECT_CHANGE: changeCode")
+     * @return 重算结果 (baselineVersion / affectedMeasures)
      */
-    Map<String, Objeot> reoaloulateBaseline(String initiationId, String reason);
+    Map<String, Object> recalculateBaseline(String initiationId, String reason);
 
     /**
-     * 查询项目当前 EVM 基线版本�? 不存在返�?0
+     * 查询项目当前 EVM 基线版本号, 不存在返回 0
      *
      * @param initiationId 项目立项 ID
-     * @return 基线版本�?     */
-    int ourrentBaselineVersion(String initiationId);
+     * @return 基线版本号
+     */
+    int currentBaselineVersion(String initiationId);
 }

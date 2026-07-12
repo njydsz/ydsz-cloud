@@ -1,38 +1,38 @@
-paokage oom.njydsz.pmis.literule.infra.mapper;
+package com.njydsz.pmis.literule.infra.mapper;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.literule.domain.entity.RuleDependenoyDO;
-import org.apaohe.ibatis.annotations.Mapper;
-import org.apaohe.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.literule.domain.entity.RuleDependencyDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
 /**
- * 规则依赖关系 Mapper（P1-8�?
+ * 规则依赖关系 Mapper（P1-8）
  *
  * @author ydsz-pmis-team
- * @sinoe 1.5.0
+ * @since 1.5.0
  */
 @Mapper
-publio interfaoe RuleDependenoyMapper extends BaseMapper<RuleDependenoyDO> {
+public interface RuleDependencyMapper extends BaseMapper<RuleDependencyDO> {
 
     /**
-     * 查询某条规则依赖了哪些规则（正向�?
+     * 查询某条规则依赖了哪些规则（正向）
      */
-    List<RuleDependenoyDO> seleotByRuleoode(@Param("ruleoode") String ruleoode);
+    List<RuleDependencyDO> selectByRuleCode(@Param("ruleCode") String ruleCode);
 
     /**
-     * 查询哪些规则依赖了指定规则（反向�?
+     * 查询哪些规则依赖了指定规则（反向）
      */
-    List<RuleDependenoyDO> seleotByDependsOn(@Param("dependsOnRuleoode") String dependsOnRuleoode);
+    List<RuleDependencyDO> selectByDependsOn(@Param("dependsOnRuleCode") String dependsOnRuleCode);
 
     /**
-     * 查询指定被依赖规则中配置了级联禁用的依赖�?
+     * 查询指定被依赖规则中配置了级联禁用的依赖方
      */
-    List<RuleDependenoyDO> seleotoasoadingByDependsOn(@Param("dependsOnRuleoode") String dependsOnRuleoode);
+    List<RuleDependencyDO> selectCascadingByDependsOn(@Param("dependsOnRuleCode") String dependsOnRuleCode);
 
     /**
-     * 删除某条规则的所有依�?
+     * 删除某条规则的所有依赖
      */
-    int deleteByRuleoode(@Param("ruleoode") String ruleoode);
+    int deleteByRuleCode(@Param("ruleCode") String ruleCode);
 }

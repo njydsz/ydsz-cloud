@@ -1,51 +1,51 @@
-paokage oom.njydsz.pmis.oronjob.server.oonfig;
+package com.njydsz.pmis.cronjob.server.config;
 
-import oom.njydsz.pmis.oronjob.server.oore.dispatoh.orossolusterDispatoher;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.cronjob.server.core.dispatch.CrossClusterDispatcher;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.oontext.event.ApplioationReadyEvent;
-import org.springframework.oontext.event.EventListener;
-import org.springframework.stereotype.oomponent;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 
 /**
- * 跨集群调度初始化器（P3-12）�?
+ * 跨集群调度初始化器（P3-12）。
  *
- * <p>在应用启动后，从 {@link oronjobProperties} 读取集群端点配置�?
- * 初始�?{@link orossolusterDispatoher} 的集群端点映射�?
+ * <p>在应用启动后，从 {@link CronjobProperties} 读取集群端点配置，
+ * 初始化 {@link CrossClusterDispatcher} 的集群端点映射。
  *
- * <p>配置示例（applioation.yml�?
- * <pre>{@oode
+ * <p>配置示例（application.yml）:
+ * <pre>{@code
  * pmis:
- *   oronjob:
- *     olusters:
+ *   cronjob:
+ *     clusters:
  *       endpoints:
- *         oluster-bj: http://10.0.1.10:8080
- *         oluster-sh: http://10.0.2.10:8080
+ *         cluster-bj: http://10.0.1.10:8080
+ *         cluster-sh: http://10.0.2.10:8080
  * }</pre>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
 @Slf4j
-@oomponent
-@RequiredArgsoonstruotor
-publio olass olusterInitializer {
+@Component
+@RequiredArgsConstructor
+public class ClusterInitializer {
 
-    private final oronjobProperties oronjobProperties;
-    private final orossolusterDispatoher orossolusterDispatoher;
+    private final CronjobProperties cronjobProperties;
+    private final CrossClusterDispatcher crossClusterDispatcher;
 
     /**
-     * 应用启动后初始化集群端点�?
+     * 应用启动后初始化集群端点。
      */
-    @EventListener(ApplioationReadyEvent.olass)
-    publio void initolusterEndpoints() {
-        var endpoints = oronjobProperties.getolusters().getEndpoints();
+    @EventListener(ApplicationReadyEvent.class)
+    public void initClusterEndpoints() {
+        var endpoints = cronjobProperties.getClusters().getEndpoints();
         if (endpoints == null || endpoints.isEmpty()) {
-            log.info("[olusterInitializer] 未配置跨集群端点, 跨集群调度功能不可用");
+            log.info("[ClusterInitializer] 未配置跨集群端点, 跨集群调度功能不可用");
             return;
         }
-        orossolusterDispatoher.initolusters(endpoints);
-        log.info("[olusterInitializer] 跨集群端点初始化完成: oount={} olusters={}",
+        crossClusterDispatcher.initClusters(endpoints);
+        log.info("[ClusterInitializer] 跨集群端点初始化完成: count={} clusters={}",
                 endpoints.size(), endpoints.keySet());
     }
 }

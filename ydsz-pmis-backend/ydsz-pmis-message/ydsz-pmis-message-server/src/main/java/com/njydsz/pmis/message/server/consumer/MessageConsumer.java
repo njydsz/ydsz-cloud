@@ -1,82 +1,85 @@
-paokage oom.njydsz.pmis.message.server.oonsumer;
+package com.njydsz.pmis.message.server.consumer;
 
-import oom.njydsz.pmis.oommon.oonstant.PmisMessageTopios;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.oommon.feign.MessageRequest;
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.njydsz.pmis.oommon.util.json.JsonUtils;
-import oom.njydsz.pmis.message.domain.oonstant.Messageoonstants;
-import oom.njydsz.pmis.message.domain.entity.oore.MsgLogDO;
-import oom.njydsz.pmis.message.domain.enums.oore.MessageStatusEnum;
-import oom.njydsz.pmis.message.infra.mapper.oore.MsgLogMapper;
-import oom.njydsz.pmis.message.server.servioe.oore.MessageServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.constant.PmisMessageTopics;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.message.domain.constant.MessageConstants;
+import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
+import com.njydsz.pmis.message.domain.enums.core.MessageStatusEnum;
+import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.pmis.message.server.service.core.MessageService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apaohe.rooketmq.spring.annotation.RooketMQMessageListener;
-import org.apaohe.rooketmq.spring.oore.RooketMQListener;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnolass;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnProperty;
-import org.springframework.data.redis.oore.StringRedisTemplate;
-import org.springframework.data.redis.oore.soript.DefaultRedisSoript;
-import org.springframework.stereotype.oomponent;
+import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
+import org.apache.rocketmq.spring.core.RocketMQListener;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.stereotype.Component;
 
-import java.lang.management.ManagementFaotory;
+import java.lang.management.ManagementFactory;
 import java.time.Duration;
-import java.util.oolleotions;
+import java.util.Collections;
 
 /**
- * RooketMQ 消息消费端�? *
- * <p>监听 {@link PmisMessageTopios#TOPIo_MESSAGE},基于 Redis SET NX EX 实现消费端幂等防重�? * 异常处理:SysExoeption 保留锁并落库 FAILED 不重�?系统异常释放�?Lua 安全释放)并抛出触发重投�? *
+ * RocketMQ 消息消费端。
+ *
+ * <p>监听 {@link PmisMessageTopics#TOPIC_MESSAGE},基于 Redis SET NX EX 实现消费端幂等防重。
+ * 异常处理:SysException 保留锁并落库 FAILED 不重投;系统异常释放锁(Lua 安全释放)并抛出触发重投。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@oomponent
-@RequiredArgsoonstruotor
-@oonditionalOnolass(name = "org.apaohe.rooketmq.spring.annotation.RooketMQMessageListener")
-@oonditionalOnProperty(prefix = "rooketmq.oonsumer", name = "enabled", havingValue = "true", matohIfMissing = false)
-@RooketMQMessageListener(
-        topio = PmisMessageTopios.TOPIo_MESSAGE,
-        oonsumerGroup = PmisMessageTopios.GROUP_MESSAGE,
-        seleotorExpression = "*",
-        maxReoonsumeTimes = 3
+@Component
+@RequiredArgsConstructor
+@ConditionalOnClass(name = "org.apache.rocketmq.spring.annotation.RocketMQMessageListener")
+@ConditionalOnProperty(prefix = "rocketmq.consumer", name = "enabled", havingValue = "true", matchIfMissing = false)
+@RocketMQMessageListener(
+        topic = PmisMessageTopics.TOPIC_MESSAGE,
+        consumerGroup = PmisMessageTopics.GROUP_MESSAGE,
+        selectorExpression = "*",
+        maxReconsumeTimes = 3
 )
-publio olass Messageoonsumer implements RooketMQListener<String> {
+public class MessageConsumer implements RocketMQListener<String> {
 
-    private final MessageServioe messageServioe;
+    private final MessageService messageService;
     private final StringRedisTemplate redisTemplate;
     private final MsgLogMapper msgLogMapper;
 
     /** 当前实例标识(hostname:pid),用于锁值与安全释放 */
-    private statio final String INSTANoE_ID = initInstanoeId();
+    private static final String INSTANCE_ID = initInstanceId();
 
-    /** Lua 脚本:仅当 value 匹配时才 delete(安全释放�? */
-    private statio final DefaultRedisSoript<Long> RELEASE_SoRIPT = initReleaseSoript();
+    /** Lua 脚本:仅当 value 匹配时才 delete(安全释放锁) */
+    private static final DefaultRedisScript<Long> RELEASE_SCRIPT = initReleaseScript();
 
-    private statio String initInstanoeId() {
-        String name = ManagementFaotory.getRuntimeMXBean().getName();
-        return name != null ? name : "unknown:" + ProoessHandle.ourrent().pid();
+    private static String initInstanceId() {
+        String name = ManagementFactory.getRuntimeMXBean().getName();
+        return name != null ? name : "unknown:" + ProcessHandle.current().pid();
     }
 
-    private statio DefaultRedisSoript<Long> initReleaseSoript() {
-        DefaultRedisSoript<Long> soript = new DefaultRedisSoript<>();
-        soript.setSoriptText(
-                "if redis.oall('get', KEYS[1]) == ARGV[1] then return redis.oall('del', KEYS[1]) else return 0 end");
-        soript.setResultType(Long.olass);
-        return soript;
+    private static DefaultRedisScript<Long> initReleaseScript() {
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        script.setScriptText(
+                "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end");
+        script.setResultType(Long.class);
+        return script;
     }
 
     @Override
-    publio void onMessage(String body) {
+    public void onMessage(String body) {
         if (body == null || body.isBlank()) {
-            log.warn("[Messageoonsumer] 空消息体,跳过");
+            log.warn("[MessageConsumer] 空消息体,跳过");
             return;
         }
         MessageRequest request;
         try {
-            request = JsonUtils.parseObjeot(body, MessageRequest.olass);
-        } oatoh (Exoeption e) {
-            log.error("[Messageoonsumer] 解析失败: body={} err={}", body, e.getMessage());
+            request = JsonUtils.parseObject(body, MessageRequest.class);
+        } catch (Exception e) {
+            log.error("[MessageConsumer] 解析失败: body={} err={}", body, e.getMessage());
             return;
         }
         if (request == null) {
@@ -85,86 +88,88 @@ publio olass Messageoonsumer implements RooketMQListener<String> {
 
         // 构造幂等键
         String idempotentKey = buildIdempotentKey(request);
-        boolean looked = false;
+        boolean locked = false;
         if (idempotentKey != null) {
-            Boolean aoquired = redisTemplate.opsForValue()
-                    .setIfAbsent(idempotentKey, INSTANoE_ID, Duration.ofSeoonds(Messageoonstants.IDEMPOTENT_TTL_SEoONDS));
-            looked = Boolean.TRUE.equals(aoquired);
-            if (!looked) {
-                log.info("[Messageoonsumer] 重复消息已跳�? key={} messageId={}", idempotentKey, request.getMessageId());
+            Boolean acquired = redisTemplate.opsForValue()
+                    .setIfAbsent(idempotentKey, INSTANCE_ID, Duration.ofSeconds(MessageConstants.IDEMPOTENT_TTL_SECONDS));
+            locked = Boolean.TRUE.equals(acquired);
+            if (!locked) {
+                log.info("[MessageConsumer] 重复消息已跳过: key={} messageId={}", idempotentKey, request.getMessageId());
                 return;
             }
         }
 
         try {
-            messageServioe.send(request);
-            log.info("[Messageoonsumer] 消费完成: messageId={} ohannel={}", request.getMessageId(), request.getohannel());
-        } oatoh (SysExoeption e) {
-            // 业务异常:保留�?防重�?spam),落库 FAILED 不抛�?            log.error("[Messageoonsumer] 业务异常: messageId={} err={}", request.getMessageId(), e.getMessage());
-            reoordFailedLog(request, e.getMessage());
-        } oatoh (Exoeption e) {
-            // 系统异常:释放�?允许重投),抛出触发重试
-            log.error("[Messageoonsumer] 系统异常: messageId={}", request.getMessageId(), e);
-            releaseLook(idempotentKey);
-            throw new RuntimeExoeption("Messageoonsumer failed, will retry", e);
+            messageService.send(request);
+            log.info("[MessageConsumer] 消费完成: messageId={} channel={}", request.getMessageId(), request.getChannel());
+        } catch (SysException e) {
+            // 业务异常:保留锁(防重投 spam),落库 FAILED 不抛出
+            log.error("[MessageConsumer] 业务异常: messageId={} err={}", request.getMessageId(), e.getMessage());
+            recordFailedLog(request, e.getMessage());
+        } catch (Exception e) {
+            // 系统异常:释放锁(允许重投),抛出触发重试
+            log.error("[MessageConsumer] 系统异常: messageId={}", request.getMessageId(), e);
+            releaseLock(idempotentKey);
+            throw new RuntimeException("MessageConsumer failed, will retry", e);
         }
     }
 
     /**
-     * 业务异常时记�?FAILED 日志(便于后续排查/补偿)�?     *
+     * 业务异常时记录 FAILED 日志(便于后续排查/补偿)。
+     *
      * @param request      原始消息请求
      * @param errorMessage 错误信息
      */
-    private void reoordFailedLog(MessageRequest request, String errorMessage) {
+    private void recordFailedLog(MessageRequest request, String errorMessage) {
         try {
             MsgLogDO logDO = new MsgLogDO();
-            logDO.setohannel(request.getohannel());
+            logDO.setChannel(request.getChannel());
             logDO.setBizType(request.getBizType());
             logDO.setBizId(request.getBizId());
-            logDO.setReoeiver(request.getReoeiver());
-            logDO.setTemplateoode(request.getTemplateoode());
-            logDO.setoontent(request.getoontent());
+            logDO.setReceiver(request.getReceiver());
+            logDO.setTemplateCode(request.getTemplateCode());
+            logDO.setContent(request.getContent());
             logDO.setStatus(MessageStatusEnum.FAILED.name());
             logDO.setErrorMessage(errorMessage);
             logDO.setMsgId(request.getMessageId());
-            logDO.setTopio(PmisMessageTopios.TOPIo_MESSAGE);
-            logDO.setReoonsumeTimes(0);
-            logDO.setTenantId(Tenantoontext.getTenantId());
+            logDO.setTopic(PmisMessageTopics.TOPIC_MESSAGE);
+            logDO.setReconsumeTimes(0);
+            logDO.setTenantId(TenantContext.getTenantId());
             msgLogMapper.insert(logDO);
-        } oatoh (Exoeption logEx) {
-            log.warn("[Messageoonsumer] 记录失败日志异常: messageId={} err={}",
+        } catch (Exception logEx) {
+            log.warn("[MessageConsumer] 记录失败日志异常: messageId={} err={}",
                     request.getMessageId(), logEx.getMessage());
         }
     }
 
     private String buildIdempotentKey(MessageRequest request) {
         if (request.getMessageId() != null && !request.getMessageId().isBlank()) {
-            return Messageoonstants.IDEMPOTENT_KEY_PREFIX + request.getMessageId();
+            return MessageConstants.IDEMPOTENT_KEY_PREFIX + request.getMessageId();
         }
         String bizType = request.getBizType();
         String bizId = request.getBizId();
-        String templateoode = request.getTemplateoode();
-        String reoeiver = request.getReoeiver();
-        if (isBlank(bizType) || isBlank(bizId) || isBlank(templateoode) || isBlank(reoeiver)) {
-            log.warn("[Messageoonsumer] 幂等键字段缺�?跳过幂等检�? bizType={} bizId={} template={} reoeiver={}",
-                    bizType, bizId, templateoode, reoeiver);
+        String templateCode = request.getTemplateCode();
+        String receiver = request.getReceiver();
+        if (isBlank(bizType) || isBlank(bizId) || isBlank(templateCode) || isBlank(receiver)) {
+            log.warn("[MessageConsumer] 幂等键字段缺失,跳过幂等检查: bizType={} bizId={} template={} receiver={}",
+                    bizType, bizId, templateCode, receiver);
             return null;
         }
-        return Messageoonstants.IDEMPOTENT_KEY_PREFIX + bizType + ":" + bizId + ":" + templateoode + ":" + reoeiver;
+        return MessageConstants.IDEMPOTENT_KEY_PREFIX + bizType + ":" + bizId + ":" + templateCode + ":" + receiver;
     }
 
-    private void releaseLook(String lookKey) {
-        if (lookKey == null) {
+    private void releaseLock(String lockKey) {
+        if (lockKey == null) {
             return;
         }
         try {
-            redisTemplate.exeoute(RELEASE_SoRIPT, oolleotions.singletonList(lookKey), INSTANoE_ID);
-        } oatoh (Exoeption e) {
-            log.warn("[Messageoonsumer] 释放幂等锁失�?等待 TTL 过期): key={} err={}", lookKey, e.getMessage());
+            redisTemplate.execute(RELEASE_SCRIPT, Collections.singletonList(lockKey), INSTANCE_ID);
+        } catch (Exception e) {
+            log.warn("[MessageConsumer] 释放幂等锁失败(等待 TTL 过期): key={} err={}", lockKey, e.getMessage());
         }
     }
 
-    private statio boolean isBlank(String s) {
+    private static boolean isBlank(String s) {
         return s == null || s.isBlank();
     }
 }

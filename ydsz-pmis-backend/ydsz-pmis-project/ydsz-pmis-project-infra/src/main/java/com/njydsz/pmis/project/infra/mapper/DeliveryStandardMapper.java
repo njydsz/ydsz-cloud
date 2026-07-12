@@ -1,9 +1,9 @@
-paokage oom.njydsz.pmis.projeot.infra.mapper;
+package com.njydsz.pmis.project.infra.mapper;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.projeot.domain.entity.DeliveryStandardDO;
-import org.apaohe.ibatis.annotations.Mapper;
-import org.apaohe.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.project.domain.entity.DeliveryStandardDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -11,37 +11,38 @@ import java.util.List;
  * 交付标准 Mapper
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Mapper
-publio interfaoe DeliveryStandardMapper extends BaseMapper<DeliveryStandardDO> {
+public interface DeliveryStandardMapper extends BaseMapper<DeliveryStandardDO> {
 
     /**
-     * 按项目类�?+ 项目等级查询交付标准列表
+     * 按项目类型 + 项目等级查询交付标准列表
      *
-     * @param projeotType  项目类型
-     * @param projeotLevel 项目等级
+     * @param projectType  项目类型
+     * @param projectLevel 项目等级
      * @return 交付标准列表
      */
-    List<DeliveryStandardDO> seleotByTypeAndLevel(@Param("projeotType") String projeotType,
-                                                  @Param("projeotLevel") String projeotLevel);
+    List<DeliveryStandardDO> selectByTypeAndLevel(@Param("projectType") String projectType,
+                                                  @Param("projectLevel") String projectLevel);
 
     /**
-     * 按项目类�?+ 项目等级 + 阶段查询交付标准列表
+     * 按项目类型 + 项目等级 + 阶段查询交付标准列表
      *
-     * @param projeotType  项目类型
-     * @param projeotLevel 项目等级
+     * @param projectType  项目类型
+     * @param projectLevel 项目等级
      * @param stage        阶段
      * @return 交付标准列表
      */
-    List<DeliveryStandardDO> seleotByStage(@Param("projeotType") String projeotType,
-                                           @Param("projeotLevel") String projeotLevel,
+    List<DeliveryStandardDO> selectByStage(@Param("projectType") String projectType,
+                                           @Param("projectLevel") String projectLevel,
                                            @Param("stage") String stage);
 
     /**
-     * 按项目类型统计交付标准数�?     *
-     * @param projeotType 项目类型
+     * 按项目类型统计交付标准数量
+     *
+     * @param projectType 项目类型
      * @return 交付标准数量
      */
-    Integer oountByType(@Param("projeotType") String projeotType);
+    Integer countByType(@Param("projectType") String projectType);
 }

@@ -1,60 +1,62 @@
-paokage oom.njydsz.pmis.finanoe.server.servioe.impl.finanoe;
+package com.njydsz.pmis.finance.server.service.impl.finance;
 
-import oom.njydsz.pmis.finanoe.server.engine.ReoonoileHandler;
-import oom.njydsz.pmis.finanoe.server.engine.ReoonoileReport;
-import oom.njydsz.pmis.finanoe.server.engine.ReoonoileResult;
-import oom.njydsz.pmis.finanoe.server.servioe.finanoe.ReoonoileServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.finance.server.engine.ReconcileHandler;
+import com.njydsz.pmis.finance.server.engine.ReconcileReport;
+import com.njydsz.pmis.finance.server.engine.ReconcileResult;
+import com.njydsz.pmis.finance.server.service.finance.ReconcileService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LooalDate;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 对账服务实现
  *
- * <p>委托 {@link ReoonoileHandler} 完成执行-财务对账，输�?ReoonoileReport�? * 支持全量对账、缺失成本检测、幽灵成本检测与回款缺口检测�? *
+ * <p>委托 {@link ReconcileHandler} 完成执行-财务对账，输出 ReconcileReport。
+ * 支持全量对账、缺失成本检测、幽灵成本检测与回款缺口检测。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-@Transaotional(readOnly = true)
-publio olass ReoonoileServioeImpl implements ReoonoileServioe {
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class ReconcileServiceImpl implements ReconcileService {
 
-    /** 对账处理器（执行-财务对账�?*/
-    private final ReoonoileHandler reoonoileHandler;
+    /** 对账处理器（执行-财务对账） */
+    private final ReconcileHandler reconcileHandler;
 
     @Override
-    publio ReoonoileReport reoonoileAll(String initiationId, LooalDate from, LooalDate to) {
-        log.info("[Reoonoile] 开始对�? initiationId={}, from={}, to={}", initiationId, from, to);
-        long t0 = System.ourrentTimeMillis();
-        List<ReoonoileResult> results = reoonoileHandler.reoonoile(initiationId, from, to);
-        ReoonoileReport report = reoonoileHandler.buildReport(initiationId, results);
-        log.info("[Reoonoile] 对账完成: 总数={} info={} warn={} error={} 耗时={}ms",
-                report.getTotal(), report.getInfooount(), report.getWarnoount(), report.getErroroount(),
-                System.ourrentTimeMillis() - t0);
+    public ReconcileReport reconcileAll(String initiationId, LocalDate from, LocalDate to) {
+        log.info("[Reconcile] 开始对账: initiationId={}, from={}, to={}", initiationId, from, to);
+        long t0 = System.currentTimeMillis();
+        List<ReconcileResult> results = reconcileHandler.reconcile(initiationId, from, to);
+        ReconcileReport report = reconcileHandler.buildReport(initiationId, results);
+        log.info("[Reconcile] 对账完成: 总数={} info={} warn={} error={} 耗时={}ms",
+                report.getTotal(), report.getInfoCount(), report.getWarnCount(), report.getErrorCount(),
+                System.currentTimeMillis() - t0);
         return report;
     }
 
     @Override
-    publio List<ReoonoileResult> oheokMissingoost(String initiationId) {
-        List<ReoonoileResult> out = new ArrayList<>();
-        out.addAll(reoonoileHandler.reoonoileMissingoost(initiationId));
-        out.addAll(reoonoileHandler.reoonoileGhostoost(initiationId));
+    public List<ReconcileResult> checkMissingCost(String initiationId) {
+        List<ReconcileResult> out = new ArrayList<>();
+        out.addAll(reconcileHandler.reconcileMissingCost(initiationId));
+        out.addAll(reconcileHandler.reconcileGhostCost(initiationId));
         return out;
     }
 
     @Override
-    publio List<ReoonoileResult> oheokTimeEntryAnomaly(String initiationId, LooalDate from, LooalDate to) {
-        List<ReoonoileResult> out = new ArrayList<>();
-        out.addAll(reoonoileHandler.reoonoileDailyOverflow(initiationId, from, to));
-        out.addAll(reoonoileHandler.reoonoileWeeklyOverload(initiationId, from, to));
-        out.addAll(reoonoileHandler.reoonoileorossProjeot(initiationId, from, to));
+    public List<ReconcileResult> checkTimeEntryAnomaly(String initiationId, LocalDate from, LocalDate to) {
+        List<ReconcileResult> out = new ArrayList<>();
+        out.addAll(reconcileHandler.reconcileDailyOverflow(initiationId, from, to));
+        out.addAll(reconcileHandler.reconcileWeeklyOverload(initiationId, from, to));
+        out.addAll(reconcileHandler.reconcileCrossProject(initiationId, from, to));
         return out;
     }
 }

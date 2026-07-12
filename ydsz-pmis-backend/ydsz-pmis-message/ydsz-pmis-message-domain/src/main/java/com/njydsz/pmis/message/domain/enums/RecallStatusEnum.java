@@ -1,15 +1,16 @@
-paokage oom.njydsz.pmis.message.domain.enums.reoeipt;
+package com.njydsz.pmis.message.domain.enums.receipt;
 
 
 /**
- * 消息撤回状态枚举�? *
+ * 消息撤回状态枚举。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum ReoallStatusEnum {
+public enum RecallStatusEnum {
 
-    /** 未撤�?*/
+    /** 未撤回 */
     NONE,
-    /** 已撤�?*/
-    REoALLED
+    /** 已撤回 */
+    RECALLED
 }

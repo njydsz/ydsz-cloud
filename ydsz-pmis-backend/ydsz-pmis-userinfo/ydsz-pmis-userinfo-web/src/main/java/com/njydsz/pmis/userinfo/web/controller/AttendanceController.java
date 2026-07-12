@@ -1,50 +1,50 @@
-paokage oom.njydsz.pmis.userinfo.web.oontroller.rate;
+package com.njydsz.pmis.userinfo.web.controller.rate;
 
-import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.Idempotent;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.audit.annotation.OperationLog;
-import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.userinfo.domain.dto.rate.AttendanoeoreateDTO;
-import oom.njydsz.pmis.userinfo.domain.dto.rate.LeaveoreateDTO;
-import oom.njydsz.pmis.userinfo.domain.dto.rate.OvertimeoreateDTO;
-import oom.njydsz.pmis.userinfo.domain.entity.rate.AttendanoeDO;
-import oom.njydsz.pmis.userinfo.domain.entity.rate.LeaveDO;
-import oom.njydsz.pmis.userinfo.domain.entity.rate.OvertimeDO;
-import oom.njydsz.pmis.userinfo.server.servioe.rate.AttendanoeServioe;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.OperationLog;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.userinfo.domain.dto.rate.AttendanceCreateDTO;
+import com.njydsz.pmis.userinfo.domain.dto.rate.LeaveCreateDTO;
+import com.njydsz.pmis.userinfo.domain.dto.rate.OvertimeCreateDTO;
+import com.njydsz.pmis.userinfo.domain.entity.rate.AttendanceDO;
+import com.njydsz.pmis.userinfo.domain.entity.rate.LeaveDO;
+import com.njydsz.pmis.userinfo.domain.entity.rate.OvertimeDO;
+import com.njydsz.pmis.userinfo.server.service.rate.AttendanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.oonstraints.Max;
-import jakarta.validation.oonstraints.Min;
-import jakarta.validation.oonstraints.NotBlank;
-import lombok.RequiredArgsoonstruotor;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LooalDate;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 /**
  * 考勤接口
  *
- * <p>覆盖出勤/加班/请假 三类记录�?
+ * <p>覆盖出勤/加班/请假 三类记录。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Tag(name = "考勤管理")
-@Restoontroller
-@RequestMapping("/attendanoe")
-@RequiredArgsoonstruotor
+@RestController
+@RequestMapping("/attendance")
+@RequiredArgsConstructor
 @Validated
-publio olass Attendanoeoontroller {
+public class AttendanceController {
 
     /** 考勤服务 */
-    private final AttendanoeServioe attendanoeServioe;
+    private final AttendanceService attendanceService;
 
     // ============== 出勤 ==============
 
@@ -52,15 +52,15 @@ publio olass Attendanoeoontroller {
      * 登记出勤
      *
      * @param dto 出勤登记参数
-     * @return 统一响应结果，包含出勤记�?ID
+     * @return 统一响应结果，包含出勤记录 ID
      */
     @Operation(summary = "登记出勤")
-    @AuthApiPermission(apioodes = "attendanoe:reoord:oreate")
-    @OperationLog(module = "考勤", aotion = "登记出勤", bizType = "ATTENDANoE")
-    @Idempotent(key = "attendanoe:reoordAttendanoe", ttlSeoonds = 5, message = "请勿重复提交")
-    @PostMapping("/reoord")
-    publio BaseResponse<String> reoordAttendanoe(@Valid @RequestBody AttendanoeoreateDTO dto) {
-        return BaseResponse.ok(attendanoeServioe.reoordAttendanoe(dto));
+    @AuthApiPermission(apiCodes = "attendance:record:create")
+    @OperationLog(module = "考勤", action = "登记出勤", bizType = "ATTENDANCE")
+    @Idempotent(key = "attendance:recordAttendance", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/record")
+    public BaseResponse<String> recordAttendance(@Valid @RequestBody AttendanceCreateDTO dto) {
+        return BaseResponse.ok(attendanceService.recordAttendance(dto));
     }
 
     /**
@@ -71,35 +71,35 @@ publio olass Attendanoeoontroller {
      * @param endDate    截止日期（可选）
      * @param page       页码
      * @param size       每页大小
-     * @return 统一响应结果，包含分页数�?
+     * @return 统一响应结果，包含分页数据
      */
     @Operation(summary = "出勤分页")
-    @AuthApiPermission(apioodes = "attendanoe:reoord:list")
-    @GetMapping("/reoord/page")
-    publio BaseResponse<Page<AttendanoeDO>> pageAttendanoe(
+    @AuthApiPermission(apiCodes = "attendance:record:list")
+    @GetMapping("/record/page")
+    public BaseResponse<Page<AttendanceDO>> pageAttendance(
             @RequestParam(required = false) String employeeId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LooalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LooalDate endDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        return BaseResponse.ok(attendanoeServioe.pageAttendanoe(employeeId, startDate, endDate, page, size));
+        return BaseResponse.ok(attendanceService.pageAttendance(employeeId, startDate, endDate, page, size));
     }
 
     /**
-     * 出勤状态统�?
+     * 出勤状态统计
      *
      * @param employeeId 员工 ID（可选）
      * @param startDate  起始日期（可选）
      * @param endDate    截止日期（可选）
-     * @return 统一响应结果，包含按状态汇总数�?
+     * @return 统一响应结果，包含按状态汇总数据
      */
-    @Operation(summary = "出勤状态统�?)
-    @GetMapping("/reoord/stat")
-    publio BaseResponse<List<Map<String, Objeot>>> statByStatus(
+    @Operation(summary = "出勤状态统计")
+    @GetMapping("/record/stat")
+    public BaseResponse<List<Map<String, Object>>> statByStatus(
             @RequestParam(required = false) String employeeId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LooalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LooalDate endDate) {
-        return BaseResponse.ok(attendanoeServioe.statByStatus(employeeId, startDate, endDate));
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        return BaseResponse.ok(attendanceService.statByStatus(employeeId, startDate, endDate));
     }
 
     // ============== 加班 ==============
@@ -108,39 +108,39 @@ publio olass Attendanoeoontroller {
      * 提交加班申请
      *
      * @param dto 加班申请参数
-     * @return 统一响应结果，包含加班记�?ID
+     * @return 统一响应结果，包含加班记录 ID
      */
     @Operation(summary = "提交加班申请")
-    @AuthApiPermission(apioodes = "attendanoe:overtime:oreate")
-    @OperationLog(module = "考勤", aotion = "提交加班", bizType = "OVERTIME")
-    @Idempotent(key = "attendanoe:submitOvertime", ttlSeoonds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apiCodes = "attendance:overtime:create")
+    @OperationLog(module = "考勤", action = "提交加班", bizType = "OVERTIME")
+    @Idempotent(key = "attendance:submitOvertime", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/overtime")
-    publio BaseResponse<String> submitOvertime(@Valid @RequestBody OvertimeoreateDTO dto) {
-        return BaseResponse.ok(attendanoeServioe.submitOvertime(dto));
+    public BaseResponse<String> submitOvertime(@Valid @RequestBody OvertimeCreateDTO dto) {
+        return BaseResponse.ok(attendanceService.submitOvertime(dto));
     }
 
     /**
      * 审批加班
      *
      * @param id           加班记录 ID
-     * @param aotion       审批动作（APPROVE/REJEoT�?
-     * @param approverId   审批�?ID（由网关透传�?
-     * @param approverName 审批人姓名（由网关透传�?
+     * @param action       审批动作（APPROVE/REJECT）
+     * @param approverId   审批人 ID（由网关透传）
+     * @param approverName 审批人姓名（由网关透传）
      * @param remark       审批备注（可选）
      * @return 统一响应结果
      */
     @Operation(summary = "审批加班")
-    @AuthApiPermission(apioodes = "attendanoe:overtime:approve")
-    @OperationLog(module = "考勤", aotion = "审批加班", bizType = "OVERTIME")
-    @Idempotent(key = "attendanoe:approveOvertime", ttlSeoonds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apiCodes = "attendance:overtime:approve")
+    @OperationLog(module = "考勤", action = "审批加班", bizType = "OVERTIME")
+    @Idempotent(key = "attendance:approveOvertime", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/overtime/{id}/approve")
-    publio BaseResponse<Void> approveOvertime(
+    public BaseResponse<Void> approveOvertime(
             @PathVariable @NotBlank String id,
-            @RequestParam String aotion,
+            @RequestParam String action,
             @RequestHeader(value = "X-User-Id", required = false) String approverId,
             @RequestHeader(value = "X-Username", required = false) String approverName,
             @RequestParam(required = false) String remark) {
-        attendanoeServioe.approveOvertime(id, aotion, approverId, approverName, remark);
+        attendanceService.approveOvertime(id, action, approverId, approverName, remark);
         return BaseResponse.ok();
     }
 
@@ -151,29 +151,29 @@ publio olass Attendanoeoontroller {
      * @param approvalStatus 审批状态（可选）
      * @param page           页码
      * @param size           每页大小
-     * @return 统一响应结果，包含分页数�?
+     * @return 统一响应结果，包含分页数据
      */
     @Operation(summary = "加班分页")
-    @AuthApiPermission(apioodes = "attendanoe:overtime:list")
+    @AuthApiPermission(apiCodes = "attendance:overtime:list")
     @GetMapping("/overtime/page")
-    publio BaseResponse<Page<OvertimeDO>> pageOvertime(
+    public BaseResponse<Page<OvertimeDO>> pageOvertime(
             @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) String approvalStatus,
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        return BaseResponse.ok(attendanoeServioe.pageOvertime(employeeId, approvalStatus, page, size));
+        return BaseResponse.ok(attendanceService.pageOvertime(employeeId, approvalStatus, page, size));
     }
 
     /**
      * 查询加班详情
      *
      * @param id 加班记录 ID
-     * @return 统一响应结果，包含加班记�?
+     * @return 统一响应结果，包含加班记录
      */
     @Operation(summary = "加班详情")
     @GetMapping("/overtime/{id}")
-    publio BaseResponse<OvertimeDO> getOvertime(@PathVariable @NotBlank String id) {
-        return BaseResponse.ok(attendanoeServioe.getOvertime(id));
+    public BaseResponse<OvertimeDO> getOvertime(@PathVariable @NotBlank String id) {
+        return BaseResponse.ok(attendanceService.getOvertime(id));
     }
 
     // ============== 请假 ==============
@@ -182,39 +182,39 @@ publio olass Attendanoeoontroller {
      * 提交请假申请
      *
      * @param dto 请假申请参数
-     * @return 统一响应结果，包含请假记�?ID
+     * @return 统一响应结果，包含请假记录 ID
      */
     @Operation(summary = "提交请假申请")
-    @AuthApiPermission(apioodes = "attendanoe:leave:oreate")
-    @OperationLog(module = "考勤", aotion = "提交请假", bizType = "LEAVE")
-    @Idempotent(key = "attendanoe:submitLeave", ttlSeoonds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apiCodes = "attendance:leave:create")
+    @OperationLog(module = "考勤", action = "提交请假", bizType = "LEAVE")
+    @Idempotent(key = "attendance:submitLeave", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/leave")
-    publio BaseResponse<String> submitLeave(@Valid @RequestBody LeaveoreateDTO dto) {
-        return BaseResponse.ok(attendanoeServioe.submitLeave(dto));
+    public BaseResponse<String> submitLeave(@Valid @RequestBody LeaveCreateDTO dto) {
+        return BaseResponse.ok(attendanceService.submitLeave(dto));
     }
 
     /**
      * 审批请假
      *
      * @param id           请假记录 ID
-     * @param aotion       审批动作（APPROVE/REJEoT�?
-     * @param approverId   审批�?ID（由网关透传�?
-     * @param approverName 审批人姓名（由网关透传�?
+     * @param action       审批动作（APPROVE/REJECT）
+     * @param approverId   审批人 ID（由网关透传）
+     * @param approverName 审批人姓名（由网关透传）
      * @param remark       审批备注（可选）
      * @return 统一响应结果
      */
     @Operation(summary = "审批请假")
-    @AuthApiPermission(apioodes = "attendanoe:leave:approve")
-    @OperationLog(module = "考勤", aotion = "审批请假", bizType = "LEAVE")
-    @Idempotent(key = "attendanoe:approveLeave", ttlSeoonds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apiCodes = "attendance:leave:approve")
+    @OperationLog(module = "考勤", action = "审批请假", bizType = "LEAVE")
+    @Idempotent(key = "attendance:approveLeave", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/leave/{id}/approve")
-    publio BaseResponse<Void> approveLeave(
+    public BaseResponse<Void> approveLeave(
             @PathVariable @NotBlank String id,
-            @RequestParam String aotion,
+            @RequestParam String action,
             @RequestHeader(value = "X-User-Id", required = false) String approverId,
             @RequestHeader(value = "X-Username", required = false) String approverName,
             @RequestParam(required = false) String remark) {
-        attendanoeServioe.approveLeave(id, aotion, approverId, approverName, remark);
+        attendanceService.approveLeave(id, action, approverId, approverName, remark);
         return BaseResponse.ok();
     }
 
@@ -225,29 +225,29 @@ publio olass Attendanoeoontroller {
      * @param approvalStatus 审批状态（可选）
      * @param page           页码
      * @param size           每页大小
-     * @return 统一响应结果，包含分页数�?
+     * @return 统一响应结果，包含分页数据
      */
     @Operation(summary = "请假分页")
-    @AuthApiPermission(apioodes = "attendanoe:leave:list")
+    @AuthApiPermission(apiCodes = "attendance:leave:list")
     @GetMapping("/leave/page")
-    publio BaseResponse<Page<LeaveDO>> pageLeave(
+    public BaseResponse<Page<LeaveDO>> pageLeave(
             @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) String approvalStatus,
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
-        return BaseResponse.ok(attendanoeServioe.pageLeave(employeeId, approvalStatus, page, size));
+        return BaseResponse.ok(attendanceService.pageLeave(employeeId, approvalStatus, page, size));
     }
 
     /**
      * 查询请假详情
      *
      * @param id 请假记录 ID
-     * @return 统一响应结果，包含请假记�?
+     * @return 统一响应结果，包含请假记录
      */
     @Operation(summary = "请假详情")
     @GetMapping("/leave/{id}")
-    publio BaseResponse<LeaveDO> getLeave(@PathVariable @NotBlank String id) {
-        return BaseResponse.ok(attendanoeServioe.getLeave(id));
+    public BaseResponse<LeaveDO> getLeave(@PathVariable @NotBlank String id) {
+        return BaseResponse.ok(attendanceService.getLeave(id));
     }
 
     /**
@@ -256,14 +256,14 @@ publio olass Attendanoeoontroller {
      * @param employeeId 员工 ID
      * @param startDate  起始日期
      * @param endDate    截止日期
-     * @return 统一响应结果，包含请假记录列�?
+     * @return 统一响应结果，包含请假记录列表
      */
     @Operation(summary = "员工在指定日期内已批准的请假")
     @GetMapping("/leave/approved")
-    publio BaseResponse<List<LeaveDO>> listApprovedLeaves(
+    public BaseResponse<List<LeaveDO>> listApprovedLeaves(
             @RequestParam @NotBlank String employeeId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LooalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LooalDate endDate) {
-        return BaseResponse.ok(attendanoeServioe.listApprovedLeaves(employeeId, startDate, endDate));
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        return BaseResponse.ok(attendanceService.listApprovedLeaves(employeeId, startDate, endDate));
     }
 }

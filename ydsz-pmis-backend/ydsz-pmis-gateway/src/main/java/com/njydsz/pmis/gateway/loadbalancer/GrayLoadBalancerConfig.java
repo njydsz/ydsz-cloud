@@ -1,46 +1,53 @@
-paokage oom.njydsz.pmis.gateway.loadbalanoer;
+package com.njydsz.pmis.gateway.loadbalancer;
 
-import org.springframework.oloud.olient.ServioeInstanoe;
-import org.springframework.oloud.loadbalanoer.annotation.LoadBalanoerolients;
-import org.springframework.oloud.loadbalanoer.oore.ReaotorLoadBalanoer;
-import org.springframework.oloud.loadbalanoer.oore.ServioeInstanoeListSupplier;
-import org.springframework.oloud.loadbalanoer.support.LoadBalanoerolientFaotory;
-import org.springframework.oontext.annotation.Bean;
-import org.springframework.oontext.annotation.oonfiguration;
-import org.springframework.oore.env.Environment;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClients;
+import org.springframework.cloud.loadbalancer.core.ReactorLoadBalancer;
+import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
+import org.springframework.cloud.loadbalancer.support.LoadBalancerClientFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 /**
- * 灰度负载均衡器配�? *
- * <p>通过 {@link LoadBalanoerolients#defaultoonfiguration} �? * {@link GrayLoadBalanoer} 注册为所有服务的默认负载均衡�?
- * 替换 Spring oloud LoadBalanoer 内置�?{@oode RoundRobinLoadBalanoer}�? *
- * <p>配合 {@oode spring.oloud.loadbalanoer.oonfigurations=gray} 配置�?
- * 抑制默认轮询负载均衡�?使灰度负载均衡器接管所�?{@oode lb://} 路由�? *
+ * 灰度负载均衡器配置
+ *
+ * <p>通过 {@link LoadBalancerClients#defaultConfiguration} 将
+ * {@link GrayLoadBalancer} 注册为所有服务的默认负载均衡器,
+ * 替换 Spring Cloud LoadBalancer 内置的 {@code RoundRobinLoadBalancer}。
+ *
+ * <p>配合 {@code spring.cloud.loadbalancer.configurations=gray} 配置项,
+ * 抑制默认轮询负载均衡器,使灰度负载均衡器接管所有 {@code lb://} 路由。
+ *
  * <h3>加载机制</h3>
- * <p>{@link LoadBalanoerolientFaotory} 为每�?servioeId 创建独立的子上下�?
- * 子上下文中通过 {@oode environment.getProperty(LoadBalanoerolientFaotory.PROPERTY_NAME)}
- * 获取当前 servioeId,从而为每个服务构建独立�?{@link GrayLoadBalanoer} 实例
- * (含独立的轮询计数�?�? *
+ * <p>{@link LoadBalancerClientFactory} 为每个 serviceId 创建独立的子上下文,
+ * 子上下文中通过 {@code environment.getProperty(LoadBalancerClientFactory.PROPERTY_NAME)}
+ * 获取当前 serviceId,从而为每个服务构建独立的 {@link GrayLoadBalancer} 实例
+ * (含独立的轮询计数器)。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.5.0
+ * @since 1.5.0
  */
-@oonfiguration
-@LoadBalanoerolients(defaultoonfiguration = GrayLoadBalanoeroonfig.olass)
-publio olass GrayLoadBalanoeroonfig {
+@Configuration
+@LoadBalancerClients(defaultConfiguration = GrayLoadBalancerConfig.class)
+public class GrayLoadBalancerConfig {
 
     /**
-     * 注册灰度负载均衡�?Bean
+     * 注册灰度负载均衡器 Bean
      *
-     * <p>Bean 名称 {@oode reaotorServioeInstanoeLoadBalanoer} �?Spring oloud LoadBalanoer
-     * 默认实现一�?配合 {@oode @oonditionalOnMissingBean} 覆盖默认�?RoundRobinLoadBalanoer�?     *
-     * @param environment 子上下文环境(携带 servioeId 属�?
-     * @param faotory     负载均衡客户端工�?提供延迟加载的实例列表供给�?
-     * @return 灰度负载均衡�?     */
+     * <p>Bean 名称 {@code reactorServiceInstanceLoadBalancer} 与 Spring Cloud LoadBalancer
+     * 默认实现一致,配合 {@code @ConditionalOnMissingBean} 覆盖默认的 RoundRobinLoadBalancer。
+     *
+     * @param environment 子上下文环境(携带 serviceId 属性)
+     * @param factory     负载均衡客户端工厂(提供延迟加载的实例列表供给者)
+     * @return 灰度负载均衡器
+     */
     @Bean
-    ReaotorLoadBalanoer<ServioeInstanoe> reaotorServioeInstanoeLoadBalanoer(
-            Environment environment, LoadBalanoerolientFaotory faotory) {
-        String servioeId = environment.getProperty(LoadBalanoerolientFaotory.PROPERTY_NAME);
-        return new GrayLoadBalanoer(
-                faotory.getLazyProvider(servioeId, ServioeInstanoeListSupplier.olass),
-                servioeId);
+    ReactorLoadBalancer<ServiceInstance> reactorServiceInstanceLoadBalancer(
+            Environment environment, LoadBalancerClientFactory factory) {
+        String serviceId = environment.getProperty(LoadBalancerClientFactory.PROPERTY_NAME);
+        return new GrayLoadBalancer(
+                factory.getLazyProvider(serviceId, ServiceInstanceListSupplier.class),
+                serviceId);
     }
 }

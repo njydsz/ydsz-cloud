@@ -1,23 +1,23 @@
-paokage oom.njydsz.pmis.projeot.domain.dto;
+package com.njydsz.pmis.project.domain.dto;
 
 import lombok.Data;
 
 /**
- * 运维工单状态变�?DTO
+ * 运维工单状态变更 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass OpsTioketStatusDTO {
+public class OpsTicketStatusDTO {
     /** 工单ID */
     private String id;
-    /** OpsTioketStatus.oode */
+    /** OpsTicketStatus.code */
     private String targetStatus;
     /** 解决说明 */
     private String resolutionNote;
-    /** 客户评分�?-5�?*/
-    private Integer oustomerSoore;
+    /** 客户评分（1-5） */
+    private Integer customerScore;
     /** 客户评价内容 */
-    private String oustomeroomment;
+    private String customerComment;
 }

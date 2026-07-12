@@ -1,17 +1,18 @@
-paokage oom.njydsz.pmis.agent.domain.dto.tool;
+package com.njydsz.pmis.agent.domain.dto.tool;
 
 import lombok.Data;
 
 /**
- * Prompt 模板查询 DTO（P2-2 落地）�? *
+ * Prompt 模板查询 DTO（P2-2 落地）。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0 (P2-2)
+ * @since 1.0.0 (P2-2)
  */
 @Data
-publio olass PromptTemplateQueryDTO {
+public class PromptTemplateQueryDTO {
 
     /** 模板编码（模糊匹配） */
-    private String templateoode;
+    private String templateCode;
 
     /** Agent 类型 */
     private String agentType;
@@ -19,8 +20,8 @@ publio olass PromptTemplateQueryDTO {
     /** Prompt 角色 */
     private String promptRole;
 
-    /** 是否仅查询生效模�?*/
-    private Boolean isAotive;
+    /** 是否仅查询生效模板 */
+    private Boolean isActive;
 
     /** 页码（从 1 开始） */
     private Integer page = 1;

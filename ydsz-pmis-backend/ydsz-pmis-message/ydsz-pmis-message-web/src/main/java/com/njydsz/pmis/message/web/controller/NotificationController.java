@@ -1,23 +1,23 @@
-paokage oom.njydsz.pmis.message.web.oontroller.oore;
+package com.njydsz.pmis.message.web.controller.core;
 
-import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.Idempotent;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.oommon.permission.Permissionoodes;
-import oom.njydsz.pmis.oommon.auth.oontext.Authoontext;
-import oom.njydsz.pmis.message.domain.dto.oore.NotifioationQueryDTO;
-import oom.njydsz.pmis.message.domain.dto.oore.NotifioationSendDTO;
-import oom.njydsz.pmis.message.domain.entity.oore.MsgNotifioationDO;
-import oom.njydsz.pmis.oommon.feign.dto.RealtimePushDTO;
-import oom.njydsz.pmis.message.server.realtime.RealtimePushServioe;
-import oom.njydsz.pmis.message.server.servioe.oore.NotifioationServioe;
-import oom.njydsz.pmis.message.server.servioe.reoeipt.ReoallServioe;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.common.auth.context.AuthContext;
+import com.njydsz.pmis.message.domain.dto.core.NotificationQueryDTO;
+import com.njydsz.pmis.message.domain.dto.core.NotificationSendDTO;
+import com.njydsz.pmis.message.domain.entity.core.MsgNotificationDO;
+import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
+import com.njydsz.pmis.message.server.realtime.RealtimePushService;
+import com.njydsz.pmis.message.server.service.core.NotificationService;
+import com.njydsz.pmis.message.server.service.receipt.RecallService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsoonstruotor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,161 +25,161 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.Restoontroller;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * 站内通知 oontroller�?
+ * 站内通知 Controller。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-@Tag(name = "站内通知", desoription = "站内通知发�?收件�?已读/撤回/推�?)
-@Restoontroller
-@RequestMapping("/notifioations")
-@RequiredArgsoonstruotor
-publio olass Notifioationoontroller {
+@Tag(name = "站内通知", description = "站内通知发送/收件箱/已读/撤回/推送")
+@RestController
+@RequestMapping("/notifications")
+@RequiredArgsConstructor
+public class NotificationController {
 
     /** 站内通知服务 */
-    private final NotifioationServioe notifioationServioe;
+    private final NotificationService notificationService;
     /** 消息撤回服务 */
-    private final ReoallServioe reoallServioe;
-    /** 实时推送服务（WebSooket�?*/
-    private final RealtimePushServioe realtimePushServioe;
+    private final RecallService recallService;
+    /** 实时推送服务（WebSocket） */
+    private final RealtimePushService realtimePushService;
 
     /**
-     * 发送站内通知�?
+     * 发送站内通知。
      *
      * @param dto 通知发送请求体
-     * @return 统一响应结果，包含发送条�?
+     * @return 统一响应结果，包含发送条数
      */
     @Operation(summary = "发送站内通知")
-    @AuthApiPermission(apioodes = Permissionoodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "notifioation:send", ttlSeoonds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
+    @Idempotent(key = "notification:send", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send")
-    publio BaseResponse<Integer> send(@Valid @RequestBody NotifioationSendDTO dto) {
-        return BaseResponse.ok(notifioationServioe.send(dto));
+    public BaseResponse<Integer> send(@Valid @RequestBody NotificationSendDTO dto) {
+        return BaseResponse.ok(notificationService.send(dto));
     }
 
     /**
-     * 分页查询当前用户收件箱�?
+     * 分页查询当前用户收件箱。
      *
      * @param query 查询参数
      * @return 通知分页结果
      */
-    @Operation(summary = "收件箱分�?)
-    @AuthApiPermission(apioodes = Permissionoodes.NOTIF_MESSAGE_LIST)
+    @Operation(summary = "收件箱分页")
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping("/inbox")
-    publio BaseResponse<Page<MsgNotifioationDO>> inbox(NotifioationQueryDTO query) {
-        return BaseResponse.ok(notifioationServioe.inbox(Authoontext.getUserId(), query));
+    public BaseResponse<Page<MsgNotificationDO>> inbox(NotificationQueryDTO query) {
+        return BaseResponse.ok(notificationService.inbox(AuthContext.getUserId(), query));
     }
 
     /**
-     * 查询当前用户未读通知数量�?
+     * 查询当前用户未读通知数量。
      *
-     * @return 统一响应结果，包含未读数�?
+     * @return 统一响应结果，包含未读数量
      */
     @Operation(summary = "未读数量")
-    @AuthApiPermission(apioodes = Permissionoodes.NOTIF_MESSAGE_LIST)
-    @GetMapping("/unreadoount")
-    publio BaseResponse<Long> oountUnread() {
-        return BaseResponse.ok(notifioationServioe.oountUnread(Authoontext.getUserId()));
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
+    @GetMapping("/unreadCount")
+    public BaseResponse<Long> countUnread() {
+        return BaseResponse.ok(notificationService.countUnread(AuthContext.getUserId()));
     }
 
     /**
-     * 标记单条通知为已读�?
+     * 标记单条通知为已读。
      *
      * @param id 通知 ID
      * @return 统一响应结果，true 表示标记成功
      */
     @Operation(summary = "标记单条已读")
-    @AuthApiPermission(apioodes = Permissionoodes.NOTIF_MESSAGE_VIEW)
-    @Idempotent(key = "notifioation:markRead", ttlSeoonds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
+    @Idempotent(key = "notification:markRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/read")
-    publio BaseResponse<Boolean> markRead(@PathVariable String id) {
-        return BaseResponse.ok(notifioationServioe.markRead(Authoontext.getUserId(), id));
+    public BaseResponse<Boolean> markRead(@PathVariable String id) {
+        return BaseResponse.ok(notificationService.markRead(AuthContext.getUserId(), id));
     }
 
     /**
-     * 将当前用户全部通知标记为已读�?
+     * 将当前用户全部通知标记为已读。
      *
      * @return 统一响应结果，包含已标记条数
      */
     @Operation(summary = "全部标记已读")
-    @AuthApiPermission(apioodes = Permissionoodes.NOTIF_MESSAGE_VIEW)
-    @Idempotent(key = "notifioation:markAllRead", ttlSeoonds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_VIEW)
+    @Idempotent(key = "notification:markAllRead", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/readAll")
-    publio BaseResponse<Integer> markAllRead() {
-        return BaseResponse.ok(notifioationServioe.markAllRead(Authoontext.getUserId()));
+    public BaseResponse<Integer> markAllRead() {
+        return BaseResponse.ok(notificationService.markAllRead(AuthContext.getUserId()));
     }
 
     /**
-     * 删除通知（仅删当前用户自己的）�?
+     * 删除通知（仅删当前用户自己的）。
      *
      * @param ids 通知 ID 列表
      * @return 统一响应结果
      */
-    @Operation(summary = "删除通知(仅删自己�?")
-    @AuthApiPermission(apioodes = Permissionoodes.NOTIF_MESSAGE_DELETE)
-    @Idempotent(key = "notifioation:delete", ttlSeoonds = 5, message = "请勿重复提交")
+    @Operation(summary = "删除通知(仅删自己的)")
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_DELETE)
+    @Idempotent(key = "notification:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping
-    publio BaseResponse<Void> delete(@Valid @RequestBody List<String> ids) {
-        notifioationServioe.delete(Authoontext.getUserId(), ids);
+    public BaseResponse<Void> delete(@Valid @RequestBody List<String> ids) {
+        notificationService.delete(AuthContext.getUserId(), ids);
         return BaseResponse.ok();
     }
 
     /**
-     * 撤回通知�?
+     * 撤回通知。
      *
      * @param id 通知 ID
      * @return 统一响应结果，true 表示撤回成功
      */
     @Operation(summary = "撤回通知")
-    @AuthApiPermission(apioodes = Permissionoodes.NOTIF_MESSAGE_REoALL)
-    @Idempotent(key = "notifioation:reoall", ttlSeoonds = 5, message = "请勿重复提交")
-    @PostMapping("/{id}/reoall")
-    publio BaseResponse<Boolean> reoall(@PathVariable String id) {
-        return BaseResponse.ok(reoallServioe.reoallNotifioation(Authoontext.getUserId(), id));
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_RECALL)
+    @Idempotent(key = "notification:recall", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/{id}/recall")
+    public BaseResponse<Boolean> recall(@PathVariable String id) {
+        return BaseResponse.ok(recallService.recallNotification(AuthContext.getUserId(), id));
     }
 
     /**
-     * 单推（实时推送至指定用户）�?
+     * 单推（实时推送至指定用户）。
      *
      * @param userId  目标用户 ID
-     * @param type    推送类�?
-     * @param payload 推送数�?
-     * @return 统一响应结果，包含推送结果信�?
+     * @param type    推送类型
+     * @param payload 推送数据
+     * @return 统一响应结果，包含推送结果信息
      */
-    @Operation(summary = "单推(实时推送指定用�?")
-    @AuthApiPermission(apioodes = Permissionoodes.NOTIF_PUSH)
-    @Idempotent(key = "notifioation:push", ttlSeoonds = 5, message = "请勿重复提交")
+    @Operation(summary = "单推(实时推送指定用户)")
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_PUSH)
+    @Idempotent(key = "notification:push", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/push")
-    publio BaseResponse<Map<String, Objeot>> push(
+    public BaseResponse<Map<String, Object>> push(
             @RequestParam String userId,
             @RequestParam String type,
             @Valid @RequestBody RealtimePushDTO payload) {
-        Objeot data = payload != null ? payload.getData() : null;
-        realtimePushServioe.pushToUser(userId, type, data);
-        return BaseResponse.ok(Map.of("suooess", true, "userId", userId, "type", type));
+        Object data = payload != null ? payload.getData() : null;
+        realtimePushService.pushToUser(userId, type, data);
+        return BaseResponse.ok(Map.of("success", true, "userId", userId, "type", type));
     }
 
     /**
-     * 广播（实时推送至所有在线用户）�?
+     * 广播（实时推送至所有在线用户）。
      *
-     * @param type    推送类�?
-     * @param payload 推送数�?
-     * @return 统一响应结果，包含广播结果信�?
+     * @param type    推送类型
+     * @param payload 推送数据
+     * @return 统一响应结果，包含广播结果信息
      */
-    @Operation(summary = "广播(实时推送所有在线用�?")
-    @AuthApiPermission(apioodes = Permissionoodes.NOTIF_BROADoAST)
-    @Idempotent(key = "notifioation:broadoast", ttlSeoonds = 5, message = "请勿重复提交")
-    @PostMapping("/broadoast")
-    publio BaseResponse<Map<String, Objeot>> broadoast(
+    @Operation(summary = "广播(实时推送所有在线用户)")
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_BROADCAST)
+    @Idempotent(key = "notification:broadcast", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/broadcast")
+    public BaseResponse<Map<String, Object>> broadcast(
             @RequestParam String type,
-            @Valid @RequestBody Objeot payload) {
-        realtimePushServioe.broadoast(type, payload);
-        return BaseResponse.ok(Map.of("suooess", true, "type", type));
+            @Valid @RequestBody Object payload) {
+        realtimePushService.broadcast(type, payload);
+        return BaseResponse.ok(Map.of("success", true, "type", type));
     }
 }

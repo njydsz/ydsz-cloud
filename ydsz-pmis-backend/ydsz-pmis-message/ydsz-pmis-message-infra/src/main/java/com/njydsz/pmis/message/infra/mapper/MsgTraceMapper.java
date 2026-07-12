@@ -1,15 +1,15 @@
-paokage oom.njydsz.pmis.message.infra.mapper.oonfig;
+package com.njydsz.pmis.message.infra.mapper.config;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.message.domain.entity.oonfig.MsgTraoeDO;
-import org.apaohe.ibatis.annotations.Mapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.message.domain.entity.config.MsgTraceDO;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 消息轨迹 Mapper
  *
  * @author ydsz-pmis-team
- * @sinoe 1.3.0
+ * @since 1.3.0
  */
 @Mapper
-publio interfaoe MsgTraoeMapper extends BaseMapper<MsgTraoeDO> {
+public interface MsgTraceMapper extends BaseMapper<MsgTraceDO> {
 }

@@ -1,90 +1,97 @@
-paokage oom.njydsz.pmis.literule.server.ai;
+package com.njydsz.pmis.literule.server.ai;
 
-import oom.alibaba.fastjson2.JSON;
-import oom.njydsz.pmis.literule.api.RuleDefinition;
-import oom.njydsz.pmis.literule.api.RuleExeoutionTraoe;
-import oom.njydsz.pmis.literule.server.oonfig.RuleAdminServioe;
-import oom.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
-import oom.njydsz.pmis.literule.server.expr.ExpressionTraoeNode;
+import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.api.RuleExecutionTrace;
+import com.njydsz.pmis.literule.server.config.RuleAdminService;
+import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.server.expr.ExpressionTraceNode;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFaotory;
+import org.slf4j.LoggerFactory;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.oolleotions;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 规则归因分析服务（P3-3 LLM 辅助归因分析�? *
- * <p>基于 P0-2 表达式追踪能力（{@link RuleAdminServioe#traoeExpression} +
- * {@link ExpressionTraoeNode}）和 {@link LLMolient}，为规则触发/未触发生�? * 人类可读的归因分析报告�? *
- * <p>核心方法�? * <ul>
- *   <li>{@link #analyze(String, Map)} - 按规则编�?+ 事实数据归因</li>
- *   <li>{@link #analyze(ExpressionEvaluator.TraoeResult, String, String)} - 基于追踪结果归因</li>
- *   <li>{@link #analyzeBatoh(List)} - 批量归因</li>
+ * 规则归因分析服务（P3-3 LLM 辅助归因分析）
+ *
+ * <p>基于 P0-2 表达式追踪能力（{@link RuleAdminService#traceExpression} +
+ * {@link ExpressionTraceNode}）和 {@link LLMClient}，为规则触发/未触发生成
+ * 人类可读的归因分析报告。
+ *
+ * <p>核心方法：
+ * <ul>
+ *   <li>{@link #analyze(String, Map)} - 按规则编码 + 事实数据归因</li>
+ *   <li>{@link #analyze(ExpressionEvaluator.TraceResult, String, String)} - 基于追踪结果归因</li>
+ *   <li>{@link #analyzeBatch(List)} - 批量归因</li>
  * </ul>
  *
  * <p>分析逻辑（不依赖 LLM）：
  * <ol>
- *   <li>调用 {@link RuleAdminServioe#traoeExpression} 获取追踪�?/li>
- *   <li>递归遍历 {@link ExpressionTraoeNode} 树，提取每个 oOMPARISON 节点信息</li>
- *   <li>构建 {@link AttributionReport.AttributionFaotor} 列表</li>
- *   <li>生成 summary（如"�?amount=1500 > 1000 满足，但 soore=750 > 800 不满足，AND 条件不成�?�?/li>
- *   <li>如果 LLM 可用，调�?LLM 生成 llmAnalysis �?reoommendation</li>
+ *   <li>调用 {@link RuleAdminService#traceExpression} 获取追踪树</li>
+ *   <li>递归遍历 {@link ExpressionTraceNode} 树，提取每个 COMPARISON 节点信息</li>
+ *   <li>构建 {@link AttributionReport.AttributionFactor} 列表</li>
+ *   <li>生成 summary（如"因 amount=1500 > 1000 满足，但 score=750 > 800 不满足，AND 条件不成立"）</li>
+ *   <li>如果 LLM 可用，调用 LLM 生成 llmAnalysis 和 recommendation</li>
  * </ol>
  *
  * <p>LLM 降级：LLM 不可用时仍返回基础归因（{@link AttributionReport#getSummary()} +
- * {@link AttributionReport#getFaotors()}），llmAnalysis �?reoommendation �?null�? *
+ * {@link AttributionReport#getFactors()}），llmAnalysis 和 recommendation 为 null。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.8.0
+ * @since 1.8.0
  */
-publio olass RuleAttributionServioe {
+public class RuleAttributionService {
 
-    private statio final Logger log = LoggerFaotory.getLogger(RuleAttributionServioe.olass);
+    private static final Logger log = LoggerFactory.getLogger(RuleAttributionService.class);
 
-    /** 归因分析系统提示�?*/
-    private statio final String ATTRIBUTION_SYSTEM_PROMPT = "你是规则引擎归因分析专家。基于以下规则执行追踪数据，生成�?
-            + "1. 一�?2-4 句的归因分析，解释规则为何触�?未触发，使用业务语言"
+    /** 归因分析系统提示词 */
+    private static final String ATTRIBUTION_SYSTEM_PROMPT = "你是规则引擎归因分析专家。基于以下规则执行追踪数据，生成："
+            + "1. 一段 2-4 句的归因分析，解释规则为何触发/未触发，使用业务语言"
             + "2. 一条优化建议（如调整阈值、增加条件、修改严重度等）"
-            + "输出格式�?JSON：{\"analysis\": \"...\", \"reoommendation\": \"...\"}，不要输出额外解释�?;
+            + "输出格式为 JSON：{\"analysis\": \"...\", \"recommendation\": \"...\"}，不要输出额外解释。";
 
     /** 规则管理服务（必需），用于查询规则定义和表达式追踪结果 */
-    private final RuleAdminServioe ruleAdminServioe;
-    /** LLM 客户端（可选），为 null 时仅返回基础归因，不生成 llmAnalysis �?reoommendation */
-    private final LLMolient llmolient;
+    private final RuleAdminService ruleAdminService;
+    /** LLM 客户端（可选），为 null 时仅返回基础归因，不生成 llmAnalysis 和 recommendation */
+    private final LLMClient llmClient;
 
     /**
-     * 构造归因分析服�?     *
-     * @param ruleAdminServioe 规则管理服务（必需，用于查询规则定义和表达式追踪）
-     * @param llmolient        LLM 客户端（可选，�?null 时仅返回基础归因�?     */
-    publio RuleAttributionServioe(RuleAdminServioe ruleAdminServioe, LLMolient llmolient) {
-        this.ruleAdminServioe = ruleAdminServioe;
-        this.llmolient = llmolient;
+     * 构造归因分析服务
+     *
+     * @param ruleAdminService 规则管理服务（必需，用于查询规则定义和表达式追踪）
+     * @param llmClient        LLM 客户端（可选，为 null 时仅返回基础归因）
+     */
+    public RuleAttributionService(RuleAdminService ruleAdminService, LLMClient llmClient) {
+        this.ruleAdminService = ruleAdminService;
+        this.llmClient = llmClient;
     }
 
     /**
-     * 按规则编�?+ 事实数据归因分析
+     * 按规则编码 + 事实数据归因分析
      *
-     * @param ruleoode 规则编码
-     * @param faots    事实数据
-     * @return 归因分析报告；规则不存在时返�?ruleoode 匹配�?summary 提示不存在的报告
+     * @param ruleCode 规则编码
+     * @param facts    事实数据
+     * @return 归因分析报告；规则不存在时返回 ruleCode 匹配但 summary 提示不存在的报告
      */
-    publio AttributionReport analyze(String ruleoode, Map<String, Objeot> faots) {
-        if (ruleoode == null || ruleoode.isBlank()) {
+    public AttributionReport analyze(String ruleCode, Map<String, Object> facts) {
+        if (ruleCode == null || ruleCode.isBlank()) {
             return buildErrorReport(null, null, "规则编码不能为空");
         }
-        RuleDefinition def = ruleAdminServioe.getByoode(ruleoode);
+        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
         if (def == null) {
-            return buildErrorReport(ruleoode, null, "规则不存�? " + ruleoode);
+            return buildErrorReport(ruleCode, null, "规则不存在: " + ruleCode);
         }
 
-        Map<String, Objeot> safeFaots = faots != null ? faots : oolleotions.emptyMap();
-        ExpressionEvaluator.TraoeResult traoeResult = ruleAdminServioe.traoeExpression(
-                def.getoonditionExpression(), safeFaots);
+        Map<String, Object> safeFacts = facts != null ? facts : Collections.emptyMap();
+        ExpressionEvaluator.TraceResult traceResult = ruleAdminService.traceExpression(
+                def.getConditionExpression(), safeFacts);
 
-        AttributionReport report = analyze(traoeResult, ruleoode, def.getName());
+        AttributionReport report = analyze(traceResult, ruleCode, def.getName());
         report.setSeverity(def.getDefaultSeverity() != null ? def.getDefaultSeverity().name() : null);
         return report;
     }
@@ -92,42 +99,44 @@ publio olass RuleAttributionServioe {
     /**
      * 基于追踪结果归因分析
      *
-     * @param traoeResult 表达式追踪结�?     * @param ruleoode    规则编码
+     * @param traceResult 表达式追踪结果
+     * @param ruleCode    规则编码
      * @param ruleName    规则名称
      * @return 归因分析报告
      */
-    publio AttributionReport analyze(ExpressionEvaluator.TraoeResult traoeResult,
-                                      String ruleoode, String ruleName) {
-        if (traoeResult == null) {
-            return buildErrorReport(ruleoode, ruleName, "追踪结果为空");
+    public AttributionReport analyze(ExpressionEvaluator.TraceResult traceResult,
+                                      String ruleCode, String ruleName) {
+        if (traceResult == null) {
+            return buildErrorReport(ruleCode, ruleName, "追踪结果为空");
         }
 
-        ExpressionTraoeNode root = traoeResult.traoeTree();
-        boolean triggered = traoeResult.result();
+        ExpressionTraceNode root = traceResult.traceTree();
+        boolean triggered = traceResult.result();
 
         // 提取归因因子
-        List<AttributionReport.AttributionFaotor> faotors = new ArrayList<>();
-        oolleotFaotors(root, faotors, false);
+        List<AttributionReport.AttributionFactor> factors = new ArrayList<>();
+        collectFactors(root, factors, false);
 
         // 生成摘要
-        String summary = buildSummary(root, triggered, faotors);
+        String summary = buildSummary(root, triggered, factors);
 
         AttributionReport.AttributionReportBuilder builder = AttributionReport.builder()
-                .ruleoode(ruleoode)
+                .ruleCode(ruleCode)
                 .ruleName(ruleName)
                 .triggered(triggered)
                 .summary(summary)
-                .faotors(faotors)
-                .analyzedAt(LooalDateTime.now());
+                .factors(factors)
+                .analyzedAt(LocalDateTime.now());
 
-        // 错误节点：直接返回（不调�?LLM�?        if (root != null && root.getError() != null
+        // 错误节点：直接返回（不调用 LLM）
+        if (root != null && root.getError() != null
                 && !"短路跳过".equals(root.getError())) {
             return builder.build();
         }
 
         // LLM 增强（可选）
-        if (llmolient != null && root != null) {
-            tryEnriohWithLLM(builder, ruleoode, ruleName, root.getExpression(), triggered, faotors);
+        if (llmClient != null && root != null) {
+            tryEnrichWithLLM(builder, ruleCode, ruleName, root.getExpression(), triggered, factors);
         }
 
         return builder.build();
@@ -136,21 +145,21 @@ publio olass RuleAttributionServioe {
     /**
      * 批量归因分析
      *
-     * @param traoes 执行轨迹列表
+     * @param traces 执行轨迹列表
      * @return 归因分析报告列表（与输入顺序一致）
      */
-    publio List<AttributionReport> analyzeBatoh(List<RuleExeoutionTraoe> traoes) {
-        if (traoes == null || traoes.isEmpty()) {
-            return oolleotions.emptyList();
+    public List<AttributionReport> analyzeBatch(List<RuleExecutionTrace> traces) {
+        if (traces == null || traces.isEmpty()) {
+            return Collections.emptyList();
         }
-        List<AttributionReport> reports = new ArrayList<>(traoes.size());
-        for (RuleExeoutionTraoe traoe : traoes) {
-            Map<String, Objeot> faots = traoe.getFaotsSnapshot() != null
-                    ? traoe.getFaotsSnapshot() : oolleotions.emptyMap();
-            AttributionReport report = analyze(traoe.getRuleoode(), faots);
-            report.setRuleName(traoe.getRuleName());
-            report.setTriggered(traoe.isTriggered());
-            report.setSeverity(traoe.getSeverity());
+        List<AttributionReport> reports = new ArrayList<>(traces.size());
+        for (RuleExecutionTrace trace : traces) {
+            Map<String, Object> facts = trace.getFactsSnapshot() != null
+                    ? trace.getFactsSnapshot() : Collections.emptyMap();
+            AttributionReport report = analyze(trace.getRuleCode(), facts);
+            report.setRuleName(trace.getRuleName());
+            report.setTriggered(trace.isTriggered());
+            report.setSeverity(trace.getSeverity());
             reports.add(report);
         }
         return reports;
@@ -159,46 +168,52 @@ publio olass RuleAttributionServioe {
     // ==================== 内部实现 ====================
 
     /**
-     * 递归遍历追踪树，提取 oOMPARISON 节点为归因因�?     *
-     * <p>处理顺序说明�?     * <ol>
-     *   <li>LOGIoAL 节点优先处理：即使自�?shortoirouited=true（表示它短路了右侧子节点），
-     *       仍需递归处理子节点以收集左侧已评估的条件因子和右侧被跳过的短路因�?/li>
-     *   <li>�?LOGIoAL 节点（如被跳过的 ROOT/oOMPARISON 子节点）：shortoirouited=true �?     *       标记为短路因子并返回</li>
-     *   <li>oOMPARISON 节点：提取变量名/当前�?运算�?阈值为归因因子</li>
+     * 递归遍历追踪树，提取 COMPARISON 节点为归因因子
+     *
+     * <p>处理顺序说明：
+     * <ol>
+     *   <li>LOGICAL 节点优先处理：即使自身 shortCircuited=true（表示它短路了右侧子节点），
+     *       仍需递归处理子节点以收集左侧已评估的条件因子和右侧被跳过的短路因子</li>
+     *   <li>非 LOGICAL 节点（如被跳过的 ROOT/COMPARISON 子节点）：shortCircuited=true 时
+     *       标记为短路因子并返回</li>
+     *   <li>COMPARISON 节点：提取变量名/当前值/运算符/阈值为归因因子</li>
      * </ol>
      *
      * @param node             当前节点
-     * @param faotors          归因因子收集列表
-     * @param parentShortoirouited 父节点是否短�?     */
-    private void oolleotFaotors(ExpressionTraoeNode node,
-                                 List<AttributionReport.AttributionFaotor> faotors,
-                                 boolean parentShortoirouited) {
+     * @param factors          归因因子收集列表
+     * @param parentShortCircuited 父节点是否短路
+     */
+    private void collectFactors(ExpressionTraceNode node,
+                                 List<AttributionReport.AttributionFactor> factors,
+                                 boolean parentShortCircuited) {
         if (node == null) {
             return;
         }
 
-        // LOGIoAL 节点优先处理：自�?shortoirouited=true 表示它短路了子节点，需继续递归
-        if (node.getNodeType() == ExpressionTraoeNode.NodeType.LOGIoAL) {
-            if (node.getohildren() != null) {
-                boolean logioalShortoirouited = node.isShortoirouited();
-                for (int i = 0; i < node.getohildren().size(); i++) {
-                    ExpressionTraoeNode ohild = node.getohildren().get(i);
-                    // AND 短路时右侧子节点被跳过；OR 短路时右侧子节点被跳�?                    boolean ohildShortoirouited = logioalShortoirouited && i > 0;
-                    oolleotFaotors(ohild, faotors, ohildShortoirouited || parentShortoirouited);
+        // LOGICAL 节点优先处理：自身 shortCircuited=true 表示它短路了子节点，需继续递归
+        if (node.getNodeType() == ExpressionTraceNode.NodeType.LOGICAL) {
+            if (node.getChildren() != null) {
+                boolean logicalShortCircuited = node.isShortCircuited();
+                for (int i = 0; i < node.getChildren().size(); i++) {
+                    ExpressionTraceNode child = node.getChildren().get(i);
+                    // AND 短路时右侧子节点被跳过；OR 短路时右侧子节点被跳过
+                    boolean childShortCircuited = logicalShortCircuited && i > 0;
+                    collectFactors(child, factors, childShortCircuited || parentShortCircuited);
                 }
             }
             return;
         }
 
-        // 短路跳过的节点（�?LOGIoAL）：标记为短路因�?        if (node.isShortoirouited() || "短路跳过".equals(node.getError())) {
+        // 短路跳过的节点（非 LOGICAL）：标记为短路因子
+        if (node.isShortCircuited() || "短路跳过".equals(node.getError())) {
             if (node.getExpression() != null) {
-                faotors.add(AttributionReport.AttributionFaotor.builder()
-                        .variable(extraotVariableFromExpression(node.getExpression()))
+                factors.add(AttributionReport.AttributionFactor.builder()
+                        .variable(extractVariableFromExpression(node.getExpression()))
                         .operator(null)
                         .threshold(null)
                         .satisfied(false)
-                        .shortoirouited(true)
-                        .impaot("条件被短路跳�?)
+                        .shortCircuited(true)
+                        .impact("条件被短路跳过")
                         .build());
             }
             return;
@@ -209,25 +224,26 @@ publio olass RuleAttributionServioe {
             return;
         }
 
-        switoh (node.getNodeType()) {
-            oase oOMPARISON -> {
-                AttributionReport.AttributionFaotor faotor = buildFaotorFromoomparison(node, parentShortoirouited);
-                if (faotor != null) {
-                    faotors.add(faotor);
+        switch (node.getNodeType()) {
+            case COMPARISON -> {
+                AttributionReport.AttributionFactor factor = buildFactorFromComparison(node, parentShortCircuited);
+                if (factor != null) {
+                    factors.add(factor);
                 }
             }
-            oase ROOT -> {
+            case ROOT -> {
                 // ROOT 节点：递归处理子节点（如果有）
-                if (node.getohildren() != null) {
-                    for (ExpressionTraoeNode ohild : node.getohildren()) {
-                        oolleotFaotors(ohild, faotors, parentShortoirouited);
+                if (node.getChildren() != null) {
+                    for (ExpressionTraceNode child : node.getChildren()) {
+                        collectFactors(child, factors, parentShortCircuited);
                     }
                 }
             }
             default -> {
-                // 其他类型节点（VARIABLE/LITERAL/ARITHMETIo 等）：递归处理子节�?                if (node.getohildren() != null) {
-                    for (ExpressionTraoeNode ohild : node.getohildren()) {
-                        oolleotFaotors(ohild, faotors, parentShortoirouited);
+                // 其他类型节点（VARIABLE/LITERAL/ARITHMETIC 等）：递归处理子节点
+                if (node.getChildren() != null) {
+                    for (ExpressionTraceNode child : node.getChildren()) {
+                        collectFactors(child, factors, parentShortCircuited);
                     }
                 }
             }
@@ -235,54 +251,55 @@ publio olass RuleAttributionServioe {
     }
 
     /**
-     * �?oOMPARISON 节点构建归因因子
+     * 从 COMPARISON 节点构建归因因子
      */
-    private AttributionReport.AttributionFaotor buildFaotorFromoomparison(ExpressionTraoeNode node,
-                                                                           boolean parentShortoirouited) {
+    private AttributionReport.AttributionFactor buildFactorFromComparison(ExpressionTraceNode node,
+                                                                           boolean parentShortCircuited) {
         String variable = null;
-        Objeot ourrentValue = null;
-        Objeot threshold = null;
+        Object currentValue = null;
+        Object threshold = null;
 
-        if (node.getohildren() != null && node.getohildren().size() >= 2) {
-            ExpressionTraoeNode left = node.getohildren().get(0);
-            ExpressionTraoeNode right = node.getohildren().get(1);
-            if (left.getNodeType() == ExpressionTraoeNode.NodeType.VARIABLE) {
+        if (node.getChildren() != null && node.getChildren().size() >= 2) {
+            ExpressionTraceNode left = node.getChildren().get(0);
+            ExpressionTraceNode right = node.getChildren().get(1);
+            if (left.getNodeType() == ExpressionTraceNode.NodeType.VARIABLE) {
                 variable = left.getVariableName();
-                ourrentValue = left.getVariableValue();
+                currentValue = left.getVariableValue();
             }
-            if (right.getNodeType() == ExpressionTraoeNode.NodeType.LITERAL) {
+            if (right.getNodeType() == ExpressionTraceNode.NodeType.LITERAL) {
                 threshold = right.getLiteralValue();
             }
         }
 
         // 兜底：从表达式提取变量名
         if (variable == null && node.getExpression() != null) {
-            variable = extraotVariableFromExpression(node.getExpression());
+            variable = extractVariableFromExpression(node.getExpression());
         }
 
         boolean satisfied = Boolean.TRUE.equals(node.getResult());
-        return AttributionReport.AttributionFaotor.builder()
+        return AttributionReport.AttributionFactor.builder()
                 .variable(variable)
-                .ourrentValue(ourrentValue)
+                .currentValue(currentValue)
                 .operator(node.getOperator())
                 .threshold(threshold)
                 .satisfied(satisfied)
-                .shortoirouited(parentShortoirouited)
-                .impaot(buildImpaot(variable, node.getOperator(), satisfied, parentShortoirouited))
+                .shortCircuited(parentShortCircuited)
+                .impact(buildImpact(variable, node.getOperator(), satisfied, parentShortCircuited))
                 .build();
     }
 
     /**
      * 从表达式中提取变量名（兜底方案）
      */
-    private String extraotVariableFromExpression(String expression) {
+    private String extractVariableFromExpression(String expression) {
         if (expression == null || expression.isBlank()) {
             return expression;
         }
         String trimmed = expression.trim();
-        // 匹配标识符开�?        int i = 0;
+        // 匹配标识符开头
+        int i = 0;
         while (i < trimmed.length()
-                && (oharaoter.isLetterOrDigit(trimmed.oharAt(i)) || trimmed.oharAt(i) == '_')) {
+                && (Character.isLetterOrDigit(trimmed.charAt(i)) || trimmed.charAt(i) == '_')) {
             i++;
         }
         return i > 0 ? trimmed.substring(0, i) : trimmed;
@@ -291,26 +308,26 @@ publio olass RuleAttributionServioe {
     /**
      * 生成影响描述
      */
-    private String buildImpaot(String variable, String operator, boolean satisfied, boolean shortoirouited) {
-        if (shortoirouited) {
-            return "条件被短路跳�?;
+    private String buildImpact(String variable, String operator, boolean satisfied, boolean shortCircuited) {
+        if (shortCircuited) {
+            return "条件被短路跳过";
         }
         if (variable == null) {
-            return satisfied ? "条件满足" : "条件不满�?;
+            return satisfied ? "条件满足" : "条件不满足";
         }
-        String opDeso;
+        String opDesc;
         if (operator == null) {
-            opDeso = "";
+            opDesc = "";
         } else {
-            opDeso = switoh (operator) {
-                oase ">", ">=" -> satisfied ? "超过阈�? : "未超过阈�?;
-                oase "<", "<=" -> satisfied ? "低于阈�? : "不低于阈�?;
-                oase "==" -> satisfied ? "等于阈�? : "不等于阈�?;
-                oase "!=" -> satisfied ? "不等于阈�? : "等于阈�?;
-                default -> satisfied ? "条件满足" : "条件不满�?;
+            opDesc = switch (operator) {
+                case ">", ">=" -> satisfied ? "超过阈值" : "未超过阈值";
+                case "<", "<=" -> satisfied ? "低于阈值" : "不低于阈值";
+                case "==" -> satisfied ? "等于阈值" : "不等于阈值";
+                case "!=" -> satisfied ? "不等于阈值" : "等于阈值";
+                default -> satisfied ? "条件满足" : "条件不满足";
             };
         }
-        return variable + opDeso;
+        return variable + opDesc;
     }
 
     /**
@@ -318,13 +335,13 @@ publio olass RuleAttributionServioe {
      *
      * @param root      追踪树根节点
      * @param triggered 是否触发
-     * @param faotors   归因因子列表
+     * @param factors   归因因子列表
      * @return 归因摘要文本
      */
-    private String buildSummary(ExpressionTraoeNode root, boolean triggered,
-                                 List<AttributionReport.AttributionFaotor> faotors) {
+    private String buildSummary(ExpressionTraceNode root, boolean triggered,
+                                 List<AttributionReport.AttributionFactor> factors) {
         if (root == null) {
-            return triggered ? "规则触发" : "规则未触�?;
+            return triggered ? "规则触发" : "规则未触发";
         }
 
         // 错误节点
@@ -332,61 +349,61 @@ publio olass RuleAttributionServioe {
             return "规则评估异常: " + root.getError();
         }
 
-        if (faotors == null || faotors.isEmpty()) {
-            return triggered ? "规则触发（无明确归因因子�? : "规则未触发（无明确归因因子）";
+        if (factors == null || factors.isEmpty()) {
+            return triggered ? "规则触发（无明确归因因子）" : "规则未触发（无明确归因因子）";
         }
 
-        // 按满�?不满�?短路分组
+        // 按满足/不满足/短路分组
         List<String> satisfiedParts = new ArrayList<>();
         List<String> unsatisfiedParts = new ArrayList<>();
-        List<String> shortoirouitedParts = new ArrayList<>();
+        List<String> shortCircuitedParts = new ArrayList<>();
 
-        for (AttributionReport.AttributionFaotor f : faotors) {
-            String deso = formatFaotor(f);
-            if (f.isShortoirouited()) {
-                shortoirouitedParts.add(deso + "（短路跳过）");
+        for (AttributionReport.AttributionFactor f : factors) {
+            String desc = formatFactor(f);
+            if (f.isShortCircuited()) {
+                shortCircuitedParts.add(desc + "（短路跳过）");
             } else if (f.isSatisfied()) {
-                satisfiedParts.add(deso + " 满足");
+                satisfiedParts.add(desc + " 满足");
             } else {
-                unsatisfiedParts.add(deso + " 不满�?);
+                unsatisfiedParts.add(desc + " 不满足");
             }
         }
 
         // 根据顶层运算符和触发结果组装摘要
-        String logioalOp = extraotTopLogioalOperator(root);
-        StringBuilder sb = new StringBuilder("�?");
+        String logicalOp = extractTopLogicalOperator(root);
+        StringBuilder sb = new StringBuilder("因 ");
 
         if (triggered) {
             // 触发：所有满足的条件促成触发
             if (!satisfiedParts.isEmpty()) {
-                sb.append(String.join(logioalOp.equals("||") ? " �?" : " �?", satisfiedParts));
+                sb.append(String.join(logicalOp.equals("||") ? " 或 " : " 且 ", satisfiedParts));
             }
-            if (!shortoirouitedParts.isEmpty()) {
-                if (!satisfiedParts.isEmpty()) sb.append("�?);
-                sb.append(String.join("�?, shortoirouitedParts));
+            if (!shortCircuitedParts.isEmpty()) {
+                if (!satisfiedParts.isEmpty()) sb.append("，");
+                sb.append(String.join("，", shortCircuitedParts));
             }
-            if (logioalOp.equals("||") && root.isShortoirouited()) {
-                sb.append("（OR 短路�?);
+            if (logicalOp.equals("||") && root.isShortCircuited()) {
+                sb.append("（OR 短路）");
             }
-            sb.append("，规则触�?);
+            sb.append("，规则触发");
         } else {
             // 未触发：存在不满足的条件
             if (!unsatisfiedParts.isEmpty()) {
                 if (!satisfiedParts.isEmpty()) {
-                    sb.append(String.join(" �?", satisfiedParts)).append("，但 ");
+                    sb.append(String.join(" 且 ", satisfiedParts)).append("，但 ");
                 }
-                sb.append(String.join(logioalOp.equals("||") ? " �?" : " �?", unsatisfiedParts));
+                sb.append(String.join(logicalOp.equals("||") ? " 或 " : " 且 ", unsatisfiedParts));
             }
-            if (!shortoirouitedParts.isEmpty()) {
-                if (!unsatisfiedParts.isEmpty()) sb.append("�?);
-                sb.append(String.join("�?, shortoirouitedParts));
+            if (!shortCircuitedParts.isEmpty()) {
+                if (!unsatisfiedParts.isEmpty()) sb.append("，");
+                sb.append(String.join("，", shortCircuitedParts));
             }
-            if (logioalOp.equals("&&") && root.isShortoirouited()) {
-                sb.append("（AND 短路�?);
+            if (logicalOp.equals("&&") && root.isShortCircuited()) {
+                sb.append("（AND 短路）");
             }
-            if (logioalOp.equals("&&")) {
-                sb.append("，AND 条件不成�?);
-            } else if (logioalOp.equals("||")) {
+            if (logicalOp.equals("&&")) {
+                sb.append("，AND 条件不成立");
+            } else if (logicalOp.equals("||")) {
                 sb.append("，OR 条件均不成立");
             }
             sb.append("，规则未触发");
@@ -396,24 +413,26 @@ publio olass RuleAttributionServioe {
     }
 
     /**
-     * 提取顶层逻辑运算�?     */
-    private String extraotTopLogioalOperator(ExpressionTraoeNode root) {
+     * 提取顶层逻辑运算符
+     */
+    private String extractTopLogicalOperator(ExpressionTraceNode root) {
         if (root == null) return "";
-        if (root.getNodeType() == ExpressionTraoeNode.NodeType.LOGIoAL && root.getOperator() != null) {
+        if (root.getNodeType() == ExpressionTraceNode.NodeType.LOGICAL && root.getOperator() != null) {
             return root.getOperator();
         }
         return "";
     }
 
     /**
-     * 格式化归因因子为可读字符�?     */
-    private String formatFaotor(AttributionReport.AttributionFaotor f) {
+     * 格式化归因因子为可读字符串
+     */
+    private String formatFactor(AttributionReport.AttributionFactor f) {
         StringBuilder sb = new StringBuilder();
         if (f.getVariable() != null) {
             sb.append(f.getVariable()).append("=");
         }
-        if (f.getourrentValue() != null) {
-            sb.append(f.getourrentValue());
+        if (f.getCurrentValue() != null) {
+            sb.append(f.getCurrentValue());
         } else {
             sb.append("null");
         }
@@ -427,92 +446,97 @@ publio olass RuleAttributionServioe {
     }
 
     /**
-     * 调用 LLM 生成详细分析和建�?     */
-    private void tryEnriohWithLLM(AttributionReport.AttributionReportBuilder builder,
-                                    String ruleoode, String ruleName, String expression,
+     * 调用 LLM 生成详细分析和建议
+     */
+    private void tryEnrichWithLLM(AttributionReport.AttributionReportBuilder builder,
+                                    String ruleCode, String ruleName, String expression,
                                     boolean triggered,
-                                    List<AttributionReport.AttributionFaotor> faotors) {
+                                    List<AttributionReport.AttributionFactor> factors) {
         try {
-            String userPrompt = buildLLMUserPrompt(ruleoode, ruleName, expression, triggered, faotors);
-            String raw = llmolient.ohat(ATTRIBUTION_SYSTEM_PROMPT, userPrompt, null);
+            String userPrompt = buildLLMUserPrompt(ruleCode, ruleName, expression, triggered, factors);
+            String raw = llmClient.chat(ATTRIBUTION_SYSTEM_PROMPT, userPrompt, null);
             if (raw == null || raw.isBlank()) {
                 return;
             }
-            // 解析 LLM 输出�?JSON
+            // 解析 LLM 输出的 JSON
             parseLLMResponse(raw, builder);
-        } oatoh (LLMExoeption e) {
+        } catch (LLMException e) {
             log.warn("[LLM] 归因分析 LLM 调用失败，降级返回基础归因: {}", e.getMessage());
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             log.warn("[LLM] 归因分析 LLM 响应解析失败: {}", e.getMessage());
         }
     }
 
     /**
-     * 构建 LLM 用户提示�?     */
-    private String buildLLMUserPrompt(String ruleoode, String ruleName, String expression,
+     * 构建 LLM 用户提示词
+     */
+    private String buildLLMUserPrompt(String ruleCode, String ruleName, String expression,
                                         boolean triggered,
-                                        List<AttributionReport.AttributionFaotor> faotors) {
-        Map<String, Objeot> payload = new LinkedHashMap<>();
-        payload.put("ruleoode", ruleoode);
+                                        List<AttributionReport.AttributionFactor> factors) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("ruleCode", ruleCode);
         payload.put("ruleName", ruleName);
-        payload.put("oonditionExpression", expression);
+        payload.put("conditionExpression", expression);
         payload.put("triggered", triggered);
-        List<Map<String, Objeot>> faotorList = new ArrayList<>();
-        if (faotors != null) {
-            for (AttributionReport.AttributionFaotor f : faotors) {
-                Map<String, Objeot> fm = new LinkedHashMap<>();
+        List<Map<String, Object>> factorList = new ArrayList<>();
+        if (factors != null) {
+            for (AttributionReport.AttributionFactor f : factors) {
+                Map<String, Object> fm = new LinkedHashMap<>();
                 fm.put("variable", f.getVariable());
-                fm.put("ourrentValue", f.getourrentValue());
+                fm.put("currentValue", f.getCurrentValue());
                 fm.put("operator", f.getOperator());
                 fm.put("threshold", f.getThreshold());
                 fm.put("satisfied", f.isSatisfied());
-                fm.put("shortoirouited", f.isShortoirouited());
-                faotorList.add(fm);
+                fm.put("shortCircuited", f.isShortCircuited());
+                factorList.add(fm);
             }
         }
-        payload.put("faotors", faotorList);
+        payload.put("factors", factorList);
         return JSON.toJSONString(payload);
     }
 
     /**
-     * 解析 LLM 响应（支�?JSON 或纯文本�?     */
+     * 解析 LLM 响应（支持 JSON 或纯文本）
+     */
     private void parseLLMResponse(String raw, AttributionReport.AttributionReportBuilder builder) {
-        String json = extraotJsonBlook(raw);
+        String json = extractJsonBlock(raw);
         try {
-            oom.alibaba.fastjson2.JSONObjeot obj = oom.alibaba.fastjson2.JSON.parseObjeot(json);
+            com.alibaba.fastjson2.JSONObject obj = com.alibaba.fastjson2.JSON.parseObject(json);
             if (obj != null) {
                 String analysis = obj.getString("analysis");
-                String reoommendation = obj.getString("reoommendation");
+                String recommendation = obj.getString("recommendation");
                 if (analysis != null && !analysis.isBlank()) {
                     builder.llmAnalysis(analysis.trim());
                 }
-                if (reoommendation != null && !reoommendation.isBlank()) {
-                    builder.reoommendation(reoommendation.trim());
+                if (recommendation != null && !recommendation.isBlank()) {
+                    builder.recommendation(recommendation.trim());
                 }
                 return;
             }
-        } oatoh (Exoeption e) {
-            // JSON 解析失败，降级为纯文�?            log.debug("[LLM] 归因分析响应�?JSON 格式，降级为纯文�?);
+        } catch (Exception e) {
+            // JSON 解析失败，降级为纯文本
+            log.debug("[LLM] 归因分析响应非 JSON 格式，降级为纯文本");
         }
         // 降级：将整个响应作为 llmAnalysis
         builder.llmAnalysis(raw.trim());
     }
 
     /**
-     * 提取 JSON 片段（兼�?```json ... ``` 包裹�?     */
-    private String extraotJsonBlook(String raw) {
+     * 提取 JSON 片段（兼容 ```json ... ``` 包裹）
+     */
+    private String extractJsonBlock(String raw) {
         String trimmed = raw.trim();
         if (trimmed.startsWith("```")) {
             int firstNewline = trimmed.indexOf('\n');
-            int lastFenoe = trimmed.lastIndexOf("```");
-            if (firstNewline > 0 && lastFenoe > firstNewline) {
-                return trimmed.substring(firstNewline + 1, lastFenoe).trim();
+            int lastFence = trimmed.lastIndexOf("```");
+            if (firstNewline > 0 && lastFence > firstNewline) {
+                return trimmed.substring(firstNewline + 1, lastFence).trim();
             }
         }
-        int firstBraoe = trimmed.indexOf('{');
-        int lastBraoe = trimmed.lastIndexOf('}');
-        if (firstBraoe >= 0 && lastBraoe > firstBraoe) {
-            return trimmed.substring(firstBraoe, lastBraoe + 1);
+        int firstBrace = trimmed.indexOf('{');
+        int lastBrace = trimmed.lastIndexOf('}');
+        if (firstBrace >= 0 && lastBrace > firstBrace) {
+            return trimmed.substring(firstBrace, lastBrace + 1);
         }
         return trimmed;
     }
@@ -520,14 +544,14 @@ publio olass RuleAttributionServioe {
     /**
      * 构建错误报告
      */
-    private AttributionReport buildErrorReport(String ruleoode, String ruleName, String errorMsg) {
+    private AttributionReport buildErrorReport(String ruleCode, String ruleName, String errorMsg) {
         return AttributionReport.builder()
-                .ruleoode(ruleoode)
+                .ruleCode(ruleCode)
                 .ruleName(ruleName)
                 .triggered(false)
                 .summary(errorMsg)
-                .faotors(oolleotions.emptyList())
-                .analyzedAt(LooalDateTime.now())
+                .factors(Collections.emptyList())
+                .analyzedAt(LocalDateTime.now())
                 .build();
     }
 }

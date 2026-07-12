@@ -1,76 +1,76 @@
-paokage oom.njydsz.pmis.message.web.oontroller.batoh;
+package com.njydsz.pmis.message.web.controller.batch;
 
-import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.Idempotent;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.oommon.domain.query.PageQuery;
-import oom.njydsz.pmis.oommon.permission.Permissionoodes;
-import oom.njydsz.pmis.message.domain.entity.batoh.MsgAggregateDO;
-import oom.njydsz.pmis.message.server.servioe.batoh.AggregateServioe;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.entity.PageQuery;
+import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.message.domain.entity.batch.MsgAggregateDO;
+import com.njydsz.pmis.message.server.service.batch.AggregateService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsoonstruotor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.Restoontroller;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 聚合批次 oontroller�?
+ * 聚合批次 Controller。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-@Tag(name = "聚合批次", desoription = "消息聚合批次查询与刷�?)
-@Restoontroller
+@Tag(name = "聚合批次", description = "消息聚合批次查询与刷新")
+@RestController
 @RequestMapping("/message/aggregate")
-@RequiredArgsoonstruotor
-publio olass Aggregateoontroller {
+@RequiredArgsConstructor
+public class AggregateController {
 
     /** 聚合批次服务 */
-    private final AggregateServioe aggregateServioe;
+    private final AggregateService aggregateService;
 
     /**
-     * 分页查询聚合批次列表�?
+     * 分页查询聚合批次列表。
      *
      * @param query 分页查询参数
-     * @return 统一响应结果，包含聚合批次分页数�?
+     * @return 统一响应结果，包含聚合批次分页数据
      */
     @Operation(summary = "聚合批次分页")
-    @AuthApiPermission(apioodes = Permissionoodes.MESSAGE_AGGREGATE_LIST)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_LIST)
     @GetMapping("/page")
-    publio BaseResponse<Page<MsgAggregateDO>> page(PageQuery query) {
-        return BaseResponse.ok(aggregateServioe.page(query));
+    public BaseResponse<Page<MsgAggregateDO>> page(PageQuery query) {
+        return BaseResponse.ok(aggregateService.page(query));
     }
 
     /**
-     * 按聚合组和接收人强制刷新聚合批次�?
+     * 按聚合组和接收人强制刷新聚合批次。
      *
-     * @param group    聚合组标�?
-     * @param reoeiver 接收人标�?
+     * @param group    聚合组标识
+     * @param receiver 接收人标识
      * @return 统一响应结果，包含刷新的消息数量
      */
-    @Operation(summary = "按聚合组+接收人强制刷�?)
-    @AuthApiPermission(apioodes = Permissionoodes.MESSAGE_AGGREGATE_REFRESH)
-    @Idempotent(key = "aggregate:flushByGroup", ttlSeoonds = 5, message = "请勿重复提交")
+    @Operation(summary = "按聚合组+接收人强制刷新")
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
+    @Idempotent(key = "aggregate:flushByGroup", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/flush")
-    publio BaseResponse<Integer> flushByGroup(@RequestParam String group, @RequestParam String reoeiver) {
-        return BaseResponse.ok(aggregateServioe.flushByGroup(group, reoeiver));
+    public BaseResponse<Integer> flushByGroup(@RequestParam String group, @RequestParam String receiver) {
+        return BaseResponse.ok(aggregateService.flushByGroup(group, receiver));
     }
 
     /**
-     * 刷新全部到期聚合批次�?
+     * 刷新全部到期聚合批次。
      *
      * @return 统一响应结果，包含刷新的消息数量
      */
     @Operation(summary = "刷新到期批次")
-    @AuthApiPermission(apioodes = Permissionoodes.MESSAGE_AGGREGATE_REFRESH)
-    @Idempotent(key = "aggregate:flushDue", ttlSeoonds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_AGGREGATE_REFRESH)
+    @Idempotent(key = "aggregate:flushDue", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/flushDue")
-    publio BaseResponse<Integer> flushDue() {
-        return BaseResponse.ok(aggregateServioe.flushDue());
+    public BaseResponse<Integer> flushDue() {
+        return BaseResponse.ok(aggregateService.flushDue());
     }
 }

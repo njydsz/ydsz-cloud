@@ -1,185 +1,193 @@
-paokage oom.njydsz.pmis.projeot.server.metrios;
+package com.njydsz.pmis.project.server.metrics;
 
-import io.miorometer.oore.instrument.Gauge;
-import io.miorometer.oore.instrument.MeterRegistry;
-import jakarta.annotation.Postoonstruot;
-import lombok.RequiredArgsoonstruotor;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbo.oore.JdboTemplate;
-import org.springframework.soheduling.annotation.Soheduled;
-import org.springframework.stereotype.oomponent;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
-import java.util.oonourrent.atomio.AtomioLong;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * PMIS 核心业务指标采集（H5.2/H5.3 修复�? *
+ * PMIS 核心业务指标采集（H5.2/H5.3 修复）
+ *
  * <p>配套告警规则文件：deploy/monitoring/prometheus/rules/pmis-alerts.yml
- * 该文件已包含 pmis_evm_red_projeots_oount / pmis_benoh_total_oost /
- * pmis_billable_utilization_avg 三个指标的告警规则（P1/P2 级别）�? *
- * <p>方案：通过 @Soheduled 定时任务每分钟从 DB 拉取关键 KPI 注册�?Gauge�? * 不侵入业务代码，DB 查询走只读副本或主库均可（QPS 1/min 可忽略）�? *
- * <p>覆盖指标�? * <ul>
- *   <li>pmis_evm_red_projeots_oount �?EVM 红色项目数（>3 告警�?/li>
- *   <li>pmis_benoh_total_oost �?Benoh 闲置成本合计�?50�?告警�?/li>
- *   <li>pmis_billable_utilization_avg �?可计费利用率均值（<60% 告警�?/li>
+ * 该文件已包含 pmis_evm_red_projects_count / pmis_bench_total_cost /
+ * pmis_billable_utilization_avg 三个指标的告警规则（P1/P2 级别）。
+ *
+ * <p>方案：通过 @Scheduled 定时任务每分钟从 DB 拉取关键 KPI 注册为 Gauge。
+ * 不侵入业务代码，DB 查询走只读副本或主库均可（QPS 1/min 可忽略）。
+ *
+ * <p>覆盖指标：
+ * <ul>
+ *   <li>pmis_evm_red_projects_count — EVM 红色项目数（>3 告警）</li>
+ *   <li>pmis_bench_total_cost — Bench 闲置成本合计（>50万 告警）</li>
+ *   <li>pmis_billable_utilization_avg — 可计费利用率均值（<60% 告警）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.4.0
+ * @since 1.4.0
  */
 @Slf4j
-@oomponent
-@RequiredArgsoonstruotor
-publio olass PmisBusinessMetriosJob {
+@Component
+@RequiredArgsConstructor
+public class PmisBusinessMetricsJob {
 
     private final MeterRegistry meterRegistry;
-    private final JdboTemplate jdboTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
-    /** EVM 红色项目数（SPI < 0.9 �?oPI < 0.9 视为红色�?*/
-    private final AtomioLong evmRedProjeotsoount = new AtomioLong(0);
-    /** Benoh 闲置成本合计（元�?*/
-    private final AtomioLong benohTotaloost = new AtomioLong(0);
+    /** EVM 红色项目数（SPI < 0.9 或 CPI < 0.9 视为红色） */
+    private final AtomicLong evmRedProjectsCount = new AtomicLong(0);
+    /** Bench 闲置成本合计（元） */
+    private final AtomicLong benchTotalCost = new AtomicLong(0);
     /** 可计费利用率均值（百分比） */
-    private final AtomioLong billableUtilizationAvg = new AtomioLong(0);
-    /** 当月新增合同金额（元�?*/
-    private final AtomioLong oontraotMonthlyAmount = new AtomioLong(0);
+    private final AtomicLong billableUtilizationAvg = new AtomicLong(0);
+    /** 当月新增合同金额（元） */
+    private final AtomicLong contractMonthlyAmount = new AtomicLong(0);
     /** 当月开票金额（元） */
-    private final AtomioLong invoioeMonthlyAmount = new AtomioLong(0);
-    /** 当月回款金额（元�?*/
-    private final AtomioLong paymentMonthlyAmount = new AtomioLong(0);
-    /** 回款率（百分比，回款/合同总额�?*/
-    private final AtomioLong oolleotionRate = new AtomioLong(0);
+    private final AtomicLong invoiceMonthlyAmount = new AtomicLong(0);
+    /** 当月回款金额（元） */
+    private final AtomicLong paymentMonthlyAmount = new AtomicLong(0);
+    /** 回款率（百分比，回款/合同总额） */
+    private final AtomicLong collectionRate = new AtomicLong(0);
     /** 待审批工单数 */
-    private final AtomioLong pendingApprovaloount = new AtomioLong(0);
+    private final AtomicLong pendingApprovalCount = new AtomicLong(0);
 
-    @Postoonstruot
-    publio void init() {
-        Gauge.builder("pmis_evm_red_projeots_oount", evmRedProjeotsoount, AtomioLong::doubleValue)
-                .desoription("EVM 红色项目数（SPI/oPI < 0.9�?)
+    @PostConstruct
+    public void init() {
+        Gauge.builder("pmis_evm_red_projects_count", evmRedProjectsCount, AtomicLong::doubleValue)
+                .description("EVM 红色项目数（SPI/CPI < 0.9）")
                 .register(meterRegistry);
-        Gauge.builder("pmis_benoh_total_oost", benohTotaloost, AtomioLong::doubleValue)
-                .desoription("Benoh 闲置成本合计（元�?)
+        Gauge.builder("pmis_bench_total_cost", benchTotalCost, AtomicLong::doubleValue)
+                .description("Bench 闲置成本合计（元）")
                 .register(meterRegistry);
-        Gauge.builder("pmis_billable_utilization_avg", billableUtilizationAvg, AtomioLong::doubleValue)
-                .desoription("可计费利用率均值（百分比）")
+        Gauge.builder("pmis_billable_utilization_avg", billableUtilizationAvg, AtomicLong::doubleValue)
+                .description("可计费利用率均值（百分比）")
                 .register(meterRegistry);
-        Gauge.builder("pmis_oontraot_monthly_amount", oontraotMonthlyAmount, AtomioLong::doubleValue)
-                .desoription("当月新增合同金额（元�?)
+        Gauge.builder("pmis_contract_monthly_amount", contractMonthlyAmount, AtomicLong::doubleValue)
+                .description("当月新增合同金额（元）")
                 .register(meterRegistry);
-        Gauge.builder("pmis_invoioe_monthly_amount", invoioeMonthlyAmount, AtomioLong::doubleValue)
-                .desoription("当月开票金额（元）")
+        Gauge.builder("pmis_invoice_monthly_amount", invoiceMonthlyAmount, AtomicLong::doubleValue)
+                .description("当月开票金额（元）")
                 .register(meterRegistry);
-        Gauge.builder("pmis_payment_monthly_amount", paymentMonthlyAmount, AtomioLong::doubleValue)
-                .desoription("当月回款金额（元�?)
+        Gauge.builder("pmis_payment_monthly_amount", paymentMonthlyAmount, AtomicLong::doubleValue)
+                .description("当月回款金额（元）")
                 .register(meterRegistry);
-        Gauge.builder("pmis_oolleotion_rate", oolleotionRate, AtomioLong::doubleValue)
-                .desoription("回款率（百分比）")
+        Gauge.builder("pmis_collection_rate", collectionRate, AtomicLong::doubleValue)
+                .description("回款率（百分比）")
                 .register(meterRegistry);
-        Gauge.builder("pmis_pending_approval_oount", pendingApprovaloount, AtomioLong::doubleValue)
-                .desoription("待审批工单数")
+        Gauge.builder("pmis_pending_approval_count", pendingApprovalCount, AtomicLong::doubleValue)
+                .description("待审批工单数")
                 .register(meterRegistry);
-        log.info("[PmisBusinessMetrios] 已注�?8 个业务指�?Gauge");
+        log.info("[PmisBusinessMetrics] 已注册 8 个业务指标 Gauge");
     }
 
     /**
-     * 每分钟刷新一次业务指�?     */
-    @Soheduled(fixedDelay = 60_000L, initialDelay = 30_000L)
-    publio void refresh() {
+     * 每分钟刷新一次业务指标
+     */
+    @Scheduled(fixedDelay = 60_000L, initialDelay = 30_000L)
+    public void refresh() {
         try {
-            refreshEvmRedoount();
-            refreshBenohoost();
+            refreshEvmRedCount();
+            refreshBenchCost();
             refreshUtilization();
-            refreshoontraotAmount();
-            refreshInvoioeAmount();
+            refreshContractAmount();
+            refreshInvoiceAmount();
             refreshPaymentAmount();
-            refreshoolleotionRate();
+            refreshCollectionRate();
             refreshPendingApproval();
-        } oatoh (Exoeption e) {
-            log.warn("[PmisBusinessMetrios] 刷新指标失败: {}", e.getMessage());
+        } catch (Exception e) {
+            log.warn("[PmisBusinessMetrics] 刷新指标失败: {}", e.getMessage());
         }
     }
 
     /**
-     * EVM 红色项目数：统计最近一�?EVM 度量�?SPI < 0.9 �?oPI < 0.9 的项目数
+     * EVM 红色项目数：统计最近一次 EVM 度量中 SPI < 0.9 或 CPI < 0.9 的项目数
      */
-    private void refreshEvmRedoount() {
+    private void refreshEvmRedCount() {
         try {
-            Long oount = jdboTemplate.queryForObjeot(
-                    "SELEoT oOUNT(DISTINoT initiation_id) FROM pmis_evm_measure " +
-                            "WHERE deleted = 0 AND (spi < 0.9 OR opi < 0.9) " +
-                            "AND measure_date = (SELEoT MAX(measure_date) FROM pmis_evm_measure WHERE deleted = 0)",
-                    Long.olass);
-            evmRedProjeotsoount.set(oount != null ? oount : 0);
-        } oatoh (Exoeption e) {
-            log.debug("[PmisBusinessMetrios] EVM 红色项目数查询失�? {}", e.getMessage());
+            Long count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(DISTINCT initiation_id) FROM pmis_evm_measure " +
+                            "WHERE deleted = 0 AND (spi < 0.9 OR cpi < 0.9) " +
+                            "AND measure_date = (SELECT MAX(measure_date) FROM pmis_evm_measure WHERE deleted = 0)",
+                    Long.class);
+            evmRedProjectsCount.set(count != null ? count : 0);
+        } catch (Exception e) {
+            log.debug("[PmisBusinessMetrics] EVM 红色项目数查询失败: {}", e.getMessage());
         }
     }
 
     /**
-     * Benoh 闲置成本合计：当前在 Benoh 状态的员工月度成本总和
+     * Bench 闲置成本合计：当前在 Bench 状态的员工月度成本总和
      */
-    private void refreshBenohoost() {
+    private void refreshBenchCost() {
         try {
-            Long oost = jdboTemplate.queryForObjeot(
-                    "SELEoT oOALESoE(SUM(monthly_oost), 0) FROM pmis_resouroe_benoh " +
-                            "WHERE deleted = 0 AND status = 'BENoH' AND tenant_id = 1",
-                    Long.olass);
-            benohTotaloost.set(oost != null ? oost : 0);
-        } oatoh (Exoeption e) {
-            log.debug("[PmisBusinessMetrios] Benoh 闲置成本查询失败: {}", e.getMessage());
+            Long cost = jdbcTemplate.queryForObject(
+                    "SELECT COALESCE(SUM(monthly_cost), 0) FROM pmis_resource_bench " +
+                            "WHERE deleted = 0 AND status = 'BENCH' AND tenant_id = 1",
+                    Long.class);
+            benchTotalCost.set(cost != null ? cost : 0);
+        } catch (Exception e) {
+            log.debug("[PmisBusinessMetrics] Bench 闲置成本查询失败: {}", e.getMessage());
         }
     }
 
     /**
-     * 可计费利用率均值：最�?30 天可计费工时 / 总工�?     */
+     * 可计费利用率均值：最近 30 天可计费工时 / 总工时
+     */
     private void refreshUtilization() {
         try {
-            // billable_utilization 表若有快照表则查快照，否则实时聚�?time_entry
-            Long avg = jdboTemplate.queryForObjeot(
-                    "SELEoT oOALESoE(AVG(utilization_rate), 0)::BIGINT FROM pmis_billable_utilization_snapshot " +
-                            "WHERE deleted = 0 AND snapshot_date >= oURRENT_DATE - INTERVAL '30 days'",
-                    Long.olass);
-            // 兜底：snapshot 表不存在或为空时�?time_entry
+            // billable_utilization 表若有快照表则查快照，否则实时聚合 time_entry
+            Long avg = jdbcTemplate.queryForObject(
+                    "SELECT COALESCE(AVG(utilization_rate), 0)::BIGINT FROM pmis_billable_utilization_snapshot " +
+                            "WHERE deleted = 0 AND snapshot_date >= CURRENT_DATE - INTERVAL '30 days'",
+                    Long.class);
+            // 兜底：snapshot 表不存在或为空时查 time_entry
             if (avg == null || avg == 0) {
-                avg = jdboTemplate.queryForObjeot(
-                        "SELEoT oASE WHEN SUM(total_hours) = 0 THEN 0 " +
-                                "ELSE (SUM(billable_hours)::NUMERIo / SUM(total_hours) * 100)::BIGINT END " +
+                avg = jdbcTemplate.queryForObject(
+                        "SELECT CASE WHEN SUM(total_hours) = 0 THEN 0 " +
+                                "ELSE (SUM(billable_hours)::NUMERIC / SUM(total_hours) * 100)::BIGINT END " +
                                 "FROM pmis_billable_utilization_snapshot " +
-                                "WHERE deleted = 0 AND snapshot_date >= oURRENT_DATE - INTERVAL '30 days'",
-                        Long.olass);
+                                "WHERE deleted = 0 AND snapshot_date >= CURRENT_DATE - INTERVAL '30 days'",
+                        Long.class);
             }
             billableUtilizationAvg.set(avg != null ? avg : 0);
-        } oatoh (Exoeption e) {
-            log.debug("[PmisBusinessMetrios] 可计费利用率查询失败: {}", e.getMessage());
+        } catch (Exception e) {
+            log.debug("[PmisBusinessMetrics] 可计费利用率查询失败: {}", e.getMessage());
         }
     }
 
     /**
      * 当月新增合同金额
      */
-    private void refreshoontraotAmount() {
+    private void refreshContractAmount() {
         try {
-            Long amount = jdboTemplate.queryForObjeot(
-                    "SELEoT oOALESoE(SUM(oontraot_amount), 0)::BIGINT FROM pmis_oontraot " +
-                            "WHERE deleted = 0 AND sign_date >= date_truno('month', oURRENT_DATE)",
-                    Long.olass);
-            oontraotMonthlyAmount.set(amount != null ? amount : 0);
-        } oatoh (Exoeption e) {
-            log.debug("[PmisBusinessMetrios] 当月合同金额查询失败: {}", e.getMessage());
+            Long amount = jdbcTemplate.queryForObject(
+                    "SELECT COALESCE(SUM(contract_amount), 0)::BIGINT FROM pmis_contract " +
+                            "WHERE deleted = 0 AND sign_date >= date_trunc('month', CURRENT_DATE)",
+                    Long.class);
+            contractMonthlyAmount.set(amount != null ? amount : 0);
+        } catch (Exception e) {
+            log.debug("[PmisBusinessMetrics] 当月合同金额查询失败: {}", e.getMessage());
         }
     }
 
     /**
-     * 当月开票金�?     */
-    private void refreshInvoioeAmount() {
+     * 当月开票金额
+     */
+    private void refreshInvoiceAmount() {
         try {
-            Long amount = jdboTemplate.queryForObjeot(
-                    "SELEoT oOALESoE(SUM(amount), 0)::BIGINT FROM pmis_invoioe " +
-                            "WHERE deleted = 0 AND invoioe_date >= date_truno('month', oURRENT_DATE) " +
-                            "AND invoioe_type = 'NORMAL' AND status IN ('APPROVED', 'ISSUED')",
-                    Long.olass);
-            invoioeMonthlyAmount.set(amount != null ? amount : 0);
-        } oatoh (Exoeption e) {
-            log.debug("[PmisBusinessMetrios] 当月开票金额查询失�? {}", e.getMessage());
+            Long amount = jdbcTemplate.queryForObject(
+                    "SELECT COALESCE(SUM(amount), 0)::BIGINT FROM pmis_invoice " +
+                            "WHERE deleted = 0 AND invoice_date >= date_trunc('month', CURRENT_DATE) " +
+                            "AND invoice_type = 'NORMAL' AND status IN ('APPROVED', 'ISSUED')",
+                    Long.class);
+            invoiceMonthlyAmount.set(amount != null ? amount : 0);
+        } catch (Exception e) {
+            log.debug("[PmisBusinessMetrics] 当月开票金额查询失败: {}", e.getMessage());
         }
     }
 
@@ -188,33 +196,33 @@ publio olass PmisBusinessMetriosJob {
      */
     private void refreshPaymentAmount() {
         try {
-            Long amount = jdboTemplate.queryForObjeot(
-                    "SELEoT oOALESoE(SUM(amount), 0)::BIGINT FROM pmis_payment " +
-                            "WHERE deleted = 0 AND payment_date >= date_truno('month', oURRENT_DATE) " +
-                            "AND status = 'REoEIVED'",
-                    Long.olass);
+            Long amount = jdbcTemplate.queryForObject(
+                    "SELECT COALESCE(SUM(amount), 0)::BIGINT FROM pmis_payment " +
+                            "WHERE deleted = 0 AND payment_date >= date_trunc('month', CURRENT_DATE) " +
+                            "AND status = 'RECEIVED'",
+                    Long.class);
             paymentMonthlyAmount.set(amount != null ? amount : 0);
-        } oatoh (Exoeption e) {
-            log.debug("[PmisBusinessMetrios] 当月回款金额查询失败: {}", e.getMessage());
+        } catch (Exception e) {
+            log.debug("[PmisBusinessMetrics] 当月回款金额查询失败: {}", e.getMessage());
         }
     }
 
     /**
-     * 回款�?= 已回款总额 / 合同总额 * 100
+     * 回款率 = 已回款总额 / 合同总额 * 100
      */
-    private void refreshoolleotionRate() {
+    private void refreshCollectionRate() {
         try {
-            Long rate = jdboTemplate.queryForObjeot(
-                    "SELEoT oASE WHEN SUM(oontraot_amount) = 0 THEN 0 " +
-                            "ELSE (SUM(p.paid_amount)::NUMERIo / SUM(o.oontraot_amount) * 100)::BIGINT END " +
-                            "FROM pmis_oontraot o LEFT JOIN LATERAL " +
-                            "(SELEoT oOALESoE(SUM(amount), 0) AS paid_amount FROM pmis_payment " +
-                            "WHERE deleted = 0 AND oontraot_id = o.id AND status = 'REoEIVED') p ON true " +
-                            "WHERE o.deleted = 0 AND o.status IN ('AoTIVE', 'oOMPLETED')",
-                    Long.olass);
-            oolleotionRate.set(rate != null ? rate : 0);
-        } oatoh (Exoeption e) {
-            log.debug("[PmisBusinessMetrios] 回款率查询失�? {}", e.getMessage());
+            Long rate = jdbcTemplate.queryForObject(
+                    "SELECT CASE WHEN SUM(contract_amount) = 0 THEN 0 " +
+                            "ELSE (SUM(p.paid_amount)::NUMERIC / SUM(c.contract_amount) * 100)::BIGINT END " +
+                            "FROM pmis_contract c LEFT JOIN LATERAL " +
+                            "(SELECT COALESCE(SUM(amount), 0) AS paid_amount FROM pmis_payment " +
+                            "WHERE deleted = 0 AND contract_id = c.id AND status = 'RECEIVED') p ON true " +
+                            "WHERE c.deleted = 0 AND c.status IN ('ACTIVE', 'COMPLETED')",
+                    Long.class);
+            collectionRate.set(rate != null ? rate : 0);
+        } catch (Exception e) {
+            log.debug("[PmisBusinessMetrics] 回款率查询失败: {}", e.getMessage());
         }
     }
 
@@ -223,13 +231,13 @@ publio olass PmisBusinessMetriosJob {
      */
     private void refreshPendingApproval() {
         try {
-            Long oount = jdboTemplate.queryForObjeot(
-                    "SELEoT oOUNT(*) FROM pmis_flow_instanoe_task " +
+            Long count = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM pmis_flow_instance_task " +
                             "WHERE deleted = 0 AND status = 'PENDING'",
-                    Long.olass);
-            pendingApprovaloount.set(oount != null ? oount : 0);
-        } oatoh (Exoeption e) {
-            log.debug("[PmisBusinessMetrios] 待审批工单数查询失败: {}", e.getMessage());
+                    Long.class);
+            pendingApprovalCount.set(count != null ? count : 0);
+        } catch (Exception e) {
+            log.debug("[PmisBusinessMetrics] 待审批工单数查询失败: {}", e.getMessage());
         }
     }
 }

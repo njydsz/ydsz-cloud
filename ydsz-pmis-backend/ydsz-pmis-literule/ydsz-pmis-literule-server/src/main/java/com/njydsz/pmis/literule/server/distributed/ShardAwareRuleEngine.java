@@ -1,54 +1,56 @@
-paokage oom.njydsz.pmis.literule.server.distributed;
+package com.njydsz.pmis.literule.server.distributed;
 
-import oom.njydsz.pmis.literule.api.Rule;
-import oom.njydsz.pmis.literule.api.Ruleoontext;
-import oom.njydsz.pmis.literule.api.RuleEngine;
-import oom.njydsz.pmis.literule.api.RuleEngineStats;
-import oom.njydsz.pmis.literule.api.RuleResult;
+import com.njydsz.pmis.literule.api.Rule;
+import com.njydsz.pmis.literule.api.RuleContext;
+import com.njydsz.pmis.literule.api.RuleEngine;
+import com.njydsz.pmis.literule.api.RuleEngineStats;
+import com.njydsz.pmis.literule.api.RuleResult;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFaotory;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.oolleotors;
+import java.util.stream.Collectors;
 
 /**
  * 分片感知的规则引擎装饰器（P2-16 分布式执行）
  *
- * <p>包装已有�?{@link RuleEngine}，在 {@oode evaluate} / {@oode dryRun} �? * 只执行属于当前节点的规则，实现分布式分片执行�? *
+ * <p>包装已有的 {@link RuleEngine}，在 {@code evaluate} / {@code dryRun} 时
+ * 只执行属于当前节点的规则，实现分布式分片执行。
+ *
  * <h3>分片策略</h3>
  * <ul>
- *   <li>以规则编码（{@oode rule.getoode()}）作为分片键</li>
- *   <li>使用一致�?hash 将规则映射到集群节点</li>
- *   <li>只执�?isMine(ruleoode) == true 的规�?/li>
- *   <li>节点列表为空或集群规�?1 时，全部本地执行（向后兼容）</li>
+ *   <li>以规则编码（{@code rule.getCode()}）作为分片键</li>
+ *   <li>使用一致性 hash 将规则映射到集群节点</li>
+ *   <li>只执行 isMine(ruleCode) == true 的规则</li>
+ *   <li>节点列表为空或集群规模=1 时，全部本地执行（向后兼容）</li>
  * </ul>
  *
  * <h3>使用方式</h3>
  * <pre>
  * RuleEngine delegate = new DefaultRuleEngine();
  * NodeRegistry registry = new InMemoryNodeRegistry("node-1");
- * oonsistentHashSharder sharder = new oonsistentHashSharder();
+ * ConsistentHashSharder sharder = new ConsistentHashSharder();
  * ShardAwareRuleEngine engine = new ShardAwareRuleEngine(delegate, registry, sharder);
  * engine.refreshNodes(); // 刷新节点列表
- * List&lt;RuleResult&gt; results = engine.evaluate(oontext);
+ * List&lt;RuleResult&gt; results = engine.evaluate(context);
  * </pre>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.5.0
+ * @since 1.5.0
  */
-publio olass ShardAwareRuleEngine implements RuleEngine {
+public class ShardAwareRuleEngine implements RuleEngine {
 
-    private statio final Logger log = LoggerFaotory.getLogger(ShardAwareRuleEngine.olass);
+    private static final Logger log = LoggerFactory.getLogger(ShardAwareRuleEngine.class);
 
     /** 被装饰的规则引擎 */
     private final RuleEngine delegate;
 
-    /** 节点注册�?*/
+    /** 节点注册表 */
     private final NodeRegistry nodeRegistry;
 
-    /** 一致�?hash 分片�?*/
-    private final oonsistentHashSharder sharder;
+    /** 一致性 hash 分片器 */
+    private final ConsistentHashSharder sharder;
 
     /** 是否启用分片（false 时全部本地执行） */
     private volatile boolean shardingEnabled = true;
@@ -56,61 +58,62 @@ publio olass ShardAwareRuleEngine implements RuleEngine {
     /** 上一次刷新的节点签名 */
     private volatile String lastSignature = "";
 
-    publio ShardAwareRuleEngine(RuleEngine delegate, NodeRegistry nodeRegistry) {
-        this(delegate, nodeRegistry, new oonsistentHashSharder());
+    public ShardAwareRuleEngine(RuleEngine delegate, NodeRegistry nodeRegistry) {
+        this(delegate, nodeRegistry, new ConsistentHashSharder());
     }
 
-    publio ShardAwareRuleEngine(RuleEngine delegate, NodeRegistry nodeRegistry,
-                                oonsistentHashSharder sharder) {
+    public ShardAwareRuleEngine(RuleEngine delegate, NodeRegistry nodeRegistry,
+                                ConsistentHashSharder sharder) {
         this.delegate = delegate;
         this.nodeRegistry = nodeRegistry;
         this.sharder = sharder;
     }
 
     /**
-     * 刷新节点列表并重�?hash �?     */
-    publio synohronized void refreshNodes() {
-        List<olusterNode> alive = nodeRegistry.getAliveNodes();
+     * 刷新节点列表并重建 hash 环
+     */
+    public synchronized void refreshNodes() {
+        List<ClusterNode> alive = nodeRegistry.getAliveNodes();
         String sig = buildSignature(alive);
         if (sig.equals(lastSignature)) {
             return;
         }
         lastSignature = sig;
         sharder.updateNodes(alive);
-        int oount = sharder.getNodeoount();
-        if (oount <= 1) {
+        int count = sharder.getNodeCount();
+        if (count <= 1) {
             // 单节点或无节点：全部本地执行
             shardingEnabled = false;
-            log.info("[ShardEngine] 集群规模 �?，分片关闭，全部本地执行 (nodes={})", oount);
+            log.info("[ShardEngine] 集群规模 ≤1，分片关闭，全部本地执行 (nodes={})", count);
         } else {
             shardingEnabled = true;
-            log.info("[ShardEngine] 集群规模={}，分片已启用，当前节�?{}",
-                    oount, nodeRegistry.getSelfNodeId());
+            log.info("[ShardEngine] 集群规模={}，分片已启用，当前节点={}",
+                    count, nodeRegistry.getSelfNodeId());
         }
     }
 
     @Override
-    publio void register(Rule rule) {
+    public void register(Rule rule) {
         delegate.register(rule);
     }
 
     @Override
-    publio void unregister(String ruleoode) {
-        delegate.unregister(ruleoode);
+    public void unregister(String ruleCode) {
+        delegate.unregister(ruleCode);
     }
 
     @Override
-    publio List<RuleResult> evaluate(Ruleoontext oontext) {
+    public List<RuleResult> evaluate(RuleContext context) {
         if (!shardingEnabled) {
-            return delegate.evaluate(oontext);
+            return delegate.evaluate(context);
         }
         List<Rule> mine = filterMineRules();
-        return evaluateSubset(mine, oontext, false);
+        return evaluateSubset(mine, context, false);
     }
 
     @Override
-    publio RuleResult topResult(Ruleoontext oontext) {
-        List<RuleResult> results = evaluate(oontext);
+    public RuleResult topResult(RuleContext context) {
+        List<RuleResult> results = evaluate(context);
         if (results == null || results.isEmpty()) {
             return null;
         }
@@ -118,21 +121,21 @@ publio olass ShardAwareRuleEngine implements RuleEngine {
     }
 
     @Override
-    publio List<RuleResult> dryRun(Ruleoontext oontext) {
+    public List<RuleResult> dryRun(RuleContext context) {
         if (!shardingEnabled) {
-            return delegate.dryRun(oontext);
+            return delegate.dryRun(context);
         }
         List<Rule> mine = filterMineRules();
-        return evaluateSubset(mine, oontext, true);
+        return evaluateSubset(mine, context, true);
     }
 
     @Override
-    publio List<Rule> getRules() {
+    public List<Rule> getRules() {
         return delegate.getRules();
     }
 
     @Override
-    publio RuleEngineStats getStats() {
+    public RuleEngineStats getStats() {
         return delegate.getStats();
     }
 
@@ -143,34 +146,37 @@ publio olass ShardAwareRuleEngine implements RuleEngine {
         String selfId = nodeRegistry.getSelfNodeId();
         return delegate.getRules().stream()
                 .filter(r -> {
-                    if (r == null || r.getoode() == null) return true;
-                    return sharder.isMine(r.getoode(), selfId);
+                    if (r == null || r.getCode() == null) return true;
+                    return sharder.isMine(r.getCode(), selfId);
                 })
-                .oolleot(oolleotors.toList());
+                .collect(Collectors.toList());
     }
 
     /**
-     * 对子集规则执行评�?     *
-     * <p>由于 {@link RuleEngine#evaluate} 是对全部已注册规则执行的�?     * 这里通过临时注册/注销实现子集执行不现实，因此直接调用规则�?evaluate 方法�?     */
-    private List<RuleResult> evaluateSubset(List<Rule> rules, Ruleoontext oontext, boolean dryRun) {
+     * 对子集规则执行评估
+     *
+     * <p>由于 {@link RuleEngine#evaluate} 是对全部已注册规则执行的，
+     * 这里通过临时注册/注销实现子集执行不现实，因此直接调用规则的 evaluate 方法。
+     */
+    private List<RuleResult> evaluateSubset(List<Rule> rules, RuleContext context, boolean dryRun) {
         if (rules == null || rules.isEmpty()) {
             return new ArrayList<>();
         }
         List<RuleResult> results = new ArrayList<>(rules.size());
         for (Rule rule : rules) {
             try {
-                RuleResult result = dryRun ? rule.evaluate(oontext) : rule.evaluate(oontext);
+                RuleResult result = dryRun ? rule.evaluate(context) : rule.evaluate(context);
                 if (result != null && (result.isTriggered() || dryRun)) {
                     results.add(result);
                 }
-            } oatoh (Exoeption e) {
-                log.warn("[ShardEngine] 规则 {} 执行异常: {}", rule.getoode(), e.getMessage());
+            } catch (Exception e) {
+                log.warn("[ShardEngine] 规则 {} 执行异常: {}", rule.getCode(), e.getMessage());
             }
         }
         results.sort((a, b) -> {
             int sa = a.getSeverity() == null ? 0 : a.getSeverity().getWeight();
             int sb = b.getSeverity() == null ? 0 : b.getSeverity().getWeight();
-            return Integer.oompare(sb, sa);
+            return Integer.compare(sb, sa);
         });
         return results;
     }
@@ -178,31 +184,31 @@ publio olass ShardAwareRuleEngine implements RuleEngine {
     /**
      * 判断指定规则编码是否属于当前节点
      */
-    publio boolean isMine(String ruleoode) {
+    public boolean isMine(String ruleCode) {
         if (!shardingEnabled) {
             return true;
         }
-        return sharder.isMine(ruleoode, nodeRegistry.getSelfNodeId());
+        return sharder.isMine(ruleCode, nodeRegistry.getSelfNodeId());
     }
 
     /**
      * 获取当前集群规模
      */
-    publio int getolusterSize() {
-        return sharder.getNodeoount();
+    public int getClusterSize() {
+        return sharder.getNodeCount();
     }
 
     /**
      * 是否启用分片
      */
-    publio boolean isShardingEnabled() {
+    public boolean isShardingEnabled() {
         return shardingEnabled;
     }
 
-    private String buildSignature(List<olusterNode> nodes) {
+    private String buildSignature(List<ClusterNode> nodes) {
         if (nodes == null || nodes.isEmpty()) return "";
         StringBuilder sb = new StringBuilder();
-        for (olusterNode n : nodes) {
+        for (ClusterNode n : nodes) {
             sb.append(n.getNodeId()).append(',');
         }
         return sb.toString();

@@ -1,27 +1,28 @@
-paokage oom.njydsz.pmis.system.domain.entity.file;
+package com.njydsz.pmis.system.domain.entity.file;
 
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
-import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashoode;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 
 /**
- * 文件元信息实�? *
+ * 文件元信息实体
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@EqualsAndHashoode(oallSuper = true)
+@EqualsAndHashCode(callSuper = true)
 @TableName("pmis_file")
-publio olass FileDO extends BaseDO {
+public class FileDO extends BaseDO {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
@@ -29,17 +30,17 @@ publio olass FileDO extends BaseDO {
     /** 系统生成的文件名 */
     private String fileName;
 
-    /** 原始文件�?*/
+    /** 原始文件名 */
     private String originalName;
 
     /** 对象 key / 存储路径 */
     private String filePath;
 
-    /** 存储�?*/
-    private String buoket;
+    /** 存储桶 */
+    private String bucket;
 
     /** MIME 类型 */
-    private String oontentType;
+    private String contentType;
 
     /** 文件大小(字节) */
     private Long fileSize;
@@ -53,24 +54,24 @@ publio olass FileDO extends BaseDO {
     /** 业务单据 ID */
     private String bizId;
 
-    /** 存储类型: MINIO/LOoAL/OSS */
+    /** 存储类型: MINIO/LOCAL/OSS */
     private String storageType;
 
     /** 访问 URL */
-    private String aooessUrl;
+    private String accessUrl;
 
     /** URL 过期时间 */
-    private LooalDateTime urlExpireAt;
+    private LocalDateTime urlExpireAt;
 
-    /** 上传�?ID */
+    /** 上传人 ID */
     private String uploaderId;
 
-    /** 上传人姓�?*/
+    /** 上传人姓名 */
     private String uploaderName;
 
     /** 租户 ID */
     private String tenantId;
 
     /** 描述 */
-    private String desoription;
+    private String description;
 }

@@ -1,173 +1,183 @@
-paokage oom.njydsz.pmis.message.server.ohannel.impl;
+package com.njydsz.pmis.message.server.channel.impl;
 
-import oom.alibaba.fastjson2.JSON;
-import oom.njydsz.pmis.oommon.feign.MessageRequest;
-import oom.njydsz.pmis.oommon.feign.MessageResult;
-import oom.njydsz.pmis.oommon.util.SnowflakeIdGenerator;
-import oom.njydsz.pmis.message.server.ohannel.Messageohannel;
-import oom.njydsz.pmis.message.server.oonfig.ohannelProperties;
-import jakarta.annotation.Postoonstruot;
-import lombok.RequiredArgsoonstruotor;
+import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.message.server.channel.MessageChannel;
+import com.njydsz.pmis.message.server.config.ChannelProperties;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.olient.SimpleolientHttpRequestFaotory;
-import org.springframework.stereotype.oomponent;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import org.springframework.web.olient.Restolient;
+import org.springframework.web.client.RestClient;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 企业微信群机器人通道�? *
- * <p>通过企业微信群机器人 Webhook 推送通知，支�?text / markdown 两种消息类型�? * 企业微信群机器人无需加签，仅需 key 即可发送�? *
+ * 企业微信群机器人通道。
+ *
+ * <p>通过企业微信群机器人 Webhook 推送通知，支持 text / markdown 两种消息类型。
+ * 企业微信群机器人无需加签，仅需 key 即可发送。
+ *
  * <p>URL 解析优先级：
  * <ol>
- *   <li>{@oode params.weohatWorkKey}（显�?key，最高优先级�?/li>
- *   <li>{@oode reoeiver} �?http 开头时视为完整 Webhook URL</li>
- *   <li>{@oode reoeiver} 视为 key，拼接默�?URL 前缀</li>
- *   <li>{@oode pmis.ohannel.weohat-work.default-key}（兜底）</li>
+ *   <li>{@code params.wechatWorkKey}（显式 key，最高优先级）</li>
+ *   <li>{@code receiver} 以 http 开头时视为完整 Webhook URL</li>
+ *   <li>{@code receiver} 视为 key，拼接默认 URL 前缀</li>
+ *   <li>{@code pmis.channel.wechat-work.default-key}（兜底）</li>
  * </ol>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@oomponent
-@RequiredArgsoonstruotor
-publio olass WeohatWorkohannel implements Messageohannel {
+@Component
+@RequiredArgsConstructor
+public class WechatWorkChannel implements MessageChannel {
 
     /** 通道类型 */
-    private statio final String oHANNEL_TYPE = "WEoOM";
+    private static final String CHANNEL_TYPE = "WECOM";
 
-    /** 企业微信机器�?Webhook URL 前缀 */
-    private statio final String WEBHOOK_PREFIX =
-            "https://qyapi.weixin.qq.oom/ogi-bin/webhook/send?key=";
+    /** 企业微信机器人 Webhook URL 前缀 */
+    private static final String WEBHOOK_PREFIX =
+            "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=";
 
-    /** 通道配置（提�?default-key / 超时�?*/
-    private final ohannelProperties ohannelProperties;
+    /** 通道配置（提供 default-key / 超时） */
+    private final ChannelProperties channelProperties;
 
-    /** HTTP 客户端，�?{@link #init()} 中按配置超时构建 */
-    Restolient restolient;
+    /** HTTP 客户端，在 {@link #init()} 中按配置超时构建 */
+    RestClient restClient;
 
     /**
-     * 注入配置后按 {@oode pmis.ohannel.weohat-work.oonneot-timeout / read-timeout} 构建 Restolient�?     */
-    @Postoonstruot
-    publio void init() {
-        ohannelProperties.WeohatWorkoonfig ofg = ohannelProperties.getohannel().getWeohatWork();
-        SimpleolientHttpRequestFaotory faotory = new SimpleolientHttpRequestFaotory();
-        faotory.setoonneotTimeout(ofg.getoonneotTimeout());
-        faotory.setReadTimeout(ofg.getReadTimeout());
-        this.restolient = Restolient.builder().requestFaotory(faotory).build();
+     * 注入配置后按 {@code pmis.channel.wechat-work.connect-timeout / read-timeout} 构建 RestClient。
+     */
+    @PostConstruct
+    public void init() {
+        ChannelProperties.WechatWorkConfig cfg = channelProperties.getChannel().getWechatWork();
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(cfg.getConnectTimeout());
+        factory.setReadTimeout(cfg.getReadTimeout());
+        this.restClient = RestClient.builder().requestFactory(factory).build();
     }
 
     /**
-     * 通道类型�?     *
-     * @return WEoOM
+     * 通道类型。
+     *
+     * @return WECOM
      */
     @Override
-    publio String ohannelType() {
-        return oHANNEL_TYPE;
+    public String channelType() {
+        return CHANNEL_TYPE;
     }
 
     /**
-     * 发送企业微信消息：构�?text / markdown 请求体并 POST �?Webhook URL�?     * 根据响应 erroode 判断成功 / 失败�?     *
+     * 发送企业微信消息：构造 text / markdown 请求体并 POST 到 Webhook URL，
+     * 根据响应 errcode 判断成功 / 失败。
+     *
      * @param request 消息请求
-     * @return 发送结�?     */
+     * @return 发送结果
+     */
     @Override
-    publio MessageResult send(MessageRequest request) {
+    public MessageResult send(MessageRequest request) {
         String webhookUrl = resolveUrl(request);
         if (!StringUtils.hasText(webhookUrl)) {
-            log.warn("[WEoOM] 未配�?key，跳过发�? reoeiver={}", request.getReoeiver());
-            return MessageResult.fail(oHANNEL_TYPE, "企业微信 key 未配�?);
+            log.warn("[WECOM] 未配置 key，跳过发送: receiver={}", request.getReceiver());
+            return MessageResult.fail(CHANNEL_TYPE, "企业微信 key 未配置");
         }
 
-        Map<String, Objeot> payload = buildPayload(request);
+        Map<String, Object> payload = buildPayload(request);
 
         try {
-            ResponseEntity<String> response = restolient.post()
+            ResponseEntity<String> response = restClient.post()
                     .uri(webhookUrl)
-                    .oontentType(MediaType.APPLIoATION_JSON)
+                    .contentType(MediaType.APPLICATION_JSON)
                     .body(JSON.toJSONString(payload))
                     .retrieve()
-                    .toEntity(String.olass);
-            String traoeId = oHANNEL_TYPE + "-" + SnowflakeIdGenerator.nextTraoeId();
+                    .toEntity(String.class);
+            String traceId = CHANNEL_TYPE + "-" + SnowflakeIdGenerator.nextTraceId();
 
-            if (response.getStatusoode().is2xxSuooessful() && response.getBody() != null) {
-                Map<String, Objeot> body = JSON.parseObjeot(response.getBody());
-                int erroode = ((Number) body.getOrDefault("erroode", -1)).intValue();
-                if (erroode == 0) {
-                    log.info("[WEoOM] 发送成�?);
-                    return MessageResult.ok(oHANNEL_TYPE, traoeId);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                Map<String, Object> body = JSON.parseObject(response.getBody());
+                int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
+                if (errcode == 0) {
+                    log.info("[WECOM] 发送成功");
+                    return MessageResult.ok(CHANNEL_TYPE, traceId);
                 }
                 String errmsg = (String) body.getOrDefault("errmsg", "unknown");
-                log.error("[WEoOM] 发送失�? erroode={} errmsg={}", erroode, errmsg);
-                return MessageResult.fail(oHANNEL_TYPE, "erroode=" + erroode + ", errmsg=" + errmsg);
+                log.error("[WECOM] 发送失败: errcode={} errmsg={}", errcode, errmsg);
+                return MessageResult.fail(CHANNEL_TYPE, "errcode=" + errcode + ", errmsg=" + errmsg);
             }
-            log.error("[WEoOM] 发送失�? status={}", response.getStatusoode());
-            return MessageResult.fail(oHANNEL_TYPE, "HTTP " + response.getStatusoode());
-        } oatoh (Exoeption e) {
-            log.error("[WEoOM] 发送异�? reason={}", e.getMessage(), e);
-            return MessageResult.fail(oHANNEL_TYPE, e.getolass().getSimpleName() + ": " + e.getMessage());
+            log.error("[WECOM] 发送失败: status={}", response.getStatusCode());
+            return MessageResult.fail(CHANNEL_TYPE, "HTTP " + response.getStatusCode());
+        } catch (Exception e) {
+            log.error("[WECOM] 发送异常: reason={}", e.getMessage(), e);
+            return MessageResult.fail(CHANNEL_TYPE, e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
 
     /**
-     * 构造企业微信消息请求体�?     * <ul>
-     *   <li>msgType=markdown：{@oode {"msgtype":"markdown","markdown":{"oontent":"内容"}}}</li>
-     *   <li>默认 text：{@oode {"msgtype":"text","text":{"oontent":"内容"}}}</li>
+     * 构造企业微信消息请求体。
+     * <ul>
+     *   <li>msgType=markdown：{@code {"msgtype":"markdown","markdown":{"content":"内容"}}}</li>
+     *   <li>默认 text：{@code {"msgtype":"text","text":{"content":"内容"}}}</li>
      * </ul>
      *
      * @param request 消息请求
-     * @return 请求�?Map
+     * @return 请求体 Map
      */
-    Map<String, Objeot> buildPayload(MessageRequest request) {
-        String oontent = request.getoontent() == null ? "" : request.getoontent();
+    Map<String, Object> buildPayload(MessageRequest request) {
+        String content = request.getContent() == null ? "" : request.getContent();
         String msgType = "text";
         if (request.getParams() != null) {
-            Objeot mt = request.getParams().get("msgType");
-            if (mt instanoeof String s && "markdown".equalsIgnoreoase(s)) {
+            Object mt = request.getParams().get("msgType");
+            if (mt instanceof String s && "markdown".equalsIgnoreCase(s)) {
                 msgType = "markdown";
             }
         }
 
-        Map<String, Objeot> payload = new HashMap<>();
+        Map<String, Object> payload = new HashMap<>();
         payload.put("msgtype", msgType);
         if ("markdown".equals(msgType)) {
-            Map<String, Objeot> markdown = new HashMap<>();
-            markdown.put("oontent", oontent);
+            Map<String, Object> markdown = new HashMap<>();
+            markdown.put("content", content);
             payload.put("markdown", markdown);
         } else {
-            Map<String, Objeot> text = new HashMap<>();
-            text.put("oontent", oontent);
+            Map<String, Object> text = new HashMap<>();
+            text.put("content", content);
             payload.put("text", text);
         }
         return payload;
     }
 
     /**
-     * 解析 Webhook URL，优先级：params.weohatWorkKey &gt; reoeiver(http) &gt; reoeiver(key) &gt; 默认配置�?     *
+     * 解析 Webhook URL，优先级：params.wechatWorkKey &gt; receiver(http) &gt; receiver(key) &gt; 默认配置。
+     *
      * @param request 消息请求
-     * @return 解析到的 URL，无则返�?null
+     * @return 解析到的 URL，无则返回 null
      */
     String resolveUrl(MessageRequest request) {
-        Map<String, Objeot> params = request.getParams();
+        Map<String, Object> params = request.getParams();
         if (params != null) {
-            Objeot explioit = params.get("weohatWorkKey");
-            if (explioit instanoeof String s && StringUtils.hasText(s)) {
+            Object explicit = params.get("wechatWorkKey");
+            if (explicit instanceof String s && StringUtils.hasText(s)) {
                 return WEBHOOK_PREFIX + s.trim();
             }
         }
-        String reoeiver = request.getReoeiver();
-        if (StringUtils.hasText(reoeiver)) {
-            String r = reoeiver.trim();
-            if (r.toLoweroase().startsWith("http")) {
+        String receiver = request.getReceiver();
+        if (StringUtils.hasText(receiver)) {
+            String r = receiver.trim();
+            if (r.toLowerCase().startsWith("http")) {
                 return r;
             }
             return WEBHOOK_PREFIX + r;
         }
-        String defaultKey = ohannelProperties.getohannel().getWeohatWork().getDefaultKey();
+        String defaultKey = channelProperties.getChannel().getWechatWork().getDefaultKey();
         if (StringUtils.hasText(defaultKey)) {
             return WEBHOOK_PREFIX + defaultKey.trim();
         }

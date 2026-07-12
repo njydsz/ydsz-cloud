@@ -1,4 +1,4 @@
-paokage oom.njydsz.pmis.projeot.domain.dto;
+package com.njydsz.pmis.project.domain.dto;
 
 import lombok.Data;
 
@@ -6,30 +6,30 @@ import lombok.Data;
  * 风险登记 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass RiskoreateDTO {
+public class RiskCreateDTO {
     /** 风险编号 */
-    private String riskoode;
+    private String riskCode;
     /** 项目立项ID */
     private String initiationId;
     /** 风险标题 */
     private String riskTitle;
-    /** 风险类型：SoOPE/SoHEDULE/oOST/QUALITY/RESOURoE/EXTERNAL/OTHER */
+    /** 风险类型：SCOPE/SCHEDULE/COST/QUALITY/RESOURCE/EXTERNAL/OTHER */
     private String riskType;
     /** 风险描述 */
-    private String desoription;
+    private String description;
     /** 发生概率：LOW/MEDIUM/HIGH */
     private String probability;   // LOW/MEDIUM/HIGH
     /** 影响程度：LOW/MEDIUM/HIGH */
-    private String impaot;
+    private String impact;
     /** 应对策略 */
     private String mitigation;
-    /** 应急预�?*/
-    private String oontingenoy;
+    /** 应急预案 */
+    private String contingency;
     /** 责任人ID */
     private String ownerId;
-    /** 责任人姓�?*/
+    /** 责任人姓名 */
     private String ownerName;
 }

@@ -1,39 +1,39 @@
-paokage oom.njydsz.pmis.projeot.domain.dto;
+package com.njydsz.pmis.project.domain.dto;
 
-import jakarta.validation.oonstraints.NotBlank;
-import jakarta.validation.oonstraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LooalDate;
+import java.time.LocalDate;
 
 /**
- * 交付物实�?DTO
+ * 交付物实例 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass DeliveryItemoreateDTO implements Serializable {
+public class DeliveryItemCreateDTO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    @NotBlank(message = "{validation.exeoution.msg_1fd28961}")
-    private String itemoode;
+    @NotBlank(message = "{validation.execution.msg_1fd28961}")
+    private String itemCode;
 
-    @NotNull(message = "{validation.exeoution.msg_576o2b5e}")
+    @NotNull(message = "{validation.execution.msg_576c2b5e}")
     private String initiationId;
 
     private String standardId;
-    private String projeotType;
-    private String projeotLevel;
+    private String projectType;
+    private String projectLevel;
     private String deliveryName;
-    private String deliveryoategory;
+    private String deliveryCategory;
     private String stage;
     private Integer required;
-    private LooalDate plannedSubmitDate;
+    private LocalDate plannedSubmitDate;
     private String submitterId;
     private String submitterName;
     private Integer trRequired;

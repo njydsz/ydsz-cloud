@@ -1,27 +1,27 @@
-paokage oom.njydsz.pmis.agent.server.engine.eval;
+package com.njydsz.pmis.agent.server.engine.eval;
 
-import lombok.AllArgsoonstruotor;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsoonstruotor;
+import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 评测用例定义（P4-8 落地）�?
+ * 评测用例定义（P4-8 落地）。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0 (P4-8)
+ * @since 1.0.0 (P4-8)
  */
 @Data
 @Builder
-@NoArgsoonstruotor
-@AllArgsoonstruotor
-publio olass Evaluationoase implements Serializable {
+@NoArgsConstructor
+@AllArgsConstructor
+public class EvaluationCase implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 用例 ID */
     private String id;
@@ -30,34 +30,34 @@ publio olass Evaluationoase implements Serializable {
     private String userInput;
 
     /** 期望输出（用于评估） */
-    private String expeotedOutput;
+    private String expectedOutput;
 
-    /** 评估器类�?*/
+    /** 评估器类型 */
     private EvaluatorType evaluator;
 
-    /** 通过阈值（soore >= 此值则通过�?*/
+    /** 通过阈值（score >= 此值则通过） */
     @Builder.Default
     private double passThreshold = 0.6;
 
     /** 用例标签（用于分类统计） */
     private String tag;
 
-    /** 自定义评测器（仅�?evaluator=oUSTOM 时使用，P1-1 落地�?*/
-    private transient oustomEvaluator oustomEvaluator;
+    /** 自定义评测器（仅当 evaluator=CUSTOM 时使用，P1-1 落地） */
+    private transient CustomEvaluator customEvaluator;
 
     /**
-     * 评估器类型枚举�?
+     * 评估器类型枚举。
      */
-    publio enum EvaluatorType {
+    public enum EvaluatorType {
         /** 精确匹配 */
-        EXAoT_MAToH,
-        /** 关键词包�?*/
-        KEYWORD_oONTAINS,
-        /** 余弦相似度（简化为 Jaooard�?*/
-        oOSINE_SIMILARITY,
+        EXACT_MATCH,
+        /** 关键词包含 */
+        KEYWORD_CONTAINS,
+        /** 余弦相似度（简化为 Jaccard） */
+        COSINE_SIMILARITY,
         /** LLM 作为评审 */
         LLM_AS_JUDGE,
-        /** 自定义评估器（通过 oustomEvaluator 函数式接口注入） */
-        oUSTOM
+        /** 自定义评估器（通过 customEvaluator 函数式接口注入） */
+        CUSTOM
     }
 }

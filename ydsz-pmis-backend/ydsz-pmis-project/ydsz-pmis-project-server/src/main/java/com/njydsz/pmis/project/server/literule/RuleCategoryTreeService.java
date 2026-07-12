@@ -1,120 +1,120 @@
-paokage oom.njydsz.pmis.projeot.server.literule;
+package com.njydsz.pmis.project.server.literule;
 
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.njydsz.pmis.literule.api.RuleDefinition;
-import oom.njydsz.pmis.literule.api.RuleSeverity;
-import oom.njydsz.pmis.literule.domain.entity.RuleDefinitionDO;
-import oom.njydsz.pmis.literule.infra.mapper.RuleDefinitionMapper;
-import oom.njydsz.pmis.literule.server.spi.RuleoategoryProvider;
-import lombok.RequiredArgsoonstruotor;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.api.RuleSeverity;
+import com.njydsz.pmis.literule.domain.entity.RuleDefinitionDO;
+import com.njydsz.pmis.literule.infra.mapper.RuleDefinitionMapper;
+import com.njydsz.pmis.literule.server.spi.RuleCategoryProvider;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
+import org.springframework.stereotype.Service;
 
-import java.util.oolleotions;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 规则目录�?Servioe（P1-9�?
+ * 规则目录树 Service（P1-9）
  *
- * <p>提供基于 oategory_path 的多级目录树构建、按路径过滤规则、按 Owner 筛选等能力�?
- * 树形结构：节点包含子节点、规则数、Owner 列表等信息�?
+ * <p>提供基于 category_path 的多级目录树构建、按路径过滤规则、按 Owner 筛选等能力。
+ * 树形结构：节点包含子节点、规则数、Owner 列表等信息。
  *
- * <p>实现 {@link RuleoategoryProvider} SPI，供 literule 模块�?oontroller 反转依赖调用�?
+ * <p>实现 {@link RuleCategoryProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.5.0
+ * @since 1.5.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass RuleoategoryTreeServioe implements RuleoategoryProvider {
+@Service
+@RequiredArgsConstructor
+public class RuleCategoryTreeService implements RuleCategoryProvider {
 
     private final RuleDefinitionMapper ruleDefinitionMapper;
 
     /**
-     * 构建规则目录�?
+     * 构建规则目录树
      *
-     * @return 树根（虚拟根，name="ROOT"），ohildren 为一级分�?
+     * @return 树根（虚拟根，name="ROOT"），children 为一级分类
      */
-    publio oategoryNode buildTree() {
-        List<RuleDefinitionDO> all = ruleDefinitionMapper.seleotList(
+    public CategoryNode buildTree() {
+        List<RuleDefinitionDO> all = ruleDefinitionMapper.selectList(
                 new LambdaQueryWrapper<RuleDefinitionDO>()
-                        .isNotNull(RuleDefinitionDO::getoategoryPath));
+                        .isNotNull(RuleDefinitionDO::getCategoryPath));
 
-        // �?oategoryPath 聚合
-        // path="a/b/o" �?拆成 [a, a/b, a/b/o] 三个虚拟节点
-        oategoryNode root = new oategoryNode("ROOT", "/", 0, true);
-        Map<String, oategoryNode> nodeIndex = new LinkedHashMap<>();
+        // 按 categoryPath 聚合
+        // path="a/b/c" → 拆成 [a, a/b, a/b/c] 三个虚拟节点
+        CategoryNode root = new CategoryNode("ROOT", "/", 0, true);
+        Map<String, CategoryNode> nodeIndex = new LinkedHashMap<>();
         nodeIndex.put("/", root);
 
         for (RuleDefinitionDO rule : all) {
-            String path = rule.getoategoryPath();
-            if (path == null || path.isBlank()) oontinue;
+            String path = rule.getCategoryPath();
+            if (path == null || path.isBlank()) continue;
             String[] segments = path.split("/");
-            StringBuilder ourrentPath = new StringBuilder();
-            oategoryNode parent = root;
+            StringBuilder currentPath = new StringBuilder();
+            CategoryNode parent = root;
             for (int i = 0; i < segments.length; i++) {
                 String seg = segments[i].trim();
-                if (seg.isEmpty()) oontinue;
-                if (ourrentPath.length() > 0) ourrentPath.append('/');
-                ourrentPath.append(seg);
-                String nodePath = ourrentPath.toString();
+                if (seg.isEmpty()) continue;
+                if (currentPath.length() > 0) currentPath.append('/');
+                currentPath.append(seg);
+                String nodePath = currentPath.toString();
                 int depth = i + 1;
-                oategoryNode node = nodeIndex.get(nodePath);
+                CategoryNode node = nodeIndex.get(nodePath);
                 if (node == null) {
-                    node = new oategoryNode(seg, nodePath, depth, false);
+                    node = new CategoryNode(seg, nodePath, depth, false);
                     nodeIndex.put(nodePath, node);
-                    parent.getohildren().add(node);
+                    parent.getChildren().add(node);
                 }
-                node.inoreaseRuleoount();
+                node.increaseRuleCount();
                 if (rule.getOwner() != null && !rule.getOwner().isBlank()) {
                     node.getOwners().add(rule.getOwner());
                 }
                 parent = node;
             }
         }
-        // 子节点按 path 字典序排�?
-        sortohildren(root);
+        // 子节点按 path 字典序排序
+        sortChildren(root);
         return root;
     }
 
     /**
-     * 按分类路径前缀查询规则（path 前缀匹配，如 path="finanoe" 匹配 "finanoe/oredit/loan"�?
+     * 按分类路径前缀查询规则（path 前缀匹配，如 path="finance" 匹配 "finance/credit/loan"）
      */
-    publio List<RuleDefinitionDO> listByoategoryPath(String pathPrefix) {
+    public List<RuleDefinitionDO> listByCategoryPath(String pathPrefix) {
         if (pathPrefix == null || pathPrefix.isBlank()) {
-            return ruleDefinitionMapper.seleotList(null);
+            return ruleDefinitionMapper.selectList(null);
         }
-        return ruleDefinitionMapper.seleotList(
+        return ruleDefinitionMapper.selectList(
                 new LambdaQueryWrapper<RuleDefinitionDO>()
-                        .likeRight(RuleDefinitionDO::getoategoryPath, pathPrefix));
+                        .likeRight(RuleDefinitionDO::getCategoryPath, pathPrefix));
     }
 
     /**
-     * 按分类路径前缀查询规则（返�?API Definition�?
+     * 按分类路径前缀查询规则（返回 API Definition）
      */
-    publio List<RuleDefinition> listDefinitionsByoategoryPath(String pathPrefix) {
-        return listByoategoryPath(pathPrefix).stream()
+    public List<RuleDefinition> listDefinitionsByCategoryPath(String pathPrefix) {
+        return listByCategoryPath(pathPrefix).stream()
                 .map(this::toDefinition)
                 .toList();
     }
 
     /**
-     * �?Owner 查询规则
+     * 按 Owner 查询规则
      */
-    publio List<RuleDefinitionDO> listByOwner(String owner) {
-        if (owner == null || owner.isBlank()) return oolleotions.emptyList();
-        return ruleDefinitionMapper.seleotList(
+    public List<RuleDefinitionDO> listByOwner(String owner) {
+        if (owner == null || owner.isBlank()) return Collections.emptyList();
+        return ruleDefinitionMapper.selectList(
                 new LambdaQueryWrapper<RuleDefinitionDO>()
                         .eq(RuleDefinitionDO::getOwner, owner));
     }
 
     /**
-     * �?Owner 查询规则（返�?API Definition�?
+     * 按 Owner 查询规则（返回 API Definition）
      */
-    publio List<RuleDefinition> listDefinitionsByOwner(String owner) {
+    public List<RuleDefinition> listDefinitionsByOwner(String owner) {
         return listByOwner(owner).stream()
                 .map(this::toDefinition)
                 .toList();
@@ -122,20 +122,20 @@ publio olass RuleoategoryTreeServioe implements RuleoategoryProvider {
 
     private RuleDefinition toDefinition(RuleDefinitionDO d) {
         return RuleDefinition.builder()
-                .oode(d.getRuleoode())
+                .code(d.getRuleCode())
                 .name(d.getRuleName())
-                .oategory(d.getoategory())
-                .oategoryPath(d.getoategoryPath())
+                .category(d.getCategory())
+                .categoryPath(d.getCategoryPath())
                 .owner(d.getOwner())
-                .desoription(d.getDesoription())
-                .oonditionExpression(d.getoonditionExpression())
+                .description(d.getDescription())
+                .conditionExpression(d.getConditionExpression())
                 .severityExpression(d.getSeverityExpression())
-                .defaultSeverity(RuleSeverity.fromoode(d.getDefaultSeverity()))
+                .defaultSeverity(RuleSeverity.fromCode(d.getDefaultSeverity()))
                 .titleTemplate(d.getTitleTemplate())
-                .desoriptionTemplate(d.getDesoriptionTemplate())
+                .descriptionTemplate(d.getDescriptionTemplate())
                 .priority(d.getPriority() != null ? d.getPriority() : 100)
                 .enabled(d.getEnabled() != null ? d.getEnabled() : true)
-                .soope(d.getSoope())
+                .scope(d.getScope())
                 .drilldownAvailable(d.getDrilldownAvailable() != null ? d.getDrilldownAvailable() : true)
                 .version(d.getVersion() != null ? d.getVersion() : 1)
                 .tenantId(d.getTenantId() != null ? d.getTenantId() : "1")
@@ -143,12 +143,12 @@ publio olass RuleoategoryTreeServioe implements RuleoategoryProvider {
                 .build();
     }
 
-    private void sortohildren(oategoryNode node) {
-        if (node.getohildren() == null || node.getohildren().isEmpty()) return;
-        // 子节点按 path 字典�?
-        node.getohildren().sort((a, b) -> a.getPath().oompareTo(b.getPath()));
-        for (oategoryNode o : node.getohildren()) {
-            sortohildren(o);
+    private void sortChildren(CategoryNode node) {
+        if (node.getChildren() == null || node.getChildren().isEmpty()) return;
+        // 子节点按 path 字典序
+        node.getChildren().sort((a, b) -> a.getPath().compareTo(b.getPath()));
+        for (CategoryNode c : node.getChildren()) {
+            sortChildren(c);
         }
     }
 }

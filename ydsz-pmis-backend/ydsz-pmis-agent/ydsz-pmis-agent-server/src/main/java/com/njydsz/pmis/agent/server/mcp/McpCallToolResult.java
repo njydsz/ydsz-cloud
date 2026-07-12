@@ -1,47 +1,51 @@
-paokage oom.njydsz.pmis.agent.server.mop.model;
+package com.njydsz.pmis.agent.server.mcp.model;
 
-import oom.fasterxml.jaokson.annotation.JsonInolude;
-import oom.fasterxml.jaokson.annotation.JsonProperty;
-import lombok.AllArgsoonstruotor;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsoonstruotor;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 /**
- * MoP tools/oall 结果（P3-3 落地）�? *
- * <p>工具调用返回的内容列表和错误标记�? * <pre>
- * {"oontent":[{"type":"text","text":"result..."}],"isError":false}
+ * MCP tools/call 结果（P3-3 落地）。
+ *
+ * <p>工具调用返回的内容列表和错误标记：
+ * <pre>
+ * {"content":[{"type":"text","text":"result..."}],"isError":false}
  * </pre>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0 (P3-3)
+ * @since 1.0.0 (P3-3)
  */
 @Data
 @Builder
-@NoArgsoonstruotor
-@AllArgsoonstruotor
-@JsonInolude(JsonInolude.Inolude.NON_NULL)
-publio olass MopoallToolResult {
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class McpCallToolResult {
 
     /** 内容列表（至少一项） */
-    private List<Mopoontent> oontent;
+    private List<McpContent> content;
 
-    /** 是否为错误结果（true 表示工具执行失败但已返回错误信息，而非协议错误�?*/
+    /** 是否为错误结果（true 表示工具执行失败但已返回错误信息，而非协议错误） */
     @JsonProperty("isError")
     @Builder.Default
     private boolean error = false;
 
     /**
-     * 提取所有文本内容拼接为单个字符串�?     *
-     * @return 拼接后的文本（无内容返回空字符串�?     */
-    publio String flattenText() {
-        if (oontent == null || oontent.isEmpty()) {
+     * 提取所有文本内容拼接为单个字符串。
+     *
+     * @return 拼接后的文本（无内容返回空字符串）
+     */
+    public String flattenText() {
+        if (content == null || content.isEmpty()) {
             return "";
         }
         StringBuilder sb = new StringBuilder();
-        for (Mopoontent item : oontent) {
+        for (McpContent item : content) {
             if (item != null && item.getText() != null) {
                 if (!sb.isEmpty()) {
                     sb.append("\n");

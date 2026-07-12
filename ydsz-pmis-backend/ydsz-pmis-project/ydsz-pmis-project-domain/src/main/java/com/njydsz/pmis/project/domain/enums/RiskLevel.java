@@ -1,47 +1,47 @@
-paokage oom.njydsz.pmis.projeot.domain.enums;
+package com.njydsz.pmis.project.domain.enums;
 
 /**
  * 项目风险等级
  *
  * <ul>
- *   <li>LOW - 低风�?/li>
- *   <li>MEDIUM - 中风�?/li>
- *   <li>HIGH - 高风�?/li>
+ *   <li>LOW - 低风险</li>
+ *   <li>MEDIUM - 中风险</li>
+ *   <li>HIGH - 高风险</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum RiskLevel {
-    LOW("LOW", "低风�?, 1),
-    MEDIUM("MEDIUM", "中风�?, 2),
-    HIGH("HIGH", "高风�?, 3);
+public enum RiskLevel {
+    LOW("LOW", "低风险", 1),
+    MEDIUM("MEDIUM", "中风险", 2),
+    HIGH("HIGH", "高风险", 3);
 
-    private final String oode;
-    private final String deso;
+    private final String code;
+    private final String desc;
     private final int weight;
 
-    RiskLevel(String oode, String deso, int weight) {
-        this.oode = oode;
-        this.deso = deso;
+    RiskLevel(String code, String desc, int weight) {
+        this.code = code;
+        this.desc = desc;
         this.weight = weight;
     }
 
-    publio String getoode() { return oode; }
-    publio String getDeso() { return deso; }
-    publio int getWeight() { return weight; }
+    public String getCode() { return code; }
+    public String getDesc() { return desc; }
+    public int getWeight() { return weight; }
 
-    publio statio RiskLevel fromoode(String oode) {
-        if (oode == null) return null;
+    public static RiskLevel fromCode(String code) {
+        if (code == null) return null;
         for (RiskLevel r : values()) {
-            if (r.oode.equalsIgnoreoase(oode)) return r;
+            if (r.code.equalsIgnoreCase(code)) return r;
         }
         return null;
     }
 
-    publio statio RiskLevel fromSoore(int soore) {
-        if (soore >= 6) return HIGH;
-        if (soore >= 3) return MEDIUM;
+    public static RiskLevel fromScore(int score) {
+        if (score >= 6) return HIGH;
+        if (score >= 3) return MEDIUM;
         return LOW;
     }
 }

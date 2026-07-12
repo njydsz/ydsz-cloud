@@ -1,54 +1,54 @@
-paokage oom.njydsz.pmis.finanoe.domain.enums;
+package com.njydsz.pmis.finance.domain.enums;
 
 /**
  * 发票类型
  *
  * <ul>
- *   <li>NORMAL - 正常开�?/li>
- *   <li>RED_REVERSE - 红冲发票（用于冲销已开发票�?/li>
+ *   <li>NORMAL - 正常开票</li>
+ *   <li>RED_REVERSE - 红冲发票（用于冲销已开发票）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum InvoioeType {
-    NORMAL("NORMAL", "正常开�?),
+public enum InvoiceType {
+    NORMAL("NORMAL", "正常开票"),
     RED_REVERSE("RED_REVERSE", "红冲发票");
 
     /** 类型编码（大小写不敏感） */
-    private final String oode;
+    private final String code;
     /** 类型中文描述 */
-    private final String deso;
+    private final String desc;
 
-    InvoioeType(String oode, String deso) {
-        this.oode = oode;
-        this.deso = deso;
+    InvoiceType(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
     }
 
     /**
      * 获取类型编码
      *
-     * @return 类型编码字符�?
+     * @return 类型编码字符串
      */
-    publio String getoode() { return oode; }
+    public String getCode() { return code; }
 
     /**
      * 获取类型中文描述
      *
      * @return 类型中文描述
      */
-    publio String getDeso() { return deso; }
+    public String getDesc() { return desc; }
 
     /**
      * 根据编码反查枚举
      *
-     * @param oode 发票类型编码（大小写不敏感）
-     * @return 枚举值；未匹配返�?null
+     * @param code 发票类型编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
      */
-    publio statio InvoioeType fromoode(String oode) {
-        if (oode == null) return null;
-        for (InvoioeType t : values()) {
-            if (t.oode.equalsIgnoreoase(oode)) return t;
+    public static InvoiceType fromCode(String code) {
+        if (code == null) return null;
+        for (InvoiceType t : values()) {
+            if (t.code.equalsIgnoreCase(code)) return t;
         }
         return null;
     }

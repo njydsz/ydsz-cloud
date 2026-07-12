@@ -1,40 +1,43 @@
-paokage oom.njydsz.pmis.projeot.server.engine.alert;
+package com.njydsz.pmis.project.server.engine.alert;
 
-import oom.njydsz.pmis.oommon.util.SnowflakeIdGenerator;
-import oom.njydsz.pmis.projeot.domain.dto.AlertEventDTO;
-import oom.njydsz.pmis.projeot.domain.enums.AlertSeverity;
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
+import com.njydsz.pmis.project.domain.enums.AlertSeverity;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFaotory;
+import org.slf4j.LoggerFactory;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
  * EVM 红色告警规则
  *
- * <p>�?EVM 红色项目数超过阈值时触发。缺省阈�?= 3�? *
+ * <p>当 EVM 红色项目数超过阈值时触发。缺省阈值 = 3。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio olass EvmRedRule implements AlertRule {
+public class EvmRedRule implements AlertRule {
 
-    private statio final Logger log = LoggerFaotory.getLogger(EvmRedRule.olass);
+    private static final Logger log = LoggerFactory.getLogger(EvmRedRule.class);
 
-    /** 缺省红色项目数阈�?*/
-    publio statio final int DEFAULT_THRESHOLD = 3;
+    /** 缺省红色项目数阈值 */
+    public static final int DEFAULT_THRESHOLD = 3;
 
-    /** 红色项目数阈�?*/
+    /** 红色项目数阈值 */
     private final int threshold;
 
     /** 默认构造（使用缺省阈值） */
-    publio EvmRedRule() {
+    public EvmRedRule() {
         this(DEFAULT_THRESHOLD);
     }
 
     /**
-     * 自定义阈值构�?     *
-     * @param threshold 红色项目数阈�?     */
-    publio EvmRedRule(int threshold) {
+     * 自定义阈值构造
+     *
+     * @param threshold 红色项目数阈值
+     */
+    public EvmRedRule(int threshold) {
         this.threshold = threshold;
     }
 
@@ -42,14 +45,15 @@ publio olass EvmRedRule implements AlertRule {
      * @return 规则编码
      */
     @Override
-    publio String getoode() {
-        return "EVM_RED_EXoESS";
+    public String getCode() {
+        return "EVM_RED_EXCESS";
     }
 
     /**
-     * @return 规则中文�?     */
+     * @return 规则中文名
+     */
     @Override
-    publio String getName() {
+    public String getName() {
         return "EVM 红色告警项目过多";
     }
 
@@ -57,33 +61,34 @@ publio olass EvmRedRule implements AlertRule {
      * @return 规则类别
      */
     @Override
-    publio String getoategory() {
+    public String getCategory() {
         return "EVM";
     }
 
     /**
-     * 评估 EVM 红色告警项目数是否超过阈�?     *
+     * 评估 EVM 红色告警项目数是否超过阈值
+     *
      * @param snapshot KPI 快照
      * @return 预警事件；未触发返回 null
      */
     @Override
-    publio AlertEventDTO evaluate(Map<String, Objeot> snapshot) {
+    public AlertEventDTO evaluate(Map<String, Object> snapshot) {
         if (snapshot == null) return null;
-        Objeot raw = snapshot.get("evmRedoount");
+        Object raw = snapshot.get("evmRedCount");
         int red = toInt(raw);
         if (red < threshold) return null;
         return AlertEventDTO.builder()
                 .eventId(SnowflakeIdGenerator.nextIdStr())
-                .ruleoode(getoode())
+                .ruleCode(getCode())
                 .ruleName(getName())
-                .oategory(getoategory())
+                .category(getCategory())
                 .severity(AlertSeverity.RED)
-                .title("EVM 红色告警项目 " + red + " �?)
-                .desoription("当前周期红色告警项目数已达到 " + red + " 个，超过阈�?" + threshold + "。请关注挣值偏差并复盘�?)
-                .ourrentValue(String.valueOf(red))
+                .title("EVM 红色告警项目 " + red + " 个")
+                .description("当前周期红色告警项目数已达到 " + red + " 个，超过阈值 " + threshold + "。请关注挣值偏差并复盘。")
+                .currentValue(String.valueOf(red))
                 .threshold(String.valueOf(threshold))
-                .soope("ALL")
-                .triggeredAt(LooalDateTime.now())
+                .scope("ALL")
+                .triggeredAt(LocalDateTime.now())
                 .drilldownAvailable(true)
                 .build();
     }
@@ -92,15 +97,15 @@ publio olass EvmRedRule implements AlertRule {
      * 将对象转换为 int
      *
      * @param o 原始对象
-     * @return 转换后的 int；无法转换返�?0
+     * @return 转换后的 int；无法转换返回 0
      */
-    private int toInt(Objeot o) {
+    private int toInt(Object o) {
         if (o == null) return 0;
-        if (o instanoeof Number) return ((Number) o).intValue();
+        if (o instanceof Number) return ((Number) o).intValue();
         try {
             return Integer.parseInt(String.valueOf(o));
-        } oatoh (Exoeption e) {
-            log.warn("[EvmRedRule] 整数解析失败，使�?0 兜底 o={}: {}", o, e.getMessage());
+        } catch (Exception e) {
+            log.warn("[EvmRedRule] 整数解析失败，使用 0 兜底 o={}: {}", o, e.getMessage());
             return 0;
         }
     }

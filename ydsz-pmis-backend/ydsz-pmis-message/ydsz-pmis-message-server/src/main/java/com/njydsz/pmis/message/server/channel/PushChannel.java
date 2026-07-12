@@ -1,85 +1,90 @@
-paokage oom.njydsz.pmis.message.server.ohannel.impl;
+package com.njydsz.pmis.message.server.channel.impl;
 
-import oom.njydsz.pmis.oommon.feign.MessageRequest;
-import oom.njydsz.pmis.oommon.feign.MessageResult;
-import oom.njydsz.pmis.message.server.ohannel.Messageohannel;
-import oom.njydsz.pmis.message.server.ohannel.push.PushProvider;
-import oom.njydsz.pmis.message.server.oonfig.MessageProperties;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.message.server.channel.MessageChannel;
+import com.njydsz.pmis.message.server.channel.push.PushProvider;
+import com.njydsz.pmis.message.server.config.MessageProperties;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 
 /**
- * APP 推送通道门面（替换原 MookPushohannel）�? *
- * <p>实现 {@link Messageohannel} SPI，内部根�?{@oode pmis.message.push.provider}
- * 配置选择实际 {@link PushProvider}（getui / mook），无匹配时降级�?mook�? *
+ * APP 推送通道门面（替换原 MockPushChannel）。
+ *
+ * <p>实现 {@link MessageChannel} SPI，内部根据 {@code pmis.message.push.provider}
+ * 配置选择实际 {@link PushProvider}（getui / mock），无匹配时降级到 mock。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
 @Slf4j
-@oomponent
-publio olass Pushohannel implements Messageohannel {
+@Component
+public class PushChannel implements MessageChannel {
 
-    private statio final String oHANNEL_TYPE = "PUSH";
+    private static final String CHANNEL_TYPE = "PUSH";
 
     private final List<PushProvider> providers;
     private final MessageProperties messageProperties;
 
-    publio Pushohannel(List<PushProvider> providers, MessageProperties messageProperties) {
+    public PushChannel(List<PushProvider> providers, MessageProperties messageProperties) {
         this.providers = providers != null ? providers : List.of();
         this.messageProperties = messageProperties;
     }
 
     @Override
-    publio String ohannelType() {
-        return oHANNEL_TYPE;
+    public String channelType() {
+        return CHANNEL_TYPE;
     }
 
     @Override
-    publio MessageResult send(MessageRequest request) {
-        if (request.getReoeiver() == null || request.getReoeiver().isBlank()) {
-            return MessageResult.fail(oHANNEL_TYPE, "推送目标不能为�?);
+    public MessageResult send(MessageRequest request) {
+        if (request.getReceiver() == null || request.getReceiver().isBlank()) {
+            return MessageResult.fail(CHANNEL_TYPE, "推送目标不能为空");
         }
-        PushProvider provider = seleotProvider();
+        PushProvider provider = selectProvider();
         MessageResult result = provider.send(request, null);
-        log.info("[Pushohannel] provider={} status={} target={}",
-                provider.providerType(), result.getStatus(), request.getReoeiver());
+        log.info("[PushChannel] provider={} status={} target={}",
+                provider.providerType(), result.getStatus(), request.getReceiver());
         return result;
     }
 
     /**
-     * P1-10: 批量推送到多个设备（委托给 provider 的原生批量接口）�?     *
+     * P1-10: 批量推送到多个设备（委托给 provider 的原生批量接口）。
+     *
      * @param requests 消息请求列表
-     * @return 发送结果列�?     */
-    publio List<MessageResult> batohSend(List<MessageRequest> requests) {
+     * @return 发送结果列表
+     */
+    public List<MessageResult> batchSend(List<MessageRequest> requests) {
         if (requests == null || requests.isEmpty()) {
             return List.of();
         }
-        PushProvider provider = seleotProvider();
-        List<MessageResult> results = provider.batohSend(requests, null);
-        log.info("[Pushohannel] 批量推�? provider={} oount={} suooess={}",
+        PushProvider provider = selectProvider();
+        List<MessageResult> results = provider.batchSend(requests, null);
+        log.info("[PushChannel] 批量推送: provider={} count={} success={}",
                 provider.providerType(), requests.size(),
-                results.stream().filter(MessageResult::isSuooess).oount());
+                results.stream().filter(MessageResult::isSuccess).count());
         return results;
     }
 
     /**
-     * 根据配置选择 provider，无匹配时降级到 mook�?     *
+     * 根据配置选择 provider，无匹配时降级到 mock。
+     *
      * @return 推送服务商
      */
-    private PushProvider seleotProvider() {
+    private PushProvider selectProvider() {
         String target = messageProperties.getPush() != null
                 && StringUtils.hasText(messageProperties.getPush().getProvider())
-                ? messageProperties.getPush().getProvider() : "mook";
+                ? messageProperties.getPush().getProvider() : "mock";
         return providers.stream()
-                .filter(p -> target.equalsIgnoreoase(p.providerType()))
+                .filter(p -> target.equalsIgnoreCase(p.providerType()))
                 .findFirst()
                 .orElseGet(() -> providers.stream()
-                        .filter(p -> "mook".equalsIgnoreoase(p.providerType()))
+                        .filter(p -> "mock".equalsIgnoreCase(p.providerType()))
                         .findFirst()
-                        .orElseThrow(() -> new IllegalStateExoeption(
-                                "无可�?PUSH provider，请检�?PushProvider Bean 注册")));
+                        .orElseThrow(() -> new IllegalStateException(
+                                "无可用 PUSH provider，请检查 PushProvider Bean 注册")));
     }
 }

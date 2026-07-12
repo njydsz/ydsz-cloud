@@ -1,10 +1,10 @@
-paokage oom.njydsz.pmis.projeot.server.servioe;
+package com.njydsz.pmis.project.server.service;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.projeot.domain.dto.ProjeotolosureoreateDTO;
-import oom.njydsz.pmis.projeot.domain.dto.ProjeotolosureStatusDTO;
-import oom.njydsz.pmis.projeot.server.engine.olosureAdmissionValidator;
-import oom.njydsz.pmis.projeot.domain.entity.ProjeotolosureDO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.project.domain.dto.ProjectClosureCreateDTO;
+import com.njydsz.pmis.project.domain.dto.ProjectClosureStatusDTO;
+import com.njydsz.pmis.project.server.engine.ClosureAdmissionValidator;
+import com.njydsz.pmis.project.domain.entity.ProjectClosureDO;
 
 import java.util.List;
 import java.util.Map;
@@ -13,9 +13,9 @@ import java.util.Map;
  * 项目结项服务
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio interfaoe ProjeotolosureServioe {
+public interface ProjectClosureService {
 
     /**
      * 创建结项申请
@@ -23,12 +23,14 @@ publio interfaoe ProjeotolosureServioe {
      * @param dto 结项创建参数
      * @return 结项记录ID
      */
-    String oreate(ProjeotolosureoreateDTO dto);
+    String create(ProjectClosureCreateDTO dto);
 
     /**
-     * 状态迁�?     *
-     * @param dto 状态变更参�?     */
-    void ohangeStatus(ProjeotolosureStatusDTO dto);
+     * 状态迁移
+     *
+     * @param dto 状态变更参数
+     */
+    void changeStatus(ProjectClosureStatusDTO dto);
 
     /**
      * 删除结项记录
@@ -43,7 +45,7 @@ publio interfaoe ProjeotolosureServioe {
      * @param id 结项记录ID
      * @return 结项实体
      */
-    ProjeotolosureDO getById(String id);
+    ProjectClosureDO getById(String id);
 
     /**
      * 根据立项ID查询结项记录
@@ -51,32 +53,36 @@ publio interfaoe ProjeotolosureServioe {
      * @param initiationId 项目立项ID
      * @return 结项实体
      */
-    ProjeotolosureDO getByInitiation(String initiationId);
+    ProjectClosureDO getByInitiation(String initiationId);
 
     /**
      * 分页查询结项记录
      *
      * @param page        页码（从 1 开始）
      * @param size        每页大小
-     * @param keyword     关键�?     * @param olosureType 结项类型
-     * @param status      状态过�?     * @return 分页结果
+     * @param keyword     关键词
+     * @param closureType 结项类型
+     * @param status      状态过滤
+     * @return 分页结果
      */
-    Page<ProjeotolosureDO> page(int page, int size, String keyword,
-                                String olosureType, String status);
+    Page<ProjectClosureDO> page(int page, int size, String keyword,
+                                String closureType, String status);
 
     /**
-     * 按结项类型列�?     *
-     * @param olosureType 结项类型
+     * 按结项类型列出
+     *
+     * @param closureType 结项类型
      * @return 结项列表
      */
-    List<ProjeotolosureDO> listByType(String olosureType);
+    List<ProjectClosureDO> listByType(String closureType);
 
     /**
-     * 按结项类型聚合统�?     *
+     * 按结项类型聚合统计
+     *
      * @param tenantId 租户ID
      * @return 聚合结果
      */
-    List<Map<String, Objeot>> aggregateByType(String tenantId);
+    List<Map<String, Object>> aggregateByType(String tenantId);
 
     /**
      * 准入校验
@@ -84,5 +90,5 @@ publio interfaoe ProjeotolosureServioe {
      * @param id 结项记录ID
      * @return 准入校验结果
      */
-    olosureAdmissionValidator.Admissionoheok oheokAdmission(String id);
+    ClosureAdmissionValidator.AdmissionCheck checkAdmission(String id);
 }

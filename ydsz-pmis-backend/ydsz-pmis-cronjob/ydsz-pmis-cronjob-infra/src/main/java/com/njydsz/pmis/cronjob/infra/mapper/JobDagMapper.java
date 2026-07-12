@@ -1,70 +1,76 @@
-paokage oom.njydsz.pmis.oronjob.infra.mapper.dag;
+package com.njydsz.pmis.cronjob.infra.mapper.dag;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.oronjob.domain.entity.dag.JobDagDO;
-import org.apaohe.ibatis.annotations.Mapper;
-import org.apaohe.ibatis.annotations.Param;
-import org.apaohe.ibatis.annotations.Seleot;
-import org.apaohe.ibatis.annotations.Update;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * DAG 工作流定�?Mapper（P2 DAG 增强）�? *
+ * DAG 工作流定义 Mapper（P2 DAG 增强）。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Mapper
-publio interfaoe JobDagMapper extends BaseMapper<JobDagDO> {
+public interface JobDagMapper extends BaseMapper<JobDagDO> {
 
     /**
-     * 根据 dag_key 查询 DAG 定义�?     */
-    @Seleot("SELEoT id, dag_key, dag_name, dag_definition, status, trigger_type, oron_expression, "
-            + "       max_oonourrent_instanoes, fail_strategy, desoription, next_fire_time, last_fire_time, "
-            + "       fire_oount, suooess_oount, fail_oount, version, "
-            + "       oreated_by, oreated_at, updated_by, updated_at, deleted, tenant_id "
+     * 根据 dag_key 查询 DAG 定义。
+     */
+    @Select("SELECT id, dag_key, dag_name, dag_definition, status, trigger_type, cron_expression, "
+            + "       max_concurrent_instances, fail_strategy, description, next_fire_time, last_fire_time, "
+            + "       fire_count, success_count, fail_count, version, "
+            + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
             + "FROM pmis_job_dag WHERE dag_key = #{dagKey} AND deleted = 0")
-    JobDagDO seleotByDagKey(@Param("dagKey") String dagKey);
+    JobDagDO selectByDagKey(@Param("dagKey") String dagKey);
 
     /**
-     * 查询所有启用状态（ENABLED）且触发类型�?oRON �?DAG（调度器扫描用）�?     */
-    @Seleot("SELEoT id, dag_key, dag_name, dag_definition, status, trigger_type, oron_expression, "
-            + "       max_oonourrent_instanoes, fail_strategy, desoription, next_fire_time, last_fire_time, "
-            + "       fire_oount, suooess_oount, fail_oount, version, "
-            + "       oreated_by, oreated_at, updated_by, updated_at, deleted, tenant_id "
+     * 查询所有启用状态（ENABLED）且触发类型为 CRON 的 DAG（调度器扫描用）。
+     */
+    @Select("SELECT id, dag_key, dag_name, dag_definition, status, trigger_type, cron_expression, "
+            + "       max_concurrent_instances, fail_strategy, description, next_fire_time, last_fire_time, "
+            + "       fire_count, success_count, fail_count, version, "
+            + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
             + "FROM pmis_job_dag "
-            + "WHERE status = 'ENABLED' AND trigger_type = 'oRON' AND deleted = 0")
-    List<JobDagDO> seleotoronEnabledDags();
+            + "WHERE status = 'ENABLED' AND trigger_type = 'CRON' AND deleted = 0")
+    List<JobDagDO> selectCronEnabledDags();
 
     /**
-     * 查询所�?ENABLED 状态的 DAG�?     */
-    @Seleot("SELEoT id, dag_key, dag_name, dag_definition, status, trigger_type, oron_expression, "
-            + "       max_oonourrent_instanoes, fail_strategy, desoription, next_fire_time, last_fire_time, "
-            + "       fire_oount, suooess_oount, fail_oount, version, "
-            + "       oreated_by, oreated_at, updated_by, updated_at, deleted, tenant_id "
+     * 查询所有 ENABLED 状态的 DAG。
+     */
+    @Select("SELECT id, dag_key, dag_name, dag_definition, status, trigger_type, cron_expression, "
+            + "       max_concurrent_instances, fail_strategy, description, next_fire_time, last_fire_time, "
+            + "       fire_count, success_count, fail_count, version, "
+            + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
             + "FROM pmis_job_dag WHERE status = 'ENABLED' AND deleted = 0")
-    List<JobDagDO> seleotEnabledDags();
+    List<JobDagDO> selectEnabledDags();
 
     /**
-     * 更新 DAG 触发统计（fire_oount +1，last_fire_time 更新）�?     */
-    @Update("UPDATE pmis_job_dag SET fire_oount = fire_oount + 1, last_fire_time = #{fireTime}, "
-            + "       next_fire_time = #{nextFireTime}, version = version + 1, updated_at = oURRENT_TIMESTAMP "
+     * 更新 DAG 触发统计（fire_count +1，last_fire_time 更新）。
+     */
+    @Update("UPDATE pmis_job_dag SET fire_count = fire_count + 1, last_fire_time = #{fireTime}, "
+            + "       next_fire_time = #{nextFireTime}, version = version + 1, updated_at = CURRENT_TIMESTAMP "
             + "WHERE id = #{dagId} AND deleted = 0")
     int updateFireStats(@Param("dagId") String dagId,
-                        @Param("fireTime") LooalDateTime fireTime,
-                        @Param("nextFireTime") LooalDateTime nextFireTime);
+                        @Param("fireTime") LocalDateTime fireTime,
+                        @Param("nextFireTime") LocalDateTime nextFireTime);
 
     /**
-     * 更新 DAG 成功/失败计数（DAG 实例结束时调用）�?     *
+     * 更新 DAG 成功/失败计数（DAG 实例结束时调用）。
+     *
      * @param dagId     DAG 定义 ID
-     * @param suooess   true=成功 +1, false=失败 +1
+     * @param success   true=成功 +1, false=失败 +1
      */
     @Update("UPDATE pmis_job_dag SET "
-            + "       suooess_oount = suooess_oount + oASE WHEN #{suooess} = 1 THEN 1 ELSE 0 END, "
-            + "       fail_oount = fail_oount + oASE WHEN #{suooess} = 0 THEN 1 ELSE 0 END, "
-            + "       version = version + 1, updated_at = oURRENT_TIMESTAMP "
+            + "       success_count = success_count + CASE WHEN #{success} = 1 THEN 1 ELSE 0 END, "
+            + "       fail_count = fail_count + CASE WHEN #{success} = 0 THEN 1 ELSE 0 END, "
+            + "       version = version + 1, updated_at = CURRENT_TIMESTAMP "
             + "WHERE id = #{dagId} AND deleted = 0")
     int updateResultStats(@Param("dagId") String dagId,
-                          @Param("suooess") boolean suooess);
+                          @Param("success") boolean success);
 }

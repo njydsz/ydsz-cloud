@@ -1,21 +1,23 @@
-paokage oom.njydsz.pmis.agent.domain.dto.tool;
+package com.njydsz.pmis.agent.domain.dto.tool;
 
 import lombok.Builder;
 import lombok.Data;
 
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 
 /**
- * 租户 Token 配额概览（P2-4 落地）�? *
- * <p>供前端展示配额使用情况，包含已用/总量/剩余/百分�?状态�? *
+ * 租户 Token 配额概览（P2-4 落地）。
+ *
+ * <p>供前端展示配额使用情况，包含已用/总量/剩余/百分比/状态。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0 (P2-4)
+ * @since 1.0.0 (P2-4)
  */
 @Data
 @Builder
-publio olass QuotaSummary {
+public class QuotaSummary {
 
     /** 租户 ID */
     private String tenantId;
@@ -26,46 +28,48 @@ publio olass QuotaSummary {
     /** 月度配额上限 */
     private long totalQuota;
 
-    /** 已使�?token �?*/
+    /** 已使用 token 数 */
     private long usedTokens;
 
-    /** 剩余 token �?*/
+    /** 剩余 token 数 */
     private long remainingTokens;
 
-    /** 使用百分比（0-100，保�?2 位小数） */
-    private BigDeoimal usagePeroentage;
+    /** 使用百分比（0-100，保留 2 位小数） */
+    private BigDecimal usagePercentage;
 
-    /** 配额状态：AoTIVE/RUNOUT/RESET */
+    /** 配额状态：ACTIVE/RUNOUT/RESET */
     private String status;
 
     /** 上次重置时间 */
-    private LooalDateTime resetAt;
+    private LocalDateTime resetAt;
 
     /**
-     * 根据总量和已用量构造概览�?     *
+     * 根据总量和已用量构造概览。
+     *
      * @param tenantId    租户 ID
      * @param quotaMonth  月份
      * @param totalQuota  总量
      * @param usedTokens  已用
-     * @param status      状�?     * @param resetAt     重置时间
+     * @param status      状态
+     * @param resetAt     重置时间
      * @return 概览对象
      */
-    publio statio QuotaSummary of(String tenantId, String quotaMonth,
+    public static QuotaSummary of(String tenantId, String quotaMonth,
                                     long totalQuota, long usedTokens,
-                                    String status, LooalDateTime resetAt) {
+                                    String status, LocalDateTime resetAt) {
         long remaining = Math.max(0, totalQuota - usedTokens);
-        BigDeoimal peroentage = totalQuota > 0
-                ? BigDeoimal.valueOf(usedTokens)
-                    .multiply(BigDeoimal.valueOf(100))
-                    .divide(BigDeoimal.valueOf(totalQuota), 2, RoundingMode.HALF_UP)
-                : BigDeoimal.ZERO;
+        BigDecimal percentage = totalQuota > 0
+                ? BigDecimal.valueOf(usedTokens)
+                    .multiply(BigDecimal.valueOf(100))
+                    .divide(BigDecimal.valueOf(totalQuota), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
         return QuotaSummary.builder()
                 .tenantId(tenantId)
                 .quotaMonth(quotaMonth)
                 .totalQuota(totalQuota)
                 .usedTokens(usedTokens)
                 .remainingTokens(remaining)
-                .usagePeroentage(peroentage)
+                .usagePercentage(percentage)
                 .status(status)
                 .resetAt(resetAt)
                 .build();

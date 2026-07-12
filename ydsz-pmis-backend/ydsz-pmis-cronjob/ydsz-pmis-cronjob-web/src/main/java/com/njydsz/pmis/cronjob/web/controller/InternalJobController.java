@@ -1,32 +1,32 @@
-paokage oom.njydsz.pmis.oronjob.web.oontroller.job;
+package com.njydsz.pmis.cronjob.web.controller.job;
 
-import oom.njydsz.pmis.oommon.look.annotation.IdempotentExempt;
+import com.njydsz.pmis.common.annotation.IdempotentExempt;
 
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.oommon.job.Mapoontext;
-import oom.njydsz.pmis.oommon.job.MapProoessor;
-import oom.njydsz.pmis.oommon.job.ProoessResult;
-import oom.njydsz.pmis.oommon.util.TraoeIdUtil;
-import oom.njydsz.pmis.oronjob.server.oore.dispatoh.RemoteSubTaskRequest;
-import oom.njydsz.pmis.oronjob.server.oore.dispatoh.RemoteTaskRequest;
-import oom.njydsz.pmis.oronjob.server.oore.dispatoh.TaskDispatoher;
-import org.springframework.oontext.Applioationoontext;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.job.MapContext;
+import com.njydsz.pmis.common.job.MapProcessor;
+import com.njydsz.pmis.common.job.ProcessResult;
+import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteSubTaskRequest;
+import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteTaskRequest;
+import com.njydsz.pmis.cronjob.server.core.dispatch.TaskDispatcher;
+import org.springframework.context.ApplicationContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsoonstruotor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.Restoontroller;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 内部任务执行接口（P1-4 远程派发接收端）�?
+ * 内部任务执行接口（P1-4 远程派发接收端）。
  *
- * <p>每个 oronjob 实例都暴露此接口，接�?Leader 节点的远程分片派发请求�?
- * Leader 通过 {@oode RemoteTaskolient} 发�?HTTP POST �?
- * {@oode http://{host}:{port}/oronjob/internal/exeoute}�?
- * �?oontroller 接收后调�?{@link TaskDispatoher#exeouteLooally} 在本地执行�?
+ * <p>每个 cronjob 实例都暴露此接口，接收 Leader 节点的远程分片派发请求。
+ * Leader 通过 {@code RemoteTaskClient} 发送 HTTP POST 到
+ * {@code http://{host}:{port}/cronjob/internal/execute}，
+ * 本 Controller 接收后调用 {@link TaskDispatcher#executeLocally} 在本地执行。
  *
  * <h3>安全考虑</h3>
  * <ul>
@@ -37,43 +37,43 @@ import org.springframework.web.bind.annotation.Restoontroller;
  *
  * <h3>错误处理</h3>
  * <ul>
- *   <li>参数校验失败：返�?400 + oode!=0</li>
- *   <li>锁被持有：返�?200 + oode=0 + data=null（正常跳过，不是错误�?/li>
- *   <li>执行异常：返�?200 + oode=0 + data=null（执行器已记�?FAILED 日志�?/li>
+ *   <li>参数校验失败：返回 400 + code!=0</li>
+ *   <li>锁被持有：返回 200 + code=0 + data=null（正常跳过，不是错误）</li>
+ *   <li>执行异常：返回 200 + code=0 + data=null（执行器已记录 FAILED 日志）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Tag(name = "内部任务执行（远程派发接收端�?)
-@Restoontroller
-@RequestMapping("/oronjob/internal")
-@RequiredArgsoonstruotor
-publio olass InternalJoboontroller {
+@Tag(name = "内部任务执行（远程派发接收端）")
+@RestController
+@RequestMapping("/cronjob/internal")
+@RequiredArgsConstructor
+public class InternalJobController {
 
-    /** 任务派发�?*/
-    private final TaskDispatoher taskDispatoher;
-    /** P0-1: Spring 应用上下文（用于获取 MapProoessor Bean�?*/
-    private final Applioationoontext applioationoontext;
+    /** 任务派发器 */
+    private final TaskDispatcher taskDispatcher;
+    /** P0-1: Spring 应用上下文（用于获取 MapProcessor Bean） */
+    private final ApplicationContext applicationContext;
 
     /**
-     * 接收远程派发请求并在本地执行�?
+     * 接收远程派发请求并在本地执行。
      *
      * <p>Leader 节点将分片任务通过 HTTP 派发到本节点，本方法接收后：
      * <ol>
-     *   <li>从请求中恢复 traoeId �?MDo（保证全链路追踪�?/li>
-     *   <li>调用 {@link TaskDispatoher#exeouteLooally} 在本地执�?/li>
-     *   <li>返回执行日志 ID（data 字段�?/li>
+     *   <li>从请求中恢复 traceId 到 MDC（保证全链路追踪）</li>
+     *   <li>调用 {@link TaskDispatcher#executeLocally} 在本地执行</li>
+     *   <li>返回执行日志 ID（data 字段）</li>
      * </ol>
      *
-     * @param request 远程派发请求（job + triggerType + shardIndex + shardTotal + traoeId�?
-     * @return 统一响应结果，data 为执行日�?ID（锁被持有或执行失败时为 null�?
+     * @param request 远程派发请求（job + triggerType + shardIndex + shardTotal + traceId）
+     * @return 统一响应结果，data 为执行日志 ID（锁被持有或执行失败时为 null）
      */
-    @Operation(summary = "接收远程派发请求并本地执�?)
+    @Operation(summary = "接收远程派发请求并本地执行")
     @IdempotentExempt("定时触发接口，无需幂等")
-    @PostMapping("/exeoute")
-    publio BaseResponse<String> exeoute(@RequestBody RemoteTaskRequest request) {
+    @PostMapping("/execute")
+    public BaseResponse<String> execute(@RequestBody RemoteTaskRequest request) {
         if (request == null || request.getJob() == null) {
             log.warn("[InternalJob] 远程派发请求参数为空");
             return BaseResponse.failed(400, "请求参数为空");
@@ -82,89 +82,89 @@ publio olass InternalJoboontroller {
             log.warn("[InternalJob] 远程派发请求 jobKey 为空");
             return BaseResponse.failed(400, "jobKey 不能为空");
         }
-        // P1-4: 从请求中恢复 traoeId �?MDo，保证全链路追踪
-        String traoeId = request.getTraoeId();
-        if (traoeId != null && !traoeId.isBlank()) {
-            TraoeIdUtil.set(traoeId);
+        // P1-4: 从请求中恢复 traceId 到 MDC，保证全链路追踪
+        String traceId = request.getTraceId();
+        if (traceId != null && !traceId.isBlank()) {
+            TraceIdUtil.set(traceId);
         } else {
-            TraoeIdUtil.getOroreate();
+            TraceIdUtil.getOrCreate();
         }
         try {
-            log.info("[InternalJob] 接收远程派发: key={} triggerType={} shard={}/{} traoeId={}",
+            log.info("[InternalJob] 接收远程派发: key={} triggerType={} shard={}/{} traceId={}",
                     request.getJob().getJobKey(), request.getTriggerType(),
-                    request.getShardIndex(), request.getShardTotal(), TraoeIdUtil.get());
-            String logId = taskDispatoher.exeouteLooally(
+                    request.getShardIndex(), request.getShardTotal(), TraceIdUtil.get());
+            String logId = taskDispatcher.executeLocally(
                     request.getJob(), request.getTriggerType(),
                     request.getShardIndex(), request.getShardTotal());
             return BaseResponse.ok(logId);
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             log.error("[InternalJob] 远程派发执行异常: key={} reason={}",
                     request.getJob().getJobKey(), e.getMessage(), e);
-            // 执行异常时返�?null（执行器端已记录 FAILED 日志，或锁被持有�?
+            // 执行异常时返回 null（执行器端已记录 FAILED 日志，或锁被持有）
             return BaseResponse.ok(null);
         } finally {
-            TraoeIdUtil.olear();
+            TraceIdUtil.clear();
         }
     }
 
     /**
-     * P0-1: 接收 MapReduoe 子任务远程派发请求并在本地执行�?
+     * P0-1: 接收 MapReduce 子任务远程派发请求并在本地执行。
      *
-     * <p>Leader 节点�?MapReduoe 子任务通过 HTTP 派发到本节点，本方法接收后：
+     * <p>Leader 节点将 MapReduce 子任务通过 HTTP 派发到本节点，本方法接收后：
      * <ol>
-     *   <li>从请求中恢复 traoeId �?MDo</li>
-     *   <li>�?Applioationoontext 获取 MapProoessor Bean</li>
-     *   <li>构造子任务 Mapoontext，调�?prooessor.prooess()</li>
-     *   <li>返回执行结果（含 suooess/result/errorMessage�?/li>
+     *   <li>从请求中恢复 traceId 到 MDC</li>
+     *   <li>从 ApplicationContext 获取 MapProcessor Bean</li>
+     *   <li>构造子任务 MapContext，调用 processor.process()</li>
+     *   <li>返回执行结果（含 success/result/errorMessage）</li>
      * </ol>
      *
-     * @param request 子任务派发请�?
+     * @param request 子任务派发请求
      * @return 统一响应结果，data 为子任务执行结果对象
      */
-    @Operation(summary = "接收 MapReduoe 子任务远程派发并本地执行")
+    @Operation(summary = "接收 MapReduce 子任务远程派发并本地执行")
     @IdempotentExempt("定时触发接口，无需幂等")
-    @PostMapping("/exeouteSubTask")
-    publio BaseResponse<ProoessResult> exeouteSubTask(@RequestBody RemoteSubTaskRequest request) {
+    @PostMapping("/executeSubTask")
+    public BaseResponse<ProcessResult> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
         if (request == null || request.getJobKey() == null || request.getHandler() == null) {
-            log.warn("[InternalJob] 子任务请求参数为�?);
+            log.warn("[InternalJob] 子任务请求参数为空");
             return BaseResponse.failed(400, "请求参数为空");
         }
-        String traoeId = request.getTraoeId();
-        if (traoeId != null && !traoeId.isBlank()) {
-            TraoeIdUtil.set(traoeId);
+        String traceId = request.getTraceId();
+        if (traceId != null && !traceId.isBlank()) {
+            TraceIdUtil.set(traceId);
         } else {
-            TraoeIdUtil.getOroreate();
+            TraceIdUtil.getOrCreate();
         }
         try {
-            log.info("[InternalJob] 接收子任务派�? key={} taskName={} handler={} traoeId={}",
-                    request.getJobKey(), request.getTaskName(), request.getHandler(), TraoeIdUtil.get());
-            // 获取 MapProoessor Bean
-            MapProoessor prooessor;
+            log.info("[InternalJob] 接收子任务派发: key={} taskName={} handler={} traceId={}",
+                    request.getJobKey(), request.getTaskName(), request.getHandler(), TraceIdUtil.get());
+            // 获取 MapProcessor Bean
+            MapProcessor processor;
             try {
-                prooessor = applioationoontext.getBean(request.getHandler(), MapProoessor.olass);
-            } oatoh (Exoeption e) {
-                log.error("[InternalJob] 获取 MapProoessor Bean 失败: handler={} reason={}",
+                processor = applicationContext.getBean(request.getHandler(), MapProcessor.class);
+            } catch (Exception e) {
+                log.error("[InternalJob] 获取 MapProcessor Bean 失败: handler={} reason={}",
                         request.getHandler(), e.getMessage());
-                return BaseResponse.ok(ProoessResult.failed("获取 MapProoessor Bean 失败: " + e.getMessage()));
+                return BaseResponse.ok(ProcessResult.failed("获取 MapProcessor Bean 失败: " + e.getMessage()));
             }
             // 构造子任务上下文并执行
-            Mapoontext oontext = new Mapoontext(
+            MapContext context = new MapContext(
                     request.getJobId(), request.getLogId(), request.getJobKey(),
                     request.getTaskName(), request.getTaskParams(), false);
-            ProoessResult result;
+            ProcessResult result;
             try {
-                result = prooessor.prooess(oontext);
+                result = processor.process(context);
                 if (result == null) {
-                    result = ProoessResult.suooess();
+                    result = ProcessResult.success();
                 }
-            } oatoh (Exoeption e) {
-                log.error("[InternalJob] 子任务执行异�? key={} taskName={} reason={}",
+            } catch (Exception e) {
+                log.error("[InternalJob] 子任务执行异常: key={} taskName={} reason={}",
                         request.getJobKey(), request.getTaskName(), e.getMessage(), e);
-                result = ProoessResult.failed(e.getolass().getSimpleName() + ": " + e.getMessage());
+                result = ProcessResult.failed(e.getClass().getSimpleName() + ": " + e.getMessage());
             }
             return BaseResponse.ok(result);
         } finally {
-            TraoeIdUtil.olear();
+            TraceIdUtil.clear();
         }
     }
 }

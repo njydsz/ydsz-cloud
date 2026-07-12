@@ -1,32 +1,32 @@
-paokage oom.njydsz.pmis.finanoe.server.engine;
+package com.njydsz.pmis.finance.server.engine;
 
-import oom.njydsz.pmis.finanoe.domain.enums.ReoonoileLevel;
-import oom.njydsz.pmis.finanoe.domain.enums.ReoonoileType;
+import com.njydsz.pmis.finance.domain.enums.ReconcileLevel;
+import com.njydsz.pmis.finance.domain.enums.ReconcileType;
 import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 
 /**
  * 单条对账结果
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
 @Builder
-publio olass ReoonoileResult implements Serializable {
+public class ReconcileResult implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 校验类型 */
-    private ReoonoileType type;
+    private ReconcileType type;
 
     /** 严重等级 */
-    private ReoonoileLevel level;
+    private ReconcileLevel level;
 
     /** 关联项目 ID */
     private String initiationId;
@@ -35,22 +35,22 @@ publio olass ReoonoileResult implements Serializable {
     private String employeeId;
 
     /** 关联来源单据 ID */
-    private String souroeId;
+    private String sourceId;
 
-    /** 关联来源类型(TIME_ENTRY / oOST / ...) */
-    private String souroeType;
+    /** 关联来源类型(TIME_ENTRY / COST / ...) */
+    private String sourceType;
 
     /** 描述 */
-    private String desoription;
+    private String description;
 
-    /** 当前观测�?可�? */
-    private BigDeoimal aotualValue;
+    /** 当前观测值(可选) */
+    private BigDecimal actualValue;
 
-    /** 期望�?可�? */
-    private BigDeoimal expeotedValue;
+    /** 期望值(可选) */
+    private BigDecimal expectedValue;
 
-    /** 偏差�?expeoted - aotual) */
-    private BigDeoimal drift;
+    /** 偏差值(expected - actual) */
+    private BigDecimal drift;
 
     /** 建议处理动作 */
     private String suggestion;
@@ -59,59 +59,61 @@ publio olass ReoonoileResult implements Serializable {
      * 构建 INFO 级别结果
      *
      * @param type 校验类型
-     * @param deso 描述
+     * @param desc 描述
      * @return 对账结果
      */
-    publio statio ReoonoileResult info(ReoonoileType type, String deso) {
-        return ReoonoileResult.builder()
-                .type(type).level(ReoonoileLevel.INFO).desoription(deso).build();
+    public static ReconcileResult info(ReconcileType type, String desc) {
+        return ReconcileResult.builder()
+                .type(type).level(ReconcileLevel.INFO).description(desc).build();
     }
 
     /**
      * 构建 WARN 级别结果
      *
      * @param type 校验类型
-     * @param deso 描述
+     * @param desc 描述
      * @return 对账结果
      */
-    publio statio ReoonoileResult warn(ReoonoileType type, String deso) {
-        return ReoonoileResult.builder()
-                .type(type).level(ReoonoileLevel.WARN).desoription(deso).build();
+    public static ReconcileResult warn(ReconcileType type, String desc) {
+        return ReconcileResult.builder()
+                .type(type).level(ReconcileLevel.WARN).description(desc).build();
     }
 
     /**
-     * 构建 WARN 级别结果（含建议�?     *
+     * 构建 WARN 级别结果（含建议）
+     *
      * @param type       校验类型
-     * @param deso       描述
+     * @param desc       描述
      * @param suggestion 建议处理动作
      * @return 对账结果
      */
-    publio statio ReoonoileResult warn(ReoonoileType type, String deso, String suggestion) {
-        return ReoonoileResult.builder()
-                .type(type).level(ReoonoileLevel.WARN).desoription(deso).suggestion(suggestion).build();
+    public static ReconcileResult warn(ReconcileType type, String desc, String suggestion) {
+        return ReconcileResult.builder()
+                .type(type).level(ReconcileLevel.WARN).description(desc).suggestion(suggestion).build();
     }
 
     /**
      * 构建 ERROR 级别结果
      *
      * @param type 校验类型
-     * @param deso 描述
+     * @param desc 描述
      * @return 对账结果
      */
-    publio statio ReoonoileResult error(ReoonoileType type, String deso) {
-        return ReoonoileResult.builder()
-                .type(type).level(ReoonoileLevel.ERROR).desoription(deso).build();
+    public static ReconcileResult error(ReconcileType type, String desc) {
+        return ReconcileResult.builder()
+                .type(type).level(ReconcileLevel.ERROR).description(desc).build();
     }
 
     /**
-     * 构建 ERROR 级别结果（含建议�?     *
+     * 构建 ERROR 级别结果（含建议）
+     *
      * @param type       校验类型
-     * @param deso       描述
+     * @param desc       描述
      * @param suggestion 建议处理动作
      * @return 对账结果
      */
-    publio statio ReoonoileResult error(ReoonoileType type, String deso, String suggestion) {
-        return ReoonoileResult.builder()
-                .type(type).level(ReoonoileLevel.ERROR).desoription(deso).suggestion(suggestion).build();
+    public static ReconcileResult error(ReconcileType type, String desc, String suggestion) {
+        return ReconcileResult.builder()
+                .type(type).level(ReconcileLevel.ERROR).description(desc).suggestion(suggestion).build();
     }
 }

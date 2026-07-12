@@ -1,43 +1,44 @@
-paokage oom.njydsz.pmis.projeot.server.servioe.impl;
+package com.njydsz.pmis.project.server.service.impl;
 
-import oom.njydsz.pmis.projeot.domain.entity.BillableUtilizationSnapshotDO;
-import oom.njydsz.pmis.projeot.domain.entity.RateInternalDO;
-import oom.njydsz.pmis.projeot.domain.enums.UtilizationGrade;
-import oom.njydsz.pmis.projeot.infra.mapper.BillableUtilizationSnapshotMapper;
-import oom.njydsz.pmis.projeot.infra.mapper.RateInternalMapper;
-import oom.njydsz.pmis.projeot.infra.mapper.TimeEntryMapper;
-import oom.njydsz.pmis.projeot.server.servioe.BillableUtilizationServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.project.domain.entity.BillableUtilizationSnapshotDO;
+import com.njydsz.pmis.project.domain.entity.RateInternalDO;
+import com.njydsz.pmis.project.domain.enums.UtilizationGrade;
+import com.njydsz.pmis.project.infra.mapper.BillableUtilizationSnapshotMapper;
+import com.njydsz.pmis.project.infra.mapper.RateInternalMapper;
+import com.njydsz.pmis.project.infra.mapper.TimeEntryMapper;
+import com.njydsz.pmis.project.server.service.BillableUtilizationService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LooalDate;
-import java.time.LooalDateTime;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.oomparator;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objeots;
+import java.util.Objects;
 
 /**
  * 可计费利用率服务实现
  *
- * <p>数据源：pmis_exeoution_time_entry 表中 status='APPROVED' 的工�? * <p>算法：utilization = billable / total * 100
+ * <p>数据源：pmis_execution_time_entry 表中 status='APPROVED' 的工时
+ * <p>算法：utilization = billable / total * 100
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-@Transaotional(readOnly = true)
-publio olass BillableUtilizationServioeImpl implements BillableUtilizationServioe {
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class BillableUtilizationServiceImpl implements BillableUtilizationService {
 
     /** 工时 Mapper（利用率计算数据源） */
     private final TimeEntryMapper timeEntryMapper;
@@ -46,319 +47,320 @@ publio olass BillableUtilizationServioeImpl implements BillableUtilizationServio
     /** 内部费率 Mapper */
     private final RateInternalMapper rateInternalMapper;
 
-    // HUNDRED reserved for future peroentage oaloulations
-    private statio final int DEFAULT_TOP = 20;
-    private statio final DateTimeFormatter PERIOD_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
+    // HUNDRED reserved for future percentage calculations
+    private static final int DEFAULT_TOP = 20;
+    private static final DateTimeFormatter PERIOD_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
 
     @Override
-    publio List<Map<String, Objeot>> aggregate(LooalDate from, LooalDate to) {
-        LooalDate[] range = normalizeRange(from, to);
-        List<Map<String, Objeot>> rows = safe(() -> timeEntryMapper.aggregateBillableByEmployee(range[0], range[1]));
+    public List<Map<String, Object>> aggregate(LocalDate from, LocalDate to) {
+        LocalDate[] range = normalizeRange(from, to);
+        List<Map<String, Object>> rows = safe(() -> timeEntryMapper.aggregateBillableByEmployee(range[0], range[1]));
         if (rows == null) rows = new ArrayList<>();
-        List<Map<String, Objeot>> out = new ArrayList<>(rows.size());
-        for (Map<String, Objeot> row : rows) {
-            enrioh(row);
+        List<Map<String, Object>> out = new ArrayList<>(rows.size());
+        for (Map<String, Object> row : rows) {
+            enrich(row);
             out.add(row);
         }
         return out;
     }
 
     @Override
-    publio Map<String, Objeot> personal(String employeeId, LooalDate from, LooalDate to) {
+    public Map<String, Object> personal(String employeeId, LocalDate from, LocalDate to) {
         if (employeeId == null) {
-            throw new IllegalArgumentExoeption("员工 ID 不能为空");
+            throw new IllegalArgumentException("员工 ID 不能为空");
         }
-        LooalDate[] range = normalizeRange(from, to);
-        Map<String, Objeot> row = safe(() -> timeEntryMapper.aggregateBillableOne(employeeId, range[0], range[1]));
+        LocalDate[] range = normalizeRange(from, to);
+        Map<String, Object> row = safe(() -> timeEntryMapper.aggregateBillableOne(employeeId, range[0], range[1]));
         if (row == null) row = new HashMap<>();
         row.put("employeeId", employeeId);
-        enrioh(row);
+        enrich(row);
         return row;
     }
 
     @Override
-    publio List<Map<String, Objeot>> rank(LooalDate from, LooalDate to, int top) {
+    public List<Map<String, Object>> rank(LocalDate from, LocalDate to, int top) {
         if (top <= 0) top = DEFAULT_TOP;
-        List<Map<String, Objeot>> all = aggregate(from, to);
+        List<Map<String, Object>> all = aggregate(from, to);
         // 个人聚合（跨月合并）
         Map<String, double[]> byEmp = new HashMap<>();
         Map<String, String> nameMap = new HashMap<>();
         Map<String, String> levelMap = new HashMap<>();
-        for (Map<String, Objeot> r : all) {
+        for (Map<String, Object> r : all) {
             String emp = stringOf(r.get("employeeId"));
-            if (emp == null) oontinue;
-            double[] aoo = byEmp.oomputeIfAbsent(emp, k -> new double[2]);
-            aoo[0] += toDouble(r.get("totalHours"));
-            aoo[1] += toDouble(r.get("billableHours"));
+            if (emp == null) continue;
+            double[] acc = byEmp.computeIfAbsent(emp, k -> new double[2]);
+            acc[0] += toDouble(r.get("totalHours"));
+            acc[1] += toDouble(r.get("billableHours"));
             nameMap.putIfAbsent(emp, str(r.get("employeeName")));
-            levelMap.putIfAbsent(emp, str(r.get("leveloode")));
+            levelMap.putIfAbsent(emp, str(r.get("levelCode")));
         }
-        List<Map<String, Objeot>> out = new ArrayList<>();
+        List<Map<String, Object>> out = new ArrayList<>();
         for (Map.Entry<String, double[]> e : byEmp.entrySet()) {
-            Map<String, Objeot> row = new HashMap<>();
+            Map<String, Object> row = new HashMap<>();
             row.put("employeeId", e.getKey());
             row.put("employeeName", nameMap.getOrDefault(e.getKey(), ""));
-            row.put("leveloode", levelMap.getOrDefault(e.getKey(), ""));
+            row.put("levelCode", levelMap.getOrDefault(e.getKey(), ""));
             row.put("totalHours", e.getValue()[0]);
             row.put("billableHours", e.getValue()[1]);
-            enrioh(row);
+            enrich(row);
             out.add(row);
         }
-        out.sort(oomparator.oomparingDouble((Map<String, Objeot> m) -> toDouble(m.get("utilizationPot"))).reversed());
+        out.sort(Comparator.comparingDouble((Map<String, Object> m) -> toDouble(m.get("utilizationPct"))).reversed());
         if (out.size() > top) return out.subList(0, top);
         return out;
     }
 
     @Override
-    publio Map<String, Objeot> overall(LooalDate from, LooalDate to) {
-        LooalDate[] range = normalizeRange(from, to);
-        List<Map<String, Objeot>> rows = aggregate(range[0], range[1]);
+    public Map<String, Object> overall(LocalDate from, LocalDate to) {
+        LocalDate[] range = normalizeRange(from, to);
+        List<Map<String, Object>> rows = aggregate(range[0], range[1]);
         double total = 0, billable = 0;
-        for (Map<String, Objeot> r : rows) {
+        for (Map<String, Object> r : rows) {
             total += toDouble(r.get("totalHours"));
             billable += toDouble(r.get("billableHours"));
         }
-        Map<String, Objeot> row = new HashMap<>();
+        Map<String, Object> row = new HashMap<>();
         row.put("totalHours", total);
         row.put("billableHours", billable);
-        row.put("employeeoount", oountDistinotEmployee(rows));
-        enrioh(row);
+        row.put("employeeCount", countDistinctEmployee(rows));
+        enrich(row);
         return row;
     }
 
     @Override
-    publio List<Map<String, Objeot>> soanAlerts(LooalDate from, LooalDate to) {
-        List<Map<String, Objeot>> all = aggregate(from, to);
+    public List<Map<String, Object>> scanAlerts(LocalDate from, LocalDate to) {
+        List<Map<String, Object>> all = aggregate(from, to);
         // 个人合并
         Map<String, double[]> byEmp = new HashMap<>();
-        Map<String, Map<String, Objeot>> meta = new HashMap<>();
-        for (Map<String, Objeot> r : all) {
+        Map<String, Map<String, Object>> meta = new HashMap<>();
+        for (Map<String, Object> r : all) {
             String emp = stringOf(r.get("employeeId"));
-            if (emp == null) oontinue;
-            double[] aoo = byEmp.oomputeIfAbsent(emp, k -> new double[2]);
-            aoo[0] += toDouble(r.get("totalHours"));
-            aoo[1] += toDouble(r.get("billableHours"));
-            meta.oomputeIfAbsent(emp, k -> {
-                Map<String, Objeot> m = new HashMap<>();
+            if (emp == null) continue;
+            double[] acc = byEmp.computeIfAbsent(emp, k -> new double[2]);
+            acc[0] += toDouble(r.get("totalHours"));
+            acc[1] += toDouble(r.get("billableHours"));
+            meta.computeIfAbsent(emp, k -> {
+                Map<String, Object> m = new HashMap<>();
                 m.put("employeeId", emp);
                 m.put("employeeName", r.get("employeeName"));
-                m.put("leveloode", r.get("leveloode"));
+                m.put("levelCode", r.get("levelCode"));
                 return m;
             });
         }
-        List<Map<String, Objeot>> out = new ArrayList<>();
+        List<Map<String, Object>> out = new ArrayList<>();
         for (Map.Entry<String, double[]> e : byEmp.entrySet()) {
-            Map<String, Objeot> row = new HashMap<>(meta.get(e.getKey()));
+            Map<String, Object> row = new HashMap<>(meta.get(e.getKey()));
             row.put("totalHours", e.getValue()[0]);
             row.put("billableHours", e.getValue()[1]);
-            enrioh(row);
+            enrich(row);
             String g = str(row.get("grade"));
-            if ("WARN".equalsIgnoreoase(g) || "oRITIoAL".equalsIgnoreoase(g)) {
+            if ("WARN".equalsIgnoreCase(g) || "CRITICAL".equalsIgnoreCase(g)) {
                 out.add(row);
             }
         }
-        out.sort(oomparator.oomparingDouble((Map<String, Objeot> m) -> toDouble(m.get("utilizationPot"))));
+        out.sort(Comparator.comparingDouble((Map<String, Object> m) -> toDouble(m.get("utilizationPct"))));
         return out;
     }
 
     @Override
-    publio Map<String, Objeot> evaluate(double totalHours, double billableHours) {
-        Map<String, Objeot> row = new HashMap<>();
+    public Map<String, Object> evaluate(double totalHours, double billableHours) {
+        Map<String, Object> row = new HashMap<>();
         row.put("totalHours", totalHours);
         row.put("billableHours", billableHours);
-        enrioh(row);
+        enrich(row);
         return row;
     }
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio Map<String, Objeot> reoompute(String period, boolean reoomputeAll) {
-        long start = System.ourrentTimeMillis();
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> recompute(String period, boolean recomputeAll) {
+        long start = System.currentTimeMillis();
         String p = (period == null || period.isBlank())
-                ? LooalDate.now().minusMonths(1).format(PERIOD_FMT)
+                ? LocalDate.now().minusMonths(1).format(PERIOD_FMT)
                 : period;
         YearMonth ym;
         try {
             ym = YearMonth.parse(p, PERIOD_FMT);
-        } oatoh (Exoeption e) {
-            throw new IllegalArgumentExoeption("period 必须�?yyyy-MM 格式: " + period);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("period 必须为 yyyy-MM 格式: " + period);
         }
-        LooalDate from = ym.atDay(1);
-        LooalDate to = ym.atEndOfMonth();
+        LocalDate from = ym.atDay(1);
+        LocalDate to = ym.atEndOfMonth();
 
-        if (reoomputeAll) {
+        if (recomputeAll) {
             try {
                 int removed = snapshotMapper.deleteByPeriod(p);
-                log.info("[BillableUtilization] reoompute 软删 period={} oount={}", p, removed);
-            } oatoh (Exoeption e) {
+                log.info("[BillableUtilization] recompute 软删 period={} count={}", p, removed);
+            } catch (Exception e) {
                 log.error("[BillableUtilization] 软删失败: {}", e.getMessage());
             }
         }
 
-        List<Map<String, Objeot>> rows = safe(
+        List<Map<String, Object>> rows = safe(
                 () -> timeEntryMapper.aggregateBillableByEmployee(from, to));
         if (rows == null) rows = new ArrayList<>();
 
-        // 拼接部门（来�?RateInternal�?        Map<String, String> deptByLevel = deptByLevelSafe();
+        // 拼接部门（来自 RateInternal）
+        Map<String, String> deptByLevel = deptByLevelSafe();
 
-        int affeoted = 0;
-        for (Map<String, Objeot> raw : rows) {
+        int affected = 0;
+        for (Map<String, Object> raw : rows) {
             try {
                 BillableUtilizationSnapshotDO snap = toSnapshot(p, raw, from, to, deptByLevel);
                 int n = snapshotMapper.upsert(snap);
-                affeoted += Math.max(n, 0);
-            } oatoh (Exoeption e) {
+                affected += Math.max(n, 0);
+            } catch (Exception e) {
                 log.error("[BillableUtilization] 写入快照失败 employee={} : {}",
                         raw.get("employee_id"), e.getMessage());
             }
         }
 
-        Map<String, Objeot> out = new HashMap<>();
+        Map<String, Object> out = new HashMap<>();
         out.put("ok", true);
         out.put("period", p);
-        out.put("reoomputeAll", reoomputeAll);
-        out.put("affeotedoount", affeoted);
+        out.put("recomputeAll", recomputeAll);
+        out.put("affectedCount", affected);
         out.put("rangeFrom", from.toString());
         out.put("rangeTo", to.toString());
-        out.put("reoomputeAt", LooalDateTime.now().toString());
-        out.put("oostMs", System.ourrentTimeMillis() - start);
+        out.put("recomputeAt", LocalDateTime.now().toString());
+        out.put("costMs", System.currentTimeMillis() - start);
         return out;
     }
 
     @Override
-    publio Map<String, Objeot> snapshotAverage(String period) {
+    public Map<String, Object> snapshotAverage(String period) {
         String p = (period == null || period.isBlank())
-                ? LooalDate.now().format(PERIOD_FMT)
+                ? LocalDate.now().format(PERIOD_FMT)
                 : period;
-        Map<String, Objeot> out = safe(() -> snapshotMapper.averageByPeriod(p));
+        Map<String, Object> out = safe(() -> snapshotMapper.averageByPeriod(p));
         if (out == null) out = new HashMap<>();
-        // 兜底：快照表无数�?�?实时聚合
-        if (out.isEmpty() || out.get("headoount") == null
-                || "0".equals(String.valueOf(out.get("headoount")))) {
-            return realtimeAverageFallbaok(p);
+        // 兜底：快照表无数据 → 实时聚合
+        if (out.isEmpty() || out.get("headcount") == null
+                || "0".equals(String.valueOf(out.get("headcount")))) {
+            return realtimeAverageFallback(p);
         }
         // 补齐展示字段
-        out.put("souroe", "SNAPSHOT");
+        out.put("source", "SNAPSHOT");
         out.put("period", p);
         return out;
     }
 
     // ----------------- 私有 -----------------
 
-    private void enrioh(Map<String, Objeot> row) {
+    private void enrich(Map<String, Object> row) {
         double total = toDouble(firstNonNull(row, "totalHours", "total_hours"));
         double billable = toDouble(firstNonNull(row, "billableHours", "billable_hours"));
-        BigDeoimal pot;
+        BigDecimal pct;
         if (total <= 0.0001) {
-            pot = BigDeoimal.ZERO;
+            pct = BigDecimal.ZERO;
         } else {
             double raw = billable / total * 100d;
-            // billable > total 钳制�?100%
+            // billable > total 钳制为 100%
             if (raw > 100d) raw = 100d;
             if (raw < 0d) raw = 0d;
-            pot = BigDeoimal.valueOf(raw).setSoale(4, RoundingMode.HALF_UP);
+            pct = BigDecimal.valueOf(raw).setScale(4, RoundingMode.HALF_UP);
         }
-        UtilizationGrade grade = UtilizationGrade.of(pot.doubleValue());
-        // 标准化为 oameloase，便于下游直�?get("totalHours") / get("billableHours")
+        UtilizationGrade grade = UtilizationGrade.of(pct.doubleValue());
+        // 标准化为 camelCase，便于下游直接 get("totalHours") / get("billableHours")
         row.put("totalHours", total);
         row.put("billableHours", billable);
-        row.put("utilizationPot", pot);
-        row.put("utilizationPotDisplay", pot.setSoale(2, RoundingMode.HALF_UP));
-        row.put("grade", grade.getoode());
-        row.put("gradeDeso", grade.getDeso());
+        row.put("utilizationPct", pct);
+        row.put("utilizationPctDisplay", pct.setScale(2, RoundingMode.HALF_UP));
+        row.put("grade", grade.getCode());
+        row.put("gradeDesc", grade.getDesc());
         row.put("alert", grade.isAlert());
-        // 同时标准�?employeeId / employeeName / leveloode（MyBatis 默认下划线）
+        // 同时标准化 employeeId / employeeName / levelCode（MyBatis 默认下划线）
         normalizeKey(row, "employeeId", "employee_id");
         normalizeKey(row, "employeeName", "employee_name");
-        normalizeKey(row, "leveloode", "level_oode");
+        normalizeKey(row, "levelCode", "level_code");
     }
 
-    private statio void normalizeKey(Map<String, Objeot> row, String oamelKey, String snakeKey) {
-        Objeot v = row.get(oamelKey);
+    private static void normalizeKey(Map<String, Object> row, String camelKey, String snakeKey) {
+        Object v = row.get(camelKey);
         if (v != null) return;
-        Objeot sro = row.get(snakeKey);
-        if (sro != null) {
-            row.put(oamelKey, sro);
+        Object src = row.get(snakeKey);
+        if (src != null) {
+            row.put(camelKey, src);
         }
     }
 
-    private statio Objeot firstNonNull(Map<String, Objeot> row, String... keys) {
+    private static Object firstNonNull(Map<String, Object> row, String... keys) {
         for (String k : keys) {
-            Objeot v = row.get(k);
+            Object v = row.get(k);
             if (v != null) return v;
         }
         return null;
     }
 
-    private LooalDate[] normalizeRange(LooalDate from, LooalDate to) {
-        LooalDate f = from != null ? from : LooalDate.now().withDayOfMonth(1);
-        LooalDate t = to != null ? to : LooalDate.now();
+    private LocalDate[] normalizeRange(LocalDate from, LocalDate to) {
+        LocalDate f = from != null ? from : LocalDate.now().withDayOfMonth(1);
+        LocalDate t = to != null ? to : LocalDate.now();
         if (t.isBefore(f)) {
-            throw new IllegalArgumentExoeption("截止日期不能早于起始日期");
+            throw new IllegalArgumentException("截止日期不能早于起始日期");
         }
-        return new LooalDate[]{f, t};
+        return new LocalDate[]{f, t};
     }
 
-    private long oountDistinotEmployee(List<Map<String, Objeot>> rows) {
+    private long countDistinctEmployee(List<Map<String, Object>> rows) {
         return rows.stream()
                 .map(r -> stringOf(r.get("employeeId")))
-                .filter(Objeots::nonNull)
-                .distinot()
-                .oount();
+                .filter(Objects::nonNull)
+                .distinct()
+                .count();
     }
 
-    private statio double toDouble(Objeot o) {
+    private static double toDouble(Object o) {
         if (o == null) return 0d;
-        if (o instanoeof Number) return ((Number) o).doubleValue();
+        if (o instanceof Number) return ((Number) o).doubleValue();
         try {
             return Double.parseDouble(o.toString());
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             return 0d;
         }
     }
 
-    private statio String str(Objeot o) {
+    private static String str(Object o) {
         return o == null ? "" : o.toString();
     }
 
-    private statio String stringOf(Objeot o) {
+    private static String stringOf(Object o) {
         return o == null ? null : o.toString();
     }
 
-    @FunotionalInterfaoe
-    private interfaoe SupplierX<T> {
+    @FunctionalInterface
+    private interface SupplierX<T> {
         T get();
     }
 
     private <T> T safe(SupplierX<T> s) {
         try {
             return s.get();
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             log.error("[Utilization] 数据查询失败: {}", e.getMessage());
             return null;
         }
     }
 
-    private BillableUtilizationSnapshotDO toSnapshot(String period, Map<String, Objeot> raw,
-                                                     LooalDate from, LooalDate to,
+    private BillableUtilizationSnapshotDO toSnapshot(String period, Map<String, Object> raw,
+                                                     LocalDate from, LocalDate to,
                                                      Map<String, String> deptByLevel) {
         BillableUtilizationSnapshotDO snap = new BillableUtilizationSnapshotDO();
         snap.setPeriod(period);
         String empId = stringOf(firstNonNull(raw, "employeeId", "employee_id"));
         if (empId == null) {
-            throw new IllegalArgumentExoeption("employee_id 缺失");
+            throw new IllegalArgumentException("employee_id 缺失");
         }
         snap.setEmployeeId(empId);
         snap.setEmployeeName(str(firstNonNull(raw, "employeeName", "employee_name")));
-        String level = str(firstNonNull(raw, "leveloode", "level_oode"));
-        snap.setLeveloode(level);
+        String level = str(firstNonNull(raw, "levelCode", "level_code"));
+        snap.setLevelCode(level);
         snap.setDepartment(deptByLevel.getOrDefault(level, ""));
 
-        BigDeoimal total = toBd(firstNonNull(raw, "totalHours", "total_hours"));
-        BigDeoimal billable = toBd(firstNonNull(raw, "billableHours", "billable_hours"));
-        BigDeoimal overtime = toBd(firstNonNull(raw, "overtimeHours", "overtime_hours"));
-        BigDeoimal leave = toBd(firstNonNull(raw, "leaveHours", "leave_hours"));
-        BigDeoimal training = toBd(firstNonNull(raw, "trainingHours", "training_hours"));
+        BigDecimal total = toBd(firstNonNull(raw, "totalHours", "total_hours"));
+        BigDecimal billable = toBd(firstNonNull(raw, "billableHours", "billable_hours"));
+        BigDecimal overtime = toBd(firstNonNull(raw, "overtimeHours", "overtime_hours"));
+        BigDecimal leave = toBd(firstNonNull(raw, "leaveHours", "leave_hours"));
+        BigDecimal training = toBd(firstNonNull(raw, "trainingHours", "training_hours"));
 
         snap.setTotalHours(total);
         snap.setBillableHours(billable);
@@ -366,26 +368,27 @@ publio olass BillableUtilizationServioeImpl implements BillableUtilizationServio
         snap.setLeaveHours(leave);
         snap.setTrainingHours(training);
 
-        // benoh = total - billable - leave - training（钳制为 0�?        BigDeoimal benoh = total.subtraot(billable).subtraot(leave).subtraot(training);
-        if (benoh.signum() < 0) benoh = BigDeoimal.ZERO;
-        snap.setBenohHours(benoh);
+        // bench = total - billable - leave - training（钳制为 0）
+        BigDecimal bench = total.subtract(billable).subtract(leave).subtract(training);
+        if (bench.signum() < 0) bench = BigDecimal.ZERO;
+        snap.setBenchHours(bench);
 
-        BigDeoimal pot;
+        BigDecimal pct;
         if (total.signum() == 0) {
-            pot = BigDeoimal.ZERO;
+            pct = BigDecimal.ZERO;
         } else {
             double raw2 = billable.divide(total, 4, RoundingMode.HALF_UP).doubleValue();
             if (raw2 > 1d) raw2 = 1d;
             if (raw2 < 0d) raw2 = 0d;
-            pot = BigDeoimal.valueOf(raw2);
+            pct = BigDecimal.valueOf(raw2);
         }
-        snap.setUtilizationPot(pot);
-        UtilizationGrade g = UtilizationGrade.of(pot.doubleValue() * 100d);
-        snap.setGrade(g.getoode());
+        snap.setUtilizationPct(pct);
+        UtilizationGrade g = UtilizationGrade.of(pct.doubleValue() * 100d);
+        snap.setGrade(g.getCode());
         snap.setRangeFrom(from);
         snap.setRangeTo(to);
-        snap.setSnapshotAt(LooalDateTime.now());
-        snap.setSouroe("oRONJOB");
+        snap.setSnapshotAt(LocalDateTime.now());
+        snap.setSource("CRONJOB");
         snap.setDeleted(0);
         return snap;
     }
@@ -393,59 +396,59 @@ publio olass BillableUtilizationServioeImpl implements BillableUtilizationServio
     private Map<String, String> deptByLevelSafe() {
         Map<String, String> out = new HashMap<>();
         try {
-            List<RateInternalDO> all = rateInternalMapper.seleotAll();
+            List<RateInternalDO> all = rateInternalMapper.selectAll();
             if (all != null) {
                 for (RateInternalDO r : all) {
-                    String lvl = r.getLeveloode();
+                    String lvl = r.getLevelCode();
                     String dept = r.getDepartmentName();
                     if (lvl != null && !lvl.isBlank() && dept != null && !dept.isBlank()) {
                         out.putIfAbsent(lvl, dept);
                     }
                 }
             }
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             log.error("[Utilization] 读取 RateInternal 失败: {}", e.getMessage());
         }
         return out;
     }
 
-    private Map<String, Objeot> realtimeAverageFallbaok(String period) {
+    private Map<String, Object> realtimeAverageFallback(String period) {
         YearMonth ym;
         try {
             ym = YearMonth.parse(period, PERIOD_FMT);
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             ym = YearMonth.now();
         }
-        LooalDate from = ym.atDay(1);
-        LooalDate to = ym.atEndOfMonth();
-        List<Map<String, Objeot>> rows = aggregate(from, to);
+        LocalDate from = ym.atDay(1);
+        LocalDate to = ym.atEndOfMonth();
+        List<Map<String, Object>> rows = aggregate(from, to);
         double total = 0, billable = 0;
         long head = 0;
-        for (Map<String, Objeot> r : rows) {
+        for (Map<String, Object> r : rows) {
             total += toDouble(r.get("totalHours"));
             billable += toDouble(r.get("billableHours"));
         }
-        head = oountDistinotEmployee(rows);
-        Map<String, Objeot> out = new HashMap<>();
-        double pot = total <= 0.0001 ? 0d : Math.min(1d, billable / total);
-        out.put("avg_pot", pot);
+        head = countDistinctEmployee(rows);
+        Map<String, Object> out = new HashMap<>();
+        double pct = total <= 0.0001 ? 0d : Math.min(1d, billable / total);
+        out.put("avg_pct", pct);
         out.put("sum_total", total);
         out.put("sum_billable", billable);
-        out.put("sum_benoh", Math.max(0d, total - billable));
-        out.put("headoount", head);
-        out.put("souroe", "REALTIME");
+        out.put("sum_bench", Math.max(0d, total - billable));
+        out.put("headcount", head);
+        out.put("source", "REALTIME");
         out.put("period", period);
         return out;
     }
 
-    private statio BigDeoimal toBd(Objeot o) {
-        if (o == null) return BigDeoimal.ZERO;
-        if (o instanoeof BigDeoimal) return (BigDeoimal) o;
-        if (o instanoeof Number) return new BigDeoimal(o.toString());
+    private static BigDecimal toBd(Object o) {
+        if (o == null) return BigDecimal.ZERO;
+        if (o instanceof BigDecimal) return (BigDecimal) o;
+        if (o instanceof Number) return new BigDecimal(o.toString());
         try {
-            return new BigDeoimal(o.toString());
-        } oatoh (Exoeption e) {
-            return BigDeoimal.ZERO;
+            return new BigDecimal(o.toString());
+        } catch (Exception e) {
+            return BigDecimal.ZERO;
         }
     }
 }

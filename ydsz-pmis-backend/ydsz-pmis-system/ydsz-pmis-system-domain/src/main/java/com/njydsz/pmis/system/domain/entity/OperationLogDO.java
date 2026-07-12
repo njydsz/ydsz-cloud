@@ -1,29 +1,30 @@
-paokage oom.njydsz.pmis.system.domain.entity.audit;
+package com.njydsz.pmis.system.domain.entity.audit;
 
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
-import oom.njydsz.pmis.oommon.domain.entity.LogBaseDO;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.entity.LogBaseDO;
 import lombok.Data;
 
 /**
- * 操作日志实体（publio.pmis_operation_log�? *
+ * 操作日志实体（public.pmis_operation_log）
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
 @TableName("pmis_operation_log")
-publio olass OperationLogDO extends LogBaseDO {
+public class OperationLogDO extends LogBaseDO {
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    /** 模块�?*/
+    /** 模块名 */
     private String module;
 
-    /** 操作�?*/
-    private String aotion;
+    /** 操作名 */
+    private String action;
 
     /** 业务类型 */
     private String bizType;
@@ -34,7 +35,7 @@ publio olass OperationLogDO extends LogBaseDO {
     /** 用户 ID */
     private String userId;
 
-    /** 用户�?*/
+    /** 用户名 */
     private String username;
 
     /** 请求 URL */
@@ -46,8 +47,8 @@ publio olass OperationLogDO extends LogBaseDO {
     /** 方法签名 */
     private String methodSignature;
 
-    /** 客户�?IP */
-    private String olientIp;
+    /** 客户端 IP */
+    private String clientIp;
 
     /** User-Agent */
     private String userAgent;
@@ -58,23 +59,23 @@ publio olass OperationLogDO extends LogBaseDO {
     /** 响应 JSON */
     private String responseJson;
 
-    /** 变更前数据（JSON�?*/
+    /** 变更前数据（JSON） */
     private String beforeData;
 
-    /** 变更后数据（JSON�?*/
+    /** 变更后数据（JSON） */
     private String afterData;
 
-    /** 状�? SUooESS / FAILED */
+    /** 状态: SUCCESS / FAILED */
     private String status;
 
     /** 错误信息 */
     private String errorMessage;
 
     /** 耗时(毫秒) */
-    private Long oostMs;
+    private Long costMs;
 
     /** 链路追踪 ID */
-    private String traoeId;
+    private String traceId;
 
     /** 租户 ID */
     private String tenantId;

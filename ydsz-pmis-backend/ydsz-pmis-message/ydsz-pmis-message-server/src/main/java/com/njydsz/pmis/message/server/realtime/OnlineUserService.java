@@ -1,107 +1,119 @@
-paokage oom.njydsz.pmis.message.server.realtime;
+package com.njydsz.pmis.message.server.realtime;
 
 
-import oom.njydsz.pmis.message.domain.oonstant.Messageoonstants;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.message.domain.constant.MessageConstants;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.oore.StringRedisTemplate;
-import org.springframework.stereotype.Servioe;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 
 /**
- * P0-4: 在线用户状态服务（Redis-based）�? *
- * <p>使用 Redis Hash 跟踪用户在线状态：key = {@oode pmis:ws:online:{userId}}�? * field = sessionId，value = 时间戳。支持同一用户多端登录（多�?sessionId 共存）�? *
- * <p>判定在线策略：用户至少有一个活�?session 即视为在线；断开时移除对�?sessionId�? * �?Hash 为空时判定离线�? *
- * <p>每个 session 记录设置 TTL（默�?1h，由心跳续期），防止异常断开导致僵尸 session�? *
+ * P0-4: 在线用户状态服务（Redis-based）。
+ *
+ * <p>使用 Redis Hash 跟踪用户在线状态：key = {@code pmis:ws:online:{userId}}，
+ * field = sessionId，value = 时间戳。支持同一用户多端登录（多个 sessionId 共存）。
+ *
+ * <p>判定在线策略：用户至少有一个活跃 session 即视为在线；断开时移除对应 sessionId，
+ * 当 Hash 为空时判定离线。
+ *
+ * <p>每个 session 记录设置 TTL（默认 1h，由心跳续期），防止异常断开导致僵尸 session。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass OnlineUserServioe {
+@Service
+@RequiredArgsConstructor
+public class OnlineUserService {
 
     /** session 记录 TTL，心跳未续期时自动清理（秒） */
-    private statio final long SESSION_TTL_SEoONDS = 3600L;
+    private static final long SESSION_TTL_SECONDS = 3600L;
 
     private final StringRedisTemplate redisTemplate;
 
     /**
-     * 标记用户上线：在 Hash 中记�?sessionId�?     *
+     * 标记用户上线：在 Hash 中记录 sessionId。
+     *
      * @param userId    用户 ID
-     * @param sessionId WebSooket session ID
+     * @param sessionId WebSocket session ID
      */
-    publio void markOnline(String userId, String sessionId) {
+    public void markOnline(String userId, String sessionId) {
         if (userId == null || sessionId == null) {
             return;
         }
-        String key = Messageoonstants.WS_ONLINE_KEY_PREFIX + userId;
-        redisTemplate.opsForHash().put(key, sessionId, String.valueOf(System.ourrentTimeMillis()));
-        redisTemplate.expire(key, Duration.ofSeoonds(SESSION_TTL_SEoONDS));
+        String key = MessageConstants.WS_ONLINE_KEY_PREFIX + userId;
+        redisTemplate.opsForHash().put(key, sessionId, String.valueOf(System.currentTimeMillis()));
+        redisTemplate.expire(key, Duration.ofSeconds(SESSION_TTL_SECONDS));
         log.debug("[WS-Online] 用户上线: userId={}, sessionId={}", userId, sessionId);
     }
 
     /**
-     * 标记用户下线：从 Hash 中移�?sessionId；Hash 为空时删�?key�?     *
+     * 标记用户下线：从 Hash 中移除 sessionId；Hash 为空时删除 key。
+     *
      * @param userId    用户 ID
-     * @param sessionId WebSooket session ID
+     * @param sessionId WebSocket session ID
      */
-    publio void markOffline(String userId, String sessionId) {
+    public void markOffline(String userId, String sessionId) {
         if (userId == null || sessionId == null) {
             return;
         }
-        String key = Messageoonstants.WS_ONLINE_KEY_PREFIX + userId;
+        String key = MessageConstants.WS_ONLINE_KEY_PREFIX + userId;
         Long remaining = redisTemplate.opsForHash().delete(key, sessionId);
         if (remaining != null && remaining == 0) {
-            // Hash 已空，清�?key
+            // Hash 已空，清理 key
             redisTemplate.delete(key);
         }
         log.debug("[WS-Online] 用户下线: userId={}, sessionId={}", userId, sessionId);
     }
 
     /**
-     * 判断用户是否在线（至少有一个活�?session）�?     *
+     * 判断用户是否在线（至少有一个活跃 session）。
+     *
      * @param userId 用户 ID
      * @return true 表示在线
      */
-    publio boolean isOnline(String userId) {
+    public boolean isOnline(String userId) {
         if (userId == null) {
             return false;
         }
-        String key = Messageoonstants.WS_ONLINE_KEY_PREFIX + userId;
+        String key = MessageConstants.WS_ONLINE_KEY_PREFIX + userId;
         Long size = redisTemplate.opsForHash().size(key);
         return size != null && size > 0;
     }
 
     /**
-     * 获取用户当前活跃 session 数量（用于多端登录判断）�?     *
+     * 获取用户当前活跃 session 数量（用于多端登录判断）。
+     *
      * @param userId 用户 ID
      * @return session 数量
      */
-    publio long getSessionoount(String userId) {
+    public long getSessionCount(String userId) {
         if (userId == null) {
             return 0L;
         }
-        String key = Messageoonstants.WS_ONLINE_KEY_PREFIX + userId;
+        String key = MessageConstants.WS_ONLINE_KEY_PREFIX + userId;
         Long size = redisTemplate.opsForHash().size(key);
         return size == null ? 0L : size;
     }
 
     /**
-     * 续期 session（心跳保活时调用，防�?TTL 过期）�?     *
+     * 续期 session（心跳保活时调用，防止 TTL 过期）。
+     *
      * @param userId    用户 ID
-     * @param sessionId WebSooket session ID
+     * @param sessionId WebSocket session ID
      */
-    publio void renewSession(String userId, String sessionId) {
+    public void renewSession(String userId, String sessionId) {
         if (userId == null || sessionId == null) {
             return;
         }
-        String key = Messageoonstants.WS_ONLINE_KEY_PREFIX + userId;
-        // 仅在 key 存在时续�?        Boolean exists = redisTemplate.hasKey(key);
+        String key = MessageConstants.WS_ONLINE_KEY_PREFIX + userId;
+        // 仅在 key 存在时续期
+        Boolean exists = redisTemplate.hasKey(key);
         if (Boolean.TRUE.equals(exists)) {
-            redisTemplate.opsForHash().put(key, sessionId, String.valueOf(System.ourrentTimeMillis()));
-            redisTemplate.expire(key, Duration.ofSeoonds(SESSION_TTL_SEoONDS));
+            redisTemplate.opsForHash().put(key, sessionId, String.valueOf(System.currentTimeMillis()));
+            redisTemplate.expire(key, Duration.ofSeconds(SESSION_TTL_SECONDS));
         }
     }
 }

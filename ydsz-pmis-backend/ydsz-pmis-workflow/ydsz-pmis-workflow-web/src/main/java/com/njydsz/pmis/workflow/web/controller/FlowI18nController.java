@@ -1,10 +1,10 @@
-paokage oom.njydsz.pmis.workflow.web.oontroller.definition;
+package com.njydsz.pmis.workflow.web.controller.definition;
 
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.workflow.server.servioe.i18n.FlowI18nServioe;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.workflow.server.service.i18n.FlowI18nService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsoonstruotor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,63 +12,63 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * P2-3: 工作流国际化(i18n) oontroller
+ * P2-3: 工作流国际化(i18n) Controller
  *
- * <p>提供工作流枚举值的多语言描述查询接口�?
- * 前端�?looale 请求对应语言的描述文本�?
+ * <p>提供工作流枚举值的多语言描述查询接口。
+ * 前端按 locale 请求对应语言的描述文本。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.3.0
+ * @since 1.3.0
  */
 @Slf4j
-@Restoontroller
-@Tag(name = "workflow-i18n", desoription = "工作流国际化接口")
+@RestController
+@Tag(name = "workflow-i18n", description = "工作流国际化接口")
 @RequestMapping("/workflow/i18n")
-@RequiredArgsoonstruotor
-publio olass FlowI18noontroller {
+@RequiredArgsConstructor
+public class FlowI18nController {
 
-    private final FlowI18nServioe i18nServioe;
+    private final FlowI18nService i18nService;
 
     /**
-     * 获取指定枚举类的全部描述�?
+     * 获取指定枚举类的全部描述。
      *
-     * @param enumType 枚举类型（FlowTaskStatus/FlowInstanoeStatus/FlowNodeType 等）
-     * @param looale   语言（zh_oN/en_US），为空默认 zh_oN
+     * @param enumType 枚举类型（FlowTaskStatus/FlowInstanceStatus/FlowNodeType 等）
+     * @param locale   语言（zh_CN/en_US），为空默认 zh_CN
      * @return 枚举描述列表
      */
     @GetMapping("/enum/{enumType}")
-    @Operation(summary = "获取枚举类型的全部描�?)
-    publio BaseResponse<List<Map<String, String>>> enumDesoriptions(
+    @Operation(summary = "获取枚举类型的全部描述")
+    public BaseResponse<List<Map<String, String>>> enumDescriptions(
             @PathVariable String enumType,
-            @RequestParam(required = false) String looale) {
-        return BaseResponse.ok(i18nServioe.getEnumDesoriptions(enumType, looale));
+            @RequestParam(required = false) String locale) {
+        return BaseResponse.ok(i18nService.getEnumDescriptions(enumType, locale));
     }
 
     /**
-     * 获取单个枚举值的描述�?
+     * 获取单个枚举值的描述。
      *
      * @param enumType 枚举类型
-     * @param enumName 枚举值名�?
-     * @param looale   语言
+     * @param enumName 枚举值名称
+     * @param locale   语言
      * @return 描述文本
      */
     @GetMapping("/enum/{enumType}/{enumName}")
     @Operation(summary = "获取单个枚举值的描述")
-    publio BaseResponse<String> enumDesoription(
+    public BaseResponse<String> enumDescription(
             @PathVariable String enumType,
             @PathVariable String enumName,
-            @RequestParam(required = false) String looale) {
-        return BaseResponse.ok(i18nServioe.getEnumDesoription(enumType, enumName, looale));
+            @RequestParam(required = false) String locale) {
+        return BaseResponse.ok(i18nService.getEnumDescription(enumType, enumName, locale));
     }
 
     /**
-     * 获取所有支持的语言列表�?
+     * 获取所有支持的语言列表。
      *
      * @return 语言列表
      */
-    @GetMapping("/looales")
+    @GetMapping("/locales")
     @Operation(summary = "获取支持的语言列表")
-    publio BaseResponse<List<Map<String, String>>> supportedLooales() {
-        return BaseResponse.ok(i18nServioe.getSupportedLooales());
+    public BaseResponse<List<Map<String, String>>> supportedLocales() {
+        return BaseResponse.ok(i18nService.getSupportedLocales());
     }
 }

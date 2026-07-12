@@ -1,21 +1,21 @@
-paokage oom.njydsz.pmis.userinfo.web.oontroller.resouroe;
+package com.njydsz.pmis.userinfo.web.controller.resource;
 
-import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.Idempotent;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.audit.annotation.OperationLog;
-import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.userinfo.domain.dto.resouroe.BenohReoordoreateDTO;
-import oom.njydsz.pmis.userinfo.domain.entity.resouroe.BenohReoordDO;
-import oom.njydsz.pmis.userinfo.server.servioe.resouroe.BenohServioe;
-import oom.njydsz.pmis.userinfo.server.servioe.impl.resouroe.BenohServioeImpl;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.OperationLog;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.userinfo.domain.dto.resource.BenchRecordCreateDTO;
+import com.njydsz.pmis.userinfo.domain.entity.resource.BenchRecordDO;
+import com.njydsz.pmis.userinfo.server.service.resource.BenchService;
+import com.njydsz.pmis.userinfo.server.service.impl.resource.BenchServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.oonstraints.Max;
-import jakarta.validation.oonstraints.Min;
-import lombok.RequiredArgsoonstruotor;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,78 +24,78 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.Restoontroller;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDeoimal;
-import java.time.LooalDate;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Benoh 闲置�?oontroller
+ * Bench 闲置池 Controller
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-@Tag(name = "Benoh 闲置池管�?)
-@Restoontroller
-@RequestMapping("/benoh")
-@RequiredArgsoonstruotor
+@Tag(name = "Bench 闲置池管理")
+@RestController
+@RequestMapping("/bench")
+@RequiredArgsConstructor
 @Validated
-publio olass Benohoontroller {
+public class BenchController {
 
-    /** 闲置池服�?*/
-    private final BenohServioe benohServioe;
+    /** 闲置池服务 */
+    private final BenchService benchService;
 
     /**
      * 入池 / 出池 业务动作
      *
-     * @param dto �?出池请求参数
-     * @return 统一响应结果，包�?Benoh 记录 ID
+     * @param dto 入/出池请求参数
+     * @return 统一响应结果，包含 Bench 记录 ID
      */
     @Operation(summary = "入池 / 出池 业务动作")
-    @AuthApiPermission(apioodes = "resouroe:benoh:aot")
-    @OperationLog(module = "Benoh �?, aotion = "�?出池", bizType = "BENoH_REoORD")
-    @Idempotent(key = "benoh:aot", ttlSeoonds = 5, message = "请勿重复提交")
-    @PostMapping("/aot")
-    publio BaseResponse<String> aot(@Valid @RequestBody BenohReoordoreateDTO dto) {
-        return BaseResponse.ok(benohServioe.aot(dto));
+    @AuthApiPermission(apiCodes = "resource:bench:act")
+    @OperationLog(module = "Bench 池", action = "入/出池", bizType = "BENCH_RECORD")
+    @Idempotent(key = "bench:act", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/act")
+    public BaseResponse<String> act(@Valid @RequestBody BenchRecordCreateDTO dto) {
+        return BaseResponse.ok(benchService.act(dto));
     }
 
     /**
-     * 查询 Benoh 记录详情
+     * 查询 Bench 记录详情
      *
-     * @param id Benoh 记录 ID
-     * @return 统一响应结果，包�?Benoh 记录
+     * @param id Bench 记录 ID
+     * @return 统一响应结果，包含 Bench 记录
      */
-    @Operation(summary = "Benoh 详情")
+    @Operation(summary = "Bench 详情")
     @GetMapping("/{id}")
-    publio BaseResponse<BenohReoordDO> get(@PathVariable String id) {
-        return BaseResponse.ok(benohServioe.getById(id));
+    public BaseResponse<BenchRecordDO> get(@PathVariable String id) {
+        return BaseResponse.ok(benchService.getById(id));
     }
 
     /**
-     * 查询员工当前�?Benoh 记录
+     * 查询员工当前的 Bench 记录
      *
      * @param employeeId 员工 ID
-     * @return 统一响应结果，包�?Benoh 记录
+     * @return 统一响应结果，包含 Bench 记录
      */
-    @Operation(summary = "员工当前 Benoh 记录")
-    @GetMapping("/aotive/{employeeId}")
-    publio BaseResponse<BenohReoordDO> getAotiveByEmployee(@PathVariable String employeeId) {
-        return BaseResponse.ok(benohServioe.getAotiveByEmployee(employeeId));
+    @Operation(summary = "员工当前 Bench 记录")
+    @GetMapping("/active/{employeeId}")
+    public BaseResponse<BenchRecordDO> getActiveByEmployee(@PathVariable String employeeId) {
+        return BaseResponse.ok(benchService.getActiveByEmployee(employeeId));
     }
 
     /**
-     * 按资源池汇�?Benoh 记录
+     * 按资源池汇总 Bench 记录
      *
-     * @return 统一响应结果，包含按池汇总数�?
+     * @return 统一响应结果，包含按池汇总数据
      */
-    @Operation(summary = "按池汇�?)
+    @Operation(summary = "按池汇总")
     @GetMapping("/aggregate/byPool")
-    publio BaseResponse<List<Map<String, Objeot>>> aggregateByPool() {
-        return BaseResponse.ok(benohServioe.aggregateByPool());
+    public BaseResponse<List<Map<String, Object>>> aggregateByPool() {
+        return BaseResponse.ok(benchService.aggregateByPool());
     }
 
     /**
@@ -103,60 +103,60 @@ publio olass Benohoontroller {
      *
      * @param from 起始日期（可选）
      * @param to   截止日期（可选）
-     * @return 统一响应结果，包含流动统计数�?
+     * @return 统一响应结果，包含流动统计数据
      */
-    @Operation(summary = "流动统计（按日期区间�?)
+    @Operation(summary = "流动统计（按日期区间）")
     @GetMapping("/flow")
-    publio BaseResponse<List<Map<String, Objeot>>> flowByDateRange(
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LooalDate from,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LooalDate to) {
-        return BaseResponse.ok(benohServioe.flowByDateRange(from, to));
+    public BaseResponse<List<Map<String, Object>>> flowByDateRange(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
+        return BaseResponse.ok(benchService.flowByDateRange(from, to));
     }
 
     /**
-     * 分页查询 Benoh 记录
+     * 分页查询 Bench 记录
      *
      * @param page   页码
      * @param size   每页大小
-     * @param poolId 资源�?ID（可选）
+     * @param poolId 资源池 ID（可选）
      * @param status 状态（可选）
-     * @return 统一响应结果，包含分页数�?
+     * @return 统一响应结果，包含分页数据
      */
     @Operation(summary = "分页查询")
     @GetMapping("/page")
-    publio BaseResponse<Page<BenohReoordDO>> page(
+    public BaseResponse<Page<BenchRecordDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String poolId,
             @RequestParam(required = false) String status) {
-        return BaseResponse.ok(benohServioe.page(page, size, poolId, status));
+        return BaseResponse.ok(benchService.page(page, size, poolId, status));
     }
 
     /**
      * 查询累计闲置成本
      *
-     * @return 统一响应结果，包含累计闲置成�?
+     * @return 统一响应结果，包含累计闲置成本
      */
     @Operation(summary = "累计闲置成本")
-    @GetMapping("/totalIdleoost")
-    publio BaseResponse<BigDeoimal> totalIdleoost() {
-        return BaseResponse.ok(benohServioe.totalIdleoost());
+    @GetMapping("/totalIdleCost")
+    public BaseResponse<BigDecimal> totalIdleCost() {
+        return BaseResponse.ok(benchService.totalIdleCost());
     }
 
     /**
-     * Benoh 仪表盘汇�?
+     * Bench 仪表盘汇总
      *
-     * @return 统一响应结果，包含仪表盘汇总数�?
+     * @return 统一响应结果，包含仪表盘汇总数据
      */
-    @Operation(summary = "Benoh 仪表盘汇�?)
+    @Operation(summary = "Bench 仪表盘汇总")
     @GetMapping("/dashboard")
-    publio BaseResponse<Map<String, Objeot>> dashboard() {
-        if (benohServioe instanoeof BenohServioeImpl impl) {
+    public BaseResponse<Map<String, Object>> dashboard() {
+        if (benchService instanceof BenchServiceImpl impl) {
             return BaseResponse.ok(impl.dashboard());
         }
-        Map<String, Objeot> out = new HashMap<>();
-        out.put("aotivePools", benohServioe.aggregateByPool());
-        out.put("totalIdleoost", benohServioe.totalIdleoost());
+        Map<String, Object> out = new HashMap<>();
+        out.put("activePools", benchService.aggregateByPool());
+        out.put("totalIdleCost", benchService.totalIdleCost());
         return BaseResponse.ok(out);
     }
 }

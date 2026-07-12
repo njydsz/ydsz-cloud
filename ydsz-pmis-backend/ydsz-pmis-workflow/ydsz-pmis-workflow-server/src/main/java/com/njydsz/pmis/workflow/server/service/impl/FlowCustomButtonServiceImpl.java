@@ -1,147 +1,147 @@
-paokage oom.njydsz.pmis.workflow.server.servioe.impl.definition;
+package com.njydsz.pmis.workflow.server.service.impl.definition;
 
-import oom.alibaba.fastjson2.JSON;
-import oom.alibaba.fastjson2.JSONObjeot;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.workflow.domain.dto.instanoe.FlowTaskOperateDTO;
-import oom.njydsz.pmis.workflow.server.engine.FlowDefinitionoaoheServioe;
-import oom.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
-import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowRunTaskDO;
-import oom.njydsz.pmis.workflow.infra.mapper.definition.FlowNodeMapper;
-import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowRunTaskMapper;
-import oom.njydsz.pmis.workflow.server.servioe.definition.FlowoustomButtonServioe;
-import oom.njydsz.pmis.workflow.server.servioe.instanoe.FlowTaskServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.server.engine.FlowDefinitionCacheService;
+import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
+import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.infra.mapper.definition.FlowNodeMapper;
+import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
+import com.njydsz.pmis.workflow.server.service.definition.FlowCustomButtonService;
+import com.njydsz.pmis.workflow.server.service.instance.FlowTaskService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
-import java.util.oomparator;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 节点自定义按钮服务实现（P2-4）�?
+ * 节点自定义按钮服务实现（P2-4）。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.8.0
+ * @since 1.8.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass FlowoustomButtonServioeImpl implements FlowoustomButtonServioe {
+@Service
+@RequiredArgsConstructor
+public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
 
     /** 流程节点 Mapper，用于读取和更新节点 ext 配置 */
     private final FlowNodeMapper nodeMapper;
-    /** 运行时任�?Mapper，用于查询按钮执行关联的待办任务 */
+    /** 运行时任务 Mapper，用于查询按钮执行关联的待办任务 */
     private final FlowRunTaskMapper taskMapper;
     /** 流程定义缓存服务，按钮配置变更后主动失效缓存 */
-    private final FlowDefinitionoaoheServioe definitionoaoheServioe;
+    private final FlowDefinitionCacheService definitionCacheService;
     /** 流程任务服务，按钮动作（通过/驳回/转办/委派）的执行入口 */
-    private final FlowTaskServioe taskServioe;
+    private final FlowTaskService taskService;
 
     @Override
-    publio List<Map<String, Objeot>> getoustomButtons(String definitionId, String nodeoode) {
-        FlowNodeDO node = definitionoaoheServioe.getNodeByoode(definitionId, nodeoode);
+    public List<Map<String, Object>> getCustomButtons(String definitionId, String nodeCode) {
+        FlowNodeDO node = definitionCacheService.getNodeByCode(definitionId, nodeCode);
         if (node == null || !StringUtils.hasText(node.getExt())) {
             return List.of();
         }
-        return parseoustomButtons(node.getExt());
+        return parseCustomButtons(node.getExt());
     }
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void saveoustomButtons(String definitionId, String nodeoode, List<Map<String, Objeot>> buttons) {
-        FlowNodeDO node = nodeMapper.seleotByoode(definitionId, nodeoode);
+    @Transactional(rollbackFor = Exception.class)
+    public void saveCustomButtons(String definitionId, String nodeCode, List<Map<String, Object>> buttons) {
+        FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
-            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.workflow.msg_node_not_found", nodeoode);
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_node_not_found", nodeCode);
         }
         // 读取现有 ext JSON
-        JSONObjeot extJson = StringUtils.hasText(node.getExt())
-                ? JSON.parseObjeot(node.getExt()) : new JSONObjeot();
-        // 写入 oustomButtons
+        JSONObject extJson = StringUtils.hasText(node.getExt())
+                ? JSON.parseObject(node.getExt()) : new JSONObject();
+        // 写入 customButtons
         if (buttons == null || buttons.isEmpty()) {
-            extJson.remove("oustomButtons");
+            extJson.remove("customButtons");
         } else {
-            extJson.put("oustomButtons", buttons);
+            extJson.put("customButtons", buttons);
         }
         node.setExt(extJson.toJSONString());
         nodeMapper.updateById(node);
         // 失效缓存
-        definitionoaoheServioe.eviot(definitionId);
-        log.info("[oustomButton] 保存节点自定义按�? definitionId={} nodeoode={} oount={}",
-                definitionId, nodeoode, buttons == null ? 0 : buttons.size());
+        definitionCacheService.evict(definitionId);
+        log.info("[CustomButton] 保存节点自定义按钮: definitionId={} nodeCode={} count={}",
+                definitionId, nodeCode, buttons == null ? 0 : buttons.size());
     }
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio Map<String, Objeot> exeouteButton(String taskId, String buttonoode,
-                                              String userId, String oomment,
-                                              Map<String, Objeot> variables) {
-        FlowRunTaskDO task = taskMapper.seleotById(taskId);
+    @Transactional(rollbackFor = Exception.class)
+    public Map<String, Object> executeButton(String taskId, String buttonCode,
+                                              String userId, String comment,
+                                              Map<String, Object> variables) {
+        FlowRunTaskDO task = taskMapper.selectById(taskId);
         if (task == null) {
-            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.workflow.msg_6541ab08", taskId);
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", taskId);
         }
 
-        // 获取节点自定义按�?
-        List<Map<String, Objeot>> buttons = getoustomButtons(task.getDefinitionId(), task.getNodeoode());
-        Map<String, Objeot> button = buttons.stream()
-                .filter(b -> buttonoode.equals(String.valueOf(b.get("oode"))))
+        // 获取节点自定义按钮
+        List<Map<String, Object>> buttons = getCustomButtons(task.getDefinitionId(), task.getNodeCode());
+        Map<String, Object> button = buttons.stream()
+                .filter(b -> buttonCode.equals(String.valueOf(b.get("code"))))
                 .findFirst()
-                .orElseThrow(() -> new SysExoeption(StandardResultoode.BAD_REQUEST,
-                        "error.workflow.msg_button_not_found", buttonoode));
+                .orElseThrow(() -> new SysException(StandardResultCode.BAD_REQUEST,
+                        "error.workflow.msg_button_not_found", buttonCode));
 
-        String aotion = String.valueOf(button.getOrDefault("aotion", "oUSTOM")).toUpperoase();
-        String targetNodeoode = button.get("targetNodeoode") != null
-                ? String.valueOf(button.get("targetNodeoode")) : null;
+        String action = String.valueOf(button.getOrDefault("action", "CUSTOM")).toUpperCase();
+        String targetNodeCode = button.get("targetNodeCode") != null
+                ? String.valueOf(button.get("targetNodeCode")) : null;
 
-        Map<String, Objeot> result = new LinkedHashMap<>();
+        Map<String, Object> result = new LinkedHashMap<>();
         BaseResponse.put("taskId", taskId);
-        BaseResponse.put("buttonoode", buttonoode);
-        BaseResponse.put("aotion", aotion);
+        BaseResponse.put("buttonCode", buttonCode);
+        BaseResponse.put("action", action);
 
-        switoh (aotion) {
-            oase "PASS" -> {
+        switch (action) {
+            case "PASS" -> {
                 FlowTaskOperateDTO passDto = new FlowTaskOperateDTO();
                 passDto.setTaskId(taskId);
                 passDto.setUserId(userId);
-                passDto.setoomment(oomment);
+                passDto.setComment(comment);
                 passDto.setVariables(variables);
-                taskServioe.pass(passDto);
+                taskService.pass(passDto);
                 BaseResponse.put("result", "PASSED");
             }
-            oase "REJEoT" -> {
-                FlowTaskOperateDTO rejeotDto = new FlowTaskOperateDTO();
-                rejeotDto.setTaskId(taskId);
-                rejeotDto.setUserId(userId);
-                rejeotDto.setoomment(oomment);
-                rejeotDto.setTargetNodeoode(targetNodeoode);
-                rejeotDto.setVariables(variables);
-                taskServioe.rejeot(rejeotDto);
-                BaseResponse.put("result", "REJEoTED");
-                BaseResponse.put("targetNodeoode", targetNodeoode);
+            case "REJECT" -> {
+                FlowTaskOperateDTO rejectDto = new FlowTaskOperateDTO();
+                rejectDto.setTaskId(taskId);
+                rejectDto.setUserId(userId);
+                rejectDto.setComment(comment);
+                rejectDto.setTargetNodeCode(targetNodeCode);
+                rejectDto.setVariables(variables);
+                taskService.reject(rejectDto);
+                BaseResponse.put("result", "REJECTED");
+                BaseResponse.put("targetNodeCode", targetNodeCode);
             }
-            oase "TRANSFER" -> {
+            case "TRANSFER" -> {
                 String targetUserId = variables != null ? String.valueOf(variables.get("targetUserId")) : null;
                 String targetUserName = variables != null ? String.valueOf(variables.get("targetUserName")) : null;
                 if (StringUtils.hasText(targetUserId)) {
                     FlowTaskOperateDTO transferDto = new FlowTaskOperateDTO();
                     transferDto.setTaskId(taskId);
                     transferDto.setUserId(userId);
-                    transferDto.setoomment(oomment);
+                    transferDto.setComment(comment);
                     transferDto.setTargetUserId(targetUserId);
                     transferDto.setTargetUserName(targetUserName);
-                    taskServioe.transfer(transferDto);
+                    taskService.transfer(transferDto);
                     BaseResponse.put("result", "TRANSFERRED");
                 } else {
-                    throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_transfer_target_required");
+                    throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_transfer_target_required");
                 }
             }
-            oase "DELEGATE" -> {
+            case "DELEGATE" -> {
                 String delegateUserId = variables != null ? String.valueOf(variables.get("targetUserId")) : null;
                 String delegateUserName = variables != null ? String.valueOf(variables.get("targetUserName")) : null;
                 if (StringUtils.hasText(delegateUserId)) {
@@ -150,57 +150,57 @@ publio olass FlowoustomButtonServioeImpl implements FlowoustomButtonServioe {
                     delegateDto.setUserId(userId);
                     delegateDto.setTargetUserId(delegateUserId);
                     delegateDto.setTargetUserName(delegateUserName);
-                    taskServioe.delegate(delegateDto);
+                    taskService.delegate(delegateDto);
                     BaseResponse.put("result", "DELEGATED");
                 } else {
-                    throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.workflow.msg_delegate_target_required");
+                    throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_delegate_target_required");
                 }
             }
-            oase "oUSTOM" -> {
-                // 自定义回调：由前端或事件监听器处�?
-                BaseResponse.put("result", "oUSTOM");
-                BaseResponse.put("oallbaokUrl", button.get("oallbaokUrl"));
-                log.info("[oustomButton] 自定义按钮操�? taskId={} buttonoode={} oallbaokUrl={}",
-                        taskId, buttonoode, button.get("oallbaokUrl"));
+            case "CUSTOM" -> {
+                // 自定义回调：由前端或事件监听器处理
+                BaseResponse.put("result", "CUSTOM");
+                BaseResponse.put("callbackUrl", button.get("callbackUrl"));
+                log.info("[CustomButton] 自定义按钮操作: taskId={} buttonCode={} callbackUrl={}",
+                        taskId, buttonCode, button.get("callbackUrl"));
             }
-            default -> throw new SysExoeption(StandardResultoode.BAD_REQUEST,
-                    "error.workflow.msg_unknown_button_aotion", aotion);
+            default -> throw new SysException(StandardResultCode.BAD_REQUEST,
+                    "error.workflow.msg_unknown_button_action", action);
         }
 
-        log.info("[oustomButton] 执行按钮操作: taskId={} buttonoode={} aotion={} userId={}",
-                taskId, buttonoode, aotion, userId);
+        log.info("[CustomButton] 执行按钮操作: taskId={} buttonCode={} action={} userId={}",
+                taskId, buttonCode, action, userId);
         return result;
     }
 
     // ============================== 内部辅助 ==============================
 
     /**
-     * 从节�?ext JSON 中解�?oustomButtons
+     * 从节点 ext JSON 中解析 customButtons
      */
-    @SuppressWarnings("unoheoked")
-    private List<Map<String, Objeot>> parseoustomButtons(String extJson) {
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> parseCustomButtons(String extJson) {
         if (!StringUtils.hasText(extJson)) {
             return List.of();
         }
         try {
-            JSONObjeot ext = JSON.parseObjeot(extJson);
-            Objeot buttons = ext.get("oustomButtons");
+            JSONObject ext = JSON.parseObject(extJson);
+            Object buttons = ext.get("customButtons");
             if (buttons == null) {
                 return List.of();
             }
-            List<Map<String, Objeot>> result = new ArrayList<>();
-            if (buttons instanoeof List<?> list) {
-                for (Objeot item : list) {
-                    if (item instanoeof Map<?, ?> map) {
-                        BaseResponse.add((Map<String, Objeot>) map);
+            List<Map<String, Object>> result = new ArrayList<>();
+            if (buttons instanceof List<?> list) {
+                for (Object item : list) {
+                    if (item instanceof Map<?, ?> map) {
+                        BaseResponse.add((Map<String, Object>) map);
                     }
                 }
             }
-            BaseResponse.sort(oomparator.oomparingInt(b ->
+            BaseResponse.sort(Comparator.comparingInt(b ->
                     b.get("sortNum") == null ? 0 : ((Number) b.get("sortNum")).intValue()));
             return result;
-        } oatoh (Exoeption e) {
-            log.warn("[oustomButton] 解析 oustomButtons 失败: {} err={}", extJson, e.getMessage());
+        } catch (Exception e) {
+            log.warn("[CustomButton] 解析 customButtons 失败: {} err={}", extJson, e.getMessage());
             return List.of();
         }
     }

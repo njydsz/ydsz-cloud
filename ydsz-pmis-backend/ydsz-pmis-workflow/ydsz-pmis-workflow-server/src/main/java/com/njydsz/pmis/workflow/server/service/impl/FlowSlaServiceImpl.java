@@ -1,261 +1,271 @@
-paokage oom.njydsz.pmis.workflow.server.servioe.impl.analytios;
+package com.njydsz.pmis.workflow.server.service.impl.analytics;
 
-import oom.njydsz.pmis.oommon.util.json.JsonUtils;
-import oom.njydsz.pmis.workflow.domain.dto.instanoe.FlowTaskOperateDTO;
-import oom.njydsz.pmis.workflow.server.engine.FlowolusterLookHelper;
-import oom.njydsz.pmis.workflow.server.engine.FlowNotifioationHelper;
-import oom.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
-import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowRunTaskDO;
-import oom.njydsz.pmis.workflow.domain.enums.analytios.FlowSlaAotion;
-import oom.njydsz.pmis.workflow.infra.mapper.definition.FlowNodeMapper;
-import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowRunTaskMapper;
-import oom.njydsz.pmis.workflow.server.metrios.FlowMetrios;
-import oom.njydsz.pmis.workflow.server.servioe.analytios.FlowSlaServioe;
-import oom.njydsz.pmis.workflow.server.servioe.instanoe.FlowTaskServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.server.engine.FlowClusterLockHelper;
+import com.njydsz.pmis.workflow.server.engine.FlowNotificationHelper;
+import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
+import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.domain.enums.analytics.FlowSlaAction;
+import com.njydsz.pmis.workflow.infra.mapper.definition.FlowNodeMapper;
+import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
+import com.njydsz.pmis.workflow.server.metrics.FlowMetrics;
+import com.njydsz.pmis.workflow.server.service.analytics.FlowSlaService;
+import com.njydsz.pmis.workflow.server.service.instance.FlowTaskService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.oontext.annotation.Lazy;
-import org.springframework.soheduling.annotation.Soheduled;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Propagation;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.Duration;
-import java.time.LooalDateTime;
-import java.util.oolleotions;
+import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /**
  * 流程 SLA 超时自动策略实现
  *
- * <p>P1-6 实现�? * <ol>
- *   <li>oronjob �?60s 扫描所�?PENDING/oLAIMED �?dueAt 不为空的 task</li>
- *   <li>解析 node.slaoonfig 配置：timeoutMinutes / aotion / reminderIntervalMinutes / maxReminders / esoalateUserId</li>
+ * <p>P1-6 实现：
+ * <ol>
+ *   <li>cronjob 每 60s 扫描所有 PENDING/CLAIMED 且 dueAt 不为空的 task</li>
+ *   <li>解析 node.slaConfig 配置：timeoutMinutes / action / reminderIntervalMinutes / maxReminders / escalateUserId</li>
  *   <li>未到 dueAt：跳过；超过 dueAt 但未到最终动作：根据 maxReminders 重复 REMIND</li>
- *   <li>超过 dueAt 且已超出 reminder 容忍窗口：执行最终动作（ESoALATE / AUTO_PASS / AUTO_REJEoT�?/li>
- *   <li>所有写操作都在 REQUIRES_NEW 子事务中，单条失败不影响扫描主循�?/li>
+ *   <li>超过 dueAt 且已超出 reminder 容忍窗口：执行最终动作（ESCALATE / AUTO_PASS / AUTO_REJECT）</li>
+ *   <li>所有写操作都在 REQUIRES_NEW 子事务中，单条失败不影响扫描主循环</li>
  * </ol>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.2.0
+ * @since 1.2.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass FlowSlaServioeImpl implements FlowSlaServioe {
+@Service
+@RequiredArgsConstructor
+public class FlowSlaServiceImpl implements FlowSlaService {
 
-    /** 运行时任�?Mapper，查询超期待办及更新提醒计数 */
+    /** 运行时任务 Mapper，查询超期待办及更新提醒计数 */
     private final FlowRunTaskMapper taskMapper;
-    /** 流程节点 Mapper，读取节�?SLA 配置（slaoonfig JSON�?*/
+    /** 流程节点 Mapper，读取节点 SLA 配置（slaConfig JSON） */
     private final FlowNodeMapper nodeMapper;
-    /** P1-6: �?@Lazy 打破 FlowSlaServioe �?FlowTaskServioe 循环依赖 */
+    /** P1-6: 用 @Lazy 打破 FlowSlaService ↔ FlowTaskService 循环依赖 */
     @Lazy
-    private final FlowTaskServioe taskServioe;
-    private final FlowNotifioationHelper notifioationHelper;
+    private final FlowTaskService taskService;
+    private final FlowNotificationHelper notificationHelper;
     /** P2-3: Prometheus 指标（可能为 null：测试环境） */
-    private final FlowMetrios flowMetrios;
+    private final FlowMetrics flowMetrics;
     /** P0-2: 集群调度分布式锁辅助 */
-    private final FlowolusterLookHelper olusterLookHelper;
+    private final FlowClusterLockHelper clusterLockHelper;
 
     /** 单次扫描上限（避免大表全表扫描） */
-    private statio final int SoAN_BAToH_SIZE = 500;
+    private static final int SCAN_BATCH_SIZE = 500;
 
-    /** 默认 SLA 配置（节点未�?slaoonfig 时使用） */
-    private statio final int DEFAULT_REMINDER_INTERVAL_MINUTES = 60;
-    private statio final int DEFAULT_MAX_REMINDERS = 3;
-    private statio final int DEFAULT_TIMEOUT_MINUTES = 24 * 60;
-    private statio final String DEFAULT_ADMIN_USER_ID = "1";
+    /** 默认 SLA 配置（节点未配 slaConfig 时使用） */
+    private static final int DEFAULT_REMINDER_INTERVAL_MINUTES = 60;
+    private static final int DEFAULT_MAX_REMINDERS = 3;
+    private static final int DEFAULT_TIMEOUT_MINUTES = 24 * 60;
+    private static final String DEFAULT_ADMIN_USER_ID = "1";
 
     @Override
-    publio Map<String, Objeot> parseSlaoonfig(String slaoonfigJson) {
-        if (!StringUtils.hasText(slaoonfigJson)) {
-            return oolleotions.emptyMap();
+    public Map<String, Object> parseSlaConfig(String slaConfigJson) {
+        if (!StringUtils.hasText(slaConfigJson)) {
+            return Collections.emptyMap();
         }
         try {
-            Map<String, Objeot> map = JsonUtils.parseMap(slaoonfigJson);
-            return map == null ? oolleotions.emptyMap() : map;
-        } oatoh (Exoeption e) {
-            log.warn("[FlowSla] 解析 slaoonfig 失败: {} err={}", slaoonfigJson, e.getMessage());
-            return oolleotions.emptyMap();
+            Map<String, Object> map = JsonUtils.parseMap(slaConfigJson);
+            return map == null ? Collections.emptyMap() : map;
+        } catch (Exception e) {
+            log.warn("[FlowSla] 解析 slaConfig 失败: {} err={}", slaConfigJson, e.getMessage());
+            return Collections.emptyMap();
         }
     }
 
     @Override
-    publio void applySlaoonfig(FlowRunTaskDO task, FlowNodeDO node) {
+    public void applySlaConfig(FlowRunTaskDO task, FlowNodeDO node) {
         if (task == null || node == null) {
             return;
         }
-        Map<String, Objeot> oonfig = parseSlaoonfig(node.getSlaoonfig());
-        if (oonfig.isEmpty()) {
-            return; // 未配�?SLA
+        Map<String, Object> config = parseSlaConfig(node.getSlaConfig());
+        if (config.isEmpty()) {
+            return; // 未配置 SLA
         }
-        Integer timeoutMinutes = readInt(oonfig, "timeoutMinutes", null);
+        Integer timeoutMinutes = readInt(config, "timeoutMinutes", null);
         if (timeoutMinutes == null || timeoutMinutes <= 0) {
-            return; // 必须配置 timeoutMinutes 才算开�?SLA
+            return; // 必须配置 timeoutMinutes 才算开启 SLA
         }
-        LooalDateTime dueAt = task.getoreatedAt() == null
-                ? LooalDateTime.now().plusMinutes(timeoutMinutes)
-                : task.getoreatedAt().plusMinutes(timeoutMinutes);
+        LocalDateTime dueAt = task.getCreatedAt() == null
+                ? LocalDateTime.now().plusMinutes(timeoutMinutes)
+                : task.getCreatedAt().plusMinutes(timeoutMinutes);
         task.setDueAt(dueAt);
-        // 记录 slaAotion 预期值（仅用于审计，不强制）
-        String aotionStr = (String) oonfig.get("aotion");
-        if (StringUtils.hasText(aotionStr)) {
+        // 记录 slaAction 预期值（仅用于审计，不强制）
+        String actionStr = (String) config.get("action");
+        if (StringUtils.hasText(actionStr)) {
             try {
-                FlowSlaAotion aotion = FlowSlaAotion.valueOf(aotionStr.toUpperoase());
-                task.setSlaAotion(aotion.name());
-            } oatoh (IllegalArgumentExoeption e) {
-                log.warn("[FlowSla] 未知�?SLA aotion: nodeoode={} aotion={}",
-                        node.getNodeoode(), aotionStr);
+                FlowSlaAction action = FlowSlaAction.valueOf(actionStr.toUpperCase());
+                task.setSlaAction(action.name());
+            } catch (IllegalArgumentException e) {
+                log.warn("[FlowSla] 未知的 SLA action: nodeCode={} action={}",
+                        node.getNodeCode(), actionStr);
             }
         }
-        log.info("[FlowSla] 应用 SLA 配置: taskId={} nodeoode={} timeoutMinutes={} aotion={} dueAt={}",
-                task.getId(), node.getNodeoode(), timeoutMinutes,
-                oonfig.get("aotion"), dueAt);
+        log.info("[FlowSla] 应用 SLA 配置: taskId={} nodeCode={} timeoutMinutes={} action={} dueAt={}",
+                task.getId(), node.getNodeCode(), timeoutMinutes,
+                config.get("action"), dueAt);
     }
 
     @Override
-    publio int soanAndProoess() {
+    public int scanAndProcess() {
         try {
-            List<FlowRunTaskDO> oandidates = taskMapper.seleotSlaoandidates(SoAN_BAToH_SIZE);
-            if (oandidates == null || oandidates.isEmpty()) {
+            List<FlowRunTaskDO> candidates = taskMapper.selectSlaCandidates(SCAN_BATCH_SIZE);
+            if (candidates == null || candidates.isEmpty()) {
                 return 0;
             }
-            LooalDateTime now = LooalDateTime.now();
-            int prooessed = 0;
-            for (FlowRunTaskDO task : oandidates) {
+            LocalDateTime now = LocalDateTime.now();
+            int processed = 0;
+            for (FlowRunTaskDO task : candidates) {
                 try {
-                    if (prooessOverdue(task, now)) {
-                        prooessed++;
+                    if (processOverdue(task, now)) {
+                        processed++;
                     }
-                } oatoh (Exoeption e) {
+                } catch (Exception e) {
                     log.error("[FlowSla] 单条处理异常: taskId={} err={}",
                             task.getId(), e.getMessage(), e);
                 }
             }
-            if (prooessed > 0) {
-                log.info("[FlowSla] 本轮扫描处理: oount={}", prooessed);
+            if (processed > 0) {
+                log.info("[FlowSla] 本轮扫描处理: count={}", processed);
             }
-            return prooessed;
-        } oatoh (Exoeption e) {
+            return processed;
+        } catch (Exception e) {
             log.error("[FlowSla] 扫描异常: {}", e.getMessage(), e);
             return 0;
         }
     }
 
     @Override
-    @Transaotional(propagation = Propagation.REQUIRES_NEW, rollbaokFor = Exoeption.olass)
-    publio boolean prooessOverdue(FlowRunTaskDO task) {
-        return prooessOverdue(task, LooalDateTime.now());
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public boolean processOverdue(FlowRunTaskDO task) {
+        return processOverdue(task, LocalDateTime.now());
     }
 
     /**
-     * 内部方法：传�?now 以便测试和复�?     */
-    @Transaotional(propagation = Propagation.REQUIRES_NEW, rollbaokFor = Exoeption.olass)
-    publio boolean prooessOverdue(FlowRunTaskDO task, LooalDateTime now) {
+     * 内部方法：传入 now 以便测试和复用
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public boolean processOverdue(FlowRunTaskDO task, LocalDateTime now) {
         if (task == null || task.getId() == null) {
             return false;
         }
         // 1. 重新查一遍任务，避免读到陈旧数据
-        FlowRunTaskDO fresh = taskMapper.seleotById(task.getId());
+        FlowRunTaskDO fresh = taskMapper.selectById(task.getId());
         if (fresh == null) {
             return false;
         }
         if (!"PENDING".equals(fresh.getTaskStatus())
-                && !"oLAIMED".equals(fresh.getTaskStatus())) {
-            return false; // 已完�?        }
-        if (fresh.getDueAt() == null) {
-            return false; // 未配�?SLA
+                && !"CLAIMED".equals(fresh.getTaskStatus())) {
+            return false; // 已完成
         }
-        // 2. 未到 dueAt，跳�?        if (fresh.getDueAt().isAfter(now)) {
+        if (fresh.getDueAt() == null) {
+            return false; // 未配置 SLA
+        }
+        // 2. 未到 dueAt，跳过
+        if (fresh.getDueAt().isAfter(now)) {
             return false;
         }
         // 3. 解析节点 SLA 配置
-        FlowNodeDO node = nodeMapper.seleotByoode(fresh.getDefinitionId(), fresh.getNodeoode());
-        Map<String, Objeot> oonfig = node == null
-                ? oolleotions.emptyMap()
-                : parseSlaoonfig(node.getSlaoonfig());
-        // 无配置：默认�?NOTIFY（但�?FlowSlaServioe 只对配了 dueAt 的任务扫描，这种情况不应出现�?        if (oonfig.isEmpty()) {
-            log.warn("[FlowSla] 任务已超期但�?SLA 配置: taskId={} nodeoode={}",
-                    fresh.getId(), fresh.getNodeoode());
+        FlowNodeDO node = nodeMapper.selectByCode(fresh.getDefinitionId(), fresh.getNodeCode());
+        Map<String, Object> config = node == null
+                ? Collections.emptyMap()
+                : parseSlaConfig(node.getSlaConfig());
+        // 无配置：默认仅 NOTIFY（但因 FlowSlaService 只对配了 dueAt 的任务扫描，这种情况不应出现）
+        if (config.isEmpty()) {
+            log.warn("[FlowSla] 任务已超期但无 SLA 配置: taskId={} nodeCode={}",
+                    fresh.getId(), fresh.getNodeCode());
             return false;
         }
-        String aotionStr = ((String) oonfig.getOrDefault("aotion", "REMIND")).toUpperoase();
-        FlowSlaAotion aotion;
+        String actionStr = ((String) config.getOrDefault("action", "REMIND")).toUpperCase();
+        FlowSlaAction action;
         try {
-            aotion = FlowSlaAotion.valueOf(aotionStr);
-        } oatoh (IllegalArgumentExoeption e) {
-            log.warn("[FlowSla] 未知 aotion: taskId={} aotion={}", fresh.getId(), aotionStr);
+            action = FlowSlaAction.valueOf(actionStr);
+        } catch (IllegalArgumentException e) {
+            log.warn("[FlowSla] 未知 action: taskId={} action={}", fresh.getId(), actionStr);
             return false;
         }
-        int maxReminders = readInt(oonfig, "maxReminders", DEFAULT_MAX_REMINDERS);
-        int reminderIntervalMin = readInt(oonfig, "reminderIntervalMinutes",
+        int maxReminders = readInt(config, "maxReminders", DEFAULT_MAX_REMINDERS);
+        int reminderIntervalMin = readInt(config, "reminderIntervalMinutes",
                 DEFAULT_REMINDER_INTERVAL_MINUTES);
-        int ourrentReminders = fresh.getReminderoount() == null ? 0 : fresh.getReminderoount();
-        LooalDateTime lastRemindedAt = fresh.getLastRemindedAt();
-        // 4. 距离最后一次提醒未到间隔，不重复提�?        if (lastRemindedAt != null
+        int currentReminders = fresh.getReminderCount() == null ? 0 : fresh.getReminderCount();
+        LocalDateTime lastRemindedAt = fresh.getLastRemindedAt();
+        // 4. 距离最后一次提醒未到间隔，不重复提醒
+        if (lastRemindedAt != null
                 && Duration.between(lastRemindedAt, now).toMinutes() < reminderIntervalMin) {
             return false;
         }
-        // 5. 已达最大提醒次数：执行最终动�?        if (ourrentReminders >= maxReminders) {
-            return exeouteFinalAotion(fresh, node, aotion, oonfig, now);
+        // 5. 已达最大提醒次数：执行最终动作
+        if (currentReminders >= maxReminders) {
+            return executeFinalAction(fresh, node, action, config, now);
         }
-        // 6. 未达最大提醒次数：先发一次提醒，再决�?        boolean reminded = sendReminder(fresh, aotion, ourrentReminders + 1, maxReminders, now);
+        // 6. 未达最大提醒次数：先发一次提醒，再决定
+        boolean reminded = sendReminder(fresh, action, currentReminders + 1, maxReminders, now);
         if (reminded) {
-            taskMapper.inorementReminderoount(fresh.getId(), ourrentReminders + 1, now);
+            taskMapper.incrementReminderCount(fresh.getId(), currentReminders + 1, now);
         }
         return reminded;
     }
 
     /**
-     * 发�?SLA 提醒
+     * 发送 SLA 提醒
      *
      * @return true=已发送，false=跳过（无 assignee 等）
      */
-    private boolean sendReminder(FlowRunTaskDO task, FlowSlaAotion aotion, int newReminderoount,
-                                  int maxReminders, LooalDateTime now) {
+    private boolean sendReminder(FlowRunTaskDO task, FlowSlaAction action, int newReminderCount,
+                                  int maxReminders, LocalDateTime now) {
         try {
             String title = "审批任务即将超时";
-            String oontent = String.format("�?s�?s 已超过截止时�?%s，请尽快处理（第 %d/%d 次提醒）",
+            String content = String.format("【%s】%s 已超过截止时间 %s，请尽快处理（第 %d/%d 次提醒）",
                     nullSafe(task.getFlowName()),
                     nullSafe(task.getNodeName()),
                     task.getDueAt(),
-                    newReminderoount,
+                    newReminderCount,
                     maxReminders);
-            String reoeiverId = task.getAssigneeId();
-            if (reoeiverId == null) {
+            String receiverId = task.getAssigneeId();
+            if (receiverId == null) {
                 log.warn("[FlowSla] 无法解析 assigneeId: taskId={} assigneeId={}",
                         task.getId(), task.getAssigneeId());
                 return false;
             }
-            notifioationHelper.notifyTaskTimeout(reoeiverId, title, oontent, task.getId());
-            log.info("[FlowSla] 发�?SLA 提醒: taskId={} reoeiver={} oount={}/{} aotion={}",
-                    task.getId(), reoeiverId, newReminderoount, maxReminders, aotion);
+            notificationHelper.notifyTaskTimeout(receiverId, title, content, task.getId());
+            log.info("[FlowSla] 发送 SLA 提醒: taskId={} receiver={} count={}/{} action={}",
+                    task.getId(), receiverId, newReminderCount, maxReminders, action);
             return true;
-        } oatoh (Exoeption e) {
-            log.warn("[FlowSla] 提醒发送失�? taskId={} err={}", task.getId(), e.getMessage());
+        } catch (Exception e) {
+            log.warn("[FlowSla] 提醒发送失败: taskId={} err={}", task.getId(), e.getMessage());
             return false;
         }
     }
 
     /**
-     * 执行最终动作（AUTO_PASS / AUTO_REJEoT / ESoALATE�?     */
-    private boolean exeouteFinalAotion(FlowRunTaskDO task, FlowNodeDO node,
-                                        FlowSlaAotion aotion, Map<String, Objeot> oonfig,
-                                        LooalDateTime now) {
-        log.info("[FlowSla] 触发最终动�? taskId={} aotion={}", task.getId(), aotion);
-        switoh (aotion) {
-            oase REMIND:
-                // 配置�?REMIND 但已超出 maxReminders：保持提醒并标记完成（视为超时未处理�?                return doAutoTimeout(task, "SLA 提醒已达最大次数，未处�?, now);
-            oase AUTO_PASS:
-                return doAutoPass(task, oonfig, now);
-            oase AUTO_REJEoT:
-                return doAutoRejeot(task, oonfig, now);
-            oase ESoALATE:
-                return doEsoalate(task, oonfig, now);
+     * 执行最终动作（AUTO_PASS / AUTO_REJECT / ESCALATE）
+     */
+    private boolean executeFinalAction(FlowRunTaskDO task, FlowNodeDO node,
+                                        FlowSlaAction action, Map<String, Object> config,
+                                        LocalDateTime now) {
+        log.info("[FlowSla] 触发最终动作: taskId={} action={}", task.getId(), action);
+        switch (action) {
+            case REMIND:
+                // 配置为 REMIND 但已超出 maxReminders：保持提醒并标记完成（视为超时未处理）
+                return doAutoTimeout(task, "SLA 提醒已达最大次数，未处理", now);
+            case AUTO_PASS:
+                return doAutoPass(task, config, now);
+            case AUTO_REJECT:
+                return doAutoReject(task, config, now);
+            case ESCALATE:
+                return doEscalate(task, config, now);
             default:
-                log.warn("[FlowSla] 未知最终动�? aotion={}", aotion);
+                log.warn("[FlowSla] 未知最终动作: action={}", action);
                 return false;
         }
     }
@@ -263,109 +273,113 @@ publio olass FlowSlaServioeImpl implements FlowSlaServioe {
     /**
      * 自动通过：以系统身份调用 pass()
      */
-    private boolean doAutoPass(FlowRunTaskDO task, Map<String, Objeot> oonfig, LooalDateTime now) {
+    private boolean doAutoPass(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
         try {
-            String oomment = (String) oonfig.getOrDefault("autooomment",
-                    "系统自动通过：超�?SLA 时限未处�?);
+            String comment = (String) config.getOrDefault("autoComment",
+                    "系统自动通过：超过 SLA 时限未处理");
             FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
             dto.setTaskId(task.getId());
             dto.setUserId("0"); // 0 = 系统用户
-            dto.setoomment(oomment);
-            dto.setVariables(oolleotions.emptyMap());
-            taskServioe.pass(dto);
-            taskMapper.markSlaAotion(task.getId(), FlowSlaAotion.AUTO_PASS.name(), 0);
-            log.info("[FlowSla] 自动通过: taskId={} oomment={}", task.getId(), oomment);
+            dto.setComment(comment);
+            dto.setVariables(Collections.emptyMap());
+            taskService.pass(dto);
+            taskMapper.markSlaAction(task.getId(), FlowSlaAction.AUTO_PASS.name(), 0);
+            log.info("[FlowSla] 自动通过: taskId={} comment={}", task.getId(), comment);
             // P2-3: Prometheus 指标
-            if (flowMetrios != null) {
-                flowMetrios.inoSlaTimeout(task.getFlowoode(), "AUTO_PASS");
-                flowMetrios.inoTaskAutoHandled(task.getFlowoode(), task.getNodeoode(), "AUTO_PASS");
+            if (flowMetrics != null) {
+                flowMetrics.incSlaTimeout(task.getFlowCode(), "AUTO_PASS");
+                flowMetrics.incTaskAutoHandled(task.getFlowCode(), task.getNodeCode(), "AUTO_PASS");
             }
             return true;
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             log.error("[FlowSla] 自动通过失败: taskId={} err={}", task.getId(), e.getMessage(), e);
             return false;
         }
     }
 
     /**
-     * 自动驳回：以系统身份调用 rejeot()
+     * 自动驳回：以系统身份调用 reject()
      */
-    private boolean doAutoRejeot(FlowRunTaskDO task, Map<String, Objeot> oonfig, LooalDateTime now) {
+    private boolean doAutoReject(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
         try {
-            String oomment = (String) oonfig.getOrDefault("autooomment",
-                    "系统自动驳回：超�?SLA 时限未处�?);
+            String comment = (String) config.getOrDefault("autoComment",
+                    "系统自动驳回：超过 SLA 时限未处理");
             FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
             dto.setTaskId(task.getId());
             dto.setUserId("0");
-            dto.setoomment(oomment);
-            dto.setVariables(oolleotions.emptyMap());
-            taskServioe.rejeot(dto);
-            taskMapper.markSlaAotion(task.getId(), FlowSlaAotion.AUTO_REJEoT.name(), 0);
-            log.info("[FlowSla] 自动驳回: taskId={} oomment={}", task.getId(), oomment);
+            dto.setComment(comment);
+            dto.setVariables(Collections.emptyMap());
+            taskService.reject(dto);
+            taskMapper.markSlaAction(task.getId(), FlowSlaAction.AUTO_REJECT.name(), 0);
+            log.info("[FlowSla] 自动驳回: taskId={} comment={}", task.getId(), comment);
             // P2-3: Prometheus 指标
-            if (flowMetrios != null) {
-                flowMetrios.inoSlaTimeout(task.getFlowoode(), "AUTO_REJEoT");
-                flowMetrios.inoTaskAutoHandled(task.getFlowoode(), task.getNodeoode(), "AUTO_REJEoT");
+            if (flowMetrics != null) {
+                flowMetrics.incSlaTimeout(task.getFlowCode(), "AUTO_REJECT");
+                flowMetrics.incTaskAutoHandled(task.getFlowCode(), task.getNodeCode(), "AUTO_REJECT");
             }
             return true;
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             log.error("[FlowSla] 自动驳回失败: taskId={} err={}", task.getId(), e.getMessage(), e);
             return false;
         }
     }
 
     /**
-     * 升级：转办给 esoalateUserId（默认管理员�?     */
-    private boolean doEsoalate(FlowRunTaskDO task, Map<String, Objeot> oonfig, LooalDateTime now) {
+     * 升级：转办给 escalateUserId（默认管理员）
+     */
+    private boolean doEscalate(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
         try {
-            if (task.getSlaEsoalated() != null && task.getSlaEsoalated() == 1) {
+            if (task.getSlaEscalated() != null && task.getSlaEscalated() == 1) {
                 log.info("[FlowSla] 任务已升级，跳过重复升级: taskId={}", task.getId());
                 return false;
             }
-            String esoalateUserId = readString(oonfig, "esoalateUserId", null);
-            if (esoalateUserId == null) {
-                esoalateUserId = DEFAULT_ADMIN_USER_ID;
+            String escalateUserId = readString(config, "escalateUserId", null);
+            if (escalateUserId == null) {
+                escalateUserId = DEFAULT_ADMIN_USER_ID;
             }
-            String oomment = String.format("系统升级：原办理人未�?SLA 时限内处理，已转办给用户 %s",
-                    esoalateUserId);
-            // 通过转办接口将任务转给升级用�?            FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+            String comment = String.format("系统升级：原办理人未在 SLA 时限内处理，已转办给用户 %s",
+                    escalateUserId);
+            // 通过转办接口将任务转给升级用户
+            FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
             dto.setTaskId(task.getId());
             dto.setUserId("0");
-            dto.setTargetUserId(esoalateUserId);
-            dto.setoomment(oomment);
-            dto.setVariables(oolleotions.emptyMap());
-            // 标记升级；使�?transfer 接口
+            dto.setTargetUserId(escalateUserId);
+            dto.setComment(comment);
+            dto.setVariables(Collections.emptyMap());
+            // 标记升级；使用 transfer 接口
             try {
-                taskServioe.transfer(dto);
-                taskMapper.markSlaAotion(task.getId(), FlowSlaAotion.ESoALATE.name(), 1);
-                // 转办后：升级后的任务重新�?SLA
-                FlowRunTaskDO afterTransfer = taskMapper.seleotById(task.getId());
+                taskService.transfer(dto);
+                taskMapper.markSlaAction(task.getId(), FlowSlaAction.ESCALATE.name(), 1);
+                // 转办后：升级后的任务重新计 SLA
+                FlowRunTaskDO afterTransfer = taskMapper.selectById(task.getId());
                 if (afterTransfer != null) {
-                    afterTransfer.setSlaEsoalated(1);
-                    afterTransfer.setReminderoount(0);
+                    afterTransfer.setSlaEscalated(1);
+                    afterTransfer.setReminderCount(0);
                     afterTransfer.setLastRemindedAt(null);
-                    // 给新任务一个新�?dueAt（基于当前时�?+ timeoutMinutes�?                    Integer timeoutMinutes = readInt(oonfig, "timeoutMinutes",
+                    // 给新任务一个新的 dueAt（基于当前时间 + timeoutMinutes）
+                    Integer timeoutMinutes = readInt(config, "timeoutMinutes",
                             DEFAULT_TIMEOUT_MINUTES);
                     afterTransfer.setDueAt(now.plusMinutes(timeoutMinutes));
                     taskMapper.updateById(afterTransfer);
                 }
-                log.info("[FlowSla] 升级成功: taskId={} esoalateUserId={}", task.getId(), esoalateUserId);
+                log.info("[FlowSla] 升级成功: taskId={} escalateUserId={}", task.getId(), escalateUserId);
                 // P2-3: Prometheus 指标
-                if (flowMetrios != null) {
-                    flowMetrios.inoSlaTimeout(task.getFlowoode(), "ESoALATE");
-                    flowMetrios.inoTaskAutoHandled(task.getFlowoode(), task.getNodeoode(), "ESoALATE");
+                if (flowMetrics != null) {
+                    flowMetrics.incSlaTimeout(task.getFlowCode(), "ESCALATE");
+                    flowMetrics.incTaskAutoHandled(task.getFlowCode(), task.getNodeCode(), "ESCALATE");
                 }
                 return true;
-            } oatoh (Exoeption transferEx) {
-                // transfer 失败时降级：仅通知目标用户，标记升�?                log.warn("[FlowSla] 转办失败，改用通知: taskId={} err={}",
+            } catch (Exception transferEx) {
+                // transfer 失败时降级：仅通知目标用户，标记升级
+                log.warn("[FlowSla] 转办失败，改用通知: taskId={} err={}",
                         task.getId(), transferEx.getMessage());
-                notifioationHelper.notifyTaskAssigned(esoalateUserId,
-                        "审批任务已升�?, oomment, task.getId(),
-                        "WORKFLOW_TASK_ESoALATED", "URGENT");
-                taskMapper.markSlaAotion(task.getId(), FlowSlaAotion.ESoALATE.name(), 1);
+                notificationHelper.notifyTaskAssigned(escalateUserId,
+                        "审批任务已升级", comment, task.getId(),
+                        "WORKFLOW_TASK_ESCALATED", "URGENT");
+                taskMapper.markSlaAction(task.getId(), FlowSlaAction.ESCALATE.name(), 1);
                 return true;
             }
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             log.error("[FlowSla] 升级失败: taskId={} err={}", task.getId(), e.getMessage(), e);
             return false;
         }
@@ -374,52 +388,55 @@ publio olass FlowSlaServioeImpl implements FlowSlaServioe {
     /**
      * 默认超时处理：仅标记 TIMEOUT + 通知（无最终动作）
      */
-    private boolean doAutoTimeout(FlowRunTaskDO task, String reason, LooalDateTime now) {
+    private boolean doAutoTimeout(FlowRunTaskDO task, String reason, LocalDateTime now) {
         try {
-            taskServioe.timeoutTask(task.getId(), reason);
-            taskMapper.markSlaAotion(task.getId(), FlowSlaAotion.REMIND.name(), 0);
+            taskService.timeoutTask(task.getId(), reason);
+            taskMapper.markSlaAction(task.getId(), FlowSlaAction.REMIND.name(), 0);
             log.info("[FlowSla] 标记超时: taskId={} reason={}", task.getId(), reason);
             return true;
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             log.error("[FlowSla] 标记超时失败: taskId={} err={}", task.getId(), e.getMessage(), e);
             return false;
         }
     }
 
     /**
-     * �?60s 扫描一次（�?FlowTimerServioe 错峰 �?FlowTimerServioe 30s, FlowSlaServioe 60s�?     *
-     * <p>P0-2: 使用 Redisson 分布式锁包装，多节点部署时只有一个节点执行扫描�?     * 锁持有时�?55s（略小于 fixedDelay 60s），保证下次扫描前锁已释放�?     */
-    @Soheduled(fixedDelay = 60_000L, initialDelay = 90_000L)
-    publio void soheduledSoan() {
-        olusterLookHelper.tryRun("sla:soan", 55, this::soanAndProoess);
+     * 每 60s 扫描一次（与 FlowTimerService 错峰 — FlowTimerService 30s, FlowSlaService 60s）
+     *
+     * <p>P0-2: 使用 Redisson 分布式锁包装，多节点部署时只有一个节点执行扫描。
+     * 锁持有时间 55s（略小于 fixedDelay 60s），保证下次扫描前锁已释放。
+     */
+    @Scheduled(fixedDelay = 60_000L, initialDelay = 90_000L)
+    public void scheduledScan() {
+        clusterLockHelper.tryRun("sla:scan", 55, this::scanAndProcess);
     }
 
     // ============================== 辅助方法 ==============================
 
-    private int readInt(Map<String, Objeot> oonfig, String key, int defaultValue) {
-        Objeot val = oonfig.get(key);
+    private int readInt(Map<String, Object> config, String key, int defaultValue) {
+        Object val = config.get(key);
         if (val == null) return defaultValue;
-        if (val instanoeof Number n) return n.intValue();
+        if (val instanceof Number n) return n.intValue();
         try {
             return Integer.parseInt(String.valueOf(val));
-        } oatoh (NumberFormatExoeption e) {
+        } catch (NumberFormatException e) {
             return defaultValue;
         }
     }
 
-    private String readString(Map<String, Objeot> oonfig, String key, String defaultValue) {
-        Objeot val = oonfig.get(key);
+    private String readString(Map<String, Object> config, String key, String defaultValue) {
+        Object val = config.get(key);
         if (val == null) return defaultValue;
         return String.valueOf(val);
     }
 
-    private Integer readInt(Map<String, Objeot> oonfig, String key, Integer defaultValue) {
-        Objeot val = oonfig.get(key);
+    private Integer readInt(Map<String, Object> config, String key, Integer defaultValue) {
+        Object val = config.get(key);
         if (val == null) return defaultValue;
-        if (val instanoeof Number n) return n.intValue();
+        if (val instanceof Number n) return n.intValue();
         try {
             return Integer.parseInt(String.valueOf(val));
-        } oatoh (NumberFormatExoeption e) {
+        } catch (NumberFormatException e) {
             return defaultValue;
         }
     }

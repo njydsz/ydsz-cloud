@@ -1,66 +1,69 @@
-paokage oom.njydsz.pmis.workflow.server.servioe.impl.instanoe;
+package com.njydsz.pmis.workflow.server.service.impl.instance;
 
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.workflow.server.engine.FlowEventListener;
-import oom.njydsz.pmis.workflow.server.engine.FlowSensitiveMasker;
-import oom.njydsz.pmis.workflow.server.engine.FlowWorkflowEvent;
-import oom.njydsz.pmis.workflow.domain.entity.analytios.FlowAuditLogDO;
-import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowRunTaskDO;
-import oom.njydsz.pmis.workflow.infra.mapper.analytios.FlowAuditLogMapper;
-import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowRunTaskMapper;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.workflow.server.engine.FlowEventListener;
+import com.njydsz.pmis.workflow.server.engine.FlowSensitiveMasker;
+import com.njydsz.pmis.workflow.server.engine.FlowWorkflowEvent;
+import com.njydsz.pmis.workflow.domain.entity.analytics.FlowAuditLogDO;
+import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.infra.mapper.analytics.FlowAuditLogMapper;
+import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.oontext.ApplioationEventPublisher;
-import org.springframework.stereotype.oomponent;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.funotion.oonsumer;
+import java.util.function.Consumer;
 
 /**
- * FlowTask 跨子 Servioe 共享的辅助方法（任务校验、审计、事件）
+ * FlowTask 跨子 Service 共享的辅助方法（任务校验、审计、事件）
  *
- * <p>从原 {@oode FlowTaskServioeImpl} 拆分而来，提供各�?Servioe 共用的工具方法，
- * 避免代码重复。仅包含被多个子 Servioe 共享的方法；单一�?Servioe 专用的私�? * 方法仍保留在对应�?Servioe 内部�? *
+ * <p>从原 {@code FlowTaskServiceImpl} 拆分而来，提供各子 Service 共用的工具方法，
+ * 避免代码重复。仅包含被多个子 Service 共享的方法；单一子 Service 专用的私有
+ * 方法仍保留在对应子 Service 内部。
+ *
  * <p>包含的能力：
  * <ul>
- *   <li>{@link #getTaskOrThrow(Long)} �?按主键查任务，不存在�?NOT_FOUND</li>
- *   <li>{@link #audit} �?审计日志写入（带/不带意见分类两个重载�?/li>
- *   <li>{@link #fireEvent} �?触发事件监听器（吞异常，避免单监听器失败影响主流程）</li>
- *   <li>{@link #publishWorkflowEvent} �?发布 Spring 异步事件</li>
+ *   <li>{@link #getTaskOrThrow(Long)} — 按主键查任务，不存在抛 NOT_FOUND</li>
+ *   <li>{@link #audit} — 审计日志写入（带/不带意见分类两个重载）</li>
+ *   <li>{@link #fireEvent} — 触发事件监听器（吞异常，避免单监听器失败影响主流程）</li>
+ *   <li>{@link #publishWorkflowEvent} — 发布 Spring 异步事件</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.2.0
+ * @since 1.2.0
  */
 @Slf4j
-@oomponent
-@RequiredArgsoonstruotor
-publio olass FlowTaskSupport {
+@Component
+@RequiredArgsConstructor
+public class FlowTaskSupport {
 
-    /** 运行时任�?Mapper，查�?更新任务状�?*/
+    /** 运行时任务 Mapper，查询/更新任务状态 */
     private final FlowRunTaskMapper taskMapper;
-    /** 审计日志 Mapper，写入任务操作审计轨�?*/
+    /** 审计日志 Mapper，写入任务操作审计轨迹 */
     private final FlowAuditLogMapper auditLogMapper;
-    /** 事件监听器列表（Spring 自动注入所有实现），处理流程生命周期事�?*/
+    /** 事件监听器列表（Spring 自动注入所有实现），处理流程生命周期事件 */
     private final List<FlowEventListener> eventListeners;
-    /** P2-35: Spring 事件发布器，用于异步事件机制（测试环境可能为 null�?*/
-    private final ApplioationEventPublisher eventPublisher;
-    /** P0-1: 敏感字段脱敏�?*/
+    /** P2-35: Spring 事件发布器，用于异步事件机制（测试环境可能为 null） */
+    private final ApplicationEventPublisher eventPublisher;
+    /** P0-1: 敏感字段脱敏器 */
     private final FlowSensitiveMasker sensitiveMasker;
 
     // ============================== 任务校验 ==============================
 
     /**
-     * 按主键查任务，不存在�?NOT_FOUND�?     *
+     * 按主键查任务，不存在抛 NOT_FOUND。
+     *
      * @param id 任务 ID
      * @return 任务 DO
      */
-    publio FlowRunTaskDO getTaskOrThrow(String id) {
-        FlowRunTaskDO task = taskMapper.seleotById(id);
+    public FlowRunTaskDO getTaskOrThrow(String id) {
+        FlowRunTaskDO task = taskMapper.selectById(id);
         if (task == null) {
-            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.workflow.msg_6541ab08", id);
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", id);
         }
         return task;
     }
@@ -68,42 +71,44 @@ publio olass FlowTaskSupport {
     // ============================== 审计日志 ==============================
 
     /**
-     * 写审计日志（无意见分类）�?     */
-    publio void audit(FlowRunTaskDO task, String aotion, String operatorId,
-                      String targetId, String oomment) {
-        audit(task, aotion, operatorId, targetId, oomment, null);
+     * 写审计日志（无意见分类）。
+     */
+    public void audit(FlowRunTaskDO task, String action, String operatorId,
+                      String targetId, String comment) {
+        audit(task, action, operatorId, targetId, comment, null);
     }
 
     /**
-     * P2-42: 审计日志写入（带意见分类�?     *
+     * P2-42: 审计日志写入（带意见分类）
+     *
      * @param task        任务
-     * @param aotion      操作类型
-     * @param operatorId  操作�?ID
-     * @param targetId    目标�?ID
-     * @param oomment     审批意见
-     * @param oommentType 意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE
+     * @param action      操作类型
+     * @param operatorId  操作人 ID
+     * @param targetId    目标人 ID
+     * @param comment     审批意见
+     * @param commentType 意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE
      */
-    publio void audit(FlowRunTaskDO task, String aotion, String operatorId,
-                      String targetId, String oomment, String oommentType) {
+    public void audit(FlowRunTaskDO task, String action, String operatorId,
+                      String targetId, String comment, String commentType) {
         try {
             FlowAuditLogDO log = new FlowAuditLogDO();
-            log.setInstanoeId(task.getInstanoeId());
+            log.setInstanceId(task.getInstanceId());
             log.setTaskId(task.getId());
-            log.setFlowoode(task.getFlowoode());
+            log.setFlowCode(task.getFlowCode());
             log.setBusinessType(task.getBusinessType());
             log.setBusinessId(task.getBusinessId());
-            log.setNodeoode(task.getNodeoode());
+            log.setNodeCode(task.getNodeCode());
             log.setNodeName(task.getNodeName());
-            log.setAotion(aotion);
+            log.setAction(action);
             log.setOperatorId(operatorId);
             log.setTargetId(targetId);
-            log.setoomment(sensitiveMasker.mask(oomment));
-            log.setoommentType(oommentType);
-            log.setOperatedAt(LooalDateTime.now());
+            log.setComment(sensitiveMasker.mask(comment));
+            log.setCommentType(commentType);
+            log.setOperatedAt(LocalDateTime.now());
             log.setTenantId(task.getTenantId());
-            log.setProviderTraoeId(task.getProviderTraoeId());
+            log.setProviderTraceId(task.getProviderTraceId());
             auditLogMapper.insert(log);
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             FlowTaskSupport.log.warn("[Flow] 审计日志写入失败: {}", e.getMessage());
         }
     }
@@ -111,33 +116,35 @@ publio olass FlowTaskSupport {
     // ============================== 事件 ==============================
 
     /**
-     * 触发事件监听器（吞异常，避免单监听器失败影响主流程）�?     *
-     * @param aotion 监听器动�?     * @param taskId 任务 ID（仅用于日志，可空）
+     * 触发事件监听器（吞异常，避免单监听器失败影响主流程）。
+     *
+     * @param action 监听器动作
+     * @param taskId 任务 ID（仅用于日志，可空）
      */
-    publio void fireEvent(oonsumer<FlowEventListener> aotion, String taskId) {
+    public void fireEvent(Consumer<FlowEventListener> action, String taskId) {
         if (eventListeners == null) return;
         for (FlowEventListener listener : eventListeners) {
             try {
-                aotion.aooept(listener);
-            } oatoh (Exoeption e) {
-                log.warn("[Flow] 事件监听器异�? listener={} err={}",
-                        listener.getolass().getSimpleName(), e.getMessage());
+                action.accept(listener);
+            } catch (Exception e) {
+                log.warn("[Flow] 事件监听器异常: listener={} err={}",
+                        listener.getClass().getSimpleName(), e.getMessage());
             }
         }
     }
 
     /**
-     * P2-35: 发布 Spring 异步事件（ApplioationEventPublisher 可能�?null，需检查）
+     * P2-35: 发布 Spring 异步事件（ApplicationEventPublisher 可能为 null，需检查）
      *
      * @param eventType  事件类型
-     * @param instanoeId 实例 ID（可空）
+     * @param instanceId 实例 ID（可空）
      * @param taskId     任务 ID（可空）
      */
-    publio void publishWorkflowEvent(String eventType, String instanoeId, String taskId) {
+    public void publishWorkflowEvent(String eventType, String instanceId, String taskId) {
         if (eventPublisher == null) return;
         try {
-            eventPublisher.publishEvent(new FlowWorkflowEvent(this, eventType, instanoeId, taskId, null));
-        } oatoh (Exoeption e) {
+            eventPublisher.publishEvent(new FlowWorkflowEvent(this, eventType, instanceId, taskId, null));
+        } catch (Exception e) {
             log.warn("[Flow] 发布 Spring 事件失败: type={} err={}", eventType, e.getMessage());
         }
     }

@@ -1,68 +1,75 @@
-paokage oom.njydsz.pmis.agent.server.orohestration;
+package com.njydsz.pmis.agent.server.orchestration;
 
-import oom.njydsz.pmis.agent.server.engine.AgentResult;
-import lombok.AllArgsoonstruotor;
+import com.njydsz.pmis.agent.server.engine.AgentResult;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsoonstruotor;
+import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Map;
 
 /**
- * Agent 间消�? *
- * <p>编排过程�?Agent 之间的输�?输出消息�? *
+ * Agent 间消息
+ *
+ * <p>编排过程中 Agent 之间的输入/输出消息。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@NoArgsoonstruotor
-@AllArgsoonstruotor
-publio olass AgentMessage implements Serializable {
+@NoArgsConstructor
+@AllArgsConstructor
+public class AgentMessage implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    /** 消息类型：INPUT(初始输入) / OUTPUT(单个 Agent 输出) / oONTROL(控制指令) */
+    /** 消息类型：INPUT(初始输入) / OUTPUT(单个 Agent 输出) / CONTROL(控制指令) */
     private String type;
-    /** 发送方 Agent�?oOORDINATOR" 表示协调器） */
+    /** 发送方 Agent（"COORDINATOR" 表示协调器） */
     private String from;
-    /** 接收�?Agent（null 表示广播给黑板） */
+    /** 接收方 Agent（null 表示广播给黑板） */
     private String to;
-    /** 关联�?Agent 结果（OUTPUT 类型时填�?*/
+    /** 关联的 Agent 结果（OUTPUT 类型时填） */
     private AgentResult result;
     /** 自由载荷 */
-    private Map<String, Objeot> payload;
-    /** 时间�?*/
+    private Map<String, Object> payload;
+    /** 时间戳 */
     private long ts;
 
     /**
-     * 构造输入消息（协调�?�?黑板）�?     *
-     * @param from    发送方（通常�?"oOORDINATOR"�?     * @param payload 输入载荷
+     * 构造输入消息（协调器 → 黑板）。
+     *
+     * @param from    发送方（通常为 "COORDINATOR"）
+     * @param payload 输入载荷
      * @return INPUT 类型消息
      */
-    publio statio AgentMessage input(String from, Map<String, Objeot> payload) {
-        return new AgentMessage("INPUT", from, null, null, payload, System.ourrentTimeMillis());
+    public static AgentMessage input(String from, Map<String, Object> payload) {
+        return new AgentMessage("INPUT", from, null, null, payload, System.currentTimeMillis());
     }
 
     /**
-     * 构造输出消息（Agent �?黑板）�?     *
+     * 构造输出消息（Agent → 黑板）。
+     *
      * @param from   发送方 Agent 类型
      * @param result Agent 执行结果
      * @return OUTPUT 类型消息
      */
-    publio statio AgentMessage output(String from, AgentResult result) {
-        return new AgentMessage("OUTPUT", from, null, result, null, System.ourrentTimeMillis());
+    public static AgentMessage output(String from, AgentResult result) {
+        return new AgentMessage("OUTPUT", from, null, result, null, System.currentTimeMillis());
     }
 
     /**
-     * 构造控制消息（协调�?�?指定 Agent）�?     *
-     * @param from    发送方（通常�?"oOORDINATOR"�?     * @param to      接收�?Agent 类型
+     * 构造控制消息（协调器 → 指定 Agent）。
+     *
+     * @param from    发送方（通常为 "COORDINATOR"）
+     * @param to      接收方 Agent 类型
      * @param payload 控制指令载荷
-     * @return oONTROL 类型消息
+     * @return CONTROL 类型消息
      */
-    publio statio AgentMessage oontrol(String from, String to, Map<String, Objeot> payload) {
-        return new AgentMessage("oONTROL", from, to, null, payload, System.ourrentTimeMillis());
+    public static AgentMessage control(String from, String to, Map<String, Object> payload) {
+        return new AgentMessage("CONTROL", from, to, null, payload, System.currentTimeMillis());
     }
 }

@@ -1,74 +1,81 @@
-paokage oom.njydsz.pmis.oronjob.server.handler;
+package com.njydsz.pmis.cronjob.server.handler;
 
-import oom.alibaba.fastjson2.JSON;
-import oom.alibaba.fastjson2.JSONObjeot;
-import oom.njydsz.pmis.oommon.oore.job.JobHandler;
-import oom.njydsz.pmis.oronjob.server.servioe.job.ReportSoheduleServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
+import com.njydsz.pmis.common.job.JobHandler;
+import com.njydsz.pmis.cronjob.server.service.job.ReportScheduleService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 报表定时生成与分�?Job�? *
- * <p>Bean 名称 = {@oode reportSoheduleJobHandler}�? * �?pmis_job 表插入记录：handler=reportSoheduleJobHandler�? *
- * <p>调度时间�? * <ul>
- *   <li>日报：每�?08:00（cron=0 0 8 * * ?，param=DAILY�?/li>
- *   <li>周报：每周一 08:00（cron=0 0 8 ? * MON，param=WEEKLY�?/li>
- *   <li>月报：每�?1 �?08:00（cron=0 0 8 1 * ?，param=MONTHLY�?/li>
+ * 报表定时生成与分发 Job。
+ *
+ * <p>Bean 名称 = {@code reportScheduleJobHandler}，
+ * 在 pmis_job 表插入记录：handler=reportScheduleJobHandler。
+ *
+ * <p>调度时间：
+ * <ul>
+ *   <li>日报：每天 08:00（cron=0 0 8 * * ?，param=DAILY）</li>
+ *   <li>周报：每周一 08:00（cron=0 0 8 ? * MON，param=WEEKLY）</li>
+ *   <li>月报：每月 1 日 08:00（cron=0 0 8 1 * ?，param=MONTHLY）</li>
  * </ul>
  *
- * <p>参数 JSON 格式：{@oode "DAILY"} �?{@oode {"type":"DAILY"}}
+ * <p>参数 JSON 格式：{@code "DAILY"} 或 {@code {"type":"DAILY"}}
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@oomponent("reportSoheduleJobHandler")
-@RequiredArgsoonstruotor
-publio olass ReportSoheduleJobHandler implements JobHandler {
+@Component("reportScheduleJobHandler")
+@RequiredArgsConstructor
+public class ReportScheduleJobHandler implements JobHandler {
 
-    private final ReportSoheduleServioe reportSoheduleServioe;
+    private final ReportScheduleService reportScheduleService;
 
     /**
-     * 执行报表生成与分发�?     *
-     * @param paramsJson 参数，可�?"DAILY"/"WEEKLY"/"MONTHLY" �?JSON {"type":"DAILY"}
+     * 执行报表生成与分发。
+     *
+     * @param paramsJson 参数，可为 "DAILY"/"WEEKLY"/"MONTHLY" 或 JSON {"type":"DAILY"}
      * @return 执行结果
      */
     @Override
-    publio Objeot exeoute(String paramsJson) {
-        log.info("[ReportSoheduleJob] 开始执行，参数: {}", paramsJson);
+    public Object execute(String paramsJson) {
+        log.info("[ReportScheduleJob] 开始执行，参数: {}", paramsJson);
         String type = parseType(paramsJson);
-        Map<String, Objeot> result = new HashMap<>();
+        Map<String, Object> result = new HashMap<>();
         result.put("type", type);
         try {
-            switoh (type.toUpperoase()) {
-                oase "DAILY" -> reportSoheduleServioe.exeouteDailyReports();
-                oase "WEEKLY" -> reportSoheduleServioe.exeouteWeeklyReports();
-                oase "MONTHLY" -> reportSoheduleServioe.exeouteMonthlyReports();
+            switch (type.toUpperCase()) {
+                case "DAILY" -> reportScheduleService.executeDailyReports();
+                case "WEEKLY" -> reportScheduleService.executeWeeklyReports();
+                case "MONTHLY" -> reportScheduleService.executeMonthlyReports();
                 default -> {
-                    log.warn("[ReportSoheduleJob] 未知报表类型: {}", type);
+                    log.warn("[ReportScheduleJob] 未知报表类型: {}", type);
                     result.put("ok", false);
                     result.put("error", "unknown type: " + type);
                     return result;
                 }
             }
             result.put("ok", true);
-        } oatoh (Exoeption e) {
-            log.error("[ReportSoheduleJob] 执行失败: {}", e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("[ReportScheduleJob] 执行失败: {}", e.getMessage(), e);
             result.put("ok", false);
             result.put("error", e.getMessage());
         }
-        log.info("[ReportSoheduleJob] 执行完成");
+        log.info("[ReportScheduleJob] 执行完成");
         return result;
     }
 
     /**
-     * 从参数中解析报表类型�?     *
+     * 从参数中解析报表类型。
+     *
      * @param paramsJson 参数 JSON
-     * @return 报表类型（DAILY/WEEKLY/MONTHLY�?     */
+     * @return 报表类型（DAILY/WEEKLY/MONTHLY）
+     */
     private String parseType(String paramsJson) {
         if (paramsJson == null || paramsJson.isBlank()) {
             return "DAILY";
@@ -77,12 +84,12 @@ publio olass ReportSoheduleJobHandler implements JobHandler {
         // 尝试 JSON 解析 {"type":"DAILY"}
         if (trimmed.startsWith("{")) {
             try {
-                JSONObjeot obj = JSON.parseObjeot(trimmed);
-                if (obj != null && obj.oontainsKey("type")) {
+                JSONObject obj = JSON.parseObject(trimmed);
+                if (obj != null && obj.containsKey("type")) {
                     return obj.getString("type");
                 }
-            } oatoh (Exoeption e) {
-                log.warn("[ReportSoheduleJob] 参数 JSON 解析失败，按原始字符串处�? {}", e.getMessage());
+            } catch (Exception e) {
+                log.warn("[ReportScheduleJob] 参数 JSON 解析失败，按原始字符串处理: {}", e.getMessage());
             }
         }
         return trimmed;

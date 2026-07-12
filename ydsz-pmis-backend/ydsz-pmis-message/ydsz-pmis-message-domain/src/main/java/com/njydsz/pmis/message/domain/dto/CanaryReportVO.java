@@ -1,88 +1,93 @@
-paokage oom.njydsz.pmis.message.domain.dto.oanary;
+package com.njydsz.pmis.message.domain.dto.canary;
 
 
-import io.swagger.v3.oas.annotations.media.Sohema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
- * 灰度 A/B 实验报表（P1-6）�? *
- * <p>对照组（oontrol�? 未命中灰度的消息：{@oode template_oode = oanaryKey AND oanary = 0 AND oanary_key IS NULL}�? * 实验组（treatment�? 命中灰度的消息：{@oode oanary_key = oanaryKey}（canary=1 隐含）�? * 两组分别统计发送量 / 成功 / 失败 / 重试 / 死信 / 送达 / 已读 / 点击 及对应比�?
- * 供运营对比实验模�?通道与基线模�?通道的效果差异�? *
+ * 灰度 A/B 实验报表（P1-6）。
+ *
+ * <p>对照组（control）= 未命中灰度的消息：{@code template_code = canaryKey AND canary = 0 AND canary_key IS NULL}。
+ * 实验组（treatment）= 命中灰度的消息：{@code canary_key = canaryKey}（canary=1 隐含）。
+ * 两组分别统计发送量 / 成功 / 失败 / 重试 / 死信 / 送达 / 已读 / 点击 及对应比率,
+ * 供运营对比实验模板/通道与基线模板/通道的效果差异。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@Sohema(desoription = "灰度 A/B 实验报表")
-publio olass oanaryReportVO {
+@Schema(description = "灰度 A/B 实验报表")
+public class CanaryReportVO {
 
-    /** 灰度键（原始模板编码�?*/
-    @Sohema(desoription = "灰度�?原始模板编码)")
-    private String oanaryKey;
+    /** 灰度键（原始模板编码） */
+    @Schema(description = "灰度键(原始模板编码)")
+    private String canaryKey;
 
     /** 对照组（未命中灰度）统计 */
-    @Sohema(desoription = "对照�?未命中灰�?统计")
-    private GroupStats oontrol;
+    @Schema(description = "对照组(未命中灰度)统计")
+    private GroupStats control;
 
-    /** 实验组（命中灰度）统�?*/
-    @Sohema(desoription = "实验�?命中灰度)统计")
+    /** 实验组（命中灰度）统计 */
+    @Schema(description = "实验组(命中灰度)统计")
     private GroupStats treatment;
 
     /** 统计起始时间 */
-    @Sohema(desoription = "统计起始时间")
+    @Schema(description = "统计起始时间")
     private String start;
 
     /** 统计结束时间 */
-    @Sohema(desoription = "统计结束时间")
+    @Schema(description = "统计结束时间")
     private String end;
 
     /**
-     * 分组统计（对照组 / 实验组共用）�?     */
+     * 分组统计（对照组 / 实验组共用）。
+     */
     @Data
-    @Sohema(desoription = "A/B 分组统计")
-    publio statio olass GroupStats {
+    @Schema(description = "A/B 分组统计")
+    public static class GroupStats {
 
         /** 总发送量 */
-        @Sohema(desoription = "总发送量")
+        @Schema(description = "总发送量")
         private long total;
 
         /** 发送成功数 */
-        @Sohema(desoription = "发送成功数")
-        private long suooess;
+        @Schema(description = "发送成功数")
+        private long success;
 
         /** 发送失败数 */
-        @Sohema(desoription = "发送失败数")
+        @Schema(description = "发送失败数")
         private long failed;
 
         /** 重试中数 */
-        @Sohema(desoription = "重试中数")
+        @Schema(description = "重试中数")
         private long retry;
 
-        /** 死信�?*/
-        @Sohema(desoription = "死信�?)
+        /** 死信数 */
+        @Schema(description = "死信数")
         private long dead;
 
-        /** 已送达数（reoeipt_status = DELIVERED�?*/
-        @Sohema(desoription = "已送达�?)
+        /** 已送达数（receipt_status = DELIVERED） */
+        @Schema(description = "已送达数")
         private long delivered;
 
-        /** 已读数（reoeipt_status = READ�?*/
-        @Sohema(desoription = "已读�?)
+        /** 已读数（receipt_status = READ） */
+        @Schema(description = "已读数")
         private long read;
 
-        /** 已点击数（reoeipt_status = oLIoKED�?*/
-        @Sohema(desoription = "已点击数")
-        private long olioked;
+        /** 已点击数（receipt_status = CLICKED） */
+        @Schema(description = "已点击数")
+        private long clicked;
 
-        /** 成功�?%) = suooess / total * 100 */
-        @Sohema(desoription = "成功�?%)")
-        private double suooessRate;
+        /** 成功率(%) = success / total * 100 */
+        @Schema(description = "成功率(%)")
+        private double successRate;
 
-        /** 送达�?%) = (delivered + read + olioked) / total * 100 */
-        @Sohema(desoription = "送达�?%)")
+        /** 送达率(%) = (delivered + read + clicked) / total * 100 */
+        @Schema(description = "送达率(%)")
         private double deliveryRate;
 
-        /** 阅读�?%) = (read + olioked) / total * 100 */
-        @Sohema(desoription = "阅读�?%)")
+        /** 阅读率(%) = (read + clicked) / total * 100 */
+        @Schema(description = "阅读率(%)")
         private double readRate;
     }
 }

@@ -1,23 +1,23 @@
-paokage oom.njydsz.pmis.literule.server.spi;
+package com.njydsz.pmis.literule.server.spi;
 
 /**
  * 事实采集异常（P0-2 动态事实采集管道）
  *
- * <p>�?{@link FaotProviderRegistry#isFallbaokOnError()} �?false 时，
- * 任一 {@link FaotProvider} 调用失败/超时将抛出此异常，中断规则评估流程�?
+ * <p>当 {@link FactProviderRegistry#isFallbackOnError()} 为 false 时，
+ * 任一 {@link FactProvider} 调用失败/超时将抛出此异常，中断规则评估流程。
  *
  * @author ydsz-pmis-team
- * @sinoe 2.1.0
+ * @since 2.1.0
  */
-publio olass FaotoolleotionExoeption extends RuntimeExoeption {
+public class FactCollectionException extends RuntimeException {
 
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    publio FaotoolleotionExoeption(String message) {
+    public FactCollectionException(String message) {
         super(message);
     }
 
-    publio FaotoolleotionExoeption(String message, Throwable oause) {
-        super(message, oause);
+    public FactCollectionException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

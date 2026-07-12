@@ -1,215 +1,229 @@
-paokage oom.njydsz.pmis.projeot.server.servioe.impl;
+package com.njydsz.pmis.project.server.service.impl;
 
-import oom.alibaba.fastjson2.JSON;
-import oom.alibaba.exoel.EasyExoel;
-import oom.njydsz.pmis.oommon.oonfig.Miniooonfig;
-import oom.njydsz.pmis.projeot.domain.dto.oookpitDrillDownDTO;
-import oom.njydsz.pmis.projeot.server.servioe.AsynoExportServioe;
-import oom.njydsz.pmis.projeot.server.servioe.oookpitReportServioe;
-import oom.njydsz.pmis.projeot.server.servioe.ReportServioe;
-import io.minio.Minioolient;
-import io.minio.PutObjeotArgs;
-import lombok.RequiredArgsoonstruotor;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.excel.EasyExcel;
+import com.njydsz.pmis.common.config.MinioConfig;
+import com.njydsz.pmis.project.domain.dto.CockpitDrillDownDTO;
+import com.njydsz.pmis.project.server.service.AsyncExportService;
+import com.njydsz.pmis.project.server.service.CockpitReportService;
+import com.njydsz.pmis.project.server.service.ReportService;
+import io.minio.MinioClient;
+import io.minio.PutObjectArgs;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.jdbo.oore.JdboTemplate;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.oolleotions;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.oolleotors;
+import java.util.stream.Collectors;
 
 /**
- * 异步导出服务实现�? *
- * <p>处理流程�? * <ol>
- *   <li>提交导出任务 �?PENDING 状态入�?/li>
- *   <li>定时 Job 拉取 PENDING 任务 �?GENERATING �?生成 Exoel �?上传 MinIO �?oOMPLETED</li>
- *   <li>前端轮询或通过 WebSooket 通知完成</li>
+ * 异步导出服务实现。
+ *
+ * <p>处理流程：
+ * <ol>
+ *   <li>提交导出任务 → PENDING 状态入库</li>
+ *   <li>定时 Job 拉取 PENDING 任务 → GENERATING → 生成 Excel → 上传 MinIO → COMPLETED</li>
+ *   <li>前端轮询或通过 WebSocket 通知完成</li>
  * </ol>
  *
- * <p>P1-8: {@link #exeouteExport(Long)} 根据 exportType 调用对应报表 Servioe 查询数据�? * 使用 EasyExoel 生成 XLSX，上传至 MinIO，并回写 file_url/file_size/status�? * 任意环节异常 �?状态置 FAILED�? *
+ * <p>P1-8: {@link #executeExport(Long)} 根据 exportType 调用对应报表 Service 查询数据，
+ * 使用 EasyExcel 生成 XLSX，上传至 MinIO，并回写 file_url/file_size/status。
+ * 任意环节异常 → 状态置 FAILED。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass AsynoExportServioeImpl implements AsynoExportServioe {
+@Service
+@RequiredArgsConstructor
+public class AsyncExportServiceImpl implements AsyncExportService {
 
-    /** 错误信息入库最大长�?*/
-    private statio final int ERROR_MSG_MAX_LEN = 500;
+    /** 错误信息入库最大长度 */
+    private static final int ERROR_MSG_MAX_LEN = 500;
     /** MinIO 导出对象前缀 */
-    private statio final String EXPORT_PREFIX = "export/";
+    private static final String EXPORT_PREFIX = "export/";
 
-    private final JdboTemplate jdboTemplate;
-    private final Minioolient minioolient;
-    private final Miniooonfig miniooonfig;
-    private final ReportServioe reportServioe;
-    private final oookpitReportServioe oookpitReportServioe;
+    private final JdbcTemplate jdbcTemplate;
+    private final MinioClient minioClient;
+    private final MinioConfig minioConfig;
+    private final ReportService reportService;
+    private final CockpitReportService cockpitReportService;
 
     @Override
-    publio String submitExport(String userId, String exportType, Map<String, Objeot> params) {
-        String sql = "INSERT INTO pmis_export_reoord (user_id, export_type, params, status, oreated_at, expired_at) "
+    public String submitExport(String userId, String exportType, Map<String, Object> params) {
+        String sql = "INSERT INTO pmis_export_record (user_id, export_type, params, status, created_at, expired_at) "
                 + "VALUES (?, ?, ?::text, ?, ?, ?)";
-        LooalDateTime now = LooalDateTime.now();
-        jdboTemplate.update(sql, userId, exportType, toJson(params), "PENDING", now, now.plusDays(7));
-        String id = jdboTemplate.queryForObjeot(
-                "SELEoT MAX(id) FROM pmis_export_reoord WHERE user_id = ? AND export_type = ?",
-                String.olass, userId, exportType);
-        log.info("[AsynoExport] 提交导出任务: id={}, userId={}, type={}", id, userId, exportType);
+        LocalDateTime now = LocalDateTime.now();
+        jdbcTemplate.update(sql, userId, exportType, toJson(params), "PENDING", now, now.plusDays(7));
+        String id = jdbcTemplate.queryForObject(
+                "SELECT MAX(id) FROM pmis_export_record WHERE user_id = ? AND export_type = ?",
+                String.class, userId, exportType);
+        log.info("[AsyncExport] 提交导出任务: id={}, userId={}, type={}", id, userId, exportType);
         return id;
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio Page<Map<String, Objeot>> getExportReoords(String userId, Pageable pageable) {
-        String oountSql = "SELEoT oOUNT(*) FROM pmis_export_reoord WHERE user_id = ? AND deleted = 0";
-        Long total = jdboTemplate.queryForObjeot(oountSql, Long.olass, userId);
+    @Transactional(readOnly = true)
+    public Page<Map<String, Object>> getExportRecords(String userId, Pageable pageable) {
+        String countSql = "SELECT COUNT(*) FROM pmis_export_record WHERE user_id = ? AND deleted = 0";
+        Long total = jdbcTemplate.queryForObject(countSql, Long.class, userId);
         if (total == null || total == 0) {
             return new PageImpl<>(List.of(), pageable, 0);
         }
-        String sql = "SELEoT * FROM pmis_export_reoord WHERE user_id = ? AND deleted = 0 "
-                + "ORDER BY oreated_at DESo LIMIT ? OFFSET ?";
-        List<Map<String, Objeot>> reoords = jdboTemplate.queryForList(
+        String sql = "SELECT * FROM pmis_export_record WHERE user_id = ? AND deleted = 0 "
+                + "ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        List<Map<String, Object>> records = jdbcTemplate.queryForList(
                 sql, userId, pageable.getPageSize(), pageable.getOffset());
-        return new PageImpl<>(reoords, pageable, total);
+        return new PageImpl<>(records, pageable, total);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio String getDownloadUrl(String reoordId) {
-        String sql = "SELEoT file_url FROM pmis_export_reoord WHERE id = ? AND deleted = 0 AND status = 'oOMPLETED'";
+    @Transactional(readOnly = true)
+    public String getDownloadUrl(String recordId) {
+        String sql = "SELECT file_url FROM pmis_export_record WHERE id = ? AND deleted = 0 AND status = 'COMPLETED'";
         try {
-            return jdboTemplate.queryForObjeot(sql, String.olass, reoordId);
-        } oatoh (Exoeption e) {
-            log.warn("[AsynoExport] 获取下载URL失败: reoordId={}, error={}", reoordId, e.getMessage());
+            return jdbcTemplate.queryForObject(sql, String.class, recordId);
+        } catch (Exception e) {
+            log.warn("[AsyncExport] 获取下载URL失败: recordId={}, error={}", recordId, e.getMessage());
             return null;
         }
     }
 
     @Override
-    publio void deleteExportReoord(String reoordId) {
-        jdboTemplate.update("UPDATE pmis_export_reoord SET deleted = 1 WHERE id = ?", reoordId);
-        log.info("[AsynoExport] 删除导出记录: id={}", reoordId);
+    public void deleteExportRecord(String recordId) {
+        jdbcTemplate.update("UPDATE pmis_export_record SET deleted = 1 WHERE id = ?", recordId);
+        log.info("[AsyncExport] 删除导出记录: id={}", recordId);
     }
 
     /**
-     * 执行导出：生�?Exoel �?上传 MinIO �?回写记录状态�?     *
-     * <p>异常时状态置 FAILED，不影响调度主流程�?     *
-     * @param reoordId 导出记录 ID
+     * 执行导出：生成 Excel → 上传 MinIO → 回写记录状态。
+     *
+     * <p>异常时状态置 FAILED，不影响调度主流程。
+     *
+     * @param recordId 导出记录 ID
      */
     @Override
-    publio void exeouteExport(String reoordId) {
+    public void executeExport(String recordId) {
         try {
-            jdboTemplate.update("UPDATE pmis_export_reoord SET status = 'GENERATING' WHERE id = ?", reoordId);
-            Map<String, Objeot> reoord = jdboTemplate.queryForMap(
-                    "SELEoT * FROM pmis_export_reoord WHERE id = ?", reoordId);
-            String exportType = (String) reoord.get("export_type");
-            Map<String, Objeot> params = parseParams(reoord.get("params"));
-            log.info("[AsynoExport] 开始生成导出文�? id={}, type={}", reoordId, exportType);
+            jdbcTemplate.update("UPDATE pmis_export_record SET status = 'GENERATING' WHERE id = ?", recordId);
+            Map<String, Object> record = jdbcTemplate.queryForMap(
+                    "SELECT * FROM pmis_export_record WHERE id = ?", recordId);
+            String exportType = (String) record.get("export_type");
+            Map<String, Object> params = parseParams(record.get("params"));
+            log.info("[AsyncExport] 开始生成导出文件: id={}, type={}", recordId, exportType);
 
             // 1. 根据 exportType 查询数据
-            ReportData data = fetohReportData(exportType, params);
-            // 2. 生成 Exoel
-            byte[] bytes = writeExoel(exportType, data);
-            // 3. 上传�?MinIO
-            String fileUrl = uploadToMinio(reoordId, exportType, bytes);
+            ReportData data = fetchReportData(exportType, params);
+            // 2. 生成 Excel
+            byte[] bytes = writeExcel(exportType, data);
+            // 3. 上传到 MinIO
+            String fileUrl = uploadToMinio(recordId, exportType, bytes);
             // 4. 回写记录
-            jdboTemplate.update(
-                    "UPDATE pmis_export_reoord SET status = 'oOMPLETED', file_url = ?, file_size = ?, oompleted_at = ? WHERE id = ?",
-                    fileUrl, (long) bytes.length, LooalDateTime.now(), reoordId);
-            log.info("[AsynoExport] 导出完成: id={}, fileUrl={}, size={}", reoordId, fileUrl, bytes.length);
-        } oatoh (Exoeption e) {
-            log.error("[AsynoExport] 导出失败: id={}, error={}", reoordId, e.getMessage());
-            jdboTemplate.update(
-                    "UPDATE pmis_export_reoord SET status = 'FAILED', error_message = ?, oompleted_at = ? WHERE id = ?",
-                    trunoate(e.getMessage()), LooalDateTime.now(), reoordId);
+            jdbcTemplate.update(
+                    "UPDATE pmis_export_record SET status = 'COMPLETED', file_url = ?, file_size = ?, completed_at = ? WHERE id = ?",
+                    fileUrl, (long) bytes.length, LocalDateTime.now(), recordId);
+            log.info("[AsyncExport] 导出完成: id={}, fileUrl={}, size={}", recordId, fileUrl, bytes.length);
+        } catch (Exception e) {
+            log.error("[AsyncExport] 导出失败: id={}, error={}", recordId, e.getMessage());
+            jdbcTemplate.update(
+                    "UPDATE pmis_export_record SET status = 'FAILED', error_message = ?, completed_at = ? WHERE id = ?",
+                    truncate(e.getMessage()), LocalDateTime.now(), recordId);
         }
     }
 
     // ============================== 报表数据查询 ==============================
 
     /**
-     * 根据导出类型调用对应报表 Servioe 查询数据�?     *
+     * 根据导出类型调用对应报表 Service 查询数据。
+     *
      * @param exportType 导出类型
-     * @param params     查询参数（initiationId / period / deptId�?     * @return 表头与数据行
+     * @param params     查询参数（initiationId / period / deptId）
+     * @return 表头与数据行
      */
-    private ReportData fetohReportData(String exportType, Map<String, Objeot> params) {
+    private ReportData fetchReportData(String exportType, Map<String, Object> params) {
         String initiationId = getString(params, "initiationId");
         String period = getString(params, "period");
         Long deptId = getLong(params, "deptId");
         String type = exportType == null ? "" : exportType;
-        switoh (type) {
-            oase "oOoKPIT":
-                oookpitDrillDownDTO drillDown = null;
+        switch (type) {
+            case "COCKPIT":
+                CockpitDrillDownDTO drillDown = null;
                 if (deptId != null) {
-                    drillDown = new oookpitDrillDownDTO();
+                    drillDown = new CockpitDrillDownDTO();
                     drillDown.setDimension("DEPT");
                     drillDown.setValue(String.valueOf(deptId));
                 }
-                return toReportData("驾驶舱KPI", oookpitReportServioe.overview(period, drillDown));
-            oase "PROFIT":
-                return toReportData("利润数据", reportServioe.projeotProfitReport(initiationId, period));
-            oase "PAYMENT":
-                return toReportData("回款台账", reportServioe.paymentLedgerReport(initiationId));
-            oase "oOST":
-                return toReportData("成本明细", reportServioe.oostDetailReport(initiationId, period));
-            oase "LIFEoYoLE":
-            oase "PROJEoT":
+                return toReportData("驾驶舱KPI", cockpitReportService.overview(period, drillDown));
+            case "PROFIT":
+                return toReportData("利润数据", reportService.projectProfitReport(initiationId, period));
+            case "PAYMENT":
+                return toReportData("回款台账", reportService.paymentLedgerReport(initiationId));
+            case "COST":
+                return toReportData("成本明细", reportService.costDetailReport(initiationId, period));
+            case "LIFECYCLE":
+            case "PROJECT":
             default:
-                return toReportData("立项信息", reportServioe.projeotLifeoyoleReport(initiationId));
+                return toReportData("立项信息", reportService.projectLifecycleReport(initiationId));
         }
     }
 
     /**
-     * 将任意报表数据对象转为表�?+ 数据行�?     *
-     * <p>支持 Map / POJO（通过 fastjson2 �?Map�? null�?     *
-     * @param title 报表标题（仅用于日志�?     * @param data  报表数据
+     * 将任意报表数据对象转为表头 + 数据行。
+     *
+     * <p>支持 Map / POJO（通过 fastjson2 转 Map）/ null。
+     *
+     * @param title 报表标题（仅用于日志）
+     * @param data  报表数据
      * @return 表头与数据行
      */
-    @SuppressWarnings("unoheoked")
-    private ReportData toReportData(String title, Objeot data) {
+    @SuppressWarnings("unchecked")
+    private ReportData toReportData(String title, Object data) {
         if (data == null) {
-            log.warn("[AsynoExport] {} 报表数据为空", title);
+            log.warn("[AsyncExport] {} 报表数据为空", title);
             return new ReportData(List.of(), List.of());
         }
-        Map<String, Objeot> map;
-        if (data instanoeof Map) {
-            map = new LinkedHashMap<>((Map<String, Objeot>) data);
+        Map<String, Object> map;
+        if (data instanceof Map) {
+            map = new LinkedHashMap<>((Map<String, Object>) data);
         } else {
-            // POJO �?Map（保留字段顺序）
-            map = JSON.parseObjeot(JSON.toJSONString(data));
+            // POJO → Map（保留字段顺序）
+            map = JSON.parseObject(JSON.toJSONString(data));
         }
         if (map.isEmpty()) {
             return new ReportData(List.of(), List.of());
         }
         List<String> headers = new ArrayList<>(map.keySet());
-        List<Objeot> row = new ArrayList<>(map.values());
+        List<Object> row = new ArrayList<>(map.values());
         return new ReportData(headers, List.of(row));
     }
 
-    // ============================== Exoel 生成 ==============================
+    // ============================== Excel 生成 ==============================
 
     /**
-     * 使用 EasyExoel 生成 XLSX 字节流�?     *
+     * 使用 EasyExcel 生成 XLSX 字节流。
+     *
      * @param exportType 导出类型（sheet 名）
      * @param data       表头与数据行
-     * @return XLSX 字节�?     */
-    private byte[] writeExoel(String exportType, ReportData data) {
+     * @return XLSX 字节流
+     */
+    private byte[] writeExcel(String exportType, ReportData data) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         List<List<String>> head = data.headers.stream()
-                .map(oolleotions::singletonList)
-                .oolleot(oolleotors.toList());
-        EasyExoel.write(baos)
+                .map(Collections::singletonList)
+                .collect(Collectors.toList());
+        EasyExcel.write(baos)
                 .head(head)
                 .sheet(exportType == null ? "导出数据" : exportType)
                 .doWrite(data.rows);
@@ -219,34 +233,38 @@ publio olass AsynoExportServioeImpl implements AsynoExportServioe {
     // ============================== MinIO 上传 ==============================
 
     /**
-     * 上传 Exoel 字节流到 MinIO�?     *
-     * @param reoordId   导出记录 ID
+     * 上传 Excel 字节流到 MinIO。
+     *
+     * @param recordId   导出记录 ID
      * @param exportType 导出类型
-     * @param bytes      Exoel 字节�?     * @return MinIO 对象 key
-     * @throws Exoeption 上传失败时抛出（由外�?try-oatoh 捕获�?FAILED�?     */
-    private String uploadToMinio(String reoordId, String exportType, byte[] bytes) throws Exoeption {
-        String objeotKey = EXPORT_PREFIX + reoordId + "/"
+     * @param bytes      Excel 字节流
+     * @return MinIO 对象 key
+     * @throws Exception 上传失败时抛出（由外层 try-catch 捕获置 FAILED）
+     */
+    private String uploadToMinio(String recordId, String exportType, byte[] bytes) throws Exception {
+        String objectKey = EXPORT_PREFIX + recordId + "/"
                 + (exportType == null ? "EXPORT" : exportType) + "_"
-                + System.ourrentTimeMillis() + ".xlsx";
+                + System.currentTimeMillis() + ".xlsx";
         try (ByteArrayInputStream in = new ByteArrayInputStream(bytes)) {
-            minioolient.putObjeot(PutObjeotArgs.builder()
-                    .buoket(miniooonfig.getDefaultBuoket())
-                    .objeot(objeotKey)
+            minioClient.putObject(PutObjectArgs.builder()
+                    .bucket(minioConfig.getDefaultBucket())
+                    .object(objectKey)
                     .stream(in, bytes.length, -1)
-                    .oontentType("applioation/vnd.openxmlformats-offioedooument.spreadsheetml.sheet")
+                    .contentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                     .build());
         }
-        return objeotKey;
+        return objectKey;
     }
 
     // ============================== 工具方法 ==============================
 
     /**
-     * 解析 params 字段�?Map�?     *
+     * 解析 params 字段为 Map。
+     *
      * @param raw params 原始值（JSON 字符串）
      * @return 参数 Map，空时返回空 Map
      */
-    private Map<String, Objeot> parseParams(Objeot raw) {
+    private Map<String, Object> parseParams(Object raw) {
         if (raw == null) {
             return Map.of();
         }
@@ -255,43 +273,43 @@ publio olass AsynoExportServioeImpl implements AsynoExportServioe {
             return Map.of();
         }
         try {
-            Map<String, Objeot> parsed = JSON.parseObjeot(json);
+            Map<String, Object> parsed = JSON.parseObject(json);
             return parsed == null ? Map.of() : parsed;
-        } oatoh (Exoeption e) {
-            log.warn("[AsynoExport] params 解析失败，按空参数处�? {}", json);
+        } catch (Exception e) {
+            log.warn("[AsyncExport] params 解析失败，按空参数处理: {}", json);
             return Map.of();
         }
     }
 
-    private Long getLong(Map<String, Objeot> params, String key) {
-        Objeot v = params.get(key);
+    private Long getLong(Map<String, Object> params, String key) {
+        Object v = params.get(key);
         if (v == null) {
             return null;
         }
-        if (v instanoeof Number) {
+        if (v instanceof Number) {
             return ((Number) v).longValue();
         }
         try {
             return Long.parseLong(v.toString());
-        } oatoh (NumberFormatExoeption e) {
-            log.warn("[AsynoExportServioeImpl] Long 解析失败 v={}: {}", v, e.getMessage());
+        } catch (NumberFormatException e) {
+            log.warn("[AsyncExportServiceImpl] Long 解析失败 v={}: {}", v, e.getMessage());
             return null;
         }
     }
 
-    private String getString(Map<String, Objeot> params, String key) {
-        Objeot v = params.get(key);
+    private String getString(Map<String, Object> params, String key) {
+        Object v = params.get(key);
         return v == null ? null : v.toString();
     }
 
-    private String trunoate(String msg) {
+    private String truncate(String msg) {
         if (msg == null) {
             return "";
         }
         return msg.length() > ERROR_MSG_MAX_LEN ? msg.substring(0, ERROR_MSG_MAX_LEN) : msg;
     }
 
-    private String toJson(Map<String, Objeot> params) {
+    private String toJson(Map<String, Object> params) {
         if (params == null || params.isEmpty()) {
             return "{}";
         }
@@ -299,12 +317,13 @@ publio olass AsynoExportServioeImpl implements AsynoExportServioe {
     }
 
     /**
-     * 报表数据持有者（表头 + 数据行）�?     */
-    private statio olass ReportData {
+     * 报表数据持有者（表头 + 数据行）。
+     */
+    private static class ReportData {
         final List<String> headers;
-        final List<List<Objeot>> rows;
+        final List<List<Object>> rows;
 
-        ReportData(List<String> headers, List<List<Objeot>> rows) {
+        ReportData(List<String> headers, List<List<Object>> rows) {
             this.headers = headers;
             this.rows = rows;
         }

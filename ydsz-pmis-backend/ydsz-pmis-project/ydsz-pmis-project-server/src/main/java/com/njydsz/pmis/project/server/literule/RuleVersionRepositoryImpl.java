@@ -1,128 +1,128 @@
-paokage oom.njydsz.pmis.projeot.server.literule;
+package com.njydsz.pmis.project.server.literule;
 
-import oom.alibaba.fastjson2.JSON;
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.njydsz.pmis.literule.domain.entity.RuleDefinitionDO;
-import oom.njydsz.pmis.literule.domain.entity.RuleVersionHistoryDO;
-import oom.njydsz.pmis.literule.infra.mapper.RuleDefinitionMapper;
-import oom.njydsz.pmis.literule.infra.mapper.RuleVersionHistoryMapper;
-import oom.njydsz.pmis.literule.api.RuleDefinition;
-import oom.njydsz.pmis.literule.api.RuleSeverity;
-import oom.njydsz.pmis.literule.server.spi.RuleVersion;
-import oom.njydsz.pmis.literule.server.spi.RuleVersionRepository;
-import lombok.RequiredArgsoonstruotor;
+import com.alibaba.fastjson2.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.literule.domain.entity.RuleDefinitionDO;
+import com.njydsz.pmis.literule.domain.entity.RuleVersionHistoryDO;
+import com.njydsz.pmis.literule.infra.mapper.RuleDefinitionMapper;
+import com.njydsz.pmis.literule.infra.mapper.RuleVersionHistoryMapper;
+import com.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.api.RuleSeverity;
+import com.njydsz.pmis.literule.server.spi.RuleVersion;
+import com.njydsz.pmis.literule.server.spi.RuleVersionRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.oolleotors;
+import java.util.stream.Collectors;
 
 /**
- * 规则版本仓库实现（exeoution 模块�?
+ * 规则版本仓库实现（execution 模块）
  *
- * <p>使用 pmis_rule_version_history 表存储版本快照，支持变更追踪和回滚�?
+ * <p>使用 pmis_rule_version_history 表存储版本快照，支持变更追踪和回滚。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
 @Slf4j
-@oomponent
-@RequiredArgsoonstruotor
-publio olass RuleVersionRepositoryImpl implements RuleVersionRepository {
+@Component
+@RequiredArgsConstructor
+public class RuleVersionRepositoryImpl implements RuleVersionRepository {
 
     private final RuleVersionHistoryMapper versionMapper;
     private final RuleDefinitionMapper ruleDefinitionMapper;
 
     @Override
-    publio void saveVersion(RuleDefinition definition, String operator, String ohangeDeso) {
+    public void saveVersion(RuleDefinition definition, String operator, String changeDesc) {
         RuleVersionHistoryDO DO = new RuleVersionHistoryDO();
-        DO.setRuleoode(definition.getoode());
+        DO.setRuleCode(definition.getCode());
         DO.setVersion(definition.getVersion());
         DO.setDefinitionJson(JSON.toJSONString(definition));
-        DO.setohangeDeso(ohangeDeso);
+        DO.setChangeDesc(changeDesc);
         DO.setOperator(operator);
-        DO.setoreatedAt(LooalDateTime.now());
+        DO.setCreatedAt(LocalDateTime.now());
         versionMapper.insert(DO);
-        log.info("[LiteRule-Exeo] 版本快照已保�? oode={}, version={}", definition.getoode(), definition.getVersion());
+        log.info("[LiteRule-Exec] 版本快照已保存: code={}, version={}", definition.getCode(), definition.getVersion());
     }
 
     @Override
-    publio List<RuleVersion> listVersions(String ruleoode) {
-        List<RuleVersionHistoryDO> list = versionMapper.listByoode(ruleoode);
-        return list.stream().map(this::toVersion).oolleot(oolleotors.toList());
+    public List<RuleVersion> listVersions(String ruleCode) {
+        List<RuleVersionHistoryDO> list = versionMapper.listByCode(ruleCode);
+        return list.stream().map(this::toVersion).collect(Collectors.toList());
     }
 
     @Override
-    publio RuleDefinition rollbaok(String ruleoode, int version, String operator) {
+    public RuleDefinition rollback(String ruleCode, int version, String operator) {
         // 查找目标版本快照
-        RuleVersionHistoryDO targetVersion = versionMapper.seleotOne(
+        RuleVersionHistoryDO targetVersion = versionMapper.selectOne(
                 new LambdaQueryWrapper<RuleVersionHistoryDO>()
-                        .eq(RuleVersionHistoryDO::getRuleoode, ruleoode)
+                        .eq(RuleVersionHistoryDO::getRuleCode, ruleCode)
                         .eq(RuleVersionHistoryDO::getVersion, version));
         if (targetVersion == null) {
-            throw new IllegalArgumentExoeption("版本不存�? " + ruleoode + " v" + version);
+            throw new IllegalArgumentException("版本不存在: " + ruleCode + " v" + version);
         }
 
-        // 从快照恢复规则定�?
-        RuleDefinition restored = JSON.parseObjeot(targetVersion.getDefinitionJson(), RuleDefinition.olass);
+        // 从快照恢复规则定义
+        RuleDefinition restored = JSON.parseObject(targetVersion.getDefinitionJson(), RuleDefinition.class);
 
         // 更新主表（版本号+1，因为回滚也是一次变更）
-        RuleDefinitionDO existing = ruleDefinitionMapper.seleotByoode(ruleoode);
+        RuleDefinitionDO existing = ruleDefinitionMapper.selectByCode(ruleCode);
         if (existing == null) {
-            throw new IllegalStateExoeption("规则主表记录不存�? " + ruleoode);
+            throw new IllegalStateException("规则主表记录不存在: " + ruleCode);
         }
-        existing.setoonditionExpression(restored.getoonditionExpression());
+        existing.setConditionExpression(restored.getConditionExpression());
         existing.setSeverityExpression(restored.getSeverityExpression());
-        existing.setDefaultSeverity(restored.getDefaultSeverity() != null ? restored.getDefaultSeverity().getoode() : "YELLOW");
+        existing.setDefaultSeverity(restored.getDefaultSeverity() != null ? restored.getDefaultSeverity().getCode() : "YELLOW");
         existing.setTitleTemplate(restored.getTitleTemplate());
-        existing.setDesoriptionTemplate(restored.getDesoriptionTemplate());
+        existing.setDescriptionTemplate(restored.getDescriptionTemplate());
         existing.setPriority(restored.getPriority());
-        existing.setSoope(restored.getSoope());
+        existing.setScope(restored.getScope());
         existing.setMutexGroup(restored.getMutexGroup());
         existing.setVersion(existing.getVersion() + 1);
         existing.setUpdatedBy(operator);
-        existing.setUpdatedAt(LooalDateTime.now());
+        existing.setUpdatedAt(LocalDateTime.now());
         ruleDefinitionMapper.updateById(existing);
 
         // 保存回滚操作版本快照
-        RuleDefinition rolledBaok = RuleDefinition.builder()
-                .oode(existing.getRuleoode())
+        RuleDefinition rolledBack = RuleDefinition.builder()
+                .code(existing.getRuleCode())
                 .name(existing.getRuleName())
-                .oategory(existing.getoategory())
-                .oonditionExpression(existing.getoonditionExpression())
+                .category(existing.getCategory())
+                .conditionExpression(existing.getConditionExpression())
                 .severityExpression(existing.getSeverityExpression())
-                .defaultSeverity(RuleSeverity.fromoode(existing.getDefaultSeverity()))
+                .defaultSeverity(RuleSeverity.fromCode(existing.getDefaultSeverity()))
                 .titleTemplate(existing.getTitleTemplate())
-                .desoriptionTemplate(existing.getDesoriptionTemplate())
+                .descriptionTemplate(existing.getDescriptionTemplate())
                 .priority(existing.getPriority())
                 .enabled(Boolean.TRUE.equals(existing.getEnabled()))
-                .soope(existing.getSoope())
+                .scope(existing.getScope())
                 .mutexGroup(existing.getMutexGroup())
                 .drilldownAvailable(Boolean.TRUE.equals(existing.getDrilldownAvailable()))
                 .version(existing.getVersion())
                 .build();
-        saveVersion(rolledBaok, operator, "回滚�?v" + version);
+        saveVersion(rolledBack, operator, "回滚至 v" + version);
 
-        log.info("[LiteRule-Exeo] 规则回滚: oode={}, from v{} to v{}", ruleoode, version, existing.getVersion());
-        return rolledBaok;
+        log.info("[LiteRule-Exec] 规则回滚: code={}, from v{} to v{}", ruleCode, version, existing.getVersion());
+        return rolledBack;
     }
 
     /**
-     * DO �?RuleVersion
+     * DO → RuleVersion
      *
-     * @param DO 数据库实�?
+     * @param DO 数据库实体
      * @return 版本快照
      */
     private RuleVersion toVersion(RuleVersionHistoryDO DO) {
         return RuleVersion.builder()
                 .id(DO.getId())
-                .ruleoode(DO.getRuleoode())
+                .ruleCode(DO.getRuleCode())
                 .version(DO.getVersion())
                 .definitionJson(DO.getDefinitionJson())
-                .ohangeDeso(DO.getohangeDeso())
+                .changeDesc(DO.getChangeDesc())
                 .operator(DO.getOperator())
-                .oreatedAt(DO.getoreatedAt())
+                .createdAt(DO.getCreatedAt())
                 .build();
     }
 }

@@ -1,36 +1,36 @@
-paokage oom.njydsz.pmis.workflow.server.engine;
+package com.njydsz.pmis.workflow.server.engine;
 
-import lombok.AllArgsoonstruotor;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsoonstruotor;
+import lombok.NoArgsConstructor;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 
 /**
  * 流程事件上下文元数据
  *
- * <p>P2-37: 携带 operatorId/operatedAt/traoeId/tenantId 等上下文信息�?
- * 供监听器获取完整的事件元数据，对标用�?BPM / 钉钉审批的事件通知能力�?
+ * <p>P2-37: 携带 operatorId/operatedAt/traceId/tenantId 等上下文信息，
+ * 供监听器获取完整的事件元数据，对标用友 BPM / 钉钉审批的事件通知能力。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
 @Data
-@AllArgsoonstruotor
-@NoArgsoonstruotor
-publio olass FlowEventoontext {
+@AllArgsConstructor
+@NoArgsConstructor
+public class FlowEventContext {
     /** 流程实例 ID */
-    private String instanoeId;
+    private String instanceId;
     /** 任务 ID */
     private String taskId;
-    /** 操作�?ID */
+    /** 操作人 ID */
     private String operatorId;
-    /** 操作动作（PASS/REJEoT/TERMINATE/SUSPEND 等） */
-    private String aotion;
+    /** 操作动作（PASS/REJECT/TERMINATE/SUSPEND 等） */
+    private String action;
     /** 租户 ID */
     private String tenantId;
     /** 链路追踪 ID */
-    private String traoeId;
+    private String traceId;
     /** 操作时间 */
-    private LooalDateTime operatedAt;
+    private LocalDateTime operatedAt;
 }

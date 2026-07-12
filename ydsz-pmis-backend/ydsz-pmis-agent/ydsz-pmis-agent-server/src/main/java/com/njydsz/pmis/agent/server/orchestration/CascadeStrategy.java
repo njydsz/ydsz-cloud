@@ -1,14 +1,14 @@
-paokage oom.njydsz.pmis.agent.server.orohestration.strategy;
+package com.njydsz.pmis.agent.server.orchestration.strategy;
 
-import oom.njydsz.pmis.agent.server.engine.Agent;
-import oom.njydsz.pmis.agent.server.engine.Agentoontext;
-import oom.njydsz.pmis.agent.server.engine.AgentResult;
-import oom.njydsz.pmis.agent.server.orohestration.AgentBlaokboard;
-import oom.njydsz.pmis.agent.server.orohestration.OrohestrationMode;
-import oom.njydsz.pmis.agent.server.orohestration.OrohestrationRequest;
-import oom.njydsz.pmis.agent.server.orohestration.OrohestrationResult;
+import com.njydsz.pmis.agent.server.engine.Agent;
+import com.njydsz.pmis.agent.server.engine.AgentContext;
+import com.njydsz.pmis.agent.server.engine.AgentResult;
+import com.njydsz.pmis.agent.server.orchestration.AgentBlackboard;
+import com.njydsz.pmis.agent.server.orchestration.OrchestrationMode;
+import com.njydsz.pmis.agent.server.orchestration.OrchestrationRequest;
+import com.njydsz.pmis.agent.server.orchestration.OrchestrationResult;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,95 +18,96 @@ import java.util.Map;
 /**
  * 级联编排策略
  *
- * <p>�?agentTypes 声明顺序逐个执行，达标即停：
+ * <p>按 agentTypes 声明顺序逐个执行，达标即停：
  * <ol>
- *   <li>�?1 �?Agent 执行 �?�?oonfidenoe 是否 �?threshold</li>
- *   <li>达标：finalResult 即其输出，停�?/li>
+ *   <li>第 1 个 Agent 执行 → 看 confidence 是否 ≥ threshold</li>
+ *   <li>达标：finalResult 即其输出，停止</li>
  *   <li>未达标：把结果丢进黑板，下一 Agent 接手</li>
- *   <li>所�?Agent 都跑完仍不达标：取最后一�?/li>
+ *   <li>所有 Agent 都跑完仍不达标：取最后一个</li>
  * </ol>
  *
- * <p>适用场景：分级响应（先用便宜的规�?Agent 兜底，置信度低再�?AI Agent）�? *
+ * <p>适用场景：分级响应（先用便宜的规则 Agent 兜底，置信度低再调 AI Agent）。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@oomponent
-publio olass oasoadeStrategy implements OrohestrationStrategy {
+@Component
+public class CascadeStrategy implements OrchestrationStrategy {
 
-    /** 默认置信度阈值（0.85�?*/
-    private statio final double DEFAULT_THRESHOLD = 0.85d;
+    /** 默认置信度阈值（0.85） */
+    private static final double DEFAULT_THRESHOLD = 0.85d;
 
     @Override
-    publio OrohestrationMode mode() {
-        return OrohestrationMode.oASoADE;
+    public OrchestrationMode mode() {
+        return OrchestrationMode.CASCADE;
     }
 
     @Override
-    publio OrohestrationResult apply(OrohestrationRequest req,
+    public OrchestrationResult apply(OrchestrationRequest req,
                                      Map<String, Agent> agents,
-                                     AgentBlaokboard blaokboard) {
-        long t0 = System.ourrentTimeMillis();
-        OrohestrationResult result = new OrohestrationResult();
-        result.setMode(OrohestrationMode.oASoADE);
+                                     AgentBlackboard blackboard) {
+        long t0 = System.currentTimeMillis();
+        OrchestrationResult result = new OrchestrationResult();
+        result.setMode(OrchestrationMode.CASCADE);
         result.setAgentResults(new HashMap<>());
-        result.setExeoutedAgents(new ArrayList<>());
+        result.setExecutedAgents(new ArrayList<>());
 
-        double threshold = req.getoonfidenoeThreshold() == null ? DEFAULT_THRESHOLD : req.getoonfidenoeThreshold();
+        double threshold = req.getConfidenceThreshold() == null ? DEFAULT_THRESHOLD : req.getConfidenceThreshold();
         List<String> types = req.getAgentTypes();
         if (types == null || types.isEmpty()) {
             result.setNote("未指定参与编排的 Agent");
-            result.setTotaloostMs(System.ourrentTimeMillis() - t0);
+            result.setTotalCostMs(System.currentTimeMillis() - t0);
             return result;
         }
 
         AgentResult lastResult = null;
         String lastType = null;
-        boolean reaohed = false;
+        boolean reached = false;
         for (int i = 0; i < types.size(); i++) {
             String agentType = types.get(i);
             Agent agent = agents.get(agentType);
             if (agent == null) {
-                log.warn("[oasoade] 跳过未注�?Agent: type={}", agentType);
-                oontinue;
+                log.warn("[Cascade] 跳过未注册 Agent: type={}", agentType);
+                continue;
             }
-            Map<String, Objeot> params = new HashMap<>();
-            if (req.getFaots() != null) params.putAll(req.getFaots());
+            Map<String, Object> params = new HashMap<>();
+            if (req.getFacts() != null) params.putAll(req.getFacts());
             // 注入上游
-            for (Map.Entry<String, Objeot> e : blaokboard.getSoratoh().entrySet()) {
+            for (Map.Entry<String, Object> e : blackboard.getScratch().entrySet()) {
                 params.put("upstream." + e.getKey(), e.getValue());
             }
-            Agentoontext otx = new Agentoontext(req.getBizType(), req.getBizId(), req.getBizRef(),
-                    req.getoallerId(), req.getoallerName(), req.getSouroe(), params);
+            AgentContext ctx = new AgentContext(req.getBizType(), req.getBizId(), req.getBizRef(),
+                    req.getCallerId(), req.getCallerName(), req.getSource(), params);
             try {
-                AgentResult ar = agent.exeoute(otx);
+                AgentResult ar = agent.execute(ctx);
                 result.getAgentResults().put(agentType, ar);
-                result.getExeoutedAgents().add(agentType);
-                blaokboard.putSoratoh(agentType, ar);
+                result.getExecutedAgents().add(agentType);
+                blackboard.putScratch(agentType, ar);
                 lastResult = ar;
                 lastType = agentType;
-                double oonf = ar.getoonfidenoe() == null ? 0d : ar.getoonfidenoe().doubleValue();
-                blaokboard.appendTraoe(agentType, OrohestrationMode.oASoADE,
-                        ar.getSoore(), ar.getoonfidenoe(),
-                        "置信�?" + oonf + (oonf >= threshold ? " 达标，提前终�? : " 未达标，级联下一"));
-                if (oonf >= threshold) {
-                    reaohed = true;
-                    result.setNote("级联在第 " + (i + 1) + " �?Agent 处达标提前终�? " + agentType);
+                double conf = ar.getConfidence() == null ? 0d : ar.getConfidence().doubleValue();
+                blackboard.appendTrace(agentType, OrchestrationMode.CASCADE,
+                        ar.getScore(), ar.getConfidence(),
+                        "置信度=" + conf + (conf >= threshold ? " 达标，提前终止" : " 未达标，级联下一"));
+                if (conf >= threshold) {
+                    reached = true;
+                    result.setNote("级联在第 " + (i + 1) + " 个 Agent 处达标提前终止: " + agentType);
                     break;
                 }
-            } oatoh (Exoeption e) {
-                log.error("[oasoade] Agent 执行失败: type={} err={}", agentType, e.getMessage());
-                blaokboard.appendTraoe(agentType, OrohestrationMode.oASoADE, null, null,
+            } catch (Exception e) {
+                log.error("[Cascade] Agent 执行失败: type={} err={}", agentType, e.getMessage());
+                blackboard.appendTrace(agentType, OrchestrationMode.CASCADE, null, null,
                         "执行异常: " + e.getMessage());
             }
         }
 
         result.setFinalResult(lastResult);
-        result.setTraoe(blaokboard.getTraoe());
-        result.setAgentoount(result.getExeoutedAgents().size());
-        result.setTotaloostMs(System.ourrentTimeMillis() - t0);
-        if (!reaohed) {
-            result.setNote("级联跑完所�?Agent 仍不达标，最终结果来�? " + (lastType == null ? "�? : lastType));
+        result.setTrace(blackboard.getTrace());
+        result.setAgentCount(result.getExecutedAgents().size());
+        result.setTotalCostMs(System.currentTimeMillis() - t0);
+        if (!reached) {
+            result.setNote("级联跑完所有 Agent 仍不达标，最终结果来自: " + (lastType == null ? "无" : lastType));
         }
         return result;
     }

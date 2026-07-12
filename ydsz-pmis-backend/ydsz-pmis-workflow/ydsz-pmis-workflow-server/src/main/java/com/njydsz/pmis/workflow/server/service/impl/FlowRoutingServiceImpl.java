@@ -1,106 +1,111 @@
-paokage oom.njydsz.pmis.workflow.server.servioe.impl.instanoe;
+package com.njydsz.pmis.workflow.server.service.impl.instance;
 
-import oom.njydsz.pmis.literule.api.Ruleoontext;
-import oom.njydsz.pmis.literule.api.RuleEngine;
-import oom.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
-import oom.njydsz.pmis.literule.server.spi.DeoisionTableEvalProvider;
-import oom.njydsz.pmis.workflow.domain.entity.analytios.FlowAuditLogDO;
-import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowInstanoeDO;
-import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowRunTaskDO;
-import oom.njydsz.pmis.workflow.domain.enums.instanoe.FlowTaskStatus;
-import oom.njydsz.pmis.workflow.infra.mapper.analytios.FlowAuditLogMapper;
-import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowInstanoeMapper;
-import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowRunTaskMapper;
-import oom.njydsz.pmis.workflow.server.servioe.instanoe.FlowRoutingServioe;
+import com.njydsz.pmis.literule.api.RuleContext;
+import com.njydsz.pmis.literule.api.RuleEngine;
+import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.server.spi.DecisionTableEvalProvider;
+import com.njydsz.pmis.workflow.domain.entity.analytics.FlowAuditLogDO;
+import com.njydsz.pmis.workflow.domain.entity.instance.FlowInstanceDO;
+import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.domain.enums.instance.FlowTaskStatus;
+import com.njydsz.pmis.workflow.infra.mapper.analytics.FlowAuditLogMapper;
+import com.njydsz.pmis.workflow.infra.mapper.instance.FlowInstanceMapper;
+import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
+import com.njydsz.pmis.workflow.server.service.instance.FlowRoutingService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.faotory.ObjeotProvider;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnBean;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.oolleotions;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.oolleotors;
+import java.util.stream.Collectors;
 
 /**
- * 智能路由与异常检测服务实�? *
- * <p>基于 ydsz-pmis-literule �?RuleEngine �?ExpressionEvaluator（Aviator 引擎），
- * 提供智能路由条件评估和流程异常检测能力�? *
- * <p><b>条件注入</b>：仅�?Spring 容器中存�?RuleEngine �?ExpressionEvaluator Bean 时，
- * 本实现才会被注册。如�?literule 模块未引入，则回退�?DefaultFlowVariableStrategy�? *
- * <h3>异常检�?/h3>
+ * 智能路由与异常检测服务实现
+ *
+ * <p>基于 ydsz-pmis-literule 的 RuleEngine 和 ExpressionEvaluator（Aviator 引擎），
+ * 提供智能路由条件评估和流程异常检测能力。
+ *
+ * <p><b>条件注入</b>：仅当 Spring 容器中存在 RuleEngine 和 ExpressionEvaluator Bean 时，
+ * 本实现才会被注册。如果 literule 模块未引入，则回退到 DefaultFlowVariableStrategy。
+ *
+ * <h3>异常检测</h3>
  * <ul>
  *   <li>超时检测：任务超过 dueAt 截止时间仍未完成</li>
  *   <li>卡单检测：任务在同一节点停留超过 24 小时</li>
- *   <li>循环审批：审计日志中同一节点被反复驳回（REJEoT）超�?3 �?/li>
+ *   <li>循环审批：审计日志中同一节点被反复驳回（REJECT）超过 3 次</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.2.0
+ * @since 1.2.0
  */
 @Slf4j
-@Servioe
-@oonditionalOnBean({RuleEngine.olass, ExpressionEvaluator.olass})
-publio olass FlowRoutingServioeImpl implements FlowRoutingServioe {
+@Service
+@ConditionalOnBean({RuleEngine.class, ExpressionEvaluator.class})
+public class FlowRoutingServiceImpl implements FlowRoutingService {
 
-    /** 表达式求值器（Aviator 引擎），评估路由条件表达�?*/
+    /** 表达式求值器（Aviator 引擎），评估路由条件表达式 */
     private final ExpressionEvaluator expressionEvaluator;
-    /** 运行时任�?Mapper，查询卡�?超期任务 */
+    /** 运行时任务 Mapper，查询卡单/超期任务 */
     private final FlowRunTaskMapper taskMapper;
     /** 审计日志 Mapper，查询循环审批等异常模式 */
     private final FlowAuditLogMapper auditLogMapper;
-    /** 流程实例 Mapper，查询运行中实例状�?*/
-    private final FlowInstanoeMapper instanoeMapper;
+    /** 流程实例 Mapper，查询运行中实例状态 */
+    private final FlowInstanceMapper instanceMapper;
 
-    /** DMN 决策表评估提供者（SPI 可选依赖，未注入时 DMN 路由不可用，回退�?Aviator 评估�?*/
-    private final DeoisionTableEvalProvider deoisionTableEvalProvider;
+    /** DMN 决策表评估提供者（SPI 可选依赖，未注入时 DMN 路由不可用，回退到 Aviator 评估） */
+    private final DecisionTableEvalProvider decisionTableEvalProvider;
 
     /**
-     * 构造注入：使用 {@link ObjeotProvider} 支持可选依�?{@link DeoisionTableEvalProvider}�?     *
-     * <p>通过 SPI 接口注入，解�?workflow �?projeot 模块的编译期硬依赖；
-     * projeot 模块�?{@oode DeoisionTableEvalServioe} 已实现该 SPI，由 Spring 自动装配�?     */
-    publio FlowRoutingServioeImpl(ExpressionEvaluator expressionEvaluator,
+     * 构造注入：使用 {@link ObjectProvider} 支持可选依赖 {@link DecisionTableEvalProvider}。
+     *
+     * <p>通过 SPI 接口注入，解除 workflow 对 project 模块的编译期硬依赖；
+     * project 模块的 {@code DecisionTableEvalService} 已实现该 SPI，由 Spring 自动装配。
+     */
+    public FlowRoutingServiceImpl(ExpressionEvaluator expressionEvaluator,
                                   FlowRunTaskMapper taskMapper,
                                   FlowAuditLogMapper auditLogMapper,
-                                  FlowInstanoeMapper instanoeMapper,
-                                  ObjeotProvider<DeoisionTableEvalProvider> deoisionTableEvalProviderObjeotProvider) {
+                                  FlowInstanceMapper instanceMapper,
+                                  ObjectProvider<DecisionTableEvalProvider> decisionTableEvalProviderObjectProvider) {
         this.expressionEvaluator = expressionEvaluator;
         this.taskMapper = taskMapper;
         this.auditLogMapper = auditLogMapper;
-        this.instanoeMapper = instanoeMapper;
-        this.deoisionTableEvalProvider = deoisionTableEvalProviderObjeotProvider.getIfAvailable();
+        this.instanceMapper = instanceMapper;
+        this.decisionTableEvalProvider = decisionTableEvalProviderObjectProvider.getIfAvailable();
     }
 
     // ============================== 路由评估 ==============================
 
     @Override
-    publio String evaluateRoute(String oonditionExpression, Map<String, Objeot> variables) {
-        if (oonditionExpression == null || oonditionExpression.isBlank()) {
+    public String evaluateRoute(String conditionExpression, Map<String, Object> variables) {
+        if (conditionExpression == null || conditionExpression.isBlank()) {
             log.debug("[FlowRoute] 路由表达式为空，返回 null");
             return null;
         }
         // DMN 决策表路由：表达式以 "dmn:" 开头时，冒号后为决策表编码
-        if (oonditionExpression.startsWith("dmn:")) {
-            String tableoode = oonditionExpression.substring(4).trim();
-            return evaluateRouteByDmn(tableoode, variables);
+        if (conditionExpression.startsWith("dmn:")) {
+            String tableCode = conditionExpression.substring(4).trim();
+            return evaluateRouteByDmn(tableCode, variables);
         }
         try {
-            Ruleoontext oontext = buildoontext(variables, "FLOW_ROUTE");
-            Objeot result = expressionEvaluator.eval(oonditionExpression, oontext);
+            RuleContext context = buildContext(variables, "FLOW_ROUTE");
+            Object result = expressionEvaluator.eval(conditionExpression, context);
             if (result == null) {
-                log.debug("[FlowRoute] 路由表达式评估结果为 null: expr={}", oonditionExpression);
+                log.debug("[FlowRoute] 路由表达式评估结果为 null: expr={}", conditionExpression);
                 return null;
             }
-            String nodeoode = result.toString();
-            log.info("[FlowRoute] 路由命中: expr={} -> nodeoode={}", oonditionExpression, nodeoode);
-            return nodeoode;
-        } oatoh (Exoeption e) {
-            log.warn("[FlowRoute] 路由表达式评估失�? expr={}, err={}", oonditionExpression, e.getMessage());
+            String nodeCode = result.toString();
+            log.info("[FlowRoute] 路由命中: expr={} -> nodeCode={}", conditionExpression, nodeCode);
+            return nodeCode;
+        } catch (Exception e) {
+            log.warn("[FlowRoute] 路由表达式评估失败: expr={}, err={}", conditionExpression, e.getMessage());
             return null;
         }
     }
@@ -108,135 +113,142 @@ publio olass FlowRoutingServioeImpl implements FlowRoutingServioe {
     /**
      * 基于 DMN 决策表的路由评估
      *
-     * <p>调用 {@link DeoisionTableEvalProvider} SPI 评估决策表，
-     * 取首条命中行的第一个动作值作为目标节点编码�?     *
-     * <p>�?DeoisionTableEvalProvider 未注入（如分服务部署、projeot 模块未引入）时，
-     * 记录告警并返�?null，路由交由上层兜底处理�?     *
-     * @param tableoode 决策表编�?     * @param variables 流程变量（作为决策表事实数据�?     * @return 目标节点编码；评估失败或无命中时返回 null
+     * <p>调用 {@link DecisionTableEvalProvider} SPI 评估决策表，
+     * 取首条命中行的第一个动作值作为目标节点编码。
+     *
+     * <p>当 DecisionTableEvalProvider 未注入（如分服务部署、project 模块未引入）时，
+     * 记录告警并返回 null，路由交由上层兜底处理。
+     *
+     * @param tableCode 决策表编码
+     * @param variables 流程变量（作为决策表事实数据）
+     * @return 目标节点编码；评估失败或无命中时返回 null
      */
-    private String evaluateRouteByDmn(String tableoode, Map<String, Objeot> variables) {
-        if (deoisionTableEvalProvider == null) {
-            log.warn("[FlowRoute] DMN 路由不可用（DeoisionTableEvalProvider 未注入）: tableoode={}", tableoode);
+    private String evaluateRouteByDmn(String tableCode, Map<String, Object> variables) {
+        if (decisionTableEvalProvider == null) {
+            log.warn("[FlowRoute] DMN 路由不可用（DecisionTableEvalProvider 未注入）: tableCode={}", tableCode);
             return null;
         }
         try {
-            List<Map<String, Objeot>> results = deoisionTableEvalProvider.evaluate(tableoode, variables);
+            List<Map<String, Object>> results = decisionTableEvalProvider.evaluate(tableCode, variables);
             if (results == null || results.isEmpty()) {
-                log.warn("[FlowRoute] DMN 路由无匹配结�? tableoode={}", tableoode);
+                log.warn("[FlowRoute] DMN 路由无匹配结果: tableCode={}", tableCode);
                 return null;
             }
-            Map<String, Objeot> first = results.get(0);
+            Map<String, Object> first = results.get(0);
             if (first == null || first.isEmpty()) {
                 return null;
             }
-            // 取第一个动作值作为目标节点编�?            Objeot target = first.values().iterator().next();
-            String nodeoode = target == null ? null : target.toString();
-            log.info("[FlowRoute] DMN 路由命中: tableoode={} -> nodeoode={}", tableoode, nodeoode);
-            return nodeoode;
-        } oatoh (Exoeption e) {
-            log.warn("[FlowRoute] DMN 路由评估失败: tableoode={}, err={}", tableoode, e.getMessage());
+            // 取第一个动作值作为目标节点编码
+            Object target = first.values().iterator().next();
+            String nodeCode = target == null ? null : target.toString();
+            log.info("[FlowRoute] DMN 路由命中: tableCode={} -> nodeCode={}", tableCode, nodeCode);
+            return nodeCode;
+        } catch (Exception e) {
+            log.warn("[FlowRoute] DMN 路由评估失败: tableCode={}, err={}", tableCode, e.getMessage());
             return null;
         }
     }
 
     @Override
-    publio boolean evaluateoondition(String oonditionExpression, Map<String, Objeot> variables) {
-        if (oonditionExpression == null || oonditionExpression.isBlank()) {
+    public boolean evaluateCondition(String conditionExpression, Map<String, Object> variables) {
+        if (conditionExpression == null || conditionExpression.isBlank()) {
             return true;
         }
         try {
-            Ruleoontext oontext = buildoontext(variables, "FLOW_oONDITION");
-            boolean result = expressionEvaluator.evalBoolean(oonditionExpression, oontext);
-            log.debug("[FlowRoute] 条件评估: expr={} -> {}", oonditionExpression, result);
+            RuleContext context = buildContext(variables, "FLOW_CONDITION");
+            boolean result = expressionEvaluator.evalBoolean(conditionExpression, context);
+            log.debug("[FlowRoute] 条件评估: expr={} -> {}", conditionExpression, result);
             return result;
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             log.warn("[FlowRoute] 条件表达式评估失败，默认返回 false: expr={}, err={}",
-                    oonditionExpression, e.getMessage());
+                    conditionExpression, e.getMessage());
             return false;
         }
     }
 
-    // ============================== 异常检�?==============================
+    // ============================== 异常检测 ==============================
 
     @Override
-    @Transaotional(readOnly = true)
-    publio List<Map<String, Objeot>> deteotAnomalies(String instanoeId) {
-        if (instanoeId == null) {
-            return oolleotions.emptyList();
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> detectAnomalies(String instanceId) {
+        if (instanceId == null) {
+            return Collections.emptyList();
         }
 
-        FlowInstanoeDO instanoe = instanoeMapper.seleotById(instanoeId);
-        if (instanoe == null) {
-            log.warn("[FlowRoute] 实例不存在，跳过异常检�? instanoeId={}", instanoeId);
-            return oolleotions.emptyList();
+        FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+        if (instance == null) {
+            log.warn("[FlowRoute] 实例不存在，跳过异常检测: instanceId={}", instanceId);
+            return Collections.emptyList();
         }
 
-        List<Map<String, Objeot>> anomalies = new ArrayList<>();
+        List<Map<String, Object>> anomalies = new ArrayList<>();
 
         // 检测顺序：超时 -> 卡单 -> 循环审批
-        deteotTimeout(instanoeId, anomalies);
-        deteotStuok(instanoeId, anomalies);
-        deteotLoop(instanoeId, anomalies);
+        detectTimeout(instanceId, anomalies);
+        detectStuck(instanceId, anomalies);
+        detectLoop(instanceId, anomalies);
 
         if (!anomalies.isEmpty()) {
-            log.warn("[FlowRoute] 检测到 {} 项异�? instanoeId={}", anomalies.size(), instanoeId);
+            log.warn("[FlowRoute] 检测到 {} 项异常: instanceId={}", anomalies.size(), instanceId);
         } else {
-            log.debug("[FlowRoute] 未检测到异常: instanoeId={}", instanoeId);
+            log.debug("[FlowRoute] 未检测到异常: instanceId={}", instanceId);
         }
 
         return anomalies;
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio boolean isAnomaly(String instanoeId) {
-        return !deteotAnomalies(instanoeId).isEmpty();
+    @Transactional(readOnly = true)
+    public boolean isAnomaly(String instanceId) {
+        return !detectAnomalies(instanceId).isEmpty();
     }
 
     // ============================== 私有方法 ==============================
 
     /**
-     * 构建 literule 规则上下�?     *
+     * 构建 literule 规则上下文
+     *
      * @param variables 流程变量
-     * @param soenario  业务场景标识
-     * @return Ruleoontext 实例
+     * @param scenario  业务场景标识
+     * @return RuleContext 实例
      */
-    private Ruleoontext buildoontext(Map<String, Objeot> variables, String soenario) {
-        Map<String, Objeot> faots = variables != null
+    private RuleContext buildContext(Map<String, Object> variables, String scenario) {
+        Map<String, Object> facts = variables != null
                 ? new LinkedHashMap<>(variables)
-                : oolleotions.emptyMap();
-        return Ruleoontext.of(faots, soenario, "FlowRoutingServioe");
+                : Collections.emptyMap();
+        return RuleContext.of(facts, scenario, "FlowRoutingService");
     }
 
     /**
      * 超时检测：任务超过 dueAt 截止时间仍未完成
      *
-     * <p>遍历实例下所有任务，筛选出 dueAt 已过期且任务状态未完成的记录�?     */
-    private void deteotTimeout(String instanoeId, List<Map<String, Objeot>> anomalies) {
-        List<FlowRunTaskDO> tasks = taskMapper.seleotByInstanoeId(instanoeId);
+     * <p>遍历实例下所有任务，筛选出 dueAt 已过期且任务状态未完成的记录。
+     */
+    private void detectTimeout(String instanceId, List<Map<String, Object>> anomalies) {
+        List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
         if (tasks == null || tasks.isEmpty()) {
             return;
         }
-        LooalDateTime now = LooalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
         for (FlowRunTaskDO task : tasks) {
             if (task.getDueAt() == null) {
-                oontinue;
+                continue;
             }
             if (task.getDueAt().isBefore(now) && !FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
                 long overdueMinutes = Duration.between(task.getDueAt(), now).toMinutes();
-                Map<String, Objeot> anomaly = new LinkedHashMap<>();
+                Map<String, Object> anomaly = new LinkedHashMap<>();
                 anomaly.put("type", "TIMEOUT");
                 anomaly.put("taskId", task.getId());
-                anomaly.put("nodeoode", task.getNodeoode());
+                anomaly.put("nodeCode", task.getNodeCode());
                 anomaly.put("nodeName", task.getNodeName());
                 anomaly.put("dueAt", task.getDueAt().toString());
                 anomaly.put("overdueMinutes", overdueMinutes);
                 anomaly.put("taskStatus", task.getTaskStatus());
-                anomaly.put("desoription", "任务超时未完�? " + task.getTitle()
+                anomaly.put("description", "任务超时未完成: " + task.getTitle()
                         + " (截止时间 " + task.getDueAt() + "，已超期 " + overdueMinutes + " 分钟)");
                 anomalies.add(anomaly);
-                log.info("[FlowRoute] 超时检�? taskId={} nodeoode={} overdueMinutes={}",
-                        task.getId(), task.getNodeoode(), overdueMinutes);
+                log.info("[FlowRoute] 超时检测: taskId={} nodeCode={} overdueMinutes={}",
+                        task.getId(), task.getNodeCode(), overdueMinutes);
             }
         }
     }
@@ -244,78 +256,84 @@ publio olass FlowRoutingServioeImpl implements FlowRoutingServioe {
     /**
      * 卡单检测：任务在同一节点停留超过 24 小时
      *
-     * <p>以任务的创建时间（createdAt）为起点，计算停留时长�?     * 仅检测未完成的任务�?     */
-    private void deteotStuok(String instanoeId, List<Map<String, Objeot>> anomalies) {
-        List<FlowRunTaskDO> tasks = taskMapper.seleotByInstanoeId(instanoeId);
+     * <p>以任务的创建时间（createdAt）为起点，计算停留时长。
+     * 仅检测未完成的任务。
+     */
+    private void detectStuck(String instanceId, List<Map<String, Object>> anomalies) {
+        List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
         if (tasks == null || tasks.isEmpty()) {
             return;
         }
-        LooalDateTime now = LooalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
         for (FlowRunTaskDO task : tasks) {
             if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-                oontinue;
+                continue;
             }
-            LooalDateTime oreatedAt = task.getoreatedAt();
-            if (oreatedAt == null) {
-                oontinue;
+            LocalDateTime createdAt = task.getCreatedAt();
+            if (createdAt == null) {
+                continue;
             }
-            long hours = Duration.between(oreatedAt, now).toHours();
+            long hours = Duration.between(createdAt, now).toHours();
             if (hours >= 24) {
-                Map<String, Objeot> anomaly = new LinkedHashMap<>();
-                anomaly.put("type", "STUoK");
+                Map<String, Object> anomaly = new LinkedHashMap<>();
+                anomaly.put("type", "STUCK");
                 anomaly.put("taskId", task.getId());
-                anomaly.put("nodeoode", task.getNodeoode());
+                anomaly.put("nodeCode", task.getNodeCode());
                 anomaly.put("nodeName", task.getNodeName());
-                anomaly.put("stuokHours", hours);
-                anomaly.put("oreatedAt", oreatedAt.toString());
+                anomaly.put("stuckHours", hours);
+                anomaly.put("createdAt", createdAt.toString());
                 anomaly.put("taskStatus", task.getTaskStatus());
-                anomaly.put("desoription", "卡单超过 " + hours + " 小时: " + task.getNodeName()
-                        + " (创建时间 " + oreatedAt + ")");
+                anomaly.put("description", "卡单超过 " + hours + " 小时: " + task.getNodeName()
+                        + " (创建时间 " + createdAt + ")");
                 anomalies.add(anomaly);
-                log.info("[FlowRoute] 卡单检�? taskId={} nodeoode={} stuokHours={}",
-                        task.getId(), task.getNodeoode(), hours);
+                log.info("[FlowRoute] 卡单检测: taskId={} nodeCode={} stuckHours={}",
+                        task.getId(), task.getNodeCode(), hours);
             }
         }
     }
 
     /**
-     * 循环审批检测：审计日志中同一节点被反复驳回（REJEoT）超�?3 �?     *
-     * <p>统计审计日志�?aotion=REJEoT 的记录，按节点编码分组计数�?     * 任意节点驳回次数超过 3 次即视为循环审批异常�?     */
-    private void deteotLoop(String instanoeId, List<Map<String, Objeot>> anomalies) {
-        List<FlowAuditLogDO> logs = auditLogMapper.seleotByInstanoeId(instanoeId);
+     * 循环审批检测：审计日志中同一节点被反复驳回（REJECT）超过 3 次
+     *
+     * <p>统计审计日志中 action=REJECT 的记录，按节点编码分组计数。
+     * 任意节点驳回次数超过 3 次即视为循环审批异常。
+     */
+    private void detectLoop(String instanceId, List<Map<String, Object>> anomalies) {
+        List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(instanceId);
         if (logs == null || logs.isEmpty()) {
             return;
         }
 
-        // �?nodeoode 分组统计 REJEoT 次数
-        Map<String, Long> rejeotoountByNode = logs.stream()
-                .filter(log -> "REJEoT".equalsIgnoreoase(log.getAotion()))
-                .filter(log -> log.getNodeoode() != null)
-                .oolleot(oolleotors.groupingBy(
-                        FlowAuditLogDO::getNodeoode,
+        // 按 nodeCode 分组统计 REJECT 次数
+        Map<String, Long> rejectCountByNode = logs.stream()
+                .filter(log -> "REJECT".equalsIgnoreCase(log.getAction()))
+                .filter(log -> log.getNodeCode() != null)
+                .collect(Collectors.groupingBy(
+                        FlowAuditLogDO::getNodeCode,
                         LinkedHashMap::new,
-                        oolleotors.oounting()
+                        Collectors.counting()
                 ));
 
         // 筛选驳回次数超过阈值的节点
-        for (Map.Entry<String, Long> entry : rejeotoountByNode.entrySet()) {
+        for (Map.Entry<String, Long> entry : rejectCountByNode.entrySet()) {
             if (entry.getValue() > 3) {
-                // 获取节点名称（从审计日志中取最近一条的名称�?                String nodeName = logs.stream()
-                        .filter(log -> entry.getKey().equals(log.getNodeoode()))
+                // 获取节点名称（从审计日志中取最近一条的名称）
+                String nodeName = logs.stream()
+                        .filter(log -> entry.getKey().equals(log.getNodeCode()))
                         .filter(log -> log.getNodeName() != null)
                         .map(FlowAuditLogDO::getNodeName)
                         .findFirst()
                         .orElse(entry.getKey());
 
-                Map<String, Objeot> anomaly = new LinkedHashMap<>();
+                Map<String, Object> anomaly = new LinkedHashMap<>();
                 anomaly.put("type", "LOOP");
-                anomaly.put("nodeoode", entry.getKey());
+                anomaly.put("nodeCode", entry.getKey());
                 anomaly.put("nodeName", nodeName);
-                anomaly.put("rejeotoount", entry.getValue());
-                anomaly.put("desoription", "节点反复驳回超过 3 �? " + nodeName
-                        + " (�?" + entry.getValue() + " 次驳�?");
+                anomaly.put("rejectCount", entry.getValue());
+                anomaly.put("description", "节点反复驳回超过 3 次: " + nodeName
+                        + " (共 " + entry.getValue() + " 次驳回)");
                 anomalies.add(anomaly);
-                log.info("[FlowRoute] 循环审批检�? nodeoode={} rejeotoount={}",
+                log.info("[FlowRoute] 循环审批检测: nodeCode={} rejectCount={}",
                         entry.getKey(), entry.getValue());
             }
         }

@@ -1,52 +1,65 @@
-paokage oom.njydsz.pmis.literule.server.spi;
+package com.njydsz.pmis.literule.server.spi;
 
-import oom.njydsz.pmis.literule.api.DeoisionTableDefinition;
+import com.njydsz.pmis.literule.api.DecisionTableDefinition;
 
 import java.util.List;
 
 /**
- * 决策表配置提供者接口（SPI�? *
- * <p>由消费方（如 exeoution 模块）提供实现，从数据库加载决策表定义�? * literule 模块本身不依赖持久层�? *
+ * 决策表配置提供者接口（SPI）
+ *
+ * <p>由消费方（如 execution 模块）提供实现，从数据库加载决策表定义。
+ * literule 模块本身不依赖持久层。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.4.0
+ * @since 1.4.0
  */
-publio interfaoe DeoisionTableoonfigProvider {
+public interface DecisionTableConfigProvider {
 
     /**
      * 加载全部启用的决策表
      *
      * @return 启用的决策表列表
      */
-    List<DeoisionTableDefinition> loadEnabledTables();
+    List<DecisionTableDefinition> loadEnabledTables();
 
     /**
      * 加载全部决策表（含禁用）
      *
-     * @return 全部决策表列�?     */
-    List<DeoisionTableDefinition> loadAllTables();
+     * @return 全部决策表列表
+     */
+    List<DecisionTableDefinition> loadAllTables();
 
     /**
-     * 保存决策�?     *
-     * @param definition 决策表定�?     * @param operator   操作�?     * @return 保存后的定义（含版本号）
+     * 保存决策表
+     *
+     * @param definition 决策表定义
+     * @param operator   操作人
+     * @return 保存后的定义（含版本号）
      */
-    DeoisionTableDefinition save(DeoisionTableDefinition definition, String operator);
+    DecisionTableDefinition save(DecisionTableDefinition definition, String operator);
 
     /**
      * 切换启停
      *
-     * @param tableoode 表编�?     * @param enabled   是否启用
-     * @param operator  操作�?     */
-    void toggleEnabled(String tableoode, boolean enabled, String operator);
+     * @param tableCode 表编码
+     * @param enabled   是否启用
+     * @param operator  操作人
+     */
+    void toggleEnabled(String tableCode, boolean enabled, String operator);
 
     /**
      * 根据编码查询
      *
-     * @param tableoode 表编�?     * @return 决策表定义；不存在返�?null
+     * @param tableCode 表编码
+     * @return 决策表定义；不存在返回 null
      */
-    DeoisionTableDefinition findByoode(String tableoode);
+    DecisionTableDefinition findByCode(String tableCode);
 
     /**
-     * 删除决策�?     *
-     * @param tableoode 表编�?     * @param operator  操作�?     */
-    void delete(String tableoode, String operator);
+     * 删除决策表
+     *
+     * @param tableCode 表编码
+     * @param operator  操作人
+     */
+    void delete(String tableCode, String operator);
 }

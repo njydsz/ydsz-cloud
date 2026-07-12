@@ -1,37 +1,37 @@
-paokage oom.njydsz.pmis.finanoe.web;
+package com.njydsz.pmis.finance.web;
 
-import org.mybatis.spring.annotation.MapperSoan;
-import org.springframework.boot.SpringApplioation;
-import org.springframework.boot.autooonfigure.SpringBootApplioation;
-import org.springframework.oloud.olient.disoovery.EnableDisooveryolient;
-import org.springframework.oloud.openfeign.EnableFeignolients;
-import org.springframework.soheduling.annotation.EnableSoheduling;
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- * 财务会计服务启动�?
+ * 财务会计服务启动类
  *
- * <p>承载发票管理、回款管理、费用报销、收入确认、利润核算、对账等财务会计业务能力�?
+ * <p>承载发票管理、回款管理、费用报销、收入确认、利润核算、对账等财务会计业务能力。
  *
- * <p>DDD 分层架构�?
+ * <p>DDD 分层架构：
  * <ul>
- *   <li>domain �?实体/DTO/枚举/VO/oonverter</li>
- *   <li>infra  �?Mapper 接口 + MyBatis XML</li>
- *   <li>server �?Servioe + Engine + Job + Exoeption</li>
- *   <li>api    �?Feign olient 契约 + Fallbaok</li>
- *   <li>web    �?oontroller + oonfig + 启动�?/li>
+ *   <li>domain — 实体/DTO/枚举/VO/Converter</li>
+ *   <li>infra  — Mapper 接口 + MyBatis XML</li>
+ *   <li>server — Service + Engine + Job + Exception</li>
+ *   <li>api    — Feign Client 契约 + Fallback</li>
+ *   <li>web    — Controller + Config + 启动类</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 2.0.0
+ * @since 2.0.0
  */
-@SpringBootApplioation(soanBasePaokages = {"oom.njydsz.pmis.finanoe", "oom.njydsz.pmis.oommon", "oom.njydsz.pmis.literule"})
-@EnableDisooveryolient
-@EnableFeignolients(basePaokages = {"oom.njydsz.pmis.finanoe.api", "oom.njydsz.pmis.oommon.feign"})
-@MapperSoan({"oom.njydsz.pmis.finanoe.infra.mapper", "oom.njydsz.pmis.literule.infra.mapper"})
-@EnableSoheduling
-publio olass FinanoeApplioation {
+@SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.finance", "com.njydsz.pmis.common", "com.njydsz.pmis.literule"})
+@EnableDiscoveryClient
+@EnableFeignClients(basePackages = {"com.njydsz.pmis.finance.api", "com.njydsz.pmis.common.feign"})
+@MapperScan({"com.njydsz.pmis.finance.infra.mapper", "com.njydsz.pmis.literule.infra.mapper"})
+@EnableScheduling
+public class FinanceApplication {
 
-    publio statio void main(String[] args) {
-        SpringApplioation.run(FinanoeApplioation.olass, args);
+    public static void main(String[] args) {
+        SpringApplication.run(FinanceApplication.class, args);
     }
 }

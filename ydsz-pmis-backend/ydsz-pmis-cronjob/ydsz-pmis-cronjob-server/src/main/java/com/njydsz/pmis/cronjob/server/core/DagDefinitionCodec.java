@@ -1,12 +1,12 @@
-paokage oom.njydsz.pmis.oronjob.server.oore.dag;
+package com.njydsz.pmis.cronjob.server.core.dag;
 
-import oom.alibaba.fastjson2.JSON;
-import oom.alibaba.fastjson2.JSONArray;
-import oom.alibaba.fastjson2.JSONObjeot;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -14,29 +14,35 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * DAG 定义 JSON 编解码器（P2 DAG 增强）�? *
- * <p>负责 {@link DagDefinition} �?JSON 字符串之间的转换�? * 存储/读取 {@oode JobDagDO.dagDefinition} 字段�? *
- * <p>使用 fastjson2 手动解析，避�?reoord 反序列化兼容性问题，
- * 并提供校验（节点 jobKey 唯一、边�?from/to 必须存在于节点列表）�? *
+ * DAG 定义 JSON 编解码器（P2 DAG 增强）。
+ *
+ * <p>负责 {@link DagDefinition} 与 JSON 字符串之间的转换，
+ * 存储/读取 {@code JobDagDO.dagDefinition} 字段。
+ *
+ * <p>使用 fastjson2 手动解析，避免 record 反序列化兼容性问题，
+ * 并提供校验（节点 jobKey 唯一、边的 from/to 必须存在于节点列表）。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@oomponent
-publio olass DagDefinitionoodeo {
+@Component
+public class DagDefinitionCodec {
 
     /**
-     * 序列�?DAG 定义�?JSON 字符串�?     *
+     * 序列化 DAG 定义为 JSON 字符串。
+     *
      * @param definition DAG 定义
-     * @return JSON 字符�?     */
-    publio String toJson(DagDefinition definition) {
+     * @return JSON 字符串
+     */
+    public String toJson(DagDefinition definition) {
         if (definition == null) {
             return null;
         }
-        JSONObjeot root = new JSONObjeot();
+        JSONObject root = new JSONObject();
         JSONArray nodesArr = new JSONArray();
         for (DagNode node : definition.nodes()) {
-            JSONObjeot n = new JSONObjeot();
+            JSONObject n = new JSONObject();
             n.put("jobKey", node.jobKey());
             n.put("jobId", node.jobId());
             n.put("label", node.label());
@@ -45,9 +51,9 @@ publio olass DagDefinitionoodeo {
             n.put("paramsJson", node.paramsJson());
             // P2-1: 节点类型扩展字段
             n.put("nodeType", node.nodeType());
-            n.put("oonditionExpression", node.oonditionExpression());
-            n.put("loopoount", node.loopoount());
-            n.put("parallelBranohes", node.parallelBranohes());
+            n.put("conditionExpression", node.conditionExpression());
+            n.put("loopCount", node.loopCount());
+            n.put("parallelBranches", node.parallelBranches());
             // P1-5/P1-6: 子工作流/审批节点扩展字段
             n.put("subWorkflowDagKey", node.subWorkflowDagKey());
             n.put("approvalUsers", node.approvalUsers());
@@ -56,11 +62,11 @@ publio olass DagDefinitionoodeo {
         }
         JSONArray edgesArr = new JSONArray();
         for (DagEdge edge : definition.edges()) {
-            JSONObjeot e = new JSONObjeot();
+            JSONObject e = new JSONObject();
             e.put("from", edge.from());
             e.put("to", edge.to());
             e.put("failStrategy", edge.failStrategy());
-            e.put("oondition", edge.oondition());
+            e.put("condition", edge.condition());
             edgesArr.add(e);
         }
         root.put("nodes", nodesArr);
@@ -69,35 +75,37 @@ publio olass DagDefinitionoodeo {
     }
 
     /**
-     * 反序列化 JSON 字符串为 DAG 定义，并执行结构校验�?     *
-     * @param json JSON 字符�?     * @return DAG 定义
-     * @throws SysExoeption 解析失败或校验不通过
+     * 反序列化 JSON 字符串为 DAG 定义，并执行结构校验。
+     *
+     * @param json JSON 字符串
+     * @return DAG 定义
+     * @throws SysException 解析失败或校验不通过
      */
-    publio DagDefinition fromJson(String json) {
+    public DagDefinition fromJson(String json) {
         if (json == null || json.isBlank()) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.oronjob.msg_dag_definition_empty");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_empty");
         }
-        JSONObjeot root;
+        JSONObject root;
         try {
-            root = JSON.parseObjeot(json);
-        } oatoh (Exoeption e) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.oronjob.msg_dag_definition_invalid");
+            root = JSON.parseObject(json);
+        } catch (Exception e) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_invalid");
         }
         if (root == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.oronjob.msg_dag_definition_empty");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_empty");
         }
 
         // 解析 nodes
         List<DagNode> nodes = new ArrayList<>();
         JSONArray nodesArr = root.getJSONArray("nodes");
         if (nodesArr == null || nodesArr.isEmpty()) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.oronjob.msg_dag_no_nodes");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_no_nodes");
         }
         for (int i = 0; i < nodesArr.size(); i++) {
-            JSONObjeot n = nodesArr.getJSONObjeot(i);
+            JSONObject n = nodesArr.getJSONObject(i);
             String jobKey = n.getString("jobKey");
             if (jobKey == null || jobKey.isBlank()) {
-                throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.oronjob.msg_dag_node_key_missing");
+                throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_node_key_missing");
             }
             nodes.add(new DagNode(
                     jobKey,
@@ -106,10 +114,11 @@ publio olass DagDefinitionoodeo {
                     n.getIntValue("x", 0),
                     n.getIntValue("y", 0),
                     n.getString("paramsJson"),
-                    // P2-1: 节点类型扩展字段（缺失时默认 TASK�?                    n.getString("nodeType"),
-                    n.getString("oonditionExpression"),
-                    n.getInteger("loopoount"),
-                    n.getInteger("parallelBranohes"),
+                    // P2-1: 节点类型扩展字段（缺失时默认 TASK）
+                    n.getString("nodeType"),
+                    n.getString("conditionExpression"),
+                    n.getInteger("loopCount"),
+                    n.getInteger("parallelBranches"),
                     // P1-5/P1-6: 子工作流/审批节点扩展字段
                     n.getString("subWorkflowDagKey"),
                     n.getString("approvalUsers"),
@@ -117,39 +126,41 @@ publio olass DagDefinitionoodeo {
         }
 
         // 校验节点 jobKey 唯一
-        long distinotoount = nodes.stream().map(DagNode::jobKey).distinot().oount();
-        if (distinotoount != nodes.size()) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.oronjob.msg_dag_node_key_duplioate");
+        long distinctCount = nodes.stream().map(DagNode::jobKey).distinct().count();
+        if (distinctCount != nodes.size()) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_node_key_duplicate");
         }
 
-        // 解析 edges（可为空�?        List<DagEdge> edges = new ArrayList<>();
+        // 解析 edges（可为空）
+        List<DagEdge> edges = new ArrayList<>();
         JSONArray edgesArr = root.getJSONArray("edges");
         if (edgesArr != null) {
             for (int i = 0; i < edgesArr.size(); i++) {
-                JSONObjeot e = edgesArr.getJSONObjeot(i);
+                JSONObject e = edgesArr.getJSONObject(i);
                 String from = e.getString("from");
                 String to = e.getString("to");
                 if (from == null || to == null) {
-                    throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.oronjob.msg_dag_edge_invalid");
+                    throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_edge_invalid");
                 }
                 edges.add(new DagEdge(from, to,
                         e.getString("failStrategy"),
-                        e.getString("oondition")));
+                        e.getString("condition")));
             }
         }
 
-        // 校验边的 from/to 必须存在于节点列�?        Set<String> nodeKeys = new HashSet<>();
+        // 校验边的 from/to 必须存在于节点列表
+        Set<String> nodeKeys = new HashSet<>();
         for (DagNode node : nodes) {
             nodeKeys.add(node.jobKey());
         }
         for (DagEdge edge : edges) {
-            if (!nodeKeys.oontains(edge.from())) {
-                throw new SysExoeption(StandardResultoode.BAD_REQUEST,
-                        "error.oronjob.msg_dag_edge_node_not_found", edge.from());
+            if (!nodeKeys.contains(edge.from())) {
+                throw new SysException(StandardResultCode.BAD_REQUEST,
+                        "error.cronjob.msg_dag_edge_node_not_found", edge.from());
             }
-            if (!nodeKeys.oontains(edge.to())) {
-                throw new SysExoeption(StandardResultoode.BAD_REQUEST,
-                        "error.oronjob.msg_dag_edge_node_not_found", edge.to());
+            if (!nodeKeys.contains(edge.to())) {
+                throw new SysException(StandardResultCode.BAD_REQUEST,
+                        "error.cronjob.msg_dag_edge_node_not_found", edge.to());
             }
         }
 

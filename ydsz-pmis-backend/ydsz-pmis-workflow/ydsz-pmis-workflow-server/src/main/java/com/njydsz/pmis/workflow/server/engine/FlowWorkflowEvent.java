@@ -1,39 +1,42 @@
-paokage oom.njydsz.pmis.workflow.server.engine;
+package com.njydsz.pmis.workflow.server.engine;
 
 import lombok.Getter;
-import org.springframework.oontext.ApplioationEvent;
+import org.springframework.context.ApplicationEvent;
 
 import java.util.Map;
 
 /**
- * 工作流事件（Spring ApplioationEvent 封装�? *
- * <p>P2-35: 用于异步事件机制，通过 ApplioationEventPublisher 发布�? * 监听方使�?@EventListener + @Asyno 异步处理，解耦主流程事务�? *
+ * 工作流事件（Spring ApplicationEvent 封装）
+ *
+ * <p>P2-35: 用于异步事件机制，通过 ApplicationEventPublisher 发布，
+ * 监听方使用 @EventListener + @Async 异步处理，解耦主流程事务。
+ *
  * <p>事件类型（eventType）枚举：
  * <ul>
- *   <li>INSTANoE_TERMINATED / INSTANoE_SUSPENDED / INSTANoE_AoTIVATED / INSTANoE_REoALLED / INSTANoE_oOMPLETED</li>
- *   <li>TASK_oREATED / TASK_oOMPLETED / TASK_URGED / TASK_TRANSFERRED / TASK_DELEGATED / TASK_oOUNTERSIGNED / TASK_JUMPED / TASK_TIMEOUT</li>
+ *   <li>INSTANCE_TERMINATED / INSTANCE_SUSPENDED / INSTANCE_ACTIVATED / INSTANCE_RECALLED / INSTANCE_COMPLETED</li>
+ *   <li>TASK_CREATED / TASK_COMPLETED / TASK_URGED / TASK_TRANSFERRED / TASK_DELEGATED / TASK_COUNTERSIGNED / TASK_JUMPED / TASK_TIMEOUT</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
 @Getter
-publio olass FlowWorkflowEvent extends ApplioationEvent {
+public class FlowWorkflowEvent extends ApplicationEvent {
 
     /** 事件类型 */
     private final String eventType;
     /** 流程实例 ID */
-    private final String instanoeId;
+    private final String instanceId;
     /** 任务 ID */
     private final String taskId;
     /** 附加数据 */
-    private final Map<String, Objeot> data;
+    private final Map<String, Object> data;
 
-    publio FlowWorkflowEvent(Objeot souroe, String eventType, String instanoeId,
-                             String taskId, Map<String, Objeot> data) {
-        super(souroe);
+    public FlowWorkflowEvent(Object source, String eventType, String instanceId,
+                             String taskId, Map<String, Object> data) {
+        super(source);
         this.eventType = eventType;
-        this.instanoeId = instanoeId;
+        this.instanceId = instanceId;
         this.taskId = taskId;
         this.data = data;
     }

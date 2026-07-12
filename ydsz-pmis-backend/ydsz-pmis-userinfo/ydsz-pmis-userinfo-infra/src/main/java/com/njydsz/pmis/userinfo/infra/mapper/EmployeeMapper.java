@@ -1,26 +1,26 @@
-paokage oom.njydsz.pmis.userinfo.infra.mapper.user;
+package com.njydsz.pmis.userinfo.infra.mapper.user;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.userinfo.domain.entity.user.EmployeeDO;
-import org.apaohe.ibatis.annotations.Mapper;
-import org.apaohe.ibatis.annotations.Param;
-import org.apaohe.ibatis.annotations.Seleot;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.userinfo.domain.entity.user.EmployeeDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 
 /**
  * 员工 Mapper
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Mapper
-publio interfaoe EmployeeMapper extends BaseMapper<EmployeeDO> {
+public interface EmployeeMapper extends BaseMapper<EmployeeDO> {
 
     /**
-     * 根据员工编码查询（排除已删除�?
+     * 根据员工编码查询（排除已删除）
      *
-     * @param empoode 员工编码
+     * @param empCode 员工编码
      * @return 员工实体，未找到返回 null
      */
-    @Seleot("SELEoT * FROM pmis_employee WHERE emp_oode = #{empoode} AND deleted = 0 LIMIT 1")
-    EmployeeDO seleotByEmpoode(@Param("empoode") String empoode);
+    @Select("SELECT * FROM pmis_employee WHERE emp_code = #{empCode} AND deleted = 0 LIMIT 1")
+    EmployeeDO selectByEmpCode(@Param("empCode") String empCode);
 }

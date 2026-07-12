@@ -1,42 +1,42 @@
-paokage oom.njydsz.pmis.literule.server.testing;
+package com.njydsz.pmis.literule.server.testing;
 
-import lombok.AllArgsoonstruotor;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsoonstruotor;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 规则测试用例（SDK 内置模型�?
+ * 规则测试用例（SDK 内置模型）
  *
- * <p>�?{@link oom.njydsz.pmis.literule.domain.entity.RuleTestoaseDO} 不同�?
- * 本类�?SDK 内置的纯 POJO 测试用例模型，不依赖 MyBatis-Plus 注解�?
- * 适用于嵌入式场景和单元测试�?
+ * <p>与 {@link com.njydsz.pmis.literule.domain.entity.RuleTestCaseDO} 不同，
+ * 本类是 SDK 内置的纯 POJO 测试用例模型，不依赖 MyBatis-Plus 注解，
+ * 适用于嵌入式场景和单元测试。
  *
  * <h3>链式构建测试用例</h3>
- * <pre>{@oode
- * RuleTestoase to = RuleTestoase.builder()
- *     .id("To001")
+ * <pre>{@code
+ * RuleTestCase tc = RuleTestCase.builder()
+ *     .id("TC001")
  *     .name("高额预警-触发")
- *     .ruleoode("R001")
- *     .faots(Map.of("amount", 15000))
- *     .expeotedTriggered(Set.of("R001"))
+ *     .ruleCode("R001")
+ *     .facts(Map.of("amount", 15000))
+ *     .expectedTriggered(Set.of("R001"))
  *     .build();
  * }</pre>
  *
  * @author ydsz-pmis-team
- * @sinoe 2.0.0
+ * @since 2.0.0
  */
 @Data
 @Builder
-@NoArgsoonstruotor
-@AllArgsoonstruotor
-publio olass RuleTestoase implements Serializable {
+@NoArgsConstructor
+@AllArgsConstructor
+public class RuleTestCase implements Serializable {
 
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 测试用例 ID */
     private String id;
@@ -44,18 +44,18 @@ publio olass RuleTestoase implements Serializable {
     /** 测试用例名称 */
     private String name;
 
-    /** 关联规则编码（可选，null 表示全量仿真�?*/
-    private String ruleoode;
+    /** 关联规则编码（可选，null 表示全量仿真） */
+    private String ruleCode;
 
     /** 事实数据 */
-    private Map<String, Objeot> faots;
+    private Map<String, Object> facts;
 
-    /** 预期触发的规则编码集�?*/
-    private List<String> expeotedTriggered;
+    /** 预期触发的规则编码集合 */
+    private List<String> expectedTriggered;
 
     /** 描述 */
-    private String desoription;
+    private String description;
 
-    /** 标签（用于分�?过滤�?*/
+    /** 标签（用于分组/过滤） */
     private List<String> tags;
 }

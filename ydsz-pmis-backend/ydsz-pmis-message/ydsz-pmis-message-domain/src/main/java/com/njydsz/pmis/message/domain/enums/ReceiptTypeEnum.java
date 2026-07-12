@@ -1,18 +1,19 @@
-paokage oom.njydsz.pmis.message.domain.enums.reoeipt;
+package com.njydsz.pmis.message.domain.enums.receipt;
 
 /**
- * 消息回执类型枚举�? *
+ * 消息回执类型枚举。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum ReoeiptTypeEnum {
+public enum ReceiptTypeEnum {
 
     /** 已送达 */
     DELIVERED,
     /** 已读 */
     READ,
-    /** 已点�?*/
-    oLIoKED,
+    /** 已点击 */
+    CLICKED,
     /** 失败 */
     FAILED
 }

@@ -1,44 +1,53 @@
-paokage oom.njydsz.pmis.projeot.infra.mapper;
+package com.njydsz.pmis.project.infra.mapper;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.projeot.domain.entity.PurohaseDO;
-import org.apaohe.ibatis.annotations.Mapper;
-import org.apaohe.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.project.domain.entity.PurchaseDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 
 /**
  * 采购 Mapper
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Mapper
-publio interfaoe PurohaseMapper extends BaseMapper<PurohaseDO> {
+public interface PurchaseMapper extends BaseMapper<PurchaseDO> {
 
     /**
-     * 按编码查询采购记�?     *
-     * @param oode 采购编码
+     * 按编码查询采购记录
+     *
+     * @param code 采购编码
      * @return 采购对象，未找到返回 null
      */
-    PurohaseDO seleotByoode(@Param("oode") String oode);
+    PurchaseDO selectByCode(@Param("code") String code);
 
     /**
-     * 更新采购状�?     *
+     * 更新采购状态
+     *
      * @param id           采购 ID
-     * @param status       目标状�?     * @param approverId   审批�?ID
-     * @param approverName 审批人姓�?     * @return 受影响行�?     */
+     * @param status       目标状态
+     * @param approverId   审批人 ID
+     * @param approverName 审批人姓名
+     * @return 受影响行数
+     */
     int updateStatus(@Param("id") String id, @Param("status") String status,
                      @Param("approverId") String approverId, @Param("approverName") String approverName);
 
     /**
-     * 跨项目汇总所有采购金�?     *
-     * @return 采购总金�?     */
-    BigDeoimal sumAllAmount();
+     * 跨项目汇总所有采购金额
+     *
+     * @return 采购总金额
+     */
+    BigDecimal sumAllAmount();
 
     /**
-     * 按项目汇总「已发生」采购金额（强管控用�?     *
+     * 按项目汇总「已发生」采购金额（强管控用）
+     *
      * @param initiationId 立项 ID
-     * @return 项目采购总金�?     */
-    BigDeoimal sumByInitiation(@Param("initiationId") String initiationId);
+     * @return 项目采购总金额
+     */
+    BigDecimal sumByInitiation(@Param("initiationId") String initiationId);
 }

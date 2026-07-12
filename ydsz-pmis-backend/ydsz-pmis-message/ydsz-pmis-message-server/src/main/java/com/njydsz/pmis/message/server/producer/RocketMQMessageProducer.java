@@ -1,92 +1,97 @@
-paokage oom.njydsz.pmis.message.server.produoer;
+package com.njydsz.pmis.message.server.producer;
 
-import oom.njydsz.pmis.oommon.oonstant.PmisMessageTopios;
-import oom.njydsz.pmis.oommon.feign.MessageRequest;
-import oom.njydsz.pmis.oommon.util.json.JsonUtils;
-import oom.njydsz.pmis.oommon.util.SnowflakeIdGenerator;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.constant.PmisMessageTopics;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apaohe.rooketmq.olient.produoer.Sendoallbaok;
-import org.apaohe.rooketmq.olient.produoer.SendResult;
-import org.apaohe.rooketmq.olient.produoer.SendStatus;
-import org.apaohe.rooketmq.spring.oore.RooketMQTemplate;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnolass;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnProperty;
+import org.apache.rocketmq.client.producer.SendCallback;
+import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.client.producer.SendStatus;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 /**
- * RooketMQ 消息生产者封装�? *
- * <p>统一封装 {@link RooketMQTemplate} 同步/异步发�?自动生成雪花 messageId 保证消费端幂等�? * 条件装配:仅当 olasspath 存在 RooketMQTemplate �?{@oode rooketmq.produoer.group} 配置时生效�? *
+ * RocketMQ 消息生产者封装。
+ *
+ * <p>统一封装 {@link RocketMQTemplate} 同步/异步发送,自动生成雪花 messageId 保证消费端幂等。
+ * 条件装配:仅当 classpath 存在 RocketMQTemplate 且 {@code rocketmq.producer.group} 配置时生效。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@oomponent
-@RequiredArgsoonstruotor
-@oonditionalOnolass(name = "org.apaohe.rooketmq.spring.oore.RooketMQTemplate")
-@oonditionalOnProperty(prefix = "rooketmq.produoer", name = "group")
-publio olass RooketMQMessageProduoer {
+@Component
+@RequiredArgsConstructor
+@ConditionalOnClass(name = "org.apache.rocketmq.spring.core.RocketMQTemplate")
+@ConditionalOnProperty(prefix = "rocketmq.producer", name = "group")
+public class RocketMQMessageProducer {
 
-    private final RooketMQTemplate rooketMQTemplate;
+    private final RocketMQTemplate rocketMQTemplate;
 
     /**
-     * 同步发送消息到 {@link PmisMessageTopios#TOPIo_MESSAGE}�?     *
+     * 同步发送消息到 {@link PmisMessageTopics#TOPIC_MESSAGE}。
+     *
      * @param req 消息请求
-     * @return RooketMQ 消息 ID
+     * @return RocketMQ 消息 ID
      */
-    publio String synoSend(MessageRequest req) {
+    public String syncSend(MessageRequest req) {
         if (req == null) {
-            throw new IllegalArgumentExoeption("MessageRequest must not be null");
+            throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
         String payload = JsonUtils.toJson(req);
         SendResult result;
         try {
-            result = rooketMQTemplate.synoSend(PmisMessageTopios.TOPIo_MESSAGE, payload);
-        } oatoh (Exoeption e) {
-            log.error("[Produoer] synoSend 失败: messageId={} ohannel={} err={}",
-                    req.getMessageId(), req.getohannel(), e.getMessage());
-            throw new RuntimeExoeption("RooketMQ synoSend failed: " + e.getMessage(), e);
+            result = rocketMQTemplate.syncSend(PmisMessageTopics.TOPIC_MESSAGE, payload);
+        } catch (Exception e) {
+            log.error("[Producer] syncSend 失败: messageId={} channel={} err={}",
+                    req.getMessageId(), req.getChannel(), e.getMessage());
+            throw new RuntimeException("RocketMQ syncSend failed: " + e.getMessage(), e);
         }
         if (result == null || result.getSendStatus() != SendStatus.SEND_OK) {
             String status = result == null ? "null" : result.getSendStatus().name();
-            throw new RuntimeExoeption("RooketMQ synoSend 状态异�? " + status);
+            throw new RuntimeException("RocketMQ syncSend 状态异常: " + status);
         }
-        log.info("[Produoer] synoSend OK: msgId={} messageId={} ohannel={}",
-                result.getMsgId(), req.getMessageId(), req.getohannel());
+        log.info("[Producer] syncSend OK: msgId={} messageId={} channel={}",
+                result.getMsgId(), req.getMessageId(), req.getChannel());
         return result.getMsgId();
     }
 
     /**
-     * 异步发送消�?不阻�?结果通过回调通知)�?     *
+     * 异步发送消息(不阻塞,结果通过回调通知)。
+     *
      * @param req 消息请求
      */
-    publio void asynoSend(MessageRequest req) {
+    public void asyncSend(MessageRequest req) {
         if (req == null) {
-            throw new IllegalArgumentExoeption("MessageRequest must not be null");
+            throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
         String payload = JsonUtils.toJson(req);
         try {
-            rooketMQTemplate.asynoSend(PmisMessageTopios.TOPIo_MESSAGE, payload, new Sendoallbaok() {
+            rocketMQTemplate.asyncSend(PmisMessageTopics.TOPIC_MESSAGE, payload, new SendCallback() {
                 @Override
-                publio void onSuooess(SendResult result) {
-                    log.info("[Produoer] asynoSend OK: msgId={} messageId={}",
+                public void onSuccess(SendResult result) {
+                    log.info("[Producer] asyncSend OK: msgId={} messageId={}",
                             result.getMsgId(), req.getMessageId());
                 }
 
                 @Override
-                publio void onExoeption(Throwable e) {
-                    log.error("[Produoer] asynoSend 失败: messageId={} err={}",
+                public void onException(Throwable e) {
+                    log.error("[Producer] asyncSend 失败: messageId={} err={}",
                             req.getMessageId(), e.getMessage());
                 }
             });
-        } oatoh (Exoeption e) {
-            log.error("[Produoer] asynoSend 提交失败: messageId={} err={}",
+        } catch (Exception e) {
+            log.error("[Producer] asyncSend 提交失败: messageId={} err={}",
                     req.getMessageId(), e.getMessage());
-            throw new RuntimeExoeption("RooketMQ asynoSend 提交失败: " + e.getMessage(), e);
+            throw new RuntimeException("RocketMQ asyncSend 提交失败: " + e.getMessage(), e);
         }
     }
 
@@ -97,30 +102,34 @@ publio olass RooketMQMessageProduoer {
     }
 
     /**
-     * P2-3: 发送事务消息（半消息）�?     *
-     * <p>发送半消息�?RooketMQ 会回�?{@link oom.njydsz.pmis.message.server.produoer.MessageTransaotionListener}
-     * 执行本地事务（校验模�?通道�?根据结果 oOMMIT / ROLLBAoK�?     * 适用于业务侧需要确保通知请求仅在本地事务成功后才投递的场景�?     *
+     * P2-3: 发送事务消息（半消息）。
+     *
+     * <p>发送半消息后,RocketMQ 会回调 {@link com.njydsz.pmis.message.server.producer.MessageTransactionListener}
+     * 执行本地事务（校验模板/通道）,根据结果 COMMIT / ROLLBACK。
+     * 适用于业务侧需要确保通知请求仅在本地事务成功后才投递的场景。
+     *
      * @param req 消息请求
-     * @return RooketMQ 半消�?ID（后�?oommit/rollbaok �?TransaotionListener 决定�?     */
-    publio String sendTransaotionMessage(MessageRequest req) {
+     * @return RocketMQ 半消息 ID（后续 commit/rollback 由 TransactionListener 决定）
+     */
+    public String sendTransactionMessage(MessageRequest req) {
         if (req == null) {
-            throw new IllegalArgumentExoeption("MessageRequest must not be null");
+            throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
         String payload = JsonUtils.toJson(req);
         try {
-            org.apaohe.rooketmq.olient.produoer.TransaotionSendResult result =
-                    rooketMQTemplate.sendMessageInTransaotion(
-                            PmisMessageTopios.TOPIo_MESSAGE,
+            org.apache.rocketmq.client.producer.TransactionSendResult result =
+                    rocketMQTemplate.sendMessageInTransaction(
+                            PmisMessageTopics.TOPIC_MESSAGE,
                             MessageBuilder.withPayload(payload).build(),
                             req);
-            log.info("[Produoer] sendTransaotionMessage: msgId={} messageId={} state={}",
-                    result.getMsgId(), req.getMessageId(), result.getLooalTransaotionState());
+            log.info("[Producer] sendTransactionMessage: msgId={} messageId={} state={}",
+                    result.getMsgId(), req.getMessageId(), result.getLocalTransactionState());
             return result.getMsgId();
-        } oatoh (Exoeption e) {
-            log.error("[Produoer] sendTransaotionMessage 失败: messageId={} err={}",
+        } catch (Exception e) {
+            log.error("[Producer] sendTransactionMessage 失败: messageId={} err={}",
                     req.getMessageId(), e.getMessage());
-            throw new RuntimeExoeption("RooketMQ sendTransaotionMessage failed: " + e.getMessage(), e);
+            throw new RuntimeException("RocketMQ sendTransactionMessage failed: " + e.getMessage(), e);
         }
     }
 }

@@ -1,331 +1,350 @@
-paokage oom.njydsz.pmis.workflow.server.faoade;
+package com.njydsz.pmis.workflow.server.facade;
 
-import oom.njydsz.pmis.oommon.oore.response.PageResponse;
-import oom.njydsz.pmis.oommon.auth.oontext.Authoontext;
-import oom.njydsz.pmis.workflow.WorkflowFaoade;
-import oom.njydsz.pmis.workflow.domain.dto.instanoe.FlowInstanoeViewDTO;
-import oom.njydsz.pmis.workflow.domain.dto.instanoe.FlowStartProoessDTO;
-import oom.njydsz.pmis.workflow.domain.dto.instanoe.FlowTaskOperateDTO;
-import oom.njydsz.pmis.workflow.server.engine.JsonHelper;
-import oom.njydsz.pmis.workflow.domain.entity.analytios.FlowAuditLogDO;
-import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowHisTaskDO;
-import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowInstanoeDO;
-import oom.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
-import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowRunTaskDO;
-import oom.njydsz.pmis.workflow.infra.mapper.analytios.FlowAuditLogMapper;
-import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowHisTaskMapper;
-import oom.njydsz.pmis.workflow.server.servioe.definition.FlowDefinitionServioe;
-import oom.njydsz.pmis.workflow.server.servioe.instanoe.FlowInstanoeServioe;
-import oom.njydsz.pmis.workflow.server.servioe.instanoe.FlowTaskServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.auth.context.AuthContext;
+import com.njydsz.pmis.workflow.WorkflowFacade;
+import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;
+import com.njydsz.pmis.workflow.domain.dto.instance.FlowStartProcessDTO;
+import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.server.engine.JsonHelper;
+import com.njydsz.pmis.workflow.domain.entity.analytics.FlowAuditLogDO;
+import com.njydsz.pmis.workflow.domain.entity.instance.FlowHisTaskDO;
+import com.njydsz.pmis.workflow.domain.entity.instance.FlowInstanceDO;
+import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
+import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.infra.mapper.analytics.FlowAuditLogMapper;
+import com.njydsz.pmis.workflow.infra.mapper.instance.FlowHisTaskMapper;
+import com.njydsz.pmis.workflow.server.service.definition.FlowDefinitionService;
+import com.njydsz.pmis.workflow.server.service.instance.FlowInstanceService;
+import com.njydsz.pmis.workflow.server.service.instance.FlowTaskService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.oolleotions;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 自建工作�?Faoade（唯一实现�? *
- * <p>所有操作落 pmis_flow_* 表，对外暴露�?WorkflowFaoade 统一接口实现�? *
- * <p>1.1.0 新增能力：加�?/ 撤回 / 催办 / 审计轨迹查询�? *
+ * 自建工作流 Facade（唯一实现）
+ *
+ * <p>所有操作落 pmis_flow_* 表，对外暴露的 WorkflowFacade 统一接口实现。
+ *
+ * <p>1.1.0 新增能力：加签 / 撤回 / 催办 / 审计轨迹查询。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@oomponent
-@RequiredArgsoonstruotor
-publio olass PmisWorkflowFaoade implements WorkflowFaoade {
+@Component
+@RequiredArgsConstructor
+public class PmisWorkflowFacade implements WorkflowFacade {
 
-    private final FlowInstanoeServioe instanoeServioe;
-    private final FlowTaskServioe taskServioe;
+    private final FlowInstanceService instanceService;
+    private final FlowTaskService taskService;
     private final FlowAuditLogMapper auditLogMapper;
-    /** P2-30: 审批轨迹时间线需要查询历史任�?*/
+    /** P2-30: 审批轨迹时间线需要查询历史任务 */
     private final FlowHisTaskMapper hisTaskMapper;
-    /** P2-22: 流程图查询需要查询流程定义详�?*/
-    private final FlowDefinitionServioe definitionServioe;
+    /** P2-22: 流程图查询需要查询流程定义详情 */
+    private final FlowDefinitionService definitionService;
 
     @Override
-    publio String startProoess(FlowStartProoessDTO dto) {
-        String id = instanoeServioe.start(dto);
+    public String startProcess(FlowStartProcessDTO dto) {
+        String id = instanceService.start(dto);
         return id == null ? null : String.valueOf(id);
     }
 
     @Override
-    publio FlowInstanoeViewDTO getByBusiness(String businessType, String businessId) {
-        FlowInstanoeDO instanoe = instanoeServioe.getByBusiness(businessType, businessId);
-        if (instanoe == null) {
+    public FlowInstanceViewDTO getByBusiness(String businessType, String businessId) {
+        FlowInstanceDO instance = instanceService.getByBusiness(businessType, businessId);
+        if (instance == null) {
             return null;
         }
-        List<FlowRunTaskDO> ourrentTasks = taskServioe.listPendingByInstanoe(instanoe.getId());
-        return instanoeServioe.toView(instanoe, ourrentTasks.stream()
-                .map(taskServioe::toView).toList());
+        List<FlowRunTaskDO> currentTasks = taskService.listPendingByInstance(instance.getId());
+        return instanceService.toView(instance, currentTasks.stream()
+                .map(taskService::toView).toList());
     }
 
     @Override
-    publio void oompleteTask(FlowTaskOperateDTO dto) {
-        taskServioe.pass(dto);
+    public void completeTask(FlowTaskOperateDTO dto) {
+        taskService.pass(dto);
     }
 
     @Override
-    publio void olaimTask(String taskId, String userId) {
-        taskServioe.olaim(taskId, userId);
+    public void claimTask(String taskId, String userId) {
+        taskService.claim(taskId, userId);
     }
 
     @Override
-    publio void transferTask(FlowTaskOperateDTO dto) {
-        taskServioe.transfer(dto);
+    public void transferTask(FlowTaskOperateDTO dto) {
+        taskService.transfer(dto);
     }
 
     @Override
-    publio void delegateTask(FlowTaskOperateDTO dto) {
-        taskServioe.delegate(dto);
+    public void delegateTask(FlowTaskOperateDTO dto) {
+        taskService.delegate(dto);
     }
 
     @Override
-    publio void rejeotTask(FlowTaskOperateDTO dto) {
-        taskServioe.rejeot(dto);
+    public void rejectTask(FlowTaskOperateDTO dto) {
+        taskService.reject(dto);
     }
 
     @Override
-    publio void terminateProoess(String prooessInstanoeId, String reason) {
-        instanoeServioe.terminate(prooessInstanoeId, reason);
+    public void terminateProcess(String processInstanceId, String reason) {
+        instanceService.terminate(processInstanceId, reason);
     }
 
     @Override
-    publio void suspendProoess(String prooessInstanoeId) {
-        instanoeServioe.suspend(prooessInstanoeId);
+    public void suspendProcess(String processInstanceId) {
+        instanceService.suspend(processInstanceId);
     }
 
     @Override
-    publio void aotivateProoess(String prooessInstanoeId) {
-        instanoeServioe.aotivate(prooessInstanoeId);
+    public void activateProcess(String processInstanceId) {
+        instanceService.activate(processInstanceId);
     }
 
     @Override
-    publio List<Map<String, Objeot>> listTodoTasks(String userId, int page, int size) {
-        // P2-17: 真分页（SQL LIMIT/OFFSET�?        PageResponse<FlowRunTaskDO> pageResult = taskServioe.listTodoByAssigneePage(
-                String.valueOf(userId), Authoontext.getTenantIdOrDefault("1"), page, size);
+    public List<Map<String, Object>> listTodoTasks(String userId, int page, int size) {
+        // P2-17: 真分页（SQL LIMIT/OFFSET）
+        PageResponse<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
+                String.valueOf(userId), AuthContext.getTenantIdOrDefault("1"), page, size);
         return PageResponse.getList().stream().map(this::toMap).toList();
     }
 
     @Override
-    publio List<Map<String, Objeot>> listDoneTasks(String userId, int page, int size) {
-        // P0-3: 已办走历史表（FlowTaskServioeImpl 内部已切换到 FlowHisTaskMapper�?        // P2-17: 真分页（SQL LIMIT/OFFSET�?        PageResponse<FlowRunTaskDO> pageResult = taskServioe.listDoneByAssigneePage(
-                String.valueOf(userId), Authoontext.getTenantIdOrDefault("1"), page, size);
+    public List<Map<String, Object>> listDoneTasks(String userId, int page, int size) {
+        // P0-3: 已办走历史表（FlowTaskServiceImpl 内部已切换到 FlowHisTaskMapper）
+        // P2-17: 真分页（SQL LIMIT/OFFSET）
+        PageResponse<FlowRunTaskDO> pageResult = taskService.listDoneByAssigneePage(
+                String.valueOf(userId), AuthContext.getTenantIdOrDefault("1"), page, size);
         return PageResponse.getList().stream().map(this::toMap).toList();
     }
 
-    // ============================== GAP-P0-1: 全部流程实例（管理员视图�?==============================
+    // ============================== GAP-P0-1: 全部流程实例（管理员视图） ==============================
 
     /**
      * GAP-P0-1: 查全部流程实例（管理员视图）
      *
-     * <p>复用 {@link FlowInstanoeServioe#page}，不�?initiatorId 过滤，返回当前租户下所有实例�?     * 上层 oontroller 应通过 {@oode @AuthApiPermission(apioodes = Permissionoodes.WORKFLOW_MONITOR)} 拦截非管理员访问�?     *
-     * <p>P0-2 修复：返�?{@link PageResult}，保�?total / page / size，避免前端假分页�?     */
+     * <p>复用 {@link FlowInstanceService#page}，不按 initiatorId 过滤，返回当前租户下所有实例。
+     * 上层 Controller 应通过 {@code @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR)} 拦截非管理员访问。
+     *
+     * <p>P0-2 修复：返回 {@link PageResult}，保留 total / page / size，避免前端假分页。
+     */
     @Override
-    publio PageResponse<Map<String, Objeot>> listAllInstanoes(String businessType, String flowStatus,
-                                                            LooalDateTime startTime, LooalDateTime endTime,
+    public PageResponse<Map<String, Object>> listAllInstances(String businessType, String flowStatus,
+                                                            LocalDateTime startTime, LocalDateTime endTime,
                                                             int page, int size) {
-        PageResponse<FlowInstanoeDO> pageResult = instanoeServioe.page(
+        PageResponse<FlowInstanceDO> pageResult = instanceService.page(
                 businessType, null, flowStatus, startTime, endTime,
-                Authoontext.getTenantIdOrDefault("1"), page, size);
-        List<Map<String, Objeot>> list = PageResponse.getList().stream().map(this::instanoeToMap).toList();
+                AuthContext.getTenantIdOrDefault("1"), page, size);
+        List<Map<String, Object>> list = PageResponse.getList().stream().map(this::instanceToMap).toList();
         return PageResponse.of(list, PageResponse.getTotal(), PageResponse.getPage(), PageResponse.getSize());
     }
 
     @Override
-    publio void oountersignBeforeTask(FlowTaskOperateDTO dto) {
-        taskServioe.oountersignBefore(dto);
+    public void countersignBeforeTask(FlowTaskOperateDTO dto) {
+        taskService.countersignBefore(dto);
     }
 
     @Override
-    publio void oountersignAfterTask(FlowTaskOperateDTO dto) {
-        taskServioe.oountersignAfter(dto);
+    public void countersignAfterTask(FlowTaskOperateDTO dto) {
+        taskService.countersignAfter(dto);
     }
 
-    /** GAP-P0-3: 并加�?*/
+    /** GAP-P0-3: 并加签 */
     @Override
-    publio void oountersignParallelTask(FlowTaskOperateDTO dto) {
-        taskServioe.oountersignParallel(dto);
-    }
-
-    @Override
-    publio List<String> urgeTask(String instanoeId, String operatorId, String oomment) {
-        return taskServioe.urge(instanoeId, operatorId, oomment);
+    public void countersignParallelTask(FlowTaskOperateDTO dto) {
+        taskService.countersignParallel(dto);
     }
 
     @Override
-    publio List<String> urgeNodeTask(String instanoeId, String nodeoode, String operatorId, String oomment) {
-        return taskServioe.urgeByNode(instanoeId, nodeoode, operatorId, oomment);
+    public List<String> urgeTask(String instanceId, String operatorId, String comment) {
+        return taskService.urge(instanceId, operatorId, comment);
     }
 
     @Override
-    publio boolean reoallProoess(String prooessInstanoeId, String initiatorId) {
-        return instanoeServioe.reoall(prooessInstanoeId, initiatorId);
+    public List<String> urgeNodeTask(String instanceId, String nodeCode, String operatorId, String comment) {
+        return taskService.urgeByNode(instanceId, nodeCode, operatorId, comment);
     }
 
     @Override
-    publio List<Map<String, Objeot>> listAuditTrail(String prooessInstanoeId) {
-        String instanoeId = prooessInstanoeId;
-        List<FlowAuditLogDO> logs = auditLogMapper.seleotByInstanoeId(instanoeId);
+    public boolean recallProcess(String processInstanceId, String initiatorId) {
+        return instanceService.recall(processInstanceId, initiatorId);
+    }
+
+    @Override
+    public List<Map<String, Object>> listAuditTrail(String processInstanceId) {
+        String instanceId = processInstanceId;
+        List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(instanceId);
         return logs.stream().map(this::auditToMap).toList();
     }
 
     @Override
-    publio String engineType() {
+    public String engineType() {
         return "PMIS";
     }
 
     // ============================== P2-20: 任务详情查询 ==============================
 
     @Override
-    publio Map<String, Objeot> getTaskDetail(String taskId) {
-        // P2-20: 调用 taskServioe.getById 获取任务，再�?toView 转换为视�?        FlowRunTaskDO task = taskServioe.getById(taskId);
+    public Map<String, Object> getTaskDetail(String taskId) {
+        // P2-20: 调用 taskService.getById 获取任务，再用 toView 转换为视图
+        FlowRunTaskDO task = taskService.getById(taskId);
         if (task == null) {
             return null;
         }
-        FlowInstanoeViewDTO.FlowTaskViewDTO view = taskServioe.toView(task);
+        FlowInstanceViewDTO.FlowTaskViewDTO view = taskService.toView(task);
         return taskViewToMap(view);
     }
 
     // ============================== P2-25: 自由跳转 / P2-26: 批量审批 ==============================
 
     @Override
-    publio void jumpTask(FlowTaskOperateDTO dto) {
-        taskServioe.jump(dto);
+    public void jumpTask(FlowTaskOperateDTO dto) {
+        taskService.jump(dto);
     }
 
     @Override
-    publio void batohPassTasks(List<String> taskIds, String userId, String oomment) {
-        taskServioe.batohPass(taskIds, userId, oomment);
+    public void batchPassTasks(List<String> taskIds, String userId, String comment) {
+        taskService.batchPass(taskIds, userId, comment);
     }
 
-    /** GAP-P0-4: 一键通过所有待�?*/
+    /** GAP-P0-4: 一键通过所有待办 */
     @Override
-    publio int passAllTodoTasks(String userId, String oomment) {
-        String tenantId = Authoontext.getTenantIdOrDefault("1");
-        PageResponse<FlowRunTaskDO> pageResult = taskServioe.listTodoByAssigneePage(
+    public int passAllTodoTasks(String userId, String comment) {
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        PageResponse<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), tenantId, 1, 100);
         List<FlowRunTaskDO> todos = PageResponse.getList();
         if (todos.isEmpty()) {
             return 0;
         }
         List<String> taskIds = todos.stream().map(FlowRunTaskDO::getId).toList();
-        taskServioe.batohPass(taskIds, userId, oomment);
-        log.info("[Flow] 一键通过所有待�? userId={} oount={}", userId, taskIds.size());
+        taskService.batchPass(taskIds, userId, comment);
+        log.info("[Flow] 一键通过所有待办: userId={} count={}", userId, taskIds.size());
         return taskIds.size();
     }
 
-    // ============================== P2-22: 流程图查询（高亮当前节点�?==============================
+    // ============================== P2-22: 流程图查询（高亮当前节点） ==============================
 
     /**
      * P2-22: 流程图查询，高亮当前节点
      *
-     * @param instanoeId 实例 ID（字符串形式�?     * @return 包含 definition / nodes / skips �?Map，nodes 中每个节点带 aotive 标记
+     * @param instanceId 实例 ID（字符串形式）
+     * @return 包含 definition / nodes / skips 的 Map，nodes 中每个节点带 active 标记
      */
-    publio Map<String, Objeot> getDiagram(String instanoeId) {
-        String id = instanoeId;
-        FlowInstanoeDO instanoe = instanoeServioe.getById(id);
-        if (instanoe == null) {
+    public Map<String, Object> getDiagram(String instanceId) {
+        String id = instanceId;
+        FlowInstanceDO instance = instanceService.getById(id);
+        if (instance == null) {
             return null;
         }
-        // 通过 definitionServioe.getDetail 组装 definition + nodes + skips
-        Map<String, Objeot> detail = definitionServioe.getDetail(instanoe.getDefinitionId());
+        // 通过 definitionService.getDetail 组装 definition + nodes + skips
+        Map<String, Object> detail = definitionService.getDetail(instance.getDefinitionId());
         if (detail == null) {
             return null;
         }
-        String ourrentNodeoode = instanoe.getourrentNodeoode();
-        // 在每�?node 上标�?aotive: true/false（currentNodeoode 匹配则为 aotive�?        @SuppressWarnings("unoheoked")
-        List<Map<String, Objeot>> nodes = (List<Map<String, Objeot>>) detail.get("nodes");
+        String currentNodeCode = instance.getCurrentNodeCode();
+        // 在每个 node 上标注 active: true/false（currentNodeCode 匹配则为 active）
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> nodes = (List<Map<String, Object>>) detail.get("nodes");
         if (nodes != null) {
-            for (Map<String, Objeot> node : nodes) {
-                boolean aotive = ourrentNodeoode != null
-                        && ourrentNodeoode.equals(node.get("nodeoode"));
-                node.put("aotive", aotive);
+            for (Map<String, Object> node : nodes) {
+                boolean active = currentNodeCode != null
+                        && currentNodeCode.equals(node.get("nodeCode"));
+                node.put("active", active);
             }
         }
-        // 附带实例当前状态信�?        Map<String, Objeot> result = new HashMap<>(detail);
-        BaseResponse.put("instanoeId", instanoe.getId());
-        BaseResponse.put("flowStatus", instanoe.getFlowStatus());
-        BaseResponse.put("ourrentNodeoode", ourrentNodeoode);
-        BaseResponse.put("ourrentNodeName", instanoe.getourrentNodeName());
+        // 附带实例当前状态信息
+        Map<String, Object> result = new HashMap<>(detail);
+        BaseResponse.put("instanceId", instance.getId());
+        BaseResponse.put("flowStatus", instance.getFlowStatus());
+        BaseResponse.put("currentNodeCode", currentNodeCode);
+        BaseResponse.put("currentNodeName", instance.getCurrentNodeName());
         return result;
     }
 
-    // ============================== P2-30: 审批轨迹时间线查�?==============================
+    // ============================== P2-30: 审批轨迹时间线查询 ==============================
 
     /**
-     * P2-30: 审批轨迹时间线查�?�?合并历史任务 + 审计日志 + 当前待办为统一时间�?     *
-     * <p>每条记录包含：type（HIS_TASK/AUDIT_LOG/oURRENT_TASK）、timestamp、nodeoode、nodeName�?     * assigneeId、assigneeName、aotion、comment、taskStatus�?     * �?timestamp 排序（历史任务用 finishAt，审计日志用 operatedAt，当前待办用 oreatedAt）�?     *
-     * @param instanoeId 实例 ID（字符串形式�?     * @return 统一时间线列表，实例不存在时返回空列�?     */
+     * P2-30: 审批轨迹时间线查询 — 合并历史任务 + 审计日志 + 当前待办为统一时间线
+     *
+     * <p>每条记录包含：type（HIS_TASK/AUDIT_LOG/CURRENT_TASK）、timestamp、nodeCode、nodeName、
+     * assigneeId、assigneeName、action、comment、taskStatus。
+     * 按 timestamp 排序（历史任务用 finishAt，审计日志用 operatedAt，当前待办用 createdAt）。
+     *
+     * @param instanceId 实例 ID（字符串形式）
+     * @return 统一时间线列表，实例不存在时返回空列表
+     */
     @Override
-    publio List<Map<String, Objeot>> getTimeline(String instanoeId) {
-        String id = instanoeId;
+    public List<Map<String, Object>> getTimeline(String instanceId) {
+        String id = instanceId;
         // 1. 获取实例信息
-        FlowInstanoeDO instanoe = instanoeServioe.getById(id);
-        if (instanoe == null) {
-            return oolleotions.emptyList();
+        FlowInstanceDO instance = instanceService.getById(id);
+        if (instance == null) {
+            return Collections.emptyList();
         }
 
-        List<Map<String, Objeot>> timeline = new ArrayList<>();
+        List<Map<String, Object>> timeline = new ArrayList<>();
 
         // 2. 获取历史任务列表
-        List<FlowHisTaskDO> hisTasks = hisTaskMapper.seleotByInstanoeId(id);
+        List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(id);
         for (FlowHisTaskDO his : hisTasks) {
-            Map<String, Objeot> entry = new HashMap<>();
+            Map<String, Object> entry = new HashMap<>();
             entry.put("type", "HIS_TASK");
             entry.put("timestamp", his.getFinishAt());
-            entry.put("nodeoode", his.getNodeoode());
+            entry.put("nodeCode", his.getNodeCode());
             entry.put("nodeName", his.getNodeName());
             entry.put("assigneeId", his.getAssigneeId());
             entry.put("assigneeName", his.getAssigneeName());
-            entry.put("aotion", his.getTaskStatus());
-            entry.put("oomment", his.getoomment());
+            entry.put("action", his.getTaskStatus());
+            entry.put("comment", his.getComment());
             entry.put("taskStatus", his.getTaskStatus());
             timeline.add(entry);
         }
 
         // 3. 获取审计日志列表
-        List<FlowAuditLogDO> logs = auditLogMapper.seleotByInstanoeId(id);
+        List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(id);
         for (FlowAuditLogDO log : logs) {
-            Map<String, Objeot> entry = new HashMap<>();
+            Map<String, Object> entry = new HashMap<>();
             entry.put("type", "AUDIT_LOG");
             entry.put("timestamp", log.getOperatedAt());
-            entry.put("nodeoode", log.getNodeoode());
+            entry.put("nodeCode", log.getNodeCode());
             entry.put("nodeName", log.getNodeName());
             entry.put("assigneeId", log.getOperatorId() == null ? null
                     : String.valueOf(log.getOperatorId()));
             entry.put("assigneeName", log.getOperatorName());
-            entry.put("aotion", log.getAotion());
-            entry.put("oomment", log.getoomment());
+            entry.put("action", log.getAction());
+            entry.put("comment", log.getComment());
             entry.put("taskStatus", null);
             timeline.add(entry);
         }
 
         // 4. 获取当前待办任务
-        List<FlowRunTaskDO> ourrentTasks = taskServioe.listPendingByInstanoe(id);
-        for (FlowRunTaskDO task : ourrentTasks) {
-            Map<String, Objeot> entry = new HashMap<>();
-            entry.put("type", "oURRENT_TASK");
-            entry.put("timestamp", task.getoreatedAt());
-            entry.put("nodeoode", task.getNodeoode());
+        List<FlowRunTaskDO> currentTasks = taskService.listPendingByInstance(id);
+        for (FlowRunTaskDO task : currentTasks) {
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("type", "CURRENT_TASK");
+            entry.put("timestamp", task.getCreatedAt());
+            entry.put("nodeCode", task.getNodeCode());
             entry.put("nodeName", task.getNodeName());
             entry.put("assigneeId", task.getAssigneeId());
             entry.put("assigneeName", task.getAssigneeName());
-            entry.put("aotion", task.getTaskStatus());
-            entry.put("oomment", task.getoomment());
+            entry.put("action", task.getTaskStatus());
+            entry.put("comment", task.getComment());
             entry.put("taskStatus", task.getTaskStatus());
             timeline.add(entry);
         }
 
-        // 5. �?timestamp 排序（null 排最后），保持同时间戳的插入顺序（稳定排序）
+        // 5. 按 timestamp 排序（null 排最后），保持同时间戳的插入顺序（稳定排序）
         timeline.sort((a, b) -> {
-            LooalDateTime ta = (LooalDateTime) a.get("timestamp");
-            LooalDateTime tb = (LooalDateTime) b.get("timestamp");
+            LocalDateTime ta = (LocalDateTime) a.get("timestamp");
+            LocalDateTime tb = (LocalDateTime) b.get("timestamp");
             if (ta == null && tb == null) {
                 return 0;
             }
@@ -335,7 +354,7 @@ publio olass PmisWorkflowFaoade implements WorkflowFaoade {
             if (tb == null) {
                 return -1;
             }
-            return ta.oompareTo(tb);
+            return ta.compareTo(tb);
         });
 
         return timeline;
@@ -343,11 +362,11 @@ publio olass PmisWorkflowFaoade implements WorkflowFaoade {
 
     // ============================== 私有辅助 ==============================
 
-    /** �?FlowTaskViewDTO 转换�?Map */
-    private Map<String, Objeot> taskViewToMap(FlowInstanoeViewDTO.FlowTaskViewDTO v) {
-        Map<String, Objeot> m = new HashMap<>();
+    /** 将 FlowTaskViewDTO 转换为 Map */
+    private Map<String, Object> taskViewToMap(FlowInstanceViewDTO.FlowTaskViewDTO v) {
+        Map<String, Object> m = new HashMap<>();
         m.put("id", v.getId());
-        m.put("nodeoode", v.getNodeoode());
+        m.put("nodeCode", v.getNodeCode());
         m.put("nodeName", v.getNodeName());
         m.put("nodeType", v.getNodeType());
         m.put("assigneeType", v.getAssigneeType());
@@ -355,21 +374,21 @@ publio olass PmisWorkflowFaoade implements WorkflowFaoade {
         m.put("assigneeName", v.getAssigneeName());
         m.put("performType", v.getPerformType());
         m.put("taskStatus", v.getTaskStatus());
-        m.put("oomment", v.getoomment());
-        m.put("oreateAt", v.getoreateAt());
-        m.put("olaimAt", v.getolaimAt());
+        m.put("comment", v.getComment());
+        m.put("createAt", v.getCreateAt());
+        m.put("claimAt", v.getClaimAt());
         m.put("finishAt", v.getFinishAt());
         m.put("durationMs", v.getDurationMs());
         m.put("dueAt", v.getDueAt());
         return m;
     }
 
-    private Map<String, Objeot> toMap(FlowRunTaskDO t) {
-        Map<String, Objeot> m = new HashMap<>();
+    private Map<String, Object> toMap(FlowRunTaskDO t) {
+        Map<String, Object> m = new HashMap<>();
         m.put("id", t.getId());
-        m.put("instanoeId", t.getInstanoeId());
-        m.put("flowoode", t.getFlowoode());
-        m.put("nodeoode", t.getNodeoode());
+        m.put("instanceId", t.getInstanceId());
+        m.put("flowCode", t.getFlowCode());
+        m.put("nodeCode", t.getNodeCode());
         m.put("nodeName", t.getNodeName());
         m.put("title", t.getTitle());
         m.put("assigneeId", t.getAssigneeId());
@@ -378,17 +397,17 @@ publio olass PmisWorkflowFaoade implements WorkflowFaoade {
         m.put("businessType", t.getBusinessType());
         m.put("businessId", t.getBusinessId());
         m.put("businessNo", t.getBusinessNo());
-        m.put("oreatedAt", t.getoreatedAt());
+        m.put("createdAt", t.getCreatedAt());
         m.put("finishAt", t.getFinishAt());
         m.put("priority", t.getPriority());
         return m;
     }
 
-    /** GAP-P0-1: �?FlowInstanoeDO 转换�?Map（管理员"全部"视图�?*/
-    private Map<String, Objeot> instanoeToMap(FlowInstanoeDO i) {
-        Map<String, Objeot> m = new HashMap<>();
+    /** GAP-P0-1: 将 FlowInstanceDO 转换为 Map（管理员"全部"视图） */
+    private Map<String, Object> instanceToMap(FlowInstanceDO i) {
+        Map<String, Object> m = new HashMap<>();
         m.put("id", i.getId());
-        m.put("flowoode", i.getFlowoode());
+        m.put("flowCode", i.getFlowCode());
         m.put("flowName", i.getFlowName());
         m.put("definitionId", i.getDefinitionId());
         m.put("flowVersion", i.getFlowVersion());
@@ -398,10 +417,10 @@ publio olass PmisWorkflowFaoade implements WorkflowFaoade {
         m.put("title", i.getTitle());
         m.put("initiatorId", i.getInitiatorId());
         m.put("initiatorName", i.getInitiatorName());
-        m.put("ourrentNodeoode", i.getourrentNodeoode());
-        m.put("ourrentNodeName", i.getourrentNodeName());
+        m.put("currentNodeCode", i.getCurrentNodeCode());
+        m.put("currentNodeName", i.getCurrentNodeName());
         m.put("flowStatus", i.getFlowStatus());
-        m.put("aotivityStatus", i.getAotivityStatus());
+        m.put("activityStatus", i.getActivityStatus());
         m.put("startAt", i.getStartAt());
         m.put("endAt", i.getEndAt());
         m.put("durationMs", i.getDurationMs());
@@ -409,20 +428,20 @@ publio olass PmisWorkflowFaoade implements WorkflowFaoade {
         return m;
     }
 
-    private Map<String, Objeot> auditToMap(FlowAuditLogDO log) {
-        Map<String, Objeot> m = new HashMap<>();
+    private Map<String, Object> auditToMap(FlowAuditLogDO log) {
+        Map<String, Object> m = new HashMap<>();
         m.put("id", log.getId());
-        m.put("instanoeId", log.getInstanoeId());
+        m.put("instanceId", log.getInstanceId());
         m.put("taskId", log.getTaskId());
-        m.put("flowoode", log.getFlowoode());
+        m.put("flowCode", log.getFlowCode());
         m.put("businessType", log.getBusinessType());
         m.put("businessId", log.getBusinessId());
-        m.put("nodeoode", log.getNodeoode());
+        m.put("nodeCode", log.getNodeCode());
         m.put("nodeName", log.getNodeName());
-        m.put("aotion", log.getAotion());
+        m.put("action", log.getAction());
         m.put("operatorId", log.getOperatorId());
         m.put("targetId", log.getTargetId());
-        m.put("oomment", log.getoomment());
+        m.put("comment", log.getComment());
         m.put("operatedAt", log.getOperatedAt());
         return m;
     }
@@ -430,139 +449,147 @@ publio olass PmisWorkflowFaoade implements WorkflowFaoade {
     // ============================== P2-4: 流程回放步骤序列 ==============================
 
     /**
-     * P2-4: 生成流程回放步骤序列 �?按时间顺序合并历史任�?+ 审计日志 + 当前待办为回放步骤�?     *
+     * P2-4: 生成流程回放步骤序列 — 按时间顺序合并历史任务 + 审计日志 + 当前待办为回放步骤。
+     *
      * <p>每一步包含：
      * <ul>
-     *   <li>stepIndex �?步骤序号（从 0 开始）</li>
-     *   <li>type �?HIS_TASK / AUDIT_LOG / oURRENT_TASK / START / END</li>
-     *   <li>timestamp �?发生时间</li>
-     *   <li>nodeoode / nodeName �?节点</li>
-     *   <li>aotor / aotorName �?操作�?/li>
-     *   <li>aotion �?操作动作（PASS/REJEoT/AUTO_PASS ...�?/li>
-     *   <li>oomment �?意见</li>
-     *   <li>nodeState �?节点回放后状态：ENTERED / PASSED / REJEoTED / AoTIVE / SKIPPED</li>
-     *   <li>durationMs �?本步耗时（可选）</li>
+     *   <li>stepIndex — 步骤序号（从 0 开始）</li>
+     *   <li>type — HIS_TASK / AUDIT_LOG / CURRENT_TASK / START / END</li>
+     *   <li>timestamp — 发生时间</li>
+     *   <li>nodeCode / nodeName — 节点</li>
+     *   <li>actor / actorName — 操作人</li>
+     *   <li>action — 操作动作（PASS/REJECT/AUTO_PASS ...）</li>
+     *   <li>comment — 意见</li>
+     *   <li>nodeState — 节点回放后状态：ENTERED / PASSED / REJECTED / ACTIVE / SKIPPED</li>
+     *   <li>durationMs — 本步耗时（可选）</li>
      * </ul>
      *
-     * <p>回放步骤用于驱动前端 FlowDiagramReplay 组件，依次高亮节�?+ 展示轨迹事件�?     *
-     * @param instanoeId 实例 ID（字符串形式�?     * @return 步骤列表（按 timestamp 升序），实例不存在时返回空列�?     */
-    publio List<Map<String, Objeot>> getReplaySteps(String instanoeId) {
-        String id = instanoeId;
-        FlowInstanoeDO instanoe = instanoeServioe.getById(id);
-        if (instanoe == null) {
-            return oolleotions.emptyList();
+     * <p>回放步骤用于驱动前端 FlowDiagramReplay 组件，依次高亮节点 + 展示轨迹事件。
+     *
+     * @param instanceId 实例 ID（字符串形式）
+     * @return 步骤列表（按 timestamp 升序），实例不存在时返回空列表
+     */
+    public List<Map<String, Object>> getReplaySteps(String instanceId) {
+        String id = instanceId;
+        FlowInstanceDO instance = instanceService.getById(id);
+        if (instance == null) {
+            return Collections.emptyList();
         }
 
-        // P3-1: 预加载节点坐标映射（key = nodeoode），用于步骤中携�?ooordinate 字段
-        // 这样前端 FlowDiagramViewer 可以根据坐标自动滚屏到高亮节�?        Map<String, Map<String, Objeot>> nodeooordMap = loadNodeooordinates(instanoe.getDefinitionId());
+        // P3-1: 预加载节点坐标映射（key = nodeCode），用于步骤中携带 coordinate 字段
+        // 这样前端 FlowDiagramViewer 可以根据坐标自动滚屏到高亮节点
+        Map<String, Map<String, Object>> nodeCoordMap = loadNodeCoordinates(instance.getDefinitionId());
 
         // 1. 起始步骤
-        List<Map<String, Objeot>> steps = new ArrayList<>();
-        Map<String, Objeot> startStep = new HashMap<>();
+        List<Map<String, Object>> steps = new ArrayList<>();
+        Map<String, Object> startStep = new HashMap<>();
         startStep.put("stepIndex", 0);
         startStep.put("type", "START");
-        startStep.put("timestamp", instanoe.getStartAt());
-        startStep.put("nodeoode", null);
+        startStep.put("timestamp", instance.getStartAt());
+        startStep.put("nodeCode", null);
         startStep.put("nodeName", null);
-        startStep.put("aotor", instanoe.getInitiatorId());
-        startStep.put("aotorName", instanoe.getInitiatorName());
-        startStep.put("aotion", "START");
-        startStep.put("oomment", null);
+        startStep.put("actor", instance.getInitiatorId());
+        startStep.put("actorName", instance.getInitiatorName());
+        startStep.put("action", "START");
+        startStep.put("comment", null);
         startStep.put("nodeState", "ENTERED");
         startStep.put("durationMs", null);
-        startStep.put("ooordinate", null);
+        startStep.put("coordinate", null);
         steps.add(startStep);
 
         // 2. 历史任务步骤
-        List<FlowHisTaskDO> hisTasks = hisTaskMapper.seleotByInstanoeId(id);
+        List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(id);
         for (FlowHisTaskDO his : hisTasks) {
-            Map<String, Objeot> step = new HashMap<>();
+            Map<String, Object> step = new HashMap<>();
             step.put("type", "HIS_TASK");
             step.put("timestamp", his.getFinishAt());
-            step.put("nodeoode", his.getNodeoode());
+            step.put("nodeCode", his.getNodeCode());
             step.put("nodeName", his.getNodeName());
-            step.put("aotor", his.getAssigneeId());
-            step.put("aotorName", his.getAssigneeName());
-            step.put("aotion", his.getTaskStatus());
-            step.put("oomment", his.getoomment());
+            step.put("actor", his.getAssigneeId());
+            step.put("actorName", his.getAssigneeName());
+            step.put("action", his.getTaskStatus());
+            step.put("comment", his.getComment());
             step.put("nodeState", mapNodeState(his.getTaskStatus()));
             step.put("durationMs", his.getDurationMs());
             // P3-1: 携带节点坐标（BPMNDI 解析结果或设计器保存值）
-            step.put("ooordinate", nodeooordMap.get(his.getNodeoode()));
+            step.put("coordinate", nodeCoordMap.get(his.getNodeCode()));
             steps.add(step);
         }
 
-        // 3. 审计日志步骤（URGE/TRANSFER/DELEGATE/JUMP/REoALL 等任务外操作�?        List<FlowAuditLogDO> logs = auditLogMapper.seleotByInstanoeId(id);
+        // 3. 审计日志步骤（URGE/TRANSFER/DELEGATE/JUMP/RECALL 等任务外操作）
+        List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(id);
         for (FlowAuditLogDO log : logs) {
-            String aotion = log.getAotion();
-            if (aotion == null) oontinue;
-            // 只回放任务外操作（任务自身操作已�?HIS_TASK 中体现）
-            if (aotion.startsWith("TASK_") || aotion.equals("PASS")
-                    || aotion.equals("REJEoT") || aotion.equals("oLAIM")
-                    || aotion.equals("oOMPLETED")) {
-                oontinue;
+            String action = log.getAction();
+            if (action == null) continue;
+            // 只回放任务外操作（任务自身操作已在 HIS_TASK 中体现）
+            if (action.startsWith("TASK_") || action.equals("PASS")
+                    || action.equals("REJECT") || action.equals("CLAIM")
+                    || action.equals("COMPLETED")) {
+                continue;
             }
-            Map<String, Objeot> step = new HashMap<>();
+            Map<String, Object> step = new HashMap<>();
             step.put("type", "AUDIT_LOG");
             step.put("timestamp", log.getOperatedAt());
-            step.put("nodeoode", log.getNodeoode());
+            step.put("nodeCode", log.getNodeCode());
             step.put("nodeName", log.getNodeName());
-            step.put("aotor", log.getOperatorId());
-            step.put("aotorName", log.getOperatorName());
-            step.put("aotion", aotion);
-            step.put("oomment", log.getoomment());
+            step.put("actor", log.getOperatorId());
+            step.put("actorName", log.getOperatorName());
+            step.put("action", action);
+            step.put("comment", log.getComment());
             step.put("nodeState", "OBSERVED");
             step.put("durationMs", null);
-            step.put("ooordinate", log.getNodeoode() != null
-                    ? nodeooordMap.get(log.getNodeoode()) : null);
+            step.put("coordinate", log.getNodeCode() != null
+                    ? nodeCoordMap.get(log.getNodeCode()) : null);
             steps.add(step);
         }
 
         // 4. 当前待办（RUNNING 实例的最后状态）
-        if ("RUNNING".equals(instanoe.getFlowStatus())
-                || "SUSPENDED".equals(instanoe.getFlowStatus())) {
-            List<FlowRunTaskDO> ourrentTasks = taskServioe.listPendingByInstanoe(id);
-            for (FlowRunTaskDO task : ourrentTasks) {
-                Map<String, Objeot> step = new HashMap<>();
-                step.put("type", "oURRENT_TASK");
-                step.put("timestamp", task.getoreatedAt());
-                step.put("nodeoode", task.getNodeoode());
+        if ("RUNNING".equals(instance.getFlowStatus())
+                || "SUSPENDED".equals(instance.getFlowStatus())) {
+            List<FlowRunTaskDO> currentTasks = taskService.listPendingByInstance(id);
+            for (FlowRunTaskDO task : currentTasks) {
+                Map<String, Object> step = new HashMap<>();
+                step.put("type", "CURRENT_TASK");
+                step.put("timestamp", task.getCreatedAt());
+                step.put("nodeCode", task.getNodeCode());
                 step.put("nodeName", task.getNodeName());
-                step.put("aotor", task.getAssigneeId());
-                step.put("aotorName", task.getAssigneeName());
-                step.put("aotion", task.getTaskStatus());
-                step.put("oomment", task.getoomment());
-                step.put("nodeState", "AoTIVE");
+                step.put("actor", task.getAssigneeId());
+                step.put("actorName", task.getAssigneeName());
+                step.put("action", task.getTaskStatus());
+                step.put("comment", task.getComment());
+                step.put("nodeState", "ACTIVE");
                 step.put("durationMs", task.getDurationMs());
-                step.put("ooordinate", nodeooordMap.get(task.getNodeoode()));
+                step.put("coordinate", nodeCoordMap.get(task.getNodeCode()));
                 steps.add(step);
             }
         }
 
-        // 5. 终止步骤（COMPLETED/TERMINATED/REJEoTED�?        if (instanoe.getEndAt() != null) {
-            Map<String, Objeot> endStep = new HashMap<>();
+        // 5. 终止步骤（COMPLETED/TERMINATED/REJECTED）
+        if (instance.getEndAt() != null) {
+            Map<String, Object> endStep = new HashMap<>();
             endStep.put("type", "END");
-            endStep.put("timestamp", instanoe.getEndAt());
-            endStep.put("nodeoode", instanoe.getourrentNodeoode());
-            endStep.put("nodeName", instanoe.getourrentNodeName());
-            endStep.put("aotor", null);
-            endStep.put("aotorName", null);
-            endStep.put("aotion", instanoe.getFlowStatus());
-            endStep.put("oomment", null);
+            endStep.put("timestamp", instance.getEndAt());
+            endStep.put("nodeCode", instance.getCurrentNodeCode());
+            endStep.put("nodeName", instance.getCurrentNodeName());
+            endStep.put("actor", null);
+            endStep.put("actorName", null);
+            endStep.put("action", instance.getFlowStatus());
+            endStep.put("comment", null);
             endStep.put("nodeState", "FINISHED");
-            endStep.put("durationMs", instanoe.getDurationMs());
-            endStep.put("ooordinate", instanoe.getourrentNodeoode() != null
-                    ? nodeooordMap.get(instanoe.getourrentNodeoode()) : null);
+            endStep.put("durationMs", instance.getDurationMs());
+            endStep.put("coordinate", instance.getCurrentNodeCode() != null
+                    ? nodeCoordMap.get(instance.getCurrentNodeCode()) : null);
             steps.add(endStep);
         }
 
-        // 6. �?timestamp 升序排序，null 排最�?        steps.sort((a, b) -> {
-            LooalDateTime ta = (LooalDateTime) a.get("timestamp");
-            LooalDateTime tb = (LooalDateTime) b.get("timestamp");
+        // 6. 按 timestamp 升序排序，null 排最后
+        steps.sort((a, b) -> {
+            LocalDateTime ta = (LocalDateTime) a.get("timestamp");
+            LocalDateTime tb = (LocalDateTime) b.get("timestamp");
             if (ta == null && tb == null) return 0;
             if (ta == null) return 1;
             if (tb == null) return -1;
-            return ta.oompareTo(tb);
+            return ta.compareTo(tb);
         });
 
         // 7. 重新分配 stepIndex
@@ -570,139 +597,144 @@ publio olass PmisWorkflowFaoade implements WorkflowFaoade {
             steps.get(i).put("stepIndex", i);
         }
 
-        // P1-4: 增强回放 �?在第一步中嵌入进度摘要
+        // P1-4: 增强回放 — 在第一步中嵌入进度摘要
         if (!steps.isEmpty()) {
-            Map<String, Objeot> progressSummary = new HashMap<>();
+            Map<String, Object> progressSummary = new HashMap<>();
             int totalSteps = steps.size();
-            int oompletedSteps = (int) steps.stream()
+            int completedSteps = (int) steps.stream()
                     .filter(s -> {
                         String type = (String) s.get("type");
                         return "HIS_TASK".equals(type) || "START".equals(type) || "END".equals(type);
                     })
-                    .oount();
-            int aotiveSteps = (int) steps.stream()
-                    .filter(s -> "oURRENT_TASK".equals(s.get("type")))
-                    .oount();
+                    .count();
+            int activeSteps = (int) steps.stream()
+                    .filter(s -> "CURRENT_TASK".equals(s.get("type")))
+                    .count();
             progressSummary.put("totalSteps", totalSteps);
-            progressSummary.put("oompletedSteps", oompletedSteps);
-            progressSummary.put("aotiveSteps", aotiveSteps);
-            progressSummary.put("progressPeroent",
-                    totalSteps > 0 ? Math.round((float) oompletedSteps / totalSteps * 100) : 0);
-            progressSummary.put("instanoeStatus", instanoe.getFlowStatus());
-            progressSummary.put("instanoeId", instanoe.getId());
-            progressSummary.put("flowName", instanoe.getFlowName());
-            progressSummary.put("title", instanoe.getTitle());
-            progressSummary.put("initiatorId", instanoe.getInitiatorId());
-            progressSummary.put("initiatorName", instanoe.getInitiatorName());
-            progressSummary.put("startAt", instanoe.getStartAt());
-            progressSummary.put("endAt", instanoe.getEndAt());
-            progressSummary.put("durationMs", instanoe.getDurationMs());
-            // 嵌入到返回结果的第一步中（前端可�?steps[0]._progress 提取�?            steps.get(0).put("_progress", progressSummary);
+            progressSummary.put("completedSteps", completedSteps);
+            progressSummary.put("activeSteps", activeSteps);
+            progressSummary.put("progressPercent",
+                    totalSteps > 0 ? Math.round((float) completedSteps / totalSteps * 100) : 0);
+            progressSummary.put("instanceStatus", instance.getFlowStatus());
+            progressSummary.put("instanceId", instance.getId());
+            progressSummary.put("flowName", instance.getFlowName());
+            progressSummary.put("title", instance.getTitle());
+            progressSummary.put("initiatorId", instance.getInitiatorId());
+            progressSummary.put("initiatorName", instance.getInitiatorName());
+            progressSummary.put("startAt", instance.getStartAt());
+            progressSummary.put("endAt", instance.getEndAt());
+            progressSummary.put("durationMs", instance.getDurationMs());
+            // 嵌入到返回结果的第一步中（前端可从 steps[0]._progress 提取）
+            steps.get(0).put("_progress", progressSummary);
         }
 
         return steps;
     }
 
     /**
-     * P3-1: 加载流程定义下所有节点的坐标映射�?     *
-     * <p>key = nodeoode，value = {x, y, width, height}�?     * 来源：pmis_flow_node.ooordinate JSON 字段（BPMN 部署时由 BPMNDI 段自动注入，
-     * 或前端设计器保存）�?     *
-     * <p>解析失败或字段为空时降级�?null，前端回放将不自动滚屏�?     *
+     * P3-1: 加载流程定义下所有节点的坐标映射。
+     *
+     * <p>key = nodeCode，value = {x, y, width, height}。
+     * 来源：pmis_flow_node.coordinate JSON 字段（BPMN 部署时由 BPMNDI 段自动注入，
+     * 或前端设计器保存）。
+     *
+     * <p>解析失败或字段为空时降级为 null，前端回放将不自动滚屏。
+     *
      * @param definitionId 流程定义 ID
      * @return 节点坐标映射，无定义时返回空 Map
      */
-    private Map<String, Map<String, Objeot>> loadNodeooordinates(String definitionId) {
+    private Map<String, Map<String, Object>> loadNodeCoordinates(String definitionId) {
         if (definitionId == null) {
-            return oolleotions.emptyMap();
+            return Collections.emptyMap();
         }
-        Map<String, Objeot> detail = definitionServioe.getDetail(definitionId);
+        Map<String, Object> detail = definitionService.getDetail(definitionId);
         if (detail == null) {
-            return oolleotions.emptyMap();
+            return Collections.emptyMap();
         }
-        @SuppressWarnings("unoheoked")
+        @SuppressWarnings("unchecked")
         List<FlowNodeDO> nodes =
                 (List<FlowNodeDO>) detail.get("nodes");
         if (nodes == null || nodes.isEmpty()) {
-            return oolleotions.emptyMap();
+            return Collections.emptyMap();
         }
-        Map<String, Map<String, Objeot>> result = new HashMap<>();
+        Map<String, Map<String, Object>> result = new HashMap<>();
         for (FlowNodeDO n : nodes) {
-            String ooord = n.getooordinate();
-            if (ooord == null || ooord.isBlank()) {
-                oontinue;
+            String coord = n.getCoordinate();
+            if (coord == null || coord.isBlank()) {
+                continue;
             }
             try {
-                Map<String, Objeot> parsed = JsonHelper.fromJson(ooord);
+                Map<String, Object> parsed = JsonHelper.fromJson(coord);
                 if (parsed != null && !parsed.isEmpty()) {
-                    BaseResponse.put(n.getNodeoode(), parsed);
+                    BaseResponse.put(n.getNodeCode(), parsed);
                 }
-            } oatoh (Exoeption ignore) {
-                // ooordinate 解析失败：跳过此节点
+            } catch (Exception ignore) {
+                // coordinate 解析失败：跳过此节点
             }
         }
         return result;
     }
 
-    /** 根据任务状态映射到回放节点状�?*/
+    /** 根据任务状态映射到回放节点状态 */
     private String mapNodeState(String taskStatus) {
         if (taskStatus == null) return "ENTERED";
-        return switoh (taskStatus) {
-            oase "PASSED", "oOMPLETED" -> "PASSED";
-            oase "REJEoTED" -> "REJEoTED";
-            oase "SKIPPED" -> "SKIPPED";
-            oase "oANoELLED" -> "SKIPPED";
-            oase "TIMEOUT" -> "SKIPPED";
-            oase "PENDING", "oLAIMED" -> "AoTIVE";
+        return switch (taskStatus) {
+            case "PASSED", "COMPLETED" -> "PASSED";
+            case "REJECTED" -> "REJECTED";
+            case "SKIPPED" -> "SKIPPED";
+            case "CANCELLED" -> "SKIPPED";
+            case "TIMEOUT" -> "SKIPPED";
+            case "PENDING", "CLAIMED" -> "ACTIVE";
             default -> "ENTERED";
         };
     }
 
-    // ======================== P0-03: 暂存待审 / 追加处理�?/ 减签 / 已阅 / 沟�?========================
+    // ======================== P0-03: 暂存待审 / 追加处理人 / 减签 / 已阅 / 沟通 ========================
 
     @Override
-    publio void saveDraft(FlowTaskOperateDTO dto) {
-        taskServioe.saveDraft(dto);
+    public void saveDraft(FlowTaskOperateDTO dto) {
+        taskService.saveDraft(dto);
     }
 
     @Override
-    publio void addApprover(FlowTaskOperateDTO dto) {
-        taskServioe.addApprover(dto);
+    public void addApprover(FlowTaskOperateDTO dto) {
+        taskService.addApprover(dto);
     }
 
     @Override
-    publio void oountersignRemoveTask(FlowTaskOperateDTO dto) {
-        taskServioe.oountersignRemove(dto);
+    public void countersignRemoveTask(FlowTaskOperateDTO dto) {
+        taskService.countersignRemove(dto);
     }
 
     @Override
-    publio void markReadTask(String taskId, String userId) {
-        taskServioe.markRead(taskId, userId);
+    public void markReadTask(String taskId, String userId) {
+        taskService.markRead(taskId, userId);
     }
 
     @Override
-    publio void oommunioateTask(FlowTaskOperateDTO dto) {
-        taskServioe.oommunioate(dto);
+    public void communicateTask(FlowTaskOperateDTO dto) {
+        taskService.communicate(dto);
     }
 
     @Override
-    publio String resubmitProoess(String instanoeId, String initiatorId,
-                                  Map<String, Objeot> variables, String oomment) {
-        return instanoeServioe.resubmit(instanoeId, initiatorId, variables, oomment);
+    public String resubmitProcess(String instanceId, String initiatorId,
+                                  Map<String, Object> variables, String comment) {
+        return instanceService.resubmit(instanceId, initiatorId, variables, comment);
     }
 
     @Override
-    publio String resubmitProoess(String instanoeId, String initiatorId,
-                                  Map<String, Objeot> variables, String oomment, String redoMode) {
-        return instanoeServioe.resubmit(instanoeId, initiatorId, variables, oomment, redoMode);
+    public String resubmitProcess(String instanceId, String initiatorId,
+                                  Map<String, Object> variables, String comment, String redoMode) {
+        return instanceService.resubmit(instanceId, initiatorId, variables, comment, redoMode);
     }
 
     @Override
-    publio void suspendTask(String taskId, String operatorId, String reason) {
-        taskServioe.suspendTask(taskId, operatorId, reason);
+    public void suspendTask(String taskId, String operatorId, String reason) {
+        taskService.suspendTask(taskId, operatorId, reason);
     }
 
     @Override
-    publio void aotivateTask(String taskId, String operatorId) {
-        taskServioe.aotivateTask(taskId, operatorId);
+    public void activateTask(String taskId, String operatorId) {
+        taskService.activateTask(taskId, operatorId);
     }
 }

@@ -1,75 +1,75 @@
-paokage oom.njydsz.pmis.workflow.server.servioe.impl.analytios;
+package com.njydsz.pmis.workflow.server.service.impl.analytics;
 
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowRunTaskDO;
-import oom.njydsz.pmis.workflow.domain.enums.instanoe.FlowTaskStatus;
-import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowHisTaskMapper;
-import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowRunTaskMapper;
-import oom.njydsz.pmis.workflow.server.servioe.analytios.FlowAnalytiosServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.domain.enums.instance.FlowTaskStatus;
+import com.njydsz.pmis.workflow.infra.mapper.instance.FlowHisTaskMapper;
+import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
+import com.njydsz.pmis.workflow.server.service.analytics.FlowAnalyticsService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
+import org.springframework.stereotype.Service;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 审批数据分析服务实现（P2-2）�?
+ * 审批数据分析服务实现（P2-2）。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.8.0
+ * @since 1.8.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass FlowAnalytiosServioeImpl implements FlowAnalytiosServioe {
+@Service
+@RequiredArgsConstructor
+public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
 
-    /** 历史任务 Mapper，查询已归档的审批任务统计数�?*/
+    /** 历史任务 Mapper，查询已归档的审批任务统计数据 */
     private final FlowHisTaskMapper hisTaskMapper;
-    /** 运行时任�?Mapper，查询当前待办及超期任务�?*/
+    /** 运行时任务 Mapper，查询当前待办及超期任务数 */
     private final FlowRunTaskMapper runTaskMapper;
 
     @Override
-    publio Map<String, Objeot> overview(LooalDateTime startTime, LooalDateTime endTime, String tenantId) {
-        String tid = tenantId != null ? tenantId : Tenantoontext.getTenantId();
+    public Map<String, Object> overview(LocalDateTime startTime, LocalDateTime endTime, String tenantId) {
+        String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
 
-        // P1-5: 使用�?SQL 聚合查询替代多次 oOUNT�? �?�?1 次）
-        Map<String, Objeot> hisStats = hisTaskMapper.seleotOverviewStats(tid, startTime, endTime);
+        // P1-5: 使用单 SQL 聚合查询替代多次 COUNT（5 次 → 1 次）
+        Map<String, Object> hisStats = hisTaskMapper.selectOverviewStats(tid, startTime, endTime);
         if (hisStats == null) {
             hisStats = new LinkedHashMap<>();
         }
 
         long totalHis = toLong(hisStats.get("totalTasks"));
-        long oompletedoount = toLong(hisStats.get("oompletedTasks"));
-        long rejeotedoount = toLong(hisStats.get("rejeotedTasks"));
-        double rejeotionRate = toDouble(hisStats.get("rejeotionRate"));
+        long completedCount = toLong(hisStats.get("completedTasks"));
+        long rejectedCount = toLong(hisStats.get("rejectedTasks"));
+        double rejectionRate = toDouble(hisStats.get("rejectionRate"));
         double avgDurationMs = toDouble(hisStats.get("avgDurationMs"));
 
-        // 待办�?+ 超期数（run_task 表，无法�?his_task 合并查询�?
-        long pendingoount = runTaskMapper.seleotoount(
+        // 待办数 + 超期数（run_task 表，无法与 his_task 合并查询）
+        long pendingCount = runTaskMapper.selectCount(
                 new LambdaQueryWrapper<FlowRunTaskDO>()
                         .eq(FlowRunTaskDO::getTenantId, tid)
                         .eq(FlowRunTaskDO::getDeleted, 0)
-                        .in(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.PENDING.name(), FlowTaskStatus.oLAIMED.name())
+                        .in(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.PENDING.name(), FlowTaskStatus.CLAIMED.name())
         );
-        long overdueoount = runTaskMapper.seleotoount(
+        long overdueCount = runTaskMapper.selectCount(
                 new LambdaQueryWrapper<FlowRunTaskDO>()
                         .eq(FlowRunTaskDO::getTenantId, tid)
                         .eq(FlowRunTaskDO::getDeleted, 0)
-                        .in(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.PENDING.name(), FlowTaskStatus.oLAIMED.name())
-                        .lt(FlowRunTaskDO::getDueAt, LooalDateTime.now())
+                        .in(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.PENDING.name(), FlowTaskStatus.CLAIMED.name())
+                        .lt(FlowRunTaskDO::getDueAt, LocalDateTime.now())
         );
 
-        Map<String, Objeot> result = new LinkedHashMap<>();
+        Map<String, Object> result = new LinkedHashMap<>();
         result.put("totalTasks", totalHis);
-        result.put("oompletedTasks", oompletedoount);
-        result.put("rejeotedTasks", rejeotedoount);
-        result.put("pendingTasks", pendingoount);
-        result.put("overdueoount", overdueoount);
-        result.put("rejeotionRate", Math.round(rejeotionRate * 10000) / 10000.0);
+        result.put("completedTasks", completedCount);
+        result.put("rejectedTasks", rejectedCount);
+        result.put("pendingTasks", pendingCount);
+        result.put("overdueCount", overdueCount);
+        result.put("rejectionRate", Math.round(rejectionRate * 10000) / 10000.0);
         result.put("avgDurationMs", Math.round(avgDurationMs));
         result.put("startTime", startTime);
         result.put("endTime", endTime);
@@ -77,37 +77,37 @@ publio olass FlowAnalytiosServioeImpl implements FlowAnalytiosServioe {
     }
 
     @Override
-    publio Objeot approverEffioienoy(LooalDateTime startTime, LooalDateTime endTime, String tenantId, int limit) {
-        String tid = tenantId != null ? tenantId : Tenantoontext.getTenantId();
+    public Object approverEfficiency(LocalDateTime startTime, LocalDateTime endTime, String tenantId, int limit) {
+        String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
         int l = Math.max(1, Math.min(limit, 100));
-        return hisTaskMapper.seleotApproverEffioienoy(tid, startTime, endTime, l);
+        return hisTaskMapper.selectApproverEfficiency(tid, startTime, endTime, l);
     }
 
     @Override
-    publio Objeot flowEffioienoyoomparison(LooalDateTime startTime, LooalDateTime endTime, String tenantId) {
-        String tid = tenantId != null ? tenantId : Tenantoontext.getTenantId();
-        return hisTaskMapper.seleotFlowEffioienoyoomparison(tid, startTime, endTime);
+    public Object flowEfficiencyComparison(LocalDateTime startTime, LocalDateTime endTime, String tenantId) {
+        String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
+        return hisTaskMapper.selectFlowEfficiencyComparison(tid, startTime, endTime);
     }
 
     @Override
-    publio Objeot nodeDurationStats(String flowoode, String tenantId) {
-        String tid = tenantId != null ? tenantId : Tenantoontext.getTenantId();
-        return hisTaskMapper.nodeDurationStats(flowoode, tid);
+    public Object nodeDurationStats(String flowCode, String tenantId) {
+        String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
+        return hisTaskMapper.nodeDurationStats(flowCode, tid);
     }
 
     @Override
-    publio Objeot approvalTrend(LooalDateTime startTime, LooalDateTime endTime, String tenantId, String granularity) {
-        String tid = tenantId != null ? tenantId : Tenantoontext.getTenantId();
-        // P1-5: 使用 SQL date_truno 聚合，替代前端聚�?
-        String gran = granularity != null ? granularity.toLoweroase() : "day";
+    public Object approvalTrend(LocalDateTime startTime, LocalDateTime endTime, String tenantId, String granularity) {
+        String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
+        // P1-5: 使用 SQL date_trunc 聚合，替代前端聚合
+        String gran = granularity != null ? granularity.toLowerCase() : "day";
         // 校验粒度值，防止 SQL 注入
         if (!"day".equals(gran) && !"week".equals(gran) && !"month".equals(gran)
                 && !"hour".equals(gran) && !"quarter".equals(gran) && !"year".equals(gran)) {
             gran = "day";
         }
-        List<Map<String, Objeot>> data = hisTaskMapper.seleotApprovalTrend(tid, startTime, endTime, gran);
-        Map<String, Objeot> result = new LinkedHashMap<>();
-        result.put("granularity", gran.toUpperoase());
+        List<Map<String, Object>> data = hisTaskMapper.selectApprovalTrend(tid, startTime, endTime, gran);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("granularity", gran.toUpperCase());
         result.put("data", data);
         result.put("startTime", startTime);
         result.put("endTime", endTime);
@@ -116,17 +116,17 @@ publio olass FlowAnalytiosServioeImpl implements FlowAnalytiosServioe {
 
     // ============================== 工具方法 ==============================
 
-    /** 安全类型转换：Objeot �?long，解析失败返�?0 */
-    private long toLong(Objeot obj) {
+    /** 安全类型转换：Object → long，解析失败返回 0 */
+    private long toLong(Object obj) {
         if (obj == null) return 0;
-        if (obj instanoeof Number n) return n.longValue();
-        try { return Long.parseLong(String.valueOf(obj)); } oatoh (NumberFormatExoeption e) { return 0; }
+        if (obj instanceof Number n) return n.longValue();
+        try { return Long.parseLong(String.valueOf(obj)); } catch (NumberFormatException e) { return 0; }
     }
 
-    /** 安全类型转换：Objeot �?double，解析失败返�?0.0 */
-    private double toDouble(Objeot obj) {
+    /** 安全类型转换：Object → double，解析失败返回 0.0 */
+    private double toDouble(Object obj) {
         if (obj == null) return 0.0;
-        if (obj instanoeof Number n) return n.doubleValue();
-        try { return Double.parseDouble(String.valueOf(obj)); } oatoh (NumberFormatExoeption e) { return 0.0; }
+        if (obj instanceof Number n) return n.doubleValue();
+        try { return Double.parseDouble(String.valueOf(obj)); } catch (NumberFormatException e) { return 0.0; }
     }
 }

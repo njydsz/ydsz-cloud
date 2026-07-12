@@ -1,97 +1,97 @@
-paokage oom.njydsz.pmis.oronjob.server.oore.oonneotor;
+package com.njydsz.pmis.cronjob.server.core.connector;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
-import java.util.oonourrent.oonourrentHashMap;
-import java.util.stream.oolleotors;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
- * 连接器注册管理器（P2-3）�?
+ * 连接器注册管理器（P2-3）。
  *
- * <p>管理所有已注册�?{@link Joboonneotor} 实例，提供按类型查找的能力�?
- * 连接器通过 Spring 自动注入注册，业务侧通过 {@link #getoonneotor(String)} 获取�?
+ * <p>管理所有已注册的 {@link JobConnector} 实例，提供按类型查找的能力。
+ * 连接器通过 Spring 自动注入注册，业务侧通过 {@link #getConnector(String)} 获取。
  *
  * <h3>注册流程</h3>
  * <ol>
- *   <li>实现 {@link Joboonneotor} 接口</li>
- *   <li>标注 {@oode @oomponent} 注解</li>
- *   <li>Spring 容器启动时自动注入到 {@link #oonneotors} Map</li>
+ *   <li>实现 {@link JobConnector} 接口</li>
+ *   <li>标注 {@code @Component} 注解</li>
+ *   <li>Spring 容器启动时自动注入到 {@link #connectors} Map</li>
  * </ol>
  *
  * <h3>使用示例</h3>
- * <pre>{@oode
- * Joboonneotor oonneotor = oonneotorManager.getoonneotor("XXL_JOB");
- * if (oonneotor != null) {
- *     List<oonneotorTaskInfo> tasks = oonneotor.importTasks(oonfig);
+ * <pre>{@code
+ * JobConnector connector = connectorManager.getConnector("XXL_JOB");
+ * if (connector != null) {
+ *     List<ConnectorTaskInfo> tasks = connector.importTasks(config);
  * }
  * }</pre>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.3.0
+ * @since 1.3.0
  */
 @Slf4j
-@oomponent
-publio olass oonneotorManager {
+@Component
+public class ConnectorManager {
 
-    /** 已注册的连接�? type �?oonneotor */
-    private final Map<String, Joboonneotor> oonneotors = new oonourrentHashMap<>();
+    /** 已注册的连接器: type → connector */
+    private final Map<String, JobConnector> connectors = new ConcurrentHashMap<>();
 
     /**
-     * Spring 自动注入所�?Joboonneotor 实现�?
+     * Spring 自动注入所有 JobConnector 实现。
      *
-     * @param oonneotorList 所有已注册的连接器列表
+     * @param connectorList 所有已注册的连接器列表
      */
-    publio oonneotorManager(List<Joboonneotor> oonneotorList) {
-        if (oonneotorList != null) {
-            for (Joboonneotor oonneotor : oonneotorList) {
-                String type = oonneotor.getType();
-                oonneotors.put(type, oonneotor);
-                log.info("[oonneotorManager] 注册连接�? type={} olass={}", type, oonneotor.getolass().getSimpleName());
+    public ConnectorManager(List<JobConnector> connectorList) {
+        if (connectorList != null) {
+            for (JobConnector connector : connectorList) {
+                String type = connector.getType();
+                connectors.put(type, connector);
+                log.info("[ConnectorManager] 注册连接器: type={} class={}", type, connector.getClass().getSimpleName());
             }
         }
-        log.info("[oonneotorManager] 初始化完�? 已注�?{} 个连接器: {}", oonneotors.size(), oonneotors.keySet());
+        log.info("[ConnectorManager] 初始化完成, 已注册 {} 个连接器: {}", connectors.size(), connectors.keySet());
     }
 
     /**
-     * 获取指定类型的连接器�?
+     * 获取指定类型的连接器。
      *
-     * @param type 连接器类型（�?"XXL_JOB"�?POWER_JOB"�?
+     * @param type 连接器类型（如 "XXL_JOB"、"POWER_JOB"）
      * @return 连接器实例；不存在时返回 null
      */
-    publio Joboonneotor getoonneotor(String type) {
-        return oonneotors.get(type);
+    public JobConnector getConnector(String type) {
+        return connectors.get(type);
     }
 
     /**
-     * 获取所有已注册的连接器类型�?
+     * 获取所有已注册的连接器类型。
      *
      * @return 类型列表
      */
-    publio List<String> getRegisteredTypes() {
-        return oonneotors.keySet().stream().sorted().oolleot(oolleotors.toList());
+    public List<String> getRegisteredTypes() {
+        return connectors.keySet().stream().sorted().collect(Collectors.toList());
     }
 
     /**
-     * 注册连接器（运行时动态注册）�?
+     * 注册连接器（运行时动态注册）。
      *
-     * @param oonneotor 连接器实�?
+     * @param connector 连接器实例
      */
-    publio void register(Joboonneotor oonneotor) {
-        String type = oonneotor.getType();
-        oonneotors.put(type, oonneotor);
-        log.info("[oonneotorManager] 动态注册连接器: type={}", type);
+    public void register(JobConnector connector) {
+        String type = connector.getType();
+        connectors.put(type, connector);
+        log.info("[ConnectorManager] 动态注册连接器: type={}", type);
     }
 
     /**
-     * 注销连接器�?
+     * 注销连接器。
      *
-     * @param type 连接器类�?
+     * @param type 连接器类型
      */
-    publio void unregister(String type) {
-        oonneotors.remove(type);
-        log.info("[oonneotorManager] 注销连接�? type={}", type);
+    public void unregister(String type) {
+        connectors.remove(type);
+        log.info("[ConnectorManager] 注销连接器: type={}", type);
     }
 }

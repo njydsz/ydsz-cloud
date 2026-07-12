@@ -1,117 +1,117 @@
-paokage oom.njydsz.pmis.oronjob.web.oontroller.dag;
+package com.njydsz.pmis.cronjob.web.controller.dag;
 
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.oronjob.server.oore.dag.DagDefinition;
-import oom.njydsz.pmis.oronjob.server.oore.dag.DagDefinitionoodeo;
-import oom.njydsz.pmis.oronjob.domain.entity.dag.JobDagInstanoeDO;
-import oom.njydsz.pmis.oronjob.domain.entity.dag.JobDagNodeInstanoeDO;
-import oom.njydsz.pmis.oronjob.domain.entity.dag.JobDagDO;
-import oom.njydsz.pmis.oronjob.domain.entity.log.JobLogDO;
-import oom.njydsz.pmis.oronjob.infra.mapper.dag.JobDagInstanoeMapper;
-import oom.njydsz.pmis.oronjob.infra.mapper.dag.JobDagMapper;
-import oom.njydsz.pmis.oronjob.infra.mapper.dag.JobDagNodeInstanoeMapper;
-import oom.njydsz.pmis.oronjob.infra.mapper.log.JobLogMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.cronjob.server.core.dag.DagDefinition;
+import com.njydsz.pmis.cronjob.server.core.dag.DagDefinitionCodec;
+import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagInstanceDO;
+import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagNodeInstanceDO;
+import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagDO;
+import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.pmis.cronjob.infra.mapper.dag.JobDagInstanceMapper;
+import com.njydsz.pmis.cronjob.infra.mapper.dag.JobDagMapper;
+import com.njydsz.pmis.cronjob.infra.mapper.dag.JobDagNodeInstanceMapper;
+import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsoonstruotor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.Restoontroller;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
 
 /**
- * P2-11: 任务执行拓扑图后�?API�?
+ * P2-11: 任务执行拓扑图后端 API。
  *
  * <p>提供任务执行全链路拓扑数据，支持前端可视化展示：
  * <ul>
- *   <li>DAG 工作流节�?边定�?+ 每个节点的实时执行状�?/li>
+ *   <li>DAG 工作流节点/边定义 + 每个节点的实时执行状态</li>
  *   <li>任务执行日志关联（每个节点关联最近一次执行日志）</li>
- *   <li>执行时间线（开�?结束/耗时�?/li>
+ *   <li>执行时间线（开始/结束/耗时）</li>
  * </ul>
  *
  * <h3>返回数据结构</h3>
- * <pre>{@oode
+ * <pre>{@code
  * {
  *   "dagDefinition": { "nodes": [...], "edges": [...] },
- *   "dagInstanoe": { "id": "...", "status": "RUNNING", ... },
- *   "nodeInstanoes": [
- *     { "jobKey": "a", "status": "SUooESS", "startTime": "...", "endTime": "...", "durationMs": 1234, "logId": "..." },
+ *   "dagInstance": { "id": "...", "status": "RUNNING", ... },
+ *   "nodeInstances": [
+ *     { "jobKey": "a", "status": "SUCCESS", "startTime": "...", "endTime": "...", "durationMs": 1234, "logId": "..." },
  *     ...
  *   ]
  * }
  * }</pre>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.2.0
+ * @since 1.2.0
  */
 @Slf4j
-@Tag(name = "任务执行拓扑�?)
-@Restoontroller
-@RequestMapping("/oronjob/topology")
-@RequiredArgsoonstruotor
-publio olass TaskTopologyoontroller {
+@Tag(name = "任务执行拓扑图")
+@RestController
+@RequestMapping("/cronjob/topology")
+@RequiredArgsConstructor
+public class TaskTopologyController {
 
     /** DAG 实例 Mapper */
-    private final JobDagInstanoeMapper dagInstanoeMapper;
+    private final JobDagInstanceMapper dagInstanceMapper;
     /** DAG 节点实例 Mapper */
-    private final JobDagNodeInstanoeMapper dagNodeInstanoeMapper;
+    private final JobDagNodeInstanceMapper dagNodeInstanceMapper;
     /** DAG 定义 Mapper */
     private final JobDagMapper dagMapper;
     /** DAG 定义 JSON 编解码器 */
-    private final DagDefinitionoodeo dagDefinitionoodeo;
+    private final DagDefinitionCodec dagDefinitionCodec;
     /** 任务执行日志 Mapper */
     private final JobLogMapper jobLogMapper;
 
     /**
-     * 查询 DAG 实例的执行拓扑图数据�?
+     * 查询 DAG 实例的执行拓扑图数据。
      *
-     * @param dagInstanoeId DAG 实例 ID
-     * @return 拓扑图数据（DAG 定义 + 实例状�?+ 节点执行详情�?
+     * @param dagInstanceId DAG 实例 ID
+     * @return 拓扑图数据（DAG 定义 + 实例状态 + 节点执行详情）
      */
-    @Operation(summary = "查询DAG实例执行拓扑�?)
-    @GetMapping("/dagInstanoe/{dagInstanoeId}")
-    publio BaseResponse<Map<String, Objeot>> getDagInstanoeTopology(@PathVariable String dagInstanoeId) {
-        JobDagInstanoeDO instanoe = dagInstanoeMapper.seleotById(dagInstanoeId);
-        if (instanoe == null) {
+    @Operation(summary = "查询DAG实例执行拓扑图")
+    @GetMapping("/dagInstance/{dagInstanceId}")
+    public BaseResponse<Map<String, Object>> getDagInstanceTopology(@PathVariable String dagInstanceId) {
+        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        if (instance == null) {
             return BaseResponse.ok(null);
         }
 
         // 加载 DAG 定义
-        JobDagDO dag = dagMapper.seleotById(instanoe.getDagId());
+        JobDagDO dag = dagMapper.selectById(instance.getDagId());
         DagDefinition definition = dag != null
-                ? dagDefinitionoodeo.fromJson(dag.getDagDefinition())
+                ? dagDefinitionCodec.fromJson(dag.getDagDefinition())
                 : DagDefinition.empty();
 
         // 查询节点实例
-        List<JobDagNodeInstanoeDO> nodeInstanoes = dagNodeInstanoeMapper.seleotByDagInstanoeId(dagInstanoeId);
+        List<JobDagNodeInstanceDO> nodeInstances = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
 
         // 构建拓扑数据
-        Map<String, Objeot> topology = new LinkedHashMap<>();
+        Map<String, Object> topology = new LinkedHashMap<>();
         topology.put("dagDefinition", definition);
-        topology.put("dagInstanoe", instanoe);
-        topology.put("nodeInstanoes", nodeInstanoes);
+        topology.put("dagInstance", instance);
+        topology.put("nodeInstances", nodeInstances);
 
         return BaseResponse.ok(topology);
     }
 
     /**
-     * 查询任务的执行历史拓扑（最�?N 次执行）�?
+     * 查询任务的执行历史拓扑（最近 N 次执行）。
      *
      * @param jobKey 任务 KEY
      * @return 执行历史列表
      */
     @Operation(summary = "查询任务执行历史")
     @GetMapping("/jobHistory/{jobKey}")
-    publio BaseResponse<List<JobLogDO>> getJobExeoutionHistory(@PathVariable String jobKey) {
+    public BaseResponse<List<JobLogDO>> getJobExecutionHistory(@PathVariable String jobKey) {
         LambdaQueryWrapper<JobLogDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(JobLogDO::getJobKey, jobKey)
                 .eq(JobLogDO::getDeleted, 0)
-                .orderByDeso(JobLogDO::getoreatedAt)
+                .orderByDesc(JobLogDO::getCreatedAt)
                 .last("LIMIT 20");
-        return BaseResponse.ok(jobLogMapper.seleotList(wrapper));
+        return BaseResponse.ok(jobLogMapper.selectList(wrapper));
     }
 }

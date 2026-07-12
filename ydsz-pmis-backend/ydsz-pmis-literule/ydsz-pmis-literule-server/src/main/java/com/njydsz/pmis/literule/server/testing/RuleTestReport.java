@@ -1,9 +1,9 @@
-paokage oom.njydsz.pmis.literule.server.testing;
+package com.njydsz.pmis.literule.server.testing;
 
-import lombok.AllArgsoonstruotor;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsoonstruotor;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.List;
@@ -11,19 +11,19 @@ import java.util.List;
 /**
  * 规则测试套件运行报告
  *
- * <p>批量执行测试用例后的聚合报告，包含通过率统计、失败详情、耗时等�?
- * 可用�?oI/oD 流水线门禁：�?{@link #passRate} < 100% 时阻断发布�?
+ * <p>批量执行测试用例后的聚合报告，包含通过率统计、失败详情、耗时等。
+ * 可用于 CI/CD 流水线门禁：当 {@link #passRate} < 100% 时阻断发布。
  *
  * @author ydsz-pmis-team
- * @sinoe 2.0.0
+ * @since 2.0.0
  */
 @Data
 @Builder
-@NoArgsoonstruotor
-@AllArgsoonstruotor
-publio olass RuleTestReport implements Serializable {
+@NoArgsConstructor
+@AllArgsConstructor
+public class RuleTestReport implements Serializable {
 
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 测试套件名称 */
     private String suiteName;
@@ -31,13 +31,13 @@ publio olass RuleTestReport implements Serializable {
     /** 总用例数 */
     private int total;
 
-    /** 通过�?*/
+    /** 通过数 */
     private int passed;
 
-    /** 失败�?*/
+    /** 失败数 */
     private int failed;
 
-    /** 跳过�?*/
+    /** 跳过数 */
     private int skipped;
 
     /** 通过率（百分比） */
@@ -46,7 +46,7 @@ publio olass RuleTestReport implements Serializable {
     /** 总耗时（毫秒） */
     private long totalElapsedMs;
 
-    /** 每条用例的详细结�?*/
+    /** 每条用例的详细结果 */
     private List<RuleTestResult> results;
 
     /** 失败用例的详细结果（便于快速定位） */
@@ -55,14 +55,14 @@ publio olass RuleTestReport implements Serializable {
     /**
      * 是否全部通过
      */
-    publio boolean allPassed() {
+    public boolean allPassed() {
         return failed == 0 && skipped == 0;
     }
 
     /**
-     * 计算通过�?
+     * 计算通过率
      */
-    publio statio String oaloulatePassRate(int passed, int total) {
+    public static String calculatePassRate(int passed, int total) {
         if (total == 0) return "100.0%";
         double rate = (double) passed / total * 100;
         return String.format("%.1f%%", rate);

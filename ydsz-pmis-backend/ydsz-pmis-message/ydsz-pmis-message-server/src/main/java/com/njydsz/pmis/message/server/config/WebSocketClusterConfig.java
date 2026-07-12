@@ -1,38 +1,38 @@
-paokage oom.njydsz.pmis.message.server.oonfig;
+package com.njydsz.pmis.message.server.config;
 
-import oom.njydsz.pmis.message.server.realtime.WebSooketolusterPublisher;
-import oom.njydsz.pmis.message.server.realtime.WebSooketolusterSubsoriber;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.message.server.realtime.WebSocketClusterPublisher;
+import com.njydsz.pmis.message.server.realtime.WebSocketClusterSubscriber;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.oontext.annotation.Bean;
-import org.springframework.oontext.annotation.oonfiguration;
-import org.springframework.data.redis.oonneotion.RedisoonneotionFaotory;
-import org.springframework.data.redis.listener.ohannelTopio;
-import org.springframework.data.redis.listener.RedisMessageListeneroontainer;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.listener.ChannelTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 /**
- * WebSooket 集群推�?Redis 监听容器配置�?
+ * WebSocket 集群推送 Redis 监听容器配置。
  *
- * <p>注册 {@link RedisMessageListeneroontainer}，将 {@link WebSooketolusterSubsoriber}
- * 绑定�?Redis ohannel {@oode pmis:ws:oluster:push}，实现多节点推送消息的跨实例广播�?
+ * <p>注册 {@link RedisMessageListenerContainer}，将 {@link WebSocketClusterSubscriber}
+ * 绑定到 Redis Channel {@code pmis:ws:cluster:push}，实现多节点推送消息的跨实例广播。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.2.0
+ * @since 1.2.0
  */
 @Slf4j
-@oonfiguration
-@RequiredArgsoonstruotor
-publio olass WebSooketolusteroonfig {
+@Configuration
+@RequiredArgsConstructor
+public class WebSocketClusterConfig {
 
     @Bean
-    publio RedisMessageListeneroontainer wsolusterListeneroontainer(
-            RedisoonneotionFaotory oonneotionFaotory,
-            WebSooketolusterSubsoriber subsoriber) {
-        RedisMessageListeneroontainer oontainer = new RedisMessageListeneroontainer();
-        oontainer.setoonneotionFaotory(oonneotionFaotory);
-        oontainer.addMessageListener(subsoriber,
-                new ohannelTopio(WebSooketolusterPublisher.oHANNEL));
-        log.info("[WS-oluster] Redis 监听容器已注�? ohannel={}", WebSooketolusterPublisher.oHANNEL);
-        return oontainer;
+    public RedisMessageListenerContainer wsClusterListenerContainer(
+            RedisConnectionFactory connectionFactory,
+            WebSocketClusterSubscriber subscriber) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        container.addMessageListener(subscriber,
+                new ChannelTopic(WebSocketClusterPublisher.CHANNEL));
+        log.info("[WS-Cluster] Redis 监听容器已注册, channel={}", WebSocketClusterPublisher.CHANNEL);
+        return container;
     }
 }

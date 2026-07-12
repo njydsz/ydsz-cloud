@@ -1,172 +1,172 @@
-paokage oom.njydsz.pmis.oronjob.server.oore.sharding;
+package com.njydsz.pmis.cronjob.server.core.sharding;
 
-import oom.njydsz.pmis.oronjob.server.oore.disoovery.NodeDisooveryStrategy;
-import oom.njydsz.pmis.oronjob.domain.entity.job.JobNodeDO;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.cronjob.server.core.discovery.NodeDiscoveryStrategy;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.faotory.ObjeotProvider;
-import org.springframework.oloud.olient.disoovery.event.HeartbeatEvent;
-import org.springframework.oontext.event.EventListener;
-import org.springframework.stereotype.oomponent;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.cloud.client.discovery.event.HeartbeatEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
-import java.util.oonourrent.oonourrentHashMap;
-import java.util.oonourrent.atomio.AtomioLong;
-import java.util.stream.oolleotors;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 /**
- * P1-9: 分片实时重平衡监听器�?
+ * P1-9: 分片实时重平衡监听器。
  *
- * <p>当集群中节点实例发生变化（新�?下线）时，自动检测需要重新分片的运行中任务，
- * 并通知 Leader 节点重新计算分片分配方案�?
+ * <p>当集群中节点实例发生变化（新增/下线）时，自动检测需要重新分片的运行中任务，
+ * 并通知 Leader 节点重新计算分片分配方案。
  *
  * <h3>工作流程</h3>
  * <ol>
- *   <li>监听 Spring oloud {@link HeartbeatEvent}（Naoos 服务发现心跳触发�?/li>
+ *   <li>监听 Spring Cloud {@link HeartbeatEvent}（Nacos 服务发现心跳触发）</li>
  *   <li>对比当前在线节点列表与上次缓存的节点列表</li>
  *   <li>检测到节点变化时：
  *     <ul>
- *       <li>记录变更日志（新�?移除了哪些节点）</li>
- *       <li>标记需要重平衡（设�?dirty flag�?/li>
+ *       <li>记录变更日志（新增/移除了哪些节点）</li>
+ *       <li>标记需要重平衡（设置 dirty flag）</li>
  *     </ul>
  *   </li>
- *   <li>Leader 节点在下一�?JobSoanner 扫描周期时自动使用新的节点列表进行分片分�?/li>
+ *   <li>Leader 节点在下一次 JobScanner 扫描周期时自动使用新的节点列表进行分片分配</li>
  * </ol>
  *
  * <h3>设计要点</h3>
  * <ul>
- *   <li>�?Leader 节点执行重平衡逻辑（非 Leader 跳过�?/li>
- *   <li>使用心跳事件驱动而非轮询，降低延�?/li>
- *   <li>防抖：连续心跳事件在 5s 内只处理一�?/li>
+ *   <li>仅 Leader 节点执行重平衡逻辑（非 Leader 跳过）</li>
+ *   <li>使用心跳事件驱动而非轮询，降低延迟</li>
+ *   <li>防抖：连续心跳事件在 5s 内只处理一次</li>
  *   <li>记录节点变更历史，供运维查看</li>
  * </ul>
  *
- * <p>对标 ElastioJob 的分片重平衡机制：实例变更后自动感知并重新分片�?
+ * <p>对标 ElasticJob 的分片重平衡机制：实例变更后自动感知并重新分片。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.2.0
+ * @since 1.2.0
  */
 @Slf4j
-@oomponent
-@RequiredArgsoonstruotor
-publio olass ShardRebalanoeListener {
+@Component
+@RequiredArgsConstructor
+public class ShardRebalanceListener {
 
-    private final ObjeotProvider<NodeDisooveryStrategy> nodeDisooveryStrategyProvider;
+    private final ObjectProvider<NodeDiscoveryStrategy> nodeDiscoveryStrategyProvider;
 
-    /** 上次缓存的在线节�?ID 列表（用于对比变化） */
+    /** 上次缓存的在线节点 ID 列表（用于对比变化） */
     private volatile List<String> lastNodeIds = List.of();
 
-    /** 上次处理时间戳（防抖�?s 内只处理一次） */
-    private final AtomioLong lastProoessTime = new AtomioLong(0);
+    /** 上次处理时间戳（防抖，5s 内只处理一次） */
+    private final AtomicLong lastProcessTime = new AtomicLong(0);
 
     /** 防抖间隔（毫秒） */
-    private statio final long DEBOUNoE_INTERVAL_MS = 5000;
+    private static final long DEBOUNCE_INTERVAL_MS = 5000;
 
-    /** 节点变更历史记录（key=时间�? value=变更描述�?*/
-    private final Map<Long, String> ohangeHistory = new oonourrentHashMap<>();
+    /** 节点变更历史记录（key=时间戳, value=变更描述） */
+    private final Map<Long, String> changeHistory = new ConcurrentHashMap<>();
 
-    /** 最大历史记录条�?*/
-    private statio final int MAX_HISTORY = 50;
+    /** 最大历史记录条数 */
+    private static final int MAX_HISTORY = 50;
 
     /**
-     * 监听 Spring oloud 心跳事件（Naoos 服务发现�?~10s 触发一次）�?
+     * 监听 Spring Cloud 心跳事件（Nacos 服务发现每 ~10s 触发一次）。
      *
-     * <p>当检测到节点列表变化时，记录变更并标记需要重平衡�?
-     * Leader 节点�?JobSoanner 会在下一次扫描时自动使用新的节点列表�?
+     * <p>当检测到节点列表变化时，记录变更并标记需要重平衡。
+     * Leader 节点的 JobScanner 会在下一次扫描时自动使用新的节点列表。
      *
      * @param event 心跳事件
      */
     @EventListener
-    publio void onHeartbeat(HeartbeatEvent event) {
-        NodeDisooveryStrategy strategy = nodeDisooveryStrategyProvider.getIfAvailable();
+    public void onHeartbeat(HeartbeatEvent event) {
+        NodeDiscoveryStrategy strategy = nodeDiscoveryStrategyProvider.getIfAvailable();
         if (strategy == null) {
             return;
         }
 
-        // 防抖�?s 内只处理一�?
-        long now = System.ourrentTimeMillis();
-        long lastTime = lastProoessTime.get();
-        if (now - lastTime < DEBOUNoE_INTERVAL_MS) {
+        // 防抖：5s 内只处理一次
+        long now = System.currentTimeMillis();
+        long lastTime = lastProcessTime.get();
+        if (now - lastTime < DEBOUNCE_INTERVAL_MS) {
             return;
         }
-        if (!lastProoessTime.oompareAndSet(lastTime, now)) {
+        if (!lastProcessTime.compareAndSet(lastTime, now)) {
             return;
         }
 
         try {
             List<JobNodeDO> onlineNodes = strategy.getOnlineNodes();
-            List<String> ourrentIds = onlineNodes.stream()
+            List<String> currentIds = onlineNodes.stream()
                     .map(JobNodeDO::getNodeId)
                     .sorted()
-                    .oolleot(oolleotors.toList());
+                    .collect(Collectors.toList());
 
             // 对比变化
-            if (!ourrentIds.equals(lastNodeIds)) {
-                deteotAndLogohanges(lastNodeIds, ourrentIds);
-                lastNodeIds = ourrentIds;
-                log.info("[ShardRebalanoe] 节点列表已更�? 下次分片分配将使用新列表: ourrentNodeoount={}",
-                        ourrentIds.size());
+            if (!currentIds.equals(lastNodeIds)) {
+                detectAndLogChanges(lastNodeIds, currentIds);
+                lastNodeIds = currentIds;
+                log.info("[ShardRebalance] 节点列表已更新, 下次分片分配将使用新列表: currentNodeCount={}",
+                        currentIds.size());
             }
-        } oatoh (Exoeption e) {
-            log.debug("[ShardRebalanoe] 心跳事件处理异常: reason={}", e.getMessage());
+        } catch (Exception e) {
+            log.debug("[ShardRebalance] 心跳事件处理异常: reason={}", e.getMessage());
         }
     }
 
     /**
-     * 检测节点变化并记录日志�?
+     * 检测节点变化并记录日志。
      *
-     * @param oldIds 旧节�?ID 列表
-     * @param newIds 新节�?ID 列表
+     * @param oldIds 旧节点 ID 列表
+     * @param newIds 新节点 ID 列表
      */
-    private void deteotAndLogohanges(List<String> oldIds, List<String> newIds) {
+    private void detectAndLogChanges(List<String> oldIds, List<String> newIds) {
         List<String> added = newIds.stream()
-                .filter(id -> !oldIds.oontains(id))
+                .filter(id -> !oldIds.contains(id))
                 .toList();
         List<String> removed = oldIds.stream()
-                .filter(id -> !newIds.oontains(id))
+                .filter(id -> !newIds.contains(id))
                 .toList();
 
         if (!added.isEmpty()) {
-            log.info("[ShardRebalanoe] 节点上线: {}", added);
+            log.info("[ShardRebalance] 节点上线: {}", added);
         }
         if (!removed.isEmpty()) {
-            log.warn("[ShardRebalanoe] 节点下线: {}（FailoverSoanner 将自动转移其任务�?, removed);
+            log.warn("[ShardRebalance] 节点下线: {}（FailoverScanner 将自动转移其任务）", removed);
         }
 
         // 记录变更历史
         if (!added.isEmpty() || !removed.isEmpty()) {
-            long timestamp = System.ourrentTimeMillis();
-            String desoription = String.format("+%s -%s", added, removed);
-            ohangeHistory.put(timestamp, desoription);
+            long timestamp = System.currentTimeMillis();
+            String description = String.format("+%s -%s", added, removed);
+            changeHistory.put(timestamp, description);
 
-            // 清理过旧的历史记�?
-            if (ohangeHistory.size() > MAX_HISTORY) {
-                long oldest = ohangeHistory.keySet().stream().min((a, b) -> Long.oompare(a, b)).orElse(0L);
+            // 清理过旧的历史记录
+            if (changeHistory.size() > MAX_HISTORY) {
+                long oldest = changeHistory.keySet().stream().min((a, b) -> Long.compare(a, b)).orElse(0L);
                 if (oldest > 0) {
-                    ohangeHistory.remove(oldest);
+                    changeHistory.remove(oldest);
                 }
             }
         }
     }
 
     /**
-     * 获取节点变更历史（供监控 API 使用）�?
+     * 获取节点变更历史（供监控 API 使用）。
      *
-     * @return 变更历史 Map（时间戳 �?变更描述�?
+     * @return 变更历史 Map（时间戳 → 变更描述）
      */
-    publio Map<Long, String> getohangeHistory() {
-        return new oonourrentHashMap<>(ohangeHistory);
+    public Map<Long, String> getChangeHistory() {
+        return new ConcurrentHashMap<>(changeHistory);
     }
 
     /**
-     * 手动触发重平衡检查（供管�?API 使用）�?
+     * 手动触发重平衡检查（供管理 API 使用）。
      *
-     * <p>强制刷新缓存的节点列表，下次分片分配时使用最新列表�?
+     * <p>强制刷新缓存的节点列表，下次分片分配时使用最新列表。
      */
-    publio void foroeRebalanoe() {
+    public void forceRebalance() {
         lastNodeIds = List.of();
-        lastProoessTime.set(0);
-        log.info("[ShardRebalanoe] 手动触发重平衡检�?);
+        lastProcessTime.set(0);
+        log.info("[ShardRebalance] 手动触发重平衡检查");
     }
 }

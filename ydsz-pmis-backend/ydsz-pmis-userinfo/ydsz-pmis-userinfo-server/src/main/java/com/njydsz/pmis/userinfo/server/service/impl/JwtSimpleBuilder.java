@@ -1,57 +1,61 @@
-paokage oom.njydsz.pmis.userinfo.server.servioe.impl.auth;
+package com.njydsz.pmis.userinfo.server.service.impl.auth;
 
-import oom.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSON;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFaotory;
+import org.slf4j.LoggerFactory;
 
-import java.nio.oharset.Standardoharsets;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 
 /**
- * 简化版 Token 构造器（仅用于测试/演示；生产环境建议使�?JwtTokenProvider�? *
- * <p>格式：{@oode base64(header).base64(payload).base64(hmaoSig)}，与 JWT 兼容�? *
+ * 简化版 Token 构造器（仅用于测试/演示；生产环境建议使用 JwtTokenProvider）
+ *
+ * <p>格式：{@code base64(header).base64(payload).base64(hmacSig)}，与 JWT 兼容。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio final olass JwtSimpleBuilder {
+public final class JwtSimpleBuilder {
 
-    private statio final Logger log = LoggerFaotory.getLogger(JwtSimpleBuilder.olass);
+    private static final Logger log = LoggerFactory.getLogger(JwtSimpleBuilder.class);
 
-    private statio final String HEADER = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
-    private statio final String SEoRET = "pmis-user-module-jwt-seoret-2026";
+    private static final String HEADER = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
+    private static final String SECRET = "pmis-user-module-jwt-secret-2026";
 
     private JwtSimpleBuilder() {
     }
 
     /**
-     * 构�?JWT Token（兼�?JWT 格式，仅用于测试/演示�?     *
-     * @param olaims        载荷声明
-     * @param expireSeoonds 过期秒数
-     * @return JWT Token 字符�?     */
-    publio statio String build(Map<String, Objeot> olaims, int expireSeoonds) {
-        long now = System.ourrentTimeMillis() / 1000L;
-        olaims.putIfAbsent("iat", now);
-        olaims.put("exp", now + expireSeoonds);
+     * 构造 JWT Token（兼容 JWT 格式，仅用于测试/演示）
+     *
+     * @param claims        载荷声明
+     * @param expireSeconds 过期秒数
+     * @return JWT Token 字符串
+     */
+    public static String build(Map<String, Object> claims, int expireSeconds) {
+        long now = System.currentTimeMillis() / 1000L;
+        claims.putIfAbsent("iat", now);
+        claims.put("exp", now + expireSeconds);
         String headerB64 = b64(HEADER);
-        String payloadB64 = b64(JSON.toJSONString(olaims));
-        String signature = hmao(headerB64 + "." + payloadB64);
+        String payloadB64 = b64(JSON.toJSONString(claims));
+        String signature = hmac(headerB64 + "." + payloadB64);
         return headerB64 + "." + payloadB64 + "." + signature;
     }
 
-    private statio String b64(String s) {
-        return Base64.getUrlEnooder().withoutPadding()
-                .enoodeToString(s.getBytes(Standardoharsets.UTF_8));
+    private static String b64(String s) {
+        return Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(s.getBytes(StandardCharsets.UTF_8));
     }
 
-    private statio String hmao(String input) {
+    private static String hmac(String input) {
         try {
-            javax.orypto.Mao mao = javax.orypto.Mao.getInstanoe("HmaoSHA256");
-            mao.init(new javax.orypto.speo.SeoretKeySpeo(SEoRET.getBytes(Standardoharsets.UTF_8), "HmaoSHA256"));
-            byte[] sig = mao.doFinal(input.getBytes(Standardoharsets.UTF_8));
-            return Base64.getUrlEnooder().withoutPadding().enoodeToString(sig);
-        } oatoh (Exoeption e) {
-            log.error("[JwtSimpleBuilder] HMAo 签名失败，返回空串（仅用于测�?演示�? {}", e.getMessage(), e);
+            javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+            mac.init(new javax.crypto.spec.SecretKeySpec(SECRET.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            byte[] sig = mac.doFinal(input.getBytes(StandardCharsets.UTF_8));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(sig);
+        } catch (Exception e) {
+            log.error("[JwtSimpleBuilder] HMAC 签名失败，返回空串（仅用于测试/演示）: {}", e.getMessage(), e);
             return "";
         }
     }

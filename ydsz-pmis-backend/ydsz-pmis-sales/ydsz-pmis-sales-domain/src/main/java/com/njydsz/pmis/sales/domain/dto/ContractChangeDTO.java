@@ -1,61 +1,61 @@
-paokage oom.njydsz.pmis.sales.domain.dto;
+package com.njydsz.pmis.sales.domain.dto;
 
-import io.swagger.v3.oas.annotations.media.Sohema;
-import io.swagger.v3.oas.annotations.media.Sohema.RequiredMode;
-import jakarta.validation.oonstraints.NotBlank;
-import jakarta.validation.oonstraints.NotNull;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 
 /**
  * 合同变更申请 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@Sohema(desoription = "合同变更申请")
-publio olass oontraotohangeDTO implements Serializable {
+@Schema(description = "合同变更申请")
+public class ContractChangeDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 合同 ID */
     @NotNull
-    @Sohema(desoription = "合同 ID", requiredMode = RequiredMode.REQUIRED)
-    private String oontraotId;
+    @Schema(description = "合同 ID", requiredMode = RequiredMode.REQUIRED)
+    private String contractId;
 
     /** 变更编号 */
     @NotBlank
-    @Sohema(desoription = "变更编号", requiredMode = RequiredMode.REQUIRED)
-    private String ohangeoode;
+    @Schema(description = "变更编号", requiredMode = RequiredMode.REQUIRED)
+    private String changeCode;
 
-    /** 变更类型（SoOPE/AMOUNT/TERM/PERSONNEL/PROGRESS�?*/
+    /** 变更类型（SCOPE/AMOUNT/TERM/PERSONNEL/PROGRESS） */
     @NotBlank
-    @Sohema(desoription = "变更类型 SoOPE/AMOUNT/TERM/PERSONNEL/PROGRESS", requiredMode = RequiredMode.REQUIRED)
-    private String ohangeType;
+    @Schema(description = "变更类型 SCOPE/AMOUNT/TERM/PERSONNEL/PROGRESS", requiredMode = RequiredMode.REQUIRED)
+    private String changeType;
 
     /** 变更原因 */
-    @Sohema(desoription = "变更原因")
-    private String ohangeReason;
+    @Schema(description = "变更原因")
+    private String changeReason;
 
-    /** 变更前�?*/
-    @Sohema(desoription = "变更前�?)
+    /** 变更前值 */
+    @Schema(description = "变更前值")
     private String beforeValue;
 
-    /** 变更后�?*/
-    @Sohema(desoription = "变更后�?)
+    /** 变更后值 */
+    @Schema(description = "变更后值")
     private String afterValue;
 
     /** 金额变化 */
-    @Sohema(desoription = "金额变化")
-    private BigDeoimal amountDelta;
+    @Schema(description = "金额变化")
+    private BigDecimal amountDelta;
 
     /** 影响分析 */
-    @Sohema(desoription = "影响分析")
-    private String impaotAnalysis;
+    @Schema(description = "影响分析")
+    private String impactAnalysis;
 }

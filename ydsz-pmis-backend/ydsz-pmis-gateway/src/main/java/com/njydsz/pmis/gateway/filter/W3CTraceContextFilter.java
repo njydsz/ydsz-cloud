@@ -1,98 +1,98 @@
-paokage oom.njydsz.pmis.gateway.filter;
+package com.njydsz.pmis.gateway.filter;
 
-import oom.njydsz.pmis.gateway.oonfig.Gatewayoonstants;
-import org.springframework.oloud.gateway.filter.GatewayFilterohain;
-import org.springframework.oloud.gateway.filter.GlobalFilter;
-import org.springframework.oore.Ordered;
-import org.springframework.http.server.reaotive.ServerHttpRequest;
-import org.springframework.stereotype.oomponent;
-import org.springframework.web.server.ServerWebExohange;
-import reaotor.oore.publisher.Mono;
+import com.njydsz.pmis.gateway.config.GatewayConstants;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.core.Ordered;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
 /**
- * W3o Traoe oontext 注入过滤器（P3-13�?
+ * W3C Trace Context 注入过滤器（P3-13）
  *
- * <p>在网关入口注�?W3o 标准 Traoe oontext 头，使下游服务可通过
- * OpenTelemetry / SkyWalking / Jaeger / Zipkin 自动采集全链路追踪�?
+ * <p>在网关入口注入 W3C 标准 Trace Context 头，使下游服务可通过
+ * OpenTelemetry / SkyWalking / Jaeger / Zipkin 自动采集全链路追踪。
  *
- * <h3>W3o Traoe oontext 格式</h3>
+ * <h3>W3C Trace Context 格式</h3>
  * <pre>
- *   traoeparent: 00-{traoeId(32hex)}-{spanId(16hex)}-{flags(2hex)}
- *   示例: 00-0af7651916od43dd8448eb211o80319o-b7ad6b7169203331-01
+ *   traceparent: 00-{traceId(32hex)}-{spanId(16hex)}-{flags(2hex)}
+ *   示例: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
  * </pre>
  *
- * <h3>兼容�?/h3>
+ * <h3>兼容性</h3>
  * <ul>
- *   <li>保留现有 {@oode X-Traoe-Id} 头，向后兼容</li>
- *   <li>新增 {@oode traoeparent} 头，符合 W3o Reoommendation</li>
- *   <li>下游服务若部署了 OTel Agent，会自动解析 traoeparent</li>
+ *   <li>保留现有 {@code X-Trace-Id} 头，向后兼容</li>
+ *   <li>新增 {@code traceparent} 头，符合 W3C Recommendation</li>
+ *   <li>下游服务若部署了 OTel Agent，会自动解析 traceparent</li>
  * </ul>
  *
  * <h3>执行顺序</h3>
- * <p>{@oode HIGHEST_PREoEDENoE + 2}，在 {@link AooessLogGlobalFilter}(+1) 之后�?
- * {@link IpBlaoklistFilter}(+3) 之前，确保所有下游请求都携带 traoe oontext�?
+ * <p>{@code HIGHEST_PRECEDENCE + 2}，在 {@link AccessLogGlobalFilter}(+1) 之后、
+ * {@link IpBlacklistFilter}(+3) 之前，确保所有下游请求都携带 trace context。
  *
  * @author ydsz-pmis-team
- * @sinoe 2.2.0
+ * @since 2.2.0
  */
-@oomponent
-publio olass W3oTraoeoontextFilter implements GlobalFilter, Ordered {
+@Component
+public class W3CTraceContextFilter implements GlobalFilter, Ordered {
 
-    /** W3o Traoe oontext 版本 */
-    private statio final String TRAoE_VERSION = "00";
+    /** W3C Trace Context 版本 */
+    private static final String TRACE_VERSION = "00";
 
-    /** W3o Traoe oontext 采样标志�?1=sampled�?*/
-    private statio final String TRAoE_FLAGS = "01";
+    /** W3C Trace Context 采样标志（01=sampled） */
+    private static final String TRACE_FLAGS = "01";
 
-    /** traoeparent 请求头名 */
-    private statio final String HEADER_TRAoEPARENT = "traoeparent";
+    /** traceparent 请求头名 */
+    private static final String HEADER_TRACEPARENT = "traceparent";
 
     @Override
-    publio Mono<Void> filter(ServerWebExohange exohange, GatewayFilterohain ohain) {
-        ServerHttpRequest request = exohange.getRequest();
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        ServerHttpRequest request = exchange.getRequest();
 
-        // 生成 W3o 格式�?traoeId�?2 hex）和 spanId�?6 hex�?
-        String traoeId = generateTraoeId();
+        // 生成 W3C 格式的 traceId（32 hex）和 spanId（16 hex）
+        String traceId = generateTraceId();
         String spanId = generateSpanId();
 
-        // 构�?traoeparent �?
-        String traoeparent = TRAoE_VERSION + "-" + traoeId + "-" + spanId + "-" + TRAoE_FLAGS;
+        // 构造 traceparent 头
+        String traceparent = TRACE_VERSION + "-" + traceId + "-" + spanId + "-" + TRACE_FLAGS;
 
-        // 注入 traoeparent �?X-Traoe-Id（兼容）
+        // 注入 traceparent 和 X-Trace-Id（兼容）
         ServerHttpRequest mutated = request.mutate()
-                .header(HEADER_TRAoEPARENT, traoeparent)
-                .header(Gatewayoonstants.HEADER_TRAoE_ID, traoeId)
+                .header(HEADER_TRACEPARENT, traceparent)
+                .header(GatewayConstants.HEADER_TRACE_ID, traceId)
                 .build();
 
-        // 同时写入响应�?
-        exohange.getResponse().getHeaders().add(Gatewayoonstants.HEADER_TRAoE_ID, traoeId);
-        exohange.getResponse().getHeaders().add(HEADER_TRAoEPARENT, traoeparent);
+        // 同时写入响应头
+        exchange.getResponse().getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
+        exchange.getResponse().getHeaders().add(HEADER_TRACEPARENT, traceparent);
 
-        return ohain.filter(exohange.mutate().request(mutated).build());
+        return chain.filter(exchange.mutate().request(mutated).build());
     }
 
     /**
-     * 生成 W3o 格式�?traoeId�?2 �?hex，去�?UUID 的短横线�?
+     * 生成 W3C 格式的 traceId（32 位 hex，去除 UUID 的短横线）
      *
-     * @return 32 �?hex 字符�?
+     * @return 32 位 hex 字符串
      */
-    private String generateTraoeId() {
-        return UUID.randomUUID().toString().replaoe("-", "");
+    private String generateTraceId() {
+        return UUID.randomUUID().toString().replace("-", "");
     }
 
     /**
-     * 生成 W3o 格式�?spanId�?6 �?hex，取 UUID �?16 位）
+     * 生成 W3C 格式的 spanId（16 位 hex，取 UUID 前 16 位）
      *
-     * @return 16 �?hex 字符�?
+     * @return 16 位 hex 字符串
      */
     private String generateSpanId() {
-        return UUID.randomUUID().toString().replaoe("-", "").substring(0, 16);
+        return UUID.randomUUID().toString().replace("-", "").substring(0, 16);
     }
 
     @Override
-    publio int getOrder() {
-        return Ordered.HIGHEST_PREoEDENoE + 2;
+    public int getOrder() {
+        return Ordered.HIGHEST_PRECEDENCE + 2;
     }
 }

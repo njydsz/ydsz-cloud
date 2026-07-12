@@ -1,188 +1,188 @@
-paokage oom.njydsz.pmis.message.web.oontroller.oore;
+package com.njydsz.pmis.message.web.controller.core;
 
-import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.Idempotent;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.oommon.feign.MessageRequest;
-import oom.njydsz.pmis.oommon.feign.MessageResult;
-import oom.njydsz.pmis.oommon.permission.Permissionoodes;
-import oom.njydsz.pmis.message.domain.dto.batoh.BatohSendResult;
-import oom.njydsz.pmis.message.domain.dto.oore.MessageLogQueryDTO;
-import oom.njydsz.pmis.message.domain.dto.oore.MessageSendDTO;
-import oom.njydsz.pmis.message.domain.entity.oore.MsgLogDO;
-import oom.njydsz.pmis.message.server.produoer.RooketMQMessageProduoer;
-import oom.njydsz.pmis.message.server.servioe.oore.MessageServioe;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.message.domain.dto.batch.BatchSendResult;
+import com.njydsz.pmis.message.domain.dto.core.MessageLogQueryDTO;
+import com.njydsz.pmis.message.domain.dto.core.MessageSendDTO;
+import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
+import com.njydsz.pmis.message.server.producer.RocketMQMessageProducer;
+import com.njydsz.pmis.message.server.service.core.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsoonstruotor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.faotory.ObjeotProvider;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.Restoontroller;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 /**
- * 消息发�?oontroller�?
+ * 消息发送 Controller。
  *
  * <p>提供同步 / 异步两种发送入口：
  * <ul>
- *   <li>{@oode /send} / {@oode /send-direot}：同步发送，阻塞返回供应商结�?/li>
- *   <li>{@oode /send-asyno}：投递到 RooketMQ 异步处理，立即返�?messageId 供追�?/li>
+ *   <li>{@code /send} / {@code /send-direct}：同步发送，阻塞返回供应商结果</li>
+ *   <li>{@code /send-async}：投递到 RocketMQ 异步处理，立即返回 messageId 供追踪</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Tag(name = "消息发�?, desoription = "消息发送与发送日志查�?)
-@Restoontroller
+@Tag(name = "消息发送", description = "消息发送与发送日志查询")
+@RestController
 @RequestMapping("/message")
-@RequiredArgsoonstruotor
-publio olass Messageoontroller {
+@RequiredArgsConstructor
+public class MessageController {
 
-    /** 消息发送服�?*/
-    private final MessageServioe messageServioe;
-    /** RooketMQ 生产者（条件装配，未启用时为空） */
-    private final ObjeotProvider<RooketMQMessageProduoer> produoerProvider;
+    /** 消息发送服务 */
+    private final MessageService messageService;
+    /** RocketMQ 生产者（条件装配，未启用时为空） */
+    private final ObjectProvider<RocketMQMessageProducer> producerProvider;
 
     /**
-     * 基于共享请求发送消息�?
+     * 基于共享请求发送消息。
      *
      * @param request 消息请求
-     * @return 发送结�?
+     * @return 发送结果
      */
-    @Operation(summary = "发送消�?基于共享请求)")
-    @AuthApiPermission(apioodes = Permissionoodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "message:send", ttlSeoonds = 5, message = "请勿重复提交")
+    @Operation(summary = "发送消息(基于共享请求)")
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
+    @Idempotent(key = "message:send", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send")
-    publio BaseResponse<MessageResult> send(@Valid @RequestBody MessageRequest request) {
-        return BaseResponse.ok(messageServioe.send(request));
+    public BaseResponse<MessageResult> send(@Valid @RequestBody MessageRequest request) {
+        return BaseResponse.ok(messageService.send(request));
     }
 
     /**
-     * 直接发送消息（使用本模�?DTO）�?
+     * 直接发送消息（使用本模块 DTO）。
      *
      * @param dto 消息发送请求体
-     * @return 发送结�?
+     * @return 发送结果
      */
-    @Operation(summary = "直接发送消�?本模�?DTO)")
-    @AuthApiPermission(apioodes = Permissionoodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "message:sendDireot", ttlSeoonds = 5, message = "请勿重复提交")
-    @PostMapping("/sendDireot")
-    publio BaseResponse<MessageResult> sendDireot(@Valid @RequestBody MessageSendDTO dto) {
-        return BaseResponse.ok(messageServioe.sendDireot(dto));
+    @Operation(summary = "直接发送消息(本模块 DTO)")
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
+    @Idempotent(key = "message:sendDirect", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/sendDirect")
+    public BaseResponse<MessageResult> sendDirect(@Valid @RequestBody MessageSendDTO dto) {
+        return BaseResponse.ok(messageService.sendDirect(dto));
     }
 
     /**
-     * 异步发送：投递到 RooketMQ，由 {@oode Messageoonsumer} 消费后调�?{@link MessageServioe#send}�?
-     * 立即返回 messageId，业务侧可通过 {@oode /log/page} 查询最终发送状态�?
+     * 异步发送：投递到 RocketMQ，由 {@code MessageConsumer} 消费后调用 {@link MessageService#send}。
+     * 立即返回 messageId，业务侧可通过 {@code /log/page} 查询最终发送状态。
      *
      * @param request 消息请求
-     * @return �?messageId 的发送结�?
+     * @return 含 messageId 的发送结果
      */
-    @Operation(summary = "异步发送消�?投�?RooketMQ)")
-    @AuthApiPermission(apioodes = Permissionoodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "message:sendAsyno", ttlSeoonds = 5, message = "请勿重复提交")
-    @PostMapping("/sendAsyno")
-    publio BaseResponse<MessageResult> sendAsyno(@Valid @RequestBody MessageRequest request) {
+    @Operation(summary = "异步发送消息(投递 RocketMQ)")
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
+    @Idempotent(key = "message:sendAsync", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/sendAsync")
+    public BaseResponse<MessageResult> sendAsync(@Valid @RequestBody MessageRequest request) {
         if (request == null) {
-            return BaseResponse.failed(StandardResultoode.BAD_REQUEST, "消息请求为空");
+            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "消息请求为空");
         }
-        RooketMQMessageProduoer produoer = produoerProvider.getIfAvailable();
-        if (produoer == null) {
-            // 未启�?RooketMQ 时降级为同步发�?
-            log.warn("[Messageoontroller] RooketMQ 未启�?降级同步发�?);
-            return BaseResponse.ok(messageServioe.send(request));
+        RocketMQMessageProducer producer = producerProvider.getIfAvailable();
+        if (producer == null) {
+            // 未启用 RocketMQ 时降级为同步发送
+            log.warn("[MessageController] RocketMQ 未启用,降级同步发送");
+            return BaseResponse.ok(messageService.send(request));
         }
         try {
-            produoer.asynoSend(request);
-            // 异步投递成�?返回 messageId 供追�?
-            MessageResult result = MessageResult.ok(request.getohannel(), request.getMessageId());
-            BaseResponse.setErrorMessage("ASYNo_QUEUED");
+            producer.asyncSend(request);
+            // 异步投递成功,返回 messageId 供追踪
+            MessageResult result = MessageResult.ok(request.getChannel(), request.getMessageId());
+            BaseResponse.setErrorMessage("ASYNC_QUEUED");
             return BaseResponse.ok(result);
-        } oatoh (Exoeption e) {
-            log.error("[Messageoontroller] 异步投递失�?降级同步: err={}", e.getMessage());
-            return BaseResponse.ok(messageServioe.send(request));
+        } catch (Exception e) {
+            log.error("[MessageController] 异步投递失败,降级同步: err={}", e.getMessage());
+            return BaseResponse.ok(messageService.send(request));
         }
     }
 
     /**
-     * 分页查询发送日志�?
+     * 分页查询发送日志。
      *
      * @param query 日志查询参数
      * @return 日志分页结果
      */
-    @Operation(summary = "发送日志分�?)
-    @AuthApiPermission(apioodes = Permissionoodes.MESSAGE_LOG_VIEW)
+    @Operation(summary = "发送日志分页")
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
     @GetMapping("/log/page")
-    publio BaseResponse<Page<MsgLogDO>> pageLog(MessageLogQueryDTO query) {
-        return BaseResponse.ok(messageServioe.pageLog(query));
+    public BaseResponse<Page<MsgLogDO>> pageLog(MessageLogQueryDTO query) {
+        return BaseResponse.ok(messageService.pageLog(query));
     }
 
     /**
-     * P2-3: 事务消息发送（RooketMQ 半消息）�?
+     * P2-3: 事务消息发送（RocketMQ 半消息）。
      *
-     * <p>通过 RooketMQ 事务消息机制,确保通知请求仅在本地事务校验（通道/模板有效性）通过后才投递�?
-     * 未配�?RooketMQ 时降级为同步发送�?
+     * <p>通过 RocketMQ 事务消息机制,确保通知请求仅在本地事务校验（通道/模板有效性）通过后才投递。
+     * 未配置 RocketMQ 时降级为同步发送。
      *
      * @param request 消息请求
-     * @return 发送结�?
+     * @return 发送结果
      */
-    @Operation(summary = "事务消息发�?RooketMQ 半消�?")
-    @AuthApiPermission(apioodes = Permissionoodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "message:sendTransaotionally", ttlSeoonds = 5, message = "请勿重复提交")
-    @PostMapping("/sendTransaotional")
-    publio BaseResponse<MessageResult> sendTransaotionally(@Valid @RequestBody MessageRequest request) {
-        return BaseResponse.ok(messageServioe.sendTransaotionally(request));
+    @Operation(summary = "事务消息发送(RocketMQ 半消息)")
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
+    @Idempotent(key = "message:sendTransactionally", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/sendTransactional")
+    public BaseResponse<MessageResult> sendTransactionally(@Valid @RequestBody MessageRequest request) {
+        return BaseResponse.ok(messageService.sendTransactionally(request));
     }
 
     /**
-     * 批量发送消息（同步循环,限制 100 �?批）�?
+     * 批量发送消息（同步循环,限制 100 条/批）。
      *
      * @param requests 消息请求列表
-     * @param batohId  批次 ID（业务侧生成,用于进度查询�?
-     * @return 批量发送结�?
+     * @param batchId  批次 ID（业务侧生成,用于进度查询）
+     * @return 批量发送结果
      */
-    @Operation(summary = "批量发送消�?限制 100 �?�?")
-    @AuthApiPermission(apioodes = Permissionoodes.NOTIF_MESSAGE_SEND)
-    @Idempotent(key = "message:batohSend", ttlSeoonds = 5, message = "请勿重复提交")
-    @PostMapping("/batohSend")
-    publio BaseResponse<BatohSendResult> batohSend(@Valid @RequestBody List<MessageRequest> requests,
-                                             @RequestParam String batohId) {
+    @Operation(summary = "批量发送消息(限制 100 条/批)")
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
+    @Idempotent(key = "message:batchSend", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/batchSend")
+    public BaseResponse<BatchSendResult> batchSend(@Valid @RequestBody List<MessageRequest> requests,
+                                             @RequestParam String batchId) {
         if (requests == null || requests.isEmpty()) {
-            return BaseResponse.failed(StandardResultoode.BAD_REQUEST, "消息列表为空");
+            return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "消息列表为空");
         }
-        return BaseResponse.ok(messageServioe.batohSend(requests, batohId));
+        return BaseResponse.ok(messageService.batchSend(requests, batchId));
     }
 
     /**
-     * 查询批次发送进度：�?bizId=batohId 分页查询发送日志�?
+     * 查询批次发送进度：按 bizId=batchId 分页查询发送日志。
      *
-     * @param batohId 批次 ID
+     * @param batchId 批次 ID
      * @param page    页码
      * @param size    每页大小
      * @return 分页日志
      */
-    @Operation(summary = "查询批次发送进�?)
-    @AuthApiPermission(apioodes = Permissionoodes.MESSAGE_LOG_VIEW)
-    @GetMapping("/batoh/{batohId}/progress")
-    publio BaseResponse<Page<MsgLogDO>> batohProgress(@PathVariable String batohId,
+    @Operation(summary = "查询批次发送进度")
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
+    @GetMapping("/batch/{batchId}/progress")
+    public BaseResponse<Page<MsgLogDO>> batchProgress(@PathVariable String batchId,
                                                 @RequestParam(defaultValue = "1") long page,
                                                 @RequestParam(defaultValue = "20") long size) {
         MessageLogQueryDTO query = new MessageLogQueryDTO();
-        query.setBizId(batohId);
+        query.setBizId(batchId);
         query.setPage(page);
         query.setSize(size);
-        return BaseResponse.ok(messageServioe.pageLog(query));
+        return BaseResponse.ok(messageService.pageLog(query));
     }
 }

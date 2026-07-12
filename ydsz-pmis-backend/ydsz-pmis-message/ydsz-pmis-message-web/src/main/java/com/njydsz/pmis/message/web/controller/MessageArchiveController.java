@@ -1,51 +1,51 @@
-paokage oom.njydsz.pmis.message.web.oontroller.arohive;
+package com.njydsz.pmis.message.web.controller.archive;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.oommon.permission.Permissionoodes;
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.njydsz.pmis.message.domain.entity.oore.MsgLogDO;
-import oom.njydsz.pmis.message.server.servioe.arohive.MessageArohiveServioe;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
+import com.njydsz.pmis.message.server.service.archive.MessageArchiveService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsoonstruotor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.Restoontroller;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 
 /**
- * 消息归档搜索 oontroller（P0-5）�?
+ * 消息归档搜索 Controller（P0-5）。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.5.0
+ * @since 1.5.0
  */
-@Tag(name = "消息归档搜索", desoription = "消息发送日志全文搜�?)
-@Restoontroller
-@RequestMapping("/arohive/searoh")
-@RequiredArgsoonstruotor
-publio olass MessageArohiveoontroller {
+@Tag(name = "消息归档搜索", description = "消息发送日志全文搜索")
+@RestController
+@RequestMapping("/archive/search")
+@RequiredArgsConstructor
+public class MessageArchiveController {
 
-    private final MessageArohiveServioe messageArohiveServioe;
+    private final MessageArchiveService messageArchiveService;
 
     @Operation(summary = "全文搜索消息日志")
-    @AuthApiPermission(apioodes = Permissionoodes.NOTIF_MESSAGE_LIST)
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_LIST)
     @GetMapping
-    publio BaseResponse<Page<MsgLogDO>> searoh(
+    public BaseResponse<Page<MsgLogDO>> search(
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String ohannel,
+            @RequestParam(required = false) String channel,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String bizType,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LooalDateTime startTime,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LooalDateTime endTime,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "20") int pageSize) {
-        Page<MsgLogDO> result = messageArohiveServioe.searoh(keyword, ohannel, status, bizType,
-                startTime, endTime, Tenantoontext.getTenantId(), pageNum, pageSize);
+        Page<MsgLogDO> result = messageArchiveService.search(keyword, channel, status, bizType,
+                startTime, endTime, TenantContext.getTenantId(), pageNum, pageSize);
         return BaseResponse.ok(result);
     }
 }

@@ -1,10 +1,10 @@
-paokage oom.njydsz.pmis.finanoe.server.engine;
+package com.njydsz.pmis.finance.server.engine;
 
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -12,33 +12,33 @@ import java.util.Map;
  * 对账报告聚合
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass ReoonoileReport implements Serializable {
+public class ReconcileReport implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    /** 校验的项�?ID */
+    /** 校验的项目 ID */
     private String initiationId;
 
     /** 校验起始时间 */
-    private LooalDateTime oheokAt;
+    private LocalDateTime checkAt;
 
     /** 总记录数 */
     private int total;
 
     /** INFO 计数 */
-    private int infooount;
+    private int infoCount;
     /** WARN 计数 */
-    private int warnoount;
+    private int warnCount;
     /** ERROR 计数 */
-    private int erroroount;
+    private int errorCount;
 
     /** 按类型分组的计数 */
-    private Map<String, Long> oountByType;
+    private Map<String, Long> countByType;
 
     /** 详细结果列表 */
-    private List<ReoonoileResult> results;
+    private List<ReconcileResult> results;
 }

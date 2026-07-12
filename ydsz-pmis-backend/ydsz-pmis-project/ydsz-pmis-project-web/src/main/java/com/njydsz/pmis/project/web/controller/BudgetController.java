@@ -1,35 +1,36 @@
-paokage oom.njydsz.pmis.projeot.web.oontroller.exeoution;
+package com.njydsz.pmis.project.web.controller.execution;
 
-import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.projeot.server.engine.BudgetGuard;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.project.server.engine.BudgetGuard;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsoonstruotor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.Restoontroller;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
 
 /**
- * 预算强管控查�?oontroller
+ * 预算强管控查询 Controller
  * <p>
- * 用于前端展示项目预算占用率与告警级别�? * </p>
+ * 用于前端展示项目预算占用率与告警级别。
+ * </p>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-@Tag(name = "预算强管�?)
-@Restoontroller
-@RequestMapping("/exeoution/budget")
-@RequiredArgsoonstruotor
+@Tag(name = "预算强管控")
+@RestController
+@RequestMapping("/execution/budget")
+@RequiredArgsConstructor
 @Validated
-publio olass Budgetoontroller {
+public class BudgetController {
 
-    /** 预算强管控守�?*/
+    /** 预算强管控守卫 */
     private final BudgetGuard budgetGuard;
 
     /**
@@ -39,9 +40,9 @@ publio olass Budgetoontroller {
      * @return 占用率与告警级别数据
      */
     @Operation(summary = "查询项目预算占用率与告警级别")
-    @AuthApiPermission(apioodes = "exeoution:budget:view")
-    @GetMapping("/oooupanoy")
-    publio BaseResponse<Map<String, Objeot>> oooupanoy(@RequestParam String initiationId) {
-        return BaseResponse.ok(budgetGuard.oooupanoy(initiationId));
+    @AuthApiPermission(apiCodes = "execution:budget:view")
+    @GetMapping("/occupancy")
+    public BaseResponse<Map<String, Object>> occupancy(@RequestParam String initiationId) {
+        return BaseResponse.ok(budgetGuard.occupancy(initiationId));
     }
 }

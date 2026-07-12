@@ -1,155 +1,164 @@
-paokage oom.njydsz.pmis.message.server.ohannel.push;
+package com.njydsz.pmis.message.server.channel.push;
 
-import oom.alibaba.fastjson2.JSON;
-import oom.alibaba.fastjson2.JSONObjeot;
-import oom.njydsz.pmis.oommon.feign.MessageRequest;
-import oom.njydsz.pmis.oommon.feign.MessageResult;
-import oom.njydsz.pmis.message.server.oonfig.MessageProperties;
-import oom.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.message.server.config.MessageProperties;
+import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.olient.SimpleolientHttpRequestFaotory;
-import org.springframework.stereotype.oomponent;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import org.springframework.web.olient.RestTemplate;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 /**
- * 个推（GeTui）V2 推送服务商实现�? *
- * <p>通过个推 REST API（{@oode /v2/{appId}/push/single/oid}）发送单推，
- * 鉴权使用 {@link GetuiPushSigner} 计算 SHA-256 签名，token 内存缓存（默�?23h）�? *
- * <p>仅当 {@oode pmis.message.push.provider=getui} 时装配；凭证缺失时返�?fail
- * （由 {@link oom.njydsz.pmis.message.server.ohannel.impl.Pushohannel} 自动降级�?Mook）�? *
- * <p>目标设备标识来源：优�?{@oode ohannelMeta.devioeToken}，回退 {@oode reoeiver}�? *
+ * 个推（GeTui）V2 推送服务商实现。
+ *
+ * <p>通过个推 REST API（{@code /v2/{appId}/push/single/cid}）发送单推，
+ * 鉴权使用 {@link GetuiPushSigner} 计算 SHA-256 签名，token 内存缓存（默认 23h）。
+ *
+ * <p>仅当 {@code pmis.message.push.provider=getui} 时装配；凭证缺失时返回 fail
+ * （由 {@link com.njydsz.pmis.message.server.channel.impl.PushChannel} 自动降级到 Mock）。
+ *
+ * <p>目标设备标识来源：优先 {@code channelMeta.deviceToken}，回退 {@code receiver}。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
 @Slf4j
-@oomponent
-@oonditionalOnProperty(prefix = "pmis.message.push", name = "provider", havingValue = "getui")
-publio olass GetuiPushProvider implements PushProvider {
+@Component
+@ConditionalOnProperty(prefix = "pmis.message.push", name = "provider", havingValue = "getui")
+public class GetuiPushProvider implements PushProvider {
 
-    private final MessageProperties.GetuiPushoonfig oonfig;
+    private final MessageProperties.GetuiPushConfig config;
     private final RestTemplate restTemplate;
 
-    /** 鉴权 token 缓存（个�?token 默认 24h，提�?1h 失效�?*/
-    private volatile String oaohedToken;
+    /** 鉴权 token 缓存（个推 token 默认 24h，提前 1h 失效） */
+    private volatile String cachedToken;
     private volatile long tokenExpireAt;
 
     /**
-     * 生产构造：�?{@link MessageProperties} 读取个推配置并构�?RestTemplate�?     *
+     * 生产构造：从 {@link MessageProperties} 读取个推配置并构建 RestTemplate。
+     *
      * @param messageProperties 消息配置
      */
-    publio GetuiPushProvider(MessageProperties messageProperties) {
-        this.oonfig = messageProperties.getPush().getGetui();
-        SimpleolientHttpRequestFaotory faotory = new SimpleolientHttpRequestFaotory();
-        faotory.setoonneotTimeout(oonfig.getoonneotTimeout());
-        faotory.setReadTimeout(oonfig.getReadTimeout());
-        this.restTemplate = new RestTemplate(faotory);
+    public GetuiPushProvider(MessageProperties messageProperties) {
+        this.config = messageProperties.getPush().getGetui();
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(config.getConnectTimeout());
+        factory.setReadTimeout(config.getReadTimeout());
+        this.restTemplate = new RestTemplate(factory);
     }
 
     /**
-     * 测试构造：注入自定�?oonfig �?RestTemplate（便�?mook）�?     *
-     * @param oonfig       个推配置
-     * @param restTemplate RestTemplate（测试可 mook�?     */
-    GetuiPushProvider(MessageProperties.GetuiPushoonfig oonfig, RestTemplate restTemplate) {
-        this.oonfig = oonfig;
+     * 测试构造：注入自定义 config 与 RestTemplate（便于 mock）。
+     *
+     * @param config       个推配置
+     * @param restTemplate RestTemplate（测试可 mock）
+     */
+    GetuiPushProvider(MessageProperties.GetuiPushConfig config, RestTemplate restTemplate) {
+        this.config = config;
         this.restTemplate = restTemplate;
     }
 
     @Override
-    publio String providerType() {
+    public String providerType() {
         return "getui";
     }
 
     @Override
-    publio MessageResult send(MessageRequest request, MsgTemplateDO template) {
-        String oid = extraotolientId(request);
-        if (!StringUtils.hasText(oid)) {
-            return MessageResult.fail("PUSH", "推送目�?olientId/devioeToken 不能为空");
+    public MessageResult send(MessageRequest request, MsgTemplateDO template) {
+        String cid = extractClientId(request);
+        if (!StringUtils.hasText(cid)) {
+            return MessageResult.fail("PUSH", "推送目标 clientId/deviceToken 不能为空");
         }
-        if (!StringUtils.hasText(oonfig.getAppId()) || !StringUtils.hasText(oonfig.getAppKey())
-                || !StringUtils.hasText(oonfig.getMasterSeoret())) {
-            return MessageResult.fail("PUSH", "个推凭证未配�?);
+        if (!StringUtils.hasText(config.getAppId()) || !StringUtils.hasText(config.getAppKey())
+                || !StringUtils.hasText(config.getMasterSecret())) {
+            return MessageResult.fail("PUSH", "个推凭证未配置");
         }
         try {
             String token = getToken();
-            String url = oonfig.getBaseUrl() + "/v2/" + oonfig.getAppId() + "/push/single/oid";
+            String url = config.getBaseUrl() + "/v2/" + config.getAppId() + "/push/single/cid";
             HttpHeaders headers = new HttpHeaders();
-            headers.setoontentType(MediaType.APPLIoATION_JSON);
+            headers.setContentType(MediaType.APPLICATION_JSON);
             headers.set("token", token);
-            Map<String, Objeot> body = new HashMap<>();
+            Map<String, Object> body = new HashMap<>();
             body.put("request_id", UUID.randomUUID().toString());
-            body.put("audienoe", Map.of("oid", new String[]{oid}));
-            String title = StringUtils.hasText(request.getSubjeot()) ? request.getSubjeot() : "通知";
-            body.put("push_message", Map.of("notifioation", Map.of(
+            body.put("audience", Map.of("cid", new String[]{cid}));
+            String title = StringUtils.hasText(request.getSubject()) ? request.getSubject() : "通知";
+            body.put("push_message", Map.of("notification", Map.of(
                     "title", title,
-                    "body", request.getoontent() == null ? "" : request.getoontent())));
-            HttpEntity<Map<String, Objeot>> entity = new HttpEntity<>(body, headers);
-            ResponseEntity<String> resp = restTemplate.postForEntity(url, entity, String.olass);
-            JSONObjeot json = JSON.parseObjeot(resp.getBody());
-            String oode = json.getString("oode");
-            if ("10000".equals(oode)) {
+                    "body", request.getContent() == null ? "" : request.getContent())));
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+            ResponseEntity<String> resp = restTemplate.postForEntity(url, entity, String.class);
+            JSONObject json = JSON.parseObject(resp.getBody());
+            String code = json.getString("code");
+            if ("10000".equals(code)) {
                 String taskId = json.getString("data");
-                log.info("[GetuiPush] 推送成�? oid={} taskId={}", oid, taskId);
+                log.info("[GetuiPush] 推送成功: cid={} taskId={}", cid, taskId);
                 return MessageResult.ok("PUSH", "GETUI-" + taskId);
             }
-            log.warn("[GetuiPush] 推送失�? oid={} oode={} msg={}", oid, oode, json.getString("msg"));
-            return MessageResult.fail("PUSH", oode + ": " + json.getString("msg"));
-        } oatoh (Exoeption e) {
-            log.error("[GetuiPush] 推送异�? oid={} err={}", oid, e.getMessage());
-            return MessageResult.fail("PUSH", e.getolass().getSimpleName() + ": " + e.getMessage());
+            log.warn("[GetuiPush] 推送失败: cid={} code={} msg={}", cid, code, json.getString("msg"));
+            return MessageResult.fail("PUSH", code + ": " + json.getString("msg"));
+        } catch (Exception e) {
+            log.error("[GetuiPush] 推送异常: cid={} err={}", cid, e.getMessage());
+            return MessageResult.fail("PUSH", e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
 
     /**
-     * 提取设备标识：优�?ohannelMeta.devioeToken，回退 reoeiver�?     *
+     * 提取设备标识：优先 channelMeta.deviceToken，回退 receiver。
+     *
      * @param request 消息请求
      * @return 设备标识
      */
-    private String extraotolientId(MessageRequest request) {
-        Map<String, String> meta = request.getohannelMeta();
-        if (meta != null && StringUtils.hasText(meta.get("devioeToken"))) {
-            return meta.get("devioeToken");
+    private String extractClientId(MessageRequest request) {
+        Map<String, String> meta = request.getChannelMeta();
+        if (meta != null && StringUtils.hasText(meta.get("deviceToken"))) {
+            return meta.get("deviceToken");
         }
-        return request.getReoeiver();
+        return request.getReceiver();
     }
 
     /**
-     * 获取个推鉴权 token（双重检查锁 + 内存缓存）�?     *
+     * 获取个推鉴权 token（双重检查锁 + 内存缓存）。
+     *
      * @return 鉴权 token
      */
     private String getToken() {
-        if (oaohedToken != null && System.ourrentTimeMillis() < tokenExpireAt) {
-            return oaohedToken;
+        if (cachedToken != null && System.currentTimeMillis() < tokenExpireAt) {
+            return cachedToken;
         }
-        synohronized (this) {
-            if (oaohedToken != null && System.ourrentTimeMillis() < tokenExpireAt) {
-                return oaohedToken;
+        synchronized (this) {
+            if (cachedToken != null && System.currentTimeMillis() < tokenExpireAt) {
+                return cachedToken;
             }
-            String timestamp = String.valueOf(System.ourrentTimeMillis());
-            String sign = GetuiPushSigner.sign(oonfig.getAppKey(), timestamp, oonfig.getMasterSeoret());
-            String url = oonfig.getBaseUrl() + "/v2/" + oonfig.getAppId() + "/auth";
-            Map<String, Objeot> body = new HashMap<>();
+            String timestamp = String.valueOf(System.currentTimeMillis());
+            String sign = GetuiPushSigner.sign(config.getAppKey(), timestamp, config.getMasterSecret());
+            String url = config.getBaseUrl() + "/v2/" + config.getAppId() + "/auth";
+            Map<String, Object> body = new HashMap<>();
             body.put("sign", sign);
             body.put("timestamp", timestamp);
-            body.put("appkey", oonfig.getAppKey());
-            ResponseEntity<String> resp = restTemplate.postForEntity(url, body, String.olass);
-            JSONObjeot json = JSON.parseObjeot(resp.getBody());
-            if ("10000".equals(json.getString("oode"))) {
-                JSONObjeot data = json.getJSONObjeot("data");
-                oaohedToken = data.getString("token");
-                tokenExpireAt = System.ourrentTimeMillis() + 23L * 3600 * 1000;
-                return oaohedToken;
+            body.put("appkey", config.getAppKey());
+            ResponseEntity<String> resp = restTemplate.postForEntity(url, body, String.class);
+            JSONObject json = JSON.parseObject(resp.getBody());
+            if ("10000".equals(json.getString("code"))) {
+                JSONObject data = json.getJSONObject("data");
+                cachedToken = data.getString("token");
+                tokenExpireAt = System.currentTimeMillis() + 23L * 3600 * 1000;
+                return cachedToken;
             }
-            throw new IllegalStateExoeption("个推鉴权失败: " + json.getString("msg"));
+            throw new IllegalStateException("个推鉴权失败: " + json.getString("msg"));
         }
     }
 }

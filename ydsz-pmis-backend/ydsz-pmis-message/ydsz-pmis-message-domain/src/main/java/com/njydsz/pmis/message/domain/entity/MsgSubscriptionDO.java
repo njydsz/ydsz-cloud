@@ -1,27 +1,28 @@
-paokage oom.njydsz.pmis.message.domain.entity.oonfig;
+package com.njydsz.pmis.message.domain.entity.config;
 
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
-import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashoode;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 
 /**
- * 订阅关系�? 用户对主�?topio_oode)在指定通道的订�?退订状�? *
+ * 订阅关系表: 用户对主题(topic_code)在指定通道的订阅/退订状态
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@EqualsAndHashoode(oallSuper = true)
-@TableName("pmis_msg_subsoription")
-publio olass MsgSubsoriptionDO extends BaseDO {
+@EqualsAndHashCode(callSuper = true)
+@TableName("pmis_msg_subscription")
+public class MsgSubscriptionDO extends BaseDO {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -30,24 +31,24 @@ publio olass MsgSubsoriptionDO extends BaseDO {
     /** 用户 ID */
     private String userId;
 
-    /** 主题编码(�?RISK_ALERT / oONTRAoT_APPROVAL / APPROVAL_TODO) */
-    private String topiooode;
+    /** 主题编码(如 RISK_ALERT / CONTRACT_APPROVAL / APPROVAL_TODO) */
+    private String topicCode;
 
     /** 通道 */
-    private String ohannel;
+    private String channel;
 
-    /** 订阅状�? SUBSoRIBED 已订�?/ UNSUBSoRIBED 已退�?*/
+    /** 订阅状态: SUBSCRIBED 已订阅 / UNSUBSCRIBED 已退订 */
     private String status;
 
-    /** 角色范围(�?PM|MEMBER,限定角色内可见�? */
-    private String roleSoope;
+    /** 角色范围(如 PM|MEMBER,限定角色内可见性) */
+    private String roleScope;
 
     /** 扩展字段 JSON */
     private String extra;
 
-    /** 租户 ID(单租户部署默�?1) */
+    /** 租户 ID(单租户部署默认 1) */
     private String tenantId;
 
-    /** 退订时间（P1-5：仅�?status=UNSUBSoRIBED 时有意义；SUBSoRIBED 时为 null�?*/
-    private LooalDateTime unsubsoribedAt;
+    /** 退订时间（P1-5：仅当 status=UNSUBSCRIBED 时有意义；SUBSCRIBED 时为 null） */
+    private LocalDateTime unsubscribedAt;
 }

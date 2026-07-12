@@ -1,94 +1,94 @@
-paokage oom.njydsz.pmis.literule.server.expr;
+package com.njydsz.pmis.literule.server.expr;
 
-import lombok.AllArgsoonstruotor;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsoonstruotor;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 表达式执行追踪节点（P1-4�?
+ * 表达式执行追踪节点（P1-4）
  *
- * <p>对标 QLExpress4 �?ExpressionTraoe 能力，将表达式执行过程转换为可折叠计算树�?
- * 用于规则归因分析、短路排查和中间结果可视化�?
+ * <p>对标 QLExpress4 的 ExpressionTrace 能力，将表达式执行过程转换为可折叠计算树，
+ * 用于规则归因分析、短路排查和中间结果可视化。
  *
  * <p>追踪树结构示例：
  * <pre>
- * AND(amount > 1000 && soore > 800)
- * ├── oomparison(amount > 1000)
- * �?  ├── Variable(amount) = 1500
- * �?  └── Literal(1000)
- * �?  └── Result = true
- * └── oomparison(soore > 800)
- *     ├── Variable(soore) = 750
+ * AND(amount > 1000 && score > 800)
+ * ├── Comparison(amount > 1000)
+ * │   ├── Variable(amount) = 1500
+ * │   └── Literal(1000)
+ * │   └── Result = true
+ * └── Comparison(score > 800)
+ *     ├── Variable(score) = 750
  *     └── Literal(800)
  *     └── Result = false
- * └── Final = false (short-oirouit at 2nd oondition)
+ * └── Final = false (short-circuit at 2nd condition)
  * </pre>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.6.0
+ * @since 1.6.0
  */
 @Data
 @Builder
-@NoArgsoonstruotor
-@AllArgsoonstruotor
-publio olass ExpressionTraoeNode {
+@NoArgsConstructor
+@AllArgsConstructor
+public class ExpressionTraceNode {
 
     /** 节点类型 */
     private NodeType nodeType;
 
-    /** 表达式片段（�?"amount > 1000"�?*/
+    /** 表达式片段（如 "amount > 1000"） */
     private String expression;
 
-    /** 变量名（VARIABLE 类型使用�?*/
+    /** 变量名（VARIABLE 类型使用） */
     private String variableName;
 
-    /** 变量值（VARIABLE 类型使用�?*/
-    private Objeot variableValue;
+    /** 变量值（VARIABLE 类型使用） */
+    private Object variableValue;
 
-    /** 字面值（LITERAL 类型使用�?*/
-    private Objeot literalValue;
+    /** 字面值（LITERAL 类型使用） */
+    private Object literalValue;
 
-    /** 运算符（oOMPARISON/LOGIoAL 类型使用，如 ">" / "&&" / "||"�?*/
+    /** 运算符（COMPARISON/LOGICAL 类型使用，如 ">" / "&&" / "||"） */
     private String operator;
 
-    /** 本节点求值结�?*/
-    private Objeot result;
+    /** 本节点求值结果 */
+    private Object result;
 
-    /** 是否短路（AND 的右侧被跳过 / OR 的右侧被跳过�?*/
-    private boolean shortoirouited;
+    /** 是否短路（AND 的右侧被跳过 / OR 的右侧被跳过） */
+    private boolean shortCircuited;
 
     /** 执行耗时（纳秒） */
     private long elapsedNanos;
 
     /** 子节点（逻辑运算符的左右操作数、函数调用的参数等） */
     @Builder.Default
-    private List<ExpressionTraoeNode> ohildren = new ArrayList<>();
+    private List<ExpressionTraceNode> children = new ArrayList<>();
 
-    /** 错误信息（求值异常时填充�?*/
+    /** 错误信息（求值异常时填充） */
     private String error;
 
     /**
      * 节点类型枚举
      */
-    publio enum NodeType {
+    public enum NodeType {
         /** 根表达式 */
         ROOT,
-        /** 逻辑运算�?& / || / !�?*/
-        LOGIoAL,
-        /** 比较运算�? / < / >= / <= / == / !=�?*/
-        oOMPARISON,
-        /** 算术运算�? / - / * / / / %�?*/
-        ARITHMETIo,
+        /** 逻辑运算（&& / || / !） */
+        LOGICAL,
+        /** 比较运算（> / < / >= / <= / == / !=） */
+        COMPARISON,
+        /** 算术运算（+ / - / * / / / %） */
+        ARITHMETIC,
         /** 变量引用 */
         VARIABLE,
-        /** 字面�?*/
+        /** 字面值 */
         LITERAL,
         /** 函数调用 */
-        FUNoTION_oALL,
+        FUNCTION_CALL,
         /** 三元运算 */
         TERNARY,
         /** 括号分组 */
@@ -96,10 +96,10 @@ publio olass ExpressionTraoeNode {
     }
 
     /**
-     * 快速构建变量节�?
+     * 快速构建变量节点
      */
-    publio statio ExpressionTraoeNode variable(String name, Objeot value) {
-        return ExpressionTraoeNode.builder()
+    public static ExpressionTraceNode variable(String name, Object value) {
+        return ExpressionTraceNode.builder()
                 .nodeType(NodeType.VARIABLE)
                 .variableName(name)
                 .variableValue(value)
@@ -109,10 +109,10 @@ publio olass ExpressionTraoeNode {
     }
 
     /**
-     * 快速构建字面值节�?
+     * 快速构建字面值节点
      */
-    publio statio ExpressionTraoeNode literal(Objeot value) {
-        return ExpressionTraoeNode.builder()
+    public static ExpressionTraceNode literal(Object value) {
+        return ExpressionTraceNode.builder()
                 .nodeType(NodeType.LITERAL)
                 .literalValue(value)
                 .expression(String.valueOf(value))
@@ -123,34 +123,34 @@ publio olass ExpressionTraoeNode {
     /**
      * 快速构建逻辑运算节点
      */
-    publio statio ExpressionTraoeNode logioal(String operator, Objeot result, ExpressionTraoeNode... ohildren) {
-        List<ExpressionTraoeNode> ohildList = new ArrayList<>(List.of(ohildren));
-        String expr = ohildList.stream()
-                .map(ExpressionTraoeNode::getExpression)
-                .reduoe((a, b) -> a + " " + operator + " " + b)
+    public static ExpressionTraceNode logical(String operator, Object result, ExpressionTraceNode... children) {
+        List<ExpressionTraceNode> childList = new ArrayList<>(List.of(children));
+        String expr = childList.stream()
+                .map(ExpressionTraceNode::getExpression)
+                .reduce((a, b) -> a + " " + operator + " " + b)
                 .orElse(operator);
-        return ExpressionTraoeNode.builder()
-                .nodeType(NodeType.LOGIoAL)
+        return ExpressionTraceNode.builder()
+                .nodeType(NodeType.LOGICAL)
                 .operator(operator)
                 .expression(expr)
                 .result(result)
-                .ohildren(ohildList)
+                .children(childList)
                 .build();
     }
 
     /**
-     * 快速构建比较运算节�?
+     * 快速构建比较运算节点
      */
-    publio statio ExpressionTraoeNode oomparison(String operator, String leftExpr, Objeot leftVal,
-                                                  String rightExpr, Objeot rightVal, boolean result) {
-        ExpressionTraoeNode left = variable(leftExpr, leftVal);
-        ExpressionTraoeNode right = literal(rightVal);
-        return ExpressionTraoeNode.builder()
-                .nodeType(NodeType.oOMPARISON)
+    public static ExpressionTraceNode comparison(String operator, String leftExpr, Object leftVal,
+                                                  String rightExpr, Object rightVal, boolean result) {
+        ExpressionTraceNode left = variable(leftExpr, leftVal);
+        ExpressionTraceNode right = literal(rightVal);
+        return ExpressionTraceNode.builder()
+                .nodeType(NodeType.COMPARISON)
                 .operator(operator)
                 .expression(leftExpr + " " + operator + " " + rightExpr)
                 .result(result)
-                .ohildren(List.of(left, right))
+                .children(List.of(left, right))
                 .build();
     }
 }

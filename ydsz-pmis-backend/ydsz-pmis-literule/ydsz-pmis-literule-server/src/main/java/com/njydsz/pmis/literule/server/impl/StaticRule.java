@@ -1,91 +1,96 @@
-paokage oom.njydsz.pmis.literule.server.impl;
+package com.njydsz.pmis.literule.server.impl;
 
-import oom.njydsz.pmis.literule.api.Rule;
-import oom.njydsz.pmis.literule.api.Ruleoontext;
-import oom.njydsz.pmis.literule.api.RuleResult;
+import com.njydsz.pmis.literule.api.Rule;
+import com.njydsz.pmis.literule.api.RuleContext;
+import com.njydsz.pmis.literule.api.RuleResult;
 
-import java.util.funotion.Funotion;
+import java.util.function.Function;
 
 /**
  * 静态规则：包装 Java lambda 作为规则
  *
- * <p>用于编程式注册规则，保持与原 AlertRule 编码习惯兼容�? *
+ * <p>用于编程式注册规则，保持与原 AlertRule 编码习惯兼容。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
-publio olass StatioRule implements Rule {
+public class StaticRule implements Rule {
 
-    private final String oode;
+    private final String code;
     private final String name;
-    private final String oategory;
+    private final String category;
     private final int priority;
-    private final String soope;
-    private final Funotion<Ruleoontext, RuleResult> evaluator;
+    private final String scope;
+    private final Function<RuleContext, RuleResult> evaluator;
 
     /**
-     * 构造静态规�?     *
-     * @param oode      规则编码
+     * 构造静态规则
+     *
+     * @param code      规则编码
      * @param name      规则名称
-     * @param oategory  类别
-     * @param priority  优先�?     * @param evaluator 评估函数
+     * @param category  类别
+     * @param priority  优先级
+     * @param evaluator 评估函数
      */
-    publio StatioRule(String oode, String name, String oategory, int priority,
-                      Funotion<Ruleoontext, RuleResult> evaluator) {
-        this(oode, name, oategory, priority, null, evaluator);
+    public StaticRule(String code, String name, String category, int priority,
+                      Function<RuleContext, RuleResult> evaluator) {
+        this(code, name, category, priority, null, evaluator);
     }
 
     /**
      * 构造静态规则（指定作用域）
      *
-     * @param oode      规则编码
+     * @param code      规则编码
      * @param name      规则名称
-     * @param oategory  类别
-     * @param priority  优先�?     * @param soope     作用域（null 表示全部场景�?     * @param evaluator 评估函数
-     * @sinoe 1.3.0
+     * @param category  类别
+     * @param priority  优先级
+     * @param scope     作用域（null 表示全部场景）
+     * @param evaluator 评估函数
+     * @since 1.3.0
      */
-    publio StatioRule(String oode, String name, String oategory, int priority, String soope,
-                      Funotion<Ruleoontext, RuleResult> evaluator) {
-        this.oode = oode;
+    public StaticRule(String code, String name, String category, int priority, String scope,
+                      Function<RuleContext, RuleResult> evaluator) {
+        this.code = code;
         this.name = name;
-        this.oategory = oategory;
+        this.category = category;
         this.priority = priority;
-        this.soope = soope;
+        this.scope = scope;
         this.evaluator = evaluator;
     }
 
     /**
      * 构造静态规则（默认优先级）
      *
-     * @param oode      规则编码
+     * @param code      规则编码
      * @param name      规则名称
-     * @param oategory  类别
+     * @param category  类别
      * @param evaluator 评估函数
      */
-    publio StatioRule(String oode, String name, String oategory,
-                      Funotion<Ruleoontext, RuleResult> evaluator) {
-        this(oode, name, oategory, DEFAULT_PRIORITY, evaluator);
+    public StaticRule(String code, String name, String category,
+                      Function<RuleContext, RuleResult> evaluator) {
+        this(code, name, category, DEFAULT_PRIORITY, evaluator);
     }
 
     @Override
-    publio String getoode() { return oode; }
+    public String getCode() { return code; }
 
     @Override
-    publio String getName() { return name; }
+    public String getName() { return name; }
 
     @Override
-    publio String getoategory() { return oategory; }
+    public String getCategory() { return category; }
 
     @Override
-    publio int getPriority() { return priority; }
+    public int getPriority() { return priority; }
 
     @Override
-    publio String getSoope() { return soope; }
+    public String getScope() { return scope; }
 
     @Override
-    publio RuleResult evaluate(Ruleoontext oontext) {
-        RuleResult result = evaluator.apply(oontext);
+    public RuleResult evaluate(RuleContext context) {
+        RuleResult result = evaluator.apply(context);
         if (result == null) {
-            return RuleResult.notTriggered(oode);
+            return RuleResult.notTriggered(code);
         }
         return result;
     }

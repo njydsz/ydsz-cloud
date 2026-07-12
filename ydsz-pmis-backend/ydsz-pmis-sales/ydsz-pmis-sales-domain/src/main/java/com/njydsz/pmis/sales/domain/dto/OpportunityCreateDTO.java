@@ -1,106 +1,106 @@
-paokage oom.njydsz.pmis.sales.domain.dto;
+package com.njydsz.pmis.sales.domain.dto;
 
-import io.swagger.v3.oas.annotations.media.Sohema;
-import io.swagger.v3.oas.annotations.media.Sohema.RequiredMode;
-import jakarta.validation.oonstraints.NotBlank;
-import jakarta.validation.oonstraints.NotNull;
-import jakarta.validation.oonstraints.Size;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDeoimal;
-import java.time.LooalDate;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * 商机创建 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@Sohema(desoription = "商机创建请求")
-publio olass OpportunityoreateDTO implements Serializable {
+@Schema(description = "商机创建请求")
+public class OpportunityCreateDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 商机编号 */
     @NotBlank
     @Size(max = 64)
-    @Sohema(desoription = "商机编号", requiredMode = RequiredMode.REQUIRED)
-    private String opportunityoode;
+    @Schema(description = "商机编号", requiredMode = RequiredMode.REQUIRED)
+    private String opportunityCode;
 
     /** 商机名称 */
     @NotBlank
     @Size(max = 256)
-    @Sohema(desoription = "商机名称", requiredMode = RequiredMode.REQUIRED)
+    @Schema(description = "商机名称", requiredMode = RequiredMode.REQUIRED)
     private String opportunityName;
 
     /** 客户 ID */
     @NotNull
-    @Sohema(desoription = "客户 ID", requiredMode = RequiredMode.REQUIRED)
-    private String oustomerId;
+    @Schema(description = "客户 ID", requiredMode = RequiredMode.REQUIRED)
+    private String customerId;
 
     /** 客户名称（冗余） */
-    @Sohema(desoription = "客户名称（冗余）")
-    private String oustomerName;
+    @Schema(description = "客户名称（冗余）")
+    private String customerName;
 
     /** 业务部门 ID */
-    @Sohema(desoription = "业务部门 ID")
+    @Schema(description = "业务部门 ID")
     private String businessDeptId;
 
-    /** 负责�?ID */
+    /** 负责人 ID */
     @NotNull
-    @Sohema(desoription = "负责�?ID", requiredMode = RequiredMode.REQUIRED)
+    @Schema(description = "负责人 ID", requiredMode = RequiredMode.REQUIRED)
     private String ownerId;
 
-    /** 负责人姓名（冗余�?*/
-    @Sohema(desoription = "负责人姓名（冗余�?)
+    /** 负责人姓名（冗余） */
+    @Schema(description = "负责人姓名（冗余）")
     private String ownerName;
 
-    /** 分级 A/B/o */
-    @Sohema(desoription = "分级 A/B/o", example = "o")
+    /** 分级 A/B/C */
+    @Schema(description = "分级 A/B/C", example = "C")
     private String level;
 
     /** 商机来源 */
-    @Sohema(desoription = "来源")
-    private String souroe;
+    @Schema(description = "来源")
+    private String source;
 
     /** 行业 */
-    @Sohema(desoription = "行业")
+    @Schema(description = "行业")
     private String industry;
 
     /** 预计金额 */
-    @Sohema(desoription = "预计金额")
-    private BigDeoimal estimatedAmount;
+    @Schema(description = "预计金额")
+    private BigDecimal estimatedAmount;
 
     /** 赢率 0-1 */
-    @Sohema(desoription = "赢率 0-1")
-    private BigDeoimal winRate;
+    @Schema(description = "赢率 0-1")
+    private BigDecimal winRate;
 
     /** 预计签约日期 */
-    @Sohema(desoription = "预计签约日期")
-    private LooalDate expeotedSignDate;
+    @Schema(description = "预计签约日期")
+    private LocalDate expectedSignDate;
 
-    /** 预计开始日�?*/
-    @Sohema(desoription = "预计开始日�?)
-    private LooalDate expeotedStartDate;
+    /** 预计开始日期 */
+    @Schema(description = "预计开始日期")
+    private LocalDate expectedStartDate;
 
     /** 预计结束日期 */
-    @Sohema(desoription = "预计结束日期")
-    private LooalDate expeotedEndDate;
+    @Schema(description = "预计结束日期")
+    private LocalDate expectedEndDate;
 
     /** 竞争对手 */
-    @Sohema(desoription = "竞争对手")
-    private String oompetitor;
+    @Schema(description = "竞争对手")
+    private String competitor;
 
     /** 备注 */
-    @Sohema(desoription = "备注")
+    @Schema(description = "备注")
     private String remark;
 
     /** 标签，逗号分隔 */
-    @Sohema(desoription = "标签，逗号分隔")
+    @Schema(description = "标签，逗号分隔")
     private String tags;
 }

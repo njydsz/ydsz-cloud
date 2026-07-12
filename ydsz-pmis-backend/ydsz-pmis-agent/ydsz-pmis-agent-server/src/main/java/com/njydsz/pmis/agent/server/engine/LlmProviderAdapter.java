@@ -1,85 +1,85 @@
-paokage oom.njydsz.pmis.agent.server.engine.llm;
+package com.njydsz.pmis.agent.server.engine.llm;
 
-import oom.njydsz.pmis.agent.server.engine.Agentoontext;
-import oom.njydsz.pmis.oommon.ai.Llmolient;
+import com.njydsz.pmis.agent.server.engine.AgentContext;
+import com.njydsz.pmis.common.ai.LlmClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnBean;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnProperty;
-import org.springframework.stereotype.oomponent;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * LLM Provider 适配器（P0-2 架构优化）�?
+ * LLM Provider 适配器（P0-2 架构优化）。
  *
- * <p>�?oommon 模块�?{@link Llmolient} 适配�?agent 模块�?{@link LlmProvider}�?
- * 使得 agent 可以复用 oommon 模块统一创建�?LLM 客户端实例，
- * 而无需�?agent 内部重复创建 OpenAI/DeepSeek 等连接�?
+ * <p>将 common 模块的 {@link LlmClient} 适配为 agent 模块的 {@link LlmProvider}，
+ * 使得 agent 可以复用 common 模块统一创建的 LLM 客户端实例，
+ * 而无需在 agent 内部重复创建 OpenAI/DeepSeek 等连接。
  *
- * <p>使用方式：在配置中设�?{@oode pmis.agent.llm.provider=oommon-llm}�?
- * {@link LlmProviderRouter} 将自动路由到�?Adapter�?
+ * <p>使用方式：在配置中设置 {@code pmis.agent.llm.provider=common-llm}，
+ * {@link LlmProviderRouter} 将自动路由到本 Adapter。
  *
  * <h3>能力映射</h3>
  * <ul>
- *   <li>{@link #ohat} �?{@link Llmolient#ohat(String, String, Map)}</li>
- *   <li>{@link #supportsFunotionoalling} �?false（基础 Llmolient 不支持）</li>
- *   <li>{@link #supportsStreaming} �?false（基础 Llmolient 不支持）</li>
- *   <li>{@link #ohatForJson} �?默认实现（追�?JSON 指令 + fastjson 反序列化�?/li>
+ *   <li>{@link #chat} → {@link LlmClient#chat(String, String, Map)}</li>
+ *   <li>{@link #supportsFunctionCalling} → false（基础 LlmClient 不支持）</li>
+ *   <li>{@link #supportsStreaming} → false（基础 LlmClient 不支持）</li>
+ *   <li>{@link #chatForJson} → 默认实现（追加 JSON 指令 + fastjson 反序列化）</li>
  * </ul>
  *
- * <p>若需�?Funotion oalling / Streaming 等高级能力，请使�?agent 原生�?
- * {@link SpringAiLlmProvider} �?{@link DashSoopeLlmProvider}�?
+ * <p>若需要 Function Calling / Streaming 等高级能力，请使用 agent 原生的
+ * {@link SpringAiLlmProvider} 或 {@link DashScopeLlmProvider}。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.6.0 (P0-2)
+ * @since 1.6.0 (P0-2)
  */
 @Slf4j
-@oomponent
-@oonditionalOnBean(Llmolient.olass)
-@oonditionalOnProperty(name = "pmis.oommon.ai.enabled", havingValue = "true")
-publio olass LlmProviderAdapter implements LlmProvider {
+@Component
+@ConditionalOnBean(LlmClient.class)
+@ConditionalOnProperty(name = "pmis.common.ai.enabled", havingValue = "true")
+public class LlmProviderAdapter implements LlmProvider {
 
-    private final Llmolient delegate;
+    private final LlmClient delegate;
 
-    publio LlmProviderAdapter(Llmolient llmolient) {
-        this.delegate = llmolient;
-        log.info("[LlmProviderAdapter] 已初始化，委托给 oommon Llmolient（provider={}, model={}�?,
-                llmolient.provider(), llmolient.model());
+    public LlmProviderAdapter(LlmClient llmClient) {
+        this.delegate = llmClient;
+        log.info("[LlmProviderAdapter] 已初始化，委托给 common LlmClient（provider={}, model={}）",
+                llmClient.provider(), llmClient.model());
     }
 
     @Override
-    publio String name() {
-        return "oommon-llm";
+    public String name() {
+        return "common-llm";
     }
 
     @Override
-    publio boolean supportsFunotionoalling() {
+    public boolean supportsFunctionCalling() {
         return false;
     }
 
     @Override
-    publio boolean supportsStreaming() {
+    public boolean supportsStreaming() {
         return false;
     }
 
     @Override
-    publio String ohat(String systemPrompt, String userPrompt, Agentoontext oontext) {
-        // �?Agentoontext 中的关键信息转换�?options
-        Map<String, Objeot> options = null;
-        if (oontext != null && oontext.getParams() != null && !oontext.getParams().isEmpty()) {
-            // �?params 中提�?LLM 相关参数（如 temperature / maxTokens�?
+    public String chat(String systemPrompt, String userPrompt, AgentContext context) {
+        // 将 AgentContext 中的关键信息转换为 options
+        Map<String, Object> options = null;
+        if (context != null && context.getParams() != null && !context.getParams().isEmpty()) {
+            // 从 params 中提取 LLM 相关参数（如 temperature / maxTokens）
             options = new HashMap<>();
-            if (oontext.getParams().oontainsKey("temperature")) {
-                options.put("temperature", oontext.getParams().get("temperature"));
+            if (context.getParams().containsKey("temperature")) {
+                options.put("temperature", context.getParams().get("temperature"));
             }
-            if (oontext.getParams().oontainsKey("maxTokens")) {
-                options.put("maxTokens", oontext.getParams().get("maxTokens"));
+            if (context.getParams().containsKey("maxTokens")) {
+                options.put("maxTokens", context.getParams().get("maxTokens"));
             }
-            if (oontext.getTraoeId() != null) {
-                options.put("traoeId", oontext.getTraoeId());
+            if (context.getTraceId() != null) {
+                options.put("traceId", context.getTraceId());
             }
         }
-        return delegate.ohat(systemPrompt, userPrompt, options);
+        return delegate.chat(systemPrompt, userPrompt, options);
     }
 }

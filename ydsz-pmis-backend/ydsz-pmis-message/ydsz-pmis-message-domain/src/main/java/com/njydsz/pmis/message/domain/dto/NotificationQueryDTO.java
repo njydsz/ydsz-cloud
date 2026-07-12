@@ -1,25 +1,25 @@
-paokage oom.njydsz.pmis.message.domain.dto.oore;
+package com.njydsz.pmis.message.domain.dto.core;
 
-import oom.njydsz.pmis.oommon.domain.query.PageQuery;
+import com.njydsz.pmis.common.entity.PageQuery;
 import lombok.Data;
-import lombok.EqualsAndHashoode;
+import lombok.EqualsAndHashCode;
 
 /**
  * 站内通知分页查询 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@EqualsAndHashoode(oallSuper = true)
-publio olass NotifioationQueryDTO extends PageQuery {
+@EqualsAndHashCode(callSuper = true)
+public class NotificationQueryDTO extends PageQuery {
 
     /** 通知分类 */
-    private String oategory;
+    private String category;
 
     /** 通知级别 */
     private String level;
 
-    /** 已读状�? 0 未读 / 1 已读 */
+    /** 已读状态: 0 未读 / 1 已读 */
     private Integer readStatus;
 }

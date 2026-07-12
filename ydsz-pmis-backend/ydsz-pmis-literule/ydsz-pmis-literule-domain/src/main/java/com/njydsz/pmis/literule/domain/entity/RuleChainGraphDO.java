@@ -1,59 +1,59 @@
-paokage oom.njydsz.pmis.literule.domain.entity;
+package com.njydsz.pmis.literule.domain.entity;
 
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 
 /**
- * 规则链画�?DO（P0-1�?
+ * 规则链画布 DO（P0-1）
  *
- * <p>对应 pmis_rule_ohain_graph 表，存储可视化编排画布的完整 JSON 内容�?
- * 一条规则对应一条画布记录，画布版本号独立递增，与规则版本号解耦�?
+ * <p>对应 pmis_rule_chain_graph 表，存储可视化编排画布的完整 JSON 内容。
+ * 一条规则对应一条画布记录，画布版本号独立递增，与规则版本号解耦。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.5.0
+ * @since 1.5.0
  */
 @Data
-@TableName("pmis_rule_ohain_graph")
-publio olass RuleohainGraphDO implements Serializable {
+@TableName("pmis_rule_chain_graph")
+public class RuleChainGraphDO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    /** 关联规则编码（一对一�?*/
-    private String ruleoode;
+    /** 关联规则编码（一对一） */
+    private String ruleCode;
 
     /** 画布名称 */
     private String name;
 
     /** 画布描述 */
-    private String desoription;
+    private String description;
 
-    /** 适用场景（与 Ruleoontext.soenario 对应�?*/
-    private String soenario;
+    /** 适用场景（与 RuleContext.scenario 对应） */
+    private String scenario;
 
-    /** 租户 ID（多租户隔离，默�?1�?*/
+    /** 租户 ID（多租户隔离，默认 1） */
     private String tenantId;
 
-    /** 画布版本号（独立递增�?*/
+    /** 画布版本号（独立递增） */
     private Integer graphVersion;
 
-    /** 画布状态：DRAFT / PUBLISHED / ARoHIVED */
+    /** 画布状态：DRAFT / PUBLISHED / ARCHIVED */
     private String status;
 
-    /** 画布内容 JSON（包�?nodes/edges/viewport/metadata�?*/
-    private String oontentJson;
+    /** 画布内容 JSON（包含 nodes/edges/viewport/metadata） */
+    private String contentJson;
 
-    private String oreatedBy;
-    private LooalDateTime oreatedAt;
+    private String createdBy;
+    private LocalDateTime createdAt;
     private String updatedBy;
-    private LooalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 }

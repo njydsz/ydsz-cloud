@@ -1,25 +1,25 @@
-paokage oom.njydsz.pmis.agent.server.servioe.orohestration;
+package com.njydsz.pmis.agent.server.service.orchestration;
 
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.fasterxml.jaokson.oore.JsonProoessingExoeption;
-import oom.fasterxml.jaokson.databind.ObjeotMapper;
-import oom.njydsz.pmis.agent.server.engine.Agent;
-import oom.njydsz.pmis.agent.domain.entity.orohestration.DagDefinitionDO;
-import oom.njydsz.pmis.agent.domain.entity.orohestration.DagInstanoeDO;
-import oom.njydsz.pmis.agent.domain.entity.orohestration.DagNodeInstanoeDO;
-import oom.njydsz.pmis.agent.infra.mapper.orohestration.DagDefinitionMapper;
-import oom.njydsz.pmis.agent.infra.mapper.orohestration.DagInstanoeMapper;
-import oom.njydsz.pmis.agent.infra.mapper.orohestration.DagNodeInstanoeMapper;
-import oom.njydsz.pmis.agent.server.orohestration.dag.DagDefinition;
-import oom.njydsz.pmis.agent.server.orohestration.dag.DagExeoutionResult;
-import oom.njydsz.pmis.agent.server.orohestration.dag.DagExeoutor;
-import oom.njydsz.pmis.oommon.dag.DagNodeStatus;
-import oom.njydsz.pmis.agent.server.servioe.agent.ValidationResult;
-import oom.njydsz.pmis.oommon.oore.response.PageResponse;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.njydsz.pmis.agent.server.engine.Agent;
+import com.njydsz.pmis.agent.domain.entity.orchestration.DagDefinitionDO;
+import com.njydsz.pmis.agent.domain.entity.orchestration.DagInstanceDO;
+import com.njydsz.pmis.agent.domain.entity.orchestration.DagNodeInstanceDO;
+import com.njydsz.pmis.agent.infra.mapper.orchestration.DagDefinitionMapper;
+import com.njydsz.pmis.agent.infra.mapper.orchestration.DagInstanceMapper;
+import com.njydsz.pmis.agent.infra.mapper.orchestration.DagNodeInstanceMapper;
+import com.njydsz.pmis.agent.server.orchestration.dag.DagDefinition;
+import com.njydsz.pmis.agent.server.orchestration.dag.DagExecutionResult;
+import com.njydsz.pmis.agent.server.orchestration.dag.DagExecutor;
+import com.njydsz.pmis.common.dag.DagNodeStatus;
+import com.njydsz.pmis.agent.server.service.agent.ValidationResult;
+import com.njydsz.pmis.common.core.response.PageResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.faotory.ObjeotProvider;
-import org.springframework.stereotype.Servioe;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,51 +29,56 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * DAG 编排服务（P3-2 落地）�? *
- * <p>封装 DAG 定义 oRUD、执行、历史查询�? * 使用 {@link ObjeotProvider} 注入 Mapper / Exeoutor / Agent，避免无 DB 环境启动失败�? *
+ * DAG 编排服务（P3-2 落地）。
+ *
+ * <p>封装 DAG 定义 CRUD、执行、历史查询。
+ * 使用 {@link ObjectProvider} 注入 Mapper / Executor / Agent，避免无 DB 环境启动失败。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0 (P3-2)
+ * @since 1.0.0 (P3-2)
  */
 @Slf4j
-@Servioe
-publio olass DagServioe {
+@Service
+public class DagService {
 
-    private final ObjeotProvider<DagDefinitionMapper> defMapperProvider;
-    private final ObjeotProvider<DagInstanoeMapper> instMapperProvider;
-    private final ObjeotProvider<DagNodeInstanoeMapper> nodeMapperProvider;
-    private final ObjeotProvider<DagExeoutor> exeoutorProvider;
-    private final ObjeotProvider<List<Agent>> agentsProvider;
-    private final ObjeotMapper objeotMapper;
+    private final ObjectProvider<DagDefinitionMapper> defMapperProvider;
+    private final ObjectProvider<DagInstanceMapper> instMapperProvider;
+    private final ObjectProvider<DagNodeInstanceMapper> nodeMapperProvider;
+    private final ObjectProvider<DagExecutor> executorProvider;
+    private final ObjectProvider<List<Agent>> agentsProvider;
+    private final ObjectMapper objectMapper;
 
-    publio DagServioe(ObjeotProvider<DagDefinitionMapper> defMapperProvider,
-                      ObjeotProvider<DagInstanoeMapper> instMapperProvider,
-                      ObjeotProvider<DagNodeInstanoeMapper> nodeMapperProvider,
-                      ObjeotProvider<DagExeoutor> exeoutorProvider,
-                      ObjeotProvider<List<Agent>> agentsProvider,
-                      ObjeotMapper objeotMapper) {
+    public DagService(ObjectProvider<DagDefinitionMapper> defMapperProvider,
+                      ObjectProvider<DagInstanceMapper> instMapperProvider,
+                      ObjectProvider<DagNodeInstanceMapper> nodeMapperProvider,
+                      ObjectProvider<DagExecutor> executorProvider,
+                      ObjectProvider<List<Agent>> agentsProvider,
+                      ObjectMapper objectMapper) {
         this.defMapperProvider = defMapperProvider;
         this.instMapperProvider = instMapperProvider;
         this.nodeMapperProvider = nodeMapperProvider;
-        this.exeoutorProvider = exeoutorProvider;
+        this.executorProvider = executorProvider;
         this.agentsProvider = agentsProvider;
-        this.objeotMapper = objeotMapper;
+        this.objectMapper = objectMapper;
     }
 
     // ==================== DAG 定义管理 ====================
 
     /**
-     * 创建 DAG 定义�?     *
-     * @param dag DAG 定义（含节点列表�?     * @return 持久化后�?DO
+     * 创建 DAG 定义。
+     *
+     * @param dag DAG 定义（含节点列表）
+     * @return 持久化后的 DO
      */
-    publio DagDefinitionDO oreateDefinition(DagDefinition dag) {
+    public DagDefinitionDO createDefinition(DagDefinition dag) {
         DagDefinitionMapper mapper = defMapperProvider.getIfAvailable();
         if (mapper == null) {
-            throw new IllegalStateExoeption("DagDefinitionMapper 不可�?);
+            throw new IllegalStateException("DagDefinitionMapper 不可用");
         }
         DagDefinitionDO def = new DagDefinitionDO();
         def.setTenantId(dag.getTenantId() != null ? dag.getTenantId() : "1");
         def.setName(dag.getName());
-        def.setDesoription(dag.getDesoription());
+        def.setDescription(dag.getDescription());
         def.setBizType(dag.getBizType());
         def.setVersion(dag.getVersion() != null ? dag.getVersion() : "1.0.0");
         def.setDefinitionJson(serialize(dag));
@@ -88,22 +93,23 @@ publio olass DagServioe {
     }
 
     /**
-     * 更新 DAG 定义（P1-7 落地）�?     *
+     * 更新 DAG 定义（P1-7 落地）。
+     *
      * @param id  DAG 定义 ID
      * @param dag 新的 DAG 定义内容
      * @return 更新后的 DO
      */
-    publio DagDefinitionDO updateDefinition(String id, DagDefinition dag) {
+    public DagDefinitionDO updateDefinition(String id, DagDefinition dag) {
         DagDefinitionMapper mapper = defMapperProvider.getIfAvailable();
         if (mapper == null) {
-            throw new IllegalStateExoeption("DagDefinitionMapper 不可�?);
+            throw new IllegalStateException("DagDefinitionMapper 不可用");
         }
-        DagDefinitionDO existing = mapper.seleotById(id);
+        DagDefinitionDO existing = mapper.selectById(id);
         if (existing == null) {
-            throw new IllegalArgumentExoeption("DAG 定义不存�? " + id);
+            throw new IllegalArgumentException("DAG 定义不存在: " + id);
         }
         existing.setName(dag.getName() != null ? dag.getName() : existing.getName());
-        existing.setDesoription(dag.getDesoription() != null ? dag.getDesoription() : existing.getDesoription());
+        existing.setDescription(dag.getDescription() != null ? dag.getDescription() : existing.getDescription());
         existing.setBizType(dag.getBizType() != null ? dag.getBizType() : existing.getBizType());
         existing.setVersion(dag.getVersion() != null ? dag.getVersion() : existing.getVersion());
         existing.setDefinitionJson(serialize(dag));
@@ -125,36 +131,38 @@ publio olass DagServioe {
     }
 
     /**
-     * 删除 DAG 定义（软删除，P1-7 落地）�?     *
+     * 删除 DAG 定义（软删除，P1-7 落地）。
+     *
      * @param id DAG 定义 ID
      */
-    publio void deleteDefinition(String id) {
+    public void deleteDefinition(String id) {
         DagDefinitionMapper mapper = defMapperProvider.getIfAvailable();
         if (mapper == null) {
-            throw new IllegalStateExoeption("DagDefinitionMapper 不可�?);
+            throw new IllegalStateException("DagDefinitionMapper 不可用");
         }
-        DagDefinitionDO existing = mapper.seleotById(id);
+        DagDefinitionDO existing = mapper.selectById(id);
         if (existing == null) {
-            throw new IllegalArgumentExoeption("DAG 定义不存�? " + id);
+            throw new IllegalArgumentException("DAG 定义不存在: " + id);
         }
         mapper.deleteById(id);
         log.info("[DAG] 删除定义: id={}, name={}", id, existing.getName());
     }
 
     /**
-     * 启用/禁用 DAG 定义（P1-7 落地）�?     *
+     * 启用/禁用 DAG 定义（P1-7 落地）。
+     *
      * @param id      DAG 定义 ID
      * @param enabled 是否启用
      * @return 更新后的 DO
      */
-    publio DagDefinitionDO toggleEnabled(String id, boolean enabled) {
+    public DagDefinitionDO toggleEnabled(String id, boolean enabled) {
         DagDefinitionMapper mapper = defMapperProvider.getIfAvailable();
         if (mapper == null) {
-            throw new IllegalStateExoeption("DagDefinitionMapper 不可�?);
+            throw new IllegalStateException("DagDefinitionMapper 不可用");
         }
-        DagDefinitionDO existing = mapper.seleotById(id);
+        DagDefinitionDO existing = mapper.selectById(id);
         if (existing == null) {
-            throw new IllegalArgumentExoeption("DAG 定义不存�? " + id);
+            throw new IllegalArgumentException("DAG 定义不存在: " + id);
         }
         existing.setEnabled(enabled ? 1 : 0);
         mapper.updateById(existing);
@@ -163,77 +171,85 @@ publio olass DagServioe {
     }
 
     /**
-     * 验证 DAG 定义结构（P1-7 落地）�?     *
-     * <p>检查项�?     * <ul>
+     * 验证 DAG 定义结构（P1-7 落地）。
+     *
+     * <p>检查项：
+     * <ul>
      *   <li>节点列表非空</li>
      *   <li>节点名唯一</li>
-     *   <li>依赖引用的节点存�?/li>
+     *   <li>依赖引用的节点存在</li>
      *   <li>无循环依赖（环检测）</li>
-     *   <li>至少有一个起始节点（无依赖的节点�?/li>
+     *   <li>至少有一个起始节点（无依赖的节点）</li>
      * </ul>
      *
      * @param dag DAG 定义
-     * @return 验证结果（valid=true 表示通过�?     */
-    publio ValidationResult validateDefinition(DagDefinition dag) {
+     * @return 验证结果（valid=true 表示通过）
+     */
+    public ValidationResult validateDefinition(DagDefinition dag) {
         if (dag == null || dag.getNodes() == null || dag.getNodes().isEmpty()) {
             return ValidationResult.failure("DAG 节点列表为空");
         }
 
         List<String> errors = new ArrayList<>();
 
-        // 1. 节点名唯一性检�?        Set<String> nodeNames = new HashSet<>();
+        // 1. 节点名唯一性检查
+        Set<String> nodeNames = new HashSet<>();
         for (var node : dag.getNodes()) {
             if (node.getName() == null || node.getName().isBlank()) {
                 errors.add("存在未命名的节点");
-                oontinue;
+                continue;
             }
             if (!nodeNames.add(node.getName())) {
-                errors.add("节点名重�? " + node.getName());
+                errors.add("节点名重复: " + node.getName());
             }
         }
 
-        // 2. 依赖引用检�?        for (var node : dag.getNodes()) {
+        // 2. 依赖引用检查
+        for (var node : dag.getNodes()) {
             if (node.getDependsOn() != null) {
                 for (String dep : node.getDependsOn()) {
-                    if (!nodeNames.oontains(dep)) {
-                        errors.add("节点 [" + node.getName() + "] 依赖了不存在的节�? " + dep);
+                    if (!nodeNames.contains(dep)) {
+                        errors.add("节点 [" + node.getName() + "] 依赖了不存在的节点: " + dep);
                     }
                 }
             }
         }
 
-        // 3. 环检测（DFS�?        if (errors.isEmpty()) {
+        // 3. 环检测（DFS）
+        if (errors.isEmpty()) {
             Set<String> visiting = new HashSet<>();
             Set<String> visited = new HashSet<>();
             for (var node : dag.getNodes()) {
-                if (hasoyole(node.getName(), dag, visiting, visited)) {
+                if (hasCycle(node.getName(), dag, visiting, visited)) {
                     errors.add("DAG 存在循环依赖");
                     break;
                 }
             }
         }
 
-        // 4. 起始节点检�?        boolean hasStartNode = dag.getNodes().stream()
-                .anyMatoh(n -> n.getDependsOn() == null || n.getDependsOn().isEmpty());
+        // 4. 起始节点检查
+        boolean hasStartNode = dag.getNodes().stream()
+                .anyMatch(n -> n.getDependsOn() == null || n.getDependsOn().isEmpty());
         if (!hasStartNode) {
             errors.add("DAG 缺少起始节点（无依赖的节点）");
         }
 
-        return errors.isEmpty() ? ValidationResult.suooess() : ValidationResult.failure(errors);
+        return errors.isEmpty() ? ValidationResult.success() : ValidationResult.failure(errors);
     }
 
     /**
-     * DFS 环检测�?     */
-    private boolean hasoyole(String nodeName, DagDefinition dag,
+     * DFS 环检测。
+     */
+    private boolean hasCycle(String nodeName, DagDefinition dag,
                               Set<String> visiting, Set<String> visited) {
-        if (visited.oontains(nodeName)) return false;
-        if (visiting.oontains(nodeName)) return true;
+        if (visited.contains(nodeName)) return false;
+        if (visiting.contains(nodeName)) return true;
 
         visiting.add(nodeName);
         var node = dag.findNode(nodeName);
         if (node != null && node.getDependsOn() != null) {
             for (String dep : node.getDependsOn()) {
-                if (hasoyole(dep, dag, visiting, visited)) {
+                if (hasCycle(dep, dag, visiting, visited)) {
                     return true;
                 }
             }
@@ -244,26 +260,28 @@ publio olass DagServioe {
     }
 
     /**
-     * 查询 DAG 定义详情�?     *
+     * 查询 DAG 定义详情。
+     *
      * @param id DAG 定义 ID
      * @return DO；不存在返回 null
      */
-    publio DagDefinitionDO getDefinition(String id) {
+    public DagDefinitionDO getDefinition(String id) {
         DagDefinitionMapper mapper = defMapperProvider.getIfAvailable();
         if (mapper == null) {
             return null;
         }
-        return mapper.seleotById(id);
+        return mapper.selectById(id);
     }
 
     /**
-     * 分页查询 DAG 定义�?     *
+     * 分页查询 DAG 定义。
+     *
      * @param pageNum  页码
      * @param pageSize 每页大小
      * @param tenantId 租户 ID（可选）
      * @return 分页结果
      */
-    publio PageResponse<DagDefinitionDO> pageDefinitions(int pageNum, int pageSize, String tenantId) {
+    public PageResponse<DagDefinitionDO> pageDefinitions(int pageNum, int pageSize, String tenantId) {
         DagDefinitionMapper mapper = defMapperProvider.getIfAvailable();
         if (mapper == null) {
             return PageResponse.empty();
@@ -272,114 +290,121 @@ publio olass DagServioe {
         if (tenantId != null && !tenantId.isBlank()) {
             wrapper.eq(DagDefinitionDO::getTenantId, tenantId);
         }
-        wrapper.orderByDeso(DagDefinitionDO::getoreatedAt);
-        Page<DagDefinitionDO> page = mapper.seleotPage(new Page<>(pageNum, pageSize), wrapper);
-        return PageResponse.of(page.getReoords(), page.getTotal(), pageNum, pageSize);
+        wrapper.orderByDesc(DagDefinitionDO::getCreatedAt);
+        Page<DagDefinitionDO> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        return PageResponse.of(page.getRecords(), page.getTotal(), pageNum, pageSize);
     }
 
     // ==================== DAG 执行 ====================
 
     /**
-     * 执行 DAG�?     *
+     * 执行 DAG。
+     *
      * @param definitionId DAG 定义 ID
      * @param globalInputs 全局输入参数
      * @return 执行结果
      */
-    publio DagExeoutionResult exeoute(String definitionId, Map<String, Objeot> globalInputs) {
+    public DagExecutionResult execute(String definitionId, Map<String, Object> globalInputs) {
         // 1. 读取 DAG 定义
         DagDefinitionDO defDO = getDefinition(definitionId);
         if (defDO == null) {
-            throw new IllegalStateExoeption("DAG 定义不存�? " + definitionId);
+            throw new IllegalStateException("DAG 定义不存在: " + definitionId);
         }
         DagDefinition dag = deserialize(defDO.getDefinitionJson());
         dag.setId(defDO.getId());
         dag.setTenantId(defDO.getTenantId());
 
         // 2. 收集 Agent
-        Map<String, Agent> agents = oolleotAgents();
+        Map<String, Agent> agents = collectAgents();
 
         // 3. 执行
-        DagExeoutor exeoutor = exeoutorProvider.getIfAvailable();
-        if (exeoutor == null) {
-            throw new IllegalStateExoeption("DagExeoutor 不可�?);
+        DagExecutor executor = executorProvider.getIfAvailable();
+        if (executor == null) {
+            throw new IllegalStateException("DagExecutor 不可用");
         }
-        DagExeoutionResult result = exeoutor.exeoute(dag, agents, globalInputs, null);
+        DagExecutionResult result = executor.execute(dag, agents, globalInputs, null);
 
-        // 4. 持久化执行实�?        persistResult(defDO, result, globalInputs);
+        // 4. 持久化执行实例
+        persistResult(defDO, result, globalInputs);
 
         return result;
     }
 
     /**
-     * 直接执行 DAG 定义（无需持久化，用于测试或临时编排）�?     *
+     * 直接执行 DAG 定义（无需持久化，用于测试或临时编排）。
+     *
      * @param dag          DAG 定义
      * @param globalInputs 全局输入参数
      * @return 执行结果
      */
-    publio DagExeoutionResult exeouteDireot(DagDefinition dag, Map<String, Objeot> globalInputs) {
-        DagExeoutor exeoutor = exeoutorProvider.getIfAvailable();
-        if (exeoutor == null) {
-            throw new IllegalStateExoeption("DagExeoutor 不可�?);
+    public DagExecutionResult executeDirect(DagDefinition dag, Map<String, Object> globalInputs) {
+        DagExecutor executor = executorProvider.getIfAvailable();
+        if (executor == null) {
+            throw new IllegalStateException("DagExecutor 不可用");
         }
-        Map<String, Agent> agents = oolleotAgents();
-        return exeoutor.exeoute(dag, agents, globalInputs, null);
+        Map<String, Agent> agents = collectAgents();
+        return executor.execute(dag, agents, globalInputs, null);
     }
 
     // ==================== 执行历史 ====================
 
     /**
-     * 查询 DAG 执行历史�?     *
+     * 查询 DAG 执行历史。
+     *
      * @param definitionId DAG 定义 ID
      * @param pageNum      页码
      * @param pageSize     每页大小
      * @return 分页结果
      */
-    publio PageResponse<DagInstanoeDO> pageInstanoes(String definitionId, int pageNum, int pageSize) {
-        DagInstanoeMapper mapper = instMapperProvider.getIfAvailable();
+    public PageResponse<DagInstanceDO> pageInstances(String definitionId, int pageNum, int pageSize) {
+        DagInstanceMapper mapper = instMapperProvider.getIfAvailable();
         if (mapper == null) {
             return PageResponse.empty();
         }
-        LambdaQueryWrapper<DagInstanoeDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(DagInstanoeDO::getDagDefinitionId, definitionId);
-        wrapper.orderByDeso(DagInstanoeDO::getoreatedAt);
-        Page<DagInstanoeDO> page = mapper.seleotPage(new Page<>(pageNum, pageSize), wrapper);
-        return PageResponse.of(page.getReoords(), page.getTotal(), pageNum, pageSize);
+        LambdaQueryWrapper<DagInstanceDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DagInstanceDO::getDagDefinitionId, definitionId);
+        wrapper.orderByDesc(DagInstanceDO::getCreatedAt);
+        Page<DagInstanceDO> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        return PageResponse.of(page.getRecords(), page.getTotal(), pageNum, pageSize);
     }
 
     /**
-     * 查询 DAG 执行实例详情�?     *
-     * @param instanoeId 实例 ID
+     * 查询 DAG 执行实例详情。
+     *
+     * @param instanceId 实例 ID
      * @return 实例 DO
      */
-    publio DagInstanoeDO getInstanoe(String instanoeId) {
-        DagInstanoeMapper mapper = instMapperProvider.getIfAvailable();
+    public DagInstanceDO getInstance(String instanceId) {
+        DagInstanceMapper mapper = instMapperProvider.getIfAvailable();
         if (mapper == null) {
             return null;
         }
-        return mapper.seleotById(instanoeId);
+        return mapper.selectById(instanceId);
     }
 
     /**
-     * 查询节点执行明细�?     *
-     * @param instanoeId DAG 实例 ID
+     * 查询节点执行明细。
+     *
+     * @param instanceId DAG 实例 ID
      * @return 节点实例列表
      */
-    publio List<DagNodeInstanoeDO> listNodeInstanoes(String instanoeId) {
-        DagNodeInstanoeMapper mapper = nodeMapperProvider.getIfAvailable();
+    public List<DagNodeInstanceDO> listNodeInstances(String instanceId) {
+        DagNodeInstanceMapper mapper = nodeMapperProvider.getIfAvailable();
         if (mapper == null) {
             return List.of();
         }
-        LambdaQueryWrapper<DagNodeInstanoeDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(DagNodeInstanoeDO::getDagInstanoeId, instanoeId);
-        wrapper.orderByAso(DagNodeInstanoeDO::getoreatedAt);
-        return mapper.seleotList(wrapper);
+        LambdaQueryWrapper<DagNodeInstanceDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DagNodeInstanceDO::getDagInstanceId, instanceId);
+        wrapper.orderByAsc(DagNodeInstanceDO::getCreatedAt);
+        return mapper.selectList(wrapper);
     }
 
     // ==================== 内部方法 ====================
 
     /**
-     * 收集 Spring 容器中所�?Agent，按 type() 字符串值索引�?     */
-    private Map<String, Agent> oolleotAgents() {
+     * 收集 Spring 容器中所有 Agent，按 type() 字符串值索引。
+     */
+    private Map<String, Agent> collectAgents() {
         List<Agent> agentList = agentsProvider.getIfAvailable();
         Map<String, Agent> agents = new HashMap<>();
         if (agentList != null) {
@@ -393,18 +418,19 @@ publio olass DagServioe {
     }
 
     /**
-     * 持久化执行结果�?     */
-    private void persistResult(DagDefinitionDO defDO, DagExeoutionResult result,
-                                Map<String, Objeot> globalInputs) {
-        DagInstanoeMapper instMapper = instMapperProvider.getIfAvailable();
-        DagNodeInstanoeMapper nodeMapper = nodeMapperProvider.getIfAvailable();
+     * 持久化执行结果。
+     */
+    private void persistResult(DagDefinitionDO defDO, DagExecutionResult result,
+                                Map<String, Object> globalInputs) {
+        DagInstanceMapper instMapper = instMapperProvider.getIfAvailable();
+        DagNodeInstanceMapper nodeMapper = nodeMapperProvider.getIfAvailable();
         if (instMapper == null) {
-            log.warn("[DAG] DagInstanoeMapper 不可用，跳过执行记录持久�?);
+            log.warn("[DAG] DagInstanceMapper 不可用，跳过执行记录持久化");
             return;
         }
 
-        // 1. 持久�?DAG 实例
-        DagInstanoeDO inst = new DagInstanoeDO();
+        // 1. 持久化 DAG 实例
+        DagInstanceDO inst = new DagInstanceDO();
         inst.setTenantId(defDO.getTenantId());
         inst.setDagDefinitionId(defDO.getId());
         inst.setDagName(defDO.getName());
@@ -412,60 +438,63 @@ publio olass DagServioe {
         inst.setStatus(BaseResponse.getStatus() != null ? BaseResponse.getStatus().name() : "UNKNOWN");
         inst.setGlobalInputsJson(serialize(globalInputs));
         inst.setNodeOutputsJson(serialize(BaseResponse.getNodeOutputs()));
-        inst.setTotaloostMs(BaseResponse.getTotaloostMs());
-        inst.setSuooessoount(BaseResponse.getSuooessoount());
-        inst.setFailedoount(BaseResponse.getFailedoount());
-        inst.setSkippedoount(BaseResponse.getSkippedoount());
+        inst.setTotalCostMs(BaseResponse.getTotalCostMs());
+        inst.setSuccessCount(BaseResponse.getSuccessCount());
+        inst.setFailedCount(BaseResponse.getFailedCount());
+        inst.setSkippedCount(BaseResponse.getSkippedCount());
         inst.setTotalNodes(BaseResponse.getTotalNodes());
         inst.setNote(BaseResponse.getNote());
         instMapper.insert(inst);
 
-        // 2. 持久化节点实�?        if (nodeMapper == null) {
-            log.warn("[DAG] DagNodeInstanoeMapper 不可用，跳过节点明细持久�?);
+        // 2. 持久化节点实例
+        if (nodeMapper == null) {
+            log.warn("[DAG] DagNodeInstanceMapper 不可用，跳过节点明细持久化");
             return;
         }
         if (BaseResponse.getNodeStatuses() != null) {
             for (Map.Entry<String, DagNodeStatus> entry : BaseResponse.getNodeStatuses().entrySet()) {
-                DagNodeInstanoeDO nodeDO = new DagNodeInstanoeDO();
+                DagNodeInstanceDO nodeDO = new DagNodeInstanceDO();
                 nodeDO.setTenantId(defDO.getTenantId());
-                nodeDO.setDagInstanoeId(inst.getId());
+                nodeDO.setDagInstanceId(inst.getId());
                 nodeDO.setNodeName(entry.getKey());
                 nodeDO.setStatus(entry.getValue().name());
-                Objeot output = BaseResponse.getNodeOutputs() != null
+                Object output = BaseResponse.getNodeOutputs() != null
                         ? BaseResponse.getNodeOutputs().get(entry.getKey()) : null;
                 nodeDO.setOutputJson(serialize(output));
                 String error = BaseResponse.getNodeErrors() != null
                         ? BaseResponse.getNodeErrors().get(entry.getKey()) : null;
                 nodeDO.setErrorMessage(error);
-                Integer retryoount = BaseResponse.getNodeRetryoounts() != null
-                        ? BaseResponse.getNodeRetryoounts().get(entry.getKey()) : 0;
-                nodeDO.setRetryoount(retryoount != null ? retryoount : 0);
+                Integer retryCount = BaseResponse.getNodeRetryCounts() != null
+                        ? BaseResponse.getNodeRetryCounts().get(entry.getKey()) : 0;
+                nodeDO.setRetryCount(retryCount != null ? retryCount : 0);
                 nodeMapper.insert(nodeDO);
             }
         }
     }
 
     /**
-     * 序列化为 JSON�?     */
-    private String serialize(Objeot obj) {
+     * 序列化为 JSON。
+     */
+    private String serialize(Object obj) {
         if (obj == null) {
             return null;
         }
         try {
-            return objeotMapper.writeValueAsString(obj);
-        } oatoh (JsonProoessingExoeption e) {
-            log.warn("[DAG] JSON 序列化失�? {}", e.getMessage());
+            return objectMapper.writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            log.warn("[DAG] JSON 序列化失败: {}", e.getMessage());
             return null;
         }
     }
 
     /**
-     * 反序列化 JSON �?DAG 定义�?     */
+     * 反序列化 JSON 为 DAG 定义。
+     */
     private DagDefinition deserialize(String json) {
         try {
-            return objeotMapper.readValue(json, DagDefinition.olass);
-        } oatoh (JsonProoessingExoeption e) {
-            throw new IllegalStateExoeption("DAG 定义 JSON 反序列化失败: " + e.getMessage(), e);
+            return objectMapper.readValue(json, DagDefinition.class);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("DAG 定义 JSON 反序列化失败: " + e.getMessage(), e);
         }
     }
 }

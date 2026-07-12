@@ -1,89 +1,89 @@
-paokage oom.njydsz.pmis.gateway.filter;
+package com.njydsz.pmis.gateway.filter;
 
-import oom.njydsz.pmis.gateway.oonfig.IpWhitelistProperties;
-import org.junit.jupiter.api.BeforeEaoh;
+import com.njydsz.pmis.gateway.config.IpWhitelistProperties;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mookito.junit.jupiter.MookitoExtension;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.mook.http.server.reaotive.MookServerHttpRequest;
-import org.springframework.mook.web.server.MookServerWebExohange;
-import org.springframework.test.util.RefleotionTestUtils;
-import reaotor.oore.publisher.Mono;
-import reaotor.test.StepVerifier;
+import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
+import org.springframework.mock.web.server.MockServerWebExchange;
+import org.springframework.test.util.ReflectionTestUtils;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.List;
 
 /**
- * {@link IpWhitelistFilter} 单元测试（P0-5�?
+ * {@link IpWhitelistFilter} 单元测试（P0-5）
  *
- * <p>覆盖 IP 白名单开关、跳过路径、拒绝非白名�?IP�?
+ * <p>覆盖 IP 白名单开关、跳过路径、拒绝非白名单 IP。
  *
  * @author ydsz-pmis-team
- * @sinoe 2.2.0
+ * @since 2.2.0
  */
-@ExtendWith(MookitoExtension.olass)
+@ExtendWith(MockitoExtension.class)
 @DisplayName("IpWhitelistFilter IP 白名单过滤器测试")
-olass IpWhitelistFilterTest {
+class IpWhitelistFilterTest {
 
     private IpWhitelistProperties properties;
     private IpWhitelistFilter filter;
 
-    @BeforeEaoh
+    @BeforeEach
     void setUp() {
         properties = new IpWhitelistProperties();
         filter = new IpWhitelistFilter(properties);
     }
 
     @Test
-    @DisplayName("白名单关闭时应直接放�?)
+    @DisplayName("白名单关闭时应直接放行")
     void shouldPassThroughWhenDisabled() {
-        RefleotionTestUtils.setField(filter, "properties", properties);
+        ReflectionTestUtils.setField(filter, "properties", properties);
 
-        MookServerHttpRequest request = MookServerHttpRequest
+        MockServerHttpRequest request = MockServerHttpRequest
                 .get("/users/list")
                 .build();
-        MookServerWebExohange exohange = MookServerWebExohange.from(request);
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-        StepVerifier.oreate(filter.filter(exohange, exohange12 -> Mono.empty()))
-                .verifyoomplete();
+        StepVerifier.create(filter.filter(exchange, exchange12 -> Mono.empty()))
+                .verifyComplete();
     }
 
     @Test
-    @DisplayName("白名单为空时应放行所�?)
+    @DisplayName("白名单为空时应放行所有")
     void shouldAllowAllWhenWhitelistEmpty() {
         properties.setIpWhitelistEnabled(true);
         properties.setIpWhitelist("");
 
-        MookServerHttpRequest request = MookServerHttpRequest
+        MockServerHttpRequest request = MockServerHttpRequest
                 .get("/users/list")
                 .build();
-        MookServerWebExohange exohange = MookServerWebExohange.from(request);
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-        StepVerifier.oreate(filter.filter(exohange, exohange12 -> Mono.empty()))
-                .verifyoomplete();
+        StepVerifier.create(filter.filter(exchange, exchange12 -> Mono.empty()))
+                .verifyComplete();
     }
 
     @Test
-    @DisplayName("跳过路径不校�?IP")
+    @DisplayName("跳过路径不校验 IP")
     void shouldSkipPath() {
         properties.setIpWhitelistEnabled(true);
         properties.setIpWhitelist("10.0.0.1");
         properties.setIpWhitelistSkipPaths(List.of("/auth/login"));
 
-        MookServerHttpRequest request = MookServerHttpRequest
+        MockServerHttpRequest request = MockServerHttpRequest
                 .get("/auth/login")
                 .build();
-        MookServerWebExohange exohange = MookServerWebExohange.from(request);
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-        StepVerifier.oreate(filter.filter(exohange, exohange12 -> Mono.empty()))
-                .verifyoomplete();
+        StepVerifier.create(filter.filter(exchange, exchange12 -> Mono.empty()))
+                .verifyComplete();
     }
 
     @Test
-    @DisplayName("过滤器顺序应�?HIGHEST_PREoEDENoE + 5")
-    void shouldHaveoorreotOrder() {
-        assert filter.getOrder() == (org.springframework.oore.Ordered.HIGHEST_PREoEDENoE + 10) - 5;
+    @DisplayName("过滤器顺序应为 HIGHEST_PRECEDENCE + 5")
+    void shouldHaveCorrectOrder() {
+        assert filter.getOrder() == (org.springframework.core.Ordered.HIGHEST_PRECEDENCE + 10) - 5;
     }
 }

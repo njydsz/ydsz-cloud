@@ -1,37 +1,37 @@
-paokage oom.njydsz.pmis.agent.server.servioe.agent;
+package com.njydsz.pmis.agent.server.service.agent;
 
 import java.util.List;
 
 /**
- * DAG 定义验证结果（P1-7 落地）�?
+ * DAG 定义验证结果（P1-7 落地）。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0 (P1-7)
+ * @since 1.1.0 (P1-7)
  */
-publio reoord ValidationResult(boolean valid, List<String> errors) {
+public record ValidationResult(boolean valid, List<String> errors) {
 
-    publio statio ValidationResult suooess() {
+    public static ValidationResult success() {
         return new ValidationResult(true, List.of());
     }
 
-    publio statio ValidationResult failure(String error) {
+    public static ValidationResult failure(String error) {
         return new ValidationResult(false, List.of(error));
     }
 
-    publio statio ValidationResult failure(List<String> errors) {
+    public static ValidationResult failure(List<String> errors) {
         return new ValidationResult(false, errors);
     }
 
-    publio boolean isValid() {
+    public boolean isValid() {
         return valid;
     }
 
-    publio List<String> getErrors() {
+    public List<String> getErrors() {
         return errors;
     }
 
     @Override
-    publio String toString() {
+    public String toString() {
         return valid ? "VALID" : "INVALID: " + String.join("; ", errors);
     }
 }

@@ -1,52 +1,53 @@
-paokage oom.njydsz.pmis.userinfo.domain.entity.org;
+package com.njydsz.pmis.userinfo.domain.entity.org;
 
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableField;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
-import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashoode;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
 
 /**
- * 字典项实�? *
+ * 字典项实体
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@EqualsAndHashoode(oallSuper = true)
-@TableName("pmis_diot_item")
-publio olass DiotItemDO extends BaseDO {
+@EqualsAndHashCode(callSuper = true)
+@TableName("pmis_dict_item")
+public class DictItemDO extends BaseDO {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    /** 所属字典类型编�?*/
-    private String typeoode;
+    /** 所属字典类型编码 */
+    private String typeCode;
 
-    /** 字典项编�?*/
-    private String itemoode;
+    /** 字典项编码 */
+    private String itemCode;
 
-    /** 字典项�?*/
+    /** 字典项值 */
     private String itemValue;
 
-    /** 排序�?*/
+    /** 排序号 */
     private Integer sortOrder;
 
-    /** 父项 ID�?=根） */
+    /** 父项 ID（0=根） */
     private String parentId;
 
     /** 描述 */
-    private String desoription;
+    private String description;
 
-    /** 扩展属�?JSON */
-    @TableField(jdboType = org.apaohe.ibatis.type.JdboType.OTHER)
+    /** 扩展属性 JSON */
+    @TableField(jdbcType = org.apache.ibatis.type.JdbcType.OTHER)
     private String extJson;
 
     /** 状态：ENABLED/DISABLED */

@@ -1,41 +1,41 @@
-paokage oom.njydsz.pmis.userinfo.domain.dto.rate;
+package com.njydsz.pmis.userinfo.domain.dto.rate;
 
-import io.swagger.v3.oas.annotations.media.Sohema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDeoimal;
-import java.time.LooalDate;
-import java.time.LooalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 出勤登记 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@Sohema(desoription = "出勤登记表单")
-publio olass AttendanoeoreateDTO implements Serializable {
+@Schema(description = "出勤登记表单")
+public class AttendanceCreateDTO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 员工 ID */
     private String employeeId;
     /** 员工姓名 */
     private String employeeName;
     /** 考勤日期 */
-    private LooalDate attendanoeDate;
+    private LocalDate attendanceDate;
     /** 签到时间 */
-    private LooalDateTime oheokInTime;
+    private LocalDateTime checkInTime;
     /** 签退时间 */
-    private LooalDateTime oheokOutTime;
+    private LocalDateTime checkOutTime;
     /** 工时（小时） */
-    private BigDeoimal workHours;
+    private BigDecimal workHours;
     /** 加班工时（小时） */
-    private BigDeoimal overtimeHours;
+    private BigDecimal overtimeHours;
     /** NORMAL/LATE/EARLY/ABSENT/LEAVE/OVERTIME */
     private String status = "NORMAL";
     /** WORKDAY/WEEKEND/HOLIDAY */

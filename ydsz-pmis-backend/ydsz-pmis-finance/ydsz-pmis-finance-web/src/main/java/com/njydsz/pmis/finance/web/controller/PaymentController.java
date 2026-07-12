@@ -1,20 +1,20 @@
-paokage oom.njydsz.pmis.finanoe.web.oontroller;
+package com.njydsz.pmis.finance.web.controller;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
-import oom.njydsz.pmis.oommon.audit.annotation.OperationLog;
-import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.finanoe.domain.dto.PaymentAllooationDTO;
-import oom.njydsz.pmis.finanoe.domain.dto.PaymentoreateDTO;
-import oom.njydsz.pmis.finanoe.domain.entity.PaymentDO;
-import oom.njydsz.pmis.finanoe.server.servioe.finanoe.PaymentServioe;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.OperationLog;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.finance.domain.dto.PaymentAllocationDTO;
+import com.njydsz.pmis.finance.domain.dto.PaymentCreateDTO;
+import com.njydsz.pmis.finance.domain.entity.PaymentDO;
+import com.njydsz.pmis.finance.server.service.finance.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.oonstraints.Max;
-import jakarta.validation.oonstraints.Min;
-import lombok.RequiredArgsoonstruotor;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,29 +24,29 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.Restoontroller;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 回款管理 oontroller
+ * 回款管理 Controller
  *
- * <p>负责回款录入、确认到账、核销发票、自动核销及现金流预测�?
+ * <p>负责回款录入、确认到账、核销发票、自动核销及现金流预测。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Tag(name = "回款管理")
-@Restoontroller
-@RequestMapping("/finanoe/payment")
-@RequiredArgsoonstruotor
+@RestController
+@RequestMapping("/finance/payment")
+@RequiredArgsConstructor
 @Validated
-publio olass Paymentoontroller {
+public class PaymentController {
 
     /** 回款服务 */
-    private final PaymentServioe servioe;
+    private final PaymentService service;
 
     /**
      * 录入回款
@@ -55,28 +55,28 @@ publio olass Paymentoontroller {
      * @return 新建回款 ID
      */
     @Operation(summary = "录入回款")
-    @AuthApiPermission(apioodes = "finanoe:payment:oreate")
-    @OperationLog(module = "回款管理", aotion = "录入回款", bizType = "PAYMENT", saveResult = true)
-    @Idempotent(key = "payment:reoord", ttlSeoonds = 10, message = "请勿重复录入回款")
+    @AuthApiPermission(apiCodes = "finance:payment:create")
+    @OperationLog(module = "回款管理", action = "录入回款", bizType = "PAYMENT", saveResult = true)
+    @Idempotent(key = "payment:record", ttlSeconds = 10, message = "请勿重复录入回款")
     @PostMapping
-    publio BaseResponse<String> reoord(@Valid @RequestBody PaymentoreateDTO dto) {
-        return BaseResponse.ok(servioe.reoord(dto));
+    public BaseResponse<String> record(@Valid @RequestBody PaymentCreateDTO dto) {
+        return BaseResponse.ok(service.record(dto));
     }
 
     /**
      * 确认回款到账
      *
      * @param id         回款 ID
-     * @param operatorId 操作�?ID
-     * @return 空结�?
+     * @param operatorId 操作人 ID
+     * @return 空结果
      */
     @Operation(summary = "确认到账")
-    @AuthApiPermission(apioodes = "finanoe:payment:status")
-    @OperationLog(module = "回款管理", aotion = "确认到账", bizType = "PAYMENT")
-    @Idempotent(key = "payment:oonfirm", ttlSeoonds = 5, message = "请勿重复提交")
-    @PutMapping("/{id}/oonfirm")
-    publio BaseResponse<Void> oonfirm(@PathVariable String id, @RequestParam String operatorId) {
-        servioe.oonfirm(id, operatorId);
+    @AuthApiPermission(apiCodes = "finance:payment:status")
+    @OperationLog(module = "回款管理", action = "确认到账", bizType = "PAYMENT")
+    @Idempotent(key = "payment:confirm", ttlSeconds = 5, message = "请勿重复提交")
+    @PutMapping("/{id}/confirm")
+    public BaseResponse<Void> confirm(@PathVariable String id, @RequestParam String operatorId) {
+        service.confirm(id, operatorId);
         return BaseResponse.ok();
     }
 
@@ -84,19 +84,19 @@ publio olass Paymentoontroller {
      * 取消回款
      *
      * @param id         回款 ID
-     * @param operatorId 操作�?ID
-     * @param reason     取消原因，可�?
-     * @return 空结�?
+     * @param operatorId 操作人 ID
+     * @param reason     取消原因，可选
+     * @return 空结果
      */
     @Operation(summary = "取消")
-    @AuthApiPermission(apioodes = "finanoe:payment:status")
-    @OperationLog(module = "回款管理", aotion = "取消回款", bizType = "PAYMENT")
-    @Idempotent(key = "payment:oanoel", ttlSeoonds = 5, message = "请勿重复提交")
-    @PutMapping("/{id}/oanoel")
-    publio BaseResponse<Void> oanoel(@PathVariable String id,
+    @AuthApiPermission(apiCodes = "finance:payment:status")
+    @OperationLog(module = "回款管理", action = "取消回款", bizType = "PAYMENT")
+    @Idempotent(key = "payment:cancel", ttlSeconds = 5, message = "请勿重复提交")
+    @PutMapping("/{id}/cancel")
+    public BaseResponse<Void> cancel(@PathVariable String id,
                           @RequestParam String operatorId,
                           @RequestParam(required = false) String reason) {
-        servioe.oanoel(id, operatorId, reason);
+        service.cancel(id, operatorId, reason);
         return BaseResponse.ok();
     }
 
@@ -104,64 +104,64 @@ publio olass Paymentoontroller {
      * 删除回款
      *
      * @param id 回款 ID
-     * @return 空结�?
+     * @return 空结果
      */
     @Operation(summary = "删除")
-    @AuthApiPermission(apioodes = "finanoe:payment:delete")
-    @OperationLog(module = "回款管理", aotion = "删除回款", bizType = "PAYMENT")
-    @Idempotent(key = "payment:delete", ttlSeoonds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apiCodes = "finance:payment:delete")
+    @OperationLog(module = "回款管理", action = "删除回款", bizType = "PAYMENT")
+    @Idempotent(key = "payment:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    publio BaseResponse<Void> delete(@PathVariable String id) {
-        servioe.delete(id);
+    public BaseResponse<Void> delete(@PathVariable String id) {
+        service.delete(id);
         return BaseResponse.ok();
     }
 
     /**
-     * 核销到发�?
+     * 核销到发票
      *
      * @param dto 核销分配参数
-     * @return 空结�?
+     * @return 空结果
      */
-    @Operation(summary = "核销到发�?)
-    @AuthApiPermission(apioodes = "finanoe:payment:allooate")
-    @OperationLog(module = "回款管理", aotion = "核销到发�?, bizType = "PAYMENT")
-    @Idempotent(key = "payment:allooate", ttlSeoonds = 5, message = "请勿重复提交")
-    @PostMapping("/allooate")
-    publio BaseResponse<Void> allooate(@Valid @RequestBody PaymentAllooationDTO dto) {
-        servioe.allooate(dto);
+    @Operation(summary = "核销到发票")
+    @AuthApiPermission(apiCodes = "finance:payment:allocate")
+    @OperationLog(module = "回款管理", action = "核销到发票", bizType = "PAYMENT")
+    @Idempotent(key = "payment:allocate", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/allocate")
+    public BaseResponse<Void> allocate(@Valid @RequestBody PaymentAllocationDTO dto) {
+        service.allocate(dto);
         return BaseResponse.ok();
     }
 
     /**
      * 按客户自动核销
      *
-     * @param oustomerId 客户 ID
-     * @param operatorId 操作�?ID
-     * @return 已核销的回款数�?
+     * @param customerId 客户 ID
+     * @param operatorId 操作人 ID
+     * @return 已核销的回款数量
      */
-    @Operation(summary = "自动核销（按客户�?)
-    @AuthApiPermission(apioodes = "finanoe:payment:allooate")
-    @OperationLog(module = "回款管理", aotion = "自动核销（按客户�?, bizType = "PAYMENT", saveResult = true)
-    @Idempotent(key = "payment:autoAllooate", ttlSeoonds = 5, message = "请勿重复提交")
-    @PostMapping("/autoAllooate")
-    publio BaseResponse<Integer> autoAllooate(@RequestParam String oustomerId,
+    @Operation(summary = "自动核销（按客户）")
+    @AuthApiPermission(apiCodes = "finance:payment:allocate")
+    @OperationLog(module = "回款管理", action = "自动核销（按客户）", bizType = "PAYMENT", saveResult = true)
+    @Idempotent(key = "payment:autoAllocate", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/autoAllocate")
+    public BaseResponse<Integer> autoAllocate(@RequestParam String customerId,
                                    @RequestParam String operatorId) {
-        return BaseResponse.ok(servioe.autoAllooate(oustomerId, operatorId));
+        return BaseResponse.ok(service.autoAllocate(customerId, operatorId));
     }
 
     /**
-     * 现金流预�?
+     * 现金流预测
      *
      * @param initiationId 项目立项 ID
-     * @param months       预测月份�?
+     * @param months       预测月份数
      * @return 预测结果列表
      */
-    @Operation(summary = "现金流预�?)
-    @AuthApiPermission(apioodes = "finanoe:payment:list")
-    @GetMapping("/foreoast")
-    publio BaseResponse<List<Map<String, Objeot>>> foreoast(@RequestParam String initiationId,
+    @Operation(summary = "现金流预测")
+    @AuthApiPermission(apiCodes = "finance:payment:list")
+    @GetMapping("/forecast")
+    public BaseResponse<List<Map<String, Object>>> forecast(@RequestParam String initiationId,
                                                  @RequestParam(defaultValue = "3") int months) {
-        return BaseResponse.ok(servioe.foreoastoashFlow(initiationId, months));
+        return BaseResponse.ok(service.forecastCashFlow(initiationId, months));
     }
 
     /**
@@ -171,10 +171,10 @@ publio olass Paymentoontroller {
      * @return 回款实体
      */
     @Operation(summary = "详情")
-    @AuthApiPermission(apioodes = "finanoe:payment:list")
+    @AuthApiPermission(apiCodes = "finance:payment:list")
     @GetMapping("/{id}")
-    publio BaseResponse<PaymentDO> get(@PathVariable String id) {
-        return BaseResponse.ok(servioe.getById(id));
+    public BaseResponse<PaymentDO> get(@PathVariable String id) {
+        return BaseResponse.ok(service.getById(id));
     }
 
     /**
@@ -182,50 +182,50 @@ publio olass Paymentoontroller {
      *
      * @param page         页码（从 1 开始）
      * @param size         每页大小
-     * @param keyword      关键�?
-     * @param status       状态过�?
-     * @param oontraotId   合同 ID
-     * @param oustomerId   客户 ID
+     * @param keyword      关键词
+     * @param status       状态过滤
+     * @param contractId   合同 ID
+     * @param customerId   客户 ID
      * @param initiationId 项目立项 ID
      * @return 分页结果
      */
     @Operation(summary = "分页")
-    @AuthApiPermission(apioodes = "finanoe:payment:list")
+    @AuthApiPermission(apiCodes = "finance:payment:list")
     @GetMapping("/page")
-    publio BaseResponse<Page<PaymentDO>> page(
+    public BaseResponse<Page<PaymentDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String oontraotId,
-            @RequestParam(required = false) String oustomerId,
+            @RequestParam(required = false) String contractId,
+            @RequestParam(required = false) String customerId,
             @RequestParam(required = false) String initiationId) {
-        return BaseResponse.ok(servioe.page(page, size, keyword, status, oontraotId, oustomerId, initiationId));
+        return BaseResponse.ok(service.page(page, size, keyword, status, contractId, customerId, initiationId));
     }
 
     /**
-     * 按合同汇总回�?
+     * 按合同汇总回款
      *
-     * @param oontraotId 合同 ID
-     * @return 已回款金�?
+     * @param contractId 合同 ID
+     * @return 已回款金额
      */
-    @Operation(summary = "按合同汇总回�?)
-    @AuthApiPermission(apioodes = "finanoe:payment:list")
-    @GetMapping("/sum/byoontraot")
-    publio BaseResponse<BigDeoimal> sumByoontraot(@RequestParam String oontraotId) {
-        return BaseResponse.ok(servioe.sumReoeivedByoontraot(oontraotId));
+    @Operation(summary = "按合同汇总回款")
+    @AuthApiPermission(apiCodes = "finance:payment:list")
+    @GetMapping("/sum/byContract")
+    public BaseResponse<BigDecimal> sumByContract(@RequestParam String contractId) {
+        return BaseResponse.ok(service.sumReceivedByContract(contractId));
     }
 
     /**
-     * 按月汇总回�?
+     * 按月汇总回款
      *
      * @param initiationId 项目立项 ID
-     * @return 各月汇总列�?
+     * @return 各月汇总列表
      */
-    @Operation(summary = "按月汇�?)
-    @AuthApiPermission(apioodes = "finanoe:payment:list")
+    @Operation(summary = "按月汇总")
+    @AuthApiPermission(apiCodes = "finance:payment:list")
     @GetMapping("/aggregate/byMonth")
-    publio BaseResponse<List<Map<String, Objeot>>> aggregateByMonth(@RequestParam String initiationId) {
-        return BaseResponse.ok(servioe.aggregateByMonth(initiationId));
+    public BaseResponse<List<Map<String, Object>>> aggregateByMonth(@RequestParam String initiationId) {
+        return BaseResponse.ok(service.aggregateByMonth(initiationId));
     }
 }

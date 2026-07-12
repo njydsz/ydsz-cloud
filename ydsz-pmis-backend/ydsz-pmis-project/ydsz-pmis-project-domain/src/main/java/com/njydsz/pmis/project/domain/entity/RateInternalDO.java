@@ -1,73 +1,73 @@
-paokage oom.njydsz.pmis.projeot.domain.entity;
+package com.njydsz.pmis.project.domain.entity;
 
-import oom.baomidou.mybatisplus.annotation.FieldFill;
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableField;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDeoimal;
-import java.time.LooalDate;
-import java.time.LooalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 对内成本费率
  *
- * <p>�?(职级 × 事业�? 维度定义内部核算成本�?
+ * <p>按 (职级 × 事业部) 维度定义内部核算成本。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
 @TableName("pmis_rate_internal")
-publio olass RateInternalDO implements Serializable {
+public class RateInternalDO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 主键ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
     /** 业务编号 */
-    private String rateoode;
+    private String rateCode;
     /** 职级 L1-L18 */
-    private String leveloode;
-    /** 事业�?部门 ID */
+    private String levelCode;
+    /** 事业部/部门 ID */
     private String departmentId;
     /** 部门名称 */
     private String departmentName;
     /** 计费单位：DAY/HOUR */
     private String billingUnit;
     /** 内部成本金额 */
-    private BigDeoimal oostAmount;
+    private BigDecimal costAmount;
     /** 币种：CNY */
-    private String ourrenoy;
+    private String currency;
     /** 生效日期 */
-    private LooalDate effeotiveDate;
+    private LocalDate effectiveDate;
     /** 失效日期 */
-    private LooalDate expiryDate;
-    /** 状态：AoTIVE/INAoTIVE */
+    private LocalDate expiryDate;
+    /** 状态：ACTIVE/INACTIVE */
     private String status;
     /** 备注 */
     private String remark;
     /** 租户ID */
     private String tenantId;
     /** 链路追踪ID */
-    private String providerTraoeId;
+    private String providerTraceId;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
-    private LooalDateTime oreatedAt;
+    private LocalDateTime createdAt;
 
     /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LooalDateTime updatedAt;
+    private LocalDateTime updatedAt;
 
-    /** 逻辑删除标志�? 已删�?/ 0 未删�?*/
+    /** 逻辑删除标志：1 已删除 / 0 未删除 */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

@@ -1,57 +1,68 @@
-paokage oom.njydsz.pmis.message.server.traoing;
+package com.njydsz.pmis.message.server.tracing;
 
-import oom.njydsz.pmis.oommon.util.TraoeIdUtil;
-import org.slf4j.MDo;
+import com.njydsz.pmis.common.util.TraceIdUtil;
+import org.slf4j.MDC;
 
 /**
- * P1-3: 消息全链路追踪上下文（MDo traoeId 自动管理）�? *
- * <p>实现 {@link Autooloseable}，配�?try-with-resouroes 在重�?/ 死信 / 回执等异步或回调环节
- * 进入时将 traoeId 写入 MDo，退出时自动恢复 / 清除，确保日志始终携�?traoeId�? *
- * <p>典型用法�? * <pre>{@oode
- * try (MessageTraoeoontext otx = MessageTraoeoontext.enter(logDO.getTraoeId())) {
- *     // 此作用域�?MDo.traoeId 已设置，所有日志自动携�? *     ohannelRouter.dispatoh(logDO);
+ * P1-3: 消息全链路追踪上下文（MDC traceId 自动管理）。
+ *
+ * <p>实现 {@link AutoCloseable}，配合 try-with-resources 在重试 / 死信 / 回执等异步或回调环节
+ * 进入时将 traceId 写入 MDC，退出时自动恢复 / 清除，确保日志始终携带 traceId。
+ *
+ * <p>典型用法：
+ * <pre>{@code
+ * try (MessageTraceContext ctx = MessageTraceContext.enter(logDO.getTraceId())) {
+ *     // 此作用域内 MDC.traceId 已设置，所有日志自动携带
+ *     channelRouter.dispatch(logDO);
  * }
- * // 退出后 MDo 自动恢复/清除
+ * // 退出后 MDC 自动恢复/清除
  * }</pre>
  *
- * <p>traoeId �?null / 空白时自动生成新 traoeId（{@link TraoeIdUtil#getOroreate()}），
- * 保证下游日志可追溯�? *
- * <p>注意：本类仅管理 MDo 中的 traoeId，不干预 Brave / Miorometer Traoing �?span 上下文�? * previousTraoeId 读取�?{@link MDo#get} 而非 {@link TraoeIdUtil#get()}，避�?Brave
- * fallbaok traoeId 干扰恢复逻辑�? *
+ * <p>traceId 为 null / 空白时自动生成新 traceId（{@link TraceIdUtil#getOrCreate()}），
+ * 保证下游日志可追溯。
+ *
+ * <p>注意：本类仅管理 MDC 中的 traceId，不干预 Brave / Micrometer Tracing 的 span 上下文。
+ * previousTraceId 读取自 {@link MDC#get} 而非 {@link TraceIdUtil#get()}，避免 Brave
+ * fallback traceId 干扰恢复逻辑。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
-publio final olass MessageTraoeoontext implements Autooloseable {
+public final class MessageTraceContext implements AutoCloseable {
 
-    /** 进入�?MDo 中的 traoeId（用于退出时恢复，null 表示原来无） */
-    private final String previousTraoeId;
+    /** 进入前 MDC 中的 traceId（用于退出时恢复，null 表示原来无） */
+    private final String previousTraceId;
 
-    private MessageTraoeoontext(String previousTraoeId) {
-        this.previousTraoeId = previousTraoeId;
+    private MessageTraceContext(String previousTraceId) {
+        this.previousTraceId = previousTraceId;
     }
 
     /**
-     * 进入追踪上下文：�?traoeId 写入 MDo�?     *
-     * @param traoeId 待设置的 traoeId；为 null / 空白时自动生�?     * @return 上下文实例（try-with-resouroes 自动清理�?     */
-    publio statio MessageTraoeoontext enter(String traoeId) {
-        // 仅读�?MDo（不�?Brave fallbaok），避免恢复时把 Brave traoeId 当作 previous
-        String previous = MDo.get(TraoeIdUtil.TRAoE_ID_KEY);
-        if (traoeId == null || traoeId.isBlank()) {
-            TraoeIdUtil.getOroreate();
+     * 进入追踪上下文：将 traceId 写入 MDC。
+     *
+     * @param traceId 待设置的 traceId；为 null / 空白时自动生成
+     * @return 上下文实例（try-with-resources 自动清理）
+     */
+    public static MessageTraceContext enter(String traceId) {
+        // 仅读取 MDC（不含 Brave fallback），避免恢复时把 Brave traceId 当作 previous
+        String previous = MDC.get(TraceIdUtil.TRACE_ID_KEY);
+        if (traceId == null || traceId.isBlank()) {
+            TraceIdUtil.getOrCreate();
         } else {
-            TraoeIdUtil.set(traoeId);
+            TraceIdUtil.set(traceId);
         }
-        return new MessageTraoeoontext(previous);
+        return new MessageTraceContext(previous);
     }
 
     /**
-     * 退出追踪上下文：恢复原 traoeId 或清�?MDo�?     */
+     * 退出追踪上下文：恢复原 traceId 或清除 MDC。
+     */
     @Override
-    publio void olose() {
-        if (previousTraoeId != null && !previousTraoeId.isEmpty()) {
-            TraoeIdUtil.set(previousTraoeId);
+    public void close() {
+        if (previousTraceId != null && !previousTraceId.isEmpty()) {
+            TraceIdUtil.set(previousTraceId);
         } else {
-            TraoeIdUtil.olear();
+            TraceIdUtil.clear();
         }
     }
 }

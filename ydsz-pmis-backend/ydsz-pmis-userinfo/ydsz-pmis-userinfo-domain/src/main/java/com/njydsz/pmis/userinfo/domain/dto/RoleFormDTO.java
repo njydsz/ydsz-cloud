@@ -1,8 +1,8 @@
-paokage oom.njydsz.pmis.userinfo.domain.dto.permission;
+package com.njydsz.pmis.userinfo.domain.dto.permission;
 
-import io.swagger.v3.oas.annotations.media.Sohema;
-import jakarta.validation.oonstraints.NotBlank;
-import jakarta.validation.oonstraints.Size;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.io.Serial;
@@ -13,22 +13,22 @@ import java.util.List;
  * 角色创建/更新 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@Sohema(desoription = "角色表单")
-publio olass RoleFormDTO implements Serializable {
+@Schema(description = "角色表单")
+public class RoleFormDTO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    /** 主键 ID（更新时必填�?*/
+    /** 主键 ID（更新时必填） */
     private String id;
 
     /** 角色编码 */
     @NotBlank
     @Size(max = 64)
-    private String roleoode;
+    private String roleCode;
 
     /** 角色名称 */
     @NotBlank
@@ -36,13 +36,13 @@ publio olass RoleFormDTO implements Serializable {
     private String roleName;
 
     /** 描述 */
-    private String desoription;
+    private String description;
 
-    /** 排序�?*/
+    /** 排序号 */
     private Integer sortOrder;
 
-    /** ALL/DEPT/SELF/oUSTOM */
-    private String dataSoope = "SELF";
+    /** ALL/DEPT/SELF/CUSTOM */
+    private String dataScope = "SELF";
 
     /** 状态：ENABLED/DISABLED */
     private String status = "ENABLED";

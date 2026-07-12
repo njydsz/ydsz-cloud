@@ -1,161 +1,161 @@
-paokage oom.njydsz.pmis.agent.server.tool;
+package com.njydsz.pmis.agent.server.tool;
 
-import oom.fasterxml.jaokson.databind.ObjeotMapper;
-import oom.njydsz.pmis.agent.server.engine.Agentoontext;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.njydsz.pmis.agent.server.engine.AgentContext;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
-import java.net.URLEnooder;
-import java.net.http.Httpolient;
+import java.net.URLEncoder;
+import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.oharset.Standardoharsets;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matoher;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * HTTP API 工具（P2-12 落地）�?
+ * HTTP API 工具（P2-12 落地）。
  *
- * <p>动�?HTTP API 工具实现，将任意 REST API 端点适配�?{@link AgentTool}�?
- * 对标 ooze Plugin �?HTTP 请求节点 / Dify 的自定义工具�?
+ * <p>动态 HTTP API 工具实现，将任意 REST API 端点适配为 {@link AgentTool}。
+ * 对标 Coze Plugin 的 HTTP 请求节点 / Dify 的自定义工具。
  *
- * <p>核心能力�?
+ * <p>核心能力：
  * <ul>
- *   <li><b>路径参数替换</b>：URL 中的 {@oode {paramName}} 占位符自动替换为实际�?/li>
- *   <li><b>查询参数拼接</b>：指定为 query 的参数自动拼接到 URL 查询�?/li>
- *   <li><b>请求体构�?/b>：支持模板渲染（{@oode ${param}}）或自动 JSON 序列�?/li>
- *   <li><b>静态请求头</b>：每次请求自动携带预设的 headers（如 Authorization�?/li>
- *   <li><b>超时控制</b>：可配置的请求超�?/li>
+ *   <li><b>路径参数替换</b>：URL 中的 {@code {paramName}} 占位符自动替换为实际值</li>
+ *   <li><b>查询参数拼接</b>：指定为 query 的参数自动拼接到 URL 查询串</li>
+ *   <li><b>请求体构建</b>：支持模板渲染（{@code ${param}}）或自动 JSON 序列化</li>
+ *   <li><b>静态请求头</b>：每次请求自动携带预设的 headers（如 Authorization）</li>
+ *   <li><b>超时控制</b>：可配置的请求超时</li>
  *   <li><b>审批门控</b>：通过 {@link #requiresApproval()} 支持高危工具人工审批</li>
  * </ul>
  *
- * <p>使用示例（手动构造）�?
- * <pre>{@oode
+ * <p>使用示例（手动构造）：
+ * <pre>{@code
  * HttpApiTool weatherTool = HttpApiTool.builder()
  *     .toolName("get_weather")
- *     .desoription("查询指定城市的天�?)
+ *     .description("查询指定城市的天气")
  *     .httpMethod("GET")
- *     .endpointUrl("https://api.weather.example.oom/v1/{oity}")
- *     .pathParams(List.of("oity"))
+ *     .endpointUrl("https://api.weather.example.com/v1/{city}")
+ *     .pathParams(List.of("city"))
  *     .queryParams(List.of("units"))
- *     .paramSohema(weatherSohema)
+ *     .paramSchema(weatherSchema)
  *     .timeoutMs(15000)
  *     .build();
  * toolRegistry.register(weatherTool);
  * }</pre>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0 (P2-12)
+ * @since 1.0.0 (P2-12)
  */
 @Slf4j
-publio olass HttpApiTool implements AgentTool {
+public class HttpApiTool implements AgentTool {
 
-    private statio final Pattern PATH_PARAM_PATTERN = Pattern.oompile("\\{(\\w+)}");
-    private statio final Pattern TEMPLATE_VAR_PATTERN = Pattern.oompile("\\$\\{(\\w+)}");
+    private static final Pattern PATH_PARAM_PATTERN = Pattern.compile("\\{(\\w+)}");
+    private static final Pattern TEMPLATE_VAR_PATTERN = Pattern.compile("\\$\\{(\\w+)}");
 
     private final String toolName;
-    private final String desoription;
+    private final String description;
     private final String httpMethod;
     private final String endpointUrl;
     private final Map<String, String> headers;
-    private final Map<String, Objeot> jsonSohemaMap;
-    private final Map<String, olass<?>> paramSohema;
+    private final Map<String, Object> jsonSchemaMap;
+    private final Map<String, Class<?>> paramSchema;
     private final String bodyTemplate;
     private final List<String> pathParams;
     private final List<String> queryParams;
     private final long timeoutMs;
     private final boolean requiresApproval;
 
-    private final Httpolient httpolient;
-    private final ObjeotMapper objeotMapper;
+    private final HttpClient httpClient;
+    private final ObjectMapper objectMapper;
 
     /**
-     * 私有构造器，使�?{@link Builder}�?
+     * 私有构造器，使用 {@link Builder}。
      */
     private HttpApiTool(Builder b) {
         this.toolName = b.toolName;
-        this.desoription = b.desoription;
+        this.description = b.description;
         this.httpMethod = b.httpMethod;
         this.endpointUrl = b.endpointUrl;
         this.headers = b.headers != null ? b.headers : Map.of();
-        this.jsonSohemaMap = b.paramSohema;
-        this.paramSohema = extraotParamSohema(b.paramSohema);
+        this.jsonSchemaMap = b.paramSchema;
+        this.paramSchema = extractParamSchema(b.paramSchema);
         this.bodyTemplate = b.bodyTemplate;
         this.pathParams = b.pathParams != null ? b.pathParams : List.of();
         this.queryParams = b.queryParams != null ? b.queryParams : List.of();
         this.timeoutMs = b.timeoutMs > 0 ? b.timeoutMs : 30000L;
         this.requiresApproval = b.requiresApproval;
-        this.objeotMapper = b.objeotMapper != null ? b.objeotMapper : new ObjeotMapper();
-        this.httpolient = b.httpolient != null ? b.httpolient : Httpolient.newBuilder()
-                .oonneotTimeout(Duration.ofSeoonds(10))
+        this.objectMapper = b.objectMapper != null ? b.objectMapper : new ObjectMapper();
+        this.httpClient = b.httpClient != null ? b.httpClient : HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
                 .build();
     }
 
     @Override
-    publio String name() {
+    public String name() {
         return toolName;
     }
 
     @Override
-    publio String desoription() {
-        return desoription;
+    public String description() {
+        return description;
     }
 
     @Override
-    publio Map<String, olass<?>> parameterSohema() {
-        return paramSohema;
+    public Map<String, Class<?>> parameterSchema() {
+        return paramSchema;
     }
 
     @Override
-    publio Map<String, Objeot> jsonSohema() {
-        return jsonSohemaMap;
+    public Map<String, Object> jsonSchema() {
+        return jsonSchemaMap;
     }
 
     @Override
-    publio boolean requiresApproval() {
+    public boolean requiresApproval() {
         return requiresApproval;
     }
 
     @Override
-    publio ToolResult exeoute(Map<String, Objeot> parameters, Agentoontext otx) {
-        String traoeId = otx != null ? otx.getTraoeId() : "unknown";
-        long startTime = System.ourrentTimeMillis();
+    public ToolResult execute(Map<String, Object> parameters, AgentContext ctx) {
+        String traceId = ctx != null ? ctx.getTraceId() : "unknown";
+        long startTime = System.currentTimeMillis();
 
         try {
-            log.info("[HttpApiTool] 调用工具: name={}, method={}, url={}, params={}, traoeId={}",
-                    toolName, httpMethod, endpointUrl, parameters, traoeId);
+            log.info("[HttpApiTool] 调用工具: name={}, method={}, url={}, params={}, traceId={}",
+                    toolName, httpMethod, endpointUrl, parameters, traceId);
 
             // 1. 替换路径参数
-            String finalUrl = replaoePathParams(endpointUrl, parameters);
+            String finalUrl = replacePathParams(endpointUrl, parameters);
 
             // 2. 拼接查询参数
             finalUrl = appendQueryParams(finalUrl, parameters);
 
-            // 3. 构建请求体（POST/PUT/PAToH�?
+            // 3. 构建请求体（POST/PUT/PATCH）
             String requestBody = buildRequestBody(parameters);
 
             // 4. 构建 HTTP 请求
             HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                    .uri(URI.oreate(finalUrl))
+                    .uri(URI.create(finalUrl))
                     .timeout(Duration.ofMillis(timeoutMs))
-                    .header("Aooept", "applioation/json");
+                    .header("Accept", "application/json");
 
-            // 静�?headers
+            // 静态 headers
             for (Map.Entry<String, String> header : headers.entrySet()) {
                 requestBuilder.header(header.getKey(), header.getValue());
             }
 
-            // 设置 method �?body
-            String method = httpMethod.toUpperoase();
+            // 设置 method 和 body
+            String method = httpMethod.toUpperCase();
             if (requestBody != null && !requestBody.isBlank()) {
-                requestBuilder.header("oontent-Type", "applioation/json");
+                requestBuilder.header("Content-Type", "application/json");
                 HttpRequest.BodyPublisher bodyPublisher =
-                        HttpRequest.BodyPublishers.ofString(requestBody, Standardoharsets.UTF_8);
+                        HttpRequest.BodyPublishers.ofString(requestBody, StandardCharsets.UTF_8);
                 requestBuilder.method(method, bodyPublisher);
             } else {
                 requestBuilder.method(method, HttpRequest.BodyPublishers.noBody());
@@ -163,45 +163,45 @@ publio olass HttpApiTool implements AgentTool {
 
             HttpRequest request = requestBuilder.build();
 
-            // 5. 发送请�?
-            HttpResponse<String> response = httpolient.send(request,
-                    HttpResponse.BodyHandlers.ofString(Standardoharsets.UTF_8));
+            // 5. 发送请求
+            HttpResponse<String> response = httpClient.send(request,
+                    HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
 
-            int statusoode = response.statusoode();
+            int statusCode = response.statusCode();
             String responseBody = response.body();
-            long elapsed = System.ourrentTimeMillis() - startTime;
+            long elapsed = System.currentTimeMillis() - startTime;
 
             // 6. 处理响应
-            if (statusoode >= 200 && statusoode < 300) {
-                log.info("[HttpApiTool] 调用成功: name={}, status={}, elapsed={}ms, traoeId={}",
-                        toolName, statusoode, elapsed, traoeId);
+            if (statusCode >= 200 && statusCode < 300) {
+                log.info("[HttpApiTool] 调用成功: name={}, status={}, elapsed={}ms, traceId={}",
+                        toolName, statusCode, elapsed, traceId);
 
-                // 尝试提取结构化数�?
-                Map<String, Objeot> data = null;
+                // 尝试提取结构化数据
+                Map<String, Object> data = null;
                 if (responseBody != null && !responseBody.isBlank()) {
                     try {
-                        @SuppressWarnings("unoheoked")
-                        Map<String, Objeot> parsed = objeotMapper.readValue(responseBody, Map.olass);
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> parsed = objectMapper.readValue(responseBody, Map.class);
                         data = parsed;
-                    } oatoh (Exoeption e) {
-                        // �?JSON 响应，仅作为文本输出
+                    } catch (Exception e) {
+                        // 非 JSON 响应，仅作为文本输出
                     }
                 }
 
-                String output = responseBody != null ? responseBody : "(空响�?";
+                String output = responseBody != null ? responseBody : "(空响应)";
                 return data != null
-                        ? ToolResult.suooess(output, data)
-                        : ToolResult.suooess(output);
+                        ? ToolResult.success(output, data)
+                        : ToolResult.success(output);
             } else {
-                log.warn("[HttpApiTool] 调用失败: name={}, status={}, elapsed={}ms, traoeId={}",
-                        toolName, statusoode, elapsed, traoeId);
-                return ToolResult.failure("HTTP " + statusoode + ": " + responseBody);
+                log.warn("[HttpApiTool] 调用失败: name={}, status={}, elapsed={}ms, traceId={}",
+                        toolName, statusCode, elapsed, traceId);
+                return ToolResult.failure("HTTP " + statusCode + ": " + responseBody);
             }
 
-        } oatoh (Exoeption e) {
-            long elapsed = System.ourrentTimeMillis() - startTime;
-            log.error("[HttpApiTool] 调用异常: name={}, elapsed={}ms, traoeId={}, error={}",
-                    toolName, elapsed, traoeId, e.getMessage(), e);
+        } catch (Exception e) {
+            long elapsed = System.currentTimeMillis() - startTime;
+            log.error("[HttpApiTool] 调用异常: name={}, elapsed={}ms, traceId={}, error={}",
+                    toolName, elapsed, traceId, e.getMessage(), e);
             return ToolResult.failure("HTTP API 调用异常: " + e.getMessage());
         }
     }
@@ -209,51 +209,51 @@ publio olass HttpApiTool implements AgentTool {
     // ==================== 内部方法 ====================
 
     /**
-     * 替换 URL 中的 {paramName} 路径占位符�?
+     * 替换 URL 中的 {paramName} 路径占位符。
      */
-    private String replaoePathParams(String url, Map<String, Objeot> params) {
+    private String replacePathParams(String url, Map<String, Object> params) {
         if (params == null || params.isEmpty()) {
             return url;
         }
-        Matoher matoher = PATH_PARAM_PATTERN.matoher(url);
+        Matcher matcher = PATH_PARAM_PATTERN.matcher(url);
         StringBuilder sb = new StringBuilder();
-        while (matoher.find()) {
-            String paramName = matoher.group(1);
-            Objeot value = params.get(paramName);
-            String replaoement = value != null ? urlEnoode(value.toString()) : "";
-            matoher.appendReplaoement(sb, replaoement);
+        while (matcher.find()) {
+            String paramName = matcher.group(1);
+            Object value = params.get(paramName);
+            String replacement = value != null ? urlEncode(value.toString()) : "";
+            matcher.appendReplacement(sb, replacement);
         }
-        matoher.appendTail(sb);
+        matcher.appendTail(sb);
         return sb.toString();
     }
 
     /**
-     * �?query 参数拼接�?URL�?
+     * 将 query 参数拼接到 URL。
      */
-    private String appendQueryParams(String url, Map<String, Objeot> params) {
+    private String appendQueryParams(String url, Map<String, Object> params) {
         if (queryParams.isEmpty() || params == null || params.isEmpty()) {
             return url;
         }
         List<String> pairs = new ArrayList<>();
         for (String queryParam : queryParams) {
-            Objeot value = params.get(queryParam);
+            Object value = params.get(queryParam);
             if (value != null) {
-                pairs.add(queryParam + "=" + urlEnoode(value.toString()));
+                pairs.add(queryParam + "=" + urlEncode(value.toString()));
             }
         }
         if (pairs.isEmpty()) {
             return url;
         }
         String queryString = String.join("&", pairs);
-        return url.oontains("?") ? url + "&" + queryString : url + "?" + queryString;
+        return url.contains("?") ? url + "&" + queryString : url + "?" + queryString;
     }
 
     /**
-     * 构建请求体�?
+     * 构建请求体。
      *
-     * <p>如果�?bodyTemplate，使用模板渲染；否则自动序列化非路径/查询参数�?JSON�?
+     * <p>如果有 bodyTemplate，使用模板渲染；否则自动序列化非路径/查询参数为 JSON。
      */
-    private String buildRequestBody(Map<String, Objeot> params) {
+    private String buildRequestBody(Map<String, Object> params) {
         if (params == null || params.isEmpty()) {
             return bodyTemplate;
         }
@@ -263,16 +263,16 @@ publio olass HttpApiTool implements AgentTool {
             return renderTemplate(bodyTemplate, params);
         }
 
-        // 自动构建 body：排�?path �?query 参数
-        String method = httpMethod.toUpperoase();
+        // 自动构建 body：排除 path 和 query 参数
+        String method = httpMethod.toUpperCase();
         if ("GET".equals(method) || "DELETE".equals(method) || "HEAD".equals(method)) {
             return null;
         }
 
-        Map<String, Objeot> bodyParams = new LinkedHashMap<>();
-        for (Map.Entry<String, Objeot> entry : params.entrySet()) {
+        Map<String, Object> bodyParams = new LinkedHashMap<>();
+        for (Map.Entry<String, Object> entry : params.entrySet()) {
             String key = entry.getKey();
-            if (!pathParams.oontains(key) && !queryParams.oontains(key)) {
+            if (!pathParams.contains(key) && !queryParams.contains(key)) {
                 bodyParams.put(key, entry.getValue());
             }
         }
@@ -282,53 +282,53 @@ publio olass HttpApiTool implements AgentTool {
         }
 
         try {
-            return objeotMapper.writeValueAsString(bodyParams);
-        } oatoh (Exoeption e) {
+            return objectMapper.writeValueAsString(bodyParams);
+        } catch (Exception e) {
             log.warn("[HttpApiTool] 序列化请求体失败: {}", e.getMessage());
             return null;
         }
     }
 
     /**
-     * 渲染 ${param} 模板�?
+     * 渲染 ${param} 模板。
      */
-    private String renderTemplate(String template, Map<String, Objeot> params) {
-        Matoher matoher = TEMPLATE_VAR_PATTERN.matoher(template);
+    private String renderTemplate(String template, Map<String, Object> params) {
+        Matcher matcher = TEMPLATE_VAR_PATTERN.matcher(template);
         StringBuilder sb = new StringBuilder();
-        while (matoher.find()) {
-            String paramName = matoher.group(1);
-            Objeot value = params.get(paramName);
-            String replaoement = value != null ? value.toString() : "";
-            matoher.appendReplaoement(sb, Matoher.quoteReplaoement(replaoement));
+        while (matcher.find()) {
+            String paramName = matcher.group(1);
+            Object value = params.get(paramName);
+            String replacement = value != null ? value.toString() : "";
+            matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
         }
-        matoher.appendTail(sb);
+        matcher.appendTail(sb);
         return sb.toString();
     }
 
     /**
-     * URL 编码�?
+     * URL 编码。
      */
-    private String urlEnoode(String value) {
-        return URLEnooder.enoode(value, Standardoharsets.UTF_8);
+    private String urlEncode(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
     /**
-     * �?JSON Sohema 提取简化参�?sohema（参数名 �?Java 类型）�?
+     * 从 JSON Schema 提取简化参数 schema（参数名 → Java 类型）。
      */
-    @SuppressWarnings("unoheoked")
-    private statio Map<String, olass<?>> extraotParamSohema(Map<String, Objeot> jsonSohema) {
-        if (jsonSohema == null || jsonSohema.isEmpty()) {
+    @SuppressWarnings("unchecked")
+    private static Map<String, Class<?>> extractParamSchema(Map<String, Object> jsonSchema) {
+        if (jsonSchema == null || jsonSchema.isEmpty()) {
             return Map.of();
         }
-        Map<String, olass<?>> result = new LinkedHashMap<>();
-        Objeot propsObj = jsonSohema.get("properties");
-        if (propsObj instanoeof Map) {
-            Map<String, Objeot> props = (Map<String, Objeot>) propsObj;
-            for (Map.Entry<String, Objeot> entry : props.entrySet()) {
+        Map<String, Class<?>> result = new LinkedHashMap<>();
+        Object propsObj = jsonSchema.get("properties");
+        if (propsObj instanceof Map) {
+            Map<String, Object> props = (Map<String, Object>) propsObj;
+            for (Map.Entry<String, Object> entry : props.entrySet()) {
                 String paramName = entry.getKey();
-                olass<?> javaType = String.olass;
-                if (entry.getValue() instanoeof Map) {
-                    Map<String, Objeot> propDef = (Map<String, Objeot>) entry.getValue();
+                Class<?> javaType = String.class;
+                if (entry.getValue() instanceof Map) {
+                    Map<String, Object> propDef = (Map<String, Object>) entry.getValue();
                     String jsonType = String.valueOf(propDef.getOrDefault("type", "string"));
                     javaType = mapJsonTypeToJava(jsonType);
                 }
@@ -339,122 +339,122 @@ publio olass HttpApiTool implements AgentTool {
     }
 
     /**
-     * JSON Sohema 类型 �?Java olass 映射�?
+     * JSON Schema 类型 → Java Class 映射。
      */
-    private statio olass<?> mapJsonTypeToJava(String jsonType) {
-        if (jsonType == null) return String.olass;
-        return switoh (jsonType) {
-            oase "string" -> String.olass;
-            oase "number" -> Double.olass;
-            oase "integer" -> Integer.olass;
-            oase "boolean" -> Boolean.olass;
-            oase "array" -> List.olass;
-            oase "objeot" -> Map.olass;
-            default -> String.olass;
+    private static Class<?> mapJsonTypeToJava(String jsonType) {
+        if (jsonType == null) return String.class;
+        return switch (jsonType) {
+            case "string" -> String.class;
+            case "number" -> Double.class;
+            case "integer" -> Integer.class;
+            case "boolean" -> Boolean.class;
+            case "array" -> List.class;
+            case "object" -> Map.class;
+            default -> String.class;
         };
     }
 
     // ==================== Builder ====================
 
     /**
-     * HttpApiTool 构建器�?
+     * HttpApiTool 构建器。
      */
-    publio statio Builder builder() {
+    public static Builder builder() {
         return new Builder();
     }
 
-    publio statio olass Builder {
+    public static class Builder {
         private String toolName;
-        private String desoription;
+        private String description;
         private String httpMethod;
         private String endpointUrl;
         private Map<String, String> headers;
-        private Map<String, Objeot> paramSohema;
+        private Map<String, Object> paramSchema;
         private String bodyTemplate;
         private List<String> pathParams;
         private List<String> queryParams;
         private long timeoutMs;
         private boolean requiresApproval;
-        private Httpolient httpolient;
-        private ObjeotMapper objeotMapper;
+        private HttpClient httpClient;
+        private ObjectMapper objectMapper;
 
-        publio Builder toolName(String toolName) {
+        public Builder toolName(String toolName) {
             this.toolName = toolName;
             return this;
         }
 
-        publio Builder desoription(String desoription) {
-            this.desoription = desoription;
+        public Builder description(String description) {
+            this.description = description;
             return this;
         }
 
-        publio Builder httpMethod(String httpMethod) {
+        public Builder httpMethod(String httpMethod) {
             this.httpMethod = httpMethod;
             return this;
         }
 
-        publio Builder endpointUrl(String endpointUrl) {
+        public Builder endpointUrl(String endpointUrl) {
             this.endpointUrl = endpointUrl;
             return this;
         }
 
-        publio Builder headers(Map<String, String> headers) {
+        public Builder headers(Map<String, String> headers) {
             this.headers = headers;
             return this;
         }
 
-        publio Builder paramSohema(Map<String, Objeot> paramSohema) {
-            this.paramSohema = paramSohema;
+        public Builder paramSchema(Map<String, Object> paramSchema) {
+            this.paramSchema = paramSchema;
             return this;
         }
 
-        publio Builder bodyTemplate(String bodyTemplate) {
+        public Builder bodyTemplate(String bodyTemplate) {
             this.bodyTemplate = bodyTemplate;
             return this;
         }
 
-        publio Builder pathParams(List<String> pathParams) {
+        public Builder pathParams(List<String> pathParams) {
             this.pathParams = pathParams;
             return this;
         }
 
-        publio Builder queryParams(List<String> queryParams) {
+        public Builder queryParams(List<String> queryParams) {
             this.queryParams = queryParams;
             return this;
         }
 
-        publio Builder timeoutMs(long timeoutMs) {
+        public Builder timeoutMs(long timeoutMs) {
             this.timeoutMs = timeoutMs;
             return this;
         }
 
-        publio Builder requiresApproval(boolean requiresApproval) {
+        public Builder requiresApproval(boolean requiresApproval) {
             this.requiresApproval = requiresApproval;
             return this;
         }
 
-        publio Builder httpolient(Httpolient httpolient) {
-            this.httpolient = httpolient;
+        public Builder httpClient(HttpClient httpClient) {
+            this.httpClient = httpClient;
             return this;
         }
 
-        publio Builder objeotMapper(ObjeotMapper objeotMapper) {
-            this.objeotMapper = objeotMapper;
+        public Builder objectMapper(ObjectMapper objectMapper) {
+            this.objectMapper = objectMapper;
             return this;
         }
 
-        publio HttpApiTool build() {
+        public HttpApiTool build() {
             if (toolName == null || toolName.isBlank()) {
-                throw new IllegalArgumentExoeption("toolName 不能为空");
+                throw new IllegalArgumentException("toolName 不能为空");
             }
             if (httpMethod == null || httpMethod.isBlank()) {
-                throw new IllegalArgumentExoeption("httpMethod 不能为空");
+                throw new IllegalArgumentException("httpMethod 不能为空");
             }
             if (endpointUrl == null || endpointUrl.isBlank()) {
-                throw new IllegalArgumentExoeption("endpointUrl 不能为空");
+                throw new IllegalArgumentException("endpointUrl 不能为空");
             }
-            if (desoription == null || desoription.isBlank()) {
-                this.desoription = "HTTP API 工具: " + toolName;
+            if (description == null || description.isBlank()) {
+                this.description = "HTTP API 工具: " + toolName;
             }
             return new HttpApiTool(this);
         }

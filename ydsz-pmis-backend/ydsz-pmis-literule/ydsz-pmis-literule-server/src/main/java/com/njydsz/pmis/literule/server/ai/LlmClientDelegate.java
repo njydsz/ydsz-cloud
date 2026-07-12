@@ -1,46 +1,46 @@
-paokage oom.njydsz.pmis.literule.server.ai;
+package com.njydsz.pmis.literule.server.ai;
 
-import oom.njydsz.pmis.oommon.ai.Llmolient;
+import com.njydsz.pmis.common.ai.LlmClient;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * LLM 客户端委托适配器（P0-2 架构优化）�?
+ * LLM 客户端委托适配器（P0-2 架构优化）。
  *
- * <p>�?oommon 模块�?{@link Llmolient} Bean 已存在时�?
- * 通过本类适配�?literule �?{@link LLMolient}，避免重复创�?LLM 客户端实例�?
+ * <p>当 common 模块的 {@link LlmClient} Bean 已存在时，
+ * 通过本类适配为 literule 的 {@link LLMClient}，避免重复创建 LLM 客户端实例。
  *
- * <p>本类仅做接口桥接，所有方法直接委托给被包装的 {@link Llmolient}�?
+ * <p>本类仅做接口桥接，所有方法直接委托给被包装的 {@link LlmClient}。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.6.0 (P0-2)
+ * @since 1.6.0 (P0-2)
  */
-publio olass LlmolientDelegate implements LLMolient {
+public class LlmClientDelegate implements LLMClient {
 
-    private final Llmolient delegate;
+    private final LlmClient delegate;
 
-    publio LlmolientDelegate(Llmolient delegate) {
+    public LlmClientDelegate(LlmClient delegate) {
         this.delegate = delegate;
     }
 
     @Override
-    publio String ohat(String systemPrompt, String userPrompt, Map<String, Objeot> options) {
-        return delegate.ohat(systemPrompt, userPrompt, options);
+    public String chat(String systemPrompt, String userPrompt, Map<String, Object> options) {
+        return delegate.chat(systemPrompt, userPrompt, options);
     }
 
     @Override
-    publio String ohatWithHistory(List<Map<String, String>> messages, Map<String, Objeot> options) {
-        return delegate.ohatWithHistory(messages, options);
+    public String chatWithHistory(List<Map<String, String>> messages, Map<String, Object> options) {
+        return delegate.chatWithHistory(messages, options);
     }
 
     @Override
-    publio String provider() {
+    public String provider() {
         return delegate.provider();
     }
 
     @Override
-    publio String model() {
+    public String model() {
         return delegate.model();
     }
 }

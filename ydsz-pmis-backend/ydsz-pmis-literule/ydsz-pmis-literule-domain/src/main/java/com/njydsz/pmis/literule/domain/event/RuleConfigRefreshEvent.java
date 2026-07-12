@@ -1,56 +1,61 @@
-paokage oom.njydsz.pmis.literule.domain.event;
+package com.njydsz.pmis.literule.domain.event;
 
 /**
  * 规则配置刷新事件
  *
  * <p>当规则配置发生变更（新增/修改/删除/启停）时发布此事件，
- * 引擎监听后重新加载规则定义并热刷新注册表�? *
+ * 引擎监听后重新加载规则定义并热刷新注册表。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
-publio olass RuleoonfigRefreshEvent {
+public class RuleConfigRefreshEvent {
 
-    /** 变更的规则编码（null 表示全量刷新�?*/
-    private final String ruleoode;
+    /** 变更的规则编码（null 表示全量刷新） */
+    private final String ruleCode;
 
     /** 变更类型 */
-    private final ohangeType ohangeType;
+    private final ChangeType changeType;
 
-    /** 操作�?*/
+    /** 操作人 */
     private final String operator;
 
     /**
      * 变更类型枚举
      */
-    publio enum ohangeType {
-        oREATE, UPDATE, DELETE, TOGGLE, FULL_RELOAD
+    public enum ChangeType {
+        CREATE, UPDATE, DELETE, TOGGLE, FULL_RELOAD
     }
 
     /**
-     * 构造全量刷新事�?     *
-     * @param operator 操作�?     * @return 事件实例
+     * 构造全量刷新事件
+     *
+     * @param operator 操作人
+     * @return 事件实例
      */
-    publio statio RuleoonfigRefreshEvent fullReload(String operator) {
-        return new RuleoonfigRefreshEvent(null, ohangeType.FULL_RELOAD, operator);
+    public static RuleConfigRefreshEvent fullReload(String operator) {
+        return new RuleConfigRefreshEvent(null, ChangeType.FULL_RELOAD, operator);
     }
 
     /**
-     * 构造单条规则变更事�?     *
-     * @param ruleoode   规则编码
-     * @param ohangeType 变更类型
-     * @param operator   操作�?     * @return 事件实例
+     * 构造单条规则变更事件
+     *
+     * @param ruleCode   规则编码
+     * @param changeType 变更类型
+     * @param operator   操作人
+     * @return 事件实例
      */
-    publio statio RuleoonfigRefreshEvent of(String ruleoode, ohangeType ohangeType, String operator) {
-        return new RuleoonfigRefreshEvent(ruleoode, ohangeType, operator);
+    public static RuleConfigRefreshEvent of(String ruleCode, ChangeType changeType, String operator) {
+        return new RuleConfigRefreshEvent(ruleCode, changeType, operator);
     }
 
-    publio RuleoonfigRefreshEvent(String ruleoode, ohangeType ohangeType, String operator) {
-        this.ruleoode = ruleoode;
-        this.ohangeType = ohangeType;
+    public RuleConfigRefreshEvent(String ruleCode, ChangeType changeType, String operator) {
+        this.ruleCode = ruleCode;
+        this.changeType = changeType;
         this.operator = operator;
     }
 
-    publio String getRuleoode() { return ruleoode; }
-    publio ohangeType getohangeType() { return ohangeType; }
-    publio String getOperator() { return operator; }
+    public String getRuleCode() { return ruleCode; }
+    public ChangeType getChangeType() { return changeType; }
+    public String getOperator() { return operator; }
 }

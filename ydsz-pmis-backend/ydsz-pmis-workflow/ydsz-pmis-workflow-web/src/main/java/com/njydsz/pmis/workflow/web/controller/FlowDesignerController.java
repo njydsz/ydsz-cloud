@@ -1,19 +1,19 @@
-paokage oom.njydsz.pmis.workflow.web.oontroller.definition;
+package com.njydsz.pmis.workflow.web.controller.definition;
 
-import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.Idempotent;
 
-import oom.alibaba.fastjson2.JSON;
-import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.oommon.permission.Permissionoodes;
-import oom.njydsz.pmis.oommon.auth.oontext.Authoontext;
-import oom.njydsz.pmis.workflow.domain.dto.definition.FlowDesignerDataDTO;
-import oom.njydsz.pmis.workflow.server.servioe.definition.FlowDefinitionServioe;
-import oom.njydsz.pmis.workflow.server.servioe.definition.FlowTemplateServioe;
+import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.common.auth.context.AuthContext;
+import com.njydsz.pmis.workflow.domain.dto.definition.FlowDesignerDataDTO;
+import com.njydsz.pmis.workflow.server.service.definition.FlowDefinitionService;
+import com.njydsz.pmis.workflow.server.service.definition.FlowTemplateService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsoonstruotor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -22,125 +22,125 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 可视化流程设计器 / 表单 / SLA 配置 / 模板 oontroller
+ * 可视化流程设计器 / 表单 / SLA 配置 / 模板 Controller
  *
- * <p>GAP-V2-01/V2-02/P1-2/GAP-P2: 设计器数据、表单字段配置、节�?SLA 配置、流程模板库
- * （P1-10 �?FlowEngineoontroller 拆分）�?
+ * <p>GAP-V2-01/V2-02/P1-2/GAP-P2: 设计器数据、表单字段配置、节点 SLA 配置、流程模板库
+ * （P1-10 从 FlowEngineController 拆分）。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Restoontroller
-@Tag(name = "workflow-designer", desoription = "工作流设计器/表单/SLA/模板接口")
+@RestController
+@Tag(name = "workflow-designer", description = "工作流设计器/表单/SLA/模板接口")
 @RequestMapping("/workflow/engine")
-@RequiredArgsoonstruotor
+@RequiredArgsConstructor
 @Validated
-publio olass FlowDesigneroontroller {
+public class FlowDesignerController {
 
     /** 流程定义服务 */
-    private final FlowDefinitionServioe definitionServioe;
+    private final FlowDefinitionService definitionService;
     /** GAP-P2: 流程模板服务 */
-    private final FlowTemplateServioe templateServioe;
+    private final FlowTemplateService templateService;
 
     // ============== GAP-V2-01: 可视化流程设计器 API ==============
 
     /**
-     * GAP-V2-01: 获取设计器数�?�?返回完整流程图（节点+�?坐标�?
+     * GAP-V2-01: 获取设计器数据 — 返回完整流程图（节点+边+坐标）
      *
      * @param id 流程定义 ID
-     * @return 设计器数据（definition / nodes / edges�?
+     * @return 设计器数据（definition / nodes / edges）
      */
     @GetMapping("/definition/{id}/designer")
-    @AuthApiPermission(apioodes = Permissionoodes.WORKFLOW_DEFINITION_DESIGN)
-    publio BaseResponse<Map<String, Objeot>> getDesignerData(@PathVariable String id) {
-        return BaseResponse.ok(definitionServioe.getDesignerData(id));
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    public BaseResponse<Map<String, Object>> getDesignerData(@PathVariable String id) {
+        return BaseResponse.ok(definitionService.getDesignerData(id));
     }
 
     /**
-     * GAP-V2-01: 批量保存设计器数�?�?一次性保存节点坐�?+ 属�?
+     * GAP-V2-01: 批量保存设计器数据 — 一次性保存节点坐标 + 属性
      *
-     * <p>P1-10: 由原 Map body 改造为 {@link FlowDesignerDataDTO}�?
-     * designerData �?JSON 字符串，控制器反序列化为 Map 后转�?servioe�?
+     * <p>P1-10: 由原 Map body 改造为 {@link FlowDesignerDataDTO}，
+     * designerData 为 JSON 字符串，控制器反序列化为 Map 后转交 service。
      *
      * @param id  流程定义 ID
-     * @param dto 设计器数�?DTO（designerData �?JSON 字符串，�?nodes + edges�?
+     * @param dto 设计器数据 DTO（designerData 为 JSON 字符串，含 nodes + edges）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowDesigner:saveDesignerData", ttlSeoonds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowDesigner:saveDesignerData", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/designer")
-    @AuthApiPermission(apioodes = Permissionoodes.WORKFLOW_DEFINITION_DESIGN)
-    publio BaseResponse<Void> saveDesignerData(@PathVariable String id,
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    public BaseResponse<Void> saveDesignerData(@PathVariable String id,
                                           @Valid @RequestBody FlowDesignerDataDTO dto) {
-        Map<String, Objeot> designerData = JSON.parseObjeot(dto.getDesignerData());
-        definitionServioe.saveDesignerData(id, designerData);
+        Map<String, Object> designerData = JSON.parseObject(dto.getDesignerData());
+        definitionService.saveDesignerData(id, designerData);
         return BaseResponse.ok();
     }
 
-    // ============== P2-4: 设计器协同编辑锁�?API ==============
+    // ============== P2-4: 设计器协同编辑锁定 API ==============
 
     /**
-     * P2-4: 加锁流程定义（设计器协同编辑）�?
+     * P2-4: 加锁流程定义（设计器协同编辑）。
      *
-     * <p>对标钉钉/飞书流程设计�?编辑锁定"：用户进入设计器编辑模式前调用此接口�?
-     * 成功获取锁后方可编辑；编辑过程中前端定期调用此接口续约（保持锁不过期）�?
+     * <p>对标钉钉/飞书流程设计器"编辑锁定"：用户进入设计器编辑模式前调用此接口，
+     * 成功获取锁后方可编辑；编辑过程中前端定期调用此接口续约（保持锁不过期）。
      *
-     * <p>行为约定�?
+     * <p>行为约定：
      * <ul>
-     *   <li>未锁�?�?加锁成功，可进入编辑</li>
-     *   <li>同一人持�?�?续约成功（刷�?lookedAt�?/li>
-     *   <li>他人持锁且未超时 �?返回 409 冲突，前端展�?当前 {lookedBy} 正在编辑"</li>
-     *   <li>他人持锁但已超时（默�?30 分钟）→ 抢占成功</li>
+     *   <li>未锁定 → 加锁成功，可进入编辑</li>
+     *   <li>同一人持锁 → 续约成功（刷新 lockedAt）</li>
+     *   <li>他人持锁且未超时 → 返回 409 冲突，前端展示"当前 {lockedBy} 正在编辑"</li>
+     *   <li>他人持锁但已超时（默认 30 分钟）→ 抢占成功</li>
      * </ul>
      *
      * @param id 流程定义 ID
      * @return 统一响应结果，true=加锁成功
      */
-    @Idempotent(key = "flowDesigner:lookDefinition", ttlSeoonds = 5, message = "请勿重复提交")
-    @PostMapping("/definition/{id}/look")
-    @Operation(summary = "加锁流程定义（设计器协同编辑�?)
-    @AuthApiPermission(apioodes = Permissionoodes.WORKFLOW_DEFINITION_DESIGN)
-    publio BaseResponse<Boolean> lookDefinition(@PathVariable String id) {
-        String userId = Authoontext.getUserId();
-        return BaseResponse.ok(definitionServioe.lookDefinition(id, userId));
+    @Idempotent(key = "flowDesigner:lockDefinition", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/definition/{id}/lock")
+    @Operation(summary = "加锁流程定义（设计器协同编辑）")
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    public BaseResponse<Boolean> lockDefinition(@PathVariable String id) {
+        String userId = AuthContext.getUserId();
+        return BaseResponse.ok(definitionService.lockDefinition(id, userId));
     }
 
     /**
-     * P2-4: 解锁流程定义（设计器协同编辑）�?
+     * P2-4: 解锁流程定义（设计器协同编辑）。
      *
-     * <p>用户退出设计器编辑模式或页面卸载时调用，释放锁。仅持锁人本人可解锁�?
+     * <p>用户退出设计器编辑模式或页面卸载时调用，释放锁。仅持锁人本人可解锁。
      *
      * @param id 流程定义 ID
      * @return 统一响应结果，true=解锁成功
      */
-    @Idempotent(key = "flowDesigner:unlookDefinition", ttlSeoonds = 5, message = "请勿重复提交")
-    @PostMapping("/definition/{id}/unlook")
-    @Operation(summary = "解锁流程定义（设计器协同编辑�?)
-    @AuthApiPermission(apioodes = Permissionoodes.WORKFLOW_DEFINITION_DESIGN)
-    publio BaseResponse<Boolean> unlookDefinition(@PathVariable String id) {
-        String userId = Authoontext.getUserId();
-        return BaseResponse.ok(definitionServioe.unlookDefinition(id, userId));
+    @Idempotent(key = "flowDesigner:unlockDefinition", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/definition/{id}/unlock")
+    @Operation(summary = "解锁流程定义（设计器协同编辑）")
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    public BaseResponse<Boolean> unlockDefinition(@PathVariable String id) {
+        String userId = AuthContext.getUserId();
+        return BaseResponse.ok(definitionService.unlockDefinition(id, userId));
     }
 
     /**
-     * P2-4: 查询流程定义的锁定状态�?
+     * P2-4: 查询流程定义的锁定状态。
      *
-     * <p>用户进入设计器前调用，判断是否可编辑�?
+     * <p>用户进入设计器前调用，判断是否可编辑：
      * <ul>
-     *   <li>{@oode looked=false} �?可直接进入编辑并加锁</li>
-     *   <li>{@oode looked=true, lookedBy=当前用户} �?可继续编辑并续约</li>
-     *   <li>{@oode looked=true, lookedBy=他人, expired=false} �?只读模式，提�?正在�?XX 编辑"</li>
-     *   <li>{@oode looked=true, lookedBy=他人, expired=true} �?可强制抢占进入编�?/li>
+     *   <li>{@code locked=false} → 可直接进入编辑并加锁</li>
+     *   <li>{@code locked=true, lockedBy=当前用户} → 可继续编辑并续约</li>
+     *   <li>{@code locked=true, lockedBy=他人, expired=false} → 只读模式，提示"正在被 XX 编辑"</li>
+     *   <li>{@code locked=true, lockedBy=他人, expired=true} → 可强制抢占进入编辑</li>
      * </ul>
      *
      * @param id 流程定义 ID
-     * @return 统一响应结果，包�?looked / lookedBy / lookedAt / expired
+     * @return 统一响应结果，包含 locked / lockedBy / lockedAt / expired
      */
-    @GetMapping("/definition/{id}/lookStatus")
-    @Operation(summary = "查询流程定义锁定状�?)
-    @AuthApiPermission(apioodes = Permissionoodes.WORKFLOW_DEFINITION_DESIGN)
-    publio BaseResponse<Map<String, Objeot>> getLookStatus(@PathVariable String id) {
-        return BaseResponse.ok(definitionServioe.getLookStatus(id));
+    @GetMapping("/definition/{id}/lockStatus")
+    @Operation(summary = "查询流程定义锁定状态")
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    public BaseResponse<Map<String, Object>> getLockStatus(@PathVariable String id) {
+        return BaseResponse.ok(definitionService.getLockStatus(id));
     }
 
     // ============== GAP-V2-02: 表单引擎字段配置 ==============
@@ -149,31 +149,31 @@ publio olass FlowDesigneroontroller {
      * GAP-V2-02: 获取节点表单字段配置
      *
      * @param id       流程定义 ID
-     * @param nodeoode 节点编码
-     * @return 字段权限 JSON 字符�?
+     * @param nodeCode 节点编码
+     * @return 字段权限 JSON 字符串
      */
-    @GetMapping("/definition/{id}/formoonfig/{nodeoode}")
-    @AuthApiPermission(apioodes = Permissionoodes.WORKFLOW_DEFINITION_DESIGN)
-    publio BaseResponse<String> getFormoonfig(@PathVariable String id,
-                                         @PathVariable String nodeoode) {
-        return BaseResponse.ok(definitionServioe.getFormoonfig(id, nodeoode));
+    @GetMapping("/definition/{id}/formConfig/{nodeCode}")
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    public BaseResponse<String> getFormConfig(@PathVariable String id,
+                                         @PathVariable String nodeCode) {
+        return BaseResponse.ok(definitionService.getFormConfig(id, nodeCode));
     }
 
     /**
      * GAP-V2-02: 保存节点表单字段配置
      *
      * @param id              流程定义 ID
-     * @param nodeoode        节点编码
-     * @param formFieldsoonfig 字段权限 JSON 字符�?
+     * @param nodeCode        节点编码
+     * @param formFieldsConfig 字段权限 JSON 字符串
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowDesigner:saveFormoonfig", ttlSeoonds = 5, message = "请勿重复提交")
-    @PostMapping("/definition/{id}/formoonfig/{nodeoode}")
-    @AuthApiPermission(apioodes = Permissionoodes.WORKFLOW_DEFINITION_DESIGN)
-    publio BaseResponse<Void> saveFormoonfig(@PathVariable String id,
-                                        @PathVariable String nodeoode,
-                                        @RequestBody String formFieldsoonfig) {
-        definitionServioe.saveFormoonfig(id, nodeoode, formFieldsoonfig);
+    @Idempotent(key = "flowDesigner:saveFormConfig", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/definition/{id}/formConfig/{nodeCode}")
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
+    public BaseResponse<Void> saveFormConfig(@PathVariable String id,
+                                        @PathVariable String nodeCode,
+                                        @RequestBody String formFieldsConfig) {
+        definitionService.saveFormConfig(id, nodeCode, formFieldsConfig);
         return BaseResponse.ok();
     }
 
@@ -183,72 +183,72 @@ publio olass FlowDesigneroontroller {
      * P1-2: 获取节点 SLA 配置（JSON 字符串）
      *
      * @param id       流程定义 ID
-     * @param nodeoode 节点编码
-     * @return SLA 配置 JSON（未配置返回 null�?
+     * @param nodeCode 节点编码
+     * @return SLA 配置 JSON（未配置返回 null）
      */
-    @GetMapping("/definition/{id}/slaoonfig/{nodeoode}")
-    @AuthApiPermission(apioodes = Permissionoodes.WORKFLOW_SLA_oONFIG)
-    publio BaseResponse<String> getSlaoonfig(@PathVariable String id,
-                                        @PathVariable String nodeoode) {
-        return BaseResponse.ok(definitionServioe.getSlaoonfig(id, nodeoode));
+    @GetMapping("/definition/{id}/slaConfig/{nodeCode}")
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
+    public BaseResponse<String> getSlaConfig(@PathVariable String id,
+                                        @PathVariable String nodeCode) {
+        return BaseResponse.ok(definitionService.getSlaConfig(id, nodeCode));
     }
 
     /**
      * P1-2: 保存节点 SLA 配置
      *
      * @param id         流程定义 ID
-     * @param nodeoode   节点编码
-     * @param slaoonfig  SLA 配置（JSON 对象，由 oontroller 序列化为字符串存储）
+     * @param nodeCode   节点编码
+     * @param slaConfig  SLA 配置（JSON 对象，由 controller 序列化为字符串存储）
      * @return 统一响应结果
      */
-    @Idempotent(key = "flowDesigner:saveSlaoonfig", ttlSeoonds = 5, message = "请勿重复提交")
-    @PostMapping("/definition/{id}/slaoonfig/{nodeoode}")
-    @AuthApiPermission(apioodes = Permissionoodes.WORKFLOW_SLA_oONFIG)
-    publio BaseResponse<Void> saveSlaoonfig(@PathVariable String id,
-                                        @PathVariable String nodeoode,
-                                        @RequestBody Map<String, Objeot> slaoonfig) {
-        String json = slaoonfig == null ? null : JSON.toJSONString(slaoonfig);
-        definitionServioe.saveSlaoonfig(id, nodeoode, json);
+    @Idempotent(key = "flowDesigner:saveSlaConfig", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/definition/{id}/slaConfig/{nodeCode}")
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_SLA_CONFIG)
+    public BaseResponse<Void> saveSlaConfig(@PathVariable String id,
+                                        @PathVariable String nodeCode,
+                                        @RequestBody Map<String, Object> slaConfig) {
+        String json = slaConfig == null ? null : JSON.toJSONString(slaConfig);
+        definitionService.saveSlaConfig(id, nodeCode, json);
         return BaseResponse.ok();
     }
 
-    // ============== GAP-P2: 流程模板�?==============
+    // ============== GAP-P2: 流程模板库 ==============
 
     /**
-     * GAP-P2: 列出所有可用模�?
+     * GAP-P2: 列出所有可用模板
      *
-     * @param oategory 模板分类（可选）
+     * @param category 模板分类（可选）
      * @return 模板列表
      */
     @GetMapping("/template/list")
-    publio BaseResponse<List<Map<String, Objeot>>> listTemplates(
-            @RequestParam(required = false) String oategory) {
-        return BaseResponse.ok(templateServioe.listTemplates(oategory));
+    public BaseResponse<List<Map<String, Object>>> listTemplates(
+            @RequestParam(required = false) String category) {
+        return BaseResponse.ok(templateService.listTemplates(category));
     }
 
     /**
-     * GAP-P2: 一键导入模�?
+     * GAP-P2: 一键导入模板
      *
-     * @param templateoode 模板编码
+     * @param templateCode 模板编码
      * @param flowName     自定义流程名称（可选，为空则使用模板名称）
      * @return 新创建的流程定义 ID
      */
-    @Idempotent(key = "flowDesigner:importTemplate", ttlSeoonds = 5, message = "请勿重复提交")
-    @PostMapping("/template/{templateoode}/import")
-    @AuthApiPermission(apioodes = Permissionoodes.WORKFLOW_TEMPLATE_IMPORT)
-    publio BaseResponse<String> importTemplate(@PathVariable String templateoode,
+    @Idempotent(key = "flowDesigner:importTemplate", ttlSeconds = 5, message = "请勿重复提交")
+    @PostMapping("/template/{templateCode}/import")
+    @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TEMPLATE_IMPORT)
+    public BaseResponse<String> importTemplate(@PathVariable String templateCode,
                                           @RequestParam(required = false) String flowName) {
-        return BaseResponse.ok(templateServioe.importTemplate(templateoode, flowName));
+        return BaseResponse.ok(templateService.importTemplate(templateCode, flowName));
     }
 
     /**
-     * GAP-P2: 获取模板详情（含 BPMN XML�?
+     * GAP-P2: 获取模板详情（含 BPMN XML）
      *
-     * @param templateoode 模板编码
+     * @param templateCode 模板编码
      * @return 模板详情
      */
-    @GetMapping("/template/{templateoode}")
-    publio BaseResponse<Map<String, Objeot>> getTemplate(@PathVariable String templateoode) {
-        return BaseResponse.ok(templateServioe.getTemplate(templateoode));
+    @GetMapping("/template/{templateCode}")
+    public BaseResponse<Map<String, Object>> getTemplate(@PathVariable String templateCode) {
+        return BaseResponse.ok(templateService.getTemplate(templateCode));
     }
 }

@@ -1,44 +1,44 @@
-paokage oom.njydsz.pmis.projeot.domain.dto;
+package com.njydsz.pmis.project.domain.dto;
 
-import oom.njydsz.pmis.projeot.domain.dto.AlertEventDTO;
-import lombok.AllArgsoonstruotor;
+import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsoonstruotor;
+import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
 /**
- * 驾驶舱预警摘要视�?
+ * 驾驶舱预警摘要视图
  *
- * <p>聚合预警事件列表 + 各严重度计数 + 最高严重度事件摘要�?
+ * <p>聚合预警事件列表 + 各严重度计数 + 最高严重度事件摘要。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
 @Builder
-@NoArgsoonstruotor
-@AllArgsoonstruotor
-publio olass oookpitAlertSummaryVO implements Serializable {
+@NoArgsConstructor
+@AllArgsConstructor
+public class CockpitAlertSummaryVO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 红色告警条数 */
-    private Integer redoount;
+    private Integer redCount;
     /** 黄色告警条数 */
-    private Integer yellowoount;
+    private Integer yellowCount;
     /** 提示条数 */
-    private Integer infooount;
-    /** 触发总条�?*/
-    private Integer totaloount;
+    private Integer infoCount;
+    /** 触发总条数 */
+    private Integer totalCount;
 
-    /** 全部告警事件（按严重度倒序�?*/
+    /** 全部告警事件（按严重度倒序） */
     private List<AlertEventDTO> events;
 
-    /** 最高严重度事件（用于顶�?banner 单条显示�?*/
+    /** 最高严重度事件（用于顶部 banner 单条显示） */
     private AlertEventDTO topEvent;
 }

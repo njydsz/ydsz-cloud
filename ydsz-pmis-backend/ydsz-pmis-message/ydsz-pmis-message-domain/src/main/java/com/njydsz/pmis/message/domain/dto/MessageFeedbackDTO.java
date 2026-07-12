@@ -1,4 +1,4 @@
-paokage oom.njydsz.pmis.message.domain.dto.oore;
+package com.njydsz.pmis.message.domain.dto.core;
 
 import lombok.Data;
 
@@ -6,26 +6,26 @@ import lombok.Data;
  * P1-4: 消息反馈请求 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.3.0
+ * @since 1.3.0
  */
 @Data
-publio olass MessageFeedbaokDTO {
+public class MessageFeedbackDTO {
 
-    /** 消息 ID（关�?pmis_msg_log.msg_id�?*/
+    /** 消息 ID（关联 pmis_msg_log.msg_id） */
     private String msgId;
 
     /** 站内通知 ID（可选） */
-    private String notifioationId;
+    private String notificationId;
 
     /** 用户 ID */
     private String userId;
 
-    /** 评分: 1-5 �?*/
+    /** 评分: 1-5 分 */
     private Integer rating;
 
     /** 反馈类型 */
-    private String feedbaokType;
+    private String feedbackType;
 
     /** 反馈内容 */
-    private String oontent;
+    private String content;
 }

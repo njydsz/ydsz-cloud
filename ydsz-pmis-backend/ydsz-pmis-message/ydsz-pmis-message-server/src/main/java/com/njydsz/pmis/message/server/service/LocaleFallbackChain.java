@@ -1,51 +1,51 @@
-paokage oom.njydsz.pmis.message.server.servioe.oore;
+package com.njydsz.pmis.message.server.service.core;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 多语言回退链（P1-6）�?
+ * 多语言回退链（P1-6）。
  *
- * <p>模板加载时按 looale 回退链查找：用户偏好 looale �?租户默认 looale �?系统默认 zh-oN�?
- * 例如用户偏好 en-US 时回退链为: en-US �?zh-oN�?
+ * <p>模板加载时按 locale 回退链查找：用户偏好 locale → 租户默认 locale → 系统默认 zh-CN。
+ * 例如用户偏好 en-US 时回退链为: en-US → zh-CN。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.5.0
+ * @since 1.5.0
  */
 @Slf4j
-@oomponent
-publio olass LooaleFallbaokohain {
+@Component
+public class LocaleFallbackChain {
 
     /** 系统默认语言 */
-    publio statio final String DEFAULT_LOoALE = "zh-oN";
+    public static final String DEFAULT_LOCALE = "zh-CN";
 
     /**
-     * 构建 looale 回退链�?
+     * 构建 locale 回退链。
      *
-     * @param preferredLooale 用户偏好语言（可�?null�?
-     * @return 回退链列表（优先级从高到低，至少包含 zh-oN�?
+     * @param preferredLocale 用户偏好语言（可为 null）
+     * @return 回退链列表（优先级从高到低，至少包含 zh-CN）
      */
-    publio List<String> buildFallbaokohain(String preferredLooale) {
-        List<String> ohain = new ArrayList<>();
-        if (StringUtils.hasText(preferredLooale)) {
-            String looale = preferredLooale.trim();
-            ohain.add(looale);
-            // 如果�?zh-TW / zh-HK �?回退�?zh-oN
-            if (looale.toLoweroase().startsWith("zh") && !looale.equalsIgnoreoase(DEFAULT_LOoALE)) {
-                ohain.add(DEFAULT_LOoALE);
+    public List<String> buildFallbackChain(String preferredLocale) {
+        List<String> chain = new ArrayList<>();
+        if (StringUtils.hasText(preferredLocale)) {
+            String locale = preferredLocale.trim();
+            chain.add(locale);
+            // 如果是 zh-TW / zh-HK 等,回退到 zh-CN
+            if (locale.toLowerCase().startsWith("zh") && !locale.equalsIgnoreCase(DEFAULT_LOCALE)) {
+                chain.add(DEFAULT_LOCALE);
             }
-            // 如果�?en-US / en-GB �?回退�?en,再到 zh-oN
-            if (looale.toLoweroase().startsWith("en") && !looale.equalsIgnoreoase("en")) {
-                ohain.add("en");
+            // 如果是 en-US / en-GB 等,回退到 en,再到 zh-CN
+            if (locale.toLowerCase().startsWith("en") && !locale.equalsIgnoreCase("en")) {
+                chain.add("en");
             }
         }
-        if (!ohain.oontains(DEFAULT_LOoALE)) {
-            ohain.add(DEFAULT_LOoALE);
+        if (!chain.contains(DEFAULT_LOCALE)) {
+            chain.add(DEFAULT_LOCALE);
         }
-        return ohain;
+        return chain;
     }
 }

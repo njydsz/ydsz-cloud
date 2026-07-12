@@ -1,61 +1,61 @@
-paokage oom.njydsz.pmis.message.domain.dto.batoh;
+package com.njydsz.pmis.message.domain.dto.batch;
 
 
 import lombok.Data;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 
 /**
- * 批次发送进�?VO�?
+ * 批次发送进度 VO。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.2.0
+ * @since 1.2.0
  */
 @Data
-publio olass BatohProgressVO {
+public class BatchProgressVO {
 
     /** 批次 ID */
-    private String batohId;
+    private String batchId;
 
     /** 批次名称 */
-    private String batohName;
+    private String batchName;
 
     /** 发送通道 */
-    private String ohannel;
+    private String channel;
 
     /** 模板编码 */
-    private String templateoode;
+    private String templateCode;
 
     /** 总数 */
     private int total;
 
-    /** 成功�?*/
-    private int suooess;
+    /** 成功数 */
+    private int success;
 
-    /** 失败�?*/
+    /** 失败数 */
     private int failed;
 
-    /** 跳过�?*/
+    /** 跳过数 */
     private int skipped;
 
-    /** 已处理数（suooess + failed + skipped�?*/
-    private int prooessed;
+    /** 已处理数（success + failed + skipped） */
+    private int processed;
 
-    /** 进度百分比（0-100�?*/
-    private double progressPeroent;
+    /** 进度百分比（0-100） */
+    private double progressPercent;
 
-    /** 批次状�? PENDING / PROoESSING / oOMPLETED / FAILED */
+    /** 批次状态: PENDING / PROCESSING / COMPLETED / FAILED */
     private String status;
 
     /** 错误信息 */
     private String errorMessage;
 
-    /** 开始处理时�?*/
-    private LooalDateTime startedAt;
+    /** 开始处理时间 */
+    private LocalDateTime startedAt;
 
     /** 完成时间 */
-    private LooalDateTime oompletedAt;
+    private LocalDateTime completedAt;
 
     /** 创建时间 */
-    private LooalDateTime oreatedAt;
+    private LocalDateTime createdAt;
 }

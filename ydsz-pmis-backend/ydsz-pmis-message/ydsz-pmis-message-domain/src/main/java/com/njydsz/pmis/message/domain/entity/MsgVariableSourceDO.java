@@ -1,52 +1,52 @@
-paokage oom.njydsz.pmis.message.domain.entity.oonfig;
+package com.njydsz.pmis.message.domain.entity.config;
 
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
-import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashoode;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
 
 /**
- * 消息变量数据源绑定表�?
+ * 消息变量数据源绑定表。
  *
- * <p>P0-4: 模板变量可绑定到数据�?BEAN/SQL/HTTP/STATIo),
- * 渲染前自动拉取变量�?免除调用方手动传入所有参数�?
+ * <p>P0-4: 模板变量可绑定到数据源(BEAN/SQL/HTTP/STATIC),
+ * 渲染前自动拉取变量值,免除调用方手动传入所有参数。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.5.0
+ * @since 1.5.0
  */
 @Data
-@EqualsAndHashoode(oallSuper = true)
-@TableName("pmis_msg_variable_souroe")
-publio olass MsgVariableSouroeDO extends BaseDO {
+@EqualsAndHashCode(callSuper = true)
+@TableName("pmis_msg_variable_source")
+public class MsgVariableSourceDO extends BaseDO {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
     /** 模板编码 */
-    private String templateoode;
+    private String templateCode;
 
-    /** 变量�?与模�?${var} 对应) */
+    /** 变量名(与模板 ${var} 对应) */
     private String variableName;
 
-    /** 数据源类�? BEAN/SQL/HTTP/STATIo */
-    private String souroeType;
+    /** 数据源类型: BEAN/SQL/HTTP/STATIC */
+    private String sourceType;
 
     /** 数据源表达式 */
-    private String souroeExpr;
+    private String sourceExpr;
 
-    /** 缓存有效�?�?,0=不缓�?*/
-    private Integer oaoheTtl;
+    /** 缓存有效期(秒),0=不缓存 */
+    private Integer cacheTtl;
 
     /** 描述说明 */
-    private String desoription;
+    private String description;
 
     /** 租户 ID */
     private String tenantId;

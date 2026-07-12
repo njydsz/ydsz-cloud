@@ -1,46 +1,46 @@
-paokage oom.njydsz.pmis.message.server.servioe.impl.template;
+package com.njydsz.pmis.message.server.service.impl.template;
 
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.oommon.feign.MessageRequest;
-import oom.njydsz.pmis.oommon.feign.MessageResult;
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.njydsz.pmis.message.domain.dto.template.TemplatePreviewDTO;
-import oom.njydsz.pmis.message.domain.dto.template.TemplateTestSendDTO;
-import oom.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
-import oom.njydsz.pmis.message.domain.entity.template.MsgTemplateVersionDO;
-import oom.njydsz.pmis.message.infra.mapper.template.MsgTemplateMapper;
-import oom.njydsz.pmis.message.infra.mapper.template.MsgTemplateVersionMapper;
-import oom.njydsz.pmis.message.server.servioe.oore.MessageServioe;
-import oom.njydsz.pmis.message.server.servioe.template.TemplateVersionServioe;
-import oom.njydsz.pmis.message.server.template.TemplateEngine;
-import lombok.RequiredArgsoonstruotor;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.message.domain.dto.template.TemplatePreviewDTO;
+import com.njydsz.pmis.message.domain.dto.template.TemplateTestSendDTO;
+import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
+import com.njydsz.pmis.message.domain.entity.template.MsgTemplateVersionDO;
+import com.njydsz.pmis.message.infra.mapper.template.MsgTemplateMapper;
+import com.njydsz.pmis.message.infra.mapper.template.MsgTemplateVersionMapper;
+import com.njydsz.pmis.message.server.service.core.MessageService;
+import com.njydsz.pmis.message.server.service.template.TemplateVersionService;
+import com.njydsz.pmis.message.server.template.TemplateEngine;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 
 /**
- * 模板版本管理与可视化服务实现�?
+ * 模板版本管理与可视化服务实现。
  *
- * <p>P1-6: 实现�?
+ * <p>P1-6: 实现：
  * <ul>
- *   <li>版本历史记录：每次审核通过/拒绝时插入版本快�?/li>
- *   <li>版本回滚：将模板内容回滚到指定历史版�?/li>
- *   <li>模板预览：使�?TemplateEngine 渲染，不实际发�?/li>
- *   <li>模板试发：通过 MessageServioe 向测试接收人发送真实消�?/li>
+ *   <li>版本历史记录：每次审核通过/拒绝时插入版本快照</li>
+ *   <li>版本回滚：将模板内容回滚到指定历史版本</li>
+ *   <li>模板预览：使用 TemplateEngine 渲染，不实际发送</li>
+ *   <li>模板试发：通过 MessageService 向测试接收人发送真实消息</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.2.0
+ * @since 1.2.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass TemplateVersionServioeImpl implements TemplateVersionServioe {
+@Service
+@RequiredArgsConstructor
+public class TemplateVersionServiceImpl implements TemplateVersionService {
 
     /** 模板版本历史 Mapper */
     private final MsgTemplateVersionMapper versionMapper;
@@ -48,160 +48,160 @@ publio olass TemplateVersionServioeImpl implements TemplateVersionServioe {
     private final MsgTemplateMapper templateMapper;
     /** 模板引擎（预览渲染） */
     private final TemplateEngine templateEngine;
-    /** 消息发送服务（试发�?*/
-    private final MessageServioe messageServioe;
+    /** 消息发送服务（试发） */
+    private final MessageService messageService;
 
     /**
-     * 查询指定模板的版本历史列�?
+     * 查询指定模板的版本历史列表
      *
-     * @param templateoode 模板编码
-     * @return 版本列表（按版本号倒序�?
-     * @throws SysExoeption templateoode 为空时抛�?
+     * @param templateCode 模板编码
+     * @return 版本列表（按版本号倒序）
+     * @throws SysException templateCode 为空时抛出
      */
     @Override
-    publio List<MsgTemplateVersionDO> listVersions(String templateoode) {
-        if (!StringUtils.hasText(templateoode)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "模板编码不能为空");
+    public List<MsgTemplateVersionDO> listVersions(String templateCode) {
+        if (!StringUtils.hasText(templateCode)) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "模板编码不能为空");
         }
-        return versionMapper.seleotList(new LambdaQueryWrapper<MsgTemplateVersionDO>()
-                .eq(MsgTemplateVersionDO::getTemplateoode, templateoode)
-                .orderByDeso(MsgTemplateVersionDO::getVersion));
+        return versionMapper.selectList(new LambdaQueryWrapper<MsgTemplateVersionDO>()
+                .eq(MsgTemplateVersionDO::getTemplateCode, templateCode)
+                .orderByDesc(MsgTemplateVersionDO::getVersion));
     }
 
     /**
      * 记录模板版本快照
      *
-     * <p>查询当前最大版本号�?+1，插入版本记录。每次审核通过/拒绝时调用�?
+     * <p>查询当前最大版本号并 +1，插入版本记录。每次审核通过/拒绝时调用。
      *
-     * @param templateoode 模板编码
-     * @param oontent      模板内容快照
+     * @param templateCode 模板编码
+     * @param content      模板内容快照
      * @param variableDefs 变量定义 JSON
-     * @param auditStatus  审核状态（APPROVED/REJEoTED�?
-     * @param auditor      审核�?
+     * @param auditStatus  审核状态（APPROVED/REJECTED）
+     * @param auditor      审核人
      * @param auditRemark  审核备注
      * @return 落库后的版本记录
      */
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio MsgTemplateVersionDO reoordVersion(String templateoode, String oontent, String variableDefs,
+    @Transactional(rollbackFor = Exception.class)
+    public MsgTemplateVersionDO recordVersion(String templateCode, String content, String variableDefs,
                                               String auditStatus, String auditor, String auditRemark) {
         // 查询当前最大版本号
-        Integer maxVersion = versionMapper.seleotList(new LambdaQueryWrapper<MsgTemplateVersionDO>()
-                        .eq(MsgTemplateVersionDO::getTemplateoode, templateoode)
-                        .orderByDeso(MsgTemplateVersionDO::getVersion)
+        Integer maxVersion = versionMapper.selectList(new LambdaQueryWrapper<MsgTemplateVersionDO>()
+                        .eq(MsgTemplateVersionDO::getTemplateCode, templateCode)
+                        .orderByDesc(MsgTemplateVersionDO::getVersion)
                         .last("LIMIT 1"))
                 .stream()
                 .findFirst()
                 .map(MsgTemplateVersionDO::getVersion)
                 .orElse(0);
         MsgTemplateVersionDO version = new MsgTemplateVersionDO();
-        version.setTemplateoode(templateoode);
+        version.setTemplateCode(templateCode);
         version.setVersion(maxVersion + 1);
-        version.setoontent(oontent);
+        version.setContent(content);
         version.setVariableDefs(variableDefs);
         version.setAuditStatus(auditStatus);
         version.setAuditor(auditor);
         version.setAuditRemark(auditRemark);
-        version.setTenantId(Tenantoontext.getTenantId());
+        version.setTenantId(TenantContext.getTenantId());
         versionMapper.insert(version);
-        log.info("[TemplateVersion] 版本记录: oode={} version={} status={}", templateoode, version.getVersion(), auditStatus);
+        log.info("[TemplateVersion] 版本记录: code={} version={} status={}", templateCode, version.getVersion(), auditStatus);
         return version;
     }
 
     /**
      * 将模板内容回滚到指定历史版本
      *
-     * @param templateoode 模板编码
-     * @param version      目标版本�?
+     * @param templateCode 模板编码
+     * @param version      目标版本号
      * @return 回滚后的模板内容
-     * @throws SysExoeption 版本或模板不存在时抛�?
+     * @throws SysException 版本或模板不存在时抛出
      */
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio String rollbaokToVersion(String templateoode, int version) {
-        MsgTemplateVersionDO versionDO = versionMapper.seleotOne(new LambdaQueryWrapper<MsgTemplateVersionDO>()
-                .eq(MsgTemplateVersionDO::getTemplateoode, templateoode)
+    @Transactional(rollbackFor = Exception.class)
+    public String rollbackToVersion(String templateCode, int version) {
+        MsgTemplateVersionDO versionDO = versionMapper.selectOne(new LambdaQueryWrapper<MsgTemplateVersionDO>()
+                .eq(MsgTemplateVersionDO::getTemplateCode, templateCode)
                 .eq(MsgTemplateVersionDO::getVersion, version)
                 .last("LIMIT 1"));
         if (versionDO == null) {
-            throw new SysExoeption(StandardResultoode.NOT_FOUND, "版本不存�? " + version);
+            throw new SysException(StandardResultCode.NOT_FOUND, "版本不存在: " + version);
         }
-        MsgTemplateDO template = templateMapper.seleotOne(new LambdaQueryWrapper<MsgTemplateDO>()
-                .eq(MsgTemplateDO::getTemplateoode, templateoode)
+        MsgTemplateDO template = templateMapper.selectOne(new LambdaQueryWrapper<MsgTemplateDO>()
+                .eq(MsgTemplateDO::getTemplateCode, templateCode)
                 .last("LIMIT 1"));
         if (template == null) {
-            throw new SysExoeption(StandardResultoode.NOT_FOUND, "模板不存�? " + templateoode);
+            throw new SysException(StandardResultCode.NOT_FOUND, "模板不存在: " + templateCode);
         }
-        template.setoontent(versionDO.getoontent());
+        template.setContent(versionDO.getContent());
         templateMapper.updateById(template);
-        log.info("[TemplateVersion] 版本回滚: oode={} targetVersion={}", templateoode, version);
-        return versionDO.getoontent();
+        log.info("[TemplateVersion] 版本回滚: code={} targetVersion={}", templateCode, version);
+        return versionDO.getContent();
     }
 
     /**
      * 预览模板渲染效果（不实际发送）
      *
-     * <p>优先使用 DTO 中的 oontent，为空时从数据库加载指定模板的内容�?
+     * <p>优先使用 DTO 中的 content，为空时从数据库加载指定模板的内容。
      *
-     * @param dto 预览参数（templateoode �?oontent + params�?
+     * @param dto 预览参数（templateCode 或 content + params）
      * @return 渲染后的内容
-     * @throws SysExoeption 参数为空或模板不存在时抛�?
+     * @throws SysException 参数为空或模板不存在时抛出
      */
     @Override
-    publio String preview(TemplatePreviewDTO dto) {
+    public String preview(TemplatePreviewDTO dto) {
         if (dto == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "预览参数不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "预览参数不能为空");
         }
-        String oontent = dto.getoontent();
-        if (!StringUtils.hasText(oontent)) {
-            // 从模板加�?
-            if (!StringUtils.hasText(dto.getTemplateoode())) {
-                throw new SysExoeption(StandardResultoode.BAD_REQUEST, "templateoode �?oontent 不能同时为空");
+        String content = dto.getContent();
+        if (!StringUtils.hasText(content)) {
+            // 从模板加载
+            if (!StringUtils.hasText(dto.getTemplateCode())) {
+                throw new SysException(StandardResultCode.BAD_REQUEST, "templateCode 和 content 不能同时为空");
             }
-            MsgTemplateDO template = templateMapper.seleotOne(new LambdaQueryWrapper<MsgTemplateDO>()
-                    .eq(MsgTemplateDO::getTemplateoode, dto.getTemplateoode())
+            MsgTemplateDO template = templateMapper.selectOne(new LambdaQueryWrapper<MsgTemplateDO>()
+                    .eq(MsgTemplateDO::getTemplateCode, dto.getTemplateCode())
                     .last("LIMIT 1"));
             if (template == null) {
-                throw new SysExoeption(StandardResultoode.NOT_FOUND, "模板不存�? " + dto.getTemplateoode());
+                throw new SysException(StandardResultCode.NOT_FOUND, "模板不存在: " + dto.getTemplateCode());
             }
-            oontent = template.getoontent();
+            content = template.getContent();
         }
-        return templateEngine.render(oontent, dto.getParams());
+        return templateEngine.render(content, dto.getParams());
     }
 
     /**
      * 试发模板消息（实际发送给测试接收人）
      *
-     * @param dto 试发参数（templateoode、testReoeiver、params、testohannel�?
-     * @return 消息发送结�?
-     * @throws SysExoeption 模板编码或接收人为空时抛�?
+     * @param dto 试发参数（templateCode、testReceiver、params、testChannel）
+     * @return 消息发送结果
+     * @throws SysException 模板编码或接收人为空时抛出
      */
     @Override
-    publio MessageResult testSend(TemplateTestSendDTO dto) {
-        if (dto == null || !StringUtils.hasText(dto.getTemplateoode())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "模板编码不能为空");
+    public MessageResult testSend(TemplateTestSendDTO dto) {
+        if (dto == null || !StringUtils.hasText(dto.getTemplateCode())) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "模板编码不能为空");
         }
-        if (!StringUtils.hasText(dto.getTestReoeiver())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "测试接收人不能为�?);
+        if (!StringUtils.hasText(dto.getTestReceiver())) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "测试接收人不能为空");
         }
         MessageRequest request = new MessageRequest();
-        request.setTemplateoode(dto.getTemplateoode());
-        request.setReoeiver(dto.getTestReoeiver());
+        request.setTemplateCode(dto.getTemplateCode());
+        request.setReceiver(dto.getTestReceiver());
         request.setParams(dto.getParams());
-        // 通道：优先使�?testohannel，否则从模板获取
-        if (StringUtils.hasText(dto.getTestohannel())) {
-            request.setohannel(dto.getTestohannel());
+        // 通道：优先使用 testChannel，否则从模板获取
+        if (StringUtils.hasText(dto.getTestChannel())) {
+            request.setChannel(dto.getTestChannel());
         } else {
-            MsgTemplateDO template = templateMapper.seleotOne(new LambdaQueryWrapper<MsgTemplateDO>()
-                    .eq(MsgTemplateDO::getTemplateoode, dto.getTemplateoode())
+            MsgTemplateDO template = templateMapper.selectOne(new LambdaQueryWrapper<MsgTemplateDO>()
+                    .eq(MsgTemplateDO::getTemplateCode, dto.getTemplateCode())
                     .last("LIMIT 1"));
             if (template != null) {
-                request.setohannel(template.getohannel());
+                request.setChannel(template.getChannel());
             }
         }
-        request.setMessageId("TEST-" + System.ourrentTimeMillis());
-        log.info("[TemplateVersion] 试发: oode={} reoeiver={} ohannel={}",
-                dto.getTemplateoode(), dto.getTestReoeiver(), request.getohannel());
-        return messageServioe.send(request);
+        request.setMessageId("TEST-" + System.currentTimeMillis());
+        log.info("[TemplateVersion] 试发: code={} receiver={} channel={}",
+                dto.getTemplateCode(), dto.getTestReceiver(), request.getChannel());
+        return messageService.send(request);
     }
 }

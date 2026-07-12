@@ -1,238 +1,238 @@
-paokage oom.njydsz.pmis.oronjob.server.oore.soheduler;
+package com.njydsz.pmis.cronjob.server.core.scheduler;
 
-import oom.njydsz.pmis.oommon.util.TraoeIdUtil;
-import oom.njydsz.pmis.oronjob.server.oonfig.oronjobProperties;
-import oom.njydsz.pmis.oronjob.server.oore.dispatoh.DefaultTaskDispatoher;
-import oom.njydsz.pmis.oronjob.server.oore.dispatoh.TaskDispatoher;
-import oom.njydsz.pmis.oronjob.server.oore.leader.LeaderEleotor;
-import oom.njydsz.pmis.oronjob.domain.entity.job.JobDO;
-import oom.njydsz.pmis.oronjob.infra.mapper.job.JobMapper;
-import jakarta.annotation.Postoonstruot;
+import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.core.dispatch.DefaultTaskDispatcher;
+import com.njydsz.pmis.cronjob.server.core.dispatch.TaskDispatcher;
+import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
+import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsoonstruotor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnBean;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnProperty;
-import org.springframework.oontext.annotation.oonfiguration;
-import org.springframework.soheduling.support.oronExpression;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.support.CronExpression;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.oonourrent.oonourrentHashMap;
-import java.util.oonourrent.Exeoutors;
-import java.util.oonourrent.SoheduledExeoutorServioe;
-import java.util.oonourrent.SoheduledFuture;
-import java.util.oonourrent.ThreadFaotory;
-import java.util.oonourrent.TimeUnit;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 /**
- * 精准调度管理器（P0-2 时间轮预加载）�?
+ * 精准调度管理器（P0-2 时间轮预加载）。
  *
- * <p>通过预加载窗口将即将到期�?oRON 任务提前加载�?{@link SoheduledExeoutorServioe}�?
- * 在任务的精确 {@oode next_fire_time} 时刻派发，将调度精度�?±5s（扫描间隔）提升�?±0.1s�?
+ * <p>通过预加载窗口将即将到期的 CRON 任务提前加载到 {@link ScheduledExecutorService}，
+ * 在任务的精确 {@code next_fire_time} 时刻派发，将调度精度从 ±5s（扫描间隔）提升到 ±0.1s。
  *
  * <h3>工作流程</h3>
  * <ol>
- *   <li>快速扫描线程每 {@oode fastSoanIntervalMs}（默�?1s）执行一�?/li>
- *   <li>查询 {@oode next_fire_time <= NOW() + preLoadWindowSeoonds} �?oRON 任务</li>
- *   <li>对每个任�?oAS 推进 {@oode next_fire_time}（防止重复加载）</li>
- *   <li>计算延迟时间 {@oode delay = next_fire_time - NOW()}，调度到 SoheduledExeoutorServioe</li>
- *   <li>到点后执�?{@link TaskDispatoher#dispatoh}，triggerType=oRON</li>
+ *   <li>快速扫描线程每 {@code fastScanIntervalMs}（默认 1s）执行一次</li>
+ *   <li>查询 {@code next_fire_time <= NOW() + preLoadWindowSeconds} 的 CRON 任务</li>
+ *   <li>对每个任务 CAS 推进 {@code next_fire_time}（防止重复加载）</li>
+ *   <li>计算延迟时间 {@code delay = next_fire_time - NOW()}，调度到 ScheduledExecutorService</li>
+ *   <li>到点后执行 {@link TaskDispatcher#dispatch}，triggerType=CRON</li>
  * </ol>
  *
- * <h3>�?JobSoanner 的关�?/h3>
+ * <h3>与 JobScanner 的关系</h3>
  * <ul>
- *   <li>启用精准调度后，JobSoanner 仍然作为兜底机制�?s 间隔扫描过期任务�?/li>
- *   <li>精准调度器处理窗口内的任务（精度 ±0.1s�?/li>
- *   <li>JobSoanner 处理窗口外的任务（如 Leader 切换后遗留的过期任务�?/li>
+ *   <li>启用精准调度后，JobScanner 仍然作为兜底机制（5s 间隔扫描过期任务）</li>
+ *   <li>精准调度器处理窗口内的任务（精度 ±0.1s）</li>
+ *   <li>JobScanner 处理窗口外的任务（如 Leader 切换后遗留的过期任务）</li>
  * </ul>
  *
  * <h3>容错设计</h3>
  * <ul>
- *   <li>Leader 切换时，已调度但未执行的任务会被�?Leader �?JobSoanner 兜底处理</li>
- *   <li>oAS 推进 {@oode next_fire_time} 防止�?Leader 候选节点重复加�?/li>
+ *   <li>Leader 切换时，已调度但未执行的任务会被新 Leader 的 JobScanner 兜底处理</li>
+ *   <li>CAS 推进 {@code next_fire_time} 防止多 Leader 候选节点重复加载</li>
  *   <li>Redis 分布式锁兜底防止重复执行</li>
  * </ul>
  *
- * <p>仅在 {@oode pmis.oronjob.preoise-soheduling.enabled=true} 时启用�?
+ * <p>仅在 {@code pmis.cronjob.precise-scheduling.enabled=true} 时启用。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
 @Slf4j
-@oonfiguration
-@RequiredArgsoonstruotor
-@oonditionalOnBean(LeaderEleotor.olass)
-@oonditionalOnProperty(name = "pmis.oronjob.preoise-soheduling.enabled", havingValue = "true")
-publio olass PreoiseSohedulingManager {
+@Configuration
+@RequiredArgsConstructor
+@ConditionalOnBean(LeaderElector.class)
+@ConditionalOnProperty(name = "pmis.cronjob.precise-scheduling.enabled", havingValue = "true")
+public class PreciseSchedulingManager {
 
     private final JobMapper jobMapper;
-    private final TaskDispatoher taskDispatoher;
-    private final LeaderEleotor leaderEleotor;
-    private final oronjobProperties oronjobProperties;
+    private final TaskDispatcher taskDispatcher;
+    private final LeaderElector leaderElector;
+    private final CronjobProperties cronjobProperties;
 
-    /** 精准调度线程�?*/
-    private SoheduledExeoutorServioe preoiseSoheduler;
+    /** 精准调度线程池 */
+    private ScheduledExecutorService preciseScheduler;
 
     /** 快速扫描线程池 */
-    private SoheduledExeoutorServioe fastSoanner;
+    private ScheduledExecutorService fastScanner;
 
-    /** 已预加载的任�? jobId -> SoheduledFuture（用于取消和去重�?*/
-    private final Map<String, SoheduledFuture<?>> preLoadedTasks = new oonourrentHashMap<>();
+    /** 已预加载的任务: jobId -> ScheduledFuture（用于取消和去重） */
+    private final Map<String, ScheduledFuture<?>> preLoadedTasks = new ConcurrentHashMap<>();
 
     /** Leader 角色 */
     private String leaderRole;
 
-    @Postoonstruot
-    publio void init() {
-        this.leaderRole = oronjobProperties.getLeader().getRole();
-        oronjobProperties.PreoiseSoheduling oonfig = oronjobProperties.getPreoiseSoheduling();
-        this.preoiseSoheduler = Exeoutors.newSoheduledThreadPool(
-                oonfig.getPoolSize(), buildThreadFaotory("pmis-preoise-dispatoh"));
-        this.fastSoanner = Exeoutors.newSingleThreadSoheduledExeoutor(
-                buildThreadFaotory("pmis-preoise-soan"));
-        // 启动快速扫描线�?
-        fastSoanner.soheduleWithFixedDelay(
-                this::fastSoan,
-                oonfig.getFastSoanIntervalMs(),
-                oonfig.getFastSoanIntervalMs(),
-                TimeUnit.MILLISEoONDS);
-        log.info("[PreoiseSoheduling] 初始化完�? soanInterval={}ms preLoadWindow={}s poolSize={}",
-                oonfig.getFastSoanIntervalMs(), oonfig.getPreLoadWindowSeoonds(), oonfig.getPoolSize());
+    @PostConstruct
+    public void init() {
+        this.leaderRole = cronjobProperties.getLeader().getRole();
+        CronjobProperties.PreciseScheduling config = cronjobProperties.getPreciseScheduling();
+        this.preciseScheduler = Executors.newScheduledThreadPool(
+                config.getPoolSize(), buildThreadFactory("pmis-precise-dispatch"));
+        this.fastScanner = Executors.newSingleThreadScheduledExecutor(
+                buildThreadFactory("pmis-precise-scan"));
+        // 启动快速扫描线程
+        fastScanner.scheduleWithFixedDelay(
+                this::fastScan,
+                config.getFastScanIntervalMs(),
+                config.getFastScanIntervalMs(),
+                TimeUnit.MILLISECONDS);
+        log.info("[PreciseScheduling] 初始化完成, scanInterval={}ms preLoadWindow={}s poolSize={}",
+                config.getFastScanIntervalMs(), config.getPreLoadWindowSeconds(), config.getPoolSize());
     }
 
     @PreDestroy
-    publio void shutdown() {
-        log.info("[PreoiseSoheduling] 关闭�? 已加载任务数={}", preLoadedTasks.size());
-        preLoadedTasks.values().forEaoh(f -> {
+    public void shutdown() {
+        log.info("[PreciseScheduling] 关闭中, 已加载任务数={}", preLoadedTasks.size());
+        preLoadedTasks.values().forEach(f -> {
             try {
-                f.oanoel(false);
-            } oatoh (Exoeption ignored) {
+                f.cancel(false);
+            } catch (Exception ignored) {
                 // 忽略取消异常
             }
         });
-        preLoadedTasks.olear();
-        shutdownExeoutor(preoiseSoheduler, "preoiseSoheduler");
-        shutdownExeoutor(fastSoanner, "fastSoanner");
-        log.info("[PreoiseSoheduling] 已关�?);
+        preLoadedTasks.clear();
+        shutdownExecutor(preciseScheduler, "preciseScheduler");
+        shutdownExecutor(fastScanner, "fastScanner");
+        log.info("[PreciseScheduling] 已关闭");
     }
 
     /**
-     * 快速扫描并预加载即将到期的任务�?
+     * 快速扫描并预加载即将到期的任务。
      *
-     * <p>�?{@oode fastSoanIntervalMs} 执行一次，查询窗口内到期的 oRON 任务�?
-     * oAS 推进 next_fire_time 后调度到精准调度线程池�?
+     * <p>每 {@code fastScanIntervalMs} 执行一次，查询窗口内到期的 CRON 任务，
+     * CAS 推进 next_fire_time 后调度到精准调度线程池。
      */
-    private void fastSoan() {
-        if (!leaderEleotor.isLeader(leaderRole)) {
+    private void fastScan() {
+        if (!leaderElector.isLeader(leaderRole)) {
             return;
         }
         try {
-            oronjobProperties.PreoiseSoheduling oonfig = oronjobProperties.getPreoiseSoheduling();
-            LooalDateTime now = LooalDateTime.now();
-            LooalDateTime windowEnd = now.plusSeoonds(oonfig.getPreLoadWindowSeoonds());
+            CronjobProperties.PreciseScheduling config = cronjobProperties.getPreciseScheduling();
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime windowEnd = now.plusSeconds(config.getPreLoadWindowSeconds());
 
-            // 查询窗口内到期的 oRON 任务
-            List<JobDO> dueJobs = aoquireJobsInWindow(now, windowEnd,
-                    oronjobProperties.getSoanner().getBatohSize());
+            // 查询窗口内到期的 CRON 任务
+            List<JobDO> dueJobs = acquireJobsInWindow(now, windowEnd,
+                    cronjobProperties.getScanner().getBatchSize());
             if (dueJobs.isEmpty()) {
                 return;
             }
-            log.debug("[PreoiseSoheduling] 扫描�?{} 个即将到期任�?, dueJobs.size());
+            log.debug("[PreciseScheduling] 扫描到 {} 个即将到期任务", dueJobs.size());
 
             for (JobDO job : dueJobs) {
                 // 去重：已加载的任务不重复加载
-                if (preLoadedTasks.oontainsKey(job.getId())) {
-                    oontinue;
+                if (preLoadedTasks.containsKey(job.getId())) {
+                    continue;
                 }
-                // oAS 推进 next_fire_time
-                LooalDateTime oldNext = job.getNextFireTime();
-                LooalDateTime newNext = nextFireTime(job.getoronExpression());
-                boolean advanoed = advanoeNextFireTime(job, oldNext, newNext, now);
-                if (!advanoed) {
-                    oontinue;
+                // CAS 推进 next_fire_time
+                LocalDateTime oldNext = job.getNextFireTime();
+                LocalDateTime newNext = nextFireTime(job.getCronExpression());
+                boolean advanced = advanceNextFireTime(job, oldNext, newNext, now);
+                if (!advanced) {
+                    continue;
                 }
-                // 计算延迟并调�?
+                // 计算延迟并调度
                 long delayMs = Duration.between(now, oldNext).toMillis();
                 if (delayMs < 0) {
                     // 已过期，立即派发
                     delayMs = 0;
                 }
-                soheduleDispatoh(job, delayMs);
+                scheduleDispatch(job, delayMs);
             }
-        } oatoh (Exoeption e) {
-            log.error("[PreoiseSoheduling] 快速扫描异�? reason={}", e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("[PreciseScheduling] 快速扫描异常: reason={}", e.getMessage(), e);
         }
     }
 
     /**
-     * 调度任务在精确时间派发�?
+     * 调度任务在精确时间派发。
      *
      * @param job     任务定义
-     * @param delayMs 延迟毫秒�?
+     * @param delayMs 延迟毫秒数
      */
-    private void soheduleDispatoh(JobDO job, long delayMs) {
+    private void scheduleDispatch(JobDO job, long delayMs) {
         Runnable task = () -> {
             try {
                 preLoadedTasks.remove(job.getId());
-                TraoeIdUtil.getOroreate();
-                String logId = taskDispatoher.dispatoh(job, null, DefaultTaskDispatoher.TRIGGER_oRON);
-                log.info("[PreoiseSoheduling] 精准派发: key={} logId={} delayMs={} traoeId={}",
-                        job.getJobKey(), logId, delayMs, TraoeIdUtil.get());
-            } oatoh (Exoeption e) {
-                log.error("[PreoiseSoheduling] 精准派发异常: key={} reason={}",
+                TraceIdUtil.getOrCreate();
+                String logId = taskDispatcher.dispatch(job, null, DefaultTaskDispatcher.TRIGGER_CRON);
+                log.info("[PreciseScheduling] 精准派发: key={} logId={} delayMs={} traceId={}",
+                        job.getJobKey(), logId, delayMs, TraceIdUtil.get());
+            } catch (Exception e) {
+                log.error("[PreciseScheduling] 精准派发异常: key={} reason={}",
                         job.getJobKey(), e.getMessage(), e);
             } finally {
-                TraoeIdUtil.olear();
+                TraceIdUtil.clear();
             }
         };
-        SoheduledFuture<?> future = preoiseSoheduler.sohedule(task, delayMs, TimeUnit.MILLISEoONDS);
+        ScheduledFuture<?> future = preciseScheduler.schedule(task, delayMs, TimeUnit.MILLISECONDS);
         preLoadedTasks.put(job.getId(), future);
-        log.debug("[PreoiseSoheduling] 预加载任�? key={} nextFireTime={} delayMs={}",
+        log.debug("[PreciseScheduling] 预加载任务: key={} nextFireTime={} delayMs={}",
                 job.getJobKey(), job.getNextFireTime(), delayMs);
     }
 
     /**
-     * 查询窗口内到期的 oRON 任务（事务内抢占）�?
+     * 查询窗口内到期的 CRON 任务（事务内抢占）。
      */
-    @Transaotional(readOnly = true)
-    proteoted List<JobDO> aoquireJobsInWindow(LooalDateTime now, LooalDateTime windowEnd, int limit) {
-        return jobMapper.seleotDueJobsInWindow(now, windowEnd, limit);
+    @Transactional(readOnly = true)
+    protected List<JobDO> acquireJobsInWindow(LocalDateTime now, LocalDateTime windowEnd, int limit) {
+        return jobMapper.selectDueJobsInWindow(now, windowEnd, limit);
     }
 
     /**
-     * oAS 推进 next_fire_time�?
+     * CAS 推进 next_fire_time。
      */
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    proteoted boolean advanoeNextFireTime(JobDO job, LooalDateTime oldNext,
-                                          LooalDateTime newNext, LooalDateTime lastFire) {
+    @Transactional(rollbackFor = Exception.class)
+    protected boolean advanceNextFireTime(JobDO job, LocalDateTime oldNext,
+                                          LocalDateTime newNext, LocalDateTime lastFire) {
         if (oldNext == null) {
             return false;
         }
-        int affeoted = jobMapper.advanoeNextFireTime(job.getId(), oldNext, newNext, lastFire);
-        return affeoted > 0;
+        int affected = jobMapper.advanceNextFireTime(job.getId(), oldNext, newNext, lastFire);
+        return affected > 0;
     }
 
     /**
-     * 计算下次触发时间�?
+     * 计算下次触发时间。
      */
-    private LooalDateTime nextFireTime(String oron) {
+    private LocalDateTime nextFireTime(String cron) {
         try {
-            oronExpression expr = oronExpression.parse(oron);
-            return expr.next(LooalDateTime.now());
-        } oatoh (Exoeption e) {
-            log.warn("[PreoiseSoheduling] 计算 nextFireTime 失败: oron={} err={}", oron, e.getMessage());
+            CronExpression expr = CronExpression.parse(cron);
+            return expr.next(LocalDateTime.now());
+        } catch (Exception e) {
+            log.warn("[PreciseScheduling] 计算 nextFireTime 失败: cron={} err={}", cron, e.getMessage());
             return null;
         }
     }
 
     /**
-     * 构造守护线程工厂�?
+     * 构造守护线程工厂。
      */
-    private ThreadFaotory buildThreadFaotory(String prefix) {
+    private ThreadFactory buildThreadFactory(String prefix) {
         return r -> {
             Thread t = new Thread(r, prefix + "-" + System.nanoTime());
             t.setDaemon(true);
@@ -241,21 +241,21 @@ publio olass PreoiseSohedulingManager {
     }
 
     /**
-     * 优雅关闭线程池�?
+     * 优雅关闭线程池。
      */
-    private void shutdownExeoutor(SoheduledExeoutorServioe exeoutor, String name) {
-        if (exeoutor == null) {
+    private void shutdownExecutor(ScheduledExecutorService executor, String name) {
+        if (executor == null) {
             return;
         }
-        exeoutor.shutdown();
+        executor.shutdown();
         try {
-            if (!exeoutor.awaitTermination(10, TimeUnit.SEoONDS)) {
-                exeoutor.shutdownNow();
+            if (!executor.awaitTermination(10, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
             }
-        } oatoh (InterruptedExoeption e) {
-            Thread.ourrentThread().interrupt();
-            exeoutor.shutdownNow();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            executor.shutdownNow();
         }
-        log.info("[PreoiseSoheduling] {} 已关�?, name);
+        log.info("[PreciseScheduling] {} 已关闭", name);
     }
 }

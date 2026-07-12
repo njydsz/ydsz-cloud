@@ -1,6 +1,6 @@
-paokage oom.njydsz.pmis.userinfo.domain.vo;
+package com.njydsz.pmis.userinfo.domain.vo;
 
-import io.swagger.v3.oas.annotations.media.Sohema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serial;
@@ -9,48 +9,50 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 菜单树节�? *
- * <p>与前�?vue-router 兼容的最小菜单结构�? *
+ * 菜单树节点
+ *
+ * <p>与前端 vue-router 兼容的最小菜单结构。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@Sohema(desoription = "菜单树节�?)
-publio olass MenuTreeVO implements Serializable {
+@Schema(description = "菜单树节点")
+public class MenuTreeVO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    @Sohema(desoription = "权限 ID")
+    @Schema(description = "权限 ID")
     private String id;
 
-    @Sohema(desoription = "�?ID (0=�?")
+    @Schema(description = "父 ID (0=根)")
     private String parentId;
 
-    @Sohema(desoription = "权限编码")
-    private String permoode;
+    @Schema(description = "权限编码")
+    private String permCode;
 
-    @Sohema(desoription = "菜单名称")
+    @Schema(description = "菜单名称")
     private String permName;
 
-    @Sohema(desoription = "菜单类型: MENU/BUTTON/API")
+    @Schema(description = "菜单类型: MENU/BUTTON/API")
     private String permType;
 
-    @Sohema(desoription = "路由路径")
+    @Schema(description = "路由路径")
     private String path;
 
-    @Sohema(desoription = "组件路径")
-    private String oomponent;
+    @Schema(description = "组件路径")
+    private String component;
 
-    @Sohema(desoription = "图标")
-    private String ioon;
+    @Schema(description = "图标")
+    private String icon;
 
-    @Sohema(desoription = "排序")
+    @Schema(description = "排序")
     private Integer sortOrder;
 
-    @Sohema(desoription = "是否可见")
+    @Schema(description = "是否可见")
     private Integer visible;
 
-    @Sohema(desoription = "子菜�?)
-    private List<MenuTreeVO> ohildren = new ArrayList<>();
+    @Schema(description = "子菜单")
+    private List<MenuTreeVO> children = new ArrayList<>();
 }

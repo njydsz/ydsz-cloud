@@ -1,20 +1,20 @@
-paokage oom.njydsz.pmis.userinfo.server.servioe.rate;
+package com.njydsz.pmis.userinfo.server.service.rate;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.userinfo.domain.dto.rate.OutsouroeRateoreateDTO;
-import oom.njydsz.pmis.userinfo.domain.dto.rate.OutsouroeRateUpdateDTO;
-import oom.njydsz.pmis.userinfo.domain.entity.rate.OutsouroeRateDO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRateCreateDTO;
+import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRateUpdateDTO;
+import com.njydsz.pmis.userinfo.domain.entity.rate.OutsourceRateDO;
 
-import java.time.LooalDate;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
  * 外包职级费率服务
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio interfaoe OutsouroeRateServioe {
+public interface OutsourceRateService {
 
     /**
      * 创建外包职级费率
@@ -22,7 +22,7 @@ publio interfaoe OutsouroeRateServioe {
      * @param dto 创建参数
      * @return 新建记录 ID
      */
-    String oreate(OutsouroeRateoreateDTO dto);
+    String create(OutsourceRateCreateDTO dto);
 
     /**
      * 更新外包职级费率
@@ -30,49 +30,49 @@ publio interfaoe OutsouroeRateServioe {
      * @param id  记录 ID
      * @param dto 更新参数
      */
-    void update(String id, OutsouroeRateUpdateDTO dto);
+    void update(String id, OutsourceRateUpdateDTO dto);
 
     /**
-     * 删除外包职级费率（逻辑删除�?
+     * 删除外包职级费率（逻辑删除）
      *
      * @param id 记录 ID
      */
     void delete(String id);
 
     /**
-     * �?ID 查询详情
+     * 按 ID 查询详情
      *
      * @param id 记录 ID
      * @return 外包职级费率记录
      */
-    OutsouroeRateDO getById(String id);
+    OutsourceRateDO getById(String id);
 
     /**
      * 分页查询
      *
-     * @param page    当前页（�?1 开始）
+     * @param page    当前页（从 1 开始）
      * @param size    每页大小
-     * @param keyword 关键字（匹配级别编码/名称�?
+     * @param keyword 关键字（匹配级别编码/名称）
      * @param segment 级别段位
-     * @param status  状�?
+     * @param status  状态
      * @return 分页结果
      */
-    Page<OutsouroeRateDO> page(int page, int size, String keyword, String segment, String status);
+    Page<OutsourceRateDO> page(int page, int size, String keyword, String segment, String status);
 
     /**
-     * 按级别编�?+ 日期匹配生效中的费率（按版本号倒序取最新）
+     * 按级别编码 + 日期匹配生效中的费率（按版本号倒序取最新）
      *
-     * @param rateoode 级别编码
+     * @param rateCode 级别编码
      * @param date     生效日期（为空时取当前日期）
      * @return 生效费率记录，未找到返回 null
      */
-    OutsouroeRateDO matohEffeotive(String rateoode, LooalDate date);
+    OutsourceRateDO matchEffective(String rateCode, LocalDate date);
 
     /**
-     * 查询某日期生效中的所有外包费�?
+     * 查询某日期生效中的所有外包费率
      *
      * @param date 生效日期（为空时取当前日期）
      * @return 生效费率列表
      */
-    List<OutsouroeRateDO> listEffeotive(LooalDate date);
+    List<OutsourceRateDO> listEffective(LocalDate date);
 }

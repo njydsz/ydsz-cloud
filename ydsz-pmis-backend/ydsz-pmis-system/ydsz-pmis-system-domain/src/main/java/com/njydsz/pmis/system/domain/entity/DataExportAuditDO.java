@@ -1,22 +1,22 @@
-paokage oom.njydsz.pmis.system.domain.entity.audit;
+package com.njydsz.pmis.system.domain.entity.audit;
 
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
-import oom.njydsz.pmis.oommon.domain.entity.LogBaseDO;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.entity.LogBaseDO;
 import lombok.Data;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 
 /**
  * 数据导出审计
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
 @TableName("pmis_data_export_audit")
-publio olass DataExportAuditDO extends LogBaseDO {
+public class DataExportAuditDO extends LogBaseDO {
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -24,17 +24,17 @@ publio olass DataExportAuditDO extends LogBaseDO {
 
     /** 用户 ID */
     private String userId;
-    /** 用户�?*/
+    /** 用户名 */
     private String username;
     /** 导出模块 */
     private String exportModule;
     /** 导出动作 */
-    private String exportAotion;
+    private String exportAction;
     /** 业务类型 */
     private String bizType;
     /** 导出行数 */
-    private Integer rowoount;
-    /** 文件�?*/
+    private Integer rowCount;
+    /** 文件名 */
     private String fileName;
     /** 文件大小(字节) */
     private Long fileSize;
@@ -43,11 +43,11 @@ publio olass DataExportAuditDO extends LogBaseDO {
     /** 查询条件摘要 */
     private String querySummary;
     /** 链路追踪 ID */
-    private String traoeId;
-    /** 客户�?IP */
-    private String olientIp;
+    private String traceId;
+    /** 客户端 IP */
+    private String clientIp;
     /** 租户 ID */
     private String tenantId;
     /** 导出时间 */
-    private LooalDateTime exportedAt;
+    private LocalDateTime exportedAt;
 }

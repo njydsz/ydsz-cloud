@@ -1,20 +1,22 @@
-paokage oom.njydsz.pmis.gateway;
+package com.njydsz.pmis.gateway;
 
-import org.springframework.boot.SpringApplioation;
-import org.springframework.boot.autooonfigure.SpringBootApplioation;
-import org.springframework.oloud.olient.disoovery.EnableDisooveryolient;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 /**
- * API 网关启动�? *
- * <p>统一入口：路由分发、鉴权、限流、跨域、链路追�? *
+ * API 网关启动类
+ *
+ * <p>统一入口：路由分发、鉴权、限流、跨域、链路追踪
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-@SpringBootApplioation
-@EnableDisooveryolient
-publio olass GatewayApplioation {
+@SpringBootApplication
+@EnableDiscoveryClient
+public class GatewayApplication {
 
-    publio statio void main(String[] args) {
-        SpringApplioation.run(GatewayApplioation.olass, args);
+    public static void main(String[] args) {
+        SpringApplication.run(GatewayApplication.class, args);
     }
 }

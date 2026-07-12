@@ -1,35 +1,37 @@
-paokage oom.njydsz.pmis.projeot.server.servioe;
+package com.njydsz.pmis.project.server.service;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.projeot.domain.dto.SatisfaotionoreateDTO;
-import oom.njydsz.pmis.projeot.domain.entity.SatisfaotionDO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.project.domain.dto.SatisfactionCreateDTO;
+import com.njydsz.pmis.project.domain.entity.SatisfactionDO;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * 服务满意度评�? *
- * <p>工单关闭 / 质保期结束可触发�? 维度（专业度/及时�?质量/态度�? 总体评分�? *
+ * 服务满意度评价
+ *
+ * <p>工单关闭 / 质保期结束可触发；4 维度（专业度/及时性/质量/态度）+ 总体评分。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio interfaoe SatisfaotionServioe {
+public interface SatisfactionService {
 
     /** 提交评价 */
-    String submit(SatisfaotionoreateDTO dto);
+    String submit(SatisfactionCreateDTO dto);
 
-    /** 标记需跟进（满意度 �?2 星） */
+    /** 标记需跟进（满意度 ≤ 2 星） */
     void markFollowUp(String id, String note);
 
     /** 关闭跟进 */
-    void oloseFollowUp(String id);
+    void closeFollowUp(String id);
 
-    /** 整体满意度均�?*/
-    Map<String, Objeot> overall();
+    /** 整体满意度均值 */
+    Map<String, Object> overall();
 
     /** 等级分布 */
-    List<Map<String, Objeot>> levelDistribution();
+    List<Map<String, Object>> levelDistribution();
 
     /** 分页 */
-    Page<SatisfaotionDO> page(int page, int size, String level, String initiationId, String keyword);
+    Page<SatisfactionDO> page(int page, int size, String level, String initiationId, String keyword);
 }

@@ -1,57 +1,57 @@
-paokage oom.njydsz.pmis.projeot.domain.enums;
+package com.njydsz.pmis.project.domain.enums;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFaotory;
+import org.slf4j.LoggerFactory;
 
 /**
- * 门径评审�?(oDoP - oritioal Deoision oheokpoint)
+ * 门径评审点 (CDCP - Critical Decision Checkpoint)
  *
  * <ul>
- *   <li>oD1: 立项决策（Entry�?/li>
- *   <li>oD2: 启动决策（Kiok-off�?/li>
- *   <li>oD3: 中期决策（Mid-term�?/li>
- *   <li>oD4: 验收决策（Aooeptanoe�?/li>
- *   <li>oD5: 结项决策（Closure�?/li>
+ *   <li>CD1: 立项决策（Entry）</li>
+ *   <li>CD2: 启动决策（Kick-off）</li>
+ *   <li>CD3: 中期决策（Mid-term）</li>
+ *   <li>CD4: 验收决策（Acceptance）</li>
+ *   <li>CD5: 结项决策（Closure）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum Gateoode {
-    oD1, oD2, oD3, oD4, oD5;
+public enum GateCode {
+    CD1, CD2, CD3, CD4, CD5;
 
-    private statio final Logger log = LoggerFaotory.getLogger(Gateoode.olass);
+    private static final Logger log = LoggerFactory.getLogger(GateCode.class);
 
     /**
-     * 根据状态码解析枚举�?
+     * 根据状态码解析枚举。
      *
-     * @param oode 状态码，大小写不敏感，�?null 或解析失败时返回 null
-     * @return 匹配到的枚举值；未匹配返�?null
+     * @param code 状态码，大小写不敏感，为 null 或解析失败时返回 null
+     * @return 匹配到的枚举值；未匹配返回 null
      */
-    publio statio Gateoode fromoode(String oode) {
-        if (oode == null) return null;
+    public static GateCode fromCode(String code) {
+        if (code == null) return null;
         try {
-            return Gateoode.valueOf(oode.trim().toUpperoase());
-        } oatoh (Exoeption e) {
-            log.warn("[Gateoode] 枚举解析失败 oode={}: {}", oode, e.getMessage());
+            return GateCode.valueOf(code.trim().toUpperCase());
+        } catch (Exception e) {
+            log.warn("[GateCode] 枚举解析失败 code={}: {}", code, e.getMessage());
             return null;
         }
     }
 
     /**
-     * 获取当前门径评审点的下一个评审点�?
+     * 获取当前门径评审点的下一个评审点。
      *
-     * @param ourrent 当前评审点，�?null 时视为起点，返回 oD1
-     * @return 下一个评审点；若 ourrent �?oD5（终态），返�?null
+     * @param current 当前评审点，为 null 时视为起点，返回 CD1
+     * @return 下一个评审点；若 current 为 CD5（终态），返回 null
      */
-    publio statio Gateoode next(Gateoode ourrent) {
-        if (ourrent == null) return oD1;
-        return switoh (ourrent) {
-            oase oD1 -> oD2;
-            oase oD2 -> oD3;
-            oase oD3 -> oD4;
-            oase oD4 -> oD5;
-            oase oD5 -> null;
+    public static GateCode next(GateCode current) {
+        if (current == null) return CD1;
+        return switch (current) {
+            case CD1 -> CD2;
+            case CD2 -> CD3;
+            case CD3 -> CD4;
+            case CD4 -> CD5;
+            case CD5 -> null;
         };
     }
 }

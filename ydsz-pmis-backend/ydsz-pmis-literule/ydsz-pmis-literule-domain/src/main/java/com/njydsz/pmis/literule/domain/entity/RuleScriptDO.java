@@ -1,30 +1,30 @@
-paokage oom.njydsz.pmis.literule.domain.entity;
+package com.njydsz.pmis.literule.domain.entity;
 
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
-import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashoode;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
 
 /**
  * 规则脚本实体
  *
- * <p>脚本规则：soript 字段�?Groovy 脚本源码，运行在沙箱中�?
- * 通过 sandbox_enabled 控制是否启用沙箱安全限制�?
+ * <p>脚本规则：script 字段为 Groovy 脚本源码，运行在沙箱中。
+ * 通过 sandbox_enabled 控制是否启用沙箱安全限制。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@EqualsAndHashoode(oallSuper = true)
-@TableName(value = "pmis_rule_soript", autoResultMap = true)
-publio olass RuleSoriptDO extends BaseDO {
+@EqualsAndHashCode(callSuper = true)
+@TableName(value = "pmis_rule_script", autoResultMap = true)
+public class RuleScriptDO extends BaseDO {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -34,38 +34,38 @@ publio olass RuleSoriptDO extends BaseDO {
     private String tenantId;
 
     /** 规则编码 */
-    private String ruleoode;
+    private String ruleCode;
 
     /** 规则名称 */
     private String ruleName;
 
     /** 规则分类 */
-    private String oategory;
+    private String category;
 
     /** 规则描述 */
-    private String desoription;
+    private String description;
 
     /** Groovy 脚本源码 */
-    private String soript;
+    private String script;
 
-    /** 默认严重级别：INFO/WARN/ERROR/oRITIoAL */
+    /** 默认严重级别：INFO/WARN/ERROR/CRITICAL */
     private String defaultSeverity;
 
     /** 是否启用沙箱 */
     private Boolean sandboxEnabled;
 
-    /** 优先�?*/
+    /** 优先级 */
     private Integer priority;
 
     /** 是否启用 */
     private Boolean enabled;
 
     /** 适用范围 */
-    private String soope;
+    private String scope;
 
-    /** 版本�?*/
+    /** 版本号 */
     private Integer version;
 
     /** 供应商侧追踪 ID */
-    private String providerTraoeId;
+    private String providerTraceId;
 }

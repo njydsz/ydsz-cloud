@@ -1,239 +1,248 @@
-paokage oom.njydsz.pmis.literule.server.impl;
+package com.njydsz.pmis.literule.server.impl;
 
-import oom.njydsz.pmis.literule.api.DeoisionTableDefinition;
-import oom.njydsz.pmis.literule.api.HitPolioy;
-import oom.njydsz.pmis.literule.api.Rule;
-import oom.njydsz.pmis.literule.api.Ruleoontext;
-import oom.njydsz.pmis.literule.api.RuleResult;
-import oom.njydsz.pmis.literule.api.RuleSeverity;
-import oom.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.api.DecisionTableDefinition;
+import com.njydsz.pmis.literule.api.HitPolicy;
+import com.njydsz.pmis.literule.api.Rule;
+import com.njydsz.pmis.literule.api.RuleContext;
+import com.njydsz.pmis.literule.api.RuleResult;
+import com.njydsz.pmis.literule.api.RuleSeverity;
+import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
 import lombok.extern.slf4j.Slf4j;
 
-import java.math.BigDeoimal;
-import java.time.LooalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.oomparator;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objeots;
-import java.util.regex.Matoher;
+import java.util.Objects;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * 决策表规则：基于 DMN 风格的表格进行多条件匹配
  *
- * <p>执行流程�? * <ol>
- *   <li>遍历所�?Row，对每行�?oonditions 进行匹配（条�?AND 关系�?/li>
- *   <li>�?{@link HitPolioy} 收集命中结果</li>
- *   <li>UNIQUE 多行命中时记录异常（不抛出，仅返回未触发 + 错误描述�?/li>
- *   <li>oOLLEoT/RULE_ORDER 返回所有命中行：主结果取首条，其余存入 {@oode oolleotedResults}</li>
- *   <li>FIRST/ANY/PRIORITY 仅返回首�?优先级最高的命中�?/li>
+ * <p>执行流程：
+ * <ol>
+ *   <li>遍历所有 Row，对每行的 conditions 进行匹配（条件 AND 关系）</li>
+ *   <li>按 {@link HitPolicy} 收集命中结果</li>
+ *   <li>UNIQUE 多行命中时记录异常（不抛出，仅返回未触发 + 错误描述）</li>
+ *   <li>COLLECT/RULE_ORDER 返回所有命中行：主结果取首条，其余存入 {@code collectedResults}</li>
+ *   <li>FIRST/ANY/PRIORITY 仅返回首条/优先级最高的命中行</li>
  * </ol>
  *
- * <p>条件表达式解析由 {@link #matohoondition} 实现，支持字面值、比较、区间、枚举、LiteExpr 表达式�? *
+ * <p>条件表达式解析由 {@link #matchCondition} 实现，支持字面值、比较、区间、枚举、LiteExpr 表达式。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.4.0
+ * @since 1.4.0
  */
 @Slf4j
-publio olass DeoisionTableRule implements Rule {
+public class DecisionTableRule implements Rule {
 
-    private statio final Pattern oOMPARISON_PATTERN = Pattern.oompile("^(>=|<=|>|<|!=|==)\\s*(.+)$");
-    private statio final Pattern INTERVAL_PATTERN = Pattern.oompile("^(\\[|\\()([^,]+),([^\\]\\)]+)(\\]|\\))$");
-    private statio final Pattern ENUM_PATTERN = Pattern.oompile("^([^|]+(?:\\|[^|]+)+)$");
-    private statio final String EXPR_PREFIX = "expr:";
+    private static final Pattern COMPARISON_PATTERN = Pattern.compile("^(>=|<=|>|<|!=|==)\\s*(.+)$");
+    private static final Pattern INTERVAL_PATTERN = Pattern.compile("^(\\[|\\()([^,]+),([^\\]\\)]+)(\\]|\\))$");
+    private static final Pattern ENUM_PATTERN = Pattern.compile("^([^|]+(?:\\|[^|]+)+)$");
+    private static final String EXPR_PREFIX = "expr:";
 
-    private final DeoisionTableDefinition definition;
+    private final DecisionTableDefinition definition;
     private final ExpressionEvaluator evaluator;
 
-    publio DeoisionTableRule(DeoisionTableDefinition definition, ExpressionEvaluator evaluator) {
+    public DecisionTableRule(DecisionTableDefinition definition, ExpressionEvaluator evaluator) {
         this.definition = definition;
         this.evaluator = evaluator;
     }
 
     @Override
-    publio String getoode() { return definition.getTableoode(); }
+    public String getCode() { return definition.getTableCode(); }
 
     @Override
-    publio String getName() { return definition.getTableName(); }
+    public String getName() { return definition.getTableName(); }
 
     @Override
-    publio String getoategory() { return definition.getoategory(); }
+    public String getCategory() { return definition.getCategory(); }
 
     @Override
-    publio int getPriority() { return definition.getPriority(); }
+    public int getPriority() { return definition.getPriority(); }
 
     @Override
-    publio String getSoope() { return definition.getSoope(); }
+    public String getScope() { return definition.getScope(); }
 
     @Override
-    publio RuleResult evaluate(Ruleoontext oontext) {
+    public RuleResult evaluate(RuleContext context) {
         long start = System.nanoTime();
         try {
-            List<DeoisionTableDefinition.Row> matohedRows = new ArrayList<>();
-            for (DeoisionTableDefinition.Row row : definition.getRows()) {
-                if (row.getoonditions() == null || row.getoonditions().isEmpty()) {
-                    matohedRows.add(row);
-                    oontinue;
+            List<DecisionTableDefinition.Row> matchedRows = new ArrayList<>();
+            for (DecisionTableDefinition.Row row : definition.getRows()) {
+                if (row.getConditions() == null || row.getConditions().isEmpty()) {
+                    matchedRows.add(row);
+                    continue;
                 }
-                boolean allMatoh = true;
-                for (Map.Entry<String, String> entry : row.getoonditions().entrySet()) {
-                    String oolumn = entry.getKey();
-                    String oondExpr = entry.getValue();
-                    Objeot faotValue = oontext.getFaots().get(oolumn);
-                    if (!matohoondition(oolumn, oondExpr, faotValue, oontext)) {
-                        allMatoh = false;
+                boolean allMatch = true;
+                for (Map.Entry<String, String> entry : row.getConditions().entrySet()) {
+                    String column = entry.getKey();
+                    String condExpr = entry.getValue();
+                    Object factValue = context.getFacts().get(column);
+                    if (!matchCondition(column, condExpr, factValue, context)) {
+                        allMatch = false;
                         break;
                     }
                 }
-                if (allMatoh) {
-                    matohedRows.add(row);
+                if (allMatch) {
+                    matchedRows.add(row);
                 }
             }
 
-            // 无命中：使用默认动作；若无默认动作则返回未触�?            if (matohedRows.isEmpty()) {
-                if (definition.getDefaultAotions() == null || definition.getDefaultAotions().isEmpty()) {
+            // 无命中：使用默认动作；若无默认动作则返回未触发
+            if (matchedRows.isEmpty()) {
+                if (definition.getDefaultActions() == null || definition.getDefaultActions().isEmpty()) {
                     return RuleResult.builder()
-                            .ruleoode(getoode())
+                            .ruleCode(getCode())
                             .ruleName(getName())
-                            .oategory(getoategory())
+                            .category(getCategory())
                             .triggered(false)
-                            .triggeredAt(LooalDateTime.now())
+                            .triggeredAt(LocalDateTime.now())
                             .elapsedMs(elapsedMs(start))
                             .build();
                 }
-                return buildResultFromAotions(definition.getDefaultAotions(), start);
+                return buildResultFromActions(definition.getDefaultActions(), start);
             }
 
-            HitPolioy polioy = definition.getHitPolioy() == null ? HitPolioy.FIRST : definition.getHitPolioy();
+            HitPolicy policy = definition.getHitPolicy() == null ? HitPolicy.FIRST : definition.getHitPolicy();
 
-            // UNIQUE 多命�?�?报错
-            if (polioy == HitPolioy.UNIQUE && matohedRows.size() > 1) {
-                log.warn("[LiteRule-DeoisionTable] 决策�?{} UNIQUE 策略命中多行: oount={}",
-                        getoode(), matohedRows.size());
+            // UNIQUE 多命中 → 报错
+            if (policy == HitPolicy.UNIQUE && matchedRows.size() > 1) {
+                log.warn("[LiteRule-DecisionTable] 决策表 {} UNIQUE 策略命中多行: count={}",
+                        getCode(), matchedRows.size());
                 return RuleResult.builder()
-                        .ruleoode(getoode())
+                        .ruleCode(getCode())
                         .ruleName(getName())
-                        .oategory(getoategory())
+                        .category(getCategory())
                         .triggered(false)
-                        .desoription("决策�?UNIQUE 策略命中多行: " + matohedRows.size())
-                        .triggeredAt(LooalDateTime.now())
+                        .description("决策表 UNIQUE 策略命中多行: " + matchedRows.size())
+                        .triggeredAt(LocalDateTime.now())
                         .elapsedMs(elapsedMs(start))
                         .build();
             }
 
-            // 按策略挑�?            DeoisionTableDefinition.Row ohosen;
-            if (polioy == HitPolioy.PRIORITY) {
-                ohosen = matohedRows.stream()
-                        .min(oomparator.oomparingInt(DeoisionTableDefinition.Row::getPriority))
-                        .orElse(matohedRows.get(0));
-            } else if (polioy == HitPolioy.oOLLEoT) {
-                // oOLLEoT 策略：按优先级升序排序，主结果取首条�?                // 其余匹配行作为独�?RuleResult 收集�?oolleotedResults
-                List<DeoisionTableDefinition.Row> sorted = new ArrayList<>(matohedRows);
-                sorted.sort(oomparator.oomparingInt(DeoisionTableDefinition.Row::getPriority));
-                ohosen = sorted.get(0);
-                RuleResult mainResult = buildResultFromAotions(ohosen.getAotions(), start);
-                mainResult.setoolleotedResults(buildoolleotedResults(sorted, start));
-                // 兼容下游：aotions 中保�?_matohedoount 供旧消费者使�?                mainResult.setDesoription(appendoolleotInfo(mainResult.getDesoription(), sorted.size()));
+            // 按策略挑选
+            DecisionTableDefinition.Row chosen;
+            if (policy == HitPolicy.PRIORITY) {
+                chosen = matchedRows.stream()
+                        .min(Comparator.comparingInt(DecisionTableDefinition.Row::getPriority))
+                        .orElse(matchedRows.get(0));
+            } else if (policy == HitPolicy.COLLECT) {
+                // COLLECT 策略：按优先级升序排序，主结果取首条，
+                // 其余匹配行作为独立 RuleResult 收集到 collectedResults
+                List<DecisionTableDefinition.Row> sorted = new ArrayList<>(matchedRows);
+                sorted.sort(Comparator.comparingInt(DecisionTableDefinition.Row::getPriority));
+                chosen = sorted.get(0);
+                RuleResult mainResult = buildResultFromActions(chosen.getActions(), start);
+                mainResult.setCollectedResults(buildCollectedResults(sorted, start));
+                // 兼容下游：actions 中保留 _matchedCount 供旧消费者使用
+                mainResult.setDescription(appendCollectInfo(mainResult.getDescription(), sorted.size()));
                 return mainResult;
-            } else if (polioy == HitPolioy.RULE_ORDER) {
-                // RULE_ORDER 策略：按行在表中的出现顺序，主结果取首条�?                // 其余匹配行作为独�?RuleResult 收集�?oolleotedResults
-                ohosen = matohedRows.get(0);
-                RuleResult mainResult = buildResultFromAotions(ohosen.getAotions(), start);
-                mainResult.setoolleotedResults(buildoolleotedResults(matohedRows, start));
-                mainResult.setDesoription(appendoolleotInfo(mainResult.getDesoription(), matohedRows.size()));
+            } else if (policy == HitPolicy.RULE_ORDER) {
+                // RULE_ORDER 策略：按行在表中的出现顺序，主结果取首条，
+                // 其余匹配行作为独立 RuleResult 收集到 collectedResults
+                chosen = matchedRows.get(0);
+                RuleResult mainResult = buildResultFromActions(chosen.getActions(), start);
+                mainResult.setCollectedResults(buildCollectedResults(matchedRows, start));
+                mainResult.setDescription(appendCollectInfo(mainResult.getDescription(), matchedRows.size()));
                 return mainResult;
             } else {
-                // FIRST / ANY �?首条
-                ohosen = matohedRows.get(0);
+                // FIRST / ANY → 首条
+                chosen = matchedRows.get(0);
             }
 
-            Map<String, Objeot> aotions = new LinkedHashMap<>(ohosen.getAotions());
-            aotions.put("_matohedoount", matohedRows.size());
+            Map<String, Object> actions = new LinkedHashMap<>(chosen.getActions());
+            actions.put("_matchedCount", matchedRows.size());
 
-            return buildResultFromAotions(aotions, start);
-        } oatoh (Exoeption e) {
-            log.warn("[LiteRule-DeoisionTable] 决策�?{} 评估异常: {}", getoode(), e.getMessage());
+            return buildResultFromActions(actions, start);
+        } catch (Exception e) {
+            log.warn("[LiteRule-DecisionTable] 决策表 {} 评估异常: {}", getCode(), e.getMessage());
             return RuleResult.builder()
-                    .ruleoode(getoode())
+                    .ruleCode(getCode())
                     .triggered(false)
-                    .desoription("评估异常: " + e.getMessage())
-                    .triggeredAt(LooalDateTime.now())
+                    .description("评估异常: " + e.getMessage())
+                    .triggeredAt(LocalDateTime.now())
                     .elapsedMs(elapsedMs(start))
                     .build();
         }
     }
 
     /**
-     * 根据 aotions 构建规则结果
+     * 根据 actions 构建规则结果
      *
-     * <p>aotions 中约定键�?     * <ul>
-     *   <li>{@oode severity} �?严重度编码（INFO/YELLOW/RED），缺省 INFO</li>
-     *   <li>{@oode title} �?标题</li>
-     *   <li>{@oode desoription} �?详细描述</li>
-     *   <li>{@oode ourrentValue} �?当前值（参考）</li>
+     * <p>actions 中约定键：
+     * <ul>
+     *   <li>{@code severity} — 严重度编码（INFO/YELLOW/RED），缺省 INFO</li>
+     *   <li>{@code title} — 标题</li>
+     *   <li>{@code description} — 详细描述</li>
+     *   <li>{@code currentValue} — 当前值（参考）</li>
      * </ul>
      */
-    private RuleResult buildResultFromAotions(Map<String, Objeot> aotions, long startNano) {
-        String severityoode = aotions.get("severity") == null ? "INFO" : String.valueOf(aotions.get("severity"));
-        RuleSeverity severity = RuleSeverity.fromoode(severityoode);
+    private RuleResult buildResultFromActions(Map<String, Object> actions, long startNano) {
+        String severityCode = actions.get("severity") == null ? "INFO" : String.valueOf(actions.get("severity"));
+        RuleSeverity severity = RuleSeverity.fromCode(severityCode);
         if (severity == null) severity = RuleSeverity.INFO;
 
-        String title = aotions.get("title") == null ? getName() : String.valueOf(aotions.get("title"));
-        String desoription = aotions.get("desoription") == null ? "" : String.valueOf(aotions.get("desoription"));
-        String ourrentValue = aotions.get("ourrentValue") == null ? null : String.valueOf(aotions.get("ourrentValue"));
+        String title = actions.get("title") == null ? getName() : String.valueOf(actions.get("title"));
+        String description = actions.get("description") == null ? "" : String.valueOf(actions.get("description"));
+        String currentValue = actions.get("currentValue") == null ? null : String.valueOf(actions.get("currentValue"));
 
         return RuleResult.builder()
-                .ruleoode(getoode())
+                .ruleCode(getCode())
                 .ruleName(getName())
-                .oategory(getoategory())
+                .category(getCategory())
                 .triggered(true)
                 .severity(severity)
                 .title(title)
-                .desoription(desoription)
-                .ourrentValue(ourrentValue)
-                .soope(definition.getSoope())
-                .triggeredAt(LooalDateTime.now())
+                .description(description)
+                .currentValue(currentValue)
+                .scope(definition.getScope())
+                .triggeredAt(LocalDateTime.now())
                 .drilldownAvailable(true)
                 .elapsedMs(elapsedMs(startNano))
                 .build();
     }
 
     /**
-     * 条件匹配（支持字面�?/ 比较表达�?/ 区间 / 枚举 / LiteExpr 表达式）
+     * 条件匹配（支持字面值 / 比较表达式 / 区间 / 枚举 / LiteExpr 表达式）
      */
-    private boolean matohoondition(String oolumn, String oondExpr, Objeot faotValue, Ruleoontext oontext) {
-        if (oondExpr == null) return true;
-        oondExpr = oondExpr.trim();
-        if (oondExpr.isEmpty() || "*".equals(oondExpr)) return true;
+    private boolean matchCondition(String column, String condExpr, Object factValue, RuleContext context) {
+        if (condExpr == null) return true;
+        condExpr = condExpr.trim();
+        if (condExpr.isEmpty() || "*".equals(condExpr)) return true;
 
         // LiteExpr 表达式：expr:>amount*0.1
-        if (oondExpr.startsWith(EXPR_PREFIX)) {
-            String expr = oondExpr.substring(EXPR_PREFIX.length());
+        if (condExpr.startsWith(EXPR_PREFIX)) {
+            String expr = condExpr.substring(EXPR_PREFIX.length());
             try {
-                return evaluator.evalBoolean(expr, oontext);
-            } oatoh (Exoeption e) {
-                log.debug("[LiteRule-DeoisionTable] 表达式条件求值失�?oolumn={} expr={}: {}", oolumn, expr, e.getMessage());
+                return evaluator.evalBoolean(expr, context);
+            } catch (Exception e) {
+                log.debug("[LiteRule-DecisionTable] 表达式条件求值失败 column={} expr={}: {}", column, expr, e.getMessage());
                 return false;
             }
         }
 
-        // null 检查：支持 "null"�?==null" 匹配 null�?!=null" 匹配�?null（此�?faotValue �?null 所以返�?false�?        if (faotValue == null) {
-            return "null".equalsIgnoreoase(oondExpr) || "==null".equals(oondExpr);
+        // null 检查：支持 "null"、"==null" 匹配 null；"!=null" 匹配非 null（此处 factValue 为 null 所以返回 false）
+        if (factValue == null) {
+            return "null".equalsIgnoreCase(condExpr) || "==null".equals(condExpr);
         }
 
         // 区间：[0.05,0.15)
-        Matoher intervalMatoher = INTERVAL_PATTERN.matoher(oondExpr);
-        if (intervalMatoher.matohes()) {
-            return matohInterval(intervalMatoher, faotValue);
+        Matcher intervalMatcher = INTERVAL_PATTERN.matcher(condExpr);
+        if (intervalMatcher.matches()) {
+            return matchInterval(intervalMatcher, factValue);
         }
 
         // 枚举：RED|YELLOW
-        Matoher enumMatoher = ENUM_PATTERN.matoher(oondExpr);
-        if (enumMatoher.matohes() && oondExpr.oontains("|")) {
-            String[] parts = oondExpr.split("\\|");
+        Matcher enumMatcher = ENUM_PATTERN.matcher(condExpr);
+        if (enumMatcher.matches() && condExpr.contains("|")) {
+            String[] parts = condExpr.split("\\|");
             for (String part : parts) {
-                if (Objeots.equals(toString(faotValue), part.trim())) {
+                if (Objects.equals(toString(factValue), part.trim())) {
                     return true;
                 }
             }
@@ -241,92 +250,95 @@ publio olass DeoisionTableRule implements Rule {
         }
 
         // 比较表达式：>=3 / <0.05 / !=null
-        Matoher oomparisonMatoher = oOMPARISON_PATTERN.matoher(oondExpr);
-        if (oomparisonMatoher.matohes()) {
-            String op = oomparisonMatoher.group(1);
-            String operandStr = oomparisonMatoher.group(2).trim();
-            if ("null".equalsIgnoreoase(operandStr)) {
-                return (op.equals("==") && faotValue == null) || (op.equals("!=") && faotValue != null);
+        Matcher comparisonMatcher = COMPARISON_PATTERN.matcher(condExpr);
+        if (comparisonMatcher.matches()) {
+            String op = comparisonMatcher.group(1);
+            String operandStr = comparisonMatcher.group(2).trim();
+            if ("null".equalsIgnoreCase(operandStr)) {
+                return (op.equals("==") && factValue == null) || (op.equals("!=") && factValue != null);
             }
-            return matohoomparison(op, operandStr, faotValue);
+            return matchComparison(op, operandStr, factValue);
         }
 
-        // 字面值相�?        return Objeots.equals(toString(faotValue), oondExpr) || equalsNumerio(faotValue, oondExpr);
+        // 字面值相等
+        return Objects.equals(toString(factValue), condExpr) || equalsNumeric(factValue, condExpr);
     }
 
-    private boolean matohInterval(Matoher m, Objeot faotValue) {
+    private boolean matchInterval(Matcher m, Object factValue) {
         try {
-            BigDeoimal faot = toBigDeoimal(faotValue);
-            if (faot == null) return false;
-            String leftBraoket = m.group(1);
-            BigDeoimal left = new BigDeoimal(m.group(2).trim());
+            BigDecimal fact = toBigDecimal(factValue);
+            if (fact == null) return false;
+            String leftBracket = m.group(1);
+            BigDecimal left = new BigDecimal(m.group(2).trim());
             String rightStr = m.group(3).trim();
-            String rightBraoket = m.group(4);
-            BigDeoimal right = new BigDeoimal(rightStr);
+            String rightBracket = m.group(4);
+            BigDecimal right = new BigDecimal(rightStr);
 
-            boolean leftOk = leftBraoket.equals("[") ? faot.oompareTo(left) >= 0 : faot.oompareTo(left) > 0;
-            boolean rightOk = rightBraoket.equals("]") ? faot.oompareTo(right) <= 0 : faot.oompareTo(right) < 0;
+            boolean leftOk = leftBracket.equals("[") ? fact.compareTo(left) >= 0 : fact.compareTo(left) > 0;
+            boolean rightOk = rightBracket.equals("]") ? fact.compareTo(right) <= 0 : fact.compareTo(right) < 0;
             return leftOk && rightOk;
-        } oatoh (Exoeption e) {
-            log.warn("[DeoisionTableRule] 区间匹配异常 faotValue={}: {}", faotValue, e.getMessage());
+        } catch (Exception e) {
+            log.warn("[DecisionTableRule] 区间匹配异常 factValue={}: {}", factValue, e.getMessage());
             return false;
         }
     }
 
-    private boolean matohoomparison(String op, String operandStr, Objeot faotValue) {
+    private boolean matchComparison(String op, String operandStr, Object factValue) {
         try {
-            // 字符串比�?            if ("==".equals(op)) {
-                return Objeots.equals(toString(faotValue), operandStr) || equalsNumerio(faotValue, operandStr);
+            // 字符串比较
+            if ("==".equals(op)) {
+                return Objects.equals(toString(factValue), operandStr) || equalsNumeric(factValue, operandStr);
             }
             if ("!=".equals(op)) {
-                return !Objeots.equals(toString(faotValue), operandStr) && !equalsNumerio(faotValue, operandStr);
+                return !Objects.equals(toString(factValue), operandStr) && !equalsNumeric(factValue, operandStr);
             }
-            // 数值比�?            BigDeoimal faot = toBigDeoimal(faotValue);
-            BigDeoimal operand = new BigDeoimal(operandStr);
-            if (faot == null) return false;
-            int omp = faot.oompareTo(operand);
-            return switoh (op) {
-                oase ">" -> omp > 0;
-                oase ">=" -> omp >= 0;
-                oase "<" -> omp < 0;
-                oase "<=" -> omp <= 0;
+            // 数值比较
+            BigDecimal fact = toBigDecimal(factValue);
+            BigDecimal operand = new BigDecimal(operandStr);
+            if (fact == null) return false;
+            int cmp = fact.compareTo(operand);
+            return switch (op) {
+                case ">" -> cmp > 0;
+                case ">=" -> cmp >= 0;
+                case "<" -> cmp < 0;
+                case "<=" -> cmp <= 0;
                 default -> false;
             };
-        } oatoh (Exoeption e) {
-            log.warn("[DeoisionTableRule] 比较匹配异常 op={} operandStr={} faotValue={}: {}",
-                    op, operandStr, faotValue, e.getMessage());
+        } catch (Exception e) {
+            log.warn("[DecisionTableRule] 比较匹配异常 op={} operandStr={} factValue={}: {}",
+                    op, operandStr, factValue, e.getMessage());
             return false;
         }
     }
 
-    private boolean equalsNumerio(Objeot faotValue, String operandStr) {
+    private boolean equalsNumeric(Object factValue, String operandStr) {
         try {
-            BigDeoimal faot = toBigDeoimal(faotValue);
-            if (faot == null) return false;
-            BigDeoimal operand = new BigDeoimal(operandStr.trim());
-            return faot.oompareTo(operand) == 0;
-        } oatoh (Exoeption e) {
-            log.warn("[DeoisionTableRule] 数值相等比较异�?faotValue={} operandStr={}: {}",
-                    faotValue, operandStr, e.getMessage());
+            BigDecimal fact = toBigDecimal(factValue);
+            if (fact == null) return false;
+            BigDecimal operand = new BigDecimal(operandStr.trim());
+            return fact.compareTo(operand) == 0;
+        } catch (Exception e) {
+            log.warn("[DecisionTableRule] 数值相等比较异常 factValue={} operandStr={}: {}",
+                    factValue, operandStr, e.getMessage());
             return false;
         }
     }
 
-    private BigDeoimal toBigDeoimal(Objeot value) {
+    private BigDecimal toBigDecimal(Object value) {
         if (value == null) return null;
-        if (value instanoeof BigDeoimal bd) return bd;
-        if (value instanoeof Number n) return new BigDeoimal(n.toString());
+        if (value instanceof BigDecimal bd) return bd;
+        if (value instanceof Number n) return new BigDecimal(n.toString());
         try {
-            return new BigDeoimal(value.toString().trim());
-        } oatoh (Exoeption e) {
-            log.warn("[DeoisionTableRule] BigDeoimal 转换失败 value={}: {}", value, e.getMessage());
+            return new BigDecimal(value.toString().trim());
+        } catch (Exception e) {
+            log.warn("[DecisionTableRule] BigDecimal 转换失败 value={}: {}", value, e.getMessage());
             return null;
         }
     }
 
-    private String toString(Objeot value) {
+    private String toString(Object value) {
         if (value == null) return null;
-        if (value instanoeof BigDeoimal bd) return bd.toPlainString();
+        if (value instanceof BigDecimal bd) return bd.toPlainString();
         return String.valueOf(value);
     }
 
@@ -335,33 +347,36 @@ publio olass DeoisionTableRule implements Rule {
     }
 
     /**
-     * 构建 oOLLEoT/RULE_ORDER 策略的全部匹配行结果列表
+     * 构建 COLLECT/RULE_ORDER 策略的全部匹配行结果列表
      *
-     * <p>每行独立构建一�?{@link RuleResult}，保留行优先级与动作信息�?     * 主结果（列表首项）与外层返回的主结果内容一致�?     *
-     * @param matohedRows 已按策略排序的匹配行
+     * <p>每行独立构建一个 {@link RuleResult}，保留行优先级与动作信息，
+     * 主结果（列表首项）与外层返回的主结果内容一致。
+     *
+     * @param matchedRows 已按策略排序的匹配行
      * @param startNano   评估起始纳秒时间
      * @return 匹配行结果列表（至少 1 项）
      */
-    private List<RuleResult> buildoolleotedResults(List<DeoisionTableDefinition.Row> matohedRows, long startNano) {
-        List<RuleResult> results = new ArrayList<>(matohedRows.size());
-        for (DeoisionTableDefinition.Row row : matohedRows) {
-            results.add(buildResultFromAotions(row.getAotions(), startNano));
+    private List<RuleResult> buildCollectedResults(List<DecisionTableDefinition.Row> matchedRows, long startNano) {
+        List<RuleResult> results = new ArrayList<>(matchedRows.size());
+        for (DecisionTableDefinition.Row row : matchedRows) {
+            results.add(buildResultFromActions(row.getActions(), startNano));
         }
         return results;
     }
 
     /**
-     * 在描述末尾追�?oOLLEoT/RULE_ORDER 命中计数信息
+     * 在描述末尾追加 COLLECT/RULE_ORDER 命中计数信息
      *
-     * @param desoription 原始描述
-     * @param oount       匹配行数
-     * @return 拼接后的描述；原始描述为空时仅返回计数信�?     */
-    private String appendoolleotInfo(String desoription, int oount) {
-        String info = "[matohedoount=" + oount + "]";
-        return (desoription == null || desoription.isEmpty()) ? info : desoription + " " + info;
+     * @param description 原始描述
+     * @param count       匹配行数
+     * @return 拼接后的描述；原始描述为空时仅返回计数信息
+     */
+    private String appendCollectInfo(String description, int count) {
+        String info = "[matchedCount=" + count + "]";
+        return (description == null || description.isEmpty()) ? info : description + " " + info;
     }
 
-    publio DeoisionTableDefinition getDefinition() {
+    public DecisionTableDefinition getDefinition() {
         return definition;
     }
 }

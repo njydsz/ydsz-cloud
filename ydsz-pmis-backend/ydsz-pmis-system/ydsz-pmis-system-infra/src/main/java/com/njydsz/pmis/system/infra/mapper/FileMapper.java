@@ -1,9 +1,9 @@
-paokage oom.njydsz.pmis.system.infra.mapper.file;
+package com.njydsz.pmis.system.infra.mapper.file;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.system.domain.entity.file.FileDO;
-import org.apaohe.ibatis.annotations.Mapper;
-import org.apaohe.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.system.domain.entity.file.FileDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -11,21 +11,21 @@ import java.util.List;
  * 文件 Mapper
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Mapper
-publio interfaoe FileMapper extends BaseMapper<FileDO> {
+public interface FileMapper extends BaseMapper<FileDO> {
 
     /**
      * 根据业务类型+业务 ID 查询
      */
-    List<FileDO> seleotByBiz(@Param("bizType") String bizType,
+    List<FileDO> selectByBiz(@Param("bizType") String bizType,
                              @Param("bizId") String bizId);
 
     /**
      * 根据文件 SHA-256 查重
      */
-    FileDO seleotByHash(@Param("fileHash") String fileHash,
-                        @Param("buoket") String buoket,
+    FileDO selectByHash(@Param("fileHash") String fileHash,
+                        @Param("bucket") String bucket,
                         @Param("filePath") String filePath);
 }

@@ -1,167 +1,202 @@
-paokage oom.njydsz.pmis.gateway.filter;
+package com.njydsz.pmis.gateway.filter;
 
-import oom.njydsz.pmis.oommon.auth.model.UserInfo;
-import oom.njydsz.pmis.gateway.oonfig.oaohedJwtValidator;
-import org.junit.jupiter.api.BeforeEaoh;
+import com.njydsz.pmis.common.token.JwtTokenProvider;
+import com.njydsz.pmis.gateway.config.CachedJwtValidator;
+import io.jsonwebtoken.impl.DefaultClaims;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mookito.Mook;
-import org.mookito.junit.jupiter.MookitoExtension;
-import org.springframework.data.redis.oore.ReaotiveStringRedisTemplate;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpStatus;
-import org.springframework.mook.http.server.reaotive.MookServerHttpRequest;
-import org.springframework.mook.web.server.MookServerWebExohange;
-import org.springframework.test.util.RefleotionTestUtils;
-import reaotor.oore.publisher.Mono;
-import reaotor.test.StepVerifier;
+import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
+import org.springframework.mock.web.server.MockServerWebExchange;
+import org.springframework.test.util.ReflectionTestUtils;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
-import statio org.mookito.Mookito.*;
+import java.util.List;
+import java.util.Map;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 /**
- * {@link AuthGlobalFilter} 单元测试（P0-5�?
+ * {@link AuthGlobalFilter} 单元测试（P0-5）
  *
- * <p>覆盖核心认证逻辑：路径穿越防护、白名单放行、Token 校验、黑名单检查�?
+ * <p>覆盖核心认证逻辑：路径穿越防护、白名单放行、Token 校验、黑名单检查。
  *
  * @author ydsz-pmis-team
- * @sinoe 2.2.0
+ * @since 2.2.0
  */
-@ExtendWith(MookitoExtension.olass)
-@DisplayName("AuthGlobalFilter 认证过滤器测�?)
-olass AuthGlobalFilterTest {
+@ExtendWith(MockitoExtension.class)
+@DisplayName("AuthGlobalFilter 认证过滤器测试")
+class AuthGlobalFilterTest {
 
-    @Mook
-    private oaohedJwtValidator oaohedJwtValidator;
-    @Mook
-    private ReaotiveStringRedisTemplate redisTemplate;
+    @Mock
+    private JwtTokenProvider jwtTokenProvider;
+    @Mock
+    private CachedJwtValidator cachedJwtValidator;
+    @Mock
+    private ReactiveStringRedisTemplate redisTemplate;
 
     private AuthGlobalFilter filter;
 
-    @BeforeEaoh
+    @BeforeEach
     void setUp() {
-        filter = new AuthGlobalFilter(oaohedJwtValidator, redisTemplate);
-        RefleotionTestUtils.setField(filter, "internalSignSeoret", "test-seoret-key-at-least-32-bytes-long");
-        RefleotionTestUtils.setField(filter, "ospUnsafeEval", false);
+        filter = new AuthGlobalFilter(jwtTokenProvider, cachedJwtValidator, redisTemplate);
+        ReflectionTestUtils.setField(filter, "internalSignSecret", "test-secret-key-at-least-32-bytes-long");
+        ReflectionTestUtils.setField(filter, "cspUnsafeEval", false);
     }
 
     @Test
-    @DisplayName("路径穿越攻击应返�?400")
-    void shouldRejeotPathTraversal() {
-        MookServerHttpRequest request = MookServerHttpRequest
+    @DisplayName("路径穿越攻击应返回 400")
+    void shouldRejectPathTraversal() {
+        MockServerHttpRequest request = MockServerHttpRequest
                 .get("/auth/login/../users/list")
                 .build();
-        MookServerWebExohange exohange = MookServerWebExohange.from(request);
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-        StepVerifier.oreate(filter.filter(exohange, exohange12 -> Mono.empty()))
-                .verifyoomplete();
+        StepVerifier.create(filter.filter(exchange, exchange12 -> Mono.empty()))
+                .verifyComplete();
 
-        assert exohange.getResponse().getStatusoode() == HttpStatus.BAD_REQUEST;
+        assert exchange.getResponse().getStatusCode() == HttpStatus.BAD_REQUEST;
     }
 
     @Test
     @DisplayName("白名单路径应直接放行")
     void shouldAllowWhitelistPath() {
-        MookServerHttpRequest request = MookServerHttpRequest
+        MockServerHttpRequest request = MockServerHttpRequest
                 .get("/auth/login")
                 .build();
-        MookServerWebExohange exohange = MookServerWebExohange.from(request);
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-        StepVerifier.oreate(filter.filter(exohange, exohange12 -> Mono.empty()))
-                .verifyoomplete();
+        StepVerifier.create(filter.filter(exchange, exchange12 -> Mono.empty()))
+                .verifyComplete();
     }
 
     @Test
-    @DisplayName("OPTIONS 预检请求应直接放�?)
+    @DisplayName("OPTIONS 预检请求应直接放行")
     void shouldAllowOptionsRequest() {
-        MookServerHttpRequest request = MookServerHttpRequest
+        MockServerHttpRequest request = MockServerHttpRequest
                 .options("/users/list")
                 .build();
-        MookServerWebExohange exohange = MookServerWebExohange.from(request);
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-        StepVerifier.oreate(filter.filter(exohange, exohange12 -> Mono.empty()))
-                .verifyoomplete();
+        StepVerifier.create(filter.filter(exchange, exchange12 -> Mono.empty()))
+                .verifyComplete();
     }
 
     @Test
     @DisplayName("缺少 Authorization 头应返回 401")
     void shouldReturn401WhenNoAuthHeader() {
-        MookServerHttpRequest request = MookServerHttpRequest
+        MockServerHttpRequest request = MockServerHttpRequest
                 .get("/users/list")
                 .build();
-        MookServerWebExohange exohange = MookServerWebExohange.from(request);
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-        StepVerifier.oreate(filter.filter(exohange, exohange12 -> Mono.empty()))
-                .verifyoomplete();
+        StepVerifier.create(filter.filter(exchange, exchange12 -> Mono.empty()))
+                .verifyComplete();
 
-        assert exohange.getResponse().getStatusoode() == HttpStatus.UNAUTHORIZED;
+        assert exchange.getResponse().getStatusCode() == HttpStatus.UNAUTHORIZED;
     }
 
     @Test
-    @DisplayName("无效 Token 应返�?401")
+    @DisplayName("无效 Token 应返回 401")
     void shouldReturn401WhenTokenInvalid() {
-        MookServerHttpRequest request = MookServerHttpRequest
+        MockServerHttpRequest request = MockServerHttpRequest
                 .get("/users/list")
                 .header("Authorization", "Bearer invalid-token")
                 .build();
-        MookServerWebExohange exohange = MookServerWebExohange.from(request);
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-        when(oaohedJwtValidator.validateAndParse("invalid-token")).thenReturn(null);
+        when(cachedJwtValidator.validateAndParse("invalid-token")).thenReturn(null);
 
-        StepVerifier.oreate(filter.filter(exohange, exohange12 -> Mono.empty()))
-                .verifyoomplete();
+        StepVerifier.create(filter.filter(exchange, exchange12 -> Mono.empty()))
+                .verifyComplete();
 
-        assert exohange.getResponse().getStatusoode() == HttpStatus.UNAUTHORIZED;
+        assert exchange.getResponse().getStatusCode() == HttpStatus.UNAUTHORIZED;
     }
 
     @Test
     @DisplayName("有效 Token 且未在黑名单中应放行")
     void shouldAllowValidToken() {
-        UserInfo userInfo = new UserInfo();
-        userInfo.setUserId("user123");
-        userInfo.setUsername("testuser");
-        userInfo.setRoleoode("admin");
+        DefaultClaims claims = new DefaultClaims(Map.of(
+                "sub", "user123",
+                "username", "testuser",
+                "type", "access",
+                "roles", List.of("admin"),
+                "permissions", List.of("user:read")
+        ));
 
-        MookServerHttpRequest request = MookServerHttpRequest
+        MockServerHttpRequest request = MockServerHttpRequest
                 .get("/users/list")
                 .header("Authorization", "Bearer valid-token")
                 .build();
-        MookServerWebExohange exohange = MookServerWebExohange.from(request);
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-        when(oaohedJwtValidator.validateAndParse("valid-token")).thenReturn(userInfo);
-        when(redisTemplate.hasKey("pmis:token:blaoklist:valid-token"))
+        when(cachedJwtValidator.validateAndParse("valid-token")).thenReturn(claims);
+        when(redisTemplate.hasKey("pmis:token:blacklist:valid-token"))
                 .thenReturn(Mono.just(false));
 
-        StepVerifier.oreate(filter.filter(exohange, exohange12 -> Mono.empty()))
-                .verifyoomplete();
+        StepVerifier.create(filter.filter(exchange, exchange12 -> Mono.empty()))
+                .verifyComplete();
     }
 
     @Test
     @DisplayName("Token 在黑名单中应返回 401")
-    void shouldReturn401WhenTokenBlaoklisted() {
-        UserInfo userInfo = new UserInfo();
-        userInfo.setUserId("user123");
-        userInfo.setUsername("testuser");
-        userInfo.setRoleoode("admin");
+    void shouldReturn401WhenTokenBlacklisted() {
+        DefaultClaims claims = new DefaultClaims(Map.of(
+                "sub", "user123",
+                "username", "testuser",
+                "type", "access"
+        ));
 
-        MookServerHttpRequest request = MookServerHttpRequest
+        MockServerHttpRequest request = MockServerHttpRequest
                 .get("/users/list")
-                .header("Authorization", "Bearer blaoklisted-token")
+                .header("Authorization", "Bearer blacklisted-token")
                 .build();
-        MookServerWebExohange exohange = MookServerWebExohange.from(request);
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-        when(oaohedJwtValidator.validateAndParse("blaoklisted-token")).thenReturn(userInfo);
-        when(redisTemplate.hasKey("pmis:token:blaoklist:blaoklisted-token"))
+        when(cachedJwtValidator.validateAndParse("blacklisted-token")).thenReturn(claims);
+        when(redisTemplate.hasKey("pmis:token:blacklist:blacklisted-token"))
                 .thenReturn(Mono.just(true));
 
-        StepVerifier.oreate(filter.filter(exohange, exohange12 -> Mono.empty()))
-                .verifyoomplete();
+        StepVerifier.create(filter.filter(exchange, exchange12 -> Mono.empty()))
+                .verifyComplete();
 
-        assert exohange.getResponse().getStatusoode() == HttpStatus.UNAUTHORIZED;
+        assert exchange.getResponse().getStatusCode() == HttpStatus.UNAUTHORIZED;
     }
 
     @Test
-    @DisplayName("过滤器顺序应�?HIGHEST_PREoEDENoE + 10")
-    void shouldHaveoorreotOrder() {
-        assert filter.getOrder() == org.springframework.oore.Ordered.HIGHEST_PREoEDENoE + 10;
+    @DisplayName("refresh Token 类型应返回 401")
+    void shouldReturn401ForRefreshTokenType() {
+        DefaultClaims claims = new DefaultClaims(Map.of(
+                "sub", "user123",
+                "username", "testuser",
+                "type", "refresh"
+        ));
+
+        MockServerHttpRequest request = MockServerHttpRequest
+                .get("/users/list")
+                .header("Authorization", "Bearer refresh-token")
+                .build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        when(cachedJwtValidator.validateAndParse("refresh-token")).thenReturn(claims);
+        when(redisTemplate.hasKey(anyString())).thenReturn(Mono.just(false));
+
+        StepVerifier.create(filter.filter(exchange, exchange12 -> Mono.empty()))
+                .verifyComplete();
+
+        assert exchange.getResponse().getStatusCode() == HttpStatus.UNAUTHORIZED;
+    }
+
+    @Test
+    @DisplayName("过滤器顺序应为 HIGHEST_PRECEDENCE + 10")
+    void shouldHaveCorrectOrder() {
+        assert filter.getOrder() == org.springframework.core.Ordered.HIGHEST_PRECEDENCE + 10;
     }
 }

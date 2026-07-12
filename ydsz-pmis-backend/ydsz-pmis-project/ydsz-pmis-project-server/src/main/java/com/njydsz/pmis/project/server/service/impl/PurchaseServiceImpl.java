@@ -1,136 +1,136 @@
-paokage oom.njydsz.pmis.projeot.server.servioe.impl;
+package com.njydsz.pmis.project.server.service.impl;
 
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.projeot.domain.dto.ApprovalDTO;
-import oom.njydsz.pmis.projeot.domain.dto.PurohaseoreateDTO;
-import oom.njydsz.pmis.projeot.server.engine.BudgetGuard;
-import oom.njydsz.pmis.projeot.domain.entity.PurohaseDO;
-import oom.njydsz.pmis.projeot.domain.enums.ApprovalStatus;
-import oom.njydsz.pmis.projeot.infra.mapper.PurohaseMapper;
-import oom.njydsz.pmis.projeot.server.servioe.PurohaseServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.project.domain.dto.ApprovalDTO;
+import com.njydsz.pmis.project.domain.dto.PurchaseCreateDTO;
+import com.njydsz.pmis.project.server.engine.BudgetGuard;
+import com.njydsz.pmis.project.domain.entity.PurchaseDO;
+import com.njydsz.pmis.project.domain.enums.ApprovalStatus;
+import com.njydsz.pmis.project.infra.mapper.PurchaseMapper;
+import com.njydsz.pmis.project.server.service.PurchaseService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 
 /**
  * 采购成本服务实现
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass PurohaseServioeImpl implements PurohaseServioe {
+@Service
+@RequiredArgsConstructor
+public class PurchaseServiceImpl implements PurchaseService {
 
     /** 采购成本 Mapper */
-    private final PurohaseMapper purohaseMapper;
-    /** 预算守卫（采购超预算校验�?*/
+    private final PurchaseMapper purchaseMapper;
+    /** 预算守卫（采购超预算校验） */
     private final BudgetGuard budgetGuard;
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio String oreate(PurohaseoreateDTO dto) {
-        if (dto == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d9712a58");
-        if (!StringUtils.hasText(dto.getPurohaseoode())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_5e907df2");
+    @Transactional(rollbackFor = Exception.class)
+    public String create(PurchaseCreateDTO dto) {
+        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (!StringUtils.hasText(dto.getPurchaseCode())) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_5e907df2");
         }
         if (!StringUtils.hasText(dto.getItemName())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_f93o80f1");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_f93c80f1");
         }
         if (dto.getInitiationId() == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_576o2b5e");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
-        if (dto.getApplioantId() == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_98bo5a1a");
+        if (dto.getApplicantId() == null) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_98bc5a1a");
         }
-        if (purohaseMapper.seleotByoode(dto.getPurohaseoode()) != null) {
-            throw new SysExoeption(StandardResultoode.DUPLIoATE_KEY, "error.exeoution.msg_126oa992", dto.getPurohaseoode());
+        if (purchaseMapper.selectByCode(dto.getPurchaseCode()) != null) {
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.execution.msg_126ca992", dto.getPurchaseCode());
         }
-        PurohaseDO p = new PurohaseDO();
-        BeanUtils.oopyProperties(dto, p);
+        PurchaseDO p = new PurchaseDO();
+        BeanUtils.copyProperties(dto, p);
         // 自动计算金额
-        if (p.getAmount() == null && p.getQuantity() != null && p.getUnitPrioe() != null) {
-            p.setAmount(p.getQuantity().multiply(p.getUnitPrioe()));
+        if (p.getAmount() == null && p.getQuantity() != null && p.getUnitPrice() != null) {
+            p.setAmount(p.getQuantity().multiply(p.getUnitPrice()));
         }
-        if (p.getQuantity() == null) p.setQuantity(BigDeoimal.ONE);
-        if (!StringUtils.hasText(p.getStatus())) p.setStatus(ApprovalStatus.DRAFT.getoode());
-        if (p.getTenantId() == null) p.setTenantId(Tenantoontext.getTenantId());
-        if (p.getProviderTraoeId() == null) p.setProviderTraoeId("");
+        if (p.getQuantity() == null) p.setQuantity(BigDecimal.ONE);
+        if (!StringUtils.hasText(p.getStatus())) p.setStatus(ApprovalStatus.DRAFT.getCode());
+        if (p.getTenantId() == null) p.setTenantId(TenantContext.getTenantId());
+        if (p.getProviderTraceId() == null) p.setProviderTraceId("");
 
-        // 预算强管控：本次新增 + 项目已发�?�?立项预算
+        // 预算强管控：本次新增 + 项目已发生 ≤ 立项预算
         if (p.getAmount() != null && p.getAmount().signum() > 0) {
-            budgetGuard.oheok(p.getInitiationId(), p.getAmount(), "PURoHASE");
+            budgetGuard.check(p.getInitiationId(), p.getAmount(), "PURCHASE");
         }
 
-        purohaseMapper.insert(p);
-        log.info("[Purohase] 创建采购�? oode={} item={} amount={}",
-                p.getPurohaseoode(), p.getItemName(), p.getAmount());
+        purchaseMapper.insert(p);
+        log.info("[Purchase] 创建采购单: code={} item={} amount={}",
+                p.getPurchaseCode(), p.getItemName(), p.getAmount());
         return p.getId();
     }
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void ohangeStatus(ApprovalDTO dto) {
+    @Transactional(rollbackFor = Exception.class)
+    public void changeStatus(ApprovalDTO dto) {
         if (dto == null || dto.getId() == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d9712a58");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
-        PurohaseDO p = getById(dto.getId());
-        ApprovalStatus from = ApprovalStatus.fromoode(p.getStatus());
-        ApprovalStatus to = ApprovalStatus.fromoode(dto.getTargetStatus());
+        PurchaseDO p = getById(dto.getId());
+        ApprovalStatus from = ApprovalStatus.fromCode(p.getStatus());
+        ApprovalStatus to = ApprovalStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_7bo741o6", dto.getTargetStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         }
-        if (from == null || !from.oanTransitTo(to)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST,
-                    "error.exeoution.msg_8d2ee457", (from == null ? "未知" : from.getDeso()), to.getDeso());
+        if (from == null || !from.canTransitTo(to)) {
+            throw new SysException(StandardResultCode.BAD_REQUEST,
+                    "error.execution.msg_8d2ee457", (from == null ? "未知" : from.getDesc()), to.getDesc());
         }
-        purohaseMapper.updateStatus(dto.getId(), to.getoode(),
+        purchaseMapper.updateStatus(dto.getId(), to.getCode(),
                 dto.getApproverId(), dto.getApproverName());
-        log.info("[Purohase] 状态迁�? id={} {} -> {}", dto.getId(), from.getoode(), to.getoode());
+        log.info("[Purchase] 状态迁移: id={} {} -> {}", dto.getId(), from.getCode(), to.getCode());
     }
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void delete(String id) {
-        PurohaseDO p = getById(id);
-        ApprovalStatus s = ApprovalStatus.fromoode(p.getStatus());
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(String id) {
+        PurchaseDO p = getById(id);
+        ApprovalStatus s = ApprovalStatus.fromCode(p.getStatus());
         if (s == ApprovalStatus.APPROVED || s == ApprovalStatus.PAID) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_306554e9");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_306554e9");
         }
-        purohaseMapper.deleteById(id);
+        purchaseMapper.deleteById(id);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio PurohaseDO getById(String id) {
-        PurohaseDO p = purohaseMapper.seleotById(id);
-        if (p == null) throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_df942bod");
+    @Transactional(readOnly = true)
+    public PurchaseDO getById(String id) {
+        PurchaseDO p = purchaseMapper.selectById(id);
+        if (p == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_df942bcd");
         return p;
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio Page<PurohaseDO> page(int page, int size, String keyword, String status, String initiationId) {
-        Page<PurohaseDO> p = new Page<>(page, size);
-        LambdaQueryWrapper<PurohaseDO> w = new LambdaQueryWrapper<>();
+    @Transactional(readOnly = true)
+    public Page<PurchaseDO> page(int page, int size, String keyword, String status, String initiationId) {
+        Page<PurchaseDO> p = new Page<>(page, size);
+        LambdaQueryWrapper<PurchaseDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
-            w.and(qw -> qw.like(PurohaseDO::getPurohaseoode, keyword)
-                    .or().like(PurohaseDO::getItemName, keyword)
-                    .or().like(PurohaseDO::getVendor, keyword));
+            w.and(qw -> qw.like(PurchaseDO::getPurchaseCode, keyword)
+                    .or().like(PurchaseDO::getItemName, keyword)
+                    .or().like(PurchaseDO::getVendor, keyword));
         }
-        if (StringUtils.hasText(status)) w.eq(PurohaseDO::getStatus, status);
-        if (initiationId != null) w.eq(PurohaseDO::getInitiationId, initiationId);
-        w.orderByDeso(PurohaseDO::getPurohaseDate);
-        return purohaseMapper.seleotPage(p, w);
+        if (StringUtils.hasText(status)) w.eq(PurchaseDO::getStatus, status);
+        if (initiationId != null) w.eq(PurchaseDO::getInitiationId, initiationId);
+        w.orderByDesc(PurchaseDO::getPurchaseDate);
+        return purchaseMapper.selectPage(p, w);
     }
 }

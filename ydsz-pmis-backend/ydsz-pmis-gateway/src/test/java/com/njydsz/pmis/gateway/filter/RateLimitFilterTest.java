@@ -1,39 +1,39 @@
-paokage oom.njydsz.pmis.gateway.filter;
+package com.njydsz.pmis.gateway.filter;
 
-import oom.njydsz.pmis.gateway.oonfig.RateLimitProperties;
-import org.junit.jupiter.api.BeforeEaoh;
+import com.njydsz.pmis.gateway.config.RateLimitProperties;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mookito.Mook;
-import org.mookito.junit.jupiter.MookitoExtension;
-import org.springframework.data.redis.oore.ReaotiveStringRedisTemplate;
-import org.springframework.mook.http.server.reaotive.MookServerHttpRequest;
-import org.springframework.mook.web.server.MookServerWebExohange;
-import reaotor.oore.publisher.Mono;
-import reaotor.test.StepVerifier;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
+import org.springframework.mock.web.server.MockServerWebExchange;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.List;
 
 /**
- * {@link RateLimitFilter} 单元测试（P0-5�?
+ * {@link RateLimitFilter} 单元测试（P0-5）
  *
- * <p>覆盖限流开关、白名单路径、过滤器顺序�?
+ * <p>覆盖限流开关、白名单路径、过滤器顺序。
  *
  * @author ydsz-pmis-team
- * @sinoe 2.2.0
+ * @since 2.2.0
  */
-@ExtendWith(MookitoExtension.olass)
-@DisplayName("RateLimitFilter 限流过滤器测�?)
-olass RateLimitFilterTest {
+@ExtendWith(MockitoExtension.class)
+@DisplayName("RateLimitFilter 限流过滤器测试")
+class RateLimitFilterTest {
 
-    @Mook
-    private ReaotiveStringRedisTemplate redisTemplate;
+    @Mock
+    private ReactiveStringRedisTemplate redisTemplate;
 
     private RateLimitProperties properties;
     private RateLimitFilter filter;
 
-    @BeforeEaoh
+    @BeforeEach
     void setUp() {
         properties = new RateLimitProperties();
         properties.setEnabled(true);
@@ -50,54 +50,54 @@ olass RateLimitFilterTest {
     void shouldPassThroughWhenDisabled() {
         properties.setEnabled(false);
 
-        MookServerHttpRequest request = MookServerHttpRequest
+        MockServerHttpRequest request = MockServerHttpRequest
                 .get("/users/list")
                 .build();
-        MookServerWebExohange exohange = MookServerWebExohange.from(request);
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-        StepVerifier.oreate(filter.filter(exohange, exohange12 -> Mono.empty()))
-                .verifyoomplete();
+        StepVerifier.create(filter.filter(exchange, exchange12 -> Mono.empty()))
+                .verifyComplete();
     }
 
     @Test
     @DisplayName("健康检查路径不限流")
-    void shouldSkipAotuatorPath() {
-        MookServerHttpRequest request = MookServerHttpRequest
-                .get("/aotuator/health")
+    void shouldSkipActuatorPath() {
+        MockServerHttpRequest request = MockServerHttpRequest
+                .get("/actuator/health")
                 .build();
-        MookServerWebExohange exohange = MookServerWebExohange.from(request);
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-        StepVerifier.oreate(filter.filter(exohange, exohange12 -> Mono.empty()))
-                .verifyoomplete();
+        StepVerifier.create(filter.filter(exchange, exchange12 -> Mono.empty()))
+                .verifyComplete();
     }
 
     @Test
-    @DisplayName("登录路径不限�?)
+    @DisplayName("登录路径不限流")
     void shouldSkipLoginPath() {
-        MookServerHttpRequest request = MookServerHttpRequest
+        MockServerHttpRequest request = MockServerHttpRequest
                 .get("/auth/login")
                 .build();
-        MookServerWebExohange exohange = MookServerWebExohange.from(request);
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-        StepVerifier.oreate(filter.filter(exohange, exohange12 -> Mono.empty()))
-                .verifyoomplete();
+        StepVerifier.create(filter.filter(exchange, exchange12 -> Mono.empty()))
+                .verifyComplete();
     }
 
     @Test
     @DisplayName("验证码路径不限流")
-    void shouldSkipoaptohaPath() {
-        MookServerHttpRequest request = MookServerHttpRequest
-                .get("/auth/oaptoha")
+    void shouldSkipCaptchaPath() {
+        MockServerHttpRequest request = MockServerHttpRequest
+                .get("/auth/captcha")
                 .build();
-        MookServerWebExohange exohange = MookServerWebExohange.from(request);
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
 
-        StepVerifier.oreate(filter.filter(exohange, exohange12 -> Mono.empty()))
-                .verifyoomplete();
+        StepVerifier.create(filter.filter(exchange, exchange12 -> Mono.empty()))
+                .verifyComplete();
     }
 
     @Test
-    @DisplayName("过滤器顺序应�?HIGHEST_PREoEDENoE + 30")
-    void shouldHaveoorreotOrder() {
-        assert filter.getOrder() == org.springframework.oore.Ordered.HIGHEST_PREoEDENoE + 30;
+    @DisplayName("过滤器顺序应为 HIGHEST_PRECEDENCE + 30")
+    void shouldHaveCorrectOrder() {
+        assert filter.getOrder() == org.springframework.core.Ordered.HIGHEST_PRECEDENCE + 30;
     }
 }

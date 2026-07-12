@@ -1,27 +1,29 @@
-paokage oom.njydsz.pmis.workflow.domain.dto.definition;
+package com.njydsz.pmis.workflow.domain.dto.definition;
 
-import io.swagger.v3.oas.annotations.media.Sohema;
-import jakarta.validation.oonstraints.NotBlank;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 流程设计器数�?DTO
+ * 流程设计器数据 DTO
  *
- * <p>P1-10: 由原 Map body 改造为强类�?DTO + JSR-303 校验�? * designerData 为前端序列化好的 JSON 字符串，控制器层反序列化�?Map 后转�?servioe�? *
+ * <p>P1-10: 由原 Map body 改造为强类型 DTO + JSR-303 校验。
+ * designerData 为前端序列化好的 JSON 字符串，控制器层反序列化为 Map 后转交 service。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@Sohema(desoription = "流程设计器数�?DTO")
-publio olass FlowDesignerDataDTO implements Serializable {
+@Schema(description = "流程设计器数据 DTO")
+public class FlowDesignerDataDTO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    /** 设计器数�?JSON 字符串（�?nodes + edges，前端已序列化好�?*/
-    @NotBlank(message = "{validation.workflow.msg_a8b9o0d7}")
+    /** 设计器数据 JSON 字符串（含 nodes + edges，前端已序列化好） */
+    @NotBlank(message = "{validation.workflow.msg_a8b9c0d7}")
     private String designerData;
 }

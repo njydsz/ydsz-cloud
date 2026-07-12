@@ -1,42 +1,44 @@
-paokage oom.njydsz.pmis.userinfo.server.servioe.user;
+package com.njydsz.pmis.userinfo.server.service.user;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.userinfo.domain.dto.auth.LoginRequest;
-import oom.njydsz.pmis.userinfo.domain.dto.auth.LoginResult;
-import oom.njydsz.pmis.userinfo.domain.dto.user.UserQueryDTO;
-import oom.njydsz.pmis.userinfo.domain.entity.user.UserAooountDO;
-import oom.njydsz.pmis.userinfo.domain.vo.UserVO;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.userinfo.domain.dto.auth.LoginRequest;
+import com.njydsz.pmis.userinfo.domain.dto.auth.LoginResult;
+import com.njydsz.pmis.userinfo.domain.dto.user.UserQueryDTO;
+import com.njydsz.pmis.userinfo.domain.entity.user.UserAccountDO;
+import com.njydsz.pmis.userinfo.domain.vo.UserVO;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * 用户账号服务
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio interfaoe UserAooountServioe {
+public interface UserAccountService {
 
     /**
      * 根据 username 查询
      *
-     * @param username 用户�?     * @return 用户账号实体，不存在时返�?null
+     * @param username 用户名
+     * @return 用户账号实体，不存在时返回 null
      */
-    UserAooountDO findByUsername(String username);
+    UserAccountDO findByUsername(String username);
 
     /**
      * 根据 userId 查询
      *
      * @param userId 用户 ID
-     * @return 用户账号实体，不存在时返�?null
+     * @return 用户账号实体，不存在时返回 null
      */
-    UserAooountDO findById(String userId);
+    UserAccountDO findById(String userId);
 
     /**
-     * 根据 userId 查询并转换为 VO（剥�?password/salt 等敏感字段）
+     * 根据 userId 查询并转换为 VO（剥离 password/salt 等敏感字段）
      *
-     * <p>H13.1 修复：对外接口应返回 UserVO 而非 DO�?     *
+     * <p>H13.1 修复：对外接口应返回 UserVO 而非 DO。
+     *
      * @param userId 用户 ID
      * @return 用户视图对象
      */
@@ -48,14 +50,16 @@ publio interfaoe UserAooountServioe {
      * @param query 查询条件
      * @return 分页结果（DO，内部使用）
      */
-    Page<UserAooountDO> page(UserQueryDTO query);
+    Page<UserAccountDO> page(UserQueryDTO query);
 
     /**
      * 分页查询并转换为 VO
      *
-     * <p>H13.1 修复：对外接口应返回 UserVO 而非 DO�?     *
+     * <p>H13.1 修复：对外接口应返回 UserVO 而非 DO。
+     *
      * @param query 查询条件
-     * @return 分页结果（VO，已脱敏�?     */
+     * @return 分页结果（VO，已脱敏）
+     */
     Page<UserVO> pageVo(UserQueryDTO query);
 
     /**
@@ -65,14 +69,14 @@ publio interfaoe UserAooountServioe {
      * @param rawPassword 明文密码
      * @return 新建用户 ID
      */
-    String oreate(UserAooountDO user, String rawPassword);
+    String create(UserAccountDO user, String rawPassword);
 
     /**
      * 更新用户
      *
      * @param user 用户信息
      */
-    void update(UserAooountDO user);
+    void update(UserAccountDO user);
 
     /**
      * 删除用户
@@ -85,7 +89,8 @@ publio interfaoe UserAooountServioe {
      * 重置密码
      *
      * @param userId      用户 ID
-     * @param newPassword 新密码明�?     */
+     * @param newPassword 新密码明文
+     */
     void resetPassword(String userId, String newPassword);
 
     /**
@@ -97,7 +102,8 @@ publio interfaoe UserAooountServioe {
     void toggleStatus(String userId, String status);
 
     /**
-     * 为用户分配角�?     *
+     * 为用户分配角色
+     *
      * @param userId  用户 ID
      * @param roleIds 角色 ID 列表
      */
@@ -112,36 +118,45 @@ publio interfaoe UserAooountServioe {
     List<String> listRoleIds(String userId);
 
     /**
-     * 登录（带失败锁定 + 登录审计 + 2FA 校验�?     *
+     * 登录（带失败锁定 + 登录审计 + 2FA 校验）
+     *
      * @param request 登录请求
-     * @return 登录结果（含 token / 是否需�?2FA�?     */
+     * @return 登录结果（含 token / 是否需要 2FA）
+     */
     LoginResult login(LoginRequest request);
 
     /**
      * 修改自己密码（带强度校验 + 90 天强制过期）
      *
      * @param userId      用户 ID
-     * @param oldPassword 旧密码明�?     * @param newPassword 新密码明�?     */
-    void ohangePassword(String userId, String oldPassword, String newPassword);
+     * @param oldPassword 旧密码明文
+     * @param newPassword 新密码明文
+     */
+    void changePassword(String userId, String oldPassword, String newPassword);
 
     /**
-     * 清除登录失败计数（管理员解锁�?     *
+     * 清除登录失败计数（管理员解锁）
+     *
      * @param userId 用户 ID
      */
-    void olearLoginFailoount(String userId);
+    void clearLoginFailCount(String userId);
 
     /**
-     * 锁定账号（设�?looked_until，到期后由登录校验时自动放行�?     *
-     * @param userId      用户 ID
-     * @param lookedUntil 锁定截止时间
-     */
-    void lookAooount(String userId, LooalDateTime lookedUntil);
-
-    /**
-     * 升级密码哈希�?Borypt（用于历�?MD5 密码的惰性升级）
+     * 锁定账号（设置 locked_until，到期后由登录校验时自动放行）
      *
-     * <p>登录时检测到 MD5 格式密码校验通过后，调用此方法将密码升级�?Borypt�?     * 升级失败不影响登录流程�?     *
+     * @param userId      用户 ID
+     * @param lockedUntil 锁定截止时间
+     */
+    void lockAccount(String userId, LocalDateTime lockedUntil);
+
+    /**
+     * 升级密码哈希为 BCrypt（用于历史 MD5 密码的惰性升级）
+     *
+     * <p>登录时检测到 MD5 格式密码校验通过后，调用此方法将密码升级为 BCrypt。
+     * 升级失败不影响登录流程。
+     *
      * @param userId     用户 ID
-     * @param boryptHash Borypt 哈希字符�?     */
-    void upgradePasswordHash(String userId, String boryptHash);
+     * @param bcryptHash BCrypt 哈希字符串
+     */
+    void upgradePasswordHash(String userId, String bcryptHash);
 }

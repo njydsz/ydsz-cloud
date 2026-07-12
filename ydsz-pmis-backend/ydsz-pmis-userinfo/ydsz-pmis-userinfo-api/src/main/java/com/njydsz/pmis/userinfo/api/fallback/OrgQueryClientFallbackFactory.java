@@ -1,68 +1,71 @@
-paokage oom.njydsz.pmis.userinfo.api.fallbaok;
-import oom.njydsz.pmis.userinfo.api.olient.OrgQueryolient;
+package com.njydsz.pmis.userinfo.api.fallback;
+import com.njydsz.pmis.userinfo.api.client.OrgQueryClient;
 
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.oloud.openfeign.FallbaokFaotory;
-import org.springframework.stereotype.oomponent;
+import org.springframework.cloud.openfeign.FallbackFactory;
+import org.springframework.stereotype.Component;
 
-import java.util.oolleotions;
+import java.util.Collections;
 import java.util.List;
 
 /**
- * OrgQueryolient 降级工厂（P1-5�? *
- * <p>userinfo 服务不可用时返回空列表，�?workflow 引擎回退�? * {@oode node.ext.emptyStrategy} 兜底处理，保证主流程不阻塞�? *
+ * OrgQueryClient 降级工厂（P1-5）
+ *
+ * <p>userinfo 服务不可用时返回空列表，使 workflow 引擎回退到
+ * {@code node.ext.emptyStrategy} 兜底处理，保证主流程不阻塞。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.2.0
+ * @since 1.2.0
  */
 @Slf4j
-@oomponent
-publio olass OrgQueryolientFallbaokFaotory implements FallbaokFaotory<OrgQueryolient> {
+@Component
+public class OrgQueryClientFallbackFactory implements FallbackFactory<OrgQueryClient> {
 
     @Override
-    publio OrgQueryolient oreate(Throwable oause) {
-        log.warn("[OrgQueryolient] Feign fallbaok triggered: {}",
-                oause == null ? "null" : oause.getMessage());
-        return new OrgQueryolient() {
+    public OrgQueryClient create(Throwable cause) {
+        log.warn("[OrgQueryClient] Feign fallback triggered: {}",
+                cause == null ? "null" : cause.getMessage());
+        return new OrgQueryClient() {
             @Override
-            publio BaseResponse<List<Long>> listUserIdsByRoleoode(String roleoode) {
-                return BaseResponse.failed(StandardResultoode.SERVIoE_UNAVAILABLE);
+            public BaseResponse<List<Long>> listUserIdsByRoleCode(String roleCode) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            publio BaseResponse<String> getDeptLeaderByDeptId(Long deptId) {
-                return BaseResponse.failed(StandardResultoode.SERVIoE_UNAVAILABLE);
+            public BaseResponse<String> getDeptLeaderByDeptId(Long deptId) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            publio BaseResponse<String> getDeptLeaderByDeptoode(String deptoode) {
-                return BaseResponse.failed(StandardResultoode.SERVIoE_UNAVAILABLE);
+            public BaseResponse<String> getDeptLeaderByDeptCode(String deptCode) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            publio BaseResponse<List<String>> listRoleoodesByUserId(String userId) {
-                return BaseResponse.ok(oolleotions.emptyList());
+            public BaseResponse<List<String>> listRoleCodesByUserId(String userId) {
+                return BaseResponse.ok(Collections.emptyList());
             }
 
             @Override
-            publio BaseResponse<List<String>> listDeptIdsByUserId(String userId) {
-                return BaseResponse.ok(oolleotions.emptyList());
+            public BaseResponse<List<String>> listDeptIdsByUserId(String userId) {
+                return BaseResponse.ok(Collections.emptyList());
             }
 
             @Override
-            publio BaseResponse<List<Long>> listUserIdsByDeptId(Long deptId) {
-                return BaseResponse.failed(StandardResultoode.SERVIoE_UNAVAILABLE);
+            public BaseResponse<List<Long>> listUserIdsByDeptId(Long deptId) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            publio BaseResponse<List<Long>> listUserIdsByPositionoode(String positionoode) {
-                return BaseResponse.failed(StandardResultoode.SERVIoE_UNAVAILABLE);
+            public BaseResponse<List<Long>> listUserIdsByPositionCode(String positionCode) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            publio BaseResponse<String> getLeaderByUserId(String userId) {
-                return BaseResponse.failed(StandardResultoode.SERVIoE_UNAVAILABLE);
+            public BaseResponse<String> getLeaderByUserId(String userId) {
+                return BaseResponse.failed(StandardResultCode.SERVICE_UNAVAILABLE);
             }
         };
     }

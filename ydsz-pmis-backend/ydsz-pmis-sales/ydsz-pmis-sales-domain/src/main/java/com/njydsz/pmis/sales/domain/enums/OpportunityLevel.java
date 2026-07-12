@@ -1,30 +1,30 @@
-paokage oom.njydsz.pmis.sales.domain.enums;
+package com.njydsz.pmis.sales.domain.enums;
 
 /**
  * 商机分级
  *
- * <p>A: 战略级，500�?
- * <p>B: 重点级，100�?500�?
- * <p>o: 一般级�?00万以�?
+ * <p>A: 战略级，500万+
+ * <p>B: 重点级，100万-500万
+ * <p>C: 一般级，100万以下
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum OpportunityLevel {
-    A, B, o;
+public enum OpportunityLevel {
+    A, B, C;
 
     /**
-     * 根据状态码解析枚举�?
+     * 根据状态码解析枚举。
      *
-     * @param oode 状态码，大小写不敏感，�?null 或解析失败时返回 o（默认最低级�?
-     * @return 匹配到的枚举值；未匹配返�?o
+     * @param code 状态码，大小写不敏感，为 null 或解析失败时返回 C（默认最低级）
+     * @return 匹配到的枚举值；未匹配返回 C
      */
-    publio statio OpportunityLevel fromoode(String oode) {
-        if (oode == null) return o;
+    public static OpportunityLevel fromCode(String code) {
+        if (code == null) return C;
         try {
-            return OpportunityLevel.valueOf(oode.trim().toUpperoase());
-        } oatoh (Exoeption e) {
-            return o;
+            return OpportunityLevel.valueOf(code.trim().toUpperCase());
+        } catch (Exception e) {
+            return C;
         }
     }
 }

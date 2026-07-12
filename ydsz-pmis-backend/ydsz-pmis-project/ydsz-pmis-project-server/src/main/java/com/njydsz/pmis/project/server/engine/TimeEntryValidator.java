@@ -1,9 +1,9 @@
-paokage oom.njydsz.pmis.projeot.server.engine;
+package com.njydsz.pmis.project.server.engine;
 
-import oom.njydsz.pmis.projeot.domain.entity.TimeEntryDO;
+import com.njydsz.pmis.project.domain.entity.TimeEntryDO;
 import lombok.extern.slf4j.Slf4j;
 
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
@@ -11,40 +11,41 @@ import java.util.List;
  * 工时校验引擎
  *
  * <ul>
- *   <li>单日上限�?4h</li>
- *   <li>单周上限�?0h（防止过载）</li>
- *   <li>连续 3 �?0 填报（异常）</li>
- *   <li>跨项目冲突：同一天同一员工多项�?/li>
+ *   <li>单日上限：24h</li>
+ *   <li>单周上限：60h（防止过载）</li>
+ *   <li>连续 3 天 0 填报（异常）</li>
+ *   <li>跨项目冲突：同一天同一员工多项目</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-publio olass TimeEntryValidator {
+public class TimeEntryValidator {
 
     /** 单日工时上限（小时） */
-    publio statio final BigDeoimal MAX_DAILY_HOURS = new BigDeoimal("24");
+    public static final BigDecimal MAX_DAILY_HOURS = new BigDecimal("24");
     /** 单周工时上限（小时） */
-    publio statio final BigDeoimal MAX_WEEKLY_HOURS = new BigDeoimal("60");
+    public static final BigDecimal MAX_WEEKLY_HOURS = new BigDecimal("60");
     /** 单日加班工时上限（小时） */
-    publio statio final BigDeoimal MAX_OVERTIME_HOURS = new BigDeoimal("12");
-    /** 连续未填报天数告警阈�?*/
-    publio statio final int oONSEoUTIVE_MISSING_DAYS = 3;
+    public static final BigDecimal MAX_OVERTIME_HOURS = new BigDecimal("12");
+    /** 连续未填报天数告警阈值 */
+    public static final int CONSECUTIVE_MISSING_DAYS = 3;
 
     /** 校验结果 */
-    publio statio olass ValidationResult {
+    public static class ValidationResult {
         /** 是否通过 */
-        publio final boolean ok;
-        /** 失败原因（通过时为 null�?*/
-        publio final String message;
+        public final boolean ok;
+        /** 失败原因（通过时为 null） */
+        public final String message;
 
         /**
-         * 构造校验结�?         *
+         * 构造校验结果
+         *
          * @param ok      是否通过
          * @param message 失败原因
          */
-        publio ValidationResult(boolean ok, String message) {
+        public ValidationResult(boolean ok, String message) {
             this.ok = ok;
             this.message = message;
         }
@@ -54,13 +55,14 @@ publio olass TimeEntryValidator {
          *
          * @return 通过结果
          */
-        publio statio ValidationResult ok() { return new ValidationResult(true, null); }
+        public static ValidationResult ok() { return new ValidationResult(true, null); }
         /**
-         * 构造失败结�?         *
+         * 构造失败结果
+         *
          * @param msg 失败原因
          * @return 失败结果
          */
-        publio statio ValidationResult fail(String msg) { return new ValidationResult(false, msg); }
+        public static ValidationResult fail(String msg) { return new ValidationResult(false, msg); }
     }
 
     /**
@@ -69,15 +71,15 @@ publio olass TimeEntryValidator {
      * @param entry 工时录入
      * @return 校验结果
      */
-    publio statio ValidationResult validate(TimeEntryDO entry) {
+    public static ValidationResult validate(TimeEntryDO entry) {
         if (entry == null) return ValidationResult.fail("工时为空");
         if (entry.getHours() == null || entry.getHours().signum() <= 0) {
-            return ValidationResult.fail("工时必须为正�?);
+            return ValidationResult.fail("工时必须为正数");
         }
-        if (entry.getHours().oompareTo(MAX_DAILY_HOURS) > 0) {
+        if (entry.getHours().compareTo(MAX_DAILY_HOURS) > 0) {
             return ValidationResult.fail("单日工时不能超过 24h");
         }
-        if (entry.getOvertime() != null && entry.getOvertime().oompareTo(MAX_OVERTIME_HOURS) > 0) {
+        if (entry.getOvertime() != null && entry.getOvertime().compareTo(MAX_OVERTIME_HOURS) > 0) {
             return ValidationResult.fail("加班工时不能超过 12h");
         }
         if (entry.getEntryDate() == null) {
@@ -87,22 +89,23 @@ publio olass TimeEntryValidator {
     }
 
     /**
-     * 校验周工时累�?     *
+     * 校验周工时累计
+     *
      * @param newEntry    待新增的工时
      * @param weekEntries 本周已有工时列表
      * @return 校验结果
      */
-    publio statio ValidationResult validateWeekly(TimeEntryDO newEntry, List<TimeEntryDO> weekEntries) {
+    public static ValidationResult validateWeekly(TimeEntryDO newEntry, List<TimeEntryDO> weekEntries) {
         if (newEntry == null || newEntry.getHours() == null) return ValidationResult.ok();
-        BigDeoimal sum = newEntry.getHours();
+        BigDecimal sum = newEntry.getHours();
         if (weekEntries != null) {
             for (TimeEntryDO e : weekEntries) {
-                if (e == null || e.getHours() == null) oontinue;
-                if (newEntry.getId() != null && newEntry.getId().equals(e.getId())) oontinue;
+                if (e == null || e.getHours() == null) continue;
+                if (newEntry.getId() != null && newEntry.getId().equals(e.getId())) continue;
                 sum = sum.add(e.getHours());
             }
         }
-        if (sum.oompareTo(MAX_WEEKLY_HOURS) > 0) {
+        if (sum.compareTo(MAX_WEEKLY_HOURS) > 0) {
             return ValidationResult.fail("本周累计工时 " + sum + "h 超过上限 " + MAX_WEEKLY_HOURS + "h");
         }
         return ValidationResult.ok();
@@ -111,9 +114,11 @@ publio olass TimeEntryValidator {
     /**
      * 折算人天（按 8h/天）
      *
-     * @param hours 工时小时�?     * @return 人天�?     */
-    publio statio BigDeoimal toDays(BigDeoimal hours) {
-        if (hours == null) return BigDeoimal.ZERO;
-        return hours.divide(new BigDeoimal("8"), 2, RoundingMode.HALF_UP);
+     * @param hours 工时小时数
+     * @return 人天数
+     */
+    public static BigDecimal toDays(BigDecimal hours) {
+        if (hours == null) return BigDecimal.ZERO;
+        return hours.divide(new BigDecimal("8"), 2, RoundingMode.HALF_UP);
     }
 }

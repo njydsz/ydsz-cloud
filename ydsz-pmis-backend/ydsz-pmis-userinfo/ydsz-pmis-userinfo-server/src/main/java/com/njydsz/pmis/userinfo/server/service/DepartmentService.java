@@ -1,8 +1,8 @@
-paokage oom.njydsz.pmis.userinfo.server.servioe.org;
+package com.njydsz.pmis.userinfo.server.service.org;
 
-import oom.njydsz.pmis.userinfo.domain.dto.org.DepartmentFormDTO;
-import oom.njydsz.pmis.userinfo.domain.entity.org.DepartmentDO;
-import oom.njydsz.pmis.userinfo.domain.vo.DepartmentTreeVO;
+import com.njydsz.pmis.userinfo.domain.dto.org.DepartmentFormDTO;
+import com.njydsz.pmis.userinfo.domain.entity.org.DepartmentDO;
+import com.njydsz.pmis.userinfo.domain.vo.DepartmentTreeVO;
 
 import java.util.List;
 
@@ -10,13 +10,15 @@ import java.util.List;
  * 部门服务
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio interfaoe DepartmentServioe {
+public interface DepartmentService {
 
     /**
-     * 获取部门�?     *
-     * @return 部门�?     */
+     * 获取部门树
+     *
+     * @return 部门树
+     */
     List<DepartmentTreeVO> tree();
 
     /**
@@ -30,7 +32,7 @@ publio interfaoe DepartmentServioe {
      * 根据 ID 获取
      *
      * @param id 部门 ID
-     * @return 部门实体，不存在时返�?null
+     * @return 部门实体，不存在时返回 null
      */
     DepartmentDO getById(String id);
 
@@ -40,7 +42,7 @@ publio interfaoe DepartmentServioe {
      * @param dto 部门表单
      * @return 新建部门 ID
      */
-    String oreate(DepartmentFormDTO dto);
+    String create(DepartmentFormDTO dto);
 
     /**
      * 更新部门

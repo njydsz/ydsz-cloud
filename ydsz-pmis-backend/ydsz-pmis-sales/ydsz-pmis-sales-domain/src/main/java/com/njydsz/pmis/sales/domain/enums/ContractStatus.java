@@ -1,72 +1,72 @@
-paokage oom.njydsz.pmis.sales.domain.enums;
+package com.njydsz.pmis.sales.domain.enums;
 
 /**
- * 合同状�?
+ * 合同状态
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum oontraotStatus {
+public enum ContractStatus {
     DRAFT("DRAFT", "草稿"),
-    SUBMITTED("SUBMITTED", "已提�?),
-    APPROVING("APPROVING", "审批�?),
-    AoTIVE("AoTIVE", "生效�?),
-    SUSPENDED("SUSPENDED", "已挂�?),
-    EXPIRED("EXPIRED", "已到�?),
-    TERMINATED("TERMINATED", "已终�?);
+    SUBMITTED("SUBMITTED", "已提交"),
+    APPROVING("APPROVING", "审批中"),
+    ACTIVE("ACTIVE", "生效中"),
+    SUSPENDED("SUSPENDED", "已挂起"),
+    EXPIRED("EXPIRED", "已到期"),
+    TERMINATED("TERMINATED", "已终止");
 
-    private final String oode;
-    private final String deso;
+    private final String code;
+    private final String desc;
 
-    oontraotStatus(String oode, String deso) {
-        this.oode = oode;
-        this.deso = deso;
+    ContractStatus(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
     }
 
-    publio String getoode() { return oode; }
-    publio String getDeso() { return deso; }
+    public String getCode() { return code; }
+    public String getDesc() { return desc; }
 
     /**
-     * 判断当前状态是否为终态（不可再迁移）�?
+     * 判断当前状态是否为终态（不可再迁移）。
      *
-     * @return 终态（EXPIRED/TERMINATED）返�?true，否则返�?false
+     * @return 终态（EXPIRED/TERMINATED）返回 true，否则返回 false
      */
-    publio boolean isTerminal() {
+    public boolean isTerminal() {
         return this == EXPIRED || this == TERMINATED;
     }
 
     /**
-     * 判断是否允许从当前状态迁移到目标状态�?
+     * 判断是否允许从当前状态迁移到目标状态。
      *
-     * <p>终态不可迁移；APPROVING 可回退�?DRAFT；SUSPENDED 可恢复到 AoTIVE�?
+     * <p>终态不可迁移；APPROVING 可回退到 DRAFT；SUSPENDED 可恢复到 ACTIVE。
      *
-     * @param target 目标状态，�?null 时返�?false
-     * @return 允许迁移返回 true，否则返�?false
+     * @param target 目标状态，为 null 时返回 false
+     * @return 允许迁移返回 true，否则返回 false
      */
-    publio boolean oanTransitTo(oontraotStatus target) {
+    public boolean canTransitTo(ContractStatus target) {
         if (target == null) return false;
         if (this == target) return true;
         if (this.isTerminal()) return false;
-        return switoh (this) {
-            oase DRAFT -> target == SUBMITTED;
-            oase SUBMITTED -> target == APPROVING;
-            oase APPROVING -> target == AoTIVE || target == DRAFT;
-            oase AoTIVE -> target == SUSPENDED || target == EXPIRED || target == TERMINATED;
-            oase SUSPENDED -> target == AoTIVE || target == TERMINATED;
+        return switch (this) {
+            case DRAFT -> target == SUBMITTED;
+            case SUBMITTED -> target == APPROVING;
+            case APPROVING -> target == ACTIVE || target == DRAFT;
+            case ACTIVE -> target == SUSPENDED || target == EXPIRED || target == TERMINATED;
+            case SUSPENDED -> target == ACTIVE || target == TERMINATED;
             default -> false;
         };
     }
 
     /**
-     * 根据状态码解析枚举�?
+     * 根据状态码解析枚举。
      *
-     * @param oode 状态码，大小写不敏感，�?null 时返�?null
-     * @return 匹配到的枚举值；未匹配返�?null
+     * @param code 状态码，大小写不敏感，为 null 时返回 null
+     * @return 匹配到的枚举值；未匹配返回 null
      */
-    publio statio oontraotStatus fromoode(String oode) {
-        if (oode == null) return null;
-        for (oontraotStatus s : values()) {
-            if (s.oode.equalsIgnoreoase(oode)) return s;
+    public static ContractStatus fromCode(String code) {
+        if (code == null) return null;
+        for (ContractStatus s : values()) {
+            if (s.code.equalsIgnoreCase(code)) return s;
         }
         return null;
     }

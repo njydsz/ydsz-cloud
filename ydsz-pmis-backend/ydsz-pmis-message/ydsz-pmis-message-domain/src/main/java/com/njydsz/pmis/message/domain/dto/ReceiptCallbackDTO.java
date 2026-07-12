@@ -1,30 +1,30 @@
-paokage oom.njydsz.pmis.message.domain.dto.reoeipt;
+package com.njydsz.pmis.message.domain.dto.receipt;
 
 
 import lombok.Data;
 
 /**
- * 服务商回执回�?DTO
+ * 服务商回执回调 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass ReoeiptoallbaokDTO {
+public class ReceiptCallbackDTO {
 
     /** 关联日志 ID */
     private String logId;
 
-    /** 三方服务商回�?ID */
-    private String providerTraoeId;
+    /** 三方服务商回执 ID */
+    private String providerTraceId;
 
-    /** 回执类型: DELIVERED/READ/oLIoKED/FAILED */
-    private String reoeiptType;
+    /** 回执类型: DELIVERED/READ/CLICKED/FAILED */
+    private String receiptType;
 
-    /** 供应商编�?*/
-    private String provideroode;
+    /** 供应商编码 */
+    private String providerCode;
 
-    /** 供应商消�?*/
+    /** 供应商消息 */
     private String providerMsg;
 
     /** 原始响应 JSON */

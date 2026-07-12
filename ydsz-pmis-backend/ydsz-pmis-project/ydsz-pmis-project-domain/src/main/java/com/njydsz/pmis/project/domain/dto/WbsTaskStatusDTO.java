@@ -1,22 +1,22 @@
-paokage oom.njydsz.pmis.projeot.domain.dto;
+package com.njydsz.pmis.project.domain.dto;
 
 import lombok.Data;
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 
 /**
- * WBS 任务状态迁�?DTO
+ * WBS 任务状态迁移 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass WbsTaskStatusDTO {
+public class WbsTaskStatusDTO {
     /** 任务ID */
     private String id;
-    /** 目标状态：WbsTaskStatus.oode */
+    /** 目标状态：WbsTaskStatus.code */
     private String targetStatus;
-    /** 进度百分比（0-100�?*/
-    private BigDeoimal progressPot;
+    /** 进度百分比（0-100） */
+    private BigDecimal progressPct;
     /** 实际工时（人天） */
-    private BigDeoimal aotualEffort;
+    private BigDecimal actualEffort;
 }

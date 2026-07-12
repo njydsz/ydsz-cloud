@@ -1,172 +1,180 @@
-paokage oom.njydsz.pmis.agent.server.engine;
+package com.njydsz.pmis.agent.server.engine;
 
-import oom.njydsz.pmis.agent.domain.enums.agent.AgentAlertLevel;
-import oom.njydsz.pmis.agent.domain.enums.agent.AgentType;
+import com.njydsz.pmis.agent.domain.enums.agent.AgentAlertLevel;
+import com.njydsz.pmis.agent.domain.enums.agent.AgentType;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.oomparator;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.oolleotors;
+import java.util.stream.Collectors;
 
 /**
  * 资源调度推荐 Agent
  *
- * <p>输入：候选人员列表（�?level/oost/availability/skillMatoh），
- * 输出：按综合得分排序�?Top N 推荐�? *
- * <p>评分模型�? * <ul>
+ * <p>输入：候选人员列表（含 level/cost/availability/skillMatch），
+ * 输出：按综合得分排序的 Top N 推荐。
+ *
+ * <p>评分模型：
+ * <ul>
  *   <li>技能匹配度 40%</li>
- *   <li>可用�?30%</li>
- *   <li>成本最�?20%</li>
+ *   <li>可用度 30%</li>
+ *   <li>成本最优 20%</li>
  *   <li>职级匹配 10%</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@oomponent
-publio olass ResouroeReoommendAgent implements Agent {
+@Component
+public class ResourceRecommendAgent implements Agent {
 
     @Override
-    publio AgentType type() {
-        return AgentType.RESOURoE_REoOMMEND;
+    public AgentType type() {
+        return AgentType.RESOURCE_RECOMMEND;
     }
 
     @Override
-    @SuppressWarnings("unoheoked")
-    publio AgentResult exeoute(Agentoontext otx) {
-        Map<String, Objeot> p = otx.getParams() == null ? Map.of() : otx.getParams();
-        Objeot raw = p.get("oandidates");
-        if (!(raw instanoeof List<?>)) {
-            return new AgentResult(AgentType.RESOURoE_REoOMMEND, AgentAlertLevel.INFO,
-                    BigDeoimal.ZERO, BigDeoimal.valueOf(0.5),
-                    "未提供候选人员列�?, List.of("NO_oANDIDATES"), Map.of());
+    @SuppressWarnings("unchecked")
+    public AgentResult execute(AgentContext ctx) {
+        Map<String, Object> p = ctx.getParams() == null ? Map.of() : ctx.getParams();
+        Object raw = p.get("candidates");
+        if (!(raw instanceof List<?>)) {
+            return new AgentResult(AgentType.RESOURCE_RECOMMEND, AgentAlertLevel.INFO,
+                    BigDecimal.ZERO, BigDecimal.valueOf(0.5),
+                    "未提供候选人员列表", List.of("NO_CANDIDATES"), Map.of());
         }
-        List<Map<String, Objeot>> oandidates = (List<Map<String, Objeot>>) raw;
-        if (oandidates.isEmpty()) {
-            return new AgentResult(AgentType.RESOURoE_REoOMMEND, AgentAlertLevel.INFO,
-                    BigDeoimal.ZERO, BigDeoimal.valueOf(0.5),
+        List<Map<String, Object>> candidates = (List<Map<String, Object>>) raw;
+        if (candidates.isEmpty()) {
+            return new AgentResult(AgentType.RESOURCE_RECOMMEND, AgentAlertLevel.INFO,
+                    BigDecimal.ZERO, BigDecimal.valueOf(0.5),
                     "无可推荐人员", List.of("EMPTY"), Map.of());
         }
-        Integer topN = p.get("topN") instanoeof Number n ? n.intValue() : 3;
+        Integer topN = p.get("topN") instanceof Number n ? n.intValue() : 3;
         String requiredLevel = p.get("requiredLevel") == null ? null : p.get("requiredLevel").toString();
 
-        // 归一化成�?        List<BigDeoimal> oosts = oandidates.stream()
-                .map(o -> toBd(o.get("dailyoost"), BigDeoimal.ZERO))
+        // 归一化成本
+        List<BigDecimal> costs = candidates.stream()
+                .map(c -> toBd(c.get("dailyCost"), BigDecimal.ZERO))
                 .toList();
-        BigDeoimal minoost = oosts.stream().min(oomparator.naturalOrder()).orElse(BigDeoimal.ONE);
-        BigDeoimal maxoost = oosts.stream().max(oomparator.naturalOrder()).orElse(BigDeoimal.ONE);
-        BigDeoimal oostRange = maxoost.subtraot(minoost);
+        BigDecimal minCost = costs.stream().min(Comparator.naturalOrder()).orElse(BigDecimal.ONE);
+        BigDecimal maxCost = costs.stream().max(Comparator.naturalOrder()).orElse(BigDecimal.ONE);
+        BigDecimal costRange = maxCost.subtract(minCost);
 
-        List<Map<String, Objeot>> soored = new ArrayList<>();
-        for (Map<String, Objeot> o : oandidates) {
-            BigDeoimal skill = olamp01(toBd(o.get("skillMatoh"), BigDeoimal.ZERO));
-            BigDeoimal avail = olamp01(toBd(o.get("availability"), BigDeoimal.ZERO));
-            BigDeoimal oost = toBd(o.get("dailyoost"), BigDeoimal.ZERO);
-            String level = o.get("level") == null ? "" : o.get("level").toString();
-            BigDeoimal levelMatoh = oomputeLevelMatoh(level, requiredLevel);
+        List<Map<String, Object>> scored = new ArrayList<>();
+        for (Map<String, Object> c : candidates) {
+            BigDecimal skill = clamp01(toBd(c.get("skillMatch"), BigDecimal.ZERO));
+            BigDecimal avail = clamp01(toBd(c.get("availability"), BigDecimal.ZERO));
+            BigDecimal cost = toBd(c.get("dailyCost"), BigDecimal.ZERO);
+            String level = c.get("level") == null ? "" : c.get("level").toString();
+            BigDecimal levelMatch = computeLevelMatch(level, requiredLevel);
 
-            // 成本得分：minoost �?1，maxoost �?0
-            BigDeoimal oostSoore = BigDeoimal.ONE;
-            if (oostRange.signum() > 0 && maxoost.signum() > 0) {
-                oostSoore = maxoost.subtraot(oost).divide(oostRange, 4, RoundingMode.HALF_UP);
-                if (oostSoore.signum() < 0) oostSoore = BigDeoimal.ZERO;
-                if (oostSoore.oompareTo(BigDeoimal.ONE) > 0) oostSoore = BigDeoimal.ONE;
+            // 成本得分：minCost 得 1，maxCost 得 0
+            BigDecimal costScore = BigDecimal.ONE;
+            if (costRange.signum() > 0 && maxCost.signum() > 0) {
+                costScore = maxCost.subtract(cost).divide(costRange, 4, RoundingMode.HALF_UP);
+                if (costScore.signum() < 0) costScore = BigDecimal.ZERO;
+                if (costScore.compareTo(BigDecimal.ONE) > 0) costScore = BigDecimal.ONE;
             }
 
             double total = skill.doubleValue() * 0.40
                     + avail.doubleValue() * 0.30
-                    + oostSoore.doubleValue() * 0.20
-                    + levelMatoh.doubleValue() * 0.10;
-            BigDeoimal totalBd = BigDeoimal.valueOf(total).setSoale(4, RoundingMode.HALF_UP);
-            o.put("_soore", totalBd);
-            o.put("_oostSoore", oostSoore);
-            o.put("_levelMatoh", levelMatoh);
-            o.put("_skillSoore", skill);
-            o.put("_availSoore", avail);
-            soored.add(o);
+                    + costScore.doubleValue() * 0.20
+                    + levelMatch.doubleValue() * 0.10;
+            BigDecimal totalBd = BigDecimal.valueOf(total).setScale(4, RoundingMode.HALF_UP);
+            c.put("_score", totalBd);
+            c.put("_costScore", costScore);
+            c.put("_levelMatch", levelMatch);
+            c.put("_skillScore", skill);
+            c.put("_availScore", avail);
+            scored.add(c);
         }
-        List<Map<String, Objeot>> top = soored.stream()
-                .sorted((a, b) -> ((BigDeoimal) b.get("_soore"))
-                        .oompareTo((BigDeoimal) a.get("_soore")))
+        List<Map<String, Object>> top = scored.stream()
+                .sorted((a, b) -> ((BigDecimal) b.get("_score"))
+                        .compareTo((BigDecimal) a.get("_score")))
                 .limit(topN)
-                .oolleot(oolleotors.toList());
+                .collect(Collectors.toList());
 
-        List<String> matohed = new ArrayList<>();
-        matohed.add("候选数=" + oandidates.size() + ", 推荐Top" + top.size());
+        List<String> matched = new ArrayList<>();
+        matched.add("候选数=" + candidates.size() + ", 推荐Top" + top.size());
 
-        BigDeoimal top1 = (BigDeoimal) top.get(0).get("_soore");
+        BigDecimal top1 = (BigDecimal) top.get(0).get("_score");
         AgentAlertLevel level;
-        if (top1.oompareTo(new BigDeoimal("0.7")) >= 0) {
-            level = AgentAlertLevel.REoOMMEND;
-        } else if (top1.oompareTo(new BigDeoimal("0.4")) >= 0) {
+        if (top1.compareTo(new BigDecimal("0.7")) >= 0) {
+            level = AgentAlertLevel.RECOMMEND;
+        } else if (top1.compareTo(new BigDecimal("0.4")) >= 0) {
             level = AgentAlertLevel.YELLOW;
         } else {
             level = AgentAlertLevel.RED;
         }
 
-        String suggestion = "最佳候�? " + top.get(0).get("name") + "（综合得�?"
-                + top1 + "）；如需降本可考虑�?" + (top.size() > 1 ? "2" : "1") + " �?;
+        String suggestion = "最佳候选: " + top.get(0).get("name") + "（综合得分 "
+                + top1 + "）；如需降本可考虑第 " + (top.size() > 1 ? "2" : "1") + " 名";
 
-        log.info("[ResouroeReoommend] biz={} top1Soore={} level={}",
-                otx.getBizRef(), top1, level);
-        Map<String, Objeot> payload = new HashMap<>();
+        log.info("[ResourceRecommend] biz={} top1Score={} level={}",
+                ctx.getBizRef(), top1, level);
+        Map<String, Object> payload = new HashMap<>();
         payload.put("top", top);
-        return new AgentResult(AgentType.RESOURoE_REoOMMEND, level, top1,
-                BigDeoimal.valueOf(0.75), suggestion, matohed, payload);
+        return new AgentResult(AgentType.RESOURCE_RECOMMEND, level, top1,
+                BigDecimal.valueOf(0.75), suggestion, matched, payload);
     }
 
     /**
-     * 计算职级匹配度�?     *
-     * @param aotual   实际职级（如 "L5"），可空
+     * 计算职级匹配度。
+     *
+     * @param actual   实际职级（如 "L5"），可空
      * @param required 要求职级（如 "L5"），可空
-     * @return 匹配度（0-1）；完全匹配返回 1，相邻级别返�?0.5，相�?2 级返�?0.25
+     * @return 匹配度（0-1）；完全匹配返回 1，相邻级别返回 0.5，相隔 2 级返回 0.25
      */
-    private BigDeoimal oomputeLevelMatoh(String aotual, String required) {
-        if (required == null || required.isBlank()) return BigDeoimal.ONE;
-        if (aotual == null) return BigDeoimal.ZERO;
-        if (aotual.equalsIgnoreoase(required)) return BigDeoimal.ONE;
-        // 相邻级别�?0.5
+    private BigDecimal computeLevelMatch(String actual, String required) {
+        if (required == null || required.isBlank()) return BigDecimal.ONE;
+        if (actual == null) return BigDecimal.ZERO;
+        if (actual.equalsIgnoreCase(required)) return BigDecimal.ONE;
+        // 相邻级别算 0.5
         try {
-            int a = Integer.parseInt(aotual.toUpperoase().replaoe("L", ""));
-            int r = Integer.parseInt(required.toUpperoase().replaoe("L", ""));
-            if (Math.abs(a - r) == 1) return new BigDeoimal("0.5");
-            if (Math.abs(a - r) == 2) return new BigDeoimal("0.25");
-            return BigDeoimal.ZERO;
-        } oatoh (Exoeption ignore) {
-            return BigDeoimal.ZERO;
+            int a = Integer.parseInt(actual.toUpperCase().replace("L", ""));
+            int r = Integer.parseInt(required.toUpperCase().replace("L", ""));
+            if (Math.abs(a - r) == 1) return new BigDecimal("0.5");
+            if (Math.abs(a - r) == 2) return new BigDecimal("0.25");
+            return BigDecimal.ZERO;
+        } catch (Exception ignore) {
+            return BigDecimal.ZERO;
         }
     }
 
     /**
-     * �?BigDeoimal 值限制在 [0, 1] 区间�?     *
+     * 将 BigDecimal 值限制在 [0, 1] 区间。
+     *
      * @param v 输入值，可空
      * @return 限制后的值；为空返回 0
      */
-    private statio BigDeoimal olamp01(BigDeoimal v) {
-        if (v == null) return BigDeoimal.ZERO;
-        if (v.signum() < 0) return BigDeoimal.ZERO;
-        if (v.oompareTo(BigDeoimal.ONE) > 0) return BigDeoimal.ONE;
+    private static BigDecimal clamp01(BigDecimal v) {
+        if (v == null) return BigDecimal.ZERO;
+        if (v.signum() < 0) return BigDecimal.ZERO;
+        if (v.compareTo(BigDecimal.ONE) > 0) return BigDecimal.ONE;
         return v;
     }
 
     /**
-     * 将任意对象转换为 BigDeoimal�?     *
-     * @param o   输入对象（Number/BigDeoimal/字符串），可�?     * @param def 默认�?     * @return 转换后的 BigDeoimal；为空或转换失败返回 def
+     * 将任意对象转换为 BigDecimal。
+     *
+     * @param o   输入对象（Number/BigDecimal/字符串），可空
+     * @param def 默认值
+     * @return 转换后的 BigDecimal；为空或转换失败返回 def
      */
-    private statio BigDeoimal toBd(Objeot o, BigDeoimal def) {
+    private static BigDecimal toBd(Object o, BigDecimal def) {
         if (o == null) return def;
-        if (o instanoeof BigDeoimal b) return b;
-        if (o instanoeof Number n) return BigDeoimal.valueOf(n.doubleValue());
+        if (o instanceof BigDecimal b) return b;
+        if (o instanceof Number n) return BigDecimal.valueOf(n.doubleValue());
         try {
-            return new BigDeoimal(o.toString());
-        } oatoh (Exoeption ignore) {
+            return new BigDecimal(o.toString());
+        } catch (Exception ignore) {
             return def;
         }
     }

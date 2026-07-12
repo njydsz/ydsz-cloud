@@ -1,138 +1,138 @@
-paokage oom.njydsz.pmis.projeot.server.servioe.impl;
+package com.njydsz.pmis.project.server.service.impl;
 
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.projeot.domain.dto.SatisfaotionoreateDTO;
-import oom.njydsz.pmis.projeot.server.engine.AfterSalesoodeGen;
-import oom.njydsz.pmis.projeot.domain.entity.SatisfaotionDO;
-import oom.njydsz.pmis.projeot.domain.enums.SatisfaotionLevel;
-import oom.njydsz.pmis.projeot.infra.mapper.SatisfaotionMapper;
-import oom.njydsz.pmis.projeot.server.servioe.SatisfaotionServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.project.domain.dto.SatisfactionCreateDTO;
+import com.njydsz.pmis.project.server.engine.AfterSalesCodeGen;
+import com.njydsz.pmis.project.domain.entity.SatisfactionDO;
+import com.njydsz.pmis.project.domain.enums.SatisfactionLevel;
+import com.njydsz.pmis.project.infra.mapper.SatisfactionMapper;
+import com.njydsz.pmis.project.server.service.SatisfactionService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.time.LooalDate;
-import java.time.LooalDateTime;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
 /**
- * 满意度评价服务实�?
+ * 满意度评价服务实现
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass SatisfaotionServioeImpl implements SatisfaotionServioe {
+@Service
+@RequiredArgsConstructor
+public class SatisfactionServiceImpl implements SatisfactionService {
 
-    /** 满意度评�?Mapper */
-    private final SatisfaotionMapper satisfaotionMapper;
+    /** 满意度评价 Mapper */
+    private final SatisfactionMapper satisfactionMapper;
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio String submit(SatisfaotionoreateDTO dto) {
+    @Transactional(rollbackFor = Exception.class)
+    public String submit(SatisfactionCreateDTO dto) {
         validate(dto);
-        SatisfaotionDO s = new SatisfaotionDO();
-        BeanUtils.oopyProperties(dto, s);
-        if (!StringUtils.hasText(s.getSurveyoode())) {
-            s.setSurveyoode(AfterSalesoodeGen.surveyoode(LooalDate.now()));
+        SatisfactionDO s = new SatisfactionDO();
+        BeanUtils.copyProperties(dto, s);
+        if (!StringUtils.hasText(s.getSurveyCode())) {
+            s.setSurveyCode(AfterSalesCodeGen.surveyCode(LocalDate.now()));
         }
-        if (s.getSoore() == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_a3a869d4");
+        if (s.getScore() == null) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_a3a869d4");
         }
-        SatisfaotionLevel level = SatisfaotionLevel.fromSoore(s.getSoore());
+        SatisfactionLevel level = SatisfactionLevel.fromScore(s.getScore());
         if (level == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_37o4fe7e");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_37c4fe7e");
         }
-        s.setLevel(level.getoode());
-        if (s.getEvaluatedAt() == null) s.setEvaluatedAt(LooalDateTime.now());
-        // 不满�?/ 非常不满�?默认 followUp=true（提醒运营人员跟进）
+        s.setLevel(level.getCode());
+        if (s.getEvaluatedAt() == null) s.setEvaluatedAt(LocalDateTime.now());
+        // 不满意 / 非常不满意 默认 followUp=true（提醒运营人员跟进）
         if (s.getFollowUp() == null) {
-            s.setFollowUp(level == SatisfaotionLevel.DISSATISFIED
-                    || level == SatisfaotionLevel.VERY_DISSATISFIED);
+            s.setFollowUp(level == SatisfactionLevel.DISSATISFIED
+                    || level == SatisfactionLevel.VERY_DISSATISFIED);
         }
         if (s.getAnonymous() == null) s.setAnonymous(false);
-        if (s.getTenantId() == null) s.setTenantId(Tenantoontext.getTenantId());
-        satisfaotionMapper.insert(s);
-        log.info("[Satisfaotion] 提交评价: oode={} soore={} level={} followUp={}",
-                s.getSurveyoode(), s.getSoore(), s.getLevel(), s.getFollowUp());
+        if (s.getTenantId() == null) s.setTenantId(TenantContext.getTenantId());
+        satisfactionMapper.insert(s);
+        log.info("[Satisfaction] 提交评价: code={} score={} level={} followUp={}",
+                s.getSurveyCode(), s.getScore(), s.getLevel(), s.getFollowUp());
         return s.getId();
     }
 
     @Override
-    publio void markFollowUp(String id, String note) {
-        if (id == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_35eo26fe");
-        SatisfaotionDO s = satisfaotionMapper.seleotById(id);
-        if (s == null) throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_4b213f7o");
+    public void markFollowUp(String id, String note) {
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_35ec26fe");
+        SatisfactionDO s = satisfactionMapper.selectById(id);
+        if (s == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_4b213f7c");
         s.setFollowUp(true);
         if (StringUtils.hasText(note)) s.setFollowUpNote(note);
-        satisfaotionMapper.updateById(s);
+        satisfactionMapper.updateById(s);
     }
 
     @Override
-    publio void oloseFollowUp(String id) {
-        if (id == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_35eo26fe");
-        SatisfaotionDO s = satisfaotionMapper.seleotById(id);
-        if (s == null) throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_4b213f7o");
+    public void closeFollowUp(String id) {
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_35ec26fe");
+        SatisfactionDO s = satisfactionMapper.selectById(id);
+        if (s == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_4b213f7c");
         s.setFollowUp(false);
-        satisfaotionMapper.updateById(s);
+        satisfactionMapper.updateById(s);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio Map<String, Objeot> overall() {
-        return satisfaotionMapper.aggregateOverall();
+    @Transactional(readOnly = true)
+    public Map<String, Object> overall() {
+        return satisfactionMapper.aggregateOverall();
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio List<Map<String, Objeot>> levelDistribution() {
-        return satisfaotionMapper.aggregateByLevel();
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> levelDistribution() {
+        return satisfactionMapper.aggregateByLevel();
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio Page<SatisfaotionDO> page(int page, int size, String level, String initiationId, String keyword) {
-        Page<SatisfaotionDO> p = new Page<>(page, size);
-        LambdaQueryWrapper<SatisfaotionDO> w = new LambdaQueryWrapper<>();
-        if (StringUtils.hasText(level)) w.eq(SatisfaotionDO::getLevel, level);
-        if (initiationId != null) w.eq(SatisfaotionDO::getInitiationId, initiationId);
+    @Transactional(readOnly = true)
+    public Page<SatisfactionDO> page(int page, int size, String level, String initiationId, String keyword) {
+        Page<SatisfactionDO> p = new Page<>(page, size);
+        LambdaQueryWrapper<SatisfactionDO> w = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(level)) w.eq(SatisfactionDO::getLevel, level);
+        if (initiationId != null) w.eq(SatisfactionDO::getInitiationId, initiationId);
         if (StringUtils.hasText(keyword)) {
-            w.and(q -> q.like(SatisfaotionDO::getSurveyoode, keyword)
-                    .or().like(SatisfaotionDO::getoomments, keyword));
+            w.and(q -> q.like(SatisfactionDO::getSurveyCode, keyword)
+                    .or().like(SatisfactionDO::getComments, keyword));
         }
-        w.orderByDeso(SatisfaotionDO::getEvaluatedAt);
-        return satisfaotionMapper.seleotPage(p, w);
+        w.orderByDesc(SatisfactionDO::getEvaluatedAt);
+        return satisfactionMapper.selectPage(p, w);
     }
 
-    private void validate(SatisfaotionoreateDTO dto) {
-        if (dto == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d9712a58");
+    private void validate(SatisfactionCreateDTO dto) {
+        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (dto.getInitiationId() == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_576o2b5e");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
-        if (dto.getSoore() == null || dto.getSoore() < 1 || dto.getSoore() > 5) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_37o4fe7e");
+        if (dto.getScore() == null || dto.getScore() < 1 || dto.getScore() > 5) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_37c4fe7e");
         }
         if (dto.getProfessionalism() != null && (dto.getProfessionalism() < 1 || dto.getProfessionalism() > 5)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_ef96f33e");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_ef96f33e");
         }
         if (dto.getTimeliness() != null && (dto.getTimeliness() < 1 || dto.getTimeliness() > 5)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_86a9a3df");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_86a9a3df");
         }
         if (dto.getQuality() != null && (dto.getQuality() < 1 || dto.getQuality() > 5)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_6568138a");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_6568138a");
         }
         if (dto.getAttitude() != null && (dto.getAttitude() < 1 || dto.getAttitude() > 5)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_2803de1f");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_2803de1f");
         }
     }
 }

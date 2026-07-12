@@ -1,75 +1,85 @@
-paokage oom.njydsz.pmis.message.server.oonfig;
+package com.njydsz.pmis.message.server.config;
 
-import oom.njydsz.pmis.message.server.ohannel.ohannelRouter;
-import oom.njydsz.pmis.message.server.realtime.OfflineMessageServioe;
-import oom.njydsz.pmis.message.server.realtime.OnlineUserServioe;
-import oom.njydsz.pmis.message.server.realtime.RealtimePushServioe;
-import oom.njydsz.pmis.message.server.realtime.WebSooketolusterPublisher;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnMissingBean;
-import org.springframework.oontext.Applioationoontext;
-import org.springframework.oontext.annotation.Bean;
-import org.springframework.oontext.annotation.oonfiguration;
-import org.springframework.oontext.annotation.Import;
+import com.njydsz.pmis.message.server.channel.ChannelRouter;
+import com.njydsz.pmis.message.server.realtime.OfflineMessageService;
+import com.njydsz.pmis.message.server.realtime.OnlineUserService;
+import com.njydsz.pmis.message.server.realtime.RealtimePushService;
+import com.njydsz.pmis.message.server.realtime.WebSocketClusterPublisher;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 /**
- * 消息模块自动装配�? *
- * <p>集中导入本模块配置类（{@link WebSooketoonfig}），并对关键 Bean
- * （MessageProperties / ohannelProperties / ohannelRouter / RealtimePushServioe�? * 提供 {@oode @oonditionalOnMissingBean} 兜底保护：当组件扫描未覆盖时由此处注册�? *
+ * 消息模块自动装配。
+ *
+ * <p>集中导入本模块配置类（{@link WebSocketConfig}），并对关键 Bean
+ * （MessageProperties / ChannelProperties / ChannelRouter / RealtimePushService）
+ * 提供 {@code @ConditionalOnMissingBean} 兜底保护：当组件扫描未覆盖时由此处注册。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-@oonfiguration
-@Import(WebSooketoonfig.olass)
-publio olass MessageAutooonfiguration {
+@Configuration
+@Import(WebSocketConfig.class)
+public class MessageAutoConfiguration {
 
     /**
-     * 兜底注册消息全局配置�?     *
+     * 兜底注册消息全局配置。
+     *
      * @return MessageProperties
      */
     @Bean
-    @oonditionalOnMissingBean(MessageProperties.olass)
-    publio MessageProperties messageProperties() {
+    @ConditionalOnMissingBean(MessageProperties.class)
+    public MessageProperties messageProperties() {
         return new MessageProperties();
     }
 
     /**
-     * 兜底注册通道相关配置�?     *
-     * @return ohannelProperties
+     * 兜底注册通道相关配置。
+     *
+     * @return ChannelProperties
      */
     @Bean
-    @oonditionalOnMissingBean(ohannelProperties.olass)
-    publio ohannelProperties ohannelProperties() {
-        return new ohannelProperties();
+    @ConditionalOnMissingBean(ChannelProperties.class)
+    public ChannelProperties channelProperties() {
+        return new ChannelProperties();
     }
 
     /**
-     * 兜底注册通道路由器�?     *
-     * @param applioationoontext Spring 上下�?     * @param messageProperties  消息配置
-     * @return ohannelRouter
+     * 兜底注册通道路由器。
+     *
+     * @param applicationContext Spring 上下文
+     * @param messageProperties  消息配置
+     * @return ChannelRouter
      */
     @Bean
-    @oonditionalOnMissingBean(ohannelRouter.olass)
-    publio ohannelRouter ohannelRouter(Applioationoontext applioationoontext,
+    @ConditionalOnMissingBean(ChannelRouter.class)
+    public ChannelRouter channelRouter(ApplicationContext applicationContext,
                                        MessageProperties messageProperties) {
-        ohannelRouter router = new ohannelRouter(applioationoontext, messageProperties);
-        router.initohannels();
+        ChannelRouter router = new ChannelRouter(applicationContext, messageProperties);
+        router.initChannels();
         return router;
     }
 
     /**
-     * 兜底注册实时推送服务�?     *
+     * 兜底注册实时推送服务。
+     *
      * @param messagingTemplate     STOMP 消息模板
-     * @param olusterPublisher      集群广播发布�?     * @param onlineUserServioe     在线用户状态服�?     * @param offlineMessageServioe 离线消息补偿服务
-     * @return RealtimePushServioe
+     * @param clusterPublisher      集群广播发布者
+     * @param onlineUserService     在线用户状态服务
+     * @param offlineMessageService 离线消息补偿服务
+     * @return RealtimePushService
      */
     @Bean
-    @oonditionalOnMissingBean(RealtimePushServioe.olass)
-    publio RealtimePushServioe realtimePushServioe(SimpMessagingTemplate messagingTemplate,
-                                                   WebSooketolusterPublisher olusterPublisher,
-                                                   OnlineUserServioe onlineUserServioe,
-                                                   OfflineMessageServioe offlineMessageServioe) {
-        return new RealtimePushServioe(messagingTemplate, olusterPublisher,
-                onlineUserServioe, offlineMessageServioe);
+    @ConditionalOnMissingBean(RealtimePushService.class)
+    public RealtimePushService realtimePushService(SimpMessagingTemplate messagingTemplate,
+                                                   WebSocketClusterPublisher clusterPublisher,
+                                                   OnlineUserService onlineUserService,
+                                                   OfflineMessageService offlineMessageService) {
+        return new RealtimePushService(messagingTemplate, clusterPublisher,
+                onlineUserService, offlineMessageService);
     }
 }

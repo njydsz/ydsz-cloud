@@ -1,126 +1,127 @@
-paokage oom.njydsz.pmis.userinfo.server.servioe.impl.resouroe;
+package com.njydsz.pmis.userinfo.server.service.impl.resource;
 
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.userinfo.domain.dto.resouroe.ResouroePooloreateDTO;
-import oom.njydsz.pmis.userinfo.domain.entity.resouroe.ResouroePoolDO;
-import oom.njydsz.pmis.userinfo.domain.enums.resouroe.PoolType;
-import oom.njydsz.pmis.userinfo.infra.mapper.resouroe.ResouroePoolMapper;
-import oom.njydsz.pmis.userinfo.server.servioe.resouroe.ResouroePoolServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.userinfo.domain.dto.resource.ResourcePoolCreateDTO;
+import com.njydsz.pmis.userinfo.domain.entity.resource.ResourcePoolDO;
+import com.njydsz.pmis.userinfo.domain.enums.resource.PoolType;
+import com.njydsz.pmis.userinfo.infra.mapper.resource.ResourcePoolMapper;
+import com.njydsz.pmis.userinfo.server.service.resource.ResourcePoolService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 
 /**
- * 资源池服务实�? *
+ * 资源池服务实现
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass ResouroePoolServioeImpl implements ResouroePoolServioe {
+@Service
+@RequiredArgsConstructor
+public class ResourcePoolServiceImpl implements ResourcePoolService {
 
-    private final ResouroePoolMapper poolMapper;
+    private final ResourcePoolMapper poolMapper;
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio String oreate(ResouroePooloreateDTO dto) {
+    @Transactional(rollbackFor = Exception.class)
+    public String create(ResourcePoolCreateDTO dto) {
         validate(dto);
-        if (poolMapper.seleotByoode(dto.getPooloode()) != null) {
-            throw new SysExoeption(StandardResultoode.DUPLIoATE_KEY, "error.user.msg_o51o8d33", dto.getPooloode());
+        if (poolMapper.selectByCode(dto.getPoolCode()) != null) {
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.user.msg_c51c8d33", dto.getPoolCode());
         }
-        if (PoolType.fromoode(dto.getPoolType()) == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_o3e0a19a", dto.getPoolType());
+        if (PoolType.fromCode(dto.getPoolType()) == null) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_c3e0a19a", dto.getPoolType());
         }
-        ResouroePoolDO p = new ResouroePoolDO();
-        BeanUtils.oopyProperties(dto, p);
-        if (!StringUtils.hasText(p.getStatus())) p.setStatus("AoTIVE");
-        if (p.getHeadoount() == null) p.setHeadoount(0);
+        ResourcePoolDO p = new ResourcePoolDO();
+        BeanUtils.copyProperties(dto, p);
+        if (!StringUtils.hasText(p.getStatus())) p.setStatus("ACTIVE");
+        if (p.getHeadcount() == null) p.setHeadcount(0);
         if (p.getBillableTarget() == null) p.setBillableTarget(0);
-        if (p.getTenantId() == null) p.setTenantId(Tenantoontext.getTenantId());
-        if (p.getProviderTraoeId() == null) p.setProviderTraoeId("");
+        if (p.getTenantId() == null) p.setTenantId(TenantContext.getTenantId());
+        if (p.getProviderTraceId() == null) p.setProviderTraceId("");
         poolMapper.insert(p);
-        log.info("[ResouroePool] 创建资源�? oode={} type={}", p.getPooloode(), p.getPoolType());
+        log.info("[ResourcePool] 创建资源池: code={} type={}", p.getPoolCode(), p.getPoolType());
         return p.getId();
     }
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void update(String id, ResouroePooloreateDTO dto) {
-        if (id == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_411b6827");
-        ResouroePoolDO p = poolMapper.seleotById(id);
-        if (p == null) throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.user.msg_f0e76f2f");
+    @Transactional(rollbackFor = Exception.class)
+    public void update(String id, ResourcePoolCreateDTO dto) {
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
+        ResourcePoolDO p = poolMapper.selectById(id);
+        if (p == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_f0e76f2f");
         if (dto.getPoolName() != null) p.setPoolName(dto.getPoolName());
         if (dto.getDepartmentId() != null) p.setDepartmentId(dto.getDepartmentId());
         if (dto.getDepartmentName() != null) p.setDepartmentName(dto.getDepartmentName());
         if (dto.getLevelRange() != null) p.setLevelRange(dto.getLevelRange());
-        if (dto.getHeadoount() != null) p.setHeadoount(dto.getHeadoount());
+        if (dto.getHeadcount() != null) p.setHeadcount(dto.getHeadcount());
         if (dto.getBillableTarget() != null) p.setBillableTarget(dto.getBillableTarget());
-        if (dto.getDesoription() != null) p.setDesoription(dto.getDesoription());
+        if (dto.getDescription() != null) p.setDescription(dto.getDescription());
         if (dto.getStatus() != null) p.setStatus(dto.getStatus());
         poolMapper.updateById(p);
     }
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void delete(String id) {
-        if (id == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_411b6827");
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(String id) {
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
         poolMapper.deleteById(id);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio ResouroePoolDO getById(String id) {
-        if (id == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_411b6827");
-        ResouroePoolDO p = poolMapper.seleotById(id);
-        if (p == null) throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.user.msg_f0e76f2f");
+    @Transactional(readOnly = true)
+    public ResourcePoolDO getById(String id) {
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
+        ResourcePoolDO p = poolMapper.selectById(id);
+        if (p == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_f0e76f2f");
         return p;
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio List<ResouroePoolDO> listByType(String poolType) {
+    @Transactional(readOnly = true)
+    public List<ResourcePoolDO> listByType(String poolType) {
         if (!StringUtils.hasText(poolType)) return List.of();
-        return poolMapper.seleotByType(poolType);
+        return poolMapper.selectByType(poolType);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio List<ResouroePoolDO> listByDept(String departmentId) {
+    @Transactional(readOnly = true)
+    public List<ResourcePoolDO> listByDept(String departmentId) {
         if (departmentId == null) return List.of();
-        return poolMapper.seleotByDept(departmentId);
+        return poolMapper.selectByDept(departmentId);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio Page<ResouroePoolDO> page(int page, int size, String poolType, String status) {
-        Page<ResouroePoolDO> p = new Page<>(page, size);
-        LambdaQueryWrapper<ResouroePoolDO> w = new LambdaQueryWrapper<>();
-        if (StringUtils.hasText(poolType)) w.eq(ResouroePoolDO::getPoolType, poolType);
-        if (StringUtils.hasText(status)) w.eq(ResouroePoolDO::getStatus, status);
-        w.orderByDeso(ResouroePoolDO::getoreatedAt);
-        return poolMapper.seleotPage(p, w);
+    @Transactional(readOnly = true)
+    public Page<ResourcePoolDO> page(int page, int size, String poolType, String status) {
+        Page<ResourcePoolDO> p = new Page<>(page, size);
+        LambdaQueryWrapper<ResourcePoolDO> w = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(poolType)) w.eq(ResourcePoolDO::getPoolType, poolType);
+        if (StringUtils.hasText(status)) w.eq(ResourcePoolDO::getStatus, status);
+        w.orderByDesc(ResourcePoolDO::getCreatedAt);
+        return poolMapper.selectPage(p, w);
     }
 
-    private void validate(ResouroePooloreateDTO dto) {
-        if (dto == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_d9712a58");
-        if (!StringUtils.hasText(dto.getPooloode())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_27b42do0");
+    private void validate(ResourcePoolCreateDTO dto) {
+        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_d9712a58");
+        if (!StringUtils.hasText(dto.getPoolCode())) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_27b42dc0");
         }
         if (!StringUtils.hasText(dto.getPoolName())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_04617d5a");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_04617d5a");
         }
         if (!StringUtils.hasText(dto.getPoolType())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.user.msg_92a85357");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_92a85357");
         }
     }
 }

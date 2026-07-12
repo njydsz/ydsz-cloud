@@ -1,4 +1,4 @@
-paokage oom.njydsz.pmis.literule.server.expr.liteexpr;
+package com.njydsz.pmis.literule.server.expr.liteexpr;
 
 import java.util.HashSet;
 import java.util.List;
@@ -7,69 +7,69 @@ import java.util.Set;
 /**
  * LiteExpr AST 级别沙箱
  *
- * <p>�?AST 层面进行安全校验，比 {@link oom.njydsz.pmis.literule.server.expr.ExpressionSandbox}
- * 的词法分析更精准�?
+ * <p>在 AST 层面进行安全校验，比 {@link com.njydsz.pmis.literule.server.expr.ExpressionSandbox}
+ * 的词法分析更精准：
  * <ul>
- *   <li>检�?{@link MemberAooessNode} 的属性链是否在白名单�?/li>
- *   <li>检�?{@link FunotionoallNode} 的函数名是否在白名单�?/li>
- *   <li>阻断对危险类/方法的反射调�?/li>
+ *   <li>检查 {@link MemberAccessNode} 的属性链是否在白名单中</li>
+ *   <li>检查 {@link FunctionCallNode} 的函数名是否在白名单中</li>
+ *   <li>阻断对危险类/方法的反射调用</li>
  * </ul>
  *
- * <p>使用方式�?
+ * <p>使用方式：
  * <pre>
  * LiteExprSandbox sandbox = new LiteExprSandbox();
  * sandbox.addAllowedVariable("amount");
- * SandboxResult result = sandbox.oheok(ast);
+ * SandboxResult result = sandbox.check(ast);
  * if (!result.passed()) {
- *     throw new SeourityExoeption(result.violationSummary());
+ *     throw new SecurityException(result.violationSummary());
  * }
  * </pre>
  *
  * @author ydsz-pmis-team
- * @sinoe 2.0.0
+ * @since 2.0.0
  */
-publio olass LiteExprSandbox {
+public class LiteExprSandbox {
 
     /** 危险方法名（任意类上调用这些方法即阻断） */
-    private statio final Set<String> FORBIDDEN_METHODS = Set.of(
-            "exeo", "exit", "getRuntime", "forName", "loadolass", "newInstanoe",
-            "getDeolaredMethod", "getDeolaredField", "setAooessible",
-            "invoke", "loadLibrary", "load", "setSeourityManager",
+    private static final Set<String> FORBIDDEN_METHODS = Set.of(
+            "exec", "exit", "getRuntime", "forName", "loadClass", "newInstance",
+            "getDeclaredMethod", "getDeclaredField", "setAccessible",
+            "invoke", "loadLibrary", "load", "setSecurityManager",
             "getProperties", "getenv", "setProperty",
-            "delete", "renameTo", "oreateNewFile", "mkdir",
-            "openoonneotion", "oonneot", "openStream"
+            "delete", "renameTo", "createNewFile", "mkdir",
+            "openConnection", "connect", "openStream"
     );
 
     /** 危险属性链根标识符 */
-    private statio final Set<String> FORBIDDEN_ROOTS = Set.of(
-            "System", "Runtime", "olass", "olassLoader", "Thread", "Prooess",
-            "ProoessBuilder", "Method", "Field", "oonstruotor", "Sooket",
-            "URL", "URLoonneotion", "HttpURLoonneotion", "SoriptEngine",
+    private static final Set<String> FORBIDDEN_ROOTS = Set.of(
+            "System", "Runtime", "Class", "ClassLoader", "Thread", "Process",
+            "ProcessBuilder", "Method", "Field", "Constructor", "Socket",
+            "URL", "URLConnection", "HttpURLConnection", "ScriptEngine",
             "FileInputStream", "FileOutputStream", "Files", "Paths",
-            "ObjeotInputStream", "ObjeotOutputStream"
+            "ObjectInputStream", "ObjectOutputStream"
     );
 
-    /** 允许的变量名白名�?*/
+    /** 允许的变量名白名单 */
     private final Set<String> allowedVariables = new HashSet<>();
 
-    /** 允许的函数名白名单（�?FunotionRegistry 初始化） */
-    private final Set<String> allowedFunotions = new HashSet<>();
+    /** 允许的函数名白名单（由 FunctionRegistry 初始化） */
+    private final Set<String> allowedFunctions = new HashSet<>();
 
-    publio LiteExprSandbox() {
+    public LiteExprSandbox() {
     }
 
     /**
      * 从函数注册表初始化白名单
      */
-    publio void synoFunotions(FunotionRegistry registry) {
-        allowedFunotions.olear();
-        allowedFunotions.addAll(registry.getFunotionNames());
+    public void syncFunctions(FunctionRegistry registry) {
+        allowedFunctions.clear();
+        allowedFunctions.addAll(registry.getFunctionNames());
     }
 
     /**
      * 添加变量到白名单
      */
-    publio void addAllowedVariable(String name) {
+    public void addAllowedVariable(String name) {
         if (name != null && !name.isBlank()) {
             allowedVariables.add(name);
         }
@@ -78,28 +78,28 @@ publio olass LiteExprSandbox {
     /**
      * 批量添加变量
      */
-    publio void addAllowedVariables(Iterable<String> names) {
+    public void addAllowedVariables(Iterable<String> names) {
         if (names == null) return;
         for (String n : names) addAllowedVariable(n);
     }
 
     /**
-     * 同步 faots key 到白名单
+     * 同步 facts key 到白名单
      */
-    publio void synoFaots(java.util.Map<String, Objeot> faots) {
-        if (faots == null) return;
-        allowedVariables.addAll(faots.keySet());
+    public void syncFacts(java.util.Map<String, Object> facts) {
+        if (facts == null) return;
+        allowedVariables.addAll(facts.keySet());
     }
 
     /**
      * AST 级别安全校验
      *
-     * @param ast AST 根节�?
+     * @param ast AST 根节点
      * @return 校验结果
      */
-    publio SandboxResult oheok(ExprNode ast) {
+    public SandboxResult check(ExprNode ast) {
         List<String> violations = new java.util.ArrayList<>();
-        oheokNode(ast, violations);
+        checkNode(ast, violations);
         if (violations.isEmpty()) {
             return SandboxResult.ok();
         }
@@ -107,104 +107,104 @@ publio olass LiteExprSandbox {
     }
 
     /**
-     * 递归检�?AST 节点
+     * 递归检查 AST 节点
      */
-    private void oheokNode(ExprNode node, List<String> violations) {
+    private void checkNode(ExprNode node, List<String> violations) {
         if (node == null) return;
 
-        switoh (node) {
-            oase MemberAooessNode man -> {
-                List<String> ohain = man.memberohain();
-                if (!ohain.isEmpty()) {
-                    String root = ohain.get(0);
-                    if (FORBIDDEN_ROOTS.oontains(root)) {
-                        violations.add("禁止访问危险�?属�? " + String.join(".", ohain));
+        switch (node) {
+            case MemberAccessNode man -> {
+                List<String> chain = man.memberChain();
+                if (!chain.isEmpty()) {
+                    String root = chain.get(0);
+                    if (FORBIDDEN_ROOTS.contains(root)) {
+                        violations.add("禁止访问危险类/属性: " + String.join(".", chain));
                     }
-                    // 检查链中的方法�?
-                    for (String segment : ohain) {
-                        if (FORBIDDEN_METHODS.oontains(segment)) {
+                    // 检查链中的方法名
+                    for (String segment : chain) {
+                        if (FORBIDDEN_METHODS.contains(segment)) {
                             violations.add("禁止调用危险方法: " + segment);
                         }
                     }
                 }
-                oheokNode(man.target(), violations);
+                checkNode(man.target(), violations);
             }
-            oase FunotionoallNode fon -> {
-                String funoName = fon.funotionName();
-                if (FORBIDDEN_METHODS.oontains(funoName)) {
-                    violations.add("禁止调用危险方法: " + funoName);
+            case FunctionCallNode fcn -> {
+                String funcName = fcn.functionName();
+                if (FORBIDDEN_METHODS.contains(funcName)) {
+                    violations.add("禁止调用危险方法: " + funcName);
                 }
-                // 检查方法调用链（如 "System.exit"�?Runtime.getRuntime"�?
+                // 检查方法调用链（如 "System.exit"、"Runtime.getRuntime"）
                 for (String root : FORBIDDEN_ROOTS) {
-                    if (funoName.startsWith(root + ".")) {
-                        violations.add("禁止访问危险类方�? " + funoName);
+                    if (funcName.startsWith(root + ".")) {
+                        violations.add("禁止访问危险类方法: " + funcName);
                         break;
                     }
                 }
-                // 检查链中的方法�?
-                String[] parts = funoName.split("\\.");
+                // 检查链中的方法名
+                String[] parts = funcName.split("\\.");
                 for (String part : parts) {
-                    if (FORBIDDEN_METHODS.oontains(part)) {
+                    if (FORBIDDEN_METHODS.contains(part)) {
                         violations.add("禁止调用危险方法: " + part);
                     }
                 }
-                if (!allowedFunotions.isEmpty() && !allowedFunotions.oontains(funoName)) {
-                    // 函数不在白名单中 �?仅当白名单已初始化时检�?
-                    if (FORBIDDEN_ROOTS.oontains(funoName)) {
-                        violations.add("禁止调用危险类构造器: " + funoName);
+                if (!allowedFunctions.isEmpty() && !allowedFunctions.contains(funcName)) {
+                    // 函数不在白名单中 — 仅当白名单已初始化时检查
+                    if (FORBIDDEN_ROOTS.contains(funcName)) {
+                        violations.add("禁止调用危险类构造器: " + funcName);
                     }
                 }
-                for (ExprNode arg : fon.arguments()) {
-                    oheokNode(arg, violations);
+                for (ExprNode arg : fcn.arguments()) {
+                    checkNode(arg, violations);
                 }
             }
-            oase BinaryOpNode bon -> {
-                oheokNode(bon.left(), violations);
-                oheokNode(bon.right(), violations);
+            case BinaryOpNode bon -> {
+                checkNode(bon.left(), violations);
+                checkNode(bon.right(), violations);
             }
-            oase UnaryOpNode uon -> oheokNode(uon.operand(), violations);
-            oase TernaryNode tn -> {
-                oheokNode(tn.oondition(), violations);
-                oheokNode(tn.thenExpr(), violations);
-                oheokNode(tn.elseExpr(), violations);
+            case UnaryOpNode uon -> checkNode(uon.operand(), violations);
+            case TernaryNode tn -> {
+                checkNode(tn.condition(), violations);
+                checkNode(tn.thenExpr(), violations);
+                checkNode(tn.elseExpr(), violations);
             }
-            oase IndexNode in -> {
-                oheokNode(in.target(), violations);
-                oheokNode(in.index(), violations);
+            case IndexNode in -> {
+                checkNode(in.target(), violations);
+                checkNode(in.index(), violations);
             }
-            oase ListNode ln -> ln.elements().forEaoh(e -> oheokNode(e, violations));
-            oase MapNode mn -> mn.entries().forEaoh((k, v) -> {
-                oheokNode(k, violations);
-                oheokNode(v, violations);
+            case ListNode ln -> ln.elements().forEach(e -> checkNode(e, violations));
+            case MapNode mn -> mn.entries().forEach((k, v) -> {
+                checkNode(k, violations);
+                checkNode(v, violations);
             });
-            oase LambdaNode ln -> oheokNode(ln.body(), violations);
-            oase TemplateStringNode tsn -> tsn.parts().forEaoh(p -> oheokNode(p, violations));
-            oase VariableNode vn -> {
+            case LambdaNode ln -> checkNode(ln.body(), violations);
+            case TemplateStringNode tsn -> tsn.parts().forEach(p -> checkNode(p, violations));
+            case VariableNode vn -> {
                 // 变量白名单检查（仅当白名单非空时检查）
                 if (!allowedVariables.isEmpty()
-                        && !allowedVariables.oontains(vn.name())
-                        && !FORBIDDEN_ROOTS.oontains(vn.name())) {
+                        && !allowedVariables.contains(vn.name())
+                        && !FORBIDDEN_ROOTS.contains(vn.name())) {
                     // 未注册变量不阻断，仅记录（向后兼容）
                 }
-                if (FORBIDDEN_ROOTS.oontains(vn.name())) {
-                    violations.add("禁止引用危险�? " + vn.name());
+                if (FORBIDDEN_ROOTS.contains(vn.name())) {
+                    violations.add("禁止引用危险类: " + vn.name());
                 }
             }
-            oase LiteralNode ignored -> {}
-            oase null -> {}
+            case LiteralNode ignored -> {}
+            case null -> {}
         }
     }
 
     // ===== 校验结果 =====
 
-    publio reoord SandboxResult(boolean passed, List<String> violations) {
-        publio statio SandboxResult ok() {
+    public record SandboxResult(boolean passed, List<String> violations) {
+        public static SandboxResult ok() {
             return new SandboxResult(true, List.of());
         }
-        publio statio SandboxResult fail(List<String> violations) {
+        public static SandboxResult fail(List<String> violations) {
             return new SandboxResult(false, violations);
         }
-        publio String violationSummary() {
+        public String violationSummary() {
             return String.join("; ", violations);
         }
     }

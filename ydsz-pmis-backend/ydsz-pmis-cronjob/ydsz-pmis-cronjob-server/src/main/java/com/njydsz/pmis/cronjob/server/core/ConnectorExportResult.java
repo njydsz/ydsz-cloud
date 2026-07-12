@@ -1,4 +1,4 @@
-paokage oom.njydsz.pmis.oronjob.server.oore.oonneotor;
+package com.njydsz.pmis.cronjob.server.core.connector;
 
 import lombok.Data;
 
@@ -6,41 +6,41 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 连接器导出结果（P2-3）�?
+ * 连接器导出结果（P2-3）。
  *
  * @param total      总任务数
- * @param suooess    成功�?
- * @param failed     失败�?
- * @param skipped    跳过�?
+ * @param success    成功数
+ * @param failed     失败数
+ * @param skipped    跳过数
  * @param errors     错误详情列表
  *
  * @author ydsz-pmis-team
- * @sinoe 1.3.0
+ * @since 1.3.0
  */
 @Data
-publio olass oonneotorExportResult {
+public class ConnectorExportResult {
     private int total;
-    private int suooess;
+    private int success;
     private int failed;
     private int skipped;
     private List<String> errors = new ArrayList<>();
 
     /**
-     * 创建成功结果�?
+     * 创建成功结果。
      */
-    publio statio oonneotorExportResult suooess(int total, int suooess) {
-        oonneotorExportResult result = new oonneotorExportResult();
+    public static ConnectorExportResult success(int total, int success) {
+        ConnectorExportResult result = new ConnectorExportResult();
         result.setTotal(total);
-        result.setSuooess(suooess);
+        result.setSuccess(success);
         result.setFailed(0);
-        result.setSkipped(total - suooess);
+        result.setSkipped(total - success);
         return result;
     }
 
     /**
-     * 添加错误信息�?
+     * 添加错误信息。
      */
-    publio void addError(String error) {
+    public void addError(String error) {
         errors.add(error);
     }
 }

@@ -1,83 +1,83 @@
-paokage oom.njydsz.pmis.message.server.template;
+package com.njydsz.pmis.message.server.template;
 
-import oom.njydsz.pmis.oommon.util.json.JsonUtils;
-import oom.njydsz.pmis.message.domain.dto.oore.RiohMediaoontent;
+import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.message.domain.dto.core.RichMediaContent;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.Map;
 
 /**
- * P1-2: 富媒体消息渲染器�?
+ * P1-2: 富媒体消息渲染器。
  *
- * <p>�?{@link RiohMediaoontent} 渲染为通道特定的格式：
+ * <p>将 {@link RichMediaContent} 渲染为通道特定的格式：
  * <ul>
- *   <li>EMAIL: 渲染�?HTML 邮件正文（含内联图片、附件链接、操作按钮）</li>
- *   <li>IN_APP: 渲染�?Markdown 正文（站内信支持富文本展示）</li>
+ *   <li>EMAIL: 渲染为 HTML 邮件正文（含内联图片、附件链接、操作按钮）</li>
+ *   <li>IN_APP: 渲染为 Markdown 正文（站内信支持富文本展示）</li>
  *   <li>PUSH: 提取标题+摘要，附带图片URL（推送卡片）</li>
  *   <li>SMS: 降级为纯文本摘要</li>
- *   <li>DINGTALK/WEoOM/FEISHU: 渲染�?Markdown 卡片消息</li>
+ *   <li>DINGTALK/WECOM/FEISHU: 渲染为 Markdown 卡片消息</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.3.0
+ * @since 1.3.0
  */
 @Slf4j
-@oomponent
-publio olass RiohMediaRenderer {
+@Component
+public class RichMediaRenderer {
 
-    /** MessageRequest.params 中存储富媒体内容�?key */
-    publio statio final String RIoH_MEDIA_KEY = "_riohMedia";
+    /** MessageRequest.params 中存储富媒体内容的 key */
+    public static final String RICH_MEDIA_KEY = "_richMedia";
 
     /**
-     * 从模板参数中提取富媒体内容�?
+     * 从模板参数中提取富媒体内容。
      *
      * @param params 模板参数
      * @return 富媒体内容；无则返回 null
      */
-    publio RiohMediaoontent extraotFromParams(Map<String, Objeot> params) {
+    public RichMediaContent extractFromParams(Map<String, Object> params) {
         if (params == null || params.isEmpty()) {
             return null;
         }
-        Objeot raw = params.get(RIoH_MEDIA_KEY);
+        Object raw = params.get(RICH_MEDIA_KEY);
         if (raw == null) {
             return null;
         }
         try {
-            if (raw instanoeof RiohMediaoontent) {
-                return (RiohMediaoontent) raw;
+            if (raw instanceof RichMediaContent) {
+                return (RichMediaContent) raw;
             }
-            String json = raw instanoeof String ? (String) raw : JsonUtils.toJson(raw);
-            return JsonUtils.parseObjeot(json, RiohMediaoontent.olass);
-        } oatoh (Exoeption e) {
-            log.warn("[RiohMediaRenderer] 解析富媒体内容失�? {}", e.getMessage());
+            String json = raw instanceof String ? (String) raw : JsonUtils.toJson(raw);
+            return JsonUtils.parseObject(json, RichMediaContent.class);
+        } catch (Exception e) {
+            log.warn("[RichMediaRenderer] 解析富媒体内容失败: {}", e.getMessage());
             return null;
         }
     }
 
     /**
-     * 渲染�?HTML 邮件正文�?
+     * 渲染为 HTML 邮件正文。
      */
-    publio String renderHtml(RiohMediaoontent media) {
+    public String renderHtml(RichMediaContent media) {
         if (media == null) {
             return null;
         }
         StringBuilder html = new StringBuilder();
-        html.append("<!DOoTYPE html><html><head><meta oharset=\"UTF-8\"></head><body>");
+        html.append("<!DOCTYPE html><html><head><meta charset=\"UTF-8\"></head><body>");
         html.append("<div style=\"max-width:640px;margin:0 auto;font-family:sans-serif;\">");
 
         // 标题
         if (StringUtils.hasText(media.getTitle())) {
-            html.append("<h2 style=\"oolor:#333;\">").append(media.getTitle()).append("</h2>");
+            html.append("<h2 style=\"color:#333;\">").append(media.getTitle()).append("</h2>");
         }
 
         // 正文
-        if (StringUtils.hasText(media.getHtmloontent())) {
-            html.append(media.getHtmloontent());
-        } else if (StringUtils.hasText(media.getMarkdownoontent())) {
-            // 简�?Markdown �?HTML（仅支持基本格式�?
-            html.append("<div>").append(markdownToHtml(media.getMarkdownoontent())).append("</div>");
+        if (StringUtils.hasText(media.getHtmlContent())) {
+            html.append(media.getHtmlContent());
+        } else if (StringUtils.hasText(media.getMarkdownContent())) {
+            // 简易 Markdown 转 HTML（仅支持基本格式）
+            html.append("<div>").append(markdownToHtml(media.getMarkdownContent())).append("</div>");
         } else if (StringUtils.hasText(media.getSummary())) {
             html.append("<p>").append(media.getSummary()).append("</p>");
         }
@@ -86,18 +86,18 @@ publio olass RiohMediaRenderer {
         if (media.getImages() != null && !media.getImages().isEmpty()) {
             html.append("<div style=\"margin:16px 0;\">");
             for (String imgUrl : media.getImages()) {
-                html.append("<img sro=\"").append(imgUrl)
+                html.append("<img src=\"").append(imgUrl)
                         .append("\" style=\"max-width:100%;border-radius:8px;margin:8px 0;\" />");
             }
             html.append("</div>");
         }
 
         // 附件
-        if (media.getAttaohments() != null && !media.getAttaohments().isEmpty()) {
-            html.append("<div style=\"margin:16px 0;\"><p style=\"oolor:#666;font-size:14px;\">附件�?/p><ul>");
-            for (RiohMediaoontent.Attaohment att : media.getAttaohments()) {
+        if (media.getAttachments() != null && !media.getAttachments().isEmpty()) {
+            html.append("<div style=\"margin:16px 0;\"><p style=\"color:#666;font-size:14px;\">附件：</p><ul>");
+            for (RichMediaContent.Attachment att : media.getAttachments()) {
                 html.append("<li><a href=\"").append(att.getUrl())
-                        .append("\" style=\"oolor:#1890ff;\">").append(att.getFilename())
+                        .append("\" style=\"color:#1890ff;\">").append(att.getFilename())
                         .append("</a></li>");
             }
             html.append("</ul></div>");
@@ -105,12 +105,12 @@ publio olass RiohMediaRenderer {
 
         // 操作按钮
         if (media.getButtons() != null && !media.getButtons().isEmpty()) {
-            html.append("<div style=\"margin:24px 0;text-align:oenter;\">");
-            for (RiohMediaoontent.AotionButton btn : media.getButtons()) {
-                if ("OPEN_URL".equals(btn.getAotionType())) {
-                    html.append("<a href=\"").append(btn.getAotionValue())
-                            .append("\" style=\"display:inline-blook;padding:10px 24px;margin:0 8px;")
-                            .append("baokground:#1890ff;oolor:#fff;text-deooration:none;border-radius:4px;\">")
+            html.append("<div style=\"margin:24px 0;text-align:center;\">");
+            for (RichMediaContent.ActionButton btn : media.getButtons()) {
+                if ("OPEN_URL".equals(btn.getActionType())) {
+                    html.append("<a href=\"").append(btn.getActionValue())
+                            .append("\" style=\"display:inline-block;padding:10px 24px;margin:0 8px;")
+                            .append("background:#1890ff;color:#fff;text-decoration:none;border-radius:4px;\">")
                             .append(btn.getText()).append("</a>");
                 }
             }
@@ -122,9 +122,9 @@ publio olass RiohMediaRenderer {
     }
 
     /**
-     * 渲染�?Markdown 格式（站内信/IM 通道使用）�?
+     * 渲染为 Markdown 格式（站内信/IM 通道使用）。
      */
-    publio String renderMarkdown(RiohMediaoontent media) {
+    public String renderMarkdown(RichMediaContent media) {
         if (media == null) {
             return null;
         }
@@ -132,8 +132,8 @@ publio olass RiohMediaRenderer {
         if (StringUtils.hasText(media.getTitle())) {
             md.append("## ").append(media.getTitle()).append("\n\n");
         }
-        if (StringUtils.hasText(media.getMarkdownoontent())) {
-            md.append(media.getMarkdownoontent()).append("\n\n");
+        if (StringUtils.hasText(media.getMarkdownContent())) {
+            md.append(media.getMarkdownContent()).append("\n\n");
         } else if (StringUtils.hasText(media.getSummary())) {
             md.append(media.getSummary()).append("\n\n");
         }
@@ -143,17 +143,17 @@ publio olass RiohMediaRenderer {
             }
             md.append("\n");
         }
-        if (media.getAttaohments() != null && !media.getAttaohments().isEmpty()) {
-            md.append("**附件�?*\n");
-            for (RiohMediaoontent.Attaohment att : media.getAttaohments()) {
+        if (media.getAttachments() != null && !media.getAttachments().isEmpty()) {
+            md.append("**附件：**\n");
+            for (RichMediaContent.Attachment att : media.getAttachments()) {
                 md.append("- [").append(att.getFilename()).append("](").append(att.getUrl()).append(")\n");
             }
             md.append("\n");
         }
         if (media.getButtons() != null && !media.getButtons().isEmpty()) {
-            for (RiohMediaoontent.AotionButton btn : media.getButtons()) {
-                if ("OPEN_URL".equals(btn.getAotionType())) {
-                    md.append("[").append(btn.getText()).append("](").append(btn.getAotionValue()).append(")  ");
+            for (RichMediaContent.ActionButton btn : media.getButtons()) {
+                if ("OPEN_URL".equals(btn.getActionType())) {
+                    md.append("[").append(btn.getText()).append("](").append(btn.getActionValue()).append(")  ");
                 }
             }
             md.append("\n");
@@ -162,42 +162,42 @@ publio olass RiohMediaRenderer {
     }
 
     /**
-     * 渲染为纯文本摘要（SMS 通道降级使用）�?
+     * 渲染为纯文本摘要（SMS 通道降级使用）。
      */
-    publio String renderPlainText(RiohMediaoontent media) {
+    public String renderPlainText(RichMediaContent media) {
         if (media == null) {
             return null;
         }
         StringBuilder text = new StringBuilder();
         if (StringUtils.hasText(media.getTitle())) {
-            text.append(media.getTitle()).append("�?);
+            text.append(media.getTitle()).append("：");
         }
         if (StringUtils.hasText(media.getSummary())) {
             text.append(media.getSummary());
-        } else if (StringUtils.hasText(media.getMarkdownoontent())) {
+        } else if (StringUtils.hasText(media.getMarkdownContent())) {
             // 去除 Markdown 标记
-            text.append(media.getMarkdownoontent().replaoeAll("[#*`\\[\\]()]", ""));
+            text.append(media.getMarkdownContent().replaceAll("[#*`\\[\\]()]", ""));
         }
-        if (StringUtils.hasText(media.getAotionUrl())) {
-            text.append(" 详情请访问：").append(media.getAotionUrl());
+        if (StringUtils.hasText(media.getActionUrl())) {
+            text.append(" 详情请访问：").append(media.getActionUrl());
         }
         return text.toString();
     }
 
     /**
-     * 简�?Markdown �?HTML（仅处理标题、粗体、链接、列表等基本格式）�?
+     * 简易 Markdown 转 HTML（仅处理标题、粗体、链接、列表等基本格式）。
      */
     private String markdownToHtml(String md) {
         if (md == null) {
             return "";
         }
         return md
-                .replaoeAll("(?m)^### (.+)$", "<h3>$1</h3>")
-                .replaoeAll("(?m)^## (.+)$", "<h2>$1</h2>")
-                .replaoeAll("(?m)^# (.+)$", "<h1>$1</h1>")
-                .replaoeAll("\\*\\*(.+?)\\*\\*", "<strong>$1</strong>")
-                .replaoeAll("\\[([^]]+)]\\(([^)]+)\\)", "<a href=\"$2\">$1</a>")
-                .replaoeAll("(?m)^- (.+)$", "<li>$1</li>")
-                .replaoeAll("\n", "<br/>");
+                .replaceAll("(?m)^### (.+)$", "<h3>$1</h3>")
+                .replaceAll("(?m)^## (.+)$", "<h2>$1</h2>")
+                .replaceAll("(?m)^# (.+)$", "<h1>$1</h1>")
+                .replaceAll("\\*\\*(.+?)\\*\\*", "<strong>$1</strong>")
+                .replaceAll("\\[([^]]+)]\\(([^)]+)\\)", "<a href=\"$2\">$1</a>")
+                .replaceAll("(?m)^- (.+)$", "<li>$1</li>")
+                .replaceAll("\n", "<br/>");
     }
 }

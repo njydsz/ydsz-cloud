@@ -1,383 +1,383 @@
-paokage oom.njydsz.pmis.literule.server.replay;
+package com.njydsz.pmis.literule.server.replay;
 
-import oom.njydsz.pmis.literule.api.RuleDefinition;
-import oom.njydsz.pmis.literule.api.RuleExeoutionTraoe;
-import oom.njydsz.pmis.literule.api.RuleResult;
-import oom.njydsz.pmis.literule.api.RuleSeverity;
-import oom.njydsz.pmis.literule.server.oonfig.RuleAdminServioe;
-import oom.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
-import oom.njydsz.pmis.literule.server.impl.ExpressionRule;
-import oom.njydsz.pmis.literule.server.spi.RuleVersionRepository;
-import oom.njydsz.pmis.literule.server.spi.TraoeReoorder;
+import com.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.api.RuleExecutionTrace;
+import com.njydsz.pmis.literule.api.RuleResult;
+import com.njydsz.pmis.literule.api.RuleSeverity;
+import com.njydsz.pmis.literule.server.config.RuleAdminService;
+import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.server.impl.ExpressionRule;
+import com.njydsz.pmis.literule.server.spi.RuleVersionRepository;
+import com.njydsz.pmis.literule.server.spi.TraceRecorder;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.oolleotions;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objeots;
+import java.util.Objects;
 import java.util.Set;
-import java.util.stream.oolleotors;
+import java.util.stream.Collectors;
 
 /**
- * 执行回放服务（P3-4�?
+ * 执行回放服务（P3-4）
  *
- * <p>基于历史执行轨迹（{@link RuleExeoutionTraoe}）中保存的事实快照（faotsSnapshot），
- * 用当前规则集或指定版本重新评估，对比历史结果与当前结果，生成结构化差异报告�?
+ * <p>基于历史执行轨迹（{@link RuleExecutionTrace}）中保存的事实快照（factsSnapshot），
+ * 用当前规则集或指定版本重新评估，对比历史结果与当前结果，生成结构化差异报告。
  *
  * <h3>核心能力</h3>
  * <ul>
- *   <li>{@link #replayByTraoeId(String)} - �?traoeId 回放单次执行（全部规则）</li>
- *   <li>{@link #batohReplay(List)} - 批量回放多条 traoe，生成汇总差异报�?/li>
- *   <li>{@link #replayWithVersion(String, String, int)} - 指定规则版本回放（对比历史与目标版本�?/li>
- *   <li>{@link #replayWithExpression(String, String, String, String, RuleSeverity, Map)} - 用自定义表达式回�?/li>
+ *   <li>{@link #replayByTraceId(String)} - 按 traceId 回放单次执行（全部规则）</li>
+ *   <li>{@link #batchReplay(List)} - 批量回放多条 trace，生成汇总差异报告</li>
+ *   <li>{@link #replayWithVersion(String, String, int)} - 指定规则版本回放（对比历史与目标版本）</li>
+ *   <li>{@link #replayWithExpression(String, String, String, String, RuleSeverity, Map)} - 用自定义表达式回放</li>
  * </ul>
  *
  * <h3>差异类型</h3>
  * <ul>
- *   <li>{@oode ADDED} - 历史未触发，当前触发（新增触发）</li>
- *   <li>{@oode REMOVED} - 历史触发，当前未触发（减少触发）</li>
- *   <li>{@oode SEVERITY_oHANGED} - 触发状态不变，但严重度变化</li>
- *   <li>{@oode UNoHANGED} - 触发状态和严重度均不变</li>
+ *   <li>{@code ADDED} - 历史未触发，当前触发（新增触发）</li>
+ *   <li>{@code REMOVED} - 历史触发，当前未触发（减少触发）</li>
+ *   <li>{@code SEVERITY_CHANGED} - 触发状态不变，但严重度变化</li>
+ *   <li>{@code UNCHANGED} - 触发状态和严重度均不变</li>
  * </ul>
  *
  * <h3>使用示例</h3>
- * <pre>{@oode
- * ExeoutionReplayServioe servioe = new ExeoutionReplayServioe(ruleAdminServioe, traoeReoorder, versionRepository, evaluator);
+ * <pre>{@code
+ * ExecutionReplayService service = new ExecutionReplayService(ruleAdminService, traceRecorder, versionRepository, evaluator);
  *
  * // 单条回放
- * ReplayResult result = servioe.replayByTraoeId("traoe-abo-123");
+ * ReplayResult result = service.replayByTraceId("trace-abc-123");
  *
  * // 批量回放
- * List<RuleExeoutionTraoe> traoes = traoeReoorder.getByRuleoode("RISK_001", 100);
- * BatohReplayResult batohResult = servioe.batohReplay(traoes);
+ * List<RuleExecutionTrace> traces = traceRecorder.getByRuleCode("RISK_001", 100);
+ * BatchReplayResult batchResult = service.batchReplay(traces);
  *
  * // 指定版本回放
- * ReplayResult versionResult = servioe.replayWithVersion("traoe-abo-123", "RISK_001", 3);
+ * ReplayResult versionResult = service.replayWithVersion("trace-abc-123", "RISK_001", 3);
  * }</pre>
  *
  * @author ydsz-pmis-team
- * @sinoe 2.0.0
+ * @since 2.0.0
  */
 @Slf4j
-publio olass ExeoutionReplayServioe {
+public class ExecutionReplayService {
 
-    private final RuleAdminServioe ruleAdminServioe;
-    private final TraoeReoorder traoeReoorder;
+    private final RuleAdminService ruleAdminService;
+    private final TraceRecorder traceRecorder;
     private final RuleVersionRepository versionRepository;
     private final ExpressionEvaluator evaluator;
 
     /**
-     * 构造执行回放服�?
+     * 构造执行回放服务
      *
-     * @param ruleAdminServioe  规则管理服务（必需，用�?dry-run 和表达式评估�?
-     * @param traoeReoorder     轨迹记录器（必需，用于加载历�?traoe�?
-     * @param versionRepository 版本仓库（可选，�?null 时不支持版本回放�?
-     * @param evaluator         表达式求值器（必需，用于版本回放时构建临时规则�?
+     * @param ruleAdminService  规则管理服务（必需，用于 dry-run 和表达式评估）
+     * @param traceRecorder     轨迹记录器（必需，用于加载历史 trace）
+     * @param versionRepository 版本仓库（可选，为 null 时不支持版本回放）
+     * @param evaluator         表达式求值器（必需，用于版本回放时构建临时规则）
      */
-    publio ExeoutionReplayServioe(RuleAdminServioe ruleAdminServioe,
-                                    TraoeReoorder traoeReoorder,
+    public ExecutionReplayService(RuleAdminService ruleAdminService,
+                                    TraceRecorder traceRecorder,
                                     RuleVersionRepository versionRepository,
                                     ExpressionEvaluator evaluator) {
-        this.ruleAdminServioe = Objeots.requireNonNull(ruleAdminServioe, "ruleAdminServioe");
-        this.traoeReoorder = traoeReoorder;
+        this.ruleAdminService = Objects.requireNonNull(ruleAdminService, "ruleAdminService");
+        this.traceRecorder = traceRecorder;
         this.versionRepository = versionRepository;
-        this.evaluator = Objeots.requireNonNull(evaluator, "evaluator");
+        this.evaluator = Objects.requireNonNull(evaluator, "evaluator");
     }
 
     /**
-     * �?traoeId 回放单次执行
+     * 按 traceId 回放单次执行
      *
-     * <p>从历�?traoe 记录中读�?faotsSnapshot，用当前规则集重新评估全部规则，
-     * 对比历史结果与当前结果，展示规则变更后的差异�?
+     * <p>从历史 trace 记录中读取 factsSnapshot，用当前规则集重新评估全部规则，
+     * 对比历史结果与当前结果，展示规则变更后的差异。
      *
-     * @param traoeId 追踪 ID
-     * @return 回放结果（含历史快照 + 当前评估 + 差异分析�?
+     * @param traceId 追踪 ID
+     * @return 回放结果（含历史快照 + 当前评估 + 差异分析）
      */
-    publio ReplayResult replayByTraoeId(String traoeId) {
-        if (traoeId == null || traoeId.isBlank()) {
-            return ReplayResult.error(traoeId, "traoeId 不能为空");
+    public ReplayResult replayByTraceId(String traceId) {
+        if (traceId == null || traceId.isBlank()) {
+            return ReplayResult.error(traceId, "traceId 不能为空");
         }
-        if (traoeReoorder == null) {
-            return ReplayResult.error(traoeId, "TraoeReoorder 未配置，无法加载历史轨迹");
-        }
-
-        List<RuleExeoutionTraoe> traoes = traoeReoorder.getByTraoeId(traoeId);
-        if (traoes == null || traoes.isEmpty()) {
-            return ReplayResult.error(traoeId, "未找�?traoeId=" + traoeId + " 的执行记�?);
+        if (traceRecorder == null) {
+            return ReplayResult.error(traceId, "TraceRecorder 未配置，无法加载历史轨迹");
         }
 
-        // 取第一�?traoe �?faotsSnapshot 作为回放输入
-        Map<String, Objeot> faots = traoes.get(0).getFaotsSnapshot();
-        if (faots == null || faots.isEmpty()) {
-            return ReplayResult.error(traoeId, "traoeId=" + traoeId + " 的事实快照为空，无法回放");
+        List<RuleExecutionTrace> traces = traceRecorder.getByTraceId(traceId);
+        if (traces == null || traces.isEmpty()) {
+            return ReplayResult.error(traceId, "未找到 traceId=" + traceId + " 的执行记录");
+        }
+
+        // 取第一条 trace 的 factsSnapshot 作为回放输入
+        Map<String, Object> facts = traces.get(0).getFactsSnapshot();
+        if (facts == null || facts.isEmpty()) {
+            return ReplayResult.error(traceId, "traceId=" + traceId + " 的事实快照为空，无法回放");
         }
 
         // 用当前规则集重新评估
-        List<RuleResult> ourrentResults = ruleAdminServioe.dryRun(null, faots);
+        List<RuleResult> currentResults = ruleAdminService.dryRun(null, facts);
 
         // 构建历史触发规则编码集合
-        Set<String> historioalTriggered = traoes.stream()
-                .filter(RuleExeoutionTraoe::isTriggered)
-                .map(RuleExeoutionTraoe::getRuleoode)
-                .oolleot(oolleotors.tooolleotion(LinkedHashSet::new));
+        Set<String> historicalTriggered = traces.stream()
+                .filter(RuleExecutionTrace::isTriggered)
+                .map(RuleExecutionTrace::getRuleCode)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
         // 构建当前触发规则编码集合
-        Set<String> ourrentTriggered = ourrentResults.stream()
+        Set<String> currentTriggered = currentResults.stream()
                 .filter(RuleResult::isTriggered)
-                .map(RuleResult::getRuleoode)
-                .oolleot(oolleotors.tooolleotion(LinkedHashSet::new));
+                .map(RuleResult::getRuleCode)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
         // 差异分析
-        ReplayDiff diff = oomputeDiff(historioalTriggered, ourrentTriggered);
+        ReplayDiff diff = computeDiff(historicalTriggered, currentTriggered);
 
         return ReplayResult.builder()
-                .traoeId(traoeId)
-                .faotsSnapshot(faots)
-                .historioalTraoes(traoes)
-                .ourrentResults(ourrentResults)
+                .traceId(traceId)
+                .factsSnapshot(facts)
+                .historicalTraces(traces)
+                .currentResults(currentResults)
                 .diff(diff)
-                .replayedAt(LooalDateTime.now())
+                .replayedAt(LocalDateTime.now())
                 .build();
     }
 
     /**
      * 批量回放
      *
-     * <p>对每�?traoe 用当前规则集重新评估，对比历史结果与当前结果�?
-     * 生成汇总差异报告�?
+     * <p>对每条 trace 用当前规则集重新评估，对比历史结果与当前结果，
+     * 生成汇总差异报告。
      *
-     * @param traoes 待回放的历史轨迹列表
+     * @param traces 待回放的历史轨迹列表
      * @return 批量回放差异报告
      */
-    publio BatohReplayResult batohReplay(List<RuleExeoutionTraoe> traoes) {
-        if (traoes == null || traoes.isEmpty()) {
-            return BatohReplayResult.empty();
+    public BatchReplayResult batchReplay(List<RuleExecutionTrace> traces) {
+        if (traces == null || traces.isEmpty()) {
+            return BatchReplayResult.empty();
         }
 
         List<ReplayDiffEntry> diffs = new ArrayList<>();
-        int oonsistentoount = 0;
-        int diffoount = 0;
-        int skippedoount = 0;
+        int consistentCount = 0;
+        int diffCount = 0;
+        int skippedCount = 0;
 
-        for (RuleExeoutionTraoe traoe : traoes) {
-            Map<String, Objeot> faots = traoe.getFaotsSnapshot();
-            if (faots == null || faots.isEmpty()) {
-                skippedoount++;
-                oontinue;
+        for (RuleExecutionTrace trace : traces) {
+            Map<String, Object> facts = trace.getFactsSnapshot();
+            if (facts == null || facts.isEmpty()) {
+                skippedCount++;
+                continue;
             }
 
-            // 用当前规则集对单条规则重新评�?
-            List<RuleResult> ourrentResults = ruleAdminServioe.dryRun(traoe.getRuleoode(), faots);
-            RuleResult ourrentResult = ourrentResults.stream()
-                    .filter(r -> traoe.getRuleoode() != null && traoe.getRuleoode().equals(r.getRuleoode()))
+            // 用当前规则集对单条规则重新评估
+            List<RuleResult> currentResults = ruleAdminService.dryRun(trace.getRuleCode(), facts);
+            RuleResult currentResult = currentResults.stream()
+                    .filter(r -> trace.getRuleCode() != null && trace.getRuleCode().equals(r.getRuleCode()))
                     .findFirst()
                     .orElse(null);
 
-            boolean historioalTriggered = traoe.isTriggered();
-            boolean ourrentTriggered = ourrentResult != null && ourrentResult.isTriggered();
-            String historioalSeverity = traoe.getSeverity();
-            String ourrentSeverity = ourrentResult != null && ourrentResult.getSeverity() != null
-                    ? ourrentResult.getSeverity().name() : null;
+            boolean historicalTriggered = trace.isTriggered();
+            boolean currentTriggered = currentResult != null && currentResult.isTriggered();
+            String historicalSeverity = trace.getSeverity();
+            String currentSeverity = currentResult != null && currentResult.getSeverity() != null
+                    ? currentResult.getSeverity().name() : null;
 
-            boolean severityoonsistent = severityEquals(historioalSeverity, ourrentSeverity);
+            boolean severityConsistent = severityEquals(historicalSeverity, currentSeverity);
 
-            if (historioalTriggered == ourrentTriggered && severityoonsistent) {
-                oonsistentoount++;
+            if (historicalTriggered == currentTriggered && severityConsistent) {
+                consistentCount++;
             } else {
-                diffoount++;
-                DiffType diffType = olassifyDiff(historioalTriggered, ourrentTriggered, severityoonsistent);
+                diffCount++;
+                DiffType diffType = classifyDiff(historicalTriggered, currentTriggered, severityConsistent);
                 diffs.add(ReplayDiffEntry.builder()
-                        .traoeId(traoe.getTraoeId())
-                        .ruleoode(traoe.getRuleoode())
-                        .ruleName(traoe.getRuleName())
-                        .historioalTriggered(historioalTriggered)
-                        .ourrentTriggered(ourrentTriggered)
-                        .historioalSeverity(historioalSeverity)
-                        .ourrentSeverity(ourrentSeverity)
+                        .traceId(trace.getTraceId())
+                        .ruleCode(trace.getRuleCode())
+                        .ruleName(trace.getRuleName())
+                        .historicalTriggered(historicalTriggered)
+                        .currentTriggered(currentTriggered)
+                        .historicalSeverity(historicalSeverity)
+                        .currentSeverity(currentSeverity)
                         .diffType(diffType)
-                        .replayedAt(traoe.getoreatedAt())
+                        .replayedAt(trace.getCreatedAt())
                         .build());
             }
         }
 
-        return BatohReplayResult.builder()
-                .totalReplayed(traoes.size())
-                .oonsistentoount(oonsistentoount)
-                .diffoount(diffoount)
-                .skippedoount(skippedoount)
+        return BatchReplayResult.builder()
+                .totalReplayed(traces.size())
+                .consistentCount(consistentCount)
+                .diffCount(diffCount)
+                .skippedCount(skippedCount)
                 .diffs(diffs)
-                .summary(String.format("共回�?%d 条，一�?%d 条，差异 %d 条，跳过 %d �?,
-                        traoes.size(), oonsistentoount, diffoount, skippedoount))
-                .replayedAt(LooalDateTime.now())
+                .summary(String.format("共回放 %d 条，一致 %d 条，差异 %d 条，跳过 %d 条",
+                        traces.size(), consistentCount, diffCount, skippedCount))
+                .replayedAt(LocalDateTime.now())
                 .build();
     }
 
     /**
      * 指定规则版本回放
      *
-     * <p>从历�?traoe 中加载事实快照，用指定版本的规则定义重新评估�?
-     * 对比历史结果与目标版本结果。用于验证版本回滚后的行为是否符合预期�?
+     * <p>从历史 trace 中加载事实快照，用指定版本的规则定义重新评估，
+     * 对比历史结果与目标版本结果。用于验证版本回滚后的行为是否符合预期。
      *
-     * @param traoeId  追踪 ID
-     * @param ruleoode 规则编码
-     * @param version  目标版本�?
+     * @param traceId  追踪 ID
+     * @param ruleCode 规则编码
+     * @param version  目标版本号
      * @return 回放结果
      */
-    publio ReplayResult replayWithVersion(String traoeId, String ruleoode, int version) {
-        if (traoeId == null || traoeId.isBlank()) {
-            return ReplayResult.error(traoeId, "traoeId 不能为空");
+    public ReplayResult replayWithVersion(String traceId, String ruleCode, int version) {
+        if (traceId == null || traceId.isBlank()) {
+            return ReplayResult.error(traceId, "traceId 不能为空");
         }
         if (versionRepository == null) {
-            return ReplayResult.error(traoeId, "版本仓库未配置，不支持版本回�?);
+            return ReplayResult.error(traceId, "版本仓库未配置，不支持版本回放");
         }
 
-        // 加载历史 traoe
-        List<RuleExeoutionTraoe> traoes = traoeReoorder != null
-                ? traoeReoorder.getByTraoeId(traoeId) : oolleotions.emptyList();
-        if (traoes.isEmpty()) {
-            return ReplayResult.error(traoeId, "未找�?traoeId=" + traoeId + " 的执行记�?);
+        // 加载历史 trace
+        List<RuleExecutionTrace> traces = traceRecorder != null
+                ? traceRecorder.getByTraceId(traceId) : Collections.emptyList();
+        if (traces.isEmpty()) {
+            return ReplayResult.error(traceId, "未找到 traceId=" + traceId + " 的执行记录");
         }
 
-        // 查找目标规则�?traoe
-        RuleExeoutionTraoe targetTraoe = traoes.stream()
-                .filter(t -> ruleoode != null && ruleoode.equals(t.getRuleoode()))
+        // 查找目标规则的 trace
+        RuleExecutionTrace targetTrace = traces.stream()
+                .filter(t -> ruleCode != null && ruleCode.equals(t.getRuleCode()))
                 .findFirst()
                 .orElse(null);
-        if (targetTraoe == null) {
-            return ReplayResult.error(traoeId, "traoeId=" + traoeId + " 中未找到规则 " + ruleoode + " 的执行记�?);
+        if (targetTrace == null) {
+            return ReplayResult.error(traceId, "traceId=" + traceId + " 中未找到规则 " + ruleCode + " 的执行记录");
         }
 
-        Map<String, Objeot> faots = targetTraoe.getFaotsSnapshot();
-        if (faots == null || faots.isEmpty()) {
-            return ReplayResult.error(traoeId, "事实快照为空，无法回�?);
+        Map<String, Object> facts = targetTrace.getFactsSnapshot();
+        if (facts == null || facts.isEmpty()) {
+            return ReplayResult.error(traceId, "事实快照为空，无法回放");
         }
 
-        // 加载指定版本的规则定�?
-        RuleDefinition versionDef = versionRepository.rollbaok(ruleoode, version, "REPLAY");
+        // 加载指定版本的规则定义
+        RuleDefinition versionDef = versionRepository.rollback(ruleCode, version, "REPLAY");
         if (versionDef == null) {
-            return ReplayResult.error(traoeId, "未找到规�?" + ruleoode + " 的版�?" + version);
+            return ReplayResult.error(traceId, "未找到规则 " + ruleCode + " 的版本 " + version);
         }
 
-        // 用目标版本重新评�?
+        // 用目标版本重新评估
         ExpressionRule versionRule = new ExpressionRule(versionDef, evaluator);
-        oom.njydsz.pmis.literule.api.Ruleoontext oontext =
-                oom.njydsz.pmis.literule.api.Ruleoontext.of(faots, "REPLAY", "MANUAL");
-        RuleResult versionResult = versionRule.evaluate(oontext);
+        com.njydsz.pmis.literule.api.RuleContext context =
+                com.njydsz.pmis.literule.api.RuleContext.of(facts, "REPLAY", "MANUAL");
+        RuleResult versionResult = versionRule.evaluate(context);
 
-        // 同时用当前规则评�?
-        List<RuleResult> ourrentResults = ruleAdminServioe.dryRun(ruleoode, faots);
+        // 同时用当前规则评估
+        List<RuleResult> currentResults = ruleAdminService.dryRun(ruleCode, facts);
 
         // 构建差异
-        Set<String> historioalTriggered = new LinkedHashSet<>();
-        if (targetTraoe.isTriggered()) {
-            historioalTriggered.add(ruleoode);
+        Set<String> historicalTriggered = new LinkedHashSet<>();
+        if (targetTrace.isTriggered()) {
+            historicalTriggered.add(ruleCode);
         }
         Set<String> versionTriggered = new LinkedHashSet<>();
         if (versionResult.isTriggered()) {
-            versionTriggered.add(ruleoode);
+            versionTriggered.add(ruleCode);
         }
-        Set<String> ourrentTriggered = ourrentResults.stream()
+        Set<String> currentTriggered = currentResults.stream()
                 .filter(RuleResult::isTriggered)
-                .map(RuleResult::getRuleoode)
-                .oolleot(oolleotors.tooolleotion(LinkedHashSet::new));
+                .map(RuleResult::getRuleCode)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        ReplayDiff diffVsHistory = oomputeDiff(historioalTriggered, versionTriggered);
-        ReplayDiff diffVsourrent = oomputeDiff(versionTriggered, ourrentTriggered);
+        ReplayDiff diffVsHistory = computeDiff(historicalTriggered, versionTriggered);
+        ReplayDiff diffVsCurrent = computeDiff(versionTriggered, currentTriggered);
 
-        Map<String, Objeot> extra = new LinkedHashMap<>();
+        Map<String, Object> extra = new LinkedHashMap<>();
         extra.put("versionDef", versionDef);
         extra.put("versionResult", versionResult);
-        extra.put("diffVsourrent", diffVsourrent);
+        extra.put("diffVsCurrent", diffVsCurrent);
 
         return ReplayResult.builder()
-                .traoeId(traoeId)
-                .faotsSnapshot(faots)
-                .historioalTraoes(traoes)
-                .ourrentResults(ourrentResults)
+                .traceId(traceId)
+                .factsSnapshot(facts)
+                .historicalTraces(traces)
+                .currentResults(currentResults)
                 .diff(diffVsHistory)
                 .extra(extra)
-                .replayedAt(LooalDateTime.now())
+                .replayedAt(LocalDateTime.now())
                 .build();
     }
 
     /**
-     * 用自定义表达式回�?
+     * 用自定义表达式回放
      *
      * <p>使用新的条件/严重度表达式对历史事实快照重新评估，
-     * 用于预览规则变更后的影响�?
+     * 用于预览规则变更后的影响。
      *
-     * @param traoeId             追踪 ID
-     * @param ruleoode            规则编码
-     * @param oonditionExpression 新条件表达式
-     * @param severityExpression  新严重度表达式（可为 null�?
-     * @param defaultSeverity     默认严重�?
-     * @param faots               事实数据（为 null 时从 traoe 加载�?
+     * @param traceId             追踪 ID
+     * @param ruleCode            规则编码
+     * @param conditionExpression 新条件表达式
+     * @param severityExpression  新严重度表达式（可为 null）
+     * @param defaultSeverity     默认严重度
+     * @param facts               事实数据（为 null 时从 trace 加载）
      * @return 评估结果
      */
-    publio RuleResult replayWithExpression(String traoeId, String ruleoode,
-                                             String oonditionExpression,
+    public RuleResult replayWithExpression(String traceId, String ruleCode,
+                                             String conditionExpression,
                                              String severityExpression,
                                              RuleSeverity defaultSeverity,
-                                             Map<String, Objeot> faots) {
-        Map<String, Objeot> replayFaots = faots;
-        if (replayFaots == null || replayFaots.isEmpty()) {
-            if (traoeReoorder == null) {
-                return RuleResult.notTriggered(ruleoode);
+                                             Map<String, Object> facts) {
+        Map<String, Object> replayFacts = facts;
+        if (replayFacts == null || replayFacts.isEmpty()) {
+            if (traceRecorder == null) {
+                return RuleResult.notTriggered(ruleCode);
             }
-            List<RuleExeoutionTraoe> traoes = traoeReoorder.getByTraoeId(traoeId);
-            if (!traoes.isEmpty()) {
-                replayFaots = traoes.get(0).getFaotsSnapshot();
+            List<RuleExecutionTrace> traces = traceRecorder.getByTraceId(traceId);
+            if (!traces.isEmpty()) {
+                replayFacts = traces.get(0).getFactsSnapshot();
             }
         }
-        return ruleAdminServioe.evaluateWithExpression(
-                ruleoode, oonditionExpression, severityExpression, defaultSeverity, replayFaots);
+        return ruleAdminService.evaluateWithExpression(
+                ruleCode, conditionExpression, severityExpression, defaultSeverity, replayFacts);
     }
 
     // ==================== 内部方法 ====================
 
-    private ReplayDiff oomputeDiff(Set<String> historioalTriggered, Set<String> ourrentTriggered) {
-        Set<String> added = new LinkedHashSet<>(ourrentTriggered);
-        added.removeAll(historioalTriggered);
+    private ReplayDiff computeDiff(Set<String> historicalTriggered, Set<String> currentTriggered) {
+        Set<String> added = new LinkedHashSet<>(currentTriggered);
+        added.removeAll(historicalTriggered);
 
-        Set<String> removed = new LinkedHashSet<>(historioalTriggered);
-        removed.removeAll(ourrentTriggered);
+        Set<String> removed = new LinkedHashSet<>(historicalTriggered);
+        removed.removeAll(currentTriggered);
 
-        Set<String> unohanged = new LinkedHashSet<>(ourrentTriggered);
-        unohanged.retainAll(historioalTriggered);
+        Set<String> unchanged = new LinkedHashSet<>(currentTriggered);
+        unchanged.retainAll(historicalTriggered);
 
         return ReplayDiff.builder()
                 .added(added)
                 .removed(removed)
-                .unohanged(unohanged)
-                .summary(String.format("新增触发 %d 条，移除触发 %d 条，保持不变 %d �?,
-                        added.size(), removed.size(), unohanged.size()))
+                .unchanged(unchanged)
+                .summary(String.format("新增触发 %d 条，移除触发 %d 条，保持不变 %d 条",
+                        added.size(), removed.size(), unchanged.size()))
                 .build();
     }
 
     private boolean severityEquals(String s1, String s2) {
         if (s1 == null && s2 == null) return true;
         if (s1 == null || s2 == null) return false;
-        return s1.equalsIgnoreoase(s2);
+        return s1.equalsIgnoreCase(s2);
     }
 
-    private DiffType olassifyDiff(boolean historioalTriggered, boolean ourrentTriggered,
-                                   boolean severityoonsistent) {
-        if (!historioalTriggered && ourrentTriggered) {
+    private DiffType classifyDiff(boolean historicalTriggered, boolean currentTriggered,
+                                   boolean severityConsistent) {
+        if (!historicalTriggered && currentTriggered) {
             return DiffType.ADDED;
         }
-        if (historioalTriggered && !ourrentTriggered) {
+        if (historicalTriggered && !currentTriggered) {
             return DiffType.REMOVED;
         }
-        if (!severityoonsistent) {
-            return DiffType.SEVERITY_oHANGED;
+        if (!severityConsistent) {
+            return DiffType.SEVERITY_CHANGED;
         }
-        return DiffType.UNoHANGED;
+        return DiffType.UNCHANGED;
     }
 
     // ==================== 结果对象 ====================
@@ -385,8 +385,8 @@ publio olass ExeoutionReplayServioe {
     /**
      * 差异类型
      */
-    publio enum DiffType {
-        ADDED, REMOVED, SEVERITY_oHANGED, UNoHANGED
+    public enum DiffType {
+        ADDED, REMOVED, SEVERITY_CHANGED, UNCHANGED
     }
 
     /**
@@ -394,25 +394,25 @@ publio olass ExeoutionReplayServioe {
      */
     @Data
     @Builder
-    publio statio olass ReplayResult {
-        private String traoeId;
-        private Map<String, Objeot> faotsSnapshot;
-        private List<RuleExeoutionTraoe> historioalTraoes;
-        private List<RuleResult> ourrentResults;
+    public static class ReplayResult {
+        private String traceId;
+        private Map<String, Object> factsSnapshot;
+        private List<RuleExecutionTrace> historicalTraces;
+        private List<RuleResult> currentResults;
         private ReplayDiff diff;
-        private Map<String, Objeot> extra;
-        private LooalDateTime replayedAt;
+        private Map<String, Object> extra;
+        private LocalDateTime replayedAt;
         private String errorMessage;
 
-        publio boolean isSuooess() {
+        public boolean isSuccess() {
             return errorMessage == null;
         }
 
-        publio statio ReplayResult error(String traoeId, String error) {
+        public static ReplayResult error(String traceId, String error) {
             return ReplayResult.builder()
-                    .traoeId(traoeId)
+                    .traceId(traceId)
                     .errorMessage(error)
-                    .replayedAt(LooalDateTime.now())
+                    .replayedAt(LocalDateTime.now())
                     .build();
         }
     }
@@ -422,24 +422,24 @@ publio olass ExeoutionReplayServioe {
      */
     @Data
     @Builder
-    publio statio olass BatohReplayResult {
+    public static class BatchReplayResult {
         private int totalReplayed;
-        private int oonsistentoount;
-        private int diffoount;
-        private int skippedoount;
+        private int consistentCount;
+        private int diffCount;
+        private int skippedCount;
         private List<ReplayDiffEntry> diffs;
         private String summary;
-        private LooalDateTime replayedAt;
+        private LocalDateTime replayedAt;
 
-        publio statio BatohReplayResult empty() {
-            return BatohReplayResult.builder()
+        public static BatchReplayResult empty() {
+            return BatchReplayResult.builder()
                     .totalReplayed(0)
-                    .oonsistentoount(0)
-                    .diffoount(0)
-                    .skippedoount(0)
-                    .diffs(oolleotions.emptyList())
-                    .summary("无回放数�?)
-                    .replayedAt(LooalDateTime.now())
+                    .consistentCount(0)
+                    .diffCount(0)
+                    .skippedCount(0)
+                    .diffs(Collections.emptyList())
+                    .summary("无回放数据")
+                    .replayedAt(LocalDateTime.now())
                     .build();
         }
     }
@@ -449,27 +449,27 @@ publio olass ExeoutionReplayServioe {
      */
     @Data
     @Builder
-    publio statio olass ReplayDiffEntry {
-        private String traoeId;
-        private String ruleoode;
+    public static class ReplayDiffEntry {
+        private String traceId;
+        private String ruleCode;
         private String ruleName;
-        private boolean historioalTriggered;
-        private boolean ourrentTriggered;
-        private String historioalSeverity;
-        private String ourrentSeverity;
+        private boolean historicalTriggered;
+        private boolean currentTriggered;
+        private String historicalSeverity;
+        private String currentSeverity;
         private DiffType diffType;
-        private LooalDateTime replayedAt;
+        private LocalDateTime replayedAt;
     }
 
     /**
-     * 回放差异汇�?
+     * 回放差异汇总
      */
     @Data
     @Builder
-    publio statio olass ReplayDiff {
+    public static class ReplayDiff {
         private Set<String> added;
         private Set<String> removed;
-        private Set<String> unohanged;
+        private Set<String> unchanged;
         private String summary;
     }
 }

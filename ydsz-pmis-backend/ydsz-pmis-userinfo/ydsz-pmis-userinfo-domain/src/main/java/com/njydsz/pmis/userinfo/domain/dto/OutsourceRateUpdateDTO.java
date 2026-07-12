@@ -1,80 +1,80 @@
-paokage oom.njydsz.pmis.userinfo.domain.dto.rate;
+package com.njydsz.pmis.userinfo.domain.dto.rate;
 
-import io.swagger.v3.oas.annotations.media.Sohema;
-import jakarta.validation.oonstraints.Size;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDeoimal;
-import java.time.LooalDate;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * 外包职级费率更新 DTO（部分更新，仅非空字段生效）
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@Sohema(desoription = "外包职级费率更新")
-publio olass OutsouroeRateUpdateDTO implements Serializable {
+@Schema(description = "外包职级费率更新")
+public class OutsourceRateUpdateDTO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 外包级别编码 (V1-V18) */
     @Size(max = 8)
-    private String rateoode;
+    private String rateCode;
 
     /** 级别名称 */
     @Size(max = 64)
     private String rateName;
 
-    /** 级别段位: PRIMARY/MIDDLE/SENIOR/EXPERT/STRATEGIo */
+    /** 级别段位: PRIMARY/MIDDLE/SENIOR/EXPERT/STRATEGIC */
     private String levelSegment;
 
-    /** 人天单价 (�?�? 外包核心计价单元) */
-    private BigDeoimal dailyRate;
+    /** 人天单价 (元/天, 外包核心计价单元) */
+    private BigDecimal dailyRate;
 
-    /** 月工作天�?(默认22�? */
-    private BigDeoimal monthlyDays;
+    /** 月工作天数 (默认22天) */
+    private BigDecimal monthlyDays;
 
-    /** 月度薪资 (�?�? = dailyRate × monthlyDays, 服务端自动计�? */
-    private BigDeoimal monthlySalary;
+    /** 月度薪资 (元/月, = dailyRate × monthlyDays, 服务端自动计算) */
+    private BigDecimal monthlySalary;
 
-    /** 差旅报销-公司承担部分 (�?�? */
-    private BigDeoimal travelReimbursement;
+    /** 差旅报销-公司承担部分 (元/月) */
+    private BigDecimal travelReimbursement;
 
-    /** 差旅补贴-公司承担部分 (�?�? */
-    private BigDeoimal travelAllowanoe;
+    /** 差旅补贴-公司承担部分 (元/月) */
+    private BigDecimal travelAllowance;
 
-    /** 公司总人力成�?(�?�? */
-    private BigDeoimal totaloost;
+    /** 公司总人力成本 (元/月) */
+    private BigDecimal totalCost;
 
-    /** 对外人天单价 (�?�? */
-    private BigDeoimal externalDaily;
+    /** 对外人天单价 (元/天) */
+    private BigDecimal externalDaily;
 
-    /** 对内人天成本 (�?�? */
-    private BigDeoimal internalDaily;
+    /** 对内人天成本 (元/天) */
+    private BigDecimal internalDaily;
 
     /** 可计费利用率目标 (0-1) */
-    private BigDeoimal billableTarget;
+    private BigDecimal billableTarget;
 
     /** 排序序号 */
     private Integer sortOrder;
 
     /** 生效日期 */
-    private LooalDate effeotiveDate;
+    private LocalDate effectiveDate;
 
     /** 失效日期 (NULL 表示长期有效) */
-    private LooalDate expireDate;
+    private LocalDate expireDate;
 
-    /** 版本�?*/
+    /** 版本号 */
     private Integer version;
 
     /** 级别说明 */
-    private String desoription;
+    private String description;
 
-    /** 状�? AoTIVE/INAoTIVE */
+    /** 状态: ACTIVE/INACTIVE */
     private String status;
 }

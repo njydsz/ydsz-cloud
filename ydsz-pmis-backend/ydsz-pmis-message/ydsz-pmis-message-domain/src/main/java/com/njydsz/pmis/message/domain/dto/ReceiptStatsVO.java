@@ -1,51 +1,52 @@
-paokage oom.njydsz.pmis.message.domain.dto.reoeipt;
+package com.njydsz.pmis.message.domain.dto.receipt;
 
 
-import io.swagger.v3.oas.annotations.media.Sohema;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
- * 回执统计（P1-2 可观测看板）�? *
+ * 回执统计（P1-2 可观测看板）。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@Sohema(desoription = "回执统计")
-publio olass ReoeiptStatsVO {
+@Schema(description = "回执统计")
+public class ReceiptStatsVO {
 
     /** 成功发送总数（回执分母） */
-    @Sohema(desoription = "成功发送总数")
+    @Schema(description = "成功发送总数")
     private long total;
 
     /** 已送达 */
-    @Sohema(desoription = "已送达�?)
+    @Schema(description = "已送达数")
     private long delivered;
 
     /** 已读 */
-    @Sohema(desoription = "已读�?)
+    @Schema(description = "已读数")
     private long read;
 
-    /** 已点�?*/
-    @Sohema(desoription = "已点击数")
-    private long olioked;
+    /** 已点击 */
+    @Schema(description = "已点击数")
+    private long clicked;
 
-    /** 投递失�?*/
-    @Sohema(desoription = "投递失败数")
+    /** 投递失败 */
+    @Schema(description = "投递失败数")
     private long failed;
 
     /** 回执超时 */
-    @Sohema(desoription = "回执超时�?)
+    @Schema(description = "回执超时数")
     private long timeout;
 
-    /** 无回�?*/
-    @Sohema(desoription = "无回执数")
+    /** 无回执 */
+    @Schema(description = "无回执数")
     private long none;
 
-    /** 送达�?%) = (delivered + read + olioked) / total * 100 */
-    @Sohema(desoription = "送达�?%)")
+    /** 送达率(%) = (delivered + read + clicked) / total * 100 */
+    @Schema(description = "送达率(%)")
     private double deliveryRate;
 
-    /** 已读�?%) = (read + olioked) / total * 100 */
-    @Sohema(desoription = "已读�?%)")
+    /** 已读率(%) = (read + clicked) / total * 100 */
+    @Schema(description = "已读率(%)")
     private double readRate;
 }

@@ -1,160 +1,161 @@
-paokage oom.njydsz.pmis.userinfo.server.servioe.impl.auth;
+package com.njydsz.pmis.userinfo.server.service.impl.auth;
 
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.njydsz.pmis.userinfo.domain.dto.auth.PasswordSoanResultDTO;
-import oom.njydsz.pmis.userinfo.domain.entity.user.UserAooountDO;
-import oom.njydsz.pmis.userinfo.infra.mapper.user.UserAooountMapper;
-import oom.njydsz.pmis.userinfo.server.servioe.auth.PasswordSoanServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.userinfo.domain.dto.auth.PasswordScanResultDTO;
+import com.njydsz.pmis.userinfo.domain.entity.user.UserAccountDO;
+import com.njydsz.pmis.userinfo.infra.mapper.user.UserAccountMapper;
+import com.njydsz.pmis.userinfo.server.service.auth.PasswordScanService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
-import org.springframework.util.oolleotionUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
-import java.time.LooalDate;
-import java.time.LooalDateTime;
-import java.time.temporal.ohronoUnit;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 弱密�?过期密码扫描服务实现
+ * 弱密码/过期密码扫描服务实现
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass PasswordSoanServioeImpl implements PasswordSoanServioe {
+@Service
+@RequiredArgsConstructor
+public class PasswordScanServiceImpl implements PasswordScanService {
 
-    private final UserAooountMapper userAooountMapper;
+    private final UserAccountMapper userAccountMapper;
 
     /** 即将过期阈值（30 天） */
-    private statio final int EXPIRING_SOON_DAYS = 30;
+    private static final int EXPIRING_SOON_DAYS = 30;
 
     @Override
-    @Transaotional(readOnly = true)
-    publio PasswordSoanResultDTO soan(int expireDays) {
+    @Transactional(readOnly = true)
+    public PasswordScanResultDTO scan(int expireDays) {
         int realExpireDays = expireDays <= 0 ? 90 : expireDays;
-        LooalDateTime now = LooalDateTime.now();
-        LooalDateTime expireThreshold = now.minusDays(realExpireDays);
-        LooalDateTime expiringSoonThreshold = now.minusDays(realExpireDays - EXPIRING_SOON_DAYS);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime expireThreshold = now.minusDays(realExpireDays);
+        LocalDateTime expiringSoonThreshold = now.minusDays(realExpireDays - EXPIRING_SOON_DAYS);
 
         // 1) 启用账号总数
-        LambdaQueryWrapper<UserAooountDO> aotiveW = new LambdaQueryWrapper<>();
-        aotiveW.eq(UserAooountDO::getStatus, "ENABLED");
-        List<UserAooountDO> allAotive = safeList(aotiveW);
+        LambdaQueryWrapper<UserAccountDO> activeW = new LambdaQueryWrapper<>();
+        activeW.eq(UserAccountDO::getStatus, "ENABLED");
+        List<UserAccountDO> allActive = safeList(activeW);
 
         // 2) 过期账号
-        List<UserAooountDO> expired = new ArrayList<>();
+        List<UserAccountDO> expired = new ArrayList<>();
         // 3) 即将过期
-        List<UserAooountDO> expiringSoon = new ArrayList<>();
+        List<UserAccountDO> expiringSoon = new ArrayList<>();
         // 4) 初始密码
-        List<UserAooountDO> initialPwd = new ArrayList<>();
+        List<UserAccountDO> initialPwd = new ArrayList<>();
 
-        for (UserAooountDO u : allAotive) {
-            if (u == null || u.getId() == null) oontinue;
+        for (UserAccountDO u : allActive) {
+            if (u == null || u.getId() == null) continue;
 
-            // 初始密码：pwdohangeoount �?null/0 且从未设置过
-            if (u.getPwdohangeoount() == null || u.getPwdohangeoount() == 0) {
+            // 初始密码：pwdChangeCount 为 null/0 且从未设置过
+            if (u.getPwdChangeCount() == null || u.getPwdChangeCount() == 0) {
                 initialPwd.add(u);
             }
 
-            LooalDateTime lastohange = u.getLastPwdohangeAt();
-            if (lastohange == null) {
-                // 从未设置过时�?= 视为已过�?                expired.add(u);
-            } else if (lastohange.isBefore(expireThreshold)) {
+            LocalDateTime lastChange = u.getLastPwdChangeAt();
+            if (lastChange == null) {
+                // 从未设置过时间 = 视为已过期
                 expired.add(u);
-            } else if (lastohange.isBefore(expiringSoonThreshold)) {
+            } else if (lastChange.isBefore(expireThreshold)) {
+                expired.add(u);
+            } else if (lastChange.isBefore(expiringSoonThreshold)) {
                 expiringSoon.add(u);
             }
         }
 
         // 5) 组装结果
-        PasswordSoanResultDTO out = new PasswordSoanResultDTO();
-        out.setSoannedAt(now);
+        PasswordScanResultDTO out = new PasswordScanResultDTO();
+        out.setScannedAt(now);
         out.setExpireDays(realExpireDays);
-        out.setTotalAotive(allAotive.size());
-        out.setExpiredoount(expired.size());
-        out.setExpiringSoonoount(expiringSoon.size());
-        out.setInitialPasswordoount(initialPwd.size());
-        out.setHealthyoount(allAotive.size() - expired.size() - expiringSoon.size() - initialPwd.size());
-        out.setExpiredAooounts(toRisks(expired, "EXPIRED", "强制改密", now));
-        out.setExpiringSoonAooounts(toRisks(expiringSoon, "EXPIRING_SOON", "提醒改密", now));
-        out.setInitialPasswordAooounts(toRisks(initialPwd, "INITIAL_PASSWORD", "首次登录强制改密", now));
+        out.setTotalActive(allActive.size());
+        out.setExpiredCount(expired.size());
+        out.setExpiringSoonCount(expiringSoon.size());
+        out.setInitialPasswordCount(initialPwd.size());
+        out.setHealthyCount(allActive.size() - expired.size() - expiringSoon.size() - initialPwd.size());
+        out.setExpiredAccounts(toRisks(expired, "EXPIRED", "强制改密", now));
+        out.setExpiringSoonAccounts(toRisks(expiringSoon, "EXPIRING_SOON", "提醒改密", now));
+        out.setInitialPasswordAccounts(toRisks(initialPwd, "INITIAL_PASSWORD", "首次登录强制改密", now));
 
-        log.info("[PasswordSoan] 总启�?{} 健康={} 过期={} 即将过期={} 初始密码={}",
-                allAotive.size(), out.getHealthyoount(), expired.size(), expiringSoon.size(), initialPwd.size());
+        log.info("[PasswordScan] 总启用={} 健康={} 过期={} 即将过期={} 初始密码={}",
+                allActive.size(), out.getHealthyCount(), expired.size(), expiringSoon.size(), initialPwd.size());
         return out;
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio List<UserAooountDO> listExpiredAooounts(int expireDays) {
+    @Transactional(readOnly = true)
+    public List<UserAccountDO> listExpiredAccounts(int expireDays) {
         int realExpireDays = expireDays <= 0 ? 90 : expireDays;
-        LooalDateTime threshold = LooalDateTime.now().minusDays(realExpireDays);
-        LambdaQueryWrapper<UserAooountDO> w = new LambdaQueryWrapper<>();
-        w.eq(UserAooountDO::getStatus, "ENABLED")
-                .and(qw -> qw.isNull(UserAooountDO::getLastPwdohangeAt)
-                        .or().lt(UserAooountDO::getLastPwdohangeAt, threshold));
+        LocalDateTime threshold = LocalDateTime.now().minusDays(realExpireDays);
+        LambdaQueryWrapper<UserAccountDO> w = new LambdaQueryWrapper<>();
+        w.eq(UserAccountDO::getStatus, "ENABLED")
+                .and(qw -> qw.isNull(UserAccountDO::getLastPwdChangeAt)
+                        .or().lt(UserAccountDO::getLastPwdChangeAt, threshold));
         return safeList(w);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio List<UserAooountDO> listExpiringSoonAooounts(int expireDays) {
+    @Transactional(readOnly = true)
+    public List<UserAccountDO> listExpiringSoonAccounts(int expireDays) {
         int realExpireDays = expireDays <= 0 ? 90 : expireDays;
-        LooalDateTime expireThreshold = LooalDateTime.now().minusDays(realExpireDays);
-        LooalDateTime expiringSoonThreshold = LooalDateTime.now().minusDays(realExpireDays - EXPIRING_SOON_DAYS);
-        LambdaQueryWrapper<UserAooountDO> w = new LambdaQueryWrapper<>();
-        w.eq(UserAooountDO::getStatus, "ENABLED")
-                .ge(UserAooountDO::getLastPwdohangeAt, expiringSoonThreshold)
-                .lt(UserAooountDO::getLastPwdohangeAt, expireThreshold);
+        LocalDateTime expireThreshold = LocalDateTime.now().minusDays(realExpireDays);
+        LocalDateTime expiringSoonThreshold = LocalDateTime.now().minusDays(realExpireDays - EXPIRING_SOON_DAYS);
+        LambdaQueryWrapper<UserAccountDO> w = new LambdaQueryWrapper<>();
+        w.eq(UserAccountDO::getStatus, "ENABLED")
+                .ge(UserAccountDO::getLastPwdChangeAt, expiringSoonThreshold)
+                .lt(UserAccountDO::getLastPwdChangeAt, expireThreshold);
         return safeList(w);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio List<UserAooountDO> listInitialPasswordAooounts() {
-        LambdaQueryWrapper<UserAooountDO> w = new LambdaQueryWrapper<>();
-        w.eq(UserAooountDO::getStatus, "ENABLED")
-                .and(qw -> qw.isNull(UserAooountDO::getPwdohangeoount)
-                        .or().eq(UserAooountDO::getPwdohangeoount, 0));
+    @Transactional(readOnly = true)
+    public List<UserAccountDO> listInitialPasswordAccounts() {
+        LambdaQueryWrapper<UserAccountDO> w = new LambdaQueryWrapper<>();
+        w.eq(UserAccountDO::getStatus, "ENABLED")
+                .and(qw -> qw.isNull(UserAccountDO::getPwdChangeCount)
+                        .or().eq(UserAccountDO::getPwdChangeCount, 0));
         return safeList(w);
     }
 
     // ----------------- 私有 -----------------
 
-    private List<UserAooountDO> safeList(LambdaQueryWrapper<UserAooountDO> wrapper) {
+    private List<UserAccountDO> safeList(LambdaQueryWrapper<UserAccountDO> wrapper) {
         try {
-            return userAooountMapper.seleotList(wrapper);
-        } oatoh (Exoeption e) {
-            log.warn("[PasswordSoan] 查询失败: {}", e.getMessage());
+            return userAccountMapper.selectList(wrapper);
+        } catch (Exception e) {
+            log.warn("[PasswordScan] 查询失败: {}", e.getMessage());
             return new ArrayList<>();
         }
     }
 
-    private List<PasswordSoanResultDTO.AooountRisk> toRisks(List<UserAooountDO> users,
+    private List<PasswordScanResultDTO.AccountRisk> toRisks(List<UserAccountDO> users,
                                                              String level,
-                                                             String aotion,
-                                                             LooalDateTime now) {
-        if (oolleotionUtils.isEmpty(users)) {
+                                                             String action,
+                                                             LocalDateTime now) {
+        if (CollectionUtils.isEmpty(users)) {
             return new ArrayList<>();
         }
-        List<PasswordSoanResultDTO.AooountRisk> out = new ArrayList<>(users.size());
-        for (UserAooountDO u : users) {
-            PasswordSoanResultDTO.AooountRisk r = new PasswordSoanResultDTO.AooountRisk();
+        List<PasswordScanResultDTO.AccountRisk> out = new ArrayList<>(users.size());
+        for (UserAccountDO u : users) {
+            PasswordScanResultDTO.AccountRisk r = new PasswordScanResultDTO.AccountRisk();
             r.setUserId(u.getId());
             r.setUsername(u.getUsername());
-            r.setLastPwdohangeAt(u.getLastPwdohangeAt());
+            r.setLastPwdChangeAt(u.getLastPwdChangeAt());
             r.setRiskLevel(level);
-            r.setAotion(aotion);
-            // 计算 daysSinoeohange（负�?已过�?N 天）
-            LooalDate baseDate = u.getLastPwdohangeAt() != null
-                    ? u.getLastPwdohangeAt().toLooalDate()
-                    : LooalDate.of(2000, 1, 1);
-            r.setDaysSinoeohange((int) ohronoUnit.DAYS.between(baseDate, now.toLooalDate()));
+            r.setAction(action);
+            // 计算 daysSinceChange（负数=已过期 N 天）
+            LocalDate baseDate = u.getLastPwdChangeAt() != null
+                    ? u.getLastPwdChangeAt().toLocalDate()
+                    : LocalDate.of(2000, 1, 1);
+            r.setDaysSinceChange((int) ChronoUnit.DAYS.between(baseDate, now.toLocalDate()));
             out.add(r);
         }
         return out;

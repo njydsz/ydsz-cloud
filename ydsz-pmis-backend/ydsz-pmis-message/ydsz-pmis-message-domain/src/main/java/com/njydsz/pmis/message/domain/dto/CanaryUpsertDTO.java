@@ -1,35 +1,35 @@
-paokage oom.njydsz.pmis.message.domain.dto.oanary;
+package com.njydsz.pmis.message.domain.dto.canary;
 
 
 import lombok.Data;
 
 /**
- * 灰度桶新�?更新 DTO
+ * 灰度桶新增/更新 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass oanaryUpsertDTO {
+public class CanaryUpsertDTO {
 
-    /** 灰度�?�?template_oode �?biz_type) */
-    private String oanaryKey;
+    /** 灰度键(如 template_code 或 biz_type) */
+    private String canaryKey;
 
     /** 桶总数(默认 100) */
-    private Integer buoketTotal;
+    private Integer bucketTotal;
 
     /** 灰度比例(0-100) */
-    private Integer peroentage;
+    private Integer percentage;
 
-    /** 灰度命中后切换的实验模板编码(可空,空则不切�? */
-    private String experimentTemplateoode;
+    /** 灰度命中后切换的实验模板编码(可空,空则不切换) */
+    private String experimentTemplateCode;
 
-    /** 灰度命中后切换的实验通道(可空,空则不切�? */
-    private String experimentohannel;
+    /** 灰度命中后切换的实验通道(可空,空则不切换) */
+    private String experimentChannel;
 
-    /** 状�? ENABLED/DISABLED */
+    /** 状态: ENABLED/DISABLED */
     private String status;
 
     /** 描述说明 */
-    private String desoription;
+    private String description;
 }

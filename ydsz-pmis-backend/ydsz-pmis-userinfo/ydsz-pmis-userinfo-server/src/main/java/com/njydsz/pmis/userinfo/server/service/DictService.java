@@ -1,33 +1,38 @@
-paokage oom.njydsz.pmis.userinfo.server.servioe.org;
+package com.njydsz.pmis.userinfo.server.service.org;
 
-import oom.njydsz.pmis.userinfo.domain.entity.org.DiotItemDO;
-import oom.njydsz.pmis.userinfo.domain.entity.org.DiotTypeDO;
+import com.njydsz.pmis.userinfo.domain.entity.org.DictItemDO;
+import com.njydsz.pmis.userinfo.domain.entity.org.DictTypeDO;
 
 import java.util.List;
 
 /**
- * 字典服务（带 Redis 缓存�? *
+ * 字典服务（带 Redis 缓存）
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio interfaoe DiotServioe {
+public interface DictService {
 
     /**
-     * 查询所有字典类�?     *
+     * 查询所有字典类型
+     *
      * @return 字典类型列表
      */
-    List<DiotTypeDO> listAllTypes();
+    List<DictTypeDO> listAllTypes();
 
     /**
-     * 根据 typeoode 查询字典�?     *
-     * @param typeoode 字典类型编码
-     * @return 字典项列�?     */
-    List<DiotItemDO> listItems(String typeoode);
+     * 根据 typeCode 查询字典项
+     *
+     * @param typeCode 字典类型编码
+     * @return 字典项列表
+     */
+    List<DictItemDO> listItems(String typeCode);
 
     /**
-     * 刷新缓存（P2-6: 返回最新字典项，由 @oaohePut 写入缓存�?     *
-     * @param typeoode 字典类型编码
+     * 刷新缓存（P2-6: 返回最新字典项，由 @CachePut 写入缓存）
+     *
+     * @param typeCode 字典类型编码
      * @return 最新字典项列表
      */
-    List<DiotItemDO> refreshoaohe(String typeoode);
+    List<DictItemDO> refreshCache(String typeCode);
 }

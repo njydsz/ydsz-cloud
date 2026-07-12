@@ -1,100 +1,100 @@
-paokage oom.njydsz.pmis.literule.server.expr.liteexpr;
+package com.njydsz.pmis.literule.server.expr.liteexpr;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.oonourrent.oonourrentHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * LiteExpr 函数注册�?
+ * LiteExpr 函数注册表
  *
- * <p>管理表达式中可调用的函数（内�?+ 业务自定义）。线程安全�?
+ * <p>管理表达式中可调用的函数（内置 + 业务自定义）。线程安全。
  *
- * <p>函数查找规则�?
+ * <p>函数查找规则：
  * <ol>
  *   <li>按函数名精确匹配</li>
- *   <li>未找到时返回 null（Parser 不报错，Interpreter 在调用时报错�?/li>
+ *   <li>未找到时返回 null（Parser 不报错，Interpreter 在调用时报错）</li>
  * </ol>
  *
  * @author ydsz-pmis-team
- * @sinoe 2.0.0
+ * @since 2.0.0
  */
-publio olass FunotionRegistry {
+public class FunctionRegistry {
 
-    private final Map<String, LiteExprFunotion> funotions = new oonourrentHashMap<>();
-    private final Map<String, String> funotionSignatures = new oonourrentHashMap<>();
-    private final Map<String, String> funotionDesoriptions = new oonourrentHashMap<>();
+    private final Map<String, LiteExprFunction> functions = new ConcurrentHashMap<>();
+    private final Map<String, String> functionSignatures = new ConcurrentHashMap<>();
+    private final Map<String, String> functionDescriptions = new ConcurrentHashMap<>();
 
-    publio FunotionRegistry() {
-        BuiltinFunotions.registerAll(this);
+    public FunctionRegistry() {
+        BuiltinFunctions.registerAll(this);
     }
 
     /**
      * 注册函数
      *
-     * @param name     函数�?
-     * @param funotion 函数实现
+     * @param name     函数名
+     * @param function 函数实现
      */
-    publio void register(String name, LiteExprFunotion funotion) {
-        funotions.put(name, funotion);
+    public void register(String name, LiteExprFunction function) {
+        functions.put(name, function);
     }
 
     /**
-     * 注册函数（含签名和描述，用于函数市场�?
+     * 注册函数（含签名和描述，用于函数市场）
      *
-     * @param name        函数�?
-     * @param funotion    函数实现
-     * @param signature   函数签名（如 "max(a, b, ...)"�?
-     * @param desoription 函数描述
+     * @param name        函数名
+     * @param function    函数实现
+     * @param signature   函数签名（如 "max(a, b, ...)"）
+     * @param description 函数描述
      */
-    publio void register(String name, LiteExprFunotion funotion, String signature, String desoription) {
-        funotions.put(name, funotion);
-        funotionSignatures.put(name, signature);
-        funotionDesoriptions.put(name, desoription);
+    public void register(String name, LiteExprFunction function, String signature, String description) {
+        functions.put(name, function);
+        functionSignatures.put(name, signature);
+        functionDescriptions.put(name, description);
     }
 
     /**
      * 查找函数
      *
-     * @param name 函数�?
+     * @param name 函数名
      * @return 函数实现；不存在返回 null
      */
-    publio LiteExprFunotion lookup(String name) {
-        return funotions.get(name);
+    public LiteExprFunction lookup(String name) {
+        return functions.get(name);
     }
 
     /**
      * 是否包含指定函数
      */
-    publio boolean oontains(String name) {
-        return funotions.oontainsKey(name);
+    public boolean contains(String name) {
+        return functions.containsKey(name);
     }
 
     /**
-     * 获取所有已注册函数�?
+     * 获取所有已注册函数名
      */
-    publio Set<String> getFunotionNames() {
-        return funotions.keySet();
+    public Set<String> getFunctionNames() {
+        return functions.keySet();
     }
 
     /**
      * 获取函数签名
      */
-    publio String getSignature(String name) {
-        return funotionSignatures.get(name);
+    public String getSignature(String name) {
+        return functionSignatures.get(name);
     }
 
     /**
      * 获取函数描述
      */
-    publio String getDesoription(String name) {
-        return funotionDesoriptions.get(name);
+    public String getDescription(String name) {
+        return functionDescriptions.get(name);
     }
 
     /**
-     * 获取所有已注册函数名列�?
+     * 获取所有已注册函数名列表
      */
-    publio List<String> listFunotionNames() {
-        return List.oopyOf(funotions.keySet());
+    public List<String> listFunctionNames() {
+        return List.copyOf(functions.keySet());
     }
 }

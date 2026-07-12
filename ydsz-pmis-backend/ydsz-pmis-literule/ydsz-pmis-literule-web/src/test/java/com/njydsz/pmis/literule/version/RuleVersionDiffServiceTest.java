@@ -1,181 +1,181 @@
-paokage oom.njydsz.pmis.literule.server.version;
+package com.njydsz.pmis.literule.server.version;
 
-import oom.njydsz.pmis.literule.api.RuleDefinition;
-import oom.njydsz.pmis.literule.api.RuleSeverity;
+import com.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.api.RuleSeverity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import statio org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * RuleVersionDiffServioe 单元测试
+ * RuleVersionDiffService 单元测试
  *
  * @author ydsz-pmis-team
- * @sinoe 2.0.0
+ * @since 2.0.0
  */
 @DisplayName("规则版本 Diff 服务测试")
-olass RuleVersionDiffServioeTest {
+class RuleVersionDiffServiceTest {
 
-    private final RuleVersionDiffServioe diffServioe = new RuleVersionDiffServioe();
+    private final RuleVersionDiffService diffService = new RuleVersionDiffService();
 
     @Test
-    @DisplayName("无变�?- 所有字段相�?)
-    void testNoohanges() {
+    @DisplayName("无变更 - 所有字段相同")
+    void testNoChanges() {
         RuleDefinition def = RuleDefinition.builder()
-                .oode("R001")
+                .code("R001")
                 .name("测试规则")
-                .oonditionExpression("amount > 100")
+                .conditionExpression("amount > 100")
                 .defaultSeverity(RuleSeverity.RED)
                 .priority(10)
                 .version(1)
                 .build();
 
-        RuleVersionDiff diff = diffServioe.diff(def, def);
+        RuleVersionDiff diff = diffService.diff(def, def);
 
-        assertFalse(diff.hasohanges());
-        assertEquals(0, diff.ohangeoount());
+        assertFalse(diff.hasChanges());
+        assertEquals(0, diff.changeCount());
     }
 
     @Test
-    @DisplayName("条件表达式变�?)
-    void testoonditionExpressionohanged() {
+    @DisplayName("条件表达式变更")
+    void testConditionExpressionChanged() {
         RuleDefinition oldDef = RuleDefinition.builder()
-                .oode("R001")
+                .code("R001")
                 .name("测试规则")
-                .oonditionExpression("amount > 100")
+                .conditionExpression("amount > 100")
                 .defaultSeverity(RuleSeverity.RED)
                 .priority(10)
                 .version(1)
                 .build();
 
         RuleDefinition newDef = RuleDefinition.builder()
-                .oode("R001")
+                .code("R001")
                 .name("测试规则")
-                .oonditionExpression("amount > 200")
+                .conditionExpression("amount > 200")
                 .defaultSeverity(RuleSeverity.RED)
                 .priority(10)
                 .version(2)
                 .build();
 
-        RuleVersionDiff diff = diffServioe.diff(oldDef, newDef);
+        RuleVersionDiff diff = diffService.diff(oldDef, newDef);
 
-        assertTrue(diff.hasohanges());
-        assertEquals(1, diff.ohangeoount());
+        assertTrue(diff.hasChanges());
+        assertEquals(1, diff.changeCount());
 
-        RuleVersionDiff.DiffEntry oondEntry = diff.getEntries().stream()
-                .filter(e -> "oonditionExpression".equals(e.getField()))
+        RuleVersionDiff.DiffEntry condEntry = diff.getEntries().stream()
+                .filter(e -> "conditionExpression".equals(e.getField()))
                 .findFirst().orElse(null);
-        assertNotNull(oondEntry);
-        assertEquals(RuleVersionDiff.DiffType.MODIFIED, oondEntry.getType());
-        assertEquals("amount > 100", oondEntry.getOldValue());
-        assertEquals("amount > 200", oondEntry.getNewValue());
+        assertNotNull(condEntry);
+        assertEquals(RuleVersionDiff.DiffType.MODIFIED, condEntry.getType());
+        assertEquals("amount > 100", condEntry.getOldValue());
+        assertEquals("amount > 200", condEntry.getNewValue());
     }
 
     @Test
-    @DisplayName("多字段变�?)
-    void testMultipleFieldohanges() {
+    @DisplayName("多字段变更")
+    void testMultipleFieldChanges() {
         RuleDefinition oldDef = RuleDefinition.builder()
-                .oode("R001")
-                .name("旧名�?)
-                .oonditionExpression("amount > 100")
+                .code("R001")
+                .name("旧名称")
+                .conditionExpression("amount > 100")
                 .defaultSeverity(RuleSeverity.YELLOW)
                 .priority(50)
                 .version(1)
                 .build();
 
         RuleDefinition newDef = RuleDefinition.builder()
-                .oode("R001")
-                .name("新名�?)
-                .oonditionExpression("amount > 500")
+                .code("R001")
+                .name("新名称")
+                .conditionExpression("amount > 500")
                 .defaultSeverity(RuleSeverity.RED)
                 .priority(10)
                 .version(2)
                 .build();
 
-        RuleVersionDiff diff = diffServioe.diff(oldDef, newDef);
+        RuleVersionDiff diff = diffService.diff(oldDef, newDef);
 
-        assertTrue(diff.hasohanges());
-        assertEquals(4, diff.ohangeoount()); // name, oondition, severity, priority
+        assertTrue(diff.hasChanges());
+        assertEquals(4, diff.changeCount()); // name, condition, severity, priority
 
         assertEquals(1, diff.getOldVersion());
         assertEquals(2, diff.getNewVersion());
-        assertEquals("R001", diff.getRuleoode());
+        assertEquals("R001", diff.getRuleCode());
         assertNotNull(diff.getSummary());
-        assertTrue(diff.getSummary().oontains("v1 �?v2"));
+        assertTrue(diff.getSummary().contains("v1 → v2"));
     }
 
     @Test
-    @DisplayName("新增字段（旧版本�?null�?)
+    @DisplayName("新增字段（旧版本为 null）")
     void testAddedField() {
         RuleDefinition oldDef = RuleDefinition.builder()
-                .oode("R001")
+                .code("R001")
                 .name("测试规则")
-                .oonditionExpression("amount > 100")
+                .conditionExpression("amount > 100")
                 .version(1)
                 .build();
 
         RuleDefinition newDef = RuleDefinition.builder()
-                .oode("R001")
+                .code("R001")
                 .name("测试规则")
-                .oonditionExpression("amount > 100")
-                .desoription("新增的描�?)
+                .conditionExpression("amount > 100")
+                .description("新增的描述")
                 .version(2)
                 .build();
 
-        RuleVersionDiff diff = diffServioe.diff(oldDef, newDef);
+        RuleVersionDiff diff = diffService.diff(oldDef, newDef);
 
-        assertTrue(diff.hasohanges());
-        RuleVersionDiff.DiffEntry desoEntry = diff.getEntries().stream()
-                .filter(e -> "desoription".equals(e.getField()))
+        assertTrue(diff.hasChanges());
+        RuleVersionDiff.DiffEntry descEntry = diff.getEntries().stream()
+                .filter(e -> "description".equals(e.getField()))
                 .findFirst().orElse(null);
-        assertNotNull(desoEntry);
-        assertEquals(RuleVersionDiff.DiffType.ADDED, desoEntry.getType());
-        assertNull(desoEntry.getOldValue());
-        assertEquals("新增的描�?, desoEntry.getNewValue());
+        assertNotNull(descEntry);
+        assertEquals(RuleVersionDiff.DiffType.ADDED, descEntry.getType());
+        assertNull(descEntry.getOldValue());
+        assertEquals("新增的描述", descEntry.getNewValue());
     }
 
     @Test
-    @DisplayName("删除字段（新版本�?null�?)
+    @DisplayName("删除字段（新版本为 null）")
     void testRemovedField() {
         RuleDefinition oldDef = RuleDefinition.builder()
-                .oode("R001")
+                .code("R001")
                 .name("测试规则")
-                .oonditionExpression("amount > 100")
-                .desoription("旧描�?)
+                .conditionExpression("amount > 100")
+                .description("旧描述")
                 .version(1)
                 .build();
 
         RuleDefinition newDef = RuleDefinition.builder()
-                .oode("R001")
+                .code("R001")
                 .name("测试规则")
-                .oonditionExpression("amount > 100")
+                .conditionExpression("amount > 100")
                 .version(2)
                 .build();
 
-        RuleVersionDiff diff = diffServioe.diff(oldDef, newDef);
+        RuleVersionDiff diff = diffService.diff(oldDef, newDef);
 
-        assertTrue(diff.hasohanges());
-        RuleVersionDiff.DiffEntry desoEntry = diff.getEntries().stream()
-                .filter(e -> "desoription".equals(e.getField()))
+        assertTrue(diff.hasChanges());
+        RuleVersionDiff.DiffEntry descEntry = diff.getEntries().stream()
+                .filter(e -> "description".equals(e.getField()))
                 .findFirst().orElse(null);
-        assertNotNull(desoEntry);
-        assertEquals(RuleVersionDiff.DiffType.REMOVED, desoEntry.getType());
-        assertEquals("旧描�?, desoEntry.getOldValue());
-        assertNull(desoEntry.getNewValue());
+        assertNotNull(descEntry);
+        assertEquals(RuleVersionDiff.DiffType.REMOVED, descEntry.getType());
+        assertEquals("旧描述", descEntry.getOldValue());
+        assertNull(descEntry.getNewValue());
     }
 
     @Test
     @DisplayName("旧版本为 null - 整条新增")
     void testOldNull() {
         RuleDefinition newDef = RuleDefinition.builder()
-                .oode("R001")
-                .name("新规�?)
+                .code("R001")
+                .name("新规则")
                 .version(1)
                 .build();
 
-        RuleVersionDiff diff = diffServioe.diff(null, newDef);
+        RuleVersionDiff diff = diffService.diff(null, newDef);
 
-        assertTrue(diff.hasohanges());
+        assertTrue(diff.hasChanges());
         assertEquals(1, diff.getEntries().size());
         assertEquals(RuleVersionDiff.DiffType.ADDED, diff.getEntries().get(0).getType());
     }
@@ -184,14 +184,14 @@ olass RuleVersionDiffServioeTest {
     @DisplayName("新版本为 null - 整条删除")
     void testNewNull() {
         RuleDefinition oldDef = RuleDefinition.builder()
-                .oode("R001")
-                .name("旧规�?)
+                .code("R001")
+                .name("旧规则")
                 .version(1)
                 .build();
 
-        RuleVersionDiff diff = diffServioe.diff(oldDef, null);
+        RuleVersionDiff diff = diffService.diff(oldDef, null);
 
-        assertTrue(diff.hasohanges());
+        assertTrue(diff.hasChanges());
         assertEquals(1, diff.getEntries().size());
         assertEquals(RuleVersionDiff.DiffType.REMOVED, diff.getEntries().get(0).getType());
     }

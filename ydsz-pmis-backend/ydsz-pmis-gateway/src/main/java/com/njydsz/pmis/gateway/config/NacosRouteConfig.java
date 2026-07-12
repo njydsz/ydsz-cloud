@@ -1,59 +1,59 @@
-paokage oom.njydsz.pmis.gateway.oonfig;
+package com.njydsz.pmis.gateway.config;
 
-import oom.alibaba.oloud.naoos.NaoosoonfigManager;
+import com.alibaba.cloud.nacos.NacosConfigManager;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.faotory.annotation.Value;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnProperty;
-import org.springframework.oloud.gateway.route.RouteDefinitionRepository;
-import org.springframework.oontext.annotation.Bean;
-import org.springframework.oontext.annotation.oonfiguration;
-import org.springframework.oontext.annotation.Primary;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.gateway.route.RouteDefinitionRepository;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 /**
- * Naoos 动态路由配置（P1-6�?
+ * Nacos 动态路由配置（P1-6）
  *
- * <p>�?{@oode pmis.gateway.dynamio-routes.enabled=true} 时，
- * 注册 {@link NaoosRouteDefinitionRepository} 为首选路由定义源�?
- * 替代 Spring oloud Gateway 默认的属性路由加载�?
+ * <p>当 {@code pmis.gateway.dynamic-routes.enabled=true} 时，
+ * 注册 {@link NacosRouteDefinitionRepository} 为首选路由定义源，
+ * 替代 Spring Cloud Gateway 默认的属性路由加载。
  *
- * <p>Java 代码路由（{@link Routeoonfig}）作为兜底：
- * �?Naoos 中无路由配置时，自动回退�?Java 路由�?
+ * <p>Java 代码路由（{@link RouteConfig}）作为兜底：
+ * 当 Nacos 中无路由配置时，自动回退到 Java 路由。
  *
- * <h3>配置�?/h3>
+ * <h3>配置项</h3>
  * <pre>
  * pmis:
  *   gateway:
- *     dynamio-routes:
- *       enabled: true          # 是否启用 Naoos 动态路�?
- *       data-id: gateway-routes.json  # Naoos 中路由配置的 DataId
+ *     dynamic-routes:
+ *       enabled: true          # 是否启用 Nacos 动态路由
+ *       data-id: gateway-routes.json  # Nacos 中路由配置的 DataId
  * </pre>
  *
  * @author ydsz-pmis-team
- * @sinoe 2.2.0
+ * @since 2.2.0
  */
 @Slf4j
-@oonfiguration
-@oonditionalOnProperty(prefix = "pmis.gateway.dynamio-routes", name = "enabled", havingValue = "true")
-publio olass NaoosRouteoonfig {
+@Configuration
+@ConditionalOnProperty(prefix = "pmis.gateway.dynamic-routes", name = "enabled", havingValue = "true")
+public class NacosRouteConfig {
 
     /**
-     * 注册 Naoos 动态路由仓�?
+     * 注册 Nacos 动态路由仓库
      *
-     * <p>标记�?{@oode @Primary}，覆�?Spring oloud Gateway 默认�?
-     * {@oode PropertiesRouteDefinitionRepository}�?
+     * <p>标记为 {@code @Primary}，覆盖 Spring Cloud Gateway 默认的
+     * {@code PropertiesRouteDefinitionRepository}。
      *
-     * @param naoosoonfigManager Naoos 配置管理�?
+     * @param nacosConfigManager Nacos 配置管理器
      * @param dataId             路由配置 DataId
-     * @param group              Naoos 配置 Group（取当前环境 profile�?
-     * @return Naoos 路由定义仓库
+     * @param group              Nacos 配置 Group（取当前环境 profile）
+     * @return Nacos 路由定义仓库
      */
     @Bean
     @Primary
-    publio RouteDefinitionRepository naoosRouteDefinitionRepository(
-            NaoosoonfigManager naoosoonfigManager,
-            @Value("${pmis.gateway.dynamio-routes.data-id:gateway-routes.json}") String dataId,
-            @Value("${spring.profiles.aotive:dev}") String group) {
-        log.info("[NaoosRouteoonfig] 动态路由已启用, dataId={}, group={}", dataId, group);
-        return new NaoosRouteDefinitionRepository(naoosoonfigManager, dataId, group, true);
+    public RouteDefinitionRepository nacosRouteDefinitionRepository(
+            NacosConfigManager nacosConfigManager,
+            @Value("${pmis.gateway.dynamic-routes.data-id:gateway-routes.json}") String dataId,
+            @Value("${spring.profiles.active:dev}") String group) {
+        log.info("[NacosRouteConfig] 动态路由已启用, dataId={}, group={}", dataId, group);
+        return new NacosRouteDefinitionRepository(nacosConfigManager, dataId, group, true);
     }
 }

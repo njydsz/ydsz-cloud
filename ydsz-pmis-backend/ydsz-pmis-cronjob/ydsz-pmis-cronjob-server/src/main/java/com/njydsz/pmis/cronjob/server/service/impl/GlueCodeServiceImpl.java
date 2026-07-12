@@ -1,116 +1,118 @@
-paokage oom.njydsz.pmis.oronjob.server.servioe.impl.sohedule;
+package com.njydsz.pmis.cronjob.server.service.impl.schedule;
 
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.oronjob.domain.entity.sohedule.GlueoodeDO;
-import oom.njydsz.pmis.oronjob.infra.mapper.sohedule.GlueoodeMapper;
-import oom.njydsz.pmis.oronjob.server.servioe.sohedule.GlueoodeServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.cronjob.domain.entity.schedule.GlueCodeDO;
+import com.njydsz.pmis.cronjob.infra.mapper.schedule.GlueCodeMapper;
+import com.njydsz.pmis.cronjob.server.service.schedule.GlueCodeService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.lang.refleot.Method;
-import java.util.oolleotions;
+import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import groovy.lang.GroovyolassLoader;
+import groovy.lang.GroovyClassLoader;
 
 /**
- * GLUE 在线编码服务实现（P1-2 GLUE 在线编码）�? *
- * <p>实现要点�? * <ul>
- *   <li>{@oode save}: 查询当前最大版本号，version+1 后插入新记录</li>
- *   <li>{@oode getLatest}: 透传 mapper.seleotLatestByJobId</li>
- *   <li>{@oode listVersions}: LambdaQueryWrapper �?version 降序查询</li>
- *   <li>{@oode rollbaok}: 查询目标版本代码，创建新版本（version=max+1�?/li>
+ * GLUE 在线编码服务实现（P1-2 GLUE 在线编码）。
+ *
+ * <p>实现要点：
+ * <ul>
+ *   <li>{@code save}: 查询当前最大版本号，version+1 后插入新记录</li>
+ *   <li>{@code getLatest}: 透传 mapper.selectLatestByJobId</li>
+ *   <li>{@code listVersions}: LambdaQueryWrapper 按 version 降序查询</li>
+ *   <li>{@code rollback}: 查询目标版本代码，创建新版本（version=max+1）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass GlueoodeServioeImpl implements GlueoodeServioe {
+@Service
+@RequiredArgsConstructor
+public class GlueCodeServiceImpl implements GlueCodeService {
 
-    /** GLUE 代码 Mapper（版本化源码 oRUD�?*/
-    private final GlueoodeMapper glueoodeMapper;
+    /** GLUE 代码 Mapper（版本化源码 CRUD） */
+    private final GlueCodeMapper glueCodeMapper;
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio GlueoodeDO save(String jobId, String souroeoode, String language, String remark) {
+    @Transactional(rollbackFor = Exception.class)
+    public GlueCodeDO save(String jobId, String sourceCode, String language, String remark) {
         if (!StringUtils.hasText(jobId)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.oronjob.msg_glue_job_id_required");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_glue_job_id_required");
         }
-        if (souroeoode == null || souroeoode.isBlank()) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.oronjob.msg_glue_souroe_required");
+        if (sourceCode == null || sourceCode.isBlank()) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_glue_source_required");
         }
         // 计算新版本号
-        GlueoodeDO latest = glueoodeMapper.seleotLatestByJobId(jobId);
+        GlueCodeDO latest = glueCodeMapper.selectLatestByJobId(jobId);
         int nextVersion = latest == null ? 1 : (latest.getVersion() == null ? 1 : latest.getVersion() + 1);
 
-        GlueoodeDO entity = new GlueoodeDO();
+        GlueCodeDO entity = new GlueCodeDO();
         entity.setJobId(jobId);
-        entity.setSouroeoode(souroeoode);
+        entity.setSourceCode(sourceCode);
         entity.setLanguage(StringUtils.hasText(language) ? language : "GROOVY");
         entity.setVersion(nextVersion);
         entity.setRemark(remark);
-        glueoodeMapper.insert(entity);
+        glueCodeMapper.insert(entity);
         log.info("[Glue] 保存 GLUE 代码: jobId={} version={} remark={}", jobId, nextVersion, remark);
         return entity;
     }
 
     @Override
-    publio GlueoodeDO getLatest(String jobId) {
+    public GlueCodeDO getLatest(String jobId) {
         if (!StringUtils.hasText(jobId)) {
             return null;
         }
-        return glueoodeMapper.seleotLatestByJobId(jobId);
+        return glueCodeMapper.selectLatestByJobId(jobId);
     }
 
     @Override
-    publio List<GlueoodeDO> listVersions(String jobId) {
+    public List<GlueCodeDO> listVersions(String jobId) {
         if (!StringUtils.hasText(jobId)) {
-            return oolleotions.emptyList();
+            return Collections.emptyList();
         }
-        LambdaQueryWrapper<GlueoodeDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(GlueoodeDO::getJobId, jobId)
-                .orderByDeso(GlueoodeDO::getVersion);
-        return glueoodeMapper.seleotList(wrapper);
+        LambdaQueryWrapper<GlueCodeDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(GlueCodeDO::getJobId, jobId)
+                .orderByDesc(GlueCodeDO::getVersion);
+        return glueCodeMapper.selectList(wrapper);
     }
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio GlueoodeDO rollbaok(String jobId, Integer version) {
+    @Transactional(rollbackFor = Exception.class)
+    public GlueCodeDO rollback(String jobId, Integer version) {
         if (!StringUtils.hasText(jobId)) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.oronjob.msg_glue_job_id_required");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_glue_job_id_required");
         }
         if (version == null || version < 1) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.oronjob.msg_glue_version_invalid");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_glue_version_invalid");
         }
         // 查询目标版本
-        LambdaQueryWrapper<GlueoodeDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(GlueoodeDO::getJobId, jobId)
-                .eq(GlueoodeDO::getVersion, version);
-        GlueoodeDO target = glueoodeMapper.seleotOne(wrapper);
+        LambdaQueryWrapper<GlueCodeDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(GlueCodeDO::getJobId, jobId)
+                .eq(GlueCodeDO::getVersion, version);
+        GlueCodeDO target = glueCodeMapper.selectOne(wrapper);
         if (target == null) {
-            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.oronjob.msg_glue_version_not_found");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_glue_version_not_found");
         }
         // 创建新版本（内容为目标版本代码）
-        GlueoodeDO latest = glueoodeMapper.seleotLatestByJobId(jobId);
+        GlueCodeDO latest = glueCodeMapper.selectLatestByJobId(jobId);
         int nextVersion = latest == null ? 1 : (latest.getVersion() == null ? 1 : latest.getVersion() + 1);
 
-        GlueoodeDO entity = new GlueoodeDO();
+        GlueCodeDO entity = new GlueCodeDO();
         entity.setJobId(jobId);
-        entity.setSouroeoode(target.getSouroeoode());
+        entity.setSourceCode(target.getSourceCode());
         entity.setLanguage(target.getLanguage());
         entity.setVersion(nextVersion);
-        entity.setRemark("rollbaok to v" + version);
-        glueoodeMapper.insert(entity);
+        entity.setRemark("rollback to v" + version);
+        glueCodeMapper.insert(entity);
         log.info("[Glue] 回滚 GLUE 代码: jobId={} fromVersion={} toNewVersion={}", jobId, version, nextVersion);
         return entity;
     }
@@ -118,57 +120,57 @@ publio olass GlueoodeServioeImpl implements GlueoodeServioe {
     // ==================== P1-1: 在线测试 / 模板 / 差异对比 ====================
 
     /** 测试执行超时时间（毫秒） */
-    private statio final long TEST_TIMEOUT_MS = 10_000;
+    private static final long TEST_TIMEOUT_MS = 10_000;
 
     @Override
-    publio Map<String, Objeot> testoode(String souroeoode, String language, String paramsJson) {
-        Map<String, Objeot> result = new HashMap<>();
-        if (souroeoode == null || souroeoode.isBlank()) {
-            BaseResponse.put("suooess", false);
-            BaseResponse.put("error", "Souroe oode is empty");
+    public Map<String, Object> testCode(String sourceCode, String language, String paramsJson) {
+        Map<String, Object> result = new HashMap<>();
+        if (sourceCode == null || sourceCode.isBlank()) {
+            BaseResponse.put("success", false);
+            BaseResponse.put("error", "Source code is empty");
             return result;
         }
-        String lang = StringUtils.hasText(language) ? language.toUpperoase() : "GROOVY";
-        long startTime = System.ourrentTimeMillis();
+        String lang = StringUtils.hasText(language) ? language.toUpperCase() : "GROOVY";
+        long startTime = System.currentTimeMillis();
         try {
             // 根据语言选择执行方式
-            Objeot exeoResult = exeouteByLanguage(souroeoode, lang, paramsJson);
-            BaseResponse.put("suooess", true);
-            BaseResponse.put("result", exeoResult);
-            BaseResponse.put("durationMs", System.ourrentTimeMillis() - startTime);
-        } oatoh (Exoeption e) {
-            BaseResponse.put("suooess", false);
+            Object execResult = executeByLanguage(sourceCode, lang, paramsJson);
+            BaseResponse.put("success", true);
+            BaseResponse.put("result", execResult);
+            BaseResponse.put("durationMs", System.currentTimeMillis() - startTime);
+        } catch (Exception e) {
+            BaseResponse.put("success", false);
             BaseResponse.put("error", e.getMessage());
-            BaseResponse.put("durationMs", System.ourrentTimeMillis() - startTime);
+            BaseResponse.put("durationMs", System.currentTimeMillis() - startTime);
             log.warn("[Glue] 测试执行失败: lang={} reason={}", lang, e.getMessage());
         }
         return result;
     }
 
     @Override
-    publio Map<String, String> getoodeTemplate(String language) {
-        String lang = StringUtils.hasText(language) ? language.toUpperoase() : "GROOVY";
+    public Map<String, String> getCodeTemplate(String language) {
+        String lang = StringUtils.hasText(language) ? language.toUpperCase() : "GROOVY";
         Map<String, String> template = new HashMap<>();
         template.put("language", lang);
-        switoh (lang) {
-            oase "GROOVY", "JAVA" -> {
+        switch (lang) {
+            case "GROOVY", "JAVA" -> {
                 template.put("template",
                         "// GLUE Groovy 模板\n" +
-                        "// 实现 JobHandler 接口或定�?exeoute 方法\n" +
-                        "import oom.njydsz.pmis.oommon.job.JobHandler\n" +
-                        "import oom.njydsz.pmis.oommon.job.ProoessResult\n" +
+                        "// 实现 JobHandler 接口或定义 execute 方法\n" +
+                        "import com.njydsz.pmis.common.job.JobHandler\n" +
+                        "import com.njydsz.pmis.common.job.ProcessResult\n" +
                         "\n" +
-                        "olass MyJob implements JobHandler {\n" +
+                        "class MyJob implements JobHandler {\n" +
                         "    @Override\n" +
-                        "    ProoessResult exeoute(String paramsJson) {\n" +
+                        "    ProcessResult execute(String paramsJson) {\n" +
                         "        // TODO: 编写业务逻辑\n" +
                         "        println(\"params: \" + paramsJson)\n" +
-                        "        return ProoessResult.suooess()\n" +
+                        "        return ProcessResult.success()\n" +
                         "    }\n" +
                         "}");
-                template.put("desoription", "Groovy 脚本模板，实�?JobHandler 接口");
+                template.put("description", "Groovy 脚本模板，实现 JobHandler 接口");
             }
-            oase "PYTHON" -> {
+            case "PYTHON" -> {
                 template.put("template",
                         "#!/usr/bin/env python3\n" +
                         "# GLUE Python 模板\n" +
@@ -180,94 +182,95 @@ publio olass GlueoodeServioeImpl implements GlueoodeServioe {
                         "\n" +
                         "# TODO: 编写业务逻辑\n" +
                         "print('Hello from Python!')\n");
-                template.put("desoription", "Python3 脚本模板，通过环境变量传入参数");
+                template.put("description", "Python3 脚本模板，通过环境变量传入参数");
             }
-            oase "SHELL" -> {
+            case "SHELL" -> {
                 template.put("template",
                         "#!/bin/bash\n" +
                         "# GLUE Shell 模板\n" +
-                        "eoho \"params: $JOB_PARAMS\"\n" +
+                        "echo \"params: $JOB_PARAMS\"\n" +
                         "\n" +
                         "# TODO: 编写业务逻辑\n" +
-                        "eoho \"Hello from Shell!\"\n");
-                template.put("desoription", "Bash 脚本模板，通过环境变量传入参数");
+                        "echo \"Hello from Shell!\"\n");
+                template.put("description", "Bash 脚本模板，通过环境变量传入参数");
             }
-            oase "JAVASoRIPT" -> {
+            case "JAVASCRIPT" -> {
                 template.put("template",
-                        "// GLUE JavaSoript 模板\n" +
+                        "// GLUE JavaScript 模板\n" +
                         "// paramsJson 全局变量包含任务参数\n" +
-                        "funotion exeoute(paramsJson) {\n" +
+                        "function execute(paramsJson) {\n" +
                         "    var params = JSON.parse(paramsJson || '{}');\n" +
                         "    // TODO: 编写业务逻辑\n" +
-                        "    return JSON.stringify({suooess: true, msg: 'Hello from JS!'});\n" +
+                        "    return JSON.stringify({success: true, msg: 'Hello from JS!'});\n" +
                         "}\n" +
-                        "exeoute(paramsJson);\n");
-                template.put("desoription", "JavaSoript 脚本模板，定�?exeoute 函数");
+                        "execute(paramsJson);\n");
+                template.put("description", "JavaScript 脚本模板，定义 execute 函数");
             }
             default -> {
                 template.put("template", "// Unsupported language: " + lang);
-                template.put("desoription", "不支持的语言");
+                template.put("description", "不支持的语言");
             }
         }
         return template;
     }
 
     @Override
-    publio Map<String, Objeot> diffVersions(String jobId, Integer versionA, Integer versionB) {
-        Map<String, Objeot> result = new HashMap<>();
+    public Map<String, Object> diffVersions(String jobId, Integer versionA, Integer versionB) {
+        Map<String, Object> result = new HashMap<>();
         if (!StringUtils.hasText(jobId) || versionA == null || versionB == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.oronjob.msg_glue_diff_params_required");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_glue_diff_params_required");
         }
         // 查询两个版本
-        GlueoodeDO oodeA = getVersion(jobId, versionA);
-        GlueoodeDO oodeB = getVersion(jobId, versionB);
-        if (oodeA == null || oodeB == null) {
-            throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.oronjob.msg_glue_version_not_found");
+        GlueCodeDO codeA = getVersion(jobId, versionA);
+        GlueCodeDO codeB = getVersion(jobId, versionB);
+        if (codeA == null || codeB == null) {
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_glue_version_not_found");
         }
         BaseResponse.put("versionA", Map.of(
                 "version", versionA,
-                "souroeoode", oodeA.getSouroeoode(),
-                "remark", oodeA.getRemark() != null ? oodeA.getRemark() : "",
-                "oreatedAt", oodeA.getoreatedAt() != null ? oodeA.getoreatedAt().toString() : ""
+                "sourceCode", codeA.getSourceCode(),
+                "remark", codeA.getRemark() != null ? codeA.getRemark() : "",
+                "createdAt", codeA.getCreatedAt() != null ? codeA.getCreatedAt().toString() : ""
         ));
         BaseResponse.put("versionB", Map.of(
                 "version", versionB,
-                "souroeoode", oodeB.getSouroeoode(),
-                "remark", oodeB.getRemark() != null ? oodeB.getRemark() : "",
-                "oreatedAt", oodeB.getoreatedAt() != null ? oodeB.getoreatedAt().toString() : ""
+                "sourceCode", codeB.getSourceCode(),
+                "remark", codeB.getRemark() != null ? codeB.getRemark() : "",
+                "createdAt", codeB.getCreatedAt() != null ? codeB.getCreatedAt().toString() : ""
         ));
         // 计算行级差异
-        BaseResponse.put("diff", oomputeLineDiff(oodeA.getSouroeoode(), oodeB.getSouroeoode()));
+        BaseResponse.put("diff", computeLineDiff(codeA.getSourceCode(), codeB.getSourceCode()));
         return result;
     }
 
     /**
-     * 根据语言执行代码（内存编译，不持久化）�?     */
-    private Objeot exeouteByLanguage(String souroeoode, String language, String paramsJson) throws Exoeption {
-        // 委托�?GlueJobHandler 的编译执行逻辑
-        // 这里简化实现：Groovy 通过 GroovyolassLoader 执行，其他语言返回提示
-        switoh (language) {
-            oase "GROOVY", "JAVA" -> {
-                try (GroovyolassLoader olassLoader = new GroovyolassLoader()) {
-                    olass<?> olazz = olassLoader.parseolass(souroeoode);
-                    Objeot instanoe = olazz.getDeolaredoonstruotor().newInstanoe();
-                    // 尝试调用 exeoute(String) 方法
+     * 根据语言执行代码（内存编译，不持久化）。
+     */
+    private Object executeByLanguage(String sourceCode, String language, String paramsJson) throws Exception {
+        // 委托给 GlueJobHandler 的编译执行逻辑
+        // 这里简化实现：Groovy 通过 GroovyClassLoader 执行，其他语言返回提示
+        switch (language) {
+            case "GROOVY", "JAVA" -> {
+                try (GroovyClassLoader classLoader = new GroovyClassLoader()) {
+                    Class<?> clazz = classLoader.parseClass(sourceCode);
+                    Object instance = clazz.getDeclaredConstructor().newInstance();
+                    // 尝试调用 execute(String) 方法
                     try {
-                        Method exeouteMethod = olazz.getMethod("exeoute", String.olass);
-                        return exeouteMethod.invoke(instanoe, paramsJson != null ? paramsJson : "{}");
-                    } oatoh (NoSuohMethodExoeption e) {
-                        // 尝试无参 exeoute() 方法
+                        Method executeMethod = clazz.getMethod("execute", String.class);
+                        return executeMethod.invoke(instance, paramsJson != null ? paramsJson : "{}");
+                    } catch (NoSuchMethodException e) {
+                        // 尝试无参 execute() 方法
                         try {
-                            Method exeouteMethod = olazz.getMethod("exeoute");
-                            return exeouteMethod.invoke(instanoe);
-                        } oatoh (NoSuohMethodExoeption e2) {
-                            return "No exeoute method found";
+                            Method executeMethod = clazz.getMethod("execute");
+                            return executeMethod.invoke(instance);
+                        } catch (NoSuchMethodException e2) {
+                            return "No execute method found";
                         }
                     }
                 }
             }
-            oase "PYTHON", "SHELL", "JAVASoRIPT" -> {
-                return language + " oode test is not supported in memory, please save and exeoute via job dispatoh";
+            case "PYTHON", "SHELL", "JAVASCRIPT" -> {
+                return language + " code test is not supported in memory, please save and execute via job dispatch";
             }
             default -> {
                 return "Unsupported language: " + language;
@@ -276,26 +279,28 @@ publio olass GlueoodeServioeImpl implements GlueoodeServioe {
     }
 
     /**
-     * 查询指定版本�?     */
-    private GlueoodeDO getVersion(String jobId, Integer version) {
-        LambdaQueryWrapper<GlueoodeDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(GlueoodeDO::getJobId, jobId)
-                .eq(GlueoodeDO::getVersion, version);
-        return glueoodeMapper.seleotOne(wrapper);
+     * 查询指定版本。
+     */
+    private GlueCodeDO getVersion(String jobId, Integer version) {
+        LambdaQueryWrapper<GlueCodeDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(GlueCodeDO::getJobId, jobId)
+                .eq(GlueCodeDO::getVersion, version);
+        return glueCodeMapper.selectOne(wrapper);
     }
 
     /**
-     * 计算行级差异（简单实现）�?     */
-    private List<Map<String, Objeot>> oomputeLineDiff(String oodeA, String oodeB) {
-        String[] linesA = oodeA != null ? oodeA.split("\n") : new String[0];
-        String[] linesB = oodeB != null ? oodeB.split("\n") : new String[0];
-        List<Map<String, Objeot>> diffs = new java.util.ArrayList<>();
+     * 计算行级差异（简单实现）。
+     */
+    private List<Map<String, Object>> computeLineDiff(String codeA, String codeB) {
+        String[] linesA = codeA != null ? codeA.split("\n") : new String[0];
+        String[] linesB = codeB != null ? codeB.split("\n") : new String[0];
+        List<Map<String, Object>> diffs = new java.util.ArrayList<>();
         int maxLines = Math.max(linesA.length, linesB.length);
         for (int i = 0; i < maxLines; i++) {
             String lineA = i < linesA.length ? linesA[i] : "";
             String lineB = i < linesB.length ? linesB[i] : "";
             if (!lineA.equals(lineB)) {
-                Map<String, Objeot> diff = new HashMap<>();
+                Map<String, Object> diff = new HashMap<>();
                 diff.put("line", i + 1);
                 diff.put("type", lineA.isEmpty() ? "ADDED" : (lineB.isEmpty() ? "REMOVED" : "MODIFIED"));
                 diff.put("old", lineA);

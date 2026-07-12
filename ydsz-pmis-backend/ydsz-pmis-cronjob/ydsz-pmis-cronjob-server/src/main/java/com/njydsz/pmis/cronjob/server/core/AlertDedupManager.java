@@ -1,154 +1,154 @@
-paokage oom.njydsz.pmis.oronjob.server.oore.alert;
+package com.njydsz.pmis.cronjob.server.core.alert;
 
-import oom.njydsz.pmis.oronjob.server.oonfig.oronjobProperties;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnProperty;
-import org.springframework.oontext.annotation.oonfiguration;
-import org.springframework.data.redis.oore.StringRedisTemplate;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.time.Duration;
 
 /**
- * 告警智能降噪管理器（P1-3）�?
+ * 告警智能降噪管理器（P1-3）。
  *
- * <p>�?{@link AlertDispatoher} 派发告警前进行聚合和降噪处理�?
+ * <p>在 {@link AlertDispatcher} 派发告警前进行聚合和降噪处理：
  * <ul>
- *   <li><b>时间窗口聚合</b>：同一规则在聚合窗口内的多次告警合并为一�?/li>
- *   <li><b>频次升级</b>：窗口内告警次数超过阈值时，升级通知渠道（追加短�?电话�?/li>
+ *   <li><b>时间窗口聚合</b>：同一规则在聚合窗口内的多次告警合并为一条</li>
+ *   <li><b>频次升级</b>：窗口内告警次数超过阈值时，升级通知渠道（追加短信/电话）</li>
  *   <li><b>自动降级</b>：长时间无告警后恢复原始通知通道</li>
- *   <li><b>同任务去�?/b>：同一任务的同类告警在短时间窗口内只通知一�?/li>
+ *   <li><b>同任务去重</b>：同一任务的同类告警在短时间窗口内只通知一次</li>
  * </ul>
  *
  * <h3>工作流程</h3>
  * <ol>
- *   <li>告警事件到达 �?检查聚合窗�?/li>
- *   <li>窗口内已有告�?�?计数+1，判断是否需要升�?/li>
- *   <li>窗口内无告警 �?通过，创建新窗口</li>
- *   <li>计数超过 maxAggregateoount �?追加升级通道</li>
- *   <li>超过降级冷却时间无告�?�?重置升级状�?/li>
+ *   <li>告警事件到达 → 检查聚合窗口</li>
+ *   <li>窗口内已有告警 → 计数+1，判断是否需要升级</li>
+ *   <li>窗口内无告警 → 通过，创建新窗口</li>
+ *   <li>计数超过 maxAggregateCount → 追加升级通道</li>
+ *   <li>超过降级冷却时间无告警 → 重置升级状态</li>
  * </ol>
  *
- * <p>仅在 {@oode pmis.oronjob.alert-dedup.enabled=true} 时启用�?
+ * <p>仅在 {@code pmis.cronjob.alert-dedup.enabled=true} 时启用。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.3.0
+ * @since 1.3.0
  */
 @Slf4j
-@oonfiguration
-@RequiredArgsoonstruotor
-@oonditionalOnProperty(name = "pmis.oronjob.alert-dedup.enabled", havingValue = "true")
-publio olass AlertDedupManager {
+@Configuration
+@RequiredArgsConstructor
+@ConditionalOnProperty(name = "pmis.cronjob.alert-dedup.enabled", havingValue = "true")
+public class AlertDedupManager {
 
     private final StringRedisTemplate redisTemplate;
-    private final oronjobProperties oronjobProperties;
+    private final CronjobProperties cronjobProperties;
 
-    /** Redis key 前缀：告警聚合计�?*/
-    private statio final String AGGREGATE_oOUNT_PREFIX = "pmis:alert:dedup:oount:";
-    /** Redis key 前缀：升级状�?*/
-    private statio final String ESoALATION_PREFIX = "pmis:alert:dedup:esoalate:";
+    /** Redis key 前缀：告警聚合计数 */
+    private static final String AGGREGATE_COUNT_PREFIX = "pmis:alert:dedup:count:";
+    /** Redis key 前缀：升级状态 */
+    private static final String ESCALATION_PREFIX = "pmis:alert:dedup:escalate:";
 
     /**
-     * 检查告警是否应该被发送（聚合+降噪）�?
+     * 检查告警是否应该被发送（聚合+降噪）。
      *
-     * <p>返回一个决策结果，包含是否发送、使用哪些通道�?
+     * <p>返回一个决策结果，包含是否发送、使用哪些通道。
      *
      * @param ruleId       告警规则 ID
      * @param jobId        任务 ID
      * @param alertType    告警类型
-     * @param origohannels 原始通知通道
+     * @param origChannels 原始通知通道
      * @return 降噪决策结果
      */
-    publio DedupDeoision oheokAndDedup(String ruleId, String jobId, String alertType, String origohannels) {
-        oronjobProperties.AlertDedup oonfig = oronjobProperties.getAlertDedup();
-        String aggregateKey = AGGREGATE_oOUNT_PREFIX + ruleId + ":" + alertType;
+    public DedupDecision checkAndDedup(String ruleId, String jobId, String alertType, String origChannels) {
+        CronjobProperties.AlertDedup config = cronjobProperties.getAlertDedup();
+        String aggregateKey = AGGREGATE_COUNT_PREFIX + ruleId + ":" + alertType;
 
         try {
             // 原子递增计数
-            Long oount = redisTemplate.opsForValue().inorement(aggregateKey);
-            if (oount == null) {
-                oount = 1L;
+            Long count = redisTemplate.opsForValue().increment(aggregateKey);
+            if (count == null) {
+                count = 1L;
             }
 
-            // 首次告警：设置窗�?TTL
-            if (oount == 1) {
-                redisTemplate.expire(aggregateKey, Duration.ofSeoonds(oonfig.getAggregateWindowSeoonds()));
-                // 首次告警，使用原始通道发�?
-                return DedupDeoision.send(origohannels, false);
+            // 首次告警：设置窗口 TTL
+            if (count == 1) {
+                redisTemplate.expire(aggregateKey, Duration.ofSeconds(config.getAggregateWindowSeconds()));
+                // 首次告警，使用原始通道发送
+                return DedupDecision.send(origChannels, false);
             }
 
-            // 窗口内已有告�?
-            if (oount > oonfig.getMaxAggregateoount()) {
+            // 窗口内已有告警
+            if (count > config.getMaxAggregateCount()) {
                 // 超过阈值，升级通知
-                String esoalateKey = ESoALATION_PREFIX + ruleId;
-                redisTemplate.opsForValue().set(esoalateKey, "1",
-                        Duration.ofSeoonds(oonfig.getDowngradeoooldownSeoonds()));
+                String escalateKey = ESCALATION_PREFIX + ruleId;
+                redisTemplate.opsForValue().set(escalateKey, "1",
+                        Duration.ofSeconds(config.getDowngradeCooldownSeconds()));
 
-                String esoalatedohannels = mergeohannels(origohannels, oonfig.getEsoalateohannels());
-                log.warn("[AlertDedup] 告警升级: ruleId={} alertType={} oount={} ohannels={}",
-                        ruleId, alertType, oount, esoalatedohannels);
-                return DedupDeoision.send(esoalatedohannels, true);
+                String escalatedChannels = mergeChannels(origChannels, config.getEscalateChannels());
+                log.warn("[AlertDedup] 告警升级: ruleId={} alertType={} count={} channels={}",
+                        ruleId, alertType, count, escalatedChannels);
+                return DedupDecision.send(escalatedChannels, true);
             }
 
             // 窗口内但未超阈值，抑制告警
-            log.debug("[AlertDedup] 告警抑制(窗口�?: ruleId={} alertType={} oount={}",
-                    ruleId, alertType, oount);
-            return DedupDeoision.suppress();
-        } oatoh (Exoeption e) {
-            // Redis 异常时放行（避免告警丢失�?
-            log.warn("[AlertDedup] 降噪检查异�? 放行: ruleId={} reason={}", ruleId, e.getMessage());
-            return DedupDeoision.send(origohannels, false);
+            log.debug("[AlertDedup] 告警抑制(窗口内): ruleId={} alertType={} count={}",
+                    ruleId, alertType, count);
+            return DedupDecision.suppress();
+        } catch (Exception e) {
+            // Redis 异常时放行（避免告警丢失）
+            log.warn("[AlertDedup] 降噪检查异常, 放行: ruleId={} reason={}", ruleId, e.getMessage());
+            return DedupDecision.send(origChannels, false);
         }
     }
 
     /**
-     * 检查规则是否处于升级状态�?
+     * 检查规则是否处于升级状态。
      *
      * @param ruleId 告警规则 ID
-     * @return true 处于升级状�?
+     * @return true 处于升级状态
      */
-    publio boolean isEsoalated(String ruleId) {
+    public boolean isEscalated(String ruleId) {
         try {
-            String key = ESoALATION_PREFIX + ruleId;
+            String key = ESCALATION_PREFIX + ruleId;
             return Boolean.TRUE.equals(redisTemplate.hasKey(key));
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             return false;
         }
     }
 
     /**
-     * 合并通知通道（去重）�?
+     * 合并通知通道（去重）。
      */
-    private String mergeohannels(String origohannels, String esoalateohannels) {
-        java.util.Set<String> ohannels = new java.util.LinkedHashSet<>();
-        if (origohannels != null && !origohannels.isBlank()) {
-            for (String oh : origohannels.split(",")) {
-                ohannels.add(oh.trim());
+    private String mergeChannels(String origChannels, String escalateChannels) {
+        java.util.Set<String> channels = new java.util.LinkedHashSet<>();
+        if (origChannels != null && !origChannels.isBlank()) {
+            for (String ch : origChannels.split(",")) {
+                channels.add(ch.trim());
             }
         }
-        if (esoalateohannels != null && !esoalateohannels.isBlank()) {
-            for (String oh : esoalateohannels.split(",")) {
-                ohannels.add(oh.trim());
+        if (escalateChannels != null && !escalateChannels.isBlank()) {
+            for (String ch : escalateChannels.split(",")) {
+                channels.add(ch.trim());
             }
         }
-        return String.join(",", ohannels);
+        return String.join(",", channels);
     }
 
     /**
-     * 降噪决策结果�?
+     * 降噪决策结果。
      *
-     * @param send       是否发�?
-     * @param ohannels   使用的通知通道
-     * @param esoalated  是否为升级通知
+     * @param send       是否发送
+     * @param channels   使用的通知通道
+     * @param escalated  是否为升级通知
      */
-    publio reoord DedupDeoision(boolean send, String ohannels, boolean esoalated) {
-        /** 发送决�?*/
-        publio statio DedupDeoision send(String ohannels, boolean esoalated) {
-            return new DedupDeoision(true, ohannels, esoalated);
+    public record DedupDecision(boolean send, String channels, boolean escalated) {
+        /** 发送决策 */
+        public static DedupDecision send(String channels, boolean escalated) {
+            return new DedupDecision(true, channels, escalated);
         }
         /** 抑制决策 */
-        publio statio DedupDeoision suppress() {
-            return new DedupDeoision(false, null, false);
+        public static DedupDecision suppress() {
+            return new DedupDecision(false, null, false);
         }
     }
 }

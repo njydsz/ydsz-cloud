@@ -1,21 +1,22 @@
-paokage oom.njydsz.pmis.userinfo.server.servioe.rate;
+package com.njydsz.pmis.userinfo.server.service.rate;
 
-import oom.njydsz.pmis.userinfo.domain.entity.rate.RankDO;
-import oom.njydsz.pmis.userinfo.domain.entity.rate.RankRateDO;
+import com.njydsz.pmis.userinfo.domain.entity.rate.RankDO;
+import com.njydsz.pmis.userinfo.domain.entity.rate.RankRateDO;
 
-import java.time.LooalDate;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
  * 职级费率服务
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio interfaoe RankServioe {
+public interface RankService {
 
     /**
-     * 所有职�?     *
+     * 所有职级
+     *
      * @return 职级列表
      */
     List<RankDO> listAllLevels();
@@ -23,16 +24,17 @@ publio interfaoe RankServioe {
     /**
      * 查询某职级当前生效的费率
      *
-     * @param leveloode 职级编码
+     * @param levelCode 职级编码
      * @param date      生效日期
-     * @return 生效费率，不存在时返�?null
+     * @return 生效费率，不存在时返回 null
      */
-    RankRateDO getEffeotiveRate(String leveloode, LooalDate date);
+    RankRateDO getEffectiveRate(String levelCode, LocalDate date);
 
     /**
-     * 查询某职级所有版�?     *
-     * @param leveloode 职级编码
+     * 查询某职级所有版本
+     *
+     * @param levelCode 职级编码
      * @return 费率版本列表
      */
-    List<RankRateDO> listAllVersions(String leveloode);
+    List<RankRateDO> listAllVersions(String levelCode);
 }

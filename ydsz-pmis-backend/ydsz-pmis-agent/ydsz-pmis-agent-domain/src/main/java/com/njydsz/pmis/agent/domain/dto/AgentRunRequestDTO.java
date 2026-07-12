@@ -1,6 +1,6 @@
-paokage oom.njydsz.pmis.agent.domain.dto.agent;
+package com.njydsz.pmis.agent.domain.dto.agent;
 
-import jakarta.validation.oonstraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.io.Serial;
@@ -11,33 +11,33 @@ import java.util.Map;
  * Agent 执行请求 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass AgentRunRequestDTO implements Serializable {
+public class AgentRunRequestDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    /** Agent 类型（AgentType.oode�?*/
-    @NotBlank(message = "{validation.agent.msg_37obd8of}")
+    /** Agent 类型（AgentType.code） */
+    @NotBlank(message = "{validation.agent.msg_37cbd8cf}")
     private String agentType;
 
-    /** 关联业务类型（PROJEoT/OPPORTUNITY/TIMESHEET/STAFF�?*/
+    /** 关联业务类型（PROJECT/OPPORTUNITY/TIMESHEET/STAFF） */
     private String bizType;
     /** 关联业务 ID */
     private String bizId;
     /** 关联业务名称/编码（冗余） */
     private String bizRef;
-    /** 调用�?ID（系统触发为空） */
-    private String oallerId;
-    /** 调用人姓�?*/
-    private String oallerName;
-    /** 来源（MANUAL/SoHEDULED/EVENT�?*/
-    private String souroe;
+    /** 调用人 ID（系统触发为空） */
+    private String callerId;
+    /** 调用人姓名 */
+    private String callerName;
+    /** 来源（MANUAL/SCHEDULED/EVENT） */
+    private String source;
     /** 附加参数 */
-    private Map<String, Objeot> params;
+    private Map<String, Object> params;
     /** 是否异步执行 */
-    private Boolean asyno;
+    private Boolean async;
 }

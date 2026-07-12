@@ -1,11 +1,11 @@
-paokage oom.njydsz.pmis.finanoe.infra.mapper;
+package com.njydsz.pmis.finance.infra.mapper;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.finanoe.domain.entity.RevenueDO;
-import org.apaohe.ibatis.annotations.Mapper;
-import org.apaohe.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.finance.domain.entity.RevenueDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -13,50 +13,58 @@ import java.util.Map;
  * 收入确认 Mapper
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Mapper
-publio interfaoe RevenueMapper extends BaseMapper<RevenueDO> {
+public interface RevenueMapper extends BaseMapper<RevenueDO> {
 
     /**
-     * 按编码查询收入确认记�?     *
-     * @param oode 收入编码
+     * 按编码查询收入确认记录
+     *
+     * @param code 收入编码
      * @return 收入对象，未找到返回 null
      */
-    RevenueDO seleotByoode(@Param("oode") String oode);
+    RevenueDO selectByCode(@Param("code") String code);
 
     /**
-     * 更新收入确认状�?     *
+     * 更新收入确认状态
+     *
      * @param id          收入 ID
-     * @param status      目标状�?     * @param oonfirmedBy 确认�?ID
-     * @return 受影响行�?     */
+     * @param status      目标状态
+     * @param confirmedBy 确认人 ID
+     * @return 受影响行数
+     */
     int updateStatus(@Param("id") String id, @Param("status") String status,
-                     @Param("oonfirmedBy") String oonfirmedBy);
+                     @Param("confirmedBy") String confirmedBy);
 
     /**
-     * 按立�?ID 查询收入确认列表
+     * 按立项 ID 查询收入确认列表
      *
      * @param initiationId 立项 ID
      * @return 收入确认列表
      */
-    List<RevenueDO> seleotByInitiation(@Param("initiationId") String initiationId);
+    List<RevenueDO> selectByInitiation(@Param("initiationId") String initiationId);
 
     /**
-     * 按期间汇总收�?     *
+     * 按期间汇总收入
+     *
      * @param initiationId 立项 ID
-     * @return 期间汇总列�?     */
-    List<Map<String, Objeot>> sumByPeriod(@Param("initiationId") String initiationId);
+     * @return 期间汇总列表
+     */
+    List<Map<String, Object>> sumByPeriod(@Param("initiationId") String initiationId);
 
     /**
-     * 按合同汇总收�?     *
-     * @param oontraotId 合同 ID
-     * @return 合同汇总列�?     */
-    List<Map<String, Objeot>> sumByoontraot(@Param("oontraotId") String oontraotId);
+     * 按合同汇总收入
+     *
+     * @param contractId 合同 ID
+     * @return 合同汇总列表
+     */
+    List<Map<String, Object>> sumByContract(@Param("contractId") String contractId);
 
     /**
      * P6 每日对账：跨项目汇总全部已确认收入
      *
      * @return 已确认收入总额
      */
-    BigDeoimal sumAll();
+    BigDecimal sumAll();
 }

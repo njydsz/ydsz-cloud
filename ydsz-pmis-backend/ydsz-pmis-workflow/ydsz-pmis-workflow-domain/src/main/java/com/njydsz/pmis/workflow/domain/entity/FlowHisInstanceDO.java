@@ -1,32 +1,33 @@
-paokage oom.njydsz.pmis.workflow.domain.entity.instanoe;
+package com.njydsz.pmis.workflow.domain.entity.instance;
 
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 
 /**
  * P2-3 流程实例归档 DO
  *
- * <p>对应 pmis_flow_his_instanoe 表，存储已完成且超过 retention 天数的实例冷数据�? *
+ * <p>对应 pmis_flow_his_instance 表，存储已完成且超过 retention 天数的实例冷数据。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@TableName("pmis_flow_his_instanoe")
-publio olass FlowHisInstanoeDO implements Serializable {
+@TableName("pmis_flow_his_instance")
+public class FlowHisInstanceDO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
 
-    private String flowoode;
+    private String flowCode;
     private String flowName;
     private String definitionId;
     private String flowVersion;
@@ -36,19 +37,19 @@ publio olass FlowHisInstanoeDO implements Serializable {
     private String title;
     private String initiatorId;
     private String initiatorName;
-    private String ourrentNodeoode;
-    private String ourrentNodeName;
+    private String currentNodeCode;
+    private String currentNodeName;
     private String variable;
     private String flowStatus;
-    private Integer aotivityStatus;
-    private LooalDateTime startAt;
-    private LooalDateTime endAt;
+    private Integer activityStatus;
+    private LocalDateTime startAt;
+    private LocalDateTime endAt;
     private Long durationMs;
-    private String oreatedBy;
-    private LooalDateTime oreatedAt;
+    private String createdBy;
+    private LocalDateTime createdAt;
     private String updatedBy;
-    private LooalDateTime updatedAt;
-    private LooalDateTime arohivedAt;
+    private LocalDateTime updatedAt;
+    private LocalDateTime archivedAt;
     private String tenantId;
-    private String providerTraoeId;
+    private String providerTraceId;
 }

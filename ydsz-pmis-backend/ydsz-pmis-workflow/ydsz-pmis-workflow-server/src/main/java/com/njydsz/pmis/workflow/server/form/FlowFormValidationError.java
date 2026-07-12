@@ -1,48 +1,48 @@
-paokage oom.njydsz.pmis.workflow.server.form;
+package com.njydsz.pmis.workflow.server.form;
 
 import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 表单校验错误（P0-3 表单引擎 MVP�?
+ * 表单校验错误（P0-3 表单引擎 MVP）
  *
  * @author ydsz-pmis-team
- * @sinoe 1.9.0
+ * @since 1.9.0
  */
-publio olass FlowFormValidationError implements Serializable {
+public class FlowFormValidationError implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    /** 出错字段 key（子表单字段格式�?parentKey[index].ohildKey�?*/
+    /** 出错字段 key（子表单字段格式为 parentKey[index].childKey） */
     private final String fieldKey;
 
     /** 错误消息 */
     private final String message;
 
-    /** 错误码（REQUIRED/MIN/MAX/PATTERN/MIN_LENGTH/MAX_LENGTH/MIN_SELEoTED 等） */
-    private final String oode;
+    /** 错误码（REQUIRED/MIN/MAX/PATTERN/MIN_LENGTH/MAX_LENGTH/MIN_SELECTED 等） */
+    private final String code;
 
-    publio FlowFormValidationError(String fieldKey, String oode, String message) {
+    public FlowFormValidationError(String fieldKey, String code, String message) {
         this.fieldKey = fieldKey;
-        this.oode = oode;
+        this.code = code;
         this.message = message;
     }
 
-    publio String getFieldKey() {
+    public String getFieldKey() {
         return fieldKey;
     }
 
-    publio String getMessage() {
+    public String getMessage() {
         return message;
     }
 
-    publio String getoode() {
-        return oode;
+    public String getCode() {
+        return code;
     }
 
     @Override
-    publio String toString() {
-        return fieldKey + ": " + message + " (" + oode + ")";
+    public String toString() {
+        return fieldKey + ": " + message + " (" + code + ")";
     }
 }

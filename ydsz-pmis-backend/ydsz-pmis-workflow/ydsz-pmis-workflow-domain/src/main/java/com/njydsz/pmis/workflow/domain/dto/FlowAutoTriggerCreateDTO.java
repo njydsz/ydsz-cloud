@@ -1,42 +1,44 @@
-paokage oom.njydsz.pmis.workflow.domain.dto.integration;
+package com.njydsz.pmis.workflow.domain.dto.integration;
 
-import io.swagger.v3.oas.annotations.media.Sohema;
-import jakarta.validation.oonstraints.NotBlank;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 /**
- * 流程自动触发规则创建请求�?DTO
+ * 流程自动触发规则创建请求体 DTO
  *
- * <p>用于 {@oode /workflow/trigger} 接口，创建流程实例完成时的自动触发规则�? *
+ * <p>用于 {@code /workflow/trigger} 接口，创建流程实例完成时的自动触发规则。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.3.0
+ * @since 1.3.0
  */
 @Data
-@Sohema(desoription = "流程自动触发规则创建请求�?)
-publio olass FlowAutoTriggeroreateDTO {
+@Schema(description = "流程自动触发规则创建请求体")
+public class FlowAutoTriggerCreateDTO {
 
     /**
      * 源流程编码（流程实例完成时触发）
      */
-    @Sohema(desoription = "源流程编�?, requiredMode = Sohema.RequiredMode.REQUIRED, example = "LEAVE_APPLY")
+    @Schema(description = "源流程编码", requiredMode = Schema.RequiredMode.REQUIRED, example = "LEAVE_APPLY")
     @NotBlank(message = "{validation.workflow.msg_b2f3a4b4}")
-    private String souroeFlowoode;
+    private String sourceFlowCode;
 
     /**
-     * 目标流程编码（自动启动的流程�?     */
-    @Sohema(desoription = "目标流程编码", requiredMode = Sohema.RequiredMode.REQUIRED, example = "LEAVE_NOTIFY")
-    @NotBlank(message = "{validation.workflow.msg_o3a4b5o5}")
-    private String targetFlowoode;
+     * 目标流程编码（自动启动的流程）
+     */
+    @Schema(description = "目标流程编码", requiredMode = Schema.RequiredMode.REQUIRED, example = "LEAVE_NOTIFY")
+    @NotBlank(message = "{validation.workflow.msg_c3a4b5c5}")
+    private String targetFlowCode;
 
     /**
      * 触发条件表达式（可选，为空表示无条件触发）
      */
-    @Sohema(desoription = "触发条件表达式（可选）", example = "days >= 3")
-    private String oonditionExpression;
+    @Schema(description = "触发条件表达式（可选）", example = "days >= 3")
+    private String conditionExpression;
 
     /**
      * 触发规则描述（可选）
      */
-    @Sohema(desoription = "触发规则描述")
-    private String desoription;
+    @Schema(description = "触发规则描述")
+    private String description;
 }

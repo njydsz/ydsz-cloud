@@ -1,28 +1,28 @@
-paokage oom.njydsz.pmis.message.domain.entity.oore;
+package com.njydsz.pmis.message.domain.entity.core;
 
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
-import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashoode;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 
 /**
- * 站内通知�? 系统消息/待办/预警/公告统一入口,支持优先�?聚合/撤回/业务跳转
+ * 站内通知表: 系统消息/待办/预警/公告统一入口,支持优先级/聚合/撤回/业务跳转
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@EqualsAndHashoode(oallSuper = true)
-@TableName("pmis_msg_notifioation")
-publio olass MsgNotifioationDO extends BaseDO {
+@EqualsAndHashCode(callSuper = true)
+@TableName("pmis_msg_notification")
+public class MsgNotificationDO extends BaseDO {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 主键 ID */
     @TableId(type = IdType.ASSIGN_ID)
@@ -31,69 +31,69 @@ publio olass MsgNotifioationDO extends BaseDO {
     /** 通知标题 */
     private String title;
 
-    /** 通知内容(支持富文�?Markdown) */
-    private String oontent;
+    /** 通知内容(支持富文本/Markdown) */
+    private String content;
 
-    /** 通知级别: INFO 提示 / WARN 警告 / ERROR 错误 / URGENT 紧�?*/
+    /** 通知级别: INFO 提示 / WARN 警告 / ERROR 错误 / URGENT 紧急 */
     private String level;
 
-    /** 通知分类: SYSTEM 系统 / WORKFLOW 流程 / ALERT 告警 / TO_DO 待办 / ANNOUNoE 公告 */
-    private String oategory;
+    /** 通知分类: SYSTEM 系统 / WORKFLOW 流程 / ALERT 告警 / TO_DO 待办 / ANNOUNCE 公告 */
+    private String category;
 
-    /** 发送优先级: LOW/NORMAL/HIGH/URGENT(影响排队与聚�? */
+    /** 发送优先级: LOW/NORMAL/HIGH/URGENT(影响排队与聚合) */
     private String priority;
 
-    /** 发送人 ID(系统通知�?SYSTEM) */
+    /** 发送人 ID(系统通知为 SYSTEM) */
     private String senderId;
 
-    /** 接收�?ID(关联 pmis_employee.id) */
-    private String reoeiverId;
+    /** 接收人 ID(关联 pmis_employee.id) */
+    private String receiverId;
 
-    /** 关联业务类型(�?oontraot/invoioe/risk) */
+    /** 关联业务类型(如 contract/invoice/risk) */
     private String bizType;
 
     /** 关联业务单据 ID */
     private String bizId;
 
-    /** 聚合�?同组通知可合并为摘要,�?RISK:oontraot-123) */
+    /** 聚合组(同组通知可合并为摘要,如 RISK:contract-123) */
     private String messageGroup;
 
     /** 聚合批次 ID(关联 pmis_msg_aggregate.id) */
-    private String batohId;
+    private String batchId;
 
-    /** 点击跳转 URL(前端路由或外�? */
-    private String aotionUrl;
+    /** 点击跳转 URL(前端路由或外链) */
+    private String actionUrl;
 
-    /** 跳转按钮文案(�?去处�?) */
-    private String aotionText;
+    /** 跳转按钮文案(如"去处理") */
+    private String actionText;
 
-    /** 通知图标标识(Element Plus ioon name) */
-    private String ioon;
+    /** 通知图标标识(Element Plus icon name) */
+    private String icon;
 
     /** 扩展字段 JSON(业务自定义透传) */
     private String extra;
 
-    /** 来源模块(system/projeot/workflow/agent) */
-    private String souroeModule;
+    /** 来源模块(system/project/workflow/agent) */
+    private String sourceModule;
 
-    /** 已读状�? 0 未读 / 1 已读 */
+    /** 已读状态: 0 未读 / 1 已读 */
     private Integer readStatus;
 
     /** 首次阅读时间 */
-    private LooalDateTime readTime;
+    private LocalDateTime readTime;
 
-    /** 撤回状�? NONE 未撤�?/ REoALLED 已撤�?*/
-    private String reoallStatus;
+    /** 撤回状态: NONE 未撤回 / RECALLED 已撤回 */
+    private String recallStatus;
 
     /** 撤回时间 */
-    private LooalDateTime reoallAt;
+    private LocalDateTime recallAt;
 
-    /** 过期时间(过期后不再展�? */
-    private LooalDateTime expiredAt;
+    /** 过期时间(过期后不再展示) */
+    private LocalDateTime expiredAt;
 
-    /** P1-3: @提及用户 ID 列表(逗号分隔,�?"user1,user2"),被@用户收到额外提醒 */
+    /** P1-3: @提及用户 ID 列表(逗号分隔,如 "user1,user2"),被@用户收到额外提醒 */
     private String mentionUserIds;
 
-    /** 租户 ID(单租户部署默�?1,P2-7 补齐与其他消息实体一�? */
+    /** 租户 ID(单租户部署默认 1,P2-7 补齐与其他消息实体一致) */
     private String tenantId;
 }

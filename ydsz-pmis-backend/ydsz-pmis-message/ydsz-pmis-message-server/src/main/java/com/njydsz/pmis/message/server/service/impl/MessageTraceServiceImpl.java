@@ -1,105 +1,105 @@
-paokage oom.njydsz.pmis.message.server.servioe.impl.oore;
+package com.njydsz.pmis.message.server.service.impl.core;
 
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.njydsz.pmis.oommon.util.json.JsonUtils;
-import oom.njydsz.pmis.oommon.util.TraoeIdUtil;
-import oom.njydsz.pmis.message.domain.entity.oonfig.MsgTraoeDO;
-import oom.njydsz.pmis.message.domain.entity.oonfig.MsgTraoeDO.Node;
-import oom.njydsz.pmis.message.infra.mapper.oonfig.MsgTraoeMapper;
-import oom.njydsz.pmis.message.server.servioe.oore.MessageTraoeServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.message.domain.entity.config.MsgTraceDO;
+import com.njydsz.pmis.message.domain.entity.config.MsgTraceDO.Node;
+import com.njydsz.pmis.message.infra.mapper.config.MsgTraceMapper;
+import com.njydsz.pmis.message.server.service.core.MessageTraceService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.soheduling.annotation.Asyno;
-import org.springframework.stereotype.Servioe;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
 /**
- * P0-2: 消息端到端追踪服务实现�?
+ * P0-2: 消息端到端追踪服务实现。
  *
- * <p>异步写入轨迹记录，不影响消息发送主流程性能�?
- * 轨迹记录失败时仅记日志，不抛异常�?
+ * <p>异步写入轨迹记录，不影响消息发送主流程性能。
+ * 轨迹记录失败时仅记日志，不抛异常。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.3.0
+ * @since 1.3.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass MessageTraoeServioeImpl implements MessageTraoeServioe {
+@Service
+@RequiredArgsConstructor
+public class MessageTraceServiceImpl implements MessageTraceService {
 
     /** 消息轨迹 Mapper（异步写入） */
-    private final MsgTraoeMapper msgTraoeMapper;
+    private final MsgTraceMapper msgTraceMapper;
 
     @Override
-    @Asyno
-    publio void reoordTraoe(String msgId, Node node, String status, String ohannel,
-                            String message, Map<String, Objeot> extra) {
+    @Async
+    public void recordTrace(String msgId, Node node, String status, String channel,
+                            String message, Map<String, Object> extra) {
         if (!StringUtils.hasText(msgId) || node == null) {
             return;
         }
         try {
-            MsgTraoeDO traoe = new MsgTraoeDO();
-            traoe.setMsgId(msgId);
-            traoe.setTraoeId(TraoeIdUtil.getOroreate());
-            traoe.setNode(node.name());
-            traoe.setStatus(status == null ? "SUooESS" : status);
-            traoe.setohannel(ohannel);
-            traoe.setMessage(message);
-            traoe.setEventAt(LooalDateTime.now());
-            traoe.setTenantId(Tenantoontext.getTenantId());
+            MsgTraceDO trace = new MsgTraceDO();
+            trace.setMsgId(msgId);
+            trace.setTraceId(TraceIdUtil.getOrCreate());
+            trace.setNode(node.name());
+            trace.setStatus(status == null ? "SUCCESS" : status);
+            trace.setChannel(channel);
+            trace.setMessage(message);
+            trace.setEventAt(LocalDateTime.now());
+            trace.setTenantId(TenantContext.getTenantId());
             if (extra != null && !extra.isEmpty()) {
-                traoe.setExtra(JsonUtils.toJson(extra));
+                trace.setExtra(JsonUtils.toJson(extra));
             }
-            msgTraoeMapper.insert(traoe);
-            log.debug("[Traoe] 记录轨迹: msgId={} node={} status={}", msgId, node, status);
-        } oatoh (Exoeption e) {
-            log.warn("[Traoe] 记录轨迹失败,不影响主流程: msgId={} node={} err={}",
+            msgTraceMapper.insert(trace);
+            log.debug("[Trace] 记录轨迹: msgId={} node={} status={}", msgId, node, status);
+        } catch (Exception e) {
+            log.warn("[Trace] 记录轨迹失败,不影响主流程: msgId={} node={} err={}",
                     msgId, node, e.getMessage());
         }
     }
 
     @Override
-    @Asyno
-    publio void reoordTraoe(String msgId, Node node, String status, String ohannel, String message) {
-        reoordTraoe(msgId, node, status, ohannel, message, null);
+    @Async
+    public void recordTrace(String msgId, Node node, String status, String channel, String message) {
+        recordTrace(msgId, node, status, channel, message, null);
     }
 
     @Override
-    publio List<MsgTraoeDO> getTraoeByMsgId(String msgId) {
+    public List<MsgTraceDO> getTraceByMsgId(String msgId) {
         if (!StringUtils.hasText(msgId)) {
             return List.of();
         }
-        LambdaQueryWrapper<MsgTraoeDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MsgTraoeDO::getMsgId, msgId)
-                .orderByAso(MsgTraoeDO::getEventAt);
-        return msgTraoeMapper.seleotList(wrapper);
+        LambdaQueryWrapper<MsgTraceDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MsgTraceDO::getMsgId, msgId)
+                .orderByAsc(MsgTraceDO::getEventAt);
+        return msgTraceMapper.selectList(wrapper);
     }
 
     @Override
-    publio List<MsgTraoeDO> getTraoeByTraoeId(String traoeId) {
-        if (!StringUtils.hasText(traoeId)) {
+    public List<MsgTraceDO> getTraceByTraceId(String traceId) {
+        if (!StringUtils.hasText(traceId)) {
             return List.of();
         }
-        LambdaQueryWrapper<MsgTraoeDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MsgTraoeDO::getTraoeId, traoeId)
-                .orderByAso(MsgTraoeDO::getEventAt);
-        return msgTraoeMapper.seleotList(wrapper);
+        LambdaQueryWrapper<MsgTraceDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MsgTraceDO::getTraceId, traceId)
+                .orderByAsc(MsgTraceDO::getEventAt);
+        return msgTraceMapper.selectList(wrapper);
     }
 
     @Override
-    publio List<MsgTraoeDO> getTraoeByBiz(String bizType, String bizId) {
+    public List<MsgTraceDO> getTraceByBiz(String bizType, String bizId) {
         if (!StringUtils.hasText(bizType) || !StringUtils.hasText(bizId)) {
             return List.of();
         }
-        LambdaQueryWrapper<MsgTraoeDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MsgTraoeDO::getBizType, bizType)
-                .eq(MsgTraoeDO::getBizId, bizId)
-                .orderByAso(MsgTraoeDO::getEventAt);
-        return msgTraoeMapper.seleotList(wrapper);
+        LambdaQueryWrapper<MsgTraceDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MsgTraceDO::getBizType, bizType)
+                .eq(MsgTraceDO::getBizId, bizId)
+                .orderByAsc(MsgTraceDO::getEventAt);
+        return msgTraceMapper.selectList(wrapper);
     }
 }

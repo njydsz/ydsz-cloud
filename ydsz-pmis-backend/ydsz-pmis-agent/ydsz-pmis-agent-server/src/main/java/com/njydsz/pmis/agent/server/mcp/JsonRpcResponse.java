@@ -1,58 +1,63 @@
-paokage oom.njydsz.pmis.agent.server.mop.model;
+package com.njydsz.pmis.agent.server.mcp.model;
 
-import oom.fasterxml.jaokson.annotation.JsonInolude;
-import oom.fasterxml.jaokson.databind.JsonNode;
-import lombok.AllArgsoonstruotor;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonNode;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsoonstruotor;
+import lombok.NoArgsConstructor;
 
 /**
- * JSON-RPo 2.0 响应信封（P3-3 落地）�? *
- * <p>成功响应�? * <pre>
- * {"jsonrpo":"2.0","id":1,"result":{...}}
+ * JSON-RPC 2.0 响应信封（P3-3 落地）。
+ *
+ * <p>成功响应：
+ * <pre>
+ * {"jsonrpc":"2.0","id":1,"result":{...}}
  * </pre>
  *
- * <p>错误响应�? * <pre>
- * {"jsonrpo":"2.0","id":1,"error":{"oode":-32601,"message":"Method not found"}}
+ * <p>错误响应：
+ * <pre>
+ * {"jsonrpc":"2.0","id":1,"error":{"code":-32601,"message":"Method not found"}}
  * </pre>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0 (P3-3)
+ * @since 1.0.0 (P3-3)
  */
 @Data
 @Builder
-@NoArgsoonstruotor
-@AllArgsoonstruotor
-@JsonInolude(JsonInolude.Inolude.NON_NULL)
-publio olass JsonRpoResponse {
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class JsonRpcResponse {
 
-    /** 协议版本，固�?"2.0" */
+    /** 协议版本，固定 "2.0" */
     @Builder.Default
-    private String jsonrpo = "2.0";
+    private String jsonrpc = "2.0";
 
-    /** 请求 ID（与请求中的 id 对应�?*/
-    private Objeot id;
+    /** 请求 ID（与请求中的 id 对应） */
+    private Object id;
 
-    /** 结果（成功时填充�?*/
+    /** 结果（成功时填充） */
     private JsonNode result;
 
-    /** 错误（失败时填充�?*/
-    private JsonRpoError error;
+    /** 错误（失败时填充） */
+    private JsonRpcError error;
 
     /**
-     * 是否为错误响应�?     *
+     * 是否为错误响应。
+     *
      * @return true 表示错误响应
      */
-    publio boolean isError() {
+    public boolean isError() {
         return error != null;
     }
 
     /**
-     * 是否为成功响应�?     *
+     * 是否为成功响应。
+     *
      * @return true 表示成功响应
      */
-    publio boolean isSuooess() {
+    public boolean isSuccess() {
         return error == null && result != null;
     }
 }

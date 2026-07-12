@@ -1,52 +1,54 @@
-paokage oom.njydsz.pmis.userinfo.domain.enums.resouroe;
+package com.njydsz.pmis.userinfo.domain.enums.resource;
 
 /**
- * Benoh 闲置状�? *
+ * Bench 闲置状态
+ *
  * <ul>
- *   <li>AoTIVE - 闲置中（计入闲置池）</li>
+ *   <li>ACTIVE - 闲置中（计入闲置池）</li>
  *   <li>EXITED - 已出池（被分配或转培训）</li>
- *   <li>TRAINING - 培训中（仍记�?Benoh 但不计闲置成本）</li>
+ *   <li>TRAINING - 培训中（仍记为 Bench 但不计闲置成本）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum BenohStatus {
-    AoTIVE("AoTIVE", "闲置�?),
-    EXITED("EXITED", "已出�?),
-    TRAINING("TRAINING", "培训�?);
+public enum BenchStatus {
+    ACTIVE("ACTIVE", "闲置中"),
+    EXITED("EXITED", "已出池"),
+    TRAINING("TRAINING", "培训中");
 
     /** 枚举编码 */
-    private final String oode;
+    private final String code;
     /** 枚举描述 */
-    private final String deso;
+    private final String desc;
 
-    BenohStatus(String oode, String deso) {
-        this.oode = oode;
-        this.deso = deso;
+    BenchStatus(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
     }
 
-    publio String getoode() { return oode; }
-    publio String getDeso() { return deso; }
+    public String getCode() { return code; }
+    public String getDesc() { return desc; }
 
     /**
      * 判断当前状态是否可出池
      *
-     * @return �?AoTIVE 状态允许出�?     */
-    publio boolean oanExit() {
-        return this == AoTIVE;
+     * @return 仅 ACTIVE 状态允许出池
+     */
+    public boolean canExit() {
+        return this == ACTIVE;
     }
 
     /**
      * 根据编码解析枚举
      *
-     * @param oode 枚举编码（大小写不敏感）
-     * @return 匹配的枚举值；oode �?null 或无匹配时返�?null
+     * @param code 枚举编码（大小写不敏感）
+     * @return 匹配的枚举值；code 为 null 或无匹配时返回 null
      */
-    publio statio BenohStatus fromoode(String oode) {
-        if (oode == null) return null;
-        for (BenohStatus b : values()) {
-            if (b.oode.equalsIgnoreoase(oode)) return b;
+    public static BenchStatus fromCode(String code) {
+        if (code == null) return null;
+        for (BenchStatus b : values()) {
+            if (b.code.equalsIgnoreCase(code)) return b;
         }
         return null;
     }

@@ -1,60 +1,63 @@
-paokage oom.njydsz.pmis.finanoe.server.engine;
+package com.njydsz.pmis.finance.server.engine;
 
-import oom.njydsz.pmis.projeot.domain.entity.oostAllooationDO;
-import oom.njydsz.pmis.projeot.domain.entity.TimeEntryDO;
-import oom.njydsz.pmis.projeot.domain.enums.oostType;
-import oom.njydsz.pmis.finanoe.domain.enums.ReoonoileLevel;
-import oom.njydsz.pmis.finanoe.domain.enums.ReoonoileType;
-import oom.njydsz.pmis.projeot.domain.enums.TimeEntryStatus;
-import oom.njydsz.pmis.projeot.infra.mapper.oostAllooationMapper;
-import oom.njydsz.pmis.projeot.infra.mapper.TimeEntryMapper;
-import oom.njydsz.pmis.projeot.server.engine.TimeEntryValidator;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.project.domain.entity.CostAllocationDO;
+import com.njydsz.pmis.project.domain.entity.TimeEntryDO;
+import com.njydsz.pmis.project.domain.enums.CostType;
+import com.njydsz.pmis.finance.domain.enums.ReconcileLevel;
+import com.njydsz.pmis.finance.domain.enums.ReconcileType;
+import com.njydsz.pmis.project.domain.enums.TimeEntryStatus;
+import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
+import com.njydsz.pmis.project.infra.mapper.TimeEntryMapper;
+import com.njydsz.pmis.project.server.engine.TimeEntryValidator;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LooalDate;
-import java.time.LooalDateTime;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Looale;
+import java.util.Locale;
 import java.util.Map;
-import java.util.Objeots;
+import java.util.Objects;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.oolleotors;
+import java.util.stream.Collectors;
 
 /**
  * 财务-工时数据交叉对账引擎
  *
- * <p>核心职责�? * <ul>
- *   <li>校验工时与成本归集的双向一致�?/li>
- *   <li>检测工时异常（单日 / 单周超限、跨项目冲突�?/li>
+ * <p>核心职责：
+ * <ul>
+ *   <li>校验工时与成本归集的双向一致性</li>
+ *   <li>检测工时异常（单日 / 单周超限、跨项目冲突）</li>
  *   <li>检测成本归集异常（漏算、幽灵成本、分配超前）</li>
- *   <li>计算工时×费率的金额偏�?/li>
+ *   <li>计算工时×费率的金额偏差</li>
  * </ul>
  *
- * <p>所有方法返�?{@link ReoonoileResult} 列表�? * 业务层可通过 {@link #buildReport(String, List)} 汇总为 {@link ReoonoileReport}�? *
+ * <p>所有方法返回 {@link ReconcileResult} 列表，
+ * 业务层可通过 {@link #buildReport(String, List)} 汇总为 {@link ReconcileReport}。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@oomponent
-@RequiredArgsoonstruotor
-publio olass ReoonoileHandler {
+@Component
+@RequiredArgsConstructor
+public class ReconcileHandler {
 
     /** 金额漂移容忍度（默认 1 元） */
-    publio statio final BigDeoimal AMOUNT_DRIFT_TOLERANoE = new BigDeoimal("1.00");
+    public static final BigDecimal AMOUNT_DRIFT_TOLERANCE = new BigDecimal("1.00");
 
-    /** 默认单人天费率（兜底，当 Rateoard 无法解析时使用） */
-    publio statio final BigDeoimal DEFAULT_DAILY_RATE = new BigDeoimal("800.00");
+    /** 默认单人天费率（兜底，当 RateCard 无法解析时使用） */
+    public static final BigDecimal DEFAULT_DAILY_RATE = new BigDecimal("800.00");
 
     private final TimeEntryMapper timeEntryMapper;
-    private final oostAllooationMapper oostAllooationMapper;
+    private final CostAllocationMapper costAllocationMapper;
 
     /**
      * 完整对账 - 包含所有检查项
@@ -64,15 +67,15 @@ publio olass ReoonoileHandler {
      * @param to           结束日期
      * @return 对账结果列表
      */
-    publio List<ReoonoileResult> reoonoile(String initiationId, LooalDate from, LooalDate to) {
-        List<ReoonoileResult> results = new ArrayList<>();
-        results.addAll(reoonoileMissingoost(initiationId));
-        results.addAll(reoonoileGhostoost(initiationId));
-        results.addAll(reoonoileDailyOverflow(initiationId, from, to));
-        results.addAll(reoonoileWeeklyOverload(initiationId, from, to));
-        results.addAll(reoonoileorossProjeot(initiationId, from, to));
-        results.addAll(reoonoileAmountDrift(initiationId, from, to));
-        results.addAll(reoonoileAllooatedBeforeApproval(initiationId));
+    public List<ReconcileResult> reconcile(String initiationId, LocalDate from, LocalDate to) {
+        List<ReconcileResult> results = new ArrayList<>();
+        results.addAll(reconcileMissingCost(initiationId));
+        results.addAll(reconcileGhostCost(initiationId));
+        results.addAll(reconcileDailyOverflow(initiationId, from, to));
+        results.addAll(reconcileWeeklyOverload(initiationId, from, to));
+        results.addAll(reconcileCrossProject(initiationId, from, to));
+        results.addAll(reconcileAmountDrift(initiationId, from, to));
+        results.addAll(reconcileAllocatedBeforeApproval(initiationId));
         return results;
     }
 
@@ -81,74 +84,76 @@ publio olass ReoonoileHandler {
      *
      * @param initiationId 项目立项 ID
      * @param results      对账结果列表
-     * @return 汇总后的对账报�?     */
-    publio ReoonoileReport buildReport(String initiationId, List<ReoonoileResult> results) {
-        ReoonoileReport report = new ReoonoileReport();
+     * @return 汇总后的对账报告
+     */
+    public ReconcileReport buildReport(String initiationId, List<ReconcileResult> results) {
+        ReconcileReport report = new ReconcileReport();
         report.setInitiationId(initiationId);
-        report.setoheokAt(LooalDateTime.now());
+        report.setCheckAt(LocalDateTime.now());
         report.setTotal(results == null ? 0 : results.size());
         int info = 0, warn = 0, err = 0;
-        Map<String, Long> oountByType = new HashMap<>();
+        Map<String, Long> countByType = new HashMap<>();
         if (results != null) {
-            for (ReoonoileResult r : results) {
-                if (r.getLevel() == ReoonoileLevel.INFO) info++;
-                else if (r.getLevel() == ReoonoileLevel.WARN) warn++;
-                else if (r.getLevel() == ReoonoileLevel.ERROR) err++;
-                String key = r.getType() == null ? "UNKNOWN" : r.getType().getoode();
-                oountByType.merge(key, 1L, (a, b) -> a + b);
+            for (ReconcileResult r : results) {
+                if (r.getLevel() == ReconcileLevel.INFO) info++;
+                else if (r.getLevel() == ReconcileLevel.WARN) warn++;
+                else if (r.getLevel() == ReconcileLevel.ERROR) err++;
+                String key = r.getType() == null ? "UNKNOWN" : r.getType().getCode();
+                countByType.merge(key, 1L, (a, b) -> a + b);
             }
         }
-        report.setInfooount(info);
-        report.setWarnoount(warn);
-        report.setErroroount(err);
-        report.setoountByType(oountByType);
+        report.setInfoCount(info);
+        report.setWarnCount(warn);
+        report.setErrorCount(err);
+        report.setCountByType(countByType);
         report.setResults(results);
         return report;
     }
 
     // ----------------------------------------------------------------
-    // 1. 工时�?APPROVED 但缺失成本归�?(漏算)
+    // 1. 工时已 APPROVED 但缺失成本归集 (漏算)
     // ----------------------------------------------------------------
 
     /**
-     * 检查工时已 APPROVED 但缺失成本归集（漏算�?     *
+     * 检查工时已 APPROVED 但缺失成本归集（漏算）
+     *
      * @param initiationId 项目立项 ID
      * @return 异常结果列表
      */
-    publio List<ReoonoileResult> reoonoileMissingoost(String initiationId) {
-        List<ReoonoileResult> out = new ArrayList<>();
+    public List<ReconcileResult> reconcileMissingCost(String initiationId) {
+        List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
 
-        List<TimeEntryDO> approved = timeEntryMapper.seleotByInitiationAndDateRange(
+        List<TimeEntryDO> approved = timeEntryMapper.selectByInitiationAndDateRange(
                 initiationId, null, null).stream()
-                .filter(e -> TimeEntryStatus.APPROVED.getoode().equals(e.getStatus()))
+                .filter(e -> TimeEntryStatus.APPROVED.getCode().equals(e.getStatus()))
                 .toList();
         if (approved.isEmpty()) return out;
 
-        List<oostAllooationDO> oosts = oostAllooationMapper.seleotByInitiationAndPeriod(initiationId, null);
-        Set<String> oostSouroeIds = oosts.stream()
-                .filter(o -> oostType.LABOR.getoode().equals(o.getoostType()))
-                .map(oostAllooationDO::getSouroeId)
-                .filter(Objeots::nonNull)
-                .oolleot(oolleotors.toSet());
+        List<CostAllocationDO> costs = costAllocationMapper.selectByInitiationAndPeriod(initiationId, null);
+        Set<String> costSourceIds = costs.stream()
+                .filter(c -> CostType.LABOR.getCode().equals(c.getCostType()))
+                .map(CostAllocationDO::getSourceId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
 
         for (TimeEntryDO e : approved) {
-            if (e.getId() == null) oontinue;
-            if (!oostSouroeIds.oontains(e.getId())) {
-                out.add(ReoonoileResult.builder()
-                        .type(ReoonoileType.MISSING_oOST_FOR_APPROVED_TIME)
-                        .level(ReoonoileLevel.ERROR)
+            if (e.getId() == null) continue;
+            if (!costSourceIds.contains(e.getId())) {
+                out.add(ReconcileResult.builder()
+                        .type(ReconcileType.MISSING_COST_FOR_APPROVED_TIME)
+                        .level(ReconcileLevel.ERROR)
                         .initiationId(initiationId)
                         .employeeId(e.getEmployeeId())
-                        .souroeId(e.getId())
-                        .souroeType("TIME_ENTRY")
-                        .desoription(String.format(
-                                "工时 id=%s 状�?APPROVED 但未生成成本归集记录,工时=%sh,人员=%s",
+                        .sourceId(e.getId())
+                        .sourceType("TIME_ENTRY")
+                        .description(String.format(
+                                "工时 id=%s 状态=APPROVED 但未生成成本归集记录,工时=%sh,人员=%s",
                                 e.getId(),
                                 e.getHours() == null ? "?" : e.getHours().toPlainString(),
                                 e.getEmployeeName() == null ? "?" : e.getEmployeeName()))
-                        .aotualValue(e.getHours())
-                        .suggestion("调用 oostAllooationServioe.synoFromTimeEntry 补齐成本")
+                        .actualValue(e.getHours())
+                        .suggestion("调用 costAllocationService.syncFromTimeEntry 补齐成本")
                         .build());
             }
         }
@@ -156,53 +161,55 @@ publio olass ReoonoileHandler {
     }
 
     // ----------------------------------------------------------------
-    // 2. 工时�?REJEoTED 但存在成本归�?(幽灵成本)
+    // 2. 工时已 REJECTED 但存在成本归集 (幽灵成本)
     // ----------------------------------------------------------------
 
     /**
-     * 检查工时已 REJEoTED 但存在成本归集（幽灵成本�?     *
+     * 检查工时已 REJECTED 但存在成本归集（幽灵成本）
+     *
      * @param initiationId 项目立项 ID
      * @return 异常结果列表
      */
-    publio List<ReoonoileResult> reoonoileGhostoost(String initiationId) {
-        List<ReoonoileResult> out = new ArrayList<>();
+    public List<ReconcileResult> reconcileGhostCost(String initiationId) {
+        List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
 
-        List<oostAllooationDO> oosts = oostAllooationMapper.seleotByInitiationAndPeriod(initiationId, null);
-        if (oosts.isEmpty()) return out;
-        List<oostAllooationDO> laboroosts = oosts.stream()
-                .filter(o -> oostType.LABOR.getoode().equals(o.getoostType()))
+        List<CostAllocationDO> costs = costAllocationMapper.selectByInitiationAndPeriod(initiationId, null);
+        if (costs.isEmpty()) return out;
+        List<CostAllocationDO> laborCosts = costs.stream()
+                .filter(c -> CostType.LABOR.getCode().equals(c.getCostType()))
                 .toList();
-        if (laboroosts.isEmpty()) return out;
+        if (laborCosts.isEmpty()) return out;
 
-        // 收集 souroeId 对应的工时状�?        Set<String> souroeIds = laboroosts.stream()
-                .map(oostAllooationDO::getSouroeId)
-                .filter(Objeots::nonNull)
-                .oolleot(oolleotors.toSet());
+        // 收集 sourceId 对应的工时状态
+        Set<String> sourceIds = laborCosts.stream()
+                .map(CostAllocationDO::getSourceId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
         Map<String, TimeEntryDO> entryMap = new HashMap<>();
-        for (String sid : souroeIds) {
-            if (sid == null) oontinue;
-            TimeEntryDO e = timeEntryMapper.seleotById(sid);
+        for (String sid : sourceIds) {
+            if (sid == null) continue;
+            TimeEntryDO e = timeEntryMapper.selectById(sid);
             if (e != null) entryMap.put(sid, e);
         }
 
-        for (oostAllooationDO o : laboroosts) {
-            if (o.getSouroeId() == null) oontinue;
-            TimeEntryDO e = entryMap.get(o.getSouroeId());
-            if (e == null) oontinue;
-            if (TimeEntryStatus.REJEoTED.getoode().equals(e.getStatus())) {
-                out.add(ReoonoileResult.builder()
-                        .type(ReoonoileType.GHOST_oOST_FOR_REJEoTED_TIME)
-                        .level(ReoonoileLevel.ERROR)
+        for (CostAllocationDO c : laborCosts) {
+            if (c.getSourceId() == null) continue;
+            TimeEntryDO e = entryMap.get(c.getSourceId());
+            if (e == null) continue;
+            if (TimeEntryStatus.REJECTED.getCode().equals(e.getStatus())) {
+                out.add(ReconcileResult.builder()
+                        .type(ReconcileType.GHOST_COST_FOR_REJECTED_TIME)
+                        .level(ReconcileLevel.ERROR)
                         .initiationId(initiationId)
                         .employeeId(e.getEmployeeId())
-                        .souroeId(o.getId())
-                        .souroeType("oOST_ALLOoATION")
-                        .desoription(String.format(
-                                "工时 id=%s 状�?REJEoTED 但存在成本归�?oostId=%s 金额=%s",
-                                e.getId(), o.getId(), o.getAmount()))
-                        .aotualValue(o.getAmount())
-                        .suggestion("删除该幽灵成本记录或恢复工时状�?)
+                        .sourceId(c.getId())
+                        .sourceType("COST_ALLOCATION")
+                        .description(String.format(
+                                "工时 id=%s 状态=REJECTED 但存在成本归集 costId=%s 金额=%s",
+                                e.getId(), c.getId(), c.getAmount()))
+                        .actualValue(c.getAmount())
+                        .suggestion("删除该幽灵成本记录或恢复工时状态")
                         .build());
             }
         }
@@ -210,7 +217,7 @@ publio olass ReoonoileHandler {
     }
 
     // ----------------------------------------------------------------
-    // 3. 单人单日工时�?24h
+    // 3. 单人单日工时超 24h
     // ----------------------------------------------------------------
 
     /**
@@ -221,36 +228,36 @@ publio olass ReoonoileHandler {
      * @param to           结束日期
      * @return 异常结果列表
      */
-    publio List<ReoonoileResult> reoonoileDailyOverflow(String initiationId, LooalDate from, LooalDate to) {
-        List<ReoonoileResult> out = new ArrayList<>();
+    public List<ReconcileResult> reconcileDailyOverflow(String initiationId, LocalDate from, LocalDate to) {
+        List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
-        List<TimeEntryDO> entries = timeEntryMapper.seleotByInitiationAndDateRange(initiationId, from, to);
+        List<TimeEntryDO> entries = timeEntryMapper.selectByInitiationAndDateRange(initiationId, from, to);
         if (entries.isEmpty()) return out;
 
-        // �?(employeeId, entryDate) 聚合
-        Map<String, BigDeoimal> sumMap = new HashMap<>();
+        // 按 (employeeId, entryDate) 聚合
+        Map<String, BigDecimal> sumMap = new HashMap<>();
         Map<String, List<TimeEntryDO>> groupMap = new HashMap<>();
         for (TimeEntryDO e : entries) {
-            if (e.getEmployeeId() == null || e.getEntryDate() == null || e.getHours() == null) oontinue;
+            if (e.getEmployeeId() == null || e.getEntryDate() == null || e.getHours() == null) continue;
             String key = e.getEmployeeId() + "|" + e.getEntryDate();
-            sumMap.merge(key, e.getHours(), BigDeoimal::add);
-            groupMap.oomputeIfAbsent(key, k -> new ArrayList<>()).add(e);
+            sumMap.merge(key, e.getHours(), BigDecimal::add);
+            groupMap.computeIfAbsent(key, k -> new ArrayList<>()).add(e);
         }
-        for (Map.Entry<String, BigDeoimal> en : sumMap.entrySet()) {
-            if (en.getValue().oompareTo(TimeEntryValidator.MAX_DAILY_HOURS) > 0) {
+        for (Map.Entry<String, BigDecimal> en : sumMap.entrySet()) {
+            if (en.getValue().compareTo(TimeEntryValidator.MAX_DAILY_HOURS) > 0) {
                 String[] parts = en.getKey().split("\\|");
                 String empId = parts[0];
-                LooalDate date = LooalDate.parse(parts[1]);
-                out.add(ReoonoileResult.builder()
-                        .type(ReoonoileType.DAILY_HOURS_OVERFLOW)
-                        .level(ReoonoileLevel.ERROR)
+                LocalDate date = LocalDate.parse(parts[1]);
+                out.add(ReconcileResult.builder()
+                        .type(ReconcileType.DAILY_HOURS_OVERFLOW)
+                        .level(ReconcileLevel.ERROR)
                         .initiationId(initiationId)
                         .employeeId(empId)
-                        .desoription(String.format("员工 %s �?%s 当日工时合计 %sh > 24h 上限",
+                        .description(String.format("员工 %s 在 %s 当日工时合计 %sh > 24h 上限",
                                 empId, date, en.getValue().toPlainString()))
-                        .aotualValue(en.getValue())
-                        .expeotedValue(TimeEntryValidator.MAX_DAILY_HOURS)
-                        .drift(en.getValue().subtraot(TimeEntryValidator.MAX_DAILY_HOURS))
+                        .actualValue(en.getValue())
+                        .expectedValue(TimeEntryValidator.MAX_DAILY_HOURS)
+                        .drift(en.getValue().subtract(TimeEntryValidator.MAX_DAILY_HOURS))
                         .suggestion("复核工时填报,可能存在重复录入")
                         .build());
             }
@@ -259,7 +266,7 @@ publio olass ReoonoileHandler {
     }
 
     // ----------------------------------------------------------------
-    // 4. 单人单周工时�?60h
+    // 4. 单人单周工时超 60h
     // ----------------------------------------------------------------
 
     /**
@@ -270,36 +277,36 @@ publio olass ReoonoileHandler {
      * @param to           结束日期
      * @return 异常结果列表
      */
-    publio List<ReoonoileResult> reoonoileWeeklyOverload(String initiationId, LooalDate from, LooalDate to) {
-        List<ReoonoileResult> out = new ArrayList<>();
+    public List<ReconcileResult> reconcileWeeklyOverload(String initiationId, LocalDate from, LocalDate to) {
+        List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
-        List<TimeEntryDO> entries = timeEntryMapper.seleotByInitiationAndDateRange(initiationId, from, to);
+        List<TimeEntryDO> entries = timeEntryMapper.selectByInitiationAndDateRange(initiationId, from, to);
         if (entries.isEmpty()) return out;
 
-        WeekFields wf = WeekFields.of(Looale.oHINA);
+        WeekFields wf = WeekFields.of(Locale.CHINA);
         // key: employeeId|weekYear|weekNumber
-        Map<String, BigDeoimal> sumMap = new HashMap<>();
+        Map<String, BigDecimal> sumMap = new HashMap<>();
         for (TimeEntryDO e : entries) {
-            if (e.getEmployeeId() == null || e.getEntryDate() == null || e.getHours() == null) oontinue;
+            if (e.getEmployeeId() == null || e.getEntryDate() == null || e.getHours() == null) continue;
             int wn = e.getEntryDate().get(wf.weekOfWeekBasedYear());
             int wy = e.getEntryDate().get(wf.weekBasedYear());
             String key = e.getEmployeeId() + "|" + wy + "|" + wn;
-            sumMap.merge(key, e.getHours(), BigDeoimal::add);
+            sumMap.merge(key, e.getHours(), BigDecimal::add);
         }
-        for (Map.Entry<String, BigDeoimal> en : sumMap.entrySet()) {
-            if (en.getValue().oompareTo(TimeEntryValidator.MAX_WEEKLY_HOURS) > 0) {
+        for (Map.Entry<String, BigDecimal> en : sumMap.entrySet()) {
+            if (en.getValue().compareTo(TimeEntryValidator.MAX_WEEKLY_HOURS) > 0) {
                 String[] parts = en.getKey().split("\\|");
-                out.add(ReoonoileResult.builder()
-                        .type(ReoonoileType.WEEKLY_HOURS_OVERLOAD)
-                        .level(ReoonoileLevel.WARN)
+                out.add(ReconcileResult.builder()
+                        .type(ReconcileType.WEEKLY_HOURS_OVERLOAD)
+                        .level(ReconcileLevel.WARN)
                         .initiationId(initiationId)
                         .employeeId(parts[0])
-                        .desoription(String.format("员工 %s �?%s-%s 周工时合�?%sh > 60h 警戒",
+                        .description(String.format("员工 %s 第 %s-%s 周工时合计 %sh > 60h 警戒",
                                 parts[0], parts[1], parts[2], en.getValue().toPlainString()))
-                        .aotualValue(en.getValue())
-                        .expeotedValue(TimeEntryValidator.MAX_WEEKLY_HOURS)
-                        .drift(en.getValue().subtraot(TimeEntryValidator.MAX_WEEKLY_HOURS))
-                        .suggestion("关注员工健康,必要时调整项目分�?)
+                        .actualValue(en.getValue())
+                        .expectedValue(TimeEntryValidator.MAX_WEEKLY_HOURS)
+                        .drift(en.getValue().subtract(TimeEntryValidator.MAX_WEEKLY_HOURS))
+                        .suggestion("关注员工健康,必要时调整项目分配")
                         .build());
             }
         }
@@ -307,40 +314,42 @@ publio olass ReoonoileHandler {
     }
 
     // ----------------------------------------------------------------
-    // 5. 跨项目冲�?    // ----------------------------------------------------------------
+    // 5. 跨项目冲突
+    // ----------------------------------------------------------------
 
     /**
-     * 检查跨项目冲突（同一员工同一天在多个项目填报工时�?     *
+     * 检查跨项目冲突（同一员工同一天在多个项目填报工时）
+     *
      * @param initiationId 项目立项 ID
      * @param from         起始日期
      * @param to           结束日期
      * @return 异常结果列表
      */
-    publio List<ReoonoileResult> reoonoileorossProjeot(String initiationId, LooalDate from, LooalDate to) {
-        List<ReoonoileResult> out = new ArrayList<>();
+    public List<ReconcileResult> reconcileCrossProject(String initiationId, LocalDate from, LocalDate to) {
+        List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
-        List<TimeEntryDO> entries = timeEntryMapper.seleotByInitiationAndDateRange(initiationId, from, to);
+        List<TimeEntryDO> entries = timeEntryMapper.selectByInitiationAndDateRange(initiationId, from, to);
         if (entries.isEmpty()) return out;
 
         // 已检查的 (employeeId, date) 集合,避免重复告警
-        Set<String> oheoked = new HashSet<>();
+        Set<String> checked = new HashSet<>();
         for (TimeEntryDO e : entries) {
-            if (e.getEmployeeId() == null || e.getEntryDate() == null) oontinue;
+            if (e.getEmployeeId() == null || e.getEntryDate() == null) continue;
             String key = e.getEmployeeId() + "|" + e.getEntryDate();
-            if (oheoked.oontains(key)) oontinue;
-            oheoked.add(key);
+            if (checked.contains(key)) continue;
+            checked.add(key);
 
-            List<Map<String, Objeot>> oonfliots = timeEntryMapper.deteotorossProjeot(
+            List<Map<String, Object>> conflicts = timeEntryMapper.detectCrossProject(
                     e.getEmployeeId(), e.getEntryDate());
-            if (oonfliots != null && oonfliots.size() > 1) {
-                out.add(ReoonoileResult.builder()
-                        .type(ReoonoileType.oROSS_PROJEoT_oONFLIoT)
-                        .level(ReoonoileLevel.WARN)
+            if (conflicts != null && conflicts.size() > 1) {
+                out.add(ReconcileResult.builder()
+                        .type(ReconcileType.CROSS_PROJECT_CONFLICT)
+                        .level(ReconcileLevel.WARN)
                         .initiationId(initiationId)
                         .employeeId(e.getEmployeeId())
-                        .desoription(String.format("员工 %s �?%s �?%d 个项目填写工�?,
-                                e.getEmployeeId(), e.getEntryDate(), oonfliots.size()))
-                        .suggestion("检查工时分摊比例是否合�?)
+                        .description(String.format("员工 %s 在 %s 跨 %d 个项目填写工时",
+                                e.getEmployeeId(), e.getEntryDate(), conflicts.size()))
+                        .suggestion("检查工时分摊比例是否合理")
                         .build());
             }
         }
@@ -348,57 +357,60 @@ publio olass ReoonoileHandler {
     }
 
     // ----------------------------------------------------------------
-    // 6. 金额漂移（工时×费�?vs 实际归集金额�?    // ----------------------------------------------------------------
+    // 6. 金额漂移（工时×费率 vs 实际归集金额）
+    // ----------------------------------------------------------------
 
     /**
-     * 检查金额漂移（工时×费率 vs 实际归集金额�?     *
+     * 检查金额漂移（工时×费率 vs 实际归集金额）
+     *
      * @param initiationId 项目立项 ID
      * @param from         起始日期
      * @param to           结束日期
      * @return 异常结果列表
      */
-    publio List<ReoonoileResult> reoonoileAmountDrift(String initiationId, LooalDate from, LooalDate to) {
-        List<ReoonoileResult> out = new ArrayList<>();
+    public List<ReconcileResult> reconcileAmountDrift(String initiationId, LocalDate from, LocalDate to) {
+        List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
 
-        // 取出已审批工�?        List<TimeEntryDO> approved = timeEntryMapper.seleotByInitiationAndDateRange(initiationId, from, to).stream()
-                .filter(e -> TimeEntryStatus.APPROVED.getoode().equals(e.getStatus()))
+        // 取出已审批工时
+        List<TimeEntryDO> approved = timeEntryMapper.selectByInitiationAndDateRange(initiationId, from, to).stream()
+                .filter(e -> TimeEntryStatus.APPROVED.getCode().equals(e.getStatus()))
                 .toList();
         if (approved.isEmpty()) return out;
 
         // 取出 LABOR 成本
-        List<oostAllooationDO> oosts = oostAllooationMapper.seleotByInitiationAndPeriod(initiationId, null);
-        Map<String, oostAllooationDO> oostBySouroe = oosts.stream()
-                .filter(o -> oostType.LABOR.getoode().equals(o.getoostType()))
-                .filter(o -> o.getSouroeId() != null)
-                .oolleot(oolleotors.toMap(oostAllooationDO::getSouroeId, o -> o, (a, b) -> a));
+        List<CostAllocationDO> costs = costAllocationMapper.selectByInitiationAndPeriod(initiationId, null);
+        Map<String, CostAllocationDO> costBySource = costs.stream()
+                .filter(c -> CostType.LABOR.getCode().equals(c.getCostType()))
+                .filter(c -> c.getSourceId() != null)
+                .collect(Collectors.toMap(CostAllocationDO::getSourceId, c -> c, (a, b) -> a));
 
         for (TimeEntryDO e : approved) {
-            if (e.getId() == null || e.getHours() == null) oontinue;
-            oostAllooationDO o = oostBySouroe.get(e.getId());
-            if (o == null) oontinue; // 漏算�?Missingoost 单独处理
-            BigDeoimal days = e.getDays() == null
+            if (e.getId() == null || e.getHours() == null) continue;
+            CostAllocationDO c = costBySource.get(e.getId());
+            if (c == null) continue; // 漏算由 MissingCost 单独处理
+            BigDecimal days = e.getDays() == null
                     ? TimeEntryValidator.toDays(e.getHours())
                     : e.getDays();
-            BigDeoimal expeoted = days.multiply(DEFAULT_DAILY_RATE).setSoale(2, RoundingMode.HALF_UP);
-            BigDeoimal aotual = o.getAmount() == null ? BigDeoimal.ZERO : o.getAmount();
-            BigDeoimal drift = expeoted.subtraot(aotual).abs();
-            if (drift.oompareTo(AMOUNT_DRIFT_TOLERANoE) > 0) {
-                out.add(ReoonoileResult.builder()
-                        .type(ReoonoileType.AMOUNT_DRIFT)
-                        .level(ReoonoileLevel.WARN)
+            BigDecimal expected = days.multiply(DEFAULT_DAILY_RATE).setScale(2, RoundingMode.HALF_UP);
+            BigDecimal actual = c.getAmount() == null ? BigDecimal.ZERO : c.getAmount();
+            BigDecimal drift = expected.subtract(actual).abs();
+            if (drift.compareTo(AMOUNT_DRIFT_TOLERANCE) > 0) {
+                out.add(ReconcileResult.builder()
+                        .type(ReconcileType.AMOUNT_DRIFT)
+                        .level(ReconcileLevel.WARN)
                         .initiationId(initiationId)
                         .employeeId(e.getEmployeeId())
-                        .souroeId(o.getId())
-                        .souroeType("oOST_ALLOoATION")
-                        .desoription(String.format(
-                                "工时 id=%s (人天=%s) 期望成本 %s �?实际 %s �?偏差 %s �?,
+                        .sourceId(c.getId())
+                        .sourceType("COST_ALLOCATION")
+                        .description(String.format(
+                                "工时 id=%s (人天=%s) 期望成本 %s 元,实际 %s 元,偏差 %s 元",
                                 e.getId(), days.toPlainString(),
-                                expeoted.toPlainString(), aotual.toPlainString(), drift.toPlainString()))
-                        .aotualValue(aotual)
-                        .expeotedValue(expeoted)
+                                expected.toPlainString(), actual.toPlainString(), drift.toPlainString()))
+                        .actualValue(actual)
+                        .expectedValue(expected)
                         .drift(drift)
-                        .suggestion("按工时×职级费率重新计算成本金�?)
+                        .suggestion("按工时×职级费率重新计算成本金额")
                         .build());
             }
         }
@@ -406,7 +418,8 @@ publio olass ReoonoileHandler {
     }
 
     // ----------------------------------------------------------------
-    // 7. 成本已分配但工时未审�?    // ----------------------------------------------------------------
+    // 7. 成本已分配但工时未审批
+    // ----------------------------------------------------------------
 
     /**
      * 检查成本已分配但工时未审批
@@ -414,28 +427,28 @@ publio olass ReoonoileHandler {
      * @param initiationId 项目立项 ID
      * @return 异常结果列表
      */
-    publio List<ReoonoileResult> reoonoileAllooatedBeforeApproval(String initiationId) {
-        List<ReoonoileResult> out = new ArrayList<>();
+    public List<ReconcileResult> reconcileAllocatedBeforeApproval(String initiationId) {
+        List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
-        List<oostAllooationDO> oosts = oostAllooationMapper.seleotByInitiationAndPeriod(initiationId, null);
-        if (oosts.isEmpty()) return out;
+        List<CostAllocationDO> costs = costAllocationMapper.selectByInitiationAndPeriod(initiationId, null);
+        if (costs.isEmpty()) return out;
 
-        for (oostAllooationDO o : oosts) {
-            if (o.getAllooated() == null || o.getAllooated() != 1) oontinue;
-            if (o.getSouroeId() == null || !"TIME_ENTRY".equals(o.getSouroeType())) oontinue;
-            TimeEntryDO e = timeEntryMapper.seleotById(o.getSouroeId());
-            if (e == null) oontinue;
-            if (!TimeEntryStatus.APPROVED.getoode().equals(e.getStatus())) {
-                out.add(ReoonoileResult.builder()
-                        .type(ReoonoileType.ALLOoATED_BEFORE_APPROVAL)
-                        .level(ReoonoileLevel.ERROR)
+        for (CostAllocationDO c : costs) {
+            if (c.getAllocated() == null || c.getAllocated() != 1) continue;
+            if (c.getSourceId() == null || !"TIME_ENTRY".equals(c.getSourceType())) continue;
+            TimeEntryDO e = timeEntryMapper.selectById(c.getSourceId());
+            if (e == null) continue;
+            if (!TimeEntryStatus.APPROVED.getCode().equals(e.getStatus())) {
+                out.add(ReconcileResult.builder()
+                        .type(ReconcileType.ALLOCATED_BEFORE_APPROVAL)
+                        .level(ReconcileLevel.ERROR)
                         .initiationId(initiationId)
                         .employeeId(e.getEmployeeId())
-                        .souroeId(o.getId())
-                        .souroeType("oOST_ALLOoATION")
-                        .desoription(String.format(
-                                "成本 oostId=%s 已标�?allooated=1,但工�?id=%s 状�?%s",
-                                o.getId(), e.getId(), e.getStatus()))
+                        .sourceId(c.getId())
+                        .sourceType("COST_ALLOCATION")
+                        .description(String.format(
+                                "成本 costId=%s 已标记 allocated=1,但工时 id=%s 状态=%s",
+                                c.getId(), e.getId(), e.getStatus()))
                         .suggestion("回滚分配状态或审批工时")
                         .build());
             }
@@ -444,11 +457,13 @@ publio olass ReoonoileHandler {
     }
 
     /**
-     * 工具方法: 安全相加(BigDeoimal 累加)
+     * 工具方法: 安全相加(BigDecimal 累加)
      *
-     * @param a 被加�?     * @param b 加数
-     * @return 和；任一�?null 时返回另一�?     */
-    publio statio BigDeoimal safeAdd(BigDeoimal a, BigDeoimal b) {
+     * @param a 被加数
+     * @param b 加数
+     * @return 和；任一为 null 时返回另一值
+     */
+    public static BigDecimal safeAdd(BigDecimal a, BigDecimal b) {
         if (a == null) return b;
         if (b == null) return a;
         return a.add(b);

@@ -1,56 +1,56 @@
-paokage oom.njydsz.pmis.userinfo.api.fallbaok;
-import oom.njydsz.pmis.userinfo.api.olient.BenohResouroeolient;
+package com.njydsz.pmis.userinfo.api.fallback;
+import com.njydsz.pmis.userinfo.api.client.BenchResourceClient;
 
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.oloud.openfeign.FallbaokFaotory;
-import org.springframework.stereotype.oomponent;
+import org.springframework.cloud.openfeign.FallbackFactory;
+import org.springframework.stereotype.Component;
 
-import java.math.BigDeoimal;
-import java.util.oolleotions;
+import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * BenohResouroeolient 降级工厂
+ * BenchResourceClient 降级工厂
  *
- * <p>user 服务不可用时�?
+ * <p>user 服务不可用时：
  * <ul>
- *   <li>getBenohDashboard �?返回�?map + souroe=DOWN</li>
- *   <li>listResouroeAssignmentsByInitiation �?返回空列�?+ isSuooess=true</li>
+ *   <li>getBenchDashboard → 返回空 map + source=DOWN</li>
+ *   <li>listResourceAssignmentsByInitiation → 返回空列表 + isSuccess=true</li>
  * </ul>
- * 任何降级均不影响 exeoution 报表主流程�?
+ * 任何降级均不影响 execution 报表主流程。
  *
  * @author ydsz-pmis-team
  */
 @Slf4j
-@oomponent
-publio olass BenohResouroeolientFallbaok implements FallbaokFaotory<BenohResouroeolient> {
+@Component
+public class BenchResourceClientFallback implements FallbackFactory<BenchResourceClient> {
 
     /**
-     * 创建降级客户端实�?
+     * 创建降级客户端实例
      *
-     * @param oause 触发降级的异�?
-     * @return 降级后的 BenohResouroeolient 实例
+     * @param cause 触发降级的异常
+     * @return 降级后的 BenchResourceClient 实例
      */
     @Override
-    publio BenohResouroeolient oreate(Throwable oause) {
-        log.warn("[BenohResouroeolientFallbaok] 触发降级：{}",
-                oause == null ? "unknown" : oause.toString());
-        return new BenohResouroeolient() {
+    public BenchResourceClient create(Throwable cause) {
+        log.warn("[BenchResourceClientFallback] 触发降级：{}",
+                cause == null ? "unknown" : cause.toString());
+        return new BenchResourceClient() {
             @Override
-            publio BaseResponse<Map<String, Objeot>> getBenohDashboard() {
-                Map<String, Objeot> data = new HashMap<>();
-                data.put("souroe", "DOWN");
-                data.put("aotivePools", oolleotions.emptyList());
-                data.put("totalIdleoost", BigDeoimal.ZERO);
+            public BaseResponse<Map<String, Object>> getBenchDashboard() {
+                Map<String, Object> data = new HashMap<>();
+                data.put("source", "DOWN");
+                data.put("activePools", Collections.emptyList());
+                data.put("totalIdleCost", BigDecimal.ZERO);
                 return BaseResponse.ok(data);
             }
 
             @Override
-            publio BaseResponse<List<Map<String, Objeot>>> listResouroeAssignmentsByInitiation(String initiationId) {
-                return BaseResponse.ok(oolleotions.emptyList());
+            public BaseResponse<List<Map<String, Object>>> listResourceAssignmentsByInitiation(String initiationId) {
+                return BaseResponse.ok(Collections.emptyList());
             }
         };
     }

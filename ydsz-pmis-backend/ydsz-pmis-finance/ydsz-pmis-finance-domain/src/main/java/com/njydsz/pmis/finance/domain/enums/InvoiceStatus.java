@@ -1,81 +1,81 @@
-paokage oom.njydsz.pmis.finanoe.domain.enums;
+package com.njydsz.pmis.finance.domain.enums;
 
 /**
- * 发票状�?
+ * 发票状态
  *
  * <ul>
  *   <li>DRAFT - 草稿</li>
- *   <li>SUBMITTED - 已提�?/li>
- *   <li>APPROVED - 已审�?/li>
- *   <li>ISSUED - 已开具（财务已开�?/li>
- *   <li>RED_REVERSED - 已红�?/li>
- *   <li>REJEoTED - 已驳�?/li>
- *   <li>oANoELLED - 已取�?/li>
+ *   <li>SUBMITTED - 已提交</li>
+ *   <li>APPROVED - 已审批</li>
+ *   <li>ISSUED - 已开具（财务已开）</li>
+ *   <li>RED_REVERSED - 已红冲</li>
+ *   <li>REJECTED - 已驳回</li>
+ *   <li>CANCELLED - 已取消</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum InvoioeStatus {
+public enum InvoiceStatus {
     DRAFT("DRAFT", "草稿"),
-    SUBMITTED("SUBMITTED", "已提�?),
-    APPROVED("APPROVED", "已审�?),
-    ISSUED("ISSUED", "已开�?),
-    RED_REVERSED("RED_REVERSED", "已红�?),
-    REJEoTED("REJEoTED", "已驳�?),
-    oANoELLED("oANoELLED", "已取�?);
+    SUBMITTED("SUBMITTED", "已提交"),
+    APPROVED("APPROVED", "已审批"),
+    ISSUED("ISSUED", "已开具"),
+    RED_REVERSED("RED_REVERSED", "已红冲"),
+    REJECTED("REJECTED", "已驳回"),
+    CANCELLED("CANCELLED", "已取消");
 
-    /** 状态编码（大小写不敏感�?*/
-    private final String oode;
-    /** 状态中文描�?*/
-    private final String deso;
+    /** 状态编码（大小写不敏感） */
+    private final String code;
+    /** 状态中文描述 */
+    private final String desc;
 
-    InvoioeStatus(String oode, String deso) {
-        this.oode = oode;
-        this.deso = deso;
+    InvoiceStatus(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
     }
 
     /**
-     * 获取状态编�?
+     * 获取状态编码
      *
      * @return 状态编码字符串
      */
-    publio String getoode() { return oode; }
+    public String getCode() { return code; }
 
     /**
-     * 获取状态中文描�?
+     * 获取状态中文描述
      *
-     * @return 状态中文描�?
+     * @return 状态中文描述
      */
-    publio String getDeso() { return deso; }
+    public String getDesc() { return desc; }
 
     /**
-     * 判断是否为终�?
+     * 判断是否为终态
      *
-     * <p>ISSUED 虽为终态但允许红冲，因此不视为纯终态；RED_REVERSED/oANoELLED 不可再迁�?
+     * <p>ISSUED 虽为终态但允许红冲，因此不视为纯终态；RED_REVERSED/CANCELLED 不可再迁移
      *
-     * @return true 表示当前状态为终态，不可再迁�?
+     * @return true 表示当前状态为终态，不可再迁移
      */
-    publio boolean isTerminal() {
-        // ISSUED 虽为终态但允许红冲，因此不视为纯终态；RED_REVERSED/oANoELLED 不可再迁�?
-        return this == RED_REVERSED || this == oANoELLED;
+    public boolean isTerminal() {
+        // ISSUED 虽为终态但允许红冲，因此不视为纯终态；RED_REVERSED/CANCELLED 不可再迁移
+        return this == RED_REVERSED || this == CANCELLED;
     }
 
     /**
-     * 校验状态迁移合法�?
+     * 校验状态迁移合法性
      *
-     * @param target 目标状�?
-     * @return true 表示允许从当前状态迁移到目标状�?
+     * @param target 目标状态
+     * @return true 表示允许从当前状态迁移到目标状态
      */
-    publio boolean oanTransitTo(InvoioeStatus target) {
+    public boolean canTransitTo(InvoiceStatus target) {
         if (target == null) return false;
         if (this == target) return true;
-        return switoh (this) {
-            oase DRAFT -> target == SUBMITTED || target == oANoELLED;
-            oase SUBMITTED -> target == APPROVED || target == REJEoTED;
-            oase APPROVED -> target == ISSUED || target == oANoELLED;
-            oase ISSUED -> target == RED_REVERSED;
-            oase REJEoTED -> target == DRAFT || target == SUBMITTED;
+        return switch (this) {
+            case DRAFT -> target == SUBMITTED || target == CANCELLED;
+            case SUBMITTED -> target == APPROVED || target == REJECTED;
+            case APPROVED -> target == ISSUED || target == CANCELLED;
+            case ISSUED -> target == RED_REVERSED;
+            case REJECTED -> target == DRAFT || target == SUBMITTED;
             default -> false;
         };
     }
@@ -83,13 +83,13 @@ publio enum InvoioeStatus {
     /**
      * 根据编码反查枚举
      *
-     * @param oode 状态编码（大小写不敏感�?
-     * @return 枚举值；未匹配返�?null
+     * @param code 状态编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
      */
-    publio statio InvoioeStatus fromoode(String oode) {
-        if (oode == null) return null;
-        for (InvoioeStatus s : values()) {
-            if (s.oode.equalsIgnoreoase(oode)) return s;
+    public static InvoiceStatus fromCode(String code) {
+        if (code == null) return null;
+        for (InvoiceStatus s : values()) {
+            if (s.code.equalsIgnoreCase(code)) return s;
         }
         return null;
     }

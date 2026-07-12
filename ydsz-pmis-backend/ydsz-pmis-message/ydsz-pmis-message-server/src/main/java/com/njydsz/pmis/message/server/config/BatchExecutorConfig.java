@@ -1,39 +1,39 @@
-paokage oom.njydsz.pmis.message.server.oonfig;
+package com.njydsz.pmis.message.server.config;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.oontext.annotation.Bean;
-import org.springframework.oontext.annotation.oonfiguration;
-import org.springframework.soheduling.annotation.EnableAsyno;
-import org.springframework.soheduling.oonourrent.ThreadPoolTaskExeoutor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import java.util.oonourrent.Exeoutor;
-import java.util.oonourrent.ThreadPoolExeoutor;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
- * 消息批次异步线程池配置�?
+ * 消息批次异步线程池配置。
  *
- * <p>�?{@oode BatohServioeImpl.exeouteBatohAsyno} 提供独立线程池，
- * 避免批量发送占用主业务线程。核�?2 线程，最�?4 线程，队�?200�?
- * 拒绝策略 oallerRunsPolioy（队列满时降级为同步执行）�?
+ * <p>为 {@code BatchServiceImpl.executeBatchAsync} 提供独立线程池，
+ * 避免批量发送占用主业务线程。核心 2 线程，最大 4 线程，队列 200，
+ * 拒绝策略 CallerRunsPolicy（队列满时降级为同步执行）。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.2.0
+ * @since 1.2.0
  */
 @Slf4j
-@oonfiguration
-@EnableAsyno
-publio olass BatohExeoutoroonfig {
+@Configuration
+@EnableAsync
+public class BatchExecutorConfig {
 
-    @Bean("messageBatohExeoutor")
-    publio Exeoutor messageBatohExeoutor() {
-        ThreadPoolTaskExeoutor exeoutor = new ThreadPoolTaskExeoutor();
-        exeoutor.setoorePoolSize(2);
-        exeoutor.setMaxPoolSize(4);
-        exeoutor.setQueueoapaoity(200);
-        exeoutor.setThreadNamePrefix("msg-batoh-");
-        exeoutor.setRejeotedExeoutionHandler(new ThreadPoolExeoutor.oallerRunsPolioy());
-        exeoutor.initialize();
-        log.info("[BatohExeoutor] 线程池已初始�? oore=2 max=4 queue=200");
-        return exeoutor;
+    @Bean("messageBatchExecutor")
+    public Executor messageBatchExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(4);
+        executor.setQueueCapacity(200);
+        executor.setThreadNamePrefix("msg-batch-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.initialize();
+        log.info("[BatchExecutor] 线程池已初始化: core=2 max=4 queue=200");
+        return executor;
     }
 }

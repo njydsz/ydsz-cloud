@@ -1,23 +1,25 @@
-paokage oom.njydsz.pmis.agent.server.engine.stream;
+package com.njydsz.pmis.agent.server.engine.stream;
 
 /**
- * 空实现的 ReAot 事件监听器（P2-1 落地�? *
- * <p>用作 {@link oom.njydsz.pmis.agent.server.engine.reaot.ReAotLoop#runStream} 的默认参数，
- * 也可作为基类被部分覆盖。所有方法都是空实现，且 try-oatoh 住所有异常避免影响主流程�? *
+ * 空实现的 ReAct 事件监听器（P2-1 落地）
+ *
+ * <p>用作 {@link com.njydsz.pmis.agent.server.engine.react.ReActLoop#runStream} 的默认参数，
+ * 也可作为基类被部分覆盖。所有方法都是空实现，且 try-catch 住所有异常避免影响主流程。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0 (P2-1)
+ * @since 1.0.0 (P2-1)
  */
-publio olass NoOpReAotEventListener implements ReAotEventListener {
+public class NoOpReActEventListener implements ReActEventListener {
 
     /** 单例实例（无状态，可共享） */
-    private statio final NoOpReAotEventListener INSTANoE = new NoOpReAotEventListener();
+    private static final NoOpReActEventListener INSTANCE = new NoOpReActEventListener();
 
     /** 获取单例 */
-    publio statio NoOpReAotEventListener getInstanoe() {
-        return INSTANoE;
+    public static NoOpReActEventListener getInstance() {
+        return INSTANCE;
     }
 
-    /** 私有构�?*/
-    private NoOpReAotEventListener() {
+    /** 私有构造 */
+    private NoOpReActEventListener() {
     }
 }

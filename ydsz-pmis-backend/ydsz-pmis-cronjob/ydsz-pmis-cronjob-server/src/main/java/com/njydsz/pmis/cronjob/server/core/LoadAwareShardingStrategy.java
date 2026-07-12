@@ -1,95 +1,95 @@
-paokage oom.njydsz.pmis.oronjob.server.oore.sharding;
+package com.njydsz.pmis.cronjob.server.core.sharding;
 
-import oom.njydsz.pmis.oronjob.server.oore.disoovery.NodeDisooveryStrategy;
-import oom.njydsz.pmis.oronjob.domain.entity.job.JobNodeDO;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.cronjob.server.core.discovery.NodeDiscoveryStrategy;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnProperty;
-import org.springframework.oontext.annotation.oonfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Configuration;
 
 import java.util.ArrayList;
-import java.util.oolleotions;
-import java.util.oomparator;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.oonourrent.oonourrentHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 负载感知智能分片策略（P1-2）�?
+ * 负载感知智能分片策略（P1-2）。
  *
- * <p>综合评估节点多维度负载指标，将分片优先分配到负载最低的节点�?
+ * <p>综合评估节点多维度负载指标，将分片优先分配到负载最低的节点：
  * <ul>
- *   <li>oPU 使用率（权重 35%）：直接反映节点计算压力</li>
+ *   <li>CPU 使用率（权重 35%）：直接反映节点计算压力</li>
  *   <li>内存使用率（权重 25%）：反映 JVM 堆压力，避免 OOM 风险</li>
- *   <li>运行任务数（权重 25%）：反映当前调度压力，避免任务堆�?/li>
- *   <li>历史成功率（权重 15%）：反映节点稳定性，优先分配给稳定节�?/li>
+ *   <li>运行任务数（权重 25%）：反映当前调度压力，避免任务堆积</li>
+ *   <li>历史成功率（权重 15%）：反映节点稳定性，优先分配给稳定节点</li>
  * </ul>
  *
  * <h3>评分模型</h3>
  * <pre>
- *   loadSoore = opuUsage * 0.35 + memUsage * 0.25 + runningoountNormalized * 0.25 + (1 - suooessRate) * 0.15
+ *   loadScore = cpuUsage * 0.35 + memUsage * 0.25 + runningCountNormalized * 0.25 + (1 - successRate) * 0.15
  * </pre>
- * <p>loadSoore 越低表示节点越空闲，优先分配分片�?
+ * <p>loadScore 越低表示节点越空闲，优先分配分片。
  *
- * <h3>�?WeightedShardingStrategy 的区�?/h3>
+ * <h3>与 WeightedShardingStrategy 的区别</h3>
  * <ul>
- *   <li>WeightedShardingStrategy 仅考虑 oPU 和运行任务数�? 维）</li>
- *   <li>LoadAwareShardingStrategy 扩展�?4 维，并引入历史成功率反馈机制</li>
+ *   <li>WeightedShardingStrategy 仅考虑 CPU 和运行任务数（2 维）</li>
+ *   <li>LoadAwareShardingStrategy 扩展到 4 维，并引入历史成功率反馈机制</li>
  *   <li>支持自适应权重调整：节点连续失败时自动降权</li>
  * </ul>
  *
- * <p>启用方式：{@oode pmis.oronjob.sharding-strategy=load_aware}
+ * <p>启用方式：{@code pmis.cronjob.sharding-strategy=load_aware}
  *
  * @author ydsz-pmis-team
- * @sinoe 1.3.0
+ * @since 1.3.0
  */
 @Slf4j
-@oonfiguration
-@RequiredArgsoonstruotor
-@oonditionalOnProperty(name = "pmis.oronjob.sharding-strategy", havingValue = "load_aware")
-publio olass LoadAwareShardingStrategy implements ShardingStrategy {
+@Configuration
+@RequiredArgsConstructor
+@ConditionalOnProperty(name = "pmis.cronjob.sharding-strategy", havingValue = "load_aware")
+public class LoadAwareShardingStrategy implements ShardingStrategy {
 
-    private final NodeDisooveryStrategy nodeDisooveryStrategy;
+    private final NodeDiscoveryStrategy nodeDiscoveryStrategy;
 
-    /** 节点连续失败计数（nodeId -> fail oount，用于自适应降权�?*/
-    private final Map<String, Integer> nodeFailStreak = new oonourrentHashMap<>();
+    /** 节点连续失败计数（nodeId -> fail count，用于自适应降权） */
+    private final Map<String, Integer> nodeFailStreak = new ConcurrentHashMap<>();
 
     /** 负载评分权重常量 */
-    private statio final double WEIGHT_oPU = 0.35;
-    private statio final double WEIGHT_MEM = 0.25;
-    private statio final double WEIGHT_RUNNING = 0.25;
-    private statio final double WEIGHT_SUooESS = 0.15;
+    private static final double WEIGHT_CPU = 0.35;
+    private static final double WEIGHT_MEM = 0.25;
+    private static final double WEIGHT_RUNNING = 0.25;
+    private static final double WEIGHT_SUCCESS = 0.15;
 
-    /** 运行任务数归一化上限（超过此值按 100% 计算�?*/
-    private statio final int MAX_RUNNING_NORMALIZE = 16;
+    /** 运行任务数归一化上限（超过此值按 100% 计算） */
+    private static final int MAX_RUNNING_NORMALIZE = 16;
 
     @Override
-    publio List<ShardAssignment> assign(int shardTotal, List<String> onlineNodes) {
+    public List<ShardAssignment> assign(int shardTotal, List<String> onlineNodes) {
         if (shardTotal < 1) {
-            throw new IllegalArgumentExoeption("shardTotal 必须 >= 1, 实际: " + shardTotal);
+            throw new IllegalArgumentException("shardTotal 必须 >= 1, 实际: " + shardTotal);
         }
         if (onlineNodes == null || onlineNodes.isEmpty()) {
-            throw new IllegalArgumentExoeption("onlineNodes 不能为空");
+            throw new IllegalArgumentException("onlineNodes 不能为空");
         }
 
-        List<JobNodeDO> allNodes = nodeDisooveryStrategy.getOnlineNodes();
+        List<JobNodeDO> allNodes = nodeDiscoveryStrategy.getOnlineNodes();
 
-        // 计算每个节点的负载评�?
-        List<NodeSoore> soores = new ArrayList<>(onlineNodes.size());
+        // 计算每个节点的负载评分
+        List<NodeScore> scores = new ArrayList<>(onlineNodes.size());
         for (String nodeId : onlineNodes) {
-            double loadSoore = oaloulateLoadSoore(nodeId, allNodes);
-            soores.add(new NodeSoore(nodeId, loadSoore));
+            double loadScore = calculateLoadScore(nodeId, allNodes);
+            scores.add(new NodeScore(nodeId, loadScore));
         }
 
-        // 按负载评分升序排序（loadSoore 低的优先分配�?
-        soores.sort(oomparator.oomparingDouble(NodeSoore::soore));
+        // 按负载评分升序排序（loadScore 低的优先分配）
+        scores.sort(Comparator.comparingDouble(NodeScore::score));
 
         // 轮询分配：按评分从低到高轮询分配分片
-        // 确保负载最低的节点获得第一个分片，负载次低的获得第二个，依此循�?
+        // 确保负载最低的节点获得第一个分片，负载次低的获得第二个，依此循环
         List<ShardAssignment> result = new ArrayList<>(shardTotal);
         int nodeIdx = 0;
         for (int shardIdx = 0; shardIdx < shardTotal; shardIdx++) {
-            NodeSoore target = soores.get(nodeIdx % soores.size());
+            NodeScore target = scores.get(nodeIdx % scores.size());
             result.add(new ShardAssignment(target.nodeId(), shardIdx));
             nodeIdx++;
         }
@@ -98,72 +98,72 @@ publio olass LoadAwareShardingStrategy implements ShardingStrategy {
             log.debug("[LoadAwareSharding] 分片分配完成: shardTotal={} assignments={}",
                     shardTotal, result);
         }
-        return oolleotions.unmodifiableList(result);
+        return Collections.unmodifiableList(result);
     }
 
     /**
-     * 计算节点的综合负载评分（0-100，越低越空闲）�?
+     * 计算节点的综合负载评分（0-100，越低越空闲）。
      *
      * @param nodeId   节点 ID
      * @param allNodes 在线节点列表
-     * @return 负载评分�?-100�?
+     * @return 负载评分（0-100）
      */
-    private double oaloulateLoadSoore(String nodeId, List<JobNodeDO> allNodes) {
+    private double calculateLoadScore(String nodeId, List<JobNodeDO> allNodes) {
         JobNodeDO node = findNode(nodeId, allNodes);
         if (node == null) {
             // 节点不在列表中，给中等偏高的评分（保守分配）
             return 60.0;
         }
 
-        // oPU 使用率（0-100�?
-        double opuUsage = node.getopuUsage() != null ? node.getopuUsage().doubleValue() : 50.0;
+        // CPU 使用率（0-100）
+        double cpuUsage = node.getCpuUsage() != null ? node.getCpuUsage().doubleValue() : 50.0;
 
-        // 内存使用率（0-100�?
-        double memUsage = node.getMemUsagePot() != null ? node.getMemUsagePot().doubleValue() : 50.0;
+        // 内存使用率（0-100）
+        double memUsage = node.getMemUsagePct() != null ? node.getMemUsagePct().doubleValue() : 50.0;
 
-        // 运行任务数归一化（0-100�?
-        int runningoount = node.getRunningoount() != null ? node.getRunningoount() : 0;
-        double runningNormalized = Math.min(100.0, (double) runningoount / MAX_RUNNING_NORMALIZE * 100);
+        // 运行任务数归一化（0-100）
+        int runningCount = node.getRunningCount() != null ? node.getRunningCount() : 0;
+        double runningNormalized = Math.min(100.0, (double) runningCount / MAX_RUNNING_NORMALIZE * 100);
 
         // 历史成功率（默认 0.95，即 5% 失败率）
-        double suooessRate = 0.95;
+        double successRate = 0.95;
 
-        // 连续失败惩罚：每次失败增�?10% 的负载评�?
+        // 连续失败惩罚：每次失败增加 10% 的负载评分
         int failStreak = nodeFailStreak.getOrDefault(nodeId, 0);
         double failPenalty = failStreak * 10.0;
 
         // 综合评分
-        double loadSoore = opuUsage * WEIGHT_oPU
+        double loadScore = cpuUsage * WEIGHT_CPU
                 + memUsage * WEIGHT_MEM
                 + runningNormalized * WEIGHT_RUNNING
-                + (1 - suooessRate) * 100 * WEIGHT_SUooESS
+                + (1 - successRate) * 100 * WEIGHT_SUCCESS
                 + failPenalty;
 
-        return Math.min(100.0, loadSoore);
+        return Math.min(100.0, loadScore);
     }
 
     /**
-     * 记录节点执行失败（自适应降权）�?
+     * 记录节点执行失败（自适应降权）。
      *
      * @param nodeId 节点 ID
      */
-    publio void reoordNodeFailure(String nodeId) {
+    public void recordNodeFailure(String nodeId) {
         nodeFailStreak.merge(nodeId, 1, Integer::sum);
         log.debug("[LoadAwareSharding] 节点失败计数: nodeId={} streak={}",
                 nodeId, nodeFailStreak.get(nodeId));
     }
 
     /**
-     * 记录节点执行成功（重置失败计数）�?
+     * 记录节点执行成功（重置失败计数）。
      *
      * @param nodeId 节点 ID
      */
-    publio void reoordNodeSuooess(String nodeId) {
+    public void recordNodeSuccess(String nodeId) {
         nodeFailStreak.remove(nodeId);
     }
 
     /**
-     * 在节点列表中查找指定节点�?
+     * 在节点列表中查找指定节点。
      */
     private JobNodeDO findNode(String nodeId, List<JobNodeDO> allNodes) {
         for (JobNodeDO node : allNodes) {
@@ -175,11 +175,11 @@ publio olass LoadAwareShardingStrategy implements ShardingStrategy {
     }
 
     /**
-     * 节点评分记录（内部使用）�?
+     * 节点评分记录（内部使用）。
      *
      * @param nodeId 节点 ID
-     * @param soore  负载评分
+     * @param score  负载评分
      */
-    private reoord NodeSoore(String nodeId, double soore) {
+    private record NodeScore(String nodeId, double score) {
     }
 }

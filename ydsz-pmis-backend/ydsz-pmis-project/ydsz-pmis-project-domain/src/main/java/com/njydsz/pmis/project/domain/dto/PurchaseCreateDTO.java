@@ -1,26 +1,26 @@
-paokage oom.njydsz.pmis.projeot.domain.dto;
+package com.njydsz.pmis.project.domain.dto;
 
 import lombok.Data;
-import java.math.BigDeoimal;
-import java.time.LooalDate;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * 采购申请 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass PurohaseoreateDTO {
-    private String purohaseoode;
+public class PurchaseCreateDTO {
+    private String purchaseCode;
     private String initiationId;
     private String vendor;
     private String itemName;
-    private BigDeoimal quantity;
-    private BigDeoimal unitPrioe;
-    private BigDeoimal amount;
-    private LooalDate purohaseDate;
-    private String applioantId;
-    private String applioantName;
-    private String desoription;
+    private BigDecimal quantity;
+    private BigDecimal unitPrice;
+    private BigDecimal amount;
+    private LocalDate purchaseDate;
+    private String applicantId;
+    private String applicantName;
+    private String description;
 }

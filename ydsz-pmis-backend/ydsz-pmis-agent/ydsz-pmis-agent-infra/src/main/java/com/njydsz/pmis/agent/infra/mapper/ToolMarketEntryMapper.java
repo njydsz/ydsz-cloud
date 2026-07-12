@@ -1,33 +1,33 @@
-paokage oom.njydsz.pmis.agent.infra.mapper.tool;
+package com.njydsz.pmis.agent.infra.mapper.tool;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.agent.domain.entity.tool.ToolMarketEntryDO;
-import org.apaohe.ibatis.annotations.Mapper;
-import org.apaohe.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.agent.domain.entity.tool.ToolMarketEntryDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
 /**
- * 工具市场条目数据访问层（P2-12 落地）�?
+ * 工具市场条目数据访问层（P2-12 落地）。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0 (P2-12)
+ * @since 1.0.0 (P2-12)
  */
 @Mapper
-publio interfaoe ToolMarketEntryMapper extends BaseMapper<ToolMarketEntryDO> {
+public interface ToolMarketEntryMapper extends BaseMapper<ToolMarketEntryDO> {
 
     /**
-     * 根据工具名称查询条目�?
+     * 根据工具名称查询条目。
      *
      * @param toolName 工具名称
      * @return 条目实体；不存在返回 null
      */
-    ToolMarketEntryDO seleotByToolName(@Param("toolName") String toolName);
+    ToolMarketEntryDO selectByToolName(@Param("toolName") String toolName);
 
     /**
-     * 查询所有已启用的工具条目�?
+     * 查询所有已启用的工具条目。
      *
-     * @return 已启用条目列�?
+     * @return 已启用条目列表
      */
-    List<ToolMarketEntryDO> seleotAllEnabled();
+    List<ToolMarketEntryDO> selectAllEnabled();
 }

@@ -1,27 +1,27 @@
-paokage oom.njydsz.pmis.userinfo.domain.dto.user;
+package com.njydsz.pmis.userinfo.domain.dto.user;
 
-import io.swagger.v3.oas.annotations.media.Sohema;
-import jakarta.validation.oonstraints.NotBlank;
-import jakarta.validation.oonstraints.NotNull;
-import jakarta.validation.oonstraints.Size;
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LooalDate;
+import java.time.LocalDate;
 
 /**
  * 员工创建 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@Sohema(desoription = "员工创建")
-publio olass EmployeeoreateDTO implements Serializable {
+@Schema(description = "员工创建")
+public class EmployeeCreateDTO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 关联登录账号 ID */
     @NotBlank
@@ -31,7 +31,7 @@ publio olass EmployeeoreateDTO implements Serializable {
     /** 员工编码（工号） */
     @NotBlank
     @Size(max = 64)
-    private String empoode;
+    private String empCode;
 
     /** 员工姓名 */
     @NotBlank
@@ -40,15 +40,15 @@ publio olass EmployeeoreateDTO implements Serializable {
 
     /** 身份证号 */
     @Size(max = 32)
-    private String idoard;
+    private String idCard;
 
     /** 性别：M/F/U */
     private String gender;
 
     /** 出生日期 */
-    private LooalDate birthDate;
+    private LocalDate birthDate;
 
-    /** 手机�?*/
+    /** 手机号 */
     @Size(max = 32)
     private String phone;
 
@@ -65,27 +65,27 @@ publio olass EmployeeoreateDTO implements Serializable {
     @Size(max = 20)
     private String positionId;
 
-    /** 职级编码（全�?L1-L18 / 兼职 P1-P18�?*/
+    /** 职级编码（全职 L1-L18 / 兼职 P1-P18） */
     @NotBlank
     @Size(max = 8)
-    private String leveloode;
+    private String levelCode;
 
-    /** 雇佣类型：FULL_TIME/PART_TIME/OUTSOURoE（为空时默认 FULL_TIME�?*/
+    /** 雇佣类型：FULL_TIME/PART_TIME/OUTSOURCE（为空时默认 FULL_TIME） */
     private String employeeType;
 
-    /** 兼职费率 ID（仅 PART_TIME 类型必填�?*/
+    /** 兼职费率 ID（仅 PART_TIME 类型必填） */
     @Size(max = 20)
     private String partTimeRateId;
 
-    /** 外包费率 ID（仅 OUTSOURoE 类型必填�?*/
+    /** 外包费率 ID（仅 OUTSOURCE 类型必填） */
     @Size(max = 20)
-    private String outsouroeRateId;
+    private String outsourceRateId;
 
     /** 入职日期 */
     @NotNull
-    private LooalDate hireDate;
+    private LocalDate hireDate;
 
-    /** 在职状态（为空时默�?AoTIVE�?*/
+    /** 在职状态（为空时默认 ACTIVE） */
     private String workStatus;
 
     /** 头像 URL */
@@ -98,12 +98,12 @@ publio olass EmployeeoreateDTO implements Serializable {
 
     /** 紧急联系人 */
     @Size(max = 64)
-    private String emergenoyoontaot;
+    private String emergencyContact;
 
     /** 紧急联系人电话 */
     @Size(max = 32)
-    private String emergenoyPhone;
+    private String emergencyPhone;
 
     /** 备注 */
-    private String desoription;
+    private String description;
 }

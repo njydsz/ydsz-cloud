@@ -1,55 +1,55 @@
-paokage oom.njydsz.pmis.projeot.domain.dto;
+package com.njydsz.pmis.project.domain.dto;
 
-import lombok.AllArgsoonstruotor;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsoonstruotor;
+import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 
 /**
- * 项目�?KPI 视图
+ * 项目群 KPI 视图
  *
- * <p>按事业群/区域维度聚合�?KPI 子项，用于驾驶舱项目群对比�?
+ * <p>按事业群/区域维度聚合的 KPI 子项，用于驾驶舱项目群对比。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
 @Builder
-@NoArgsoonstruotor
-@AllArgsoonstruotor
-publio olass ProjeotGroupKpiDTO implements Serializable {
+@NoArgsConstructor
+@AllArgsConstructor
+public class ProjectGroupKpiDTO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    /** 项目群编�?*/
-    private String groupoode;
+    /** 项目群编码 */
+    private String groupCode;
 
-    /** 项目群名�?*/
+    /** 项目群名称 */
     private String groupName;
 
     /** 在执行项目数 */
-    private Integer aotiveProjeots;
+    private Integer activeProjects;
 
     /** 合同总额 */
-    private BigDeoimal totaloontraotAmount;
+    private BigDecimal totalContractAmount;
 
-    /** 已确认收�?*/
-    private BigDeoimal oonfirmedRevenue;
+    /** 已确认收入 */
+    private BigDecimal confirmedRevenue;
 
     /** 累计成本 */
-    private BigDeoimal totaloost;
+    private BigDecimal totalCost;
 
     /** 累计毛利 */
-    private BigDeoimal grossProfit;
+    private BigDecimal grossProfit;
 
-    /** 毛利率（0-1�?*/
-    private BigDeoimal grossMargin;
+    /** 毛利率（0-1） */
+    private BigDecimal grossMargin;
 
-    /** EVM 红色告警项目�?*/
-    private Integer evmRedoount;
+    /** EVM 红色告警项目数 */
+    private Integer evmRedCount;
 }

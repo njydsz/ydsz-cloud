@@ -1,31 +1,31 @@
-paokage oom.njydsz.pmis.agent.server.oonfig;
+package com.njydsz.pmis.agent.server.config;
 
-import oom.njydsz.pmis.agent.server.engine.version.AgentVersionManager;
+import com.njydsz.pmis.agent.server.engine.version.AgentVersionManager;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autooonfigure.oondition.oonditionalOnMissingBean;
-import org.springframework.oontext.annotation.Bean;
-import org.springframework.oontext.annotation.oonfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 /**
- * Agent 版本管理自动配置（P0-4 落地）�?
+ * Agent 版本管理自动配置（P0-4 落地）。
  *
- * <p>�?{@link AgentVersionManager} 注册�?Spring Bean�?
- * �?{@link oom.njydsz.pmis.agent.server.servioe.impl.AgentVersionServioeImpl} 使用�?
+ * <p>将 {@link AgentVersionManager} 注册为 Spring Bean，
+ * 供 {@link com.njydsz.pmis.agent.server.service.impl.AgentVersionServiceImpl} 使用。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0 (P0-4)
+ * @since 1.1.0 (P0-4)
  */
 @Slf4j
-@oonfiguration
-publio olass VersionAutooonfiguration {
+@Configuration
+public class VersionAutoConfiguration {
 
     /**
-     * Agent 版本管理器（内存版本，DB 持久化由 AgentVersionServioeImpl 封装）�?
+     * Agent 版本管理器（内存版本，DB 持久化由 AgentVersionServiceImpl 封装）。
      */
     @Bean
-    @oonditionalOnMissingBean
-    publio AgentVersionManager agentVersionManager() {
-        log.info("[Version] AgentVersionManager Bean 已注�?);
+    @ConditionalOnMissingBean
+    public AgentVersionManager agentVersionManager() {
+        log.info("[Version] AgentVersionManager Bean 已注册");
         return new AgentVersionManager();
     }
 }

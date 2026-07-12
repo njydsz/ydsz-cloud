@@ -1,42 +1,47 @@
-paokage oom.njydsz.pmis.workflow.server.servioe.impl.strategy;
+package com.njydsz.pmis.workflow.server.service.impl.strategy;
 
-import oom.njydsz.pmis.workflow.domain.dto.instanoe.FlowTaskOperateDTO;
-import oom.njydsz.pmis.workflow.domain.entity.instanoe.FlowRunTaskDO;
-import oom.njydsz.pmis.workflow.domain.enums.definition.FlowPerformType;
-import oom.njydsz.pmis.workflow.infra.mapper.instanoe.FlowRunTaskMapper;
-import oom.njydsz.pmis.workflow.server.servioe.impl.instanoe.FlowTaskArohiveServioe;
-import lombok.RequiredArgsoonstruotor;
-import org.springframework.stereotype.oomponent;
+import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.domain.enums.definition.FlowPerformType;
+import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
+import com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskArchiveService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 /**
- * FOREAoH 循环策略：每�?task 独立完成，全部完成才推进�? *
- * <p>对标 BPMN 2.0 multiInstanoe + 钉钉/飞书动态审批人集合�? * �?PARALLEL 会签的区别：会签�?1 task + N user 共享审批意见�? * FOREAoH �?N 条独�?task，每条独立完成，全部完成才推进�? *
+ * FOREACH 循环策略：每条 task 独立完成，全部完成才推进。
+ *
+ * <p>对标 BPMN 2.0 multiInstance + 钉钉/飞书动态审批人集合。
+ * 与 PARALLEL 会签的区别：会签是 1 task + N user 共享审批意见；
+ * FOREACH 是 N 条独立 task，每条独立完成，全部完成才推进。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.7.0
+ * @since 1.7.0
  */
-@oomponent
-@RequiredArgsoonstruotor
-publio olass ForeaohoountersignStrategy implements oountersignStrategy {
+@Component
+@RequiredArgsConstructor
+public class ForeachCountersignStrategy implements CountersignStrategy {
 
-    /** 运行时任�?Mapper，用于查询同节点 PENDING 任务数以判断是否全部完成 */
+    /** 运行时任务 Mapper，用于查询同节点 PENDING 任务数以判断是否全部完成 */
     private final FlowRunTaskMapper taskMapper;
-    /** 任务归档服务，完成单�?task 后归档到历史�?*/
-    private final FlowTaskArohiveServioe arohiveServioe;
+    /** 任务归档服务，完成单条 task 后归档到历史表 */
+    private final FlowTaskArchiveService archiveService;
 
     @Override
-    publio FlowPerformType supportedType() {
-        return FlowPerformType.FOREAoH_PARALLEL;
+    public FlowPerformType supportedType() {
+        return FlowPerformType.FOREACH_PARALLEL;
     }
 
     @Override
-    publio void onUserPassed(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
+    public void onUserPassed(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
         // 完成当前 task（每条独立）
-        arohiveServioe.oompleteAndArohive(task, dto.getoomment());
+        archiveService.completeAndArchive(task, dto.getComment());
     }
 
     @Override
-    publio boolean shouldAdvanoe(FlowRunTaskDO task) {
-        // 查询�?nodeoode �?PENDING task �?        int pendingoount = taskMapper.oountPendingByNode(task.getInstanoeId(), task.getNodeoode());
-        return pendingoount == 0;
+    public boolean shouldAdvance(FlowRunTaskDO task) {
+        // 查询同 nodeCode 的 PENDING task 数
+        int pendingCount = taskMapper.countPendingByNode(task.getInstanceId(), task.getNodeCode());
+        return pendingCount == 0;
     }
 }

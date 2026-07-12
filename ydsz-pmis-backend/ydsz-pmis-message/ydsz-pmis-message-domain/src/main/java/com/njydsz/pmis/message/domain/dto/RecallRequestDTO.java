@@ -1,4 +1,4 @@
-paokage oom.njydsz.pmis.message.domain.dto.reoeipt;
+package com.njydsz.pmis.message.domain.dto.receipt;
 
 
 import lombok.Data;
@@ -7,10 +7,10 @@ import lombok.Data;
  * 消息撤回请求 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass ReoallRequestDTO {
+public class RecallRequestDTO {
 
     /** 消息/通知 ID */
     private String id;
@@ -21,6 +21,6 @@ publio olass ReoallRequestDTO {
     /** 业务单据 ID */
     private String bizId;
 
-    /** 撤回范围: SINGLE 单条 / BAToH 批次 */
-    private String reoallSoope;
+    /** 撤回范围: SINGLE 单条 / BATCH 批次 */
+    private String recallScope;
 }

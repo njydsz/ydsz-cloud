@@ -1,53 +1,53 @@
-paokage oom.njydsz.pmis.literule.server.expr.liteexpr;
+package com.njydsz.pmis.literule.server.expr.liteexpr;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.oonourrent.oonourrentHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * LiteExpr 编译�?
+ * LiteExpr 编译器
  *
- * <p>负责将表达式文本编译�?AST，并提供�?
+ * <p>负责将表达式文本编译为 AST，并提供：
  * <ul>
- *   <li><b>编译缓存</b>：{@oode String �?ExprNode} 缓存，避免重复解�?/li>
- *   <li><b>常量折叠</b>：编译期求值常量表达式（如 {@oode 1 + 2} �?{@oode 3}�?/li>
- *   <li><b>变量提取</b>：从 AST 中收集所有变量引�?/li>
- *   <li><b>函数提取</b>：从 AST 中收集所有函数调�?/li>
- *   <li><b>AST 级错误定�?/b>：编译错误携带精确行列号</li>
+ *   <li><b>编译缓存</b>：{@code String → ExprNode} 缓存，避免重复解析</li>
+ *   <li><b>常量折叠</b>：编译期求值常量表达式（如 {@code 1 + 2} → {@code 3}）</li>
+ *   <li><b>变量提取</b>：从 AST 中收集所有变量引用</li>
+ *   <li><b>函数提取</b>：从 AST 中收集所有函数调用</li>
+ *   <li><b>AST 级错误定位</b>：编译错误携带精确行列号</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 2.0.0
+ * @since 2.0.0
  */
-publio olass LiteExproompiler {
+public class LiteExprCompiler {
 
-    /** 编译缓存：表达式文本 �?AST */
-    private final Map<String, ExprNode> oaohe = new oonourrentHashMap<>(512);
+    /** 编译缓存：表达式文本 → AST */
+    private final Map<String, ExprNode> cache = new ConcurrentHashMap<>(512);
 
     /** 缓存上限 */
-    private statio final int MAX_oAoHE_SIZE = 4096;
+    private static final int MAX_CACHE_SIZE = 4096;
 
     /**
      * 编译表达式（带缓存）
      *
-     * @param expression 表达式文�?
-     * @return AST 根节�?
-     * @throws LiteExprExoeption 编译失败
+     * @param expression 表达式文本
+     * @return AST 根节点
+     * @throws LiteExprException 编译失败
      */
-    publio ExprNode oompile(String expression) {
+    public ExprNode compile(String expression) {
         if (expression == null || expression.isBlank()) {
-            throw new LiteExprExoeption("表达式为�?, 1, 1);
+            throw new LiteExprException("表达式为空", 1, 1);
         }
-        return oaohe.oomputeIfAbsent(expression, this::oompile0);
+        return cache.computeIfAbsent(expression, this::compile0);
     }
 
     /**
-     * 实际编译逻辑（无缓存�?
+     * 实际编译逻辑（无缓存）
      */
-    private ExprNode oompile0(String expression) {
+    private ExprNode compile0(String expression) {
         // 1. 词法分析
         ExprLexer lexer = new ExprLexer(expression);
         List<Token> tokens = lexer.tokenize();
@@ -57,166 +57,166 @@ publio olass LiteExproompiler {
         ExprNode ast = parser.parse();
 
         // 3. 常量折叠优化
-        return oonstantFold(ast);
+        return constantFold(ast);
     }
 
     /**
      * 清空编译缓存
      */
-    publio void olearoaohe() {
-        oaohe.olear();
+    public void clearCache() {
+        cache.clear();
     }
 
     /**
      * 当前缓存数量
      */
-    publio int oaoheSize() {
-        return oaohe.size();
+    public int cacheSize() {
+        return cache.size();
     }
 
     // ===== 常量折叠 =====
 
     /**
-     * 常量折叠：递归地将编译期可求值的子表达式替换为字面�?
+     * 常量折叠：递归地将编译期可求值的子表达式替换为字面值
      *
-     * <p>示例�?
+     * <p>示例：
      * <ul>
-     *   <li>{@oode 1 + 2} �?{@oode 3}</li>
-     *   <li>{@oode true && false} �?{@oode false}</li>
-     *   <li>{@oode "a" + "b"} �?{@oode "ab"}</li>
-     *   <li>{@oode !true} �?{@oode false}</li>
-     *   <li>{@oode true ? 1 : 2} �?{@oode 1}</li>
+     *   <li>{@code 1 + 2} → {@code 3}</li>
+     *   <li>{@code true && false} → {@code false}</li>
+     *   <li>{@code "a" + "b"} → {@code "ab"}</li>
+     *   <li>{@code !true} → {@code false}</li>
+     *   <li>{@code true ? 1 : 2} → {@code 1}</li>
      * </ul>
      *
-     * <p>仅折叠全字面量子表达式，包含变量的子表达式不折叠�?
+     * <p>仅折叠全字面量子表达式，包含变量的子表达式不折叠。
      */
-    publio ExprNode oonstantFold(ExprNode node) {
+    public ExprNode constantFold(ExprNode node) {
         if (node == null) return null;
 
-        return switoh (node) {
-            oase LiteralNode ln -> ln;
-            oase VariableNode vn -> vn;
-            oase BinaryOpNode bon -> {
-                ExprNode left = oonstantFold(bon.left());
-                ExprNode right = oonstantFold(bon.right());
-                if (left instanoeof LiteralNode ll && right instanoeof LiteralNode rl) {
-                    Objeot result = tryEvalBinary(bon.operator(), ll.value(), rl.value());
+        return switch (node) {
+            case LiteralNode ln -> ln;
+            case VariableNode vn -> vn;
+            case BinaryOpNode bon -> {
+                ExprNode left = constantFold(bon.left());
+                ExprNode right = constantFold(bon.right());
+                if (left instanceof LiteralNode ll && right instanceof LiteralNode rl) {
+                    Object result = tryEvalBinary(bon.operator(), ll.value(), rl.value());
                     if (result != null) {
-                        yield new LiteralNode(result, bon.line(), bon.oolumn());
+                        yield new LiteralNode(result, bon.line(), bon.column());
                     }
                 }
-                yield new BinaryOpNode(bon.operator(), left, right, bon.line(), bon.oolumn());
+                yield new BinaryOpNode(bon.operator(), left, right, bon.line(), bon.column());
             }
-            oase UnaryOpNode uon -> {
-                ExprNode operand = oonstantFold(uon.operand());
-                if (operand instanoeof LiteralNode ol) {
-                    Objeot result = tryEvalUnary(uon.operator(), ol.value());
+            case UnaryOpNode uon -> {
+                ExprNode operand = constantFold(uon.operand());
+                if (operand instanceof LiteralNode ol) {
+                    Object result = tryEvalUnary(uon.operator(), ol.value());
                     if (result != null) {
-                        yield new LiteralNode(result, uon.line(), uon.oolumn());
+                        yield new LiteralNode(result, uon.line(), uon.column());
                     }
                 }
-                yield new UnaryOpNode(uon.operator(), operand, uon.line(), uon.oolumn());
+                yield new UnaryOpNode(uon.operator(), operand, uon.line(), uon.column());
             }
-            oase TernaryNode tn -> {
-                ExprNode oond = oonstantFold(tn.oondition());
-                ExprNode thenE = oonstantFold(tn.thenExpr());
-                ExprNode elseE = oonstantFold(tn.elseExpr());
-                if (oond instanoeof LiteralNode ol && ol.value() instanoeof Boolean b) {
+            case TernaryNode tn -> {
+                ExprNode cond = constantFold(tn.condition());
+                ExprNode thenE = constantFold(tn.thenExpr());
+                ExprNode elseE = constantFold(tn.elseExpr());
+                if (cond instanceof LiteralNode cl && cl.value() instanceof Boolean b) {
                     yield b ? thenE : elseE;
                 }
-                yield new TernaryNode(oond, thenE, elseE, tn.line(), tn.oolumn());
+                yield new TernaryNode(cond, thenE, elseE, tn.line(), tn.column());
             }
-            oase FunotionoallNode fon -> {
-                List<ExprNode> foldedArgs = new ArrayList<>(fon.arguments().size());
-                for (ExprNode arg : fon.arguments()) {
-                    foldedArgs.add(oonstantFold(arg));
+            case FunctionCallNode fcn -> {
+                List<ExprNode> foldedArgs = new ArrayList<>(fcn.arguments().size());
+                for (ExprNode arg : fcn.arguments()) {
+                    foldedArgs.add(constantFold(arg));
                 }
-                yield new FunotionoallNode(fon.funotionName(), foldedArgs, fon.line(), fon.oolumn());
+                yield new FunctionCallNode(fcn.functionName(), foldedArgs, fcn.line(), fcn.column());
             }
-            oase MemberAooessNode man -> {
-                ExprNode target = oonstantFold(man.target());
-                yield new MemberAooessNode(target, man.member(), man.line(), man.oolumn());
+            case MemberAccessNode man -> {
+                ExprNode target = constantFold(man.target());
+                yield new MemberAccessNode(target, man.member(), man.line(), man.column());
             }
-            oase IndexNode in -> {
-                ExprNode target = oonstantFold(in.target());
-                ExprNode index = oonstantFold(in.index());
-                yield new IndexNode(target, index, in.line(), in.oolumn());
+            case IndexNode in -> {
+                ExprNode target = constantFold(in.target());
+                ExprNode index = constantFold(in.index());
+                yield new IndexNode(target, index, in.line(), in.column());
             }
-            oase ListNode ln -> {
+            case ListNode ln -> {
                 List<ExprNode> folded = new ArrayList<>(ln.elements().size());
-                for (ExprNode e : ln.elements()) folded.add(oonstantFold(e));
-                yield new ListNode(folded, ln.line(), ln.oolumn());
+                for (ExprNode e : ln.elements()) folded.add(constantFold(e));
+                yield new ListNode(folded, ln.line(), ln.column());
             }
-            oase MapNode mn -> {
+            case MapNode mn -> {
                 Map<ExprNode, ExprNode> folded = new java.util.LinkedHashMap<>(mn.entries().size());
                 for (Map.Entry<ExprNode, ExprNode> e : mn.entries().entrySet()) {
-                    folded.put(oonstantFold(e.getKey()), oonstantFold(e.getValue()));
+                    folded.put(constantFold(e.getKey()), constantFold(e.getValue()));
                 }
-                yield new MapNode(folded, mn.line(), mn.oolumn());
+                yield new MapNode(folded, mn.line(), mn.column());
             }
-            oase LambdaNode lan -> {
-                ExprNode body = oonstantFold(lan.body());
-                yield new LambdaNode(lan.parameter(), body, lan.line(), lan.oolumn());
+            case LambdaNode lan -> {
+                ExprNode body = constantFold(lan.body());
+                yield new LambdaNode(lan.parameter(), body, lan.line(), lan.column());
             }
-            oase TemplateStringNode tsn -> {
+            case TemplateStringNode tsn -> {
                 List<ExprNode> folded = new ArrayList<>(tsn.parts().size());
-                for (ExprNode p : tsn.parts()) folded.add(oonstantFold(p));
-                yield new TemplateStringNode(folded, tsn.line(), tsn.oolumn());
+                for (ExprNode p : tsn.parts()) folded.add(constantFold(p));
+                yield new TemplateStringNode(folded, tsn.line(), tsn.column());
             }
-            oase null -> null;
+            case null -> null;
         };
     }
 
     /**
-     * 尝试在编译期求值二元运算（常量折叠辅助�?
+     * 尝试在编译期求值二元运算（常量折叠辅助）
      *
-     * @return 求值结果；无法求值返�?null
+     * @return 求值结果；无法求值返回 null
      */
-    private Objeot tryEvalBinary(String op, Objeot left, Objeot right) {
+    private Object tryEvalBinary(String op, Object left, Object right) {
         try {
-            return switoh (op) {
-                oase "+" -> {
-                    if (left instanoeof String || right instanoeof String) {
-                        yield BuiltinFunotions.str(left) + BuiltinFunotions.str(right);
+            return switch (op) {
+                case "+" -> {
+                    if (left instanceof String || right instanceof String) {
+                        yield BuiltinFunctions.str(left) + BuiltinFunctions.str(right);
                     }
-                    yield BuiltinFunotions.smartAdd(left, right);
+                    yield BuiltinFunctions.smartAdd(left, right);
                 }
-                oase "-" -> BuiltinFunotions.smartSubtraot(left, right);
-                oase "*" -> BuiltinFunotions.smartMultiply(left, right);
-                oase "/" -> {
-                    var divisor = BuiltinFunotions.toDeoimal(right);
+                case "-" -> BuiltinFunctions.smartSubtract(left, right);
+                case "*" -> BuiltinFunctions.smartMultiply(left, right);
+                case "/" -> {
+                    var divisor = BuiltinFunctions.toDecimal(right);
                     if (divisor.signum() == 0) yield null;
-                    yield BuiltinFunotions.toDeoimal(left).divide(divisor, 10, java.math.RoundingMode.HALF_UP);
+                    yield BuiltinFunctions.toDecimal(left).divide(divisor, 10, java.math.RoundingMode.HALF_UP);
                 }
-                oase "%" -> BuiltinFunotions.smartRemainder(left, right);
-                oase "==" -> left != null && left.equals(right);
-                oase "!=" -> left == null || !left.equals(right);
-                oase ">" -> BuiltinFunotions.toDeoimal(left).oompareTo(BuiltinFunotions.toDeoimal(right)) > 0;
-                oase ">=" -> BuiltinFunotions.toDeoimal(left).oompareTo(BuiltinFunotions.toDeoimal(right)) >= 0;
-                oase "<" -> BuiltinFunotions.toDeoimal(left).oompareTo(BuiltinFunotions.toDeoimal(right)) < 0;
-                oase "<=" -> BuiltinFunotions.toDeoimal(left).oompareTo(BuiltinFunotions.toDeoimal(right)) <= 0;
-                oase "&&", "and" -> BuiltinFunotions.toBool(left) && BuiltinFunotions.toBool(right);
-                oase "||", "or" -> BuiltinFunotions.toBool(left) || BuiltinFunotions.toBool(right);
+                case "%" -> BuiltinFunctions.smartRemainder(left, right);
+                case "==" -> left != null && left.equals(right);
+                case "!=" -> left == null || !left.equals(right);
+                case ">" -> BuiltinFunctions.toDecimal(left).compareTo(BuiltinFunctions.toDecimal(right)) > 0;
+                case ">=" -> BuiltinFunctions.toDecimal(left).compareTo(BuiltinFunctions.toDecimal(right)) >= 0;
+                case "<" -> BuiltinFunctions.toDecimal(left).compareTo(BuiltinFunctions.toDecimal(right)) < 0;
+                case "<=" -> BuiltinFunctions.toDecimal(left).compareTo(BuiltinFunctions.toDecimal(right)) <= 0;
+                case "&&", "and" -> BuiltinFunctions.toBool(left) && BuiltinFunctions.toBool(right);
+                case "||", "or" -> BuiltinFunctions.toBool(left) || BuiltinFunctions.toBool(right);
                 default -> null;
             };
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             return null;
         }
     }
 
     /**
-     * 尝试在编译期求值一元运�?
+     * 尝试在编译期求值一元运算
      */
-    private Objeot tryEvalUnary(String op, Objeot operand) {
+    private Object tryEvalUnary(String op, Object operand) {
         try {
-            return switoh (op) {
-                oase "!", "not" -> !BuiltinFunotions.toBool(operand);
-                oase "-", "neg" -> BuiltinFunotions.isIntegerLike(operand)
-                        ? -BuiltinFunotions.toLong(operand)
-                        : BuiltinFunotions.toDeoimal(operand).negate();
+            return switch (op) {
+                case "!", "not" -> !BuiltinFunctions.toBool(operand);
+                case "-", "neg" -> BuiltinFunctions.isIntegerLike(operand)
+                        ? -BuiltinFunctions.toLong(operand)
+                        : BuiltinFunctions.toDecimal(operand).negate();
                 default -> null;
             };
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             return null;
         }
     }
@@ -224,95 +224,95 @@ publio olass LiteExproompiler {
     // ===== 变量提取 =====
 
     /**
-     * �?AST 中提取所有变量引用名
+     * 从 AST 中提取所有变量引用名
      *
-     * <p>遍历 AST 收集 {@link VariableNode}，过滤内置关键字�?
-     * 不依赖正则，�?Aviator/QLExpress 实现更准确�?
+     * <p>遍历 AST 收集 {@link VariableNode}，过滤内置关键字。
+     * 不依赖正则，比 Aviator/QLExpress 实现更准确。
      *
-     * @param ast AST 根节�?
+     * @param ast AST 根节点
      * @return 变量名列表（去重，保留出现顺序）
      */
-    publio List<String> extraotVariables(ExprNode ast) {
+    public List<String> extractVariables(ExprNode ast) {
         Set<String> variables = new LinkedHashSet<>();
-        oolleotVariables(ast, variables);
+        collectVariables(ast, variables);
         return new ArrayList<>(variables);
     }
 
-    private void oolleotVariables(ExprNode node, Set<String> variables) {
+    private void collectVariables(ExprNode node, Set<String> variables) {
         if (node == null) return;
-        switoh (node) {
-            oase VariableNode vn -> variables.add(vn.name());
-            oase BinaryOpNode bon -> {
-                oolleotVariables(bon.left(), variables);
-                oolleotVariables(bon.right(), variables);
+        switch (node) {
+            case VariableNode vn -> variables.add(vn.name());
+            case BinaryOpNode bon -> {
+                collectVariables(bon.left(), variables);
+                collectVariables(bon.right(), variables);
             }
-            oase UnaryOpNode uon -> oolleotVariables(uon.operand(), variables);
-            oase TernaryNode tn -> {
-                oolleotVariables(tn.oondition(), variables);
-                oolleotVariables(tn.thenExpr(), variables);
-                oolleotVariables(tn.elseExpr(), variables);
+            case UnaryOpNode uon -> collectVariables(uon.operand(), variables);
+            case TernaryNode tn -> {
+                collectVariables(tn.condition(), variables);
+                collectVariables(tn.thenExpr(), variables);
+                collectVariables(tn.elseExpr(), variables);
             }
-            oase FunotionoallNode fon -> fon.arguments().forEaoh(a -> oolleotVariables(a, variables));
-            oase MemberAooessNode man -> oolleotVariables(man.target(), variables);
-            oase IndexNode in -> {
-                oolleotVariables(in.target(), variables);
-                oolleotVariables(in.index(), variables);
+            case FunctionCallNode fcn -> fcn.arguments().forEach(a -> collectVariables(a, variables));
+            case MemberAccessNode man -> collectVariables(man.target(), variables);
+            case IndexNode in -> {
+                collectVariables(in.target(), variables);
+                collectVariables(in.index(), variables);
             }
-            oase ListNode ln -> ln.elements().forEaoh(e -> oolleotVariables(e, variables));
-            oase MapNode mn -> mn.entries().forEaoh((k, v) -> {
-                oolleotVariables(k, variables);
-                oolleotVariables(v, variables);
+            case ListNode ln -> ln.elements().forEach(e -> collectVariables(e, variables));
+            case MapNode mn -> mn.entries().forEach((k, v) -> {
+                collectVariables(k, variables);
+                collectVariables(v, variables);
             });
-            oase LambdaNode lan -> {
+            case LambdaNode lan -> {
                 // Lambda 参数不是外部变量引用
                 Set<String> inner = new LinkedHashSet<>();
-                oolleotVariables(lan.body(), inner);
+                collectVariables(lan.body(), inner);
                 inner.remove(lan.parameter());
                 variables.addAll(inner);
             }
-            oase TemplateStringNode tsn -> tsn.parts().forEaoh(p -> oolleotVariables(p, variables));
+            case TemplateStringNode tsn -> tsn.parts().forEach(p -> collectVariables(p, variables));
             default -> {}
         }
     }
 
     /**
-     * �?AST 中提取所有函数调用名
+     * 从 AST 中提取所有函数调用名
      */
-    publio List<String> extraotFunotions(ExprNode ast) {
-        Set<String> funotions = new LinkedHashSet<>();
-        oolleotFunotions(ast, funotions);
-        return new ArrayList<>(funotions);
+    public List<String> extractFunctions(ExprNode ast) {
+        Set<String> functions = new LinkedHashSet<>();
+        collectFunctions(ast, functions);
+        return new ArrayList<>(functions);
     }
 
-    private void oolleotFunotions(ExprNode node, Set<String> funotions) {
+    private void collectFunctions(ExprNode node, Set<String> functions) {
         if (node == null) return;
-        switoh (node) {
-            oase FunotionoallNode fon -> {
-                funotions.add(fon.funotionName());
-                fon.arguments().forEaoh(a -> oolleotFunotions(a, funotions));
+        switch (node) {
+            case FunctionCallNode fcn -> {
+                functions.add(fcn.functionName());
+                fcn.arguments().forEach(a -> collectFunctions(a, functions));
             }
-            oase BinaryOpNode bon -> {
-                oolleotFunotions(bon.left(), funotions);
-                oolleotFunotions(bon.right(), funotions);
+            case BinaryOpNode bon -> {
+                collectFunctions(bon.left(), functions);
+                collectFunctions(bon.right(), functions);
             }
-            oase UnaryOpNode uon -> oolleotFunotions(uon.operand(), funotions);
-            oase TernaryNode tn -> {
-                oolleotFunotions(tn.oondition(), funotions);
-                oolleotFunotions(tn.thenExpr(), funotions);
-                oolleotFunotions(tn.elseExpr(), funotions);
+            case UnaryOpNode uon -> collectFunctions(uon.operand(), functions);
+            case TernaryNode tn -> {
+                collectFunctions(tn.condition(), functions);
+                collectFunctions(tn.thenExpr(), functions);
+                collectFunctions(tn.elseExpr(), functions);
             }
-            oase MemberAooessNode man -> oolleotFunotions(man.target(), funotions);
-            oase IndexNode in -> {
-                oolleotFunotions(in.target(), funotions);
-                oolleotFunotions(in.index(), funotions);
+            case MemberAccessNode man -> collectFunctions(man.target(), functions);
+            case IndexNode in -> {
+                collectFunctions(in.target(), functions);
+                collectFunctions(in.index(), functions);
             }
-            oase ListNode ln -> ln.elements().forEaoh(e -> oolleotFunotions(e, funotions));
-            oase MapNode mn -> mn.entries().forEaoh((k, v) -> {
-                oolleotFunotions(k, funotions);
-                oolleotFunotions(v, funotions);
+            case ListNode ln -> ln.elements().forEach(e -> collectFunctions(e, functions));
+            case MapNode mn -> mn.entries().forEach((k, v) -> {
+                collectFunctions(k, functions);
+                collectFunctions(v, functions);
             });
-            oase LambdaNode lan -> oolleotFunotions(lan.body(), funotions);
-            oase TemplateStringNode tsn -> tsn.parts().forEaoh(p -> oolleotFunotions(p, funotions));
+            case LambdaNode lan -> collectFunctions(lan.body(), functions);
+            case TemplateStringNode tsn -> tsn.parts().forEach(p -> collectFunctions(p, functions));
             default -> {}
         }
     }

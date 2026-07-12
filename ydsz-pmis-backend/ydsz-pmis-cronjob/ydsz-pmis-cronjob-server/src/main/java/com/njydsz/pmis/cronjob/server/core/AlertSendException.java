@@ -1,23 +1,23 @@
-paokage oom.njydsz.pmis.oronjob.server.oore.alert;
+package com.njydsz.pmis.cronjob.server.core.alert;
 
 /**
- * 告警发送异常（P5 告警 + 监控）�?
+ * 告警发送异常（P5 告警 + 监控）。
  *
- * <p>�?{@link AlertDispatoher} 实现类在发送失败时抛出，由 {@link AlertDispatoher}
- * 捕获并记录到 {@oode pmis_job_alert_log.error_message}�?
+ * <p>由 {@link AlertDispatcher} 实现类在发送失败时抛出，由 {@link AlertDispatcher}
+ * 捕获并记录到 {@code pmis_job_alert_log.error_message}。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio olass AlertSendExoeption extends Exoeption {
+public class AlertSendException extends Exception {
 
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    publio AlertSendExoeption(String message) {
+    public AlertSendException(String message) {
         super(message);
     }
 
-    publio AlertSendExoeption(String message, Throwable oause) {
-        super(message, oause);
+    public AlertSendException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

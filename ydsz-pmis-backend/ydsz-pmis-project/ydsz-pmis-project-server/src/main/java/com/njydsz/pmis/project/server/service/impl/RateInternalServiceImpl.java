@@ -1,72 +1,72 @@
-paokage oom.njydsz.pmis.projeot.server.servioe.impl;
+package com.njydsz.pmis.project.server.service.impl;
 
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.oore.response.StandardResultoode;
-import oom.njydsz.pmis.oommon.exoeption.oustom.SysExoeption;
-import oom.njydsz.pmis.projeot.domain.dto.RateInternaloreateDTO;
-import oom.njydsz.pmis.projeot.domain.entity.RateInternalDO;
-import oom.njydsz.pmis.projeot.infra.mapper.RateInternalMapper;
-import oom.njydsz.pmis.projeot.server.servioe.RateInternalServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.project.domain.dto.RateInternalCreateDTO;
+import com.njydsz.pmis.project.domain.entity.RateInternalDO;
+import com.njydsz.pmis.project.infra.mapper.RateInternalMapper;
+import com.njydsz.pmis.project.server.service.RateInternalService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDeoimal;
-import java.time.LooalDate;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
  * 内部结算费率服务实现
  *
- * <p>负责内部成本费率的创建、更新、匹配与分页查询�?
- * matohEffeotive 优先匹配 (level+department)，其次回退�?(level)�?
+ * <p>负责内部成本费率的创建、更新、匹配与分页查询。
+ * matchEffective 优先匹配 (level+department)，其次回退到 (level)。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass RateInternalServioeImpl implements RateInternalServioe {
+@Service
+@RequiredArgsConstructor
+public class RateInternalServiceImpl implements RateInternalService {
 
     /** 内部结算费率 Mapper */
     private final RateInternalMapper rateMapper;
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio String oreate(RateInternaloreateDTO dto) {
+    @Transactional(rollbackFor = Exception.class)
+    public String create(RateInternalCreateDTO dto) {
         validate(dto);
-        if (rateMapper.seleotByoode(dto.getRateoode()) != null) {
-            throw new SysExoeption(StandardResultoode.DUPLIoATE_KEY, "error.exeoution.msg_f713b711", dto.getRateoode());
+        if (rateMapper.selectByCode(dto.getRateCode()) != null) {
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.execution.msg_f713b711", dto.getRateCode());
         }
         RateInternalDO r = new RateInternalDO();
-        BeanUtils.oopyProperties(dto, r);
-        if (!StringUtils.hasText(r.getStatus())) r.setStatus("AoTIVE");
-        if (!StringUtils.hasText(r.getourrenoy())) r.setourrenoy("oNY");
-        if (r.getoostAmount() == null) r.setoostAmount(BigDeoimal.ZERO);
-        if (r.getTenantId() == null) r.setTenantId(Tenantoontext.getTenantId());
-        if (r.getProviderTraoeId() == null) r.setProviderTraoeId("");
+        BeanUtils.copyProperties(dto, r);
+        if (!StringUtils.hasText(r.getStatus())) r.setStatus("ACTIVE");
+        if (!StringUtils.hasText(r.getCurrency())) r.setCurrency("CNY");
+        if (r.getCostAmount() == null) r.setCostAmount(BigDecimal.ZERO);
+        if (r.getTenantId() == null) r.setTenantId(TenantContext.getTenantId());
+        if (r.getProviderTraceId() == null) r.setProviderTraceId("");
         rateMapper.insert(r);
-        log.info("[RateInternal] 创建对内费率: oode={} level={} oost={}",
-                r.getRateoode(), r.getLeveloode(), r.getoostAmount());
+        log.info("[RateInternal] 创建对内费率: code={} level={} cost={}",
+                r.getRateCode(), r.getLevelCode(), r.getCostAmount());
         return r.getId();
     }
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void update(String id, RateInternaloreateDTO dto) {
-        if (id == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_411b6827");
-        RateInternalDO r = rateMapper.seleotById(id);
-        if (r == null) throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_o90e3407");
-        if (dto.getoostAmount() != null) r.setoostAmount(dto.getoostAmount());
+    @Transactional(rollbackFor = Exception.class)
+    public void update(String id, RateInternalCreateDTO dto) {
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
+        RateInternalDO r = rateMapper.selectById(id);
+        if (r == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_c90e3407");
+        if (dto.getCostAmount() != null) r.setCostAmount(dto.getCostAmount());
         if (dto.getBillingUnit() != null) r.setBillingUnit(dto.getBillingUnit());
-        if (dto.getourrenoy() != null) r.setourrenoy(dto.getourrenoy());
-        if (dto.getEffeotiveDate() != null) r.setEffeotiveDate(dto.getEffeotiveDate());
+        if (dto.getCurrency() != null) r.setCurrency(dto.getCurrency());
+        if (dto.getEffectiveDate() != null) r.setEffectiveDate(dto.getEffectiveDate());
         if (dto.getExpiryDate() != null) r.setExpiryDate(dto.getExpiryDate());
         if (dto.getStatus() != null) r.setStatus(dto.getStatus());
         if (dto.getRemark() != null) r.setRemark(dto.getRemark());
@@ -76,64 +76,64 @@ publio olass RateInternalServioeImpl implements RateInternalServioe {
     }
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    publio void delete(String id) {
-        if (id == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_411b6827");
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(String id) {
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
         rateMapper.deleteById(id);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio RateInternalDO getById(String id) {
-        if (id == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_411b6827");
-        RateInternalDO r = rateMapper.seleotById(id);
-        if (r == null) throw new SysExoeption(StandardResultoode.NOT_FOUND, "error.exeoution.msg_o90e3407");
+    @Transactional(readOnly = true)
+    public RateInternalDO getById(String id) {
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
+        RateInternalDO r = rateMapper.selectById(id);
+        if (r == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_c90e3407");
         return r;
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio RateInternalDO matohEffeotive(String leveloode, String departmentId, LooalDate date) {
-        if (!StringUtils.hasText(leveloode)) return null;
-        if (date == null) date = LooalDate.now();
-        return rateMapper.matohEffeotive(leveloode, departmentId, date);
+    @Transactional(readOnly = true)
+    public RateInternalDO matchEffective(String levelCode, String departmentId, LocalDate date) {
+        if (!StringUtils.hasText(levelCode)) return null;
+        if (date == null) date = LocalDate.now();
+        return rateMapper.matchEffective(levelCode, departmentId, date);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio List<RateInternalDO> listByLevelAndDept(String leveloode, String departmentId) {
-        if (!StringUtils.hasText(leveloode)) return List.of();
-        return rateMapper.seleotByLevelAndDept(leveloode, departmentId);
+    @Transactional(readOnly = true)
+    public List<RateInternalDO> listByLevelAndDept(String levelCode, String departmentId) {
+        if (!StringUtils.hasText(levelCode)) return List.of();
+        return rateMapper.selectByLevelAndDept(levelCode, departmentId);
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    publio Page<RateInternalDO> page(int page, int size, String leveloode, String departmentId, String status) {
+    @Transactional(readOnly = true)
+    public Page<RateInternalDO> page(int page, int size, String levelCode, String departmentId, String status) {
         Page<RateInternalDO> p = new Page<>(page, size);
         LambdaQueryWrapper<RateInternalDO> w = new LambdaQueryWrapper<>();
-        if (StringUtils.hasText(leveloode)) w.eq(RateInternalDO::getLeveloode, leveloode);
+        if (StringUtils.hasText(levelCode)) w.eq(RateInternalDO::getLevelCode, levelCode);
         if (departmentId != null) w.eq(RateInternalDO::getDepartmentId, departmentId);
         if (StringUtils.hasText(status)) w.eq(RateInternalDO::getStatus, status);
-        w.orderByAso(RateInternalDO::getLeveloode);
-        return rateMapper.seleotPage(p, w);
+        w.orderByAsc(RateInternalDO::getLevelCode);
+        return rateMapper.selectPage(p, w);
     }
 
-    private void validate(RateInternaloreateDTO dto) {
-        if (dto == null) throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_d9712a58");
-        if (!StringUtils.hasText(dto.getRateoode())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_3fbd3o07");
+    private void validate(RateInternalCreateDTO dto) {
+        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (!StringUtils.hasText(dto.getRateCode())) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_3fbd3c07");
         }
-        if (!StringUtils.hasText(dto.getLeveloode())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_11653d4o");
+        if (!StringUtils.hasText(dto.getLevelCode())) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_11653d4c");
         }
         if (!StringUtils.hasText(dto.getBillingUnit())) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_8e68458a");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_8e68458a");
         }
-        if (dto.getoostAmount() == null || dto.getoostAmount().signum() < 0) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_a0286o2d");
+        if (dto.getCostAmount() == null || dto.getCostAmount().signum() < 0) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_a0286c2d");
         }
-        if (dto.getEffeotiveDate() == null) {
-            throw new SysExoeption(StandardResultoode.BAD_REQUEST, "error.exeoution.msg_o10e0b62");
+        if (dto.getEffectiveDate() == null) {
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_c10e0b62");
         }
     }
 }

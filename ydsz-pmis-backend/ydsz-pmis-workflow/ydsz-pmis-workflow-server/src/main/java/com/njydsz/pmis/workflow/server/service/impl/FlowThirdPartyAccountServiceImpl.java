@@ -1,86 +1,89 @@
-paokage oom.njydsz.pmis.workflow.server.servioe.impl.integration;
+package com.njydsz.pmis.workflow.server.service.impl.integration;
 
-import oom.njydsz.pmis.oommon.oore.oonstant.oaoheoonstants;
-import oom.njydsz.pmis.workflow.domain.entity.integration.FlowThirdPartyAooountDO;
-import oom.njydsz.pmis.workflow.infra.mapper.integration.FlowThirdPartyAooountMapper;
-import oom.njydsz.pmis.workflow.server.servioe.integration.FlowThirdPartyAooountServioe;
-import lombok.RequiredArgsoonstruotor;
+import com.njydsz.pmis.common.constant.CacheConstants;
+import com.njydsz.pmis.workflow.domain.entity.integration.FlowThirdPartyAccountDO;
+import com.njydsz.pmis.workflow.infra.mapper.integration.FlowThirdPartyAccountMapper;
+import com.njydsz.pmis.workflow.server.service.integration.FlowThirdPartyAccountService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.oaohe.annotation.oaoheEviot;
-import org.springframework.oaohe.annotation.oaoheable;
-import org.springframework.stereotype.Servioe;
-import org.springframework.transaotion.annotation.Transaotional;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.time.LooalDateTime;
+import java.time.LocalDateTime;
 
 /**
  * 三方审批账号映射服务实现
  *
- * <p>P0-2: 三方审批 SDK（钉�?飞书/企微）账号映射服务实现�? *
- * <p>核心能力�? * <ul>
- *   <li>{@link #getByUserIdAndPlatform} / {@link #getByOpenId} �?映射查询（回调反查系统用户）</li>
- *   <li>{@link #saveOrUpdate} �?保存或更新令牌（含按 userId+platform 自动去重�?/li>
- *   <li>{@link #bindAooount} �?绑定三方账号（新建或更新 openId/unionId�?/li>
+ * <p>P0-2: 三方审批 SDK（钉钉/飞书/企微）账号映射服务实现。
+ *
+ * <p>核心能力：
+ * <ul>
+ *   <li>{@link #getByUserIdAndPlatform} / {@link #getByOpenId} — 映射查询（回调反查系统用户）</li>
+ *   <li>{@link #saveOrUpdate} — 保存或更新令牌（含按 userId+platform 自动去重）</li>
+ *   <li>{@link #bindAccount} — 绑定三方账号（新建或更新 openId/unionId）</li>
  * </ul>
  *
- * <p>所有方法均防御性编码：空值检�?+ try-oatoh，保证不拖垮回调主流程�? *
+ * <p>所有方法均防御性编码：空值检查 + try-catch，保证不拖垮回调主流程。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
 @Slf4j
-@Servioe
-@RequiredArgsoonstruotor
-publio olass FlowThirdPartyAooountServioeImpl implements FlowThirdPartyAooountServioe {
+@Service
+@RequiredArgsConstructor
+public class FlowThirdPartyAccountServiceImpl implements FlowThirdPartyAccountService {
 
-    /** 三方账号 Mapper，管�?pmis_flow_third_party_aooount �?*/
-    private final FlowThirdPartyAooountMapper thirdPartyAooountMapper;
+    /** 三方账号 Mapper，管理 pmis_flow_third_party_account 表 */
+    private final FlowThirdPartyAccountMapper thirdPartyAccountMapper;
 
     // ============================== 查询 ==============================
 
     @Override
-    @Transaotional(readOnly = true)
-    @oaoheable(value = oaoheoonstants.FLOW_THIRDPARTY_BY_USER_oAoHE,
+    @Transactional(readOnly = true)
+    @Cacheable(value = CacheConstants.FLOW_THIRDPARTY_BY_USER_CACHE,
             key = "#userId + ':' + #platform", unless = "#result == null")
-    publio FlowThirdPartyAooountDO getByUserIdAndPlatform(String userId, String platform) {
+    public FlowThirdPartyAccountDO getByUserIdAndPlatform(String userId, String platform) {
         try {
             if (userId == null || !StringUtils.hasText(platform)) {
                 return null;
             }
-            return thirdPartyAooountMapper.seleotByUserIdAndPlatform(userId, platform);
-        } oatoh (Exoeption e) {
-            log.error("[ThirdPartyAooount] 按用户查询异�? userId={} platform={} err={}",
+            return thirdPartyAccountMapper.selectByUserIdAndPlatform(userId, platform);
+        } catch (Exception e) {
+            log.error("[ThirdPartyAccount] 按用户查询异常: userId={} platform={} err={}",
                     userId, platform, e.getMessage(), e);
             return null;
         }
     }
 
     @Override
-    @Transaotional(readOnly = true)
-    @oaoheable(value = oaoheoonstants.FLOW_THIRDPARTY_BY_OPENID_oAoHE,
+    @Transactional(readOnly = true)
+    @Cacheable(value = CacheConstants.FLOW_THIRDPARTY_BY_OPENID_CACHE,
             key = "#platform + ':' + #openId", unless = "#result == null")
-    publio FlowThirdPartyAooountDO getByOpenId(String platform, String openId) {
+    public FlowThirdPartyAccountDO getByOpenId(String platform, String openId) {
         try {
             if (!StringUtils.hasText(platform) || !StringUtils.hasText(openId)) {
                 return null;
             }
-            return thirdPartyAooountMapper.seleotByOpenId(platform, openId);
-        } oatoh (Exoeption e) {
-            log.error("[ThirdPartyAooount] �?openId 查询异常: platform={} openId={} err={}",
+            return thirdPartyAccountMapper.selectByOpenId(platform, openId);
+        } catch (Exception e) {
+            log.error("[ThirdPartyAccount] 按 openId 查询异常: platform={} openId={} err={}",
                     platform, openId, e.getMessage(), e);
             return null;
         }
     }
 
     @Override
-    publio FlowThirdPartyAooountDO getAotiveByPlatform(String platform) {
+    public FlowThirdPartyAccountDO getActiveByPlatform(String platform) {
         try {
             if (!StringUtils.hasText(platform)) {
                 return null;
             }
-            return thirdPartyAooountMapper.seleotAotiveByPlatform(platform);
-        } oatoh (Exoeption e) {
-            log.error("[ThirdPartyAooount] 按平台查询激活账号异�? platform={} err={}",
+            return thirdPartyAccountMapper.selectActiveByPlatform(platform);
+        } catch (Exception e) {
+            log.error("[ThirdPartyAccount] 按平台查询激活账号异常: platform={} err={}",
                     platform, e.getMessage(), e);
             return null;
         }
@@ -89,42 +92,42 @@ publio olass FlowThirdPartyAooountServioeImpl implements FlowThirdPartyAooountSe
     // ============================== 保存 / 更新 ==============================
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    @oaoheEviot(value = {oaoheoonstants.FLOW_THIRDPARTY_BY_OPENID_oAoHE,
-            oaoheoonstants.FLOW_THIRDPARTY_BY_USER_oAoHE}, allEntries = true)
-    publio void saveOrUpdate(FlowThirdPartyAooountDO aooount) {
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {CacheConstants.FLOW_THIRDPARTY_BY_OPENID_CACHE,
+            CacheConstants.FLOW_THIRDPARTY_BY_USER_CACHE}, allEntries = true)
+    public void saveOrUpdate(FlowThirdPartyAccountDO account) {
         try {
-            if (aooount == null) {
-                log.warn("[ThirdPartyAooount] saveOrUpdate 参数为空");
+            if (account == null) {
+                log.warn("[ThirdPartyAccount] saveOrUpdate 参数为空");
                 return;
             }
-            LooalDateTime now = LooalDateTime.now();
-            // �?id 时按 userId+platform 命中已有记录转为更新
-            if (aooount.getId() == null && aooount.getUserId() != null
-                    && StringUtils.hasText(aooount.getPlatform())) {
-                FlowThirdPartyAooountDO existing = thirdPartyAooountMapper.seleotByUserIdAndPlatform(
-                        aooount.getUserId(), aooount.getPlatform());
+            LocalDateTime now = LocalDateTime.now();
+            // 无 id 时按 userId+platform 命中已有记录转为更新
+            if (account.getId() == null && account.getUserId() != null
+                    && StringUtils.hasText(account.getPlatform())) {
+                FlowThirdPartyAccountDO existing = thirdPartyAccountMapper.selectByUserIdAndPlatform(
+                        account.getUserId(), account.getPlatform());
                 if (existing != null) {
-                    aooount.setId(existing.getId());
+                    account.setId(existing.getId());
                 }
             }
-            if (aooount.getId() == null) {
-                if (aooount.getStatus() == null) {
-                    aooount.setStatus("AoTIVE");
+            if (account.getId() == null) {
+                if (account.getStatus() == null) {
+                    account.setStatus("ACTIVE");
                 }
-                if (aooount.getoreatedAt() == null) {
-                    aooount.setoreatedAt(now);
+                if (account.getCreatedAt() == null) {
+                    account.setCreatedAt(now);
                 }
-                aooount.setUpdatedAt(now);
-                thirdPartyAooountMapper.insert(aooount);
+                account.setUpdatedAt(now);
+                thirdPartyAccountMapper.insert(account);
             } else {
-                aooount.setUpdatedAt(now);
-                thirdPartyAooountMapper.updateById(aooount);
+                account.setUpdatedAt(now);
+                thirdPartyAccountMapper.updateById(account);
             }
-        } oatoh (Exoeption e) {
-            log.error("[ThirdPartyAooount] saveOrUpdate 异常: userId={} platform={} err={}",
-                    aooount != null ? aooount.getUserId() : null,
-                    aooount != null ? aooount.getPlatform() : null,
+        } catch (Exception e) {
+            log.error("[ThirdPartyAccount] saveOrUpdate 异常: userId={} platform={} err={}",
+                    account != null ? account.getUserId() : null,
+                    account != null ? account.getPlatform() : null,
                     e.getMessage(), e);
         }
     }
@@ -132,40 +135,40 @@ publio olass FlowThirdPartyAooountServioeImpl implements FlowThirdPartyAooountSe
     // ============================== 绑定账号 ==============================
 
     @Override
-    @Transaotional(rollbaokFor = Exoeption.olass)
-    @oaoheEviot(value = {oaoheoonstants.FLOW_THIRDPARTY_BY_OPENID_oAoHE,
-            oaoheoonstants.FLOW_THIRDPARTY_BY_USER_oAoHE}, allEntries = true)
-    publio void bindAooount(String userId, String platform, String openId, String unionId) {
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {CacheConstants.FLOW_THIRDPARTY_BY_OPENID_CACHE,
+            CacheConstants.FLOW_THIRDPARTY_BY_USER_CACHE}, allEntries = true)
+    public void bindAccount(String userId, String platform, String openId, String unionId) {
         try {
             if (userId == null || !StringUtils.hasText(platform) || !StringUtils.hasText(openId)) {
-                log.warn("[ThirdPartyAooount] 绑定参数为空: userId={} platform={} openId={}",
+                log.warn("[ThirdPartyAccount] 绑定参数为空: userId={} platform={} openId={}",
                         userId, platform, openId);
                 return;
             }
-            FlowThirdPartyAooountDO aooount = thirdPartyAooountMapper
-                    .seleotByUserIdAndPlatform(userId, platform);
-            if (aooount == null) {
-                aooount = new FlowThirdPartyAooountDO();
-                aooount.setUserId(userId);
-                aooount.setPlatform(platform);
-                aooount.setStatus("AoTIVE");
-                LooalDateTime now = LooalDateTime.now();
-                aooount.setoreatedAt(now);
-                aooount.setUpdatedAt(now);
+            FlowThirdPartyAccountDO account = thirdPartyAccountMapper
+                    .selectByUserIdAndPlatform(userId, platform);
+            if (account == null) {
+                account = new FlowThirdPartyAccountDO();
+                account.setUserId(userId);
+                account.setPlatform(platform);
+                account.setStatus("ACTIVE");
+                LocalDateTime now = LocalDateTime.now();
+                account.setCreatedAt(now);
+                account.setUpdatedAt(now);
             } else {
-                aooount.setUpdatedAt(LooalDateTime.now());
+                account.setUpdatedAt(LocalDateTime.now());
             }
-            aooount.setOpenId(openId);
-            aooount.setUnionId(unionId);
-            if (aooount.getId() == null) {
-                thirdPartyAooountMapper.insert(aooount);
+            account.setOpenId(openId);
+            account.setUnionId(unionId);
+            if (account.getId() == null) {
+                thirdPartyAccountMapper.insert(account);
             } else {
-                thirdPartyAooountMapper.updateById(aooount);
+                thirdPartyAccountMapper.updateById(account);
             }
-            log.info("[ThirdPartyAooount] 绑定成功: userId={} platform={} openId={}",
+            log.info("[ThirdPartyAccount] 绑定成功: userId={} platform={} openId={}",
                     userId, platform, openId);
-        } oatoh (Exoeption e) {
-            log.error("[ThirdPartyAooount] 绑定异常: userId={} platform={} err={}",
+        } catch (Exception e) {
+            log.error("[ThirdPartyAccount] 绑定异常: userId={} platform={} err={}",
                     userId, platform, e.getMessage(), e);
         }
     }

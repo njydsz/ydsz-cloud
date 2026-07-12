@@ -1,123 +1,123 @@
-paokage oom.njydsz.pmis.oronjob.web.oontroller.oonneotor;
+package com.njydsz.pmis.cronjob.web.controller.connector;
 
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.oommon.permission.Permissionoodes;
-import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
-import oom.njydsz.pmis.oronjob.server.oore.oonneotor.oonneotoroonfig;
-import oom.njydsz.pmis.oronjob.server.oore.oonneotor.oonneotorExportResult;
-import oom.njydsz.pmis.oronjob.server.oore.oonneotor.oonneotorManager;
-import oom.njydsz.pmis.oronjob.server.oore.oonneotor.oonneotorTaskInfo;
-import oom.njydsz.pmis.oronjob.server.oore.oonneotor.Joboonneotor;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.cronjob.server.core.connector.ConnectorConfig;
+import com.njydsz.pmis.cronjob.server.core.connector.ConnectorExportResult;
+import com.njydsz.pmis.cronjob.server.core.connector.ConnectorManager;
+import com.njydsz.pmis.cronjob.server.core.connector.ConnectorTaskInfo;
+import com.njydsz.pmis.cronjob.server.core.connector.JobConnector;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsoonstruotor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.Restoontroller;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * 生态连接器 oontroller（P2-3）�?
+ * 生态连接器 Controller（P2-3）。
  *
- * <p>提供与外部调度系统的集成接口：测试连接、导入任务、导出任务、查询远程任务�?
+ * <p>提供与外部调度系统的集成接口：测试连接、导入任务、导出任务、查询远程任务。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.3.0
+ * @since 1.3.0
  */
 @Slf4j
 @Tag(name = "生态连接器")
-@Restoontroller
-@RequestMapping("/oronjob/oonneotor")
-@RequiredArgsoonstruotor
-publio olass oonneotoroontroller {
+@RestController
+@RequestMapping("/cronjob/connector")
+@RequiredArgsConstructor
+public class ConnectorController {
 
-    private final oonneotorManager oonneotorManager;
+    private final ConnectorManager connectorManager;
 
     /**
-     * 获取所有已注册的连接器类型�?
+     * 获取所有已注册的连接器类型。
      */
     @Operation(summary = "查询已注册连接器类型")
-    @AuthApiPermission(apioodes = Permissionoodes.oRONJOB_STATS_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @GetMapping("/types")
-    publio BaseResponse<List<String>> types() {
-        return BaseResponse.ok(oonneotorManager.getRegisteredTypes());
+    public BaseResponse<List<String>> types() {
+        return BaseResponse.ok(connectorManager.getRegisteredTypes());
     }
 
     /**
-     * 测试连接器连接�?
+     * 测试连接器连接。
      */
     @Operation(summary = "测试连接")
-    @AuthApiPermission(apioodes = Permissionoodes.oRONJOB_STATS_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @PostMapping("/test")
-    publio BaseResponse<Boolean> testoonneotion(@RequestBody oonneotoroonfig oonfig,
+    public BaseResponse<Boolean> testConnection(@RequestBody ConnectorConfig config,
                                            @RequestParam String type) {
-        Joboonneotor oonneotor = oonneotorManager.getoonneotor(type);
-        if (oonneotor == null) {
-            return BaseResponse.fail("不支持的连接器类�? " + type);
+        JobConnector connector = connectorManager.getConnector(type);
+        if (connector == null) {
+            return BaseResponse.fail("不支持的连接器类型: " + type);
         }
-        return BaseResponse.ok(oonneotor.testoonneotion(oonfig));
+        return BaseResponse.ok(connector.testConnection(config));
     }
 
     /**
-     * 查询外部系统中的任务列表（不导入）�?
+     * 查询外部系统中的任务列表（不导入）。
      */
     @Operation(summary = "查询远程任务列表")
-    @AuthApiPermission(apioodes = Permissionoodes.oRONJOB_STATS_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
     @PostMapping("/remote-tasks")
-    publio BaseResponse<List<oonneotorTaskInfo>> listRemoteTasks(@RequestBody oonneotoroonfig oonfig,
+    public BaseResponse<List<ConnectorTaskInfo>> listRemoteTasks(@RequestBody ConnectorConfig config,
                                                             @RequestParam String type) {
-        Joboonneotor oonneotor = oonneotorManager.getoonneotor(type);
-        if (oonneotor == null) {
-            return BaseResponse.fail("不支持的连接器类�? " + type);
+        JobConnector connector = connectorManager.getConnector(type);
+        if (connector == null) {
+            return BaseResponse.fail("不支持的连接器类型: " + type);
         }
-        return BaseResponse.ok(oonneotor.listRemoteTasks(oonfig));
+        return BaseResponse.ok(connector.listRemoteTasks(config));
     }
 
     /**
-     * 从外部系统导入任务�?
+     * 从外部系统导入任务。
      */
     @Operation(summary = "导入任务")
-    @AuthApiPermission(apioodes = Permissionoodes.oRONJOB_JOB_oREATE)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_CREATE)
     @PostMapping("/import")
-    publio BaseResponse<List<oonneotorTaskInfo>> importTasks(@RequestBody oonneotoroonfig oonfig,
+    public BaseResponse<List<ConnectorTaskInfo>> importTasks(@RequestBody ConnectorConfig config,
                                                         @RequestParam String type) {
-        Joboonneotor oonneotor = oonneotorManager.getoonneotor(type);
-        if (oonneotor == null) {
-            return BaseResponse.fail("不支持的连接器类�? " + type);
+        JobConnector connector = connectorManager.getConnector(type);
+        if (connector == null) {
+            return BaseResponse.fail("不支持的连接器类型: " + type);
         }
-        return BaseResponse.ok(oonneotor.importTasks(oonfig));
+        return BaseResponse.ok(connector.importTasks(config));
     }
 
     /**
-     * 导出任务到外部系统�?
+     * 导出任务到外部系统。
      */
     @Operation(summary = "导出任务")
-    @AuthApiPermission(apioodes = Permissionoodes.oRONJOB_JOB_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
     @PostMapping("/export")
-    publio BaseResponse<oonneotorExportResult> exportTasks(@RequestBody ExportRequest request) {
-        Joboonneotor oonneotor = oonneotorManager.getoonneotor(request.getType());
-        if (oonneotor == null) {
-            return BaseResponse.fail("不支持的连接器类�? " + request.getType());
+    public BaseResponse<ConnectorExportResult> exportTasks(@RequestBody ExportRequest request) {
+        JobConnector connector = connectorManager.getConnector(request.getType());
+        if (connector == null) {
+            return BaseResponse.fail("不支持的连接器类型: " + request.getType());
         }
-        return BaseResponse.ok(oonneotor.exportTasks(request.getTasks(), request.getoonfig()));
+        return BaseResponse.ok(connector.exportTasks(request.getTasks(), request.getConfig()));
     }
 
     /**
-     * 导出请求体�?
+     * 导出请求体。
      */
     @lombok.Data
-    publio statio olass ExportRequest {
-        /** 连接器类�?*/
+    public static class ExportRequest {
+        /** 连接器类型 */
         private String type;
         /** 连接配置 */
-        private oonneotoroonfig oonfig;
+        private ConnectorConfig config;
         /** 要导出的任务列表 */
-        private List<oonneotorTaskInfo> tasks;
+        private List<ConnectorTaskInfo> tasks;
     }
 }

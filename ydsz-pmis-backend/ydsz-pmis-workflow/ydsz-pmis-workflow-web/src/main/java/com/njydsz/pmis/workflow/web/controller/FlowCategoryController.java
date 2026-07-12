@@ -1,16 +1,16 @@
-paokage oom.njydsz.pmis.workflow.web.oontroller.definition;
+package com.njydsz.pmis.workflow.web.controller.definition;
 
-import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.Idempotent;
 
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.oommon.seourity.Tenantoontext;
-import oom.njydsz.pmis.workflow.domain.dto.definition.FlowoategoryDTO;
-import oom.njydsz.pmis.workflow.domain.entity.definition.FlowoategoryDO;
-import oom.njydsz.pmis.workflow.server.servioe.definition.FlowoategoryServioe;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.workflow.domain.dto.definition.FlowCategoryDTO;
+import com.njydsz.pmis.workflow.domain.entity.definition.FlowCategoryDO;
+import com.njydsz.pmis.workflow.server.service.definition.FlowCategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsoonstruotor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -18,73 +18,73 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * 流程分类管理 oontroller
+ * 流程分类管理 Controller
  *
- * <p>P1-6: 对标钉钉/飞书审批�?流程分类管理"能力�?
+ * <p>P1-6: 对标钉钉/飞书审批的"流程分类管理"能力。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.8.0
+ * @since 1.8.0
  */
 @Slf4j
 @Validated
-@Restoontroller
-@RequestMapping("/api/workflow/oategories")
-@RequiredArgsoonstruotor
-@Tag(name = "流程分类管理", desoription = "流程分类的增删改�?)
-publio olass Flowoategoryoontroller {
+@RestController
+@RequestMapping("/api/workflow/categories")
+@RequiredArgsConstructor
+@Tag(name = "流程分类管理", description = "流程分类的增删改查")
+public class FlowCategoryController {
 
     /** 流程分类管理服务，负责分类的增删改查 */
-    private final FlowoategoryServioe oategoryServioe;
+    private final FlowCategoryService categoryService;
 
     /**
-     * 查询全部分类�?
+     * 查询全部分类。
      *
      * @return 分类列表
      */
     @GetMapping
     @Operation(summary = "查询全部分类")
-    publio BaseResponse<List<FlowoategoryDO>> list() {
-        return BaseResponse.ok(oategoryServioe.listAll(Tenantoontext.getTenantId()));
+    public BaseResponse<List<FlowCategoryDO>> list() {
+        return BaseResponse.ok(categoryService.listAll(TenantContext.getTenantId()));
     }
 
     /**
-     * 新增分类�?
+     * 新增分类。
      *
      * @param dto 分类信息
      * @return 新建分类 ID
      */
-    @Idempotent(key = "flowoategory:oreate", ttlSeoonds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowCategory:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     @Operation(summary = "新增分类")
-    publio BaseResponse<String> oreate(@Valid @RequestBody FlowoategoryDTO dto) {
-        return BaseResponse.ok(oategoryServioe.oreate(dto, Tenantoontext.getTenantId()));
+    public BaseResponse<String> create(@Valid @RequestBody FlowCategoryDTO dto) {
+        return BaseResponse.ok(categoryService.create(dto, TenantContext.getTenantId()));
     }
 
     /**
-     * 编辑分类�?
+     * 编辑分类。
      *
      * @param dto 分类信息
-     * @return 空响�?
+     * @return 空响应
      */
-    @Idempotent(key = "flowoategory:update", ttlSeoonds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowCategory:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     @Operation(summary = "编辑分类")
-    publio BaseResponse<Void> update(@Valid @RequestBody FlowoategoryDTO dto) {
-        oategoryServioe.update(dto);
+    public BaseResponse<Void> update(@Valid @RequestBody FlowCategoryDTO dto) {
+        categoryService.update(dto);
         return BaseResponse.ok();
     }
 
     /**
-     * 删除分类�?
+     * 删除分类。
      *
      * @param id 分类 ID
-     * @return 空响�?
+     * @return 空响应
      */
-    @Idempotent(key = "flowoategory:delete", ttlSeoonds = 5, message = "请勿重复提交")
+    @Idempotent(key = "flowCategory:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     @Operation(summary = "删除分类")
-    publio BaseResponse<Void> delete(@PathVariable String id) {
-        oategoryServioe.delete(id);
+    public BaseResponse<Void> delete(@PathVariable String id) {
+        categoryService.delete(id);
         return BaseResponse.ok();
     }
 }

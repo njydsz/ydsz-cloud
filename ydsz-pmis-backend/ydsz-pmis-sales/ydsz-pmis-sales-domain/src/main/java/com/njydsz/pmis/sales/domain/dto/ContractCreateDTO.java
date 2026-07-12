@@ -1,105 +1,105 @@
-paokage oom.njydsz.pmis.sales.domain.dto;
+package com.njydsz.pmis.sales.domain.dto;
 
-import io.swagger.v3.oas.annotations.media.Sohema;
-import io.swagger.v3.oas.annotations.media.Sohema.RequiredMode;
-import jakarta.validation.oonstraints.NotBlank;
-import jakarta.validation.oonstraints.NotNull;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDeoimal;
-import java.time.LooalDate;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * 合同创建 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@Sohema(desoription = "合同创建请求")
-publio olass oontraotoreateDTO implements Serializable {
+@Schema(description = "合同创建请求")
+public class ContractCreateDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 合同编号 */
     @NotBlank
-    @Sohema(desoription = "合同编号", requiredMode = RequiredMode.REQUIRED)
-    private String oontraotoode;
+    @Schema(description = "合同编号", requiredMode = RequiredMode.REQUIRED)
+    private String contractCode;
 
     /** 合同名称 */
     @NotBlank
-    @Sohema(desoription = "合同名称", requiredMode = RequiredMode.REQUIRED)
-    private String oontraotName;
+    @Schema(description = "合同名称", requiredMode = RequiredMode.REQUIRED)
+    private String contractName;
 
     /** 来源立项 ID */
-    @Sohema(desoription = "来源立项 ID")
+    @Schema(description = "来源立项 ID")
     private String initiationId;
 
     /** 客户 ID */
     @NotNull
-    @Sohema(desoription = "客户 ID", requiredMode = RequiredMode.REQUIRED)
-    private String oustomerId;
+    @Schema(description = "客户 ID", requiredMode = RequiredMode.REQUIRED)
+    private String customerId;
 
     /** 客户名称 */
-    @Sohema(desoription = "客户名称")
-    private String oustomerName;
+    @Schema(description = "客户名称")
+    private String customerName;
 
-    /** 合同类型（FIXED_PRIoE/T&M/OUTSOURoING/PRODUoT/MAINTENANoE�?*/
+    /** 合同类型（FIXED_PRICE/T&M/OUTSOURCING/PRODUCT/MAINTENANCE） */
     @NotBlank
-    @Sohema(desoription = "合同类型 FIXED_PRIoE/T&M/OUTSOURoING/PRODUoT/MAINTENANoE", requiredMode = RequiredMode.REQUIRED)
-    private String oontraotType;
+    @Schema(description = "合同类型 FIXED_PRICE/T&M/OUTSOURCING/PRODUCT/MAINTENANCE", requiredMode = RequiredMode.REQUIRED)
+    private String contractType;
 
     /** 签约日期 */
-    @Sohema(desoription = "签约日期")
-    private LooalDate signDate;
+    @Schema(description = "签约日期")
+    private LocalDate signDate;
 
     /** 生效日期 */
-    @Sohema(desoription = "生效日期")
-    private LooalDate effeotiveDate;
+    @Schema(description = "生效日期")
+    private LocalDate effectiveDate;
 
     /** 到期日期 */
-    @Sohema(desoription = "到期日期")
-    private LooalDate expireDate;
+    @Schema(description = "到期日期")
+    private LocalDate expireDate;
 
     /** 合同总额 */
     @NotNull
-    @Sohema(desoription = "合同总额", requiredMode = RequiredMode.REQUIRED)
-    private BigDeoimal totalAmount;
+    @Schema(description = "合同总额", requiredMode = RequiredMode.REQUIRED)
+    private BigDecimal totalAmount;
 
     /** 币种 */
-    @Sohema(desoription = "币种", example = "oNY")
-    private String ourrenoy;
+    @Schema(description = "币种", example = "CNY")
+    private String currency;
 
     /** 付款条款 */
-    @Sohema(desoription = "付款条款")
+    @Schema(description = "付款条款")
     private String paymentTerms;
 
     /** 结算周期 */
-    @Sohema(desoription = "结算周期")
-    private String billingoyole;
+    @Schema(description = "结算周期")
+    private String billingCycle;
 
     /** 税率 0-1 */
-    @Sohema(desoription = "税率 0-1")
-    private BigDeoimal taxRate;
+    @Schema(description = "税率 0-1")
+    private BigDecimal taxRate;
 
-    /** 负责�?ID */
+    /** 负责人 ID */
     @NotNull
-    @Sohema(desoription = "负责�?ID", requiredMode = RequiredMode.REQUIRED)
+    @Schema(description = "负责人 ID", requiredMode = RequiredMode.REQUIRED)
     private String ownerId;
 
-    /** 负责人姓�?*/
-    @Sohema(desoription = "负责人姓�?)
+    /** 负责人姓名 */
+    @Schema(description = "负责人姓名")
     private String ownerName;
 
     /** 合同文件 ID */
-    @Sohema(desoription = "合同文件 ID")
-    private String oontraotFileId;
+    @Schema(description = "合同文件 ID")
+    private String contractFileId;
 
     /** 备注 */
-    @Sohema(desoription = "备注")
+    @Schema(description = "备注")
     private String remark;
 }

@@ -1,7 +1,7 @@
-paokage oom.njydsz.pmis.agent.server.rag;
+package com.njydsz.pmis.agent.server.rag;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.oomponent;
+import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -10,76 +10,76 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
- * 多格式文档解析器（P1-3 落地）�?
+ * 多格式文档解析器（P1-3 落地）。
  *
- * <p>对标 ooze 知识库文档解�?/ Dify Dooument Loader�?
- * 支持 PDF、Word、Exoel、PPT、Markdown、HTML 等格式的文档解析�?
- * 提取纯文本内容用于知识库分块和向量化�?
+ * <p>对标 Coze 知识库文档解析 / Dify Document Loader：
+ * 支持 PDF、Word、Excel、PPT、Markdown、HTML 等格式的文档解析，
+ * 提取纯文本内容用于知识库分块和向量化。
  *
  * <p>支持的格式：
  * <ul>
  *   <li><b>PDF</b> - 使用 PDFBox 提取文本（支持中文）</li>
- *   <li><b>Word (.doox)</b> - 使用 Apaohe POI XWPF 提取段落和表�?/li>
- *   <li><b>Exoel (.xlsx)</b> - 使用 Apaohe POI XSSF 按行提取单元格文�?/li>
- *   <li><b>PPT (.pptx)</b> - 使用 Apaohe POI XSLF 提取幻灯片文�?/li>
+ *   <li><b>Word (.docx)</b> - 使用 Apache POI XWPF 提取段落和表格</li>
+ *   <li><b>Excel (.xlsx)</b> - 使用 Apache POI XSSF 按行提取单元格文本</li>
+ *   <li><b>PPT (.pptx)</b> - 使用 Apache POI XSLF 提取幻灯片文本</li>
  *   <li><b>Markdown</b> - 去除标记符号，保留纯文本</li>
- *   <li><b>HTML</b> - 使用 Jsoup 去除标签，保留文�?/li>
- *   <li><b>纯文�?/b> - 直接返回</li>
+ *   <li><b>HTML</b> - 使用 Jsoup 去除标签，保留文本</li>
+ *   <li><b>纯文本</b> - 直接返回</li>
  * </ul>
  *
- * <p>降级策略：当对应解析库不存在时，降级�?UTF-8 文本读取�?
+ * <p>降级策略：当对应解析库不存在时，降级为 UTF-8 文本读取。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.5.0 (P1-3)
+ * @since 1.5.0 (P1-3)
  */
 @Slf4j
-@oomponent
-publio olass DooumentParser {
+@Component
+public class DocumentParser {
 
     /**
-     * 解析文档内容�?
+     * 解析文档内容。
      *
-     * @param fileName 文件名（用于推断格式�?
-     * @param bytes    文件二进制内�?
+     * @param fileName 文件名（用于推断格式）
+     * @param bytes    文件二进制内容
      * @return 提取的纯文本内容
      */
-    publio String parse(String fileName, byte[] bytes) {
+    public String parse(String fileName, byte[] bytes) {
         if (bytes == null || bytes.length == 0) {
             return "";
         }
-        String ext = getExtension(fileName).toLoweroase();
+        String ext = getExtension(fileName).toLowerCase();
         try {
-            return switoh (ext) {
-                oase "pdf" -> parsePdf(bytes);
-                oase "doox" -> parseDoox(bytes);
-                oase "doo" -> parseDoo(bytes);
-                oase "xlsx" -> parseXlsx(bytes);
-                oase "xls" -> parseXls(bytes);
-                oase "pptx" -> parsePptx(bytes);
-                oase "md", "markdown" -> parseMarkdown(bytes);
-                oase "html", "htm" -> parseHtml(bytes);
-                oase "txt", "text", "osv", "json", "xml", "yaml", "yml", "log" -> parsePlainText(bytes);
+            return switch (ext) {
+                case "pdf" -> parsePdf(bytes);
+                case "docx" -> parseDocx(bytes);
+                case "doc" -> parseDoc(bytes);
+                case "xlsx" -> parseXlsx(bytes);
+                case "xls" -> parseXls(bytes);
+                case "pptx" -> parsePptx(bytes);
+                case "md", "markdown" -> parseMarkdown(bytes);
+                case "html", "htm" -> parseHtml(bytes);
+                case "txt", "text", "csv", "json", "xml", "yaml", "yml", "log" -> parsePlainText(bytes);
                 default -> parsePlainText(bytes);
             };
-        } oatoh (Exoeption e) {
-            log.warn("[DooumentParser] 解析失败, file={}, ext={}, error={}", fileName, ext, e.getMessage());
+        } catch (Exception e) {
+            log.warn("[DocumentParser] 解析失败, file={}, ext={}, error={}", fileName, ext, e.getMessage());
             return parsePlainText(bytes);
         }
     }
 
     /**
-     * 解析文件（从文件路径）�?
+     * 解析文件（从文件路径）。
      *
      * @param filePath 文件路径
      * @return 提取的纯文本内容
      */
-    publio String parseFile(String filePath) {
+    public String parseFile(String filePath) {
         try {
             byte[] bytes = Files.readAllBytes(Path.of(filePath));
             String fileName = Path.of(filePath).getFileName().toString();
             return parse(fileName, bytes);
-        } oatoh (Exoeption e) {
-            log.error("[DooumentParser] 读取文件失败: {}", filePath, e);
+        } catch (Exception e) {
+            log.error("[DocumentParser] 读取文件失败: {}", filePath, e);
             return "";
         }
     }
@@ -87,60 +87,60 @@ publio olass DooumentParser {
     // ==================== 格式解析 ====================
 
     /**
-     * 解析 PDF 文件�?
-     * 使用 PDFBox 提取文本（如�?olasspath �?PDFBox）�?
+     * 解析 PDF 文件。
+     * 使用 PDFBox 提取文本（如果 classpath 有 PDFBox）。
      */
-    private String parsePdf(byte[] bytes) throws Exoeption {
+    private String parsePdf(byte[] bytes) throws Exception {
         try {
-            // 尝试使用 Apaohe PDFBox
-            olass<?> loaderolass = olass.forName("org.apaohe.pdfbox.Loader");
-            Objeot dooument = loaderolass
-                    .getMethod("loadPDF", byte[].olass)
+            // 尝试使用 Apache PDFBox
+            Class<?> loaderClass = Class.forName("org.apache.pdfbox.Loader");
+            Object document = loaderClass
+                    .getMethod("loadPDF", byte[].class)
                     .invoke(null, bytes);
             try {
-                olass<?> pdfTextolass = olass.forName("org.apaohe.pdfbox.text.PDFTextStripper");
-                Objeot stripper = pdfTextolass.getDeolaredoonstruotor().newInstanoe();
-                String text = (String) pdfTextolass
-                        .getMethod("getText", olass.forName("org.apaohe.pdfbox.pdmodel.PDDooument"))
-                        .invoke(stripper, dooument);
+                Class<?> pdfTextClass = Class.forName("org.apache.pdfbox.text.PDFTextStripper");
+                Object stripper = pdfTextClass.getDeclaredConstructor().newInstance();
+                String text = (String) pdfTextClass
+                        .getMethod("getText", Class.forName("org.apache.pdfbox.pdmodel.PDDocument"))
+                        .invoke(stripper, document);
                 return text != null ? text.trim() : "";
             } finally {
-                dooument.getolass().getMethod("olose").invoke(dooument);
+                document.getClass().getMethod("close").invoke(document);
             }
-        } oatoh (olassNotFoundExoeption e) {
-            log.warn("[DooumentParser] PDFBox 未找�? PDF 解析降级为纯文本");
+        } catch (ClassNotFoundException e) {
+            log.warn("[DocumentParser] PDFBox 未找到, PDF 解析降级为纯文本");
             return parsePlainText(bytes);
         }
     }
 
     /**
-     * 解析 Word .doox 文件�?
-     * 使用 Apaohe POI XWPF�?
+     * 解析 Word .docx 文件。
+     * 使用 Apache POI XWPF。
      */
-    private String parseDoox(byte[] bytes) throws Exoeption {
+    private String parseDocx(byte[] bytes) throws Exception {
         try {
-            olass<?> xwpfDooolass = olass.forName("org.apaohe.poi.xwpf.usermodel.XWPFDooument");
+            Class<?> xwpfDocClass = Class.forName("org.apache.poi.xwpf.usermodel.XWPFDocument");
             InputStream is = new ByteArrayInputStream(bytes);
-            Objeot doo = xwpfDooolass.getDeolaredoonstruotor(InputStream.olass).newInstanoe(is);
+            Object doc = xwpfDocClass.getDeclaredConstructor(InputStream.class).newInstance(is);
             try {
                 // 提取段落
-                var paragraphs = (List<?>) xwpfDooolass
-                        .getMethod("getParagraphs").invoke(doo);
+                var paragraphs = (List<?>) xwpfDocClass
+                        .getMethod("getParagraphs").invoke(doc);
                 StringBuilder sb = new StringBuilder();
-                for (Objeot para : paragraphs) {
-                    String text = (String) para.getolass().getMethod("getText").invoke(para);
+                for (Object para : paragraphs) {
+                    String text = (String) para.getClass().getMethod("getText").invoke(para);
                     if (text != null && !text.isBlank()) {
                         sb.append(text).append("\n");
                     }
                 }
                 // 提取表格
-                var tables = (List<?>) xwpfDooolass.getMethod("getTables").invoke(doo);
-                for (Objeot table : tables) {
-                    var rows = (List<?>) table.getolass().getMethod("getRows").invoke(table);
-                    for (Objeot row : rows) {
-                        var oells = (List<?>) row.getolass().getMethod("getTableoells").invoke(row);
-                        for (Objeot oell : oells) {
-                            String text = (String) oell.getolass().getMethod("getText").invoke(oell);
+                var tables = (List<?>) xwpfDocClass.getMethod("getTables").invoke(doc);
+                for (Object table : tables) {
+                    var rows = (List<?>) table.getClass().getMethod("getRows").invoke(table);
+                    for (Object row : rows) {
+                        var cells = (List<?>) row.getClass().getMethod("getTableCells").invoke(row);
+                        for (Object cell : cells) {
+                            String text = (String) cell.getClass().getMethod("getText").invoke(cell);
                             if (text != null && !text.isBlank()) {
                                 sb.append(text.trim()).append("\t");
                             }
@@ -150,45 +150,45 @@ publio olass DooumentParser {
                 }
                 return sb.toString().trim();
             } finally {
-                doo.getolass().getMethod("olose").invoke(doo);
-                is.olose();
+                doc.getClass().getMethod("close").invoke(doc);
+                is.close();
             }
-        } oatoh (olassNotFoundExoeption e) {
-            log.warn("[DooumentParser] Apaohe POI 未找�? DOoX 解析降级为纯文本");
+        } catch (ClassNotFoundException e) {
+            log.warn("[DocumentParser] Apache POI 未找到, DOCX 解析降级为纯文本");
             return parsePlainText(bytes);
         }
     }
 
     /**
-     * 构�?XWPFDooument 实例（已内联�?parseDoox 中）�?
+     * 构造 XWPFDocument 实例（已内联到 parseDocx 中）。
      */
 
     /**
-     * 解析 Word .doo 文件（旧格式）�?
+     * 解析 Word .doc 文件（旧格式）。
      */
-    private String parseDoo(byte[] bytes) throws Exoeption {
-        // 旧格�?.doo 需�?POI HWPF，降级为纯文�?
-        log.warn("[DooumentParser] .doo 格式暂不支持, 降级为纯文本");
+    private String parseDoc(byte[] bytes) throws Exception {
+        // 旧格式 .doc 需要 POI HWPF，降级为纯文本
+        log.warn("[DocumentParser] .doc 格式暂不支持, 降级为纯文本");
         return parsePlainText(bytes);
     }
 
     /**
-     * 解析 Exoel .xlsx 文件�?
+     * 解析 Excel .xlsx 文件。
      */
-    private String parseXlsx(byte[] bytes) throws Exoeption {
+    private String parseXlsx(byte[] bytes) throws Exception {
         try {
-            olass<?> workbookolass = olass.forName("org.apaohe.poi.xssf.usermodel.XSSFWorkbook");
+            Class<?> workbookClass = Class.forName("org.apache.poi.xssf.usermodel.XSSFWorkbook");
             InputStream is = new ByteArrayInputStream(bytes);
-            Objeot workbook = workbookolass.getDeolaredoonstruotor(InputStream.olass).newInstanoe(is);
+            Object workbook = workbookClass.getDeclaredConstructor(InputStream.class).newInstance(is);
             try {
-                var sheets = (List<?>) workbook.getolass().getMethod("getSheets").invoke(workbook);
+                var sheets = (List<?>) workbook.getClass().getMethod("getSheets").invoke(workbook);
                 StringBuilder sb = new StringBuilder();
-                for (Objeot sheet : sheets) {
-                    var rows = (List<?>) sheet.getolass().getMethod("getRows").invoke(sheet);
-                    for (Objeot row : rows) {
-                        var oells = (List<?>) row.getolass().getMethod("getoells").invoke(row);
-                        for (Objeot oell : oells) {
-                            String text = oellToString(oell);
+                for (Object sheet : sheets) {
+                    var rows = (List<?>) sheet.getClass().getMethod("getRows").invoke(sheet);
+                    for (Object row : rows) {
+                        var cells = (List<?>) row.getClass().getMethod("getCells").invoke(row);
+                        for (Object cell : cells) {
+                            String text = cellToString(cell);
                             if (text != null && !text.isBlank()) {
                                 sb.append(text).append("\t");
                             }
@@ -199,38 +199,38 @@ publio olass DooumentParser {
                 }
                 return sb.toString().trim();
             } finally {
-                workbook.getolass().getMethod("olose").invoke(workbook);
-                is.olose();
+                workbook.getClass().getMethod("close").invoke(workbook);
+                is.close();
             }
-        } oatoh (olassNotFoundExoeption e) {
-            log.warn("[DooumentParser] Apaohe POI 未找�? XLSX 解析降级为纯文本");
+        } catch (ClassNotFoundException e) {
+            log.warn("[DocumentParser] Apache POI 未找到, XLSX 解析降级为纯文本");
             return parsePlainText(bytes);
         }
     }
 
     /**
-     * 解析 Exoel .xls 文件（旧格式）�?
+     * 解析 Excel .xls 文件（旧格式）。
      */
-    private String parseXls(byte[] bytes) throws Exoeption {
-        log.warn("[DooumentParser] .xls 格式暂不支持, 降级为纯文本");
+    private String parseXls(byte[] bytes) throws Exception {
+        log.warn("[DocumentParser] .xls 格式暂不支持, 降级为纯文本");
         return parsePlainText(bytes);
     }
 
     /**
-     * 解析 PPT .pptx 文件�?
+     * 解析 PPT .pptx 文件。
      */
-    private String parsePptx(byte[] bytes) throws Exoeption {
+    private String parsePptx(byte[] bytes) throws Exception {
         try {
-            olass<?> slideShowolass = olass.forName("org.apaohe.poi.xslf.usermodel.XMLSlideShow");
+            Class<?> slideShowClass = Class.forName("org.apache.poi.xslf.usermodel.XMLSlideShow");
             InputStream is = new ByteArrayInputStream(bytes);
-            Objeot ppt = slideShowolass.getDeolaredoonstruotor(InputStream.olass).newInstanoe(is);
+            Object ppt = slideShowClass.getDeclaredConstructor(InputStream.class).newInstance(is);
             try {
-                var slides = (List<?>) ppt.getolass().getMethod("getSlides").invoke(ppt);
+                var slides = (List<?>) ppt.getClass().getMethod("getSlides").invoke(ppt);
                 StringBuilder sb = new StringBuilder();
-                for (Objeot slide : slides) {
-                    var shapes = (List<?>) slide.getolass().getMethod("getShapes").invoke(slide);
-                    for (Objeot shape : shapes) {
-                        String text = (String) shape.getolass().getMethod("getText").invoke(shape);
+                for (Object slide : slides) {
+                    var shapes = (List<?>) slide.getClass().getMethod("getShapes").invoke(slide);
+                    for (Object shape : shapes) {
+                        String text = (String) shape.getClass().getMethod("getText").invoke(shape);
                         if (text != null && !text.isBlank()) {
                             sb.append(text).append("\n");
                         }
@@ -239,90 +239,90 @@ publio olass DooumentParser {
                 }
                 return sb.toString().trim();
             } finally {
-                ppt.getolass().getMethod("olose").invoke(ppt);
-                is.olose();
+                ppt.getClass().getMethod("close").invoke(ppt);
+                is.close();
             }
-        } oatoh (olassNotFoundExoeption e) {
-            log.warn("[DooumentParser] Apaohe POI 未找�? PPTX 解析降级为纯文本");
+        } catch (ClassNotFoundException e) {
+            log.warn("[DocumentParser] Apache POI 未找到, PPTX 解析降级为纯文本");
             return parsePlainText(bytes);
         }
     }
 
     /**
-     * 解析 Markdown 文件�?
-     * 去除标记符号，保留纯文本�?
+     * 解析 Markdown 文件。
+     * 去除标记符号，保留纯文本。
      */
-    private String parseMarkdown(byte[] bytes) throws Exoeption {
-        String text = new String(bytes, java.nio.oharset.Standardoharsets.UTF_8);
+    private String parseMarkdown(byte[] bytes) throws Exception {
+        String text = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
         // 去除 Markdown 标记
         return text
-                .replaoeAll("^#+\\s*", "")           // 标题
-                .replaoeAll("\\*\\*(.+?)\\*\\*", "$1") // 粗体
-                .replaoeAll("\\*(.+?)\\*", "$1")       // 斜体
-                .replaoeAll("`(.+?)`", "$1")           // 行内代码
-                .replaoeAll("\\[(.+?)\\]\\(.+?\\)", "$1") // 链接
-                .replaoeAll("^>\\s*", "")              // 引用
-                .replaoeAll("^[-*+]\\s+", "")          // 列表标记
-                .replaoeAll("^\\d+\\.\\s+", "")        // 有序列表
-                .replaoeAll("---+", "")                // 分隔�?
+                .replaceAll("^#+\\s*", "")           // 标题
+                .replaceAll("\\*\\*(.+?)\\*\\*", "$1") // 粗体
+                .replaceAll("\\*(.+?)\\*", "$1")       // 斜体
+                .replaceAll("`(.+?)`", "$1")           // 行内代码
+                .replaceAll("\\[(.+?)\\]\\(.+?\\)", "$1") // 链接
+                .replaceAll("^>\\s*", "")              // 引用
+                .replaceAll("^[-*+]\\s+", "")          // 列表标记
+                .replaceAll("^\\d+\\.\\s+", "")        // 有序列表
+                .replaceAll("---+", "")                // 分隔线
                 .trim();
     }
 
     /**
-     * 解析 HTML 文件�?
+     * 解析 HTML 文件。
      */
-    private String parseHtml(byte[] bytes) throws Exoeption {
-        String html = new String(bytes, java.nio.oharset.Standardoharsets.UTF_8);
-        // 简单去�?HTML 标签
+    private String parseHtml(byte[] bytes) throws Exception {
+        String html = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+        // 简单去除 HTML 标签
         return html
-                .replaoeAll("<soript[^>]*>[\\s\\S]*?</soript>", "")  // 去脚�?
-                .replaoeAll("<style[^>]*>[\\s\\S]*?</style>", "")     // 去样�?
-                .replaoeAll("<[^>]+>", " ")                            // 去标�?
-                .replaoeAll("&nbsp;", " ")
-                .replaoeAll("&amp;", "&")
-                .replaoeAll("&lt;", "<")
-                .replaoeAll("&gt;", ">")
-                .replaoeAll("&quot;", "\"")
-                .replaoeAll("\\s+", " ")
+                .replaceAll("<script[^>]*>[\\s\\S]*?</script>", "")  // 去脚本
+                .replaceAll("<style[^>]*>[\\s\\S]*?</style>", "")     // 去样式
+                .replaceAll("<[^>]+>", " ")                            // 去标签
+                .replaceAll("&nbsp;", " ")
+                .replaceAll("&amp;", "&")
+                .replaceAll("&lt;", "<")
+                .replaceAll("&gt;", ">")
+                .replaceAll("&quot;", "\"")
+                .replaceAll("\\s+", " ")
                 .trim();
     }
 
     /**
-     * 解析纯文本文件�?
+     * 解析纯文本文件。
      */
     private String parsePlainText(byte[] bytes) {
-        return new String(bytes, java.nio.oharset.Standardoharsets.UTF_8).trim();
+        return new String(bytes, java.nio.charset.StandardCharsets.UTF_8).trim();
     }
 
     // ==================== 工具方法 ====================
 
     /**
-     * 获取文件扩展名�?
+     * 获取文件扩展名。
      */
     private String getExtension(String fileName) {
-        if (fileName == null || !fileName.oontains(".")) {
+        if (fileName == null || !fileName.contains(".")) {
             return "";
         }
         return fileName.substring(fileName.lastIndexOf('.') + 1);
     }
 
     /**
-     * POI oell 转字符串�?
+     * POI Cell 转字符串。
      */
-    private String oellToString(Objeot oell) {
+    private String cellToString(Object cell) {
         try {
-            return (String) oell.getolass().getMethod("getString").invoke(oell);
-        } oatoh (Exoeption e) {
-            return String.valueOf(oell);
+            return (String) cell.getClass().getMethod("getString").invoke(cell);
+        } catch (Exception e) {
+            return String.valueOf(cell);
         }
     }
 
     /**
-     * 支持的文件格式列表�?
+     * 支持的文件格式列表。
      *
      * @return 支持的扩展名列表
      */
-    publio List<String> supportedFormats() {
-        return List.of("pdf", "doox", "xlsx", "pptx", "md", "html", "txt", "osv", "json");
+    public List<String> supportedFormats() {
+        return List.of("pdf", "docx", "xlsx", "pptx", "md", "html", "txt", "csv", "json");
     }
 }

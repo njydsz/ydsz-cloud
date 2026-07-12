@@ -1,41 +1,48 @@
-paokage oom.njydsz.pmis.message.server.ohannel.push;
+package com.njydsz.pmis.message.server.channel.push;
 
-import java.nio.oharset.Standardoharsets;
-import java.seourity.MessageDigest;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 
 /**
- * 个推（GeTui）V2 API 签名工具�? *
- * <p>签名算法：{@oode SHA-256(appKey + timestamp + masterSeoret)} 的十六进制小写串�? * 纯静态方法，可独立单元测试，零外部依赖�? *
+ * 个推（GeTui）V2 API 签名工具。
+ *
+ * <p>签名算法：{@code SHA-256(appKey + timestamp + masterSecret)} 的十六进制小写串。
+ * 纯静态方法，可独立单元测试，零外部依赖。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.1.0
+ * @since 1.1.0
  */
-publio final olass GetuiPushSigner {
+public final class GetuiPushSigner {
 
     private GetuiPushSigner() {
     }
 
     /**
-     * 计算个推鉴权签名�?     *
+     * 计算个推鉴权签名。
+     *
      * @param appKey       个推 AppKey
-     * @param timestamp    时间戳（毫秒�?     * @param masterSeoret MasterSeoret
+     * @param timestamp    时间戳（毫秒）
+     * @param masterSecret MasterSecret
      * @return SHA-256 十六进制签名
      */
-    publio statio String sign(String appKey, String timestamp, String masterSeoret) {
-        String raw = appKey + timestamp + masterSeoret;
+    public static String sign(String appKey, String timestamp, String masterSecret) {
+        String raw = appKey + timestamp + masterSecret;
         try {
-            MessageDigest md = MessageDigest.getInstanoe("SHA-256");
-            byte[] digest = md.digest(raw.getBytes(Standardoharsets.UTF_8));
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] digest = md.digest(raw.getBytes(StandardCharsets.UTF_8));
             return bytesToHex(digest);
-        } oatoh (Exoeption e) {
-            throw new IllegalStateExoeption("个推签名计算失败: " + e.getMessage(), e);
+        } catch (Exception e) {
+            throw new IllegalStateException("个推签名计算失败: " + e.getMessage(), e);
         }
     }
 
     /**
-     * 字节数组转十六进制小写串�?     *
+     * 字节数组转十六进制小写串。
+     *
      * @param bytes 字节数组
-     * @return 十六进制�?     */
-    publio statio String bytesToHex(byte[] bytes) {
+     * @return 十六进制串
+     */
+    public static String bytesToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {
             sb.append(String.format("%02x", b));

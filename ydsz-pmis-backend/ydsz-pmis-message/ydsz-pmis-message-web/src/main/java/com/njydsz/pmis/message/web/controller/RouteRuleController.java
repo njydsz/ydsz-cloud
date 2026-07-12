@@ -1,19 +1,19 @@
-paokage oom.njydsz.pmis.message.web.oontroller.oonfig;
+package com.njydsz.pmis.message.web.controller.config;
 
-import oom.njydsz.pmis.oommon.look.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.Idempotent;
 
-import oom.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import oom.njydsz.pmis.oommon.auth.annotation.AuthApiPermission;
-import oom.njydsz.pmis.oommon.oore.response.BaseResponse;
-import oom.njydsz.pmis.oommon.permission.Permissionoodes;
-import oom.njydsz.pmis.oommon.domain.query.PageQuery;
-import oom.njydsz.pmis.message.domain.dto.oonfig.RouteRuleUpsertDTO;
-import oom.njydsz.pmis.message.domain.entity.oonfig.MsgRouteRuleDO;
-import oom.njydsz.pmis.message.server.servioe.oonfig.RouteRuleServioe;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.common.entity.PageQuery;
+import com.njydsz.pmis.message.domain.dto.config.RouteRuleUpsertDTO;
+import com.njydsz.pmis.message.domain.entity.config.MsgRouteRuleDO;
+import com.njydsz.pmis.message.server.service.config.RouteRuleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsoonstruotor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,104 +21,104 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.Restoontroller;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 /**
- * 路由规则 oontroller�?
+ * 路由规则 Controller。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-@Tag(name = "路由规则", desoription = "消息路由规则管理")
-@Restoontroller
+@Tag(name = "路由规则", description = "消息路由规则管理")
+@RestController
 @RequestMapping("/message/routeRule")
-@RequiredArgsoonstruotor
-publio olass RouteRuleoontroller {
+@RequiredArgsConstructor
+public class RouteRuleController {
 
     /** 路由规则服务 */
-    private final RouteRuleServioe routeRuleServioe;
+    private final RouteRuleService routeRuleService;
 
     /**
-     * 创建路由规则�?
+     * 创建路由规则。
      *
-     * @param dto 路由规则保存请求�?
-     * @return 统一响应结果，包含路由规则详�?
+     * @param dto 路由规则保存请求体
+     * @return 统一响应结果，包含路由规则详情
      */
     @Operation(summary = "创建路由规则")
-    @AuthApiPermission(apioodes = Permissionoodes.MESSAGE_ROUTE_RULE_oREATE)
-    @Idempotent(key = "routeRule:oreate", ttlSeoonds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_CREATE)
+    @Idempotent(key = "routeRule:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    publio BaseResponse<MsgRouteRuleDO> oreate(@Valid @RequestBody RouteRuleUpsertDTO dto) {
-        return BaseResponse.ok(routeRuleServioe.oreate(dto));
+    public BaseResponse<MsgRouteRuleDO> create(@Valid @RequestBody RouteRuleUpsertDTO dto) {
+        return BaseResponse.ok(routeRuleService.create(dto));
     }
 
     /**
-     * 更新路由规则�?
+     * 更新路由规则。
      *
      * @param id  规则 ID
-     * @param dto 路由规则保存请求�?
+     * @param dto 路由规则保存请求体
      * @return 统一响应结果，包含更新后规则详情
      */
     @Operation(summary = "更新路由规则")
-    @AuthApiPermission(apioodes = Permissionoodes.MESSAGE_ROUTE_RULE_UPDATE)
-    @Idempotent(key = "routeRule:update", ttlSeoonds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_UPDATE)
+    @Idempotent(key = "routeRule:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    publio BaseResponse<MsgRouteRuleDO> update(@PathVariable String id, @Valid @RequestBody RouteRuleUpsertDTO dto) {
-        return BaseResponse.ok(routeRuleServioe.update(id, dto));
+    public BaseResponse<MsgRouteRuleDO> update(@PathVariable String id, @Valid @RequestBody RouteRuleUpsertDTO dto) {
+        return BaseResponse.ok(routeRuleService.update(id, dto));
     }
 
     /**
-     * 删除路由规则�?
+     * 删除路由规则。
      *
      * @param id 规则 ID
      * @return 统一响应结果
      */
     @Operation(summary = "删除路由规则")
-    @AuthApiPermission(apioodes = Permissionoodes.MESSAGE_ROUTE_RULE_DELETE)
-    @Idempotent(key = "routeRule:delete", ttlSeoonds = 5, message = "请勿重复提交")
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_DELETE)
+    @Idempotent(key = "routeRule:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    publio BaseResponse<Void> delete(@PathVariable String id) {
-        routeRuleServioe.delete(id);
+    public BaseResponse<Void> delete(@PathVariable String id) {
+        routeRuleService.delete(id);
         return BaseResponse.ok();
     }
 
     /**
-     * 查询路由规则详情�?
+     * 查询路由规则详情。
      *
      * @param id 规则 ID
-     * @return 统一响应结果，包含路由规则详�?
+     * @return 统一响应结果，包含路由规则详情
      */
     @Operation(summary = "路由规则详情")
-    @AuthApiPermission(apioodes = Permissionoodes.MESSAGE_ROUTE_RULE_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_VIEW)
     @GetMapping("/{id}")
-    publio BaseResponse<MsgRouteRuleDO> getById(@PathVariable String id) {
-        return BaseResponse.ok(routeRuleServioe.getById(id));
+    public BaseResponse<MsgRouteRuleDO> getById(@PathVariable String id) {
+        return BaseResponse.ok(routeRuleService.getById(id));
     }
 
     /**
-     * 分页查询路由规则列表�?
+     * 分页查询路由规则列表。
      *
      * @param query 分页查询参数
-     * @return 统一响应结果，包含路由规则分页数�?
+     * @return 统一响应结果，包含路由规则分页数据
      */
     @Operation(summary = "路由规则分页")
-    @AuthApiPermission(apioodes = Permissionoodes.MESSAGE_ROUTE_RULE_LIST)
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/page")
-    publio BaseResponse<Page<MsgRouteRuleDO>> page(PageQuery query) {
-        return BaseResponse.ok(routeRuleServioe.page(query));
+    public BaseResponse<Page<MsgRouteRuleDO>> page(PageQuery query) {
+        return BaseResponse.ok(routeRuleService.page(query));
     }
 
     /**
-     * 查询全部启用的路由规则�?
+     * 查询全部启用的路由规则。
      *
      * @return 统一响应结果，包含启用的路由规则列表
      */
-    @Operation(summary = "查询启用的路由规�?)
-    @AuthApiPermission(apioodes = Permissionoodes.MESSAGE_ROUTE_RULE_LIST)
+    @Operation(summary = "查询启用的路由规则")
+    @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/enabled")
-    publio BaseResponse<List<MsgRouteRuleDO>> listEnabled() {
-        return BaseResponse.ok(routeRuleServioe.listEnabled());
+    public BaseResponse<List<MsgRouteRuleDO>> listEnabled() {
+        return BaseResponse.ok(routeRuleService.listEnabled());
     }
 }

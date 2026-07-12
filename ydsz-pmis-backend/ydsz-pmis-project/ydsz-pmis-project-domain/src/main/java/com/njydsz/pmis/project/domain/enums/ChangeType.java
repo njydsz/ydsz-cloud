@@ -1,47 +1,47 @@
-paokage oom.njydsz.pmis.projeot.domain.enums;
+package com.njydsz.pmis.project.domain.enums;
 
 /**
  * 项目变更类型
  *
  * <ul>
- *   <li>SoOPE - 范围变更</li>
- *   <li>oOST - 成本预算变更</li>
- *   <li>oONTRAoT - 合同变更</li>
+ *   <li>SCOPE - 范围变更</li>
+ *   <li>COST - 成本预算变更</li>
+ *   <li>CONTRACT - 合同变更</li>
  *   <li>STAFF - 人员变更</li>
- *   <li>SoHEDULE - 进度变更</li>
+ *   <li>SCHEDULE - 进度变更</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
-publio enum ohangeType {
-    SoOPE("SoOPE", "范围变更"),
-    oOST("oOST", "成本预算变更"),
-    oONTRAoT("oONTRAoT", "合同变更"),
+public enum ChangeType {
+    SCOPE("SCOPE", "范围变更"),
+    COST("COST", "成本预算变更"),
+    CONTRACT("CONTRACT", "合同变更"),
     STAFF("STAFF", "人员变更"),
-    SoHEDULE("SoHEDULE", "进度变更");
+    SCHEDULE("SCHEDULE", "进度变更");
 
-    private final String oode;
-    private final String deso;
+    private final String code;
+    private final String desc;
 
-    ohangeType(String oode, String deso) {
-        this.oode = oode;
-        this.deso = deso;
+    ChangeType(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
     }
 
-    publio String getoode() { return oode; }
-    publio String getDeso() { return deso; }
+    public String getCode() { return code; }
+    public String getDesc() { return desc; }
 
     /**
-     * 根据状态码解析枚举�?
+     * 根据状态码解析枚举。
      *
-     * @param oode 状态码，大小写不敏感，�?null 时返�?null
-     * @return 匹配到的枚举值；未匹配返�?null
+     * @param code 状态码，大小写不敏感，为 null 时返回 null
+     * @return 匹配到的枚举值；未匹配返回 null
      */
-    publio statio ohangeType fromoode(String oode) {
-        if (oode == null) return null;
-        for (ohangeType t : values()) {
-            if (t.oode.equalsIgnoreoase(oode)) return t;
+    public static ChangeType fromCode(String code) {
+        if (code == null) return null;
+        for (ChangeType t : values()) {
+            if (t.code.equalsIgnoreCase(code)) return t;
         }
         return null;
     }

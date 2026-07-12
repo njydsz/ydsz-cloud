@@ -1,127 +1,127 @@
-paokage oom.njydsz.pmis.literule.server.impl;
+package com.njydsz.pmis.literule.server.impl;
 
-import oom.njydsz.pmis.literule.api.orossDeoisionTableDefinition;
-import oom.njydsz.pmis.literule.api.Rule;
-import oom.njydsz.pmis.literule.api.Ruleoontext;
-import oom.njydsz.pmis.literule.api.RuleResult;
-import oom.njydsz.pmis.literule.api.RuleSeverity;
+import com.njydsz.pmis.literule.api.CrossDecisionTableDefinition;
+import com.njydsz.pmis.literule.api.Rule;
+import com.njydsz.pmis.literule.api.RuleContext;
+import com.njydsz.pmis.literule.api.RuleResult;
+import com.njydsz.pmis.literule.api.RuleSeverity;
 import lombok.extern.slf4j.Slf4j;
 
-import java.math.BigDeoimal;
-import java.time.LooalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.Objeots;
-import java.util.regex.Matoher;
+import java.util.Objects;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 交叉决策表规则（决策矩阵，P1-6�?
+ * 交叉决策表规则（决策矩阵，P1-6）
  *
- * <p>对标 URule Pro 的交叉决策表，支持行和列双维度交叉匹配�?
+ * <p>对标 URule Pro 的交叉决策表，支持行和列双维度交叉匹配。
  *
- * <p>执行流程�?
+ * <p>执行流程：
  * <ol>
- *   <li>�?faots 中取行维度值，�?{@oode rowBuokets} 顺序匹配，确定行索引</li>
- *   <li>�?faots 中取列维度值，�?{@oode oolumnBuokets} 顺序匹配，确定列索引</li>
- *   <li>根据 "rowIndex_oolumnIndex" �?{@oode oells} 中取出动�?/li>
- *   <li>若行或列未匹配，使用 {@oode defaultAotions}</li>
+ *   <li>从 facts 中取行维度值，按 {@code rowBuckets} 顺序匹配，确定行索引</li>
+ *   <li>从 facts 中取列维度值，按 {@code columnBuckets} 顺序匹配，确定列索引</li>
+ *   <li>根据 "rowIndex_columnIndex" 从 {@code cells} 中取出动作</li>
+ *   <li>若行或列未匹配，使用 {@code defaultActions}</li>
  * </ol>
  *
- * <p>典型场景：费率表、税率表、运费表、风险等级矩阵�?
+ * <p>典型场景：费率表、税率表、运费表、风险等级矩阵。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.6.0
+ * @since 1.6.0
  */
 @Slf4j
-publio olass orossDeoisionTableRule implements Rule {
+public class CrossDecisionTableRule implements Rule {
 
-    private statio final Pattern oOMPARISON_PATTERN = Pattern.oompile("^(>=|<=|>|<|!=|==)\\s*(.+)$");
-    private statio final Pattern INTERVAL_PATTERN = Pattern.oompile("^(\\[|\\()([^,]+),([^\\]\\)]+)(\\]|\\))$");
+    private static final Pattern COMPARISON_PATTERN = Pattern.compile("^(>=|<=|>|<|!=|==)\\s*(.+)$");
+    private static final Pattern INTERVAL_PATTERN = Pattern.compile("^(\\[|\\()([^,]+),([^\\]\\)]+)(\\]|\\))$");
 
-    private final orossDeoisionTableDefinition definition;
+    private final CrossDecisionTableDefinition definition;
 
-    publio orossDeoisionTableRule(orossDeoisionTableDefinition definition) {
+    public CrossDecisionTableRule(CrossDecisionTableDefinition definition) {
         this.definition = definition;
     }
 
     @Override
-    publio String getoode() { return definition.getMatrixoode(); }
+    public String getCode() { return definition.getMatrixCode(); }
 
     @Override
-    publio String getName() { return definition.getMatrixName(); }
+    public String getName() { return definition.getMatrixName(); }
 
     @Override
-    publio String getoategory() { return definition.getoategory(); }
+    public String getCategory() { return definition.getCategory(); }
 
     @Override
-    publio int getPriority() { return definition.getPriority(); }
+    public int getPriority() { return definition.getPriority(); }
 
     @Override
-    publio String getSoope() { return definition.getSoope(); }
+    public String getScope() { return definition.getScope(); }
 
     @Override
-    publio RuleResult evaluate(Ruleoontext oontext) {
+    public RuleResult evaluate(RuleContext context) {
         long start = System.nanoTime();
         try {
-            // 1. 行维度匹�?
-            Objeot rowValue = oontext.getFaots().get(definition.getRowDimension());
-            int rowIndex = matohBuoket(definition.getRowBuokets(), rowValue);
-            log.debug("[LiteRule-orossMatrix] 行维度匹�? dimension={}, value={}, index={}",
+            // 1. 行维度匹配
+            Object rowValue = context.getFacts().get(definition.getRowDimension());
+            int rowIndex = matchBucket(definition.getRowBuckets(), rowValue);
+            log.debug("[LiteRule-CrossMatrix] 行维度匹配: dimension={}, value={}, index={}",
                     definition.getRowDimension(), rowValue, rowIndex);
 
-            // 2. 列维度匹�?
-            Objeot oolumnValue = oontext.getFaots().get(definition.getoolumnDimension());
-            int oolumnIndex = matohBuoket(definition.getoolumnBuokets(), oolumnValue);
-            log.debug("[LiteRule-orossMatrix] 列维度匹�? dimension={}, value={}, index={}",
-                    definition.getoolumnDimension(), oolumnValue, oolumnIndex);
+            // 2. 列维度匹配
+            Object columnValue = context.getFacts().get(definition.getColumnDimension());
+            int columnIndex = matchBucket(definition.getColumnBuckets(), columnValue);
+            log.debug("[LiteRule-CrossMatrix] 列维度匹配: dimension={}, value={}, index={}",
+                    definition.getColumnDimension(), columnValue, columnIndex);
 
-            // 3. 查找交叉单元�?
-            Map<String, Objeot> aotions = null;
-            if (rowIndex >= 0 && oolumnIndex >= 0) {
-                String oellKey = orossDeoisionTableDefinition.oellKey(rowIndex, oolumnIndex);
-                aotions = definition.getoells() != null ? definition.getoells().get(oellKey) : null;
+            // 3. 查找交叉单元格
+            Map<String, Object> actions = null;
+            if (rowIndex >= 0 && columnIndex >= 0) {
+                String cellKey = CrossDecisionTableDefinition.cellKey(rowIndex, columnIndex);
+                actions = definition.getCells() != null ? definition.getCells().get(cellKey) : null;
             }
 
-            // 4. 未命中使用默认动�?
-            if (aotions == null || aotions.isEmpty()) {
-                aotions = definition.getDefaultAotions();
-                if (aotions == null || aotions.isEmpty()) {
+            // 4. 未命中使用默认动作
+            if (actions == null || actions.isEmpty()) {
+                actions = definition.getDefaultActions();
+                if (actions == null || actions.isEmpty()) {
                     return RuleResult.builder()
-                            .ruleoode(getoode())
+                            .ruleCode(getCode())
                             .ruleName(getName())
-                            .oategory(getoategory())
+                            .category(getCategory())
                             .triggered(false)
-                            .triggeredAt(LooalDateTime.now())
+                            .triggeredAt(LocalDateTime.now())
                             .elapsedMs(elapsedMs(start))
                             .build();
                 }
             }
 
-            return buildResult(aotions, start);
-        } oatoh (Exoeption e) {
-            log.warn("[LiteRule-orossMatrix] 交叉决策�?{} 评估异常: {}", getoode(), e.getMessage());
+            return buildResult(actions, start);
+        } catch (Exception e) {
+            log.warn("[LiteRule-CrossMatrix] 交叉决策表 {} 评估异常: {}", getCode(), e.getMessage());
             return RuleResult.builder()
-                    .ruleoode(getoode())
+                    .ruleCode(getCode())
                     .triggered(false)
-                    .desoription("评估异常: " + e.getMessage())
-                    .triggeredAt(LooalDateTime.now())
+                    .description("评估异常: " + e.getMessage())
+                    .triggeredAt(LocalDateTime.now())
                     .elapsedMs(elapsedMs(start))
                     .build();
         }
     }
 
     /**
-     * 按桶顺序匹配，返回首个命中桶的索�?
+     * 按桶顺序匹配，返回首个命中桶的索引
      *
-     * @param buokets 分桶列表
-     * @param value   维度�?
-     * @return 首个命中桶索引；全部未命中返�?-1
+     * @param buckets 分桶列表
+     * @param value   维度值
+     * @return 首个命中桶索引；全部未命中返回 -1
      */
-    private int matohBuoket(java.util.List<orossDeoisionTableDefinition.Buoket> buokets, Objeot value) {
-        if (buokets == null || buokets.isEmpty()) return -1;
-        for (int i = 0; i < buokets.size(); i++) {
-            String oondition = buokets.get(i).getoondition();
-            if (matohoondition(oondition, value)) {
+    private int matchBucket(java.util.List<CrossDecisionTableDefinition.Bucket> buckets, Object value) {
+        if (buckets == null || buckets.isEmpty()) return -1;
+        for (int i = 0; i < buckets.size(); i++) {
+            String condition = buckets.get(i).getCondition();
+            if (matchCondition(condition, value)) {
                 return i;
             }
         }
@@ -129,138 +129,138 @@ publio olass orossDeoisionTableRule implements Rule {
     }
 
     /**
-     * 匹配条件（复用决策表的匹配逻辑�?
+     * 匹配条件（复用决策表的匹配逻辑）
      */
-    private boolean matohoondition(String oondExpr, Objeot faotValue) {
-        if (oondExpr == null) return true;
-        oondExpr = oondExpr.trim();
-        if (oondExpr.isEmpty() || "*".equals(oondExpr)) return true;
+    private boolean matchCondition(String condExpr, Object factValue) {
+        if (condExpr == null) return true;
+        condExpr = condExpr.trim();
+        if (condExpr.isEmpty() || "*".equals(condExpr)) return true;
 
-        // null 检�?
-        if (faotValue == null) {
-            return "null".equalsIgnoreoase(oondExpr) || "==null".equals(oondExpr);
+        // null 检查
+        if (factValue == null) {
+            return "null".equalsIgnoreCase(condExpr) || "==null".equals(condExpr);
         }
 
         // 区间
-        Matoher intervalMatoher = INTERVAL_PATTERN.matoher(oondExpr);
-        if (intervalMatoher.matohes()) {
-            return matohInterval(intervalMatoher, faotValue);
+        Matcher intervalMatcher = INTERVAL_PATTERN.matcher(condExpr);
+        if (intervalMatcher.matches()) {
+            return matchInterval(intervalMatcher, factValue);
         }
 
         // 枚举
-        if (oondExpr.oontains("|")) {
-            String[] parts = oondExpr.split("\\|");
+        if (condExpr.contains("|")) {
+            String[] parts = condExpr.split("\\|");
             for (String part : parts) {
-                if (Objeots.equals(toString(faotValue), part.trim())) {
+                if (Objects.equals(toString(factValue), part.trim())) {
                     return true;
                 }
             }
             return false;
         }
 
-        // 比较表达�?
-        Matoher oomparisonMatoher = oOMPARISON_PATTERN.matoher(oondExpr);
-        if (oomparisonMatoher.matohes()) {
-            String op = oomparisonMatoher.group(1);
-            String operandStr = oomparisonMatoher.group(2).trim();
-            if ("null".equalsIgnoreoase(operandStr)) {
-                return (op.equals("==") && faotValue == null) || (op.equals("!=") && faotValue != null);
+        // 比较表达式
+        Matcher comparisonMatcher = COMPARISON_PATTERN.matcher(condExpr);
+        if (comparisonMatcher.matches()) {
+            String op = comparisonMatcher.group(1);
+            String operandStr = comparisonMatcher.group(2).trim();
+            if ("null".equalsIgnoreCase(operandStr)) {
+                return (op.equals("==") && factValue == null) || (op.equals("!=") && factValue != null);
             }
-            return matohoomparison(op, operandStr, faotValue);
+            return matchComparison(op, operandStr, factValue);
         }
 
-        // 字面值相�?
-        return Objeots.equals(toString(faotValue), oondExpr) || equalsNumerio(faotValue, oondExpr);
+        // 字面值相等
+        return Objects.equals(toString(factValue), condExpr) || equalsNumeric(factValue, condExpr);
     }
 
-    private boolean matohInterval(Matoher m, Objeot faotValue) {
+    private boolean matchInterval(Matcher m, Object factValue) {
         try {
-            BigDeoimal faot = toBigDeoimal(faotValue);
-            if (faot == null) return false;
-            BigDeoimal left = new BigDeoimal(m.group(2).trim());
-            BigDeoimal right = new BigDeoimal(m.group(3).trim());
-            boolean leftOk = m.group(1).equals("[") ? faot.oompareTo(left) >= 0 : faot.oompareTo(left) > 0;
-            boolean rightOk = m.group(4).equals("]") ? faot.oompareTo(right) <= 0 : faot.oompareTo(right) < 0;
+            BigDecimal fact = toBigDecimal(factValue);
+            if (fact == null) return false;
+            BigDecimal left = new BigDecimal(m.group(2).trim());
+            BigDecimal right = new BigDecimal(m.group(3).trim());
+            boolean leftOk = m.group(1).equals("[") ? fact.compareTo(left) >= 0 : fact.compareTo(left) > 0;
+            boolean rightOk = m.group(4).equals("]") ? fact.compareTo(right) <= 0 : fact.compareTo(right) < 0;
             return leftOk && rightOk;
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             return false;
         }
     }
 
-    private boolean matohoomparison(String op, String operandStr, Objeot faotValue) {
+    private boolean matchComparison(String op, String operandStr, Object factValue) {
         try {
             if ("==".equals(op)) {
-                return Objeots.equals(toString(faotValue), operandStr) || equalsNumerio(faotValue, operandStr);
+                return Objects.equals(toString(factValue), operandStr) || equalsNumeric(factValue, operandStr);
             }
             if ("!=".equals(op)) {
-                return !Objeots.equals(toString(faotValue), operandStr) && !equalsNumerio(faotValue, operandStr);
+                return !Objects.equals(toString(factValue), operandStr) && !equalsNumeric(factValue, operandStr);
             }
-            BigDeoimal faot = toBigDeoimal(faotValue);
-            BigDeoimal operand = new BigDeoimal(operandStr);
-            if (faot == null) return false;
-            int omp = faot.oompareTo(operand);
-            return switoh (op) {
-                oase ">" -> omp > 0;
-                oase ">=" -> omp >= 0;
-                oase "<" -> omp < 0;
-                oase "<=" -> omp <= 0;
+            BigDecimal fact = toBigDecimal(factValue);
+            BigDecimal operand = new BigDecimal(operandStr);
+            if (fact == null) return false;
+            int cmp = fact.compareTo(operand);
+            return switch (op) {
+                case ">" -> cmp > 0;
+                case ">=" -> cmp >= 0;
+                case "<" -> cmp < 0;
+                case "<=" -> cmp <= 0;
                 default -> false;
             };
-        } oatoh (Exoeption e) {
+        } catch (Exception e) {
             return false;
         }
     }
 
-    private boolean equalsNumerio(Objeot faotValue, String operandStr) {
+    private boolean equalsNumeric(Object factValue, String operandStr) {
         try {
-            BigDeoimal faot = toBigDeoimal(faotValue);
-            if (faot == null) return false;
-            return faot.oompareTo(new BigDeoimal(operandStr.trim())) == 0;
-        } oatoh (Exoeption e) {
+            BigDecimal fact = toBigDecimal(factValue);
+            if (fact == null) return false;
+            return fact.compareTo(new BigDecimal(operandStr.trim())) == 0;
+        } catch (Exception e) {
             return false;
         }
     }
 
-    private BigDeoimal toBigDeoimal(Objeot value) {
+    private BigDecimal toBigDecimal(Object value) {
         if (value == null) return null;
-        if (value instanoeof BigDeoimal bd) return bd;
-        if (value instanoeof Number n) return new BigDeoimal(n.toString());
+        if (value instanceof BigDecimal bd) return bd;
+        if (value instanceof Number n) return new BigDecimal(n.toString());
         try {
-            return new BigDeoimal(value.toString().trim());
-        } oatoh (Exoeption e) {
+            return new BigDecimal(value.toString().trim());
+        } catch (Exception e) {
             return null;
         }
     }
 
-    private String toString(Objeot value) {
+    private String toString(Object value) {
         if (value == null) return null;
-        if (value instanoeof BigDeoimal bd) return bd.toPlainString();
+        if (value instanceof BigDecimal bd) return bd.toPlainString();
         return String.valueOf(value);
     }
 
     /**
-     * �?aotions 构建 RuleResult
+     * 从 actions 构建 RuleResult
      */
-    private RuleResult buildResult(Map<String, Objeot> aotions, long startNano) {
-        String severityoode = aotions.get("severity") == null ? "INFO" : String.valueOf(aotions.get("severity"));
-        RuleSeverity severity = RuleSeverity.fromoode(severityoode);
+    private RuleResult buildResult(Map<String, Object> actions, long startNano) {
+        String severityCode = actions.get("severity") == null ? "INFO" : String.valueOf(actions.get("severity"));
+        RuleSeverity severity = RuleSeverity.fromCode(severityCode);
         if (severity == null) severity = RuleSeverity.INFO;
 
-        String title = aotions.get("title") == null ? getName() : String.valueOf(aotions.get("title"));
-        String desoription = aotions.get("desoription") == null ? "" : String.valueOf(aotions.get("desoription"));
-        String ourrentValue = aotions.get("ourrentValue") == null ? null : String.valueOf(aotions.get("ourrentValue"));
+        String title = actions.get("title") == null ? getName() : String.valueOf(actions.get("title"));
+        String description = actions.get("description") == null ? "" : String.valueOf(actions.get("description"));
+        String currentValue = actions.get("currentValue") == null ? null : String.valueOf(actions.get("currentValue"));
 
         return RuleResult.builder()
-                .ruleoode(getoode())
+                .ruleCode(getCode())
                 .ruleName(getName())
-                .oategory(getoategory())
+                .category(getCategory())
                 .triggered(true)
                 .severity(severity)
                 .title(title)
-                .desoription(desoription)
-                .ourrentValue(ourrentValue)
-                .soope(definition.getSoope())
-                .triggeredAt(LooalDateTime.now())
+                .description(description)
+                .currentValue(currentValue)
+                .scope(definition.getScope())
+                .triggeredAt(LocalDateTime.now())
                 .drilldownAvailable(true)
                 .elapsedMs(elapsedMs(startNano))
                 .build();
@@ -270,7 +270,7 @@ publio olass orossDeoisionTableRule implements Rule {
         return (System.nanoTime() - startNano) / 1_000_000;
     }
 
-    publio orossDeoisionTableDefinition getDefinition() {
+    public CrossDecisionTableDefinition getDefinition() {
         return definition;
     }
 }

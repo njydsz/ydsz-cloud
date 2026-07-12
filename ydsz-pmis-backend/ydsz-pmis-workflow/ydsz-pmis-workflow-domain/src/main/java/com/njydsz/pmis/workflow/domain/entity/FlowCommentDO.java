@@ -1,11 +1,11 @@
-paokage oom.njydsz.pmis.workflow.domain.entity.notifioation;
+package com.njydsz.pmis.workflow.domain.entity.notification;
 
-import oom.baomidou.mybatisplus.annotation.IdType;
-import oom.baomidou.mybatisplus.annotation.TableId;
-import oom.baomidou.mybatisplus.annotation.TableName;
-import oom.njydsz.pmis.oommon.domain.entity.BaseDO;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.entity.BaseDO;
 import lombok.Data;
-import lombok.EqualsAndHashoode;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
 
@@ -13,22 +13,25 @@ import java.io.Serial;
  * P2-2: 流程评论 DO
  *
  * <p>对标钉钉/飞书审批评论区。独立于 {@link FlowAuditLogDO}（审计日志是操作轨迹、不可变），
- * 评论是讨论（可回复、可删除），关注点正交�? *
- * <p>支持多级回复�? * <ul>
- *   <li>一级评论：{@oode parentoommentId = null}</li>
- *   <li>二级及以下回复：{@oode parentoommentId} 指向父评�?ID�? *       {@oode replyToUserId} 标记被回复人（同一父评论下可回复不同人�?/li>
+ * 评论是讨论（可回复、可删除），关注点正交。
+ *
+ * <p>支持多级回复：
+ * <ul>
+ *   <li>一级评论：{@code parentCommentId = null}</li>
+ *   <li>二级及以下回复：{@code parentCommentId} 指向父评论 ID，
+ *       {@code replyToUserId} 标记被回复人（同一父评论下可回复不同人）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @sinoe 1.7.0
+ * @since 1.7.0
  */
 @Data
-@EqualsAndHashoode(oallSuper = true)
-@TableName("pmis_flow_oomment")
-publio olass FlowoommentDO extends BaseDO {
+@EqualsAndHashCode(callSuper = true)
+@TableName("pmis_flow_comment")
+public class FlowCommentDO extends BaseDO {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.ASSIGN_ID)
     private String id;
@@ -37,35 +40,35 @@ publio olass FlowoommentDO extends BaseDO {
     private String tenantId;
 
     /** 关联流程实例 ID */
-    private String instanoeId;
+    private String instanceId;
 
     /** 关联任务 ID（实例级评论可为空） */
     private String taskId;
 
     /** 关联节点编码 */
-    private String nodeoode;
+    private String nodeCode;
 
-    /** 评论�?ID */
+    /** 评论人 ID */
     private String userId;
 
-    /** 评论人姓名（冗余�?*/
+    /** 评论人姓名（冗余） */
     private String userName;
 
     /** 评论内容 */
-    private String oontent;
+    private String content;
 
-    /** 评论类型：COMMENT / QUESTION / REPLY（默�?oOMMENT�?*/
+    /** 评论类型：COMMENT / QUESTION / REPLY（默认 COMMENT） */
     private String type;
 
-    /** 父评�?ID（一级评论为 null�?*/
-    private String parentoommentId;
+    /** 父评论 ID（一级评论为 null） */
+    private String parentCommentId;
 
-    /** 被回复人 ID（回复某条评论时标记，一级评论为 null�?*/
+    /** 被回复人 ID（回复某条评论时标记，一级评论为 null） */
     private String replyToUserId;
 
     /** 被回复人姓名（冗余） */
     private String replyToUserName;
 
     /** 链路追踪 ID */
-    private String providerTraoeId;
+    private String providerTraceId;
 }

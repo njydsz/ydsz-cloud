@@ -1,44 +1,53 @@
-paokage oom.njydsz.pmis.message.domain.dto.reoeipt;
+package com.njydsz.pmis.message.domain.dto.receipt;
 
 
-import oom.njydsz.pmis.message.domain.enums.reoeipt.ReoeiptStatusEnum;
-import lombok.AllArgsoonstruotor;
+import com.njydsz.pmis.message.domain.enums.receipt.ReceiptStatusEnum;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsoonstruotor;
+import lombok.NoArgsConstructor;
 
 /**
- * 主动拉取的回执结果（P2-9）�? *
- * <p>�?{@link oom.njydsz.pmis.message.server.ohannel.Messageohannel#queryReoeipt} 返回�? * 描述从服务商侧查询到的最新回执状态。{@oode ReoeiptPuller} 拿到此结果后会联动更�? * {@oode MsgLogDO.reoeiptStatus} �?{@oode MsgLogDO.reoeiptAt}�? *
+ * 主动拉取的回执结果（P2-9）。
+ *
+ * <p>由 {@link com.njydsz.pmis.message.server.channel.MessageChannel#queryReceipt} 返回，
+ * 描述从服务商侧查询到的最新回执状态。{@code ReceiptPuller} 拿到此结果后会联动更新
+ * {@code MsgLogDO.receiptStatus} 与 {@code MsgLogDO.receiptAt}。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@NoArgsoonstruotor
-@AllArgsoonstruotor
-publio olass ReoeiptResult {
+@NoArgsConstructor
+@AllArgsConstructor
+public class ReceiptResult {
 
-    /** 回执状态（DELIVERED/READ/oLIoKED/FAILED�?*/
-    private ReoeiptStatusEnum status;
+    /** 回执状态（DELIVERED/READ/CLICKED/FAILED） */
+    private ReceiptStatusEnum status;
 
-    /** 服务商侧消息（如"DELIVERED"�?REJEoTED"等描述） */
+    /** 服务商侧消息（如"DELIVERED"、"REJECTED"等描述） */
     private String providerMsg;
 
     /** 原始响应 JSON（用于排查） */
     private String rawResponse;
 
     /**
-     * 构造指定状态的回执结果�?     *
-     * @param status 回执状�?     * @return 回执结果实例
+     * 构造指定状态的回执结果。
+     *
+     * @param status 回执状态
+     * @return 回执结果实例
      */
-    publio statio ReoeiptResult of(ReoeiptStatusEnum status) {
-        return new ReoeiptResult(status, null, null);
+    public static ReceiptResult of(ReceiptStatusEnum status) {
+        return new ReceiptResult(status, null, null);
     }
 
     /**
-     * 构造指定状态与描述的回执结果�?     *
-     * @param status      回执状�?     * @param providerMsg 服务商消�?     * @return 回执结果实例
+     * 构造指定状态与描述的回执结果。
+     *
+     * @param status      回执状态
+     * @param providerMsg 服务商消息
+     * @return 回执结果实例
      */
-    publio statio ReoeiptResult of(ReoeiptStatusEnum status, String providerMsg) {
-        return new ReoeiptResult(status, providerMsg, null);
+    public static ReceiptResult of(ReceiptStatusEnum status, String providerMsg) {
+        return new ReceiptResult(status, providerMsg, null);
     }
 }

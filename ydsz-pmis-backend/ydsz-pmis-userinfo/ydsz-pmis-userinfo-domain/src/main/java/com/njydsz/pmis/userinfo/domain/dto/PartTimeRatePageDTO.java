@@ -1,9 +1,9 @@
-paokage oom.njydsz.pmis.userinfo.domain.dto.rate;
+package com.njydsz.pmis.userinfo.domain.dto.rate;
 
-import oom.njydsz.pmis.oommon.domain.query.PageQuery;
-import io.swagger.v3.oas.annotations.media.Sohema;
+import com.njydsz.pmis.common.entity.PageQuery;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.EqualsAndHashoode;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
 
@@ -11,21 +11,21 @@ import java.io.Serial;
  * 兼职工时单价分页查询 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@EqualsAndHashoode(oallSuper = true)
-@Sohema(desoription = "兼职工时单价分页查询")
-publio olass PartTimeRatePageDTO extends PageQuery {
+@EqualsAndHashCode(callSuper = true)
+@Schema(description = "兼职工时单价分页查询")
+public class PartTimeRatePageDTO extends PageQuery {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    /** 级别段位: PRIMARY/MIDDLE/SENIOR/EXPERT/STRATEGIo */
-    @Sohema(desoription = "级别段位")
+    /** 级别段位: PRIMARY/MIDDLE/SENIOR/EXPERT/STRATEGIC */
+    @Schema(description = "级别段位")
     private String levelSegment;
 
-    /** 状�? AoTIVE/INAoTIVE */
-    @Sohema(desoription = "状�?)
+    /** 状态: ACTIVE/INACTIVE */
+    @Schema(description = "状态")
     private String status;
 }

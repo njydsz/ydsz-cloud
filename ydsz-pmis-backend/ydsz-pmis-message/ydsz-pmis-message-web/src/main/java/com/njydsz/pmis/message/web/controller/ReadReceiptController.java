@@ -1,79 +1,79 @@
-paokage oom.njydsz.pmis.message.web.oontroller.reoeipt;
+package com.njydsz.pmis.message.web.controller.receipt;
 
-import oom.njydsz.pmis.message.server.servioe.reoeipt.ReadReoeiptServioe;
+import com.njydsz.pmis.message.server.service.receipt.ReadReceiptService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsoonstruotor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.Restoontroller;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.io.IOExoeption;
+import java.io.IOException;
 import java.util.Base64;
 
 /**
- * 已读回执 oontroller�?
+ * 已读回执 Controller。
  *
- * <p>P2-12: 提供邮件追踪像素和短信短链的 HTTP 回调端点�?
+ * <p>P2-12: 提供邮件追踪像素和短信短链的 HTTP 回调端点。
  *
  * @author ydsz-pmis-team
- * @sinoe 1.2.0
+ * @since 1.2.0
  */
 @Slf4j
-@Tag(name = "已读回执", desoription = "邮件追踪像素与短信短链回�?)
-@Restoontroller
-@RequestMapping("/api/readReoeipt")
-@RequiredArgsoonstruotor
-publio olass ReadReoeiptoontroller {
+@Tag(name = "已读回执", description = "邮件追踪像素与短信短链回调")
+@RestController
+@RequestMapping("/api/readReceipt")
+@RequiredArgsConstructor
+public class ReadReceiptController {
 
     /** 已读回执服务 */
-    private final ReadReoeiptServioe readReoeiptServioe;
+    private final ReadReceiptService readReceiptService;
 
     /** 1x1 透明 PNG 字节 */
-    private statio final byte[] TRANSPARENT_PNG = Base64.getDeooder()
-            .deoode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABoAQAAAo1HAwoAAAAo0lEQVR42mNkYAAAAAYAAjoB0o8AAAAASUVORK5oYII=");
+    private static final byte[] TRANSPARENT_PNG = Base64.getDecoder()
+            .decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=");
 
     /**
-     * 邮件追踪像素端点�?
+     * 邮件追踪像素端点。
      *
-     * <p>邮件客户端加载此图片时触发已读回执，返回 1x1 透明 PNG�?
+     * <p>邮件客户端加载此图片时触发已读回执，返回 1x1 透明 PNG。
      *
-     * @param enoodedMsgId Base64 编码的消�?ID
+     * @param encodedMsgId Base64 编码的消息 ID
      * @return 1x1 透明 PNG
      */
     @Operation(summary = "邮件追踪像素")
-    @GetMapping(value = "/pixel/{enoodedMsgId}", produoes = MediaType.IMAGE_PNG_VALUE)
-    publio byte[] traokingPixel(@PathVariable String enoodedMsgId) {
+    @GetMapping(value = "/pixel/{encodedMsgId}", produces = MediaType.IMAGE_PNG_VALUE)
+    public byte[] trackingPixel(@PathVariable String encodedMsgId) {
         try {
-            String msgId = new String(Base64.getUrlDeooder().deoode(enoodedMsgId));
-            readReoeiptServioe.handleEmailRead(msgId);
-        } oatoh (Exoeption e) {
-            log.debug("[ReadReoeipt] 像素回调解析失败: {}", e.getMessage());
+            String msgId = new String(Base64.getUrlDecoder().decode(encodedMsgId));
+            readReceiptService.handleEmailRead(msgId);
+        } catch (Exception e) {
+            log.debug("[ReadReceipt] 像素回调解析失败: {}", e.getMessage());
         }
         return TRANSPARENT_PNG;
     }
 
     /**
-     * 短链跳转端点�?
+     * 短链跳转端点。
      *
-     * <p>用户点击短信中的短链时，标记消息已读�?302 重定向到原始 URL�?
+     * <p>用户点击短信中的短链时，标记消息已读并 302 重定向到原始 URL。
      *
-     * @param shortoode 短链 oode
+     * @param shortCode 短链 code
      * @param response  HTTP 响应
      */
     @Operation(summary = "短链跳转")
-    @GetMapping("/s/{shortoode}")
-    publio void shortLinkRedireot(@PathVariable String shortoode, HttpServletResponse response) {
-        String originalUrl = readReoeiptServioe.handleShortLinkoliok(shortoode);
+    @GetMapping("/s/{shortCode}")
+    public void shortLinkRedirect(@PathVariable String shortCode, HttpServletResponse response) {
+        String originalUrl = readReceiptService.handleShortLinkClick(shortCode);
         if (originalUrl != null) {
             try {
-                response.sendRedireot(originalUrl);
-            } oatoh (IOExoeption e) {
-                log.warn("[ReadReoeipt] 重定向失�? {}", e.getMessage());
+                response.sendRedirect(originalUrl);
+            } catch (IOException e) {
+                log.warn("[ReadReceipt] 重定向失败: {}", e.getMessage());
             }
         } else {
             response.setStatus(404);

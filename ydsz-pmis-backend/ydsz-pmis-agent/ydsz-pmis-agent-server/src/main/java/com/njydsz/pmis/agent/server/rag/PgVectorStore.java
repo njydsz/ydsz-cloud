@@ -1,127 +1,131 @@
-paokage oom.njydsz.pmis.agent.server.rag;
+package com.njydsz.pmis.agent.server.rag;
 
-import oom.baomidou.mybatisplus.oore.oonditions.query.LambdaQueryWrapper;
-import oom.njydsz.pmis.agent.domain.entity.knowledge.DooumentohunkDO;
-import oom.njydsz.pmis.agent.infra.mapper.knowledge.DooumentohunkMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.agent.domain.entity.knowledge.DocumentChunkDO;
+import com.njydsz.pmis.agent.infra.mapper.knowledge.DocumentChunkMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.faotory.ObjeotProvider;
+import org.springframework.beans.factory.ObjectProvider;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * PostgreSQL + pgveotor 向量存储实现（P3-1 落地）�? *
- * <p>生产环境使用，依�?{@link DooumentohunkMapper} 的自定义 SQL 实现向量检索�? * 使用 {@link ObjeotProvider} 注入 Mapper，避免无 DB 环境启动失败�? *
+ * PostgreSQL + pgvector 向量存储实现（P3-1 落地）。
+ *
+ * <p>生产环境使用，依赖 {@link DocumentChunkMapper} 的自定义 SQL 实现向量检索。
+ * 使用 {@link ObjectProvider} 注入 Mapper，避免无 DB 环境启动失败。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0 (P3-1)
+ * @since 1.0.0 (P3-1)
  */
 @Slf4j
-publio olass PgVeotorStore implements VeotorStore {
+public class PgVectorStore implements VectorStore {
 
-    private final ObjeotProvider<DooumentohunkMapper> ohunkMapperProvider;
+    private final ObjectProvider<DocumentChunkMapper> chunkMapperProvider;
 
-    publio PgVeotorStore(ObjeotProvider<DooumentohunkMapper> ohunkMapperProvider) {
-        this.ohunkMapperProvider = ohunkMapperProvider;
+    public PgVectorStore(ObjectProvider<DocumentChunkMapper> chunkMapperProvider) {
+        this.chunkMapperProvider = chunkMapperProvider;
     }
 
     @Override
-    publio String store(String knowledgeBaseId, String dooumentId, int ohunkIndex,
-                       String oontent, float[] embedding, int tokenoount) {
-        DooumentohunkMapper ohunkMapper = ohunkMapperProvider.getIfAvailable();
-        if (ohunkMapper == null) {
-            log.warn("[PgVeotorStore] Mapper 不可用，跳过存储");
+    public String store(String knowledgeBaseId, String documentId, int chunkIndex,
+                       String content, float[] embedding, int tokenCount) {
+        DocumentChunkMapper chunkMapper = chunkMapperProvider.getIfAvailable();
+        if (chunkMapper == null) {
+            log.warn("[PgVectorStore] Mapper 不可用，跳过存储");
             return null;
         }
 
-        DooumentohunkDO ohunk = new DooumentohunkDO();
-        // ID �?MyBatis-Plus 雪花算法自动生成
-        ohunk.setTenantId("1");
-        ohunk.setKnowledgeBaseId(knowledgeBaseId);
-        ohunk.setDooumentId(dooumentId);
-        ohunk.setohunkIndex(ohunkIndex);
-        ohunk.setoontent(oontent);
-        ohunk.setTokenoount(tokenoount);
-        ohunk.setEmbedding(floatToPgVeotor(embedding));
+        DocumentChunkDO chunk = new DocumentChunkDO();
+        // ID 由 MyBatis-Plus 雪花算法自动生成
+        chunk.setTenantId("1");
+        chunk.setKnowledgeBaseId(knowledgeBaseId);
+        chunk.setDocumentId(documentId);
+        chunk.setChunkIndex(chunkIndex);
+        chunk.setContent(content);
+        chunk.setTokenCount(tokenCount);
+        chunk.setEmbedding(floatToPgVector(embedding));
 
-        ohunkMapper.insert(ohunk);
-        return ohunk.getId();
+        chunkMapper.insert(chunk);
+        return chunk.getId();
     }
 
     @Override
-    publio List<Retrievedohunk> searoh(String knowledgeBaseId, float[] queryVeotor, int topK) {
-        DooumentohunkMapper ohunkMapper = ohunkMapperProvider.getIfAvailable();
-        if (ohunkMapper == null) {
-            log.warn("[PgVeotorStore] Mapper 不可用，返回空列�?);
+    public List<RetrievedChunk> search(String knowledgeBaseId, float[] queryVector, int topK) {
+        DocumentChunkMapper chunkMapper = chunkMapperProvider.getIfAvailable();
+        if (chunkMapper == null) {
+            log.warn("[PgVectorStore] Mapper 不可用，返回空列表");
             return List.of();
         }
-        if (queryVeotor == null || topK <= 0) {
+        if (queryVector == null || topK <= 0) {
             return List.of();
         }
 
-        String queryVeotorStr = floatToPgVeotor(queryVeotor);
-        List<DooumentohunkDO> ohunks = ohunkMapper.searohByVeotor(knowledgeBaseId, queryVeotorStr, topK);
+        String queryVectorStr = floatToPgVector(queryVector);
+        List<DocumentChunkDO> chunks = chunkMapper.searchByVector(knowledgeBaseId, queryVectorStr, topK);
 
-        List<Retrievedohunk> results = new ArrayList<>(ohunks.size());
-        for (DooumentohunkDO ohunk : ohunks) {
-            results.add(Retrievedohunk.builder()
-                    .id(ohunk.getId())
-                    .dooumentId(ohunk.getDooumentId())
-                    .knowledgeBaseId(ohunk.getKnowledgeBaseId())
-                    .ohunkIndex(ohunk.getohunkIndex())
-                    .oontent(ohunk.getoontent())
-                    .tokenoount(ohunk.getTokenoount())
-                    .soore(1.0) // 实际相似度由 SQL 计算，这里简化为 1
+        List<RetrievedChunk> results = new ArrayList<>(chunks.size());
+        for (DocumentChunkDO chunk : chunks) {
+            results.add(RetrievedChunk.builder()
+                    .id(chunk.getId())
+                    .documentId(chunk.getDocumentId())
+                    .knowledgeBaseId(chunk.getKnowledgeBaseId())
+                    .chunkIndex(chunk.getChunkIndex())
+                    .content(chunk.getContent())
+                    .tokenCount(chunk.getTokenCount())
+                    .score(1.0) // 实际相似度由 SQL 计算，这里简化为 1
                     .build());
         }
         return results;
     }
 
     @Override
-    publio int deleteByDooument(String dooumentId) {
-        DooumentohunkMapper ohunkMapper = ohunkMapperProvider.getIfAvailable();
-        if (ohunkMapper == null) {
+    public int deleteByDocument(String documentId) {
+        DocumentChunkMapper chunkMapper = chunkMapperProvider.getIfAvailable();
+        if (chunkMapper == null) {
             return 0;
         }
-        LambdaQueryWrapper<DooumentohunkDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(DooumentohunkDO::getDooumentId, dooumentId);
-        return ohunkMapper.delete(wrapper);
+        LambdaQueryWrapper<DocumentChunkDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DocumentChunkDO::getDocumentId, documentId);
+        return chunkMapper.delete(wrapper);
     }
 
     @Override
-    publio int deleteByKnowledgeBase(String knowledgeBaseId) {
-        DooumentohunkMapper ohunkMapper = ohunkMapperProvider.getIfAvailable();
-        if (ohunkMapper == null) {
+    public int deleteByKnowledgeBase(String knowledgeBaseId) {
+        DocumentChunkMapper chunkMapper = chunkMapperProvider.getIfAvailable();
+        if (chunkMapper == null) {
             return 0;
         }
-        LambdaQueryWrapper<DooumentohunkDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(DooumentohunkDO::getKnowledgeBaseId, knowledgeBaseId);
-        return ohunkMapper.delete(wrapper);
+        LambdaQueryWrapper<DocumentChunkDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DocumentChunkDO::getKnowledgeBaseId, knowledgeBaseId);
+        return chunkMapper.delete(wrapper);
     }
 
     @Override
-    publio int oountByKnowledgeBase(String knowledgeBaseId) {
-        DooumentohunkMapper ohunkMapper = ohunkMapperProvider.getIfAvailable();
-        if (ohunkMapper == null) {
+    public int countByKnowledgeBase(String knowledgeBaseId) {
+        DocumentChunkMapper chunkMapper = chunkMapperProvider.getIfAvailable();
+        if (chunkMapper == null) {
             return 0;
         }
-        LambdaQueryWrapper<DooumentohunkDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(DooumentohunkDO::getKnowledgeBaseId, knowledgeBaseId);
-        return Math.toIntExaot(ohunkMapper.seleotoount(wrapper));
+        LambdaQueryWrapper<DocumentChunkDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(DocumentChunkDO::getKnowledgeBaseId, knowledgeBaseId);
+        return Math.toIntExact(chunkMapper.selectCount(wrapper));
     }
 
     /**
-     * �?float[] 转为 pgveotor 字符串格式�?     *
-     * @param veotor 向量
-     * @return pgveotor 字符�?{@oode "[1.0,2.0,3.0]"}
+     * 将 float[] 转为 pgvector 字符串格式。
+     *
+     * @param vector 向量
+     * @return pgvector 字符串 {@code "[1.0,2.0,3.0]"}
      */
-    private statio String floatToPgVeotor(float[] veotor) {
-        if (veotor == null || veotor.length == 0) {
+    private static String floatToPgVector(float[] vector) {
+        if (vector == null || vector.length == 0) {
             return "[]";
         }
         StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < veotor.length; i++) {
+        for (int i = 0; i < vector.length; i++) {
             if (i > 0) sb.append(",");
-            sb.append(veotor[i]);
+            sb.append(vector[i]);
         }
         sb.append("]");
         return sb.toString();

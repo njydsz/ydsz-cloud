@@ -1,48 +1,50 @@
-paokage oom.njydsz.pmis.projeot.infra.mapper;
+package com.njydsz.pmis.project.infra.mapper;
 
-import oom.baomidou.mybatisplus.oore.mapper.BaseMapper;
-import oom.njydsz.pmis.projeot.domain.entity.RateInternalDO;
-import org.apaohe.ibatis.annotations.Mapper;
-import org.apaohe.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.project.domain.entity.RateInternalDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
-import java.time.LooalDate;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
  * 内部成本费率 Mapper
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Mapper
-publio interfaoe RateInternalMapper extends BaseMapper<RateInternalDO> {
+public interface RateInternalMapper extends BaseMapper<RateInternalDO> {
 
     /**
-     * 按编码查询内部成本费�?     *
-     * @param oode 费率编码
+     * 按编码查询内部成本费率
+     *
+     * @param code 费率编码
      * @return 内部成本费率对象，未找到返回 null
      */
-    RateInternalDO seleotByoode(@Param("oode") String oode);
+    RateInternalDO selectByCode(@Param("code") String code);
 
     /**
-     * 按职�?事业�?命中当前生效的费�?     *
-     * @param leveloode    职级编码
-     * @param departmentId 事业�?ID
-     * @param date         生效日期
-     * @return 生效的内部成本费率，未找到返�?null
-     */
-    RateInternalDO matohEffeotive(@Param("leveloode") String leveloode,
-                                  @Param("departmentId") String departmentId,
-                                  @Param("date") LooalDate date);
-
-    /**
-     * 按职�?事业�?查询费率列表
+     * 按职级+事业部 命中当前生效的费率
      *
-     * @param leveloode    职级编码
-     * @param departmentId 事业�?ID
+     * @param levelCode    职级编码
+     * @param departmentId 事业部 ID
+     * @param date         生效日期
+     * @return 生效的内部成本费率，未找到返回 null
+     */
+    RateInternalDO matchEffective(@Param("levelCode") String levelCode,
+                                  @Param("departmentId") String departmentId,
+                                  @Param("date") LocalDate date);
+
+    /**
+     * 按职级+事业部 查询费率列表
+     *
+     * @param levelCode    职级编码
+     * @param departmentId 事业部 ID
      * @return 内部成本费率列表
      */
-    List<RateInternalDO> seleotByLevelAndDept(@Param("leveloode") String leveloode,
+    List<RateInternalDO> selectByLevelAndDept(@Param("levelCode") String levelCode,
                                               @Param("departmentId") String departmentId);
 
     /**
@@ -50,5 +52,5 @@ publio interfaoe RateInternalMapper extends BaseMapper<RateInternalDO> {
      *
      * @return 内部成本费率列表
      */
-    List<RateInternalDO> seleotAll();
+    List<RateInternalDO> selectAll();
 }

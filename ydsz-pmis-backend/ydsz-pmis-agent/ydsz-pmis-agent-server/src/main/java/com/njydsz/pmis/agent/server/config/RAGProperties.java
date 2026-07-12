@@ -1,39 +1,42 @@
-paokage oom.njydsz.pmis.agent.server.oonfig;
+package com.njydsz.pmis.agent.server.config;
 
 import lombok.Data;
-import org.springframework.boot.oontext.properties.oonfigurationProperties;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * RAG 配置（P3-1 落地）�? *
- * <p>对标 ooze Knowledge / Dify Dataset 配置�? * 通过 Naoos 配置 {@oode pmis.agent.rag.*} 控制 RAG 行为�? *
+ * RAG 配置（P3-1 落地）。
+ *
+ * <p>对标 Coze Knowledge / Dify Dataset 配置。
+ * 通过 Nacos 配置 {@code pmis.agent.rag.*} 控制 RAG 行为。
+ *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0 (P3-1)
+ * @since 1.0.0 (P3-1)
  */
 @Data
-@oonfigurationProperties(prefix = "pmis.agent.rag")
-publio olass RAGProperties {
+@ConfigurationProperties(prefix = "pmis.agent.rag")
+public class RAGProperties {
 
-    /** RAG 功能开�?*/
+    /** RAG 功能开关 */
     private boolean enabled = false;
 
     /** Embedding Provider 选择 */
-    private String embeddingProvider = "mook";
+    private String embeddingProvider = "mock";
 
     /** 向量存储类型 */
-    private String veotorStore = "pgveotor";
+    private String vectorStore = "pgvector";
 
-    /** 分块大小（字符数�?*/
-    private int ohunkSize = 500;
+    /** 分块大小（字符数） */
+    private int chunkSize = 500;
 
-    /** 分块重叠（字符数�?*/
-    private int ohunkOverlap = 50;
+    /** 分块重叠（字符数） */
+    private int chunkOverlap = 50;
 
-    /** 检�?top-k */
+    /** 检索 top-k */
     private int topK = 3;
 
-    /** 最低相似度阈值（低于此分数的检索结果被过滤�?*/
-    private double minSoore = 0.3;
+    /** 最低相似度阈值（低于此分数的检索结果被过滤） */
+    private double minScore = 0.3;
 
-    /** 拼接�?prompt 的最�?token �?*/
-    private int maxoontextTokens = 2000;
+    /** 拼接到 prompt 的最大 token 数 */
+    private int maxContextTokens = 2000;
 }

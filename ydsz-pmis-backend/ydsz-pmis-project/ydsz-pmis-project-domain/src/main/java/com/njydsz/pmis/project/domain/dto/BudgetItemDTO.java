@@ -1,68 +1,68 @@
-paokage oom.njydsz.pmis.projeot.domain.dto;
+package com.njydsz.pmis.project.domain.dto;
 
-import io.swagger.v3.oas.annotations.media.Sohema;
-import io.swagger.v3.oas.annotations.media.Sohema.RequiredMode;
-import jakarta.validation.oonstraints.NotBlank;
-import jakarta.validation.oonstraints.NotNull;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.math.BigDeoimal;
+import java.math.BigDecimal;
 
 /**
  * 预算明细 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-@Sohema(desoription = "立项预算明细")
-publio olass BudgetItemDTO implements Serializable {
+@Schema(description = "立项预算明细")
+public class BudgetItemDTO implements Serializable {
 
     /** 序列化版本号 */
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
     /** 立项 ID */
     @NotNull
-    @Sohema(desoription = "立项 ID", requiredMode = RequiredMode.REQUIRED)
+    @Schema(description = "立项 ID", requiredMode = RequiredMode.REQUIRED)
     private String initiationId;
 
-    /** 分类（LABOR/PURoHASE/EXPENSE/OUTSOURoE/OTHER�?*/
+    /** 分类（LABOR/PURCHASE/EXPENSE/OUTSOURCE/OTHER） */
     @NotBlank
-    @Sohema(desoription = "分类: LABOR/PURoHASE/EXPENSE/OUTSOURoE/OTHER", requiredMode = RequiredMode.REQUIRED)
-    private String oategory;
+    @Schema(description = "分类: LABOR/PURCHASE/EXPENSE/OUTSOURCE/OTHER", requiredMode = RequiredMode.REQUIRED)
+    private String category;
 
-    /** 子分�?*/
-    @Sohema(desoription = "子分�?)
-    private String suboategory;
+    /** 子分类 */
+    @Schema(description = "子分类")
+    private String subCategory;
 
     /** 说明 */
-    @Sohema(desoription = "说明")
-    private String desoription;
+    @Schema(description = "说明")
+    private String description;
 
     /** 数量 */
-    @Sohema(desoription = "数量")
-    private BigDeoimal quantity;
+    @Schema(description = "数量")
+    private BigDecimal quantity;
 
     /** 单位 */
-    @Sohema(desoription = "单位")
+    @Schema(description = "单位")
     private String unit;
 
     /** 单价 */
-    @Sohema(desoription = "单价")
-    private BigDeoimal unitPrioe;
+    @Schema(description = "单价")
+    private BigDecimal unitPrice;
 
     /** 金额 */
-    @Sohema(desoription = "金额")
-    private BigDeoimal amount;
+    @Schema(description = "金额")
+    private BigDecimal amount;
 
     /** 备注 */
-    @Sohema(desoription = "备注")
+    @Schema(description = "备注")
     private String remark;
 
     /** 排序序号 */
-    @Sohema(desoription = "排序")
+    @Schema(description = "排序")
     private Integer sortOrder;
 }

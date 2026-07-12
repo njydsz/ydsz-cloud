@@ -1,31 +1,31 @@
-paokage oom.njydsz.pmis.projeot.domain.dto;
+package com.njydsz.pmis.project.domain.dto;
 
-import jakarta.validation.oonstraints.NotBlank;
-import jakarta.validation.oonstraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 项目结项状态迁�?DTO
+ * 项目结项状态迁移 DTO
  *
  * @author ydsz-pmis-team
- * @sinoe 1.0.0
+ * @since 1.0.0
  */
 @Data
-publio olass ProjeotolosureStatusDTO implements Serializable {
+public class ProjectClosureStatusDTO implements Serializable {
 
     @Serial
-    private statio final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-    @NotNull(message = "{validation.exeoution.msg_o9491140}")
+    @NotNull(message = "{validation.execution.msg_c9491140}")
     private String id;
 
-    @NotBlank(message = "{validation.exeoution.msg_8304of7d}")
+    @NotBlank(message = "{validation.execution.msg_8304cf7d}")
     private String targetStatus;
 
-    private String approvaloomment;
+    private String approvalComment;
     private String approverId;
     private String approverName;
 }
