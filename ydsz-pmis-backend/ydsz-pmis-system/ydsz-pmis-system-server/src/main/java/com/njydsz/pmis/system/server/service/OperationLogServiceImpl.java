@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.system.domain.entity.audit.OperationLogDO;
 import com.njydsz.pmis.system.infra.mapper.audit.OperationLogMapper;
-import com.njydsz.pmis.common.entity.CursorPageResult;
+import com.njydsz.pmis.common.domain.query.CursorPageResult;
 import com.njydsz.pmis.common.util.CursorHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

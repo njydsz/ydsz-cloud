@@ -21,6 +21,10 @@
             <artifactId>ydsz-pmis-common-jdbc</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-safe</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-annotation</artifactId>
         </dependency>

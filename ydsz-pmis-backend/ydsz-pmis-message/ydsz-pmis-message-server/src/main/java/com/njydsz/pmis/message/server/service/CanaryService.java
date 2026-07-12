@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.canary;
 
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.entity.PageQuery;
+import com.njydsz.pmis.common.domain.query.PageQuery;
 import com.njydsz.pmis.message.domain.dto.canary.CanaryUpsertDTO;
 import com.njydsz.pmis.message.domain.entity.canary.MsgCanaryDO;
 

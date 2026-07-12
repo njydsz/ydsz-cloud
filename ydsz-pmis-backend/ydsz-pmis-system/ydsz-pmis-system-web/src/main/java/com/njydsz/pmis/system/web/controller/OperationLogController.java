@@ -9,7 +9,7 @@ import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.entity.CursorPageResult;
+import com.njydsz.pmis.common.domain.query.CursorPageResult;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

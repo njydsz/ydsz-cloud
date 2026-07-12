@@ -43,6 +43,11 @@
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-agent-api</artifactId>
         </dependency>
+        <!-- P2-15 AI 增强：OpenAICompatibleLlmClient / MockLlmClient / LlmClientAutoConfiguration 基础设施层 -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-agent-infra</artifactId>
+        </dependency>
         <!-- P1-1 多级缓存 L2 + 分布式注册 / 广播依赖 Redisson（强制） -->
         <dependency>
             <groupId>org.redisson</groupId>

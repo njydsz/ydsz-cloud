@@ -104,7 +104,7 @@ public class EmployeeDO extends BaseDO {
     private String avatar;
 
     /** 通讯地址 */
-    @Sensitive(SensitiveStrategy.ADDRESS)
+    @Sensitive(type = SensitiveType.ADDRESS)
     private String address;
 
     /** 紧急联系人 */

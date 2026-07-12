@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 
 import static lombok.AccessLevel.PROTECTED;
 
@@ -58,31 +57,26 @@ public class BaseQuery implements Serializable {
     /**
      * 状态过滤
      *
-     * <p>用于过滤数据状态：
-     * <ul>
-     *   <li>null - 不过滤状态</li>
-     *   <li>0 - 禁用/停用</li>
-     *   <li>1 - 启用/正常</li>
-     *   <li>其他值 - 业务自定义状态</li>
-     * </ul>
+     * <p>用于过滤数据状态，子类可按需覆盖为具体业务状态枚举值。
+     * 默认值为空，由各子类根据业务语义自行定义。
      */
-    private Integer status;
+    private String status;
 
     /**
      * 开始时间
      *
-     * <p>用于时间范围查询的起始时间。
-     * 通常与 endTime 配合使用，查询 [startTime, endTime] 区间的数据。
+     * <p>用于时间范围查询的起始时间，字符串格式，子类可按需指定具体格式。
+     * 通常与 endTime 配合使用。
      */
-    private transient LocalDateTime startTime;
+    private transient String startTime;
 
     /**
      * 结束时间
      *
-     * <p>用于时间范围查询的结束时间。
-     * 通常与 startTime 配合使用，查询 [startTime, endTime] 区间的数据。
+     * <p>用于时间范围查询的结束时间，字符串格式，子类可按需指定具体格式。
+     * 通常与 startTime 配合使用。
      */
-    private transient LocalDateTime endTime;
+    private transient String endTime;
 
     /**
      * 关键字
