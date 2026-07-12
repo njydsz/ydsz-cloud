@@ -13,6 +13,7 @@ import com.njydsz.pmis.common.audit.sharding.MonthlyShardingStrategy;
 import com.njydsz.pmis.common.audit.sharding.TableShardingStrategy;
 import com.njydsz.pmis.common.audit.sharding.YearlyShardingStrategy;
 import com.njydsz.pmis.common.audit.storage.JdbcAuditStorage;
+import com.njydsz.pmis.common.audit.health.AuditHealthIndicator;
 import com.njydsz.pmis.common.audit.template.AuditTemplateProcessor;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -280,7 +281,7 @@ public class AuditAutoConfiguration {
      * @return 审计健康检查指示器
      */
     @Bean
-    @ConditionalOnClass(name = "org.springframework.boot.actuate.health.HealthIndicator")
+    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
     @ConditionalOnBean(DataSource.class)
     @ConditionalOnProperty(prefix = "remi.audit", name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean(name = "auditHealthIndicator")

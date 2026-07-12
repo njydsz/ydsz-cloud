@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.audit.context;
 
-import com.njydsz.pmis.common.core.context.RequestContext;
+import com.njydsz.pmis.common.context.RequestContext;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -180,7 +180,7 @@ public class AuditContext {
          * @return 操作人姓名
          */
         public String getOperatorName() {
-            return (String) RequestContext.get("userName");
+            return RequestContext.getUsername();
         }
 
         public Long getStartTime() {

@@ -10,8 +10,8 @@ import com.njydsz.pmis.common.audit.event.AuditEvent;
 import com.njydsz.pmis.common.audit.mask.SensitiveFieldMask;
 import com.njydsz.pmis.common.audit.template.AuditTemplateProcessor;
 import com.njydsz.pmis.common.util.JsonUtils;
-import com.njydsz.pmis.common.util.id.SnowflakeUtils;
-import com.njydsz.pmis.common.util.ip.IpAddrUtils;
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.ServletUtils;
 import com.njydsz.pmis.common.util.StringUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -235,7 +235,7 @@ public class AuditAspect {
             context.setUrl(request.getRequestURL() != null ? request.getRequestURL().toString() : "");
             context.setUri(request.getRequestURI());
             context.setHttpMethod(request.getMethod());
-            context.setIpAddress(IpAddrUtils.getIpAddr(request));
+            context.setIpAddress(ServletUtils.getClientIp(request));
             context.setToken(request.getHeader("X-Access-Token"));
             context.setBusinessNo(request.getHeader("X-Business-No"));
 
@@ -283,7 +283,7 @@ public class AuditAspect {
                                    Object result, Throwable exception, long startTime) {
         AuditLog auditLog = new AuditLog();
 
-        auditLog.setId(SnowflakeUtils.nextIdStr());
+        auditLog.setId(SnowflakeIdGenerator.nextIdStr());
         auditLog.setAuditType(audit.type().getCode());
         auditLog.setAction(audit.action().getCode());
         auditLog.setStatus(exception != null ? AuditStatus.FAILURE.getCode() : AuditStatus.SUCCESS.getCode());

@@ -105,7 +105,7 @@ public final class SensitiveFieldMask {
             Class<?> clazz = obj.getClass();
             // Collection/Map 类型使用 parseArray/parseObject 保持泛型兼容
             if (Collection.class.isAssignableFrom(clazz)) {
-                return JsonUtils.fromJsonToList(json, Object.class);
+                return JsonUtils.parseList(json);
             } else if (Map.class.isAssignableFrom(clazz)) {
                 return JsonUtils.parseObject(json, HashMap.class);
             }
@@ -129,7 +129,7 @@ public final class SensitiveFieldMask {
             return json;
         }
         try {
-            ObjectMapper mapper = JsonUtils.getMapper();
+            ObjectMapper mapper = JsonUtils.getObjectMapper();
             JsonNode parsed = mapper.readTree(json);
             maskJsonObject(parsed, patterns, new HashSet<>());
             return mapper.writeValueAsString(parsed);

@@ -2,7 +2,7 @@ package com.njydsz.pmis.common.audit.core;
 
 import com.njydsz.pmis.common.audit.domain.AuditLog;
 import com.njydsz.pmis.common.audit.sharding.TableShardingStrategy;
-import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.api.PageResult;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -300,7 +300,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
     // ====================== Paginated query methods ======================
 
     @Override
-    public PageResponse<List<AuditLog>> queryByTimeRange(LocalDateTime start, LocalDateTime end, int page, int size) {
+    public PageResult<AuditLog> queryByTimeRange(LocalDateTime start, LocalDateTime end, int page, int size) {
         try {
             int offset = validatePagination(page, size);
             long total = countByTimeRange(start, end);
@@ -320,7 +320,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
                     params.add(offset);
                     List<AuditLog> records = jdbcTemplate.query(sql,
                             BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-                    return PageResponse.success(total, (long) page, (long) size, records);
+                    return PageResult.of(records, total, page, size);
                 }
                 // 多分表：使用子查询合并后分页
                 List<Object> params = new ArrayList<>();
@@ -328,7 +328,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
                 String unionSql = buildUnionAllWithLimit(tables, whereClause, size, offset);
                 List<AuditLog> records = jdbcTemplate.query(unionSql,
                         BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-                return PageResponse.success(total, (long) page, (long) size, records);
+                return PageResult.of(records, total, page, size);
             }
 
             List<Object> params = new ArrayList<>();
@@ -341,7 +341,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
 
             List<AuditLog> records = jdbcTemplate.query(sql.toString(),
                     BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-            return PageResponse.success(total, (long) page, (long) size, records);
+            return PageResult.of(records, total, page, size);
         } catch (Exception e) {
             log.warn("按时间范围分页查询审计日志失败", e);
             return emptyPageResult(page, size);
@@ -349,7 +349,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
     }
 
     @Override
-    public PageResponse<List<AuditLog>> queryByOperator(String operatorId, int page, int size) {
+    public PageResult<AuditLog> queryByOperator(String operatorId, int page, int size) {
         if (operatorId == null || operatorId.isEmpty()) {
             return emptyPageResult(page, size);
         }
@@ -368,7 +368,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
 
             List<AuditLog> records = jdbcTemplate.query(sql,
                     BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-            return PageResponse.success(total, (long) page, (long) size, records);
+            return PageResult.of(records, total, page, size);
         } catch (Exception e) {
             log.warn("按操作人分页查询审计日志失败, operatorId={}", operatorId, e);
             return emptyPageResult(page, size);
@@ -376,7 +376,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
     }
 
     @Override
-    public PageResponse<List<AuditLog>> queryByAction(Integer action, int page, int size) {
+    public PageResult<AuditLog> queryByAction(Integer action, int page, int size) {
         if (action == null) {
             return emptyPageResult(page, size);
         }
@@ -395,7 +395,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
 
             List<AuditLog> records = jdbcTemplate.query(sql,
                     BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-            return PageResponse.success(total, (long) page, (long) size, records);
+            return PageResult.of(records, total, page, size);
         } catch (Exception e) {
             log.warn("按操作类型分页查询审计日志失败, action={}", action, e);
             return emptyPageResult(page, size);
@@ -403,7 +403,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
     }
 
     @Override
-    public PageResponse<List<AuditLog>> queryByEntityType(String entityType, int page, int size) {
+    public PageResult<AuditLog> queryByEntityType(String entityType, int page, int size) {
         if (entityType == null || entityType.isEmpty()) {
             return emptyPageResult(page, size);
         }
@@ -422,7 +422,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
 
             List<AuditLog> records = jdbcTemplate.query(sql,
                     BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-            return PageResponse.success(total, (long) page, (long) size, records);
+            return PageResult.of(records, total, page, size);
         } catch (Exception e) {
             log.warn("按实体类型分页查询审计日志失败, entityType={}", entityType, e);
             return emptyPageResult(page, size);
@@ -636,8 +636,8 @@ public class DefaultAuditQueryService implements AuditQueryService {
      * @param size 每页大小
      * @return 无记录的空分页结果
      */
-    private PageResponse<List<AuditLog>> emptyPageResult(int page, int size) {
-        return PageResponse.success(0L, (long) page, (long) size, Collections.emptyList());
+    private PageResult<AuditLog> emptyPageResult(int page, int size) {
+        return PageResult.of(Collections.emptyList(), 0L, page, size);
     }
 
     /**

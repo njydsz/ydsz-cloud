@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.audit.health;
 
 import com.njydsz.pmis.common.audit.config.AuditProperties;
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -34,7 +34,7 @@ public class AuditHealthIndicator implements HealthIndicator {
     public Health health() {
         Health.Builder builder = Health.up();
         builder.withDetail("enabled", properties.isEnabled());
-        builder.withDetail("async", properties.isAsync());
+        builder.withDetail("recordAsync", properties.isRecordAsync());
         builder.withDetail("storageType", properties.getStorageType());
 
         if (dataSource != null) {
