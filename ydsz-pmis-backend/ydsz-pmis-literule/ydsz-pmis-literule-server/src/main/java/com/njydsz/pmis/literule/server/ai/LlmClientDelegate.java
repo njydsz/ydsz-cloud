@@ -1,6 +1,6 @@
 package com.njydsz.pmis.literule.server.ai;
 
-import com.njydsz.pmis.common.ai.LlmClient;
+import com.njydsz.pmis.agent.api.llm.LlmClient;
 
 import java.util.List;
 import java.util.Map;

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.web.controller.job;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.IdempotentExempt;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;

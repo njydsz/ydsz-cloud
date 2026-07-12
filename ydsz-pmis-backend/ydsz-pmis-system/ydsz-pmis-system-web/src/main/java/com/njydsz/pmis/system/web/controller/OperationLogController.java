@@ -1,6 +1,6 @@
 package com.njydsz.pmis.system.web.controller.audit;
 
-import com.njydsz.pmis.common.annotation.IdempotentExempt;
+import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
 
 import com.njydsz.pmis.system.domain.entity.audit.OperationLogDO;
 import com.njydsz.pmis.system.server.service.audit.OperationLogServiceImpl;

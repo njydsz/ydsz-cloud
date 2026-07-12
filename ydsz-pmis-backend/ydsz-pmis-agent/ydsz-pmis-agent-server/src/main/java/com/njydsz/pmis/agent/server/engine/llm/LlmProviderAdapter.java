@@ -1,7 +1,7 @@
 package com.njydsz.pmis.agent.server.engine.llm;
 
+import com.njydsz.pmis.agent.api.llm.LlmClient;
 import com.njydsz.pmis.agent.server.engine.AgentContext;
-import com.njydsz.pmis.common.ai.LlmClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -37,14 +37,14 @@ import java.util.Map;
 @Slf4j
 @Component
 @ConditionalOnBean(LlmClient.class)
-@ConditionalOnProperty(name = "pmis.common.ai.enabled", havingValue = "true")
+@ConditionalOnProperty(name = "pmis.agent.ai.enabled", havingValue = "true")
 public class LlmProviderAdapter implements LlmProvider {
 
     private final LlmClient delegate;
 
     public LlmProviderAdapter(LlmClient llmClient) {
         this.delegate = llmClient;
-        log.info("[LlmProviderAdapter] 已初始化，委托给 common LlmClient（provider={}, model={}）",
+        log.info("[LlmProviderAdapter] 已初始化，委托给 agent 模块 LlmClient（provider={}, model={}）",
                 llmClient.provider(), llmClient.model());
     }
 

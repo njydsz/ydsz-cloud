@@ -3,9 +3,9 @@ package com.njydsz.pmis.system.domain.entity.audit;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.LogBaseDO;
-import com.njydsz.pmis.common.sensitive.Sensitive;
-import com.njydsz.pmis.common.sensitive.SensitiveStrategy;
+import com.njydsz.pmis.common.domain.entity.LogBaseDO;
+import com.njydsz.pmis.common.safe.annotation.Sensitive;
+import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -44,7 +44,7 @@ public class SensitiveOperationDO extends LogBaseDO {
     /** 过期时间 */
     private LocalDateTime expireAt;
     /** 客户端 IP（脱敏：保留前 3 段） */
-    @Sensitive(SensitiveStrategy.ADDRESS)
+    @Sensitive(type = SensitiveType.ADDRESS)
     private String clientIp;
     /** 链路追踪 ID */
     private String traceId;

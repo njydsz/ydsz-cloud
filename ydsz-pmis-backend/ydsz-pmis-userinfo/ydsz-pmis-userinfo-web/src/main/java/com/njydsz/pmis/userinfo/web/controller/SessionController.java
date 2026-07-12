@@ -1,6 +1,6 @@
 package com.njydsz.pmis.userinfo.web.controller.auth;
 
-import com.njydsz.pmis.common.annotation.IdempotentExempt;
+import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

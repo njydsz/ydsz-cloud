@@ -1,6 +1,6 @@
 package com.njydsz.pmis.project.web.controller.report;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import io.swagger.v3.oas.annotations.Operation;

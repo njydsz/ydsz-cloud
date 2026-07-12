@@ -1,7 +1,7 @@
 package com.njydsz.pmis.literule.server.ai;
 
-import com.njydsz.pmis.common.ai.LlmClientConfig;
-import com.njydsz.pmis.common.ai.impl.OpenAICompatibleLlmClient;
+import com.njydsz.pmis.agent.api.llm.LlmClientConfig;
+import com.njydsz.pmis.agent.server.engine.llm.impl.OpenAICompatibleLlmClient;
 import com.njydsz.pmis.literule.server.config.LiteRuleProperties;
 
 import java.util.List;

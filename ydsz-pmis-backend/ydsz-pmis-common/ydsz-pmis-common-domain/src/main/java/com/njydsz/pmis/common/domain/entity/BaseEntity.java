@@ -148,14 +148,10 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
     /**
      * 状态标识
      *
-     * <p>用于标识实体的业务状态：
-     * <ul>
-     *   <li>0 - 禁用/停用</li>
-     *   <li>1 - 正常/启用</li>
-     *   <li>其他值可根据业务需求自定义</li>
-     * </ul>
+     * <p>用于标识实体的业务状态，子类可按需覆盖为具体业务状态枚举值。
+     * 默认值为空，由各子类根据业务语义自行定义。
      *
      * <p><b>字段映射：</b> status -> status
      */
-    private Integer status;
+    private String status;
 }

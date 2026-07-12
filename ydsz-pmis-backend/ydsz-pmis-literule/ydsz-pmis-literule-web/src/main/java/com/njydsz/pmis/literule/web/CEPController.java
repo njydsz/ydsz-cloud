@@ -1,6 +1,6 @@
 package com.njydsz.pmis.literule.web;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.core.response.BaseResponse;

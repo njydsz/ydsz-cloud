@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.web.controller.definition;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;

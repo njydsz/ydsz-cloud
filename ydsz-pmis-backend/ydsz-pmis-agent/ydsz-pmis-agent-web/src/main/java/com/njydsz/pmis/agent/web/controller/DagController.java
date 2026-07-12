@@ -1,6 +1,6 @@
 package com.njydsz.pmis.agent.web.controller.orchestration;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.njydsz.pmis.agent.domain.entity.orchestration.DagDefinitionDO;
 import com.njydsz.pmis.agent.domain.entity.orchestration.DagInstanceDO;

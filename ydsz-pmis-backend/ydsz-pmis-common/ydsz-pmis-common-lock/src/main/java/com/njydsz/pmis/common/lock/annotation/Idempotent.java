@@ -3,7 +3,7 @@ package com.njydsz.pmis.common.lock.annotation;
 import java.lang.annotation.*;
 
 /**
- * 接口幂等性注解（兼容旧 com.njydsz.pmis.common.annotation.Idempotent）。
+ * 接口幂等性注解（兼容旧 com.njydsz.pmis.common.lock.annotation.Idempotent）。
  *
  * <p>标注在 Controller 方法上，防止重复提交。
  * 基于 Redis 分布式锁实现，在 TTL 时间内同一 key 的请求只处理一次。

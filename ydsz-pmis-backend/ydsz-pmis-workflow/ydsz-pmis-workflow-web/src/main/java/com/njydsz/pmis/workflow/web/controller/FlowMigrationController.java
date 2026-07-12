@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.web.controller.instance;
 
-import com.njydsz.pmis.common.annotation.IdempotentExempt;
+import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.workflow.domain.dto.instance.InstanceMigrationDTO;

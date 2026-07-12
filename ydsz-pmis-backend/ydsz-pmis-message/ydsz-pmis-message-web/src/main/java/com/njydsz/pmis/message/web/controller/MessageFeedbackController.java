@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.web.controller.core;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.web.controller.job;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.userinfo.web.controller.auth;
 
-import com.njydsz.pmis.common.annotation.IdempotentExempt;
+import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.auth.context.AuthContext;

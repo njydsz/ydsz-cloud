@@ -1,6 +1,6 @@
 package com.njydsz.pmis.agent.web.controller.tool;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.njydsz.pmis.agent.domain.dto.tool.ToolMarketQueryDTO;
 import com.njydsz.pmis.agent.domain.dto.tool.ToolRegisterDTO;

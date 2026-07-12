@@ -1,6 +1,6 @@
 package com.njydsz.pmis.project.web.controller.report;
 
-import com.njydsz.pmis.common.annotation.IdempotentExempt;
+import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.RateLimit;

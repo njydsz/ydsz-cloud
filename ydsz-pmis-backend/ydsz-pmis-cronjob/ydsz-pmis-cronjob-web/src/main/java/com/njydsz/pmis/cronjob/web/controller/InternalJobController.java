@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.web.controller.job;
 
-import com.njydsz.pmis.common.annotation.IdempotentExempt;
+import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.job.MapContext;

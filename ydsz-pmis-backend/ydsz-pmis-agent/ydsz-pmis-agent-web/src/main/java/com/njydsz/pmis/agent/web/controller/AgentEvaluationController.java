@@ -1,6 +1,6 @@
 package com.njydsz.pmis.agent.web.controller.agent;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.njydsz.pmis.agent.server.engine.Agent;
 import com.njydsz.pmis.agent.server.engine.AgentContext;

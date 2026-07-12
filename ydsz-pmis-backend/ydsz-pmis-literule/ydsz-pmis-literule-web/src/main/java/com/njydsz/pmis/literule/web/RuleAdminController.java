@@ -2,8 +2,8 @@ package com.njydsz.pmis.literule.web;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.IdempotentExempt;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;

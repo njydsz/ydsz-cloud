@@ -1,6 +1,6 @@
 package com.njydsz.pmis.literule.server.ai;
 
-import com.njydsz.pmis.common.ai.impl.MockLlmClient;
+import com.njydsz.pmis.agent.server.engine.llm.impl.MockLlmClient;
 
 /**
  * Mock LLM 客户端（P2-15 AI 增强）

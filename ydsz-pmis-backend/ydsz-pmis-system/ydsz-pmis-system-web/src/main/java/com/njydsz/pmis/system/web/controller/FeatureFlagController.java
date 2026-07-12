@@ -1,6 +1,6 @@
 package com.njydsz.pmis.system.web.controller.config;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;

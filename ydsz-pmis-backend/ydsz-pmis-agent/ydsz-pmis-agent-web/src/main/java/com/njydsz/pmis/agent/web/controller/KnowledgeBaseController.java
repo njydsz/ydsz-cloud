@@ -1,7 +1,7 @@
 package com.njydsz.pmis.agent.web.controller.knowledge;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.IdempotentExempt;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
 
 import com.njydsz.pmis.agent.domain.entity.agent.AgentDocumentDO;
 import com.njydsz.pmis.agent.domain.entity.knowledge.KnowledgeBaseDO;

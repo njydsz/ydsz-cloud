@@ -1,6 +1,6 @@
 package com.njydsz.pmis.finance.web.controller;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.finance.server.service.finance.DailyReconcileService;

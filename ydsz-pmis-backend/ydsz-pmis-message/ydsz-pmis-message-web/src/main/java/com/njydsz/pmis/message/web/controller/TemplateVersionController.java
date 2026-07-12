@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.web.controller.template;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.IdempotentExempt;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.BaseResponse;

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.literule.server.ai;
 
-import com.njydsz.pmis.common.ai.LlmException;
+import com.njydsz.pmis.agent.api.llm.LlmException;
 
 /**
  * LLM 调用异常（P2-15 AI 增强）

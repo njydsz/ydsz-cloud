@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.domain.entity.integration;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.pmis.common.entity.VersionableDO;
+import com.njydsz.pmis.common.domain.entity.VersionableDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

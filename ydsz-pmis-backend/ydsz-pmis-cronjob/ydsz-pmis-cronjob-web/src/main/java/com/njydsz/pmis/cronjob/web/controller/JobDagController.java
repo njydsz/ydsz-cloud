@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.web.controller.dag;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
-import com.njydsz.pmis.common.annotation.IdempotentExempt;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;

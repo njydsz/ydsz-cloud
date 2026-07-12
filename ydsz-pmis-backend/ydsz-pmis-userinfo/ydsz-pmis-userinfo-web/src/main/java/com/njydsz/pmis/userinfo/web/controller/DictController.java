@@ -1,6 +1,6 @@
 package com.njydsz.pmis.userinfo.web.controller.org;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.core.response.BaseResponse;

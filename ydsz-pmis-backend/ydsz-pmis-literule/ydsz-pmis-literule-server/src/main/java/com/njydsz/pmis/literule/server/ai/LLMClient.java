@@ -1,6 +1,6 @@
 package com.njydsz.pmis.literule.server.ai;
 
-import com.njydsz.pmis.common.ai.LlmClient;
+import com.njydsz.pmis.agent.api.llm.LlmClient;
 
 /**
  * LLM 客户端抽象接口（P2-15 AI 增强）

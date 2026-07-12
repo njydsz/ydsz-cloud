@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.web.controller.schedule;
 
-import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.cronjob.domain.entity.schedule.GlueCodeDO;
