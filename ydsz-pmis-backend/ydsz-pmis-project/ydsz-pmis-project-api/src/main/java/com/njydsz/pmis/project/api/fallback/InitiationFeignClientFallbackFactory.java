@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.api.fallback;
 import com.njydsz.pmis.project.api.client.InitiationFeignClient;
+import com.njydsz.pmis.project.api.dto.InitiationCreateDTO;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
@@ -36,6 +37,11 @@ public class InitiationFeignClientFallbackFactory implements FallbackFactory<Ini
 
             @Override
             public Result<Void> markRejected(String initiationId, String reason) {
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
+            }
+
+            @Override
+            public Result<String> create(InitiationCreateDTO dto) {
                 return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
         };

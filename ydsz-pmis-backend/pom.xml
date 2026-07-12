@@ -155,11 +155,6 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-common-all</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-userinfo</artifactId>
                 <version>${project.version}</version>
             </dependency>

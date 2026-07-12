@@ -55,6 +55,8 @@ import com.njydsz.pmis.literule.server.spi.WorkflowTriggerActionHandler;
 import com.njydsz.pmis.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.pmis.literule.server.spi.RuleConfigProvider;
 import com.njydsz.pmis.literule.server.spi.RuleVersionRepository;
+import com.njydsz.pmis.literule.server.replay.ExecutionReplayService;
+import com.njydsz.pmis.literule.server.audit.RuleAuditLogService;
 import com.njydsz.pmis.literule.server.spi.ScorecardConfigProvider;
 import com.njydsz.pmis.literule.server.spi.ScriptConfigProvider;
 import com.njydsz.pmis.literule.server.spi.TraceDataProvider;
@@ -1215,13 +1217,13 @@ public class LiteRuleAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnBean(RuleAdminService.class)
-    public com.njydsz.pmis.literule.server.replay.ExecutionReplayService executionReplayService(
+    public ExecutionReplayService executionReplayService(
             RuleAdminService ruleAdminService,
             ObjectProvider<TraceRecorder> traceRecorderProvider,
             ObjectProvider<RuleVersionRepository> versionRepoProvider,
             ExpressionEvaluator evaluator) {
-        com.njydsz.pmis.literule.server.replay.ExecutionReplayService service =
-                new com.njydsz.pmis.literule.server.replay.ExecutionReplayService(
+        ExecutionReplayService service =
+                new ExecutionReplayService(
                         ruleAdminService,
                         traceRecorderProvider.getIfAvailable(),
                         versionRepoProvider.getIfAvailable(),
@@ -1251,12 +1253,12 @@ public class LiteRuleAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnBean(RuleAdminService.class)
-    public com.njydsz.pmis.literule.server.audit.RuleAuditLogService ruleAuditLogService(
-            ObjectProvider<com.njydsz.pmis.literule.server.audit.RuleAuditLogService.AuditLogStore> auditLogStoreProvider) {
-        com.njydsz.pmis.literule.server.audit.RuleAuditLogService.AuditLogStore store =
+    public RuleAuditLogService ruleAuditLogService(
+            ObjectProvider<RuleAuditLogService.AuditLogStore> auditLogStoreProvider) {
+        RuleAuditLogService.AuditLogStore store =
                 auditLogStoreProvider.getIfAvailable();
-        com.njydsz.pmis.literule.server.audit.RuleAuditLogService service =
-                new com.njydsz.pmis.literule.server.audit.RuleAuditLogService(store);
+        RuleAuditLogService service =
+                new RuleAuditLogService(store);
         log.info("[LiteRule-Audit] 规则审计日志服务已初始化（store={}）",
                 store != null ? store.getClass().getSimpleName() : "InMemory");
         return service;

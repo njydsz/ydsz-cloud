@@ -50,7 +50,7 @@ public class GeoOps {
      * 计算两个成员之间的距离（米）
      */
     public Distance distance(String key, String member1, String member2) {
-        return redis.opsForGeo().distance(key, member1, member2, MetricsUnit.KILOMETERS);
+        return redis.opsForGeo().distance(key, member1, member2, Metrics.KILOMETERS);
     }
 
     /**
@@ -67,7 +67,7 @@ public class GeoOps {
                                                                double longitude, double latitude,
                                                                double radius, int limit) {
         Circle circle = new Circle(new Point(longitude, latitude),
-                new Distance(radius, MetricsUnit.KILOMETERS));
+                new Distance(radius, Metrics.KILOMETERS));
         RedisGeoCommands.GeoRadiusCommandArgs args = RedisGeoCommands.GeoRadiusCommandArgs
                 .newGeoRadiusArgs()
                 .includeCoordinates()
@@ -89,7 +89,7 @@ public class GeoOps {
      * @return 成员列表
      */
     public List<String> radiusByMember(String key, String member, double radius, int limit) {
-        Distance distance = new Distance(radius, MetricsUnit.KILOMETERS);
+        Distance distance = new Distance(radius, Metrics.KILOMETERS);
         RedisGeoCommands.GeoRadiusCommandArgs args = RedisGeoCommands.GeoRadiusCommandArgs
                 .newGeoRadiusArgs()
                 .sortAscending()
@@ -105,7 +105,7 @@ public class GeoOps {
      * 移除成员
      */
     public long remove(String key, String... members) {
-        Long count = redis.opsForGeo().remove(key, (Object[]) members);
+        Long count = redis.opsForGeo().remove(key, members);
         return count != null ? count : 0;
     }
 }

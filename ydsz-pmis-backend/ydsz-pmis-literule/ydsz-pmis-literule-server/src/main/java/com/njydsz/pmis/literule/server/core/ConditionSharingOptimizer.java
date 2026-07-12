@@ -1,6 +1,8 @@
 package com.njydsz.pmis.literule.server.core;
 
+import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
+import com.njydsz.pmis.literule.api.RuleDefinition;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -57,7 +59,7 @@ public class ConditionSharingOptimizer {
      * @param candidateRules 候选规则列表
      * @param context        规则上下文
      */
-    public void optimize(Iterable<com.njydsz.pmis.literule.api.Rule> candidateRules,
+    public void optimize(Iterable<Rule> candidateRules,
                          RuleContext context) {
         if (candidateRules == null || context == null) {
             return;
@@ -66,8 +68,8 @@ public class ConditionSharingOptimizer {
         Map<String, Object> cache = context.getExpressionCache();
         int sharedCount = 0;
 
-        for (com.njydsz.pmis.literule.api.Rule rule : candidateRules) {
-            com.njydsz.pmis.literule.api.RuleDefinition def = rule.getRuleDefinition();
+        for (Rule rule : candidateRules) {
+            RuleDefinition def = rule.getRuleDefinition();
             if (def == null) {
                 continue;
             }

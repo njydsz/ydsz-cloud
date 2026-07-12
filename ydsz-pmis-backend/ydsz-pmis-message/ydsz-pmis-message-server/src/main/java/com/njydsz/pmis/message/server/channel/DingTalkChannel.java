@@ -3,6 +3,7 @@ package com.njydsz.pmis.message.server.channel.impl;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.util.CryptoSignUtil;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 import com.njydsz.pmis.message.server.config.ChannelProperties;
@@ -211,7 +212,7 @@ public class DingTalkChannel implements MessageChannel {
             long timestamp = System.currentTimeMillis();
             String stringToSign = timestamp + "\n" + secret;
             String sign = URLEncoder.encode(
-                    com.njydsz.pmis.common.util.CryptoSignUtil.hmacSha256Base64(stringToSign, secret),
+                    CryptoSignUtil.hmacSha256Base64(stringToSign, secret),
                     StandardCharsets.UTF_8);
             return url + "&timestamp=" + timestamp + "&sign=" + sign;
         } catch (Exception e) {

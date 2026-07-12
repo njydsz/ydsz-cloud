@@ -1,10 +1,12 @@
 package com.njydsz.pmis.cronjob.web.controller.job;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.cronjob.domain.entity.log.JobDailyStatsDO;
 import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
 import com.njydsz.pmis.cronjob.infra.mapper.log.JobDailyStatsMapper;
 import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
@@ -144,19 +146,19 @@ public class JobStatsController {
         // 1. 任务状态分布
         Map<String, Object> taskStats = new HashMap<>();
         taskStats.put("total", jobMapper.selectCount(null));
-        taskStats.put("normal", jobMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.pmis.cronjob.domain.entity.job.JobDO>().eq(com.njydsz.pmis.cronjob.domain.entity.job.JobDO::getStatus, "NORMAL")));
-        taskStats.put("paused", jobMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.pmis.cronjob.domain.entity.job.JobDO>().eq(com.njydsz.pmis.cronjob.domain.entity.job.JobDO::getStatus, "PAUSED")));
-        taskStats.put("error", jobMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.pmis.cronjob.domain.entity.job.JobDO>().eq(com.njydsz.pmis.cronjob.domain.entity.job.JobDO::getStatus, "ERROR")));
-        taskStats.put("autoPaused", jobMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.pmis.cronjob.domain.entity.job.JobDO>().eq(com.njydsz.pmis.cronjob.domain.entity.job.JobDO::getStatus, "AUTO_PAUSED")));
+        taskStats.put("normal", jobMapper.selectCount(new LambdaQueryWrapper<JobDO>().eq(JobDO::getStatus, "NORMAL")));
+        taskStats.put("paused", jobMapper.selectCount(new LambdaQueryWrapper<JobDO>().eq(JobDO::getStatus, "PAUSED")));
+        taskStats.put("error", jobMapper.selectCount(new LambdaQueryWrapper<JobDO>().eq(JobDO::getStatus, "ERROR")));
+        taskStats.put("autoPaused", jobMapper.selectCount(new LambdaQueryWrapper<JobDO>().eq(JobDO::getStatus, "AUTO_PAUSED")));
         dashboard.put("taskStats", taskStats);
 
         // 2. 今日执行统计
         LocalDateTime todayStart = LocalDate.now().atStartOfDay();
         Map<String, Object> todayExec = new HashMap<>();
-        Long todayTotal = jobLogMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLogDO>().ge(JobLogDO::getStartTime, todayStart));
-        Long todaySuccess = jobLogMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLogDO>().ge(JobLogDO::getStartTime, todayStart).eq(JobLogDO::getStatus, "SUCCESS"));
-        Long todayFailed = jobLogMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLogDO>().ge(JobLogDO::getStartTime, todayStart).eq(JobLogDO::getStatus, "FAILED"));
-        Long todayRunning = jobLogMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLogDO>().eq(JobLogDO::getStatus, "RUNNING"));
+        Long todayTotal = jobLogMapper.selectCount(new LambdaQueryWrapper<JobLogDO>().ge(JobLogDO::getStartTime, todayStart));
+        Long todaySuccess = jobLogMapper.selectCount(new LambdaQueryWrapper<JobLogDO>().ge(JobLogDO::getStartTime, todayStart).eq(JobLogDO::getStatus, "SUCCESS"));
+        Long todayFailed = jobLogMapper.selectCount(new LambdaQueryWrapper<JobLogDO>().ge(JobLogDO::getStartTime, todayStart).eq(JobLogDO::getStatus, "FAILED"));
+        Long todayRunning = jobLogMapper.selectCount(new LambdaQueryWrapper<JobLogDO>().eq(JobLogDO::getStatus, "RUNNING"));
         todayExec.put("total", todayTotal);
         todayExec.put("success", todaySuccess);
         todayExec.put("failed", todayFailed);

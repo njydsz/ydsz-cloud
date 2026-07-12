@@ -1,5 +1,7 @@
 package com.njydsz.pmis.project.server.service.impl;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
+import com.njydsz.pmis.common.datasource.DataSourceConstants;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleEngineStats;
 import com.njydsz.pmis.literule.api.dto.RuleDashboardDistributionVO;
@@ -39,7 +41,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@com.baomidou.dynamic.datasource.annotation.DS(com.njydsz.pmis.common.datasource.DataSourceConstants.SLAVE)
+@DS(DataSourceConstants.SLAVE)
 public class RuleEngineDashboardServiceImpl implements RuleEngineDashboardService {
 
     /** 规则执行轨迹 Mapper */

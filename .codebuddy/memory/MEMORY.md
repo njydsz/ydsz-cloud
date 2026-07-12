@@ -23,3 +23,13 @@
 
 ### 核心短板（对标竞品）
 - 缺RETE算法(线性扫描)、缺DSL文本语法、脚本沙箱不完整、多数据源支持不足(仅DB)、缺表达式级追踪/归因、缺交叉决策表/复杂评分卡
+
+## 公司代码规范（强制）
+
+### 禁止行内全限定类名（FQN）
+- **规则**：Java 代码中不允许出现行内 FQN 用法，必须使用标准 `import` 语句后在代码中直接引用简单类名。
+- **触发案例**：`InitiationFeignClient.java` 中 `Result<String> create(@RequestBody com.njydsz.pmis.project.api.dto.InitiationCreateDTO dto)` 违规，已修复为 import + 简单类名。
+- **覆盖范围**：类型引用、`.class` 字面量、注解、静态方法调用、`new` 表达式、`instanceof` 检查、方法引用（`::`）。
+- **唯一例外**：字符串字面量中的 FQN（如反射类名）、Javadoc `{@link FQN}` 引用可保留完整路径。
+- **规则文件**：`.trae/rules/no-inline-fqn.md`（`alwaysApply: true`）。
+- **详细文档**：`deploy/docs/architecture/coding-standards.md`。

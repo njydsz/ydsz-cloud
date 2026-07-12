@@ -1,6 +1,8 @@
 package com.njydsz.pmis.project.server.service.impl;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.datasource.DataSourceConstants;
 import com.njydsz.pmis.finance.api.client.FinanceDataClient;
 import com.njydsz.pmis.project.domain.entity.CostAllocationDO;
 import com.njydsz.pmis.project.domain.entity.PurchaseDO;
@@ -35,7 +37,7 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@com.baomidou.dynamic.datasource.annotation.DS(com.njydsz.pmis.common.datasource.DataSourceConstants.SLAVE)
+@DS(DataSourceConstants.SLAVE)
 public class ReportServiceImpl implements ReportService {
 
     /** 成本分摊 Mapper */

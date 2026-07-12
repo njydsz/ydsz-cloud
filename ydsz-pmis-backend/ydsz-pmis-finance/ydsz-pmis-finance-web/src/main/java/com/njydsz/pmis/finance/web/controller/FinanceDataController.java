@@ -1,6 +1,8 @@
 package com.njydsz.pmis.finance.web.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.finance.domain.entity.ProfitSnapshot;
 import com.njydsz.pmis.finance.infra.mapper.InvoiceMapper;
 import com.njydsz.pmis.finance.infra.mapper.PaymentMapper;
 import com.njydsz.pmis.finance.infra.mapper.ExpenseMapper;
@@ -200,8 +202,8 @@ public class FinanceDataController {
     @Operation(summary = "利润快照汇总")
     public Result<List<Map<String, Object>>> profitSnapshotSummaryAll() {
         try {
-            var wrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.pmis.finance.domain.entity.ProfitSnapshot>();
-            wrapper.orderByDesc(com.njydsz.pmis.finance.domain.entity.ProfitSnapshot::getSnapshotAt).last("LIMIT 200");
+            var wrapper = new LambdaQueryWrapper<ProfitSnapshot>();
+            wrapper.orderByDesc(ProfitSnapshot::getSnapshotAt).last("LIMIT 200");
             var snaps = profitSnapshotMapper.selectList(wrapper);
             if (snaps == null) return Result.ok(List.of());
             List<Map<String, Object>> result = new java.util.ArrayList<>();
@@ -227,9 +229,9 @@ public class FinanceDataController {
             @RequestParam("sortBy") String sortBy,
             @RequestParam(value = "period", required = false) String period) {
         try {
-            var wrapper = new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.njydsz.pmis.finance.domain.entity.ProfitSnapshot>();
+            var wrapper = new LambdaQueryWrapper<ProfitSnapshot>();
             if (period != null && !period.isEmpty()) {
-                wrapper.eq(com.njydsz.pmis.finance.domain.entity.ProfitSnapshot::getPeriod, period);
+                wrapper.eq(ProfitSnapshot::getPeriod, period);
             }
             var all = profitSnapshotMapper.selectList(wrapper);
             if (all == null) return Result.ok(List.of());

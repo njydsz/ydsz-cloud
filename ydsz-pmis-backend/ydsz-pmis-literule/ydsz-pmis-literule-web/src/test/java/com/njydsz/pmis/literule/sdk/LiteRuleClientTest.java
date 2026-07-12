@@ -1,5 +1,6 @@
 package com.njydsz.pmis.literule.server.sdk;
 
+import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleSeverity;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +34,7 @@ class LiteRuleClientTest {
     @Test
     @DisplayName("编程式注册规则并评估触发")
     void testAddRuleAndEvaluate() {
-        client.addRule(com.njydsz.pmis.literule.api.RuleDefinition.builder()
+        client.addRule(RuleDefinition.builder()
                 .code("R001")
                 .name("高额预警")
                 .conditionExpression("amount > 10000")
@@ -49,7 +50,7 @@ class LiteRuleClientTest {
     @Test
     @DisplayName("条件不满足时不触发")
     void testEvaluateNotTriggered() {
-        client.addRule(com.njydsz.pmis.literule.api.RuleDefinition.builder()
+        client.addRule(RuleDefinition.builder()
                 .code("R002")
                 .name("小额检查")
                 .conditionExpression("amount < 100")

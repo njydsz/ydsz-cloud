@@ -4,6 +4,7 @@ import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleResult;
+import com.njydsz.pmis.literule.api.StatsRecorder;
 import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
 import com.njydsz.pmis.literule.server.impl.ExpressionRule;
 import com.njydsz.pmis.literule.server.orchestrator.ChainGraphConverter;
@@ -87,7 +88,7 @@ public class GraphExecutionService implements GraphExecutionProvider {
      */
     public List<RuleResult> evaluateGraph(String ruleCode, Map<String, Object> facts,
                                            String scenario,
-                                           com.njydsz.pmis.literule.api.StatsRecorder statsRecorder) {
+                                           StatsRecorder statsRecorder) {
         RuleChain chain = validateAndBuildChain(ruleCode);
         if (chain == null) {
             return Collections.emptyList();

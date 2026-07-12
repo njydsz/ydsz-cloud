@@ -1,5 +1,7 @@
 package com.njydsz.pmis.cronjob.server.core.dag;
 
+import java.util.Objects;
+
 /**
  * DAG 边定义（P2 DAG 增强）。
  *
@@ -23,8 +25,8 @@ public record DagEdge(String from, String to, String failStrategy, String condit
      * 紧凑构造器：校验 from / to 非空且不自环。
      */
     public DagEdge {
-        java.util.Objects.requireNonNull(from, "from 不能为空");
-        java.util.Objects.requireNonNull(to, "to 不能为空");
+        Objects.requireNonNull(from, "from 不能为空");
+        Objects.requireNonNull(to, "to 不能为空");
         if (from.equals(to)) {
             throw new IllegalArgumentException("DAG 边不允许自环: " + from);
         }
@@ -56,7 +58,7 @@ public record DagEdge(String from, String to, String failStrategy, String condit
      *
      * @return 通用 DagEdge 实例
      */
-    public com.njydsz.pmis.common.dag.DagEdge toCommon() {
-        return new com.njydsz.pmis.common.dag.DagEdge(from, to, failStrategy, condition);
+    public com.njydsz.pmis.common.dag.DagEdge toCommon() { // FQN-OK: name conflict with local DagEdge
+        return new com.njydsz.pmis.common.dag.DagEdge(from, to, failStrategy, condition); // FQN-OK: name conflict with local DagEdge
     }
 }

@@ -1,7 +1,9 @@
 package com.njydsz.pmis.project.server.service.impl;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.config.ThresholdProvider;
+import com.njydsz.pmis.common.datasource.DataSourceConstants;
 import com.njydsz.pmis.project.domain.entity.EvmMeasureDO;
 import com.njydsz.pmis.finance.api.client.FinanceDataClient;
 import com.njydsz.pmis.project.domain.entity.RateCardDO;
@@ -51,7 +53,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@com.baomidou.dynamic.datasource.annotation.DS(com.njydsz.pmis.common.datasource.DataSourceConstants.SLAVE)
+@DS(DataSourceConstants.SLAVE)
 public class AdvancedReportServiceImpl implements AdvancedReportService {
 
     /** EVM 挣值度量 Mapper */

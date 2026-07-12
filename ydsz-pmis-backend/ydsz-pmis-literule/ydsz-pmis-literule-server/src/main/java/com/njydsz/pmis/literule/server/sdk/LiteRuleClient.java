@@ -1,6 +1,7 @@
 package com.njydsz.pmis.literule.server.sdk;
 
 import com.njydsz.pmis.literule.api.RuleContext;
+import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleResult;
@@ -216,7 +217,7 @@ public class LiteRuleClient {
             return this;
         }
 
-        public RuleBuilder severity(com.njydsz.pmis.literule.api.RuleSeverity severity) {
+        public RuleBuilder severity(RuleSeverity severity) {
             builder.defaultSeverity(severity);
             return this;
         }

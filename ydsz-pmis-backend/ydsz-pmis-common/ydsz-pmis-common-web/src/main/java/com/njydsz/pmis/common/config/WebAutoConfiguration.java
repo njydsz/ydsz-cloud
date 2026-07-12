@@ -5,7 +5,9 @@ import com.njydsz.pmis.common.aspect.DataExportAuditAspect;
 import com.njydsz.pmis.common.aspect.OperationLogAspect;
 import com.njydsz.pmis.common.exception.GlobalExceptionHandler;
 import com.njydsz.pmis.common.health.DatabaseHealthIndicator;
+import com.njydsz.pmis.common.health.DiskSpaceHealthIndicator;
 import com.njydsz.pmis.common.health.RedisHealthIndicator;
+import com.njydsz.pmis.common.health.RocketMQHealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -20,13 +22,16 @@ import org.springframework.context.annotation.Import;
  * <ul>
  *   <li>{@link ApiVersionConfig} - API 版本路由</li>
  *   <li>{@link I18nConfig} - 国际化消息源</li>
- *   <li>{@link OpenApiConfig} - OpenAPI 3.0 文档</li>
+ *   <li>{@link OpenApiConfig} - OpenAPI 3.0 文档（含 Bearer/API Key 双安全方案）</li>
+ *   <li>{@link Knife4jConfig} - Knife4j API 分组（controller / actuator）</li>
  *   <li>{@link GlobalExceptionHandler} - 全局异常处理</li>
  *   <li>{@link OperationLogAspect} - 操作日志切面</li>
  *   <li>{@link DataExportAuditAspect} - 数据导出审计切面</li>
  *   <li>{@link ApiMetricsAspect} - API 指标监控切面</li>
  *   <li>{@link RedisHealthIndicator} - Redis 健康检查</li>
  *   <li>{@link DatabaseHealthIndicator} - 数据库健康检查</li>
+ *   <li>{@link RocketMQHealthIndicator} - RocketMQ 健康检查</li>
+ *   <li>{@link DiskSpaceHealthIndicator} - 磁盘空间健康检查</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -38,12 +43,15 @@ import org.springframework.context.annotation.Import;
     ApiVersionConfig.class,
     I18nConfig.class,
     OpenApiConfig.class,
+    Knife4jConfig.class,
     GlobalExceptionHandler.class,
     OperationLogAspect.class,
     DataExportAuditAspect.class,
     ApiMetricsAspect.class,
     RedisHealthIndicator.class,
-    DatabaseHealthIndicator.class
+    DatabaseHealthIndicator.class,
+    RocketMQHealthIndicator.class,
+    DiskSpaceHealthIndicator.class
 })
 public class WebAutoConfiguration {
 }

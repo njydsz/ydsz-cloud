@@ -6,6 +6,8 @@ import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
+import com.njydsz.pmis.common.security.LoginUser;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;
@@ -601,8 +603,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         boolean isInitiator = instance.getInitiatorId() != null
                 && instance.getInitiatorId().equals(operatorId);
         boolean isAdmin = false;
-        com.njydsz.pmis.common.security.LoginUser user =
-                com.njydsz.pmis.common.security.SecurityContext.getCurrentOrNull();
+        LoginUser user =
+                SecurityContext.getCurrentOrNull();
         if (user != null) {
             isAdmin = user.isSuperAdmin() || user.hasPermission(PERM_INSTANCE_ROLLBACK);
         }
@@ -680,7 +682,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // P1-3: 数据权限 SQL 片段（由 DataScopeAspect ThreadLocal 传递，DataScopeHelper 构造）
         String dataScopeFilter = "";
         try {
-            dataScopeFilter = com.njydsz.pmis.common.security.DataScopeHelper
+            dataScopeFilter = DataScopeHelper
                     .buildSqlFragment("", "", "dept_id", "initiator_id");
         } catch (Exception e) {
             log.debug("[Flow] 数据权限片段构建失败（无登录用户上下文）: {}", e.getMessage());

@@ -7,6 +7,7 @@ import com.njydsz.pmis.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.pmis.cronjob.server.core.dag.DagDefinitionCodec;
 import com.njydsz.pmis.cronjob.server.core.dag.DagEdge;
 import com.njydsz.pmis.cronjob.server.core.dag.DagInstanceExecutor;
+import com.njydsz.pmis.cronjob.server.core.dag.DagNode;
 import com.njydsz.pmis.cronjob.server.core.dag.DagParser;
 import com.njydsz.pmis.cronjob.server.core.dag.FailStrategy;
 import com.njydsz.pmis.cronjob.domain.dto.dag.JobDagSaveDTO;
@@ -418,7 +419,7 @@ public class JobDagServiceImpl implements JobDagService {
         }
         Map<String, List<String>> adj = new HashMap<>();
         // 确保所有节点都在邻接表中（即使没有出边）
-        for (com.njydsz.pmis.cronjob.server.core.dag.DagNode node : definition.nodes()) {
+        for (DagNode node : definition.nodes()) {
             adj.computeIfAbsent(node.jobKey(), k -> new ArrayList<>());
         }
         for (DagEdge edge : definition.edges()) {

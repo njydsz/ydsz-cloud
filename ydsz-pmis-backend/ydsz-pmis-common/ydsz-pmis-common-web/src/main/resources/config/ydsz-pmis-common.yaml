@@ -190,15 +190,28 @@ springdoc:
   packages-to-scan: com.njydsz.pmis
   default-flat-param-object: true
 
-# ---------- Knife4j 增强 OpenAPI UI 共享配置 ----------
+# ---------- Knife4j 增强 OpenAPI UI 共享配置（P2-5 增强） ----------
 knife4j:
   enable: true
+  production: ${knife4j.production:false}
   setting:
     language: zh_cn
     enable-version: true
     enable-swagger-models: true
+    enable-document-manage: true
+    enable-request-cache: true
+    enable-filter-multipart-api: false
+    enable-filter-multipart-api-method-type: POST
+    enable-host: false
+    enable-host-text: pmis.example.com
+    enable-search: false
+    enable-footer: true
+    enable-custom-code: true
+    enable-dynamic-parameter: true
+    enable-debug: true
+    enable-open-api: false
+    enable-after-script: true
     document-url: https://doc.pmis.example.com
-  production: ${knife4j.production:false}
 
 # ---------- 日志共享配置 ----------
 logging:

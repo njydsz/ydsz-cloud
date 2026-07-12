@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.message.domain.dto.config.RouteRuleUpsertDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgRouteRuleDO;
 import com.njydsz.pmis.message.server.service.config.RouteRuleService;
@@ -105,7 +106,7 @@ public class RouteRuleController {
     @Operation(summary = "路由规则分页")
     @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/page")
-    public Result<Page<MsgRouteRuleDO>> page(com.njydsz.pmis.common.entity.PageQuery query) {
+    public Result<Page<MsgRouteRuleDO>> page(PageQuery query) {
         return Result.ok(routeRuleService.page(query));
     }
 

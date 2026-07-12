@@ -1,11 +1,13 @@
 package com.njydsz.pmis.project.api.client;
 import com.njydsz.pmis.common.feign.FeignClientConstants;
+import com.njydsz.pmis.project.api.dto.InitiationCreateDTO;
 import com.njydsz.pmis.project.api.fallback.InitiationFeignClientFallbackFactory;
 
 import com.njydsz.pmis.common.api.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 /**
@@ -54,4 +56,13 @@ public interface InitiationFeignClient {
     @PostMapping("/{id}/markRejected")
     Result<Void> markRejected(@PathVariable("id") String initiationId,
                               @RequestParam(value = "reason", required = false) String reason);
+
+    /**
+     * 创建立项。
+     *
+     * @param dto 立项创建参数
+     * @return 立项 ID
+     */
+    @PostMapping
+    Result<String> create(@RequestBody InitiationCreateDTO dto);
 }
