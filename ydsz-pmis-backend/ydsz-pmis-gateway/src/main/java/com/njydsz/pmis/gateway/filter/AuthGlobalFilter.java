@@ -114,6 +114,11 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             return rejectPathTraversal(exchange);
         }
 
+        // P2-12: WebSocket 请求已由 WebSocketAuthFilter 认证，跳过
+        if (Boolean.TRUE.equals(exchange.getAttribute(WebSocketAuthFilter.ATTR_WS_AUTHENTICATED))) {
+            return chain.filter(exchange);
+        }
+
         // 链路追踪 ID（网关层强制重新生成，剥离客户端伪造的 X-Trace-Id）
         final String traceId = TraceIdUtil.generate();
 

@@ -2,6 +2,7 @@ package com.njydsz.pmis.gateway.filter;
 
 import com.njydsz.pmis.common.constant.CommonConstants;
 import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.gateway.config.GatewayMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -69,6 +70,9 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
     /** exchange attribute key: traceId */
     private static final String ATTR_TRACE_ID = "__gateway_trace_id";
 
+    /** P3-14: 网关自定义指标 */
+    private final GatewayMetrics gatewayMetrics;
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         long startTime = System.currentTimeMillis();
@@ -120,6 +124,10 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
         String targetUri = route != null ? route.getUri().toString() : "UNKNOWN";
 
         int status = response.getStatusCode() != null ? response.getStatusCode().value() : 0;
+
+        // P3-14: 记录 Prometheus 指标
+        gatewayMetrics.recordRequestDuration(routeId, method, status, duration);
+        gatewayMetrics.incrementRequestTotal(routeId, method, status);
 
         String logMessage = String.format(
                 "traceId=%s | method=%s | path=%s | query=%s | clientIp=%s | status=%d | latencyMs=%d | " +
