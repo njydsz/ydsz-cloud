@@ -3,7 +3,7 @@
  *
  * <p>本包是项目模块对 {@code com.njydsz.pmis.literule}（通用规则引擎）的"业务侧适配层"，
  * 提供规则配置中心、变量注册、版本管理、模板、A/B 实验、金丝雀、依赖图、决策表、
- * 冲突检测、AI 生成等业务能力。
+ * 冲突检测等业务能力。
  *
  * <h3>核心组件</h3>
  * <ul>
@@ -17,8 +17,7 @@
  *   <li>{@link com.njydsz.pmis.project.server.literule.DbTraceRecorder} - 规则执行轨迹 DB 落地器</li>
  *   <li>{@link com.njydsz.pmis.project.server.literule.RuleCategoryTreeService} - 规则分类树服务</li>
  *   <li>{@link com.njydsz.pmis.project.server.literule.RuleTemplateService} - 规则模板服务</li>
- *   <li>{@link com.njydsz.pmis.project.server.literule.RuleGenerationService} - AI 辅助规则生成（NL2Rule）</li>
- *   <li>{@link com.njydsz.pmis.project.server.literule.RuleDependencyService} - 规则依赖关系服务</li>
+ *   <li>{@link com.njydsz.pmis.project.server.literule.ABTestNotifier} - A/B 实验变更通知</li>
  *   <li>{@link com.njydsz.pmis.project.server.literule.RuleChainGraphService} - 规则责任链图服务</li>
  *   <li>{@link com.njydsz.pmis.project.server.literule.RuleConflictDetector} - 规则冲突检测器</li>
  *   <li>{@link com.njydsz.pmis.project.server.literule.RulePackService} - 规则包管理（打包/安装/版本化）</li>
@@ -38,7 +37,6 @@
  * <h3>使用规范</h3>
  * <ul>
  *   <li>禁止直接调用 {@code BaseMapper} 操作 {@code pmis_rule_*} 表，必须经本包 Service</li>
- *   <li>AI 生成规则发布前必须经过 {@code ExpressionValidationService} 校验与 {@code dryRun} 试跑</li>
  * </ul>
  *
  * @author ydsz-pmis-team

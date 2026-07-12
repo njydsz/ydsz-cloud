@@ -9,7 +9,6 @@ import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.literule.server.adaptive.AdaptiveThresholdService;
 import com.njydsz.pmis.literule.server.adaptive.ThresholdAnalysis;
-
 import com.njydsz.pmis.literule.api.DecisionTableDefinition;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
@@ -20,7 +19,6 @@ import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.literule.api.RuleStatus;
 import com.njydsz.pmis.literule.api.dto.ExpressionValidateDTO;
 import com.njydsz.pmis.literule.api.dto.RuleABTestDTO;
-
 import com.njydsz.pmis.literule.api.dto.RuleApproveDTO;
 import com.njydsz.pmis.literule.api.dto.RuleBatchCategoryDTO;
 import com.njydsz.pmis.literule.api.dto.RuleBatchPriorityDTO;
@@ -28,7 +26,6 @@ import com.njydsz.pmis.literule.api.dto.RuleBatchToggleDTO;
 import com.njydsz.pmis.literule.api.dto.RuleDelegateDTO;
 import com.njydsz.pmis.literule.api.dto.RuleDependencyAddDTO;
 import com.njydsz.pmis.literule.api.dto.RuleImportDTO;
-
 import com.njydsz.pmis.literule.api.dto.RuleRejectDTO;
 import com.njydsz.pmis.literule.api.dto.RuleStatusChangeDTO;
 import com.njydsz.pmis.literule.api.dto.RuleSubmitReviewDTO;
@@ -65,7 +62,6 @@ import com.njydsz.pmis.literule.server.spi.RuleChainGraphProvider;
 import com.njydsz.pmis.literule.server.spi.RuleConflictDetectorProvider;
 import com.njydsz.pmis.literule.server.spi.RuleConflictDetectorProvider.RuleConflictInfo;
 import com.njydsz.pmis.literule.server.spi.RuleDependencyProvider;
-
 import com.njydsz.pmis.literule.server.spi.RulePackProvider;
 import com.njydsz.pmis.literule.server.spi.RulePackProvider.InstallResult;
 import com.njydsz.pmis.literule.server.spi.RulePackProvider.PackDiff;
@@ -104,7 +100,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -112,7 +107,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
 import java.util.stream.Collectors;
 
 /**
@@ -121,10 +115,9 @@ import java.util.stream.Collectors;
  * <p>提供规则 CRUD、启停、版本管理、dry-run 仿真、执行监控等 REST API。
  *
  * <p>1.6.0 起从 project 模块迁移至 literule 模块，通过 SPI 接口反转依赖，
- * 避免 literule 直接依赖 project 模块。10 个原 project 服务依赖替换为对应 SPI：
+ * 避免 literule 直接依赖 project 模块。9 个原 project 服务依赖替换为对应 SPI：
  * <ul>
  *   <li>{@link RuleTemplateProvider} - 规则模板市场</li>
- *   <li>{@link RuleGenerationProvider} - AI 辅助规则生成</li>
  *   <li>{@link RuleConflictDetectorProvider} - 规则冲突检测</li>
  *   <li>{@link DecisionTableEvalProvider} - 决策表评估</li>
  *   <li>{@link RuleChainGraphProvider} - 规则链画布</li>
@@ -143,7 +136,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/ruleEngine/rules")
 @RequiredArgsConstructor
 @Validated
-@Tag(name = "规则引擎管理", description = "规则 CRUD、版本、dry-run、冲突检测、画布、模板市场、AI 增强、规则集市场")
+@Tag(name = "规则引擎管理", description = "规则 CRUD、版本、dry-run、冲突检测、画布、模板市场、规则集市场")
 public class RuleAdminController {
 
     /** 规则管理服务 */
@@ -154,8 +147,6 @@ public class RuleAdminController {
     private final RuleEngine ruleEngine;
     /** 规则模板服务（SPI，由 project 模块提供实现） */
     private final RuleTemplateProvider ruleTemplateProvider;
-    /** 规则生成服务（SPI，由 project 模块提供实现） */
-    private final RuleGenerationProvider ruleGenerationProvider;
     /** 规则冲突检测器（SPI，由 project 模块提供实现） */
     private final RuleConflictDetectorProvider ruleConflictDetectorProvider;
     /** 规则测试用例 Mapper */
@@ -186,16 +177,8 @@ public class RuleAdminController {
     private final ObjectProvider<RuleStressTestService> ruleStressTestServiceProvider;
     // 决策表管理服务（P0-3）：可选注入，未启用决策表时为空
     private final ObjectProvider<DecisionTableAdminService> decisionTableAdminServiceProvider;
-    // AI 增强（P2-15）：可选注入，未启用 AI 时为空
-    private final ObjectProvider<RuleLLMService> ruleLLMServiceProvider;
-    private final ObjectProvider<RuleHealthScoreService> ruleHealthScoreServiceProvider;
-    private final ObjectProvider<RuleRecommendationService> ruleRecommendationServiceProvider;
-    // 归因分析服务（P3-3）：可选注入，未启用 AI 时为空
-    private final ObjectProvider<RuleAttributionService> ruleAttributionServiceProvider;
     // 多级审批流服务（P1-3）：可选注入，未配置 RuleConfigProvider 时为空
     private final ObjectProvider<RuleApprovalService> ruleApprovalServiceProvider;
-    // ReAct Agent 执行器（P3-5）：可选注入，未启用 AI 时为空
-    private final ObjectProvider<ReActAgentExecutor> reActAgentExecutorProvider;
     // 自适应阈值分析服务（P3-4）：可选注入，未配置 TraceDataProvider 时为空
     private final ObjectProvider<AdaptiveThresholdService> adaptiveThresholdServiceProvider;
 
@@ -492,38 +475,6 @@ public class RuleAdminController {
     public BaseResponse<RuleDefinition> importTemplate(@PathVariable String templateCode,
                                                   @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         return BaseResponse.ok(ruleTemplateProvider.importTemplate(templateCode, operator));
-    }
-
-    // ==================== AI 辅助规则生成 ====================
-
-    /**
-     * AI 辅助生成规则定义（仅生成建议，不保存）
-     *
-     * @param request 请求体，包含 description（自然语言描述）和 availableFields（可用字段列表）
-     * @return 生成的规则定义
-     */
-    @Idempotent(key = "ruleAdmin:aiGenerate", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/aiGenerate")
-    public BaseResponse<RuleDefinition> aiGenerate(@Valid @RequestBody RuleAiGenerateDTO dto) {
-        List<String> fields = dto.getAvailableFields();
-        if (fields == null) fields = List.of();
-        return BaseResponse.ok(ruleGenerationProvider.generate(dto.getDescription(), fields));
-    }
-
-    /**
-     * AI 辅助生成并保存规则定义
-     *
-     * @param request  请求体，包含 description（自然语言描述）和 availableFields（可用字段列表）
-     * @param operator 操作人（从 Header 获取）
-     * @return 保存后的规则定义
-     */
-    @Idempotent(key = "ruleAdmin:aiGenerateAndSave", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/aiGenerateAndSave")
-    public BaseResponse<RuleDefinition> aiGenerateAndSave(@Valid @RequestBody RuleAiGenerateDTO dto,
-                                                      @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        List<String> fields = dto.getAvailableFields();
-        if (fields == null) fields = List.of();
-        return BaseResponse.ok(ruleGenerationProvider.generateAndSave(dto.getDescription(), fields, operator));
     }
 
     // ==================== 冲突检测 ====================
@@ -2234,248 +2185,6 @@ public class RuleAdminController {
     }
 
     // ==================================================================
-    // P2-15 AI 增强
-    // ==================================================================
-
-    /**
-     * 自然语言转规则定义
-     *
-     * <p>调用 LLM 将自然语言描述转为结构化规则定义（含表达式、严重度、描述）。
-     * LLM 不可用时降级返回空壳定义。
-     *
-     * @param body 请求体，含 naturalLanguage 字段
-     * @return LLM 生成的规则定义
-     */
-    @Idempotent(key = "ruleAdmin:naturalLanguageToRule", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/ai/nl2rule")
-    @Operation(summary = "AI 自然语言转规则（NL2Rule）", description = "调用 LLM 将自然语言描述转为结构化规则定义（含表达式、严重度、描述）；LLM 不可用时降级返回空壳定义")
-    public BaseResponse<RuleDefinition> naturalLanguageToRule(@Valid @RequestBody RuleNL2RuleDTO dto) {
-        RuleLLMService svc = ruleLLMServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("AI 增强未启用（pmis.literule.ai.enabled=false）");
-        }
-        String text = dto.getNaturalLanguage();
-        return BaseResponse.ok(svc.naturalLanguageToRule(text));
-    }
-
-    /**
-     * 生成规则业务描述
-     *
-     * @param ruleCode 规则编码
-     * @return 1~3 句中文描述；LLM 不可用时返回 null
-     */
-    @GetMapping("/{ruleCode}/ai/describe")
-    @Operation(summary = "AI 生成规则描述", description = "基于规则定义生成 1~3 句中文业务描述；LLM 不可用时返回 null")
-    public BaseResponse<String> describeRule(@PathVariable String ruleCode) {
-        RuleLLMService svc = ruleLLMServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("AI 增强未启用");
-        }
-        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
-        if (def == null) {
-            return BaseResponse.fail("规则不存在: " + ruleCode);
-        }
-        return BaseResponse.ok(svc.describeRule(def));
-    }
-
-    /**
-     * 表达式优化建议
-     *
-     * @param ruleCode 规则编码
-     * @return 优化建议文本
-     */
-    @GetMapping("/{ruleCode}/ai/optimize")
-    @Operation(summary = "AI 表达式优化建议", description = "基于规则条件表达式生成优化建议文本")
-    public BaseResponse<String> optimizeExpression(@PathVariable String ruleCode) {
-        RuleLLMService svc = ruleLLMServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("AI 增强未启用");
-        }
-        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
-        if (def == null) {
-            return BaseResponse.fail("规则不存在: " + ruleCode);
-        }
-        return BaseResponse.ok(svc.optimizeExpression(def.getConditionExpression()));
-    }
-
-    /**
-     * 规则健康度评分
-     *
-     * @param ruleCode 规则编码
-     * @return 健康度评分结果（0~100 + 分项 + 建议）
-     */
-    @GetMapping("/{ruleCode}/ai/health")
-    @Operation(summary = "规则健康度评分", description = "4 维加权评分（命中率 30% + 错误率 30% + 复杂度 20% + 覆盖率 20%），返回 0~100 总分 + EXCELLENT/GOOD/WARN/BAD 等级 + 建议")
-    public BaseResponse<RuleHealthScore> healthScore(@PathVariable String ruleCode) {
-        RuleHealthScoreService svc = ruleHealthScoreServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("AI 增强未启用");
-        }
-        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
-        if (def == null) {
-            return BaseResponse.fail("规则不存在: " + ruleCode);
-        }
-        RuleEngineStats stats = ruleEngine.getStats();
-        return BaseResponse.ok(svc.score(def, stats));
-    }
-
-    /**
-     * 批量规则健康度评分
-     *
-     * @return 全部规则的健康度评分列表
-     */
-    @GetMapping("/ai/healthBatch")
-    @Operation(summary = "批量规则健康度评分", description = "对全部规则逐条评分，返回健康度评分列表")
-    public BaseResponse<List<RuleHealthScore>> healthScoreBatch() {
-        RuleHealthScoreService svc = ruleHealthScoreServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("AI 增强未启用");
-        }
-        List<RuleDefinition> all = ruleAdminService.listAll();
-        RuleEngineStats stats = ruleEngine.getStats();
-        // 逐条评分：score 方法内部会从全局 stats.perRuleStats 中按规则编码取明细
-        List<RuleHealthScore> result = new ArrayList<>(all.size());
-        for (RuleDefinition def : all) {
-            BaseResponse.add(svc.score(def, stats));
-        }
-        return BaseResponse.ok(result);
-    }
-
-    /**
-     * 规则推荐
-     *
-     * @param ruleCode 源规则编码
-     * @return 推荐结果列表（按 score 降序）
-     */
-    @GetMapping("/{ruleCode}/ai/recommend")
-    @Operation(summary = "规则推荐", description = "基于 4 种启发式算法（字段补全/重复检测/变体建议/拆分建议）生成推荐规则列表，按 score 降序")
-    public BaseResponse<List<RuleRecommendation>> recommend(@PathVariable String ruleCode) {
-        RuleRecommendationService svc = ruleRecommendationServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("AI 增强未启用");
-        }
-        RuleDefinition source = ruleAdminService.getByCode(ruleCode);
-        if (source == null) {
-            return BaseResponse.fail("规则不存在: " + ruleCode);
-        }
-        List<RuleDefinition> all = ruleAdminService.listAll();
-        RuleEngineStats stats = ruleEngine.getStats();
-        // 将全局 stats 包装为 Map：recommend 内部按规则编码取 RuleEngineStats，
-        // 再从其 perRuleStats 中按规则编码取明细
-        Map<String, RuleEngineStats> statsMap = new HashMap<>();
-        if (stats != null) {
-            statsMap.put(source.getCode(), stats);
-        }
-        return BaseResponse.ok(svc.recommend(source, all, statsMap));
-    }
-
-    // ==================================================================
-    // P3-3 LLM 辅助归因分析
-    // ==================================================================
-
-    /**
-     * 单规则归因分析
-     *
-     * <p>基于 P0-2 表达式追踪能力，对指定规则用给定事实数据执行表达式追踪，
-     * 生成人类可读的归因分析报告。LLM 可用时附加详细分析和建议。
-     *
-     * <p>请求体示例：
-     * <pre>
-     * POST /rules/{ruleCode}/attribution
-     * {
-     *   "amount": 1500,
-     *   "score": 750
-     * }
-     * </pre>
-     *
-     * @param ruleCode 规则编码
-     * @param facts    事实数据
-     * @return 归因分析报告
-     */
-    @Idempotent(key = "ruleAdmin:attribution", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/attribution")
-    @Operation(summary = "单规则归因分析", description = "基于表达式追踪 + LLM 生成规则触发/未触发的归因分析报告")
-    public BaseResponse<AttributionReport> attribution(@PathVariable String ruleCode,
-                                                   @RequestBody Map<String, Object> facts) {
-        RuleAttributionService svc = ruleAttributionServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("归因分析服务未启用");
-        }
-        return BaseResponse.ok(svc.analyze(ruleCode, facts));
-    }
-
-    /**
-     * 批量归因分析
-     *
-     * <p>按 traceId 列表查询历史执行轨迹，对每条轨迹的事实快照重新执行归因分析。
-     *
-     * @param traceIds traceId 列表
-     * @return 归因分析报告列表
-     */
-    @Idempotent(key = "ruleAdmin:batchAttribution", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/attribution/batch")
-    @Operation(summary = "批量归因分析", description = "按 traceId 列表对历史执行轨迹批量归因分析")
-    public BaseResponse<List<AttributionReport>> batchAttribution(@RequestBody List<String> traceIds) {
-        RuleAttributionService svc = ruleAttributionServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("归因分析服务未启用");
-        }
-        if (traceIds == null || traceIds.isEmpty()) {
-            return BaseResponse.ok(List.of());
-        }
-        List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(
-                new LambdaQueryWrapper<RuleExecutionTraceDO>()
-                        .in(RuleExecutionTraceDO::getTraceId, traceIds)
-                        .orderByAsc(RuleExecutionTraceDO::getCreatedAt));
-        List<AttributionReport> reports = new ArrayList<>();
-        for (RuleExecutionTraceDO trace : traces) {
-            Map<String, Object> facts = trace.getFactsSnapshot() != null
-                    ? trace.getFactsSnapshot() : new HashMap<>();
-            AttributionReport report = svc.analyze(trace.getRuleCode(), facts);
-            report.setRuleName(trace.getRuleName());
-            report.setTriggered(Boolean.TRUE.equals(trace.getTriggered()));
-            report.setSeverity(trace.getSeverity());
-            reports.add(report);
-        }
-        return BaseResponse.ok(reports);
-    }
-
-    /**
-     * 基于 traceId 归因分析
-     *
-     * <p>按 traceId 查询执行轨迹，对每条轨迹的事实快照重新执行归因分析。
-     *
-     * @param traceId 追踪 ID
-     * @return 归因分析报告列表
-     */
-    @GetMapping("/traces/{traceId}/attribution")
-    @Operation(summary = "基于 traceId 归因分析", description = "按 traceId 查询执行轨迹并归因分析")
-    public BaseResponse<List<AttributionReport>> traceAttribution(@PathVariable String traceId) {
-        RuleAttributionService svc = ruleAttributionServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("归因分析服务未启用");
-        }
-        List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(
-                new LambdaQueryWrapper<RuleExecutionTraceDO>()
-                        .eq(RuleExecutionTraceDO::getTraceId, traceId)
-                        .orderByAsc(RuleExecutionTraceDO::getCreatedAt));
-        if (traces.isEmpty()) {
-            return BaseResponse.ok(List.of());
-        }
-        List<AttributionReport> reports = new ArrayList<>();
-        for (RuleExecutionTraceDO trace : traces) {
-            Map<String, Object> facts = trace.getFactsSnapshot() != null
-                    ? trace.getFactsSnapshot() : new HashMap<>();
-            AttributionReport report = svc.analyze(trace.getRuleCode(), facts);
-            report.setRuleName(trace.getRuleName());
-            report.setTriggered(Boolean.TRUE.equals(trace.getTriggered()));
-            report.setSeverity(trace.getSeverity());
-            reports.add(report);
-        }
-        return BaseResponse.ok(reports);
-    }
-
-    // ==================================================================
     // P3-4 自适应智能风控（自适应阈值分析）
     // ==================================================================
 
@@ -2560,86 +2269,6 @@ public class RuleAdminController {
             return BaseResponse.ok(List.of());
         }
         return BaseResponse.ok(svc.getPendingSuggestions(ruleCode));
-    }
-
-    // ==================================================================
-    // P3-5 AI Agent 规则编排
-    // ==================================================================
-
-    /**
-     * 执行 Agent 节点（独立执行，不嵌入链）
-     *
-     * <p>调用 ReAct Agent 执行器，在"思考-行动-观察"循环中逐步推理，
-     * 返回最终答案、迭代次数、思考过程和耗时。Agent 可调用其他规则作为工具。
-     *
-     * <p>请求体示例：
-     * <pre>
-     * POST /execution/rules/agent/execute
-     * {
-     *   "systemPrompt": "你是项目风险分析专家",
-     *   "userPrompt": "分析项目 budgetUsedRatio=0.95 的风险",
-     *   "maxIterations": 3,
-     *   "tools": ["EVM_RED_ALERT", "BUDGET_CHECK"],
-     *   "facts": {"budgetUsedRatio": 0.95}
-     * }
-     * </pre>
-     *
-     * @param request 请求体
-     * @return Agent 执行结果（output / iterations / thoughts / elapsedMs）
-     */
-    @Idempotent(key = "ruleAdmin:executeAgent", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/agent/execute")
-    @Operation(summary = "执行 AI Agent 节点", description = "调用 ReAct Agent 执行器，在思考-行动-观察循环中逐步推理；Agent 可调用其他规则作为工具")
-    public BaseResponse<Map<String, Object>> executeAgent(@RequestBody Map<String, Object> request) {
-        ReActAgentExecutor executor = reActAgentExecutorProvider.getIfAvailable();
-        if (executor == null) {
-            return BaseResponse.fail("AI Agent 执行器未启用（需开启 pmis.literule.ai.enabled=true）");
-        }
-
-        String systemPrompt = (String) request.get("systemPrompt");
-        String userPrompt = (String) request.get("userPrompt");
-        int maxIterations = toInt(request.get("maxIterations"), 3);
-        @SuppressWarnings("unchecked")
-        List<String> tools = (List<String>) request.get("tools");
-        @SuppressWarnings("unchecked")
-        Map<String, Object> facts = (Map<String, Object>) request.get("facts");
-
-        if (userPrompt == null || userPrompt.isBlank()) {
-            return BaseResponse.fail("userPrompt 不能为空");
-        }
-        // 使用 final 变量供 lambda 引用（避免重新赋值导致非 effectively final）
-        final Map<String, Object> factsSnapshot = facts != null ? facts : new HashMap<>();
-
-        // 构建工具执行回调：通过 dryRun 评估规则作为工具
-        Function<String, String> toolExecutor = ruleCode -> {
-            try {
-                List<RuleResult> results = ruleAdminService.dryRun(ruleCode, factsSnapshot);
-                if (results == null || results.isEmpty()) {
-                    return "规则 " + ruleCode + " 未触发";
-                }
-                return results.stream()
-                        .filter(r -> ruleCode.equals(r.getRuleCode()) && r.isTriggered())
-                        .findFirst()
-                        .map(r -> "规则触发: " + r.getTitle() + " | " + r.getDescription())
-                        .orElse("规则 " + ruleCode + " 未触发");
-            } catch (Exception e) {
-                return "工具执行异常: " + e.getMessage();
-            }
-        };
-
-        long timeoutMs = request.containsKey("timeoutMs")
-                ? ((Number) request.get("timeoutMs")).longValue() : 5000L;
-
-        ReActAgentExecutor.AgentExecutionResult agentResult =
-                executor.execute(systemPrompt, userPrompt, tools, toolExecutor, maxIterations, timeoutMs);
-
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("output", agentResult.getOutput());
-        response.put("iterations", agentResult.getIterations());
-        response.put("thoughts", agentResult.getThoughts());
-        response.put("elapsedMs", agentResult.getElapsedMs());
-        response.put("degraded", agentResult.isDegraded());
-        return BaseResponse.ok(response);
     }
 
     // ==================================================================
