@@ -29,6 +29,18 @@ jobMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQ
 
 // ❌ LiteRuleAutoConfiguration.java — new 表达式使用行内 FQN
 new com.njydsz.pmis.literule.server.replay.ExecutionReplayService(...);
+
+// ❌ ReAuthService.java / JobService.java / JobDagService.java 等 8 个文件 — Javadoc @throws 使用行内 FQN
+* @throws com.njydsz.pmis.common.exception.BizException 当任务不存在时抛出
+
+// ❌ IFileStorage.java / LogicalDeleteConfiguration.java 等 10 个文件 — Javadoc @see 使用行内 FQN
+* @see com.njydsz.pmis.common.file.storage.platform.LocalStorage
+
+// ❌ EnableAudit.java — @Import 注解使用行内 FQN
+@Import(com.njydsz.pmis.common.audit.config.AuditAutoConfiguration.class)
+
+// ❌ NotifyChannelStrategy.java — 方法参数使用行内 FQN
+default void setTemplateEngine(com.njydsz.pmis.common.notify.template.TemplateEngine templateEngine) {
 ```
 
 正确写法：
@@ -38,6 +50,10 @@ import com.njydsz.pmis.finance.domain.entity.ProfitSnapshot;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.literule.server.replay.ExecutionReplayService;
+import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.file.storage.platform.LocalStorage;
+import com.njydsz.pmis.common.audit.config.AuditAutoConfiguration;
+import com.njydsz.pmis.common.notify.template.TemplateEngine;
 
 // ✅ 使用简单类名
 Result<String> create(@RequestBody InitiationCreateDTO dto);
@@ -47,6 +63,18 @@ wrapper.orderByDesc(ProfitSnapshot::getSnapshotAt);
 jobMapper.selectCount(new LambdaQueryWrapper<JobDO>().eq(JobDO::getStatus, "NORMAL"));
 
 new ExecutionReplayService(...);
+
+// ✅ Javadoc @throws 使用简单类名
+* @throws BizException 当任务不存在时抛出
+
+// ✅ Javadoc @see 使用简单类名
+* @see LocalStorage
+
+// ✅ @Import 注解使用简单类名
+@Import(AuditAutoConfiguration.class)
+
+// ✅ 方法参数使用简单类名
+default void setTemplateEngine(TemplateEngine templateEngine) {
 ```
 
 ## 覆盖范围
@@ -59,11 +87,15 @@ new ExecutionReplayService(...);
 4. **静态方法调用**：如 `org.junit.jupiter.api.Assertions.assertThrows(...)` → `assertThrows(...)`（配合 `import static`）
 5. **`new` 表达式**：如 `new com.njydsz.pmis.literule.expr.QLExpressExpressionEvaluator()` → `new QLExpressExpressionEvaluator()`
 6. **`instanceof` 检查**：如 `x instanceof com.njydsz.pmis.common.exception.BizException` → `x instanceof BizException`
+7. **Javadoc `@throws` 标签**：如 `@throws com.njydsz.pmis.common.exception.BizException` → `@throws BizException`
+8. **Javadoc `@see` 标签**：如 `@see com.njydsz.pmis.common.file.storage.platform.LocalStorage` → `@see LocalStorage`
+9. **Javadoc `@param` / `@return` 标签中的类型名**：同上，禁止 FQN，必须 import + 简单类名
+10. **注解参数中的 `.class` 字面量**：如 `@Import(com.njydsz.pmis.common.audit.config.AuditAutoConfiguration.class)` → `@Import(AuditAutoConfiguration.class)`
 
 ## 例外
 
 1. **字符串字面量**中的 FQN（如反射类名 `"com.njydsz.pmis.literule.core.MicrometerRuleMetrics"`）可保留完整路径。
-2. **Javadoc `{@link FQN}` / `@throws FQN` 引用**可保留完整路径，但推荐在已 import 的情况下使用简单类名。
+2. **Javadoc `{@link FQN}` 引用**可保留完整路径（当目标类未在代码中使用、仅作 Javadoc 交叉引用时）。但如果该类已被 import，则必须使用简单类名 `{@link SimpleName}`。**注意：此例外仅适用于 `{@link}` 标签，不适用于 `@throws`、`@see`、`@param`、`@return` 等其他 Javadoc 标签。**
 3. **同名类冲突**（Java 语言限制）：当当前类与目标类简单名相同（如 `com.njydsz.pmis.cronjob.server.core.dag.DagEdge` 与 `com.njydsz.pmis.common.dag.DagEdge`），Java 不允许同时 import 两个同名类，此时对其中一个使用 FQN 是合法的。此类 FQN 必须在行尾添加 `// FQN-OK: name conflict with <ClassName>` 注释说明原因。
 
 ## 通用示例
@@ -82,11 +114,22 @@ org.junit.jupiter.api.Assertions.assertThrows(BizException.class, () -> service.
 
 // new 表达式
 return new com.njydsz.pmis.literule.expr.QLExpressExpressionEvaluator();
+
+// Javadoc @throws 使用 FQN（禁止）
+* @throws com.njydsz.pmis.common.exception.BizException 当条件不满足时抛出
+
+// Javadoc @see 使用 FQN（禁止）
+* @see com.njydsz.pmis.common.jdbc.interceptor.LogicalDeleteInterceptor
+
+// @Import 注解参数使用 FQN（禁止）
+@Import(com.njydsz.pmis.common.audit.config.AuditAutoConfiguration.class)
 ```
 
 正确：
 ```java
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.jdbc.interceptor.LogicalDeleteInterceptor;
+import com.njydsz.pmis.common.audit.config.AuditAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import com.njydsz.pmis.literule.expr.QLExpressExpressionEvaluator;
@@ -103,6 +146,15 @@ assertThrows(BizException.class, () -> service.send(req));
 
 // new 表达式
 return new QLExpressExpressionEvaluator();
+
+// Javadoc @throws 使用简单类名（正确）
+* @throws BizException 当条件不满足时抛出
+
+// Javadoc @see 使用简单类名（正确）
+* @see LogicalDeleteInterceptor
+
+// @Import 注解参数使用简单类名（正确）
+@Import(AuditAutoConfiguration.class)
 ```
 
 ## 执行机制

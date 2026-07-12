@@ -107,6 +107,19 @@ public class BizException extends RuntimeException {
     }
 
     /**
+     * 根据提示信息与原始异常构造业务异常
+     *
+     * @param message 提示信息
+     * @param cause   原始异常
+     */
+    public BizException(String message, Throwable cause) {
+        super(message, cause);
+        this.code = BizErrorCode.INTERNAL_ERROR.getCode();
+        this.errorMessage = message;
+        this.args = null;
+    }
+
+    /**
      * 根据 ExceptionCode 构造异常
      *
      * @param code 异常码

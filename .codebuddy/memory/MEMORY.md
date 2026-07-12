@@ -28,8 +28,13 @@
 
 ### 禁止行内全限定类名（FQN）
 - **规则**：Java 代码中不允许出现行内 FQN 用法，必须使用标准 `import` 语句后在代码中直接引用简单类名。
-- **触发案例**：`InitiationFeignClient.java` 中 `Result<String> create(@RequestBody com.njydsz.pmis.project.api.dto.InitiationCreateDTO dto)` 违规，已修复为 import + 简单类名。
-- **覆盖范围**：类型引用、`.class` 字面量、注解、静态方法调用、`new` 表达式、`instanceof` 检查、方法引用（`::`）。
-- **唯一例外**：字符串字面量中的 FQN（如反射类名）、Javadoc `{@link FQN}` 引用可保留完整路径。
+- **触发案例**：
+  - `InitiationFeignClient.java` 中 `Result<String> create(@RequestBody com.njydsz.pmis.project.api.dto.InitiationCreateDTO dto)` 违规，已修复为 import + 简单类名。
+  - `ReAuthService.java` / `JobService.java` / `JobDagService.java` 等 8 个文件中 Javadoc `@throws com.njydsz.pmis.common.exception.BizException` 违规，已修复为 import + `@throws BizException`。
+  - `IFileStorage.java` / `LogicalDeleteConfiguration.java` 等 10 个文件中 Javadoc `@see com.njydsz.pmis.xxx.XxxClass` 违规，已修复为 import + `@see XxxClass`。
+  - `EnableAudit.java` 中 `@Import(com.njydsz.pmis.common.audit.config.AuditAutoConfiguration.class)` 违规，已修复为 import + `@Import(AuditAutoConfiguration.class)`。
+  - `NotifyChannelStrategy.java` 中方法参数 `com.njydsz.pmis.common.notify.template.TemplateEngine templateEngine` 违规，已修复为 import + `TemplateEngine templateEngine`。
+- **覆盖范围**：类型引用、`.class` 字面量、注解（含 `@Import` 等注解参数）、静态方法调用、`new` 表达式、`instanceof` 检查、方法引用（`::`）、Javadoc `@throws`/`@see`/`@param`/`@return` 标签中的类型名。
+- **唯一例外**：字符串字面量中的 FQN（如反射类名）、Javadoc `{@link FQN}` 引用（仅 `{@link}` 标签，不含 `@throws`/`@see` 等）可保留完整路径。但如果该类已被 import，则必须使用简单类名。
 - **规则文件**：`.trae/rules/no-inline-fqn.md`（`alwaysApply: true`）。
 - **详细文档**：`deploy/docs/architecture/coding-standards.md`。
