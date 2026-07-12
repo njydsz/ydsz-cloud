@@ -2,10 +2,9 @@ package com.njydsz.pmis.finance.web.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
-import com.njydsz.pmis.common.lock.annotation.YdszDistributedLock;
+import com.njydsz.pmis.common.lock.annotation.DistributedLock;
 import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.auth.annotation.RequireReAuth;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.finance.domain.dto.PaymentAllocationDTO;
 import com.njydsz.pmis.finance.domain.dto.PaymentCreateDTO;
@@ -75,7 +74,7 @@ public class PaymentController {
     @Operation(summary = "确认到账")
     @AuthApiPermission(apiCodes = "finance:payment:status")
     @OperationLog(module = "回款管理", action = "确认到账", bizType = "PAYMENT")
-    @YdszDistributedLock(key = "payment:confirm:#{#id}", waitTime = 3, leaseTime = 15, message = "正在确认回款，请稍后")
+    @DistributedLock(key = "payment:confirm:#{#id}", waitTime = 3, leaseTime = 15, message = "正在确认回款，请稍后")
     @Idempotent(key = "payment:confirm", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/confirm")
     public BaseResponse<Void> confirm(@PathVariable String id, @RequestParam String operatorId) {
@@ -112,7 +111,6 @@ public class PaymentController {
     @Operation(summary = "删除")
     @AuthApiPermission(apiCodes = "finance:payment:delete")
     @OperationLog(module = "回款管理", action = "删除回款", bizType = "PAYMENT")
-    @RequireReAuth(code = "PAYMENT_DELETE", name = "删除回款")
     @Idempotent(key = "payment:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -129,7 +127,7 @@ public class PaymentController {
     @Operation(summary = "核销到发票")
     @AuthApiPermission(apiCodes = "finance:payment:allocate")
     @OperationLog(module = "回款管理", action = "核销到发票", bizType = "PAYMENT")
-    @YdszDistributedLock(key = "payment:allocate:#{#dto.paymentId}", waitTime = 3, leaseTime = 20, message = "正在核销回款，请稍后")
+    @DistributedLock(key = "payment:allocate:#{#dto.paymentId}", waitTime = 3, leaseTime = 20, message = "正在核销回款，请稍后")
     @Idempotent(key = "payment:allocate", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/allocate")
     public BaseResponse<Void> allocate(@Valid @RequestBody PaymentAllocationDTO dto) {

@@ -67,8 +67,6 @@ public enum StandardResultCode implements ResultCode {
     PASSWORD_WEAK("A20103", "密码强度不足"),
     PASSWORD_EXPIRED("A20104", "密码已过期，请修改"),
     PASSWORD_REUSED("A20105", "不能使用最近使用过的密码"),
-    REAUTH_REQUIRED("A20106", "该操作需要二次认证"),
-    REAUTH_INVALID("A20107", "二次认证 token 无效或已过期"),
     MFA_REQUIRED("A20108", "需要双因素认证"),
     MFA_INVALID("A20109", "双因素认证码无效"),
     ACCOUNT_LOCKED("A20110", "账号已锁定"),
@@ -170,7 +168,7 @@ public enum StandardResultCode implements ResultCode {
             case SERVICE_UNAVAILABLE, DB_QUERY_TIMEOUT, DB_CONNECTION_FAILED -> HttpStatus.SERVICE_UNAVAILABLE;
             // 2xxxx 认证授权
             case UNAUTHORIZED, TOKEN_EXPIRED, TOKEN_INVALID,
-                 PASSWORD_EXPIRED, REAUTH_REQUIRED, REAUTH_INVALID,
+                 PASSWORD_EXPIRED,
                  MFA_REQUIRED, MFA_INVALID, SESSION_KICKED,
                  PASSWORD_INCORRECT -> HttpStatus.UNAUTHORIZED;
             case FORBIDDEN, DATA_SCOPE_FORBIDDEN, USER_DISABLED,

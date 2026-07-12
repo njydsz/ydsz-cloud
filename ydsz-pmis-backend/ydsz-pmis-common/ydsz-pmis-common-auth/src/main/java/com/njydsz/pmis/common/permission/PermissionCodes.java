@@ -275,11 +275,6 @@ public final class PermissionCodes {
     public static final String AUDIT_LOG_CLEAN = "audit:log:clean";
     public static final String AUDIT_LOGIN_VIEW = "audit:login:view";
     public static final String AUDIT_EXPORT_VIEW = "audit:export:view";
-    public static final String AUDIT_SENSITIVE_VIEW = "audit:sensitive:view";
-
-    // ==================== 敏感操作二次认证 ====================
-
-    public static final String SENSITIVE_REAUTH = "sensitive:reauth:confirm";
 
     // ==================== 项目模块 ====================
 

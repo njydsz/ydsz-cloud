@@ -5,7 +5,6 @@ import com.njydsz.pmis.common.audit.annotation.ApiMetrics;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.auth.annotation.RequireReAuth;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.sales.domain.dto.ContractCreateDTO;
 import com.njydsz.pmis.sales.domain.dto.ContractStatusDTO;
@@ -89,7 +88,6 @@ public class ContractController {
      */
     @Operation(summary = "删除合同")
     @AuthApiPermission(apiCodes = "project:contract:delete")
-    @RequireReAuth(code = "CONTRACT_DELETE", name = "删除合同")
     @Idempotent(key = "contract:delete", ttlSeconds = 5, message = "请勿重复提交")
     @OperationLog(module = "合同管理", action = "删除合同", bizType = "CONTRACT")
     @DeleteMapping("/{id}")

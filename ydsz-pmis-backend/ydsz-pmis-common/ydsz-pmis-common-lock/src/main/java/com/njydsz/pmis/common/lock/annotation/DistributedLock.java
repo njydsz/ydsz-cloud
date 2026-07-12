@@ -13,9 +13,13 @@ import java.util.concurrent.TimeUnit;
  *   <li>公平锁：按请求顺序获取</li>
  * </ul>
  *
+ * <p>与 {@link Idempotent} 的区别：本注解用于对同一资源的并发互斥（key 通常含 SpEL 表达式精确到资源 ID，
+ * 并可阻塞等待），而 {@link Idempotent} 用于接口防重复提交（key 通常为静态串，不阻塞）。
+ * 典型场景下两者会配合使用形成分层防御。
+ *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * @YdszDistributedLock(key = "order:#{#orderId}", waitTime = 3, leaseTime = 30)
+ * @DistributedLock(key = "order:#{#orderId}", waitTime = 3, leaseTime = 30)
  * public void processOrder(String orderId) {
  *     // 业务逻辑
  * }
@@ -38,7 +42,7 @@ import java.util.concurrent.TimeUnit;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface YdszDistributedLock {
+public @interface DistributedLock {
 
     /**
      * 锁的键

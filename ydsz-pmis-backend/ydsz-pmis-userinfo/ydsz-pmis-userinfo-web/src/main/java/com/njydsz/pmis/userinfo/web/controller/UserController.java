@@ -1,13 +1,12 @@
 package com.njydsz.pmis.userinfo.web.controller.user;
 
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
-import com.njydsz.pmis.common.lock.annotation.YdszDistributedLock;
+import com.njydsz.pmis.common.lock.annotation.DistributedLock;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.safe.annotation.RateLimit;
-import com.njydsz.pmis.common.auth.annotation.RequireReAuth;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.auth.context.AuthContext;
@@ -113,7 +112,7 @@ public class UserController {
     @OperationLog(module = "权限管理", action = "创建用户", bizType = "USER")
     @RateLimit(key = "register", qps = 3, windowSeconds = 60,
             message = "{validation.user.msg_7aa2293e}")
-    @YdszDistributedLock(key = "user:create:#{#dto.username}", waitTime = 3, leaseTime = 10, message = "正在创建用户，请稍后")
+    @DistributedLock(key = "user:create:#{#dto.username}", waitTime = 3, leaseTime = 10, message = "正在创建用户，请稍后")
     @Idempotent(key = "user:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody UserCreateDTO dto) {
@@ -156,7 +155,6 @@ public class UserController {
      */
     @Operation(summary = "删除用户")
     @AuthApiPermission(apiCodes = "auth:user:delete")
-    @RequireReAuth(code = "USER_DELETE", name = "删除用户")
     @OperationLog(module = "权限管理", action = "删除用户", bizType = "USER")
     @Idempotent(key = "user:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
@@ -174,7 +172,6 @@ public class UserController {
      */
     @Operation(summary = "重置密码")
     @AuthApiPermission(apiCodes = "auth:user:resetPassword")
-    @RequireReAuth(code = "USER_RESET_PASSWORD", name = "重置用户密码")
     @OperationLog(module = "权限管理", action = "重置密码", bizType = "USER")
     @RateLimit(key = "register", qps = 3, windowSeconds = 60,
             message = "{validation.user.msg_538560c7}")
@@ -213,7 +210,7 @@ public class UserController {
     @Operation(summary = "为用户分配角色")
     @AuthApiPermission(apiCodes = "auth:user:assign")
     @OperationLog(module = "权限管理", action = "分配角色", bizType = "USER")
-    @YdszDistributedLock(key = "user:assignRoles:#{#id}", waitTime = 3, leaseTime = 15, message = "正在分配角色，请稍后")
+    @DistributedLock(key = "user:assignRoles:#{#id}", waitTime = 3, leaseTime = 15, message = "正在分配角色，请稍后")
     @Idempotent(key = "user:assignRoles", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/roles")
     public BaseResponse<Void> assignRoles(@Parameter(description = "用户ID") @PathVariable String id, @Valid @RequestBody List<String> roleIds) {
