@@ -21,6 +21,11 @@ public class SysException extends AbstractPmisException {
         super(UnifiedExceptionCode.INTERNAL_ERROR, message);
     }
 
+    public SysException(String message, Throwable cause) {
+        super(UnifiedExceptionCode.INTERNAL_ERROR, message);
+        initCause(cause);
+    }
+
     public SysException(ExceptionCode code, String message) {
         super(code, message);
     }

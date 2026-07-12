@@ -25,18 +25,18 @@ import java.time.Duration;
  * 
  */
 @Service
-@ConditionalOnBean({RedisStringOps.class, IFileStorage.class})
+@ConditionalOnBean({StringRedisTemplate.class, IFileStorage.class})
 public class FileDedupService {
 
     private static final Logger log = LoggerFactory.getLogger(FileDedupService.class);
     private static final String DEDUP_KEY_PREFIX = "file:dedup:hash:";
 
-    private final RedisStringOps redisStringOps;
+    private final StringRedisTemplate stringRedisTemplate;
     @SuppressWarnings("unused")
     private final IFileStorage fileStorage;
 
-    public FileDedupService(RedisStringOps redisStringOps, IFileStorage fileStorage) {
-        this.redisStringOps = redisStringOps;
+    public FileDedupService(StringRedisTemplate stringRedisTemplate, IFileStorage fileStorage) {
+        this.stringRedisTemplate = stringRedisTemplate;
         this.fileStorage = fileStorage;
     }
 
@@ -82,7 +82,7 @@ public class FileDedupService {
      */
     public String checkExisting(long fileSize, String hash) {
         String key = buildDedupKey(fileSize, hash);
-        String existingPath = redisStringOps.get(key, String.class);
+        String existingPath = stringRedisTemplate.opsForValue().get(key);
         return existingPath;
     }
 
@@ -96,7 +96,7 @@ public class FileDedupService {
     public void registerHash(long fileSize, String hash, String filePath) {
         String key = buildDedupKey(fileSize, hash);
         // 设置 30 天过期
-        redisStringOps.set(key, filePath, Duration.ofDays(30));
+        stringRedisTemplate.opsForValue().set(key, filePath, Duration.ofDays(30));
     }
 
     /**

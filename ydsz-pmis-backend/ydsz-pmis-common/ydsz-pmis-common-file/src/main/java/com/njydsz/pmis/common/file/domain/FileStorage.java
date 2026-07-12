@@ -3,7 +3,7 @@ package com.njydsz.pmis.common.file.domain;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.file.constant.FileConstant;
 import com.njydsz.pmis.common.file.exception.FileExceptionCode;
-import com.njydsz.pmis.common.util.FileTypeUtils;
+import com.njydsz.pmis.common.util.FileUtils;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -128,12 +128,12 @@ public class FileStorage implements Serializable {
         }
         Long size = file.getSize();
         String orgName = file.getOriginalFilename();
-        String fileExt = FileTypeUtils.getFileType(orgName);
-        if (!FileTypeUtils.isAllowedExtension(fileExt)) {
+        String fileExt = FileUtils.getFileType(orgName);
+        if (!FileUtils.isAllowedExtension(fileExt)) {
             throw new BizException(FileExceptionCode.FILE_SUFFIX_NOT_ALLOWED);
         }
         String type;
-        if (FileTypeUtils.isCodeExtension(fileExt)) {
+        if (FileUtils.isCodeExtension(fileExt)) {
             type = "code";
         } else {
             type = fileExt;
@@ -142,10 +142,10 @@ public class FileStorage implements Serializable {
         fileStorage.setSuffix(fileExt);
         fileStorage.setSize(size);
         fileStorage.setFileName(orgName);
-        fileStorage.setIsImage(FileTypeUtils.isImageExtension(fileExt) ? 1 : 0);
-        fileStorage.setIsVideo(FileTypeUtils.isVideoExtension(fileExt) ? 1 : 0);
-        fileStorage.setIsAudio(FileTypeUtils.isAudioExtension(fileExt) ? 1 : 0);
-        fileStorage.setIsOffice(FileTypeUtils.isOfficeExtension(fileExt) ? 1 : 0);
+        fileStorage.setIsImage(FileUtils.isImageExtension(fileExt) ? 1 : 0);
+        fileStorage.setIsVideo(FileUtils.isVideoExtension(fileExt) ? 1 : 0);
+        fileStorage.setIsAudio(FileUtils.isAudioExtension(fileExt) ? 1 : 0);
+        fileStorage.setIsOffice(FileUtils.isOfficeExtension(fileExt) ? 1 : 0);
         fileStorage.setIsDir(0);
         fileStorage.setUploadAt(LocalDateTime.now());
         fileStorage.setType(type);

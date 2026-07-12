@@ -11,7 +11,7 @@ import com.njydsz.pmis.common.file.domain.PolicyResult;
 import com.njydsz.pmis.common.file.exception.FileExceptionCode;
 import com.njydsz.pmis.common.util.StringUtils;
 import com.njydsz.pmis.common.file.storage.AbstractFileStorage;
-import com.njydsz.pmis.common.util.io.IOUtils;
+import com.njydsz.pmis.common.util.IOUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import jakarta.servlet.http.HttpServletResponse;

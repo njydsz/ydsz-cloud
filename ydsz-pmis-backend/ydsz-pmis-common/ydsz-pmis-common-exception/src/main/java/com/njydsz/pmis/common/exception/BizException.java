@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.exception;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.exception.code.ExceptionCode;
 import lombok.Getter;
 
 import java.io.Serial;
@@ -101,6 +102,33 @@ public class BizException extends RuntimeException {
     public BizException(String message) {
         super(message);
         this.code = BizErrorCode.INTERNAL_ERROR.getCode();
+        this.errorMessage = message;
+        this.args = null;
+    }
+
+    /**
+     * 根据 ExceptionCode 构造异常
+     *
+     * @param code    异常码
+     * @param message 提示信息
+     */
+    public BizException(ExceptionCode code, String message) {
+        super(message);
+        this.code = code.getHttpStatus();
+        this.errorMessage = message;
+        this.args = null;
+    }
+
+    /**
+     * 根据 ExceptionCode 构造异常（带 cause）
+     *
+     * @param code    异常码
+     * @param message 提示信息
+     * @param cause   原始异常
+     */
+    public BizException(ExceptionCode code, String message, Throwable cause) {
+        super(message, cause);
+        this.code = code.getHttpStatus();
         this.errorMessage = message;
         this.args = null;
     }

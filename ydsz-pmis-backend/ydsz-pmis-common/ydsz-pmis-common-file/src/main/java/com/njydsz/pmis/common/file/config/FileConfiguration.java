@@ -176,13 +176,7 @@ public class FileConfiguration {
      * @param fileProperties      文件存储配置
      * @return 文件健康检查指示器实例
      */
-    @Bean
-    @ConditionalOnClass(name = "org.springframework.boot.actuate.health.HealthIndicator")
-    @ConditionalOnMissingBean(FileHealthIndicator.class)
-    public FileHealthIndicator storageHealthIndicator(IFileStorageProvider fileStorageProvider,
-                                                      FileProperties fileProperties) {
-        return new FileHealthIndicator(fileStorageProvider, fileProperties);
-    }
+    // FileHealthIndicator removed — actuator is optional, add manually if needed
 
     /**
      * 去重清理调度器 Bean
