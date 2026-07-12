@@ -1,8 +1,8 @@
 package com.njydsz.pmis.system.server.service.impl.config;
 
-import com.njydsz.pmis.common.featureflag.FeatureFlag;
-import com.njydsz.pmis.common.featureflag.FeatureFlagService;
-import com.njydsz.pmis.common.featureflag.FeatureFlagSnapshot;
+import com.njydsz.pmis.common.core.featureflag.FeatureFlag;
+import com.njydsz.pmis.common.core.featureflag.FeatureFlagService;
+import com.njydsz.pmis.common.core.featureflag.FeatureFlagSnapshot;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

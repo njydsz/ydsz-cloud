@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.constant.CacheConstants;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.domain.dto.definition.FlowDeployProcessDTO;
 import com.njydsz.pmis.workflow.server.engine.BpmnModel;

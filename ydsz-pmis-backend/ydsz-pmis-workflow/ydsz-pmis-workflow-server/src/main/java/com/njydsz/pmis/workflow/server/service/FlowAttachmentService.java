@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.integration;
 
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.dto.integration.FlowAttachmentDTO;
 import com.njydsz.pmis.workflow.domain.dto.integration.FlowAttachmentPreviewVO;
 import com.njydsz.pmis.workflow.domain.entity.integration.FlowAttachmentDO;

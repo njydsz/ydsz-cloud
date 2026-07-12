@@ -3,8 +3,10 @@ package com.njydsz.pmis.finance.server.service.impl.finance;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.project.server.assembler.NameAssembler;
 import com.njydsz.pmis.project.domain.dto.ApprovalDTO;
 import com.njydsz.pmis.finance.domain.dto.ExpenseCreateDTO;
@@ -117,6 +119,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "employee_id")
     @Transactional(readOnly = true)
     public Page<ExpenseDO> page(int page, int size, String keyword, String status,
                                 String expenseType, String employeeId, String initiationId) {
@@ -130,6 +133,9 @@ public class ExpenseServiceImpl implements ExpenseService {
         if (StringUtils.hasText(expenseType)) w.eq(ExpenseDO::getExpenseType, expenseType);
         if (employeeId != null) w.eq(ExpenseDO::getEmployeeId, employeeId);
         if (initiationId != null) w.eq(ExpenseDO::getInitiationId, initiationId);
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "employee_id");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(ExpenseDO::getExpenseDate);
         return expenseMapper.selectPage(p, w);
     }

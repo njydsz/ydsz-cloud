@@ -1,10 +1,12 @@
-package com.njydsz.pmis.sales.server.service.impl.contract;
+﻿package com.njydsz.pmis.sales.server.service.impl.contract;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.sales.domain.dto.ContractSupplementDTO;
 import com.njydsz.pmis.sales.domain.entity.ContractDO;
 import com.njydsz.pmis.sales.domain.entity.ContractSupplementDO;
@@ -137,11 +139,15 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
      * @return 分页结果
      */
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     @Transactional(readOnly = true)
     public Page<ContractSupplementDO> page(int page, int size, String contractId) {
         Page<ContractSupplementDO> p = new Page<>(page, size);
         LambdaQueryWrapper<ContractSupplementDO> w = new LambdaQueryWrapper<>();
         if (contractId != null) w.eq(ContractSupplementDO::getContractId, contractId);
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "created_by");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(ContractSupplementDO::getCreatedAt);
         return supplementMapper.selectPage(p, w);
     }

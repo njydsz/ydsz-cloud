@@ -2,7 +2,7 @@ package com.njydsz.pmis.finance.server.service.impl.finance;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.finance.domain.dto.ProfitSnapshotDTO;
 import com.njydsz.pmis.finance.server.engine.ProfitCalculator;
 import com.njydsz.pmis.finance.domain.entity.ProfitSnapshotDO;

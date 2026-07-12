@@ -10,7 +10,7 @@
     </parent>
     <artifactId>ydsz-pmis-finance-infra</artifactId>
     <name>ydsz-pmis-finance-infra</name>
-    <description>DDD Module</description>
+    <description>Infrastructure Layer</description>
     <dependencies>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>

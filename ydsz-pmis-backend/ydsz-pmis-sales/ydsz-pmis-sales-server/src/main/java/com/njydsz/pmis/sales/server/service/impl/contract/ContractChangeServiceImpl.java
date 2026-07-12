@@ -1,10 +1,12 @@
-package com.njydsz.pmis.sales.server.service.impl.contract;
+﻿package com.njydsz.pmis.sales.server.service.impl.contract;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.sales.domain.dto.ContractChangeDTO;
 import com.njydsz.pmis.sales.server.engine.ContractRiskEvaluator;
 import com.njydsz.pmis.sales.domain.entity.ContractChangeDO;
@@ -174,12 +176,16 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      * @return 分页结果
      */
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     @Transactional(readOnly = true)
     public Page<ContractChangeDO> page(int page, int size, String contractId, String status) {
         Page<ContractChangeDO> p = new Page<>(page, size);
         LambdaQueryWrapper<ContractChangeDO> w = new LambdaQueryWrapper<>();
         if (contractId != null) w.eq(ContractChangeDO::getContractId, contractId);
         if (StringUtils.hasText(status)) w.eq(ContractChangeDO::getStatus, status);
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "created_by");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(ContractChangeDO::getCreatedAt);
         return changeMapper.selectPage(p, w);
     }

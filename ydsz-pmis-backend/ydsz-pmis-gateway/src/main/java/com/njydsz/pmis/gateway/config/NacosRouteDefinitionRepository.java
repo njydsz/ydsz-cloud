@@ -3,17 +3,23 @@ package com.njydsz.pmis.gateway.config;
 import com.alibaba.cloud.nacos.NacosConfigManager;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
+import com.alibaba.nacos.api.config.listener.Listener;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinitionRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
- * Nacos 动态路由仓库（P1-6）
+ * Nacos 动态路由仓库（P1-6 + P2-12 增强）
  *
  * <p>从 Nacos 配置中心加载网关路由定义，实现路由动态刷新：
  * 在 Nacos Dashboard 修改路由配置后，网关秒级生效，无需重启。
@@ -41,9 +47,9 @@ import java.util.List;
  * <p>Nacos 路由优先于 {@link RouteConfig} 中的 Java 路由。
  * 若 Nacos 中无路由配置（空或解析失败），则回退到 Java 路由。
  *
- * <h3>动态刷新机制</h3>
- * <p>通过 {@link NacosConfigManager} 监听 Nacos 配置变更事件，
- * 收到变更后重新加载路由定义并触发 {@code RefreshRoutesEvent}。
+ * <h3>P2-12 增强项</h3>
+ * <p>配置变更自动监听：Nacos 配置更新后自动触发 {@code RefreshRoutesEvent}，
+ * 无需手动重启网关即可实时生效。
  *
  * @author ydsz-pmis-team
  * @since 2.2.0
@@ -66,6 +72,12 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
     /** 是否启用动态路由 */
     private final boolean enabled;
 
+    /** P2-12: Spring 事件发布器（用于触发路由刷新） */
+    private final ApplicationEventPublisher eventPublisher;
+
+    /** P2-12: 配置变更监听器（已注册状态标记） */
+    private volatile boolean listenerRegistered = false;
+
     /**
      * 构造 Nacos 动态路由仓库
      *
@@ -73,13 +85,21 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
      * @param dataId             路由配置 DataId
      * @param group              Nacos 配置 Group
      * @param enabled            是否启用
+     * @param eventPublisher     Spring 事件发布器（用于触发路由刷新）
      */
     public NacosRouteDefinitionRepository(NacosConfigManager nacosConfigManager,
-                                         String dataId, String group, boolean enabled) {
+                                         String dataId, String group, boolean enabled,
+                                         ApplicationEventPublisher eventPublisher) {
         this.nacosConfigManager = nacosConfigManager;
         this.dataId = (dataId != null && !dataId.isBlank()) ? dataId : DEFAULT_DATA_ID;
         this.group = group;
         this.enabled = enabled;
+        this.eventPublisher = eventPublisher;
+
+        // P2-12: 注册配置变更监听器
+        if (enabled) {
+            registerConfigListener();
+        }
     }
 
     /**
@@ -125,5 +145,40 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
     @Override
     public Mono<Void> delete(Mono<String> routeId) {
         return Mono.empty();
+    }
+
+    /**
+     * P2-12: 注册 Nacos 配置变更监听器
+     * <p>当 Nacos 中的路由配置变更时，自动触发 {@code RefreshRoutesEvent}。
+     */
+    private void registerConfigListener() {
+        if (listenerRegistered) {
+            return;
+        }
+
+        try {
+            nacosConfigManager.getConfigService().addListener(dataId, group, new Listener() {
+                @Override
+                public void receiveConfigInfo(String configInfo) {
+                    log.info("[NacosRoutes] 检测到路由配置变更 dataId={} group={}", dataId, group);
+                    // 触发路由刷新事件
+                    eventPublisher.publishEvent(new RefreshRoutesEvent(this));
+                    log.info("[NacosRoutes] 已触发路由刷新事件");
+                }
+
+                @Override
+                public Executor getExecutor() {
+                    return Executors.newSingleThreadExecutor(r -> {
+                        Thread t = new Thread(r, "nacos-route-listener");
+                        t.setDaemon(true);
+                        return t;
+                    });
+                }
+            });
+            listenerRegistered = true;
+            log.info("[NacosRoutes] 配置变更监听器已注册 dataId={} group={}", dataId, group);
+        } catch (Exception e) {
+            log.warn("[NacosRoutes] 注册配置变更监听器失败: {}", e.getMessage());
+        }
     }
 }

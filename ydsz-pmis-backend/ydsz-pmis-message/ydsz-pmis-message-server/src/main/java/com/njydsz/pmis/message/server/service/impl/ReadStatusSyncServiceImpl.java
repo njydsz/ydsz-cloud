@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.server.service.impl.receipt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 import com.njydsz.pmis.message.domain.entity.core.MsgNotificationDO;
 import com.njydsz.pmis.message.domain.enums.receipt.ReceiptStatusEnum;

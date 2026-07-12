@@ -1482,9 +1482,9 @@ public class RuleAdminController {
             return map;
         }).collect(Collectors.toList());
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("exportTime", LocalDateTime.now().toString());
-        BaseResponse.put("ruleCount", rules.size());
-        BaseResponse.put("rules", exportData);
+        result.put("exportTime", LocalDateTime.now().toString());
+        result.put("ruleCount", rules.size());
+        result.put("rules", exportData);
         return BaseResponse.ok(result);
     }
 
@@ -1581,8 +1581,8 @@ public class RuleAdminController {
             }
         }
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("imported", imported);
-        BaseResponse.put("skipped", skipped);
+        result.put("imported", imported);
+        result.put("skipped", skipped);
         return BaseResponse.ok(result);
     }
 
@@ -1659,8 +1659,8 @@ public class RuleAdminController {
             }
         }
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("success", success);
-        BaseResponse.put("failed", failed);
+        result.put("success", success);
+        result.put("failed", failed);
         return BaseResponse.ok(result);
     }
 
@@ -1701,8 +1701,8 @@ public class RuleAdminController {
             }
         }
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("success", success);
-        BaseResponse.put("failed", failed);
+        result.put("success", success);
+        result.put("failed", failed);
         return BaseResponse.ok(result);
     }
 
@@ -1737,8 +1737,8 @@ public class RuleAdminController {
             }
         }
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("success", success);
-        BaseResponse.put("failed", failed);
+        result.put("success", success);
+        result.put("failed", failed);
         return BaseResponse.ok(result);
     }
 
@@ -1786,9 +1786,9 @@ public class RuleAdminController {
         // 2. 保存
         RuleChainGraph saved = ruleChainGraphProvider.save(ruleCode, graph, operator);
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("valid", true);
-        BaseResponse.put("issues", issues);
-        BaseResponse.put("graph", saved);
+        result.put("valid", true);
+        result.put("issues", issues);
+        result.put("graph", saved);
         return BaseResponse.ok(result);
     }
 

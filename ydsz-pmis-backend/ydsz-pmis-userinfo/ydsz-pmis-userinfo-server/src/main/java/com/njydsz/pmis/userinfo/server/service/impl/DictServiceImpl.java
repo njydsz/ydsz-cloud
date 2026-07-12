@@ -1,6 +1,6 @@
 package com.njydsz.pmis.userinfo.server.service.impl.org;
 
-import com.njydsz.pmis.common.constant.CacheConstants;
+import com.njydsz.pmis.common.core.constant.CacheConstants;
 import com.njydsz.pmis.userinfo.domain.entity.org.DictItemDO;
 import com.njydsz.pmis.userinfo.domain.entity.org.DictTypeDO;
 import com.njydsz.pmis.userinfo.infra.mapper.org.DictItemMapper;

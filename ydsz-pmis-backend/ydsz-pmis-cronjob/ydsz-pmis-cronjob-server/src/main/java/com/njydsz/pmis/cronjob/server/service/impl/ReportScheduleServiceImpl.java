@@ -2,7 +2,7 @@ package com.njydsz.pmis.cronjob.server.service.impl.job;
 
 import com.alibaba.excel.EasyExcel;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.config.MinioConfig;
+import com.njydsz.pmis.common.file.config.MinioConfig;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.feign.MessageServiceClient;
@@ -312,7 +312,7 @@ public class ReportScheduleServiceImpl implements ReportScheduleService {
             request.setBizType("REPORT");
             request.setBizId(String.valueOf(subId));
             BaseResponse<MessageResult> result = messageServiceClient.send(request);
-            if (result != null && BaseResponse.isSuccess()) {
+            if (result != null && result.isSuccess()) {
                 log.info("[ReportSchedule] 报表邮件通知发送成功: subId={}, recipients={}", subId, recipients);
             } else {
                 log.warn("[ReportSchedule] 报表邮件通知发送失败: subId={}, result={}", subId, result);

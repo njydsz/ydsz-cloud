@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.server.handler;
 
-import com.njydsz.pmis.common.job.JobHandler;
+import com.njydsz.pmis.common.core.job.JobHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;

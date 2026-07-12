@@ -8,7 +8,7 @@ import com.njydsz.pmis.userinfo.domain.dto.auth.CaptchaVO;
 import com.njydsz.pmis.userinfo.server.service.auth.AuthService;
 import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.token.JwtTokenProvider;
+import com.njydsz.pmis.common.auth.token.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;

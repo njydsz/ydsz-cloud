@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.server.core.dag;
 
-import com.njydsz.pmis.common.dag.DagFailureStrategy;
+import com.njydsz.pmis.common.core.dag.DagFailureStrategy;
 
 /**
  * 失败传播策略枚举（P0-1 架构优化：委托到 common.DagFailureStrategy）。

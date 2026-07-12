@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.redis.lock.DistributedLock;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.LoginUser;
 import com.njydsz.pmis.common.auth.context.AuthContext;

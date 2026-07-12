@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.server.job;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.common.job.JobHandler;
+import com.njydsz.pmis.common.core.job.JobHandler;
 import com.njydsz.pmis.workflow.server.config.FlowHistoryProperties;
 import com.njydsz.pmis.workflow.server.service.analytics.FlowHistoryArchiveService;
 import lombok.RequiredArgsConstructor;

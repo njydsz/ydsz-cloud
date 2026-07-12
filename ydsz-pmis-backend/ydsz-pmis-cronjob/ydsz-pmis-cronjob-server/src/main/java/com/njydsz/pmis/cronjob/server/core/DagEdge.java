@@ -53,12 +53,4 @@ public record DagEdge(String from, String to, String failStrategy, String condit
         return FailStrategy.parse(failStrategy);
     }
 
-    /**
-     * 转换为 common 模块统一 DagEdge 模型（P0-3 架构优化）。
-     *
-     * @return 通用 DagEdge 实例
-     */
-    public com.njydsz.pmis.common.dag.DagEdge toCommon() { // FQN-OK: name conflict with local DagEdge
-        return new com.njydsz.pmis.common.dag.DagEdge(from, to, failStrategy, condition); // FQN-OK: name conflict with local DagEdge
-    }
 }

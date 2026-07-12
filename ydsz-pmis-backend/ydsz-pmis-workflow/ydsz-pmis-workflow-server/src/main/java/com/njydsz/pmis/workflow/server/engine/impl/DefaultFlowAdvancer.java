@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.engine.impl;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.server.engine.FlowAdvancer;

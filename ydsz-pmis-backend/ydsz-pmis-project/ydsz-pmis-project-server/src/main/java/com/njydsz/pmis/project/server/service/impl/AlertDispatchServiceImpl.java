@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.notify.event.UnifiedAlertEvent;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.project.domain.dto.AlertDispatchDTO;
 import com.njydsz.pmis.project.domain.entity.AlertDispatchDO;
 import com.njydsz.pmis.project.infra.mapper.AlertDispatchMapper;

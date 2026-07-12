@@ -8,6 +8,7 @@ import com.njydsz.pmis.gateway.config.CachedJwtValidator;
 import com.njydsz.pmis.gateway.config.GatewayConstants;
 import com.njydsz.pmis.gateway.config.InternalHeaderSigner;
 import com.njydsz.pmis.gateway.config.PathGuard;
+import com.njydsz.pmis.gateway.config.SecurityHeadersProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -74,6 +75,8 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     private final CachedJwtValidator cachedJwtValidator;
     /** Redis 响应式模板（用于 Token 黑名单检查） */
     private final ReactiveStringRedisTemplate redisTemplate;
+    /** P2-12: 安全响应头配置 */
+    private final SecurityHeadersProperties securityHeadersProperties;
 
     /**
      * 内部头签名密钥（复用 JWT 密钥，避免新增配置）。
@@ -82,13 +85,6 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
      */
     @Value("${pmis.jwt.secret:}")
     private String internalSignSecret;
-
-    /**
-     * CSP 策略是否允许 unsafe-eval（默认 false）。
-     * <p>仅开发环境可设置为 true（Vue DevTools 需要），生产环境必须为 false。
-     */
-    @Value("${pmis.security.csp.unsafe-eval:false}")
-    private boolean cspUnsafeEval;
 
     /**
      * 核心过滤逻辑：路径规范化 → 链路追踪 → 白名单放行 → Token 校验
@@ -166,6 +162,8 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         return redisTemplate.hasKey(TOKEN_BLACKLIST_PREFIX + jwt)
                 .flatMap(blacklisted -> {
                     if (Boolean.TRUE.equals(blacklisted)) {
+                        // P2-12: 黑名单命中时立即清除缓存
+                        cachedJwtValidator.invalidate(jwt);
                         return unauthorized(exchange, traceId, "error.TOKEN_EXPIRED");
                     }
 
@@ -266,7 +264,10 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     /**
      * 在响应头中注入 CSRF / 浏览器安全响应头
      *
-     * <p>注入头清单:
+     * <h3>P2-12 增强项</h3>
+     * <p>通过 {@link SecurityHeadersProperties} 可配置化，新增 COOP/COEP/CORP 头。
+     *
+     * <h3>注入头清单</h3>
      * <ul>
      *   <li>X-Content-Type-Options: nosniff — 阻止 MIME 嗅探</li>
      *   <li>X-Frame-Options: DENY — 阻止点击劫持(Clickjacking)</li>
@@ -275,6 +276,9 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
      *   <li>X-CSRF-Protection: 1 — 声明已启用 CSRF 防护</li>
      *   <li>Content-Security-Policy — 限制脚本/样式/图片/连接来源,防 XSS 注入</li>
      *   <li>Permissions-Policy — 限制浏览器 API 权限(摄像头/麦克风/地理位置等)</li>
+     *   <li>P2-12: Cross-Origin-Opener-Policy (COOP) — 防止窗口名攻击</li>
+     *   <li>P2-12: Cross-Origin-Embedder-Policy (COEP) — 隔离跨域资源</li>
+     *   <li>P2-12: Cross-Origin-Resource-Policy (CORP) — 限制资源跨域访问</li>
      * </ul>
      *
      * <p>通过 chain.filter().then() 在下游链完成后注入,确保所有成功响应均携带安全头。
@@ -286,42 +290,82 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     private Mono<Void> withSecurityHeaders(ServerWebExchange exchange, Mono<Void> result) {
         return result.then(Mono.fromRunnable(() -> {
             ServerHttpResponse response = exchange.getResponse();
+
+            // 全局开关
+            if (!securityHeadersProperties.isEnabled()) {
+                return;
+            }
+
+            // 基础安全头
             response.getHeaders().add("X-Content-Type-Options", "nosniff");
             response.getHeaders().add("X-Frame-Options", "DENY");
             response.getHeaders().add("X-XSS-Protection", "1; mode=block");
             response.getHeaders().add("Referrer-Policy", "strict-origin-when-cross-origin");
             response.getHeaders().add("X-CSRF-Protection", "1");
+
             // CSP 策略: 限制脚本/样式/图片/连接来源
-            // P3-13: 移除 'unsafe-eval'（生产环境不需要，Vue 模板预编译）
-            //         移除 script-src 的 'unsafe-inline'（防 XSS 注入）
-            //         保留 style-src 的 'unsafe-inline'（Element Plus 运行时样式注入需要）
-            // - script-src: self（仅允许同源脚本）
-            // - style-src: self + unsafe-inline(Element Plus 样式注入)
-            // - img-src: self + data:(base64) + blob:(URL) + https:(CDN 图片)
-            // - connect-src: self + ws/wss(WebSocket) + https(API/Sentry)
-            // - font-src: self + data:(字体 base64)
-            // - frame-ancestors: none(防点击劫持)
-            // - base-uri: self(防 base 标签注入)
-            // - form-action: self(防表单提交到外部)
-            String scriptSrc = cspUnsafeEval
-                    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-                    : "script-src 'self'; ";
-            response.getHeaders().add("Content-Security-Policy",
-                "default-src 'self'; "
-                + scriptSrc
-                + "style-src 'self' 'unsafe-inline'; "
-                + "img-src 'self' data: blob: https:; "
-                + "font-src 'self' data:; "
-                + "connect-src 'self' ws: wss: https:; "
-                + "frame-ancestors 'none'; "
-                + "base-uri 'self'; "
-                + "form-action 'self'");
+            if (securityHeadersProperties.getCsp().isEnabled()) {
+                // P3-13: 移除 'unsafe-eval'（生产环境不需要，Vue 模板预编译）
+                //         移除 script-src 的 'unsafe-inline'（防 XSS 注入）
+                //         保留 style-src 的 'unsafe-inline'（Element Plus 运行时样式注入需要）
+                // - script-src: self（仅允许同源脚本）
+                // - style-src: self + unsafe-inline(Element Plus 样式注入)
+                // - img-src: self + data:(base64) + blob:(URL) + https:(CDN 图片)
+                // - connect-src: self + ws/wss(WebSocket) + https(API/Sentry)
+                // - font-src: self + data:(字体 base64)
+                // - frame-ancestors: none(防点击劫持)
+                // - base-uri: self(防 base 标签注入)
+                // - form-action: self(防表单提交到外部)
+                boolean unsafeEval = securityHeadersProperties.getCsp().isUnsafeEval();
+                String scriptSrc = unsafeEval
+                        ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+                        : "script-src 'self'; ";
+                response.getHeaders().add("Content-Security-Policy",
+                    "default-src 'self'; "
+                    + scriptSrc
+                    + "style-src 'self' 'unsafe-inline'; "
+                    + "img-src 'self' data: blob: https:; "
+                    + "font-src 'self' data:; "
+                    + "connect-src 'self' ws: wss: https:; "
+                    + "frame-ancestors 'none'; "
+                    + "base-uri 'self'; "
+                    + "form-action 'self'");
+            }
+
             // Permissions-Policy: 禁用不需要的浏览器 API
             response.getHeaders().add("Permissions-Policy",
                 "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()");
-            // P1-10: HSTS — 强制 HTTPS（生产环境必须）
-            response.getHeaders().add("Strict-Transport-Security",
-                "max-age=31536000; includeSubDomains; preload");
+
+            // P2-12: COOP (Cross-Origin-Opener-Policy) — 防止窗口名攻击
+            if (securityHeadersProperties.getCoop().isEnabled()) {
+                response.getHeaders().add("Cross-Origin-Opener-Policy",
+                    securityHeadersProperties.getCoop().getPolicy());
+            }
+
+            // P2-12: COEP (Cross-Origin-Embedder-Policy) — 隔离跨域资源
+            if (securityHeadersProperties.getCoep().isEnabled()) {
+                response.getHeaders().add("Cross-Origin-Embedder-Policy",
+                    securityHeadersProperties.getCoep().getPolicy());
+            }
+
+            // P2-12: CORP (Cross-Origin-Resource-Policy) — 限制资源跨域访问
+            if (securityHeadersProperties.getCorp().isEnabled()) {
+                response.getHeaders().add("Cross-Origin-Resource-Policy",
+                    securityHeadersProperties.getCorp().getPolicy());
+            }
+
+            // HSTS (Strict-Transport-Security) — 强制 HTTPS
+            if (securityHeadersProperties.getHsts().isEnabled()) {
+                StringBuilder hstsValue = new StringBuilder()
+                    .append("max-age=").append(securityHeadersProperties.getHsts().getMaxAge());
+                if (securityHeadersProperties.getHsts().isIncludeSubdomains()) {
+                    hstsValue.append("; includeSubDomains");
+                }
+                if (securityHeadersProperties.getHsts().isPreload()) {
+                    hstsValue.append("; preload");
+                }
+                response.getHeaders().add("Strict-Transport-Security", hstsValue.toString());
+            }
         }));
     }
 

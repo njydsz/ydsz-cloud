@@ -2,12 +2,13 @@ package com.njydsz.pmis.cronjob.server.core.map;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.common.job.JobLoggerHolder;
-import com.njydsz.pmis.common.job.MapContext;
-import com.njydsz.pmis.common.job.MapProcessor;
-import com.njydsz.pmis.common.job.MapReduceProcessor;
-import com.njydsz.pmis.common.job.MapTask;
-import com.njydsz.pmis.common.job.ProcessResult;
+import com.njydsz.pmis.common.core.job.JobLogger;
+import com.njydsz.pmis.common.core.job.JobLoggerHolder;
+import com.njydsz.pmis.common.core.job.MapContext;
+import com.njydsz.pmis.common.core.job.MapProcessor;
+import com.njydsz.pmis.common.core.job.MapReduceProcessor;
+import com.njydsz.pmis.common.core.job.MapTask;
+import com.njydsz.pmis.common.core.job.ProcessResult;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteSubTaskRequest;
@@ -476,11 +477,11 @@ public class MapTaskExecutor {
      * @param context 执行上下文
      */
     private void logStartToJobLogger(MapContext context) {
-        com.njydsz.pmis.common.job.JobLogger logger = JobLoggerHolder.get();
+        JobLogger logger = JobLoggerHolder.get();
         if (logger == null) {
             return;
         }
-        String taskType = context.isRootTask() ? "ROOT" : "SUB_TASK";
+        String taskType = context.isRoot() ? "ROOT" : "SUB_TASK";
         logger.info("[MapTask] 开始执行 {} 任务: taskName={}", taskType, context.getTaskName());
     }
 
@@ -491,11 +492,11 @@ public class MapTaskExecutor {
      * @param result  处理结果
      */
     private void logEndToJobLogger(MapContext context, ProcessResult result) {
-        com.njydsz.pmis.common.job.JobLogger logger = JobLoggerHolder.get();
+        JobLogger logger = JobLoggerHolder.get();
         if (logger == null) {
             return;
         }
-        String taskType = context.isRootTask() ? "ROOT" : "SUB_TASK";
+        String taskType = context.isRoot() ? "ROOT" : "SUB_TASK";
         if (result.isSuccess()) {
             logger.info("[MapTask] {} 任务执行成功: taskName={} result={}",
                     taskType, context.getTaskName(), result.getResult());

@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.template;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.util.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

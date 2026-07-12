@@ -5,10 +5,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.constant.CacheConstants;
-import com.njydsz.pmis.common.datasource.DataSourceConstants;
+import com.njydsz.pmis.common.core.constant.CacheConstants;
+import com.njydsz.pmis.common.jdbc.constant.DataSourceConstants;
+import com.njydsz.pmis.common.core.constant.PageConstants;
 import com.njydsz.pmis.common.domain.query.PageQuery;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.AccountLockInfo;
 import com.njydsz.pmis.common.security.LoginAuditEvent;
@@ -16,7 +17,7 @@ import com.njydsz.pmis.common.security.LoginStatus;
 import com.njydsz.pmis.common.security.PasswordPolicy;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.security.TotpUtil;
-import com.njydsz.pmis.common.service.BloomFilterService;
+import com.njydsz.pmis.common.redis.service.BloomFilterService;
 import com.njydsz.pmis.common.util.CryptoUtil;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginRequest;
@@ -147,7 +148,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @DataScope(deptColumn = "dept_id", userColumn = "id")
     @Transactional(readOnly = true)
     public Page<UserAccountDO> page(UserQueryDTO query) {
-        Page<UserAccountDO> page = new Page<>(query.getPage(), Math.min(query.getSize(), PageQuery.MAX_SIZE));
+        Page<UserAccountDO> page = new Page<>(query.getPageNum(), Math.min(query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
         LambdaQueryWrapper<UserAccountDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(query.getKeyword())) {
             w.like(UserAccountDO::getUsername, query.getKeyword());
@@ -571,10 +572,10 @@ public class UserAccountServiceImpl implements UserAccountService {
         for (String s : customDeptIds.split(",")) {
             String trimmed = s.trim();
             if (!trimmed.isEmpty()) {
-                BaseResponse.add(trimmed);
+                result.add(trimmed);
             }
         }
-        return BaseResponse.isEmpty() ? null : result;
+        return result.isEmpty() ? null : result;
     }
 
     /**

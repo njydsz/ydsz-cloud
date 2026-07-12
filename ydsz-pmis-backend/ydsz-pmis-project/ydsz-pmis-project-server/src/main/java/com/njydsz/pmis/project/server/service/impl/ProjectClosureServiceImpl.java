@@ -1,10 +1,12 @@
-package com.njydsz.pmis.project.server.service.impl;
+﻿package com.njydsz.pmis.project.server.service.impl;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.project.domain.dto.ProjectClosureCreateDTO;
 import com.njydsz.pmis.project.domain.dto.ProjectClosureStatusDTO;
 import com.njydsz.pmis.project.server.engine.ClosureAdmissionValidator;
@@ -127,6 +129,7 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
     }
 
     @Override
+    @DataScope(userColumn = "created_by")
     @Transactional(readOnly = true)
     public Page<ProjectClosureDO> page(int page, int size, String keyword,
                                        String closureType, String status) {
@@ -139,6 +142,9 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
         }
         if (StringUtils.hasText(closureType)) w.eq(ProjectClosureDO::getClosureType, closureType);
         if (StringUtils.hasText(status)) w.eq(ProjectClosureDO::getStatus, status);
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "created_by");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(ProjectClosureDO::getCreatedAt);
         return closureMapper.selectPage(p, w);
     }

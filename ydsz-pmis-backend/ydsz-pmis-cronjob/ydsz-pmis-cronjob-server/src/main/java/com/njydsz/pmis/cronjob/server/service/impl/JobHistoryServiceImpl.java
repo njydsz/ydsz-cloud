@@ -2,7 +2,7 @@ package com.njydsz.pmis.cronjob.server.service.impl.job;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobHistoryDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobHistoryMapper;

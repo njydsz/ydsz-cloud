@@ -1,9 +1,9 @@
 package com.njydsz.pmis.project.server.job;
 
 import com.njydsz.pmis.project.server.service.AlertDispatchService;
-import com.njydsz.pmis.common.job.JobHandler;
-import com.njydsz.pmis.common.job.JobRunRecorder;
-import com.njydsz.pmis.common.job.JobRunRecorder.JobRunResult;
+import com.njydsz.pmis.common.core.job.JobHandler;
+import com.njydsz.pmis.common.core.job.JobRunRecorder;
+import com.njydsz.pmis.common.core.job.JobRunRecorder.JobRunResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

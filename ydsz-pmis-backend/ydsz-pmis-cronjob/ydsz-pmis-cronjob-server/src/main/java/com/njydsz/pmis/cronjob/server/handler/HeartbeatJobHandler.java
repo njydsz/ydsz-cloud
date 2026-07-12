@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.server.handler;
 
-import com.njydsz.pmis.common.job.JobHandler;
+import com.njydsz.pmis.common.core.job.JobHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

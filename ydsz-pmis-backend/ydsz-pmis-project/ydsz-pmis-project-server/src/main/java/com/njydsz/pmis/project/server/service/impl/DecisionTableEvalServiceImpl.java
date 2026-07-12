@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.server.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.project.server.engine.DecisionTableEvaluator;
 import com.njydsz.pmis.literule.domain.entity.DecisionTableDO;
 import com.njydsz.pmis.literule.infra.mapper.DecisionTableMapper;

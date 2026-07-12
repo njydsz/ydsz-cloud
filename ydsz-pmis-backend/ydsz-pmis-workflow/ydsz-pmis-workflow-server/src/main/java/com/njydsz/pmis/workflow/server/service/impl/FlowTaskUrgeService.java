@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.server.engine.FlowUrgeLimiter;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowInstanceDO;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;

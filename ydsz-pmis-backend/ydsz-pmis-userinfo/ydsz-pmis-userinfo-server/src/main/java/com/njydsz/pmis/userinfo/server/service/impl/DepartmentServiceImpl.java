@@ -2,8 +2,8 @@ package com.njydsz.pmis.userinfo.server.service.impl.org;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.datasource.DataSourceConstants;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.jdbc.constant.DataSourceConstants;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.userinfo.domain.dto.org.DepartmentFormDTO;
 import com.njydsz.pmis.userinfo.domain.entity.org.DepartmentDO;
 import com.njydsz.pmis.userinfo.infra.mapper.org.DepartmentMapper;

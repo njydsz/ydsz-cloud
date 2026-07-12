@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.notification;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.dto.notification.FlowCommentCreateDTO;
 import com.njydsz.pmis.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.pmis.workflow.domain.entity.notification.FlowCommentDO;

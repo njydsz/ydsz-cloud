@@ -1,10 +1,11 @@
-package com.njydsz.pmis.project.server.service.impl;
+﻿package com.njydsz.pmis.project.server.service.impl;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.project.domain.dto.ApprovalDTO;
 import com.njydsz.pmis.project.domain.dto.PurchaseCreateDTO;
 import com.njydsz.pmis.project.server.engine.BudgetGuard;
@@ -12,6 +13,7 @@ import com.njydsz.pmis.project.domain.entity.PurchaseDO;
 import com.njydsz.pmis.project.domain.enums.ApprovalStatus;
 import com.njydsz.pmis.project.infra.mapper.PurchaseMapper;
 import com.njydsz.pmis.project.server.service.PurchaseService;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -119,6 +121,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     }
 
     @Override
+    @DataScope(userColumn = "created_by")
     @Transactional(readOnly = true)
     public Page<PurchaseDO> page(int page, int size, String keyword, String status, String initiationId) {
         Page<PurchaseDO> p = new Page<>(page, size);
@@ -130,6 +133,9 @@ public class PurchaseServiceImpl implements PurchaseService {
         }
         if (StringUtils.hasText(status)) w.eq(PurchaseDO::getStatus, status);
         if (initiationId != null) w.eq(PurchaseDO::getInitiationId, initiationId);
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "created_by");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(PurchaseDO::getPurchaseDate);
         return purchaseMapper.selectPage(p, w);
     }

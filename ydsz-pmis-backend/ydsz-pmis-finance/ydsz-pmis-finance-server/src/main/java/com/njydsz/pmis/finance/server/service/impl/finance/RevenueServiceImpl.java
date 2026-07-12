@@ -1,10 +1,12 @@
-package com.njydsz.pmis.finance.server.service.impl.finance;
+﻿package com.njydsz.pmis.finance.server.service.impl.finance;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.finance.domain.dto.RevenueCreateDTO;
 import com.njydsz.pmis.finance.domain.entity.RevenueDO;
 import com.njydsz.pmis.finance.domain.enums.RevenueRecognitionMethod;
@@ -113,6 +115,7 @@ public class RevenueServiceImpl implements RevenueService {
     }
 
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     @Transactional(readOnly = true)
     public Page<RevenueDO> page(int page, int size, String keyword, String status,
                                  String contractId, String initiationId, String period) {
@@ -126,6 +129,9 @@ public class RevenueServiceImpl implements RevenueService {
         if (contractId != null) w.eq(RevenueDO::getContractId, contractId);
         if (initiationId != null) w.eq(RevenueDO::getInitiationId, initiationId);
         if (StringUtils.hasText(period)) w.eq(RevenueDO::getPeriod, period);
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "created_by");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(RevenueDO::getRecognitionDate);
         return revenueMapper.selectPage(p, w);
     }

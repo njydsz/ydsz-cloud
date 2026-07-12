@@ -1,10 +1,12 @@
-package com.njydsz.pmis.project.server.service.impl;
+﻿package com.njydsz.pmis.project.server.service.impl;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.project.domain.dto.OpsTicketAssignDTO;
 import com.njydsz.pmis.project.domain.dto.OpsTicketCreateDTO;
 import com.njydsz.pmis.project.domain.dto.OpsTicketStatusDTO;
@@ -184,6 +186,7 @@ public class OpsTicketServiceImpl implements OpsTicketService {
     }
 
     @Override
+    @DataScope(userColumn = "created_by")
     @Transactional(readOnly = true)
     public Page<OpsTicketDO> page(int page, int size, String status, String priority,
                                    String initiationId, String assigneeId, String keyword) {
@@ -197,6 +200,9 @@ public class OpsTicketServiceImpl implements OpsTicketService {
             w.and(q -> q.like(OpsTicketDO::getTicketCode, keyword)
                     .or().like(OpsTicketDO::getTitle, keyword));
         }
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "created_by");
+        if (!ds.isEmpty()) w.apply(ds);
         // 优先级 P1>P2>P3>P4 排序
         w.orderByAsc(OpsTicketDO::getPriority).orderByDesc(OpsTicketDO::getCreatedAt);
         return ticketMapper.selectPage(p, w);

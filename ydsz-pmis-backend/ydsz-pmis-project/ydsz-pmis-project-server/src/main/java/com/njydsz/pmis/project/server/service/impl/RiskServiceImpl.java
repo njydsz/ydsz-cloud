@@ -1,10 +1,12 @@
-package com.njydsz.pmis.project.server.service.impl;
+﻿package com.njydsz.pmis.project.server.service.impl;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.project.domain.dto.RiskCreateDTO;
 import com.njydsz.pmis.project.domain.dto.RiskStatusDTO;
 import com.njydsz.pmis.project.server.engine.RiskScoreEvaluator;
@@ -114,6 +116,7 @@ public class RiskServiceImpl implements RiskService {
     }
 
     @Override
+    @DataScope(userColumn = "owner_id")
     @Transactional(readOnly = true)
     public Page<RiskVO> page(int page, int size, String keyword, String status,
                              String riskLevel, String initiationId) {
@@ -127,6 +130,9 @@ public class RiskServiceImpl implements RiskService {
         if (StringUtils.hasText(status)) w.eq(RiskDO::getStatus, status);
         if (StringUtils.hasText(riskLevel)) w.eq(RiskDO::getRiskLevel, riskLevel);
         if (initiationId != null) w.eq(RiskDO::getInitiationId, initiationId);
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "owner_id");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(RiskDO::getCreatedAt);
         Page<RiskDO> doPage = riskMapper.selectPage(p, w);
         Page<RiskVO> voPage = new Page<>(doPage.getCurrent(), doPage.getSize(), doPage.getTotal());

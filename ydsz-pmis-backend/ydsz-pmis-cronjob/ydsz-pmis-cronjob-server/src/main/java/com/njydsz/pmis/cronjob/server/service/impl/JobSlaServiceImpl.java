@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.server.service.impl.alert;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertType;
 import com.njydsz.pmis.cronjob.domain.dto.alert.JobSlaSaveDTO;
 import com.njydsz.pmis.cronjob.domain.entity.alert.JobSlaDO;
@@ -132,7 +132,7 @@ public class JobSlaServiceImpl implements JobSlaService {
                 .collect(java.util.stream.Collectors.groupingBy(JobAlertRuleDO::getJobId));
         List<JobSlaDO> result = new ArrayList<>();
         for (var entry : grouped.entrySet()) {
-            BaseResponse.add(aggregateSlaFromRules(entry.getKey(), entry.getValue()));
+            result.add(aggregateSlaFromRules(entry.getKey(), entry.getValue()));
         }
         return result;
     }

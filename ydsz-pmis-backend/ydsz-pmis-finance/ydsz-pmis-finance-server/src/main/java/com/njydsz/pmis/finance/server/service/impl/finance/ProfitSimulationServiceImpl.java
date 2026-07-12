@@ -1,10 +1,12 @@
-package com.njydsz.pmis.finance.server.service.impl.finance;
+﻿package com.njydsz.pmis.finance.server.service.impl.finance;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.finance.domain.dto.ProfitSimulationCreateDTO;
 import com.njydsz.pmis.finance.domain.dto.SimulationStatusDTO;
 import com.njydsz.pmis.finance.domain.entity.ProfitSimulationDO;
@@ -174,6 +176,7 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
     }
 
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     @Transactional(readOnly = true)
     public Page<ProfitSimulationDO> page(int page, int size, String initiationId, String scenarioType, String status) {
         Page<ProfitSimulationDO> p = new Page<>(page, size);
@@ -181,6 +184,9 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
         if (initiationId != null) w.eq(ProfitSimulationDO::getInitiationId, initiationId);
         if (StringUtils.hasText(scenarioType)) w.eq(ProfitSimulationDO::getScenarioType, scenarioType);
         if (StringUtils.hasText(status)) w.eq(ProfitSimulationDO::getStatus, status);
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "created_by");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(ProfitSimulationDO::getVersion);
         return mapper.selectPage(p, w);
     }

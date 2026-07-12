@@ -4,7 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.project.api.client.ExecutionClient;
-import com.njydsz.pmis.common.job.JobHandler;
+import com.njydsz.pmis.common.core.job.JobHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.system.server.fallback;
 
 import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.common.event.OperationLogEvent;
+import com.njydsz.pmis.common.audit.event.OperationLogEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

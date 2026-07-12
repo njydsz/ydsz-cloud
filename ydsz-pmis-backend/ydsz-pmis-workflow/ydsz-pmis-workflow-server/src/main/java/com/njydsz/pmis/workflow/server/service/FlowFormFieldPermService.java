@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.integration;
 
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 
 import java.util.Map;
 

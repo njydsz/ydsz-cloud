@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.dmn;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnDecisionDO;
 import com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnRuleDO;

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.server.metrics;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.metrics.AbstractModuleMetrics;
+import com.njydsz.pmis.common.core.metrics.AbstractModuleMetrics;
 import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
 import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
 import io.micrometer.core.instrument.MeterRegistry;

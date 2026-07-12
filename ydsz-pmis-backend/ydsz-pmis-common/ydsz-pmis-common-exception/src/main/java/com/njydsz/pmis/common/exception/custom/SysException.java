@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.exception.custom;
 
 import org.springframework.http.HttpStatus;
+import com.njydsz.pmis.common.core.response.ResultCode;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.pmis.common.exception.core.ExceptionInfo;
 import com.njydsz.pmis.common.exception.enums.ExceptionCategory;
@@ -167,6 +168,70 @@ public class SysException extends AbstractYdszException {
         this.level = ExceptionLevel.ERROR;
         this.category = ExceptionCategory.SYSTEM;
         this.code = code;
+        this.key = key;
+        this.params = normalizeParams(params);
+        this.message = null;
+        this.messageKey = key;
+        this.messageParams = this.params;
+    }
+
+    /**
+     * 使用 ResultCode 构造系统异常。
+     *
+     * <p>兼容业务模块中以 StandardResultCode 作为错误码的调用方式。
+     *
+     * @param resultCode 结果码
+     */
+    public SysException(ResultCode resultCode) {
+        super();
+        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
+        this.level = ExceptionLevel.ERROR;
+        this.category = ExceptionCategory.SYSTEM;
+        this.code = resultCode.getCode();
+        this.key = resultCode.getMessageKey();
+        this.params = normalizeParams(new Object[]{});
+        this.message = null;
+        this.messageKey = resultCode.getMessageKey();
+        this.messageParams = this.params;
+    }
+
+    /**
+     * 使用 ResultCode 和自定义消息构造系统异常。
+     *
+     * <p>兼容业务模块中以 StandardResultCode 作为错误码的调用方式。
+     *
+     * @param resultCode 结果码
+     * @param message    自定义消息
+     */
+    public SysException(ResultCode resultCode, String message) {
+        super(message);
+        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
+        this.level = ExceptionLevel.ERROR;
+        this.category = ExceptionCategory.SYSTEM;
+        this.code = resultCode.getCode();
+        this.key = resultCode.getMessageKey();
+        this.params = normalizeParams(new Object[]{});
+        this.message = message;
+        this.messageKey = key;
+        this.messageParams = this.params;
+    }
+
+    /**
+     * 使用 ResultCode、消息 key 和可变参数构造系统异常。
+     *
+     * <p>兼容业务模块中以 StandardResultCode 作为错误码、
+     * 使用国际化消息 key 和参数的调用方式。
+     *
+     * @param resultCode 结果码
+     * @param key        国际化消息 key
+     * @param params     消息参数（可变参数）
+     */
+    public SysException(ResultCode resultCode, String key, Object... params) {
+        super();
+        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
+        this.level = ExceptionLevel.ERROR;
+        this.category = ExceptionCategory.SYSTEM;
+        this.code = resultCode.getCode();
         this.key = key;
         this.params = normalizeParams(params);
         this.message = null;

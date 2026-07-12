@@ -2,7 +2,7 @@ package com.njydsz.pmis.userinfo.server.service.impl.user;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.userinfo.domain.dto.user.EmployeeTagCreateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.user.EmployeeTagDO;
 import com.njydsz.pmis.userinfo.domain.enums.user.TagType;

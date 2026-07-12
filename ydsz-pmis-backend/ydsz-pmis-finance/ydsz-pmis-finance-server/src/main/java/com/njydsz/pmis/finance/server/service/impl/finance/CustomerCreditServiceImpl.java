@@ -1,10 +1,12 @@
-package com.njydsz.pmis.finance.server.service.impl.finance;
+﻿package com.njydsz.pmis.finance.server.service.impl.finance;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.finance.domain.dto.CreditAssessmentDTO;
 import com.njydsz.pmis.literule.server.calc.CreditScoreEvaluator;
 import com.njydsz.pmis.finance.domain.entity.CustomerCreditDO;
@@ -185,6 +187,7 @@ public class CustomerCreditServiceImpl implements CustomerCreditService {
     }
 
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     @Transactional(readOnly = true)
     public Page<CustomerCreditDO> page(int page, int size, String keyword, String level) {
         Page<CustomerCreditDO> p = new Page<>(page, size);
@@ -193,6 +196,9 @@ public class CustomerCreditServiceImpl implements CustomerCreditService {
             w.and(qw -> qw.like(CustomerCreditDO::getCustomerName, keyword));
         }
         if (StringUtils.hasText(level)) w.eq(CustomerCreditDO::getCreditLevel, level);
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "created_by");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(CustomerCreditDO::getCreditScore);
         return creditMapper.selectPage(p, w);
     }

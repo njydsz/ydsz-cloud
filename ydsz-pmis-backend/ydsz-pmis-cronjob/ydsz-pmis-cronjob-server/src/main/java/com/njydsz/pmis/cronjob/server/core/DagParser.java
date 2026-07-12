@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.server.core.dag;
 
-import com.njydsz.pmis.common.dag.DagGraph;
+import com.njydsz.pmis.common.core.dag.DagGraph;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobRelationDO;
 import org.springframework.stereotype.Component;
 

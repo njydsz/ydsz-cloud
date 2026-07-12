@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.server.service.impl.job;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.cronjob.server.core.dag.DagParser;
 import com.njydsz.pmis.cronjob.server.core.dag.FailStrategy;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobRelationDO;

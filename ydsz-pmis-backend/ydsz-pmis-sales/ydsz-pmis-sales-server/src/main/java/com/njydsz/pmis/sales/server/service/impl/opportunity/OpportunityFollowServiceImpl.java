@@ -1,9 +1,11 @@
-package com.njydsz.pmis.sales.server.service.impl.opportunity;
+﻿package com.njydsz.pmis.sales.server.service.impl.opportunity;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.sales.domain.dto.OpportunityFollowDTO;
 import com.njydsz.pmis.sales.domain.entity.OpportunityFollowDO;
 import com.njydsz.pmis.sales.infra.mapper.OpportunityFollowMapper;
@@ -65,11 +67,15 @@ public class OpportunityFollowServiceImpl implements OpportunityFollowService {
      * @return 分页结果
      */
     @Override
+    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     @Transactional(readOnly = true)
     public Page<OpportunityFollowDO> page(int page, int size, String opportunityId) {
         Page<OpportunityFollowDO> p = new Page<>(page, size);
         LambdaQueryWrapper<OpportunityFollowDO> w = new LambdaQueryWrapper<>();
         if (opportunityId != null && !opportunityId.isBlank()) w.eq(OpportunityFollowDO::getOpportunityId, opportunityId);
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "created_by");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(OpportunityFollowDO::getFollowAt);
         return followMapper.selectPage(p, w);
     }

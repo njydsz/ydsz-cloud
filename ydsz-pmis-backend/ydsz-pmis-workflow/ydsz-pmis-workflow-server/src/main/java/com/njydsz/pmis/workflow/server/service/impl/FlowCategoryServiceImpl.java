@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.server.service.impl.definition;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.workflow.domain.dto.definition.FlowCategoryDTO;
 import com.njydsz.pmis.workflow.domain.entity.definition.FlowCategoryDO;

@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.server.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.excel.EasyExcel;
-import com.njydsz.pmis.common.config.MinioConfig;
+import com.njydsz.pmis.common.file.config.MinioConfig;
 import com.njydsz.pmis.project.domain.dto.CockpitDrillDownDTO;
 import com.njydsz.pmis.project.server.service.AsyncExportService;
 import com.njydsz.pmis.project.server.service.CockpitReportService;

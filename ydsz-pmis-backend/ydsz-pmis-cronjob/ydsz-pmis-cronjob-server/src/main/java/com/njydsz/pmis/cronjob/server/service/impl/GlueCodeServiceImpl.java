@@ -2,7 +2,7 @@ package com.njydsz.pmis.cronjob.server.service.impl.schedule;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.cronjob.domain.entity.schedule.GlueCodeDO;
 import com.njydsz.pmis.cronjob.infra.mapper.schedule.GlueCodeMapper;
 import com.njydsz.pmis.cronjob.server.service.schedule.GlueCodeService;
@@ -126,8 +126,8 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     public Map<String, Object> testCode(String sourceCode, String language, String paramsJson) {
         Map<String, Object> result = new HashMap<>();
         if (sourceCode == null || sourceCode.isBlank()) {
-            BaseResponse.put("success", false);
-            BaseResponse.put("error", "Source code is empty");
+            result.put("success", false);
+            result.put("error", "Source code is empty");
             return result;
         }
         String lang = StringUtils.hasText(language) ? language.toUpperCase() : "GROOVY";
@@ -135,13 +135,13 @@ public class GlueCodeServiceImpl implements GlueCodeService {
         try {
             // 根据语言选择执行方式
             Object execResult = executeByLanguage(sourceCode, lang, paramsJson);
-            BaseResponse.put("success", true);
-            BaseResponse.put("result", execResult);
-            BaseResponse.put("durationMs", System.currentTimeMillis() - startTime);
+            result.put("success", true);
+            result.put("result", execResult);
+            result.put("durationMs", System.currentTimeMillis() - startTime);
         } catch (Exception e) {
-            BaseResponse.put("success", false);
-            BaseResponse.put("error", e.getMessage());
-            BaseResponse.put("durationMs", System.currentTimeMillis() - startTime);
+            result.put("success", false);
+            result.put("error", e.getMessage());
+            result.put("durationMs", System.currentTimeMillis() - startTime);
             log.warn("[Glue] 测试执行失败: lang={} reason={}", lang, e.getMessage());
         }
         return result;
@@ -157,8 +157,8 @@ public class GlueCodeServiceImpl implements GlueCodeService {
                 template.put("template",
                         "// GLUE Groovy 模板\n" +
                         "// 实现 JobHandler 接口或定义 execute 方法\n" +
-                        "import com.njydsz.pmis.common.job.JobHandler\n" +
-                        "import com.njydsz.pmis.common.job.ProcessResult\n" +
+                        "import com.njydsz.pmis.common.core.job.JobHandler\n" +
+                        "import com.njydsz.pmis.common.core.job.ProcessResult\n" +
                         "\n" +
                         "class MyJob implements JobHandler {\n" +
                         "    @Override\n" +
@@ -226,20 +226,20 @@ public class GlueCodeServiceImpl implements GlueCodeService {
         if (codeA == null || codeB == null) {
             throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_glue_version_not_found");
         }
-        BaseResponse.put("versionA", Map.of(
+        result.put("versionA", Map.of(
                 "version", versionA,
                 "sourceCode", codeA.getSourceCode(),
                 "remark", codeA.getRemark() != null ? codeA.getRemark() : "",
                 "createdAt", codeA.getCreatedAt() != null ? codeA.getCreatedAt().toString() : ""
         ));
-        BaseResponse.put("versionB", Map.of(
+        result.put("versionB", Map.of(
                 "version", versionB,
                 "sourceCode", codeB.getSourceCode(),
                 "remark", codeB.getRemark() != null ? codeB.getRemark() : "",
                 "createdAt", codeB.getCreatedAt() != null ? codeB.getCreatedAt().toString() : ""
         ));
         // 计算行级差异
-        BaseResponse.put("diff", computeLineDiff(codeA.getSourceCode(), codeB.getSourceCode()));
+        result.put("diff", computeLineDiff(codeA.getSourceCode(), codeB.getSourceCode()));
         return result;
     }
 

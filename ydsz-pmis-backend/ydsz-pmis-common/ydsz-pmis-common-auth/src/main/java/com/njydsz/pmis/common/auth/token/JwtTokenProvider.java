@@ -67,14 +67,14 @@ public class JwtTokenProvider {
      * @return JWT 访问令牌
      */
     public String generateToken(String userId, String username,
-                                String roles, String permissions,
-                                String deptId, List<Long> deptIds, List<Long> customDeptIds,
+                                List<String> roles, List<String> permissions,
+                                String deptId, List<String> deptIds, List<String> customDeptIds,
                                 String dataScope,
                                 long expireSeconds) {
         UserInfo userInfo = new UserInfo();
         userInfo.setUserId(userId);
         userInfo.setUsername(username);
-        userInfo.setRoleCode(roles);
+        userInfo.setRoleCode(roles != null ? String.join(",", roles) : null);
         return jwtTokenService.issueAccessToken(userInfo);
     }
 

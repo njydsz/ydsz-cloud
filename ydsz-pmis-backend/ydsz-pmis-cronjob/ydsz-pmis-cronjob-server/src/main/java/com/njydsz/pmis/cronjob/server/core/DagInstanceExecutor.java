@@ -2,8 +2,10 @@ package com.njydsz.pmis.cronjob.server.core.dag;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.common.dag.DagInstanceStatus;
-import com.njydsz.pmis.common.dag.DagNodeStatus;
+import com.njydsz.pmis.common.core.dag.DagInstanceStatus;
+import com.njydsz.pmis.common.core.dag.DagNodeStatus;
+import com.njydsz.pmis.common.core.dag.SpELConditionEvaluator;
+import com.njydsz.pmis.cronjob.server.core.TaskCompletedEvent;
 import com.njydsz.pmis.cronjob.server.core.dispatch.TaskDispatcher;
 import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagDO;
 import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagInstanceDO;
@@ -69,7 +71,7 @@ private final JobLogMapper jobLogMapper;
 private final DagDefinitionCodec dagDefinitionCodec;
 private final TaskDispatcher taskDispatcher;
 /** P1-8: SpEL 条件表达式引擎 */
-private final com.njydsz.pmis.common.dag.SpELConditionEvaluator spELConditionEvaluator;
+private final SpELConditionEvaluator spELConditionEvaluator;
 
     /**
      * 异步执行 DAG 实例。

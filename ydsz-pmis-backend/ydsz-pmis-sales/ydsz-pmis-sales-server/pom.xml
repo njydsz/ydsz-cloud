@@ -10,7 +10,7 @@
     </parent>
     <artifactId>ydsz-pmis-sales-server</artifactId>
     <name>ydsz-pmis-sales-server</name>
-    <description>DDD Module</description>
+    <description>Application Layer</description>
     <dependencies>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
@@ -58,7 +58,6 @@
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-literule-server</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.alibaba.fastjson2</groupId>
@@ -100,12 +99,10 @@
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-project-domain</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-project-server</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>

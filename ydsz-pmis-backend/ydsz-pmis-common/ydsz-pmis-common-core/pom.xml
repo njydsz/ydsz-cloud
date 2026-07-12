@@ -102,6 +102,12 @@
             <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- Micrometer (for AbstractModuleMetrics) -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
 

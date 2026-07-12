@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.server.service.impl.definition;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;

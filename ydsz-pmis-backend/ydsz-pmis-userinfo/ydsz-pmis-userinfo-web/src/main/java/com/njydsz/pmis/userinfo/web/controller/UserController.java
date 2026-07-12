@@ -8,7 +8,7 @@ import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.userinfo.domain.dto.auth.PasswordChangeDTO;
 import com.njydsz.pmis.userinfo.domain.dto.auth.PasswordResetDTO;

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.server.engine;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
 import com.njydsz.pmis.finance.api.client.FinanceDataClient;
 import com.njydsz.pmis.project.infra.mapper.PurchaseMapper;

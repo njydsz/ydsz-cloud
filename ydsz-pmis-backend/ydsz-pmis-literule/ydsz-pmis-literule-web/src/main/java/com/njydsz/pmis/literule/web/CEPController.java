@@ -194,8 +194,8 @@ public class CEPController {
         engine.feed(event);
         int hitsAfter = (int) engine.totalHits();
         Map<String, Object> result = new HashMap<>();
-        BaseResponse.put("fed", true);
-        BaseResponse.put("triggeredHits", hitsAfter - hitsBefore);
+        result.put("fed", true);
+        result.put("triggeredHits", hitsAfter - hitsBefore);
         return BaseResponse.ok(result);
     }
 
@@ -344,10 +344,10 @@ public class CEPController {
             long hitsAfter = engine.totalHits();
 
             Map<String, Object> result = new HashMap<>();
-            BaseResponse.put("patternId", patternId);
-            BaseResponse.put("fedEvents", eventsList.size());
-            BaseResponse.put("triggeredHits", hitsAfter - hitsBefore);
-            BaseResponse.put("hits", testHits);
+            result.put("patternId", patternId);
+            result.put("fedEvents", eventsList.size());
+            result.put("triggeredHits", hitsAfter - hitsBefore);
+            result.put("hits", testHits);
             return BaseResponse.ok(result);
         } catch (Exception e) {
             log.warn("[CEP] 测试模式失败: {}", e.getMessage());

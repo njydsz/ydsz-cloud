@@ -1,11 +1,13 @@
-package com.njydsz.pmis.project.server.service.impl;
+﻿package com.njydsz.pmis.project.server.service.impl;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.event.ProjectChangeExecutedEvent;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.project.domain.dto.ProjectChangeCreateDTO;
 import com.njydsz.pmis.project.domain.dto.ProjectChangeStatusDTO;
 import com.njydsz.pmis.project.server.engine.ChangeImpactEvaluator;
@@ -171,6 +173,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      * @return 分页结果
      */
     @Override
+    @DataScope(userColumn = "created_by")
     @Transactional(readOnly = true)
     public Page<ProjectChangeDO> page(int page, int size, String keyword,
                                       String changeType, String status, String initiationId) {
@@ -184,6 +187,9 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
         if (StringUtils.hasText(changeType)) w.eq(ProjectChangeDO::getChangeType, changeType);
         if (StringUtils.hasText(status)) w.eq(ProjectChangeDO::getStatus, status);
         if (initiationId != null) w.eq(ProjectChangeDO::getInitiationId, initiationId);
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "created_by");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(ProjectChangeDO::getCreatedAt);
         return changeMapper.selectPage(p, w);
     }

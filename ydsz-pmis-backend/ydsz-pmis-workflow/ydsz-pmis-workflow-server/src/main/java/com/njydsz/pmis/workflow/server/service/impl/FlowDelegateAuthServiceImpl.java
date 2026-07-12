@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.server.service.impl.delegate;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

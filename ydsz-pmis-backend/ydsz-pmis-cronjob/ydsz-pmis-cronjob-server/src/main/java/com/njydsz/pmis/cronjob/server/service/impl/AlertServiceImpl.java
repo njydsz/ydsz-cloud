@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.server.service.impl.alert;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertType;
 import com.njydsz.pmis.cronjob.domain.dto.alert.AlertRuleSaveDTO;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobAlertLogDO;

@@ -8,6 +8,7 @@ import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.feign.MessageServiceClient;
 import com.njydsz.pmis.common.feign.NotificationClient;
 import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
+import com.njydsz.pmis.cronjob.server.core.AlertSendException;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobAlertLogDO;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobAlertRuleDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobAlertLogMapper;
@@ -304,12 +305,12 @@ public class AlertDispatcher {
         request.setParams(params);
         try {
             BaseResponse<MessageResult> result = messageServiceClient.send(request);
-            if (result == null || !BaseResponse.isSuccess()) {
-                String reason = result != null && BaseResponse.getMessage() != null
-                         ? BaseResponse.getMessage() : "unknown";
+            if (result == null || !result.isSuccess()) {
+                String reason = result != null && result.getMessage() != null
+                         ? result.getMessage() : "unknown";
                 throw new AlertSendException("message module returned failure: " + reason);
             }
-            MessageResult msgResult = BaseResponse.getData();
+            MessageResult msgResult = result.getData();
             if (msgResult != null && !msgResult.isSuccess()) {
                 throw new AlertSendException(
                          msgResult.getErrorMessage() != null ? msgResult.getErrorMessage() : "send failed");

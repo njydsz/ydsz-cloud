@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
@@ -84,7 +83,6 @@ public class ProjectFileHelper {
      * @return 文件存储路径（objectName）
      */
     public String storeExportFile(byte[] bytes, String fileName, String contentType) {
-        IFileStorage storage = fileStorageProvider.getStorage();
         String ext = extractExtension(fileName);
         String month = LocalDate.now().format(MONTH_FMT);
         String objectName = String.format("project/export/%s/%s.%s", month, UUID.randomUUID(), ext);

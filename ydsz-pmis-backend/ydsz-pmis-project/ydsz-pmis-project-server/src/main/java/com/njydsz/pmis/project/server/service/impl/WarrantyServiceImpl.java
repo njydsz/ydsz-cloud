@@ -1,10 +1,12 @@
-package com.njydsz.pmis.project.server.service.impl;
+﻿package com.njydsz.pmis.project.server.service.impl;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.project.domain.dto.WarrantyCreateDTO;
 import com.njydsz.pmis.project.domain.dto.WarrantyTerminateDTO;
 import com.njydsz.pmis.project.server.engine.AfterSalesCodeGen;
@@ -137,6 +139,7 @@ public class WarrantyServiceImpl implements WarrantyService {
     }
 
     @Override
+    @DataScope(userColumn = "created_by")
     @Transactional(readOnly = true)
     public Page<WarrantyDO> page(int page, int size, String status, String initiationId, String keyword) {
         Page<WarrantyDO> p = new Page<>(page, size);
@@ -147,6 +150,9 @@ public class WarrantyServiceImpl implements WarrantyService {
             w.and(q -> q.like(WarrantyDO::getWarrantyCode, keyword)
                     .or().like(WarrantyDO::getContactName, keyword));
         }
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "created_by");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(WarrantyDO::getCreatedAt);
         return warrantyMapper.selectPage(p, w);
     }

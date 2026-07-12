@@ -2,7 +2,7 @@ package com.njydsz.pmis.userinfo.server.service.impl.auth;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.TotpUtil;
 import com.njydsz.pmis.userinfo.domain.dto.auth.TwoFactorBindResult;
 import com.njydsz.pmis.userinfo.domain.entity.user.User2FADO;

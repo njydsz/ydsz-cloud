@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.server.core.handler;
 
-import com.njydsz.pmis.common.job.JobHandler;
-import com.njydsz.pmis.common.job.JobLoggerHolder;
+import com.njydsz.pmis.common.core.job.JobHandler;
+import com.njydsz.pmis.common.core.job.JobLoggerHolder;
 import com.njydsz.pmis.cronjob.server.core.executor.SandboxScriptExecutor;
 import com.njydsz.pmis.cronjob.domain.entity.schedule.GlueCodeDO;
 import com.njydsz.pmis.cronjob.server.service.schedule.GlueCodeService;
@@ -104,7 +104,7 @@ public class GlueJobHandler implements JobHandler {
     @Override
     public Object execute(String paramsJson) throws Exception {
         // 从 JobContextHolder 获取当前 jobId
-        String jobId = com.njydsz.pmis.common.job.JobContextHolder.getJobId();
+        String jobId = com.njydsz.pmis.common.core.job.JobContextHolder.getJobId();
         if (!StringUtils.hasText(jobId)) {
             throw new IllegalStateException("GLUE 任务执行上下文缺少 jobId，请确认 JobContextHolder 已正确设置");
         }

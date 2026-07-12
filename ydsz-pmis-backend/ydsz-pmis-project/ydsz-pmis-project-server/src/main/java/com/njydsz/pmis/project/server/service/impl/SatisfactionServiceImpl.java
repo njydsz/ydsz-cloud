@@ -1,10 +1,12 @@
-package com.njydsz.pmis.project.server.service.impl;
+﻿package com.njydsz.pmis.project.server.service.impl;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.project.domain.dto.SatisfactionCreateDTO;
 import com.njydsz.pmis.project.server.engine.AfterSalesCodeGen;
 import com.njydsz.pmis.project.domain.entity.SatisfactionDO;
@@ -100,6 +102,7 @@ public class SatisfactionServiceImpl implements SatisfactionService {
     }
 
     @Override
+    @DataScope(userColumn = "created_by")
     @Transactional(readOnly = true)
     public Page<SatisfactionDO> page(int page, int size, String level, String initiationId, String keyword) {
         Page<SatisfactionDO> p = new Page<>(page, size);
@@ -110,6 +113,9 @@ public class SatisfactionServiceImpl implements SatisfactionService {
             w.and(q -> q.like(SatisfactionDO::getSurveyCode, keyword)
                     .or().like(SatisfactionDO::getComments, keyword));
         }
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "created_by");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(SatisfactionDO::getEvaluatedAt);
         return satisfactionMapper.selectPage(p, w);
     }

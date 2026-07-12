@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.server.token;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.util.CryptoUtil;
 import com.njydsz.pmis.message.server.config.MessageProperties;
 import lombok.RequiredArgsConstructor;

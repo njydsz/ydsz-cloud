@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.project.server.assembler.NameAssembler;
 import com.njydsz.pmis.project.domain.dto.WbsTaskCreateDTO;

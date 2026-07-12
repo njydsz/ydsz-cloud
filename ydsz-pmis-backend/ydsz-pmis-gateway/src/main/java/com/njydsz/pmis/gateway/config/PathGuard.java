@@ -1,11 +1,22 @@
 package com.njydsz.pmis.gateway.config;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
 /**
  * 路径安全工具类
  *
  * <p>提供路径规范化、白名单匹配和内部头列表功能，防止路径穿越攻击和客户端伪造内部头。
+ *
+ * <h3>P2-12 增强项</h3>
+ * <ul>
+ *   <li>双重 URL 编码检测：拦截 {@code %252e%252e} (Double-Encoding 绕过)</li>
+ *   <li>null 字节注入防护：拦截 {@code %00}、{@code \0}</li>
+ *   <li>混合编码检测：拦截 {@code .%2f} 等混合编码穿越</li>
+ *   <li>URL 解码规范化：先解码再检测，防范编码绕过</li>
+ * </ul>
  *
  * @author ydsz-pmis-team
  * @since 2.2.0
@@ -30,6 +41,9 @@ public final class PathGuard {
             "X-Real-IP"
     );
 
+    /** 最大解码次数（防止递归解码 DoS） */
+    private static final int MAX_DECODE_ITERATIONS = 3;
+
     /**
      * 创建不可修改的白名单集合
      *
@@ -43,7 +57,19 @@ public final class PathGuard {
     /**
      * 路径规范化，检测并拦截路径穿越攻击
      *
-     * <p>检测 {@code ..}、{@code //}、{@code %2e} 等路径穿越模式。
+     * <h3>P2-12 增强检测项</h3>
+     * <ul>
+     *   <li>基础穿越模式：{@code ..}、{@code %2e}、{@code //}、{@code \}、{@code %5c}、{@code %2f}</li>
+     *   <li>双重编码：{@code %252e%252e} (Double-Encoding bypass)</li>
+     *   <li>null 字节注入：{@code %00}、{@code \0}</li>
+     *   <li>混合编码：{@code .%2f}、{@code %2e%2f}</li>
+     * </ul>
+     *
+     * <p>检测流程：
+     * <ol>
+     *   <li>先进行递归 URL 解码（最多 3 次），防范编码绕过</li>
+     *   <li>对解码后的路径进行模式匹配检测</li>
+     * </ol>
      *
      * @param rawPath 原始路径
      * @return 规范化后的路径，如果检测到穿越攻击返回 null
@@ -52,17 +78,79 @@ public final class PathGuard {
         if (rawPath == null || rawPath.isEmpty()) {
             return rawPath;
         }
+
+        // P2-12: 递归 URL 解码（最多 3 次），防范 Double-Encoding 攻击
+        String decodedPath = recursiveDecode(rawPath);
+
         // 检测路径穿越攻击
-        String lowerPath = rawPath.toLowerCase();
+        String lowerPath = decodedPath.toLowerCase();
+
+        // 基础检测：父目录引用
         if (lowerPath.contains("..") ||
-                lowerPath.contains("%2e") ||
-                lowerPath.contains("//") ||
-                lowerPath.contains("\\") ||
-                lowerPath.contains("%5c") ||
-                lowerPath.contains("%2f")) {
+                lowerPath.contains("%2e%2e") ||
+                lowerPath.contains("%2e.")) {
             return null;
         }
+
+        // 反斜杠检测
+        if (lowerPath.contains("\\") ||
+                lowerPath.contains("%5c") ||
+                lowerPath.contains("%5C")) {
+            return null;
+        }
+
+        // 双斜杠检测（可被用于绕过某些安全检查）
+        if (lowerPath.contains("//")) {
+            return null;
+        }
+
+        // P2-12: null 字节注入检测（可导致文件系统问题）
+        if (lowerPath.contains("%00") ||
+                lowerPath.contains("%00") ||
+                decodedPath.contains("\0")) {
+            return null;
+        }
+
+        // P2-12: 混合编码检测（如 .%2f、%2e%2f）
+        if (lowerPath.contains(".%2f") ||
+                lowerPath.contains(".%5c") ||
+                lowerPath.contains("%2f.") ||
+                lowerPath.contains("%2e%2f") ||
+                lowerPath.contains("%2e%5c")) {
+            return null;
+        }
+
         return rawPath;
+    }
+
+    /**
+     * 递归 URL 解码（最多 MAX_DECODE_ITERATIONS 次）
+     *
+     * <p>防范 Double-Encoding 攻击：攻击者将路径编码两次 ({@code %252e} 代表 {@code %2e} 再代表 {@code .})
+     *
+     * @param path 原始路径
+     * @return 解码后的路径（或原始路径，如果解码失败）
+     */
+    private static String recursiveDecode(String path) {
+        String result = path;
+        int iterations = 0;
+
+        while (iterations < MAX_DECODE_ITERATIONS) {
+            String prev = result;
+            try {
+                result = URLDecoder.decode(result, StandardCharsets.UTF_8.name());
+            } catch (UnsupportedEncodingException | IllegalArgumentException e) {
+                // 解码失败，返回上次成功解码的结果或原始路径
+                return prev;
+            }
+            // 解码后不再变化，提前终止
+            if (result.equals(prev)) {
+                break;
+            }
+            iterations++;
+        }
+
+        return result;
     }
 
     /**

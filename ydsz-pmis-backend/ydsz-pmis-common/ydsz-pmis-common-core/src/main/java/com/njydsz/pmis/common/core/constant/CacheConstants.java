@@ -18,4 +18,13 @@ public final class CacheConstants {
 
     /** 通用缓存键前缀 */
     public static final String CACHE_PREFIX = "ydsz:";
+
+    /** 字典缓存名称 */
+    public static final String DICT_CACHE = "dict";
+
+    /** 用户按用户名查询缓存名称 */
+    public static final String USER_BY_USERNAME_CACHE = "user:username";
+
+    /** 用户按 ID 查询缓存名称 */
+    public static final String USER_BY_ID_CACHE = "user:id";
 }

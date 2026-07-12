@@ -2,7 +2,7 @@ package com.njydsz.pmis.cronjob.server.service.impl.job;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.domain.entity.job.TenantQuotaDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;

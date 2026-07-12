@@ -10,7 +10,7 @@
     </parent>
     <artifactId>ydsz-pmis-finance-api</artifactId>
     <name>ydsz-pmis-finance-api</name>
-    <description>DDD Module</description>
+    <description>API Layer</description>
     <dependencies>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>

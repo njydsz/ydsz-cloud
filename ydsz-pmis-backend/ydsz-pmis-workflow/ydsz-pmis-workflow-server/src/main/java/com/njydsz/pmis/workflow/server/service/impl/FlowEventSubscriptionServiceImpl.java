@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.server.service.impl.integration;
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.server.engine.FlowAdvancer;

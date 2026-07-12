@@ -5,9 +5,9 @@ import com.njydsz.pmis.userinfo.domain.dto.auth.CaptchaVO;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginDTO;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginResultVO;
 import com.njydsz.pmis.userinfo.server.service.auth.AuthService;
-import com.njydsz.pmis.common.token.JwtTokenProvider;
+import com.njydsz.pmis.common.auth.token.JwtTokenProvider;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.AccountLockedEvent;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.CryptoUtil;
@@ -353,10 +353,10 @@ public class AuthServiceImpl implements AuthService {
         for (String s : customDeptIds.split(",")) {
             String trimmed = s.trim();
             if (!trimmed.isEmpty()) {
-                BaseResponse.add(trimmed);
+                result.add(trimmed);
             }
         }
-        return BaseResponse.isEmpty() ? null : result;
+        return result.isEmpty() ? null : result;
     }
 
     /**

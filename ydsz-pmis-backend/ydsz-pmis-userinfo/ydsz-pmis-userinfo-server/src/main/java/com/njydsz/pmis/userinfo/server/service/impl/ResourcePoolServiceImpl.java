@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.userinfo.domain.dto.resource.ResourcePoolCreateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.resource.ResourcePoolDO;
 import com.njydsz.pmis.userinfo.domain.enums.resource.PoolType;

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.integration;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.server.service.integration.FlowFormFieldPermService;
 import lombok.extern.slf4j.Slf4j;

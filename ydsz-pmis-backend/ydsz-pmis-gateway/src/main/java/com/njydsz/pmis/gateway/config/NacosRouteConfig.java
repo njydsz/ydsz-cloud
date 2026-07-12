@@ -5,12 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.route.RouteDefinitionRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 /**
- * Nacos 动态路由配置（P1-6）
+ * Nacos 动态路由配置（P1-6 + P2-12 增强）
  *
  * <p>当 {@code pmis.gateway.dynamic-routes.enabled=true} 时，
  * 注册 {@link NacosRouteDefinitionRepository} 为首选路由定义源，
@@ -18,6 +19,9 @@ import org.springframework.context.annotation.Primary;
  *
  * <p>Java 代码路由（{@link RouteConfig}）作为兜底：
  * 当 Nacos 中无路由配置时，自动回退到 Java 路由。
+ *
+ * <h3>P2-12 增强项</h3>
+ * <p>Nacos 配置变更自动触发路由刷新，无需重启网关。
  *
  * <h3>配置项</h3>
  * <pre>
@@ -45,6 +49,7 @@ public class NacosRouteConfig {
      * @param nacosConfigManager Nacos 配置管理器
      * @param dataId             路由配置 DataId
      * @param group              Nacos 配置 Group（取当前环境 profile）
+     * @param eventPublisher     Spring 事件发布器（P2-12 用于触发路由刷新）
      * @return Nacos 路由定义仓库
      */
     @Bean
@@ -52,8 +57,9 @@ public class NacosRouteConfig {
     public RouteDefinitionRepository nacosRouteDefinitionRepository(
             NacosConfigManager nacosConfigManager,
             @Value("${pmis.gateway.dynamic-routes.data-id:gateway-routes.json}") String dataId,
-            @Value("${spring.profiles.active:dev}") String group) {
+            @Value("${spring.profiles.active:dev}") String group,
+            ApplicationEventPublisher eventPublisher) {
         log.info("[NacosRouteConfig] 动态路由已启用, dataId={}, group={}", dataId, group);
-        return new NacosRouteDefinitionRepository(nacosConfigManager, dataId, group, true);
+        return new NacosRouteDefinitionRepository(nacosConfigManager, dataId, group, true, eventPublisher);
     }
 }

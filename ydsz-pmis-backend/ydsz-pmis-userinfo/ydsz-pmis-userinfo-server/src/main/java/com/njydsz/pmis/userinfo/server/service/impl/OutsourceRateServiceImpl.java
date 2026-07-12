@@ -3,7 +3,7 @@ package com.njydsz.pmis.userinfo.server.service.impl.rate;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRateCreateDTO;
 import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRateUpdateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.rate.OutsourceRateDO;

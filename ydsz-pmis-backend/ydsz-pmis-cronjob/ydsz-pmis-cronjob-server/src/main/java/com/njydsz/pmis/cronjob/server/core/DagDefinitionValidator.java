@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.server.core.dag;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

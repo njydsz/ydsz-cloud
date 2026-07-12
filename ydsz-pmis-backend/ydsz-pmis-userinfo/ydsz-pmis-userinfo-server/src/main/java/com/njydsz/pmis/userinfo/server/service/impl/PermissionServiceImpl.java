@@ -2,7 +2,7 @@ package com.njydsz.pmis.userinfo.server.service.impl.permission;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.userinfo.domain.dto.permission.PermissionFormDTO;
 import com.njydsz.pmis.userinfo.domain.entity.permission.PermissionDO;
 import com.njydsz.pmis.userinfo.infra.mapper.permission.PermissionMapper;

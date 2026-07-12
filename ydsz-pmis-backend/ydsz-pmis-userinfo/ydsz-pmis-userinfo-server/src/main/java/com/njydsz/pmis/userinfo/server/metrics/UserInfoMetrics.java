@@ -1,6 +1,6 @@
 package com.njydsz.pmis.userinfo.server.metrics;
 
-import com.njydsz.pmis.common.metrics.AbstractModuleMetrics;
+import com.njydsz.pmis.common.core.metrics.AbstractModuleMetrics;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;

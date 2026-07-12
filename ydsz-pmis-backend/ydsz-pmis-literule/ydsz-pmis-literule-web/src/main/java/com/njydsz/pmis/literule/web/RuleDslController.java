@@ -3,7 +3,9 @@ package com.njydsz.pmis.literule.web;
 import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.literule.api.Rule;
+import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.server.config.RuleAdminService;
 import com.njydsz.pmis.literule.server.dsl.RuleDsl;
 import com.njydsz.pmis.literule.server.dsl.RuleDslConverter;
@@ -108,16 +110,16 @@ public class RuleDslController {
                 }
             }
 
-            BaseResponse.put("valid", errors.isEmpty());
-            BaseResponse.put("errors", errors);
-            BaseResponse.put("ruleCount", ruleCount);
-            BaseResponse.put("chainCount", dsl.getChains() != null ? dsl.getChains().size() : 0);
+            result.put("valid", errors.isEmpty());
+            result.put("errors", errors);
+            result.put("ruleCount", ruleCount);
+            result.put("chainCount", dsl.getChains() != null ? dsl.getChains().size() : 0);
             return BaseResponse.ok(result);
 
         } catch (IllegalArgumentException e) {
-            BaseResponse.put("valid", false);
-            BaseResponse.put("errors", List.of(e.getMessage()));
-            BaseResponse.put("ruleCount", 0);
+            result.put("valid", false);
+            result.put("errors", List.of(e.getMessage()));
+            result.put("ruleCount", 0);
             return BaseResponse.ok(result);
         } catch (Exception e) {
             log.warn("[DSL] 校验失败: {}", e.getMessage());
@@ -201,12 +203,12 @@ public class RuleDslController {
             }
 
             Map<String, Object> result = new LinkedHashMap<>();
-            BaseResponse.put("totalRules", dsl.getRules() != null ? dsl.getRules().size() : 0);
-            BaseResponse.put("successCount", successCount);
-            BaseResponse.put("failCount", failCount);
-            BaseResponse.put("importedCodes", importedCodes);
-            BaseResponse.put("errors", errors);
-            BaseResponse.put("summary", String.format("共 %d 条，成功 %d 条，失败 %d 条",
+            result.put("totalRules", dsl.getRules() != null ? dsl.getRules().size() : 0);
+            result.put("successCount", successCount);
+            result.put("failCount", failCount);
+            result.put("importedCodes", importedCodes);
+            result.put("errors", errors);
+            result.put("summary", String.format("共 %d 条，成功 %d 条，失败 %d 条",
                     dsl.getRules() != null ? dsl.getRules().size() : 0, successCount, failCount));
 
             log.info("[DSL] 导入完成: success={}, fail={}", successCount, failCount);
@@ -245,9 +247,9 @@ public class RuleDslController {
                 "导出时间: " + java.time.LocalDateTime.now());
 
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("format", "yaml");
-        BaseResponse.put("ruleCount", allRules.size());
-        BaseResponse.put("content", yaml);
+        result.put("format", "yaml");
+        result.put("ruleCount", allRules.size());
+        result.put("content", yaml);
         return BaseResponse.ok(result);
     }
 
@@ -268,9 +270,9 @@ public class RuleDslController {
         String yaml = RuleDslExporter.exportSingleRule(def);
 
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("format", "yaml");
-        BaseResponse.put("ruleCode", ruleCode);
-        BaseResponse.put("content", yaml);
+        result.put("format", "yaml");
+        result.put("ruleCode", ruleCode);
+        result.put("content", yaml);
         return BaseResponse.ok(result);
     }
 
@@ -311,19 +313,19 @@ public class RuleDslController {
             RuleDslParser.validate(dsl);
 
             List<Rule> rules = RuleDslConverter.toRules(dsl, evaluator);
-            com.njydsz.pmis.literule.api.RuleContext context =
-                    com.njydsz.pmis.literule.api.RuleContext.of(facts, "DSL_PREVIEW", "MANUAL");
+            RuleContext context =
+                    RuleContext.of(facts, "DSL_PREVIEW", "MANUAL");
 
             List<Map<String, Object>> results = new ArrayList<>();
             for (Rule rule : rules) {
                 try {
-                    com.njydsz.pmis.literule.api.RuleResult result = rule.evaluate(context);
+                    RuleResult result = rule.evaluate(context);
                     Map<String, Object> r = new LinkedHashMap<>();
-                    r.put("ruleCode", BaseResponse.getRuleCode());
-                    r.put("triggered", BaseResponse.isTriggered());
-                    r.put("severity", BaseResponse.getSeverity() != null ? BaseResponse.getSeverity().name() : null);
-                    r.put("title", BaseResponse.getTitle());
-                    r.put("description", BaseResponse.getDescription());
+                    r.put("ruleCode", result.getRuleCode());
+                    r.put("triggered", result.isTriggered());
+                    r.put("severity", result.getSeverity() != null ? result.getSeverity().name() : null);
+                    r.put("title", result.getTitle());
+                    r.put("description", result.getDescription());
                     results.add(r);
                 } catch (Exception e) {
                     Map<String, Object> r = new LinkedHashMap<>();

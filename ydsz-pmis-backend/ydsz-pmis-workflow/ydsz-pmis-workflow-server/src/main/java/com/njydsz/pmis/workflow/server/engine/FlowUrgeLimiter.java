@@ -28,7 +28,7 @@ import java.util.List;
  * <ul>
  *   <li>key 维度：催办人 userId + 任务/实例 id，避免不同催办人之间互锁</li>
  *   <li>窗口可配置（默认 30 分钟）</li>
- *   <li>限流失败时通过 {@link com.njydsz.pmis.common.exception.SysException}
+ *   <li>限流失败时通过 {@link com.njydsz.pmis.common.exception.custom.SysException}
  *       + {@code RATE_LIMIT} 错误码抛回前端</li>
  * </ul>
  *

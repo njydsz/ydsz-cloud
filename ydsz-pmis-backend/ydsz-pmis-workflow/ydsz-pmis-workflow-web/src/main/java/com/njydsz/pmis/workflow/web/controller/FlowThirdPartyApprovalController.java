@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.web.controller.integration;
 
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.dto.integration.EmbeddedApprovalActionDTO;
 import com.njydsz.pmis.workflow.domain.entity.integration.FlowThirdPartyAccountDO;
 import com.njydsz.pmis.workflow.domain.entity.integration.FlowThirdPartyLogDO;

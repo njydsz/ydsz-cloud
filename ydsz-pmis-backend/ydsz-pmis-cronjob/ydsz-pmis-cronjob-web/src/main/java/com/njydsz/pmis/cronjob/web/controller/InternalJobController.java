@@ -3,9 +3,9 @@ package com.njydsz.pmis.cronjob.web.controller.job;
 import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.job.MapContext;
-import com.njydsz.pmis.common.job.MapProcessor;
-import com.njydsz.pmis.common.job.ProcessResult;
+import com.njydsz.pmis.common.core.job.MapContext;
+import com.njydsz.pmis.common.core.job.MapProcessor;
+import com.njydsz.pmis.common.core.job.ProcessResult;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteSubTaskRequest;
 import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteTaskRequest;

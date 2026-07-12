@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.server.job;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.common.job.JobHandler;
+import com.njydsz.pmis.common.core.job.JobHandler;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowInstanceDO;
 import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;

@@ -4,9 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
+import com.njydsz.pmis.common.core.constant.PageConstants;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.domain.query.PageQuery;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.system.domain.dto.config.ConfigFormDTO;
 import com.njydsz.pmis.system.domain.dto.config.ConfigQueryDTO;
 import com.njydsz.pmis.system.domain.entity.config.ConfigDO;
@@ -66,7 +67,7 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     @Transactional(readOnly = true)
     public Page<ConfigDO> page(ConfigQueryDTO query) {
-        Page<ConfigDO> page = new Page<>(query.getPage(), Math.min(query.getSize(), PageQuery.MAX_SIZE));
+        Page<ConfigDO> page = new Page<>(query.getPageNum(), Math.min(query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
         LambdaQueryWrapper<ConfigDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(query.getKeyword())) {
             w.and(qw -> qw.like(ConfigDO::getConfigKey, query.getKeyword())

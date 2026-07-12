@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.server.consumer;
 
 import com.njydsz.pmis.common.constant.PmisMessageTopics;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.JsonUtils;

@@ -3,7 +3,7 @@ package com.njydsz.pmis.system.server.listener;
 import com.njydsz.pmis.system.domain.entity.audit.OperationLogDO;
 import com.njydsz.pmis.system.server.fallback.OperationLogFallbackLogger;
 import com.njydsz.pmis.system.infra.mapper.audit.OperationLogMapper;
-import com.njydsz.pmis.common.event.OperationLogEvent;
+import com.njydsz.pmis.common.audit.event.OperationLogEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;

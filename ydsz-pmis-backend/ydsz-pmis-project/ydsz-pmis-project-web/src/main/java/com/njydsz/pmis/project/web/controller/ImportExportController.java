@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.web.controller.common;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.project.server.service.ImportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

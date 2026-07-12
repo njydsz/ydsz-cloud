@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.constant.SystemConstants;
 import com.njydsz.pmis.common.domain.query.PageQuery;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.dto.core.NotificationQueryDTO;
 import com.njydsz.pmis.message.domain.dto.core.NotificationSendDTO;
