@@ -1,0 +1,342 @@
+﻿package com.njydsz.pmis.common.safe.config;
+
+import com.njydsz.pmis.common.redis.service.RedisService;
+import com.njydsz.pmis.common.safe.csrf.CsrfTokenGenerator;
+import com.njydsz.pmis.common.safe.csrf.CsrfTokenRepository;
+import com.njydsz.pmis.common.safe.csrf.impl.DefaultCsrfTokenGenerator;
+import com.njydsz.pmis.common.safe.csrf.impl.InMemoryCsrfTokenRepository;
+import com.njydsz.pmis.common.safe.csrf.impl.RedisCsrfTokenRepository;
+import com.njydsz.pmis.common.safe.alert.SafeAlertProperties;
+import com.njydsz.pmis.common.safe.alert.SecurityEventPublisher;
+import com.njydsz.pmis.common.safe.converter.XssJsonMessageConverter;
+import com.njydsz.pmis.common.safe.core.JsonBodyXssCleaner;
+import com.njydsz.pmis.common.safe.advice.XssRequestBodyAdvice;
+import com.njydsz.pmis.common.safe.config.condition.XssConverterModeCondition;
+import com.njydsz.pmis.common.safe.config.condition.XssFilterModeCondition;
+import com.njydsz.pmis.common.safe.filter.CsrfFilter;
+import com.njydsz.pmis.common.safe.filter.SecurityHeaderFilter;
+import com.njydsz.pmis.common.safe.filter.SqlInjectionFilter;
+import com.njydsz.pmis.common.safe.filter.XssFilter;
+import com.njydsz.pmis.common.safe.ratelimit.RateLimitFilter;
+import com.njydsz.pmis.common.safe.ratelimit.RateLimitProperties;
+import com.njydsz.pmis.common.safe.sensitive.SensitiveDataAdvice;
+import com.njydsz.pmis.common.safe.sensitive.SensitiveDataConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.http.converter.autoconfigure.HttpMessageConverters;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.Primary;
+import org.springframework.core.Ordered;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+
+/**
+ * 安全模块自动配置
+ * <p>
+ * 集中注册以下安全防护能力：
+ * <ul>
+ *   <li>XSS 过滤器：基于 OWASP 库的全局 HTTP 请求参数与 JSON 请求体清洗</li>
+ *   <li>安全响应头：防止 XSS、点击劫持、MIME 嗅探等 Web 安全威胁</li>
+ *   <li>CSRF 防护：基于 Token 机制，Redis 存储支持分布式</li>
+ *   <li>SQL 注入防护：基于正则的请求参数拦截</li>
+ *   <li>限流防护：基于 Redis 令牌桶的全局限流</li>
+ *   <li>敏感数据脱敏：基于 Jackson 序列化器的字段级脱敏</li>
+ *   <li>验证码：图形/算术验证码生成与验证</li>
+ * </ul>
+ *
+ * <p><b>过滤器执行顺序：</b>SecurityHeaderFilter → XssFilter → SqlInjectionFilter
+ * → CsrfFilter → RateLimitFilter。其中 RateLimitFilter 优先级最高，限流失败直接
+ * 返回 429 而不再进入后续过滤器。</p>
+ *
+ * <p><b>注意：</b>防重复提交/幂等性功能由本模块的 Redis 限流能力提供。</p>
+ *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ * @since 1.0.0
+ */
+@AutoConfiguration
+@ConditionalOnClass(FilterRegistrationBean.class)
+@EnableConfigurationProperties({
+        SafeXssProperties.class,
+        SecurityHeaderProperties.class,
+        CsrfProperties.class,
+        SensitiveDataConfiguration.class,
+        SafeAlertProperties.class,
+        RateLimitProperties.class
+})
+public class SafeConfiguration {
+
+    private static final Logger log = LoggerFactory.getLogger(SafeConfiguration.class);
+
+    /**
+     * 注册安全响应头过滤器
+     *
+     * <p>为 HTTP 响应添加安全相关的头部，包括：
+     * <ul>
+     *   <li>X-Frame-Options：防止点击劫持</li>
+     *   <li>X-Content-Type-Options：防止 MIME 嗅探</li>
+     *   <li>X-XSS-Protection：XSS 过滤器</li>
+     *   <li>Strict-Transport-Security：强制 HTTPS</li>
+     *   <li>Content-Security-Policy：内容安全策略</li>
+     * </ul>
+     *
+     * @param properties 安全响应头配置属性
+     * @return 安全响应头过滤器注册 bean
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "securityHeaderFilter")
+    @ConditionalOnProperty(prefix = "remi.safe.security-headers", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public FilterRegistrationBean<SecurityHeaderFilter> securityHeaderFilterRegistration(SecurityHeaderProperties properties) {
+        FilterRegistrationBean<SecurityHeaderFilter> registrationBean = new FilterRegistrationBean<>(new SecurityHeaderFilter(properties));
+        registrationBean.setName("securityHeaderFilter");
+        registrationBean.addUrlPatterns("/*");
+        registrationBean.setOrder(properties.getOrder());
+        return registrationBean;
+    }
+
+    /**
+     * 注册安全事件发布器
+     *
+     * @return 安全事件发布器实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(SecurityEventPublisher.class)
+    public SecurityEventPublisher securityEventPublisher() {
+        return new SecurityEventPublisher();
+    }
+
+    /**
+     * 注册 XSS 过滤器
+     *
+     * <p>默认排除路径：/error、/favicon.ico、/actuator/**
+     * 仅在 mode=filter 时注册（与 RequestBodyAdvice 和 Converter 互斥）。
+     *
+     * @param xssProperties   XSS 配置属性
+     * @param eventPublisher  安全事件发布器
+     * @param alertProperties 安全告警配置属性
+     * @return XSS 过滤器注册 bean
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "xssFilterRegistration")
+    @Conditional(XssFilterModeCondition.class)
+    public FilterRegistrationBean<XssFilter> xssFilterRegistration(SafeXssProperties xssProperties,
+                                                                    SecurityEventPublisher eventPublisher,
+                                                                    SafeAlertProperties alertProperties) {
+        FilterRegistrationBean<XssFilter> registrationBean = new FilterRegistrationBean<>(
+                new XssFilter(xssProperties.getExcludes(), eventPublisher, alertProperties));
+        registrationBean.setName("xssFilter");
+        registrationBean.addUrlPatterns("/*");
+        registrationBean.setOrder(xssProperties.getOrder());
+        return registrationBean;
+    }
+
+    /**
+     * 注册 JSON Body XSS 清理器
+     *
+     * <p>用于递归清理 JSON 对象中所有字符串值的 XSS 内容。
+     *
+     * @return JSON Body XSS 清理器实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(JsonBodyXssCleaner.class)
+    public JsonBodyXssCleaner jsonBodyXssCleaner() {
+        return new JsonBodyXssCleaner();
+    }
+
+    /**
+     * 注册 XSS 请求体拦截器
+     *
+     * <p>在 JSON 反序列化前，对请求体中的字符串值进行 XSS 清理。
+     * 仅在 Filter 模式下生效，避免与 Converter 模式双重清洗。
+     *
+     * @param xssCleaner    JSON Body XSS 清理器
+     * @param xssProperties XSS 配置属性
+     * @return XSS 请求体拦截器实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(XssRequestBodyAdvice.class)
+    public XssRequestBodyAdvice xssRequestBodyAdvice(JsonBodyXssCleaner xssCleaner,
+            SafeXssProperties xssProperties) {
+        return new XssRequestBodyAdvice(xssCleaner, xssProperties);
+    }
+
+    /**
+     * 注册 XSS JSON 消息转换器
+     *
+     * <p>在 JSON 反序列化阶段对字符串值进行 XSS 过滤。
+     * 仅在 mode=converter 时注册（与 Filter 和 Advice 模式互斥）。
+     *
+     * <p>过滤器通过 {@link HttpMessageConverters} 注册到 Spring MVC 的消息转换器链中，
+     * 替换默认的 MappingJackson2HttpMessageConverter，在反序列化前完成 XSS 清洗。
+     *
+     * @param properties XSS 配置属性
+     * @return XSS JSON 消息转换器 Bean
+     */
+    @Bean
+    @ConditionalOnMissingBean(XssJsonMessageConverter.class)
+    @Conditional(XssConverterModeCondition.class)
+    public XssJsonMessageConverter xssJsonMessageConverter(SafeXssProperties properties) {
+        log.info("注册 XSS JSON 消息转换器，模式: {}", properties.getMode());
+        return new XssJsonMessageConverter();
+    }
+
+    /**
+     * 注册 XSS JSON 消息转换器到 HttpMessageConverters
+     *
+     * <p>将 XSS 防护的 JSON 转换器注册到 Spring MVC 的消息转换器链中。
+     *
+     * @param xssJsonMessageConverter XSS JSON 消息转换器（仅在 converter 模式下创建）
+     * @return HttpMessageConverters 实例
+     */
+    @Bean
+    @ConditionalOnBean(XssJsonMessageConverter.class)
+    public HttpMessageConverters xssHttpMessageConverters(XssJsonMessageConverter xssJsonMessageConverter) {
+        return new HttpMessageConverters(xssJsonMessageConverter);
+    }
+
+    /**
+     * 注册 CSRF 令牌生成器
+     */
+    @Bean
+    @ConditionalOnMissingBean(CsrfTokenGenerator.class)
+    public CsrfTokenGenerator csrfTokenGenerator(CsrfTokenRepository tokenRepository) {
+        return new DefaultCsrfTokenGenerator(tokenRepository);
+    }
+
+    /**
+     * 注册 CSRF 令牌存储库（Redis 分布式环境）
+     *
+     * <p>当 RedisService 可用时，自动使用 Redis 存储以支持分布式部署。
+     */
+    @Bean
+    @Primary
+    @ConditionalOnBean(RedisService.class)
+    public CsrfTokenRepository redisCsrfTokenRepository(CsrfProperties properties, RedisService redisService) {
+        return new RedisCsrfTokenRepository(properties.getExpirationSeconds(), redisService);
+    }
+
+    /**
+     * 注册 CSRF 令牌存储库（单机内存环境）
+     *
+     * <p>仅当 RedisService 不可用时使用内存存储。适用于单机部署场景。
+     *
+     * @param properties CSRF 配置属性
+     * @return CSRF 令牌存储库实例
+     */
+    @Bean
+    @ConditionalOnMissingBean({RedisService.class, CsrfTokenRepository.class})
+    public CsrfTokenRepository inMemoryCsrfTokenRepository(CsrfProperties properties) {
+        return new InMemoryCsrfTokenRepository(properties.getExpirationSeconds());
+    }
+
+    /**
+     * 注册 CSRF 防护过滤器
+     *
+     * <p>防止跨站请求伪造（CSRF）攻击：
+     * <ul>
+     *   <li>GET 请求：自动生成并返回 CSRF 令牌</li>
+     *   <li>其他请求：验证 CSRF 令牌有效性</li>
+     * </ul>
+     *
+     * @param properties      CSRF 配置属性
+     * @param tokenRepository CSRF 令牌存储库
+     * @param tokenGenerator  CSRF 令牌生成器
+     * @return CSRF 防护过滤器注册 bean
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "csrfFilterRegistration")
+    @ConditionalOnProperty(prefix = "remi.safe.csrf", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public FilterRegistrationBean<CsrfFilter> csrfFilterRegistration(CsrfProperties properties, CsrfTokenRepository tokenRepository, CsrfTokenGenerator tokenGenerator) {
+        FilterRegistrationBean<CsrfFilter> registrationBean = new FilterRegistrationBean<>(new CsrfFilter(properties, tokenRepository));
+        registrationBean.setName("csrfFilter");
+        registrationBean.addUrlPatterns("/*");
+        registrationBean.setOrder(properties.getOrder());
+        return registrationBean;
+    }
+
+    /**
+     * 注册敏感数据脱敏 AOP 拦截器
+     *
+     * <p>对 Controller 返回值进行敏感数据脱敏处理。
+     * 仅在 {@code remi.safe.sensitive.enabled=true} 时生效。
+     *
+     * @param configuration 敏感数据脱敏配置
+     * @return 敏感数据脱敏 AOP 拦截器实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(SensitiveDataAdvice.class)
+    public SensitiveDataAdvice sensitiveDataAdvice(SensitiveDataConfiguration configuration) {
+        log.info("注册敏感数据脱敏 AOP 拦截器，启用状态: {}", configuration.isEnabled());
+        return new SensitiveDataAdvice(configuration);
+    }
+
+    /**
+     * 注册限流过滤器
+     *
+     * <p>基于 Redis 令牌桶的全局限流 Filter，支持按 IP/用户/全局维度。
+     * 仅在 {@code remi.safe.ratelimit.enabled=true} 时注册。
+     *
+     * @param properties      限流配置属性
+     * @param redisService    Redis 服务
+     * @param eventPublisher  安全事件发布器
+     * @param alertProperties 安全告警配置属性
+     * @return 限流过滤器注册 bean
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "rateLimitFilterRegistration")
+    @ConditionalOnBean(RedisService.class)
+    @ConditionalOnProperty(prefix = "remi.safe.ratelimit", name = "enabled", havingValue = "true")
+    public FilterRegistrationBean<RateLimitFilter> rateLimitFilterRegistration(
+            RateLimitProperties properties,
+            RedisService redisService,
+            SecurityEventPublisher eventPublisher,
+            SafeAlertProperties alertProperties) {
+        FilterRegistrationBean<RateLimitFilter> registrationBean = new FilterRegistrationBean<>(
+                new RateLimitFilter(properties, redisService, eventPublisher, alertProperties));
+        registrationBean.setName("rateLimitFilter");
+        registrationBean.addUrlPatterns("/*");
+        registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
+        return registrationBean;
+    }
+
+    /**
+     * 注册 SQL 注入防护过滤器
+     *
+     * <p>检测并拦截 HTTP 请求中的 SQL 注入攻击，保护应用安全。
+     * 仅在 {@code remi.safe.sql-injection.enabled=true} 时注册。
+     *
+     * <p>支持白名单配置：
+     * <ul>
+     *   <li>{@code remi.safe.sql-injection.whitelist-paths} - 白名单路径（Ant 风格，逗号分隔）</li>
+     *   <li>{@code remi.safe.sql-injection.whitelist-params} - 白名单参数名（逗号分隔）</li>
+     * </ul>
+     *
+     * @param eventPublisher  安全事件发布器
+     * @param whitelistPaths  白名单路径
+     * @param whitelistParams 白名单参数名
+     * @return SQL 注入过滤器注册 bean
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "sqlInjectionFilterRegistration")
+    @ConditionalOnProperty(prefix = "remi.safe.sql-injection", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public FilterRegistrationBean<SqlInjectionFilter> sqlInjectionFilterRegistration(
+            SecurityEventPublisher eventPublisher,
+            @org.springframework.beans.factory.annotation.Value("${remi.safe.sql-injection.whitelist-paths:}") List<String> whitelistPaths,
+            @org.springframework.beans.factory.annotation.Value("${remi.safe.sql-injection.whitelist-params:}") List<String> whitelistParams) {
+        FilterRegistrationBean<SqlInjectionFilter> registrationBean = new FilterRegistrationBean<>(
+                new SqlInjectionFilter(true, eventPublisher, whitelistPaths, whitelistParams));
+        registrationBean.setName("sqlInjectionFilter");
+        registrationBean.addUrlPatterns("/*");
+        registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE + 3);
+        return registrationBean;
+    }
+}

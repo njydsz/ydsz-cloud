@@ -1,0 +1,77 @@
+﻿[
+  {
+    "name": "com.njydsz.pmis.common.redis.serializer.JacksonRedisSerializer",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.redis.service.RedisService",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.redis.service.ops.RedisStringOps",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.redis.service.ops.RedisHashOps",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.redis.service.ops.RedisCollectionOps",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.redis.service.ops.RedisGeoOps",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.redis.service.ops.RedisAdvancedOps",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.redis.service.ops.RedisPubSubOps",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.redis.service.ops.RedisStreamOps",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.redis.service.ops.RedisTransactionOps",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.redis.service.RedisRateLimiter",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.redis.service.RedisDelayedQueue",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.redis.service.RedisSnowflakeIdGenerator",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.redis.service.RedisBloomFilter",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.redis.service.RedisCacheGuard",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  }
+]

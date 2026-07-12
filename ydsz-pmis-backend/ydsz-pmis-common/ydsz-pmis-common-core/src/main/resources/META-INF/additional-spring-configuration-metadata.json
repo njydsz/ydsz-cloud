@@ -1,0 +1,82 @@
+{
+  "properties": [
+    {
+      "name": "remi.core.max-page-size",
+      "type": "java.lang.Integer",
+      "description": "最大每页记录数上限，防止一次性拉取过多数据导致性能问题。",
+      "defaultValue": 1000
+    },
+    {
+      "name": "remi.core.default-page-size",
+      "type": "java.lang.Integer",
+      "description": "默认每页记录数，分页查询未指定 pageSize 时使用。",
+      "defaultValue": 10
+    },
+    {
+      "name": "remi.core.cache.default-expire-seconds",
+      "type": "java.lang.Long",
+      "description": "默认缓存过期时间（秒）。",
+      "defaultValue": 3600
+    },
+    {
+      "name": "remi.core.cache.short-expire-seconds",
+      "type": "java.lang.Long",
+      "description": "短效缓存过期时间（秒），适用于高频变动数据。",
+      "defaultValue": 300
+    },
+    {
+      "name": "remi.core.cache.medium-expire-seconds",
+      "type": "java.lang.Long",
+      "description": "中效缓存过期时间（秒），适用于中等频率变动数据。",
+      "defaultValue": 1800
+    },
+    {
+      "name": "remi.core.cache.long-expire-seconds",
+      "type": "java.lang.Long",
+      "description": "长效缓存过期时间（秒），适用于几乎不变的数据。",
+      "defaultValue": 86400
+    },
+    {
+      "name": "remi.core.i18n.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用国际化（i18n）支持。",
+      "defaultValue": true
+    },
+    {
+      "name": "remi.core.i18n.default-locale",
+      "type": "java.lang.String",
+      "description": "默认语言区域，当请求未指定语言时使用。",
+      "defaultValue": "zh_CN"
+    },
+    {
+      "name": "remi.core.i18n.additional-locations",
+      "type": "java.util.List<java.lang.String>",
+      "description": "额外的 i18n 文件路径，支持 classpath: 和 classpath*: 前缀。",
+      "defaultValue": []
+    },
+    {
+      "name": "remi.core.token.access-token-expire-time",
+      "type": "java.lang.Long",
+      "description": "AccessToken 过期时间（毫秒）。",
+      "defaultValue": 86400000
+    },
+    {
+      "name": "remi.core.token.refresh-token-expire-time",
+      "type": "java.lang.Long",
+      "description": "RefreshToken 过期时间（毫秒）。",
+      "defaultValue": 604800000
+    },
+    {
+      "name": "remi.core.security.max-login-attempts",
+      "type": "java.lang.Integer",
+      "description": "最大登录尝试次数，超过后锁定账户。",
+      "defaultValue": 5
+    },
+    {
+      "name": "remi.core.security.login-lockout-duration",
+      "type": "java.lang.Long",
+      "description": "登录锁定时长（毫秒）。",
+      "defaultValue": 1800000
+    }
+  ]
+}

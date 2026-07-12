@@ -1,0 +1,6 @@
+﻿com.njydsz.pmis.common.jdbc.config.MybatisPlusConfiguration
+com.njydsz.pmis.common.jdbc.config.MapperScanConfiguration
+com.njydsz.pmis.common.jdbc.config.DynamicDataSourceConfiguration
+com.njydsz.pmis.common.jdbc.config.HikariCPConfiguration
+com.njydsz.pmis.common.jdbc.config.SqlTraceAutoConfiguration
+com.njydsz.pmis.common.jdbc.exception.DataIntegrityExceptionHandler

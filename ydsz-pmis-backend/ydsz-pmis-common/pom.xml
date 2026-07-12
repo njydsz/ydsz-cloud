@@ -13,7 +13,50 @@
     <artifactId>ydsz-pmis-common</artifactId>
     <packaging>pom</packaging>
     <name>ydsz-pmis-common</name>
-    <description>PMIS Common - 公共依赖聚合模块</description>
+    <description>PMIS Common - 公共依赖聚合模块（从 remi-comm 一比一迁移）</description>
+
+    <properties>
+        <!-- remi-comm 第三方依赖版本（父 POM 未管理的部分） -->
+        <commons-text.version>1.13.0</commons-text.version>
+        <commons-validator.version>1.9.0</commons-validator.version>
+        <commons-net.version>3.11.1</commons-net.version>
+        <guava.version>33.4.8-jre</guava.version>
+        <yauaa.version>7.32.0</yauaa.version>
+        <ip2region.version>2.7.0</ip2region.version>
+        <velocity.version>2.4.1</velocity.version>
+        <javassist.version>3.30.2-GA</javassist.version>
+        <rocketmq-client.version>5.3.3</rocketmq-client.version>
+        <activemq.version>6.2.6</activemq.version>
+        <owasp-html-sanitizer.version>20240325.1</owasp-html-sanitizer.version>
+        <jsr305.version>3.0.2</jsr305.version>
+        <trace.version>8.13.0</trace.version>
+        <lombok-mapstruct.version>0.2.0</lombok-mapstruct.version>
+        <db2-jdbc.version>11.5.0.0</db2-jdbc.version>
+        <knife4j.version>4.5.0</knife4j.version>
+        <swagger.version>2.2.30</swagger.version>
+        <springdoc.version>3.0.3</springdoc.version>
+        <jetbrains-annotations.version>24.1.0</jetbrains-annotations.version>
+        <spotbugs-annotations.version>4.8.6</spotbugs-annotations.version>
+        <mybatis-starter.version>4.0.1</mybatis-starter.version>
+        <mybatis.version>3.5.19</mybatis.version>
+        <commons-lang3.version>3.17.0</commons-lang3.version>
+        <commons-codec.version>1.17.1</commons-codec.version>
+        <commons-logging.version>1.3.5</commons-logging.version>
+        <dom4j.version>2.1.4</dom4j.version>
+        <jedis.version>5.2.0</jedis.version>
+        <kafka.version>4.1.1</kafka.version>
+        <rabbitmq.version>5.28.0</rabbitmq.version>
+        <mysql.version>9.7.0</mysql.version>
+        <ojdbc.version>23.26.2.0.0</ojdbc.version>
+        <mssql-jdbc.version>13.4.0.jre11</mssql-jdbc.version>
+        <h2.db.version>2.4.240</h2.db.version>
+        <okhttp3.version>4.12.0</okhttp3.version>
+        <hibernate-validator.version>9.1.0.Final</hibernate-validator.version>
+        <resilience4j.version>2.4.0</resilience4j.version>
+        <error-prone-annotations.version>2.41.0</error-prone-annotations.version>
+        <fastjson2.version>2.0.62</fastjson2.version>
+        <caffeine.version>3.2.4</caffeine.version>
+    </properties>
 
     <modules>
         <!-- L1 基础设施层 -->
@@ -36,7 +79,6 @@
         <module>ydsz-pmis-common-notify</module>
         <module>ydsz-pmis-common-queue</module>
         <module>ydsz-pmis-common-doc</module>
-        <module>ydsz-pmis-common-infra</module>
         <!-- L6 应用层 -->
         <module>ydsz-pmis-common-base</module>
         <module>ydsz-pmis-common-web</module>
@@ -47,6 +89,7 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- ==================== 内部模块 ==================== -->
             <!-- L1 -->
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
@@ -127,11 +170,6 @@
                 <artifactId>ydsz-pmis-common-doc</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-common-infra</artifactId>
-                <version>${project.version}</version>
-            </dependency>
             <!-- L6 -->
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
@@ -147,6 +185,374 @@
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common-app</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <!-- 聚合 -->
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-all</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- ==================== 第三方依赖（父 POM 未管理部分） ==================== -->
+
+            <!-- MyBatis（版本覆盖声明，必须在 Spring Boot BOM 之后声明才能生效） -->
+            <dependency>
+                <groupId>org.mybatis</groupId>
+                <artifactId>mybatis</artifactId>
+                <version>${mybatis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mybatis.spring.boot</groupId>
+                <artifactId>mybatis-spring-boot-starter</artifactId>
+                <version>${mybatis-starter.version}</version>
+            </dependency>
+
+            <!-- hibernate-validator 版本覆盖 -->
+            <dependency>
+                <groupId>org.hibernate.validator</groupId>
+                <artifactId>hibernate-validator</artifactId>
+                <version>${hibernate-validator.version}</version>
+            </dependency>
+
+            <!-- commons-text 版本覆盖 -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-text</artifactId>
+                <version>${commons-text.version}</version>
+            </dependency>
+
+            <!-- commons-lang3 版本覆盖 -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>${commons-lang3.version}</version>
+            </dependency>
+
+            <!-- commons-codec -->
+            <dependency>
+                <groupId>commons-codec</groupId>
+                <artifactId>commons-codec</artifactId>
+                <version>${commons-codec.version}</version>
+            </dependency>
+
+            <!-- commons-logging -->
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>${commons-logging.version}</version>
+            </dependency>
+
+            <!-- commons-net -->
+            <dependency>
+                <groupId>commons-net</groupId>
+                <artifactId>commons-net</artifactId>
+                <version>${commons-net.version}</version>
+            </dependency>
+
+            <!-- commons-validator -->
+            <dependency>
+                <groupId>commons-validator</groupId>
+                <artifactId>commons-validator</artifactId>
+                <version>${commons-validator.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-collections</groupId>
+                        <artifactId>commons-collections</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <!-- caffeine 版本覆盖 -->
+            <dependency>
+                <groupId>com.github.ben-manes.caffeine</groupId>
+                <artifactId>caffeine</artifactId>
+                <version>${caffeine.version}</version>
+            </dependency>
+
+            <!-- error_prone_annotations 版本覆盖 -->
+            <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_annotations</artifactId>
+                <version>${error-prone-annotations.version}</version>
+            </dependency>
+
+            <!-- dom4j -->
+            <dependency>
+                <groupId>org.dom4j</groupId>
+                <artifactId>dom4j</artifactId>
+                <version>${dom4j.version}</version>
+            </dependency>
+
+            <!-- tika-core 版本覆盖 -->
+            <dependency>
+                <groupId>org.apache.tika</groupId>
+                <artifactId>tika-core</artifactId>
+                <version>${tika.version}</version>
+            </dependency>
+
+            <!-- jedis 版本覆盖 -->
+            <dependency>
+                <groupId>redis.clients</groupId>
+                <artifactId>jedis</artifactId>
+                <version>${jedis.version}</version>
+            </dependency>
+
+            <!-- guava -->
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+
+            <!-- jsr305 -->
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>${jsr305.version}</version>
+            </dependency>
+
+            <!-- okhttp3 -->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp3.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>logging-interceptor</artifactId>
+                <version>${okhttp3.version}</version>
+            </dependency>
+
+            <!-- yauaa (User-Agent 解析) -->
+            <dependency>
+                <groupId>nl.basjes.parse.useragent</groupId>
+                <artifactId>yauaa</artifactId>
+                <version>${yauaa.version}</version>
+            </dependency>
+
+            <!-- ip2region -->
+            <dependency>
+                <groupId>org.lionsoul</groupId>
+                <artifactId>ip2region</artifactId>
+                <version>${ip2region.version}</version>
+            </dependency>
+
+            <!-- SkyWalking apm-toolkit-trace -->
+            <dependency>
+                <groupId>org.apache.skywalking</groupId>
+                <artifactId>apm-toolkit-trace</artifactId>
+                <version>${trace.version}</version>
+            </dependency>
+
+            <!-- velocity -->
+            <dependency>
+                <groupId>org.apache.velocity</groupId>
+                <artifactId>velocity-engine-core</artifactId>
+                <version>${velocity.version}</version>
+            </dependency>
+
+            <!-- javassist -->
+            <dependency>
+                <groupId>org.javassist</groupId>
+                <artifactId>javassist</artifactId>
+                <version>${javassist.version}</version>
+            </dependency>
+
+            <!-- kafka-clients -->
+            <dependency>
+                <groupId>org.apache.kafka</groupId>
+                <artifactId>kafka-clients</artifactId>
+                <version>${kafka.version}</version>
+            </dependency>
+
+            <!-- rocketmq-client -->
+            <dependency>
+                <groupId>org.apache.rocketmq</groupId>
+                <artifactId>rocketmq-client</artifactId>
+                <version>${rocketmq-client.version}</version>
+            </dependency>
+
+            <!-- activemq-client -->
+            <dependency>
+                <groupId>org.apache.activemq</groupId>
+                <artifactId>activemq-client</artifactId>
+                <version>${activemq.version}</version>
+            </dependency>
+
+            <!-- rabbitmq amqp-client -->
+            <dependency>
+                <groupId>com.rabbitmq</groupId>
+                <artifactId>amqp-client</artifactId>
+                <version>${rabbitmq.version}</version>
+            </dependency>
+
+            <!-- OWASP HTML Sanitizer -->
+            <dependency>
+                <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+                <artifactId>owasp-java-html-sanitizer</artifactId>
+                <version>${owasp-html-sanitizer.version}</version>
+            </dependency>
+
+            <!-- lombok-mapstruct-binding -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok-mapstruct-binding</artifactId>
+                <version>${lombok-mapstruct.version}</version>
+            </dependency>
+
+            <!-- mapstruct-processor -->
+            <dependency>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct-processor</artifactId>
+                <version>${mapstruct.version}</version>
+            </dependency>
+
+            <!-- mysql -->
+            <dependency>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
+                <version>${mysql.version}</version>
+            </dependency>
+
+            <!-- oracle -->
+            <dependency>
+                <groupId>com.oracle.database.jdbc</groupId>
+                <artifactId>ojdbc11</artifactId>
+                <version>${ojdbc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.oracle.database.nls</groupId>
+                <artifactId>orai18n</artifactId>
+                <version>${ojdbc.version}</version>
+            </dependency>
+
+            <!-- sqlserver -->
+            <dependency>
+                <groupId>com.microsoft.sqlserver</groupId>
+                <artifactId>mssql-jdbc</artifactId>
+                <version>${mssql-jdbc.version}</version>
+            </dependency>
+
+            <!-- db2 -->
+            <dependency>
+                <groupId>com.ibm.db2</groupId>
+                <artifactId>jcc</artifactId>
+                <version>${db2-jdbc.version}</version>
+            </dependency>
+
+            <!-- h2 -->
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>${h2.db.version}</version>
+            </dependency>
+
+            <!-- knife4j -->
+            <dependency>
+                <groupId>com.github.xiaoymin</groupId>
+                <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
+                <version>${knife4j.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.springdoc</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <!-- swagger -->
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-core</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-models</artifactId>
+                <version>${swagger.version}</version>
+            </dependency>
+
+            <!-- springdoc-openapi -->
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+
+            <!-- easyexcel -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>easyexcel-core</artifactId>
+                <version>${easyexcel.version}</version>
+            </dependency>
+
+            <!-- fastjson2 版本覆盖 -->
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson2.version}</version>
+            </dependency>
+
+            <!-- resilience4j 版本覆盖 -->
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-spring-boot3</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-reactor</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-circuitbreaker</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+
+            <!-- Spring Boot Web -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-web</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+
+            <!-- Spring Boot Actuator -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-actuator</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+
+            <!-- jetbrains annotations -->
+            <dependency>
+                <groupId>org.jetbrains</groupId>
+                <artifactId>annotations</artifactId>
+                <version>${jetbrains-annotations.version}</version>
+            </dependency>
+
+            <!-- spotbugs annotations -->
+            <dependency>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-annotations</artifactId>
+                <version>${spotbugs-annotations.version}</version>
+            </dependency>
+
+            <!-- mybatis-plus-boot-starter（remi-comm 使用此 artifact，与 PMIS 父 POM 的 mybatis-plus-spring-boot4-starter 等效） -->
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-boot-starter</artifactId>
+                <version>${mybatis-plus.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-annotation</artifactId>
+                <version>${mybatis-plus.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

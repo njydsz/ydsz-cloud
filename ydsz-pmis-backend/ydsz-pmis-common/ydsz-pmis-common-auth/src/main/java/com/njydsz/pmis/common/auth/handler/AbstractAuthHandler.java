@@ -1,0 +1,147 @@
+﻿package com.njydsz.pmis.common.auth.handler;
+
+import com.njydsz.pmis.common.util.auth.AuthInfo;
+import com.njydsz.pmis.common.util.auth.RemiAuthInfo;
+import com.njydsz.pmis.common.util.string.StringUtils;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+/**
+ * 认证信息处理抽象基类
+ *
+ * <p>提供通用的请求头解析逻辑，子类只需实现 {@link #createAuthInfo()} 返回具体的 AuthInfo 实现类。
+ * 采用模板方法模式，统一的解析流程由本类管理，差异化实例创建由子类提供。
+ *
+ * <p>从 {@code com.njydsz.pmis.common.util.auth.AbstractAuthHandler} 迁移而来，
+ * 已移除对旧版弃用类的继承依赖，新代码应继承本类。
+ *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ * @see AuthHandler
+ */
+public abstract class AbstractAuthHandler implements AuthHandler {
+
+    /**
+     * 创建认证信息实例（模板方法模式）
+     *
+     * <p>子类实现此方法返回具体的 AuthInfo 实现类实例，
+     * 如 WebAuthInfo 或 AppAuthInfo。
+     *
+     * @return 空的 AuthInfo 实例
+     */
+    protected abstract RemiAuthInfo createAuthInfo();
+
+    /**
+     * 解析请求头并构建认证信息（模板方法）
+     *
+     * <p>统一解析逻辑，子类仅需提供不同的 AuthInfo 实例类型。
+     *
+     * @param request HTTP 请求
+     * @param response HTTP 响应
+     * @return 填充完毕的认证信息
+     */
+    @Override
+    public AuthInfo getAuthInfo(HttpServletRequest request, HttpServletResponse response) {
+        ParsedAuthHeaders h = ParsedAuthHeaders.parse(request, this);
+
+        AuthInfo info = createAuthInfo();
+        if (info instanceof RemiAuthInfo remiAuthInfo) {
+            remiAuthInfo.setUserLanguage(h.getLanguage());
+            remiAuthInfo.setDistinctId(h.getDistinctId());
+            remiAuthInfo.setAccessToken(h.getAuthToken());
+            remiAuthInfo.setDataScope(h.getDataScope());
+            remiAuthInfo.setHasPermissionCompanyIds(h.getCompanyIds());
+            remiAuthInfo.setHasPermissionDeptIds(h.getDeptIds());
+            remiAuthInfo.setUniqueId(h.getUserId());
+            remiAuthInfo.setTenantId(h.getTenantId());
+            remiAuthInfo.setHasPermissionProjectIds(h.getProjectIds());
+            remiAuthInfo.setHasPermissionRegionIds(h.getRegionIds());
+            remiAuthInfo.setRequestSource(h.getRequestSource());
+            remiAuthInfo.setVisibleColumnsByTable(h.getVisibleColumns());
+            remiAuthInfo.setEditableColumnsByTable(h.getEditableColumns());
+        }
+
+        return info;
+    }
+
+    /**
+     * 解析 CSV 格式的请求头值为 Set
+     *
+     * @param request HTTP 请求对象
+     * @param headerName 请求头名称
+     * @return 解析后的值集合，解析失败返回空 Set
+     */
+    protected Set<String> parseCsvHeaderValues(HttpServletRequest request, String headerName) {
+        if (request == null || StringUtils.isBlank(headerName)) {
+            return Collections.emptySet();
+        }
+        Enumeration<String> headers = request.getHeaders(headerName);
+        if (headers == null) {
+            return Collections.emptySet();
+        }
+        return Collections.list(headers).stream()
+                .flatMap(this::splitCsv)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    /**
+     * 按逗号分割字符串并过滤空值
+     *
+     * @param value 待分割的字符串
+     * @return 分割后的字符串流，空值时返回空流
+     */
+    protected Stream<String> splitCsv(String value) {
+        if (StringUtils.isBlank(value)) {
+            return Stream.empty();
+        }
+        String[] parts = value.split(",");
+        if (parts == null) {
+            return Stream.empty();
+        }
+        return Arrays.stream(parts)
+                .map(String::trim)
+                .filter(StringUtils::isNotBlank);
+    }
+
+    /**
+     * 解析表级列权限规则字符串
+     *
+     * <p>格式：{@code table:col1,col2;table2:col3}，表名和列名统一转小写
+     *
+     * @param value 列权限规则字符串
+     * @return 表名到列名集合的映射，解析失败返回空 Map
+     */
+    protected Map<String, Set<String>> parseTableColumnsRule(String value) {
+        if (StringUtils.isBlank(value)) {
+            return Collections.emptyMap();
+        }
+        Map<String, Set<String>> out = new LinkedHashMap<>();
+        String[] blocks = value.split(";");
+        for (String block : blocks) {
+            if (StringUtils.isBlank(block) || !block.contains(":")) {
+                continue;
+            }
+            String[] pair = block.split(":", 2);
+            String table = pair[0].trim().toLowerCase(Locale.ROOT);
+            Set<String> cols = splitCsv(pair[1])
+                    .map(item -> item.toLowerCase(Locale.ROOT))
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+            if (StringUtils.isNotBlank(table) && !cols.isEmpty()) {
+                out.computeIfAbsent(table, key -> new LinkedHashSet<>()).addAll(cols);
+            }
+        }
+        return out;
+    }
+}
