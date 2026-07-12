@@ -30,9 +30,7 @@
  *       {@link com.njydsz.pmis.workflow.server.service.FlowThirdPartyAccountService}、
  *       {@link com.njydsz.pmis.workflow.server.service.FlowThirdPartyLogService}、
  *       {@link com.njydsz.pmis.workflow.server.service.FlowHistoryArchiveService}</li>
- *   <li>AI / 待办 / 计时器 / 事件 - {@link com.njydsz.pmis.workflow.server.service.FlowAiAssistService}、
- *       {@link com.njydsz.pmis.workflow.server.service.FlowAiGenerateService}、
- *       {@link com.njydsz.pmis.workflow.server.service.FlowTodoCountPushService}、
+ *   <li>待办 / 计时器 / 事件 - {@link com.njydsz.pmis.workflow.server.service.FlowTodoCountPushService}、
  *       {@link com.njydsz.pmis.workflow.server.service.FlowTimerService}、
  *       {@link com.njydsz.pmis.workflow.server.service.FlowEventSubscriptionService}、
  *       {@link com.njydsz.pmis.workflow.server.service.FlowJoinTokenService}</li>

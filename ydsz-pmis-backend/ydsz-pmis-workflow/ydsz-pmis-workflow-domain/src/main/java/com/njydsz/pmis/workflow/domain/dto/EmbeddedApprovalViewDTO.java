@@ -27,7 +27,6 @@ import java.util.Map;
  *   "history": [ ...审批轨迹时间线... ],
  *   "myRole": "INITIATOR/APPROVER/OBSERVER",
  *   "actions": [ "PASS","REJECT","TRANSFER","WITHDRAW","URGE" ],
- *   "aiAvailable": true,
  *   "canRecall": true
  * }
  * </pre>
@@ -67,9 +66,6 @@ public class EmbeddedApprovalViewDTO implements Serializable {
 
     /** 当前用户可执行的快捷操作（PASS/REJECT/TRANSFER/WITHDRAW/URGE/SUBMIT） */
     private List<String> actions;
-
-    /** AI Agent 服务是否可用（用于前端按钮置灰） */
-    private boolean aiAvailable;
 
     /** 是否可撤回（仅发起人 + 流程运行中） */
     private boolean canRecall;

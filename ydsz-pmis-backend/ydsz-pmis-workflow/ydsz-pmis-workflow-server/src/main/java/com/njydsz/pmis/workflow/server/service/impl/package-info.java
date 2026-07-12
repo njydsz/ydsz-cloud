@@ -33,9 +33,7 @@
  *       {@link com.njydsz.pmis.workflow.server.service.impl.FlowThirdPartyAccountServiceImpl}、
  *       {@link com.njydsz.pmis.workflow.server.service.impl.FlowThirdPartyLogServiceImpl}、
  *       {@link com.njydsz.pmis.workflow.server.service.impl.FlowHistoryArchiveServiceImpl}</li>
- *   <li>AI / 计时器 / 事件 - {@link com.njydsz.pmis.workflow.server.service.impl.FlowAiAssistServiceImpl}、
- *       {@link com.njydsz.pmis.workflow.server.service.impl.FlowAiGenerateServiceImpl}、
- *       {@link com.njydsz.pmis.workflow.server.service.impl.FlowTimerServiceImpl}、
+ *   <li>计时器 / 事件 - {@link com.njydsz.pmis.workflow.server.service.impl.FlowTimerServiceImpl}、
  *       {@link com.njydsz.pmis.workflow.server.service.impl.FlowEventSubscriptionServiceImpl}</li>
  * </ul>
  *
