@@ -1,4 +1,4 @@
-﻿﻿﻿﻿/**
+﻿﻿﻿/**
  * @file 路由表定义
  * @description 定义前端静态路由（constantRoutes）与动态业务路由（asyncRoutes），
  *              静态路由包含登录/404/根布局默认页，动态路由按业务模块分组并通过权限码控制访问。
@@ -589,74 +589,6 @@ export const asyncRoutes: RouteRecordRaw[] = [
         name: 'Audit',
         component: () => import('@/views/audit/index.vue'),
         meta: { title: 'route.auditIndex', icon: 'Document', keepAlive: true, permCode: PC.AUDIT_LOG_VIEW },
-      },
-    ],
-  },
-  {
-    path: '/agent',
-    component: () => import('@/layout/default/index.vue'),
-    redirect: '/agent/orchestration',
-    meta: { title: 'route.agent', icon: 'MagicStick' },
-    children: [
-      {
-        path: 'orchestration',
-        name: 'AgentOrchestration',
-        component: () => import('@/views/agent/orchestration/index.vue'),
-        meta: { title: 'route.agentOrchestration', icon: 'Share', keepAlive: true, permCode: PC.AGENT_ORCHESTRATION_VIEW },
-      },
-      {
-        path: 'debug-console',
-        name: 'AgentDebugConsole',
-        component: () => import('@/views/agent/debug-console/index.vue'),
-        meta: { title: 'route.agentDebugConsole', icon: 'Monitor', keepAlive: false, permCode: PC.AGENT_DEBUG_VIEW },
-      },
-      {
-        path: 'dag',
-        name: 'AgentDag',
-        component: () => import('@/views/agent/dag/index.vue'),
-        meta: { title: 'route.agentDag', icon: 'Connection', keepAlive: true, permCode: PC.AGENT_DAG_VIEW },
-      },
-      {
-        path: 'prompt-template',
-        name: 'AgentPromptTemplate',
-        component: () => import('@/views/agent/prompt-template/index.vue'),
-        meta: { title: 'route.agentPromptTemplate', icon: 'Document', keepAlive: true, permCode: PC.AGENT_PROMPT_VIEW },
-      },
-      {
-        path: 'prediction',
-        name: 'AgentPrediction',
-        component: () => import('@/views/agent/prediction/index.vue'),
-        meta: { title: 'route.agentPrediction', icon: 'DataAnalysis', keepAlive: true, permCode: PC.AGENT_PREDICTION_VIEW },
-      },
-      {
-        path: 'hitl',
-        name: 'AgentHitl',
-        component: () => import('@/views/agent/hitl/index.vue'),
-        meta: { title: 'route.agentHitl', icon: 'Check', keepAlive: true, permCode: PC.AGENT_HITL_LIST },
-      },
-      {
-        path: 'knowledge-base',
-        name: 'AgentKnowledgeBase',
-        component: () => import('@/views/agent/knowledge-base/index.vue'),
-        meta: { title: 'route.agentKnowledgeBase', icon: 'FolderOpened', keepAlive: true, permCode: PC.AGENT_KB_VIEW },
-      },
-      {
-        path: 'token-quota',
-        name: 'AgentTokenQuota',
-        component: () => import('@/views/agent/token-quota/index.vue'),
-        meta: { title: 'route.agentTokenQuota', icon: 'Coin', keepAlive: true, permCode: PC.AGENT_TOKEN_QUOTA_VIEW },
-      },
-      {
-        path: 'trace',
-        name: 'AgentTrace',
-        component: () => import('@/views/agent/trace/index.vue'),
-        meta: { title: 'route.agentTrace', icon: 'DataLine', keepAlive: true, permCode: PC.AGENT_HISTORY },
-      },
-      {
-        path: 'evaluation',
-        name: 'AgentEvaluation',
-        component: () => import('@/views/agent/evaluation/index.vue'),
-        meta: { title: 'route.agentEvaluation', icon: 'Histogram', keepAlive: false, permCode: PC.AGENT_HISTORY },
       },
     ],
   },

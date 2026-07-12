@@ -1,7 +1,5 @@
 package com.njydsz.pmis.literule.server.adaptive;
 
-import com.njydsz.pmis.literule.server.ai.LLMClient;
-import com.njydsz.pmis.literule.server.ai.LLMException;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleExecutionTrace;
 import com.njydsz.pmis.literule.server.config.RuleAdminService;
