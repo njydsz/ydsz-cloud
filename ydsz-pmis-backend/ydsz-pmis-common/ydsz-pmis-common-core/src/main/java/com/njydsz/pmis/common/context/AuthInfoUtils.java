@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.security;
+package com.njydsz.pmis.common.context;
 
 import java.util.Collections;
 import java.util.Map;
@@ -8,6 +8,7 @@ import java.util.Set;
  * 认证信息快捷读取工具类
  *
  * <p>封装 {@link RequestHolder#getAuthInfo()} 的常用读取逻辑，提供空值安全的快捷方法。
+ * 放置在 common-core 模块以避免循环依赖。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

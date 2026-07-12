@@ -10,7 +10,6 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
@@ -22,10 +21,10 @@ import javax.sql.DataSource;
  * <p>配置 HikariCP 数据库连接池，支持两种配置方式：
  * <ol>
  *   <li>Spring Boot 标准配置：{@code spring.datasource.hikari.*}</li>
- *   <li>项目自定义配置：{@code remi.jdbc.hikari.*}（推荐）</li>
+ *   <li>项目自定义配置：{@code pmis.jdbc.hikari.*}（推荐）</li>
  * </ol>
  *
- * <p><b>配置优先级：</b> 若配置了 {@code remi.jdbc.hikari.*}，则使用项目配置；
+ * <p><b>配置优先级：</b> 若配置了 {@code pmis.jdbc.hikari.*}，则使用项目配置；
  * 否则使用 Spring Boot 默认配置。
  *
  * <p><b>配置示例（application.yml）：</b>
@@ -49,8 +48,7 @@ import javax.sql.DataSource;
  * @see <a href="https://github.com/brettwooldridge/HikariCP">HikariCP Official</a>
  */
 @AutoConfiguration
-@AutoConfigureBefore(DataSourceAutoConfiguration.class)
-@ConditionalOnProperty(prefix = "remi.jdbc", name = "enabled", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "pmis.jdbc", name = "enabled", matchIfMissing = true)
 @EnableConfigurationProperties({HikariCPProperties.class, JdbcProperties.class})
 public class HikariCPConfiguration {
 

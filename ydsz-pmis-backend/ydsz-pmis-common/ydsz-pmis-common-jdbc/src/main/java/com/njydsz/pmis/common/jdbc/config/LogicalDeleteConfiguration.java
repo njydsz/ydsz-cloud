@@ -41,7 +41,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @see LogicalDeleteInterceptor
  */
 @Data
-@ConfigurationProperties(prefix = "remi.jdbc.logical-delete")
+@ConfigurationProperties(prefix = "pmis.jdbc.logical-delete")
 public class LogicalDeleteConfiguration {
 
     /**

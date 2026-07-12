@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Bean;
  */
 @AutoConfiguration
 @EnableConfigurationProperties(JdbcProperties.class)
-@ConditionalOnProperty(prefix = "remi.jdbc", name = "enabled", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "pmis.jdbc", name = "enabled", matchIfMissing = true)
 public class MapperScanConfiguration {
 
     /**

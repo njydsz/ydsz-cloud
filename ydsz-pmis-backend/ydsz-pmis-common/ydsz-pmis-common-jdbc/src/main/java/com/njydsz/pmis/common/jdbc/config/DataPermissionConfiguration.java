@@ -6,7 +6,7 @@ package com.njydsz.pmis.common.jdbc.config;
  * <p>配置数据权限拦截器所需的列名映射、默认策略和过滤规则，
  * 通过 Spring Boot 配置属性绑定实现灵活的数据权限控制。
  *
- * <p><b>配置前缀：</b>{@code remi.jdbc.data-permission}
+ * <p><b>配置前缀：</b>{@code pmis.jdbc.data-permission}
  *
  * @author ydsz-pmis-team
  * 
@@ -22,7 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
-@ConfigurationProperties(prefix = "remi.jdbc.data-permission")
+@ConfigurationProperties(prefix = "pmis.jdbc.data-permission")
 public class DataPermissionConfiguration {
     /**
      * 是否启用数据权限拦截（行级 + 列级）。

@@ -35,8 +35,8 @@ import org.springframework.context.annotation.Configuration;
  */
 @Data
 @Configuration
-@ConditionalOnProperty(prefix = "remi.jdbc", name = "enabled", matchIfMissing = true)
-@ConfigurationProperties(prefix = "remi.jdbc.pagination")
+@ConditionalOnProperty(prefix = "pmis.jdbc", name = "enabled", matchIfMissing = true)
+@ConfigurationProperties(prefix = "pmis.jdbc.pagination")
 public class PaginationProperties {
 
     /**

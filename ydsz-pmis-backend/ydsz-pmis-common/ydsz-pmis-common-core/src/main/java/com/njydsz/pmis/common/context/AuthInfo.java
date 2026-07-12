@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.security;
+package com.njydsz.pmis.common.context;
 
 import java.util.Map;
 import java.util.Set;
@@ -7,6 +7,7 @@ import java.util.Set;
  * 认证信息统一接口
  *
  * <p>定义了跨模块传递用户身份与权限上下文的标准契约。
+ * 放置在 common-core 模块以避免循环依赖。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

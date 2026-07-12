@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * JDBC 模块统一配置属性类
  *
- * <p>提供 remi.jdbc 前缀的全局配置，包括模块开关、Mapper 扫描包、慢 SQL 监控等。
+ * <p>提供 pmis.jdbc 前缀的全局配置，包括模块开关、Mapper 扫描包、慢 SQL 监控等。
  *
  * <p><b>配置示例（application.yml）：</b>
  * <pre>{@code
@@ -32,7 +32,7 @@ import java.util.List;
  */
 @Data
 @Validated
-@ConfigurationProperties(prefix = "remi.jdbc")
+@ConfigurationProperties(prefix = "pmis.jdbc")
 public class JdbcProperties {
 
     /**

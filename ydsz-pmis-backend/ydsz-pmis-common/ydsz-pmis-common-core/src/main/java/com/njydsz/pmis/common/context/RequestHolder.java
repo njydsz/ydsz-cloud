@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.security;
+package com.njydsz.pmis.common.context;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -10,8 +10,8 @@ import java.util.Map;
 /**
  * 请求上下文持有者
  *
- * <p>使用 ThreadLocal 存储当前线程的认证信息和 HTTP 请求对象，
- * 支持线程池场景下的上下文透传。
+ * <p>使用 ThreadLocal 存储当前线程的认证信息和 HTTP 请求对象。
+ * 放置在 common-core 模块以避免循环依赖。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

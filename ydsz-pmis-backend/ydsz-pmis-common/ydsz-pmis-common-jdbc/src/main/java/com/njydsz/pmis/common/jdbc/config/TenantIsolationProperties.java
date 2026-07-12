@@ -34,8 +34,8 @@ import java.util.Set;
  */
 @Data
 @Configuration
-@ConditionalOnProperty(prefix = "remi.jdbc", name = "enabled", matchIfMissing = true)
-@ConfigurationProperties(prefix = "remi.jdbc.tenant-isolation")
+@ConditionalOnProperty(prefix = "pmis.jdbc", name = "enabled", matchIfMissing = true)
+@ConfigurationProperties(prefix = "pmis.jdbc.tenant-isolation")
 public class TenantIsolationProperties {
 
     /**

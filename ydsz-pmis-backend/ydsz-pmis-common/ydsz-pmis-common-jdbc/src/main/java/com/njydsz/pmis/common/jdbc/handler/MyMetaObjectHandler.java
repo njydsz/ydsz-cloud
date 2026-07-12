@@ -1,7 +1,7 @@
 package com.njydsz.pmis.common.jdbc.handler;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
-import com.njydsz.pmis.common.security.AuthInfoUtils;
+import com.njydsz.pmis.common.context.AuthInfoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;

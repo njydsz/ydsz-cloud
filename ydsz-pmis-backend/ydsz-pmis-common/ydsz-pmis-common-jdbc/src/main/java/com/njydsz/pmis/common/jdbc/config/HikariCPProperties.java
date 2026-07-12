@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * HikariCP 连接池配置属性类
  *
  * <p>用于外部化配置 HikariCP 连接池参数，绑定 application.yml 中的
- * {@code remi.jdbc.hikari} 配置前缀。
+ * {@code pmis.jdbc.hikari} 配置前缀。
  *
  * <p><b>配置示例：</b>
  * <pre>{@code
@@ -30,7 +30,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @since 1.0.0
  */
 @Data
-@ConfigurationProperties(prefix = "remi.jdbc.hikari")
+@ConfigurationProperties(prefix = "pmis.jdbc.hikari")
 public class HikariCPProperties {
 
     /**

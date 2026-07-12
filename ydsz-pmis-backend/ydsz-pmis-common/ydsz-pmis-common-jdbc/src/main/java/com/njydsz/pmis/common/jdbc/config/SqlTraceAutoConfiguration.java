@@ -33,7 +33,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
  * }</pre>
  *
  * <p>配置项沿用 {@link JdbcProperties.SlowSql} 与 {@link JdbcProperties.SqlAudit}，
- * 对已有 {@code remi.jdbc.slow-sql.*} 和 {@code remi.jdbc.sql-audit.*} 配置完全兼容。
+ * 对已有 {@code pmis.jdbc.slow-sql.*} 和 {@code pmis.jdbc.sql-audit.*} 配置完全兼容。
  *
  * @author ydsz-pmis-team
  * 
@@ -45,7 +45,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 @Slf4j
 @AutoConfiguration
 @ConditionalOnClass(MybatisPlusInterceptor.class)
-@ConditionalOnExpression("${remi.jdbc.enabled:true} and (${remi.jdbc.slow-sql.enabled:true} or ${remi.jdbc.sql-audit.enabled:true})")
+@ConditionalOnExpression("${pmis.jdbc.enabled:true} and (${pmis.jdbc.slow-sql.enabled:true} or ${pmis.jdbc.sql-audit.enabled:true})")
 @EnableConfigurationProperties(JdbcProperties.class)
 public class SqlTraceAutoConfiguration {
 

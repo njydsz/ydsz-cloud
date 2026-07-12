@@ -15,7 +15,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "remi.jdbc.field-fill")
+@ConfigurationProperties(prefix = "pmis.jdbc.field-fill")
 public class FieldFillConfiguration {
 
     /**

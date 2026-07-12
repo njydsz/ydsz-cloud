@@ -2,7 +2,7 @@ package com.njydsz.pmis.common.jdbc.permission;
 
 import com.njydsz.pmis.common.constant.HeaderConstants;
 import com.njydsz.pmis.common.enums.DataScopeType;
-import com.njydsz.pmis.common.security.RequestHolder;
+import com.njydsz.pmis.common.context.RequestHolder;
 import com.njydsz.pmis.common.util.ServletUtils;
 import com.njydsz.pmis.common.util.StringUtils;
 
