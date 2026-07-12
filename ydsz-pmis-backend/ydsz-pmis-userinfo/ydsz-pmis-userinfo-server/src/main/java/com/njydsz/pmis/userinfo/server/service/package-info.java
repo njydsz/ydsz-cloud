@@ -16,7 +16,6 @@
  *   <li>AuthService - 登录、刷新 Token、登出、Token 黑名单、图形验证码。</li>
  *   <li>SessionService - 活跃会话维护、主动/强制下线、踢出其他会话。</li>
  *   <li>TwoFactorService - TOTP 绑定/校验、备份码生成与校验、关闭 2FA。</li>
- *   <li>ReAuthService - 敏感操作二次认证 Token 颁发与校验。</li>
  *   <li>PasswordScanService - 密码健康度扫描（过期/即将过期/初始密码）。</li>
  *   <li>AttendanceService - 出勤登记、加班/请假申请与审批、状态统计。</li>
  *   <li>ResourcePoolService - 三级资源池 CRUD。</li>

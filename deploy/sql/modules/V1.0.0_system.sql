@@ -449,8 +449,7 @@ ON CONFLICT (tenant_id) DO NOTHING;
 -- 2) 登录审计：pmis_login_audit
 -- 3) 双因素认证：pmis_user_2fa
 -- 4) 数据导出审计：pmis_data_export_audit
--- 5) 敏感操作复核：pmis_sensitive_operation
--- 6) 会话管理：pmis_user_session
+-- 5) 会话管理：pmis_user_session
 -- ============================================================
 
 -- ----------------------------
@@ -591,70 +590,7 @@ CREATE INDEX IF NOT EXISTS idx_dea_tenant_module_at
     ON pmis_data_export_audit(tenant_id, export_module, exported_at DESC)
     WHERE deleted = 0;
 
--- ----------------------------
--- 5) 敏感操作二次确认
--- ----------------------------
-CREATE TABLE IF NOT EXISTS pmis_sensitive_operation (
-    id              VARCHAR(20) PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
-    user_id         VARCHAR(20)        NOT NULL,
-    username        VARCHAR(64)   NOT NULL,
-    operation_code  VARCHAR(64)   NOT NULL,
-    operation_name  VARCHAR(128)  NOT NULL,
-    biz_type        VARCHAR(32),
-    biz_id          VARCHAR(20),
-    re_auth_method  VARCHAR(16)   NOT NULL,
-    re_auth_token   VARCHAR(256),
-    verified_at     TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expire_at       TIMESTAMPTZ   NOT NULL,
-    client_ip       VARCHAR(64),
-    trace_id        VARCHAR(20),
-    tenant_id       VARCHAR(20)        NOT NULL DEFAULT '1',
-    created_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT      NOT NULL DEFAULT 0,
-    CONSTRAINT ck_sensitive_op_method    CHECK (re_auth_method IN ('PASSWORD','MFA','SMS')),
-    CONSTRAINT ck_sensitive_op_expire    CHECK (expire_at >= verified_at),
-    CONSTRAINT ck_sensitive_op_deleted   CHECK (deleted IN (0, 1))
-);
-
-COMMENT ON TABLE  pmis_sensitive_operation IS '敏感操作二次确认记录表: @RequireReAuth 注解触发的二次认证,token 一次性消费,防重放';
-
-COMMENT ON COLUMN pmis_sensitive_operation.user_id IS '操作用户 ID';
-
-COMMENT ON COLUMN pmis_sensitive_operation.username IS '操作用户姓名（冗余）';
-
-COMMENT ON COLUMN pmis_sensitive_operation.operation_code IS '操作编码: 例如 USER_DELETE / CONTRACT_REVERSE';
-
-COMMENT ON COLUMN pmis_sensitive_operation.operation_name IS '操作名称';
-
-COMMENT ON COLUMN pmis_sensitive_operation.biz_type IS '业务类型';
-
-COMMENT ON COLUMN pmis_sensitive_operation.biz_id IS '业务对象 ID';
-
-COMMENT ON COLUMN pmis_sensitive_operation.re_auth_method IS '二次认证方式: PASSWORD 密码 / MFA / SMS';
-
-COMMENT ON COLUMN pmis_sensitive_operation.re_auth_token IS '二次认证 Token: Redis Key 一次性消费';
-
-COMMENT ON COLUMN pmis_sensitive_operation.verified_at IS '验证时间';
-
-COMMENT ON COLUMN pmis_sensitive_operation.expire_at IS 'Token 过期时间';
-
-COMMENT ON COLUMN pmis_sensitive_operation.client_ip IS '客户端 IP';
-
-COMMENT ON COLUMN pmis_sensitive_operation.trace_id IS '链路追踪 ID';
-
-COMMENT ON COLUMN pmis_sensitive_operation.tenant_id IS '租户 ID';
-
-COMMENT ON COLUMN pmis_sensitive_operation.deleted IS '逻辑删除: 0=未删除,1=已删除';
-
--- 复合/部分索引(替代零散的 idx_sensitive_op_*)
-CREATE INDEX IF NOT EXISTS idx_sensitive_op_tenant_user_at
-    ON pmis_sensitive_operation(tenant_id, user_id, verified_at DESC)
-    WHERE deleted = 0;
-
-CREATE INDEX IF NOT EXISTS idx_sensitive_op_tenant_code_at
-    ON pmis_sensitive_operation(tenant_id, operation_code, verified_at DESC)
-    WHERE deleted = 0;
+-- 5) 敏感操作二次确认: 已下线（@RequireReAuth 流程整体移除,2026-07 简化）
 
 -- --------------------------------------------------------------------
 

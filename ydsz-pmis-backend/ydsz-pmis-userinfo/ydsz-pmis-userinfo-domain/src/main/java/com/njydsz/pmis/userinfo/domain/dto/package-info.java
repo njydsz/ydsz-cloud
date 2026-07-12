@@ -7,7 +7,7 @@
  * <h3>核心组件</h3>
  * <ul>
  *   <li>用户域：UserCreateDTO、UserUpdateDTO、UserQueryDTO、PasswordChangeDTO、PasswordResetDTO。</li>
- *   <li>认证域：LoginRequest、LoginDTO、LoginResult、LoginResultVO、LoginContextDTO、ReAuthRequest、ReAuthResult、TwoFactorBindResult、CaptchaVO。</li>
+ *   <li>认证域：LoginRequest、LoginDTO、LoginResult、LoginResultVO、LoginContextDTO、TwoFactorBindResult、CaptchaVO。</li>
  *   <li>角色/权限域：RoleFormDTO、RoleQueryDTO、PermissionFormDTO。</li>
  *   <li>组织架构域：DepartmentFormDTO、DepartmentQueryDTO、EmployeeTagCreateDTO。</li>
  *   <li>资源域：ResourcePoolCreateDTO、ResourceAssignmentCreateDTO、BenchRecordCreateDTO。</li>

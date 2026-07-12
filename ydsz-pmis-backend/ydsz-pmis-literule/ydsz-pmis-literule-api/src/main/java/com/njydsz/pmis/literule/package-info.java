@@ -14,9 +14,9 @@
  * <h3>权限</h3>
  * <ul>
  *   <li>规则查看：{@code literule:rule:query}</li>
- *   <li>规则修改：{@code literule:rule:update} + 二次认证</li>
- *   <li>规则发布：{@code literule:rule:publish} + 二次认证</li>
- *   <li>规则删除：{@code literule:rule:delete} + 二次认证</li>
+ *   <li>规则修改：{@code literule:rule:update}</li>
+ *   <li>规则发布：{@code literule:rule:publish}</li>
+ *   <li>规则删除：{@code literule:rule:delete}</li>
  * </ul>
  *
  * @author ydsz-pmis-team

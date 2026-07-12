@@ -12,7 +12,6 @@
  *   <li>AuthServiceImpl - 认证流程编排：图形验证码 → 用户名校验 → 密码校验 → 2FA → 颁发 Token。</li>
  *   <li>SessionServiceImpl - 会话生命周期：登录登记、心跳续期、主动/被动下线。</li>
  *   <li>TwoFactorServiceImpl - TOTP 密钥生成、备份码生成与校验、关闭 2FA。</li>
- *   <li>ReAuthServiceImpl - 二次认证 Token 颁发与有效期管理。</li>
  *   <li>PasswordScanServiceImpl - 密码健康度扫描（过期/即将过期/初始密码）聚合逻辑。</li>
  *   <li>RoleServiceImpl / PermissionServiceImpl - RBAC 模型增删改查与权限码聚合。</li>
  *   <li>DepartmentServiceImpl - 部门树构建、CRUD 与负责人维护。</li>
