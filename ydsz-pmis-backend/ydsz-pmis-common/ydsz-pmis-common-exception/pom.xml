@@ -66,6 +66,12 @@
             <artifactId>spring-jdbc</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- Spring ORM（JdbcExceptionTranslator 使用） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-orm</artifactId>
+            <optional>true</optional>
+        </dependency>
 
         <!-- SLF4J API -->
         <dependency>

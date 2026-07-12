@@ -19,7 +19,7 @@ public class SecurityException extends AbstractPmisException {
 
     public SecurityException() {
         super();
-        this.code = UnifiedExceptionCode.SECURITY_ACCESS_DENIED.getCode();
+        this.code = UnifiedExceptionCode.SEC_ACCESS_DENIED.getCode();
         this.httpStatus = 403;
         this.level = ExceptionLevel.WARN;
         this.category = ExceptionCategory.SECURITY;
@@ -27,7 +27,7 @@ public class SecurityException extends AbstractPmisException {
 
     public SecurityException(String message) {
         super(message);
-        this.code = UnifiedExceptionCode.SECURITY_ACCESS_DENIED.getCode();
+        this.code = UnifiedExceptionCode.SEC_ACCESS_DENIED.getCode();
         this.httpStatus = 403;
         this.level = ExceptionLevel.WARN;
         this.category = ExceptionCategory.SECURITY;
@@ -35,7 +35,7 @@ public class SecurityException extends AbstractPmisException {
 
     public SecurityException(String message, Throwable cause) {
         super(message, cause);
-        this.code = UnifiedExceptionCode.SECURITY_ACCESS_DENIED.getCode();
+        this.code = UnifiedExceptionCode.SEC_ACCESS_DENIED.getCode();
         this.httpStatus = 403;
         this.level = ExceptionLevel.WARN;
         this.category = ExceptionCategory.SECURITY;

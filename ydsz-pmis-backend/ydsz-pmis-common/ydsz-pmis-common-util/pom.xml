@@ -170,6 +170,18 @@
             <artifactId>spring-security-crypto</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- OpenPDF（PdfUtil） -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- mybatis-plus-core（PmisSnowflakeIdentifierGenerator） -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-core</artifactId>
+            <optional>true</optional>
+        </dependency>
 
         <!-- Spring Boot AutoConfiguration -->
         <dependency>

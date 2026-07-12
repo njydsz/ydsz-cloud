@@ -78,6 +78,30 @@
             <version>4.8.6</version>
             <scope>provided</scope>
         </dependency>
+        <!-- spring-web（BizErrorCode 使用 HttpStatus） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- swagger-annotations（Result/PageResult 使用 @Schema） -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- mybatis-plus-extension（PageResult 使用 Page） -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-extension</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- jakarta.servlet-api（RequestHolder 使用 HttpServletRequest） -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 

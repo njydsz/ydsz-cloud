@@ -92,5 +92,11 @@
             <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
             <artifactId>owasp-java-html-sanitizer</artifactId>
         </dependency>
+        <!-- mybatis-plus-core（AuditFieldFiller 使用） -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-core</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 </project>
