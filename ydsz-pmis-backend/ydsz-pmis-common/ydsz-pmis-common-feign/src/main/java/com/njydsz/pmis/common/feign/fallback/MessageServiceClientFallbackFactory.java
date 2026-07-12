@@ -23,8 +23,8 @@ public class MessageServiceClientFallbackFactory extends DefaultFallbackFactory<
         return new MessageServiceClient() {
             @Override
             public BaseResponse<MessageResult> send(MessageRequest request) {
-                log.warn("MessageServiceClient.send 降级: messageId={}, cause={}",
-                        request.getMessageId(), cause.getMessage());
+                log.warn("MessageServiceClient.send 降级: bizId={}, cause={}",
+                        request.getBizId(), cause.getMessage());
                 return BaseResponse.error("B01004", "消息服务暂时不可用");
             }
         };

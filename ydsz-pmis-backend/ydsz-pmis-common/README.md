@@ -37,7 +37,7 @@ L6 应用层     → ydsz-pmis-common-base, ydsz-pmis-common-web, ydsz-pmis-comm
 | L3 | common-exception | 15+ 异常类、统一错误码、ProblemDetail (RFC 7807)、i18n、双栈异常处理器 |
 | L4 | common-jdbc | MyBatis-Plus 增强、动态数据源、行/列权限、逻辑删除、乐观锁、租户隔离 |
 | L4 | common-redis | Redis 6 种 ops + 9 种高级 ops、布隆过滤器、延迟队列、限流、缓存击穿防护 |
-| L4 | common-lock | 分布式锁（4 种实现）、@Idempotent 幂等、@YdszLock、WatchDog、读写锁、信号量 |
+| L4 | common-lock | 分布式锁（4 种实现）、@Idempotent 幂等、@YdszDistributedLock、WatchDog、读写锁、信号量 |
 | L5 | common-auth | JWT、RBAC 4 注解 + 3 切面、@DataScope 数据权限、@RequireReAuth 二次认证、TOTP 2FA |
 | L5 | common-safe | @Sensitive 7 种脱敏、@Xss、@RateLimit、CSRF、SQL 注入防护、验证码、安全事件总线 |
 | L5 | common-feign | OpenFeign 增强、统一编解码、ResponseUnwrapDecoder、DefaultFallbackFactory、Resilience4j 熔断 |

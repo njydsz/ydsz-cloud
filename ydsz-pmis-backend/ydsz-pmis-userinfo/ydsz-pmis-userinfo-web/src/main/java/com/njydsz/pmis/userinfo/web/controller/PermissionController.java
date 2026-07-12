@@ -1,7 +1,7 @@
 package com.njydsz.pmis.userinfo.web.controller.permission;
 
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
-import com.njydsz.pmis.common.lock.annotation.YdszLock;
+import com.njydsz.pmis.common.lock.annotation.YdszDistributedLock;
 
 import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
@@ -115,7 +115,7 @@ public class PermissionController {
     @Operation(summary = "创建权限")
     @AuthApiPermission(apiCodes = "auth:perm:create")
     @OperationLog(module = "权限管理", action = "创建权限", bizType = "PERM")
-    @YdszLock(key = "permission:create:#{#dto.permCode}", waitTime = 3, leaseTime = 10, message = "正在创建权限，请稍后")
+    @YdszDistributedLock(key = "permission:create:#{#dto.permCode}", waitTime = 3, leaseTime = 10, message = "正在创建权限，请稍后")
     @Idempotent(key = "permission:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<String> create(@Valid @RequestBody PermissionFormDTO dto) {
@@ -131,7 +131,7 @@ public class PermissionController {
     @Operation(summary = "更新权限")
     @AuthApiPermission(apiCodes = "auth:perm:update")
     @OperationLog(module = "权限管理", action = "更新权限", bizType = "PERM")
-    @YdszLock(key = "permission:update:#{#dto.id}", waitTime = 3, leaseTime = 10, message = "正在更新权限，请稍后")
+    @YdszDistributedLock(key = "permission:update:#{#dto.id}", waitTime = 3, leaseTime = 10, message = "正在更新权限，请稍后")
     @Idempotent(key = "permission:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     public BaseResponse<Void> update(@Valid @RequestBody PermissionFormDTO dto) {
@@ -148,7 +148,7 @@ public class PermissionController {
     @Operation(summary = "删除权限")
     @AuthApiPermission(apiCodes = "auth:perm:delete")
     @OperationLog(module = "权限管理", action = "删除权限", bizType = "PERM")
-    @YdszLock(key = "permission:delete:#{#id}", waitTime = 3, leaseTime = 10, message = "正在删除权限，请稍后")
+    @YdszDistributedLock(key = "permission:delete:#{#id}", waitTime = 3, leaseTime = 10, message = "正在删除权限，请稍后")
     @Idempotent(key = "permission:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@Parameter(description = "权限ID") @PathVariable String id) {

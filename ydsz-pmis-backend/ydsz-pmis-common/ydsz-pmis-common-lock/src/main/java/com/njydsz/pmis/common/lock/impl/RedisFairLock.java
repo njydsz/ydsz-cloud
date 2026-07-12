@@ -1,7 +1,7 @@
 package com.njydsz.pmis.common.lock.impl;
 
 import com.njydsz.pmis.common.lock.core.AbstractRedisDistributedLock;
-import com.njydsz.pmis.common.lock.core.DistributedLock;
+import com.njydsz.pmis.common.lock.core.DistributedLocker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
  * @email limw1888@126.com
  * @version 3.5.0
  * @since 1.0.0
- * @see DistributedLock
+ * @see DistributedLocker
  * @see RedisReentrantLock
  */
 @Slf4j

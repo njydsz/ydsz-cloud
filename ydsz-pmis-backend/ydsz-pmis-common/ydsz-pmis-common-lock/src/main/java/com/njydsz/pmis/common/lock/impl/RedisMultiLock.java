@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.lock.impl;
 
-import com.njydsz.pmis.common.lock.core.DistributedLock;
+import com.njydsz.pmis.common.lock.core.DistributedLocker;
 import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @since 1.0.0
  */
 @Slf4j
-public class RedisMultiLock implements DistributedLock {
+public class RedisMultiLock implements DistributedLocker {
 
 	/**
 	 * 共享的 WatchDog 续期调度线程池（避免每个 MultiLock 创建独立线程导致线程爆炸）
@@ -69,7 +69,7 @@ public class RedisMultiLock implements DistributedLock {
 	/**
 	 * 底层分布式锁列表（按获取顺序）
 	 */
-	private final List<DistributedLock> locks;
+	private final List<DistributedLocker> locks;
 
 	/**
 	 * 当前持有的锁值映射（lockKey → lockValue）
@@ -86,7 +86,7 @@ public class RedisMultiLock implements DistributedLock {
 	 *
 	 * @param locks 底层分布式锁列表，至少需要 2 个锁
 	 */
-	public RedisMultiLock(List<DistributedLock> locks) {
+	public RedisMultiLock(List<DistributedLocker> locks) {
 		if (locks == null || locks.size() < 2) {
 			throw new IllegalArgumentException("RedisMultiLock 至少需要 2 个底层锁");
 		}
@@ -108,7 +108,7 @@ public class RedisMultiLock implements DistributedLock {
 		List<String> acquired = new ArrayList<>(locks.size());
 		try {
 			for (int i = 0; i < locks.size(); i++) {
-				DistributedLock lock = locks.get(i);
+				DistributedLocker lock = locks.get(i);
 				String subLockKey = buildSubLockKey(lockKey, i);
 				String lockValue = lock.tryLock(subLockKey, leaseTime, timeUnit);
 				if (lockValue == null) {
@@ -156,7 +156,7 @@ public class RedisMultiLock implements DistributedLock {
 					return null;
 				}
 
-				DistributedLock lock = locks.get(i);
+				DistributedLocker lock = locks.get(i);
 				String subLockKey = buildSubLockKey(lockKey, i);
 				String lockValue = lock.tryLock(subLockKey, remaining, leaseTime, timeUnit);
 				if (lockValue == null) {
@@ -203,7 +203,7 @@ public class RedisMultiLock implements DistributedLock {
 	@Override
 	public boolean isLocked(String lockKey) {
 		for (int i = 0; i < locks.size(); i++) {
-			DistributedLock lock = locks.get(i);
+			DistributedLocker lock = locks.get(i);
 			String subLockKey = buildSubLockKey(lockKey, i);
 			if (!lock.isLocked(subLockKey)) {
 				return false;
@@ -224,7 +224,7 @@ public class RedisMultiLock implements DistributedLock {
 	public long getRemainTime(String lockKey) {
 		long minRemain = Long.MAX_VALUE;
 		for (int i = 0; i < locks.size(); i++) {
-			DistributedLock lock = locks.get(i);
+			DistributedLocker lock = locks.get(i);
 			String subLockKey = buildSubLockKey(lockKey, i);
 			long remain = lock.getRemainTime(subLockKey);
 			if (remain > 0 && remain < minRemain) {
@@ -249,7 +249,7 @@ public class RedisMultiLock implements DistributedLock {
 	 * @param index 索引
 	 * @return 底层分布式锁
 	 */
-	public DistributedLock getLock(int index) {
+	public DistributedLocker getLock(int index) {
 		return locks.get(index);
 	}
 
@@ -275,7 +275,7 @@ public class RedisMultiLock implements DistributedLock {
 	private void rollbackLocks(String lockKey, int acquiredCount) {
 		for (int i = acquiredCount - 1; i >= 0; i--) {
 			try {
-				DistributedLock lock = locks.get(i);
+				DistributedLocker lock = locks.get(i);
 				String subLockKey = buildSubLockKey(lockKey, i);
 				String lockValue = acquiredLockValues.remove(subLockKey);
 				if (lockValue != null) {
@@ -297,7 +297,7 @@ public class RedisMultiLock implements DistributedLock {
 		boolean allReleased = true;
 		for (int i = locks.size() - 1; i >= 0; i--) {
 			try {
-				DistributedLock lock = locks.get(i);
+				DistributedLocker lock = locks.get(i);
 				String subLockKey = buildSubLockKey(lockKey, i);
 				String lockValue = acquiredLockValues.remove(subLockKey);
 				if (lockValue != null) {
@@ -377,7 +377,7 @@ public class RedisMultiLock implements DistributedLock {
 	 */
 	private boolean renewAllLocks(String lockKey, long leaseTime, TimeUnit timeUnit) {
 		for (int i = 0; i < locks.size(); i++) {
-			DistributedLock lock = locks.get(i);
+			DistributedLocker lock = locks.get(i);
 			String subLockKey = buildSubLockKey(lockKey, i);
 			String lockValue = acquiredLockValues.get(subLockKey);
 			if (lockValue == null) {

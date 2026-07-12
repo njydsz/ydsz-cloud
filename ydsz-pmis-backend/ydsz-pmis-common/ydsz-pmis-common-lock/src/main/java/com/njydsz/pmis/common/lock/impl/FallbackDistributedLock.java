@@ -2,7 +2,7 @@ package com.njydsz.pmis.common.lock.impl;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.njydsz.pmis.common.lock.core.DistributedLock;
+import com.njydsz.pmis.common.lock.core.DistributedLocker;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.UUID;
@@ -15,7 +15,7 @@ import java.util.concurrent.locks.ReentrantLock;
 /**
  * 锁降级策略实现 - Redis 不可用时自动降级为本地 ReentrantLock
  *
- * <p>包装 DistributedLock，当 Redis 不可用时降级为本地锁，保证服务可用性。
+ * <p>包装 DistributedLocker，当 Redis 不可用时降级为本地锁，保证服务可用性。
  *
  * <p><b>降级策略：</b>
  * <ul>
@@ -43,7 +43,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @since 1.0.0
  */
 @Slf4j
-public class FallbackDistributedLock implements DistributedLock {
+public class FallbackDistributedLock implements DistributedLocker {
 
     /**
      * 连续失败阈值，达到后全局标记 Redis 不可用
@@ -58,7 +58,7 @@ public class FallbackDistributedLock implements DistributedLock {
     /**
      * 被包装的分布式锁实例
      */
-    private final DistributedLock delegate;
+    private final DistributedLocker delegate;
     /**
      * 是否启用降级策略
      */
@@ -103,7 +103,7 @@ public class FallbackDistributedLock implements DistributedLock {
      * @param delegate         被包装的分布式锁实例
      * @param fallbackEnabled  是否启用降级策略
      */
-    public FallbackDistributedLock(DistributedLock delegate, boolean fallbackEnabled) {
+    public FallbackDistributedLock(DistributedLocker delegate, boolean fallbackEnabled) {
         this.delegate = delegate;
         this.fallbackEnabled = fallbackEnabled;
     }
@@ -113,7 +113,7 @@ public class FallbackDistributedLock implements DistributedLock {
      *
      * @param delegate 被包装的分布式锁实例
      */
-    public FallbackDistributedLock(DistributedLock delegate) {
+    public FallbackDistributedLock(DistributedLocker delegate) {
         this(delegate, true);
     }
 
@@ -422,7 +422,7 @@ public class FallbackDistributedLock implements DistributedLock {
      *
      * @return 原始分布式锁实例
      */
-    public DistributedLock getDelegate() {
+    public DistributedLocker getDelegate() {
         return delegate;
     }
 

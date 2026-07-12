@@ -2,7 +2,7 @@ package com.njydsz.pmis.common.lock.strategy;
 
 import com.njydsz.pmis.common.lock.RedisReadWriteLock;
 import com.njydsz.pmis.common.lock.RedisSemaphore;
-import com.njydsz.pmis.common.lock.core.DistributedLock;
+import com.njydsz.pmis.common.lock.core.DistributedLocker;
 import com.njydsz.pmis.common.lock.annotation.LockType;
 
 /**
@@ -27,7 +27,7 @@ public interface LockStrategy {
      * @param lockType 锁类型，不能为空
      * @return 对应类型的分布式锁实例
      */
-    DistributedLock getLock(LockType lockType);
+    DistributedLocker getLock(LockType lockType);
 
     /**
      * 获取 Redis 读写锁实例

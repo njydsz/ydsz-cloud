@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
  * @since 1.0.0
  */
 @Slf4j
-public abstract class AbstractRedisDistributedLock implements DistributedLock {
+public abstract class AbstractRedisDistributedLock implements DistributedLocker {
 
     /**
      * 客户端标识注册表 Redis Key 前缀

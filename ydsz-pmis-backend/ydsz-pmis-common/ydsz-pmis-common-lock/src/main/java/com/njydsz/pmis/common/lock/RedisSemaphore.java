@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.lock;
 
-import com.njydsz.pmis.common.lock.core.DistributedLock;
+import com.njydsz.pmis.common.lock.core.DistributedLocker;
 import com.njydsz.pmis.common.redis.service.RedisService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
  *   <li>业务代码正常 release 时，取消定时任务，避免误释放</li>
  * </ul>
  *
- * <p>自 v3.5.1 起实现 {@link DistributedLock} 接口，
+ * <p>自 v3.5.1 起实现 {@link DistributedLocker} 接口，
  * 可纳入 {@link com.njydsz.pmis.common.lock.strategy.LockStrategy} 统一管理。
  *
  * @author Marvin Lee
@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
  * @since 3.0.0
  */
 @Slf4j
-public class RedisSemaphore implements DistributedLock {
+public class RedisSemaphore implements DistributedLocker {
 
     /**
      * Redis 服务，用于执行 Lua 脚本
@@ -313,11 +313,11 @@ public class RedisSemaphore implements DistributedLock {
         }
     }
 
-    // ======================== DistributedLock 接口实现 ========================
+    // ======================== DistributedLocker 接口实现 ========================
 
     /**
      * 尝试获取一个信号量许可（非阻塞）
-     * <p>实现 {@link DistributedLock#tryLock(String, long, TimeUnit)}，
+     * <p>实现 {@link DistributedLocker#tryLock(String, long, TimeUnit)}，
      * 内部使用 {@code tryAcquire()} 方法。
      *
      * @param lockKey   锁的键（当前实现忽略，使用构造时传入的 key）
@@ -345,7 +345,7 @@ public class RedisSemaphore implements DistributedLock {
 
     /**
      * 尝试获取一个信号量许可（带等待时间）
-     * <p>实现 {@link DistributedLock#tryLock(String, long, long, TimeUnit)}，
+     * <p>实现 {@link DistributedLocker#tryLock(String, long, long, TimeUnit)}，
      * 内部使用 {@code tryAcquire(timeout, unit)} 方法。
      *
      * @param lockKey   锁的键（当前实现忽略，使用构造时传入的 key）
@@ -374,7 +374,7 @@ public class RedisSemaphore implements DistributedLock {
 
     /**
      * 释放信号量许可
-     * <p>实现 {@link DistributedLock#unlock(String, String)}，
+     * <p>实现 {@link DistributedLocker#unlock(String, String)}，
      * 同时取消超时自动释放定时任务。
      *
      * @param lockKey   锁的键（当前实现忽略，使用构造时传入的 key）
@@ -389,7 +389,7 @@ public class RedisSemaphore implements DistributedLock {
 
     /**
      * 检查信号量是否还有可用许可
-     * <p>实现 {@link DistributedLock#isLocked(String)}，
+     * <p>实现 {@link DistributedLocker#isLocked(String)}，
      * 当所有许可都被占用时返回 true。
      *
      * @param lockKey 锁的键（当前实现忽略，使用构造时传入的 key）
@@ -412,7 +412,7 @@ public class RedisSemaphore implements DistributedLock {
 
     /**
      * 获取信号量 key 的剩余过期时间
-     * <p>实现 {@link DistributedLock#getRemainTime(String)}。
+     * <p>实现 {@link DistributedLocker#getRemainTime(String)}。
      *
      * @param lockKey 锁的键（当前实现忽略，使用构造时传入的 key）
      * @return 剩余时间（毫秒），-1 表示 key 不存在，-2 表示获取失败

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.lock;
 
-import com.njydsz.pmis.common.lock.core.DistributedLock;
+import com.njydsz.pmis.common.lock.core.DistributedLocker;
 import com.njydsz.pmis.common.redis.service.RedisService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,7 +23,7 @@ import java.util.concurrent.locks.ReadWriteLock;
  *   <li>写锁释放：Lua 原子校验 lockValue 匹配 + 删除写锁 key</li>
  * </ul>
  *
- * <p>自 v3.5.1 起实现 {@link DistributedLock} 接口，
+ * <p>自 v3.5.1 起实现 {@link DistributedLocker} 接口，
  * 可纳入 {@link com.njydsz.pmis.common.lock.strategy.LockStrategy} 统一管理。
  *
  * @author Marvin Lee
@@ -32,7 +32,7 @@ import java.util.concurrent.locks.ReadWriteLock;
  * @since 3.0.0
  */
 @Slf4j
-public class RedisReadWriteLock implements ReadWriteLock, DistributedLock {
+public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
 
     /**
      * Redis 服务，用于执行 Lua 脚本
@@ -59,7 +59,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLock {
     private final ThreadLocal<String> threadReadLockValue = new ThreadLocal<>();
     /** 当前线程的读锁重入计数 */
     private final ThreadLocal<Integer> threadReadLockCount = new ThreadLocal<>();
-    /** 当前线程持有的写锁 lockValue，用于 DistributedLock 接口方法 */
+    /** 当前线程持有的写锁 lockValue，用于 DistributedLocker 接口方法 */
     private final ThreadLocal<String> writeLockValueHolder = new ThreadLocal<>();
 
     /**
@@ -359,11 +359,11 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLock {
         }
     }
 
-    // ======================== DistributedLock 接口实现 ========================
+    // ======================== DistributedLocker 接口实现 ========================
 
     /**
      * 尝试获取写锁（非阻塞）
-     * <p>实现 {@link DistributedLock#tryLock(String, long, TimeUnit)}，
+     * <p>实现 {@link DistributedLocker#tryLock(String, long, TimeUnit)}，
      * 内部使用写锁的 {@code tryLock()} 方法。
      *
      * @param lockKey   锁的键（当前实现忽略，使用构造时传入的 key）
@@ -386,7 +386,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLock {
 
     /**
      * 尝试获取写锁（带等待时间）
-     * <p>实现 {@link DistributedLock#tryLock(String, long, long, TimeUnit)}，
+     * <p>实现 {@link DistributedLocker#tryLock(String, long, long, TimeUnit)}，
      * 内部使用写锁的 {@code tryLock(time, unit)} 方法。
      *
      * @param lockKey   锁的键（当前实现忽略，使用构造时传入的 key）
@@ -410,7 +410,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLock {
 
     /**
      * 释放写锁
-     * <p>实现 {@link DistributedLock#unlock(String, String)}，
+     * <p>实现 {@link DistributedLocker#unlock(String, String)}，
      * 内部使用写锁的 {@code unlock()} 方法。
      *
      * @param lockKey   锁的键（当前实现忽略，使用构造时传入的 key）
@@ -437,7 +437,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLock {
 
     /**
      * 检查写锁是否被持有
-     * <p>实现 {@link DistributedLock#isLocked(String)}。
+     * <p>实现 {@link DistributedLocker#isLocked(String)}。
      *
      * @param lockKey 锁的键（当前实现忽略，使用构造时传入的 key）
      * @return true-写锁被持有，false-写锁未被持有
@@ -454,7 +454,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLock {
 
     /**
      * 获取写锁的剩余过期时间
-     * <p>实现 {@link DistributedLock#getRemainTime(String)}。
+     * <p>实现 {@link DistributedLocker#getRemainTime(String)}。
      *
      * @param lockKey 锁的键（当前实现忽略，使用构造时传入的 key）
      * @return 剩余时间（毫秒），-1 表示锁未被持有，-2 表示获取失败

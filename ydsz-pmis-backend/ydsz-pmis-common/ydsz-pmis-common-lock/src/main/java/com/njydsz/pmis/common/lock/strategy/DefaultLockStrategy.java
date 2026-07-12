@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.lock.RedisReadWriteLock;
 import com.njydsz.pmis.common.lock.RedisSemaphore;
 import com.njydsz.pmis.common.lock.annotation.LockType;
 import com.njydsz.pmis.common.lock.core.AbstractRedisDistributedLock;
-import com.njydsz.pmis.common.lock.core.DistributedLock;
+import com.njydsz.pmis.common.lock.core.DistributedLocker;
 import com.njydsz.pmis.common.lock.impl.RedisFairLock;
 import com.njydsz.pmis.common.lock.impl.RedisReentrantLock;
 import com.njydsz.pmis.common.lock.metrics.LockMetrics;
@@ -65,7 +65,7 @@ public class DefaultLockStrategy implements LockStrategy {
     /**
      * 锁实例缓存，按锁类型缓存避免重复创建
      */
-    private final Map<LockType, DistributedLock> lockCache = new ConcurrentHashMap<>();
+    private final Map<LockType, DistributedLocker> lockCache = new ConcurrentHashMap<>();
 
     /**
      * 默认锁过期时间（毫秒）
@@ -160,7 +160,7 @@ public class DefaultLockStrategy implements LockStrategy {
      * @return 分布式锁实例
      */
     @Override
-    public DistributedLock getLock(LockType lockType) {
+    public DistributedLocker getLock(LockType lockType) {
         return lockCache.computeIfAbsent(lockType, this::createLock);
     }
 
@@ -226,8 +226,8 @@ public class DefaultLockStrategy implements LockStrategy {
      * @param lockType 锁类型
      * @return 分布式锁实例
      */
-    private DistributedLock createLock(LockType lockType) {
-        DistributedLock lock = switch (lockType) {
+    private DistributedLocker createLock(LockType lockType) {
+        DistributedLocker lock = switch (lockType) {
             case REENTRANT -> new RedisReentrantLock(stringRedisTemplate, namespace);
             case FAIR -> new RedisFairLock(stringRedisTemplate, namespace);
             default -> new RedisReentrantLock(stringRedisTemplate, namespace);

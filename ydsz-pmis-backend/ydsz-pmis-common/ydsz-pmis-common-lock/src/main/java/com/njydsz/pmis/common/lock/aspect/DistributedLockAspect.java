@@ -2,7 +2,7 @@ package com.njydsz.pmis.common.lock.aspect;
 
 import com.njydsz.pmis.common.lock.annotation.DistributedLock;
 import com.njydsz.pmis.common.lock.annotation.LockType;
-import com.njydsz.pmis.common.lock.core.DistributedLock;
+import com.njydsz.pmis.common.lock.core.DistributedLocker;
 import com.njydsz.pmis.common.lock.exception.DistributedLockException;
 import com.njydsz.pmis.common.lock.impl.FallbackDistributedLock;
 import com.njydsz.pmis.common.lock.metrics.LockMetrics;
@@ -26,11 +26,11 @@ import java.util.concurrent.TimeUnit;
 /**
  * 分布式锁 AOP 切面
  *
- * 拦截带有 @YdszLock 注解的方法，在方法执行前后进行加锁和解锁操作。
+ * 拦截带有 @YdszDistributedLock 注解的方法，在方法执行前后进行加锁和解锁操作。
  * 支持 SpEL 表达式解析锁的键。
  *
  * 执行流程：
- * 1. 解析方法上的 @YdszLock 注解
+ * 1. 解析方法上的 @YdszDistributedLock 注解
  * 2. 使用 SpEL 解析锁的键
  * 3. 根据锁类型获取对应的锁实例
  * 4. 尝试获取锁，失败则按配置重试
@@ -115,7 +115,7 @@ public class DistributedLockAspect {
      * @throws Throwable 方法执行异常
      */
     @Around("@annotation(lockAnn)")
-    public Object around(ProceedingJoinPoint joinPoint, DistributedLock lockAnn) throws Throwable {
+    public Object around(ProceedingJoinPoint joinPoint, YdszDistributedLock lockAnn) throws Throwable {
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
         String lockKey = resolveLockKey(lockAnn.key(), method, joinPoint.getArgs());
         LockType lockType = lockAnn.lockType();
@@ -125,7 +125,7 @@ public class DistributedLockAspect {
         int retryCount = lockAnn.retryCount();
         long retryInterval = lockAnn.retryInterval();
 
-        DistributedLock lock = lockStrategy.getLock(lockType);
+        DistributedLocker lock = lockStrategy.getLock(lockType);
 
         // 如果启用降级策略，包装为 FallbackDistributedLock
         if (fallbackEnabled && !(lock instanceof FallbackDistributedLock)) {
@@ -186,7 +186,7 @@ public class DistributedLockAspect {
      * @return 锁值，获取失败返回 null
      */
     private String acquireLockWithRetry(
-            DistributedLock lock, String lockKey, long waitTime,
+            DistributedLocker lock, String lockKey, long waitTime,
             long leaseTime, TimeUnit timeUnit, int retryCount, long retryInterval) {
 
         int maxRetries = Math.min(retryCount, 5);

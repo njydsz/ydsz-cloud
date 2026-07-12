@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * @YdszLock(key = "order:#{#orderId}", waitTime = 3, leaseTime = 30)
+ * @YdszDistributedLock(key = "order:#{#orderId}", waitTime = 3, leaseTime = 30)
  * public void processOrder(String orderId) {
  *     // 业务逻辑
  * }
@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface YdszLock {
+public @interface YdszDistributedLock {
 
     /**
      * 锁的键
