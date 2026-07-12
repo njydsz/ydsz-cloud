@@ -89,7 +89,6 @@ declare module 'vue' {
     PasswordStrengthBar: typeof import('./src/components/common/PasswordStrengthBar.vue')['default']
     ProTable: typeof import('./src/components/common/ProTable.vue')['default']
     QuickAccess: typeof import('./src/components/common/QuickAccess.vue')['default']
-    ReAuthDialog: typeof import('./src/components/common/ReAuthDialog.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     RuleCategoryTreeSidebar: typeof import('./src/components/common/RuleCategoryTreeSidebar.vue')['default']

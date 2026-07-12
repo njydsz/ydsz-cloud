@@ -1,6 +1,7 @@
 package com.njydsz.pmis.workflow.server.queue;
 
 import com.njydsz.pmis.common.queue.domain.QueueMessage;
+import com.njydsz.pmis.common.queue.enums.QueueType;
 import com.njydsz.pmis.common.queue.queue.IMessageQueue;
 import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.pmis.common.queue.service.IMessagePublisher;
@@ -59,10 +60,7 @@ public class FlowQueuePublisher {
     @PostConstruct
     public void init() {
         try {
-            flowEventQueue = messageQueueProvider.createMessageQueue(
-                    messageQueueProvider.getClass() != null
-                            ? com.njydsz.pmis.common.queue.enums.QueueType.STREAM
-                            : com.njydsz.pmis.common.queue.enums.QueueType.STREAM);
+            flowEventQueue = messageQueueProvider.createMessageQueue(QueueType.STREAM);
             flowEventPublisher = flowEventQueue.createPublisher(FlowQueueChannels.FLOW_EVENT);
             log.info("[FlowQueue] 工作流事件队列发布者已启动, channel={}", FlowQueueChannels.FLOW_EVENT);
         } catch (Exception e) {

@@ -99,7 +99,7 @@ YDSZ PMIS · 项目运营管理系统 · README
 | **后端治理** | Nacos 2.3.2（注册/配置）+ Sentinel 1.8.9（限流/熔断）+ Seata 2.5.0（AT 模式分布式事务）+ OpenFeign + RocketMQ 5.x + XXL-JOB 2.4+ |
 | **数据** | PostgreSQL 18 + MyBatis-Plus 3.5.16 + Redis 8 + MinIO + 5 张聚合 SQL 视图（零 Java JOIN） |
 | **可观测** | Sentry（异常，默认关闭需手动启用）+ Logback + TraceId（MDC）+ Actuator（健康检查） |
-| **安全** | AES-256 + SM4 字段加密 · 7 种脱敏策略 · TOTP 2FA · DataScope 6 模式 · 操作/登录/导出/敏感 4 类审计 · 二级密码策略 |
+| **安全** | AES-256 + SM4 字段加密 · 7 种脱敏策略 · TOTP 2FA · DataScope 6 模式 · 操作/登录/导出 3 类审计 · 二级密码策略 |
 | **质量门禁（CI）** | Checkstyle + SpotBugs + FindSecBugs + JaCoCo（覆盖率，配置已就绪）+ OWASP Dependency-Check（默认跳过，CI 中 -DskipDependencyCheck=false 启用） |
 | **前端** | Vue 3.5 + TS 5 + Vite 5.4 + Element Plus 2.8 + vxe-table 4 + ECharts 5.5 + Pinia 2 + vue-i18n 10 + bpmn-js + form-create + CodeMirror 6 + vue-grid-layout |
 | **前端工程化** | vite-plugin-mock 独立开发 + vite-plugin-pwa + rollup-plugin-visualizer + unplugin-auto-import + ESLint + Prettier + Husky + lint-staged + commitlint |
@@ -132,7 +132,7 @@ YDSZ PMIS · 项目运营管理系统 · README
 | # | 模块 | artifactId | 端口 | 职责 |
 |---|---|---|---|---|
 | 1 | API 网关 | ydsz-pmis-gateway | **9000** | 路由 + 鉴权 + 限流 + CORS |
-| 2 | 用户信息 | ydsz-pmis-userinfo | **9001** | 登录 / Token / 2FA / 登录审计 / 二次认证 / RBAC / 部门 / 人员 / 职级 / 字典 / 资源池 / Bench / 员工标签 |
+| 2 | 用户信息 | ydsz-pmis-userinfo | **9001** | 登录 / Token / 2FA / 登录审计 / RBAC / 部门 / 人员 / 职级 / 字典 / 资源池 / Bench / 员工标签 |
 | 3 | 系统基础 | ydsz-pmis-system | **9002** | 文件 / 配置 / 审计 |
 | 4 | 项目 | ydsz-pmis-project | **9003** | 商机 / 立项 / 合同 / 变更 / WBS / EVM / 成本 / 收入 / 风险 / 工时 / 发票 / 付款 / 客户信用 / 资源 / Dashboard / Report / 费率 / 交付 / 收尾 / 利润 |
 | 5 | 消息中心 | ydsz-pmis-message | **9004** | 多渠道发送（SMS/EMAIL/PUSH/INAPP/WEBHOOK/DINGTALK/WECOM/FEISHU）+ 模板 + 偏好 + 订阅 + 限流 + 撤回 + 聚合 + 回执 |
@@ -248,7 +248,7 @@ ydsz-pmis/
 │   ├── src/api/                # 1:1 后端 Controller 封装
 │   ├── src/views/              # 57 个业务页面
 │   ├── src/components/common/  # 20+ 通用组件 (含 vxe-table 通用列表)
-│   ├── src/composables/        # useECharts / useFeatureFlag / useReAuth / useFormDraft / useI18n
+│   ├── src/composables/        # useECharts / useFeatureFlag / useFormDraft / useI18n
 │   ├── src/locales/            # 中/英文语言包
 │   └── src/mock/               # vite-plugin-mock 独立开发
 ├── deploy/                     # 部署全套(按环境分子目录)
@@ -374,7 +374,7 @@ ydsz-pmis/
 | 批次 | 主题 | 关键交付 |
 |---|---|---|
 | 1-12 | 核心业务 | 14 模块 + 34 业务页面 + 主数据流 |
-| 13 | 用户中心强化 | 2FA + Session + 登录审计 + 数据导出审计 + 二次认证 + 6 模块补全 60 测试 |
+| 13 | 用户中心强化 | 2FA + Session + 登录审计 + 数据导出审计 + 6 模块补全 60 测试 |
 | 14-15 | 报表与驾驶舱 | EVM 看板 + Cockpit 6 KPI + 高级报表 6 类 + 5 张聚合 SQL 视图 |
 | 16 | AI Agent 编排 | 4 策略 + Blackboard + 50 测试类 |
 | 17 | JobHandler 重构 | cronjob→execution 跨模块 Feign 化 |

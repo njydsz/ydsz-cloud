@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.lock.aspect;
 
-import com.njydsz.pmis.common.lock.annotation.DistributedLock;
+import com.njydsz.pmis.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.pmis.common.lock.annotation.LockType;
 import com.njydsz.pmis.common.lock.core.DistributedLocker;
 import com.njydsz.pmis.common.lock.exception.DistributedLockException;
@@ -26,11 +26,11 @@ import java.util.concurrent.TimeUnit;
 /**
  * 分布式锁 AOP 切面
  *
- * 拦截带有 @DistributedLock 注解的方法，在方法执行前后进行加锁和解锁操作。
+ * 拦截带有 @YdszDistributedLock 注解的方法，在方法执行前后进行加锁和解锁操作。
  * 支持 SpEL 表达式解析锁的键。
  *
  * 执行流程：
- * 1. 解析方法上的 @DistributedLock 注解
+ * 1. 解析方法上的 @YdszDistributedLock 注解
  * 2. 使用 SpEL 解析锁的键
  * 3. 根据锁类型获取对应的锁实例
  * 4. 尝试获取锁，失败则按配置重试
@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Aspect
-public class DistributedLockAspect {
+public class YdszDistributedLockAspect {
 
     /**
      * SpEL 表达式解析器
@@ -82,7 +82,7 @@ public class DistributedLockAspect {
      * @param lockStrategy    锁策略工厂
      * @param fallbackEnabled 是否启用锁降级策略
      */
-    public DistributedLockAspect(LockStrategy lockStrategy, boolean fallbackEnabled) {
+    public YdszDistributedLockAspect(LockStrategy lockStrategy, boolean fallbackEnabled) {
         this.lockStrategy = lockStrategy;
         this.fallbackEnabled = fallbackEnabled;
     }
@@ -93,7 +93,7 @@ public class DistributedLockAspect {
      *
      * @param lockStrategy 锁策略工厂
      */
-    public DistributedLockAspect(LockStrategy lockStrategy) {
+    public YdszDistributedLockAspect(LockStrategy lockStrategy) {
         this(lockStrategy, false);
     }
 
@@ -115,7 +115,7 @@ public class DistributedLockAspect {
      * @throws Throwable 方法执行异常
      */
     @Around("@annotation(lockAnn)")
-    public Object around(ProceedingJoinPoint joinPoint, DistributedLock lockAnn) throws Throwable {
+    public Object around(ProceedingJoinPoint joinPoint, YdszDistributedLock lockAnn) throws Throwable {
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
         String lockKey = resolveLockKey(lockAnn.key(), method, joinPoint.getArgs());
         LockType lockType = lockAnn.lockType();
@@ -241,11 +241,11 @@ public class DistributedLockAspect {
         }
 
         String spelExpression = keyExpression.replaceAll("#\\{(.+?)}", "$1");
-        
+
         // 从缓存获取或解析表达式
-        Expression expression = expressionCache.computeIfAbsent(spelExpression, 
+        Expression expression = expressionCache.computeIfAbsent(spelExpression,
             expr -> expressionParser.parseExpression(expr));
-        
+
         // 构建上下文并执行
         SimpleEvaluationContext context = SimpleEvaluationContext.forReadOnlyDataBinding().build();
         String[] parameterNames = parameterNameDiscoverer.getParameterNames(method);

@@ -110,10 +110,6 @@ export const PC = {
   AUDIT_LOG_VIEW: 'audit:log:view',
   AUDIT_LOGIN_VIEW: 'audit:login:view',
   AUDIT_EXPORT_VIEW: 'audit:export:view',
-  AUDIT_SENSITIVE_VIEW: 'audit:sensitive:view',
-
-  // ============= 敏感操作二次认证(sensitive) =============
-  SENSITIVE_REAUTH: 'sensitive:reauth:confirm',
 
   // ============= 分布式任务引擎(cronjob) =============
   CRONJOB_JOB_LIST: 'cronjob:job:list',

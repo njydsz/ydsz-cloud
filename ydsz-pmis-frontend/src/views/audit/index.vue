@@ -1,17 +1,16 @@
 <!--
   @file 审计中心
-  @description 审计中心页面，整合操作日志、登录审计、敏感操作、数据导出 4 个 Tab，对接 @/api/audit 模块。
+  @description 审计中心页面，整合操作日志、登录审计、数据导出 3 个 Tab，对接 @/api/audit 模块。
   @module views/audit
 -->
 <script setup lang="ts">
 /**
  * 审计中心
  *
- * 整合 4 个 Tab：
+ * 整合 3 个 Tab：
  * 1) 操作日志 — 来自 OperationLogAspect
  * 2) 登录审计 — 来自 LoginAuditListener
- * 3) 敏感操作 — 来自 RequireReAuthAspect
- * 4) 数据导出 — 来自 DataExportAuditAspect
+ * 3) 数据导出 — 来自 DataExportAuditAspect
  */
 import { ref, reactive, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -19,18 +18,17 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   pageOperationLog,
   pageLoginAudit,
-  pageSensitiveOp,
   pageDataExport,
   cleanOperationLog,
 } from '@/api/audit'
 import type {
-  OperationLogVO, LoginAuditVO, SensitiveOperationVO, DataExportAuditVO,
+  OperationLogVO, LoginAuditVO, DataExportAuditVO,
 } from '@/api/audit'
 
 const { t } = useI18n()
 
-/** 审计 Tab 类型：operation-操作日志 / login-登录审计 / sensitive-敏感操作 / export-数据导出 */
-type Tab = 'operation' | 'login' | 'sensitive' | 'export'
+/** 审计 Tab 类型：operation-操作日志 / login-登录审计 / export-数据导出 */
+type Tab = 'operation' | 'login' | 'export'
 /** 当前激活的 Tab */
 const activeTab = ref<Tab>('operation')
 
@@ -63,20 +61,6 @@ const loginQuery = reactive({
   username: '',
   status: '',
   loginIp: '',
-})
-
-/** 敏感操作列表加载状态 */
-const soLoading = ref(false)
-/** 敏感操作列表 */
-const soList = ref<SensitiveOperationVO[]>([])
-/** 敏感操作总条数 */
-const soTotal = ref(0)
-/** 敏感操作查询条件 */
-const soQuery = reactive({
-  page: 1,
-  size: 20,
-  userId: undefined as number | undefined,
-  opType: '',
 })
 
 /** 数据导出列表加载状态 */
@@ -127,21 +111,6 @@ async function fetchLogin() {
   }
 }
 
-/** 拉取敏感操作分页列表 */
-async function fetchSensitive() {
-  soLoading.value = true
-  try {
-    const { data } = await pageSensitiveOp(soQuery.page, soQuery.size, {
-      userId: soQuery.userId,
-      opType: soQuery.opType || undefined,
-    })
-    soList.value = data?.list || []
-    soTotal.value = data?.total || 0
-  } finally {
-    soLoading.value = false
-  }
-}
-
 /** 拉取数据导出审计分页列表 */
 async function fetchExport() {
   exLoading.value = true
@@ -166,7 +135,6 @@ function onTabChange(tab: Tab) {
   activeTab.value = tab
   if (tab === 'operation') fetchOperation()
   else if (tab === 'login') fetchLogin()
-  else if (tab === 'sensitive') fetchSensitive()
   else fetchExport()
 }
 
@@ -340,60 +308,7 @@ onMounted(fetchOperation)
         />
       </el-tab-pane>
 
-      <!-- Tab 3: 敏感操作 -->
-      <el-tab-pane name="sensitive" :label="$t('audit.tabs.sensitive')">
-        <div class="search-bar">
-          <el-form inline :model="soQuery" @submit.prevent>
-            <el-form-item :label="$t('audit.search.opType')">
-              <el-input v-model="soQuery.opType" :placeholder="$t('audit.search.opTypePlaceholder')" clearable />
-            </el-form-item>
-            <el-form-item :label="$t('audit.search.userId')">
-              <el-input-number v-model="soQuery.userId" :min="0" :controls="false" style="width: 120px" />
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="soQuery.page = 1; fetchSensitive()">{{ $t('common.search') }}</el-button>
-              <el-button @click="soQuery.opType = ''; soQuery.userId = undefined; soQuery.page = 1; fetchSensitive()">{{ $t('common.reset') }}</el-button>
-            </el-form-item>
-          </el-form>
-        </div>
-
-        <vxe-table :data="soList" :loading="soLoading" border stripe>
-          <vxe-column type="seq" title="#" width="55" />
-          <vxe-column field="operatedAt" :title="$t('audit.columns.time')" width="170">
-            <template #default="{ row }">{{ fmtDate(row.operatedAt) }}</template>
-          </vxe-column>
-          <vxe-column field="username" :title="$t('audit.columns.username')" width="110" />
-          <vxe-column field="opType" :title="$t('audit.columns.opType')" width="160" />
-          <vxe-column field="opTarget" :title="$t('audit.columns.opTarget')" width="160" />
-          <vxe-column field="targetId" :title="$t('audit.columns.targetId')" width="120" />
-          <vxe-column field="opResult" :title="$t('audit.columns.opResult')" width="100">
-            <template #default="{ row }">
-              <el-tag :type="statusTag(row.opResult)" size="small">{{ row.opResult }}</el-tag>
-            </template>
-          </vxe-column>
-          <vxe-column field="reAuthUsed" :title="$t('audit.columns.reAuthUsed')" width="100">
-            <template #default="{ row }">
-              <el-tag v-if="row.reAuthUsed" type="success" size="small">{{ $t('audit.messages.reAuthVerified') }}</el-tag>
-              <span v-else>-</span>
-            </template>
-          </vxe-column>
-          <vxe-column field="clientIp" :title="$t('audit.columns.clientIp')" width="120" />
-          <vxe-column field="traceId" :title="$t('audit.columns.traceId')" min-width="180" show-overflow="tooltip" />
-        </vxe-table>
-
-        <el-pagination
-          v-model:current-page="soQuery.page"
-          v-model:page-size="soQuery.size"
-          :page-sizes="[10, 20, 50, 100]"
-          :total="soTotal"
-          layout="total, sizes, prev, pager, next, jumper"
-          class="pager"
-          @size-change="fetchSensitive"
-          @current-change="fetchSensitive"
-        />
-      </el-tab-pane>
-
-      <!-- Tab 4: 数据导出 -->
+      <!-- Tab 3: 数据导出审计 -->
       <el-tab-pane name="export" :label="$t('audit.tabs.export')">
         <div class="search-bar">
           <el-form inline :model="exQuery" @submit.prevent>

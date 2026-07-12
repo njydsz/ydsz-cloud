@@ -55,13 +55,12 @@
 | | `pmis_operation_log_default` | 操作审计默认分区 |
 | | `pmis_operation_log_yYYYYmMM` | 操作审计月度分区模板（按需创建） |
 | | `pmis_data_export_audit` | 数据导出审计（导出人、表、行数、用途） |
-| | `pmis_sensitive_operation` | 敏感操作审计（金额/合同/权限变更） |
 | **跨服务公共** | `pmis_report_subscription` | 报表订阅（用户×报表×频率） |
 | | `pmis_export_record` | 异步导出记录（异步导出到 MinIO） |
 | | `pmis_meta_schema_version` | DB Schema 版本号（启动校验） |
 
 > **分区说明**：`pmis_operation_log` 为 PostgreSQL 范围分区表（按月分区），历史月份可走 `pg_partman` 或手动 `DETACH` 归档。
-> **脱敏约束**：`pmis_sensitive_operation`、`pmis_data_export_audit` 写入时自动 `SensitiveSerializer` 脱敏。
+> **脱敏约束**：`pmis_data_export_audit` 写入时自动 `SensitiveSerializer` 脱敏。
 
 ## 启动顺序
 

@@ -1,6 +1,6 @@
 /**
  * @file 审计中心 API
- * @description 提供操作日志、登录审计、敏感操作、数据导出审计的分页查询与日志清理能力，
+ * @description 提供操作日志、登录审计、数据导出审计的分页查询与日志清理能力，
  *              对应后端 AuditController（/audit/**）。
  * @module api/audit
  */
@@ -128,34 +128,6 @@ export interface DataExportAuditVO {
 }
 
 /**
- * 敏感操作审计视图对象
- */
-export interface SensitiveOperationVO {
-  /** 日志 ID */
-  id?: number
-  /** 操作用户 ID */
-  userId?: number
-  /** 操作用户名 */
-  username?: string
-  /** 操作类型 */
-  opType?: string
-  /** 操作目标 */
-  opTarget?: string
-  /** 目标 ID */
-  targetId?: string
-  /** 操作结果 */
-  opResult?: string
-  /** 是否使用了二次认证 */
-  reAuthUsed?: boolean
-  /** 客户端 IP */
-  clientIp?: string
-  /** 操作时间（ISO 8601） */
-  operatedAt?: string
-  /** 链路追踪 ID */
-  traceId?: string
-}
-
-/**
  * 操作日志分页
  *
  * 按用户、业务类型、状态、模块筛选操作日志。
@@ -230,27 +202,6 @@ export const pageLoginAudit = (
 ) =>
   request<PageResult<LoginAuditVO>>({
     url: '/audit/login/page',
-    method: 'GET',
-    params: { page, size, ...(params || {}) },
-  })
-
-/**
- * 敏感操作分页
- *
- * 按用户、操作类型筛选敏感操作审计记录。
- *
- * @param page 页码
- * @param size 每页大小
- * @param params 可选筛选条件（userId / opType）
- * @returns 敏感操作分页结果
- */
-export const pageSensitiveOp = (
-  page: number,
-  size: number,
-  params?: { userId?: number; opType?: string },
-) =>
-  request<PageResult<SensitiveOperationVO>>({
-    url: '/audit/sensitive-op/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
   })

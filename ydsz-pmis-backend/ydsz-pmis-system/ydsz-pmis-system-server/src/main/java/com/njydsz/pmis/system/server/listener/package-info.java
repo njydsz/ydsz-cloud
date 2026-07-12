@@ -11,8 +11,6 @@
  *       落库 {@code pmis_operation_log}；失败重试 1 次（100ms）后仍失败则转 Fallback 文件补偿</li>
  *   <li>{@code LoginAuditListener} - 登录审计监听器，记录登录成功/失败/IP/UA 等信息</li>
  *   <li>{@code DataExportAuditListener} - 数据导出审计监听器，记录导出人/范围/行数/审批单号</li>
- *   <li>{@code SensitiveOperationListener} - 敏感操作监听器（如大额审批、权限变更），
- *       落库 {@code pmis_sensitive_operation} 用于后续合规审计</li>
  * </ul>
  *
  * <h3>设计原则</h3>

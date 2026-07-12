@@ -1,7 +1,7 @@
 package com.njydsz.pmis.userinfo.web.controller.permission;
 
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
-import com.njydsz.pmis.common.lock.annotation.DistributedLock;
+import com.njydsz.pmis.common.lock.annotation.YdszDistributedLock;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.audit.annotation.OperationLog;
@@ -134,7 +134,7 @@ public class RoleController {
     @Operation(summary = "为角色分配权限")
     @AuthApiPermission(apiCodes = "auth:role:assign")
     @OperationLog(module = "权限管理", action = "分配权限", bizType = "ROLE")
-    @DistributedLock(key = "role:assignPermissions:#{#id}", waitTime = 3, leaseTime = 15, message = "正在分配权限，请稍后")
+    @YdszDistributedLock(key = "role:assignPermissions:#{#id}", waitTime = 3, leaseTime = 15, message = "正在分配权限，请稍后")
     @Idempotent(key = "role:assignPermissions", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/permissions")
     public BaseResponse<Void> assignPermissions(@Parameter(description = "角色ID") @PathVariable String id, @Valid @RequestBody List<String> permissionIds) {

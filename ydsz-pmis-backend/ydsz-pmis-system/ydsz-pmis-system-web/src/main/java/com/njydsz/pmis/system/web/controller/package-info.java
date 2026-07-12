@@ -16,7 +16,6 @@
  *   <li>{@code FeatureFlagController} - 灰度发布/特性开关管理</li>
  *   <li>{@code OperationLogController} / {@code LoginAuditController} / {@code DataExportAuditController}
  *       - 三类审计日志查询</li>
- *   <li>{@code SensitiveOperationController} - 敏感操作（如二次鉴权/导出）审批</li>
  *   <li>{@code ChaosController} - 混沌工程演练接口（注入延迟/异常/熔断）</li>
  * </ul>
  *

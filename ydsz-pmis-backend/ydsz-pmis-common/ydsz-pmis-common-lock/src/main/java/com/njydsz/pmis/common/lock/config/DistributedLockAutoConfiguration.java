@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.lock.config;
 
-import com.njydsz.pmis.common.lock.aspect.DistributedLockAspect;
+import com.njydsz.pmis.common.lock.aspect.YdszDistributedLockAspect;
 import com.njydsz.pmis.common.lock.metrics.LockMetrics;
 import com.njydsz.pmis.common.lock.metrics.LockMetricsExporter;
 import com.njydsz.pmis.common.lock.scheduler.LockWatchDog;
@@ -124,9 +124,9 @@ public class DistributedLockAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public DistributedLockAspect distributedLockAspect(LockStrategy lockStrategy, LockMetrics lockMetrics,
-                                                       LockProperties lockProperties) {
-        DistributedLockAspect aspect = new DistributedLockAspect(lockStrategy, lockProperties.isFallbackEnabled());
+    public YdszDistributedLockAspect distributedLockAspect(LockStrategy lockStrategy, LockMetrics lockMetrics,
+                                                           LockProperties lockProperties) {
+        YdszDistributedLockAspect aspect = new YdszDistributedLockAspect(lockStrategy, lockProperties.isFallbackEnabled());
         aspect.setLockMetrics(lockMetrics);
         return aspect;
     }

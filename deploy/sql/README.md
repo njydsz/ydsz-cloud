@@ -84,7 +84,7 @@ deploy/sql/
 | 模块 | 端口 | 表数量 | 主要表归属说明 |
 |---|---|---|---|
 | common | - | 0(存根) | **已合并至 system**。`ydsz-pmis-common` 是公共依赖库(lib),非独立后端服务,无 Mapper/Service,不持有独立 DDL |
-| system | - | 12 | `pmis_config` / `pmis_tenant_quota` / `pmis_file` / `pmis_operation_log`(+ DEFAULT 分区) / `pmis_login_audit` / `pmis_data_export_audit` / `pmis_sensitive_operation` / `pmis_dict_version` / `pmis_report_subscription` / `pmis_export_record` / `pmis_meta_schema_version` + 全局 PG 扩展 / PL/pgSQL 函数 / 触发器 / undo_log |
+| system | - | 11 | `pmis_config` / `pmis_tenant_quota` / `pmis_file` / `pmis_operation_log`(+ DEFAULT 分区) / `pmis_login_audit` / `pmis_data_export_audit` / `pmis_dict_version` / `pmis_report_subscription` / `pmis_export_record` / `pmis_meta_schema_version` + 全局 PG 扩展 / PL/pgSQL 函数 / 触发器 / undo_log |
 | userinfo | - | 22 | RBAC(`pmis_role` / `pmis_permission` / `pmis_user_*`)+ 用户/部门/岗位/字典主表(`pmis_dict_type` / `pmis_dict_item` / `pmis_department` / `pmis_employee` / `pmis_position`)+ 职级系列(**`pmis_rank` / `pmis_rank_rate`**,RankMapper 在 userinfo)+ 资源/考勤(`pmis_resource_assignment` / `pmis_bench_record` / `pmis_attendance` / `pmis_overtime` / `pmis_leave`)+ 兼职/外包费率 |
 | **sales** | **9010** | **6** | 商机主表(`pmis_project_opportunity`)+ 商机跟进(`pmis_project_opportunity_follow`)+ 合同(`pmis_project_contract` / `pmis_project_contract_supplement` / `pmis_project_contract_change`)+ 合同模板(`pmis_project_contract_template`) |
 | **finance** | **9011** | **8** | 费用(`pmis_cost_expense`)+ 收入(`pmis_profit_revenue`)+ 利润快照(`pmis_profit_snapshot`)+ 利润模拟(`pmis_profit_simulation`)+ 发票(`pmis_finance_invoice`)+ 付款(`pmis_finance_payment`)+ 客户信用(`pmis_finance_customer_credit`)+ 日对账(`pmis_reconcile_daily`) |
@@ -95,7 +95,7 @@ deploy/sql/
 | agent | - | 12 | `pmis_agent_*` / `pmis_knowledge_*` / `pmis_token_*` / `pmis_tool_*` / `pmis_hitl_*` / `pmis_mcp_*` |
 | literule | - | 17 | 规则引擎主表 9 张(`pmis_rule_def` / `pmis_rule_version` / 规则模板/测试/变量/链/依赖/包/安装)+ **业务表 8 张**(`pmis_rule_execution_trace` / `pmis_rule_decision_table` / `pmis_rule_canary_bucket` / `pmis_rule_scorecard` / `pmis_rule_decision_tree` / `pmis_rule_script` / `pmis_rule_ab_policy` / `pmis_rule_ab_rollback`, 2026-07-12 从 project 迁移) |
 | local_message | - | 1 | 本地消息表(`pmis_local_message`, 分布式事务) |
-| **合计** | - | **168** | |
+| **合计** | - | **167** | |
 
 ### 3.3 模块拆分规则(2026-07-12 DDD 拆分后)
 

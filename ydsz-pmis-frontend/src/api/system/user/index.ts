@@ -2,7 +2,6 @@
  * @file 用户管理 API
  * @description 提供用户的分页查询、详情、增删改、状态切换、密码重置、
  *              角色分配等接口；对应后端 UserController（/users）。
- *              涉及敏感操作（删除、重置密码）的接口需要在请求头携带 X-Re-Auth-Token。
  * @module api/system/user
  */
 
@@ -44,32 +43,21 @@ export const updateUser = (id: number, data: UserCreateDTO) =>
   request<void>({ url: `/users/${id}`, method: 'PUT', data })
 
 /**
- * 删除（需要 X-Re-Auth-Token）
- * @param id          用户 ID
- * @param reauthToken 二次验证 Token，缺失时不携带 X-Re-Auth-Token 头
+ * 删除
+ * @param id 用户 ID
  * @returns void
  */
-export const deleteUser = (id: number, reauthToken?: string) =>
-  request<void>({
-    url: `/users/${id}`,
-    method: 'DELETE',
-    headers: reauthToken ? { 'X-Re-Auth-Token': reauthToken } : undefined,
-  })
+export const deleteUser = (id: number) =>
+  request<void>({ url: `/users/${id}`, method: 'DELETE' })
 
 /**
- * 重置密码（需要 X-Re-Auth-Token）
+ * 重置密码
  * @param id          用户 ID
  * @param newPassword 新密码
- * @param reauthToken 二次验证 Token，缺失时不携带 X-Re-Auth-Token 头
  * @returns void
  */
-export const resetPassword = (id: number, newPassword: string, reauthToken?: string) =>
-  request<void>({
-    url: `/users/${id}/reset-password`,
-    method: 'POST',
-    data: { newPassword },
-    headers: reauthToken ? { 'X-Re-Auth-Token': reauthToken } : undefined,
-  })
+export const resetPassword = (id: number, newPassword: string) =>
+  request<void>({ url: `/users/${id}/reset-password`, method: 'POST', data: { newPassword } })
 
 /**
  * 启用/禁用用户
