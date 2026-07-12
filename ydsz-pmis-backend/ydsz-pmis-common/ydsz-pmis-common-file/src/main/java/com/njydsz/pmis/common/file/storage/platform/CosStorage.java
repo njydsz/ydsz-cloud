@@ -7,7 +7,7 @@ import com.qcloud.cos.auth.COSCredentials;
 import com.qcloud.cos.http.HttpMethodName;
 import com.qcloud.cos.model.*;
 import com.qcloud.cos.region.Region;
-import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.file.config.FileProperties;
 import com.njydsz.pmis.common.file.config.FileUploadProperties;
 import com.njydsz.pmis.common.file.constant.FileConstant;
@@ -78,10 +78,10 @@ public class CosStorage extends AbstractFileStorage {
                 if (parts.length >= 3) {
                     this.region = parts[1];
                 } else {
-                    throw new BusinessException(FileExceptionCode.STORAGE_CONFIG_INVALID);
+                    throw new BizException(FileExceptionCode.STORAGE_CONFIG_INVALID);
                 }
             } else {
-                throw new BusinessException(FileExceptionCode.STORAGE_CONFIG_INVALID);
+                throw new BizException(FileExceptionCode.STORAGE_CONFIG_INVALID);
             }
 
             COSCredentials cred = new BasicCOSCredentials(secretId, secretKey);
@@ -93,11 +93,11 @@ public class CosStorage extends AbstractFileStorage {
                 clientConfig.setSocketTimeout(config.getSocketTimeout());
             }
             this.cosClient = new COSClient(cred, clientConfig);
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[COS] COSClient build failed: {}", e.getMessage());
-            throw new BusinessException(FileExceptionCode.STORAGE_CLIENT_BUILD_FAILED);
+            throw new BizException(FileExceptionCode.STORAGE_CLIENT_BUILD_FAILED);
         }
     }
 
@@ -123,7 +123,7 @@ public class CosStorage extends AbstractFileStorage {
             }
         } catch (Exception e) {
             log.error("[COS] make Bucket failed, bucket={}, message={}", bucketName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.BUCKET_CREATE_FAILED);
+            throw new BizException(FileExceptionCode.BUCKET_CREATE_FAILED);
         }
     }
 
@@ -157,7 +157,7 @@ public class CosStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[COS] make Folder failed, bucket={}, folder={}, message={}",
                     bucketName, folderName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FOLDER_CREATE_FAILED);
+            throw new BizException(FileExceptionCode.FOLDER_CREATE_FAILED);
         }
     }
 
@@ -175,7 +175,7 @@ public class CosStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[COS] doPutObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_UPLOAD_FAILED);
         }
     }
 
@@ -192,7 +192,7 @@ public class CosStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[COS] doGetObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
         }
     }
 
@@ -203,7 +203,7 @@ public class CosStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[COS] doRemoveObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DELETE_FAILED);
+            throw new BizException(FileExceptionCode.FILE_DELETE_FAILED);
         }
     }
 
@@ -236,7 +236,7 @@ public class CosStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[COS] doInitiateMultipartUpload failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_INIT_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_INIT_FAILED);
         }
     }
 
@@ -261,7 +261,7 @@ public class CosStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[COS] doUploadPart failed, bucket={}, chunk={}, part={}, message={}",
                     bucketName, chunkObjectName, partNumber, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -279,7 +279,7 @@ public class CosStorage extends AbstractFileStorage {
             for (Integer partNumber : partNumbers) {
                 PartSummary uploadedPart = uploadedPartMap.get(partNumber);
                 if (uploadedPart == null || StringUtils.isBlank(uploadedPart.getETag())) {
-                    throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+                    throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
                 }
                 partETags.add(new PartETag(partNumber, uploadedPart.getETag()));
             }
@@ -289,12 +289,12 @@ public class CosStorage extends AbstractFileStorage {
             cosClient.completeMultipartUpload(request);
             log.info("[COS] chunked upload completed, bucket={}, object={}, parts={}",
                     bucketName, objectName, partETags.size());
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[COS] doCompleteMultipartUpload failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
         }
     }
 
@@ -393,7 +393,7 @@ public class CosStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[COS] doListObjects failed, bucket={}, prefix={}, message={}",
                     bucketName, prefix, e.getMessage());
-            throw new BusinessException(FileExceptionCode.OBJECT_LIST_FAILED);
+            throw new BizException(FileExceptionCode.OBJECT_LIST_FAILED);
         }
     }
 

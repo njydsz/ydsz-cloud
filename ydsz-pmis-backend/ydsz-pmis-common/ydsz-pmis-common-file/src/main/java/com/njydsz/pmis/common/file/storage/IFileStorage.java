@@ -24,7 +24,7 @@ package com.njydsz.pmis.common.file.storage;
  *   <li>{@link FileManager} - 管理相关方法（删除、重命名等）</li>
  * </ul>
  *
- * <p><b>异常体系：</b>所有实现层异常均封装为 {@code BusinessException}，错误码参见 {@link FileExceptionCode}。
+ * <p><b>异常体系：</b>所有实现层异常均封装为 {@code BizException}，错误码参见 {@link FileExceptionCode}。
  * 上传/下载失败时不应直接抛出 SDK 异常，需转换为稳定的业务错误码。</p>
  *
  * <p><b>并发一致性：</b>分片上传需保证 partNumber 唯一性；complete 时需校验所有分片

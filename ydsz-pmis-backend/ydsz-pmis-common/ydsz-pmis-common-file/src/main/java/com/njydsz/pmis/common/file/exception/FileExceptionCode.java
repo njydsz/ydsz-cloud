@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.file.exception;
 
-import com.njydsz.pmis.common.exception.enums.ExceptionCode;
+import com.njydsz.pmis.common.exception.code.ExceptionCode;
 
 /**
  * 文件存储模块异常码枚举

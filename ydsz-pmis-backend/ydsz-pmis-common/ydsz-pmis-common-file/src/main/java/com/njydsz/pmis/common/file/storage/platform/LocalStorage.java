@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.file.storage.platform;
 
-import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.file.config.FileProperties;
 import com.njydsz.pmis.common.file.config.FileUploadProperties;
 import com.njydsz.pmis.common.file.constant.FileConstant;
@@ -91,7 +91,7 @@ public class LocalStorage extends AbstractFileStorage {
             this.nginxUrl = config.getDomain();
         } catch (Exception e) {
             log.error("[Local] LocalStorage build failed: {}", e.getMessage());
-            throw new BusinessException(FileExceptionCode.STORAGE_CLIENT_BUILD_FAILED);
+            throw new BizException(FileExceptionCode.STORAGE_CLIENT_BUILD_FAILED);
         }
     }
 
@@ -107,7 +107,7 @@ public class LocalStorage extends AbstractFileStorage {
         if (!file.exists()) {
             boolean created = file.mkdirs();
             if (!created) {
-                throw new BusinessException(FileExceptionCode.BUCKET_CREATE_FAILED);
+                throw new BizException(FileExceptionCode.BUCKET_CREATE_FAILED);
             }
         }
     }
@@ -125,7 +125,7 @@ public class LocalStorage extends AbstractFileStorage {
             Files.createDirectories(path);
         } catch (IOException e) {
             log.error("[Local] makeFolder Exception:{}", e.getMessage());
-            throw new BusinessException(FileExceptionCode.FOLDER_CREATE_FAILED);
+            throw new BizException(FileExceptionCode.FOLDER_CREATE_FAILED);
         }
     }
 
@@ -144,7 +144,7 @@ public class LocalStorage extends AbstractFileStorage {
             }
         } catch (IOException e) {
             log.error("[Local] doPutObject failed, object={}, message={}", objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_UPLOAD_FAILED);
         }
     }
 
@@ -154,14 +154,14 @@ public class LocalStorage extends AbstractFileStorage {
         try {
             Path file = resolveLocalPath(bucketName, objectName);
             if (!Files.exists(file)) {
-                throw new BusinessException(FileExceptionCode.FILE_NOT_FOUND);
+                throw new BizException(FileExceptionCode.FILE_NOT_FOUND);
             }
             return Files.newInputStream(file);
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (IOException e) {
             log.error("[Local] doGetObject failed, object={}, message={}", objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
         }
     }
 
@@ -172,7 +172,7 @@ public class LocalStorage extends AbstractFileStorage {
             Files.deleteIfExists(file);
         } catch (IOException e) {
             log.error("[Local] doRemoveObject failed, object={}, message={}", objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DELETE_FAILED);
+            throw new BizException(FileExceptionCode.FILE_DELETE_FAILED);
         }
     }
 
@@ -204,7 +204,7 @@ public class LocalStorage extends AbstractFileStorage {
                                InputStream inputStream, long size) {
         try {
             if (!UPLOAD_ID_PATTERN.matcher(uploadId).matches()) {
-                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+                throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
             }
             Path chunkPath = resolveLocalPath(bucketName, chunkObjectName);
             Path parent = chunkPath.getParent();
@@ -215,11 +215,11 @@ public class LocalStorage extends AbstractFileStorage {
                     StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
                 IOUtils.copy(inputStream, os);
             }
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[Local] doUploadPart failed, chunk={}, message={}", chunkObjectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -239,7 +239,7 @@ public class LocalStorage extends AbstractFileStorage {
                 for (Integer partNumber : partNumbers) {
                     Path chunkPath = resolveChunkPath(bucketName, objectName, uploadId, partNumber);
                     if (!Files.exists(chunkPath)) {
-                        throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+                        throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
                     }
                     try (InputStream is = Files.newInputStream(chunkPath)) {
                         IOUtils.copy(is, os);
@@ -248,11 +248,11 @@ public class LocalStorage extends AbstractFileStorage {
                 }
             }
             deleteIfEmpty(uploadRootPath);
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[Local] doCompleteMultipartUpload failed, object={}, message={}", objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
         }
     }
 
@@ -311,7 +311,7 @@ public class LocalStorage extends AbstractFileStorage {
             return metadata;
         } catch (Exception e) {
             log.error("[Local] doGetMetadata failed, object={}, message={}", objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.OBJECT_METADATA_GET_FAILED);
+            throw new BizException(FileExceptionCode.OBJECT_METADATA_GET_FAILED);
         }
     }
 
@@ -332,7 +332,7 @@ public class LocalStorage extends AbstractFileStorage {
             Path searchPath = bucketPath.resolve(resolvedPrefix).normalize();
 
             if (!searchPath.startsWith(bucketPath)) {
-                throw new BusinessException(FileExceptionCode.FILE_PATH_ILLEGAL);
+                throw new BizException(FileExceptionCode.FILE_PATH_ILLEGAL);
             }
 
             try (Stream<Path> stream = Files.walk(searchPath, 1)) {
@@ -376,11 +376,11 @@ public class LocalStorage extends AbstractFileStorage {
                 result.setObjectCount(objects.size());
                 return result;
             }
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[Local] doListObjects failed, bucket={}, prefix={}, message={}", bucketName, prefix, e.getMessage());
-            throw new BusinessException(FileExceptionCode.OBJECT_LIST_FAILED);
+            throw new BizException(FileExceptionCode.OBJECT_LIST_FAILED);
         }
     }
 
@@ -418,11 +418,11 @@ public class LocalStorage extends AbstractFileStorage {
                 os.flush();
             }
             log.info("[Local] file download success, object={}, offset={}, length={}", objectName, start, end - start);
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[Local] file download failed, object={}, message={}", objectName, e.getMessage(), e);
-            throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
         }
     }
 
@@ -432,7 +432,7 @@ public class LocalStorage extends AbstractFileStorage {
      * @param bucketName 存储桶名称（对应本地目录路径）
      * @param objectName 对象键（文件相对路径）
      * @return 解析后的绝对路径
-     * @throws BusinessException 路径非法（穿越根目录）时抛出
+     * @throws BizException 路径非法（穿越根目录）时抛出
      */
     private Path resolveLocalPath(String bucketName, String objectName) {
         String resolvedBucket = StringUtils.isNotBlank(bucketName) ? bucketName : directory;
@@ -445,7 +445,7 @@ public class LocalStorage extends AbstractFileStorage {
         Path targetPath = rootPath.resolve(resolvedObject).normalize();
 
         if (!targetPath.startsWith(rootPath)) {
-            throw new BusinessException(FileExceptionCode.FILE_PATH_ILLEGAL);
+            throw new BizException(FileExceptionCode.FILE_PATH_ILLEGAL);
         }
         return targetPath;
     }

@@ -3,7 +3,7 @@ package com.njydsz.pmis.common.file.storage.platform;
 import com.obs.services.ObsClient;
 import com.obs.services.ObsConfiguration;
 import com.obs.services.model.*;
-import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.file.config.FileProperties;
 import com.njydsz.pmis.common.file.config.FileUploadProperties;
 import com.njydsz.pmis.common.file.constant.FileConstant;
@@ -77,7 +77,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
                     obsConfig);
         } catch (Exception e) {
             log.error("[OBS] ObsClient build failed: {}", e.getMessage());
-            throw new BusinessException(FileExceptionCode.STORAGE_CLIENT_BUILD_FAILED);
+            throw new BizException(FileExceptionCode.STORAGE_CLIENT_BUILD_FAILED);
         }
     }
 
@@ -101,7 +101,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
             }
         } catch (Exception e) {
             log.error("[OBS] make Bucket failed, bucket={}, message={}", bucketName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.BUCKET_CREATE_FAILED);
+            throw new BizException(FileExceptionCode.BUCKET_CREATE_FAILED);
         }
     }
 
@@ -132,7 +132,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
         } catch (Exception e) {
             log.error("[OBS] make Folder failed, bucket={}, folder={}, message={}",
                     bucketName, folderName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FOLDER_CREATE_FAILED);
+            throw new BizException(FileExceptionCode.FOLDER_CREATE_FAILED);
         }
     }
 
@@ -151,7 +151,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
         } catch (Exception e) {
             log.error("[OBS] doPutObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_UPLOAD_FAILED);
         }
     }
 
@@ -172,7 +172,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
         } catch (Exception e) {
             log.error("[OBS] doGetObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
         }
     }
 
@@ -184,7 +184,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
         } catch (Exception e) {
             log.error("[OBS] doRemoveObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DELETE_FAILED);
+            throw new BizException(FileExceptionCode.FILE_DELETE_FAILED);
         }
     }
 
@@ -224,7 +224,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
         } catch (Exception e) {
             log.error("[OBS] doInitiateMultipartUpload failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_INIT_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_INIT_FAILED);
         }
     }
 
@@ -246,7 +246,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
         } catch (Exception e) {
             log.error("[OBS] doUploadPart failed, bucket={}, chunk={}, part={}, message={}",
                     bucketName, chunkObjectName, partNumber, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -264,7 +264,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
                     .map(partNumber -> {
                         Multipart multipart = uploadedPartMap.get(partNumber);
                         if (multipart == null || StringUtils.isBlank(multipart.getEtag())) {
-                            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+                            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
                         }
                         return new PartEtag(multipart.getEtag(), partNumber);
                     })
@@ -276,12 +276,12 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
             obsClient.completeMultipartUpload(request);
             log.info("[OBS] chunked upload completed, bucket={}, object={}, parts={}",
                     bucketName, objectName, partETags.size());
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[OBS] doCompleteMultipartUpload failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
         }
     }
 
@@ -420,7 +420,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
         } catch (Exception e) {
             log.error("[OBS] doListObjects failed, bucket={}, prefix={}, message={}",
                     bucketName, prefix, e.getMessage());
-            throw new BusinessException(FileExceptionCode.OBJECT_LIST_FAILED);
+            throw new BizException(FileExceptionCode.OBJECT_LIST_FAILED);
         }
     }
 

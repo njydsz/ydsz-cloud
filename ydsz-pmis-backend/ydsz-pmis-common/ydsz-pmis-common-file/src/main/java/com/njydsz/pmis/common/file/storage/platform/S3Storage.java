@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.file.storage.platform;
 
-import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.file.config.FileProperties;
 import com.njydsz.pmis.common.file.config.FileUploadProperties;
 import com.njydsz.pmis.common.file.constant.FileConstant;
@@ -102,10 +102,10 @@ public class S3Storage extends AbstractFileStorage {
                     if (parts.length >= 2) {
                         this.region = parts[1];
                     } else {
-                        throw new BusinessException(FileExceptionCode.STORAGE_CONFIG_INVALID);
+                        throw new BizException(FileExceptionCode.STORAGE_CONFIG_INVALID);
                     }
                 } else {
-                    throw new BusinessException(FileExceptionCode.STORAGE_CONFIG_INVALID);
+                    throw new BizException(FileExceptionCode.STORAGE_CONFIG_INVALID);
                 }
             }
 
@@ -139,11 +139,11 @@ public class S3Storage extends AbstractFileStorage {
             }
 
             this.s3Presigner = presignerBuilder.build();
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[S3] S3Client build failed: {}", e.getMessage());
-            throw new BusinessException(FileExceptionCode.STORAGE_CLIENT_BUILD_FAILED);
+            throw new BizException(FileExceptionCode.STORAGE_CLIENT_BUILD_FAILED);
         }
     }
 
@@ -183,7 +183,7 @@ public class S3Storage extends AbstractFileStorage {
             }
         } catch (Exception e) {
             log.error("[S3] make Bucket failed, bucket={}, message={}", bucketName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.BUCKET_CREATE_FAILED);
+            throw new BizException(FileExceptionCode.BUCKET_CREATE_FAILED);
         }
     }
 
@@ -231,7 +231,7 @@ public class S3Storage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[S3] make Folder failed, bucket={}, folder={}, message={}",
                     bucketName, folderName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FOLDER_CREATE_FAILED);
+            throw new BizException(FileExceptionCode.FOLDER_CREATE_FAILED);
         }
     }
 
@@ -249,7 +249,7 @@ public class S3Storage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[S3] doPutObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_UPLOAD_FAILED);
         }
     }
 
@@ -266,11 +266,11 @@ public class S3Storage extends AbstractFileStorage {
             ResponseInputStream<GetObjectResponse> s3Object = s3Client.getObject(requestBuilder.build());
             return s3Object;
         } catch (NoSuchKeyException e) {
-            throw new BusinessException(FileExceptionCode.FILE_NOT_FOUND);
+            throw new BizException(FileExceptionCode.FILE_NOT_FOUND);
         } catch (Exception e) {
             log.error("[S3] doGetObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
         }
     }
 
@@ -285,7 +285,7 @@ public class S3Storage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[S3] doRemoveObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DELETE_FAILED);
+            throw new BizException(FileExceptionCode.FILE_DELETE_FAILED);
         }
     }
 
@@ -335,7 +335,7 @@ public class S3Storage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[S3] doInitiateMultipartUpload failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_INIT_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_INIT_FAILED);
         }
     }
 
@@ -357,7 +357,7 @@ public class S3Storage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[S3] doUploadPart failed, bucket={}, chunk={}, part={}, message={}",
                     bucketName, chunkObjectName, partNumber, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -378,7 +378,7 @@ public class S3Storage extends AbstractFileStorage {
             for (Integer partNumber : partNumbers) {
                 Part uploadedPart = uploadedPartMap.get(partNumber);
                 if (uploadedPart == null || StringUtils.isBlank(uploadedPart.eTag())) {
-                    throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+                    throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
                 }
                 completedParts.add(CompletedPart.builder()
                         .partNumber(partNumber)
@@ -395,12 +395,12 @@ public class S3Storage extends AbstractFileStorage {
             s3Client.completeMultipartUpload(request);
             log.info("[S3] chunked upload completed, bucket={}, object={}, parts={}",
                     bucketName, objectName, completedParts.size());
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[S3] doCompleteMultipartUpload failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
         }
     }
 
@@ -510,7 +510,7 @@ public class S3Storage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[S3] doListObjects failed, bucket={}, prefix={}, message={}",
                     bucketName, prefix, e.getMessage());
-            throw new BusinessException(FileExceptionCode.OBJECT_LIST_FAILED);
+            throw new BizException(FileExceptionCode.OBJECT_LIST_FAILED);
         }
     }
 
@@ -552,12 +552,12 @@ public class S3Storage extends AbstractFileStorage {
             result.setRegion(region);
             result.setEndpoint(resolvedEndpoint);
             return result;
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[S3] generateUploadPolicy failed, bucket={}, prefix={}, message={}",
                     bucketName, objectNamePrefix, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_UPLOAD_FAILED);
         }
     }
 }

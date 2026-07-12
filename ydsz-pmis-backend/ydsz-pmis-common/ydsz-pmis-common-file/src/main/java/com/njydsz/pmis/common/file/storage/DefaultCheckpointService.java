@@ -1,7 +1,7 @@
 package com.njydsz.pmis.common.file.storage;
 
 import com.njydsz.pmis.common.util.JsonUtils;
-import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.file.domain.UploadCheckpoint;
 import com.njydsz.pmis.common.file.exception.FileExceptionCode;
 import com.njydsz.pmis.common.util.StringUtils;
@@ -229,10 +229,10 @@ public class DefaultCheckpointService implements CheckpointService {
             if (!actualMd5.equalsIgnoreCase(checkpoint.getFileMd5())) {
                 log.error("[Storage] validateFileMd5 mismatch, bucket={}, object={}, expected={}, actual={}",
                         bucketName, objectName, checkpoint.getFileMd5(), actualMd5);
-                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+                throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
             }
             log.info("[Storage] validateFileMd5 success, bucket={}, object={}", bucketName, objectName);
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.warn("[Storage] validateFileMd5 failed, bucket={}, object={}, message={}",

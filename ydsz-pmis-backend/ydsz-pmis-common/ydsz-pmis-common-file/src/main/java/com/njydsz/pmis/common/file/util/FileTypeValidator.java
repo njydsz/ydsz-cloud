@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.file.util;
 
-import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.file.exception.FileExceptionCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
@@ -110,21 +110,21 @@ public final class FileTypeValidator {
      * <p>对于未知后缀（不在 Magic Number 映射表中的），采用白名单机制放行；不在白名单中的后缀直接拒绝。</p>
      *
      * @param file 上传的文件
-     * @throws BusinessException 文件类型不合法时抛出
+     * @throws BizException 文件类型不合法时抛出
      */
     public static void validate(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new BusinessException(FileExceptionCode.FILE_EMPTY);
+            throw new BizException(FileExceptionCode.FILE_EMPTY);
         }
 
         String originalFilename = file.getOriginalFilename();
         if (originalFilename == null || originalFilename.isEmpty()) {
-            throw new BusinessException(FileExceptionCode.FILE_NAME_INVALID);
+            throw new BizException(FileExceptionCode.FILE_NAME_INVALID);
         }
 
         String suffix = extractSuffix(originalFilename);
         if (suffix.isEmpty()) {
-            throw new BusinessException(FileExceptionCode.FILE_SUFFIX_NOT_ALLOWED);
+            throw new BizException(FileExceptionCode.FILE_SUFFIX_NOT_ALLOWED);
         }
 
         String lowerSuffix = suffix.toLowerCase();
@@ -132,7 +132,7 @@ public final class FileTypeValidator {
         if (expectedMagicType == null) {
             if (!ALLOWED_UNKNOWN_EXTENSIONS.contains(lowerSuffix)) {
                 log.warn("[FileTypeValidator] 文件后缀不在允许列表中: {}", originalFilename);
-                throw new BusinessException(FileExceptionCode.FILE_SUFFIX_NOT_ALLOWED);
+                throw new BizException(FileExceptionCode.FILE_SUFFIX_NOT_ALLOWED);
             }
             return;
         }
@@ -146,16 +146,16 @@ public final class FileTypeValidator {
             int read = is.read(header);
             if (read < 4) {
                 log.warn("[FileTypeValidator] 文件头读取不足，拒绝上传: {}", originalFilename);
-                throw new BusinessException(FileExceptionCode.FILE_SUFFIX_NOT_ALLOWED);
+                throw new BizException(FileExceptionCode.FILE_SUFFIX_NOT_ALLOWED);
             }
 
             if (!MagicNumberRegistry.match(header, expectedMagicType)) {
                 log.warn("[FileTypeValidator] Magic Number 不匹配: file={}, expected={}", originalFilename, expectedMagicType);
-                throw new BusinessException(FileExceptionCode.FILE_SUFFIX_NOT_ALLOWED);
+                throw new BizException(FileExceptionCode.FILE_SUFFIX_NOT_ALLOWED);
             }
         } catch (IOException e) {
             log.error("[FileTypeValidator] 文件读取失败: {}", originalFilename, e);
-            throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_UPLOAD_FAILED);
         }
     }
 

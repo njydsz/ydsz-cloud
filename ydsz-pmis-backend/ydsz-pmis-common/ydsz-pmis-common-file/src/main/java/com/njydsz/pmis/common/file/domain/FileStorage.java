@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.file.domain;
 
-import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.file.constant.FileConstant;
 import com.njydsz.pmis.common.file.exception.FileExceptionCode;
 import com.njydsz.pmis.common.util.FileTypeUtils;
@@ -112,25 +112,25 @@ public class FileStorage implements Serializable {
      *
      * @param file 上传的文件
      * @return 填充了基本信息的 FileStorage 实体
-     * @throws BusinessException 文件为空、文件名无效或扩展名不允许时抛出
+     * @throws BizException 文件为空、文件名无效或扩展名不允许时抛出
      */
     public static FileStorage build(MultipartFile file) {
         if (file.isEmpty()) {
-            throw new BusinessException(FileExceptionCode.FILE_EMPTY);
+            throw new BizException(FileExceptionCode.FILE_EMPTY);
         }
         String originalFilename = file.getOriginalFilename();
         if (originalFilename == null || originalFilename.isEmpty()) {
-            throw new BusinessException(FileExceptionCode.FILE_NAME_INVALID);
+            throw new BizException(FileExceptionCode.FILE_NAME_INVALID);
         }
         int dotPos = originalFilename.lastIndexOf(FileConstant.SUFFIX_SPLIT);
         if (dotPos < 0) {
-            throw new BusinessException(FileExceptionCode.FILE_NAME_INVALID);
+            throw new BizException(FileExceptionCode.FILE_NAME_INVALID);
         }
         Long size = file.getSize();
         String orgName = file.getOriginalFilename();
         String fileExt = FileTypeUtils.getFileType(orgName);
         if (!FileTypeUtils.isAllowedExtension(fileExt)) {
-            throw new BusinessException(FileExceptionCode.FILE_SUFFIX_NOT_ALLOWED);
+            throw new BizException(FileExceptionCode.FILE_SUFFIX_NOT_ALLOWED);
         }
         String type;
         if (FileTypeUtils.isCodeExtension(fileExt)) {

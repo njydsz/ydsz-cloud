@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.file.storage;
 
-import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.file.exception.FileExceptionCode;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +42,7 @@ public class FileDownloadDelegate {
      * @param bucketName 存储桶名称，为空时使用默认桶
      * @param objectName 对象键（文件路径）
      * @param response   HTTP 响应对象
-     * @throws BusinessException 下载失败时抛出
+     * @throws BizException 下载失败时抛出
      */
     public void download(String bucketName, String objectName, HttpServletResponse response) {
         download(bucketName, objectName, response, null, null);
@@ -56,7 +56,7 @@ public class FileDownloadDelegate {
      * @param response   HTTP 响应对象
      * @param offset     起始偏移量（字节），为 null 时从 0 开始
      * @param length     下载长度（字节），为 null 时下载到文件末尾
-     * @throws BusinessException 下载失败时抛出
+     * @throws BizException 下载失败时抛出
      */
     public void download(String bucketName, String objectName, HttpServletResponse response, Long offset, Long length) {
         String resolvedBucket = storage.resolveBucketName(bucketName);
@@ -71,11 +71,11 @@ public class FileDownloadDelegate {
             }
             os.flush();
             log.info("[Storage] file download success, bucket={}, object={}", resolvedBucket, resolvedKey);
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[Storage] file download failed, bucket={}, object={}, error={}", resolvedBucket, resolvedKey, e.getMessage(), e);
-            throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
         }
     }
 
@@ -111,18 +111,18 @@ public class FileDownloadDelegate {
      * @param bucketName 存储桶名称，为空时使用默认桶
      * @param objectName 对象键（文件路径）
      * @return 文件输入流，调用方负责关闭
-     * @throws BusinessException 下载失败时抛出
+     * @throws BizException 下载失败时抛出
      */
     public InputStream downloadAsStream(String bucketName, String objectName) {
         String resolvedBucket = storage.resolveBucketName(bucketName);
         String resolvedKey = storage.resolveObjectKey(resolvedBucket, objectName);
         try {
             return storage.doGetObject(resolvedBucket, resolvedKey, null, null);
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[Storage] downloadAsStream failed, bucket={}, object={}, error={}", resolvedBucket, resolvedKey, e.getMessage(), e);
-            throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
         }
     }
 }

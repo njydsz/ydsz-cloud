@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.file.storage;
 
-import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.file.config.FileProperties.ConcurrencyControl;
 import com.njydsz.pmis.common.file.exception.FileExceptionCode;
 import lombok.extern.slf4j.Slf4j;
@@ -77,7 +77,7 @@ public class UploadConcurrencyGuard {
      *
      * @param objectKey 文件对象键
      * @return 锁令牌，用于释放锁时校验
-     * @throws BusinessException 当配置为 REJECT 策略且已有上传正在进行时
+     * @throws BizException 当配置为 REJECT 策略且已有上传正在进行时
      */
     public String acquire(String objectKey) {
         if (objectKey == null || objectKey.isEmpty()) {
@@ -143,19 +143,19 @@ public class UploadConcurrencyGuard {
      * @param lockKey 锁键
      * @param existingValue 已存在的锁值（用于日志）
      * @return 获取锁后返回新令牌
-     * @throws BusinessException 当 REJECT 策略时直接拒绝
+     * @throws BizException 当 REJECT 策略时直接拒绝
      */
     private String handleLockHeld(String lockKey, String existingValue) {
         switch (config.getStrategy()) {
             case REJECT:
                 log.warn("[UploadGuard] concurrent upload rejected, key={}", lockKey);
-                throw new BusinessException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
+                throw new BizException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
             case WAIT:
                 return waitForLock(lockKey);
             default:
                 // 未知策略，默认拒绝
                 log.warn("[UploadGuard] unknown strategy, rejecting concurrent upload, key={}", lockKey);
-                throw new BusinessException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
+                throw new BizException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
         }
     }
 
@@ -186,11 +186,11 @@ public class UploadConcurrencyGuard {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 log.warn("[UploadGuard] interrupted while waiting for lock, key={}", lockKey);
-                throw new BusinessException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
+                throw new BizException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
             }
         }
 
         log.warn("[UploadGuard] wait timeout for lock, key={}, timeout={}s", lockKey, MAX_WAIT_SECONDS);
-        throw new BusinessException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
+        throw new BizException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
     }
 }

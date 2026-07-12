@@ -1,6 +1,5 @@
 package com.njydsz.pmis.common.file.config;
 
-import com.njydsz.pmis.common.file.health.FileHealthIndicator;
 import com.njydsz.pmis.common.file.service.DedupCleanupScheduler;
 import com.njydsz.pmis.common.file.service.FileDedupService;
 import com.njydsz.pmis.common.file.storage.CheckpointService;

@@ -12,7 +12,7 @@ import com.qiniu.storage.Region;
 import com.qiniu.storage.UploadManager;
 import com.qiniu.storage.model.FileInfo;
 import com.qiniu.util.Auth;
-import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.file.config.FileProperties;
 import com.njydsz.pmis.common.file.config.FileUploadProperties;
 import com.njydsz.pmis.common.file.constant.FileConstant;
@@ -107,7 +107,7 @@ public class QiniuStorage extends AbstractFileStorage {
             this.bucketManager = new BucketManager(auth, cfg);
         } catch (Exception e) {
             log.error("[Qiniu] QiniuClient build failed: {}", e.getMessage());
-            throw new BusinessException(FileExceptionCode.STORAGE_CLIENT_BUILD_FAILED);
+            throw new BizException(FileExceptionCode.STORAGE_CLIENT_BUILD_FAILED);
         }
     }
 
@@ -133,7 +133,7 @@ public class QiniuStorage extends AbstractFileStorage {
             log.info("[Qiniu] bucket created, bucket={}", bucketName);
         } catch (Exception e) {
             log.error("[Qiniu] doMakeBucket failed, bucket={}, message={}", bucketName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.BUCKET_CREATE_FAILED);
+            throw new BizException(FileExceptionCode.BUCKET_CREATE_FAILED);
         }
     }
 
@@ -172,7 +172,7 @@ public class QiniuStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[Qiniu] make Folder failed, bucket={}, folder={}, message={}",
                     bucketName, folderName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FOLDER_CREATE_FAILED);
+            throw new BizException(FileExceptionCode.FOLDER_CREATE_FAILED);
         }
     }
 
@@ -185,7 +185,7 @@ public class QiniuStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[Qiniu] doPutObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_UPLOAD_FAILED);
         }
     }
 
@@ -195,7 +195,7 @@ public class QiniuStorage extends AbstractFileStorage {
         try {
             String urlString = buildPrivateUrl(bucketName, objectName);
             if (StringUtils.isEmpty(urlString)) {
-                throw new BusinessException(FileExceptionCode.PRIVATE_URL_GENERATE_FAILED);
+                throw new BizException(FileExceptionCode.PRIVATE_URL_GENERATE_FAILED);
             }
             URI uri = URI.create(urlString);
             URL url = uri.toURL();
@@ -208,7 +208,7 @@ public class QiniuStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[Qiniu] doGetObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
         }
     }
 
@@ -219,7 +219,7 @@ public class QiniuStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[Qiniu] doRemoveObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DELETE_FAILED);
+            throw new BizException(FileExceptionCode.FILE_DELETE_FAILED);
         }
     }
 
@@ -267,7 +267,7 @@ public class QiniuStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[Qiniu] doInitiateMultipartUpload failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_INIT_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_INIT_FAILED);
         }
     }
 
@@ -284,7 +284,7 @@ public class QiniuStorage extends AbstractFileStorage {
             ApiUploadV2UploadPart.Response response = uploadPartApi.request(request);
             String eTag = response.getEtag();
             if (StringUtils.isBlank(eTag)) {
-                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+                throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
             }
             MultipartContextStore.MultipartContextData context = multipartContextStore.get(uploadId);
             if (context == null) {
@@ -299,12 +299,12 @@ public class QiniuStorage extends AbstractFileStorage {
                     24 * 3600);
             log.info("[Qiniu] chunk uploaded, bucket={}, chunk={}, part={}",
                     bucketName, chunkObjectName, partNumber);
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[Qiniu] doUploadPart failed, bucket={}, chunk={}, part={}, message={}",
                     bucketName, chunkObjectName, partNumber, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -314,7 +314,7 @@ public class QiniuStorage extends AbstractFileStorage {
         MultipartContextStore.MultipartContextData context = multipartContextStore.get(uploadId);
         if (context == null || !objectName.equals(context.objectName())) {
             safeAbortMultipartUpload(bucketName, objectName, uploadId);
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
         }
         Set<Integer> uniqueParts = new HashSet<>(partNumbers);
         List<Integer> sortedParts = new ArrayList<>(uniqueParts);
@@ -324,7 +324,7 @@ public class QiniuStorage extends AbstractFileStorage {
             for (Integer partNumber : sortedParts) {
                 String eTag = context.partChunkNames().get(partNumber);
                 if (StringUtils.isBlank(eTag)) {
-                    throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+                    throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
                 }
                 Map<String, Object> partInfo = new HashMap<>();
                 partInfo.put(ApiUploadV2CompleteUpload.Request.PART_NUMBER, partNumber);
@@ -339,7 +339,7 @@ public class QiniuStorage extends AbstractFileStorage {
             multipartContextStore.remove(uploadId);
             log.info("[Qiniu] chunked upload completed, bucket={}, object={}, parts={}",
                     bucketName, objectName, sortedParts.size());
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             safeAbortMultipartUpload(bucketName, objectName, uploadId);
             multipartContextStore.remove(uploadId);
             throw e;
@@ -348,7 +348,7 @@ public class QiniuStorage extends AbstractFileStorage {
             multipartContextStore.remove(uploadId);
             log.error("[Qiniu] doCompleteMultipartUpload failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
         }
     }
 

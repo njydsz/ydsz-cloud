@@ -110,7 +110,7 @@ public class Resilience4jConfig {
             }
             // 业务异常: 不重试
             if (className.contains("BizException") ||
-                className.contains("BusinessException") ||
+                className.contains("BizException") ||
                 className.contains("IllegalArgumentException")) {
                 return false;
             }

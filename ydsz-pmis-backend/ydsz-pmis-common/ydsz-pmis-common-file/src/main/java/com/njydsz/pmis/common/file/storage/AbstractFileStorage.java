@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.file.storage;
 
-import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.file.callback.UploadProgressListener;
 import com.njydsz.pmis.common.file.config.FileProperties;
 import com.njydsz.pmis.common.file.config.FileUploadProperties;
@@ -302,7 +302,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
     public void makeBucket(String bucketName) {
         String resolvedBucket = resolveBucketName(bucketName);
         if (StringUtils.isBlank(resolvedBucket)) {
-            throw new BusinessException(FileExceptionCode.BUCKET_NOT_FOUND);
+            throw new BizException(FileExceptionCode.BUCKET_NOT_FOUND);
         }
         if (!bucketExists(resolvedBucket)) {
             doMakeBucket(resolvedBucket);
@@ -345,7 +345,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
         try {
             ObjectMetadata metadata = doGetMetadata(resolvedSrcBucket, resolvedSrcObject);
             if (metadata == null) {
-                throw new BusinessException(FileExceptionCode.FILE_NOT_FOUND);
+                throw new BizException(FileExceptionCode.FILE_NOT_FOUND);
             }
             String contentType = metadata.getContentType() != null ? metadata.getContentType() : "application/octet-stream";
             long size = metadata.getSize();
@@ -354,12 +354,12 @@ public abstract class AbstractFileStorage implements IFileStorage {
             }
             log.info("[Storage] copyObject success, src={}/{}, dest={}/{}",
                     resolvedSrcBucket, resolvedSrcObject, resolvedDestBucket, resolvedDestObject);
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[Storage] copyObject failed, src={}/{}, dest={}/{}, message={}",
                     resolvedSrcBucket, resolvedSrcObject, resolvedDestBucket, resolvedDestObject, e.getMessage());
-            throw new BusinessException(FileExceptionCode.OBJECT_COPY_FAILED);
+            throw new BizException(FileExceptionCode.OBJECT_COPY_FAILED);
         }
     }
 
@@ -398,7 +398,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
         String resolvedObjectName = resolveObjectKey(resolvedBucket, objectName);
 
         if (file.isEmpty()) {
-            throw new BusinessException(FileExceptionCode.FILE_EMPTY);
+            throw new BizException(FileExceptionCode.FILE_EMPTY);
         }
 
         FileTypeValidator.validate(file);
@@ -425,7 +425,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
                 listener.onSuccess(resolvedObjectName);
             }
             return fileStorage;
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             if (listener != null) {
                 listener.onFailure(resolvedObjectName, e);
             }
@@ -436,7 +436,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
             if (listener != null) {
                 listener.onFailure(resolvedObjectName, e);
             }
-            throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_UPLOAD_FAILED);
         } finally {
             releaseConcurrencyLock(resolvedObjectName, lockToken);
         }
@@ -448,7 +448,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
         String resolvedObjectName = resolveObjectKey(resolvedBucket, objectName);
 
         if (StringUtils.isEmpty(resolvedObjectName)) {
-            throw new BusinessException(FileExceptionCode.FILE_PATH_EMPTY);
+            throw new BizException(FileExceptionCode.FILE_PATH_EMPTY);
         }
 
         try {
@@ -456,7 +456,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
         } catch (Exception e) {
             log.error("[Storage] file delete failed, bucket={}, object={}, message={}",
                     resolvedBucket, resolvedObjectName, e.getMessage(), e);
-            throw new BusinessException(FileExceptionCode.FILE_DELETE_FAILED);
+            throw new BizException(FileExceptionCode.FILE_DELETE_FAILED);
         }
     }
 
@@ -499,12 +499,12 @@ public abstract class AbstractFileStorage implements IFileStorage {
             }
             os.flush();
             log.info("[Storage] file download success, bucket={}, object={}", resolvedBucket, resolvedObjectName);
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[Storage] file download failed, bucket={}, object={}, message={}",
                     resolvedBucket, resolvedObjectName, e.getMessage(), e);
-            throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
         }
     }
 
@@ -540,12 +540,12 @@ public abstract class AbstractFileStorage implements IFileStorage {
         String resolvedObjectName = resolveObjectKey(resolvedBucket, objectName);
         try {
             return doGetObject(resolvedBucket, resolvedObjectName, null, null);
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[Storage] downloadAsStream failed, bucket={}, object={}, message={}",
                     resolvedBucket, resolvedObjectName, e.getMessage(), e);
-            throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
         }
     }
 
@@ -612,12 +612,12 @@ public abstract class AbstractFileStorage implements IFileStorage {
 
             log.info("[Storage] chunk uploaded, bucket={}, object={}, part={}",
                     resolvedBucket, resolvedObjectName, partNumber);
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[Storage] uploadChunk failed, bucket={}, object={}, part={}, message={}",
                     resolvedBucket, resolvedObjectName, partNumber, e.getMessage(), e);
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -631,7 +631,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
 
         MultipartContextStore.MultipartContextData context = multipartContextStore.get(uploadId);
         if (context == null || !resolvedObjectName.equals(context.objectName())) {
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
         }
 
         Set<Integer> uniqueParts = new HashSet<>(partNumbers);
@@ -644,7 +644,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
             boolean found = uploadedParts.stream()
                     .anyMatch(p -> p.partNumber() == partNumber);
             if (!found) {
-                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+                throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
             }
         }
 
@@ -674,7 +674,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
 
             log.info("[Storage] chunked upload completed, bucket={}, object={}, parts={}",
                     resolvedBucket, resolvedObjectName, sortedParts.size());
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             safeAbortMultipartUpload(resolvedBucket, resolvedObjectName, uploadId);
             multipartContextStore.remove(uploadId);
             chunkedMd5DigestMap.remove(uploadId);
@@ -685,7 +685,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
             chunkedMd5DigestMap.remove(uploadId);
             log.error("[Storage] completeChunkedUpload failed, bucket={}, object={}, message={}",
                     resolvedBucket, resolvedObjectName, e.getMessage(), e);
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
         }
     }
 
@@ -762,19 +762,19 @@ public abstract class AbstractFileStorage implements IFileStorage {
      * @param bucketName 存储桶名称
      * @param objectName 对象路径
      * @return 解析后的对象路径
-     * @throws BusinessException 当路径为空或存在安全风险时
+     * @throws BizException 当路径为空或存在安全风险时
      */
     protected final String resolveObjectKey(String bucketName, String objectName) {
         if (StringUtils.isEmpty(objectName)) {
-            throw new BusinessException(FileExceptionCode.FILE_PATH_EMPTY);
+            throw new BizException(FileExceptionCode.FILE_PATH_EMPTY);
         }
         if (objectName.indexOf('\0') >= 0) {
             log.warn("[Storage] null byte detected in objectName={}", objectName);
-            throw new BusinessException(FileExceptionCode.FILE_PATH_EMPTY);
+            throw new BizException(FileExceptionCode.FILE_PATH_EMPTY);
         }
         if (PATH_TRAVERSAL_PATTERN.matcher(objectName).find()) {
             log.warn("[Storage] path traversal detected, objectName={}", objectName);
-            throw new BusinessException(FileExceptionCode.FILE_PATH_EMPTY);
+            throw new BizException(FileExceptionCode.FILE_PATH_EMPTY);
         }
         String resolved = objectName;
         if (!resolved.startsWith("/")) {
@@ -784,7 +784,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
         for (String segment : normalized.split("/")) {
             if ("..".equals(segment)) {
                 log.warn("[Storage] path traversal after normalization, objectName={}", objectName);
-                throw new BusinessException(FileExceptionCode.FILE_PATH_EMPTY);
+                throw new BizException(FileExceptionCode.FILE_PATH_EMPTY);
             }
         }
         try {
@@ -792,12 +792,12 @@ public abstract class AbstractFileStorage implements IFileStorage {
             if (!canonicalPath.equals(normalized) && canonicalPath.contains("..")) {
                 log.warn("[Storage] path traversal after canonical normalization, objectName={}, normalized={}, canonical={}",
                         objectName, normalized, canonicalPath);
-                throw new BusinessException(FileExceptionCode.FILE_PATH_EMPTY);
+                throw new BizException(FileExceptionCode.FILE_PATH_EMPTY);
             }
         } catch (Exception e) {
             log.warn("[Storage] path canonicalization failed, objectName={}, message={}",
                     objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_PATH_EMPTY);
+            throw new BizException(FileExceptionCode.FILE_PATH_EMPTY);
         }
         return normalizeObjectKey(normalized);
     }
@@ -852,17 +852,17 @@ public abstract class AbstractFileStorage implements IFileStorage {
     protected FileStorage buildFileStorage(MultipartFile file) {
         String originalFilename = file.getOriginalFilename();
         if (originalFilename == null || StringUtils.isBlank(originalFilename)) {
-            throw new BusinessException(FileExceptionCode.FILE_NAME_INVALID);
+            throw new BizException(FileExceptionCode.FILE_NAME_INVALID);
         }
 
         int dotIndex = originalFilename.lastIndexOf(FileConstant.SUFFIX_SPLIT);
         if (dotIndex < 0) {
-            throw new BusinessException(FileExceptionCode.FILE_NAME_INVALID);
+            throw new BizException(FileExceptionCode.FILE_NAME_INVALID);
         }
 
         String suffix = originalFilename.substring(dotIndex + 1).toLowerCase();
         if (!isAllowedSuffix(suffix)) {
-            throw new BusinessException(FileExceptionCode.FILE_SUFFIX_NOT_ALLOWED);
+            throw new BizException(FileExceptionCode.FILE_SUFFIX_NOT_ALLOWED);
         }
 
         FileStorage fileStorage = new FileStorage();
@@ -952,7 +952,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
      */
     protected void validateUploadId(String uploadId) {
         if (StringUtils.isBlank(uploadId) || uploadId.length() > 64) {
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -961,7 +961,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
      */
     protected void validatePartNumber(int partNumber) {
         if (partNumber <= 0) {
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -970,11 +970,11 @@ public abstract class AbstractFileStorage implements IFileStorage {
      */
     protected void validatePartNumbers(List<Integer> partNumbers) {
         if (partNumbers == null || partNumbers.isEmpty()) {
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
         }
         for (Integer partNumber : partNumbers) {
             if (partNumber == null || partNumber <= 0) {
-                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+                throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
             }
         }
     }
@@ -1011,7 +1011,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
         try (InputStream emptyStream = new ByteArrayInputStream(new byte[]{})) {
             doPutObject(bucketName, folderName, emptyStream, 0L, "application/directory");
         } catch (Exception e) {
-            throw new BusinessException(FileExceptionCode.FOLDER_CREATE_FAILED);
+            throw new BizException(FileExceptionCode.FOLDER_CREATE_FAILED);
         }
     }
 
@@ -1027,7 +1027,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
         String resolvedObjectName = resolveObjectKey(resolvedBucket, objectName);
 
         if (file.isEmpty()) {
-            throw new BusinessException(FileExceptionCode.FILE_EMPTY);
+            throw new BizException(FileExceptionCode.FILE_EMPTY);
         }
 
         makeBucket(resolvedBucket);
@@ -1081,7 +1081,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
     @Override
     public FileStorage resumeChunkedUpload(UploadCheckpoint checkpoint, UploadProgressListener listener) {
         if (checkpoint == null || StringUtils.isBlank(checkpoint.getUploadId())) {
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
 
         String bucketName = checkpoint.getBucketName();
@@ -1121,7 +1121,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
             if (listener != null) {
                 listener.onFailure(objectName, e);
             }
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
         }
     }
 

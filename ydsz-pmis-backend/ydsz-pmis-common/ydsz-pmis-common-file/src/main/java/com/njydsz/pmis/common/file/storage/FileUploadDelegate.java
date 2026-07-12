@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.file.storage;
 
-import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.file.callback.UploadProgressListener;
 import com.njydsz.pmis.common.file.config.FileProperties;
 import com.njydsz.pmis.common.file.domain.ChunkedUploadResult;
@@ -119,7 +119,7 @@ public class FileUploadDelegate {
      * @param objectName 对象键（文件路径），为空时自动生成
      * @param file       上传的文件
      * @return 文件存储实体
-     * @throws BusinessException 文件为空、上传失败等异常
+     * @throws BizException 文件为空、上传失败等异常
      */
     public FileStorage upload(String bucketName, String objectName, MultipartFile file) {
         return upload(bucketName, objectName, file, null);
@@ -133,11 +133,11 @@ public class FileUploadDelegate {
      * @param file       上传的文件
      * @param listener   上传进度监听器，可为 null
      * @return 文件存储实体
-     * @throws BusinessException 文件为空、上传失败等异常
+     * @throws BizException 文件为空、上传失败等异常
      */
     public FileStorage upload(String bucketName, String objectName, MultipartFile file, UploadProgressListener listener) {
         if (file == null || file.isEmpty()) {
-            throw new BusinessException(FileExceptionCode.FILE_EMPTY);
+            throw new BizException(FileExceptionCode.FILE_EMPTY);
         }
 
         checkUploadRateLimit();
@@ -171,7 +171,7 @@ public class FileUploadDelegate {
             }
 
             log.info("[Storage] file upload success, bucket={}, object={}, size={}", resolvedBucket, resolvedKey, contentLength);
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             if (listener != null) {
                 listener.onFailure(resolvedKey, e);
             }
@@ -181,7 +181,7 @@ public class FileUploadDelegate {
             if (listener != null) {
                 listener.onFailure(resolvedKey, e);
             }
-            throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_UPLOAD_FAILED);
         } finally {
             releaseConcurrencyLock(resolvedKey, lockToken);
         }
@@ -195,7 +195,7 @@ public class FileUploadDelegate {
      * @param bucketName 存储桶名称，为空时使用默认桶
      * @param objectName 对象键（文件路径），为空时自动生成
      * @return 分片上传结果，包含 uploadId 等信息
-     * @throws BusinessException 发起失败时抛出
+     * @throws BizException 发起失败时抛出
      */
     public ChunkedUploadResult initiateChunkedUpload(String bucketName, String objectName) {
         String resolvedBucket = storage.resolveBucketName(bucketName);
@@ -220,7 +220,7 @@ public class FileUploadDelegate {
      * @param uploadId   分片上传会话 ID
      * @param partNumber 分片序号（从 1 开始）
      * @param file       分片文件内容
-     * @throws BusinessException uploadId 无效或上传失败时抛出
+     * @throws BizException uploadId 无效或上传失败时抛出
      */
     public void uploadChunk(String bucketName, String objectName, String uploadId, int partNumber, MultipartFile file) {
         validateUploadId(uploadId);
@@ -246,11 +246,11 @@ public class FileUploadDelegate {
                     MULTIPART_CONTEXT_TTL_SECONDS);
 
             log.debug("[Storage] chunk uploaded, bucket={}, object={}, part={}", resolvedBucket, resolvedKey, partNumber);
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[Storage] uploadChunk failed, bucket={}, object={}, part={}, error={}", resolvedBucket, resolvedKey, partNumber, e.getMessage(), e);
-            throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_UPLOAD_FAILED);
         }
     }
 
@@ -261,7 +261,7 @@ public class FileUploadDelegate {
      * @param objectName  对象键（文件路径），为空时自动生成
      * @param uploadId    分片上传会话 ID
      * @param partNumbers 已上传的分片序号列表
-     * @throws BusinessException uploadId 无效、分片缺失或合并失败时抛出
+     * @throws BizException uploadId 无效、分片缺失或合并失败时抛出
      */
     public void completeChunkedUpload(String bucketName, String objectName, String uploadId, List<Integer> partNumbers) {
         validateUploadId(uploadId);
@@ -272,7 +272,7 @@ public class FileUploadDelegate {
 
         MultipartContextStore.MultipartContextData context = multipartContextStore.get(uploadId);
         if (context == null || !resolvedKey.equals(context.objectName())) {
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
         }
 
         Set<Integer> uniqueParts = new HashSet<>(partNumbers);
@@ -284,7 +284,7 @@ public class FileUploadDelegate {
             boolean found = uploadedParts.stream()
                     .anyMatch(p -> p.partNumber() == partNumber);
             if (!found) {
-                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+                throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
             }
         }
 
@@ -293,7 +293,7 @@ public class FileUploadDelegate {
             storage.safeAbortMultipartUpload(resolvedBucket, resolvedKey, uploadId);
             multipartContextStore.remove(uploadId);
             log.info("[Storage] chunked upload completed, bucket={}, object={}, parts={}", resolvedBucket, resolvedKey, sortedParts.size());
-        } catch (BusinessException e) {
+        } catch (BizException e) {
             storage.safeAbortMultipartUpload(resolvedBucket, resolvedKey, uploadId);
             multipartContextStore.remove(uploadId);
             throw e;
@@ -301,7 +301,7 @@ public class FileUploadDelegate {
             storage.safeAbortMultipartUpload(resolvedBucket, resolvedKey, uploadId);
             multipartContextStore.remove(uploadId);
             log.error("[Storage] completeChunkedUpload failed, bucket={}, object={}, error={}", resolvedBucket, resolvedKey, e.getMessage(), e);
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
         }
     }
 
@@ -313,14 +313,14 @@ public class FileUploadDelegate {
      * @param objectName 对象键（文件路径），为空时自动生成
      * @param file       上传的文件（用于校验文件大小一致性）
      * @return 上传检查点，包含 uploadId、已上传分片等信息
-     * @throws BusinessException 文件为空或发起失败时抛出
+     * @throws BizException 文件为空或发起失败时抛出
      */
     public UploadCheckpoint initChunkedUploadWithCheckpoint(String bucketName, String objectName, MultipartFile file) {
         String resolvedBucket = storage.resolveBucketName(bucketName);
         String resolvedKey = storage.resolveObjectKey(resolvedBucket, objectName);
 
         if (file == null || file.isEmpty()) {
-            throw new BusinessException(FileExceptionCode.FILE_EMPTY);
+            throw new BizException(FileExceptionCode.FILE_EMPTY);
         }
 
         storage.makeBucket(resolvedBucket);
@@ -371,11 +371,11 @@ public class FileUploadDelegate {
      * @param checkpoint 上传检查点
      * @param listener   上传进度监听器，可为 null
      * @return 文件存储实体
-     * @throws BusinessException 检查点无效或合并失败时抛出
+     * @throws BizException 检查点无效或合并失败时抛出
      */
     public FileStorage resumeChunkedUpload(UploadCheckpoint checkpoint, UploadProgressListener listener) {
         if (checkpoint == null || StringUtils.isBlank(checkpoint.getUploadId())) {
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
 
         String bucketName = checkpoint.getBucketName();
@@ -415,7 +415,7 @@ public class FileUploadDelegate {
             if (listener != null) {
                 listener.onFailure(objectName, e);
             }
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
         }
     }
 
@@ -528,13 +528,13 @@ public class FileUploadDelegate {
 
     private void validateUploadId(String uploadId) {
         if (StringUtils.isBlank(uploadId) || uploadId.length() > 64) {
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
     private void validatePartNumber(int partNumber) {
         if (partNumber <= 0) {
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -542,15 +542,15 @@ public class FileUploadDelegate {
      * 校验分片序号列表的合法性
      *
      * @param partNumbers 分片序号列表
-     * @throws BusinessException 列表为空、包含 null 或序号小于等于 0 时抛出
+     * @throws BizException 列表为空、包含 null 或序号小于等于 0 时抛出
      */
     private void validatePartNumbers(List<Integer> partNumbers) {
         if (partNumbers == null || partNumbers.isEmpty()) {
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
         }
         for (Integer partNumber : partNumbers) {
             if (partNumber == null || partNumber <= 0) {
-                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+                throw new BizException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
             }
         }
     }
@@ -577,7 +577,7 @@ public class FileUploadDelegate {
         if (currentCount > maxUploadsPerMinute) {
             log.warn("[Storage] upload rate limit exceeded, window={}, count={}, limit={}",
                     currentWindow, currentCount, maxUploadsPerMinute);
-            throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
+            throw new BizException(FileExceptionCode.FILE_UPLOAD_FAILED);
         }
     }
 

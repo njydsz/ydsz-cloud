@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.file.storage;
 
-import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.file.config.FileProperties;
 import com.njydsz.pmis.common.file.config.FileUploadProperties;
 import com.njydsz.pmis.common.file.exception.FileExceptionCode;
@@ -117,13 +117,13 @@ public class IStorageFactory implements IFileStorageProvider {
      * 否则创建新实例并存入缓存。
      *
      * @return 文件存储实现类
-     * @throws BusinessException 若 storage.type 未配置（STORAGE_CONFIG_INVALID）
+     * @throws BizException 若 storage.type 未配置（STORAGE_CONFIG_INVALID）
      */
     @Override
     public IFileStorage getStorage() {
         String storageType = serverProperties.getType();
         if (storageType == null || storageType.isBlank()) {
-            throw new BusinessException(FileExceptionCode.STORAGE_CONFIG_INVALID);
+            throw new BizException(FileExceptionCode.STORAGE_CONFIG_INVALID);
         }
         return storageCache.computeIfAbsent(storageType, this::createStorage);
     }
@@ -151,7 +151,7 @@ public class IStorageFactory implements IFileStorageProvider {
      *
      * @param storageType 存储类型
      * @return 对应的 IFileStorage 实现
-     * @throws BusinessException 若类型未知或实例创建失败
+     * @throws BizException 若类型未知或实例创建失败
      */
     private IFileStorage createStorage(String storageType) {
         IFileStorage storage;
@@ -191,7 +191,7 @@ public class IStorageFactory implements IFileStorageProvider {
                 storage = new QiniuStorage(serverProperties, fileUploadProperties);
                 break;
             default:
-                throw new BusinessException(FileExceptionCode.STORAGE_CONFIG_INVALID);
+                throw new BizException(FileExceptionCode.STORAGE_CONFIG_INVALID);
         }
 
         return injectCommonDependencies(storage);
