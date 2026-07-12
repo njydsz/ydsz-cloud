@@ -1,7 +1,7 @@
 package com.njydsz.pmis.sales.web.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.annotation.ApiMetrics;
+import com.njydsz.pmis.common.audit.annotation.ApiMetrics;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;

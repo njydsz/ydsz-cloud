@@ -10,7 +10,7 @@ import java.lang.annotation.*;
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * @RequireReAuth
+ * @RequireReAuth(code = "USER_DELETE", name = "删除用户")
  * @PostMapping("/users/delete")
  * public Result delete(@RequestBody DeleteDTO dto) { ... }
  * }</pre>
@@ -37,4 +37,19 @@ public @interface RequireReAuth {
      * @return TTL 秒数
      */
     int ttlSeconds() default 300;
+
+    /**
+     * 操作编码，用于标识具体的敏感操作类型。
+     * <p>例如：USER_DELETE / USER_RESET_PASSWORD / CONTRACT_DELETE 等。
+     *
+     * @return 操作编码
+     */
+    String code() default "";
+
+    /**
+     * 操作名称，用于前端展示和日志记录。
+     *
+     * @return 操作名称
+     */
+    String name() default "";
 }

@@ -1060,89 +1060,6 @@ async function handleImportTemplate(tpl: RuleTemplate) {
   }
 }
 
-// ==================== AI 辅助生成 ====================
-
-/** AI 生成对话框可见性 */
-const aiDialogVisible = ref(false)
-/** 自然语言描述 */
-const aiDescription = ref('')
-/** 可用字段（多选） */
-const aiFields = ref<string[]>([])
-/** 生成中 loading */
-const aiLoading = ref(false)
-/** AI 生成结果预览 */
-const aiResult = ref<RuleDefinition | null>(null)
-
-/** 常用可用字段建议 */
-const fieldSuggestions = [
-  'budgetUsedRatio',
-  'budgetTotal',
-  'budgetUsed',
-  'spi',
-  'cpi',
-  'ev',
-  'pv',
-  'ac',
-  'progress',
-  'daysRemaining',
-  'riskScore',
-  'utilizationRate',
-  'overdueDays',
-]
-
-/**
- * 打开 AI 生成对话框
- */
-function openAiGenerate() {
-  aiDescription.value = ''
-  aiFields.value = []
-  aiResult.value = null
-  aiDialogVisible.value = true
-}
-
-/** AI 生成（仅预览） */
-async function handleAiGenerate() {
-  if (!aiDescription.value.trim()) {
-    ElMessage.warning('请输入规则描述')
-    return
-  }
-  aiLoading.value = true
-  try {
-    const { data } = await ruleApi.aiGenerate(aiDescription.value, aiFields.value)
-    aiResult.value = data
-    ElMessage.success('生成成功，请预览')
-  } finally {
-    aiLoading.value = false
-  }
-}
-
-/** AI 生成并保存 */
-async function handleAiGenerateAndSave() {
-  if (!aiDescription.value.trim()) {
-    ElMessage.warning('请输入规则描述')
-    return
-  }
-  aiLoading.value = true
-  try {
-    await ruleApi.aiGenerateAndSave(aiDescription.value, aiFields.value)
-    ElMessage.success('生成并保存成功')
-    aiDialogVisible.value = false
-    fetchRules()
-  } finally {
-    aiLoading.value = false
-  }
-}
-
-/** 将 AI 生成结果载入编辑对话框 */
-function loadAiResultToEdit() {
-  if (!aiResult.value) return
-  editMode.value = 'create'
-  resetEditForm()
-  Object.assign(editForm, JSON.parse(JSON.stringify(aiResult.value)))
-  aiDialogVisible.value = false
-  editDialogVisible.value = true
-}
-
 // ==================== 执行链路回放 ====================
 
 /** 执行回放对话框可见性 */
@@ -1457,9 +1374,6 @@ onMounted(() => {
               </el-button>
           <el-button type="success" aria-label="从模板导入规则" @click="openTemplateMarket">
             <el-icon><Files /></el-icon>从模板导入
-          </el-button>
-          <el-button type="warning" aria-label="AI生成规则" @click="openAiGenerate">
-            <el-icon><MagicStick /></el-icon>AI 生成
           </el-button>
           <el-button aria-label="规则仿真" @click="openDryRun()">
             <el-icon><VideoPlay /></el-icon>Dry-run 仿真
@@ -2038,72 +1952,6 @@ onMounted(() => {
       </template>
     </el-dialog>
 
-    <!-- ==================== AI 生成对话框 ==================== -->
-    <el-dialog v-model="aiDialogVisible" title="AI 辅助生成规则" width="780px" :close-on-click-modal="false">
-      <el-form label-width="100px">
-        <el-form-item label="规则描述">
-          <el-input
-            v-model="aiDescription"
-            type="textarea"
-            :rows="4"
-            :placeholder="$t('execution.ruleEngine.ai.descriptionPlaceholder')"
-          />
-        </el-form-item>
-        <el-form-item label="可用字段">
-          <el-select
-            v-model="aiFields"
-            multiple
-            filterable
-            allow-create
-            default-first-option
-            :placeholder="$t('execution.ruleEngine.ai.fieldsPlaceholder')"
-            style="width: 100%"
-          >
-            <el-option v-for="f in fieldSuggestions" :key="f" :label="f" :value="f" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" :loading="aiLoading" aria-label="AI生成预览规则" @click="handleAiGenerate">
-            <el-icon><MagicStick /></el-icon>生成预览
-          </el-button>
-          <el-button type="success" :loading="aiLoading" aria-label="AI生成并保存规则" @click="handleAiGenerateAndSave">
-            <el-icon><Check /></el-icon>生成并保存
-          </el-button>
-        </el-form-item>
-      </el-form>
-
-      <template v-if="aiResult">
-        <el-divider content-position="left">生成结果预览</el-divider>
-        <el-descriptions :column="2" border size="small">
-          <el-descriptions-item label="规则编码">{{ aiResult.code }}</el-descriptions-item>
-          <el-descriptions-item label="规则名称">{{ aiResult.name }}</el-descriptions-item>
-          <el-descriptions-item label="类别">{{ aiResult.category }}</el-descriptions-item>
-          <el-descriptions-item label="默认严重度">
-            <el-tag :type="severityOf(aiResult.defaultSeverity).type" size="small">
-              {{ severityOf(aiResult.defaultSeverity).label }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="条件表达式" :span="2">
-            <code class="expr-code">{{ aiResult.conditionExpression }}</code>
-          </el-descriptions-item>
-          <el-descriptions-item v-if="aiResult.severityExpression" label="严重度表达式" :span="2">
-            <code class="expr-code">{{ aiResult.severityExpression }}</code>
-          </el-descriptions-item>
-          <el-descriptions-item label="标题模板" :span="2">
-            {{ aiResult.titleTemplate || '-' }}
-          </el-descriptions-item>
-        </el-descriptions>
-        <div class="ai-result-actions">
-          <el-button type="primary" aria-label="载入AI生成结果到编辑" @click="loadAiResultToEdit">
-            <el-icon><Edit /></el-icon>载入编辑
-          </el-button>
-        </div>
-      </template>
-      <template #footer>
-        <el-button @click="aiDialogVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
-
     <!-- ==================== 版本历史对话框 ==================== -->
     <el-dialog v-model="versionDialogVisible" title="版本历史" width="780px">
       <el-table v-loading="versionLoading" :data="versions" border stripe size="small">
@@ -2679,21 +2527,6 @@ onMounted(() => {
       font-family: 'Courier New', Consolas, monospace;
       font-size: $font-size-sm;
     }
-  }
-
-  .expr-code {
-    display: block;
-    padding: $spacing-xs $spacing-sm;
-    background: $bg-page;
-    border-radius: $border-radius-base;
-    font-family: 'Courier New', Consolas, monospace;
-    font-size: $font-size-sm;
-    word-break: break-all;
-  }
-
-  .ai-result-actions {
-    margin-top: $spacing-md;
-    text-align: right;
   }
 
   .mb-3 {

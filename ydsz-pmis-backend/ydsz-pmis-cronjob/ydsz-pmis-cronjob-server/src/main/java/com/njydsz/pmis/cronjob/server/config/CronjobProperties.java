@@ -97,9 +97,6 @@ public class CronjobProperties {
     /** P1-3: 告警智能降噪配置 */
     private AlertDedup alertDedup = new AlertDedup();
 
-    /** P3-1: AI 驱动调度优化配置 */
-    private AiScheduling aiScheduling = new AiScheduling();
-
     /** P3-2: 自愈系统配置 */
     private SelfHealing selfHealing = new SelfHealing();
 
@@ -680,39 +677,6 @@ public class CronjobProperties {
 
         /** 降级冷却时间（秒，无告警后恢复原始通道） */
         private long downgradeCooldownSeconds = 3600;
-    }
-
-    /**
-     * P3-1: AI 驱动调度优化配置。
-     *
-     * <p>基于历史执行数据预测任务执行时间和失败概率，辅助调度决策：
-     * <ul>
-     *   <li>预测执行时间 → 优化任务排队顺序</li>
-     *   <li>预测失败概率 → 提前触发预警</li>
-     *   <li>资源利用率预测 → 弹性扩缩容建议</li>
-     * </ul>
-     *
-     * <p>采用指数加权移动平均（EWMA）作为基础预测模型，轻量无外部依赖。
-     */
-    @Data
-    public static class AiScheduling {
-        /** 是否启用 AI 调度优化（false=不启用预测，向后兼容） */
-        private boolean enabled = false;
-
-        /** EWMA 衰减因子（0-1，越大越偏向近期数据，默认 0.3） */
-        private double ewmaAlpha = 0.3;
-
-        /** 历史数据最小样本数（不足此数时不预测，使用默认值） */
-        private int minSamples = 5;
-
-        /** 最大历史样本数（滑动窗口大小） */
-        private int maxSamples = 100;
-
-        /** 预测失败概率阈值（超过此值触发预警，0-1） */
-        private double failurePredictThreshold = 0.5;
-
-        /** 预测评估间隔（分钟，定时从日志表统计并更新模型） */
-        private int evalIntervalMinutes = 30;
     }
 
     /**
