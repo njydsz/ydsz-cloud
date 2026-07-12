@@ -33,7 +33,7 @@
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-literule-server</artifactId><version>${project.version}</version></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-project-api</artifactId><version>${project.version}</version></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-message-api</artifactId><version>${project.version}</version></dependency>
-        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-agent-api</artifactId><version>${project.version}</version></dependency>
+        
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-userinfo-api</artifactId><version>${project.version}</version></dependency>
         <dependency><groupId>com.alibaba.fastjson2</groupId><artifactId>fastjson2</artifactId></dependency>
                 <dependency><groupId>org.springframework.cloud</groupId><artifactId>spring-cloud-starter-openfeign</artifactId></dependency>

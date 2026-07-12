@@ -34,7 +34,7 @@
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-finance-api</artifactId><version>${project.version}</version></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-userinfo-api</artifactId><version>${project.version}</version></dependency>
         <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-workflow-api</artifactId><version>${project.version}</version></dependency>
-        <dependency><groupId>com.njydsz.pmis</groupId><artifactId>ydsz-pmis-agent-api</artifactId><version>${project.version}</version></dependency>
+        
         <dependency><groupId>com.alibaba.fastjson2</groupId><artifactId>fastjson2</artifactId></dependency>
         <dependency><groupId>cn.hutool</groupId><artifactId>hutool-all</artifactId></dependency>
         <dependency><groupId>com.alibaba</groupId><artifactId>easyexcel</artifactId></dependency>

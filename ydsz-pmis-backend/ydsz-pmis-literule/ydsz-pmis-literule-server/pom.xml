@@ -38,16 +38,7 @@
         <dependency><groupId>com.alibaba.fastjson2</groupId><artifactId>fastjson2</artifactId></dependency>
         <dependency><groupId>org.yaml</groupId><artifactId>snakeyaml</artifactId></dependency>
         <dependency><groupId>org.apache.poi</groupId><artifactId>poi-ooxml</artifactId><optional>true</optional></dependency>
-        <!-- P2-15 AI 增强：LlmClient / LlmException / LlmClientConfig 接口依赖 agent-api -->
-        <dependency>
-            <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-agent-api</artifactId>
-        </dependency>
-        <!-- P2-15 AI 增强：OpenAICompatibleLlmClient / MockLlmClient / LlmClientAutoConfiguration 基础设施层 -->
-        <dependency>
-            <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-agent-infra</artifactId>
-        </dependency>
+        
         <!-- P1-1 多级缓存 L2 + 分布式注册 / 广播依赖 Redisson（强制） -->
         <dependency>
             <groupId>org.redisson</groupId>

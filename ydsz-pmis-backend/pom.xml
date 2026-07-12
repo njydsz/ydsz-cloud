@@ -30,7 +30,7 @@
         <module>ydsz-pmis-message</module>
         <module>ydsz-pmis-cronjob</module>
         <module>ydsz-pmis-workflow</module>
-        <module>ydsz-pmis-agent</module>
+        
     </modules>
 
     <properties>
@@ -90,8 +90,7 @@
         <rocketmq.spring.version>2.3.1</rocketmq.spring.version>
         <seata.version>2.5.0</seata.version>
         <sentry.version>7.13.0</sentry.version>
-        <spring-ai.version>1.0.0-M6</spring-ai.version>
-        <jtokkit.version>1.1.0</jtokkit.version>
+        
         <ttl.version>2.14.5</ttl.version>
         <disruptor.version>3.4.4</disruptor.version>
         <tika.version>2.9.2</tika.version>
@@ -276,11 +275,7 @@
                 <artifactId>ydsz-pmis-workflow</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-agent</artifactId>
-                <version>${project.version}</version>
-            </dependency>
+            
 
             <!-- DDD 子模块：api（Feign 门面） -->
             <dependency>
@@ -313,11 +308,7 @@
                 <artifactId>ydsz-pmis-message-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-agent-api</artifactId>
-                <version>${project.version}</version>
-            </dependency>
+            
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-project-api</artifactId>
@@ -365,11 +356,7 @@
                 <artifactId>ydsz-pmis-message-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-agent-domain</artifactId>
-                <version>${project.version}</version>
-            </dependency>
+            
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-project-domain</artifactId>
@@ -417,11 +404,7 @@
                 <artifactId>ydsz-pmis-message-infra</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-agent-infra</artifactId>
-                <version>${project.version}</version>
-            </dependency>
+            
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-project-infra</artifactId>
@@ -469,11 +452,7 @@
                 <artifactId>ydsz-pmis-message-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-agent-server</artifactId>
-                <version>${project.version}</version>
-            </dependency>
+            
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-project-server</artifactId>
@@ -521,11 +500,7 @@
                 <artifactId>ydsz-pmis-message-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-agent-web</artifactId>
-                <version>${project.version}</version>
-            </dependency>
+            
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-project-web</artifactId>
@@ -626,21 +601,7 @@
                 <version>${resilience4j.version}</version>
             </dependency>
 
-            <!-- Spring AI -->
-            <dependency>
-                <groupId>org.springframework.ai</groupId>
-                <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
-                <version>${spring-ai.version}</version>
-            </dependency>
-
-            <!-- JTokkit (Token 计算) -->
-            <dependency>
-                <groupId>com.knuddels</groupId>
-                <artifactId>jtokkit</artifactId>
-                <version>${jtokkit.version}</version>
-            </dependency>
-
-            <!-- Hutool 工具 -->
+            
             <dependency>
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
