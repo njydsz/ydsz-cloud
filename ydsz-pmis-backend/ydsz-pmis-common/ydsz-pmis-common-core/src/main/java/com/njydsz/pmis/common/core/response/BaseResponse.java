@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.core.response;
+﻿package com.njydsz.pmis.common.core.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
@@ -11,34 +11,31 @@ import java.time.Clock;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * 统一API返回结果封装类
- *
- * <p>用于前后端交互的标准返回格式，封装了响应码、消息、数据和时间戳。
- *
- * <p><b>响应结构：</b>
+ * 缁熶竴API杩斿洖缁撴灉灏佽绫? *
+ * <p>鐢ㄤ簬鍓嶅悗绔氦浜掔殑鏍囧噯杩斿洖鏍煎紡锛屽皝瑁呬簡鍝嶅簲鐮併€佹秷鎭€佹暟鎹拰鏃堕棿鎴炽€? *
+ * <p><b>鍝嶅簲缁撴瀯锛?/b>
  * <ul>
- *   <li>code: 响应码，A00000表示成功，其他表示失败</li>
- *   <li>msg: 响应消息</li>
- *   <li>data: 响应数据</li>
- *   <li>timestamp: 响应时间戳</li>
+ *   <li>code: 鍝嶅簲鐮侊紝A00000琛ㄧず鎴愬姛锛屽叾浠栬〃绀哄け璐?/li>
+ *   <li>msg: 鍝嶅簲娑堟伅</li>
+ *   <li>data: 鍝嶅簲鏁版嵁</li>
+ *   <li>timestamp: 鍝嶅簲鏃堕棿鎴?/li>
  * </ul>
  *
- * <p><b>使用示例：</b>
+ * <p><b>浣跨敤绀轰緥锛?/b>
  * <pre>{@code
- * // 返回成功
+ * // 杩斿洖鎴愬姛
  * return BaseResponse.success(user);
  *
- * // 返回成功带消息
- * return BaseResponse.success("操作成功", user);
+ * // 杩斿洖鎴愬姛甯︽秷鎭? * return BaseResponse.success("鎿嶄綔鎴愬姛", user);
  *
- * // 返回失败
- * return BaseResponse.error("参数错误");
+ * // 杩斿洖澶辫触
+ * return BaseResponse.error("鍙傛暟閿欒");
  *
- * // 返回失败带错误码
- * return BaseResponse.error("A01002", "用户名已存在");
+ * // 杩斿洖澶辫触甯﹂敊璇爜
+ * return BaseResponse.error("A01002", "鐢ㄦ埛鍚嶅凡瀛樺湪");
  * }</pre>
  *
- * @param <T> 数据泛型
+ * @param <T> 鏁版嵁娉涘瀷
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -56,66 +53,64 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     private static final long serialVersionUID = 3L;
 
     /**
-     * 成功状态码
+     * 鎴愬姛鐘舵€佺爜
      */
     public static final String SUCCESS = "A00000";
 
     /**
-     * 失败状态码
+     * 澶辫触鐘舵€佺爜
      */
     public static final String ERROR = "A01001";
 
     /**
-     * 国际化消息 key
+     * 鍥介檯鍖栨秷鎭?key
      */
     public static final String MSG_OPERATION_SUCCESS = "response.success";
 
     /**
-     * 操作失败国际化消息 key
+     * 鎿嶄綔澶辫触鍥介檯鍖栨秷鎭?key
      */
     public static final String MSG_OPERATION_FAIL = "response.error";
 
     /**
-     * 返回编码
+     * 杩斿洖缂栫爜
      */
     @EqualsAndHashCode.Include
     private String code;
 
     /**
-     * 返回信息
+     * 杩斿洖淇℃伅
      */
     private String msg;
 
     /**
-     * 返回数据
-     */
+     * 杩斿洖鏁版嵁
+     *
+     * <p>娉涘瀷绫诲瀷 T 鏃犳硶闄愬畾涓?Serializable锛圓PI 鍝嶅簲鍙惡甯︿换鎰忕被鍨嬫暟鎹級锛?     * Java 搴忓垪鍖栭潪涓昏搴忓垪鍖栨柟寮忥紙椤圭洰浣跨敤 Jackson JSON锛夛紝姝ゅ鎶戝埗缂栬瘧鍣ㄨ鍛娿€?     */
+    @SuppressWarnings("serial")
     private T data;
 
     /**
-     * 时间戳
-     */
+     * 鏃堕棿鎴?     */
     private Long timestamp;
 
     /**
-     * 时钟提供者 - 使用 AtomicReference 保证线程安全和性能
-     * <p>相比 volatile 字段，AtomicReference 提供更好的内存可见性语义和更低的读取开销
+     * 鏃堕挓鎻愪緵鑰?- 浣跨敤 AtomicReference 淇濊瘉绾跨▼瀹夊叏鍜屾€ц兘
+     * <p>鐩告瘮 volatile 瀛楁锛孉tomicReference 鎻愪緵鏇村ソ鐨勫唴瀛樺彲瑙佹€ц涔夊拰鏇翠綆鐨勮鍙栧紑閿€
      */
     private static final AtomicReference<Clock> CLOCK_HOLDER = 
         new AtomicReference<>(Clock.systemDefaultZone());
 
     /**
-     * 默认构造函数
-     */
+     * 榛樿鏋勯€犲嚱鏁?     */
     public BaseResponse() {
         this.timestamp = CLOCK_HOLDER.get().millis();
     }
 
     /**
-     * 全参数构造函数
-     *
-     * @param code 响应码
-     * @param msg 响应消息
-     * @param data 响应数据
+     * 鍏ㄥ弬鏁版瀯閫犲嚱鏁?     *
+     * @param code 鍝嶅簲鐮?     * @param msg 鍝嶅簲娑堟伅
+     * @param data 鍝嶅簲鏁版嵁
      */
     public BaseResponse(String code, String msg, T data) {
         this.code = code;
@@ -125,9 +120,9 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
-     * 设置时钟（用于单元测试）
+     * 璁剧疆鏃堕挓锛堢敤浜庡崟鍏冩祴璇曪級
      *
-     * @param clock 时钟实例
+     * @param clock 鏃堕挓瀹炰緥
      */
     public static void setClock(Clock clock) {
         if (clock == null) {
@@ -137,54 +132,54 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
-     * 获取当前时钟（用于测试验证）
+     * 鑾峰彇褰撳墠鏃堕挓锛堢敤浜庢祴璇曢獙璇侊級
      *
-     * @return 当前时钟实例
+     * @return 褰撳墠鏃堕挓瀹炰緥
      */
     public static Clock getClock() {
         return CLOCK_HOLDER.get();
     }
 
     /**
-     * 创建BaseResponse实例
+     * 鍒涘缓BaseResponse瀹炰緥
      *
-     * @param code 状态码
-     * @param msg 消息
-     * @param data 数据
-     * @param <T> 数据类型
-     * @return BaseResponse实例
+     * @param code 鐘舵€佺爜
+     * @param msg 娑堟伅
+     * @param data 鏁版嵁
+     * @param <T> 鏁版嵁绫诲瀷
+     * @return BaseResponse瀹炰緥
      */
     public static <T> BaseResponse<T> of(String code, String msg, T data) {
         return new BaseResponse<>(code, msg, data);
     }
 
     /**
-     * 返回成功消息
+     * 杩斿洖鎴愬姛娑堟伅
      *
-     * @param <T> 数据类型
-     * @return 成功消息
+     * @param <T> 鏁版嵁绫诲瀷
+     * @return 鎴愬姛娑堟伅
      */
     public static <T> BaseResponse<T> success() {
-        return of(SUCCESS, resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"), null);
+        return of(SUCCESS, resolveMessage(MSG_OPERATION_SUCCESS, "鎿嶄綔鎴愬姛"), null);
     }
 
     /**
-     * 返回成功数据
+     * 杩斿洖鎴愬姛鏁版嵁
      *
-     * @param data 数据内容
-     * @param <T> 数据类型
-     * @return 成功消息
+     * @param data 鏁版嵁鍐呭
+     * @param <T> 鏁版嵁绫诲瀷
+     * @return 鎴愬姛娑堟伅
      */
     public static <T> BaseResponse<T> success(T data) {
-        return of(SUCCESS, resolveMessage(MSG_OPERATION_SUCCESS, "操作成功"), data);
+        return of(SUCCESS, resolveMessage(MSG_OPERATION_SUCCESS, "鎿嶄綔鎴愬姛"), data);
     }
 
     /**
-     * 返回成功消息
+     * 杩斿洖鎴愬姛娑堟伅
      *
-     * @param msg 消息内容
-     * @param <T> 数据类型
-     * @return 成功消息
+     * @param msg 娑堟伅鍐呭
+     * @param <T> 鏁版嵁绫诲瀷
+     * @return 鎴愬姛娑堟伅
      */
     public static <T> BaseResponse<T> successMsg(String msg) {
         BaseResponse<T> response = new BaseResponse<>();
@@ -194,113 +189,106 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
-     * 返回成功消息
+     * 杩斿洖鎴愬姛娑堟伅
      *
-     * @param msg 消息内容
-     * @param data 数据内容
-     * @param <T> 数据类型
-     * @return 成功消息
+     * @param msg 娑堟伅鍐呭
+     * @param data 鏁版嵁鍐呭
+     * @param <T> 鏁版嵁绫诲瀷
+     * @return 鎴愬姛娑堟伅
      */
     public static <T> BaseResponse<T> success(String msg, T data) {
         return of(SUCCESS, msg, data);
     }
 
     /**
-     * 返回失败消息
+     * 杩斿洖澶辫触娑堟伅
      *
-     * @param <T> 数据类型
-     * @return 失败消息
+     * @param <T> 鏁版嵁绫诲瀷
+     * @return 澶辫触娑堟伅
      */
     public static <T> BaseResponse<T> error() {
-        return of(ERROR, resolveMessage(MSG_OPERATION_FAIL, "操作失败"), null);
+        return of(ERROR, resolveMessage(MSG_OPERATION_FAIL, "鎿嶄綔澶辫触"), null);
     }
 
     /**
-     * 返回失败消息
+     * 杩斿洖澶辫触娑堟伅
      *
-     * @param msg 消息内容
-     * @param <T> 数据类型
-     * @return 失败消息
+     * @param msg 娑堟伅鍐呭
+     * @param <T> 鏁版嵁绫诲瀷
+     * @return 澶辫触娑堟伅
      */
     public static <T> BaseResponse<T> error(String msg) {
         return of(ERROR, msg, null);
     }
 
     /**
-     * 返回失败消息
+     * 杩斿洖澶辫触娑堟伅
      *
-     * @param msg 消息内容
-     * @param data 数据内容
-     * @param <T> 数据类型
-     * @return 失败消息
+     * @param msg 娑堟伅鍐呭
+     * @param data 鏁版嵁鍐呭
+     * @param <T> 鏁版嵁绫诲瀷
+     * @return 澶辫触娑堟伅
      */
     public static <T> BaseResponse<T> error(String msg, T data) {
         return of(ERROR, msg, data);
     }
 
     /**
-     * 返回失败消息
+     * 杩斿洖澶辫触娑堟伅
      *
-     * @param code 错误码
-     * @param msg 消息内容
-     * @param <T> 数据类型
-     * @return 失败消息
+     * @param code 閿欒鐮?     * @param msg 娑堟伅鍐呭
+     * @param <T> 鏁版嵁绫诲瀷
+     * @return 澶辫触娑堟伅
      */
     public static <T> BaseResponse<T> error(String code, String msg) {
         return of(code, msg, null);
     }
 
     /**
-     * 返回失败消息
+     * 杩斿洖澶辫触娑堟伅
      *
-     * @param code 错误码
-     * @param msg 消息内容
-     * @param data 数据内容
-     * @param <T> 数据类型
-     * @return 失败消息
+     * @param code 閿欒鐮?     * @param msg 娑堟伅鍐呭
+     * @param data 鏁版嵁鍐呭
+     * @param <T> 鏁版嵁绫诲瀷
+     * @return 澶辫触娑堟伅
      */
     public static <T> BaseResponse<T> error(String code, String msg, T data) {
         return of(code, msg, data);
     }
 
     /**
-     * 国际化消息解析器接口
+     * 鍥介檯鍖栨秷鎭В鏋愬櫒鎺ュ彛
      */
     @FunctionalInterface
     public interface MessageResolver {
         /**
-         * 解析国际化消息
-         *
-         * @param key 国际化消息 key
-         * @param defaultValue 默认消息文本
-         * @return 解析后的消息内容
+         * 瑙ｆ瀽鍥介檯鍖栨秷鎭?         *
+         * @param key 鍥介檯鍖栨秷鎭?key
+         * @param defaultValue 榛樿娑堟伅鏂囨湰
+         * @return 瑙ｆ瀽鍚庣殑娑堟伅鍐呭
          */
         String resolve(String key, String defaultValue);
     }
 
     /**
-     * 消息解析器实例（volatile 保证多线程可见性）
+     * 娑堟伅瑙ｆ瀽鍣ㄥ疄渚嬶紙volatile 淇濊瘉澶氱嚎绋嬪彲瑙佹€э級
      */
     private static volatile MessageResolver resolver;
 
     /**
-     * 设置全局消息解析器（可覆盖）
+     * 璁剧疆鍏ㄥ眬娑堟伅瑙ｆ瀽鍣紙鍙鐩栵級
      *
-     * <p>由上层应用（如 Spring Boot 启动类或配置类）调用，注入国际化解析实现。
-     * 后续调用将覆盖之前设置的解析器，以最后一次设置为准。
-     *
-     * @param resolver 消息解析器实现
-     */
+     * <p>鐢变笂灞傚簲鐢紙濡?Spring Boot 鍚姩绫绘垨閰嶇疆绫伙級璋冪敤锛屾敞鍏ュ浗闄呭寲瑙ｆ瀽瀹炵幇銆?     * 鍚庣画璋冪敤灏嗚鐩栦箣鍓嶈缃殑瑙ｆ瀽鍣紝浠ユ渶鍚庝竴娆¤缃负鍑嗐€?     *
+     * @param resolver 娑堟伅瑙ｆ瀽鍣ㄥ疄鐜?     */
     public static void setResolver(MessageResolver resolver) {
         BaseResponse.resolver = resolver;
     }
 
     /**
-     * 解析国际化消息，若未设置解析器则返回默认值
-     *
-     * @param key 国际化消息 key
-     * @param defaultValue 默认消息文本
-     * @return 解析后的消息内容
+     * 瑙ｆ瀽鍥介檯鍖栨秷鎭紝鑻ユ湭璁剧疆瑙ｆ瀽鍣ㄥ垯杩斿洖榛樿鍊?     *
+     * @param key 鍥介檯鍖栨秷鎭?key
+     * @param defaultValue 榛樿娑堟伅鏂囨湰
+     * @return 瑙ｆ瀽鍚庣殑娑堟伅鍐呭
      */
     protected static String resolveMessage(String key, String defaultValue) {
         MessageResolver currentResolver = resolver;
@@ -312,44 +300,40 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     }
 
     /**
-     * 返回失败消息
+     * 杩斿洖澶辫触娑堟伅
      *
-     * @param resultCode 结果码
-     * @param <T> 数据类型
-     * @return 失败消息
+     * @param resultCode 缁撴灉鐮?     * @param <T> 鏁版嵁绫诲瀷
+     * @return 澶辫触娑堟伅
      */
     public static <T> BaseResponse<T> error(ResultCode resultCode) {
         return of(resultCode.getCode(), resultCode.getMsg(), null);
     }
 
     /**
-     * 返回失败消息
+     * 杩斿洖澶辫触娑堟伅
      *
-     * @param resultCode 结果码
-     * @param data 数据内容
-     * @param <T> 数据类型
-     * @return 失败消息
+     * @param resultCode 缁撴灉鐮?     * @param data 鏁版嵁鍐呭
+     * @param <T> 鏁版嵁绫诲瀷
+     * @return 澶辫触娑堟伅
      */
     public static <T> BaseResponse<T> error(ResultCode resultCode, T data) {
         return of(resultCode.getCode(), resultCode.getMsg(), data);
     }
 
     /**
-     * 返回失败消息
+     * 杩斿洖澶辫触娑堟伅
      *
-     * @param resultCode 结果码
-     * @param msg 自定义消息（覆盖 ResultCode 默认消息）
-     * @param <T> 数据类型
-     * @return 失败消息
+     * @param resultCode 缁撴灉鐮?     * @param msg 鑷畾涔夋秷鎭紙瑕嗙洊 ResultCode 榛樿娑堟伅锛?     * @param <T> 鏁版嵁绫诲瀷
+     * @return 澶辫触娑堟伅
      */
     public static <T> BaseResponse<T> error(ResultCode resultCode, String msg) {
         return of(resultCode.getCode(), msg, null);
     }
 
     /**
-     * 判断是否成功
+     * 鍒ゆ柇鏄惁鎴愬姛
      *
-     * @return 成功返回true，否则返回false
+     * @return 鎴愬姛杩斿洖true锛屽惁鍒欒繑鍥瀎alse
      */
     @Override
     public boolean isSuccess() {

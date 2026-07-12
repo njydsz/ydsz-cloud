@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.file.storage;
+﻿package com.njydsz.pmis.common.file.storage;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.file.callback.UploadProgressListener;
@@ -40,35 +40,35 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 /**
- * 文件存储抽象基类
- * <p>封装所有存储实现公共逻辑，减少子类重复代码。
+ * 鏂囦欢瀛樺偍鎶借薄鍩虹被
+ * <p>灏佽鎵€鏈夊瓨鍌ㄥ疄鐜板叕鍏遍€昏緫锛屽噺灏戝瓙绫婚噸澶嶄唬鐮併€?
  *
- * <p>子类只需实现以下核心抽象方法即可：
+ * <p>瀛愮被鍙渶瀹炵幇浠ヤ笅鏍稿績鎶借薄鏂规硶鍗冲彲锛?
  * <ul>
- *   <li>{@link #doBucketExists(String)} - 判断桶是否存在</li>
- *   <li>{@link #doMakeBucket(String)} - 创建桶</li>
- *   <li>{@link #doFolderExists(String, String)} - 判断目录是否存在</li>
- *   <li>{@link #doMakeFolder(String, String)} - 创建目录</li>
- *   <li>{@link #doPutObject(String, String, InputStream, long, String)} - 写入对象</li>
- *   <li>{@link #doGetObject(String, String, Long, Long)} - 读取对象</li>
- *   <li>{@link #doRemoveObject(String, String)} - 删除对象</li>
- *   <li>{@link #buildObjectUrl(String, String)} - 构建对象访问地址</li>
- *   <li>{@link #doInitiateMultipartUpload(String, String)} - 初始化分片上传</li>
- *   <li>{@link #doUploadPart(String, String, String, int, InputStream, long)} - 上传分片</li>
- *   <li>{@link #doCompleteMultipartUpload(String, String, String, List)} - 完成分片上传</li>
- *   <li>{@link #doAbortMultipartUpload(String, String, String)} - 中止分片上传</li>
- *   <li>{@link #listParts(String, String, String)} - 列举已上传分片</li>
+ *   <li>{@link #doBucketExists(String)} - 鍒ゆ柇妗舵槸鍚﹀瓨鍦?/li>
+ *   <li>{@link #doMakeBucket(String)} - 鍒涘缓妗?/li>
+ *   <li>{@link #doFolderExists(String, String)} - 鍒ゆ柇鐩綍鏄惁瀛樺湪</li>
+ *   <li>{@link #doMakeFolder(String, String)} - 鍒涘缓鐩綍</li>
+ *   <li>{@link #doPutObject(String, String, InputStream, long, String)} - 鍐欏叆瀵硅薄</li>
+ *   <li>{@link #doGetObject(String, String, Long, Long)} - 璇诲彇瀵硅薄</li>
+ *   <li>{@link #doRemoveObject(String, String)} - 鍒犻櫎瀵硅薄</li>
+ *   <li>{@link #buildObjectUrl(String, String)} - 鏋勫缓瀵硅薄璁块棶鍦板潃</li>
+ *   <li>{@link #doInitiateMultipartUpload(String, String)} - 鍒濆鍖栧垎鐗囦笂浼?/li>
+ *   <li>{@link #doUploadPart(String, String, String, int, InputStream, long)} - 涓婁紶鍒嗙墖</li>
+ *   <li>{@link #doCompleteMultipartUpload(String, String, String, List)} - 瀹屾垚鍒嗙墖涓婁紶</li>
+ *   <li>{@link #doAbortMultipartUpload(String, String, String)} - 涓鍒嗙墖涓婁紶</li>
+ *   <li>{@link #listParts(String, String, String)} - 鍒椾妇宸蹭笂浼犲垎鐗?/li>
  * </ul>
  *
- * <p>公共能力：
+ * <p>鍏叡鑳藉姏锛?
  * <ul>
- *   <li>bucketName 默认值解析（子类无需重复实现 formatBucketName）</li>
- *   <li>分片上传参数校验（子类无需重复实现 validateMultipartArgs / validateCompleteParts）</li>
- *   <li>分片合并前服务端校验（确保分片完整性）</li>
- *   <li>失败时自动 abort 清理</li>
- *   <li>进度回调触发（onStart/onProgress/onSuccess/onFailure）</li>
- *   <li>路径穿越防护（resolveObjectKey）</li>
- *   <li>分片上传上下文和检查点使用分布式存储（Redis），支持多实例共享</li>
+ *   <li>bucketName 榛樿鍊艰В鏋愶紙瀛愮被鏃犻渶閲嶅瀹炵幇 formatBucketName锛?/li>
+ *   <li>鍒嗙墖涓婁紶鍙傛暟鏍￠獙锛堝瓙绫绘棤闇€閲嶅瀹炵幇 validateMultipartArgs / validateCompleteParts锛?/li>
+ *   <li>鍒嗙墖鍚堝苟鍓嶆湇鍔＄鏍￠獙锛堢‘淇濆垎鐗囧畬鏁存€э級</li>
+ *   <li>澶辫触鏃惰嚜鍔?abort 娓呯悊</li>
+ *   <li>杩涘害鍥炶皟瑙﹀彂锛坥nStart/onProgress/onSuccess/onFailure锛?/li>
+ *   <li>璺緞绌胯秺闃叉姢锛坮esolveObjectKey锛?/li>
+ *   <li>鍒嗙墖涓婁紶涓婁笅鏂囧拰妫€鏌ョ偣浣跨敤鍒嗗竷寮忓瓨鍌紙Redis锛夛紝鏀寔澶氬疄渚嬪叡浜?/li>
  * </ul>
  *
  * @author Marvin Lee
@@ -80,77 +80,77 @@ import java.util.regex.Pattern;
 public abstract class AbstractFileStorage implements IFileStorage {
 
     /**
-     * 分片临时对象前缀（用于标识临时分片文件）
+     * 鍒嗙墖涓存椂瀵硅薄鍓嶇紑锛堢敤浜庢爣璇嗕复鏃跺垎鐗囨枃浠讹級
      */
     protected static final String CHUNK_DIR_PREFIX = ".multipart";
 
     /**
-     * 分片文件名格式
+     * 鍒嗙墖鏂囦欢鍚嶆牸寮?
      */
     protected static final String CHUNK_FILE_NAME_FORMAT = "part-%d";
 
     /**
-     * 分片上下文 TTL（24 小时）
+     * 鍒嗙墖涓婁笅鏂?TTL锛?4 灏忔椂锛?
      */
     private static final long MULTIPART_CONTEXT_TTL_SECONDS = 24 * 3600;
 
     /**
-     * 检查点 TTL（24 小时）
+     * 妫€鏌ョ偣 TTL锛?4 灏忔椂锛?
      */
     private static final long CHECKPOINT_TTL_SECONDS = 24 * 3600;
 
     /**
-     * 存储配置属性
+     * 瀛樺偍閰嶇疆灞炴€?
      */
     @Getter
     protected final FileProperties fileProperties;
 
     /**
-     * 默认存储桶名称
+     * 榛樿瀛樺偍妗跺悕绉?
      */
     @Getter
     protected final String defaultBucket;
 
     /**
-     * 默认访问域名
+     * 榛樿璁块棶鍩熷悕
      */
     @Getter
     protected final String domain;
 
     /**
-     * 默认端点地址
+     * 榛樿绔偣鍦板潃
      */
     @Getter
     protected final String endpoint;
 
     /**
-     * 分片上传上下文存储（底层存储接口）
+     * 鍒嗙墖涓婁紶涓婁笅鏂囧瓨鍌紙搴曞眰瀛樺偍鎺ュ彛锛?
      */
     protected volatile MultipartContextStore multipartContextStore;
 
     /**
-     * 检查点服务（高层业务封装）
+     * 妫€鏌ョ偣鏈嶅姟锛堥珮灞備笟鍔″皝瑁咃級
      */
     protected volatile CheckpointService checkpointService;
 
     /**
-     * 分片上传模板（组合方式，避免继承导致类膨胀）
+     * 鍒嗙墖涓婁紶妯℃澘锛堢粍鍚堟柟寮忥紝閬垮厤缁ф壙瀵艰嚧绫昏啫鑳€锛?
      */
     protected AbstractChunkedUploadTemplate chunkedUploadTemplate;
 
     /**
-     * 并发上传保护器（可选）
+     * 骞跺彂涓婁紶淇濇姢鍣紙鍙€夛級
      */
     protected UploadConcurrencyGuard concurrencyGuard;
 
     /**
-     * 分片上传配置（可选，为空时不使用 MD5 校验）
+     * 鍒嗙墖涓婁紶閰嶇疆锛堝彲閫夛紝涓虹┖鏃朵笉浣跨敤 MD5 鏍￠獙锛?
      */
     protected FileUploadProperties fileUploadProperties;
 
     /**
-     * 流式 MD5 摘要器（uploadId → MessageDigest），每上传一片就更新摘要。
-     * 仅缓存 MessageDigest 状态（约 128 字节），而非原始分片数据，避免大文件 OOM。
+     * 娴佸紡 MD5 鎽樿鍣紙uploadId 鈫?MessageDigest锛夛紝姣忎笂浼犱竴鐗囧氨鏇存柊鎽樿銆?
+     * 浠呯紦瀛?MessageDigest 鐘舵€侊紙绾?128 瀛楄妭锛夛紝鑰岄潪鍘熷鍒嗙墖鏁版嵁锛岄伩鍏嶅ぇ鏂囦欢 OOM銆?
      */
     private final ConcurrentHashMap<String, MessageDigest> chunkedMd5DigestMap =
             new ConcurrentHashMap<>();
@@ -165,33 +165,39 @@ public abstract class AbstractFileStorage implements IFileStorage {
         this.defaultBucket = fileProperties.getBucket();
         this.domain = fileProperties.getDomain();
         this.endpoint = fileProperties.getEndpoint();
-        // 默认使用内存/本地文件实现的服务层
+        // 榛樿浣跨敤鍐呭瓨/鏈湴鏂囦欢瀹炵幇鐨勬湇鍔″眰
         this.multipartContextStore = new InMemoryMultipartContextStore();
         CheckpointStore defaultCheckpointStore = new LocalCheckpointStore(fileProperties.getCheckpointDir());
-        // 延迟初始化 listParts 方法引用，避免构造器中 this 逃逸
+        // 浣跨敤灞€閮ㄦ暟缁勬寔鏈夎€呭欢杩熺粦瀹?this::listParts锛岄伩鍏嶆瀯閫犲櫒涓?this 閫冮€?
+        final DefaultCheckpointService.MultipartLister[] listerHolder = new DefaultCheckpointService.MultipartLister[1];
         this.checkpointService = new DefaultCheckpointService(defaultCheckpointStore,
-                this::listParts,
+                (bucket, object, uploadId) -> {
+                    DefaultCheckpointService.MultipartLister lister = listerHolder[0];
+                    return lister != null ? lister.listParts(bucket, object, uploadId)
+                            : Collections.emptyList();
+                },
                 CHECKPOINT_TTL_SECONDS);
-        // 初始化分片上传模板（基于当前实例的 checkpoint 保存/加载能力）
+        listerHolder[0] = this::listParts;
+        // 鍒濆鍖栧垎鐗囦笂浼犳ā鏉匡紙鍩轰簬褰撳墠瀹炰緥鐨?checkpoint 淇濆瓨/鍔犺浇鑳藉姏锛?
         this.chunkedUploadTemplate = createChunkedUploadTemplate();
     }
 
     /**
-     * 设置分片上传配置
+     * 璁剧疆鍒嗙墖涓婁紶閰嶇疆
      */
     public void setFileUploadProperties(FileUploadProperties properties) {
         this.fileUploadProperties = properties;
     }
 
     /**
-     * 是否启用分片 MD5 校验
+     * 鏄惁鍚敤鍒嗙墖 MD5 鏍￠獙
      */
     protected boolean isChunkMd5CheckEnabled() {
         return fileUploadProperties != null && fileUploadProperties.isChunkMd5Check();
     }
 
     /**
-     * 设置分片上传上下文存储
+     * 璁剧疆鍒嗙墖涓婁紶涓婁笅鏂囧瓨鍌?
      */
     public void setMultipartContextStore(MultipartContextStore store) {
         if (store != null) {
@@ -200,27 +206,27 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 设置检查点服务
+     * 璁剧疆妫€鏌ョ偣鏈嶅姟
      */
     public void setCheckpointService(CheckpointService service) {
         if (service != null) {
             this.checkpointService = service;
-            // 重建模板以使用新的服务
+            // 閲嶅缓妯℃澘浠ヤ娇鐢ㄦ柊鐨勬湇鍔?
             this.chunkedUploadTemplate = createChunkedUploadTemplate();
         }
     }
 
     /**
-     * 设置分片上传模板
-     * <p>子类可注入自定义的模板实现
+     * 璁剧疆鍒嗙墖涓婁紶妯℃澘
+     * <p>瀛愮被鍙敞鍏ヨ嚜瀹氫箟鐨勬ā鏉垮疄鐜?
      */
     public void setChunkedUploadTemplate(AbstractChunkedUploadTemplate template) {
         this.chunkedUploadTemplate = template;
     }
 
     /**
-     * 创建默认的分片上传模板实现
-     * <p>基于 checkpointStore 保存/加载检查点数据
+     * 鍒涘缓榛樿鐨勫垎鐗囦笂浼犳ā鏉垮疄鐜?
+     * <p>鍩轰簬 checkpointStore 淇濆瓨/鍔犺浇妫€鏌ョ偣鏁版嵁
      */
     protected final AbstractChunkedUploadTemplate createChunkedUploadTemplate() {
         final AbstractFileStorage self = this;
@@ -229,7 +235,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
             protected void saveCheckpoint(String bucketName, String objectName, String uploadId,
                                           long partSize, long totalSize, int totalParts,
                                           int completedParts, long expiresAt) {
-                // 委托给 AbstractFileStorage 的检查点保存逻辑
+                // 濮旀墭缁?AbstractFileStorage 鐨勬鏌ョ偣淇濆瓨閫昏緫
                 UploadCheckpoint checkpoint = new UploadCheckpoint();
                 checkpoint.setUploadId(uploadId);
                 checkpoint.setBucketName(bucketName);
@@ -270,17 +276,17 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 设置并发上传保护器
+     * 璁剧疆骞跺彂涓婁紶淇濇姢鍣?
      */
     public void setConcurrencyGuard(UploadConcurrencyGuard guard) {
         this.concurrencyGuard = guard;
     }
 
     /**
-     * 清理过期的分片上传上下文
-     * <p>建议定时调用（如每小时一次）清理超时未完成的上传任务
+     * 娓呯悊杩囨湡鐨勫垎鐗囦笂浼犱笂涓嬫枃
+     * <p>寤鸿瀹氭椂璋冪敤锛堝姣忓皬鏃朵竴娆★級娓呯悊瓒呮椂鏈畬鎴愮殑涓婁紶浠诲姟
      *
-     * @param timeoutMinutes 超时时间（分钟），超过此时间未更新的上下文将被清理
+     * @param timeoutMinutes 瓒呮椂鏃堕棿锛堝垎閽燂級锛岃秴杩囨鏃堕棿鏈洿鏂扮殑涓婁笅鏂囧皢琚竻鐞?
      */
     public void cleanExpiredMultipartContexts(int timeoutMinutes) {
         MultipartContextStore store = multipartContextStore;
@@ -403,7 +409,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
 
         FileTypeValidator.validate(file);
 
-        // 获取并发上传锁
+        // 鑾峰彇骞跺彂涓婁紶閿?
         String lockToken = acquireConcurrencyLock(resolvedObjectName);
 
         makeBucket(resolvedBucket);
@@ -577,13 +583,13 @@ public abstract class AbstractFileStorage implements IFileStorage {
         try {
             byte[] chunkData = file.getBytes();
 
-            // 流式更新 MD5 摘要，仅缓存 MessageDigest 状态而非原始数据，避免 OOM
+            // 娴佸紡鏇存柊 MD5 鎽樿锛屼粎缂撳瓨 MessageDigest 鐘舵€佽€岄潪鍘熷鏁版嵁锛岄伩鍏?OOM
             String chunkMd5 = null;
             if (isChunkMd5CheckEnabled()) {
-                // 计算分片 MD5（用于校验）
+                // 璁＄畻鍒嗙墖 MD5锛堢敤浜庢牎楠岋級
                 chunkMd5 = UploadCheckpoint.calculateMd5(chunkData);
                 
-                // 流式更新整体文件 MD5 摘要
+                // 娴佸紡鏇存柊鏁翠綋鏂囦欢 MD5 鎽樿
                 MessageDigest digest = chunkedMd5DigestMap.computeIfAbsent(
                         uploadId, k -> createMessageDigest());
                 digest.update(chunkData);
@@ -605,7 +611,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
                             partChunkNames, context.createTime(), System.currentTimeMillis()),
                     MULTIPART_CONTEXT_TTL_SECONDS);
 
-            // 更新检查点中的分片 MD5
+            // 鏇存柊妫€鏌ョ偣涓殑鍒嗙墖 MD5
             if (isChunkMd5CheckEnabled() && chunkMd5 != null) {
                 checkpointService.updateChunkMd5InCheckpoint(resolvedBucket, resolvedObjectName, partNumber, chunkMd5, chunkData.length);
             }
@@ -651,7 +657,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
         try {
             doCompleteMultipartUpload(resolvedBucket, resolvedObjectName, uploadId, sortedParts);
 
-            // 基于流式 MessageDigest 计算累积 MD5，避免缓存原始分片数据导致 OOM
+            // 鍩轰簬娴佸紡 MessageDigest 璁＄畻绱Н MD5锛岄伩鍏嶇紦瀛樺師濮嬪垎鐗囨暟鎹鑷?OOM
             if (isChunkMd5CheckEnabled()) {
                 MessageDigest digest = chunkedMd5DigestMap.get(uploadId);
                 if (digest != null) {
@@ -665,7 +671,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
             multipartContextStore.remove(uploadId);
             chunkedMd5DigestMap.remove(uploadId);
 
-            // 分片上传完成后，基于 fileMd5 校验文件完整性
+            // 鍒嗙墖涓婁紶瀹屾垚鍚庯紝鍩轰簬 fileMd5 鏍￠獙鏂囦欢瀹屾暣鎬?
             if (isChunkMd5CheckEnabled()) {
                 checkpointService.validateFileMd5(resolvedBucket, resolvedObjectName, true,
                         this::computeMd5,
@@ -690,11 +696,11 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 将存储桶名称解析为实际使用的值
-     * <p>当传入值为空时，使用配置文件中的默认桶名称
+     * 灏嗗瓨鍌ㄦ《鍚嶇О瑙ｆ瀽涓哄疄闄呬娇鐢ㄧ殑鍊?
+     * <p>褰撲紶鍏ュ€间负绌烘椂锛屼娇鐢ㄩ厤缃枃浠朵腑鐨勯粯璁ゆ《鍚嶇О
      *
-     * @param bucketName 存储桶名称（可为 null）
-     * @return 解析后的存储桶名称
+     * @param bucketName 瀛樺偍妗跺悕绉帮紙鍙负 null锛?
+     * @return 瑙ｆ瀽鍚庣殑瀛樺偍妗跺悕绉?
      */
     protected String resolveBucketName(String bucketName) {
         return StringUtils.isNotBlank(bucketName) ? bucketName : defaultBucket;
@@ -703,11 +709,11 @@ public abstract class AbstractFileStorage implements IFileStorage {
     private static final Pattern PATH_TRAVERSAL_PATTERN = Pattern.compile("(\\.\\.)|(%2e%2e)|(%2E%2E)");
 
     /**
-     * 转义 JSON 字符串中的特殊字符
-     * <p>用于安全地将字符串嵌入 JSON 文本中，防止注入。
+     * 杞箟 JSON 瀛楃涓蹭腑鐨勭壒娈婂瓧绗?
+     * <p>鐢ㄤ簬瀹夊叏鍦板皢瀛楃涓插祵鍏?JSON 鏂囨湰涓紝闃叉娉ㄥ叆銆?
      *
-     * @param value 待转义的字符串
-     * @return 转义后的字符串
+     * @param value 寰呰浆涔夌殑瀛楃涓?
+     * @return 杞箟鍚庣殑瀛楃涓?
      */
     protected static String escapeJsonString(String value) {
         if (value == null) {
@@ -721,17 +727,17 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 校验路径是否在安全目录范围内，防止目录穿越攻击
-     * <p>安全校验规则：
+     * 鏍￠獙璺緞鏄惁鍦ㄥ畨鍏ㄧ洰褰曡寖鍥村唴锛岄槻姝㈢洰褰曠┛瓒婃敾鍑?
+     * <p>瀹夊叏鏍￠獙瑙勫垯锛?
      * <ul>
-     *   <li>使用 {@code Paths.normalize()} 规范化路径</li>
-     *   <li>校验规范化后的路径以 baseDir 为前缀</li>
-     *   <li>拒绝空字节、控制字符等异常输入</li>
+     *   <li>浣跨敤 {@code Paths.normalize()} 瑙勮寖鍖栬矾寰?/li>
+     *   <li>鏍￠獙瑙勮寖鍖栧悗鐨勮矾寰勪互 baseDir 涓哄墠缂€</li>
+     *   <li>鎷掔粷绌哄瓧鑺傘€佹帶鍒跺瓧绗︾瓑寮傚父杈撳叆</li>
      * </ul>
      *
-     * @param path    待校验的文件路径
-     * @param baseDir 允许的基础目录
-     * @return true 表示路径安全
+     * @param path    寰呮牎楠岀殑鏂囦欢璺緞
+     * @param baseDir 鍏佽鐨勫熀纭€鐩綍
+     * @return true 琛ㄧず璺緞瀹夊叏
      */
     protected static boolean isSafePath(String path, String baseDir) {
         if (StringUtils.isBlank(path) || StringUtils.isBlank(baseDir)) {
@@ -749,20 +755,20 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 解析并校验对象路径，防止路径穿越攻击
-     * <p>校验规则：
+     * 瑙ｆ瀽骞舵牎楠屽璞¤矾寰勶紝闃叉璺緞绌胯秺鏀诲嚮
+     * <p>鏍￠獙瑙勫垯锛?
      * <ul>
-     *   <li>路径不能为空</li>
-     *   <li>禁止包含空字节 {@code \0} 及控制字符</li>
-     *   <li>禁止包含 {@code ..} 路径穿越符（含 URL 编码形式）</li>
-     *   <li>规范化路径后禁止以 {@code ..} 作为路径段</li>
-     *   <li>使用 {@code Paths.normalize()} 进行二次校验</li>
+     *   <li>璺緞涓嶈兘涓虹┖</li>
+     *   <li>绂佹鍖呭惈绌哄瓧鑺?{@code \0} 鍙婃帶鍒跺瓧绗?/li>
+     *   <li>绂佹鍖呭惈 {@code ..} 璺緞绌胯秺绗︼紙鍚?URL 缂栫爜褰㈠紡锛?/li>
+     *   <li>瑙勮寖鍖栬矾寰勫悗绂佹浠?{@code ..} 浣滀负璺緞娈?/li>
+     *   <li>浣跨敤 {@code Paths.normalize()} 杩涜浜屾鏍￠獙</li>
      * </ul>
      *
-     * @param bucketName 存储桶名称
-     * @param objectName 对象路径
-     * @return 解析后的对象路径
-     * @throws BusinessException 当路径为空或存在安全风险时
+     * @param bucketName 瀛樺偍妗跺悕绉?
+     * @param objectName 瀵硅薄璺緞
+     * @return 瑙ｆ瀽鍚庣殑瀵硅薄璺緞
+     * @throws BusinessException 褰撹矾寰勪负绌烘垨瀛樺湪瀹夊叏椋庨櫓鏃?
      */
     protected final String resolveObjectKey(String bucketName, String objectName) {
         if (StringUtils.isEmpty(objectName)) {
@@ -807,12 +813,12 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 检测文件的 MIME Type
-     * <p>优先使用 MultipartFile.getContentType()，若为空则通过
-     * java.net.URLConnection.guessContentTypeFromStream() 基于文件头魔数检测。
+     * 妫€娴嬫枃浠剁殑 MIME Type
+     * <p>浼樺厛浣跨敤 MultipartFile.getContentType()锛岃嫢涓虹┖鍒欓€氳繃
+     * java.net.URLConnection.guessContentTypeFromStream() 鍩轰簬鏂囦欢澶撮瓟鏁版娴嬨€?
      *
-     * @param file 上传的文件
-     * @return MIME Type，无法检测时返回 application/octet-stream
+     * @param file 涓婁紶鐨勬枃浠?
+     * @return MIME Type锛屾棤娉曟娴嬫椂杩斿洖 application/octet-stream
      */
     protected String detectMimeType(MultipartFile file) {
         String contentType = file.getContentType();
@@ -829,7 +835,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
             log.debug("[Storage] MIME Type detection failed for file: {}, message={}",
                     file.getOriginalFilename(), e.getMessage());
         }
-        // fallback: 基于后缀推断
+        // fallback: 鍩轰簬鍚庣紑鎺ㄦ柇
         String suffix = "";
         String originalFilename = file.getOriginalFilename();
         if (originalFilename != null) {
@@ -843,11 +849,11 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 从 FileStorage 构建 MultipartFile 的文件信息对象
-     * <p>子类可覆盖此方法以自定义 FileStorage 的构建逻辑
+     * 浠?FileStorage 鏋勫缓 MultipartFile 鐨勬枃浠朵俊鎭璞?
+     * <p>瀛愮被鍙鐩栨鏂规硶浠ヨ嚜瀹氫箟 FileStorage 鐨勬瀯寤洪€昏緫
      *
-     * @param file 上传的文件
-     * @return 文件存储信息对象
+     * @param file 涓婁紶鐨勬枃浠?
+     * @return 鏂囦欢瀛樺偍淇℃伅瀵硅薄
      */
     protected FileStorage buildFileStorage(MultipartFile file) {
         String originalFilename = file.getOriginalFilename();
@@ -882,10 +888,10 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 检查文件后缀是否允许上传
+     * 妫€鏌ユ枃浠跺悗缂€鏄惁鍏佽涓婁紶
      *
-     * @param suffix 文件后缀（不含点）
-     * @return true 允许上传
+     * @param suffix 鏂囦欢鍚庣紑锛堜笉鍚偣锛?
+     * @return true 鍏佽涓婁紶
      */
     protected boolean isAllowedSuffix(String suffix) {
         List<String> allowedSuffixes = fileProperties.getAllowedSuffixes();
@@ -913,42 +919,42 @@ public abstract class AbstractFileStorage implements IFileStorage {
             "java", "sql", "js", "py", "php", "vue", "sh", "css", "html", "htm", "xml", "json");
 
     /**
-     * 检查是否为图片文件后缀
+     * 妫€鏌ユ槸鍚︿负鍥剧墖鏂囦欢鍚庣紑
      */
     protected boolean isImageSuffix(String suffix) {
         return suffix != null && IMAGE_SUFFIXES.contains(suffix.toLowerCase());
     }
 
     /**
-     * 检查是否为视频文件后缀
+     * 妫€鏌ユ槸鍚︿负瑙嗛鏂囦欢鍚庣紑
      */
     protected boolean isVideoSuffix(String suffix) {
         return suffix != null && VIDEO_SUFFIXES.contains(suffix.toLowerCase());
     }
 
     /**
-     * 检查是否为音频文件后缀
+     * 妫€鏌ユ槸鍚︿负闊抽鏂囦欢鍚庣紑
      */
     protected boolean isAudioSuffix(String suffix) {
         return suffix != null && AUDIO_SUFFIXES.contains(suffix.toLowerCase());
     }
 
     /**
-     * 检查是否为办公文档后缀
+     * 妫€鏌ユ槸鍚︿负鍔炲叕鏂囨。鍚庣紑
      */
     protected boolean isOfficeSuffix(String suffix) {
         return suffix != null && OFFICE_SUFFIXES.contains(suffix.toLowerCase());
     }
 
     /**
-     * 检查是否为代码文件后缀
+     * 妫€鏌ユ槸鍚︿负浠ｇ爜鏂囦欢鍚庣紑
      */
     protected boolean isCodeSuffix(String suffix) {
         return suffix != null && CODE_SUFFIXES.contains(suffix.toLowerCase());
     }
 
     /**
-     * 校验上传 ID 格式
+     * 鏍￠獙涓婁紶 ID 鏍煎紡
      */
     protected void validateUploadId(String uploadId) {
         if (StringUtils.isBlank(uploadId) || uploadId.length() > 64) {
@@ -957,7 +963,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 校验分片编号
+     * 鏍￠獙鍒嗙墖缂栧彿
      */
     protected void validatePartNumber(int partNumber) {
         if (partNumber <= 0) {
@@ -966,7 +972,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 校验分片编号列表
+     * 鏍￠獙鍒嗙墖缂栧彿鍒楄〃
      */
     protected void validatePartNumbers(List<Integer> partNumbers) {
         if (partNumbers == null || partNumbers.isEmpty()) {
@@ -980,7 +986,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 构建分片对象名称
+     * 鏋勫缓鍒嗙墖瀵硅薄鍚嶇О
      */
     protected String buildChunkObjectName(String objectName, String uploadId, int partNumber) {
         return CHUNK_DIR_PREFIX + FileConstant.DIR_SPLIT +
@@ -990,7 +996,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 安全中止分片上传（失败时清理资源）
+     * 瀹夊叏涓鍒嗙墖涓婁紶锛堝け璐ユ椂娓呯悊璧勬簮锛?
      */
     protected void safeAbortMultipartUpload(String bucketName, String objectName, String uploadId) {
         if (StringUtils.isBlank(uploadId)) {
@@ -1005,7 +1011,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 创建目录（以 / 结尾的 0 字节对象）
+     * 鍒涘缓鐩綍锛堜互 / 缁撳熬鐨?0 瀛楄妭瀵硅薄锛?
      */
     protected void createFolderByEmptyObject(String bucketName, String folderName) {
         try (InputStream emptyStream = new ByteArrayInputStream(new byte[]{})) {
@@ -1063,7 +1069,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
         checkpoint.setUploadedPartsCount(0);
         checkpoint.setUploadedParts(new ArrayList<>());
 
-        // 初始化时计算文件 MD5
+        // 鍒濆鍖栨椂璁＄畻鏂囦欢 MD5
         if (isChunkMd5CheckEnabled()) {
             try {
                 String fileMd5 = UploadCheckpoint.calculateMd5(file.getBytes());
@@ -1133,9 +1139,9 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 保存上传检查点
+     * 淇濆瓨涓婁紶妫€鏌ョ偣
      *
-     * @param checkpoint 检查点数据
+     * @param checkpoint 妫€鏌ョ偣鏁版嵁
      */
     protected void saveCheckpoint(UploadCheckpoint checkpoint) {
         CheckpointService service = checkpointService;
@@ -1145,11 +1151,11 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 加载上传检查点
+     * 鍔犺浇涓婁紶妫€鏌ョ偣
      *
-     * @param bucketName 存储桶名称
-     * @param objectName 对象名称
-     * @return 检查点数据，不存在时返回 null
+     * @param bucketName 瀛樺偍妗跺悕绉?
+     * @param objectName 瀵硅薄鍚嶇О
+     * @return 妫€鏌ョ偣鏁版嵁锛屼笉瀛樺湪鏃惰繑鍥?null
      */
     protected UploadCheckpoint loadCheckpoint(String bucketName, String objectName) {
         CheckpointService service = checkpointService;
@@ -1160,11 +1166,11 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 校验并恢复上传检查点
+     * 鏍￠獙骞舵仮澶嶄笂浼犳鏌ョ偣
      *
-     * @param checkpoint 已有检查点
-     * @param file 上传文件
-     * @return 校验后的检查点
+     * @param checkpoint 宸叉湁妫€鏌ョ偣
+     * @param file 涓婁紶鏂囦欢
+     * @return 鏍￠獙鍚庣殑妫€鏌ョ偣
      */
     protected UploadCheckpoint validateAndRecoverCheckpoint(UploadCheckpoint checkpoint, org.springframework.web.multipart.MultipartFile file) {
         CheckpointService service = checkpointService;
@@ -1183,10 +1189,10 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 获取并发上传锁
+     * 鑾峰彇骞跺彂涓婁紶閿?
      *
-     * @param objectKey 文件对象键
-     * @return 锁令牌，用于释放锁
+     * @param objectKey 鏂囦欢瀵硅薄閿?
+     * @return 閿佷护鐗岋紝鐢ㄤ簬閲婃斁閿?
      */
     protected String acquireConcurrencyLock(String objectKey) {
         if (concurrencyGuard != null) {
@@ -1196,10 +1202,10 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 释放并发上传锁
+     * 閲婃斁骞跺彂涓婁紶閿?
      *
-     * @param objectKey  文件对象键
-     * @param lockToken  锁令牌
+     * @param objectKey  鏂囦欢瀵硅薄閿?
+     * @param lockToken  閿佷护鐗?
      */
     protected void releaseConcurrencyLock(String objectKey, String lockToken) {
         if (concurrencyGuard != null && lockToken != null) {
@@ -1211,12 +1217,12 @@ public abstract class AbstractFileStorage implements IFileStorage {
         }
     }
 
-    // ==================== MD5 校验辅助方法 ====================
+    // ==================== MD5 鏍￠獙杈呭姪鏂规硶 ====================
 
     /**
-     * 创建 MD5 摘要实例
+     * 鍒涘缓 MD5 鎽樿瀹炰緥
      *
-     * @return MessageDigest 实例
+     * @return MessageDigest 瀹炰緥
      */
     private static MessageDigest createMessageDigest() {
         try {
@@ -1227,7 +1233,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     /**
-     * 计算输入流的 MD5（会消费流，调用者需自行重新获取流）
+     * 璁＄畻杈撳叆娴佺殑 MD5锛堜細娑堣垂娴侊紝璋冪敤鑰呴渶鑷閲嶆柊鑾峰彇娴侊級
      */
     protected String computeMd5(InputStream inputStream) {
         try {
@@ -1253,176 +1259,176 @@ public abstract class AbstractFileStorage implements IFileStorage {
         return sb.toString();
     }
 
-    // ==================== 抽象方法，子类必须实现 ====================
+    // ==================== 鎶借薄鏂规硶锛屽瓙绫诲繀椤诲疄鐜?====================
 
     /**
-     * 判断存储桶是否存在
+     * 鍒ゆ柇瀛樺偍妗舵槸鍚﹀瓨鍦?
      *
-     * @param bucketName 已解析的存储桶名称
-     * @return true 表示存在
+     * @param bucketName 宸茶В鏋愮殑瀛樺偍妗跺悕绉?
+     * @return true 琛ㄧず瀛樺湪
      */
     protected abstract boolean doBucketExists(String bucketName);
 
     /**
-     * 创建存储桶
+     * 鍒涘缓瀛樺偍妗?
      *
-     * @param bucketName 已解析的存储桶名称
+     * @param bucketName 宸茶В鏋愮殑瀛樺偍妗跺悕绉?
      */
     protected abstract void doMakeBucket(String bucketName);
 
     /**
-     * 判断目录是否存在
+     * 鍒ゆ柇鐩綍鏄惁瀛樺湪
      *
-     * @param bucketName 已解析的存储桶名称
-     * @param folderName 已解析的目录名称
-     * @return true 表示存在
+     * @param bucketName 宸茶В鏋愮殑瀛樺偍妗跺悕绉?
+     * @param folderName 宸茶В鏋愮殑鐩綍鍚嶇О
+     * @return true 琛ㄧず瀛樺湪
      */
     protected abstract boolean doFolderExists(String bucketName, String folderName);
 
     /**
-     * 获取对象元信息
+     * 鑾峰彇瀵硅薄鍏冧俊鎭?
      *
-     * @param bucketName 已解析的存储桶名称
-     * @param objectName 已解析的对象名称
-     * @return 对象元信息，若不存在返回 null
+     * @param bucketName 宸茶В鏋愮殑瀛樺偍妗跺悕绉?
+     * @param objectName 宸茶В鏋愮殑瀵硅薄鍚嶇О
+     * @return 瀵硅薄鍏冧俊鎭紝鑻ヤ笉瀛樺湪杩斿洖 null
      */
     protected abstract ObjectMetadata doGetMetadata(String bucketName, String objectName);
 
     /**
-     * 分页列举对象
+     * 鍒嗛〉鍒椾妇瀵硅薄
      *
-     * @param bucketName 已解析的存储桶名称
-     * @param prefix    对象前缀过滤
-     * @param cursor    分页游标
-     * @param maxKeys   每页最大返回数量
-     * @return 分页结果
+     * @param bucketName 宸茶В鏋愮殑瀛樺偍妗跺悕绉?
+     * @param prefix    瀵硅薄鍓嶇紑杩囨护
+     * @param cursor    鍒嗛〉娓告爣
+     * @param maxKeys   姣忛〉鏈€澶ц繑鍥炴暟閲?
+     * @return 鍒嗛〉缁撴灉
      */
     protected abstract ListObjectsResult doListObjects(String bucketName, String prefix, String cursor, int maxKeys);
 
     /**
-     * 创建目录
+     * 鍒涘缓鐩綍
      *
-     * @param bucketName 已解析的存储桶名称
-     * @param folderName 目录名称（应确保以 / 结尾）
+     * @param bucketName 宸茶В鏋愮殑瀛樺偍妗跺悕绉?
+     * @param folderName 鐩綍鍚嶇О锛堝簲纭繚浠?/ 缁撳熬锛?
      */
     protected abstract void doMakeFolder(String bucketName, String folderName);
 
     /**
-     * 写入对象到存储
+     * 鍐欏叆瀵硅薄鍒板瓨鍌?
      *
-     * @param bucketName  存储桶名称
-     * @param objectName  对象路径
-     * @param inputStream 数据输入流
-     * @param size        数据大小
-     * @param contentType 内容类型
+     * @param bucketName  瀛樺偍妗跺悕绉?
+     * @param objectName  瀵硅薄璺緞
+     * @param inputStream 鏁版嵁杈撳叆娴?
+     * @param size        鏁版嵁澶у皬
+     * @param contentType 鍐呭绫诲瀷
      */
     protected abstract void doPutObject(String bucketName, String objectName,
                                         InputStream inputStream, long size, String contentType);
 
     /**
-     * 读取对象内容
+     * 璇诲彇瀵硅薄鍐呭
      *
-     * @param bucketName 存储桶名称
-     * @param objectName 对象路径
-     * @param offset     起始偏移（null 表示从 0 开始）
-     * @param length     读取长度（null 表示读取全部）
-     * @return 输入流
+     * @param bucketName 瀛樺偍妗跺悕绉?
+     * @param objectName 瀵硅薄璺緞
+     * @param offset     璧峰鍋忕Щ锛坣ull 琛ㄧず浠?0 寮€濮嬶級
+     * @param length     璇诲彇闀垮害锛坣ull 琛ㄧず璇诲彇鍏ㄩ儴锛?
+     * @return 杈撳叆娴?
      */
     protected abstract InputStream doGetObject(String bucketName, String objectName,
                                                Long offset, Long length);
 
     /**
-     * 删除对象
+     * 鍒犻櫎瀵硅薄
      *
-     * @param bucketName 存储桶名称
-     * @param objectName 对象路径
+     * @param bucketName 瀛樺偍妗跺悕绉?
+     * @param objectName 瀵硅薄璺緞
      */
     protected abstract void doRemoveObject(String bucketName, String objectName);
 
     /**
-     * 构建公开访问 URL
+     * 鏋勫缓鍏紑璁块棶 URL
      *
-     * @param bucketName 存储桶名称
-     * @param objectName 对象路径
-     * @return 公开访问 URL
+     * @param bucketName 瀛樺偍妗跺悕绉?
+     * @param objectName 瀵硅薄璺緞
+     * @return 鍏紑璁块棶 URL
      */
     protected abstract String buildObjectUrl(String bucketName, String objectName);
 
     /**
-     * 构建私有签名访问 URL
+     * 鏋勫缓绉佹湁绛惧悕璁块棶 URL
      *
-     * @param bucketName 存储桶名称
-     * @param objectName 对象路径
-     * @return 私有签名 URL（不支持时返回空字符串）
+     * @param bucketName 瀛樺偍妗跺悕绉?
+     * @param objectName 瀵硅薄璺緞
+     * @return 绉佹湁绛惧悕 URL锛堜笉鏀寔鏃惰繑鍥炵┖瀛楃涓诧級
      */
     protected String buildPrivateUrl(String bucketName, String objectName) {
         return "";
     }
 
     /**
-     * 生成预签名 URL（可自定义过期时间）
+     * 鐢熸垚棰勭鍚?URL锛堝彲鑷畾涔夎繃鏈熸椂闂达級
      *
-     * <p>默认实现返回公开访问 URL。子类可覆盖此方法以使用云厂商 SDK 生成签名 URL。
+     * <p>榛樿瀹炵幇杩斿洖鍏紑璁块棶 URL銆傚瓙绫诲彲瑕嗙洊姝ゆ柟娉曚互浣跨敤浜戝巶鍟?SDK 鐢熸垚绛惧悕 URL銆?
      *
-     * @param bucketName    存储桶名称
-     * @param objectName    对象路径
-     * @param expireSeconds 过期时间（秒）
-     * @return 预签名 URL
+     * @param bucketName    瀛樺偍妗跺悕绉?
+     * @param objectName    瀵硅薄璺緞
+     * @param expireSeconds 杩囨湡鏃堕棿锛堢锛?
+     * @return 棰勭鍚?URL
      */
     protected String doGeneratePresignedUrl(String bucketName, String objectName, int expireSeconds) {
         return buildObjectUrl(bucketName, objectName);
     }
 
     /**
-     * 初始化分片上传
+     * 鍒濆鍖栧垎鐗囦笂浼?
      *
-     * @param bucketName 存储桶名称
-     * @param objectName 对象路径
-     * @return 分片上传结果（包含 uploadId）
+     * @param bucketName 瀛樺偍妗跺悕绉?
+     * @param objectName 瀵硅薄璺緞
+     * @return 鍒嗙墖涓婁紶缁撴灉锛堝寘鍚?uploadId锛?
      */
     protected abstract ChunkedUploadResult doInitiateMultipartUpload(String bucketName, String objectName);
 
     /**
-     * 上传单个分片
+     * 涓婁紶鍗曚釜鍒嗙墖
      *
-     * @param bucketName    存储桶名称
-     * @param chunkObjectName 分片对象名称
-     * @param uploadId      分片任务 ID
-     * @param partNumber    分片编号
-     * @param inputStream   分片数据流
-     * @param size          分片大小
+     * @param bucketName    瀛樺偍妗跺悕绉?
+     * @param chunkObjectName 鍒嗙墖瀵硅薄鍚嶇О
+     * @param uploadId      鍒嗙墖浠诲姟 ID
+     * @param partNumber    鍒嗙墖缂栧彿
+     * @param inputStream   鍒嗙墖鏁版嵁娴?
+     * @param size          鍒嗙墖澶у皬
      */
     protected abstract void doUploadPart(String bucketName, String chunkObjectName,
                                          String uploadId, int partNumber,
                                          InputStream inputStream, long size);
 
     /**
-     * 完成分片上传并合并
+     * 瀹屾垚鍒嗙墖涓婁紶骞跺悎骞?
      *
-     * @param bucketName  存储桶名称
-     * @param objectName  对象路径
-     * @param uploadId    分片任务 ID
-     * @param partNumbers 已上传的分片编号列表（升序）
+     * @param bucketName  瀛樺偍妗跺悕绉?
+     * @param objectName  瀵硅薄璺緞
+     * @param uploadId    鍒嗙墖浠诲姟 ID
+     * @param partNumbers 宸蹭笂浼犵殑鍒嗙墖缂栧彿鍒楄〃锛堝崌搴忥級
      */
     protected abstract void doCompleteMultipartUpload(String bucketName, String objectName,
                                                        String uploadId, List<Integer> partNumbers);
 
     /**
-     * 中止分片上传（清理已上传的分片）
+     * 涓鍒嗙墖涓婁紶锛堟竻鐞嗗凡涓婁紶鐨勫垎鐗囷級
      *
-     * @param bucketName 存储桶名称
-     * @param objectName 对象路径
-     * @param uploadId   分片任务 ID
+     * @param bucketName 瀛樺偍妗跺悕绉?
+     * @param objectName 瀵硅薄璺緞
+     * @param uploadId   鍒嗙墖浠诲姟 ID
      */
     protected abstract void doAbortMultipartUpload(String bucketName, String objectName, String uploadId);
 
     /**
-     * 列举已上传的分片
+     * 鍒椾妇宸蹭笂浼犵殑鍒嗙墖
      *
-     * @param bucketName 存储桶名称
-     * @param objectName 对象路径
-     * @param uploadId   分片任务 ID
-     * @return 已上传分片信息列表
+     * @param bucketName 瀛樺偍妗跺悕绉?
+     * @param objectName 瀵硅薄璺緞
+     * @param uploadId   鍒嗙墖浠诲姟 ID
+     * @return 宸蹭笂浼犲垎鐗囦俊鎭垪琛?
      */
     protected abstract List<PartInfo> listParts(String bucketName, String objectName, String uploadId);
 }

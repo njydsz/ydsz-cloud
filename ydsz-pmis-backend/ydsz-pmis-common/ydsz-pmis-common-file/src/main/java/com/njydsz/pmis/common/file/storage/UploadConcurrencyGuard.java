@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.file.storage;
+﻿package com.njydsz.pmis.common.file.storage;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.file.config.FileProperties.ConcurrencyControl;
@@ -6,26 +6,26 @@ import com.njydsz.pmis.common.file.exception.FileExceptionCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 /**
- * 上传并发保护器
+ * 涓婁紶骞跺彂淇濇姢鍣?
  *
- * <p>防止对同一文件（objectKey）的并发上传，避免数据竞争和覆盖问题。
- * 基于 Redis 实现，支持两种策略：
+ * <p>闃叉瀵瑰悓涓€鏂囦欢锛坥bjectKey锛夌殑骞跺彂涓婁紶锛岄伩鍏嶆暟鎹珵浜夊拰瑕嗙洊闂銆?
+ * 鍩轰簬 Redis 瀹炵幇锛屾敮鎸佷袱绉嶇瓥鐣ワ細
  * <ul>
- *   <li>{@code REJECT} - 已有上传正在进行时，直接拒绝新上传（默认）</li>
- *   <li>{@code WAIT} - 等待旧上传完成后，再执行新上传</li>
+ *   <li>{@code REJECT} - 宸叉湁涓婁紶姝ｅ湪杩涜鏃讹紝鐩存帴鎷掔粷鏂颁笂浼狅紙榛樿锛?/li>
+ *   <li>{@code WAIT} - 绛夊緟鏃т笂浼犲畬鎴愬悗锛屽啀鎵ц鏂颁笂浼?/li>
  * </ul>
  *
- * <p><b>使用方式：</b>
+ * <p><b>浣跨敤鏂瑰紡锛?/b>
  * <pre>{@code
  * UploadConcurrencyGuard guard = ...;
  * String lockToken = guard.acquire(objectKey);
  * try {
- *     // 执行上传
+ *     // 鎵ц涓婁紶
  * } finally {
  *     guard.release(objectKey, lockToken);
  * }
@@ -39,22 +39,22 @@ import java.util.concurrent.TimeUnit;
 public class UploadConcurrencyGuard {
 
     /**
-     * Redis 锁键前缀
+     * Redis 閿侀敭鍓嶇紑
      */
     private static final String LOCK_KEY_PREFIX = "remi:file:upload:lock:";
 
     /**
-     * 锁的过期时间（秒），防止业务异常导致锁无法释放
+     * 閿佺殑杩囨湡鏃堕棿锛堢锛夛紝闃叉涓氬姟寮傚父瀵艰嚧閿佹棤娉曢噴鏀?
      */
     private static final long LOCK_EXPIRE_SECONDS = 300;
 
     /**
-     * WAIT 策略下每次等待的间隔（毫秒）
+     * WAIT 绛栫暐涓嬫瘡娆＄瓑寰呯殑闂撮殧锛堟绉掞級
      */
     private static final long WAIT_INTERVAL_MILLIS = 100;
 
     /**
-     * WAIT 策略下最大等待时间（秒）
+     * WAIT 绛栫暐涓嬫渶澶х瓑寰呮椂闂达紙绉掞級
      */
     private static final long MAX_WAIT_SECONDS = 60;
 
@@ -62,10 +62,10 @@ public class UploadConcurrencyGuard {
     private final ConcurrencyControl config;
 
     /**
-     * 创建并发保护器
+     * 鍒涘缓骞跺彂淇濇姢鍣?
      *
-     * @param redisTemplate Redis 模板
-     * @param config        并发控制配置
+     * @param redisTemplate Redis 妯℃澘
+     * @param config        骞跺彂鎺у埗閰嶇疆
      */
     public UploadConcurrencyGuard(StringRedisTemplate redisTemplate, ConcurrencyControl config) {
         this.redisTemplate = redisTemplate;
@@ -73,11 +73,11 @@ public class UploadConcurrencyGuard {
     }
 
     /**
-     * 获取上传锁
+     * 鑾峰彇涓婁紶閿?
      *
-     * @param objectKey 文件对象键
-     * @return 锁令牌，用于释放锁时校验
-     * @throws BusinessException 当配置为 REJECT 策略且已有上传正在进行时
+     * @param objectKey 鏂囦欢瀵硅薄閿?
+     * @return 閿佷护鐗岋紝鐢ㄤ簬閲婃斁閿佹椂鏍￠獙
+     * @throws BusinessException 褰撻厤缃负 REJECT 绛栫暐涓斿凡鏈変笂浼犳鍦ㄨ繘琛屾椂
      */
     public String acquire(String objectKey) {
         if (objectKey == null || objectKey.isEmpty()) {
@@ -86,23 +86,23 @@ public class UploadConcurrencyGuard {
 
         String lockKey = LOCK_KEY_PREFIX + objectKey;
 
-        // 尝试非阻塞获取锁
+        // 灏濊瘯闈為樆濉炶幏鍙栭攣
         String lockValue = tryAcquireNonBlocking(lockKey);
         if (lockValue != null) {
             return lockValue;
         }
 
-        // 锁已被持有，根据策略处理
+        // 閿佸凡琚寔鏈夛紝鏍规嵁绛栫暐澶勭悊
         return handleLockHeld(lockKey, lockValue);
     }
 
     /**
-     * 释放上传锁
+     * 閲婃斁涓婁紶閿?
      *
-     * <p>使用 Lua 脚本保证原子性：仅当锁值匹配时才删除。
+     * <p>浣跨敤 Lua 鑴氭湰淇濊瘉鍘熷瓙鎬э細浠呭綋閿佸€煎尮閰嶆椂鎵嶅垹闄ゃ€?
      *
-     * @param objectKey  文件对象键
-     * @param lockToken  获取锁时返回的令牌
+     * @param objectKey  鏂囦欢瀵硅薄閿?
+     * @param lockToken  鑾峰彇閿佹椂杩斿洖鐨勪护鐗?
      */
     public void release(String objectKey, String lockToken) {
         if (objectKey == null || lockToken == null) {
@@ -121,15 +121,15 @@ public class UploadConcurrencyGuard {
     }
 
     /**
-     * 非阻塞尝试获取锁（SETNX）
+     * 闈為樆濉炲皾璇曡幏鍙栭攣锛圫ETNX锛?
      *
-     * @param lockKey 锁键
-     * @return 成功返回锁令牌，失败返回 null
+     * @param lockKey 閿侀敭
+     * @return 鎴愬姛杩斿洖閿佷护鐗岋紝澶辫触杩斿洖 null
      */
     private String tryAcquireNonBlocking(String lockKey) {
         String lockValue = UUID.randomUUID().toString().replace("-", "");
         Boolean success = redisTemplate.opsForValue()
-                .setIfAbsent(lockKey, lockValue, LOCK_EXPIRE_SECONDS, TimeUnit.SECONDS);
+                .setIfAbsent(lockKey, lockValue, Duration.ofSeconds(LOCK_EXPIRE_SECONDS));
         if (Boolean.TRUE.equals(success)) {
             log.debug("[UploadGuard] lock acquired, key={}", lockKey);
             return lockValue;
@@ -138,12 +138,12 @@ public class UploadConcurrencyGuard {
     }
 
     /**
-     * 处理锁已被持有的情况
+     * 澶勭悊閿佸凡琚寔鏈夌殑鎯呭喌
      *
-     * @param lockKey 锁键
-     * @param existingValue 已存在的锁值（用于日志）
-     * @return 获取锁后返回新令牌
-     * @throws BusinessException 当 REJECT 策略时直接拒绝
+     * @param lockKey 閿侀敭
+     * @param existingValue 宸插瓨鍦ㄧ殑閿佸€硷紙鐢ㄤ簬鏃ュ織锛?
+     * @return 鑾峰彇閿佸悗杩斿洖鏂颁护鐗?
+     * @throws BusinessException 褰?REJECT 绛栫暐鏃剁洿鎺ユ嫆缁?
      */
     private String handleLockHeld(String lockKey, String existingValue) {
         switch (config.getStrategy()) {
@@ -153,17 +153,17 @@ public class UploadConcurrencyGuard {
             case WAIT:
                 return waitForLock(lockKey);
             default:
-                // 未知策略，默认拒绝
+                // 鏈煡绛栫暐锛岄粯璁ゆ嫆缁?
                 log.warn("[UploadGuard] unknown strategy, rejecting concurrent upload, key={}", lockKey);
                 throw new BusinessException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
         }
     }
 
     /**
-     * WAIT 策略：等待锁释放后重新获取
+     * WAIT 绛栫暐锛氱瓑寰呴攣閲婃斁鍚庨噸鏂拌幏鍙?
      *
-     * @param lockKey 锁键
-     * @return 获取锁后返回新令牌
+     * @param lockKey 閿侀敭
+     * @return 鑾峰彇閿佸悗杩斿洖鏂颁护鐗?
      */
     private String waitForLock(String lockKey) {
         long elapsedMillis = 0;
@@ -173,7 +173,7 @@ public class UploadConcurrencyGuard {
 
         while (elapsedMillis < maxWaitMillis) {
             try {
-                // 短暂休眠后重试
+                // 鐭殏浼戠湢鍚庨噸璇?
                 Thread.sleep(WAIT_INTERVAL_MILLIS);
                 elapsedMillis += WAIT_INTERVAL_MILLIS;
 

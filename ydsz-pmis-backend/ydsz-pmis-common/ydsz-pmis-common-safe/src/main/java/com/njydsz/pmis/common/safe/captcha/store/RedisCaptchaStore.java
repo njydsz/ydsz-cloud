@@ -1,16 +1,16 @@
-package com.njydsz.pmis.common.safe.captcha.store;
+﻿package com.njydsz.pmis.common.safe.captcha.store;
 
 import com.njydsz.pmis.common.safe.captcha.core.CaptchaStore;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 /**
- * Redis 分布式验证码存储器
- * 基于 Redis 实现，适用于集群环境
- * 支持自动过期，由 Redis TTL 机制管理，无需定时任务
+ * Redis 鍒嗗竷寮忛獙璇佺爜瀛樺偍鍣?
+ * 鍩轰簬 Redis 瀹炵幇锛岄€傜敤浜庨泦缇ょ幆澧?
+ * 鏀寔鑷姩杩囨湡锛岀敱 Redis TTL 鏈哄埗绠＄悊锛屾棤闇€瀹氭椂浠诲姟
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -30,8 +30,8 @@ public class RedisCaptchaStore implements CaptchaStore {
     @Override
     public void store(String captchaId, String captchaCode, long expireSeconds) {
         String key = CAPTCHA_KEY_PREFIX + captchaId;
-        redisTemplate.opsForValue().set(key, captchaCode, expireSeconds, TimeUnit.SECONDS);
-        log.debug("存储验证码: [{}], 过期时间: [{}]s", captchaId, expireSeconds);
+        redisTemplate.opsForValue().set(key, captchaCode, Duration.ofSeconds(expireSeconds));
+        log.debug("瀛樺偍楠岃瘉鐮? [{}], 杩囨湡鏃堕棿: [{}]s", captchaId, expireSeconds);
     }
 
     @Override
@@ -39,7 +39,7 @@ public class RedisCaptchaStore implements CaptchaStore {
         String key = CAPTCHA_KEY_PREFIX + captchaId;
         String code = redisTemplate.opsForValue().getAndDelete(key);
         if (code == null) {
-            log.warn("验证码不存在或已过期: [{}]", captchaId);
+            log.warn("楠岃瘉鐮佷笉瀛樺湪鎴栧凡杩囨湡: [{}]", captchaId);
             return null;
         }
         return code;

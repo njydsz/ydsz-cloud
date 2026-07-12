@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.advice;
+﻿package com.njydsz.pmis.common.safe.advice;
 
 import com.njydsz.pmis.common.safe.config.SafeXssProperties;
 import com.njydsz.pmis.common.safe.core.JsonBodyXssCleaner;
@@ -11,7 +11,7 @@ import org.springframework.http.HttpInputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.stereotype.Component;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.web.servlet.mvc.method.annotation.RequestBodyAdviceAdapter;
 
 import java.io.ByteArrayInputStream;
@@ -21,10 +21,10 @@ import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 
 /**
- * XSS 请求体拦截器
+ * XSS 璇锋眰浣撴嫤鎴櫒
  * 
- * 在 JSON 反序列化前，对请求体中的字符串值进行 XSS 清理。
- * 适用于非 FastJson 转换器场景，作为补充防护层。
+ * 鍦?JSON 鍙嶅簭鍒楀寲鍓嶏紝瀵硅姹備綋涓殑瀛楃涓插€艰繘琛?XSS 娓呯悊銆?
+ * 閫傜敤浜庨潪 FastJson 杞崲鍣ㄥ満鏅紝浣滀负琛ュ厖闃叉姢灞傘€?
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -48,7 +48,7 @@ public class XssRequestBodyAdvice extends RequestBodyAdviceAdapter {
     @Override
     public boolean supports(@NonNull MethodParameter methodParameter, @NonNull Type targetType,
             @NonNull Class<? extends HttpMessageConverter<?>> converterType) {
-        // 仅在 Filter 模式下生效，避免与 Converter 模式双重清洗
+        // 浠呭湪 Filter 妯″紡涓嬬敓鏁堬紝閬垮厤涓?Converter 妯″紡鍙岄噸娓呮礂
         return xssProperties.getMode() == SafeXssProperties.Mode.FILTER;
     }
 
@@ -57,7 +57,7 @@ public class XssRequestBodyAdvice extends RequestBodyAdviceAdapter {
     public HttpInputMessage beforeBodyRead(@NonNull HttpInputMessage inputMessage,
             @NonNull MethodParameter parameter, @NonNull Type targetType,
             @NonNull Class<? extends HttpMessageConverter<?>> converterType) throws IOException {
-        // 只对 JSON 请求进行清理
+        // 鍙 JSON 璇锋眰杩涜娓呯悊
         if (!isJsonContentType(inputMessage.getHeaders())) {
             return inputMessage;
         }
@@ -71,7 +71,7 @@ public class XssRequestBodyAdvice extends RequestBodyAdviceAdapter {
         String cleanedJson = xssCleaner.clean(originalJson);
 
         if (!cleanedJson.equals(originalJson)) {
-            log.debug("[XssRequestBodyAdvice] JSON Body XSS 过滤完成, URI: {}", 
+            log.debug("[XssRequestBodyAdvice] JSON Body XSS 杩囨护瀹屾垚, URI: {}", 
                     parameter.getMethod() != null ? parameter.getMethod().getName() : "unknown");
         }
 
@@ -80,7 +80,7 @@ public class XssRequestBodyAdvice extends RequestBodyAdviceAdapter {
     }
 
     /**
-     * 判断 Content-Type 是否为 JSON
+     * 鍒ゆ柇 Content-Type 鏄惁涓?JSON
      */
     private boolean isJsonContentType(HttpHeaders headers) {
         MediaType contentType = headers.getContentType();
@@ -88,7 +88,7 @@ public class XssRequestBodyAdvice extends RequestBodyAdviceAdapter {
     }
 
     /**
-     * 包装清理后的 HTTP 输入消息
+     * 鍖呰娓呯悊鍚庣殑 HTTP 杈撳叆娑堟伅
      */
     private static class XssCleanedInputMessage implements HttpInputMessage {
 

@@ -1,19 +1,19 @@
-package com.njydsz.pmis.common.safe.captcha.core;
+﻿package com.njydsz.pmis.common.safe.captcha.core;
 
 import com.njydsz.pmis.common.safe.captcha.exception.CaptchaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 /**
- * 验证码频率限制器
+ * 楠岃瘉鐮侀鐜囬檺鍒跺櫒
  *
- * <p>基于 Redis 实现验证码请求的频率限制，防止验证码接口被恶意刷取：
+ * <p>鍩轰簬 Redis 瀹炵幇楠岃瘉鐮佽姹傜殑棰戠巼闄愬埗锛岄槻姝㈤獙璇佺爜鎺ュ彛琚伓鎰忓埛鍙栵細
  * <ul>
- *   <li>同一 IP 每分钟最多请求 10 次验证码</li>
- *   <li>连续验证失败 5 次后锁定该 IP 10 分钟</li>
+ *   <li>鍚屼竴 IP 姣忓垎閽熸渶澶氳姹?10 娆￠獙璇佺爜</li>
+ *   <li>杩炵画楠岃瘉澶辫触 5 娆″悗閿佸畾璇?IP 10 鍒嗛挓</li>
  * </ul>
  *
  * @author Marvin Lee
@@ -39,10 +39,10 @@ public class CaptchaRateLimiter {
     }
 
     /**
-     * 检查是否允许请求验证码
+     * 妫€鏌ユ槸鍚﹀厑璁歌姹傞獙璇佺爜
      *
-     * @param clientIp 客户端 IP
-     * @throws CaptchaException 频率超限时抛出
+     * @param clientIp 瀹㈡埛绔?IP
+     * @throws CaptchaException 棰戠巼瓒呴檺鏃舵姏鍑?
      */
     public void checkRequestRate(String clientIp) {
         if (clientIp == null || clientIp.isEmpty()) {
@@ -50,25 +50,25 @@ public class CaptchaRateLimiter {
         }
 
         if (isLocked(clientIp)) {
-            throw new CaptchaException("验证码请求过于频繁，请稍后再试");
+            throw new CaptchaException("楠岃瘉鐮佽姹傝繃浜庨绻侊紝璇风◢鍚庡啀璇?);
         }
 
         String key = REQUEST_RATE_KEY_PREFIX + clientIp;
         Long count = redisTemplate.opsForValue().increment(key);
         if (count != null && count == 1) {
-            redisTemplate.expire(key, REQUEST_RATE_WINDOW_SECONDS, TimeUnit.SECONDS);
+            redisTemplate.expire(key, Duration.ofSeconds(REQUEST_RATE_WINDOW_SECONDS));
         }
 
         if (count != null && count > MAX_REQUEST_PER_WINDOW) {
-            log.warn("[CaptchaRateLimiter] IP {} 每分钟请求次数超限 ({})", clientIp, count);
-            throw new CaptchaException("验证码请求过于频繁，请稍后再试");
+            log.warn("[CaptchaRateLimiter] IP {} 姣忓垎閽熻姹傛鏁拌秴闄?({})", clientIp, count);
+            throw new CaptchaException("楠岃瘉鐮佽姹傝繃浜庨绻侊紝璇风◢鍚庡啀璇?);
         }
     }
 
     /**
-     * 记录验证失败
+     * 璁板綍楠岃瘉澶辫触
      *
-     * @param clientIp 客户端 IP
+     * @param clientIp 瀹㈡埛绔?IP
      */
     public void recordFail(String clientIp) {
         if (clientIp == null || clientIp.isEmpty()) {
@@ -78,19 +78,19 @@ public class CaptchaRateLimiter {
         String key = FAIL_LOCK_KEY_PREFIX + clientIp;
         Long failCount = redisTemplate.opsForValue().increment(key);
         if (failCount != null && failCount == 1) {
-            redisTemplate.expire(key, FAIL_LOCK_SECONDS, TimeUnit.SECONDS);
+            redisTemplate.expire(key, Duration.ofSeconds(FAIL_LOCK_SECONDS));
         }
 
         if (failCount != null && failCount >= MAX_FAIL_COUNT) {
-            log.warn("[CaptchaRateLimiter] IP {} 连续验证失败 {} 次，锁定 {} 秒",
+            log.warn("[CaptchaRateLimiter] IP {} 杩炵画楠岃瘉澶辫触 {} 娆★紝閿佸畾 {} 绉?,
                     clientIp, failCount, FAIL_LOCK_SECONDS);
         }
     }
 
     /**
-     * 重置失败计数（验证成功时调用）
+     * 閲嶇疆澶辫触璁℃暟锛堥獙璇佹垚鍔熸椂璋冪敤锛?
      *
-     * @param clientIp 客户端 IP
+     * @param clientIp 瀹㈡埛绔?IP
      */
     public void resetFail(String clientIp) {
         if (clientIp == null || clientIp.isEmpty()) {
@@ -102,10 +102,10 @@ public class CaptchaRateLimiter {
     }
 
     /**
-     * 检查 IP 是否被锁定
+     * 妫€鏌?IP 鏄惁琚攣瀹?
      *
-     * @param clientIp 客户端 IP
-     * @return 是否被锁定
+     * @param clientIp 瀹㈡埛绔?IP
+     * @return 鏄惁琚攣瀹?
      */
     private boolean isLocked(String clientIp) {
         String key = FAIL_LOCK_KEY_PREFIX + clientIp;

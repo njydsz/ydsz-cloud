@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.doc.config;
+﻿package com.njydsz.pmis.common.doc.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -7,18 +7,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 文档配置属性类
+ * 鏂囨。閰嶇疆灞炴€х被
  *
- * <p>用于外部化配置 OpenAPI 与 Knife4j 相关参数，前缀 {@code remi.doc}。
- * 通过 {@code application.yml} 即可灵活调整文档模块的行为：
+ * <p>鐢ㄤ簬澶栭儴鍖栭厤缃?OpenAPI 涓?Knife4j 鐩稿叧鍙傛暟锛屽墠缂€ {@code remi.doc}銆?
+ * 閫氳繃 {@code application.yml} 鍗冲彲鐏垫椿璋冩暣鏂囨。妯″潡鐨勮涓猴細
  * <ul>
- *   <li>基础信息：标题、描述、版本、联系方式、许可证</li>
- *   <li>分组策略：单分组 / 多分组模式</li>
- *   <li>导出配置：支持格式、输出目录</li>
- *   <li>安全控制：是否允许生产访问、Basic 认证</li>
+ *   <li>鍩虹淇℃伅锛氭爣棰樸€佹弿杩般€佺増鏈€佽仈绯绘柟寮忋€佽鍙瘉</li>
+ *   <li>鍒嗙粍绛栫暐锛氬崟鍒嗙粍 / 澶氬垎缁勬ā寮?/li>
+ *   <li>瀵煎嚭閰嶇疆锛氭敮鎸佹牸寮忋€佽緭鍑虹洰褰?/li>
+ *   <li>瀹夊叏鎺у埗锛氭槸鍚﹀厑璁哥敓浜ц闂€丅asic 璁よ瘉</li>
  * </ul>
  *
- * <p><b>配置示例：</b>
+ * <p><b>閰嶇疆绀轰緥锛?/b>
  * <pre>{@code
  * remi:
  *   doc:
@@ -26,7 +26,7 @@ import java.util.List;
  *     api-docs-path: /v3/api-docs
  *     knife4j-path: /doc.html
  *     info:
- *       title: 我的应用 API 文档
+ *       title: 鎴戠殑搴旂敤 API 鏂囨。
  *       version: 1.0.0
  *     groups:
  *       - name: default
@@ -37,8 +37,8 @@ import java.util.List;
  *       password: your-secure-password
  * }</pre>
  *
- * <p><b>线程安全性：</b>本类由 Spring Boot 配置属性绑定机制管理，
- * 绑定完成后通常视为只读；若业务方在运行时修改属性需自行保证线程安全。
+ * <p><b>绾跨▼瀹夊叏鎬э細</b>鏈被鐢?Spring Boot 閰嶇疆灞炴€х粦瀹氭満鍒剁鐞嗭紝
+ * 缁戝畾瀹屾垚鍚庨€氬父瑙嗕负鍙锛涜嫢涓氬姟鏂瑰湪杩愯鏃朵慨鏀瑰睘鎬ч渶鑷淇濊瘉绾跨▼瀹夊叏銆?
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -50,65 +50,65 @@ import java.util.List;
 public class DocProperties {
 
     /**
-     * 是否启用文档功能，默认为 false
+     * 鏄惁鍚敤鏂囨。鍔熻兘锛岄粯璁や负 false
      *
-     * <p>出于安全考虑，文档模块默认不启用。需在 application.yml 中显式配置 {@code remi.doc.enabled=true} 才会加载
-     * OpenAPI/Knife4j 相关 Bean。生产环境建议保持关闭或配合 {@code basicAuth} 认证保护。
+     * <p>鍑轰簬瀹夊叏鑰冭檻锛屾枃妗ｆā鍧楅粯璁や笉鍚敤銆傞渶鍦?application.yml 涓樉寮忛厤缃?{@code remi.doc.enabled=true} 鎵嶄細鍔犺浇
+     * OpenAPI/Knife4j 鐩稿叧 Bean銆傜敓浜х幆澧冨缓璁繚鎸佸叧闂垨閰嶅悎 {@code basicAuth} 璁よ瘉淇濇姢銆?
      */
     private boolean enabled = false;
 
     /**
-     * 生产环境是否允许访问文档，默认为 false（生产环境默认关闭）
+     * 鐢熶骇鐜鏄惁鍏佽璁块棶鏂囨。锛岄粯璁や负 false锛堢敓浜х幆澧冮粯璁ゅ叧闂級
      *
-     * <p>开启后需配合 basicAuth 配置进行认证保护。
+     * <p>寮€鍚悗闇€閰嶅悎 basicAuth 閰嶇疆杩涜璁よ瘉淇濇姢銆?
      */
     private boolean productionEnabled = false;
 
     /**
-     * Basic 认证配置
+     * Basic 璁よ瘉閰嶇疆
      *
-     * <p>开启文档访问控制时生效，用于对 Swagger/Knife4j 入口进行简单密码保护。
+     * <p>寮€鍚枃妗ｈ闂帶鍒舵椂鐢熸晥锛岀敤浜庡 Swagger/Knife4j 鍏ュ彛杩涜绠€鍗曞瘑鐮佷繚鎶ゃ€?
      */
     private BasicAuth basicAuth = new BasicAuth();
 
     /**
-     * 文档基础路径，默认为 {@code /v3/api-docs}
+     * 鏂囨。鍩虹璺緞锛岄粯璁や负 {@code /v3/api-docs}
      */
     private String apiDocsPath = "/v3/api-docs";
 
     /**
-     * Knife4j 文档访问路径，默认为 {@code /doc.html}
+     * Knife4j 鏂囨。璁块棶璺緞锛岄粯璁や负 {@code /doc.html}
      */
     private String knife4jPath = "/doc.html";
 
     /**
-     * 文档版本号
+     * 鏂囨。鐗堟湰鍙?
      *
-     * <p>默认从应用版本注入，可通过配置显式覆盖。
+     * <p>榛樿浠庡簲鐢ㄧ増鏈敞鍏ワ紝鍙€氳繃閰嶇疆鏄惧紡瑕嗙洊銆?
      */
     private String docVersion;
 
     /**
-     * OpenAPI 信息配置
+     * OpenAPI 淇℃伅閰嶇疆
      */
     private OpenApiInfo info = new OpenApiInfo();
 
     /**
-     * 分组配置列表
+     * 鍒嗙粍閰嶇疆鍒楄〃
      *
-     * <p>为空时使用单分组模式，非空时使用多分组模式。
+     * <p>涓虹┖鏃朵娇鐢ㄥ崟鍒嗙粍妯″紡锛岄潪绌烘椂浣跨敤澶氬垎缁勬ā寮忋€?
      */
     private List<GroupConfig> groups = new ArrayList<>();
 
     /**
-     * 导出配置
+     * 瀵煎嚭閰嶇疆
      */
     private ExportConfig export = new ExportConfig();
 
     /**
-     * OpenAPI 信息配置类
+     * OpenAPI 淇℃伅閰嶇疆绫?
      *
-     * <p>对应 OpenAPI 规范中的 {@code info} 对象，承载文档的基础元数据。
+     * <p>瀵瑰簲 OpenAPI 瑙勮寖涓殑 {@code info} 瀵硅薄锛屾壙杞芥枃妗ｇ殑鍩虹鍏冩暟鎹€?
      *
      * @author Marvin Lee
      * @since 1.0.0
@@ -117,38 +117,38 @@ public class DocProperties {
     public static class OpenApiInfo {
 
         /**
-         * 文档标题
+         * 鏂囨。鏍囬
          */
-        private String title = "REMI API 文档";
+        private String title = "REMI API 鏂囨。";
 
         /**
-         * 文档描述
+         * 鏂囨。鎻忚堪
          */
-        private String description = "REMI 公共框架 API 文档";
+        private String description = "REMI 鍏叡妗嗘灦 API 鏂囨。";
 
         /**
-         * 文档版本
+         * 鏂囨。鐗堟湰
          */
         private String version = "1.0.0";
 
         /**
-         * 服务条款 URL
+         * 鏈嶅姟鏉℃ URL
          */
         private String termsOfService = "";
 
         /**
-         * 联系人信息
+         * 鑱旂郴浜轰俊鎭?
          */
         private Contact contact = new Contact();
 
         /**
-         * 许可证信息
+         * 璁稿彲璇佷俊鎭?
          */
         private License license = new License();
     }
 
     /**
-     * 联系人信息类
+     * 鑱旂郴浜轰俊鎭被
      *
      * @author Marvin Lee
      * @since 1.0.0
@@ -157,23 +157,23 @@ public class DocProperties {
     public static class Contact {
 
         /**
-         * 联系人姓名
+         * 鑱旂郴浜哄鍚?
          */
         private String name = "Marvin Lee";
 
         /**
-         * 联系人邮箱
+         * 鑱旂郴浜洪偖绠?
          */
         private String email = "limw1888@126.com";
 
         /**
-         * 联系人 URL
+         * 鑱旂郴浜?URL
          */
-        private String url = "https://remisoft.com.cn";
+        private String url = "https://njydsz.pmis.com.cn";
     }
 
     /**
-     * 许可证信息类
+     * 璁稿彲璇佷俊鎭被
      *
      * @author Marvin Lee
      * @since 1.0.0
@@ -182,20 +182,20 @@ public class DocProperties {
     public static class License {
 
         /**
-         * 许可证名称
+         * 璁稿彲璇佸悕绉?
          */
         private String name = "Apache 2.0";
 
         /**
-         * 许可证 URL
+         * 璁稿彲璇?URL
          */
         private String url = "https://www.apache.org/licenses/LICENSE-2.0";
     }
 
     /**
-     * 分组配置类
+     * 鍒嗙粍閰嶇疆绫?
      *
-     * <p>用于在多分组模式下定义单个 API 分组，支持按包扫描或按路径匹配两种方式。
+     * <p>鐢ㄤ簬鍦ㄥ鍒嗙粍妯″紡涓嬪畾涔夊崟涓?API 鍒嗙粍锛屾敮鎸佹寜鍖呮壂鎻忔垨鎸夎矾寰勫尮閰嶄袱绉嶆柟寮忋€?
      *
      * @author Marvin Lee
      * @since 1.0.0
@@ -204,53 +204,53 @@ public class DocProperties {
     public static class GroupConfig {
 
         /**
-         * 分组名称
+         * 鍒嗙粍鍚嶇О
          */
         private String name = "default";
 
         /**
-         * 分组标题
+         * 鍒嗙粍鏍囬
          */
         private String title;
 
         /**
-         * 分组版本
+         * 鍒嗙粍鐗堟湰
          */
         private String version = "1.0.0";
 
         /**
-         * 分组描述
+         * 鍒嗙粍鎻忚堪
          */
-        private String description = "默认分组";
+        private String description = "榛樿鍒嗙粍";
 
         /**
-         * 基础包路径，用于扫描 Controller
+         * 鍩虹鍖呰矾寰勶紝鐢ㄤ簬鎵弿 Controller
          */
         private String basePackage = "";
 
         /**
-         * 基础路径匹配规则
+         * 鍩虹璺緞鍖归厤瑙勫垯
          */
         private String basePath = "/**";
 
         /**
-         * 需要排除的路径
+         * 闇€瑕佹帓闄ょ殑璺緞
          */
         private List<String> excludePaths = new ArrayList<>();
 
         /**
-         * 扫描的包路径列表（支持多包扫描）
+         * 鎵弿鐨勫寘璺緞鍒楄〃锛堟敮鎸佸鍖呮壂鎻忥級
          */
         private List<String> packages = new ArrayList<>();
 
         /**
-         * 匹配的路径模式列表（支持多路径匹配）
+         * 鍖归厤鐨勮矾寰勬ā寮忓垪琛紙鏀寔澶氳矾寰勫尮閰嶏級
          */
         private List<String> paths = new ArrayList<>();
     }
 
     /**
-     * 导出配置类
+     * 瀵煎嚭閰嶇疆绫?
      *
      * @author Marvin Lee
      * @since 1.0.0
@@ -259,30 +259,30 @@ public class DocProperties {
     public static class ExportConfig {
 
         /**
-         * 是否启用文档导出功能
+         * 鏄惁鍚敤鏂囨。瀵煎嚭鍔熻兘
          */
         private boolean enabled = true;
 
         /**
-         * 默认导出格式 (json, yaml, html, markdown)
+         * 榛樿瀵煎嚭鏍煎紡 (json, yaml, html, markdown)
          */
         private String format = "json";
 
         /**
-         * 导出目录
+         * 瀵煎嚭鐩綍
          */
         private String outputDir = "./api-docs";
 
         /**
-         * 支持的导出格式
+         * 鏀寔鐨勫鍑烘牸寮?
          */
         private List<String> formats = List.of("json", "yaml", "html", "markdown");
     }
 
     /**
-     * Basic 认证配置类
+     * Basic 璁よ瘉閰嶇疆绫?
      *
-     * <p>用于在生产环境下对 API 文档入口进行简单的 HTTP Basic 认证保护。
+     * <p>鐢ㄤ簬鍦ㄧ敓浜х幆澧冧笅瀵?API 鏂囨。鍏ュ彛杩涜绠€鍗曠殑 HTTP Basic 璁よ瘉淇濇姢銆?
      *
      * @author Marvin Lee
      * @since 1.0.0
@@ -291,17 +291,17 @@ public class DocProperties {
     public static class BasicAuth {
 
         /**
-         * 是否启用 Basic 认证
+         * 鏄惁鍚敤 Basic 璁よ瘉
          */
         private boolean enabled = true;
 
         /**
-         * API 文档访问用户名（必须配置，否则文档端点不可访问）
+         * API 鏂囨。璁块棶鐢ㄦ埛鍚嶏紙蹇呴』閰嶇疆锛屽惁鍒欐枃妗ｇ鐐逛笉鍙闂級
          */
         private String username;
 
         /**
-         * API 文档访问密码（必须配置，否则文档端点不可访问）
+         * API 鏂囨。璁块棶瀵嗙爜锛堝繀椤婚厤缃紝鍚﹀垯鏂囨。绔偣涓嶅彲璁块棶锛?
          */
         private String password;
     }

@@ -1,7 +1,7 @@
-package com.njydsz.pmis.common.web.config;
+﻿package com.njydsz.pmis.common.web.config;
 
+import com.fasterxml.jackson.core.StreamWriteFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.njydsz.pmis.common.auth.config.AuthFilterConfiguration;
 import com.njydsz.pmis.common.auth.model.AuthenticationProvider;
 import com.njydsz.pmis.common.base.config.BaseAutoConfiguration;
@@ -25,26 +25,25 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 
 /**
- * Web 端 MVC 核心配置
+ * Web 绔?MVC 鏍稿績閰嶇疆
  *
- * <p>继承 {@link BaseMvcConfiguration}，注册 Web 端专属的拦截器和过滤器链。
- *
- * <p><b>过滤器链（按 order 从小到大执行）：</b>
+ * <p>缁ф壙 {@link BaseMvcConfiguration}锛屾敞鍐?Web 绔笓灞炵殑鎷︽埅鍣ㄥ拰杩囨护鍣ㄩ摼銆? *
+ * <p><b>杩囨护鍣ㄩ摼锛堟寜 order 浠庡皬鍒板ぇ鎵ц锛夛細</b>
  * <ol>
- *   <li>{@link ContentCachingFilter}（order=MIN_VALUE）- 请求体缓存，支持多次读取</li>
- *   <li>{@link WebAuthFilter}（order=3）- 认证鉴权，解析 Token 并构建上下文</li>
- *   <li>{@link SecurityHeaderFilter}（order=可配置）- 安全响应头注入</li>
- *   <li>{@link TraceIdResponseFilter}（order=5）- TraceId 写入响应头</li>
+ *   <li>{@link ContentCachingFilter}锛坥rder=MIN_VALUE锛? 璇锋眰浣撶紦瀛橈紝鏀寔澶氭璇诲彇</li>
+ *   <li>{@link WebAuthFilter}锛坥rder=3锛? 璁よ瘉閴存潈锛岃В鏋?Token 骞舵瀯寤轰笂涓嬫枃</li>
+ *   <li>{@link SecurityHeaderFilter}锛坥rder=鍙厤缃級- 瀹夊叏鍝嶅簲澶存敞鍏?/li>
+ *   <li>{@link TraceIdResponseFilter}锛坥rder=5锛? TraceId 鍐欏叆鍝嶅簲澶?/li>
  * </ol>
  *
- * <p><b>拦截器链：</b>
+ * <p><b>鎷︽埅鍣ㄩ摼锛?/b>
  * <ul>
- *   <li>{@link RequestLogInterceptor}（order=MIN_VALUE）- 请求日志记录</li>
- *   <li>{@link BaseHttpInterceptor}（order=MAX_VALUE）- 请求结束清理（RequestContext）</li>
+ *   <li>{@link RequestLogInterceptor}锛坥rder=MIN_VALUE锛? 璇锋眰鏃ュ織璁板綍</li>
+ *   <li>{@link BaseHttpInterceptor}锛坥rder=MAX_VALUE锛? 璇锋眰缁撴潫娓呯悊锛圧equestContext锛?/li>
  * </ul>
  *
  * @author Marvin Lee
@@ -88,10 +87,9 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
         this.applicationName = applicationContext.getApplicationName();
     }
 
-    @SuppressWarnings("deprecation")
     protected void configureObjectMapper(ObjectMapper mapper) {
-        // Web端大数格式化：避免科学计数法
-        mapper.configure(SerializationFeature.WRITE_BIGDECIMAL_AS_PLAIN, true);
+        // Web绔ぇ鏁版牸寮忓寲锛氶伩鍏嶇瀛﹁鏁版硶
+        mapper.configure(StreamWriteFeature.WRITE_BIGDECIMAL_AS_PLAIN.mappedFeature(), true);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.audit.mask;
+﻿package com.njydsz.pmis.common.audit.mask;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,34 +11,33 @@ import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * 敏感字段脱敏工具类
+ * 鏁忔劅瀛楁鑴辨晱宸ュ叿绫?
  * <p>
- * 审计切面调用本工具对入参、响应中的敏感字段进行脱敏，避免密钥、密码、证件号等
- * 敏感信息随审计日志落盘。支持两种脱敏检测方式：
+ * 瀹¤鍒囬潰璋冪敤鏈伐鍏峰鍏ュ弬銆佸搷搴斾腑鐨勬晱鎰熷瓧娈佃繘琛岃劚鏁忥紝閬垮厤瀵嗛挜銆佸瘑鐮併€佽瘉浠跺彿绛?
+ * 鏁忔劅淇℃伅闅忓璁℃棩蹇楄惤鐩樸€傛敮鎸佷袱绉嶈劚鏁忔娴嬫柟寮忥細
  * </p>
  * <ul>
- *   <li>基于 {@link MaskField} 注解的字段级精确控制</li>
- *   <li>基于 {@code patterns} 名称集合的模糊匹配（如 password、secret、token 等）</li>
+ *   <li>鍩轰簬 {@link MaskField} 娉ㄨВ鐨勫瓧娈电骇绮剧‘鎺у埗</li>
+ *   <li>鍩轰簬 {@code patterns} 鍚嶇О闆嗗悎鐨勬ā绯婂尮閰嶏紙濡?password銆乻ecret銆乼oken 绛夛級</li>
  * </ul>
  *
- * <p><b>脱敏规则：</b></p>
+ * <p><b>鑴辨晱瑙勫垯锛?/b></p>
  * <ul>
- *   <li>字符串：保留前后 2 位，中间用 {@code ****} 替换（长度不足时全替换为 {@code ****}）</li>
- *   <li>集合/Map：递归处理每个元素</li>
- *   <li>其他类型：转为 {@code ***MASKED***}</li>
+ *   <li>瀛楃涓诧細淇濈暀鍓嶅悗 2 浣嶏紝涓棿鐢?{@code ****} 鏇挎崲锛堥暱搴︿笉瓒虫椂鍏ㄦ浛鎹负 {@code ****}锛?/li>
+ *   <li>闆嗗悎/Map锛氶€掑綊澶勭悊姣忎釜鍏冪礌</li>
+ *   <li>鍏朵粬绫诲瀷锛氳浆涓?{@code ***MASKED***}</li>
  * </ul>
  *
- * <p><b>安全约束：</b></p>
+ * <p><b>瀹夊叏绾︽潫锛?/b></p>
  * <ul>
- *   <li>类为 final，构造器私有，禁止实例化</li>
- *   <li>脱敏前先 JSON 序列化深拷贝，避免污染原始业务对象</li>
- *   <li>循环引用防护（{@code visited} 集合）</li>
- *   <li>解析失败时降级返回原值而非异常，保证审计主流程不受影响</li>
+ *   <li>绫讳负 final锛屾瀯閫犲櫒绉佹湁锛岀姝㈠疄渚嬪寲</li>
+ *   <li>鑴辨晱鍓嶅厛 JSON 搴忓垪鍖栨繁鎷疯礉锛岄伩鍏嶆薄鏌撳師濮嬩笟鍔″璞?/li>
+ *   <li>寰幆寮曠敤闃叉姢锛坽@code visited} 闆嗗悎锛?/li>
+ *   <li>瑙ｆ瀽澶辫触鏃堕檷绾ц繑鍥炲師鍊艰€岄潪寮傚父锛屼繚璇佸璁′富娴佺▼涓嶅彈褰卞搷</li>
  * </ul>
  *
  * @author Marvin Lee
@@ -49,64 +48,64 @@ import java.util.Set;
 @Slf4j
 public final class SensitiveFieldMask {
 
-    /** 脱敏时字符串前后保留的字符数 */
+    /** 鑴辨晱鏃跺瓧绗︿覆鍓嶅悗淇濈暀鐨勫瓧绗︽暟 */
     private static final int KEEP_CHARS = 2;
 
-    /** 手机号脱敏：保留前 3 位和后 4 位 */
+    /** 鎵嬫満鍙疯劚鏁忥細淇濈暀鍓?3 浣嶅拰鍚?4 浣?*/
     private static final int PHONE_PREFIX = 3;
     private static final int PHONE_SUFFIX = 4;
 
-    /** 身份证号脱敏：保留前 6 位和后 4 位 */
+    /** 韬唤璇佸彿鑴辨晱锛氫繚鐣欏墠 6 浣嶅拰鍚?4 浣?*/
     private static final int IDCARD_PREFIX = 6;
     private static final int IDCARD_SUFFIX = 4;
 
-    /** 银行卡号脱敏：保留前 4 位和后 4 位 */
+    /** 閾惰鍗″彿鑴辨晱锛氫繚鐣欏墠 4 浣嶅拰鍚?4 浣?*/
     private static final int BANKCARD_PREFIX = 4;
     private static final int BANKCARD_SUFFIX = 4;
 
-    /** 邮箱脱敏：本地部分最少保留字符数 */
+    /** 閭鑴辨晱锛氭湰鍦伴儴鍒嗘渶灏戜繚鐣欏瓧绗︽暟 */
     private static final int EMAIL_LOCAL_KEEP = 1;
 
-    /** 默认敏感字段名称匹配模式（不区分大小写、子串匹配） */
+    /** 榛樿鏁忔劅瀛楁鍚嶇О鍖归厤妯″紡锛堜笉鍖哄垎澶у皬鍐欍€佸瓙涓插尮閰嶏級 */
     private static final Set<String> DEFAULT_PATTERNS = Set.of(
-            // 认证凭据类
+            // 璁よ瘉鍑嵁绫?
             "password", "secret", "token", "credential", "apikey", "apisecret",
             "privatekey", "publickey", "salt", "auth", "sessionid", "refreshtoken",
-            // 个人信息类
+            // 涓汉淇℃伅绫?
             "creditcard", "cardno", "cardnumber", "bankcard", "cvv", "pin",
             "idcard", "idnumber", "mobile", "phone", "email", "address",
-            // 其他敏感信息
+            // 鍏朵粬鏁忔劅淇℃伅
             "passport", "license", "accountno", "accountnumber"
     );
 
-    /** 手机号匹配模式 */
+    /** 鎵嬫満鍙峰尮閰嶆ā寮?*/
     private static final String PATTERN_MOBILE = "mobile";
-    /** 手机号匹配模式（备选） */
+    /** 鎵嬫満鍙峰尮閰嶆ā寮忥紙澶囬€夛級 */
     private static final String PATTERN_PHONE = "phone";
-    /** 邮箱匹配模式 */
+    /** 閭鍖归厤妯″紡 */
     private static final String PATTERN_EMAIL = "email";
-    /** 身份证匹配模式 */
+    /** 韬唤璇佸尮閰嶆ā寮?*/
     private static final String PATTERN_IDCARD = "idcard";
-    /** 身份证匹配模式（备选） */
+    /** 韬唤璇佸尮閰嶆ā寮忥紙澶囬€夛級 */
     private static final String PATTERN_IDNUMBER = "idnumber";
-    /** 银行卡匹配模式 */
+    /** 閾惰鍗″尮閰嶆ā寮?*/
     private static final String PATTERN_BANKCARD = "bankcard";
-    /** 银行卡匹配模式（备选） */
+    /** 閾惰鍗″尮閰嶆ā寮忥紙澶囬€夛級 */
     private static final String PATTERN_CARDNO = "cardno";
-    /** 银行卡匹配模式（备选） */
+    /** 閾惰鍗″尮閰嶆ā寮忥紙澶囬€夛級 */
     private static final String PATTERN_CARDNUMBER = "cardnumber";
 
     private SensitiveFieldMask() {
-        throw new UnsupportedOperationException("SensitiveFieldMask 是工具类，禁止实例化");
+        throw new UnsupportedOperationException("SensitiveFieldMask 鏄伐鍏风被锛岀姝㈠疄渚嬪寲");
     }
 
     /**
-     * 对对象进行脱敏处理
+     * 瀵瑰璞¤繘琛岃劚鏁忓鐞?
      *
-     * @param obj      待脱敏对象（不会被修改）
-     * @param patterns 额外敏感字段名称集合（与默认模式合并生效）
-     * @param enabled  是否启用脱敏；false 时直接返回原对象
-     * @return 脱敏后的对象副本；入参 null 时返回 null
+     * @param obj      寰呰劚鏁忓璞★紙涓嶄細琚慨鏀癸級
+     * @param patterns 棰濆鏁忔劅瀛楁鍚嶇О闆嗗悎锛堜笌榛樿妯″紡鍚堝苟鐢熸晥锛?
+     * @param enabled  鏄惁鍚敤鑴辨晱锛沠alse 鏃剁洿鎺ヨ繑鍥炲師瀵硅薄
+     * @return 鑴辨晱鍚庣殑瀵硅薄鍓湰锛涘叆鍙?null 鏃惰繑鍥?null
      */
     public static Object mask(Object obj, Set<String> patterns, boolean enabled) {
         if (!enabled || obj == null) {
@@ -116,32 +115,32 @@ public final class SensitiveFieldMask {
         if (patterns != null) {
             combinedPatterns.addAll(patterns);
         }
-        // 脱敏前先深拷贝，避免修改原始业务数据
+        // 鑴辨晱鍓嶅厛娣辨嫹璐濓紝閬垮厤淇敼鍘熷涓氬姟鏁版嵁
         Object copy = deepCopy(obj);
         return maskInternal(copy, combinedPatterns, new HashSet<>());
     }
 
     /**
-     * 深拷贝对象，通过 JSON 序列化/反序列化实现。
-     * <p>对不可变类型（String/Number/Boolean/Character）直接复用，不做拷贝。
-     * 深拷贝失败时降级返回原对象（仅用于审计展示，不影响原业务）。
+     * 娣辨嫹璐濆璞★紝閫氳繃 JSON 搴忓垪鍖?鍙嶅簭鍒楀寲瀹炵幇銆?
+     * <p>瀵逛笉鍙彉绫诲瀷锛圫tring/Number/Boolean/Character锛夌洿鎺ュ鐢紝涓嶅仛鎷疯礉銆?
+     * 娣辨嫹璐濆け璐ユ椂闄嶇骇杩斿洖鍘熷璞★紙浠呯敤浜庡璁″睍绀猴紝涓嶅奖鍝嶅師涓氬姟锛夈€?
      *
-     * @param obj 待拷贝对象
-     * @return 深拷贝结果
+     * @param obj 寰呮嫹璐濆璞?
+     * @return 娣辨嫹璐濈粨鏋?
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private static Object deepCopy(Object obj) {
         if (obj == null) {
             return null;
         }
-        // 不可变类型无需拷贝
+        // 涓嶅彲鍙樼被鍨嬫棤闇€鎷疯礉
         if (obj instanceof String || obj instanceof Number || obj instanceof Boolean || obj instanceof Character) {
             return obj;
         }
         try {
             String json = JsonUtils.toJson(obj);
             Class<?> clazz = obj.getClass();
-            // Collection/Map 类型使用 parseArray/parseObject 保持泛型兼容
+            // Collection/Map 绫诲瀷浣跨敤 parseArray/parseObject 淇濇寔娉涘瀷鍏煎
             if (Collection.class.isAssignableFrom(clazz)) {
                 return JsonUtils.fromJsonToList(json, Object.class);
             } else if (Map.class.isAssignableFrom(clazz)) {
@@ -149,18 +148,18 @@ public final class SensitiveFieldMask {
             }
             return JsonUtils.fromJson(json, (Class) clazz);
         } catch (Exception e) {
-            // 深拷贝失败时降级返回原对象
-            log.debug("[SensitiveFieldMask] 深拷贝失败，降级返回原对象: {}", e.getMessage());
+            // 娣辨嫹璐濆け璐ユ椂闄嶇骇杩斿洖鍘熷璞?
+            log.debug("[SensitiveFieldMask] 娣辨嫹璐濆け璐ワ紝闄嶇骇杩斿洖鍘熷璞? {}", e.getMessage());
             return obj;
         }
     }
 
     /**
-     * 对 JSON 字符串进行敏感字段脱敏
+     * 瀵?JSON 瀛楃涓茶繘琛屾晱鎰熷瓧娈佃劚鏁?
      *
-     * @param json     JSON 字符串
-     * @param patterns 敏感字段名称集合
-     * @return 脱敏后的 JSON 字符串；解析失败时返回原 JSON
+     * @param json     JSON 瀛楃涓?
+     * @param patterns 鏁忔劅瀛楁鍚嶇О闆嗗悎
+     * @return 鑴辨晱鍚庣殑 JSON 瀛楃涓诧紱瑙ｆ瀽澶辫触鏃惰繑鍥炲師 JSON
      */
     public static String maskJson(String json, Set<String> patterns) {
         if (json == null || json.isEmpty() || patterns == null || patterns.isEmpty()) {
@@ -172,13 +171,12 @@ public final class SensitiveFieldMask {
             maskJsonObject(parsed, patterns, new HashSet<>());
             return mapper.writeValueAsString(parsed);
         } catch (Exception e) {
-            // 解析失败时降级返回原始 JSON
-            log.debug("[SensitiveFieldMask] JSON解析失败，降级返回原始JSON: {}", e.getMessage());
+            // 瑙ｆ瀽澶辫触鏃堕檷绾ц繑鍥炲師濮?JSON
+            log.debug("[SensitiveFieldMask] JSON瑙ｆ瀽澶辫触锛岄檷绾ц繑鍥炲師濮婮SON: {}", e.getMessage());
             return json;
         }
     }
 
-    @SuppressWarnings("deprecation")
     private static void maskJsonObject(Object obj, Set<String> patterns, Set<Object> visited) {
         if (obj == null || visited.contains(obj)) {
             return;
@@ -187,8 +185,7 @@ public final class SensitiveFieldMask {
 
         if (obj instanceof ObjectNode) {
             ObjectNode jsonObj = (ObjectNode) obj;
-            for (Iterator<Map.Entry<String, JsonNode>> it = jsonObj.fields(); it.hasNext(); ) {
-                Map.Entry<String, JsonNode> entry = it.next();
+            for (Map.Entry<String, JsonNode> entry : jsonObj.properties()) {
                 String key = entry.getKey();
                 JsonNode value = entry.getValue();
                 if (isSensitiveKey(key, patterns)) {
@@ -206,12 +203,12 @@ public final class SensitiveFieldMask {
     }
 
     /**
-     * 递归脱敏处理核心逻辑（基于反射处理 POJO 字段）
+     * 閫掑綊鑴辨晱澶勭悊鏍稿績閫昏緫锛堝熀浜庡弽灏勫鐞?POJO 瀛楁锛?
      *
-     * @param obj      待脱敏对象
-     * @param patterns 敏感字段名称集合
-     * @param visited  已访问对象集合，用于防止循环引用
-     * @return 脱敏后的对象
+     * @param obj      寰呰劚鏁忓璞?
+     * @param patterns 鏁忔劅瀛楁鍚嶇О闆嗗悎
+     * @param visited  宸茶闂璞￠泦鍚堬紝鐢ㄤ簬闃叉寰幆寮曠敤
+     * @return 鑴辨晱鍚庣殑瀵硅薄
      */
     private static Object maskInternal(Object obj, Set<String> patterns, Set<Object> visited) {
         if (obj == null) {
@@ -260,7 +257,7 @@ public final class SensitiveFieldMask {
                     if (field.isAnnotationPresent(MaskField.class) ||
                             isSensitiveKey(field.getName(), patterns)) {
                         Object fieldValue = field.get(obj);
-                        // 读取 @MaskField 注解的 pattern 属性，用于类型特定脱敏
+                        // 璇诲彇 @MaskField 娉ㄨВ鐨?pattern 灞炴€э紝鐢ㄤ簬绫诲瀷鐗瑰畾鑴辨晱
                         String fieldKey = field.getName();
                         MaskField maskAnnotation = field.getAnnotation(MaskField.class);
                         if (maskAnnotation != null && !maskAnnotation.pattern().isEmpty()) {
@@ -276,43 +273,43 @@ public final class SensitiveFieldMask {
                 currentClass = currentClass.getSuperclass();
             }
         } catch (Exception ignored) {
-            // 反射失败时静默降级（仅影响审计展示，不影响业务）
+            // 鍙嶅皠澶辫触鏃堕潤榛橀檷绾э紙浠呭奖鍝嶅璁″睍绀猴紝涓嶅奖鍝嶄笟鍔★級
         }
 
         return obj;
     }
 
     /**
-     * 对字符串值进行脱敏，根据字段名称自动选择最佳脱敏策略。
+     * 瀵瑰瓧绗︿覆鍊艰繘琛岃劚鏁忥紝鏍规嵁瀛楁鍚嶇О鑷姩閫夋嫨鏈€浣宠劚鏁忕瓥鐣ャ€?
      *
-     * <p>支持的类型特定脱敏策略：
+     * <p>鏀寔鐨勭被鍨嬬壒瀹氳劚鏁忕瓥鐣ワ細
      * <ul>
-     *   <li>手机号（mobile/phone）：保留前 3 后 4，如 {@code 138****1234}</li>
-     *   <li>邮箱（email）：本地部分仅保留首字符，如 {@code z***@example.com}</li>
-     *   <li>身份证号（idcard/idnumber）：保留前 6 后 4，如 {@code 110101********1234}</li>
-     *   <li>银行卡号（bankcard/cardno/cardnumber）：保留前 4 后 4，如 {@code 6222****1234}</li>
-     *   <li>其他敏感字段：保留前后 2 位，中间 {@code ****}</li>
+     *   <li>鎵嬫満鍙凤紙mobile/phone锛夛細淇濈暀鍓?3 鍚?4锛屽 {@code 138****1234}</li>
+     *   <li>閭锛坋mail锛夛細鏈湴閮ㄥ垎浠呬繚鐣欓瀛楃锛屽 {@code z***@example.com}</li>
+     *   <li>韬唤璇佸彿锛坕dcard/idnumber锛夛細淇濈暀鍓?6 鍚?4锛屽 {@code 110101********1234}</li>
+     *   <li>閾惰鍗″彿锛坆ankcard/cardno/cardnumber锛夛細淇濈暀鍓?4 鍚?4锛屽 {@code 6222****1234}</li>
+     *   <li>鍏朵粬鏁忔劅瀛楁锛氫繚鐣欏墠鍚?2 浣嶏紝涓棿 {@code ****}</li>
      * </ul>
      *
-     * @param value 原始字符串值
-     * @return 脱敏后的字符串
+     * @param value 鍘熷瀛楃涓插€?
+     * @return 鑴辨晱鍚庣殑瀛楃涓?
      */
     private static String maskValue(String value) {
         return maskValue(value, null);
     }
 
     /**
-     * 对字符串值进行脱敏，根据字段名称或 pattern 选择最佳脱敏策略。
+     * 瀵瑰瓧绗︿覆鍊艰繘琛岃劚鏁忥紝鏍规嵁瀛楁鍚嶇О鎴?pattern 閫夋嫨鏈€浣宠劚鏁忕瓥鐣ャ€?
      *
-     * @param value    原始字符串值
-     * @param fieldKey 字段名称或 pattern（可为 null）
-     * @return 脱敏后的字符串
+     * @param value    鍘熷瀛楃涓插€?
+     * @param fieldKey 瀛楁鍚嶇О鎴?pattern锛堝彲涓?null锛?
+     * @return 鑴辨晱鍚庣殑瀛楃涓?
      */
     private static String maskValue(String value, String fieldKey) {
         if (value == null || value.isEmpty()) {
             return value;
         }
-        // 如果提供了字段名称，尝试类型特定脱敏
+        // 濡傛灉鎻愪緵浜嗗瓧娈靛悕绉帮紝灏濊瘯绫诲瀷鐗瑰畾鑴辨晱
         if (fieldKey != null && !fieldKey.isEmpty()) {
             String lowerKey = fieldKey.toLowerCase();
             String masked = maskByFieldType(value, lowerKey);
@@ -320,7 +317,7 @@ public final class SensitiveFieldMask {
                 return masked;
             }
         }
-        // 默认脱敏策略：保留前后 2 位
+        // 榛樿鑴辨晱绛栫暐锛氫繚鐣欏墠鍚?2 浣?
         if (value.length() <= KEEP_CHARS * 2) {
             return "****";
         }
@@ -328,21 +325,21 @@ public final class SensitiveFieldMask {
     }
 
     /**
-     * 根据字段名称类型选择特定的脱敏策略。
+     * 鏍规嵁瀛楁鍚嶇О绫诲瀷閫夋嫨鐗瑰畾鐨勮劚鏁忕瓥鐣ャ€?
      *
-     * @param value    原始值
-     * @param lowerKey 小写字段名称
-     * @return 脱敏后的字符串，不匹配类型时返回 null
+     * @param value    鍘熷鍊?
+     * @param lowerKey 灏忓啓瀛楁鍚嶇О
+     * @return 鑴辨晱鍚庣殑瀛楃涓诧紝涓嶅尮閰嶇被鍨嬫椂杩斿洖 null
      */
     private static String maskByFieldType(String value, String lowerKey) {
-        // 手机号脱敏：保留前 3 后 4
+        // 鎵嬫満鍙疯劚鏁忥細淇濈暀鍓?3 鍚?4
         if (lowerKey.contains(PATTERN_MOBILE) || lowerKey.contains(PATTERN_PHONE)) {
             if (value.length() <= PHONE_PREFIX + PHONE_SUFFIX) {
                 return "****";
             }
             return value.substring(0, PHONE_PREFIX) + "****" + value.substring(value.length() - PHONE_SUFFIX);
         }
-        // 邮箱脱敏：本地部分仅保留首字符
+        // 閭鑴辨晱锛氭湰鍦伴儴鍒嗕粎淇濈暀棣栧瓧绗?
         if (lowerKey.contains(PATTERN_EMAIL)) {
             int atIndex = value.indexOf('@');
             if (atIndex > 0) {
@@ -353,33 +350,33 @@ public final class SensitiveFieldMask {
                 }
                 return localPart.charAt(0) + "***" + domain;
             }
-            // 不是邮箱格式，使用默认策略
+            // 涓嶆槸閭鏍煎紡锛屼娇鐢ㄩ粯璁ょ瓥鐣?
             return null;
         }
-        // 身份证号脱敏：保留前 6 后 4
+        // 韬唤璇佸彿鑴辨晱锛氫繚鐣欏墠 6 鍚?4
         if (lowerKey.contains(PATTERN_IDCARD) || lowerKey.contains(PATTERN_IDNUMBER)) {
             if (value.length() <= IDCARD_PREFIX + IDCARD_SUFFIX) {
                 return "****";
             }
             return value.substring(0, IDCARD_PREFIX) + "********" + value.substring(value.length() - IDCARD_SUFFIX);
         }
-        // 银行卡号脱敏：保留前 4 后 4
+        // 閾惰鍗″彿鑴辨晱锛氫繚鐣欏墠 4 鍚?4
         if (lowerKey.contains(PATTERN_BANKCARD) || lowerKey.contains(PATTERN_CARDNO) || lowerKey.contains(PATTERN_CARDNUMBER)) {
             if (value.length() <= BANKCARD_PREFIX + BANKCARD_SUFFIX) {
                 return "****";
             }
             return value.substring(0, BANKCARD_PREFIX) + "****" + value.substring(value.length() - BANKCARD_SUFFIX);
         }
-        // 不匹配任何特定类型
+        // 涓嶅尮閰嶄换浣曠壒瀹氱被鍨?
         return null;
     }
 
     /**
-     * 判断字段名称是否为敏感字段（大小写不敏感、子串匹配）
+     * 鍒ゆ柇瀛楁鍚嶇О鏄惁涓烘晱鎰熷瓧娈碉紙澶у皬鍐欎笉鏁忔劅銆佸瓙涓插尮閰嶏級
      *
-     * @param key      字段名称
-     * @param patterns 敏感字段名称匹配模式集合
-     * @return 是敏感字段返回 true，否则返回 false
+     * @param key      瀛楁鍚嶇О
+     * @param patterns 鏁忔劅瀛楁鍚嶇О鍖归厤妯″紡闆嗗悎
+     * @return 鏄晱鎰熷瓧娈佃繑鍥?true锛屽惁鍒欒繑鍥?false
      */
     private static boolean isSensitiveKey(String key, Set<String> patterns) {
         if (key == null) {

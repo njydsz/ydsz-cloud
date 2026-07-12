@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.base.config;
+﻿package com.njydsz.pmis.common.base.config;
 
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
 import io.swagger.v3.oas.models.Components;
@@ -17,19 +17,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * OpenAPI 文档配置基类（Web/App 共享）
+ * OpenAPI 鏂囨。閰嶇疆鍩虹被锛圵eb/App 鍏变韩锛?
  *
- * <p>基于 springdoc-openapi 生成 Swagger 3.0 规范的 API 文档。
- * 子类覆盖 {@link #getTitle()}、{@link #getDescription()} 提供不同的文档标题和描述。
+ * <p>鍩轰簬 springdoc-openapi 鐢熸垚 Swagger 3.0 瑙勮寖鐨?API 鏂囨。銆?
+ * 瀛愮被瑕嗙洊 {@link #getTitle()}銆亄@link #getDescription()} 鎻愪緵涓嶅悓鐨勬枃妗ｆ爣棰樺拰鎻忚堪銆?
  *
- * <p><b>默认行为：</b>
+ * <p><b>榛樿琛屼负锛?/b>
  * <ul>
- *   <li>注册所有公共请求头（X-User-Id、X-Tenant-Id、X-Access-Token 等）</li>
- *   <li>注册 JWT Bearer Token 认证方案</li>
- *   <li>设置统一的联系信息和外部文档链接</li>
+ *   <li>娉ㄥ唽鎵€鏈夊叕鍏辫姹傚ご锛圶-User-Id銆乆-Tenant-Id銆乆-Access-Token 绛夛級</li>
+ *   <li>娉ㄥ唽 JWT Bearer Token 璁よ瘉鏂规</li>
+ *   <li>璁剧疆缁熶竴鐨勮仈绯讳俊鎭拰澶栭儴鏂囨。閾炬帴</li>
  * </ul>
  *
- * <p><b>激活条件：</b>需要通过配置 {@code remi.doc.enabled=true} 显式开启。
+ * <p><b>婵€娲绘潯浠讹細</b>闇€瑕侀€氳繃閰嶇疆 {@code remi.doc.enabled=true} 鏄惧紡寮€鍚€?
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -39,29 +39,29 @@ import java.util.Map;
 public abstract class BaseOpenApiConfiguration {
 
     /**
-     * API 文档标题
+     * API 鏂囨。鏍囬
      *
-     * <p>子类必须覆盖以提供具体业务系统的名称，例如 "REMI 管理系统 API"。
+     * <p>瀛愮被蹇呴』瑕嗙洊浠ユ彁渚涘叿浣撲笟鍔＄郴缁熺殑鍚嶇О锛屼緥濡?"REMI 绠＄悊绯荤粺 API"銆?
      *
-     * @return API 文档标题
+     * @return API 鏂囨。鏍囬
      */
     protected abstract String getTitle();
 
     /**
-     * API 文档描述
+     * API 鏂囨。鎻忚堪
      *
-     * <p>子类必须覆盖以提供具体业务系统的简要说明。
+     * <p>瀛愮被蹇呴』瑕嗙洊浠ユ彁渚涘叿浣撲笟鍔＄郴缁熺殑绠€瑕佽鏄庛€?
      *
-     * @return API 文档描述
+     * @return API 鏂囨。鎻忚堪
      */
     protected abstract String getDescription();
 
     /**
-     * 构建 OpenAPI 文档
+     * 鏋勫缓 OpenAPI 鏂囨。
      *
-     * <p>整合 Info、Components（Headers + SecuritySchemes）、ExternalDocs、SecurityRequirements。
+     * <p>鏁村悎 Info銆丆omponents锛圚eaders + SecuritySchemes锛夈€丒xternalDocs銆丼ecurityRequirements銆?
      *
-     * @return OpenAPI 文档实例
+     * @return OpenAPI 鏂囨。瀹炰緥
      */
     @Bean
     @ConditionalOnProperty(prefix = "remi.doc", name = "enabled", havingValue = "true", matchIfMissing = false)
@@ -74,7 +74,7 @@ public abstract class BaseOpenApiConfiguration {
     }
 
     /**
-     * 构建 API 基本信息（标题、描述、版本、联系信息）
+     * 鏋勫缓 API 鍩烘湰淇℃伅锛堟爣棰樸€佹弿杩般€佺増鏈€佽仈绯讳俊鎭級
      */
     private Info createInfo() {
         return new Info()
@@ -84,11 +84,11 @@ public abstract class BaseOpenApiConfiguration {
                 .contact(new Contact()
                         .name("Marvin Lee")
                         .email("limw1888@126.com")
-                        .url("https://remisoft.com.cn"));
+                        .url("https://njydsz.pmis.com.cn"));
     }
 
     /**
-     * 构建 OpenAPI 组件（请求头、安全方案）
+     * 鏋勫缓 OpenAPI 缁勪欢锛堣姹傚ご銆佸畨鍏ㄦ柟妗堬級
      */
     private Components createComponents() {
         return new Components()
@@ -97,32 +97,32 @@ public abstract class BaseOpenApiConfiguration {
     }
 
     /**
-     * 构建请求头参数映射（用于文档展示）
+     * 鏋勫缓璇锋眰澶村弬鏁版槧灏勶紙鐢ㄤ簬鏂囨。灞曠ず锛?
      */
     private Map<String, Header> createHeaderParams() {
         Map<String, Header> headers = new LinkedHashMap<>();
 
-        headers.put(HeaderConstants.X_SERVICE_TYPE, createHeader("服务类型", false));
-        headers.put(HeaderConstants.X_USER_LANGUAGE, createHeader("用户系统语言", false));
-        headers.put(HeaderConstants.X_UNIQUE_ID, createHeader("用户唯一ID", false));
-        headers.put(HeaderConstants.X_ACCESS_TOKEN, createHeader("用户鉴权Token", false));
-        headers.put(HeaderConstants.X_DISTINCT_ID, createHeader("设备唯一标识", false));
-        headers.put(HeaderConstants.X_DATA_SCOPE, createHeader("数据权限范围类型", false));
-        headers.put(HeaderConstants.X_TENANT_ID, createHeader("租户ID", false));
-        headers.put(HeaderConstants.X_COMPANY_IDS, createHeader("公司ID集合", false));
-        headers.put(HeaderConstants.X_DEPT_IDS, createHeader("部门ID集合", false));
-        headers.put(HeaderConstants.X_PROJECT_IDS, createHeader("项目ID集合", false));
-        headers.put(HeaderConstants.X_REGION_IDS, createHeader("区域ID集合", false));
-        headers.put(HeaderConstants.X_VISIBLE_COLUMNS, createHeader("列可见规则", false));
-        headers.put(HeaderConstants.X_EDITABLE_COLUMNS, createHeader("列可编辑规则", false));
-        headers.put(HeaderConstants.X_REQUEST_SOURCE, createHeader("请求来源标识", false));
-        headers.put(HeaderConstants.X_FORWARDED_FOR, createHeader("请求来源IP", false));
+        headers.put(HeaderConstants.X_SERVICE_TYPE, createHeader("鏈嶅姟绫诲瀷", false));
+        headers.put(HeaderConstants.X_USER_LANGUAGE, createHeader("鐢ㄦ埛绯荤粺璇█", false));
+        headers.put(HeaderConstants.X_UNIQUE_ID, createHeader("鐢ㄦ埛鍞竴ID", false));
+        headers.put(HeaderConstants.X_ACCESS_TOKEN, createHeader("鐢ㄦ埛閴存潈Token", false));
+        headers.put(HeaderConstants.X_DISTINCT_ID, createHeader("璁惧鍞竴鏍囪瘑", false));
+        headers.put(HeaderConstants.X_DATA_SCOPE, createHeader("鏁版嵁鏉冮檺鑼冨洿绫诲瀷", false));
+        headers.put(HeaderConstants.X_TENANT_ID, createHeader("绉熸埛ID", false));
+        headers.put(HeaderConstants.X_COMPANY_IDS, createHeader("鍏徃ID闆嗗悎", false));
+        headers.put(HeaderConstants.X_DEPT_IDS, createHeader("閮ㄩ棬ID闆嗗悎", false));
+        headers.put(HeaderConstants.X_PROJECT_IDS, createHeader("椤圭洰ID闆嗗悎", false));
+        headers.put(HeaderConstants.X_REGION_IDS, createHeader("鍖哄煙ID闆嗗悎", false));
+        headers.put(HeaderConstants.X_VISIBLE_COLUMNS, createHeader("鍒楀彲瑙佽鍒?, false));
+        headers.put(HeaderConstants.X_EDITABLE_COLUMNS, createHeader("鍒楀彲缂栬緫瑙勫垯", false));
+        headers.put(HeaderConstants.X_REQUEST_SOURCE, createHeader("璇锋眰鏉ユ簮鏍囪瘑", false));
+        headers.put(HeaderConstants.X_FORWARDED_FOR, createHeader("璇锋眰鏉ユ簮IP", false));
 
         return headers;
     }
 
     /**
-     * 构建安全方案映射
+     * 鏋勫缓瀹夊叏鏂规鏄犲皠
      */
     private Map<String, SecurityScheme> createSecuritySchemes() {
         Map<String, SecurityScheme> schemes = new LinkedHashMap<>();
@@ -130,32 +130,32 @@ public abstract class BaseOpenApiConfiguration {
                 .type(SecurityScheme.Type.HTTP)
                 .scheme("bearer")
                 .bearerFormat("JWT")
-                .description("JWT Bearer Token 认证"));
+                .description("JWT Bearer Token 璁よ瘉"));
         return schemes;
     }
 
     /**
-     * 构建全局安全要求
+     * 鏋勫缓鍏ㄥ眬瀹夊叏瑕佹眰
      */
     private List<SecurityRequirement> createSecurityRequirements() {
         return List.of(new SecurityRequirement().addList("Bearer"));
     }
 
     /**
-     * 构建外部文档引用
+     * 鏋勫缓澶栭儴鏂囨。寮曠敤
      */
     private ExternalDocumentation createExternalDocs() {
         return new ExternalDocumentation()
-                .description("REMI 公共框架文档")
-                .url("https://remisoft.com.cn");
+                .description("REMI 鍏叡妗嗘灦鏂囨。")
+                .url("https://njydsz.pmis.com.cn");
     }
 
     /**
-     * 创建 OpenAPI Header 描述对象
+     * 鍒涘缓 OpenAPI Header 鎻忚堪瀵硅薄
      *
-     * @param description 描述
-     * @param required    是否必填
-     * @return Header 实例
+     * @param description 鎻忚堪
+     * @param required    鏄惁蹇呭～
+     * @return Header 瀹炰緥
      */
     private Header createHeader(String description, boolean required) {
         Header header = new Header();

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.base.advice;
+﻿package com.njydsz.pmis.common.base.advice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.util.json.JsonUtils;
@@ -10,21 +10,21 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 /**
- * 全局响应包装基类（Web/App 共享）
+ * 鍏ㄥ眬鍝嶅簲鍖呰鍩虹被锛圵eb/App 鍏变韩锛?
  *
- * <p>自动将非 {@link BaseResponse} 类型的返回值包装为 {@link BaseResponse#success(Object)} 格式。
+ * <p>鑷姩灏嗛潪 {@link BaseResponse} 绫诲瀷鐨勮繑鍥炲€煎寘瑁呬负 {@link BaseResponse#success(Object)} 鏍煎紡銆?
  *
- * <p>子类覆盖 {@link #wrapStringBody(String)} 处理 String 类型返回值的差异：
- * Web 端调用 {@code BaseResponse.success(msg)}，App 端调用 {@code BaseResponse.successMsg(msg)}。
+ * <p>瀛愮被瑕嗙洊 {@link #wrapStringBody(String)} 澶勭悊 String 绫诲瀷杩斿洖鍊肩殑宸紓锛?
+ * Web 绔皟鐢?{@code BaseResponse.success(msg)}锛孉pp 绔皟鐢?{@code BaseResponse.successMsg(msg)}銆?
  *
- * <p><b>优化说明：</b>
- * <p>支持通过构造器注入自定义 ObjectMapper，提升可测试性和灵活性。
- * 若未注入，则使用 JsonUtils 的默认 ObjectMapper。
+ * <p><b>浼樺寲璇存槑锛?/b>
+ * <p>鏀寔閫氳繃鏋勯€犲櫒娉ㄥ叆鑷畾涔?ObjectMapper锛屾彁鍗囧彲娴嬭瘯鎬у拰鐏垫椿鎬с€?
+ * 鑻ユ湭娉ㄥ叆锛屽垯浣跨敤 JsonUtils 鐨勯粯璁?ObjectMapper銆?
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -33,21 +33,21 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Object> {
 
     /**
-     * JSON 序列化器（可选注入）
+     * JSON 搴忓垪鍖栧櫒锛堝彲閫夋敞鍏ワ級
      */
     private final ObjectMapper objectMapper;
 
     /**
-     * 默认构造器（使用 JsonUtils 的默认 ObjectMapper）
+     * 榛樿鏋勯€犲櫒锛堜娇鐢?JsonUtils 鐨勯粯璁?ObjectMapper锛?
      */
     protected BaseGlobalResponseAdvice() {
         this.objectMapper = null;
     }
 
     /**
-     * 构造器注入自定义 ObjectMapper
+     * 鏋勯€犲櫒娉ㄥ叆鑷畾涔?ObjectMapper
      *
-     * @param objectMapper JSON 序列化器
+     * @param objectMapper JSON 搴忓垪鍖栧櫒
      */
     protected BaseGlobalResponseAdvice(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -80,7 +80,7 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
     }
 
     /**
-     * 子类覆盖此方法处理 String 类型返回值的包装差异
+     * 瀛愮被瑕嗙洊姝ゆ柟娉曞鐞?String 绫诲瀷杩斿洖鍊肩殑鍖呰宸紓
      */
     protected abstract BaseResponse<String> wrapStringBody(String body);
 }

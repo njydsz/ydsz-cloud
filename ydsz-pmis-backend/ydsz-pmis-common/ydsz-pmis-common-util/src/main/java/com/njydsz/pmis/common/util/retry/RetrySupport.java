@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.retry;
+﻿package com.njydsz.pmis.common.util.retry;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
@@ -6,24 +6,20 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 /**
- * 统一重试工具类
- *
- * <p>提供通用的重试执行逻辑，支持多种退避策略。
- * 统一了 ydsz-pmis-common-redis、ydsz-pmis-common-job、ydsz-pmis-common-queue 等模块的重试逻辑。
- *
- * <p><b>使用示例：</b></p>
+ * 缁熶竴閲嶈瘯宸ュ叿绫? *
+ * <p>鎻愪緵閫氱敤鐨勯噸璇曟墽琛岄€昏緫锛屾敮鎸佸绉嶉€€閬跨瓥鐣ャ€? * 缁熶竴浜?ydsz-pmis-common-redis銆乺emi-comm-job銆乺emi-comm-queue 绛夋ā鍧楃殑閲嶈瘯閫昏緫銆? *
+ * <p><b>浣跨敤绀轰緥锛?/b></p>
  * <pre>{@code
- * // 使用指数退避重试
- * RetrySupport.withExponentialBackoff(3, 1000, 30000)
+ * // 浣跨敤鎸囨暟閫€閬块噸璇? * RetrySupport.withExponentialBackoff(3, 1000, 30000)
  *     .retryOn(e -> e instanceof TimeoutException)
  *     .execute(() -> remoteService.call());
  *
- * // 使用固定间隔重试
+ * // 浣跨敤鍥哄畾闂撮殧閲嶈瘯
  * RetrySupport.withFixedInterval(5, 2000)
  *     .retryOn(e -> e instanceof IOException)
  *     .execute(() -> fileService.upload());
  *
- * // 带抖动因子的重试（避免惊群效应）
+ * // 甯︽姈鍔ㄥ洜瀛愮殑閲嶈瘯锛堥伩鍏嶆儕缇ゆ晥搴旓級
  * RetrySupport.withExponentialBackoff(3, 1000, 30000)
  *     .withJitter()
  *     .execute(() -> batchProcess());
@@ -40,41 +36,34 @@ public final class RetrySupport {
     }
 
     /**
-     * 创建指数退避重试构建器
+     * 鍒涘缓鎸囨暟閫€閬块噸璇曟瀯寤哄櫒
      *
-     * @param maxAttempts    最大重试次数（不含首次执行）
-     * @param initialDelayMs 初始延迟（毫秒）
-     * @param maxDelayMs     最大延迟（毫秒）
-     * @return 重试构建器
-     */
+     * @param maxAttempts    鏈€澶ч噸璇曟鏁帮紙涓嶅惈棣栨鎵ц锛?     * @param initialDelayMs 鍒濆寤惰繜锛堟绉掞級
+     * @param maxDelayMs     鏈€澶у欢杩燂紙姣锛?     * @return 閲嶈瘯鏋勫缓鍣?     */
     public static RetryBuilder withExponentialBackoff(int maxAttempts, long initialDelayMs, long maxDelayMs) {
         return new RetryBuilder(RetryStrategy.EXPONENTIAL_BACKOFF, maxAttempts, initialDelayMs, maxDelayMs);
     }
 
     /**
-     * 创建固定间隔重试构建器
-     *
-     * @param maxAttempts 最大重试次数（不含首次执行）
-     * @param intervalMs  固定间隔（毫秒）
-     * @return 重试构建器
-     */
+     * 鍒涘缓鍥哄畾闂撮殧閲嶈瘯鏋勫缓鍣?     *
+     * @param maxAttempts 鏈€澶ч噸璇曟鏁帮紙涓嶅惈棣栨鎵ц锛?     * @param intervalMs  鍥哄畾闂撮殧锛堟绉掞級
+     * @return 閲嶈瘯鏋勫缓鍣?     */
     public static RetryBuilder withFixedInterval(int maxAttempts, long intervalMs) {
         return new RetryBuilder(RetryStrategy.FIXED_INTERVAL, maxAttempts, intervalMs, intervalMs);
     }
 
     /**
-     * 重试策略枚举
+     * 閲嶈瘯绛栫暐鏋氫妇
      */
     public enum RetryStrategy {
-        /** 指数退避：delay = initialDelay * 2^attempt */
+        /** 鎸囨暟閫€閬匡細delay = initialDelay * 2^attempt */
         EXPONENTIAL_BACKOFF,
-        /** 固定间隔 */
+        /** 鍥哄畾闂撮殧 */
         FIXED_INTERVAL
     }
 
     /**
-     * 重试构建器
-     */
+     * 閲嶈瘯鏋勫缓鍣?     */
     public static class RetryBuilder {
         private final RetryStrategy strategy;
         private final int maxAttempts;
@@ -91,34 +80,31 @@ public final class RetrySupport {
         }
 
         /**
-         * 设置重试条件
+         * 璁剧疆閲嶈瘯鏉′欢
          *
-         * @param predicate 判断异常是否可重试的谓词
-         * @return 重试构建器
-         */
+         * @param predicate 鍒ゆ柇寮傚父鏄惁鍙噸璇曠殑璋撹瘝
+         * @return 閲嶈瘯鏋勫缓鍣?         */
         public RetryBuilder retryOn(Predicate<Throwable> predicate) {
             this.retryPredicate = predicate;
             return this;
         }
 
         /**
-         * 启用抖动因子（避免惊群效应）
+         * 鍚敤鎶栧姩鍥犲瓙锛堥伩鍏嶆儕缇ゆ晥搴旓級
          *
-         * <p>抖动因子范围：[0.5, 1.0]，实际延迟 = delay * (0.5 + random * 0.5)
+         * <p>鎶栧姩鍥犲瓙鑼冨洿锛歔0.5, 1.0]锛屽疄闄呭欢杩?= delay * (0.5 + random * 0.5)
          *
-         * @return 重试构建器
-         */
+         * @return 閲嶈瘯鏋勫缓鍣?         */
         public RetryBuilder withJitter() {
             this.withJitter = true;
             return this;
         }
 
         /**
-         * 执行无返回值的任务
+         * 鎵ц鏃犺繑鍥炲€肩殑浠诲姟
          *
-         * @param task 要执行的任务
-         * @throws Exception 如果重试次数耗尽或遇到不可重试异常
-         */
+         * @param task 瑕佹墽琛岀殑浠诲姟
+         * @throws Exception 濡傛灉閲嶈瘯娆℃暟鑰楀敖鎴栭亣鍒颁笉鍙噸璇曞紓甯?         */
         public void execute(Runnable task) throws Exception {
             execute(() -> {
                 task.run();
@@ -127,13 +113,11 @@ public final class RetrySupport {
         }
 
         /**
-         * 执行有返回值的任务
+         * 鎵ц鏈夎繑鍥炲€肩殑浠诲姟
          *
-         * @param task 要执行的任务
-         * @param <T>  返回值类型
-         * @return 任务执行结果
-         * @throws Exception 如果重试次数耗尽或遇到不可重试异常
-         */
+         * @param task 瑕佹墽琛岀殑浠诲姟
+         * @param <T>  杩斿洖鍊肩被鍨?         * @return 浠诲姟鎵ц缁撴灉
+         * @throws Exception 濡傛灉閲嶈瘯娆℃暟鑰楀敖鎴栭亣鍒颁笉鍙噸璇曞紓甯?         */
         public <T> T execute(Callable<T> task) throws Exception {
             if (task == null) {
                 throw new IllegalArgumentException("Task cannot be null");
@@ -148,28 +132,26 @@ public final class RetrySupport {
                 } catch (Throwable e) {
                     lastException = e;
 
-                    // 检查是否可重试
+                    // 妫€鏌ユ槸鍚﹀彲閲嶈瘯
                     if (retryPredicate != null && !retryPredicate.test(e)) {
                         throw e;
                     }
 
-                    // 检查是否还有重试机会
-                    if (attempt >= maxAttempts) {
+                    // 妫€鏌ユ槸鍚﹁繕鏈夐噸璇曟満浼?                    if (attempt >= maxAttempts) {
                         break;
                     }
 
-                    // 计算延迟
+                    // 璁＄畻寤惰繜
                     long delay = calculateDelay(attempt);
 
-                    // 等待
+                    // 绛夊緟
                     sleep(delay);
 
                     attempt++;
                 }
             }
 
-            // 重试耗尽，抛出最后异常
-            if (lastException != null) {
+            // 閲嶈瘯鑰楀敖锛屾姏鍑烘渶鍚庡紓甯?            if (lastException != null) {
                 if (lastException instanceof Exception) {
                     throw (Exception) lastException;
                 }
@@ -180,7 +162,7 @@ public final class RetrySupport {
         }
 
         /**
-         * 计算延迟时间
+         * 璁＄畻寤惰繜鏃堕棿
          */
         private long calculateDelay(int attempt) {
             long delay;
@@ -193,7 +175,7 @@ public final class RetrySupport {
                 delay = initialDelayMs;
             }
 
-            // 应用抖动因子
+            // 搴旂敤鎶栧姩鍥犲瓙
             if (withJitter) {
                 double jitterFactor = 0.5 + ThreadLocalRandom.current().nextDouble() * 0.5;
                 delay = (long) (delay * jitterFactor);
@@ -203,7 +185,7 @@ public final class RetrySupport {
         }
 
         /**
-         * 睡眠指定时间
+         * 鐫＄湢鎸囧畾鏃堕棿
          */
         private void sleep(long millis) {
             try {
@@ -215,17 +197,15 @@ public final class RetrySupport {
         }
     }
 
-    // ==================== 便捷方法 ====================
+    // ==================== 渚挎嵎鏂规硶 ====================
 
     /**
-     * 计算指数退避延迟时间
+     * 璁＄畻鎸囨暟閫€閬垮欢杩熸椂闂?     *
+     * <p>鍏紡锛歞elay = min(initialDelay * 2^(attempt-1), maxDelay)
      *
-     * <p>公式：delay = min(initialDelay * 2^(attempt-1), maxDelay)
-     *
-     * @param attempt          当前重试次数（从1开始）
-     * @param initialDelayMs   初始延迟（毫秒）
-     * @param maxDelayMs       最大延迟（毫秒）
-     * @return 延迟时间（毫秒）
+     * @param attempt          褰撳墠閲嶈瘯娆℃暟锛堜粠1寮€濮嬶級
+     * @param initialDelayMs   鍒濆寤惰繜锛堟绉掞級
+     * @param maxDelayMs       鏈€澶у欢杩燂紙姣锛?     * @return 寤惰繜鏃堕棿锛堟绉掞級
      */
     public static long calculateExponentialBackoff(int attempt, long initialDelayMs, long maxDelayMs) {
         long delay = initialDelayMs * (1L << (attempt - 1));
@@ -233,15 +213,13 @@ public final class RetrySupport {
     }
 
     /**
-     * 计算带抖动因子的指数退避延迟时间
+     * 璁＄畻甯︽姈鍔ㄥ洜瀛愮殑鎸囨暟閫€閬垮欢杩熸椂闂?     *
+     * <p>鍏紡锛歞elay = min(initialDelay * 2^(attempt-1) * jitter, maxDelay)
+     * <p>鎶栧姩鍥犲瓙鑼冨洿锛歔0.5, 1.0]锛岄伩鍏嶅涓换鍔″悓鏃堕噸璇曞鑷寸殑"鎯婄兢鏁堝簲"
      *
-     * <p>公式：delay = min(initialDelay * 2^(attempt-1) * jitter, maxDelay)
-     * <p>抖动因子范围：[0.5, 1.0]，避免多个任务同时重试导致的"惊群效应"
-     *
-     * @param attempt          当前重试次数（从1开始）
-     * @param initialDelayMs   初始延迟（毫秒）
-     * @param maxDelayMs       最大延迟（毫秒）
-     * @return 延迟时间（毫秒）
+     * @param attempt          褰撳墠閲嶈瘯娆℃暟锛堜粠1寮€濮嬶級
+     * @param initialDelayMs   鍒濆寤惰繜锛堟绉掞級
+     * @param maxDelayMs       鏈€澶у欢杩燂紙姣锛?     * @return 寤惰繜鏃堕棿锛堟绉掞級
      */
     public static long calculateExponentialBackoffWithJitter(int attempt, long initialDelayMs, long maxDelayMs) {
         long delay = initialDelayMs * (1L << (attempt - 1));
@@ -251,10 +229,10 @@ public final class RetrySupport {
     }
 
     /**
-     * 计算固定间隔延迟时间
+     * 璁＄畻鍥哄畾闂撮殧寤惰繜鏃堕棿
      *
-     * @param intervalMs 固定间隔（毫秒）
-     * @return 延迟时间（毫秒）
+     * @param intervalMs 鍥哄畾闂撮殧锛堟绉掞級
+     * @return 寤惰繜鏃堕棿锛堟绉掞級
      */
     public static long calculateFixedInterval(long intervalMs) {
         return intervalMs;

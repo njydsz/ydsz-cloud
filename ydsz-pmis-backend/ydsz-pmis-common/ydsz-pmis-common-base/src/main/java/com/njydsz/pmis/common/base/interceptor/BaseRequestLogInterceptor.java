@@ -1,22 +1,22 @@
-package com.njydsz.pmis.common.base.interceptor;
+﻿package com.njydsz.pmis.common.base.interceptor;
 
 import com.njydsz.pmis.common.base.config.BaseTraceProperties;
 import com.njydsz.pmis.common.util.string.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * 请求日志拦截器（Web/App 共享）
+ * 璇锋眰鏃ュ織鎷︽埅鍣紙Web/App 鍏变韩锛?
  *
- * <p>子类覆盖 {@link #resolveRequestId(HttpServletRequest)} 提供不同的 ID 来源，
- * 覆盖 {@link #getLogger()} 提供不同的日志实例。
+ * <p>瀛愮被瑕嗙洊 {@link #resolveRequestId(HttpServletRequest)} 鎻愪緵涓嶅悓鐨?ID 鏉ユ簮锛?
+ * 瑕嗙洊 {@link #getLogger()} 鎻愪緵涓嶅悓鐨勬棩蹇楀疄渚嬨€?
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -115,12 +115,12 @@ public abstract class BaseRequestLogInterceptor implements HandlerInterceptor {
     }
 
     /**
-     * 子类覆盖此方法提供具体的请求 ID 解析逻辑
+     * 瀛愮被瑕嗙洊姝ゆ柟娉曟彁渚涘叿浣撶殑璇锋眰 ID 瑙ｆ瀽閫昏緫
      */
     protected abstract String resolveRequestId(HttpServletRequest request);
 
     /**
-     * 子类覆盖此方法提供具体的日志实例
+     * 瀛愮被瑕嗙洊姝ゆ柟娉曟彁渚涘叿浣撶殑鏃ュ織瀹炰緥
      */
     protected abstract Logger getLogger();
 

@@ -1,31 +1,27 @@
-package com.njydsz.pmis.common.exception.observability;
+﻿package com.njydsz.pmis.common.exception.observability;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
 /**
- * TraceId 注入过滤器
- *
- * <p>在请求入口处自动从 header 提取或生成 traceId，写入 MDC 和响应 header。
- * 配合 logback 的 {@code %X{traceId}} 配置可在所有日志中自动携带 traceId。
- *
- * <p><b>处理流程：</b>
+ * TraceId 娉ㄥ叆杩囨护鍣? *
+ * <p>鍦ㄨ姹傚叆鍙ｅ鑷姩浠?header 鎻愬彇鎴栫敓鎴?traceId锛屽啓鍏?MDC 鍜屽搷搴?header銆? * 閰嶅悎 logback 鐨?{@code %X{traceId}} 閰嶇疆鍙湪鎵€鏈夋棩蹇椾腑鑷姩鎼哄甫 traceId銆? *
+ * <p><b>澶勭悊娴佺▼锛?/b>
  * <ol>
- *   <li>从请求 header 提取 traceId（{@code X-Trace-Id} / {@code X-B3-TraceId}）</li>
- *   <li>若未提取到则生成新的 traceId</li>
- *   <li>写入 SLF4J MDC，注入响应 header</li>
- *   <li>请求结束后清理 MDC（线程池复用）</li>
+ *   <li>浠庤姹?header 鎻愬彇 traceId锛坽@code X-Trace-Id} / {@code X-B3-TraceId}锛?/li>
+ *   <li>鑻ユ湭鎻愬彇鍒板垯鐢熸垚鏂扮殑 traceId</li>
+ *   <li>鍐欏叆 SLF4J MDC锛屾敞鍏ュ搷搴?header</li>
+ *   <li>璇锋眰缁撴潫鍚庢竻鐞?MDC锛堢嚎绋嬫睜澶嶇敤锛?/li>
  * </ol>
  *
- * <p><b>激活条件：</b>需在 {@code AutoConfiguration.imports} 中注册，
- * 或在业务系统中通过 {@code @Component} 引入。
- *
+ * <p><b>婵€娲绘潯浠讹細</b>闇€鍦?{@code AutoConfiguration.imports} 涓敞鍐岋紝
+ * 鎴栧湪涓氬姟绯荤粺涓€氳繃 {@code @Component} 寮曞叆銆? *
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0

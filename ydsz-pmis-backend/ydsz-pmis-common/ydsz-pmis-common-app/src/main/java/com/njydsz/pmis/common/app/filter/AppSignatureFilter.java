@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.app.filter;
+﻿package com.njydsz.pmis.common.app.filter;
 
 import com.njydsz.pmis.common.util.security.DigestUtils;
 import jakarta.servlet.FilterChain;
@@ -6,17 +6,16 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
 /**
- * App 端请求签名验证过滤器
+ * App 绔姹傜鍚嶉獙璇佽繃婊ゅ櫒
  *
- * <p>基于 HMAC-SHA256 算法验证请求签名的完整性和来源合法性。
- *
- * <p><b>签名算法：</b>
+ * <p>鍩轰簬 HMAC-SHA256 绠楁硶楠岃瘉璇锋眰绛惧悕鐨勫畬鏁存€у拰鏉ユ簮鍚堟硶鎬с€? *
+ * <p><b>绛惧悕绠楁硶锛?/b>
  * <pre>
  * signature = HMAC-SHA256(
  *     key = appSecret,
@@ -24,18 +23,18 @@ import java.io.IOException;
  * )
  * </pre>
  *
- * <p><b>必需请求头：</b>
+ * <p><b>蹇呴渶璇锋眰澶达細</b>
  * <ul>
- *   <li>{@code X-App-Sign} - 客户端计算的签名值（Hex 格式）</li>
- *   <li>{@code X-App-Timestamp} - 请求时间戳（毫秒）</li>
- *   <li>{@code X-App-Nonce} - 随机字符串（用于防重放）</li>
+ *   <li>{@code X-App-Sign} - 瀹㈡埛绔绠楃殑绛惧悕鍊硷紙Hex 鏍煎紡锛?/li>
+ *   <li>{@code X-App-Timestamp} - 璇锋眰鏃堕棿鎴筹紙姣锛?/li>
+ *   <li>{@code X-App-Nonce} - 闅忔満瀛楃涓诧紙鐢ㄤ簬闃查噸鏀撅級</li>
  * </ul>
  *
- * <p><b>配置开关：</b>
+ * <p><b>閰嶇疆寮€鍏筹細</b>
  * <ul>
- *   <li>{@code remi.app.signature.enabled=false} 可禁用签名验证</li>
- *   <li>{@code remi.app.signature.app-secret} 配置签名密钥（必填）</li>
- *   <li>{@code remi.app.signature.timestamp-tolerance} 时间戳容差（毫秒，默认 5 分钟）</li>
+ *   <li>{@code remi.app.signature.enabled=false} 鍙鐢ㄧ鍚嶉獙璇?/li>
+ *   <li>{@code remi.app.signature.app-secret} 閰嶇疆绛惧悕瀵嗛挜锛堝繀濉級</li>
+ *   <li>{@code remi.app.signature.timestamp-tolerance} 鏃堕棿鎴冲宸紙姣锛岄粯璁?5 鍒嗛挓锛?/li>
  * </ul>
  *
  * @author Marvin Lee
@@ -46,100 +45,92 @@ import java.io.IOException;
 @Slf4j
 public class AppSignatureFilter extends OncePerRequestFilter {
 
-    /** 签名头名称，客户端将计算后的 Hex 字符串写入此头 */
+    /** 绛惧悕澶村悕绉帮紝瀹㈡埛绔皢璁＄畻鍚庣殑 Hex 瀛楃涓插啓鍏ユ澶?*/
     private static final String HEADER_SIGNATURE = "X-App-Sign";
-    /** 时间戳头名称（毫秒） */
+    /** 鏃堕棿鎴冲ご鍚嶇О锛堟绉掞級 */
     private static final String HEADER_TIMESTAMP = "X-App-Timestamp";
-    /** 随机字符串头名称，用于防重放 */
+    /** 闅忔満瀛楃涓插ご鍚嶇О锛岀敤浜庨槻閲嶆斁 */
     private static final String HEADER_NONCE = "X-App-Nonce";
 
-    /** HMAC-SHA256 签名密钥，由 {@link AppSignatureProperties#getAppSecret()} 注入 */
+    /** HMAC-SHA256 绛惧悕瀵嗛挜锛岀敱 {@link AppSignatureProperties#getAppSecret()} 娉ㄥ叆 */
     private final String appSecret;
-    /** 时间戳容差（毫秒），由 {@link AppSignatureProperties#getTimestampTolerance()} 注入 */
+    /** 鏃堕棿鎴冲宸紙姣锛夛紝鐢?{@link AppSignatureProperties#getTimestampTolerance()} 娉ㄥ叆 */
     private final long timestampTolerance;
 
     /**
-     * 构造方法
-     *
-     * @param appSecret          HMAC-SHA256 签名密钥
-     * @param timestampTolerance 时间戳容差（毫秒）
-     */
+     * 鏋勯€犳柟娉?     *
+     * @param appSecret          HMAC-SHA256 绛惧悕瀵嗛挜
+     * @param timestampTolerance 鏃堕棿鎴冲宸紙姣锛?     */
     public AppSignatureFilter(String appSecret, long timestampTolerance) {
         this.appSecret = appSecret;
         this.timestampTolerance = timestampTolerance;
     }
 
     /**
-     * 执行签名校验的核心逻辑
+     * 鎵ц绛惧悕鏍￠獙鐨勬牳蹇冮€昏緫
      *
-     * <p>校验流程：
-     * <ol>
-     *   <li>提取签名相关请求头，缺失则返回 400</li>
-     *   <li>解析时间戳并校验是否在容差范围内</li>
-     *   <li>按 {@code method|uri|timestamp|nonce} 计算期望签名</li>
-     *   <li>使用恒定时间比较客户端签名与服务端计算签名</li>
+     * <p>鏍￠獙娴佺▼锛?     * <ol>
+     *   <li>鎻愬彇绛惧悕鐩稿叧璇锋眰澶达紝缂哄け鍒欒繑鍥?400</li>
+     *   <li>瑙ｆ瀽鏃堕棿鎴冲苟鏍￠獙鏄惁鍦ㄥ宸寖鍥村唴</li>
+     *   <li>鎸?{@code method|uri|timestamp|nonce} 璁＄畻鏈熸湜绛惧悕</li>
+     *   <li>浣跨敤鎭掑畾鏃堕棿姣旇緝瀹㈡埛绔鍚嶄笌鏈嶅姟绔绠楃鍚?/li>
      * </ol>
      *
-     * <p>任意一步校验失败均直接响应错误，不再放行至后续过滤器。
-     *
-     * @param request     当前 HTTP 请求
-     * @param response    当前 HTTP 响应
-     * @param filterChain 过滤器链
-     * @throws ServletException 透传 Servlet 异常
-     * @throws IOException      透传 IO 异常
+     * <p>浠绘剰涓€姝ユ牎楠屽け璐ュ潎鐩存帴鍝嶅簲閿欒锛屼笉鍐嶆斁琛岃嚦鍚庣画杩囨护鍣ㄣ€?     *
+     * @param request     褰撳墠 HTTP 璇锋眰
+     * @param response    褰撳墠 HTTP 鍝嶅簲
+     * @param filterChain 杩囨护鍣ㄩ摼
+     * @throws ServletException 閫忎紶 Servlet 寮傚父
+     * @throws IOException      閫忎紶 IO 寮傚父
      */
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                      @NonNull HttpServletResponse response,
                                      @NonNull FilterChain filterChain) throws ServletException, IOException {
-        // 提取签名相关请求头
-        String signature = request.getHeader(HEADER_SIGNATURE);
+        // 鎻愬彇绛惧悕鐩稿叧璇锋眰澶?        String signature = request.getHeader(HEADER_SIGNATURE);
         String timestampStr = request.getHeader(HEADER_TIMESTAMP);
         String nonce = request.getHeader(HEADER_NONCE);
 
-        // 验证必需头
-        if (signature == null || timestampStr == null || nonce == null) {
-            log.warn("【App签名验证】缺少必需请求头 | uri={} | sign={} | timestamp={} | nonce={}",
+        // 楠岃瘉蹇呴渶澶?        if (signature == null || timestampStr == null || nonce == null) {
+            log.warn("銆怉pp绛惧悕楠岃瘉銆戠己灏戝繀闇€璇锋眰澶?| uri={} | sign={} | timestamp={} | nonce={}",
                     request.getRequestURI(), signature, timestampStr, nonce);
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing signature headers");
             return;
         }
 
-        // 验证时间戳
-        long timestamp;
+        // 楠岃瘉鏃堕棿鎴?        long timestamp;
         try {
             timestamp = Long.parseLong(timestampStr);
         } catch (NumberFormatException e) {
-            log.warn("【App签名验证】时间戳格式错误 | uri={} | timestamp={}", request.getRequestURI(), timestampStr);
+            log.warn("銆怉pp绛惧悕楠岃瘉銆戞椂闂存埑鏍煎紡閿欒 | uri={} | timestamp={}", request.getRequestURI(), timestampStr);
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid timestamp format");
             return;
         }
 
         long currentTime = System.currentTimeMillis();
         if (Math.abs(currentTime - timestamp) > timestampTolerance) {
-            log.warn("【App签名验证】时间戳过期 | uri={} | timestamp={} | currentTime={} | tolerance={}",
+            log.warn("銆怉pp绛惧悕楠岃瘉銆戞椂闂存埑杩囨湡 | uri={} | timestamp={} | currentTime={} | tolerance={}",
                     request.getRequestURI(), timestamp, currentTime, timestampTolerance);
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Timestamp expired");
             return;
         }
 
-        // 构建签名字符串
-        String method = request.getMethod();
+        // 鏋勫缓绛惧悕瀛楃涓?        String method = request.getMethod();
         String uri = request.getRequestURI();
         String signData = method + "|" + uri + "|" + timestamp + "|" + nonce;
 
-        // 计算期望签名
+        // 璁＄畻鏈熸湜绛惧悕
         String expectedSignature = DigestUtils.hmacSha256Hex(signData, appSecret);
 
-        // 验证签名（时序恒定比较）
+        // 楠岃瘉绛惧悕锛堟椂搴忔亽瀹氭瘮杈冿級
         if (!DigestUtils.verifyDigestHex(expectedSignature, signature)) {
-            log.warn("【App签名验证】签名不匹配 | uri={} | expected={} | actual={}",
+            log.warn("銆怉pp绛惧悕楠岃瘉銆戠鍚嶄笉鍖归厤 | uri={} | expected={} | actual={}",
                     request.getRequestURI(), expectedSignature, signature);
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid signature");
             return;
         }
 
-        log.debug("【App签名验证】通过 | uri={}", request.getRequestURI());
+        log.debug("銆怉pp绛惧悕楠岃瘉銆戦€氳繃 | uri={}", request.getRequestURI());
         filterChain.doFilter(request, response);
     }
 }

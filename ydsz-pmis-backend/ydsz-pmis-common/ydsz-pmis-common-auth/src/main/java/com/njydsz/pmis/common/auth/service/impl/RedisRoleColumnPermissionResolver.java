@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.service.impl;
+﻿package com.njydsz.pmis.common.auth.service.impl;
 
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.model.ColumnScopeInfo;
@@ -20,21 +20,21 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * 基于 Redis 的角色列权限解析器。
+ * 鍩轰簬 Redis 鐨勮鑹插垪鏉冮檺瑙ｆ瀽鍣ㄣ€?
  *
- * <p>职责：
+ * <p>鑱岃矗锛?
  * <ul>
- *   <li>根据 accessToken 读取当前用户信息</li>
- *   <li>从用户信息解析 roleCode（支持多角色）</li>
- *   <li>按角色读取 role-col-key 并合并列可见/可编辑规则</li>
- *   <li>对单角色列权限结果做本地 Caffeine 缓存，防止内存溢出</li>
+ *   <li>鏍规嵁 accessToken 璇诲彇褰撳墠鐢ㄦ埛淇℃伅</li>
+ *   <li>浠庣敤鎴蜂俊鎭В鏋?roleCode锛堟敮鎸佸瑙掕壊锛?/li>
+ *   <li>鎸夎鑹茶鍙?role-col-key 骞跺悎骞跺垪鍙/鍙紪杈戣鍒?/li>
+ *   <li>瀵瑰崟瑙掕壊鍒楁潈闄愮粨鏋滃仛鏈湴 Caffeine 缂撳瓨锛岄槻姝㈠唴瀛樻孩鍑?/li>
  * </ul>
  *
- * <p><b>缓存策略：</b>
+ * <p><b>缂撳瓨绛栫暐锛?/b>
  * <ul>
- *   <li>使用 Caffeine 做本地缓存，防止内存溢出</li>
- *   <li>缓存时间由 {@code roleColumnCacheSeconds} 配置</li>
- *   <li>记录缓存命中率统计，支持 JMX/Actuator 监控</li>
+ *   <li>浣跨敤 Caffeine 鍋氭湰鍦扮紦瀛橈紝闃叉鍐呭瓨婧㈠嚭</li>
+ *   <li>缂撳瓨鏃堕棿鐢?{@code roleColumnCacheSeconds} 閰嶇疆</li>
+ *   <li>璁板綍缂撳瓨鍛戒腑鐜囩粺璁★紝鏀寔 JMX/Actuator 鐩戞帶</li>
  * </ul>
  *
  * @author Marvin Lee
@@ -68,19 +68,19 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
                 .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
                 .removalListener((String key, ColumnScopeInfo value, RemovalCause cause) -> {
                     if (log.isDebugEnabled()) {
-                        log.debug("列权限缓存淘汰: roleCode={}, cause={}", key, cause);
+                        log.debug("鍒楁潈闄愮紦瀛樻窐姹? roleCode={}, cause={}", key, cause);
                     }
                 })
                 .build();
     }
 
     /**
-     * 解析当前用户的列权限信息。
+     * 瑙ｆ瀽褰撳墠鐢ㄦ埛鐨勫垪鏉冮檺淇℃伅銆?
      *
-     * <p>从当前请求上下文获取 token，加载用户信息，解析角色编码，
-     * 然后合并所有角色的列权限规则。
+     * <p>浠庡綋鍓嶈姹備笂涓嬫枃鑾峰彇 token锛屽姞杞界敤鎴蜂俊鎭紝瑙ｆ瀽瑙掕壊缂栫爜锛?
+     * 鐒跺悗鍚堝苟鎵€鏈夎鑹茬殑鍒楁潈闄愯鍒欍€?
      *
-     * @return 列权限信息，无权限时返回空的 {@link ColumnScopeInfo}
+     * @return 鍒楁潈闄愪俊鎭紝鏃犳潈闄愭椂杩斿洖绌虹殑 {@link ColumnScopeInfo}
      */
     @Override
     public ColumnScopeInfo resolve() {
@@ -100,13 +100,13 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
     }
 
     /**
-     * 根据角色编码集合解析列权限信息。
+     * 鏍规嵁瑙掕壊缂栫爜闆嗗悎瑙ｆ瀽鍒楁潈闄愪俊鎭€?
      *
-     * <p>遍历每个角色编码，从缓存或 Redis 中加载对应的列权限规则，
-     * 合并所有角色的可见/可编辑字段集合。
+     * <p>閬嶅巻姣忎釜瑙掕壊缂栫爜锛屼粠缂撳瓨鎴?Redis 涓姞杞藉搴旂殑鍒楁潈闄愯鍒欙紝
+     * 鍚堝苟鎵€鏈夎鑹茬殑鍙/鍙紪杈戝瓧娈甸泦鍚堛€?
      *
-     * @param roleCodes 角色编码集合
-     * @return 合并后的列权限信息，无权限时返回空的 {@link ColumnScopeInfo}
+     * @param roleCodes 瑙掕壊缂栫爜闆嗗悎
+     * @return 鍚堝苟鍚庣殑鍒楁潈闄愪俊鎭紝鏃犳潈闄愭椂杩斿洖绌虹殑 {@link ColumnScopeInfo}
      */
     public ColumnScopeInfo resolveByRoles(Set<String> roleCodes) {
         if (roleCodes == null || roleCodes.isEmpty()) {
@@ -153,12 +153,11 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
             Map<String, Set<String>> editableColumns = parseTableColumns(object, "editableColumns", "editable");
             return new ColumnScopeInfo(visibleColumns, editableColumns);
         } catch (Exception e) {
-            log.warn("解析 role-col-key 失败：{}", json, e);
+            log.warn("瑙ｆ瀽 role-col-key 澶辫触锛歿}", json, e);
             return ColumnScopeInfo.empty();
         }
     }
 
-    @SuppressWarnings("deprecation")
     private Map<String, Set<String>> parseTableColumns(ObjectNode object, String primaryKey, String fallbackKey) {
         JsonNode rule = object.get(primaryKey);
         if (rule == null && StringUtils.isNotBlank(fallbackKey)) {
@@ -168,8 +167,7 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
             return Collections.emptyMap();
         }
         Map<String, Set<String>> out = new LinkedHashMap<>();
-        for (Iterator<Map.Entry<String, JsonNode>> it = rule.fields(); it.hasNext(); ) {
-            Map.Entry<String, JsonNode> entry = it.next();
+        for (Map.Entry<String, JsonNode> entry : rule.properties()) {
             String table = entry.getKey();
             if (StringUtils.isBlank(table)) {
                 continue;
@@ -249,9 +247,9 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
     }
 
     /**
-     * 使指定角色的列权限缓存失效。
+     * 浣挎寚瀹氳鑹茬殑鍒楁潈闄愮紦瀛樺け鏁堛€?
      *
-     * @param roleCode 角色编码
+     * @param roleCode 瑙掕壊缂栫爜
      */
     public void invalidate(String roleCode) {
         if (StringUtils.isNotBlank(roleCode)) {
@@ -260,16 +258,16 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
     }
 
     /**
-     * 使所有列权限缓存失效。
+     * 浣挎墍鏈夊垪鏉冮檺缂撳瓨澶辨晥銆?
      */
     public void invalidateAll() {
         cache.invalidateAll();
     }
 
     /**
-     * 获取列权限本地缓存实例。
+     * 鑾峰彇鍒楁潈闄愭湰鍦扮紦瀛樺疄渚嬨€?
      *
-     * @return Caffeine 缓存实例
+     * @return Caffeine 缂撳瓨瀹炰緥
      */
     public Cache<String, ColumnScopeInfo> getCache() {
         return cache;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.lock.impl;
+﻿package com.njydsz.pmis.common.lock.impl;
 
 import com.njydsz.pmis.common.lock.core.AbstractRedisDistributedLock;
 import com.njydsz.pmis.common.lock.core.DistributedLock;
@@ -6,24 +6,25 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Redis 公平分布式锁实现
+ * Redis 鍏钩鍒嗗竷寮忛攣瀹炵幇
  *
- * <p>基于 Redis List 队列实现公平调度，按客户端请求顺序获取锁（先到先得）。
- * 内部使用 Lua 脚本保证入队、出队、锁获取的原子性。
+ * <p>鍩轰簬 Redis List 闃熷垪瀹炵幇鍏钩璋冨害锛屾寜瀹㈡埛绔姹傞『搴忚幏鍙栭攣锛堝厛鍒板厛寰楋級銆?
+ * 鍐呴儴浣跨敤 Lua 鑴氭湰淇濊瘉鍏ラ槦銆佸嚭闃熴€侀攣鑾峰彇鐨勫師瀛愭€с€?
  *
- * <p><b>实现机制：</b>
+ * <p><b>瀹炵幇鏈哄埗锛?/b>
  * <ul>
- *   <li>队列管理：通过 Redis List 维护等待队列，新请求追加到队尾</li>
- *   <li>原子调度：Lua 脚本检查队首客户端，仅队首客户端可获取锁</li>
- *   <li>可重入支持：同一客户端可多次获取锁，内部维护重入计数</li>
+ *   <li>闃熷垪绠＄悊锛氶€氳繃 Redis List 缁存姢绛夊緟闃熷垪锛屾柊璇锋眰杩藉姞鍒伴槦灏?/li>
+ *   <li>鍘熷瓙璋冨害锛歀ua 鑴氭湰妫€鏌ラ槦棣栧鎴风锛屼粎闃熼瀹㈡埛绔彲鑾峰彇閿?/li>
+ *   <li>鍙噸鍏ユ敮鎸侊細鍚屼竴瀹㈡埛绔彲澶氭鑾峰彇閿侊紝鍐呴儴缁存姢閲嶅叆璁℃暟</li>
  * </ul>
  *
- * <p><b>适用场景：</b>需要严格按顺序执行的分布式任务，避免饥饿问题。
+ * <p><b>閫傜敤鍦烘櫙锛?/b>闇€瑕佷弗鏍兼寜椤哄簭鎵ц鐨勫垎甯冨紡浠诲姟锛岄伩鍏嶉ゥ楗块棶棰樸€?
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -36,9 +37,9 @@ import java.util.concurrent.TimeUnit;
 public class RedisFairLock extends AbstractRedisDistributedLock {
 
     /**
-     * 获取公平锁 Lua 脚本
-     * <p>支持可重入：当前客户端已持有时递增计数；否则检查等待队列队首，仅队首客户端可获取锁
-     * <p>兼容 Redis 6.0 以下版本：使用 LINDEX 遍历替代 LPOS 检查队列中是否存在客户端
+     * 鑾峰彇鍏钩閿?Lua 鑴氭湰
+     * <p>鏀寔鍙噸鍏ワ細褰撳墠瀹㈡埛绔凡鎸佹湁鏃堕€掑璁℃暟锛涘惁鍒欐鏌ョ瓑寰呴槦鍒楅槦棣栵紝浠呴槦棣栧鎴风鍙幏鍙栭攣
+     * <p>鍏煎 Redis 6.0 浠ヤ笅鐗堟湰锛氫娇鐢?LINDEX 閬嶅巻鏇夸唬 LPOS 妫€鏌ラ槦鍒椾腑鏄惁瀛樺湪瀹㈡埛绔?
      */
     private static final String ACQUIRE_LOCK_LUA_SCRIPT =
             "local lockKey = KEYS[1] " +
@@ -88,8 +89,8 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             "return 0";
 
     /**
-     * 释放公平锁 Lua 脚本
-     * <p>递减重入计数，计数归零时删除锁并从等待队列中移除客户端
+     * 閲婃斁鍏钩閿?Lua 鑴氭湰
+     * <p>閫掑噺閲嶅叆璁℃暟锛岃鏁板綊闆舵椂鍒犻櫎閿佸苟浠庣瓑寰呴槦鍒椾腑绉婚櫎瀹㈡埛绔?
      */
     private static final String RELEASE_LOCK_LUA_SCRIPT =
             "local lockKey = KEYS[1] " +
@@ -115,8 +116,8 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             "end";
 
     /**
-     * 续期公平锁 Lua 脚本
-     * <p>仅当当前客户端是锁的持有者时才续期
+     * 缁湡鍏钩閿?Lua 鑴氭湰
+     * <p>浠呭綋褰撳墠瀹㈡埛绔槸閿佺殑鎸佹湁鑰呮椂鎵嶇画鏈?
      */
     private static final String RENEW_LOCK_LUA_SCRIPT =
             "local lockKey = KEYS[1] " +
@@ -130,13 +131,13 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             "end";
 
     /**
-     * 等待队列默认过期时间（秒）
+     * 绛夊緟闃熷垪榛樿杩囨湡鏃堕棿锛堢锛?
      */
     private static final long QUEUE_EXPIRE_SECONDS = 3600;
 
     /**
-     * 清理等待队列中指定客户端 Lua 脚本
-     * <p>从队列中移除 clientId，并设置队列 TTL 防止孤立队列
+     * 娓呯悊绛夊緟闃熷垪涓寚瀹氬鎴风 Lua 鑴氭湰
+     * <p>浠庨槦鍒椾腑绉婚櫎 clientId锛屽苟璁剧疆闃熷垪 TTL 闃叉瀛ょ珛闃熷垪
      */
     private static final String CLEANUP_QUEUE_LUA_SCRIPT =
             "local queueKey = KEYS[1] " +
@@ -151,36 +152,36 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             "return 1";
 
     /**
-     * 获取锁脚本封装
+     * 鑾峰彇閿佽剼鏈皝瑁?
      */
     private final DefaultRedisScript<Long> acquireLockScript;
     /**
-     * 释放锁脚本封装
+     * 閲婃斁閿佽剼鏈皝瑁?
      */
     private final DefaultRedisScript<Long> releaseLockScript;
     /**
-     * 续期锁脚本封装
+     * 缁湡閿佽剼鏈皝瑁?
      */
     private final DefaultRedisScript<Long> renewLockScript;
     /**
-     * 清理队列脚本封装
+     * 娓呯悊闃熷垪鑴氭湰灏佽
      */
     private final DefaultRedisScript<Long> cleanupQueueScript;
 
     /**
-     * 构造公平锁（无命名空间）
+     * 鏋勯€犲叕骞抽攣锛堟棤鍛藉悕绌洪棿锛?
      *
-     * @param stringRedisTemplate Redis 操作模板
+     * @param stringRedisTemplate Redis 鎿嶄綔妯℃澘
      */
     public RedisFairLock(StringRedisTemplate stringRedisTemplate) {
         this(stringRedisTemplate, null);
     }
 
     /**
-     * 构造公平锁（带命名空间）
+     * 鏋勯€犲叕骞抽攣锛堝甫鍛藉悕绌洪棿锛?
      *
-     * @param stringRedisTemplate Redis 操作模板
-     * @param namespace           锁键命名空间前缀，用于多应用共享 Redis 时的隔离
+     * @param stringRedisTemplate Redis 鎿嶄綔妯℃澘
+     * @param namespace           閿侀敭鍛藉悕绌洪棿鍓嶇紑锛岀敤浜庡搴旂敤鍏变韩 Redis 鏃剁殑闅旂
      */
     public RedisFairLock(StringRedisTemplate stringRedisTemplate, String namespace) {
         super(stringRedisTemplate, namespace);
@@ -191,24 +192,24 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
     }
 
     /**
-     * 获取公平锁等待队列的 Redis Key
+     * 鑾峰彇鍏钩閿佺瓑寰呴槦鍒楃殑 Redis Key
      *
-     * @param lockKey 锁的键
-     * @return 等待队列键
+     * @param lockKey 閿佺殑閿?
+     * @return 绛夊緟闃熷垪閿?
      */
     private String getQueueKey(String lockKey) {
         return lockKey + ":fair:queue";
     }
 
     /**
-     * 尝试获取公平锁（不等待）
+     * 灏濊瘯鑾峰彇鍏钩閿侊紙涓嶇瓑寰咃級
      *
-     * <p>按等待队列顺序获取锁，当前客户端在队首或锁空闲时可获取。
+     * <p>鎸夌瓑寰呴槦鍒楅『搴忚幏鍙栭攣锛屽綋鍓嶅鎴风鍦ㄩ槦棣栨垨閿佺┖闂叉椂鍙幏鍙栥€?
      *
-     * @param lockKey   锁的键
-     * @param leaseTime 租约时间
-     * @param timeUnit  时间单位
-     * @return 锁值（客户端标识），获取失败返回 null
+     * @param lockKey   閿佺殑閿?
+     * @param leaseTime 绉熺害鏃堕棿
+     * @param timeUnit  鏃堕棿鍗曚綅
+     * @return 閿佸€硷紙瀹㈡埛绔爣璇嗭級锛岃幏鍙栧け璐ヨ繑鍥?null
      */
     @Override
     public String tryLock(String lockKey, long leaseTime, TimeUnit timeUnit) {
@@ -218,7 +219,7 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
         String queueKey = getQueueKey(namespacedKey);
         boolean acquired = false;
         try {
-            stringRedisTemplate.expire(queueKey, QUEUE_EXPIRE_SECONDS, TimeUnit.SECONDS);
+            stringRedisTemplate.expire(queueKey, Duration.ofSeconds(QUEUE_EXPIRE_SECONDS));
             Long result = stringRedisTemplate.execute(
                     acquireLockScript,
                     Arrays.asList(namespacedKey, queueKey),
@@ -227,17 +228,17 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             );
             acquired = Long.valueOf(1L).equals(result);
             if (acquired) {
-                log.debug("【分布式锁】获取公平锁成功 | lockKey={} | clientId={}", lockKey, clientId);
+                log.debug("銆愬垎甯冨紡閿併€戣幏鍙栧叕骞抽攣鎴愬姛 | lockKey={} | clientId={}", lockKey, clientId);
                 recordLeaseTime(namespacedKey, leaseTimeMs);
                 startWatchDog(namespacedKey, clientId, leaseTimeMs);
                 return clientId;
             }
             return null;
         } catch (Exception e) {
-            log.error("【分布式锁】获取公平锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("銆愬垎甯冨紡閿併€戣幏鍙栧叕骞抽攣寮傚父 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return null;
         } finally {
-            // 锁获取失败时清理 ThreadLocal 和等待队列，防止泄漏（调用方不会调用 unlock）
+            // 閿佽幏鍙栧け璐ユ椂娓呯悊 ThreadLocal 鍜岀瓑寰呴槦鍒楋紝闃叉娉勬紡锛堣皟鐢ㄦ柟涓嶄細璋冪敤 unlock锛?
             if (!acquired) {
                 clearClientId(namespacedKey);
                 clearLeaseTime(namespacedKey);
@@ -247,14 +248,14 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
     }
 
     /**
-     * 尝试获取公平锁（带等待时间）
+     * 灏濊瘯鑾峰彇鍏钩閿侊紙甯︾瓑寰呮椂闂达級
      *
-     * @param lockKey   锁的键
-     * @param waitTime  最大等待时间
-     * @param leaseTime 租约时间
-     * @param timeUnit  时间单位
-     * @return 锁值（客户端标识），获取失败返回 null
-     * @throws InterruptedException 等待过程中线程被中断
+     * @param lockKey   閿佺殑閿?
+     * @param waitTime  鏈€澶х瓑寰呮椂闂?
+     * @param leaseTime 绉熺害鏃堕棿
+     * @param timeUnit  鏃堕棿鍗曚綅
+     * @return 閿佸€硷紙瀹㈡埛绔爣璇嗭級锛岃幏鍙栧け璐ヨ繑鍥?null
+     * @throws InterruptedException 绛夊緟杩囩▼涓嚎绋嬭涓柇
      */
     @Override
     public String tryLock(String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit) throws InterruptedException {
@@ -278,11 +279,11 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             );
             boolean released = Long.valueOf(1L).equals(result);
             if (released) {
-                log.debug("【分布式锁】释放公平锁成功 | lockKey={} | clientId={}", lockKey, clientId);
+                log.debug("銆愬垎甯冨紡閿併€戦噴鏀惧叕骞抽攣鎴愬姛 | lockKey={} | clientId={}", lockKey, clientId);
             }
             return released;
         } catch (Exception e) {
-            log.error("【分布式锁】释放公平锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("銆愬垎甯冨紡閿併€戦噴鏀惧叕骞抽攣寮傚父 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return false;
         }
     }
@@ -292,7 +293,7 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
         try {
             return Boolean.TRUE.equals(stringRedisTemplate.hasKey(lockKey));
         } catch (Exception e) {
-            log.error("【分布式锁】检查锁状态异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("銆愬垎甯冨紡閿併€戞鏌ラ攣鐘舵€佸紓甯?| lockKey={} | error={}", lockKey, e.getMessage(), e);
             return false;
         }
     }
@@ -302,21 +303,21 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
         try {
             return stringRedisTemplate.getExpire(lockKey, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
-            log.error("【分布式锁】获取剩余时间异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("銆愬垎甯冨紡閿併€戣幏鍙栧墿浣欐椂闂村紓甯?| lockKey={} | error={}", lockKey, e.getMessage(), e);
             return -2;
         }
     }
 
     /**
-     * 续期公平锁，延长锁的过期时间
+     * 缁湡鍏钩閿侊紝寤堕暱閿佺殑杩囨湡鏃堕棿
      *
-     * <p>仅当当前客户端是锁的持有者时才续期，否则返回失败。
+     * <p>浠呭綋褰撳墠瀹㈡埛绔槸閿佺殑鎸佹湁鑰呮椂鎵嶇画鏈燂紝鍚﹀垯杩斿洖澶辫触銆?
      *
-     * @param lockKey   锁的键
-     * @param lockValue 锁的值（客户端标识）
-     * @param leaseTime 新的租约时间
-     * @param timeUnit  时间单位
-     * @return true-续期成功，false-续期失败
+     * @param lockKey   閿佺殑閿?
+     * @param lockValue 閿佺殑鍊硷紙瀹㈡埛绔爣璇嗭級
+     * @param leaseTime 鏂扮殑绉熺害鏃堕棿
+     * @param timeUnit  鏃堕棿鍗曚綅
+     * @return true-缁湡鎴愬姛锛宖alse-缁湡澶辫触
      */
     public boolean renewLock(String lockKey, String lockValue, long leaseTime, TimeUnit timeUnit) {
         try {
@@ -328,17 +329,17 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             );
             return Long.valueOf(1L).equals(result);
         } catch (Exception e) {
-            log.error("【分布式锁】续期锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("銆愬垎甯冨紡閿併€戠画鏈熼攣寮傚父 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return false;
         }
     }
 
     /**
-     * 清理等待队列中的指定客户端
-     * <p>在获取锁失败或超时时调用，防止客户端遗留在队列中
+     * 娓呯悊绛夊緟闃熷垪涓殑鎸囧畾瀹㈡埛绔?
+     * <p>鍦ㄨ幏鍙栭攣澶辫触鎴栬秴鏃舵椂璋冪敤锛岄槻姝㈠鎴风閬楃暀鍦ㄩ槦鍒椾腑
      *
-     * @param queueKey 队列键
-     * @param clientId 客户端标识
+     * @param queueKey 闃熷垪閿?
+     * @param clientId 瀹㈡埛绔爣璇?
      */
     private void cleanupQueue(String queueKey, String clientId) {
         try {
@@ -348,9 +349,9 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
                     clientId,
                     String.valueOf(QUEUE_EXPIRE_SECONDS)
             );
-            log.debug("【分布式锁】公平锁等待队列清理 | queueKey={} | clientId={}", queueKey, clientId);
+            log.debug("銆愬垎甯冨紡閿併€戝叕骞抽攣绛夊緟闃熷垪娓呯悊 | queueKey={} | clientId={}", queueKey, clientId);
         } catch (Exception e) {
-            log.debug("【分布式锁】清理等待队列异常 | queueKey={} | error={}", queueKey, e.getMessage());
+            log.debug("銆愬垎甯冨紡閿併€戞竻鐞嗙瓑寰呴槦鍒楀紓甯?| queueKey={} | error={}", queueKey, e.getMessage());
         }
     }
 
@@ -361,7 +362,7 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             Long index = stringRedisTemplate.opsForList().indexOf(queueKey, lockValue);
             return index != null ? index.intValue() : -1;
         } catch (Exception e) {
-            log.error("【分布式锁】获取排队位置异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("銆愬垎甯冨紡閿併€戣幏鍙栨帓闃熶綅缃紓甯?| lockKey={} | error={}", lockKey, e.getMessage(), e);
             return -1;
         }
     }
@@ -373,26 +374,26 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             Long size = stringRedisTemplate.opsForList().size(queueKey);
             return size != null ? size.intValue() : -1;
         } catch (Exception e) {
-            log.error("【分布式锁】获取排队大小异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("銆愬垎甯冨紡閿併€戣幏鍙栨帓闃熷ぇ灏忓紓甯?| lockKey={} | error={}", lockKey, e.getMessage(), e);
             return -1;
         }
     }
 
     /**
-     * 设置键的过期时间（毫秒精度）
+     * 璁剧疆閿殑杩囨湡鏃堕棿锛堟绉掔簿搴︼級
      *
-     * @param key  Redis 键
-     * @param time 过期时间
-     * @param unit 时间单位
-     * @return 设置成功返回过期时间的毫秒值，失败返回 0
+     * @param key  Redis 閿?
+     * @param time 杩囨湡鏃堕棿
+     * @param unit 鏃堕棿鍗曚綅
+     * @return 璁剧疆鎴愬姛杩斿洖杩囨湡鏃堕棿鐨勬绉掑€硷紝澶辫触杩斿洖 0
      */
     @Override
     public long pexpire(String key, long time, TimeUnit unit) {
         try {
-            Boolean result = stringRedisTemplate.expire(key, time, unit);
+            Boolean result = stringRedisTemplate.expire(key, Duration.ofMillis(unit.toMillis(time)));
             return Boolean.TRUE.equals(result) ? unit.toMillis(time) : 0;
         } catch (Exception e) {
-            log.error("【分布式锁】PEXPIRE 续期异常 | lockKey={} | error={}", key, e.getMessage(), e);
+            log.error("銆愬垎甯冨紡閿併€慞EXPIRE 缁湡寮傚父 | lockKey={} | error={}", key, e.getMessage(), e);
             return 0;
         }
     }

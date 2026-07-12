@@ -1,20 +1,20 @@
-package com.njydsz.pmis.common.safe.alert;
+﻿package com.njydsz.pmis.common.safe.alert;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
-import org.springframework.lang.NonNull;
+import org.jspecify.annotations.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 
 /**
- * 安全事件发布器
+ * 瀹夊叏浜嬩欢鍙戝竷鍣?
  *
- * <p>通过 Spring {@link ApplicationEventPublisher} 发布事件，
- * 同时通过 {@link ServiceLoader} 调用所有 SPI 实现的监听器。
+ * <p>閫氳繃 Spring {@link ApplicationEventPublisher} 鍙戝竷浜嬩欢锛?
+ * 鍚屾椂閫氳繃 {@link ServiceLoader} 璋冪敤鎵€鏈?SPI 瀹炵幇鐨勭洃鍚櫒銆?
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -37,22 +37,22 @@ public class SecurityEventPublisher implements ApplicationEventPublisherAware {
     }
 
     /**
-     * 发布安全事件
+     * 鍙戝竷瀹夊叏浜嬩欢
      *
-     * @param event 安全事件
+     * @param event 瀹夊叏浜嬩欢
      */
     public void publish(SecurityEvent event) {
-        // 发布 Spring 应用事件
+        // 鍙戝竷 Spring 搴旂敤浜嬩欢
         if (applicationEventPublisher != null) {
             applicationEventPublisher.publishEvent(event);
         }
 
-        // 调用 SPI 监听器
+        // 璋冪敤 SPI 鐩戝惉鍣?
         for (SecurityAlertListener listener : spiListeners) {
             try {
                 listener.onSecurityEvent(event);
             } catch (Exception e) {
-                log.warn("安全事件监听器处理异常: {}", listener.getClass().getName(), e);
+                log.warn("瀹夊叏浜嬩欢鐩戝惉鍣ㄥ鐞嗗紓甯? {}", listener.getClass().getName(), e);
             }
         }
     }
@@ -62,7 +62,7 @@ public class SecurityEventPublisher implements ApplicationEventPublisherAware {
         ServiceLoader<SecurityAlertListener> loader = ServiceLoader.load(SecurityAlertListener.class);
         for (SecurityAlertListener listener : loader) {
             listeners.add(listener);
-            log.info("加载安全事件告警监听器: {}", listener.getClass().getName());
+            log.info("鍔犺浇瀹夊叏浜嬩欢鍛婅鐩戝惉鍣? {}", listener.getClass().getName());
         }
         return listeners;
     }
