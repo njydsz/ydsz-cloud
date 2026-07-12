@@ -27,7 +27,7 @@ import com.njydsz.pmis.agent.infra.mapper.hitl.AgentPredictionMapper;
 import com.njydsz.pmis.agent.server.service.agent.AgentService;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.constant.AsyncExecutorNames;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -95,7 +95,7 @@ public class AgentServiceImpl implements AgentService {
      *
      * @param req Agent 执行请求
      * @return 落库后的预测记录
-     * @throws BizException 执行失败或限流时抛出
+     * @throws SysException 执行失败或限流时抛出
      */
     @Override
     @SentinelResource(value = "agent:run", blockHandler = "runBlockHandler", fallback = "runFallback")
@@ -142,7 +142,7 @@ public class AgentServiceImpl implements AgentService {
             predictionMapper.updateById(record);
             // P2-3: 记录异常终止 span
             tracer.error(traceCtx, e);
-            throw new BizException(StandardResultCode.INTERNAL_ERROR, "error.agent.msg_eaf40df5", e.getMessage());
+            throw new SysException(StandardResultCode.INTERNAL_ERROR, "error.agent.msg_eaf40df5", e.getMessage());
         }
         long cost = System.currentTimeMillis() - t0;
         // P1-4: 从 AgentContext 读取 LLM Provider 返回的 traceId，用于审计/账单核对
@@ -187,7 +187,7 @@ public class AgentServiceImpl implements AgentService {
      */
     public AgentPredictionDO runBlockHandler(AgentRunRequestDTO req, BlockException ex) {
         log.warn("[Agent] Sentinel 限流: {}", ex.getClass().getSimpleName());
-        throw new BizException(StandardResultCode.RATE_LIMIT, "error.agent.msg_e12dc2f2");
+        throw new SysException(StandardResultCode.RATE_LIMIT, "error.agent.msg_e12dc2f2");
     }
 
     /**
@@ -199,7 +199,7 @@ public class AgentServiceImpl implements AgentService {
      */
     public AgentPredictionDO runFallback(AgentRunRequestDTO req, Throwable e) {
         log.error("[Agent] Sentinel 降级: {}", e.getMessage());
-        throw new BizException(StandardResultCode.SERVICE_UNAVAILABLE, "error.agent.msg_8536a322");
+        throw new SysException(StandardResultCode.SERVICE_UNAVAILABLE, "error.agent.msg_8536a322");
     }
 
     /**
@@ -241,13 +241,13 @@ public class AgentServiceImpl implements AgentService {
      * @param agentType Agent 类型编码
      * @param context   Agent 执行上下文
      * @return Agent 执行结果
-     * @throws BizException agentType 无效或未注册时抛出
+     * @throws SysException agentType 无效或未注册时抛出
      */
     @Override
     public AgentResult executeInMemory(String agentType, AgentContext context) {
         AgentType type = AgentType.fromCode(agentType);
         if (type == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.agent.msg_3e4d9788", agentType);
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.agent.msg_3e4d9788", agentType);
         }
         Agent agent = findAgent(type);
         return agent.execute(context);
@@ -280,7 +280,7 @@ public class AgentServiceImpl implements AgentService {
         }
         AgentType type = AgentType.fromCode(agentType);
         if (type == null) {
-            BizException ex = new BizException(StandardResultCode.BAD_REQUEST,
+            SysException ex = new SysException(StandardResultCode.BAD_REQUEST,
                     "error.agent.msg_3e4d9788", agentType);
             listener.onError(0, ex);
             listener.onComplete(ReActResult.failure("无效 agentType: " + agentType, List.of()));
@@ -333,14 +333,14 @@ public class AgentServiceImpl implements AgentService {
      *
      * @param id 记录 ID
      * @return 预测记录
-     * @throws BizException 记录不存在时抛出
+     * @throws SysException 记录不存在时抛出
      */
     @Override
     @Transactional(readOnly = true)
     public AgentPredictionDO getById(String id) {
         AgentPredictionDO r = predictionMapper.selectById(id);
         if (r == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.agent.msg_99e3df42");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.agent.msg_99e3df42");
         }
         return r;
     }
@@ -422,13 +422,13 @@ public class AgentServiceImpl implements AgentService {
      *
      * @param type Agent 类型
      * @return 匹配的 Agent 实例
-     * @throws BizException 当未找到匹配的 Agent 时抛出
+     * @throws SysException 当未找到匹配的 Agent 时抛出
      */
     private Agent findAgent(AgentType type) {
         return agents.stream()
                 .filter(a -> a.type() == type)
                 .findFirst()
-                .orElseThrow(() -> new BizException(StandardResultCode.BAD_REQUEST,
+                .orElseThrow(() -> new SysException(StandardResultCode.BAD_REQUEST,
                         "未注册 Agent: " + type.getCode()));
     }
 
@@ -437,15 +437,15 @@ public class AgentServiceImpl implements AgentService {
      *
      * @param req Agent 执行请求
      * @return 解析后的 Agent 类型
-     * @throws BizException 当请求为空或 agentType 无效时抛出
+     * @throws SysException 当请求为空或 agentType 无效时抛出
      */
     private AgentType validate(AgentRunRequestDTO req) {
         if (req == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.agent.msg_d9712a58");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.agent.msg_d9712a58");
         }
         AgentType type = AgentType.fromCode(req.getAgentType());
         if (type == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.agent.msg_3e4d9788", req.getAgentType());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.agent.msg_3e4d9788", req.getAgentType());
         }
         return type;
     }

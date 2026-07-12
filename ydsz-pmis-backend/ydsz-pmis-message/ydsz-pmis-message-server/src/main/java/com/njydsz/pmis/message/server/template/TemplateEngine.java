@@ -11,7 +11,7 @@ import java.util.Set;
  *   <li>变量替换：{@code ${var}} / {@code ${a.b.c}} 嵌套 Map 取值，未命中替换为空串</li>
  *   <li>条件渲染：{@code {{#if var}}A{{else}}B{{/if}}}，支持 truthy 判定与 else 分支</li>
  *   <li>循环渲染：{@code {{#each list}}...{{this}}...{{this.prop}}...{{@index}}...{{/each}}}</li>
- *   <li>必填参数校验：{@link #render(String, Map, Set)} 缺失时抛 {@code BizException}</li>
+ *   <li>必填参数校验：{@link #render(String, Map, Set)} 缺失时抛 {@code SysException}</li>
  * </ul>
  *
  * <p>多渠道差异化由 {@code TemplateService.loadByCodeAndChannel} 在模板加载层实现，
@@ -36,7 +36,7 @@ public interface TemplateEngine {
      * P0-3: 渲染模板并校验必填参数。
      *
      * <p>在渲染前校验 {@code requiredKeys} 中的 key 是否存在于 {@code params} 且非 null / 非空白字符串，
-     * 任一缺失抛 {@link com.njydsz.pmis.common.exception.BizException}（错误码 MISSING_PARAMETER）。
+     * 任一缺失抛 {@link com.njydsz.pmis.common.exception.SysException}（错误码 MISSING_PARAMETER）。
      *
      * @param template     模板内容
      * @param params       参数映射，可为 null（此时若有 requiredKeys 则必抛异常）

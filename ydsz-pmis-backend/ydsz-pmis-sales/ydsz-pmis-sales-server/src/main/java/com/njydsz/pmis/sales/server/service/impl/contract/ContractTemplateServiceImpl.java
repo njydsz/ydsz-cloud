@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.sales.domain.dto.ContractTemplateCreateDTO;
 import com.njydsz.pmis.sales.domain.dto.ContractTemplateStatusDTO;
 import com.njydsz.pmis.sales.domain.entity.ContractTemplateDO;
@@ -42,14 +42,14 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
      *
      * @param dto 模板创建参数
      * @return 模板 ID
-     * @throws BizException 模板编码重复或参数非法时抛出
+     * @throws SysException 模板编码重复或参数非法时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(ContractTemplateCreateDTO dto) {
         validate(dto);
         if (templateMapper.selectByCode(dto.getTemplateCode()) != null) {
-            throw new BizException(StandardResultCode.DUPLICATE_KEY,
+            throw new SysException(StandardResultCode.DUPLICATE_KEY,
                     "error.project.msg_ba4811d9", dto.getTemplateCode());
         }
         ContractTemplateDO t = new ContractTemplateDO();
@@ -68,7 +68,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
      * <p>PUBLISHED → DRAFT 视为重新编辑，仍允许。</p>
      *
      * @param dto 状态迁移参数
-     * @throws BizException 模板不存在、目标状态未知或迁移路径非法时抛出
+     * @throws SysException 模板不存在、目标状态未知或迁移路径非法时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -77,13 +77,13 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
         ContractTemplateStatus from = ContractTemplateStatus.fromCode(t.getStatus());
         ContractTemplateStatus to = ContractTemplateStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_2e33226a", t.getStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_2e33226a", t.getStatus());
         }
         if (!from.canTransitTo(to)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "error.project.msg_01c65a70", from.getDesc(), to.getDesc());
         }
         // PUBLISHED -> DRAFT 视为重新编辑（仍允许）
@@ -96,14 +96,14 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
      * <p>已发布（PUBLISHED）模板不能直接删除，需先下线。</p>
      *
      * @param id 模板 ID
-     * @throws BizException 模板不存在或处于已发布状态时抛出
+     * @throws SysException 模板不存在或处于已发布状态时抛出
      */
     @Override
     public void delete(String id) {
         ContractTemplateDO t = getById(id);
         ContractTemplateStatus st = ContractTemplateStatus.fromCode(t.getStatus());
         if (st == ContractTemplateStatus.PUBLISHED) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_0b4fd49f");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_0b4fd49f");
         }
         templateMapper.deleteById(id);
         log.info("[ContractTemplate] 删除模板: id={}", id);
@@ -114,14 +114,14 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
      *
      * @param id 模板 ID
      * @return 模板实体
-     * @throws BizException 模板不存在时抛出
+     * @throws SysException 模板不存在时抛出
      */
     @Override
     @Transactional(readOnly = true)
     public ContractTemplateDO getById(String id) {
         ContractTemplateDO t = templateMapper.selectById(id);
         if (t == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_e8185aa1");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_e8185aa1");
         }
         return t;
     }
@@ -169,22 +169,22 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
      * 校验合同模板创建参数。
      *
      * @param dto 模板创建参数
-     * @throws BizException 参数为空、合同类型非法、账期为负或违约金比例越界时抛出
+     * @throws SysException 参数为空、合同类型非法、账期为负或违约金比例越界时抛出
      */
     private void validate(ContractTemplateCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (ContractTemplateType.fromCode(dto.getContractType()) == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_d8bb22ac", dto.getContractType());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d8bb22ac", dto.getContractType());
         }
         if (dto.getDefaultPaymentDays() != null && dto.getDefaultPaymentDays() < 0) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_435fcf5a");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_435fcf5a");
         }
         if (dto.getDefaultPenaltyRate() != null) {
             BigDecimal r = dto.getDefaultPenaltyRate();
             if (r.signum() < 0 || r.compareTo(BigDecimal.ONE) > 0) {
-                throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_200cb0f7");
+                throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_200cb0f7");
             }
         }
     }

@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.impl.batch;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -57,15 +57,15 @@ public class BatchServiceImpl implements BatchService {
     @Override
     public MsgBatchDO submitBatch(BatchSendRequestDTO dto) {
         if (dto == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "批量发送参数不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "批量发送参数不能为空");
         }
         // 构建请求列表
         List<MessageRequest> requests = buildRequests(dto);
         if (requests.isEmpty()) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "接收人列表为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "接收人列表为空");
         }
         if (requests.size() > MAX_BATCH_SIZE) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "单批最大 " + MAX_BATCH_SIZE + " 条，当前 " + requests.size() + " 条");
         }
         // 创建批次记录
@@ -100,13 +100,13 @@ public class BatchServiceImpl implements BatchService {
     @Override
     public BatchProgressVO getProgress(String batchId) {
         if (!StringUtils.hasText(batchId)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "批次 ID 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "批次 ID 不能为空");
         }
         MsgBatchDO batch = msgBatchMapper.selectOne(new LambdaQueryWrapper<MsgBatchDO>()
                 .eq(MsgBatchDO::getBatchId, batchId)
                 .last("LIMIT 1"));
         if (batch == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "批次不存在: " + batchId);
+            throw new SysException(StandardResultCode.NOT_FOUND, "批次不存在: " + batchId);
         }
         BatchProgressVO vo = new BatchProgressVO();
         vo.setBatchId(batch.getBatchId());

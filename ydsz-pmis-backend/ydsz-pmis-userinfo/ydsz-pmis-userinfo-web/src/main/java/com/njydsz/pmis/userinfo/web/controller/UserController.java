@@ -8,7 +8,7 @@ import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.annotation.RequireReAuth;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.userinfo.domain.dto.auth.PasswordChangeDTO;
 import com.njydsz.pmis.userinfo.domain.dto.auth.PasswordResetDTO;
@@ -90,7 +90,7 @@ public class UserController {
      *
      * @param dto 请求体，包含 oldPassword 与 newPassword
      * @return 统一响应结果
-     * @throws BizException 当原密码或新密码为空时抛出
+     * @throws SysException 当原密码或新密码为空时抛出
      */
     @Operation(summary = "修改自己的密码")
     @Idempotent(key = "user:changeMyPassword", ttlSeconds = 5, message = "请勿重复提交")
@@ -105,7 +105,7 @@ public class UserController {
      *
      * @param body 请求体，包含 username、password、employeeId
      * @return 统一响应结果，包含新建用户 ID
-     * @throws BizException 当用户名或密码为空时抛出
+     * @throws SysException 当用户名或密码为空时抛出
      */
     @Operation(summary = "创建用户")
     @AuthApiPermission(apiCodes = "auth:user:create")

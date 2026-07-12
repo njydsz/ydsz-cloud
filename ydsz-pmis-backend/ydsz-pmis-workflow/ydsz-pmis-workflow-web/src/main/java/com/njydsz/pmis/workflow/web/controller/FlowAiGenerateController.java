@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.workflow.server.service.ai.FlowAiAssistService;
 import com.njydsz.pmis.workflow.server.service.ai.FlowAiGenerateService;
 import com.njydsz.pmis.workflow.domain.dto.ai.FlowAiGenerateDTO;
@@ -141,11 +141,11 @@ public class FlowAiGenerateController {
      */
     private void validateRiskParams(Map<String, Object> body) {
         if (body == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");
         }
         if (!StringUtils.hasText(String.valueOf(body.getOrDefault("instanceId", "")))
                 && !StringUtils.hasText(String.valueOf(body.getOrDefault("flowCode", "")))) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");
         }
     }
 
@@ -156,11 +156,11 @@ public class FlowAiGenerateController {
      */
     private void validateRemindParams(Map<String, Object> body) {
         if (body == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_d9e0f1a2");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_d9e0f1a2");
         }
         if (!StringUtils.hasText(String.valueOf(body.getOrDefault("taskId", "")))
                 || !StringUtils.hasText(String.valueOf(body.getOrDefault("assigneeId", "")))) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_d9e0f1a2");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_d9e0f1a2");
         }
     }
 
@@ -171,11 +171,11 @@ public class FlowAiGenerateController {
      */
     private void validateSlaParams(Map<String, Object> body) {
         if (body == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");
         }
         if (!StringUtils.hasText(String.valueOf(body.getOrDefault("instanceId", "")))
                 && !StringUtils.hasText(String.valueOf(body.getOrDefault("flowCode", "")))) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_c8d9e0f1");
         }
     }
 }

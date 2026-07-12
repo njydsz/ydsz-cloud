@@ -29,7 +29,7 @@
  *   <li>面向接口编程：Controller 仅依赖 Service 接口，便于通过 Spring 注入替换实现。</li>
  *   <li>接口与实现分离：接口不引入 Spring 注解，实现类可使用 {@code @Service}、{@code @Transactional} 等。</li>
  *   <li>返回类型显式：禁止返回 {@code Map<String,Object>} 等开放类型，建议定义专用 VO/DTO。</li>
- *   <li>异常语义化：业务校验失败应抛出 {@code BizException} 携带业务错误码，而非 RuntimeException。</li>
+ *   <li>异常语义化：业务校验失败应抛出 {@code SysException} 携带业务错误码，而非 RuntimeException。</li>
  * </ul>
  *
  * <h3>使用规范</h3>

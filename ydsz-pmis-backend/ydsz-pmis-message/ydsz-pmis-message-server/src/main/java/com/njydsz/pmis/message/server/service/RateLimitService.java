@@ -44,7 +44,7 @@ public interface RateLimitService {
      * 维度间为 AND 关系：所有启用的维度都通过才允许发送。
      *
      * <p>调用方应在限流失败时记录 {@code messageMetrics.recordSend(channel, "RATE_LIMITED", 0)}
-     * 并抛出 {@code BizException(RATE_LIMIT)}。
+     * 并抛出 {@code SysException(RATE_LIMIT)}。
      *
      * @param channel      通道（用于日志，不参与限流 key）
      * @param receiver     接收人（可为空，空则跳过 receiver 维度）

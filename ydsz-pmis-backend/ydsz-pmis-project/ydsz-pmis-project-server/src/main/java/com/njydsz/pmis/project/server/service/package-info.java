@@ -29,7 +29,7 @@
  *   <li><b>事务边界</b>：{@code @Transactional} 标注在 Service 实现类的方法上（默认按异常回滚）</li>
  *   <li><b>粒度控制</b>：单个 Service 方法的事务粒度建议控制在 5 个 SQL 以内，避免长事务</li>
  *   <li><b>幂等声明</b>：对幂等性有要求的写入方法必须在 Javadoc 中显式声明</li>
- *   <li><b>结果统一</b>：Service 层允许抛 {@code BizException}，由全局异常处理器统一封装为 {@code Result}</li>
+ *   <li><b>结果统一</b>：Service 层允许抛 {@code SysException}，由全局异常处理器统一封装为 {@code Result}</li>
  * </ul>
  *
  * <h3>使用规范</h3>

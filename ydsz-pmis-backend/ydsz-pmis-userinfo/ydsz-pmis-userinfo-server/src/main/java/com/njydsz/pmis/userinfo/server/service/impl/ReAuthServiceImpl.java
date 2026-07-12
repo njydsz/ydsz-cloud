@@ -2,7 +2,7 @@ package com.njydsz.pmis.userinfo.server.service.impl.auth;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.aspect.RequireReAuthAspect;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.util.CryptoUtil;
 import com.njydsz.pmis.userinfo.domain.dto.auth.ReAuthRequest;
 import com.njydsz.pmis.userinfo.domain.dto.auth.ReAuthResult;
@@ -51,18 +51,18 @@ public class ReAuthServiceImpl implements ReAuthService {
     @Override
     public ReAuthResult issueToken(String userId, ReAuthRequest request) {
         if (userId == null) {
-            throw new BizException(StandardResultCode.UNAUTHORIZED);
+            throw new SysException(StandardResultCode.UNAUTHORIZED);
         }
         if (request == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_d9712a58");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_d9712a58");
         }
         String opCode = trimToNull(request.getOperationCode());
         String method = trimToNull(request.getMethod());
         if (opCode == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_34522254");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_34522254");
         }
         if (method == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_92565530");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_92565530");
         }
         String methodUpper = method.toUpperCase(Locale.ROOT);
         int ttl = normalizeTtl(request.getTtlSeconds());
@@ -72,11 +72,11 @@ public class ReAuthServiceImpl implements ReAuthService {
             case "PASSWORD" -> ok = verifyPassword(userId, request.getPassword());
             case "TOTP" -> ok = verifyTotp(userId, request.getOtp());
             case "BACKUP_CODE" -> ok = verifyBackupCode(userId, request.getBackupCode());
-            default -> throw new BizException(StandardResultCode.BAD_REQUEST,
+            default -> throw new SysException(StandardResultCode.BAD_REQUEST,
                     "error.user.msg_0fecfe87", method);
         }
         if (!ok) {
-            throw new BizException(StandardResultCode.FORBIDDEN, "error.user.msg_89bb6348");
+            throw new SysException(StandardResultCode.FORBIDDEN, "error.user.msg_89bb6348");
         }
 
         String token = requireReAuthAspect.issueToken(opCode, userId, ttl);
@@ -95,11 +95,11 @@ public class ReAuthServiceImpl implements ReAuthService {
     @SuppressWarnings("deprecation")
     private boolean verifyPassword(String userId, String rawPassword) {
         if (rawPassword == null || rawPassword.isBlank()) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_1a011aca");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_1a011aca");
         }
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
-            throw new BizException(StandardResultCode.USER_NOT_FOUND);
+            throw new SysException(StandardResultCode.USER_NOT_FOUND);
         }
         if (u.getSalt() == null || u.getSalt().isBlank()) {
             log.warn("[ReAuth] 用户 {} 缺少 salt 配置，拒绝密码校验", userId);
@@ -110,22 +110,22 @@ public class ReAuthServiceImpl implements ReAuthService {
 
     private boolean verifyTotp(String userId, String otp) {
         if (otp == null || otp.isBlank()) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_d6ef6b97");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_d6ef6b97");
         }
         User2FADO e = user2FAMapper.selectByUserId(userId);
         if (e == null || !Boolean.TRUE.equals(e.getEnabled())) {
-            throw new BizException(StandardResultCode.FORBIDDEN, "error.user.msg_2a4023be");
+            throw new SysException(StandardResultCode.FORBIDDEN, "error.user.msg_2a4023be");
         }
         return twoFactorService.verify(userId, otp);
     }
 
     private boolean verifyBackupCode(String userId, String code) {
         if (code == null || code.isBlank()) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_140fe16d");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_140fe16d");
         }
         User2FADO e = user2FAMapper.selectByUserId(userId);
         if (e == null || e.getBackupCodes() == null || e.getBackupCodes().isBlank()) {
-            throw new BizException(StandardResultCode.FORBIDDEN, "error.user.msg_bd347be6");
+            throw new SysException(StandardResultCode.FORBIDDEN, "error.user.msg_bd347be6");
         }
         return twoFactorService.verifyBackup(userId, code);
     }

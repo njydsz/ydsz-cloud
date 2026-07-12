@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.server.consumer;
 
 import com.njydsz.pmis.common.constant.PmisMessageTopics;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.JsonUtils;
@@ -28,7 +28,7 @@ import java.util.Collections;
  * RocketMQ 消息消费端。
  *
  * <p>监听 {@link PmisMessageTopics#TOPIC_MESSAGE},基于 Redis SET NX EX 实现消费端幂等防重。
- * 异常处理:BizException 保留锁并落库 FAILED 不重投;系统异常释放锁(Lua 安全释放)并抛出触发重投。
+ * 异常处理:SysException 保留锁并落库 FAILED 不重投;系统异常释放锁(Lua 安全释放)并抛出触发重投。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -102,7 +102,7 @@ public class MessageConsumer implements RocketMQListener<String> {
         try {
             messageService.send(request);
             log.info("[MessageConsumer] 消费完成: messageId={} channel={}", request.getMessageId(), request.getChannel());
-        } catch (BizException e) {
+        } catch (SysException e) {
             // 业务异常:保留锁(防重投 spam),落库 FAILED 不抛出
             log.error("[MessageConsumer] 业务异常: messageId={} err={}", request.getMessageId(), e.getMessage());
             recordFailedLog(request, e.getMessage());

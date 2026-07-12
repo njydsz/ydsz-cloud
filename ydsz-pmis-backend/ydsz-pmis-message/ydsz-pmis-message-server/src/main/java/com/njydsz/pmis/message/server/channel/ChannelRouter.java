@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.server.channel;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.JsonUtils;
@@ -82,19 +82,19 @@ public class ChannelRouter {
     }
 
     /**
-     * 路由到指定通道，缺失时抛 {@link BizException}。
+     * 路由到指定通道，缺失时抛 {@link SysException}。
      *
      * @param channel 通道类型字符串（大小写无关）
      * @return 对应通道实例
-     * @throws BizException 通道为空或不存在
+     * @throws SysException 通道为空或不存在
      */
     public MessageChannel route(String channel) {
         if (channel == null || channel.isBlank()) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "消息通道不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "消息通道不能为空");
         }
         MessageChannel target = channelCache.get(channel.trim().toUpperCase());
         if (target == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "不支持的消息通道: " + channel);
+            throw new SysException(StandardResultCode.BAD_REQUEST, "不支持的消息通道: " + channel);
         }
         return target;
     }
@@ -147,16 +147,16 @@ public class ChannelRouter {
      * 基于 {@link MsgLogDO} 的分发重载：将日志实体转换为 {@link MessageRequest} 后委托
      * {@link #dispatch(MessageRequest)} 执行，便于上层 service 直接传入日志实体。
      *
-     * <p>返回供应商侧追踪 ID（{@code providerTraceId}）；发送失败时抛 {@link BizException}，
+     * <p>返回供应商侧追踪 ID（{@code providerTraceId}）；发送失败时抛 {@link SysException}，
      * 由调用方 catch 处理。
      *
      * @param logDO 消息日志实体
      * @return 供应商侧追踪 ID
-     * @throws BizException 发送失败
+     * @throws SysException 发送失败
      */
     public String dispatch(MsgLogDO logDO) {
         if (logDO == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "消息日志为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "消息日志为空");
         }
         MessageRequest request = new MessageRequest();
         request.setChannel(logDO.getChannel());
@@ -177,7 +177,7 @@ public class ChannelRouter {
         }
         MessageResult result = dispatch(request);
         if (!BaseResponse.isSuccess()) {
-            throw new BizException(BaseResponse.getErrorMessage());
+            throw new SysException(BaseResponse.getErrorMessage());
         }
         return BaseResponse.getProviderTraceId();
     }

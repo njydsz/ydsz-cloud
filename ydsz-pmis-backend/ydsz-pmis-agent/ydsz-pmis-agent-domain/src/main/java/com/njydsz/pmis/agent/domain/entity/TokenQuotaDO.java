@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * Agent 租户级 Token 配额实体（P2-4 落地）。
  *
  * <p>每个租户每月一行，记录当月 LLM token 配额与已使用量。
- * 配额超限时抛 {@code BizException(QUOTA_EXCEEDED)}，AOP 自动拦截。
+ * 配额超限时抛 {@code SysException(QUOTA_EXCEEDED)}，AOP 自动拦截。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0 (P2-4)

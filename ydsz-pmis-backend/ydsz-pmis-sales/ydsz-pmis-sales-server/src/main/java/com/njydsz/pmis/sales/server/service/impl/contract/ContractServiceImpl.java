@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.aspect.DataScopeAspect;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.sales.server.assembler.NameAssembler;
 import com.njydsz.pmis.sales.domain.dto.ContractCreateDTO;
@@ -53,14 +53,14 @@ public class ContractServiceImpl implements ContractService {
      *
      * @param dto 合同创建参数
      * @return 合同 ID
-     * @throws BizException 编号重复或参数非法时抛出
+     * @throws SysException 编号重复或参数非法时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(ContractCreateDTO dto) {
         validate(dto);
         if (contractMapper.selectByCode(dto.getContractCode()) != null) {
-            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.project.msg_f038adba", dto.getContractCode());
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.project.msg_f038adba", dto.getContractCode());
         }
         ContractDO c = new ContractDO();
         BeanUtils.copyProperties(dto, c);
@@ -86,7 +86,7 @@ public class ContractServiceImpl implements ContractService {
      * 合同状态迁移（遵循 ContractStatus 状态机）。
      *
      * @param dto 状态迁移参数
-     * @throws BizException 合同不存在、目标状态未知或迁移路径非法时抛出
+     * @throws SysException 合同不存在、目标状态未知或迁移路径非法时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -95,13 +95,13 @@ public class ContractServiceImpl implements ContractService {
         ContractStatus from = ContractStatus.fromCode(c.getStatus());
         ContractStatus to = ContractStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_2e33226a", c.getStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_2e33226a", c.getStatus());
         }
         if (!from.canTransitTo(to)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "error.project.msg_01c65a70", from.getDesc(), to.getDesc());
         }
         contractMapper.updateStatus(c.getId(), to.getCode());
@@ -112,7 +112,7 @@ public class ContractServiceImpl implements ContractService {
      * 删除合同（逻辑删除）。
      *
      * @param id 合同 ID
-     * @throws BizException 合同不存在时抛出
+     * @throws SysException 合同不存在时抛出
      */
     @Override
     public void delete(String id) {
@@ -127,14 +127,14 @@ public class ContractServiceImpl implements ContractService {
      *
      * @param id 合同 ID
      * @return 合同实体
-     * @throws BizException 合同不存在时抛出
+     * @throws SysException 合同不存在时抛出
      */
     @Override
     @Transactional(readOnly = true)
     public ContractDO getById(String id) {
         ContractDO c = contractMapper.selectById(id);
         if (c == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_22d39b90");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_22d39b90");
         }
         // P0-4: 越权防护 - 非超管只能查看自己创建的合同
         DataScopeAspect.assertAllowByOwner(c.getCreatedBy());
@@ -185,7 +185,7 @@ public class ContractServiceImpl implements ContractService {
      *
      * @param id 合同 ID
      * @return 风险等级码（RiskLevel.code）
-     * @throws BizException 合同不存在时抛出
+     * @throws SysException 合同不存在时抛出
      */
     @Override
     public String evaluateRisk(String id) {
@@ -226,33 +226,33 @@ public class ContractServiceImpl implements ContractService {
      * 校验合同创建参数。
      *
      * @param dto 合同创建参数
-     * @throws BizException 参数为空、编号/名称/类型/客户/负责人缺失、金额为负或日期不合法时抛出
+     * @throws SysException 参数为空、编号/名称/类型/客户/负责人缺失、金额为负或日期不合法时抛出
      */
     private void validate(ContractCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (!StringUtils.hasText(dto.getContractCode())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_8d3e1723");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_8d3e1723");
         }
         if (!StringUtils.hasText(dto.getContractName())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_c6c8edbf");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_c6c8edbf");
         }
         if (!StringUtils.hasText(dto.getCustomerId())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_6de1fd36");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_6de1fd36");
         }
         if (!StringUtils.hasText(dto.getContractType())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_fc52e1b0");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_fc52e1b0");
         }
         if (dto.getTotalAmount() == null || dto.getTotalAmount().signum() < 0) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_8ece143c");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_8ece143c");
         }
         if (!StringUtils.hasText(dto.getOwnerId())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_26804acb");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_26804acb");
         }
         if (dto.getEffectiveDate() != null && dto.getExpireDate() != null
                 && dto.getExpireDate().isBefore(dto.getEffectiveDate())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_40094d71");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_40094d71");
         }
     }
 

@@ -42,7 +42,7 @@
  * <ul>
  *   <li>接口粒度按"业务用例"划分，单接口方法数不超过 20。</li>
  *   <li>入参 / 出参统一使用 DTO / ViewDO / 领域 DO，<strong>禁止直接暴露 Page 分页对象</strong>。</li>
- *   <li>异常使用 {@code BizException} 抛出，由全局异常处理器统一封装。</li>
+ *   <li>异常使用 {@code SysException} 抛出，由全局异常处理器统一封装。</li>
  *   <li>事务边界在 Service 方法上声明，Controller / Facade 不感知事务。</li>
  *   <li>本包仅服务 <strong>PC 端</strong> 业务，<strong>不适用移动端 / 独立 H5</strong>。</li>
  *   <li>本模块 <strong>不包含电子签章相关业务</strong>，合同签署走独立电子签章服务。</li>

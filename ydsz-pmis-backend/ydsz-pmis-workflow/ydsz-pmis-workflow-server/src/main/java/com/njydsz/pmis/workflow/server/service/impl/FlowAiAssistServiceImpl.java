@@ -6,7 +6,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Ticker;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.agent.api.client.AgentClient;
 import com.njydsz.pmis.workflow.domain.entity.ai.FlowAiFeedbackDO;
 import com.njydsz.pmis.workflow.infra.mapper.ai.FlowAiFeedbackMapper;
@@ -413,7 +413,7 @@ public class FlowAiAssistServiceImpl implements FlowAiAssistService {
     @Override
     public String recordApproverFeedback(Map<String, Object> feedback) {
         if (feedback == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_e0f1a2b3");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_e0f1a2b3");
         }
         String traceId = strOrEmpty(feedback.get("traceId"));
         String recommendedUserId = strOrEmpty(feedback.get("recommendedUserId"));
@@ -421,16 +421,16 @@ public class FlowAiAssistServiceImpl implements FlowAiAssistService {
         if (!StringUtils.hasText(traceId)
                 || !StringUtils.hasText(recommendedUserId)
                 || !StringUtils.hasText(action)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_e0f1a2b3");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_e0f1a2b3");
         }
         // 校验 action 合法性
         if (!isValidFeedbackAction(action)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_e0f1a2b3");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_e0f1a2b3");
         }
         // CHOSEN_OTHER 时必须有 actualUserId
         if ("CHOSEN_OTHER".equals(action)
                 && !StringUtils.hasText(strOrEmpty(feedback.get("actualUserId")))) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_e0f1a2b4");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_e0f1a2b4");
         }
 
         FlowAiFeedbackDO entity = new FlowAiFeedbackDO();

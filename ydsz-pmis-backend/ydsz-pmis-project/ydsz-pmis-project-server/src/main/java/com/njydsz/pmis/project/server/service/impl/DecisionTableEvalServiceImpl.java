@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.server.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.project.server.engine.DecisionTableEvaluator;
 import com.njydsz.pmis.literule.domain.entity.DecisionTableDO;
 import com.njydsz.pmis.literule.infra.mapper.DecisionTableMapper;
@@ -42,7 +42,7 @@ public class DecisionTableEvalServiceImpl implements DecisionTableEvalService {
     @Override
     public List<Map<String, Object>> evaluate(String tableCode, Map<String, Object> facts, String tenantId) {
         if (tableCode == null || tableCode.isBlank()) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "决策表编码不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "决策表编码不能为空");
         }
         DecisionTableDO table = loadTable(tableCode, tenantId);
         log.info("[DMN] 评估决策表: tableCode={}, tenantId={}, factsKeys={}",
@@ -56,7 +56,7 @@ public class DecisionTableEvalServiceImpl implements DecisionTableEvalService {
      * @param tableCode 决策表编码
      * @param tenantId  租户 ID（当前实体未启用租户隔离，仅记录日志）
      * @return 决策表实体
-     * @throws BizException 决策表不存在或未启用
+     * @throws SysException 决策表不存在或未启用
      */
     private DecisionTableDO loadTable(String tableCode, String tenantId) {
         LambdaQueryWrapper<DecisionTableDO> wrapper = new LambdaQueryWrapper<DecisionTableDO>()
@@ -70,7 +70,7 @@ public class DecisionTableEvalServiceImpl implements DecisionTableEvalService {
         }
         List<DecisionTableDO> tables = decisionTableMapper.selectList(wrapper);
         if (tables == null || tables.isEmpty()) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "决策表不存在或未启用: " + tableCode);
+            throw new SysException(StandardResultCode.BAD_REQUEST, "决策表不存在或未启用: " + tableCode);
         }
         return tables.get(0);
     }

@@ -2,7 +2,7 @@ package com.njydsz.pmis.common.security;
 
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ public final class DataScopeHelper {
      * 校验当前用户是否有权访问指定 dept 数据
      *
      * @param targetDeptId 目标部门 ID
-     * @throws BizException 无权限时抛出
+     * @throws SysException 无权限时抛出
      */
     public static void requireDept(String targetDeptId) {
         if (targetDeptId == null) {
@@ -53,14 +53,14 @@ public final class DataScopeHelper {
         if (ctx.getCustomDeptIds() != null && ctx.getCustomDeptIds().contains(targetDeptId)) {
             return;
         }
-        throw new BizException(StandardResultCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_e107b337");
+        throw new SysException(StandardResultCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_e107b337");
     }
 
     /**
      * 校验当前用户是否有权访问指定用户数据
      *
      * @param ownerUserId 目标用户 ID
-     * @throws BizException 无权限时抛出
+     * @throws SysException 无权限时抛出
      */
     public static void requireOwner(String ownerUserId) {
         if (ownerUserId == null) {
@@ -76,7 +76,7 @@ public final class DataScopeHelper {
         if (ctx.getUserId() != null && ctx.getUserId().equals(ownerUserId)) {
             return;
         }
-        throw new BizException(StandardResultCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_4982e9ba");
+        throw new SysException(StandardResultCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_4982e9ba");
     }
 
     /**

@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.project.server.assembler.NameAssembler;
 import com.njydsz.pmis.project.domain.dto.ApprovalDTO;
 import com.njydsz.pmis.finance.domain.dto.ExpenseCreateDTO;
@@ -41,18 +41,18 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(ExpenseCreateDTO dto) {
-        if (dto == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getExpenseCode())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_01247121");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_01247121");
         }
         if (dto.getAmount() == null || dto.getAmount().signum() <= 0) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_2b7b69af");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_2b7b69af");
         }
         if (dto.getEmployeeId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_9f487f28");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_9f487f28");
         }
         if (expenseMapper.selectByCode(dto.getExpenseCode()) != null) {
-            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.execution.msg_37f1deeb", dto.getExpenseCode());
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.execution.msg_37f1deeb", dto.getExpenseCode());
         }
         ExpenseDO e = new ExpenseDO();
         BeanUtils.copyProperties(dto, e);
@@ -80,16 +80,16 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Transactional(rollbackFor = Exception.class)
     public void changeStatus(ApprovalDTO dto) {
         if (dto == null || dto.getId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         ExpenseDO e = getById(dto.getId());
         ApprovalStatus from = ApprovalStatus.fromCode(e.getStatus());
         ApprovalStatus to = ApprovalStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null || !from.canTransitTo(to)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "error.execution.msg_ba0d6420", (from == null ? "未知" : from.getDesc()), to.getDesc());
         }
         expenseMapper.updateStatus(dto.getId(), to.getCode(),
@@ -103,7 +103,7 @@ public class ExpenseServiceImpl implements ExpenseService {
         ExpenseDO e = getById(id);
         ApprovalStatus s = ApprovalStatus.fromCode(e.getStatus());
         if (s == ApprovalStatus.APPROVED || s == ApprovalStatus.PAID) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_bf3459b1");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_bf3459b1");
         }
         expenseMapper.deleteById(id);
     }
@@ -112,7 +112,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Transactional(readOnly = true)
     public ExpenseDO getById(String id) {
         ExpenseDO e = expenseMapper.selectById(id);
-        if (e == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_fe55e2d1");
+        if (e == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_fe55e2d1");
         return e;
     }
 

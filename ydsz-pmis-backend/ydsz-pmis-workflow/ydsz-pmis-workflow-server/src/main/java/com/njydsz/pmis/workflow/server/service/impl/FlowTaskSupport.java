@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.workflow.server.engine.FlowEventListener;
 import com.njydsz.pmis.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.pmis.workflow.server.engine.FlowWorkflowEvent;
@@ -63,7 +63,7 @@ public class FlowTaskSupport {
     public FlowRunTaskDO getTaskOrThrow(String id) {
         FlowRunTaskDO task = taskMapper.selectById(id);
         if (task == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", id);
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", id);
         }
         return task;
     }

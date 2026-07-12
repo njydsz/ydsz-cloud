@@ -45,7 +45,7 @@ public interface FlowInstanceService {
      *     <li>{@code instanceIds} (List&lt;String&gt;) — 成功发起的实例 ID 列表</li>
      *     <li>{@code failedItems} (List&lt;Map&gt;) — 失败项明细，每项含 index / businessId / reason</li>
      *   </ul>
-     * @throws BizException 当 dtos 为空或超过 100 条时
+     * @throws SysException 当 dtos 为空或超过 100 条时
      */
     Map<String, Object> batchStartInstances(List<FlowStartProcessDTO> dtos);
 

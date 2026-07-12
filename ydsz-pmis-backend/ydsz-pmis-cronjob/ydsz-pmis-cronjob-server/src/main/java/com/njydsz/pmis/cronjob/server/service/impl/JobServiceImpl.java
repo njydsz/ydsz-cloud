@@ -5,7 +5,7 @@ import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.dispatch.TaskDispatcher;
@@ -247,7 +247,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      *
      * @param job 任务定义
      * @return 新增任务 ID
-     * @throws BizException 当 jobKey 已存在或参数非法时抛出
+     * @throws SysException 当 jobKey 已存在或参数非法时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -258,7 +258,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         }
         validate(job);
         if (jobMapper.selectByJobKey(job.getJobKey()) != null) {
-            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.cronjob.msg_7e5ef640", job.getJobKey());
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.cronjob.msg_7e5ef640", job.getJobKey());
         }
         if (job.getStatus() == null) {
             job.setStatus("NORMAL");
@@ -306,17 +306,17 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * <p>P0-3: 同步 scheduleType/fixedRateMs/fixedDelayMs 字段，并按新调度类型重新注册。
      *
      * @param job 任务定义
-     * @throws BizException 当任务不存在或 cron 表达式非法时抛出
+     * @throws SysException 当任务不存在或 cron 表达式非法时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(JobDO job) {
         if (job.getId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_ce91ca69");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_ce91ca69");
         }
         JobDO exists = jobMapper.selectById(job.getId());
         if (exists == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
         }
         // P1-6: 保存历史版本（在更新之前保存当前快照）
         JobHistoryService historyService = jobHistoryServiceProvider.getIfAvailable();
@@ -344,14 +344,14 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             }
         } else if (type == ScheduleType.FIXED_RATE) {
             if (exists.getFixedRateMs() == null || exists.getFixedRateMs() <= 0) {
-                throw new BizException(StandardResultCode.BAD_REQUEST,
+                throw new SysException(StandardResultCode.BAD_REQUEST,
                         "error.cronjob.msg_5d0044ca", "fixedRateMs 必须为正数");
             }
             // FIXED_RATE 类型清空 nextFireTime（由 SecondLevelScheduler 管理）
             exists.setNextFireTime(null);
         } else if (type == ScheduleType.FIXED_DELAY) {
             if (exists.getFixedDelayMs() == null || exists.getFixedDelayMs() <= 0) {
-                throw new BizException(StandardResultCode.BAD_REQUEST,
+                throw new SysException(StandardResultCode.BAD_REQUEST,
                         "error.cronjob.msg_5d0044ca", "fixedDelayMs 必须为正数");
             }
             // FIXED_DELAY 类型清空 nextFireTime（由 SecondLevelScheduler 管理）
@@ -398,13 +398,13 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * 删除任务
      *
      * @param id 任务 ID
-     * @throws BizException 当任务不存在时抛出
+     * @throws SysException 当任务不存在时抛出
      */
     @Override
     public void delete(String id) {
         JobDO j = jobMapper.selectById(id);
         if (j == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
         }
         unregister(j.getJobKey());
         // P0-3: 注销 SecondLevelScheduler 中的调度（FIXED_RATE/FIXED_DELAY）
@@ -423,7 +423,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * 暂停任务
      *
      * @param id 任务 ID
-     * @throws BizException 当任务不存在时抛出
+     * @throws SysException 当任务不存在时抛出
      */
     @Override
     public void pause(String id) {
@@ -440,7 +440,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * 恢复任务
      *
      * @param id 任务 ID
-     * @throws BizException 当任务不存在时抛出
+     * @throws SysException 当任务不存在时抛出
      */
     @Override
     public void resume(String id) {
@@ -464,7 +464,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      *
      * @param id 任务 ID
      * @return 执行日志 ID
-     * @throws BizException 当任务不存在时抛出
+     * @throws SysException 当任务不存在时抛出
      */
     @Override
     public String trigger(String id) {
@@ -480,7 +480,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * @param id       任务 ID
      * @param holdLock 是否抢占分布式锁
      * @return 执行日志 ID；当 holdLock=true 且锁被持有时返回 null
-     * @throws BizException 当任务不存在时抛出
+     * @throws SysException 当任务不存在时抛出
      */
     @Override
     public String trigger(String id, boolean holdLock) {
@@ -773,14 +773,14 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      *
      * @param id 任务 ID
      * @return 任务定义
-     * @throws BizException 当任务不存在时抛出
+     * @throws SysException 当任务不存在时抛出
      */
     @Override
     @Transactional(readOnly = true)
     public JobDO getById(String id) {
         JobDO j = jobMapper.selectById(id);
         if (j == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
         }
         return j;
     }
@@ -954,21 +954,21 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * </ul>
      *
      * @param job 任务定义
-     * @throws BizException 当 jobKey/handler 为空或调度参数非法时抛出
+     * @throws SysException 当 jobKey/handler 为空或调度参数非法时抛出
      */
     private void validate(JobDO job) {
         if (!StringUtils.hasText(job.getJobKey())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_884214e7");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_884214e7");
         }
         if (!StringUtils.hasText(job.getHandler())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_04ebee77");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_04ebee77");
         }
         // P2-8: 校验任务级时区（非空时必须为有效时区 ID）
         if (StringUtils.hasText(job.getTimezone())) {
             try {
                 ZoneId.of(job.getTimezone());
             } catch (Exception e) {
-                throw new BizException(StandardResultCode.BAD_REQUEST,
+                throw new SysException(StandardResultCode.BAD_REQUEST,
                         "error.cronjob.msg_5d0044ca", "无效的时区 ID: " + job.getTimezone());
             }
         }
@@ -979,13 +979,13 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
                 break;
             case FIXED_RATE:
                 if (job.getFixedRateMs() == null || job.getFixedRateMs() <= 0) {
-                    throw new BizException(StandardResultCode.BAD_REQUEST,
+                    throw new SysException(StandardResultCode.BAD_REQUEST,
                             "error.cronjob.msg_5d0044ca", "fixedRateMs 必须为正数");
                 }
                 break;
             case FIXED_DELAY:
                 if (job.getFixedDelayMs() == null || job.getFixedDelayMs() <= 0) {
-                    throw new BizException(StandardResultCode.BAD_REQUEST,
+                    throw new SysException(StandardResultCode.BAD_REQUEST,
                             "error.cronjob.msg_5d0044ca", "fixedDelayMs 必须为正数");
                 }
                 break;
@@ -1002,16 +1002,16 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * 校验 cron 表达式合法性
      *
      * @param cron cron 表达式
-     * @throws BizException 当 cron 为空或非法时抛出
+     * @throws SysException 当 cron 为空或非法时抛出
      */
     private void validateCron(String cron) {
         if (!StringUtils.hasText(cron)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_35ac148f");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_35ac148f");
         }
         try {
             new CronTrigger(cron);
         } catch (Exception e) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca", e.getMessage());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca", e.getMessage());
         }
     }
 

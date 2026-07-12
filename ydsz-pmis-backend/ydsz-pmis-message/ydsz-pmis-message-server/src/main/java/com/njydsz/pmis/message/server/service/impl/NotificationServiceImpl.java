@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.constant.SystemConstants;
 import com.njydsz.pmis.common.entity.PageQuery;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.dto.core.NotificationQueryDTO;
 import com.njydsz.pmis.message.domain.dto.core.NotificationSendDTO;
@@ -52,7 +52,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional(rollbackFor = Exception.class)
     public int send(NotificationSendDTO dto) {
         if (dto == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "通知参数不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "通知参数不能为空");
         }
         List<String> receiverIds = resolveReceiverIds(dto);
         int count = 0;
@@ -70,7 +70,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public Page<MsgNotificationDO> inbox(String userId, NotificationQueryDTO query) {
         if (!StringUtils.hasText(userId)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "用户 ID 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "用户 ID 不能为空");
         }
         Page<MsgNotificationDO> page = new Page<>(
                 query == null ? 1 : query.getPage(),
@@ -185,7 +185,7 @@ public class NotificationServiceImpl implements NotificationService {
             receiverIds = List.of(dto.getReceiverId());
         }
         if (CollectionUtils.isEmpty(receiverIds)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "接收人不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "接收人不能为空");
         }
         return receiverIds;
     }

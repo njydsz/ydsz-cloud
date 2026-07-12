@@ -1,6 +1,6 @@
 /**
  * @file 错误处理工具
- * @description 提供 BizException / HttpException 类型、统一错误处理函数与确认/成功提示工具
+ * @description 提供 SysException / HttpException 类型、统一错误处理函数与确认/成功提示工具
  * @module utils/error
  */
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -19,7 +19,7 @@ import { logger } from './logger'
  * }
  * ```
  */
-export class BizException extends Error {
+export class SysException extends Error {
   /** 后端业务码 */
   readonly code: number
   /** 拦截器是否已弹错提示 */
@@ -27,7 +27,7 @@ export class BizException extends Error {
 
   constructor(message: string, code: number, handled = true) {
     super(message)
-    this.name = 'BizException'
+    this.name = 'SysException'
     this.code = code
     this.handled = handled
   }
@@ -62,7 +62,7 @@ export class HttpException extends Error {
  * ```
  */
 export function isHandledError(e: unknown): boolean {
-  if (e instanceof BizException || e instanceof HttpException) {
+  if (e instanceof SysException || e instanceof HttpException) {
     return e.handled
   }
   return false
@@ -93,7 +93,7 @@ export function handleError(error: unknown, context?: string): void {
   const t = i18n.global.t
 
   // 业务异常（已处理的）
-  if (error instanceof BizException) {
+  if (error instanceof SysException) {
     if (error.handled) return // 拦截器已处理，不重复提示
     ElMessage.error(error.message || t('common.operationFailed'))
     return

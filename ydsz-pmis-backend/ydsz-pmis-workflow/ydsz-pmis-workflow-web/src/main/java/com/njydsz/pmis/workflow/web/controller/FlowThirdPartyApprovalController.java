@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.web.controller.integration;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
 
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.workflow.domain.dto.integration.EmbeddedApprovalActionDTO;
 import com.njydsz.pmis.workflow.domain.entity.integration.FlowThirdPartyAccountDO;
 import com.njydsz.pmis.workflow.domain.entity.integration.FlowThirdPartyLogDO;
@@ -257,7 +257,7 @@ public class FlowThirdPartyApprovalController {
             embeddedApprovalService.quickAction(dto);
             log.info("[ThirdPartyCallback] 派发审批动作成功: platform={} userId={} action={} businessType={} businessId={}",
                     platform, account.getUserId(), action, businessType, businessId);
-        } catch (BizException e) {
+        } catch (SysException e) {
             // 业务异常（找不到任务/流程已结束/参数错误等）— 三方可能回调已处理的任务或延迟回调，log.warn 不抛
             log.warn("[ThirdPartyCallback] 回调容错跳过: platform={} userId={} action={} code={} msg={}",
                     platform, account.getUserId(), action, e.getCode(), e.getMessage());

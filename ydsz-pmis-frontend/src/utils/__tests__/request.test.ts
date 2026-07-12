@@ -3,7 +3,7 @@
  * @covers isRetryableError / getRetryDelay (内部函数通过行为测试覆盖)
  */
 import { describe, it, expect } from 'vitest'
-import { BizException, HttpException } from '../error'
+import { SysException, HttpException } from '../error'
 
 /**
  * 从 request.ts 中提取的可测试逻辑
@@ -102,9 +102,9 @@ describe('request retry logic', () => {
   })
 })
 
-describe('BizException and HttpException integration', () => {
-  it('BizException should carry business code', () => {
-    const err = new BizException('validation failed', 10001, true)
+describe('SysException and HttpException integration', () => {
+  it('SysException should carry business code', () => {
+    const err = new SysException('validation failed', 10001, true)
     expect(err.code).toBe(10001)
     expect(err.handled).toBe(true)
   })

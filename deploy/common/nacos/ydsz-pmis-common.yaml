@@ -181,7 +181,7 @@ resilience4j:
           - java.net.SocketTimeoutException
           - org.springframework.web.client.ResourceAccessException
         ignore-exceptions:
-          - com.njydsz.pmis.common.exception.BizException
+          - com.njydsz.pmis.common.exception.SysException
           - java.lang.IllegalArgumentException
       dbRetry:
         max-attempts: 2

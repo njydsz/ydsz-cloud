@@ -16,7 +16,7 @@
  *
  * P1-7 改进：
  *  - 全局 loading 服务（并发计数，支持 silent 跳过）
- *  - 错误去重：拦截器弹错后抛 BizException/HttpException（handled=true），业务层可用 isHandledError() 判断
+ *  - 错误去重：拦截器弹错后抛 SysException/HttpException（handled=true），业务层可用 isHandledError() 判断
  *  - 类型合并：ApiResponse/PageData 统一从 @/types/api 导入
  */
 import axios, {
@@ -32,7 +32,7 @@ import 'nprogress/nprogress.css'
 import { useUserStore } from '@/store/modules/user'
 import { getToken, getRefreshToken, setToken } from './auth'
 import { generateTraceId } from './trace'
-import { BizException, HttpException } from './error'
+import { SysException, HttpException } from './error'
 import { requestCanceler } from './request-canceler'
 import i18n from '@/locales'
 import { logger } from '@/utils/logger'
@@ -240,7 +240,7 @@ service.interceptors.response.use(
     // 刷新 Token 请求自身返回业务错误：静默拒绝（handled=false），
     // 由调用方 doRefreshToken 的 catch 统一处理跳转，避免重复弹错
     if (response.config._isRefreshTokenRequest) {
-      return Promise.reject(new BizException(resolveErrorMessage(res.message) || i18n.global.t('request.refreshFailed'), res.code, false))
+      return Promise.reject(new SysException(resolveErrorMessage(res.message) || i18n.global.t('request.refreshFailed'), res.code, false))
     }
 
     // Token 失效业务码：20001 未登录 / 20002 Token 过期 / 20003 Token 无效
@@ -249,10 +249,10 @@ service.interceptors.response.use(
       return handleTokenExpired(response.config, res.message) as unknown as Promise<AxiosResponse>
     }
 
-    // 其他业务错误：统一弹错 + 抛 BizException（handled=true 标记拦截器已处理）
+    // 其他业务错误：统一弹错 + 抛 SysException（handled=true 标记拦截器已处理）
     const errMsg = resolveErrorMessage(res.message)
     ElMessage.error(errMsg)
-    return Promise.reject(new BizException(errMsg, res.code, true))
+    return Promise.reject(new SysException(errMsg, res.code, true))
   },
   (error) => {
     // 请求结束（含失败）：从 pending Map 中移除
@@ -419,7 +419,7 @@ function handleTokenExpired(config: AxiosRequestConfig, message?: string): Promi
   // 防止死循环：已刷新重试过的请求再次 401，直接跳登录
   if (config._tokenRefreshed) {
     handleUnauthorized(message)
-    return Promise.reject(new BizException(resolveErrorMessage(message) || i18n.global.t('request.loginExpired'), 401, true))
+    return Promise.reject(new SysException(resolveErrorMessage(message) || i18n.global.t('request.loginExpired'), 401, true))
   }
   config._tokenRefreshed = true
 
@@ -431,7 +431,7 @@ function handleTokenExpired(config: AxiosRequestConfig, message?: string): Promi
   // 无 refresh token，无法续期，直接跳登录
   if (!getRefreshToken()) {
     handleUnauthorized(message)
-    return Promise.reject(new BizException(resolveErrorMessage(message) || i18n.global.t('request.loginExpired'), 401, true))
+    return Promise.reject(new SysException(resolveErrorMessage(message) || i18n.global.t('request.loginExpired'), 401, true))
   }
 
   isRefreshing = true
@@ -447,7 +447,7 @@ function handleTokenExpired(config: AxiosRequestConfig, message?: string): Promi
       // 刷新失败：拒绝队列中所有请求并跳登录
       rejectPendingQueue(err)
       handleUnauthorized(i18n.global.t('request.loginExpiredRelogin'))
-      return Promise.reject(new BizException(i18n.global.t('request.loginExpiredRelogin'), 401, true))
+      return Promise.reject(new SysException(i18n.global.t('request.loginExpiredRelogin'), 401, true))
     })
     .finally(() => {
       isRefreshing = false

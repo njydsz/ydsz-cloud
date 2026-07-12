@@ -9,7 +9,7 @@ import com.njydsz.pmis.agent.infra.mapper.tool.TokenQuotaMapper;
 import com.njydsz.pmis.agent.infra.mapper.tool.TokenUsageLogMapper;
 import com.njydsz.pmis.agent.server.service.tool.TokenQuotaService;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -71,7 +71,7 @@ public class DefaultTokenQuotaService implements TokenQuotaService {
      *
      * @param tenantId       租户 ID
      * @param estimatedTokens 预估 Token 消耗量
-     * @throws BizException 配额不足时抛出（QUOTA_EXCEEDED）
+     * @throws SysException 配额不足时抛出（QUOTA_EXCEEDED）
      */
     @Override
     public void checkQuota(String tenantId, long estimatedTokens) {
@@ -91,7 +91,7 @@ public class DefaultTokenQuotaService implements TokenQuotaService {
         if (estimatedTokens > remaining) {
             log.warn("[TokenQuota] 配额不足: tenant={} month={} needed={} remaining={}",
                     tenantId, month, estimatedTokens, remaining);
-            throw new BizException(StandardResultCode.QUOTA_EXCEEDED,
+            throw new SysException(StandardResultCode.QUOTA_EXCEEDED,
                     "error.agent.token_quota_exceeded",
                     tenantId, month, estimatedTokens, remaining);
         }

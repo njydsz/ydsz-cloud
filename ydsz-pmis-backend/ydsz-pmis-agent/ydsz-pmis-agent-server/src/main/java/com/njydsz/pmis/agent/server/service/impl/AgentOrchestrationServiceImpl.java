@@ -6,7 +6,7 @@ import com.njydsz.pmis.agent.server.orchestration.OrchestrationRequest;
 import com.njydsz.pmis.agent.server.orchestration.OrchestrationResult;
 import com.njydsz.pmis.agent.server.service.agent.AgentOrchestrationService;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,7 +35,7 @@ public class AgentOrchestrationServiceImpl implements AgentOrchestrationService 
     @Override
     public OrchestrationResult orchestrate(OrchestrationRequest req) {
         if (req == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.agent.msg_372ae3c5");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.agent.msg_372ae3c5");
         }
         // 过滤出请求声明的 agentType
         Map<String, Agent> registry = agentRegistry();
@@ -51,7 +51,7 @@ public class AgentOrchestrationServiceImpl implements AgentOrchestrationService 
             }
         }
         if (picked.isEmpty()) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.agent.msg_319b849b");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.agent.msg_319b849b");
         }
         return coordinator.coordinate(req, picked);
     }

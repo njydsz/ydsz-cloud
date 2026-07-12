@@ -31,7 +31,7 @@ jobMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQ
 new com.njydsz.pmis.literule.server.replay.ExecutionReplayService(...);
 
 // ❌ ReAuthService.java / JobService.java / JobDagService.java 等 8 个文件 — Javadoc @throws 使用行内 FQN
-* @throws com.njydsz.pmis.common.exception.BizException 当任务不存在时抛出
+* @throws com.njydsz.pmis.common.exception.SysException 当任务不存在时抛出
 
 // ❌ IFileStorage.java / LogicalDeleteConfiguration.java 等 10 个文件 — Javadoc @see 使用行内 FQN
 * @see com.njydsz.pmis.common.file.storage.platform.LocalStorage
@@ -50,7 +50,7 @@ import com.njydsz.pmis.finance.domain.entity.ProfitSnapshot;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.literule.server.replay.ExecutionReplayService;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.file.storage.platform.LocalStorage;
 import com.njydsz.pmis.common.audit.config.AuditAutoConfiguration;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;
@@ -65,7 +65,7 @@ jobMapper.selectCount(new LambdaQueryWrapper<JobDO>().eq(JobDO::getStatus, "NORM
 new ExecutionReplayService(...);
 
 // ✅ Javadoc @throws 使用简单类名
-* @throws BizException 当任务不存在时抛出
+* @throws SysException 当任务不存在时抛出
 
 // ✅ Javadoc @see 使用简单类名
 * @see LocalStorage
@@ -82,12 +82,12 @@ default void setTemplateEngine(TemplateEngine templateEngine) {
 以下场景禁止使用行内 FQN，必须先 `import` 再用简单类名：
 
 1. **类型引用**：变量声明、返回类型、参数类型、泛型类型参数
-2. **`.class` 字面量**：如 `com.njydsz.pmis.common.exception.BizException.class` → `BizException.class`
+2. **`.class` 字面量**：如 `com.njydsz.pmis.common.exception.SysException.class` → `SysException.class`
 3. **注解**：如 `@org.springframework.boot.autoconfigure.condition.ConditionalOnBean(...)` → `@ConditionalOnBean(...)`
 4. **静态方法调用**：如 `org.junit.jupiter.api.Assertions.assertThrows(...)` → `assertThrows(...)`（配合 `import static`）
 5. **`new` 表达式**：如 `new com.njydsz.pmis.literule.expr.QLExpressExpressionEvaluator()` → `new QLExpressExpressionEvaluator()`
-6. **`instanceof` 检查**：如 `x instanceof com.njydsz.pmis.common.exception.BizException` → `x instanceof BizException`
-7. **Javadoc `@throws` 标签**：如 `@throws com.njydsz.pmis.common.exception.BizException` → `@throws BizException`
+6. **`instanceof` 检查**：如 `x instanceof com.njydsz.pmis.common.exception.SysException` → `x instanceof SysException`
+7. **Javadoc `@throws` 标签**：如 `@throws com.njydsz.pmis.common.exception.SysException` → `@throws SysException`
 8. **Javadoc `@see` 标签**：如 `@see com.njydsz.pmis.common.file.storage.platform.LocalStorage` → `@see LocalStorage`
 9. **Javadoc `@param` / `@return` 标签中的类型名**：同上，禁止 FQN，必须 import + 简单类名
 10. **注解参数中的 `.class` 字面量**：如 `@Import(com.njydsz.pmis.common.audit.config.AuditAutoConfiguration.class)` → `@Import(AuditAutoConfiguration.class)`
@@ -104,19 +104,19 @@ default void setTemplateEngine(TemplateEngine templateEngine) {
 ```java
 // .class 字面量
 assertThatThrownBy(() -> service.execute("INVALID", ctx()))
-    .isInstanceOf(com.njydsz.pmis.common.exception.BizException.class);
+    .isInstanceOf(com.njydsz.pmis.common.exception.SysException.class);
 
 // 注解
 @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(RuleConfigProvider.class)
 
 // 静态方法调用
-org.junit.jupiter.api.Assertions.assertThrows(BizException.class, () -> service.send(req));
+org.junit.jupiter.api.Assertions.assertThrows(SysException.class, () -> service.send(req));
 
 // new 表达式
 return new com.njydsz.pmis.literule.expr.QLExpressExpressionEvaluator();
 
 // Javadoc @throws 使用 FQN（禁止）
-* @throws com.njydsz.pmis.common.exception.BizException 当条件不满足时抛出
+* @throws com.njydsz.pmis.common.exception.SysException 当条件不满足时抛出
 
 // Javadoc @see 使用 FQN（禁止）
 * @see com.njydsz.pmis.common.jdbc.interceptor.LogicalDeleteInterceptor
@@ -127,7 +127,7 @@ return new com.njydsz.pmis.literule.expr.QLExpressExpressionEvaluator();
 
 正确：
 ```java
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.jdbc.interceptor.LogicalDeleteInterceptor;
 import com.njydsz.pmis.common.audit.config.AuditAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -136,19 +136,19 @@ import com.njydsz.pmis.literule.expr.QLExpressExpressionEvaluator;
 
 // .class 字面量
 assertThatThrownBy(() -> service.execute("INVALID", ctx()))
-    .isInstanceOf(BizException.class);
+    .isInstanceOf(SysException.class);
 
 // 注解
 @ConditionalOnBean(RuleConfigProvider.class)
 
 // 静态方法调用
-assertThrows(BizException.class, () -> service.send(req));
+assertThrows(SysException.class, () -> service.send(req));
 
 // new 表达式
 return new QLExpressExpressionEvaluator();
 
 // Javadoc @throws 使用简单类名（正确）
-* @throws BizException 当条件不满足时抛出
+* @throws SysException 当条件不满足时抛出
 
 // Javadoc @see 使用简单类名（正确）
 * @see LogicalDeleteInterceptor

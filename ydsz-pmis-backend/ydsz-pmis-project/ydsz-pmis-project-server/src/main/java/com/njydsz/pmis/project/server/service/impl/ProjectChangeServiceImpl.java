@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.event.ProjectChangeExecutedEvent;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.project.domain.dto.ProjectChangeCreateDTO;
 import com.njydsz.pmis.project.domain.dto.ProjectChangeStatusDTO;
 import com.njydsz.pmis.project.server.engine.ChangeImpactEvaluator;
@@ -53,14 +53,14 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      *
      * @param dto 变更创建参数
      * @return 变更记录 ID
-     * @throws BizException 编号重复或参数非法时抛出
+     * @throws SysException 编号重复或参数非法时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(ProjectChangeCreateDTO dto) {
         validate(dto);
         if (changeMapper.selectByCode(dto.getChangeCode()) != null) {
-            throw new BizException(StandardResultCode.DUPLICATE_KEY,
+            throw new SysException(StandardResultCode.DUPLICATE_KEY,
                     "error.project.msg_f3637e40", dto.getChangeCode());
         }
         ProjectChangeDO c = new ProjectChangeDO();
@@ -91,7 +91,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      * 触发 EVM 基线重算等下游联动（事件发布失败不影响主流程）。</p>
      *
      * @param dto 状态迁移参数
-     * @throws BizException 状态非法或迁移路径不允许时抛出
+     * @throws SysException 状态非法或迁移路径不允许时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -100,13 +100,13 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
         ChangeStatus from = ChangeStatus.fromCode(c.getStatus());
         ChangeStatus to = ChangeStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_2e33226a", c.getStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_2e33226a", c.getStatus());
         }
         if (!from.canTransitTo(to)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "error.project.msg_0c941160", from.getDesc(), to.getDesc());
         }
         LocalDateTime now = LocalDateTime.now();
@@ -129,14 +129,14 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      * 删除变更申请，仅 DRAFT/REJECTED/CANCELLED 状态允许删除。
      *
      * @param id 变更 ID
-     * @throws BizException 变更不存在或当前状态不允许删除时抛出
+     * @throws SysException 变更不存在或当前状态不允许删除时抛出
      */
     @Override
     public void delete(String id) {
         ProjectChangeDO c = getById(id);
         ChangeStatus st = ChangeStatus.fromCode(c.getStatus());
         if (st != ChangeStatus.DRAFT && st != ChangeStatus.REJECTED && st != ChangeStatus.CANCELLED) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_3a1a0d4b", st.getDesc());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_3a1a0d4b", st.getDesc());
         }
         changeMapper.deleteById(id);
         log.info("[ProjectChange] 删除变更: id={}", id);
@@ -147,14 +147,14 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      *
      * @param id 变更 ID
      * @return 变更实体
-     * @throws BizException 变更不存在时抛出
+     * @throws SysException 变更不存在时抛出
      */
     @Override
     @Transactional(readOnly = true)
     public ProjectChangeDO getById(String id) {
         ProjectChangeDO c = changeMapper.selectById(id);
         if (c == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_2cfba1ec");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_2cfba1ec");
         }
         return c;
     }
@@ -244,20 +244,20 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      * 校验变更创建参数：变更类型合法、申请人必填、进度影响天数合理。
      *
      * @param dto 变更创建参数
-     * @throws BizException 参数非法时抛出
+     * @throws SysException 参数非法时抛出
      */
     private void validate(ProjectChangeCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (ChangeType.fromCode(dto.getChangeType()) == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_7d505699", dto.getChangeType());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_7d505699", dto.getChangeType());
         }
         if (dto.getApplicantId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_98bc5a1a");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_98bc5a1a");
         }
         if (dto.getScheduleImpactDays() != null && dto.getScheduleImpactDays() < -3650) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_40763f49");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_40763f49");
         }
     }
 

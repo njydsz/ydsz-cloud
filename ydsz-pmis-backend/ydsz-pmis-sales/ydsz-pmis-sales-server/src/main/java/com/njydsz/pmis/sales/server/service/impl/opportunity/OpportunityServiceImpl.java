@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.sales.server.assembler.NameAssembler;
 import com.njydsz.pmis.project.domain.dto.InitiationCreateDTO;
@@ -65,14 +65,14 @@ public class OpportunityServiceImpl implements OpportunityService {
      *
      * @param dto 商机创建参数
      * @return 商机主键 ID
-     * @throws BizException 编号重复或参数非法时抛出
+     * @throws SysException 编号重复或参数非法时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(OpportunityCreateDTO dto) {
         validate(dto);
         if (opportunityMapper.selectByCode(dto.getOpportunityCode()) != null) {
-            throw new BizException(StandardResultCode.DUPLICATE_KEY,
+            throw new SysException(StandardResultCode.DUPLICATE_KEY,
                     "商机编号已存在: " + dto.getOpportunityCode());
         }
         OpportunityDO o = new OpportunityDO();
@@ -107,17 +107,17 @@ public class OpportunityServiceImpl implements OpportunityService {
      * 更新商机信息（按非空字段覆盖）。
      *
      * @param dto 商机更新参数，必须携带 id
-     * @throws BizException 商机不存在或参数非法时抛出
+     * @throws SysException 商机不存在或参数非法时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(OpportunityUpdateDTO dto) {
         if (dto.getId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "商机 ID 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "商机 ID 不能为空");
         }
         OpportunityDO o = opportunityMapper.selectById(dto.getId());
         if (o == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "商机不存在");
+            throw new SysException(StandardResultCode.NOT_FOUND, "商机不存在");
         }
         if (StringUtils.hasText(dto.getOpportunityName())) o.setOpportunityName(dto.getOpportunityName());
         if (StringUtils.hasText(dto.getLevel())) o.setLevel(dto.getLevel());
@@ -140,7 +140,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      * 输单(LOST)需附带原因。</p>
      *
      * @param dto 状态迁移参数
-     * @throws BizException 状态非法或迁移路径不允许时抛出
+     * @throws SysException 状态非法或迁移路径不允许时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -149,17 +149,17 @@ public class OpportunityServiceImpl implements OpportunityService {
         OpportunityStatus from = OpportunityStatus.fromCode(o.getStatus());
         OpportunityStatus to = OpportunityStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "未知状态: " + dto.getTargetStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "未知状态: " + dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "商机当前状态非法: " + o.getStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "商机当前状态非法: " + o.getStatus());
         }
         if (!from.canTransitTo(to)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "状态不允许迁移: " + from.getDesc() + " → " + to.getDesc());
         }
         if (to == OpportunityStatus.LOST && !StringUtils.hasText(dto.getLostReason())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "输单原因不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "输单原因不能为空");
         }
         opportunityMapper.updateStatus(o.getId(), to.getCode(), dto.getLostReason());
         log.info("[Opportunity] 状态迁移: id={} {} -> {}", o.getId(), from.getCode(), to.getCode());
@@ -169,7 +169,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      * 删除商机（按主键）。
      *
      * @param id 商机 ID
-     * @throws BizException 商机不存在时抛出
+     * @throws SysException 商机不存在时抛出
      */
     @Override
     public void delete(String id) {
@@ -183,14 +183,14 @@ public class OpportunityServiceImpl implements OpportunityService {
      *
      * @param id 商机 ID
      * @return 商机实体
-     * @throws BizException 商机不存在时抛出
+     * @throws SysException 商机不存在时抛出
      */
     @Override
     @Transactional(readOnly = true)
     public OpportunityDO getById(String id) {
         OpportunityDO o = opportunityMapper.selectById(id);
         if (o == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "商机不存在");
+            throw new SysException(StandardResultCode.NOT_FOUND, "商机不存在");
         }
         return o;
     }
@@ -234,7 +234,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      * @param customerCredit 客户信用等级码（A/B/C/D），可空
      * @param hasHistory     是否存在历史合作记录
      * @return 评估后的赢单率（百分比）
-     * @throws BizException 商机不存在时抛出
+     * @throws SysException 商机不存在时抛出
      */
     @Override
     public BigDecimal evaluateWinRate(String id, String customerCredit, boolean hasHistory) {
@@ -275,23 +275,23 @@ public class OpportunityServiceImpl implements OpportunityService {
      * 校验商机创建参数，确保编号/名称/客户/负责人等必填字段非空。
      *
      * @param dto 商机创建参数
-     * @throws BizException 参数非法时抛出
+     * @throws SysException 参数非法时抛出
      */
     private void validate(OpportunityCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "请求不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "请求不能为空");
         }
         if (!StringUtils.hasText(dto.getOpportunityCode())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "商机编号不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "商机编号不能为空");
         }
         if (!StringUtils.hasText(dto.getOpportunityName())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "商机名称不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "商机名称不能为空");
         }
         if (dto.getCustomerId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "客户 ID 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "客户 ID 不能为空");
         }
         if (dto.getOwnerId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "负责人 ID 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "负责人 ID 不能为空");
         }
     }
 
@@ -326,25 +326,25 @@ public class OpportunityServiceImpl implements OpportunityService {
      * @param sponsorId     立项发起人 ID
      * @param pmId          项目经理 ID
      * @return 新创建的立项 ID
-     * @throws BizException 商机不存在、状态非 WON 或客户为空时抛出
+     * @throws SysException 商机不存在、状态非 WON 或客户为空时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String convertToInitiation(String opportunityId, String sponsorId, String pmId) {
         if (opportunityId == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "商机 ID 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "商机 ID 不能为空");
         }
         OpportunityDO opp = opportunityMapper.selectById(opportunityId);
         if (opp == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "商机不存在: " + opportunityId);
+            throw new SysException(StandardResultCode.NOT_FOUND, "商机不存在: " + opportunityId);
         }
         OpportunityStatus cur = OpportunityStatus.fromCode(opp.getStatus());
         if (cur != OpportunityStatus.WON) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "仅已赢单(WON)状态的商机可转立项，当前状态: " + (cur == null ? "未知" : cur.getDesc()));
         }
         if (opp.getCustomerId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "商机客户为空，无法转立项");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "商机客户为空，无法转立项");
         }
 
         // 1. 装配立项草稿

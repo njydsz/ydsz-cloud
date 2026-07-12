@@ -1,6 +1,6 @@
 package com.njydsz.pmis.cronjob.server.service.dag;
 
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.cronjob.domain.dto.dag.JobDagSaveDTO;
 import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagDO;
 import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagVersionDO;
@@ -22,7 +22,7 @@ public interface JobDagService {
      *
      * @param dto DAG 表单
      * @return 新建的 DAG ID
-     * @throws BizException 当 dagKey 已存在或 dagDefinition 非法时抛出
+     * @throws SysException 当 dagKey 已存在或 dagDefinition 非法时抛出
      */
     String createDag(JobDagSaveDTO dto);
 
@@ -31,7 +31,7 @@ public interface JobDagService {
      *
      * @param dagId DAG ID
      * @param dto   DAG 表单
-     * @throws BizException 当 DAG 不存在或 dagDefinition 非法时抛出
+     * @throws SysException 当 DAG 不存在或 dagDefinition 非法时抛出
      */
     void updateDag(String dagId, JobDagSaveDTO dto);
 
@@ -39,7 +39,7 @@ public interface JobDagService {
      * 删除 DAG 定义（逻辑删除）。
      *
      * @param dagId DAG ID
-     * @throws BizException 当 DAG 不存在时抛出
+     * @throws SysException 当 DAG 不存在时抛出
      */
     void deleteDag(String dagId);
 
@@ -47,7 +47,7 @@ public interface JobDagService {
      * 启用 DAG（DRAFT/DISABLED → ENABLED）。
      *
      * @param dagId DAG ID
-     * @throws BizException 当 DAG 不存在或状态非法时抛出
+     * @throws SysException 当 DAG 不存在或状态非法时抛出
      */
     void enableDag(String dagId);
 
@@ -55,7 +55,7 @@ public interface JobDagService {
      * 禁用 DAG（ENABLED → DISABLED）。
      *
      * @param dagId DAG ID
-     * @throws BizException 当 DAG 不存在或状态非法时抛出
+     * @throws SysException 当 DAG 不存在或状态非法时抛出
      */
     void disableDag(String dagId);
 
@@ -64,7 +64,7 @@ public interface JobDagService {
      *
      * @param dagId DAG ID
      * @return DAG 定义
-     * @throws BizException 当 DAG 不存在时抛出
+     * @throws SysException 当 DAG 不存在时抛出
      */
     JobDagDO getDagById(String dagId);
 
@@ -73,7 +73,7 @@ public interface JobDagService {
      *
      * @param dagKey DAG KEY
      * @return DAG 定义
-     * @throws BizException 当 DAG 不存在时抛出
+     * @throws SysException 当 DAG 不存在时抛出
      */
     JobDagDO getDagByKey(String dagKey);
 
@@ -97,7 +97,7 @@ public interface JobDagService {
      * @param dagKey    DAG KEY
      * @param triggerBy 触发人（用户 ID，可空）
      * @return DAG 实例 ID
-     * @throws BizException 当 DAG 不存在、未启用或并发已达上限时抛出
+     * @throws SysException 当 DAG 不存在、未启用或并发已达上限时抛出
      */
     String triggerDag(String dagKey, String triggerBy);
 
@@ -118,7 +118,7 @@ public interface JobDagService {
      * @param dagId   DAG ID
      * @param version 版本号
      * @return 版本快照
-     * @throws BizException 当版本不存在时抛出
+     * @throws SysException 当版本不存在时抛出
      */
     JobDagVersionDO getDagVersion(String dagId, int version);
 
@@ -132,7 +132,7 @@ public interface JobDagService {
      * @param version  要回滚到的版本号
      * @param changedBy 操作人
      * @return 回滚后的新版本号
-     * @throws BizException 当 DAG 或版本不存在时抛出
+     * @throws SysException 当 DAG 或版本不存在时抛出
      */
     int rollbackDagVersion(String dagId, int version, String changedBy);
 }

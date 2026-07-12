@@ -43,7 +43,7 @@
  * <ul>
  *   <li>实现类之间通过构造函数注入依赖，<strong>禁止字段注入（{@code @Autowired} 字段）</strong>。</li>
  *   <li>复杂流程编排走"门面 Service"，将多步操作封装为可复用方法，避免事务碎片化。</li>
- *   <li>对外抛出的业务异常必须使用 {@code BizException}，禁止裸 {@code RuntimeException}。</li>
+ *   <li>对外抛出的业务异常必须使用 {@code SysException}，禁止裸 {@code RuntimeException}。</li>
  *   <li>单方法事务粒度遵循"最小必要"原则，避免大事务；跨 Service 调用走 {@code Propagation.REQUIRES_NEW}。</li>
  *   <li>本包实现仅服务 <strong>PC 端</strong>，<strong>不适用移动端 / 独立 H5</strong>；
  *       <strong>不含电子签章</strong>（合同签署走独立电子签章服务）。</li>

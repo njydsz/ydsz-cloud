@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.config.ThresholdProvider;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.project.domain.dto.EvmMeasureCreateDTO;
 import com.njydsz.pmis.project.server.engine.EvmCalculator;
 import com.njydsz.pmis.project.domain.entity.EvmMeasureDO;
@@ -52,15 +52,15 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String save(EvmMeasureCreateDTO dto) {
-        if (dto == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (dto.getInitiationId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (!StringUtils.hasText(dto.getPeriod())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d53b5f27");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d53b5f27");
         }
         if (dto.getPv() == null || dto.getEv() == null || dto.getAc() == null || dto.getBac() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_e52f5250");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_e52f5250");
         }
         if (dto.getMeasureDate() == null) dto.setMeasureDate(LocalDate.now());
 
@@ -108,9 +108,9 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
     @Override
     @Transactional(readOnly = true)
     public EvmMeasureVO getById(String id) {
-        if (id == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
         EvmMeasureDO m = evmMapper.selectById(id);
-        if (m == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_c14ffd5d");
+        if (m == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_c14ffd5d");
         return toVo(m);
     }
 
@@ -198,7 +198,7 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(String id) {
-        if (id == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_411b6827");
         evmMapper.deleteById(id);
     }
 

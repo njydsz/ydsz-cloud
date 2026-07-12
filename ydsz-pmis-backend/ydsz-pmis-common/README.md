@@ -20,7 +20,7 @@
 | 类 | 作用 |
 |---|---|
 | `Result<T>` | 业务响应包装（`code` / `message` / `data` / `traceId`） |
-| `BizException` + `BizErrorCode` | 业务异常（带错误码） |
+| `SysException` + `BizErrorCode` | 业务异常（带错误码） |
 | `GlobalExceptionHandler` | 全局异常处理（业务异常 / 参数校验 / 系统异常） |
 | `PageResult<T>` / `CursorPageResult<T>` | 分页结果（offset / cursor 两种） |
 
@@ -106,7 +106,7 @@ ydsz-pmis-common/
 │   ├── entity/          # BaseDO / 分页查询
 │   ├── event/           # 事件定义
 │   ├── excel/           # Excel 工具
-│   ├── exception/       # BizException / GlobalExceptionHandler
+│   ├── exception/       # SysException / GlobalExceptionHandler
 │   ├── featureflag/     # 特性开关
 │   ├── feign/           # 7 个 Feign 客户端 + Fallback
 │   ├── filter/          # TraceId/XSS/SameSite/StrictContentType

@@ -28,7 +28,7 @@ import java.util.Map;
  * <pre>{@code
  * List<FlowFormValidationError> errors = validator.validate(schema, formData);
  * if (!errors.isEmpty()) {
- *     throw new BizException(...);
+ *     throw new SysException(...);
  * }
  * }</pre>
  *

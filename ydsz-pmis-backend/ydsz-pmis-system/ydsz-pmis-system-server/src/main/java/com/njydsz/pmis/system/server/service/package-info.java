@@ -27,7 +27,7 @@
  *   <li><b>事务边界清晰</b>：{@code @Transactional(rollbackFor = Exception.class)} 标注在写操作上，
 >       读操作使用 {@code readOnly = true} 优化</li>
  *   <li><b>幂等可控</b>：对外暴露的写操作须保证幂等性，幂等键通过入参或业务字段构造</li>
- *   <li><b>业务异常显式</b>：所有业务校验失败须抛 {@code BizException(BizErrorCode, i18nKey)}，
+ *   <li><b>业务异常显式</b>：所有业务校验失败须抛 {@code SysException(BizErrorCode, i18nKey)}，
 >       禁止 {@code RuntimeException} 模糊处理</li>
  *   <li><b>无状态可水平扩展</b>：所有 Service 均为无状态 Bean（仅依赖 Mapper/其他 Service），
 >       支持多实例部署</li>

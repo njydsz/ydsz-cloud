@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowAssigneeDTO;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
@@ -226,7 +226,7 @@ public class FlowTaskCreateService {
     private FlowInstanceDO lookupInstance(String instanceId) {
         FlowInstanceDO instance = instanceService.getById(instanceId);
         if (instance == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.workflow.msg_fc4b1c16", instanceId);
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_fc4b1c16", instanceId);
         }
         return instance;
     }
@@ -792,7 +792,7 @@ public class FlowTaskCreateService {
         int depth = AUTO_PASS_DEPTH.get();
         if (depth >= MAX_AUTO_PASS_DEPTH) {
             log.warn("[Flow] AUTO_PASS 递归深度超限: depth={} instanceId={}", depth, instance.getId());
-            throw new BizException(StandardResultCode.INTERNAL_ERROR, "error.workflow.msg_fcd55e62");
+            throw new SysException(StandardResultCode.INTERNAL_ERROR, "error.workflow.msg_fcd55e62");
         }
         AUTO_PASS_DEPTH.set(depth + 1);
         try {

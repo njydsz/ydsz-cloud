@@ -6,7 +6,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.entity.PageQuery;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.system.domain.dto.config.ConfigFormDTO;
 import com.njydsz.pmis.system.domain.dto.config.ConfigQueryDTO;
 import com.njydsz.pmis.system.domain.entity.config.ConfigDO;
@@ -91,14 +91,14 @@ public class ConfigServiceImpl implements ConfigService {
      *
      * @param id 配置 ID
      * @return 配置实体
-     * @throws BizException 当配置不存在时抛出
+     * @throws SysException 当配置不存在时抛出
      */
     @Override
     @Transactional(readOnly = true)
     public ConfigDO getById(String id) {
         ConfigDO c = configMapper.selectById(id);
         if (c == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "配置不存在");
+            throw new SysException(StandardResultCode.NOT_FOUND, "配置不存在");
         }
         return c;
     }
@@ -166,7 +166,7 @@ public class ConfigServiceImpl implements ConfigService {
      *
      * @param dto 配置表单
      * @return 配置 ID
-     * @throws BizException 当 valueType 非法、配置已存在或值格式不匹配时抛出
+     * @throws SysException 当 valueType 非法、配置已存在或值格式不匹配时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -174,11 +174,11 @@ public class ConfigServiceImpl implements ConfigService {
     public String create(ConfigFormDTO dto) {
         if (dto.getValueType() == null
                 || !Set.of("STRING", "NUMBER", "BOOLEAN", "JSON").contains(dto.getValueType())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "valueType 必须是 STRING/NUMBER/BOOLEAN/JSON");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "valueType 必须是 STRING/NUMBER/BOOLEAN/JSON");
         }
         ConfigDO exists = configMapper.selectByGroupAndKey(dto.getConfigGroup(), dto.getConfigKey());
         if (exists != null) {
-            throw new BizException(StandardResultCode.DUPLICATE_KEY, "配置已存在: " + dto.getConfigGroup() + "." + dto.getConfigKey());
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "配置已存在: " + dto.getConfigGroup() + "." + dto.getConfigKey());
         }
         ConfigDO entity = new ConfigDO();
         BeanUtils.copyProperties(dto, entity);
@@ -196,22 +196,22 @@ public class ConfigServiceImpl implements ConfigService {
      * 更新配置
      *
      * @param dto 配置表单
-     * @throws BizException 当 ID 为空、valueType 非法、配置不存在或值格式不匹配时抛出
+     * @throws SysException 当 ID 为空、valueType 非法、配置不存在或值格式不匹配时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = CACHE_NAME, allEntries = true)
     public void update(ConfigFormDTO dto) {
         if (dto.getId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "配置 ID 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "配置 ID 不能为空");
         }
         if (dto.getValueType() != null
                 && !Set.of("STRING", "NUMBER", "BOOLEAN", "JSON").contains(dto.getValueType())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "valueType 必须是 STRING/NUMBER/BOOLEAN/JSON");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "valueType 必须是 STRING/NUMBER/BOOLEAN/JSON");
         }
         ConfigDO exists = configMapper.selectById(dto.getId());
         if (exists == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "配置不存在");
+            throw new SysException(StandardResultCode.NOT_FOUND, "配置不存在");
         }
         ConfigDO entity = new ConfigDO();
         BeanUtils.copyProperties(dto, entity);
@@ -225,7 +225,7 @@ public class ConfigServiceImpl implements ConfigService {
      * 验证 configValue 与 valueType 的格式匹配性
      *
      * @param entity 配置实体
-     * @throws BizException 当值格式与类型不匹配时抛出
+     * @throws SysException 当值格式与类型不匹配时抛出
      */
     private void validateValueFormat(ConfigDO entity) {
         if (entity.getConfigValue() == null || entity.getValueType() == null) {
@@ -237,13 +237,13 @@ public class ConfigServiceImpl implements ConfigService {
                 try {
                     new BigDecimal(v);
                 } catch (NumberFormatException e) {
-                    throw new BizException(StandardResultCode.BAD_REQUEST,
+                    throw new SysException(StandardResultCode.BAD_REQUEST,
                             "NUMBER 类型配置值必须是数字: " + v);
                 }
             }
             case "BOOLEAN" -> {
                 if (!"true".equalsIgnoreCase(v) && !"false".equalsIgnoreCase(v)) {
-                    throw new BizException(StandardResultCode.BAD_REQUEST,
+                    throw new SysException(StandardResultCode.BAD_REQUEST,
                             "BOOLEAN 类型配置值必须是 true/false: " + v);
                 }
             }
@@ -251,7 +251,7 @@ public class ConfigServiceImpl implements ConfigService {
                 try {
                     JSON.parse(v);
                 } catch (Exception e) {
-                    throw new BizException(StandardResultCode.BAD_REQUEST,
+                    throw new SysException(StandardResultCode.BAD_REQUEST,
                             "JSON 类型配置值格式不合法: " + v);
                 }
             }
@@ -263,7 +263,7 @@ public class ConfigServiceImpl implements ConfigService {
      * 删除配置
      *
      * @param id 配置 ID
-     * @throws BizException 当配置不存在时抛出
+     * @throws SysException 当配置不存在时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -271,7 +271,7 @@ public class ConfigServiceImpl implements ConfigService {
     public void delete(String id) {
         ConfigDO c = configMapper.selectById(id);
         if (c == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "配置不存在");
+            throw new SysException(StandardResultCode.NOT_FOUND, "配置不存在");
         }
         configMapper.deleteById(id);
         invalidateCache(c.getConfigGroup());
@@ -282,14 +282,14 @@ public class ConfigServiceImpl implements ConfigService {
      *
      * @param group 配置分组
      * @return 删除条数
-     * @throws BizException 当分组为空时抛出
+     * @throws SysException 当分组为空时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = CACHE_NAME, allEntries = true)
     public int deleteByGroup(String group) {
         if (!StringUtils.hasText(group)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "配置分组不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "配置分组不能为空");
         }
         int n = configMapper.deleteByGroup(group);
         if (n > 0) {
@@ -305,17 +305,17 @@ public class ConfigServiceImpl implements ConfigService {
      * @param group  配置分组
      * @param status 目标状态（ENABLED/DISABLED）
      * @return 更新条数
-     * @throws BizException 当分组或状态为空、状态值非法时抛出
+     * @throws SysException 当分组或状态为空、状态值非法时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     @CacheEvict(value = CACHE_NAME, allEntries = true)
     public int updateStatusByGroup(String group, String status) {
         if (!StringUtils.hasText(group) || !StringUtils.hasText(status)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "分组和状态不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "分组和状态不能为空");
         }
         if (!"ENABLED".equals(status) && !"DISABLED".equals(status)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "状态值非法: " + status);
+            throw new SysException(StandardResultCode.BAD_REQUEST, "状态值非法: " + status);
         }
         int n = configMapper.updateStatusByGroup(group, status);
         if (n > 0) {

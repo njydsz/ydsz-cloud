@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.impl.config;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.dto.config.SubscriptionUpsertDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgSubscriptionDO;
@@ -40,13 +40,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      *
      * @param dto 订阅 upsert 参数
      * @return 落库后的订阅记录
-     * @throws BizException 必填字段为空时抛出
+     * @throws SysException 必填字段为空时抛出
      */
     @Override
     public MsgSubscriptionDO upsert(SubscriptionUpsertDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getUserId())
                 || !StringUtils.hasText(dto.getTopicCode()) || !StringUtils.hasText(dto.getChannel())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
         }
         MsgSubscriptionDO existing = msgSubscriptionMapper.selectOne(new LambdaQueryWrapper<MsgSubscriptionDO>()
                 .eq(MsgSubscriptionDO::getUserId, dto.getUserId())
@@ -170,12 +170,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      * @param topicCode 主题编码
      * @param channel   消息通道
      * @return 更新后的订阅记录
-     * @throws BizException 必填字段为空时抛出
+     * @throws SysException 必填字段为空时抛出
      */
     @Override
     public MsgSubscriptionDO unsubscribe(String userId, String topicCode, String channel) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode) || !StringUtils.hasText(channel)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
         }
         MsgSubscriptionDO existing = msgSubscriptionMapper.selectOne(new LambdaQueryWrapper<MsgSubscriptionDO>()
                 .eq(MsgSubscriptionDO::getUserId, userId)

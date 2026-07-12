@@ -3,7 +3,7 @@ package com.njydsz.pmis.userinfo.server.service.impl.rate;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.userinfo.domain.dto.rate.PartTimeRateCreateDTO;
 import com.njydsz.pmis.userinfo.domain.dto.rate.PartTimeRateUpdateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.rate.PartTimeRateDO;
@@ -81,29 +81,29 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
     @Transactional(rollbackFor = Exception.class)
     public void update(String id, PartTimeRateUpdateDTO dto) {
         if (id == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "兼职职级费率 ID 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "兼职职级费率 ID 不能为空");
         }
         PartTimeRateDO exists = partTimeRateMapper.selectById(id);
         if (exists == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "兼职职级费率不存在: " + id);
+            throw new SysException(StandardResultCode.NOT_FOUND, "兼职职级费率不存在: " + id);
         }
         if (dto == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "兼职职级费率参数不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "兼职职级费率参数不能为空");
         }
         if (dto.getMonthlySalary() != null && dto.getMonthlySalary().signum() <= 0) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "月度薪资必须大于 0");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "月度薪资必须大于 0");
         }
         if (dto.getHourlyRate() != null && dto.getHourlyRate().signum() <= 0) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "时薪必须大于 0");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "时薪必须大于 0");
         }
         if (StringUtils.hasText(dto.getLevelSegment()) && !VALID_SEGMENTS.contains(dto.getLevelSegment())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "级别段位非法: " + dto.getLevelSegment());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "级别段位非法: " + dto.getLevelSegment());
         }
         // 日期校验
         LocalDate effective = dto.getEffectiveDate() != null ? dto.getEffectiveDate() : exists.getEffectiveDate();
         LocalDate expire = dto.getExpireDate() != null ? dto.getExpireDate() : exists.getExpireDate();
         if (expire != null && expire.isBefore(effective)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "失效日期不能早于生效日期");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "失效日期不能早于生效日期");
         }
         // rate_code + version 唯一性校验（排除自身）
         String code = dto.getRateCode() != null ? dto.getRateCode() : exists.getRateCode();
@@ -113,7 +113,7 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
                 .eq(PartTimeRateDO::getVersion, ver)
                 .ne(PartTimeRateDO::getId, id));
         if (dup != null) {
-            throw new BizException(StandardResultCode.DUPLICATE_KEY, "兼职级别编码已存在: " + code);
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "兼职级别编码已存在: " + code);
         }
         PartTimeRateDO entity = new PartTimeRateDO();
         BeanUtils.copyProperties(dto, entity);
@@ -147,10 +147,10 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
     @Transactional(rollbackFor = Exception.class)
     public void delete(String id) {
         if (id == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "兼职职级费率 ID 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "兼职职级费率 ID 不能为空");
         }
         if (partTimeRateMapper.selectById(id) == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "兼职职级费率不存在: " + id);
+            throw new SysException(StandardResultCode.NOT_FOUND, "兼职职级费率不存在: " + id);
         }
         partTimeRateMapper.deleteById(id);
         log.info("[PartTimeRate] 删除兼职费率: id={}", id);
@@ -161,7 +161,7 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
     public PartTimeRateDO getById(String id) {
         PartTimeRateDO rate = partTimeRateMapper.selectById(id);
         if (rate == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "兼职职级费率不存在: " + id);
+            throw new SysException(StandardResultCode.NOT_FOUND, "兼职职级费率不存在: " + id);
         }
         return rate;
     }
@@ -220,7 +220,7 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
     private BigDecimal calculateTotalCost(BigDecimal monthlySalary, BigDecimal commercialInsurance,
                                           BigDecimal travelReimbursement, BigDecimal travelAllowance) {
         if (monthlySalary == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "月度薪资不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "月度薪资不能为空");
         }
         BigDecimal insurance = commercialInsurance != null ? commercialInsurance : BigDecimal.ZERO;
         BigDecimal reimbursement = travelReimbursement != null ? travelReimbursement : BigDecimal.ZERO;
@@ -235,24 +235,24 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
      */
     private void validateCreate(PartTimeRateCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "兼职职级费率参数不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "兼职职级费率参数不能为空");
         }
         if (!StringUtils.hasText(dto.getRateCode())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "兼职级别编码不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "兼职级别编码不能为空");
         }
         if (!StringUtils.hasText(dto.getRateName())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "兼职级别名称不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "兼职级别名称不能为空");
         }
         // monthlySalary 由 hourlyRate × monthlyHours 服务端自动计算（见 create 方法），不在 create 入参校验
         if (dto.getHourlyRate() == null || dto.getHourlyRate().signum() <= 0) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "时薪必须大于 0");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "时薪必须大于 0");
         }
         validateSegment(dto.getLevelSegment());
         if (dto.getEffectiveDate() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "生效日期不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "生效日期不能为空");
         }
         if (dto.getExpireDate() != null && dto.getExpireDate().isBefore(dto.getEffectiveDate())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "失效日期不能早于生效日期");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "失效日期不能早于生效日期");
         }
         // rate_code + version 唯一性校验
         Integer version = dto.getVersion() != null ? dto.getVersion() : DEFAULT_VERSION;
@@ -260,7 +260,7 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
                 .eq(PartTimeRateDO::getRateCode, dto.getRateCode())
                 .eq(PartTimeRateDO::getVersion, version));
         if (dup != null) {
-            throw new BizException(StandardResultCode.DUPLICATE_KEY, "兼职级别编码已存在: " + dto.getRateCode());
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "兼职级别编码已存在: " + dto.getRateCode());
         }
     }
 
@@ -271,7 +271,7 @@ public class PartTimeRateServiceImpl implements PartTimeRateService {
      */
     private void validateSegment(String segment) {
         if (!StringUtils.hasText(segment) || !VALID_SEGMENTS.contains(segment)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "级别段位非法: " + segment);
+            throw new SysException(StandardResultCode.BAD_REQUEST, "级别段位非法: " + segment);
         }
     }
 }

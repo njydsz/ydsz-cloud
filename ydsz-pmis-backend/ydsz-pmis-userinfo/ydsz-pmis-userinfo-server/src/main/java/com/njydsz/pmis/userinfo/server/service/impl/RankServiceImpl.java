@@ -1,7 +1,7 @@
 package com.njydsz.pmis.userinfo.server.service.impl.rate;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.userinfo.domain.entity.rate.RankDO;
 import com.njydsz.pmis.userinfo.domain.entity.rate.RankRateDO;
 import com.njydsz.pmis.userinfo.infra.mapper.rate.RankMapper;
@@ -41,7 +41,7 @@ public class RankServiceImpl implements RankService {
         }
         RankRateDO rate = rankRateMapper.selectEffective(levelCode, date);
         if (rate == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.user.msg_c23b2b34", levelCode);
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_c23b2b34", levelCode);
         }
         return rate;
     }

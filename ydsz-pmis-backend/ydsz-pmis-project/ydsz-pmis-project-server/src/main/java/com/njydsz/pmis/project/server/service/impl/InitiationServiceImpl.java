@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.project.server.assembler.NameAssembler;
 import com.njydsz.pmis.project.domain.dto.BudgetItemDTO;
@@ -80,14 +80,14 @@ public class InitiationServiceImpl implements InitiationService {
      *
      * @param dto 立项创建参数
      * @return 立项 ID
-     * @throws BizException 项目编号重复或参数非法时抛出
+     * @throws SysException 项目编号重复或参数非法时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(InitiationCreateDTO dto) {
         validate(dto);
         if (initiationMapper.selectByCode(dto.getProjectCode()) != null) {
-            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.project.msg_32756e2a", dto.getProjectCode());
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.project.msg_32756e2a", dto.getProjectCode());
         }
         InitiationDO o = new InitiationDO();
         BeanUtils.copyProperties(dto, o);
@@ -117,7 +117,7 @@ public class InitiationServiceImpl implements InitiationService {
      * 迁移至 APPROVED 时自动设置门径为 CD1。</p>
      *
      * @param dto 阶段迁移参数
-     * @throws BizException 阶段非法或迁移路径不允许时抛出
+     * @throws SysException 阶段非法或迁移路径不允许时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -126,13 +126,13 @@ public class InitiationServiceImpl implements InitiationService {
         InitiationStage from = InitiationStage.fromCode(o.getStage());
         InitiationStage to = InitiationStage.fromCode(dto.getTargetStage());
         if (to == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_8453405e", dto.getTargetStage());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_8453405e", dto.getTargetStage());
         }
         if (from == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_3895d38d", o.getStage());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_3895d38d", o.getStage());
         }
         if (!from.canTransitTo(to)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "error.project.msg_fc28e9a4", from.getDesc(), to.getDesc());
         }
         String gate = to == InitiationStage.APPROVED ? GateCode.CD1.name() : o.getCurrentGate();
@@ -144,7 +144,7 @@ public class InitiationServiceImpl implements InitiationService {
      * 删除立项（按主键）。
      *
      * @param id 立项 ID
-     * @throws BizException 立项不存在时抛出
+     * @throws SysException 立项不存在时抛出
      */
     @Override
     public void delete(String id) {
@@ -158,14 +158,14 @@ public class InitiationServiceImpl implements InitiationService {
      *
      * @param id 立项 ID
      * @return 立项实体（含名称）
-     * @throws BizException 立项不存在时抛出
+     * @throws SysException 立项不存在时抛出
      */
     @Override
     @Transactional(readOnly = true)
     public InitiationDO getById(String id) {
         InitiationDO o = initiationMapper.selectById(id);
         if (o == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_f7fde8f5");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_f7fde8f5");
         }
         assembleNames(o);
         return o;
@@ -263,13 +263,13 @@ public class InitiationServiceImpl implements InitiationService {
      *
      * @param dto 预算明细参数
      * @return 预算明细 ID
-     * @throws BizException 立项不存在或参数非法时抛出
+     * @throws SysException 立项不存在或参数非法时抛出
      */
     @Override
     public String addBudgetItem(BudgetItemDTO dto) {
         validateBudget(dto);
         if (initiationMapper.selectById(dto.getInitiationId()) == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_f7fde8f5");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_f7fde8f5");
         }
         BudgetItemDO b = new BudgetItemDO();
         BeanUtils.copyProperties(dto, b);
@@ -288,13 +288,13 @@ public class InitiationServiceImpl implements InitiationService {
      * 删除预算明细，并触发预算总额重算。
      *
      * @param id 预算明细 ID
-     * @throws BizException 预算明细不存在时抛出
+     * @throws SysException 预算明细不存在时抛出
      */
     @Override
     public void deleteBudgetItem(String id) {
         BudgetItemDO b = budgetItemMapper.selectById(id);
         if (b == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_6b9c2579");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_6b9c2579");
         }
         budgetItemMapper.deleteById(id);
         recomputeBudget(b.getInitiationId());
@@ -359,7 +359,7 @@ public class InitiationServiceImpl implements InitiationService {
      *
      * @param dto 门径评审参数
      * @return 评审记录 ID
-     * @throws BizException 门径编码非法或评审结果非法时抛出
+     * @throws SysException 门径编码非法或评审结果非法时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -367,10 +367,10 @@ public class InitiationServiceImpl implements InitiationService {
         InitiationDO o = getById(dto.getInitiationId());
         GateCode gate = GateCode.fromCode(dto.getGateCode());
         if (gate == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_e08dfe9a", dto.getGateCode());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_e08dfe9a", dto.getGateCode());
         }
         if (!GATE_RESULTS.contains(dto.getReviewResult().toUpperCase())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_64b97ca8", dto.getReviewResult());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_64b97ca8", dto.getReviewResult());
         }
         GateReviewDO existing = gateReviewMapper.selectByInitiationAndGate(o.getId(), gate.name());
         GateReviewDO record = existing != null ? existing : new GateReviewDO();
@@ -443,7 +443,7 @@ public class InitiationServiceImpl implements InitiationService {
      * @param id          立项 ID
      * @param initiatorId 发起人 ID
      * @return 流程实例 ID；已存在或调用失败时返回 null
-     * @throws BizException 立项不存在时抛出
+     * @throws SysException 立项不存在时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -516,7 +516,7 @@ public class InitiationServiceImpl implements InitiationService {
      *
      * @param id 立项 ID
      * @return 快照 Map（按插入顺序保留）
-     * @throws BizException 立项不存在时抛出
+     * @throws SysException 立项不存在时抛出
      */
     @Override
     @Transactional(readOnly = true)
@@ -538,14 +538,14 @@ public class InitiationServiceImpl implements InitiationService {
      * 标记立项为审批中（APPROVING），保留当前门径不变。
      *
      * @param id 立项 ID
-     * @throws BizException 立项不存在时抛出
+     * @throws SysException 立项不存在时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void markProcessing(String id) {
         InitiationDO o = initiationMapper.selectById(id);
         if (o == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_f7fde8f5");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_f7fde8f5");
         }
         initiationMapper.updateStage(id, InitiationStage.APPROVING.getCode(), o.getCurrentGate());
         log.info("[Initiation] 标记审批中: id={} prevStage={}", id, o.getStage());
@@ -555,14 +555,14 @@ public class InitiationServiceImpl implements InitiationService {
      * 标记立项为已批准（APPROVED），并设置门径为 CD1。
      *
      * @param id 立项 ID
-     * @throws BizException 立项不存在时抛出
+     * @throws SysException 立项不存在时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void markApproved(String id) {
         InitiationDO o = initiationMapper.selectById(id);
         if (o == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_f7fde8f5");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_f7fde8f5");
         }
         initiationMapper.updateStage(id, InitiationStage.APPROVED.getCode(), GateCode.CD1.name());
         log.info("[Initiation] 标记已批准: id={} prevStage={}", id, o.getStage());
@@ -573,14 +573,14 @@ public class InitiationServiceImpl implements InitiationService {
      *
      * @param id     立项 ID
      * @param reason 驳回原因（可空，仅用于日志）
-     * @throws BizException 立项不存在时抛出
+     * @throws SysException 立项不存在时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void markRejected(String id, String reason) {
         InitiationDO o = initiationMapper.selectById(id);
         if (o == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_f7fde8f5");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_f7fde8f5");
         }
         initiationMapper.updateStage(id, InitiationStage.REJECTED.getCode(), o.getCurrentGate());
         log.info("[Initiation] 标记已驳回: id={} prevStage={} reason={}", id, o.getStage(), reason);
@@ -614,27 +614,27 @@ public class InitiationServiceImpl implements InitiationService {
      * 校验立项创建参数：编号/名称/客户/类型必填，结束日期不早于开始日期。
      *
      * @param dto 立项创建参数
-     * @throws BizException 参数非法时抛出
+     * @throws SysException 参数非法时抛出
      */
     private void validate(InitiationCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (!StringUtils.hasText(dto.getProjectCode())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_5e628290");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_5e628290");
         }
         if (!StringUtils.hasText(dto.getProjectName())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_68b28145");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_68b28145");
         }
         if (dto.getCustomerId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_6de1fd36");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_6de1fd36");
         }
         if (!StringUtils.hasText(dto.getProjectType())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_40dfe929");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_40dfe929");
         }
         if (dto.getPlannedStartDate() != null && dto.getPlannedEndDate() != null
                 && dto.getPlannedEndDate().isBefore(dto.getPlannedStartDate())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_7e6b1218");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_7e6b1218");
         }
     }
 
@@ -642,17 +642,17 @@ public class InitiationServiceImpl implements InitiationService {
      * 校验预算明细参数：立项 ID 必填，分类必须在 {@link #BUDGET_CATEGORIES} 范围内。
      *
      * @param dto 预算明细参数
-     * @throws BizException 参数非法时抛出
+     * @throws SysException 参数非法时抛出
      */
     private void validateBudget(BudgetItemDTO dto) {
         if (dto == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (dto.getInitiationId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_779da94d");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_779da94d");
         }
         if (!BUDGET_CATEGORIES.contains(dto.getCategory().toUpperCase())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_b33fbb09", dto.getCategory());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_b33fbb09", dto.getCategory());
         }
     }
 }

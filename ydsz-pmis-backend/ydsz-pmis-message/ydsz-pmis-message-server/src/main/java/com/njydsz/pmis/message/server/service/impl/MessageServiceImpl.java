@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.constant.SystemConstants;
 import com.njydsz.pmis.common.entity.PageQuery;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -267,19 +267,19 @@ public class MessageServiceImpl implements MessageService {
         // ⑥-1 通道+bizType 维度令牌桶（全局配额）
         if (!rateLimitService.tryAcquire(buildRateLimitKey(channel, bizType), 1)) {
             messageMetrics.recordSend(channel, "FAILED", 0);
-            throw new BizException(StandardResultCode.RATE_LIMIT, "发送限流，请稍后重试");
+            throw new SysException(StandardResultCode.RATE_LIMIT, "发送限流，请稍后重试");
         }
         // ⑥-2 P2-5/P0-5: 多维度令牌桶（receiver/templateCode/tenant），优先级感知
         if (!rateLimitService.checkSendLimit(channel, receiver, templateCode,
                 TenantContext.getTenantId(), request.getPriority())) {
             messageMetrics.recordSend(channel, "RATE_LIMITED", 0);
-            throw new BizException(StandardResultCode.RATE_LIMIT, "多维度限流：receiver/template/tenant 超限");
+            throw new SysException(StandardResultCode.RATE_LIMIT, "多维度限流：receiver/template/tenant 超限");
         }
         // ⑥-3 用户偏好频率（每日/每小时上限）
         if (StringUtils.hasText(receiver)
                 && !rateLimitService.checkFrequency(receiver, channel, bizType)) {
             messageMetrics.recordSend(channel, "FAILED", 0);
-            throw new BizException(StandardResultCode.RATE_LIMIT, "发送频率超限");
+            throw new SysException(StandardResultCode.RATE_LIMIT, "发送频率超限");
         }
 
         // ⑦ 加载模板（有 templateCode 时，使用偏好 locale）
@@ -879,7 +879,7 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public MessageResult sendTransactionally(MessageRequest request) {
         if (request == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "消息请求不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "消息请求不能为空");
         }
         RocketMQMessageProducer mqProducer = mqProducerProvider.getIfAvailable();
         if (mqProducer == null) {

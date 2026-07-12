@@ -23,10 +23,10 @@
 | 1 | **参数类型** | `create(@RequestBody com.njydsz.pmis.project.api.dto.InitiationCreateDTO dto)` | `import ...InitiationCreateDTO;` → `create(@RequestBody InitiationCreateDTO dto)` |
 | 2 | **方法引用** | `wrapper.eq(com.njydsz.pmis.cronjob.domain.entity.job.JobDO::getStatus, "NORMAL")` | `import ...JobDO;` → `wrapper.eq(JobDO::getStatus, "NORMAL")` |
 | 3 | **new 表达式** | `new com.njydsz.pmis.literule.server.replay.ExecutionReplayService(...)` | `import ...ExecutionReplayService;` → `new ExecutionReplayService(...)` |
-| 4 | **`.class` 字面量** | `com.njydsz.pmis.common.exception.BizException.class` | `BizException.class` |
+| 4 | **`.class` 字面量** | `com.njydsz.pmis.common.exception.SysException.class` | `SysException.class` |
 | 5 | **注解** | `@org.springframework.boot.autoconfigure.condition.ConditionalOnBean(...)` | `@ConditionalOnBean(...)` |
 | 6 | **静态方法调用** | `org.junit.jupiter.api.Assertions.assertThrows(...)` | `import static ...assertThrows;` → `assertThrows(...)` |
-| 7 | **instanceof 检查** | `x instanceof com.njydsz.pmis.common.exception.BizException` | `x instanceof BizException` |
+| 7 | **instanceof 检查** | `x instanceof com.njydsz.pmis.common.exception.SysException` | `x instanceof SysException` |
 | 8 | **泛型类型参数** | `new LambdaQueryWrapper<com.njydsz.pmis.cronjob.domain.entity.job.JobDO>()` | `new LambdaQueryWrapper<JobDO>()` |
 | 9 | **for-each 变量类型** | `for (com.njydsz.pmis.literule.api.Rule rule : ...)` | `for (Rule rule : ...)` |
 

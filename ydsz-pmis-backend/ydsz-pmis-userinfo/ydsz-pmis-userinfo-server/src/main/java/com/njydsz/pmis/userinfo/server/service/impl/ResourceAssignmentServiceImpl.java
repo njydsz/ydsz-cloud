@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.userinfo.domain.dto.resource.ResourceAssignmentCreateDTO;
 import com.njydsz.pmis.userinfo.server.engine.UtilizationCalculator;
 import com.njydsz.pmis.userinfo.domain.entity.resource.ResourceAssignmentDO;
@@ -42,25 +42,25 @@ public class ResourceAssignmentServiceImpl implements ResourceAssignmentService 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String act(ResourceAssignmentCreateDTO dto) {
-        if (dto == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_d9712a58");
+        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_d9712a58");
         if (!StringUtils.hasText(dto.getAction())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_f0494194");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_f0494194");
         }
         if (dto.getEmployeeId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_03f5ae35");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         }
         if (assignmentMapper.selectByCode(dto.getAssignmentCode()) != null) {
-            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.user.msg_c59015da", dto.getAssignmentCode());
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.user.msg_c59015da", dto.getAssignmentCode());
         }
         // RESERVE 阶段要求 opportunity 或 initiation 任一存在
         String action = dto.getAction().toUpperCase();
         if ("RESERVE".equals(action) && dto.getOpportunityId() == null && dto.getInitiationId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_278176c3");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_278176c3");
         }
         // START/TRANSFER/RELEASE 阶段要求 initiation
         if (("START".equals(action) || "TRANSFER".equals(action) || "RELEASE".equals(action))
                 && dto.getInitiationId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_52d7045f");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_52d7045f");
         }
         // 过载检测
         if ("START".equals(action) || "RESERVE".equals(action)) {
@@ -92,9 +92,9 @@ public class ResourceAssignmentServiceImpl implements ResourceAssignmentService 
     @Override
     @Transactional(readOnly = true)
     public ResourceAssignmentDO getById(String id) {
-        if (id == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
         ResourceAssignmentDO a = assignmentMapper.selectById(id);
-        if (a == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.user.msg_3d429777");
+        if (a == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_3d429777");
         return a;
     }
 

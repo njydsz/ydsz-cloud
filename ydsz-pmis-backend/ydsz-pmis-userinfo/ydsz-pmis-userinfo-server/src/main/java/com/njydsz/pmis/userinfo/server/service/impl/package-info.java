@@ -37,7 +37,7 @@
  * <h3>使用规范</h3>
  * <ul>
  *   <li>实现类使用 {@code @RequiredArgsConstructor} 注入依赖，字段 {@code final}，便于测试与并发安全。</li>
- *   <li>业务校验失败统一抛出 {@code BizException(BizErrorCode, messageKey)}，由全局异常处理器翻译为 i18n 文案。</li>
+ *   <li>业务校验失败统一抛出 {@code SysException(BizErrorCode, messageKey)}，由全局异常处理器翻译为 i18n 文案。</li>
  *   <li>不允许在 Service 内直接访问 {@code HttpServletRequest}，上下文参数通过方法入参显式传入。</li>
  *   <li>使用引擎工具（{@code engine} 包）完成复杂计算，Service 负责编排而非计算。</li>
  * </ul>

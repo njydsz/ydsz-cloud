@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.server.template;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -84,7 +84,7 @@ public class DefaultTemplateEngine implements TemplateEngine {
      * @param params      参数映射
      * @param requiredKeys 必填参数 key 集合（可为 null 或空）
      * @return 渲染后的字符串
-     * @throws BizException 必填参数缺失或为空时抛出
+     * @throws SysException 必填参数缺失或为空时抛出
      */
     @Override
     public String render(String template, Map<String, Object> params, Set<String> requiredKeys) {
@@ -107,7 +107,7 @@ public class DefaultTemplateEngine implements TemplateEngine {
     }
 
     /**
-     * 校验必填参数：缺失 / null / 空白字符串均视为缺失，抛 {@link BizException}。
+     * 校验必填参数：缺失 / null / 空白字符串均视为缺失，抛 {@link SysException}。
      *
      * @param params       参数映射
      * @param requiredKeys 必填 key 集合
@@ -116,11 +116,11 @@ public class DefaultTemplateEngine implements TemplateEngine {
         for (String key : requiredKeys) {
             Object value = resolve(params, key);
             if (value == null) {
-                throw new BizException(StandardResultCode.MISSING_PARAMETER,
+                throw new SysException(StandardResultCode.MISSING_PARAMETER,
                         "模板必填参数缺失: " + key);
             }
             if (value instanceof String s && s.isBlank()) {
-                throw new BizException(StandardResultCode.MISSING_PARAMETER,
+                throw new SysException(StandardResultCode.MISSING_PARAMETER,
                         "模板必填参数为空: " + key);
             }
         }

@@ -1,27 +1,27 @@
 /**
  * @file 错误处理工具单元测试
- * @covers BizException / HttpException / isHandledError
+ * @covers SysException / HttpException / isHandledError
  */
 import { describe, it, expect } from 'vitest'
-import { BizException, HttpException, isHandledError } from '../error'
+import { SysException, HttpException, isHandledError } from '../error'
 
 describe('error utils', () => {
-  describe('BizException', () => {
+  describe('SysException', () => {
     it('should create with message and code', () => {
-      const err = new BizException('test error', 1001)
+      const err = new SysException('test error', 1001)
       expect(err.message).toBe('test error')
       expect(err.code).toBe(1001)
-      expect(err.name).toBe('BizException')
+      expect(err.name).toBe('SysException')
       expect(err.handled).toBe(true) // default
     })
 
     it('should create with handled=false', () => {
-      const err = new BizException('unhandled', 1002, false)
+      const err = new SysException('unhandled', 1002, false)
       expect(err.handled).toBe(false)
     })
 
     it('should be an instance of Error', () => {
-      const err = new BizException('test', 1001)
+      const err = new SysException('test', 1001)
       expect(err).toBeInstanceOf(Error)
     })
   })
@@ -47,13 +47,13 @@ describe('error utils', () => {
   })
 
   describe('isHandledError', () => {
-    it('should return true for handled BizException', () => {
-      const err = new BizException('test', 1001, true)
+    it('should return true for handled SysException', () => {
+      const err = new SysException('test', 1001, true)
       expect(isHandledError(err)).toBe(true)
     })
 
-    it('should return false for unhandled BizException', () => {
-      const err = new BizException('test', 1001, false)
+    it('should return false for unhandled SysException', () => {
+      const err = new SysException('test', 1001, false)
       expect(isHandledError(err)).toBe(false)
     })
 

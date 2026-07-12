@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.strategy;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.domain.enums.definition.FlowPerformType;
@@ -45,7 +45,7 @@ public class VoteCountersignStrategy implements CountersignStrategy {
      *
      * @param task 运行时任务
      * @param dto  任务操作 DTO（含审批意见）
-     * @throws BizException 乐观锁更新失败时抛出
+     * @throws SysException 乐观锁更新失败时抛出
      */
     @Override
     public void onUserPassed(FlowRunTaskDO task, FlowTaskOperateDTO dto) {
@@ -53,7 +53,7 @@ public class VoteCountersignStrategy implements CountersignStrategy {
         task.setApproveFinished(finished);
         int updated = taskMapper.updateById(task);
         if (updated == 0) {
-            throw new BizException(StandardResultCode.RESOURCE_CONFLICT,
+            throw new SysException(StandardResultCode.RESOURCE_CONFLICT,
                     "error.workflow.msg_199e8ba1", task.getId());
         }
         archiveService.completeAndArchive(task, dto.getComment());

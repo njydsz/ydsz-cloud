@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.entity.PageQuery;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.dto.canary.CanaryUpsertDTO;
 import com.njydsz.pmis.message.domain.entity.canary.MsgCanaryDO;
@@ -41,7 +41,7 @@ public class CanaryServiceImpl implements CanaryService {
     @Override
     public MsgCanaryDO upsert(CanaryUpsertDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getCanaryKey())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "灰度键不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "灰度键不能为空");
         }
         int total = dto.getBucketTotal() == null || dto.getBucketTotal() <= 0 ? DEFAULT_BUCKET_TOTAL : dto.getBucketTotal();
         int percentage = dto.getPercentage() == null ? 0 : Math.max(0, Math.min(100, dto.getPercentage()));

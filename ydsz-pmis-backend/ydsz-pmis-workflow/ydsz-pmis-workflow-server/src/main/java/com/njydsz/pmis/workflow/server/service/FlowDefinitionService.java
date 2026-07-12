@@ -205,26 +205,26 @@ public interface FlowDefinitionService {
      * <ul>
      *   <li>未锁定 → 加锁成功，返回 true</li>
      *   <li>同一人持锁 → 续约（刷新 lockedAt），返回 true</li>
-     *   <li>他人持锁且未超时 → 抛 BizException</li>
+     *   <li>他人持锁且未超时 → 抛 SysException</li>
      *   <li>他人持锁但已超时 → 强制抢占，返回 true</li>
      * </ul>
      *
      * @param definitionId 流程定义 ID
      * @param userId       当前操作用户 ID
      * @return true=加锁成功
-     * @throws BizException 当锁被他人持有时
+     * @throws SysException 当锁被他人持有时
      */
     boolean lockDefinition(String definitionId, String userId);
 
     /**
      * P2-4: 解锁流程定义（设计器协同编辑）。
      *
-     * <p>仅持锁人本人可解锁；他人持锁或未锁定时抛 BizException。
+     * <p>仅持锁人本人可解锁；他人持锁或未锁定时抛 SysException。
      *
      * @param definitionId 流程定义 ID
      * @param userId       当前操作用户 ID
      * @return true=解锁成功
-     * @throws BizException 当非持锁人尝试解锁时
+     * @throws SysException 当非持锁人尝试解锁时
      */
     boolean unlockDefinition(String definitionId, String userId);
 

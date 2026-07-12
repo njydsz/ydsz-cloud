@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.userinfo.domain.dto.resource.ResourcePoolCreateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.resource.ResourcePoolDO;
 import com.njydsz.pmis.userinfo.domain.enums.resource.PoolType;
@@ -37,10 +37,10 @@ public class ResourcePoolServiceImpl implements ResourcePoolService {
     public String create(ResourcePoolCreateDTO dto) {
         validate(dto);
         if (poolMapper.selectByCode(dto.getPoolCode()) != null) {
-            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.user.msg_c51c8d33", dto.getPoolCode());
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.user.msg_c51c8d33", dto.getPoolCode());
         }
         if (PoolType.fromCode(dto.getPoolType()) == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_c3e0a19a", dto.getPoolType());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_c3e0a19a", dto.getPoolType());
         }
         ResourcePoolDO p = new ResourcePoolDO();
         BeanUtils.copyProperties(dto, p);
@@ -57,9 +57,9 @@ public class ResourcePoolServiceImpl implements ResourcePoolService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(String id, ResourcePoolCreateDTO dto) {
-        if (id == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
         ResourcePoolDO p = poolMapper.selectById(id);
-        if (p == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.user.msg_f0e76f2f");
+        if (p == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_f0e76f2f");
         if (dto.getPoolName() != null) p.setPoolName(dto.getPoolName());
         if (dto.getDepartmentId() != null) p.setDepartmentId(dto.getDepartmentId());
         if (dto.getDepartmentName() != null) p.setDepartmentName(dto.getDepartmentName());
@@ -74,16 +74,16 @@ public class ResourcePoolServiceImpl implements ResourcePoolService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(String id) {
-        if (id == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
         poolMapper.deleteById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
     public ResourcePoolDO getById(String id) {
-        if (id == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
         ResourcePoolDO p = poolMapper.selectById(id);
-        if (p == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.user.msg_f0e76f2f");
+        if (p == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_f0e76f2f");
         return p;
     }
 
@@ -113,15 +113,15 @@ public class ResourcePoolServiceImpl implements ResourcePoolService {
     }
 
     private void validate(ResourcePoolCreateDTO dto) {
-        if (dto == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_d9712a58");
+        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_d9712a58");
         if (!StringUtils.hasText(dto.getPoolCode())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_27b42dc0");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_27b42dc0");
         }
         if (!StringUtils.hasText(dto.getPoolName())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_04617d5a");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_04617d5a");
         }
         if (!StringUtils.hasText(dto.getPoolType())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_92a85357");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_92a85357");
         }
     }
 }

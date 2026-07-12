@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.WorkflowFacade;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowStartProcessDTO;
@@ -85,25 +85,25 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
                                 FlowNodeDO callActivityNode,
                                 Map<String, Object> variables) {
         if (parentInstance == null || callActivityNode == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "父实例/callActivity 节点不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "父实例/callActivity 节点不能为空");
         }
         // 1. 从节点 ext JSON 提取子流程编码
         String subFlowCode = extractSubFlowCode(callActivityNode);
         if (subFlowCode == null || subFlowCode.isBlank()) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "callActivity 节点未配置子流程编码: nodeCode=" + callActivityNode.getNodeCode());
         }
         // 2. 校验子流程定义存在且已发布
         FlowDefinitionDO subDef = definitionService.getPublished(subFlowCode, null,
                 parentInstance.getTenantId());
         if (subDef == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND,
+            throw new SysException(StandardResultCode.NOT_FOUND,
                     "子流程定义未发布或不存在: flowCode=" + subFlowCode);
         }
         // 3. 检查嵌套深度（P2-8: 可配置，默认 3 层）
         int nestingDepth = getNestingDepth(parentInstance.getId());
         if (nestingDepth >= maxNestingDepth) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "error.workflow.msg_14aff96e",
                     maxNestingDepth, nestingDepth, parentInstance.getId());
         }

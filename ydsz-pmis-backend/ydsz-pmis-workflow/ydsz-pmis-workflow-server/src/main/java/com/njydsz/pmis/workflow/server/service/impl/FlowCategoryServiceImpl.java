@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.server.service.impl.definition;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.workflow.domain.dto.definition.FlowCategoryDTO;
 import com.njydsz.pmis.workflow.domain.entity.definition.FlowCategoryDO;
@@ -63,7 +63,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
                         .eq(FlowCategoryDO::getDeleted, 0)
         );
         if (count != null && count > 0) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "error.workflow.msg_category_code_exists", dto.getCategoryCode());
         }
 
@@ -87,11 +87,11 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     @Transactional(rollbackFor = Exception.class)
     public void update(FlowCategoryDTO dto) {
         if (!StringUtils.hasText(dto.getId())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_id_required");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_id_required");
         }
         FlowCategoryDO existing = categoryMapper.selectById(dto.getId());
         if (existing == null || existing.getDeleted() == 1) {
-            throw new BizException(StandardResultCode.NOT_FOUND,
+            throw new SysException(StandardResultCode.NOT_FOUND,
                     "error.workflow.msg_6541ab08", dto.getId());
         }
         existing.setCategoryName(dto.getCategoryName());
@@ -125,7 +125,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
                         .eq(FlowCategoryDO::getDeleted, 0)
         );
         if (childCount != null && childCount > 0) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "error.workflow.msg_category_has_children");
         }
         // 校验是否有关联的流程定义
@@ -135,7 +135,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
                         .eq(FlowDefinitionDO::getDeleted, 0)
         );
         if (defCount != null && defCount > 0) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "error.workflow.msg_category_has_definitions");
         }
         existing.setDeleted(1);

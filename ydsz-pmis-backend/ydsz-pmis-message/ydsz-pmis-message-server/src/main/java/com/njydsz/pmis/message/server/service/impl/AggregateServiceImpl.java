@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.entity.PageQuery;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -67,7 +67,7 @@ public class AggregateServiceImpl implements AggregateService {
     @Override
     public MsgAggregateDO appendOrStart(String group, String receiver, String channel, String tenantId) {
         if (!StringUtils.hasText(group) || !StringUtils.hasText(receiver)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "聚合组与接收人不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "聚合组与接收人不能为空");
         }
         String tid = StringUtils.hasText(tenantId) ? tenantId : TenantContext.getTenantId();
         String lockKey = MessageConstants.AGGREGATE_LOCK_PREFIX + group + ":" + receiver;
@@ -76,7 +76,7 @@ public class AggregateServiceImpl implements AggregateService {
         try {
             locked = lock.tryLock(3, 10, TimeUnit.SECONDS);
             if (!locked) {
-                throw new BizException(StandardResultCode.RESOURCE_LOCKED, "获取聚合锁失败: " + group);
+                throw new SysException(StandardResultCode.RESOURCE_LOCKED, "获取聚合锁失败: " + group);
             }
             // 查 PENDING 批次
             MsgAggregateDO batch = msgAggregateMapper.selectOne(new LambdaQueryWrapper<MsgAggregateDO>()
@@ -107,7 +107,7 @@ public class AggregateServiceImpl implements AggregateService {
             return entity;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new BizException(StandardResultCode.RESOURCE_LOCKED, "聚合锁等待中断");
+            throw new SysException(StandardResultCode.RESOURCE_LOCKED, "聚合锁等待中断");
         } finally {
             if (locked && lock.isHeldByCurrentThread()) {
                 lock.unlock();
@@ -136,7 +136,7 @@ public class AggregateServiceImpl implements AggregateService {
     @Override
     public int flushByGroup(String group, String receiver) {
         if (!StringUtils.hasText(group) || !StringUtils.hasText(receiver)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "聚合组与接收人不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "聚合组与接收人不能为空");
         }
         List<MsgAggregateDO> batches = msgAggregateMapper.selectList(new LambdaQueryWrapper<MsgAggregateDO>()
                 .eq(MsgAggregateDO::getAggregateGroup, group)

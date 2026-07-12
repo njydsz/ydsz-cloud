@@ -27,7 +27,7 @@
 >       读方法标注 {@code @Transactional(readOnly = true)}</li>
  *   <li><b>日志规范</b>：业务关键路径（发送/删除/审批）使用 INFO 级别记录摘要；
 >       异常使用 ERROR 级别并附上下文（业务 ID/用户 ID/错误原因）</li>
- *   <li><b>异常透传</b>：Service 内部不吞异常，校验失败抛 {@code BizException}，
+ *   <li><b>异常透传</b>：Service 内部不吞异常，校验失败抛 {@code SysException}，
 >       第三方调用异常上抛由 Controller 统一捕获</li>
  * </ul>
  *

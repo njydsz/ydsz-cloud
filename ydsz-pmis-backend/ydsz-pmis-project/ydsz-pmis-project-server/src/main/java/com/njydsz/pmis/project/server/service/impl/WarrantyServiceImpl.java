@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.project.domain.dto.WarrantyCreateDTO;
 import com.njydsz.pmis.project.domain.dto.WarrantyTerminateDTO;
 import com.njydsz.pmis.project.server.engine.AfterSalesCodeGen;
@@ -46,7 +46,7 @@ public class WarrantyServiceImpl implements WarrantyService {
             for (WarrantyDO w : active) {
                 WarrantyStatus s = WarrantyStatus.fromCode(w.getStatus());
                 if (s != null && !s.isTerminal()) {
-                    throw new BizException(StandardResultCode.BAD_REQUEST,
+                    throw new SysException(StandardResultCode.BAD_REQUEST,
                             "error.execution.msg_a3d34659", w.getWarrantyCode());
                 }
             }
@@ -60,12 +60,12 @@ public class WarrantyServiceImpl implements WarrantyService {
         if (w.getStartDate() == null) w.setStartDate(LocalDate.now());
         if (w.getDurationMonths() == null) w.setDurationMonths(12);
         if (w.getDurationMonths() <= 0 || w.getDurationMonths() > 120) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_75b5c555");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_75b5c555");
         }
         w.setEndDate(w.getStartDate().plusMonths(w.getDurationMonths()));
         if (w.getNoticeDays() == null) w.setNoticeDays(30);
         if (w.getNoticeDays() < 0 || w.getNoticeDays() > 180) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_f4127654");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_f4127654");
         }
         w.setStatus(WarrantyStatus.ACTIVE.getCode());
         if (w.getTenantId() == null) w.setTenantId(TenantContext.getTenantId());
@@ -79,16 +79,16 @@ public class WarrantyServiceImpl implements WarrantyService {
     @Transactional(rollbackFor = Exception.class)
     public void terminate(WarrantyTerminateDTO dto) {
         if (dto == null || dto.getId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_40437174");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_40437174");
         }
         WarrantyDO w = warrantyMapper.selectById(dto.getId());
-        if (w == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_6457af8b");
+        if (w == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_6457af8b");
         WarrantyStatus st = WarrantyStatus.fromCode(w.getStatus());
         if (st == null || st.isTerminal()) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_b9835ff3", w.getStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_b9835ff3", w.getStatus());
         }
         if (!st.canTransitTo(WarrantyStatus.TERMINATED)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_5b3f83db", st.getDesc());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_5b3f83db", st.getDesc());
         }
         warrantyMapper.markStatus(dto.getId(), WarrantyStatus.TERMINATED.getCode(), dto.getReason());
         log.info("[Warranty] 终止质保期: id={} reason={}", dto.getId(), dto.getReason());
@@ -155,16 +155,16 @@ public class WarrantyServiceImpl implements WarrantyService {
     @Transactional(readOnly = true)
     public WarrantyDO getById(String id) {
         WarrantyDO w = warrantyMapper.selectById(id);
-        if (w == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_6457af8b");
+        if (w == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_6457af8b");
         return w;
     }
 
     private void validate(WarrantyCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         if (dto.getInitiationId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
     }
 }

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.engine.impl;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.server.engine.FlowAdvancer;
@@ -90,11 +90,11 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     public FlowInstanceViewDTO start(String instanceId) {
         FlowInstanceDO instance = instanceService.getById(instanceId);
         if (instance == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.workflow.msg_67a10717", instanceId);
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_67a10717", instanceId);
         }
         FlowNodeDO startNode = flowDefinitionCacheService.getStartNode(instance.getDefinitionId());
         if (startNode == null) {
-            throw new BizException(StandardResultCode.INTERNAL_ERROR,
+            throw new SysException(StandardResultCode.INTERNAL_ERROR,
                     "error.workflow.msg_560bf118", instance.getDefinitionId());
         }
         List<FlowNodeDO> nextNodes = advance(instance, startNode.getNodeCode(),
@@ -132,7 +132,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         FlowNodeDO currentNode = flowDefinitionCacheService.getNodeByCode(
                 currentInstance.getDefinitionId(), currentNodeCode);
         if (currentNode == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND,
+            throw new SysException(StandardResultCode.NOT_FOUND,
                     "error.workflow.msg_d84d389b", currentNodeCode);
         }
 
@@ -142,12 +142,12 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                     ? targetNodeCode
                     : resolveRejectTarget(currentInstance.getDefinitionId(), currentNodeCode);
             if (rejectTarget == null) {
-                throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_241f4a79");
+                throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_241f4a79");
             }
             FlowNodeDO target = flowDefinitionCacheService.getNodeByCode(
                     currentInstance.getDefinitionId(), rejectTarget);
             if (target == null) {
-                throw new BizException(StandardResultCode.NOT_FOUND, "error.workflow.msg_6e66716d", rejectTarget);
+                throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_6e66716d", rejectTarget);
             }
             return List.of(target);
         }
@@ -261,7 +261,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             FlowNodeDO target = flowDefinitionCacheService.getNodeByCode(
                     currentInstance.getDefinitionId(), nodeCode);
             if (target == null) {
-                throw new BizException(StandardResultCode.NOT_FOUND,
+                throw new SysException(StandardResultCode.NOT_FOUND,
                         "error.workflow.msg_6e66716d" + nodeCode);
             }
             // 避免重复
@@ -270,7 +270,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             }
         }
         if (targets.isEmpty()) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_241f4a79");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_241f4a79");
         }
         return targets;
     }

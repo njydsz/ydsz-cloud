@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.server.service.impl.integration;
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.server.engine.FlowAdvancer;
@@ -69,11 +69,11 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     public String createSubscription(String instanceId, FlowNodeDO node,
                                     Map<String, Object> variables, String boundaryTaskId) {
         if (instanceId == null || node == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "instanceId/node 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "instanceId/node 不能为空");
         }
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+            throw new SysException(StandardResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
         }
 
         Map<String, Object> ext = parseExt(node);
@@ -112,7 +112,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     public int correlateMessage(String tenantId, String messageName,
                                  String correlationKey, String payload) {
         if (!StringUtils.hasText(messageName)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "messageName 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "messageName 不能为空");
         }
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
 
@@ -144,7 +144,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     @Transactional(rollbackFor = Exception.class)
     public int throwError(String tenantId, String instanceId, String errorCode, String payload) {
         if (!StringUtils.hasText(errorCode)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "errorCode 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "errorCode 不能为空");
         }
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
 

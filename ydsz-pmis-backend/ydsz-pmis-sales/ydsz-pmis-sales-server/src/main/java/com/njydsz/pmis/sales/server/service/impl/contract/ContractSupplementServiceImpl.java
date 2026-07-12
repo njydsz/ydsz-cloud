@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.sales.domain.dto.ContractSupplementDTO;
 import com.njydsz.pmis.sales.domain.entity.ContractDO;
 import com.njydsz.pmis.sales.domain.entity.ContractSupplementDO;
@@ -48,17 +48,17 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
      *
      * @param dto 补充协议参数
      * @return 补充协议 ID
-     * @throws BizException 合同不存在、编号重复或参数非法时抛出
+     * @throws SysException 合同不存在、编号重复或参数非法时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(ContractSupplementDTO dto) {
         validate(dto);
         if (contractMapper.selectById(dto.getContractId()) == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_22d39b90");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_22d39b90");
         }
         if (supplementMapper.selectByCode(dto.getSupplementCode()) != null) {
-            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.project.msg_3592a4cc");
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.project.msg_3592a4cc");
         }
         ContractSupplementDO s = new ContractSupplementDO();
         BeanUtils.copyProperties(dto, s);
@@ -87,13 +87,13 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
      * 删除补充协议（按主键）。
      *
      * @param id 补充协议 ID
-     * @throws BizException 补充协议不存在时抛出
+     * @throws SysException 补充协议不存在时抛出
      */
     @Override
     public void delete(String id) {
         ContractSupplementDO s = supplementMapper.selectById(id);
         if (s == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_163e0077");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_163e0077");
         }
         supplementMapper.deleteById(id);
     }
@@ -103,14 +103,14 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
      *
      * @param id 补充协议 ID
      * @return 补充协议实体
-     * @throws BizException 补充协议不存在时抛出
+     * @throws SysException 补充协议不存在时抛出
      */
     @Override
     @Transactional(readOnly = true)
     public ContractSupplementDO getById(String id) {
         ContractSupplementDO s = supplementMapper.selectById(id);
         if (s == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_163e0077");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_163e0077");
         }
         return s;
     }
@@ -150,23 +150,23 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
      * 校验补充协议参数。
      *
      * @param dto 补充协议参数
-     * @throws BizException 参数为空、合同 ID 缺失、编号/名称缺失或类型非法时抛出
+     * @throws SysException 参数为空、合同 ID 缺失、编号/名称缺失或类型非法时抛出
      */
     private void validate(ContractSupplementDTO dto) {
         if (dto == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (!StringUtils.hasText(dto.getContractId())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_af96cf73");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_af96cf73");
         }
         if (!StringUtils.hasText(dto.getSupplementCode())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_9b9ada20");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_9b9ada20");
         }
         if (!StringUtils.hasText(dto.getSupplementName())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_33d967a0");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_33d967a0");
         }
         if (!TYPES.contains(dto.getSupplementType().toUpperCase())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_3820d28c", dto.getSupplementType());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_3820d28c", dto.getSupplementType());
         }
     }
 }

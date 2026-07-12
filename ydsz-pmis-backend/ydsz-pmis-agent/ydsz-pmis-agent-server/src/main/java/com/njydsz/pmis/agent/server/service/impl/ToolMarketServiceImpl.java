@@ -15,7 +15,7 @@ import com.njydsz.pmis.agent.server.tool.ToolRegistry;
 import com.njydsz.pmis.agent.server.tool.ToolResult;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -104,14 +104,14 @@ public class ToolMarketServiceImpl implements ToolMarketService {
      *
      * <p>注册流程：
      * <ol>
-     *   <li>校验工具名唯一性（重名抛 BizException）</li>
+     *   <li>校验工具名唯一性（重名抛 SysException）</li>
      *   <li>构建 DO 并落库（默认 enabled=true）</li>
      *   <li>同步注册到内存 ToolRegistry（失败仅日志告警，不影响落库）</li>
      * </ol>
      *
      * @param dto 工具注册参数（工具名、HTTP 方法、URL、参数 Schema 等）
      * @return 落库后的工具条目（含生成的 ID）
-     * @throws BizException 工具名称已存在时抛出
+     * @throws SysException 工具名称已存在时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -119,7 +119,7 @@ public class ToolMarketServiceImpl implements ToolMarketService {
         // 校验工具名唯一性
         ToolMarketEntryDO existing = mapper.selectByToolName(dto.getToolName());
         if (existing != null) {
-            throw new BizException(StandardResultCode.DUPLICATE_KEY, "工具名称已存在: " + dto.getToolName());
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "工具名称已存在: " + dto.getToolName());
         }
 
         ToolMarketEntryDO entry = new ToolMarketEntryDO();
@@ -168,13 +168,13 @@ public class ToolMarketServiceImpl implements ToolMarketService {
      *
      * @param specUrl OpenAPI 规范 URL
      * @return 成功导入的工具条目列表（跳过的不包含）
-     * @throws BizException specUrl 为空或解析失败时抛出
+     * @throws SysException specUrl 为空或解析失败时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public List<ToolMarketEntryDO> registerFromOpenApi(String specUrl) {
         if (!StringUtils.hasText(specUrl)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "OpenAPI 规范 URL 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "OpenAPI 规范 URL 不能为空");
         }
 
         log.info("[ToolMarket] 开始从 OpenAPI 导入: url={}", specUrl);
@@ -185,7 +185,7 @@ public class ToolMarketServiceImpl implements ToolMarketService {
         try {
             dtos = parser.parseFromUrl(specUrl);
         } catch (Exception e) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "OpenAPI 规范解析失败: " + e.getMessage());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "OpenAPI 规范解析失败: " + e.getMessage());
         }
 
         if (dtos.isEmpty()) {
@@ -246,14 +246,14 @@ public class ToolMarketServiceImpl implements ToolMarketService {
      * 注销工具（软删除 + 从 ToolRegistry 移除）
      *
      * @param toolName 工具名称
-     * @throws BizException 工具不存在时抛出
+     * @throws SysException 工具不存在时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void unregister(String toolName) {
         ToolMarketEntryDO entry = mapper.selectByToolName(toolName);
         if (entry == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "工具不存在: " + toolName);
+            throw new SysException(StandardResultCode.NOT_FOUND, "工具不存在: " + toolName);
         }
 
         // 从 ToolRegistry 移除
@@ -270,14 +270,14 @@ public class ToolMarketServiceImpl implements ToolMarketService {
      *
      * @param toolName 工具名称
      * @return 更新后的工具条目
-     * @throws BizException 工具不存在或注册 ToolRegistry 失败时抛出
+     * @throws SysException 工具不存在或注册 ToolRegistry 失败时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ToolMarketEntryDO enable(String toolName) {
         ToolMarketEntryDO entry = mapper.selectByToolName(toolName);
         if (entry == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "工具不存在: " + toolName);
+            throw new SysException(StandardResultCode.NOT_FOUND, "工具不存在: " + toolName);
         }
 
         entry.setEnabled(true);
@@ -290,7 +290,7 @@ public class ToolMarketServiceImpl implements ToolMarketService {
             log.info("[ToolMarket] 工具已启用: name={}", toolName);
         } catch (Exception e) {
             log.error("[ToolMarket] 工具启用失败: name={}, error={}", toolName, e.getMessage(), e);
-            throw new BizException(StandardResultCode.INTERNAL_ERROR, "工具启用失败: " + e.getMessage());
+            throw new SysException(StandardResultCode.INTERNAL_ERROR, "工具启用失败: " + e.getMessage());
         }
 
         return entry;
@@ -301,14 +301,14 @@ public class ToolMarketServiceImpl implements ToolMarketService {
      *
      * @param toolName 工具名称
      * @return 更新后的工具条目
-     * @throws BizException 工具不存在时抛出
+     * @throws SysException 工具不存在时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ToolMarketEntryDO disable(String toolName) {
         ToolMarketEntryDO entry = mapper.selectByToolName(toolName);
         if (entry == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "工具不存在: " + toolName);
+            throw new SysException(StandardResultCode.NOT_FOUND, "工具不存在: " + toolName);
         }
 
         entry.setEnabled(false);
@@ -328,13 +328,13 @@ public class ToolMarketServiceImpl implements ToolMarketService {
      *
      * @param id 工具 ID
      * @return 工具条目
-     * @throws BizException 工具不存在时抛出
+     * @throws SysException 工具不存在时抛出
      */
     @Override
     public ToolMarketEntryDO getById(String id) {
         ToolMarketEntryDO entry = mapper.selectById(id);
         if (entry == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "工具不存在: " + id);
+            throw new SysException(StandardResultCode.NOT_FOUND, "工具不存在: " + id);
         }
         return entry;
     }
@@ -381,13 +381,13 @@ public class ToolMarketServiceImpl implements ToolMarketService {
      * @param toolName  工具名称
      * @param parameters 调用参数
      * @return 工具执行结果
-     * @throws BizException 工具不存在时抛出
+     * @throws SysException 工具不存在时抛出
      */
     @Override
     public ToolResult testTool(String toolName, Map<String, Object> parameters) {
         ToolMarketEntryDO entry = mapper.selectByToolName(toolName);
         if (entry == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "工具不存在: " + toolName);
+            throw new SysException(StandardResultCode.NOT_FOUND, "工具不存在: " + toolName);
         }
 
         HttpApiTool tool = buildToolFromEntry(entry);

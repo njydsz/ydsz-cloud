@@ -34,7 +34,7 @@ public interface TokenQuotaService {
     /**
      * 检查租户是否有足够配额（不预占）。
      *
-     * <p>配额不足时抛 {@code BizException(QUOTA_EXCEEDED)}。
+     * <p>配额不足时抛 {@code SysException(QUOTA_EXCEEDED)}。
      *
      * @param tenantId         租户 ID
      * @param estimatedTokens  预估 token 数

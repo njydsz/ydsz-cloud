@@ -1,7 +1,7 @@
 package com.njydsz.pmis.userinfo.server.service.impl.auth;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginDTO;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginResultVO;
@@ -115,7 +115,7 @@ class AuthServiceImplTest {
             dto2.setUsername("nonexistent");
             dto2.setPassword("any");
 
-            BizException ex = assertThrows(BizException.class, () -> authService.login(dto2));
+            SysException ex = assertThrows(SysException.class, () -> authService.login(dto2));
             assertEquals(StandardResultCode.USER_NOT_FOUND.getCode(), ex.getCode());
         }
 
@@ -128,7 +128,7 @@ class AuthServiceImplTest {
             dto.setUsername("ghost");
             dto.setPassword("whatever");
 
-            BizException ex = assertThrows(BizException.class, () -> authService.login(dto));
+            SysException ex = assertThrows(SysException.class, () -> authService.login(dto));
             assertEquals(StandardResultCode.USER_NOT_FOUND.getCode(), ex.getCode());
         }
 
@@ -143,7 +143,7 @@ class AuthServiceImplTest {
             dto.setUsername("admin");
             dto.setPassword("pass");
 
-            BizException ex = assertThrows(BizException.class, () -> authService.login(dto));
+            SysException ex = assertThrows(SysException.class, () -> authService.login(dto));
             assertEquals(StandardResultCode.USER_DISABLED.getCode(), ex.getCode());
         }
 
@@ -158,7 +158,7 @@ class AuthServiceImplTest {
             dto.setUsername("admin");
             dto.setPassword("pass");
 
-            BizException ex = assertThrows(BizException.class, () -> authService.login(dto));
+            SysException ex = assertThrows(SysException.class, () -> authService.login(dto));
             assertEquals(StandardResultCode.USER_LOCKED.getCode(), ex.getCode());
         }
     }
@@ -172,7 +172,7 @@ class AuthServiceImplTest {
         void shouldThrowWhenRefreshTokenInvalid() {
             when(jwtTokenProvider.validateToken("invalid-token")).thenReturn(false);
 
-            BizException ex = assertThrows(BizException.class, () -> authService.refresh("invalid-token"));
+            SysException ex = assertThrows(SysException.class, () -> authService.refresh("invalid-token"));
             assertEquals(StandardResultCode.TOKEN_INVALID.getCode(), ex.getCode());
         }
 
@@ -183,7 +183,7 @@ class AuthServiceImplTest {
             when(jwtTokenProvider.getUserId("valid-refresh")).thenReturn("U999");
             when(userAccountService.findById("U999")).thenReturn(null);
 
-            BizException ex = assertThrows(BizException.class, () -> authService.refresh("valid-refresh"));
+            SysException ex = assertThrows(SysException.class, () -> authService.refresh("valid-refresh"));
             assertEquals(StandardResultCode.USER_NOT_FOUND.getCode(), ex.getCode());
         }
 
@@ -196,7 +196,7 @@ class AuthServiceImplTest {
             when(jwtTokenProvider.getUserId("valid-refresh")).thenReturn("U001");
             when(userAccountService.findById("U001")).thenReturn(user);
 
-            BizException ex = assertThrows(BizException.class, () -> authService.refresh("valid-refresh"));
+            SysException ex = assertThrows(SysException.class, () -> authService.refresh("valid-refresh"));
             assertEquals(StandardResultCode.USER_DISABLED.getCode(), ex.getCode());
         }
     }

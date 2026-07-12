@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.entity.PageQuery;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.message.server.config.MessageProperties;
 import com.njydsz.pmis.message.domain.dto.config.UnsubscribeQueryDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgSubscriptionDO;
@@ -24,7 +24,7 @@ import org.springframework.util.StringUtils;
  * 退订中心服务实现（P1-5）。
  *
  * <p>编排 {@link UnsubscribeTokenUtil}（token 签名/校验）与 {@link SubscriptionService}
- * （订阅状态变更）。token 校验失败 / 过期 / 中心关闭均抛 {@link BizException}。
+ * （订阅状态变更）。token 校验失败 / 过期 / 中心关闭均抛 {@link SysException}。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -74,12 +74,12 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
      *
      * @param token 退订 token
      * @return 更新后的订阅记录
-     * @throws BizException 退订中心关闭或 token 无效时抛出
+     * @throws SysException 退订中心关闭或 token 无效时抛出
      */
     @Override
     public MsgSubscriptionDO unsubscribeByToken(String token) {
         if (!messageProperties.getUnsubscribe().isEnabled()) {
-            throw new BizException(StandardResultCode.BIZ_ERROR, "退订中心已关闭");
+            throw new SysException(StandardResultCode.BIZ_ERROR, "退订中心已关闭");
         }
         UnsubscribeTokenPayload payload = unsubscribeTokenUtil.parseAndVerify(token);
         log.info("[Unsubscribe] token 退订: user={} topic={} channel={}",
@@ -121,12 +121,12 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
      * @param userId    用户 ID
      * @param topicCode 主题编码
      * @param channel   消息通道
-     * @throws BizException 参数为空时抛出
+     * @throws SysException 参数为空时抛出
      */
     @Override
     public void resubscribe(String userId, String topicCode, String channel) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode) || !StringUtils.hasText(channel)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
         }
         MsgSubscriptionDO existing = msgSubscriptionMapper.selectOne(new LambdaQueryWrapper<MsgSubscriptionDO>()
                 .eq(MsgSubscriptionDO::getUserId, userId)

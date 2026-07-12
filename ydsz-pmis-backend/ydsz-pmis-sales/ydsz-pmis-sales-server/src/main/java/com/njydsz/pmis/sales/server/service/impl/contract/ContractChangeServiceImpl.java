@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.sales.domain.dto.ContractChangeDTO;
 import com.njydsz.pmis.sales.server.engine.ContractRiskEvaluator;
 import com.njydsz.pmis.sales.domain.entity.ContractChangeDO;
@@ -49,17 +49,17 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      *
      * @param dto 变更申请参数
      * @return 变更记录 ID
-     * @throws BizException 合同不存在、编号重复或参数非法时抛出
+     * @throws SysException 合同不存在、编号重复或参数非法时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String apply(ContractChangeDTO dto) {
         validate(dto);
         if (contractMapper.selectById(dto.getContractId()) == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_22d39b90");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_22d39b90");
         }
         if (changeMapper.selectByCode(dto.getChangeCode()) != null) {
-            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.project.msg_08a1df2a");
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.project.msg_08a1df2a");
         }
         ContractChangeDO c = new ContractChangeDO();
         BeanUtils.copyProperties(dto, c);
@@ -74,14 +74,14 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      * 提交变更进入审批流。
      *
      * @param id 变更 ID
-     * @throws BizException 变更不存在或当前状态非 DRAFT 时抛出
+     * @throws SysException 变更不存在或当前状态非 DRAFT 时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void submit(String id) {
         ContractChangeDO c = getById(id);
         if (!"DRAFT".equalsIgnoreCase(c.getStatus())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_d85e77c2", c.getStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d85e77c2", c.getStatus());
         }
         changeMapper.updateStatus(id, "SUBMITTED", null, null);
         log.info("[ContractChange] 提交审批: id={}", id);
@@ -94,14 +94,14 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      * @param id           变更 ID
      * @param approverId   审批人 ID
      * @param approverName 审批人名称
-     * @throws BizException 变更不存在或当前状态不允许审批时抛出
+     * @throws SysException 变更不存在或当前状态不允许审批时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void approve(String id, String approverId, String approverName) {
         ContractChangeDO c = getById(id);
         if (!("SUBMITTED".equalsIgnoreCase(c.getStatus()) || "APPROVING".equalsIgnoreCase(c.getStatus()))) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_8a0e5737", c.getStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_8a0e5737", c.getStatus());
         }
         changeMapper.updateStatus(id, "APPROVED", approverId, approverName);
 
@@ -129,14 +129,14 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      * @param approverId   审批人 ID
      * @param approverName 审批人名称
      * @param reason       驳回原因，可空
-     * @throws BizException 变更不存在或当前状态不允许驳回时抛出
+     * @throws SysException 变更不存在或当前状态不允许驳回时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void reject(String id, String approverId, String approverName, String reason) {
         ContractChangeDO c = getById(id);
         if (!("SUBMITTED".equalsIgnoreCase(c.getStatus()) || "APPROVING".equalsIgnoreCase(c.getStatus()))) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_a77d8060", c.getStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_a77d8060", c.getStatus());
         }
         changeMapper.updateStatus(id, "REJECTED", approverId, approverName);
         if (StringUtils.hasText(reason)) {
@@ -152,14 +152,14 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      *
      * @param id 变更 ID
      * @return 变更实体
-     * @throws BizException 变更不存在时抛出
+     * @throws SysException 变更不存在时抛出
      */
     @Override
     @Transactional(readOnly = true)
     public ContractChangeDO getById(String id) {
         ContractChangeDO c = changeMapper.selectById(id);
         if (c == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.project.msg_49023973");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_49023973");
         }
         return c;
     }
@@ -201,20 +201,20 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      * 校验合同变更申请参数。
      *
      * @param dto 变更申请参数
-     * @throws BizException 参数为空、合同 ID 缺失、变更编号缺失或变更类型非法时抛出
+     * @throws SysException 参数为空、合同 ID 缺失、变更编号缺失或变更类型非法时抛出
      */
     private void validate(ContractChangeDTO dto) {
         if (dto == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (!StringUtils.hasText(dto.getContractId())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_af96cf73");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_af96cf73");
         }
         if (!StringUtils.hasText(dto.getChangeCode())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_00a4ec00");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_00a4ec00");
         }
         if (!CHANGE_TYPES.contains(dto.getChangeType().toUpperCase())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.project.msg_b246fa8c", dto.getChangeType());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.project.msg_b246fa8c", dto.getChangeType());
         }
     }
 }

@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.project.server.assembler.NameAssembler;
 import com.njydsz.pmis.project.domain.dto.TimeEntryApprovalDTO;
@@ -61,15 +61,15 @@ public class TimeEntryServiceImpl implements TimeEntryService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String create(TimeEntryCreateDTO dto) {
-        if (dto == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (dto.getEntryDate() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_f4a1a58d");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_f4a1a58d");
         }
         if (dto.getEmployeeId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_03f5ae35");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_03f5ae35");
         }
         if (dto.getInitiationId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         TimeEntryDO e = new TimeEntryDO();
         BeanUtils.copyProperties(dto, e);
@@ -86,7 +86,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
         // 校验
         TimeEntryValidator.ValidationResult vr = TimeEntryValidator.validate(e);
         if (!vr.ok) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, vr.message);
+            throw new SysException(StandardResultCode.BAD_REQUEST, vr.message);
         }
 
         // 装配员工名称
@@ -127,7 +127,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
         TimeEntryDO e = getById(id);
         TimeEntryStatus from = TimeEntryStatus.fromCode(e.getStatus());
         if (from == null || !from.canTransitTo(TimeEntryStatus.SUBMITTED)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "error.execution.msg_7b9adbb0", (from == null ? "未知" : from.getDesc()));
         }
         timeEntryMapper.updateStatus(id, TimeEntryStatus.SUBMITTED.getCode(), null, null, null);
@@ -138,20 +138,20 @@ public class TimeEntryServiceImpl implements TimeEntryService {
     @Transactional(rollbackFor = Exception.class)
     public void approve(TimeEntryApprovalDTO dto) {
         if (dto == null || dto.getId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         TimeEntryDO e = getById(dto.getId());
         TimeEntryStatus from = TimeEntryStatus.fromCode(e.getStatus());
         TimeEntryStatus to = TimeEntryStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null || !from.canTransitTo(to)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "error.execution.msg_5ad12374", (from == null ? "未知" : from.getDesc()), to.getDesc());
         }
         if (to == TimeEntryStatus.REJECTED && !StringUtils.hasText(dto.getRejectReason())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_4f3bb73f");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_4f3bb73f");
         }
         timeEntryMapper.updateStatus(dto.getId(), to.getCode(),
                 dto.getApproverId(), dto.getApproverName(), dto.getRejectReason());
@@ -189,7 +189,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
     public void delete(String id) {
         TimeEntryDO e = getById(id);
         if (TimeEntryStatus.fromCode(e.getStatus()) == TimeEntryStatus.APPROVED) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_b0ba9ac4");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_b0ba9ac4");
         }
         timeEntryMapper.deleteById(id);
         log.info("[TimeEntry] 删除工时: id={}", id);
@@ -199,7 +199,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
     @Transactional(readOnly = true)
     public TimeEntryDO getById(String id) {
         TimeEntryDO e = timeEntryMapper.selectById(id);
-        if (e == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_24f2654b");
+        if (e == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_24f2654b");
         return e;
     }
 

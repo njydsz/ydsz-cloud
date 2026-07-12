@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.template;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.util.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -17,9 +17,9 @@ import java.util.Map;
  *
  * <p>根据模板的 {@code variableDefs}（JSON）定义，在渲染前校验传入的 params：
  * <ul>
- *   <li>必填变量缺失 → 抛 BizException(MISSING_PARAMETER)</li>
- *   <li>类型不匹配 → 抛 BizException(BAD_REQUEST)</li>
- *   <li>ENUM 值不在可选范围 → 抛 BizException(BAD_REQUEST)</li>
+ *   <li>必填变量缺失 → 抛 SysException(MISSING_PARAMETER)</li>
+ *   <li>类型不匹配 → 抛 SysException(BAD_REQUEST)</li>
+ *   <li>ENUM 值不在可选范围 → 抛 SysException(BAD_REQUEST)</li>
  *   <li>有 defaultValue 的缺失变量 → 自动填充默认值</li>
  * </ul>
  *
@@ -104,7 +104,7 @@ public class TemplateVariableValidator {
         }
 
         if (!errors.isEmpty()) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "模板变量校验失败[" + templateCode + "]: " + String.join("; ", errors));
         }
     }

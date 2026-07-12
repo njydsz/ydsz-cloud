@@ -2,7 +2,7 @@ package com.njydsz.pmis.userinfo.server.service.impl.user;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.userinfo.domain.dto.user.EmployeeTagCreateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.user.EmployeeTagDO;
 import com.njydsz.pmis.userinfo.domain.enums.user.TagType;
@@ -48,14 +48,14 @@ public class EmployeeTagServiceImpl implements EmployeeTagService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void remove(String id) {
-        if (id == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
         tagMapper.deleteById(id);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void replaceByEmployee(String employeeId, List<EmployeeTagCreateDTO> tags) {
-        if (employeeId == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_03f5ae35");
+        if (employeeId == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         tagMapper.deleteByEmployee(employeeId);
         if (tags == null) return;
         for (EmployeeTagCreateDTO dto : tags) {
@@ -79,21 +79,21 @@ public class EmployeeTagServiceImpl implements EmployeeTagService {
     }
 
     private void validate(EmployeeTagCreateDTO dto) {
-        if (dto == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_d9712a58");
+        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_d9712a58");
         if (dto.getEmployeeId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_03f5ae35");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         }
         if (TagType.fromCode(dto.getTagType()) == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_3637b07d", dto.getTagType());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_3637b07d", dto.getTagType());
         }
         if (!StringUtils.hasText(dto.getTagCode())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_8faabfac");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_8faabfac");
         }
         if (!StringUtils.hasText(dto.getTagName())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_16eb3ef6");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_16eb3ef6");
         }
         if (dto.getProficiency() != null && (dto.getProficiency() < 1 || dto.getProficiency() > 5)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_49c5e2b0");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_49c5e2b0");
         }
     }
 }

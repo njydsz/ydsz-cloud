@@ -1,7 +1,7 @@
 package com.njydsz.pmis.cronjob.server.core.dag;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -43,14 +43,14 @@ public class DagDefinitionValidator {
     private static final int MAX_EDGES = 500;
 
     /**
-     * 校验 DAG 定义，不通过时抛出 {@link BizException}。
+     * 校验 DAG 定义，不通过时抛出 {@link SysException}。
      *
      * @param definition DAG 定义
-     * @throws BizException 校验不通过
+     * @throws SysException 校验不通过
      */
     public void validate(DagDefinition definition) {
         if (definition == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_empty");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_empty");
         }
         validateNodes(definition);
         validateEdges(definition);
@@ -65,15 +65,15 @@ public class DagDefinitionValidator {
      */
     private void validateNodes(DagDefinition definition) {
         if (definition.nodes() == null || definition.nodes().isEmpty()) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_no_nodes");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_no_nodes");
         }
         Set<String> seen = new HashSet<>();
         for (DagNode node : definition.nodes()) {
             if (node.jobKey() == null || node.jobKey().isBlank()) {
-                throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_node_key_missing");
+                throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_node_key_missing");
             }
             if (!seen.add(node.jobKey())) {
-                throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_node_key_duplicate");
+                throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_node_key_duplicate");
             }
         }
     }
@@ -89,24 +89,24 @@ public class DagDefinitionValidator {
         Set<String> seenEdges = new HashSet<>();
         for (DagEdge edge : definition.edges()) {
             if (edge.from() == null || edge.to() == null) {
-                throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_edge_invalid");
+                throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_edge_invalid");
             }
             if (!nodeKeys.contains(edge.from())) {
-                throw new BizException(StandardResultCode.BAD_REQUEST,
+                throw new SysException(StandardResultCode.BAD_REQUEST,
                         "error.cronjob.msg_dag_edge_node_not_found", edge.from());
             }
             if (!nodeKeys.contains(edge.to())) {
-                throw new BizException(StandardResultCode.BAD_REQUEST,
+                throw new SysException(StandardResultCode.BAD_REQUEST,
                         "error.cronjob.msg_dag_edge_node_not_found", edge.to());
             }
             if (edge.from().equals(edge.to())) {
-                throw new BizException(StandardResultCode.BAD_REQUEST,
+                throw new SysException(StandardResultCode.BAD_REQUEST,
                         "error.cronjob.msg_dag_self_loop", edge.from());
             }
             // 重复边检测
             String edgeKey = edge.from() + "->" + edge.to();
             if (!seenEdges.add(edgeKey)) {
-                throw new BizException(StandardResultCode.BAD_REQUEST,
+                throw new SysException(StandardResultCode.BAD_REQUEST,
                         "error.cronjob.msg_dag_duplicate_edge", edge.from(), edge.to());
             }
         }
@@ -131,7 +131,7 @@ public class DagDefinitionValidator {
         for (DagNode node : definition.nodes()) {
             if (color.get(node.jobKey()) == 0) {
                 if (hasCycleDFS(node.jobKey(), definition, color)) {
-                    throw new BizException(StandardResultCode.BAD_REQUEST,
+                    throw new SysException(StandardResultCode.BAD_REQUEST,
                             "error.cronjob.msg_dag_cycle_detected", node.jobKey());
                 }
             }
@@ -166,7 +166,7 @@ public class DagDefinitionValidator {
     private void validateRootNodes(DagDefinition definition) {
         List<DagNode> roots = definition.rootNodes();
         if (roots.isEmpty()) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_no_root");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_no_root");
         }
     }
 
@@ -179,24 +179,24 @@ public class DagDefinitionValidator {
             switch (type) {
                 case CONDITION -> {
                     if (node.conditionExpression() == null || node.conditionExpression().isBlank()) {
-                        throw new BizException(StandardResultCode.BAD_REQUEST,
+                        throw new SysException(StandardResultCode.BAD_REQUEST,
                                 "error.cronjob.msg_dag_condition_expr_missing", node.jobKey());
                     }
                 }
                 case LOOP -> {
                     if (node.loopCount() == null || node.loopCount() <= 0) {
-                        throw new BizException(StandardResultCode.BAD_REQUEST,
+                        throw new SysException(StandardResultCode.BAD_REQUEST,
                                 "error.cronjob.msg_dag_loop_count_invalid", node.jobKey());
                     }
                 }
                 case PARALLEL_GATEWAY -> {
                     if (node.parallelBranches() == null || node.parallelBranches() <= 0) {
-                        throw new BizException(StandardResultCode.BAD_REQUEST,
+                        throw new SysException(StandardResultCode.BAD_REQUEST,
                                 "error.cronjob.msg_dag_parallel_branches_invalid", node.jobKey());
                     }
                     int outEdgeCount = definition.outgoingEdges(node.jobKey()).size();
                     if (outEdgeCount != node.parallelBranches()) {
-                        throw new BizException(StandardResultCode.BAD_REQUEST,
+                        throw new SysException(StandardResultCode.BAD_REQUEST,
                                 "error.cronjob.msg_dag_parallel_edge_mismatch",
                                 node.jobKey(), node.parallelBranches(), outEdgeCount);
                     }
@@ -204,25 +204,25 @@ public class DagDefinitionValidator {
                 case TASK -> {
                     // TASK 节点要求 jobId 非空（关联具体任务）
                     if (node.jobId() == null || node.jobId().isBlank()) {
-                        throw new BizException(StandardResultCode.BAD_REQUEST,
+                        throw new SysException(StandardResultCode.BAD_REQUEST,
                                 "error.cronjob.msg_dag_task_job_id_missing", node.jobKey());
                     }
                 }
                 case SUB_WORKFLOW -> {
                     // P1-5: 子工作流节点要求 subWorkflowDagKey 非空
                     if (node.subWorkflowDagKey() == null || node.subWorkflowDagKey().isBlank()) {
-                        throw new BizException(StandardResultCode.BAD_REQUEST,
+                        throw new SysException(StandardResultCode.BAD_REQUEST,
                                 "error.cronjob.msg_dag_sub_workflow_key_missing", node.jobKey());
                     }
                 }
                 case APPROVAL -> {
                     // P1-6: 审批节点要求 approvalUsers 非空
                     if (node.approvalUsers() == null || node.approvalUsers().isBlank()) {
-                        throw new BizException(StandardResultCode.BAD_REQUEST,
+                        throw new SysException(StandardResultCode.BAD_REQUEST,
                                 "error.cronjob.msg_dag_approval_users_missing", node.jobKey());
                     }
                     if (node.approvalTimeoutMinutes() != null && node.approvalTimeoutMinutes() <= 0) {
-                        throw new BizException(StandardResultCode.BAD_REQUEST,
+                        throw new SysException(StandardResultCode.BAD_REQUEST,
                                 "error.cronjob.msg_dag_approval_timeout_invalid", node.jobKey());
                     }
                 }
@@ -235,11 +235,11 @@ public class DagDefinitionValidator {
      */
     private void validateScale(DagDefinition definition) {
         if (definition.nodeCount() > MAX_NODES) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "error.cronjob.msg_dag_too_many_nodes", MAX_NODES, definition.nodeCount());
         }
         if (definition.edges().size() > MAX_EDGES) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "error.cronjob.msg_dag_too_many_edges", MAX_EDGES, definition.edges().size());
         }
     }

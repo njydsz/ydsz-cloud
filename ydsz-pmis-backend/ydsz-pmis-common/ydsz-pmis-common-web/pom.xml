@@ -38,12 +38,6 @@
             <artifactId>ydsz-pmis-common-redis</artifactId>
         </dependency>
 
-        <!-- Infra 模块（KMS / Chaos / FeatureFlag / Async / Sentinel / TransactionPostProcessor / OperationLogEvent） -->
-        <dependency>
-            <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-common-infra</artifactId>
-        </dependency>
-
         <!-- Doc 模块（OpenApiConfig / Knife4jConfig） -->
         <dependency>
             <groupId>com.njydsz.pmis</groupId>

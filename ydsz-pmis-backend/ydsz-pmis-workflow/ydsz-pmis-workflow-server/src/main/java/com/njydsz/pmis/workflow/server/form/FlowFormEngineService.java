@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.server.form;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -74,7 +74,7 @@ public class FlowFormEngineService {
      * @param schema            表单 Schema
      * @param formData          提交的表单数据
      * @param fieldPerms        字段权限映射（fieldKey → EDIT/READONLY/HIDDEN/REQUIRED）
-     * @throws BizException 校验失败时抛出
+     * @throws SysException 校验失败时抛出
      */
     public void validateAndThrow(FlowFormSchema schema, Map<String, Object> formData,
                                   Map<String, String> fieldPerms) {
@@ -84,7 +84,7 @@ public class FlowFormEngineService {
                 String fieldKey = entry.getKey();
                 String perm = entry.getValue();
                 if ("HIDDEN".equals(perm) && formData.containsKey(fieldKey)) {
-                    throw new BizException(StandardResultCode.VALIDATION_FAILED,
+                    throw new SysException(StandardResultCode.VALIDATION_FAILED,
                             "字段 " + fieldKey + " 不允许提交");
                 }
             }
@@ -97,7 +97,7 @@ public class FlowFormEngineService {
         List<FlowFormValidationError> errors = formValidator.validate(schema, formData);
         if (!errors.isEmpty()) {
             FlowFormValidationError first = errors.get(0);
-            throw new BizException(StandardResultCode.VALIDATION_FAILED,
+            throw new SysException(StandardResultCode.VALIDATION_FAILED,
                     "表单校验失败: " + first);
         }
     }

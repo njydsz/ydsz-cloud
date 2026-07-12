@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
 import lombok.RequiredArgsConstructor;
@@ -38,22 +38,22 @@ public class FlowCountersignDynamicService {
     @Transactional(rollbackFor = Exception.class)
     public void updateCompletionCondition(String taskId, BigDecimal votePassRate, String operatorId) {
         if (!StringUtils.hasText(taskId)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_a7b8c9d0");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_a7b8c9d0");
         }
         if (votePassRate == null || votePassRate.compareTo(BigDecimal.ZERO) < 0
                 || votePassRate.compareTo(BigDecimal.ONE) > 0) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_b8c9d0e1");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_b8c9d0e1");
         }
 
         FlowRunTaskDO task = taskMapper.selectById(taskId);
         if (task == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.workflow.msg_c9d0e1f2", taskId);
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_c9d0e1f2", taskId);
         }
 
         // 仅 VOTE / WEIGHTED_VOTE 模式允许动态修改
         String performType = task.getPerformType();
         if (!"VOTE".equals(performType) && !"WEIGHTED_VOTE".equals(performType)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_d0e1f2a3");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_d0e1f2a3");
         }
 
         BigDecimal oldRate = task.getVotePassRate();
@@ -74,12 +74,12 @@ public class FlowCountersignDynamicService {
     @Transactional(rollbackFor = Exception.class)
     public void updateApproveCount(String taskId, Integer approveCount, String operatorId) {
         if (!StringUtils.hasText(taskId) || approveCount == null || approveCount < 1) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_e1f2a3b4");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_e1f2a3b4");
         }
 
         FlowRunTaskDO task = taskMapper.selectById(taskId);
         if (task == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.workflow.msg_c9d0e1f2", taskId);
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_c9d0e1f2", taskId);
         }
 
         Integer oldCount = task.getApproveCount();

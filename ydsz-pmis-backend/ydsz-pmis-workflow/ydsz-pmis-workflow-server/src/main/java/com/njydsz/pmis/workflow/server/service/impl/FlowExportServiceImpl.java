@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowInstanceDO;
@@ -160,7 +160,7 @@ public class FlowExportServiceImpl implements FlowExportService {
     private FlowInstanceDO loadInstance(String instanceId) {
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+            throw new SysException(StandardResultCode.NOT_FOUND, "流程实例不存在: " + instanceId);
         }
         return instance;
     }

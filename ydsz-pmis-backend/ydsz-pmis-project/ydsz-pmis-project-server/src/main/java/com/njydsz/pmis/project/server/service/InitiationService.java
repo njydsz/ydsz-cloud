@@ -165,7 +165,7 @@ public interface InitiationService {
      * 标记立项为审批中（APPROVING）。
      *
      * @param id 立项 ID
-     * @throws BizException 立项不存在时抛出
+     * @throws SysException 立项不存在时抛出
      */
     void markProcessing(String id);
 
@@ -173,7 +173,7 @@ public interface InitiationService {
      * 标记立项为已批准（APPROVED），并设置门径为 CD1。
      *
      * @param id 立项 ID
-     * @throws BizException 立项不存在时抛出
+     * @throws SysException 立项不存在时抛出
      */
     void markApproved(String id);
 
@@ -182,7 +182,7 @@ public interface InitiationService {
      *
      * @param id     立项 ID
      * @param reason 驳回原因（可空）
-     * @throws BizException 立项不存在时抛出
+     * @throws SysException 立项不存在时抛出
      */
     void markRejected(String id, String reason);
 }

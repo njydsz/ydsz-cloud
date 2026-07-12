@@ -2,9 +2,8 @@ package com.njydsz.pmis.common.auth.context;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
 import com.njydsz.pmis.common.auth.model.ColumnPermissionInfo;
-import com.njydsz.pmis.common.context.RequestContext;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.LoginUser;
 
 /**
@@ -67,12 +66,12 @@ public final class AuthContext {
      * 获取当前登录用户
      *
      * @return 当前登录用户
-     * @throws BizException 未登录时抛出
+     * @throws SysException 未登录时抛出
      */
     public static LoginUser getCurrent() {
         LoginUser user = getCurrentOrNull();
         if (user == null) {
-            throw new BizException(StandardResultCode.UNAUTHORIZED, "error.common.msg_1923bd82");
+            throw new SysException(StandardResultCode.UNAUTHORIZED, "error.common.msg_1923bd82");
         }
         return user;
     }
@@ -91,7 +90,7 @@ public final class AuthContext {
      * 当前用户 ID（雪花算法字符串）
      *
      * @return 当前用户 ID
-     * @throws BizException 未登录时抛出
+     * @throws SysException 未登录时抛出
      */
     public static String getUserId() {
         return getCurrent().getUserId();
@@ -101,7 +100,7 @@ public final class AuthContext {
      * 当前用户名
      *
      * @return 当前用户名
-     * @throws BizException 未登录时抛出
+     * @throws SysException 未登录时抛出
      */
     public static String getUsername() {
         return getCurrent().getUsername();
@@ -111,7 +110,7 @@ public final class AuthContext {
      * 当前部门 ID（雪花算法字符串）
      *
      * @return 当前部门 ID
-     * @throws BizException 未登录时抛出
+     * @throws SysException 未登录时抛出
      */
     public static String getDeptId() {
         return getCurrent().getDeptId();
@@ -147,12 +146,12 @@ public final class AuthContext {
      * 校验权限
      *
      * @param perm 权限编码
-     * @throws BizException 无权限时抛出
+     * @throws SysException 无权限时抛出
      */
     public static void requirePermission(String perm) {
         LoginUser user = getCurrent();
         if (!user.hasPermission(perm)) {
-            throw new BizException(StandardResultCode.FORBIDDEN, "error.common.msg_1e40057e", perm);
+            throw new SysException(StandardResultCode.FORBIDDEN, "error.common.msg_1e40057e", perm);
         }
     }
 
@@ -160,7 +159,7 @@ public final class AuthContext {
      * 校验任一权限
      *
      * @param perms 权限编码列表
-     * @throws BizException 全部权限都不拥有时抛出
+     * @throws SysException 全部权限都不拥有时抛出
      */
     public static void requireAnyPermission(String... perms) {
         LoginUser user = getCurrent();
@@ -169,7 +168,7 @@ public final class AuthContext {
                 return;
             }
         }
-        throw new BizException(StandardResultCode.FORBIDDEN, "error.common.msg_ad4fff48");
+        throw new SysException(StandardResultCode.FORBIDDEN, "error.common.msg_ad4fff48");
     }
 
     // ==================== 列权限管理（原有功能） ====================

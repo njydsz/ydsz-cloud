@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.entity.PageQuery;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.userinfo.domain.dto.permission.RoleFormDTO;
 import com.njydsz.pmis.userinfo.domain.dto.permission.RoleQueryDTO;
 import com.njydsz.pmis.userinfo.domain.entity.permission.RoleDO;
@@ -72,7 +72,7 @@ public class RoleServiceImpl implements RoleService {
     public RoleDO getById(String id) {
         RoleDO r = roleMapper.selectById(id);
         if (r == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.user.msg_c3f70e4c");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_c3f70e4c");
         }
         return r;
     }
@@ -89,7 +89,7 @@ public class RoleServiceImpl implements RoleService {
     @CacheEvict(value = CACHE_NAME, allEntries = true)
     public String create(RoleFormDTO dto) {
         if (roleMapper.selectByCode(dto.getRoleCode()) != null) {
-            throw new BizException(StandardResultCode.DUPLICATE_KEY, "error.user.msg_af20e82e");
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "error.user.msg_af20e82e");
         }
         RoleDO entity = new RoleDO();
         BeanUtils.copyProperties(dto, entity);
@@ -107,11 +107,11 @@ public class RoleServiceImpl implements RoleService {
     @CacheEvict(value = CACHE_NAME, allEntries = true)
     public void update(RoleFormDTO dto) {
         if (dto.getId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_6fe5914e");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_6fe5914e");
         }
         RoleDO exists = roleMapper.selectById(dto.getId());
         if (exists == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.user.msg_c3f70e4c");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_c3f70e4c");
         }
         RoleDO entity = new RoleDO();
         BeanUtils.copyProperties(dto, entity);
@@ -126,12 +126,12 @@ public class RoleServiceImpl implements RoleService {
     @CacheEvict(value = CACHE_NAME, allEntries = true)
     public void delete(String id) {
         if (roleMapper.selectById(id) == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.user.msg_c3f70e4c");
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_c3f70e4c");
         }
         // 不允许删除 SUPER_ADMIN
         RoleDO r = roleMapper.selectById(id);
         if ("SUPER_ADMIN".equals(r.getRoleCode())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_5201576b");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_5201576b");
         }
         roleMapper.deleteById(id);
         // 清除角色权限关联

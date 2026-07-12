@@ -10,7 +10,7 @@ import com.njydsz.pmis.agent.infra.mapper.agent.AgentPromptTemplateMapper;
 import com.njydsz.pmis.agent.server.service.tool.PromptTemplateService;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -71,14 +71,14 @@ public class PromptTemplateServiceImpl implements PromptTemplateService {
      *
      * @param id 模板 ID
      * @return 激活后的模板实体
-     * @throws BizException 模板不存在时抛出
+     * @throws SysException 模板不存在时抛出
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public AgentPromptTemplateDO activate(String id) {
         AgentPromptTemplateDO template = mapper.selectById(id);
         if (template == null) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "模板不存在: " + id);
+            throw new SysException(StandardResultCode.NOT_FOUND, "模板不存在: " + id);
         }
         // 排他：同 code 的其他版本置为非生效
         mapper.deactivateOthers(template.getTemplateCode(), id);

@@ -3,7 +3,7 @@ package com.njydsz.pmis.cronjob.server.core.dispatch;
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.common.job.JobContextHolder;
 import com.njydsz.pmis.common.job.JobLoggerHolder;
@@ -321,7 +321,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      * P7-3: 检查租户并发配额 + 日执行配额。
      *
      * <p>仅对 CRON/RETRY/DEPENDENT/MISFIRED 触发类型调用（MANUAL 不检查）。
-     * 配额超限时抛 {@link BizException}，任务不会被派发。
+     * 配额超限时抛 {@link SysException}，任务不会被派发。
      * 配额服务不可用时降级放行（不影响任务执行）。
      */
     private void checkExecutionQuota(JobDO job) {
@@ -336,7 +336,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         try {
             quotaService.checkConcurrentQuota(tenantId);
             quotaService.checkDailyExecutionQuota(tenantId);
-        } catch (BizException e) {
+        } catch (SysException e) {
             // 配额超限，记录日志后重新抛出
             log.warn("[Dispatcher] 租户配额超限, 拒绝派发: key={} tenant={} code={}",
                     job.getJobKey(), tenantId, e.getCode());
@@ -1354,7 +1354,7 @@ try {
      * <p>优先使用 {@link JobDO#getTimezone()}，为空时回退到默认时区 Asia/Shanghai。
      *
      * @param job 任务定义（含 cron 表达式和时区）
-     * @return 下次触发时间；表达式非法时抛 BizException
+     * @return 下次触发时间；表达式非法时抛 SysException
      */
     private LocalDateTime nextFireTime(JobDO job) {
         try {
@@ -1367,7 +1367,7 @@ try {
             return next == null ? null : LocalDateTime.ofInstant(next,
                     ZoneId.systemDefault());
         } catch (IllegalArgumentException e) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca", e.getMessage());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca", e.getMessage());
         }
     }
 

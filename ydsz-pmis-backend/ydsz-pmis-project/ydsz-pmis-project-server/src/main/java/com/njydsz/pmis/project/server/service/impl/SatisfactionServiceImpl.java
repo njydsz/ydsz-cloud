@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.project.domain.dto.SatisfactionCreateDTO;
 import com.njydsz.pmis.project.server.engine.AfterSalesCodeGen;
 import com.njydsz.pmis.project.domain.entity.SatisfactionDO;
@@ -47,11 +47,11 @@ public class SatisfactionServiceImpl implements SatisfactionService {
             s.setSurveyCode(AfterSalesCodeGen.surveyCode(LocalDate.now()));
         }
         if (s.getScore() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_a3a869d4");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_a3a869d4");
         }
         SatisfactionLevel level = SatisfactionLevel.fromScore(s.getScore());
         if (level == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_37c4fe7e");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_37c4fe7e");
         }
         s.setLevel(level.getCode());
         if (s.getEvaluatedAt() == null) s.setEvaluatedAt(LocalDateTime.now());
@@ -70,9 +70,9 @@ public class SatisfactionServiceImpl implements SatisfactionService {
 
     @Override
     public void markFollowUp(String id, String note) {
-        if (id == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_35ec26fe");
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_35ec26fe");
         SatisfactionDO s = satisfactionMapper.selectById(id);
-        if (s == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_4b213f7c");
+        if (s == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_4b213f7c");
         s.setFollowUp(true);
         if (StringUtils.hasText(note)) s.setFollowUpNote(note);
         satisfactionMapper.updateById(s);
@@ -80,9 +80,9 @@ public class SatisfactionServiceImpl implements SatisfactionService {
 
     @Override
     public void closeFollowUp(String id) {
-        if (id == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_35ec26fe");
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_35ec26fe");
         SatisfactionDO s = satisfactionMapper.selectById(id);
-        if (s == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.execution.msg_4b213f7c");
+        if (s == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.execution.msg_4b213f7c");
         s.setFollowUp(false);
         satisfactionMapper.updateById(s);
     }
@@ -115,24 +115,24 @@ public class SatisfactionServiceImpl implements SatisfactionService {
     }
 
     private void validate(SatisfactionCreateDTO dto) {
-        if (dto == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
+        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (dto.getInitiationId() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (dto.getScore() == null || dto.getScore() < 1 || dto.getScore() > 5) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_37c4fe7e");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_37c4fe7e");
         }
         if (dto.getProfessionalism() != null && (dto.getProfessionalism() < 1 || dto.getProfessionalism() > 5)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_ef96f33e");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_ef96f33e");
         }
         if (dto.getTimeliness() != null && (dto.getTimeliness() < 1 || dto.getTimeliness() > 5)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_86a9a3df");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_86a9a3df");
         }
         if (dto.getQuality() != null && (dto.getQuality() < 1 || dto.getQuality() > 5)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_6568138a");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_6568138a");
         }
         if (dto.getAttitude() != null && (dto.getAttitude() < 1 || dto.getAttitude() > 5)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.execution.msg_2803de1f");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_2803de1f");
         }
     }
 }

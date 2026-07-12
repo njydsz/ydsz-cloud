@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.server.service.impl.notification;
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.workflow.domain.dto.notification.FlowQuickCommentDTO;
 import com.njydsz.pmis.workflow.domain.entity.notification.FlowQuickCommentDO;
@@ -67,7 +67,7 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
     @Transactional(rollbackFor = Exception.class)
     public String create(FlowQuickCommentDTO dto, String userId, String tenantId) {
         if (!StringUtils.hasText(userId)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_user_required");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_user_required");
         }
         FlowQuickCommentDO comment = new FlowQuickCommentDO();
         comment.setUserId(userId);
@@ -88,14 +88,14 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
     @Transactional(rollbackFor = Exception.class)
     public void update(FlowQuickCommentDTO dto, String userId) {
         if (!StringUtils.hasText(dto.getId())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_id_required");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_id_required");
         }
         FlowQuickCommentDO existing = quickCommentMapper.selectById(dto.getId());
         if (existing == null || existing.getDeleted() == 1) {
-            throw new BizException(StandardResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", dto.getId());
+            throw new SysException(StandardResultCode.NOT_FOUND, "error.workflow.msg_6541ab08", dto.getId());
         }
         if (!userId.equals(existing.getUserId())) {
-            throw new BizException(StandardResultCode.FORBIDDEN, "error.workflow.msg_no_permission");
+            throw new SysException(StandardResultCode.FORBIDDEN, "error.workflow.msg_no_permission");
         }
         existing.setContent(dto.getContent());
         if (dto.getCommentType() != null) {
@@ -117,10 +117,10 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
         }
         // 系统预设不可删除
         if (existing.getIsSystem() != null && existing.getIsSystem() == 1) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_system_comment_cannot_delete");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_system_comment_cannot_delete");
         }
         if (!userId.equals(existing.getUserId())) {
-            throw new BizException(StandardResultCode.FORBIDDEN, "error.workflow.msg_no_permission");
+            throw new SysException(StandardResultCode.FORBIDDEN, "error.workflow.msg_no_permission");
         }
         existing.setDeleted(1);
         existing.setUpdatedAt(LocalDateTime.now());

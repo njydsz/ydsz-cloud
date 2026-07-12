@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.server.engine;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
 import com.njydsz.pmis.finance.api.client.FinanceDataClient;
 import com.njydsz.pmis.project.infra.mapper.PurchaseMapper;
@@ -56,7 +56,7 @@ public class BudgetGuard {
      * @param initiationId 项目立项 ID
      * @param delta        本次新增金额（采购/费用）
      * @param bizType      业务类型: PURCHASE / EXPENSE
-     * @throws BizException 当超出预算时抛出
+     * @throws SysException 当超出预算时抛出
      */
     public void check(String initiationId, BigDecimal delta, String bizType) {
         if (initiationId == null || delta == null || delta.signum() <= 0) {
@@ -87,7 +87,7 @@ public class BudgetGuard {
                 initiationId, bizType, delta, budget, used, purchaseUsed, expenseUsed, allocatedUsed, afterUsed, ratio.multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP));
 
         if (afterUsed.compareTo(budget) > 0) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     String.format("[预算强管控] 项目[%s] 累计 %s 元已超出预算 %s 元（采购 %s + 费用 %s + 已归集 %s + 本次 %s）",
                             snap.get("projectCode"), afterUsed.toPlainString(), budget.toPlainString(),
                             purchaseUsed.toPlainString(), expenseUsed.toPlainString(),

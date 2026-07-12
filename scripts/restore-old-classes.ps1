@@ -29,7 +29,7 @@ $missingClasses = @(
     "BaseDO","CursorPageResult","LogBaseDO","VersionableDO",
     "OperationLogEvent","ProjectChangeExecutedEvent",
     "ExcelTemplate","ExcelUtil",
-    "BizException",
+    "SysException",
     "FeatureFlag","FeatureFlagService","FeatureFlagSnapshot",
     "NotificationFeignDTO","RealtimePushDTO","FeignClientConstants","MessageRequest","MessageResult","MessageServiceClient","NotificationClient",
     "JobContextHolder","JobHandler","JobLogger","JobLoggerHolder","JobRunRecorder","MapContext","MapProcessor","MapReduceProcessor","MapTask","ProcessResult","ShardingContext",

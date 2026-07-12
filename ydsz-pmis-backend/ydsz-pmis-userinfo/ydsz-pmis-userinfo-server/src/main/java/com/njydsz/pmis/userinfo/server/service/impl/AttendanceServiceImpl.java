@@ -5,7 +5,7 @@ import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.userinfo.domain.dto.rate.AttendanceCreateDTO;
 import com.njydsz.pmis.userinfo.domain.dto.rate.LeaveCreateDTO;
 import com.njydsz.pmis.userinfo.domain.dto.rate.OvertimeCreateDTO;
@@ -109,7 +109,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         // 自动计算加班时长
         if (dto.getOvertimeHours() == null && dto.getStartTime() != null && dto.getEndTime() != null) {
             long minutes = Duration.between(dto.getStartTime(), dto.getEndTime()).toMinutes();
-            if (minutes <= 0) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_0e756b4f");
+            if (minutes <= 0) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_0e756b4f");
             dto.setOvertimeHours(BigDecimal.valueOf(minutes).divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP));
         }
         if (dto.getPayRate() == null) dto.setPayRate(new BigDecimal("1.5"));
@@ -130,14 +130,14 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void approveOvertime(String id, String action, String approverId, String approverName, String remark) {
-        if (id == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
         if (!"APPROVED".equalsIgnoreCase(action) && !"REJECTED".equalsIgnoreCase(action)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_dbf45b98");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_dbf45b98");
         }
         OvertimeDO entity = overtimeMapper.selectById(id);
-        if (entity == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.user.msg_09aca734");
+        if (entity == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_09aca734");
         if (!"SUBMITTED".equalsIgnoreCase(entity.getApprovalStatus())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_8a0e5737", entity.getApprovalStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_8a0e5737", entity.getApprovalStatus());
         }
         entity.setApprovalStatus(action.toUpperCase());
         entity.setApproverId(approverId);
@@ -174,7 +174,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         // 自动计算请假天数
         if (dto.getLeaveDays() == null && dto.getStartDate() != null && dto.getEndDate() != null) {
             long days = Duration.between(dto.getStartDate().atStartOfDay(), dto.getEndDate().atStartOfDay()).toDays() + 1;
-            if (days <= 0) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_6ea170d7");
+            if (days <= 0) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_6ea170d7");
             dto.setLeaveDays(BigDecimal.valueOf(days));
         }
 
@@ -194,16 +194,16 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void approveLeave(String id, String action, String approverId, String approverName, String remark) {
-        if (id == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
+        if (id == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_411b6827");
         LeaveDO entity = leaveMapper.selectById(id);
-        if (entity == null) throw new BizException(StandardResultCode.NOT_FOUND, "error.user.msg_802c6117");
+        if (entity == null) throw new SysException(StandardResultCode.NOT_FOUND, "error.user.msg_802c6117");
         LeaveStatus current = LeaveStatus.fromCode(entity.getApprovalStatus());
         LeaveStatus target = LeaveStatus.fromCode(action);
         if (current == null || target == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_555b7349", action);
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_555b7349", action);
         }
         if (!current.canTransitTo(target)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST,
+            throw new SysException(StandardResultCode.BAD_REQUEST,
                     "error.user.msg_e6729e07", current.getDesc(), target.getDesc());
         }
         entity.setApprovalStatus(target.getCode());
@@ -242,37 +242,37 @@ public class AttendanceServiceImpl implements AttendanceService {
     // ==================== 校验 ====================
 
     private void validateAttendance(AttendanceCreateDTO dto) {
-        if (dto == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_d9712a58");
-        if (dto.getEmployeeId() == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_03f5ae35");
-        if (dto.getAttendanceDate() == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_6d57c0a5");
+        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_d9712a58");
+        if (dto.getEmployeeId() == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_03f5ae35");
+        if (dto.getAttendanceDate() == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_6d57c0a5");
         if (StringUtils.hasText(dto.getStatus()) && AttendanceStatus.fromCode(dto.getStatus()) == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_555b7349", dto.getStatus());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_555b7349", dto.getStatus());
         }
     }
 
     private void validateOvertime(OvertimeCreateDTO dto) {
-        if (dto == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_d9712a58");
-        if (dto.getEmployeeId() == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_03f5ae35");
-        if (dto.getOvertimeDate() == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_f8aecb6a");
+        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_d9712a58");
+        if (dto.getEmployeeId() == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_03f5ae35");
+        if (dto.getOvertimeDate() == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_f8aecb6a");
         if (dto.getStartTime() == null || dto.getEndTime() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_a765717d");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_a765717d");
         }
         if (!StringUtils.hasText(dto.getOvertimeType())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_1f6cd674");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_1f6cd674");
         }
     }
 
     private void validateLeave(LeaveCreateDTO dto) {
-        if (dto == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_d9712a58");
-        if (dto.getEmployeeId() == null) throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_03f5ae35");
+        if (dto == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_d9712a58");
+        if (dto.getEmployeeId() == null) throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         if (LeaveType.fromCode(dto.getLeaveType()) == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_867f50ca", dto.getLeaveType());
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_867f50ca", dto.getLeaveType());
         }
         if (dto.getStartDate() == null || dto.getEndDate() == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_9c779eb8");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_9c779eb8");
         }
         if (dto.getEndDate().isBefore(dto.getStartDate())) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.user.msg_7e6b1218");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.user.msg_7e6b1218");
         }
     }
 }

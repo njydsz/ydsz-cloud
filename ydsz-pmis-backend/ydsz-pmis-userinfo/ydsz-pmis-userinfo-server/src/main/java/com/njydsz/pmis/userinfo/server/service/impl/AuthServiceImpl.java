@@ -7,7 +7,7 @@ import com.njydsz.pmis.userinfo.domain.dto.auth.LoginResultVO;
 import com.njydsz.pmis.userinfo.server.service.auth.AuthService;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.security.AccountLockedEvent;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.CryptoUtil;
@@ -133,7 +133,7 @@ public class AuthServiceImpl implements AuthService {
      *
      * @param dto 登录请求参数（用户名、密码、验证码等）
      * @return 登录结果 VO（含访问 Token 与刷新 Token）
-     * @throws BizException 当验证码错误、用户不存在、账号锁定或密码错误时抛出
+     * @throws SysException 当验证码错误、用户不存在、账号锁定或密码错误时抛出
      */
     @Override
     @SuppressWarnings("deprecation")
@@ -147,17 +147,17 @@ public class AuthServiceImpl implements AuthService {
         LoginContextDTO ctx = buildContext(userAccountService.findByUsername(dto.getUsername()));
         if (ctx == null) {
             log.warn("[Auth] 用户不存在 username={}", dto.getUsername());
-            throw new BizException(StandardResultCode.USER_NOT_FOUND);
+            throw new SysException(StandardResultCode.USER_NOT_FOUND);
         }
 
         // 3. 锁定检查
         if (ctx.getLockedUntil() != null && ctx.getLockedUntil() > System.currentTimeMillis()) {
-            throw new BizException(StandardResultCode.USER_LOCKED, "error.auth.msg_9d09bb97");
+            throw new SysException(StandardResultCode.USER_LOCKED, "error.auth.msg_9d09bb97");
         }
 
         // 4. 状态校验
         if (!"ENABLED".equalsIgnoreCase(ctx.getStatus())) {
-            throw new BizException(StandardResultCode.USER_DISABLED);
+            throw new SysException(StandardResultCode.USER_DISABLED);
         }
 
         // 5. 密码校验（兼容 BCrypt 与历史 MD5；MD5 校验通过后惰性升级为 BCrypt）
@@ -167,7 +167,7 @@ public class AuthServiceImpl implements AuthService {
                 : CryptoUtil.verifyPassword(dto.getPassword(), ctx.getPassword(), ctx.getSalt());
         if (!passwordOk) {
             recordLoginFailure(dto.getUsername());
-            throw new BizException(StandardResultCode.PASSWORD_INCORRECT);
+            throw new SysException(StandardResultCode.PASSWORD_INCORRECT);
         }
         // 惰性升级：历史 MD5 密码登录成功后升级为 BCrypt（失败不影响登录流程）
         if (!oldHashWasBcrypt) {
@@ -208,12 +208,12 @@ public class AuthServiceImpl implements AuthService {
      *
      * @param refreshToken 刷新 Token
      * @return 新的登录结果 VO（含新的访问 Token 与刷新 Token）
-     * @throws BizException 当刷新 Token 无效或用户不存在/禁用时抛出
+     * @throws SysException 当刷新 Token 无效或用户不存在/禁用时抛出
      */
     @Override
     public LoginResultVO refresh(String refreshToken) {
         if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new BizException(StandardResultCode.TOKEN_INVALID);
+            throw new SysException(StandardResultCode.TOKEN_INVALID);
         }
 
         String userId = jwtTokenProvider.getUserId(refreshToken);
@@ -221,10 +221,10 @@ public class AuthServiceImpl implements AuthService {
         // 重新加载上下文（角色权限可能已变）
         LoginContextDTO ctx = buildContext(userAccountService.findById(userId));
         if (ctx == null) {
-            throw new BizException(StandardResultCode.USER_NOT_FOUND);
+            throw new SysException(StandardResultCode.USER_NOT_FOUND);
         }
         if (!"ENABLED".equalsIgnoreCase(ctx.getStatus())) {
-            throw new BizException(StandardResultCode.USER_DISABLED);
+            throw new SysException(StandardResultCode.USER_DISABLED);
         }
 
         String newToken = jwtTokenProvider.generateToken(
@@ -402,18 +402,18 @@ public class AuthServiceImpl implements AuthService {
      *
      * @param key  验证码 Key
      * @param code 用户输入的验证码
-     * @throws BizException 当验证码为空、已过期或错误时抛出
+     * @throws SysException 当验证码为空、已过期或错误时抛出
      */
     private void validateCaptcha(String key, String code) {
         if (key == null || key.isBlank() || code == null || code.isBlank()) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.auth.msg_e7006630");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.auth.msg_e7006630");
         }
         String stored = redisTemplate.opsForValue().get(CAPTCHA_KEY_PREFIX + key);
         if (stored == null) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.auth.msg_ffa59696");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.auth.msg_ffa59696");
         }
         if (!stored.equalsIgnoreCase(code)) {
-            throw new BizException(StandardResultCode.BAD_REQUEST, "error.auth.msg_08e91fbb");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "error.auth.msg_08e91fbb");
         }
         // 一次性使用
         redisTemplate.delete(CAPTCHA_KEY_PREFIX + key);
