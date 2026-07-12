@@ -3,7 +3,7 @@ package com.njydsz.pmis.common.file.domain;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.file.constant.FileConstant;
 import com.njydsz.pmis.common.file.exception.FileExceptionCode;
-import com.njydsz.pmis.common.util.file.FileTypeUtils;
+import com.njydsz.pmis.common.util.FileTypeUtils;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
