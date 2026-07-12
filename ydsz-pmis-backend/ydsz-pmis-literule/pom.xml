@@ -11,9 +11,6 @@
     <packaging>pom</packaging>
     <name>ydsz-pmis-literule</name>
     <description>DDD Module</description>
-        <properties>
-        <jmh.version>1.37</jmh.version>
-    </properties>
     <modules>
         <module>ydsz-pmis-literule-api</module>
         <module>ydsz-pmis-literule-domain</module>

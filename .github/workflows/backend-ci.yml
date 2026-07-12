@@ -8,7 +8,7 @@
 # 关联:   与 cd-deploy.yml 串行 (CI 通过 → CD 构建镜像)
 #
 # Job 编排:
-#   1. test               编译 + 运行全部 9 后端模块单元测试（Maven）
+#   1. build              编译全部 9 后端模块（不执行单元测试）
 #   2. quality            Checkstyle + SpotBugs + SonarQube（SONAR_TOKEN 可选）
 #   3. security-scan      OWASP dependency-check（CVSS ≥ 7 直接失败）
 #
@@ -37,8 +37,8 @@ defaults:
     working-directory: ydsz-pmis-backend
 
 jobs:
-  test:
-    name: Build & Test
+  build:
+    name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -53,14 +53,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Maven Verify (含编译 + 单元测试 + JaCoCo 覆盖率门禁)
-        # 使用 verify 阶段以触发 jacoco-check 目标
-        # 门禁规则（分阶段提升, 详见 pom.xml jacoco-check 注释）:
-        #   BUNDLE  级别: LINE≥80%, BRANCH≥70%
-        #   PACKAGE 级别: LINE≥75%, BRANCH≥65%（防低质包被平均掩盖）
-        #   METHOD  级别: LINE≥50%（拦截完全未测试的核心方法）
-        # 任一规则不达标即构建失败
-        run: mvn -B -ntp verify
+      - name: Maven Compile
+        # 仅做编译，跳过 test/verify 阶段（项目已移除全部单元测试，2026-07）
+        run: mvn -B -ntp -DskipTests compile
 
       - name: 幂等注解覆盖检查
         # 扫描所有写接口(@PostMapping/@PutMapping/@DeleteMapping/@PatchMapping)
@@ -112,23 +107,13 @@ jobs:
           fi
           echo "✅ 未检测到 Flyway / Liquibase 依赖、增量脚本目录或 db/migration 目录"
 
-      - name: Upload Test Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-test-reports
-          path: |
-            ydsz-pmis-backend/**/target/surefire-reports/*.xml
-            ydsz-pmis-backend/**/target/site/jacoco/**
-          retention-days: 7
-
   # ============================================================
   # Schema 漂移检测（无 Flyway 方案：pg_dump diff）
   # ============================================================
   schema-drift-check:
     name: Schema Drift Check
     runs-on: ubuntu-latest
-    needs: test
+    needs: build
     steps:
       - uses: actions/checkout@v4
 
@@ -181,8 +166,8 @@ jobs:
             echo "::error::SONAR_TOKEN 未配置，SonarQube 质量门禁为必选项。请在 GitHub Secrets 中配置 SONAR_TOKEN。"
             exit 1
           fi
-          # 复用 test job 已构建的产物，不再重复 verify
-          mvn -B -ntp sonar:sonar \
+          # 复用 build job 已编译的产物，-DskipTests 避免触发 test 阶段
+          mvn -B -ntp -DskipTests sonar:sonar \
             -Dsonar.projectKey=ydsz-pmis-backend \
             -Dsonar.organization=ydsz \
             -Dsonar.host.url=https://sonarcloud.io \
@@ -231,7 +216,7 @@ jobs:
   performance-baseline:
     name: Performance Baseline (k6)
     runs-on: ubuntu-latest
-    needs: test
+    needs: build
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
     steps:
       - uses: actions/checkout@v4

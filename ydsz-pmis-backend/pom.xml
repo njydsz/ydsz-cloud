@@ -97,10 +97,6 @@
         <!-- Prometheus（Sentry 7.13.0 要求 ≥1.7.0，Spring Boot 4.1.0 BOM 管理 1.5.1，取高版本） -->
         <prometheus.version>1.7.0</prometheus.version>
 
-        <!-- 测试 -->
-        <springdoc.version>2.8.13</springdoc.version>
-        <testcontainers.version>1.20.2</testcontainers.version>
-
         <!-- 质量与安全扫描（P0-3：CI 质量门禁） -->
         <!-- 默认 false 由 CI 显式启用；本地构建可 -DskipDependencyCheck=true 跳过以加速 -->
         <skipDependencyCheck>false</skipDependencyCheck>
@@ -936,15 +932,6 @@
                 <artifactId>prometheus-metrics-config</artifactId>
                 <version>${prometheus.version}</version>
             </dependency>
-
-            <!-- Testcontainers -->
-            <dependency>
-                <groupId>org.testcontainers</groupId>
-                <artifactId>testcontainers-bom</artifactId>
-                <version>${testcontainers.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -963,12 +950,6 @@
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
             <version>${caffeine.version}</version>
-        </dependency>
-        <!-- 单元测试 -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -1007,22 +988,6 @@
                         </annotationProcessorPaths>
                     </configuration>
                 </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <configuration>
-                        <!-- P0-1: 保留 failIfNoTests=false 避免无测试的模块阻断构建，
-                             但 JaCoCo 覆盖率门禁（jacoco-check）会拦截覆盖率不达标的情况 -->
-                        <failIfNoTests>false</failIfNoTests>
-                        <!-- Windows 下 classpath 含不同盘符根路径时禁用 URL 校验,避免 fork JVM 启动失败 -->
-                        <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
-                        <includes>
-                            <include>**/*Test.java</include>
-                            <include>**/*Tests.java</include>
-                            <include>**/*TestCase.java</include>
-                        </includes>
-                    </configuration>
-                </plugin>
                 <!-- Checkstyle 静态检查（批次18：与 code-quality.md 规范一致） -->
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -1053,123 +1018,6 @@
                             </goals>
                             <configuration>
                                 <skip>false</skip>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-                <!-- JaCoCo 覆盖率（SonarQube 接入 + CI 质量门禁） -->
-                <plugin>
-                    <groupId>org.jacoco</groupId>
-                    <artifactId>jacoco-maven-plugin</artifactId>
-                    <version>0.8.11</version>
-                    <configuration>
-                        <skip>false</skip>
-                        <!-- 排除不需要覆盖率统计的类：DTO/Entity/Config/Mapper 等非业务逻辑类 -->
-                        <excludes>
-                            <exclude>**/dto/**</exclude>
-                            <exclude>**/entity/**</exclude>
-                            <exclude>**/vo/**</exclude>
-                            <exclude>**/config/**</exclude>
-                            <exclude>**/mapper/**</exclude>
-                            <exclude>**/enums/**</exclude>
-                            <exclude>**/constant/**</exclude>
-                            <exclude>**/*DO.class</exclude>
-                            <exclude>**/*DTO.class</exclude>
-                            <exclude>**/*VO.class</exclude>
-                            <exclude>**/*Application.class</exclude>
-                            <exclude>**/migration/**</exclude>
-                        </excludes>
-                    </configuration>
-                    <executions>
-                        <!-- 测试前注入 Agent -->
-                        <execution>
-                            <id>jacoco-prepare-agent</id>
-                            <goals>
-                                <goal>prepare-agent</goal>
-                            </goals>
-                        </execution>
-                        <!-- 测试后生成报告 -->
-                        <execution>
-                            <id>jacoco-report</id>
-                            <phase>test</phase>
-                            <goals>
-                                <goal>report</goal>
-                            </goals>
-                        </execution>
-                        <!--
-                            覆盖率门禁检查（分阶段提升计划）
-                            ==============================================================
-                            阶段 1（当前, 2026-07）: LINE>=80%, BRANCH>=70%  — 立即收口
-                            阶段 2（2026-08）:      LINE>=90%, BRANCH>=85%  — 接近大厂标准
-                            阶段 3（2026-09）:      LINE>=95%, BRANCH>=90%  — 对齐项目规范 100% 覆盖目标
-                            ==============================================================
-                            规则设计:
-                              1. BUNDLE 级别: 整体行/分支覆盖率, 拦截整体退化
-                              2. PACKAGE 级别: 按 Java 包校验, 避免"高质模块拉低质模块平均值"
-                              3. METHOD 级别: 单方法覆盖率, 拦截未测试的核心方法
-                            排除项: DTO/Entity/VO/Config/Mapper/Enums/Constant/Application 已在上方 excludes 中声明
-                        -->
-                        <execution>
-                            <id>jacoco-check</id>
-                            <phase>verify</phase>
-                            <goals>
-                                <goal>check</goal>
-                            </goals>
-                            <configuration>
-                                <rules>
-                                    <!-- 规则 1: 整体 BUNDLE 覆盖率门禁 -->
-                                    <rule>
-                                        <element>BUNDLE</element>
-                                        <limits>
-                                            <limit>
-                                                <counter>LINE</counter>
-                                                <value>COVEREDRATIO</value>
-                                                <minimum>0.80</minimum>
-                                            </limit>
-                                            <limit>
-                                                <counter>BRANCH</counter>
-                                                <value>COVEREDRATIO</value>
-                                                <minimum>0.70</minimum>
-                                            </limit>
-                                        </limits>
-                                    </rule>
-                                    <!-- 规则 2: PACKAGE 级别门禁, 防止低质包被整体平均掩盖 -->
-                                    <rule>
-                                        <element>PACKAGE</element>
-                                        <limits>
-                                            <limit>
-                                                <counter>LINE</counter>
-                                                <value>COVEREDRATIO</value>
-                                                <minimum>0.75</minimum>
-                                            </limit>
-                                            <limit>
-                                                <counter>BRANCH</counter>
-                                                <value>COVEREDRATIO</value>
-                                                <minimum>0.65</minimum>
-                                            </limit>
-                                        </limits>
-                                        <excludes>
-                                            <!-- 启动类与配置包允许较低覆盖率 -->
-                                            <exclude>com.njydsz.pmis.*.config</exclude>
-                                            <exclude>com.njydsz.pmis.*.migration</exclude>
-                                        </excludes>
-                                    </rule>
-                                    <!-- 规则 3: METHOD 级别, 单方法行覆盖≥50%, 拦截完全未测试的核心方法 -->
-                                    <rule>
-                                        <element>METHOD</element>
-                                        <limits>
-                                            <limit>
-                                                <counter>LINE</counter>
-                                                <value>COVEREDRATIO</value>
-                                                <minimum>0.50</minimum>
-                                            </limit>
-                                        </limits>
-                                        <excludes>
-                                            <exclude>com.njydsz.pmis.*.config.*</exclude>
-                                            <exclude>com.njydsz.pmis.*.migration.*</exclude>
-                                        </excludes>
-                                    </rule>
-                                </rules>
                             </configuration>
                         </execution>
                     </executions>

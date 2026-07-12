@@ -86,20 +86,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-
-        <!-- 单元测试 -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.projectreactor</groupId>
-            <artifactId>reactor-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- jjwt-impl（test scope: AuthGlobalFilterTest 使用 DefaultClaims） -->
-        <!-- 已在上面以 runtime scope 声明，此处保留 test scope 供测试使用 -->
     </dependencies>
 
     <build>
