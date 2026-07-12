@@ -7,7 +7,7 @@ import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.constant.CacheConstants;
 import com.njydsz.pmis.common.datasource.DataSourceConstants;
-import com.njydsz.pmis.common.entity.PageQuery;
+import com.njydsz.pmis.common.domain.query.PageQuery;
 import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.AccountLockInfo;

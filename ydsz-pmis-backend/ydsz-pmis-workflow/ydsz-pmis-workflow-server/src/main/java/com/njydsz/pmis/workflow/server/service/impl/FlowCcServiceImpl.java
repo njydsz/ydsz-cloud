@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.notification;
 
 import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.entity.PageQuery;
+import com.njydsz.pmis.common.domain.query.PageQuery;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.workflow.domain.dto.notification.FlowCcQueryDTO;
 import com.njydsz.pmis.workflow.server.engine.FlowAssigneeResolver;

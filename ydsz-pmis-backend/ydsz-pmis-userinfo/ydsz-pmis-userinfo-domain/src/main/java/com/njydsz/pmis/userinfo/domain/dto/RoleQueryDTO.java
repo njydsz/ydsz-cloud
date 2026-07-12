@@ -1,6 +1,6 @@
 package com.njydsz.pmis.userinfo.domain.dto.permission;
 
-import com.njydsz.pmis.common.entity.PageQuery;
+import com.njydsz.pmis.common.domain.query.PageQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
