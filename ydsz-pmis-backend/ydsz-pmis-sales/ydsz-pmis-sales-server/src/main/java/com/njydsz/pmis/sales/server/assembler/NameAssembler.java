@@ -1,4 +1,4 @@
-package com.njydsz.pmis.server.assembler;
+package com.njydsz.pmis.sales.server.assembler;
 
 import com.njydsz.pmis.userinfo.api.client.UserServiceClient;
 import lombok.RequiredArgsConstructor;

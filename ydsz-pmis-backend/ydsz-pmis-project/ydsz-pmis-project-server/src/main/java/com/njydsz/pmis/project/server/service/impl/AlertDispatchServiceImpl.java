@@ -8,6 +8,7 @@ import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.domain.dto.AlertDispatchDTO;
 import com.njydsz.pmis.project.domain.entity.AlertDispatchDO;
 import com.njydsz.pmis.project.infra.mapper.AlertDispatchMapper;
+import com.njydsz.pmis.project.server.engine.AlertCodeGen;
 import com.njydsz.pmis.project.server.service.AlertDispatchService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
