@@ -40,7 +40,6 @@ public class JwtTokenProvider {
     public JwtTokenProvider(JwtTokenService jwtTokenService,
                             TokenProperties tokenProperties) {
         this.jwtTokenService = jwtTokenService;
-        this.tokenProperties = tokenProperties;
         String secretKeyRaw = tokenProperties.getSecretKey();
         if (secretKeyRaw == null || secretKeyRaw.isBlank()) {
             throw new IllegalStateException("ydsz.auth.token.secret-key 不能为空");
