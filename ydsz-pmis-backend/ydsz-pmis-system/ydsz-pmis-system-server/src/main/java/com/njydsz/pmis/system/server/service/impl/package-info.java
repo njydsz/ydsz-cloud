@@ -14,7 +14,6 @@
  *   <li>{@code LoginAuditServiceImpl} - 登录审计服务实现，记录登录/登出/失败事件</li>
  *   <li>{@code DataExportAuditServiceImpl} - 数据导出审计服务实现，记录导出人/范围/审批单</li>
  *   <li>{@code FeatureFlagServiceImpl} - 特性开关服务实现，支持按用户/租户灰度</li>
- *   <li>{@code SensitiveOperationServiceImpl} - 敏感操作服务实现（二次鉴权/审批流）</li>
  * </ul>
  *
  * <h3>设计原则</h3>

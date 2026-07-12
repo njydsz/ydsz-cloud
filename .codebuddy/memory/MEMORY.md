@@ -30,7 +30,7 @@
 - **规则**：Java 代码中不允许出现行内 FQN 用法，必须使用标准 `import` 语句后在代码中直接引用简单类名。
 - **触发案例**：
   - `InitiationFeignClient.java` 中 `Result<String> create(@RequestBody com.njydsz.pmis.project.api.dto.InitiationCreateDTO dto)` 违规，已修复为 import + 简单类名。
-  - `ReAuthService.java` / `JobService.java` / `JobDagService.java` 等 8 个文件中 Javadoc `@throws com.njydsz.pmis.common.exception.SysException` 违规，已修复为 import + `@throws SysException`。
+  - `JobService.java` / `JobDagService.java` 等 8 个文件中 Javadoc `@throws com.njydsz.pmis.common.exception.SysException` 违规，已修复为 import + `@throws SysException`。
   - `IFileStorage.java` / `LogicalDeleteConfiguration.java` 等 10 个文件中 Javadoc `@see com.njydsz.pmis.xxx.XxxClass` 违规，已修复为 import + `@see XxxClass`。
   - `EnableAudit.java` 中 `@Import(com.njydsz.pmis.common.audit.config.AuditAutoConfiguration.class)` 违规，已修复为 import + `@Import(AuditAutoConfiguration.class)`。
   - `NotifyChannelStrategy.java` 中方法参数 `com.njydsz.pmis.common.notify.template.TemplateEngine templateEngine` 违规，已修复为 import + `TemplateEngine templateEngine`。

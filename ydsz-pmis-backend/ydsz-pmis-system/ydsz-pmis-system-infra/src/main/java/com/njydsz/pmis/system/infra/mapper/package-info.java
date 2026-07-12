@@ -16,7 +16,6 @@
  *   <li>{@code OperationLogMapper} - 操作日志 Mapper，扩展 {@code insertLog} 支持前后数据 diff</li>
  *   <li>{@code LoginAuditMapper} - 登录审计 Mapper</li>
  *   <li>{@code DataExportAuditMapper} - 数据导出审计 Mapper</li>
- *   <li>{@code SensitiveOperationMapper} - 敏感操作审计 Mapper</li>
  * </ul>
  *
  * <h3>设计原则</h3>

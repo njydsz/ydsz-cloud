@@ -1442,7 +1442,7 @@ SELECT pmis_attach_updated_at_trigger('pmis_flow_definition');
 --      pmis_attach_updated_at_trigger() 自身幂等: 已挂载 / 表不存在 / 缺
 --      updated_at 列时均静默跳过, 故可安全覆盖全部表。
 --      覆盖: 规则/成本/利润/EVM/费率/资源/考勤/运维/工单/满意度/对账/
---      利用率/工作流子表/报表/导出/2FA/会话/敏感操作等(约 80+ 张表)。
+--      利用率/工作流子表/报表/导出/2FA/会话等(约 80+ 张表)。
 --      日志表(pmis_operation_log / pmis_flow_audit_log 等)无 updated_at 列,
 --      会被辅助函数自动跳过。
 -- ----------------------------------------------------------------------------
