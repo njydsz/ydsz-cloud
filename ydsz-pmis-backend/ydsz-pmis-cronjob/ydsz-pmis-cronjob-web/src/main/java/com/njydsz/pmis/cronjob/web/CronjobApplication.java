@@ -4,7 +4,8 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
+import com.njydsz.pmis.common.auth.annotation.EnableYdszAuth;
+import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
@@ -15,7 +16,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.cronjob", "com.njydsz.pmis.common"})
 @EnableDiscoveryClient
-@EnableFeignClients(basePackages = {"com.njydsz.pmis.cronjob.api", "com.njydsz.pmis.common.feign"})
+@EnableYdszAuth
+@EnableYdszFeign(basePackages = {"com.njydsz.pmis.cronjob.api", "com.njydsz.pmis.common.feign"})
 @EnableScheduling
 @MapperScan("com.njydsz.pmis.cronjob.infra.mapper")
 public class CronjobApplication {

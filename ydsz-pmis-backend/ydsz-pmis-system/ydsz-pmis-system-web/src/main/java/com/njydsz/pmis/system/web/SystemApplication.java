@@ -4,7 +4,8 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.cloud.openfeign.EnableFeignClients;
+import com.njydsz.pmis.common.auth.annotation.EnableYdszAuth;
+import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
 
 /**
  * 系统基础服务启动类（合并 file + config + audit + notification + message）
@@ -20,7 +21,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.njydsz.pmis.common"
 })
 @EnableDiscoveryClient
-@EnableFeignClients(basePackages = {"com.njydsz.pmis.system.api", "com.njydsz.pmis.common.feign"})
+@EnableYdszAuth
+@EnableYdszFeign(basePackages = {"com.njydsz.pmis.system.api", "com.njydsz.pmis.common.feign"})
 @MapperScan("com.njydsz.pmis.system.infra.mapper")
 public class SystemApplication {
 

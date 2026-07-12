@@ -7,8 +7,7 @@ import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.literule.server.adaptive.AdaptiveThresholdService;
-import com.njydsz.pmis.literule.server.adaptive.ThresholdAnalysis;
+
 import com.njydsz.pmis.literule.api.DecisionTableDefinition;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
@@ -179,8 +178,6 @@ public class RuleAdminController {
     private final ObjectProvider<DecisionTableAdminService> decisionTableAdminServiceProvider;
     // 多级审批流服务（P1-3）：可选注入，未配置 RuleConfigProvider 时为空
     private final ObjectProvider<RuleApprovalService> ruleApprovalServiceProvider;
-    // 自适应阈值分析服务（P3-4）：可选注入，未配置 TraceDataProvider 时为空
-    private final ObjectProvider<AdaptiveThresholdService> adaptiveThresholdServiceProvider;
 
     /**
      * 查询全部规则定义
@@ -2182,93 +2179,6 @@ public class RuleAdminController {
             @RequestParam(value = "rating") double rating) {
         rulePackProvider.rate(id, rating);
         return BaseResponse.ok();
-    }
-
-    // ==================================================================
-    // P3-4 自适应智能风控（自适应阈值分析）
-    // ==================================================================
-
-    /**
-     * 分析指定规则的阈值
-     *
-     * <p>基于规则最近 N 天的执行轨迹，自动计算最优阈值并生成调整建议。
-     * 支持的调整策略：PERCENTILE / FALSE_RATE / MISS_RATE / BALANCED。
-     *
-     * @param ruleCode 规则编码
-     * @param days     分析最近 N 天的数据（默认 30）
-     * @return 阈值分析结果列表（一条规则可能含多个阈值比较项）
-     */
-    @Idempotent(key = "ruleAdmin:analyzeThreshold", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/thresholdAnalysis")
-    @Operation(summary = "规则阈值自适应分析", description = "基于历史触发数据自动计算最优阈值，生成阈值调整建议")
-    public BaseResponse<List<ThresholdAnalysis>> analyzeThreshold(
-            @PathVariable String ruleCode,
-            @RequestParam(value = "days", defaultValue = "30") int days) {
-        AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("自适应阈值分析服务未启用（需提供 TraceDataProvider SPI 实现）");
-        }
-        return BaseResponse.ok(svc.analyzeRule(ruleCode, days));
-    }
-
-    /**
-     * 分析所有规则的阈值
-     *
-     * @param days 分析最近 N 天的数据（默认 30）
-     * @return 全部规则的分析结果列表
-     */
-    @Idempotent(key = "ruleAdmin:analyzeAllThresholds", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/thresholdAnalysis/all")
-    @Operation(summary = "全部规则阈值自适应分析", description = "批量分析所有规则的阈值，生成调整建议")
-    public BaseResponse<List<ThresholdAnalysis>> analyzeAllThresholds(
-            @RequestParam(value = "days", defaultValue = "30") int days) {
-        AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("自适应阈值分析服务未启用");
-        }
-        return BaseResponse.ok(svc.analyzeAllRules(days));
-    }
-
-    /**
-     * 应用阈值调整
-     *
-     * <p>将建议阈值写入规则的条件表达式并持久化，触发热刷新。
-     *
-     * @param ruleCode 规则编码
-     * @param analysis 阈值分析结果（含 suggestedThreshold）
-     * @param operator 操作人
-     * @return 操作结果（true=应用成功）
-     */
-    @Idempotent(key = "ruleAdmin:applyThreshold", ttlSeconds = 5, message = "请勿重复提交")
-    @PostMapping("/{ruleCode}/applyThreshold")
-    @OperationLog(module = "规则引擎", action = "应用自适应阈值调整", bizType = "RULE")
-    @Operation(summary = "应用阈值调整", description = "将建议阈值写入规则条件表达式并持久化")
-    public BaseResponse<Boolean> applyThreshold(
-            @PathVariable String ruleCode,
-            @Valid @RequestBody ThresholdAnalysis analysis,
-            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.fail("自适应阈值分析服务未启用");
-        }
-        boolean success = svc.applyThreshold(ruleCode, analysis, operator);
-        return success ? BaseResponse.ok(true) : BaseResponse.fail("应用阈值调整失败，请检查规则表达式或日志");
-    }
-
-    /**
-     * 获取待处理的阈值调整建议
-     *
-     * @param ruleCode 规则编码
-     * @return 待处理建议列表
-     */
-    @GetMapping("/{ruleCode}/thresholdSuggestions")
-    @Operation(summary = "获取阈值调整建议", description = "返回最近一次分析生成的待处理阈值调整建议")
-    public BaseResponse<List<ThresholdAnalysis>> thresholdSuggestions(@PathVariable String ruleCode) {
-        AdaptiveThresholdService svc = adaptiveThresholdServiceProvider.getIfAvailable();
-        if (svc == null) {
-            return BaseResponse.ok(List.of());
-        }
-        return BaseResponse.ok(svc.getPendingSuggestions(ruleCode));
     }
 
     // ==================================================================

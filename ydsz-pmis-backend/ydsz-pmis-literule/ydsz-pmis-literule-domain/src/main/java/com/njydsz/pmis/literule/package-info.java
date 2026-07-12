@@ -12,7 +12,6 @@
  *   <li>{@code expr}         - 表达式引擎（基于自研 LiteExpr）</li>
  *   <li>{@code cep}          - 复杂事件处理（Complex Event Processing）</li>
  *   <li>{@code calc}         - 计算引擎（公式 / 财务计算）</li>
- *   <li>{@code ai}           - AI 辅助规则生成（基于 LLM）</li>
  *   <li>{@code orchestrator} - 规则编排（多规则协同）</li>
  *   <li>{@code distributed}  - 分布式规则（跨服务规则调用）</li>
  *   <li>{@code spi}          - SPI 扩展点（自定义规则 / 函数 / 算子）</li>

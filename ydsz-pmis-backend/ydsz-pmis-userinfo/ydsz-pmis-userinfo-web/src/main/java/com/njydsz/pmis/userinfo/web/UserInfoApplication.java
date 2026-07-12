@@ -1,5 +1,6 @@
 package com.njydsz.pmis.userinfo.web;
 
+import com.njydsz.pmis.common.auth.annotation.EnableYdszAuth;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -22,6 +23,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
         "com.njydsz.pmis.common"
 })
 @EnableDiscoveryClient
+@EnableYdszAuth
 @MapperScan("com.njydsz.pmis.userinfo.infra.mapper")
 public class UserInfoApplication {
 

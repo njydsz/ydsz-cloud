@@ -17,9 +17,6 @@
  *       {@link com.njydsz.pmis.workflow.domain.dto.FlowDmnTableSaveDTO}</li>
  *   <li>设计器类 - {@link com.njydsz.pmis.workflow.domain.dto.FlowDesignerDataDTO}、
  *       {@link com.njydsz.pmis.workflow.domain.dto.FlowDefinitionSimulateDTO}</li>
- *   <li>AI 类 - {@link com.njydsz.pmis.workflow.domain.dto.FlowAiGenerateDTO}、
- *       {@link com.njydsz.pmis.workflow.domain.dto.FlowAiRecommendApproversDTO}、
- *       {@link com.njydsz.pmis.workflow.domain.dto.FlowAiDraftCommentDTO}</li>
  *   <li>嵌入式审批类 - {@link com.njydsz.pmis.workflow.domain.dto.EmbeddedApprovalActionDTO}、
  *       {@link com.njydsz.pmis.workflow.domain.dto.EmbeddedApprovalViewDTO}</li>
  *   <li>委派 / 抄送 / 通知类 - {@link com.njydsz.pmis.workflow.domain.dto.FlowDelegateAuthSaveDTO}、

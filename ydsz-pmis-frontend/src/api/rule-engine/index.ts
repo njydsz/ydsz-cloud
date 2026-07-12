@@ -3,7 +3,7 @@
  * @description 提供规则 CRUD、版本管理、Dry-run、测试用例、审批、监控、
  *              决策表/树/评分卡/CEP/规则链管理、DSL 管理、审计日志、
  *              执行回放、影响分析、归因分析、健康度评分、自适应阈值、
- *              AI Agent 执行等接口；
+ *              执行等接口；
  *              对应后端 RuleAdminController（/ruleEngine/rules）、
  *              RuleDslController（/ruleEngine/dsl）、
  *              RuleAuditLogController（/ruleEngine/audit）、
@@ -239,14 +239,6 @@ export interface ThresholdAnalysis {
   reason?: string
   confidence?: number
   improvement?: string
-}
-
-export interface AgentExecutionResult {
-  output: string
-  iterations: number
-  thoughts: string[]
-  elapsedMs: number
-  degraded: boolean
 }
 
 export interface RegressionReport {
@@ -499,14 +491,6 @@ export const listPacks = () =>
 export const installPack = (packId: string) =>
   request<any>({ url: `/ruleEngine/rules/packs/${packId}/install`, method: 'POST' })
 
-// ===== AI 辅助 =====
-
-export const generateRuleByAI = (data: { description: string; availableFields: string[] }) =>
-  request<RuleDefinition>({ url: '/ruleEngine/rules/ai/generate', method: 'POST', data })
-
-export const nl2Rule = (data: { naturalLanguage: string }) =>
-  request<RuleDefinition>({ url: '/ruleEngine/rules/ai/nl2rule', method: 'POST', data })
-
 // ===== 变量管理 =====
 
 export const listVariables = () =>
@@ -566,23 +550,6 @@ export const batchAttribution = (traceIds: string[]) =>
 export const traceAttribution = (traceId: string) =>
   request<AttributionReport[]>({ url: `/ruleEngine/rules/traces/${traceId}/attribution`, method: 'GET' })
 
-// ===== 健康度评分（P2-15） =====
-
-export const getHealthScore = (ruleCode: string) =>
-  request<RuleHealthScore>({ url: `/ruleEngine/rules/${ruleCode}/ai/health`, method: 'GET' })
-
-export const getHealthScoreBatch = () =>
-  request<RuleHealthScore[]>({ url: '/ruleEngine/rules/ai/healthBatch', method: 'GET' })
-
-export const getRecommendations = (ruleCode: string) =>
-  request<any[]>({ url: `/ruleEngine/rules/${ruleCode}/ai/recommend`, method: 'GET' })
-
-export const describeRule = (ruleCode: string) =>
-  request<string>({ url: `/ruleEngine/rules/${ruleCode}/ai/describe`, method: 'GET' })
-
-export const optimizeExpression = (ruleCode: string) =>
-  request<string>({ url: `/ruleEngine/rules/${ruleCode}/ai/optimize`, method: 'GET' })
-
 // ===== 自适应阈值（P3-4） =====
 
 export const analyzeThreshold = (ruleCode: string, days?: number) =>
@@ -596,18 +563,6 @@ export const applyThreshold = (ruleCode: string, analysis: ThresholdAnalysis) =>
 
 export const getThresholdSuggestions = (ruleCode: string) =>
   request<ThresholdAnalysis[]>({ url: `/ruleEngine/rules/${ruleCode}/thresholdSuggestions`, method: 'GET' })
-
-// ===== AI Agent 执行（P3-5） =====
-
-export const executeAgent = (data: {
-  systemPrompt?: string
-  userPrompt: string
-  maxIterations?: number
-  tools?: string[]
-  facts?: Record<string, any>
-  timeoutMs?: number
-}) =>
-  request<AgentExecutionResult>({ url: '/ruleEngine/rules/agent/execute', method: 'POST', data })
 
 // ===== 规则依赖 =====
 

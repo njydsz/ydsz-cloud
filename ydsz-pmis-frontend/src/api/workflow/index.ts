@@ -476,79 +476,6 @@ export function listOverdueTasks(params: {
 }
 
 // ===========================================
-// P2-1: 智能审批辅助
-// ===========================================
-
-/** P2-1: 推荐审批人（调用 Agent 服务） */
-export function recommendApprovers(payload: {
-  flowCode?: string
-  nodeCode?: string
-  businessType?: string
-  businessId?: number
-  businessTitle?: string
-  requiredLevel?: string
-  requiredRole?: string
-  requiredDepartment?: string
-  topN?: number
-  candidates: Array<{
-    userId: number
-    name?: string
-    department?: string
-    level?: string
-    role?: string
-    activeTasks?: number
-    avgApprovalMs?: number
-  }>
-}) {
-  return http.post<ApiResponse<Array<Record<string, unknown>>>>(
-    '/workflow/engine/ai/recommend-approvers',
-    payload,
-  )
-}
-
-/** P2-1: 起草审批意见（调用 Agent 服务） */
-export function draftComment(payload: {
-  action: 'PASS' | 'REJECT' | 'TRANSFER' | 'DELEGATE' | 'URGE'
-  taskId?: number
-  flowCode?: string
-  flowName?: string
-  nodeCode?: string
-  nodeName?: string
-  title?: string
-  riskLevel?: 'RED' | 'YELLOW' | 'GREEN'
-  overdueDays?: number
-  tone?: 'FORMAL' | 'FRIENDLY'
-  maxLength?: number
-  historicalComments?: string[]
-}) {
-  return http.post<ApiResponse<{
-    primary: string
-    alternatives: string[]
-    reasons: string[]
-    action: string
-    tone: string
-  }>>(
-    '/workflow/engine/ai/draft-comment',
-    payload,
-  )
-}
-
-/** P2-1: 检查 AI Agent 服务是否可用 */
-export function aiStatus() {
-  return http.get<ApiResponse<{ available: boolean; agents: string[] }>>(
-    '/workflow/engine/ai/status',
-  )
-}
-
-/** P0-3: AI 一句话生成流程 */
-export function generateBpmn(description: string) {
-  return http.post<ApiResponse<{ bpmnXml: string }>>(
-    '/workflow/ai/generate',
-    { description },
-  )
-}
-
-// ===========================================
 // P2-2: 嵌入式审批（业务页内嵌审批面板）
 // ===========================================
 
@@ -562,7 +489,6 @@ export interface EmbeddedApprovalView {
   history: EmbeddedHistoryItem[]
   myRole: 'INITIATOR' | 'APPROVER' | 'OBSERVER'
   actions: string[]
-  aiAvailable: boolean
   canRecall: boolean
   finished: boolean
   message: string

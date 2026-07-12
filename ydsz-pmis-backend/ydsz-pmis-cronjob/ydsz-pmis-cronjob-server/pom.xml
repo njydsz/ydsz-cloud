@@ -16,41 +16,16 @@
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-cronjob-infra</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-common-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-common-util</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-common-domain</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-common-exception</artifactId>
-        </dependency>
+        <!-- common-web 传递引入: common-base(→core/util/exception), common-auth, common-safe, common-redis -->
+        <!-- common-jdbc 传递引入: common-domain -->
+        <!-- common-feign 传递引入: spring-cloud-starter-openfeign -->
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-jdbc</artifactId>
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-common-redis</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-lock</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-common-auth</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-common-safe</artifactId>
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
@@ -75,10 +50,6 @@
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-doc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-common-base</artifactId>
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
@@ -115,16 +86,8 @@
             <artifactId>groovy</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-openfeign</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-webmvc</artifactId>
         </dependency>
     </dependencies>
 </project>
