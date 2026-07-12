@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.auth.context;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
 import com.njydsz.pmis.common.auth.model.ColumnPermissionInfo;
+import com.njydsz.pmis.common.core.context.RequestContext;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.LoginUser;
@@ -51,13 +52,12 @@ public final class AuthContext {
         data.loginUser = user;
         // 同步关键信息到 RequestContext
         if (user != null) {
-            RequestContext.ContextData ctx = RequestContext.getOrDefault();
-            ctx.setUserId(user.getUserId());
-            ctx.setUsername(user.getUsername());
-            ctx.setRealName(user.getRealName());
-            ctx.setDeptId(user.getDeptId());
+            RequestContext.setUserId(user.getUserId());
+            RequestContext.put("username", user.getUsername());
+            RequestContext.put("realName", user.getRealName());
+            RequestContext.put("deptId", user.getDeptId());
             if (user.getTenantId() != null) {
-                ctx.setTenantId(user.getTenantId());
+                RequestContext.setTenantId(user.getTenantId());
             }
         }
     }
@@ -71,7 +71,11 @@ public final class AuthContext {
     public static LoginUser getCurrent() {
         LoginUser user = getCurrentOrNull();
         if (user == null) {
-            throw new SysException(StandardResultCode.UNAUTHORIZED, "error.common.msg_1923bd82");
+            throw SysException.builder()
+                    .code(StandardResultCode.UNAUTHORIZED.getCode())
+                    .key("error.common.msg_1923bd82")
+                    .httpStatus(StandardResultCode.UNAUTHORIZED.getHttpStatus().value())
+                    .build();
         }
         return user;
     }
@@ -151,7 +155,12 @@ public final class AuthContext {
     public static void requirePermission(String perm) {
         LoginUser user = getCurrent();
         if (!user.hasPermission(perm)) {
-            throw new SysException(StandardResultCode.FORBIDDEN, "error.common.msg_1e40057e", perm);
+            throw SysException.builder()
+                    .code(StandardResultCode.FORBIDDEN.getCode())
+                    .key("error.common.msg_1e40057e")
+                    .params(perm)
+                    .httpStatus(StandardResultCode.FORBIDDEN.getHttpStatus().value())
+                    .build();
         }
     }
 
@@ -168,7 +177,11 @@ public final class AuthContext {
                 return;
             }
         }
-        throw new SysException(StandardResultCode.FORBIDDEN, "error.common.msg_ad4fff48");
+        throw SysException.builder()
+                .code(StandardResultCode.FORBIDDEN.getCode())
+                .key("error.common.msg_ad4fff48")
+                .httpStatus(StandardResultCode.FORBIDDEN.getHttpStatus().value())
+                .build();
     }
 
     // ==================== 列权限管理（原有功能） ====================

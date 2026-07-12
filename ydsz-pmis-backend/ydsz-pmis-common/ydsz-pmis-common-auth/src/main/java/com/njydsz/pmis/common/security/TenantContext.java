@@ -1,7 +1,7 @@
 package com.njydsz.pmis.common.security;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
-import com.njydsz.pmis.common.context.RequestContext;
+import com.njydsz.pmis.common.core.context.RequestContext;
 
 /**
  * 租户上下文（TransmittableThreadLocal）

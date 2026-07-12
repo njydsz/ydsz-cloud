@@ -2,7 +2,7 @@ package com.njydsz.pmis.common.security;
 
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -53,7 +53,11 @@ public final class DataScopeHelper {
         if (ctx.getCustomDeptIds() != null && ctx.getCustomDeptIds().contains(targetDeptId)) {
             return;
         }
-        throw new SysException(StandardResultCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_e107b337");
+        throw SysException.builder()
+                .code(StandardResultCode.DATA_SCOPE_FORBIDDEN.getCode())
+                .key("error.common.msg_e107b337")
+                .httpStatus(StandardResultCode.DATA_SCOPE_FORBIDDEN.getHttpStatus().value())
+                .build();
     }
 
     /**
@@ -76,7 +80,11 @@ public final class DataScopeHelper {
         if (ctx.getUserId() != null && ctx.getUserId().equals(ownerUserId)) {
             return;
         }
-        throw new SysException(StandardResultCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_4982e9ba");
+        throw SysException.builder()
+                .code(StandardResultCode.DATA_SCOPE_FORBIDDEN.getCode())
+                .key("error.common.msg_4982e9ba")
+                .httpStatus(StandardResultCode.DATA_SCOPE_FORBIDDEN.getHttpStatus().value())
+                .build();
     }
 
     /**
