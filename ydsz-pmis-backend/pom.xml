@@ -55,12 +55,12 @@
         <!-- baomidou 动态数据源（读写分离 P2-3） -->
         <dynamic-datasource.version>4.3.1</dynamic-datasource.version>
         <hutool.version>5.8.46</hutool.version>
-        <resilience4j.version>2.2.0</resilience4j.version>
+        <resilience4j.version>2.3.0</resilience4j.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <lombok.version>1.18.42</lombok.version>
         <fastjson2.version>2.0.62</fastjson2.version>
         <jjwt.version>0.12.6</jjwt.version>
-        <bcprov.version>1.78.1</bcprov.version>
+        <bcprov.version>1.81.1</bcprov.version>
         <knife4j.version>4.5.0</knife4j.version>
         <easyexcel.version>4.0.3</easyexcel.version>
         <commons-csv.version>1.11.0</commons-csv.version>
@@ -478,6 +478,11 @@
                 <artifactId>swagger-annotations</artifactId>
                 <version>2.2.25</version>
             </dependency>
+            <dependency>
+                <groupId>io.swagger.core.v3</groupId>
+                <artifactId>swagger-annotations-jakarta</artifactId>
+                <version>2.2.36</version>
+            </dependency>
 
             <!-- EasyExcel -->
             <dependency>
@@ -575,6 +580,13 @@
                 <groupId>org.apache.tika</groupId>
                 <artifactId>tika-core</artifactId>
                 <version>${tika.version}</version>
+            </dependency>
+
+            <!-- Google Error Prone Annotations (Caffeine/Guava 传递依赖统一) -->
+            <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_annotations</artifactId>
+                <version>2.36.0</version>
             </dependency>
 
             <!-- Jasypt 配置加密（P0-4） -->
@@ -868,8 +880,8 @@
                         </dependencyConvergence>
                         <bannedDependencies>
                             <excludes>
-                                <!-- 禁止 fastjson 1.x（历史安全漏洞），允许 fastjson2 -->
-                                <exclude>com.alibaba:fastjson</exclude>
+                                <!-- 禁止 fastjson 1.x（历史安全漏洞），允许 fastjson2 及兼容包 com.alibaba:fastjson:2.x -->
+                                <exclude>com.alibaba:fastjson:*:[,2)</exclude>
                                 <!-- 禁止 commons-collections 3.x（反序列化漏洞），允许 commons-collections4 -->
                                 <exclude>commons-collections:commons-collections</exclude>
                                 <exclude>org.apache.commons:commons-collections</exclude>

@@ -1,1 +1,1 @@
-com.njydsz.pmis.common.config.DataAutoConfiguration
+com.njydsz.pmis.common.config.JdbcAutoConfiguration

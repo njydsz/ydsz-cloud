@@ -1,6 +1,8 @@
-com.njydsz.pmis.common.config.DataAutoConfiguration
+com.njydsz.pmis.common.config.JdbcAutoConfiguration
+com.njydsz.pmis.common.config.RedisAutoConfiguration
 com.njydsz.pmis.common.config.InfraAutoConfiguration
 com.njydsz.pmis.common.feign.FeignAutoConfiguration
-com.njydsz.pmis.common.SecurityAutoConfiguration
+com.njydsz.pmis.common.AuthAutoConfiguration
+com.njydsz.pmis.common.SafeAutoConfiguration
 com.njydsz.pmis.common.config.WebAutoConfiguration
 com.njydsz.pmis.common.config.CommonAutoConfiguration
