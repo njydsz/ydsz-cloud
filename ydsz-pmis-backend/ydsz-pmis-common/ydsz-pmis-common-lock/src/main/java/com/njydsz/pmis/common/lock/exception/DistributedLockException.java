@@ -1,8 +1,6 @@
 package com.njydsz.pmis.common.lock.exception;
 
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.common.exception.enums.ExceptionCategory;
-import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
 
 /**
  * 分布式锁异常
@@ -15,18 +13,14 @@ import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
  * </ul>
  *
  * @author ydsz-pmis-team
- * 
- * 
  * @since 1.0.0
  */
 public class DistributedLockException extends BizException {
 
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 默认错误码
-     */
-    private static final String DEFAULT_CODE = "LOCK_ERROR";
+    /** 默认错误码 */
+    private static final int DEFAULT_CODE = 500;
 
     /**
      * 构造分布式锁异常
@@ -34,16 +28,7 @@ public class DistributedLockException extends BizException {
      * @param message 异常消息
      */
     public DistributedLockException(String message) {
-        super();
-        this.httpStatus = 400;
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.BUSINESS;
-        this.code = DEFAULT_CODE;
-        this.key = DEFAULT_CODE;
-        this.params = new Object[]{};
-        this.message = message;
-        this.messageKey = DEFAULT_CODE;
-        this.messageParams = this.params;
+        super(DEFAULT_CODE, message);
     }
 
     /**
@@ -53,16 +38,7 @@ public class DistributedLockException extends BizException {
      * @param cause   原始异常
      */
     public DistributedLockException(String message, Throwable cause) {
-        super(cause);
-        this.httpStatus = 400;
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.BUSINESS;
-        this.code = DEFAULT_CODE;
-        this.key = DEFAULT_CODE;
-        this.params = new Object[]{};
-        this.message = message;
-        this.messageKey = DEFAULT_CODE;
-        this.messageParams = this.params;
+        super(message, cause);
     }
 
     /**
@@ -71,15 +47,6 @@ public class DistributedLockException extends BizException {
      * @param cause 原始异常
      */
     public DistributedLockException(Throwable cause) {
-        super(cause);
-        this.httpStatus = 400;
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.BUSINESS;
-        this.code = DEFAULT_CODE;
-        this.key = DEFAULT_CODE;
-        this.params = new Object[]{};
-        this.message = cause.getMessage();
-        this.messageKey = DEFAULT_CODE;
-        this.messageParams = this.params;
+        super(cause.getMessage(), cause);
     }
 }

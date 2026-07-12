@@ -2,6 +2,8 @@ package com.njydsz.pmis.common.redis.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -495,5 +497,36 @@ public class RedisService {
             log.error("[Redis] executePipelined 失败, error={}", e.getMessage());
             return Collections.emptyList();
         }
+    }
+
+    // ============================ Lua Script 操作 =========================
+
+    /**
+     * 执行 Lua 脚本并返回指定类型结果
+     *
+     * @param script     Lua 脚本内容
+     * @param keys       Redis key 列表
+     * @param returnType 返回值类型
+     * @param args       脚本参数
+     * @param <T>        返回值泛型
+     * @return 脚本执行结果
+     */
+    public <T> T executeScript(String script, List<String> keys, Class<T> returnType, Object... args) {
+        DefaultRedisScript<T> redisScript = new DefaultRedisScript<>(script, returnType);
+        List<Object> serializedArgs = Arrays.asList(args);
+        return redisTemplate.execute(redisScript, keys, serializedArgs.toArray());
+    }
+
+    /**
+     * 执行 RedisScript 并返回结果
+     *
+     * @param script RedisScript 对象
+     * @param keys   Redis key 列表
+     * @param args   脚本参数
+     * @param <T>    返回值泛型
+     * @return 脚本执行结果
+     */
+    public <T> T execute(RedisScript<T> script, List<String> keys, Object... args) {
+        return redisTemplate.execute(script, keys, args);
     }
 }
