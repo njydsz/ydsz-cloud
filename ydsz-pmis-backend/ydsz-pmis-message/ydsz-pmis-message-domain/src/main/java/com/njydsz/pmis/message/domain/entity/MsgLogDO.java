@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
-import com.njydsz.pmis.common.sensitive.Sensitive;
-import com.njydsz.pmis.common.sensitive.SensitiveStrategy;
+import com.njydsz.pmis.common.safe.annotation.Sensitive;
+import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -40,7 +40,7 @@ public class MsgLogDO extends BaseDO {
     private String bizId;
 
     /** 接收人（API 响应自动脱敏：手机号/邮箱/用户 ID 智能识别，落库保留原值） */
-    @Sensitive(SensitiveStrategy.CUSTOM)
+    @Sensitive(type = SensitiveType.CUSTOM)
     private String receiver;
 
     /** 模板编码 */

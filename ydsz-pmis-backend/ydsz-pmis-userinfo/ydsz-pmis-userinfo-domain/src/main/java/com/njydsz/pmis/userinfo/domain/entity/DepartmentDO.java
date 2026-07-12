@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
-import com.njydsz.pmis.common.sensitive.Sensitive;
-import com.njydsz.pmis.common.sensitive.SensitiveStrategy;
+import com.njydsz.pmis.common.safe.annotation.Sensitive;
+import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -48,11 +48,11 @@ public class DepartmentDO extends BaseDO {
     private String leaderId;
 
     /** 联系电话（脱敏：138****8000） */
-    @Sensitive(SensitiveStrategy.PHONE)
+    @Sensitive(type = SensitiveType.PHONE)
     private String phone;
 
     /** 邮箱（脱敏：a***@example.com） */
-    @Sensitive(SensitiveStrategy.EMAIL)
+    @Sensitive(type = SensitiveType.EMAIL)
     private String email;
 
     /** 部门描述 */

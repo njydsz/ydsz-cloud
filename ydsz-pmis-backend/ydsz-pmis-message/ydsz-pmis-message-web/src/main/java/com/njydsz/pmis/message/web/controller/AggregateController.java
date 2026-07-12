@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.lock.annotation.Idempotent;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.entity.PageQuery;
+import com.njydsz.pmis.common.domain.query.PageQuery;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.entity.batch.MsgAggregateDO;
 import com.njydsz.pmis.message.server.service.batch.AggregateService;

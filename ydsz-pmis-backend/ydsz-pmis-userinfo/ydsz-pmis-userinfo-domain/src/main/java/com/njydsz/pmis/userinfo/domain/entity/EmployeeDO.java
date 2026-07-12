@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
-import com.njydsz.pmis.common.sensitive.Sensitive;
-import com.njydsz.pmis.common.sensitive.SensitiveStrategy;
+import com.njydsz.pmis.common.safe.annotation.Sensitive;
+import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -44,7 +44,7 @@ public class EmployeeDO extends BaseDO {
     private String empName;
 
     /** 身份证号（明文，已脱敏展示） */
-    @Sensitive(SensitiveStrategy.ID_CARD)
+    @Sensitive(type = SensitiveType.ID_CARD)
     private String idCard;
 
     /** 身份证号 SM4 加密 */
@@ -57,14 +57,14 @@ public class EmployeeDO extends BaseDO {
     private LocalDate birthDate;
 
     /** 手机号（明文，已脱敏展示） */
-    @Sensitive(SensitiveStrategy.PHONE)
+    @Sensitive(type = SensitiveType.PHONE)
     private String phone;
 
     /** 手机号 SM4 加密 */
     private String phoneEnc;
 
     /** 邮箱（脱敏：a***@example.com） */
-    @Sensitive(SensitiveStrategy.EMAIL)
+    @Sensitive(type = SensitiveType.EMAIL)
     private String email;
 
     /** 部门 ID（pmis_department.id） */
@@ -111,7 +111,7 @@ public class EmployeeDO extends BaseDO {
     private String emergencyContact;
 
     /** 紧急联系人电话（脱敏：138****8000） */
-    @Sensitive(SensitiveStrategy.PHONE)
+    @Sensitive(type = SensitiveType.PHONE)
     private String emergencyPhone;
 
     /** 备注 / 描述 */

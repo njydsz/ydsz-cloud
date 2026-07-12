@@ -5,8 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
-import com.njydsz.pmis.common.sensitive.Sensitive;
-import com.njydsz.pmis.common.sensitive.SensitiveStrategy;
+import com.njydsz.pmis.common.safe.annotation.Sensitive;
+import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -52,7 +52,7 @@ public class UserAccountDO extends BaseDO {
     private LocalDateTime lastLoginTime;
 
     /** 最近一次登录 IP（脱敏：保留前 3 段） */
-    @Sensitive(SensitiveStrategy.ADDRESS)
+    @Sensitive(type = SensitiveType.ADDRESS)
     private String lastLoginIp;
 
     /** 连续登录失败次数 */

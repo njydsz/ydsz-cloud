@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.entity.PageQuery;
+import com.njydsz.pmis.common.domain.query.PageQuery;
 import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.message.server.config.MessageProperties;
 import com.njydsz.pmis.message.domain.dto.config.UnsubscribeQueryDTO;

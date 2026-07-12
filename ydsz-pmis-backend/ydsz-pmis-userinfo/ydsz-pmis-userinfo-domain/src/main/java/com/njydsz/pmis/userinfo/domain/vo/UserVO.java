@@ -1,8 +1,8 @@
 package com.njydsz.pmis.userinfo.domain.vo;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.njydsz.pmis.common.sensitive.Sensitive;
-import com.njydsz.pmis.common.sensitive.SensitiveStrategy;
+import com.njydsz.pmis.common.safe.annotation.Sensitive;
+import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
 import lombok.Data;
 
 import java.io.Serial;
@@ -35,10 +35,10 @@ public class UserVO implements Serializable {
     /** 真实姓名 */
     private String realName;
     /** 邮箱（脱敏：a***@example.com） */
-    @Sensitive(SensitiveStrategy.EMAIL)
+    @Sensitive(type = SensitiveType.EMAIL)
     private String email;
     /** 手机号（脱敏：138****8000） */
-    @Sensitive(SensitiveStrategy.PHONE)
+    @Sensitive(type = SensitiveType.PHONE)
     private String phone;
     /** 头像地址 */
     private String avatar;
@@ -61,7 +61,7 @@ public class UserVO implements Serializable {
     /** 最近登录时间 */
     private LocalDateTime lastLoginTime;
     /** 最近登录 IP（脱敏：保留前 3 段） */
-    @Sensitive(SensitiveStrategy.ADDRESS)
+    @Sensitive(type = SensitiveType.ADDRESS)
     private String lastLoginIp;
     /** 数据权限范围: ALL/DEPT/DEPT_AND_CHILD/SELF/CUSTOM/PROJECT */
     private String dataScope;
