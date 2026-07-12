@@ -82,8 +82,6 @@ public class ChainEdgeDTO implements Serializable {
         public static final String DEFAULT_BRANCH = "DEFAULT_BRANCH";
         public static final String GROUP_MEMBER = "GROUP_MEMBER";
         public static final String BREAK = "BREAK";
-        /** AI Agent 节点边：source 是 AGENT 链节点，target 是 Agent 节点 */
-        public static final String AGENT = "AGENT";
         /** CATCH/RETRY 主节点边：source 是 CATCH/RETRY 链节点，target 是主节点 */
         public static final String PRIMARY = "PRIMARY";
         /** CATCH 补偿节点边：source 是 CATCH 链节点，target 是补偿节点 */

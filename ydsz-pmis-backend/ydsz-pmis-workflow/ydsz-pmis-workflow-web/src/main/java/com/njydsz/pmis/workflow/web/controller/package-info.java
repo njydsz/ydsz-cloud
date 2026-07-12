@@ -17,7 +17,6 @@
  *   <li>FlowSlaController - SLA 配置（阈值 / 升级策略 / 超时统计）</li>
  *   <li>FlowDelegateController - 委派 / 代办授权（新增 / 撤销 / 列表）</li>
  *   <li>FlowTemplateController - 流程模板（我的模板 / 公共模板）</li>
- *   <li>FlowAiGenerateController - AI 流程生成（自然语言 → BPMN）</li>
  *   <li>FlowAutoTriggerController - 自动触发规则（新增 / 启停 / 触发日志）</li>
  *   <li>FlowCanaryController - 灰度发布（按部门 / 按用户 / 比例灰度）</li>
  *   <li>FlowMigrationController - 流程实例迁移（版本升级 / 节点跳转）</li>

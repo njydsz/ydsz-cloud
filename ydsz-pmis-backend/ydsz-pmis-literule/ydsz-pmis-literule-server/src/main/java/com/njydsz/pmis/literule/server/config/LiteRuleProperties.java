@@ -96,11 +96,6 @@ public class LiteRuleProperties {
     private boolean conflictDetectionBlockOnError = true;
 
     /**
-     * AI 增强配置（P2-15）
-     */
-    private Ai ai = new Ai();
-
-    /**
      * 分布式执行配置（P2-16）
      */
     private Distributed distributed = new Distributed();
@@ -252,56 +247,6 @@ public class LiteRuleProperties {
      * @since 2.0.0
      */
     private LifecycleConfig lifecycle = new LifecycleConfig();
-
-    /**
-     * AI 增强配置
-     *
-     * <p>支持自然语言转规则表达式、规则推荐、健康度评分。
-     * LLM 客户端通过 OpenAI 兼容协议接入，可在不修改代码的情况下
-     * 切换 OpenAI / DeepSeek / 通义千问 / Ollama 等不同提供方。
-     */
-    @Data
-    public static class Ai {
-
-        /** 是否启用 AI 增强 */
-        private boolean enabled = false;
-
-        /** LLM 客户端类型：OPENAI_COMPATIBLE / MOCK（默认 MOCK，便于开发） */
-        private String llmClient = "MOCK";
-
-        /** LLM API 地址（OpenAI 兼容协议 chat/completions 端点） */
-        private String llmApiUrl = "https://api.openai.com/v1/chat/completions";
-
-        /** LLM API Key */
-        private String llmApiKey = "";
-
-        /** LLM 模型名称 */
-        private String llmModel = "gpt-4o-mini";
-
-        /** LLM 调用超时（毫秒） */
-        private long llmTimeoutMs = 15000;
-
-        /** LLM 调用温度（0~1.0，越低越稳定） */
-        private double llmTemperature = 0.2;
-
-        /** 健康度评分：命中率权重（0~1.0） */
-        private double healthHitRateWeight = 0.30;
-
-        /** 健康度评分：错误率权重（0~1.0） */
-        private double healthErrorRateWeight = 0.30;
-
-        /** 健康度评分：复杂度权重（0~1.0） */
-        private double healthComplexityWeight = 0.20;
-
-        /** 健康度评分：覆盖率权重（0~1.0） */
-        private double healthCoverageWeight = 0.20;
-
-        /** 健康度评分：复杂度上限（表达式 token 数，超过该值视为复杂） */
-        private int healthComplexityThreshold = 80;
-
-        /** 推荐结果最大返回条数 */
-        private int recommendTopN = 10;
-    }
 
     /**
      * 分布式执行配置

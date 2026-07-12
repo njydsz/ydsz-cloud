@@ -16,7 +16,7 @@
  *   <li><b>执行/交付</b>：WbsTaskCreateDTO、WbsTaskStatusDTO、TimeEntryCreateDTO、TimeEntryApprovalDTO、DeliveryItemCreateDTO、DeliveryItemStatusDTO、DeliveryStandardCreateDTO、EvmMeasureCreateDTO</li>
  *   <li><b>财务</b>：BudgetItemDTO、PaymentCreateDTO、PaymentAllocationDTO、InvoiceCreateDTO、InvoiceApprovalDTO、ExpenseCreateDTO、RevenueCreateDTO、ProfitSnapshotDTO、ProfitSimulationCreateDTO、RateCardCreateDTO、RateCardImportDTO、RateInternalCreateDTO</li>
  *   <li><b>风险/变更/收尾</b>：RiskCreateDTO、RiskStatusDTO、ProjectChangeCreateDTO、ProjectChangeStatusDTO、ProjectClosureCreateDTO、ProjectClosureStatusDTO、GateReviewDTO、WarrantyCreateDTO、WarrantyTerminateDTO</li>
- *   <li><b>规则引擎</b>：RuleABTestDTO、RuleAiGenerateDTO、RuleNL2RuleDTO、RuleImportDTO、RuleApproveDTO、RuleRejectDTO、RuleStatusChangeDTO、RuleTestCaseSaveDTO、RuleBatchCategoryDTO、RuleBatchPriorityDTO、RuleBatchToggleDTO、RuleDependencyAddDTO、RuleABPolicySaveDTO、DecisionTableSaveDTO、ExpressionValidateDTO、TestCaseBatchRunDTO</li>
+ *   <li><b>规则引擎</b>：RuleABTestDTO、RuleImportDTO、RuleApproveDTO、RuleRejectDTO、RuleStatusChangeDTO、RuleTestCaseSaveDTO、RuleBatchCategoryDTO、RuleBatchPriorityDTO、RuleBatchToggleDTO、RuleDependencyAddDTO、RuleABPolicySaveDTO、DecisionTableSaveDTO、ExpressionValidateDTO、TestCaseBatchRunDTO</li>
  *   <li><b>工单/审批/告警</b>：OpsTicketCreateDTO、OpsTicketAssignDTO、OpsTicketStatusDTO、ApprovalDTO、AlertDispatchDTO、AlertEventDTO、SimulationStatusDTO</li>
  *   <li><b>其他</b>：CustomerCreditDTO、SatisfactionCreateDTO、CockpitKpiVO、CockpitAlertSummaryVO、CockpitDrillDownDTO、KpiTrendVO、ExecutiveOverviewVO、ProjectGroupKpiDTO、CreditAssessmentDTO</li>
  * </ul>

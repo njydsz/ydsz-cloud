@@ -101,7 +101,6 @@ public final class ChainGraphConverter {
             case BREAK -> {
                 // BREAK 链无子节点
             }
-            case AGENT -> extractAgent(chain, parentId, nodeSeq, nodes, edges);
             case CATCH, RETRY -> extractCatchOrRetry(chain, parentId, nodeSeq, nodes, edges);
         }
     }
@@ -338,37 +337,6 @@ public final class ChainGraphConverter {
                     .edgeType(ChainEdgeDTO.EdgeType.WHILE_ITER)
                     .condition(condition)
                     .label(condition)
-                    .build());
-        }
-    }
-
-    /**
-     * 提取 AGENT 链：单个 AI Agent 节点（P3-5）
-     *
-     * <p>AGENT 链只包含单个 Agent 节点（SINGLE 类型），复用 sequence 逻辑。
-     * 为便于前端展示，metadata 中显式标记 agent 标志。
-     */
-    private static void extractAgent(RuleChain chain, String parentId,
-                                     AtomicInteger nodeSeq,
-                                     List<ChainNodeDTO> nodes,
-                                     List<ChainEdgeDTO> edges) {
-        List<RuleNode> ruleNodes = chain.getNodes();
-        if (ruleNodes == null || ruleNodes.isEmpty()) return;
-        for (RuleNode rn : ruleNodes) {
-            String nodeId = "node-" + nodeSeq.incrementAndGet();
-            ChainNodeDTO node = ruleNodeToDTO(rn, nodeId, parentId);
-            Map<String, Object> meta = node.getMetadata() != null
-                    ? new LinkedHashMap<>(node.getMetadata())
-                    : new LinkedHashMap<>();
-            meta.put("agent", true);
-            node.setMetadata(meta);
-            nodes.add(node);
-            edges.add(ChainEdgeDTO.builder()
-                    .edgeId("edge-" + nodeSeq.incrementAndGet())
-                    .sourceNodeId(parentId)
-                    .targetNodeId(nodeId)
-                    .edgeType(ChainEdgeDTO.EdgeType.AGENT)
-                    .label("agent")
                     .build());
         }
     }
