@@ -1,7 +1,6 @@
 package com.njydsz.pmis.common.search.analytics;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

@@ -71,11 +71,11 @@ public class TrashDomainService {
     public FileNode restore(String trashItemId, String userId) {
         TrashItem trashItem = trashItemRepository.findById(trashItemId);
         if (trashItem == null) {
-            throw new BusinessException("NW-TRASH-001", "回收站条目不存在: " + trashItemId);
+            throw BusinessException.builder().key("回收站条目不存在: " + trashItemId).build();
         }
 
         if (!"in_trash".equals(trashItem.getStatus())) {
-            throw new BusinessException("NW-TRASH-002", "回收站条目状态不允许恢复: " + trashItem.getStatus());
+            throw BusinessException.builder().key("回收站条目状态不允许恢复: " + trashItem.getStatus()).build();
         }
 
         fileNodeRepository.restore(trashItem.getFileNodeId());
@@ -119,7 +119,7 @@ public class TrashDomainService {
     public void purge(String trashItemId, String userId) {
         TrashItem trashItem = trashItemRepository.findById(trashItemId);
         if (trashItem == null) {
-            throw new BusinessException("NW-TRASH-001", "回收站条目不存在: " + trashItemId);
+            throw BusinessException.builder().key("回收站条目不存在: " + trashItemId).build();
         }
 
         fileNodeRepository.physicalDelete(trashItem.getFileNodeId());

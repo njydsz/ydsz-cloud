@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.search.health;
 
+import org.springframework.boot.health.Health;
 import org.springframework.boot.health.HealthContributor;
 import org.springframework.boot.health.HealthIndicator;
-import org.springframework.boot.health.Health;
 
 import com.njydsz.pmis.common.search.core.SearchEngine;
 

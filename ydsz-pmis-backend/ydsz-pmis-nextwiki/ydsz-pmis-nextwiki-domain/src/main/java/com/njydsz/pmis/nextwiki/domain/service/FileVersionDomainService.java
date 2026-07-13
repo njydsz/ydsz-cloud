@@ -51,7 +51,7 @@ public class FileVersionDomainService {
                                       String userId) {
         FileNode fileNode = fileNodeRepository.findById(fileNodeId);
         if (fileNode == null || !fileNode.isFile()) {
-            throw new BusinessException("NW-VERSION-001", "文件节点不存在或不是文件: " + fileNodeId);
+            throw BusinessException.builder().key("文件节点不存在或不是文件: " + fileNodeId).build();
         }
 
         // 取当前最大版本号
@@ -111,12 +111,12 @@ public class FileVersionDomainService {
     public FileVersion rollback(String fileNodeId, Integer targetVersion, String userId) {
         FileNode fileNode = fileNodeRepository.findById(fileNodeId);
         if (fileNode == null || !fileNode.isFile()) {
-            throw new BusinessException("NW-VERSION-001", "文件节点不存在或不是文件: " + fileNodeId);
+            throw BusinessException.builder().key("文件节点不存在或不是文件: " + fileNodeId).build();
         }
 
         FileVersion target = versionRepository.findByFileNodeIdAndVersion(fileNodeId, targetVersion);
         if (target == null) {
-            throw new BusinessException("NW-VERSION-002", "目标版本不存在: " + targetVersion);
+            throw BusinessException.builder().key("目标版本不存在: " + targetVersion).build();
         }
 
         // 将当前活跃版本标记为非活跃

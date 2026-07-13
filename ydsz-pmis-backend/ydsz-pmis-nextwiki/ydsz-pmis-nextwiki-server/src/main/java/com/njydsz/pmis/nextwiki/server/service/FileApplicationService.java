@@ -65,7 +65,7 @@ public class FileApplicationService {
         // 2. 获取存储实例
         IFileStorage storage = resolveStorage();
         if (storage == null) {
-            throw new BusinessException("NW-FILE-001", "文件存储未配置");
+            throw BusinessException.builder().key("文件存储未配置").build();
         }
 
         // 3. 生成存储键

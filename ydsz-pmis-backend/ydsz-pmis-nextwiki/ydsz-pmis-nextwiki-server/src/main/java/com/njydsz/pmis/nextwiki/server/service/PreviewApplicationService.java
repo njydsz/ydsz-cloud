@@ -148,13 +148,13 @@ public class PreviewApplicationService {
         boolean finished = process.waitFor(120, TimeUnit.SECONDS);
         if (!finished) {
             process.destroyForcibly();
-            throw new BusinessException("NW-PREVIEW-001", "LibreOffice 转换超时");
+            throw BusinessException.builder().key("LibreOffice 转换超时").build();
         }
 
         int exitCode = process.exitValue();
         if (exitCode != 0) {
             String errorOutput = new String(process.getInputStream().readAllBytes());
-            throw new BusinessException("NW-PREVIEW-002", "LibreOffice 转换失败: " + errorOutput);
+            throw BusinessException.builder().key("LibreOffice 转换失败: " + errorOutput).build();
         }
 
         // 查找生成的 PDF 文件
@@ -168,7 +168,7 @@ public class PreviewApplicationService {
             if (pdfs != null && pdfs.length > 0) {
                 pdfFile = pdfs[0].toPath();
             } else {
-                throw new BusinessException("NW-PREVIEW-003", "转换后 PDF 文件未找到");
+                throw BusinessException.builder().key("转换后 PDF 文件未找到").build();
             }
         }
 

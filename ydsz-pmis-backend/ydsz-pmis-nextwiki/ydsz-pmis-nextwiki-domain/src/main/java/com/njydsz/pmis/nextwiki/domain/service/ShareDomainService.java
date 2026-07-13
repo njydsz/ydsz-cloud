@@ -47,7 +47,7 @@ public class ShareDomainService {
                                   LocalDateTime expireTime, Integer maxAccessCount, String userId) {
         FileNode fileNode = fileNodeRepository.findById(fileNodeId);
         if (fileNode == null) {
-            throw new BusinessException("NW-SHARE-001", "文件节点不存在: " + fileNodeId);
+            throw BusinessException.builder().key("文件节点不存在: " + fileNodeId).build();
         }
 
         // 生成分享码和提取码
@@ -102,36 +102,36 @@ public class ShareDomainService {
     public ShareLink verifyAccess(String shareCode, String extractCode, String password) {
         ShareLink shareLink = shareLinkRepository.findByShareCode(shareCode);
         if (shareLink == null) {
-            throw new BusinessException("NW-SHARE-002", "分享链接不存在");
+            throw BusinessException.builder().key("分享链接不存在").build();
         }
 
         if (!"active".equals(shareLink.getStatus())) {
-            throw new BusinessException("NW-SHARE-003", "分享链接已失效");
+            throw BusinessException.builder().key("分享链接已失效").build();
         }
 
         // 检查过期时间
         if (shareLink.getExpireTime() != null && shareLink.getExpireTime().isBefore(LocalDateTime.now())) {
             shareLink.setStatus("expired");
             shareLinkRepository.update(shareLink);
-            throw new BusinessException("NW-SHARE-004", "分享链接已过期");
+            throw BusinessException.builder().key("分享链接已过期").build();
         }
 
         // 检查访问次数
         if (shareLink.getMaxAccessCount() != null
                 && shareLink.getAccessCount() != null
                 && shareLink.getAccessCount() >= shareLink.getMaxAccessCount()) {
-            throw new BusinessException("NW-SHARE-005", "分享链接访问次数已用尽");
+            throw BusinessException.builder().key("分享链接访问次数已用尽").build();
         }
 
         // 验证提取码
         if (shareLink.getExtractCode() != null && !shareLink.getExtractCode().equals(extractCode)) {
-            throw new BusinessException("NW-SHARE-006", "提取码错误");
+            throw BusinessException.builder().key("提取码错误").build();
         }
 
         // 验证密码
         if (shareLink.getPassword() != null && !shareLink.getPassword().isEmpty()) {
             if (password == null || !passwordEncoder.matches(password, shareLink.getPassword())) {
-                throw new BusinessException("NW-SHARE-007", "密码错误");
+                throw BusinessException.builder().key("密码错误").build();
             }
         }
 
@@ -147,7 +147,7 @@ public class ShareDomainService {
     public void revoke(String shareId, String userId) {
         ShareLink shareLink = shareLinkRepository.findById(shareId);
         if (shareLink == null) {
-            throw new BusinessException("NW-SHARE-002", "分享链接不存在");
+            throw BusinessException.builder().key("分享链接不存在").build();
         }
         shareLinkRepository.revoke(shareId);
         log.info("[ShareDomainService] 撤销分享: shareId={}, userId={}", shareId, userId);

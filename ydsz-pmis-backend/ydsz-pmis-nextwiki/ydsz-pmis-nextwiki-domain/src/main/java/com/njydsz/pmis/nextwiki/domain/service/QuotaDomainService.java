@@ -40,13 +40,11 @@ public class QuotaDomainService {
         if (!quota.hasSpace(requiredBytes)) {
             long used = quota.getQuotaUsed() != null ? quota.getQuotaUsed() : 0;
             long limit = quota.getQuotaLimit() != null ? quota.getQuotaLimit() : 0;
-            throw new BusinessException("NW-QUOTA-001",
-                    String.format("存储空间不足: 已用 %s / 总量 %s / 本次需要 %s",
-                            formatSize(used), formatSize(limit), formatSize(requiredBytes)));
+            throw BusinessException.builder().key("存储空间不足: " + String.format("已用 %s / 总量 %s / 本次需要 %s", formatSize(used), formatSize(limit), formatSize(requiredBytes))).build();
         }
 
         if (!quota.hasFileCountSlot()) {
-            throw new BusinessException("NW-QUOTA-002", "文件数量已达上限: " + quota.getFileCountLimit());
+            throw BusinessException.builder().key("文件数量已达上限: " + quota.getFileCountLimit()).build();
         }
     }
 

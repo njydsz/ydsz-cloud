@@ -11,15 +11,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import com.njydsz.pmis.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.pmis.common.search.core.SearchEngine;
 import com.njydsz.pmis.common.search.engine.memory.InMemorySearchEngine;
 import com.njydsz.pmis.common.search.engine.pg.PgSearchEngine;
+import com.njydsz.pmis.common.search.health.SearchHealthIndicator;
+import com.njydsz.pmis.common.search.metrics.SearchMetrics;
 import com.njydsz.pmis.common.search.provider.SearchProviderRegistry;
+import com.njydsz.pmis.common.search.service.IndexRebuildService;
 import com.njydsz.pmis.common.search.service.IndexSyncService;
 import com.njydsz.pmis.common.search.service.SuggestionService;
 import com.njydsz.pmis.common.search.service.UnifiedSearchService;
 import com.njydsz.pmis.common.search.sync.IndexSyncListener;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -33,6 +38,12 @@ import lombok.extern.slf4j.Slf4j;
  *     engine: pg          # pg / memory / es
  *     highlight: true
  *     fuzzy: true
+ *     cache:
+ *       enabled: true
+ *       ttl: 60
+ *     index:
+ *       sync-mode: event
+ *       batch-size: 100
  * </pre>
  *
  * @author ydsz-pmis-team
@@ -118,6 +129,17 @@ public class SearchAutoConfiguration {
     }
 
     /**
+     * 索引重建服务
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public IndexRebuildService indexRebuildService(IndexSyncService indexSyncService,
+                                                    SearchEngine searchEngine,
+                                                    SearchProviderRegistry providerRegistry) {
+        return new IndexRebuildService(indexSyncService, searchEngine, providerRegistry);
+    }
+
+    /**
      * 搜索建议服务
      */
     @Bean
@@ -125,5 +147,34 @@ public class SearchAutoConfiguration {
     public SuggestionService suggestionService(SearchEngine searchEngine,
                                                 SearchProperties properties) {
         return new SuggestionService(searchEngine, properties);
+    }
+
+    /**
+     * 搜索分析服务
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public SearchAnalyticsService searchAnalyticsService() {
+        return new SearchAnalyticsService();
+    }
+
+    /**
+     * 搜索指标（Micrometer 可用时自动注册）
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(MeterRegistry.class)
+    public SearchMetrics searchMetrics(MeterRegistry meterRegistry) {
+        return new SearchMetrics(meterRegistry);
+    }
+
+    /**
+     * 搜索健康检查（Spring Boot Actuator 可用时自动注册）
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(name = "org.springframework.boot.health.HealthIndicator")
+    public SearchHealthIndicator searchHealthIndicator(SearchEngine searchEngine) {
+        return new SearchHealthIndicator(searchEngine);
     }
 }

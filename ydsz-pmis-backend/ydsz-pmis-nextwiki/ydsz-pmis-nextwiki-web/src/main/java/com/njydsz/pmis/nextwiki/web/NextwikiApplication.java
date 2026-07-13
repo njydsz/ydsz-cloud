@@ -4,6 +4,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.pmis.common.auth.annotation.EnableYdszAuth;
@@ -24,6 +25,7 @@ import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
 @EnableYdszFeign(basePackages = {"com.njydsz.pmis.nextwiki.api", "com.njydsz.pmis.common.feign"})
 @MapperScan("com.njydsz.pmis.nextwiki.infra.mapper")
 @EnableScheduling
+@EnableAsync
 public class NextwikiApplication {
 
     public static void main(String[] args) {
