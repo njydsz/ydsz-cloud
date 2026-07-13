@@ -26,4 +26,10 @@ public final class PmisMessageTopics {
 
     /** 死信队列 ConsumerGroup */
     public static final String GROUP_DLQ_MESSAGE = "pmis-message-dlq-consumer-group";
+
+    /** P1-11: 批量消息 Topic */
+    public static final String TOPIC_MESSAGE_BATCH = "pmis-message-batch";
+
+    /** P1-11: 批量消息 ConsumerGroup */
+    public static final String GROUP_MESSAGE_BATCH = "pmis-message-batch-consumer-group";
 }

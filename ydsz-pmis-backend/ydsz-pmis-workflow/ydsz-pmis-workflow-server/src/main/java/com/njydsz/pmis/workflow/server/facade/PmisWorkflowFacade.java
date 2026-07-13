@@ -146,9 +146,9 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         PageResponse<FlowInstanceDO> pageResult = instanceService.page(
                 businessType, null, flowStatus, startTime, endTime,
                 AuthContext.getTenantIdOrDefault("1"), page, size);
-        List<FlowInstanceDO> dataList = pageResult.getList();
+        @SuppressWarnings("unchecked") List<FlowInstanceDO> dataList = (List<FlowInstanceDO>) pageResult.getData();
         List<Map<String, Object>> list = dataList.stream().map(this::instanceToMap).toList();
-        return PageResponse.of(list, pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize());
+        return (PageResponse<Map<String, Object>>) (PageResponse<?>) PageResponse.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), list);
     }
 
     @Override

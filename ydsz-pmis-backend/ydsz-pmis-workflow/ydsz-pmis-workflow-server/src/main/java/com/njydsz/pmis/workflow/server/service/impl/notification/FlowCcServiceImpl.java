@@ -161,7 +161,7 @@ public class FlowCcServiceImpl implements FlowCcService {
                                              String tenantId, int pageNo, int pageSize) {
         try {
             if (userId == null) {
-                return PageResponse.empty();
+                return PageResponse.success(null);
             }
             int page = Math.max(pageNo, 1);
             int size = (int) Math.min(Math.max(pageSize, 1), PageConstants.MAX_PAGE_SIZE);
@@ -170,10 +170,10 @@ public class FlowCcServiceImpl implements FlowCcService {
             List<FlowCcDO> list = ccMapper.selectCcByUserPage(tenantId, userId,
                     readStatus, flowCode, offset, size);
             long total = ccMapper.countCcByUser(tenantId, userId, readStatus, flowCode);
-            return PageResponse.of(list, total, page, size);
+            return (PageResponse) PageResponse.success(total, (long) page, (long) size, list);
         } catch (Exception e) {
             log.error("[FlowCc] 分页查询异常: userId={} err={}", userId, e.getMessage(), e);
-            return PageResponse.empty();
+            return PageResponse.success(null);
         }
     }
 

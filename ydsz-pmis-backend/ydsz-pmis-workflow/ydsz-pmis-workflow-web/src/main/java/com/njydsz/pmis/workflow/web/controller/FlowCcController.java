@@ -49,8 +49,8 @@ public class FlowCcController {
     public BaseResponse<PageResponse<FlowCcDO>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         String userId = AuthContext.getUserId();
-        int pageNo = (int) query.getPage();
-        int pageSize = (int) query.getSize();
+        int pageNo = query.getPageNum();
+        int pageSize = query.getPageSize();
         return BaseResponse.ok(ccService.listCcByUser(userId, query.getReadStatus(),
                 query.getFlowCode(), tenantId, pageNo, pageSize));
     }

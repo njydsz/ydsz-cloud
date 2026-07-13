@@ -34,6 +34,12 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
 
     private final RocketMQTemplate rocketMQTemplate;
 
+    /** P1-6: 优先级 → RocketMQ Tag 映射 */
+    private static final String TAG_URGENT = "URGENT";
+    private static final String TAG_HIGH = "HIGH";
+    private static final String TAG_NORMAL = "NORMAL";
+    private static final String TAG_LOW = "LOW";
+
     @Override
     /**
      * 同步发送消息到 {@link PmisMessageTopics#TOPIC_MESSAGE}。
@@ -47,9 +53,10 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
         }
         ensureMessageId(req);
         String payload = JsonUtils.toJson(req);
+        String destination = buildDestination(req);
         SendResult result;
         try {
-            result = rocketMQTemplate.syncSend(PmisMessageTopics.TOPIC_MESSAGE, payload);
+            result = rocketMQTemplate.syncSend(destination, payload);
         } catch (Exception e) {
             log.error("[Producer] syncSend 失败: messageId={} channel={} err={}",
                     req.getMessageId(), req.getChannel(), e.getMessage());
@@ -76,8 +83,9 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
         }
         ensureMessageId(req);
         String payload = JsonUtils.toJson(req);
+        String destination = buildDestination(req);
         try {
-            rocketMQTemplate.asyncSend(PmisMessageTopics.TOPIC_MESSAGE, payload, new SendCallback() {
+            rocketMQTemplate.asyncSend(destination, payload, new SendCallback() {
                 @Override
                 public void onSuccess(SendResult result) {
                     log.info("[Producer] asyncSend OK: msgId={} messageId={}",
@@ -103,6 +111,44 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
         }
     }
 
+    /**
+     * P1-6: 构建带优先级 Tag 的 destination。
+     *
+     * <p>RocketMQ destination 格式：{@code topic:tag}，消费端可按 Tag 过滤优先级。
+     * <ul>
+     *   <li>URGENT → tag:URGENT（最高优先级，独立消费线程池）</li>
+     *   <li>HIGH → tag:HIGH</li>
+     *   <li>NORMAL → tag:NORMAL（默认）</li>
+     *   <li>LOW → tag:LOW</li>
+     * </ul>
+     *
+     * @param req 消息请求
+     * @return destination 字符串（topic:tag）
+     */
+    private String buildDestination(MessageRequest req) {
+        String priority = req.getPriority();
+        String tag = resolvePriorityTag(priority);
+        return PmisMessageTopics.TOPIC_MESSAGE + ":" + tag;
+    }
+
+    /**
+     * 解析优先级 Tag。
+     *
+     * @param priority 优先级字符串
+     * @return RocketMQ Tag
+     */
+    private String resolvePriorityTag(String priority) {
+        if (priority == null || priority.isBlank()) {
+            return TAG_NORMAL;
+        }
+        return switch (priority.trim().toUpperCase()) {
+            case TAG_URGENT -> TAG_URGENT;
+            case TAG_HIGH -> TAG_HIGH;
+            case TAG_LOW -> TAG_LOW;
+            default -> TAG_NORMAL;
+        };
+    }
+
     @Override
     /**
      * P2-3: 发送事务消息（半消息）。
@@ -123,7 +169,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
         try {
             org.apache.rocketmq.client.producer.TransactionSendResult result =
                     rocketMQTemplate.sendMessageInTransaction(
-                            PmisMessageTopics.TOPIC_MESSAGE,
+                            buildDestination(req),
                             MessageBuilder.withPayload(payload).build(),
                             req);
             log.info("[Producer] sendTransactionMessage: msgId={} messageId={} state={}",

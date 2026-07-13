@@ -47,6 +47,11 @@
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-queue</artifactId>
         </dependency>
+        <!-- P0-5: TCP 推送通道依赖 common-netty -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-netty</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-doc</artifactId>
