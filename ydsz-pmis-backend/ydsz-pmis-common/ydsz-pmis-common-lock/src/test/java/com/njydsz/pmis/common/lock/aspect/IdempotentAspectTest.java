@@ -146,6 +146,9 @@ class IdempotentAspectTest {
     @DisplayName("业务异常应自动释放幂等锁")
     void businessExceptionShouldReleaseLock() throws Throwable {
         ProceedingJoinPoint joinPoint = mockJoinPoint(SampleController.class, "throwBusiness", new Object[]{});
+        // 覆盖 mockJoinPoint 中的 thenReturn("ok")，让 proceed() 抛 BusinessException
+        BusinessException bizEx = BusinessException.builder().message("biz-error").build();
+        when(joinPoint.proceed()).thenThrow(bizEx);
         when(redisTemplate.execute(any(), anyList(), any(), any())).thenReturn(1L);
 
         Idempotent idempotent = mock(Idempotent.class);
@@ -157,14 +160,18 @@ class IdempotentAspectTest {
                 () -> aspect.around(joinPoint, idempotent));
 
         assertNotNull(thrown);
-        // 验证调用了两次 Redis：一次获取锁，一次释放锁
-        verify(redisTemplate, times(2)).execute(any(), anyList(), any(Object.class), any());
+        assertEquals("biz-error", thrown.getMessage());
+        // 验证 Redis 被调用两次：acquire（2 varargs: token+ttl）+ release（1 vararg: token）
+        verify(redisTemplate, times(1)).execute(any(), anyList(), any(), any());
+        verify(redisTemplate, times(1)).execute(any(), anyList(), any());
     }
 
     @Test
     @DisplayName("非业务异常应保留幂等锁（不释放）")
     void nonBusinessExceptionShouldKeepLock() throws Throwable {
         ProceedingJoinPoint joinPoint = mockJoinPoint(SampleController.class, "throwRuntime", new Object[]{});
+        // 覆盖 mockJoinPoint 中的 thenReturn("ok")，让 proceed() 抛 RuntimeException
+        when(joinPoint.proceed()).thenThrow(new RuntimeException("sys-error"));
         when(redisTemplate.execute(any(), anyList(), any(), any())).thenReturn(1L);
 
         Idempotent idempotent = mock(Idempotent.class);
@@ -176,8 +183,10 @@ class IdempotentAspectTest {
                 () -> aspect.around(joinPoint, idempotent));
 
         assertEquals("sys-error", thrown.getMessage());
-        // 验证只调用了一次 Redis（获取锁），未调用释放锁
+        // 验证只调用了一次 Redis（获取锁 acquire: 2 varargs），未调用释放锁
         verify(redisTemplate, times(1)).execute(any(), anyList(), any(), any());
+        // release（1 vararg）未被调用
+        verify(redisTemplate, never()).execute(any(), anyList(), any());
     }
 
     @Test

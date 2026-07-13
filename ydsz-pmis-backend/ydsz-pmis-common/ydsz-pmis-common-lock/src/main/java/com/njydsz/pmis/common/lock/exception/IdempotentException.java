@@ -40,7 +40,9 @@ public class IdempotentException extends BusinessException {
         this.code = DEFAULT_CODE;
         this.key = DEFAULT_CODE;
         this.params = new Object[]{};
-        this.message = message;
+        // 使用 setMessage 确保 messageResolved=true，防止 getMessage() 懒加载时
+        // 用 messageKey 覆盖已设置的直显消息（@Idempotent.message() 是用户可读文案，非 i18n key）
+        setMessage(message);
         this.messageKey = DEFAULT_CODE;
         this.messageParams = this.params;
     }
@@ -59,7 +61,9 @@ public class IdempotentException extends BusinessException {
         this.code = DEFAULT_CODE;
         this.key = DEFAULT_CODE;
         this.params = new Object[]{idempotentKey};
-        this.message = message;
+        // 使用 setMessage 确保 messageResolved=true，防止 getMessage() 懒加载时
+        // 用 messageKey 覆盖已设置的直显消息（@Idempotent.message() 是用户可读文案，非 i18n key）
+        setMessage(message);
         this.messageKey = DEFAULT_CODE;
         this.messageParams = this.params;
     }

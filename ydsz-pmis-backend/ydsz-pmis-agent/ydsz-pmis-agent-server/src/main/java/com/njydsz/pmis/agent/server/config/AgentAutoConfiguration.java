@@ -146,4 +146,12 @@ public class AgentAutoConfiguration {
         return new AgentFactory(llmClient, memory, toolRegistry, properties,
                 inputGuardrails, outputGuardrails, ragService);
     }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public com.njydsz.pmis.agent.server.agent.DagOrchestrationExecutor dagOrchestrationExecutor(
+            LlmClient llmClient, AgentProperties properties, AgentFactory agentFactory) {
+        return new com.njydsz.pmis.agent.server.agent.DagOrchestrationExecutor(
+                llmClient, properties, agentFactory);
+    }
 }

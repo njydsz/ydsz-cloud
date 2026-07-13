@@ -89,6 +89,8 @@
         <module>ydsz-pmis-common-json</module>
         <module>ydsz-pmis-common-excel</module>
         <module>ydsz-pmis-common-search</module>
+        <!-- L5.5 可观测性层 -->
+        <module>ydsz-pmis-common-sentry</module>
         <!-- L6 应用层 -->
         <module>ydsz-pmis-common-base</module>
         <module>ydsz-pmis-common-web</module>
@@ -238,6 +240,12 @@
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common-search</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- ydsz-pmis-common-sentry -->
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-sentry</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
