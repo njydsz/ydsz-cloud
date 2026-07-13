@@ -15,7 +15,7 @@ import com.njydsz.pmis.cronjob.domain.entity.job.JobArtifactDO;
  * 执行产物 Mapper（P2-8）。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Mapper
 public interface JobArtifactMapper extends BaseMapper<JobArtifactDO> {

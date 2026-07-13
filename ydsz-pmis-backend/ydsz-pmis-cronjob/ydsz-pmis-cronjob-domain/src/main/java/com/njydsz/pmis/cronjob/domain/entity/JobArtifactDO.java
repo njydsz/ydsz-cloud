@@ -16,7 +16,7 @@ import lombok.Data;
  * <p>记录任务执行产生的文件/数据产物，支持产物查询、下载和清理。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @TableName("pmis_job_artifact")

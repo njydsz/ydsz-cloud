@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>使用 pmis_rule_version_history 表存储版本快照，支持变更追踪和回滚。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

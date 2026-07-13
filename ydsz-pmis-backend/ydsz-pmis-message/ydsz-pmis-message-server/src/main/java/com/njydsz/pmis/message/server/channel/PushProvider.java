@@ -19,7 +19,7 @@ import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
  * <p>P1-10 增强：支持批量推送（{@link #batchSend}）和富媒体推送（通过 channelMeta 传入 imageUrl / actionUrl）。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public interface PushProvider {
 

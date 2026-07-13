@@ -16,7 +16,7 @@ import lombok.Data;
  * <p>记录用户配置的 WebHook 订阅，在任务生命周期事件发生时推送通知。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @TableName("pmis_job_webhook")

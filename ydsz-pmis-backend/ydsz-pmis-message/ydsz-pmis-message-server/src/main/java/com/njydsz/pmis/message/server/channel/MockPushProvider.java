@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  * 仅记录日志并返回成功结果，保证开发/测试环境可运行。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

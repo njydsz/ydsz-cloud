@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>退避公式：{@code backoff = min(baseBackoffMs * backoffMultiplier^retryCount, maxBackoffMs)}。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

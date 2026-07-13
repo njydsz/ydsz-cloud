@@ -27,7 +27,7 @@ import com.njydsz.pmis.common.util.TraceIdUtil;
  * fallback traceId 干扰恢复逻辑。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public final class MessageTraceContext implements AutoCloseable {
 

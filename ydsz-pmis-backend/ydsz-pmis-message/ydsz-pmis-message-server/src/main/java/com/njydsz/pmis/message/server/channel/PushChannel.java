@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  * 配置选择实际 {@link PushProvider}（getui / mock），无匹配时降级到 mock。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

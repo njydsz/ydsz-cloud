@@ -23,7 +23,7 @@ import javax.crypto.spec.SecretKeySpec;
  * <p>零外部 SDK 依赖，仅用 JDK 标准库，符合自研轻量化风格。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public final class AliyunSmsSigner {
 

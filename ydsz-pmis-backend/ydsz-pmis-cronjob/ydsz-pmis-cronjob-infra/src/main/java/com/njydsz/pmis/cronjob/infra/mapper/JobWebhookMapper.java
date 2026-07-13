@@ -13,7 +13,7 @@ import com.njydsz.pmis.cronjob.domain.entity.job.JobWebhookDO;
  * WebHook 订阅 Mapper（P3-13）。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Mapper
 public interface JobWebhookMapper extends BaseMapper<JobWebhookDO> {

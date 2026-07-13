@@ -19,7 +19,7 @@ import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
  * <p>P0-4 增强：支持批量发送（{@link #batchSend}）和回执查询（{@link #queryReceipt}）。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public interface SmsProvider {
 

@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>增强点：返回详细的风险因子列表，支持前端展示具体风险点。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 public class ContractRiskEvaluator {
