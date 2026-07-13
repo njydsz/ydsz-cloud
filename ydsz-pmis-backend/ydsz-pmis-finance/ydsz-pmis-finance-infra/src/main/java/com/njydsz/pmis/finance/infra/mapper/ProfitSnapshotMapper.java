@@ -45,6 +45,16 @@ public interface ProfitSnapshotMapper extends BaseMapper<ProfitSnapshotDO> {
     List<Map<String, Object>> trendByPeriod(@Param("initiationId") String initiationId);
 
     /**
+     * 查询最新利润快照
+     *
+     * @param initiationId 立项 ID
+     * @param period       期间（可选，格式 YYYY-MM）
+     * @return 最新利润快照，未找到返回 null
+     */
+    ProfitSnapshotDO selectLatest(@Param("initiationId") String initiationId,
+                                  @Param("period") String period);
+
+    /**
      * P4-3 跨项目汇总所有快照利润
      *
      * @return 利润总额

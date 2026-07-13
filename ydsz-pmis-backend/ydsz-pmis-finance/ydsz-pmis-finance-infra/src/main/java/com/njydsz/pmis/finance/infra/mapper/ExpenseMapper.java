@@ -46,8 +46,12 @@ public interface ExpenseMapper extends BaseMapper<ExpenseDO> {
     /**
      * 按项目汇总「已发生」费用金额（强管控用）
      *
+     * <p>period 为空时汇总所有期间，非空时按费用发生日期的 YYYY-MM 过滤。
+     *
      * @param initiationId 立项 ID
+     * @param period       期间（可选，格式 YYYY-MM）
      * @return 项目费用总金额
      */
-    BigDecimal sumByInitiation(@Param("initiationId") String initiationId);
+    BigDecimal sumByInitiation(@Param("initiationId") String initiationId,
+                               @Param("period") String period);
 }

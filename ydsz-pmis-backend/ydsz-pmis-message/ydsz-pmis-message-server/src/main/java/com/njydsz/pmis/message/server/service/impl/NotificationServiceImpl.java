@@ -73,8 +73,8 @@ public class NotificationServiceImpl implements NotificationService {
             throw new SysException(StandardResultCode.BAD_REQUEST, "用户 ID 不能为空");
         }
         Page<MsgNotificationDO> page = new Page<>(
-                query == null ? 1 : query.getPage(),
-                Math.min(query == null ? 10 : query.getSize(), PageQuery.MAX_SIZE));
+                query == null ? 1 : query.getPageNum(),
+                Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
         LambdaQueryWrapper<MsgNotificationDO> w = new LambdaQueryWrapper<MsgNotificationDO>()
                 .eq(MsgNotificationDO::getReceiverId, userId);
         if (query != null) {
@@ -163,7 +163,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         Page<NotificationGroupVO> result = new Page<>(allPage.getCurrent(), allPage.getSize(), allPage.getTotal());
-        BaseResponse.setRecords(new ArrayList<>(groupMap.values()));
+        result.setRecords(new ArrayList<>(groupMap.values()));
         return result;
     }
 

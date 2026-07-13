@@ -424,7 +424,7 @@ public class MessageServiceImpl implements MessageService {
         // ⑩ 通道分发
         MessageResult result = doDispatch(logDO, matchedRule, receiver);
         // P2-6: 父消息发送成功后触发级联发送(聚合消息不触发级联,由聚合 flush 时自行处理)
-        if (result != null && BaseResponse.isSuccess()) {
+        if (result != null && result.isSuccess()) {
             triggerCascade(request, logDO, depth);
         }
         return result;
@@ -537,16 +537,16 @@ public class MessageServiceImpl implements MessageService {
                     continue;
                 }
                 String upper = trimmed.toUpperCase();
-                if (!upper.equalsIgnoreCase(currentChannel) && !BaseResponse.contains(upper)) {
-                    BaseResponse.add(upper);
+                if (!upper.equalsIgnoreCase(currentChannel) && !result.contains(upper)) {
+                    result.add(upper);
                 }
             }
         }
-        if (BaseResponse.isEmpty()) {
+        if (result.isEmpty()) {
             String single = matchedRule.getFallbackChannel();
             if (StringUtils.hasText(single)
                     && !single.equalsIgnoreCase(currentChannel)) {
-                BaseResponse.add(single.trim().toUpperCase());
+                result.add(single.trim().toUpperCase());
             }
         }
         return result;
@@ -646,11 +646,11 @@ public class MessageServiceImpl implements MessageService {
         }
         // 限制单批最大 100 条,防止阻塞过久
         int limit = Math.min(requests.size(), MessageConstants.BATCH_SEND_MAX_SIZE);
-        BaseResponse.setTotal(limit);
+        result.setTotal(limit);
         for (int i = 0; i < limit; i++) {
             MessageRequest req = requests.get(i);
             if (req == null) {
-                BaseResponse.incSkipped();
+                result.incSkipped();
                 continue;
             }
             // 统一设置 bizId = batchId 便于进度查询
@@ -658,26 +658,26 @@ public class MessageServiceImpl implements MessageService {
             try {
                 MessageResult r = send(req);
                 if (r != null && r.isSuccess()) {
-                    BaseResponse.incSuccess();
+                    result.incSuccess();
                 } else {
-                    BaseResponse.incFailed();
+                    result.incFailed();
                 }
             } catch (Exception e) {
                 log.warn("[Message] 批量发送单条失败: batchId={} idx={} err={}",
                         batchId, i, e.getMessage());
-                BaseResponse.incFailed();
+                result.incFailed();
             }
         }
         log.info("[Message] 批量发送完成: batchId={} total={} success={} failed={} skipped={}",
-                batchId, BaseResponse.getTotal(), BaseResponse.getSuccess(), BaseResponse.getFailed(), BaseResponse.getSkipped());
+                batchId, result.getTotal(), result.getSuccess(), result.getFailed(), result.getSkipped());
         return result;
     }
 
     @Override
     public Page<MsgLogDO> pageLog(MessageLogQueryDTO query) {
         Page<MsgLogDO> page = new Page<>(
-                query == null ? 1 : query.getPage(),
-                Math.min(query == null ? 10 : query.getSize(), PageQuery.MAX_SIZE));
+                query == null ? 1 : query.getPageNum(),
+                Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
         LambdaQueryWrapper<MsgLogDO> w = new LambdaQueryWrapper<>();
         if (query != null) {
             w.eq(StringUtils.hasText(query.getChannel()), MsgLogDO::getChannel, query.getChannel());

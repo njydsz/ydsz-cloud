@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.njydsz.pmis.project.mapper.finance.RevenueMapper">
+<mapper namespace="com.njydsz.pmis.finance.infra.mapper.RevenueMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.pmis.project.entity.RevenueDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.finance.domain.entity.RevenueDO">
         <id column="id" property="id"/>
         <result column="contract_id" property="contractId"/>
         <result column="initiation_id" property="initiationId"/>
@@ -61,6 +61,16 @@
         WHERE contract_id = #{contractId}
           AND status = 'CONFIRMED' AND deleted = 0
         GROUP BY contract_id
+    </select>
+
+    <!-- 按立项 + 期间汇总已确认收入 -->
+    <select id="sumByInitiation" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0) FROM pmis_profit_revenue
+        WHERE initiation_id = #{initiationId}
+          AND status = 'CONFIRMED' AND deleted = 0
+        <if test="period != null and period != ''">
+            AND period = #{period}
+        </if>
     </select>
 
     <!-- P6 每日对账：跨项目汇总全部已确认收入 -->

@@ -99,8 +99,8 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
             query = new UnsubscribeQueryDTO();
         }
         Page<MsgSubscriptionDO> page = new Page<>(
-                query.getPage(),
-                Math.min(query.getSize(), PageQuery.MAX_SIZE));
+                query.getPageNum(),
+                Math.min(query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
         LambdaQueryWrapper<MsgSubscriptionDO> w = new LambdaQueryWrapper<MsgSubscriptionDO>()
                 .eq(MsgSubscriptionDO::getStatus, SubscriptionStatusEnum.UNSUBSCRIBED.name())
                 .eq(StringUtils.hasText(query.getUserId()), MsgSubscriptionDO::getUserId, query.getUserId())

@@ -38,6 +38,12 @@ public class MessageRequest implements Serializable {
     /** 业务单据 ID */
     private String bizId;
 
+    /** 模板编码 */
+    private String templateCode;
+
+    /** 消息 ID（业务侧生成，用于全链路追踪） */
+    private String messageId;
+
     /** 附加参数（模板变量、Webhook 配置等） */
     private Map<String, Object> params;
 }

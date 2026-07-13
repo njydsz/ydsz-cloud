@@ -101,7 +101,7 @@ public class UnsubscribeTokenUtil {
             throw new SysException(StandardResultCode.BAD_REQUEST, "退订 token 签名校验失败");
         }
         UnsubscribeTokenPayload result = parsePayload(payload);
-        if (Instant.now().getEpochSecond() > BaseResponse.getExpiresAt()) {
+        if (Instant.now().getEpochSecond() > result.getExpiresAt()) {
             throw new SysException(StandardResultCode.BAD_REQUEST, "退订 token 已过期");
         }
         return result;

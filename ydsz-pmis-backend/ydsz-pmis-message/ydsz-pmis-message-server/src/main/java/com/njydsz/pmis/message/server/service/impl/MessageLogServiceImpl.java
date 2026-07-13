@@ -71,8 +71,8 @@ public class MessageLogServiceImpl implements MessageLogService {
     @Override
     public Page<MsgLogDO> page(MessageLogQueryDTO query) {
         Page<MsgLogDO> page = new Page<>(
-                query == null ? 1 : query.getPage(),
-                Math.min(query == null ? 10 : query.getSize(), PageQuery.MAX_SIZE));
+                query == null ? 1 : query.getPageNum(),
+                Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
         LambdaQueryWrapper<MsgLogDO> w = new LambdaQueryWrapper<>();
         if (query != null) {
             w.eq(StringUtils.hasText(query.getChannel()), MsgLogDO::getChannel, query.getChannel());

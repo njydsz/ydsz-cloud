@@ -145,8 +145,8 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public Page<MsgTemplateDO> page(TemplateQueryDTO query) {
         Page<MsgTemplateDO> page = new Page<>(
-                query == null ? 1 : query.getPage(),
-                Math.min(query == null ? 10 : query.getSize(), PageQuery.MAX_SIZE));
+                query == null ? 1 : query.getPageNum(),
+                Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
         LambdaQueryWrapper<MsgTemplateDO> w = new LambdaQueryWrapper<>();
         if (query != null) {
             w.eq(StringUtils.hasText(query.getTemplateCode()), MsgTemplateDO::getTemplateCode, query.getTemplateCode());

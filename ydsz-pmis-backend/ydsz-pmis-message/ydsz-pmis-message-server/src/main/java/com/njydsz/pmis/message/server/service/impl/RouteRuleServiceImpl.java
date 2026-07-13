@@ -135,8 +135,8 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     @Override
     public Page<MsgRouteRuleDO> page(PageQuery query) {
         Page<MsgRouteRuleDO> page = new Page<>(
-                query == null ? 1 : query.getPage(),
-                Math.min(query == null ? 10 : query.getSize(), PageQuery.MAX_SIZE));
+                query == null ? 1 : query.getPageNum(),
+                Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
         return msgRouteRuleMapper.selectPage(page, new LambdaQueryWrapper<MsgRouteRuleDO>()
                 .orderByAsc(MsgRouteRuleDO::getSortOrder)
                 .orderByDesc(MsgRouteRuleDO::getCreatedAt));

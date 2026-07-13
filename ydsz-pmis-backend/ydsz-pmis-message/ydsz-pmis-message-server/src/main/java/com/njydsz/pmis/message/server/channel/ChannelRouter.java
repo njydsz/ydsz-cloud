@@ -120,15 +120,15 @@ public class ChannelRouter {
             MessageResult result = target.send(request);
             long cost = System.currentTimeMillis() - start;
             log.info("[ChannelRouter] channel={} status={} costMs={} cbState={}",
-                    channel, BaseResponse.getStatus(), cost,
+                    channel, result.isSuccess() ? "SUCCESS" : "FAILED", cost,
                     breaker == null ? "N/A" : breaker.getState());
             // 业务失败(非异常)也计入熔断失败率
             if (breaker != null) {
-                if (BaseResponse.isSuccess()) {
+                if (result.isSuccess()) {
                     breaker.onSuccess(cost, java.util.concurrent.TimeUnit.MILLISECONDS);
                 } else {
                     breaker.onError(cost, java.util.concurrent.TimeUnit.MILLISECONDS,
-                            new RuntimeException(BaseResponse.getErrorMessage()));
+                            new RuntimeException(result.getErrorMessage()));
                 }
             }
             return result;
@@ -176,10 +176,10 @@ public class ChannelRouter {
             }
         }
         MessageResult result = dispatch(request);
-        if (!BaseResponse.isSuccess()) {
-            throw new SysException(BaseResponse.getErrorMessage());
+        if (!result.isSuccess()) {
+            throw new SysException(result.getErrorMessage());
         }
-        return BaseResponse.getProviderTraceId();
+        return result.getTraceId();
     }
 
     /**

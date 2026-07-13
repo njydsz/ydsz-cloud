@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.njydsz.pmis.project.mapper.finance.ProfitSimulationMapper">
+<mapper namespace="com.njydsz.pmis.finance.infra.mapper.ProfitSimulationMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.pmis.project.entity.ProfitSimulationDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.finance.domain.entity.ProfitSimulationDO">
         <id column="id" property="id"/>
         <result column="simulation_code" property="simulationCode"/>
         <result column="simulation_name" property="simulationName"/>

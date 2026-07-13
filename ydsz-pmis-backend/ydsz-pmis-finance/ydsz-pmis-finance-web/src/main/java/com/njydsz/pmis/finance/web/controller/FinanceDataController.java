@@ -2,7 +2,7 @@ package com.njydsz.pmis.finance.web.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.finance.domain.entity.ProfitSnapshot;
+import com.njydsz.pmis.finance.domain.entity.ProfitSnapshotDO;
 import com.njydsz.pmis.finance.infra.mapper.InvoiceMapper;
 import com.njydsz.pmis.finance.infra.mapper.PaymentMapper;
 import com.njydsz.pmis.finance.infra.mapper.ExpenseMapper;
@@ -202,8 +202,8 @@ public class FinanceDataController {
     @Operation(summary = "利润快照汇总")
     public BaseResponse<List<Map<String, Object>>> profitSnapshotSummaryAll() {
         try {
-            var wrapper = new LambdaQueryWrapper<ProfitSnapshot>();
-            wrapper.orderByDesc(ProfitSnapshot::getSnapshotAt).last("LIMIT 200");
+            var wrapper = new LambdaQueryWrapper<ProfitSnapshotDO>();
+            wrapper.orderByDesc(ProfitSnapshotDO::getSnapshotAt).last("LIMIT 200");
             var snaps = profitSnapshotMapper.selectList(wrapper);
             if (snaps == null) return BaseResponse.ok(List.of());
             List<Map<String, Object>> result = new java.util.ArrayList<>();
@@ -213,7 +213,7 @@ public class FinanceDataController {
                 m.put("period", s.getPeriod());
                 m.put("totalCost", s.getTotalCost());
                 m.put("grossMargin", s.getGrossMargin());
-                BaseResponse.add(m);
+                result.add(m);
             }
             return BaseResponse.ok(result);
         } catch (Exception e) {
@@ -229,14 +229,14 @@ public class FinanceDataController {
             @RequestParam("sortBy") String sortBy,
             @RequestParam(value = "period", required = false) String period) {
         try {
-            var wrapper = new LambdaQueryWrapper<ProfitSnapshot>();
+            var wrapper = new LambdaQueryWrapper<ProfitSnapshotDO>();
             if (period != null && !period.isEmpty()) {
-                wrapper.eq(ProfitSnapshot::getPeriod, period);
+                wrapper.eq(ProfitSnapshotDO::getPeriod, period);
             }
             var all = profitSnapshotMapper.selectList(wrapper);
             if (all == null) return BaseResponse.ok(List.of());
             // Deduplicate by initiationId, keeping latest snapshot
-            Map<String, com.njydsz.pmis.finance.domain.entity.ProfitSnapshot> latest = new java.util.HashMap<>();
+            Map<String, ProfitSnapshotDO> latest = new java.util.HashMap<>();
             for (var s : all) {
                 if (s == null || s.getInitiationId() == null) continue;
                 var prev = latest.get(s.getInitiationId());
@@ -288,7 +288,7 @@ public class FinanceDataController {
                 m.put("status", r.getStatus());
                 m.put("amount", r.getAmount());
                 m.put("period", r.getPeriod());
-                BaseResponse.add(m);
+                result.add(m);
             }
             return BaseResponse.ok(result);
         } catch (Exception e) {

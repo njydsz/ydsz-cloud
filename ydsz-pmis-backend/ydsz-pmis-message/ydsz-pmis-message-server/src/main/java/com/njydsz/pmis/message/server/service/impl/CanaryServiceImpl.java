@@ -114,8 +114,8 @@ public class CanaryServiceImpl implements CanaryService {
     @Override
     public Page<MsgCanaryDO> page(PageQuery query) {
         Page<MsgCanaryDO> page = new Page<>(
-                query == null ? 1 : query.getPage(),
-                Math.min(query == null ? 10 : query.getSize(), PageQuery.MAX_SIZE));
+                query == null ? 1 : query.getPageNum(),
+                Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
         return msgCanaryMapper.selectPage(page, new LambdaQueryWrapper<MsgCanaryDO>()
                 .orderByDesc(MsgCanaryDO::getCreatedAt));
     }

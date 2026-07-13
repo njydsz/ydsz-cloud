@@ -62,6 +62,16 @@ public interface RevenueMapper extends BaseMapper<RevenueDO> {
     List<Map<String, Object>> sumByContract(@Param("contractId") String contractId);
 
     /**
+     * 按立项 + 期间汇总已确认收入
+     *
+     * @param initiationId 立项 ID
+     * @param period       期间（可选，格式 YYYY-MM）
+     * @return 已确认收入总额
+     */
+    BigDecimal sumByInitiation(@Param("initiationId") String initiationId,
+                               @Param("period") String period);
+
+    /**
      * P6 每日对账：跨项目汇总全部已确认收入
      *
      * @return 已确认收入总额

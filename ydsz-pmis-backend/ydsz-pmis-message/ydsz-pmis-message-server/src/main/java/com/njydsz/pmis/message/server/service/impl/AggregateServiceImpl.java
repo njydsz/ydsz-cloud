@@ -157,8 +157,8 @@ public class AggregateServiceImpl implements AggregateService {
     @Override
     public Page<MsgAggregateDO> page(PageQuery query) {
         Page<MsgAggregateDO> page = new Page<>(
-                query == null ? 1 : query.getPage(),
-                Math.min(query == null ? 10 : query.getSize(), PageQuery.MAX_SIZE));
+                query == null ? 1 : query.getPageNum(),
+                Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
         return msgAggregateMapper.selectPage(page, new LambdaQueryWrapper<MsgAggregateDO>()
                 .orderByDesc(MsgAggregateDO::getCreatedAt));
     }
@@ -185,7 +185,7 @@ public class AggregateServiceImpl implements AggregateService {
             request.setBizType("AGGREGATE");
             request.setBizId(batch.getId());
             MessageResult result = messageService.send(request);
-            boolean ok = result != null && BaseResponse.isSuccess();
+            boolean ok = result != null && result.isSuccess();
             if (ok) {
                 batch.setBatchStatus(AggregateBatchStatusEnum.SENT.name());
                 batch.setSentAt(LocalDateTime.now());
@@ -193,7 +193,7 @@ public class AggregateServiceImpl implements AggregateService {
                 return true;
             }
             log.warn("[Aggregate] 批次发送失败: id={} err={}", batch.getId(),
-                    result == null ? "无响应" : BaseResponse.getErrorMessage());
+                    result == null ? "无响应" : result.getErrorMessage());
             return false;
         } catch (Exception e) {
             log.error("[Aggregate] 批次发送异常: id={} err={}", batch.getId(), e.getMessage());

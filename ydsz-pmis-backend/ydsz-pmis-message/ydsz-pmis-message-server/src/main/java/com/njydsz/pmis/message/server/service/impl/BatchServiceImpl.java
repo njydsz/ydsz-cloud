@@ -177,7 +177,7 @@ public class BatchServiceImpl implements BatchService {
             req.setBizId(batchId);
             try {
                 MessageResult result = messageService.send(req);
-                if (result != null && BaseResponse.isSuccess()) {
+                if (result != null && result.isSuccess()) {
                     success++;
                 } else {
                     failed++;
