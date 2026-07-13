@@ -11,6 +11,8 @@ import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.pmis.nextwiki.domain.repository.StorageQuotaRepository;
 import com.njydsz.pmis.nextwiki.domain.repository.TrashItemRepository;
 
+import lombok.Builder;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -75,8 +77,8 @@ public class StorageAnalysisApplicationService {
     /**
      * 存储概览
      */
-    @lombok.Data
-    @lombok.Builder
+    @Data
+    @Builder
     public static class StorageOverview {
         private String userId;
         private Long totalSize;
@@ -89,8 +91,8 @@ public class StorageAnalysisApplicationService {
     /**
      * 类型统计
      */
-    @lombok.Data
-    @lombok.Builder
+    @Data
+    @Builder
     public static class TypeStats {
         private String suffix;
         private Integer fileCount;

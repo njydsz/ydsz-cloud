@@ -116,9 +116,10 @@ spec:
       interval: 30s
       rules:
         # 服务下线（P0）
+        # namespace 匹配 K8s base 部署的 namespace=pmis（prod overlay 未改 namespace）
         - alert: PmisServiceDown
           expr: |
-            up{job=~"pmis-.*",namespace="pmis-production"} == 0
+            up{job=~"pmis-.*",namespace="pmis"} == 0
           for: 1m
           labels:
             severity: P0
@@ -219,10 +220,14 @@ spec:
       interval: 30s
       rules:
         # 数据库连接池耗尽（P0，服务即将不可用）
+        # 指标来源：Micrometer JDBC 绑定器，对 Druid/HikariCP 统一暴露为 jdbc_connections_*
+        #   - jdbc_connections_active：当前活跃连接数
+        #   - jdbc_connections_max：连接池最大配置
+        #   - jdbc_connections_idle：空闲连接数
         - alert: PmisDbPoolExhausted
           expr: |
-            (hikaricp_connections_active{job=~"pmis-.*"} /
-             hikaricp_connections_max{job=~"pmis-.*"}) > 0.9
+            (jdbc_connections_active{job=~"pmis-.*"} /
+             jdbc_connections_max{job=~"pmis-.*"}) > 0.9
           for: 1m
           labels:
             severity: P0
@@ -232,18 +237,20 @@ spec:
             description: "活跃连接 {{ $value | humanizePercentage }} 即将耗尽，请立即排查慢 SQL 或扩容连接池。"
 
         # 数据库连接失败（P0）
+        # 当活跃连接数接近上限且空闲连接耗尽时，认为连接获取失败
         - alert: PmisDbConnectionFailed
           expr: |
-            increase(hikaricp_connections_acquire_seconds_count{job=~"pmis-.*"}[1m]) > 0
+            jdbc_connections_active{job=~"pmis-.*"}
+            / jdbc_connections_max{job=~"pmis-.*"} > 0.95
             and on(job)
-            hikaricp_connections_pending{job=~"pmis-.*"} > 0
+            jdbc_connections_idle{job=~"pmis-.*"} < 2
           for: 1m
           labels:
             severity: P0
             category: database
           annotations:
             summary: "{{ $labels.job }} 数据库连接获取失败"
-            description: "存在连接获取失败与 pending 连接，数据库可能不可达或连接池配置过小。"
+            description: "连接池接近上限且空闲连接耗尽，数据库可能不可达或连接池配置过小。"
 
         # Redis 连接失败（P1）
         - alert: PmisRedisConnectionFailed

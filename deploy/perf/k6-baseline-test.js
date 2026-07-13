@@ -43,10 +43,10 @@ const errorRate = new Rate('errors');
 export const options = STRESS ? {
     // 压力测试：逐步加压到 500 VU
     stages: [
-        { duration: '2m', target: 50 },   # 预热
-        { duration: '5m', target: 200 },  # 正常负载
-        { duration: '3m', target: 500 },  # 峰值
-        { duration: '2m', target: 0 },    # 降温
+        { duration: '2m', target: 50 },   // 预热
+        { duration: '5m', target: 200 },  // 正常负载
+        { duration: '3m', target: 500 },  // 峰值
+        { duration: '2m', target: 0 },    // 降温
     ],
     thresholds: {
         http_req_duration: ['p(95)<1000', 'p(99)<2000'],
@@ -65,13 +65,15 @@ export const options = STRESS ? {
 };
 
 // ============================================================
-// 测试数据
+// 测试数据（凭据通过环境变量注入，避免硬编码）
+//   K6_TEST_USER / K6_TEST_PASS 必填
+//   示例: k6 run --env BASE_URL=... --env K6_TEST_USER=admin --env K6_TEST_PASS=xxx ...
 // ============================================================
-const TEST_USERS = [
-    { username: 'admin', password: 'Admin@123456' },
-    { username: 'pm', password: 'Pm@123456' },
-    { username: 'finance', password: 'Finance@123' },
-];
+const TEST_USER = __ENV.K6_TEST_USER || 'admin';
+const TEST_PASS = __ENV.K6_TEST_PASS || '';
+const TEST_USERS = TEST_PASS
+    ? [{ username: TEST_USER, password: TEST_PASS }]
+    : [];
 
 // ============================================================
 // 工具函数

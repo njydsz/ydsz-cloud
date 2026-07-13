@@ -23,7 +23,6 @@ import java.util.function.Function;
  * @email limw1888@126.com
  * @version 3.5.0
  */
-@SuppressWarnings("unchecked")
 public class Converters {
 
     /**
@@ -227,18 +226,6 @@ public class Converters {
             }
             return converter.convert(source);
         };
-    }
-
-    /**
-     * 获取缓存的 SimpleDateFormat
-     *
-     * @param pattern 格式
-     * @return SimpleDateFormat
-     */
-    @SuppressWarnings("unused")
-    private static SimpleDateFormat getDateFormat(String pattern) {
-        Map<String, SimpleDateFormat> cache = DATE_FORMAT_CACHE.get();
-        return cache.computeIfAbsent(pattern, SimpleDateFormat::new);
     }
 
     /**

@@ -387,8 +387,8 @@ services:
     volumes:
       # 主配置(抓取目标 + alertmanager + rule_files)
       - ../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      # 告警规则
-      - ../monitoring/prometheus/rules/pmis-alerts.yml:/etc/prometheus/rules/pmis-alerts.yml:ro
+      # 告警规则目录(挂载整个目录,prometheus.yml 中 rule_files 用通配符 *.yml)
+      - ../monitoring/prometheus/rules:/etc/prometheus/rules:ro
       # 持久化 tsdb 数据
       - prometheus_data:/prometheus
     command:

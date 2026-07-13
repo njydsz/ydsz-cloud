@@ -23,6 +23,9 @@
      模板: dingtalk.content
      内容: 触发时间 / 服务 / 实例 / 值 / 摘要 / runbook 链接
      钉钉 markdown 消息体
+     注意: Alertmanager 模板引擎仅支持 Go text/template 标准函数 +
+           alertmanager 扩展函数(replace/split/trim/toUpper/toLower 等有限集合),
+           不支持 Prometheus 的 reReplaceAll / regexReplaceAll 等正则函数。
      ===================================================================== */ -}}
 {{ define "dingtalk.content" -}}
 ### {{ template "dingtalk.title" . }}
@@ -44,7 +47,6 @@
 | **实例** | {{ .Labels.instance }} |
 | **告警级别** | P{{ .Labels.severity }} |
 | **分类** | {{ .Labels.category }} |
-| **当前值** | {{ reReplaceAll "(\\d+\\.\\d{4})\\d*" "${1}" .Annotations.description }} |
 | **摘要** | {{ .Annotations.summary }} |
 
 **详情:**

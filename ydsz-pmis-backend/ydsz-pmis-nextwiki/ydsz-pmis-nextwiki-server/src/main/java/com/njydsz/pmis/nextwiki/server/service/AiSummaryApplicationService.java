@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import lombok.Builder;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -253,8 +255,8 @@ public class AiSummaryApplicationService {
     /**
      * 文档分析结果
      */
-    @lombok.Data
-    @lombok.Builder
+    @Data
+    @Builder
     public static class DocumentAnalysis {
         private String summary;
         private List<String> keywords;

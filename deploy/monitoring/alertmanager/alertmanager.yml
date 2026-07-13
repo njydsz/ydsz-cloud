@@ -10,18 +10,21 @@
 #   P1 - 钉钉: 业务指标严重异常 / 5xx 错误率激增 / JVM OOM / Full GC 频繁
 #   P2 - 邮件: 性能劣化 / 资源水位 / RocketMQ 堆积
 #
-# 占位符说明(部署前需替换为实际地址):
-#   ${DINGTALK_WEBHOOK_URL}    钉钉自定义机器人 webhook
-#   ${VOICE_WEBHOOK_URL}       电话语音通知服务 webhook(如阿里云语音通知)
-#   ${SMTP_*}                  邮件 SMTP 配置
-#   ${ALERT_EMAIL_TO}          告警收件人邮箱
+# 敏感配置说明:
+#   Alertmanager 原生不支持 ${VAR} 占位符替换。本文件直接使用默认值,
+#   生产部署通过以下任一方式覆盖:
+#     1) docker-compose 启动前 envsubst 预处理生成实际配置
+#        (需要 alertmanager.yml.tmpl 模板,见 deploy/scripts/render-alertmanager.sh)
+#     2) 启动 alertmanager 时加 --config.expand-env 参数(v0.22+)
+#        并将本文件中的占位符语法改为 ${VAR} 形式(本文件未采用此方案)
+#     3) K8s 部署用 Secret + envsubst init-container 渲染
 # =============================================================================
 global:
-  # SMTP 邮件发送配置(占位符,部署时通过环境变量注入实际值)
-  smtp_smarthost: "${SMTP_SMARTHOST:smtp.qiye.aliyun.com:465}"
-  smtp_from: "${SMTP_FROM:pmis-alert@ydsz.cn}"
-  smtp_auth_username: "${SMTP_USER:pmis-alert@ydsz.cn}"
-  smtp_auth_password: "${SMTP_PASSWORD:CHANGE_ME}"
+  # SMTP 邮件发送配置(默认值,生产通过 envsubst 或 Secret 覆盖)
+  smtp_smarthost: "smtp.qiye.aliyun.com:465"
+  smtp_from: "pmis-alert@ydsz.cn"
+  smtp_auth_username: "pmis-alert@ydsz.cn"
+  smtp_auth_password: "CHANGE_ME"
   smtp_require_tls: false
   resolve_timeout: 5m
 
@@ -116,31 +119,28 @@ inhibit_rules:
 
 # =============================================================================
 # 接收器定义
+# 接收器 URL/邮箱地址默认值为内网占位符,生产部署通过 envsubst 或 K8s Secret 覆盖
 # =============================================================================
 receivers:
   # ----------------------------------------------------------------------
   # 1. voice-phone - 电话语音通知(P0 专用)
   # 通过 webhook 调用电话语音通知服务(如阿里云语音通知 / 容联云通讯)
-  # 部署时需将 URL 替换为实际语音通知服务地址
   # ----------------------------------------------------------------------
   - name: voice-phone
     webhook_configs:
-      # 占位符 URL,部署时通过环境变量 VOICE_WEBHOOK_URL 注入实际地址
-      # 示例: https://voice-alert.example.com/api/call?token=xxx
-      - url: "${VOICE_WEBHOOK_URL:http://voice-alert:8060/api/call}"
+      # 默认内网占位符,生产通过 VOICE_WEBHOOK_URL 环境变量 + envsubst 覆盖
+      - url: "http://voice-alert:8060/api/call"
         send_resolved: true
         max_alerts: 0
 
   # ----------------------------------------------------------------------
   # 2. dingtalk-webhook - 钉钉机器人通知(P0/P1)
   # 使用 dingtalk-template.tmpl 渲染钉钉 markdown 消息
-  # 部署时需将 URL 替换为实际钉钉自定义机器人 webhook
   # ----------------------------------------------------------------------
   - name: dingtalk-webhook
     webhook_configs:
-      # 占位符 URL,部署时通过环境变量 DINGTALK_WEBHOOK_URL 注入实际地址
-      # 示例: https://oapi.dingtalk.com/robot/send?access_token=xxx
-      - url: "${DINGTALK_WEBHOOK_URL:http://dingtalk-webhook:8060/dingtalk/webhook1/send}"
+      # 默认内网占位符,生产通过 DINGTALK_WEBHOOK_URL 环境变量 + envsubst 覆盖
+      - url: "http://dingtalk-webhook:8060/dingtalk/webhook1/send"
         send_resolved: true
         max_alerts: 0
         http_config:
@@ -148,11 +148,10 @@ receivers:
 
   # ----------------------------------------------------------------------
   # 3. email - 邮件通知(P2)
-  # 部署时需配置 SMTP 账号与收件人邮箱
   # ----------------------------------------------------------------------
   - name: email
     email_configs:
-      - to: "${ALERT_EMAIL_TO:pmis-sre@ydsz.cn}"
+      - to: "pmis-sre@ydsz.cn"
         headers:
           Subject: '[PMIS 告警] {{ .CommonLabels.alertname }}'
         html: |

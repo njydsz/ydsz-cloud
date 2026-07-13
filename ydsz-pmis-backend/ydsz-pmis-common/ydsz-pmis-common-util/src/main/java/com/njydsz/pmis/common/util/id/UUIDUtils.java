@@ -340,8 +340,6 @@ public final class UUIDUtils {
      * @param result      结果字符数组
      */
     private static void encodeRandom(byte[] randomBytes, char[] result) {
-        @SuppressWarnings("unused")
-        int entropyIndex = 0;
         int bitCount = 0;
         int entropy = 0;
         int resultIndex = 10;

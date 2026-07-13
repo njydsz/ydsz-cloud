@@ -2,6 +2,7 @@ package com.njydsz.pmis.nextwiki.api.dto;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -191,7 +192,7 @@ public final class NextwikiDTOs {
         private String fileNodeId;
 
         @Schema(description = "标签ID列表")
-        private java.util.List<String> tagIds;
+        private List<String> tagIds;
     }
 
     /**

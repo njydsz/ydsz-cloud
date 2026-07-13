@@ -1,7 +1,7 @@
 package com.njydsz.pmis.agent.server.health;
 
-import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.agent.domain.conversation.ConversationMemory;

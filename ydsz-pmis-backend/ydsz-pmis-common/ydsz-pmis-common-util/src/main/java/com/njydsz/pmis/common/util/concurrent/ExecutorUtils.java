@@ -251,10 +251,9 @@ public class ExecutorUtils {
      * @param nThreads   线程池大小
      * @param comparator 任务优先级比较器
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
     public static ExecutorService newPriorityThreadPool(int nThreads, Comparator<Runnable> comparator) {
         BlockingQueue<Runnable> queue = new PriorityBlockingQueue<>(DEFAULT_QUEUE_CAPACITY,
-                (Comparator) new RunnableComparatorAdapter(comparator));
+                new RunnableComparatorAdapter(comparator));
         return new ThreadPoolExecutor(
                 nThreads,
                 nThreads,

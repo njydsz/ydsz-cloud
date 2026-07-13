@@ -504,20 +504,19 @@ public class ExceptionUtils {
      * 创建异常
      */
     
-    @SuppressWarnings("unchecked")
     private static <T extends Throwable> T createException(String message, Class<T> exceptionType) throws T {
         try {
             if (exceptionType == RuntimeException.class) {
-                return (T) new RuntimeException(message);
+                return exceptionType.cast(new RuntimeException(message));
             }
             if (exceptionType == IllegalArgumentException.class) {
-                return (T) new IllegalArgumentException(message);
+                return exceptionType.cast(new IllegalArgumentException(message));
             }
             if (exceptionType == IllegalStateException.class) {
-                return (T) new IllegalStateException(message);
+                return exceptionType.cast(new IllegalStateException(message));
             }
             if (exceptionType == NullPointerException.class) {
-                return (T) new NullPointerException(message);
+                return exceptionType.cast(new NullPointerException(message));
             }
             return exceptionType.getConstructor(String.class).newInstance(message);
         } catch (Exception e) {
