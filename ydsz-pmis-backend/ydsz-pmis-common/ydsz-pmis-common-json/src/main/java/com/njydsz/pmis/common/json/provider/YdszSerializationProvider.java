@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentMap;
 import com.njydsz.pmis.common.json.writer.BeanSerializer;
 
 /**
- * Remi 序列化提供者（架构层）
+ * YdszJson 序列化提供者（架构层）
  *
  * <p>架构层级：YdszJson => Engine => Provider => Parser</p>
  *

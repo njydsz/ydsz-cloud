@@ -53,7 +53,8 @@ public class ExcelException extends BusinessException {
      * @param message 错误描述
      */
     public ExcelException(String message) {
-        super(message);
+        super();
+        setMessage(message);
     }
 
     /**
@@ -63,7 +64,8 @@ public class ExcelException extends BusinessException {
      * @param cause 原始异常
      */
     public ExcelException(String message, Throwable cause) {
-        super(message, cause);
+        super(cause);
+        setMessage(message);
     }
 
     /**
@@ -96,7 +98,7 @@ public class ExcelException extends BusinessException {
     public ExcelException(ExceptionCode exceptionCode, String message, Throwable cause) {
         super(cause);
         setCode(exceptionCode.getCode());
-        setMessageKey(exceptionCode.getKey());
+        this.messageKey = exceptionCode.getKey();
         setMessage(message);
     }
 

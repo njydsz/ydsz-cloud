@@ -94,7 +94,7 @@ public class GlobalObjectPool {
      * 清空所有对象池
      */
     public static void clearAll() {
-        POOLS.values().forEach(TypeObjectPool::clear);
+        POOLS.values().forEach(pool -> pool.clear());
     }
 
     /**

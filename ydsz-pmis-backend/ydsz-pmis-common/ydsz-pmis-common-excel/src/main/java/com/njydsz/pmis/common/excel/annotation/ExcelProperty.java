@@ -214,4 +214,51 @@ public @interface ExcelProperty {
      * @return 公式表达式字符串
      */
     String formula() default "";
+
+    // ==================== 数据验证属性 ====================
+
+    /**
+     * 字符串最大长度
+     *
+     * <p>仅对 String 类型字段生效。设置为 -1 表示不限制。</p>
+     *
+     * @return 最大长度
+     */
+    int maxLength() default -1;
+
+    /**
+     * 数值最小值（字符串表示）
+     *
+     * <p>仅对 Number 类型字段生效。为空字符串表示不限制。</p>
+     *
+     * @return 最小值
+     */
+    String minValue() default "";
+
+    /**
+     * 数值最大值（字符串表示）
+     *
+     * <p>仅对 Number 类型字段生效。为空字符串表示不限制。</p>
+     *
+     * @return 最大值
+     */
+    String maxValue() default "";
+
+    /**
+     * 正则表达式验证
+     *
+     * <p>仅对 String 类型字段生效。为空字符串表示不验证。</p>
+     *
+     * @return 正则表达式
+     */
+    String pattern() default "";
+
+    /**
+     * 自定义验证错误消息
+     *
+     * <p>为空时使用默认错误消息。</p>
+     *
+     * @return 错误消息
+     */
+    String errorMessage() default "";
 }

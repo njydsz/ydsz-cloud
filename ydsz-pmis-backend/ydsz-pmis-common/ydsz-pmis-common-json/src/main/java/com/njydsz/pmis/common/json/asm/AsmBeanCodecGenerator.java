@@ -18,7 +18,10 @@ import java.security.SecureClassLoader;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -1491,14 +1494,14 @@ public final class AsmBeanCodecGenerator {
             return Date.from(Instant.parse(dateStr));
         } catch (Exception e) {
             try {
-                java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
                 LocalDateTime ldt = LocalDateTime.parse(dateStr, formatter);
-                return Date.from(ldt.atZone(java.time.ZoneId.systemDefault()).toInstant());
+                return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
             } catch (Exception e2) {
                 try {
-                    java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd");
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                     LocalDate ld = LocalDate.parse(dateStr, formatter);
-                    return Date.from(ld.atStartOfDay(java.time.ZoneId.systemDefault()).toInstant());
+                    return Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
                 } catch (Exception e3) {
                     log.warn("日期解析失败: {}", dateStr);
                     return null;
@@ -1607,10 +1610,10 @@ public final class AsmBeanCodecGenerator {
      * 获取 List 字段的元素类型
      */
     private static Class<?> getListElementType(Field field) {
-        java.lang.reflect.Type genericType = field.getGenericType();
+        Type genericType = field.getGenericType();
         if (genericType instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) genericType;
-            java.lang.reflect.Type[] typeArgs = pt.getActualTypeArguments();
+            Type[] typeArgs = pt.getActualTypeArguments();
             if (typeArgs.length > 0 && typeArgs[0] instanceof Class) {
                 return (Class<?>) typeArgs[0];
             }

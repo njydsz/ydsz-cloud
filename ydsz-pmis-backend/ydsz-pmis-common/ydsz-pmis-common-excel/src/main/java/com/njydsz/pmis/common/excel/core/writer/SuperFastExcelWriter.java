@@ -208,8 +208,8 @@ public class SuperFastExcelWriter {
             try {
                 Files.walk(tempDir)
                     .sorted(Comparator.reverseOrder())
-                    .map(Path::toFile)
-                    .forEach(File::delete);
+                    .map(p -> p.toFile())
+                    .forEach(f -> f.delete());
             } catch (Exception e) {
                 log.warn("清理临时文件异常", e);
             }
@@ -233,7 +233,7 @@ public class SuperFastExcelWriter {
         zipOut.closeEntry();
 
         zipOut.putNextEntry(new ZipEntry("xl/workbook.xml"));
-        zipOut.write(WORKBOOK_BYTES);
+        zipOut.write(getWorkbookBytes());
         zipOut.closeEntry();
 
         rowBuffer = new byte[ROW_BUFFER_SIZE];

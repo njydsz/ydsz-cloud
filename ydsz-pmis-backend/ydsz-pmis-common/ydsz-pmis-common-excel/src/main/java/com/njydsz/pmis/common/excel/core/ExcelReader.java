@@ -487,18 +487,17 @@ public class ExcelReader {
      * @param <T> 数据类型
      * @return 数据列表
      */
-    @SuppressWarnings("unchecked")
     public <T> List<T> doReadAll() {
         List<T> result = new ArrayList<>();
         doRead(new ReadListener<T>() {
             @Override
-            public void onStart(com.njydsz.pmis.common.excel.core.context.AnalysisContext context) {}
+            public void onStart(AnalysisContext context) {}
             @Override
-            public void onData(com.njydsz.pmis.common.excel.core.context.AnalysisContext context, T data) {
+            public void onData(AnalysisContext context, T data) {
                 result.add(data);
             }
             @Override
-            public void onEnd(com.njydsz.pmis.common.excel.core.context.AnalysisContext context) {}
+            public void onEnd(AnalysisContext context) {}
         });
         return result;
     }

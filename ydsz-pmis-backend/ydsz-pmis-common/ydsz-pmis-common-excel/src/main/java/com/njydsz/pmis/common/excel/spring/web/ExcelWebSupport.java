@@ -2,6 +2,9 @@ package com.njydsz.pmis.common.excel.spring.web;
 
 import com.njydsz.pmis.common.excel.core.ExcelFacade;
 import com.njydsz.pmis.common.excel.core.listener.WriteHandler;
+import com.njydsz.pmis.common.excel.exception.ExcelWriteException;
+import com.njydsz.pmis.common.excel.exception.ExcelExceptionCode;
+import com.njydsz.pmis.common.excel.spring.DownloadContext;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,20 +15,26 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
- * Web download support for ExcelFacade in Spring MVC environment.
+ * Excel Web 下载支持 — Spring MVC 环境下的 HTTP 响应写入
+ *
+ * <p>自动设置 Content-Type、Content-Disposition 等 HTTP 头，
+ * 并确保 ThreadLocal 上下文在请求结束后被清理，防止线程池内存泄漏。</p>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
-public class ExcelFacadeWebSupport {
+public class ExcelWebSupport {
 
-    private static final Logger log = LoggerFactory.getLogger(ExcelFacadeWebSupport.class);
+    private static final Logger log = LoggerFactory.getLogger(ExcelWebSupport.class);
 
     /**
-     * Write data to HTTP response as Excel file download.
+     * 写入 Excel 文件到 HTTP 响应（默认 Sheet 名）
      *
-     * @param response HTTP response
-     * @param fileName download file name (without extension)
-     * @param clazz    data class
-     * @param data     data list to write
-     * @param <T>      data type
+     * @param response HTTP 响应
+     * @param fileName 下载文件名（不含扩展名）
+     * @param clazz    数据类型
+     * @param data     数据列表
+     * @param <T>      数据泛型
      */
     public static <T> void download(HttpServletResponse response, String fileName,
                                     Class<T> clazz, List<T> data) {
@@ -33,14 +42,14 @@ public class ExcelFacadeWebSupport {
     }
 
     /**
-     * Write data to HTTP response as Excel file download with sheet name.
+     * 写入 Excel 文件到 HTTP 响应（指定 Sheet 名）
      *
-     * @param response  HTTP response
-     * @param fileName  download file name (without extension)
-     * @param clazz     data class
-     * @param data      data list to write
-     * @param sheetName sheet name
-     * @param <T>       data type
+     * @param response  HTTP 响应
+     * @param fileName  下载文件名（不含扩展名）
+     * @param clazz     数据类型
+     * @param data      数据列表
+     * @param sheetName Sheet 名称
+     * @param <T>       数据泛型
      */
     public static <T> void download(HttpServletResponse response, String fileName,
                                     Class<T> clazz, List<T> data, String sheetName) {
@@ -48,14 +57,18 @@ public class ExcelFacadeWebSupport {
     }
 
     /**
-     * Write data to HTTP response as Excel file download with sheet name and write handler.
+     * 写入 Excel 文件到 HTTP 响应（指定 Sheet 名和写入处理器）
      *
-     * @param response     HTTP response
-     * @param fileName     download file name (without extension)
-     * @param clazz        data class
-     * @param data         data list to write
-     * @param sheetName    sheet name
-     * @param <T>          data type
+     * <p>使用 try-finally 确保 ThreadLocal 上下文在请求结束后被清理，
+     * 防止 Servlet 线程池中的线程复用导致内存泄漏。</p>
+     *
+     * @param response     HTTP 响应
+     * @param fileName     下载文件名（不含扩展名）
+     * @param clazz        数据类型
+     * @param data         数据列表
+     * @param sheetName    Sheet 名称
+     * @param writeHandler 写入处理器
+     * @param <T>          数据泛型
      */
     public static <T> void download(HttpServletResponse response, String fileName,
                                     Class<T> clazz, List<T> data, String sheetName,
@@ -67,12 +80,23 @@ public class ExcelFacadeWebSupport {
             response.setHeader("Content-Disposition",
                     "attachment; filename*=UTF-8''" + encodedFileName + ".xlsx");
 
+            // 设置下载上下文
+            DownloadContext.setFileName(fileName + ".xlsx");
+            if (sheetName != null) {
+                DownloadContext.setSheetName(sheetName);
+            }
+
             ExcelFacade.write(response.getOutputStream(), clazz)
-                    .sheet(sheetName != null ? sheetName : "sheet1")
+                    .sheet(sheetName != null ? sheetName : "Sheet1")
                     .doWrite(data);
         } catch (IOException e) {
-            log.error("Failed to write Excel download response", e);
-            throw new RuntimeException("Failed to write Excel download response", e);
+            log.error("Excel 下载写入失败: fileName={}", fileName, e);
+            throw new ExcelWriteException(ExcelExceptionCode.WRITE_IO_ERROR,
+                "Excel 下载写入失败: " + fileName, e);
+        } finally {
+            // 确保 ThreadLocal 被清理，防止线程池内存泄漏
+            DownloadContext.clear();
+            ExcelFacade.clearDownloadContext();
         }
     }
 }

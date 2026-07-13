@@ -5,8 +5,6 @@ import com.njydsz.pmis.common.json.annotation.YdszJsonField;
 import com.njydsz.pmis.common.json.exception.YdszJsonException;
 import org.junit.jupiter.api.*;
 
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayName("错误处理集成测试")
@@ -243,7 +241,7 @@ class ErrorHandlingIntegrationTest {
     void deserializeArrayIntoObjectShouldFail() {
         String jsonArray = "[1,2,3]";
         assertThrows(Exception.class, () -> {
-            SimplePojo result = YdszJson.toObject(jsonArray, SimplePojo.class);
+            YdszJson.toObject(jsonArray, SimplePojo.class);
         }, "将JSON数组反序列化为POJO对象应抛出异常");
     }
 

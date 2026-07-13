@@ -237,7 +237,7 @@ public class ASMFieldAccessor {
         String superClassName = "java/lang/Object";
 
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
-        String classGenName = "remi/asm/Getter_" + Math.abs(key(className, fieldName));
+        String classGenName = "ydsz/asm/Getter_" + Math.abs(key(className, fieldName));
         cw.visit(Opcodes.V11, Opcodes.ACC_PUBLIC, classGenName, null, superClassName, new String[]{Type.getInternalName(FieldGetter.class)});
 
         cw.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "instance", Type.getDescriptor(FieldGetter.class), null, null);
@@ -312,7 +312,7 @@ public class ASMFieldAccessor {
         String superClassName = "java/lang/Object";
 
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
-        String classGenName = "remi/asm/Setter_" + Math.abs(key(className, fieldName));
+        String classGenName = "ydsz/asm/Setter_" + Math.abs(key(className, fieldName));
         cw.visit(Opcodes.V11, Opcodes.ACC_PUBLIC, classGenName, null, superClassName, new String[]{Type.getInternalName(FieldSetter.class)});
 
         cw.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "instance", Type.getDescriptor(FieldSetter.class), null, null);
@@ -389,7 +389,7 @@ public class ASMFieldAccessor {
         String className = clazz.getName().replace('.', '/');
 
         ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
-        String classGenName = "remi/asm/Instantiator_" + Math.abs(className.hashCode());
+        String classGenName = "ydsz/asm/Instantiator_" + Math.abs(className.hashCode());
         cw.visit(Opcodes.V11, Opcodes.ACC_PUBLIC, classGenName, null, "java/lang/Object", new String[]{Type.getInternalName(ObjectInstantiator.class)});
 
         cw.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC, "instance", Type.getDescriptor(ObjectInstantiator.class), null, null);

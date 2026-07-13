@@ -33,40 +33,17 @@
 ### 1.3 例外
 
 1. **字符串字面量**中的 FQN（如反射类名 `"com.njydsz.pmis.literule.core.MicrometerRuleMetrics"`）可保留完整路径。
-2. **Javadoc `{@link FQN}` / `@throws FQN` 引用**可保留完整路径，但推荐在已 import 的情况下使用简单类名。
+2. **Javadoc `{@link FQN}` 引用**（仅 `{@link}` 标签）可保留完整路径（当目标类未在代码中使用、仅作 Javadoc 交叉引用时）。但如果该类已被 import，则必须使用简单类名 `{@link SimpleName}`。**注意：此例外仅适用于 `{@link}` 标签，不适用于 `@throws`、`@see`、`@param`、`@return` 等其他 Javadoc 标签——这些标签中的 FQN 均属违规。**
 3. **同名类冲突**（Java 语言限制）：当当前类与目标类简单名相同（如 `com.njydsz.pmis.cronjob.server.core.dag.DagEdge` 与 `com.njydsz.pmis.common.dag.DagEdge`），Java 不允许同时 import 两个同名类，此时对其中一个使用 FQN 是合法的。此类 FQN 必须在行尾添加 `// FQN-OK: name conflict with <ClassName>` 注释说明原因。
+4. **`@ConditionalOnClass(name = "FQN")` 注解**：Spring 的 `@ConditionalOnClass` 的 `name` 参数是字符串类型，属于字符串字面量例外，不算违规。
 
 ### 1.4 执行机制
 
 1. **IDE 规则**：`.trae/rules/no-inline-fqn.md` 设置 `alwaysApply: true`，AI 代码生成阶段自动遵守。
 2. **Code Review**：PR 审查必须检查行内 FQN，发现即打回。
-3. **CI 检测（可选）**：可在 CI 流水线中加入检测脚本：
-
-```bash
-#!/bin/bash
-# deploy/scripts/check-inline-fqn.sh — 检测行内 FQN 违规
-# 用法: check-inline-fqn.sh <src-dir>
-# 排除 import 行和字符串字面量，检测代码行中的 FQN 用法
-
-SRC_DIR="${1:-ydsz-pmis-backend}"
-VIOLATIONS=0
-
-# 匹配非 import 行、非 package 行、非注释行中的 com.njydsz.pmis.xxx.YyyClass 模式
-grep -rn --include='*.java' \
-  -E '^\s+[^/*]*com\.njydsz\.pmis\.[a-z]+\.[a-z]+(\.[a-z]+)*\.[A-Z][a-zA-Z0-9_]*' \
-  "$SRC_DIR" \
-  | grep -v '^\s*//' \
-  | grep -v '@link' \
-  | grep -v '@code' \
-  | grep -v '@throws' \
-  | grep -v '{@' \
-  | while read -r line; do
-      echo "❌ INLINE FQN: $line"
-      VIOLATIONS=$((VIOLATIONS + 1))
-    done
-
-echo "检测完成。"
-```
+3. **CI 检测（强制）**：CI 流水线 `backend-ci.yml` 的 `build` job 中集成 `deploy/scripts/check-inline-fqn.sh --strict`，有违规即 `exit 1` 阻断 PR 合并。
+4. **Checkstyle（辅助）**：`checkstyle.xml` 已配置 `IllegalImport` 等规则，与 shell 脚本形成双重防线。
+5. **Spotless（自动修复）**：引入 Spotless + Google Java Format 插件，`mvn spotless:apply` 可自动将行内 FQN 转为 import 语句。
 
 ### 1.5 真实违规案例
 
@@ -100,3 +77,4 @@ new com.njydsz.pmis.literule.server.replay.ExecutionReplayService(...);
 | 日期 | 版本 | 变更内容 | 作者 |
 |------|------|----------|------|
 | 2026-07-12 | 1.0 | 初始创建，收录「禁止行内 FQN」规范 | ydsz-pmis-team |
+| 2026-07-13 | 1.1 | 修复例外描述矛盾：@throws/@see/@param/@return 中的 FQN 均属违规（仅 {@link} 可保留）；新增 @ConditionalOnClass 例外；更新执行机制（CI 强制 + Spotless 自动修复） | ydsz-pmis-team |

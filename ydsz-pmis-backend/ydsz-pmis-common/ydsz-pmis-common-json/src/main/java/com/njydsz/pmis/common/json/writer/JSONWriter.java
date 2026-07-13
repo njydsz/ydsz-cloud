@@ -5,6 +5,7 @@ import com.njydsz.pmis.common.json.cache.AsmCodecCache;
 import com.njydsz.pmis.common.json.number.NumberUtils;
 import com.njydsz.pmis.common.json.YdszJson;
 
+import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -656,7 +657,7 @@ public final class JSONWriter {
         } else if (obj instanceof Map) {
             estimated = ((Map<?, ?>) obj).size() * 64 + 16;
         } else if (obj.getClass().isArray()) {
-            estimated = java.lang.reflect.Array.getLength(obj) * 64 + 16;
+            estimated = Array.getLength(obj) * 64 + 16;
         } else {
             // Bean 类型：粗略估算
             estimated = 256;

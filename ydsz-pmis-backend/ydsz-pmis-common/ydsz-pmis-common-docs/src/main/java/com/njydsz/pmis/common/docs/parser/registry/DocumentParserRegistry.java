@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -94,7 +96,7 @@ public class DocumentParserRegistry {
      *
      * @return 已注册格式列表
      */
-    public java.util.Set<DocumentFormat> getSupportedFormats() {
-        return java.util.Collections.unmodifiableSet(parserMap.keySet());
+    public Set<DocumentFormat> getSupportedFormats() {
+        return Collections.unmodifiableSet(parserMap.keySet());
     }
 }

@@ -345,7 +345,7 @@ public final class YdszJsonModuleRegistry {
      */
     public List<String> getModuleNames() {
         return modules.stream()
-                .map(YdszJsonModule::getModuleName)
+                .map(module -> module != null ? module.getModuleName() : null)
                 .collect(Collectors.toList());
     }
 }

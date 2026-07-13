@@ -1,7 +1,10 @@
 package com.njydsz.pmis.common.file.storage;
 
 import com.njydsz.pmis.common.file.callback.UploadProgressListener;
+import com.njydsz.pmis.common.file.domain.ChunkedUploadResult;
 import com.njydsz.pmis.common.file.domain.FileStorage;
+import com.njydsz.pmis.common.file.domain.PolicyResult;
+import com.njydsz.pmis.common.file.domain.UploadCheckpoint;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.time.Duration;
@@ -66,7 +69,7 @@ public interface FileUploader {
      * @param objectName 分片合并后的目标对象路径
      * @return 包含 uploadId 等分片任务信息的结果对象
      */
-    com.njydsz.pmis.common.file.domain.ChunkedUploadResult initiateChunkedUpload(String bucketName, String objectName);
+    ChunkedUploadResult initiateChunkedUpload(String bucketName, String objectName);
 
     /**
      * 分片上传第二步：上传单个分片
@@ -104,7 +107,7 @@ public interface FileUploader {
      * @param expires    签名过期时间（秒），默认使用配置中的 temporarySignatureExpiry
      * @return 前端直传签名结果，包含 Policy、Signature 等凭证
      */
-    com.njydsz.pmis.common.file.domain.PolicyResult generateUploadPolicy(String bucketName, String objectNamePrefix, Integer expires);
+    PolicyResult generateUploadPolicy(String bucketName, String objectNamePrefix, Integer expires);
 
     /**
      * 初始化带断点续传的分片上传
@@ -116,7 +119,7 @@ public interface FileUploader {
      * @param file       待上传的文件（用于计算分片和记录元信息）
      * @return 分片上传检查点信息
      */
-    com.njydsz.pmis.common.file.domain.UploadCheckpoint initChunkedUploadWithCheckpoint(String bucketName, String objectName, MultipartFile file);
+    UploadCheckpoint initChunkedUploadWithCheckpoint(String bucketName, String objectName, MultipartFile file);
 
     /**
      * 断点续传：从检查点恢复分片上传
@@ -126,7 +129,7 @@ public interface FileUploader {
      * @param listener   上传进度回调
      * @return 包含文件元信息的 FileStorage 对象
      */
-    FileStorage resumeChunkedUpload(com.njydsz.pmis.common.file.domain.UploadCheckpoint checkpoint, UploadProgressListener listener);
+    FileStorage resumeChunkedUpload(UploadCheckpoint checkpoint, UploadProgressListener listener);
 
     /**
      * 查询分片上传进度
@@ -136,7 +139,7 @@ public interface FileUploader {
      * @param objectName 对象路径
      * @return 分片上传检查点信息，若不存在则返回 null
      */
-    com.njydsz.pmis.common.file.domain.UploadCheckpoint getCheckpoint(String bucketName, String objectName);
+    UploadCheckpoint getCheckpoint(String bucketName, String objectName);
 
     /**
      * 删除分片上传检查点
@@ -144,7 +147,7 @@ public interface FileUploader {
      *
      * @param checkpoint 检查点信息
      */
-    void deleteCheckpoint(com.njydsz.pmis.common.file.domain.UploadCheckpoint checkpoint);
+    void deleteCheckpoint(UploadCheckpoint checkpoint);
 
     /**
      * 复制对象

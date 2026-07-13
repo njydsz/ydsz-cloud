@@ -57,6 +57,16 @@ jobs:
         # 仅做编译，跳过 test/verify 阶段（项目已移除全部单元测试，2026-07）
         run: mvn -B -ntp -DskipTests compile
 
+      - name: 行内 FQN 违规检测
+        # 公司代码规范（强制）：禁止行内全限定类名（FQN）用法
+        # 规则文件：.trae/rules/no-inline-fqn.md
+        # 检测脚本：deploy/scripts/check-inline-fqn.sh
+        # --strict 模式：有违规即 exit 1 阻断 CI
+        working-directory: .
+        run: |
+          chmod +x deploy/scripts/check-inline-fqn.sh
+          bash deploy/scripts/check-inline-fqn.sh ydsz-pmis-backend --strict
+
       - name: 幂等注解覆盖检查
         # 扫描所有写接口(@PostMapping/@PutMapping/@DeleteMapping/@PatchMapping)
         # 是否标注了 @Idempotent 或 @IdempotentExempt;未标注的以 ERROR 阻断 CI

@@ -105,7 +105,7 @@ public final class ArrayNode extends JsonNode {
 
     @Override
     public Object asValue() {
-        return elements.stream().map(JsonNode::asValue).toList();
+        return elements.stream().map(node -> node != null ? node.asValue() : null).toList();
     }
 
     @Override

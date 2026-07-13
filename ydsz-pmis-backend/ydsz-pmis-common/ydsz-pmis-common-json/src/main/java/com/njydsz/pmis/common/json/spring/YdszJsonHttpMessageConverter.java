@@ -7,8 +7,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -36,14 +34,13 @@ public class YdszJsonHttpMessageConverter extends AbstractHttpMessageConverter<O
     }
 
     @Override
-    protected boolean supports(@NonNull Class<?> clazz) {
+    protected boolean supports(Class<?> clazz) {
         // 通用转换器，支持所有非 CharSequence 类型
         return !CharSequence.class.isAssignableFrom(clazz);
     }
 
     @Override
-    @Nullable
-    protected Object readInternal(@NonNull Class<?> clazz, @NonNull HttpInputMessage inputMessage)
+    protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage)
             throws IOException, HttpMessageNotReadableException {
         try {
             byte[] body = inputMessage.getBody().readAllBytes();
@@ -58,7 +55,7 @@ public class YdszJsonHttpMessageConverter extends AbstractHttpMessageConverter<O
     }
 
     @Override
-    protected void writeInternal(@Nullable Object o, @NonNull HttpOutputMessage outputMessage)
+    protected void writeInternal(Object o, HttpOutputMessage outputMessage)
             throws IOException, HttpMessageNotWritableException {
         try {
             byte[] bytes = YdszJson.toJsonBytes(o);

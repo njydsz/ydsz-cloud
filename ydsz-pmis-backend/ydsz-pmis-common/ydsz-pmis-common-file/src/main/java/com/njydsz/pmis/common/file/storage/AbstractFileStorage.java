@@ -1172,7 +1172,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
      * @param file 上传文件
      * @return 校验后的检查点
      */
-    protected UploadCheckpoint validateAndRecoverCheckpoint(UploadCheckpoint checkpoint, org.springframework.web.multipart.MultipartFile file) {
+    protected UploadCheckpoint validateAndRecoverCheckpoint(UploadCheckpoint checkpoint, MultipartFile file) {
         CheckpointService service = checkpointService;
         if (service != null) {
             return service.validateAndRecoverCheckpoint(checkpoint, file);

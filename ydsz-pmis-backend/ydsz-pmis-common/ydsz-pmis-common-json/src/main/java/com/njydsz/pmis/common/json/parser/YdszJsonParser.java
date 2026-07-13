@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.json.exception.JsonDeserializationException;
 import java.util.*;
 
 /**
- * Remi 底层 JSON 解析器（零依赖，JIT + SIMD 优化版）
+ * YdszJson 底层 JSON 解析器（零依赖，JIT + SIMD 优化版）
  * 
  * <p>直接解析 JSON 字符串为 Map/List 结构，不依赖 YdszJson。</p>
  * 

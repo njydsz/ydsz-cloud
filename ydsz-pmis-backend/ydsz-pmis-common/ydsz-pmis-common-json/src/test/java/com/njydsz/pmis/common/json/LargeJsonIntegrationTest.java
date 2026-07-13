@@ -152,11 +152,12 @@ class LargeJsonIntegrationTest {
         assertEquals("level_0", result.get("levelName"), "第0层名称应正确");
 
         // 逐层验证（通过Map嵌套）
-        @SuppressWarnings("unchecked")
         Map<String, Object> current = result;
         for (int i = 0; i < 49; i++) {
             assertNotNull(current.get("child"), "第" + i + "层应有子节点");
-            current = (Map<String, Object>) current.get("child");
+            @SuppressWarnings("unchecked")
+            Map<String, Object> next = (Map<String, Object>) current.get("child");
+            current = next;
             assertEquals("level_" + (i + 1), current.get("levelName"),
                     "第" + (i + 1) + "层名称应正确");
         }

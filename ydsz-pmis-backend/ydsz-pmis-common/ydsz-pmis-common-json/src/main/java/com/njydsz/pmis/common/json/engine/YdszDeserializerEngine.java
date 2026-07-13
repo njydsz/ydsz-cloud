@@ -6,7 +6,7 @@ import com.njydsz.pmis.common.json.type.YdszJsonType;
 import java.lang.reflect.Type;
 
 /**
- * Remi 反序列化引擎（Facade 模式）
+ * YdszJson 反序列化引擎（Facade 模式）
  *
  * <p>架构层级：YdszJson => Engine => Provider => Parser</p>
  *

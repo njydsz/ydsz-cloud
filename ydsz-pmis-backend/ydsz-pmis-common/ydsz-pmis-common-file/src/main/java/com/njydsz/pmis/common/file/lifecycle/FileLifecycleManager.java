@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.file.lifecycle;
 
+import com.njydsz.pmis.common.file.domain.ListObjectsResult;
+import com.njydsz.pmis.common.file.domain.ObjectMetadata;
 import com.njydsz.pmis.common.file.storage.IFileStorage;
 import com.njydsz.pmis.common.file.storage.IStorageFactory;
 import lombok.Data;
@@ -155,14 +157,14 @@ public class FileLifecycleManager {
 		int skippedCount = 0;
 
 		while (true) {
-			com.njydsz.pmis.common.file.domain.ListObjectsResult listResult =
+			ListObjectsResult listResult =
 					storage.listObjects(bucketName, prefix, cursor, 1000);
 
 			if (listResult == null || listResult.getObjects() == null || listResult.getObjects().isEmpty()) {
 				break;
 			}
 
-			for (com.njydsz.pmis.common.file.domain.ObjectMetadata obj : listResult.getObjects()) {
+			for (ObjectMetadata obj : listResult.getObjects()) {
 				scannedCount++;
 				long lastModified = obj.getLastModified() != null
 						? obj.getLastModified().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -209,14 +211,14 @@ public class FileLifecycleManager {
 		String cursor = null;
 
 		while (true) {
-			com.njydsz.pmis.common.file.domain.ListObjectsResult listResult =
+			ListObjectsResult listResult =
 					storage.listObjects(bucketName, prefix, cursor, 1000);
 
 			if (listResult == null || listResult.getObjects() == null || listResult.getObjects().isEmpty()) {
 				break;
 			}
 
-			for (com.njydsz.pmis.common.file.domain.ObjectMetadata obj : listResult.getObjects()) {
+			for (ObjectMetadata obj : listResult.getObjects()) {
 				long lastModified = obj.getLastModified() != null
 						? obj.getLastModified().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 						: 0;

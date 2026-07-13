@@ -4,7 +4,6 @@ import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
 import com.njydsz.pmis.common.json.type.YdszJsonType;
 import org.junit.jupiter.api.*;
 
-import java.lang.reflect.Type;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;

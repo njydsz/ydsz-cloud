@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.file.validator;
 
+import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.file.exception.FileValidationException;
 import com.njydsz.pmis.common.file.util.FileTypeValidator;
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +67,7 @@ public class FileUploadValidator {
         if (magicNumberCheckEnabled) {
             try {
                 FileTypeValidator.validate(file);
-            } catch (com.njydsz.pmis.common.exception.custom.BusinessException e) {
+            } catch (BusinessException e) {
                 throw new FileValidationException("Magic Number 校验失败: " + e.getMessage());
             }
         }

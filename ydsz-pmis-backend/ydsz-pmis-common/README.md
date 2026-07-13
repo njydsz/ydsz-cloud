@@ -14,7 +14,7 @@
 
 ## L1-L6 分层架构
 
-本模块按 DDD 分层组织 **17 个子模块**，依赖方向严格自下而上（上层依赖下层，不可反向）：
+本模块按 DDD 分层组织 **18+ 个子模块**，依赖方向严格自下而上（上层依赖下层，不可反向）：
 
 ```
 L1 基础设施层  → ydsz-pmis-common-core
@@ -23,7 +23,7 @@ L3 基础服务层  → ydsz-pmis-common-domain, ydsz-pmis-common-exception
 L4 基础数据层  → ydsz-pmis-common-jdbc, ydsz-pmis-common-redis, ydsz-pmis-common-lock
 L5 业务服务层  → ydsz-pmis-common-auth, ydsz-pmis-common-safe, ydsz-pmis-common-feign,
                 ydsz-pmis-common-audit, ydsz-pmis-common-file, ydsz-pmis-common-notify,
-                ydsz-pmis-common-queue
+                ydsz-pmis-common-queue, ydsz-pmis-common-docs
 L6 应用层     → ydsz-pmis-common-base, ydsz-pmis-common-web, ydsz-pmis-common-app
 ```
 
@@ -45,6 +45,7 @@ L6 应用层     → ydsz-pmis-common-base, ydsz-pmis-common-web, ydsz-pmis-comm
 | L5 | common-file | 7 种存储平台（Local/OSS/Minio/S3/COS/OBS/Qiniu）、分片上传、断点续传、文件去重、Tika 类型检测 |
 | L5 | common-notify | 5 种通知渠道（邮件/短信/企微/钉钉/飞书）、SpEL 模板引擎、重试队列、滑动窗口限流 |
 | L5 | common-queue | 5 种 MQ（Redis×3/Kafka/RocketMQ/RabbitMQ/ActiveMQ）、死信队列、消息轨迹、消费者限流 |
+| L5 | common-docs | 8 种格式解析（PDF/Word/Excel/PPT/HTML/Markdown/TXT/CSV）、预处理 Pipeline、安全扫描（宏/PDF JS/嵌入对象）、PII 检测（5 种）、文本水印、PDF 脱敏、异步解析、OCR 集成 |
 | L5 | common-doc | OpenAPI 3.0 + SpringDoc + Knife4j UI 增强 + Markdown 文档导出 |
 | L6 | common-base | HTTP 公共基座（CORS/时区/I18n/安全头/TraceId/请求日志/全局响应包装） |
 | L6 | common-web | **PC Web 端基座**（继承 base，叠加 Spring Security/WebAuthFilter/Session） |
@@ -54,7 +55,7 @@ L6 应用层     → ydsz-pmis-common-base, ydsz-pmis-common-web, ydsz-pmis-comm
 
 ## 自动配置机制
 
-所有 17 个子模块统一使用 Spring Boot 3+ 的 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 机制自动装配（**不使用** `spring.factories`）。
+所有 18+ 个子模块统一使用 Spring Boot 3+ 的 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 机制自动装配（**不使用** `spring.factories`）。
 
 各服务的启动类通过 `@SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.{service}", "com.njydsz.pmis.common"})` 扫描 common 包，激活自动配置。
 
@@ -132,6 +133,7 @@ ydsz-pmis-common/
 ├── ydsz-pmis-common-file/     # L5 业务服务层
 ├── ydsz-pmis-common-notify/   # L5 业务服务层
 ├── ydsz-pmis-common-queue/    # L5 业务服务层
+├── ydsz-pmis-common-docs/    # L5 业务服务层（文档解析/预处理/安全/PII/水印/脱敏/OCR）
 ├── ydsz-pmis-common-base/     # L6 应用层（HTTP 公共基座）
 ├── ydsz-pmis-common-web/      # L6 应用层（PC Web 端基座）
 └── ydsz-pmis-common-app/      # L6 应用层（移动端 App 基座）
@@ -140,7 +142,7 @@ ydsz-pmis-common/
 ## 构建
 
 ```bash
-# 仅构建 common 模块（含所有 17 个子模块）
+# 仅构建 common 模块（含所有 18+ 个子模块）
 cd ydsz-pmis-backend
 mvn -pl ydsz-pmis-common -am clean install
 

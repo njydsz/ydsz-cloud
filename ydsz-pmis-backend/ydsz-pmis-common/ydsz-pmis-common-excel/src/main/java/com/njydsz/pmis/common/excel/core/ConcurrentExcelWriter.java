@@ -7,9 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedOutputStream;
-import java.io.File;
 import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -101,7 +99,6 @@ public class ConcurrentExcelWriter {
      * <p>将数据分片后并行预序列化为字节数组，然后顺序写入 ZIP 文件。
      * 适用于 10 万行以上的大数据量场景。</p>
      */
-    @SuppressWarnings("unchecked")
     public void doWrite() {
         int totalSize = data.size();
         if (totalSize <= chunkSize) {
@@ -137,7 +134,7 @@ public class ConcurrentExcelWriter {
             }
 
             // 按分片顺序排序
-            results.sort(Comparator.comparingInt(ChunkResult::getChunkIndex));
+            results.sort(Comparator.comparingInt(r -> r.getChunkIndex()));
 
             // 顺序写入最终文件
             writeMergedFile(results);
@@ -271,8 +268,8 @@ public class ConcurrentExcelWriter {
                 try {
                     Files.walk(tempDir)
                          .sorted(Comparator.reverseOrder())
-                         .map(Path::toFile)
-                         .forEach(File::delete);
+                         .map(p -> p.toFile())
+                         .forEach(f -> f.delete());
                 } catch (Exception e) {
                     log.warn("清理临时文件异常", e);
                 }

@@ -10,7 +10,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import com.njydsz.pmis.common.json.config.DeserializationConfig;
-import com.njydsz.pmis.common.json.config.DeserializationConfig.getInstance;
 
 @DisplayName("YdszJson 安全测试")
 class YdszJsonSecurityTest {
@@ -287,7 +286,7 @@ class YdszJsonSecurityTest {
         void deeplyNestedJsonThrows() {
             // 设置较低的最大深度限制
             DeserializationConfig config =
-                getInstance();
+                DeserializationConfig.getInstance();
             int originalMaxDepth = config.getMaxDepth();
             try {
                 config.setMaxDepth(10);

@@ -313,19 +313,19 @@ public class ExcelFacade {
         for (SheetData sheetData : sheetDataList) {
             ExcelWriter writer;
             if (sheetIndex == 0) {
-                writer = write(fileName, sheetData.getClazz());
-                writer.sheet(sheetData.getSheetName() != null ? sheetData.getSheetName() : "sheet1");
+                firstWriter = write(fileName, sheetData.getClazz());
+                firstWriter.setMultiSheetWriting(true);
+                firstWriter.sheet(sheetData.getSheetName() != null ? sheetData.getSheetName() : "sheet1");
+                writer = firstWriter;
             } else {
+                if (firstWriter == null) {
+                    throw new IllegalStateException("ExcelWriter 未初始化，多Sheet写入必须从第一个Sheet开始");
+                }
                 writer = firstWriter.newSheet(sheetData.getSheetName() != null ? sheetData.getSheetName() : "sheet" + (sheetIndex + 1));
             }
 
             if (sheetData.getHeadRowNumber() != null) {
                 writer.headRowNumber(sheetData.getHeadRowNumber());
-            }
-
-            if (sheetIndex == 0) {
-                firstWriter = writer;
-                firstWriter.setMultiSheetWriting(true);
             }
 
             writer.doWrite(sheetData.getData(), sheetIndex);

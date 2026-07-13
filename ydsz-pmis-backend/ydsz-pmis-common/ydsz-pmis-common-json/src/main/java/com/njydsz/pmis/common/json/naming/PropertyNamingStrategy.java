@@ -49,7 +49,7 @@ public interface PropertyNamingStrategy extends java.io.Serializable {
     /**
      * 全小写命名
      */
-    PropertyNamingStrategy LOWER_CASE = String::toLowerCase;
+    PropertyNamingStrategy LOWER_CASE = propertyName -> propertyName.toLowerCase();
     
     /**
      * 下划线命名（SNAKE_CASE）

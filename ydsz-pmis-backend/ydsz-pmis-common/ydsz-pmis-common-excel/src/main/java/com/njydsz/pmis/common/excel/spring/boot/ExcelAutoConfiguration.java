@@ -1,11 +1,15 @@
 package com.njydsz.pmis.common.excel.spring.boot;
 
 import com.njydsz.pmis.common.excel.core.config.ExcelConfig;
+import com.njydsz.pmis.common.excel.core.metrics.ExcelMetrics;
 import com.njydsz.pmis.common.excel.spring.ExcelTemplate;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 
 import java.util.zip.Deflater;
@@ -97,5 +101,26 @@ public class ExcelAutoConfiguration {
     @ConditionalOnMissingBean
     public ExcelTemplate excelTemplate(ExcelConfig config) {
         return new ExcelTemplate(config);
+    }
+
+    /**
+     * 注入 Micrometer MeterRegistry 到 ExcelMetrics
+     *
+     * <p>当 classpath 中存在 MeterRegistry 时自动注入，启用可观测性指标采集。</p>
+     *
+     * @param meterRegistry Micrometer 注册表（可选）
+     * @return ExcelMetrics 初始化器 Bean
+     */
+    @Bean
+    @ConditionalOnClass(MeterRegistry.class)
+    @ConditionalOnMissingBean(name = "excelMetricsInitializer")
+    public InitializingBean excelMetricsInitializer(
+            ObjectProvider<MeterRegistry> meterRegistryProvider) {
+        return () -> {
+            MeterRegistry registry = meterRegistryProvider.getIfAvailable();
+            if (registry != null) {
+                ExcelMetrics.setRegistry(registry);
+            }
+        };
     }
 }

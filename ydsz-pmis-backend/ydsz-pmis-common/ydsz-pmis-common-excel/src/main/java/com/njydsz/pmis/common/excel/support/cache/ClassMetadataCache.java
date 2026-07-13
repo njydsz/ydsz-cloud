@@ -74,7 +74,7 @@ public class ClassMetadataCache {
             fieldInfoList.add(fieldInfo);
         }
 
-        fieldInfoList.sort(Comparator.comparingInt(FieldInfo::getOrder));
+        fieldInfoList.sort(Comparator.comparingInt(f -> f.getOrder()));
         metadata.setFieldInfoList(fieldInfoList);
 
         return metadata;
@@ -109,7 +109,7 @@ public class ClassMetadataCache {
             fieldInfoList.add(fieldInfo);
         }
 
-        fieldInfoList.sort(Comparator.comparingInt(FieldInfo::getOrder));
+        fieldInfoList.sort(Comparator.comparingInt(f -> f.getOrder()));
         metadata.setFieldInfoList(fieldInfoList);
 
         return metadata;

@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.json.serializer;
 
+import com.njydsz.pmis.common.json.writer.JSONWriter;
+
 /**
  * 自定义序列化器接口
  *
@@ -32,7 +34,7 @@ public interface JsonSerializer<T> {
      * @param object 要序列化的对象
      * @param out 输出序列化器（用于写入 JSON）
      */
-    void serialize(T object, JSONSerializer out);
+    void serialize(T object, JSONWriter out);
 
     /**
      * 是否支持指定类型

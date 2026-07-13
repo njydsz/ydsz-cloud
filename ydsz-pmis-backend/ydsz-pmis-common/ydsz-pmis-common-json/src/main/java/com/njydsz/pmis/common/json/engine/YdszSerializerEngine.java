@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.json.cache.SerializerCache;
 import com.njydsz.pmis.common.json.provider.YdszSerializationProvider;
 
 /**
- * Remi 序列化引擎（Facade + 缓存管理）
+ * YdszJson 序列化引擎（Facade + 缓存管理）
  *
  * <p>架构层级：YdszJson => Engine => Provider => Parser</p>
  *

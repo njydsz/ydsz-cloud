@@ -110,7 +110,10 @@ public final class ObjectNode extends JsonNode {
     @Override
     public Object asValue() {
         return fields.entrySet().stream()
-            .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().asValue()));
+            .collect(Collectors.toMap(Map.Entry::getKey, e -> {
+                JsonNode node = e.getValue();
+                return node != null ? node.asValue() : null;
+            }));
     }
 
     @Override

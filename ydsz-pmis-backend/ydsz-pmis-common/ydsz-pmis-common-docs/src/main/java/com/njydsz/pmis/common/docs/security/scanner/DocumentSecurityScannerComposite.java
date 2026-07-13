@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.docs.security.scanner;
 
 import com.njydsz.pmis.common.docs.domain.SecurityScanResult;
 import com.njydsz.pmis.common.docs.enums.DocumentFormat;
+import com.njydsz.pmis.common.docs.enums.SecurityLevel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -40,7 +41,7 @@ public class DocumentSecurityScannerComposite implements DocumentSecurityScanner
     public SecurityScanResult scan(InputStream inputStream, String fileName, DocumentFormat format) {
         if (inputStream == null) {
             return SecurityScanResult.builder()
-                    .securityLevel(com.njydsz.pmis.common.docs.enums.SecurityLevel.SAFE)
+                    .securityLevel(SecurityLevel.SAFE)
                     .findings(List.of())
                     .success(false)
                     .errorMessage("输入流为空")
@@ -86,7 +87,7 @@ public class DocumentSecurityScannerComposite implements DocumentSecurityScanner
         } catch (IOException e) {
             log.error("[DocumentSecurityScannerComposite] 临时文件写入失败", e);
             return SecurityScanResult.builder()
-                    .securityLevel(com.njydsz.pmis.common.docs.enums.SecurityLevel.SAFE)
+                    .securityLevel(SecurityLevel.SAFE)
                     .findings(List.of())
                     .success(false)
                     .errorMessage("IO 错误: " + e.getMessage())
@@ -105,15 +106,14 @@ public class DocumentSecurityScannerComposite implements DocumentSecurityScanner
     /**
      * 根据风险项列表确定最终安全等级
      */
-    private com.njydsz.pmis.common.docs.enums.SecurityLevel determineLevel(
-            List<SecurityScanResult.SecurityFinding> findings) {
+    private SecurityLevel determineLevel(List<SecurityScanResult.SecurityFinding> findings) {
         if (findings == null || findings.isEmpty()) {
-            return com.njydsz.pmis.common.docs.enums.SecurityLevel.SAFE;
+            return SecurityLevel.SAFE;
         }
         return findings.stream()
                 .map(SecurityScanResult.SecurityFinding::getLevel)
                 .max(Enum::compareTo)
-                .orElse(com.njydsz.pmis.common.docs.enums.SecurityLevel.SAFE);
+                .orElse(SecurityLevel.SAFE);
     }
 
     @Override

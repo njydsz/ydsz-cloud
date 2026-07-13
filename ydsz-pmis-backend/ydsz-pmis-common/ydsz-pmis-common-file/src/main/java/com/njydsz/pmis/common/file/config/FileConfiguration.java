@@ -10,6 +10,7 @@ import com.njydsz.pmis.common.file.storage.DelegatingMultipartContextStore;
 import com.njydsz.pmis.common.file.storage.DefaultCheckpointService;
 import com.njydsz.pmis.common.file.storage.IFileStorageProvider;
 import com.njydsz.pmis.common.file.storage.IStorageFactory;
+import com.njydsz.pmis.common.file.storage.InMemoryMultipartContextStore;
 import com.njydsz.pmis.common.file.storage.LocalCheckpointStore;
 import com.njydsz.pmis.common.file.storage.MultipartContextStore;
 import com.njydsz.pmis.common.file.storage.RedisCheckpointStore;
@@ -76,7 +77,7 @@ public class FileConfiguration {
         }
         configLog.warn("[FileConfig] Redis not available, falling back to InMemoryMultipartContextStore. " +
                 "Multi-instance deployments may fail to share multipart upload contexts.");
-        return new com.njydsz.pmis.common.file.storage.InMemoryMultipartContextStore();
+        return new InMemoryMultipartContextStore();
     }
 
     /**

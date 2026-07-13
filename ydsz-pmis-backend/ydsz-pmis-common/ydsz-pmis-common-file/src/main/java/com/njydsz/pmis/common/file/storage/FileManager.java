@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.file.storage;
 
+import com.njydsz.pmis.common.file.domain.BatchDeleteResult;
 import com.njydsz.pmis.common.file.domain.ListObjectsResult;
 import com.njydsz.pmis.common.file.domain.ObjectMetadata;
 
@@ -97,7 +98,7 @@ public interface FileManager {
      * @param objectNames  待删除的对象路径列表
      * @return 批量删除结果，包含成功删除的路径列表和失败路径及原因映射
      */
-    com.njydsz.pmis.common.file.domain.BatchDeleteResult batchDelete(String bucketName, List<String> objectNames);
+    BatchDeleteResult batchDelete(String bucketName, List<String> objectNames);
 
     /**
      * 分页列举对象

@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -148,9 +149,9 @@ public class PdfDocumentParser implements DocumentParser {
                     .creator(info.getCreator())
                     .producer(info.getProducer())
                     .createdTime(info.getCreationDate() != null ? info.getCreationDate().toInstant()
-                            .atZone(java.time.ZoneId.systemDefault()).toLocalDateTime() : null)
+                            .atZone(ZoneId.systemDefault()).toLocalDateTime() : null)
                     .modifiedTime(info.getModificationDate() != null ? info.getModificationDate().toInstant()
-                            .atZone(java.time.ZoneId.systemDefault()).toLocalDateTime() : null);
+                            .atZone(ZoneId.systemDefault()).toLocalDateTime() : null);
         }
 
         return builder.build();

@@ -116,7 +116,7 @@ class YdszJsonPathTest {
         @Test
         @DisplayName("$..name 递归查找所有 name 字段")
         void recursiveDescentName() {
-            Object result = YdszJson.getByPath(STORE_JSON, "$..name");
+            YdszJson.getByPath(STORE_JSON, "$..name");
             // 递归下降可能尚未实现或返回 null
             // 验证方法不抛异常即可
             assertNotNull(STORE_JSON);
