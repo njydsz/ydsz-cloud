@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>ydsz-pmis-common-base</artifactId>
     <name>ydsz-pmis-common-base</name>
-    <description>ydsz-pmis-common-base 是 Web/App 公共 HTTP 基座模块，承载 CORS、时区、安全头、日志拦截、上下文清理、API 文档(OpenAPI/Knife4j)、文档导出、Excel 工具等共享逻辑</description>
+    <description>ydsz-pmis-common-base 是 Web/App 公共 HTTP 基座模块，承载 CORS、时区、安全头、日志拦截、上下文清理、API 文档(OpenAPI/Knife4j)、文档导出等共享逻辑</description>
 
     <parent>
         <groupId>com.njydsz.pmis</groupId>
@@ -64,13 +64,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- EasyExcel（ExcelTemplate / ExcelUtil，optional 避免传递依赖冲突） -->
-        <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>easyexcel</artifactId>
             <optional>true</optional>
         </dependency>
 

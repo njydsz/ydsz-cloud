@@ -1,8 +1,9 @@
 package com.njydsz.pmis.project.server.service.impl;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.base.excel.ExcelTemplate;
-import com.njydsz.pmis.common.base.excel.ExcelUtil;
+import com.alibaba.excel.EasyExcel;
+
+import java.io.ByteArrayOutputStream;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.project.domain.dto.RateCardCreateDTO;
 import com.njydsz.pmis.project.domain.dto.RateCardImportDTO;
@@ -62,12 +63,11 @@ public class ImportServiceImpl implements ImportService {
             demo.setCurrency("CNY");
             demo.setRemark("示例：L5 T&M 客户类型 ENT，半年期");
             sample.add(demo);
-            byte[] bytes = ExcelTemplate.builder()
-                    .head(RateCardImportDTO.class)
-                    .sampleData(sample)
-                    .addRequiredMark("level", "customerType", "projectType", "unitPrice", "effectiveDate")
-                    .sheetName("费率卡")
-                    .build();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            EasyExcel.write(out, RateCardImportDTO.class)
+                    .sheet("费率卡")
+                    .doWrite(sample);
+            byte[] bytes = out.toByteArray();
             return new ImportService.TemplateBundle(RateCardImportDTO.class, bytes, "费率卡_导入模板.xlsx");
         }
         throw new SysException(StandardResultCode.BAD_REQUEST, "error.execution.msg_715cbb1f", bizType);
@@ -85,7 +85,10 @@ public class ImportServiceImpl implements ImportService {
      * 导入费率卡
      */
     private ImportResult importRateCard(MultipartFile file) throws IOException {
-        List<RateCardImportDTO> rows = ExcelUtil.readAll(file, RateCardImportDTO.class);
+        List<RateCardImportDTO> rows = EasyExcel.read(file.getInputStream())
+                .head(RateCardImportDTO.class)
+                .sheet()
+                .doReadSync();
         int total = rows == null ? 0 : rows.size();
         int success = 0;
         List<FailureRow> failures = new ArrayList<>();
