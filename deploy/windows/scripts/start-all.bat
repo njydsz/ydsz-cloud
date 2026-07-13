@@ -7,7 +7,7 @@ REM    1. 环境检查（docker / java / maven / node）
 REM    2. 加载 deploy/.env
 REM    3. 启动基础设施容器（Nacos / PG / Redis / MinIO）
 REM    4. 等待基础设施健康
-REM    5. 编译并后台启动 7 个后端微服务
+REM    5. 编译并后台启动 11 个后端微服务
 REM    6. 启动前端开发服务器
 REM
 REM  用法：
@@ -104,16 +104,19 @@ if /I not "%1"=="frontend" if /I not "%1"=="infra" (
 )
 
 REM -----------------------------------------------------------------------------
-REM  5. 启动 7 个后端服务
+REM  5. 启动 11 个后端服务
 REM -----------------------------------------------------------------------------
 if /I not "%1"=="frontend" if /I not "%1"=="infra" (
-  echo [%TIMESTAMP%] [INFO] 步骤 5/6 - 启动 7 个后端微服务
+  echo [%TIMESTAMP%] [INFO] 步骤 5/6 - 启动 11 个后端微服务
 
   REM 用 PowerShell 启动（命令行参数最稳的方式）
+  REM 启动顺序：gateway(9000) -> userinfo(9001) / system(9002) / project(9003) / message(9004)
+  REM            -> cronjob(9005) / workflow(9006) / agent(9007) / nextwiki(8800)
+  REM            -> sales(9010) / finance(9011)
   powershell -NoProfile -Command ^
     "$ErrorActionPreference = 'SilentlyContinue';" ^
-    "$modules = @('ydsz-pmis-gateway','ydsz-pmis-userinfo','ydsz-pmis-system','ydsz-pmis-project','ydsz-pmis-message','ydsz-pmis-cronjob','ydsz-pmis-workflow','ydsz-pmis-agent');" ^
-    "$ports = @(9000,9001,9002,9003,9004,9005,9006,9007);" ^
+    "$modules = @('ydsz-pmis-gateway','ydsz-pmis-userinfo','ydsz-pmis-system','ydsz-pmis-project','ydsz-pmis-message','ydsz-pmis-cronjob','ydsz-pmis-workflow','ydsz-pmis-agent','ydsz-pmis-nextwiki','ydsz-pmis-sales','ydsz-pmis-finance');" ^
+    "$ports = @(9000,9001,9002,9003,9004,9005,9006,9007,8800,9010,9011);" ^
     "$logDir = '%LOG_DIR%';" ^
     "$backendDir = '%BACKEND_DIR%';" ^
     "foreach ($m in $modules) {" ^
@@ -127,7 +130,7 @@ if /I not "%1"=="frontend" if /I not "%1"=="infra" (
 
   echo [%TIMESTAMP%] [INFO] 等待服务健康（60-120s）...
   timeout /t 90 /nobreak >nul
-  echo [%TIMESTAMP%] [OK] 8 个后端服务已在后台启动
+  echo [%TIMESTAMP%] [OK] 11 个后端服务已在后台启动
 )
 
 REM -----------------------------------------------------------------------------

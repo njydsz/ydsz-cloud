@@ -565,7 +565,7 @@ public class IOUtils {
         ByteArrayInputStream bais = new ByteArrayInputStream(data);
         try (ObjectInputStream ois = new ObjectInputStream(bais)) {
             ois.setObjectInputFilter(DESERIALIZE_FILTER);
-            return (T) ois.readObject();
+            return castObject(ois.readObject());
         }
     }
 

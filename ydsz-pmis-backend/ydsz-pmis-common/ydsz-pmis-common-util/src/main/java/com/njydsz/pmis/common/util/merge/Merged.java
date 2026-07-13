@@ -221,10 +221,10 @@ public interface Merged<R, T> {
                 ObjectOutputStream oos = new ObjectOutputStream(baos);
                 oos.writeObject(obj);
                 oos.close();
-                
+
                 ObjectInputStream ois = new ObjectInputStream(
                     new ByteArrayInputStream(baos.toByteArray()));
-                T copy = (T) ois.readObject();
+                T copy = Merged.castObject(ois.readObject());
                 ois.close();
                 return copy;
             } catch (Exception e) {
@@ -232,6 +232,11 @@ public interface Merged<R, T> {
             }
         }
         return obj;
+    }
+
+    /** 内部辅助方法：安全转换反序列化对象到泛型类型 T */
+    private static <T> T castObject(Object obj) {
+        return (T) obj;
     }
 
     /**

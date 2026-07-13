@@ -8,7 +8,7 @@
 #    3. Maven 3.9+
 #    4. Node.js 20+ 与 pnpm 9+
 #    5. Docker 24+ 与 docker compose v2
-#    6. 端口占用检查（9000-9006 / 5432 / 6379 / 8848 / 9100-9101）
+#    6. 端口占用检查（9000-9007 / 9010-9011 / 8800 / 5432 / 6379 / 8848 / 9100-9101）
 #    7. 内存检查（建议 ≥ 8GB 可用）
 #    8. 项目文件结构
 # =============================================================================
@@ -101,7 +101,7 @@ fi
 
 # 6. 端口
 log "[6/8] 端口检查"
-REQUIRED_PORTS=(5432 6379 8848 9848 9100 9101 9000 9001 9002 9003 9004 9005 9006 5173)
+REQUIRED_PORTS=(5432 6379 8848 9848 9100 9101 9000 9001 9002 9003 9004 9005 9006 9007 9010 9011 8800 5173)
 for port in "${REQUIRED_PORTS[@]}"; do
   if (echo > /dev/tcp/127.0.0.1/$port) 2>/dev/null; then
     warn "端口 $port 已被占用（运行中的服务？可忽略若端口被其他项目使用）"
@@ -136,7 +136,7 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 for f in \
   "$ROOT_DIR/ydsz-pmis-backend/pom.xml" \
   "$ROOT_DIR/ydsz-pmis-frontend/package.json" \
-  "$ROOT_DIR/docs/V1.0.0.sql" \
+  "$ROOT_DIR/deploy/sql/V1.0.0.sql" \
   "$ROOT_DIR/deploy/docker/docker-compose.dev.yml"; do
   if [[ -f "$f" ]]; then
     check_ok "$(basename $f)"

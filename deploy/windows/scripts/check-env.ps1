@@ -63,7 +63,7 @@ try {
 
 # 6. 端口
 Write-Host "`n[6/8] 端口检查" -ForegroundColor Cyan
-$ports = @(5432, 6379, 8848, 9848, 9100, 9101, 9000, 9001, 9002, 9003, 9004, 9005, 9006, 5173)
+$ports = @(5432, 6379, 8848, 9848, 9100, 9101, 9000, 9001, 9002, 9003, 9004, 9005, 9006, 9007, 9010, 9011, 8800, 5173)
 $busy = @()
 foreach ($p in $ports) {
   $conn = Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue
@@ -86,7 +86,7 @@ $root = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSCommandPat
 $files = @(
   "ydsz-pmis-backend\pom.xml",
   "ydsz-pmis-frontend\package.json",
-  "docs\V1.0.0.sql",
+  "deploy\sql\V1.0.0.sql",
   "deploy\docker\docker-compose.dev.yml"
 )
 foreach ($f in $files) {

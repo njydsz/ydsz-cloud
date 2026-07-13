@@ -941,10 +941,9 @@ CREATE INDEX IF NOT EXISTS idx_pmis_rule_pack_install_trace
     WHERE provider_trace_id IS NOT NULL;
 
 -- ============================================================
--- V1.1.0 架构优化：以下 8 张 pmis_rule_* 表从 project 模块迁移到 literule 模块管理
+-- V1.0.0 架构优化：以下 8 张 pmis_rule_* 表从 project 模块迁移到 literule 模块管理
 -- DDL 仍保留在 V1.0.0_project.sql 中（避免数据迁移风险），
 -- 但表的归属权和 Java 实体/Mapper/Service 代码归 literule 模块。
--- 迁移标记见 V1.1.0_rule_table_migration.sql
 -- ============================================================
 -- 1. pmis_rule_execution_trace  — 规则执行链路追踪
 -- 2. pmis_rule_decision_table   — 决策表

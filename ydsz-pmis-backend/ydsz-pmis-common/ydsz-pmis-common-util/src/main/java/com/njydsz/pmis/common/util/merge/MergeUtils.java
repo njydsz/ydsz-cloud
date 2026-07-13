@@ -98,7 +98,6 @@ import java.util.stream.Stream;
  * @see Stream
  * @see Function
  */
-@SuppressWarnings("unchecked")
 public class MergeUtils {
 
     private MergeUtils() {
