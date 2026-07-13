@@ -1,7 +1,8 @@
 package com.njydsz.pmis.common.web.config;
 
-import com.njydsz.pmis.common.base.config.BaseOpenApiConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+
+import com.njydsz.pmis.common.base.config.BaseOpenApiConfiguration;
 
 /**
  * Web 端 OpenAPI 文档配置

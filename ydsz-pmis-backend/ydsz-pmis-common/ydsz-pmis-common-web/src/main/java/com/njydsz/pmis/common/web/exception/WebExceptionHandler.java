@@ -1,12 +1,14 @@
 package com.njydsz.pmis.common.web.exception;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.exception.custom.BusinessException;
-import com.njydsz.pmis.common.exception.handler.BaseExceptionHandler;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.exception.handler.BaseExceptionHandler;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Web 层统一异常处理器

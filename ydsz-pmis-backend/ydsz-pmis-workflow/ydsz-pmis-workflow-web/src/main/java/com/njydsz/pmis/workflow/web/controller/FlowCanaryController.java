@@ -1,20 +1,21 @@
 package com.njydsz.pmis.workflow.web.controller.ai;
 
-import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import java.util.List;
+import java.util.Map;
 
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.workflow.server.service.FlowCanaryService;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Map;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.auth.context.AuthContext;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.workflow.server.service.FlowCanaryService;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 灰度发布 Controller

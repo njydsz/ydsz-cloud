@@ -1,11 +1,12 @@
 package com.njydsz.pmis.project.server.service;
 
-import com.njydsz.pmis.project.domain.query.ProjectSearchVO;
-import com.njydsz.pmis.project.domain.query.UniversalSearchVO;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
+import com.njydsz.pmis.project.domain.query.ProjectSearchVO;
+import com.njydsz.pmis.project.domain.query.UniversalSearchVO;
 
 /**
  * 项目全文检索服务接口。

@@ -1,13 +1,10 @@
 package com.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.literule.api.RuleContext;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -16,7 +13,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
-import java.util.Comparator;
+
+import com.njydsz.pmis.literule.api.RuleContext;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 事实数据提供者注册中心（P0-2 动态事实采集管道）

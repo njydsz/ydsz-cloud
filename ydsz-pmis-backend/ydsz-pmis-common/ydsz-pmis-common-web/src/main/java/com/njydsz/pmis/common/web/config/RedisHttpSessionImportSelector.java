@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.web.config;
 
+import org.jspecify.annotations.NonNull;
 import org.springframework.context.annotation.ImportSelector;
 import org.springframework.core.type.AnnotationMetadata;
-import org.jspecify.annotations.NonNull;
 
 /**
  * Redis HttpSession 导入选择器

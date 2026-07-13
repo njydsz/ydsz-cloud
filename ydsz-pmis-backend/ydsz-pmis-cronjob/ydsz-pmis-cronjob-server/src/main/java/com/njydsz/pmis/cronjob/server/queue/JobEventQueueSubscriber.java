@@ -1,5 +1,12 @@
 package com.njydsz.pmis.cronjob.server.queue;
 
+import java.util.Map;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+
+import org.springframework.stereotype.Component;
+
 import com.njydsz.pmis.common.queue.domain.QueueMessage;
 import com.njydsz.pmis.common.queue.enums.QueueType;
 import com.njydsz.pmis.common.queue.queue.IMessageQueue;
@@ -7,13 +14,9 @@ import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.cronjob.server.core.EventDrivenScheduler;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
-import java.util.Map;
 
 /**
  * 定时任务事件驱动调度队列订阅者

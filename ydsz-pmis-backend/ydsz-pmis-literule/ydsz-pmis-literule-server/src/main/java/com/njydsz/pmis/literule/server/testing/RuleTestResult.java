@@ -1,14 +1,15 @@
 package com.njydsz.pmis.literule.server.testing;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Set;
+
 import com.njydsz.pmis.literule.api.RuleResult;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
-import java.util.List;
-import java.util.Set;
 
 /**
  * 规则测试运行结果

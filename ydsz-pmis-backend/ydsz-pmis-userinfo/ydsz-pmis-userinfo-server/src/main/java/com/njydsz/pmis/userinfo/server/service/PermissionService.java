@@ -1,10 +1,10 @@
 package com.njydsz.pmis.userinfo.server.service.permission;
 
+import java.util.List;
+
 import com.njydsz.pmis.userinfo.domain.dto.permission.PermissionFormDTO;
 import com.njydsz.pmis.userinfo.domain.entity.permission.PermissionDO;
 import com.njydsz.pmis.userinfo.domain.vo.MenuTreeVO;
-
-import java.util.List;
 
 /**
  * 权限服务

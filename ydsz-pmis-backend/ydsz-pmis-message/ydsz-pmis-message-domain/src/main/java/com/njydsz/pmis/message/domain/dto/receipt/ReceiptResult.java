@@ -2,6 +2,7 @@ package com.njydsz.pmis.message.domain.dto.receipt;
 
 
 import com.njydsz.pmis.message.domain.enums.receipt.ReceiptStatusEnum;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,12 +1,12 @@
 package com.njydsz.pmis.userinfo.domain.dto.auth;
 
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.Data;
 
 /**
  * 密码扫描结果 DTO（P3-3 运维安全增强）

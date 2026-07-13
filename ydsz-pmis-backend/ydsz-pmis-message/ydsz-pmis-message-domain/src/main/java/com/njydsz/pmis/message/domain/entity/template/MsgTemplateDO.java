@@ -1,14 +1,15 @@
 package com.njydsz.pmis.message.domain.entity.template;
 
+import java.io.Serial;
+import java.time.LocalDateTime;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
-import java.time.LocalDateTime;
 
 /**
  * 消息模板表: 支持 ${var} 嵌套占位符 / 多语言 i18n / 版本 / 审核 / 分类 / 场景

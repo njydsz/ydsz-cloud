@@ -1,16 +1,17 @@
 package com.njydsz.pmis.userinfo.api.fallback;
-import com.njydsz.pmis.userinfo.api.client.BenchResourceClient;
-
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.openfeign.FallbackFactory;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.cloud.openfeign.FallbackFactory;
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.userinfo.api.client.BenchResourceClient;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * BenchResourceClient 降级工厂

@@ -1,11 +1,11 @@
 package com.njydsz.pmis.cronjob.server.core.sharding;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Configuration;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * 平均分片策略（默认实现，P3 阶段引入）。

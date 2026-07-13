@@ -1,9 +1,9 @@
 package com.njydsz.pmis.message.server.service.receipt;
 
+import java.util.List;
+
 import com.njydsz.pmis.message.domain.dto.receipt.ReceiptCallbackDTO;
 import com.njydsz.pmis.message.domain.entity.receipt.MsgReceiptDO;
-
-import java.util.List;
 
 /**
  * 消息回执服务

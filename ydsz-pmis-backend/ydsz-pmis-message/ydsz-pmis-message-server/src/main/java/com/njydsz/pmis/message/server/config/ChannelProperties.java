@@ -1,9 +1,10 @@
 package com.njydsz.pmis.message.server.config;
 
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+
+import lombok.Data;
 
 /**
  * 通道相关配置（prefix = {@code pmis}）。

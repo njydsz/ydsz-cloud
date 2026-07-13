@@ -1,13 +1,14 @@
 package com.njydsz.pmis.message.domain.entity.config;
 
+import java.io.Serial;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
 
 /**
  * 消息路由规则表: 按 biz_type/channel/条件表达式路由到目标通道,支持降级

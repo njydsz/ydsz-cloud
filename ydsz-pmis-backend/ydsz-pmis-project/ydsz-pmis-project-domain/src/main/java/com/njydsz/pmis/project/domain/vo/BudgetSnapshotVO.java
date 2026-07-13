@@ -1,12 +1,13 @@
 package com.njydsz.pmis.project.domain.vo;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.njydsz.pmis.literule.server.spi.BudgetSnapshotProvider.BudgetSnapshot;
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.njydsz.pmis.literule.server.spi.BudgetSnapshotProvider.BudgetSnapshot;
+
+import lombok.Data;
 
 /**
  * 预算快照 VO（对外接口返回视图）

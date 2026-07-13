@@ -1,9 +1,9 @@
 package com.njydsz.pmis.message.domain.dto.core;
 
 
-import lombok.Data;
-
 import java.util.Map;
+
+import lombok.Data;
 
 /**
  * 消息直接发送 DTO

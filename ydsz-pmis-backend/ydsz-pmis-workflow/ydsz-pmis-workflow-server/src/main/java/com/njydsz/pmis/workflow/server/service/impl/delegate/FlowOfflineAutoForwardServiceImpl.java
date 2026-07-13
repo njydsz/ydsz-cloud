@@ -1,5 +1,12 @@
 package com.njydsz.pmis.workflow.server.service.impl.delegate;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO;
@@ -9,14 +16,9 @@ import com.njydsz.pmis.workflow.infra.mapper.FlowDelegateAuthMapper;
 import com.njydsz.pmis.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.pmis.workflow.server.service.FlowTaskService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * 离线代理自动转发服务实现（P2-5）。

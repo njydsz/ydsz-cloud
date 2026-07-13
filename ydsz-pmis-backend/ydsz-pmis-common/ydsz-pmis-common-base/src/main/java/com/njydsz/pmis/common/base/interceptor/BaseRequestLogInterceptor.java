@@ -1,17 +1,19 @@
 package com.njydsz.pmis.common.base.interceptor;
 
-import com.njydsz.pmis.common.base.config.BaseTraceProperties;
-import com.njydsz.pmis.common.util.string.StringUtils;
+import java.util.concurrent.ThreadLocalRandom;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
+
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.util.concurrent.ThreadLocalRandom;
+import com.njydsz.pmis.common.base.config.BaseTraceProperties;
 import com.njydsz.pmis.common.util.http.ServletUtils;
+import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
  * 请求日志拦截器（Web/App 共享）

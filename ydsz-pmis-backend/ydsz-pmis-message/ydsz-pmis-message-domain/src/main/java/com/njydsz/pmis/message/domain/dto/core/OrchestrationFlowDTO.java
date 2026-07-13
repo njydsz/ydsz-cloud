@@ -1,8 +1,8 @@
 package com.njydsz.pmis.message.domain.dto.core;
 
-import lombok.Data;
-
 import java.util.List;
+
+import lombok.Data;
 
 /**
  * 消息编排流程 DTO。

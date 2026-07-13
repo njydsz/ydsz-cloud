@@ -1,10 +1,11 @@
 package com.njydsz.pmis.message.server.service.core;
 
-import lombok.extern.slf4j.Slf4j;
+import java.util.regex.Pattern;
+
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 收件人预校验器（P1-8）。

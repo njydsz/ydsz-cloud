@@ -1,9 +1,9 @@
 package com.njydsz.pmis.message.server.service.config;
 
+import java.util.List;
+
 import com.njydsz.pmis.message.domain.dto.config.PreferenceUpsertDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgPreferenceDO;
-
-import java.util.List;
 
 /**
  * 用户消息偏好服务

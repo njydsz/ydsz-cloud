@@ -1,8 +1,13 @@
 package com.njydsz.pmis.literule.server.distributed;
 
-import com.njydsz.pmis.literule.server.config.LiteRuleProperties;
-import com.njydsz.pmis.literule.server.spi.RuleConfigBroadcaster;
+import java.net.InetAddress;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import jakarta.annotation.PreDestroy;
+
+import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -12,12 +17,9 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.net.InetAddress;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import com.njydsz.pmis.literule.api.RuleEngine;
-import org.redisson.api.RedissonClient;
+import com.njydsz.pmis.literule.server.config.LiteRuleProperties;
+import com.njydsz.pmis.literule.server.spi.RuleConfigBroadcaster;
 
 /**
  * 分布式执行自动配置（P2-16）

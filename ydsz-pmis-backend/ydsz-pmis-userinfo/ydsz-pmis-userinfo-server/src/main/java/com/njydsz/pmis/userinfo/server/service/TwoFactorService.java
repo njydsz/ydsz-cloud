@@ -1,9 +1,9 @@
 package com.njydsz.pmis.userinfo.server.service.auth;
 
+import java.util.List;
+
 import com.njydsz.pmis.userinfo.domain.dto.auth.TwoFactorBindResult;
 import com.njydsz.pmis.userinfo.domain.entity.user.User2FADO;
-
-import java.util.List;
 
 /**
  * 双因素认证服务

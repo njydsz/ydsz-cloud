@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.json.module;
 
-import com.njydsz.pmis.common.json.deserializer.JsonDeserializer;
-
 import java.util.*;
+
+import com.njydsz.pmis.common.json.deserializer.JsonDeserializer;
 
 /**
  * 模块化反序列化器注册表

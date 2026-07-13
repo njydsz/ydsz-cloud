@@ -1,12 +1,14 @@
 package com.njydsz.pmis.sales.server.notify;
 
-import com.njydsz.pmis.common.notify.core.AsyncNotifyService;
-import com.njydsz.pmis.common.notify.enums.NotifyChannel;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import com.njydsz.pmis.common.notify.core.AsyncNotifyService;
+import com.njydsz.pmis.common.notify.enums.NotifyChannel;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 销售模块通知助手

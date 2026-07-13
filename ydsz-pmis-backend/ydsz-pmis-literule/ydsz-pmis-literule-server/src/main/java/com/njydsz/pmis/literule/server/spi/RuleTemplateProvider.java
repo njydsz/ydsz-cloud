@@ -1,9 +1,9 @@
 package com.njydsz.pmis.literule.server.spi;
 
+import java.util.List;
+
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.domain.entity.RuleTemplateDO;
-
-import java.util.List;
 
 /**
  * 规则模板提供者 SPI

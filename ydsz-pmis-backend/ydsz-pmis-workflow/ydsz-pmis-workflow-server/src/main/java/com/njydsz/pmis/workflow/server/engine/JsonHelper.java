@@ -1,10 +1,10 @@
 package com.njydsz.pmis.workflow.server.engine;
 
+import java.util.Map;
+
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONReader;
 import com.alibaba.fastjson2.JSONWriter;
-
-import java.util.Map;
 
 /**
  * 工作流引擎 JSON 工具（隔离 fastjson2，便于测试 mock）

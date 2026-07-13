@@ -1,22 +1,24 @@
 package com.njydsz.pmis.workflow.web.controller.notification;
 
-import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import java.util.List;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
+import jakarta.validation.Valid;
+
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
 import com.njydsz.pmis.common.auth.context.AuthContext;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.workflow.domain.dto.FlowQuickCommentDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowQuickCommentDO;
 import com.njydsz.pmis.workflow.server.service.FlowQuickCommentService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * 审批常用语 Controller

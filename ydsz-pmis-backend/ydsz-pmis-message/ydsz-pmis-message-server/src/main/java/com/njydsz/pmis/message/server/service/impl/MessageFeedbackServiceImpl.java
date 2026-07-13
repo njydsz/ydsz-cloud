@@ -1,5 +1,10 @@
 package com.njydsz.pmis.message.server.service.impl.core;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
@@ -9,12 +14,9 @@ import com.njydsz.pmis.message.domain.dto.core.MessageFeedbackDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgFeedbackDO;
 import com.njydsz.pmis.message.infra.mapper.config.MsgFeedbackMapper;
 import com.njydsz.pmis.message.server.service.core.MessageFeedbackService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
-import java.util.List;
 
 /**
  * P1-4: 消息质量反馈服务实现。

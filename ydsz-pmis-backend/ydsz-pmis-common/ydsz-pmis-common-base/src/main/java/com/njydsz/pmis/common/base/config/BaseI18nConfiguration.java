@@ -1,14 +1,14 @@
 package com.njydsz.pmis.common.base.config;
 
+import java.util.List;
+import java.util.Locale;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
-
-import java.util.List;
-import java.util.Locale;
 
 /**
  * 国际化配置基类（Web/App 共享）

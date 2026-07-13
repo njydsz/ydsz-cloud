@@ -1,13 +1,14 @@
 package com.njydsz.pmis.userinfo.domain.vo;
 
-import com.njydsz.pmis.userinfo.domain.entity.org.DepartmentDO;
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.njydsz.pmis.userinfo.domain.entity.org.DepartmentDO;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 
 /**
  * 部门树节点 VO

@@ -1,10 +1,18 @@
 package com.njydsz.pmis.userinfo.server.service.impl.permission;
 
+import java.util.List;
+
+import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.constant.PageConstants;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.domain.query.PageQuery;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.userinfo.domain.dto.permission.RoleFormDTO;
 import com.njydsz.pmis.userinfo.domain.dto.permission.RoleQueryDTO;
@@ -13,15 +21,8 @@ import com.njydsz.pmis.userinfo.domain.entity.permission.RolePermissionDO;
 import com.njydsz.pmis.userinfo.infra.mapper.permission.RoleMapper;
 import com.njydsz.pmis.userinfo.infra.mapper.permission.RolePermissionMapper;
 import com.njydsz.pmis.userinfo.server.service.permission.RoleService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 角色服务实现

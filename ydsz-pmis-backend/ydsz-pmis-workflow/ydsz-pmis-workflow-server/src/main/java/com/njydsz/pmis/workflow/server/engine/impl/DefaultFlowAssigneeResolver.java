@@ -1,13 +1,15 @@
 package com.njydsz.pmis.workflow.server.engine.impl;
 
-import com.njydsz.pmis.workflow.server.engine.FlowAssigneeResolver;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.stereotype.Component;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.workflow.server.engine.FlowAssigneeResolver;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 默认办理人解析器（空实现）

@@ -1,8 +1,10 @@
 package com.njydsz.pmis.common.json.spring;
 
-import com.njydsz.pmis.common.json.naming.PropertyNamingStrategy;
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import com.njydsz.pmis.common.json.naming.PropertyNamingStrategy;
+
+import lombok.Data;
 
 /**
  * YdszJson 配置属性。

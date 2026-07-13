@@ -1,12 +1,12 @@
 package com.njydsz.pmis.project.domain.dto;
 
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+
+import lombok.Data;
 
 /**
  * 经营驾驶舱 KPI 视图

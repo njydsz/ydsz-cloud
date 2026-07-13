@@ -1,14 +1,13 @@
 package com.njydsz.pmis.project.domain.dto;
 
-import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serial;
-import java.io.Serializable;
-import java.util.List;
 
 /**
  * 驾驶舱预警摘要视图

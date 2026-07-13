@@ -1,11 +1,12 @@
 package com.njydsz.pmis.literule.api;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.Builder;
-import lombok.Data;
-
 import java.io.Serializable;
 import java.util.List;
+
+import jakarta.validation.constraints.NotBlank;
+
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * 规则集（RulePack）元数据

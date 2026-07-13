@@ -1,24 +1,25 @@
 package com.njydsz.pmis.cronjob.web.controller.job;
 
-import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
-
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.core.job.MapContext;
-import com.njydsz.pmis.common.core.job.MapProcessor;
-import com.njydsz.pmis.common.core.job.ProcessResult;
-import com.njydsz.pmis.common.util.TraceIdUtil;
-import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteSubTaskRequest;
-import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteTaskRequest;
-import com.njydsz.pmis.cronjob.server.core.dispatch.TaskDispatcher;
 import org.springframework.context.ApplicationContext;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.njydsz.pmis.common.core.job.MapContext;
+import com.njydsz.pmis.common.core.job.MapProcessor;
+import com.njydsz.pmis.common.core.job.ProcessResult;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
+import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteSubTaskRequest;
+import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteTaskRequest;
+import com.njydsz.pmis.cronjob.server.core.dispatch.TaskDispatcher;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 内部任务执行接口（P1-4 远程派发接收端）。

@@ -1,9 +1,9 @@
 package com.njydsz.pmis.message.domain.dto.core;
 
-import lombok.Data;
-
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
+
+import lombok.Data;
 
 /**
  * 用户触达画像 DTO。

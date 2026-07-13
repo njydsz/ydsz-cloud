@@ -1,10 +1,12 @@
 package com.njydsz.pmis.cronjob.api.fallback;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.cronjob.api.client.CronjobServiceClient;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.cronjob.api.client.CronjobServiceClient;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * {@link CronjobServiceClient} 的 FallbackFactory（P1-2 规则与定时任务联动）

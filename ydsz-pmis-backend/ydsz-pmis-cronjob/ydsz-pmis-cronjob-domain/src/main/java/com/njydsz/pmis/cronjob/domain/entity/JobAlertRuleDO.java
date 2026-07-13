@@ -1,14 +1,15 @@
 package com.njydsz.pmis.cronjob.domain.entity.job;
 
+import java.io.Serial;
+import java.time.LocalDateTime;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
-import java.time.LocalDateTime;
 
 /**
  * 任务告警规则实体（pmis_job_alert_rule 表，P5 告警 + 监控）。

@@ -1,13 +1,14 @@
 package com.njydsz.pmis.cronjob.domain.entity.schedule;
 
+import java.io.Serial;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
 
 /**
  * GLUE 在线编码实体（P1-2 GLUE 在线编码，P1-7 多语言支持扩展）。

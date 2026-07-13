@@ -1,21 +1,24 @@
 package com.njydsz.pmis.cronjob.server.core.alert;
 
-import com.njydsz.pmis.common.util.TraceIdUtil;
-import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
-import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobAlertRuleDO;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobAlertRuleMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobAlertRuleDO;
+import com.njydsz.pmis.cronjob.infra.mapper.job.JobAlertRuleMapper;
+import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 周期性告警扫描器（P3-2）。

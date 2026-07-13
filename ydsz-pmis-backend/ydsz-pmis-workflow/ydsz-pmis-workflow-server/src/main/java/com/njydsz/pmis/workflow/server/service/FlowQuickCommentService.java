@@ -1,9 +1,9 @@
 package com.njydsz.pmis.workflow.server.service;
 
+import java.util.List;
+
 import com.njydsz.pmis.workflow.domain.dto.FlowQuickCommentDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowQuickCommentDO;
-
-import java.util.List;
 
 /**
  * 审批常用语服务接口

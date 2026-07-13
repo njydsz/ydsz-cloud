@@ -1,8 +1,8 @@
 package com.njydsz.pmis.message.domain.dto.core;
 
-import lombok.Data;
-
 import java.util.List;
+
+import lombok.Data;
 
 /**
  * P1-2: 富媒体消息内容模型。

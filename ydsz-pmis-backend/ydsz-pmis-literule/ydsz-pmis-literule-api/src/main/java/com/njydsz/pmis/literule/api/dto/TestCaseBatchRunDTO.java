@@ -1,9 +1,9 @@
 package com.njydsz.pmis.literule.api.dto;
 
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-
-import java.util.List;
 
 /**
  * 测试用例批量执行请求体 DTO

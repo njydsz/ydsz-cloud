@@ -1,18 +1,5 @@
 package com.njydsz.pmis.literule.server.replay;
 
-import com.njydsz.pmis.literule.api.RuleDefinition;
-import com.njydsz.pmis.literule.api.RuleExecutionTrace;
-import com.njydsz.pmis.literule.api.RuleResult;
-import com.njydsz.pmis.literule.api.RuleSeverity;
-import com.njydsz.pmis.literule.server.config.RuleAdminService;
-import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
-import com.njydsz.pmis.literule.server.impl.ExpressionRule;
-import com.njydsz.pmis.literule.server.spi.RuleVersionRepository;
-import com.njydsz.pmis.literule.server.spi.TraceRecorder;
-import lombok.Builder;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,7 +10,21 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import com.njydsz.pmis.literule.api.RuleContext;
+import com.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.api.RuleExecutionTrace;
+import com.njydsz.pmis.literule.api.RuleResult;
+import com.njydsz.pmis.literule.api.RuleSeverity;
+import com.njydsz.pmis.literule.server.config.RuleAdminService;
+import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.server.impl.ExpressionRule;
+import com.njydsz.pmis.literule.server.spi.RuleVersionRepository;
+import com.njydsz.pmis.literule.server.spi.TraceRecorder;
+
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 执行回放服务（P3-4）

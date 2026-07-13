@@ -1,11 +1,12 @@
 package com.njydsz.pmis.workflow.domain.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
+
+import jakarta.validation.constraints.NotBlank;
+
+import lombok.Data;
 
 /**
  * 自建工作流引擎 - 部署流程 DTO

@@ -1,22 +1,5 @@
 package com.njydsz.pmis.workflow.server.service.impl.ai;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.workflow.domain.entity.FlowDefinitionDO;
-import com.njydsz.pmis.workflow.domain.enums.CanaryStatus;
-import com.njydsz.pmis.workflow.domain.enums.CanaryStrategy;
-import com.njydsz.pmis.workflow.infra.mapper.FlowDefinitionMapper;
-import com.njydsz.pmis.workflow.server.service.FlowCanaryService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,6 +7,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
+import com.njydsz.pmis.common.auth.context.AuthContext;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.workflow.domain.entity.FlowDefinitionDO;
+import com.njydsz.pmis.workflow.domain.enums.CanaryStatus;
+import com.njydsz.pmis.workflow.domain.enums.CanaryStrategy;
+import com.njydsz.pmis.workflow.infra.mapper.FlowDefinitionMapper;
+import com.njydsz.pmis.workflow.server.service.FlowCanaryService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 灰度发布服务实现

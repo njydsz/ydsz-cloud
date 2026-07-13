@@ -1,14 +1,15 @@
 package com.njydsz.pmis.cronjob.infra.mapper.job;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobArtifactDO;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobArtifactDO;
 
 /**
  * 执行产物 Mapper（P2-8）。

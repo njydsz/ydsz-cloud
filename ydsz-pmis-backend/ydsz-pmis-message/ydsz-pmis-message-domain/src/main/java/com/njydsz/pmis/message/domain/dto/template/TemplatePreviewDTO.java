@@ -1,9 +1,9 @@
 package com.njydsz.pmis.message.domain.dto.template;
 
 
-import lombok.Data;
-
 import java.util.Map;
+
+import lombok.Data;
 
 /**
  * 模板预览请求 DTO。

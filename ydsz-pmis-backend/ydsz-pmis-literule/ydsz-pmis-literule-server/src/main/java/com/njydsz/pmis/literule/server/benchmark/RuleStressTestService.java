@@ -1,11 +1,5 @@
 package com.njydsz.pmis.literule.server.benchmark;
 
-import com.njydsz.pmis.literule.api.RuleResult;
-import com.njydsz.pmis.literule.server.config.RuleAdminService;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -16,6 +10,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.LongAdder;
+
+import org.springframework.stereotype.Service;
+
+import com.njydsz.pmis.literule.api.RuleResult;
+import com.njydsz.pmis.literule.server.config.RuleAdminService;
+
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 规则压测服务（P2-9）

@@ -1,9 +1,9 @@
 package com.njydsz.pmis.workflow.server.service;
 
+import java.util.List;
+
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO;
-
-import java.util.List;
 
 /**
  * 流程委派代理（长期授权）服务

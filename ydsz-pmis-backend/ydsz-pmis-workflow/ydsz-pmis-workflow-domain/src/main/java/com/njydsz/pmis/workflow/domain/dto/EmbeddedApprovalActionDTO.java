@@ -1,12 +1,13 @@
 package com.njydsz.pmis.workflow.domain.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Map;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+import lombok.Data;
 
 /**
  * P2-2 嵌入式审批快捷操作 DTO

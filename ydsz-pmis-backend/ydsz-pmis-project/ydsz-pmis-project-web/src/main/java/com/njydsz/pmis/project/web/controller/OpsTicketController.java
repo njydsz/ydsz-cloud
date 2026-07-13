@@ -1,20 +1,12 @@
 package com.njydsz.pmis.project.web.controller.aftersales;
 
-import com.njydsz.pmis.common.lock.annotation.Idempotent;
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.project.domain.dto.OpsTicketAssignDTO;
-import com.njydsz.pmis.project.domain.dto.OpsTicketCreateDTO;
-import com.njydsz.pmis.project.domain.dto.OpsTicketStatusDTO;
-import com.njydsz.pmis.project.domain.entity.OpsTicketDO;
-import com.njydsz.pmis.project.server.service.OpsTicketService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.Map;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,8 +16,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Map;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.project.domain.dto.OpsTicketAssignDTO;
+import com.njydsz.pmis.project.domain.dto.OpsTicketCreateDTO;
+import com.njydsz.pmis.project.domain.dto.OpsTicketStatusDTO;
+import com.njydsz.pmis.project.domain.entity.OpsTicketDO;
+import com.njydsz.pmis.project.server.service.OpsTicketService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 运维工单 Controller

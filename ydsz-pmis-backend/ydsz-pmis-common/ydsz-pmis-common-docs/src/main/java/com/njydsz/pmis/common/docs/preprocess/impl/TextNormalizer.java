@@ -1,11 +1,12 @@
 package com.njydsz.pmis.common.docs.preprocess.impl;
 
-import com.njydsz.pmis.common.docs.domain.DocumentContent;
-import com.njydsz.pmis.common.docs.preprocess.DocumentPreprocessor;
-import org.springframework.stereotype.Component;
-
 import java.text.Normalizer;
 import java.util.List;
+
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.docs.domain.DocumentContent;
+import com.njydsz.pmis.common.docs.preprocess.DocumentPreprocessor;
 
 /**
  * 文本归一化预处理器

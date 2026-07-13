@@ -1,8 +1,8 @@
 package com.njydsz.pmis.nextwiki.domain.repository;
 
-import com.njydsz.pmis.nextwiki.domain.entity.ShareLink;
-
 import java.util.List;
+
+import com.njydsz.pmis.nextwiki.domain.entity.ShareLink;
 
 /**
  * 分享链接仓储接口

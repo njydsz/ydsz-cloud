@@ -1,12 +1,13 @@
 package com.njydsz.pmis.nextwiki.domain.entity;
 
+import java.io.Serializable;
+
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseEntity;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
-
-import java.io.Serializable;
 
 /**
  * 文件级 ACL 权限实体

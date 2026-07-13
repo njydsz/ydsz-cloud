@@ -1,8 +1,8 @@
 package com.njydsz.pmis.cronjob.server.core.connector;
 
-import lombok.Data;
-
 import java.util.Map;
+
+import lombok.Data;
 
 /**
  * 连接器任务信息（P2-3）。

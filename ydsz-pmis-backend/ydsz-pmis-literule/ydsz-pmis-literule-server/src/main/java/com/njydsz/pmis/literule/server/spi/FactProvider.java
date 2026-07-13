@@ -1,8 +1,8 @@
 package com.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.literule.api.RuleContext;
-
 import java.util.Map;
+
+import com.njydsz.pmis.literule.api.RuleContext;
 
 /**
  * 事实数据提供者 SPI（P0-2 动态事实采集管道）

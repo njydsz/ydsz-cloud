@@ -1,9 +1,9 @@
 package com.njydsz.pmis.nextwiki.domain.repository;
 
-import com.njydsz.pmis.nextwiki.domain.entity.Tag;
-import com.njydsz.pmis.nextwiki.domain.entity.FileTag;
-
 import java.util.List;
+
+import com.njydsz.pmis.nextwiki.domain.entity.FileTag;
+import com.njydsz.pmis.nextwiki.domain.entity.Tag;
 
 /**
  * 标签仓储接口

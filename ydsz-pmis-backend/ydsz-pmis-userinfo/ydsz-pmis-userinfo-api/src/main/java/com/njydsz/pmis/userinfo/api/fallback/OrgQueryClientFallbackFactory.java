@@ -1,14 +1,15 @@
 package com.njydsz.pmis.userinfo.api.fallback;
-import com.njydsz.pmis.userinfo.api.client.OrgQueryClient;
+import java.util.Collections;
+import java.util.List;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
-import java.util.List;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.userinfo.api.client.OrgQueryClient;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * OrgQueryClient 降级工厂（P1-5）

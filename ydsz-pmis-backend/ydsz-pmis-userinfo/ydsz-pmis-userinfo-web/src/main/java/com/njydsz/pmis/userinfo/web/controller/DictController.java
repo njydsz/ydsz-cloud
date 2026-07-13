@@ -1,19 +1,20 @@
 package com.njydsz.pmis.userinfo.web.controller.org;
 
-import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import java.util.List;
 
-import com.njydsz.pmis.common.safe.annotation.RateLimit;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.userinfo.domain.entity.org.DictItemDO;
-import com.njydsz.pmis.userinfo.domain.entity.org.DictTypeDO;
-import com.njydsz.pmis.userinfo.server.service.org.DictService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
+import com.njydsz.pmis.userinfo.domain.entity.org.DictItemDO;
+import com.njydsz.pmis.userinfo.domain.entity.org.DictTypeDO;
+import com.njydsz.pmis.userinfo.server.service.org.DictService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 字典接口

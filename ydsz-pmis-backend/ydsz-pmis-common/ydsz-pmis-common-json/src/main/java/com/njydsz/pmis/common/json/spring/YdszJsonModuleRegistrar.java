@@ -1,11 +1,12 @@
 package com.njydsz.pmis.common.json.spring;
 
-import com.njydsz.pmis.common.json.module.YdszJsonModule;
-import com.njydsz.pmis.common.json.module.YdszJsonModuleRegistry;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
+import com.njydsz.pmis.common.json.module.YdszJsonModule;
+import com.njydsz.pmis.common.json.module.YdszJsonModuleRegistry;
 
 /**
  * YdszJson 模块注册器。

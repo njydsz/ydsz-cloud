@@ -1,8 +1,8 @@
 package com.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.literule.api.DecisionTreeDefinition;
-
 import java.util.List;
+
+import com.njydsz.pmis.literule.api.DecisionTreeDefinition;
 
 /**
  * 决策树配置提供者接口（SPI）

@@ -1,21 +1,23 @@
 package com.njydsz.pmis.userinfo.web.controller.auth;
 
-import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
+import jakarta.validation.Valid;
 
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import com.njydsz.pmis.common.auth.token.JwtTokenProvider;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
+import com.njydsz.pmis.userinfo.domain.dto.auth.CaptchaVO;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginDTO;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginResultVO;
-import com.njydsz.pmis.userinfo.domain.dto.auth.CaptchaVO;
 import com.njydsz.pmis.userinfo.server.service.auth.AuthService;
-import com.njydsz.pmis.common.safe.annotation.RateLimit;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.auth.token.JwtTokenProvider;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
 
 /**
  * 认证接口

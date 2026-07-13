@@ -1,9 +1,9 @@
 package com.njydsz.pmis.message.server.service.config;
 
+import java.util.List;
+
 import com.njydsz.pmis.message.domain.dto.config.UserChannelBindingDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgUserChannelDO;
-
-import java.util.List;
 
 /**
  * 用户通道绑定服务。

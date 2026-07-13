@@ -1,12 +1,13 @@
 package com.njydsz.pmis.sales.server.engine;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 import com.njydsz.pmis.sales.domain.entity.OpportunityDO;
 import com.njydsz.pmis.sales.domain.enums.OpportunityLevel;
 import com.njydsz.pmis.sales.domain.enums.OpportunityStatus;
-import lombok.extern.slf4j.Slf4j;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 商机赢率评估器（增强版）

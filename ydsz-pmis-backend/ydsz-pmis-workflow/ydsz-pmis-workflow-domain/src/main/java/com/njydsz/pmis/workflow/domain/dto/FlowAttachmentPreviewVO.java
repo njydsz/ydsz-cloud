@@ -1,9 +1,9 @@
 package com.njydsz.pmis.workflow.domain.dto;
 
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
+
+import lombok.Data;
 
 /**
  * P2-3: 附件在线预览 VO

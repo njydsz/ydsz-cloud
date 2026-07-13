@@ -1,12 +1,13 @@
 package com.njydsz.pmis.message.server.service.core;
 
-import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.message.domain.dto.core.CardMessageDTO;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.message.domain.dto.core.CardMessageDTO;
 
 /**
  * 交互式卡片消息渲染器（P1-1）。

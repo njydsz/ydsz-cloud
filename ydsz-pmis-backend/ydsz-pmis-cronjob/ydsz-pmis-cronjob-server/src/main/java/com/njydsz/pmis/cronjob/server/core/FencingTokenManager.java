@@ -1,13 +1,14 @@
 package com.njydsz.pmis.cronjob.server.core.leader;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import java.util.concurrent.atomic.AtomicLong;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Fencing Token 管理器（P0-3 防脑裂增强）。

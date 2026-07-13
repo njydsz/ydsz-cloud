@@ -1,10 +1,11 @@
 package com.njydsz.pmis.common.docs.preprocess.impl;
 
-import com.njydsz.pmis.common.docs.domain.DocumentContent;
-import com.njydsz.pmis.common.docs.preprocess.DocumentPreprocessor;
+import java.util.regex.Pattern;
+
 import org.springframework.stereotype.Component;
 
-import java.util.regex.Pattern;
+import com.njydsz.pmis.common.docs.domain.DocumentContent;
+import com.njydsz.pmis.common.docs.preprocess.DocumentPreprocessor;
 
 /**
  * 文本清洗预处理器
@@ -31,10 +32,10 @@ public class TextCleaner implements DocumentPreprocessor {
     private static final Pattern CONTROL_CHARS = Pattern.compile("[\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]");
 
     /** BOM 标记 */
-    private static final Pattern BOM = Pattern.compile("\uFEFF|\uFFFE");
+    private static final Pattern BOM = Pattern.compile("|\uFFFE");
 
     /** 零宽字符 */
-    private static final Pattern ZERO_WIDTH = Pattern.compile("[\\u200B-\\u200D\\uFEFF]");
+    private static final Pattern ZERO_WIDTH = Pattern.compile("[\u200B-\u200D]");
 
     /** PDF 页码标记（如 "- 1 -" 或 "Page 1 of 10"） */
     private static final Pattern PAGE_NUMBER = Pattern.compile(

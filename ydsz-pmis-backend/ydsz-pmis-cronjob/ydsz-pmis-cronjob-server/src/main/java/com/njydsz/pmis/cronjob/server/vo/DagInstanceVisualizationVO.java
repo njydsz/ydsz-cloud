@@ -1,11 +1,12 @@
 package com.njydsz.pmis.cronjob.server.vo;
 
-import com.njydsz.pmis.cronjob.server.core.dag.DagDefinition;
+import java.util.List;
+
 import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagInstanceDO;
 import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagNodeInstanceDO;
-import lombok.Data;
+import com.njydsz.pmis.cronjob.server.core.dag.DagDefinition;
 
-import java.util.List;
+import lombok.Data;
 
 /**
  * DAG 实例可视化数据 VO（P4-1 细节体验优化）。

@@ -1,19 +1,20 @@
 package com.njydsz.pmis.literule.web;
 
-import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import java.util.List;
+import java.util.stream.Collectors;
 
-import com.njydsz.pmis.common.audit.annotation.OperationLog;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.literule.server.expr.ExpressionValidationService;
-import com.njydsz.pmis.literule.server.expr.VariableDefinition;
-import com.njydsz.pmis.literule.server.expr.VariableRegistry;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import com.njydsz.pmis.common.audit.annotation.OperationLog;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.literule.server.expr.ExpressionValidationService;
+import com.njydsz.pmis.literule.server.expr.VariableDefinition;
+import com.njydsz.pmis.literule.server.expr.VariableRegistry;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 规则变量管理 Controller

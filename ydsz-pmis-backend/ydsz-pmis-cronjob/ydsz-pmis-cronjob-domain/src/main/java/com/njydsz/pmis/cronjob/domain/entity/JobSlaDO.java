@@ -1,14 +1,15 @@
 package com.njydsz.pmis.cronjob.domain.entity.alert;
 
+import java.io.Serial;
+import java.math.BigDecimal;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
-import java.math.BigDecimal;
 
 /**
  * 任务 SLA 管理实体（P2-7 SLA 管理, P2-2-merge 重构为视图 DTO）。

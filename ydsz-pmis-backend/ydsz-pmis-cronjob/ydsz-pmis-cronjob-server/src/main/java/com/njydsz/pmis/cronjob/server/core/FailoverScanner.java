@@ -1,27 +1,30 @@
 package com.njydsz.pmis.cronjob.server.core.dispatch;
 
-import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
-import com.njydsz.pmis.cronjob.server.core.discovery.NodeDiscoveryStrategy;
-import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
-import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
-import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
-import com.njydsz.pmis.cronjob.server.metrics.CronjobMetrics;
-import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import jakarta.annotation.PostConstruct;
+
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
+import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
+import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.core.discovery.NodeDiscoveryStrategy;
+import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
+import com.njydsz.pmis.cronjob.server.metrics.CronjobMetrics;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 失败自动转移扫描器（P1-4）。

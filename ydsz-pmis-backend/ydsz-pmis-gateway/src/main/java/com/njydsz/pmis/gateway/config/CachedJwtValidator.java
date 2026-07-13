@@ -1,14 +1,16 @@
 package com.njydsz.pmis.gateway.config;
 
+import java.time.Duration;
+import java.util.Optional;
+
+import org.springframework.stereotype.Component;
+
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.auth.token.TokenService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
-import java.time.Duration;
-import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * JWT 校验结果缓存（P1-7 + P2-12 增强）

@@ -1,11 +1,12 @@
 package com.njydsz.pmis.literule.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.literule.domain.entity.RuleVersionHistoryDO;
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import java.util.List;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.literule.domain.entity.RuleVersionHistoryDO;
 
 /**
  * 规则版本历史 Mapper

@@ -1,14 +1,15 @@
 package com.njydsz.pmis.common.json;
 
-import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
-import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
+
+import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
 
 @DisplayName("并发集成测试")
 class ConcurrentIntegrationTest {

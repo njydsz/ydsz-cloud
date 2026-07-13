@@ -1,8 +1,5 @@
 package com.njydsz.pmis.literule.domain.model;
 
-import com.njydsz.pmis.literule.api.RuleContext;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -14,6 +11,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import com.njydsz.pmis.literule.api.RuleContext;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 模型输入注册中心（P3-1 规则+模型融合）

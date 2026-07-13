@@ -1,20 +1,7 @@
 package com.njydsz.pmis.message.web.controller.template;
 
-import com.njydsz.pmis.common.lock.annotation.Idempotent;
-
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.message.domain.dto.template.TemplateAuditDTO;
-import com.njydsz.pmis.message.domain.dto.template.TemplateCreateDTO;
-import com.njydsz.pmis.message.domain.dto.template.TemplateQueryDTO;
-import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
-import com.njydsz.pmis.message.server.service.template.TemplateService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +10,21 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.message.domain.dto.template.TemplateAuditDTO;
+import com.njydsz.pmis.message.domain.dto.template.TemplateCreateDTO;
+import com.njydsz.pmis.message.domain.dto.template.TemplateQueryDTO;
+import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
+import com.njydsz.pmis.message.server.service.template.TemplateService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 消息模板管理 Controller。

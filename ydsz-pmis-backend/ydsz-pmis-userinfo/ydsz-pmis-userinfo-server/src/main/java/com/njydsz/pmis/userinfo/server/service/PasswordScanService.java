@@ -1,9 +1,9 @@
 package com.njydsz.pmis.userinfo.server.service.auth;
 
+import java.util.List;
+
 import com.njydsz.pmis.userinfo.domain.dto.auth.PasswordScanResultDTO;
 import com.njydsz.pmis.userinfo.domain.entity.user.UserAccountDO;
-
-import java.util.List;
 
 /**
  * 弱密码/过期密码扫描服务（P3-3 运维安全增强）

@@ -1,14 +1,16 @@
 package com.njydsz.pmis.workflow.server.service;
 
-import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
+import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * P1-5: 待办智能优先级排序服务

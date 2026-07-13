@@ -1,15 +1,16 @@
 package com.njydsz.pmis.userinfo.domain.entity.user;
 
+import java.io.Serial;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
+import lombok.Data;
 
 /**
  * 用户双因素认证

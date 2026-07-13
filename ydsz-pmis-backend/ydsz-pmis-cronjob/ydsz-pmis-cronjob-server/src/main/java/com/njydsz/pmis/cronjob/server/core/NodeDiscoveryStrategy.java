@@ -1,8 +1,8 @@
 package com.njydsz.pmis.cronjob.server.core.discovery;
 
-import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
-
 import java.util.List;
+
+import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
 
 /**
  * 执行器节点发现策略（P1-1）。

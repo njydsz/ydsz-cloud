@@ -1,9 +1,9 @@
 package com.njydsz.pmis.system.domain.dto.file;
 
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
+
+import lombok.Data;
 
 /**
  * 文件上传 DTO

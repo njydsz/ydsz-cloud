@@ -1,10 +1,11 @@
 package com.njydsz.pmis.message.infra.mapper.config;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.message.domain.entity.config.MsgOfflineDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.message.domain.entity.config.MsgOfflineDO;
 
 /**
  * P0-3: 离线消息持久化 Mapper

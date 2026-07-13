@@ -1,9 +1,9 @@
 package com.njydsz.pmis.userinfo.server.service.org;
 
+import java.util.List;
+
 import com.njydsz.pmis.userinfo.domain.entity.org.DictItemDO;
 import com.njydsz.pmis.userinfo.domain.entity.org.DictTypeDO;
-
-import java.util.List;
 
 /**
  * 字典服务（带 Redis 缓存）

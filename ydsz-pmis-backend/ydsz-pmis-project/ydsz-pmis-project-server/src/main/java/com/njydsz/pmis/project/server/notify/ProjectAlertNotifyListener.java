@@ -1,13 +1,15 @@
 package com.njydsz.pmis.project.server.notify;
 
-import com.njydsz.pmis.common.notify.core.AsyncNotifyService;
-import com.njydsz.pmis.common.notify.enums.NotifyChannel;
-import com.njydsz.pmis.common.notify.event.UnifiedAlertEvent;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.notify.core.AsyncNotifyService;
+import com.njydsz.pmis.common.notify.enums.NotifyChannel;
+import com.njydsz.pmis.common.notify.event.UnifiedAlertEvent;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 项目模块统一告警通知监听器

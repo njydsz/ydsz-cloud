@@ -1,17 +1,5 @@
 package com.njydsz.pmis.project.server.service.impl;
 
-import com.njydsz.pmis.project.domain.entity.BillableUtilizationSnapshotDO;
-import com.njydsz.pmis.project.domain.entity.RateInternalDO;
-import com.njydsz.pmis.project.domain.enums.UtilizationGrade;
-import com.njydsz.pmis.project.infra.mapper.BillableUtilizationSnapshotMapper;
-import com.njydsz.pmis.project.infra.mapper.RateInternalMapper;
-import com.njydsz.pmis.project.infra.mapper.TimeEntryMapper;
-import com.njydsz.pmis.project.server.service.BillableUtilizationService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -24,6 +12,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.njydsz.pmis.project.domain.entity.BillableUtilizationSnapshotDO;
+import com.njydsz.pmis.project.domain.entity.RateInternalDO;
+import com.njydsz.pmis.project.domain.enums.UtilizationGrade;
+import com.njydsz.pmis.project.infra.mapper.BillableUtilizationSnapshotMapper;
+import com.njydsz.pmis.project.infra.mapper.RateInternalMapper;
+import com.njydsz.pmis.project.infra.mapper.TimeEntryMapper;
+import com.njydsz.pmis.project.server.service.BillableUtilizationService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 可计费利用率服务实现

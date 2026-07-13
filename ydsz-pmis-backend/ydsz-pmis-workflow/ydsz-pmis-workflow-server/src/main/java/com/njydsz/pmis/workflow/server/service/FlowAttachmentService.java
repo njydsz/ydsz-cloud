@@ -1,11 +1,11 @@
 package com.njydsz.pmis.workflow.server.service;
 
+import java.util.List;
+
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.dto.FlowAttachmentDTO;
 import com.njydsz.pmis.workflow.domain.dto.FlowAttachmentPreviewVO;
 import com.njydsz.pmis.workflow.domain.entity.FlowAttachmentDO;
-
-import java.util.List;
 
 /**
  * 自建工作流引擎 - 审批附件 Service
@@ -76,4 +76,3 @@ public interface FlowAttachmentService {
      */
     FlowAttachmentPreviewVO previewAttachment(String attachmentId);
 }
-

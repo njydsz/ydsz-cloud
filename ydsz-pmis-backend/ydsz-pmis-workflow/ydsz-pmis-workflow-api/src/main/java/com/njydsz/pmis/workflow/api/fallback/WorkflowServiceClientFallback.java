@@ -1,13 +1,14 @@
 package com.njydsz.pmis.workflow.api.fallback;
-import com.njydsz.pmis.workflow.api.client.WorkflowServiceClient;
+import java.util.Map;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.workflow.api.client.WorkflowServiceClient;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * WorkflowServiceClient 降级工厂

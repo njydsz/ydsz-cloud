@@ -1,7 +1,8 @@
 package com.njydsz.pmis.message.server.tracing;
 
-import com.njydsz.pmis.common.util.TraceIdUtil;
 import org.slf4j.MDC;
+
+import com.njydsz.pmis.common.util.TraceIdUtil;
 
 /**
  * P1-3: 消息全链路追踪上下文（MDC traceId 自动管理）。

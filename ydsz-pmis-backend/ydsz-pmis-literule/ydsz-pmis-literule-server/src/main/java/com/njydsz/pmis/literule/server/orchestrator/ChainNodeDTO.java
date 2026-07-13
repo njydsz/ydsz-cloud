@@ -1,12 +1,12 @@
 package com.njydsz.pmis.literule.server.orchestrator;
 
+import java.io.Serializable;
+import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
-import java.util.Map;
 
 /**
  * 可视化规则链编排画布节点 DTO（P2-1）

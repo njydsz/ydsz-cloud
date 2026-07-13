@@ -1,8 +1,8 @@
 package com.njydsz.pmis.nextwiki.domain.repository;
 
-import com.njydsz.pmis.nextwiki.domain.entity.FileAcl;
-
 import java.util.List;
+
+import com.njydsz.pmis.nextwiki.domain.entity.FileAcl;
 
 /**
  * 文件 ACL 仓储接口

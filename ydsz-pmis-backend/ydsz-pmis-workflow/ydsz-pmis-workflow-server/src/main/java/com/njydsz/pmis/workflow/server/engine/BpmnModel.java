@@ -1,10 +1,10 @@
 package com.njydsz.pmis.workflow.server.engine;
 
-import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.domain.entity.FlowSkipDO;
-
 import java.util.List;
 import java.util.Map;
+
+import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowSkipDO;
 
 /**
  * BPMN 2.0 解析结果

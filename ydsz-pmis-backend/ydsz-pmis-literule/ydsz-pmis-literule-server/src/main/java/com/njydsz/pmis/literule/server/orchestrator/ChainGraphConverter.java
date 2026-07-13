@@ -1,13 +1,13 @@
 package com.njydsz.pmis.literule.server.orchestrator;
 
-import com.njydsz.pmis.literule.api.Rule;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.njydsz.pmis.literule.api.Rule;
 
 /**
  * RuleChain ↔ RuleChainGraph 双向转换器（P2-1）

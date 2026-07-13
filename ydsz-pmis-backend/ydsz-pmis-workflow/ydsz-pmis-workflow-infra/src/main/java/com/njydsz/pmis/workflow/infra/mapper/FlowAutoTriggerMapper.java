@@ -1,11 +1,12 @@
 package com.njydsz.pmis.workflow.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.workflow.domain.entity.FlowAutoTriggerDO;
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import java.util.List;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.workflow.domain.entity.FlowAutoTriggerDO;
 
 /**
  * 流程自动触发规则 Mapper

@@ -1,13 +1,15 @@
 package com.njydsz.pmis.cronjob.server.service.impl.log;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import com.njydsz.pmis.cronjob.domain.entity.log.JobLogContentDO;
 import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogContentMapper;
 import com.njydsz.pmis.cronjob.server.service.log.JobLogContentService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 /**
  * 任务日志内容 Service 实现（P0-2 在线日志白屏化）。

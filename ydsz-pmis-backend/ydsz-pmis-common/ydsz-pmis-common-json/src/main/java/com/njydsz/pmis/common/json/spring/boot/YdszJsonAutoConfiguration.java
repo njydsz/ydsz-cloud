@@ -1,13 +1,7 @@
 package com.njydsz.pmis.common.json.spring.boot;
 
-import com.njydsz.pmis.common.json.autotype.AutoTypeChecker;
-import com.njydsz.pmis.common.json.config.YdszJsonConfig;
-import com.njydsz.pmis.common.json.health.YdszJsonHealthIndicator;
-import com.njydsz.pmis.common.json.metric.YdszJsonMetrics;
-import com.njydsz.pmis.common.json.module.YdszJsonModule;
-import com.njydsz.pmis.common.json.spring.YdszJsonHttpMessageConverter;
-import com.njydsz.pmis.common.json.spring.YdszJsonModuleRegistrar;
-import com.njydsz.pmis.common.json.spring.YdszJsonProperties;
+import java.util.List;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -16,9 +10,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
-import io.micrometer.core.instrument.MeterRegistry;
+import com.njydsz.pmis.common.json.autotype.AutoTypeChecker;
+import com.njydsz.pmis.common.json.config.YdszJsonConfig;
+import com.njydsz.pmis.common.json.health.YdszJsonHealthIndicator;
+import com.njydsz.pmis.common.json.metric.YdszJsonMetrics;
+import com.njydsz.pmis.common.json.module.YdszJsonModule;
+import com.njydsz.pmis.common.json.spring.YdszJsonHttpMessageConverter;
+import com.njydsz.pmis.common.json.spring.YdszJsonModuleRegistrar;
+import com.njydsz.pmis.common.json.spring.YdszJsonProperties;
 
-import java.util.List;
+import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * YdszJson Spring Boot 自动配置入口。

@@ -1,10 +1,10 @@
 package com.njydsz.pmis.workflow.domain.dto;
 
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Map;
+
+import lombok.Data;
 
 /**
  * 流程实例迁移 DTO

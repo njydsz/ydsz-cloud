@@ -1,12 +1,13 @@
 package com.njydsz.pmis.cronjob.api.client;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.feign.FeignClientConstants;
-import com.njydsz.pmis.cronjob.api.fallback.CronjobServiceClientFallback;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.feign.FeignClientConstants;
+import com.njydsz.pmis.cronjob.api.fallback.CronjobServiceClientFallback;
 
 /**
  * 定时任务服务 Feign 客户端（P1-2 规则与定时任务联动）

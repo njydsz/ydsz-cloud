@@ -1,13 +1,14 @@
 package com.njydsz.pmis.common.json;
 
-import com.njydsz.pmis.common.json.schema.YdszJsonSchema;
-import com.njydsz.pmis.common.json.schema.SchemaValidator;
-import com.njydsz.pmis.common.json.schema.ValidationResult;
-import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
+
+import com.njydsz.pmis.common.json.schema.SchemaValidator;
+import com.njydsz.pmis.common.json.schema.ValidationResult;
+import com.njydsz.pmis.common.json.schema.YdszJsonSchema;
 
 @DisplayName("YdszJson Schema 验证测试")
 class YdszJsonSchemaTest {

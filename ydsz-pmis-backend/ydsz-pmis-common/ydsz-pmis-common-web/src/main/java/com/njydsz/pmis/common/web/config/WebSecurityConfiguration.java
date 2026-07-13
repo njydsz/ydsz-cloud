@@ -1,7 +1,5 @@
 package com.njydsz.pmis.common.web.config;
 
-import com.njydsz.pmis.common.web.handler.WebAccessDeniedHandler;
-import com.njydsz.pmis.common.web.handler.WebAuthenticationEntryPoint;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -12,6 +10,9 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+
+import com.njydsz.pmis.common.web.handler.WebAccessDeniedHandler;
+import com.njydsz.pmis.common.web.handler.WebAuthenticationEntryPoint;
 
 /**
  * Web 端安全配置类

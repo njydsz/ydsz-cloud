@@ -1,13 +1,14 @@
 package com.njydsz.pmis.literule.server.core;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleDefinition;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * P2-13: 条件求值共享器（RETE Alpha Network 思想的轻量实现）。

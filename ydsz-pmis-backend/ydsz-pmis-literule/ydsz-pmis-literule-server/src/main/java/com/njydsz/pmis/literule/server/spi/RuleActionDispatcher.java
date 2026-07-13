@@ -1,11 +1,12 @@
 package com.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.literule.api.RuleContext;
-import com.njydsz.pmis.literule.api.RuleResult;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.njydsz.pmis.literule.api.RuleContext;
+import com.njydsz.pmis.literule.api.RuleResult;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 规则动作分发器

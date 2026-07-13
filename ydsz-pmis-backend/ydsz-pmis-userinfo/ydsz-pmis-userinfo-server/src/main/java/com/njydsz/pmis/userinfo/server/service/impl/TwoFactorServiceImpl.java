@@ -1,8 +1,17 @@
 package com.njydsz.pmis.userinfo.server.service.impl.auth;
 
-import com.njydsz.pmis.common.security.TenantContext;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.security.TotpUtil;
 import com.njydsz.pmis.userinfo.domain.dto.auth.TwoFactorBindResult;
 import com.njydsz.pmis.userinfo.domain.entity.user.User2FADO;
@@ -10,16 +19,9 @@ import com.njydsz.pmis.userinfo.domain.entity.user.UserAccountDO;
 import com.njydsz.pmis.userinfo.infra.mapper.user.User2FAMapper;
 import com.njydsz.pmis.userinfo.infra.mapper.user.UserAccountMapper;
 import com.njydsz.pmis.userinfo.server.service.auth.TwoFactorService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 双因素认证服务实现

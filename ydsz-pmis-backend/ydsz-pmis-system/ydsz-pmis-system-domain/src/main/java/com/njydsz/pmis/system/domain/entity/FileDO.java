@@ -1,14 +1,15 @@
 package com.njydsz.pmis.system.domain.entity.file;
 
+import java.io.Serial;
+import java.time.LocalDateTime;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
-import java.time.LocalDateTime;
 
 /**
  * 文件元信息实体

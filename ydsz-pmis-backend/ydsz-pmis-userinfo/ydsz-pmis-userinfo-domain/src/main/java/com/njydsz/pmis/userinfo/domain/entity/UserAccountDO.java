@@ -1,5 +1,8 @@
 package com.njydsz.pmis.userinfo.domain.entity.user;
 
+import java.io.Serial;
+import java.time.LocalDateTime;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -7,11 +10,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
 import com.njydsz.pmis.common.safe.annotation.Sensitive;
 import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
-import java.time.LocalDateTime;
 
 /**
  * 用户账号实体

@@ -1,28 +1,30 @@
 package com.njydsz.pmis.sales.server.service.impl.contract;
 
-import com.njydsz.pmis.common.security.TenantContext;
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
+import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.sales.domain.dto.ContractChangeDTO;
-import com.njydsz.pmis.sales.server.engine.ContractRiskEvaluator;
 import com.njydsz.pmis.sales.domain.entity.ContractChangeDO;
 import com.njydsz.pmis.sales.domain.entity.ContractDO;
 import com.njydsz.pmis.sales.infra.mapper.ContractChangeMapper;
 import com.njydsz.pmis.sales.infra.mapper.ContractMapper;
+import com.njydsz.pmis.sales.server.engine.ContractRiskEvaluator;
 import com.njydsz.pmis.sales.server.service.contract.ContractChangeService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import java.util.List;
-import java.util.Set;
 
 /**
  * 合同变更服务实现

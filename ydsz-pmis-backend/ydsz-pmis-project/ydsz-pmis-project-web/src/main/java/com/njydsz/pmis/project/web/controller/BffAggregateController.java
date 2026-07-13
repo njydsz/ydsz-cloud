@@ -1,17 +1,11 @@
 package com.njydsz.pmis.project.web.controller.common;
 
-import com.njydsz.pmis.common.safe.annotation.RateLimit;
-import com.njydsz.pmis.project.domain.dto.CockpitAlertSummaryVO;
-import com.njydsz.pmis.project.domain.dto.CockpitKpiVO;
-import com.njydsz.pmis.project.domain.dto.ProjectDetailAggregateVO;
-import com.njydsz.pmis.project.domain.dto.ProjectDetailAggregateVO.AggregateSection;
-import com.njydsz.pmis.project.server.service.CockpitReportService;
-import com.njydsz.pmis.project.server.service.ReportService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import jakarta.validation.constraints.NotNull;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,9 +13,18 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
+import com.njydsz.pmis.project.domain.dto.CockpitAlertSummaryVO;
+import com.njydsz.pmis.project.domain.dto.CockpitKpiVO;
+import com.njydsz.pmis.project.domain.dto.ProjectDetailAggregateVO;
+import com.njydsz.pmis.project.domain.dto.ProjectDetailAggregateVO.AggregateSection;
+import com.njydsz.pmis.project.server.service.CockpitReportService;
+import com.njydsz.pmis.project.server.service.ReportService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * BFF 聚合 Controller。

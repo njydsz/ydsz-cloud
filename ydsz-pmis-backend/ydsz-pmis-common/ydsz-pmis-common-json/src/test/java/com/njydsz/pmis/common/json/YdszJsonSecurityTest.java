@@ -1,15 +1,16 @@
 package com.njydsz.pmis.common.json;
 
-import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
-import com.njydsz.pmis.common.json.autotype.AutoTypeChecker;
-import com.njydsz.pmis.common.json.exception.JsonDeserializationException;
-import com.njydsz.pmis.common.json.reader.JSONReader;
-import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
+
+import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
+import com.njydsz.pmis.common.json.autotype.AutoTypeChecker;
 import com.njydsz.pmis.common.json.config.DeserializationConfig;
+import com.njydsz.pmis.common.json.exception.JsonDeserializationException;
+import com.njydsz.pmis.common.json.reader.JSONReader;
 
 @DisplayName("YdszJson 安全测试")
 class YdszJsonSecurityTest {

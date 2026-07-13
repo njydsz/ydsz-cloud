@@ -1,16 +1,18 @@
 package com.njydsz.pmis.message.server.token;
 
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.util.CryptoUtil;
 import com.njydsz.pmis.message.server.config.MessageProperties;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 退订 token 工具（P1-5）。

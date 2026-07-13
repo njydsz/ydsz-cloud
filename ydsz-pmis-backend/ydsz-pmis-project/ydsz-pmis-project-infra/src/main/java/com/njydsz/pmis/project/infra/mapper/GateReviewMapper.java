@@ -1,11 +1,12 @@
 package com.njydsz.pmis.project.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.project.domain.entity.GateReviewDO;
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import java.util.List;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.project.domain.entity.GateReviewDO;
 
 /**
  * 门径评审记录数据访问层

@@ -1,5 +1,9 @@
 package com.njydsz.pmis.project.domain.entity;
 
+import java.io.Serial;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -8,11 +12,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
 import com.njydsz.pmis.common.safe.annotation.Sensitive;
 import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
-import lombok.Data;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
+import lombok.Data;
 
 /**
  * 运维工单实体

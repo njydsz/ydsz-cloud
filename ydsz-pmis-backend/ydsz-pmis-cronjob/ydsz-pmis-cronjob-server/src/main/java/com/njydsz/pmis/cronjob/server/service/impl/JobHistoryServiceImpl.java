@@ -1,5 +1,17 @@
 package com.njydsz.pmis.cronjob.server.service.impl.job;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
@@ -8,19 +20,9 @@ import com.njydsz.pmis.cronjob.domain.entity.job.JobHistoryDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobHistoryMapper;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.pmis.cronjob.server.service.job.JobHistoryService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * 任务配置历史版本服务实现（P1-6 任务版本管理，合并原 JobVersionService）。

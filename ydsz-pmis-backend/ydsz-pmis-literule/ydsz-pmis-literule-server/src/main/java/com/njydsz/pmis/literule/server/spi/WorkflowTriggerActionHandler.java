@@ -1,13 +1,14 @@
 package com.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.literule.api.RuleContext;
-import com.njydsz.pmis.literule.api.RuleResult;
-import com.njydsz.pmis.workflow.api.client.WorkflowServiceClient;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.njydsz.pmis.literule.api.RuleContext;
+import com.njydsz.pmis.literule.api.RuleResult;
+import com.njydsz.pmis.workflow.api.client.WorkflowServiceClient;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 工作流触发动作处理器

@@ -1,5 +1,12 @@
 package com.njydsz.pmis.message.server.consumer;
 
+import org.apache.rocketmq.common.message.MessageExt;
+import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
+import org.apache.rocketmq.spring.core.RocketMQListener;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.pmis.common.constant.PmisMessageTopics;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -9,14 +16,9 @@ import com.njydsz.pmis.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.pmis.message.server.metric.MessageMetrics;
 import com.njydsz.pmis.message.server.tracing.MessageTraceContext;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
-import org.apache.rocketmq.spring.core.RocketMQListener;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 
 /**
  * RocketMQ 死信队列消费者。

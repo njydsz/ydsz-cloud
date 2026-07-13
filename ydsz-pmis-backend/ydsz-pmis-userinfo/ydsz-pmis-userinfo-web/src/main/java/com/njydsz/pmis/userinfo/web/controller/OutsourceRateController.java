@@ -1,18 +1,10 @@
 package com.njydsz.pmis.userinfo.web.controller.rate;
 
-import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import java.time.LocalDate;
+import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRateCreateDTO;
-import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRatePageDTO;
-import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRateUpdateDTO;
-import com.njydsz.pmis.userinfo.domain.entity.rate.OutsourceRateDO;
-import com.njydsz.pmis.userinfo.server.service.rate.OutsourceRateService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,8 +17,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
-import java.util.List;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRateCreateDTO;
+import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRatePageDTO;
+import com.njydsz.pmis.userinfo.domain.dto.rate.OutsourceRateUpdateDTO;
+import com.njydsz.pmis.userinfo.domain.entity.rate.OutsourceRateDO;
+import com.njydsz.pmis.userinfo.server.service.rate.OutsourceRateService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 外包职级费率接口（V1-V18）

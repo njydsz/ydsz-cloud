@@ -1,15 +1,7 @@
 package com.njydsz.pmis.userinfo.web.controller.auth;
 
-import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
+import java.util.List;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.userinfo.domain.dto.auth.TwoFactorBindResult;
-import com.njydsz.pmis.userinfo.domain.entity.user.User2FADO;
-import com.njydsz.pmis.userinfo.server.service.auth.TwoFactorService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,7 +9,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.njydsz.pmis.common.auth.context.AuthContext;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
+import com.njydsz.pmis.userinfo.domain.dto.auth.TwoFactorBindResult;
+import com.njydsz.pmis.userinfo.domain.entity.user.User2FADO;
+import com.njydsz.pmis.userinfo.server.service.auth.TwoFactorService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 双因素认证 Controller

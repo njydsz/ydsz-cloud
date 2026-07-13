@@ -1,8 +1,19 @@
 package com.njydsz.pmis.workflow.web.controller.integration;
 
-import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
 import com.njydsz.pmis.workflow.domain.dto.EmbeddedApprovalActionDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyAccountDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyLogDO;
@@ -14,21 +25,11 @@ import com.njydsz.pmis.workflow.server.thirdparty.DingTalkSignatureUtil;
 import com.njydsz.pmis.workflow.server.thirdparty.FeishuSignatureUtil;
 import com.njydsz.pmis.workflow.server.thirdparty.ThirdPartyApprovalActionResolver;
 import com.njydsz.pmis.workflow.server.thirdparty.WeComSignatureUtil;
-import org.springframework.validation.annotation.Validated;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * 三方审批回调 Controller

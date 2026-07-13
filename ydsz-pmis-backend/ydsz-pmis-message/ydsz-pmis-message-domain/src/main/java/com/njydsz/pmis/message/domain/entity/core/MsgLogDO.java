@@ -1,17 +1,18 @@
 package com.njydsz.pmis.message.domain.entity.core;
 
+import java.io.Serial;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
 import com.njydsz.pmis.common.safe.annotation.Sensitive;
 import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
-import java.time.LocalDateTime;
-import java.math.BigDecimal;
 
 /**
  * 消息发送日志: 全通道发送全量记录,支持优先级/聚合/撤回/回执/路由/灰度/重试调度

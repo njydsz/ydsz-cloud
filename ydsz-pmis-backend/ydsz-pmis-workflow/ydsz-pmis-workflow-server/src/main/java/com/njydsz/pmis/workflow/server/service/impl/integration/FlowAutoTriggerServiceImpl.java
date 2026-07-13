@@ -1,5 +1,13 @@
 package com.njydsz.pmis.workflow.server.service.impl.integration;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.workflow.WorkflowFacade;
 import com.njydsz.pmis.workflow.domain.dto.FlowStartProcessDTO;
@@ -11,15 +19,9 @@ import com.njydsz.pmis.workflow.infra.mapper.FlowAutoTriggerMapper;
 import com.njydsz.pmis.workflow.server.service.FlowAutoTriggerService;
 import com.njydsz.pmis.workflow.server.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.server.service.FlowRoutingService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 流程自动触发服务实现

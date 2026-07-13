@@ -1,16 +1,9 @@
 package com.njydsz.pmis.message.web.controller.config;
 
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.message.domain.dto.config.UserChannelBindingDTO;
-import com.njydsz.pmis.message.domain.entity.config.MsgUserChannelDO;
-import com.njydsz.pmis.message.server.service.config.UserChannelBindingService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +12,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.auth.context.AuthContext;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.message.domain.dto.config.UserChannelBindingDTO;
+import com.njydsz.pmis.message.domain.entity.config.MsgUserChannelDO;
+import com.njydsz.pmis.message.server.service.config.UserChannelBindingService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 用户通道绑定 Controller。

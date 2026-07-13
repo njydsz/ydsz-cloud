@@ -1,17 +1,19 @@
 package com.njydsz.pmis.cronjob.server.metrics;
 
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicLong;
+
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.stereotype.Component;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.metrics.AbstractModuleMetrics;
 import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
 import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
+
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.stereotype.Component;
-
-import java.time.Duration;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * P6-2 任务调度 Prometheus 指标收集器

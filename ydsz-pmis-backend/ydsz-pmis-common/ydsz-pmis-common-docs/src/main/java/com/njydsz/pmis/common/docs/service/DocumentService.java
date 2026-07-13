@@ -1,9 +1,16 @@
 package com.njydsz.pmis.common.docs.service;
 
+import java.io.InputStream;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import com.njydsz.pmis.common.docs.domain.DocumentContent;
 import com.njydsz.pmis.common.docs.domain.DocumentParseResult;
-import com.njydsz.pmis.common.docs.domain.PiiFinding;
 import com.njydsz.pmis.common.docs.domain.ParseOptions;
+import com.njydsz.pmis.common.docs.domain.PiiFinding;
 import com.njydsz.pmis.common.docs.domain.SecurityScanResult;
 import com.njydsz.pmis.common.docs.enums.DocumentFormat;
 import com.njydsz.pmis.common.docs.exception.DocumentException;
@@ -12,14 +19,9 @@ import com.njydsz.pmis.common.docs.parser.registry.DocumentParserRegistry;
 import com.njydsz.pmis.common.docs.preprocess.pipeline.PreprocessPipeline;
 import com.njydsz.pmis.common.docs.security.pii.PiiDetectorComposite;
 import com.njydsz.pmis.common.docs.security.scanner.DocumentSecurityScannerComposite;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import java.io.InputStream;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
 
 /**
  * 文档处理统一服务门面

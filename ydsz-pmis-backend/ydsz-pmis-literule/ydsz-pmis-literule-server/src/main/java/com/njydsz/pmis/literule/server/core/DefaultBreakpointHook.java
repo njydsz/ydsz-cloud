@@ -340,4 +340,3 @@ public class DefaultBreakpointHook implements BreakpointHook {
         final AtomicReference<BreakpointAction> action = new AtomicReference<>(BreakpointAction.CONTINUE);
     }
 }
-

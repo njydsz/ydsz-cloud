@@ -1,30 +1,32 @@
 package com.njydsz.pmis.workflow.server.service.impl;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.common.util.TraceIdUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.workflow.domain.entity.FlowAuditLogDO;
-import com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO;
-import com.njydsz.pmis.workflow.infra.mapper.FlowAuditLogMapper;
-import com.njydsz.pmis.workflow.infra.mapper.FlowDelegateAuthMapper;
-import com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskAuditService;
-import com.njydsz.pmis.workflow.server.service.FlowDelegateAuthService;
-import com.njydsz.pmis.workflow.server.service.FlowOfflineAutoForwardService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.common.auth.context.AuthContext;
+import com.njydsz.pmis.common.core.response.PageResponse;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.workflow.domain.entity.FlowAuditLogDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO;
+import com.njydsz.pmis.workflow.infra.mapper.FlowAuditLogMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowDelegateAuthMapper;
+import com.njydsz.pmis.workflow.server.service.FlowDelegateAuthService;
+import com.njydsz.pmis.workflow.server.service.FlowOfflineAutoForwardService;
+import com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskAuditService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 流程委派代理（长期授权）服务实现

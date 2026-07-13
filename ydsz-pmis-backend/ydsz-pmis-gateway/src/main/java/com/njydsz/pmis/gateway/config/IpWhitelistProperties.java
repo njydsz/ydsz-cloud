@@ -1,12 +1,13 @@
 package com.njydsz.pmis.gateway.config;
 
-import lombok.Data;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import lombok.Data;
 
 /**
  * IP 白名单安全配置属性（P2-8 安全加固）

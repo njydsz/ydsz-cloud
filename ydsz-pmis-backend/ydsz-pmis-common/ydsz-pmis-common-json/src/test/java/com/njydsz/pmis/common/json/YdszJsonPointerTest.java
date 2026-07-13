@@ -1,10 +1,11 @@
 package com.njydsz.pmis.common.json;
 
-import com.njydsz.pmis.common.json.exception.YdszJsonException;
-import com.njydsz.pmis.common.json.pointer.JsonPointer;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import com.njydsz.pmis.common.json.exception.YdszJsonException;
+import com.njydsz.pmis.common.json.pointer.JsonPointer;
 
 @DisplayName("YdszJson Pointer (RFC 6901) 测试")
 class YdszJsonPointerTest {

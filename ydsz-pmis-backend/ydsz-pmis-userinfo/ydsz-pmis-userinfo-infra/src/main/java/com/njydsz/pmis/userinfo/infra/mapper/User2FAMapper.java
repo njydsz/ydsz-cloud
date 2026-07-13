@@ -1,9 +1,10 @@
 package com.njydsz.pmis.userinfo.infra.mapper.user;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.userinfo.domain.entity.user.User2FADO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.userinfo.domain.entity.user.User2FADO;
 
 /**
  * 用户双因素认证 Mapper

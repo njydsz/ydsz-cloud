@@ -1,12 +1,14 @@
 package com.njydsz.pmis.workflow.server.service.impl.strategy;
 
+import org.springframework.stereotype.Component;
+
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.domain.enums.FlowPerformType;
 import com.njydsz.pmis.workflow.server.service.impl.CountersignStrategy;
 import com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskArchiveService;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
 /**
  * OR 或签策略：任一办理人通过即推进。

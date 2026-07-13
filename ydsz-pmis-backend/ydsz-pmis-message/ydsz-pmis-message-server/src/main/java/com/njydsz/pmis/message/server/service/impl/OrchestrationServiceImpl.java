@@ -1,15 +1,9 @@
 package com.njydsz.pmis.message.server.service.impl.core;
 
-import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.message.domain.dto.core.OrchestrationFlowDTO;
-import com.njydsz.pmis.message.domain.dto.core.OrchestrationNodeDTO;
-import com.njydsz.pmis.message.domain.dto.core.OrchestrationResultVO;
-import com.njydsz.pmis.message.server.service.core.MessageService;
-import com.njydsz.pmis.message.server.service.core.OrchestrationService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -18,9 +12,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.message.domain.dto.core.OrchestrationFlowDTO;
+import com.njydsz.pmis.message.domain.dto.core.OrchestrationNodeDTO;
+import com.njydsz.pmis.message.domain.dto.core.OrchestrationResultVO;
+import com.njydsz.pmis.message.server.service.core.MessageService;
+import com.njydsz.pmis.message.server.service.core.OrchestrationService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 消息编排引擎实现。

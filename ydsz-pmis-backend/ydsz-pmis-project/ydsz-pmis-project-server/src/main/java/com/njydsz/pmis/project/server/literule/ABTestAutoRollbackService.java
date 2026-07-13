@@ -1,9 +1,17 @@
 package com.njydsz.pmis.project.server.literule;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.literule.api.RuleDefinition;
-import com.njydsz.pmis.literule.server.spi.ABTestAutoRollbackProvider;
-import com.njydsz.pmis.literule.server.spi.RuleConfigProvider;
 import com.njydsz.pmis.literule.domain.entity.RuleABPolicyDO;
 import com.njydsz.pmis.literule.domain.entity.RuleABRollbackDO;
 import com.njydsz.pmis.literule.domain.entity.RuleCanaryBucketDO;
@@ -12,17 +20,11 @@ import com.njydsz.pmis.literule.infra.mapper.RuleABPolicyMapper;
 import com.njydsz.pmis.literule.infra.mapper.RuleABRollbackMapper;
 import com.njydsz.pmis.literule.infra.mapper.RuleCanaryBucketMapper;
 import com.njydsz.pmis.literule.infra.mapper.RuleDefinitionMapper;
+import com.njydsz.pmis.literule.server.spi.ABTestAutoRollbackProvider;
+import com.njydsz.pmis.literule.server.spi.RuleConfigProvider;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * AB Test 自动回滚 Service（P1-10）

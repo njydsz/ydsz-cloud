@@ -1,12 +1,13 @@
 package com.njydsz.pmis.cronjob.domain.dto.job;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 
 /**
  * 任务依赖关系创建/更新 DTO（P4 DAG 工作流）。

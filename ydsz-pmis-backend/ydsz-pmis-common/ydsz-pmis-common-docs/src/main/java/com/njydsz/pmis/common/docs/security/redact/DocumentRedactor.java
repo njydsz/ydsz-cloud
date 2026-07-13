@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.docs.security.redact;
 
-import com.njydsz.pmis.common.docs.domain.PiiFinding;
-import com.njydsz.pmis.common.docs.enums.DocumentFormat;
-
 import java.io.InputStream;
 import java.util.List;
+
+import com.njydsz.pmis.common.docs.domain.PiiFinding;
+import com.njydsz.pmis.common.docs.enums.DocumentFormat;
 
 /**
  * 文档脱敏接口

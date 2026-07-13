@@ -1,8 +1,8 @@
 package com.njydsz.pmis.message.server.template;
 
-import lombok.Data;
-
 import java.util.List;
+
+import lombok.Data;
 
 /**
  * 模板变量定义（P0-3）。

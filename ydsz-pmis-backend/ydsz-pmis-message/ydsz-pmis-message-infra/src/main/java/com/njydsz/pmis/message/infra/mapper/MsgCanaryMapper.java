@@ -1,8 +1,9 @@
 package com.njydsz.pmis.message.infra.mapper.canary;
 
+import org.apache.ibatis.annotations.Mapper;
+
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.message.domain.entity.canary.MsgCanaryDO;
-import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 灰度桶 Mapper

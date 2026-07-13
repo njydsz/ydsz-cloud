@@ -1,8 +1,9 @@
 package com.njydsz.pmis.common.app.auth;
 
+import org.springframework.stereotype.Component;
+
 import com.njydsz.pmis.common.auth.handler.AbstractAuthHandler;
 import com.njydsz.pmis.common.util.auth.YdszAuthInfo;
-import org.springframework.stereotype.Component;
 
 /**
  * App 端认证信息处理器

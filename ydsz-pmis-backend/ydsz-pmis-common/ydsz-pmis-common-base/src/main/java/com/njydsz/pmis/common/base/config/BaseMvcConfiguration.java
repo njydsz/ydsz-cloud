@@ -1,7 +1,7 @@
 package com.njydsz.pmis.common.base.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -12,7 +12,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.util.List;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 /**
  * MVC 基础配置（Web/App 共享）

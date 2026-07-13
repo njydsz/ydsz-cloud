@@ -1,5 +1,10 @@
 package com.njydsz.pmis.message.server.service.impl.config;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
@@ -9,12 +14,9 @@ import com.njydsz.pmis.message.domain.dto.config.PreferenceUpsertDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgPreferenceDO;
 import com.njydsz.pmis.message.infra.mapper.config.MsgPreferenceMapper;
 import com.njydsz.pmis.message.server.service.config.PreferenceService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
-import java.util.List;
 
 /**
  * 用户消息偏好服务实现。

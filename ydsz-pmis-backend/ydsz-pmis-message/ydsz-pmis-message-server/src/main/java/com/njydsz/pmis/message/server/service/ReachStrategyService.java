@@ -1,8 +1,8 @@
 package com.njydsz.pmis.message.server.service.core;
 
-import com.njydsz.pmis.message.domain.dto.core.UserReachProfileDTO;
-
 import java.util.List;
+
+import com.njydsz.pmis.message.domain.dto.core.UserReachProfileDTO;
 
 /**
  * 智能触达策略服务。

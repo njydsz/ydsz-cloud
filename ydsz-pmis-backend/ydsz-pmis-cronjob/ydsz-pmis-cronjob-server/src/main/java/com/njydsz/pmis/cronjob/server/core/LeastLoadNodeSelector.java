@@ -1,15 +1,17 @@
 package com.njydsz.pmis.cronjob.server.core.dispatch;
 
-import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.util.Comparator;
+import java.util.List;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-import java.math.BigDecimal;
-import java.util.Comparator;
-import java.util.List;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 默认节点选择策略：最少负载优先。

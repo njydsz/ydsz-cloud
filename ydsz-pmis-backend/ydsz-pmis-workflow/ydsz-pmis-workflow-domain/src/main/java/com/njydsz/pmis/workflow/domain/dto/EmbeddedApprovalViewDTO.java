@@ -1,16 +1,15 @@
 package com.njydsz.pmis.workflow.domain.dto;
 
-import com.njydsz.pmis.workflow.domain.dto.FlowInstanceViewDTO;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * P2-2 嵌入式审批面板 DTO

@@ -1,11 +1,13 @@
 package com.njydsz.pmis.message.server.metric;
 
 
-import com.njydsz.pmis.common.core.metrics.AbstractModuleMetrics;
-import io.micrometer.core.instrument.MeterRegistry;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.core.metrics.AbstractModuleMetrics;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 消息发送监控指标。

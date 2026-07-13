@@ -1,9 +1,10 @@
 package com.njydsz.pmis.message.server.event;
 
-import com.njydsz.pmis.message.server.config.MessageProperties;
+import java.time.LocalDateTime;
+
 import org.springframework.context.ApplicationEvent;
 
-import java.time.LocalDateTime;
+import com.njydsz.pmis.message.server.config.MessageProperties;
 
 /**
  * 死信告警事件（P1-4）。

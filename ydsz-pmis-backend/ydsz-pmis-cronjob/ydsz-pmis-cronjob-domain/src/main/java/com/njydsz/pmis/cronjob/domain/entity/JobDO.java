@@ -1,15 +1,17 @@
 package com.njydsz.pmis.cronjob.domain.entity.job;
 
+import java.io.Serial;
+import java.time.LocalDateTime;
+
+import jakarta.validation.constraints.NotBlank;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
-import jakarta.validation.constraints.NotBlank;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
-import java.time.LocalDateTime;
 
 /**
  * 定时任务定义

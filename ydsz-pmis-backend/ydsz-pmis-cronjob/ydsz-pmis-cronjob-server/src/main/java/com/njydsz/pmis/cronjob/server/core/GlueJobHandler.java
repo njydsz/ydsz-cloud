@@ -1,24 +1,27 @@
 package com.njydsz.pmis.cronjob.server.core.handler;
 
-import com.njydsz.pmis.common.core.job.JobHandler;
-import com.njydsz.pmis.common.core.job.JobLoggerHolder;
-import com.njydsz.pmis.cronjob.server.core.executor.SandboxScriptExecutor;
-import com.njydsz.pmis.cronjob.domain.entity.schedule.GlueCodeDO;
-import com.njydsz.pmis.cronjob.server.service.schedule.GlueCodeService;
-import groovy.lang.GroovyClassLoader;
-import groovy.lang.GroovyObject;
-import lombok.extern.slf4j.Slf4j;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.Map;
 import com.njydsz.pmis.common.core.job.JobContextHolder;
+import com.njydsz.pmis.common.core.job.JobHandler;
+import com.njydsz.pmis.common.core.job.JobLoggerHolder;
+import com.njydsz.pmis.cronjob.domain.entity.schedule.GlueCodeDO;
+import com.njydsz.pmis.cronjob.server.core.executor.SandboxScriptExecutor;
+import com.njydsz.pmis.cronjob.server.service.schedule.GlueCodeService;
+
+import groovy.lang.GroovyClassLoader;
+import groovy.lang.GroovyObject;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * GLUE 在线编码任务处理器（P1-2 GLUE 在线编码，P1-7 多语言支持扩展）。

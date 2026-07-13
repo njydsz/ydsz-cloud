@@ -1,12 +1,13 @@
 package com.njydsz.pmis.common.json;
 
-import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
-import com.njydsz.pmis.common.json.type.YdszJsonType;
-import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
+
+import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
+import com.njydsz.pmis.common.json.type.YdszJsonType;
 
 @DisplayName("YdszJson 核心序列化/反序列化测试")
 class YdszJsonCoreTest {

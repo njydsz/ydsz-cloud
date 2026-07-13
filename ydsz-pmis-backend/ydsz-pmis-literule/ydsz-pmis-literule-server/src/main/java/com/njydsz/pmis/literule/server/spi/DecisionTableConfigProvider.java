@@ -1,8 +1,8 @@
 package com.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.literule.api.DecisionTableDefinition;
-
 import java.util.List;
+
+import com.njydsz.pmis.literule.api.DecisionTableDefinition;
 
 /**
  * 决策表配置提供者接口（SPI）

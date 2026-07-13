@@ -1,20 +1,23 @@
 package com.njydsz.pmis.cronjob.server.core.cleaner;
 
-import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
-import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobAlertLogMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobHistoryMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogContentMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobTaskMapper;
+import java.time.LocalDateTime;
+
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
+import com.njydsz.pmis.cronjob.infra.mapper.job.JobAlertLogMapper;
+import com.njydsz.pmis.cronjob.infra.mapper.job.JobHistoryMapper;
+import com.njydsz.pmis.cronjob.infra.mapper.job.JobTaskMapper;
+import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogContentMapper;
+import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 日志归档清理器（P2-2）。

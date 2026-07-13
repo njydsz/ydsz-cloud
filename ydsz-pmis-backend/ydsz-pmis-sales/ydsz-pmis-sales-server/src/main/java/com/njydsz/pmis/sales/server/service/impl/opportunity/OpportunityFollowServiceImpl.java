@@ -1,5 +1,12 @@
 package com.njydsz.pmis.sales.server.service.impl.opportunity;
 
+import java.time.LocalDateTime;
+
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
@@ -11,14 +18,9 @@ import com.njydsz.pmis.sales.domain.entity.OpportunityFollowDO;
 import com.njydsz.pmis.sales.infra.mapper.OpportunityFollowMapper;
 import com.njydsz.pmis.sales.infra.mapper.OpportunityMapper;
 import com.njydsz.pmis.sales.server.service.opportunity.OpportunityFollowService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import java.time.LocalDateTime;
 
 /**
  * 商机跟进服务实现

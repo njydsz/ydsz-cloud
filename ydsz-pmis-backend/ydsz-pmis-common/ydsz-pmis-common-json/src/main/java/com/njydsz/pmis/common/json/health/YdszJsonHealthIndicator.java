@@ -1,10 +1,11 @@
 package com.njydsz.pmis.common.json.health;
 
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
+
 import com.njydsz.pmis.common.json.autotype.AutoTypeChecker;
 import com.njydsz.pmis.common.json.cache.YdszJsonCacheStats;
 import com.njydsz.pmis.common.json.config.YdszJsonConfig;
-import org.springframework.boot.health.contributor.Health;
-import org.springframework.boot.health.contributor.HealthIndicator;
 
 /**
  * YdszJson 健康检查指标。

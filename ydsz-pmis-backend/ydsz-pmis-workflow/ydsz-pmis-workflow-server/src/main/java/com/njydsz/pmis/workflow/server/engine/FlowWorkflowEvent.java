@@ -1,9 +1,10 @@
 package com.njydsz.pmis.workflow.server.engine;
 
-import lombok.Getter;
+import java.util.Map;
+
 import org.springframework.context.ApplicationEvent;
 
-import java.util.Map;
+import lombok.Getter;
 
 /**
  * 工作流事件（Spring ApplicationEvent 封装）

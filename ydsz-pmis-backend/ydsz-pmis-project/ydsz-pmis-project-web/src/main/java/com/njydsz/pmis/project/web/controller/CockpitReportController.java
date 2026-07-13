@@ -1,8 +1,17 @@
 package com.njydsz.pmis.project.web.controller.report;
 
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.project.domain.dto.CockpitAlertSummaryVO;
 import com.njydsz.pmis.project.domain.dto.CockpitDrillDownDTO;
 import com.njydsz.pmis.project.domain.dto.CockpitKpiVO;
@@ -10,17 +19,10 @@ import com.njydsz.pmis.project.domain.dto.ExecutiveOverviewVO;
 import com.njydsz.pmis.project.domain.dto.KpiTrendVO;
 import com.njydsz.pmis.project.domain.dto.ProjectGroupKpiDTO;
 import com.njydsz.pmis.project.server.service.CockpitReportService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * 经营驾驶舱 Controller（批次18 增强）

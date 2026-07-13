@@ -1,12 +1,13 @@
 package com.njydsz.pmis.project.api.fallback;
+import org.springframework.cloud.openfeign.FallbackFactory;
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.project.api.client.InitiationFeignClient;
 import com.njydsz.pmis.project.api.dto.InitiationCreateDTO;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.core.response.BaseResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.openfeign.FallbackFactory;
-import org.springframework.stereotype.Component;
 
 /**
  * InitiationFeignClient 降级工厂。

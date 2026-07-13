@@ -1,15 +1,16 @@
 package com.njydsz.pmis.workflow.web.controller.delegate;
 
-import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import org.springframework.web.bind.annotation.*;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.auth.context.AuthContext;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
 import com.njydsz.pmis.workflow.server.service.FlowOfflineAutoForwardService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
 
 /**
  * 离线代理自动转发 Controller（P2-5）。

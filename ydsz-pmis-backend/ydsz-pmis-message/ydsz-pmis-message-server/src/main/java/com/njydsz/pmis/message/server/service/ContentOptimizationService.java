@@ -1,14 +1,14 @@
 package com.njydsz.pmis.message.server.service.ai;
 
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.util.List;
-import java.util.ArrayList;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * AI 内容优化建议服务（P2-4）。

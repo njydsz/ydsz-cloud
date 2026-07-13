@@ -1,5 +1,15 @@
 package com.njydsz.pmis.userinfo.web.controller.org;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.entity.org.DepartmentDO;
 import com.njydsz.pmis.userinfo.domain.entity.permission.RoleDO;
@@ -8,19 +18,11 @@ import com.njydsz.pmis.userinfo.infra.mapper.permission.RoleMapper;
 import com.njydsz.pmis.userinfo.infra.mapper.user.UserAccountMapper;
 import com.njydsz.pmis.userinfo.infra.mapper.user.UserRoleMapper;
 import com.njydsz.pmis.userinfo.server.service.permission.RoleService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * 组织架构查询 Feign 端点（P1-5）

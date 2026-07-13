@@ -1,11 +1,12 @@
 package com.njydsz.pmis.workflow.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.workflow.domain.entity.FlowSkipDO;
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import java.util.List;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.workflow.domain.entity.FlowSkipDO;
 
 /**
  * 节点跳转 Mapper

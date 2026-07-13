@@ -1,16 +1,18 @@
 package com.njydsz.pmis.workflow.server.job;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Component;
+
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.core.job.JobHandler;
 import com.njydsz.pmis.workflow.server.config.FlowHistoryProperties;
 import com.njydsz.pmis.workflow.server.service.FlowHistoryArchiveService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * P2-3 / P2-8 历史数据归档任务处理器

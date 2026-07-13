@@ -1,13 +1,5 @@
 package com.njydsz.pmis.message.server.producer;
 
-import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.json.JsonUtils;
-import com.njydsz.pmis.message.server.channel.ChannelRouter;
-import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
-import com.njydsz.pmis.message.server.service.template.TemplateService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQTransactionListener;
 import org.apache.rocketmq.spring.core.RocketMQLocalTransactionListener;
 import org.apache.rocketmq.spring.core.RocketMQLocalTransactionState;
@@ -16,6 +8,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
+import com.njydsz.pmis.message.server.channel.ChannelRouter;
+import com.njydsz.pmis.message.server.service.template.TemplateService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * RocketMQ 事务消息本地事务监听器（P2-3）。

@@ -1,5 +1,13 @@
 package com.njydsz.pmis.gateway.config;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import jakarta.annotation.PostConstruct;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+
 import com.alibaba.csp.sentinel.adapter.gateway.common.SentinelGatewayConstants;
 import com.alibaba.csp.sentinel.adapter.gateway.common.api.ApiDefinition;
 import com.alibaba.csp.sentinel.adapter.gateway.common.api.ApiPathPredicateItem;
@@ -7,13 +15,8 @@ import com.alibaba.csp.sentinel.adapter.gateway.common.api.GatewayApiDefinitionM
 import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayFlowRule;
 import com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayRuleManager;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
-import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
 
-import java.util.HashSet;
-import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 网关 Sentinel API 级限流规则配置（P2-8 落地）。

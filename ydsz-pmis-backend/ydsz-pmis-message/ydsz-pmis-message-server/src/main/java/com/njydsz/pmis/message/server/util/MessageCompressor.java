@@ -1,7 +1,5 @@
 package com.njydsz.pmis.message.server.util;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -9,6 +7,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * P2-21: 消息压缩工具。

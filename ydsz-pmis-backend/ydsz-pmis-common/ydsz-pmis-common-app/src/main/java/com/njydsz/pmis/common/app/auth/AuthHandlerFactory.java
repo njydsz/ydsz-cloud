@@ -1,12 +1,13 @@
 package com.njydsz.pmis.common.app.auth;
 
-import com.njydsz.pmis.common.core.enums.ServiceType;
-import com.njydsz.pmis.common.auth.handler.AuthHandler;
-import org.springframework.stereotype.Component;
-
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.LinkedHashMap;
+
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.auth.handler.AuthHandler;
+import com.njydsz.pmis.common.core.enums.ServiceType;
 
 /**
  * 认证处理器工厂

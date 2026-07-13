@@ -1,9 +1,9 @@
 package com.njydsz.pmis.message.server.service.config;
 
+import java.util.List;
+
 import com.njydsz.pmis.message.domain.dto.config.SubscriptionUpsertDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgSubscriptionDO;
-
-import java.util.List;
 
 /**
  * 订阅关系服务

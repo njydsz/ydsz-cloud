@@ -1,6 +1,7 @@
 package com.njydsz.pmis.message.domain.dto.template;
 
 import com.njydsz.pmis.common.domain.query.PageQuery;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

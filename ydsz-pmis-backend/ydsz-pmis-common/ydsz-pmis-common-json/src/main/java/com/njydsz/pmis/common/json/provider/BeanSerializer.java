@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.json.provider;
 
-import com.njydsz.pmis.common.json.cache.FieldMeta;
-
 import java.lang.invoke.MethodHandle;
+
+import com.njydsz.pmis.common.json.cache.FieldMeta;
 
 /**
  * Bean 序列化器（FastJSON2 架构级优化）

@@ -1,10 +1,12 @@
 package com.njydsz.pmis.common.web.config;
 
-import com.njydsz.pmis.common.web.filter.TraceIdResponseFilter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
 import com.njydsz.pmis.common.base.config.BaseTraceProperties;
+import com.njydsz.pmis.common.web.filter.TraceIdResponseFilter;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Web 端请求追踪/日志配置属性

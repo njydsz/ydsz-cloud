@@ -1,8 +1,8 @@
 package com.njydsz.pmis.sales.server.service.opportunity;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.sales.domain.entity.OpportunityFollowDO;
 import com.njydsz.pmis.sales.domain.dto.OpportunityFollowDTO;
+import com.njydsz.pmis.sales.domain.entity.OpportunityFollowDO;
 
 /**
  * 商机跟进服务

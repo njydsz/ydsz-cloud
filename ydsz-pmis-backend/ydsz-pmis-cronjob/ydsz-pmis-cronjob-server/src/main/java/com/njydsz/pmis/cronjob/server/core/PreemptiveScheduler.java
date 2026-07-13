@@ -1,21 +1,23 @@
 package com.njydsz.pmis.cronjob.server.core.dispatch;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
-import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
-import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Component;
-
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.time.Duration;
+
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Component;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
+import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
+import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * P3-19: 优先级抢占式调度。

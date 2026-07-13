@@ -1,9 +1,9 @@
 package com.njydsz.pmis.workflow.server.service;
 
+import java.util.List;
+
 import com.njydsz.pmis.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowCategoryDO;
-
-import java.util.List;
 
 /**
  * 流程分类服务接口

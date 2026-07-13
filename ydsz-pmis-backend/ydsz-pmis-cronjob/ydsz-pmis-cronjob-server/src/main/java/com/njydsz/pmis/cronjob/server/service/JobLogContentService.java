@@ -1,8 +1,8 @@
 package com.njydsz.pmis.cronjob.server.service.log;
 
-import com.njydsz.pmis.cronjob.domain.entity.log.JobLogContentDO;
-
 import java.util.List;
+
+import com.njydsz.pmis.cronjob.domain.entity.log.JobLogContentDO;
 
 /**
  * 任务日志内容 Service（P0-2 在线日志白屏化）。

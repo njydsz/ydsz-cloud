@@ -1,20 +1,23 @@
 package com.njydsz.pmis.common.web.handler;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
-import com.njydsz.pmis.common.exception.enums.ExceptionCode;
-import com.njydsz.pmis.common.util.message.MessageUtils;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.pmis.common.exception.enums.ExceptionCode;
+import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.util.message.MessageUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Web 端认证失败统一处理入口点

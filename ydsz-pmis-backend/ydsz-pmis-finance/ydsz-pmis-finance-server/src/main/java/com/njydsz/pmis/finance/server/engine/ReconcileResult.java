@@ -1,13 +1,14 @@
 package com.njydsz.pmis.finance.server.engine;
 
-import com.njydsz.pmis.finance.domain.enums.ReconcileLevel;
-import com.njydsz.pmis.finance.domain.enums.ReconcileType;
-import lombok.Builder;
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
+
+import com.njydsz.pmis.finance.domain.enums.ReconcileLevel;
+import com.njydsz.pmis.finance.domain.enums.ReconcileType;
+
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * 单条对账结果

@@ -1,11 +1,11 @@
 package com.njydsz.pmis.literule.server.orchestrator;
 
-import com.njydsz.pmis.literule.api.Rule;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+
+import com.njydsz.pmis.literule.api.Rule;
 
 /**
  * 编排节点抽象

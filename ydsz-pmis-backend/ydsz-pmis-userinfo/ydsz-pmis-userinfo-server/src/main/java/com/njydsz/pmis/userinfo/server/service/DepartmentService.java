@@ -1,10 +1,10 @@
 package com.njydsz.pmis.userinfo.server.service.org;
 
+import java.util.List;
+
 import com.njydsz.pmis.userinfo.domain.dto.org.DepartmentFormDTO;
 import com.njydsz.pmis.userinfo.domain.entity.org.DepartmentDO;
 import com.njydsz.pmis.userinfo.domain.vo.DepartmentTreeVO;
-
-import java.util.List;
 
 /**
  * 部门服务

@@ -1,9 +1,9 @@
 package com.njydsz.pmis.literule.server.spi;
 
+import java.util.List;
+
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleResult;
-
-import java.util.List;
 
 /**
  * 规则动作处理器 SPI

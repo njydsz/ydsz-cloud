@@ -1,11 +1,11 @@
 package com.njydsz.pmis.cronjob.server.core.dispatch;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serial;
-import java.io.Serializable;
 
 /**
  * MapReduce 子任务远程派发请求 DTO（P0-1 分布式并行执行）。

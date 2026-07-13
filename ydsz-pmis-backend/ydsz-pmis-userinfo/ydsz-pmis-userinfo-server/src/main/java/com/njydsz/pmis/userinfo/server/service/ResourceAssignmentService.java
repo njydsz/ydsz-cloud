@@ -1,11 +1,11 @@
 package com.njydsz.pmis.userinfo.server.service.resource;
 
+import java.util.List;
+import java.util.Map;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.userinfo.domain.dto.resource.ResourceAssignmentCreateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.resource.ResourceAssignmentDO;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * 资源分配服务

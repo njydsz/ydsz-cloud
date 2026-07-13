@@ -1,5 +1,15 @@
 package com.njydsz.pmis.cronjob.server.queue;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.pmis.common.queue.domain.QueueMessage;
 import com.njydsz.pmis.common.queue.enums.QueueType;
 import com.njydsz.pmis.common.queue.queue.IMessageQueue;
@@ -7,16 +17,9 @@ import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.pmis.common.queue.service.IMessagePublisher;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.cronjob.server.core.TaskCompletedEvent;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 定时任务执行结果队列发布者

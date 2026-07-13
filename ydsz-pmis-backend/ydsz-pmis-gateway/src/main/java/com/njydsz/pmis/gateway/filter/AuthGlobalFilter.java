@@ -1,5 +1,22 @@
 package com.njydsz.pmis.gateway.filter;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.core.Ordered;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.core.response.BaseResponse;
@@ -9,25 +26,10 @@ import com.njydsz.pmis.gateway.config.GatewayConstants;
 import com.njydsz.pmis.gateway.config.InternalHeaderSigner;
 import com.njydsz.pmis.gateway.config.PathGuard;
 import com.njydsz.pmis.gateway.config.SecurityHeadersProperties;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.gateway.filter.GatewayFilterChain;
-import org.springframework.cloud.gateway.filter.GlobalFilter;
-import org.springframework.core.Ordered;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.stereotype.Component;
-import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Set;
-import org.springframework.http.HttpHeaders;
 
 /**
  * 认证全局过滤器（P0-C5 安全加固）

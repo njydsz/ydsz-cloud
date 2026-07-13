@@ -1,10 +1,5 @@
 package com.njydsz.pmis.literule.server.core;
 
-import com.njydsz.pmis.literule.api.Rule;
-import com.njydsz.pmis.literule.api.RuleDefinition;
-import com.njydsz.pmis.literule.api.RuleEnvironment;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -14,6 +9,12 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.njydsz.pmis.literule.api.Rule;
+import com.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.api.RuleEnvironment;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 规则索引器（P0-1 轻量 RETE 优化，P1-2 倒排索引优化）

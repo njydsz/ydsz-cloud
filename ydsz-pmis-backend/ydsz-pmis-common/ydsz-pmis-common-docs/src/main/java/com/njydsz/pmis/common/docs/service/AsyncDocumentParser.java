@@ -1,21 +1,20 @@
 package com.njydsz.pmis.common.docs.service;
 
-import com.njydsz.pmis.common.docs.config.DocsProperties;
-import com.njydsz.pmis.common.docs.domain.DocumentParseResult;
-import com.njydsz.pmis.common.docs.domain.ParseOptions;
-import com.njydsz.pmis.common.docs.exception.DocumentException;
-import com.njydsz.pmis.common.docs.exception.DocumentExceptionCode;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.*;
+
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.docs.config.DocsProperties;
+import com.njydsz.pmis.common.docs.domain.DocumentParseResult;
+import com.njydsz.pmis.common.docs.domain.ParseOptions;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 异步文档解析器

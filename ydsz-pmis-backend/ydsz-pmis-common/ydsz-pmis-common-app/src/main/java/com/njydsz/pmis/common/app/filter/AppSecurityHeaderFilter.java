@@ -1,7 +1,7 @@
 package com.njydsz.pmis.common.app.filter;
 
-import com.njydsz.pmis.common.safe.filter.BaseSecurityHeaderFilter;
 import com.njydsz.pmis.common.safe.config.SecurityHeaderProperties;
+import com.njydsz.pmis.common.safe.filter.BaseSecurityHeaderFilter;
 
 /**
  * App 端安全响应头过滤器

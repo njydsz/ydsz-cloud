@@ -1,18 +1,20 @@
 package com.njydsz.pmis.message.server.config;
 
-import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
-import com.njydsz.pmis.common.notify.enums.NotifyChannel;
-import com.njydsz.pmis.message.server.channel.MessageChannel;
-import com.njydsz.pmis.message.server.channel.NotifyChannelStrategyAdapter;
-import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
+import com.njydsz.pmis.common.notify.enums.NotifyChannel;
+import com.njydsz.pmis.message.server.channel.MessageChannel;
+import com.njydsz.pmis.message.server.channel.NotifyChannelStrategyAdapter;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 通道桥接自动配置。

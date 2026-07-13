@@ -1,20 +1,22 @@
 package com.njydsz.pmis.project.server.literule;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.project.domain.entity.CostAllocationDO;
-import com.njydsz.pmis.project.domain.entity.TimeEntryDO;
-import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
-import com.njydsz.pmis.project.infra.mapper.TimeEntryMapper;
-import com.njydsz.pmis.literule.server.spi.ReconcileDataProvider;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Component;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.literule.server.spi.ReconcileDataProvider;
+import com.njydsz.pmis.project.domain.entity.CostAllocationDO;
+import com.njydsz.pmis.project.domain.entity.TimeEntryDO;
+import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
+import com.njydsz.pmis.project.infra.mapper.TimeEntryMapper;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 工时与成本对账数据提供者实现（execution 模块）

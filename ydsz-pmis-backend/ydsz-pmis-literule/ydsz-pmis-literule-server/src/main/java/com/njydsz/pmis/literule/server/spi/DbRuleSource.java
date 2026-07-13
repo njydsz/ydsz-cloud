@@ -1,10 +1,11 @@
 package com.njydsz.pmis.literule.server.spi;
 
+import java.util.List;
+
 import com.njydsz.pmis.literule.api.RuleDefinition;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.List;
 
 /**
  * 数据库规则数据源（P1-5）

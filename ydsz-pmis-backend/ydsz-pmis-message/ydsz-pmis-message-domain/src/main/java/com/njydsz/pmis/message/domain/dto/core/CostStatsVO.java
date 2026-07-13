@@ -1,11 +1,11 @@
 package com.njydsz.pmis.message.domain.dto.core;
 
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
-
 import java.math.BigDecimal;
 import java.util.List;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 
 /**
  * 消息发送成本统计 VO（P2-4 成本看板）。

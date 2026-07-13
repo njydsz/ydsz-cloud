@@ -1,9 +1,10 @@
 package com.njydsz.pmis.common.web.config;
 
-import nl.basjes.parse.useragent.UserAgentAnalyzer;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
+
+import nl.basjes.parse.useragent.UserAgentAnalyzer;
 
 /**
  * User-Agent 解析器配置

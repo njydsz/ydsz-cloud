@@ -1,13 +1,13 @@
 package com.njydsz.pmis.literule.server.impact;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Set;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
-import java.util.List;
-import java.util.Set;
 
 /**
  * 规则变更影响分析结果

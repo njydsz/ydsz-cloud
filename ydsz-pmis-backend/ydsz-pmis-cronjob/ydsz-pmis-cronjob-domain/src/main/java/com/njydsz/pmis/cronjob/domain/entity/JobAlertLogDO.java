@@ -1,13 +1,14 @@
 package com.njydsz.pmis.cronjob.domain.entity.job;
 
+import java.io.Serial;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
 
 /**
  * 任务告警日志实体（P5 告警 + 监控, P3-1-merge 重构）。

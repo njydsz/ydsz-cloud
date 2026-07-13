@@ -1,8 +1,8 @@
 package com.njydsz.pmis.literule.server.expr;
 
-import lombok.Data;
-
 import java.io.Serializable;
+
+import lombok.Data;
 
 /**
  * 表达式求值预览结果（P2-8）

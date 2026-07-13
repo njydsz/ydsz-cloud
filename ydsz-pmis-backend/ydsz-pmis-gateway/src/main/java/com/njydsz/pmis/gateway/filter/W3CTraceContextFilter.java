@@ -1,15 +1,17 @@
 package com.njydsz.pmis.gateway.filter;
 
-import com.njydsz.pmis.gateway.config.GatewayConstants;
+import java.util.UUID;
+
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Mono;
 
-import java.util.UUID;
+import com.njydsz.pmis.gateway.config.GatewayConstants;
+
+import reactor.core.publisher.Mono;
 
 /**
  * W3C Trace Context 注入过滤器（P3-13）

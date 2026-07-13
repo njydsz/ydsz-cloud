@@ -1,11 +1,12 @@
 package com.njydsz.pmis.workflow.domain.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
+
+import jakarta.validation.constraints.NotBlank;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 
 /**
  * 流程设计器数据 DTO

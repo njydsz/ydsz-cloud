@@ -1,12 +1,10 @@
 package com.njydsz.pmis.message.server.channel.impl;
 
-import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.message.server.channel.MessageChannel;
-import com.njydsz.pmis.message.server.service.receipt.ReadReceiptService;
+import java.util.Base64;
+import java.util.Map;
+
 import jakarta.mail.internet.MimeMessage;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -16,9 +14,14 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.util.Map;
-import java.util.Base64;
 import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.message.server.channel.MessageChannel;
+import com.njydsz.pmis.message.server.service.receipt.ReadReceiptService;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 邮件通道实现。

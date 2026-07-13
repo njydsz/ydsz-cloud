@@ -1,10 +1,11 @@
 package com.njydsz.pmis.cronjob.infra.mapper.job;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.cronjob.domain.entity.job.TenantQuotaDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.cronjob.domain.entity.job.TenantQuotaDO;
 
 /**
  * 租户级配额 Mapper（P7-2）。

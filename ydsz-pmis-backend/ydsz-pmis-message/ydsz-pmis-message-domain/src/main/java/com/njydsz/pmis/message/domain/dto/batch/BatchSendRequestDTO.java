@@ -1,10 +1,10 @@
 package com.njydsz.pmis.message.domain.dto.batch;
 
 
-import lombok.Data;
-
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
+
+import lombok.Data;
 
 /**
  * 批量发送请求 DTO。

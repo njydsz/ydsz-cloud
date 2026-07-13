@@ -1,16 +1,17 @@
 package com.njydsz.pmis.cronjob.server.core.logger;
 
-import com.njydsz.pmis.common.core.job.JobLogger;
-import com.njydsz.pmis.cronjob.domain.entity.log.JobLogContentDO;
-import com.njydsz.pmis.cronjob.server.service.log.JobLogContentService;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import com.njydsz.pmis.common.core.job.JobLogger;
+import com.njydsz.pmis.cronjob.domain.entity.log.JobLogContentDO;
+import com.njydsz.pmis.cronjob.server.service.log.JobLogContentService;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 任务执行日志器实现（P0-2 在线日志白屏化）。

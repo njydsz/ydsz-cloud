@@ -1,11 +1,8 @@
 package com.njydsz.pmis.message.server.consumer;
 
-import com.njydsz.pmis.common.constant.PmisMessageTopics;
-import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.util.json.JsonUtils;
-import com.njydsz.pmis.message.server.service.core.MessageService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Duration;
+import java.util.List;
+
 import org.apache.rocketmq.spring.annotation.ConsumeMode;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
@@ -14,9 +11,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
+import com.njydsz.pmis.common.constant.PmisMessageTopics;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.message.server.service.core.MessageService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * P1-11: 批量消息消费者。

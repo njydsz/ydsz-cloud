@@ -1,23 +1,26 @@
 package com.njydsz.pmis.common.web.filter;
 
+import java.util.Objects;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+
 import com.njydsz.pmis.common.auth.config.AuthFilterConfiguration;
-import com.njydsz.pmis.common.auth.model.AuthenticationProvider;
 import com.njydsz.pmis.common.auth.filter.BaseAuthFilter;
+import com.njydsz.pmis.common.auth.handler.AuthHandler;
+import com.njydsz.pmis.common.auth.model.AuthenticationProvider;
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
 import com.njydsz.pmis.common.core.enums.ServiceType;
-import com.njydsz.pmis.common.web.auth.AuthHandlerFactory;
-import com.njydsz.pmis.common.auth.handler.AuthHandler;
 import com.njydsz.pmis.common.util.auth.AuthInfo;
 import com.njydsz.pmis.common.util.auth.RequestHolder;
 import com.njydsz.pmis.common.util.id.TracerUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
+import com.njydsz.pmis.common.web.auth.AuthHandlerFactory;
 
-import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Web 端认证过滤器

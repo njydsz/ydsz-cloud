@@ -1,9 +1,9 @@
 package com.njydsz.pmis.userinfo.domain.dto.user;
 
+import java.util.List;
+
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.userinfo.domain.vo.UserVO;
-
-import java.util.List;
 
 /**
  * 用户服务 Feign 接口

@@ -1,12 +1,14 @@
 package com.njydsz.pmis.common.docs.security.pii;
 
-import com.njydsz.pmis.common.docs.domain.DocumentContent;
-import com.njydsz.pmis.common.docs.domain.PiiFinding;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.docs.domain.DocumentContent;
+import com.njydsz.pmis.common.docs.domain.PiiFinding;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * PII 检测器组合实现

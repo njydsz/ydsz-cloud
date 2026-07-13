@@ -1,18 +1,20 @@
 package com.njydsz.pmis.userinfo.web.controller.rate;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.userinfo.domain.entity.rate.RankDO;
-import com.njydsz.pmis.userinfo.domain.entity.rate.RankRateDO;
-import com.njydsz.pmis.userinfo.server.service.rate.RankService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDate;
+import java.util.List;
+
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.util.List;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.userinfo.domain.entity.rate.RankDO;
+import com.njydsz.pmis.userinfo.domain.entity.rate.RankRateDO;
+import com.njydsz.pmis.userinfo.server.service.rate.RankService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 职级/职级费率接口

@@ -1,11 +1,13 @@
 package com.njydsz.pmis.userinfo.server.job;
 
+import org.springframework.stereotype.Component;
+
 import com.njydsz.pmis.common.core.job.JobHandler;
 import com.njydsz.pmis.userinfo.domain.dto.auth.PasswordScanResultDTO;
 import com.njydsz.pmis.userinfo.server.service.auth.PasswordScanService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 /**
  * 密码巡检 JobHandler（P3-3 运维安全增强）

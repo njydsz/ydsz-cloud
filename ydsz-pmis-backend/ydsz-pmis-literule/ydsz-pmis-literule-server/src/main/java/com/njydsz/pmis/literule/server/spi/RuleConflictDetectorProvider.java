@@ -1,9 +1,9 @@
 package com.njydsz.pmis.literule.server.spi;
 
+import java.util.List;
+
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.List;
 
 /**
  * 规则冲突检测提供者 SPI

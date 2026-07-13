@@ -1,10 +1,11 @@
 package com.njydsz.pmis.workflow.domain.dto;
 
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
+
+import jakarta.validation.constraints.NotNull;
+
+import lombok.Data;
 
 /**
  * 办理人 DTO

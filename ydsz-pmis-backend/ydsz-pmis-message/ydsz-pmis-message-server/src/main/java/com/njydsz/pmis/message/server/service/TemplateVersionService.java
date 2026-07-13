@@ -1,11 +1,11 @@
 package com.njydsz.pmis.message.server.service.template;
 
+import java.util.List;
+
+import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.message.domain.dto.template.TemplatePreviewDTO;
 import com.njydsz.pmis.message.domain.dto.template.TemplateTestSendDTO;
 import com.njydsz.pmis.message.domain.entity.template.MsgTemplateVersionDO;
-import com.njydsz.pmis.common.feign.MessageResult;
-
-import java.util.List;
 
 /**
  * 模板版本管理与可视化服务。

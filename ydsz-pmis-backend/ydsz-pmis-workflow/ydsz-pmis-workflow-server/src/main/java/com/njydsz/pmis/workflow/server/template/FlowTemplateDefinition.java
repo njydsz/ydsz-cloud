@@ -1,11 +1,11 @@
 package com.njydsz.pmis.workflow.server.template;
 
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+
+import lombok.Data;
 
 /**
  * 流程模板定义（P2-1 流程模板市场）

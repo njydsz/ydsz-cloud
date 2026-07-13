@@ -1,15 +1,16 @@
 package com.njydsz.pmis.userinfo.api.fallback;
-import com.njydsz.pmis.userinfo.api.client.UserServiceClient;
-
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.openfeign.FallbackFactory;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.cloud.openfeign.FallbackFactory;
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.userinfo.api.client.UserServiceClient;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 用户服务统一降级工厂（P1 架构优化：合并 project + system 两个版本）。

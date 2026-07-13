@@ -1,10 +1,11 @@
 package com.njydsz.pmis.message.server.config;
 
-import com.njydsz.pmis.message.server.channel.ChannelRouter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.njydsz.pmis.message.server.channel.ChannelRouter;
 
 /**
  * 消息模块自动装配。

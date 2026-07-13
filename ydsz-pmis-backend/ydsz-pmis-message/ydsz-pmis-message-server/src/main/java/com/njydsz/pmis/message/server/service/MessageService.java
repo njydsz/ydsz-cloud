@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.server.service.core;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -7,8 +9,6 @@ import com.njydsz.pmis.message.domain.dto.batch.BatchSendResult;
 import com.njydsz.pmis.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.pmis.message.domain.dto.core.MessageSendDTO;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
-
-import java.util.List;
 
 /**
  * 消息发送服务

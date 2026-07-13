@@ -1,11 +1,9 @@
 package com.njydsz.pmis.message.server.channel.impl;
 
-import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.message.server.channel.MessageChannel;
-import com.njydsz.pmis.message.server.config.MessageProperties;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpEntity;
@@ -16,9 +14,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.message.server.channel.MessageChannel;
+import com.njydsz.pmis.message.server.config.MessageProperties;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 微信小程序订阅消息通道实现。

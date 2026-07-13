@@ -1,12 +1,13 @@
 package com.njydsz.pmis.cronjob.server.config;
 
-import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
-
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
+
+import lombok.Data;
 
 /**
  * 定时任务调度服务配置属性。
@@ -713,4 +714,3 @@ public class CronjobProperties {
         private int maxRedispatchRetries = 3;
     }
 }
-

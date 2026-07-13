@@ -1,8 +1,6 @@
 package com.njydsz.pmis.workflow.api.client;
-import com.njydsz.pmis.common.feign.FeignClientConstants;
-import com.njydsz.pmis.workflow.api.fallback.WorkflowServiceClientFallback;
+import java.util.Map;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,7 +8,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.Map;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.feign.FeignClientConstants;
+import com.njydsz.pmis.workflow.api.fallback.WorkflowServiceClientFallback;
 
 /**
  * 工作流服务 Feign 客户端（指向自研 pmis_flow_* 引擎）

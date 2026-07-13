@@ -1,13 +1,14 @@
 package com.njydsz.pmis.sales.server.engine;
 
-import com.njydsz.pmis.sales.domain.entity.ContractDO;
-import com.njydsz.pmis.sales.domain.enums.RiskLevel;
-import lombok.extern.slf4j.Slf4j;
-
 import java.math.BigDecimal;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.njydsz.pmis.sales.domain.entity.ContractDO;
+import com.njydsz.pmis.sales.domain.enums.RiskLevel;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 合同风险评估引擎（增强版）

@@ -1,16 +1,18 @@
 package com.njydsz.pmis.message.server.channel.impl;
 
+import java.util.Map;
+
+import org.springframework.stereotype.Component;
+
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.message.domain.dto.core.NotificationSendDTO;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 import com.njydsz.pmis.message.server.service.core.NotificationService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
-import java.util.Map;
 
 /**
  * 站内信通道实现。

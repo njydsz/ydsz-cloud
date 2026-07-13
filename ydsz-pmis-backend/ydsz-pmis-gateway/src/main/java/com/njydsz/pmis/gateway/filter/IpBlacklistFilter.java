@@ -1,14 +1,8 @@
 package com.njydsz.pmis.gateway.filter;
 
-import com.alibaba.fastjson2.JSON;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
-import com.njydsz.pmis.gateway.config.GatewayConstants;
-import com.njydsz.pmis.gateway.config.GatewayIpUtils;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -20,10 +14,18 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Mono;
 
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
+import com.alibaba.fastjson2.JSON;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
+import com.njydsz.pmis.gateway.config.GatewayConstants;
+import com.njydsz.pmis.gateway.config.GatewayIpUtils;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 /**
  * IP 黑名单全局过滤器（P2-11）

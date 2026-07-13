@@ -1,25 +1,26 @@
 package com.njydsz.pmis.message.server.service.config;
 
+import java.lang.reflect.Method;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+import org.springframework.web.client.RestClient;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.message.domain.entity.config.MsgVariableSourceDO;
 import com.njydsz.pmis.message.infra.mapper.config.MsgVariableSourceMapper;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.lang.reflect.Method;
-import java.time.Duration;
-import org.springframework.context.ApplicationContext;
-import org.springframework.web.client.RestClient;
 
 /**
  * 消息变量数据源解析器（P0-4）。

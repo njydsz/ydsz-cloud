@@ -1,25 +1,25 @@
 package com.njydsz.pmis.gateway.config;
 
-import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
-import lombok.extern.slf4j.Slf4j;
+import java.net.ConnectException;
+import java.nio.charset.StandardCharsets;
+import java.util.concurrent.TimeoutException;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.server.HandlerStrategies;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.server.WebExceptionHandler;
 import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Mono;
+import org.springframework.web.server.WebExceptionHandler;
 
-import java.nio.charset.StandardCharsets;
-import java.net.ConnectException;
-import java.util.concurrent.TimeoutException;
+import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
+
+import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
 
 /**
  * 网关全局异常处理器配置（P0-1）

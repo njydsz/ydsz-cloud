@@ -1,14 +1,14 @@
 package com.njydsz.pmis.userinfo.domain.dto.auth;
 
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serial;
-import java.io.Serializable;
-import java.util.List;
 
 /**
  * 登录上下文 (供 auth 服务使用)

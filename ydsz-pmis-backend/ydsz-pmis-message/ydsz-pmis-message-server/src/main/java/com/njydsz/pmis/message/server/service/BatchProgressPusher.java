@@ -1,14 +1,15 @@
 package com.njydsz.pmis.message.server.service.batch;
 
-import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.message.domain.entity.batch.MsgBatchDO;
-import com.njydsz.pmis.message.server.realtime.RealtimePushService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.message.domain.entity.batch.MsgBatchDO;
+import com.njydsz.pmis.message.server.realtime.RealtimePushService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 批量发送实时进度推送器（P1-10）。

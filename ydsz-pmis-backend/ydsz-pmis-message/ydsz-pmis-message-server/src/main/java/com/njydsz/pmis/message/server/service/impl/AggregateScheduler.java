@@ -1,14 +1,9 @@
 package com.njydsz.pmis.message.server.service.impl.batch;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.njydsz.pmis.message.domain.constant.MessageConstants;
-import com.njydsz.pmis.message.domain.entity.batch.MsgAggregateDO;
-import com.njydsz.pmis.message.domain.enums.batch.AggregateBatchStatusEnum;
-import com.njydsz.pmis.message.infra.mapper.batch.MsgAggregateMapper;
-import com.njydsz.pmis.message.server.service.batch.AggregateService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -16,9 +11,16 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.njydsz.pmis.message.domain.constant.MessageConstants;
+import com.njydsz.pmis.message.domain.entity.batch.MsgAggregateDO;
+import com.njydsz.pmis.message.domain.enums.batch.AggregateBatchStatusEnum;
+import com.njydsz.pmis.message.infra.mapper.batch.MsgAggregateMapper;
+import com.njydsz.pmis.message.server.service.batch.AggregateService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 聚合批次调度器。

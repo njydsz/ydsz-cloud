@@ -1,11 +1,12 @@
 package com.njydsz.pmis.sales.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.sales.domain.entity.OpportunityFollowDO;
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import java.util.List;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.sales.domain.entity.OpportunityFollowDO;
 
 /**
  * 商机跟进记录数据访问层

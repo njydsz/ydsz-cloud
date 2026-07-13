@@ -1,15 +1,16 @@
 package com.njydsz.pmis.message.server.channel;
 
+import java.util.List;
+import java.util.Map;
+
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 通道策略适配器：将消息服务的 {@link MessageChannel} 适配为

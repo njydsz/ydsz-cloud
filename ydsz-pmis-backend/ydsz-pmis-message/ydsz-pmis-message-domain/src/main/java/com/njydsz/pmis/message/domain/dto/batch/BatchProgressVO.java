@@ -1,9 +1,9 @@
 package com.njydsz.pmis.message.domain.dto.batch;
 
 
-import lombok.Data;
-
 import java.time.LocalDateTime;
+
+import lombok.Data;
 
 /**
  * 批次发送进度 VO。

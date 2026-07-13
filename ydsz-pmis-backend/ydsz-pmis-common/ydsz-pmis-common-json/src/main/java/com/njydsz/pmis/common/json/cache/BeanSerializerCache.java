@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.json.cache;
 
-import com.njydsz.pmis.common.json.writer.BeanSerializer;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import com.njydsz.pmis.common.json.writer.BeanSerializer;
 
 /**
  * Bean 序列化器缓存（FastJSON2 架构）

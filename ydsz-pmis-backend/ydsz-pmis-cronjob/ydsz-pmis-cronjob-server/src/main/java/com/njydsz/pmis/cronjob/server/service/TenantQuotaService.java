@@ -1,8 +1,8 @@
 package com.njydsz.pmis.cronjob.server.service.job;
 
+import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.cronjob.domain.entity.job.TenantQuotaDO;
-import com.njydsz.pmis.common.api.BizErrorCode;
 
 /**
  * 租户级配额服务（P7-2 / P7-3）。

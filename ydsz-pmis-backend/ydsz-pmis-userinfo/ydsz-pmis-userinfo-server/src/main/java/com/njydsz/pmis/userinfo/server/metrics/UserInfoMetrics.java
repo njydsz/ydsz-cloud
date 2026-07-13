@@ -1,15 +1,18 @@
 package com.njydsz.pmis.userinfo.server.metrics;
 
-import com.njydsz.pmis.common.core.metrics.AbstractModuleMetrics;
-import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.MeterRegistry;
+import java.util.concurrent.atomic.AtomicLong;
+
 import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.atomic.AtomicLong;
+import com.njydsz.pmis.common.core.metrics.AbstractModuleMetrics;
+
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 用户中心核心业务指标采集（P1-2）

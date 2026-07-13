@@ -1,16 +1,17 @@
 package com.njydsz.pmis.cronjob.infra.mapper.log;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.cronjob.domain.entity.log.JobDailyStatsDO;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.cronjob.domain.entity.log.JobDailyStatsDO;
 
 /**
  * 任务每日统计 Mapper（P2-3 执行历史趋势可视化）。

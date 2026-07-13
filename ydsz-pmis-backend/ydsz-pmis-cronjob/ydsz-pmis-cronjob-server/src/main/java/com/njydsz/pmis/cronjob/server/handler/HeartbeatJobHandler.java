@@ -1,11 +1,13 @@
 package com.njydsz.pmis.cronjob.server.handler;
 
-import com.njydsz.pmis.common.core.job.JobHandler;
-import lombok.extern.slf4j.Slf4j;
+import java.lang.management.ManagementFactory;
+import java.util.Map;
+
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
-import java.lang.management.ManagementFactory;
+import com.njydsz.pmis.common.core.job.JobHandler;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 示例任务处理器 - 心跳上报

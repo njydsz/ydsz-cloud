@@ -1,8 +1,8 @@
 package com.njydsz.pmis.cronjob.server.core.alert;
 
-import com.njydsz.pmis.cronjob.domain.entity.job.JobAlertRuleDO;
-
 import java.io.Serializable;
+
+import com.njydsz.pmis.cronjob.domain.entity.job.JobAlertRuleDO;
 
 /**
  * 告警事件（P5 告警 + 监控）。

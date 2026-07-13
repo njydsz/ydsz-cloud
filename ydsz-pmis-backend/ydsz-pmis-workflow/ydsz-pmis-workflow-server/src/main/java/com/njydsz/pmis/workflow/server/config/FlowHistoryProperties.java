@@ -1,8 +1,9 @@
 package com.njydsz.pmis.workflow.server.config;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+
+import lombok.Data;
 
 /**
  * 流程历史数据归档配置属性

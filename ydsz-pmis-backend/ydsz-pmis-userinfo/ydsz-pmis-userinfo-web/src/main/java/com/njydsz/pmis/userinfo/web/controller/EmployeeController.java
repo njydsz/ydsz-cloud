@@ -1,22 +1,9 @@
 package com.njydsz.pmis.userinfo.web.controller.user;
 
-import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import java.util.List;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.audit.annotation.OperationLog;
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.userinfo.domain.dto.user.EmployeeCreateDTO;
-import com.njydsz.pmis.userinfo.domain.dto.user.EmployeePageDTO;
-import com.njydsz.pmis.userinfo.domain.dto.user.EmployeeUpdateDTO;
-import com.njydsz.pmis.userinfo.domain.entity.user.EmployeeDO;
-import com.njydsz.pmis.userinfo.server.service.user.EmployeeService;
-import com.njydsz.pmis.userinfo.domain.vo.EmployeeVO;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,7 +15,22 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.audit.annotation.OperationLog;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.userinfo.domain.dto.user.EmployeeCreateDTO;
+import com.njydsz.pmis.userinfo.domain.dto.user.EmployeePageDTO;
+import com.njydsz.pmis.userinfo.domain.dto.user.EmployeeUpdateDTO;
+import com.njydsz.pmis.userinfo.domain.entity.user.EmployeeDO;
+import com.njydsz.pmis.userinfo.domain.vo.EmployeeVO;
+import com.njydsz.pmis.userinfo.server.service.user.EmployeeService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 员工 Controller

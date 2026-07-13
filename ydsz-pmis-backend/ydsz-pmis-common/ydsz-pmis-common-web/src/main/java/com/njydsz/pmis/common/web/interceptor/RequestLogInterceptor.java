@@ -1,14 +1,17 @@
 package com.njydsz.pmis.common.web.interceptor;
 
-import com.njydsz.pmis.common.base.interceptor.BaseRequestLogInterceptor;
-import com.njydsz.pmis.common.util.id.TracerUtils;
-import com.njydsz.pmis.common.web.config.WebTraceProperties;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
+
 import org.slf4j.Logger;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.base.interceptor.BaseRequestLogInterceptor;
+import com.njydsz.pmis.common.util.id.TracerUtils;
+import com.njydsz.pmis.common.web.config.WebTraceProperties;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Web 端请求日志拦截器

@@ -1,12 +1,13 @@
 package com.njydsz.pmis.gateway.config;
 
-import lombok.Data;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Map;
-import java.util.List;
+import lombok.Data;
 
 /**
  * P2-15: 网关精细化限流配置属性

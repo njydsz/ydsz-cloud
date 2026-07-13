@@ -1,11 +1,12 @@
 package com.njydsz.pmis.project.domain.vo;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import lombok.Data;
 
 /**
  * 项目风险 VO（对外接口返回视图）

@@ -1,9 +1,9 @@
 package com.njydsz.pmis.userinfo.server.service.user;
 
+import java.util.List;
+
 import com.njydsz.pmis.userinfo.domain.dto.user.EmployeeTagCreateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.user.EmployeeTagDO;
-
-import java.util.List;
 
 /**
  * 人员标签服务

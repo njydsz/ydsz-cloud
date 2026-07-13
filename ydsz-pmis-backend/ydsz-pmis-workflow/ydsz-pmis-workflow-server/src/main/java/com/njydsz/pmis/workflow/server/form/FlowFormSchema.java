@@ -1,11 +1,11 @@
 package com.njydsz.pmis.workflow.server.form;
 
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+
+import lombok.Data;
 
 /**
  * 表单 Schema 定义（P0-3 表单引擎 MVP）

@@ -1,12 +1,13 @@
 package com.njydsz.pmis.userinfo.infra.mapper.permission;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.userinfo.domain.entity.permission.RolePermissionDO;
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
-import java.util.List;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.userinfo.domain.entity.permission.RolePermissionDO;
 
 /**
  * 角色-权限关联 Mapper

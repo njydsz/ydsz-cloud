@@ -1,16 +1,18 @@
 package com.njydsz.pmis.common.base.filter;
 
-import com.njydsz.pmis.common.core.context.RequestContext;
-import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
+import java.io.IOException;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.MDC;
+
 import org.jspecify.annotations.NonNull;
+import org.slf4j.MDC;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
+import com.njydsz.pmis.common.core.context.RequestContext;
+import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
 
 /**
  * 链路追踪过滤器

@@ -1,8 +1,8 @@
 package com.njydsz.pmis.workflow.server.thirdparty;
 
-import com.njydsz.pmis.workflow.domain.enums.ThirdPartyPlatform;
-
 import java.util.Map;
+
+import com.njydsz.pmis.workflow.domain.enums.ThirdPartyPlatform;
 
 /**
  * 三方审批事件 → 工作流动作映射工具

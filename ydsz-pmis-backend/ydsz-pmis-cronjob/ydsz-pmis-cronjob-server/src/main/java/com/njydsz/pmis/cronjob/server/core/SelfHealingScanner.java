@@ -1,20 +1,12 @@
 package com.njydsz.pmis.cronjob.server.core.healing;
 
-import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
-import com.njydsz.pmis.cronjob.server.core.alert.AlertContext;
-import com.njydsz.pmis.cronjob.server.core.alert.AlertTrigger;
-import com.njydsz.pmis.cronjob.server.core.alert.AlertType;
-import com.njydsz.pmis.cronjob.server.core.dispatch.DefaultTaskDispatcher;
-import com.njydsz.pmis.cronjob.server.core.dispatch.TaskDispatcher;
-import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
-import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
-import com.njydsz.pmis.cronjob.server.metrics.CronjobMetrics;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -24,11 +16,22 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
+import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
+import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
+import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.core.alert.AlertContext;
+import com.njydsz.pmis.cronjob.server.core.alert.AlertTrigger;
+import com.njydsz.pmis.cronjob.server.core.alert.AlertType;
+import com.njydsz.pmis.cronjob.server.core.dispatch.DefaultTaskDispatcher;
+import com.njydsz.pmis.cronjob.server.core.dispatch.TaskDispatcher;
+import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
+import com.njydsz.pmis.cronjob.server.metrics.CronjobMetrics;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 自愈扫描器（P3-2）。

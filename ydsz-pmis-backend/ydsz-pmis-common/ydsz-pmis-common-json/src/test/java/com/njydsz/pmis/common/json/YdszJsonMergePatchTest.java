@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.json;
 
-import org.junit.jupiter.api.*;
-
 import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.*;
 
 @DisplayName("YdszJson Merge Patch (RFC 7396) 测试")
 class YdszJsonMergePatchTest {

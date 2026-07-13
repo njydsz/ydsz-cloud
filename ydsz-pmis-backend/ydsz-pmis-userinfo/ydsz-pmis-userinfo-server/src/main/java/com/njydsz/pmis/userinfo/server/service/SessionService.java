@@ -1,8 +1,8 @@
 package com.njydsz.pmis.userinfo.server.service.auth;
 
-import com.njydsz.pmis.userinfo.domain.entity.user.UserSessionDO;
-
 import java.util.List;
+
+import com.njydsz.pmis.userinfo.domain.entity.user.UserSessionDO;
 
 /**
  * 用户会话管理

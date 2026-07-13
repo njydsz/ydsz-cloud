@@ -1,9 +1,5 @@
 package com.njydsz.pmis.message.server.config;
 
-import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -11,6 +7,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+import lombok.Data;
 
 /**
  * 消息引擎全局配置（prefix = {@code pmis.message}）。

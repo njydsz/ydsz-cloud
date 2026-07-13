@@ -1,21 +1,14 @@
 package com.njydsz.pmis.project.web.controller.common;
 
-import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import java.util.List;
 
-import com.njydsz.pmis.common.safe.annotation.RateLimit;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import org.springframework.data.domain.Sort;
-import com.njydsz.pmis.project.domain.query.ProjectSearchVO;
-import com.njydsz.pmis.project.domain.query.UniversalSearchVO;
-import com.njydsz.pmis.project.server.service.SearchService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +16,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
+import com.njydsz.pmis.project.domain.query.ProjectSearchVO;
+import com.njydsz.pmis.project.domain.query.UniversalSearchVO;
+import com.njydsz.pmis.project.server.service.SearchService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 全文检索 Controller。

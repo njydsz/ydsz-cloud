@@ -1,14 +1,10 @@
 package com.njydsz.pmis.message.server.service.impl.core;
 
-import com.njydsz.pmis.common.constant.SystemConstants;
-import com.njydsz.pmis.message.server.config.MessageProperties;
-import com.njydsz.pmis.message.domain.constant.MessageConstants;
-import com.njydsz.pmis.message.domain.entity.config.MsgPreferenceDO;
-import com.njydsz.pmis.message.domain.enums.core.MessagePriorityEnum;
-import com.njydsz.pmis.message.server.service.config.PreferenceService;
-import com.njydsz.pmis.message.server.service.core.RateLimitService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.concurrent.TimeUnit;
+
 import org.redisson.api.RRateLimiter;
 import org.redisson.api.RateIntervalUnit;
 import org.redisson.api.RateType;
@@ -16,10 +12,16 @@ import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.concurrent.TimeUnit;
+import com.njydsz.pmis.common.constant.SystemConstants;
+import com.njydsz.pmis.message.domain.constant.MessageConstants;
+import com.njydsz.pmis.message.domain.entity.config.MsgPreferenceDO;
+import com.njydsz.pmis.message.domain.enums.core.MessagePriorityEnum;
+import com.njydsz.pmis.message.server.config.MessageProperties;
+import com.njydsz.pmis.message.server.service.config.PreferenceService;
+import com.njydsz.pmis.message.server.service.core.RateLimitService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 限流与频率控制服务实现。

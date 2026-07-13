@@ -1,16 +1,17 @@
 package com.njydsz.pmis.common.docs.summary;
 
-import com.njydsz.pmis.common.docs.domain.DocumentContent;
-import com.njydsz.pmis.common.docs.domain.DocumentSection;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.docs.domain.DocumentContent;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文档摘要与关键词提取器

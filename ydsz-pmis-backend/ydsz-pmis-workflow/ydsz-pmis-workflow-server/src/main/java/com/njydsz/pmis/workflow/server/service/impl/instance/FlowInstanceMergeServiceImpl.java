@@ -1,5 +1,13 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.WorkflowFacade;
@@ -10,15 +18,9 @@ import com.njydsz.pmis.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.server.service.FlowInstanceMergeService;
 import com.njydsz.pmis.workflow.server.service.FlowTaskService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * P2-5: 多实例合并审批服务实现

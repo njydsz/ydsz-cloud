@@ -1,13 +1,14 @@
 package com.njydsz.pmis.nextwiki.domain.entity;
 
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseEntity;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
-
-import java.io.Serializable;
-import java.time.LocalDateTime;
 
 /**
  * 回收站条目实体

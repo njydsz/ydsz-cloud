@@ -1,12 +1,14 @@
 package com.njydsz.pmis.finance.domain.dto;
 
-import com.njydsz.pmis.common.safe.annotation.Xss;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+import com.njydsz.pmis.common.safe.annotation.Xss;
+
+import lombok.Data;
 
 /**
  * 发票创建 DTO

@@ -1,11 +1,11 @@
 package com.njydsz.pmis.literule.server.core;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 规则熔断器（基于错误率的滑动窗口熔断）

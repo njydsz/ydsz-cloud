@@ -1,14 +1,15 @@
 package com.njydsz.pmis.cronjob.domain.entity.job;
 
+import java.io.Serial;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Data;
 
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
+import lombok.Data;
 
 // 引入 fastjson2 仅用于 beforeSnapshot 字段的序列化说明, 实际序列化由 Service 层完成
 

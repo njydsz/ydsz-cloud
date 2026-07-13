@@ -1,5 +1,17 @@
 package com.njydsz.pmis.cronjob.server.core.map;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
+
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.core.job.JobLogger;
@@ -10,28 +22,18 @@ import com.njydsz.pmis.common.core.job.MapReduceProcessor;
 import com.njydsz.pmis.common.core.job.MapTask;
 import com.njydsz.pmis.common.core.job.ProcessResult;
 import com.njydsz.pmis.common.util.TraceIdUtil;
-import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
-import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteSubTaskRequest;
-import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteTaskClient;
-import com.njydsz.pmis.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
-import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobTaskDO;
+import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobTaskMapper;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.core.discovery.NodeDiscoveryStrategy;
+import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteSubTaskRequest;
+import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteTaskClient;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * MapReduce 任务执行器（P0-4, P0-1 分布式并行执行）。

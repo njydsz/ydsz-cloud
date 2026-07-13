@@ -1,8 +1,9 @@
 package com.njydsz.pmis.literule.infra.mapper;
 
+import org.apache.ibatis.annotations.Mapper;
+
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.literule.domain.entity.DecisionTableDO;
-import org.apache.ibatis.annotations.Mapper;
 
 /**
  * 决策表 Mapper

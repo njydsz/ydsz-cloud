@@ -1,10 +1,21 @@
 package com.njydsz.pmis.message.server.service.impl.batch;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.core.constant.PageConstants;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.domain.query.PageQuery;
-import com.njydsz.pmis.common.core.constant.PageConstants;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -18,18 +29,9 @@ import com.njydsz.pmis.message.server.service.batch.AggregateService;
 import com.njydsz.pmis.message.server.service.core.MessageService;
 import com.njydsz.pmis.message.server.service.template.TemplateService;
 import com.njydsz.pmis.message.server.template.TemplateEngine;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RLock;
-import org.redisson.api.RedissonClient;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 聚合批次服务实现。

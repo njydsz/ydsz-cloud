@@ -1,16 +1,19 @@
 package com.njydsz.pmis.common.app.interceptor;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.pmis.common.app.config.AppTraceProperties;
 import com.njydsz.pmis.common.app.util.RequestIdGenerator;
 import com.njydsz.pmis.common.base.interceptor.BaseRequestLogInterceptor;
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
 import com.njydsz.pmis.common.util.auth.RequestHolder;
-import jakarta.servlet.http.HttpServletRequest;
+
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 /**
  * App 端请求日志拦截器

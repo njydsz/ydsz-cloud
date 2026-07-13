@@ -1,5 +1,16 @@
 package com.njydsz.pmis.literule.web;
 
+import java.util.List;
+
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.literule.api.dto.RuleDashboardDistributionVO;
 import com.njydsz.pmis.literule.api.dto.RuleDashboardOverviewVO;
@@ -7,19 +18,11 @@ import com.njydsz.pmis.literule.api.dto.RuleDashboardRealtimeVO;
 import com.njydsz.pmis.literule.api.dto.RuleDashboardTopRuleVO;
 import com.njydsz.pmis.literule.api.dto.RuleDashboardTrendVO;
 import com.njydsz.pmis.literule.server.spi.DashboardDataProvider;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 /**
  * 规则引擎监控大盘 Controller

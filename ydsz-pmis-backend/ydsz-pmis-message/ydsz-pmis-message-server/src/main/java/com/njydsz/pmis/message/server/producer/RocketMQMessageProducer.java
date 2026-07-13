@@ -1,22 +1,24 @@
 package com.njydsz.pmis.message.server.producer;
 
-import com.njydsz.pmis.common.constant.PmisMessageTopics;
-import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.util.json.JsonUtils;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.message.server.util.MessageCompressor;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
+import org.apache.rocketmq.client.producer.TransactionSendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import org.apache.rocketmq.client.producer.TransactionSendResult;
+
+import com.njydsz.pmis.common.constant.PmisMessageTopics;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.message.server.util.MessageCompressor;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * RocketMQ 消息生产者封装。

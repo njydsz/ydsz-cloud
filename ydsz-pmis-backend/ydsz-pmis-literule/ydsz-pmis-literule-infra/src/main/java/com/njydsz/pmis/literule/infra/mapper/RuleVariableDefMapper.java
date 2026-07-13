@@ -1,10 +1,11 @@
 package com.njydsz.pmis.literule.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.literule.domain.entity.RuleVariableDefDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.literule.domain.entity.RuleVariableDefDO;
 
 /**
  * 规则变量定义 Mapper

@@ -1,15 +1,17 @@
 package com.njydsz.pmis.project.server.literule;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.njydsz.pmis.literule.domain.entity.RuleDefinitionDO;
 import com.njydsz.pmis.literule.infra.mapper.RuleDefinitionMapper;
 import com.njydsz.pmis.literule.server.spi.RuleConflictDetectorProvider;
 import com.njydsz.pmis.literule.server.util.RuleConflictAnalyzer;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 规则冲突检测服务

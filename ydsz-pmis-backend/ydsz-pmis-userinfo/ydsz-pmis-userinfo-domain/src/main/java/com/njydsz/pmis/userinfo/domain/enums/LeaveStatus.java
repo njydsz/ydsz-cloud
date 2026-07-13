@@ -1,9 +1,9 @@
 package com.njydsz.pmis.userinfo.domain.enums.rate;
 
+import java.util.Arrays;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
-import java.util.Arrays;
 
 /**
  * 请假状态机

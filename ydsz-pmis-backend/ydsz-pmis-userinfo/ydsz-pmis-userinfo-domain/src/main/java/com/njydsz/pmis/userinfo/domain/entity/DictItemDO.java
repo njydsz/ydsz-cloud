@@ -1,15 +1,17 @@
 package com.njydsz.pmis.userinfo.domain.entity.org;
 
+import java.io.Serial;
+
+import org.apache.ibatis.type.JdbcType;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
-import org.apache.ibatis.type.JdbcType;
 
 /**
  * 字典项实体

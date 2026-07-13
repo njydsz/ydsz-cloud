@@ -1,14 +1,16 @@
 package com.njydsz.pmis.message.server.service.core;
 
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.njydsz.pmis.message.domain.entity.core.MsgNotificationDO;
-import com.njydsz.pmis.message.infra.mapper.core.MsgNotificationMapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.njydsz.pmis.message.domain.entity.core.MsgNotificationDO;
+import com.njydsz.pmis.message.infra.mapper.core.MsgNotificationMapper;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 消息过期自动清理器（P1-7）。

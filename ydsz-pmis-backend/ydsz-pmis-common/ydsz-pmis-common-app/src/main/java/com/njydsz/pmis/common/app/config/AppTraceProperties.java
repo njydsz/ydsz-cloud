@@ -1,9 +1,11 @@
 package com.njydsz.pmis.common.app.config;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
 import com.njydsz.pmis.common.base.config.BaseTraceProperties;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * App 端请求追踪 / 日志配置属性

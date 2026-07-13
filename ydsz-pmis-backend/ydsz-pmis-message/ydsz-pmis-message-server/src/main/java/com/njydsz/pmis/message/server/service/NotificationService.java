@@ -1,12 +1,12 @@
 package com.njydsz.pmis.message.server.service.core;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.message.domain.dto.core.NotificationQueryDTO;
 import com.njydsz.pmis.message.domain.dto.core.NotificationSendDTO;
 import com.njydsz.pmis.message.domain.entity.core.MsgNotificationDO;
 import com.njydsz.pmis.message.domain.vo.NotificationGroupVO;
-
-import java.util.List;
 
 /**
  * 站内通知服务

@@ -1,7 +1,8 @@
 package com.njydsz.pmis.common.web.filter;
 
-import com.njydsz.pmis.common.base.filter.AbstractContentCachingFilter;
 import org.springframework.beans.factory.annotation.Value;
+
+import com.njydsz.pmis.common.base.filter.AbstractContentCachingFilter;
 
 /**
  * Web 端请求体缓存过滤器

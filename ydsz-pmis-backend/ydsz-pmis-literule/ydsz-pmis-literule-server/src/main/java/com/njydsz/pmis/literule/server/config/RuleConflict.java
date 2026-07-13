@@ -1,11 +1,11 @@
 package com.njydsz.pmis.literule.server.config;
 
+import java.io.Serializable;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
 
 /**
  * 规则冲突检测结果

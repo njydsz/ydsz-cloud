@@ -1,22 +1,24 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.pmis.workflow.domain.enums.FlowTaskStatus;
-import com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO;
-import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.infra.mapper.FlowDelegateAuthMapper;
-import com.njydsz.pmis.workflow.infra.mapper.FlowRunTaskMapper;
-import com.njydsz.pmis.workflow.server.service.FlowAssigneeLeaveHandler;
-import com.njydsz.pmis.workflow.server.service.FlowTaskService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.domain.enums.FlowTaskStatus;
+import com.njydsz.pmis.workflow.infra.mapper.FlowDelegateAuthMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowRunTaskMapper;
+import com.njydsz.pmis.workflow.server.service.FlowAssigneeLeaveHandler;
+import com.njydsz.pmis.workflow.server.service.FlowTaskService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 审批人离职/调岗自动处理服务实现（P1-1）

@@ -1,11 +1,12 @@
 package com.njydsz.pmis.literule.api.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.List;
+
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
 
-import java.util.List;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 
 /**
  * 规则批量优先级调整请求体 DTO

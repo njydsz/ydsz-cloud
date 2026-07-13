@@ -1,13 +1,13 @@
 package com.njydsz.pmis.project.server.engine.alert;
 
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
-import com.njydsz.pmis.project.domain.enums.AlertSeverity;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Map;
+
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
+import com.njydsz.pmis.project.domain.enums.AlertSeverity;
 
 /**
  * 毛利率过低规则

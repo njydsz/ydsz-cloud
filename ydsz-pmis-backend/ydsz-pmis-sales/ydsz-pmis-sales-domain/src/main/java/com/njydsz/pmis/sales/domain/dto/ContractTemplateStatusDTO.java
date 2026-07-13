@@ -1,10 +1,11 @@
 package com.njydsz.pmis.sales.domain.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
+
+import jakarta.validation.constraints.NotBlank;
+
+import lombok.Data;
 
 /**
  * 合同模板状态迁移 DTO

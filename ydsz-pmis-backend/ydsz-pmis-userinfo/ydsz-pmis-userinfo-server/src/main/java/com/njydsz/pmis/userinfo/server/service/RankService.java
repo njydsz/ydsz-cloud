@@ -1,10 +1,10 @@
 package com.njydsz.pmis.userinfo.server.service.rate;
 
-import com.njydsz.pmis.userinfo.domain.entity.rate.RankDO;
-import com.njydsz.pmis.userinfo.domain.entity.rate.RankRateDO;
-
 import java.time.LocalDate;
 import java.util.List;
+
+import com.njydsz.pmis.userinfo.domain.entity.rate.RankDO;
+import com.njydsz.pmis.userinfo.domain.entity.rate.RankRateDO;
 
 /**
  * 职级费率服务

@@ -1,11 +1,12 @@
 package com.njydsz.pmis.userinfo.domain.dto.resource;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+import lombok.Data;
 
 /**
  * 资源分配创建/更新 DTO

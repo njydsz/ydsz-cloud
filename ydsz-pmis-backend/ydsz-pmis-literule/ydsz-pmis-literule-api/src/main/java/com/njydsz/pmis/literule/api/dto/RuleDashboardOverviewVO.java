@@ -1,11 +1,11 @@
 package com.njydsz.pmis.literule.api.dto;
 
-import lombok.Builder;
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Map;
+
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * 规则引擎监控大盘 - 概览指标 VO

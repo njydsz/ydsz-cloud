@@ -1,8 +1,5 @@
 package com.njydsz.pmis.literule.server.expr;
 
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -14,6 +11,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 表达式沙箱（AST 级别拦截，P1-11）

@@ -1,9 +1,9 @@
 package com.njydsz.pmis.project.domain.dto;
 
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
+
+import lombok.Data;
 
 /**
  * 经营驾驶舱维度下钻 DTO

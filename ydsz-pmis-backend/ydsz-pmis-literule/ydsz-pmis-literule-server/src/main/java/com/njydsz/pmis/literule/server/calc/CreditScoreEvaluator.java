@@ -1,9 +1,9 @@
 package com.njydsz.pmis.literule.server.calc;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 客户信用评分引擎（零依赖纯计算组件，从 execution 模块迁移至 literule）

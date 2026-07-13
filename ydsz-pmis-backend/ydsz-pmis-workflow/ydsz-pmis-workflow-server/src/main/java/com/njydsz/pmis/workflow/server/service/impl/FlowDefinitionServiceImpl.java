@@ -1,42 +1,5 @@
 package com.njydsz.pmis.workflow.server.service.impl;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.core.constant.CacheConstants;
-import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.workflow.domain.dto.FlowDeployProcessDTO;
-import com.njydsz.pmis.workflow.server.engine.BpmnModel;
-import com.njydsz.pmis.workflow.server.engine.BpmnXmlParser;
-import com.njydsz.pmis.workflow.server.engine.FlowDefinitionCacheService;
-import com.njydsz.pmis.workflow.server.engine.FlowGraphValidator;
-import com.njydsz.pmis.workflow.server.engine.JsonHelper;
-import com.njydsz.pmis.workflow.domain.entity.FlowDefinitionDO;
-import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.domain.entity.FlowSkipDO;
-import com.njydsz.pmis.workflow.domain.enums.FlowNodeType;
-import com.njydsz.pmis.workflow.domain.enums.FlowSkipType;
-import com.njydsz.pmis.workflow.infra.mapper.FlowDefinitionMapper;
-import com.njydsz.pmis.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.infra.mapper.FlowNodeMapper;
-import com.njydsz.pmis.workflow.infra.mapper.FlowSkipMapper;
-import com.njydsz.pmis.workflow.domain.dto.InstanceMigrationDTO;
-import com.njydsz.pmis.workflow.domain.dto.InstanceMigrationResultDTO;
-import com.njydsz.pmis.workflow.server.service.FlowDefinitionService;
-import com.njydsz.pmis.workflow.server.service.FlowInstanceMigrationService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -47,10 +10,49 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.auth.context.AuthContext;
+import com.njydsz.pmis.common.core.constant.CacheConstants;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.workflow.domain.dto.FlowDeployProcessDTO;
+import com.njydsz.pmis.workflow.domain.dto.InstanceMigrationDTO;
+import com.njydsz.pmis.workflow.domain.dto.InstanceMigrationResultDTO;
+import com.njydsz.pmis.workflow.domain.entity.FlowDefinitionDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowSkipDO;
+import com.njydsz.pmis.workflow.domain.enums.FlowNodeType;
+import com.njydsz.pmis.workflow.domain.enums.FlowSkipType;
+import com.njydsz.pmis.workflow.infra.mapper.FlowDefinitionMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowInstanceMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowNodeMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowSkipMapper;
+import com.njydsz.pmis.workflow.server.engine.BpmnModel;
+import com.njydsz.pmis.workflow.server.engine.BpmnXmlParser;
+import com.njydsz.pmis.workflow.server.engine.FlowDefinitionCacheService;
+import com.njydsz.pmis.workflow.server.engine.FlowGraphValidator;
+import com.njydsz.pmis.workflow.server.engine.JsonHelper;
+import com.njydsz.pmis.workflow.server.service.FlowDefinitionService;
+import com.njydsz.pmis.workflow.server.service.FlowInstanceMigrationService;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 流程定义 Service 实现

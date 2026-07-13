@@ -1,9 +1,9 @@
 package com.njydsz.pmis.literule.server.spi;
 
+import java.util.List;
+
 import com.njydsz.pmis.literule.domain.entity.RuleABPolicyDO;
 import com.njydsz.pmis.literule.domain.entity.RuleABRollbackDO;
-
-import java.util.List;
 
 /**
  * AB Test 自动回滚提供者 SPI

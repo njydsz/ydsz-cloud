@@ -1,15 +1,17 @@
 package com.njydsz.pmis.cronjob.server.core.dispatch;
 
-import com.njydsz.pmis.cronjob.server.core.discovery.NodeDiscoveryStrategy;
-import com.njydsz.pmis.cronjob.server.core.executor.JobNodeHeartbeat;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
-import lombok.extern.slf4j.Slf4j;
+import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
+import java.util.List;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
-import java.lang.management.ManagementFactory;
-import java.util.List;
-import java.net.InetAddress;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
+import com.njydsz.pmis.cronjob.server.core.discovery.NodeDiscoveryStrategy;
+import com.njydsz.pmis.cronjob.server.core.executor.JobNodeHeartbeat;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * P3-20: 智能路由（机房/CPU 负载感知）。

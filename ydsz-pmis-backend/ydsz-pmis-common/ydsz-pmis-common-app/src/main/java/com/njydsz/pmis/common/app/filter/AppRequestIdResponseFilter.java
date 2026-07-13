@@ -1,10 +1,11 @@
 package com.njydsz.pmis.common.app.filter;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import com.njydsz.pmis.common.app.config.AppTraceProperties;
 import com.njydsz.pmis.common.app.util.RequestIdGenerator;
 import com.njydsz.pmis.common.base.filter.BaseRequestIdResponseFilter;
 import com.njydsz.pmis.common.util.auth.RequestHolder;
-import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * App 端请求 ID 响应头过滤器

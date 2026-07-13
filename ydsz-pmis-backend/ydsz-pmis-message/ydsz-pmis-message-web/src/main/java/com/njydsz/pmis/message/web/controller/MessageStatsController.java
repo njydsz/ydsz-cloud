@@ -1,7 +1,16 @@
 package com.njydsz.pmis.message.web.controller.core;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.domain.dto.core.ChannelStatsVO;
 import com.njydsz.pmis.message.domain.dto.core.CostStatsVO;
@@ -9,18 +18,11 @@ import com.njydsz.pmis.message.domain.dto.core.FunnelStatsVO;
 import com.njydsz.pmis.message.domain.dto.core.MessageStatsVO;
 import com.njydsz.pmis.message.domain.dto.receipt.ReceiptStatsVO;
 import com.njydsz.pmis.message.server.service.core.MessageStatsService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 /**
  * 消息统计看板 Controller（P1-2 可观测看板）。

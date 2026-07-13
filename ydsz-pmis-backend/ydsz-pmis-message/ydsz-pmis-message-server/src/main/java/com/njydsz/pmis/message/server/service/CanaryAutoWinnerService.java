@@ -1,17 +1,19 @@
 package com.njydsz.pmis.message.server.service.canary;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
-import com.njydsz.pmis.message.domain.entity.canary.MsgCanaryDO;
-import com.njydsz.pmis.message.infra.mapper.canary.MsgCanaryMapper;
-import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.message.domain.entity.canary.MsgCanaryDO;
+import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
+import com.njydsz.pmis.message.infra.mapper.canary.MsgCanaryMapper;
+import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * A/B 实验自动胜出服务（P2-2）。

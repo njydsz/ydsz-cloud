@@ -1,10 +1,10 @@
 package com.njydsz.pmis.project.server.service;
 
-import com.njydsz.pmis.project.domain.dto.AlertDispatchDTO;
-import com.njydsz.pmis.project.domain.entity.AlertDispatchDO;
-
 import java.util.List;
 import java.util.Map;
+
+import com.njydsz.pmis.project.domain.dto.AlertDispatchDTO;
+import com.njydsz.pmis.project.domain.entity.AlertDispatchDO;
 
 /**
  * 预警分级推送服务（P4-2）

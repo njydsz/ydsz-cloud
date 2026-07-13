@@ -1,12 +1,12 @@
 package com.njydsz.pmis.message.server.service.config;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.domain.query.PageQuery;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.message.domain.dto.config.RouteRuleUpsertDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgRouteRuleDO;
-
-import java.util.List;
 
 /**
  * 消息路由规则服务

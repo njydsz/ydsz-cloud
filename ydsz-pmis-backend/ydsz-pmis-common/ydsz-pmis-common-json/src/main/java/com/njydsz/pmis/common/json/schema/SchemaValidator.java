@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.json.schema;
 
 import java.util.*;
-import java.util.regex.Pattern;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.regex.Pattern;
 
 /**
  * JSON Schema 验证器

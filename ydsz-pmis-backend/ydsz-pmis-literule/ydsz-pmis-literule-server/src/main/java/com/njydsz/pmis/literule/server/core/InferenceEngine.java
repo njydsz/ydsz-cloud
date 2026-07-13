@@ -1,18 +1,19 @@
 package com.njydsz.pmis.literule.server.core;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
 import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
 import com.njydsz.pmis.literule.server.impl.ExpressionRule;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 轻量级前向链推理引擎（2.0.0）

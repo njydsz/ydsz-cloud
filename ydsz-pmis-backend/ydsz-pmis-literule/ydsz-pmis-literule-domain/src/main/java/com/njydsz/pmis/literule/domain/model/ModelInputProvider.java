@@ -1,8 +1,8 @@
 package com.njydsz.pmis.literule.domain.model;
 
-import com.njydsz.pmis.literule.api.RuleContext;
-
 import java.util.Map;
+
+import com.njydsz.pmis.literule.api.RuleContext;
 
 /**
  * 模型输入提供者 SPI（P3-1 规则+模型融合）

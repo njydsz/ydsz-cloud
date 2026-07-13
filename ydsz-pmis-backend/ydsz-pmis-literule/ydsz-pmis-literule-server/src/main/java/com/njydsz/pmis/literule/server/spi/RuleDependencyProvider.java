@@ -1,8 +1,8 @@
 package com.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.literule.domain.entity.RuleDependencyDO;
-
 import java.util.List;
+
+import com.njydsz.pmis.literule.domain.entity.RuleDependencyDO;
 
 /**
  * 规则依赖关系提供者 SPI

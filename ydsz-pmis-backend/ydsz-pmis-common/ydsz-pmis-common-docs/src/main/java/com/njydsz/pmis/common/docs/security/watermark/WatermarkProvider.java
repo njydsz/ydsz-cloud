@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.docs.security.watermark;
 
-import com.njydsz.pmis.common.docs.enums.DocumentFormat;
-
 import java.io.InputStream;
+
+import com.njydsz.pmis.common.docs.enums.DocumentFormat;
 
 /**
  * 文档水印提供者接口

@@ -1,9 +1,11 @@
 package com.njydsz.pmis.message.server.realtime;
 
+import org.springframework.stereotype.Service;
+
 import com.njydsz.pmis.common.socket.push.RealtimePushTemplate;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 /**
  * 实时推送服务（业务门面，委托给 common-socket 的 {@link RealtimePushTemplate}）。

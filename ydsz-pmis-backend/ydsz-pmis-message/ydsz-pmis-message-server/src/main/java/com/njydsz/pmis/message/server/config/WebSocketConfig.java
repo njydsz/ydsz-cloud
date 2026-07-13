@@ -1,12 +1,14 @@
 package com.njydsz.pmis.message.server.config;
 
-import com.njydsz.pmis.common.socket.config.WebSocketProperties;
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
+
+import com.njydsz.pmis.common.socket.config.WebSocketProperties;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * WebSocket 消息代理配置（STOMP 协议）。

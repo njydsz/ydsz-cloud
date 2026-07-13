@@ -1,5 +1,19 @@
 package com.njydsz.pmis.literule.server.core;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
+
+import jakarta.annotation.PreDestroy;
+
 import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleDefinition;
@@ -15,21 +29,8 @@ import com.njydsz.pmis.literule.server.spi.FactCollectionException;
 import com.njydsz.pmis.literule.server.spi.FactProviderRegistry;
 import com.njydsz.pmis.literule.server.spi.RuleActionDispatcher;
 import com.njydsz.pmis.literule.server.spi.TraceRecorder;
+
 import lombok.extern.slf4j.Slf4j;
-
-import jakarta.annotation.PreDestroy;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 默认规则引擎实现

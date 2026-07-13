@@ -1,20 +1,13 @@
 package com.njydsz.pmis.message.server.consumer;
 
-import com.njydsz.pmis.common.constant.PmisMessageTopics;
-import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.json.JsonUtils;
-import com.njydsz.pmis.message.domain.constant.MessageConstants;
-import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
-import com.njydsz.pmis.message.domain.enums.core.MessageStatusEnum;
-import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
-import com.njydsz.pmis.message.server.service.core.MessageService;
-import com.njydsz.pmis.message.server.metrics.MessageServiceMetrics;
-import com.njydsz.pmis.message.server.util.MessageCompressor;
+import java.lang.management.ManagementFactory;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.rocketmq.spring.annotation.ConsumeMode;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
@@ -24,11 +17,21 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 
-import java.lang.management.ManagementFactory;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.concurrent.atomic.AtomicBoolean;
+import com.njydsz.pmis.common.constant.PmisMessageTopics;
+import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.message.domain.constant.MessageConstants;
+import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
+import com.njydsz.pmis.message.domain.enums.core.MessageStatusEnum;
+import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.pmis.message.server.metrics.MessageServiceMetrics;
+import com.njydsz.pmis.message.server.service.core.MessageService;
+import com.njydsz.pmis.message.server.util.MessageCompressor;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * RocketMQ 消息消费端。

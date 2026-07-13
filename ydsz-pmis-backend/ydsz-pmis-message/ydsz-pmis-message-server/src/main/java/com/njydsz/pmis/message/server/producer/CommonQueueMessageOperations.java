@@ -1,21 +1,23 @@
 package com.njydsz.pmis.message.server.producer;
 
-import com.njydsz.pmis.common.constant.PmisMessageTopics;
-import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.queue.domain.QueueMessage;
-import com.njydsz.pmis.common.queue.queue.IMessageQueue;
-import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
-import com.njydsz.pmis.common.queue.service.IMessagePublisher;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.common.util.json.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.pmis.common.constant.PmisMessageTopics;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.queue.domain.QueueMessage;
 import com.njydsz.pmis.common.queue.enums.QueueType;
+import com.njydsz.pmis.common.queue.queue.IMessageQueue;
+import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
+import com.njydsz.pmis.common.queue.service.IMessagePublisher;
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 
 /**

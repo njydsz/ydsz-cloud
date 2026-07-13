@@ -1,12 +1,12 @@
 package com.njydsz.pmis.literule.server.approval;
 
+import java.io.Serializable;
+import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
-import java.util.List;
 
 /**
  * 审批流配置（P1-3 多级审批流）

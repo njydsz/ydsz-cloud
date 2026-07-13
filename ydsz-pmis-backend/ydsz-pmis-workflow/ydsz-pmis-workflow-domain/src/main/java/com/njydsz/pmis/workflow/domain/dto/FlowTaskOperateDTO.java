@@ -1,14 +1,15 @@
 package com.njydsz.pmis.workflow.domain.dto;
 
-import com.njydsz.pmis.common.safe.annotation.Xss;
-import com.njydsz.pmis.workflow.domain.dto.FlowAttachmentDTO;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+
+import jakarta.validation.constraints.NotNull;
+
+import com.njydsz.pmis.common.safe.annotation.Xss;
+
+import lombok.Data;
 
 /**
  * 自建工作流引擎 - 任务操作 DTO

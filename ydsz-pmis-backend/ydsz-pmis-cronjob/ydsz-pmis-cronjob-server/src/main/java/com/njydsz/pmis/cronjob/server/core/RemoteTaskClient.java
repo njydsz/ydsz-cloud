@@ -1,20 +1,22 @@
 package com.njydsz.pmis.cronjob.server.core.dispatch;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Configuration;
-
+import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.time.Duration;
-import java.net.ConnectException;
 import java.net.http.HttpTimeoutException;
+import java.time.Duration;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Configuration;
+
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 远程任务派发客户端（P1-4）。

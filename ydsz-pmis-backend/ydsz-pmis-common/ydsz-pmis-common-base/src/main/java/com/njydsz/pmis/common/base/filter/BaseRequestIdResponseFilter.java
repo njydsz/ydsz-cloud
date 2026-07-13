@@ -1,16 +1,19 @@
 package com.njydsz.pmis.common.base.filter;
 
-import com.njydsz.pmis.common.base.config.BaseTraceProperties;
-import com.njydsz.pmis.common.core.constant.HeaderConstants;
+import java.io.IOException;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
+
 import org.jspecify.annotations.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
+import com.njydsz.pmis.common.base.config.BaseTraceProperties;
+import com.njydsz.pmis.common.core.constant.HeaderConstants;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 请求ID响应头过滤器（Web/App 共享）

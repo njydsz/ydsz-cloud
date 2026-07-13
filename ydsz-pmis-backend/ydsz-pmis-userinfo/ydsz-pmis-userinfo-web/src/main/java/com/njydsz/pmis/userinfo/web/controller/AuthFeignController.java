@@ -1,5 +1,14 @@
 package com.njydsz.pmis.userinfo.web.controller.auth;
 
+import java.time.ZoneId;
+import java.util.Collections;
+import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginContextDTO;
 import com.njydsz.pmis.userinfo.domain.entity.permission.RoleDO;
@@ -7,17 +16,10 @@ import com.njydsz.pmis.userinfo.domain.entity.user.UserAccountDO;
 import com.njydsz.pmis.userinfo.server.service.permission.PermissionService;
 import com.njydsz.pmis.userinfo.server.service.permission.RoleService;
 import com.njydsz.pmis.userinfo.server.service.user.UserAccountService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.time.ZoneId;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * 认证相关 Feign 端点

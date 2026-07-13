@@ -1,7 +1,8 @@
 package com.njydsz.pmis.project.domain.dto;
 
-import lombok.Data;
 import java.math.BigDecimal;
+
+import lombok.Data;
 
 /**
  * WBS 任务状态迁移 DTO

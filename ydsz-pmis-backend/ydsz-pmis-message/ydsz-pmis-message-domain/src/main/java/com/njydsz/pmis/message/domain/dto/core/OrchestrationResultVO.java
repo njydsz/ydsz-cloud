@@ -1,10 +1,10 @@
 package com.njydsz.pmis.message.domain.dto.core;
 
+import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Map;
 
 /**
  * 消息编排流程执行结果 VO。

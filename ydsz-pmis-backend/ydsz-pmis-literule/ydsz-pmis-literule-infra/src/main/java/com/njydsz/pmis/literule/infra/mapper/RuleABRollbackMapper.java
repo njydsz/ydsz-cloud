@@ -1,8 +1,9 @@
 package com.njydsz.pmis.literule.infra.mapper;
 
+import org.apache.ibatis.annotations.Mapper;
+
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.literule.domain.entity.RuleABRollbackDO;
-import org.apache.ibatis.annotations.Mapper;
 
 /**
  * AB Test 回滚历史 Mapper（P1-10）。

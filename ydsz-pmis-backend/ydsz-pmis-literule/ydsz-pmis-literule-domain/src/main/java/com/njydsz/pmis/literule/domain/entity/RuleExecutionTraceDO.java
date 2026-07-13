@@ -1,15 +1,16 @@
 package com.njydsz.pmis.literule.domain.entity;
 
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.Map;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
-import lombok.Data;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.Map;
+import lombok.Data;
 
 /**
  * 规则执行链路追踪实体

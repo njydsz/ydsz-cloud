@@ -1,11 +1,12 @@
 package com.njydsz.pmis.sales.domain.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
+
+import jakarta.validation.constraints.NotBlank;
+
+import lombok.Data;
 
 /**
  * 合同模板创建 DTO

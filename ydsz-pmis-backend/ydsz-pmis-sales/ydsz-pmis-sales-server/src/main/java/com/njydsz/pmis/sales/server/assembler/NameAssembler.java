@@ -1,12 +1,14 @@
 package com.njydsz.pmis.sales.server.assembler;
 
-import com.njydsz.pmis.userinfo.api.client.UserServiceClient;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.userinfo.api.client.UserServiceClient;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 名称装配器

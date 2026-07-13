@@ -1,10 +1,11 @@
 package com.njydsz.pmis.cronjob.server.config;
 
-import lombok.Data;
+import java.time.Duration;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import java.time.Duration;
+import lombok.Data;
 
 /**
  * 告警通知配置属性（P5 告警 + 监控）。

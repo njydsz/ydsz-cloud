@@ -1,16 +1,18 @@
 package com.njydsz.pmis.cronjob.server.core.sharding;
 
-import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
-import com.njydsz.pmis.cronjob.server.core.discovery.NodeDiscoveryStrategy;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Configuration;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Configuration;
+
+import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
+import com.njydsz.pmis.cronjob.server.core.discovery.NodeDiscoveryStrategy;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 权重分片策略（P1-6 分片策略丰富化）。

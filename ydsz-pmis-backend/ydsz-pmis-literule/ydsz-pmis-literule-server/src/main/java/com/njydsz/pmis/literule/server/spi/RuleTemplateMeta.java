@@ -1,10 +1,10 @@
 package com.njydsz.pmis.literule.server.spi;
 
-import lombok.Builder;
-import lombok.Data;
-
 import java.io.Serializable;
 import java.util.List;
+
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * 规则模板元数据

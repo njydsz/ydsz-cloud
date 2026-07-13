@@ -1,8 +1,9 @@
 package com.njydsz.pmis.project.server.literule;
 
-import com.njydsz.pmis.common.core.config.ThresholdProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.core.config.ThresholdProvider;
 
 /**
  * common-core 模块 {@link ThresholdProvider} 的持有器。

@@ -1,5 +1,16 @@
 package com.njydsz.pmis.common.web.config;
 
+import org.jspecify.annotations.Nullable;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+
 import com.fasterxml.jackson.core.StreamWriteFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.auth.config.AuthFilterConfiguration;
@@ -7,7 +18,7 @@ import com.njydsz.pmis.common.auth.model.AuthenticationProvider;
 import com.njydsz.pmis.common.base.config.BaseAutoConfiguration;
 import com.njydsz.pmis.common.base.config.BaseMvcConfiguration;
 import com.njydsz.pmis.common.base.constant.BaseFilterOrders;
-import org.springframework.context.ApplicationContext;
+import com.njydsz.pmis.common.base.interceptor.BaseHttpInterceptor;
 import com.njydsz.pmis.common.safe.config.SafeConfiguration;
 import com.njydsz.pmis.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.pmis.common.web.advice.GlobalResponseAdvice;
@@ -18,16 +29,6 @@ import com.njydsz.pmis.common.web.filter.SecurityHeaderFilter;
 import com.njydsz.pmis.common.web.filter.TraceIdResponseFilter;
 import com.njydsz.pmis.common.web.filter.WebAuthFilter;
 import com.njydsz.pmis.common.web.interceptor.RequestLogInterceptor;
-import com.njydsz.pmis.common.base.interceptor.BaseHttpInterceptor;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.AutoConfigureBefore;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
-import org.jspecify.annotations.Nullable;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 
 /**
  * Web 端 MVC 核心配置

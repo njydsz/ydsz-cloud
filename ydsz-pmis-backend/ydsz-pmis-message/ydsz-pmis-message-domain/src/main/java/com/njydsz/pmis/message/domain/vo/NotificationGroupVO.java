@@ -1,8 +1,8 @@
 package com.njydsz.pmis.message.domain.vo;
 
-import lombok.Data;
-
 import java.time.LocalDateTime;
+
+import lombok.Data;
 
 /**
  * 收件箱分组 VO（P1-2）。

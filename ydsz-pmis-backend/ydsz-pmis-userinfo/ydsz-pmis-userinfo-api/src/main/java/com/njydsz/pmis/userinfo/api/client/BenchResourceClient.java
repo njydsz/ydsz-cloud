@@ -1,14 +1,14 @@
 package com.njydsz.pmis.userinfo.api.client;
-import com.njydsz.pmis.common.feign.FeignClientConstants;
-import com.njydsz.pmis.userinfo.api.fallback.BenchResourceClientFallback;
+import java.util.List;
+import java.util.Map;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
-import java.util.List;
-import java.util.Map;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.feign.FeignClientConstants;
+import com.njydsz.pmis.userinfo.api.fallback.BenchResourceClientFallback;
 
 /**
  * 资源/Bench 数据 Feign 客户端（执行模块专用）

@@ -1,34 +1,36 @@
 package com.njydsz.pmis.userinfo.web.controller.user;
 
-import com.njydsz.pmis.common.lock.annotation.Idempotent;
-import com.njydsz.pmis.common.lock.annotation.YdszDistributedLock;
+import java.util.List;
+
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+
+import org.springframework.beans.BeanUtils;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.safe.annotation.RateLimit;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.auth.context.AuthContext;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.common.lock.annotation.YdszDistributedLock;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.userinfo.domain.dto.auth.PasswordChangeDTO;
 import com.njydsz.pmis.userinfo.domain.dto.auth.PasswordResetDTO;
 import com.njydsz.pmis.userinfo.domain.dto.user.UserCreateDTO;
 import com.njydsz.pmis.userinfo.domain.dto.user.UserQueryDTO;
 import com.njydsz.pmis.userinfo.domain.dto.user.UserUpdateDTO;
 import com.njydsz.pmis.userinfo.domain.entity.user.UserAccountDO;
-import com.njydsz.pmis.userinfo.server.service.user.UserAccountService;
 import com.njydsz.pmis.userinfo.domain.vo.UserVO;
+import com.njydsz.pmis.userinfo.server.service.user.UserAccountService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * 用户接口

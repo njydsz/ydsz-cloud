@@ -1,9 +1,21 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.domain.dto.InstanceMigrationDTO;
 import com.njydsz.pmis.workflow.domain.dto.InstanceMigrationResultDTO;
 import com.njydsz.pmis.workflow.domain.dto.InstanceMigrationResultDTO.MigrationDetail;
@@ -17,19 +29,9 @@ import com.njydsz.pmis.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.server.service.FlowInstanceMigrationService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * 流程实例迁移 Service 实现

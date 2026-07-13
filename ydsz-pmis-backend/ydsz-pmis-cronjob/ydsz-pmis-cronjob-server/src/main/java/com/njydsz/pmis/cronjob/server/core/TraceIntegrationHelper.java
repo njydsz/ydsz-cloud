@@ -1,11 +1,12 @@
 package com.njydsz.pmis.cronjob.server.core.tracing;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.*;
+
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
-import org.slf4j.MDC;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * P2-12: 全链路追踪集成（SkyWalking / OpenTelemetry）。

@@ -1,42 +1,5 @@
 package com.njydsz.pmis.project.server.service.impl;
 
-import com.baomidou.dynamic.datasource.annotation.DS;
-import com.njydsz.pmis.common.core.constant.CacheConstants;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.jdbc.constant.DataSourceConstants;
-import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
-import com.njydsz.pmis.project.domain.dto.CockpitAlertSummaryVO;
-import com.njydsz.pmis.project.domain.dto.CockpitDrillDownDTO;
-import com.njydsz.pmis.project.domain.dto.CockpitKpiVO;
-import com.njydsz.pmis.project.domain.dto.ExecutiveOverviewVO;
-import com.njydsz.pmis.project.domain.dto.KpiTrendVO;
-import com.njydsz.pmis.project.domain.dto.ProjectGroupKpiDTO;
-import com.njydsz.pmis.project.server.engine.alert.AlertRuleEngine;
-import com.njydsz.pmis.project.server.engine.alert.BenchHighRule;
-import com.njydsz.pmis.project.server.engine.alert.EvmRedRule;
-import com.njydsz.pmis.project.server.engine.alert.MarginLowRule;
-import com.njydsz.pmis.project.server.engine.alert.UtilizationLowRule;
-import com.njydsz.pmis.project.domain.enums.AlertSeverity;
-import com.njydsz.pmis.literule.api.RuleContext;
-import com.njydsz.pmis.literule.api.RuleEngine;
-import com.njydsz.pmis.literule.api.RuleResult;
-import com.njydsz.pmis.literule.api.RuleSeverity;
-import com.njydsz.pmis.userinfo.api.client.BenchResourceClient;
-import com.njydsz.pmis.project.infra.mapper.BillableUtilizationSnapshotMapper;
-import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
-import com.njydsz.pmis.project.infra.mapper.EvmMeasureMapper;
-import com.njydsz.pmis.finance.api.client.FinanceDataClient;
-import com.njydsz.pmis.project.infra.mapper.PurchaseMapper;
-import com.njydsz.pmis.project.infra.mapper.RiskMapper;
-import com.njydsz.pmis.project.server.service.BillableUtilizationService;
-import com.njydsz.pmis.project.server.service.CockpitReportService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -49,6 +12,45 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import com.baomidou.dynamic.datasource.annotation.DS;
+import com.njydsz.pmis.common.core.constant.CacheConstants;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.jdbc.constant.DataSourceConstants;
+import com.njydsz.pmis.finance.api.client.FinanceDataClient;
+import com.njydsz.pmis.literule.api.RuleContext;
+import com.njydsz.pmis.literule.api.RuleEngine;
+import com.njydsz.pmis.literule.api.RuleResult;
+import com.njydsz.pmis.literule.api.RuleSeverity;
+import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
+import com.njydsz.pmis.project.domain.dto.CockpitAlertSummaryVO;
+import com.njydsz.pmis.project.domain.dto.CockpitDrillDownDTO;
+import com.njydsz.pmis.project.domain.dto.CockpitKpiVO;
+import com.njydsz.pmis.project.domain.dto.ExecutiveOverviewVO;
+import com.njydsz.pmis.project.domain.dto.KpiTrendVO;
+import com.njydsz.pmis.project.domain.dto.ProjectGroupKpiDTO;
+import com.njydsz.pmis.project.domain.enums.AlertSeverity;
+import com.njydsz.pmis.project.infra.mapper.BillableUtilizationSnapshotMapper;
+import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
+import com.njydsz.pmis.project.infra.mapper.EvmMeasureMapper;
+import com.njydsz.pmis.project.infra.mapper.PurchaseMapper;
+import com.njydsz.pmis.project.infra.mapper.RiskMapper;
+import com.njydsz.pmis.project.server.engine.alert.AlertRuleEngine;
+import com.njydsz.pmis.project.server.engine.alert.BenchHighRule;
+import com.njydsz.pmis.project.server.engine.alert.EvmRedRule;
+import com.njydsz.pmis.project.server.engine.alert.MarginLowRule;
+import com.njydsz.pmis.project.server.engine.alert.UtilizationLowRule;
+import com.njydsz.pmis.project.server.service.BillableUtilizationService;
+import com.njydsz.pmis.project.server.service.CockpitReportService;
+import com.njydsz.pmis.userinfo.api.client.BenchResourceClient;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 经营驾驶舱 Service 实现

@@ -1,14 +1,8 @@
 package com.njydsz.pmis.project.server.service.impl;
 
-import com.baomidou.dynamic.datasource.annotation.DS;
-import com.njydsz.pmis.common.jdbc.constant.DataSourceConstants;
-import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.project.infra.mapper.InitiationMapper;
-import com.njydsz.pmis.project.domain.query.ProjectSearchVO;
-import com.njydsz.pmis.project.domain.query.UniversalSearchVO;
-import com.njydsz.pmis.project.server.service.SearchService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -16,8 +10,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.baomidou.dynamic.datasource.annotation.DS;
+import com.njydsz.pmis.common.jdbc.constant.DataSourceConstants;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.project.domain.query.ProjectSearchVO;
+import com.njydsz.pmis.project.domain.query.UniversalSearchVO;
+import com.njydsz.pmis.project.infra.mapper.InitiationMapper;
+import com.njydsz.pmis.project.server.service.SearchService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 项目全文检索 Service 实现（P2-19：替代 Elasticsearch，改用 PostgreSQL tsvector）。

@@ -1,13 +1,13 @@
 package com.njydsz.pmis.literule.api;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 决策表定义（DMN 风格）

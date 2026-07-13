@@ -1,23 +1,20 @@
 package com.njydsz.pmis.common.docs.security.scanner;
 
-import com.njydsz.pmis.common.docs.domain.SecurityScanResult;
-import com.njydsz.pmis.common.docs.enums.DocumentFormat;
-import com.njydsz.pmis.common.docs.enums.SecurityLevel;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ooxml.POIXMLProperties.CoreProperties;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xslf.usermodel.XMLSlideShow;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.stereotype.Component;
-
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.docs.domain.SecurityScanResult;
+import com.njydsz.pmis.common.docs.enums.DocumentFormat;
+import com.njydsz.pmis.common.docs.enums.SecurityLevel;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Office 宏检测器

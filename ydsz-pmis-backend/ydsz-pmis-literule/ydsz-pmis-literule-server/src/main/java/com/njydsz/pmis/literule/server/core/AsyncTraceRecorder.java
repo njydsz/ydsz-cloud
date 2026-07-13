@@ -1,9 +1,5 @@
 package com.njydsz.pmis.literule.server.core;
 
-import com.njydsz.pmis.literule.api.RuleExecutionTrace;
-import com.njydsz.pmis.literule.server.spi.TraceRecorder;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -11,6 +7,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import com.njydsz.pmis.literule.api.RuleExecutionTrace;
+import com.njydsz.pmis.literule.server.spi.TraceRecorder;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 异步批量轨迹记录器

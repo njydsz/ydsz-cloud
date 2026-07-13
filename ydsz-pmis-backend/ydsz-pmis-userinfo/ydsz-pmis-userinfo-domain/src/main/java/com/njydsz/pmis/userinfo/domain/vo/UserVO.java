@@ -1,14 +1,15 @@
 package com.njydsz.pmis.userinfo.domain.vo;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.njydsz.pmis.common.safe.annotation.Sensitive;
-import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.njydsz.pmis.common.safe.annotation.Sensitive;
+import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
+
+import lombok.Data;
 
 /**
  * 用户视图对象
@@ -78,4 +79,3 @@ public class UserVO implements Serializable {
     /** 权限编码列表 */
     private List<String> permissions;
 }
-

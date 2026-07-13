@@ -1,28 +1,28 @@
 package com.njydsz.pmis.cronjob.server.core.dispatch;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
-import com.njydsz.pmis.cronjob.server.core.dag.DagDefinition;
-import com.njydsz.pmis.cronjob.server.core.dag.DagDefinitionCodec;
-import com.njydsz.pmis.cronjob.server.core.dag.DagNode;
-import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
-import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagDO;
-import com.njydsz.pmis.cronjob.domain.entity.job.JobRelationDO;
-import com.njydsz.pmis.cronjob.infra.mapper.dag.JobDagMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobRelationMapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagDO;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
+import com.njydsz.pmis.cronjob.domain.entity.job.JobRelationDO;
+import com.njydsz.pmis.cronjob.infra.mapper.dag.JobDagMapper;
+import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
+import com.njydsz.pmis.cronjob.infra.mapper.job.JobRelationMapper;
+import com.njydsz.pmis.cronjob.server.core.dag.DagDefinition;
+import com.njydsz.pmis.cronjob.server.core.dag.DagDefinitionCodec;
+import com.njydsz.pmis.cronjob.server.core.dag.DagNode;
+import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * P2-10: 依赖巡检与自愈机制。

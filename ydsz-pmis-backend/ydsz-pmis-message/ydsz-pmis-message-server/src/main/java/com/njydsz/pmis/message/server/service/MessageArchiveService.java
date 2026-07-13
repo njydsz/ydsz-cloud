@@ -1,10 +1,10 @@
 package com.njydsz.pmis.message.server.service.archive;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
-
 import java.time.LocalDateTime;
 import java.util.List;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 
 /**
  * 消息归档全文搜索服务（P0-5）。

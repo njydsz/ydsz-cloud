@@ -1,11 +1,13 @@
 package com.njydsz.pmis.cronjob.server.config;
 
-import com.njydsz.pmis.cronjob.server.core.dispatch.CrossClusterDispatcher;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.cronjob.server.core.dispatch.CrossClusterDispatcher;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 跨集群调度初始化器（P3-12）。

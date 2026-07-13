@@ -1,8 +1,8 @@
 package com.njydsz.pmis.message.domain.dto.core;
 
-import lombok.Data;
-
 import java.util.List;
+
+import lombok.Data;
 
 /**
  * 交互式卡片消息 DTO（P1-1）。

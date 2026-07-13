@@ -1,8 +1,8 @@
 package com.njydsz.pmis.project.server.engine.alert;
 
-import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
-
 import java.util.Map;
+
+import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
 
 /**
  * 预警规则接口

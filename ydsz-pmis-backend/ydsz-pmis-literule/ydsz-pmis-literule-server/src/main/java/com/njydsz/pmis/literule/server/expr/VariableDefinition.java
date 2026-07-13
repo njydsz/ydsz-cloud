@@ -1,14 +1,11 @@
 package com.njydsz.pmis.literule.server.expr;
 
+import java.io.Serializable;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
-import java.lang.Boolean;
-import java.lang.Number;
-import java.lang.String;
 
 /**
  * 变量定义元数据

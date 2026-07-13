@@ -1,16 +1,17 @@
 package com.njydsz.pmis.userinfo.domain.entity.user;
 
+import java.io.Serial;
+import java.time.LocalDate;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
 import com.njydsz.pmis.common.safe.annotation.Sensitive;
 import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
-import java.time.LocalDate;
 
 /**
  * 员工实体

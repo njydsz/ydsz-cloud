@@ -1,14 +1,14 @@
 package com.njydsz.pmis.literule.server.security;
 
-import com.njydsz.pmis.literule.api.RuleDefinition;
-import com.njydsz.pmis.literule.server.spi.RuleConfigProvider;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+
+import com.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.server.spi.RuleConfigProvider;
 
 /**
  * 规则细粒度权限校验器（P2-4 按目录授权）

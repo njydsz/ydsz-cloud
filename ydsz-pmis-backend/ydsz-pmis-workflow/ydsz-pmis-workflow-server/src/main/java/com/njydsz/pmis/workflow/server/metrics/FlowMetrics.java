@@ -1,5 +1,12 @@
 package com.njydsz.pmis.workflow.server.metrics;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.function.Supplier;
+
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.stereotype.Component;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.metrics.AbstractModuleMetrics;
 import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
@@ -7,15 +14,10 @@ import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.infra.mapper.FlowCcMapper;
 import com.njydsz.pmis.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.infra.mapper.FlowRunTaskMapper;
+
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.stereotype.Component;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.function.Supplier;
 
 /**
  * P2-3 流程引擎 Prometheus 指标收集器

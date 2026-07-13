@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.json.serializer;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 import com.njydsz.pmis.common.json.deserializer.JsonDeserializer;
 
 /**

@@ -1,8 +1,8 @@
 package com.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.literule.api.ScriptDefinition;
-
 import java.util.List;
+
+import com.njydsz.pmis.literule.api.ScriptDefinition;
 
 /**
  * 脚本规则配置提供者接口（SPI）

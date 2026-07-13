@@ -1,11 +1,12 @@
 package com.njydsz.pmis.userinfo.domain.vo;
 
+import java.io.Serial;
+
 import com.njydsz.pmis.userinfo.domain.entity.user.EmployeeDO;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
 
 /**
  * 员工视图对象（含部门 / 岗位 / 职级名称装配）

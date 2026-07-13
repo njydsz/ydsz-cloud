@@ -1,14 +1,15 @@
 package com.njydsz.pmis.common.json;
 
-import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
-import com.njydsz.pmis.common.json.type.YdszJsonType;
-import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
+
+import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
+import com.njydsz.pmis.common.json.type.YdszJsonType;
 
 @DisplayName("完整往返集成测试")
 class RoundTripIntegrationTest {

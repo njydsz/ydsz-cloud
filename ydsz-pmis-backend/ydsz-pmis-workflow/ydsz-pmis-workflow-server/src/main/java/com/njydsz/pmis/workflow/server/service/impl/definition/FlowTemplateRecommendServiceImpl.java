@@ -1,17 +1,19 @@
 package com.njydsz.pmis.workflow.server.service.impl.definition;
 
-import com.njydsz.pmis.workflow.domain.entity.FlowTemplateDO;
-import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.pmis.workflow.infra.mapper.FlowTemplateMapper;
-import com.njydsz.pmis.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.server.service.FlowTemplateRecommendService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowTemplateDO;
+import com.njydsz.pmis.workflow.infra.mapper.FlowInstanceMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowTemplateMapper;
+import com.njydsz.pmis.workflow.server.service.FlowTemplateRecommendService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * P2-2: 审批模板智能推荐服务实现

@@ -1,18 +1,20 @@
 package com.njydsz.pmis.project.server.literule;
 
-import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
-import com.njydsz.pmis.finance.api.client.FinanceDataClient;
-import com.njydsz.pmis.project.infra.mapper.PurchaseMapper;
-import com.njydsz.pmis.project.server.service.InitiationService;
-import com.njydsz.pmis.literule.server.spi.BudgetSnapshotProvider;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.finance.api.client.FinanceDataClient;
+import com.njydsz.pmis.literule.server.spi.BudgetSnapshotProvider;
+import com.njydsz.pmis.project.infra.mapper.CostAllocationMapper;
+import com.njydsz.pmis.project.infra.mapper.PurchaseMapper;
+import com.njydsz.pmis.project.server.service.InitiationService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 预算快照提供者实现（execution 模块）

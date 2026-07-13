@@ -1,15 +1,17 @@
 package com.njydsz.pmis.cronjob.server.core.alert;
 
-import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Duration;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import java.time.Duration;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 告警智能降噪管理器（P1-3）。

@@ -1,10 +1,10 @@
 package com.njydsz.pmis.message.domain.dto.core;
 
 
-import lombok.Data;
-
 import java.time.LocalDateTime;
 import java.util.List;
+
+import lombok.Data;
 
 /**
  * 站内通知发送 DTO

@@ -1,5 +1,12 @@
 package com.njydsz.pmis.project.server.queue;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.pmis.common.queue.domain.QueueMessage;
 import com.njydsz.pmis.common.queue.enums.QueueType;
 import com.njydsz.pmis.common.queue.queue.IMessageQueue;
@@ -7,13 +14,9 @@ import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.pmis.common.queue.service.IMessagePublisher;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.project.server.engine.BudgetAlertEvent;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
 
 /**
  * 项目预算告警队列发布者

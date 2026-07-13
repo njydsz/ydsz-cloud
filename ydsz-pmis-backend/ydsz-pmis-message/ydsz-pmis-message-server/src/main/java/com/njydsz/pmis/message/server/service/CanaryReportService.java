@@ -1,9 +1,9 @@
 package com.njydsz.pmis.message.server.service.canary;
 
 
-import com.njydsz.pmis.message.domain.dto.canary.CanaryReportVO;
-
 import java.time.LocalDateTime;
+
+import com.njydsz.pmis.message.domain.dto.canary.CanaryReportVO;
 
 /**
  * 灰度 A/B 报表服务（P1-6）。

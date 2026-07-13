@@ -1,5 +1,16 @@
 package com.njydsz.pmis.workflow.server.service.impl.integration;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.dto.FlowAttachmentDTO;
@@ -7,18 +18,9 @@ import com.njydsz.pmis.workflow.domain.dto.FlowAttachmentPreviewVO;
 import com.njydsz.pmis.workflow.domain.entity.FlowAttachmentDO;
 import com.njydsz.pmis.workflow.infra.mapper.FlowAttachmentMapper;
 import com.njydsz.pmis.workflow.server.service.FlowAttachmentService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Set;
-import java.util.List;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
 /**
  * 自建工作流引擎 - 审批附件服务实现
@@ -200,4 +202,3 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
         return downloadUrl;
     }
 }
-

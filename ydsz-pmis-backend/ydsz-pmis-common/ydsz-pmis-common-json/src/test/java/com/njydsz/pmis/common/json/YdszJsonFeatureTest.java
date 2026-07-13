@@ -1,13 +1,14 @@
 package com.njydsz.pmis.common.json;
 
-import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
-import com.njydsz.pmis.common.json.reader.JSONReader;
-import com.njydsz.pmis.common.json.writer.JSONWriter;
-import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
+
+import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
+import com.njydsz.pmis.common.json.reader.JSONReader;
+import com.njydsz.pmis.common.json.writer.JSONWriter;
 
 @DisplayName("YdszJson Feature 系统测试")
 class YdszJsonFeatureTest {

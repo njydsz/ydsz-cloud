@@ -1,28 +1,30 @@
 package com.njydsz.pmis.finance.web.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.finance.domain.entity.ProfitSnapshotDO;
-import com.njydsz.pmis.finance.infra.mapper.InvoiceMapper;
-import com.njydsz.pmis.finance.infra.mapper.PaymentMapper;
-import com.njydsz.pmis.finance.infra.mapper.ExpenseMapper;
-import com.njydsz.pmis.finance.infra.mapper.RevenueMapper;
-import com.njydsz.pmis.finance.infra.mapper.ProfitSnapshotMapper;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.finance.domain.entity.ProfitSnapshotDO;
+import com.njydsz.pmis.finance.infra.mapper.ExpenseMapper;
+import com.njydsz.pmis.finance.infra.mapper.InvoiceMapper;
+import com.njydsz.pmis.finance.infra.mapper.PaymentMapper;
+import com.njydsz.pmis.finance.infra.mapper.ProfitSnapshotMapper;
+import com.njydsz.pmis.finance.infra.mapper.RevenueMapper;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 财务数据查询 Controller（内部接口）

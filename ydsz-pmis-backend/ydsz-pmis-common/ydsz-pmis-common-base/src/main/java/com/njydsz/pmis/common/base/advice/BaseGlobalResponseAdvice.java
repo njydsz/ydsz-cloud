@@ -1,18 +1,19 @@
 package com.njydsz.pmis.common.base.advice;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.njydsz.pmis.common.util.json.JsonUtils;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-
 import java.io.Serializable;
+
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 /**
  * 全局响应包装基类（Web/App 共享）

@@ -1,15 +1,16 @@
 package com.njydsz.pmis.common.docs.security.pii.impl;
 
-import com.njydsz.pmis.common.docs.domain.DocumentContent;
-import com.njydsz.pmis.common.docs.domain.PiiFinding;
-import com.njydsz.pmis.common.docs.enums.PiiType;
-import com.njydsz.pmis.common.docs.security.pii.PiiDetector;
-import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.docs.domain.DocumentContent;
+import com.njydsz.pmis.common.docs.domain.PiiFinding;
+import com.njydsz.pmis.common.docs.enums.PiiType;
+import com.njydsz.pmis.common.docs.security.pii.PiiDetector;
 
 /**
  * 银行卡号检测器

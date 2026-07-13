@@ -1,9 +1,9 @@
 package com.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.literule.api.RuleDefinition;
-
 import java.util.List;
 import java.util.function.Consumer;
+
+import com.njydsz.pmis.literule.api.RuleDefinition;
 
 /**
  * 规则数据源接口（P1-5 多数据源支持）

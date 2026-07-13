@@ -1,22 +1,5 @@
 package com.njydsz.pmis.workflow.server.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.workflow.domain.entity.FlowAuditLogDO;
-import com.njydsz.pmis.workflow.domain.entity.FlowHisTaskDO;
-import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.infra.mapper.FlowAuditLogMapper;
-import com.njydsz.pmis.workflow.infra.mapper.FlowHisTaskMapper;
-import com.njydsz.pmis.workflow.infra.mapper.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.infra.mapper.FlowRunTaskMapper;
-import com.njydsz.pmis.workflow.server.service.FlowEfficiencyService;
-import com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskAuditService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,6 +11,25 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.workflow.domain.entity.FlowAuditLogDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowHisTaskDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.infra.mapper.FlowAuditLogMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowHisTaskMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowInstanceMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowRunTaskMapper;
+import com.njydsz.pmis.workflow.server.service.FlowEfficiencyService;
+import com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskAuditService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * GAP-P1: 审批效率分析服务实现

@@ -1,13 +1,13 @@
 package com.njydsz.pmis.literule.api;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 交叉决策表定义（决策矩阵，P1-6）

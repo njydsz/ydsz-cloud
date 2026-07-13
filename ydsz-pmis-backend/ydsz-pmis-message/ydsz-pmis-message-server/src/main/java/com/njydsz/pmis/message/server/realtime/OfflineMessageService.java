@@ -1,24 +1,26 @@
 package com.njydsz.pmis.message.server.realtime;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.json.JsonUtils;
-import com.njydsz.pmis.common.socket.constant.WebSocketConstants;
-import com.njydsz.pmis.common.socket.offline.OfflineMessageStore;
-import com.njydsz.pmis.message.domain.entity.config.MsgOfflineDO;
-import com.njydsz.pmis.message.infra.mapper.config.MsgOfflineMapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.common.socket.constant.WebSocketConstants;
+import com.njydsz.pmis.common.socket.offline.OfflineMessageStore;
+import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.message.domain.entity.config.MsgOfflineDO;
+import com.njydsz.pmis.message.infra.mapper.config.MsgOfflineMapper;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 离线消息补偿服务（Redis + DB 双层存储）。

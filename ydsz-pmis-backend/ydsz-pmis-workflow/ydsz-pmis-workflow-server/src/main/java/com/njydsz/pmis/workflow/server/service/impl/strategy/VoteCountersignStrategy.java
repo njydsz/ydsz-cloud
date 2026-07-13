@@ -1,5 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.strategy;
 
+import org.springframework.stereotype.Component;
+
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
@@ -9,8 +11,8 @@ import com.njydsz.pmis.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.server.service.impl.CountersignStrategy;
 import com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskArchiveService;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
 /**
  * 票签策略：通过率达到阈值才推进（默认 50% + 1，可配置）。

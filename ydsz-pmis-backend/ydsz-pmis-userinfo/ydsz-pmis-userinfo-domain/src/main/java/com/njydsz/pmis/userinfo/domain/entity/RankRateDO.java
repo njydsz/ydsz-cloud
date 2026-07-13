@@ -1,15 +1,16 @@
 package com.njydsz.pmis.userinfo.domain.entity.rate;
 
+import java.io.Serial;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
-import java.math.BigDecimal;
-import java.time.LocalDate;
 
 /**
  * 职级费率实体（双费率）

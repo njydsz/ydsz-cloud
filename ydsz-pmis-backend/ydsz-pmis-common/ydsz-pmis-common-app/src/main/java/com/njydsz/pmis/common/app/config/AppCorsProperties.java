@@ -1,7 +1,8 @@
 package com.njydsz.pmis.common.app.config;
 
-import com.njydsz.pmis.common.base.config.BaseCorsProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import com.njydsz.pmis.common.base.config.BaseCorsProperties;
 
 /**
  * App 端 CORS 跨域配置属性

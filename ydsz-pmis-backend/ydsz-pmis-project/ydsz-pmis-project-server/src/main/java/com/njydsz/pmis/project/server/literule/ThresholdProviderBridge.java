@@ -1,10 +1,12 @@
 package com.njydsz.pmis.project.server.literule;
 
-import com.njydsz.pmis.literule.server.spi.ThresholdProvider;
-import lombok.RequiredArgsConstructor;
+import java.math.BigDecimal;
+
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
+import com.njydsz.pmis.literule.server.spi.ThresholdProvider;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * 规则阈值提供者桥接实现（execution 模块）

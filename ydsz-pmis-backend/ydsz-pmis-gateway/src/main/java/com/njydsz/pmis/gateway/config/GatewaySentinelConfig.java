@@ -1,5 +1,14 @@
 package com.njydsz.pmis.gateway.config;
 
+import java.nio.charset.StandardCharsets;
+
+import jakarta.annotation.PostConstruct;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.server.ServerResponse;
+
 import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.BlockRequestHandler;
 import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.GatewayCallbackManager;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
@@ -9,14 +18,8 @@ import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
-import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.server.ServerResponse;
 
-import java.nio.charset.StandardCharsets;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 网关 Sentinel 配置（P1-8 增强）

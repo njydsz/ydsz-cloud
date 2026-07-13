@@ -1,10 +1,11 @@
 package com.njydsz.pmis.finance.domain.dto;
 
+import java.math.BigDecimal;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
 
-import java.math.BigDecimal;
+import lombok.Data;
 
 /**
  * 利润测算 DTO

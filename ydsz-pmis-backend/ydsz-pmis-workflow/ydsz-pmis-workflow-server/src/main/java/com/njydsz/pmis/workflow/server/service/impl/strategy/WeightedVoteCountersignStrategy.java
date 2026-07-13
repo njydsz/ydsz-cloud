@@ -1,5 +1,10 @@
 package com.njydsz.pmis.workflow.server.service.impl.strategy;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.stereotype.Component;
+
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
@@ -11,11 +16,8 @@ import com.njydsz.pmis.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.infra.mapper.FlowUserMapper;
 import com.njydsz.pmis.workflow.server.service.impl.CountersignStrategy;
 import com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskArchiveService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 加权票签策略：按办理人 weight 累加，权重达到阈值才推进。

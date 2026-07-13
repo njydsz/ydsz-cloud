@@ -1,14 +1,15 @@
 package com.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.literule.api.RuleDefinition;
-import lombok.extern.slf4j.Slf4j;
-
+import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Consumer;
-import java.lang.reflect.Proxy;
+
 import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.literule.api.RuleDefinition;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Nacos 配置中心规则数据源（P1-5）

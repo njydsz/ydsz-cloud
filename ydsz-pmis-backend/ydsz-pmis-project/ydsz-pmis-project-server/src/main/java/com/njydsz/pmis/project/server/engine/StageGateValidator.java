@@ -1,12 +1,13 @@
 package com.njydsz.pmis.project.server.engine;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.njydsz.pmis.project.domain.entity.DeliveryItemDO;
 import com.njydsz.pmis.project.domain.enums.DeliveryItemStatus;
 import com.njydsz.pmis.project.domain.enums.DeliveryStage;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 阶段门控校验器

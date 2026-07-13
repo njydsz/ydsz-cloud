@@ -1,10 +1,17 @@
 package com.njydsz.pmis.userinfo.server.service.impl.auth;
 
-import cn.hutool.core.util.IdUtil;
-import com.njydsz.pmis.userinfo.domain.dto.auth.CaptchaVO;
-import com.njydsz.pmis.userinfo.domain.dto.auth.LoginDTO;
-import com.njydsz.pmis.userinfo.domain.dto.auth.LoginResultVO;
-import com.njydsz.pmis.userinfo.server.service.auth.AuthService;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
+
 import com.njydsz.pmis.common.auth.token.JwtTokenProvider;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
@@ -12,28 +19,23 @@ import com.njydsz.pmis.common.security.AccountLockedEvent;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.CryptoUtil;
 import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.userinfo.domain.dto.auth.CaptchaVO;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginContextDTO;
+import com.njydsz.pmis.userinfo.domain.dto.auth.LoginDTO;
+import com.njydsz.pmis.userinfo.domain.dto.auth.LoginResultVO;
 import com.njydsz.pmis.userinfo.domain.entity.org.DepartmentDO;
 import com.njydsz.pmis.userinfo.domain.entity.permission.RoleDO;
 import com.njydsz.pmis.userinfo.domain.entity.user.UserAccountDO;
+import com.njydsz.pmis.userinfo.server.service.auth.AuthService;
 import com.njydsz.pmis.userinfo.server.service.org.DepartmentService;
 import com.njydsz.pmis.userinfo.server.service.permission.PermissionService;
 import com.njydsz.pmis.userinfo.server.service.permission.RoleService;
 import com.njydsz.pmis.userinfo.server.service.user.UserAccountService;
 import com.wf.captcha.SpecCaptcha;
+
+import cn.hutool.core.util.IdUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Service;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * 认证服务实现

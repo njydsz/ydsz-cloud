@@ -1,11 +1,11 @@
 package com.njydsz.pmis.message.server.channel;
 
+import java.util.Optional;
+
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.message.domain.dto.receipt.ReceiptResult;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
-
-import java.util.Optional;
 
 /**
  * 消息通道 SPI 接口。

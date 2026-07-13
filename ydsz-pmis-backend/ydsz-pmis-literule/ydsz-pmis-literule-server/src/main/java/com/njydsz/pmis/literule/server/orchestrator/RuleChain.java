@@ -1,13 +1,5 @@
 package com.njydsz.pmis.literule.server.orchestrator;
 
-import com.njydsz.pmis.literule.api.Rule;
-import com.njydsz.pmis.literule.api.RuleContext;
-import com.njydsz.pmis.literule.api.RuleResult;
-import com.njydsz.pmis.literule.api.RuleSeverity;
-import com.njydsz.pmis.literule.api.StatsRecorder;
-import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,6 +12,15 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import com.njydsz.pmis.literule.api.Rule;
+import com.njydsz.pmis.literule.api.RuleContext;
+import com.njydsz.pmis.literule.api.RuleResult;
+import com.njydsz.pmis.literule.api.RuleSeverity;
+import com.njydsz.pmis.literule.api.StatsRecorder;
+import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 规则链，支持 THEN/IF/ELIF/SWITCH/WHEN/FOR/WHILE/BREAK 编排

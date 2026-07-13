@@ -1,12 +1,13 @@
 package com.njydsz.pmis.literule.server.version;
 
-import com.njydsz.pmis.literule.api.RuleDefinition;
-import com.njydsz.pmis.literule.api.RuleSeverity;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import com.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.api.RuleSeverity;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 规则版本 Diff 服务

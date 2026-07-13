@@ -1,13 +1,14 @@
 package com.njydsz.pmis.project.api.fallback;
-import com.njydsz.pmis.project.api.client.ProjectServiceClient;
+import java.util.Map;
 
-import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.project.api.client.ProjectServiceClient;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 项目执行模块 Feign 降级工厂

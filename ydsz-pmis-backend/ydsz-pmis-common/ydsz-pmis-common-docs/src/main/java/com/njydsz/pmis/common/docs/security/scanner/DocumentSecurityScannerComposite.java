@@ -1,17 +1,19 @@
 package com.njydsz.pmis.common.docs.security.scanner;
 
-import com.njydsz.pmis.common.docs.domain.SecurityScanResult;
-import com.njydsz.pmis.common.docs.enums.DocumentFormat;
-import com.njydsz.pmis.common.docs.enums.SecurityLevel;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.docs.domain.SecurityScanResult;
+import com.njydsz.pmis.common.docs.enums.DocumentFormat;
+import com.njydsz.pmis.common.docs.enums.SecurityLevel;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文档安全扫描器组合实现

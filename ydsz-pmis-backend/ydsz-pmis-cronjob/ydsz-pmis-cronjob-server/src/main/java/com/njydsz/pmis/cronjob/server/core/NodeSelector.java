@@ -1,9 +1,9 @@
 package com.njydsz.pmis.cronjob.server.core.dispatch;
 
+import java.util.List;
+
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
-
-import java.util.List;
 
 /**
  * 节点选择策略接口。

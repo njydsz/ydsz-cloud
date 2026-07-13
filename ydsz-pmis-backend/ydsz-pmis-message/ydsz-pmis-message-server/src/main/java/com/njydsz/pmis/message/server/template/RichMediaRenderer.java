@@ -1,12 +1,14 @@
 package com.njydsz.pmis.message.server.template;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
-import com.njydsz.pmis.message.domain.dto.core.RichMediaContent;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Map;
+
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.util.Map;
+import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.message.domain.dto.core.RichMediaContent;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * P1-2: 富媒体消息渲染器。

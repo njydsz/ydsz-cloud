@@ -1,11 +1,12 @@
 package com.njydsz.pmis.common.json;
 
-import com.njydsz.pmis.common.json.tree.*;
-import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
+
+import com.njydsz.pmis.common.json.tree.*;
 
 @DisplayName("YdszJson Tree Model 测试")
 class YdszJsonTreeTest {

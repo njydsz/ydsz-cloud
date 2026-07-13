@@ -1,9 +1,9 @@
 package com.njydsz.pmis.cronjob.server.core.connector;
 
-import lombok.Data;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.Data;
 
 /**
  * 连接器导出结果（P2-3）。

@@ -1,5 +1,13 @@
 package com.njydsz.pmis.message.server.service.impl.receipt;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
@@ -12,15 +20,9 @@ import com.njydsz.pmis.message.infra.mapper.core.MsgNotificationMapper;
 import com.njydsz.pmis.message.server.realtime.RealtimePushService;
 import com.njydsz.pmis.message.server.service.core.DeliveryTimeOptimizer;
 import com.njydsz.pmis.message.server.service.receipt.ReadStatusSyncService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
 
 /**
  * P1-3: 全通道消息已读/未读状态同步服务实现。

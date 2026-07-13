@@ -1,14 +1,16 @@
 package com.njydsz.pmis.message.server.service.impl.core;
 
-import com.njydsz.pmis.message.server.config.MessageProperties;
-import com.njydsz.pmis.message.domain.constant.MessageConstants;
-import com.njydsz.pmis.message.server.service.core.DedupService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Duration;
+
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
-import java.time.Duration;
+import com.njydsz.pmis.message.domain.constant.MessageConstants;
+import com.njydsz.pmis.message.server.config.MessageProperties;
+import com.njydsz.pmis.message.server.service.core.DedupService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 智能去重服务实现（P2-1）。

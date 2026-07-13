@@ -1,11 +1,13 @@
 package com.njydsz.pmis.message.server.channel.push;
 
+import org.springframework.stereotype.Component;
+
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
+
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 /**
  * Mock 推送服务商（降级实现）。

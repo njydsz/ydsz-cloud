@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.json.config;
 
+import java.io.Serializable;
+
 import com.njydsz.pmis.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.pmis.common.json.provider.YdszSerializationProvider;
-
-import java.io.Serializable;
 
 /**
  * YdszJson 全局配置类

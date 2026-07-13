@@ -1,19 +1,21 @@
 package com.njydsz.pmis.project.server.literule;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.literule.domain.entity.RuleDefinitionDO;
 import com.njydsz.pmis.literule.infra.mapper.RuleDefinitionMapper;
 import com.njydsz.pmis.literule.server.spi.RuleCategoryProvider;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 规则目录树 Service（P1-9）

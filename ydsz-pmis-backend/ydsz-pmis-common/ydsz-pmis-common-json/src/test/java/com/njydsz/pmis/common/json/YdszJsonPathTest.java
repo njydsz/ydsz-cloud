@@ -1,11 +1,12 @@
 package com.njydsz.pmis.common.json;
 
-import com.njydsz.pmis.common.json.jsonpath.YdszJsonPath;
-import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
+
+import com.njydsz.pmis.common.json.jsonpath.YdszJsonPath;
 
 @DisplayName("YdszJsonPath 测试")
 class YdszJsonPathTest {

@@ -1,11 +1,14 @@
 package com.njydsz.pmis.message.server.config;
 
-import com.njydsz.pmis.common.safe.sensitive.SensitiveUtil;
+import java.util.regex.Pattern;
+
 import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Component;
 
-import java.util.regex.Pattern;
+import com.njydsz.pmis.common.safe.sensitive.SensitiveUtil;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 接收人(receiver)智能脱敏注册器。

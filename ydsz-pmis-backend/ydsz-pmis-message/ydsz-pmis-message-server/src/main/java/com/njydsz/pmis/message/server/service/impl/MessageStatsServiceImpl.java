@@ -1,7 +1,16 @@
 package com.njydsz.pmis.message.server.service.impl.core;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.message.server.config.MessageProperties;
 import com.njydsz.pmis.message.domain.dto.core.ChannelStatsVO;
 import com.njydsz.pmis.message.domain.dto.core.CostStatsVO;
 import com.njydsz.pmis.message.domain.dto.core.FunnelStatsVO;
@@ -12,18 +21,11 @@ import com.njydsz.pmis.message.domain.enums.core.MessageChannelEnum;
 import com.njydsz.pmis.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.pmis.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.pmis.message.server.config.MessageProperties;
 import com.njydsz.pmis.message.server.service.core.MessageStatsService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.Arrays;
-import java.util.Collections;
 
 /**
  * 消息统计服务实现（P1-2 可观测看板）。

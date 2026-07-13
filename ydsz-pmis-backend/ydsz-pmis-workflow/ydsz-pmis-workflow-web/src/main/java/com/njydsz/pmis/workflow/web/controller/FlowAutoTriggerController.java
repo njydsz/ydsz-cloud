@@ -1,22 +1,24 @@
 package com.njydsz.pmis.workflow.web.controller.integration;
 
-import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import java.util.List;
+import java.util.Map;
+
+import jakarta.validation.Valid;
+
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.workflow.domain.dto.FlowAutoTriggerCreateDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowAutoTriggerDO;
 import com.njydsz.pmis.workflow.server.service.FlowAutoTriggerService;
-import com.njydsz.pmis.workflow.domain.dto.FlowAutoTriggerCreateDTO;
-import jakarta.validation.Valid;
-import org.springframework.validation.annotation.Validated;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * 流程自动触发规则 HTTP API

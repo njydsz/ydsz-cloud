@@ -1,13 +1,14 @@
 package com.njydsz.pmis.gateway.config;
 
+import java.time.Duration;
+
+import org.springframework.stereotype.Component;
+
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
-import java.time.Duration;
 
 /**
  * 网关自定义 Prometheus 指标（P3-14）

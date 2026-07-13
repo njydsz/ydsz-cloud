@@ -1,18 +1,20 @@
 package com.njydsz.pmis.common.app.filter;
 
-import com.njydsz.pmis.common.app.util.RequestIdGenerator;
-import com.njydsz.pmis.common.auth.config.AuthFilterConfiguration;
-import com.njydsz.pmis.common.auth.model.AuthenticationProvider;
-import com.njydsz.pmis.common.auth.filter.BaseAuthFilter;
-import com.njydsz.pmis.common.core.constant.HeaderConstants;
-import com.njydsz.pmis.common.auth.handler.AuthHandler;
-import com.njydsz.pmis.common.util.auth.AuthInfo;
-import com.njydsz.pmis.common.util.auth.RequestHolder;
+import java.util.Objects;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.Objects;
+import com.njydsz.pmis.common.app.util.RequestIdGenerator;
+import com.njydsz.pmis.common.auth.config.AuthFilterConfiguration;
+import com.njydsz.pmis.common.auth.filter.BaseAuthFilter;
+import com.njydsz.pmis.common.auth.handler.AuthHandler;
+import com.njydsz.pmis.common.auth.model.AuthenticationProvider;
+import com.njydsz.pmis.common.core.constant.HeaderConstants;
+import com.njydsz.pmis.common.util.auth.AuthInfo;
+import com.njydsz.pmis.common.util.auth.RequestHolder;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 移动端 App 认证过滤器

@@ -1,11 +1,11 @@
 package com.njydsz.pmis.workflow.server.thirdparty;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Arrays;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 企业微信回调签名验证工具

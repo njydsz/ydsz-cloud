@@ -1,7 +1,8 @@
 package com.njydsz.pmis.common.app.config;
 
-import com.njydsz.pmis.common.base.config.BaseI18nConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+
+import com.njydsz.pmis.common.base.config.BaseI18nConfiguration;
 
 /**
  * App 端国际化配置

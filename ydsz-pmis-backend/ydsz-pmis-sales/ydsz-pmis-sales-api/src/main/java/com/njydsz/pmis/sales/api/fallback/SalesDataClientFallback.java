@@ -1,14 +1,15 @@
 package com.njydsz.pmis.sales.api.fallback;
-import com.njydsz.pmis.sales.api.client.SalesDataClient;
-
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.sales.api.client.SalesDataClient;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 商务数据查询 Feign 客户端降级工厂

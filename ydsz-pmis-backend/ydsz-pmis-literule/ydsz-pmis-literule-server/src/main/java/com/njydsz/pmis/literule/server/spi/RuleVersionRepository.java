@@ -1,8 +1,8 @@
 package com.njydsz.pmis.literule.server.spi;
 
-import com.njydsz.pmis.literule.api.RuleDefinition;
-
 import java.util.List;
+
+import com.njydsz.pmis.literule.api.RuleDefinition;
 
 /**
  * 规则版本仓库接口（SPI）

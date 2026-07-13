@@ -1,11 +1,11 @@
 package com.njydsz.pmis.literule.server.distributed;
 
-import lombok.Data;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+
+import lombok.Data;
 
 /**
  * 集群节点信息（P2-16 分布式执行）

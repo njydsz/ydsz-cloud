@@ -1,7 +1,8 @@
 package com.njydsz.pmis.common.app.config;
 
-import com.njydsz.pmis.common.base.config.BaseTimezoneConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+
+import com.njydsz.pmis.common.base.config.BaseTimezoneConfiguration;
 
 /**
  * App 端时区配置

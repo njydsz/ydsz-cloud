@@ -1,11 +1,12 @@
 package com.njydsz.pmis.common.web.auth;
 
-import com.njydsz.pmis.common.core.enums.ServiceType;
-import com.njydsz.pmis.common.auth.handler.AuthHandler;
-import org.springframework.stereotype.Component;
-
 import java.util.Collections;
 import java.util.Map;
+
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.auth.handler.AuthHandler;
+import com.njydsz.pmis.common.core.enums.ServiceType;
 
 /**
  * Web 端认证处理器工厂

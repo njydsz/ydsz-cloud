@@ -1,12 +1,13 @@
 package com.njydsz.pmis.common.json;
 
-import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
-import com.njydsz.pmis.common.json.annotation.YdszJsonField;
-import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.*;
+
+import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
+import com.njydsz.pmis.common.json.annotation.YdszJsonField;
 
 @DisplayName("大型JSON边界集成测试")
 class LargeJsonIntegrationTest {

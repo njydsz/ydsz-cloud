@@ -1,16 +1,16 @@
 package com.njydsz.pmis.userinfo.api.client;
-import com.njydsz.pmis.common.feign.FeignClientConstants;
-import com.njydsz.pmis.userinfo.api.fallback.UserServiceClientFallback;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.feign.FeignClientConstants;
+import com.njydsz.pmis.userinfo.api.fallback.UserServiceClientFallback;
 
 /**
  * 用户服务统一 Feign 客户端（P1 架构优化：合并 project + system 两个版本）。

@@ -1,24 +1,26 @@
 package com.njydsz.pmis.userinfo.web.controller.org;
 
-import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import java.util.List;
 
-import com.njydsz.pmis.common.audit.annotation.OperationLog;
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.safe.annotation.RateLimit;
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.userinfo.domain.dto.org.DepartmentFormDTO;
-import com.njydsz.pmis.userinfo.domain.entity.org.DepartmentDO;
-import com.njydsz.pmis.userinfo.server.service.org.DepartmentService;
-import com.njydsz.pmis.userinfo.domain.vo.DepartmentTreeVO;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import com.njydsz.pmis.common.audit.annotation.OperationLog;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
+import com.njydsz.pmis.userinfo.domain.dto.org.DepartmentFormDTO;
+import com.njydsz.pmis.userinfo.domain.entity.org.DepartmentDO;
+import com.njydsz.pmis.userinfo.domain.vo.DepartmentTreeVO;
+import com.njydsz.pmis.userinfo.server.service.org.DepartmentService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 部门接口

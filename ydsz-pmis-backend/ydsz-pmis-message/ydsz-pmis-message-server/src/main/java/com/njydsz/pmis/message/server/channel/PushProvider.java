@@ -1,10 +1,10 @@
 package com.njydsz.pmis.message.server.channel.push;
 
+import java.util.List;
+
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
-
-import java.util.List;
 
 /**
  * APP 推送服务商 SPI 接口。

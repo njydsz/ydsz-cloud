@@ -1,5 +1,12 @@
 package com.njydsz.pmis.literule.server.config;
 
+import java.util.List;
+
+import jakarta.annotation.PostConstruct;
+
+import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
+
 import com.njydsz.pmis.literule.api.DecisionTableDefinition;
 import com.njydsz.pmis.literule.api.DecisionTreeDefinition;
 import com.njydsz.pmis.literule.api.Rule;
@@ -19,13 +26,9 @@ import com.njydsz.pmis.literule.server.spi.DecisionTreeConfigProvider;
 import com.njydsz.pmis.literule.server.spi.RuleConfigProvider;
 import com.njydsz.pmis.literule.server.spi.ScorecardConfigProvider;
 import com.njydsz.pmis.literule.server.spi.ScriptConfigProvider;
-import jakarta.annotation.PostConstruct;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
-import org.springframework.core.annotation.Order;
-
-import java.util.List;
 
 /**
  * 规则热加载管理器

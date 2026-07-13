@@ -1,12 +1,14 @@
 package com.njydsz.pmis.common.json;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.List;
+
+import org.junit.jupiter.api.*;
+
 import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
 import com.njydsz.pmis.common.json.annotation.YdszJsonField;
 import com.njydsz.pmis.common.json.exception.YdszJsonException;
-import org.junit.jupiter.api.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import java.util.List;
 
 @DisplayName("错误处理集成测试")
 class ErrorHandlingIntegrationTest {

@@ -1,12 +1,13 @@
 package com.njydsz.pmis.cronjob.server.core.dispatch;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serial;
-import java.io.Serializable;
 
 /**
  * 远程派发请求 DTO（P1-4）。

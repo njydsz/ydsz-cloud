@@ -1,13 +1,14 @@
 package com.njydsz.pmis.message.domain.entity.config;
 
+import java.io.Serial;
+
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.domain.entity.BaseDO;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
 
 /**
  * 用户消息偏好表: 免打扰时段 / 频率上限 / 聚合开关 / 偏好语言

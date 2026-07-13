@@ -1,14 +1,15 @@
 package com.njydsz.pmis.project.domain.dto;
 
+import java.io.Serial;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
 import com.njydsz.pmis.project.domain.enums.AlertSeverity;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serial;
-import java.io.Serializable;
-import java.time.LocalDateTime;
 
 /**
  * 驾驶舱预警事件 DTO

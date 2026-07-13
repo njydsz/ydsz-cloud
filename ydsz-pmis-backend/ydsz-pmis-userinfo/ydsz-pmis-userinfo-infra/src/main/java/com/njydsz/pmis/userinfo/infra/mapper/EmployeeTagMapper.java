@@ -1,11 +1,12 @@
 package com.njydsz.pmis.userinfo.infra.mapper.user;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.userinfo.domain.entity.user.EmployeeTagDO;
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import java.util.List;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.userinfo.domain.entity.user.EmployeeTagDO;
 
 /**
  * 员工标签 Mapper

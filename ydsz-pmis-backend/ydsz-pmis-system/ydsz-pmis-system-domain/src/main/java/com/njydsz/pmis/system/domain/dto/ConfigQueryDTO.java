@@ -1,11 +1,12 @@
 package com.njydsz.pmis.system.domain.dto.config;
 
+import java.io.Serial;
+
 import com.njydsz.pmis.common.domain.query.PageQuery;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serial;
 
 /**
  * 配置分页查询 DTO。
