@@ -1,7 +1,6 @@
 package com.njydsz.pmis.common.search.service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -15,7 +14,6 @@ import com.njydsz.pmis.common.search.api.SearchSuggestion;
 import com.njydsz.pmis.common.search.config.SearchProperties;
 import com.njydsz.pmis.common.search.core.SearchEngine;
 import com.njydsz.pmis.common.search.provider.SearchProvider;
-import com.njydsz.pmis.common.search.provider.SearchProviderContext;
 import com.njydsz.pmis.common.search.provider.SearchProviderRegistry;
 
 import lombok.extern.slf4j.Slf4j;

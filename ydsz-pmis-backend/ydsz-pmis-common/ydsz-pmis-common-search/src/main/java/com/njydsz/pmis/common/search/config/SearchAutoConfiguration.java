@@ -15,9 +15,9 @@ import com.njydsz.pmis.common.search.core.SearchEngine;
 import com.njydsz.pmis.common.search.engine.memory.InMemorySearchEngine;
 import com.njydsz.pmis.common.search.engine.pg.PgSearchEngine;
 import com.njydsz.pmis.common.search.provider.SearchProviderRegistry;
-import com.njydsz.pmis.common.search.service.UnifiedSearchService;
 import com.njydsz.pmis.common.search.service.IndexSyncService;
 import com.njydsz.pmis.common.search.service.SuggestionService;
+import com.njydsz.pmis.common.search.service.UnifiedSearchService;
 import com.njydsz.pmis.common.search.sync.IndexSyncListener;
 
 import lombok.extern.slf4j.Slf4j;

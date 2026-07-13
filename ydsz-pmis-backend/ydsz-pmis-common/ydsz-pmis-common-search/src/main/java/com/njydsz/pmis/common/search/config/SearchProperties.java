@@ -1,7 +1,8 @@
 package com.njydsz.pmis.common.search.config;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import lombok.Data;
 
 /**
  * 搜索服务配置属性
