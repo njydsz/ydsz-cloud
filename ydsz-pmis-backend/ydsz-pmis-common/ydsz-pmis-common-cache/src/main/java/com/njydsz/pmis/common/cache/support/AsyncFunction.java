@@ -13,11 +13,11 @@ import java.util.concurrent.CompletableFuture;
  */
 @FunctionalInterface
 public interface AsyncFunction<K, V> {
-    /**
-     * 异步应用函数
-     *
-     * @param key 键
-     * @return 值的 CompletableFuture
-     */
-    CompletableFuture<V> apply(K key);
+  /**
+   * 异步应用函数
+   *
+   * @param key 键
+   * @return 值的 CompletableFuture
+   */
+  CompletableFuture<V> apply(K key);
 }

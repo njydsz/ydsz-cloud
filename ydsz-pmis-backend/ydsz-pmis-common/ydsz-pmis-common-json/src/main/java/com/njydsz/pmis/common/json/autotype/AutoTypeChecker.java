@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.json.autotype;
 import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
 import com.njydsz.pmis.common.json.exception.JsonDeserializationException;
 
+import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -109,7 +110,7 @@ public final class AutoTypeChecker {
         BUILTIN_WHITELIST.add("java.time.LocalTime");
         BUILTIN_WHITELIST.add("java.time.Instant");
         BUILTIN_WHITELIST.add("java.time.ZonedDateTime");
-        BUILTIN_WHITELIST.add("java.time.Duration");
+        BUILTIN_WHITELIST.add(Duration.class.getName());
         BUILTIN_WHITELIST.add("java.time.Period");
         BUILTIN_WHITELIST.add("java.time.ZoneId");
         BUILTIN_WHITELIST.add("java.time.OffsetDateTime");

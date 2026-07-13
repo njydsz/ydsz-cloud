@@ -1,38 +1,37 @@
 package com.njydsz.pmis.common.cache.multilevel;
 
-import com.njydsz.pmis.common.cache.api.Cache;
-import com.njydsz.pmis.common.cache.listener.RemovalCause;
-import com.njydsz.pmis.common.cache.listener.RemovalListener;
-import com.njydsz.pmis.common.cache.stats.CacheStats;
-import com.njydsz.pmis.common.cache.support.AsyncFunction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.RedisTemplate;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.RedisTemplate;
+
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.listener.RemovalListener;
+import com.njydsz.pmis.common.cache.stats.CacheStats;
+import com.njydsz.pmis.common.cache.support.AsyncFunction;
+
 /**
  * Redis L2 缓存适配器 — 将 RedisTemplate 适配为 YdszCache Cache 接口
  *
- * <p>作为多级缓存的 L2 后端，提供分布式缓存能力。
- * 使用 Spring Data Redis 的 RedisTemplate 进行序列化/反序列化。
+ * <p>作为多级缓存的 L2 后端，提供分布式缓存能力。 使用 Spring Data Redis 的 RedisTemplate 进行序列化/反序列化。
  *
  * <p>特性：
+ *
  * <ul>
- *   <li>支持 TTL 过期（写入时设置）</li>
- *   <li>支持批量读写（getAll/putAll）</li>
- *   <li>独立统计计数（命中/未命中/写入/删除）</li>
- *   <li>key 前缀隔离（避免不同缓存实例 key 冲突）</li>
+ *   <li>支持 TTL 过期（写入时设置）
+ *   <li>支持批量读写（getAll/putAll）
+ *   <li>独立统计计数（命中/未命中/写入/删除）
+ *   <li>key 前缀隔离（避免不同缓存实例 key 冲突）
  * </ul>
  *
  * @param <K> 键类型
@@ -42,254 +41,254 @@ import java.util.function.Function;
  */
 public class RedisCacheAdapter<K, V> implements Cache<K, V> {
 
-    private static final Logger log = LoggerFactory.getLogger(RedisCacheAdapter.class);
+  private static final Logger log = LoggerFactory.getLogger(RedisCacheAdapter.class);
 
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final String keyPrefix;
-    private final long ttlSeconds;
-    private final Class<V> valueClass;
+  private final RedisTemplate<String, Object> redisTemplate;
+  private final String keyPrefix;
+  private final long ttlSeconds;
+  private final Class<V> valueClass;
 
-    private final LongAdder hitCount = new LongAdder();
-    private final LongAdder missCount = new LongAdder();
-    private final LongAdder writeCount = new LongAdder();
-    private final LongAdder deleteCount = new LongAdder();
+  private final LongAdder hitCount = new LongAdder();
+  private final LongAdder missCount = new LongAdder();
+  private final LongAdder writeCount = new LongAdder();
+  private final LongAdder deleteCount = new LongAdder();
 
-    /**
-     * 创建 Redis 缓存适配器
-     *
-     * @param redisTemplate Redis 模板
-     * @param keyPrefix     key 前缀（用于隔离不同缓存实例）
-     * @param ttlSeconds    TTL 过期时间（秒），0 表示永不过期
-     * @param valueClass    值类型（用于反序列化）
-     */
-    public RedisCacheAdapter(RedisTemplate<String, Object> redisTemplate,
-                             String keyPrefix, long ttlSeconds, Class<V> valueClass) {
-        this.redisTemplate = redisTemplate;
-        this.keyPrefix = keyPrefix.endsWith(":") ? keyPrefix : keyPrefix + ":";
-        this.ttlSeconds = ttlSeconds;
-        this.valueClass = valueClass;
+  /**
+   * 创建 Redis 缓存适配器
+   *
+   * @param redisTemplate Redis 模板
+   * @param keyPrefix key 前缀（用于隔离不同缓存实例）
+   * @param ttlSeconds TTL 过期时间（秒），0 表示永不过期
+   * @param valueClass 值类型（用于反序列化）
+   */
+  public RedisCacheAdapter(
+      RedisTemplate<String, Object> redisTemplate,
+      String keyPrefix,
+      long ttlSeconds,
+      Class<V> valueClass) {
+    this.redisTemplate = redisTemplate;
+    this.keyPrefix = keyPrefix.endsWith(":") ? keyPrefix : keyPrefix + ":";
+    this.ttlSeconds = ttlSeconds;
+    this.valueClass = valueClass;
+  }
+
+  /** 构建 Redis key */
+  private String buildKey(K key) {
+    return keyPrefix + key.toString();
+  }
+
+  @Override
+  public V getIfPresent(K key) {
+    try {
+      Object value = redisTemplate.opsForValue().get(buildKey(key));
+      if (value != null) {
+        hitCount.increment();
+        return valueClass.isInstance(value) ? valueClass.cast(value) : null;
+      }
+      missCount.increment();
+      return null;
+    } catch (Exception e) {
+      log.warn("Redis 缓存读取失败, key={}", key, e);
+      missCount.increment();
+      return null;
     }
+  }
 
-    /**
-     * 构建 Redis key
-     */
-    private String buildKey(K key) {
-        return keyPrefix + key.toString();
+  @Override
+  public V get(K key, Function<K, V> loader) {
+    V value = getIfPresent(key);
+    if (value == null && loader != null) {
+      value = loader.apply(key);
+      if (value != null) {
+        put(key, value);
+      }
     }
+    return value;
+  }
 
-    @Override
-    public V getIfPresent(K key) {
-        try {
-            Object value = redisTemplate.opsForValue().get(buildKey(key));
-            if (value != null) {
-                hitCount.increment();
-                return valueClass.isInstance(value) ? valueClass.cast(value) : null;
-            }
-            missCount.increment();
-            return null;
-        } catch (Exception e) {
-            log.warn("Redis 缓存读取失败, key={}", key, e);
-            missCount.increment();
-            return null;
-        }
+  @Override
+  public CompletableFuture<V> getAsync(K key, AsyncFunction<K, V> loader) {
+    V value = getIfPresent(key);
+    if (value != null) {
+      return CompletableFuture.completedFuture(value);
     }
-
-    @Override
-    public V get(K key, Function<K, V> loader) {
-        V value = getIfPresent(key);
-        if (value == null && loader != null) {
-            value = loader.apply(key);
-            if (value != null) {
-                put(key, value);
-            }
-        }
-        return value;
-    }
-
-    @Override
-    public CompletableFuture<V> getAsync(K key, AsyncFunction<K, V> loader) {
-        V value = getIfPresent(key);
-        if (value != null) {
-            return CompletableFuture.completedFuture(value);
-        }
-        return loader.apply(key).thenApply(v -> {
-            if (v != null) {
+    return loader
+        .apply(key)
+        .thenApply(
+            v -> {
+              if (v != null) {
                 put(key, v);
-            }
-            return v;
-        });
-    }
+              }
+              return v;
+            });
+  }
 
-    @Override
-    public void put(K key, V value) {
-        try {
-            String redisKey = buildKey(key);
-            if (ttlSeconds > 0) {
-                redisTemplate.opsForValue().set(redisKey, value, ttlSeconds, TimeUnit.SECONDS);
-            } else {
-                redisTemplate.opsForValue().set(redisKey, value);
-            }
-            writeCount.increment();
-        } catch (Exception e) {
-            log.warn("Redis 缓存写入失败, key={}", key, e);
-        }
+  @Override
+  public void put(K key, V value) {
+    try {
+      String redisKey = buildKey(key);
+      if (ttlSeconds > 0) {
+        redisTemplate.opsForValue().set(redisKey, value, ttlSeconds, TimeUnit.SECONDS);
+      } else {
+        redisTemplate.opsForValue().set(redisKey, value);
+      }
+      writeCount.increment();
+    } catch (Exception e) {
+      log.warn("Redis 缓存写入失败, key={}", key, e);
     }
+  }
 
-    @Override
-    public V remove(K key) {
-        V value = getIfPresent(key);
-        try {
-            redisTemplate.delete(buildKey(key));
-            deleteCount.increment();
-        } catch (Exception e) {
-            log.warn("Redis 缓存删除失败, key={}", key, e);
-        }
-        return value;
+  @Override
+  public V remove(K key) {
+    V value = getIfPresent(key);
+    try {
+      redisTemplate.delete(buildKey(key));
+      deleteCount.increment();
+    } catch (Exception e) {
+      log.warn("Redis 缓存删除失败, key={}", key, e);
     }
+    return value;
+  }
 
-    @Override
-    public void clear() {
-        try {
-            Set<String> keys = redisTemplate.keys(keyPrefix + "*");
-            if (keys != null && !keys.isEmpty()) {
-                redisTemplate.delete(keys);
-            }
-        } catch (Exception e) {
-            log.warn("Redis 缓存清空失败, prefix={}", keyPrefix, e);
-        }
+  @Override
+  public void clear() {
+    try {
+      Set<String> keys = redisTemplate.keys(keyPrefix + "*");
+      if (keys != null && !keys.isEmpty()) {
+        redisTemplate.delete(keys);
+      }
+    } catch (Exception e) {
+      log.warn("Redis 缓存清空失败, prefix={}", keyPrefix, e);
     }
+  }
 
-    @Override
-    public long estimatedSize() {
-        try {
-            Set<String> keys = redisTemplate.keys(keyPrefix + "*");
-            return keys != null ? keys.size() : 0;
-        } catch (Exception e) {
-            log.warn("Redis 缓存大小估算失败", e);
-            return 0;
-        }
+  @Override
+  public long estimatedSize() {
+    try {
+      Set<String> keys = redisTemplate.keys(keyPrefix + "*");
+      return keys != null ? keys.size() : 0;
+    } catch (Exception e) {
+      log.warn("Redis 缓存大小估算失败", e);
+      return 0;
     }
+  }
 
-    @Override
-    public boolean containsKey(K key) {
-        try {
-            Boolean exists = redisTemplate.hasKey(buildKey(key));
-            return Boolean.TRUE.equals(exists);
-        } catch (Exception e) {
-            log.warn("Redis 缓存检查失败, key={}", key, e);
-            return false;
-        }
+  @Override
+  public boolean containsKey(K key) {
+    try {
+      Boolean exists = redisTemplate.hasKey(buildKey(key));
+      return Boolean.TRUE.equals(exists);
+    } catch (Exception e) {
+      log.warn("Redis 缓存检查失败, key={}", key, e);
+      return false;
     }
+  }
 
-    @Override
-    public Set<K> keySet() {
-        // Redis 不支持高效获取所有 key，返回空集合
-        return Set.of();
-    }
+  @Override
+  public Set<K> keySet() {
+    // Redis 不支持高效获取所有 key，返回空集合
+    return Set.of();
+  }
 
-    @Override
-    public Collection<V> values() {
-        return Set.of();
-    }
+  @Override
+  public Collection<V> values() {
+    return Set.of();
+  }
 
-    @Override
-    public Map<K, V> getAll(Collection<K> keys) {
-        Map<K, V> result = new HashMap<>();
-        for (K key : keys) {
-            V value = getIfPresent(key);
-            if (value != null) {
-                result.put(key, value);
-            }
-        }
-        return result;
+  @Override
+  public Map<K, V> getAll(Collection<K> keys) {
+    Map<K, V> result = new HashMap<>();
+    for (K key : keys) {
+      V value = getIfPresent(key);
+      if (value != null) {
+        result.put(key, value);
+      }
     }
+    return result;
+  }
 
-    @Override
-    public void putAll(Map<K, V> map) {
-        map.forEach(this::put);
-    }
+  @Override
+  public void putAll(Map<K, V> map) {
+    map.forEach(this::put);
+  }
 
-    @Override
-    public void removeAll(Collection<K> keys) {
-        keys.forEach(this::remove);
-    }
+  @Override
+  public void removeAll(Collection<K> keys) {
+    keys.forEach(this::remove);
+  }
 
-    @Override
-    public void invalidate(K key) {
-        remove(key);
-    }
+  @Override
+  public void invalidate(K key) {
+    remove(key);
+  }
 
-    @Override
-    public void invalidateAll(Collection<K> keys) {
-        removeAll(keys);
-    }
+  @Override
+  public void invalidateAll(Collection<K> keys) {
+    removeAll(keys);
+  }
 
-    @Override
-    public void invalidateAll() {
-        clear();
-    }
+  @Override
+  public void invalidateAll() {
+    clear();
+  }
 
-    @Override
-    public V computeIfAbsent(K key, Function<K, V> mappingFunction) {
-        V value = getIfPresent(key);
-        if (value == null) {
-            value = mappingFunction.apply(key);
-            if (value != null) {
-                put(key, value);
-            }
-        }
-        return value;
+  @Override
+  public V computeIfAbsent(K key, Function<K, V> mappingFunction) {
+    V value = getIfPresent(key);
+    if (value == null) {
+      value = mappingFunction.apply(key);
+      if (value != null) {
+        put(key, value);
+      }
     }
+    return value;
+  }
 
-    @Override
-    public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-        V oldValue = getIfPresent(key);
-        V newValue = remappingFunction.apply(key, oldValue);
-        if (newValue != null) {
-            put(key, newValue);
-        } else {
-            remove(key);
-        }
-        return newValue;
+  @Override
+  public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
+    V oldValue = getIfPresent(key);
+    V newValue = remappingFunction.apply(key, oldValue);
+    if (newValue != null) {
+      put(key, newValue);
+    } else {
+      remove(key);
     }
+    return newValue;
+  }
 
-    @Override
-    public void forEach(BiConsumer<? super K, ? super V> action) {
-        // Redis 不支持高效遍历，空实现
-    }
+  @Override
+  public void forEach(BiConsumer<? super K, ? super V> action) {
+    // Redis 不支持高效遍历，空实现
+  }
 
-    @Override
-    public double getHitRate() {
-        long total = hitCount.sum() + missCount.sum();
-        return total == 0 ? 0.0 : (double) hitCount.sum() / total;
-    }
+  @Override
+  public double getHitRate() {
+    long total = hitCount.sum() + missCount.sum();
+    return total == 0 ? 0.0 : (double) hitCount.sum() / total;
+  }
 
-    @Override
-    public CacheStats getStats() {
-        return new CacheStats(hitCount.sum(), missCount.sum());
-    }
+  @Override
+  public CacheStats getStats() {
+    return new CacheStats(hitCount.sum(), missCount.sum());
+  }
 
-    @Override
-    public void addListener(RemovalListener<? super K, ? super V> listener) {
-        // Redis 缓存不支持删除监听器
-    }
+  @Override
+  public void addListener(RemovalListener<? super K, ? super V> listener) {
+    // Redis 缓存不支持删除监听器
+  }
 
-    @Override
-    public void cleanUp() {
-        // Redis 自动过期，无需手动清理
-    }
+  @Override
+  public void cleanUp() {
+    // Redis 自动过期，无需手动清理
+  }
 
-    /**
-     * 获取写入次数
-     */
-    public long getWriteCount() {
-        return writeCount.sum();
-    }
+  /** 获取写入次数 */
+  public long getWriteCount() {
+    return writeCount.sum();
+  }
 
-    /**
-     * 获取删除次数
-     */
-    public long getDeleteCount() {
-        return deleteCount.sum();
-    }
+  /** 获取删除次数 */
+  public long getDeleteCount() {
+    return deleteCount.sum();
+  }
 }

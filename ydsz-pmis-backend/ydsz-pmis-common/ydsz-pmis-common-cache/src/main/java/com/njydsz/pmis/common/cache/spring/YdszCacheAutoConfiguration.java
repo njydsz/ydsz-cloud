@@ -9,10 +9,10 @@ import org.springframework.context.annotation.Bean;
 /**
  * YdszCache Spring Boot 自动配置
  *
- * <p>提供 YdszCache 的 Spring Boot 自动配置，
- * 支持通过 application.yml 配置缓存参数（全局默认 + per-cache 覆盖）。
+ * <p>提供 YdszCache 的 Spring Boot 自动配置， 支持通过 application.yml 配置缓存参数（全局默认 + per-cache 覆盖）。
  *
  * <p>配置示例：
+ *
  * <pre>
  * ydsz:
  *   cache:
@@ -38,24 +38,24 @@ import org.springframework.context.annotation.Bean;
 @EnableConfigurationProperties(YdszCacheProperties.class)
 public class YdszCacheAutoConfiguration {
 
-    @Bean
-    @ConditionalOnMissingBean
-    public YdszCacheManager springYdszCacheManager(YdszCacheProperties props) {
-        YdszCacheManager cacheManager = new YdszCacheManager();
-        cacheManager.setCacheType(props.getType());
-        cacheManager.setCacheNames(props.getCacheNames());
-        cacheManager.setMaximumSize(props.getMaximumSize());
-        cacheManager.setExpireAfterWrite(props.getExpireAfterWrite(), props.getExpireTimeUnit());
-        cacheManager.setAllowNullValues(props.isAllowNullValues());
-        cacheManager.setInitialCapacity(props.getInitialCapacity());
-        cacheManager.setExpireAfterAccess(props.getExpireAfterAccess(), props.getExpireTimeUnit());
-        cacheManager.setRefreshAfterWrite(props.getRefreshAfterWrite(), props.getExpireTimeUnit());
-        cacheManager.setRecordStats(props.isRecordStats());
-        cacheManager.setWeakKeys(props.isWeakKeys());
-        cacheManager.setWeakValues(props.isWeakValues());
-        cacheManager.setSoftValues(props.isSoftValues());
-        // 设置 per-cache 配置
-        cacheManager.setPerCacheConfigs(props.getCaches());
-        return cacheManager;
-    }
+  @Bean
+  @ConditionalOnMissingBean
+  public YdszCacheManager springYdszCacheManager(YdszCacheProperties props) {
+    YdszCacheManager cacheManager = new YdszCacheManager();
+    cacheManager.setCacheType(props.getType());
+    cacheManager.setCacheNames(props.getCacheNames());
+    cacheManager.setMaximumSize(props.getMaximumSize());
+    cacheManager.setExpireAfterWrite(props.getExpireAfterWrite(), props.getExpireTimeUnit());
+    cacheManager.setAllowNullValues(props.isAllowNullValues());
+    cacheManager.setInitialCapacity(props.getInitialCapacity());
+    cacheManager.setExpireAfterAccess(props.getExpireAfterAccess(), props.getExpireTimeUnit());
+    cacheManager.setRefreshAfterWrite(props.getRefreshAfterWrite(), props.getExpireTimeUnit());
+    cacheManager.setRecordStats(props.isRecordStats());
+    cacheManager.setWeakKeys(props.isWeakKeys());
+    cacheManager.setWeakValues(props.isWeakValues());
+    cacheManager.setSoftValues(props.isSoftValues());
+    // 设置 per-cache 配置
+    cacheManager.setPerCacheConfigs(props.getCaches());
+    return cacheManager;
+  }
 }

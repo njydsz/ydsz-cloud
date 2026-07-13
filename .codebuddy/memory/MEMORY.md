@@ -38,3 +38,19 @@
 - **唯一例外**：字符串字面量中的 FQN（如反射类名）、Javadoc `{@link FQN}` 引用（仅 `{@link}` 标签，不含 `@throws`/`@see` 等）可保留完整路径。但如果该类已被 import，则必须使用简单类名。
 - **规则文件**：`.trae/rules/no-inline-fqn.md`（`alwaysApply: true`）。
 - **详细文档**：`deploy/docs/architecture/coding-standards.md`。
+- **修复历史**：
+  - (1) 2026-07-12 第一轮修复。
+  - (2) 2026-07-12 第二轮修复：清理 `@throws`/`@see`/`@Import`/方法参数 FQN 违规。
+  - (3) 2026-07-13 第三轮修复：全面清理 `java.util.*`（List/Map/Set/ArrayList/HashMap/Collections/Arrays/Collection 等）、`java.time.*`（LocalDateTime/Duration）、`java.math.*`（BigDecimal/RoundingMode）、`java.net.*`（URLEncoder）、`java.nio.charset.*`（StandardCharsets）、`java.lang.reflect.*`（Field/Method/Proxy/Array）、`java.util.concurrent.*`（TimeUnit）、`java.util.function.*`（Consumer）、`javax.sql.*`（DataSource）等所有 `java.*`/`javax.*` 行内 FQN，共修复 150+ 个文件。
+  - (4) 2026-07-13 第四轮修复（FQN 标准化工程体系）：
+    - **P0**：修复 `coding-standards.md` 文档矛盾（`@throws`/`@see` 中的 FQN 均属违规，仅 `{@link}` 可保留）；重写 `check-inline-fqn.sh` 脚本（修复 5 个 Bug：子 shell 变量丢失、错误跳过 @throws、无法检测注解 FQN、字符串检测漏洞、未检测 catch/instanceof）；将 FQN 检查集成到 CI 流水线 `backend-ci.yml`（`--strict` 模式阻断 PR）。
+    - **P1**：批量修复所有残留违规——`common-file`（IFileStorage @see 7处、FileUploader 方法参数 6处、FileManager 返回类型 1处、FileLifecycleManager 4处、FileUploadValidator catch 1处、FileConfiguration new 1处、AbstractFileStorage 参数 1处、RedisMultipartContextStore 5处、UploadConcurrencyGuard 1处、CosStorage/ObsStorage/OssStorage 同名冲突 7处标记 FQN-OK）、`common-jdbc` + `common-exception`（@see FQN 15处）、`common-excel`（ConverterRegistry 11处 new 表达式）、`common-audit`（@Import 1处、DefaultAuditStorage new 1处、JdbcTemplate new 2处、CustomizableThreadFactory new 1处、SleepingWaitStrategy new 1处）、`common-redis`（FailOpenPolicy 5处、RedisKeysEnum 参数 1处、Metrics 参数 2处）、`common-web`（ApplicationContext 参数 1处、@see 4处）、`common-safe`（@Value 注解 2处、RemovalCause lambda 1处、@see 1处）、`common-socket`（WebSocketClusterPublisher 参数 1处、WebSocketClusterMessage 方法 1处）、`common-lock`（RedisConnection 变量 1处）、`common-docs`（PDDocumentInformation 变量 1处）、`common-queue`（RedisService 参数 1处）、`common-jdbc`（DataScopeType 变量 1处）、`common-util`（@see 2处转 {@link}）、`common-base`（@ConditionalOnMissingBean 注解 1处）、`common-exception`（@RestControllerAdvice 注解 1处）、`common-auth`（@NonNull/@Nullable 注解 2处）；业务模块——`literule`（@PathVariable 1处）、`cronjob`（LambdaQueryWrapper new 1处、OperatingSystemMXBean instanceof 2处标记 FQN-OK、@throws 1处）、`project`（LambdaQueryWrapper new 2处）。修复 Checkstyle severity 从 `warning` 改为 `error`。
+    - **P2**：引入 Spotless + Google Java Format 插件（`pom.xml` 配置，`mvn spotless:apply` 自动修复）；配置 Git Pre-commit Hook（`deploy/scripts/pre-commit` + `install-hooks.sh`，仅检查暂存文件）。
+    - **P3**：导出 IntelliJ IDEA 检查配置（`.idea/inspectionProfiles/Project_Default.xml`，启用 UnusedImport/RedundantImport/WildcardImport/JavaDocReference 等检查项）。
+- **工程化防线（5 层）**：
+  1. IDE 检查（IntelliJ IDEA Inspection Profile）
+  2. Pre-commit Hook（`deploy/scripts/pre-commit`，仅检查暂存文件）
+  3. Checkstyle（`checkstyle.xml`，severity=error，`mvn validate` 阶段执行）
+  4. Spotless（`pom.xml`，Google Java Format，`mvn validate` 阶段执行）
+  5. CI 流水线（`backend-ci.yml`，`check-inline-fqn.sh --strict` 阻断 PR 合并）
+- **同名类冲突处理**：当两个类简单名相同（如 `com.sun.management.OperatingSystemMXBean` 与 `java.lang.management.OperatingSystemMXBean`，或云存储 SDK 的 `ObjectMetadata` 与项目域模型 `ObjectMetadata`），对其中一个使用 FQN 并在行尾添加 `// FQN-OK: name conflict with <ClassName>` 注释。检测脚本自动跳过带 `FQN-OK` 注释的行。

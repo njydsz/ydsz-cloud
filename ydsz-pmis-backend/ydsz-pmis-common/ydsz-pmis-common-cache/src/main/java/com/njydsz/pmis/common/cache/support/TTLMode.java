@@ -8,12 +8,8 @@ package com.njydsz.pmis.common.cache.support;
  * @version 3.5.0
  */
 public enum TTLMode {
-    /**
-     * 基于写入时间
-     */
-    WRITE,
-    /**
-     * 基于访问时间
-     */
-    ACCESS
+  /** 基于写入时间 */
+  WRITE,
+  /** 基于访问时间 */
+  ACCESS
 }

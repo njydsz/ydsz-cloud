@@ -11,12 +11,12 @@ package com.njydsz.pmis.common.cache.support;
  */
 @FunctionalInterface
 public interface Weigher<K, V> {
-    /**
-     * 计算键值对的权重
-     *
-     * @param key 键
-     * @param value 值
-     * @return 权重值
-     */
-    long weigh(K key, V value);
+  /**
+   * 计算键值对的权重
+   *
+   * @param key 键
+   * @param value 值
+   * @return 权重值
+   */
+  long weigh(K key, V value);
 }
