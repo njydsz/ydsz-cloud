@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 /**
  * P2-20: Sender 配额管理。
@@ -67,7 +68,7 @@ public class SenderQuotaService {
             return false;
         }
         String hourKey = HOURLY_KEY_PREFIX + senderId + ":" + channel + ":" + today + ":" +
-                String.format("%02d", java.time.LocalTime.now().getHour());
+                String.format("%02d", LocalTime.now().getHour());
         String hourCountStr = redisTemplate.opsForValue().get(hourKey);
         long hourCount = hourCountStr != null ? Long.parseLong(hourCountStr) : 0;
         if (hourCount >= DEFAULT_HOURLY_LIMIT) {
@@ -95,7 +96,7 @@ public class SenderQuotaService {
             redisTemplate.expire(dailyKey, Duration.ofDays(2));
         }
         String hourKey = HOURLY_KEY_PREFIX + senderId + ":" + channel + ":" + today + ":" +
-                String.format("%02d", java.time.LocalTime.now().getHour());
+                String.format("%02d", LocalTime.now().getHour());
         Long hourCount = redisTemplate.opsForValue().increment(hourKey);
         if (hourCount != null && hourCount == 1L) {
             redisTemplate.expire(hourKey, Duration.ofHours(2));

@@ -11,6 +11,7 @@ import com.njydsz.pmis.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.pmis.message.infra.mapper.core.MsgNotificationMapper;
 import com.njydsz.pmis.message.server.realtime.RealtimePushService;
+import com.njydsz.pmis.message.server.service.impl.MessageRecallPushService;
 import com.njydsz.pmis.message.server.service.core.MessageLogService;
 import com.njydsz.pmis.message.server.service.core.MessageTraceService;
 import com.njydsz.pmis.message.server.service.receipt.RecallService;
@@ -43,6 +44,8 @@ public class RecallServiceImpl implements RecallService {
     private final MsgLogMapper msgLogMapper;
     /** 实时推送服务（撤回通知推送） */
     private final RealtimePushService realtimePushService;
+    /** P2-19: 消息撤回实时推送（携带撤回原因/时间戳等元数据） */
+    private final MessageRecallPushService messageRecallPushService;
     /** 消息日志服务（撤回状态更新） */
     private final MessageLogService messageLogService;
     /** 消息全链路追踪服务 */
@@ -64,8 +67,8 @@ public class RecallServiceImpl implements RecallService {
         n.setRecallStatus(RecallStatusEnum.RECALLED.name());
         n.setRecallAt(LocalDateTime.now());
         msgNotificationMapper.updateById(n);
-        // 推送撤回事件到前端
-        realtimePushService.pushToUser(userId, "NOTIFICATION_RECALL", notificationId);
+        // P2-19: 推送撤回事件到前端（携带撤回原因/时间戳）
+        messageRecallPushService.pushRecall(userId, notificationId, "通知撤回");
         log.info("[Recall] 撤回通知: id={} user={}", notificationId, userId);
         return true;
     }
@@ -79,7 +82,8 @@ public class RecallServiceImpl implements RecallService {
         // P0-4: 查找消息并通过 WebSocket 推送撤回事件
         MsgLogDO logDO = msgLogMapper.selectById(logId);
         if (logDO != null && StringUtils.hasText(logDO.getReceiver())) {
-            realtimePushService.pushToUser(logDO.getReceiver(), "MESSAGE_RECALL", logDO.getMsgId());
+            // P2-19: 推送撤回事件（携带消息 ID/撤回原因/时间戳）
+            messageRecallPushService.pushRecall(logDO.getReceiver(), logDO.getMsgId(), "消息撤回");
             // P0-2: 记录撤回轨迹
             messageTraceService.recordTrace(logDO.getMsgId(),
                     MsgTraceDO.Node.RECALLED, "SUCCESS", logDO.getChannel(),
@@ -125,9 +129,9 @@ public class RecallServiceImpl implements RecallService {
         logDO.setRecallStatus(RecallStatusEnum.RECALLED.name());
         logDO.setRecallAt(LocalDateTime.now());
         msgLogMapper.updateById(logDO);
-        // 推送撤回事件到前端
+        // P2-19: 推送撤回事件到前端（携带撤回原因/时间戳）
         if (StringUtils.hasText(logDO.getReceiver())) {
-            realtimePushService.pushToUser(logDO.getReceiver(), "MESSAGE_RECALL", msgId);
+            messageRecallPushService.pushRecall(logDO.getReceiver(), msgId, "消息撤回");
         }
         // P0-2: 记录撤回轨迹
         messageTraceService.recordTrace(msgId, MsgTraceDO.Node.RECALLED,

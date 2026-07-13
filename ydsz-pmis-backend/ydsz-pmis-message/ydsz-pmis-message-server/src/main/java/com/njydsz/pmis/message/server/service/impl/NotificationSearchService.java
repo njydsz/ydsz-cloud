@@ -5,7 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -55,7 +57,7 @@ public class NotificationSearchService {
             }
             String key = INDEX_KEY_PREFIX + userId + ":" + keyword.toLowerCase();
             redisTemplate.opsForSet().add(key, notificationId);
-            redisTemplate.expire(key, java.time.Duration.ofDays(INDEX_TTL_DAYS));
+            redisTemplate.expire(key, Duration.ofDays(INDEX_TTL_DAYS));
         }
     }
 
@@ -119,7 +121,7 @@ public class NotificationSearchService {
         if (text == null || text.isBlank()) {
             return Set.of();
         }
-        return java.util.Arrays.stream(text.split("[\\s,，。\\.！!？?；;：:、\\-_/]+"))
+        return Arrays.stream(text.split("[\\s,，。\\.！!？?；;：:、\\-_/]+"))
                 .filter(s -> !s.isBlank())
                 .collect(Collectors.toSet());
     }

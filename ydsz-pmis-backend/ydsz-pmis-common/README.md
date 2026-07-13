@@ -23,7 +23,7 @@ L3 基础服务层  → ydsz-pmis-common-domain, ydsz-pmis-common-exception
 L4 基础数据层  → ydsz-pmis-common-jdbc, ydsz-pmis-common-redis, ydsz-pmis-common-lock
 L5 业务服务层  → ydsz-pmis-common-auth, ydsz-pmis-common-safe, ydsz-pmis-common-feign,
                 ydsz-pmis-common-audit, ydsz-pmis-common-file, ydsz-pmis-common-notify,
-                ydsz-pmis-common-queue, ydsz-pmis-common-doc
+                ydsz-pmis-common-queue
 L6 应用层     → ydsz-pmis-common-base, ydsz-pmis-common-web, ydsz-pmis-common-app
 ```
 
@@ -132,7 +132,6 @@ ydsz-pmis-common/
 ├── ydsz-pmis-common-file/     # L5 业务服务层
 ├── ydsz-pmis-common-notify/   # L5 业务服务层
 ├── ydsz-pmis-common-queue/    # L5 业务服务层
-├── ydsz-pmis-common-doc/      # L5 业务服务层
 ├── ydsz-pmis-common-base/     # L6 应用层（HTTP 公共基座）
 ├── ydsz-pmis-common-web/      # L6 应用层（PC Web 端基座）
 └── ydsz-pmis-common-app/      # L6 应用层（移动端 App 基座）

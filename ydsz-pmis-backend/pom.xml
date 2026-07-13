@@ -207,11 +207,6 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-common-doc</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common-base</artifactId>
                 <version>${project.version}</version>
             </dependency>

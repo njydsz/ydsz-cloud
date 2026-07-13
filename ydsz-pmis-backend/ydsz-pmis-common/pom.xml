@@ -79,7 +79,6 @@
         <module>ydsz-pmis-common-file</module>
         <module>ydsz-pmis-common-notify</module>
         <module>ydsz-pmis-common-queue</module>
-        <module>ydsz-pmis-common-doc</module>
         <module>ydsz-pmis-common-socket</module>
         <module>ydsz-pmis-common-netty</module>
         <!-- L6 应用层 -->
@@ -164,11 +163,6 @@
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common-queue</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-common-doc</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

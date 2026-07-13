@@ -553,7 +553,8 @@ public class MessageServiceImpl implements MessageService {
                     logDO.getMsgId(), channel, receiver, cost);
             return MessageResult.ok(channel, providerTraceId);
         } catch (Exception e) {
-            long cost = System.currentTimeMillis() - start;\n            logDO.setCostMs(cost);
+            long cost = System.currentTimeMillis() - start;
+            logDO.setCostMs(cost);
             logDO.setErrorMessage(e.getMessage());
             // P3-24/P3-25: 记录发送失败 + 异常分类
             messageServiceMetrics.recordSendFailure(channel, logDO.getTemplateCode(),

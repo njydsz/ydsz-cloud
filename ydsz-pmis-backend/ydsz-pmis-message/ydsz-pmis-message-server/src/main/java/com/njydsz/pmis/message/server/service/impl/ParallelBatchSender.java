@@ -14,6 +14,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 /**
  * P2-15: 并行批量发送 + 流控。
@@ -55,7 +56,7 @@ public class ParallelBatchSender {
      * @return 批量发送结果
      */
     public BatchSendResult sendBatch(List<MessageRequest> requests, String channel,
-                                     java.util.function.Function<MessageRequest, MessageResult> sender) {
+                                     Function<MessageRequest, MessageResult> sender) {
         if (requests == null || requests.isEmpty()) {
             return new BatchSendResult();
         }
@@ -118,7 +119,7 @@ public class ParallelBatchSender {
      * @return 批量发送结果
      */
     private BatchSendResult sendSequential(List<MessageRequest> requests,
-                                           java.util.function.Function<MessageRequest, MessageResult> sender) {
+                                           Function<MessageRequest, MessageResult> sender) {
         int success = 0;
         int failure = 0;
         for (MessageRequest request : requests) {

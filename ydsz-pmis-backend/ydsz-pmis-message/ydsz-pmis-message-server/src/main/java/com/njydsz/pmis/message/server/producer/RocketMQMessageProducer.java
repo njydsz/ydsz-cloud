@@ -4,6 +4,7 @@ import com.njydsz.pmis.common.constant.PmisMessageTopics;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.message.server.util.MessageCompressor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.SendCallback;
@@ -52,7 +53,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
             throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
-        String payload = JsonUtils.toJson(req);
+        String payload = MessageCompressor.compressIfNeeded(JsonUtils.toJson(req));
         String destination = buildDestination(req);
         SendResult result;
         try {
@@ -82,7 +83,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
             throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
-        String payload = JsonUtils.toJson(req);
+        String payload = MessageCompressor.compressIfNeeded(JsonUtils.toJson(req));
         String destination = buildDestination(req);
         try {
             rocketMQTemplate.asyncSend(destination, payload, new SendCallback() {
@@ -165,7 +166,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
             throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
-        String payload = JsonUtils.toJson(req);
+        String payload = MessageCompressor.compressIfNeeded(JsonUtils.toJson(req));
         try {
             org.apache.rocketmq.client.producer.TransactionSendResult result =
                     rocketMQTemplate.sendMessageInTransaction(

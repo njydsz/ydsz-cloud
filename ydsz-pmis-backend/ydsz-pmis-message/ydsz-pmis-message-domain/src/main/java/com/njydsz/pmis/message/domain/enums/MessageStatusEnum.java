@@ -27,7 +27,9 @@ public enum MessageStatusEnum {
     /** 已撤回（终态） */
     RECALLED,
     /** P0-3: 定时发送（等待 scheduledAt 到期后触发） */
-    SCHEDULED;
+    SCHEDULED,
+    /** P2-16: 跳过发送（退信/抑制等业务规则拦截,终态） */
+    SKIPPED;
 
     /**
      * 校验状态流转是否合法。
@@ -40,12 +42,12 @@ public enum MessageStatusEnum {
             return true;
         }
         return switch (this) {
-            case PENDING -> target == SENDING || target == FAILED || target == RECALLED || target == SCHEDULED;
-            case SCHEDULED -> target == SENDING || target == FAILED || target == RECALLED;
-            case SENDING -> target == SUCCESS || target == FAILED || target == RETRY || target == RECALLED;
+            case PENDING -> target == SENDING || target == FAILED || target == RECALLED || target == SCHEDULED || target == SKIPPED;
+            case SCHEDULED -> target == SENDING || target == FAILED || target == RECALLED || target == SKIPPED;
+            case SENDING -> target == SUCCESS || target == FAILED || target == RETRY || target == RECALLED || target == SKIPPED;
             case RETRY -> target == SENDING || target == SUCCESS || target == FAILED || target == DEAD;
             case SUCCESS -> target == RECALLED;
-            case FAILED, DEAD, RECALLED -> false;
+            case FAILED, DEAD, RECALLED, SKIPPED -> false;
         };
     }
 }

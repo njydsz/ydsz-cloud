@@ -1,4 +1,0 @@
-com.njydsz.pmis.common.doc.config.DocAutoConfiguration
-com.njydsz.pmis.common.doc.config.DocSecurityConfiguration
-com.njydsz.pmis.common.doc.config.OpenApiAutoConfiguration
-com.njydsz.pmis.common.doc.config.Knife4jAutoConfiguration

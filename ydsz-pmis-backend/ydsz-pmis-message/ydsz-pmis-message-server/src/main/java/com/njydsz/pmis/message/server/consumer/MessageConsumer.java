@@ -10,6 +10,8 @@ import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 import com.njydsz.pmis.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.pmis.message.server.service.core.MessageService;
+import com.njydsz.pmis.message.server.metrics.MessageServiceMetrics;
+import com.njydsz.pmis.message.server.util.MessageCompressor;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +56,7 @@ public class MessageConsumer implements RocketMQListener<String> {
     private final MessageService messageService;
     private final StringRedisTemplate redisTemplate;
     private final MsgLogMapper msgLogMapper;
+    private final MessageServiceMetrics messageServiceMetrics;
 
     /** 当前实例标识(hostname:pid),用于锁值与安全释放 */
     private static final String INSTANCE_ID = initInstanceId();
@@ -82,6 +85,7 @@ public class MessageConsumer implements RocketMQListener<String> {
 
     @Override
     public void onMessage(String body) {
+        long consumeStart = System.currentTimeMillis();
         // P1-10: 优雅停机检查
         if (shuttingDown.get()) {
             log.warn("[MessageConsumer] 服务正在关闭,拒绝新消息");
@@ -91,6 +95,8 @@ public class MessageConsumer implements RocketMQListener<String> {
             log.warn("[MessageConsumer] 空消息体,跳过");
             return;
         }
+        // P2-21: 消息解压（如果带 GZIP: 前缀则自动解压）
+        body = MessageCompressor.decompressIfNeeded(body);
         MessageRequest request;
         try {
             request = JsonUtils.fromJson(body, MessageRequest.class);
@@ -124,7 +130,12 @@ public class MessageConsumer implements RocketMQListener<String> {
 
         try {
             messageService.send(request);
-            log.info("[MessageConsumer] 消费完成: messageId={} channel={}", request.getMessageId(), request.getChannel());
+            // P3-23: 记录消费延迟（从开始消费到消费完成的耗时）
+            long consumeDuration = System.currentTimeMillis() - consumeStart;
+            String channel = request.getChannel() != null ? request.getChannel() : "UNKNOWN";
+            messageServiceMetrics.recordConsumeDelay(channel, consumeDuration);
+            log.info("[MessageConsumer] 消费完成: messageId={} channel={} cost={}ms",
+                    request.getMessageId(), request.getChannel(), consumeDuration);
         } catch (SysException e) {
             // 业务异常:保留锁(防重投 spam),落库 FAILED 不抛出
             log.error("[MessageConsumer] 业务异常: messageId={} err={}", request.getMessageId(), e.getMessage());

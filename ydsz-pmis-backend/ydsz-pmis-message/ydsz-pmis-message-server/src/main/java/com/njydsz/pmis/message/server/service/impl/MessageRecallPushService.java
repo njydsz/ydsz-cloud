@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -61,7 +62,7 @@ public class MessageRecallPushService {
      * @param messageId  被撤回的消息 ID
      * @param recallReason 撤回原因
      */
-    public void pushRecallBatch(java.util.List<String> userIds, String messageId, String recallReason) {
+    public void pushRecallBatch(List<String> userIds, String messageId, String recallReason) {
         if (userIds == null || userIds.isEmpty()) {
             return;
         }
