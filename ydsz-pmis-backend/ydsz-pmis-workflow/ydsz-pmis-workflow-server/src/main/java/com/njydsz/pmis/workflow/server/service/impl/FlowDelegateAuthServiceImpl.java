@@ -230,7 +230,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     @Transactional(readOnly = true)
     public PageResponse<?> listDelegateLog(String delegateUserId, int page, int size) {
         if (delegateUserId == null) {
-            return PageResponse.success(null);
+            return (PageResponse) PageResponse.success(null);
         }
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
@@ -240,14 +240,14 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
                 .orderByDesc(FlowAuditLogDO::getCreatedAt)
                 .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
         List<FlowAuditLogDO> list = auditLogMapper.selectList(wrapper);
-        return PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
+        return (PageResponse) PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
     }
 
     @Override
     @Transactional(readOnly = true)
     public PageResponse<?> listOwnerLog(String ownerUserId, int page, int size) {
         if (ownerUserId == null) {
-            return PageResponse.success(null);
+            return (PageResponse) PageResponse.success(null);
         }
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
@@ -257,7 +257,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
                 .orderByDesc(FlowAuditLogDO::getCreatedAt)
                 .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
         List<FlowAuditLogDO> list = auditLogMapper.selectList(wrapper);
-        return PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
+        return (PageResponse) PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
     }
 
     // ==================== P1-7: 链式解析代理人 ====================

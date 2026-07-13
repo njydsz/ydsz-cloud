@@ -103,7 +103,7 @@ public class FlowTaskQueryServiceImpl {
         String tid = tenantId != null ? tenantId : AuthContext.getTenantIdOrDefault("1");
         Set<FlowRunTaskDO> result = new LinkedHashSet<>();
         // 1. 直接分配给该用户的任务
-        BaseResponse.addAll(taskMapper.selectTodoByAssignee(String.valueOf(userId), tid));
+        result.addAll(taskMapper.selectTodoByAssignee(String.valueOf(userId), tid));
         // 2. 通过 pmis_flow_user 关联的任务
         List<Long> taskIds = userMapper.selectTaskIdsByUser(String.valueOf(userId), tid);
         if (taskIds != null && !taskIds.isEmpty()) {
@@ -111,19 +111,19 @@ public class FlowTaskQueryServiceImpl {
                 FlowRunTaskDO t = taskMapper.selectById(tid2);
                 if (t != null && !FlowTaskStatus
                         .valueOf(t.getTaskStatus()).isFinished()) {
-                    BaseResponse.add(t);
+                    result.add(t);
                 }
             }
         }
         // 3. ROLE/DEPT 匹配
         if (roleCodes != null) {
             for (String rc : roleCodes) {
-                BaseResponse.addAll(taskMapper.selectTodoByAssignee(rc, tid));
+                result.addAll(taskMapper.selectTodoByAssignee(rc, tid));
             }
         }
         if (deptIds != null) {
             for (String did : deptIds) {
-                BaseResponse.addAll(taskMapper.selectTodoByAssignee(did, tid));
+                result.addAll(taskMapper.selectTodoByAssignee(did, tid));
             }
         }
         return new ArrayList<>(result);
@@ -139,7 +139,7 @@ public class FlowTaskQueryServiceImpl {
         List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectDoneByAssignee(assigneeId, tid);
         List<FlowRunTaskDO> result = new ArrayList<>();
         for (FlowHisTaskDO his : hisTasks) {
-            BaseResponse.add(hisToTask(his));
+            result.add(hisToTask(his));
         }
         return result;
     }
@@ -158,7 +158,7 @@ public class FlowTaskQueryServiceImpl {
         int offset = (safePage - 1) * safeSize;
         List<FlowRunTaskDO> list = taskMapper.selectTodoByAssigneePage(assigneeId, tid, offset, safeSize);
         long total = taskMapper.countTodoByAssignee(assigneeId, tid);
-        return PageResponse.success(total, (long) safePage, (long) safeSize, list);
+        return (PageResponse) PageResponse.success(total, (long) safePage, (long) safeSize, list);
     }
 
     /**
@@ -177,7 +177,7 @@ public class FlowTaskQueryServiceImpl {
             list.add(hisToTask(his));
         }
         long total = hisTaskMapper.countDoneByAssignee(assigneeId, tid);
-        return PageResponse.success(total, (long) safePage, (long) safeSize, list);
+        return (PageResponse) PageResponse.success(total, (long) safePage, (long) safeSize, list);
     }
 
     /**
@@ -199,7 +199,7 @@ public class FlowTaskQueryServiceImpl {
         }
         long total = hisTaskMapper.countDone(assigneeId, businessType, flowCode,
                 startTime, endTime, tid);
-        return PageResponse.success(total, (long) safePage, (long) safeSize, list);
+        return (PageResponse) PageResponse.success(total, (long) safePage, (long) safeSize, list);
     }
 
     // ============================== 统计查询 ==============================

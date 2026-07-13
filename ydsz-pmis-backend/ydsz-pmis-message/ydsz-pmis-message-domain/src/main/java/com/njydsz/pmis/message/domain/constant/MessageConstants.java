@@ -87,5 +87,5 @@ public final class MessageConstants {
     /** P2-9: 回执超时阈值(分钟): 超过此时间仍未收到回执则标记为 TIMEOUT */
     public static final long RECEIPT_TIMEOUT_MINUTES = 30L;
 
-    // WebSocket 相关常量已迁移到 com.njydsz.pmis.common.websocket.constant.WebSocketConstants
+    // WebSocket 相关常量已迁移到 com.njydsz.pmis.common.socket.constant.WebSocketConstants
 }

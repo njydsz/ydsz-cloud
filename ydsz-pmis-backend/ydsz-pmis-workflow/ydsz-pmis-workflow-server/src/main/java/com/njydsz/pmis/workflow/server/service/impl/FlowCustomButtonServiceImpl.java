@@ -197,7 +197,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                     }
                 }
             }
-            BaseResponse.sort(Comparator.comparingInt(b ->
+            result.sort(Comparator.comparingInt(b ->
                     b.get("sortNum") == null ? 0 : ((Number) b.get("sortNum")).intValue()));
             return result;
         } catch (Exception e) {

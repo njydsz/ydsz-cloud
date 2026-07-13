@@ -911,11 +911,11 @@ public class FlowTaskCreateService {
                 String s = String.valueOf(uid);
                 String stopAtUserId = (String) extConfig.get("stopAtUserId");
                 if (stopAtUserId != null && stopAtUserId.equals(s)) {
-                    BaseResponse.add(s);
+                    result.add(s);
                     break;
                 }
                 if (seen.add(s)) {
-                    BaseResponse.add(s);
+                    result.add(s);
                 }
             }
             return result;
@@ -1109,7 +1109,7 @@ public class FlowTaskCreateService {
                 List<String> expanded = expandCollectionValue(selfSelectVal);
                 for (String uid : expanded) {
                     if (seen.add(uid)) {
-                        BaseResponse.add(uid);
+                        result.add(uid);
                     }
                 }
                 continue;
@@ -1117,7 +1117,7 @@ public class FlowTaskCreateService {
             if (t.startsWith("user:")) {
                 String uid = t.substring(5).trim();
                 if (!uid.isEmpty() && seen.add(uid)) {
-                    BaseResponse.add(uid);
+                    result.add(uid);
                 }
                 continue;
             }
@@ -1136,7 +1136,7 @@ public class FlowTaskCreateService {
                         for (Long uid : expanded) {
                             String s = String.valueOf(uid);
                             if (seen.add(s)) {
-                                BaseResponse.add(s);
+                                result.add(s);
                             }
                         }
                     }
@@ -1150,7 +1150,7 @@ public class FlowTaskCreateService {
                     if (leaderId != null) {
                         String s = String.valueOf(leaderId);
                         if (seen.add(s)) {
-                            BaseResponse.add(s);
+                            result.add(s);
                         }
                     }
                 }
@@ -1161,7 +1161,7 @@ public class FlowTaskCreateService {
                 for (Long uid : expanded) {
                     String s = String.valueOf(uid);
                     if (seen.add(s)) {
-                        BaseResponse.add(s);
+                        result.add(s);
                     }
                 }
             }
@@ -1182,7 +1182,7 @@ public class FlowTaskCreateService {
                 if (item == null) continue;
                 String s = String.valueOf(item).trim();
                 if (!s.isEmpty()) {
-                    BaseResponse.add(s);
+                    result.add(s);
                 }
             }
         } else if (value instanceof Object[] arr) {
@@ -1190,7 +1190,7 @@ public class FlowTaskCreateService {
                 if (item == null) continue;
                 String s = String.valueOf(item).trim();
                 if (!s.isEmpty()) {
-                    BaseResponse.add(s);
+                    result.add(s);
                 }
             }
         } else {
@@ -1199,7 +1199,7 @@ public class FlowTaskCreateService {
                 for (String part : s.split(",")) {
                     String p = part.trim();
                     if (!p.isEmpty()) {
-                        BaseResponse.add(p);
+                        result.add(p);
                     }
                 }
             }

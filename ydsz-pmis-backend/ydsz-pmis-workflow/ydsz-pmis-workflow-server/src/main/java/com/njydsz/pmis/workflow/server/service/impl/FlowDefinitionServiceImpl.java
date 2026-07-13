@@ -790,7 +790,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             map.put("description", v.getDescription());
             map.put("createdAt", v.getCreatedAt());
             map.put("updatedAt", v.getUpdatedAt());
-            BaseResponse.add(map);
+            result.add(map);
         }
         log.info("[Flow] 查询版本历史: flowCode={} count={}",
                 def.getFlowCode(), BaseResponse.size());

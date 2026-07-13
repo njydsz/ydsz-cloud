@@ -207,7 +207,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
                         .map(FlowRunTaskDO::getId)
                         .collect(Collectors.toList());
                 group.put("taskIds", taskIds);
-                BaseResponse.add(group);
+                result.add(group);
             }
         }
         return result;

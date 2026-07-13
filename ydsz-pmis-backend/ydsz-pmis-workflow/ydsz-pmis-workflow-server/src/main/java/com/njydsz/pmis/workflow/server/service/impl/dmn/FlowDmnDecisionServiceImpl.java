@@ -388,7 +388,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
             List<Map<String, Object>> result = new ArrayList<>();
             for (Object item : list) {
                 if (item instanceof Map<?, ?> m) {
-                    BaseResponse.add((Map<String, Object>) m);
+                    result.add((Map<String, Object>) m);
                 }
             }
             return result;
@@ -410,7 +410,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
             }
             List<String> result = new ArrayList<>();
             for (Object item : list) {
-                BaseResponse.add(item == null ? null : String.valueOf(item));
+                result.add(item == null ? null : String.valueOf(item));
             }
             return result;
         } catch (Exception e) {
@@ -422,7 +422,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
             String[] parts = json.split(",");
             List<String> result = new ArrayList<>();
             for (String p : parts) {
-                BaseResponse.add(p.trim());
+                result.add(p.trim());
             }
             return result;
         }

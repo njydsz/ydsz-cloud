@@ -281,9 +281,9 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
         request.setParams(params);
         try {
             BaseResponse<MessageResult> result = messageServiceClient.send(request);
-            if (result != null && BaseResponse.getData() != null && !BaseResponse.getData().isSuccess()) {
+            if (result != null && result.getData() != null && !result.getData().isSuccess()) {
                 log.warn("[FlowNotify][WEBHOOK] 发送失败: userId={} url={} err={}",
-                        userId, webhookUrl, BaseResponse.getData().getErrorMessage());
+                        userId, webhookUrl, result.getData().getErrorMessage());
             }
         } catch (Exception e) {
             log.warn("[FlowNotify][WEBHOOK] 发送异常: userId={} url={} err={}",

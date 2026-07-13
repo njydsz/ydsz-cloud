@@ -497,7 +497,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         for (Map<String, Object> n : passedNodes) {
             Object code = n.get("nodeCode");
             if (code != null && !code.toString().equals(currentNodeCode)) {
-                BaseResponse.add(n);
+                result.add(n);
             }
         }
         return result;
@@ -694,7 +694,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 dataScopeFilter, offset, safeSize);
         long total = instanceMapper.countPage(
                 businessType, initiatorId, flowStatus, startTime, endTime, tenantId, dataScopeFilter);
-        return PageResponse.success(total, (long) safePage, (long) safeSize, list);
+        return (PageResponse) PageResponse.success(total, (long) safePage, (long) safeSize, list);
     }
 
     // ============================== P2-24: 流程变量读写 ==============================
@@ -1087,7 +1087,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 cycleStep.put("condition", null);
                 cycleStep.put("skipped", false);
                 cycleStep.put("warning", "检测到循环，模拟终止");
-                BaseResponse.add(cycleStep);
+                result.add(cycleStep);
                 log.warn("[Flow-Simulate] 检测到循环，终止模拟: flowCode={} nodeCode={}",
                         flowCode, currentNode.getNodeCode());
                 break;
@@ -1103,7 +1103,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             stepMap.put("assignee", currentNode.getPermissionFlag());
             stepMap.put("condition", null);
             stepMap.put("skipped", false);
-            BaseResponse.add(stepMap);
+            result.add(stepMap);
 
             // 遇到 END 节点终止
             if (currentNode.getNodeType() != null

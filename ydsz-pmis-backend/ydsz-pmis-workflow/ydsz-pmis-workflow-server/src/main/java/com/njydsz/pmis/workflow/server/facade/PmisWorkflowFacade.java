@@ -113,7 +113,8 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
         PageResponse<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), AuthContext.getTenantIdOrDefault("1"), page, size);
-        return pageResult.getData().stream().map(this::toMap).toList();
+        List<FlowRunTaskDO> list = (List<FlowRunTaskDO>) pageResult.getData();
+        return list.stream().map(this::toMap).toList();
     }
 
     @Override
@@ -122,7 +123,8 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
         PageResponse<FlowRunTaskDO> pageResult = taskService.listDoneByAssigneePage(
                 String.valueOf(userId), AuthContext.getTenantIdOrDefault("1"), page, size);
-        return pageResult.getData().stream().map(this::toMap).toList();
+        List<FlowRunTaskDO> list = (List<FlowRunTaskDO>) pageResult.getData();
+        return list.stream().map(this::toMap).toList();
     }
 
     // ============================== GAP-P0-1: 全部流程实例（管理员视图） ==============================
@@ -142,8 +144,10 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         PageResponse<FlowInstanceDO> pageResult = instanceService.page(
                 businessType, null, flowStatus, startTime, endTime,
                 AuthContext.getTenantIdOrDefault("1"), page, size);
-        List<Map<String, Object>> list = pageResult.getData().stream().map(this::instanceToMap).toList();
-        return PageResponse.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), list);
+        @SuppressWarnings("unchecked")
+        List<FlowInstanceDO> dataList = (List<FlowInstanceDO>) pageResult.getData();
+        List<Map<String, Object>> list = dataList.stream().map(this::instanceToMap).toList();
+        return (PageResponse<Map<String, Object>>) (PageResponse<?>) PageResponse.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), list);
     }
 
     @Override
@@ -220,7 +224,8 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         PageResponse<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), tenantId, 1, 100);
-        List<FlowRunTaskDO> todos = pageResult.getData();
+        @SuppressWarnings("unchecked")
+        List<FlowRunTaskDO> todos = (List<FlowRunTaskDO>) pageResult.getData();
         if (todos.isEmpty()) {
             return 0;
         }
