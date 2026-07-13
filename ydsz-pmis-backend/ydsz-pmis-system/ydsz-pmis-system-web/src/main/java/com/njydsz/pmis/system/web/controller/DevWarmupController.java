@@ -61,13 +61,13 @@ public class DevWarmupController {
         log.info("[DevWarmup] 开始全量预热...");
 
         // 1. 数据库预热
-        BaseResponse.put("database", warmupDatabase());
+        result.put("database", warmupDatabase());
 
         // 2. Redis 预热
-        BaseResponse.put("redis", warmupRedis());
+        result.put("redis", warmupRedis());
 
         // 3. JIT 预热（Thread.sleep 触发 JIT 编译）
-        BaseResponse.put("jit", warmupJit());
+        result.put("jit", warmupJit());
 
         log.info("[DevWarmup] 全量预热完成: {}", result);
         return BaseResponse.ok(result);
@@ -86,17 +86,17 @@ public class DevWarmupController {
         // 检查数据库连接
         try {
             jdbcTemplate.queryForObject("SELECT 1", Integer.class);
-            BaseResponse.put("database", "UP");
+            result.put("database", "UP");
         } catch (Exception e) {
-            BaseResponse.put("database", "DOWN: " + e.getMessage());
+            result.put("database", "DOWN: " + e.getMessage());
         }
 
         // 检查 Redis 连接
         try {
             String pong = redisTemplate.getConnectionFactory().getConnection().ping();
-            BaseResponse.put("redis", "UP");
+            result.put("redis", "UP");
         } catch (Exception e) {
-            BaseResponse.put("redis", "DOWN: " + e.getMessage());
+            result.put("redis", "DOWN: " + e.getMessage());
         }
 
         return BaseResponse.ok(result);

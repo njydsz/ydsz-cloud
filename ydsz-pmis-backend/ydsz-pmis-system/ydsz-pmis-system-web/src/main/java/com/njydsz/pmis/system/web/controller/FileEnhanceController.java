@@ -57,8 +57,8 @@ public class FileEnhanceController {
             @Parameter(description = "待扫描文件") @RequestParam("file") @NotNull(message = "{validation.file.msg_3f00c223}") MultipartFile file) {
         boolean safe = fileEnhanceService.scanVirus(file);
         Map<String, Object> result = new HashMap<>();
-        BaseResponse.put("safe", safe);
-        BaseResponse.put("filename", file.getOriginalFilename());
+        result.put("safe", safe);
+        result.put("filename", file.getOriginalFilename());
         return BaseResponse.ok(result);
     }
 
@@ -81,7 +81,7 @@ public class FileEnhanceController {
             @Parameter(description = "分片总数") @RequestParam @Min(value = 1, message = "{validation.file.msg_0dddf2c0}") int totalChunks) {
         String uploadId = fileEnhanceService.initMultipartUpload(filename, totalSize, totalChunks);
         Map<String, Object> result = new HashMap<>();
-        BaseResponse.put("uploadId", uploadId);
+        result.put("uploadId", uploadId);
         return BaseResponse.ok(result);
     }
 
@@ -103,8 +103,8 @@ public class FileEnhanceController {
             @RequestParam("chunk") @NotNull(message = "{validation.file.msg_041e6b98}") MultipartFile chunk) throws Exception {
         boolean success = fileEnhanceService.uploadChunk(uploadId, chunkIndex, chunk.getBytes());
         Map<String, Object> result = new HashMap<>();
-        BaseResponse.put("success", success);
-        BaseResponse.put("chunkIndex", chunkIndex);
+        result.put("success", success);
+        result.put("chunkIndex", chunkIndex);
         return BaseResponse.ok(result);
     }
 
@@ -121,8 +121,8 @@ public class FileEnhanceController {
             @Parameter(description = "分片上传ID") @RequestParam @NotBlank(message = "{validation.file.msg_5866b696}") String uploadId) {
         String fileKey = fileEnhanceService.completeMultipartUpload(uploadId);
         Map<String, Object> result = new HashMap<>();
-        BaseResponse.put("fileKey", fileKey != null ? fileKey : "");
-        BaseResponse.put("success", fileKey != null);
+        result.put("fileKey", fileKey != null ? fileKey : "");
+        result.put("success", fileKey != null);
         return BaseResponse.ok(result);
     }
 
@@ -139,7 +139,7 @@ public class FileEnhanceController {
             @Parameter(description = "分片上传ID") @RequestParam @NotBlank(message = "{validation.file.msg_5866b696}") String uploadId) {
         fileEnhanceService.abortMultipartUpload(uploadId);
         Map<String, Object> result = new HashMap<>();
-        BaseResponse.put("success", true);
+        result.put("success", true);
         return BaseResponse.ok(result);
     }
 
@@ -155,7 +155,7 @@ public class FileEnhanceController {
             @Parameter(description = "文件key") @RequestParam @NotBlank(message = "{validation.file.msg_db802ce3}") String fileKey) {
         String url = fileEnhanceService.generatePreviewUrl(fileKey);
         Map<String, Object> result = new HashMap<>();
-        BaseResponse.put("previewUrl", url);
+        result.put("previewUrl", url);
         return BaseResponse.ok(result);
     }
 }
