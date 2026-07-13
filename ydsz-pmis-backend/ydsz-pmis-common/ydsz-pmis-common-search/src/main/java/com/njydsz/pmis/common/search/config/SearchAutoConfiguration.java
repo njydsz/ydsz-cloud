@@ -173,7 +173,7 @@ public class SearchAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnClass(name = "org.springframework.boot.health.HealthIndicator")
+    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
     public SearchHealthIndicator searchHealthIndicator(SearchEngine searchEngine) {
         return new SearchHealthIndicator(searchEngine);
     }

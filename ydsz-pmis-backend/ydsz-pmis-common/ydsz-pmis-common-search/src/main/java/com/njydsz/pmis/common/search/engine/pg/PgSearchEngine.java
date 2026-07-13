@@ -251,7 +251,7 @@ public class PgSearchEngine implements SearchEngine {
                         updated_at_ts = NOW()
                     """.formatted(INDEX_TABLE);
 
-            String searchableText = request.isTitleOnly() ? document.getTitleSearchableText() : document.getSearchableText();
+            String searchableText = document.getSearchableText();
             String tagsJson = document.getTags() != null ? toJsonArray(document.getTags()) : "[]";
             String metadataJson = document.getMetadata() != null ? toJson(document.getMetadata()) : "{}";
 

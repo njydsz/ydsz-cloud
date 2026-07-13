@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import feign.Logger;
@@ -31,7 +30,7 @@ import feign.Logger;
  */
 public class YdszFeignLogger extends Logger {
 
-    private static final Logger LOG = LoggerFactory.getLogger("com.njydsz.pmis.feign");
+    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger("com.njydsz.pmis.feign"); // FQN-OK: name conflict with feign.Logger
 
     /**
      * 需要脱敏的敏感字段名称集合（不区分大小写匹配）

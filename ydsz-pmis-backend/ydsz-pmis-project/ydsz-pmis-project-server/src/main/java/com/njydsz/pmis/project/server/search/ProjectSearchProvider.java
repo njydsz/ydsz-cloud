@@ -1,7 +1,6 @@
 package com.njydsz.pmis.project.server.search;
 
-import java.time.Instant;
-import java.util.Collections;
+import java.time.ZoneId;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
@@ -68,10 +67,10 @@ public class ProjectSearchProvider implements SearchProvider<InitiationDO> {
                 .tenantId(entity.getTenantId())
                 .createdBy(entity.getCreatedBy())
                 .createdAt(entity.getCreatedAt() != null
-                        ? Instant.from(entity.getCreatedAt()) : null)
+                        ? entity.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant() : null)
                 .updatedBy(entity.getUpdatedBy())
                 .updatedAt(entity.getUpdatedAt() != null
-                        ? Instant.from(entity.getUpdatedAt()) : null)
+                        ? entity.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant() : null)
                 .build();
     }
 

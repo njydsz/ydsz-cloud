@@ -1,8 +1,7 @@
 package com.njydsz.pmis.common.search.health;
 
-import org.springframework.boot.health.Health;
-import org.springframework.boot.health.HealthContributor;
-import org.springframework.boot.health.HealthIndicator;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.pmis.common.search.core.SearchEngine;
 
@@ -17,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RequiredArgsConstructor
-public class SearchHealthIndicator implements HealthIndicator, HealthContributor {
+public class SearchHealthIndicator implements HealthIndicator {
 
     private final SearchEngine searchEngine;
 

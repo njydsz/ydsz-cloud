@@ -1,8 +1,6 @@
 package com.njydsz.pmis.common.search.indexer;
 
 import java.io.InputStream;
-import java.time.Duration;
-import java.time.Instant;
 
 import com.njydsz.pmis.common.search.core.IndexDocument;
 

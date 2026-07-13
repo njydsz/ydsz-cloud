@@ -92,6 +92,13 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
+        <!-- Spring Boot Health（Spring Boot 4.x: health classes moved from actuator to health module） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
         <!-- Micrometer 可观测性（可选） -->
         <dependency>
             <groupId>io.micrometer</groupId>
