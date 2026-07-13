@@ -13,14 +13,12 @@ import com.njydsz.pmis.message.domain.dto.batch.BatchSendResult;
 import com.njydsz.pmis.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.pmis.message.domain.dto.core.MessageSendDTO;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
-import com.njydsz.pmis.message.server.producer.RocketMQMessageProducer;
 import com.njydsz.pmis.message.server.service.core.MessageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,8 +50,6 @@ public class MessageController {
 
     /** 消息发送服务 */
     private final MessageService messageService;
-    /** RocketMQ 生产者（条件装配，未启用时为空） */
-    private final ObjectProvider<RocketMQMessageProducer> producerProvider;
 
     /**
      * 基于共享请求发送消息。
@@ -90,7 +86,7 @@ public class MessageController {
      * @param request 消息请求
      * @return 含 messageId 的发送结果
      */
-    @Operation(summary = "异步发送消息(投递 RocketMQ)")
+    @Operation(summary = "异步发送消息(先落库再投递 MQ)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
     @Idempotent(key = "message:sendAsync", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/sendAsync")
@@ -98,23 +94,11 @@ public class MessageController {
         if (request == null) {
             return BaseResponse.failed(StandardResultCode.BAD_REQUEST, "消息请求为空");
         }
-        RocketMQMessageProducer producer = producerProvider.getIfAvailable();
-        if (producer == null) {
-            // 未启用 RocketMQ 时降级为同步发送
-            log.warn("[MessageController] RocketMQ 未启用,降级同步发送");
-            return BaseResponse.ok(messageService.send(request));
-        }
-        try {
-            producer.asyncSend(request);
-            // 异步投递成功,返回 messageId 供追踪
-            MessageResult result = MessageResult.ok(request.getChannel(), request.getMessageId());
-            BaseResponse<MessageResult> response = BaseResponse.ok(result);
-            response.setMsg("ASYNC_QUEUED");
-            return response;
-        } catch (Exception e) {
-            log.error("[MessageController] 异步投递失败,降级同步: err={}", e.getMessage());
-            return BaseResponse.ok(messageService.send(request));
-        }
+        // P0-3: 先落库 PENDING 再投递 MQ，保证消息不丢失
+        MessageResult result = messageService.sendAsync(request);
+        BaseResponse<MessageResult> response = BaseResponse.ok(result);
+        response.setMsg("ASYNC_QUEUED");
+        return response;
     }
 
     /**

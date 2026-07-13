@@ -2,7 +2,6 @@ package com.njydsz.pmis.workflow.server.service.impl.notification;
 
 import com.njydsz.pmis.common.core.constant.PageConstants;
 import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.domain.query.PageQuery;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.workflow.domain.dto.FlowCcQueryDTO;
 import com.njydsz.pmis.workflow.server.engine.FlowAssigneeResolver;
@@ -162,7 +161,7 @@ public class FlowCcServiceImpl implements FlowCcService {
                                              String tenantId, int pageNo, int pageSize) {
         try {
             if (userId == null) {
-                return (PageResponse) PageResponse.success(null);
+                return PageResponse.empty();
             }
             int page = Math.max(pageNo, 1);
             int size = (int) Math.min(Math.max(pageSize, 1), PageConstants.MAX_PAGE_SIZE);
@@ -171,10 +170,10 @@ public class FlowCcServiceImpl implements FlowCcService {
             List<FlowCcDO> list = ccMapper.selectCcByUserPage(tenantId, userId,
                     readStatus, flowCode, offset, size);
             long total = ccMapper.countCcByUser(tenantId, userId, readStatus, flowCode);
-            return (PageResponse) PageResponse.success(total, (long) page, (long) size, list);
+            return PageResponse.of(list, total, page, size);
         } catch (Exception e) {
             log.error("[FlowCc] 分页查询异常: userId={} err={}", userId, e.getMessage(), e);
-            return (PageResponse) PageResponse.success(null);
+            return PageResponse.empty();
         }
     }
 

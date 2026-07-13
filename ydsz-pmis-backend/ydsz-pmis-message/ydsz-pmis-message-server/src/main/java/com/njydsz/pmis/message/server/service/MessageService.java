@@ -63,4 +63,16 @@ public interface MessageService {
      * @return 发送结果（success=true 表示半消息已提交,实际发送由消费端异步完成）
      */
     MessageResult sendTransactionally(MessageRequest request);
+
+    /**
+     * P0-3: 异步发送消息（先落库 PENDING → 再投递 MQ）。
+     *
+     * <p>可靠性保证：先将消息请求落库为 PENDING 状态（DB 是 Source of Truth），
+     * 然后投递到 MQ。消费端处理后更新状态为 SUCCESS/FAILED/RETRY。
+     * 若 MQ 投递失败，PENDING 记录可被恢复扫描器拾取补偿。
+     *
+     * @param request 消息发送请求
+     * @return 发送结果（含 messageId 供追踪，success=true 表示已落库+已投递 MQ）
+     */
+    MessageResult sendAsync(MessageRequest request);
 }

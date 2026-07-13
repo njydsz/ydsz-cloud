@@ -5,7 +5,6 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.constant.CacheConstants;
 import com.njydsz.pmis.common.exception.custom.SysException;
@@ -1169,7 +1168,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         //          AND version = #{version}
         // 这里 expectedOldBy 传 userId，因为若是同一人持锁应允许续约
         int affected = definitionMapper.casLock(
-                definitionId, userId, now, userId, timeoutExpired, def.getVersion());
+                definitionId, userId, now, userId, timeoutExpired, def.getRevision());
 
         if (affected == 1) {
             log.info("[Flow] 设计器加锁成功: defId={} userId={} timeout={}min",
@@ -1193,7 +1192,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 log.warn("[Flow] 设计器加锁重试（锁已超时但 version 变化）: defId={} holder={}",
                         definitionId, holder);
                 int retry = definitionMapper.casLock(
-                        definitionId, userId, now, userId, timeoutExpired, latest.getVersion());
+                        definitionId, userId, now, userId, timeoutExpired, latest.getRevision());
                 if (retry == 1) {
                     log.info("[Flow] 设计器加锁成功（重试）: defId={} userId={} 抢占自={}",
                             definitionId, userId, holder);
@@ -1234,7 +1233,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         // CAS 解锁：仅持锁人可解锁
-        int affected = definitionMapper.casUnlock(definitionId, userId, def.getVersion());
+        int affected = definitionMapper.casUnlock(definitionId, userId, def.getRevision());
         if (affected == 1) {
             log.info("[Flow] 设计器解锁成功: defId={} userId={}", definitionId, userId);
             return true;

@@ -30,10 +30,11 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 @ConditionalOnClass(name = "org.apache.rocketmq.spring.core.RocketMQTemplate")
 @ConditionalOnProperty(prefix = "rocketmq.producer", name = "group")
-public class RocketMQMessageProducer {
+public class RocketMQMessageProducer implements MessageQueueOperations {
 
     private final RocketMQTemplate rocketMQTemplate;
 
+    @Override
     /**
      * 同步发送消息到 {@link PmisMessageTopics#TOPIC_MESSAGE}。
      *
@@ -63,6 +64,7 @@ public class RocketMQMessageProducer {
         return result.getMsgId();
     }
 
+    @Override
     /**
      * 异步发送消息(不阻塞,结果通过回调通知)。
      *
@@ -101,6 +103,7 @@ public class RocketMQMessageProducer {
         }
     }
 
+    @Override
     /**
      * P2-3: 发送事务消息（半消息）。
      *

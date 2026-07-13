@@ -3,6 +3,7 @@ package com.njydsz.pmis.message.server.service.impl.core;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.constant.PmisMessageTopics;
 import com.njydsz.pmis.common.constant.SystemConstants;
 import com.njydsz.pmis.common.domain.query.PageQuery;
 import com.njydsz.pmis.common.core.constant.PageConstants;
@@ -46,7 +47,7 @@ import com.njydsz.pmis.message.server.service.config.SubscriptionService;
 import com.njydsz.pmis.message.server.service.template.TemplateService;
 import com.njydsz.pmis.message.server.template.RichMediaRenderer;
 import com.njydsz.pmis.message.server.template.TemplateEngine;
-import com.njydsz.pmis.message.server.producer.RocketMQMessageProducer;
+import com.njydsz.pmis.message.server.producer.MessageQueueOperations;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -121,8 +122,8 @@ public class MessageServiceImpl implements MessageService {
     /** P0-4: 变量数据源解析器 */
     private final com.njydsz.pmis.message.server.service.config.VariableSourceResolver variableSourceResolver;
 
-    /** P2-3: RocketMQ 事务消息生产者（可选,未配置 RocketMQ 时为 null） */
-    private final ObjectProvider<RocketMQMessageProducer> mqProducerProvider;
+    /** P2-3: 消息队列操作（可选,未配置 MQ 时为 null） */
+    private final ObjectProvider<MessageQueueOperations> mqProducerProvider;
 
     @Override
     public MessageResult send(MessageRequest request) {
@@ -885,9 +886,9 @@ public class MessageServiceImpl implements MessageService {
         if (request == null) {
             throw new SysException(StandardResultCode.BAD_REQUEST, "消息请求不能为空");
         }
-        RocketMQMessageProducer mqProducer = mqProducerProvider.getIfAvailable();
+        MessageQueueOperations mqProducer = mqProducerProvider.getIfAvailable();
         if (mqProducer == null) {
-            log.warn("[Message] RocketMQ 未配置,事务消息降级为同步发送: channel={}", request.getChannel());
+            log.warn("[Message] MQ 未配置,事务消息降级为同步发送: channel={}", request.getChannel());
             return send(request);
         }
         try {
@@ -898,6 +899,72 @@ public class MessageServiceImpl implements MessageService {
         } catch (Exception e) {
             log.error("[Message] 事务消息发送失败,降级同步发送: channel={} err={}",
                     request.getChannel(), e.getMessage());
+            return send(request);
+        }
+    }
+
+    /**
+     * P0-3: 异步发送消息（先落库 PENDING → 再投递 MQ）。
+     *
+     * <p>可靠性保证流程：
+     * <ol>
+     *   <li>生成 messageId（雪花 ID）</li>
+     *   <li>落库 PENDING 记录（DB 是 Source of Truth）</li>
+     *   <li>投递到 MQ，消费端处理后更新状态</li>
+     *   <li>MQ 投递失败 → 落库 PENDING 记录仍存在，由恢复扫描器补偿</li>
+     * </ol>
+     *
+     * @param request 消息发送请求
+     * @return 发送结果
+     */
+    @Override
+    public MessageResult sendAsync(MessageRequest request) {
+        if (request == null) {
+            return MessageResult.fail(null, "消息请求为空");
+        }
+        // 确保有 messageId
+        if (!StringUtils.hasText(request.getMessageId())) {
+            request.setMessageId(SnowflakeIdGenerator.nextIdStr());
+        }
+        // ① 先落库 PENDING（DB 是 Source of Truth）
+        MsgLogDO logDO = new MsgLogDO();
+        logDO.setMsgId(request.getMessageId());
+        logDO.setChannel(request.getChannel());
+        logDO.setBizType(request.getBizType());
+        logDO.setBizId(request.getBizId());
+        logDO.setReceiver(request.getReceiver());
+        logDO.setTemplateCode(request.getTemplateCode());
+        logDO.setContent(request.getContent());
+        logDO.setStatus(MessageStatusEnum.PENDING.name());
+        logDO.setPriority(resolvePriority(request));
+        logDO.setRetryCount(0);
+        logDO.setReceiptStatus("NONE");
+        logDO.setRecallStatus(RecallStatusEnum.NONE.name());
+        logDO.setTraceId(TraceIdUtil.getOrCreate());
+        logDO.setSenderId(SystemConstants.SYSTEM_USER_ID);
+        logDO.setTenantId(TenantContext.getTenantId());
+        logDO.setTopic(PmisMessageTopics.TOPIC_MESSAGE);
+        try {
+            msgLogMapper.insert(logDO);
+            log.info("[Message] 异步消息已落库 PENDING: msgId={} channel={}", logDO.getMsgId(), request.getChannel());
+        } catch (Exception e) {
+            log.error("[Message] 异步消息落库失败,降级直接投递 MQ: msgId={} err={}",
+                    request.getMessageId(), e.getMessage());
+        }
+        // ② 投递到 MQ
+        MessageQueueOperations mqOps = mqProducerProvider.getIfAvailable();
+        if (mqOps == null) {
+            // MQ 未配置，降级为同步发送
+            log.warn("[Message] MQ 未配置,异步消息降级同步发送: msgId={}", request.getMessageId());
+            return send(request);
+        }
+        try {
+            mqOps.asyncSend(request);
+            log.info("[Message] 异步消息已投递 MQ: msgId={} channel={}", request.getMessageId(), request.getChannel());
+            return MessageResult.ok(request.getChannel(), request.getMessageId());
+        } catch (Exception e) {
+            log.error("[Message] 异步投递 MQ 失败,降级同步发送: msgId={} err={}",
+                    request.getMessageId(), e.getMessage());
             return send(request);
         }
     }

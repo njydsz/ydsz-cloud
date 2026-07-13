@@ -267,7 +267,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
         log.info("[Flow-Migrate] 迁移完成: sourceDefId={} targetDefId={} dryRun={} "
                         + "total={} migrated={} skipped={} failed={}",
                 sourceDefId, targetDefId, dryRun,
-                BaseResponse.getTotalInstances(), migratedCount, skippedCount, failedCount);
+                result.getTotalInstances(), migratedCount, skippedCount, failedCount);
         return result;
     }
 
