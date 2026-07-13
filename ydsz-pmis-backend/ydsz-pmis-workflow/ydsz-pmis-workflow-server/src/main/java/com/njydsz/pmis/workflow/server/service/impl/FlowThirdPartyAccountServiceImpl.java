@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.integration;
 
-import com.njydsz.pmis.common.constant.CacheConstants;
+import com.njydsz.pmis.common.core.constant.CacheConstants;
 import com.njydsz.pmis.workflow.domain.entity.integration.FlowThirdPartyAccountDO;
 import com.njydsz.pmis.workflow.infra.mapper.integration.FlowThirdPartyAccountMapper;
 import com.njydsz.pmis.workflow.server.service.integration.FlowThirdPartyAccountService;

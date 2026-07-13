@@ -98,11 +98,11 @@ public class FlowMobileController {
                         .toList();
 
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("todoCount", todoCount);
-        BaseResponse.put("doneCount", doneCount);
-        BaseResponse.put("overdueCount", overdueCount);
-        BaseResponse.put("todoList", topTodos);
-        BaseResponse.put("timestamp", System.currentTimeMillis());
+        result.put("todoCount", todoCount);
+        result.put("doneCount", doneCount);
+        result.put("overdueCount", overdueCount);
+        result.put("todoList", topTodos);
+        result.put("timestamp", System.currentTimeMillis());
         return BaseResponse.ok(result);
     }
 

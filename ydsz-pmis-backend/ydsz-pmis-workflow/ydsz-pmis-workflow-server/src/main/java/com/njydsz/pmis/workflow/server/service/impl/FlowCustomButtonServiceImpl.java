@@ -100,9 +100,9 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                 ? String.valueOf(button.get("targetNodeCode")) : null;
 
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("taskId", taskId);
-        BaseResponse.put("buttonCode", buttonCode);
-        BaseResponse.put("action", action);
+        result.put("taskId", taskId);
+        result.put("buttonCode", buttonCode);
+        result.put("action", action);
 
         switch (action) {
             case "PASS" -> {
@@ -112,7 +112,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                 passDto.setComment(comment);
                 passDto.setVariables(variables);
                 taskService.pass(passDto);
-                BaseResponse.put("result", "PASSED");
+                result.put("result", "PASSED");
             }
             case "REJECT" -> {
                 FlowTaskOperateDTO rejectDto = new FlowTaskOperateDTO();
@@ -122,8 +122,8 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                 rejectDto.setTargetNodeCode(targetNodeCode);
                 rejectDto.setVariables(variables);
                 taskService.reject(rejectDto);
-                BaseResponse.put("result", "REJECTED");
-                BaseResponse.put("targetNodeCode", targetNodeCode);
+                result.put("result", "REJECTED");
+                result.put("targetNodeCode", targetNodeCode);
             }
             case "TRANSFER" -> {
                 String targetUserId = variables != null ? String.valueOf(variables.get("targetUserId")) : null;
@@ -136,7 +136,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                     transferDto.setTargetUserId(targetUserId);
                     transferDto.setTargetUserName(targetUserName);
                     taskService.transfer(transferDto);
-                    BaseResponse.put("result", "TRANSFERRED");
+                    result.put("result", "TRANSFERRED");
                 } else {
                     throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_transfer_target_required");
                 }
@@ -151,15 +151,15 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
                     delegateDto.setTargetUserId(delegateUserId);
                     delegateDto.setTargetUserName(delegateUserName);
                     taskService.delegate(delegateDto);
-                    BaseResponse.put("result", "DELEGATED");
+                    result.put("result", "DELEGATED");
                 } else {
                     throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_delegate_target_required");
                 }
             }
             case "CUSTOM" -> {
                 // 自定义回调：由前端或事件监听器处理
-                BaseResponse.put("result", "CUSTOM");
-                BaseResponse.put("callbackUrl", button.get("callbackUrl"));
+                result.put("result", "CUSTOM");
+                result.put("callbackUrl", button.get("callbackUrl"));
                 log.info("[CustomButton] 自定义按钮操作: taskId={} buttonCode={} callbackUrl={}",
                         taskId, buttonCode, button.get("callbackUrl"));
             }
@@ -192,7 +192,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
             if (buttons instanceof List<?> list) {
                 for (Object item : list) {
                     if (item instanceof Map<?, ?> map) {
-                        BaseResponse.add((Map<String, Object>) map);
+                        result.add((Map<String, Object>) map);
                     }
                 }
             }

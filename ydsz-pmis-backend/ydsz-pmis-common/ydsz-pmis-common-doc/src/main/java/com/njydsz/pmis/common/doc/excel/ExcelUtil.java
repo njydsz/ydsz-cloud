@@ -34,7 +34,7 @@ public final class ExcelUtil {
             return new ArrayList<>();
         }
         try (InputStream in = file.getInputStream()) {
-            return EasyExcel.read(in, clazz).sheet().doReadSync();
+            return EasyExcel.read(in).head(clazz).sheet().doReadSync();
         } catch (IOException e) {
             throw new RuntimeException("读取 Excel 文件失败: " + e.getMessage(), e);
         }
@@ -49,6 +49,6 @@ public final class ExcelUtil {
      * @return 数据列表
      */
     public static <T> List<T> readAll(InputStream in, Class<T> clazz) {
-        return EasyExcel.read(in, clazz).sheet().doReadSync();
+        return EasyExcel.read(in).head(clazz).sheet().doReadSync();
     }
 }

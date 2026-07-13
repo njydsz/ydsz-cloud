@@ -392,7 +392,7 @@ public class FlowMonitorController {
             row.put("date", entry.getKey());
             row.put("newCount", entry.getValue()[0]);
             row.put("completedCount", entry.getValue()[1]);
-            BaseResponse.add(row);
+            result.add(row);
         }
         return BaseResponse.ok(result);
     }
@@ -434,7 +434,7 @@ public class FlowMonitorController {
                 item.put("completedCount", row.get("completedCount"));
                 item.put("avgDurationMs", row.get("avgDurationMs"));
                 item.put("totalDurationMs", row.get("totalDurationMs"));
-                BaseResponse.add(item);
+                result.add(item);
             }
         }
         return BaseResponse.ok(result);
@@ -476,7 +476,7 @@ public class FlowMonitorController {
                 long cnt = ((Number) row.get("cnt")).longValue();
                 item.put("count", cnt);
                 item.put("percentage", total > 0 ? Math.round(cnt * 10000.0 / total) / 100.0 : 0.0);
-                BaseResponse.add(item);
+                result.add(item);
             }
         }
         return BaseResponse.ok(result);
@@ -733,7 +733,7 @@ public class FlowMonitorController {
             row.put("date", entry.getKey());
             row.put("newCount", entry.getValue()[0]);
             row.put("completedCount", entry.getValue()[1]);
-            BaseResponse.add(row);
+            result.add(row);
         }
         return result;
     }

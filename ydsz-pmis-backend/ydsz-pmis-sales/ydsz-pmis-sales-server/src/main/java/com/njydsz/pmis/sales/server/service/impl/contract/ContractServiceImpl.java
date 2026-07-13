@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.aspect.DataScopeAspect;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.sales.server.assembler.NameAssembler;
@@ -137,7 +136,7 @@ public class ContractServiceImpl implements ContractService {
             throw new SysException(StandardResultCode.NOT_FOUND, "error.project.msg_22d39b90");
         }
         // P0-4: 越权防护 - 非超管只能查看自己创建的合同
-        DataScopeAspect.assertAllowByOwner(c.getCreatedBy());
+        DataScopeHelper.requireOwner(c.getCreatedBy());
         assembleNames(c);
         return c;
     }
@@ -174,8 +173,8 @@ public class ContractServiceImpl implements ContractService {
         if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(ContractDO::getCreatedAt);
         Page<ContractDO> result = contractMapper.selectPage(p, w);
-        if (result != null && BaseResponse.getRecords() != null) {
-            batchAssembleNames(BaseResponse.getRecords());
+        if (result != null && result.getRecords() != null) {
+            batchAssembleNames(result.getRecords());
         }
         return result;
     }

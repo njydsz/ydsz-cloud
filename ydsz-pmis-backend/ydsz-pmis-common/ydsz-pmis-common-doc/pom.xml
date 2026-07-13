@@ -73,7 +73,7 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- EasyExcel（ExcelTemplate / ExcelUtil） -->
+        <!-- EasyExcel（ExcelTemplate / ExcelUtil，optional 避免传递依赖冲突） -->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>easyexcel</artifactId>

@@ -30,4 +30,16 @@ public final class CacheConstants {
 
     /** 经营驾驶舱缓存名称 */
     public static final String COCKPIT_CACHE = "cockpit";
+
+    /** 流程定义已发布缓存名称 */
+    public static final String FLOW_DEF_PUBLISHED_CACHE = "flow:def:published";
+
+    /** 流程定义最新版本缓存名称 */
+    public static final String FLOW_DEF_LATEST_CACHE = "flow:def:latest";
+
+    /** 流程第三方账号按用户缓存名称 */
+    public static final String FLOW_THIRDPARTY_BY_USER_CACHE = "flow:thirdparty:user";
+
+    /** 流程第三方账号按 OpenID 缓存名称 */
+    public static final String FLOW_THIRDPARTY_BY_OPENID_CACHE = "flow:thirdparty:openid";
 }

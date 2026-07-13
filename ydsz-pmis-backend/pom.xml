@@ -622,6 +622,36 @@
                 <artifactId>resilience4j-framework-common</artifactId>
                 <version>${resilience4j.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-core</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-ratelimiter</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-retry</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-bulkhead</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-timelimiter</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-consumer</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
 
             
             <dependency>
@@ -1050,6 +1080,21 @@
                                     <exclude>io.grpc:grpc-api</exclude>
                                     <exclude>com.google.code.gson:gson</exclude>
                                     <exclude>org.springdoc:springdoc-openapi-starter-webmvc-ui</exclude>
+                                    <exclude>commons-codec:commons-codec</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-timelimiter</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-bulkhead</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-retry</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-ratelimiter</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-circuitbreaker</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-core</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-consumer</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-micrometer</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-framework-common</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-spring6</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-spring-boot3</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-reactor</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-annotations</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-circularbuffer</exclude>
                                 </excludes>
                             </requireUpperBoundDeps>
                             <dependencyConvergence>
@@ -1063,6 +1108,7 @@
                                     <exclude>org.apache.poi:poi</exclude>
                                     <exclude>org.apache.commons:commons-collections4</exclude>
                                     <exclude>org.apache.commons:commons-compress</exclude>
+                                    <exclude>commons-codec:commons-codec</exclude>
                                     <exclude>org.antlr:ST4</exclude>
                                     <exclude>org.antlr:antlr4-runtime</exclude>
                                     <exclude>com.squareup.okio:okio-jvm</exclude>
@@ -1072,6 +1118,20 @@
                                     <exclude>io.grpc:grpc-core</exclude>
                                     <exclude>io.grpc:grpc-stub</exclude>
                                     <exclude>io.grpc:grpc-api</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-timelimiter</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-bulkhead</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-retry</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-ratelimiter</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-circuitbreaker</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-core</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-consumer</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-micrometer</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-framework-common</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-spring6</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-spring-boot3</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-reactor</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-annotations</exclude>
+                                    <exclude>io.github.resilience4j:resilience4j-circularbuffer</exclude>
                                 </excludes>
                             </dependencyConvergence>
                             <bannedDependencies>

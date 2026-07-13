@@ -186,7 +186,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
                     log.warn("[Flow] multi_leader 检测到循环引用: userId={} leaderId={}", currentUserId, leaderId);
                     break;
                 }
-                BaseResponse.add(leaderId);
+                result.add(leaderId);
                 currentUserId = String.valueOf(leaderId);
             } catch (Exception e) {
                 log.warn("[Flow] multi_leader 查询异常: userId={} level={} err={}",
@@ -254,7 +254,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
             return Collections.emptyList();
         }
         List<Long> result = new ArrayList<>(1);
-        BaseResponse.add(leaderId);
+        result.add(leaderId);
         return result;
     }
 
@@ -308,7 +308,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
             return Collections.emptyList();
         }
         List<Long> result = new ArrayList<>(1);
-        BaseResponse.add(leaderId);
+        result.add(leaderId);
         return result;
     }
 

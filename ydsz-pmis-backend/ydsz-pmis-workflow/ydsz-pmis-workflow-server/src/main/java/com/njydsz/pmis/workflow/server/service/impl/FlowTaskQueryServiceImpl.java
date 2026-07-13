@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.server.service.impl.instance;
 import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.datasource.DataSourceConstants;
+import com.njydsz.pmis.common.jdbc.constant.DataSourceConstants;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowHisTaskDO;

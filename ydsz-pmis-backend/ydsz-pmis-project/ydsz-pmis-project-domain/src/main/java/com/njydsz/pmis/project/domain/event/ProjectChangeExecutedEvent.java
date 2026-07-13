@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -23,16 +24,26 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ProjectChangeExecutedEvent implements Serializable {
 
-    /** 立项 ID */
-    private String initiationId;
+    /** 变更 ID */
+    private String changeId;
     /** 变更编号 */
     private String changeCode;
+    /** 变更标题 */
+    private String changeTitle;
+    /** 立项 ID */
+    private String initiationId;
     /** 变更类型 */
     private String changeType;
-    /** 最终状态码 */
-    private String finalStatusCode;
     /** 是否重大变更 */
     private Boolean majorFlag;
+    /** 最终状态码 */
+    private String finalStatusCode;
+    /** 利润影响百分比 */
+    private BigDecimal profitImpactPct;
+    /** 进度影响天数 */
+    private Integer scheduleImpactDays;
+    /** 事件时间戳 */
+    private Long timestamp;
     /** 事件发生时间 */
     private LocalDateTime occurredAt;
 
