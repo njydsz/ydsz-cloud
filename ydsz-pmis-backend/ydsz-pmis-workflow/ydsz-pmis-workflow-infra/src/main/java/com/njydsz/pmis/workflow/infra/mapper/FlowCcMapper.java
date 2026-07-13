@@ -15,7 +15,7 @@ import com.njydsz.pmis.workflow.domain.entity.FlowCcDO;
  * <p>P0-3: 抄送中心（对标钉钉/飞书的"抄送我的"独立 Tab）。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowCcMapper extends BaseMapper<FlowCcDO> {

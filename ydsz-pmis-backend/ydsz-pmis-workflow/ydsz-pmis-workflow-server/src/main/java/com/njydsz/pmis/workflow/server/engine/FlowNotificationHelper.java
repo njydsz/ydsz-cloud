@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>P2-重构: 统一委托 FlowNotificationService，消除双服务直接调用 Feign 的重复逻辑。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component

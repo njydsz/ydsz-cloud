@@ -15,7 +15,7 @@ import com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyLogDO;
  * <p>P0-2: 三方审批回调日志落库与状态更新。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowThirdPartyLogMapper extends BaseMapper<FlowThirdPartyLogDO> {

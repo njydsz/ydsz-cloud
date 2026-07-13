@@ -14,7 +14,7 @@ import com.njydsz.pmis.workflow.domain.entity.FlowAuditLogDO;
  * <p>对应 pmis_flow_audit_log 表，记录审批全操作轨迹。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowAuditLogMapper extends BaseMapper<FlowAuditLogDO> {

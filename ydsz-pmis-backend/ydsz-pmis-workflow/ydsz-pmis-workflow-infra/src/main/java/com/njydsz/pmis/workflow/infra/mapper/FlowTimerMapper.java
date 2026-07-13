@@ -13,7 +13,7 @@ import com.njydsz.pmis.workflow.domain.entity.FlowTimerDO;
  * 工作流定时器 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowTimerMapper extends BaseMapper<FlowTimerDO> {

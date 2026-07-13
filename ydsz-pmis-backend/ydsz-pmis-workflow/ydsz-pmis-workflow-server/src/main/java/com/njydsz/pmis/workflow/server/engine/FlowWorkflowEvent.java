@@ -19,7 +19,7 @@ import lombok.Getter;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Getter
 public class FlowWorkflowEvent extends ApplicationEvent {

@@ -13,7 +13,7 @@ import com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyAccountDO;
  * <p>P0-2: 三方审批账号映射（钉钉/飞书/企微）。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowThirdPartyAccountMapper extends BaseMapper<FlowThirdPartyAccountDO> {
