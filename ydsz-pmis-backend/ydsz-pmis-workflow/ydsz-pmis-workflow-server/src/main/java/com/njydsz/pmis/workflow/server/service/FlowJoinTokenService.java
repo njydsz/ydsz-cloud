@@ -10,7 +10,7 @@ package com.njydsz.pmis.workflow.server.service;
  * 仅当所有分支都到达后（{@link #allArrived} 为 true）才允许聚合通过，避免提前或遗漏聚合。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public interface FlowJoinTokenService {
 

@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  * 注入，避免监控指标对核心数据源造成循环依赖。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component("flowMetrics")

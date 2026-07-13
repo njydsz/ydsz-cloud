@@ -7,7 +7,7 @@ package com.njydsz.pmis.workflow.server.service;
  * 当本地流程被终止/撤回时，主动调用三方平台"取消审批单"接口，保证三方侧审批单状态一致。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public interface FlowThirdPartySyncService {
 

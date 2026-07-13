@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>所有方法均防御性编码：空值检查 + try-catch，保证不拖垮回调主流程。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

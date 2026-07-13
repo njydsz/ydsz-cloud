@@ -13,7 +13,7 @@ import com.njydsz.pmis.common.util.CryptoSignUtil;
  * 消除重复的 HmacSHA256 实现。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public final class DingTalkSignatureUtil {
 

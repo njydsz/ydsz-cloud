@@ -10,7 +10,7 @@ import com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyLogDO;
  * 由独立重试任务保证最终一致（重试任务暂未实现）。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public interface FlowThirdPartyLogService {
 

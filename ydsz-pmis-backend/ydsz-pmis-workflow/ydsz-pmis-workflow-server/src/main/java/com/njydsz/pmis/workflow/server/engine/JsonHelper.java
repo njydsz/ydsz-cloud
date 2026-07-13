@@ -10,7 +10,7 @@ import com.alibaba.fastjson2.JSONWriter;
  * 工作流引擎 JSON 工具（隔离 fastjson2，便于测试 mock）
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public final class JsonHelper {
 

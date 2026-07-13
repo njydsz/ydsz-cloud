@@ -10,7 +10,7 @@ import com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyAccountDO;
  * 三方审批回调时通过 {@link #getByOpenId} 反查系统用户，驱动工作流通过/驳回等操作。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public interface FlowThirdPartyAccountService {
 

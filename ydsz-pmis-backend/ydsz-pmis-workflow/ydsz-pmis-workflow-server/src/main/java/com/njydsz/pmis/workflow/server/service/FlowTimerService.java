@@ -13,7 +13,7 @@ import com.njydsz.pmis.workflow.domain.entity.FlowTimerDO;
  * <p>边界定时器：挂在 userTask 上，到时间未完成则触发超时分支
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public interface FlowTimerService {
 

@@ -54,7 +54,7 @@ import lombok.extern.slf4j.Slf4j;
  * 自动终止子流程并同步父流程。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Component("flowTimeoutJobHandler")
