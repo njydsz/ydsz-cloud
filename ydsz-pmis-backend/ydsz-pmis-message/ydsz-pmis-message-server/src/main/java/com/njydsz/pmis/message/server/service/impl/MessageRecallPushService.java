@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.server.service.impl;
 
-import com.njydsz.pmis.message.server.service.core.RealtimePushService;
+import com.njydsz.pmis.message.server.realtime.RealtimePushService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

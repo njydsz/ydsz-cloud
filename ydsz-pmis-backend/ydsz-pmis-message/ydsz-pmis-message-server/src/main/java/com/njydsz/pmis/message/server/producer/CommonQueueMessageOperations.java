@@ -16,7 +16,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.util.UUID;
 
 /**
  * 基于 common-queue 抽象的消息队列操作实现。
