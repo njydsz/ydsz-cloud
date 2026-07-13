@@ -1,11 +1,13 @@
 package com.njydsz.pmis.nextwiki.server.job;
 
-import com.njydsz.pmis.nextwiki.domain.service.SearchDomainService;
-import com.njydsz.pmis.nextwiki.domain.service.TrashDomainService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.nextwiki.domain.service.SearchDomainService;
+import com.njydsz.pmis.nextwiki.domain.service.TrashDomainService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * NextWiki 定时任务

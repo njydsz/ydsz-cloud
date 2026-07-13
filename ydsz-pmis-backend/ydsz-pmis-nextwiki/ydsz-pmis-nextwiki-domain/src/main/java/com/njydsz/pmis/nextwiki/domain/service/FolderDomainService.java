@@ -100,17 +100,17 @@ public class FolderDomainService {
     public FileNode move(String nodeId, String targetParentId, String userId) {
         FileNode node = fileNodeRepository.findById(nodeId);
         if (node == null) {
-            throw new BusinessException("NW-FOLDER-002", "文件节点不存在: " + nodeId);
+            throw BusinessException.builder().key("文件节点不存在: " + nodeId).build();
         }
 
         // 防止将目录移动到自身或其子目录下
         if (node.isFolder() && isAncestorOrSelf(nodeId, targetParentId)) {
-            throw new BusinessException("NW-FOLDER-003", "不能将目录移动到自身或其子目录下");
+            throw BusinessException.builder().key("不能将目录移动到自身或其子目录下").build();
         }
 
         FileNode targetParent = fileNodeRepository.findById(targetParentId);
         if (targetParent == null || !targetParent.isFolder()) {
-            throw new BusinessException("NW-FOLDER-004", "目标父目录不存在或不是目录");
+            throw BusinessException.builder().key("目标父目录不存在或不是目录").build();
         }
 
         String oldPath = node.getPath();
@@ -152,7 +152,7 @@ public class FolderDomainService {
     public FileNode rename(String nodeId, String newName, String userId) {
         FileNode node = fileNodeRepository.findById(nodeId);
         if (node == null) {
-            throw new BusinessException("NW-FOLDER-002", "文件节点不存在: " + nodeId);
+            throw BusinessException.builder().key("文件节点不存在: " + nodeId).build();
         }
 
         String oldName = node.getName();
@@ -191,7 +191,7 @@ public class FolderDomainService {
     public void softDelete(String nodeId, String userId) {
         FileNode node = fileNodeRepository.findById(nodeId);
         if (node == null) {
-            throw new BusinessException("NW-FOLDER-002", "文件节点不存在: " + nodeId);
+            throw BusinessException.builder().key("文件节点不存在: " + nodeId).build();
         }
 
         // 记录原始路径
@@ -266,7 +266,7 @@ public class FolderDomainService {
         }
         FileNode parent = fileNodeRepository.findById(parentId);
         if (parent == null) {
-            throw new BusinessException("NW-FOLDER-005", "父目录不存在: " + parentId);
+            throw BusinessException.builder().key("父目录不存在: " + parentId).build();
         }
         return parent;
     }

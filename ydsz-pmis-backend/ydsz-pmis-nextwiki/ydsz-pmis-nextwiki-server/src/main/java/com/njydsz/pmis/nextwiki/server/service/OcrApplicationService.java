@@ -1,11 +1,12 @@
 package com.njydsz.pmis.nextwiki.server.service;
 
-import lombok.extern.slf4j.Slf4j;
+import java.io.InputStream;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.InputStream;
-import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * OCR 文字识别应用服务

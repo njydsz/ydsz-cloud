@@ -1,12 +1,14 @@
 package com.njydsz.pmis.nextwiki.web.controller;
 
+import org.springframework.web.bind.annotation.*;
+
 import com.njydsz.pmis.common.core.response.Result;
 import com.njydsz.pmis.nextwiki.server.service.PreviewApplicationService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
 
 /**
  * 文档预览 REST API

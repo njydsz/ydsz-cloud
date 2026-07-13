@@ -1,12 +1,14 @@
 package com.njydsz.pmis.nextwiki.server.listener;
 
-import com.njydsz.pmis.nextwiki.domain.event.FileOperatedEvent;
-import com.njydsz.pmis.nextwiki.domain.service.SearchDomainService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.nextwiki.domain.event.FileOperatedEvent;
+import com.njydsz.pmis.nextwiki.domain.service.SearchDomainService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文件操作事件异步监听器

@@ -1,13 +1,15 @@
 package com.njydsz.pmis.nextwiki.web.controller;
 
+import org.springframework.web.bind.annotation.*;
+
 import com.njydsz.pmis.common.core.response.Result;
 import com.njydsz.pmis.nextwiki.server.service.AiSummaryApplicationService;
 import com.njydsz.pmis.nextwiki.server.service.StorageAnalysisApplicationService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
 
 /**
  * 存储分析与 AI 摘要 REST API
