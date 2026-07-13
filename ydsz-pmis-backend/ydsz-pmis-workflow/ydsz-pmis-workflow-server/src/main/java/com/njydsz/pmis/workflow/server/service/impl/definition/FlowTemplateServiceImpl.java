@@ -10,7 +10,7 @@ import com.njydsz.pmis.workflow.domain.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowSkipDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowTemplateDO;
-import com.njydsz.pmis.workflow.infra.mapper.definition.FlowTemplateMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowTemplateMapper;
 import com.njydsz.pmis.workflow.server.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.server.service.FlowTemplateService;
 import lombok.RequiredArgsConstructor;

@@ -8,7 +8,7 @@ import com.njydsz.pmis.workflow.server.engine.FlowWorkflowEvent;
 import com.njydsz.pmis.workflow.domain.entity.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.infra.mapper.FlowAuditLogMapper;
-import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowRunTaskMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;

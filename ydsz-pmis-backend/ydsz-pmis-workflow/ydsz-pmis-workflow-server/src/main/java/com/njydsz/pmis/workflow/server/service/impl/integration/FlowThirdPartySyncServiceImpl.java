@@ -1,8 +1,8 @@
 package com.njydsz.pmis.workflow.server.service.impl.integration;
 
-import com.njydsz.pmis.workflow.domain.entity.integration.FlowThirdPartyAccountDO;
-import com.njydsz.pmis.workflow.domain.entity.integration.FlowThirdPartyLogDO;
-import com.njydsz.pmis.workflow.infra.mapper.integration.FlowThirdPartyLogMapper;
+import com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyAccountDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyLogDO;
+import com.njydsz.pmis.workflow.infra.mapper.FlowThirdPartyLogMapper;
 import com.njydsz.pmis.workflow.server.service.FlowThirdPartyAccountService;
 import com.njydsz.pmis.workflow.server.service.FlowThirdPartySyncService;
 import lombok.RequiredArgsConstructor;

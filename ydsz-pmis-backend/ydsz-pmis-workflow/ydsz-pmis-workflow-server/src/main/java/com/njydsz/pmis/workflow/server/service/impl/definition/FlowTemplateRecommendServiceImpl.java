@@ -2,8 +2,8 @@ package com.njydsz.pmis.workflow.server.service.impl.definition;
 
 import com.njydsz.pmis.workflow.domain.entity.FlowTemplateDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
-import com.njydsz.pmis.workflow.infra.mapper.definition.FlowTemplateMapper;
-import com.njydsz.pmis.workflow.infra.mapper.instance.FlowInstanceMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowTemplateMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.server.service.FlowTemplateRecommendService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

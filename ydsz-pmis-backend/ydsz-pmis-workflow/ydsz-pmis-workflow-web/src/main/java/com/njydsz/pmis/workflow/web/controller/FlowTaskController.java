@@ -11,7 +11,7 @@ import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.WorkflowFacade;
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.infra.mapper.instance.FlowHisTaskMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.server.service.FlowTaskService;
 import com.njydsz.pmis.workflow.server.service.FlowTodoCountPushService;
 import io.swagger.v3.oas.annotations.Operation;

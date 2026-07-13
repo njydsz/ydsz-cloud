@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.infra.mapper.integration;
+package com.njydsz.pmis.workflow.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyAccountDO;

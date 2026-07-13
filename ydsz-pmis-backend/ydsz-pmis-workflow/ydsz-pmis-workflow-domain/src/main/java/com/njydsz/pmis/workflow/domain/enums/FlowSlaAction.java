@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.domain.enums.analytics;
+package com.njydsz.pmis.workflow.domain.enums;
 
 /**
  * GAP-P1: SLA 超时处理动作

@@ -1,8 +1,8 @@
 package com.njydsz.pmis.workflow.server.service.impl.integration;
 
 import com.njydsz.pmis.common.core.constant.CacheConstants;
-import com.njydsz.pmis.workflow.domain.entity.integration.FlowThirdPartyAccountDO;
-import com.njydsz.pmis.workflow.infra.mapper.integration.FlowThirdPartyAccountMapper;
+import com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyAccountDO;
+import com.njydsz.pmis.workflow.infra.mapper.FlowThirdPartyAccountMapper;
 import com.njydsz.pmis.workflow.server.service.FlowThirdPartyAccountService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

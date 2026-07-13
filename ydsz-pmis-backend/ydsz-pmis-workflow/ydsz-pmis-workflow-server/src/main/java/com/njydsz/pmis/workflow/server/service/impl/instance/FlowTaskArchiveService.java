@@ -2,9 +2,9 @@ package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import com.njydsz.pmis.workflow.domain.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.domain.enums.instance.FlowTaskStatus;
-import com.njydsz.pmis.workflow.infra.mapper.instance.FlowHisTaskMapper;
-import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
+import com.njydsz.pmis.workflow.domain.enums.FlowTaskStatus;
+import com.njydsz.pmis.workflow.infra.mapper.FlowHisTaskMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.server.service.FlowEventSubscriptionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.workflow.domain.entity.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO;
 import com.njydsz.pmis.workflow.infra.mapper.FlowAuditLogMapper;
-import com.njydsz.pmis.workflow.infra.mapper.delegate.FlowDelegateAuthMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowDelegateAuthMapper;
 import com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskAuditService;
 import com.njydsz.pmis.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.pmis.workflow.server.service.FlowOfflineAutoForwardService;

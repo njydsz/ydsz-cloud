@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.thirdparty;
 
-import com.njydsz.pmis.workflow.domain.enums.definition.ThirdPartyPlatform;
+import com.njydsz.pmis.workflow.domain.enums.ThirdPartyPlatform;
 
 import java.util.Map;
 

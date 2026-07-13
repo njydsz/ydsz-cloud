@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
-import com.njydsz.pmis.workflow.infra.mapper.instance.FlowHisTaskMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowHisTaskMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

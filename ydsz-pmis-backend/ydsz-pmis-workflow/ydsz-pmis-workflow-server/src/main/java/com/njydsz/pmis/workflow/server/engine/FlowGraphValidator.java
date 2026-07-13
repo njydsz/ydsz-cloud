@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.server.engine;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowSkipDO;
-import com.njydsz.pmis.workflow.domain.enums.definition.FlowNodeType;
+import com.njydsz.pmis.workflow.domain.enums.FlowNodeType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;

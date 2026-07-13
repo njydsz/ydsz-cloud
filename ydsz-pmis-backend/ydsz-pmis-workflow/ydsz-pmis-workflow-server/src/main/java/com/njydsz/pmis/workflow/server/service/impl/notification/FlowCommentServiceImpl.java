@@ -2,10 +2,10 @@ package com.njydsz.pmis.workflow.server.service.impl.notification;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.workflow.domain.dto.notification.FlowCommentCreateDTO;
+import com.njydsz.pmis.workflow.domain.dto.FlowCommentCreateDTO;
 import com.njydsz.pmis.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.pmis.workflow.domain.entity.FlowCommentDO;
-import com.njydsz.pmis.workflow.infra.mapper.notification.FlowCommentMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowCommentMapper;
 import com.njydsz.pmis.workflow.server.service.FlowCommentService;
 import com.njydsz.pmis.workflow.server.service.FlowNotificationService;
 import lombok.RequiredArgsConstructor;

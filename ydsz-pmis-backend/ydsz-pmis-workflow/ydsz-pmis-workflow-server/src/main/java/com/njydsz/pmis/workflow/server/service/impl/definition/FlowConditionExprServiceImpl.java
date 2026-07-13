@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.server.service.impl.definition;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.infra.mapper.definition.FlowNodeMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.server.service.FlowConditionExprService;
 import com.googlecode.aviator.AviatorEvaluator;
 import lombok.RequiredArgsConstructor;

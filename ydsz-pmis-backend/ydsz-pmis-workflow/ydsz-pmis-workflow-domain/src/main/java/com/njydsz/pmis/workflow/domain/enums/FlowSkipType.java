@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.domain.enums.instance;
+package com.njydsz.pmis.workflow.domain.enums;
 
 /**
  * 流程跳转类型

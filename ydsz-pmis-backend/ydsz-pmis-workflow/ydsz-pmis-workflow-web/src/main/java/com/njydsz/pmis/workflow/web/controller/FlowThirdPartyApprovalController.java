@@ -6,7 +6,7 @@ import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.dto.EmbeddedApprovalActionDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyAccountDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyLogDO;
-import com.njydsz.pmis.workflow.domain.enums.definition.ThirdPartyPlatform;
+import com.njydsz.pmis.workflow.domain.enums.ThirdPartyPlatform;
 import com.njydsz.pmis.workflow.server.service.FlowEmbeddedApprovalService;
 import com.njydsz.pmis.workflow.server.service.FlowThirdPartyAccountService;
 import com.njydsz.pmis.workflow.server.service.FlowThirdPartyLogService;

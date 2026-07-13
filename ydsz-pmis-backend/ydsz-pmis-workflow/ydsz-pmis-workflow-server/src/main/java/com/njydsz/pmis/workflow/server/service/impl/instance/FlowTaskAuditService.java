@@ -5,7 +5,7 @@ import com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.infra.mapper.FlowAuditLogMapper;
-import com.njydsz.pmis.workflow.infra.mapper.instance.FlowInstanceMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.server.service.FlowDelegateAuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

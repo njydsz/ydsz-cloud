@@ -9,7 +9,7 @@ import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.workflow.domain.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.domain.enums.CanaryStatus;
 import com.njydsz.pmis.workflow.domain.enums.CanaryStrategy;
-import com.njydsz.pmis.workflow.infra.mapper.definition.FlowDefinitionMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowDefinitionMapper;
 import com.njydsz.pmis.workflow.server.service.FlowCanaryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

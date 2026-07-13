@@ -2,11 +2,11 @@ package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.pmis.workflow.domain.enums.instance.FlowTaskStatus;
+import com.njydsz.pmis.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.infra.mapper.delegate.FlowDelegateAuthMapper;
-import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowDelegateAuthMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.server.service.FlowAssigneeLeaveHandler;
 import com.njydsz.pmis.workflow.server.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;

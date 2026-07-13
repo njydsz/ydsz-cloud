@@ -8,9 +8,9 @@ import com.github.benmanes.caffeine.cache.Ticker;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowSkipDO;
-import com.njydsz.pmis.workflow.domain.enums.definition.FlowNodeType;
-import com.njydsz.pmis.workflow.infra.mapper.definition.FlowNodeMapper;
-import com.njydsz.pmis.workflow.infra.mapper.instance.FlowSkipMapper;
+import com.njydsz.pmis.workflow.domain.enums.FlowNodeType;
+import com.njydsz.pmis.workflow.infra.mapper.FlowNodeMapper;
+import com.njydsz.pmis.workflow.infra.mapper.FlowSkipMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

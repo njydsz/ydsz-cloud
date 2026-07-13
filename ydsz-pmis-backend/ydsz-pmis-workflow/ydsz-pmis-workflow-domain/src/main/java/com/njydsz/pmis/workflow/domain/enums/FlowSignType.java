@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.domain.enums.definition;
+package com.njydsz.pmis.workflow.domain.enums;
 
 /**
  * 加签类型

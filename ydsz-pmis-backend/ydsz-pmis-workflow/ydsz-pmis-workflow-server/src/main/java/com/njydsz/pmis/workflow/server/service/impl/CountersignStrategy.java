@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.server.service.impl;
 
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.domain.enums.definition.FlowPerformType;
+import com.njydsz.pmis.workflow.domain.enums.FlowPerformType;
 
 /**
  * 会签推进策略接口
