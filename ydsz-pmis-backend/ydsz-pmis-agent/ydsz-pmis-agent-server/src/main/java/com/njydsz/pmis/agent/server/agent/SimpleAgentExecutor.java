@@ -29,7 +29,7 @@ import com.njydsz.pmis.agent.server.config.AgentProperties;
  * 适用于不需要工具调用的纯对话场景。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public class SimpleAgentExecutor implements AgentExecutor {
 

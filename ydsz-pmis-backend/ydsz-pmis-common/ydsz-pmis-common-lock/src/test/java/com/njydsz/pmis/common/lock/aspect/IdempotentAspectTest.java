@@ -46,7 +46,7 @@ import com.njydsz.pmis.common.lock.exception.IdempotentException;
  *
  * @author Marvin Lee
  * @email limw1888@126.com
- * @since 1.1.0
+ * @since 1.0.0
  */
 @DisplayName("IdempotentAspect 单元测试")
 class IdempotentAspectTest {

@@ -19,7 +19,7 @@ import com.njydsz.pmis.agent.domain.guardrail.OutputGuardrail;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public class PiiMaskingGuardrail implements OutputGuardrail {
 

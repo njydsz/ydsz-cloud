@@ -61,11 +61,11 @@ public class PromptManagementService {
         if (existing == null) {
             throw new IllegalArgumentException("Prompt 模板不存在: " + code);
         }
-        int newVersion = existing.getVersion() + 1;
+        int newVersion = existing.version() + 1;
         PromptTemplate updated = new PromptTemplate(
-                existing.getCode(), existing.getName(), content,
-                existing.getDescription(), existing.getCategory(),
-                newVersion, existing.getCreatedAt(), LocalDateTime.now());
+                existing.code(), existing.name(), content,
+                existing.description(), existing.category(),
+                newVersion, existing.createdAt(), LocalDateTime.now());
         templates.put(code, updated);
         versions.computeIfAbsent(code, k -> new CopyOnWriteArrayList<>())
                 .add(new PromptVersion(code, newVersion, content, LocalDateTime.now()));
@@ -85,7 +85,7 @@ public class PromptManagementService {
      */
     public PromptVersion getVersion(String code, int version) {
         return versions.getOrDefault(code, List.of()).stream()
-                .filter(v -> v.getVersion() == version)
+                .filter(v -> v.version() == version)
                 .findFirst()
                 .orElse(null);
     }
@@ -109,7 +109,7 @@ public class PromptManagementService {
      */
     public List<PromptTemplate> listByCategory(String category) {
         return templates.values().stream()
-                .filter(t -> category.equals(t.getCategory()))
+                .filter(t -> category.equals(t.category()))
                 .collect(Collectors.toList());
     }
 
@@ -130,7 +130,7 @@ public class PromptManagementService {
         if (pv == null) {
             throw new IllegalArgumentException("版本不存在: " + targetVersion);
         }
-        return update(code, pv.getContent());
+        return update(code, pv.content());
     }
 
     /**
@@ -141,7 +141,7 @@ public class PromptManagementService {
         if (template == null) {
             throw new IllegalArgumentException("Prompt 模板不存在: " + code);
         }
-        String content = template.getContent();
+        String content = template.content();
         if (variables != null) {
             for (Map.Entry<String, Object> entry : variables.entrySet()) {
                 content = content.replace("#{" + entry.getKey() + "}",

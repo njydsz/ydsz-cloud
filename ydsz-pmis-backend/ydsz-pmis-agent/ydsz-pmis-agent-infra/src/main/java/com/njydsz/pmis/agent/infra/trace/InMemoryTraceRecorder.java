@@ -20,7 +20,7 @@ import com.njydsz.pmis.agent.domain.trace.TraceRecorder;
  * 生产环境可替换为数据库或链路追踪系统实现。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public class InMemoryTraceRecorder implements TraceRecorder {
 

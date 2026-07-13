@@ -28,6 +28,9 @@ public class IndexOperation implements Serializable {
     /** 索引文档（UPSERT 时必填） */
     private IndexDocument document;
 
+    /** 索引文档列表（BULK 时必填） */
+    private List<IndexDocument> documents;
+
     /** 文档 ID（DELETE 时必填） */
     private String documentId;
 
@@ -73,7 +76,7 @@ public class IndexOperation implements Serializable {
     public static IndexOperation bulkUpsert(List<IndexDocument> documents) {
         return IndexOperation.builder()
                 .operation(OperationType.BULK)
-                .document(null)
+                .documents(documents)
                 .build();
     }
 }

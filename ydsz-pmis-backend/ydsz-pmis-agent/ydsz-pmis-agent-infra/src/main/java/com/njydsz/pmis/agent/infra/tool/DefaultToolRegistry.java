@@ -22,7 +22,7 @@ import com.njydsz.pmis.agent.domain.tool.ToolRegistry;
  * 支持编程式注册和注解扫描注册（通过 {@code ToolAnnotationScanner}）。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public class DefaultToolRegistry implements ToolRegistry {
 

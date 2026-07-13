@@ -24,7 +24,7 @@ import com.njydsz.pmis.agent.server.rag.RagService;
  * 支持按类型路由到不同的执行器实现。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public class AgentFactory {
 
