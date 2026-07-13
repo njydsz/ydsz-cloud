@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>ydsz-pmis-common-socket</artifactId>
+    <name>ydsz-pmis-common-socket</name>
+    <description>PMIS 公共依赖 - WebSocket 实时通信模块（STOMP + 集群广播 + 在线状态 + 离线补偿 + 指标监控）</description>
+
+    <parent>
+        <groupId>com.njydsz.pmis</groupId>
+        <artifactId>ydsz-pmis-common</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <dependencies>
+        <!-- common-core -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-core</artifactId>
+        </dependency>
+
+        <!-- common-util（JsonUtils） -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-util</artifactId>
+        </dependency>
+
+        <!-- common-exception -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-exception</artifactId>
+        </dependency>
+
+        <!-- common-auth（JWT 鉴权，optional，通过 @ConditionalOnClass 条件装配） -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-auth</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- common-redis（集群广播 Pub/Sub + 在线状态 + 离线缓存 + 限流，optional） -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-redis</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Spring WebSocket（STOMP 协议支持） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Spring Web（ServletServerHttpRequest 等，provided） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Spring Boot AutoConfigure -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-autoconfigure</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Spring Boot Configuration Processor -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Spring Boot Actuator（HealthIndicator，optional） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-actuator</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- spring-boot-health (Spring Boot 4.x: health classes moved to actuator to health module) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Micrometer（指标监控，provided） -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Jakarta Servlet API（握手拦截器使用，provided） -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

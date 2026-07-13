@@ -869,7 +869,7 @@ public class FlowTaskCreateService {
             Map<String, Integer> result = new HashMap<>();
             for (Map.Entry<?, ?> e : m.entrySet()) {
                 if (e.getValue() instanceof Number n) {
-                    BaseResponse.put(String.valueOf(e.getKey()), n.intValue());
+                    result.put(String.valueOf(e.getKey()), n.intValue());
                 }
             }
             return result;

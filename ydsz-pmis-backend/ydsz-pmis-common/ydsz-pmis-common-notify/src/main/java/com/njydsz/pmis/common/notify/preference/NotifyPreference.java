@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.notify.preference;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import com.njydsz.pmis.common.notify.enums.NotifyType;
 
+import java.time.LocalTime;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
@@ -93,7 +94,7 @@ public class NotifyPreference {
 		if (dndStartHour < 0 || dndEndHour < 0) {
 			return false;
 		}
-		int hour = java.time.LocalTime.now().getHour();
+		int hour = LocalTime.now().getHour();
 		if (dndStartHour <= dndEndHour) {
 			return hour >= dndStartHour && hour < dndEndHour;
 		} else {

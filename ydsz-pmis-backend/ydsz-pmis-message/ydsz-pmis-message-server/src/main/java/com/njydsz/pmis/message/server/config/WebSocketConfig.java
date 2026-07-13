@@ -1,7 +1,6 @@
 package com.njydsz.pmis.message.server.config;
 
-import com.njydsz.pmis.common.websocket.auth.WebSocketAuthInterceptor;
-import com.njydsz.pmis.common.websocket.config.WebSocketProperties;
+import com.njydsz.pmis.common.socket.config.WebSocketProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -13,7 +12,7 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
  * WebSocket 消息代理配置（STOMP 协议）。
  *
  * <p>P1.3.0 重构：鉴权拦截器、在线状态、离线补偿、集群广播等通用能力
- * 已由 {@code ydsz-pmis-common-websocket} 自动装配提供，本类仅保留
+ * 已由 {@code ydsz-pmis-common-socket} 自动装配提供，本类仅保留
  * STOMP 端点和 Broker 前缀配置（因为 {@code @EnableWebSocketMessageBroker}
  * 必须在业务 {@code @Configuration} 类上显式声明）。
  *

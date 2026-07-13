@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.notify.i18n;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.ConcurrentHashMap;
@@ -92,9 +93,9 @@ public class NotifyI18nService {
 		return bundleCache.computeIfAbsent(locale, loc -> {
 			try {
 				String[] parts = loc.split("_");
-				java.util.Locale javaLocale = parts.length >= 2
-						? java.util.Locale.of(parts[0], parts[1])
-						: java.util.Locale.of(parts[0]);
+				Locale javaLocale = parts.length >= 2
+						? Locale.of(parts[0], parts[1])
+						: Locale.of(parts[0]);
 				return ResourceBundle.getBundle(BASE_NAME, javaLocale,
 						getClass().getClassLoader());
 			} catch (Exception e) {

@@ -3,8 +3,8 @@ package com.njydsz.pmis.message.server.realtime;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.json.JsonUtils;
-import com.njydsz.pmis.common.websocket.constant.WebSocketConstants;
-import com.njydsz.pmis.common.websocket.offline.OfflineMessageStore;
+import com.njydsz.pmis.common.socket.constant.WebSocketConstants;
+import com.njydsz.pmis.common.socket.offline.OfflineMessageStore;
 import com.njydsz.pmis.message.domain.entity.config.MsgOfflineDO;
 import com.njydsz.pmis.message.infra.mapper.config.MsgOfflineMapper;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * 离线消息补偿服务（Redis + DB 双层存储）。
  *
- * <p>实现 {@link OfflineMessageStore} 接口，由 common-websocket 的
+ * <p>实现 {@link OfflineMessageStore} 接口，由 common-socket 的
  * {@code WebSocketSessionEventListener} 自动调用。
  *
  * <p>用户离线时，将待推送消息缓存到 Redis List（{@code pmis:ws:offline:{userId}}），

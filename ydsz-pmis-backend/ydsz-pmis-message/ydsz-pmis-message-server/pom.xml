@@ -93,10 +93,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
-        <!-- ydsz-pmis-common-websocket -->
+        <!-- ydsz-pmis-common-socket -->
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-common-websocket</artifactId>
+            <artifactId>ydsz-pmis-common-socket</artifactId>
         </dependency>
         <!-- Redisson 分布式锁/限流（ydsz-pmis-common-lock 声明为 optional，此处显式引入） -->
         <dependency>

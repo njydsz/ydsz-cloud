@@ -232,7 +232,7 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-common-websocket</artifactId>
+                <artifactId>ydsz-pmis-common-socket</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

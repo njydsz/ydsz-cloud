@@ -3,6 +3,8 @@ package com.njydsz.pmis.common.core.response;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+import java.util.List;
+
 /**
  * 分页响应结果封装类
  *
@@ -192,6 +194,53 @@ public class PageResponse<T> extends BaseResponse<T> {
         Long pageSize = page.getSize();
         T data = (T) page.getRecords();
         return success(total, pageNum, pageSize, data);
+    }
+
+    // ============================== 向后兼容方法 ==============================
+
+    /**
+     * 创建空分页响应
+     *
+     * <p>返回一个数据为 null 的成功分页响应，用于异常降级或无数据场景。
+     *
+     * @param <T> 数据类型
+     * @return 空分页响应
+     */
+    public static <T> PageResponse<T> empty() {
+        return success(null);
+    }
+
+    /**
+     * 从列表构建分页响应（向后兼容）
+     *
+     * <p>旧版 API 中 {@code PageResponse<T>} 的 {@code T} 表示列表元素类型，
+     * 此方法接受 {@code List<T>} 并将其作为 data 字段存储，
+     * 配合 {@link #getList()} 方法可获取回列表。
+     *
+     * @param list     数据列表
+     * @param total    总记录数
+     * @param pageNum  当前页码
+     * @param pageSize 每页记录数
+     * @param <T>      元素类型
+     * @return 分页响应对象
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> PageResponse<T> of(List<T> list, long total, int pageNum, int pageSize) {
+        return success(total, (long) pageNum, (long) pageSize, (T) list);
+    }
+
+    /**
+     * 获取数据列表（向后兼容）
+     *
+     * <p>当 data 字段为 List 类型时返回该列表，否则返回空列表。
+     * 用于兼容旧版 {@code PageResponse<T>} 中 {@code T} 为元素类型的用法。
+     *
+     * @return 数据列表
+     */
+    @SuppressWarnings("unchecked")
+    public List<T> getList() {
+        Object data = getData();
+        return data instanceof List ? (List<T>) data : List.of();
     }
 
     /**

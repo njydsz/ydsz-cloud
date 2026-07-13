@@ -1,15 +1,15 @@
 package com.njydsz.pmis.message.server.realtime;
 
-import com.njydsz.pmis.common.websocket.push.RealtimePushTemplate;
+import com.njydsz.pmis.common.socket.push.RealtimePushTemplate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
- * 实时推送服务（业务门面，委托给 common-websocket 的 {@link RealtimePushTemplate}）。
+ * 实时推送服务（业务门面，委托给 common-socket 的 {@link RealtimePushTemplate}）。
  *
  * <p>P1.3.0 重构：底层推送逻辑（STOMP + Redis Pub/Sub 集群广播 + 降级 + 离线补偿 + 指标监控）
- * 已上迁到 {@code ydsz-pmis-common-websocket} 模块的 {@link RealtimePushTemplate}，
+ * 已上迁到 {@code ydsz-pmis-common-socket} 模块的 {@link RealtimePushTemplate}，
  * 本类保留为业务门面，确保现有调用方无需修改注入路径。
  *
  * @author ydsz-pmis-team

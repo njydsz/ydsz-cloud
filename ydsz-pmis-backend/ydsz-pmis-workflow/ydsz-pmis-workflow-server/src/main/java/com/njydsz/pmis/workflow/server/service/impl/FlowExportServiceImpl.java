@@ -148,10 +148,10 @@ public class FlowExportServiceImpl implements FlowExportService {
                 "<script>window.onload=function(){window.print();}</script></body>");
 
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("html", printHtml);
-        BaseResponse.put("instanceId", instanceId);
-        BaseResponse.put("exportTime", LocalDateTime.now().format(FMT));
-        BaseResponse.put("exportBy", userName != null ? userName : userId);
+        result.put("html", printHtml);
+        result.put("instanceId", instanceId);
+        result.put("exportTime", LocalDateTime.now().format(FMT));
+        result.put("exportBy", userName != null ? userName : userId);
         return result;
     }
 

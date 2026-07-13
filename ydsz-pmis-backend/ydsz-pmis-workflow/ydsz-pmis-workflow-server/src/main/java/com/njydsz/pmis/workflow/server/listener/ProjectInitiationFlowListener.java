@@ -376,7 +376,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         for (int attempt = 1; attempt <= LINKAGE_MAX_ATTEMPTS; attempt++) {
             try {
                 BaseResponse<Void> result = call.get();
-                if (result != null && BaseResponse.isSuccess()) {
+                if (result != null && result.isSuccess()) {
                     log.info("[FlowListener] 立项状态联动成功: action={} initiationId={} attempt={}",
                             action, initiationId, attempt);
                     return;

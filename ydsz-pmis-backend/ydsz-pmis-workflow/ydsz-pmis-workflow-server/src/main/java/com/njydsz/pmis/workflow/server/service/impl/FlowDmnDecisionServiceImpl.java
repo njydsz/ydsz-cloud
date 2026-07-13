@@ -145,8 +145,8 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
         }
         List<FlowDmnRuleDO> rules = ruleMapper.selectEnabledByDecisionId(decisionId);
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("decision", decision);
-        BaseResponse.put("rules", rules);
+        result.put("decision", decision);
+        result.put("rules", rules);
         return result;
     }
 

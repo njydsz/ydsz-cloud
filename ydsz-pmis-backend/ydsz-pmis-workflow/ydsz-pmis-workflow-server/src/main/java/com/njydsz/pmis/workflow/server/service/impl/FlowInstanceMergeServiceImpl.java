@@ -156,12 +156,12 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
                 .entries(MERGE_GROUP_DETAIL_KEY + mergeGroupId);
 
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("mergeGroupId", mergeGroupId);
-        BaseResponse.put("instanceIds", new ArrayList<>(instanceIds));
-        BaseResponse.put("instanceCount", instanceIds.size());
-        BaseResponse.put("operatorId", detail.get("operatorId"));
-        BaseResponse.put("flowCode", detail.get("flowCode"));
-        BaseResponse.put("createdAt", detail.get("createdAt"));
+        result.put("mergeGroupId", mergeGroupId);
+        result.put("instanceIds", new ArrayList<>(instanceIds));
+        result.put("instanceCount", instanceIds.size());
+        result.put("operatorId", detail.get("operatorId"));
+        result.put("flowCode", detail.get("flowCode"));
+        result.put("createdAt", detail.get("createdAt"));
 
         // 获取实例摘要
         List<Map<String, Object>> instanceDetails = new ArrayList<>();
@@ -177,7 +177,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
                 instanceDetails.add(info);
             }
         }
-        BaseResponse.put("instances", instanceDetails);
+        result.put("instances", instanceDetails);
         return result;
     }
 

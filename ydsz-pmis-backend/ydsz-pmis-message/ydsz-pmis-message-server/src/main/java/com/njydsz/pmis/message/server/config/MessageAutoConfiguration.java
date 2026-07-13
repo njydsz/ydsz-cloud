@@ -12,9 +12,9 @@ import org.springframework.context.annotation.Configuration;
  * <p>对关键 Bean（MessageProperties / ChannelProperties / ChannelRouter）
  * 提供 {@code @ConditionalOnMissingBean} 兜底保护：当组件扫描未覆盖时由此处注册。
  *
- * <p>P1.3.0 重构：RealtimePushService 已改为委托 common-websocket 的
+ * <p>P1.3.0 重构：RealtimePushService 已改为委托 common-socket 的
  * RealtimePushTemplate，不再需要在此手动注册；WebSocketConfig / WebSocketClusterConfig
- * 已由 common-websocket 自动装配接管。
+ * 已由 common-socket 自动装配接管。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

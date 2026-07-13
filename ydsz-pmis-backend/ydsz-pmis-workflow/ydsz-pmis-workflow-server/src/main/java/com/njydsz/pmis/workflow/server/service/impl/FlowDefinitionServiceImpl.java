@@ -338,9 +338,9 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         List<FlowNodeDO> nodes = nodeMapper.selectByDefinitionId(definitionId);
         List<FlowSkipDO> skips = skipMapper.selectByDefinitionId(definitionId);
         Map<String, Object> result = new HashMap<>();
-        BaseResponse.put("definition", definition);
-        BaseResponse.put("nodes", nodes);
-        BaseResponse.put("skips", skips);
+        result.put("definition", definition);
+        result.put("nodes", nodes);
+        result.put("skips", skips);
         return result;
     }
 
@@ -644,7 +644,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 edge.put("skipType", skip.getSkipType());
                 edges.add(edge);
             }
-            BaseResponse.put("edges", edges);
+            result.put("edges", edges);
         }
         return result;
     }
@@ -948,16 +948,16 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         skipChanges.put("removed", removedSkips);
 
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("version1", version1);
-        BaseResponse.put("version2", version2);
-        BaseResponse.put("nodeChanges", nodeChanges);
-        BaseResponse.put("skipChanges", skipChanges);
+        result.put("version1", version1);
+        result.put("version2", version2);
+        result.put("nodeChanges", nodeChanges);
+        result.put("skipChanges", skipChanges);
         // P1-3: 增强 diff — 统计摘要
         Map<String, Object> summary = new LinkedHashMap<>();
         summary.put("totalNodeChanges", addedNodes.size() + removedNodes.size() + modifiedNodes.size());
         summary.put("totalSkipChanges", addedSkips.size() + removedSkips.size());
         summary.put("hasBreakingChange", !removedNodes.isEmpty() || !removedSkips.isEmpty());
-        BaseResponse.put("summary", summary);
+        result.put("summary", summary);
 
         log.info("[Flow] 版本差异对比: flowCode={} v1={} v2={} "
                         + "nodeAdded={} nodeRemoved={} nodeModified={} "
@@ -1100,8 +1100,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("successCount", successCount);
-        BaseResponse.put("failedItems", failedItems);
+        result.put("successCount", successCount);
+        result.put("failedItems", failedItems);
         log.info("[Flow] zip 批量导入完成: success={} failed={}", successCount, failedItems.size());
         return result;
     }
@@ -1277,10 +1277,10 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             LocalDateTime timeoutExpired = LocalDateTime.now().minusMinutes(lockTimeoutMinutes);
             expired = def.getLockedAt().isBefore(timeoutExpired);
         }
-        BaseResponse.put("locked", locked);
-        BaseResponse.put("lockedBy", def.getLockedBy());
-        BaseResponse.put("lockedAt", def.getLockedAt());
-        BaseResponse.put("expired", expired);
+        result.put("locked", locked);
+        result.put("lockedBy", def.getLockedBy());
+        result.put("lockedAt", def.getLockedAt());
+        result.put("expired", expired);
         return result;
     }
 
@@ -1411,13 +1411,13 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         impactedInstances.put("affectedInstances", affectedInstances);
 
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("oldDefinition", oldDefInfo);
-        BaseResponse.put("newDefinition", newDefInfo);
-        BaseResponse.put("diff", diff);
-        BaseResponse.put("runningInstances", runningInstances);
-        BaseResponse.put("impactedInstances", impactedInstances);
-        BaseResponse.put("riskLevel", riskLevel);
-        BaseResponse.put("recommendations", recommendations);
+        result.put("oldDefinition", oldDefInfo);
+        result.put("newDefinition", newDefInfo);
+        result.put("diff", diff);
+        result.put("runningInstances", runningInstances);
+        result.put("impactedInstances", impactedInstances);
+        result.put("riskLevel", riskLevel);
+        result.put("recommendations", recommendations);
 
         log.info("[Flow] 变更影响分析: oldDef={} newDef={} running={} stuck={} affected={} risk={}",
                 oldDefinitionId, newDefinitionId, runningTotal,
@@ -1593,11 +1593,11 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         toInfo.put("flowVersion", previousDef.getFlowVersion());
 
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("fromDefinition", fromInfo);
-        BaseResponse.put("toDefinition", toInfo);
-        BaseResponse.put("migrationImpact", migrationImpact);
-        BaseResponse.put("migrationResult", migrationResult);
-        BaseResponse.put("rollbackTime", LocalDateTime.now().toString());
+        result.put("fromDefinition", fromInfo);
+        result.put("toDefinition", toInfo);
+        result.put("migrationImpact", migrationImpact);
+        result.put("migrationResult", migrationResult);
+        result.put("rollbackTime", LocalDateTime.now().toString());
 
         log.info("[Flow] 一键回滚完成: flowCode={} from=v{} to=v{} risk={}",
                 flowCode, currentDef.getFlowVersion(), previousDef.getFlowVersion(), riskLevel);

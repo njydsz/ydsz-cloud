@@ -80,7 +80,7 @@
         <module>ydsz-pmis-common-notify</module>
         <module>ydsz-pmis-common-queue</module>
         <module>ydsz-pmis-common-doc</module>
-        <module>ydsz-pmis-common-websocket</module>
+        <module>ydsz-pmis-common-socket</module>
         <module>ydsz-pmis-common-netty</module>
         <!-- L6 应用层 -->
         <module>ydsz-pmis-common-base</module>
@@ -173,7 +173,7 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-common-websocket</artifactId>
+                <artifactId>ydsz-pmis-common-socket</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
