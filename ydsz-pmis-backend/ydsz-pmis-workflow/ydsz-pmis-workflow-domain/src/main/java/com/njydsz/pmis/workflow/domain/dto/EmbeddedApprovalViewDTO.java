@@ -1,6 +1,6 @@
-package com.njydsz.pmis.workflow.domain.dto.integration;
+package com.njydsz.pmis.workflow.domain.dto;
 
-import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;
+import com.njydsz.pmis.workflow.domain.dto.FlowInstanceViewDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

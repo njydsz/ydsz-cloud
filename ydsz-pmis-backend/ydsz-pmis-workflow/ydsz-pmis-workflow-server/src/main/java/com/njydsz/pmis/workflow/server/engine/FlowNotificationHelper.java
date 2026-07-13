@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.engine;
 
-import com.njydsz.pmis.workflow.server.service.notification.FlowNotificationService;
+import com.njydsz.pmis.workflow.server.service.FlowNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

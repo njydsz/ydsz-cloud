@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.web.controller.instance;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.workflow.domain.entity.analytics.FlowAuditLogDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.infra.mapper.analytics.FlowAuditLogMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

@@ -1,7 +1,7 @@
-package com.njydsz.pmis.workflow.server.service.notification;
+package com.njydsz.pmis.workflow.server.service;
 
-import com.njydsz.pmis.workflow.domain.dto.notification.FlowCommentCreateDTO;
-import com.njydsz.pmis.workflow.domain.entity.notification.FlowCommentDO;
+import com.njydsz.pmis.workflow.domain.dto.FlowCommentCreateDTO;
+import com.njydsz.pmis.workflow.domain.entity.FlowCommentDO;
 
 import java.util.List;
 

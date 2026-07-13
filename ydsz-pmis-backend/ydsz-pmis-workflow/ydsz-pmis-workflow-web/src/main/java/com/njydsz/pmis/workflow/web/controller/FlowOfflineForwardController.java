@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.workflow.server.service.delegate.FlowOfflineAutoForwardService;
+import com.njydsz.pmis.workflow.server.service.FlowOfflineAutoForwardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

@@ -1,10 +1,10 @@
-package com.njydsz.pmis.workflow.server.service.instance;
+package com.njydsz.pmis.workflow.server.service;
 
 import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;
-import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.domain.dto.FlowInstanceViewDTO;
+import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
 
 import java.time.LocalDateTime;
 import java.util.List;

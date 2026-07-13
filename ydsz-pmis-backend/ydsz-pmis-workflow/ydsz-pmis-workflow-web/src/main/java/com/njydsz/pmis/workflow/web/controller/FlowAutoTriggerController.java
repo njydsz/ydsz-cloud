@@ -4,9 +4,9 @@ import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.workflow.domain.entity.integration.FlowAutoTriggerDO;
-import com.njydsz.pmis.workflow.server.service.integration.FlowAutoTriggerService;
-import com.njydsz.pmis.workflow.domain.dto.integration.FlowAutoTriggerCreateDTO;
+import com.njydsz.pmis.workflow.domain.entity.FlowAutoTriggerDO;
+import com.njydsz.pmis.workflow.server.service.FlowAutoTriggerService;
+import com.njydsz.pmis.workflow.domain.dto.FlowAutoTriggerCreateDTO;
 import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;

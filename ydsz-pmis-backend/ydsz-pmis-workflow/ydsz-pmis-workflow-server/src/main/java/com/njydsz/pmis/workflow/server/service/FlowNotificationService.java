@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.notification;
+package com.njydsz.pmis.workflow.server.service;
 
 import java.util.List;
 import java.util.Map;

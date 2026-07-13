@@ -1,6 +1,6 @@
-package com.njydsz.pmis.workflow.server.service.instance;
+package com.njydsz.pmis.workflow.server.service;
 
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

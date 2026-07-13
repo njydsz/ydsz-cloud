@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.impl.strategy;
+package com.njydsz.pmis.workflow.server.service.impl;
 
 import com.njydsz.pmis.workflow.domain.enums.definition.FlowPerformType;
 import jakarta.annotation.PostConstruct;

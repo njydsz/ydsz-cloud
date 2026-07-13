@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.infra.mapper.analytics;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.workflow.domain.entity.analytics.FlowAdminRoleDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowAdminRoleDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

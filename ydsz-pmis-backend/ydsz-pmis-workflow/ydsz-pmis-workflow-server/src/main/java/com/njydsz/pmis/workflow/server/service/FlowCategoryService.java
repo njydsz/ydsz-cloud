@@ -1,7 +1,7 @@
-package com.njydsz.pmis.workflow.server.service.definition;
+package com.njydsz.pmis.workflow.server.service;
 
-import com.njydsz.pmis.workflow.domain.dto.definition.FlowCategoryDTO;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowCategoryDO;
+import com.njydsz.pmis.workflow.domain.dto.FlowCategoryDTO;
+import com.njydsz.pmis.workflow.domain.entity.FlowCategoryDO;
 
 import java.util.List;
 

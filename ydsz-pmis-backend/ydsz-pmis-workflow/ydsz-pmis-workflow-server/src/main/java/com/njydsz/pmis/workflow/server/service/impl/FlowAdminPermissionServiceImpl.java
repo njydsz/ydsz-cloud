@@ -1,11 +1,11 @@
-package com.njydsz.pmis.workflow.server.service.impl.analytics;
+package com.njydsz.pmis.workflow.server.service.impl;
 
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.workflow.domain.entity.analytics.FlowAdminRoleDO;
-import com.njydsz.pmis.workflow.infra.mapper.analytics.FlowAdminRoleMapper;
-import com.njydsz.pmis.workflow.server.service.analytics.FlowAdminPermissionService;
+import com.njydsz.pmis.workflow.domain.entity.FlowAdminRoleDO;
+import com.njydsz.pmis.workflow.infra.mapper.FlowAdminRoleMapper;
+import com.njydsz.pmis.workflow.server.service.FlowAdminPermissionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

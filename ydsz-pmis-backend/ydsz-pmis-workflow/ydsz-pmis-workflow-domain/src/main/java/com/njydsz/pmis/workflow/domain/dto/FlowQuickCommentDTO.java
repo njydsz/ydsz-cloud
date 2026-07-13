@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.domain.dto.notification;
+package com.njydsz.pmis.workflow.domain.dto;
 
 import com.njydsz.pmis.common.safe.annotation.Xss;
 import io.swagger.v3.oas.annotations.media.Schema;

@@ -1,6 +1,6 @@
-package com.njydsz.pmis.workflow.server.service.integration;
+package com.njydsz.pmis.workflow.server.service;
 
-import com.njydsz.pmis.workflow.domain.entity.integration.FlowAutoTriggerDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowAutoTriggerDO;
 
 import java.util.List;
 

@@ -1,8 +1,8 @@
-package com.njydsz.pmis.workflow.server.service.instance;
+package com.njydsz.pmis.workflow.server.service;
 
-import com.njydsz.pmis.workflow.domain.dto.instance.FlowStartProcessDTO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowInstanceDO;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
+import com.njydsz.pmis.workflow.domain.dto.FlowStartProcessDTO;
+import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
 
 import java.util.List;
 import java.util.Map;

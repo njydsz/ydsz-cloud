@@ -1,9 +1,9 @@
-package com.njydsz.pmis.workflow.server.service.integration;
+package com.njydsz.pmis.workflow.server.service;
 
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.workflow.domain.dto.integration.FlowAttachmentDTO;
-import com.njydsz.pmis.workflow.domain.dto.integration.FlowAttachmentPreviewVO;
-import com.njydsz.pmis.workflow.domain.entity.integration.FlowAttachmentDO;
+import com.njydsz.pmis.workflow.domain.dto.FlowAttachmentDTO;
+import com.njydsz.pmis.workflow.domain.dto.FlowAttachmentPreviewVO;
+import com.njydsz.pmis.workflow.domain.entity.FlowAttachmentDO;
 
 import java.util.List;
 

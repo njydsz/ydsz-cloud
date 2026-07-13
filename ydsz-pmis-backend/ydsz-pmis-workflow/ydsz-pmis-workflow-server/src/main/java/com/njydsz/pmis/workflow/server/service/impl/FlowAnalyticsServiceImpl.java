@@ -1,12 +1,12 @@
-package com.njydsz.pmis.workflow.server.service.impl.analytics;
+package com.njydsz.pmis.workflow.server.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.domain.enums.instance.FlowTaskStatus;
 import com.njydsz.pmis.workflow.infra.mapper.instance.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
-import com.njydsz.pmis.workflow.server.service.analytics.FlowAnalyticsService;
+import com.njydsz.pmis.workflow.server.service.FlowAnalyticsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -4,9 +4,9 @@ import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.workflow.domain.dto.definition.FlowCategoryDTO;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowCategoryDO;
-import com.njydsz.pmis.workflow.server.service.definition.FlowCategoryService;
+import com.njydsz.pmis.workflow.domain.dto.FlowCategoryDTO;
+import com.njydsz.pmis.workflow.domain.entity.FlowCategoryDO;
+import com.njydsz.pmis.workflow.server.service.FlowCategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

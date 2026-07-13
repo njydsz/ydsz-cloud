@@ -1,6 +1,6 @@
-package com.njydsz.pmis.workflow.server.service.instance;
+package com.njydsz.pmis.workflow.server.service;
 
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
 
 /**
  * 待办数实时推送服务接口

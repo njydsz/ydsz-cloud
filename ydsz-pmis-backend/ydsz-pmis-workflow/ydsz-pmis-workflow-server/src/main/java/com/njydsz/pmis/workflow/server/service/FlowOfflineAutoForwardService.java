@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.delegate;
+package com.njydsz.pmis.workflow.server.service;
 
 /**
  * 离线代理自动转发服务（P2-5）。

@@ -5,8 +5,8 @@ import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.workflow.server.service.definition.FlowTemplateRecommendService;
-import com.njydsz.pmis.workflow.server.service.definition.FlowTemplateService;
+import com.njydsz.pmis.workflow.server.service.FlowTemplateRecommendService;
+import com.njydsz.pmis.workflow.server.service.FlowTemplateService;
 import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

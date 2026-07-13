@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.infra.mapper.notification;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.workflow.domain.entity.notification.FlowQuickCommentDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowQuickCommentDO;
 import org.apache.ibatis.annotations.Mapper;
 
 /**

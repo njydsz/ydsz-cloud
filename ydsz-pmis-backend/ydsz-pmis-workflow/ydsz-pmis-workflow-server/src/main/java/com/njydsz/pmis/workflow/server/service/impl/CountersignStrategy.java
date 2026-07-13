@@ -1,7 +1,7 @@
-package com.njydsz.pmis.workflow.server.service.impl.strategy;
+package com.njydsz.pmis.workflow.server.service.impl;
 
-import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.domain.enums.definition.FlowPerformType;
 
 /**

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.workflow.server.service.impl.delegate;
+package com.njydsz.pmis.workflow.server.service.impl;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.PageResponse;
@@ -6,13 +6,13 @@ import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.workflow.domain.entity.analytics.FlowAuditLogDO;
-import com.njydsz.pmis.workflow.domain.entity.delegate.FlowDelegateAuthDO;
-import com.njydsz.pmis.workflow.infra.mapper.analytics.FlowAuditLogMapper;
+import com.njydsz.pmis.workflow.domain.entity.FlowAuditLogDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO;
+import com.njydsz.pmis.workflow.infra.mapper.FlowAuditLogMapper;
 import com.njydsz.pmis.workflow.infra.mapper.delegate.FlowDelegateAuthMapper;
 import com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskAuditService;
-import com.njydsz.pmis.workflow.server.service.delegate.FlowDelegateAuthService;
-import com.njydsz.pmis.workflow.server.service.delegate.FlowOfflineAutoForwardService;
+import com.njydsz.pmis.workflow.server.service.FlowDelegateAuthService;
+import com.njydsz.pmis.workflow.server.service.FlowOfflineAutoForwardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
@@ -188,7 +188,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     @Override
     @Transactional(readOnly = true)
     public FlowDelegateAuthDO matchAuth(String tenantId, String ownerUserId,
-                                         String flowCode, String nodeCode) {
+                                        String flowCode, String nodeCode) {
         if (tenantId == null || ownerUserId == null) {
             return null;
         }
@@ -236,9 +236,9 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         int safeSize = size > 0 ? size : 20;
         LambdaQueryWrapper<FlowAuditLogDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FlowAuditLogDO::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY)
-               .eq(FlowAuditLogDO::getOperatorId, delegateUserId)
-               .orderByDesc(FlowAuditLogDO::getCreatedAt)
-               .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
+                .eq(FlowAuditLogDO::getOperatorId, delegateUserId)
+                .orderByDesc(FlowAuditLogDO::getCreatedAt)
+                .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
         List<FlowAuditLogDO> list = auditLogMapper.selectList(wrapper);
         return PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
     }
@@ -253,9 +253,9 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         int safeSize = size > 0 ? size : 20;
         LambdaQueryWrapper<FlowAuditLogDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FlowAuditLogDO::getBusinessType, FlowTaskAuditService.BIZ_TYPE_DELEGATE_PROXY)
-               .eq(FlowAuditLogDO::getTargetId, ownerUserId)
-               .orderByDesc(FlowAuditLogDO::getCreatedAt)
-               .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
+                .eq(FlowAuditLogDO::getTargetId, ownerUserId)
+                .orderByDesc(FlowAuditLogDO::getCreatedAt)
+                .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
         List<FlowAuditLogDO> list = auditLogMapper.selectList(wrapper);
         return PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
     }
@@ -268,7 +268,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     @Override
     @Transactional(readOnly = true)
     public String resolveDelegateChain(String tenantId, String ownerUserId,
-                                         String flowCode, String nodeCode) {
+                                       String flowCode, String nodeCode) {
         if (tenantId == null || ownerUserId == null) {
             return ownerUserId;
         }

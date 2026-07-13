@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.pmis.workflow.infra.mapper.dmn.FlowDmnRuleMapper">
 
-    <select id="selectEnabledByDecisionId" resultType="com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnRuleDO">
+    <select id="selectEnabledByDecisionId" resultType="com.njydsz.pmis.workflow.domain.entity.FlowDmnRuleDO">
         SELECT * FROM pmis_flow_dmn_rule
         WHERE decision_id = #{decisionId}
           AND enabled = 1

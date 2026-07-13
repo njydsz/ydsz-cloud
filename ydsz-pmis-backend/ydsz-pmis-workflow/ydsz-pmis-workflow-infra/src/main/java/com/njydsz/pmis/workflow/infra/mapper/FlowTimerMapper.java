@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.infra.mapper.integration;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.workflow.domain.entity.integration.FlowTimerDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowTimerDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

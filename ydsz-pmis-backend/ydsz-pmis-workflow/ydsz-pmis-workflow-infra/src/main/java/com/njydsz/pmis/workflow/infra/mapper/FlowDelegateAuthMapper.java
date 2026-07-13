@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.infra.mapper.delegate;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.workflow.domain.entity.delegate.FlowDelegateAuthDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

@@ -1,7 +1,7 @@
-package com.njydsz.pmis.workflow.domain.dto.instance;
+package com.njydsz.pmis.workflow.domain.dto;
 
 import com.njydsz.pmis.common.safe.annotation.Xss;
-import com.njydsz.pmis.workflow.domain.dto.integration.FlowAttachmentDTO;
+import com.njydsz.pmis.workflow.domain.dto.FlowAttachmentDTO;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 

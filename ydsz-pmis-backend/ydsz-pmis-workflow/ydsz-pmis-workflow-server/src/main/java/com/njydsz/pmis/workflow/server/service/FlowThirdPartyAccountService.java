@@ -1,6 +1,6 @@
-package com.njydsz.pmis.workflow.server.service.integration;
+package com.njydsz.pmis.workflow.server.service;
 
-import com.njydsz.pmis.workflow.domain.entity.integration.FlowThirdPartyAccountDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyAccountDO;
 
 /**
  * 三方审批账号映射服务

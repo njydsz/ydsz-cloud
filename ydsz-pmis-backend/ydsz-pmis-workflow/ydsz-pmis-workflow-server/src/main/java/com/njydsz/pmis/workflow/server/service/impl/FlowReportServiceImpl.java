@@ -1,8 +1,8 @@
-package com.njydsz.pmis.workflow.server.service.impl.analytics;
+package com.njydsz.pmis.workflow.server.service.impl;
 
-import com.njydsz.pmis.workflow.server.service.analytics.FlowAnalyticsService;
-import com.njydsz.pmis.workflow.server.service.analytics.FlowReportService;
-import com.njydsz.pmis.workflow.server.service.notification.FlowNotificationService;
+import com.njydsz.pmis.workflow.server.service.FlowAnalyticsService;
+import com.njydsz.pmis.workflow.server.service.FlowReportService;
+import com.njydsz.pmis.workflow.server.service.FlowNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;

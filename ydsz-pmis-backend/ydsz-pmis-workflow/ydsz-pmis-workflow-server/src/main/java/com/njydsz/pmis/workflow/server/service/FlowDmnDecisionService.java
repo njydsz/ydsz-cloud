@@ -1,7 +1,7 @@
-package com.njydsz.pmis.workflow.server.service.dmn;
+package com.njydsz.pmis.workflow.server.service;
 
-import com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnDecisionDO;
-import com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnRuleDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowDmnDecisionDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowDmnRuleDO;
 
 import java.util.List;
 import java.util.Map;

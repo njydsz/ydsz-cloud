@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.instance;
+package com.njydsz.pmis.workflow.server.service;
 
 /**
  * 审批人离职/调岗自动处理服务（P1-1）

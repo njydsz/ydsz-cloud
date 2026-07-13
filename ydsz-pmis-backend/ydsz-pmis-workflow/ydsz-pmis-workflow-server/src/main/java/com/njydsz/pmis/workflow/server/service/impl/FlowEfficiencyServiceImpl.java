@@ -1,15 +1,15 @@
-package com.njydsz.pmis.workflow.server.service.impl.analytics;
+package com.njydsz.pmis.workflow.server.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.workflow.domain.entity.analytics.FlowAuditLogDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowHisTaskDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowInstanceDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.infra.mapper.analytics.FlowAuditLogMapper;
+import com.njydsz.pmis.workflow.domain.entity.FlowAuditLogDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowHisTaskDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.infra.mapper.FlowAuditLogMapper;
 import com.njydsz.pmis.workflow.infra.mapper.instance.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.infra.mapper.instance.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
-import com.njydsz.pmis.workflow.server.service.analytics.FlowEfficiencyService;
+import com.njydsz.pmis.workflow.server.service.FlowEfficiencyService;
 import com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskAuditService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

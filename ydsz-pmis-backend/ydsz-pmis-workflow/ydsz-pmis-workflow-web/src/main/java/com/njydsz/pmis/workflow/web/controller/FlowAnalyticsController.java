@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.web.controller.analytics;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.workflow.server.service.analytics.FlowAnalyticsService;
+import com.njydsz.pmis.workflow.server.service.FlowAnalyticsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

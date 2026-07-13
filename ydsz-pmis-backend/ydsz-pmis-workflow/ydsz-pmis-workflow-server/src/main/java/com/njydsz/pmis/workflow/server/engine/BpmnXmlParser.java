@@ -2,8 +2,8 @@ package com.njydsz.pmis.workflow.server.engine;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowSkipDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowSkipDO;
 import com.njydsz.pmis.workflow.domain.enums.definition.FlowNodeType;
 import com.njydsz.pmis.workflow.domain.enums.definition.FlowPerformType;
 import com.njydsz.pmis.workflow.domain.enums.instance.FlowSkipType;

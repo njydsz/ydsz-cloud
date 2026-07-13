@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.integration;
+package com.njydsz.pmis.workflow.server.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

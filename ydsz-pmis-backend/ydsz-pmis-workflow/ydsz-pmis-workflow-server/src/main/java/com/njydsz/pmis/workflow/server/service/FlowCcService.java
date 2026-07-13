@@ -1,9 +1,9 @@
-package com.njydsz.pmis.workflow.server.service.notification;
+package com.njydsz.pmis.workflow.server.service;
 
 import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.workflow.domain.dto.notification.FlowCcQueryDTO;
-import com.njydsz.pmis.workflow.domain.entity.notification.FlowCcDO;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
+import com.njydsz.pmis.workflow.domain.dto.FlowCcQueryDTO;
+import com.njydsz.pmis.workflow.domain.entity.FlowCcDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
 
 import java.util.List;
 import java.util.Map;

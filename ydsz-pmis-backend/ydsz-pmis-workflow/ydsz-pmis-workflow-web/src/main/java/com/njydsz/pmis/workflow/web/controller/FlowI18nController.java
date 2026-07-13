@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.web.controller.definition;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.workflow.server.service.i18n.FlowI18nService;
+import com.njydsz.pmis.workflow.server.service.FlowI18nService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

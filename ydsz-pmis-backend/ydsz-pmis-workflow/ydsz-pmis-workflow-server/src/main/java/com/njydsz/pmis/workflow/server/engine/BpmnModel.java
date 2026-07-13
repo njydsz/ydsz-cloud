@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.engine;
 
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowSkipDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowSkipDO;
 
 import java.util.List;
 import java.util.Map;

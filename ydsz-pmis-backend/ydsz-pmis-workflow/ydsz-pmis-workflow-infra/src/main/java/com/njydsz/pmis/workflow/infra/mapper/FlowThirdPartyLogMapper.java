@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.infra.mapper.integration;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.workflow.domain.entity.integration.FlowThirdPartyLogDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyLogDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;

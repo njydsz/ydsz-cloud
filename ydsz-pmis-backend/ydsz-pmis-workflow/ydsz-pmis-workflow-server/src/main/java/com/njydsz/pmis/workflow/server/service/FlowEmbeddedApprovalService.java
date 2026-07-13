@@ -1,7 +1,7 @@
-package com.njydsz.pmis.workflow.server.service.integration;
+package com.njydsz.pmis.workflow.server.service;
 
-import com.njydsz.pmis.workflow.domain.dto.integration.EmbeddedApprovalActionDTO;
-import com.njydsz.pmis.workflow.domain.dto.integration.EmbeddedApprovalViewDTO;
+import com.njydsz.pmis.workflow.domain.dto.EmbeddedApprovalActionDTO;
+import com.njydsz.pmis.workflow.domain.dto.EmbeddedApprovalViewDTO;
 
 /**
  * P2-2 嵌入式审批服务

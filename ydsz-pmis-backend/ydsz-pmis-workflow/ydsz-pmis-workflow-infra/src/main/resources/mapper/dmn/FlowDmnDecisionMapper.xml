@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.njydsz.pmis.workflow.infra.mapper.dmn.FlowDmnDecisionMapper">
 
-    <select id="selectPublishedByCode" resultType="com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnDecisionDO">
+    <select id="selectPublishedByCode" resultType="com.njydsz.pmis.workflow.domain.entity.FlowDmnDecisionDO">
         SELECT * FROM pmis_flow_dmn_decision
         WHERE decision_code = #{decisionCode}
           AND tenant_id = #{tenantId}
@@ -13,7 +13,7 @@
         LIMIT 1
     </select>
 
-    <select id="selectByNode" resultType="com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnDecisionDO">
+    <select id="selectByNode" resultType="com.njydsz.pmis.workflow.domain.entity.FlowDmnDecisionDO">
         SELECT * FROM pmis_flow_dmn_decision
         WHERE flow_code = #{flowCode}
           AND node_code = #{nodeCode}
@@ -24,7 +24,7 @@
         LIMIT 1
     </select>
 
-    <select id="selectPublishedList" resultType="com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnDecisionDO">
+    <select id="selectPublishedList" resultType="com.njydsz.pmis.workflow.domain.entity.FlowDmnDecisionDO">
         SELECT * FROM pmis_flow_dmn_decision
         WHERE tenant_id = #{tenantId}
           AND status = 'PUBLISHED'

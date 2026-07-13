@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service;
 
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowDefinitionDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowDefinitionDO;
 
 import java.util.List;
 import java.util.Map;

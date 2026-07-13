@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.infra.mapper.instance;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowHisInstanceDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowHisInstanceDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

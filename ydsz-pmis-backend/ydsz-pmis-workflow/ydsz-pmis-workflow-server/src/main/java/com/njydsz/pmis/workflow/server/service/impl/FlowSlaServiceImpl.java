@@ -1,17 +1,17 @@
-package com.njydsz.pmis.workflow.server.service.impl.analytics;
+package com.njydsz.pmis.workflow.server.service.impl;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
-import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.server.engine.FlowClusterLockHelper;
 import com.njydsz.pmis.workflow.server.engine.FlowNotificationHelper;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
-import com.njydsz.pmis.workflow.domain.enums.analytics.FlowSlaAction;
+import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.domain.enums.FlowSlaAction;
 import com.njydsz.pmis.workflow.infra.mapper.definition.FlowNodeMapper;
 import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.server.metrics.FlowMetrics;
-import com.njydsz.pmis.workflow.server.service.analytics.FlowSlaService;
-import com.njydsz.pmis.workflow.server.service.instance.FlowTaskService;
+import com.njydsz.pmis.workflow.server.service.FlowSlaService;
+import com.njydsz.pmis.workflow.server.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;

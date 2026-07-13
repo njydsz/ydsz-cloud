@@ -1,6 +1,6 @@
-package com.njydsz.pmis.workflow.server.service.integration;
+package com.njydsz.pmis.workflow.server.service;
 
-import com.njydsz.pmis.workflow.domain.entity.integration.FlowTimerDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowTimerDO;
 
 import java.time.Duration;
 import java.util.List;

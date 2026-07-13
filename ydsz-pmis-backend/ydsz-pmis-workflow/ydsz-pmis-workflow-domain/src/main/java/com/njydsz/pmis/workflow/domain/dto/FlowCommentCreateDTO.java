@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.domain.dto.notification;
+package com.njydsz.pmis.workflow.domain.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

@@ -2,9 +2,9 @@ package com.njydsz.pmis.workflow.web.controller.dmn;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnDecisionDO;
-import com.njydsz.pmis.workflow.domain.entity.dmn.FlowDmnRuleDO;
-import com.njydsz.pmis.workflow.server.service.dmn.FlowDmnDecisionService;
+import com.njydsz.pmis.workflow.domain.entity.FlowDmnDecisionDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowDmnRuleDO;
+import com.njydsz.pmis.workflow.server.service.FlowDmnDecisionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

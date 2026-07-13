@@ -1,7 +1,7 @@
-package com.njydsz.pmis.workflow.server.service.analytics;
+package com.njydsz.pmis.workflow.server.service;
 
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
 
 import java.util.Map;
 

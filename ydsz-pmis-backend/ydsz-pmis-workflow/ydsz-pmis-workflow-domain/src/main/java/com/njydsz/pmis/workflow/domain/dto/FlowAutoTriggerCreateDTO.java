@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.domain.dto.integration;
+package com.njydsz.pmis.workflow.domain.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

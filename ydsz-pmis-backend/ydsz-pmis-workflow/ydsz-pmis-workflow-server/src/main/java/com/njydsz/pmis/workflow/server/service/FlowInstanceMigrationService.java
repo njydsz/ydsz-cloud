@@ -1,7 +1,7 @@
-package com.njydsz.pmis.workflow.server.service.instance;
+package com.njydsz.pmis.workflow.server.service;
 
-import com.njydsz.pmis.workflow.domain.dto.instance.InstanceMigrationDTO;
-import com.njydsz.pmis.workflow.domain.dto.instance.InstanceMigrationResultDTO;
+import com.njydsz.pmis.workflow.domain.dto.InstanceMigrationDTO;
+import com.njydsz.pmis.workflow.domain.dto.InstanceMigrationResultDTO;
 
 import java.util.List;
 import java.util.Map;

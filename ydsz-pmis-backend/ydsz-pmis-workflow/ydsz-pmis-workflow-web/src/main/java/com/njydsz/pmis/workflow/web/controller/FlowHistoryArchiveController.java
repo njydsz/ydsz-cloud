@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.workflow.server.service.analytics.FlowHistoryArchiveService;
+import com.njydsz.pmis.workflow.server.service.FlowHistoryArchiveService;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.springframework.validation.annotation.Validated;

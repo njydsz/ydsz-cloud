@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.web.controller.definition;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.workflow.server.service.definition.FlowConditionExprService;
+import com.njydsz.pmis.workflow.server.service.FlowConditionExprService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

@@ -1,17 +1,18 @@
-package com.njydsz.pmis.workflow.server.service.impl.definition;
+package com.njydsz.pmis.workflow.server.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.server.engine.FlowDefinitionCacheService;
-import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
-import com.njydsz.pmis.workflow.domain.entity.instance.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.infra.mapper.definition.FlowNodeMapper;
 import com.njydsz.pmis.workflow.infra.mapper.instance.FlowRunTaskMapper;
-import com.njydsz.pmis.workflow.server.service.definition.FlowCustomButtonService;
-import com.njydsz.pmis.workflow.server.service.instance.FlowTaskService;
+import com.njydsz.pmis.workflow.server.service.FlowCustomButtonService;
+import com.njydsz.pmis.workflow.server.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

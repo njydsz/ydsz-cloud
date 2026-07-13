@@ -3,9 +3,9 @@ package com.njydsz.pmis.workflow.web.controller.integration;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.workflow.domain.dto.integration.FlowAttachmentPreviewVO;
-import com.njydsz.pmis.workflow.domain.entity.integration.FlowAttachmentDO;
-import com.njydsz.pmis.workflow.server.service.integration.FlowAttachmentService;
+import com.njydsz.pmis.workflow.domain.dto.FlowAttachmentPreviewVO;
+import com.njydsz.pmis.workflow.domain.entity.FlowAttachmentDO;
+import com.njydsz.pmis.workflow.server.service.FlowAttachmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

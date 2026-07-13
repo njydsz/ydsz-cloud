@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.integration;
+package com.njydsz.pmis.workflow.server.service;
 
 /**
  * 三方审批双向同步服务

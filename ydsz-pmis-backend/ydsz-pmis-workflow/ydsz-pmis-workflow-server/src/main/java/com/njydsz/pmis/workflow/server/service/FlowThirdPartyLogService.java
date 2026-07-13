@@ -1,6 +1,6 @@
-package com.njydsz.pmis.workflow.server.service.integration;
+package com.njydsz.pmis.workflow.server.service;
 
-import com.njydsz.pmis.workflow.domain.entity.integration.FlowThirdPartyLogDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowThirdPartyLogDO;
 
 /**
  * 三方审批回调日志服务

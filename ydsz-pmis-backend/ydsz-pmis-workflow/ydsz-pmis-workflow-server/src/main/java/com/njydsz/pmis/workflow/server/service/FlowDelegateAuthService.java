@@ -1,7 +1,7 @@
-package com.njydsz.pmis.workflow.server.service.delegate;
+package com.njydsz.pmis.workflow.server.service;
 
 import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.workflow.domain.entity.delegate.FlowDelegateAuthDO;
+import com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO;
 
 import java.util.List;
 
