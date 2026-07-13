@@ -27,11 +27,8 @@ import java.time.LocalDateTime;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 消息发送日志服务实现。
- *
- * <p>状态流转必须经 {@link MessageStatusEnum#canTransitTo} 校验，非法流转抛 SysException。
- * 手动重发死信 ({@link #resendDead}) 为显式运维操作,绕过 canTransitTo 但仅限 DEAD 状态。
- *
+ * 消息发送日志服务实现�? *
+ * <p>状态流转必须经 {@link MessageStatusEnum#canTransitTo} 校验，非法流转抛 SysException�? * 手动重发死信 ({@link #resendDead}) 为显式运维操�?绕过 canTransitTo 但仅�?DEAD 状态�? *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -44,16 +41,16 @@ public class MessageLogServiceImpl implements MessageLogService {
     private final MsgLogMapper msgLogMapper;
     /** 通道路由器（重发时分发） */
     private final ChannelRouter channelRouter;
-    /** 重试策略解析器 */
+    /** 重试策略解析�?*/
     private final RetryStrategyResolver retryStrategyResolver;
-    /** Spring 事件发布器（死信告警） */
+    /** Spring 事件发布器（死信告警�?*/
     private final ApplicationEventPublisher eventPublisher;
-    /** 消息模块配置属性 */
+    /** 消息模块配置属�?*/
     private final MessageProperties messageProperties;
     /** 消息指标采集 */
     private final MessageMetrics messageMetrics;
 
-    /** P1-4: 通道 → 上次告警时间戳(ms),用于告警冷却去重 */
+    /** P1-4: 通道 �?上次告警时间�?ms),用于告警冷却去重 */
     private final ConcurrentHashMap<String, Long> lastAlertTimeMap = new ConcurrentHashMap<>();
 
     @Override
@@ -63,7 +60,7 @@ public class MessageLogServiceImpl implements MessageLogService {
         }
         MsgLogDO entity = msgLogMapper.selectById(id);
         if (entity == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "日志不存在: " + id);
+            throw new SysException(StandardResultCode.NOT_FOUND, "日志不存�? " + id);
         }
         return entity;
     }
@@ -94,7 +91,7 @@ public class MessageLogServiceImpl implements MessageLogService {
         MessageStatusEnum current = parseStatus(entity.getStatus());
         if (!current.canTransitTo(MessageStatusEnum.RETRY)) {
             throw new SysException(StandardResultCode.BIZ_ERROR,
-                    "非法状态流转: " + current + " -> RETRY");
+                    "非法状态流�? " + current + " -> RETRY");
         }
         entity.setStatus(MessageStatusEnum.RETRY.name());
         entity.setNextRetryAt(nextRetryAt);
@@ -108,16 +105,14 @@ public class MessageLogServiceImpl implements MessageLogService {
         MsgLogDO entity = getById(id);
         MessageStatusEnum current = parseStatus(entity.getStatus());
         if (!current.canTransitTo(MessageStatusEnum.DEAD)) {
-            // 仅 RETRY 可流转到 DEAD；其他状态强制记录但仍校验，非法抛异常
-            throw new SysException(StandardResultCode.BIZ_ERROR,
-                    "非法状态流转: " + current + " -> DEAD");
+            // �?RETRY 可流转到 DEAD；其他状态强制记录但仍校验，非法抛异�?            throw new SysException(StandardResultCode.BIZ_ERROR,
+                    "非法状态流�? " + current + " -> DEAD");
         }
         entity.setStatus(MessageStatusEnum.DEAD.name());
         entity.setErrorMessage(errorMessage);
         msgLogMapper.updateById(entity);
         log.warn("[MessageLog] 标记死信: id={} err={}", id, errorMessage);
-        // P1-4: 死信告警检测
-        checkAndFireDeadLetterAlert(entity.getChannel());
+        // P1-4: 死信告警检�?        checkAndFireDeadLetterAlert(entity.getChannel());
     }
 
     @Override
@@ -134,7 +129,7 @@ public class MessageLogServiceImpl implements MessageLogService {
         MessageStatusEnum current = parseStatus(entity.getStatus());
         if (!current.canTransitTo(MessageStatusEnum.RECALLED)) {
             throw new SysException(StandardResultCode.BIZ_ERROR,
-                    "非法状态流转: " + current + " -> RECALLED");
+                    "非法状态流�? " + current + " -> RECALLED");
         }
         entity.setStatus(MessageStatusEnum.RECALLED.name());
         entity.setRecallStatus(RecallStatusEnum.RECALLED.name());
@@ -143,23 +138,18 @@ public class MessageLogServiceImpl implements MessageLogService {
     }
 
     /**
-     * P1-4: 手动重发死信。
-     *
-     * <p>仅 DEAD 状态可重发。重置 retryCount / errorMessage / nextRetryAt，
-     * 流转为 SENDING 后立即通过 {@link ChannelRouter#dispatch(MsgLogDO)} 重新投递。
-     * 投递失败则进入 RETRY 状态（retryCount=1）走正常重试调度，而非立即再次死信。
-     */
+     * P1-4: 手动重发死信�?     *
+     * <p>�?DEAD 状态可重发。重�?retryCount / errorMessage / nextRetryAt�?     * 流转�?SENDING 后立即通过 {@link ChannelRouter#dispatch(MsgLogDO)} 重新投递�?     * 投递失败则进入 RETRY 状态（retryCount=1）走正常重试调度，而非立即再次死信�?     */
     @Override
     public void resendDead(String logId) {
         MsgLogDO entity = getById(logId);
         MessageStatusEnum current = parseStatus(entity.getStatus());
         if (current != MessageStatusEnum.DEAD) {
             throw new SysException(StandardResultCode.BIZ_ERROR,
-                    "仅死信可手动重发,当前状态: " + current);
+                    "仅死信可手动重发,当前状�? " + current);
         }
         try (MessageTraceContext ctx = MessageTraceContext.enter(entity.getTraceId())) {
-            // 重置重试上下文
-            entity.setRetryCount(0);
+            // 重置重试上下�?            entity.setRetryCount(0);
             entity.setErrorMessage(null);
             entity.setNextRetryAt(null);
             entity.setStatus(MessageStatusEnum.SENDING.name());
@@ -187,18 +177,15 @@ public class MessageLogServiceImpl implements MessageLogService {
                 entity.setNextRetryAt(retryStrategyResolver.calcNextRetryAt(newRetryCount, entity.getChannel()));
                 msgLogMapper.updateById(entity);
                 messageMetrics.recordRetry(entity.getChannel());
-                log.warn("[MessageLog] 死信重发失败转重试: logId={} err={} nextRetryAt={}",
+                log.warn("[MessageLog] 死信重发失败转重�? logId={} err={} nextRetryAt={}",
                         logId, e.getMessage(), entity.getNextRetryAt());
             }
         }
     }
 
     /**
-     * P1-4: 死信告警检测。
-     *
-     * <p>统计窗口内指定通道的死信数量,达到阈值且通过冷却期则发布 {@link DeadLetterAlertEvent}。
-     * 告警逻辑不抛异常,避免影响 markDead 主流程。
-     *
+     * P1-4: 死信告警检测�?     *
+     * <p>统计窗口内指定通道的死信数�?达到阈值且通过冷却期则发布 {@link DeadLetterAlertEvent}�?     * 告警逻辑不抛异常,避免影响 markDead 主流程�?     *
      * @param channel 触发死信的通道
      */
     private void checkAndFireDeadLetterAlert(String channel) {
@@ -210,15 +197,13 @@ public class MessageLogServiceImpl implements MessageLogService {
             if (cfg == null || !cfg.isEnabled() || cfg.getThreshold() <= 0) {
                 return;
             }
-            // 冷却期去重:同一通道冷却期内不重复告警
-            long now = System.currentTimeMillis();
+            // 冷却期去�?同一通道冷却期内不重复告�?            long now = System.currentTimeMillis();
             Long last = lastAlertTimeMap.get(channel);
             long cooldownMs = cfg.getCooldownMinutes() * 60_000L;
             if (last != null && (now - last) < cooldownMs) {
                 return;
             }
-            // 统计窗口内死信数量
-            LocalDateTime windowStart = LocalDateTime.now().minusMinutes(cfg.getWindowMinutes());
+            // 统计窗口内死信数�?            LocalDateTime windowStart = LocalDateTime.now().minusMinutes(cfg.getWindowMinutes());
             Long count = msgLogMapper.selectCount(new LambdaQueryWrapper<MsgLogDO>()
                     .eq(MsgLogDO::getStatus, MessageStatusEnum.DEAD.name())
                     .eq(MsgLogDO::getChannel, channel)
@@ -229,11 +214,11 @@ public class MessageLogServiceImpl implements MessageLogService {
                 DeadLetterAlertEvent event = new DeadLetterAlertEvent(this, channel, currentCount,
                         cfg.getThreshold(), cfg.getWindowMinutes());
                 eventPublisher.publishEvent(event);
-                log.info("[MessageLog] 死信告警已触发: channel={} count={} threshold={}",
+                log.info("[MessageLog] 死信告警已触�? channel={} count={} threshold={}",
                         channel, currentCount, cfg.getThreshold());
             }
         } catch (Exception e) {
-            log.error("[MessageLog] 死信告警检测异常,不影响主流程: {}", e.getMessage(), e);
+            log.error("[MessageLog] 死信告警检测异�?不影响主流程: {}", e.getMessage(), e);
         }
     }
 
@@ -241,7 +226,7 @@ public class MessageLogServiceImpl implements MessageLogService {
         try {
             return MessageStatusEnum.valueOf(value);
         } catch (Exception e) {
-            throw new SysException(StandardResultCode.BIZ_ERROR, "非法消息状态: " + value);
+            throw new SysException(StandardResultCode.BIZ_ERROR, "非法消息状�? " + value);
         }
     }
 }

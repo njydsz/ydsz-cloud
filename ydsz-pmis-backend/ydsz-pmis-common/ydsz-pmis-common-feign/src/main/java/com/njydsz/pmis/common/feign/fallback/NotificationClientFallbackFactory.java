@@ -33,6 +33,12 @@ public class NotificationClientFallbackFactory extends DefaultFallbackFactory<No
                         userId, type, cause.getMessage());
                 return BaseResponse.error("B01004", "实时推送服务暂时不可用");
             }
+
+            @Override
+            public BaseResponse<Void> broadcast(String type, RealtimePushDTO dto) {
+                log.warn("NotificationClient.broadcast 降级: type={}, cause={}", type, cause.getMessage());
+                return BaseResponse.error("B01004", "广播服务暂时不可用");
+            }
         };
     }
 }

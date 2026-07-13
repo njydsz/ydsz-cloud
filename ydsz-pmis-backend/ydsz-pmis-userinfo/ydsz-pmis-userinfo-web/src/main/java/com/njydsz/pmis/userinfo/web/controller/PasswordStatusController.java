@@ -72,40 +72,40 @@ public class PasswordStatusController {
         LocalDateTime lastChange = account.getLastPwdChangeAt();
 
         if (isInitial) {
-            BaseResponse.put("status", "INITIAL");
-            BaseResponse.put("message", "您使用的是初始密码，请尽快修改");
-            BaseResponse.put("daysRemaining", 0);
-            BaseResponse.put("mustChange", true);
+            result.put("status", "INITIAL");
+            result.put("message", "您使用的是初始密码，请尽快修改");
+            result.put("daysRemaining", 0);
+            result.put("mustChange", true);
         } else if (lastChange == null) {
-            BaseResponse.put("status", "EXPIRED");
-            BaseResponse.put("message", "密码已过期，请立即修改");
-            BaseResponse.put("daysRemaining", 0);
-            BaseResponse.put("mustChange", true);
+            result.put("status", "EXPIRED");
+            result.put("message", "密码已过期，请立即修改");
+            result.put("daysRemaining", 0);
+            result.put("mustChange", true);
         } else {
             long daysSinceChange = ChronoUnit.DAYS.between(lastChange, now);
             long daysRemaining = PASSWORD_EXPIRE_DAYS - daysSinceChange;
 
             if (daysRemaining <= 0) {
-                BaseResponse.put("status", "EXPIRED");
-                BaseResponse.put("message", "密码已过期 " + Math.abs(daysRemaining) + " 天，请立即修改");
-                BaseResponse.put("daysRemaining", 0);
-                BaseResponse.put("mustChange", true);
+                result.put("status", "EXPIRED");
+                result.put("message", "密码已过期 " + Math.abs(daysRemaining) + " 天，请立即修改");
+                result.put("daysRemaining", 0);
+                result.put("mustChange", true);
             } else if (daysRemaining <= EXPIRING_SOON_DAYS) {
-                BaseResponse.put("status", "EXPIRING_SOON");
-                BaseResponse.put("message", "密码将在 " + daysRemaining + " 天后过期，建议尽快修改");
-                BaseResponse.put("daysRemaining", daysRemaining);
-                BaseResponse.put("mustChange", false);
+                result.put("status", "EXPIRING_SOON");
+                result.put("message", "密码将在 " + daysRemaining + " 天后过期，建议尽快修改");
+                result.put("daysRemaining", daysRemaining);
+                result.put("mustChange", false);
             } else {
-                BaseResponse.put("status", "HEALTHY");
-                BaseResponse.put("message", "");
-                BaseResponse.put("daysRemaining", daysRemaining);
-                BaseResponse.put("mustChange", false);
+                result.put("status", "HEALTHY");
+                result.put("message", "");
+                result.put("daysRemaining", daysRemaining);
+                result.put("mustChange", false);
             }
         }
 
-        BaseResponse.put("lastPwdChangeAt", lastChange);
-        BaseResponse.put("pwdChangeCount", account.getPwdChangeCount());
-        BaseResponse.put("expireDays", PASSWORD_EXPIRE_DAYS);
+        result.put("lastPwdChangeAt", lastChange);
+        result.put("pwdChangeCount", account.getPwdChangeCount());
+        result.put("expireDays", PASSWORD_EXPIRE_DAYS);
 
         return BaseResponse.ok(result);
     }

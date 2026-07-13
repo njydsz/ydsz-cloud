@@ -19,12 +19,9 @@ import org.springframework.util.StringUtils;
 import java.util.Map;
 
 /**
- * 邮件通道实现。
- *
- * <p>通过 {@link JavaMailSender} 发送邮件，自动识别 HTML（内容含 {@code <}）或纯文本格式。
- * 发件人取 {@code spring.mail.username}。{@link JavaMailSender} 为可选注入，
- * 未配置邮件时发送直接返回 fail。
- *
+ * 邮件通道实现�? *
+ * <p>通过 {@link JavaMailSender} 发送邮件，自动识别 HTML（内容含 {@code <}）或纯文本格式�? * 发件人取 {@code spring.mail.username}。{@link JavaMailSender} 为可选注入，
+ * 未配置邮件时发送直接返�?fail�? *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -35,7 +32,7 @@ public class EmailChannel implements MessageChannel {
     /** 通道类型 */
     private static final String CHANNEL_TYPE = "EMAIL";
 
-    /** JavaMail 发送器（未配置邮件时为 null） */
+    /** JavaMail 发送器（未配置邮件时为 null�?*/
     private final JavaMailSender mailSender;
 
     /** 发件人地址 */
@@ -46,11 +43,9 @@ public class EmailChannel implements MessageChannel {
     private final ReadReceiptService readReceiptService;
 
     /**
-     * 构造方法，邮件发送器与回执服务可选注入。
-     *
+     * 构造方法，邮件发送器与回执服务可选注入�?     *
      * @param mailSender        JavaMail 发送器
-     * @param readReceiptService 已读回执服务（P2-14）
-     */
+     * @param readReceiptService 已读回执服务（P2-14�?     */
     public EmailChannel(@Autowired(required = false) JavaMailSender mailSender,
                         @Autowired(required = false) ReadReceiptService readReceiptService) {
         this.mailSender = mailSender;
@@ -58,8 +53,7 @@ public class EmailChannel implements MessageChannel {
     }
 
     /**
-     * 通道类型。
-     *
+     * 通道类型�?     *
      * @return EMAIL
      */
     @Override
@@ -68,26 +62,23 @@ public class EmailChannel implements MessageChannel {
     }
 
     /**
-     * 发送邮件，自动识别 HTML / 纯文本格式。
-     *
-     * <p>P2-14 增强：
-     * <ul>
+     * 发送邮件，自动识别 HTML / 纯文本格式�?     *
+     * <p>P2-14 增强�?     * <ul>
      *   <li>HTML 邮件注入追踪像素（已读回执）</li>
-     *   <li>支持附件：通过 channelMeta.attachments 传入（Base64 编码）</li>
+     *   <li>支持附件：通过 channelMeta.attachments 传入（Base64 编码�?/li>
      *   <li>支持内嵌图片：通过 channelMeta.inlineImages 传入</li>
      *   <li>注入 List-Unsubscribe 头（退订支持）</li>
      * </ul>
      *
      * @param request 消息请求
-     * @return 发送结果（含供应商侧追踪 ID）
-     */
+     * @return 发送结果（含供应商侧追�?ID�?     */
     @Override
     public MessageResult send(MessageRequest request) {
         if (mailSender == null) {
-            return MessageResult.fail(CHANNEL_TYPE, "JavaMailSender 未配置");
+            return MessageResult.fail(CHANNEL_TYPE, "JavaMailSender 未配�?);
         }
         if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-            return MessageResult.fail(CHANNEL_TYPE, "收件人邮箱不能为空");
+            return MessageResult.fail(CHANNEL_TYPE, "收件人邮箱不能为�?);
         }
         try {
             String subject = request.getSubject() == null ? "PMIS 通知" : request.getSubject();
@@ -107,13 +98,11 @@ public class EmailChannel implements MessageChannel {
                 // P2-14: 附件支持
                 Map<String, String> meta = request.getChannelMeta();
                 if (meta != null) {
-                    // 附件（key=文件名, value=Base64 内容）
-                    String attachmentsStr = meta.get("attachments");
+                    // 附件（key=文件�? value=Base64 内容�?                    String attachmentsStr = meta.get("attachments");
                     if (StringUtils.hasText(attachmentsStr)) {
                         addAttachments(helper, attachmentsStr);
                     }
-                    // 内嵌图片（key=contentId, value=Base64 内容）
-                    String inlineStr = meta.get("inlineImages");
+                    // 内嵌图片（key=contentId, value=Base64 内容�?                    String inlineStr = meta.get("inlineImages");
                     if (StringUtils.hasText(inlineStr)) {
                         addInlineImages(helper, inlineStr);
                     }
@@ -128,18 +117,17 @@ public class EmailChannel implements MessageChannel {
                 mailSender.send(msg);
             }
             String traceId = CHANNEL_TYPE + "-" + SnowflakeIdGenerator.nextTraceId();
-            log.info("[EMAIL] 发送成功: to={} subject={}", request.getReceiver(), subject);
+            log.info("[EMAIL] 发送成�? to={} subject={}", request.getReceiver(), subject);
             return MessageResult.ok(CHANNEL_TYPE, traceId);
         } catch (Exception e) {
-            log.error("[EMAIL] 发送失败: to={} reason={}", request.getReceiver(), e.getMessage(), e);
+            log.error("[EMAIL] 发送失�? to={} reason={}", request.getReceiver(), e.getMessage(), e);
             return MessageResult.fail(CHANNEL_TYPE, e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
 
     /**
-     * P2-14: 添加附件。
-     *
-     * <p>attachments 格式为 JSON：[{"name":"file.pdf","data":"base64..."}, ...]
+     * P2-14: 添加附件�?     *
+     * <p>attachments 格式�?JSON：[{"name":"file.pdf","data":"base64..."}, ...]
      *
      * @param helper       MimeMessageHelper
      * @param attachmentsJson 附件 JSON
@@ -162,9 +150,8 @@ public class EmailChannel implements MessageChannel {
     }
 
     /**
-     * P2-14: 添加内嵌图片。
-     *
-     * <p>inlineImages 格式为 JSON：[{"cid":"logo","data":"base64..."}, ...]
+     * P2-14: 添加内嵌图片�?     *
+     * <p>inlineImages 格式�?JSON：[{"cid":"logo","data":"base64..."}, ...]
      *
      * @param helper      MimeMessageHelper
      * @param inlineJson  内嵌图片 JSON

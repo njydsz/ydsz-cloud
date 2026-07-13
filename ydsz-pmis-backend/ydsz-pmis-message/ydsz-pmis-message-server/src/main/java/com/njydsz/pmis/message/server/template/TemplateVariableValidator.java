@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.server.template;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -13,14 +13,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 模板变量校验器（P0-3）。
- *
- * <p>根据模板的 {@code variableDefs}（JSON）定义，在渲染前校验传入的 params：
- * <ul>
- *   <li>必填变量缺失 → 抛 SysException(MISSING_PARAMETER)</li>
- *   <li>类型不匹配 → 抛 SysException(BAD_REQUEST)</li>
- *   <li>ENUM 值不在可选范围 → 抛 SysException(BAD_REQUEST)</li>
- *   <li>有 defaultValue 的缺失变量 → 自动填充默认值</li>
+ * 模板变量校验器（P0-3）�? *
+ * <p>根据模板�?{@code variableDefs}（JSON）定义，在渲染前校验传入�?params�? * <ul>
+ *   <li>必填变量缺失 �?�?SysException(MISSING_PARAMETER)</li>
+ *   <li>类型不匹�?�?�?SysException(BAD_REQUEST)</li>
+ *   <li>ENUM 值不在可选范�?�?�?SysException(BAD_REQUEST)</li>
+ *   <li>�?defaultValue 的缺失变�?�?自动填充默认�?/li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -31,10 +29,8 @@ import java.util.Map;
 public class TemplateVariableValidator {
 
     /**
-     * 解析变量定义 JSON 为列表。
-     *
-     * @param variableDefs JSON 字符串
-     * @return 变量定义列表；空或 null 时返回空列表
+     * 解析变量定义 JSON 为列表�?     *
+     * @param variableDefs JSON 字符�?     * @return 变量定义列表；空�?null 时返回空列表
      */
     public List<TemplateVariableDef> parse(String variableDefs) {
         if (!StringUtils.hasText(variableDefs)) {
@@ -49,19 +45,17 @@ public class TemplateVariableValidator {
     }
 
     /**
-     * 校验并补全参数。
-     *
+     * 校验并补全参数�?     *
      * <p>对每个变量定义执行：
      * <ol>
-     *   <li>缺失且有默认值 → params 中填充默认值</li>
-     *   <li>缺失且必填且无默认值 → 抛异常</li>
-     *   <li>存在 → 校验类型与枚举值</li>
+     *   <li>缺失且有默认�?�?params 中填充默认�?/li>
+     *   <li>缺失且必填且无默认�?�?抛异�?/li>
+     *   <li>存在 �?校验类型与枚举�?/li>
      * </ol>
      *
      * @param params     参数 Map（可被修改：填充默认值）
      * @param varDefs    变量定义列表
-     * @param templateCode 模板编码（日志用）
-     */
+     * @param templateCode 模板编码（日志用�?     */
     @SuppressWarnings("unchecked")
     public void validateAndFill(Map<String, Object> params, List<TemplateVariableDef> varDefs,
                                 String templateCode) {
@@ -80,11 +74,10 @@ public class TemplateVariableValidator {
             if (value == null || (value instanceof String s && s.isBlank())) {
                 // 缺失
                 if (StringUtils.hasText(def.getDefaultValue())) {
-                    // 填充默认值
-                    if (params != null) {
+                    // 填充默认�?                    if (params != null) {
                         params.put(name, def.getDefaultValue());
                     }
-                    log.debug("[VariableValidator] 填充默认值: template={} var={} default={}",
+                    log.debug("[VariableValidator] 填充默认�? template={} var={} default={}",
                             templateCode, name, def.getDefaultValue());
                     continue;
                 }
@@ -110,14 +103,13 @@ public class TemplateVariableValidator {
     }
 
     /**
-     * 校验单个变量类型。
-     *
+     * 校验单个变量类型�?     *
      * @return null 表示通过；非 null 表示错误描述
      */
     private String checkType(String name, Object value, TemplateVariableDef def) {
         try {
             switch (def.getType()) {
-                case STRING -> { /* 任何值都可 toString，通过 */ }
+                case STRING -> { /* 任何值都�?toString，通过 */ }
                 case NUMBER -> {
                     if (value instanceof Number) {
                         return null;
@@ -147,7 +139,7 @@ public class TemplateVariableValidator {
                 }
                 case ENUM -> {
                     if (def.getEnumValues() == null || !def.getEnumValues().contains(value.toString())) {
-                        return name + ": 值 '" + value + "' 不在枚举范围 " + def.getEnumValues();
+                        return name + ": �?'" + value + "' 不在枚举范围 " + def.getEnumValues();
                     }
                 }
                 case LIST -> {

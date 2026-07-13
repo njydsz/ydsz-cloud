@@ -24,14 +24,12 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 
 /**
- * 模板版本管理与可视化服务实现。
- *
- * <p>P1-6: 实现：
- * <ul>
- *   <li>版本历史记录：每次审核通过/拒绝时插入版本快照</li>
- *   <li>版本回滚：将模板内容回滚到指定历史版本</li>
- *   <li>模板预览：使用 TemplateEngine 渲染，不实际发送</li>
- *   <li>模板试发：通过 MessageService 向测试接收人发送真实消息</li>
+ * 模板版本管理与可视化服务实现�? *
+ * <p>P1-6: 实现�? * <ul>
+ *   <li>版本历史记录：每次审核通过/拒绝时插入版本快�?/li>
+ *   <li>版本回滚：将模板内容回滚到指定历史版�?/li>
+ *   <li>模板预览：使�?TemplateEngine 渲染，不实际发�?/li>
+ *   <li>模板试发：通过 MessageService 向测试接收人发送真实消�?/li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -48,16 +46,13 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     private final MsgTemplateMapper templateMapper;
     /** 模板引擎（预览渲染） */
     private final TemplateEngine templateEngine;
-    /** 消息发送服务（试发） */
+    /** 消息发送服务（试发�?*/
     private final MessageService messageService;
 
     /**
-     * 查询指定模板的版本历史列表
-     *
+     * 查询指定模板的版本历史列�?     *
      * @param templateCode 模板编码
-     * @return 版本列表（按版本号倒序）
-     * @throws SysException templateCode 为空时抛出
-     */
+     * @return 版本列表（按版本号倒序�?     * @throws SysException templateCode 为空时抛�?     */
     @Override
     public List<MsgTemplateVersionDO> listVersions(String templateCode) {
         if (!StringUtils.hasText(templateCode)) {
@@ -71,14 +66,11 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     /**
      * 记录模板版本快照
      *
-     * <p>查询当前最大版本号并 +1，插入版本记录。每次审核通过/拒绝时调用。
-     *
+     * <p>查询当前最大版本号�?+1，插入版本记录。每次审核通过/拒绝时调用�?     *
      * @param templateCode 模板编码
      * @param content      模板内容快照
      * @param variableDefs 变量定义 JSON
-     * @param auditStatus  审核状态（APPROVED/REJECTED）
-     * @param auditor      审核人
-     * @param auditRemark  审核备注
+     * @param auditStatus  审核状态（APPROVED/REJECTED�?     * @param auditor      审核�?     * @param auditRemark  审核备注
      * @return 落库后的版本记录
      */
     @Override
@@ -112,10 +104,8 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
      * 将模板内容回滚到指定历史版本
      *
      * @param templateCode 模板编码
-     * @param version      目标版本号
-     * @return 回滚后的模板内容
-     * @throws SysException 版本或模板不存在时抛出
-     */
+     * @param version      目标版本�?     * @return 回滚后的模板内容
+     * @throws SysException 版本或模板不存在时抛�?     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String rollbackToVersion(String templateCode, int version) {
@@ -124,13 +114,13 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
                 .eq(MsgTemplateVersionDO::getVersion, version)
                 .last("LIMIT 1"));
         if (versionDO == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "版本不存在: " + version);
+            throw new SysException(StandardResultCode.NOT_FOUND, "版本不存�? " + version);
         }
         MsgTemplateDO template = templateMapper.selectOne(new LambdaQueryWrapper<MsgTemplateDO>()
                 .eq(MsgTemplateDO::getTemplateCode, templateCode)
                 .last("LIMIT 1"));
         if (template == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "模板不存在: " + templateCode);
+            throw new SysException(StandardResultCode.NOT_FOUND, "模板不存�? " + templateCode);
         }
         template.setContent(versionDO.getContent());
         templateMapper.updateById(template);
@@ -141,12 +131,9 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     /**
      * 预览模板渲染效果（不实际发送）
      *
-     * <p>优先使用 DTO 中的 content，为空时从数据库加载指定模板的内容。
-     *
-     * @param dto 预览参数（templateCode 或 content + params）
-     * @return 渲染后的内容
-     * @throws SysException 参数为空或模板不存在时抛出
-     */
+     * <p>优先使用 DTO 中的 content，为空时从数据库加载指定模板的内容�?     *
+     * @param dto 预览参数（templateCode �?content + params�?     * @return 渲染后的内容
+     * @throws SysException 参数为空或模板不存在时抛�?     */
     @Override
     public String preview(TemplatePreviewDTO dto) {
         if (dto == null) {
@@ -154,15 +141,14 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
         }
         String content = dto.getContent();
         if (!StringUtils.hasText(content)) {
-            // 从模板加载
-            if (!StringUtils.hasText(dto.getTemplateCode())) {
-                throw new SysException(StandardResultCode.BAD_REQUEST, "templateCode 和 content 不能同时为空");
+            // 从模板加�?            if (!StringUtils.hasText(dto.getTemplateCode())) {
+                throw new SysException(StandardResultCode.BAD_REQUEST, "templateCode �?content 不能同时为空");
             }
             MsgTemplateDO template = templateMapper.selectOne(new LambdaQueryWrapper<MsgTemplateDO>()
                     .eq(MsgTemplateDO::getTemplateCode, dto.getTemplateCode())
                     .last("LIMIT 1"));
             if (template == null) {
-                throw new SysException(StandardResultCode.NOT_FOUND, "模板不存在: " + dto.getTemplateCode());
+                throw new SysException(StandardResultCode.NOT_FOUND, "模板不存�? " + dto.getTemplateCode());
             }
             content = template.getContent();
         }
@@ -172,23 +158,20 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     /**
      * 试发模板消息（实际发送给测试接收人）
      *
-     * @param dto 试发参数（templateCode、testReceiver、params、testChannel）
-     * @return 消息发送结果
-     * @throws SysException 模板编码或接收人为空时抛出
-     */
+     * @param dto 试发参数（templateCode、testReceiver、params、testChannel�?     * @return 消息发送结�?     * @throws SysException 模板编码或接收人为空时抛�?     */
     @Override
     public MessageResult testSend(TemplateTestSendDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getTemplateCode())) {
             throw new SysException(StandardResultCode.BAD_REQUEST, "模板编码不能为空");
         }
         if (!StringUtils.hasText(dto.getTestReceiver())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "测试接收人不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "测试接收人不能为�?);
         }
         MessageRequest request = new MessageRequest();
         request.setTemplateCode(dto.getTemplateCode());
         request.setReceiver(dto.getTestReceiver());
         request.setParams(dto.getParams());
-        // 通道：优先使用 testChannel，否则从模板获取
+        // 通道：优先使�?testChannel，否则从模板获取
         if (StringUtils.hasText(dto.getTestChannel())) {
             request.setChannel(dto.getTestChannel());
         } else {

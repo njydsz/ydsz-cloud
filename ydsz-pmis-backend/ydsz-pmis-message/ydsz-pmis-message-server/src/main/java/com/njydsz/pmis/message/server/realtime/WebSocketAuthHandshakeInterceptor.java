@@ -15,14 +15,10 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 import java.util.Map;
 
 /**
- * P0-4: WebSocket 握手鉴权拦截器。
- *
- * <p>从握手请求中提取 JWT token（优先查询参数 {@code token}，回退请求头
- * {@code Authorization: Bearer xxx}），通过 {@link JwtTokenProvider} 校验合法性，
- * 并将 {@code userId} / {@code username} 写入握手属性，供后续 SessionListener 使用。
- *
- * <p>token 缺失 / 无效 / 过期时拒绝握手（返回 401），避免未认证连接消耗资源。
- *
+ * P0-4: WebSocket 握手鉴权拦截器�? *
+ * <p>从握手请求中提取 JWT token（优先查询参�?{@code token}，回退请求�? * {@code Authorization: Bearer xxx}），通过 {@link JwtTokenProvider} 校验合法性，
+ * 并将 {@code userId} / {@code username} 写入握手属性，供后�?SessionListener 使用�? *
+ * <p>token 缺失 / 无效 / 过期时拒绝握手（返回 401），避免未认证连接消耗资源�? *
  * @author ydsz-pmis-team
  * @since 1.1.0
  */
@@ -34,13 +30,10 @@ public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
     private final JwtTokenProvider jwtTokenProvider;
 
     /**
-     * 握手前校验 JWT token：提取并校验 token，写入 userId / username 到属性。
-     *
+     * 握手前校�?JWT token：提取并校验 token，写�?userId / username 到属性�?     *
      * @param request    HTTP 握手请求
      * @param response   HTTP 握手响应
-     * @param wsHandler  WebSocket 处理器
-     * @param attributes 握手属性（会传递到 WebSocketSession）
-     * @return true 允许握手；false 拒绝
+     * @param wsHandler  WebSocket 处理�?     * @param attributes 握手属性（会传递到 WebSocketSession�?     * @return true 允许握手；false 拒绝
      */
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
@@ -52,7 +45,7 @@ public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
             return false;
         }
         if (!jwtTokenProvider.validateToken(token)) {
-            log.warn("[WS-Auth] 握手拒绝: token 无效或过期, remote={}", request.getRemoteAddress());
+            log.warn("[WS-Auth] 握手拒绝: token 无效或过�? remote={}", request.getRemoteAddress());
             response.setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
             return false;
         }
@@ -77,21 +70,18 @@ public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
     }
 
     /**
-     * 从请求中提取 JWT token：优先查询参数 {@code token}，回退请求头 {@code Authorization}。
-     *
+     * 从请求中提取 JWT token：优先查询参�?{@code token}，回退请求�?{@code Authorization}�?     *
      * @param request HTTP 请求
      * @return token 字符串，无则返回 null
      */
     private String extractToken(ServerHttpRequest request) {
-        // ① 优先从查询参数提取（WebSocket 浏览器不支持自定义请求头）
-        if (request instanceof ServletServerHttpRequest servletRequest) {
+        // �?优先从查询参数提取（WebSocket 浏览器不支持自定义请求头�?        if (request instanceof ServletServerHttpRequest servletRequest) {
             String param = servletRequest.getServletRequest().getParameter(MessageConstants.WS_TOKEN_PARAM);
             if (StringUtils.hasText(param)) {
                 return param.trim();
             }
         }
-        // ② 回退到 Authorization 请求头（Bearer xxx）
-        String header = request.getHeaders().getFirst(MessageConstants.WS_TOKEN_HEADER);
+        // �?回退�?Authorization 请求头（Bearer xxx�?        String header = request.getHeaders().getFirst(MessageConstants.WS_TOKEN_HEADER);
         if (StringUtils.hasText(header)) {
             String trimmed = header.trim();
             if (trimmed.startsWith("Bearer ")) {

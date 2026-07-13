@@ -19,11 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 灰度桶服务实现。
- *
- * <p>按 canaryKey upsert；命中判定按 {@code Math.floorMod(canaryKey.hashCode() ^ bucketValue.hashCode(), 100) < percentage}。
- * upsert 时重算 bucketSelected（前 percentage 个桶号）。
- *
+ * 灰度桶服务实现�? *
+ * <p>�?canaryKey upsert；命中判定按 {@code Math.floorMod(canaryKey.hashCode() ^ bucketValue.hashCode(), 100) < percentage}�? * upsert 时重�?bucketSelected（前 percentage 个桶号）�? *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -41,7 +38,7 @@ public class CanaryServiceImpl implements CanaryService {
     @Override
     public MsgCanaryDO upsert(CanaryUpsertDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getCanaryKey())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "灰度键不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "灰度键不能为�?);
         }
         int total = dto.getBucketTotal() == null || dto.getBucketTotal() <= 0 ? DEFAULT_BUCKET_TOTAL : dto.getBucketTotal();
         int percentage = dto.getPercentage() == null ? 0 : Math.max(0, Math.min(100, dto.getPercentage()));
@@ -61,7 +58,7 @@ public class CanaryServiceImpl implements CanaryService {
             entity.setDescription(dto.getDescription());
             entity.setTenantId(TenantContext.getTenantId());
             msgCanaryMapper.insert(entity);
-            log.info("[Canary] 新建灰度桶: key={} percentage={} expTpl={} expChan={}",
+            log.info("[Canary] 新建灰度�? key={} percentage={} expTpl={} expChan={}",
                     dto.getCanaryKey(), percentage, dto.getExperimentTemplateCode(), dto.getExperimentChannel());
             return entity;
         }
@@ -121,12 +118,10 @@ public class CanaryServiceImpl implements CanaryService {
     }
 
     /**
-     * 构造命中桶列表 JSON（前 percentage 个桶号）。
-     *
+     * 构造命中桶列表 JSON（前 percentage 个桶号）�?     *
      * @param total      桶总数
      * @param percentage 灰度比例
-     * @return 形如 [0,1,2] 的 JSON 字符串
-     */
+     * @return 形如 [0,1,2] �?JSON 字符�?     */
     private String buildBucketSelected(int total, int percentage) {
         int count = Math.min(percentage, total);
         List<Integer> buckets = new ArrayList<>(count);

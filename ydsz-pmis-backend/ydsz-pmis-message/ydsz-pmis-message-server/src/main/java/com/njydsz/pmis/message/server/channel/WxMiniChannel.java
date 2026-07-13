@@ -21,16 +21,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 微信小程序订阅消息通道实现。
- *
- * <p>实现 {@link MessageChannel} SPI，通过微信小程序订阅消息 API 下发通知。
- * 需要用户在小程序端主动订阅消息模板后才能发送，每次发送消耗一次订阅配额。
- *
- * <p>降级策略：未配置 AppID/AppSecret 或 provider=mock 时降级为日志输出。
- *
- * <p>API 流程：
- * <ol>
- *   <li>获取 access_token（缓存到 Redis，7200s 有效期）</li>
+ * 微信小程序订阅消息通道实现�? *
+ * <p>实现 {@link MessageChannel} SPI，通过微信小程序订阅消�?API 下发通知�? * 需要用户在小程序端主动订阅消息模板后才能发送，每次发送消耗一次订阅配额�? *
+ * <p>降级策略：未配置 AppID/AppSecret �?provider=mock 时降级为日志输出�? *
+ * <p>API 流程�? * <ol>
+ *   <li>获取 access_token（缓存到 Redis�?200s 有效期）</li>
  *   <li>调用 subscribeMessage/send 下发订阅消息</li>
  * </ol>
  *
@@ -72,7 +67,7 @@ public class WxMiniChannel implements MessageChannel {
         MessageProperties.WxMiniConfig config = messageProperties.getWxMini();
         if (config == null || !StringUtils.hasText(config.getAppId())
                 || !StringUtils.hasText(config.getAppSecret())) {
-            log.warn("[WxMiniChannel] 未配置 AppID/AppSecret,降级为日志输出: receiver={}",
+            log.warn("[WxMiniChannel] 未配�?AppID/AppSecret,降级为日志输�? receiver={}",
                     request.getReceiver());
             return mockSend(request);
         }
@@ -104,26 +99,25 @@ public class WxMiniChannel implements MessageChannel {
 
             if (resultBody != null && Integer.valueOf(0).equals(resultBody.get("errcode"))) {
                 String traceId = "WX_MINI-" + SnowflakeIdGenerator.nextTraceId();
-                log.info("[WxMiniChannel] 发送成功: receiver={} template={}",
+                log.info("[WxMiniChannel] 发送成�? receiver={} template={}",
                         request.getReceiver(), request.getTemplateCode());
                 return MessageResult.ok(CHANNEL_TYPE, traceId);
             } else {
                 String errMsg = resultBody != null ? String.valueOf(resultBody.get("errmsg")) : "未知错误";
-                log.error("[WxMiniChannel] 发送失败: receiver={} errcode={} errmsg={}",
+                log.error("[WxMiniChannel] 发送失�? receiver={} errcode={} errmsg={}",
                         request.getReceiver(),
                         resultBody != null ? resultBody.get("errcode") : "N/A", errMsg);
-                return MessageResult.fail(CHANNEL_TYPE, "微信小程序发送失败: " + errMsg);
+                return MessageResult.fail(CHANNEL_TYPE, "微信小程序发送失�? " + errMsg);
             }
         } catch (Exception e) {
-            log.error("[WxMiniChannel] 发送异常: receiver={} err={}",
+            log.error("[WxMiniChannel] 发送异�? receiver={} err={}",
                     request.getReceiver(), e.getMessage(), e);
             return MessageResult.fail(CHANNEL_TYPE, e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
 
     /**
-     * 获取微信 access_token（Redis 缓存，7200s 有效期）。
-     */
+     * 获取微信 access_token（Redis 缓存�?200s 有效期）�?     */
     private String getAccessToken(MessageProperties.WxMiniConfig config) {
         try {
             String cached = redisTemplate.opsForValue().get(ACCESS_TOKEN_CACHE_KEY);
@@ -154,8 +148,7 @@ public class WxMiniChannel implements MessageChannel {
     }
 
     /**
-     * 构造模板消息 data 字段。
-     * 微信小程序订阅消息的 data 格式为 { "key": { "value": "xxx" } }
+     * 构造模板消�?data 字段�?     * 微信小程序订阅消息的 data 格式�?{ "key": { "value": "xxx" } }
      */
     private Map<String, Object> buildTemplateData(MessageRequest request) {
         if (request.getParams() == null) {
@@ -170,11 +163,10 @@ public class WxMiniChannel implements MessageChannel {
     }
 
     /**
-     * Mock 发送（开发环境降级）。
-     */
+     * Mock 发送（开发环境降级）�?     */
     private MessageResult mockSend(MessageRequest request) {
         String traceId = "WX_MINI-MOCK-" + SnowflakeIdGenerator.nextTraceId();
-        log.info("[WxMiniChannel][MOCK] 模拟发送: receiver={} template={} content={}",
+        log.info("[WxMiniChannel][MOCK] 模拟发�? receiver={} template={} content={}",
                 request.getReceiver(), request.getTemplateCode(), request.getContent());
         return MessageResult.ok(CHANNEL_TYPE, traceId);
     }

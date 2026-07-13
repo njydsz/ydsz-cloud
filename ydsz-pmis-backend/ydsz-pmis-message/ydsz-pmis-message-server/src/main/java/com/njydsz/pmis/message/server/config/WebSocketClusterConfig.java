@@ -11,11 +11,9 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 /**
- * WebSocket 集群推送 Redis 监听容器配置。
- *
+ * WebSocket 集群推�?Redis 监听容器配置�? *
  * <p>注册 {@link RedisMessageListenerContainer}，将 {@link WebSocketClusterSubscriber}
- * 绑定到 Redis Channel {@code pmis:ws:cluster:push}，实现多节点推送消息的跨实例广播。
- *
+ * 绑定�?Redis Channel {@code pmis:ws:cluster:push}，实现多节点推送消息的跨实例广播�? *
  * @author ydsz-pmis-team
  * @since 1.2.0
  */
@@ -32,7 +30,7 @@ public class WebSocketClusterConfig {
         container.setConnectionFactory(connectionFactory);
         container.addMessageListener(subscriber,
                 new ChannelTopic(WebSocketClusterPublisher.CHANNEL));
-        log.info("[WS-Cluster] Redis 监听容器已注册, channel={}", WebSocketClusterPublisher.CHANNEL);
+        log.info("[WS-Cluster] Redis 监听容器已注�? channel={}", WebSocketClusterPublisher.CHANNEL);
         return container;
     }
 }

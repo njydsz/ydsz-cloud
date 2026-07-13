@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.archive.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.pmis.message.server.service.archive.MessageArchiveService;
@@ -16,11 +16,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 消息归档搜索服务实现（P0-5）。
- *
- * <p>当 ES 可用时使用 Elasticsearch 全文搜索；不可用时降级为数据库 LIKE 查询。
- * 通过 {@code pmis.message.archive.es-enabled} 配置开关。
- *
+ * 消息归档搜索服务实现（P0-5）�? *
+ * <p>�?ES 可用时使�?Elasticsearch 全文搜索；不可用时降级为数据�?LIKE 查询�? * 通过 {@code pmis.message.archive.es-enabled} 配置开关�? *
  * @author ydsz-pmis-team
  * @since 1.5.0
  */
@@ -39,8 +36,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
         if (!esEnabled || logDO == null) {
             return;
         }
-        // ES 索引逻辑（当 ES 可用时通过 ElasticsearchRestTemplate 索引）
-        // 当前为 mock 降级，仅记录日志
+        // ES 索引逻辑（当 ES 可用时通过 ElasticsearchRestTemplate 索引�?        // 当前�?mock 降级，仅记录日志
         log.debug("[Archive] 索引消息: id={} channel={} status={}",
                 logDO.getId(), logDO.getChannel(), logDO.getStatus());
     }
@@ -78,8 +74,7 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
     }
 
     /**
-     * 数据库 LIKE 降级搜索。
-     */
+     * 数据�?LIKE 降级搜索�?     */
     private Page<MsgLogDO> searchByDatabase(String keyword, String channel, String status, String bizType,
                                             LocalDateTime startTime, LocalDateTime endTime,
                                             String tenantId, int pageNum, int pageSize) {

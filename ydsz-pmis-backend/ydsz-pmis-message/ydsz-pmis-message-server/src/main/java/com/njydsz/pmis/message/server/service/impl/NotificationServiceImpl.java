@@ -29,10 +29,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 站内通知服务实现。
- *
- * <p>send 支持批量接收人(receiverIds 优先),逐人入库 + 实时推送;撤回委托 {@link RecallService}。
- *
+ * 站内通知服务实现�? *
+ * <p>send 支持批量接收�?receiverIds 优先),逐人入库 + 实时推�?撤回委托 {@link RecallService}�? *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -43,7 +41,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     /** 站内通知 Mapper */
     private final MsgNotificationMapper msgNotificationMapper;
-    /** 实时推送服务（WebSocket / 离线缓存） */
+    /** 实时推送服务（WebSocket / 离线缓存�?*/
     private final RealtimePushService realtimePushService;
     /** 消息撤回服务 */
     private final RecallService recallService;
@@ -59,8 +57,7 @@ public class NotificationServiceImpl implements NotificationService {
         for (String rid : receiverIds) {
             MsgNotificationDO entity = buildEntity(dto, rid);
             msgNotificationMapper.insert(entity);
-            // 实时推送（P0-4: 离线时自动缓存到 Redis，上线时补偿）
-            realtimePushService.pushToUserWithOffline(rid, "NOTIFICATION", entity);
+            // 实时推送（P0-4: 离线时自动缓存到 Redis，上线时补偿�?            realtimePushService.pushToUserWithOffline(rid, "NOTIFICATION", entity);
             count++;
         }
         log.info("[Notification] 发送通知: title={} count={} bizType={}", dto.getTitle(), count, dto.getBizType());
@@ -132,15 +129,14 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public Page<NotificationGroupVO> inboxGrouped(String userId, NotificationQueryDTO query) {
-        // 查询用户全部通知（按时间倒序），按 message_group 折叠
+        // 查询用户全部通知（按时间倒序），�?message_group 折叠
         Page<MsgNotificationDO> allPage = inbox(userId, query);
         Map<String, NotificationGroupVO> groupMap = new LinkedHashMap<>();
 
         for (MsgNotificationDO n : allPage.getRecords()) {
             String groupKey = n.getMessageGroup();
             if (!StringUtils.hasText(groupKey)) {
-                // 无分组键的消息独立成组（用 id 作为 groupKey）
-                groupKey = "UNG:" + n.getId();
+                // 无分组键的消息独立成组（�?id 作为 groupKey�?                groupKey = "UNG:" + n.getId();
             }
             NotificationGroupVO vo = groupMap.get(groupKey);
             if (vo == null) {
@@ -163,7 +159,7 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         Page<NotificationGroupVO> result = new Page<>(allPage.getCurrent(), allPage.getSize(), allPage.getTotal());
-        BaseResponse.setRecords(new ArrayList<>(groupMap.values()));
+        result.setRecords(new ArrayList<>(groupMap.values()));
         return result;
     }
 
@@ -185,7 +181,7 @@ public class NotificationServiceImpl implements NotificationService {
             receiverIds = List.of(dto.getReceiverId());
         }
         if (CollectionUtils.isEmpty(receiverIds)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "接收人不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "接收人不能为�?);
         }
         return receiverIds;
     }
@@ -210,7 +206,7 @@ public class NotificationServiceImpl implements NotificationService {
         n.setReadStatus(0);
         n.setRecallStatus(RecallStatusEnum.NONE.name());
         n.setExpiredAt(dto.getExpiredAt());
-        // P2-7: 补齐租户隔离,与其他消息实体一致(原依赖 DB DEFAULT '1',多租户场景会越权)
+        // P2-7: 补齐租户隔离,与其他消息实体一�?原依�?DB DEFAULT '1',多租户场景会越权)
         n.setTenantId(TenantContext.getTenantId());
         return n;
     }

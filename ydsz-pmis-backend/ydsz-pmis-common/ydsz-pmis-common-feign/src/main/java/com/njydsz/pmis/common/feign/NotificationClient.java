@@ -43,4 +43,15 @@ public interface NotificationClient {
     BaseResponse<Void> pushRealtime(@RequestParam("userId") String userId,
                                     @RequestParam("type") String type,
                                     @RequestBody RealtimePushDTO dto);
+
+    /**
+     * 广播实时消息（WebSocket 全局推送）。
+     *
+     * @param type 消息类型（如 ALERT）
+     * @param dto  推送数据
+     * @return 推送结果
+     */
+    @PostMapping("/api/message/notification/broadcast")
+    BaseResponse<Void> broadcast(@RequestParam("type") String type,
+                                 @RequestBody RealtimePushDTO dto);
 }

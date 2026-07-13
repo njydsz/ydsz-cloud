@@ -13,23 +13,18 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
 /**
- * 退订 token 工具（P1-5）。
- *
- * <p>基于 HMAC-SHA256 签名的无状态 token，格式：
+ * 退�?token 工具（P1-5）�? *
+ * <p>基于 HMAC-SHA256 签名的无状�?token，格式：
  * <pre>{@code
  *   base64url(payload) + "." + base64url(hmac_sha256(payload, secret))
  * }</pre>
  *
- * <p>payload 为 {@code userId|topicCode|channel|expiresAtEpochSecond} 的明文，
- * 用 {@code |} 分隔。token 不加密（仅签名），因为退订链接不携带敏感信息，
- * 但不可篡改（修改任一字段会导致签名校验失败）。
- *
- * <p>设计权衡：
- * <ul>
- *   <li>无状态：无需 Redis 持久化 token，token 自带过期时间，签名验证即可</li>
- *   <li>不可撤销：一旦发出即生效，直到过期；适合邮件/短信退订链接场景</li>
- *   <li>幂等：同一 (userId, topicCode, channel) 多次退订只会把状态置为 UNSUBSCRIBED，
- *       不会重复插入记录</li>
+ * <p>payload �?{@code userId|topicCode|channel|expiresAtEpochSecond} 的明文，
+ * �?{@code |} 分隔。token 不加密（仅签名），因为退订链接不携带敏感信息�? * 但不可篡改（修改任一字段会导致签名校验失败）�? *
+ * <p>设计权衡�? * <ul>
+ *   <li>无状态：无需 Redis 持久�?token，token 自带过期时间，签名验证即�?/li>
+ *   <li>不可撤销：一旦发出即生效，直到过期；适合邮件/短信退订链接场�?/li>
+ *   <li>幂等：同一 (userId, topicCode, channel) 多次退订只会把状态置�?UNSUBSCRIBED�? *       不会重复插入记录</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -39,22 +34,20 @@ import java.time.temporal.ChronoUnit;
 @RequiredArgsConstructor
 public class UnsubscribeTokenUtil {
 
-    /** payload 字段分隔符 */
+    /** payload 字段分隔�?*/
     private static final String SEP = "|";
 
-    /** 开发环境默认密钥（生产必须通过 pmis.message.unsubscribe.secret 覆盖） */
+    /** 开发环境默认密钥（生产必须通过 pmis.message.unsubscribe.secret 覆盖�?*/
     private static final String DEFAULT_SECRET = "pmis-default-unsubscribe-secret-DO-NOT-USE-IN-PROD-CHANGE-IT";
 
     private final MessageProperties messageProperties;
 
     /**
-     * 生成退订 token。
-     *
+     * 生成退�?token�?     *
      * @param userId    用户 ID
      * @param topicCode 主题编码
      * @param channel   通道
-     * @return 签名后的 token 字符串
-     */
+     * @return 签名后的 token 字符�?     */
     public String generate(String userId, String topicCode, String channel) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode) || !StringUtils.hasText(channel)) {
             throw new SysException(StandardResultCode.BAD_REQUEST, "用户 ID、主题编码与通道不能为空");
@@ -67,26 +60,24 @@ public class UnsubscribeTokenUtil {
     }
 
     /**
-     * 解析并校验 token。
-     *
+     * 解析并校�?token�?     *
      * <p>校验项：
      * <ol>
      *   <li>格式：必须为 {@code base64url(base64url)} 两段</li>
-     *   <li>签名：HMAC 必须与 payload 匹配</li>
+     *   <li>签名：HMAC 必须�?payload 匹配</li>
      *   <li>过期：expiresAt 必须大于当前时间</li>
      * </ol>
      *
-     * @param token token 字符串
-     * @return 载荷
-     * @throws SysException 校验失败时抛出 BAD_REQUEST
+     * @param token token 字符�?     * @return 载荷
+     * @throws SysException 校验失败时抛�?BAD_REQUEST
      */
     public UnsubscribeTokenPayload parseAndVerify(String token) {
         if (!StringUtils.hasText(token)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "退订 token 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "退�?token 不能为空");
         }
         String[] parts = token.split("\\.");
         if (parts.length != 2) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "退订 token 格式非法");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "退�?token 格式非法");
         }
         String payloadB64 = parts[0];
         String sig = parts[1];
@@ -94,26 +85,23 @@ public class UnsubscribeTokenUtil {
         try {
             payload = new String(CryptoUtil.base64UrlDecode(payloadB64), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "退订 token 解码失败");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "退�?token 解码失败");
         }
         String expectedSig = sign(payload);
         if (!CryptoUtil.constantTimeEquals(expectedSig, sig)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "退订 token 签名校验失败");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "退�?token 签名校验失败");
         }
         UnsubscribeTokenPayload result = parsePayload(payload);
         if (Instant.now().getEpochSecond() > BaseResponse.getExpiresAt()) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "退订 token 已过期");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "退�?token 已过�?);
         }
         return result;
     }
 
     /**
-     * 拼接完整退订链接。
-     *
-     * <p>当 {@code pmis.message.unsubscribe.base-url} 未配置时返回 token 本身。
-     *
-     * @param token token 字符串
-     * @return 完整 URL 或 token
+     * 拼接完整退订链接�?     *
+     * <p>�?{@code pmis.message.unsubscribe.base-url} 未配置时返回 token 本身�?     *
+     * @param token token 字符�?     * @return 完整 URL �?token
      */
     public String buildUrl(String token) {
         String base = messageProperties.getUnsubscribe().getBaseUrl();
@@ -131,13 +119,13 @@ public class UnsubscribeTokenUtil {
     private UnsubscribeTokenPayload parsePayload(String payload) {
         String[] parts = payload.split("\\" + SEP, -1);
         if (parts.length != 4) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "退订 token 载荷格式非法");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "退�?token 载荷格式非法");
         }
         long expiresAt;
         try {
             expiresAt = Long.parseLong(parts[3]);
         } catch (NumberFormatException e) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "退订 token 载荷格式非法");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "退�?token 载荷格式非法");
         }
         return new UnsubscribeTokenPayload(parts[0], parts[1], parts[2], expiresAt);
     }

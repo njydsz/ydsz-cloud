@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.message.server.config.MessageProperties;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
@@ -22,15 +22,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 消息通道路由器。
- *
- * <p>启动时通过 {@link ApplicationContext#getBeansOfType(Class)} 收集所有
- * {@link MessageChannel} Bean，按 {@link MessageChannel#channelType()} 大写形式
- * 注册到内部缓存，供 {@link #route(String)} 与 {@link #dispatch(MessageRequest)} 使用。
- *
- * <p>通道开关由 {@code pmis.message.channel-enabled.*} 配置控制，
- * 通过 {@link MessageProperties#getChannelEnabled()} 读取。
- *
+ * 消息通道路由器�? *
+ * <p>启动时通过 {@link ApplicationContext#getBeansOfType(Class)} 收集所�? * {@link MessageChannel} Bean，按 {@link MessageChannel#channelType()} 大写形式
+ * 注册到内部缓存，�?{@link #route(String)} �?{@link #dispatch(MessageRequest)} 使用�? *
+ * <p>通道开关由 {@code pmis.message.channel-enabled.*} 配置控制�? * 通过 {@link MessageProperties#getChannelEnabled()} 读取�? *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -42,7 +37,7 @@ public class ChannelRouter {
     /** Spring 上下文，用于收集通道 Bean */
     private final ApplicationContext applicationContext;
 
-    /** 消息配置，用于读取通道开关 */
+    /** 消息配置，用于读取通道开�?*/
     private final MessageProperties messageProperties;
 
     /** 通道缓存：channelType(大写) -> MessageChannel */
@@ -51,7 +46,7 @@ public class ChannelRouter {
     /** 熔断器缓存：channelType(大写) -> CircuitBreaker */
     private final Map<String, CircuitBreaker> breakerCache = new HashMap<>();
 
-    /** 默认熔断配置：50% 失败率触发熔断,开启 30s,半开试探 3 次 */
+    /** 默认熔断配置�?0% 失败率触发熔�?开�?30s,半开试探 3 �?*/
     private static final CircuitBreakerConfig DEFAULT_CB_CONFIG = CircuitBreakerConfig.custom()
             .failureRateThreshold(50)
             .slowCallRateThreshold(80)
@@ -63,8 +58,7 @@ public class ChannelRouter {
             .build();
 
     /**
-     * 收集所有 MessageChannel Bean 并按通道类型注册,同时为每个通道创建独立熔断器。
-     */
+     * 收集所�?MessageChannel Bean 并按通道类型注册,同时为每个通道创建独立熔断器�?     */
     @PostConstruct
     public void initChannels() {
         Map<String, MessageChannel> beans = applicationContext.getBeansOfType(MessageChannel.class);
@@ -78,12 +72,11 @@ public class ChannelRouter {
             channelCache.put(type, channel);
             breakerCache.put(type, registry.circuitBreaker("ch-" + type, DEFAULT_CB_CONFIG));
         }
-        log.info("[ChannelRouter] 已注册 {} 个消息通道(含熔断器): {}", channelCache.size(), channelCache.keySet());
+        log.info("[ChannelRouter] 已注�?{} 个消息通道(含熔断器): {}", channelCache.size(), channelCache.keySet());
     }
 
     /**
-     * 路由到指定通道，缺失时抛 {@link SysException}。
-     *
+     * 路由到指定通道，缺失时�?{@link SysException}�?     *
      * @param channel 通道类型字符串（大小写无关）
      * @return 对应通道实例
      * @throws SysException 通道为空或不存在
@@ -100,20 +93,18 @@ public class ChannelRouter {
     }
 
     /**
-     * 路由并发送消息：记录开始时间，发送后输出耗时日志，异常捕获返回 fail。
-     *
+     * 路由并发送消息：记录开始时间，发送后输出耗时日志，异常捕获返�?fail�?     *
      * @param request 消息请求
-     * @return 发送结果
-     */
+     * @return 发送结�?     */
     public MessageResult dispatch(MessageRequest request) {
         String channel = request.getChannel();
         MessageChannel target = route(channel);
         CircuitBreaker breaker = breakerCache.get(channel.trim().toUpperCase());
-        // 熔断开启时快速失败,不调用真实通道
+        // 熔断开启时快速失�?不调用真实通道
         if (breaker != null && !breaker.tryAcquirePermission()) {
-            log.warn("[ChannelRouter] 通道熔断中,快速失败: channel={} state={}",
+            log.warn("[ChannelRouter] 通道熔断�?快速失�? channel={} state={}",
                     channel, breaker.getState());
-            return MessageResult.fail(channel, "通道熔断中,请稍后重试");
+            return MessageResult.fail(channel, "通道熔断�?请稍后重�?);
         }
         long start = System.currentTimeMillis();
         try {
@@ -122,7 +113,7 @@ public class ChannelRouter {
             log.info("[ChannelRouter] channel={} status={} costMs={} cbState={}",
                     channel, BaseResponse.getStatus(), cost,
                     breaker == null ? "N/A" : breaker.getState());
-            // 业务失败(非异常)也计入熔断失败率
+            // 业务失败(非异�?也计入熔断失败率
             if (breaker != null) {
                 if (BaseResponse.isSuccess()) {
                     breaker.onSuccess(cost, java.util.concurrent.TimeUnit.MILLISECONDS);
@@ -137,23 +128,18 @@ public class ChannelRouter {
             if (breaker != null) {
                 breaker.onError(cost, java.util.concurrent.TimeUnit.MILLISECONDS, e);
             }
-            log.error("[ChannelRouter] channel={} 发送异常 costMs={} cbState={}",
+            log.error("[ChannelRouter] channel={} 发送异�?costMs={} cbState={}",
                     channel, cost, breaker == null ? "N/A" : breaker.getState(), e);
             return MessageResult.fail(channel, e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
 
     /**
-     * 基于 {@link MsgLogDO} 的分发重载：将日志实体转换为 {@link MessageRequest} 后委托
-     * {@link #dispatch(MessageRequest)} 执行，便于上层 service 直接传入日志实体。
-     *
-     * <p>返回供应商侧追踪 ID（{@code providerTraceId}）；发送失败时抛 {@link SysException}，
-     * 由调用方 catch 处理。
-     *
+     * 基于 {@link MsgLogDO} 的分发重载：将日志实体转换为 {@link MessageRequest} 后委�?     * {@link #dispatch(MessageRequest)} 执行，便于上�?service 直接传入日志实体�?     *
+     * <p>返回供应商侧追踪 ID（{@code providerTraceId}）；发送失败时�?{@link SysException}�?     * 由调用方 catch 处理�?     *
      * @param logDO 消息日志实体
      * @return 供应商侧追踪 ID
-     * @throws SysException 发送失败
-     */
+     * @throws SysException 发送失�?     */
     public String dispatch(MsgLogDO logDO) {
         if (logDO == null) {
             throw new SysException(StandardResultCode.BAD_REQUEST, "消息日志为空");
@@ -183,9 +169,7 @@ public class ChannelRouter {
     }
 
     /**
-     * 判断通道是否启用，结合 {@code pmis.message.channel-enabled.*} 配置。
-     * 配置未显式指定时默认启用。
-     *
+     * 判断通道是否启用，结�?{@code pmis.message.channel-enabled.*} 配置�?     * 配置未显式指定时默认启用�?     *
      * @param channel 通道类型字符串（大小写无关）
      * @return true 表示启用
      */
@@ -203,8 +187,7 @@ public class ChannelRouter {
     }
 
     /**
-     * 获取已注册通道的只读视图（供诊断 / 测试使用）。
-     *
+     * 获取已注册通道的只读视图（供诊�?/ 测试使用）�?     *
      * @return 通道缓存只读 Map
      */
     public Map<String, MessageChannel> getChannelCache() {

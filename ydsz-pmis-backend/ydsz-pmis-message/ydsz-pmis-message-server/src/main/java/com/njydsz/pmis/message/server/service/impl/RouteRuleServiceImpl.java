@@ -7,7 +7,7 @@ import com.njydsz.pmis.common.domain.query.PageQuery;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.message.domain.constant.MessageConstants;
 import com.njydsz.pmis.message.domain.dto.config.RouteRuleUpsertDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgRouteRuleDO;
@@ -28,11 +28,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * 消息路由规则服务实现。
- *
- * <p>使用 SpEL 求值 {@code conditionExpr}，上下文变量 {@code #request} 绑定 {@link MessageRequest}。
- * match 按 priority 升序遍历 enabled 规则，命中即返回；SpEL 求值失败跳过该规则。
- *
+ * 消息路由规则服务实现�? *
+ * <p>使用 SpEL 求�?{@code conditionExpr}，上下文变量 {@code #request} 绑定 {@link MessageRequest}�? * match �?priority 升序遍历 enabled 规则，命中即返回；SpEL 求值失败跳过该规则�? *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -61,7 +58,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
                 .eq(MsgRouteRuleDO::getTenantId, TenantContext.getTenantId())
                 .last("LIMIT 1"));
         if (existing != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "规则编码已存在: " + dto.getRuleCode());
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "规则编码已存�? " + dto.getRuleCode());
         }
         MsgRouteRuleDO entity = toEntity(dto);
         msgRouteRuleMapper.insert(entity);
@@ -73,7 +70,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     @Override
     public MsgRouteRuleDO update(String id, RouteRuleUpsertDTO dto) {
         if (!StringUtils.hasText(id) || dto == null) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "规则 ID 与参数不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "规则 ID 与参数不能为�?);
         }
         MsgRouteRuleDO entity = getById(id);
         if (StringUtils.hasText(dto.getRuleName())) {
@@ -127,7 +124,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
         }
         MsgRouteRuleDO entity = msgRouteRuleMapper.selectById(id);
         if (entity == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "路由规则不存在: " + id);
+            throw new SysException(StandardResultCode.NOT_FOUND, "路由规则不存�? " + id);
         }
         return entity;
     }
@@ -168,7 +165,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
                 }
             } catch (Exception e) {
                 // SpEL 求值失败跳过该规则
-                log.warn("[RouteRule] SpEL 求值失败,跳过规则: ruleId={} expr={} err={}",
+                log.warn("[RouteRule] SpEL 求值失�?跳过规则: ruleId={} expr={} err={}",
                         rule.getId(), rule.getConditionExpr(), e.getMessage());
             }
         }
@@ -176,8 +173,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     }
 
     /**
-     * 从 Redis 加载启用规则列表(未命中则查 DB 并回填)。
-     */
+     * �?Redis 加载启用规则列表(未命中则�?DB 并回�?�?     */
     private List<MsgRouteRuleDO> loadEnabledRulesFromCache() {
         try {
             String json = stringRedisTemplate.opsForValue().get(MessageConstants.ROUTE_RULE_CACHE_KEY);
@@ -205,8 +201,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     }
 
     /**
-     * 主动失效路由规则缓存。
-     */
+     * 主动失效路由规则缓存�?     */
     private void evictCache() {
         try {
             stringRedisTemplate.delete(MessageConstants.ROUTE_RULE_CACHE_KEY);

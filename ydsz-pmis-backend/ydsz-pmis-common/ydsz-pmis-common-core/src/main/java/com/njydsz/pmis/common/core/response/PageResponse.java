@@ -175,6 +175,26 @@ public class PageResponse<T> extends BaseResponse<T> {
     }
 
     /**
+     * 从 MyBatis-Plus Page 构建分页响应。
+     *
+     * <p>自动提取 Page 中的 total、current、size 和 records。
+     *
+     * @param page MyBatis-Plus 分页结果
+     * @param <T>  数据类型
+     * @return 分页响应对象
+     */
+    public static <T> PageResponse<T> ofPage(com.baomidou.mybatisplus.extension.plugins.pagination.Page<T> page) {
+        if (page == null) {
+            return success(0L, 1L, 10L, null);
+        }
+        Long total = page.getTotal();
+        Long pageNum = page.getCurrent();
+        Long pageSize = page.getSize();
+        T data = (T) page.getRecords();
+        return success(total, pageNum, pageSize, data);
+    }
+
+    /**
      * 是否有下一页
      *
      * @return 有下一页返回true，否则返回false

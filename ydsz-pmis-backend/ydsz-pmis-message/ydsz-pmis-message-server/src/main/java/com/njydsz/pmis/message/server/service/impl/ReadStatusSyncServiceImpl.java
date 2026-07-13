@@ -23,13 +23,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * P1-3: 全通道消息已读/未读状态同步服务实现。
- *
+ * P1-3: 全通道消息已读/未读状态同步服务实现�? *
  * <p>统一管理消息已读状态的更新和实时同步：
  * <ul>
- *   <li>更新消息日志的 receipt_status 为 READ</li>
- *   <li>更新站内通知的 read_status 为 1</li>
- *   <li>通过 WebSocket 推送已读状态变更事件</li>
+ *   <li>更新消息日志�?receipt_status �?READ</li>
+ *   <li>更新站内通知�?read_status �?1</li>
+ *   <li>通过 WebSocket 推送已读状态变更事�?/li>
  *   <li>记录用户活跃行为（供智能推送时间优化使用）</li>
  * </ul>
  *
@@ -45,7 +44,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     private final MsgLogMapper msgLogMapper;
     /** 站内通知 Mapper */
     private final MsgNotificationMapper msgNotificationMapper;
-    /** 实时推送服务（已读状态变更通知） */
+    /** 实时推送服务（已读状态变更通知�?*/
     private final RealtimePushService realtimePushService;
     /** 智能推送时间优化器（记录用户活跃行为） */
     private final DeliveryTimeOptimizer deliveryTimeOptimizer;
@@ -54,9 +53,9 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     @Transactional(rollbackFor = Exception.class)
     public boolean markRead(String msgId, String userId) {
         if (!StringUtils.hasText(msgId) || !StringUtils.hasText(userId)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "消息 ID 和用户 ID 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "消息 ID 和用�?ID 不能为空");
         }
-        // 更新消息日志的 receipt_status
+        // 更新消息日志�?receipt_status
         int updated = msgLogMapper.update(null, new LambdaUpdateWrapper<MsgLogDO>()
                 .eq(MsgLogDO::getMsgId, msgId)
                 .eq(MsgLogDO::getReceiver, userId)
@@ -102,7 +101,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     @Transactional(rollbackFor = Exception.class)
     public boolean markNotificationRead(String notificationId, String userId) {
         if (!StringUtils.hasText(notificationId) || !StringUtils.hasText(userId)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "通知 ID 和用户 ID 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "通知 ID 和用�?ID 不能为空");
         }
         int updated = msgNotificationMapper.update(null, new LambdaUpdateWrapper<MsgNotificationDO>()
                 .eq(MsgNotificationDO::getId, notificationId)
@@ -150,8 +149,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
         if (!StringUtils.hasText(userId)) {
             return 0;
         }
-        // 站内通知未读数
-        Long notifCount = msgNotificationMapper.selectCount(
+        // 站内通知未读�?        Long notifCount = msgNotificationMapper.selectCount(
                 new LambdaQueryWrapper<MsgNotificationDO>()
                         .eq(MsgNotificationDO::getReceiverId, userId)
                         .eq(MsgNotificationDO::getReadStatus, 0)
@@ -167,11 +165,10 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
         if (!StringUtils.hasText(channel)) {
             return getUnreadCount(userId);
         }
-        // 站内通知按通道查询（站内信通道）
-        if ("INAPP".equalsIgnoreCase(channel)) {
+        // 站内通知按通道查询（站内信通道�?        if ("INAPP".equalsIgnoreCase(channel)) {
             return getUnreadCount(userId);
         }
-        // 其他通道按消息日志查询 receipt_status != READ
+        // 其他通道按消息日志查�?receipt_status != READ
         Long count = msgLogMapper.selectCount(
                 new LambdaQueryWrapper<MsgLogDO>()
                         .eq(MsgLogDO::getReceiver, userId)

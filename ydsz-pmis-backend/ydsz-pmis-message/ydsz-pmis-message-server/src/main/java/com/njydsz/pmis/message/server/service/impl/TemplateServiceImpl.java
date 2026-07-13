@@ -22,11 +22,8 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 
 /**
- * 消息模板服务实现。
- *
- * <p>模板按 (templateCode, channel, locale, tenantId) 唯一；locale 加载支持精确回退默认 zh-CN；
- * 审核状态流转 DRAFT → AUDITING → APPROVED/REJECTED。
- *
+ * 消息模板服务实现�? *
+ * <p>模板�?(templateCode, channel, locale, tenantId) 唯一；locale 加载支持精确回退默认 zh-CN�? * 审核状态流�?DRAFT �?AUDITING �?APPROVED/REJECTED�? *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -35,7 +32,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class TemplateServiceImpl implements TemplateService {
 
-    /** 消息模板 Mapper（CRUD / locale 回退查询） */
+    /** 消息模板 Mapper（CRUD / locale 回退查询�?*/
     private final MsgTemplateMapper msgTemplateMapper;
 
     @Override
@@ -48,7 +45,7 @@ public class TemplateServiceImpl implements TemplateService {
         }
         String tenantId = TenantContext.getTenantId();
         String locale = StringUtils.hasText(dto.getLocale()) ? dto.getLocale() : MessageConstants.DEFAULT_LOCALE;
-        // 唯一性校验 (templateCode, channel, locale, tenantId)
+        // 唯一性校�?(templateCode, channel, locale, tenantId)
         MsgTemplateDO existing = msgTemplateMapper.selectOne(new LambdaQueryWrapper<MsgTemplateDO>()
                 .eq(MsgTemplateDO::getTemplateCode, dto.getTemplateCode())
                 .eq(MsgTemplateDO::getChannel, dto.getChannel())
@@ -56,7 +53,7 @@ public class TemplateServiceImpl implements TemplateService {
                 .eq(MsgTemplateDO::getTenantId, tenantId)
                 .last("LIMIT 1"));
         if (existing != null) {
-            throw new SysException(StandardResultCode.DUPLICATE_KEY, "模板已存在: " + dto.getTemplateCode() + "/" + locale);
+            throw new SysException(StandardResultCode.DUPLICATE_KEY, "模板已存�? " + dto.getTemplateCode() + "/" + locale);
         }
         MsgTemplateDO entity = new MsgTemplateDO();
         entity.setTemplateCode(dto.getTemplateCode());
@@ -137,7 +134,7 @@ public class TemplateServiceImpl implements TemplateService {
         }
         MsgTemplateDO entity = msgTemplateMapper.selectById(id);
         if (entity == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "模板不存在: " + id);
+            throw new SysException(StandardResultCode.NOT_FOUND, "模板不存�? " + id);
         }
         return entity;
     }
@@ -195,19 +192,18 @@ public class TemplateServiceImpl implements TemplateService {
     @Override
     public void audit(String id, TemplateAuditDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getAuditStatus())) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "审核状态不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "审核状态不能为�?);
         }
         MsgTemplateDO entity = getById(id);
         TemplateAuditStatusEnum current = parseAuditStatus(entity.getAuditStatus());
         TemplateAuditStatusEnum target = parseAuditStatus(dto.getAuditStatus());
         if (!canTransitAudit(current, target)) {
             throw new SysException(StandardResultCode.BIZ_ERROR,
-                    "非法审核状态流转: " + current + " -> " + target);
+                    "非法审核状态流�? " + current + " -> " + target);
         }
         entity.setAuditStatus(target.name());
         entity.setAuditRemark(dto.getAuditRemark());
-        // APPROVED 时同步启用状态
-        if (target == TemplateAuditStatusEnum.APPROVED) {
+        // APPROVED 时同步启用状�?        if (target == TemplateAuditStatusEnum.APPROVED) {
             entity.setStatus("ENABLED");
         } else if (target == TemplateAuditStatusEnum.REJECTED) {
             entity.setStatus("DISABLED");
@@ -218,11 +214,8 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     /**
-     * 校验审核状态流转合法性：DRAFT → AUDITING → APPROVED/REJECTED。
-     *
-     * @param current 当前状态
-     * @param target  目标状态
-     * @return true 表示允许流转
+     * 校验审核状态流转合法性：DRAFT �?AUDITING �?APPROVED/REJECTED�?     *
+     * @param current 当前状�?     * @param target  目标状�?     * @return true 表示允许流转
      */
     private boolean canTransitAudit(TemplateAuditStatusEnum current, TemplateAuditStatusEnum target) {
         if (current == target) {
@@ -240,7 +233,7 @@ public class TemplateServiceImpl implements TemplateService {
         try {
             return TemplateAuditStatusEnum.valueOf(value);
         } catch (Exception e) {
-            throw new SysException(StandardResultCode.BIZ_ERROR, "非法审核状态: " + value);
+            throw new SysException(StandardResultCode.BIZ_ERROR, "非法审核状�? " + value);
         }
     }
 }

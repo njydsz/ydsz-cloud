@@ -18,10 +18,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 订阅关系服务实现。
- *
- * <p>按 (userId, topicCode, channel) upsert；退订更新状态为 UNSUBSCRIBED。
- *
+ * 订阅关系服务实现�? *
+ * <p>�?(userId, topicCode, channel) upsert；退订更新状态为 UNSUBSCRIBED�? *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -34,14 +32,11 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     private final MsgSubscriptionMapper msgSubscriptionMapper;
 
     /**
-     * 新增或更新订阅关系
-     *
-     * <p>按 (userId, topicCode, channel) 唯一约束 upsert。新增时插入，已存在时更新状态。
-     *
+     * 新增或更新订阅关�?     *
+     * <p>�?(userId, topicCode, channel) 唯一约束 upsert。新增时插入，已存在时更新状态�?     *
      * @param dto 订阅 upsert 参数
      * @return 落库后的订阅记录
-     * @throws SysException 必填字段为空时抛出
-     */
+     * @throws SysException 必填字段为空时抛�?     */
     @Override
     public MsgSubscriptionDO upsert(SubscriptionUpsertDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getUserId())
@@ -71,8 +66,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         existing.setStatus(status);
         existing.setRoleScope(dto.getRoleScope());
         existing.setExtra(dto.getExtra());
-        // P1-5: 恢复订阅时清空退订时间;退订时记录退订时间
-        if (SubscriptionStatusEnum.SUBSCRIBED.name().equals(status)) {
+        // P1-5: 恢复订阅时清空退订时�?退订时记录退订时�?        if (SubscriptionStatusEnum.SUBSCRIBED.name().equals(status)) {
             existing.setUnsubscribedAt(null);
         } else if (SubscriptionStatusEnum.UNSUBSCRIBED.name().equals(status) && existing.getUnsubscribedAt() == null) {
             existing.setUnsubscribedAt(LocalDateTime.now());
@@ -82,8 +76,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     /**
-     * 查询指定用户的所有订阅记录
-     *
+     * 查询指定用户的所有订阅记�?     *
      * @param userId 用户 ID
      * @return 订阅记录列表（按创建时间倒序）；userId 为空时返回空列表
      */
@@ -101,9 +94,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
      * 查询指定主题下的活跃订阅列表
      *
      * @param topicCode 主题编码
-     * @param channel   消息通道（可空，空时查全部通道）
-     * @return 订阅状态为 SUBSCRIBED 的记录列表
-     */
+     * @param channel   消息通道（可空，空时查全部通道�?     * @return 订阅状态为 SUBSCRIBED 的记录列�?     */
     @Override
     public List<MsgSubscriptionDO> listByTopic(String topicCode, String channel) {
         if (!StringUtils.hasText(topicCode)) {
@@ -161,17 +152,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     }
 
     /**
-     * 执行退订操作
-     *
-     * <p>将指定用户+主题+通道的订阅状态更新为 UNSUBSCRIBED。
-     * 无记录时新建 UNSUBSCRIBED 记录（防止默认订阅语义下 isBlocked 返回 false）。
-     *
+     * 执行退订操�?     *
+     * <p>将指定用�?主题+通道的订阅状态更新为 UNSUBSCRIBED�?     * 无记录时新建 UNSUBSCRIBED 记录（防止默认订阅语义下 isBlocked 返回 false）�?     *
      * @param userId    用户 ID
      * @param topicCode 主题编码
      * @param channel   消息通道
      * @return 更新后的订阅记录
-     * @throws SysException 必填字段为空时抛出
-     */
+     * @throws SysException 必填字段为空时抛�?     */
     @Override
     public MsgSubscriptionDO unsubscribe(String userId, String topicCode, String channel) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode) || !StringUtils.hasText(channel)) {
@@ -184,8 +171,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
                 .last("LIMIT 1"));
         if (existing == null) {
             // P1-5: 无订阅记录时也要创建 UNSUBSCRIBED 记录,否则 isBlocked 永远返回 false,
-            // 用户点击退订后仍会被发送(默认订阅语义)。修复此 latent bug。
-            MsgSubscriptionDO entity = new MsgSubscriptionDO();
+            // 用户点击退订后仍会被发�?默认订阅语义)。修复此 latent bug�?            MsgSubscriptionDO entity = new MsgSubscriptionDO();
             entity.setUserId(userId);
             entity.setTopicCode(topicCode);
             entity.setChannel(channel);
@@ -193,7 +179,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             entity.setUnsubscribedAt(LocalDateTime.now());
             entity.setTenantId(TenantContext.getTenantId());
             msgSubscriptionMapper.insert(entity);
-            log.info("[Subscription] 退订(新建记录): user={} topic={} channel={}", userId, topicCode, channel);
+            log.info("[Subscription] 退�?新建记录): user={} topic={} channel={}", userId, topicCode, channel);
             return entity;
         }
         existing.setStatus(SubscriptionStatusEnum.UNSUBSCRIBED.name());

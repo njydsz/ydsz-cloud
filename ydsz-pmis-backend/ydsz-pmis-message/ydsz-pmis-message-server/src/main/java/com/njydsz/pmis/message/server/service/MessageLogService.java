@@ -7,8 +7,7 @@ import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 import java.time.LocalDateTime;
 
 /**
- * 消息发送日志服务
- *
+ * 消息发送日志服�? *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -31,16 +30,14 @@ public interface MessageLogService {
     Page<MsgLogDO> page(MessageLogQueryDTO query);
 
     /**
-     * 标记日志为重试中,并设置下次重试时间
-     *
+     * 标记日志为重试中,并设置下次重试时�?     *
      * @param id           日志 ID
      * @param nextRetryAt  下次重试时间
      */
     void markRetry(String id, LocalDateTime nextRetryAt);
 
     /**
-     * 标记日志为死信
-     *
+     * 标记日志为死�?     *
      * @param id           日志 ID
      * @param errorMessage 错误信息
      */
@@ -50,8 +47,7 @@ public interface MessageLogService {
      * 更新回执状态与回执时间
      *
      * @param id            日志 ID
-     * @param receiptStatus 回执状态
-     * @param receiptAt     回执时间
+     * @param receiptStatus 回执状�?     * @param receiptAt     回执时间
      */
     void updateReceipt(String id, String receiptStatus, LocalDateTime receiptAt);
 
@@ -63,13 +59,11 @@ public interface MessageLogService {
     void markRecalled(String id);
 
     /**
-     * P1-4: 手动重发死信。
-     *
-     * <p>仅 DEAD 状态可重发。重置 retryCount / errorMessage / nextRetryAt，
-     * 流转为 SENDING 后立即通过 {@code ChannelRouter} 重新投递：
+     * P1-4: 手动重发死信�?     *
+     * <p>�?DEAD 状态可重发。重�?retryCount / errorMessage / nextRetryAt�?     * 流转�?SENDING 后立即通过 {@code ChannelRouter} 重新投递：
      * <ul>
-     *   <li>投递成功 → SUCCESS</li>
-     *   <li>投递失败 → RETRY（进入正常重试调度,以全新 retryCount 计数）</li>
+     *   <li>投递成�?�?SUCCESS</li>
+     *   <li>投递失�?�?RETRY（进入正常重试调�?以全�?retryCount 计数�?/li>
      * </ul>
      *
      * @param logId 日志 ID

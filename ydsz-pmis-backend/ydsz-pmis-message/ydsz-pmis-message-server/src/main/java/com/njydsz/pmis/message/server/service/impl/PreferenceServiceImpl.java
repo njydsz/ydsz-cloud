@@ -17,10 +17,8 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 
 /**
- * 用户消息偏好服务实现。
- *
- * <p>按 (userId, channel, bizType) upsert；查询优先精确 bizType，回退 {@code __DEFAULT__}。
- *
+ * 用户消息偏好服务实现�? *
+ * <p>�?(userId, channel, bizType) upsert；查询优先精�?bizType，回退 {@code __DEFAULT__}�? *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */

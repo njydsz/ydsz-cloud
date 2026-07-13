@@ -12,17 +12,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * P2-11: 实时统计预聚合服务。
- *
- * <p>将消息发送指标实时写入 Redis，供看板查询和告警判断：
+ * P2-11: 实时统计预聚合服务�? *
+ * <p>将消息发送指标实时写�?Redis，供看板查询和告警判断：
  * <ul>
- *   <li>每分钟维度：{@code pmis:stats:realtime:{yyyyMMddHHmm}} → Hash(channel, count)</li>
- *   <li>延迟分位数：{@code pmis:stats:latency:{channel}} → Sorted Set(score=costMs, member=msgId)</li>
- *   <li>渠道错误计数：{@code pmis:stats:errors:{channel}:{yyyyMMdd}} → INCR</li>
+ *   <li>每分钟维度：{@code pmis:stats:realtime:{yyyyMMddHHmm}} �?Hash(channel, count)</li>
+ *   <li>延迟分位数：{@code pmis:stats:latency:{channel}} �?Sorted Set(score=costMs, member=msgId)</li>
+ *   <li>渠道错误计数：{@code pmis:stats:errors:{channel}:{yyyyMMdd}} �?INCR</li>
  * </ul>
  *
- * <p>定时任务每分钟将上一分钟的预聚合数据持久化到数据库统计表（可选）。
- *
+ * <p>定时任务每分钟将上一分钟的预聚合数据持久化到数据库统计表（可选）�? *
  * @author ydsz-pmis-team
  * @since 1.2.0
  */
@@ -37,20 +35,17 @@ public class RealtimeStatsService {
     private final StringRedisTemplate redisTemplate;
 
     /**
-     * 记录一次消息发送到实时统计。
-     *
+     * 记录一次消息发送到实时统计�?     *
      * @param channel 通道
-     * @param status  状态（SUCCESS/FAILED/RETRY/RATE_LIMITED）
-     * @param costMs  耗时（毫秒）
+     * @param status  状态（SUCCESS/FAILED/RETRY/RATE_LIMITED�?     * @param costMs  耗时（毫秒）
      */
     public void recordSend(String channel, String status, long costMs) {
         try {
             String minuteKey = "pmis:stats:realtime:" + LocalDateTime.now().format(MINUTE_FMT);
-            // 按状态+通道计数
+            // 按状�?通道计数
             redisTemplate.opsForHash().increment(minuteKey, channel + ":" + status, 1);
             redisTemplate.expire(minuteKey, Duration.ofHours(2));
-            // 记录延迟到 Sorted Set（保留最近 10000 条用于分位数计算）
-            if ("SUCCESS".equals(status) && costMs > 0) {
+            // 记录延迟�?Sorted Set（保留最�?10000 条用于分位数计算�?            if ("SUCCESS".equals(status) && costMs > 0) {
                 String latencyKey = "pmis:stats:latency:" + channel;
                 String member = channel + ":" + System.nanoTime();
                 redisTemplate.opsForZSet().add(latencyKey, member, costMs);
@@ -73,8 +68,7 @@ public class RealtimeStatsService {
     }
 
     /**
-     * 获取当前分钟各通道的实时发送统计。
-     *
+     * 获取当前分钟各通道的实时发送统计�?     *
      * @return key=channel:status, value=count
      */
     public Map<String, String> getRealtimeStats() {
@@ -86,10 +80,9 @@ public class RealtimeStatsService {
     }
 
     /**
-     * 计算指定通道的延迟分位数（P50/P95/P99）。
-     *
+     * 计算指定通道的延迟分位数（P50/P95/P99）�?     *
      * @param channel 通道
-     * @return 分位数数组 [P50, P95, P99]（毫秒），无数据时返回 [0, 0, 0]
+     * @return 分位数数�?[P50, P95, P99]（毫秒），无数据时返�?[0, 0, 0]
      */
     public double[] getLatencyPercentiles(String channel) {
         String latencyKey = "pmis:stats:latency:" + channel;
@@ -103,14 +96,13 @@ public class RealtimeStatsService {
             double p99 = getPercentile(latencyKey, size, 0.99);
             return new double[]{p50, p95, p99};
         } catch (Exception e) {
-            log.warn("[RealtimeStats] 延迟分位数查询失败: channel={} err={}", channel, e.getMessage());
+            log.warn("[RealtimeStats] 延迟分位数查询失�? channel={} err={}", channel, e.getMessage());
             return new double[]{0, 0, 0};
         }
     }
 
     /**
-     * 从 Sorted Set 中计算指定分位数的值。
-     */
+     * �?Sorted Set 中计算指定分位数的值�?     */
     private double getPercentile(String key, long size, double percentile) {
         long index = (long) Math.ceil(size * percentile) - 1;
         if (index < 0) index = 0;
@@ -122,8 +114,7 @@ public class RealtimeStatsService {
     }
 
     /**
-     * 获取当日各通道错误计数。
-     *
+     * 获取当日各通道错误计数�?     *
      * @return key=channel, value=errorCount
      */
     public Map<String, Long> getDailyErrorCounts() {

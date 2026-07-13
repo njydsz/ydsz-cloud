@@ -21,11 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 /**
- * 退订中心服务实现（P1-5）。
- *
+ * 退订中心服务实现（P1-5）�? *
  * <p>编排 {@link UnsubscribeTokenUtil}（token 签名/校验）与 {@link SubscriptionService}
- * （订阅状态变更）。token 校验失败 / 过期 / 中心关闭均抛 {@link SysException}。
- *
+ * （订阅状态变更）。token 校验失败 / 过期 / 中心关闭均抛 {@link SysException}�? *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -34,22 +32,22 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class UnsubscribeServiceImpl implements UnsubscribeService {
 
-    /** 退订 token 工具（签名/校验） */
+    /** 退�?token 工具（签�?校验�?*/
     private final UnsubscribeTokenUtil unsubscribeTokenUtil;
     /** 订阅关系服务（状态变更） */
     private final SubscriptionService subscriptionService;
     /** 订阅关系 Mapper（退订查询） */
     private final MsgSubscriptionMapper msgSubscriptionMapper;
-    /** 消息模块配置属性 */
+    /** 消息模块配置属�?*/
     private final MessageProperties messageProperties;
 
     /**
-     * 生成退订 token
+     * 生成退�?token
      *
      * @param userId    用户 ID
      * @param topicCode 主题编码
      * @param channel   消息通道
-     * @return 签名后的退订 token
+     * @return 签名后的退�?token
      */
     @Override
     public String generateToken(String userId, String topicCode, String channel) {
@@ -57,9 +55,9 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
     }
 
     /**
-     * 预览退订 token 信息（不执行退订）
+     * 预览退�?token 信息（不执行退订）
      *
-     * @param token 退订 token
+     * @param token 退�?token
      * @return token 载荷（userId、topicCode、channel、过期时间）
      */
     @Override
@@ -68,21 +66,18 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
     }
 
     /**
-     * 通过退订 token 执行退订
-     *
-     * <p>校验 token 签名与有效期后，调用 SubscriptionService 更新订阅状态为 UNSUBSCRIBED。
-     *
-     * @param token 退订 token
+     * 通过退�?token 执行退�?     *
+     * <p>校验 token 签名与有效期后，调用 SubscriptionService 更新订阅状态为 UNSUBSCRIBED�?     *
+     * @param token 退�?token
      * @return 更新后的订阅记录
-     * @throws SysException 退订中心关闭或 token 无效时抛出
-     */
+     * @throws SysException 退订中心关闭或 token 无效时抛�?     */
     @Override
     public MsgSubscriptionDO unsubscribeByToken(String token) {
         if (!messageProperties.getUnsubscribe().isEnabled()) {
             throw new SysException(StandardResultCode.BIZ_ERROR, "退订中心已关闭");
         }
         UnsubscribeTokenPayload payload = unsubscribeTokenUtil.parseAndVerify(token);
-        log.info("[Unsubscribe] token 退订: user={} topic={} channel={}",
+        log.info("[Unsubscribe] token 退�? user={} topic={} channel={}",
                 payload.getUserId(), payload.getTopicCode(), payload.getChannel());
         return subscriptionService.unsubscribe(payload.getUserId(), payload.getTopicCode(), payload.getChannel());
     }
@@ -90,8 +85,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
     /**
      * 分页查询已退订的订阅记录
      *
-     * @param query 查询条件（userId、topicCode、channel、tenantId）
-     * @return 分页结果
+     * @param query 查询条件（userId、topicCode、channel、tenantId�?     * @return 分页结果
      */
     @Override
     public PageResponse<MsgSubscriptionDO> pageUnsubscribed(UnsubscribeQueryDTO query) {
@@ -115,14 +109,11 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
     /**
      * 恢复订阅
      *
-     * <p>将指定用户+主题+通道的订阅状态恢复为 SUBSCRIBED。
-     * 无记录时新建 SUBSCRIBED 记录；已订阅则跳过。
-     *
+     * <p>将指定用�?主题+通道的订阅状态恢复为 SUBSCRIBED�?     * 无记录时新建 SUBSCRIBED 记录；已订阅则跳过�?     *
      * @param userId    用户 ID
      * @param topicCode 主题编码
      * @param channel   消息通道
-     * @throws SysException 参数为空时抛出
-     */
+     * @throws SysException 参数为空时抛�?     */
     @Override
     public void resubscribe(String userId, String topicCode, String channel) {
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(topicCode) || !StringUtils.hasText(channel)) {

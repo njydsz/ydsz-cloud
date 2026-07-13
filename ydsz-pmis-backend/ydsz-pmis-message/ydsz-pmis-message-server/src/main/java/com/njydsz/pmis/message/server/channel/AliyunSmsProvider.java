@@ -4,7 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.message.server.config.MessageProperties;
 import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
 import lombok.extern.slf4j.Slf4j;
@@ -25,20 +25,16 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * 阿里云短信服务商实现。
- *
- * <p>通过阿里云 SMS Common RPC API（{@code SendSms}）发送短信，签名使用
- * {@link AliyunSmsSigner} 自实现 HmacSHA1，零外部 SDK 依赖。
- *
- * <p>仅当 {@code pmis.message.sms.provider=aliyun} 时装配；凭证缺失时返回 fail
- * （由 {@link com.njydsz.pmis.message.server.channel.impl.SmsChannel} 自动降级到 Mock）。
- *
- * <p>参数来源：
- * <ul>
+ * 阿里云短信服务商实现�? *
+ * <p>通过阿里�?SMS Common RPC API（{@code SendSms}）发送短信，签名使用
+ * {@link AliyunSmsSigner} 自实�?HmacSHA1，零外部 SDK 依赖�? *
+ * <p>仅当 {@code pmis.message.sms.provider=aliyun} 时装配；凭证缺失时返�?fail
+ * （由 {@link com.njydsz.pmis.message.server.channel.impl.SmsChannel} 自动降级�?Mock）�? *
+ * <p>参数来源�? * <ul>
  *   <li>PhoneNumbers = {@code request.getReceiver()}</li>
- *   <li>SignName = {@code template.signName}（回退配置默认签名）</li>
- *   <li>TemplateCode = {@code template.providerKey}（阿里云侧模板 ID）</li>
- *   <li>TemplateParam = {@code request.getParams()} 的 JSON</li>
+ *   <li>SignName = {@code template.signName}（回退配置默认签名�?/li>
+ *   <li>TemplateCode = {@code template.providerKey}（阿里云侧模�?ID�?/li>
+ *   <li>TemplateParam = {@code request.getParams()} �?JSON</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -56,8 +52,7 @@ public class AliyunSmsProvider implements SmsProvider {
     private final RestTemplate restTemplate;
 
     /**
-     * 生产构造：从 {@link MessageProperties} 读取阿里云配置并构建 RestTemplate。
-     *
+     * 生产构造：�?{@link MessageProperties} 读取阿里云配置并构建 RestTemplate�?     *
      * @param messageProperties 消息配置
      */
     public AliyunSmsProvider(MessageProperties messageProperties) {
@@ -69,11 +64,8 @@ public class AliyunSmsProvider implements SmsProvider {
     }
 
     /**
-     * 测试构造：注入自定义 config 与 RestTemplate（便于 mock）。
-     *
-     * @param config       阿里云配置
-     * @param restTemplate RestTemplate（测试可 mock）
-     */
+     * 测试构造：注入自定�?config �?RestTemplate（便�?mock）�?     *
+     * @param config       阿里云配�?     * @param restTemplate RestTemplate（测试可 mock�?     */
     AliyunSmsProvider(MessageProperties.AliyunSmsConfig config, RestTemplate restTemplate) {
         this.config = config;
         this.restTemplate = restTemplate;
@@ -88,18 +80,18 @@ public class AliyunSmsProvider implements SmsProvider {
     public MessageResult send(MessageRequest request, MsgTemplateDO template) {
         String phone = request.getReceiver();
         if (!StringUtils.hasText(phone)) {
-            return MessageResult.fail("SMS", "手机号不能为空");
+            return MessageResult.fail("SMS", "手机号不能为�?);
         }
         if (!StringUtils.hasText(config.getAccessKeyId())
                 || !StringUtils.hasText(config.getAccessKeySecret())) {
-            log.warn("[AliyunSms] 凭证未配置,发送失败: phone={}", phone);
-            return MessageResult.fail("SMS", "阿里云 SMS 凭证未配置");
+            log.warn("[AliyunSms] 凭证未配�?发送失�? phone={}", phone);
+            return MessageResult.fail("SMS", "阿里�?SMS 凭证未配�?);
         }
         String signName = template != null && StringUtils.hasText(template.getSignName())
                 ? template.getSignName() : config.getSignName();
         String templateCode = template != null ? template.getProviderKey() : null;
         if (!StringUtils.hasText(signName) || !StringUtils.hasText(templateCode)) {
-            return MessageResult.fail("SMS", "短信签名或模板 Code 缺失");
+            return MessageResult.fail("SMS", "短信签名或模�?Code 缺失");
         }
         try {
             Map<String, String> params = buildCommonParams();
@@ -116,21 +108,20 @@ public class AliyunSmsProvider implements SmsProvider {
             String code = json.getString("Code");
             if ("OK".equals(code)) {
                 String bizId = json.getString("BizId");
-                log.info("[AliyunSms] 发送成功: phone={} bizId={}", phone, bizId);
+                log.info("[AliyunSms] 发送成�? phone={} bizId={}", phone, bizId);
                 return MessageResult.ok("SMS", "ALIYUN-" + bizId);
             }
-            log.warn("[AliyunSms] 发送失败: phone={} code={} msg={}",
+            log.warn("[AliyunSms] 发送失�? phone={} code={} msg={}",
                     phone, code, json.getString("Message"));
             return MessageResult.fail("SMS", code + ": " + json.getString("Message"));
         } catch (Exception e) {
-            log.error("[AliyunSms] 发送异常: phone={} err={}", phone, e.getMessage());
+            log.error("[AliyunSms] 发送异�? phone={} err={}", phone, e.getMessage());
             return MessageResult.fail("SMS", e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
 
     /**
-     * 构造阿里云 RPC 公共参数。
-     *
+     * 构造阿里云 RPC 公共参数�?     *
      * @return 公共参数 Map
      */
     private Map<String, String> buildCommonParams() {
@@ -147,15 +138,15 @@ public class AliyunSmsProvider implements SmsProvider {
         return p;
     }
 
-    // ==================== P0-4: 批量发送 + 回执查询 ====================
+    // ==================== P0-4: 批量发�?+ 回执查询 ====================
 
-    /** 阿里云 SendBatchSms 单次最大手机号数 */
+    /** 阿里�?SendBatchSms 单次最大手机号�?*/
     private static final int BATCH_MAX_PHONES = 100;
 
     @Override
     public List<MessageResult> batchSend(List<MessageRequest> requests, MsgTemplateDO template) {
         List<MessageResult> results = new ArrayList<>(requests.size());
-        // 按 BATCH_MAX_PHONES 分批调用阿里云 SendBatchSms
+        // �?BATCH_MAX_PHONES 分批调用阿里�?SendBatchSms
         for (int i = 0; i < requests.size(); i += BATCH_MAX_PHONES) {
             int end = Math.min(i + BATCH_MAX_PHONES, requests.size());
             List<MessageRequest> chunk = requests.subList(i, end);
@@ -165,17 +156,14 @@ public class AliyunSmsProvider implements SmsProvider {
     }
 
     /**
-     * 调用阿里云 SendBatchSms 接口批量发送。
-     *
-     * <p>参数构造：PhoneNumberJson = ["phone1","phone2",...]，
-     * SignNameJson = ["sign","sign",...]，TemplateParamJson = [{...},{...},...]。
-     */
+     * 调用阿里�?SendBatchSms 接口批量发送�?     *
+     * <p>参数构造：PhoneNumberJson = ["phone1","phone2",...]�?     * SignNameJson = ["sign","sign",...]，TemplateParamJson = [{...},{...},...]�?     */
     private List<MessageResult> doBatchSend(List<MessageRequest> requests, MsgTemplateDO template) {
         List<MessageResult> results = new ArrayList<>(requests.size());
         if (!StringUtils.hasText(config.getAccessKeyId())
                 || !StringUtils.hasText(config.getAccessKeySecret())) {
             for (int i = 0; i < requests.size(); i++) {
-                results.add(MessageResult.fail("SMS", "阿里云 SMS 凭证未配置"));
+                results.add(MessageResult.fail("SMS", "阿里�?SMS 凭证未配�?));
             }
             return results;
         }
@@ -184,12 +172,12 @@ public class AliyunSmsProvider implements SmsProvider {
         String templateCode = template != null ? template.getProviderKey() : null;
         if (!StringUtils.hasText(signName) || !StringUtils.hasText(templateCode)) {
             for (int i = 0; i < requests.size(); i++) {
-                results.add(MessageResult.fail("SMS", "短信签名或模板 Code 缺失"));
+                results.add(MessageResult.fail("SMS", "短信签名或模�?Code 缺失"));
             }
             return results;
         }
         try {
-            // 构造 JSON 数组参数
+            // 构�?JSON 数组参数
             List<String> phones = new ArrayList<>();
             List<String> signNames = new ArrayList<>();
             List<String> templateParams = new ArrayList<>();
@@ -212,18 +200,18 @@ public class AliyunSmsProvider implements SmsProvider {
             String code = json.getString("Code");
             if ("OK".equals(code)) {
                 String bizId = json.getString("BizId");
-                log.info("[AliyunSms] 批量发送成功: count={} bizId={}", requests.size(), bizId);
+                log.info("[AliyunSms] 批量发送成�? count={} bizId={}", requests.size(), bizId);
                 for (int i = 0; i < requests.size(); i++) {
                     results.add(MessageResult.ok("SMS", "ALIYUN-" + bizId + "-" + i));
                 }
             } else {
-                log.warn("[AliyunSms] 批量发送失败: code={} msg={}", code, json.getString("Message"));
+                log.warn("[AliyunSms] 批量发送失�? code={} msg={}", code, json.getString("Message"));
                 for (int i = 0; i < requests.size(); i++) {
                     results.add(MessageResult.fail("SMS", code + ": " + json.getString("Message")));
                 }
             }
         } catch (Exception e) {
-            log.error("[AliyunSms] 批量发送异常: count={} err={}", requests.size(), e.getMessage());
+            log.error("[AliyunSms] 批量发送异�? count={} err={}", requests.size(), e.getMessage());
             for (int i = 0; i < requests.size(); i++) {
                 results.add(MessageResult.fail("SMS", e.getClass().getSimpleName() + ": " + e.getMessage()));
             }
@@ -238,9 +226,9 @@ public class AliyunSmsProvider implements SmsProvider {
         }
         if (!StringUtils.hasText(config.getAccessKeyId())
                 || !StringUtils.hasText(config.getAccessKeySecret())) {
-            return MessageResult.fail("SMS", "阿里云 SMS 凭证未配置");
+            return MessageResult.fail("SMS", "阿里�?SMS 凭证未配�?);
         }
-        // 从 ALIYUN-{bizId}-{idx} 中提取 bizId
+        // �?ALIYUN-{bizId}-{idx} 中提�?bizId
         String bizId = providerTraceId;
         if (bizId.startsWith("ALIYUN-")) {
             bizId = bizId.substring(7);
@@ -274,7 +262,7 @@ public class AliyunSmsProvider implements SmsProvider {
                         if ("DELIVERED".equals(sendStatus)) {
                             return MessageResult.ok("SMS", providerTraceId);
                         } else if ("FAILED".equals(sendStatus)) {
-                            MessageResult r = MessageResult.fail("SMS", "发送失败: " + errMsg);
+                            MessageResult r = MessageResult.fail("SMS", "发送失�? " + errMsg);
                             r.setProviderTraceId(providerTraceId);
                             return r;
                         }

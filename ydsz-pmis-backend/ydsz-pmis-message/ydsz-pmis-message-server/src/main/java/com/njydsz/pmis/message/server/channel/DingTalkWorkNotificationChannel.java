@@ -22,19 +22,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 钉钉工作通知通道（企业内部应用）。
- *
- * <p>P0-2: 通过钉钉开放平台企业内部应用发送工作通知(与群机器人不同,
- * 工作通知可指定 userId 定向发送,支持 text/markdown/actionCard 消息类型)。
- *
- * <p>流程：
- * <ol>
- *   <li>AppKey + AppSecret → 获取 access_token(缓存 Redis,7200s)</li>
+ * 钉钉工作通知通道（企业内部应用）�? *
+ * <p>P0-2: 通过钉钉开放平台企业内部应用发送工作通知(与群机器人不�?
+ * 工作通知可指�?userId 定向发�?支持 text/markdown/actionCard 消息类型)�? *
+ * <p>流程�? * <ol>
+ *   <li>AppKey + AppSecret �?获取 access_token(缓存 Redis,7200s)</li>
  *   <li>调用 {@code /topapi/message/corpconversation/asyncsend_v2} 发送工作通知</li>
  * </ol>
  *
- * <p>未配置 AppKey 时降级为 mock 输出日志,保证开发环境可运行。
- *
+ * <p>未配�?AppKey 时降级为 mock 输出日志,保证开发环境可运行�? *
  * @author ydsz-pmis-team
  * @since 1.5.0
  */
@@ -72,7 +68,7 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
 
         // 降级 mock
         if (!cfg.isEnabled() || !StringUtils.hasText(cfg.getAppKey())) {
-            log.warn("[DINGTALK_WORK] 未启用或未配置 AppKey, 降级 mock: receiver={} content={}",
+            log.warn("[DINGTALK_WORK] 未启用或未配�?AppKey, 降级 mock: receiver={} content={}",
                     request.getReceiver(), truncate(request.getContent(), 100));
             return MessageResult.ok(CHANNEL_TYPE, "mock-" + System.currentTimeMillis());
         }
@@ -84,7 +80,7 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
 
         String receiver = request.getReceiver();
         if (!StringUtils.hasText(receiver)) {
-            return MessageResult.fail(CHANNEL_TYPE, "接收人(userId)不能为空");
+            return MessageResult.fail(CHANNEL_TYPE, "接收�?userId)不能为空");
         }
 
         Map<String, Object> payload = buildPayload(request, cfg.getAgentId(), receiver);
@@ -103,24 +99,23 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
                 Map<String, Object> body = JSON.parseObject(response.getBody());
                 int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
                 if (errcode == 0) {
-                    log.info("[DINGTALK_WORK] 发送成功: receiver={}", receiver);
+                    log.info("[DINGTALK_WORK] 发送成�? receiver={}", receiver);
                     return MessageResult.ok(CHANNEL_TYPE, traceId);
                 }
                 String errmsg = (String) body.getOrDefault("errmsg", "unknown");
-                log.error("[DINGTALK_WORK] 发送失败: errcode={} errmsg={}", errcode, errmsg);
+                log.error("[DINGTALK_WORK] 发送失�? errcode={} errmsg={}", errcode, errmsg);
                 return MessageResult.fail(CHANNEL_TYPE, "errcode=" + errcode + ", errmsg=" + errmsg);
             }
-            log.error("[DINGTALK_WORK] 发送失败: status={}", response.getStatusCode());
+            log.error("[DINGTALK_WORK] 发送失�? status={}", response.getStatusCode());
             return MessageResult.fail(CHANNEL_TYPE, "HTTP " + response.getStatusCode());
         } catch (Exception e) {
-            log.error("[DINGTALK_WORK] 发送异常: reason={}", e.getMessage(), e);
+            log.error("[DINGTALK_WORK] 发送异�? reason={}", e.getMessage(), e);
             return MessageResult.fail(CHANNEL_TYPE, e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
 
     /**
-     * 获取钉钉 access_token（Redis 缓存，提前续期）。
-     */
+     * 获取钉钉 access_token（Redis 缓存，提前续期）�?     */
     private String getAccessToken(ChannelProperties.DingTalkWorkConfig cfg) {
         try {
             String cached = redisTemplate.opsForValue().get(TOKEN_CACHE_KEY);
@@ -149,8 +144,7 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
     }
 
     /**
-     * 构造钉钉工作通知请求体。
-     */
+     * 构造钉钉工作通知请求体�?     */
     private Map<String, Object> buildPayload(MessageRequest request, Long agentId, String receiver) {
         String content = request.getContent() == null ? "" : request.getContent();
         String subject = request.getSubject() == null ? "PMIS 通知" : request.getSubject();

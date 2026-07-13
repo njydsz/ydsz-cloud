@@ -14,15 +14,14 @@ import java.util.List;
 public interface PreferenceService {
 
     /**
-     * 新增或更新用户偏好
-     *
+     * 新增或更新用户偏�?     *
      * @param dto 偏好参数
      * @return 偏好实体
      */
     MsgPreferenceDO upsert(PreferenceUpsertDTO dto);
 
     /**
-     * 按用户 + 通道 + 业务类型查询偏好
+     * 按用�?+ 通道 + 业务类型查询偏好
      *
      * @param userId  用户 ID
      * @param channel 通道
@@ -32,8 +31,7 @@ public interface PreferenceService {
     MsgPreferenceDO getByUser(String userId, String channel, String bizType);
 
     /**
-     * 查询用户所有偏好
-     *
+     * 查询用户所有偏�?     *
      * @param userId 用户 ID
      * @return 偏好列表
      */

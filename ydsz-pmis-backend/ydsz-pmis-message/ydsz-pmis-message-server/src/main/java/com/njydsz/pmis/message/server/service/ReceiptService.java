@@ -14,8 +14,7 @@ import java.util.List;
 public interface ReceiptService {
 
     /**
-     * 处理服务商回执回调
-     *
+     * 处理服务商回执回�?     *
      * @param dto 回执回调参数
      */
     void callback(ReceiptCallbackDTO dto);

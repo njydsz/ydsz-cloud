@@ -64,10 +64,10 @@ public interface RouteRuleService {
     List<MsgRouteRuleDO> listEnabled();
 
     /**
-     * 按 priority 升序遍历 enabled 规则,SpEL 求值命中即返回
+     * �?priority 升序遍历 enabled 规则,SpEL 求值命中即返回
      *
      * @param request 消息请求
-     * @return 命中的路由规则,未命中返回 null
+     * @return 命中的路由规�?未命中返�?null
      */
     MsgRouteRuleDO match(MessageRequest request);
 }
