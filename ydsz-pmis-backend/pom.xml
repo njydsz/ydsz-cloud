@@ -31,6 +31,7 @@
         <module>ydsz-pmis-cronjob</module>
         <module>ydsz-pmis-workflow</module>
         <module>ydsz-pmis-nextwiki</module>
+        <module>ydsz-pmis-agent</module>
         
     </modules>
 
@@ -315,6 +316,11 @@
                 <artifactId>ydsz-pmis-nextwiki</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-agent</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- DDD 子模块：api（Feign 门面） -->
             <dependency>
@@ -366,6 +372,11 @@
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-nextwiki-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-agent-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -421,6 +432,11 @@
                 <artifactId>ydsz-pmis-nextwiki-domain</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-agent-domain</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- DDD 子模块：infra -->
             <dependency>
@@ -472,6 +488,11 @@
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-nextwiki-infra</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-agent-infra</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -527,6 +548,11 @@
                 <artifactId>ydsz-pmis-nextwiki-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-agent-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- DDD 子模块：web -->
             <dependency>
@@ -578,6 +604,11 @@
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-nextwiki-web</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-agent-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

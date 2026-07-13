@@ -1,10 +1,11 @@
 package com.njydsz.pmis.nextwiki.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.nextwiki.domain.entity.StorageQuota;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.nextwiki.domain.entity.StorageQuota;
 
 /**
  * 存储配额 MyBatis Mapper

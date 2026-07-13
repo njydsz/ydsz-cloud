@@ -1,11 +1,13 @@
 package com.njydsz.pmis.nextwiki.domain.service;
 
-import com.njydsz.pmis.nextwiki.domain.vo.SearchResultVO;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.njydsz.pmis.nextwiki.domain.vo.SearchResultVO;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 搜索领域服务

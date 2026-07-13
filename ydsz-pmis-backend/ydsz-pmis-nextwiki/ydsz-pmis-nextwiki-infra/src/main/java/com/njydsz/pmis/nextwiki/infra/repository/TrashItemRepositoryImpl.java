@@ -1,12 +1,14 @@
 package com.njydsz.pmis.nextwiki.infra.repository;
 
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
 import com.njydsz.pmis.nextwiki.domain.entity.TrashItem;
 import com.njydsz.pmis.nextwiki.domain.repository.TrashItemRepository;
 import com.njydsz.pmis.nextwiki.infra.mapper.TrashItemMapper;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 回收站仓储实现

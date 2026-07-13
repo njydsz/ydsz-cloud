@@ -1,12 +1,14 @@
 package com.njydsz.pmis.nextwiki.infra.repository;
 
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
 import com.njydsz.pmis.nextwiki.domain.entity.ShareLink;
 import com.njydsz.pmis.nextwiki.domain.repository.ShareLinkRepository;
 import com.njydsz.pmis.nextwiki.infra.mapper.ShareLinkMapper;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 分享链接仓储实现

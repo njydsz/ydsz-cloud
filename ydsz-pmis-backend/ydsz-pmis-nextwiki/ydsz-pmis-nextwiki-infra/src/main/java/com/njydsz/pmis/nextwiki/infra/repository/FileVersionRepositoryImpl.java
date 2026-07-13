@@ -1,12 +1,14 @@
 package com.njydsz.pmis.nextwiki.infra.repository;
 
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
 import com.njydsz.pmis.nextwiki.domain.entity.FileVersion;
 import com.njydsz.pmis.nextwiki.domain.repository.FileVersionRepository;
 import com.njydsz.pmis.nextwiki.infra.mapper.FileVersionMapper;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 文件版本仓储实现

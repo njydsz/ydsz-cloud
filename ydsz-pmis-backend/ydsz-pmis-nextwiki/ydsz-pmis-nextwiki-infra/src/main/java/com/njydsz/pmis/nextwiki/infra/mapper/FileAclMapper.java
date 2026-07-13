@@ -1,12 +1,13 @@
 package com.njydsz.pmis.nextwiki.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.nextwiki.domain.entity.FileAcl;
+import java.util.List;
+
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Delete;
 
-import java.util.List;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.nextwiki.domain.entity.FileAcl;
 
 /**
  * 文件 ACL MyBatis Mapper

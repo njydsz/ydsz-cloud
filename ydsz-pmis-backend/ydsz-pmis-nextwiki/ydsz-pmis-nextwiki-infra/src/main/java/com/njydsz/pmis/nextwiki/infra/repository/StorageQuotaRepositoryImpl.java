@@ -1,10 +1,12 @@
 package com.njydsz.pmis.nextwiki.infra.repository;
 
+import org.springframework.stereotype.Repository;
+
 import com.njydsz.pmis.nextwiki.domain.entity.StorageQuota;
 import com.njydsz.pmis.nextwiki.domain.repository.StorageQuotaRepository;
 import com.njydsz.pmis.nextwiki.infra.mapper.StorageQuotaMapper;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
 
 /**
  * 存储配额仓储实现
