@@ -57,7 +57,7 @@ public class ParallelBatchSender {
     public BatchSendResult sendBatch(List<MessageRequest> requests, String channel,
                                      java.util.function.Function<MessageRequest, MessageResult> sender) {
         if (requests == null || requests.isEmpty()) {
-            return BatchSendResult.empty();
+            return new BatchSendResult();
         }
         ExecutorService executor = channelExecutorMap.get(channel);
         if (executor == null) {
@@ -107,7 +107,7 @@ public class ParallelBatchSender {
         }
         log.info("[ParallelBatch] 批量发送完成: channel={} total={} success={} failure={} skipped={}",
                 channel, requests.size(), success, failure, skipped);
-        return new BatchSendResult(requests.size(), success, failure, skipped);
+        return new BatchSendResult(null, requests.size(), success, failure, skipped);
     }
 
     /**
@@ -133,6 +133,6 @@ public class ParallelBatchSender {
                 failure++;
             }
         }
-        return new BatchSendResult(requests.size(), success, failure, 0);
+        return new BatchSendResult(null, requests.size(), success, failure, 0);
     }
 }

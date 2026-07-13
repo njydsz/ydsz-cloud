@@ -1,0 +1,72 @@
+package com.njydsz.pmis.message.server.service.impl;
+
+import com.njydsz.pmis.message.server.service.core.RealtimePushService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * P2-19: 消息撤回实时推送。
+ *
+ * <p>当消息被撤回时，通过 WebSocket 实时推送撤回通知到客户端，
+ * 客户端收到后从消息列表中移除或标记为已撤回。
+ *
+ * <p>推送内容：
+ * <ul>
+ *   <li>type: RECALL</li>
+ *   <li>messageId: 被撤回的消息 ID</li>
+ *   <li>recallReason: 撤回原因</li>
+ *   <li>recallTime: 撤回时间戳</li>
+ * </ul>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.3.0
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class MessageRecallPushService {
+
+    private final RealtimePushService realtimePushService;
+
+    /**
+     * 推送消息撤回通知。
+     *
+     * @param userId       用户 ID
+     * @param messageId    被撤回的消息 ID
+     * @param recallReason 撤回原因
+     */
+    public void pushRecall(String userId, String messageId, String recallReason) {
+        try {
+            Map<String, Object> recallData = new HashMap<>(4);
+            recallData.put("type", "RECALL");
+            recallData.put("messageId", messageId);
+            recallData.put("recallReason", recallReason);
+            recallData.put("recallTime", System.currentTimeMillis());
+            realtimePushService.pushToUser(userId, "RECALL", recallData);
+            log.info("[RecallPush] 撤回推送已发送: userId={} messageId={}", userId, messageId);
+        } catch (Exception e) {
+            log.error("[RecallPush] 撤回推送失败: userId={} messageId={} err={}",
+                    userId, messageId, e.getMessage());
+        }
+    }
+
+    /**
+     * 批量推送撤回通知。
+     *
+     * @param userIds    用户 ID 列表
+     * @param messageId  被撤回的消息 ID
+     * @param recallReason 撤回原因
+     */
+    public void pushRecallBatch(java.util.List<String> userIds, String messageId, String recallReason) {
+        if (userIds == null || userIds.isEmpty()) {
+            return;
+        }
+        for (String userId : userIds) {
+            pushRecall(userId, messageId, recallReason);
+        }
+    }
+}
