@@ -40,6 +40,34 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Jackson（邮件队列序列化） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-json</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- OWASP HTML Sanitizer（邮件内容 XSS 防护） -->
+        <dependency>
+            <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+            <artifactId>owasp-java-html-sanitizer</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Micrometer（邮件发送指标监控） -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Jasypt（密码加密解密） -->
+        <dependency>
+            <groupId>com.github.ulisesbocchio</groupId>
+            <artifactId>jasypt-spring-boot-starter</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aspectj</artifactId>

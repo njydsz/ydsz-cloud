@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.common.redis.lock.DistributedLock;
+import com.njydsz.pmis.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.PageResponse;
@@ -1343,18 +1343,18 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             }
         }
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("instanceId", instanceId);
-        BaseResponse.put("taskId", taskId);
-        BaseResponse.put("nodeCode", nodeCode);
-        BaseResponse.put("nodeName", nodeName);
-        BaseResponse.put("formFieldsConfig", formFieldsConfig);
+        result.put("instanceId", instanceId);
+        result.put("taskId", taskId);
+        result.put("nodeCode", nodeCode);
+        result.put("nodeName", nodeName);
+        result.put("formFieldsConfig", formFieldsConfig);
         // P1-4: 字段权限配置（READONLY/REQUIRED/HIDDEN/EDITABLE）
-        BaseResponse.put("fieldPermissions", fieldPermissions);
+        result.put("fieldPermissions", fieldPermissions);
         // P1-4: 审批意见配置（required/minLength/placeholder）
-        BaseResponse.put("commentConfig", commentConfig);
-        BaseResponse.put("variables", getVariables(instanceId));
-        BaseResponse.put("flowStatus", instance.getFlowStatus());
-        BaseResponse.put("title", instance.getTitle());
+        result.put("commentConfig", commentConfig);
+        result.put("variables", getVariables(instanceId));
+        result.put("flowStatus", instance.getFlowStatus());
+        result.put("title", instance.getTitle());
         return result;
     }
 
@@ -1560,10 +1560,10 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
 
         Map<String, Object> result = new LinkedHashMap<>();
-        BaseResponse.put("successCount", successCount);
-        BaseResponse.put("failedCount", failedItems.size());
-        BaseResponse.put("instanceIds", instanceIds);
-        BaseResponse.put("failedItems", failedItems);
+        result.put("successCount", successCount);
+        result.put("failedCount", failedItems.size());
+        result.put("instanceIds", instanceIds);
+        result.put("failedItems", failedItems);
         log.info("[Flow] 批量发起完成: total={} success={} failed={}",
                 dtos.size(), successCount, failedItems.size());
         return result;

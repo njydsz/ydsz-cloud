@@ -9,6 +9,7 @@ import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -46,6 +47,12 @@ public class NotifyProperties {
 
 	/** 站内信渠道配置 */
 	private InsiteConfig insite = new InsiteConfig();
+
+	/** 渠道降级配置 */
+	private FallbackConfig fallback = new FallbackConfig();
+
+	/** 去重配置 */
+	private DedupConfig dedup = new DedupConfig();
 
 	/** 重试队列配置 */
 	private RetryQueueConfig retryQueue = new RetryQueueConfig();
@@ -171,6 +178,66 @@ public class NotifyProperties {
 
 		/** SSL 配置 */
 		private SslConfig ssl = new SslConfig();
+
+		/** 安全配置 */
+		private SecurityConfig security = new SecurityConfig();
+
+		/** 追踪配置 */
+		private TrackingConfig tracking = new TrackingConfig();
+
+		/** DKIM 签名配置 */
+		private DkimConfig dkim = new DkimConfig();
+	}
+
+	/**
+	 * 邮件安全配置
+	 */
+	@Data
+	public static class SecurityConfig {
+
+		/** 密码是否已加密（ENC(xxx) 格式，通过 Jasypt 解密） */
+		private boolean passwordEncrypted = false;
+
+		/** Jasypt 解密密钥（可从环境变量注入，不推荐硬编码） */
+		private String jasyptKey;
+
+		/** 是否启用 HTML 内容 XSS 过滤 */
+		private boolean sanitizeHtml = true;
+
+		/** List-Unsubscribe 头地址（退订支持） */
+		private String listUnsubscribe;
+	}
+
+	/**
+	 * 邮件追踪配置
+	 */
+	@Data
+	public static class TrackingConfig {
+
+		/** 是否启用已读追踪像素 */
+		private boolean enabled = false;
+
+		/** 追踪像素图片 Base URL，如 https://pmis.ydsz.com/api/notify/track/open */
+		private String pixelBaseUrl;
+	}
+
+	/**
+	 * DKIM 签名配置
+	 */
+	@Data
+	public static class DkimConfig {
+
+		/** 是否启用 DKIM 签名 */
+		private boolean enabled = false;
+
+		/** DKIM 域名（如 ydsz.com） */
+		private String domain;
+
+		/** DKIM 选择器（如 default） */
+		private String selector = "default";
+
+		/** DKIM 私钥（Base64 编码的 RSA 私钥） */
+		private String privateKey;
 	}
 
 	/**
@@ -306,6 +373,40 @@ public class NotifyProperties {
 
 		/** 过期时间（分钟） */
 		private long expireMinutes = 1440;
+	}
+
+	/**
+	 * 渠道降级配置
+	 *
+	 * <p>当主渠道发送失败时，自动降级到备用渠道发送。
+	 * 配置降级链：EMAIL -> SMS -> INSITE 等。
+	 */
+	@Data
+	public static class FallbackConfig {
+
+		/** 是否启用渠道降级 */
+		private boolean enabled = false;
+
+		/** 降级链配置，key=主渠道，value=备用渠道列表（按优先级排序） */
+		private Map<NotifyChannel, List<NotifyChannel>> chains = new HashMap<>();
+	}
+
+	/**
+	 * 去重配置
+	 *
+	 * <p>防止相同内容的邮件在短时间内重复发送。
+	 */
+	@Data
+	public static class DedupConfig {
+
+		/** 是否启用去重 */
+		private boolean enabled = false;
+
+		/** 去重时间窗口（秒），相同内容在该窗口内只发送一次 */
+		private int windowSeconds = 300;
+
+		/** Redis Key 前缀 */
+		private String redisKeyPrefix = "notify:dedup:";
 	}
 
 	/**

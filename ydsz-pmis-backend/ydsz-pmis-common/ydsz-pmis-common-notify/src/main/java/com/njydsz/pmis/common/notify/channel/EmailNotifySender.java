@@ -2,12 +2,20 @@ package com.njydsz.pmis.common.notify.channel;
 
 import com.njydsz.pmis.common.notify.config.NotifyProperties;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
+import com.njydsz.pmis.common.notify.dedup.NotifyDedupService;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
+import com.njydsz.pmis.common.notify.metrics.NotifyMetrics;
+import com.njydsz.pmis.common.notify.security.DkimSigner;
+import com.njydsz.pmis.common.notify.security.EmailContentSanitizer;
+import com.njydsz.pmis.common.notify.security.EmailSmtpHealthChecker;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;
+import com.njydsz.pmis.common.notify.tracking.EmailTrackingService;
 import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetHeaders;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -18,8 +26,11 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
@@ -41,29 +52,12 @@ import java.util.regex.Pattern;
  *   <li>邮件主题前缀（统一品牌标识）</li>
  *   <li>异步发送（基于虚拟线程池）</li>
  *   <li>模板引擎集成（通过 {@link TemplateEngine} 渲染邮件内容）</li>
+ *   <li>P0-3 HTML 内容 XSS 防护（OWASP Sanitizer）</li>
+ *   <li>P1-4 发送指标埋点（Micrometer）</li>
+ *   <li>P1-5 邮件追踪像素（已读回执）</li>
+ *   <li>P2-9 DKIM 签名支持</li>
+ *   <li>P3-13 邮件去重与幂等</li>
  * </ul>
- *
- * <p><b>配置示例（application.yml）：</b>
- * <pre>{@code
- * ydsz:
- *   notify:
- *     email:
- *       enabled: true
- *       smtp-host: smtp.exmail.qq.com
- *       smtp-port: 465
- *       from-mail: noreply@ydsz.com
- *       from-name: ydsz项目管理平台
- *       password: your-auth-code
- *       html-mode: true
- *       default-subject-prefix: "【ydsz项目管理】"
- *       cc: pmo@ydsz.com
- *       bcc: audit@ydsz.com
- *       reply-to: support@ydsz.com
- *       max-attachment-size-mb: 20
- *       ssl:
- *         enabled: true
- *         protocols: TLSv1.2
- * }</pre>
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -89,29 +83,53 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 	private final TemplateEngine templateEngine;
 	private final ExecutorService virtualThreadExecutor;
 
+	/** 可选：指标埋点服务（P1-4） */
+	private final ObjectProvider<NotifyMetrics> metricsProvider;
+	/** 可选：SMTP 健康检查器（P0-2） */
+	private final ObjectProvider<EmailSmtpHealthChecker> healthCheckerProvider;
+	/** 可选：邮件追踪服务（P1-5） */
+	private final ObjectProvider<EmailTrackingService> trackingServiceProvider;
+	/** 可选：DKIM 签名器（P2-9） */
+	private final ObjectProvider<DkimSigner> dkimSignerProvider;
+	/** 可选：去重服务（P3-13） */
+	private final ObjectProvider<NotifyDedupService> dedupServiceProvider;
+
 	/**
 	 * 构造邮件通知发送器
 	 *
-	 * @param mailSender           Spring JavaMail 发送器
-	 * @param notifyProperties     通知配置属性（从中获取邮件渠道配置）
-	 * @param templateEngine       模板引擎
-	 * @param virtualThreadExecutor 虚拟线程池（用于异步发送）
+	 * @param mailSender            Spring JavaMail 发送器
+	 * @param notifyProperties      通知配置属性
+	 * @param templateEngine        模板引擎（可为 null）
+	 * @param virtualThreadExecutor 虚拟线程池
+	 * @param metricsProvider       指标埋点服务（可选）
+	 * @param healthCheckerProvider SMTP 健康检查器（可选）
+	 * @param trackingServiceProvider 邮件追踪服务（可选）
+	 * @param dkimSignerProvider    DKIM 签名器（可选）
+	 * @param dedupServiceProvider  去重服务（可选）
 	 */
 	public EmailNotifySender(
 			JavaMailSender mailSender,
 			NotifyProperties notifyProperties,
-			TemplateEngine templateEngine,
-			@Qualifier("notifyVirtualThreadExecutor") ExecutorService virtualThreadExecutor) {
+			ObjectProvider<TemplateEngine> templateEngineProvider,
+			@Qualifier("notifyVirtualThreadExecutor") ExecutorService virtualThreadExecutor,
+			ObjectProvider<NotifyMetrics> metricsProvider,
+			ObjectProvider<EmailSmtpHealthChecker> healthCheckerProvider,
+			ObjectProvider<EmailTrackingService> trackingServiceProvider,
+			ObjectProvider<DkimSigner> dkimSignerProvider,
+			ObjectProvider<NotifyDedupService> dedupServiceProvider) {
 		this.mailSender = mailSender;
 		this.notifyProperties = notifyProperties;
-		this.templateEngine = templateEngine;
+		this.templateEngine = templateEngineProvider.getIfAvailable();
 		this.virtualThreadExecutor = virtualThreadExecutor;
+		this.metricsProvider = metricsProvider;
+		this.healthCheckerProvider = healthCheckerProvider;
+		this.trackingServiceProvider = trackingServiceProvider;
+		this.dkimSignerProvider = dkimSignerProvider;
+		this.dedupServiceProvider = dedupServiceProvider;
 	}
 
 	/**
 	 * 获取邮件渠道配置
-	 *
-	 * @return 邮件渠道配置
 	 */
 	private NotifyProperties.EmailConfig emailConfig() {
 		return notifyProperties.getEmail();
@@ -130,21 +148,43 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 		if (!isValidEmail(receiver)) {
 			return NotifySendResult.failure("收件人邮箱地址无效: " + receiver, channelName());
 		}
+		// P3-13：去重检查
+		if (isDuplicate(receiver, title, content)) {
+			log.debug("邮件去重命中，跳过发送: to={}, subject={}", receiver, title);
+			return NotifySendResult.success("dedup-skipped", channelName());
+		}
+		// P0-2：SMTP 健康检查
+		if (!isSmtpHealthy()) {
+			return NotifySendResult.failure("SMTP 服务不健康", channelName());
+		}
+		long startTime = System.nanoTime();
+		boolean success = false;
 		try {
 			String subject = buildSubject(title);
 			boolean isHtml = emailConfig().isHtmlMode() && isHtmlContent(content);
 
+			// P0-3：HTML 内容 XSS 清洗
+			String safeContent = sanitizeIfNeeded(content, isHtml);
+
 			if (isHtml || hasDefaultCcBcc()) {
-				sendMimeMail(receiver, subject, content, isHtml, null, null, null);
+				String messageId = generateMessageId();
+				// P1-5：注入追踪像素
+				safeContent = injectTrackingPixel(safeContent, messageId, isHtml);
+				sendMimeMail(receiver, subject, safeContent, isHtml, null, null, null);
 			} else {
-				sendSimpleMail(receiver, subject, content);
+				sendSimpleMail(receiver, subject, safeContent);
 			}
 
+			success = true;
 			log.debug("邮件通知发送成功: to={}, subject={}", receiver, subject);
 			return NotifySendResult.success("email-sent", channelName());
 		} catch (Exception e) {
 			log.error("邮件通知发送失败: to={}, subject={}, error={}", receiver, title, e.getMessage(), e);
+			recordFailure(e);
 			return NotifySendResult.failure(e.getMessage(), channelName());
+		} finally {
+			// P1-4：记录指标
+			recordMetrics(success, System.nanoTime() - startTime);
 		}
 	}
 
@@ -162,7 +202,9 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 					? (Map<String, Object>) templateParams
 					: Map.of();
 
-			String content = templateEngine.render(templateCode, params);
+			String content = templateEngine != null
+					? templateEngine.render(templateCode, params)
+					: templateCode;
 			String title = params.containsKey("subject")
 					? String.valueOf(params.get("subject"))
 					: templateCode;
@@ -227,6 +269,17 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 		if (!isValidEmailList(message.getTo())) {
 			return NotifySendResult.failure("收件人邮箱地址无效: " + message.getTo(), channelName());
 		}
+		// P3-13：去重检查
+		if (isDuplicate(message.getTo(), message.getSubject(), message.getContent())) {
+			log.debug("邮件去重命中，跳过发送: to={}, subject={}", message.getTo(), message.getSubject());
+			return NotifySendResult.success("dedup-skipped", channelName());
+		}
+		// P0-2：SMTP 健康检查
+		if (!isSmtpHealthy()) {
+			return NotifySendResult.failure("SMTP 服务不健康", channelName());
+		}
+		long startTime = System.nanoTime();
+		boolean success = false;
 		try {
 			validateAttachmentSize(message);
 			String subject = buildSubject(message.getSubject());
@@ -234,25 +287,37 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 					? message.getHtml()
 					: (emailConfig().isHtmlMode() && isHtmlContent(message.getContent()));
 
+			// P0-3：HTML 内容 XSS 清洗
+			String safeContent = sanitizeIfNeeded(message.getContent(), isHtml);
+
+			// P1-5：注入追踪像素
+			String messageId = generateMessageId();
+			safeContent = injectTrackingPixel(safeContent, messageId, isHtml);
+
 			sendMimeMail(
 					message.getTo(),
 					subject,
-					message.getContent(),
+					safeContent,
 					isHtml,
 					message.getCc(),
 					message.getBcc(),
 					message
 			);
 
+			success = true;
 			log.debug("高级邮件发送成功: to={}, subject={}, attachments={}, inlineResources={}",
 					message.getTo(), subject,
 					message.getAttachments() != null ? message.getAttachments().size() : 0,
 					message.getInlineResources() != null ? message.getInlineResources().size() : 0);
-			return NotifySendResult.success("email-sent", channelName());
+			return NotifySendResult.success(messageId, channelName());
 		} catch (Exception e) {
 			log.error("高级邮件发送失败: to={}, subject={}, error={}",
 					message.getTo(), message.getSubject(), e.getMessage(), e);
+			recordFailure(e);
 			return NotifySendResult.failure(e.getMessage(), channelName());
+		} finally {
+			// P1-4：记录指标
+			recordMetrics(success, System.nanoTime() - startTime);
 		}
 	}
 
@@ -260,11 +325,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 异步发送邮件
-	 *
-	 * @param receiver 收件人邮箱
-	 * @param title    邮件主题
-	 * @param content  邮件内容
-	 * @return 异步发送结果
 	 */
 	public CompletableFuture<NotifySendResult> sendEmailAsync(String receiver, String title, String content) {
 		return CompletableFuture.supplyAsync(() -> send(receiver, title, content), virtualThreadExecutor);
@@ -272,9 +332,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 异步发送复杂邮件
-	 *
-	 * @param message 邮件消息体
-	 * @return 异步发送结果
 	 */
 	public CompletableFuture<NotifySendResult> sendEmailAsync(EmailMessage message) {
 		return CompletableFuture.supplyAsync(() -> sendEmail(message), virtualThreadExecutor);
@@ -282,14 +339,91 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 批量异步发送邮件
-	 *
-	 * @param receivers 收件人邮箱列表
-	 * @param title     邮件主题
-	 * @param content   邮件内容
-	 * @return 异步发送结果
 	 */
 	public CompletableFuture<NotifySendResult> batchSendEmailAsync(List<String> receivers, String title, String content) {
 		return CompletableFuture.supplyAsync(() -> batchSend(receivers, title, content), virtualThreadExecutor);
+	}
+
+	// ==================== 集成辅助方法 ====================
+
+	/**
+	 * P3-13：检查是否为重复邮件
+	 */
+	private boolean isDuplicate(String receiver, String title, String content) {
+		NotifyDedupService dedupService = dedupServiceProvider.getIfAvailable();
+		return dedupService != null && dedupService.isDuplicate(receiver, title, content);
+	}
+
+	/**
+	 * P0-2：检查 SMTP 是否健康
+	 */
+	private boolean isSmtpHealthy() {
+		EmailSmtpHealthChecker healthChecker = healthCheckerProvider.getIfAvailable();
+		if (healthChecker == null) {
+			return true; // 未配置健康检查器时默认健康
+		}
+		return healthChecker.isHealthy();
+	}
+
+	/**
+	 * P0-3：HTML 内容 XSS 清洗
+	 */
+	private String sanitizeIfNeeded(String content, boolean isHtml) {
+		if (!isHtml || !StringUtils.hasText(content)) {
+			return content;
+		}
+		if (emailConfig().getSecurity() != null && emailConfig().getSecurity().isSanitizeHtml()) {
+			String sanitized = EmailContentSanitizer.sanitize(content);
+			if (!sanitized.equals(content)) {
+				log.debug("HTML 邮件内容已清洗 XSS");
+			}
+			return sanitized;
+		}
+		return content;
+	}
+
+	/**
+	 * P1-5：注入追踪像素
+	 */
+	private String injectTrackingPixel(String content, String messageId, boolean isHtml) {
+		if (!isHtml || !StringUtils.hasText(content)) {
+			return content;
+		}
+		EmailTrackingService trackingService = trackingServiceProvider.getIfAvailable();
+		if (trackingService == null || !trackingService.isTrackingEnabled()) {
+			return content;
+		}
+		return trackingService.injectTrackingPixel(content, messageId);
+	}
+
+	/**
+	 * P1-4：记录发送指标
+	 */
+	private void recordMetrics(boolean success, long durationNanos) {
+		NotifyMetrics metrics = metricsProvider.getIfAvailable();
+		if (metrics != null) {
+			metrics.recordEmailSend(channelName(), success, Duration.ofNanos(durationNanos));
+			if (!success) {
+				metrics.recordEmailFailure(channelName(), "send_error");
+			}
+		}
+	}
+
+	/**
+	 * P1-4：记录发送失败
+	 */
+	private void recordFailure(Exception e) {
+		NotifyMetrics metrics = metricsProvider.getIfAvailable();
+		if (metrics != null) {
+			metrics.recordEmailFailure(channelName(), e.getClass().getSimpleName());
+		}
+	}
+
+	/**
+	 * 生成邮件消息 ID
+	 */
+	private String generateMessageId() {
+		return UUID.randomUUID().toString().replace("-", "");
 	}
 
 	// ==================== 内部方法 ====================
@@ -300,9 +434,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 构建邮件主题（添加默认前缀）
-	 *
-	 * @param subject 原始主题
-	 * @return 带前缀的主题
 	 */
 	private String buildSubject(String subject) {
 		if (subject == null || subject.isEmpty()) {
@@ -317,9 +448,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 判断内容是否为 HTML 格式
-	 *
-	 * @param content 邮件内容
-	 * @return true 表示内容包含 HTML 标签
 	 */
 	private boolean isHtmlContent(String content) {
 		return content != null && content.contains("<") && content.contains(">");
@@ -327,8 +455,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 检查是否配置了默认抄送/密送
-	 *
-	 * @return true 表示有默认抄送或密送配置
 	 */
 	private boolean hasDefaultCcBcc() {
 		return StringUtils.hasText(emailConfig().getCc()) || StringUtils.hasText(emailConfig().getBcc());
@@ -336,10 +462,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 发送简单纯文本邮件（无附件、无抄送）
-	 *
-	 * @param to      收件人
-	 * @param subject 主题
-	 * @param content 内容
 	 */
 	private void sendSimpleMail(String to, String subject, String content) {
 		SimpleMailMessage msg = new SimpleMailMessage();
@@ -354,7 +476,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 	}
 
 	/**
-	 * 发送 MIME 邮件（支持 HTML、附件、内联资源、抄送、密送、自定义头）
+	 * 发送 MIME 邮件（支持 HTML、附件、内联资源、抄送、密送、自定义头、DKIM 签名）
 	 *
 	 * @param to       收件人
 	 * @param subject  主题
@@ -422,13 +544,32 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 			}
 		}
 
+		// P0-3：List-Unsubscribe 退订头
+		if (emailConfig().getSecurity() != null
+				&& StringUtils.hasText(emailConfig().getSecurity().getListUnsubscribe())) {
+			mime.setHeader("List-Unsubscribe",
+					"<" + emailConfig().getSecurity().getListUnsubscribe() + ">");
+		}
+
+		// P2-9：DKIM 签名
+		DkimSigner dkimSigner = dkimSignerProvider.getIfAvailable();
+		if (dkimSigner != null && dkimSigner.isDkimEnabled()) {
+			InternetHeaders headers = new InternetHeaders();
+			headers.setHeader("From", buildFromAddress());
+			headers.setHeader("To", to);
+			headers.setHeader("Subject", subject);
+			byte[] bodyBytes = content != null ? content.getBytes(StandardCharsets.UTF_8) : new byte[0];
+			String dkimSignature = dkimSigner.generateDkimSignature(headers, bodyBytes);
+			if (dkimSignature != null) {
+				mime.setHeader("DKIM-Signature", dkimSignature);
+			}
+		}
+
 		mailSender.send(mime);
 	}
 
 	/**
 	 * 构建发件人地址（含显示名称）
-	 *
-	 * @return 格式为 "显示名称 <邮箱地址>" 的发件人地址
 	 */
 	private String buildFromAddress() {
 		String fromName = emailConfig().getFromName();
@@ -441,9 +582,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 解析逗号分隔的邮箱地址列表
-	 *
-	 * @param addresses 逗号分隔的邮箱地址
-	 * @return 邮箱地址数组
 	 */
 	private String[] parseAddresses(String addresses) {
 		return addresses.split("[,;]\\s*");
@@ -451,9 +589,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 校验邮箱地址格式
-	 *
-	 * @param email 邮箱地址
-	 * @return true 表示格式合法
 	 */
 	private boolean isValidEmail(String email) {
 		if (email == null || email.isBlank()) {
@@ -464,9 +599,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 校验多个邮箱地址格式（逗号分隔）
-	 *
-	 * @param emails 逗号分隔的邮箱地址
-	 * @return true 表示全部格式合法
 	 */
 	private boolean isValidEmailList(String emails) {
 		if (!StringUtils.hasText(emails)) {
@@ -482,9 +614,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 
 	/**
 	 * 校验附件总大小是否超过限制
-	 *
-	 * @param message 邮件消息体
-	 * @throws IllegalArgumentException 附件总大小超限时抛出
 	 */
 	private void validateAttachmentSize(EmailMessage message) {
 		if (message == null || message.getAttachments() == null) {
