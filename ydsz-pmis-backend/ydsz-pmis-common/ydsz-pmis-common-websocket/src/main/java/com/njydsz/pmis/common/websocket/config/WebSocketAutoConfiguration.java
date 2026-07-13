@@ -213,49 +213,6 @@ public class WebSocketAutoConfiguration {
     }
 
     /**
-     * STOMP 端点配置（注册 WebSocket 端点 + 鉴权拦截器 + 心跳）。
-     *
-     * <p>当业务服务已自行定义 {@code @EnableWebSocketMessageBroker} 配置类时，
-     * 可通过 {@code pmis.websocket.auto-endpoint=false} 禁用此自动注册，避免重复。
-     *
-     * @param properties    WebSocket 配置
-     * @param authInterceptor 握手鉴权拦截器（可选）
-     * @return WebSocketMessageBrokerConfigurer
-     */
-    @Bean
-    @ConditionalOnMissingBean(name = "webSocketEndpointConfigurer")
-    @ConditionalOnProperty(prefix = "pmis.websocket", name = "auto-endpoint", havingValue = "true", matchIfMissing = true)
-    public WebSocketMessageBrokerConfigurer webSocketEndpointConfigurer(
-            WebSocketProperties properties,
-            @Autowired(required = false) WebSocketAuthInterceptor authInterceptor) {
-        log.info("[WebSocket] 注册 STOMP 端点: endpoint={}, sockJs={}", properties.getEndpoint(), properties.isSockJsEnabled());
-        return new WebSocketMessageBrokerConfigurer() {
-            @Override
-            public void configureMessageBroker(org.springframework.messaging.simp.config.MessageBrokerRegistry config) {
-                var broker = config.enableSimpleBroker("/topic", "/queue")
-                        .setHeartbeatValue(new long[]{
-                                properties.getHeartbeat().getServerInterval(),
-                                properties.getHeartbeat().getClientInterval()});
-                config.setApplicationDestinationPrefixes("/app");
-                config.setUserDestinationPrefix("/user");
-            }
-
-            @Override
-            public void registerStompEndpoints(StompEndpointRegistry registry) {
-                var registration = registry.addEndpoint(properties.getEndpoint());
-                if (authInterceptor != null) {
-                    registration.addInterceptors(authInterceptor);
-                }
-                registration.setAllowedOriginPatterns(
-                        properties.getAllowedOriginPatterns().toArray(new String[0]));
-                if (properties.isSockJsEnabled()) {
-                    registration.withSockJS();
-                }
-            }
-        };
-    }
-
-    /**
      * No-op 集群发布者（集群未启用时的降级实现，始终返回 false 触发本地推送）。
      */
     private static class NoOpClusterPublisher extends com.njydsz.pmis.common.websocket.cluster.WebSocketClusterPublisher {

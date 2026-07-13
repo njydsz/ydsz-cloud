@@ -76,11 +76,11 @@ public class InternalJobController {
     public BaseResponse<String> execute(@RequestBody RemoteTaskRequest request) {
         if (request == null || request.getJob() == null) {
             log.warn("[InternalJob] 远程派发请求参数为空");
-            return BaseResponse.failed(400, "请求参数为空");
+            return BaseResponse.failed("400", "请求参数为空");
         }
         if (request.getJob().getJobKey() == null) {
             log.warn("[InternalJob] 远程派发请求 jobKey 为空");
-            return BaseResponse.failed(400, "jobKey 不能为空");
+            return BaseResponse.failed("400", "jobKey 不能为空");
         }
         // P1-4: 从请求中恢复 traceId 到 MDC，保证全链路追踪
         String traceId = request.getTraceId();
@@ -127,7 +127,7 @@ public class InternalJobController {
     public BaseResponse<ProcessResult> executeSubTask(@RequestBody RemoteSubTaskRequest request) {
         if (request == null || request.getJobKey() == null || request.getHandler() == null) {
             log.warn("[InternalJob] 子任务请求参数为空");
-            return BaseResponse.failed(400, "请求参数为空");
+            return BaseResponse.failed("400", "请求参数为空");
         }
         String traceId = request.getTraceId();
         if (traceId != null && !traceId.isBlank()) {
