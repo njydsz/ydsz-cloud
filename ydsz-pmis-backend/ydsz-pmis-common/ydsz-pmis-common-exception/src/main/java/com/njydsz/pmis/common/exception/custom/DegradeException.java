@@ -34,7 +34,7 @@ import lombok.ToString;
  * @email limw1888@126.com
  * @version 3.5.0
  * @since 3.5.0
- * @see com.njydsz.pmis.common.exception.code.UnifiedExceptionCode#SERVICE_DEGRADED
+ * @see UnifiedExceptionCode#SERVICE_DEGRADED
  * @see ExceptionCategory#INFRASTRUCTURE
  * @see ExceptionLevel#WARN
  */

@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.audit.annotation;
 
+import com.njydsz.pmis.common.audit.config.AuditAutoConfiguration;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;
@@ -33,7 +34,7 @@ import java.lang.annotation.*;
 @Documented
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import(com.njydsz.pmis.common.audit.config.AuditAutoConfiguration.class)
+@Import(AuditAutoConfiguration.class)
 public @interface EnableYdszAudit {
 
     /**

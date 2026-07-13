@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.jdbc.config;
 
+import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
+import com.baomidou.dynamic.datasource.annotation.DS;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -56,10 +58,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
  * @email limw1888@126.com
  * @version 3.5.0
  * @since 1.0.0
- * @see com.baomidou.dynamic.datasource.annotation.DS
+ * @see DS
  */
 @AutoConfiguration
-@ConditionalOnClass(com.baomidou.dynamic.datasource.DynamicRoutingDataSource.class)
+@ConditionalOnClass(DynamicRoutingDataSource.class)
 @ConditionalOnProperty(prefix = "spring.datasource.dynamic", name = "enabled", havingValue = "true", matchIfMissing = false)
 public class DynamicDataSourceConfiguration {
     // 本配置类仅作为自动装配入口，实际功能由 dynamic-datasource 自动配置完成。

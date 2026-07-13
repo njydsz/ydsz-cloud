@@ -21,7 +21,7 @@ import com.njydsz.pmis.common.safe.config.SecurityHeaderProperties;
  * @email limw1888@126.com
  * @version 3.5.0
  * @see BaseSecurityHeaderFilter
- * @see com.njydsz.pmis.common.safe.config.SecurityHeaderProperties
+ * @see SecurityHeaderProperties
  */
 public class SecurityHeaderFilter extends BaseSecurityHeaderFilter {
 

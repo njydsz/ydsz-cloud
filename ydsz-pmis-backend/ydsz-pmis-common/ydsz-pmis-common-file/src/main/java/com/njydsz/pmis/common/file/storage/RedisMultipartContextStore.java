@@ -3,6 +3,9 @@ package com.njydsz.pmis.common.file.storage;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.time.Duration;
@@ -187,14 +190,14 @@ public class RedisMultipartContextStore implements MultipartContextStore {
     private List<String> scanKeys() {
         List<String> keys = new ArrayList<>();
         try {
-            org.springframework.data.redis.core.ScanOptions options =
-                    org.springframework.data.redis.core.ScanOptions.scanOptions()
+            ScanOptions options =
+                    ScanOptions.scanOptions()
                             .match(SCAN_PATTERN)
                             .count(100)
                             .build();
 
-            stringRedisTemplate.execute((org.springframework.data.redis.core.RedisCallback<Void>) connection -> {
-                try (org.springframework.data.redis.core.Cursor<byte[]> cursor =
+            stringRedisTemplate.execute((RedisCallback<Void>) connection -> {
+                try (Cursor<byte[]> cursor =
                              connection.keyCommands().scan(options)) {
                     if (cursor != null) {
                         while (cursor.hasNext()) {

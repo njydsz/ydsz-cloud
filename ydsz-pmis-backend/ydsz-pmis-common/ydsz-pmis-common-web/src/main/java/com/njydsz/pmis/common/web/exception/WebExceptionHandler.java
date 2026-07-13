@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.web.exception;
 
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.exception.handler.BaseExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
@@ -46,8 +48,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * @email limw1888@126.com
  * @version 3.5.0
  * @see BaseExceptionHandler
- * @see com.njydsz.pmis.common.exception.custom.BusinessException
- * @see com.njydsz.pmis.common.core.response.BaseResponse
+ * @see BusinessException
+ * @see BaseResponse
  */
 @Slf4j
 @RestControllerAdvice

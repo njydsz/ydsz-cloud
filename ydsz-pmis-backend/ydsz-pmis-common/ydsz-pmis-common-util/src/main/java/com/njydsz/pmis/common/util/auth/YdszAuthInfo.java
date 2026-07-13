@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.util.auth;
 
 import com.njydsz.pmis.common.core.enums.ServiceType;
 import com.njydsz.pmis.common.core.enums.DataScopeType;
+import com.njydsz.pmis.common.core.enums.DataScopeType;
 import com.njydsz.pmis.common.core.enums.IdentityType;
 import lombok.Data;
 
@@ -43,8 +44,8 @@ import java.util.Set;
  *   <tr><td>editableColumnsByTable</td><td>X-Editable-Columns</td></tr>
  * </table>
  *
- * @see com.njydsz.pmis.common.web.auth.WebAuthInfo
- * @see com.njydsz.pmis.common.app.auth.AppAuthInfo
+ * @see {@link com.njydsz.pmis.common.web.auth.WebAuthInfo}
+ * @see {@link com.njydsz.pmis.common.app.auth.AppAuthInfo}
  * @see RequestHolder
  * @see AuthInfoUtils
   *

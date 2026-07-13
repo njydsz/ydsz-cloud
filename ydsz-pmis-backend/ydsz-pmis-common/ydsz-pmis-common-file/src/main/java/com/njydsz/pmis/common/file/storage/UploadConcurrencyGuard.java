@@ -5,6 +5,7 @@ import com.njydsz.pmis.common.file.config.FileProperties.ConcurrencyControl;
 import com.njydsz.pmis.common.file.exception.FileExceptionCode;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -113,7 +114,7 @@ public class UploadConcurrencyGuard {
         // Lua: if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end
         String script = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
         Object result = redisTemplate.execute(
-                new org.springframework.data.redis.core.script.DefaultRedisScript<>(script, Long.class),
+                new DefaultRedisScript<>(script, Long.class),
                 Collections.singletonList(lockKey), lockToken);
         if (Long.valueOf(1).equals(result)) {
             log.debug("[UploadGuard] lock released, key={}", lockKey);

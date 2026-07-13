@@ -7,6 +7,7 @@ import com.njydsz.pmis.common.auth.model.AuthenticationProvider;
 import com.njydsz.pmis.common.base.config.BaseAutoConfiguration;
 import com.njydsz.pmis.common.base.config.BaseMvcConfiguration;
 import com.njydsz.pmis.common.base.constant.BaseFilterOrders;
+import org.springframework.context.ApplicationContext;
 import com.njydsz.pmis.common.safe.config.SafeConfiguration;
 import com.njydsz.pmis.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.pmis.common.web.advice.GlobalResponseAdvice;
@@ -77,7 +78,7 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
                                AuthHandlerFactory authHandlerFactory,
                                WebTraceProperties webTraceProperties,
                                @Nullable AuthenticationProvider authenticationProvider,
-                               org.springframework.context.ApplicationContext applicationContext) {
+                               ApplicationContext applicationContext) {
         super(webCorsProperties);
         this.baseHttpInterceptor = baseHttpInterceptor;
         this.requestLogInterceptor = requestLogInterceptor;

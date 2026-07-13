@@ -72,8 +72,8 @@ import java.util.List;
  * @email limw1888@126.com
  * @version 3.5.0
  * @see MybatisPlusInterceptor
- * @see com.njydsz.pmis.common.jdbc.interceptor.OptimisticLockInterceptor
- * @see com.njydsz.pmis.common.jdbc.interceptor.LogicalDeleteInterceptor
+ * @see OptimisticLockInterceptor
+ * @see LogicalDeleteInterceptor
  * @since 1.0.0
  */
 @Slf4j

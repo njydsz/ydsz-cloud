@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.server.service.impl;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.jdbc.constant.DataSourceConstants;
 import com.njydsz.pmis.finance.api.client.FinanceDataClient;
@@ -281,8 +282,8 @@ public class ReportServiceImpl implements ReportService {
 
     private BigDecimal sumPurchase(String initiationId, String period) {
         try {
-            com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<PurchaseDO> w =
-                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+            LambdaQueryWrapper<PurchaseDO> w =
+                    new LambdaQueryWrapper<>();
             w.eq(PurchaseDO::getInitiationId, initiationId);
             if (StringUtils.hasText(period)) {
                 w.like(PurchaseDO::getPurchaseDate, period);

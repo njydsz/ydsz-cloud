@@ -1,6 +1,8 @@
 package com.njydsz.pmis.common.socket.config;
 
 import com.njydsz.pmis.common.auth.token.TokenService;
+import com.njydsz.pmis.common.socket.cluster.WebSocketClusterMessage;
+import com.njydsz.pmis.common.socket.cluster.WebSocketClusterPublisher;
 import com.njydsz.pmis.common.socket.auth.WebSocketAuthInterceptor;
 import com.njydsz.pmis.common.socket.metric.WebSocketMetrics;
 import com.njydsz.pmis.common.socket.offline.OfflineMessageStore;
@@ -195,7 +197,7 @@ public class WebSocketAutoConfiguration {
     @ConditionalOnMissingBean(RealtimePushTemplate.class)
     public RealtimePushTemplate realtimePushTemplate(
             SimpMessagingTemplate messagingTemplate,
-            @Autowired(required = false) com.njydsz.pmis.common.socket.cluster.WebSocketClusterPublisher clusterPublisher,
+            @Autowired(required = false) WebSocketClusterPublisher clusterPublisher,
             OnlineUserService onlineUserService,
             OfflineMessageStore offlineMessageStore,
             WebSocketMetrics webSocketMetrics) {
@@ -217,7 +219,7 @@ public class WebSocketAutoConfiguration {
         }
 
         @Override
-        public boolean publish(com.njydsz.pmis.common.socket.cluster.WebSocketClusterMessage message) {
+        public boolean publish(WebSocketClusterMessage message) {
             return false;
         }
     }

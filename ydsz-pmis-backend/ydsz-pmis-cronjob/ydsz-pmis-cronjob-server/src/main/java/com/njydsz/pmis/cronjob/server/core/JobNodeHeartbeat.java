@@ -226,7 +226,7 @@ public class JobNodeHeartbeat {
      */
     private BigDecimal collectCpuUsage() {
         try {
-            if (osMxBean instanceof com.sun.management.OperatingSystemMXBean sunOs) {
+            if (osMxBean instanceof com.sun.management.OperatingSystemMXBean sunOs) { // FQN-OK: name conflict with java.lang.management.OperatingSystemMXBean
                 double cpuLoad = sunOs.getCpuLoad();
                 if (cpuLoad >= 0) {
                     return BigDecimal.valueOf(cpuLoad * 100)
@@ -244,7 +244,7 @@ public class JobNodeHeartbeat {
      */
     private BigDecimal collectMemUsagePct() {
         try {
-            if (osMxBean instanceof com.sun.management.OperatingSystemMXBean sunOs) {
+            if (osMxBean instanceof com.sun.management.OperatingSystemMXBean sunOs) { // FQN-OK: name conflict with java.lang.management.OperatingSystemMXBean
                 long total = sunOs.getTotalMemorySize();
                 long free = sunOs.getFreeMemorySize();
                 if (total > 0) {

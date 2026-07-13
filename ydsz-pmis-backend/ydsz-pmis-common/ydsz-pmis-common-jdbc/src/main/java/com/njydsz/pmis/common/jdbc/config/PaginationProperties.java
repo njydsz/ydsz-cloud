@@ -31,7 +31,7 @@ import org.springframework.context.annotation.Configuration;
  * @email limw1888@126.com
  * @version 3.5.0
  * @since 1.0.0
- * @see com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor
+ * @see PaginationInnerInterceptor
  */
 @Data
 @Configuration

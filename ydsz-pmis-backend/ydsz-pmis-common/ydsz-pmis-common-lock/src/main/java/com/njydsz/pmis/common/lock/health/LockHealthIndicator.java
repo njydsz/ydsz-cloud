@@ -7,6 +7,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 
 /**
@@ -41,7 +42,7 @@ public class LockHealthIndicator implements HealthIndicator {
         try {
             long startTime = System.currentTimeMillis();
 
-            org.springframework.data.redis.connection.RedisConnection connection = null;
+            RedisConnection connection = null;
             try {
                 connection = redisConnectionFactory.getConnection();
                 String pong = connection.ping();

@@ -189,7 +189,7 @@ public class JobStatsController {
     @GetMapping("/recent-failures")
     public BaseResponse<List<JobLogDO>> recentFailures(@RequestParam(defaultValue = "10") int limit) {
         return BaseResponse.ok(jobLogMapper.selectList(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLogDO>()
+                new LambdaQueryWrapper<JobLogDO>()
                         .eq(JobLogDO::getStatus, "FAILED")
                         .orderByDesc(JobLogDO::getStartTime)
                         .last("LIMIT " + Math.min(limit, 100))));
@@ -214,7 +214,7 @@ public class JobStatsController {
             LocalDateTime hourStart = queryDate.atTime(hour, 0);
             LocalDateTime hourEnd = queryDate.atTime(hour, 59, 59);
             Long count = jobLogMapper.selectCount(
-                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLogDO>()
+                    new LambdaQueryWrapper<JobLogDO>()
                             .ge(JobLogDO::getStartTime, hourStart)
                             .le(JobLogDO::getStartTime, hourEnd));
             Map<String, Object> entry = new HashMap<>();

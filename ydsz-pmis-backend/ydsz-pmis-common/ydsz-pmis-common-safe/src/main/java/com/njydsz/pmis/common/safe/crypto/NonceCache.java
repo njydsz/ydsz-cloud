@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.safe.crypto;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.RemovalCause;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -91,7 +92,7 @@ public class NonceCache {
         this.cache = Caffeine.newBuilder()
                 .expireAfterWrite(expireSeconds, TimeUnit.SECONDS)
                 .maximumSize(maxSize)
-                .removalListener((String key, Long value, com.github.benmanes.caffeine.cache.RemovalCause cause) -> {
+                .removalListener((String key, Long value, RemovalCause cause) -> {
                     if (log.isDebugEnabled()) {
                         log.debug("Nonce 缓存淘汰: key={}, cause={}", key, cause);
                     }

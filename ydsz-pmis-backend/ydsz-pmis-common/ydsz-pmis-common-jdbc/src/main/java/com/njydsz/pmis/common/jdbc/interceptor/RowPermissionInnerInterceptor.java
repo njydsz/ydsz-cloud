@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.jdbc.interceptor;
 
+import com.njydsz.pmis.common.core.enums.DataScopeType;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
@@ -330,7 +331,7 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
             return null;
         }
         Expression out = null;
-        com.njydsz.pmis.common.core.enums.DataScopeType scope = context.getDataScope();
+        DataScopeType scope = context.getDataScope();
         if (scope == null) {
             if (shouldApplyTenantIsolation(table)) {
                 out = and(out, equals(table, config.getTenantColumn(), context.getTenantId()));

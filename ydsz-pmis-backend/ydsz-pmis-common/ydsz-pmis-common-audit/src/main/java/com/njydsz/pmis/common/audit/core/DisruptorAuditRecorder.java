@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.audit.core;
 
+import com.lmax.disruptor.SleepingWaitStrategy;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.RingBuffer;
@@ -11,6 +12,8 @@ import com.njydsz.pmis.common.audit.sharding.TableShardingStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import javax.sql.DataSource;
 import java.sql.PreparedStatement;
@@ -113,14 +116,14 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
                                    TableShardingStrategy shardingStrategy, String baseTableName) {
         Objects.requireNonNull(dataSource, "DataSource must not be null");
         Objects.requireNonNull(properties, "AuditProperties must not be null");
-        this.jdbcTemplate = new org.springframework.jdbc.core.JdbcTemplate(dataSource);
+        this.jdbcTemplate = new JdbcTemplate(dataSource);
         this.asyncProps = properties.getAsync();
         this.shardingStrategy = shardingStrategy;
         this.baseTableName = baseTableName != null ? baseTableName : BASE_TABLE_NAME;
         this.batchBuffer = new ArrayList<>(asyncProps.getBatchSize());
 
         // 创建线程工厂
-        ThreadFactory threadFactory = new org.springframework.scheduling.concurrent.CustomizableThreadFactory("audit-disruptor-");
+        ThreadFactory threadFactory = new CustomizableThreadFactory("audit-disruptor-");
 
         // 创建 Disruptor
         this.disruptor = new Disruptor<>(
@@ -128,7 +131,7 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
                 asyncProps.getQueueCapacity(),
                 threadFactory,
                 ProducerType.MULTI,
-                new com.lmax.disruptor.SleepingWaitStrategy()
+                new SleepingWaitStrategy()
         );
 
         // 设置批量事件处理器

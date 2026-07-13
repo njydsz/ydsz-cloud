@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.docs.parser.impl;
 
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import com.njydsz.pmis.common.docs.domain.DocumentContent;
 import com.njydsz.pmis.common.docs.domain.DocumentImage;
 import com.njydsz.pmis.common.docs.domain.DocumentMetadata;
@@ -137,7 +138,7 @@ public class PdfDocumentParser implements DocumentParser {
             return DocumentMetadata.builder().title(fileName).build();
         }
 
-        org.apache.pdfbox.pdmodel.PDDocumentInformation info = document.getDocumentInformation();
+        PDDocumentInformation info = document.getDocumentInformation();
         DocumentMetadata.DocumentMetadataBuilder builder = DocumentMetadata.builder()
                 .title(info != null && info.getTitle() != null ? info.getTitle() : fileName)
                 .pageCount(document.getNumberOfPages());

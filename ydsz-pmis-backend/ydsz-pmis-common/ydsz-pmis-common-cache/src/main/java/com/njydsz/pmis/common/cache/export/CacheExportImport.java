@@ -97,6 +97,10 @@ public class CacheExportImport {
             // 白名单类检查
             if (filterInfo.serialClass() != null) {
                 String className = filterInfo.serialClass().getName();
+                // 数组类型：交给元素级检查（每个元素会单独触发 filter 回调）
+                if (className.startsWith("[")) {
+                    return ObjectInputFilter.Status.UNDECIDED;
+                }
                 for (String prefix : ALLOWED_PACKAGE_PREFIXES) {
                     if (className.startsWith(prefix)) {
                         return ObjectInputFilter.Status.ALLOWED;
@@ -273,7 +277,7 @@ public class CacheExportImport {
                 throw new ClassCastException("Expected Map, got " + obj.getClass().getName());
             }
             Map<?, ?> data = (Map<?, ?>) obj;
-            validateMapSize(data, Math.min(maxEntries, DEFAULT_MAX_ENTRIES));
+            validateMapSize(data, DEFAULT_MAX_ENTRIES);
             for (Map.Entry<?, ?> entry : data.entrySet()) {
                 if (count >= maxEntries) {
                     break;

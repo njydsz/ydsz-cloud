@@ -302,7 +302,7 @@ public class OssStorage extends AbstractFileStorage {
     @Override
     protected ObjectMetadata doGetMetadata(String bucketName, String objectName) {
         try {
-            com.aliyun.oss.model.ObjectMetadata ossMetadata = ossClient.getObjectMetadata(bucketName, objectName);
+            com.aliyun.oss.model.ObjectMetadata ossMetadata = ossClient.getObjectMetadata(bucketName, objectName); // FQN-OK: name conflict with ObjectMetadata
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setObjectName(objectName);
             metadata.setBucketName(bucketName);

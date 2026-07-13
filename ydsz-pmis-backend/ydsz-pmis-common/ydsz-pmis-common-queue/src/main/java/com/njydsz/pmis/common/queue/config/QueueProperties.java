@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.queue.config;
 
+import com.njydsz.pmis.common.redis.service.RedisService;
 import com.njydsz.pmis.common.queue.enums.QueueType;
 import com.njydsz.pmis.common.queue.queue.MessageQueueFactory;
 import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
@@ -426,7 +427,7 @@ public class QueueProperties {
      * @param consumerExecutor 异步消费者线程池
      * @return 消息队列工厂
      */
-    public IMessageQueueProvider buildFactory(com.njydsz.pmis.common.redis.service.RedisService redisService,
+    public IMessageQueueProvider buildFactory(RedisService redisService,
                                               ExecutorService consumerExecutor) {
         log.info("构建消息队列工厂（复用 ydsz-pmis-common-redis 连接）");
         return new MessageQueueFactory(this, redisService, consumerExecutor);

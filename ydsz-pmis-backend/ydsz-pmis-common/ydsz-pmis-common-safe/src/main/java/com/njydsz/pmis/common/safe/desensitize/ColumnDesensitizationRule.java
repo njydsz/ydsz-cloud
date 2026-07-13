@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.safe.desensitize;
 
+import com.njydsz.pmis.common.safe.desensitize.ColumnDesensitizationExecutor;
+
 /**
  * 字段脱敏规则枚举。
  *
@@ -35,7 +37,7 @@ package com.njydsz.pmis.common.safe.desensitize;
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
- * @see com.njydsz.pmis.common.safe.desensitize.ColumnDesensitizationExecutor
+ * @see ColumnDesensitizationExecutor
  */
 public enum ColumnDesensitizationRule {
 

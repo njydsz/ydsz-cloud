@@ -150,7 +150,7 @@ public class AdaptiveBatchScheduler {
      */
     private double getCpuUsage() {
         try {
-            if (osMXBean instanceof com.sun.management.OperatingSystemMXBean sunOs) {
+            if (osMXBean instanceof com.sun.management.OperatingSystemMXBean sunOs) { // FQN-OK: name conflict with java.lang.management.OperatingSystemMXBean
                 double load = sunOs.getCpuLoad();
                 return load >= 0 ? load * 100 : 0;
             }

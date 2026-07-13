@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.redis.config;
 
+import com.njydsz.pmis.common.redis.enums.FailOpenPolicy;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -68,8 +69,8 @@ public class RedisProperties {
      * <p>各子组件（如 rate-limiter、bloom-filter）可单独配置策略，覆盖此全局设置。
      * 未单独配置的组件使用此全局策略。
      */
-    private com.njydsz.pmis.common.redis.enums.FailOpenPolicy failurePolicy =
-            com.njydsz.pmis.common.redis.enums.FailOpenPolicy.FAIL_OPEN;
+    private FailOpenPolicy failurePolicy =
+            FailOpenPolicy.FAIL_OPEN;
 
     /**
      * Redis 服务器地址（单机模式）
@@ -324,8 +325,8 @@ public class RedisProperties {
          *   <li>FAIL_THROW: 抛出异常（由业务层处理）</li>
          * </ul>
          */
-        private com.njydsz.pmis.common.redis.enums.FailOpenPolicy failOpenPolicy =
-                com.njydsz.pmis.common.redis.enums.FailOpenPolicy.FAIL_CLOSED;
+        private FailOpenPolicy failOpenPolicy =
+                FailOpenPolicy.FAIL_CLOSED;
     }
 
     /**
@@ -343,7 +344,7 @@ public class RedisProperties {
          *   <li>FAIL_THROW: 抛出异常（由业务层处理）</li>
          * </ul>
          */
-        private com.njydsz.pmis.common.redis.enums.FailOpenPolicy failMode =
-                com.njydsz.pmis.common.redis.enums.FailOpenPolicy.FAIL_OPEN;
+        private FailOpenPolicy failMode =
+                FailOpenPolicy.FAIL_OPEN;
     }
 }

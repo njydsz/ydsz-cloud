@@ -1,5 +1,6 @@
 package com.njydsz.pmis.cronjob.server.core.dispatch;
 
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
@@ -743,7 +744,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      *
      * @param job 任务定义
      * @return 任务处理器
-     * @throws org.springframework.beans.factory.NoSuchBeanDefinitionException BEAN 模式下找不到对应 Bean
+     * @throws NoSuchBeanDefinitionException BEAN 模式下找不到对应 Bean
      */
     private JobHandler resolveHandler(JobDO job) {
         String jobType = job.getJobType();

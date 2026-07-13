@@ -14,10 +14,6 @@
     <name>ydsz-pmis-common-excel</name>
     <description>高性能 Excel 处理模块 — 双引擎架构（零 POI 快速路径 + POI 兼容路径）、ASM 字节码优化、公式注入防护</description>
 
-    <properties>
-        <asm.version>9.7.1</asm.version>
-    </properties>
-
     <dependencies>
         <!-- ==================== 内部模块 ==================== -->
         <!-- 公共异常模块（异常体系集成） -->
@@ -41,12 +37,10 @@
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm</artifactId>
-            <version>${asm.version}</version>
         </dependency>
         <dependency>
             <groupId>org.ow2.asm</groupId>
             <artifactId>asm-commons</artifactId>
-            <version>${asm.version}</version>
         </dependency>
 
         <!-- SLF4J -->

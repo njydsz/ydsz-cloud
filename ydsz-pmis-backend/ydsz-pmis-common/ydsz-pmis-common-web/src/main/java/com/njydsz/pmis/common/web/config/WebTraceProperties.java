@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.web.config;
 
+import com.njydsz.pmis.common.web.filter.TraceIdResponseFilter;
 import com.njydsz.pmis.common.base.config.BaseTraceProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,7 +24,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @email limw1888@126.com
  * @version 3.5.0
  * @see BaseTraceProperties
- * @see com.njydsz.pmis.common.web.filter.TraceIdResponseFilter
+ * @see TraceIdResponseFilter
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

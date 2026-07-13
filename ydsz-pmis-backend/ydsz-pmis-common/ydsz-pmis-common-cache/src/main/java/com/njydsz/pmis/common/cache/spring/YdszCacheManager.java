@@ -7,8 +7,8 @@ import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.cache.internal.loading.EnhancedLoadingCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.cache.CacheManager;
-import org.springframework.lang.NonNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,7 +26,7 @@ import java.util.function.Function;
  *
  * <p>生命周期管理：
  * <ul>
- *   <li>实现 {@link org.springframework.beans.factory.DisposableBean}，在 Spring 容器关闭时自动清理资源</li>
+ *   <li>实现 {@link DisposableBean}，在 Spring 容器关闭时自动清理资源</li>
  *   <li>关闭所有 {@link EnhancedLoadingCache} 实例和共享线程池</li>
  * </ul>
  *
@@ -51,7 +51,7 @@ import java.util.function.Function;
  * @author Marvin Lee
  * @version 4.0.0
  */
-public class YdszCacheManager implements CacheManager, org.springframework.beans.factory.DisposableBean {
+public class YdszCacheManager implements CacheManager, DisposableBean {
 
     private static final Logger log = LoggerFactory.getLogger(YdszCacheManager.class);
 
@@ -199,7 +199,7 @@ public class YdszCacheManager implements CacheManager, org.springframework.beans
     }
 
     @Override
-    public SpringYdszCache getCache(@NonNull String name) {
+    public SpringYdszCache getCache(String name) {
         SpringYdszCache cache = this.cacheMap.get(name);
         if (cache != null) {
             return cache;
@@ -219,7 +219,6 @@ public class YdszCacheManager implements CacheManager, org.springframework.beans
     }
 
     @Override
-    @NonNull
     @SuppressWarnings("null")
     public Collection<String> getCacheNames() {
         return Collections.unmodifiableSet(this.cacheMap.keySet());

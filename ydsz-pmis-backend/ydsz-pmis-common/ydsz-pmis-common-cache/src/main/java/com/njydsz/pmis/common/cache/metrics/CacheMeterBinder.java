@@ -11,6 +11,7 @@ import io.micrometer.core.instrument.binder.MeterBinder;
 
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 /**
  * YdszCache 到 Micrometer 的指标桥接器
@@ -139,8 +140,8 @@ public class CacheMeterBinder implements MeterBinder {
                 .description("Cache GET operation duration")
                 .publishPercentiles(0.5, 0.9, 0.99)
                 .publishPercentileHistogram()
-                .minimumExpectedValue(java.time.Duration.ofNanos(100))
-                .maximumExpectedValue(java.time.Duration.ofMillis(100))
+                .minimumExpectedValue(Duration.ofNanos(100))
+                .maximumExpectedValue(Duration.ofMillis(100))
                 .register(registry);
 
         // PUT 操作 Timer（含 P50/P90/P99 分位数）
@@ -151,8 +152,8 @@ public class CacheMeterBinder implements MeterBinder {
                 .description("Cache PUT operation duration")
                 .publishPercentiles(0.5, 0.9, 0.99)
                 .publishPercentileHistogram()
-                .minimumExpectedValue(java.time.Duration.ofNanos(100))
-                .maximumExpectedValue(java.time.Duration.ofMillis(100))
+                .minimumExpectedValue(Duration.ofNanos(100))
+                .maximumExpectedValue(Duration.ofMillis(100))
                 .register(registry);
     }
 

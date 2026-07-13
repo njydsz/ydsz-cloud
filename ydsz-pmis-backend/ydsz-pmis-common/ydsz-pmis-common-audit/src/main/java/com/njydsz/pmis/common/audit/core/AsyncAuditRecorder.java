@@ -8,6 +8,7 @@ import com.njydsz.pmis.common.util.json.JsonUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -141,7 +142,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
                               TableShardingStrategy shardingStrategy, String baseTableName) {
         this.dataSource = Objects.requireNonNull(dataSource, "DataSource must not be null");
         this.properties = Objects.requireNonNull(properties, "AuditProperties must not be null");
-        this.jdbcTemplate = new org.springframework.jdbc.core.JdbcTemplate(dataSource);
+        this.jdbcTemplate = new JdbcTemplate(dataSource);
         this.asyncProps = properties.getAsync();
         this.queue = new LinkedBlockingQueue<>(asyncProps.getQueueCapacity());
         this.scheduler = ExecutorUtils.newScheduledThreadPool(1, "audit-scheduler");

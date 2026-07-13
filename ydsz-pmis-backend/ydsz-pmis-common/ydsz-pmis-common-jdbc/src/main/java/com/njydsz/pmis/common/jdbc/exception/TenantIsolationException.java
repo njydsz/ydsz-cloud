@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.jdbc.exception;
 
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.pmis.common.exception.custom.YdszSecurityException;
+import com.njydsz.pmis.common.jdbc.interceptor.TenantIsolationInterceptor;
 
 /**
  * 租户隔离异常
@@ -14,7 +15,7 @@ import com.njydsz.pmis.common.exception.custom.YdszSecurityException;
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
- * @see com.njydsz.pmis.common.jdbc.interceptor.TenantIsolationInterceptor
+ * @see TenantIsolationInterceptor
  */
 public class TenantIsolationException extends YdszSecurityException {
 

@@ -13,7 +13,7 @@ import com.njydsz.pmis.common.core.enums.ServiceType;
  * @email limw1888@126.com
  * @version 3.5.0
  * @see BaseAuthInfo
- * @see com.njydsz.pmis.common.core.enums.ServiceType#WEB_SERVICE
+ * @see ServiceType#WEB_SERVICE
  */
 public class WebAuthInfo extends BaseAuthInfo {
 

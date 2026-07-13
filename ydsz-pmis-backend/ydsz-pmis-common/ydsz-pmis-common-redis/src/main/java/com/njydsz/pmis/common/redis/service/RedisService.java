@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.redis.service;
 
+import com.njydsz.pmis.common.redis.enums.RedisKeysEnum;
 import com.njydsz.pmis.common.redis.config.RedisProperties;
 import com.njydsz.pmis.common.redis.service.ops.*;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +8,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.redis.connection.RedisGeoCommands;
+import org.springframework.data.redis.domain.geo.Metrics;
 import org.springframework.data.redis.core.*;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.stereotype.Service;
@@ -216,7 +218,7 @@ public class RedisService implements BatchRedisOperations {
         return stringOps.getOrCompute(key, expire, supplier, clazz);
     }
 
-    public <T> T getOrCompute(com.njydsz.pmis.common.redis.enums.RedisKeysEnum keyEnum, Object arg, long expire, Supplier<T> supplier, Class<T> clazz) {
+    public <T> T getOrCompute(RedisKeysEnum keyEnum, Object arg, long expire, Supplier<T> supplier, Class<T> clazz) {
         return stringOps.getOrCompute(keyEnum, arg, expire, supplier, clazz);
     }
 
@@ -478,7 +480,7 @@ public class RedisService implements BatchRedisOperations {
         return geoOps.geoAdd(key, member, longitude, latitude);
     }
 
-    public Distance geoDistance(String key, Object member1, Object member2, org.springframework.data.redis.domain.geo.Metrics unit) {
+    public Distance geoDistance(String key, Object member1, Object member2, Metrics unit) {
         return geoOps.geoDistance(key, member1, member2, unit);
     }
 
@@ -486,7 +488,7 @@ public class RedisService implements BatchRedisOperations {
         return geoOps.geoPosition(key, member);
     }
 
-    public GeoResults<RedisGeoCommands.GeoLocation<Object>> geoRadius(String key, double longitude, double latitude, double radius, org.springframework.data.redis.domain.geo.Metrics unit) {
+    public GeoResults<RedisGeoCommands.GeoLocation<Object>> geoRadius(String key, double longitude, double latitude, double radius, Metrics unit) {
         return geoOps.geoRadius(key, longitude, latitude, radius, unit);
     }
 

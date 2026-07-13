@@ -1,5 +1,6 @@
 package com.njydsz.pmis.literule.web;
 
+import org.springframework.web.bind.annotation.PathVariable;
 import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.literule.api.Rule;
@@ -262,7 +263,7 @@ public class RuleDslController {
      */
     @GetMapping("/export/{ruleCode}")
     @Operation(summary = "导出单条规则DSL", description = "将指定规则导出为 YAML 格式的 DSL")
-    public BaseResponse<Map<String, Object>> exportSingle(@org.springframework.web.bind.annotation.PathVariable String ruleCode) {
+    public BaseResponse<Map<String, Object>> exportSingle(@PathVariable String ruleCode) {
         RuleDefinition def = ruleAdminService.getByCode(ruleCode);
         if (def == null) {
             return BaseResponse.fail("规则不存在: " + ruleCode);

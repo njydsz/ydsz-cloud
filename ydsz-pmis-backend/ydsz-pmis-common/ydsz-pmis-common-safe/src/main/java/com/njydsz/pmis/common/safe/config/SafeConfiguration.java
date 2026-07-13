@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
@@ -318,8 +319,8 @@ public class SafeConfiguration {
     @ConditionalOnProperty(prefix = "ydsz.safe.sql-injection", name = "enabled", havingValue = "true", matchIfMissing = true)
     public FilterRegistrationBean<SqlInjectionFilter> sqlInjectionFilterRegistration(
             SecurityEventPublisher eventPublisher,
-            @org.springframework.beans.factory.annotation.Value("${ydsz.safe.sql-injection.whitelist-paths:}") List<String> whitelistPaths,
-            @org.springframework.beans.factory.annotation.Value("${ydsz.safe.sql-injection.whitelist-params:}") List<String> whitelistParams) {
+            @Value("${ydsz.safe.sql-injection.whitelist-paths:}") List<String> whitelistPaths,
+            @Value("${ydsz.safe.sql-injection.whitelist-params:}") List<String> whitelistParams) {
         FilterRegistrationBean<SqlInjectionFilter> registrationBean = new FilterRegistrationBean<>(
                 new SqlInjectionFilter(true, eventPublisher, whitelistPaths, whitelistParams));
         registrationBean.setName("sqlInjectionFilter");

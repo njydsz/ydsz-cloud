@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.exception.handler;
 
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
 import com.njydsz.pmis.common.exception.core.ExceptionInfo;
@@ -61,7 +62,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @ConditionalOnClass(name = "org.springframework.web.bind.annotation.RestControllerAdvice")
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@org.springframework.web.bind.annotation.RestControllerAdvice
+@RestControllerAdvice
 public class MvcExceptionHandler extends BaseExceptionHandler {
 
     private final MessageSource messageSource;

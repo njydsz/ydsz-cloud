@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.jdbc.config;
 
+import com.njydsz.pmis.common.jdbc.interceptor.OptimisticLockInterceptor;
 import lombok.Data;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -32,7 +33,7 @@ import org.springframework.context.annotation.Configuration;
  * @email limw1888@126.com
  * @version 3.5.0
  * @since 1.0.0
- * @see com.njydsz.pmis.common.jdbc.interceptor.OptimisticLockInterceptor
+ * @see OptimisticLockInterceptor
  */
 @Data
 @Configuration

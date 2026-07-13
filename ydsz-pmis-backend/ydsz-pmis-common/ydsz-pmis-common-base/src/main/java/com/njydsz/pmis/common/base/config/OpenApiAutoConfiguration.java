@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.base.config;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,7 +67,7 @@ public class OpenApiAutoConfiguration {
      * @return OpenAPI 实例，包含文档标题、描述、版本、联系方式和许可证等信息
      */
     @Bean
-    @org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean(OpenAPI.class)
+    @ConditionalOnMissingBean(OpenAPI.class)
     public OpenAPI openAPI() {
         DocProperties.OpenApiInfo info = docProperties.getInfo();
 

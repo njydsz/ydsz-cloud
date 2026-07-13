@@ -13,6 +13,7 @@ import com.njydsz.pmis.common.audit.sharding.DailyShardingStrategy;
 import com.njydsz.pmis.common.audit.sharding.MonthlyShardingStrategy;
 import com.njydsz.pmis.common.audit.sharding.TableShardingStrategy;
 import com.njydsz.pmis.common.audit.sharding.YearlyShardingStrategy;
+import com.njydsz.pmis.common.audit.storage.DefaultAuditStorage;
 import com.njydsz.pmis.common.audit.storage.JdbcAuditStorage;
 import com.njydsz.pmis.common.audit.template.AuditTemplateProcessor;
 import jakarta.annotation.PreDestroy;
@@ -112,7 +113,7 @@ public class AuditAutoConfiguration {
     @ConditionalOnMissingBean(value = AuditStorage.class, ignored = JdbcAuditStorage.class)
     public AuditStorage defaultAuditStorage(DataSource dataSource) {
         log.info("初始化默认审计日志存储: DefaultAuditStorage(控制台输出)");
-        return new com.njydsz.pmis.common.audit.storage.DefaultAuditStorage();
+        return new DefaultAuditStorage();
     }
 
     /**

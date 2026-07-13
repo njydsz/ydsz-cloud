@@ -26,7 +26,7 @@ import lombok.ToString;
  * @email limw1888@126.com
  * @version 3.5.0
  * @since 3.0.0
- * @see com.njydsz.pmis.common.exception.code.UnifiedExceptionCode
+ * @see UnifiedExceptionCode
  * @see ExceptionCategory#INFRASTRUCTURE
  */
 @ToString(callSuper = true)

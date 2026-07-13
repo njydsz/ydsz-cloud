@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.auth.listener;
 
+import org.jspecify.annotations.NonNull;
+import org.jspecify.annotations.Nullable;
 import com.njydsz.pmis.common.auth.service.RbacPermissionEvaluator;
 import com.njydsz.pmis.common.util.string.StringUtils;
 import org.slf4j.Logger;
@@ -73,7 +75,7 @@ public class PermissionKeyspaceNotificationListener {
     private class KeyspacePermissionMessageListener implements MessageListener {
 
         @Override
-        public void onMessage(@org.jspecify.annotations.NonNull Message message, @org.jspecify.annotations.Nullable byte[] pattern) {
+        public void onMessage(@NonNull Message message, @Nullable byte[] pattern) {
             try {
                 String channel = new String(message.getChannel());
                 String key = new String(message.getBody());
