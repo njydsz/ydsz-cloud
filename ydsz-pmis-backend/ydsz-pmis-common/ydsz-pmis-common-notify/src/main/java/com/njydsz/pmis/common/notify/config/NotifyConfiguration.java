@@ -4,43 +4,56 @@ import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.pmis.common.notify.core.NotifyService;
 import com.njydsz.pmis.common.notify.core.NotifyServiceImpl;
 import com.njydsz.pmis.common.notify.core.PersistentNotifyRetryQueue;
+import com.njydsz.pmis.common.notify.dedup.NotifyDedupService;
+import com.njydsz.pmis.common.notify.fallback.NotifyFallbackManager;
+import com.njydsz.pmis.common.notify.i18n.NotifyI18nService;
+import com.njydsz.pmis.common.notify.metrics.NotifyMetrics;
+import com.njydsz.pmis.common.notify.preference.NotifyPreferenceManager;
+import com.njydsz.pmis.common.notify.queue.EmailQueueService;
 import com.njydsz.pmis.common.notify.ratelimit.NotifyRateLimiterManager;
+import com.njydsz.pmis.common.notify.security.DkimSigner;
+import com.njydsz.pmis.common.notify.security.EmailSmtpHealthChecker;
+import com.njydsz.pmis.common.notify.security.NotifyPasswordResolver;
+import com.njydsz.pmis.common.notify.template.HtmlTemplateRegistry;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.JavaMailSenderImpl;
-import org.springframework.util.StringUtils;
+import com.njydsz.pmis.common.notify.tracking.EmailTrackingService;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import com.njydsz.pmis.common.notify.core.AsyncNotifyService;
-import com.njydsz.pmis.common.notify.core.NotifyRetryQueue;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
+import com.njydsz.pmis.common.notify.core.AsyncNotifyService;
+import com.njydsz.pmis.common.notify.core.NotifyRetryQueue;
+import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
-import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
 
 /**
  * 统一消息通知自动配置类
  *
  * <p>各渠道 Sender（Email/SMS/WeCom/DingTalk/Feishu）通过实现 {@link NotifyChannelStrategy} 接口自动注册。
- * 邮件渠道的 {@link JavaMailSender} Bean 由本配置类根据 {@code ydsz.notify.email} 配置自动创建。
- * 若容器中已存在 {@link JavaMailSender} Bean（如由 spring-boot-starter-mail 自动配置），则不重复创建。
+ * 邮件渠道的 {@link JavaMailSender} Bean 由本配置类根据 {@code ydsz.notify.email} 配置自动创建，
+ * 支持密码加密解密（P0-1）、SMTP 健康探活（P0-2）、内容 XSS 防护（P0-3）、指标埋点（P1-4）、
+ * 追踪像素（P1-5）、渠道降级（P1-6）、HTML 模板注册（P2-7）、邮件队列（P2-8）、
+ * DKIM 签名（P2-9）、多提供商抽象（P2-10）、通知偏好（P3-12）、去重（P3-13）、国际化（P3-14）。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -48,7 +61,6 @@ import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
  * @since 1.0.0
  */
 @AutoConfiguration
-@RequiredArgsConstructor
 @EnableConfigurationProperties(NotifyProperties.class)
 @ConditionalOnClass(name = "org.apache.hc.client5.http.classic.HttpClient")
 @ConditionalOnProperty(prefix = "ydsz.notify", name = "enabled", havingValue = "true", matchIfMissing = true)
@@ -61,29 +73,59 @@ public class NotifyConfiguration {
 	/** 通知重试队列实例，供定时任务消费重试队列时使用 */
 	private NotifyRetryQueue retryQueueInstance;
 
+	// ==================== P0-1 密码加密 ====================
+
+	/**
+	 * 创建通知模块密码解析器（P0-1）
+	 *
+	 * <p>当 EmailConfig.security.passwordEncrypted=true 时，通过 Jasypt 解密 SMTP 密码。
+	 *
+	 * @param properties 通知配置属性
+	 * @return NotifyPasswordResolver 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean(NotifyPasswordResolver.class)
+	@ConditionalOnProperty(prefix = "ydsz.notify.email", name = "enabled", havingValue = "true")
+	public NotifyPasswordResolver notifyPasswordResolver(NotifyProperties properties) {
+		log.info("[NotifyConfiguration] NotifyPasswordResolver bean registered");
+		return new NotifyPasswordResolver(properties);
+	}
+
+	// ==================== JavaMailSender ====================
+
 	/**
 	 * 创建邮件发送器 {@link JavaMailSender}。
 	 *
 	 * <p>根据 {@code ydsz.notify.email} 配置构建 SMTP 连接参数，支持 SSL/TLS 加密、STARTTLS 升级、
 	 * 自定义 JavaMail 属性等。当邮件渠道未启用或 SMTP 主机未配置时，不创建该 Bean。
+	 * 若容器中已存在 {@link JavaMailSender} Bean，则不重复创建。
 	 *
-	 * <p>若容器中已存在 {@link JavaMailSender} Bean（如通过 spring.mail.* 标准配置自动装配），
-	 * 则不重复创建，使用已有 Bean。
+	 * <p>P0-1：当 security.passwordEncrypted=true 时，通过 {@link NotifyPasswordResolver} 自动解密密码。
 	 *
-	 * @param properties 通知配置属性
+	 * @param properties       通知配置属性
+	 * @param passwordResolver 密码解析器（可选，用于加密密码解密）
 	 * @return JavaMailSender 实例
 	 */
 	@Bean
 	@ConditionalOnMissingBean(JavaMailSender.class)
 	@ConditionalOnClass(JavaMailSender.class)
 	@ConditionalOnProperty(prefix = "ydsz.notify.email", name = "enabled", havingValue = "true")
-	public JavaMailSender notifyJavaMailSender(NotifyProperties properties) {
+	public JavaMailSender notifyJavaMailSender(NotifyProperties properties,
+											   ObjectProvider<NotifyPasswordResolver> passwordResolver) {
 		NotifyProperties.EmailConfig email = properties.getEmail();
 		JavaMailSenderImpl sender = new JavaMailSenderImpl();
 		sender.setHost(email.getSmtpHost());
 		sender.setPort(email.getSmtpPort());
 		sender.setUsername(email.getFromMail());
-		sender.setPassword(email.getPassword());
+
+		// P0-1：密码解密
+		String password = email.getPassword();
+		NotifyPasswordResolver resolver = passwordResolver.getIfAvailable();
+		if (resolver != null && NotifyPasswordResolver.isEncrypted(password)) {
+			password = resolver.resolvePassword(password);
+			log.info("[NotifyConfiguration] SMTP 密码已通过 Jasypt 解密");
+		}
+		sender.setPassword(password);
 		sender.setDefaultEncoding(email.getEncoding());
 		sender.setProtocol(email.getSsl().isEnabled() ? "smtps" : "smtp");
 
@@ -109,7 +151,6 @@ public class NotifyConfiguration {
 			props.put("mail.smtp.starttls.required", "true");
 		}
 
-		// 注入额外 JavaMail 属性
 		if (email.getProperties() != null) {
 			for (Map.Entry<String, String> entry : email.getProperties().entrySet()) {
 				props.put(entry.getKey(), entry.getValue());
@@ -121,10 +162,185 @@ public class NotifyConfiguration {
 		return sender;
 	}
 
+	// ==================== P0-2 SMTP 健康探活 ====================
+
+	/**
+	 * 创建 SMTP 健康检查器（P0-2）
+	 *
+	 * @param properties 通知配置属性
+	 * @return EmailSmtpHealthChecker 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean(EmailSmtpHealthChecker.class)
+	@ConditionalOnClass(JavaMailSender.class)
+	@ConditionalOnProperty(prefix = "ydsz.notify.email", name = "enabled", havingValue = "true")
+	public EmailSmtpHealthChecker emailSmtpHealthChecker(NotifyProperties properties) {
+		log.info("[NotifyConfiguration] EmailSmtpHealthChecker bean registered");
+		return new EmailSmtpHealthChecker(properties);
+	}
+
+	// ==================== P0-3 XSS 防护 ====================
+	// EmailContentSanitizer 为静态工具类，无需注册 Bean
+
+	// ==================== P1-4 指标埋点 ====================
+
+	/**
+	 * 创建通知指标收集器（P1-4）
+	 *
+	 * @param meterRegistryProvider Micrometer MeterRegistry 提供者（可选）
+	 * @return NotifyMetrics 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean(NotifyMetrics.class)
+	public NotifyMetrics notifyMetrics(ObjectProvider<MeterRegistry> meterRegistryProvider) {
+		MeterRegistry registry = meterRegistryProvider.getIfAvailable();
+		log.info("[NotifyConfiguration] NotifyMetrics bean registered, meterRegistry={}",
+				registry != null ? registry.getClass().getSimpleName() : "null");
+		return new NotifyMetrics(registry);
+	}
+
+	// ==================== P1-5 邮件追踪 ====================
+
+	/**
+	 * 创建邮件追踪服务（P1-5）
+	 *
+	 * @param properties          通知配置属性
+	 * @param redisTemplateProvider Redis 模板提供者（可选）
+	 * @return EmailTrackingService 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean(EmailTrackingService.class)
+	@ConditionalOnProperty(prefix = "ydsz.notify.email", name = "enabled", havingValue = "true")
+	public EmailTrackingService emailTrackingService(NotifyProperties properties,
+													 ObjectProvider<StringRedisTemplate> redisTemplateProvider) {
+		StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
+		log.info("[NotifyConfiguration] EmailTrackingService bean registered, redis={}",
+				redisTemplate != null);
+		return new EmailTrackingService(properties, redisTemplate);
+	}
+
+	// ==================== P1-6 渠道降级 ====================
+
+	/**
+	 * 创建渠道降级管理器（P1-6）
+	 *
+	 * @param properties 通知配置属性
+	 * @param strategies 所有渠道策略列表
+	 * @return NotifyFallbackManager 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean(NotifyFallbackManager.class)
+	public NotifyFallbackManager notifyFallbackManager(NotifyProperties properties,
+													   List<NotifyChannelStrategy> strategies) {
+		log.info("[NotifyConfiguration] NotifyFallbackManager bean registered, strategies={}",
+				strategies != null ? strategies.size() : 0);
+		return new NotifyFallbackManager(properties, strategies != null ? strategies : List.of());
+	}
+
+	// ==================== P2-7 HTML 模板注册 ====================
+
+	/**
+	 * 创建 HTML 邮件模板注册中心（P2-7）
+	 *
+	 * @return HtmlTemplateRegistry 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean(HtmlTemplateRegistry.class)
+	public HtmlTemplateRegistry htmlTemplateRegistry() {
+		log.info("[NotifyConfiguration] HtmlTemplateRegistry bean registered");
+		return new HtmlTemplateRegistry();
+	}
+
+	// ==================== P2-8 邮件队列 ====================
+
+	/**
+	 * 创建邮件队列服务（P2-8）
+	 *
+	 * @param redisTemplateProvider Redis 模板提供者（可选）
+	 * @param executor             虚拟线程池
+	 * @return EmailQueueService 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean(EmailQueueService.class)
+	@ConditionalOnClass(name = "com.fasterxml.jackson.databind.ObjectMapper")
+	public EmailQueueService emailQueueService(ObjectProvider<StringRedisTemplate> redisTemplateProvider,
+											   @Qualifier("notifyVirtualThreadExecutor") ExecutorService executor) {
+		StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
+		log.info("[NotifyConfiguration] EmailQueueService bean registered, redis={}",
+				redisTemplate != null);
+		return new EmailQueueService(redisTemplate, executor);
+	}
+
+	// ==================== P2-9 DKIM 签名 ====================
+
+	/**
+	 * 创建 DKIM 签名器（P2-9）
+	 *
+	 * @param properties 通知配置属性
+	 * @return DkimSigner 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean(DkimSigner.class)
+	@ConditionalOnProperty(prefix = "ydsz.notify.email", name = "enabled", havingValue = "true")
+	public DkimSigner dkimSigner(NotifyProperties properties) {
+		log.info("[NotifyConfiguration] DkimSigner bean registered");
+		return new DkimSigner(properties);
+	}
+
+	// ==================== P3-12 通知偏好 ====================
+
+	/**
+	 * 创建通知偏好管理器（P3-12）
+	 *
+	 * @param redisTemplateProvider Redis 模板提供者（可选）
+	 * @return NotifyPreferenceManager 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean(NotifyPreferenceManager.class)
+	public NotifyPreferenceManager notifyPreferenceManager(ObjectProvider<StringRedisTemplate> redisTemplateProvider) {
+		StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
+		log.info("[NotifyConfiguration] NotifyPreferenceManager bean registered, redis={}",
+				redisTemplate != null);
+		return new NotifyPreferenceManager(redisTemplate);
+	}
+
+	// ==================== P3-13 邮件去重 ====================
+
+	/**
+	 * 创建邮件去重服务（P3-13）
+	 *
+	 * @param properties          通知配置属性
+	 * @param redisTemplateProvider Redis 模板提供者（可选）
+	 * @return NotifyDedupService 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean(NotifyDedupService.class)
+	public NotifyDedupService notifyDedupService(NotifyProperties properties,
+												 ObjectProvider<StringRedisTemplate> redisTemplateProvider) {
+		StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
+		log.info("[NotifyConfiguration] NotifyDedupService bean registered, redis={}",
+				redisTemplate != null);
+		return new NotifyDedupService(properties, redisTemplate);
+	}
+
+	// ==================== P3-14 国际化 ====================
+
+	/**
+	 * 创建通知国际化服务（P3-14）
+	 *
+	 * @return NotifyI18nService 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean(NotifyI18nService.class)
+	public NotifyI18nService notifyI18nService() {
+		log.info("[NotifyConfiguration] NotifyI18nService bean registered");
+		return new NotifyI18nService();
+	}
+
+	// ==================== RestTemplate ====================
+
 	/**
 	 * 创建用于通知渠道 HTTP 调用的 {@link RestTemplate}。
-	 *
-	 * <p>连接超时 5 秒，读取超时 10 秒。
 	 *
 	 * @return 配置了超时参数的 RestTemplate 实例
 	 */
@@ -137,11 +353,10 @@ public class NotifyConfiguration {
 		return new RestTemplate(factory);
 	}
 
+	// ==================== 限流器 ====================
+
 	/**
 	 * 创建渠道限流管理器，用于控制各通知渠道的发送频率。
-	 *
-	 * <p>当 {@code ydsz.notify.rate-limit.enabled=true}（默认）时生效，
-	 * 为每个渠道维护独立的滑动窗口限流器，防止单渠道过载。
 	 *
 	 * @param properties 通知配置属性
 	 * @return NotifyRateLimiterManager 实例
@@ -155,16 +370,15 @@ public class NotifyConfiguration {
 		return new NotifyRateLimiterManager(rateLimitConfig);
 	}
 
+	// ==================== NotifyService ====================
+
 	/**
 	 * 创建统一消息通知服务，自动收集所有 {@link NotifyChannelStrategy} 实现并组装。
 	 *
-	 * <p>若容器中存在 {@link TemplateEngine}，则自动注入到各渠道策略中，启用模板渲染能力。
-	 * <p>若容器中存在 {@link NotifyRateLimiterManager}，则注入以启用渠道限流保护。
-	 *
-	 * @param beanFactory          用于扫描所有 NotifyChannelStrategy 实现的 Bean 工厂
-	 * @param templateEngine       可选的模板引擎，用于消息模板渲染（可为 null）
-	 * @param rateLimiterManager   可选的限流管理器，用于渠道限流保护（可为 null）
-	 * @param executor             可选的并行执行器，用于批量并行发送（可为 null）
+	 * @param beanFactory              用于扫描所有 NotifyChannelStrategy 实现的 Bean 工厂
+	 * @param templateEngineProvider   可选的模板引擎
+	 * @param rateLimiterManagerProvider 可选的限流管理器
+	 * @param executorProvider         可选的并行执行器
 	 * @return 组装完成的 NotifyService 实例
 	 */
 	@Bean
@@ -179,7 +393,6 @@ public class NotifyConfiguration {
 				.toList();
 
 		TemplateEngine templateEngine = templateEngineProvider.getIfAvailable();
-		// 注入模板引擎到各渠道策略
 		if (templateEngine != null) {
 			for (NotifyChannelStrategy strategy : strategies) {
 				strategy.setTemplateEngine(templateEngine);
@@ -197,16 +410,13 @@ public class NotifyConfiguration {
 		return service;
 	}
 
+	// ==================== 重试队列 ====================
+
 	/**
 	 * 创建通知重试队列，用于管理发送失败通知的重试调度。
 	 *
-	 * <p>当 {@code ydsz.notify.retryQueue.persistent=true} 时，使用 Redis 持久化队列
-	 * （支持多实例共享、重启不丢失），Redis 不可用时降级为内存队列。
-	 * 当 {@code persistent=false} 时，直接使用内存队列。
-	 * 队列容量、批量大小等参数可通过 {@code ydsz.notify.retryQueue} 配置。
-	 *
-	 * @param properties         通知配置属性
-	 * @param redisTemplateProvider Redis 模板提供者（可选）
+	 * @param properties             通知配置属性
+	 * @param redisTemplateProvider  Redis 模板提供者（可选）
 	 * @return NotifyRetryQueue 实例
 	 */
 	@Bean
@@ -224,7 +434,6 @@ public class NotifyConfiguration {
 			log.info("[NotifyConfiguration] PersistentNotifyRetryQueue bean registered, persistent=true, maxRetries={}, batchSize={}, redisKeyPrefix={}",
 					retryConfig.getMaxRetries(), retryConfig.getBatchSize(), retryConfig.getRedisKeyPrefix());
 		} else {
-			// 非持久化模式：使用内存队列（通过 PersistentNotifyRetryQueue 降级实现）
 			queue = new PersistentNotifyRetryQueue(null,
 					retryConfig.getMaxRetries(), retryConfig.getCapacity(), retryConfig.getBatchSize());
 			log.info("[NotifyConfiguration] In-memory NotifyRetryQueue bean registered, persistent=false, maxRetries={}, batchSize={}",
@@ -234,15 +443,15 @@ public class NotifyConfiguration {
 		return queue;
 	}
 
+	// ==================== 异步通知服务 ====================
+
 	/**
 	 * 创建异步通知服务，封装 {@link NotifyService} 并集成重试队列支持。
-	 *
-	 * <p>发送失败的通知将自动进入重试队列，由 {@link NotifyRetryQueue} 管理后续重试。
 	 *
 	 * @param notifyService 统一通知服务
 	 * @param retryQueue    通知重试队列
 	 * @param executor      共享虚拟线程池
-	 * @return 具备异步发送和重试能力的 AsyncNotifyService 实例
+	 * @return AsyncNotifyService 实例
 	 */
 	@Bean
 	@ConditionalOnMissingBean(AsyncNotifyService.class)
@@ -252,11 +461,10 @@ public class NotifyConfiguration {
 		return new AsyncNotifyService(notifyService, retryQueue, executor);
 	}
 
+	// ==================== 虚拟线程池 ====================
+
 	/**
 	 * 创建共享的虚拟线程池，供通知模块各组件使用
-	 *
-	 * <p>使用 Java 21 虚拟线程特性，避免重复创建线程池造成资源浪费。
-	 * 各 Sender、AsyncNotifyService、NotifyServiceImpl 等组件统一使用此线程池。
 	 *
 	 * @return 共享的虚拟线程池 ExecutorService
 	 */
@@ -267,10 +475,10 @@ public class NotifyConfiguration {
 		return ExecutorUtils.newVirtualThreadExecutor("notify-virtual-");
 	}
 
+	// ==================== 定时任务 ====================
+
 	/**
 	 * 定时消费重试队列，每 5 秒执行一次。
-	 * <p>使用批量消费模式提升吞吐量，默认每次最多处理 100 条消息。
-	 * 采用指数退避策略，跳过未到重试时间的条目。
 	 */
 	@Scheduled(fixedDelay = 5000)
 	public void processRetryQueue() {

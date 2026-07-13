@@ -48,7 +48,8 @@ public class DkimSigner {
 
 	private static final Logger log = LoggerFactory.getLogger(DkimSigner.class);
 
-	private static final String DKIM_HEADER = "DKIM-Signature";
+	/** DKIM-Signature 头名称 */
+	public static final String DKIM_HEADER = "DKIM-Signature";
 	private static final String SIGNATURE_ALGORITHM = "SHA256withRSA";
 	private static final String CANONICALIZATION = "relaxed/relaxed";
 

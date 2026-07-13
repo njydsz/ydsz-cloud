@@ -93,8 +93,8 @@ public class NotifyI18nService {
 			try {
 				String[] parts = loc.split("_");
 				java.util.Locale javaLocale = parts.length >= 2
-						? new java.util.Locale(parts[0], parts[1])
-						: new java.util.Locale(parts[0]);
+						? java.util.Locale.of(parts[0], parts[1])
+						: java.util.Locale.of(parts[0]);
 				return ResourceBundle.getBundle(BASE_NAME, javaLocale,
 						getClass().getClassLoader());
 			} catch (Exception e) {

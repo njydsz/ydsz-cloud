@@ -561,7 +561,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 			byte[] bodyBytes = content != null ? content.getBytes(StandardCharsets.UTF_8) : new byte[0];
 			String dkimSignature = dkimSigner.generateDkimSignature(headers, bodyBytes);
 			if (dkimSignature != null) {
-				mime.setHeader("DKIM-Signature", dkimSignature);
+				mime.setHeader(DkimSigner.DKIM_HEADER, dkimSignature);
 			}
 		}
 
