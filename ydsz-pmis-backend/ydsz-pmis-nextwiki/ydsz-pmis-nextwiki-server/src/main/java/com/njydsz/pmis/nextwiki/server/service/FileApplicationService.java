@@ -8,6 +8,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,6 +18,9 @@ import com.njydsz.pmis.common.file.storage.IFileStorage;
 import com.njydsz.pmis.common.file.storage.IFileStorageProvider;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 import com.njydsz.pmis.nextwiki.domain.entity.FileVersion;
+import com.njydsz.pmis.nextwiki.domain.entity.TrashItem;
+import com.njydsz.pmis.nextwiki.domain.event.FileOperatedEvent;
+import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.pmis.nextwiki.domain.service.FileVersionDomainService;
 import com.njydsz.pmis.nextwiki.domain.service.FolderDomainService;
 import com.njydsz.pmis.nextwiki.domain.service.QuotaDomainService;
@@ -33,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p><b>核心流程：</b>
  * <ul>
- *   <li>上传：配额校验 → 存储上传 → 创建 FileNode → 创建版本 → 索引同步 → 缩略图生成</li>
+ *   <li>上传：配额校验 → 存储上传 → 创建 FileNode（持久化）→ 创建版本 → 事件发布</li>
  *   <li>删除：逻辑删除 FileNode → 移入回收站 → 释放配额 → 删除索引</li>
  *   <li>移动/重命名：更新 FileNode → 递归更新子节点路径 → 事件通知</li>
  * </ul>
@@ -50,6 +54,8 @@ public class FileApplicationService {
     private final FileVersionDomainService versionDomainService;
     private final QuotaDomainService quotaDomainService;
     private final TrashDomainService trashDomainService;
+    private final FileNodeRepository fileNodeRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
@@ -84,25 +90,44 @@ public class FileApplicationService {
             log.warn("[FileApplicationService] SHA-256 计算失败: {}", e.getMessage());
         }
 
-        // 6. 创建文件节点
+        // 6. 解析父目录
         FileNode parent = folderDomainService.listChildren(parentId, userId)
-                .isEmpty() ? null : null; // parent resolved in createFileNode
+                .isEmpty() ? null : fileNodeRepository.findById(parentId);
+        String resolvedParentId = parent != null ? parent.getId() : "0";
+        String path = parent != null
+                ? (parent.getPath() != null ? parent.getPath() : "/") + (rename != null && !rename.isEmpty() ? rename : originalFilename) + "/"
+                : "/" + (rename != null && !rename.isEmpty() ? rename : originalFilename) + "/";
+        int level = parent != null && parent.getLevel() != null ? parent.getLevel() + 1 : 1;
 
+        // 7. 创建文件节点并持久化
         String fileName = rename != null && !rename.isEmpty() ? rename : originalFilename;
-        FileNode fileNode = createFileNode(parentId, fileName, suffix, uploaded,
-                storageKey, fileHash, userId);
+        FileNode fileNode = buildFileNode(resolvedParentId, fileName, suffix, uploaded,
+                storageKey, fileHash, path, level, userId);
+        FileNode saved = fileNodeRepository.save(fileNode);
 
-        // 7. 创建版本记录
-        versionDomainService.createVersion(fileNode.getId(), storageKey, file.getSize(),
+        // 8. 创建版本记录
+        versionDomainService.createVersion(saved.getId(), storageKey, file.getSize(),
                 fileHash, uploaded.getMimeType(), versionRemark, userId);
 
-        // 8. 增加配额用量
+        // 9. 增加配额用量
         quotaDomainService.addUsage("user", userId, file.getSize(), 1);
+
+        // 10. 发布上传事件
+        eventPublisher.publishEvent(FileOperatedEvent.builder()
+                .operation(FileOperatedEvent.OP_UPLOAD)
+                .fileNodeId(saved.getId())
+                .fileName(fileName)
+                .nodeType(FileNode.TYPE_FILE)
+                .storageKey(storageKey)
+                .bucketName(uploaded.getUuidName())
+                .operatorId(userId)
+                .operatedAt(LocalDateTime.now())
+                .build());
 
         log.info("[FileApplicationService] 文件上传成功: name={}, size={}, userId={}",
                 fileName, file.getSize(), userId);
 
-        return toVO(fileNode);
+        return toVO(saved);
     }
 
     /**
@@ -141,14 +166,23 @@ public class FileApplicationService {
      * 删除（移入回收站）
      */
     public void delete(String nodeId, String userId) {
-        FileNode node = folderDomainService.listChildren(nodeId, userId)
-                .isEmpty() ? null : null;
-        // soft delete in folder service
+        FileNode node = fileNodeRepository.findById(nodeId);
+        if (node == null) {
+            throw BusinessException.builder().key("文件节点不存在: " + nodeId).build();
+        }
+
+        // 逻辑删除 FileNode
         folderDomainService.softDelete(nodeId, userId);
 
-        // 获取文件节点信息用于回收站
-        // Note: softDelete already marks as deleted, but we need info for trash
-        // This is handled via domain events
+        // 移入回收站
+        trashDomainService.moveToTrash(node, userId);
+
+        // 释放配额
+        if (node.isFile() && node.getSize() != null) {
+            quotaDomainService.subtractUsage("user", userId, node.getSize(), 1);
+        }
+
+        log.info("[FileApplicationService] 删除文件: nodeId={}, name={}", nodeId, node.getName());
     }
 
     /**
@@ -156,7 +190,8 @@ public class FileApplicationService {
      */
     public FileNodeVO rollbackVersion(String nodeId, Integer targetVersion, String userId) {
         versionDomainService.rollback(nodeId, targetVersion, userId);
-        return null; // 返回更新后的节点信息
+        FileNode updated = fileNodeRepository.findById(nodeId);
+        return toVO(updated);
     }
 
     /**
@@ -170,16 +205,27 @@ public class FileApplicationService {
      * 获取文件详情
      */
     public FileNodeVO getFileInfo(String nodeId) {
-        // 直接查询并转换
-        return null; // 由 Controller 直接调用 repository
+        FileNode node = fileNodeRepository.findById(nodeId);
+        if (node == null) {
+            throw BusinessException.builder().key("文件节点不存在: " + nodeId).build();
+        }
+        return toVO(node);
     }
 
     /**
      * 星标/取消星标
      */
     public void toggleStar(String nodeId, String userId) {
-        // 简化实现：通过 repository 更新 starred 字段
-        log.info("[FileApplicationService] 切换星标: nodeId={}, userId={}", nodeId, userId);
+        FileNode node = fileNodeRepository.findById(nodeId);
+        if (node == null) {
+            throw BusinessException.builder().key("文件节点不存在: " + nodeId).build();
+        }
+        node.setStarred(node.getStarred() == null || !node.getStarred());
+        node.setUpdatedBy(userId);
+        node.setUpdatedAt(LocalDateTime.now());
+        fileNodeRepository.update(node);
+        log.info("[FileApplicationService] 切换星标: nodeId={}, starred={}, userId={}",
+                nodeId, node.getStarred(), userId);
     }
 
     // ==================== 私有方法 ====================
@@ -191,11 +237,10 @@ public class FileApplicationService {
         return null;
     }
 
-    private FileNode createFileNode(String parentId, String name, String suffix,
+    private FileNode buildFileNode(String parentId, String name, String suffix,
                                      FileStorage uploaded, String storageKey,
-                                     String fileHash, String userId) {
-        // 委托给 FolderDomainService 处理 parent 解析
-        // 此处直接构建 FileNode 并通过 repository 保存
+                                     String fileHash, String path, int level,
+                                     String userId) {
         FileNode node = FileNode.builder()
                 .id(UUID.randomUUID().toString().replace("-", ""))
                 .parentId(parentId)
@@ -206,6 +251,9 @@ public class FileApplicationService {
                 .storageKey(storageKey)
                 .bucketName(uploaded.getUuidName())
                 .mimeType(uploaded.getMimeType())
+                .path(path)
+                .level(level)
+                .sort(0)
                 .currentVersion(0)
                 .fileHash(fileHash)
                 .previewReady(false)

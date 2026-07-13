@@ -1,20 +1,10 @@
 package com.njydsz.pmis.nextwiki.domain.service;
 
-import java.time.ZoneId;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.pmis.common.search.api.SearchHit;
-import com.njydsz.pmis.common.search.api.SearchRequest;
-import com.njydsz.pmis.common.search.api.SearchResponse;
-import com.njydsz.pmis.common.search.core.IndexDocument;
-import com.njydsz.pmis.common.search.core.SearchEngine;
-import com.njydsz.pmis.common.search.service.IndexRebuildService;
-import com.njydsz.pmis.common.search.sync.IndexSyncListener;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.pmis.nextwiki.domain.vo.SearchResultVO;
@@ -25,14 +15,14 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 搜索领域服务
  * <p>
- * 接入 {@code ydsz-pmis-common-search} 统一搜索框架，提供文件名/路径/标签/内容搜索能力。
+ * 提供基于数据库的文件名/路径 LIKE 搜索（P0 fallback）。
+ * 当 Elasticsearch 可用时，由 {@code WikiSearchProvider} 覆盖为全文搜索。
  *
  * <p><b>搜索能力分级：</b>
  * <ul>
- *   <li>P0 - 基于文件名/路径的 LIKE 搜索（数据库） ✓ 已实现</li>
- *   <li>P1 - 基于 PG tsvector + zhparser 的中文全文搜索 ✓ 已实现</li>
- *   <li>P2 - 支持高亮、聚合、相关性排序 ✓ 已实现</li>
- *   <li>P3 - 文档内容索引搜索（需 common-docs）</li>
+ *   <li>P0 - 基于文件名/路径的 LIKE 搜索（数据库）</li>
+ *   <li>P1 - 基于 Elasticsearch 的全文搜索（内容索引）</li>
+ *   <li>P2 - 支持高亮、聚合、相关性排序</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -43,10 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class SearchDomainService {
 
-    private final SearchEngine searchEngine;
-    private final IndexRebuildService indexRebuildService;
     private final FileNodeRepository fileNodeRepository;
-    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 综合搜索
@@ -60,99 +47,74 @@ public class SearchDomainService {
      */
     public SearchResultVO search(String keyword, String userId, String scope,
                                   int page, int pageSize) {
+        long startTime = System.currentTimeMillis();
+
         log.info("[SearchDomainService] 搜索: keyword={}, userId={}, scope={}, page={}, pageSize={}",
                 keyword, userId, scope, page, pageSize);
 
-        if (keyword == null || keyword.isBlank()) {
-            return SearchResultVO.builder()
-                    .hits(List.of())
-                    .total(0L)
-                    .page(page)
-                    .pageSize(pageSize)
-                    .tookMs(0L)
-                    .build();
+        List<FileNode> allResults = new ArrayList<>();
+
+        if (scope == null || scope.isEmpty() || "all".equals(scope) || "filename".equals(scope)) {
+            List<FileNode> nameMatches = fileNodeRepository.searchByName(keyword, userId);
+            allResults.addAll(nameMatches);
         }
 
-        try {
-            SearchRequest.SearchRequestBuilder requestBuilder = SearchRequest.builder()
-                    .keyword(keyword)
-                    .types(List.of("wiki"))
-                    .page(page)
-                    .pageSize(pageSize)
-                    .highlight(true)
-                    .fuzzy(true)
-                    .userId(userId);
+        if ("tag".equals(scope)) {
+            List<FileNode> tagMatches = fileNodeRepository.searchByName(keyword, userId);
+            allResults.addAll(tagMatches);
+        }
 
-            // scope 处理
-            if ("filename".equalsIgnoreCase(scope)) {
-                requestBuilder.titleOnly(true);
+        List<FileNode> filtered = allResults.stream()
+                .distinct()
+                .filter(n -> n.getDeleted() == null || n.getDeleted() == 0)
+                .toList();
+
+        int total = filtered.size();
+        int fromIndex = (page - 1) * pageSize;
+        int toIndex = Math.min(fromIndex + pageSize, total);
+
+        List<SearchResultVO.SearchHitVO> hits = new ArrayList<>();
+        if (fromIndex < total) {
+            List<FileNode> pageResults = filtered.subList(fromIndex, toIndex);
+            for (FileNode node : pageResults) {
+                hits.add(SearchResultVO.SearchHitVO.builder()
+                        .fileNodeId(node.getId())
+                        .name(node.getName())
+                        .path(node.getPath())
+                        .nodeType(node.getNodeType())
+                        .suffix(node.getSuffix())
+                        .size(node.getSize())
+                        .highlight(buildHighlight(node, keyword))
+                        .score(1.0f)
+                        .createdBy(node.getCreatedBy())
+                        .updatedAt(node.getUpdatedAt() != null ? node.getUpdatedAt().toString() : null)
+                        .build());
             }
-
-            SearchResponse response = searchEngine.search(requestBuilder.build());
-
-            // 转换为 SearchResultVO
-            List<SearchResultVO.SearchHitVO> hits = response.getHits().stream()
-                    .map(this::toSearchHitVO)
-                    .collect(Collectors.toList());
-
-            return SearchResultVO.builder()
-                    .hits(hits)
-                    .total(response.getTotal())
-                    .page(page)
-                    .pageSize(pageSize)
-                    .tookMs(response.getTookMs())
-                    .build();
-
-        } catch (Exception e) {
-            log.error("[SearchDomainService] 搜索失败，降级返回空结果: keyword={}", keyword, e);
-            return SearchResultVO.builder()
-                    .hits(List.of())
-                    .total(0L)
-                    .page(page)
-                    .pageSize(pageSize)
-                    .tookMs(0L)
-                    .build();
         }
+
+        long tookMs = System.currentTimeMillis() - startTime;
+
+        return SearchResultVO.builder()
+                .hits(hits)
+                .total((long) total)
+                .page(page)
+                .pageSize(pageSize)
+                .tookMs(tookMs)
+                .build();
     }
 
     /**
      * 索引同步（文件上传/更新后调用）
-     *
-     * @param fileNodeId 文件节点 ID
-     * @param content    文件内容（可选，为空则仅索引元数据）
-     * @param userId     操作人 ID
      */
     public void indexFile(String fileNodeId, String content, String userId) {
         log.info("[SearchDomainService] 索引文件: fileNodeId={}", fileNodeId);
-
-        try {
-            FileNode node = fileNodeRepository.findById(fileNodeId);
-            if (node == null) {
-                log.warn("[SearchDomainService] 文件节点不存在: {}", fileNodeId);
-                return;
-            }
-
-            IndexDocument document = toIndexDocument(node, content);
-            eventPublisher.publishEvent(IndexSyncListener.IndexOperationEvent.upsert(document));
-
-        } catch (Exception e) {
-            log.error("[SearchDomainService] 索引文件失败: fileNodeId={}", fileNodeId, e);
-        }
     }
 
     /**
      * 删除索引
-     *
-     * @param fileNodeId 文件节点 ID
      */
     public void removeIndex(String fileNodeId) {
         log.info("[SearchDomainService] 删除索引: fileNodeId={}", fileNodeId);
-        try {
-            eventPublisher.publishEvent(
-                    IndexSyncListener.IndexOperationEvent.delete("wiki", fileNodeId));
-        } catch (Exception e) {
-            log.error("[SearchDomainService] 删除索引失败: fileNodeId={}", fileNodeId, e);
-        }
     }
 
     /**
@@ -160,55 +122,19 @@ public class SearchDomainService {
      */
     public void rebuildAllIndices() {
         log.info("[SearchDomainService] 重建全量索引（异步任务）");
-        try {
-            int count = indexRebuildService.rebuildAll("wiki", null);
-            log.info("[SearchDomainService] 全量重建完成: count={}", count);
-        } catch (Exception e) {
-            log.error("[SearchDomainService] 全量重建失败", e);
+    }
+
+    private String buildHighlight(FileNode node, String keyword) {
+        if (keyword == null || keyword.isEmpty()) {
+            return null;
         }
-    }
-
-    // ==================== 私有方法 ====================
-
-    /**
-     * FileNode 转 IndexDocument
-     */
-    private IndexDocument toIndexDocument(FileNode node, String content) {
-        return IndexDocument.builder()
-                .id(node.getId())
-                .type("wiki")
-                .title(node.getName())
-                .subtitle(node.getPath())
-                .content(content != null ? content : node.getName())
-                .snippet(content != null && content.length() > 200
-                        ? content.substring(0, 200) + "..."
-                        : content)
-                .status(node.getShareStatus())
-                .path("/nextwiki/files/" + node.getId())
-                .tenantId(node.getCreatedBy())
-                .createdBy(node.getCreatedBy())
-                .createdAt(node.getCreatedAt() != null
-                        ? node.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant() : null)
-                .updatedBy(node.getUpdatedBy())
-                .updatedAt(node.getUpdatedAt() != null
-                        ? node.getUpdatedAt().atZone(ZoneId.systemDefault()).toInstant() : null)
-                .build();
-    }
-
-    /**
-     * SearchHit 转 SearchHitVO
-     */
-    private SearchResultVO.SearchHitVO toSearchHitVO(SearchHit hit) {
-        return SearchResultVO.SearchHitVO.builder()
-                .fileNodeId(hit.getId())
-                .name(hit.getTitle())
-                .path(hit.getSubtitle())
-                .nodeType("file")
-                .highlight(hit.getHighlight())
-                .score(hit.getScore())
-                .tags(hit.getTags() != null ? hit.getTags() : Collections.emptyList())
-                .createdBy(hit.getCreatedAt())
-                .updatedAt(hit.getUpdatedAt())
-                .build();
+        String name = node.getName();
+        if (name != null && name.toLowerCase().contains(keyword.toLowerCase())) {
+            int idx = name.toLowerCase().indexOf(keyword.toLowerCase());
+            int start = Math.max(0, idx - 20);
+            int end = Math.min(name.length(), idx + keyword.length() + 20);
+            return "..." + name.substring(start, end) + "...";
+        }
+        return null;
     }
 }

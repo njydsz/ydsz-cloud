@@ -4,10 +4,12 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
+import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
 
 /**
  * 文件节点 MyBatis Mapper
@@ -56,4 +58,31 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
      * 查询用户根目录
      */
     FileNode selectRootByUser(@Param("createdBy") String createdBy);
+
+    /**
+     * 统计用户文件数量
+     */
+    @Select("SELECT COUNT(*) FROM nw_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'file'")
+    int countByUser(@Param("userId") String userId);
+
+    /**
+     * 查询用户文件总大小
+     */
+    @Select("SELECT COALESCE(SUM(size), 0) FROM nw_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'file'")
+    Long sumSizeByUser(@Param("userId") String userId);
+
+    /**
+     * 查询用户大文件 Top-N
+     */
+    @Select("SELECT * FROM nw_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'file' " +
+            "ORDER BY size DESC LIMIT #{limit}")
+    List<FileNode> findTopLargeFilesByUser(@Param("userId") String userId, @Param("limit") int limit);
+
+    /**
+     * 按后缀统计文件数量和大小
+     */
+    @Select("SELECT suffix, COUNT(*) AS file_count, COALESCE(SUM(size), 0) AS total_size " +
+            "FROM nw_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'file' " +
+            "GROUP BY suffix ORDER BY total_size DESC")
+    List<FileNodeRepository.FileTypeStat> statsBySuffixAndUser(@Param("userId") String userId);
 }

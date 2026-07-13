@@ -87,6 +87,32 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     }
 
     @Override
+    public List<FileNode> searchByName(String keyword, String createdBy) {
+        return fileNodeMapper.searchByName(keyword, createdBy);
+    }
+
+    @Override
+    public int countByUser(String userId) {
+        return fileNodeMapper.countByUser(userId);
+    }
+
+    @Override
+    public long sumSizeByUser(String userId) {
+        Long sum = fileNodeMapper.sumSizeByUser(userId);
+        return sum != null ? sum : 0L;
+    }
+
+    @Override
+    public List<FileNode> findTopLargeFilesByUser(String userId, int limit) {
+        return fileNodeMapper.findTopLargeFilesByUser(userId, limit);
+    }
+
+    @Override
+    public List<FileTypeStat> statsBySuffixAndUser(String userId) {
+        return fileNodeMapper.statsBySuffixAndUser(userId);
+    }
+
+    @Override
     public FileNode findOrCreateRoot(String userId) {
         FileNode root = fileNodeMapper.selectRootByUser(userId);
         if (root != null) {

@@ -70,7 +70,38 @@ public interface FileNodeRepository {
     void updateSize(String id, Long sizeDelta);
 
     /**
+     * 按文件名搜索（LIKE）
+     */
+    List<FileNode> searchByName(String keyword, String createdBy);
+
+    /**
+     * 统计用户文件数量
+     */
+    int countByUser(String userId);
+
+    /**
+     * 查询用户文件总大小
+     */
+    long sumSizeByUser(String userId);
+
+    /**
+     * 查询用户大文件 Top-N
+     */
+    List<FileNode> findTopLargeFilesByUser(String userId, int limit);
+
+    /**
+     * 按后缀统计文件数量和大小
+     */
+    List<FileTypeStat> statsBySuffixAndUser(String userId);
+
+    /**
      * 查询用户根目录
      */
     FileNode findOrCreateRoot(String userId);
+
+    /**
+     * 文件类型统计结果
+     */
+    record FileTypeStat(String suffix, int fileCount, long totalSize) {
+    }
 }

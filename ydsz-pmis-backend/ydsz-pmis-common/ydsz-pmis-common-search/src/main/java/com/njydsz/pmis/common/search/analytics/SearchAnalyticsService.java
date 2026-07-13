@@ -72,7 +72,7 @@ public class SearchAnalyticsService {
      */
     public List<HotKeyword> getHotKeywords(int limit) {
         return hotKeywords.entrySet().stream()
-                .sorted(Map.Entry.<String, AtomicLong>comparingByValue().reversed())
+                .sorted((a, b) -> Long.compare(b.getValue().get(), a.getValue().get()))
                 .limit(limit)
                 .map(e -> new HotKeyword(e.getKey(), e.getValue().get()))
                 .collect(Collectors.toList());
@@ -86,7 +86,7 @@ public class SearchAnalyticsService {
      */
     public List<HotKeyword> getZeroResultKeywords(int limit) {
         return zeroResultKeywords.entrySet().stream()
-                .sorted(Map.Entry.<String, AtomicLong>comparingByValue().reversed())
+                .sorted((a, b) -> Long.compare(b.getValue().get(), a.getValue().get()))
                 .limit(limit)
                 .map(e -> new HotKeyword(e.getKey(), e.getValue().get()))
                 .collect(Collectors.toList());
