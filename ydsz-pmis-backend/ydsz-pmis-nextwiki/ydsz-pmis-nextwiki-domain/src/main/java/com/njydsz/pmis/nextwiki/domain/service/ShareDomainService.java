@@ -202,6 +202,13 @@ public class ShareDomainService {
     }
 
     /**
+     * 查询用户的分享列表
+     */
+    public List<ShareLink> findByUserId(String userId) {
+        return shareLinkRepository.findActiveSharesByUserId(userId);
+    }
+
+    /**
      * 设置文件所有者
      */
     public FileAcl setOwner(String fileNodeId, String userId) {
