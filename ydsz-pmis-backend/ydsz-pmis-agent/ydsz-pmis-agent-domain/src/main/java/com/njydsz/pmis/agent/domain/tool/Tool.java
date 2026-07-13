@@ -18,7 +18,7 @@ import java.lang.annotation.Target;
  * }</pre>
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)

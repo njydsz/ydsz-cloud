@@ -11,7 +11,7 @@ import com.njydsz.pmis.agent.domain.model.ToolDefinition;
  * <p>将 {@link ToolDefinition}（元数据）与 {@link ToolExecutor}（执行器）绑定在一起。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public final class ToolRegistration {
 

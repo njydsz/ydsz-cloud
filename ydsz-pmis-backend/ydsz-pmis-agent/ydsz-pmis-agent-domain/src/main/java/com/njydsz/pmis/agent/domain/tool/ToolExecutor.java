@@ -8,7 +8,7 @@ import java.util.Map;
  * <p>每个工具对应一个 {@code ToolExecutor} 实现，接收参数 Map 并返回 JSON 字符串结果。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @FunctionalInterface
 public interface ToolExecutor {

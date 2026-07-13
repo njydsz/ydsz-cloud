@@ -12,7 +12,7 @@ package com.njydsz.pmis.agent.domain.guardrail;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public interface InputGuardrail {
 

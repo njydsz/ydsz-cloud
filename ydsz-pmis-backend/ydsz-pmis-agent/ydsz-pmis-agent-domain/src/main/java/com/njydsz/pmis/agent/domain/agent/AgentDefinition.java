@@ -10,7 +10,7 @@ import java.util.Objects;
  * <p>描述一个 Agent 的完整配置，包括类型、系统提示词、绑定工具、模型参数等。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public final class AgentDefinition implements Serializable {
 

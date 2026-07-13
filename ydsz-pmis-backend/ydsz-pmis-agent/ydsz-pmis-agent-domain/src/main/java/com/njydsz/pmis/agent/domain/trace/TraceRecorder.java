@@ -9,7 +9,7 @@ import java.util.List;
  * <p>记录 Agent 每一步的执行过程，用于调试和可观测性。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public interface TraceRecorder {
 

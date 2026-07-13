@@ -17,7 +17,7 @@ import com.njydsz.pmis.agent.domain.model.ChatResponse;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public interface AgentExecutor {
 

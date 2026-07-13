@@ -37,7 +37,7 @@ import com.njydsz.pmis.workflow.domain.enums.ThirdPartyPlatform;
  * 飞书抄送事件等），由调用方决定是否忽略。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public final class ThirdPartyApprovalActionResolver {
 

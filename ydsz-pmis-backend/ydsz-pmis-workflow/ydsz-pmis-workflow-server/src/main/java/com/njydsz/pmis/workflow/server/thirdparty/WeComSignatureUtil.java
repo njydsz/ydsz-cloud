@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
  * <p>算法：SHA1(sort(token, timestamp, nonce, encrypt))，结果以十六进制小写编码后与回调签名比对。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public final class WeComSignatureUtil {
 

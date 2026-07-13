@@ -6,7 +6,7 @@ import java.io.Serializable;
  * 护栏检查结果
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public final class GuardrailResult implements Serializable {
 
