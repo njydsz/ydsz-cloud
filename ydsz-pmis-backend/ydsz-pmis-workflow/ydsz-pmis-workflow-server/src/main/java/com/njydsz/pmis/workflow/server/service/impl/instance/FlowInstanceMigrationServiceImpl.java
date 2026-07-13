@@ -257,12 +257,12 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
 
         // 6. 组装结果
         InstanceMigrationResultDTO result = new InstanceMigrationResultDTO();
-        BaseResponse.setTotalInstances(instances == null ? 0 : instances.size());
-        BaseResponse.setMigratedCount(migratedCount);
-        BaseResponse.setSkippedCount(skippedCount);
-        BaseResponse.setFailedCount(failedCount);
-        BaseResponse.setDetails(details);
-        BaseResponse.setNodeMappingApplied(nodeMapping);
+        result.setTotalInstances(instances == null ? 0 : instances.size());
+        result.setMigratedCount(migratedCount);
+        result.setSkippedCount(skippedCount);
+        result.setFailedCount(failedCount);
+        result.setDetails(details);
+        result.setNodeMappingApplied(nodeMapping);
 
         log.info("[Flow-Migrate] 迁移完成: sourceDefId={} targetDefId={} dryRun={} "
                         + "total={} migrated={} skipped={} failed={}",

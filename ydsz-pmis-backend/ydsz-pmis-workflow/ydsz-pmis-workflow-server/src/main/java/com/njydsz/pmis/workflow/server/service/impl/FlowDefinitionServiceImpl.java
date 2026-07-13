@@ -793,7 +793,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             result.add(map);
         }
         log.info("[Flow] 查询版本历史: flowCode={} count={}",
-                def.getFlowCode(), BaseResponse.size());
+                def.getFlowCode(), result.size());
         return result;
     }
 

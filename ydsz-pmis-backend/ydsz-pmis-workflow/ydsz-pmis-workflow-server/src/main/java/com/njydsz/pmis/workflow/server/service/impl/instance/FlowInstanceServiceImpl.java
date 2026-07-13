@@ -1180,7 +1180,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
 
         log.info("[Flow-Simulate] 模拟完成: flowCode={} version={} steps={}",
-                flowCode, def.getFlowVersion(), BaseResponse.size());
+                flowCode, def.getFlowVersion(), result.size());
         return result;
     }
 

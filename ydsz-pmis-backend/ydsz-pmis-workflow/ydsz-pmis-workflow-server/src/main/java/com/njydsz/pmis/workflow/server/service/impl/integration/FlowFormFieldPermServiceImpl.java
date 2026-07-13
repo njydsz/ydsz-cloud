@@ -115,7 +115,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
         // 移除 HIDDEN 字段
         for (Map.Entry<String, String> entry : fieldPerms.entrySet()) {
             if (PERM_HIDDEN.equals(entry.getValue())) {
-                BaseResponse.remove(entry.getKey());
+                result.remove(entry.getKey());
             }
         }
         return result;

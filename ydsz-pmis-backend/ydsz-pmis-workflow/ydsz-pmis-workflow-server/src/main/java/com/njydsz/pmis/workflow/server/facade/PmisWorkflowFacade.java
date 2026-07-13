@@ -113,7 +113,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
         PageResponse<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), AuthContext.getTenantIdOrDefault("1"), page, size);
-        List<FlowRunTaskDO> list = (List<FlowRunTaskDO>) pageResult.getData();
+        List<FlowRunTaskDO> list = pageResult.getList();
         return list.stream().map(this::toMap).toList();
     }
 
@@ -123,7 +123,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
         PageResponse<FlowRunTaskDO> pageResult = taskService.listDoneByAssigneePage(
                 String.valueOf(userId), AuthContext.getTenantIdOrDefault("1"), page, size);
-        List<FlowRunTaskDO> list = (List<FlowRunTaskDO>) pageResult.getData();
+        List<FlowRunTaskDO> list = pageResult.getList();
         return list.stream().map(this::toMap).toList();
     }
 
@@ -144,8 +144,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         PageResponse<FlowInstanceDO> pageResult = instanceService.page(
                 businessType, null, flowStatus, startTime, endTime,
                 AuthContext.getTenantIdOrDefault("1"), page, size);
-        @SuppressWarnings("unchecked")
-        List<FlowInstanceDO> dataList = (List<FlowInstanceDO>) pageResult.getData();
+        List<FlowInstanceDO> dataList = pageResult.getList();
         List<Map<String, Object>> list = dataList.stream().map(this::instanceToMap).toList();
         return (PageResponse<Map<String, Object>>) (PageResponse<?>) PageResponse.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), list);
     }
@@ -224,8 +223,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         PageResponse<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), tenantId, 1, 100);
-        @SuppressWarnings("unchecked")
-        List<FlowRunTaskDO> todos = (List<FlowRunTaskDO>) pageResult.getData();
+        List<FlowRunTaskDO> todos = pageResult.getList();
         if (todos.isEmpty()) {
             return 0;
         }

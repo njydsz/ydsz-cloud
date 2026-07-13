@@ -1301,41 +1301,41 @@ public class FlowTaskCreateService {
         task.setFinishAt(now);
         task.setDurationMs(0L);
 
-        if (BaseResponse.success()) {
+        if (result.isSuccess()) {
             // 3a. 成功：标记 COMPLETED，归档，审计，推进
             task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
-            task.setComment(BaseResponse.message());
+            task.setComment(result.getMessage());
             taskMapper.insert(task);
             archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
             support.audit(task, "SERVICE_EXECUTE", null, null,
-                    "服务节点执行成功: " + BaseResponse.message());
+                    "服务节点执行成功: " + result.getMessage());
             log.info("[Flow] 服务节点执行成功: instanceId={} node={} msg={}",
-                    instance.getId(), node.getNodeCode(), BaseResponse.message());
+                    instance.getId(), node.getNodeCode(), result.getMessage());
             advanceAfterAutoPass(instance, node, variables);
         } else {
             // 3b. 失败：优先尝试触发 error boundary 接管流程
-            boolean errorBoundaryTriggered = triggerErrorBoundaryIfExists(instance, node, BaseResponse.message());
+            boolean errorBoundaryTriggered = triggerErrorBoundaryIfExists(instance, node, result.getMessage());
             task.setTaskStatus(FlowTaskStatus.TIMEOUT.name());
             if (errorBoundaryTriggered) {
-                task.setComment("服务节点失败，error boundary 已触发: " + BaseResponse.message());
+                task.setComment("服务节点失败，error boundary 已触发: " + result.getMessage());
             } else {
-                task.setComment("服务节点执行失败: " + BaseResponse.message());
+                task.setComment("服务节点执行失败: " + result.getMessage());
             }
             taskMapper.insert(task);
             archiveService.archiveToHistory(task, FlowTaskStatus.TIMEOUT);
             if (errorBoundaryTriggered) {
                 support.audit(task, "SERVICE_ERROR_BOUNDARY", null, null,
-                        "服务节点失败，error boundary 触发: " + BaseResponse.message());
+                        "服务节点失败，error boundary 触发: " + result.getMessage());
                 log.info("[Flow] 服务节点失败，error boundary 已触发: instanceId={} node={}",
                         instance.getId(), node.getNodeCode());
             } else {
                 support.audit(task, "SERVICE_ERROR", null, null,
-                        "服务节点执行失败: " + BaseResponse.message());
+                        "服务节点执行失败: " + result.getMessage());
                 instanceMapper.updateStatus(instance.getId(),
                         FlowInstanceStatus.ERROR.name(),
                         node.getNodeCode(), node.getNodeName(), null, null);
                 log.error("[Flow] 服务节点执行失败，实例标记为异常: instanceId={} node={} msg={}",
-                        instance.getId(), node.getNodeCode(), BaseResponse.message());
+                        instance.getId(), node.getNodeCode(), result.getMessage());
             }
         }
         return task.getId();
