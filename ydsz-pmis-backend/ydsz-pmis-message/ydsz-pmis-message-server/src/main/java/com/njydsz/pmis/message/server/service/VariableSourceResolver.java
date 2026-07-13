@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.config;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.message.domain.entity.config.MsgVariableSourceDO;
 import com.njydsz.pmis.message.infra.mapper.config.MsgVariableSourceMapper;
 import lombok.RequiredArgsConstructor;
@@ -18,15 +18,17 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 消息变量数据源解析器（P0-4）�? *
- * <p>在模板渲染前，根�?{@link MsgVariableSourceDO} 配置自动从数据源拉取变量值：
+ * 消息变量数据源解析器（P0-4）。
+ *
+ * <p>在模板渲染前，根据 {@link MsgVariableSourceDO} 配置自动从数据源拉取变量值：
  * <ul>
  *   <li>BEAN: 调用 Spring Bean 方法，表达式 {@code beanName.method(#bizId)}</li>
  *   <li>SQL: 执行 SQL 查询，表达式 {@code SELECT name FROM xxx WHERE id = :bizId}</li>
- *   <li>HTTP: 调用远程接口（简化实现，�?GET�?/li>
- *   <li>STATIC: 直接返回表达式�?/li>
+ *   <li>HTTP: 调用远程接口（简化实现，仅 GET）</li>
+ *   <li>STATIC: 直接返回表达式值</li>
  * </ul>
- * 支持 Redis 缓存（cacheTtl > 0 时）�? *
+ * 支持 Redis 缓存（cacheTtl > 0 时）。
+ *
  * @author ydsz-pmis-team
  * @since 1.5.0
  */
@@ -40,13 +42,15 @@ public class VariableSourceResolver {
     private final JdbcTemplate jdbcTemplate;
     private final org.springframework.context.ApplicationContext applicationContext;
 
-    /** Bean 数据源方法缓�? key=beanName.methodName, value=Method */
+    /** Bean 数据源方法缓存: key=beanName.methodName, value=Method */
     private final Map<String, java.lang.reflect.Method> methodCache = new ConcurrentHashMap<>();
 
     /**
-     * 按模板编码加载变量数据源配置�?     *
+     * 按模板编码加载变量数据源配置。
+     *
      * @param templateCode 模板编码
-     * @return 数据源列�?     */
+     * @return 数据源列表
+     */
     public List<MsgVariableSourceDO> loadByTemplate(String templateCode) {
         if (!StringUtils.hasText(templateCode)) {
             return List.of();
@@ -57,7 +61,8 @@ public class VariableSourceResolver {
     }
 
     /**
-     * 批量解析变量值（params 中已有的变量不覆盖）�?     *
+     * 批量解析变量值（params 中已有的变量不覆盖）。
+     *
      * @param templateCode 模板编码
      * @param params       当前参数（将被补充）
      * @param context      上下文（bizId/bizType 等，用于数据源表达式取值）
@@ -75,7 +80,8 @@ public class VariableSourceResolver {
 
         for (MsgVariableSourceDO source : sources) {
             String varName = source.getVariableName();
-            // params 中已有值则不覆�?            if (params.containsKey(varName) && params.get(varName) != null) {
+            // params 中已有值则不覆盖
+            if (params.containsKey(varName) && params.get(varName) != null) {
                 continue;
             }
             try {
@@ -93,18 +99,20 @@ public class VariableSourceResolver {
     }
 
     /**
-     * 解析单个变量�?     */
+     * 解析单个变量。
+     */
     private Object resolveOne(MsgVariableSourceDO source, Map<String, Object> context) {
         String type = source.getSourceType();
         String expr = source.getSourceExpr();
         String cacheKey = null;
 
-        // 缓存检�?        if (source.getCacheTtl() != null && source.getCacheTtl() > 0) {
+        // 缓存检查
+        if (source.getCacheTtl() != null && source.getCacheTtl() > 0) {
             cacheKey = "pmis:msg:vars:" + source.getTemplateCode() + ":" + source.getVariableName()
                     + ":" + (context == null ? "" : context.hashCode());
             String cached = redisTemplate.opsForValue().get(cacheKey);
             if (StringUtils.hasText(cached)) {
-                return JsonUtils.fromJson(cached, Object.class);
+                return JsonUtils.parseObject(cached, Object.class);
             }
         }
 
@@ -114,7 +122,7 @@ public class VariableSourceResolver {
             case "BEAN" -> resolveBean(expr, context);
             case "HTTP" -> resolveHttp(expr, context);
             default -> {
-                log.warn("[VariableSource] 未知数据源类�? {}", type);
+                log.warn("[VariableSource] 未知数据源类型: {}", type);
                 yield null;
             }
         };
@@ -128,10 +136,12 @@ public class VariableSourceResolver {
     }
 
     /**
-     * SQL 数据源：执行查询并返回第一行第一列的值�?     */
+     * SQL 数据源：执行查询并返回第一行第一列的值。
+     */
     private Object resolveSql(String sql, Map<String, Object> context) {
         try {
-            // 简化实现：�?:param 替换�?context 中的�?            String resolvedSql = resolvePlaceholders(sql, context);
+            // 简化实现：将 :param 替换为 context 中的值
+            String resolvedSql = resolvePlaceholders(sql, context);
             return jdbcTemplate.queryForObject(resolvedSql, Object.class);
         } catch (Exception e) {
             log.warn("[VariableSource] SQL 解析失败: sql={} err={}", sql, e.getMessage());
@@ -140,7 +150,8 @@ public class VariableSourceResolver {
     }
 
     /**
-     * BEAN 数据源：调用 Spring Bean 方法�?     * 表达式格�? beanName.methodName(#bizId)
+     * BEAN 数据源：调用 Spring Bean 方法。
+     * 表达式格式: beanName.methodName(#bizId)
      */
     private Object resolveBean(String expr, Map<String, Object> context) {
         try {
@@ -167,7 +178,7 @@ public class VariableSourceResolver {
             java.lang.reflect.Method method = methodCache.computeIfAbsent(
                     beanName + "." + methodName, k -> findMethod(bean.getClass(), methodName, args.length));
             if (method == null) {
-                log.warn("[VariableSource] Bean 方法不存�? {}.{}", beanName, methodName);
+                log.warn("[VariableSource] Bean 方法不存在: {}.{}", beanName, methodName);
                 return null;
             }
             return method.invoke(bean, args);
@@ -178,14 +189,15 @@ public class VariableSourceResolver {
     }
 
     /**
-     * HTTP 数据源（简化实现，GET 请求）�?     */
+     * HTTP 数据源（简化实现，GET 请求）。
+     */
     private Object resolveHttp(String url, Map<String, Object> context) {
         try {
             String resolvedUrl = resolvePlaceholders(url, context);
             org.springframework.web.client.RestClient client = org.springframework.web.client.RestClient.create();
             String body = client.get().uri(resolvedUrl).retrieve().body(String.class);
             if (StringUtils.hasText(body)) {
-                return JsonUtils.fromJson(body, Object.class);
+                return JsonUtils.parseObject(body, Object.class);
             }
         } catch (Exception e) {
             log.warn("[VariableSource] HTTP 解析失败: url={} err={}", url, e.getMessage());

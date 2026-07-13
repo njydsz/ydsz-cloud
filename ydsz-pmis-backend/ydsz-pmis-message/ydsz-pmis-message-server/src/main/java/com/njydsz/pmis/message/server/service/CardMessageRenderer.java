@@ -9,8 +9,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 交互式卡片消息渲染器（P1-1）�? *
- * <p>�?{@link CardMessageDTO} 转换为各通道的消息请求：
+ * 交互式卡片消息渲染器（P1-1）。
+ *
+ * <p>将 {@link CardMessageDTO} 转换为各通道的消息请求：
  * <ul>
  *   <li>DINGTALK/DINGTALK_WORK: msgType=action_card</li>
  *   <li>WECOM/WECOM_APP: msgType=textcard</li>
@@ -25,10 +26,12 @@ import java.util.Map;
 public class CardMessageRenderer {
 
     /**
-     * 将卡�?DTO 转换�?MessageRequest�?     *
+     * 将卡片 DTO 转换为 MessageRequest。
+     *
      * @param card     卡片 DTO
      * @param channel  目标通道
-     * @param receiver 接收�?     * @param bizType  业务类型
+     * @param receiver 接收人
+     * @param bizType  业务类型
      * @param bizId    业务 ID
      * @return MessageRequest
      */
@@ -70,9 +73,10 @@ public class CardMessageRenderer {
                 params.put("extra", extra);
             }
             default -> {
-                // 降级纯文�?                StringBuilder sb = new StringBuilder();
+                // 降级纯文本
+                StringBuilder sb = new StringBuilder();
                 if (StringUtils.hasText(card.getTitle())) {
-                    sb.append("�?).append(card.getTitle()).append("】\n");
+                    sb.append("【").append(card.getTitle()).append("】\n");
                 }
                 sb.append(card.getContent());
                 if (card.getButtons() != null) {

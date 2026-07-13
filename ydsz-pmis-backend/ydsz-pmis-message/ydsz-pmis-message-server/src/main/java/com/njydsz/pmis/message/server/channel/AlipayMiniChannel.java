@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.channel.impl;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 import com.njydsz.pmis.message.server.config.MessageProperties;
@@ -20,9 +20,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 支付宝小程序模板消息通道实现�? *
- * <p>实现 {@link MessageChannel} SPI，通过支付宝小程序模板消息 API 下发通知�? * 支付宝模板消息通过 openapi 中的 alipay.open.app.mini.templatemessage.send 接口发送�? *
- * <p>降级策略：未配置 AppID/privateKey �?provider=mock 时降级为日志输出�? *
+ * 支付宝小程序模板消息通道实现。
+ *
+ * <p>实现 {@link MessageChannel} SPI，通过支付宝小程序模板消息 API 下发通知。
+ * 支付宝模板消息通过 openapi 中的 alipay.open.app.mini.templatemessage.send 接口发送。
+ *
+ * <p>降级策略：未配置 AppID/privateKey 或 provider=mock 时降级为日志输出。
+ *
  * @author ydsz-pmis-team
  * @since 1.3.0
  */
@@ -49,25 +53,27 @@ public class AlipayMiniChannel implements MessageChannel {
     @Override
     public MessageResult send(MessageRequest request) {
         if (request.getReceiver() == null || request.getReceiver().isBlank()) {
-            return MessageResult.fail(CHANNEL_TYPE, "支付宝小程序接收�?UserID)不能为空");
+            return MessageResult.fail(CHANNEL_TYPE, "支付宝小程序接收人(UserID)不能为空");
         }
 
         MessageProperties.AlipayMiniConfig config = messageProperties.getAlipayMini();
         if (config == null || !StringUtils.hasText(config.getAppId())
                 || !StringUtils.hasText(config.getPrivateKey())) {
-            log.warn("[AlipayMiniChannel] 未配�?AppID/privateKey,降级为日志输�? receiver={}",
+            log.warn("[AlipayMiniChannel] 未配置 AppID/privateKey,降级为日志输出: receiver={}",
                     request.getReceiver());
             return mockSend(request);
         }
 
         try {
-            // 构造支付宝开放平台请求参�?            Map<String, String> bizContent = new HashMap<>();
+            // 构造支付宝开放平台请求参数
+            Map<String, String> bizContent = new HashMap<>();
             bizContent.put("to_user_id", request.getReceiver());
             bizContent.put("template_id",
                     request.getTemplateCode() != null ? request.getTemplateCode() : "");
             bizContent.put("page", "pages/index/index");
 
-            // 构造模板数�?            if (request.getParams() != null) {
+            // 构造模板数据
+            if (request.getParams() != null) {
                 Map<String, String> data = new HashMap<>();
                 for (Map.Entry<String, Object> entry : request.getParams().entrySet()) {
                     data.put(entry.getKey(),
@@ -105,36 +111,38 @@ public class AlipayMiniChannel implements MessageChannel {
             ResponseEntity<String> resp = restTemplate.postForEntity(config.getGateway(), entity, String.class);
             String respBody = resp.getBody();
 
-            // 解析响应（支付宝返回 JSON�?            @SuppressWarnings("unchecked")
-            Map<String, Object> result = (Map<String, Object>) JsonUtils.fromJson(respBody, Map.class);
+            // 解析响应（支付宝返回 JSON）
+            @SuppressWarnings("unchecked")
+            Map<String, Object> result = (Map<String, Object>) JsonUtils.parseObject(respBody, Map.class);
             if (result != null) {
                 Map<?, ?> alipayResp = (Map<?, ?>) result.get("alipay_open_app_mini_templatemessage_send_response");
                 if (alipayResp != null && "10000".equals(String.valueOf(alipayResp.get("code")))) {
                     String traceId = "ALIPAY_MINI-" + SnowflakeIdGenerator.nextTraceId();
-                    log.info("[AlipayMiniChannel] 发送成�? receiver={} template={}",
+                    log.info("[AlipayMiniChannel] 发送成功: receiver={} template={}",
                             request.getReceiver(), request.getTemplateCode());
                     return MessageResult.ok(CHANNEL_TYPE, traceId);
                 } else {
                     String errMsg = alipayResp != null ? String.valueOf(alipayResp.get("sub_msg")) : "未知错误";
                     String errCode = alipayResp != null ? String.valueOf(alipayResp.get("sub_code")) : "N/A";
-                    log.error("[AlipayMiniChannel] 发送失�? receiver={} code={} msg={}",
+                    log.error("[AlipayMiniChannel] 发送失败: receiver={} code={} msg={}",
                             request.getReceiver(), errCode, errMsg);
-                    return MessageResult.fail(CHANNEL_TYPE, "支付宝小程序发送失�? " + errMsg);
+                    return MessageResult.fail(CHANNEL_TYPE, "支付宝小程序发送失败: " + errMsg);
                 }
             }
             return MessageResult.fail(CHANNEL_TYPE, "支付宝返回空响应");
         } catch (Exception e) {
-            log.error("[AlipayMiniChannel] 发送异�? receiver={} err={}",
+            log.error("[AlipayMiniChannel] 发送异常: receiver={} err={}",
                     request.getReceiver(), e.getMessage(), e);
             return MessageResult.fail(CHANNEL_TYPE, e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
 
     /**
-     * Mock 发送（开发环境降级）�?     */
+     * Mock 发送（开发环境降级）。
+     */
     private MessageResult mockSend(MessageRequest request) {
         String traceId = "ALIPAY_MINI-MOCK-" + SnowflakeIdGenerator.nextTraceId();
-        log.info("[AlipayMiniChannel][MOCK] 模拟发�? receiver={} template={} content={}",
+        log.info("[AlipayMiniChannel][MOCK] 模拟发送: receiver={} template={} content={}",
                 request.getReceiver(), request.getTemplateCode(), request.getContent());
         return MessageResult.ok(CHANNEL_TYPE, traceId);
     }

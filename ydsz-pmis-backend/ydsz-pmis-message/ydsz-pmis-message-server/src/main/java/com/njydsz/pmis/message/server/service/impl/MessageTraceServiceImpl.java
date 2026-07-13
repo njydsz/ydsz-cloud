@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.impl.core;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.message.domain.entity.config.MsgTraceDO;
 import com.njydsz.pmis.message.domain.entity.config.MsgTraceDO.Node;
@@ -19,8 +19,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * P0-2: 消息端到端追踪服务实现�? *
- * <p>异步写入轨迹记录，不影响消息发送主流程性能�? * 轨迹记录失败时仅记日志，不抛异常�? *
+ * P0-2: 消息端到端追踪服务实现。
+ *
+ * <p>异步写入轨迹记录，不影响消息发送主流程性能。
+ * 轨迹记录失败时仅记日志，不抛异常。
+ *
  * @author ydsz-pmis-team
  * @since 1.3.0
  */

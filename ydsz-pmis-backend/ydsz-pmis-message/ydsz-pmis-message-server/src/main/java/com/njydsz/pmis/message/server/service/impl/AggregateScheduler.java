@@ -21,11 +21,14 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 聚合批次调度器�? *
- * <p>定时扫描 PENDING 且到期的批次,流转�?READY 后触�?{@link AggregateService#flushDue} 发送�? *
- * <p>P2-4: 接入 Redisson 分布式锁,保证多实例部署时同一时刻只有一个实例执行扫�?
- * 避免重复流转状态、重复发送聚合消息。锁等待 0s(不阻�?,TTL 60s,
- * 获取失败直接跳过本次扫描,由下一个周期接管�? *
+ * 聚合批次调度器。
+ *
+ * <p>定时扫描 PENDING 且到期的批次,流转为 READY 后触发 {@link AggregateService#flushDue} 发送。
+ *
+ * <p>P2-4: 接入 Redisson 分布式锁,保证多实例部署时同一时刻只有一个实例执行扫描,
+ * 避免重复流转状态、重复发送聚合消息。锁等待 0s(不阻塞),TTL 60s,
+ * 获取失败直接跳过本次扫描,由下一个周期接管。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -41,8 +44,10 @@ public class AggregateScheduler {
     private final RedissonClient redissonClient;
 
     /**
-     * 定时扫描聚合批次:�?PENDING �?scheduled_send_at<=now 的批次置 READY,�?flushDue 发送�?     *
-     * <p>分布式锁 TTL 60s,等待 0s(不阻�?,获取失败直接跳过本次扫描�?     */
+     * 定时扫描聚合批次:将 PENDING 且 scheduled_send_at<=now 的批次置 READY,再 flushDue 发送。
+     *
+     * <p>分布式锁 TTL 60s,等待 0s(不阻塞),获取失败直接跳过本次扫描。
+     */
     @Scheduled(fixedDelayString = "${pmis.message.aggregate-scan-interval-ms:60000}")
     public void scan() {
         RLock lock = redissonClient.getLock(MessageConstants.AGGREGATE_SCAN_LOCK_KEY);
@@ -56,7 +61,7 @@ public class AggregateScheduler {
             doScan();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.warn("[AggregateScheduler] 扫描被中�?);
+            log.warn("[AggregateScheduler] 扫描被中断");
         } catch (Exception e) {
             log.error("[AggregateScheduler] 扫描异常: {}", e.getMessage(), e);
         } finally {
@@ -67,7 +72,8 @@ public class AggregateScheduler {
     }
 
     /**
-     * 执行聚合批次扫描与发送�?     */
+     * 执行聚合批次扫描与发送。
+     */
     private void doScan() {
         LocalDateTime now = LocalDateTime.now();
         List<MsgAggregateDO> due = msgAggregateMapper.selectList(new LambdaQueryWrapper<MsgAggregateDO>()
@@ -83,6 +89,6 @@ public class AggregateScheduler {
                     .set(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.READY.name()));
         }
         int sent = aggregateService.flushDue();
-        log.debug("[AggregateScheduler] 流转 {} 个到期批�?发�?{} �?, due.size(), sent);
+        log.debug("[AggregateScheduler] 流转 {} 个到期批次,发送 {} 个", due.size(), sent);
     }
 }

@@ -24,8 +24,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 消息统计服务实现（P1-2 可观测看板）�? *
- * <p>基于 {@code pmis_msg_log} 表的 selectCount 聚合查询,提供发送总览 / 通道维度 / 回执统计�? * 查询结果均带时间范围过滤（created_at 区间）�? *
+ * 消息统计服务实现（P1-2 可观测看板）。
+ *
+ * <p>基于 {@code pmis_msg_log} 表的 selectCount 聚合查询,提供发送总览 / 通道维度 / 回执统计。
+ * 查询结果均带时间范围过滤（created_at 区间）。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -36,7 +39,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
 
     /** 消息日志 Mapper（聚合统计查询） */
     private final MsgLogMapper msgLogMapper;
-    /** 消息模块配置属�?*/
+    /** 消息模块配置属性 */
     private final MessageProperties messageProperties;
 
     @Override
@@ -129,7 +132,8 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     }
 
     /**
-     * 按状态统计数量（带时间范围）�?     */
+     * 按状态统计数量（带时间范围）。
+     */
     private long countByStatus(MessageStatusEnum status, LocalDateTime start, LocalDateTime end) {
         Long count = msgLogMapper.selectCount(new LambdaQueryWrapper<MsgLogDO>()
                 .eq(MsgLogDO::getStatus, status.name())
@@ -139,7 +143,8 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     }
 
     /**
-     * 按状�?+ 通道统计数量（带时间范围）�?     */
+     * 按状态 + 通道统计数量（带时间范围）。
+     */
     private long countByStatusAndChannel(MessageStatusEnum status, String channel,
                                          LocalDateTime start, LocalDateTime end) {
         Long count = msgLogMapper.selectCount(new LambdaQueryWrapper<MsgLogDO>()
@@ -151,7 +156,8 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     }
 
     /**
-     * 按回执状态统计数量（带时间范围）�?     */
+     * 按回执状态统计数量（带时间范围）。
+     */
     private long countByReceiptStatus(ReceiptStatusEnum status, LocalDateTime start, LocalDateTime end) {
         Long count = msgLogMapper.selectCount(new LambdaQueryWrapper<MsgLogDO>()
                 .eq(MsgLogDO::getReceiptStatus, status.name())
@@ -166,20 +172,20 @@ public class MessageStatsServiceImpl implements MessageStatsService {
         LocalDateTime actualStart = range[0];
         LocalDateTime actualEnd = range[1];
 
-        // 漏斗�?层：已发�?= status = SUCCESS
+        // 漏斗第1层：已发送 = status = SUCCESS
         long sent = countForFunnel(MessageStatusEnum.SUCCESS.name(), null, channel, templateCode,
                 actualStart, actualEnd);
-        // 漏斗�?层：已送达 = receiptStatus IN (DELIVERED, READ, CLICKED)（累积）
+        // 漏斗第2层：已送达 = receiptStatus IN (DELIVERED, READ, CLICKED)（累积）
         long delivered = countForFunnel(null,
                 java.util.Arrays.asList(ReceiptStatusEnum.DELIVERED.name(),
                         ReceiptStatusEnum.READ.name(), ReceiptStatusEnum.CLICKED.name()),
                 channel, templateCode, actualStart, actualEnd);
-        // 漏斗�?层：已读 = receiptStatus IN (READ, CLICKED)（累积）
+        // 漏斗第3层：已读 = receiptStatus IN (READ, CLICKED)（累积）
         long read = countForFunnel(null,
                 java.util.Arrays.asList(ReceiptStatusEnum.READ.name(),
                         ReceiptStatusEnum.CLICKED.name()),
                 channel, templateCode, actualStart, actualEnd);
-        // 漏斗�?层：已点�?= receiptStatus = CLICKED
+        // 漏斗第4层：已点击 = receiptStatus = CLICKED
         long clicked = countForFunnel(null,
                 java.util.Collections.singletonList(ReceiptStatusEnum.CLICKED.name()),
                 channel, templateCode, actualStart, actualEnd);
@@ -218,7 +224,8 @@ public class MessageStatsServiceImpl implements MessageStatsService {
         for (Map.Entry<String, BigDecimal> entry : unitPrices.entrySet()) {
             String channel = entry.getKey();
             BigDecimal unitPrice = entry.getValue();
-            // 统计该通道 SUCCESS 消息�?            LambdaQueryWrapper<MsgLogDO> w = new LambdaQueryWrapper<>();
+            // 统计该通道 SUCCESS 消息数
+            LambdaQueryWrapper<MsgLogDO> w = new LambdaQueryWrapper<>();
             w.eq(MsgLogDO::getChannel, channel);
             w.eq(MsgLogDO::getStatus, MessageStatusEnum.SUCCESS.name());
             w.ge(MsgLogDO::getCreatedAt, actualStart);
@@ -246,10 +253,14 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     }
 
     /**
-     * P2-2: 漏斗通用计数查询�?     *
-     * <p>�?status（精确）�?receiptStatus（IN 集合）过�?同时支持可选的 channel / templateCode 维度过滤�?     * status �?receiptStatusList 互斥：status 非空时按 status �?否则�?receiptStatusList 查�?     *
+     * P2-2: 漏斗通用计数查询。
+     *
+     * <p>按 status（精确）或 receiptStatus（IN 集合）过滤,同时支持可选的 channel / templateCode 维度过滤。
+     * status 与 receiptStatusList 互斥：status 非空时按 status 查,否则按 receiptStatusList 查。
+     *
      * @param status            发送状态（非空时按此过滤）
-     * @param receiptStatusList 回执状态集合（status 为空时按�?IN 过滤�?     * @param channel           通道过滤（可选）
+     * @param receiptStatusList 回执状态集合（status 为空时按此 IN 过滤）
+     * @param channel           通道过滤（可选）
      * @param templateCode      模板编码过滤（可选）
      * @param start             起始时间
      * @param end               结束时间
@@ -277,7 +288,8 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     }
 
     /**
-     * 规范化时间范围：start �?null 时取 24h 前，end �?null 时取当前时间�?     */
+     * 规范化时间范围：start 为 null 时取 24h 前，end 为 null 时取当前时间。
+     */
     private LocalDateTime[] normalizeRange(LocalDateTime start, LocalDateTime end) {
         LocalDateTime actualEnd = end != null ? end : LocalDateTime.now();
         LocalDateTime actualStart = start != null ? start : actualEnd.minusHours(24);
@@ -285,7 +297,8 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     }
 
     /**
-     * 保留两位小数�?     */
+     * 保留两位小数。
+     */
     private double round2(double value) {
         return Math.round(value * 100.0) / 100.0;
     }

@@ -20,13 +20,15 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * 短信通道门面（替换原 MockSmsChannel）�? *
- * <p>实现 {@link MessageChannel} SPI，内部根�?{@code pmis.message.sms.provider}
- * 配置选择实际 {@link SmsProvider}（aliyun / mock），无匹配时降级�?mock�? *
+ * 短信通道门面（替换原 MockSmsChannel）。
+ *
+ * <p>实现 {@link MessageChannel} SPI，内部根据 {@code pmis.message.sms.provider}
+ * 配置选择实际 {@link SmsProvider}（aliyun / mock），无匹配时降级到 mock。
+ *
  * <p>模板元数据（signName / providerKey）解析顺序：
  * <ol>
- *   <li>优先�?{@link MessageRequest#getChannelMeta()} 获取（上游填充）</li>
- *   <li>回退�?{@link TemplateService} �?templateCode 查询模板</li>
+ *   <li>优先从 {@link MessageRequest#getChannelMeta()} 获取（上游填充）</li>
+ *   <li>回退到 {@link TemplateService} 按 templateCode 查询模板</li>
  * </ol>
  *
  * @author ydsz-pmis-team
@@ -68,9 +70,11 @@ public class SmsChannel implements MessageChannel {
     }
 
     /**
-     * P0-4: 批量发送短信（委托�?provider 的原生批量接口）�?     *
+     * P0-4: 批量发送短信（委托给 provider 的原生批量接口）。
+     *
      * @param requests 消息请求列表
-     * @return 发送结果列�?     */
+     * @return 发送结果列表
+     */
     public List<MessageResult> batchSend(List<MessageRequest> requests) {
         if (requests == null || requests.isEmpty()) {
             return List.of();
@@ -78,14 +82,15 @@ public class SmsChannel implements MessageChannel {
         SmsProvider provider = selectProvider();
         MsgTemplateDO template = resolveTemplate(requests.get(0));
         List<MessageResult> results = provider.batchSend(requests, template);
-        log.info("[SmsChannel] 批量发�? provider={} count={} success={}",
+        log.info("[SmsChannel] 批量发送: provider={} count={} success={}",
                 provider.providerType(), requests.size(),
                 results.stream().filter(MessageResult::isSuccess).count());
         return results;
     }
 
     /**
-     * P0-4: 查询短信回执（委托给 provider）�?     */
+     * P0-4: 查询短信回执（委托给 provider）。
+     */
     @Override
     public Optional<ReceiptResult> queryReceipt(MsgLogDO logDO) {
         SmsProvider provider = selectProvider();
@@ -109,8 +114,10 @@ public class SmsChannel implements MessageChannel {
     }
 
     /**
-     * 根据配置选择 provider，无匹配时降级到 mock�?     *
-     * @return 短信服务�?     */
+     * 根据配置选择 provider，无匹配时降级到 mock。
+     *
+     * @return 短信服务商
+     */
     private SmsProvider selectProvider() {
         String target = messageProperties.getSms() != null
                 && StringUtils.hasText(messageProperties.getSms().getProvider())
@@ -122,13 +129,14 @@ public class SmsChannel implements MessageChannel {
                         .filter(p -> "mock".equalsIgnoreCase(p.providerType()))
                         .findFirst()
                         .orElseThrow(() -> new IllegalStateException(
-                                "无可�?SMS provider，请检�?SmsProvider Bean 注册")));
+                                "无可用 SMS provider，请检查 SmsProvider Bean 注册")));
     }
 
     /**
-     * 解析模板元数据：优先�?channelMeta 获取，回退�?TemplateService 查询�?     *
+     * 解析模板元数据：优先从 channelMeta 获取，回退到 TemplateService 查询。
+     *
      * @param request 消息请求
-     * @return 模板实体（含 signName / providerKey），均无时返�?null
+     * @return 模板实体（含 signName / providerKey），均无时返回 null
      */
     private MsgTemplateDO resolveTemplate(MessageRequest request) {
         Map<String, String> meta = request.getChannelMeta();

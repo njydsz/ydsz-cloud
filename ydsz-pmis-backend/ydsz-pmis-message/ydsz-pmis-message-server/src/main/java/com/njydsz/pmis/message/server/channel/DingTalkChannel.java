@@ -23,13 +23,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 钉钉群机器人通道�? *
- * <p>通过钉钉自定义机器人 Webhook 推送通知，支�?text / markdown 两种消息类型�? * 启用加签安全模式时，需配置 {@code pmis.channel.dingtalk.secret}，通道会自动计�? * HMAC-SHA256 签名并附加到请求 URL�? *
+ * 钉钉群机器人通道。
+ *
+ * <p>通过钉钉自定义机器人 Webhook 推送通知，支持 text / markdown 两种消息类型。
+ * 启用加签安全模式时，需配置 {@code pmis.channel.dingtalk.secret}，通道会自动计算
+ * HMAC-SHA256 签名并附加到请求 URL。
+ *
  * <p>URL 解析优先级：
  * <ol>
- *   <li>{@code params.dingtalkToken}（显�?access_token，最高优先级�?/li>
- *   <li>{@code receiver} �?http 开头时视为完整 Webhook URL</li>
- *   <li>{@code receiver} 视为 access_token，拼接默�?URL 前缀</li>
+ *   <li>{@code params.dingtalkToken}（显式 access_token，最高优先级）</li>
+ *   <li>{@code receiver} 以 http 开头时视为完整 Webhook URL</li>
+ *   <li>{@code receiver} 视为 access_token，拼接默认 URL 前缀</li>
  *   <li>{@code pmis.channel.dingtalk.default-token}（兜底）</li>
  * </ol>
  *
@@ -44,18 +48,19 @@ public class DingTalkChannel implements MessageChannel {
     /** 通道类型 */
     private static final String CHANNEL_TYPE = "DINGTALK";
 
-    /** 钉钉机器�?Webhook URL 前缀 */
+    /** 钉钉机器人 Webhook URL 前缀 */
     private static final String WEBHOOK_PREFIX =
             "https://oapi.dingtalk.com/robot/send?access_token=";
 
-    /** 通道配置（提�?default-token / secret / 超时�?*/
+    /** 通道配置（提供 default-token / secret / 超时） */
     private final ChannelProperties channelProperties;
 
-    /** HTTP 客户端，�?{@link #init()} 中按配置超时构建 */
+    /** HTTP 客户端，在 {@link #init()} 中按配置超时构建 */
     RestClient restClient;
 
     /**
-     * 注入配置后按 {@code pmis.channel.dingtalk.connect-timeout / read-timeout} 构建 RestClient�?     */
+     * 注入配置后按 {@code pmis.channel.dingtalk.connect-timeout / read-timeout} 构建 RestClient。
+     */
     @PostConstruct
     public void init() {
         ChannelProperties.DingTalkConfig cfg = channelProperties.getChannel().getDingtalk();
@@ -66,7 +71,8 @@ public class DingTalkChannel implements MessageChannel {
     }
 
     /**
-     * 通道类型�?     *
+     * 通道类型。
+     *
      * @return DINGTALK
      */
     @Override
@@ -75,15 +81,18 @@ public class DingTalkChannel implements MessageChannel {
     }
 
     /**
-     * 发送钉钉消息：构�?text / markdown 请求体并 POST �?Webhook URL�?     * 根据响应 errcode 判断成功 / 失败�?     *
+     * 发送钉钉消息：构造 text / markdown 请求体并 POST 到 Webhook URL，
+     * 根据响应 errcode 判断成功 / 失败。
+     *
      * @param request 消息请求
-     * @return 发送结�?     */
+     * @return 发送结果
+     */
     @Override
     public MessageResult send(MessageRequest request) {
         String webhookUrl = resolveUrl(request);
         if (!StringUtils.hasText(webhookUrl)) {
-            log.warn("[DINGTALK] 未配�?access_token，跳过发�? receiver={}", request.getReceiver());
-            return MessageResult.fail(CHANNEL_TYPE, "钉钉 access_token 未配�?);
+            log.warn("[DINGTALK] 未配置 access_token，跳过发送: receiver={}", request.getReceiver());
+            return MessageResult.fail(CHANNEL_TYPE, "钉钉 access_token 未配置");
         }
 
         String secret = channelProperties.getChannel().getDingtalk().getSecret();
@@ -106,29 +115,30 @@ public class DingTalkChannel implements MessageChannel {
                 Map<String, Object> body = JSON.parseObject(response.getBody());
                 int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
                 if (errcode == 0) {
-                    log.info("[DINGTALK] 发送成�?);
+                    log.info("[DINGTALK] 发送成功");
                     return MessageResult.ok(CHANNEL_TYPE, traceId);
                 }
                 String errmsg = (String) body.getOrDefault("errmsg", "unknown");
-                log.error("[DINGTALK] 发送失�? errcode={} errmsg={}", errcode, errmsg);
+                log.error("[DINGTALK] 发送失败: errcode={} errmsg={}", errcode, errmsg);
                 return MessageResult.fail(CHANNEL_TYPE, "errcode=" + errcode + ", errmsg=" + errmsg);
             }
-            log.error("[DINGTALK] 发送失�? status={}", response.getStatusCode());
+            log.error("[DINGTALK] 发送失败: status={}", response.getStatusCode());
             return MessageResult.fail(CHANNEL_TYPE, "HTTP " + response.getStatusCode());
         } catch (Exception e) {
-            log.error("[DINGTALK] 发送异�? reason={}", e.getMessage(), e);
+            log.error("[DINGTALK] 发送异常: reason={}", e.getMessage(), e);
             return MessageResult.fail(CHANNEL_TYPE, e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
 
     /**
-     * 构造钉钉消息请求体�?     * <ul>
+     * 构造钉钉消息请求体。
+     * <ul>
      *   <li>msgType=markdown：{@code {"msgtype":"markdown","markdown":{"title":"标题","text":"内容"}}}</li>
      *   <li>默认 text：{@code {"msgtype":"text","text":{"content":"内容"}}}</li>
      * </ul>
      *
      * @param request 消息请求
-     * @return 请求�?Map
+     * @return 请求体 Map
      */
     Map<String, Object> buildPayload(MessageRequest request) {
         String content = request.getContent() == null ? "" : request.getContent();
@@ -157,9 +167,10 @@ public class DingTalkChannel implements MessageChannel {
     }
 
     /**
-     * 解析 Webhook URL，优先级：params.dingtalkToken &gt; receiver(http) &gt; receiver(token) &gt; 默认配置�?     *
+     * 解析 Webhook URL，优先级：params.dingtalkToken &gt; receiver(http) &gt; receiver(token) &gt; 默认配置。
+     *
      * @param request 消息请求
-     * @return 解析到的 URL，无则返�?null
+     * @return 解析到的 URL，无则返回 null
      */
     String resolveUrl(MessageRequest request) {
         Map<String, Object> params = request.getParams();
@@ -185,9 +196,13 @@ public class DingTalkChannel implements MessageChannel {
     }
 
     /**
-     * 计算加签并附加到 URL�?     *
-     * <p>签名算法：HMAC-SHA256(timestamp + "\n" + secret, secret) �?Base64 �?URLEncode�?     * timestamp 为毫秒�?     *
-     * <p>P1-1: 委托�?CryptoSignUtil 统一实现�?     *
+     * 计算加签并附加到 URL。
+     *
+     * <p>签名算法：HMAC-SHA256(timestamp + "\n" + secret, secret) → Base64 → URLEncode。
+     * timestamp 为毫秒。
+     *
+     * <p>P1-1: 委托到 CryptoSignUtil 统一实现。
+     *
      * @param url    原始 Webhook URL
      * @param secret 加签密钥
      * @return 附加 timestamp & sign 后的 URL
@@ -201,7 +216,7 @@ public class DingTalkChannel implements MessageChannel {
                     StandardCharsets.UTF_8);
             return url + "&timestamp=" + timestamp + "&sign=" + sign;
         } catch (Exception e) {
-            log.warn("[DINGTALK] 加签失败，使用原�?URL: {}", e.getMessage());
+            log.warn("[DINGTALK] 加签失败，使用原始 URL: {}", e.getMessage());
             return url;
         }
     }

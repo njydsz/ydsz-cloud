@@ -10,9 +10,12 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
- * 消息批次异步线程池配置�? *
- * <p>�?{@code BatchServiceImpl.executeBatchAsync} 提供独立线程池，
- * 避免批量发送占用主业务线程。核�?2 线程，最�?4 线程，队�?200�? * 拒绝策略 CallerRunsPolicy（队列满时降级为同步执行）�? *
+ * 消息批次异步线程池配置。
+ *
+ * <p>为 {@code BatchServiceImpl.executeBatchAsync} 提供独立线程池，
+ * 避免批量发送占用主业务线程。核心 2 线程，最大 4 线程，队列 200，
+ * 拒绝策略 CallerRunsPolicy（队列满时降级为同步执行）。
+ *
  * @author ydsz-pmis-team
  * @since 1.2.0
  */
@@ -30,7 +33,7 @@ public class BatchExecutorConfig {
         executor.setThreadNamePrefix("msg-batch-");
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.initialize();
-        log.info("[BatchExecutor] 线程池已初始�? core=2 max=4 queue=200");
+        log.info("[BatchExecutor] 线程池已初始化: core=2 max=4 queue=200");
         return executor;
     }
 }

@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.impl.config;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.constant.MessageConstants;
 import com.njydsz.pmis.message.domain.dto.config.PreferenceUpsertDTO;
@@ -17,8 +17,10 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 
 /**
- * 用户消息偏好服务实现�? *
- * <p>�?(userId, channel, bizType) upsert；查询优先精�?bizType，回退 {@code __DEFAULT__}�? *
+ * 用户消息偏好服务实现。
+ *
+ * <p>按 (userId, channel, bizType) upsert；查询优先精确 bizType，回退 {@code __DEFAULT__}。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */

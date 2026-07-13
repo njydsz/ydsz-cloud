@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.server.service.config;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.domain.query.PageQuery;
+import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.message.domain.dto.config.RouteRuleUpsertDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgRouteRuleDO;
@@ -64,10 +64,10 @@ public interface RouteRuleService {
     List<MsgRouteRuleDO> listEnabled();
 
     /**
-     * �?priority 升序遍历 enabled 规则,SpEL 求值命中即返回
+     * 按 priority 升序遍历 enabled 规则,SpEL 求值命中即返回
      *
      * @param request 消息请求
-     * @return 命中的路由规�?未命中返�?null
+     * @return 命中的路由规则,未命中返回 null
      */
     MsgRouteRuleDO match(MessageRequest request);
 }

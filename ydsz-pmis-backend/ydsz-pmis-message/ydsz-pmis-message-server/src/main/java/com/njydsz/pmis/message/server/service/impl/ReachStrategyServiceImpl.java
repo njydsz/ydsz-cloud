@@ -18,17 +18,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 智能触达策略服务实现�? *
- * <p>P1-8: 基于 Redis 缓存的用户画像数据，综合评分各通道的触达能力�? *
- * <p>评分公式（满�?100）：
+ * 智能触达策略服务实现。
+ *
+ * <p>P1-8: 基于 Redis 缓存的用户画像数据，综合评分各通道的触达能力。
+ *
+ * <p>评分公式（满分 100）：
  * <ul>
- *   <li>通道活跃度（40%）：用户在该通道的历史活跃程�?/li>
- *   <li>历史打开率（30%）：该通道的历史消息打开�?/li>
- *   <li>用户偏好�?0%）：用户设置的通道优先�?/li>
- *   <li>通道成本�?0%）：低成本通道加分</li>
+ *   <li>通道活跃度（40%）：用户在该通道的历史活跃程度</li>
+ *   <li>历史打开率（30%）：该通道的历史消息打开率</li>
+ *   <li>用户偏好（20%）：用户设置的通道优先级</li>
+ *   <li>通道成本（10%）：低成本通道加分</li>
  * </ul>
  *
- * <p>免打扰判断：基于用户偏好中的 DND 配置，结合用户时区判断当前是否在免打扰时段�? *
+ * <p>免打扰判断：基于用户偏好中的 DND 配置，结合用户时区判断当前是否在免打扰时段。
+ *
  * @author ydsz-pmis-team
  * @since 1.2.0
  */
@@ -43,7 +46,7 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
     /** 默认时区 */
     private static final String DEFAULT_TIMEZONE = "Asia/Shanghai";
 
-    /** 通道成本权重（越低成本越高分�?*/
+    /** 通道成本权重（越低成本越高分） */
     private static final Map<String, Double> CHANNEL_COST = Map.of(
             "INAPP", 0.1,
             "WEBHOOK", 0.2,
@@ -63,7 +66,7 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
             return defaultProfile();
         }
         try {
-            // �?Redis 加载画像（外部系统写入）
+            // 从 Redis 加载画像（外部系统写入）
             Map<Object, Object> raw = redisTemplate.opsForHash()
                     .entries(PROFILE_KEY_PREFIX + userId);
             if (raw == null || raw.isEmpty()) {
@@ -83,7 +86,8 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
             if (StringUtils.hasText(clickRateStr)) {
                 profile.setClickRate(Double.parseDouble(clickRateStr));
             }
-            // 解析通道活跃�?            Map<String, Integer> scores = new HashMap<>();
+            // 解析通道活跃度
+            Map<String, Integer> scores = new HashMap<>();
             for (Map.Entry<Object, Object> e : raw.entrySet()) {
                 String key = String.valueOf(e.getKey());
                 if (key.startsWith("score:")) {
@@ -108,12 +112,14 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
             return List.of();
         }
         UserReachProfileDTO profile = getProfile(userId);
-        // 计算每个通道的综合评�?        List<ChannelScore> scored = new ArrayList<>();
+        // 计算每个通道的综合评分
+        List<ChannelScore> scored = new ArrayList<>();
         for (String channel : channels) {
             double score = calculateChannelScore(channel, profile);
             scored.add(new ChannelScore(channel, score));
         }
-        // 按评分降序排�?        scored.sort(Comparator.comparingDouble(ChannelScore::score).reversed());
+        // 按评分降序排列
+        scored.sort(Comparator.comparingDouble(ChannelScore::score).reversed());
         return scored.stream().map(ChannelScore::channel).toList();
     }
 
@@ -129,7 +135,8 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
             LocalTime currentTime = now.toLocalTime();
             LocalTime start = LocalTime.parse(profile.getDndStart());
             LocalTime end = LocalTime.parse(profile.getDndEnd());
-            // 处理跨天情况（如 22:00-08:00�?            if (start.isBefore(end)) {
+            // 处理跨天情况（如 22:00-08:00）
+            if (start.isBefore(end)) {
                 return !currentTime.isBefore(start) && currentTime.isBefore(end);
             } else {
                 return !currentTime.isBefore(start) || currentTime.isBefore(end);
@@ -147,19 +154,23 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
     }
 
     /**
-     * 计算单个通道的综合评分�?     *
-     * <p>评分 = 活跃�?* 0.4 + 打开�?* 0.3 + 偏好 * 0.2 + 成本 * 0.1
+     * 计算单个通道的综合评分。
+     *
+     * <p>评分 = 活跃度 * 0.4 + 打开率 * 0.3 + 偏好 * 0.2 + 成本 * 0.1
      */
     private double calculateChannelScore(String channel, UserReachProfileDTO profile) {
-        // 活跃度评分（0-100 �?0-1�?        double activityScore = 0.5; // 默认中等
+        // 活跃度评分（0-100 → 0-1）
+        double activityScore = 0.5; // 默认中等
         if (profile.getChannelActivityScores() != null) {
             Integer score = profile.getChannelActivityScores().get(channel);
             if (score != null) {
                 activityScore = Math.min(1.0, score / 100.0);
             }
         }
-        // 打开�?        double openRate = profile.getOpenRate() != null ? profile.getOpenRate() : 0.3;
-        // 偏好评分：在偏好列表中越靠前分越�?        double prefScore = 0.5;
+        // 打开率
+        double openRate = profile.getOpenRate() != null ? profile.getOpenRate() : 0.3;
+        // 偏好评分：在偏好列表中越靠前分越高
+        double prefScore = 0.5;
         if (profile.getChannelPreferences() != null) {
             int idx = profile.getChannelPreferences().indexOf(channel);
             if (idx >= 0) {
@@ -167,13 +178,15 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
                 prefScore = total > 0 ? (total - idx) / (double) total : 0.5;
             }
         }
-        // 成本评分（越低成本越高分�?        double costScore = 1.0 - CHANNEL_COST.getOrDefault(channel, 0.5);
+        // 成本评分（越低成本越高分）
+        double costScore = 1.0 - CHANNEL_COST.getOrDefault(channel, 0.5);
         // 综合评分
         return (activityScore * 0.4 + openRate * 0.3 + prefScore * 0.2 + costScore * 0.1) * 100;
     }
 
     /**
-     * 返回默认画像�?     */
+     * 返回默认画像。
+     */
     private UserReachProfileDTO defaultProfile() {
         UserReachProfileDTO profile = new UserReachProfileDTO();
         profile.setChannelActivityScores(Map.of());

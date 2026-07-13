@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.impl.receipt;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.dto.receipt.ReceiptCallbackDTO;
 import com.njydsz.pmis.message.domain.entity.receipt.MsgReceiptDO;
@@ -19,8 +19,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 消息回执服务实现�? *
- * <p>回调落库 {@code MsgReceiptDO}，并联动 {@link MessageLogService#updateReceipt} 更新日志回执状态�? *
+ * 消息回执服务实现。
+ *
+ * <p>回调落库 {@code MsgReceiptDO}，并联动 {@link MessageLogService#updateReceipt} 更新日志回执状态。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -39,7 +41,7 @@ public class ReceiptServiceImpl implements ReceiptService {
         if (dto == null || !StringUtils.hasText(dto.getLogId())) {
             throw new SysException(StandardResultCode.BAD_REQUEST, "回执关联日志 ID 不能为空");
         }
-        // P1-3: 回执回调进入追踪上下文（外部回调无原�?traceId，自动生成）
+        // P1-3: 回执回调进入追踪上下文（外部回调无原始 traceId，自动生成）
         try (MessageTraceContext ctx = MessageTraceContext.enter(null)) {
             MsgReceiptDO entity = new MsgReceiptDO();
             entity.setLogId(dto.getLogId());
@@ -51,10 +53,12 @@ public class ReceiptServiceImpl implements ReceiptService {
             entity.setRawResponse(dto.getRawResponse());
             entity.setTenantId(TenantContext.getTenantId());
             msgReceiptMapper.insert(entity);
-            // 联动更新日志回执状�?            try {
+            // 联动更新日志回执状态
+            try {
                 messageLogService.updateReceipt(dto.getLogId(), dto.getReceiptType(), entity.getReceiptTime());
             } catch (Exception e) {
-                // 日志不存在时仅记录，不影响回执落�?                log.warn("[Receipt] 更新日志回执失败: logId={} err={}", dto.getLogId(), e.getMessage());
+                // 日志不存在时仅记录，不影响回执落库
+                log.warn("[Receipt] 更新日志回执失败: logId={} err={}", dto.getLogId(), e.getMessage());
             }
             log.info("[Receipt] 回执落库: logId={} type={}", dto.getLogId(), dto.getReceiptType());
         }

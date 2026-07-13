@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.server.template;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.message.domain.dto.core.RichMediaContent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -9,14 +9,15 @@ import org.springframework.util.StringUtils;
 import java.util.Map;
 
 /**
- * P1-2: 富媒体消息渲染器�? *
- * <p>�?{@link RichMediaContent} 渲染为通道特定的格式：
+ * P1-2: 富媒体消息渲染器。
+ *
+ * <p>将 {@link RichMediaContent} 渲染为通道特定的格式：
  * <ul>
- *   <li>EMAIL: 渲染�?HTML 邮件正文（含内联图片、附件链接、操作按钮）</li>
- *   <li>IN_APP: 渲染�?Markdown 正文（站内信支持富文本展示）</li>
+ *   <li>EMAIL: 渲染为 HTML 邮件正文（含内联图片、附件链接、操作按钮）</li>
+ *   <li>IN_APP: 渲染为 Markdown 正文（站内信支持富文本展示）</li>
  *   <li>PUSH: 提取标题+摘要，附带图片URL（推送卡片）</li>
  *   <li>SMS: 降级为纯文本摘要</li>
- *   <li>DINGTALK/WECOM/FEISHU: 渲染�?Markdown 卡片消息</li>
+ *   <li>DINGTALK/WECOM/FEISHU: 渲染为 Markdown 卡片消息</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -26,11 +27,12 @@ import java.util.Map;
 @Component
 public class RichMediaRenderer {
 
-    /** MessageRequest.params 中存储富媒体内容�?key */
+    /** MessageRequest.params 中存储富媒体内容的 key */
     public static final String RICH_MEDIA_KEY = "_richMedia";
 
     /**
-     * 从模板参数中提取富媒体内容�?     *
+     * 从模板参数中提取富媒体内容。
+     *
      * @param params 模板参数
      * @return 富媒体内容；无则返回 null
      */
@@ -47,15 +49,16 @@ public class RichMediaRenderer {
                 return (RichMediaContent) raw;
             }
             String json = raw instanceof String ? (String) raw : JsonUtils.toJson(raw);
-            return JsonUtils.fromJson(json, RichMediaContent.class);
+            return JsonUtils.parseObject(json, RichMediaContent.class);
         } catch (Exception e) {
-            log.warn("[RichMediaRenderer] 解析富媒体内容失�? {}", e.getMessage());
+            log.warn("[RichMediaRenderer] 解析富媒体内容失败: {}", e.getMessage());
             return null;
         }
     }
 
     /**
-     * 渲染�?HTML 邮件正文�?     */
+     * 渲染为 HTML 邮件正文。
+     */
     public String renderHtml(RichMediaContent media) {
         if (media == null) {
             return null;
@@ -73,7 +76,8 @@ public class RichMediaRenderer {
         if (StringUtils.hasText(media.getHtmlContent())) {
             html.append(media.getHtmlContent());
         } else if (StringUtils.hasText(media.getMarkdownContent())) {
-            // 简�?Markdown �?HTML（仅支持基本格式�?            html.append("<div>").append(markdownToHtml(media.getMarkdownContent())).append("</div>");
+            // 简易 Markdown 转 HTML（仅支持基本格式）
+            html.append("<div>").append(markdownToHtml(media.getMarkdownContent())).append("</div>");
         } else if (StringUtils.hasText(media.getSummary())) {
             html.append("<p>").append(media.getSummary()).append("</p>");
         }
@@ -90,7 +94,7 @@ public class RichMediaRenderer {
 
         // 附件
         if (media.getAttachments() != null && !media.getAttachments().isEmpty()) {
-            html.append("<div style=\"margin:16px 0;\"><p style=\"color:#666;font-size:14px;\">附件�?/p><ul>");
+            html.append("<div style=\"margin:16px 0;\"><p style=\"color:#666;font-size:14px;\">附件：</p><ul>");
             for (RichMediaContent.Attachment att : media.getAttachments()) {
                 html.append("<li><a href=\"").append(att.getUrl())
                         .append("\" style=\"color:#1890ff;\">").append(att.getFilename())
@@ -118,7 +122,8 @@ public class RichMediaRenderer {
     }
 
     /**
-     * 渲染�?Markdown 格式（站内信/IM 通道使用）�?     */
+     * 渲染为 Markdown 格式（站内信/IM 通道使用）。
+     */
     public String renderMarkdown(RichMediaContent media) {
         if (media == null) {
             return null;
@@ -139,7 +144,7 @@ public class RichMediaRenderer {
             md.append("\n");
         }
         if (media.getAttachments() != null && !media.getAttachments().isEmpty()) {
-            md.append("**附件�?*\n");
+            md.append("**附件：**\n");
             for (RichMediaContent.Attachment att : media.getAttachments()) {
                 md.append("- [").append(att.getFilename()).append("](").append(att.getUrl()).append(")\n");
             }
@@ -157,14 +162,15 @@ public class RichMediaRenderer {
     }
 
     /**
-     * 渲染为纯文本摘要（SMS 通道降级使用）�?     */
+     * 渲染为纯文本摘要（SMS 通道降级使用）。
+     */
     public String renderPlainText(RichMediaContent media) {
         if (media == null) {
             return null;
         }
         StringBuilder text = new StringBuilder();
         if (StringUtils.hasText(media.getTitle())) {
-            text.append(media.getTitle()).append("�?);
+            text.append(media.getTitle()).append("：");
         }
         if (StringUtils.hasText(media.getSummary())) {
             text.append(media.getSummary());
@@ -179,7 +185,8 @@ public class RichMediaRenderer {
     }
 
     /**
-     * 简�?Markdown �?HTML（仅处理标题、粗体、链接、列表等基本格式）�?     */
+     * 简易 Markdown 转 HTML（仅处理标题、粗体、链接、列表等基本格式）。
+     */
     private String markdownToHtml(String md) {
         if (md == null) {
             return "";

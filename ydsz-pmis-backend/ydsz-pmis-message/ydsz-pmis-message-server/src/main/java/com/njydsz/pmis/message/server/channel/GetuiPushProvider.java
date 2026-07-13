@@ -22,12 +22,16 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * 个推（GeTui）V2 推送服务商实现�? *
+ * 个推（GeTui）V2 推送服务商实现。
+ *
  * <p>通过个推 REST API（{@code /v2/{appId}/push/single/cid}）发送单推，
- * 鉴权使用 {@link GetuiPushSigner} 计算 SHA-256 签名，token 内存缓存（默�?23h）�? *
- * <p>仅当 {@code pmis.message.push.provider=getui} 时装配；凭证缺失时返�?fail
- * （由 {@link com.njydsz.pmis.message.server.channel.impl.PushChannel} 自动降级�?Mock）�? *
- * <p>目标设备标识来源：优�?{@code channelMeta.deviceToken}，回退 {@code receiver}�? *
+ * 鉴权使用 {@link GetuiPushSigner} 计算 SHA-256 签名，token 内存缓存（默认 23h）。
+ *
+ * <p>仅当 {@code pmis.message.push.provider=getui} 时装配；凭证缺失时返回 fail
+ * （由 {@link com.njydsz.pmis.message.server.channel.impl.PushChannel} 自动降级到 Mock）。
+ *
+ * <p>目标设备标识来源：优先 {@code channelMeta.deviceToken}，回退 {@code receiver}。
+ *
  * @author ydsz-pmis-team
  * @since 1.1.0
  */
@@ -39,12 +43,13 @@ public class GetuiPushProvider implements PushProvider {
     private final MessageProperties.GetuiPushConfig config;
     private final RestTemplate restTemplate;
 
-    /** 鉴权 token 缓存（个�?token 默认 24h，提�?1h 失效�?*/
+    /** 鉴权 token 缓存（个推 token 默认 24h，提前 1h 失效） */
     private volatile String cachedToken;
     private volatile long tokenExpireAt;
 
     /**
-     * 生产构造：�?{@link MessageProperties} 读取个推配置并构�?RestTemplate�?     *
+     * 生产构造：从 {@link MessageProperties} 读取个推配置并构建 RestTemplate。
+     *
      * @param messageProperties 消息配置
      */
     public GetuiPushProvider(MessageProperties messageProperties) {
@@ -56,9 +61,11 @@ public class GetuiPushProvider implements PushProvider {
     }
 
     /**
-     * 测试构造：注入自定�?config �?RestTemplate（便�?mock）�?     *
+     * 测试构造：注入自定义 config 与 RestTemplate（便于 mock）。
+     *
      * @param config       个推配置
-     * @param restTemplate RestTemplate（测试可 mock�?     */
+     * @param restTemplate RestTemplate（测试可 mock）
+     */
     GetuiPushProvider(MessageProperties.GetuiPushConfig config, RestTemplate restTemplate) {
         this.config = config;
         this.restTemplate = restTemplate;
@@ -73,11 +80,11 @@ public class GetuiPushProvider implements PushProvider {
     public MessageResult send(MessageRequest request, MsgTemplateDO template) {
         String cid = extractClientId(request);
         if (!StringUtils.hasText(cid)) {
-            return MessageResult.fail("PUSH", "推送目�?clientId/deviceToken 不能为空");
+            return MessageResult.fail("PUSH", "推送目标 clientId/deviceToken 不能为空");
         }
         if (!StringUtils.hasText(config.getAppId()) || !StringUtils.hasText(config.getAppKey())
                 || !StringUtils.hasText(config.getMasterSecret())) {
-            return MessageResult.fail("PUSH", "个推凭证未配�?);
+            return MessageResult.fail("PUSH", "个推凭证未配置");
         }
         try {
             String token = getToken();
@@ -98,19 +105,20 @@ public class GetuiPushProvider implements PushProvider {
             String code = json.getString("code");
             if ("10000".equals(code)) {
                 String taskId = json.getString("data");
-                log.info("[GetuiPush] 推送成�? cid={} taskId={}", cid, taskId);
+                log.info("[GetuiPush] 推送成功: cid={} taskId={}", cid, taskId);
                 return MessageResult.ok("PUSH", "GETUI-" + taskId);
             }
-            log.warn("[GetuiPush] 推送失�? cid={} code={} msg={}", cid, code, json.getString("msg"));
+            log.warn("[GetuiPush] 推送失败: cid={} code={} msg={}", cid, code, json.getString("msg"));
             return MessageResult.fail("PUSH", code + ": " + json.getString("msg"));
         } catch (Exception e) {
-            log.error("[GetuiPush] 推送异�? cid={} err={}", cid, e.getMessage());
+            log.error("[GetuiPush] 推送异常: cid={} err={}", cid, e.getMessage());
             return MessageResult.fail("PUSH", e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
 
     /**
-     * 提取设备标识：优�?channelMeta.deviceToken，回退 receiver�?     *
+     * 提取设备标识：优先 channelMeta.deviceToken，回退 receiver。
+     *
      * @param request 消息请求
      * @return 设备标识
      */
@@ -123,7 +131,8 @@ public class GetuiPushProvider implements PushProvider {
     }
 
     /**
-     * 获取个推鉴权 token（双重检查锁 + 内存缓存）�?     *
+     * 获取个推鉴权 token（双重检查锁 + 内存缓存）。
+     *
      * @return 鉴权 token
      */
     private String getToken() {

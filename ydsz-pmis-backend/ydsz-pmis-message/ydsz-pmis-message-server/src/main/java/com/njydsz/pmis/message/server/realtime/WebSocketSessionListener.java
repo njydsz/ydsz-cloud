@@ -15,10 +15,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * P0-4: WebSocket 会话事件监听器�? *
- * <p>监听 STOMP {@link SessionConnectedEvent} / {@link SessionDisconnectEvent}�? * 维护用户在线状态并在上线时补偿离线消息�? * <ul>
- *   <li>连接成功：标记用户上线，拉取并推送离线消�?/li>
- *   <li>断开连接：标记用户下线（仅当最后一�?session 断开时真正离线）</li>
+ * P0-4: WebSocket 会话事件监听器。
+ *
+ * <p>监听 STOMP {@link SessionConnectedEvent} / {@link SessionDisconnectEvent}，
+ * 维护用户在线状态并在上线时补偿离线消息：
+ * <ul>
+ *   <li>连接成功：标记用户上线，拉取并推送离线消息</li>
+ *   <li>断开连接：标记用户下线（仅当最后一个 session 断开时真正离线）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -34,9 +37,11 @@ public class WebSocketSessionListener {
     private final SimpMessagingTemplate messagingTemplate;
 
     /**
-     * 连接成功事件：标记上�?+ 补偿离线消息�?     *
-     * <p>�?STOMP header 中提�?userId（由 {@link WebSocketAuthHandshakeInterceptor}
-     * 写入握手属性），标记在线后立即拉取离线消息逐条推送�?     *
+     * 连接成功事件：标记上线 + 补偿离线消息。
+     *
+     * <p>从 STOMP header 中提取 userId（由 {@link WebSocketAuthHandshakeInterceptor}
+     * 写入握手属性），标记在线后立即拉取离线消息逐条推送。
+     *
      * @param event 连接事件
      */
     @EventListener
@@ -50,7 +55,7 @@ public class WebSocketSessionListener {
         String userId = (String) attributes.get(MessageConstants.WS_ATTR_USER_ID);
         String sessionId = accessor.getSessionId();
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(sessionId)) {
-            log.warn("[WS-Session] 连接事件缺少 userId/sessionId，跳�?);
+            log.warn("[WS-Session] 连接事件缺少 userId/sessionId，跳过");
             return;
         }
         onlineUserService.markOnline(userId, sessionId);
@@ -59,7 +64,8 @@ public class WebSocketSessionListener {
     }
 
     /**
-     * 断开连接事件：标记下线�?     *
+     * 断开连接事件：标记下线。
+     *
      * @param event 断开事件
      */
     @EventListener
@@ -79,8 +85,10 @@ public class WebSocketSessionListener {
     }
 
     /**
-     * 拉取并推送用户离线消息�?     *
-     * <p>逐条推送到用户个人频道，推送失败仅�?warn（消息已�?Redis 删除，不重试）�?     *
+     * 拉取并推送用户离线消息。
+     *
+     * <p>逐条推送到用户个人频道，推送失败仅记 warn（消息已从 Redis 删除，不重试）。
+     *
      * @param userId 用户 ID
      */
     private void drainAndPushOfflineMessages(String userId) {
@@ -94,7 +102,7 @@ public class WebSocketSessionListener {
                 try {
                     messagingTemplate.convertAndSend(destination, json);
                 } catch (Exception e) {
-                    log.warn("[WS-Session] 离线消息补偿推送失�? userId={}, err={}", userId, e.getMessage());
+                    log.warn("[WS-Session] 离线消息补偿推送失败: userId={}, err={}", userId, e.getMessage());
                 }
             }
             log.info("[WS-Session] 离线消息补偿完成: userId={}, count={}", userId, offlineMessages.size());

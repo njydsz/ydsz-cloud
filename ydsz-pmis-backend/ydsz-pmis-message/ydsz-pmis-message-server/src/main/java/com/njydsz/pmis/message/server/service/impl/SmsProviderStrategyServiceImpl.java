@@ -17,11 +17,16 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * 多短信服务商策略服务实现�? *
- * <p>P2-15: 支持四种选择策略，默认轮询�? *
- * <p>成本统计：使�?Redis 记录�?provider 的日发送量和失败量�? * key={@code pmis:sms:stats:{provider}:{yyyyMMdd}}，value=INCR 计数�? *
+ * 多短信服务商策略服务实现。
+ *
+ * <p>P2-15: 支持四种选择策略，默认轮询。
+ *
+ * <p>成本统计：使用 Redis 记录各 provider 的日发送量和失败量，
+ * key={@code pmis:sms:stats:{provider}:{yyyyMMdd}}，value=INCR 计数。
+ *
  * <p>轮询使用 AtomicInteger 游标，权重使用配置文件中的权重比例，
- * 成本优先�?provider 成本排序，可用性优先跳过连续失败超过阈值的 provider�? *
+ * 成本优先按 provider 成本排序，可用性优先跳过连续失败超过阈值的 provider。
+ *
  * @author ydsz-pmis-team
  * @since 1.2.0
  */
@@ -37,7 +42,7 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
     @Value("${pmis.message.sms.strategy:ROUND_ROBIN}")
     private String strategyStr;
 
-    /** 权重配置（provider:weight,provider:weight�?*/
+    /** 权重配置（provider:weight,provider:weight） */
     @Value("${pmis.message.sms.weights:aliyun:5,tencent:3}")
     private String weightsConfig;
 
@@ -47,13 +52,13 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
     /** 本地失败计数（用于可用性优先） */
     private final Map<String, AtomicInteger> failureCount = new ConcurrentHashMap<>();
 
-    /** 连续失败阈�?*/
+    /** 连续失败阈值 */
     private static final int FAILURE_THRESHOLD = 5;
 
     @Override
     public SmsProvider selectProvider(List<SmsProvider> availableProviders) {
         if (availableProviders == null || availableProviders.isEmpty()) {
-            throw new IllegalStateException("无可�?SMS provider");
+            throw new IllegalStateException("无可用 SMS provider");
         }
         if (availableProviders.size() == 1) {
             return availableProviders.get(0);
@@ -115,14 +120,16 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
     // ==================== 策略实现 ====================
 
     /**
-     * 轮询选择�?     */
+     * 轮询选择。
+     */
     private SmsProvider selectRoundRobin(List<SmsProvider> providers) {
         int idx = Math.abs(roundRobinIndex.getAndIncrement()) % providers.size();
         return providers.get(idx);
     }
 
     /**
-     * 权重选择�?     */
+     * 权重选择。
+     */
     private SmsProvider selectWeighted(List<SmsProvider> providers) {
         Map<String, Integer> weights = parseWeights();
         int totalWeight = providers.stream()
@@ -140,7 +147,8 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
     }
 
     /**
-     * 成本优先（aliyun < tencent < mock）�?     */
+     * 成本优先（aliyun < tencent < mock）。
+     */
     private SmsProvider selectCostFirst(List<SmsProvider> providers) {
         return providers.stream()
                 .min((a, b) -> {
@@ -152,7 +160,8 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
     }
 
     /**
-     * 可用性优先（跳过连续失败超过阈值的 provider）�?     */
+     * 可用性优先（跳过连续失败超过阈值的 provider）。
+     */
     private SmsProvider selectAvailabilityFirst(List<SmsProvider> providers) {
         for (SmsProvider p : providers) {
             AtomicInteger count = failureCount.get(p.providerType());
@@ -160,12 +169,14 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
                 return p;
             }
         }
-        // 所�?provider 都超阈值，降级选择第一�?        log.warn("[SmsStrategy] 所�?provider 连续失败超阈�?降级选择第一�?);
+        // 所有 provider 都超阈值，降级选择第一个
+        log.warn("[SmsStrategy] 所有 provider 连续失败超阈值,降级选择第一个");
         return providers.get(0);
     }
 
     /**
-     * 解析权重配置�?     */
+     * 解析权重配置。
+     */
     private Map<String, Integer> parseWeights() {
         Map<String, Integer> weights = new HashMap<>();
         if (weightsConfig != null && !weightsConfig.isBlank()) {
@@ -183,7 +194,8 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
     }
 
     /**
-     * 获取 provider 成本（越低越优先）�?     */
+     * 获取 provider 成本（越低越优先）。
+     */
     private int getProviderCost(String providerType) {
         return switch (providerType) {
             case "aliyun" -> 1;

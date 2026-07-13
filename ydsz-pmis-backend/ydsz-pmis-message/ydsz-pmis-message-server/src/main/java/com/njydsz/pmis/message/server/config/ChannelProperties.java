@@ -6,9 +6,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * 通道相关配置（prefix = {@code pmis}）�? *
- * <p>绑定 {@code application.yml} �?{@code pmis.webhook.*} �?{@code pmis.channel.*} 配置项，
- * 覆盖 Webhook / 钉钉 / 企业微信 / 飞书群机器人的默认地址、密钥与超时�? *
+ * 通道相关配置（prefix = {@code pmis}）。
+ *
+ * <p>绑定 {@code application.yml} 中 {@code pmis.webhook.*} 与 {@code pmis.channel.*} 配置项，
+ * 覆盖 Webhook / 钉钉 / 企业微信 / 飞书群机器人的默认地址、密钥与超时。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -20,11 +22,12 @@ public class ChannelProperties {
     /** Webhook 通道兜底配置 */
     private WebhookConfig webhook = new WebhookConfig();
 
-    /** 群机器人通道配置�?*/
+    /** 群机器人通道配置组 */
     private ChannelGroup channel = new ChannelGroup();
 
     /**
-     * Webhook 通道配置�?     */
+     * Webhook 通道配置。
+     */
     @Data
     public static class WebhookConfig {
         /** 默认 Webhook URL（兜底） */
@@ -36,7 +39,8 @@ public class ChannelProperties {
     }
 
     /**
-     * 群机器人通道配置组�?     */
+     * 群机器人通道配置组。
+     */
     @Data
     public static class ChannelGroup {
         /** 钉钉群机器人配置 */
@@ -52,7 +56,8 @@ public class ChannelProperties {
     }
 
     /**
-     * 钉钉群机器人配置�?     */
+     * 钉钉群机器人配置。
+     */
     @Data
     public static class DingTalkConfig {
         /** 默认 access_token（兜底） */
@@ -66,17 +71,19 @@ public class ChannelProperties {
     }
 
     /**
-     * P0-2: 钉钉工作通知(企业内部应用)配置�?     *
-     * <p>通过钉钉开放平台企业内部应用发送工作通知,需�?
+     * P0-2: 钉钉工作通知(企业内部应用)配置。
+     *
+     * <p>通过钉钉开放平台企业内部应用发送工作通知,需要:
      * <ul>
-     *   <li>AppKey + AppSecret �?获取 access_token</li>
-     *   <li>AgentId �?企业应用 ID</li>
-     *   <li>receiver 为钉�?userId</li>
+     *   <li>AppKey + AppSecret → 获取 access_token</li>
+     *   <li>AgentId → 企业应用 ID</li>
+     *   <li>receiver 为钉钉 userId</li>
      * </ul>
-     * access_token 缓存�?Redis,有效�?7200s,提前 300s 续期�?     */
+     * access_token 缓存在 Redis,有效期 7200s,提前 300s 续期。
+     */
     @Data
     public static class DingTalkWorkConfig {
-        /** 是否启用工作通知通道(未配�?AppKey 时降�?mock) */
+        /** 是否启用工作通知通道(未配置 AppKey 时降级 mock) */
         private boolean enabled = false;
         /** 钉钉应用 AppKey */
         private String appKey;
@@ -93,7 +100,8 @@ public class ChannelProperties {
     }
 
     /**
-     * 企业微信群机器人配置�?     */
+     * 企业微信群机器人配置。
+     */
     @Data
     public static class WechatWorkConfig {
         /** 默认 key（兜底） */
@@ -105,17 +113,19 @@ public class ChannelProperties {
     }
 
     /**
-     * P0-2: 企业微信应用消息(企业内部应用)配置�?     *
-     * <p>通过企业微信开放平台企业内部应用发送应用消�?需�?
+     * P0-2: 企业微信应用消息(企业内部应用)配置。
+     *
+     * <p>通过企业微信开放平台企业内部应用发送应用消息,需要:
      * <ul>
-     *   <li>CorpID + CorpSecret �?获取 access_token</li>
-     *   <li>AgentId �?企业应用 ID</li>
-     *   <li>receiver 为企业微�?userId</li>
+     *   <li>CorpID + CorpSecret → 获取 access_token</li>
+     *   <li>AgentId → 企业应用 ID</li>
+     *   <li>receiver 为企业微信 userId</li>
      * </ul>
-     * access_token 缓存�?Redis,有效�?7200s,提前 300s 续期�?     */
+     * access_token 缓存在 Redis,有效期 7200s,提前 300s 续期。
+     */
     @Data
     public static class WeComAppConfig {
-        /** 是否启用企微应用消息通道(未配�?CorpID 时降�?mock) */
+        /** 是否启用企微应用消息通道(未配置 CorpID 时降级 mock) */
         private boolean enabled = false;
         /** 企业微信 CorpID */
         private String corpId;
@@ -132,10 +142,11 @@ public class ChannelProperties {
     }
 
     /**
-     * 飞书群机器人配置�?     */
+     * 飞书群机器人配置。
+     */
     @Data
     public static class FeishuConfig {
-        /** 默认 hook（兜底，可为完整 URL �?hook ID�?*/
+        /** 默认 hook（兜底，可为完整 URL 或 hook ID） */
         private String defaultHook = "";
         /** 加签密钥（可选） */
         private String secret = "";

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.server.realtime;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.message.domain.constant.MessageConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,14 +10,18 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
 /**
- * WebSocket 集群广播订阅者（Redis Pub/Sub �?本地 STOMP 推送）�? *
- * <p>订阅 Redis Channel {@code pmis:ws:cluster:push}，收到消息后根据推送类�? * 将消息推送到本地 JVM �?WebSocket session�? * <ul>
+ * WebSocket 集群广播订阅者（Redis Pub/Sub → 本地 STOMP 推送）。
+ *
+ * <p>订阅 Redis Channel {@code pmis:ws:cluster:push}，收到消息后根据推送类型
+ * 将消息推送到本地 JVM 的 WebSocket session：
+ * <ul>
  *   <li>{@code USER}：推送到 {@code /topic/user/{userId}/notifications}</li>
  *   <li>{@code BROADCAST}：推送到 {@code /topic/broadcast}</li>
  *   <li>{@code TOPIC}：推送到 {@code /topic/{topic}}</li>
  * </ul>
  *
- * <p>推送失败不影响其他消息（try-catch 降级，仅 warn 日志）�? *
+ * <p>推送失败不影响其他消息（try-catch 降级，仅 warn 日志）。
+ *
  * @author ydsz-pmis-team
  * @since 1.2.0
  */
@@ -36,7 +40,7 @@ public class WebSocketClusterSubscriber implements MessageListener {
         String body = new String(message.getBody());
         WebSocketClusterMessage clusterMsg;
         try {
-            clusterMsg = JsonUtils.fromJson(body, WebSocketClusterMessage.class);
+            clusterMsg = JsonUtils.parseObject(body, WebSocketClusterMessage.class);
         } catch (Exception e) {
             log.warn("[WS-Cluster] 消息解析失败,跳过: err={}", e.getMessage());
             return;
@@ -47,14 +51,16 @@ public class WebSocketClusterSubscriber implements MessageListener {
         try {
             dispatchToLocal(clusterMsg);
         } catch (Exception e) {
-            log.warn("[WS-Cluster] 本地推送失�? type={} err={}",
+            log.warn("[WS-Cluster] 本地推送失败: type={} err={}",
                     clusterMsg.getPushType(), e.getMessage());
         }
     }
 
     /**
-     * 将集群消息推送到本地 WebSocket session�?     *
-     * @param msg 集群推送消�?     */
+     * 将集群消息推送到本地 WebSocket session。
+     *
+     * @param msg 集群推送消息
+     */
     private void dispatchToLocal(WebSocketClusterMessage msg) {
         String pushType = msg.getPushType();
         if ("USER".equals(pushType) && msg.getUserId() != null) {

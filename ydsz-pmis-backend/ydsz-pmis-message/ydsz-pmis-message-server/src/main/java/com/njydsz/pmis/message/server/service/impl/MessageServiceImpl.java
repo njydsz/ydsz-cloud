@@ -4,12 +4,12 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.constant.SystemConstants;
-import com.njydsz.pmis.common.domain.query.PageQuery;
-import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.entity.PageQuery;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.message.server.channel.ChannelRouter;
@@ -60,8 +60,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 消息发送核心编排服务实现�? *
- * <p>发送流程：通道校验 �?路由 �?灰度(P0-7 差异�? �?订阅校验(P0-5) �?偏好(DND/locale/digest, P0-6) �? * 去重(P2-1 SET NX EX) �?限流 �?模板加载(偏好 locale) �?渲染 �?落库 PENDING �?通道分发 �? * 成功 SUCCESS / 失败降级 fallback(P0-4) / 失败重试 RETRY(P0-3) �?频率计数�? *
+ * 消息发送核心编排服务实现。
+ *
+ * <p>发送流程：通道校验 → 路由 → 灰度(P0-7 差异化) → 订阅校验(P0-5) → 偏好(DND/locale/digest, P0-6) →
+ * 去重(P2-1 SET NX EX) → 限流 → 模板加载(偏好 locale) → 渲染 → 落库 PENDING → 通道分发 →
+ * 成功 SUCCESS / 失败降级 fallback(P0-4) / 失败重试 RETRY(P0-3) → 频率计数。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -72,25 +76,25 @@ public class MessageServiceImpl implements MessageService {
 
     /** 通道路由器（负责通道选择与消息分发） */
     private final ChannelRouter channelRouter;
-    /** 模板引擎（变量占位符渲染�?*/
+    /** 模板引擎（变量占位符渲染） */
     private final TemplateEngine templateEngine;
-    /** 模板管理服务（加�?校验模板�?*/
+    /** 模板管理服务（加载/校验模板） */
     private final TemplateService templateService;
-    /** 消息日志 Mapper（落�?/ 查询�?*/
+    /** 消息日志 Mapper（落库 / 查询） */
     private final MsgLogMapper msgLogMapper;
     /** 路由规则服务（通道动态路由） */
     private final RouteRuleService routeRuleService;
-    /** 限流服务（通道 / 用户 / 模板多维限流�?*/
+    /** 限流服务（通道 / 用户 / 模板多维限流） */
     private final RateLimitService rateLimitService;
-    /** 灰度服务（A/B 实验命中判断�?*/
+    /** 灰度服务（A/B 实验命中判断） */
     private final CanaryService canaryService;
-    /** 消息模块配置属�?*/
+    /** 消息模块配置属性 */
     private final MessageProperties messageProperties;
-    /** 消息指标采集（Prometheus�?*/
+    /** 消息指标采集（Prometheus） */
     private final MessageMetrics messageMetrics;
     /** 订阅管理服务（退订校验） */
     private final SubscriptionService subscriptionService;
-    /** 用户偏好服务（DND / locale / 聚合�?*/
+    /** 用户偏好服务（DND / locale / 聚合） */
     private final PreferenceService preferenceService;
     /** 消息聚合服务（批量摘要发送） */
     private final AggregateService aggregateService;
@@ -98,22 +102,22 @@ public class MessageServiceImpl implements MessageService {
     private final SensitiveWordFilter sensitiveWordFilter;
     /** 重试策略解析器（按通道解析最大重试次数与退避间隔） */
     private final RetryStrategyResolver retryStrategyResolver;
-    /** 去重服务（Redis SET NX EX 幂等去重�?*/
+    /** 去重服务（Redis SET NX EX 幂等去重） */
     private final DedupService dedupService;
-    /** 消息全链路追踪服�?*/
+    /** 消息全链路追踪服务 */
     private final MessageTraceService messageTraceService;
-    /** 智能推送时间优化器（用户活跃度画像�?*/
+    /** 智能推送时间优化器（用户活跃度画像） */
     private final DeliveryTimeOptimizer deliveryTimeOptimizer;
     /** 富媒体内容渲染器（HTML / Markdown / 纯文本） */
     private final RichMediaRenderer richMediaRenderer;
-    /** P0-1: 用户通道绑定服务（userId �?通道联系方式解析�?*/
+    /** P0-1: 用户通道绑定服务（userId → 通道联系方式解析） */
     private final UserChannelBindingService userChannelBindingService;
-    /** P0-3: 模板变量校验�?*/
+    /** P0-3: 模板变量校验器 */
     private final com.njydsz.pmis.message.server.template.TemplateVariableValidator templateVariableValidator;
     /** P0-4: 变量数据源解析器 */
     private final com.njydsz.pmis.message.server.service.config.VariableSourceResolver variableSourceResolver;
 
-    /** P2-3: RocketMQ 事务消息生产者（可�?未配�?RocketMQ 时为 null�?*/
+    /** P2-3: RocketMQ 事务消息生产者（可选,未配置 RocketMQ 时为 null） */
     private final ObjectProvider<RocketMQMessageProducer> mqProducerProvider;
 
     @Override
@@ -122,9 +126,13 @@ public class MessageServiceImpl implements MessageService {
     }
 
     /**
-     * P2-6: 内部发送方�?携带级联深度�?     *
-     * <p>顶层消息 depth=0,级联子消�?depth 递增,超过 {@link MessageConstants#MAX_CASCADE_DEPTH} 跳过�?     * 级联触发时机：父消息 {@code doDispatch} 成功�?遍历 {@link MessageRequest#getCascadeTo()},
-     * 为每个子消息设置 {@code parentMsgId = �?msgId} 后递归调用本方法�?     * 单条级联消息失败不影响其他级联消�?try-catch 吞异常记 WARN)�?     *
+     * P2-6: 内部发送方法,携带级联深度。
+     *
+     * <p>顶层消息 depth=0,级联子消息 depth 递增,超过 {@link MessageConstants#MAX_CASCADE_DEPTH} 跳过。
+     * 级联触发时机：父消息 {@code doDispatch} 成功后,遍历 {@link MessageRequest#getCascadeTo()},
+     * 为每个子消息设置 {@code parentMsgId = 父 msgId} 后递归调用本方法。
+     * 单条级联消息失败不影响其他级联消息(try-catch 吞异常记 WARN)。
+     *
      * @param request 消息请求
      * @param depth   级联深度(0=顶层消息)
      */
@@ -132,9 +140,9 @@ public class MessageServiceImpl implements MessageService {
         if (request == null) {
             return MessageResult.fail(null, "消息请求为空");
         }
-        // P2-6: 级联深度保护(防御�?正常路径�?triggerCascade 已提前拦�?
+        // P2-6: 级联深度保护(防御性,正常路径下 triggerCascade 已提前拦截)
         if (depth > MessageConstants.MAX_CASCADE_DEPTH) {
-            log.warn("[Message] 级联深度超限,拒绝发�? depth={} max={} receiver={}",
+            log.warn("[Message] 级联深度超限,拒绝发送: depth={} max={} receiver={}",
                     depth, MessageConstants.MAX_CASCADE_DEPTH, request.getReceiver());
             return MessageResult.fail(request.getChannel(), "级联深度超限");
         }
@@ -142,19 +150,20 @@ public class MessageServiceImpl implements MessageService {
         if (!StringUtils.hasText(channel)) {
             return MessageResult.fail(null, "消息通道不能为空");
         }
-        // �?通道启用校验
+        // ① 通道启用校验
         if (!isChannelEnabled(channel)) {
-            log.warn("[Message] 通道未启�? {}", channel);
-            return MessageResult.fail(channel, "通道未启�? " + channel);
+            log.warn("[Message] 通道未启用: {}", channel);
+            return MessageResult.fail(channel, "通道未启用: " + channel);
         }
         // P0-2: 记录接收节点轨迹
         messageTraceService.recordTrace(
                 StringUtils.hasText(request.getMessageId()) ? request.getMessageId()
                         : (StringUtils.hasText(request.getBizId()) ? request.getBizId() : "unknown"),
                 MsgTraceDO.Node.RECEIVED, "SUCCESS", channel,
-                "消息已接�? channel=" + channel + " receiver=" + request.getReceiver());
+                "消息已接收: channel=" + channel + " receiver=" + request.getReceiver());
 
-        // �?路由（命中则覆盖 channel�?        MsgRouteRuleDO matchedRule = routeRuleService.match(request);
+        // ② 路由（命中则覆盖 channel）
+        MsgRouteRuleDO matchedRule = routeRuleService.match(request);
         if (matchedRule != null && StringUtils.hasText(matchedRule.getTargetChannel())) {
             channel = matchedRule.getTargetChannel();
             request.setChannel(channel);
@@ -163,19 +172,20 @@ public class MessageServiceImpl implements MessageService {
         String bizType = request.getBizType();
         String templateCode = request.getTemplateCode();
 
-        // �?2 P0-1: 用户通道绑定解析（receiver �?userId 时自动解析为通道联系方式�?        if (StringUtils.hasText(receiver) && StringUtils.hasText(channel)) {
+        // ①-2 P0-1: 用户通道绑定解析（receiver 是 userId 时自动解析为通道联系方式）
+        if (StringUtils.hasText(receiver) && StringUtils.hasText(channel)) {
             String resolved = userChannelBindingService.resolveChannelUserId(receiver, channel);
             if (resolved != null) {
-                log.debug("[Message] P0-1 通道绑定解析: userId={} channel={} �?channelUserId={}",
+                log.debug("[Message] P0-1 通道绑定解析: userId={} channel={} → channelUserId={}",
                         receiver, channel, resolved);
                 request.setReceiver(resolved);
                 receiver = resolved;
             }
         }
 
-        // �?灰度命中差异化处理（P0-7）：命中后切换实验模�?通道
+        // ③ 灰度命中差异化处理（P0-7）：命中后切换实验模板/通道
         int canaryFlag = 0;
-        // P1-6: 命中时记录原�?canaryKey(=切换�?templateCode),用于 A/B 报表分组;未命中为 null
+        // P1-6: 命中时记录原始 canaryKey(=切换前 templateCode),用于 A/B 报表分组;未命中为 null
         String canaryKeyForLog = null;
         if (StringUtils.hasText(templateCode) && StringUtils.hasText(receiver)) {
             MsgCanaryDO canary = canaryService.matchConfig(templateCode, receiver);
@@ -197,15 +207,16 @@ public class MessageServiceImpl implements MessageService {
             }
         }
 
-        // �?订阅关系校验（P0-5）：用户退订后不发�?        if (StringUtils.hasText(receiver) && StringUtils.hasText(templateCode)
+        // ④ 订阅关系校验（P0-5）：用户退订后不发送
+        if (StringUtils.hasText(receiver) && StringUtils.hasText(templateCode)
                 && subscriptionService.isBlocked(receiver, templateCode, channel)) {
-            log.info("[Message] 用户已退�?跳过发�? receiver={} topic={} channel={}",
+            log.info("[Message] 用户已退订,跳过发送: receiver={} topic={} channel={}",
                     receiver, templateCode, channel);
             messageMetrics.recordSend(channel, "BLOCKED", 0);
             return MessageResult.fail(channel, "用户已退订该消息");
         }
 
-        // �?用户偏好（P0-6）：DND 时段 / locale / digestEnabled
+        // ⑤ 用户偏好（P0-6）：DND 时段 / locale / digestEnabled
         MsgPreferenceDO pref = StringUtils.hasText(receiver)
                 ? preferenceService.getByUser(receiver, channel, bizType) : null;
         if (pref != null && isInDndPeriod(pref)) {
@@ -214,74 +225,81 @@ public class MessageServiceImpl implements MessageService {
             boolean urgentBypass = stc != null && stc.isUrgentBypassDnd()
                     && "URGENT".equals(resolvePriority(request));
             if (!channelDisruptive) {
-                // 非打扰型通道（EMAIL/INAPP/Webhook）绕�?DND
+                // 非打扰型通道（EMAIL/INAPP/Webhook）绕过 DND
                 log.debug("[Message] 非打扰型通道绕过 DND: channel={}", channel);
             } else if (urgentBypass) {
                 log.info("[Message] URGENT 消息绕过 DND: receiver={} channel={}", receiver, channel);
             } else if (stc != null && stc.isEnabled()) {
-                // P2-5: 智能定时 —�?延迟�?DND 结束后发�?                LocalDateTime nextTime = calculateDndEndTime(pref);
+                // P2-5: 智能定时 —— 延迟到 DND 结束后发送
+                LocalDateTime nextTime = calculateDndEndTime(pref);
                 if (nextTime == null) {
                     messageMetrics.recordSend(channel, "DND_SKIPPED", 0);
                     return MessageResult.fail(channel, "当前为免打扰时段");
                 }
                 long deferHours = java.time.Duration.between(LocalDateTime.now(), nextTime).toHours();
                 if (deferHours > stc.getMaxDeferHours()) {
-                    log.info("[Message] DND 延迟超过阈�?丢弃: receiver={} defer={}h max={}h",
+                    log.info("[Message] DND 延迟超过阈值,丢弃: receiver={} defer={}h max={}h",
                             receiver, deferHours, stc.getMaxDeferHours());
                     messageMetrics.recordSend(channel, "DND_DROPPED", 0);
-                    return MessageResult.fail(channel, "免打扰时段消息延迟过�?已丢�?);
+                    return MessageResult.fail(channel, "免打扰时段消息延迟过久,已丢弃");
                 }
-                log.info("[Message] DND 延迟发�? receiver={} dnd={}~{} nextSendAt={}",
+                log.info("[Message] DND 延迟发送: receiver={} dnd={}~{} nextSendAt={}",
                         receiver, pref.getDndStart(), pref.getDndEnd(), nextTime);
                 messageMetrics.recordSend(channel, "DND_DEFERRED", 0);
                 request.setScheduledAt(nextTime);
             } else {
-                // 智能定时未启�?走旧的丢弃策�?                messageMetrics.recordSend(channel, "DND_SKIPPED", 0);
+                // 智能定时未启用,走旧的丢弃策略
+                messageMetrics.recordSend(channel, "DND_SKIPPED", 0);
                 return MessageResult.fail(channel, "当前为免打扰时段");
             }
         }
         String prefLocale = pref != null ? pref.getLocale() : null;
 
-        // �?2 P2-1: 智能去重（SET NX EX）—�?相同 dedupKey �?TTL 窗口内仅允许一�?        String dedupKey = buildDedupKey(request);
+        // ⑤-2 P2-1: 智能去重（SET NX EX）—— 相同 dedupKey 在 TTL 窗口内仅允许一次
+        String dedupKey = buildDedupKey(request);
         if (StringUtils.hasText(dedupKey) && !dedupService.tryAcquire(dedupKey)) {
-            log.info("[Message] 检测到重复消息,跳过发�? dedupKey={} receiver={}", dedupKey, receiver);
+            log.info("[Message] 检测到重复消息,跳过发送: dedupKey={} receiver={}", dedupKey, receiver);
             messageMetrics.recordSend(channel, "DEDUPED", 0);
-            return MessageResult.fail(channel, "消息重复,已忽�?);
+            return MessageResult.fail(channel, "消息重复,已忽略");
         }
 
-        // �?限流 + 频率
-        // �?1 通道+bizType 维度令牌桶（全局配额�?        if (!rateLimitService.tryAcquire(buildRateLimitKey(channel, bizType), 1)) {
+        // ⑥ 限流 + 频率
+        // ⑥-1 通道+bizType 维度令牌桶（全局配额）
+        if (!rateLimitService.tryAcquire(buildRateLimitKey(channel, bizType), 1)) {
             messageMetrics.recordSend(channel, "FAILED", 0);
-            throw new SysException(StandardResultCode.RATE_LIMIT, "发送限流，请稍后重�?);
+            throw new SysException(StandardResultCode.RATE_LIMIT, "发送限流，请稍后重试");
         }
-        // �?2 P2-5/P0-5: 多维度令牌桶（receiver/templateCode/tenant），优先级感�?        if (!rateLimitService.checkSendLimit(channel, receiver, templateCode,
+        // ⑥-2 P2-5/P0-5: 多维度令牌桶（receiver/templateCode/tenant），优先级感知
+        if (!rateLimitService.checkSendLimit(channel, receiver, templateCode,
                 TenantContext.getTenantId(), request.getPriority())) {
             messageMetrics.recordSend(channel, "RATE_LIMITED", 0);
             throw new SysException(StandardResultCode.RATE_LIMIT, "多维度限流：receiver/template/tenant 超限");
         }
-        // �?3 用户偏好频率（每�?每小时上限）
+        // ⑥-3 用户偏好频率（每日/每小时上限）
         if (StringUtils.hasText(receiver)
                 && !rateLimitService.checkFrequency(receiver, channel, bizType)) {
             messageMetrics.recordSend(channel, "FAILED", 0);
-            throw new SysException(StandardResultCode.RATE_LIMIT, "发送频率超�?);
+            throw new SysException(StandardResultCode.RATE_LIMIT, "发送频率超限");
         }
 
-        // �?加载模板（有 templateCode 时，使用偏好 locale�?        String content = request.getContent();
+        // ⑦ 加载模板（有 templateCode 时，使用偏好 locale）
+        String content = request.getContent();
         String subject = request.getSubject();
         if (StringUtils.hasText(templateCode)) {
             MsgTemplateDO template = templateService.loadByCodeAndChannel(
                     templateCode, channel, prefLocale, TenantContext.getTenantId());
             if (template == null) {
-                return MessageResult.fail(channel, "模板不存�? " + templateCode);
+                return MessageResult.fail(channel, "模板不存在: " + templateCode);
             }
-            // P0-3: 模板变量类型校验（有 variableDefs 时校�?填充默认值）
+            // P0-3: 模板变量类型校验（有 variableDefs 时校验+填充默认值）
             if (StringUtils.hasText(template.getVariableDefs())) {
                 var varDefs = templateVariableValidator.parse(template.getVariableDefs());
                 if (!varDefs.isEmpty() && request.getParams() != null) {
                     templateVariableValidator.validateAndFill(request.getParams(), varDefs, templateCode);
                 }
             }
-            // P0-4: 变量数据源自动拉取（params 中缺失的变量从数据源补全�?            if (request.getParams() != null) {
+            // P0-4: 变量数据源自动拉取（params 中缺失的变量从数据源补全）
+            if (request.getParams() != null) {
                 java.util.Map<String, Object> ctx = new java.util.HashMap<>();
                 if (StringUtils.hasText(request.getBizId())) {
                     ctx.put("bizId", request.getBizId());
@@ -300,12 +318,12 @@ public class MessageServiceImpl implements MessageService {
             }
         }
 
-        // �?2 敏感词过滤（P2-1）：对最�?content 做敏感词替换,无论模板渲染还是直传内容
+        // ⑦-2 敏感词过滤（P2-1）：对最终 content 做敏感词替换,无论模板渲染还是直传内容
         if (StringUtils.hasText(content)) {
             content = sensitiveWordFilter.filter(content);
         }
 
-        // P1-2: 富媒体消息渲�?—�?检�?params 中是否包含富媒体内容,按通道渲染
+        // P1-2: 富媒体消息渲染 —— 检查 params 中是否包含富媒体内容,按通道渲染
         RichMediaContent richMedia = richMediaRenderer.extractFromParams(request.getParams());
         if (richMedia != null) {
             String renderedContent = switch (channel == null ? "" : channel.toUpperCase()) {
@@ -322,7 +340,7 @@ public class MessageServiceImpl implements MessageService {
             }
         }
 
-        // �?落库 PENDING
+        // ⑧ 落库 PENDING
         MsgLogDO logDO = new MsgLogDO();
         logDO.setChannel(channel);
         logDO.setBizType(bizType);
@@ -343,23 +361,26 @@ public class MessageServiceImpl implements MessageService {
         logDO.setMsgId(StringUtils.hasText(request.getMessageId()) ? request.getMessageId()
                 : SnowflakeIdGenerator.nextIdStr());
         logDO.setDedupKey(dedupKey);
-        // P2-6: 级联发送时记录父消�?ID,用于追溯级联关系
+        // P2-6: 级联发送时记录父消息 ID,用于追溯级联关系
         logDO.setParentMsgId(request.getParentMsgId());
-        // P0-3: 定时发送时�?        logDO.setScheduledAt(request.getScheduledAt());
+        // P0-3: 定时发送时间
+        logDO.setScheduledAt(request.getScheduledAt());
         if (matchedRule != null) {
             logDO.setRouteRuleId(matchedRule.getId());
         }
         logDO.setTenantId(TenantContext.getTenantId());
-        // �?2 P0-3: 定时消息 —�?scheduledAt 非空且在未来�?落库 SCHEDULED 不立即发�?        if (request.getScheduledAt() != null
+        // ⑧-2 P0-3: 定时消息 —— scheduledAt 非空且在未来时,落库 SCHEDULED 不立即发送
+        if (request.getScheduledAt() != null
                 && request.getScheduledAt().isAfter(java.time.LocalDateTime.now())) {
             logDO.setStatus(MessageStatusEnum.SCHEDULED.name());
             msgLogMapper.insert(logDO);
-            log.info("[Message] 定时消息已入�? msgId={} scheduledAt={} channel={}",
+            log.info("[Message] 定时消息已入库: msgId={} scheduledAt={} channel={}",
                     logDO.getMsgId(), logDO.getScheduledAt(), channel);
             return MessageResult.ok(channel, logDO.getMsgId());
         }
 
-        // P1-1: 智能推送时间优�?—�?非紧急且未设置定时时间的消息，使用用户活跃度画像推荐最佳推送时�?        if (request.getScheduledAt() == null && StringUtils.hasText(receiver)
+        // P1-1: 智能推送时间优化 —— 非紧急且未设置定时时间的消息，使用用户活跃度画像推荐最佳推送时间
+        if (request.getScheduledAt() == null && StringUtils.hasText(receiver)
                 && !"URGENT".equals(resolvePriority(request))) {
             try {
                 java.time.LocalDateTime optimalTime = deliveryTimeOptimizer.getOptimalDeliveryTime(receiver, channel);
@@ -371,25 +392,26 @@ public class MessageServiceImpl implements MessageService {
                     messageTraceService.recordTrace(logDO.getMsgId(),
                             MsgTraceDO.Node.SCHEDULED,
                             "SUCCESS", channel, "智能定时: optimalAt=" + optimalTime);
-                    log.info("[Message] 智能定时推�? msgId={} receiver={} optimalAt={}",
+                    log.info("[Message] 智能定时推送: msgId={} receiver={} optimalAt={}",
                             logDO.getMsgId(), receiver, optimalTime);
                     return MessageResult.ok(channel, logDO.getMsgId());
                 }
             } catch (Exception e) {
-                log.debug("[Message] 智能推送时间优化失�?降级立即发�? receiver={} err={}",
+                log.debug("[Message] 智能推送时间优化失败,降级立即发送: receiver={} err={}",
                         receiver, e.getMessage());
             }
         }
 
         msgLogMapper.insert(logDO);
 
-        // �?聚合判断（P0-6）：digestEnabled=1 时追加到聚合批次,不立即发�?        if (pref != null && Integer.valueOf(1).equals(pref.getDigestEnabled())
+        // ⑨ 聚合判断（P0-6）：digestEnabled=1 时追加到聚合批次,不立即发送
+        if (pref != null && Integer.valueOf(1).equals(pref.getDigestEnabled())
                 && StringUtils.hasText(bizType) && StringUtils.hasText(receiver)) {
             aggregateService.appendOrStart(bizType, receiver, channel, logDO.getTenantId());
             logDO.setStatus(MessageStatusEnum.PENDING.name());
             logDO.setErrorMessage("AGGREGATED");
             msgLogMapper.updateById(logDO);
-            log.info("[Message] 已加入聚合批�? msgId={} group={} receiver={}",
+            log.info("[Message] 已加入聚合批次: msgId={} group={} receiver={}",
                     logDO.getMsgId(), bizType, receiver);
             return MessageResult.ok(channel, logDO.getMsgId());
         }
@@ -397,23 +419,26 @@ public class MessageServiceImpl implements MessageService {
         // P0-2: 记录落库轨迹
         messageTraceService.recordTrace(logDO.getMsgId(),
                 MsgTraceDO.Node.PERSISTED, "SUCCESS", channel,
-                "消息已落�? status=" + logDO.getStatus());
+                "消息已落库: status=" + logDO.getStatus());
 
-        // �?通道分发
+        // ⑩ 通道分发
         MessageResult result = doDispatch(logDO, matchedRule, receiver);
-        // P2-6: 父消息发送成功后触发级联发�?聚合消息不触发级�?由聚�?flush 时自行处�?
-        if (result != null && result.isSuccess()) {
+        // P2-6: 父消息发送成功后触发级联发送(聚合消息不触发级联,由聚合 flush 时自行处理)
+        if (result != null && BaseResponse.isSuccess()) {
             triggerCascade(request, logDO, depth);
         }
         return result;
     }
 
     /**
-     * P2-6: 触发级联发送�?     *
-     * <p>遍历 {@code request.getCascadeTo()},为每个子消息设置 {@code parentMsgId = �?msgId},
-     * 递归调用 {@link #sendInternal}。单条级联失败不影响其他级联(try-catch 吞异常记 WARN)�?     * 深度超限时整体跳过并�?WARN�?     *
-     * @param request  父消息请�?�?cascadeTo 列表)
-     * @param parentLog 父消息落库记�?提供 msgId 作为子消息的 parentMsgId)
+     * P2-6: 触发级联发送。
+     *
+     * <p>遍历 {@code request.getCascadeTo()},为每个子消息设置 {@code parentMsgId = 父 msgId},
+     * 递归调用 {@link #sendInternal}。单条级联失败不影响其他级联(try-catch 吞异常记 WARN)。
+     * 深度超限时整体跳过并记 WARN。
+     *
+     * @param request  父消息请求(含 cascadeTo 列表)
+     * @param parentLog 父消息落库记录(提供 msgId 作为子消息的 parentMsgId)
      * @param depth    父消息的级联深度
      */
     private void triggerCascade(MessageRequest request, MsgLogDO parentLog, int depth) {
@@ -434,23 +459,25 @@ public class MessageServiceImpl implements MessageService {
             try {
                 sendInternal(child, depth + 1);
             } catch (Exception e) {
-                log.warn("[Message] 级联消息发送失�?不影响其他级�? parentMsgId={} err={}",
+                log.warn("[Message] 级联消息发送失败,不影响其他级联: parentMsgId={} err={}",
                         parentLog.getMsgId(), e.getMessage());
             }
         }
     }
 
     /**
-     * 执行通道分发,包含 P0-3 重试落库 �?P0-4 通道降级 / P1-8 多级降级链�?     */
+     * 执行通道分发,包含 P0-3 重试落库 与 P0-4 通道降级 / P1-8 多级降级链。
+     */
     private MessageResult doDispatch(MsgLogDO logDO, MsgRouteRuleDO matchedRule, String receiver) {
         String channel = logDO.getChannel();
         long start = System.currentTimeMillis();
         try {
             logDO.setStatus(MessageStatusEnum.SENDING.name());
             msgLogMapper.updateById(logDO);
-            // P0-2: 记录分发开始轨�?            messageTraceService.recordTrace(logDO.getMsgId(),
+            // P0-2: 记录分发开始轨迹
+            messageTraceService.recordTrace(logDO.getMsgId(),
                     MsgTraceDO.Node.DISPATCH_START,
-                    "SUCCESS", channel, "通道分发开�?);
+                    "SUCCESS", channel, "通道分发开始");
             String providerTraceId = channelRouter.dispatch(logDO);
             long cost = System.currentTimeMillis() - start;
             logDO.setStatus(MessageStatusEnum.SUCCESS.name());
@@ -465,8 +492,8 @@ public class MessageServiceImpl implements MessageService {
             // P0-2: 记录分发成功轨迹
             messageTraceService.recordTrace(logDO.getMsgId(),
                     MsgTraceDO.Node.DISPATCH_SUCCESS,
-                    "SUCCESS", channel, "发送成�? cost=" + cost + "ms");
-            log.info("[Message] 发送成�? msgId={} channel={} receiver={} cost={}ms",
+                    "SUCCESS", channel, "发送成功: cost=" + cost + "ms");
+            log.info("[Message] 发送成功: msgId={} channel={} receiver={} cost={}ms",
                     logDO.getMsgId(), channel, receiver, cost);
             return MessageResult.ok(channel, providerTraceId);
         } catch (Exception e) {
@@ -481,17 +508,22 @@ public class MessageServiceImpl implements MessageService {
                     return fallback;
                 }
             }
-            // P0-3 重试落库：retryCount < MAX �?RETRY + nextRetryAt,否则 FAILED
+            // P0-3 重试落库：retryCount < MAX → RETRY + nextRetryAt,否则 FAILED
             return handleFailure(logDO, e, cost);
         }
     }
 
     /**
-     * P1-8: 解析有序降级通道列表�?     *
+     * P1-8: 解析有序降级通道列表。
+     *
      * <p>优先使用 {@link MsgRouteRuleDO#getFallbackChain()}（逗号分隔多通道），
-     * 为空时回退�?{@link MsgRouteRuleDO#getFallbackChannel()}（单通道）�?     * 自动过滤空白项与当前通道(避免循环降级)�?     *
-     * @param matchedRule    命中的路由规�?     * @param currentChannel 当前发送通道(排除自身)
-     * @return 有序降级通道列表（大写），可能为�?     */
+     * 为空时回退到 {@link MsgRouteRuleDO#getFallbackChannel()}（单通道）。
+     * 自动过滤空白项与当前通道(避免循环降级)。
+     *
+     * @param matchedRule    命中的路由规则
+     * @param currentChannel 当前发送通道(排除自身)
+     * @return 有序降级通道列表（大写），可能为空
+     */
     private List<String> resolveFallbackChannels(MsgRouteRuleDO matchedRule, String currentChannel) {
         if (matchedRule == null) {
             return Collections.emptyList();
@@ -505,23 +537,24 @@ public class MessageServiceImpl implements MessageService {
                     continue;
                 }
                 String upper = trimmed.toUpperCase();
-                if (!upper.equalsIgnoreCase(currentChannel) && !result.contains(upper)) {
-                    result.add(upper);
+                if (!upper.equalsIgnoreCase(currentChannel) && !BaseResponse.contains(upper)) {
+                    BaseResponse.add(upper);
                 }
             }
         }
-        if (result.isEmpty()) {
+        if (BaseResponse.isEmpty()) {
             String single = matchedRule.getFallbackChannel();
             if (StringUtils.hasText(single)
                     && !single.equalsIgnoreCase(currentChannel)) {
-                result.add(single.trim().toUpperCase());
+                BaseResponse.add(single.trim().toUpperCase());
             }
         }
         return result;
     }
 
     /**
-     * P0-4 + P1-8: 按降级链顺序逐个尝试,任一成功即返回�?     *
+     * P0-4 + P1-8: 按降级链顺序逐个尝试,任一成功即返回。
+     *
      * @param logDO            消息日志(会被修改 channel)
      * @param fallbackChannels 有序降级通道列表
      * @param prevCost         前序累计耗时
@@ -546,26 +579,28 @@ public class MessageServiceImpl implements MessageService {
                 logDO.setCost(calculateCost(fallbackChannel));
                 msgLogMapper.updateById(logDO);
                 messageMetrics.recordSend(fallbackChannel, "SUCCESS", cost);
-                log.info("[Message] 降级发送成�? msgId={} chain={} final={} cost={}ms",
+                log.info("[Message] 降级发送成功: msgId={} chain={} final={} cost={}ms",
                         logDO.getMsgId(), tried, fallbackChannel, cost);
                 return MessageResult.ok(fallbackChannel, providerTraceId);
             } catch (Exception fe) {
                 long cost = System.currentTimeMillis() - start;
                 accumulatedCost += cost;
                 tried.add(fallbackChannel);
-                log.warn("[Message] 降级发送失�? msgId={} fallback={} err={} 继续尝试下一通道",
+                log.warn("[Message] 降级发送失败: msgId={} fallback={} err={} 继续尝试下一通道",
                         logDO.getMsgId(), fallbackChannel, fe.getMessage());
             }
         }
-        // 全部降级失败,恢复�?channel,继续走重试逻辑
+        // 全部降级失败,恢复原 channel,继续走重试逻辑
         logDO.setChannel(origChannel);
-        logDO.setErrorMessage(String.join("�?, tried) + " 均失�?);
+        logDO.setErrorMessage(String.join("→", tried) + " 均失败");
         return null;
     }
 
     /**
-     * P0-3 失败处理：retryCount < MAX �?RETRY + nextRetryAt(指数退�?,否则 FAILED�?     *
-     * <p>P1-7: 重试次数与退避由 {@link RetryStrategyResolver} 按通道解析,替代硬编码常量�?     */
+     * P0-3 失败处理：retryCount < MAX → RETRY + nextRetryAt(指数退避),否则 FAILED。
+     *
+     * <p>P1-7: 重试次数与退避由 {@link RetryStrategyResolver} 按通道解析,替代硬编码常量。
+     */
     private MessageResult handleFailure(MsgLogDO logDO, Exception e, long cost) {
         int retryCount = logDO.getRetryCount() == null ? 0 : logDO.getRetryCount();
         if (!retryStrategyResolver.isMaxRetriesReached(retryCount, logDO.getChannel())) {
@@ -575,12 +610,12 @@ public class MessageServiceImpl implements MessageService {
             messageMetrics.recordRetry(logDO.getChannel());
             log.warn("[Message] 发送失败转重试: msgId={} channel={} retryCount={} nextRetryAt={} err={}",
                     logDO.getMsgId(), logDO.getChannel(), retryCount, logDO.getNextRetryAt(), e.getMessage());
-            return MessageResult.fail(logDO.getChannel(), "发送失�?已加入重试队�? " + e.getMessage());
+            return MessageResult.fail(logDO.getChannel(), "发送失败,已加入重试队列: " + e.getMessage());
         }
         logDO.setStatus(MessageStatusEnum.FAILED.name());
         msgLogMapper.updateById(logDO);
         messageMetrics.recordSend(logDO.getChannel(), "FAILED", cost);
-        log.error("[Message] 发送失�?重试耗尽): msgId={} channel={} retryCount={} err={}",
+        log.error("[Message] 发送失败(重试耗尽): msgId={} channel={} retryCount={} err={}",
                 logDO.getMsgId(), logDO.getChannel(), retryCount, e.getMessage());
         return MessageResult.fail(logDO.getChannel(), e.getMessage());
     }
@@ -588,7 +623,7 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public MessageResult sendDirect(MessageSendDTO dto) {
         if (dto == null) {
-            return MessageResult.fail(null, "发送参数为�?);
+            return MessageResult.fail(null, "发送参数为空");
         }
         MessageRequest request = new MessageRequest();
         request.setChannel(dto.getChannel());
@@ -609,13 +644,13 @@ public class MessageServiceImpl implements MessageService {
         if (requests == null || requests.isEmpty() || !StringUtils.hasText(batchId)) {
             return result;
         }
-        // 限制单批最�?100 �?防止阻塞过久
+        // 限制单批最大 100 条,防止阻塞过久
         int limit = Math.min(requests.size(), MessageConstants.BATCH_SEND_MAX_SIZE);
-        result.setTotal(limit);
+        BaseResponse.setTotal(limit);
         for (int i = 0; i < limit; i++) {
             MessageRequest req = requests.get(i);
             if (req == null) {
-                result.incSkipped();
+                BaseResponse.incSkipped();
                 continue;
             }
             // 统一设置 bizId = batchId 便于进度查询
@@ -623,18 +658,18 @@ public class MessageServiceImpl implements MessageService {
             try {
                 MessageResult r = send(req);
                 if (r != null && r.isSuccess()) {
-                    result.incSuccess();
+                    BaseResponse.incSuccess();
                 } else {
-                    result.incFailed();
+                    BaseResponse.incFailed();
                 }
             } catch (Exception e) {
-                log.warn("[Message] 批量发送单条失�? batchId={} idx={} err={}",
+                log.warn("[Message] 批量发送单条失败: batchId={} idx={} err={}",
                         batchId, i, e.getMessage());
-                result.incFailed();
+                BaseResponse.incFailed();
             }
         }
-        log.info("[Message] 批量发送完�? batchId={} total={} success={} failed={} skipped={}",
-                batchId, result.getTotal(), result.getSuccess(), result.getFailed(), result.getSkipped());
+        log.info("[Message] 批量发送完成: batchId={} total={} success={} failed={} skipped={}",
+                batchId, BaseResponse.getTotal(), BaseResponse.getSuccess(), BaseResponse.getFailed(), BaseResponse.getSkipped());
         return result;
     }
 
@@ -653,7 +688,8 @@ public class MessageServiceImpl implements MessageService {
             w.eq(StringUtils.hasText(query.getPriority()), MsgLogDO::getPriority, query.getPriority());
             w.eq(StringUtils.hasText(query.getRecallStatus()), MsgLogDO::getRecallStatus, query.getRecallStatus());
             w.eq(StringUtils.hasText(query.getTenantId()), MsgLogDO::getTenantId, query.getTenantId());
-            // P2-13: 全文搜索（模糊匹�?content / receiver / templateCode�?            if (StringUtils.hasText(query.getKeyword())) {
+            // P2-13: 全文搜索（模糊匹配 content / receiver / templateCode）
+            if (StringUtils.hasText(query.getKeyword())) {
                 String kw = query.getKeyword().trim();
                 w.and(wrapper -> wrapper
                         .like(MsgLogDO::getContent, kw)
@@ -675,7 +711,8 @@ public class MessageServiceImpl implements MessageService {
     }
 
     /**
-     * 判断通道是否启用：优�?ChannelRouter，回退 MessageProperties.channelEnabled�?     */
+     * 判断通道是否启用：优先 ChannelRouter，回退 MessageProperties.channelEnabled。
+     */
     private boolean isChannelEnabled(String channel) {
         try {
             if (channelRouter != null && !channelRouter.isChannelEnabled(channel)) {
@@ -696,7 +733,9 @@ public class MessageServiceImpl implements MessageService {
     }
 
     /**
-     * 判断当前是否�?DND 免打扰时段（P0-6）�?     * 支持跨天时段(�?22:00-08:00)�?     */
+     * 判断当前是否在 DND 免打扰时段（P0-6）。
+     * 支持跨天时段(如 22:00-08:00)。
+     */
     private boolean isInDndPeriod(MsgPreferenceDO pref) {
         if (pref == null || !Integer.valueOf(1).equals(pref.getDndEnabled())) {
             return false;
@@ -711,10 +750,10 @@ public class MessageServiceImpl implements MessageService {
             LocalTime s = LocalTime.parse(start);
             LocalTime e = LocalTime.parse(end);
             if (s.isBefore(e)) {
-                // 同日时段(�?09:00-18:00)
+                // 同日时段(如 09:00-18:00)
                 return !now.isBefore(s) && now.isBefore(e);
             } else {
-                // 跨天时段(�?22:00-08:00)
+                // 跨天时段(如 22:00-08:00)
                 return !now.isBefore(s) || now.isBefore(e);
             }
         } catch (Exception ex) {
@@ -725,16 +764,17 @@ public class MessageServiceImpl implements MessageService {
     }
 
     /**
-     * P2-5: 计算免打扰时段的结束时间（即下次可发送时间，不含 buffer）�?     *
+     * P2-5: 计算免打扰时段的结束时间（即下次可发送时间，不含 buffer）。
+     *
      * <p>支持跨天时段（如 22:00-08:00）：
      * <ul>
-     *   <li>同日 DND�?9:00-18:00）：结束时间为当�?end</li>
-     *   <li>跨天 DND�?2:00-08:00），当前�?start 之后：结束时间为次日 end</li>
-     *   <li>跨天 DND�?2:00-08:00），当前�?end 之前：结束时间为当天 end</li>
+     *   <li>同日 DND（09:00-18:00）：结束时间为当天 end</li>
+     *   <li>跨天 DND（22:00-08:00），当前在 start 之后：结束时间为次日 end</li>
+     *   <li>跨天 DND（22:00-08:00），当前在 end 之前：结束时间为当天 end</li>
      * </ul>
      *
      * @param pref 偏好配置（须已确认在 DND 时段内）
-     * @return DND 结束时间 + buffer，解析失败返�?null
+     * @return DND 结束时间 + buffer，解析失败返回 null
      */
     private LocalDateTime calculateDndEndTime(MsgPreferenceDO pref) {
         if (pref == null) {
@@ -752,18 +792,20 @@ public class MessageServiceImpl implements MessageService {
             LocalDateTime todayEnd = LocalDateTime.now().toLocalDate().atTime(end);
             LocalDateTime nextEnd;
             if (start.isBefore(end)) {
-                // 同日 DND（如 09:00-18:00）：结束时间为当�?end
+                // 同日 DND（如 09:00-18:00）：结束时间为当天 end
                 nextEnd = todayEnd;
             } else {
-                // 跨天 DND（如 22:00-08:00�?                if (now.isBefore(end)) {
-                    // 当前�?end 之前（凌晨段）：结束时间为当�?end
+                // 跨天 DND（如 22:00-08:00）
+                if (now.isBefore(end)) {
+                    // 当前在 end 之前（凌晨段）：结束时间为当天 end
                     nextEnd = todayEnd;
                 } else {
-                    // 当前�?start 之后（夜晚段）：结束时间为次�?end
+                    // 当前在 start 之后（夜晚段）：结束时间为次日 end
                     nextEnd = todayEnd.plusDays(1);
                 }
             }
-            // 附加 buffer 避免卡在 DND 结束瞬间的高�?            MessageProperties.SmartTimingConfig stc = messageProperties.getSmartTiming();
+            // 附加 buffer 避免卡在 DND 结束瞬间的高峰
+            MessageProperties.SmartTimingConfig stc = messageProperties.getSmartTiming();
             long buffer = (stc != null) ? stc.getDndBufferSeconds() : 0L;
             return nextEnd.plusSeconds(buffer);
         } catch (Exception e) {
@@ -783,7 +825,8 @@ public class MessageServiceImpl implements MessageService {
     }
 
     /**
-     * P0-3: 解析发送优先级,优先使用请求中的 priority,回退全局配置�?     */
+     * P0-3: 解析发送优先级,优先使用请求中的 priority,回退全局配置。
+     */
     private String resolvePriority(MessageRequest request) {
         if (request != null && StringUtils.hasText(request.getPriority())) {
             return request.getPriority().trim().toUpperCase();
@@ -796,9 +839,10 @@ public class MessageServiceImpl implements MessageService {
     }
 
     /**
-     * P2-4: 按通道计算单条消息成本�?     *
+     * P2-4: 按通道计算单条消息成本。
+     *
      * @param channel 通道
-     * @return 单条成本（元），未配置或关闭时返�?ZERO
+     * @return 单条成本（元），未配置或关闭时返回 ZERO
      */
     private java.math.BigDecimal calculateCost(String channel) {
         MessageProperties.CostConfig cfg = messageProperties.getCost();
@@ -821,11 +865,17 @@ public class MessageServiceImpl implements MessageService {
     }
 
     /**
-     * P2-3: 事务消息发送�?     *
-     * <p>通过 RocketMQ 半消息机�?确保通知请求仅在本地事务校验（通道/模板有效性）通过后才投递�?     * 半消息发送后�?{@link com.njydsz.pmis.message.server.producer.MessageTransactionListener}
-     * 执行校验,COMMIT 后消费端异步调用 {@link #send} 完成实际发送�?     *
-     * <p>降级策略：未配置 RocketMQ 时直接走同步 {@link #send}�?     *
-     * @param request 消息发送请�?     * @return 发送结�?     */
+     * P2-3: 事务消息发送。
+     *
+     * <p>通过 RocketMQ 半消息机制,确保通知请求仅在本地事务校验（通道/模板有效性）通过后才投递。
+     * 半消息发送后由 {@link com.njydsz.pmis.message.server.producer.MessageTransactionListener}
+     * 执行校验,COMMIT 后消费端异步调用 {@link #send} 完成实际发送。
+     *
+     * <p>降级策略：未配置 RocketMQ 时直接走同步 {@link #send}。
+     *
+     * @param request 消息发送请求
+     * @return 发送结果
+     */
     @Override
     public MessageResult sendTransactionally(MessageRequest request) {
         if (request == null) {
@@ -833,7 +883,7 @@ public class MessageServiceImpl implements MessageService {
         }
         RocketMQMessageProducer mqProducer = mqProducerProvider.getIfAvailable();
         if (mqProducer == null) {
-            log.warn("[Message] RocketMQ 未配�?事务消息降级为同步发�? channel={}", request.getChannel());
+            log.warn("[Message] RocketMQ 未配置,事务消息降级为同步发送: channel={}", request.getChannel());
             return send(request);
         }
         try {
@@ -842,7 +892,7 @@ public class MessageServiceImpl implements MessageService {
                     request.getMessageId(), msgId, request.getChannel());
             return MessageResult.ok(request.getChannel(), msgId);
         } catch (Exception e) {
-            log.error("[Message] 事务消息发送失�?降级同步发�? channel={} err={}",
+            log.error("[Message] 事务消息发送失败,降级同步发送: channel={} err={}",
                     request.getChannel(), e.getMessage());
             return send(request);
         }

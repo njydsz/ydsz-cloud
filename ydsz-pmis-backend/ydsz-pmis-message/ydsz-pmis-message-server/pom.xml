@@ -16,16 +16,41 @@
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-message-infra</artifactId>
         </dependency>
-        <!-- common-web 传递引入: common-base(→core/util/exception), common-auth, common-safe, common-redis -->
-        <!-- common-jdbc 传递引入: common-domain -->
-        <!-- common-feign 传递引入: spring-cloud-starter-openfeign -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-exception</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-jdbc</artifactId>
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-lock</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-auth</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-safe</artifactId>
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
@@ -53,7 +78,15 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-base</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-app</artifactId>
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
@@ -89,13 +122,12 @@
             <optional>true</optional>
         </dependency>
         <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
-        </dependency>
-        <!-- Redisson 分布式锁/限流（ydsz-pmis-common-lock 声明为 optional，此处显式引入） -->
-        <dependency>
-            <groupId>org.redisson</groupId>
-            <artifactId>redisson-spring-boot-starter</artifactId>
         </dependency>
     </dependencies>
 </project>

@@ -55,11 +55,11 @@ public interface TemplateService {
     Page<MsgTemplateDO> page(TemplateQueryDTO query);
 
     /**
-     * 按编�?+ 通道 + 语言加载模板(locale 为空时回退默认 zh-CN)
+     * 按编码 + 通道 + 语言加载模板(locale 为空时回退默认 zh-CN)
      *
      * @param templateCode 模板编码
      * @param channel      通道
-     * @param locale       语言区域(可为�?
+     * @param locale       语言区域(可为空)
      * @param tenantId     租户 ID
      * @return 模板实体
      */

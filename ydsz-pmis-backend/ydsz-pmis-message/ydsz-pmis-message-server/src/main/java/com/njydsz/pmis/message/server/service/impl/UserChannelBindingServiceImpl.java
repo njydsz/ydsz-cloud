@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.impl.config;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.dto.config.UserChannelBindingDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgUserChannelDO;
@@ -16,7 +16,8 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 
 /**
- * 用户通道绑定服务实现�? *
+ * 用户通道绑定服务实现。
+ *
  * @author ydsz-pmis-team
  * @since 1.5.0
  */
@@ -108,12 +109,12 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
         }
         MsgUserChannelDO binding = getByUserAndChannel(userId, channelType);
         if (binding == null) {
-            log.debug("[UserChannelBinding] 无通道绑定,降级使用�?receiver: userId={} channel={}",
+            log.debug("[UserChannelBinding] 无通道绑定,降级使用原 receiver: userId={} channel={}",
                     userId, channelType);
             return null;
         }
         if (binding.getVerified() != null && binding.getVerified() == 0) {
-            log.warn("[UserChannelBinding] 通道绑定未验�? userId={} channel={} channelUserId={}",
+            log.warn("[UserChannelBinding] 通道绑定未验证: userId={} channel={} channelUserId={}",
                     userId, channelType, binding.getChannelUserId());
         }
         return binding.getChannelUserId();

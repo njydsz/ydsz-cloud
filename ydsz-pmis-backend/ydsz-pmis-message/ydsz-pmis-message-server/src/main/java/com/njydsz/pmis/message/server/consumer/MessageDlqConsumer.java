@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.server.consumer;
 import com.njydsz.pmis.common.constant.PmisMessageTopics;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 import com.njydsz.pmis.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
@@ -19,9 +19,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
- * RocketMQ 死信队列消费者�? *
- * <p>监听 {@link PmisMessageTopics#DLQ_MESSAGE},将重试耗尽的消息落�?status=DEAD,
- * 不抛出异常避�?DLQ 循环重投�? *
+ * RocketMQ 死信队列消费者。
+ *
+ * <p>监听 {@link PmisMessageTopics#DLQ_MESSAGE},将重试耗尽的消息落库 status=DEAD,
+ * 不抛出异常避免 DLQ 循环重投。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -52,13 +54,13 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
         String body = new String(messageExt.getBody() == null ? new byte[0] : messageExt.getBody());
         String originTopic = messageExt.getTopic();
 
-        // P1-3: 死信处理进入追踪上下文（无原�?traceId 时自动生成）
+        // P1-3: 死信处理进入追踪上下文（无原始 traceId 时自动生成）
         try (MessageTraceContext ctx = MessageTraceContext.enter(null)) {
             MessageRequest request = null;
             try {
-                request = JsonUtils.fromJson(body, MessageRequest.class);
+                request = JsonUtils.parseObject(body, MessageRequest.class);
             } catch (Exception e) {
-                log.error("[MessageDlqConsumer] 死信消息体解析失�? msgId={} err={}", msgId, e.getMessage());
+                log.error("[MessageDlqConsumer] 死信消息体解析失败: msgId={} err={}", msgId, e.getMessage());
             }
 
             try {
@@ -88,7 +90,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
                 log.error("[MessageDlqConsumer] 死信落库失败: msgId={} err={}", msgId, e.getMessage(), e);
             }
 
-            log.error("[MessageDlqConsumer] 死信已落�? msgId={} originTopic={} reconsumeTimes={} bizType={} bizId={} receiver={}",
+            log.error("[MessageDlqConsumer] 死信已落库: msgId={} originTopic={} reconsumeTimes={} bizType={} bizId={} receiver={}",
                     msgId, originTopic, reconsumeTimes,
                     request == null ? null : request.getBizType(),
                     request == null ? null : request.getBizId(),

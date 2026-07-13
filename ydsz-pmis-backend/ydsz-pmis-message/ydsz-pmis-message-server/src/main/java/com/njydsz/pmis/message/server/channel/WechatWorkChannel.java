@@ -20,13 +20,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 企业微信群机器人通道�? *
- * <p>通过企业微信群机器人 Webhook 推送通知，支�?text / markdown 两种消息类型�? * 企业微信群机器人无需加签，仅需 key 即可发送�? *
+ * 企业微信群机器人通道。
+ *
+ * <p>通过企业微信群机器人 Webhook 推送通知，支持 text / markdown 两种消息类型。
+ * 企业微信群机器人无需加签，仅需 key 即可发送。
+ *
  * <p>URL 解析优先级：
  * <ol>
- *   <li>{@code params.wechatWorkKey}（显�?key，最高优先级�?/li>
- *   <li>{@code receiver} �?http 开头时视为完整 Webhook URL</li>
- *   <li>{@code receiver} 视为 key，拼接默�?URL 前缀</li>
+ *   <li>{@code params.wechatWorkKey}（显式 key，最高优先级）</li>
+ *   <li>{@code receiver} 以 http 开头时视为完整 Webhook URL</li>
+ *   <li>{@code receiver} 视为 key，拼接默认 URL 前缀</li>
  *   <li>{@code pmis.channel.wechat-work.default-key}（兜底）</li>
  * </ol>
  *
@@ -41,18 +44,19 @@ public class WechatWorkChannel implements MessageChannel {
     /** 通道类型 */
     private static final String CHANNEL_TYPE = "WECOM";
 
-    /** 企业微信机器�?Webhook URL 前缀 */
+    /** 企业微信机器人 Webhook URL 前缀 */
     private static final String WEBHOOK_PREFIX =
             "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=";
 
-    /** 通道配置（提�?default-key / 超时�?*/
+    /** 通道配置（提供 default-key / 超时） */
     private final ChannelProperties channelProperties;
 
-    /** HTTP 客户端，�?{@link #init()} 中按配置超时构建 */
+    /** HTTP 客户端，在 {@link #init()} 中按配置超时构建 */
     RestClient restClient;
 
     /**
-     * 注入配置后按 {@code pmis.channel.wechat-work.connect-timeout / read-timeout} 构建 RestClient�?     */
+     * 注入配置后按 {@code pmis.channel.wechat-work.connect-timeout / read-timeout} 构建 RestClient。
+     */
     @PostConstruct
     public void init() {
         ChannelProperties.WechatWorkConfig cfg = channelProperties.getChannel().getWechatWork();
@@ -63,7 +67,8 @@ public class WechatWorkChannel implements MessageChannel {
     }
 
     /**
-     * 通道类型�?     *
+     * 通道类型。
+     *
      * @return WECOM
      */
     @Override
@@ -72,15 +77,18 @@ public class WechatWorkChannel implements MessageChannel {
     }
 
     /**
-     * 发送企业微信消息：构�?text / markdown 请求体并 POST �?Webhook URL�?     * 根据响应 errcode 判断成功 / 失败�?     *
+     * 发送企业微信消息：构造 text / markdown 请求体并 POST 到 Webhook URL，
+     * 根据响应 errcode 判断成功 / 失败。
+     *
      * @param request 消息请求
-     * @return 发送结�?     */
+     * @return 发送结果
+     */
     @Override
     public MessageResult send(MessageRequest request) {
         String webhookUrl = resolveUrl(request);
         if (!StringUtils.hasText(webhookUrl)) {
-            log.warn("[WECOM] 未配�?key，跳过发�? receiver={}", request.getReceiver());
-            return MessageResult.fail(CHANNEL_TYPE, "企业微信 key 未配�?);
+            log.warn("[WECOM] 未配置 key，跳过发送: receiver={}", request.getReceiver());
+            return MessageResult.fail(CHANNEL_TYPE, "企业微信 key 未配置");
         }
 
         Map<String, Object> payload = buildPayload(request);
@@ -98,29 +106,30 @@ public class WechatWorkChannel implements MessageChannel {
                 Map<String, Object> body = JSON.parseObject(response.getBody());
                 int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
                 if (errcode == 0) {
-                    log.info("[WECOM] 发送成�?);
+                    log.info("[WECOM] 发送成功");
                     return MessageResult.ok(CHANNEL_TYPE, traceId);
                 }
                 String errmsg = (String) body.getOrDefault("errmsg", "unknown");
-                log.error("[WECOM] 发送失�? errcode={} errmsg={}", errcode, errmsg);
+                log.error("[WECOM] 发送失败: errcode={} errmsg={}", errcode, errmsg);
                 return MessageResult.fail(CHANNEL_TYPE, "errcode=" + errcode + ", errmsg=" + errmsg);
             }
-            log.error("[WECOM] 发送失�? status={}", response.getStatusCode());
+            log.error("[WECOM] 发送失败: status={}", response.getStatusCode());
             return MessageResult.fail(CHANNEL_TYPE, "HTTP " + response.getStatusCode());
         } catch (Exception e) {
-            log.error("[WECOM] 发送异�? reason={}", e.getMessage(), e);
+            log.error("[WECOM] 发送异常: reason={}", e.getMessage(), e);
             return MessageResult.fail(CHANNEL_TYPE, e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
 
     /**
-     * 构造企业微信消息请求体�?     * <ul>
+     * 构造企业微信消息请求体。
+     * <ul>
      *   <li>msgType=markdown：{@code {"msgtype":"markdown","markdown":{"content":"内容"}}}</li>
      *   <li>默认 text：{@code {"msgtype":"text","text":{"content":"内容"}}}</li>
      * </ul>
      *
      * @param request 消息请求
-     * @return 请求�?Map
+     * @return 请求体 Map
      */
     Map<String, Object> buildPayload(MessageRequest request) {
         String content = request.getContent() == null ? "" : request.getContent();
@@ -147,9 +156,10 @@ public class WechatWorkChannel implements MessageChannel {
     }
 
     /**
-     * 解析 Webhook URL，优先级：params.wechatWorkKey &gt; receiver(http) &gt; receiver(key) &gt; 默认配置�?     *
+     * 解析 Webhook URL，优先级：params.wechatWorkKey &gt; receiver(http) &gt; receiver(key) &gt; 默认配置。
+     *
      * @param request 消息请求
-     * @return 解析到的 URL，无则返�?null
+     * @return 解析到的 URL，无则返回 null
      */
     String resolveUrl(MessageRequest request) {
         Map<String, Object> params = request.getParams();

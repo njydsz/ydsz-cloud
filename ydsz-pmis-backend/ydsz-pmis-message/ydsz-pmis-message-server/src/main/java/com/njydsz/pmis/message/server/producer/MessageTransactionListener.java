@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.producer;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.message.server.channel.ChannelRouter;
 import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
 import com.njydsz.pmis.message.server.service.template.TemplateService;
@@ -18,16 +18,19 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 /**
- * RocketMQ 事务消息本地事务监听器（P2-3）�? *
- * <p>半消息发送成功后,RocketMQ 回调 {@link #executeLocalTransaction} 执行本地事务�? * <ol>
+ * RocketMQ 事务消息本地事务监听器（P2-3）。
+ *
+ * <p>半消息发送成功后,RocketMQ 回调 {@link #executeLocalTransaction} 执行本地事务：
+ * <ol>
  *   <li>解析 MessageRequest</li>
- *   <li>校验通道启用 + 模板存在�?ENABLED</li>
- *   <li>校验通过 �?COMMIT（半消息投�?消费端可消费�?/li>
- *   <li>校验失败 �?ROLLBACK（半消息丢弃,消费端不可见�?/li>
+ *   <li>校验通道启用 + 模板存在且 ENABLED</li>
+ *   <li>校验通过 → COMMIT（半消息投递,消费端可消费）</li>
+ *   <li>校验失败 → ROLLBACK（半消息丢弃,消费端不可见）</li>
  * </ol>
  *
- * <p>�?Producer 崩溃未返�?COMMIT/ROLLBACK,RocketMQ 回调 {@link #checkLocalTransaction}
- * 重新校验,决定最终状态�? *
+ * <p>若 Producer 崩溃未返回 COMMIT/ROLLBACK,RocketMQ 回调 {@link #checkLocalTransaction}
+ * 重新校验,决定最终状态。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -47,7 +50,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
     public RocketMQLocalTransactionState executeLocalTransaction(Message message, Object arg) {
         MessageRequest req = resolveRequest(message, arg);
         if (req == null) {
-            log.warn("[TxListener] executeLocalTransaction: 请求�?null,ROLLBACK");
+            log.warn("[TxListener] executeLocalTransaction: 请求为 null,ROLLBACK");
             return RocketMQLocalTransactionState.ROLLBACK;
         }
         try {
@@ -92,16 +95,18 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
     }
 
     /**
-     * �?RocketMQ Message + arg 中解�?MessageRequest�?     *
-     * <p>优先�?arg（sendMessageInTransaction 的第三个参数）解�?
-     * arg �?null 时从 message payload 解析�?     */
+     * 从 RocketMQ Message + arg 中解析 MessageRequest。
+     *
+     * <p>优先从 arg（sendMessageInTransaction 的第三个参数）解析,
+     * arg 为 null 时从 message payload 解析。
+     */
     private MessageRequest resolveRequest(Message<?> message, Object arg) {
         if (arg instanceof MessageRequest req) {
             return req;
         }
         if (arg != null) {
             try {
-                return JsonUtils.fromJson(JsonUtils.toJson(arg), MessageRequest.class);
+                return JsonUtils.parseObject(JsonUtils.toJson(arg), MessageRequest.class);
             } catch (Exception ignored) {
                 // fall through to payload parsing
             }
@@ -111,10 +116,10 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
         }
         Object payload = message.getPayload();
         if (payload instanceof String str) {
-            return JsonUtils.fromJson(str, MessageRequest.class);
+            return JsonUtils.parseObject(str, MessageRequest.class);
         }
         try {
-            return JsonUtils.fromJson(JsonUtils.toJson(payload), MessageRequest.class);
+            return JsonUtils.parseObject(JsonUtils.toJson(payload), MessageRequest.class);
         } catch (Exception e) {
             log.warn("[TxListener] resolveRequest: 解析失败: {}", e.getMessage());
             return null;
@@ -122,8 +127,9 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
     }
 
     /**
-     * 轻量校验：通道启用 + 模板存在�?ENABLED + 接收人非空�?     *
-     * @return null 表示校验通过,�?null 表示失败原因
+     * 轻量校验：通道启用 + 模板存在且 ENABLED + 接收人非空。
+     *
+     * @return null 表示校验通过,非 null 表示失败原因
      */
     private String validateRequest(MessageRequest req) {
         if (!StringUtils.hasText(req.getChannel())) {
@@ -133,18 +139,18 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
             return "模板编码为空";
         }
         if (!StringUtils.hasText(req.getReceiver())) {
-            return "接收人为�?;
+            return "接收人为空";
         }
         if (!channelRouter.isChannelEnabled(req.getChannel())) {
-            return "通道未启�? " + req.getChannel();
+            return "通道未启用: " + req.getChannel();
         }
         MsgTemplateDO tpl = templateService.loadByCodeAndChannel(
                 req.getTemplateCode(), req.getChannel(), null, TenantContext.getTenantId());
         if (tpl == null) {
-            return "模板不存�? " + req.getTemplateCode();
+            return "模板不存在: " + req.getTemplateCode();
         }
         if (!"ENABLED".equals(tpl.getStatus())) {
-            return "模板未启�? " + tpl.getStatus();
+            return "模板未启用: " + tpl.getStatus();
         }
         return null;
     }

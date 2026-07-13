@@ -23,13 +23,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * 消息编排引擎实现�? *
- * <p>P1-9: 基于 DAG 拓扑排序执行消息编排流程�? * <ol>
+ * 消息编排引擎实现。
+ *
+ * <p>P1-9: 基于 DAG 拓扑排序执行消息编排流程：
+ * <ol>
  *   <li>验证 DAG 合法性（无环检测）</li>
  *   <li>按拓扑序逐个执行节点</li>
  *   <li>节点依赖全部成功后才执行</li>
- *   <li>支持 SpEL 条件表达�?/li>
- *   <li>节点失败按策略处理：CONTINUE / ABORT / RETRY（最�?3 次）</li>
+ *   <li>支持 SpEL 条件表达式</li>
+ *   <li>节点失败按策略处理：CONTINUE / ABORT / RETRY（最多 3 次）</li>
  * </ol>
  *
  * @author ydsz-pmis-team
@@ -42,7 +44,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
 
     /** SpEL 表达式解析器（条件求值） */
     private static final ExpressionParser SPEL_PARSER = new SpelExpressionParser();
-    /** 节点最大重试次�?*/
+    /** 节点最大重试次数 */
     private static final int MAX_RETRY = 3;
 
     /** 消息发送服务（节点执行时调用） */
@@ -51,11 +53,11 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     @Override
     public OrchestrationResultVO execute(OrchestrationFlowDTO flow) {
         if (flow == null || CollectionUtils.isEmpty(flow.getNodes())) {
-            return new OrchestrationResultVO(null, "FAILED", 0, 0, 0, 0, Map.of(), "流程或节点为�?);
+            return new OrchestrationResultVO(null, "FAILED", 0, 0, 0, 0, Map.of(), "流程或节点为空");
         }
         String flowId = StringUtils.hasText(flow.getFlowId())
                 ? flow.getFlowId() : SnowflakeIdGenerator.nextIdStr();
-        log.info("[Orchestration] 流程开�? flowId={} nodes={}", flowId, flow.getNodes().size());
+        log.info("[Orchestration] 流程开始: flowId={} nodes={}", flowId, flow.getNodes().size());
 
         // DAG 校验
         List<String> topoOrder;
@@ -78,11 +80,12 @@ public class OrchestrationServiceImpl implements OrchestrationService {
 
         for (String nodeId : topoOrder) {
             OrchestrationNodeDTO node = nodeMap.get(nodeId);
-            // 检查依赖是否全部成�?            if (!CollectionUtils.isEmpty(node.getDependsOn())) {
+            // 检查依赖是否全部成功
+            if (!CollectionUtils.isEmpty(node.getDependsOn())) {
                 boolean allDepsSuccess = node.getDependsOn().stream()
                         .allMatch(dep -> Boolean.TRUE.equals(nodeSuccess.get(dep)));
                 if (!allDepsSuccess) {
-                    nodeResults.put(nodeId, "SKIPPED (依赖未成�?");
+                    nodeResults.put(nodeId, "SKIPPED (依赖未成功)");
                     skippedCount++;
                     continue;
                 }
@@ -96,12 +99,12 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                     Expression expr = SPEL_PARSER.parseExpression(node.getCondition());
                     Boolean shouldExecute = expr.getValue(ctx, Boolean.class);
                     if (Boolean.FALSE.equals(shouldExecute)) {
-                        nodeResults.put(nodeId, "SKIPPED (条件不满�?");
+                        nodeResults.put(nodeId, "SKIPPED (条件不满足)");
                         skippedCount++;
                         continue;
                     }
                 } catch (Exception e) {
-                    log.warn("[Orchestration] 条件表达式求值失�? nodeId={} err={}", nodeId, e.getMessage());
+                    log.warn("[Orchestration] 条件表达式求值失败: nodeId={} err={}", nodeId, e.getMessage());
                 }
             }
             // 执行节点
@@ -127,7 +130,8 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     }
 
     /**
-     * 执行单个编排节点（支持重试）�?     */
+     * 执行单个编排节点（支持重试）。
+     */
     private boolean executeNode(OrchestrationNodeDTO node, OrchestrationFlowDTO flow,
                                 Map<String, String> nodeResults) {
         int retryCount = "RETRY".equalsIgnoreCase(node.getOnFailure()) ? MAX_RETRY : 1;
@@ -168,9 +172,10 @@ public class OrchestrationServiceImpl implements OrchestrationService {
     }
 
     /**
-     * 拓扑排序（Kahn 算法），检测环�?     *
+     * 拓扑排序（Kahn 算法），检测环。
+     *
      * @param nodes 节点列表
-     * @return 拓扑序节�?ID 列表
+     * @return 拓扑序节点 ID 列表
      * @throws IllegalStateException 检测到环时抛出
      */
     private List<String> topologicalSort(List<OrchestrationNodeDTO> nodes) {

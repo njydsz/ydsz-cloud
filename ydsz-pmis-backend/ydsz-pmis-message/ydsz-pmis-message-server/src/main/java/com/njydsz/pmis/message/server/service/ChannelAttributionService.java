@@ -15,10 +15,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 跨通道转化归因服务（P2-1）�? *
- * <p>追踪同一 bizId 在多通道的发�?回执链路,计算每个通道的转化率�? * <ul>
- *   <li>发送数 �?送达�?�?已读�?�?点击�?/li>
- *   <li>按通道维度汇�?识别最优触达通道</li>
+ * 跨通道转化归因服务（P2-1）。
+ *
+ * <p>追踪同一 bizId 在多通道的发送/回执链路,计算每个通道的转化率：
+ * <ul>
+ *   <li>发送数 → 送达率 → 已读率 → 点击率</li>
+ *   <li>按通道维度汇总,识别最优触达通道</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -32,9 +34,11 @@ public class ChannelAttributionService {
     private final MsgLogMapper msgLogMapper;
 
     /**
-     * �?bizId 查询跨通道发送链路�?     *
+     * 按 bizId 查询跨通道发送链路。
+     *
      * @param bizId 业务单据 ID
-     * @return 发送日志列表（含多通道�?     */
+     * @return 发送日志列表（含多通道）
+     */
     public List<MsgLogDO> traceByBizId(String bizId) {
         if (bizId == null || bizId.isBlank()) {
             return List.of();
@@ -45,8 +49,10 @@ public class ChannelAttributionService {
     }
 
     /**
-     * 计算指定时间范围内各通道的转化漏斗�?     *
-     * @param startTime 开始时�?     * @param endTime   结束时间
+     * 计算指定时间范围内各通道的转化漏斗。
+     *
+     * @param startTime 开始时间
+     * @param endTime   结束时间
      * @return 通道转化统计列表
      */
     public List<ChannelFunnelStats> calculateFunnel(LocalDateTime startTime, LocalDateTime endTime) {
@@ -85,7 +91,8 @@ public class ChannelAttributionService {
     }
 
     /**
-     * 通道转化漏斗统计�?     */
+     * 通道转化漏斗统计。
+     */
     @Data
     public static class ChannelFunnelStats {
         private String channel;

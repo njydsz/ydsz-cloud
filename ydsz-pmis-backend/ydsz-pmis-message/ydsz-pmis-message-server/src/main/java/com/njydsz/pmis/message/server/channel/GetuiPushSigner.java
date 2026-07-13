@@ -4,8 +4,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
 /**
- * 个推（GeTui）V2 API 签名工具�? *
- * <p>签名算法：{@code SHA-256(appKey + timestamp + masterSecret)} 的十六进制小写串�? * 纯静态方法，可独立单元测试，零外部依赖�? *
+ * 个推（GeTui）V2 API 签名工具。
+ *
+ * <p>签名算法：{@code SHA-256(appKey + timestamp + masterSecret)} 的十六进制小写串。
+ * 纯静态方法，可独立单元测试，零外部依赖。
+ *
  * @author ydsz-pmis-team
  * @since 1.1.0
  */
@@ -15,9 +18,11 @@ public final class GetuiPushSigner {
     }
 
     /**
-     * 计算个推鉴权签名�?     *
+     * 计算个推鉴权签名。
+     *
      * @param appKey       个推 AppKey
-     * @param timestamp    时间戳（毫秒�?     * @param masterSecret MasterSecret
+     * @param timestamp    时间戳（毫秒）
+     * @param masterSecret MasterSecret
      * @return SHA-256 十六进制签名
      */
     public static String sign(String appKey, String timestamp, String masterSecret) {
@@ -32,9 +37,11 @@ public final class GetuiPushSigner {
     }
 
     /**
-     * 字节数组转十六进制小写串�?     *
+     * 字节数组转十六进制小写串。
+     *
      * @param bytes 字节数组
-     * @return 十六进制�?     */
+     * @return 十六进制串
+     */
     public static String bytesToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {

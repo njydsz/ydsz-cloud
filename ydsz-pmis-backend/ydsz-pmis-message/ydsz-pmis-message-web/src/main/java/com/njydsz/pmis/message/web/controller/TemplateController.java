@@ -1,13 +1,11 @@
 package com.njydsz.pmis.message.web.controller.template;
 
-import com.njydsz.pmis.common.audit.annotation.OperationLog;
-import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.message.domain.dto.template.TemplateAuditDTO;
 import com.njydsz.pmis.message.domain.dto.template.TemplateCreateDTO;
 import com.njydsz.pmis.message.domain.dto.template.TemplateQueryDTO;
@@ -49,7 +47,6 @@ public class TemplateController {
      */
     @Operation(summary = "创建模板")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_CREATE)
-    @OperationLog(module = "消息模板", action = "创建模板", bizType = "MESSAGE_TEMPLATE", saveResult = true)
     @Idempotent(key = "template:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public BaseResponse<MsgTemplateDO> create(@Valid @RequestBody TemplateCreateDTO dto) {
@@ -65,7 +62,6 @@ public class TemplateController {
      */
     @Operation(summary = "更新模板")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_UPDATE)
-    @OperationLog(module = "消息模板", action = "更新模板", bizType = "MESSAGE_TEMPLATE", saveDiff = true)
     @Idempotent(key = "template:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public BaseResponse<MsgTemplateDO> update(@PathVariable String id, @Valid @RequestBody TemplateCreateDTO dto) {
@@ -80,7 +76,6 @@ public class TemplateController {
      */
     @Operation(summary = "删除模板")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_DELETE)
-    @OperationLog(module = "消息模板", action = "删除模板", bizType = "MESSAGE_TEMPLATE")
     @Idempotent(key = "template:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public BaseResponse<Void> delete(@PathVariable String id) {
@@ -96,7 +91,6 @@ public class TemplateController {
      */
     @Operation(summary = "模板详情")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_VIEW)
-    @RateLimit(key = "template:query", qps = 30, windowSeconds = 60)
     @GetMapping("/{id}")
     public BaseResponse<MsgTemplateDO> getById(@PathVariable String id) {
         return BaseResponse.ok(templateService.getById(id));
@@ -110,7 +104,6 @@ public class TemplateController {
      */
     @Operation(summary = "模板分页")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_LIST)
-    @RateLimit(key = "template:page", qps = 20, windowSeconds = 60)
     @GetMapping("/page")
     public BaseResponse<Page<MsgTemplateDO>> page(TemplateQueryDTO query) {
         return BaseResponse.ok(templateService.page(query));
@@ -125,7 +118,6 @@ public class TemplateController {
      */
     @Operation(summary = "审核模板")
     @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_TEMPLATE_APPROVE)
-    @OperationLog(module = "消息模板", action = "审核模板", bizType = "MESSAGE_TEMPLATE")
     @Idempotent(key = "template:audit", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/{id}/audit")
     public BaseResponse<Void> audit(@PathVariable String id, @Valid @RequestBody TemplateAuditDTO dto) {

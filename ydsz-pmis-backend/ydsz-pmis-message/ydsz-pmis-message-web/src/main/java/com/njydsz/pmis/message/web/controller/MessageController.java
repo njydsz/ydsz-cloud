@@ -1,12 +1,11 @@
 package com.njydsz.pmis.message.web.controller.core;
 
-import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -64,7 +63,6 @@ public class MessageController {
      */
     @Operation(summary = "发送消息(基于共享请求)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-    @RateLimit(key = "message:send", qps = 5, windowSeconds = 60, message = "消息发送过于频繁，请稍后重试")
     @Idempotent(key = "message:send", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/send")
     public BaseResponse<MessageResult> send(@Valid @RequestBody MessageRequest request) {
@@ -79,7 +77,6 @@ public class MessageController {
      */
     @Operation(summary = "直接发送消息(本模块 DTO)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-    @RateLimit(key = "message:send", qps = 5, windowSeconds = 60, message = "消息发送过于频繁，请稍后重试")
     @Idempotent(key = "message:sendDirect", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/sendDirect")
     public BaseResponse<MessageResult> sendDirect(@Valid @RequestBody MessageSendDTO dto) {
@@ -95,7 +92,6 @@ public class MessageController {
      */
     @Operation(summary = "异步发送消息(投递 RocketMQ)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-    @RateLimit(key = "message:sendAsync", qps = 10, windowSeconds = 60, message = "异步发送过于频繁，请稍后重试")
     @Idempotent(key = "message:sendAsync", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/sendAsync")
     public BaseResponse<MessageResult> sendAsync(@Valid @RequestBody MessageRequest request) {
@@ -159,7 +155,6 @@ public class MessageController {
      */
     @Operation(summary = "批量发送消息(限制 100 条/批)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_MESSAGE_SEND)
-    @RateLimit(key = "message:batchSend", qps = 2, windowSeconds = 60, message = "批量发送频率受限，请稍后重试")
     @Idempotent(key = "message:batchSend", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/batchSend")
     public BaseResponse<BatchSendResult> batchSend(@Valid @RequestBody List<MessageRequest> requests,

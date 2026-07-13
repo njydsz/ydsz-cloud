@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.server.service.impl.receipt;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 import com.njydsz.pmis.message.domain.entity.core.MsgNotificationDO;
 import com.njydsz.pmis.message.domain.entity.config.MsgTraceDO;
@@ -23,9 +23,11 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 
 /**
- * 消息撤回服务实现�? *
- * <p>撤回通知校验归属后更�?recall_status=RECALLED 并推送前�?撤回消息委托 {@link MessageLogService#markRecalled};
- * 批量撤回�?bizType+bizId 统计受影响条数�? *
+ * 消息撤回服务实现。
+ *
+ * <p>撤回通知校验归属后更新 recall_status=RECALLED 并推送前端;撤回消息委托 {@link MessageLogService#markRecalled};
+ * 批量撤回按 bizType+bizId 统计受影响条数。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -42,7 +44,7 @@ public class RecallServiceImpl implements RecallService {
     private final RealtimePushService realtimePushService;
     /** 消息日志服务（撤回状态更新） */
     private final MessageLogService messageLogService;
-    /** 消息全链路追踪服�?*/
+    /** 消息全链路追踪服务 */
     private final MessageTraceService messageTraceService;
 
     @Override
@@ -53,7 +55,7 @@ public class RecallServiceImpl implements RecallService {
         }
         MsgNotificationDO n = msgNotificationMapper.selectById(notificationId);
         if (n == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "通知不存�? " + notificationId);
+            throw new SysException(StandardResultCode.NOT_FOUND, "通知不存在: " + notificationId);
         }
         if (!userId.equals(n.getReceiverId())) {
             throw new SysException(StandardResultCode.FORBIDDEN, "仅可撤回本人的通知");
@@ -73,33 +75,37 @@ public class RecallServiceImpl implements RecallService {
             throw new SysException(StandardResultCode.BAD_REQUEST, "日志 ID 不能为空");
         }
         messageLogService.markRecalled(logId);
-        // P0-4: 查找消息并通过 WebSocket 推送撤回事�?        MsgLogDO logDO = msgLogMapper.selectById(logId);
+        // P0-4: 查找消息并通过 WebSocket 推送撤回事件
+        MsgLogDO logDO = msgLogMapper.selectById(logId);
         if (logDO != null && StringUtils.hasText(logDO.getReceiver())) {
             realtimePushService.pushToUser(logDO.getReceiver(), "MESSAGE_RECALL", logDO.getMsgId());
             // P0-2: 记录撤回轨迹
             messageTraceService.recordTrace(logDO.getMsgId(),
                     MsgTraceDO.Node.RECALLED, "SUCCESS", logDO.getChannel(),
-                    "消息已撤�? logId=" + logId);
+                    "消息已撤回: logId=" + logId);
         }
         log.info("[Recall] 撤回消息: logId={}", logId);
         return true;
     }
 
     /**
-     * P0-4: �?msgId 撤回已发送消息�?     *
-     * <p>校验撤回时间窗口（默�?30 分钟），超时不可撤回�?     * 撤回后更新状态为 RECALLED 并推送前端撤回事件�?     */
+     * P0-4: 按 msgId 撤回已发送消息。
+     *
+     * <p>校验撤回时间窗口（默认 30 分钟），超时不可撤回。
+     * 撤回后更新状态为 RECALLED 并推送前端撤回事件。
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean recallByMsgId(String msgId) {
         if (!StringUtils.hasText(msgId)) {
             throw new SysException(StandardResultCode.BAD_REQUEST, "消息 ID 不能为空");
         }
-        // �?msgId 查询消息日志
+        // 按 msgId 查询消息日志
         MsgLogDO logDO = msgLogMapper.selectOne(new LambdaQueryWrapper<MsgLogDO>()
                 .eq(MsgLogDO::getMsgId, msgId)
                 .last("LIMIT 1"));
         if (logDO == null) {
-            throw new SysException(StandardResultCode.NOT_FOUND, "消息不存�? msgId=" + msgId);
+            throw new SysException(StandardResultCode.NOT_FOUND, "消息不存在: msgId=" + msgId);
         }
         // 校验撤回时间窗口
         if (logDO.getCreatedAt() != null) {
@@ -107,10 +113,11 @@ public class RecallServiceImpl implements RecallService {
                     logDO.getCreatedAt(), java.time.LocalDateTime.now()).toMinutes();
             if (minutesElapsed > RECALL_WINDOW_MINUTES) {
                 throw new SysException(StandardResultCode.BIZ_ERROR,
-                        "消息发送已超过 " + RECALL_WINDOW_MINUTES + " 分钟，不可撤�?);
+                        "消息发送已超过 " + RECALL_WINDOW_MINUTES + " 分钟，不可撤回");
             }
         }
-        // 校验是否已撤�?        if (RecallStatusEnum.RECALLED.name().equals(logDO.getRecallStatus())) {
+        // 校验是否已撤回
+        if (RecallStatusEnum.RECALLED.name().equals(logDO.getRecallStatus())) {
             throw new SysException(StandardResultCode.BIZ_ERROR, "消息已撤回，无需重复操作");
         }
         // 执行撤回
@@ -123,8 +130,8 @@ public class RecallServiceImpl implements RecallService {
         }
         // P0-2: 记录撤回轨迹
         messageTraceService.recordTrace(msgId, MsgTraceDO.Node.RECALLED,
-                "SUCCESS", logDO.getChannel(), "消息已撤�? msgId=" + msgId);
-        log.info("[Recall] �?msgId 撤回成功: msgId={} channel={}", msgId, logDO.getChannel());
+                "SUCCESS", logDO.getChannel(), "消息已撤回: msgId=" + msgId);
+        log.info("[Recall] 按 msgId 撤回成功: msgId={} channel={}", msgId, logDO.getChannel());
         return true;
     }
 
@@ -132,7 +139,7 @@ public class RecallServiceImpl implements RecallService {
     @Transactional(rollbackFor = Exception.class)
     public int recallBatch(String bizType, String bizId) {
         if (!StringUtils.hasText(bizType) || !StringUtils.hasText(bizId)) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "业务类型与单�?ID 不能为空");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "业务类型与单据 ID 不能为空");
         }
         // 通知批量撤回
         int notifCount = msgNotificationMapper.update(null, new LambdaUpdateWrapper<MsgNotificationDO>()

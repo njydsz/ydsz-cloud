@@ -17,13 +17,15 @@ import java.util.List;
 public interface NotificationService {
 
     /**
-     * 发送站内通知(单发或群�?
+     * 发送站内通知(单发或群发)
      *
-     * @param dto 发送参�?     * @return 发送数�?     */
+     * @param dto 发送参数
+     * @return 发送数量
+     */
     int send(NotificationSendDTO dto);
 
     /**
-     * 查询用户收件�?分页)
+     * 查询用户收件箱(分页)
      *
      * @param userId 用户 ID
      * @param query  查询参数
@@ -32,14 +34,16 @@ public interface NotificationService {
     Page<MsgNotificationDO> inbox(String userId, NotificationQueryDTO query);
 
     /**
-     * 统计用户未读通知�?     *
+     * 统计用户未读通知数
+     *
      * @param userId 用户 ID
      * @return 未读数量
      */
     long countUnread(String userId);
 
     /**
-     * 标记单条通知为已�?     *
+     * 标记单条通知为已读
+     *
      * @param userId 用户 ID
      * @param id     通知 ID
      * @return true 表示标记成功
@@ -47,7 +51,8 @@ public interface NotificationService {
     boolean markRead(String userId, String id);
 
     /**
-     * 标记该用户所有未读通知为已�?     *
+     * 标记该用户所有未读通知为已读
+     *
      * @param userId 用户 ID
      * @return 影响行数
      */
@@ -71,7 +76,8 @@ public interface NotificationService {
     boolean recall(String userId, String id);
 
     /**
-     * P1-2: 分组查询收件箱（�?message_group 折叠,每组返回最新一�?未读数）�?     *
+     * P1-2: 分组查询收件箱（按 message_group 折叠,每组返回最新一条+未读数）。
+     *
      * @param userId 用户 ID
      * @param query  查询参数
      * @return 分组列表
@@ -79,9 +85,11 @@ public interface NotificationService {
     Page<NotificationGroupVO> inboxGrouped(String userId, NotificationQueryDTO query);
 
     /**
-     * P1-2: 查询指定分组的所有通知�?     *
+     * P1-2: 查询指定分组的所有通知。
+     *
      * @param userId       用户 ID
-     * @param messageGroup 分组�?     * @return 通知列表
+     * @param messageGroup 分组键
+     * @return 通知列表
      */
     List<MsgNotificationDO> listByGroup(String userId, String messageGroup);
 }

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.server.service.batch;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.domain.query.PageQuery;
+import com.njydsz.pmis.common.entity.PageQuery;
 import com.njydsz.pmis.message.domain.entity.batch.MsgAggregateDO;
 
 /**
@@ -13,24 +13,29 @@ import com.njydsz.pmis.message.domain.entity.batch.MsgAggregateDO;
 public interface AggregateService {
 
     /**
-     * 追加消息到聚合批�?不存在则新建批次
+     * 追加消息到聚合批次,不存在则新建批次
      *
-     * @param group    聚合�?     * @param receiver 接收�?     * @param channel  通道
+     * @param group    聚合组
+     * @param receiver 接收人
+     * @param channel  通道
      * @param tenantId 租户 ID
      * @return 聚合批次实体
      */
     MsgAggregateDO appendOrStart(String group, String receiver, String channel, String tenantId);
 
     /**
-     * 刷新到期的聚合批�?发送摘�?
+     * 刷新到期的聚合批次(发送摘要)
      *
      * @return 已发送批次数
      */
     int flushDue();
 
     /**
-     * 按聚合组 + 接收人刷新批�?     *
-     * @param group    聚合�?     * @param receiver 接收�?     * @return 已发送批次数
+     * 按聚合组 + 接收人刷新批次
+     *
+     * @param group    聚合组
+     * @param receiver 接收人
+     * @return 已发送批次数
      */
     int flushByGroup(String group, String receiver);
 

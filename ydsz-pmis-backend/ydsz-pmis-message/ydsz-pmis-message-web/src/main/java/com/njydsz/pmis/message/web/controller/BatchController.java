@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.web.controller.batch;
 
-import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.Idempotent;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.BaseResponse;

@@ -5,7 +5,17 @@
 #  端口:      9004
 # =====================================================================
 
+server:
+  port: 9004
+  servlet:
+    context-path: /
+
 spring:
+  profiles: dev
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: NON_NULL
   mail:
     host: ${MAIL_HOST:smtp.example.com}
     port: ${MAIL_PORT:465}
@@ -91,8 +101,19 @@ rocketmq:
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
   type-aliases-package: com.njydsz.pmis.message.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    banner: false
+    db-config:
+      id-type: AUTO
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
 
-# Resilience4j 限流（共享配置提供 retry/circuitbreaker，此处仅保留 ratelimiter）
+# Resilience4j 限流
 resilience4j:
   ratelimiter:
     instances:
@@ -104,3 +125,27 @@ resilience4j:
         limit-for-period: 1000
         limit-refresh-period: 1s
         timeout-duration: 0
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    root: INFO
+    "[com.njydsz.pmis]": DEBUG
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  prometheus:
+    metrics:
+      export:
+        enabled: true

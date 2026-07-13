@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.server.service.impl.core;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.custom.SysException;
+import com.njydsz.pmis.common.exception.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.dto.core.MessageFeedbackDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgFeedbackDO;
@@ -17,7 +17,8 @@ import org.springframework.util.StringUtils;
 import java.util.List;
 
 /**
- * P1-4: 消息质量反馈服务实现�? *
+ * P1-4: 消息质量反馈服务实现。
+ *
  * @author ydsz-pmis-team
  * @since 1.3.0
  */
@@ -46,7 +47,7 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
             throw new SysException(StandardResultCode.BAD_REQUEST, "用户 ID 不能为空");
         }
         if (dto.getRating() == null || dto.getRating() < 1 || dto.getRating() > 5) {
-            throw new SysException(StandardResultCode.BAD_REQUEST, "评分必须�?1-5 之间");
+            throw new SysException(StandardResultCode.BAD_REQUEST, "评分必须在 1-5 之间");
         }
 
         MsgFeedbackDO feedback = new MsgFeedbackDO();
@@ -58,9 +59,10 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
         feedback.setContent(dto.getContent());
         feedback.setTenantId(TenantContext.getTenantId());
 
-        // 通道和业务类型由前端或上游传入，此处不强制补�?
+        // 通道和业务类型由前端或上游传入，此处不强制补全
+
         msgFeedbackMapper.insert(feedback);
-        log.info("[Feedback] 用户反馈已提�? userId={} msgId={} rating={} type={}",
+        log.info("[Feedback] 用户反馈已提交: userId={} msgId={} rating={} type={}",
                 dto.getUserId(), dto.getMsgId(), dto.getRating(), dto.getFeedbackType());
         return feedback.getId();
     }
