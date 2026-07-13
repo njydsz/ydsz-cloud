@@ -15,6 +15,7 @@ import com.njydsz.pmis.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.pmis.message.infra.mapper.core.MsgNotificationMapper;
 import com.njydsz.pmis.message.server.realtime.RealtimePushService;
 import com.njydsz.pmis.message.server.service.core.NotificationService;
+import com.njydsz.pmis.message.server.service.impl.NotificationSearchService;
 import com.njydsz.pmis.message.server.service.receipt.RecallService;
 import com.njydsz.pmis.message.domain.vo.NotificationGroupVO;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,8 @@ public class NotificationServiceImpl implements NotificationService {
     private final MsgNotificationMapper msgNotificationMapper;
     /** 实时推送服务（WebSocket / 离线缓存） */
     private final RealtimePushService realtimePushService;
+    /** P2-18: 站内通知全文搜索索引 */
+    private final NotificationSearchService notificationSearchService;
     /** 消息撤回服务 */
     private final RecallService recallService;
 
@@ -60,6 +63,8 @@ public class NotificationServiceImpl implements NotificationService {
         for (String rid : receiverIds) {
             MsgNotificationDO entity = buildEntity(dto, rid);
             msgNotificationMapper.insert(entity);
+            // P2-18: 构建全文搜索索引
+            notificationSearchService.index(rid, entity.getId(), dto.getTitle(), entity.getContent());
             // 实时推送（P0-4: 离线时自动缓存到 Redis，上线时补偿）
             realtimePushService.pushToUserWithOffline(rid, "NOTIFICATION", entity);
             count++;
@@ -121,6 +126,8 @@ public class NotificationServiceImpl implements NotificationService {
         for (String id : ids) {
             MsgNotificationDO n = msgNotificationMapper.selectById(id);
             if (n != null && userId.equals(n.getReceiverId())) {
+                // P2-18: 移除全文搜索索引
+                notificationSearchService.removeIndex(userId, id, n.getTitle(), n.getContent());
                 msgNotificationMapper.deleteById(id);
             }
         }

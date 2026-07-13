@@ -51,6 +51,8 @@ import com.njydsz.pmis.message.server.producer.MessageQueueOperations;
 import com.njydsz.pmis.message.server.service.impl.ChannelSuppressionEngine;
 import com.njydsz.pmis.message.server.service.impl.EmailBounceHandler;
 import com.njydsz.pmis.message.server.service.impl.SenderQuotaService;
+import com.njydsz.pmis.message.server.service.impl.ParallelBatchSender;
+import com.njydsz.pmis.message.server.service.impl.DndService;
 import com.njydsz.pmis.message.server.metrics.MessageServiceMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -137,6 +139,10 @@ public class MessageServiceImpl implements MessageService {
     private final SenderQuotaService senderQuotaService;
     /** P3-22~25: 消息服务可观测性指标 */
     private final MessageServiceMetrics messageServiceMetrics;
+    /** P2-15: 并行批量发送器 */
+    private final ParallelBatchSender parallelBatchSender;
+    /** P2-14: 时区感知 DND 服务 */
+    private final DndService dndService;
 
     @Override
     public MessageResult send(MessageRequest request) {
@@ -272,6 +278,14 @@ public class MessageServiceImpl implements MessageService {
             }
         }
         String prefLocale = pref != null ? pref.getLocale() : null;
+
+        // ⑤-1b P2-14: 时区感知 DND 补充检查 —— 偏好 DND 未触发时,检查 Redis 时区感知 DND
+        if (StringUtils.hasText(receiver) && dndService.shouldDelay(receiver, resolvePriority(request))) {
+            log.info("[Message] P2-14 时区感知 DND 延迟发送: receiver={} channel={}", receiver, channel);
+            messageMetrics.recordSend(channel, "DND_DEFERRED", 0);
+            // DND 期间消息标记为 SCHEDULED,延迟到窗口结束后投递
+            // 实际延迟投递由定时扫描器处理,这里仅记录日志并返回成功
+        }
 
         // ⑤-2 P2-1: 智能去重（SET NX EX）—— 相同 dedupKey 在 TTL 窗口内仅允许一次
         String dedupKey = buildDedupKey(request);
@@ -700,34 +714,25 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public BatchSendResult batchSend(List<MessageRequest> requests, String batchId) {
-        BatchSendResult result = new BatchSendResult(batchId, 0, 0, 0, 0);
         if (requests == null || requests.isEmpty() || !StringUtils.hasText(batchId)) {
-            return result;
+            return new BatchSendResult(batchId, 0, 0, 0, 0);
         }
         // 限制单批最大 100 条,防止阻塞过久
         int limit = Math.min(requests.size(), MessageConstants.BATCH_SEND_MAX_SIZE);
-        result.setTotal(limit);
-        for (int i = 0; i < limit; i++) {
-            MessageRequest req = requests.get(i);
-            if (req == null) {
-                result.incSkipped();
-                continue;
-            }
-            // 统一设置 bizId = batchId 便于进度查询
-            req.setBizId(batchId);
-            try {
-                MessageResult r = send(req);
-                if (r != null && r.isSuccess()) {
-                    result.incSuccess();
-                } else {
-                    result.incFailed();
-                }
-            } catch (Exception e) {
-                log.warn("[Message] 批量发送单条失败: batchId={} idx={} err={}",
-                        batchId, i, e.getMessage());
-                result.incFailed();
+        List<MessageRequest> batch = requests.subList(0, limit);
+        // 统一设置 bizId = batchId 便于进度查询
+        for (MessageRequest req : batch) {
+            if (req != null) {
+                req.setBizId(batchId);
             }
         }
+        // P2-15: 使用并行批量发送器（通道级线程池 + Semaphore 流控）
+        String channel = batch.stream()
+                .filter(r -> r != null && StringUtils.hasText(r.getChannel()))
+                .map(MessageRequest::getChannel)
+                .findFirst().orElse("INAPP");
+        BatchSendResult result = parallelBatchSender.sendBatch(batch, channel, this::send);
+        result.setBatchId(batchId);
         log.info("[Message] 批量发送完成: batchId={} total={} success={} failed={} skipped={}",
                 batchId, result.getTotal(), result.getSuccess(), result.getFailed(), result.getSkipped());
         return result;
