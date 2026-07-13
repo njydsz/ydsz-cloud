@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.search.provider;
 
+import java.util.List;
+
 import lombok.Builder;
 import lombok.Data;
 
@@ -22,7 +24,7 @@ public class SearchProviderContext {
     private String tenantId;
 
     /** 用户角色列表 */
-    private java.util.List<String> roles;
+    private List<String> roles;
 
     /** 用户部门 ID */
     private String deptId;

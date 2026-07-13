@@ -1,0 +1,78 @@
+# NextWiki 网盘知识库服务本地配置
+# Nacos 配置中心覆盖以下配置
+
+server:
+  port: 8800
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 500MB
+
+# MyBatis-Plus
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# NextWiki 配置
+nextwiki:
+  # 文档预览
+  preview:
+    libreoffice-path: ${LIBREOFFICE_PATH:soffice}
+    temp-dir: ${java.io.tmpdir}/nextwiki-preview
+  # 缩略图
+  thumbnail:
+    temp-dir: ${java.io.tmpdir}/nextwiki-thumbnail
+  # AI 摘要
+  ai:
+    llm-enabled: false
+    llm-api-url: ${LLM_API_URL:}
+    llm-api-key: ${LLM_API_KEY:}
+  # CDN
+  cdn:
+    enabled: false
+    provider: aliyun
+    domain: ${CDN_DOMAIN:}
+    access-key: ${CDN_ACCESS_KEY:}
+    secret-key: ${CDN_SECRET_KEY:}
+  # 病毒扫描
+  virus-scan:
+    enabled: false
+    host: ${CLAMAV_HOST:localhost}
+    port: ${CLAMAV_PORT:3310}
+  # OCR
+  ocr:
+    enabled: false
+    provider: tesseract
+    tesseract-path: ${TESSERACT_PATH:tesseract}
+    language: chi_sim+eng
+  # 下载限流
+  download:
+    rate-limit-per-minute: 30
+    ip-rate-limit-per-minute: 100
+    signed-url-expire-seconds: 3600
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+# OpenAPI
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html

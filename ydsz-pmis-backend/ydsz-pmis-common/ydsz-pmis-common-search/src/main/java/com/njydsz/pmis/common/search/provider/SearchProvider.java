@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.search.provider;
 import java.util.Collections;
 import java.util.List;
 
+import com.njydsz.pmis.common.search.api.SearchFilter;
 import com.njydsz.pmis.common.search.api.SearchHit;
 import com.njydsz.pmis.common.search.api.SearchRequest;
 import com.njydsz.pmis.common.search.core.IndexDocument;
@@ -102,7 +103,7 @@ public interface SearchProvider<T> {
      * @param context 提供者上下文
      * @return 过滤条件列表，为空表示无额外过滤
      */
-    default List<com.njydsz.pmis.common.search.api.SearchFilter> getFilters(SearchProviderContext context) {
+    default List<SearchFilter> getFilters(SearchProviderContext context) {
         return Collections.emptyList();
     }
 
