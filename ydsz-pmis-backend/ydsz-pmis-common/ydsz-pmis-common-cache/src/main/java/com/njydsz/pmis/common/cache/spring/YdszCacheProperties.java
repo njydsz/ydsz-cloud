@@ -4,7 +4,9 @@ import com.njydsz.pmis.common.cache.builder.CacheType;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -12,20 +14,33 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>配置前缀：{@code ydsz.cache}
  *
- * <p>配置示例：
+ * <p>配置示例（全局默认 + per-cache 覆盖）：
  * <pre>
  * ydsz:
  *   cache:
  *     type: TINYLFU
- *     cache-names: users,orders,config
  *     maximum-size: 1000
  *     expire-after-write: 30
  *     expire-time-unit: MINUTES
  *     allow-null-values: true
+ *     # per-cache 配置（覆盖全局默认）
+ *     caches:
+ *       users:
+ *         type: LRU
+ *         maximum-size: 5000
+ *         expire-after-write: 60
+ *       orders:
+ *         type: TINYLFU
+ *         maximum-size: 20000
+ *         expire-after-write: 10
+ *       config:
+ *         type: CONCURRENT
+ *         maximum-size: 100
+ *         expire-after-write: 0
  * </pre>
  *
  * @author Marvin Lee
- * @version 3.5.0
+ * @version 4.0.0
  */
 @ConfigurationProperties(prefix = "ydsz.cache")
 public class YdszCacheProperties {
@@ -61,6 +76,62 @@ public class YdszCacheProperties {
 
     /** 是否使用软引用值 */
     private boolean softValues = false;
+
+    /**
+     * per-cache 配置映射
+     * <p>key 为缓存名称，value 为该缓存的独立配置（覆盖全局默认值）
+     */
+    private Map<String, CacheConfig> caches = new LinkedHashMap<>();
+
+    /**
+     * Per-cache 配置类
+     */
+    public static class CacheConfig {
+        private CacheType type;
+        private Long maximumSize;
+        private Long expireAfterWrite;
+        private TimeUnit expireTimeUnit;
+        private Integer initialCapacity;
+        private Long expireAfterAccess;
+        private Long refreshAfterWrite;
+        private Boolean recordStats;
+        private Boolean weakKeys;
+        private Boolean weakValues;
+        private Boolean softValues;
+
+        public CacheType getType() { return type; }
+        public void setType(CacheType type) { this.type = type; }
+
+        public Long getMaximumSize() { return maximumSize; }
+        public void setMaximumSize(Long maximumSize) { this.maximumSize = maximumSize; }
+
+        public Long getExpireAfterWrite() { return expireAfterWrite; }
+        public void setExpireAfterWrite(Long expireAfterWrite) { this.expireAfterWrite = expireAfterWrite; }
+
+        public TimeUnit getExpireTimeUnit() { return expireTimeUnit; }
+        public void setExpireTimeUnit(TimeUnit expireTimeUnit) { this.expireTimeUnit = expireTimeUnit; }
+
+        public Integer getInitialCapacity() { return initialCapacity; }
+        public void setInitialCapacity(Integer initialCapacity) { this.initialCapacity = initialCapacity; }
+
+        public Long getExpireAfterAccess() { return expireAfterAccess; }
+        public void setExpireAfterAccess(Long expireAfterAccess) { this.expireAfterAccess = expireAfterAccess; }
+
+        public Long getRefreshAfterWrite() { return refreshAfterWrite; }
+        public void setRefreshAfterWrite(Long refreshAfterWrite) { this.refreshAfterWrite = refreshAfterWrite; }
+
+        public Boolean getRecordStats() { return recordStats; }
+        public void setRecordStats(Boolean recordStats) { this.recordStats = recordStats; }
+
+        public Boolean getWeakKeys() { return weakKeys; }
+        public void setWeakKeys(Boolean weakKeys) { this.weakKeys = weakKeys; }
+
+        public Boolean getWeakValues() { return weakValues; }
+        public void setWeakValues(Boolean weakValues) { this.weakValues = weakValues; }
+
+        public Boolean getSoftValues() { return softValues; }
+        public void setSoftValues(Boolean softValues) { this.softValues = softValues; }
+    }
 
     public CacheType getType() {
         return type;
@@ -164,5 +235,13 @@ public class YdszCacheProperties {
 
     public void setSoftValues(boolean softValues) {
         this.softValues = softValues;
+    }
+
+    public Map<String, CacheConfig> getCaches() {
+        return caches;
+    }
+
+    public void setCaches(Map<String, CacheConfig> caches) {
+        this.caches = caches;
     }
 }

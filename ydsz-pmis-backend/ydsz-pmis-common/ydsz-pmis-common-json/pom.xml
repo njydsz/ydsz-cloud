@@ -19,11 +19,10 @@
     </properties>
 
     <dependencies>
-        <!-- Lombok（父 POM 已提供） -->
+        <!-- Lombok（父 POM 已管理版本和 annotation processor） -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <scope>provided</scope>
         </dependency>
 
         <!-- SLF4J（可选） -->
@@ -97,34 +96,4 @@
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>21</source>
-                    <target>21</target>
-                    <release>21</release>
-                    <compilerArgs>
-                        <arg>--add-modules=jdk.incubator.vector</arg>
-                        <arg>-Xlint:all</arg>
-                    </compilerArgs>
-                    <showWarnings>true</showWarnings>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifestEntries>
-                            <Automatic-Module-Name>com.njydsz.pmis.common.json</Automatic-Module-Name>
-                            <Implementation-Version>${project.version}</Implementation-Version>
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
 </project>

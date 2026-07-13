@@ -24,7 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.objectweb.asm.Opcodes.*;
-import com.njydsz.pmis.common.json.asm.generated;
 
 /**
  * ASM Bean 序列化器/反序列化器生成器
@@ -296,7 +295,7 @@ public final class AsmBeanCodecGenerator {
 
         ClassWriter cw = new ClassWriter(ASM_FLAGS);
         cw.visit(V1_8, ACC_PUBLIC | ACC_FINAL, classInternalName, null, 
-                 "java/lang/Object", new String[]{"com/remisoft/json/asm/AsmSerializer"});
+                 "java/lang/Object", new String[]{"com/njydsz/pmis/common/json/asm/AsmSerializer"});
 
         Field[] fields = getSerializableFields(beanType);
 
@@ -307,13 +306,13 @@ public final class AsmBeanCodecGenerator {
                 Class<?> elementType = getListElementType(field);
                 String cachedFieldName = "_list_" + field.getName();
                 cw.visitField(ACC_PRIVATE, cachedFieldName, 
-                    "Lcom/remisoft/json/asm/AsmSerializer;", null, null).visitEnd();
+                    "Lcom/njydsz/pmis/common/json/asm/AsmSerializer;", null, null).visitEnd();
                 cachedFields.add(new FieldCacheInfo(cachedFieldName, elementType));
             } else if (typeCode == 15) {
                 Class<?> nestedType = field.getType();
                 String cachedFieldName = "_nested_" + field.getName();
                 cw.visitField(ACC_PRIVATE, cachedFieldName, 
-                    "Lcom/remisoft/json/asm/AsmSerializer;", null, null).visitEnd();
+                    "Lcom/njydsz/pmis/common/json/asm/AsmSerializer;", null, null).visitEnd();
                 cachedFields.add(new FieldCacheInfo(cachedFieldName, nestedType));
             }
         }
@@ -326,10 +325,10 @@ public final class AsmBeanCodecGenerator {
         for (FieldCacheInfo info : cachedFields) {
             mv.visitVarInsn(ALOAD, 0);
             mv.visitLdcInsn(org.objectweb.asm.Type.getType(getTypeDescriptorForClass(info.cachedType)));
-            mv.visitMethodInsn(INVOKESTATIC, "com/remisoft/json/asm/AsmBeanCodecGenerator", 
-                "safeGetSerializer", "(Ljava/lang/Class;)Lcom/remisoft/json/asm/AsmSerializer;", false);
+            mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/pmis/common/json/asm/AsmBeanCodecGenerator", 
+                "safeGetSerializer", "(Ljava/lang/Class;)Lcom/njydsz/pmis/common/json/asm/AsmSerializer;", false);
             mv.visitFieldInsn(PUTFIELD, classInternalName, info.fieldName, 
-                "Lcom/remisoft/json/asm/AsmSerializer;");
+                "Lcom/njydsz/pmis/common/json/asm/AsmSerializer;");
         }
 
         mv.visitInsn(RETURN);
@@ -337,7 +336,7 @@ public final class AsmBeanCodecGenerator {
         mv.visitEnd();
 
         mv = cw.visitMethod(ACC_PUBLIC, "serialize", 
-                           "(Ljava/lang/Object;Lcom/remisoft/json/writer/JSONWriter;)V", null, null);
+                           "(Ljava/lang/Object;Lcom/njydsz/pmis/common/json/writer/JSONWriter;)V", null, null);
         mv.visitCode();
 
         int estimatedSize = 2;
@@ -364,16 +363,16 @@ public final class AsmBeanCodecGenerator {
         // writer.preAllocate(estimatedSize) — 一次性容量预分配，后续所有 ensureCapacity 检查均为 no-op
         mv.visitVarInsn(ALOAD, 2);
         mv.visitLdcInsn(estimatedSize);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/writer/JSONWriter", "preAllocate", "(I)V", false);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter", "preAllocate", "(I)V", false);
 
         // char[] buf = writer.buf — 直接字段访问，消除 getBuffer() 方法调用开销
         mv.visitVarInsn(ALOAD, 2);
-        mv.visitFieldInsn(GETFIELD, "com/remisoft/json/writer/JSONWriter", "buf", "[C");
+        mv.visitFieldInsn(GETFIELD, "com/njydsz/pmis/common/json/writer/JSONWriter", "buf", "[C");
         mv.visitVarInsn(ASTORE, 3);
 
         // int pos = writer.pos — 直接字段访问，消除 getPosition() 方法调用开销
         mv.visitVarInsn(ALOAD, 2);
-        mv.visitFieldInsn(GETFIELD, "com/remisoft/json/writer/JSONWriter", "pos", "I");
+        mv.visitFieldInsn(GETFIELD, "com/njydsz/pmis/common/json/writer/JSONWriter", "pos", "I");
         mv.visitVarInsn(ISTORE, 4);
 
         // buf[pos++] = '{' — 直接写入结构字符，消除 writer.write("{") 方法调用
@@ -420,7 +419,7 @@ public final class AsmBeanCodecGenerator {
 
                 // 检查是否需要转义（1 次方法调用 vs 原来 4 次方法调用的 sync/re-read）
                 mv.visitVarInsn(ALOAD, 5);
-                mv.visitMethodInsn(INVOKESTATIC, "com/remisoft/json/writer/JSONWriter",
+                mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/pmis/common/json/writer/JSONWriter",
                     "needsEscape", "(Ljava/lang/String;)Z", false);
 
                 Label slowPath = new Label();
@@ -459,7 +458,7 @@ public final class AsmBeanCodecGenerator {
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 5);
                 mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/writer/JSONWriter",
+                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter",
                     "writeStringToBuf", "(Ljava/lang/String;I)I", false);
                 mv.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mv);
@@ -510,7 +509,7 @@ public final class AsmBeanCodecGenerator {
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(DLOAD, 6);
                 mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/writer/JSONWriter",
+                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter",
                     "writeDoubleToBuf", "(DI)I", false);
                 mv.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mv);
@@ -531,7 +530,7 @@ public final class AsmBeanCodecGenerator {
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(FLOAD, 6);
                 mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/writer/JSONWriter",
+                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter",
                     "writeFloatToBuf", "(FI)I", false);
                 mv.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mv);
@@ -606,7 +605,7 @@ public final class AsmBeanCodecGenerator {
                 mv.visitVarInsn(ALOAD, 5);
                 mv.visitMethodInsn(INVOKEVIRTUAL, dateInternalName, "toString", "()Ljava/lang/String;", false);
                 mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/writer/JSONWriter",
+                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter",
                     "writeStringToBuf", "(Ljava/lang/String;I)I", false);
                 mv.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mv);
@@ -627,7 +626,7 @@ public final class AsmBeanCodecGenerator {
                 mv.visitMethodInsn(INVOKEVIRTUAL, "java/util/Date", "toInstant", "()Ljava/time/Instant;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, "java/time/Instant", "toString", "()Ljava/lang/String;", false);
                 mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/writer/JSONWriter",
+                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter",
                     "writeStringToBuf", "(Ljava/lang/String;I)I", false);
                 mv.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mv);
@@ -647,14 +646,14 @@ public final class AsmBeanCodecGenerator {
                 String cachedFieldName = "_list_" + field.getName();
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
-                    "Lcom/remisoft/json/asm/AsmSerializer;");
+                    "Lcom/njydsz/pmis/common/json/asm/AsmSerializer;");
                 Label hasSerializerLabel = new Label();
                 mv.visitJumpInsn(IFNONNULL, hasSerializerLabel);
 
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 5);
                 mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/writer/JSONWriter",
+                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter",
                     "writeCollectionToBuf", "(Ljava/util/Collection;I)I", false);
                 mv.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mv);
@@ -665,10 +664,10 @@ public final class AsmBeanCodecGenerator {
                 mv.visitVarInsn(ALOAD, 5);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
-                    "Lcom/remisoft/json/asm/AsmSerializer;");
+                    "Lcom/njydsz/pmis/common/json/asm/AsmSerializer;");
                 mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/writer/JSONWriter",
-                    "writeCollectionWithSerializerToBuf", "(Ljava/util/Collection;Lcom/remisoft/json/asm/AsmSerializer;I)I", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter",
+                    "writeCollectionWithSerializerToBuf", "(Ljava/util/Collection;Lcom/njydsz/pmis/common/json/asm/AsmSerializer;I)I", false);
                 mv.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mv);
 
@@ -687,7 +686,7 @@ public final class AsmBeanCodecGenerator {
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 5);
                 mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/writer/JSONWriter",
+                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter",
                     "writeMapToBuf", "(Ljava/util/Map;I)I", false);
                 mv.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mv);
@@ -711,15 +710,15 @@ public final class AsmBeanCodecGenerator {
                 String cachedFieldName = "_nested_" + field.getName();
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
-                    "Lcom/remisoft/json/asm/AsmSerializer;");
+                    "Lcom/njydsz/pmis/common/json/asm/AsmSerializer;");
                 Label hasSerializerLabel = new Label();
                 mv.visitJumpInsn(IFNONNULL, hasSerializerLabel);
 
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 5);
                 mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKESTATIC, "com/remisoft/json/asm/AsmBeanCodecGenerator",
-                    "serializeNestedToBuf", "(Lcom/remisoft/json/writer/JSONWriter;Ljava/lang/Object;I)I", false);
+                mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/pmis/common/json/asm/AsmBeanCodecGenerator",
+                    "serializeNestedToBuf", "(Lcom/njydsz/pmis/common/json/writer/JSONWriter;Ljava/lang/Object;I)I", false);
                 mv.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mv);
                 mv.visitJumpInsn(GOTO, endNull);
@@ -727,12 +726,12 @@ public final class AsmBeanCodecGenerator {
                 mv.visitLabel(hasSerializerLabel);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
-                    "Lcom/remisoft/json/asm/AsmSerializer;");
+                    "Lcom/njydsz/pmis/common/json/asm/AsmSerializer;");
                 mv.visitVarInsn(ALOAD, 5);
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ILOAD, 4);
-                mv.visitMethodInsn(INVOKESTATIC, "com/remisoft/json/asm/AsmBeanCodecGenerator",
-                    "serializeWithSerializerToBuf", "(Lcom/remisoft/json/asm/AsmSerializer;Ljava/lang/Object;Lcom/remisoft/json/writer/JSONWriter;I)I", false);
+                mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/pmis/common/json/asm/AsmBeanCodecGenerator",
+                    "serializeWithSerializerToBuf", "(Lcom/njydsz/pmis/common/json/asm/AsmSerializer;Ljava/lang/Object;Lcom/njydsz/pmis/common/json/writer/JSONWriter;I)I", false);
                 mv.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mv);
 
@@ -748,7 +747,7 @@ public final class AsmBeanCodecGenerator {
         // writer.pos = pos — 直接字段写入，消除 setPosition() 方法调用开销
         mv.visitVarInsn(ALOAD, 2);
         mv.visitVarInsn(ILOAD, 4);
-        mv.visitFieldInsn(PUTFIELD, "com/remisoft/json/writer/JSONWriter", "pos", "I");
+        mv.visitFieldInsn(PUTFIELD, "com/njydsz/pmis/common/json/writer/JSONWriter", "pos", "I");
 
         mv.visitInsn(RETURN);
         mv.visitMaxs(8, 8);
@@ -758,17 +757,17 @@ public final class AsmBeanCodecGenerator {
         // 用于列表序列化场景，外层已预分配足够容量
         // 实现方式：直接读取 buf/pos，写入字段，写回 pos，跳过 preAllocate
         MethodVisitor mvInline = cw.visitMethod(ACC_PUBLIC, "serializeInline",
-                           "(Ljava/lang/Object;Lcom/remisoft/json/writer/JSONWriter;)V", null, null);
+                           "(Ljava/lang/Object;Lcom/njydsz/pmis/common/json/writer/JSONWriter;)V", null, null);
         mvInline.visitCode();
 
         // char[] buf = writer.buf
         mvInline.visitVarInsn(ALOAD, 2);
-        mvInline.visitFieldInsn(GETFIELD, "com/remisoft/json/writer/JSONWriter", "buf", "[C");
+        mvInline.visitFieldInsn(GETFIELD, "com/njydsz/pmis/common/json/writer/JSONWriter", "buf", "[C");
         mvInline.visitVarInsn(ASTORE, 3);
 
         // int pos = writer.pos
         mvInline.visitVarInsn(ALOAD, 2);
-        mvInline.visitFieldInsn(GETFIELD, "com/remisoft/json/writer/JSONWriter", "pos", "I");
+        mvInline.visitFieldInsn(GETFIELD, "com/njydsz/pmis/common/json/writer/JSONWriter", "pos", "I");
         mvInline.visitVarInsn(ISTORE, 4);
 
         // buf[pos++] = '{'
@@ -809,7 +808,7 @@ public final class AsmBeanCodecGenerator {
                 mvInline.visitLabel(notNullLabel);
                 mvInline.visitVarInsn(ASTORE, 5);
                 mvInline.visitVarInsn(ALOAD, 5);
-                mvInline.visitMethodInsn(INVOKESTATIC, "com/remisoft/json/writer/JSONWriter",
+                mvInline.visitMethodInsn(INVOKESTATIC, "com/njydsz/pmis/common/json/writer/JSONWriter",
                     "needsEscape", "(Ljava/lang/String;)Z", false);
                 Label slowPath = new Label();
                 mvInline.visitJumpInsn(IFNE, slowPath);
@@ -833,7 +832,7 @@ public final class AsmBeanCodecGenerator {
                 mvInline.visitVarInsn(ALOAD, 2);
                 mvInline.visitVarInsn(ALOAD, 5);
                 mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/writer/JSONWriter",
+                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter",
                     "writeStringToBuf", "(Ljava/lang/String;I)I", false);
                 mvInline.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mvInline);
@@ -903,7 +902,7 @@ public final class AsmBeanCodecGenerator {
                 mvInline.visitVarInsn(ALOAD, 2);
                 mvInline.visitVarInsn(DLOAD, 6);
                 mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/writer/JSONWriter",
+                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter",
                     "writeDoubleToBuf", "(DI)I", false);
                 mvInline.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mvInline);
@@ -922,7 +921,7 @@ public final class AsmBeanCodecGenerator {
                 mvInline.visitVarInsn(ALOAD, 2);
                 mvInline.visitVarInsn(FLOAD, 6);
                 mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/writer/JSONWriter",
+                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter",
                     "writeFloatToBuf", "(FI)I", false);
                 mvInline.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mvInline);
@@ -959,7 +958,7 @@ public final class AsmBeanCodecGenerator {
                 mvInline.visitVarInsn(ALOAD, 5);
                 mvInline.visitMethodInsn(INVOKEVIRTUAL, dateInternalName, "toString", "()Ljava/lang/String;", false);
                 mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/writer/JSONWriter",
+                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter",
                     "writeStringToBuf", "(Ljava/lang/String;I)I", false);
                 mvInline.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mvInline);
@@ -978,7 +977,7 @@ public final class AsmBeanCodecGenerator {
                 mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/util/Date", "toInstant", "()Ljava/time/Instant;", false);
                 mvInline.visitMethodInsn(INVOKEVIRTUAL, "java/time/Instant", "toString", "()Ljava/lang/String;", false);
                 mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/writer/JSONWriter",
+                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter",
                     "writeStringToBuf", "(Ljava/lang/String;I)I", false);
                 mvInline.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mvInline);
@@ -995,13 +994,13 @@ public final class AsmBeanCodecGenerator {
                 String cachedFieldName = "_list_" + field.getName();
                 mvInline.visitVarInsn(ALOAD, 0);
                 mvInline.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
-                    "Lcom/remisoft/json/asm/AsmSerializer;");
+                    "Lcom/njydsz/pmis/common/json/asm/AsmSerializer;");
                 Label hasSerializerLabel = new Label();
                 mvInline.visitJumpInsn(IFNONNULL, hasSerializerLabel);
                 mvInline.visitVarInsn(ALOAD, 2);
                 mvInline.visitVarInsn(ALOAD, 5);
                 mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/writer/JSONWriter",
+                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter",
                     "writeCollectionToBuf", "(Ljava/util/Collection;I)I", false);
                 mvInline.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mvInline);
@@ -1011,10 +1010,10 @@ public final class AsmBeanCodecGenerator {
                 mvInline.visitVarInsn(ALOAD, 5);
                 mvInline.visitVarInsn(ALOAD, 0);
                 mvInline.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
-                    "Lcom/remisoft/json/asm/AsmSerializer;");
+                    "Lcom/njydsz/pmis/common/json/asm/AsmSerializer;");
                 mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/writer/JSONWriter",
-                    "writeCollectionWithSerializerToBuf", "(Ljava/util/Collection;Lcom/remisoft/json/asm/AsmSerializer;I)I", false);
+                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter",
+                    "writeCollectionWithSerializerToBuf", "(Ljava/util/Collection;Lcom/njydsz/pmis/common/json/asm/AsmSerializer;I)I", false);
                 mvInline.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mvInline);
                 mvInline.visitLabel(endNull);
@@ -1030,7 +1029,7 @@ public final class AsmBeanCodecGenerator {
                 mvInline.visitVarInsn(ALOAD, 2);
                 mvInline.visitVarInsn(ALOAD, 5);
                 mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/writer/JSONWriter",
+                mvInline.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter",
                     "writeMapToBuf", "(Ljava/util/Map;I)I", false);
                 mvInline.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mvInline);
@@ -1047,26 +1046,26 @@ public final class AsmBeanCodecGenerator {
                 String cachedFieldName = "_nested_" + field.getName();
                 mvInline.visitVarInsn(ALOAD, 0);
                 mvInline.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
-                    "Lcom/remisoft/json/asm/AsmSerializer;");
+                    "Lcom/njydsz/pmis/common/json/asm/AsmSerializer;");
                 Label hasSerializerLabel = new Label();
                 mvInline.visitJumpInsn(IFNONNULL, hasSerializerLabel);
                 mvInline.visitVarInsn(ALOAD, 2);
                 mvInline.visitVarInsn(ALOAD, 5);
                 mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKESTATIC, "com/remisoft/json/asm/AsmBeanCodecGenerator",
-                    "serializeNestedToBuf", "(Lcom/remisoft/json/writer/JSONWriter;Ljava/lang/Object;I)I", false);
+                mvInline.visitMethodInsn(INVOKESTATIC, "com/njydsz/pmis/common/json/asm/AsmBeanCodecGenerator",
+                    "serializeNestedToBuf", "(Lcom/njydsz/pmis/common/json/writer/JSONWriter;Ljava/lang/Object;I)I", false);
                 mvInline.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mvInline);
                 mvInline.visitJumpInsn(GOTO, endNull);
                 mvInline.visitLabel(hasSerializerLabel);
                 mvInline.visitVarInsn(ALOAD, 0);
                 mvInline.visitFieldInsn(GETFIELD, classInternalName, cachedFieldName,
-                    "Lcom/remisoft/json/asm/AsmSerializer;");
+                    "Lcom/njydsz/pmis/common/json/asm/AsmSerializer;");
                 mvInline.visitVarInsn(ALOAD, 5);
                 mvInline.visitVarInsn(ALOAD, 2);
                 mvInline.visitVarInsn(ILOAD, 4);
-                mvInline.visitMethodInsn(INVOKESTATIC, "com/remisoft/json/asm/AsmBeanCodecGenerator",
-                    "serializeWithSerializerToBuf", "(Lcom/remisoft/json/asm/AsmSerializer;Ljava/lang/Object;Lcom/remisoft/json/writer/JSONWriter;I)I", false);
+                mvInline.visitMethodInsn(INVOKESTATIC, "com/njydsz/pmis/common/json/asm/AsmBeanCodecGenerator",
+                    "serializeWithSerializerToBuf", "(Lcom/njydsz/pmis/common/json/asm/AsmSerializer;Ljava/lang/Object;Lcom/njydsz/pmis/common/json/writer/JSONWriter;I)I", false);
                 mvInline.visitVarInsn(ISTORE, 4);
                 emitReadBufFromWriter(mvInline);
                 mvInline.visitLabel(endNull);
@@ -1081,7 +1080,7 @@ public final class AsmBeanCodecGenerator {
         // writer.pos = pos
         mvInline.visitVarInsn(ALOAD, 2);
         mvInline.visitVarInsn(ILOAD, 4);
-        mvInline.visitFieldInsn(PUTFIELD, "com/remisoft/json/writer/JSONWriter", "pos", "I");
+        mvInline.visitFieldInsn(PUTFIELD, "com/njydsz/pmis/common/json/writer/JSONWriter", "pos", "I");
 
         mvInline.visitInsn(RETURN);
         mvInline.visitMaxs(8, 8);
@@ -1146,7 +1145,7 @@ public final class AsmBeanCodecGenerator {
      */
     private static void emitReadBufFromWriter(MethodVisitor mv) {
         mv.visitVarInsn(ALOAD, 2);
-        mv.visitFieldInsn(GETFIELD, "com/remisoft/json/writer/JSONWriter", "buf", "[C");
+        mv.visitFieldInsn(GETFIELD, "com/njydsz/pmis/common/json/writer/JSONWriter", "buf", "[C");
         mv.visitVarInsn(ASTORE, 3);
     }
 
@@ -1165,7 +1164,7 @@ public final class AsmBeanCodecGenerator {
         mv.visitVarInsn(ILOAD, 6);     // int_value
         mv.visitVarInsn(ALOAD, 3);     // buf
         mv.visitVarInsn(ILOAD, 4);     // pos
-        mv.visitMethodInsn(INVOKESTATIC, "com/remisoft/json/number/NumberUtils", "writeInt", "(I[CI)I", false);
+        mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/pmis/common/json/number/NumberUtils", "writeInt", "(I[CI)I", false);
         mv.visitInsn(IADD);
         mv.visitVarInsn(ISTORE, 4);    // pos = pos + result
     }
@@ -1185,7 +1184,7 @@ public final class AsmBeanCodecGenerator {
         mv.visitVarInsn(LLOAD, 6);     // long_value
         mv.visitVarInsn(ALOAD, 3);     // buf
         mv.visitVarInsn(ILOAD, 4);     // pos
-        mv.visitMethodInsn(INVOKESTATIC, "com/remisoft/json/number/NumberUtils", "writeLong", "(J[CI)I", false);
+        mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/pmis/common/json/number/NumberUtils", "writeLong", "(J[CI)I", false);
         mv.visitInsn(IADD);
         mv.visitVarInsn(ISTORE, 4);    // pos = pos + result
     }
@@ -1217,7 +1216,7 @@ public final class AsmBeanCodecGenerator {
 
         ClassWriter cw = new ClassWriter(ASM_FLAGS);
         cw.visit(V1_8, ACC_PUBLIC | ACC_FINAL, classInternalName, null, 
-                 "java/lang/Object", new String[]{"com/remisoft/json/asm/AsmDeserializer"});
+                 "java/lang/Object", new String[]{"com/njydsz/pmis/common/json/asm/AsmDeserializer"});
 
         Field[] fields = getSerializableFields(beanType);
 
@@ -1228,13 +1227,13 @@ public final class AsmBeanCodecGenerator {
                 Class<?> elementType = getListElementType(field);
                 String cachedFieldName = "_list_deser_" + field.getName();
                 cw.visitField(ACC_PRIVATE, cachedFieldName, 
-                    "Lcom/remisoft/json/asm/AsmDeserializer;", null, null).visitEnd();
+                    "Lcom/njydsz/pmis/common/json/asm/AsmDeserializer;", null, null).visitEnd();
                 cachedDeserFields.add(new FieldCacheInfo(cachedFieldName, elementType));
             } else if (typeCode == 15) {
                 Class<?> nestedType = field.getType();
                 String cachedFieldName = "_nested_deser_" + field.getName();
                 cw.visitField(ACC_PRIVATE, cachedFieldName, 
-                    "Lcom/remisoft/json/asm/AsmDeserializer;", null, null).visitEnd();
+                    "Lcom/njydsz/pmis/common/json/asm/AsmDeserializer;", null, null).visitEnd();
                 cachedDeserFields.add(new FieldCacheInfo(cachedFieldName, nestedType));
             }
         }
@@ -1247,10 +1246,10 @@ public final class AsmBeanCodecGenerator {
         for (FieldCacheInfo info : cachedDeserFields) {
             mv.visitVarInsn(ALOAD, 0);
             mv.visitLdcInsn(org.objectweb.asm.Type.getType(getTypeDescriptorForClass(info.cachedType)));
-            mv.visitMethodInsn(INVOKESTATIC, "com/remisoft/json/asm/AsmBeanCodecGenerator", 
-                "safeGetDeserializer", "(Ljava/lang/Class;)Lcom/remisoft/json/asm/AsmDeserializer;", false);
+            mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/pmis/common/json/asm/AsmBeanCodecGenerator", 
+                "safeGetDeserializer", "(Ljava/lang/Class;)Lcom/njydsz/pmis/common/json/asm/AsmDeserializer;", false);
             mv.visitFieldInsn(PUTFIELD, classInternalName, info.fieldName, 
-                "Lcom/remisoft/json/asm/AsmDeserializer;");
+                "Lcom/njydsz/pmis/common/json/asm/AsmDeserializer;");
         }
 
         mv.visitInsn(RETURN);
@@ -1258,7 +1257,7 @@ public final class AsmBeanCodecGenerator {
         mv.visitEnd();
 
         mv = cw.visitMethod(ACC_PUBLIC, "deserialize", 
-                           "(Lcom/remisoft/json/reader/JSONReader;)Ljava/lang/Object;", null, null);
+                           "(Lcom/njydsz/pmis/common/json/reader/JSONReader;)Ljava/lang/Object;", null, null);
         mv.visitCode();
 
         mv.visitTypeInsn(NEW, beanInternalName);
@@ -1267,9 +1266,9 @@ public final class AsmBeanCodecGenerator {
         mv.visitVarInsn(ASTORE, 2);
 
         mv.visitVarInsn(ALOAD, 1);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "skipWhitespace", "()V", false);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "skipWhitespace", "()V", false);
         mv.visitVarInsn(ALOAD, 1);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "readChar", "()C", false);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "readChar", "()C", false);
         mv.visitInsn(POP);
         
         Label loopStart = new Label();
@@ -1278,7 +1277,7 @@ public final class AsmBeanCodecGenerator {
         mv.visitLabel(loopStart);
         
         mv.visitVarInsn(ALOAD, 1);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "readFieldNameHash", "()J", false);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "readFieldNameHash", "()J", false);
         mv.visitVarInsn(LSTORE, 3);
         
         mv.visitVarInsn(LLOAD, 3);
@@ -1310,20 +1309,20 @@ public final class AsmBeanCodecGenerator {
             if (typeCode == 1) {
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 1);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "readStringDirect", "()Ljava/lang/String;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "readStringDirect", "()Ljava/lang/String;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, "(Ljava/lang/String;)V", false);
                 
             } else if (typeCode == 2) {
                 if (field.getType() == Integer.class) {
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "readInt", "()I", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "readInt", "()I", false);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/Integer", "valueOf", "(I)Ljava/lang/Integer;", false);
                     mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, "(Ljava/lang/Integer;)V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "readInt", "()I", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "readInt", "()I", false);
                     mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, "(I)V", false);
                 }
                 
@@ -1331,13 +1330,13 @@ public final class AsmBeanCodecGenerator {
                 if (field.getType() == Long.class) {
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "readLong", "()J", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "readLong", "()J", false);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
                     mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, "(Ljava/lang/Long;)V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "readLong", "()J", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "readLong", "()J", false);
                     mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, "(J)V", false);
                 }
                 
@@ -1345,13 +1344,13 @@ public final class AsmBeanCodecGenerator {
                 if (field.getType() == Double.class) {
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "readDouble", "()D", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "readDouble", "()D", false);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/Double", "valueOf", "(D)Ljava/lang/Double;", false);
                     mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, "(Ljava/lang/Double;)V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "readDouble", "()D", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "readDouble", "()D", false);
                     mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, "(D)V", false);
                 }
                 
@@ -1359,13 +1358,13 @@ public final class AsmBeanCodecGenerator {
                 if (field.getType() == Float.class) {
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "readFloat", "()F", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "readFloat", "()F", false);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/Float", "valueOf", "(F)Ljava/lang/Float;", false);
                     mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, "(Ljava/lang/Float;)V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "readFloat", "()F", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "readFloat", "()F", false);
                     mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, "(F)V", false);
                 }
                 
@@ -1373,35 +1372,35 @@ public final class AsmBeanCodecGenerator {
                 if (field.getType() == Boolean.class) {
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "readBoolean", "()Z", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "readBoolean", "()Z", false);
                     mv.visitMethodInsn(INVOKESTATIC, "java/lang/Boolean", "valueOf", "(Z)Ljava/lang/Boolean;", false);
                     mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, "(Ljava/lang/Boolean;)V", false);
                 } else {
                     mv.visitVarInsn(ALOAD, 2);
                     mv.visitVarInsn(ALOAD, 1);
-                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "readBoolean", "()Z", false);
+                    mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "readBoolean", "()Z", false);
                     mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, "(Z)V", false);
                 }
 
             } else if (typeCode == 10) {
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 1);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "readStringDirect", "()Ljava/lang/String;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "readStringDirect", "()Ljava/lang/String;", false);
                 mv.visitMethodInsn(INVOKESTATIC, "java/time/LocalDateTime", "parse", "(Ljava/lang/CharSequence;)Ljava/time/LocalDateTime;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, "(Ljava/time/LocalDateTime;)V", false);
 
             } else if (typeCode == 11) {
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 1);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "readStringDirect", "()Ljava/lang/String;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "readStringDirect", "()Ljava/lang/String;", false);
                 mv.visitMethodInsn(INVOKESTATIC, "java/time/LocalDate", "parse", "(Ljava/lang/CharSequence;)Ljava/time/LocalDate;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, "(Ljava/time/LocalDate;)V", false);
 
             } else if (typeCode == 12) {
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 1);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "readStringDirect", "()Ljava/lang/String;", false);
-                mv.visitMethodInsn(INVOKESTATIC, "com/remisoft/json/asm/AsmBeanCodecGenerator", 
+                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "readStringDirect", "()Ljava/lang/String;", false);
+                mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/pmis/common/json/asm/AsmBeanCodecGenerator", 
                     "parseDate", "(Ljava/lang/String;)Ljava/util/Date;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, "(Ljava/util/Date;)V", false);
 
@@ -1413,16 +1412,16 @@ public final class AsmBeanCodecGenerator {
                 mv.visitLdcInsn(org.objectweb.asm.Type.getType(getTypeDescriptorForClass(elementType)));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, classInternalName, cachedDeserFieldName, 
-                    "Lcom/remisoft/json/asm/AsmDeserializer;");
-                mv.visitMethodInsn(INVOKESTATIC, "com/remisoft/json/asm/AsmBeanCodecGenerator", 
+                    "Lcom/njydsz/pmis/common/json/asm/AsmDeserializer;");
+                mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/pmis/common/json/asm/AsmBeanCodecGenerator", 
                     "deserializeListFieldWithDeserializer", 
-                    "(Lcom/remisoft/json/reader/JSONReader;Ljava/lang/Class;Lcom/remisoft/json/asm/AsmDeserializer;)Ljava/util/List;", false);
+                    "(Lcom/njydsz/pmis/common/json/reader/JSONReader;Ljava/lang/Class;Lcom/njydsz/pmis/common/json/asm/AsmDeserializer;)Ljava/util/List;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, "(Ljava/util/List;)V", false);
 
             } else if (typeCode == 14) {
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 1);
-                mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "readObjectMap", "()Ljava/util/Map;", false);
+                mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "readObjectMap", "()Ljava/util/Map;", false);
                 mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, "(Ljava/util/Map;)V", false);
 
             } else if (typeCode == 15) {
@@ -1432,7 +1431,7 @@ public final class AsmBeanCodecGenerator {
 
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, classInternalName, cachedDeserFieldName, 
-                    "Lcom/remisoft/json/asm/AsmDeserializer;");
+                    "Lcom/njydsz/pmis/common/json/asm/AsmDeserializer;");
                 Label hasDeserLabel = new Label();
                 Label endDeserLabel = new Label();
                 mv.visitJumpInsn(IFNONNULL, hasDeserLabel);
@@ -1440,8 +1439,8 @@ public final class AsmBeanCodecGenerator {
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 1);
                 mv.visitLdcInsn(org.objectweb.asm.Type.getType(getTypeDescriptorForClass(nestedType)));
-                mv.visitMethodInsn(INVOKESTATIC, "com/remisoft/json/asm/AsmBeanCodecGenerator", 
-                    "deserializeNestedField", "(Lcom/remisoft/json/reader/JSONReader;Ljava/lang/Class;)Ljava/lang/Object;", false);
+                mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/pmis/common/json/asm/AsmBeanCodecGenerator", 
+                    "deserializeNestedField", "(Lcom/njydsz/pmis/common/json/reader/JSONReader;Ljava/lang/Class;)Ljava/lang/Object;", false);
                 mv.visitTypeInsn(CHECKCAST, nestedTypeInternalName);
                 mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, 
                     "(" + getTypeDescriptor(nestedType) + ")V", false);
@@ -1451,10 +1450,10 @@ public final class AsmBeanCodecGenerator {
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, classInternalName, cachedDeserFieldName, 
-                    "Lcom/remisoft/json/asm/AsmDeserializer;");
+                    "Lcom/njydsz/pmis/common/json/asm/AsmDeserializer;");
                 mv.visitVarInsn(ALOAD, 1);
-                mv.visitMethodInsn(INVOKEINTERFACE, "com/remisoft/json/asm/AsmDeserializer",
-                    "deserialize", "(Lcom/remisoft/json/reader/JSONReader;)Ljava/lang/Object;", true);
+                mv.visitMethodInsn(INVOKEINTERFACE, "com/njydsz/pmis/common/json/asm/AsmDeserializer",
+                    "deserialize", "(Lcom/njydsz/pmis/common/json/reader/JSONReader;)Ljava/lang/Object;", true);
                 mv.visitTypeInsn(CHECKCAST, nestedTypeInternalName);
                 mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, setterName, 
                     "(" + getTypeDescriptor(nestedType) + ")V", false);
@@ -1468,7 +1467,7 @@ public final class AsmBeanCodecGenerator {
         }
         
         mv.visitVarInsn(ALOAD, 1);
-        mv.visitMethodInsn(INVOKEVIRTUAL, "com/remisoft/json/reader/JSONReader", "skipValue", "()V", false);
+        mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/reader/JSONReader", "skipValue", "()V", false);
         mv.visitJumpInsn(GOTO, loopStart);
         
         mv.visitLabel(loopEnd);

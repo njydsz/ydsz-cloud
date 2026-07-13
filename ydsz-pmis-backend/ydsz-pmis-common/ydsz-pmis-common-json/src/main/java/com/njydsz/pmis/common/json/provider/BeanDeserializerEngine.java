@@ -14,8 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import com.njydsz.pmis.common.json.reader.JSONReader;
-import com.njydsz.pmis.common.json.reader.JSONReader.getPooledReader;
-import com.njydsz.pmis.common.json.reader.JSONReader.returnPooledReader;
+import com.njydsz.pmis.common.json.reader.JSONReader;
 
 /**
  * Bean 反序列化策略引擎
@@ -126,7 +125,7 @@ final class BeanDeserializerEngine {
     static <E> List<E> deserializeBeanListWithAsm(String json, Class<E> elementClass,
             AsmDeserializer<E> asmDeserializer) {
         JSONReader reader =
-            getPooledReader(json);
+            JSONReader.getPooledReader(json);
 
         try {
             reader.skipWhitespace();
@@ -169,7 +168,7 @@ final class BeanDeserializerEngine {
 
             return result;
         } finally {
-            returnPooledReader(reader);
+            JSONReader.returnPooledReader(reader);
         }
     }
 

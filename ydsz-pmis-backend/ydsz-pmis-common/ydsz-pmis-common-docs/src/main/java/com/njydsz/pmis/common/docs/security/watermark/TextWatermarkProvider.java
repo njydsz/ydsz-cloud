@@ -11,11 +11,12 @@ import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState;
+import org.apache.pdfbox.util.Matrix;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
 import java.awt.Color;
-import java.awt.geom.AffineTransform;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -71,8 +72,7 @@ public class TextWatermarkProvider implements WatermarkProvider {
                         float pageHeight = page.getMediaBox().getHeight();
 
                         // 设置透明度
-                        com.fasterxml.jackson.databind.ObjectMapper mapper = null; // placeholder, remove
-                        var extState = new org.apache.pdfbox.pdmodel.graphics.state.PDExtendedGraphicsState();
+                        PDExtendedGraphicsState extState = new PDExtendedGraphicsState();
                         extState.setNonStrokingAlphaConstant(ALPHA);
                         extState.setStrokingAlphaConstant(ALPHA);
                         contentStream.setGraphicsStateParameters(extState);
@@ -82,9 +82,14 @@ public class TextWatermarkProvider implements WatermarkProvider {
                         float x = (pageWidth - textWidth * (float) Math.cos(ROTATION)) / 2;
                         float y = (pageHeight - textWidth * (float) Math.sin(ROTATION)) / 2;
 
+                        // 使用 Matrix 设置旋转和位移
+                        float cos = (float) Math.cos(ROTATION);
+                        float sin = (float) Math.sin(ROTATION);
+                        Matrix matrix = new Matrix(cos, sin, -sin, cos, x, y);
+
                         contentStream.beginText();
                         contentStream.setFont(font, FONT_SIZE);
-                        contentStream.setTextMatrix(AffineTransform.getRotateInstance(ROTATION, x, y));
+                        contentStream.setTextMatrix(matrix);
                         contentStream.setNonStrokingColor(Color.GRAY);
                         contentStream.showText(watermarkText);
                         contentStream.endText();

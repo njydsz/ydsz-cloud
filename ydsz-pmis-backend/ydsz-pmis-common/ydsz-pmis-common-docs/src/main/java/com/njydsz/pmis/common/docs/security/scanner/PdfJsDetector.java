@@ -6,11 +6,8 @@ import com.njydsz.pmis.common.docs.enums.SecurityLevel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
-import org.apache.pdfbox.pdmodel.common.filespecification.PDComplexFileSpecification;
-import org.apache.pdfbox.pdmodel.common.filespecification.PDEmbeddedFile;
-import org.apache.pdfbox.pdmodel.interactive.action.PDAction;
+import org.apache.pdfbox.pdmodel.PDDocumentNameDictionary;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionJavaScript;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
@@ -61,9 +58,8 @@ public class PdfJsDetector implements DocumentSecurityScanner {
                 PDDocumentCatalog catalog = document.getDocumentCatalog();
 
                 // 1. 检测 OpenAction 中的 JavaScript
-                PDAction openAction = catalog.getOpenAction();
-                if (openAction instanceof PDActionJavaScript jsAction) {
-                    String jsCode = jsAction.getJavascript();
+                var openAction = catalog.getOpenAction();
+                if (openAction instanceof PDActionJavaScript) {
                     findings.add(SecurityScanResult.SecurityFinding.builder()
                             .type("pdf_js")
                             .description("检测到 PDF OpenAction 中的 JavaScript 脚本")
@@ -99,7 +95,7 @@ public class PdfJsDetector implements DocumentSecurityScanner {
                     }
                     for (PDAnnotation ann : annotations) {
                         if (ann instanceof PDAnnotationLink link) {
-                            PDAction action = link.getAction();
+                            var action = link.getAction();
                             if (action instanceof PDActionURI uriAction) {
                                 String uri = uriAction.getURI();
                                 if (uri != null && isSuspiciousUri(uri)) {

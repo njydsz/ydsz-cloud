@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -27,28 +28,109 @@ import java.util.Map;
  *   <li>限制导入：支持限制导入条目数量</li>
  * </ul>
  *
- * <p>使用示例：
- * <pre>{@code
- * // 导出到文件
- * CacheExportImport.exportCache(cache, "cache.dat");
- *
- * // 从文件导入
- * CacheExportImport.importCache(cache, "cache.dat");
- *
- * // 带过滤导出
- * CacheExportImport.exportCacheWithFilter(cache, "cache.dat",
- *     (key, value) -> key.toString().startsWith("user:"));
- *
- * // 限制数量导入
- * CacheExportImport.importCacheWithLimit(cache, "cache.dat", 1000);
- * }</pre>
+ * <p>安全优化（P1 修复）：
+ * <ul>
+ *   <li>反序列化使用 {@link ObjectInputFilter} 白名单机制，仅允许 JDK 核心类型</li>
+ *   <li>限制反序列化深度（≤5）、引用数（≤500000）、字节数（≤256MB）</li>
+ *   <li>限制导入 Map 大小，防止 OOM 攻击</li>
+ * </ul>
  *
  * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @version 4.0.0
  */
 public class CacheExportImport {
 
+    /**
+     * 最大允许的反序列化深度
+     */
+    private static final int MAX_DEPTH = 5;
+
+    /**
+     * 最大允许的引用数量
+     */
+    private static final long MAX_REFERENCES = 500_000L;
+
+    /**
+     * 最大允许的反序列化字节数（256MB）
+     */
+    private static final long MAX_STREAM_BYTES = 256L * 1024 * 1024;
+
+    /**
+     * 默认最大导入条目数
+     */
+    private static final int DEFAULT_MAX_ENTRIES = 1_000_000;
+
+    /**
+     * 反序列化白名单前缀
+     */
+    private static final String[] ALLOWED_PACKAGE_PREFIXES = {
+            "java.lang.",
+            "java.util.",
+            "java.math.",
+            "java.time.",
+            "java.lang.reflect.",
+            "sun.reflect.annotation.",
+    };
+
+    /**
+     * 创建安全的 ObjectInputStream，配置反序列化过滤器
+     *
+     * @param fis 文件输入流
+     * @return 配置了安全过滤器的 ObjectInputStream
+     * @throws IOException 如果创建流失败
+     */
+    private static ObjectInputStream createSafeObjectInputStream(FileInputStream fis) throws IOException {
+        ObjectInputStream ois = new ObjectInputStream(fis);
+        ois.setObjectInputFilter(filterInfo -> {
+            // 限制反序列化深度
+            if (filterInfo.depth() > MAX_DEPTH) {
+                return ObjectInputFilter.Status.REJECTED;
+            }
+            // 限制引用数量
+            if (filterInfo.references() > MAX_REFERENCES) {
+                return ObjectInputFilter.Status.REJECTED;
+            }
+            // 限制字节数
+            if (filterInfo.streamBytes() > MAX_STREAM_BYTES) {
+                return ObjectInputFilter.Status.REJECTED;
+            }
+            // 白名单类检查
+            if (filterInfo.serialClass() != null) {
+                String className = filterInfo.serialClass().getName();
+                for (String prefix : ALLOWED_PACKAGE_PREFIXES) {
+                    if (className.startsWith(prefix)) {
+                        return ObjectInputFilter.Status.ALLOWED;
+                    }
+                }
+                return ObjectInputFilter.Status.REJECTED;
+            }
+            return ObjectInputFilter.Status.UNDECIDED;
+        });
+        return ois;
+    }
+
+    /**
+     * 验证导入的 Map 大小
+     *
+     * @param data    导入的 Map
+     * @param maxEntries 最大允许条目数
+     * @throws IOException 如果超过限制
+     */
+    private static void validateMapSize(Map<?, ?> data, int maxEntries) throws IOException {
+        if (data.size() > maxEntries) {
+            throw new IOException("导入数据量超过限制: " + data.size() + " > " + maxEntries);
+        }
+    }
+
+    /**
+     * 导出缓存数据到序列化文件
+     *
+     * @param cache    缓存实例
+     * @param filePath 文件路径
+     * @param <K>      键类型（必须实现 Serializable）
+     * @param <V>      值类型（必须实现 Serializable）
+     * @throws IOException 如果导出失败
+     */
     public static <K extends Serializable, V extends Serializable> void exportCache(
             Cache<K, V> cache, String filePath) throws IOException {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath))) {
@@ -63,14 +145,27 @@ public class CacheExportImport {
         }
     }
 
+    /**
+     * 从序列化文件导入缓存数据
+     *
+     * @param cache      缓存实例
+     * @param filePath   文件路径
+     * @param keyClass   键类型
+     * @param valueClass 值类型
+     * @param <K>        键类型
+     * @param <V>        值类型
+     * @throws IOException            如果导入失败
+     * @throws ClassNotFoundException 如果反序列化类未找到
+     */
     public static <K, V> void importCache(
             Cache<K, V> cache, String filePath, Class<K> keyClass, Class<V> valueClass) throws IOException, ClassNotFoundException {
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filePath))) {
+        try (ObjectInputStream ois = createSafeObjectInputStream(new FileInputStream(filePath))) {
             Object obj = ois.readObject();
             if (!(obj instanceof Map)) {
                 throw new ClassCastException("Expected Map, got " + obj.getClass().getName());
             }
             Map<?, ?> data = (Map<?, ?>) obj;
+            validateMapSize(data, DEFAULT_MAX_ENTRIES);
             for (Map.Entry<?, ?> entry : data.entrySet()) {
                 K key = keyClass.cast(entry.getKey());
                 V value = valueClass.cast(entry.getValue());
@@ -79,6 +174,15 @@ public class CacheExportImport {
         }
     }
 
+    /**
+     * 导出缓存数据到文本文件
+     *
+     * @param cache    缓存实例
+     * @param filePath 文件路径
+     * @param <K>      键类型（必须实现 Serializable）
+     * @param <V>      值类型（必须实现 Serializable）
+     * @throws IOException 如果导出失败
+     */
     public static <K extends Serializable, V extends Serializable> void exportCacheToText(
             Cache<K, V> cache, String filePath) throws IOException {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath))) {
@@ -92,8 +196,18 @@ public class CacheExportImport {
         }
     }
 
+    /**
+     * 从文本文件导入缓存数据
+     *
+     * @param cache    缓存实例
+     * @param filePath 文件路径
+     * @param parser   文本解析器
+     * @param <K>      键类型
+     * @param <V>      值类型
+     * @throws IOException 如果导入失败
+     */
     public static <K, V> void importCacheFromText(
-            Cache<K, V> cache, String filePath, 
+            Cache<K, V> cache, String filePath,
             TextParser<K, V> parser) throws IOException {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
             String line;
@@ -108,6 +222,17 @@ public class CacheExportImport {
         }
     }
 
+    /**
+     * 带过滤条件导出缓存数据
+     *
+     * @param cache    缓存实例
+     * @param filePath 文件路径
+     * @param filter   过滤器
+     * @param <K>      键类型
+     * @param <V>      值类型
+     * @return 导出的条目数
+     * @throws IOException 如果导出失败
+     */
     public static <K, V> int exportCacheWithFilter(
             Cache<K, V> cache, String filePath, CacheFilter<K, V> filter) throws IOException {
         int count = 0;
@@ -125,15 +250,30 @@ public class CacheExportImport {
         return count;
     }
 
+    /**
+     * 限制数量导入缓存数据
+     *
+     * @param cache      缓存实例
+     * @param filePath   文件路径
+     * @param maxEntries 最大导入条目数
+     * @param keyClass   键类型
+     * @param valueClass 值类型
+     * @param <K>        键类型
+     * @param <V>        值类型
+     * @return 实际导入的条目数
+     * @throws IOException            如果导入失败
+     * @throws ClassNotFoundException 如果反序列化类未找到
+     */
     public static <K, V> int importCacheWithLimit(
             Cache<K, V> cache, String filePath, int maxEntries, Class<K> keyClass, Class<V> valueClass) throws IOException, ClassNotFoundException {
         int count = 0;
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filePath))) {
+        try (ObjectInputStream ois = createSafeObjectInputStream(new FileInputStream(filePath))) {
             Object obj = ois.readObject();
             if (!(obj instanceof Map)) {
                 throw new ClassCastException("Expected Map, got " + obj.getClass().getName());
             }
             Map<?, ?> data = (Map<?, ?>) obj;
+            validateMapSize(data, Math.min(maxEntries, DEFAULT_MAX_ENTRIES));
             for (Map.Entry<?, ?> entry : data.entrySet()) {
                 if (count >= maxEntries) {
                     break;
@@ -147,11 +287,24 @@ public class CacheExportImport {
         return count;
     }
 
+    /**
+     * 文本解析器接口
+     *
+     * @param <K> 键类型
+     * @param <V> 值类型
+     */
     public interface TextParser<K, V> {
         K parseKey(String text);
+
         V parseValue(String text);
     }
 
+    /**
+     * 缓存过滤器接口
+     *
+     * @param <K> 键类型
+     * @param <V> 值类型
+     */
     @FunctionalInterface
     public interface CacheFilter<K, V> {
         boolean accept(K key, V value);

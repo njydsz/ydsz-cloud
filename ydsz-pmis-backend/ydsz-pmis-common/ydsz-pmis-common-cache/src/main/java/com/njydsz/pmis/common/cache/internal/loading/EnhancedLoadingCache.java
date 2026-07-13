@@ -22,8 +22,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -54,18 +56,84 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V> implements L
     private static final Logger log = LoggerFactory.getLogger(EnhancedLoadingCache.class);
 
     /**
-     * 全局共享异步执行器（替代每实例创建线程池）
+     * 全局共享异步执行器（守护线程，不阻止 JVM 退出）
+     * <p>使用 ForkJoinPool 的 makePool 创建守护线程池
      */
-    private static final Executor SHARED_EXECUTOR = Executors.newWorkStealingPool();
+    private static volatile Executor sharedExecutor;
 
     /**
-     * 全局共享刷新调度器（替代每实例创建调度线程）
+     * 全局共享刷新调度器（守护线程，不阻止 JVM 退出）
      */
-    private static final ScheduledExecutorService SHARED_REFRESH_SCHEDULER = Executors.newSingleThreadScheduledExecutor(r -> {
-        Thread t = new Thread(r, "ydsz-cache-shared-refresher");
-        t.setDaemon(true);
-        return t;
-    });
+    private static volatile ScheduledExecutorService sharedRefreshScheduler;
+
+    /**
+     * 共享资源是否已关闭
+     */
+    private static volatile boolean sharedResourcesShutdown = false;
+
+    /**
+     * 获取共享异步执行器（懒加载，线程安全）
+     */
+    private static Executor getSharedExecutor() {
+        if (sharedExecutor == null) {
+            synchronized (EnhancedLoadingCache.class) {
+                if (sharedExecutor == null) {
+                    sharedExecutor = new ForkJoinPool(
+                            Runtime.getRuntime().availableProcessors(),
+                            ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+                            null, true);
+                }
+            }
+        }
+        return sharedExecutor;
+    }
+
+    /**
+     * 获取共享刷新调度器（懒加载，线程安全）
+     */
+    private static ScheduledExecutorService getSharedRefreshScheduler() {
+        if (sharedRefreshScheduler == null) {
+            synchronized (EnhancedLoadingCache.class) {
+                if (sharedRefreshScheduler == null) {
+                    ScheduledThreadPoolExecutor exec = new ScheduledThreadPoolExecutor(1, r -> {
+                        Thread t = new Thread(r, "ydsz-cache-shared-refresher");
+                        t.setDaemon(true);
+                        t.setPriority(Thread.NORM_PRIORITY - 1);
+                        return t;
+                    });
+                    exec.setRemoveOnCancelPolicy(true);
+                    sharedRefreshScheduler = exec;
+                }
+            }
+        }
+        return sharedRefreshScheduler;
+    }
+
+    /**
+     * 关闭所有共享资源（由 Spring 生命周期管理调用）
+     * <p>调用后所有使用共享执行器的 EnhancedLoadingCache 实例将无法再使用自动刷新功能。
+     * 建议在应用关闭阶段调用。
+     */
+    public static void shutdownSharedResources() {
+        sharedResourcesShutdown = true;
+        Executor exec = sharedExecutor;
+        if (exec instanceof ForkJoinPool) {
+            ((ForkJoinPool) exec).shutdown();
+        }
+        ScheduledExecutorService scheduler = sharedRefreshScheduler;
+        if (scheduler != null) {
+            scheduler.shutdown();
+            try {
+                if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                    scheduler.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                scheduler.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+        log.info("EnhancedLoadingCache 共享资源已关闭");
+    }
 
     /**
      * 底层缓存
@@ -230,12 +298,12 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V> implements L
                                 boolean scheduleRefresh) {
         this.cache = cache;
         this.loader = loader;
-        this.executor = executor != null ? executor : SHARED_EXECUTOR;
+        this.executor = executor != null ? executor : getSharedExecutor();
         this.recordStats = recordStats;
 
         if (refreshInterval > 0 && refreshUnit != null) {
             this.refreshIntervalNanos = refreshUnit.toNanos(refreshInterval);
-            this.refreshScheduler = SHARED_REFRESH_SCHEDULER;
+            this.refreshScheduler = getSharedRefreshScheduler();
             if (scheduleRefresh) {
                 scheduleAutoRefresh();
             }

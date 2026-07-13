@@ -81,7 +81,7 @@ public class YdszJsonAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnClass(name = "org.springframework.boot.actuate.health.HealthIndicator")
+    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
     public YdszJsonHealthIndicator ydszJsonHealthIndicator() {
         return new YdszJsonHealthIndicator();
     }

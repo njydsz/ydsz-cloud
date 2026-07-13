@@ -10,22 +10,28 @@ import org.springframework.context.annotation.Bean;
  * YdszCache Spring Boot 自动配置
  *
  * <p>提供 YdszCache 的 Spring Boot 自动配置，
- * 支持通过 application.yml 配置缓存参数。
+ * 支持通过 application.yml 配置缓存参数（全局默认 + per-cache 覆盖）。
  *
  * <p>配置示例：
  * <pre>
  * ydsz:
  *   cache:
  *     type: TINYLFU
- *     cache-names: users,orders,config
  *     maximum-size: 1000
  *     expire-after-write: 30
  *     expire-time-unit: MINUTES
  *     allow-null-values: true
+ *     caches:
+ *       users:
+ *         type: LRU
+ *         maximum-size: 5000
+ *       orders:
+ *         type: TINYLFU
+ *         maximum-size: 20000
  * </pre>
  *
  * @author Marvin Lee
- * @version 3.5.0
+ * @version 4.0.0
  */
 @AutoConfiguration
 @ConditionalOnClass(YdszCacheManager.class)
@@ -48,6 +54,8 @@ public class YdszCacheAutoConfiguration {
         cacheManager.setWeakKeys(props.isWeakKeys());
         cacheManager.setWeakValues(props.isWeakValues());
         cacheManager.setSoftValues(props.isSoftValues());
+        // 设置 per-cache 配置
+        cacheManager.setPerCacheConfigs(props.getCaches());
         return cacheManager;
     }
 }

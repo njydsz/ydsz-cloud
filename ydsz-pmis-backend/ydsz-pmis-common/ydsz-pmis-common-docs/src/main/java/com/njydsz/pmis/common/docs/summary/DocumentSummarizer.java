@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -43,7 +44,7 @@ public class DocumentSummarizer {
     private static final int MIN_WORD_LENGTH = 2;
 
     /** 中文停用词 */
-    private static final java.util.Set<String> STOP_WORDS = java.util.Set.of(
+    private static final Set<String> STOP_WORDS = Set.of(
             "的", "了", "在", "是", "我", "有", "和", "就", "不", "人", "都", "一", "一个",
             "上", "也", "很", "到", "说", "要", "去", "你", "会", "着", "没有", "看", "好",
             "the", "a", "an", "is", "are", "was", "were", "in", "on", "at", "to", "for",

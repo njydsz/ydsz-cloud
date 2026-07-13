@@ -7,6 +7,9 @@ package com.njydsz.pmis.common.excel.core.writer;
  * @email pmis-dev@njydsz.com
  * @version 1.0.0
  */
+import com.njydsz.pmis.common.excel.annotation.ExcelIgnore;
+import com.njydsz.pmis.common.excel.annotation.ExcelProperty;
+import com.njydsz.pmis.common.excel.annotation.ExcelSheet;
 import com.njydsz.pmis.common.excel.core.config.ExcelConfig;
 import com.njydsz.pmis.common.excel.core.metadata.WriteMetadata;
 import com.njydsz.pmis.common.excel.support.asm.ASMFieldAccessor;
@@ -38,7 +41,7 @@ public class SuperFastExcelWriter {
     private static final byte[] CONTENT_TYPES_BYTES;
     private static final byte[] RELS_BYTES;
     private static final byte[] WORKBOOK_RELS_BYTES;
-    private static final byte[] WORKBOOK_BYTES;
+    private static final byte[] WORKBOOK_BYTES_TEMPLATE;
     private static final byte[] SHEET_HEADER_BYTES;
     private static final byte[] FOOTER_BYTES;
 
@@ -63,10 +66,10 @@ public class SuperFastExcelWriter {
                 "<Relationship Id=\"rId2\" Type=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings\" Target=\"sharedStrings.xml\"/>" +
                 "</Relationships>").getBytes(StandardCharsets.UTF_8);
 
-        WORKBOOK_BYTES = ("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
+        WORKBOOK_BYTES_TEMPLATE = ("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>" +
                 "<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">" +
                 "<sheets>" +
-                "<sheet name=\"Sheet1\" sheetId=\"1\" r:id=\"rId1\"/>" +
+                "<sheet name=\"%s\" sheetId=\"1\" r:id=\"rId1\"/>" +
                 "</sheets>" +
                 "</workbook>").getBytes(StandardCharsets.UTF_8);
 
@@ -126,7 +129,7 @@ public class SuperFastExcelWriter {
     }
 
     private void writeXlsxDirect(String filePath, List<?> list) throws Exception {
-        Path tempDir = Files.createTempDirectory("remi_sxssf_");
+        Path tempDir = Files.createTempDirectory("ydsz_sxssf_");
         
         try (FileOutputStream fos = new FileOutputStream(filePath);
              BufferedOutputStream bos = new BufferedOutputStream(fos, ZIP_BUFFER_SIZE);
@@ -151,7 +154,7 @@ public class SuperFastExcelWriter {
 
             entry = new ZipEntry("xl/workbook.xml");
             zipOut.putNextEntry(entry);
-            zipOut.write(WORKBOOK_BYTES);
+            zipOut.write(getWorkbookBytes());
             zipOut.closeEntry();
 
             Path sheetTempFile = tempDir.resolve("sheet1.xml");
@@ -165,6 +168,14 @@ public class SuperFastExcelWriter {
 
                 rowBuffer = new byte[ROW_BUFFER_SIZE];
                 rowBufferPos = 0;
+
+                // 写入表头行
+                if (fieldInfoSize > 0) {
+                    currentRow++;
+                    int headerLen = writeHeaderRow(ss);
+                    sheetBos.write(rowBuffer, 0, headerLen);
+                    rowBufferPos = 0;
+                }
 
                 int listSize = list.size();
                 for (int rowIdx = 0; rowIdx < listSize; rowIdx++) {
@@ -232,6 +243,14 @@ public class SuperFastExcelWriter {
 
         zipOut.putNextEntry(new ZipEntry("xl/worksheets/sheet1.xml"));
         zipOut.write(SHEET_HEADER_BYTES);
+
+        // 写入表头行
+        if (fieldInfoSize > 0) {
+            currentRow++;
+            int headerLen = writeHeaderRow(ss);
+            zipOut.write(rowBuffer, 0, headerLen);
+            rowBufferPos = 0;
+        }
 
         for (int rowIdx = 0; rowIdx < list.size(); rowIdx++) {
             Object item = list.get(rowIdx);
@@ -639,12 +658,12 @@ public class SuperFastExcelWriter {
 
             for (int i = 0; i < declaredFields.length; i++) {
                 Field field = declaredFields[i];
-                if (field.getAnnotation(com.njydsz.pmis.common.excel.annotation.ExcelIgnore.class) != null) {
+                if (field.getAnnotation(ExcelIgnore.class) != null) {
                     continue;
                 }
 
-                com.njydsz.pmis.common.excel.annotation.ExcelProperty prop =
-                    field.getAnnotation(com.njydsz.pmis.common.excel.annotation.ExcelProperty.class);
+                ExcelProperty prop =
+                    field.getAnnotation(ExcelProperty.class);
 
                 if (prop != null) {
                     orderList.add(new int[]{prop.order(), i});
@@ -667,12 +686,14 @@ public class SuperFastExcelWriter {
             for (int compactIdx = 0; compactIdx < orderList.size(); compactIdx++) {
                 int originalOrder = orderList.get(compactIdx)[0];
                 Field field = annotatedFields.get(compactIdx);
-                com.njydsz.pmis.common.excel.annotation.ExcelProperty prop =
-                    field.getAnnotation(com.njydsz.pmis.common.excel.annotation.ExcelProperty.class);
+                ExcelProperty prop =
+                    field.getAnnotation(ExcelProperty.class);
                 String dateFormat = prop.dateFormat();
 
                 FieldAccessorInfo info = new FieldAccessorInfo();
                 info.field = field;
+                info.headerName = (prop.value() != null && !prop.value().isEmpty())
+                        ? prop.value() : field.getName();
                 info.getter = ASMFieldAccessor.getGetter(clazz, field);
                 info.dateFormatObj = (dateFormat != null && !dateFormat.isEmpty())
                         ? DateTimeFormatter.ofPattern(dateFormat) : DEFAULT_DATE_FORMATTER;
@@ -701,8 +722,64 @@ public class SuperFastExcelWriter {
 
     private static class FieldAccessorInfo {
         Field field;
+        String headerName;
         ASMFieldAccessor.FieldGetter getter;
         DateTimeFormatter dateFormatObj;
+    }
+
+    /**
+     * 获取 Workbook XML 字节，使用 @ExcelSheet 注解的 name 作为 Sheet 名称
+     */
+    private byte[] getWorkbookBytes() {
+        String sheetName = "Sheet1";
+        Class<?> clazz = metadata.getClazz();
+        if (clazz != null) {
+            ExcelSheet sheetAnnotation = clazz.getAnnotation(ExcelSheet.class);
+            if (sheetAnnotation != null && !sheetAnnotation.name().isEmpty()) {
+                sheetName = sheetAnnotation.name();
+            }
+        }
+        // XML 转义
+        sheetName = sheetName.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&apos;");
+        return String.format(new String(WORKBOOK_BYTES_TEMPLATE, StandardCharsets.UTF_8), sheetName)
+                .getBytes(StandardCharsets.UTF_8);
+    }
+
+    /**
+     * 写入表头行
+     */
+    private int writeHeaderRow(UltraFastSharedStrings ss) {
+        ensureCapacity(32);
+        rowBuffer[rowBufferPos++] = '<';
+        rowBuffer[rowBufferPos++] = 'r';
+        rowBuffer[rowBufferPos++] = 'o';
+        rowBuffer[rowBufferPos++] = 'w';
+        rowBuffer[rowBufferPos++] = ' ';
+        rowBuffer[rowBufferPos++] = 'r';
+        rowBuffer[rowBufferPos++] = '=';
+        rowBuffer[rowBufferPos++] = '"';
+        writeNumberToBuffer(currentRow);
+        rowBuffer[rowBufferPos++] = '"';
+        rowBuffer[rowBufferPos++] = '>';
+
+        for (int col = 0; col < fieldInfoSize; col++) {
+            FieldAccessorInfo info = fieldInfoArray[col];
+            if (info == null || info.headerName == null) continue;
+            writeStringCell(col, info.headerName, ss);
+        }
+
+        ensureCapacity(16);
+        rowBuffer[rowBufferPos++] = '<';
+        rowBuffer[rowBufferPos++] = '/';
+        rowBuffer[rowBufferPos++] = 'r';
+        rowBuffer[rowBufferPos++] = 'o';
+        rowBuffer[rowBufferPos++] = 'w';
+        rowBuffer[rowBufferPos++] = '>';
+        return rowBufferPos;
     }
 
     private static class UltraFastSharedStrings {

@@ -1,14 +1,14 @@
 package com.njydsz.pmis.common.cache.api;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
 /**
  * 缓存防护守卫 — 防穿透/防击穿/防雪崩
- *
- * <p>从 {@link Cache} 接口中提取，将可变静态状态（KEY_LOCKS）和防护逻辑
- * 隔离为独立工具类，避免接口持有可变状态。
  *
  * <p>提供以下防护机制：
  * <ul>
@@ -17,20 +17,52 @@ import java.util.function.Function;
  *   <li><b>防雪崩</b>：通过过期时间抖动，避免大量缓存同时失效</li>
  * </ul>
  *
+ * <p>优化点（P1 修复）：
+ * <ul>
+ *   <li>从全局静态 {@code KEY_LOCKS} 改为 per-cache 实例级锁映射，
+ *       消除跨缓存实例的锁竞争</li>
+ *   <li>从全局静态 {@code NULL_KEY_EXPIRATIONS} 改为 per-cache 实例级过期映射，
+ *       消除内存泄漏风险</li>
+ *   <li>移除 {@code NullKey} 包装类（per-cache 状态下直接使用 key 即可）</li>
+ *   <li>外层 {@link WeakHashMap} 确保缓存实例 GC 后状态自动清理</li>
+ * </ul>
+ *
  * @author Marvin Lee
- * @version 3.5.0
+ * @version 4.0.0
  */
 public final class CacheProtectionGuard {
 
-    private static final ConcurrentHashMap<Object, Object> KEY_LOCKS = new ConcurrentHashMap<>();
+    /**
+     * Per-cache 实例注册表，使用 WeakHashMap 避免内存泄漏。
+     * 当 Cache 实例不再被引用时，对应的 CacheProtectionGuard 实例会被自动 GC 清理。
+     */
+    private static final Map<Cache<?, ?>, CacheProtectionGuard> INSTANCES =
+            Collections.synchronizedMap(new WeakHashMap<>());
 
     /**
-     * 空值占位符的过期时间注册表（防雪崩：随机过期）
+     * Per-cache Key 级锁映射（防击穿）
+     */
+    private final ConcurrentHashMap<Object, Object> keyLocks = new ConcurrentHashMap<>();
+
+    /**
+     * Per-cache 空值占位符过期时间（防雪崩：随机过期）
      * key -> expireTimestamp
      */
-    private static final ConcurrentHashMap<NullKey, Long> NULL_KEY_EXPIRATIONS = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Object, Long> nullKeyExpirations = new ConcurrentHashMap<>();
 
     private CacheProtectionGuard() {
+    }
+
+    /**
+     * 获取或创建指定缓存实例对应的 CacheProtectionGuard
+     *
+     * @param cache 缓存实例
+     * @return 对应的 CacheProtectionGuard 实例
+     */
+    private static CacheProtectionGuard forCache(Cache<?, ?> cache) {
+        synchronized (INSTANCES) {
+            return INSTANCES.computeIfAbsent(cache, c -> new CacheProtectionGuard());
+        }
     }
 
     /**
@@ -53,14 +85,15 @@ public final class CacheProtectionGuard {
             throw new IllegalArgumentException("minExpireMs must be <= maxExpireMs");
         }
 
+        CacheProtectionGuard guard = forCache(cache);
+
         // 防雪崩：检查空值占位符是否已过期
         if (NullValueGuard.isNullKeyRegistered(cache, key)) {
-            NullKey nullKey = new NullKey(cache, key);
-            Long expiration = NULL_KEY_EXPIRATIONS.get(nullKey);
+            Long expiration = guard.nullKeyExpirations.get(key);
             if (expiration != null && System.currentTimeMillis() > expiration) {
                 // 空值占位已过期，清除并重新加载
                 NullValueGuard.unregisterNullKey(cache, key);
-                NULL_KEY_EXPIRATIONS.remove(nullKey);
+                guard.nullKeyExpirations.remove(key);
             } else {
                 return null;
             }
@@ -68,16 +101,15 @@ public final class CacheProtectionGuard {
 
         V value = cache.getIfPresent(key);
         if (value == null && loader != null) {
-            Object lock = KEY_LOCKS.computeIfAbsent(key, k -> new Object());
+            Object lock = guard.keyLocks.computeIfAbsent(key, k -> new Object());
             try {
                 synchronized (lock) {
                     // Double-check after acquiring lock
                     if (NullValueGuard.isNullKeyRegistered(cache, key)) {
-                        NullKey nullKey = new NullKey(cache, key);
-                        Long expiration = NULL_KEY_EXPIRATIONS.get(nullKey);
+                        Long expiration = guard.nullKeyExpirations.get(key);
                         if (expiration != null && System.currentTimeMillis() > expiration) {
                             NullValueGuard.unregisterNullKey(cache, key);
-                            NULL_KEY_EXPIRATIONS.remove(nullKey);
+                            guard.nullKeyExpirations.remove(key);
                         } else {
                             return null;
                         }
@@ -94,14 +126,14 @@ public final class CacheProtectionGuard {
                                 long jitteredExpire = minExpireMs > 0
                                         ? minExpireMs + ThreadLocalRandom.current().nextLong(maxExpireMs - minExpireMs + 1)
                                         : maxExpireMs;
-                                NULL_KEY_EXPIRATIONS.put(new NullKey(cache, key),
+                                guard.nullKeyExpirations.put(key,
                                         System.currentTimeMillis() + jitteredExpire);
                             }
                         }
                     }
                 }
             } finally {
-                KEY_LOCKS.remove(key, lock);
+                guard.keyLocks.remove(key, lock);
             }
         }
         return value;
@@ -130,33 +162,5 @@ public final class CacheProtectionGuard {
      */
     public static boolean isNullPlaceholderKey(Cache<?, ?> cache, Object key) {
         return NullValueGuard.isNullKeyRegistered(cache, key);
-    }
-
-    /**
-     * 空值键包装类，用于 NULL_KEY_EXPIRATIONS 的键
-     */
-    private static final class NullKey {
-        private final Cache<?, ?> cache;
-        private final Object key;
-
-        NullKey(Cache<?, ?> cache, Object key) {
-            this.cache = cache;
-            this.key = key;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof NullKey)) return false;
-            NullKey nullKey = (NullKey) o;
-            return cache == nullKey.cache && (key == null ? nullKey.key == null : key.equals(nullKey.key));
-        }
-
-        @Override
-        public int hashCode() {
-            int result = System.identityHashCode(cache);
-            result = 31 * result + (key != null ? key.hashCode() : 0);
-            return result;
-        }
     }
 }

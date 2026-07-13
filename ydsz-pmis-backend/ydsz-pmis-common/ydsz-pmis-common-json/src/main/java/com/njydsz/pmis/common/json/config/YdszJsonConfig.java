@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.config;
+package com.njydsz.pmis.common.json.config;
 
 import com.njydsz.pmis.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.pmis.common.json.provider.YdszSerializationProvider;

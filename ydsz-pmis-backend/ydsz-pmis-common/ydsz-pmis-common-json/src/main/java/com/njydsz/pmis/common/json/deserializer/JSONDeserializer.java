@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.json.deserializer;
 
+import com.njydsz.pmis.common.json.reader.JSONReader;
+
 /**
  * 自定义反序列化器接口
  *
@@ -31,5 +33,5 @@ public interface JsonDeserializer<T> {
      * @param in 输入反序列化器（用于读取 JSON）
      * @return 反序列化后的对象
      */
-    T deserialize(JSONDeserializer in);
+    T deserialize(JSONReader in);
 }

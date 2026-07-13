@@ -4,11 +4,16 @@ import com.njydsz.pmis.common.cache.YdszCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheBuilder;
 import com.njydsz.pmis.common.cache.builder.CacheType;
+import com.njydsz.pmis.common.cache.internal.loading.EnhancedLoadingCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.CacheManager;
 import org.springframework.lang.NonNull;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -17,10 +22,15 @@ import java.util.function.Function;
 /**
  * YdszCache 的 Spring CacheManager 实现
  *
- * <p>类似 Caffeine 的 CaffeineCacheManager，提供 YdszCache 的 Spring 集成。
- * 支持 @Cacheable、@CachePut、@CacheEvict 等 Spring Cache 注解。
+ * <p>支持 per-cache 独立配置，每个缓存可以使用不同的类型、容量和过期策略。
  *
- * <p>使用示例：
+ * <p>生命周期管理：
+ * <ul>
+ *   <li>实现 {@link org.springframework.beans.factory.DisposableBean}，在 Spring 容器关闭时自动清理资源</li>
+ *   <li>关闭所有 {@link EnhancedLoadingCache} 实例和共享线程池</li>
+ * </ul>
+ *
+ * <p>配置示例：
  * <pre>
  * {@code
  * @Configuration
@@ -39,12 +49,18 @@ import java.util.function.Function;
  * </pre>
  *
  * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @version 4.0.0
  */
-public class YdszCacheManager implements CacheManager {
+public class YdszCacheManager implements CacheManager, org.springframework.beans.factory.DisposableBean {
+
+    private static final Logger log = LoggerFactory.getLogger(YdszCacheManager.class);
 
     private final Map<String, SpringYdszCache> cacheMap = new ConcurrentHashMap<>();
+
+    /**
+     * 已创建的底层 Cache 实例（用于生命周期管理）
+     */
+    private final List<Cache<?, ?>> createdCaches = Collections.synchronizedList(new ArrayList<>());
 
     private Collection<String> cacheNames;
 
@@ -73,6 +89,11 @@ public class YdszCacheManager implements CacheManager {
     private boolean softValues = false;
 
     private Function<String, Cache<Object, Object>> cacheBuilder;
+
+    /**
+     * per-cache 配置映射
+     */
+    private Map<String, YdszCacheProperties.CacheConfig> perCacheConfigs = Collections.emptyMap();
 
     /**
      * 设置缓存类型
@@ -168,6 +189,15 @@ public class YdszCacheManager implements CacheManager {
         this.cacheBuilder = cacheBuilder;
     }
 
+    /**
+     * 设置 per-cache 配置映射
+     *
+     * @param perCacheConfigs per-cache 配置
+     */
+    public void setPerCacheConfigs(Map<String, YdszCacheProperties.CacheConfig> perCacheConfigs) {
+        this.perCacheConfigs = perCacheConfigs != null ? perCacheConfigs : Collections.emptyMap();
+    }
+
     @Override
     public SpringYdszCache getCache(@NonNull String name) {
         SpringYdszCache cache = this.cacheMap.get(name);
@@ -180,6 +210,7 @@ public class YdszCacheManager implements CacheManager {
         }
 
         Cache<Object, Object> delegate = buildCache(name);
+        createdCaches.add(delegate);
         @SuppressWarnings("null")
         SpringYdszCache newCache = new SpringYdszCache(name, delegate, this.allowNullValues);
 
@@ -195,39 +226,87 @@ public class YdszCacheManager implements CacheManager {
     }
 
     /**
-     * 构建底层 YdszCache 实例
+     * 构建底层 YdszCache 实例（支持 per-cache 配置覆盖）
      */
     private Cache<Object, Object> buildCache(String name) {
         if (this.cacheBuilder != null) {
             return this.cacheBuilder.apply(name);
         }
 
-        CacheBuilder<Object, Object> builder = YdszCache.newBuilder()
-                .type(this.cacheType)
-                .initialCapacity(this.initialCapacity)
-                .maximumSize(this.maximumSize)
-                .recordStats(this.recordStats);
+        // 获取 per-cache 配置（如有）
+        YdszCacheProperties.CacheConfig perCache = perCacheConfigs.get(name);
 
-        if (this.weakKeys) {
+        // 解析有效配置值（per-cache 优先，回退到全局默认）
+        CacheType effectiveType = perCache != null && perCache.getType() != null ? perCache.getType() : this.cacheType;
+        long effectiveMaxSize = perCache != null && perCache.getMaximumSize() != null ? perCache.getMaximumSize() : this.maximumSize;
+        int effectiveInitCapacity = perCache != null && perCache.getInitialCapacity() != null ? perCache.getInitialCapacity() : this.initialCapacity;
+        long effectiveExpireAfterWrite = perCache != null && perCache.getExpireAfterWrite() != null ? perCache.getExpireAfterWrite() : this.expireAfterWrite;
+        long effectiveExpireAfterAccess = perCache != null && perCache.getExpireAfterAccess() != null ? perCache.getExpireAfterAccess() : this.expireAfterAccess;
+        long effectiveRefreshAfterWrite = perCache != null && perCache.getRefreshAfterWrite() != null ? perCache.getRefreshAfterWrite() : this.refreshAfterWrite;
+        TimeUnit effectiveTimeUnit = perCache != null && perCache.getExpireTimeUnit() != null ? perCache.getExpireTimeUnit() : this.expireTimeUnit;
+        boolean effectiveRecordStats = perCache != null && perCache.getRecordStats() != null ? perCache.getRecordStats() : this.recordStats;
+        boolean effectiveWeakKeys = perCache != null && perCache.getWeakKeys() != null ? perCache.getWeakKeys() : this.weakKeys;
+        boolean effectiveWeakValues = perCache != null && perCache.getWeakValues() != null ? perCache.getWeakValues() : this.weakValues;
+        boolean effectiveSoftValues = perCache != null && perCache.getSoftValues() != null ? perCache.getSoftValues() : this.softValues;
+
+        CacheBuilder<Object, Object> builder = YdszCache.newBuilder()
+                .type(effectiveType)
+                .initialCapacity(effectiveInitCapacity)
+                .maximumSize(effectiveMaxSize)
+                .recordStats(effectiveRecordStats);
+
+        if (effectiveWeakKeys) {
             builder.weakKeys();
         }
-        if (this.weakValues) {
+        if (effectiveWeakValues) {
             builder.weakValues();
         }
-        if (this.softValues) {
+        if (effectiveSoftValues) {
             builder.softValues();
         }
 
-        if (this.expireAfterWrite > 0) {
-            builder.expireAfterWrite(this.expireAfterWrite, this.expireTimeUnit);
+        if (effectiveExpireAfterWrite > 0) {
+            builder.expireAfterWrite(effectiveExpireAfterWrite, effectiveTimeUnit);
         }
-        if (this.expireAfterAccess > 0) {
-            builder.expireAfterAccess(this.expireAfterAccess, this.expireTimeUnit);
+        if (effectiveExpireAfterAccess > 0) {
+            builder.expireAfterAccess(effectiveExpireAfterAccess, effectiveTimeUnit);
         }
-        if (this.refreshAfterWrite > 0) {
-            builder.refreshAfterWrite(this.refreshAfterWrite, this.expireTimeUnit);
+        if (effectiveRefreshAfterWrite > 0) {
+            builder.refreshAfterWrite(effectiveRefreshAfterWrite, effectiveTimeUnit);
         }
 
+        log.debug("构建缓存: name={}, type={}, maxSize={}, expireAfterWrite={} {}",
+                name, effectiveType, effectiveMaxSize, effectiveExpireAfterWrite, effectiveTimeUnit);
+
         return builder.build();
+    }
+
+    /**
+     * Spring 容器关闭时清理资源
+     */
+    @Override
+    public void destroy() {
+        log.info("YdszCacheManager 正在关闭...");
+        
+        // 关闭所有可关闭的缓存实例
+        synchronized (createdCaches) {
+            for (Cache<?, ?> cache : createdCaches) {
+                if (cache instanceof AutoCloseable) {
+                    try {
+                        ((AutoCloseable) cache).close();
+                    } catch (Exception e) {
+                        log.warn("关闭缓存实例失败: {}", cache.getClass().getSimpleName(), e);
+                    }
+                }
+            }
+            createdCaches.clear();
+        }
+        
+        cacheMap.clear();
+        
+        // 关闭 EnhancedLoadingCache 共享资源
+        EnhancedLoadingCache.shutdownSharedResources();
+        
+        log.info("YdszCacheManager 已关闭");
     }
 }

@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.concurrent.*;
 
 /**
@@ -138,7 +139,7 @@ public class AsyncDocumentParser {
      * @return 所有解析完成的 {@link CompletableFuture}
      */
     public CompletableFuture<DocumentParseResult>[] parseBatch(
-            java.util.List<BatchFile> files, ParseOptions options) {
+            List<BatchFile> files, ParseOptions options) {
         @SuppressWarnings("unchecked")
         CompletableFuture<DocumentParseResult>[] futures = files.stream()
                 .map(f -> parseAsync(f.inputStream(), f.fileName(), options))

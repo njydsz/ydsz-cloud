@@ -6,6 +6,7 @@ import io.micrometer.core.instrument.FunctionTimer;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.MeterBinder;
 
 import java.util.Collections;
@@ -25,16 +26,18 @@ import java.util.concurrent.TimeUnit;
  *   <li>{@code cache.size} - 当前缓存条目数（Gauge）</li>
  *   <li>{@code cache.evictions} - 淘汰总次数（FunctionCounter）</li>
  *   <li>{@code cache.load.duration} - 平均加载耗时（FunctionTimer）</li>
+ *   <li>{@code cache.get.duration} - GET 操作耗时分布（Timer，含 P50/P90/P99 分位数）</li>
+ *   <li>{@code cache.put.duration} - PUT 操作耗时分布（Timer，含 P50/P90/P99 分位数）</li>
  * </ul>
  *
  * <p>指标标签：
  * <ul>
  *   <li>{@code cache_name} - 缓存名称</li>
- *   <li>{@code cache_type} - 缓存类型（由调用方通过 Tag 传入，如 "local", "caffeine" 等）</li>
+ *   <li>{@code cache_type} - 缓存类型</li>
  * </ul>
  *
  * @author Marvin Lee
- * @version 3.5.0
+ * @version 4.0.0
  */
 public class CacheMeterBinder implements MeterBinder {
 
@@ -46,6 +49,15 @@ public class CacheMeterBinder implements MeterBinder {
     private final String cacheName;
     private final String cacheType;
     private final Iterable<Tag> extraTags;
+
+    /**
+     * GET 操作 Timer（含 P50/P90/P99 分位数）
+     */
+    private Timer getTimer;
+    /**
+     * PUT 操作 Timer（含 P50/P90/P99 分位数）
+     */
+    private Timer putTimer;
 
     public CacheMeterBinder(Cache<?, ?> cache, String cacheName) {
         this(cache, cacheName, "local", Collections.emptyList());
@@ -118,5 +130,51 @@ public class CacheMeterBinder implements MeterBinder {
                 .tag(cacheTypeTag.getKey(), cacheTypeTag.getValue())
                 .description("Cache load duration")
                 .register(registry);
+
+        // GET 操作 Timer（含 P50/P90/P99 分位数）
+        getTimer = Timer.builder(METRIC_PREFIX + ".get.duration")
+                .tags(extraTags)
+                .tag(cacheNameTag.getKey(), cacheNameTag.getValue())
+                .tag(cacheTypeTag.getKey(), cacheTypeTag.getValue())
+                .description("Cache GET operation duration")
+                .publishPercentiles(0.5, 0.9, 0.99)
+                .publishPercentileHistogram()
+                .minimumExpectedValue(java.time.Duration.ofNanos(100))
+                .maximumExpectedValue(java.time.Duration.ofMillis(100))
+                .register(registry);
+
+        // PUT 操作 Timer（含 P50/P90/P99 分位数）
+        putTimer = Timer.builder(METRIC_PREFIX + ".put.duration")
+                .tags(extraTags)
+                .tag(cacheNameTag.getKey(), cacheNameTag.getValue())
+                .tag(cacheTypeTag.getKey(), cacheTypeTag.getValue())
+                .description("Cache PUT operation duration")
+                .publishPercentiles(0.5, 0.9, 0.99)
+                .publishPercentileHistogram()
+                .minimumExpectedValue(java.time.Duration.ofNanos(100))
+                .maximumExpectedValue(java.time.Duration.ofMillis(100))
+                .register(registry);
+    }
+
+    /**
+     * 记录 GET 操作耗时
+     *
+     * @param nanos 耗时（纳秒）
+     */
+    public void recordGetDuration(long nanos) {
+        if (getTimer != null) {
+            getTimer.record(nanos, TimeUnit.NANOSECONDS);
+        }
+    }
+
+    /**
+     * 记录 PUT 操作耗时
+     *
+     * @param nanos 耗时（纳秒）
+     */
+    public void recordPutDuration(long nanos) {
+        if (putTimer != null) {
+            putTimer.record(nanos, TimeUnit.NANOSECONDS);
+        }
     }
 }

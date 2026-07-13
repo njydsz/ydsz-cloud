@@ -34,8 +34,8 @@ public class DocumentException extends BusinessException {
      */
     public DocumentException(ExceptionCode exceptionCode, Throwable cause) {
         super(cause);
-        this.setCode(exceptionCode.getCode());
-        this.setMessageKey(exceptionCode.getKey());
+        this.code = exceptionCode.getCode();
+        this.messageKey = exceptionCode.getKey();
     }
 
     /**
@@ -46,7 +46,7 @@ public class DocumentException extends BusinessException {
      */
     public DocumentException(ExceptionCode exceptionCode, String message) {
         super(exceptionCode);
-        this.setMessage(message);
+        this.message = message;
     }
 
     /**
@@ -58,8 +58,8 @@ public class DocumentException extends BusinessException {
      */
     public DocumentException(ExceptionCode exceptionCode, String message, Throwable cause) {
         super(cause);
-        this.setCode(exceptionCode.getCode());
-        this.setMessageKey(exceptionCode.getKey());
-        this.setMessage(message);
+        this.code = exceptionCode.getCode();
+        this.messageKey = exceptionCode.getKey();
+        this.message = message;
     }
 }

@@ -4,37 +4,58 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 空值占位符守卫 — 缓存穿透防护
  *
  * <p>当加载器返回 null 时，通过注册空值键防止缓存穿透。
- * 内部使用 {@link WeakHashMap} 跟踪每个缓存实例的空值键，
- * 避免将非 V 类型的占位符存入缓存导致的类型不安全。
+ * 内部使用 per-cache 实例级状态（通过 {@link WeakHashMap} 关联缓存实例），
+ * 当缓存实例被 GC 回收时，对应的空值键注册信息也会自动清理，避免内存泄漏。
  *
- * <p>使用 {@link WeakHashMap} 以缓存实例为键，当缓存实例被 GC 回收时，
- * 对应的空值键注册信息也会自动清理，避免内存泄漏。
- *
- * <p>从 {@link Cache} 接口中提取，遵循单一职责原则。
+ * <p>优化点（P1 修复）：
+ * <ul>
+ *   <li>从全局静态 {@code Map<Cache, Set>} 改为 per-cache {@code Set<Object>}，
+ *       消除跨缓存实例的状态共享</li>
+ *   <li>使用 {@link ConcurrentHashMap} 支持高并发读写</li>
+ *   <li>外层 {@link WeakHashMap} 确保缓存实例 GC 后状态自动清理</li>
+ * </ul>
  *
  * @author Marvin Lee
- * @version 3.5.0
+ * @version 4.0.0
  */
 public final class NullValueGuard {
 
     /**
-     * 单例实例（保留用于向后兼容的 isNullPlaceholder 检测）
+     * 单例实例（保留用于向后兼容）
      */
     public static final NullValueGuard INSTANCE = new NullValueGuard();
 
     /**
-     * 空值键注册表，使用 WeakHashMap 避免内存泄漏。
-     * 当 Cache 实例不再被引用时，对应的注册信息会被自动 GC 清理。
+     * Per-cache 实例注册表，使用 WeakHashMap 避免内存泄漏。
+     * 当 Cache 实例不再被引用时，对应的 NullValueGuard 实例会被自动 GC 清理。
      */
-    private static final Map<Cache<?, ?>, Set<Object>> NULL_KEY_REGISTRY =
+    private static final Map<Cache<?, ?>, NullValueGuard> INSTANCES =
             Collections.synchronizedMap(new WeakHashMap<>());
 
+    /**
+     * Per-cache 空值键集合（线程安全）
+     */
+    private final Set<Object> nullKeys = ConcurrentHashMap.newKeySet();
+
     private NullValueGuard() {
+    }
+
+    /**
+     * 获取或创建指定缓存实例对应的 NullValueGuard
+     *
+     * @param cache 缓存实例
+     * @return 对应的 NullValueGuard 实例
+     */
+    private static NullValueGuard forCache(Cache<?, ?> cache) {
+        synchronized (INSTANCES) {
+            return INSTANCES.computeIfAbsent(cache, c -> new NullValueGuard());
+        }
     }
 
     /**
@@ -44,8 +65,7 @@ public final class NullValueGuard {
      * @param key   缓存键
      */
     public static void registerNullKey(Cache<?, ?> cache, Object key) {
-        NULL_KEY_REGISTRY.computeIfAbsent(cache, c -> Collections.newSetFromMap(
-                Collections.synchronizedMap(new WeakHashMap<>()))).add(key);
+        forCache(cache).nullKeys.add(key);
     }
 
     /**
@@ -56,8 +76,8 @@ public final class NullValueGuard {
      * @return true 如果已注册
      */
     public static boolean isNullKeyRegistered(Cache<?, ?> cache, Object key) {
-        Set<Object> keys = NULL_KEY_REGISTRY.get(cache);
-        return keys != null && keys.contains(key);
+        NullValueGuard guard = forCache(cache);
+        return guard.nullKeys.contains(key);
     }
 
     /**
@@ -67,9 +87,7 @@ public final class NullValueGuard {
      * @param key   缓存键
      */
     public static void unregisterNullKey(Cache<?, ?> cache, Object key) {
-        Set<Object> keys = NULL_KEY_REGISTRY.get(cache);
-        if (keys != null) {
-            keys.remove(key);
-        }
+        NullValueGuard guard = forCache(cache);
+        guard.nullKeys.remove(key);
     }
 }

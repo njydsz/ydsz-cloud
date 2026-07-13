@@ -319,7 +319,7 @@ public final class YdszSerializationProvider {
         objects.clear();
 
         try {
-            if (isEnabled(features)) {
+            if (JSONWriter.Feature.PrettyPrint.isEnabled(features)) {
                 ValueFormatter.formatValue(obj, sb, 0);
             } else {
                 ValueWriter.writeValue(obj, sb);
