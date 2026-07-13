@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import cn.hutool.crypto.digest.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -88,7 +89,7 @@ public class CdnApplicationService {
         }
         long expireTime = System.currentTimeMillis() / 1000 + expireSeconds;
         String signedValue = storageKey + "-" + expireTime + "-" + secretKey;
-        String md5 = cn.hutool.crypto.digest.DigestUtil.md5Hex(signedValue);
+        String md5 = DigestUtil.md5Hex(signedValue);
         return "https://" + cdnDomain + "/" + storageKey + "?expires=" + expireTime + "&sign=" + md5;
     }
 }

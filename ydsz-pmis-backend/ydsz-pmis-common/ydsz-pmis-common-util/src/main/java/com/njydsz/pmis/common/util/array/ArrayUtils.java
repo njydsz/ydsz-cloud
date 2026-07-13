@@ -30,7 +30,6 @@ import java.util.function.Function;
  * @email limw1888@126.com
  * @version 3.5.0
  */
-@SuppressWarnings("unchecked")
 public class ArrayUtils {
 
     private ArrayUtils() {
@@ -363,7 +362,7 @@ public class ArrayUtils {
     /**
      * 将 Collection 转换为数组
      */
-    public static <T> T[] toArray(Collection<T> collection, Class<T> clazz) {
+    public static <T> T[] toArray(Collection<T> collection, Class<?> clazz) {
         Objects.requireNonNull(clazz, "clazz must not be null");
         if (collection == null || collection.isEmpty()) {
             return newArray(clazz, 0);
@@ -375,9 +374,19 @@ public class ArrayUtils {
      * 创建指定类型的数组
      */
     
-    public static <T> T[] newArray(Class<T> clazz, int length) {
+    public static <T> T[] newArray(Class<?> clazz, int length) {
         Objects.requireNonNull(clazz, "clazz must not be null");
-        return (T[]) Array.newInstance(clazz, length);
+        // Array.newInstance returns Object; cast to T[] is safe because clazz is Class<T>
+        Object array = Array.newInstance(clazz, length);
+        return castArray(array);
+    }
+
+    /**
+     * 将 Object 数组安全转换为泛型数组（内部使用）
+     * 此转换在运行时由调用方保证类型安全
+     */
+    private static <T> T[] castArray(Object array) {
+        return (T[]) array;
     }
 
     /**
@@ -430,7 +439,7 @@ public class ArrayUtils {
      * @param <R>    目标类型
      * @return 转换后的数组
      */
-    public static <T, R> R[] convertArray(T[] source, Function<? super T, ? extends R> mapper, Class<R> clazz) {
+    public static <T, R> R[] convertArray(T[] source, Function<? super T, ? extends R> mapper, Class<?> clazz) {
         Objects.requireNonNull(mapper, "mapper must not be null");
         Objects.requireNonNull(clazz, "clazz must not be null");
         if (isEmpty(source)) {
@@ -464,12 +473,12 @@ public class ArrayUtils {
         }
 
         if (totalLength == 0) {
-            Class<T> clazz = (Class<T>) arrays[0].getClass().getComponentType();
-            return newArray(clazz, 0);
+            Class<?> rawClazz = arrays[0].getClass().getComponentType();
+            return newArray(rawClazz, 0);
         }
 
-        Class<T> clazz = (Class<T>) arrays[0].getClass().getComponentType();
-        T[] result = newArray(clazz, totalLength);
+        Class<?> componentType = arrays[0].getClass().getComponentType();
+        T[] result = newArray(componentType, totalLength);
         int currentIndex = 0;
         for (T[] array : arrays) {
             if (isNotEmpty(array)) {
@@ -490,21 +499,25 @@ public class ArrayUtils {
      */
     public static <T> T[] addAll(T[] array, List<T> elements) {
         if (isEmpty(array)) {
-            return elements == null ? null : elements.toArray(newArray((Class<T>) array.getClass().getComponentType(), elements.size()));
+            if (elements == null) {
+                return null;
+            }
+            // array 为 null/空时无法推断组件类型，使用 Object[] 作为 fallback
+            return elements.toArray(newArray(Object.class, elements.size()));
         }
         if (elements == null || elements.isEmpty()) {
             return Arrays.copyOf(array, array.length);
         }
-        
-        Class<T> clazz = (Class<T>) array.getClass().getComponentType();
-        T[] result = newArray(clazz, array.length + elements.size());
+
+        Class<?> componentType = array.getClass().getComponentType();
+        T[] result = newArray(componentType, array.length + elements.size());
         System.arraycopy(array, 0, result, 0, array.length);
         for (int i = 0; i < elements.size(); i++) {
             result[array.length + i] = elements.get(i);
         }
         return result;
     }
-    
+
     /**
      * 添加所有元素到数组
      *
@@ -520,9 +533,9 @@ public class ArrayUtils {
         if (elements == null || elements.length == 0) {
             return Arrays.copyOf(array, array.length);
         }
-        
-        Class<T> clazz = (Class<T>) array.getClass().getComponentType();
-        T[] result = newArray(clazz, array.length + elements.length);
+
+        Class<?> componentType = array.getClass().getComponentType();
+        T[] result = newArray(componentType, array.length + elements.length);
         System.arraycopy(array, 0, result, 0, array.length);
         System.arraycopy(elements, 0, result, array.length, elements.length);
         return result;
@@ -538,16 +551,14 @@ public class ArrayUtils {
      */
     public static <T> T[] add(T[] array, T element) {
         if (isEmpty(array)) {
-            
-            Class<T> clazz = (Class<T>) element.getClass();
-            T[] result = newArray(clazz, 1);
+            Class<?> elementType = element.getClass();
+            T[] result = newArray(elementType, 1);
             result[0] = element;
             return result;
         }
-        
-        
-        Class<T> clazz = (Class<T>) array.getClass().getComponentType();
-        T[] result = newArray(clazz, array.length + 1);
+
+        Class<?> componentType = array.getClass().getComponentType();
+        T[] result = newArray(componentType, array.length + 1);
         System.arraycopy(array, 0, result, 0, array.length);
         result[array.length] = element;
         return result;
@@ -564,19 +575,17 @@ public class ArrayUtils {
      */
     public static <T> T[] add(T[] array, int index, T element) {
         if (array == null) {
-            
-            Class<T> clazz = (Class<T>) element.getClass();
-            T[] result = newArray(clazz, 1);
+            Class<?> elementType = element.getClass();
+            T[] result = newArray(elementType, 1);
             result[0] = element;
             return result;
         }
         if (index < 0 || index > array.length) {
             throw new IndexOutOfBoundsException("Index: " + index + ", Length: " + array.length);
         }
-        
-        
-        Class<T> clazz = (Class<T>) array.getClass().getComponentType();
-        T[] result = newArray(clazz, array.length + 1);
+
+        Class<?> componentType = array.getClass().getComponentType();
+        T[] result = newArray(componentType, array.length + 1);
         System.arraycopy(array, 0, result, 0, index);
         result[index] = element;
         System.arraycopy(array, index, result, index + 1, array.length - index);
@@ -648,9 +657,8 @@ public class ArrayUtils {
             end = array.length;
         }
         if (start >= end) {
-            
-            Class<T> clazz = (Class<T>) array.getClass().getComponentType();
-            return newArray(clazz, 0);
+            Class<?> componentType = array.getClass().getComponentType();
+            return newArray(componentType, 0);
         }
         return Arrays.copyOfRange(array, start, end);
     }
@@ -679,9 +687,8 @@ public class ArrayUtils {
      */
     public static <T> T[] limit(T[] array, int n) {
         if (isEmpty(array) || n <= 0) {
-            
-            Class<T> clazz = (Class<T>) array.getClass().getComponentType();
-            return newArray(clazz, 0);
+            Class<?> componentType = array.getClass().getComponentType();
+            return newArray(componentType, 0);
         }
         if (n >= array.length) {
             return Arrays.copyOf(array, array.length);
@@ -709,17 +716,16 @@ public class ArrayUtils {
      */
     public static <T> T[] removeDuplicate(T[] array) {
         if (isEmpty(array)) {
-            
-            Class<T> clazz = (Class<T>) array.getClass().getComponentType();
-            return newArray(clazz, 0);
+            Class<?> componentType = array.getClass().getComponentType();
+            return newArray(componentType, 0);
         }
         Set<T> set = new LinkedHashSet<>();
         for (T item : array) {
             set.add(item);
         }
-        
-        Class<T> clazz = (Class<T>) array.getClass().getComponentType();
-        return toArray(set, clazz);
+
+        Class<?> componentType = array.getClass().getComponentType();
+        return toArray(set, componentType);
     }
 
     /**
@@ -815,9 +821,8 @@ public class ArrayUtils {
      */
     public static <T> T[] clone(T[] array) {
         if (isEmpty(array)) {
-            
-            Class<T> clazz = (Class<T>) array.getClass().getComponentType();
-            return newArray(clazz, 0);
+            Class<?> componentType = array.getClass().getComponentType();
+            return newArray(componentType, 0);
         }
         return Arrays.copyOf(array, array.length);
     }

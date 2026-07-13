@@ -6,6 +6,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import lombok.Builder;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -91,8 +93,8 @@ public class OcrApplicationService {
     /**
      * OCR 结果
      */
-    @lombok.Data
-    @lombok.Builder
+    @Data
+    @Builder
     public static class OcrResult {
         private boolean success;
         private boolean skipped;
@@ -117,8 +119,8 @@ public class OcrApplicationService {
     /**
      * 文本块（包含位置信息）
      */
-    @lombok.Data
-    @lombok.Builder
+    @Data
+    @Builder
     public static class TextBlock {
         private String text;
         private int x;

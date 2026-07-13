@@ -83,13 +83,13 @@ public class QuotaDomainService {
                     .deleted(0)
                     .build();
             quota.setCreatedBy(userId);
-            quota.setCreatedAt(java.time.LocalDateTime.now());
+            quota.setCreatedAt(LocalDateTime.now());
         } else {
             quota.setQuotaLimit(limit);
             quota.setFileCountLimit(fileCountLimit);
         }
         quota.setUpdatedBy(userId);
-        quota.setUpdatedAt(java.time.LocalDateTime.now());
+        quota.setUpdatedAt(LocalDateTime.now());
         return quotaRepository.save(quota);
     }
 
@@ -123,9 +123,9 @@ public class QuotaDomainService {
                     .deleted(0)
                     .build();
             quota.setCreatedBy("system");
-            quota.setCreatedAt(java.time.LocalDateTime.now());
+            quota.setCreatedAt(LocalDateTime.now());
             quota.setUpdatedBy("system");
-            quota.setUpdatedAt(java.time.LocalDateTime.now());
+            quota.setUpdatedAt(LocalDateTime.now());
             quota = quotaRepository.save(quota);
         }
         return quota;

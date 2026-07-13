@@ -8,6 +8,8 @@ import java.nio.ByteOrder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import lombok.Builder;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -130,8 +132,8 @@ public class VirusScanApplicationService {
     /**
      * 扫描结果
      */
-    @lombok.Data
-    @lombok.Builder
+    @Data
+    @Builder
     public static class ScanResult {
         private boolean clean;
         private boolean infected;

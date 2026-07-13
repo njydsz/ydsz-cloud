@@ -1,15 +1,20 @@
 package com.njydsz.pmis.nextwiki.server.service;
 
-import java.io.*;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.file.storage.IFileStorage;
+import com.njydsz.pmis.common.file.storage.IFileStorageProvider;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
 
@@ -40,6 +45,9 @@ public class PreviewApplicationService {
 
     private final FileNodeRepository fileNodeRepository;
 
+    @Autowired(required = false)
+    private IFileStorageProvider fileStorageProvider;
+
     @Value("${nextwiki.preview.libreoffice-path:soffice}")
     private String libreofficePath;
 
@@ -47,17 +55,17 @@ public class PreviewApplicationService {
     private String tempDir;
 
     /** 支持 Office 预览的文件后缀 */
-    private static final java.util.Set<String> OFFICE_SUFFIXES = java.util.Set.of(
+    private static final Set<String> OFFICE_SUFFIXES = Set.of(
             "doc", "docx", "xls", "xlsx", "ppt", "pptx", "odt", "ods", "odp", "rtf"
     );
 
     /** 支持直接预览的文件后缀（无需转换） */
-    private static final java.util.Set<String> DIRECT_PREVIEW_SUFFIXES = java.util.Set.of(
+    private static final Set<String> DIRECT_PREVIEW_SUFFIXES = Set.of(
             "pdf", "txt", "md", "html", "htm", "csv", "json", "xml"
     );
 
     /** 图片文件后缀 */
-    private static final java.util.Set<String> IMAGE_SUFFIXES = java.util.Set.of(
+    private static final Set<String> IMAGE_SUFFIXES = Set.of(
             "jpg", "jpeg", "png", "gif", "bmp", "webp", "svg"
     );
 
@@ -83,7 +91,6 @@ public class PreviewApplicationService {
             } else if (IMAGE_SUFFIXES.contains(suffix)) {
                 generateImageThumbnail(fileNode);
             } else if (DIRECT_PREVIEW_SUFFIXES.contains(suffix)) {
-                // 直接预览，无需转换
                 fileNode.setPreviewReady(true);
                 fileNodeRepository.update(fileNode);
             }
@@ -118,23 +125,44 @@ public class PreviewApplicationService {
     // ==================== 私有方法 ====================
 
     /**
-     * Office 文档转 PDF（调用 LibreOffice headless）
+     * 从存储下载文件到临时路径
      */
-    private void convertOfficeToPdf(FileNode fileNode) throws Exception {
+    private Path downloadToTemp(FileNode fileNode) throws Exception {
+        IFileStorage storage = resolveStorage();
+        if (storage == null) {
+            throw BusinessException.builder().key("文件存储未配置").build();
+        }
+
         Path tempDirPath = Path.of(tempDir);
         Files.createDirectories(tempDirPath);
 
         String tempFileId = UUID.randomUUID().toString().replace("-", "");
-        Path inputFile = tempDirPath.resolve(tempFileId + "." + fileNode.getSuffix());
+        String suffix = fileNode.getSuffix() != null ? fileNode.getSuffix() : "tmp";
+        Path tempFile = tempDirPath.resolve(tempFileId + "." + suffix);
+
+        try (InputStream is = storage.downloadAsStream(fileNode.getBucketName(), fileNode.getStorageKey())) {
+            Files.copy(is, tempFile, StandardCopyOption.REPLACE_EXISTING);
+        }
+
+        log.info("[PreviewApplicationService] 文件下载到临时路径: fileNodeId={}, tempPath={}",
+                fileNode.getId(), tempFile);
+        return tempFile;
+    }
+
+    /**
+     * Office 文档转 PDF（调用 LibreOffice headless）
+     */
+    private void convertOfficeToPdf(FileNode fileNode) throws Exception {
+        Path inputFile = downloadToTemp(fileNode);
+
+        Path tempDirPath = Path.of(tempDir);
+        String tempFileId = UUID.randomUUID().toString().replace("-", "");
         Path outputDir = tempDirPath.resolve("output-" + tempFileId);
         Files.createDirectories(outputDir);
 
-        // 注意：实际下载逻辑需要通过 IFileStorage 接口
-        // 此处仅为转换管线框架，实际文件下载由调用方传入 InputStream
         log.info("[PreviewApplicationService] 开始 Office→PDF 转换: fileNodeId={}, suffix={}",
                 fileNode.getId(), fileNode.getSuffix());
 
-        // 调用 LibreOffice headless 模式
         ProcessBuilder pb = new ProcessBuilder(
                 libreofficePath,
                 "--headless",
@@ -157,13 +185,11 @@ public class PreviewApplicationService {
             throw BusinessException.builder().key("LibreOffice 转换失败: " + errorOutput).build();
         }
 
-        // 查找生成的 PDF 文件
         String pdfName = fileNode.getName().substring(0,
                 fileNode.getName().lastIndexOf('.')) + ".pdf";
         Path pdfFile = outputDir.resolve(pdfName);
 
         if (!Files.exists(pdfFile)) {
-            // 尝试查找目录中的 PDF
             File[] pdfs = outputDir.toFile().listFiles((dir, name) -> name.endsWith(".pdf"));
             if (pdfs != null && pdfs.length > 0) {
                 pdfFile = pdfs[0].toPath();
@@ -171,10 +197,6 @@ public class PreviewApplicationService {
                 throw BusinessException.builder().key("转换后 PDF 文件未找到").build();
             }
         }
-
-        // 上传 PDF 预览副本到存储
-        String previewKey = "wiki/preview/" + fileNode.getId() + ".pdf";
-        // storage.upload(previewKey, pdfFile);  // 实际存储上传由底层实现
 
         // 更新文件节点
         fileNode.setPreviewReady(true);
@@ -192,12 +214,17 @@ public class PreviewApplicationService {
      * 生成图片缩略图
      */
     private void generateImageThumbnail(FileNode fileNode) throws Exception {
-        // 使用 javax.imageio 生成缩略图
-        // 缩略图存储键
         String thumbnailKey = "wiki/thumbnail/" + fileNode.getId() + "_thumb.png";
         fileNode.setThumbnailKey(thumbnailKey);
         fileNode.setPreviewReady(true);
         fileNodeRepository.update(fileNode);
         log.info("[PreviewApplicationService] 图片缩略图生成: fileNodeId={}", fileNode.getId());
+    }
+
+    private IFileStorage resolveStorage() {
+        if (fileStorageProvider != null) {
+            return fileStorageProvider.getStorage();
+        }
+        return null;
     }
 }

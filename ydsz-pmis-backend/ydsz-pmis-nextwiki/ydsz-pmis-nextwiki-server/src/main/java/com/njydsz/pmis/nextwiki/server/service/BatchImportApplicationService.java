@@ -2,6 +2,7 @@ package com.njydsz.pmis.nextwiki.server.service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -11,6 +12,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.pmis.nextwiki.domain.vo.FileNodeVO;
 
+import lombok.Builder;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -70,7 +73,7 @@ public class BatchImportApplicationService {
 
         List<FileNodeVO> results = futures.stream()
                 .map(CompletableFuture::join)
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .toList();
 
         int failed = files.length - results.size();
@@ -97,8 +100,8 @@ public class BatchImportApplicationService {
     /**
      * 批量导入结果
      */
-    @lombok.Data
-    @lombok.Builder
+    @Data
+    @Builder
     public static class BatchImportResult {
         private boolean success;
         private String message;

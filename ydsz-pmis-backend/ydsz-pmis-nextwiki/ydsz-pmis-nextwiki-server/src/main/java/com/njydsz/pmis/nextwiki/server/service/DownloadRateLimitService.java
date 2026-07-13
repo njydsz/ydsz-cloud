@@ -7,6 +7,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import cn.hutool.crypto.digest.DigestUtil;
+import lombok.Builder;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -98,7 +101,7 @@ public class DownloadRateLimitService {
     public String generateSignedDownloadUrl(String storageKey, String userId, String ip) {
         long expireTime = System.currentTimeMillis() / 1000 + signedUrlExpireSeconds;
         String rawData = storageKey + "|" + userId + "|" + ip + "|" + expireTime;
-        String sign = cn.hutool.crypto.digest.DigestUtil.md5Hex(rawData);
+        String sign = DigestUtil.md5Hex(rawData);
 
         // 存储签名到 Redis（用于验证）
         String signKey = "nextwiki:sign:" + sign;
@@ -127,8 +130,8 @@ public class DownloadRateLimitService {
     /**
      * 限流结果
      */
-    @lombok.Data
-    @lombok.Builder
+    @Data
+    @Builder
     public static class RateLimitResult {
         private boolean allowed;
         private String message;
