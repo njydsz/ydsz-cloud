@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * LiteExpr 自研表达式求值器
@@ -320,16 +321,16 @@ public class LiteExprEvaluator implements ExpressionEvaluator {
     }
 
     private String inferCategory(String funcName) {
-        if (java.util.Set.of("abs", "max", "min", "round", "floor", "ceil", "sqrt", "pow",
+        if (Set.of("abs", "max", "min", "round", "floor", "ceil", "sqrt", "pow",
                 "log", "log10", "exp", "random").contains(funcName)) return "math";
-        if (java.util.Set.of("length", "upper", "lower", "trim", "contains", "startsWith",
+        if (Set.of("length", "upper", "lower", "trim", "contains", "startsWith",
                 "endsWith", "substring", "indexOf", "replace", "split", "join", "concat",
                 "equals", "isEmpty", "isBlank", "isNotBlank", "compareTo").contains(funcName)) return "string";
-        if (java.util.Set.of("count", "sum", "avg", "first", "last", "distinct", "filter",
+        if (Set.of("count", "sum", "avg", "first", "last", "distinct", "filter",
                 "map", "reduce", "sortBy").contains(funcName)) return "collection";
-        if (java.util.Set.of("toString", "toNumber", "toInt", "toLong", "toDouble",
+        if (Set.of("toString", "toNumber", "toInt", "toLong", "toDouble",
                 "toBoolean", "toDecimal", "isNull", "isNotNull", "typeOf").contains(funcName)) return "type";
-        if (java.util.Set.of("now", "today", "dateFormat", "dateParse", "year", "month", "day").contains(funcName)) return "datetime";
+        if (Set.of("now", "today", "dateFormat", "dateParse", "year", "month", "day").contains(funcName)) return "datetime";
         return "utility";
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Arrays;
 
 /**
  * 消息队列配置类
@@ -383,7 +384,7 @@ public class QueueProperties {
     }
 
     private static Map<String, String> parseKeyValueArgs(String argsStr) {
-        return java.util.Arrays.stream(argsStr.split("&"))
+        return Arrays.stream(argsStr.split("&"))
                 .map(s -> s.split("="))
                 .filter(a -> a.length == 2)
                 .collect(java.util.stream.Collectors.toMap(

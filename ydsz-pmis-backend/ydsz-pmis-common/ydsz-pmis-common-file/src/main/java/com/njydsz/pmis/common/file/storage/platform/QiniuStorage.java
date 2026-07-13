@@ -290,7 +290,7 @@ public class QiniuStorage extends AbstractFileStorage {
             if (context == null) {
                 context = new MultipartContextStore.MultipartContextData(uploadId, bucketName, chunkObjectName);
             }
-            Map<Integer, String> partChunkNames = new java.util.HashMap<>(context.partChunkNames());
+            Map<Integer, String> partChunkNames = new HashMap<>(context.partChunkNames());
             partChunkNames.put(partNumber, eTag);
             multipartContextStore.save(uploadId,
                     new MultipartContextStore.MultipartContextData(

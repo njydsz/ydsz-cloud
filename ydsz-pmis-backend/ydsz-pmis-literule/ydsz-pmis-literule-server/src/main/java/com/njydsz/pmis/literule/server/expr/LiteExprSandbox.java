@@ -3,6 +3,8 @@ package com.njydsz.pmis.literule.server.expr.liteexpr;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * LiteExpr AST 级别沙箱
@@ -86,7 +88,7 @@ public class LiteExprSandbox {
     /**
      * 同步 facts key 到白名单
      */
-    public void syncFacts(java.util.Map<String, Object> facts) {
+    public void syncFacts(Map<String, Object> facts) {
         if (facts == null) return;
         allowedVariables.addAll(facts.keySet());
     }
@@ -98,7 +100,7 @@ public class LiteExprSandbox {
      * @return 校验结果
      */
     public SandboxResult check(ExprNode ast) {
-        List<String> violations = new java.util.ArrayList<>();
+        List<String> violations = new ArrayList<>();
         checkNode(ast, violations);
         if (violations.isEmpty()) {
             return SandboxResult.ok();

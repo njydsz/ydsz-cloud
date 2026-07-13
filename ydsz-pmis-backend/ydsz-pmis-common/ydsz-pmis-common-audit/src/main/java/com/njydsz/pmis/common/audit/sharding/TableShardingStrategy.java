@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.audit.sharding;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 /**
  * 审计日志分表策略接口
@@ -48,7 +49,7 @@ public interface TableShardingStrategy {
      * @param endTime       结束时间
      * @return 时间范围内涉及的分表名集合（去重）
      */
-    java.util.Set<String> getTableNamesInRange(String baseTableName, LocalDateTime startTime, LocalDateTime endTime);
+    Set<String> getTableNamesInRange(String baseTableName, LocalDateTime startTime, LocalDateTime endTime);
 
     /**
      * 分表类型枚举

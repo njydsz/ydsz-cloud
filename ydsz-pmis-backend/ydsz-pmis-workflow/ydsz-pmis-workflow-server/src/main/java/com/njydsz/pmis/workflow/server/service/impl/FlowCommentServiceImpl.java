@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.Map;
 
 /**
  * P2-2: 流程评论 Service 实现
@@ -94,7 +95,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
                     // 不通知自己
                     if (!mentionedUserId.equals(userId)) {
                         notificationService.send("WORKFLOW", mentionedUserId, title, content,
-                                java.util.Map.of("instanceId", dto.getInstanceId(),
+                                Map.of("instanceId", dto.getInstanceId(),
                                         "commentId", comment.getId(),
                                         "type", "MENTION"));
                     }
@@ -116,7 +117,7 @@ public class FlowCommentServiceImpl implements FlowCommentService {
                 String replyContent = userName + " 回复了您的评论: " + comment.getContent();
                 notificationService.send("WORKFLOW", dto.getReplyToUserId(),
                         replyTitle, replyContent,
-                        java.util.Map.of("instanceId", dto.getInstanceId(),
+                        Map.of("instanceId", dto.getInstanceId(),
                                 "commentId", comment.getId(),
                                 "type", "REPLY"));
             } catch (Exception e) {

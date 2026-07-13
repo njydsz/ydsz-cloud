@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.ArrayList;
 
 /**
  * 敏感字段脱敏工具类
@@ -225,7 +226,7 @@ public final class SensitiveFieldMask {
 
         if (obj instanceof Collection) {
             Collection<?> collection = (Collection<?>) obj;
-            Collection<Object> result = new java.util.ArrayList<>();
+            Collection<Object> result = new ArrayList<>();
             for (Object item : collection) {
                 result.add(maskInternal(item, patterns, visited));
             }

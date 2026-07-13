@@ -264,7 +264,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             // 索引未启用时仍需租户、环境、场景过滤
             if (!ruleIndexer.isIndexEnabled()) {
                 // 租户隔离（1.5.0）：仅评估与上下文租户匹配的规则
-                if (!java.util.Objects.equals(rule.getTenantId(), contextTenantId)) {
+                if (!Objects.equals(rule.getTenantId(), contextTenantId)) {
                     continue;
                 }
                 // 环境隔离（1.6.0，P1-5）：rule.environment="default" 匹配任何上下文；非 default 必须完全匹配
@@ -633,7 +633,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         String contextEnvironment = context.getEnvironment();
         for (Rule rule : rules) {
             // 租户隔离（1.5.0）：dry-run 同样仅评估与上下文租户匹配的规则
-            if (!java.util.Objects.equals(rule.getTenantId(), contextTenantId)) {
+            if (!Objects.equals(rule.getTenantId(), contextTenantId)) {
                 continue;
             }
             // 环境隔离（1.6.0，P1-5）：dry-run 同样遵循环境隔离

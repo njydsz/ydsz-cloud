@@ -10,6 +10,7 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.UUID;
 
 /**
  * 基于 Redis 的持久化重试队列实现
@@ -308,7 +309,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
 
         RetryMessage(NotifyChannel channel, String receiver, String title, String content,
                      int retryCount, String lastError, long nextRetryTime) {
-            this.id = java.util.UUID.randomUUID().toString().replace("-", "");
+            this.id = UUID.randomUUID().toString().replace("-", "");
             this.channel = channel;
             this.receiver = receiver;
             this.title = title;

@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 /**
  * 任务执行统计 Controller（P2-3 执行历史趋势可视化）。
@@ -208,7 +209,7 @@ public class JobStatsController {
     public BaseResponse<List<Map<String, Object>>> heatmap(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         LocalDate queryDate = date != null ? date : LocalDate.now();
-        List<Map<String, Object>> heatmap = new java.util.ArrayList<>();
+        List<Map<String, Object>> heatmap = new ArrayList<>();
         for (int hour = 0; hour < 24; hour++) {
             LocalDateTime hourStart = queryDate.atTime(hour, 0);
             LocalDateTime hourEnd = queryDate.atTime(hour, 59, 59);

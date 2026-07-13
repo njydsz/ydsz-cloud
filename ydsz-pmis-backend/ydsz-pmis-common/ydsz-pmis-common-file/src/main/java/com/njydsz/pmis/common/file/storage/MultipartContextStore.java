@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.file.storage;
 
+
+import java.util.Map;
 /**
  * 分片上传上下文存储接口
  * <p>支持多实例部署时分片上下文共享。
@@ -39,7 +41,7 @@ public interface MultipartContextStore {
      *
      * @return 所有分片上下文映射
      */
-    java.util.Map<String, MultipartContextData> getAll();
+    Map<String, MultipartContextData> getAll();
 
     /**
      * 清理过期的分片上传上下文
@@ -55,7 +57,7 @@ public interface MultipartContextStore {
             String uploadId,
             String bucketName,
             String objectName,
-            java.util.Map<Integer, String> partChunkNames,
+            Map<Integer, String> partChunkNames,
             long createTime,
             long lastAccessTime
     ) {

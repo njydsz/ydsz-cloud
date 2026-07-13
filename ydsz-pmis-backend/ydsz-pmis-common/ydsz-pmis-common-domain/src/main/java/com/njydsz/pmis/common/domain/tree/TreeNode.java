@@ -15,6 +15,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 树节点基础类
@@ -258,7 +262,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
         if (children == null || children.isEmpty()) {
             return count;
         }
-        java.util.Deque<T> stack = new java.util.ArrayDeque<>(children);
+        Deque<T> stack = new ArrayDeque<>(children);
         while (!stack.isEmpty()) {
             T node = stack.pop();
             count++;
@@ -278,7 +282,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
      * @param visitor 访问者函数
      */
     public void traverseDFS(Consumer<T> visitor) {
-        java.util.Deque<T> stack = new java.util.ArrayDeque<>();
+        Deque<T> stack = new ArrayDeque<>();
         stack.push((T) this);
         while (!stack.isEmpty()) {
             T node = stack.pop();
@@ -358,7 +362,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
             return null;
         }
         // 使用栈进行深度优先搜索，避免递归调用栈溢出
-        java.util.Deque<T> stack = new java.util.ArrayDeque<>();
+        Deque<T> stack = new ArrayDeque<>();
         stack.push((T) this);
         while (!stack.isEmpty()) {
             T node = stack.pop();
@@ -386,7 +390,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
      */
     public List<ID> getAncestorIds(List<T> nodeList) {
         // 构建 ID -> Node 索引，将 O(n²) 降为 O(n)
-        java.util.Map<ID, T> nodeMap = new java.util.HashMap<>();
+        Map<ID, T> nodeMap = new HashMap<>();
         if (nodeList != null) {
             for (T node : nodeList) {
                 if (node != null && node.getId() != null) {
@@ -450,7 +454,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
             return (T) this;
         }
         // 构建 ID -> Node 索引，将 O(n²) 降为 O(n)
-        java.util.Map<ID, T> nodeMap = new java.util.HashMap<>();
+        Map<ID, T> nodeMap = new HashMap<>();
         if (nodeList != null) {
             for (T node : nodeList) {
                 if (node != null && node.getId() != null) {

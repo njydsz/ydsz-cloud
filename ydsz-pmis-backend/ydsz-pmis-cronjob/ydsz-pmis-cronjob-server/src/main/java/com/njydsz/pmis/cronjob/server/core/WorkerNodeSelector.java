@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Collections;
 
 /**
  * P0-1: Worker 节点选择器（调度器-执行器分离）。
@@ -122,7 +123,7 @@ public class WorkerNodeSelector {
         if (strategy != null) {
             return strategy.getOnlineNodes();
         }
-        return java.util.Collections.emptyList();
+        return Collections.emptyList();
     }
 
     /**

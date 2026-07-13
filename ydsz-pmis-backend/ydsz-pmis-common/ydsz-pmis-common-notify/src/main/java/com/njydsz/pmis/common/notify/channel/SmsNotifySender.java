@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.Base64;
 
 /**
  * 短信通知发送器
@@ -214,7 +215,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 			mac.init(new javax.crypto.spec.SecretKeySpec(
 					secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
 			byte[] signData = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
-			String sign = java.util.Base64.getEncoder().encodeToString(signData);
+			String sign = Base64.getEncoder().encodeToString(signData);
 			// accessKey 通过 Header 传递，不放入请求体
 			return (accessKey != null ? accessKey + ":" : "") + sign;
 		} catch (Exception e) {

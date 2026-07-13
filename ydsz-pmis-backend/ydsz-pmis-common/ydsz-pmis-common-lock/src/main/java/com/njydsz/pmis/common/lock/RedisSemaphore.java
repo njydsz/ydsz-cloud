@@ -225,7 +225,7 @@ public class RedisSemaphore implements DistributedLocker {
      */
     public String acquireWithTimeout(long timeout, TimeUnit unit) {
         if (tryAcquire(0, TimeUnit.MILLISECONDS)) {
-            String acquireId = java.util.UUID.randomUUID().toString();
+            String acquireId = UUID.randomUUID().toString();
             long timeoutMillis = unit.toMillis(timeout);
             ScheduledFuture<?> future = timeoutScheduler.schedule(() -> {
                 timeoutTasks.remove(acquireId);
@@ -252,7 +252,7 @@ public class RedisSemaphore implements DistributedLocker {
     public String acquireWithTimeout(long waitTimeout, TimeUnit waitUnit,
                                      long autoReleaseTimeout, TimeUnit releaseUnit) {
         if (tryAcquire(waitTimeout, waitUnit)) {
-            String acquireId = java.util.UUID.randomUUID().toString();
+            String acquireId = UUID.randomUUID().toString();
             long timeoutMillis = releaseUnit.toMillis(autoReleaseTimeout);
             ScheduledFuture<?> future = timeoutScheduler.schedule(() -> {
                 timeoutTasks.remove(acquireId);

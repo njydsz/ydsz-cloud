@@ -2,7 +2,6 @@ package com.njydsz.pmis.common.websocket.config;
 
 import com.njydsz.pmis.common.auth.token.TokenService;
 import com.njydsz.pmis.common.websocket.auth.WebSocketAuthInterceptor;
-import com.njydsz.pmis.common.websocket.constant.WebSocketConstants;
 import com.njydsz.pmis.common.websocket.metric.WebSocketMetrics;
 import com.njydsz.pmis.common.websocket.offline.OfflineMessageStore;
 import com.njydsz.pmis.common.websocket.offline.RedisOfflineMessageStore;
@@ -22,10 +21,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
-import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
-import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
-
+import java.util.List;
 /**
  * WebSocket 自动装配配置。
  *
@@ -128,7 +124,7 @@ public class WebSocketAutoConfiguration {
                 @Override
                 public void cacheOffline(String userId, String type, Object payload) { }
                 @Override
-                public java.util.List<String> drainOffline(String userId) { return java.util.List.of(); }
+                public List<String> drainOffline(String userId) { return List.of(); }
                 @Override
                 public long countOffline(String userId) { return 0; }
             };

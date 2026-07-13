@@ -143,7 +143,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
         try {
             if (shardingStrategy != null) {
                 Set<String> tables = resolveTables(startTime, endTime);
-                List<Object> params = new java.util.ArrayList<>();
+                List<Object> params = new ArrayList<>();
                 params.add(operatorId);
                 String whereClause = "operator_id = ?" + appendTimeCondition(params, startTime, endTime)
                         + " ORDER BY operation_time DESC";
@@ -153,7 +153,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
             }
             StringBuilder sql = new StringBuilder("SELECT * FROM ").append(baseTableName)
                     .append(" WHERE operator_id = ?");
-            List<Object> params = new java.util.ArrayList<>();
+            List<Object> params = new ArrayList<>();
             params.add(operatorId);
 
             if (startTime != null) {
@@ -182,7 +182,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
         try {
             if (shardingStrategy != null) {
                 Set<String> tables = resolveTables(startTime, endTime);
-                List<Object> params = new java.util.ArrayList<>();
+                List<Object> params = new ArrayList<>();
                 params.add(module);
                 String whereClause = "module = ?" + appendTimeCondition(params, startTime, endTime)
                         + " ORDER BY operation_time DESC";
@@ -192,7 +192,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
             }
             StringBuilder sql = new StringBuilder("SELECT * FROM ").append(baseTableName)
                     .append(" WHERE module = ?");
-            List<Object> params = new java.util.ArrayList<>();
+            List<Object> params = new ArrayList<>();
             params.add(module);
 
             if (startTime != null) {
@@ -221,7 +221,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
         try {
             if (shardingStrategy != null) {
                 Set<String> tables = resolveTables(startTime, endTime);
-                List<Object> params = new java.util.ArrayList<>();
+                List<Object> params = new ArrayList<>();
                 params.add(auditType);
                 String whereClause = "audit_type = ?" + appendTimeCondition(params, startTime, endTime)
                         + " ORDER BY operation_time DESC";
@@ -231,7 +231,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
             }
             StringBuilder sql = new StringBuilder("SELECT * FROM ").append(baseTableName)
                     .append(" WHERE audit_type = ?");
-            List<Object> params = new java.util.ArrayList<>();
+            List<Object> params = new ArrayList<>();
             params.add(auditType);
 
             if (startTime != null) {
@@ -262,13 +262,13 @@ public class DefaultAuditQueryService implements AuditQueryService {
                 }
                 if (tables.size() == 1) {
                     String table = tables.iterator().next();
-                    List<Object> params = new java.util.ArrayList<>();
+                    List<Object> params = new ArrayList<>();
                     String whereClause = "1=1" + appendTimeCondition(params, startTime, endTime)
                             + " ORDER BY operation_time DESC";
                     return jdbcTemplate.query("SELECT * FROM " + table + " WHERE " + whereClause,
                             BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
                 }
-                List<Object> params = new java.util.ArrayList<>();
+                List<Object> params = new ArrayList<>();
                 String whereClause = "1=1" + appendTimeCondition(params, startTime, endTime)
                         + " ORDER BY operation_time DESC";
                 String unionSql = buildUnionAllSql(tables, whereClause);
@@ -277,7 +277,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
             }
             StringBuilder sql = new StringBuilder("SELECT * FROM ").append(baseTableName)
                     .append(" WHERE 1=1");
-            List<Object> params = new java.util.ArrayList<>();
+            List<Object> params = new ArrayList<>();
 
             if (startTime != null) {
                 sql.append(" AND operation_time >= ?");

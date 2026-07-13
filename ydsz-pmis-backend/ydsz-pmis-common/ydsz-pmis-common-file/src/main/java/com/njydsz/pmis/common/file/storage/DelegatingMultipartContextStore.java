@@ -1,6 +1,8 @@
 package com.njydsz.pmis.common.file.storage;
 
 import lombok.extern.slf4j.Slf4j;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * 分片上传上下文存储委托实现
@@ -77,7 +79,7 @@ public class DelegatingMultipartContextStore implements MultipartContextStore {
     }
 
     @Override
-    public java.util.Map<String, MultipartContextData> getAll() {
+    public Map<String, MultipartContextData> getAll() {
         if (primary != null) {
             try {
                 return primary.getAll();
@@ -88,7 +90,7 @@ public class DelegatingMultipartContextStore implements MultipartContextStore {
         if (fallback != null) {
             return fallback.getAll();
         }
-        return java.util.Collections.emptyMap();
+        return Collections.emptyMap();
     }
 
     @Override

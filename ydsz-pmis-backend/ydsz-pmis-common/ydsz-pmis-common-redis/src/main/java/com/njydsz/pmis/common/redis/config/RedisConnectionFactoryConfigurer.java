@@ -16,6 +16,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Redis 连接工厂配置器
@@ -148,7 +151,7 @@ public class RedisConnectionFactoryConfigurer {
         if (properties.getCluster() != null && properties.getCluster().getNodes() != null
                 && !properties.getCluster().getNodes().isEmpty()) {
             RedisClusterConfiguration clusterConfig =
-                    new RedisClusterConfiguration(new java.util.ArrayList<>(properties.getCluster().getNodes()));
+                    new RedisClusterConfiguration(new ArrayList<>(properties.getCluster().getNodes()));
             clusterConfig.setPassword(properties.getPassword());
             clusterConfig.setMaxRedirects(properties.getCluster().getMaxRedirects());
             return new LettuceConnectionFactory(clusterConfig, clientConfig);
@@ -334,7 +337,7 @@ public class RedisConnectionFactoryConfigurer {
             return null;
         }
         RedisClusterConfiguration config =
-                new RedisClusterConfiguration(new java.util.ArrayList<>(properties.getCluster().getNodes()));
+                new RedisClusterConfiguration(new ArrayList<>(properties.getCluster().getNodes()));
         config.setPassword(properties.getPassword());
         config.setMaxRedirects(properties.getCluster().getMaxRedirects());
         return config;
@@ -358,8 +361,8 @@ public class RedisConnectionFactoryConfigurer {
     /**
      * 构建 Redis 节点列表
      */
-    private java.util.List<RedisNode> buildRedisNodes(java.util.Collection<String> nodes) {
-        java.util.List<RedisNode> redisNodes = new java.util.ArrayList<>();
+    private List<RedisNode> buildRedisNodes(Collection<String> nodes) {
+        List<RedisNode> redisNodes = new ArrayList<>();
         if (nodes != null) {
             for (String node : nodes) {
                 String[] parts = node.split(":");

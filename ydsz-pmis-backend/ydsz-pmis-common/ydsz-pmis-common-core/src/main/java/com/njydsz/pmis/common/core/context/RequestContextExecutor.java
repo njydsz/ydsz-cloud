@@ -4,6 +4,8 @@ import com.alibaba.ttl.threadpool.TtlExecutors;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.*;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * 请求上下文自动传播线程池执行器
@@ -243,12 +245,12 @@ public final class RequestContextExecutor {
      *
      * @return 等待执行的任务列表
      */
-    public java.util.List<Runnable> shutdownNow() {
+    public List<Runnable> shutdownNow() {
         if (ownsDelegate) {
             log.warn("【RequestContext】立即关闭线程池 | executor={}", delegate.getClass().getSimpleName());
             return delegate.shutdownNow();
         }
-        return java.util.Collections.emptyList();
+        return Collections.emptyList();
     }
 
     /**

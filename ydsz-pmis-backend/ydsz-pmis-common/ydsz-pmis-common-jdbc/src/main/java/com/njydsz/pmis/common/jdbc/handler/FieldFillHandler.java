@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.jdbc.handler;
 
 import net.sf.jsqlparser.expression.Expression;
+import java.util.Map;
 
 /**
  * 字段填充处理器接口
@@ -94,7 +95,7 @@ public interface FieldFillHandler {
      *
      * @return 默认值映射，返回 null 或空 Map 表示不使用默认值
      */
-    default java.util.Map<String, Expression> getDefaultValues() {
+    default Map<String, Expression> getDefaultValues() {
         return null;
     }
 
@@ -108,7 +109,7 @@ public interface FieldFillHandler {
      * @return 默认值表达式，返回 null 表示不应用默认值
      */
     default Expression getDefaultValue(String fieldName) {
-        java.util.Map<String, Expression> defaults = getDefaultValues();
+        Map<String, Expression> defaults = getDefaultValues();
         if (defaults != null && !defaults.isEmpty()) {
             return defaults.get(fieldName);
         }

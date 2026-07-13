@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * P1-7: 重试策略解析器。
@@ -47,7 +48,7 @@ public class RetryStrategyResolver {
         if (channel == null || channel.isBlank()) {
             return def;
         }
-        java.util.Map<String, MessageProperties.RetryPolicy> map =
+        Map<String, MessageProperties.RetryPolicy> map =
                 messageProperties.getChannelRetryPolicies();
         if (map == null || map.isEmpty()) {
             return def;

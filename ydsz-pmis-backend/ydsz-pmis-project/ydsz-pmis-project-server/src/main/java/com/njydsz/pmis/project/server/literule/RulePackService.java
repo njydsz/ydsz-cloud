@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 规则集 Service（P2-14）
@@ -381,9 +382,9 @@ public class RulePackService implements RulePackProvider {
                 RuleDefinition a = fromMap.get(code);
                 RuleDefinition b = toMap.get(code);
                 if (a == null || b == null) continue;
-                if (!java.util.Objects.equals(a.getConditionExpression(), b.getConditionExpression())
-                        || !java.util.Objects.equals(a.getSeverityExpression(), b.getSeverityExpression())
-                        || !java.util.Objects.equals(a.getPriority(), b.getPriority())) {
+                if (!Objects.equals(a.getConditionExpression(), b.getConditionExpression())
+                        || !Objects.equals(a.getSeverityExpression(), b.getSeverityExpression())
+                        || !Objects.equals(a.getPriority(), b.getPriority())) {
                     changed.add(code);
                 }
             }

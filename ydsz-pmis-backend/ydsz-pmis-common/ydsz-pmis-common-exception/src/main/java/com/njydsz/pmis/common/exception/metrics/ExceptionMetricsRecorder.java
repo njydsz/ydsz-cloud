@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
+import java.util.Map;
 
 /**
  * 异常处理器装饰器（增强可观测性）
@@ -187,7 +188,7 @@ public class ExceptionMetricsRecorder {
      */
     private String readTraceId() {
         try {
-            java.util.Map<String, String> mdc = org.slf4j.MDC.getCopyOfContextMap();
+            Map<String, String> mdc = org.slf4j.MDC.getCopyOfContextMap();
             if (mdc != null) {
                 String traceId = mdc.get("traceId");
                 if (traceId == null) {

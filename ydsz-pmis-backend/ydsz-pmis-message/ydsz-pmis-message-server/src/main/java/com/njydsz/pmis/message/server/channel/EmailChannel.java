@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.Map;
+import java.util.Base64;
 
 /**
  * 邮件通道实现。
@@ -152,7 +153,7 @@ public class EmailChannel implements MessageChannel {
                 String name = item.getString("name");
                 String data = item.getString("data");
                 if (StringUtils.hasText(name) && StringUtils.hasText(data)) {
-                    byte[] bytes = java.util.Base64.getDecoder().decode(data);
+                    byte[] bytes = Base64.getDecoder().decode(data);
                     helper.addAttachment(name, new ByteArrayResource(bytes));
                 }
             }
@@ -177,7 +178,7 @@ public class EmailChannel implements MessageChannel {
                 String cid = item.getString("cid");
                 String data = item.getString("data");
                 if (StringUtils.hasText(cid) && StringUtils.hasText(data)) {
-                    byte[] bytes = java.util.Base64.getDecoder().decode(data);
+                    byte[] bytes = Base64.getDecoder().decode(data);
                     helper.addInline(cid, new ByteArrayResource(bytes));
                 }
             }

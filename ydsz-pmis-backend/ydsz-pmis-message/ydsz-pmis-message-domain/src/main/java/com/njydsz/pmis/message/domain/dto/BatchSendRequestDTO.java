@@ -4,6 +4,7 @@ package com.njydsz.pmis.message.domain.dto.batch;
 import lombok.Data;
 
 import java.util.Map;
+import java.util.List;
 
 /**
  * 批量发送请求 DTO。
@@ -41,7 +42,7 @@ public class BatchSendRequestDTO {
     private Map<String, Object> params;
 
     /** 接收人列表（receiverList 模式） */
-    private java.util.List<String> receiverList;
+    private List<String> receiverList;
 
     /** 是否异步发送（默认 true；false 时同步返回结果） */
     private Boolean async = true;

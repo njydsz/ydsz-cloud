@@ -3,6 +3,7 @@ package com.njydsz.pmis.message.domain.dto.core;
 import lombok.Data;
 
 import java.util.Map;
+import java.util.List;
 
 /**
  * 用户触达画像 DTO。
@@ -22,7 +23,7 @@ public class UserReachProfileDTO {
     private Map<String, Integer> channelActivityScores;
 
     /** 通道偏好优先级（如 ["SMS","PUSH","EMAIL"]，按优先级降序） */
-    private java.util.List<String> channelPreferences;
+    private List<String> channelPreferences;
 
     /** 最近活跃时间（ISO 格式字符串） */
     private String lastActiveAt;

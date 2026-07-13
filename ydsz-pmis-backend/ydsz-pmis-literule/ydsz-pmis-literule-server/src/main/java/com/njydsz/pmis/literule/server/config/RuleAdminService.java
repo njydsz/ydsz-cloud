@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Collections;
 
 /**
  * 规则管理服务
@@ -238,7 +239,7 @@ public class RuleAdminService {
         // 4. 分页
         if (offset < 0) offset = 0;
         if (limit <= 0) limit = 50;
-        if (offset >= filtered.size()) return java.util.Collections.emptyList();
+        if (offset >= filtered.size()) return Collections.emptyList();
         int end = Math.min(offset + limit, filtered.size());
         return filtered.subList(offset, end);
     }
@@ -526,7 +527,7 @@ public class RuleAdminService {
                 .build();
 
         ExpressionRule rule = new ExpressionRule(tempDef, evaluator);
-        RuleContext context = RuleContext.of(facts != null ? facts : java.util.Collections.emptyMap(),
+        RuleContext context = RuleContext.of(facts != null ? facts : Collections.emptyMap(),
                 "IMPACT_PREVIEW", "MANUAL");
         try {
             return rule.evaluate(context);
@@ -570,7 +571,7 @@ public class RuleAdminService {
                     .build();
             return new ExpressionEvaluator.TraceResult(false, root);
         }
-        RuleContext context = RuleContext.of(facts != null ? facts : java.util.Collections.emptyMap(),
+        RuleContext context = RuleContext.of(facts != null ? facts : Collections.emptyMap(),
                 "EXPR_TRACE", "MANUAL");
         return evaluator.evalBooleanWithTrace(expression, context);
     }

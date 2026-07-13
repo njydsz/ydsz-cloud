@@ -392,7 +392,7 @@ public class ColPermissionInnerInterceptor extends JsqlParserSupport implements 
                 log.warn("所有表均无可见列，已将 SELECT 列表替换为 NULL 占位避免数据泄露");
                 SelectItem<net.sf.jsqlparser.expression.NullValue> nullItem =
                     new SelectItem<>(new net.sf.jsqlparser.expression.NullValue());
-                plain.setSelectItems(java.util.Collections.singletonList(nullItem));
+                plain.setSelectItems(Collections.singletonList(nullItem));
             }
             return;
         }

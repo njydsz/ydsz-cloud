@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.LinkedHashSet;
 
 /**
  * LiteExpr 内置函数库
@@ -188,7 +189,7 @@ public final class BuiltinFunctions {
         r.register("distinct", args -> {
             Object v = args[0];
             if (v instanceof Collection<?> c) {
-                return new ArrayList<>(new java.util.LinkedHashSet<>(c));
+                return new ArrayList<>(new LinkedHashSet<>(c));
             }
             return v;
         }, "distinct(coll)", "去重");

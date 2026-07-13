@@ -217,7 +217,7 @@ public class FlowInstanceController {
     public BaseResponse<String> resubmit(@PathVariable String id,
                                     @RequestParam(required = false) String comment,
                                     @RequestParam(required = false, defaultValue = "RESTART") String redoMode,
-                                    @RequestBody(required = false) java.util.Map<String, Object> variables) {
+                                    @RequestBody(required = false) Map<String, Object> variables) {
         return BaseResponse.ok(workflowFacade.resubmitProcess(id, AuthContext.getUserId(),
                 variables, comment, redoMode));
     }

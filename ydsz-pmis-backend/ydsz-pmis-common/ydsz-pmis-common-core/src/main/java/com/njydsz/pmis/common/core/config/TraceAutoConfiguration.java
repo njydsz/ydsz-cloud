@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import java.util.UUID;
 
 /**
  * Trace 模块自动配置类
@@ -39,6 +40,6 @@ public class TraceAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(TraceIdSupplier.class)
     public TraceIdSupplier traceIdSupplier() {
-        return () -> java.util.UUID.randomUUID().toString().replace("-", "");
+        return () -> UUID.randomUUID().toString().replace("-", "");
     }
 }

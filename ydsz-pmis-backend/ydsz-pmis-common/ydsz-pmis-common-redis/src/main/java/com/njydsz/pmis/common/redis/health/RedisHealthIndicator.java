@@ -6,6 +6,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import java.util.Properties;
 
 /**
  * Redis 健康检查指示器
@@ -74,7 +75,7 @@ public class RedisHealthIndicator implements HealthIndicator {
                         .withDetail("latency_ms", latency);
 
                 try {
-                    java.util.Properties info = connection.serverCommands().info();
+                    Properties info = connection.serverCommands().info();
                     if (info != null) {
                         builder.withDetail("used_memory", info.getProperty("used_memory_human", "unknown"));
                         builder.withDetail("max_memory", info.getProperty("max_memory_human", "unlimited"));

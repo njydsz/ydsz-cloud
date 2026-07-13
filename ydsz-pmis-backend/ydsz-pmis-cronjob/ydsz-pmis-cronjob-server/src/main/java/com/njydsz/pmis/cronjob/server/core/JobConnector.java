@@ -1,5 +1,7 @@
 package com.njydsz.pmis.cronjob.server.core.connector;
 
+
+import java.util.List;
 /**
  * 生态连接器接口（P2-3）。
  *
@@ -41,7 +43,7 @@ public interface JobConnector {
      * @param config 连接配置（端点、认证信息等）
      * @return 导入的任务映射列表
      */
-    java.util.List<ConnectorTaskInfo> importTasks(ConnectorConfig config);
+    List<ConnectorTaskInfo> importTasks(ConnectorConfig config);
 
     /**
      * 导出任务到外部系统。
@@ -50,7 +52,7 @@ public interface JobConnector {
      * @param config 连接配置
      * @return 导出结果（成功/失败/跳过计数）
      */
-    ConnectorExportResult exportTasks(java.util.List<ConnectorTaskInfo> tasks, ConnectorConfig config);
+    ConnectorExportResult exportTasks(List<ConnectorTaskInfo> tasks, ConnectorConfig config);
 
     /**
      * 测试连接是否可用。
@@ -66,5 +68,5 @@ public interface JobConnector {
      * @param config 连接配置
      * @return 外部系统中的任务列表
      */
-    java.util.List<ConnectorTaskInfo> listRemoteTasks(ConnectorConfig config);
+    List<ConnectorTaskInfo> listRemoteTasks(ConnectorConfig config);
 }

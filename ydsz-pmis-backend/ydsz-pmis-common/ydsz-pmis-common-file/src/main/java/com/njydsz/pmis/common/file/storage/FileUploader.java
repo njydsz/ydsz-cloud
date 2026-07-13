@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.file.storage;
 import com.njydsz.pmis.common.file.callback.UploadProgressListener;
 import com.njydsz.pmis.common.file.domain.FileStorage;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.List;
 
 /**
  * 文件上传器接口
@@ -15,7 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
  * <ol>
  *   <li>{@link #initiateChunkedUpload(String, String)} - 初始化分片任务，获取 uploadId</li>
  *   <li>{@link #uploadChunk(String, String, String, int, MultipartFile)} - 上传单个分片（可并行）</li>
- *   <li>{@link #completeChunkedUpload(String, String, String, java.util.List)} - 完成分片合并</li>
+ *   <li>{@link #completeChunkedUpload(String, String, String, List)} - 完成分片合并</li>
  * </ol>
  *
  * <p><b>分片大小：</b>默认 5MB（与 S3 协议对齐，可在 {@code FileProperties.chunkSize} 调整）。
@@ -90,7 +91,7 @@ public interface FileUploader {
      * @param uploadId    初始化分片任务时返回的 uploadId
      * @param partNumbers 已上传的分片编号列表，编号必须为正整数且连续（允许跳号但不建议）
      */
-    void completeChunkedUpload(String bucketName, String objectName, String uploadId, java.util.List<Integer> partNumbers);
+    void completeChunkedUpload(String bucketName, String objectName, String uploadId, List<Integer> partNumbers);
 
     /**
      * 生成前端直传 Policy 签名

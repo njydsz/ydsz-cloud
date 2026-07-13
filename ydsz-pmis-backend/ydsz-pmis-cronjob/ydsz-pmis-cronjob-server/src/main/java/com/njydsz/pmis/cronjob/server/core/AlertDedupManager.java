@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.time.Duration;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * 告警智能降噪管理器（P1-3）。
@@ -120,7 +122,7 @@ public class AlertDedupManager {
      * 合并通知通道（去重）。
      */
     private String mergeChannels(String origChannels, String escalateChannels) {
-        java.util.Set<String> channels = new java.util.LinkedHashSet<>();
+        Set<String> channels = new LinkedHashSet<>();
         if (origChannels != null && !origChannels.isBlank()) {
             for (String ch : origChannels.split(",")) {
                 channels.add(ch.trim());

@@ -483,7 +483,7 @@ public class LiteRuleAutoConfiguration {
     @ConditionalOnProperty(prefix = "pmis.literule.cache", name = "enabled", havingValue = "true", matchIfMissing = true)
     @Primary
     public CachingRuleConfigProvider cachingRuleConfigProvider(
-            java.util.List<RuleConfigProvider> providers,
+            List<RuleConfigProvider> providers,
             ObjectProvider<RedissonClient> redissonClientProvider,
             LiteRuleProperties properties) {
         // 过滤掉 CachingRuleConfigProvider 自身（避免循环装饰），取第一个作为委托

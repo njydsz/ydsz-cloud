@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * AI 内容优化建议服务（P2-4）。
@@ -41,7 +42,7 @@ public class ContentOptimizationService {
      * @return 优化建议列表
      */
     public List<OptimizationSuggestion> analyze(String content, String channel, String subject) {
-        List<OptimizationSuggestion> suggestions = new java.util.ArrayList<>();
+        List<OptimizationSuggestion> suggestions = new ArrayList<>();
         if (!StringUtils.hasText(content)) {
             suggestions.add(warn("内容为空", "消息内容不能为空"));
             return suggestions;

@@ -6,6 +6,7 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.Map;
+import java.util.List;
 
 /**
  * P2-15: 网关精细化限流配置属性
@@ -96,7 +97,7 @@ public class RateLimitProperties {
         /** 突发容量 */
         private int burstCapacity = 60;
         /** IP 白名单（不限流） */
-        private java.util.List<String> whitelist;
+        private List<String> whitelist;
     }
 
     /** 租户级限流配置 */

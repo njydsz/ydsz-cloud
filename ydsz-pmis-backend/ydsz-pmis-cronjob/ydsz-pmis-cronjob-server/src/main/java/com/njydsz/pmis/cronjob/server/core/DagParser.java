@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.ArrayList;
 
 /**
  * DAG 解析器（P0-1 架构优化：委托到 common.DagGraph）。
@@ -44,9 +45,9 @@ public class DagParser {
         }
         Map<String, List<String>> adj = new HashMap<>();
         for (JobRelationDO edge : edges) {
-            adj.computeIfAbsent(edge.getParentJobId(), k -> new java.util.ArrayList<>())
+            adj.computeIfAbsent(edge.getParentJobId(), k -> new ArrayList<>())
                     .add(edge.getChildJobId());
-            adj.computeIfAbsent(edge.getChildJobId(), k -> new java.util.ArrayList<>());
+            adj.computeIfAbsent(edge.getChildJobId(), k -> new ArrayList<>());
         }
         return adj;
     }

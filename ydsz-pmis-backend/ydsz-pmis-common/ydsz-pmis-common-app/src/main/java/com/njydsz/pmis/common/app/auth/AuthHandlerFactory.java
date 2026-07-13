@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.LinkedHashMap;
 
 /**
  * 认证处理器工厂
@@ -48,7 +49,7 @@ public class AuthHandlerFactory {
      *
      * <p>注意：Spring 注入的 beanMap 通常为 {@link java.util.concurrent.ConcurrentHashMap}，
      * 其迭代顺序不保证插入顺序。因此 {@link #getFirstAvailableHandler()} 返回的"第一个"处理器
-     * 在不同 JVM 启动中可能不同。如有确定性需求，建议使用 {@link java.util.LinkedHashMap} 或
+     * 在不同 JVM 启动中可能不同。如有确定性需求，建议使用 {@link LinkedHashMap} 或
      * 通过 {@code @Order} 注解显式指定优先级。
      *
      * @param authHandlerMap Spring 注入的 AuthHandler 映射，允许为空

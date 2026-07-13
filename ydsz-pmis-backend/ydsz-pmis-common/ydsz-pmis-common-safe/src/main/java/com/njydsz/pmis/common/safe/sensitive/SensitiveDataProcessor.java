@@ -17,6 +17,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Arrays;
 
 /**
  * 敏感数据统一处理器。
@@ -222,7 +223,7 @@ public final class SensitiveDataProcessor {
 
             // 通过 canonical constructor 创建新实例
             Constructor<?> canonicalConstructor = clazz.getDeclaredConstructor(
-                    java.util.Arrays.stream(components)
+                    Arrays.stream(components)
                             .map(RecordComponent::getType)
                             .toArray(Class<?>[]::new)
             );

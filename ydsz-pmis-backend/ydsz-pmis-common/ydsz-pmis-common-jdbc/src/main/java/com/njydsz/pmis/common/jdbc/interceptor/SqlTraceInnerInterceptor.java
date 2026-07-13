@@ -24,6 +24,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 /**
  * SQL 链路追踪拦截器（慢 SQL + 审计一体化）
@@ -345,7 +346,7 @@ public class SqlTraceInnerInterceptor implements InnerInterceptor, Ordered, Mete
                 return "[]";
             }
 
-            if (parameter instanceof java.util.Map) {
+            if (parameter instanceof Map) {
                 return parameter.toString();
             }
 

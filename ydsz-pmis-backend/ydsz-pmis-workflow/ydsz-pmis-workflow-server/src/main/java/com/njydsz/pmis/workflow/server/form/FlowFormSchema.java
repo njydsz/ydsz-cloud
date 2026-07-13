@@ -5,6 +5,7 @@ import lombok.Data;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 表单 Schema 定义（P0-3 表单引擎 MVP）
@@ -59,5 +60,5 @@ public class FlowFormSchema implements Serializable {
     private Boolean allowModify;
 
     /** 扩展属性 */
-    private java.util.Map<String, Object> extProps;
+    private Map<String, Object> extProps;
 }

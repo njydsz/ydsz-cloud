@@ -20,6 +20,9 @@ import org.springframework.web.bind.annotation.RestController;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 
 /**
  * 财务数据查询 Controller（内部接口）
@@ -206,9 +209,9 @@ public class FinanceDataController {
             wrapper.orderByDesc(ProfitSnapshotDO::getSnapshotAt).last("LIMIT 200");
             var snaps = profitSnapshotMapper.selectList(wrapper);
             if (snaps == null) return BaseResponse.ok(List.of());
-            List<Map<String, Object>> result = new java.util.ArrayList<>();
+            List<Map<String, Object>> result = new ArrayList<>();
             for (var s : snaps) {
-                Map<String, Object> m = new java.util.HashMap<>();
+                Map<String, Object> m = new HashMap<>();
                 m.put("initiationId", s.getInitiationId());
                 m.put("period", s.getPeriod());
                 m.put("totalCost", s.getTotalCost());
@@ -236,7 +239,7 @@ public class FinanceDataController {
             var all = profitSnapshotMapper.selectList(wrapper);
             if (all == null) return BaseResponse.ok(List.of());
             // Deduplicate by initiationId, keeping latest snapshot
-            Map<String, ProfitSnapshotDO> latest = new java.util.HashMap<>();
+            Map<String, ProfitSnapshotDO> latest = new HashMap<>();
             for (var s : all) {
                 if (s == null || s.getInitiationId() == null) continue;
                 var prev = latest.get(s.getInitiationId());
@@ -244,9 +247,9 @@ public class FinanceDataController {
                     latest.put(s.getInitiationId(), s);
                 }
             }
-            List<Map<String, Object>> rows = new java.util.ArrayList<>();
+            List<Map<String, Object>> rows = new ArrayList<>();
             for (var s : latest.values()) {
-                Map<String, Object> row = new java.util.HashMap<>();
+                Map<String, Object> row = new HashMap<>();
                 row.put("initiationId", s.getInitiationId());
                 row.put("period", s.getPeriod());
                 row.put("contractAmount", s.getContractAmount());
@@ -260,10 +263,10 @@ public class FinanceDataController {
             }
             // Sort
             String dim = sortBy != null ? sortBy : "grossMargin";
-            java.util.Comparator<Map<String, Object>> cmp = switch (dim) {
-                case "grossProfit" -> java.util.Comparator.comparing(m -> toDecimal(m.get("grossProfit")));
-                case "contractAmount" -> java.util.Comparator.comparing(m -> toDecimal(m.get("contractAmount")));
-                default -> java.util.Comparator.comparing(m -> toDecimal(m.get("grossMargin")));
+            Comparator<Map<String, Object>> cmp = switch (dim) {
+                case "grossProfit" -> Comparator.comparing(m -> toDecimal(m.get("grossProfit")));
+                case "contractAmount" -> Comparator.comparing(m -> toDecimal(m.get("contractAmount")));
+                default -> Comparator.comparing(m -> toDecimal(m.get("grossMargin")));
             };
             rows.sort(cmp.reversed());
             int limit = top <= 0 ? 10 : top;
@@ -281,9 +284,9 @@ public class FinanceDataController {
         try {
             var revs = revenueMapper.selectByInitiation(initiationId);
             if (revs == null) return BaseResponse.ok(List.of());
-            List<Map<String, Object>> result = new java.util.ArrayList<>();
+            List<Map<String, Object>> result = new ArrayList<>();
             for (var r : revs) {
-                Map<String, Object> m = new java.util.HashMap<>();
+                Map<String, Object> m = new HashMap<>();
                 m.put("id", r.getId());
                 m.put("status", r.getStatus());
                 m.put("amount", r.getAmount());

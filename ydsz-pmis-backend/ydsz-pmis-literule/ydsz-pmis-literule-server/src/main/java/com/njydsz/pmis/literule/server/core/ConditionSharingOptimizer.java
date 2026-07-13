@@ -6,6 +6,8 @@ import com.njydsz.pmis.literule.api.RuleDefinition;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * P2-13: 条件求值共享器（RETE Alpha Network 思想的轻量实现）。
@@ -119,7 +121,7 @@ public class ConditionSharingOptimizer {
         }
 
         // 按顶层 && 和 || 分割（忽略括号内的运算符）
-        java.util.List<String> atoms = new java.util.ArrayList<>();
+        List<String> atoms = new ArrayList<>();
         splitByLogicalOperators(expr, atoms);
 
         // 去重并去空白
@@ -136,7 +138,7 @@ public class ConditionSharingOptimizer {
      * @param expr  表达式
      * @param atoms 原子条件收集列表
      */
-    private void splitByLogicalOperators(String expr, java.util.List<String> atoms) {
+    private void splitByLogicalOperators(String expr, List<String> atoms) {
         int parenDepth = 0;
         int lastSplit = 0;
 
@@ -166,7 +168,7 @@ public class ConditionSharingOptimizer {
      * 处理分割后的表达式段。
      * 如果段以括号包裹，递归分割；否则作为原子条件。
      */
-    private void processSegment(String segment, java.util.List<String> atoms) {
+    private void processSegment(String segment, List<String> atoms) {
         segment = segment.trim();
         if (segment.isEmpty()) {
             return;

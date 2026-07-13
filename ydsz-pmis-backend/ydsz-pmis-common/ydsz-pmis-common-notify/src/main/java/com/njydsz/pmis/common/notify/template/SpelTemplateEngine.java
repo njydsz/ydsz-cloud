@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.Collections;
 
 /**
  * 基于 Spring Expression Language (SpEL) 的模板引擎
@@ -126,7 +127,7 @@ public class SpelTemplateEngine implements TemplateEngine {
     }
 
     @Override
-    public java.util.Map<String, NotifyTemplate> getAllTemplates() {
-        return java.util.Collections.unmodifiableMap(templates);
+    public Map<String, NotifyTemplate> getAllTemplates() {
+        return Collections.unmodifiableMap(templates);
     }
 }

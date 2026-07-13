@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.Enumeration;
 
 /**
  * 文件规则数据源（P2-3 DSL YAML/JSON 规则文件加载）
@@ -229,7 +230,7 @@ public class FileRuleSource implements RuleSource {
             dsls.addAll(loadFromFilesystem(dirPath.toString()));
         } else {
             // jar 内部资源，通过 ClassLoader.getResources 枚举
-            java.util.Enumeration<URL> resources = cl.getResources(path);
+            Enumeration<URL> resources = cl.getResources(path);
             while (resources.hasMoreElements()) {
                 URL url = resources.nextElement();
                 RuleDsl dsl = loadFromUrl(url);

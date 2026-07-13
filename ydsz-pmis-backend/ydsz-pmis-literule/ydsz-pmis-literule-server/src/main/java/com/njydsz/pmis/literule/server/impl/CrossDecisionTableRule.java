@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.List;
 
 /**
  * 交叉决策表规则（决策矩阵，P1-6）
@@ -117,7 +118,7 @@ public class CrossDecisionTableRule implements Rule {
      * @param value   维度值
      * @return 首个命中桶索引；全部未命中返回 -1
      */
-    private int matchBucket(java.util.List<CrossDecisionTableDefinition.Bucket> buckets, Object value) {
+    private int matchBucket(List<CrossDecisionTableDefinition.Bucket> buckets, Object value) {
         if (buckets == null || buckets.isEmpty()) return -1;
         for (int i = 0; i < buckets.size(); i++) {
             String condition = buckets.get(i).getCondition();

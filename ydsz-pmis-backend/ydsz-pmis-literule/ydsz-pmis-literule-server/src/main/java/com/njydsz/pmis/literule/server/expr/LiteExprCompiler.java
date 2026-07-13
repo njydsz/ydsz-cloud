@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.LinkedHashMap;
 
 /**
  * LiteExpr 编译器
@@ -148,7 +149,7 @@ public class LiteExprCompiler {
                 yield new ListNode(folded, ln.line(), ln.column());
             }
             case MapNode mn -> {
-                Map<ExprNode, ExprNode> folded = new java.util.LinkedHashMap<>(mn.entries().size());
+                Map<ExprNode, ExprNode> folded = new LinkedHashMap<>(mn.entries().size());
                 for (Map.Entry<ExprNode, ExprNode> e : mn.entries().entrySet()) {
                     folded.put(constantFold(e.getKey()), constantFold(e.getValue()));
                 }

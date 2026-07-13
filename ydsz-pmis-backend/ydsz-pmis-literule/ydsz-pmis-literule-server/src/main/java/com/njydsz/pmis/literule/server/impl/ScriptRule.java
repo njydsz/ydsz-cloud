@@ -21,6 +21,11 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 /**
  * 脚本规则：基于 JSR-223 多语言脚本动态评估
@@ -384,18 +389,18 @@ public class ScriptRule implements Rule {
                     ScriptRule.class.getClassLoader());
             Object customizer = customizerClass.getDeclaredConstructor().newInstance();
             // 禁用 imports
-            customizerClass.getMethod("setImportsWhitelist", java.util.List.class)
-                    .invoke(customizer, java.util.Collections.emptyList());
+            customizerClass.getMethod("setImportsWhitelist", List.class)
+                    .invoke(customizer, Collections.emptyList());
             // 禁用 static imports
-            customizerClass.getMethod("setStaticImportsWhitelist", java.util.List.class)
-                    .invoke(customizer, java.util.Collections.emptyList());
+            customizerClass.getMethod("setStaticImportsWhitelist", List.class)
+                    .invoke(customizer, Collections.emptyList());
             // 接收者白名单：仅允许安全类型
-            java.util.List<Class<?>> receivers = java.util.List.of(
+            List<Class<?>> receivers = List.of(
                     Object.class, String.class, Math.class, java.math.BigDecimal.class,
-                    java.util.ArrayList.class, java.util.HashMap.class, java.util.LinkedHashMap.class,
+                    ArrayList.class, HashMap.class, LinkedHashMap.class,
                     Integer.class, Long.class, Double.class, Float.class,
-                    Boolean.class, Number.class, java.util.List.class, java.util.Map.class);
-            customizerClass.getMethod("setReceiversWhiteList", java.util.List.class)
+                    Boolean.class, Number.class, List.class, Map.class);
+            customizerClass.getMethod("setReceiversWhiteList", List.class)
                     .invoke(customizer, receivers);
             // 应用到 GroovyScriptEngineImpl 的 CompilerConfiguration
             // GroovyScriptEngineImpl 暴露 CompilerConfiguration 通过 setConfiguration

@@ -50,6 +50,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.Set;
 
 /**
  * 流程定义 Service 实现
@@ -1339,7 +1340,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> removedNodes = (List<Map<String, Object>>)
                 nodeChanges.get("removed");
-        java.util.Set<String> removedNodeCodes = removedNodes.stream()
+        Set<String> removedNodeCodes = removedNodes.stream()
                 .map(n -> String.valueOf(n.get("nodeCode")))
                 .collect(Collectors.toSet());
 
@@ -1563,7 +1564,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             Map<String, String> nodeMapping = new HashMap<>();
             List<FlowNodeDO> oldNodes = nodeMapper.selectByDefinitionId(currentDef.getId());
             List<FlowNodeDO> newNodes = nodeMapper.selectByDefinitionId(previousDef.getId());
-            java.util.Set<String> newNodeCodes = newNodes.stream()
+            Set<String> newNodeCodes = newNodes.stream()
                     .map(FlowNodeDO::getNodeCode)
                     .collect(Collectors.toSet());
             for (FlowNodeDO oldNode : oldNodes) {

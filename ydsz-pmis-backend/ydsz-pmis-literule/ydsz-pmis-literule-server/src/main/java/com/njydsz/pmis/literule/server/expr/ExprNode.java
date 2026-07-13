@@ -2,6 +2,7 @@ package com.njydsz.pmis.literule.server.expr.liteexpr;
 
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
 
 /**
  * LiteExpr AST 节点体系
@@ -260,7 +261,7 @@ record MemberAccessNode(
      * 提取完整的属性链（如 a.b.c → ["a", "b", "c"]）
      */
     public List<String> memberChain() {
-        java.util.ArrayList<String> chain = new java.util.ArrayList<>();
+        ArrayList<String> chain = new ArrayList<>();
         ExprNode current = this;
         while (current instanceof MemberAccessNode man) {
             chain.add(0, man.member());

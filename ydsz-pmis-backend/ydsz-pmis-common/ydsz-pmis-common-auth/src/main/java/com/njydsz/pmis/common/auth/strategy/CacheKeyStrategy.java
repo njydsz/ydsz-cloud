@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.auth.strategy;
 
+
+import java.util.Set;
 /**
  * 缓存 Key 生成策略接口。
  *
@@ -33,5 +35,5 @@ public interface CacheKeyStrategy {
      * @param roleCodes 角色编码集合
      * @return 缓存 Key
      */
-    String generate(String tenantId, java.util.Set<String> roleCodes);
+    String generate(String tenantId, Set<String> roleCodes);
 }

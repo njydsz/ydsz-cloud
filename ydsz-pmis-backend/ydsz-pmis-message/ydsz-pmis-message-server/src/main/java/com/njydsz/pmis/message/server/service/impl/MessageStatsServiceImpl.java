@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * 消息统计服务实现（P1-2 可观测看板）。
@@ -177,17 +179,17 @@ public class MessageStatsServiceImpl implements MessageStatsService {
                 actualStart, actualEnd);
         // 漏斗第2层：已送达 = receiptStatus IN (DELIVERED, READ, CLICKED)（累积）
         long delivered = countForFunnel(null,
-                java.util.Arrays.asList(ReceiptStatusEnum.DELIVERED.name(),
+                Arrays.asList(ReceiptStatusEnum.DELIVERED.name(),
                         ReceiptStatusEnum.READ.name(), ReceiptStatusEnum.CLICKED.name()),
                 channel, templateCode, actualStart, actualEnd);
         // 漏斗第3层：已读 = receiptStatus IN (READ, CLICKED)（累积）
         long read = countForFunnel(null,
-                java.util.Arrays.asList(ReceiptStatusEnum.READ.name(),
+                Arrays.asList(ReceiptStatusEnum.READ.name(),
                         ReceiptStatusEnum.CLICKED.name()),
                 channel, templateCode, actualStart, actualEnd);
         // 漏斗第4层：已点击 = receiptStatus = CLICKED
         long clicked = countForFunnel(null,
-                java.util.Collections.singletonList(ReceiptStatusEnum.CLICKED.name()),
+                Collections.singletonList(ReceiptStatusEnum.CLICKED.name()),
                 channel, templateCode, actualStart, actualEnd);
 
         FunnelStatsVO vo = new FunnelStatsVO();
@@ -216,7 +218,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
 
         MessageProperties.CostConfig costCfg = messageProperties.getCost();
         Map<String, BigDecimal> unitPrices = costCfg != null && costCfg.getUnitPrices() != null
-                ? costCfg.getUnitPrices() : java.util.Collections.emptyMap();
+                ? costCfg.getUnitPrices() : Collections.emptyMap();
 
         List<CostStatsVO.ChannelCost> channelCosts = new ArrayList<>();
         BigDecimal totalCost = BigDecimal.ZERO;
@@ -266,7 +268,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
      * @param end               结束时间
      * @return 计数
      */
-    private long countForFunnel(String status, java.util.List<String> receiptStatusList,
+    private long countForFunnel(String status, List<String> receiptStatusList,
                                  String channel, String templateCode,
                                  LocalDateTime start, LocalDateTime end) {
         LambdaQueryWrapper<MsgLogDO> w = new LambdaQueryWrapper<>();

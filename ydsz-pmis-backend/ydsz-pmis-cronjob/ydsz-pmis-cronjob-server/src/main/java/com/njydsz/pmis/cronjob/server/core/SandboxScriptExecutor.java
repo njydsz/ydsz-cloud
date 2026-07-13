@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
+import java.util.Map;
 
 /**
  * 沙箱脚本执行器（P3-11 脚本执行沙箱）。
@@ -48,7 +49,7 @@ public class SandboxScriptExecutor {
      * @return 执行结果
      */
     public SandboxResult execute(String scriptContent, String scriptType,
-                                  int timeoutSeconds, java.util.Map<String, String> envVars) {
+                                  int timeoutSeconds, Map<String, String> envVars) {
         Path scriptFile = null;
         try {
             // 创建临时工作目录

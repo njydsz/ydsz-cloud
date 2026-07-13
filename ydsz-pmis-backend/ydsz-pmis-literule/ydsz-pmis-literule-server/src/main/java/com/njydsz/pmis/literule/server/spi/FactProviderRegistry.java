@@ -16,6 +16,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import java.util.Comparator;
 
 /**
  * 事实数据提供者注册中心（P0-2 动态事实采集管道）
@@ -183,7 +184,7 @@ public class FactProviderRegistry {
         }
         // 按 order 排序（不修改原列表）
         List<FactProvider> sorted = providers.stream()
-                .sorted(java.util.Comparator.comparingInt(FactProvider::getOrder))
+                .sorted(Comparator.comparingInt(FactProvider::getOrder))
                 .collect(Collectors.toList());
 
         Map<String, Object> aggregated = new LinkedHashMap<>();

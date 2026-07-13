@@ -366,7 +366,7 @@ public class OssStorage extends AbstractFileStorage {
     @Override
     protected String doGeneratePresignedUrl(String bucketName, String objectName, int expireSeconds) {
         try {
-            java.util.Date expiration = new java.util.Date(System.currentTimeMillis() + (long) expireSeconds * 1000);
+            Date expiration = new Date(System.currentTimeMillis() + (long) expireSeconds * 1000);
             return ossClient.generatePresignedUrl(bucketName, objectName, expiration).toString();
         } catch (Exception e) {
             log.error("[OSS] generatePresignedUrl failed, bucket={}, object={}, message={}",

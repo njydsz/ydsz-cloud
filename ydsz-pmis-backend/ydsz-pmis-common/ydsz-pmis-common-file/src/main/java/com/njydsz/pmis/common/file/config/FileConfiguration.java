@@ -28,6 +28,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
+import java.util.Collections;
 
 /**
  * 文件存储自动配置类
@@ -112,7 +113,7 @@ public class FileConfiguration {
                 (bucketName, objectName, uploadId) -> {
                     // 在 Bean 初始化阶段无法获取 IFileStorageProvider，返回空列表
                     // 实际运行时由 AbstractFileStorage 重新创建时使用真实 listParts
-                    return java.util.Collections.emptyList();
+                    return Collections.emptyList();
                 },
                 checkpointTtl);
     }

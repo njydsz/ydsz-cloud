@@ -326,7 +326,7 @@ public final class JsonUtils {
             return null;
         }
         return recordDeserialize(() ->
-                MAPPER.readValue(json, MAPPER.getTypeFactory().constructMapType(java.util.HashMap.class, keyClass, valueClass)));
+                MAPPER.readValue(json, MAPPER.getTypeFactory().constructMapType(HashMap.class, keyClass, valueClass)));
     }
 
     /**

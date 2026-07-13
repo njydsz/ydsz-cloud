@@ -13,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.List;
 
 /**
  * P1-6: 审批人忙碌状态/日历服务
@@ -133,7 +134,7 @@ public class FlowAssigneeAvailabilityService {
      * @param candidateUserIds 候选人列表
      * @return 最空闲的候选人 userId，列表为空时返回 null
      */
-    public String recommendLeastBusy(java.util.List<String> candidateUserIds) {
+    public String recommendLeastBusy(List<String> candidateUserIds) {
         if (candidateUserIds == null || candidateUserIds.isEmpty()) {
             return null;
         }

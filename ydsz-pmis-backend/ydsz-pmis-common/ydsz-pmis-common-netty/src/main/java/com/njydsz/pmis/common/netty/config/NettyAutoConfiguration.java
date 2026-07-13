@@ -13,6 +13,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Netty 自动装配配置。
@@ -61,8 +62,8 @@ public class NettyAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(NettyServerLifecycle.class)
     public NettyServerLifecycle nettyServerLifecycle(
-            @Autowired(required = false) java.util.List<com.njydsz.pmis.common.netty.server.AbstractNettyServer> servers) {
-        java.util.List<com.njydsz.pmis.common.netty.server.AbstractNettyServer> serverList =
+            @Autowired(required = false) List<com.njydsz.pmis.common.netty.server.AbstractNettyServer> servers) {
+        List<com.njydsz.pmis.common.netty.server.AbstractNettyServer> serverList =
                 servers != null ? servers : Collections.emptyList();
         log.info("[Netty] 注册 NettyServerLifecycle, servers={}", serverList.size());
         return new NettyServerLifecycle(serverList);

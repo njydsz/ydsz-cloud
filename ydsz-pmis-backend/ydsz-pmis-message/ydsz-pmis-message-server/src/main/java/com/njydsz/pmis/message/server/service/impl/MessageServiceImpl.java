@@ -59,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 /**
  * 消息发送核心编排服务实现。
@@ -301,7 +302,7 @@ public class MessageServiceImpl implements MessageService {
             }
             // P0-4: 变量数据源自动拉取（params 中缺失的变量从数据源补全）
             if (request.getParams() != null) {
-                java.util.Map<String, Object> ctx = new java.util.HashMap<>();
+                Map<String, Object> ctx = new HashMap<>();
                 if (StringUtils.hasText(request.getBizId())) {
                     ctx.put("bizId", request.getBizId());
                 }

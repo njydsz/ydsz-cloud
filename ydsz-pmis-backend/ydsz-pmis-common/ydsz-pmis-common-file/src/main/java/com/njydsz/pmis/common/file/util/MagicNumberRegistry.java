@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashSet;
 
 /**
  * 文件 Magic Number 注册表
@@ -173,7 +174,7 @@ public final class MagicNumberRegistry {
     }
 
     private static void mapExtToMagic(String ext, String type) {
-        EXT_TO_MAGIC_TYPES.computeIfAbsent(ext.toLowerCase(), k -> new java.util.HashSet<>())
+        EXT_TO_MAGIC_TYPES.computeIfAbsent(ext.toLowerCase(), k -> new HashSet<>())
                 .add(type);
     }
 

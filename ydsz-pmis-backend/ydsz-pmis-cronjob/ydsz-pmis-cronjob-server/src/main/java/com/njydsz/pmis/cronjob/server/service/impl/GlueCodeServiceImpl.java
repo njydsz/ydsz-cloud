@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import groovy.lang.GroovyClassLoader;
+import java.util.ArrayList;
 
 /**
  * GLUE 在线编码服务实现（P1-2 GLUE 在线编码）。
@@ -294,7 +295,7 @@ public class GlueCodeServiceImpl implements GlueCodeService {
     private List<Map<String, Object>> computeLineDiff(String codeA, String codeB) {
         String[] linesA = codeA != null ? codeA.split("\n") : new String[0];
         String[] linesB = codeB != null ? codeB.split("\n") : new String[0];
-        List<Map<String, Object>> diffs = new java.util.ArrayList<>();
+        List<Map<String, Object>> diffs = new ArrayList<>();
         int maxLines = Math.max(linesA.length, linesB.length);
         for (int i = 0; i < maxLines; i++) {
             String lineA = i < linesA.length ? linesA[i] : "";

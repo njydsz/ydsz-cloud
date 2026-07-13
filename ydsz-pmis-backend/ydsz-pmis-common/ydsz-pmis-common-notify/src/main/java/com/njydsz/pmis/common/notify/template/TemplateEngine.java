@@ -1,6 +1,8 @@
 package com.njydsz.pmis.common.notify.template;
 
 import java.util.Map;
+import java.util.Collection;
+import java.util.Collections;
 
 /**
  * 通知模板引擎接口
@@ -52,7 +54,7 @@ public interface TemplateEngine {
      *
      * @param templateList 模板列表
      */
-    default void registerAll(java.util.Collection<NotifyTemplate> templateList) {
+    default void registerAll(Collection<NotifyTemplate> templateList) {
         if (templateList == null || templateList.isEmpty()) {
             return;
         }
@@ -75,7 +77,7 @@ public interface TemplateEngine {
      *
      * @return 模板 Map
      */
-    default java.util.Map<String, NotifyTemplate> getAllTemplates() {
-        return java.util.Collections.emptyMap();
+    default Map<String, NotifyTemplate> getAllTemplates() {
+        return Collections.emptyMap();
     }
 }

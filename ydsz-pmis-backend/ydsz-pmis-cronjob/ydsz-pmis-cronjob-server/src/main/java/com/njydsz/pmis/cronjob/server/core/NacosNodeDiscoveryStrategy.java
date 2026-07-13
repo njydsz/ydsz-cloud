@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Comparator;
 
 /**
  * 基于 Nacos 服务发现的节点发现策略（P1-1）。
@@ -74,7 +75,7 @@ public class NacosNodeDiscoveryStrategy implements NodeDiscoveryStrategy {
                 nodes.add(node);
             }
             // 按 nodeId 升序保证分片分配确定性
-            nodes.sort(java.util.Comparator.comparing(JobNodeDO::getNodeId));
+            nodes.sort(Comparator.comparing(JobNodeDO::getNodeId));
             log.debug("[NacosNodeDiscovery] 获取在线节点: count={}", nodes.size());
             return nodes;
         } catch (Exception e) {

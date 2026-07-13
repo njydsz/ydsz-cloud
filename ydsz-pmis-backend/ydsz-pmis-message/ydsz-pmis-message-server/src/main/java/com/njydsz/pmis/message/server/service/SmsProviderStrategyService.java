@@ -3,6 +3,7 @@ package com.njydsz.pmis.message.server.service.core;
 import com.njydsz.pmis.message.server.channel.sms.SmsProvider;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 多短信服务商策略服务。
@@ -43,7 +44,7 @@ public interface SmsProviderStrategyService {
      *
      * @return key=providerType, value=[total, success, failed]
      */
-    java.util.Map<String, long[]> getProviderStats();
+    Map<String, long[]> getProviderStats();
 
     /**
      * 策略类型。

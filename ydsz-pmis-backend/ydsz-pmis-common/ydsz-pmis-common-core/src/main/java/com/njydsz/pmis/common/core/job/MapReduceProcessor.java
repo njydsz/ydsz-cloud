@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.core.job;
 
+
+import java.util.List;
 /**
  * MapReduce 处理器接口（Map + Reduce）。
  *
@@ -16,5 +18,5 @@ public interface MapReduceProcessor extends MapProcessor {
      * @return Reduce 结果
      * @throws Exception 处理异常
      */
-    ProcessResult reduce(MapContext context, java.util.List<ProcessResult> results) throws Exception;
+    ProcessResult reduce(MapContext context, List<ProcessResult> results) throws Exception;
 }

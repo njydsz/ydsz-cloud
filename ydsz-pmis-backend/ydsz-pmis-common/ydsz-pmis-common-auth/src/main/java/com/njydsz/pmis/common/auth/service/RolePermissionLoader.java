@@ -5,6 +5,7 @@ import com.njydsz.pmis.common.auth.model.RolePermissions;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashMap;
 
 /**
  * 角色权限加载器接口。
@@ -63,7 +64,7 @@ public interface RolePermissionLoader {
         if (roleCodes == null || roleCodes.isEmpty()) {
             return Collections.emptyMap();
         }
-        java.util.Map<String, RolePermissions> result = new java.util.HashMap<>(roleCodes.size());
+        Map<String, RolePermissions> result = new HashMap<>(roleCodes.size());
         for (String roleCode : roleCodes) {
             if (roleCode != null && !roleCode.isBlank()) {
                 result.put(roleCode, loadByRoleCode(roleCode));
