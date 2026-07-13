@@ -32,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
  * @version 3.5.0
  */
 @Slf4j
-@SuppressWarnings("unchecked")
 public class BeanCopyUtils {
 
     private BeanCopyUtils() {

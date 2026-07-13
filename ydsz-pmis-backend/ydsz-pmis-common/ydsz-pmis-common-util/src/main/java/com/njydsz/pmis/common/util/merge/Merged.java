@@ -62,7 +62,6 @@ import java.util.stream.Collectors;
  * @see BiFunction
  */
 @FunctionalInterface
-@SuppressWarnings("unchecked")
 public interface Merged<R, T> {
 
     /**

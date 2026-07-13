@@ -33,3 +33,14 @@ pmis:
     memory:
       ttl-hours: 24
       max-messages: 20
+    rag:
+      enabled: ${RAG_ENABLED:false}
+      vector-store: ${RAG_VECTOR_STORE:memory}
+      embedding-model: ${EMBEDDING_MODEL:text-embedding-3-small}
+      embedding-api-key: ${EMBEDDING_API_KEY:}
+      embedding-base-url: ${EMBEDDING_BASE_URL:}
+      dimension: ${EMBEDDING_DIMENSION:1536}
+      chunk-size: 500
+      chunk-overlap: 50
+      top-k: 5
+      min-score: 0.7

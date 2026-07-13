@@ -56,7 +56,6 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  * @email limw1888@126.com
  * @version 3.5.0
  */
-@SuppressWarnings("unchecked")
 public class ObjectUtils {
 
     /**

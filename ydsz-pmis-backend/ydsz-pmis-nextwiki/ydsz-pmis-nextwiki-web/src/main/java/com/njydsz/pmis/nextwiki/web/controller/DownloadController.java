@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.pmis.common.core.response.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.file.storage.IFileStorage;
 import com.njydsz.pmis.common.file.storage.IFileStorageProvider;
@@ -28,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 文件下载 REST API
  * <p>
- * 提供文件下载接口，集成下载限流与防盗链验证。
+ * 提供文件下载接口，集成下载限流与防盗链验证�?
  *
  * @author ydsz-pmis-team
  * @since 1.4.0
@@ -50,7 +50,7 @@ public class DownloadController {
      * 下载文件
      */
     @PostMapping("/{nodeId}")
-    @Operation(summary = "下载文件", description = "下载前校验限流和防盗链")
+    @Operation(summary = "下载文件", description = "下载前校验限流和防盗�?)
     public void download(
             @PathVariable String nodeId,
             @RequestHeader("X-User-Id") String userId,
@@ -66,13 +66,13 @@ public class DownloadController {
 
         DownloadRateLimitService.RateLimitResult rateResult =
                 rateLimitService.checkRateLimit(userId, ip, nodeId);
-        if (!rateResult.isAllowed()) {
-            throw BusinessException.builder().key(rateResult.getMessage()).build();
+        if (!rateBaseResponse.isAllowed()) {
+            throw BusinessException.builder().key(rateBaseResponse.getMessage()).build();
         }
 
         IFileStorage storage = resolveStorage();
         if (storage == null) {
-            throw BusinessException.builder().key("文件存储未配置").build();
+            throw BusinessException.builder().key("文件存储未配�?).build();
         }
 
         storage.download(fileNode.getBucketName(), fileNode.getStorageKey(), response);
@@ -85,8 +85,8 @@ public class DownloadController {
      * 生成签名下载 URL
      */
     @PostMapping("/{nodeId}/signed-url")
-    @Operation(summary = "生成签名下载URL", description = "生成带时效性和IP绑定的签名下载链接")
-    public Result<String> generateSignedUrl(
+    @Operation(summary = "生成签名下载URL", description = "生成带时效性和IP绑定的签名下载链�?)
+    public BaseResponse<String> generateSignedUrl(
             @PathVariable String nodeId,
             @RequestHeader("X-User-Id") String userId,
             HttpServletRequest request) {
@@ -101,7 +101,7 @@ public class DownloadController {
                 fileNode.getStorageKey(), userId, ip);
 
         log.info("[DownloadController] 生成签名URL: nodeId={}, userId={}", nodeId, userId);
-        return Result.ok(signedUrl);
+        return BaseResponse.ok(signedUrl);
     }
 
     /**
@@ -122,7 +122,7 @@ public class DownloadController {
 
         IFileStorage storage = resolveStorage();
         if (storage == null) {
-            throw BusinessException.builder().key("文件存储未配置").build();
+            throw BusinessException.builder().key("文件存储未配�?).build();
         }
 
         storage.download(null, storageKey, response);

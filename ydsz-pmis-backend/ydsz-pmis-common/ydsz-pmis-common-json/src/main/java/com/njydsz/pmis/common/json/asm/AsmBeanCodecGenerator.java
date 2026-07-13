@@ -7,7 +7,6 @@ import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryUsage;
 import java.lang.reflect.*;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.security.CodeSource;
 import java.security.SecureClassLoader;
 import java.time.Instant;
@@ -33,9 +32,9 @@ import com.njydsz.pmis.common.json.writer.JSONWriter;
 /**
  * ASM Bean 序列化器/反序列化器生成器
  * 
- * <p>为每个 Bean 类生成专用的序列化器和反序列化器，消除 MethodHandle 反射开销</p>
+ * <p>为每�?Bean 类生成专用的序列化器和反序列化器，消�?MethodHandle 反射开销</p>
  * 
- * <p><b>类型代码体系：</b></p>
+ * <p><b>类型代码体系�?/b></p>
  * <ul>
  *   <li>1: String</li>
  *   <li>2: int/Integer</li>
@@ -56,14 +55,13 @@ import com.njydsz.pmis.common.json.writer.JSONWriter;
  * 
  * @author YdszJson Team
  */
-@SuppressWarnings("unchecked")
 public final class AsmBeanCodecGenerator {
 
     /** ASM ClassWriter 配置 */
     private static final int ASM_FLAGS = ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS;
 
     /**
-     * 字段缓存信息（用于 ASM 生成类中缓存嵌套序列化器/反序列化器）
+     * 字段缓存信息（用�?ASM 生成类中缓存嵌套序列化器/反序列化器）
      */
     private static final class FieldCacheInfo {
         final String fieldName;
@@ -76,9 +74,9 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 序列化嵌套对象（静态方法，供 ASM 生成的字节码调用）
+     * 序列化嵌套对象（静态方法，�?ASM 生成的字节码调用�?
      * 
-     * <p>优先使用 ASM 序列化器，避免 String 转换开销</p>
+     * <p>优先使用 ASM 序列化器，避�?String 转换开销</p>
      */
     public static void serializeNested(JSONWriter writer, Object obj) {
         if (obj == null) {
@@ -116,15 +114,15 @@ public final class AsmBeanCodecGenerator {
                 writer.write(json);
             }
         } catch (Exception e) {
-            log.warn("序列化嵌套对象失败, 类型: {}, 错误: {}", obj.getClass().getName(), e.getMessage());
+            log.warn("序列化嵌套对象失�? 类型: {}, 错误: {}", obj.getClass().getName(), e.getMessage());
             writer.write("null");
         }
     }
 
     /**
-     * 反序列化嵌套对象（静态方法，供 ASM 生成的字节码调用）
+     * 反序列化嵌套对象（静态方法，�?ASM 生成的字节码调用�?
      * 
-     * <p>优先使用 ASM 反序列化器，回退到 BeanReader</p>
+     * <p>优先使用 ASM 反序列化器，回退�?BeanReader</p>
      */
     public static Object deserializeNestedField(JSONReader reader, Class<?> beanClass) {
         try {
@@ -148,10 +146,10 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 安全获取序列化器（供 ASM 生成类的构造函数调用，避免构造函数异常导致整个类加载失败）
+     * 安全获取序列化器（供 ASM 生成类的构造函数调用，避免构造函数异常导致整个类加载失败�?
      *
      * @param clazz 目标类型
-     * @return 序列化器实例，获取失败返回 null
+     * @return 序列化器实例，获取失败返�?null
      */
     public static AsmSerializer<?> safeGetSerializer(Class<?> clazz) {
         try {
@@ -162,7 +160,7 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 安全获取反序列化器（供 ASM 生成类的构造函数调用，避免构造函数异常导致整个类加载失败）
+     * 安全获取反序列化器（�?ASM 生成类的构造函数调用，避免构造函数异常导致整个类加载失败�?
      *
      * @param clazz 目标类型
      * @return 反序列化器实例，获取失败返回 null
@@ -176,14 +174,14 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 序列化嵌套对象到缓冲区（合并 setPosition + serializeNested + getPosition）
+     * 序列化嵌套对象到缓冲区（合并 setPosition + serializeNested + getPosition�?
      *
-     * <p>消除 ASM 序列化器中 setPosition 和 getPosition 的额外方法调用开销</p>
+     * <p>消除 ASM 序列化器�?setPosition �?getPosition 的额外方法调用开销</p>
      *
-     * @param writer JSON 写入器
+     * @param writer JSON 写入�?
      * @param obj 嵌套对象
      * @param pos 当前写入位置
-     * @return 写入后的新位置
+     * @return 写入后的新位�?
      */
     public static int serializeNestedToBuf(JSONWriter writer, Object obj, int pos) {
         writer.setPosition(pos);
@@ -192,15 +190,15 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 使用预解析序列化器序列化嵌套对象到缓冲区（合并 setPosition + serialize + getPosition）
+     * 使用预解析序列化器序列化嵌套对象到缓冲区（合�?setPosition + serialize + getPosition�?
      *
-     * <p>消除 ASM 序列化器中 setPosition 和 getPosition 的额外方法调用开销</p>
+     * <p>消除 ASM 序列化器�?setPosition �?getPosition 的额外方法调用开销</p>
      *
      * @param serializer 预解析的序列化器
      * @param obj 嵌套对象
-     * @param writer JSON 写入器
+     * @param writer JSON 写入�?
      * @param pos 当前写入位置
-     * @return 写入后的新位置
+     * @return 写入后的新位�?
      */
     public static int serializeWithSerializerToBuf(
             AsmSerializer<Object> serializer,
@@ -211,13 +209,13 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 使用预解析反序列化器反序列化列表字段（供 ASM 生成的字节码调用）
+     * 使用预解析反序列化器反序列化列表字段（供 ASM 生成的字节码调用�?
      *
      * <p>当元素反序列化器已在构造函数中预解析时，直接传入避免运行时 ConcurrentHashMap 查找</p>
      *
-     * @param reader JSON 读取器
+     * @param reader JSON 读取�?
      * @param elementClass 元素类型
-     * @param preResolvedDeserializer 预解析的元素反序列化器（可为 null）
+     * @param preResolvedDeserializer 预解析的元素反序列化器（可为 null�?
      * @return 反序列化后的列表
      */
     
@@ -282,16 +280,16 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 反序列化列表字段（静态方法，供 ASM 生成的字节码调用）
+     * 反序列化列表字段（静态方法，�?ASM 生成的字节码调用�?
      * 
-     * <p>优先使用 ASM 反序列化器处理元素类型</p>
+     * <p>优先使用 ASM 反序列化器处理元素类�?/p>
      */
     public static List<?> deserializeListField(JSONReader reader, Class<?> elementClass) {
         return deserializeListFieldWithDeserializer(reader, elementClass, null);
     }
 
     /**
-     * 生成序列化器（缓存嵌套类型序列化器为实例字段，消除运行时 ConcurrentHashMap 查找）
+     * 生成序列化器（缓存嵌套类型序列化器为实例字段，消除运行时 ConcurrentHashMap 查找�?
      */
     public static <T> Class<? extends AsmSerializer<T>> generateSerializer(Class<T> beanType) throws Exception {
         String className = beanType.getName() + "_ASM_Serializer";
@@ -362,25 +360,25 @@ public final class AsmBeanCodecGenerator {
             }
         }
 
-        // 直接缓冲区访问模式：消除 write() 方法调用的 externalSb 检查和 ensureCapacity 检查开销
-        // 本地变量槽位：0=this, 1=obj, 2=writer, 3=buf, 4=pos, 5=temp
+        // 直接缓冲区访问模式：消除 write() 方法调用�?externalSb 检查和 ensureCapacity 检查开销
+        // 本地变量槽位�?=this, 1=obj, 2=writer, 3=buf, 4=pos, 5=temp
 
-        // writer.preAllocate(estimatedSize) — 一次性容量预分配，后续所有 ensureCapacity 检查均为 no-op
+        // writer.preAllocate(estimatedSize) �?一次性容量预分配，后续所�?ensureCapacity 检查均�?no-op
         mv.visitVarInsn(ALOAD, 2);
         mv.visitLdcInsn(estimatedSize);
         mv.visitMethodInsn(INVOKEVIRTUAL, "com/njydsz/pmis/common/json/writer/JSONWriter", "preAllocate", "(I)V", false);
 
-        // char[] buf = writer.buf — 直接字段访问，消除 getBuffer() 方法调用开销
+        // char[] buf = writer.buf �?直接字段访问，消�?getBuffer() 方法调用开销
         mv.visitVarInsn(ALOAD, 2);
         mv.visitFieldInsn(GETFIELD, "com/njydsz/pmis/common/json/writer/JSONWriter", "buf", "[C");
         mv.visitVarInsn(ASTORE, 3);
 
-        // int pos = writer.pos — 直接字段访问，消除 getPosition() 方法调用开销
+        // int pos = writer.pos �?直接字段访问，消�?getPosition() 方法调用开销
         mv.visitVarInsn(ALOAD, 2);
         mv.visitFieldInsn(GETFIELD, "com/njydsz/pmis/common/json/writer/JSONWriter", "pos", "I");
         mv.visitVarInsn(ISTORE, 4);
 
-        // buf[pos++] = '{' — 直接写入结构字符，消除 writer.write("{") 方法调用
+        // buf[pos++] = '{' �?直接写入结构字符，消�?writer.write("{") 方法调用
         emitWriteCharDirect(mv, '{');
 
         int fieldCount = 0;
@@ -404,7 +402,7 @@ public final class AsmBeanCodecGenerator {
             // 消除 writer.write(jsonKey) 方法调用开销
             emitWriteStringGetChars(mv, jsonKey, keyLen);
 
-            // 获取字段值
+            // 获取字段�?
             mv.visitVarInsn(ALOAD, 1);
             mv.visitTypeInsn(CHECKCAST, beanInternalName);
             mv.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, getterName, 
@@ -412,7 +410,7 @@ public final class AsmBeanCodecGenerator {
 
             // 根据类型码直接写入缓冲区
             if (typeCode == 1) {
-                // String 字段：null 检查 → 无转义时内联快速写入，有转义时委托 writeStringToBuf
+                // String 字段：null 检�?�?无转义时内联快速写入，有转义时委托 writeStringToBuf
                 Label notNullLabel = new Label();
                 mv.visitInsn(DUP);
                 mv.visitJumpInsn(IFNONNULL, notNullLabel);
@@ -422,7 +420,7 @@ public final class AsmBeanCodecGenerator {
                 mv.visitLabel(notNullLabel);
                 mv.visitVarInsn(ASTORE, 5);
 
-                // 检查是否需要转义（1 次方法调用 vs 原来 4 次方法调用的 sync/re-read）
+                // 检查是否需要转义（1 次方法调�?vs 原来 4 次方法调用的 sync/re-read�?
                 mv.visitVarInsn(ALOAD, 5);
                 mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/pmis/common/json/writer/JSONWriter",
                     "needsEscape", "(Ljava/lang/String;)Z", false);
@@ -430,7 +428,7 @@ public final class AsmBeanCodecGenerator {
                 Label slowPath = new Label();
                 mv.visitJumpInsn(IFNE, slowPath);
 
-                // 快速路径（无需转义）：直接内联写入缓冲区，零 sync/re-read 开销
+                // 快速路径（无需转义）：直接内联写入缓冲区，�?sync/re-read 开销
                 // len = str.length()
                 mv.visitVarInsn(ALOAD, 5);
                 mv.visitMethodInsn(INVOKEVIRTUAL, "java/lang/String", "length", "()I", false);
@@ -458,7 +456,7 @@ public final class AsmBeanCodecGenerator {
 
                 mv.visitJumpInsn(GOTO, endField);
 
-                // 慢速路径（需要转义）：委托 writeStringToBuf（2 次方法调用 vs 原来 4 次）
+                // 慢速路径（需要转义）：委�?writeStringToBuf�? 次方法调�?vs 原来 4 次）
                 mv.visitLabel(slowPath);
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 5);
@@ -469,7 +467,7 @@ public final class AsmBeanCodecGenerator {
                 emitReadBufFromWriter(mv);
                 
             } else if (typeCode == 2) {
-                // int/Integer 字段：null 检查 → 非空则 NumberUtils.writeInt 直接写入缓冲区
+                // int/Integer 字段：null 检�?�?非空�?NumberUtils.writeInt 直接写入缓冲�?
                 if (field.getType() == Integer.class) {
                     Label notNullLabel = new Label();
                     mv.visitInsn(DUP);
@@ -484,7 +482,7 @@ public final class AsmBeanCodecGenerator {
                 emitWriteIntDirect(mv);
                 
             } else if (typeCode == 3) {
-                // long/Long 字段：null 检查 → 非空则 NumberUtils.writeLong 直接写入缓冲区
+                // long/Long 字段：null 检�?�?非空�?NumberUtils.writeLong 直接写入缓冲�?
                 if (field.getType() == Long.class) {
                     Label notNullLabel = new Label();
                     mv.visitInsn(DUP);
@@ -499,7 +497,7 @@ public final class AsmBeanCodecGenerator {
                 emitWriteLongDirect(mv);
                 
             } else if (typeCode == 4) {
-                // double/Double 字段：null 检查 → 委托 writeDoubleToBuf（2 次调用 vs 原来 4 次）
+                // double/Double 字段：null 检�?�?委托 writeDoubleToBuf�? 次调�?vs 原来 4 次）
                 if (field.getType() == Double.class) {
                     Label notNullLabel = new Label();
                     mv.visitInsn(DUP);
@@ -520,7 +518,7 @@ public final class AsmBeanCodecGenerator {
                 emitReadBufFromWriter(mv);
                 
             } else if (typeCode == 5) {
-                // float/Float 字段：null 检查 → 委托 writeFloatToBuf（2 次调用 vs 原来 4 次）
+                // float/Float 字段：null 检�?�?委托 writeFloatToBuf�? 次调�?vs 原来 4 次）
                 if (field.getType() == Float.class) {
                     Label notNullLabel = new Label();
                     mv.visitInsn(DUP);
@@ -541,7 +539,7 @@ public final class AsmBeanCodecGenerator {
                 emitReadBufFromWriter(mv);
                 
             } else if (typeCode == 6) {
-                // boolean/Boolean 字段：null 检查 → 非空则直接写入 "true"/"false" 到缓冲区
+                // boolean/Boolean 字段：null 检�?�?非空则直接写�?"true"/"false" 到缓冲区
                 if (field.getType() == Boolean.class) {
                     Label notNullLabel = new Label();
                     mv.visitInsn(DUP);
@@ -564,7 +562,7 @@ public final class AsmBeanCodecGenerator {
                 mv.visitLabel(boolEndLabel);
                 
             } else if (typeCode >= 7 && typeCode <= 9) {
-                // short/byte/char 字段：null 检查 → NumberUtils.writeInt 直接写入
+                // short/byte/char 字段：null 检�?�?NumberUtils.writeInt 直接写入
                 if (field.getType() == Short.class) {
                     Label notNullLabel = new Label();
                     mv.visitInsn(DUP);
@@ -596,7 +594,7 @@ public final class AsmBeanCodecGenerator {
                 emitWriteIntDirect(mv);
 
             } else if (typeCode == 10 || typeCode == 11) {
-                // LocalDateTime/LocalDate 字段：null 检查 → 委托 writeStringToBuf（2 次调用 vs 原来 4 次）
+                // LocalDateTime/LocalDate 字段：null 检�?�?委托 writeStringToBuf�? 次调�?vs 原来 4 次）
                 mv.visitVarInsn(ASTORE, 5);
                 Label notNullLabel = new Label();
                 Label endNull = new Label();
@@ -617,7 +615,7 @@ public final class AsmBeanCodecGenerator {
                 mv.visitLabel(endNull);
 
             } else if (typeCode == 12) {
-                // Date 字段：null 检查 → 委托 writeStringToBuf（2 次调用 vs 原来 4 次）
+                // Date 字段：null 检�?�?委托 writeStringToBuf�? 次调�?vs 原来 4 次）
                 mv.visitVarInsn(ASTORE, 5);
                 Label notNullLabel = new Label();
                 Label endNull = new Label();
@@ -638,7 +636,7 @@ public final class AsmBeanCodecGenerator {
                 mv.visitLabel(endNull);
 
             } else if (typeCode == 13) {
-                // Collection 字段：null 检查 → 委托 writeCollectionToBuf/writeCollectionWithSerializerToBuf
+                // Collection 字段：null 检�?�?委托 writeCollectionToBuf/writeCollectionWithSerializerToBuf
                 mv.visitVarInsn(ASTORE, 5);
                 Label notNullLabel = new Label();
                 Label endNull = new Label();
@@ -679,7 +677,7 @@ public final class AsmBeanCodecGenerator {
                 mv.visitLabel(endNull);
 
             } else if (typeCode == 14) {
-                // Map 字段：null 检查 → 委托 writeMapToBuf（2 次调用 vs 原来 4 次）
+                // Map 字段：null 检�?�?委托 writeMapToBuf�? 次调�?vs 原来 4 次）
                 mv.visitVarInsn(ASTORE, 5);
                 Label notNullLabel = new Label();
                 Label endNull = new Label();
@@ -698,7 +696,7 @@ public final class AsmBeanCodecGenerator {
                 mv.visitLabel(endNull);
 
             } else {
-                // 嵌套 Bean 字段：null 检查 → 委托 serializeNestedToBuf/serializeWithSerializerToBuf
+                // 嵌套 Bean 字段：null 检�?�?委托 serializeNestedToBuf/serializeWithSerializerToBuf
                 mv.visitVarInsn(ASTORE, 5);
 
                 Label notNullLabel = new Label();
@@ -746,10 +744,10 @@ public final class AsmBeanCodecGenerator {
             mv.visitLabel(endField);
         }
 
-        // buf[pos++] = '}' — 直接写入结构字符
+        // buf[pos++] = '}' �?直接写入结构字符
         emitWriteCharDirect(mv, '}');
 
-        // writer.pos = pos — 直接字段写入，消除 setPosition() 方法调用开销
+        // writer.pos = pos �?直接字段写入，消�?setPosition() 方法调用开销
         mv.visitVarInsn(ALOAD, 2);
         mv.visitVarInsn(ILOAD, 4);
         mv.visitFieldInsn(PUTFIELD, "com/njydsz/pmis/common/json/writer/JSONWriter", "pos", "I");
@@ -758,9 +756,9 @@ public final class AsmBeanCodecGenerator {
         mv.visitMaxs(8, 8);
         mv.visitEnd();
 
-        // 生成 serializeInline 方法：跳过 preAllocate，直接在已有 buf/pos 上操作
+        // 生成 serializeInline 方法：跳�?preAllocate，直接在已有 buf/pos 上操�?
         // 用于列表序列化场景，外层已预分配足够容量
-        // 实现方式：直接读取 buf/pos，写入字段，写回 pos，跳过 preAllocate
+        // 实现方式：直接读�?buf/pos，写入字段，写回 pos，跳�?preAllocate
         MethodVisitor mvInline = cw.visitMethod(ACC_PUBLIC, "serializeInline",
                            "(Ljava/lang/Object;Lcom/njydsz/pmis/common/json/writer/JSONWriter;)V", null, null);
         mvInline.visitCode();
@@ -802,7 +800,7 @@ public final class AsmBeanCodecGenerator {
             mvInline.visitMethodInsn(INVOKEVIRTUAL, beanInternalName, getterName,
                              "()" + getTypeDescriptor(field.getType()), false);
 
-            // 根据类型码直接写入缓冲区（与 serialize 方法相同的逻辑）
+            // 根据类型码直接写入缓冲区（与 serialize 方法相同的逻辑�?
             if (typeCode == 1) {
                 Label notNullLabel = new Label();
                 mvInline.visitInsn(DUP);
@@ -1100,7 +1098,7 @@ public final class AsmBeanCodecGenerator {
     /**
      * 直接写入单个字符到缓冲区：buf[pos++] = c
      *
-     * <p>消除 writer.write(String) 方法调用的 externalSb 检查和 ensureCapacity 检查开销</p>
+     * <p>消除 writer.write(String) 方法调用�?externalSb 检查和 ensureCapacity 检查开销</p>
      */
     private static void emitWriteCharDirect(MethodVisitor mv, char c) {
         mv.visitVarInsn(ALOAD, 3);
@@ -1117,7 +1115,7 @@ public final class AsmBeanCodecGenerator {
     /**
      * 直接写入字符串到缓冲区：str.getChars(0, len, buf, pos); pos += len;
      *
-     * <p>用于字段名和常量字符串（如 "true"/"false"）的直接写入，
+     * <p>用于字段名和常量字符串（�?"true"/"false"）的直接写入�?
      * 消除 writer.write(String) 方法调用开销</p>
      */
     private static void emitWriteStringGetChars(MethodVisitor mv, String str, int len) {
@@ -1143,10 +1141,10 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 从 writer 重新读取 buf：buf = writer.buf
+     * �?writer 重新读取 buf：buf = writer.buf
      *
-     * <p>当 pos 已通过方法返回值更新时，只需重新读取 buf 即可</p>
-     * <p>使用直接字段访问，消除 getBuffer() 方法调用开销</p>
+     * <p>�?pos 已通过方法返回值更新时，只需重新读取 buf 即可</p>
+     * <p>使用直接字段访问，消�?getBuffer() 方法调用开销</p>
      */
     private static void emitReadBufFromWriter(MethodVisitor mv) {
         mv.visitVarInsn(ALOAD, 2);
@@ -1157,13 +1155,13 @@ public final class AsmBeanCodecGenerator {
     /**
      * 直接写入 int 值到缓冲区：pos += NumberUtils.writeInt(value, buf, pos)
      *
-     * <p>消除 writer.writeInt() 方法调用的 externalSb 检查和 ensureCapacity 检查开销</p>
+     * <p>消除 writer.writeInt() 方法调用�?externalSb 检查和 ensureCapacity 检查开销</p>
      *
      * <p>调用前栈状态：[int_value]</p>
      * <p>调用后栈状态：[]</p>
      */
     private static void emitWriteIntDirect(MethodVisitor mv) {
-        // 栈: [int_value] — 先存储到临时变量
+        // �? [int_value] �?先存储到临时变量
         mv.visitVarInsn(ISTORE, 6);
         // pos += NumberUtils.writeInt(value, buf, pos)
         mv.visitVarInsn(ILOAD, 6);     // int_value
@@ -1177,13 +1175,13 @@ public final class AsmBeanCodecGenerator {
     /**
      * 直接写入 long 值到缓冲区：pos += NumberUtils.writeLong(value, buf, pos)
      *
-     * <p>消除 writer.writeLong() 方法调用的 externalSb 检查和 ensureCapacity 检查开销</p>
+     * <p>消除 writer.writeLong() 方法调用�?externalSb 检查和 ensureCapacity 检查开销</p>
      *
      * <p>调用前栈状态：[long_value]（占2个槽位）</p>
      * <p>调用后栈状态：[]</p>
      */
     private static void emitWriteLongDirect(MethodVisitor mv) {
-        // 栈: [long_value] — 先存储到临时变量（long 占2个槽位：6和7）
+        // �? [long_value] �?先存储到临时变量（long �?个槽位：6�?�?
         mv.visitVarInsn(LSTORE, 6);
         // pos += NumberUtils.writeLong(value, buf, pos)
         mv.visitVarInsn(LLOAD, 6);     // long_value
@@ -1195,7 +1193,7 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 发射整数常量到栈上（使用最优字节码指令）
+     * 发射整数常量到栈上（使用最优字节码指令�?
      */
     private static void emitIntConstant(MethodVisitor mv, int value) {
         if (value >= -1 && value <= 5) {
@@ -1210,9 +1208,9 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 生成反序列化器（缓存嵌套类型反序列化器为实例字段，消除运行时 ConcurrentHashMap 查找）
+     * 生成反序列化器（缓存嵌套类型反序列化器为实例字段，消除运行时 ConcurrentHashMap 查找�?
      * 
-     * <p>支持所有类型：基本类型、日期类型、集合、Map、嵌套 Bean</p>
+     * <p>支持所有类型：基本类型、日期类型、集合、Map、嵌�?Bean</p>
      */
     public static <T> Class<? extends AsmDeserializer<T>> generateDeserializer(Class<T> beanType) throws Exception {
         String className = beanType.getName() + "_ASM_Deserializer";
@@ -1489,7 +1487,7 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 解析日期字符串（静态方法，供 ASM 生成的字节码调用）
+     * 解析日期字符串（静态方法，�?ASM 生成的字节码调用�?
      */
     public static Date parseDate(String dateStr) {
         try {
@@ -1574,7 +1572,7 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 获取类型的 ASM 描述符（用于 visitLdcInsn 加载 Class 对象）
+     * 获取类型�?ASM 描述符（用于 visitLdcInsn 加载 Class 对象�?
      */
     private static String getTypeDescriptorForClass(Class<?> type) {
         if (type.isPrimitive()) {
@@ -1609,13 +1607,13 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 获取 List 字段的元素类型
+     * 获取 List 字段的元素类�?
      */
     private static Class<?> getListElementType(Field field) {
-        Type genericType = field.getGenericType();
+        java.lang.reflect.Type genericType = field.getGenericType(); // FQN-OK: name conflict with org.objectweb.asm.Type
         if (genericType instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) genericType;
-            Type[] typeArgs = pt.getActualTypeArguments();
+            java.lang.reflect.Type[] typeArgs = pt.getActualTypeArguments(); // FQN-OK: name conflict with org.objectweb.asm.Type
             if (typeArgs.length > 0 && typeArgs[0] instanceof Class) {
                 return (Class<?>) typeArgs[0];
             }
@@ -1624,7 +1622,7 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 检查是否为简单类型
+     * 检查是否为简单类�?
      */
     private static boolean isSimpleType(Class<?> type) {
         return type.isPrimitive() || 
@@ -1650,7 +1648,7 @@ public final class AsmBeanCodecGenerator {
     private static final int ASM_CLASS_THRESHOLD = 10000;
 
     /**
-     * Metaspace 使用率告警阈值（80%）
+     * Metaspace 使用率告警阈值（80%�?
      */
     private static final double METASPACE_WARN_THRESHOLD = 0.8;
 
@@ -1665,16 +1663,16 @@ public final class AsmBeanCodecGenerator {
     private static volatile boolean degradedToReflection = false;
 
     /**
-     * 按源 ClassLoader 分组的 SecureClassLoader 缓存
-     * 每个父 ClassLoader 对应一个 SecureClassLoader，避免元空间碎片化
+     * 按源 ClassLoader 分组�?SecureClassLoader 缓存
+     * 每个�?ClassLoader 对应一�?SecureClassLoader，避免元空间碎片�?
      */
     private static final ConcurrentHashMap<ClassLoader, SecureClassLoader> CLASSLOADER_CACHE =
             new ConcurrentHashMap<>();
 
     /**
-     * 获取或创建指定父 ClassLoader 对应的 SecureClassLoader
+     * 获取或创建指定父 ClassLoader 对应�?SecureClassLoader
      *
-     * @param parentClassLoader 父 ClassLoader
+     * @param parentClassLoader �?ClassLoader
      * @return SecureClassLoader 实例
      */
     private static SecureClassLoader getOrCreateSecureClassLoader(ClassLoader parentClassLoader) {
@@ -1684,7 +1682,7 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 获取 Platform ClassLoader（Java 9+）
+     * 获取 Platform ClassLoader（Java 9+�?
      */
     private static ClassLoader getPlatformClassLoader() {
         try {
@@ -1695,7 +1693,7 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * ASM 降级阈值分级
+     * ASM 降级阈值分�?
      */
     private static final int ASM_WARN_THRESHOLD = 5000;
     private static final int ASM_DEGRADE_THRESHOLD = 8000;
@@ -1704,18 +1702,18 @@ public final class AsmBeanCodecGenerator {
      * ASM 降级级别
      */
     public enum AsmLevel {
-        /** ASM 字节码生成（最优性能） */
+        /** ASM 字节码生成（最优性能�?*/
         ASM,
         /** ASM 生效但接近阈值，输出告警 */
         ASM_WARN,
-        /** 接近阈值，仅对新类降级到反射 */
+        /** 接近阈值，仅对新类降级到反�?*/
         DEGRADED,
-        /** 完全降级到反射模式 */
+        /** 完全降级到反射模�?*/
         REFLECTION
     }
 
     /**
-     * 获取当前 ASM 降级级别。
+     * 获取当前 ASM 降级级别�?
      *
      * @return 降级级别
      */
@@ -1737,9 +1735,9 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 获取 ASM 统计信息。
+     * 获取 ASM 统计信息�?
      *
-     * @return 统计信息字符串
+     * @return 统计信息字符�?
      */
     public static String getAsmStats() {
         return String.format(
@@ -1748,7 +1746,7 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 检查是否允许继续生成 ASM 类
+     * 检查是否允许继续生�?ASM �?
      *
      * @return true 如果允许生成，false 如果应降级到反射
      */
@@ -1760,7 +1758,7 @@ public final class AsmBeanCodecGenerator {
         int count = GENERATED_CLASS_COUNT.incrementAndGet();
         if (count > ASM_CLASS_THRESHOLD) {
             degradedToReflection = true;
-            log.warn("ASM 动态生成类数量 {} 超过阈值 {}，降级到反射模式", count, ASM_CLASS_THRESHOLD);
+            log.warn("ASM 动态生成类数量 {} 超过阈�?{}，降级到反射模式", count, ASM_CLASS_THRESHOLD);
             return false;
         }
 
@@ -1769,7 +1767,7 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 检查 Metaspace 使用情况
+     * 检�?Metaspace 使用情况
      */
     private static void checkMetaspaceUsage() {
         try {
@@ -1782,7 +1780,7 @@ public final class AsmBeanCodecGenerator {
                         double ratio = (double) used / max;
                         if (ratio > METASPACE_WARN_THRESHOLD && !metaspaceWarned) {
                             metaspaceWarned = true;
-                            log.warn("Metaspace 使用率过高: {}/{} ({:.1f}%)，" +
+                            log.warn("Metaspace 使用率过�? {}/{} ({:.1f}%)�? +
                                     "建议增加 -XX:MaxMetaspaceSize 或检查动态类生成",
                                     formatBytes(used), formatBytes(max), ratio * 100);
                         }
@@ -1791,7 +1789,7 @@ public final class AsmBeanCodecGenerator {
                 }
             }
         } catch (Exception e) {
-            // 忽略 Metaspace 检查异常
+            // 忽略 Metaspace 检查异�?
         }
     }
 
@@ -1808,8 +1806,8 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 基于 SecureClassLoader 的 ASM 类加载器
-     * 每个实例与一个父 ClassLoader 绑定，支持独立的类定义空间
+     * 基于 SecureClassLoader �?ASM 类加载器
+     * 每个实例与一个父 ClassLoader 绑定，支持独立的类定义空�?
      */
     private static final class SecureAsmClassLoader extends SecureClassLoader {
         private SecureAsmClassLoader(ClassLoader parent) {
@@ -1861,7 +1859,7 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 检查 ASM 是否可用（未降级到反射模式）
+     * 检�?ASM 是否可用（未降级到反射模式）
      *
      * @return true 如果 ASM 模式可用
      */
@@ -1879,7 +1877,7 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 重置 ASM 状态（用于测试）
+     * 重置 ASM 状态（用于测试�?
      */
     static void resetForTest() {
         degradedToReflection = false;
@@ -1889,14 +1887,14 @@ public final class AsmBeanCodecGenerator {
     }
 
     /**
-     * 生成 ASM 序列化器（非类型参数版本，接受 Class<?>）
+     * 生成 ASM 序列化器（非类型参数版本，接�?Class<?>�?
      */
     public static Class<? extends AsmSerializer<?>> generateSerializerForType(Class<?> beanType) throws Exception {
         return generateSerializer(beanType);
     }
 
     /**
-     * 生成 ASM 反序列化器（非类型参数版本，接受 Class<?>）
+     * 生成 ASM 反序列化器（非类型参数版本，接受 Class<?>�?
      */
     public static Class<? extends AsmDeserializer<?>> generateDeserializerForType(Class<?> beanType) throws Exception {
         return generateDeserializer(beanType);

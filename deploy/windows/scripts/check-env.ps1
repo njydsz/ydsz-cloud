@@ -1,4 +1,4 @@
-# =============================================================================
+﻿# =============================================================================
 #  YDSZ PMIS - 环境检查脚本 (Windows PowerShell)
 # =============================================================================
 $ErrorActionPreference = 'Continue'
@@ -22,7 +22,8 @@ if ($os -match "Windows") { Check-Ok $os } else { Check-Fail "不支持: $os" }
 Write-Host "`n[2/8] JDK" -ForegroundColor Cyan
 try {
   $javaOut = & java -version 2>&1 | Select-Object -First 1
-  if ($javaOut -match '"(\d+)\.') {
+  # 使用字符类 ["] 避免在单引号字符串中嵌入双引号导致解析器报错
+  if ($javaOut -match '["](\d+)\.') {
     $major = [int]$Matches[1]
     if ($major -ge 21) { Check-Ok $javaOut } else { Check-Fail "需要 JDK 21+，当前: $javaOut" }
   } else { Check-Fail "无法解析 Java 版本" }

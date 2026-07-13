@@ -11,20 +11,19 @@ import com.njydsz.pmis.common.json.asm.AsmSerializer;
 import com.njydsz.pmis.common.json.writer.JSONWriter;
 
 /**
- * ASM 序列化器/反序列化器缓存
+ * ASM 序列化器/反序列化器缓�?
  * 
- * <p>缓存 ASM 生成的专用序列化器和反序列化器，避免重复生成字节码</p>
+ * <p>缓存 ASM 生成的专用序列化器和反序列化器，避免重复生成字节�?/p>
  * 
- * <p><b>工作原理：</b></p>
+ * <p><b>工作原理�?/b></p>
  * <ul>
- *   <li>首次使用时为 Bean 类生成专用序列化器/反序列化器</li>
- *   <li>生成后的类缓存在 ConcurrentHashMap 中</li>
+ *   <li>首次使用时为 Bean 类生成专用序列化�?反序列化�?/li>
+ *   <li>生成后的类缓存在 ConcurrentHashMap �?/li>
  *   <li>后续使用直接从缓存获取，零开销</li>
  * </ul>
  * 
  * @author YdszJson Team
  */
-@SuppressWarnings("unchecked")
 public final class AsmCodecCache {
 
     private static final int DEFAULT_MAX_SIZE = 1024;
@@ -210,9 +209,9 @@ public final class AsmCodecCache {
     }
 
     /**
-     * 获取或创建 ASM 序列化器
+     * 获取或创�?ASM 序列化器
      *
-     * <p>优化：使用单次 ConcurrentHashMap.get() 替代 containsKey() + get() 双次查找</p>
+     * <p>优化：使用单�?ConcurrentHashMap.get() 替代 containsKey() + get() 双次查找</p>
      */
     
     public static <T> AsmSerializer<T> getOrCreateSerializer(Class<T> beanType) {
@@ -241,10 +240,10 @@ public final class AsmCodecCache {
     }
 
     /**
-     * 获取或创建 ASM 序列化器（非类型参数版本，接受 Class<?>）
+     * 获取或创�?ASM 序列化器（非类型参数版本，接�?Class<?>�?
      *
      * @param beanType Bean 类型
-     * @return 序列化器实例，获取失败返回 null
+     * @return 序列化器实例，获取失败返�?null
      */
     public static AsmSerializer<?> getOrCreateSerializerForType(Class<?> beanType) {
         AsmSerializer<?> cached = SERIALIZER_CACHE.get(beanType);
@@ -272,14 +271,14 @@ public final class AsmCodecCache {
     }
 
     /**
-     * 使用 ASM 序列化器序列化对象
+     * 使用 ASM 序列化器序列化对�?
      *
-     * <p>封装从缓存获取序列化器并调用序列化的完整流程，
-     * 内部通过泛型辅助方法捕获通配符类型，避免调用方 unchecked cast</p>
+     * <p>封装从缓存获取序列化器并调用序列化的完整流程�?
+     * 内部通过泛型辅助方法捕获通配符类型，避免调用�?unchecked cast</p>
      *
-     * @param obj 要序列化的对象
-     * @param writer JSON 写入器
-     * @return 是否成功使用 ASM 序列化器完成序列化
+     * @param obj 要序列化的对�?
+     * @param writer JSON 写入�?
+     * @return 是否成功使用 ASM 序列化器完成序列�?
      */
     public static boolean trySerialize(Object obj, JSONWriter writer) {
         if (obj == null) return false;
@@ -290,15 +289,15 @@ public final class AsmCodecCache {
     }
 
     /**
-     * 使用预解析的 ASM 序列化器序列化对象
+     * 使用预解析的 ASM 序列化器序列化对�?
      *
      * <p>适用于集合元素同类型场景，避免重复查找序列化器，
-     * 内部通过泛型辅助方法捕获通配符类型，避免调用方 unchecked cast</p>
+     * 内部通过泛型辅助方法捕获通配符类型，避免调用�?unchecked cast</p>
      *
-     * @param serializer 预解析的序列化器（可为 AsmSerializer<?>）
-     * @param obj 要序列化的对象
-     * @param writer JSON 写入器
-     * @return 是否成功完成序列化
+     * @param serializer 预解析的序列化器（可�?AsmSerializer<?>�?
+     * @param obj 要序列化的对�?
+     * @param writer JSON 写入�?
+     * @return 是否成功完成序列�?
      */
     public static boolean serializeWithSerializer(AsmSerializer<?> serializer, Object obj, JSONWriter writer) {
         if (serializer == null || obj == null) return false;
@@ -307,10 +306,10 @@ public final class AsmCodecCache {
     }
 
     /**
-     * 泛型辅助方法：捕获 AsmSerializer 的通配符类型，实现类型安全的序列化调用
+     * 泛型辅助方法：捕�?AsmSerializer 的通配符类型，实现类型安全的序列化调用
      *
-     * <p>调用方通过此方法间接调用 serializer.serialize()，
-     * 将 unchecked cast 隔离在此方法内部，避免在各调用点重复出现</p>
+     * <p>调用方通过此方法间接调�?serializer.serialize()�?
+     * �?unchecked cast 隔离在此方法内部，避免在各调用点重复出现</p>
      */
     private static <T> void invokeSerializer(AsmSerializer<T> serializer, Object obj, JSONWriter writer) {
         T typedObj = (T) obj;
@@ -322,9 +321,9 @@ public final class AsmCodecCache {
     }
 
     /**
-     * 获取或创建 ASM 反序列化器
+     * 获取或创�?ASM 反序列化�?
      *
-     * <p>优化：使用单次 ConcurrentHashMap.get() 替代 containsKey() + get() 双次查找</p>
+     * <p>优化：使用单�?ConcurrentHashMap.get() 替代 containsKey() + get() 双次查找</p>
      */
     
     public static <T> AsmDeserializer<T> getOrCreateDeserializer(Class<T> beanType) {
@@ -353,7 +352,7 @@ public final class AsmCodecCache {
     }
 
     /**
-     * 获取或创建 ASM 反序列化器（非类型参数版本，接受 Class<?>）
+     * 获取或创�?ASM 反序列化器（非类型参数版本，接受 Class<?>�?
      *
      * @param beanType Bean 类型
      * @return 反序列化器实例，获取失败返回 null
@@ -388,7 +387,7 @@ public final class AsmCodecCache {
     }
 
     /**
-     * 检查是否启用 ASM 优化
+     * 检查是否启�?ASM 优化
      */
     public static boolean isEnabled() {
         return true;
@@ -397,7 +396,7 @@ public final class AsmCodecCache {
     /**
      * 获取缓存大小监控信息
      *
-     * @return 缓存统计信息字符串
+     * @return 缓存统计信息字符�?
      */
     public static String getCacheSize() {
         return String.format(
@@ -410,7 +409,7 @@ public final class AsmCodecCache {
     }
 
     /**
-     * 清理所有缓存
+     * 清理所有缓�?
      */
     public static void clearCache() {
         SERIALIZER_CACHE.clear();

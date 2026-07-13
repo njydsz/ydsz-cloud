@@ -15,6 +15,7 @@ import com.njydsz.pmis.agent.domain.guardrail.InputGuardrail;
 import com.njydsz.pmis.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.pmis.agent.domain.tool.ToolRegistry;
 import com.njydsz.pmis.agent.server.config.AgentProperties;
+import com.njydsz.pmis.agent.server.rag.RagService;
 
 /**
  * Agent 工厂
@@ -35,18 +36,21 @@ public class AgentFactory {
     private final AgentProperties properties;
     private final List<InputGuardrail> inputGuardrails;
     private final List<OutputGuardrail> outputGuardrails;
+    private final RagService ragService;
     private final Map<String, AgentExecutor> executorCache = new HashMap<>();
 
     public AgentFactory(LlmClient llmClient, ConversationMemory memory,
                         ToolRegistry toolRegistry, AgentProperties properties,
                         List<InputGuardrail> inputGuardrails,
-                        List<OutputGuardrail> outputGuardrails) {
+                        List<OutputGuardrail> outputGuardrails,
+                        RagService ragService) {
         this.llmClient = llmClient;
         this.memory = memory;
         this.toolRegistry = toolRegistry;
         this.properties = properties;
         this.inputGuardrails = inputGuardrails;
         this.outputGuardrails = outputGuardrails;
+        this.ragService = ragService;
     }
 
     /**
@@ -76,6 +80,16 @@ public class AgentFactory {
         if ("CHAT".equalsIgnoreCase(type)) {
             return new SimpleAgentExecutor(llmClient, memory, properties,
                     inputGuardrails, outputGuardrails);
+        }
+        if ("RAG".equalsIgnoreCase(type)) {
+            return new RagAgentExecutor(llmClient, memory, properties, ragService,
+                    inputGuardrails, outputGuardrails);
+        }
+        if ("PLAN_EXECUTE".equalsIgnoreCase(type)) {
+            return new PlanExecuteAgentExecutor(llmClient, memory, properties);
+        }
+        if ("ROUTER".equalsIgnoreCase(type)) {
+            return new RouterAgentExecutor(llmClient, properties, this);
         }
         log.warn("[Agent-Factory] 未知 Agent 类型: {}，回退到 ReAct", type);
         return new ReActAgentExecutor(llmClient, memory, toolRegistry, properties,

@@ -6,20 +6,20 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.njydsz.pmis.common.json.deserializer.JsonDeserializer;
 
 /**
- * 自定义序列化器注册中心
+ * 自定义序列化器注册中�?
  *
- * <p>支持用户注册和管理自定义序列化器，实现类似 Jackson Module 的扩展机制。</p>
+ * <p>支持用户注册和管理自定义序列化器，实现类�?Jackson Module 的扩展机制�?/p>
  *
- * <p><b>使用示例：</b></p>
+ * <p><b>使用示例�?/b></p>
  * <pre>
- * // 注册自定义序列化器
+ * // 注册自定义序列化�?
  * SerializerRegistry.getInstance().register(User.class, new CustomUserSerializer());
  *
  * // 获取序列化器
  * JsonSerializer serializer = SerializerRegistry.getInstance().get(User.class);
  * </pre>
  *
- * <p><b>线程安全：</b></p>
+ * <p><b>线程安全�?/b></p>
  * <ul>
  *   <li>使用 ConcurrentHashMap 保证并发安全</li>
  *   <li>注册操作原子执行</li>
@@ -29,7 +29,6 @@ import com.njydsz.pmis.common.json.deserializer.JsonDeserializer;
  * @email limw1888@126.com
  * @version 3.5.0
  */
-@SuppressWarnings("unchecked")
 public final class SerializerRegistry {
 
     private static volatile SerializerRegistry instance;
@@ -58,7 +57,7 @@ public final class SerializerRegistry {
     }
 
     /**
-     * 注册自定义序列化器
+     * 注册自定义序列化�?
      *
      * @param type 目标类型
      * @param serializer 序列化器
@@ -78,7 +77,7 @@ public final class SerializerRegistry {
      * 注册自定义反序列化器
      *
      * @param type 目标类型
-     * @param deserializer 反序列化器
+     * @param deserializer 反序列化�?
      * @param <T> 类型参数
      */
     public <T> void register(Class<T> type, JsonDeserializer<T> deserializer) {
@@ -103,10 +102,10 @@ public final class SerializerRegistry {
     }
 
     /**
-     * 获取反序列化器
+     * 获取反序列化�?
      *
      * @param type 目标类型
-     * @return 反序列化器，如果未注册返回 null
+     * @return 反序列化器，如果未注册返�?null
      */
     public <T> JsonDeserializer<T> getDeserializer(Class<T> type) {
         return castDeserializer(deserializers.get(type));
@@ -122,10 +121,10 @@ public final class SerializerRegistry {
     }
 
     /**
-     * 是否已注册序列化器
+     * 是否已注册序列化�?
      *
      * @param type 目标类型
-     * @return 如果已注册返回 true
+     * @return 如果已注册返�?true
      */
     public boolean hasSerializer(Class<?> type) {
         return serializers.containsKey(type);
@@ -135,7 +134,7 @@ public final class SerializerRegistry {
      * 是否已注册反序列化器
      *
      * @param type 目标类型
-     * @return 如果已注册返回 true
+     * @return 如果已注册返�?true
      */
     public boolean hasDeserializer(Class<?> type) {
         return deserializers.containsKey(type);
@@ -152,17 +151,17 @@ public final class SerializerRegistry {
     }
 
     /**
-     * 移除反序列化器
+     * 移除反序列化�?
      *
      * @param type 目标类型
-     * @return 被移除的反序列化器，如果未注册返回 null
+     * @return 被移除的反序列化器，如果未注册返�?null
      */
     public JsonDeserializer<?> unregisterDeserializer(Class<?> type) {
         return deserializers.remove(type);
     }
 
     /**
-     * 清空所有注册
+     * 清空所有注�?
      */
     public void clear() {
         serializers.clear();
@@ -179,7 +178,7 @@ public final class SerializerRegistry {
     }
 
     /**
-     * 获取已注册的反序列化器数量
+     * 获取已注册的反序列化器数�?
      *
      * @return 数量
      */

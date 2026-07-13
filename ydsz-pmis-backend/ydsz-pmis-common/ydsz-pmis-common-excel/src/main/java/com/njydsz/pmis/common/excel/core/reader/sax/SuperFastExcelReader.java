@@ -23,19 +23,19 @@ import com.njydsz.pmis.common.excel.exception.ExcelReadException;
 import com.njydsz.pmis.common.excel.support.asm.ASMFieldAccessor.ObjectInstantiator;
 
 /**
- * 超高速 Excel 读取器 — 纯 XML 流式解析实现
+ * 超高�?Excel 读取�?�?�?XML 流式解析实现
  *
- * <p>完全不依赖 POI 的 OPCPackage、SharedStringsTable、SAXParser 等组件，
- * 直接通过 ZipInputStream 解压 xlsx 文件，手动解析 XML 提取数据。</p>
+ * <p>完全不依�?POI �?OPCPackage、SharedStringsTable、SAXParser 等组件，
+ * 直接通过 ZipInputStream 解压 xlsx 文件，手动解�?XML 提取数据�?/p>
  *
  * <h3>核心优化</h3>
  * <ul>
- *   <li>零 POI 依赖 — 不使用 OPCPackage、SharedStringsTable、SAXParser</li>
- *   <li>手动 XML 解析 — 通过字符串匹配直接提取标签内容，避免 SAX 事件开销</li>
- *   <li>SST 按需加载 — 共享字符串表流式解析，不一次性加载到内存</li>
- *   <li>大文件流式处理 — sheet XML 通过临时文件管道传递，避免 OOM</li>
- *   <li>文件大小限制 — 通过 ExcelConfig.maxReadFileSizeMB 防止超大文件 OOM</li>
- *   <li>ASM 字段访问 — 使用 ASM 生成的 Getter/Setter 替代反射</li>
+ *   <li>�?POI 依赖 �?不使�?OPCPackage、SharedStringsTable、SAXParser</li>
+ *   <li>手动 XML 解析 �?通过字符串匹配直接提取标签内容，避免 SAX 事件开销</li>
+ *   <li>SST 按需加载 �?共享字符串表流式解析，不一次性加载到内存</li>
+ *   <li>大文件流式处�?�?sheet XML 通过临时文件管道传递，避免 OOM</li>
+ *   <li>文件大小限制 �?通过 ExcelConfig.maxReadFileSizeMB 防止超大文件 OOM</li>
+ *   <li>ASM 字段访问 �?使用 ASM 生成�?Getter/Setter 替代反射</li>
  * </ul>
  *
  * <h3>性能对比</h3>
@@ -43,13 +43,12 @@ import com.njydsz.pmis.common.excel.support.asm.ASMFieldAccessor.ObjectInstantia
  *   <tr><th>读取方式</th><th>100K 数据耗时</th><th>内存占用</th></tr>
  *   <tr><td>XSSFWorkbook 用户模式</td><td>~1500ms</td><td>~500MB</td></tr>
  *   <tr><td>SAX + POI 组件</td><td>~800ms</td><td>~200MB</td></tr>
- *   <tr><td>纯 XML 手工解析</td><td>~300ms</td><td>~50MB</td></tr>
+ *   <tr><td>�?XML 手工解析</td><td>~300ms</td><td>~50MB</td></tr>
  * </table>
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@SuppressWarnings("unchecked")
 public class SuperFastExcelReader {
 
     private static final Logger log = LoggerFactory.getLogger(SuperFastExcelReader.class);
@@ -63,29 +62,29 @@ public class SuperFastExcelReader {
     /** 对象实例化器 */
     ObjectInstantiator instantiator;
 
-    /** 分析上下文 */
+    /** 分析上下�?*/
     AnalysisContext context;
 
-    /** 监听器列表 */
+    /** 监听器列�?*/
     List<ReadListener<?>> listeners;
 
     /** 表头行号 */
     int headRowNumber = 1;
 
-    /** 最大读取行数限制，0 表示不限制 */
+    /** 最大读取行数限制，0 表示不限�?*/
     int maxRows = 0;
 
     /**
      * 读取 XLSX 文件
      *
-     * <p>对大文件采用流式处理策略：当 sheet XML 超过内存阈值时，
-     * 自动切换为临时文件管道方式，避免 OOM。</p>
+     * <p>对大文件采用流式处理策略：当 sheet XML 超过内存阈值时�?
+     * 自动切换为临时文件管道方式，避免 OOM�?/p>
      *
-     * @param inputStream xlsx 文件输入流
+     * @param inputStream xlsx 文件输入�?
      * @throws Exception 解析异常
      */
     public void read(InputStream inputStream) throws Exception {
-        // 文件大小安全检查
+        // 文件大小安全检�?
         ExcelConfig config = ExcelConfig.getInstance();
         int maxFileSizeMB = config.getMaxReadFileSizeMB();
 
@@ -101,20 +100,20 @@ public class SuperFastExcelReader {
                 String name = entry.getName();
 
                 if ("xl/sharedStrings.xml".equals(name)) {
-                    // SST 解析：流式读取，内存中只保留字符串索引
+                    // SST 解析：流式读取，内存中只保留字符串索�?
                     ssReader = new SharedStringsReader();
                     ssReader.parse(zis);
                 } else if (name.startsWith("xl/worksheets/sheet") && name.endsWith(".xml")) {
-                    // Sheet 数据：根据大小决定加载策略
+                    // Sheet 数据：根据大小决定加载策�?
                     long estimatedSize = entry.getSize();
 
                     if (estimatedSize > IN_MEMORY_THRESHOLD || estimatedSize == -1) {
-                        // 大文件或未知大小：使用临时文件
+                        // 大文件或未知大小：使用临时文�?
                         tempSheetFile = Files.createTempFile("ydsz_sheet_", ".xml");
                         Files.copy(zis, tempSheetFile, StandardCopyOption.REPLACE_EXISTING);
                         long actualSize = Files.size(tempSheetFile);
 
-                        // 文件大小安全检查
+                        // 文件大小安全检�?
                         long maxSizeBytes = (long) maxFileSizeMB * 1024 * 1024;
                         if (actualSize > maxSizeBytes) {
                             Files.deleteIfExists(tempSheetFile);
@@ -129,11 +128,11 @@ public class SuperFastExcelReader {
                             tempSheetFile = null;
                         } else {
                             sheetStream = new BufferedInputStream(Files.newInputStream(tempSheetFile));
-                            log.debug("大文件模式: sheet XML 大小={}MB, 使用临时文件流式解析",
+                            log.debug("大文件模�? sheet XML 大小={}MB, 使用临时文件流式解析",
                                     actualSize / 1024 / 1024);
                         }
                     } else {
-                        // 小文件：直接加载到内存
+                        // 小文件：直接加载到内�?
                         sheetStream = new ByteArrayInputStream(readAllBytes(zis, (int) estimatedSize));
                     }
                     break;
@@ -142,7 +141,7 @@ public class SuperFastExcelReader {
             }
 
             if (sheetStream == null) {
-                throw ExcelReadException.invalidFormat("unknown", "Sheet 不存在");
+                throw ExcelReadException.invalidFormat("unknown", "Sheet 不存�?);
             }
 
             try {
@@ -152,7 +151,7 @@ public class SuperFastExcelReader {
                 sheetStream.close();
             }
         } finally {
-            // 确保临时文件被清理
+            // 确保临时文件被清�?
             if (tempSheetFile != null) {
                 try {
                     Files.deleteIfExists(tempSheetFile);
@@ -165,7 +164,7 @@ public class SuperFastExcelReader {
     }
 
     /**
-     * 读取 InputStream 的所有字节（带预估大小，减少扩容）
+     * 读取 InputStream 的所有字节（带预估大小，减少扩容�?
      */
     private byte[] readAllBytes(InputStream is, int estimatedSize) throws IOException {
         int capacity = Math.max(8192, estimatedSize + 1024);
@@ -193,14 +192,14 @@ public class SuperFastExcelReader {
     }
 
     /**
-     * 设置分析上下文
+     * 设置分析上下�?
      */
     public void setContext(AnalysisContext context) {
         this.context = context;
     }
 
     /**
-     * 设置监听器列表
+     * 设置监听器列�?
      */
     public void setListeners(List<?> listenerList) {
         this.listeners = (List<ReadListener<?>>) listenerList;
@@ -214,7 +213,7 @@ public class SuperFastExcelReader {
     }
 
     /**
-     * 设置最大读取行数限制
+     * 设置最大读取行数限�?
      */
     public void setMaxRows(int maxRows) {
         this.maxRows = maxRows;

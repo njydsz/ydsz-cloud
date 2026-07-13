@@ -654,12 +654,17 @@ public class MergeUtils {
             oos.close();
             ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
             ObjectInputStream ois = new ObjectInputStream(bais);
-            T copy = (T) ois.readObject();
+            T copy = castObject(ois.readObject());
             ois.close();
             return copy;
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException("Deep copy failed for: " + obj.getClass().getName(), e);
         }
+    }
+
+    /** 内部辅助方法：安全转换反序列化对象到泛型类型 T */
+    private static <T> T castObject(Object obj) {
+        return (T) obj;
     }
 
     /**

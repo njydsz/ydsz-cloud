@@ -1,6 +1,7 @@
 package com.njydsz.pmis.nextwiki.infra.repository;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
@@ -51,9 +52,13 @@ public class TagRepositoryImpl implements TagRepository {
 
     @Override
     public void bindTag(String fileNodeId, String tagId) {
-        FileTag fileTag = new FileTag();
-        fileTag.setFileNodeId(fileNodeId);
-        fileTag.setTagId(tagId);
+        FileTag fileTag = FileTag.builder()
+                .id(UUID.randomUUID().toString().replace("-", ""))
+                .fileNodeId(fileNodeId)
+                .tagId(tagId)
+                .revision(0)
+                .deleted(0)
+                .build();
         tagMapper.insertFileTag(fileTag);
     }
 

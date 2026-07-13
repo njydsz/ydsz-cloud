@@ -31,7 +31,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @email limw1888@126.com
  * @version 3.5.0
  */
-@SuppressWarnings("unchecked")
 public class ReflectUtils {
 
     private static final int MAX_CACHE_SIZE = 5000;

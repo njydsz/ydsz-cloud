@@ -7,22 +7,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * HTML 过滤器，用于去除 XSS 漏洞隐患。
+ * HTML 过滤器，用于去除 XSS 漏洞隐患�?
  * <p>
- * 基于 OWASP 最佳实践设计，支持白名单机制、协议验证、属性过滤等功能。
+ * 基于 OWASP 最佳实践设计，支持白名单机制、协议验证、属性过滤等功能�?
  * 相比互联网大厂工具类的优势：
  * 1. 零第三方依赖，纯 JDK 实现
- * 2. 支持完全自定义的白名单配置
+ * 2. 支持完全自定义的白名单配�?
  * 3. 内置多种安全策略（宽松、标准、严格）
- * 4. 支持协议级别的 URL 验证
- * 5. 高性能正则匹配和缓存机制
+ * 4. 支持协议级别�?URL 验证
+ * 5. 高性能正则匹配和缓存机�?
  * </p>
  *
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
  */
-@SuppressWarnings("unchecked")
 public final class HTMLFilter {
 
     private static final int REGEX_FLAGS_SI = Pattern.CASE_INSENSITIVE | Pattern.DOTALL;
@@ -438,7 +437,7 @@ public final class HTMLFilter {
 
         s = validateEntities(s);
 
-        // 解码命名实体（如 &amp; &lt; &gt; &quot; &nbsp;）
+        // 解码命名实体（如 &amp; &lt; &gt; &quot; &nbsp;�?
         buf = new StringBuilder();
         m = P_NAMED_ENTITY.matcher(s);
         while (m.find()) {

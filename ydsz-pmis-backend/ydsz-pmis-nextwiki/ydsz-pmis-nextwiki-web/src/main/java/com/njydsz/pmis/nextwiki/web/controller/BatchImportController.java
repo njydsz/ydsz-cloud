@@ -3,7 +3,7 @@ package com.njydsz.pmis.nextwiki.web.controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.njydsz.pmis.common.core.response.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.nextwiki.server.service.BatchImportApplicationService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,19 +28,19 @@ public class BatchImportController {
 
     @PostMapping("/batch-upload")
     @Operation(summary = "批量上传文件")
-    public Result<BatchImportApplicationService.BatchImportResult> batchUpload(
+    public BaseResponse<BatchImportApplicationService.BatchImportResult> batchUpload(
             @RequestParam("files") MultipartFile[] files,
             @RequestParam(value = "parentId", required = false) String parentId,
             @RequestHeader("X-User-Id") String userId) {
-        return Result.ok(batchImportService.batchUpload(files, parentId, userId));
+        return BaseResponse.ok(batchImportService.batchUpload(files, parentId, userId));
     }
 
     @PostMapping("/zip")
-    @Operation(summary = "从 ZIP 压缩包导入")
-    public Result<BatchImportApplicationService.BatchImportResult> importZip(
+    @Operation(summary = "�?ZIP 压缩包导�?)
+    public BaseResponse<BatchImportApplicationService.BatchImportResult> importZip(
             @RequestParam("file") MultipartFile zipFile,
             @RequestParam(value = "parentId", required = false) String parentId,
             @RequestHeader("X-User-Id") String userId) {
-        return Result.ok(batchImportService.importFromZip(zipFile, parentId, userId));
+        return BaseResponse.ok(batchImportService.importFromZip(zipFile, parentId, userId));
     }
 }

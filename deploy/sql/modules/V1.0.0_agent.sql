@@ -142,3 +142,34 @@ CREATE TABLE IF NOT EXISTS pmis_agent_tool_def (
     updated_at          TIMESTAMPTZ   DEFAULT NOW()
 );
 COMMENT ON TABLE pmis_agent_tool_def IS '工具定义表';
+
+-- pgvector 扩展（RAG 向量存储）
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- 文档分块向量表（RAG 知识库核心表）
+CREATE TABLE IF NOT EXISTS pmis_agent_document_chunk (
+    id              VARCHAR(64)   PRIMARY KEY DEFAULT gen_random_uuid()::text,
+    document_id     VARCHAR(64)   NOT NULL,
+    content         TEXT          NOT NULL,
+    embedding       vector(1536),
+    chunk_index     INTEGER       DEFAULT 0,
+    token_count     INTEGER       DEFAULT 0,
+    document_title  VARCHAR(256),
+    source          VARCHAR(128),
+    metadata        JSONB,
+    created_at      TIMESTAMPTZ   DEFAULT NOW()
+);
+COMMENT ON TABLE pmis_agent_document_chunk IS '文档分块向量表（RAG 知识库）';
+
+-- IVFFlat 向量索引（近似最近邻搜索）
+CREATE INDEX IF NOT EXISTS idx_chunk_embedding
+    ON pmis_agent_document_chunk USING ivfflat (embedding vector_cosine_ops)
+    WITH (lists = 100);
+
+-- 文档 ID 索引（按文档删除/查询）
+CREATE INDEX IF NOT EXISTS idx_chunk_doc
+    ON pmis_agent_document_chunk(document_id);
+
+-- 来源类型索引（按来源过滤）
+CREATE INDEX IF NOT EXISTS idx_chunk_source
+    ON pmis_agent_document_chunk(source);

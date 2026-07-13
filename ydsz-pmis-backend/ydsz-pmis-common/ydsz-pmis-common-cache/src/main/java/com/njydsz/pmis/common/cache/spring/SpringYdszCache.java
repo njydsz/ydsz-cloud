@@ -9,27 +9,26 @@ import org.springframework.cache.support.AbstractValueAdaptingCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 
 /**
- * YdszCache 的 Spring Cache 适配器（Spring 6.x）
+ * YdszCache �?Spring Cache 适配器（Spring 6.x�?
  *
- * <p>将 YdszCache 的 Cache 接口适配为 Spring Cache 的标准接口， 使 YdszCache 支持 @Cacheable、@CachePut、@CacheEvict
- * 等 Spring Cache 注解。
+ * <p>�?YdszCache �?Cache 接口适配�?Spring Cache 的标准接口， �?YdszCache 支持 @Cacheable、@CachePut、@CacheEvict
+ * �?Spring Cache 注解�?
  *
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
  */
-@SuppressWarnings("unchecked")
 public class SpringYdszCache extends AbstractValueAdaptingCache {
 
   private final String name;
   private final Cache<Object, Object> delegate;
 
   /**
-   * 创建 Spring YdszCache 适配器
+   * 创建 Spring YdszCache 适配�?
    *
    * @param name 缓存名称
    * @param delegate YdszCache 实例
-   * @param allowNullValues 是否允许 null 值
+   * @param allowNullValues 是否允许 null �?
    */
   public SpringYdszCache(String name, Cache<Object, Object> delegate, boolean allowNullValues) {
     super(allowNullValues);

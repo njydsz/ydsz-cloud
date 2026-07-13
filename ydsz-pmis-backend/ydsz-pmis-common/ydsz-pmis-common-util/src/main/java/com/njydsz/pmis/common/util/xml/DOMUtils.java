@@ -37,7 +37,6 @@ import lombok.extern.slf4j.Slf4j;
  * @version 3.5.0
  */
 @Slf4j
-@SuppressWarnings("unchecked")
 public class DOMUtils {
 
     private static final String DEFAULT_ENCODING = StandardCharsets.UTF_8.name();

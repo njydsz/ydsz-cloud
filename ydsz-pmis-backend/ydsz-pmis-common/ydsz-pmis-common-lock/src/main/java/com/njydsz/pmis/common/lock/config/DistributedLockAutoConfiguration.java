@@ -18,6 +18,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
+import com.njydsz.pmis.common.lock.aspect.IdempotentAspect;
 import com.njydsz.pmis.common.lock.aspect.YdszDistributedLockAspect;
 import com.njydsz.pmis.common.lock.metrics.LockMetrics;
 import com.njydsz.pmis.common.lock.metrics.LockMetricsExporter;
@@ -130,6 +131,28 @@ public class DistributedLockAutoConfiguration {
         YdszDistributedLockAspect aspect = new YdszDistributedLockAspect(lockStrategy, lockProperties.isFallbackEnabled());
         aspect.setLockMetrics(lockMetrics);
         return aspect;
+    }
+
+    /**
+     * 创建接口幂等性 AOP 切面 Bean
+     *
+     * <p>拦截 {@link com.njydsz.pmis.common.lock.annotation.Idempotent} 注解方法，
+     * 基于 Redis {@code SET NX EX} Lua 脚本实现"在 TTL 窗口内同一幂等键只处理一次"。
+     *
+     * <p>项目硬约束：AOP 组件必须通过 {@code @ConditionalOnMissingBean} 注册，
+     * 允许业务方覆盖默认实现。
+     *
+     * @param stringRedisTemplate Redis 客户端
+     * @param lockMetrics         锁指标收集器（可选）
+     * @param lockProperties      锁配置属性（用于获取 namespace）
+     * @return IdempotentAspect 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public IdempotentAspect idempotentAspect(StringRedisTemplate stringRedisTemplate,
+                                             LockMetrics lockMetrics,
+                                             LockProperties lockProperties) {
+        return new IdempotentAspect(stringRedisTemplate, lockProperties.getNamespace(), lockMetrics);
     }
 
     /**

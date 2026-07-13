@@ -38,7 +38,6 @@ import java.util.jar.JarFile;
  * @email limw1888@126.com
  * @version 3.5.0
  */
-@SuppressWarnings("unchecked")
 public class ClassUtils {
 
     private static ClassLoader defaultClassLoader = ClassUtils.class.getClassLoader();

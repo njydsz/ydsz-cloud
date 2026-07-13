@@ -24,63 +24,62 @@ import com.njydsz.pmis.common.json.exception.JsonDeserializationException;
 import com.njydsz.pmis.common.json.util.StringInterner;
 
 /**
- * 零拷贝反序列化生成器（深度优化版 v3.5.0）
+ * 零拷贝反序列化生成器（深度优化版 v3.5.0�?
  *
- * <p>核心优化：</p>
+ * <p>核心优化�?/p>
  * <ul>
  *   <li>char[] 数组访问 - 避免 String.charAt() 开销</li>
  *   <li>直接字段设置 - 避免 Map 中转</li>
- *   <li>hashCode 快速匹配 - 先比哈希再比字符串</li>
+ *   <li>hashCode 快速匹�?- 先比哈希再比字符�?/li>
  *   <li>基本类型优化 - 避免装箱/拆箱</li>
- *   <li>零拷贝数字解析 - SIMD 加速</li>
- *   <li>对象池复用 - ThreadLocal 缓存 ArrayList/LinkedHashMap</li>
- *   <li>String 池化 - 复用常用字段名和短字符串值</li>
+ *   <li>零拷贝数字解�?- SIMD 加�?/li>
+ *   <li>对象池复�?- ThreadLocal 缓存 ArrayList/LinkedHashMap</li>
+ *   <li>String 池化 - 复用常用字段名和短字符串�?/li>
  *   <li>Constructor 缓存 - 避免反射开销</li>
- *   <li>分级反序列化器 - 根据字段数选择最优策略</li>
- *   <li>字段访问缓存 - 预计算类型码和 setter 策略</li>
- *   <li>集合预分配优化 - 基于字段数的容量估算</li>
+ *   <li>分级反序列化�?- 根据字段数选择最优策�?/li>
+ *   <li>字段访问缓存 - 预计算类型码�?setter 策略</li>
+ *   <li>集合预分配优�?- 基于字段数的容量估算</li>
  * </ul>
  *
  * <p><b>反序列化器分级：</b></p>
  * <ul>
- *   <li>SingleFieldDeserializer - 1 个简单字段，性能最优</li>
- *   <li>TwoFieldDeserializer - 2 个简单字段</li>
- *   <li>UltraFastDeserializer - ≤4 个简单字段，hashCode 优化</li>
- *   <li>FastDeserializer - ≤8 个字段，HashMap 查找</li>
+ *   <li>SingleFieldDeserializer - 1 个简单字段，性能最�?/li>
+ *   <li>TwoFieldDeserializer - 2 个简单字�?/li>
+ *   <li>UltraFastDeserializer - �? 个简单字段，hashCode 优化</li>
+ *   <li>FastDeserializer - �? 个字段，HashMap 查找</li>
  *   <li>StandardDeserializer - 任意字段数，完整功能</li>
  * </ul>
  *
- * <p><b>设计模式：</b></p>
+ * <p><b>设计模式�?/b></p>
  * <ul>
- *   <li>策略模式 - 根据字段数量选择最优反序列化策略</li>
+ *   <li>策略模式 - 根据字段数量选择最优反序列化策�?/li>
  *   <li>享元模式 - 反序列化器缓存、字符串驻留</li>
- *   <li>对象池 - ThreadLocal 复用集合对象</li>
+ *   <li>对象�?- ThreadLocal 复用集合对象</li>
  * </ul>
  *
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
  */
-@SuppressWarnings("unchecked")
 public final class ZeroCopyDeserializer {
 
-    /** 反序列化器缓存 */
+    /** 反序列化器缓�?*/
     private static final ConcurrentHashMap<Class<?>, BeanDeserializer> CACHE = new ConcurrentHashMap<>();
 
     /** Constructor 缓存 */
     private static final ConcurrentHashMap<Class<?>, Constructor<?>> CONSTRUCTOR_CACHE = new ConcurrentHashMap<>();
 
-    /** 字符串驻留器（减少重复字符串分配） */
+    /** 字符串驻留器（减少重复字符串分配�?*/
     private static final StringInterner STRING_INTERNER = new StringInterner(512);
 
-    /** ArrayList 对象池 */
+    /** ArrayList 对象�?*/
     private static final ThreadLocal<ArrayList<Object>> ARRAY_LIST_POOL = ThreadLocal.withInitial(() -> new ArrayList<>(64));
 
-    /** LinkedHashMap 对象池 */
+    /** LinkedHashMap 对象�?*/
     private static final ThreadLocal<LinkedHashMap<String, Object>> LINKED_HASH_MAP_POOL = ThreadLocal.withInitial(() -> new LinkedHashMap<>(64));
 
     /**
-     * 从池中获取 ArrayList
+     * 从池中获�?ArrayList
      */
     private static ArrayList<Object> borrowArrayList() {
         ArrayList<Object> list = ARRAY_LIST_POOL.get();
@@ -89,14 +88,14 @@ public final class ZeroCopyDeserializer {
     }
 
     /**
-     * 归还 ArrayList 到池中
+     * 归还 ArrayList 到池�?
      */
     private static void returnArrayList(ArrayList<Object> list) {
         list.clear();
     }
 
     /**
-     * 从池中获取 LinkedHashMap
+     * 从池中获�?LinkedHashMap
      */
     private static LinkedHashMap<String, Object> borrowLinkedHashMap() {
         LinkedHashMap<String, Object> map = LINKED_HASH_MAP_POOL.get();
@@ -105,24 +104,24 @@ public final class ZeroCopyDeserializer {
     }
 
     /**
-     * 归还 LinkedHashMap 到池中
+     * 归还 LinkedHashMap 到池�?
      */
     private static void returnLinkedHashMap(LinkedHashMap<String, Object> map) {
         map.clear();
     }
 
     /**
-     * 驻留字符串（短字符串复用）
+     * 驻留字符串（短字符串复用�?
      *
-     * @param str 待驻留的字符串
-     * @return 驻留后的字符串实例
+     * @param str 待驻留的字符�?
+     * @return 驻留后的字符串实�?
      */
     private static String internString(String str) {
         return STRING_INTERNER.intern(str);
     }
 
     /**
-     * 获取反序列化器
+     * 获取反序列化�?
      */
     public static <T> BeanDeserializer getDeserializer(Class<T> clazz) {
         AutoTypeChecker.checkType(clazz);
@@ -130,7 +129,7 @@ public final class ZeroCopyDeserializer {
     }
 
     /**
-     * 创建反序列化器
+     * 创建反序列化�?
      */
     private static <T> BeanDeserializer createDeserializer(Class<T> clazz) {
         FieldInfo[] fields = loadFields(clazz);
@@ -240,7 +239,7 @@ public final class ZeroCopyDeserializer {
         }
 
         /**
-         * 提取泛型元素类型（如 List<User> -> User.class）
+         * 提取泛型元素类型（如 List<User> -> User.class�?
          */
         private static Class<?> extractElementType(Type genericType) {
             if (genericType instanceof ParameterizedType pt) {
@@ -694,7 +693,7 @@ public final class ZeroCopyDeserializer {
         }
 
         /**
-         * 使用字段完整信息解析值（支持泛型类型）
+         * 使用字段完整信息解析值（支持泛型类型�?
          */
         private static Object parseValueWithFieldInfo(char[] chars, int start, FieldInfo field, int len) {
             if (start >= len) return null;
@@ -1137,7 +1136,7 @@ public final class ZeroCopyDeserializer {
     }
 
     /**
-     * 解析 JSON 数组（带元素类型）
+     * 解析 JSON 数组（带元素类型�?
      */
     public static List<Object> parseArray(String json, Class<?> elementClass) {
         if (json == null || json.isEmpty()) {
@@ -1169,7 +1168,7 @@ public final class ZeroCopyDeserializer {
     }
 
     /**
-     * 公共解析 JSON 数组（带元素类型）
+     * 公共解析 JSON 数组（带元素类型�?
      */
     public static List<Object> parseArrayChars(char[] chars, int start, int len, Class<?> elementClass) {
         ArrayList<Object> list = borrowArrayList();

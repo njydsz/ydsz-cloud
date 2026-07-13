@@ -8,11 +8,15 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.pmis.agent.domain.conversation.ConversationMemory;
 import com.njydsz.pmis.agent.domain.gateway.LlmClient;
 import com.njydsz.pmis.agent.domain.guardrail.InputGuardrail;
 import com.njydsz.pmis.agent.domain.guardrail.OutputGuardrail;
+import com.njydsz.pmis.agent.domain.rag.EmbeddingClient;
+import com.njydsz.pmis.agent.domain.rag.TextChunker;
+import com.njydsz.pmis.agent.domain.rag.VectorStore;
 import com.njydsz.pmis.agent.domain.tool.ToolRegistry;
 import com.njydsz.pmis.agent.domain.trace.TraceRecorder;
 import com.njydsz.pmis.agent.infra.guardrail.PiiMaskingGuardrail;
@@ -20,6 +24,10 @@ import com.njydsz.pmis.agent.infra.guardrail.PromptInjectionGuardrail;
 import com.njydsz.pmis.agent.infra.llm.LlmClientRouter;
 import com.njydsz.pmis.agent.infra.llm.OpenAiCompatibleClient;
 import com.njydsz.pmis.agent.infra.memory.RedisConversationMemory;
+import com.njydsz.pmis.agent.infra.rag.InMemoryVectorStore;
+import com.njydsz.pmis.agent.infra.rag.OpenAiEmbeddingClient;
+import com.njydsz.pmis.agent.infra.rag.PgVectorStore;
+import com.njydsz.pmis.agent.infra.rag.SimpleTextChunker;
 import com.njydsz.pmis.agent.infra.tool.DefaultToolRegistry;
 import com.njydsz.pmis.agent.infra.trace.InMemoryTraceRecorder;
 import com.njydsz.pmis.agent.server.agent.AgentFactory;
@@ -36,6 +44,9 @@ import com.njydsz.pmis.agent.server.agent.AgentFactory;
  *   <li>{@link InMemoryTraceRecorder} — 执行链路记录器</li>
  *   <li>{@link PromptInjectionGuardrail} — Prompt 注入检测护栏</li>
  *   <li>{@link PiiMaskingGuardrail} — PII 脱敏护栏</li>
+ *   <li>{@link OpenAiEmbeddingClient} — Embedding 客户端</li>
+ *   <li>{@link SimpleTextChunker} — 文本分块器</li>
+ *   <li>{@link PgVectorStore} / {@link InMemoryVectorStore} — 向量存储</li>
  *   <li>{@link AgentFactory} — Agent 工厂</li>
  * </ul>
  *
@@ -93,12 +104,46 @@ public class AgentAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean(EmbeddingClient.class)
+    public EmbeddingClient embeddingClient(AgentProperties properties) {
+        AgentProperties.Rag ragConfig = properties.getRag();
+        String apiKey = ragConfig.getEmbeddingApiKey().isEmpty()
+                ? properties.getLlm().getApiKey() : ragConfig.getEmbeddingApiKey();
+        String baseUrl = ragConfig.getEmbeddingBaseUrl().isEmpty()
+                ? properties.getLlm().getBaseUrl() : ragConfig.getEmbeddingBaseUrl();
+        return new OpenAiEmbeddingClient(baseUrl, apiKey,
+                ragConfig.getEmbeddingModel(), ragConfig.getDimension());
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(TextChunker.class)
+    public TextChunker textChunker(AgentProperties properties) {
+        AgentProperties.Rag ragConfig = properties.getRag();
+        return new SimpleTextChunker(ragConfig.getChunkSize(), ragConfig.getChunkOverlap());
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(VectorStore.class)
+    public VectorStore vectorStore(AgentProperties properties, EmbeddingClient embeddingClient,
+                                   JdbcTemplate jdbcTemplate) {
+        AgentProperties.Rag ragConfig = properties.getRag();
+        if ("pgvector".equalsIgnoreCase(ragConfig.getVectorStore())) {
+            PgVectorStore pgStore = new PgVectorStore(jdbcTemplate, embeddingClient);
+            if (pgStore.isAvailable()) {
+                return pgStore;
+            }
+        }
+        return new InMemoryVectorStore(embeddingClient);
+    }
+
+    @Bean
     @ConditionalOnMissingBean(AgentFactory.class)
     public AgentFactory agentFactory(LlmClient llmClient, ConversationMemory memory,
                                      ToolRegistry toolRegistry, AgentProperties properties,
                                      List<InputGuardrail> inputGuardrails,
-                                     List<OutputGuardrail> outputGuardrails) {
+                                     List<OutputGuardrail> outputGuardrails,
+                                     com.njydsz.pmis.agent.server.rag.RagService ragService) {
         return new AgentFactory(llmClient, memory, toolRegistry, properties,
-                inputGuardrails, outputGuardrails);
+                inputGuardrails, outputGuardrails, ragService);
     }
 }

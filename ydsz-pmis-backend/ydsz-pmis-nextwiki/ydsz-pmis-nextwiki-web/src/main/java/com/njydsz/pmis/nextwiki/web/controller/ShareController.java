@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.*;
 
-import com.njydsz.pmis.common.core.response.Result;
+import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.nextwiki.api.dto.NextwikiDTOs;
 import com.njydsz.pmis.nextwiki.domain.entity.ShareLink;
 import com.njydsz.pmis.nextwiki.domain.service.ShareDomainService;
@@ -31,7 +31,7 @@ public class ShareController {
 
     @PostMapping
     @Operation(summary = "创建分享链接")
-    public Result<ShareLink> createShare(
+    public BaseResponse<ShareLink> createShare(
             @RequestBody NextwikiDTOs.CreateShareRequest request,
             @RequestHeader("X-User-Id") String userId) {
 
@@ -42,32 +42,32 @@ public class ShareController {
                 request.getExpireTime(),
                 request.getMaxAccessCount(),
                 userId);
-        return Result.ok(result);
+        return BaseResponse.ok(result);
     }
 
     @PostMapping("/verify")
     @Operation(summary = "验证分享链接访问权限")
-    public Result<ShareLink> verifyAccess(@RequestBody NextwikiDTOs.VerifyShareRequest request) {
+    public BaseResponse<ShareLink> verifyAccess(@RequestBody NextwikiDTOs.VerifyShareRequest request) {
         ShareLink result = shareDomainService.verifyAccess(
                 request.getShareCode(),
                 request.getExtractCode(),
                 request.getPassword());
-        return Result.ok(result);
+        return BaseResponse.ok(result);
     }
 
     @DeleteMapping("/{shareId}")
     @Operation(summary = "撤销分享")
-    public Result<Void> revoke(
+    public BaseResponse<Void> revoke(
             @PathVariable String shareId,
             @RequestHeader("X-User-Id") String userId) {
 
         shareDomainService.revoke(shareId, userId);
-        return Result.ok();
+        return BaseResponse.ok();
     }
 
     @GetMapping("/my")
     @Operation(summary = "查询我的分享列表")
-    public Result<List<ShareLink>> myShares(@RequestHeader("X-User-Id") String userId) {
-        return Result.ok(shareDomainService.findByUserId(userId));
+    public BaseResponse<List<ShareLink>> myShares(@RequestHeader("X-User-Id") String userId) {
+        return BaseResponse.ok(shareDomainService.findByUserId(userId));
     }
 }

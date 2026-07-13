@@ -43,7 +43,6 @@ import java.util.stream.Collectors;
  *   <li>所有方法 null 安全处理</li>
  * </ul>
  */
-@SuppressWarnings("unchecked")
 public class StringConvertUtils {
 
     /**

@@ -18,7 +18,6 @@ import com.njydsz.pmis.common.file.storage.IFileStorage;
 import com.njydsz.pmis.common.file.storage.IFileStorageProvider;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 import com.njydsz.pmis.nextwiki.domain.entity.FileVersion;
-import com.njydsz.pmis.nextwiki.domain.entity.TrashItem;
 import com.njydsz.pmis.nextwiki.domain.event.FileOperatedEvent;
 import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.pmis.nextwiki.domain.service.FileVersionDomainService;
