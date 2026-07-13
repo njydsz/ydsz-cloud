@@ -23,6 +23,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.concurrent.locks.LockSupport;
 
 /**
  * Redis String / Bitmap 操作组件
@@ -624,7 +625,7 @@ public class RedisStringOps {
             long maxWaitNanos = TimeUnit.MILLISECONDS.toNanos(3000);
             long totalWaitNanos = 0;
             while (totalWaitNanos < maxWaitNanos) {
-                java.util.concurrent.locks.LockSupport.parkNanos(waitNanos);
+                LockSupport.parkNanos(waitNanos);
                 totalWaitNanos += waitNanos;
                 waitNanos = Math.min(waitNanos * 2, maxWaitNanos - totalWaitNanos);
                 value = get(key, clazz);

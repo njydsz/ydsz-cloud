@@ -4,6 +4,7 @@ import com.njydsz.pmis.common.file.domain.ListObjectsResult;
 import com.njydsz.pmis.common.file.domain.ObjectMetadata;
 
 import java.util.List;
+import java.time.Duration;
 
 /**
  * 文件管理器接口
@@ -120,7 +121,7 @@ public interface FileManager {
      * @return 预签名 URL
      * @throws UnsupportedOperationException 如果当前存储后端不支持
      */
-    default String generatePresignedUrl(String bucketName, String objectName, java.time.Duration expiryDuration) {
+    default String generatePresignedUrl(String bucketName, String objectName, Duration expiryDuration) {
         throw new UnsupportedOperationException("Presigned URL not supported by this storage backend");
     }
 }

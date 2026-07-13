@@ -8,6 +8,8 @@ import lombok.Data;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.lang.Number;
+import java.lang.String;
 
 /**
  * 规则变量定义 DO
@@ -32,7 +34,7 @@ public class RuleVariableDefDO implements Serializable {
     /** 变量名（如 cpi / budgetAmount / evmRedCount） */
     private String varName;
 
-    /** 变量类型（java.lang.Number / java.lang.String 等） */
+    /** 变量类型（Number / String 等） */
     private String varType;
 
     /** 变量描述（中文，供前端编辑器提示） */

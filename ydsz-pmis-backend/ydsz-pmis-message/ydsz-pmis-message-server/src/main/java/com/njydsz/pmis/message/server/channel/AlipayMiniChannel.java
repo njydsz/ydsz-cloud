@@ -18,6 +18,10 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * 支付宝小程序模板消息通道实现。
@@ -87,8 +91,8 @@ public class AlipayMiniChannel implements MessageChannel {
             params.put("app_id", config.getAppId());
             params.put("charset", "UTF-8");
             params.put("sign_type", "RSA2");
-            params.put("timestamp", java.time.LocalDateTime.now()
-                    .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            params.put("timestamp", LocalDateTime.now()
+                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
             params.put("version", "1.0");
             params.put("biz_content", JsonUtils.toJson(bizContent));
 
@@ -101,10 +105,10 @@ public class AlipayMiniChannel implements MessageChannel {
                 if (formBody.length() > 0) {
                     formBody.append("&");
                 }
-                formBody.append(java.net.URLEncoder.encode(entry.getKey(), java.nio.charset.StandardCharsets.UTF_8));
+                formBody.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8));
                 formBody.append("=");
-                formBody.append(java.net.URLEncoder.encode(String.valueOf(entry.getValue()),
-                        java.nio.charset.StandardCharsets.UTF_8));
+                formBody.append(URLEncoder.encode(String.valueOf(entry.getValue()),
+                        StandardCharsets.UTF_8));
             }
 
             HttpEntity<String> entity = new HttpEntity<>(formBody.toString(), headers);

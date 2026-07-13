@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * CEP 复杂事件处理 Controller（P0-2）
@@ -325,7 +326,7 @@ public class CEPController {
             engine.registerPattern(pattern);
             // 注册监听器收集命中
             List<CEPHit> testHits = new ArrayList<>();
-            java.util.function.Consumer<CEPHit> listener = testHits::add;
+            Consumer<CEPHit> listener = testHits::add;
             engine.addListener(listener);
             long hitsBefore = engine.totalHits();
             try {

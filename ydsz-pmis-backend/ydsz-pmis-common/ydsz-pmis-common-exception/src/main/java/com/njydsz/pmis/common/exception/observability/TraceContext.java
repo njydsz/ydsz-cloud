@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.exception.observability;
 import org.slf4j.MDC;
 
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * 分布式追踪上下文（基于 SLF4J MDC）
@@ -132,7 +133,7 @@ public final class TraceContext {
      * @param <T>     返回类型
      * @return action 的返回值
      */
-    public static <T> T withContext(String traceId, java.util.function.Supplier<T> action) {
+    public static <T> T withContext(String traceId, Supplier<T> action) {
         String previousTraceId = getTraceId();
         String previousSpanId = getSpanId();
         try {

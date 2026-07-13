@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.Duration;
 
 /**
  * 自动催办调度器（P1-2）
@@ -154,7 +155,7 @@ public class FlowAutoUrgeScheduler {
         // 推送 IM 通知（钉钉 + 企业微信）
         String title = "【审批催办】" + (instance.getTitle() != null ? instance.getTitle() : instance.getFlowName());
         long pendingHours = tasks.get(0).getCreatedAt() != null
-                ? java.time.Duration.between(tasks.get(0).getCreatedAt(), LocalDateTime.now()).toHours()
+                ? Duration.between(tasks.get(0).getCreatedAt(), LocalDateTime.now()).toHours()
                 : thresholdHours;
         String content = String.format(
                 "您有 %d 个审批任务已等待 %d 小时，请尽快处理。\n流程：%s\n标题：%s",

@@ -10,6 +10,7 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.time.Duration;
 
 /**
  * P1-1: 智能推送时间优化器实现。
@@ -59,12 +60,12 @@ public class DeliveryTimeOptimizerImpl implements DeliveryTimeOptimizer {
             // 更新小时维度活跃计数（Hash: hour → count）
             String hourlyKey = ACTIVITY_HOURLY_PREFIX + userId;
             redisTemplate.opsForHash().increment(hourlyKey, hourKey, 1);
-            redisTemplate.expire(hourlyKey, java.time.Duration.ofDays(ACTIVITY_EXPIRE_DAYS));
+            redisTemplate.expire(hourlyKey, Duration.ofDays(ACTIVITY_EXPIRE_DAYS));
 
             // 更新总活跃计数
             String countKey = ACTIVITY_COUNT_PREFIX + userId;
             redisTemplate.opsForValue().increment(countKey);
-            redisTemplate.expire(countKey, java.time.Duration.ofDays(ACTIVITY_EXPIRE_DAYS));
+            redisTemplate.expire(countKey, Duration.ofDays(ACTIVITY_EXPIRE_DAYS));
 
             log.debug("[DeliveryTime] 记录活跃: userId={} hour={} channel={}", userId, now.getHour(), channel);
         } catch (Exception e) {

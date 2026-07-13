@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.LinkedHashMap;
+import java.math.RoundingMode;
 
 /**
  * LiteExpr 编译器
@@ -187,7 +188,7 @@ public class LiteExprCompiler {
                 case "/" -> {
                     var divisor = BuiltinFunctions.toDecimal(right);
                     if (divisor.signum() == 0) yield null;
-                    yield BuiltinFunctions.toDecimal(left).divide(divisor, 10, java.math.RoundingMode.HALF_UP);
+                    yield BuiltinFunctions.toDecimal(left).divide(divisor, 10, RoundingMode.HALF_UP);
                 }
                 case "%" -> BuiltinFunctions.smartRemainder(left, right);
                 case "==" -> left != null && left.equals(right);

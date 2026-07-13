@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * 每日对账 Service 实现（P4-3）
@@ -213,7 +214,7 @@ public class DailyReconcileServiceImpl implements DailyReconcileService {
 
     // ----------------- 工具 -----------------
 
-    private <T> BigDecimal safeSum(T mapper, java.util.function.Function<T, BigDecimal> fn) {
+    private <T> BigDecimal safeSum(T mapper, Function<T, BigDecimal> fn) {
         try {
             BigDecimal v = fn.apply(mapper);
             if (v == null) return BigDecimal.ZERO;
@@ -224,7 +225,7 @@ public class DailyReconcileServiceImpl implements DailyReconcileService {
         }
     }
 
-    private BigDecimal safeSumTime(TimeEntryMapper m, java.util.function.Function<TimeEntryMapper, BigDecimal> fn) {
+    private BigDecimal safeSumTime(TimeEntryMapper m, Function<TimeEntryMapper, BigDecimal> fn) {
         try {
             BigDecimal v = fn.apply(m);
             if (v == null) return BigDecimal.ZERO;
@@ -236,7 +237,7 @@ public class DailyReconcileServiceImpl implements DailyReconcileService {
     }
 
     private BigDecimal safeSumSnapshot(ProfitSnapshotMapper m,
-                                       java.util.function.Function<ProfitSnapshotMapper, BigDecimal> fn) {
+                                       Function<ProfitSnapshotMapper, BigDecimal> fn) {
         try {
             BigDecimal v = fn.apply(m);
             if (v == null) return BigDecimal.ZERO;

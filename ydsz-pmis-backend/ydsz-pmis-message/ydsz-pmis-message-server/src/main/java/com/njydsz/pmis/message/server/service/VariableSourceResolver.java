@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.lang.reflect.Method;
+import java.time.Duration;
 
 /**
  * 消息变量数据源解析器（P0-4）。
@@ -43,7 +45,7 @@ public class VariableSourceResolver {
     private final org.springframework.context.ApplicationContext applicationContext;
 
     /** Bean 数据源方法缓存: key=beanName.methodName, value=Method */
-    private final Map<String, java.lang.reflect.Method> methodCache = new ConcurrentHashMap<>();
+    private final Map<String, Method> methodCache = new ConcurrentHashMap<>();
 
     /**
      * 按模板编码加载变量数据源配置。
@@ -130,7 +132,7 @@ public class VariableSourceResolver {
         // 缓存写入
         if (value != null && cacheKey != null) {
             redisTemplate.opsForValue().set(cacheKey, JsonUtils.toJson(value),
-                    java.time.Duration.ofSeconds(source.getCacheTtl()));
+                    Duration.ofSeconds(source.getCacheTtl()));
         }
         return value;
     }
@@ -175,7 +177,7 @@ public class VariableSourceResolver {
             }
 
             Object bean = applicationContext.getBean(beanName);
-            java.lang.reflect.Method method = methodCache.computeIfAbsent(
+            Method method = methodCache.computeIfAbsent(
                     beanName + "." + methodName, k -> findMethod(bean.getClass(), methodName, args.length));
             if (method == null) {
                 log.warn("[VariableSource] Bean 方法不存在: {}.{}", beanName, methodName);
@@ -237,7 +239,7 @@ public class VariableSourceResolver {
         return args;
     }
 
-    private java.lang.reflect.Method findMethod(Class<?> clazz, String name, int paramCount) {
+    private Method findMethod(Class<?> clazz, String name, int paramCount) {
         for (var m : clazz.getMethods()) {
             if (m.getName().equals(name) && m.getParameterCount() == paramCount) {
                 return m;

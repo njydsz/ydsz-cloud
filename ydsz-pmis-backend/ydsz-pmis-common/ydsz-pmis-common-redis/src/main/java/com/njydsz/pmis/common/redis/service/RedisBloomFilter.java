@@ -360,7 +360,7 @@ public class RedisBloomFilter {
         }
         try {
             Long size = redisTemplate.execute((org.springframework.data.redis.core.RedisCallback<Long>) connection ->
-                    connection.stringCommands().strLen(filterKey.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+                    connection.stringCommands().strLen(filterKey.getBytes(StandardCharsets.UTF_8)));
             return size != null ? size : -1;
         } catch (Exception e) {
             log.error("【Redis】布隆过滤器内存查询失败 | key={} | error={}", filterKey, e.getMessage());
@@ -405,7 +405,7 @@ public class RedisBloomFilter {
      * @return 哈希值列表
      */
     private static List<Long> murmurHash3(String value, int numHashes, long numBits) {
-        byte[] data = value.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        byte[] data = value.getBytes(StandardCharsets.UTF_8);
         long hash1 = hash64A(data, 0);
         long hash2 = hash64A(data, 1);
 

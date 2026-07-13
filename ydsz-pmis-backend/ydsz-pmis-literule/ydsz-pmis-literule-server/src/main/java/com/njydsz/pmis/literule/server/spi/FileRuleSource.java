@@ -19,6 +19,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.Enumeration;
+import java.nio.file.FileSystems;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 
 /**
  * 文件规则数据源（P2-3 DSL YAML/JSON 规则文件加载）
@@ -369,18 +374,18 @@ public class FileRuleSource implements RuleSource {
             return;
         }
         try {
-            java.nio.file.WatchService watcher = java.nio.file.FileSystems.getDefault().newWatchService();
+            WatchService watcher = FileSystems.getDefault().newWatchService();
             watchPath.register(watcher,
-                    java.nio.file.StandardWatchEventKinds.ENTRY_CREATE,
-                    java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY,
-                    java.nio.file.StandardWatchEventKinds.ENTRY_DELETE);
+                    StandardWatchEventKinds.ENTRY_CREATE,
+                    StandardWatchEventKinds.ENTRY_MODIFY,
+                    StandardWatchEventKinds.ENTRY_DELETE);
             watchThread = new Thread(() -> {
                 log.info("[FileRuleSource] 文件监听已启动: path={}", watchPath);
                 while (!Thread.currentThread().isInterrupted()) {
                     try {
-                        java.nio.file.WatchKey key = watcher.take();
+                        WatchKey key = watcher.take();
                         boolean changed = false;
-                        for (java.nio.file.WatchEvent<?> event : key.pollEvents()) {
+                        for (WatchEvent<?> event : key.pollEvents()) {
                             if (event.context() instanceof Path ctx && isRuleFile(watchPath.resolve(ctx))) {
                                 changed = true;
                             }

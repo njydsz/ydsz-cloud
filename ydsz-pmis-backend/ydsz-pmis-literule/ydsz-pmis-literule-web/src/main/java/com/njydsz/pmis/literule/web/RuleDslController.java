@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDateTime;
 
 /**
  * 规则 DSL 管理接口（P3-6 DSL 语言支持）
@@ -244,7 +245,7 @@ public class RuleDslController {
         }
 
         String yaml = RuleDslExporter.exportYaml(allRules, "exported-rules",
-                "导出时间: " + java.time.LocalDateTime.now());
+                "导出时间: " + LocalDateTime.now());
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("format", "yaml");

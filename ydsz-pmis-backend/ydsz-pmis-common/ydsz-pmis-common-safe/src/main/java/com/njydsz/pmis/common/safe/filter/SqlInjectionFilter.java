@@ -24,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 
 /**
  * SQL 注入防护过滤器
@@ -345,9 +347,9 @@ public class SqlInjectionFilter extends OncePerRequestFilter {
         }
 
         @Override
-        public java.io.BufferedReader getReader() throws IOException {
-            return new java.io.BufferedReader(
-                    new java.io.InputStreamReader(getInputStream(), StandardCharsets.UTF_8));
+        public BufferedReader getReader() throws IOException {
+            return new BufferedReader(
+                    new InputStreamReader(getInputStream(), StandardCharsets.UTF_8));
         }
     }
 }

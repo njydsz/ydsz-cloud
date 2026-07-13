@@ -48,6 +48,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * 经营驾驶舱 Service 实现
@@ -415,7 +416,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         return v == null ? ZERO : v;
     }
 
-    private BigDecimal safeSum(java.util.function.Supplier<BigDecimal> supplier) {
+    private BigDecimal safeSum(Supplier<BigDecimal> supplier) {
         try {
             return nz(supplier.get());
         } catch (Exception e) {

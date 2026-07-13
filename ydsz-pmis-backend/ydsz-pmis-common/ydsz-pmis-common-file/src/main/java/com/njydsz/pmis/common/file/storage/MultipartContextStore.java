@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.file.storage;
 
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 /**
  * 分片上传上下文存储接口
  * <p>支持多实例部署时分片上下文共享。
@@ -62,7 +63,7 @@ public interface MultipartContextStore {
             long lastAccessTime
     ) {
         public MultipartContextData(String uploadId, String bucketName, String objectName) {
-            this(uploadId, bucketName, objectName, new java.util.concurrent.ConcurrentHashMap<>(),
+            this(uploadId, bucketName, objectName, new ConcurrentHashMap<>(),
                     System.currentTimeMillis(), System.currentTimeMillis());
         }
     }

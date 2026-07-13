@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.text.DecimalFormat;
 
 /**
  * 表达式规则：基于 LiteExpr 表达式动态评估
@@ -288,7 +289,7 @@ public class ExpressionRule implements Rule {
                 return String.format(formatPattern, value);
             } else {
                 // DecimalFormat 模式
-                java.text.DecimalFormat df = new java.text.DecimalFormat(formatPattern);
+                DecimalFormat df = new DecimalFormat(formatPattern);
                 return df.format(value);
             }
         } catch (Exception e) {

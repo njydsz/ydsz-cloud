@@ -34,6 +34,7 @@ import org.springframework.util.StringUtils;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDateTime;
 
 /**
  * 任务通过服务
@@ -126,7 +127,7 @@ public class FlowTaskPassService {
         // 标记当前用户已处理（pmis_flow_user）
         if (dto.getUserId() != null) {
             userMapper.markProcessed(task.getId(), String.valueOf(dto.getUserId()),
-                    dto.getComment(), java.time.LocalDateTime.now());
+                    dto.getComment(), LocalDateTime.now());
         }
 
         // P1-6: 保存审批附件
@@ -172,7 +173,7 @@ public class FlowTaskPassService {
         task.setAssignorId(null);
         task.setAssignorName(null);
         task.setTaskStatus(FlowTaskStatus.CLAIMED.name());
-        task.setUpdatedAt(java.time.LocalDateTime.now());
+        task.setUpdatedAt(LocalDateTime.now());
         taskMapper.updateById(task);
         support.audit(task, "DELEGATE_RETURN", dto.getUserId(), null,
                 dto.getComment(), dto.getCommentType());

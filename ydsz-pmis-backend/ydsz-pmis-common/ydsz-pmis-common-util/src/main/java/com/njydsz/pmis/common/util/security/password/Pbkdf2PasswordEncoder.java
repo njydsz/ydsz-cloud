@@ -4,6 +4,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.security.spec.InvalidKeySpecException;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
 /**
  * PBKDF2 WithHmacSHA256 密码编码器
@@ -88,12 +91,12 @@ public class Pbkdf2PasswordEncoder implements PasswordEncoder {
 
     private byte[] pbkdf2(char[] password, byte[] salt, int iterations, int keyLength) {
         try {
-            javax.crypto.spec.PBEKeySpec spec = new javax.crypto.spec.PBEKeySpec(password, salt, iterations, keyLength * 8);
-            javax.crypto.SecretKeyFactory factory = javax.crypto.SecretKeyFactory.getInstance(PRF);
+            PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, keyLength * 8);
+            SecretKeyFactory factory = SecretKeyFactory.getInstance(PRF);
             return factory.generateSecret(spec).getEncoded();
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("PBKDF2WithHmacSHA256 not supported", e);
-        } catch (java.security.spec.InvalidKeySpecException e) {
+        } catch (InvalidKeySpecException e) {
             throw new IllegalStateException("Invalid PBKDF2 key spec", e);
         }
     }

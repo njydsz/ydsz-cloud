@@ -4,6 +4,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 
 import java.net.InetSocketAddress;
 import java.util.Set;
+import java.net.InetAddress;
 
 /**
  * 网关 IP 工具类（WebFlux 响应式版本）
@@ -102,8 +103,8 @@ public final class GatewayIpUtils {
             String networkIp = parts[0];
             int prefix = Integer.parseInt(parts[1]);
 
-            byte[] ipBytes = java.net.InetAddress.getByName(ip).getAddress();
-            byte[] networkBytes = java.net.InetAddress.getByName(networkIp).getAddress();
+            byte[] ipBytes = InetAddress.getByName(ip).getAddress();
+            byte[] networkBytes = InetAddress.getByName(networkIp).getAddress();
 
             if (ipBytes.length != networkBytes.length) {
                 return false;

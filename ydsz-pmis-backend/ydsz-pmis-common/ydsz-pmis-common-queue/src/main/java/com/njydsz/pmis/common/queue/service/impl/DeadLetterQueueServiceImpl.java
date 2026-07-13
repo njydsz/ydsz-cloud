@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.time.ZoneId;
 
 /**
  * 死信队列服务实现类
@@ -162,7 +163,7 @@ public class DeadLetterQueueServiceImpl implements DeadLetterQueueService {
                         DeadLetterMessage msg = JsonUtils.fromJson(entry.getValue().toString(), DeadLetterMessage.class);
                         if (msg != null && msg.getEnterTime() != null) {
                             LocalDateTime enterTime = LocalDateTime.parse(msg.getEnterTime(), formatter);
-                            long ageMillis = now - enterTime.atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli();
+                            long ageMillis = now - enterTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
                             if (ageMillis > maxAgeMillis) {
                                 redisTemplate.opsForHash().delete(dlqKey, messageId);
                                 redisTemplate.opsForHash().delete(DLQ_RETRY_KEY_PREFIX + topic, messageId);

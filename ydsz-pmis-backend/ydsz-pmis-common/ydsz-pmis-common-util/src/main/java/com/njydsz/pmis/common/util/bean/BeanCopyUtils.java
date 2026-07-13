@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.lang.reflect.Array;
 
 /**
  * Bean 拷贝工具类
@@ -308,8 +309,8 @@ public class BeanCopyUtils {
         }
 
         Class<?> componentType = source.getClass().getComponentType();
-        int length = java.lang.reflect.Array.getLength(source);
-        Object newArray = java.lang.reflect.Array.newInstance(componentType, length);
+        int length = Array.getLength(source);
+        Object newArray = Array.newInstance(componentType, length);
         visited.put(source, newArray);
 
         if (componentType.isPrimitive() || componentType == String.class
@@ -320,8 +321,8 @@ public class BeanCopyUtils {
             System.arraycopy(source, 0, newArray, 0, length);
         } else {
             for (int i = 0; i < length; i++) {
-                Object element = java.lang.reflect.Array.get(source, i);
-                java.lang.reflect.Array.set(newArray, i, deepCopyInternal(element, visited));
+                Object element = Array.get(source, i);
+                Array.set(newArray, i, deepCopyInternal(element, visited));
             }
         }
 
@@ -585,7 +586,7 @@ public class BeanCopyUtils {
      * <p>防止动态类加载场景下缓存无限增长导致内存泄漏。
      * 清空操作不是原子的，但并发下最多多放几个条目，不影响正确性。</p>
      */
-    private static <K, V> V computeIfAbsentBounded(Map<K, V> cache, K key, java.util.function.Function<K, V> mapper) {
+    private static <K, V> V computeIfAbsentBounded(Map<K, V> cache, K key, Function<K, V> mapper) {
         if (cache.size() >= MAX_CACHE_SIZE) {
             log.debug("【BeanCopyUtils】缓存达到上限 {}，执行全量清空", MAX_CACHE_SIZE);
             cache.clear();

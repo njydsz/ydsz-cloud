@@ -18,6 +18,8 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
+import java.net.ConnectException;
+import java.util.concurrent.TimeoutException;
 
 /**
  * 网关全局异常处理器配置（P0-1）
@@ -110,10 +112,10 @@ public class GatewayErrorConfig {
                         ? HttpStatus.valueOf(rse.getStatusCode().value())
                         : HttpStatus.INTERNAL_SERVER_ERROR;
             }
-            if (ex instanceof java.net.ConnectException) {
+            if (ex instanceof ConnectException) {
                 return HttpStatus.BAD_GATEWAY;
             }
-            if (ex instanceof java.util.concurrent.TimeoutException) {
+            if (ex instanceof TimeoutException) {
                 return HttpStatus.GATEWAY_TIMEOUT;
             }
             // NotFoundException 来自 spring-cloud-gateway

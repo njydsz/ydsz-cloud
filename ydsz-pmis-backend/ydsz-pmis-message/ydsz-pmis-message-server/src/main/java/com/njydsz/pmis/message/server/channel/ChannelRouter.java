@@ -20,6 +20,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 消息通道路由器。
@@ -125,9 +126,9 @@ public class ChannelRouter {
             // 业务失败(非异常)也计入熔断失败率
             if (breaker != null) {
                 if (result.isSuccess()) {
-                    breaker.onSuccess(cost, java.util.concurrent.TimeUnit.MILLISECONDS);
+                    breaker.onSuccess(cost, TimeUnit.MILLISECONDS);
                 } else {
-                    breaker.onError(cost, java.util.concurrent.TimeUnit.MILLISECONDS,
+                    breaker.onError(cost, TimeUnit.MILLISECONDS,
                             new RuntimeException(result.getErrorMessage()));
                 }
             }
@@ -135,7 +136,7 @@ public class ChannelRouter {
         } catch (Exception e) {
             long cost = System.currentTimeMillis() - start;
             if (breaker != null) {
-                breaker.onError(cost, java.util.concurrent.TimeUnit.MILLISECONDS, e);
+                breaker.onError(cost, TimeUnit.MILLISECONDS, e);
             }
             log.error("[ChannelRouter] channel={} 发送异常 costMs={} cbState={}",
                     channel, cost, breaker == null ? "N/A" : breaker.getState(), e);

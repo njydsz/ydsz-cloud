@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 @Data
 public class DataPermissionContext {
@@ -51,7 +52,7 @@ public class DataPermissionContext {
     /**
      * 租户隔离开关 Supplier（由配置类初始化）。
      */
-    private static volatile java.util.function.Supplier<Boolean> tenantIsolationEnabledSupplier = () -> true;
+    private static volatile Supplier<Boolean> tenantIsolationEnabledSupplier = () -> true;
 
     /**
      * 初始化租户隔离开关的 Supplier。
@@ -60,7 +61,7 @@ public class DataPermissionContext {
      *
      * @param supplier 租户隔离开关的 Supplier
      */
-    public static void initTenantIsolationEnabledSupplier(java.util.function.Supplier<Boolean> supplier) {
+    public static void initTenantIsolationEnabledSupplier(Supplier<Boolean> supplier) {
         tenantIsolationEnabledSupplier = supplier;
     }
 

@@ -5,6 +5,10 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.math.RoundingMode;
 
 /**
  * LiteExpr AST 树形遍历解释器
@@ -229,8 +233,8 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
             result = (idx >= 0 && idx < str.length()) ? String.valueOf(str.charAt(idx)) : null;
         } else if (target.getClass().isArray()) {
             int idx = BuiltinFunctions.toInt(index);
-            result = (idx >= 0 && idx < java.lang.reflect.Array.getLength(target))
-                    ? java.lang.reflect.Array.get(target, idx) : null;
+            result = (idx >= 0 && idx < Array.getLength(target))
+                    ? Array.get(target, idx) : null;
         } else {
             result = null;
         }
@@ -311,7 +315,7 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
                 if (divisor.compareTo(BigDecimal.ZERO) == 0) {
                     yield null;
                 }
-                yield BuiltinFunctions.toDecimal(left).divide(divisor, 10, java.math.RoundingMode.HALF_UP);
+                yield BuiltinFunctions.toDecimal(left).divide(divisor, 10, RoundingMode.HALF_UP);
             }
             case "%" -> BuiltinFunctions.smartRemainder(left, right);
             case "==" -> equals(left, right);
@@ -356,14 +360,14 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
      */
     private Object getFieldValue(Object target, String fieldName) {
         try {
-            java.lang.reflect.Field field = target.getClass().getDeclaredField(fieldName);
+            Field field = target.getClass().getDeclaredField(fieldName);
             field.setAccessible(true);
             return field.get(target);
         } catch (NoSuchFieldException e) {
             // 尝试 getter 方法
             try {
                 String getterName = "get" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
-                java.lang.reflect.Method getter = target.getClass().getMethod(getterName);
+                Method getter = target.getClass().getMethod(getterName);
                 return getter.invoke(target);
             } catch (Exception e2) {
                 return null;

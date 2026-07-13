@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.Base64;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * 短信通知发送器
@@ -211,8 +213,8 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 		}
 		// 简单 HMAC-SHA256 签名（可根据实际短信服务商 API 调整）
 		try {
-			javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
-			mac.init(new javax.crypto.spec.SecretKeySpec(
+			Mac mac = Mac.getInstance("HmacSHA256");
+			mac.init(new SecretKeySpec(
 					secretKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
 			byte[] signData = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
 			String sign = Base64.getEncoder().encodeToString(signData);

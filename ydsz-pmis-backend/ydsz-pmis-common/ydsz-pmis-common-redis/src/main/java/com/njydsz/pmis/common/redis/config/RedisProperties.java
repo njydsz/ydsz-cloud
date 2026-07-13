@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.Collection;
+import java.time.Duration;
 /**
  * Redis 配置属性类
  *
@@ -99,19 +100,19 @@ public class RedisProperties {
      * 连接超时时间（Duration 格式）
      * <p>支持 Spring Boot 标准的 Duration 配置格式，如 PT3S、PT1.5S 等
      */
-    private java.time.Duration timeoutDuration;
+    private Duration timeoutDuration;
 
     /**
      * 获取连接超时时间
-     * <p>优先返回 timeoutDuration（java.time.Duration），若未设置则根据 timeout（毫秒）自动构建
+     * <p>优先返回 timeoutDuration（Duration），若未设置则根据 timeout（毫秒）自动构建
      *
      * @return 连接超时时间
      */
-    public java.time.Duration getTimeoutDuration() {
+    public Duration getTimeoutDuration() {
         if (timeoutDuration != null) {
             return timeoutDuration;
         }
-        return timeout > 0 ? java.time.Duration.ofMillis(timeout) : null;
+        return timeout > 0 ? Duration.ofMillis(timeout) : null;
     }
 
     /**
@@ -119,7 +120,7 @@ public class RedisProperties {
      *
      * @param timeoutDuration 连接超时时间
      */
-    public void setTimeoutDuration(java.time.Duration timeoutDuration) {
+    public void setTimeoutDuration(Duration timeoutDuration) {
         this.timeoutDuration = timeoutDuration;
     }
 

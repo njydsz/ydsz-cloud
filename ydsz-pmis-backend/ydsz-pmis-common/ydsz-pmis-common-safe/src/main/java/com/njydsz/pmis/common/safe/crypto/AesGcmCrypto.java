@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Objects;
+import javax.crypto.AEADBadTagException;
 
 /**
  * AES-GCM 加解密工具。
@@ -299,7 +300,7 @@ public final class AesGcmCrypto {
             cipher.updateAAD(aad);
 
             return cipher.doFinal(ciphertextAndTag);
-        } catch (javax.crypto.AEADBadTagException e) {
+        } catch (AEADBadTagException e) {
             throw new CryptoException("AES-GCM decryption with AAD failed: authentication tag mismatch (可能密文被篡改或 AAD 不匹配)", e);
         } catch (Exception e) {
             throw new CryptoException("AES-GCM decryption with AAD failed", e);

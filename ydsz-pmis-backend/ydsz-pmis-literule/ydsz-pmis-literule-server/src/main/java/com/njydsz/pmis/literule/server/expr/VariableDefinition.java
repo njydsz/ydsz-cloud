@@ -6,6 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.lang.Boolean;
+import java.lang.Number;
+import java.lang.String;
 
 /**
  * 变量定义元数据
@@ -27,7 +30,7 @@ public class VariableDefinition implements Serializable {
     /** 变量名（如 cpi / budgetAmount / evmRedCount） */
     private String name;
 
-    /** 变量类型（java.lang.String / java.lang.Number / java.lang.Boolean 等） */
+    /** 变量类型（String / Number / Boolean 等） */
     private String type;
 
     /** 变量描述（中文，供前端编辑器提示） */

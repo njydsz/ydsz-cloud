@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.lang.reflect.Proxy;
 
 /**
  * Apollo 配置中心规则数据源（P1-5）
@@ -88,7 +89,7 @@ public class ApolloRuleSource implements RuleSource {
             // 注册配置变更监听器
             Class<?> changeListenerClass = Class.forName(
                     "com.ctrip.framework.apollo.model.ConfigChangeListener");
-            Object listener = java.lang.reflect.Proxy.newProxyInstance(
+            Object listener = Proxy.newProxyInstance(
                     this.getClass().getClassLoader(),
                     new Class[]{changeListenerClass},
                     (proxy, method, args) -> {

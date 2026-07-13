@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.time.LocalDateTime;
 
 /**
  * 定时任务模块通知助手
@@ -54,7 +55,7 @@ public class CronjobNotifyHelper {
         }
         String title = "任务执行失败告警";
         String content = String.format("任务: %s (%s)\n错误: %s\n时间: %s\n请及时处理",
-                jobName, jobKey, errorMsg, java.time.LocalDateTime.now());
+                jobName, jobKey, errorMsg, LocalDateTime.now());
         try {
             asyncNotifyService.sendAsync(channel, webhookUrl, title, content)
                     .whenComplete((result, ex) -> {

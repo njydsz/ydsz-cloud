@@ -99,8 +99,8 @@ public final class EntityCapabilities {
         try {
             Class<?> mpVersionClass = Class.forName("com.baomidou.mybatisplus.annotation.Version");
             @SuppressWarnings("unchecked")
-            Class<? extends java.lang.annotation.Annotation> annotationClass =
-                    (Class<? extends java.lang.annotation.Annotation>) mpVersionClass;
+            Class<? extends Annotation> annotationClass =
+                    (Class<? extends Annotation>) mpVersionClass;
             return getAnnotatedField(entityClass, annotationClass).isPresent();
         } catch (ClassNotFoundException e) {
             return false;

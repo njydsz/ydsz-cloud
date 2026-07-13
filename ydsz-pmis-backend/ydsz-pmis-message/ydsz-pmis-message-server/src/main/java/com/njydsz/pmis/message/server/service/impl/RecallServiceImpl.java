@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.time.Duration;
 
 /**
  * 消息撤回服务实现。
@@ -109,8 +110,8 @@ public class RecallServiceImpl implements RecallService {
         }
         // 校验撤回时间窗口
         if (logDO.getCreatedAt() != null) {
-            long minutesElapsed = java.time.Duration.between(
-                    logDO.getCreatedAt(), java.time.LocalDateTime.now()).toMinutes();
+            long minutesElapsed = Duration.between(
+                    logDO.getCreatedAt(), LocalDateTime.now()).toMinutes();
             if (minutesElapsed > RECALL_WINDOW_MINUTES) {
                 throw new SysException(StandardResultCode.BIZ_ERROR,
                         "消息发送已超过 " + RECALL_WINDOW_MINUTES + " 分钟，不可撤回");
@@ -122,7 +123,7 @@ public class RecallServiceImpl implements RecallService {
         }
         // 执行撤回
         logDO.setRecallStatus(RecallStatusEnum.RECALLED.name());
-        logDO.setRecallAt(java.time.LocalDateTime.now());
+        logDO.setRecallAt(LocalDateTime.now());
         msgLogMapper.updateById(logDO);
         // 推送撤回事件到前端
         if (StringUtils.hasText(logDO.getReceiver())) {

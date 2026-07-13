@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Redis Stream 操作组件
@@ -393,17 +394,17 @@ public class RedisStreamOps {
 
                 redisTemplate.execute((org.springframework.data.redis.core.RedisCallback<Long>) connection -> {
                     byte[][] keysArray = keys.stream()
-                            .map(k -> k.getBytes(java.nio.charset.StandardCharsets.UTF_8))
+                            .map(k -> k.getBytes(StandardCharsets.UTF_8))
                             .toArray(byte[][]::new);
                     byte[][] argsArray = args.stream()
-                            .map(a -> a.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8))
+                            .map(a -> a.toString().getBytes(StandardCharsets.UTF_8))
                             .toArray(byte[][]::new);
                     // Merge keys and args for vararg passing
                     byte[][] allArgs = new byte[keysArray.length + argsArray.length][];
                     System.arraycopy(keysArray, 0, allArgs, 0, keysArray.length);
                     System.arraycopy(argsArray, 0, allArgs, keysArray.length, argsArray.length);
                     Object result = connection.scriptingCommands().eval(
-                            DEAD_LETTER_ATOMIC_SCRIPT.getBytes(java.nio.charset.StandardCharsets.UTF_8),
+                            DEAD_LETTER_ATOMIC_SCRIPT.getBytes(StandardCharsets.UTF_8),
                             org.springframework.data.redis.connection.ReturnType.INTEGER,
                             keysArray.length,
                             allArgs);

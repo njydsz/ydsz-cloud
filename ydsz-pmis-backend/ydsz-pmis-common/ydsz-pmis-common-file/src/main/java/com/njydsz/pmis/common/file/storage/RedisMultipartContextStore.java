@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.nio.charset.StandardCharsets;
 
 /**
  * 基于 Redis 的分片上传上下文存储实现
@@ -197,7 +198,7 @@ public class RedisMultipartContextStore implements MultipartContextStore {
                              connection.keyCommands().scan(options)) {
                     if (cursor != null) {
                         while (cursor.hasNext()) {
-                            keys.add(new String(cursor.next(), java.nio.charset.StandardCharsets.UTF_8));
+                            keys.add(new String(cursor.next(), StandardCharsets.UTF_8));
                         }
                     }
                 }

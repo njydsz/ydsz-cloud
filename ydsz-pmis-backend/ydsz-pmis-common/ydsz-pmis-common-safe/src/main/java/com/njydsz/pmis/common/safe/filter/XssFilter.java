@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.servlet.FilterChain;
+import java.nio.charset.StandardCharsets;
 
 /**
  * XSS 安全防护过滤器
@@ -234,7 +235,7 @@ public class XssFilter extends OncePerRequestFilter {
 
         CachedRequestBody(byte[] bytes) {
             this.bytes = bytes;
-            this.text = new String(bytes, java.nio.charset.StandardCharsets.UTF_8);
+            this.text = new String(bytes, StandardCharsets.UTF_8);
         }
 
         byte[] getBytes() {

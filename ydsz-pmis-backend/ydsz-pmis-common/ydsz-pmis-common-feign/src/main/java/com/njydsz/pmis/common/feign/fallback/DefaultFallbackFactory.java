@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cloud.openfeign.FallbackFactory;
 
 import java.lang.reflect.Proxy;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 /**
  * Feign Client 降级工厂抽象基类。
  *
@@ -212,9 +214,9 @@ public abstract class DefaultFallbackFactory<T> implements FallbackFactory<T> {
             return new Class<?>[]{directInterfaces[0]};
         }
         // 通过泛型反射查找目标 FeignClient 接口
-        java.lang.reflect.Type genericSuperclass = getClass().getGenericSuperclass();
-        if (genericSuperclass instanceof java.lang.reflect.ParameterizedType pt) {
-            java.lang.reflect.Type[] typeArgs = pt.getActualTypeArguments();
+        Type genericSuperclass = getClass().getGenericSuperclass();
+        if (genericSuperclass instanceof ParameterizedType pt) {
+            Type[] typeArgs = pt.getActualTypeArguments();
             if (typeArgs.length > 0 && typeArgs[0] instanceof Class<?> clazz) {
                 return new Class<?>[]{clazz};
             }

@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.time.temporal.Temporal;
 
 /**
  * 敏感数据脱敏 AOP 拦截器
@@ -278,6 +279,6 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
                 || clazz == Boolean.class
                 || clazz == Character.class
                 || Date.class.isAssignableFrom(clazz)
-                || java.time.temporal.Temporal.class.isAssignableFrom(clazz);
+                || Temporal.class.isAssignableFrom(clazz);
     }
 }

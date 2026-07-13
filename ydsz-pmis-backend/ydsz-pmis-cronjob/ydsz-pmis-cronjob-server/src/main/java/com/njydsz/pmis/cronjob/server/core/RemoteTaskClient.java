@@ -13,6 +13,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.net.ConnectException;
+import java.net.http.HttpTimeoutException;
 
 /**
  * 远程任务派发客户端（P1-4）。
@@ -108,10 +110,10 @@ public class RemoteTaskClient {
             log.warn("[RemoteClient] 远程派发 HTTP {}: url={} body={}", status, url, 
                     body == null ? "" : (body.length() > 200 ? body.substring(0, 200) : body));
             return null;
-        } catch (java.net.ConnectException e) {
+        } catch (ConnectException e) {
             log.warn("[RemoteClient] 连接拒绝(节点可能已下线): url={} reason={}", url, e.getMessage());
             return null;
-        } catch (java.net.http.HttpTimeoutException e) {
+        } catch (HttpTimeoutException e) {
             log.warn("[RemoteClient] 请求超时: url={} timeout={}s", url, remoteConfig.getRequestTimeoutSeconds());
             return null;
         } catch (Exception e) {
@@ -158,10 +160,10 @@ public class RemoteTaskClient {
             log.warn("[RemoteClient] 子任务远程派发 HTTP {}: url={} body={}", status, url,
                     body == null ? "" : (body.length() > 200 ? body.substring(0, 200) : body));
             return null;
-        } catch (java.net.ConnectException e) {
+        } catch (ConnectException e) {
             log.warn("[RemoteClient] 子任务连接拒绝(节点可能已下线): url={} reason={}", url, e.getMessage());
             return null;
-        } catch (java.net.http.HttpTimeoutException e) {
+        } catch (HttpTimeoutException e) {
             log.warn("[RemoteClient] 子任务请求超时: url={} timeout={}s", url, remoteConfig.getRequestTimeoutSeconds());
             return null;
         } catch (Exception e) {

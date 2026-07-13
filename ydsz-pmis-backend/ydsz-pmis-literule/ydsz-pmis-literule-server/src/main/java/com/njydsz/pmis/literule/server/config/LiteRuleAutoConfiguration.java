@@ -62,6 +62,7 @@ import org.springframework.context.annotation.Primary;
 
 import java.util.List;
 import java.util.Map;
+import java.lang.reflect.Constructor;
 
 /**
  * LiteRule 自动配置
@@ -231,7 +232,7 @@ public class LiteRuleAutoConfiguration {
             Class<?> metricsClass = Class.forName(
                     "com.njydsz.pmis.literule.server.core.MicrometerRuleMetrics", true,
                     getClass().getClassLoader());
-            java.lang.reflect.Constructor<?> ctor = metricsClass.getConstructor(meterRegistryClass);
+            Constructor<?> ctor = metricsClass.getConstructor(meterRegistryClass);
             RuleMetrics metrics = (RuleMetrics) ctor.newInstance(registry);
             engine.setMetrics(metrics);
             log.info("[LiteRule] Prometheus 监控指标已启用 (registry={})",

@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.Condition;
 
 /**
  * 基于 Redis + Lua 脚本的分布式读写锁
@@ -247,7 +248,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
          * @throws UnsupportedOperationException 始终抛出
          */
         @Override
-        public java.util.concurrent.locks.Condition newCondition() {
+        public Condition newCondition() {
             throw new UnsupportedOperationException("ReadLock does not support conditions");
         }
     }
@@ -354,7 +355,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
          * @throws UnsupportedOperationException 始终抛出
          */
         @Override
-        public java.util.concurrent.locks.Condition newCondition() {
+        public Condition newCondition() {
             throw new UnsupportedOperationException("WriteLock does not support conditions");
         }
     }

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.function.Consumer;
+import java.lang.reflect.Proxy;
 
 /**
  * Nacos 配置中心规则数据源（P1-5）
@@ -155,7 +156,7 @@ public class NacosRuleSource implements RuleSource {
      */
     private Object createConfigListener() throws Exception {
         Class<?> listenerClass = Class.forName("com.alibaba.nacos.api.config.listener.Listener");
-        return java.lang.reflect.Proxy.newProxyInstance(
+        return Proxy.newProxyInstance(
                 this.getClass().getClassLoader(),
                 new Class[]{listenerClass},
                 (proxy, method, args) -> {

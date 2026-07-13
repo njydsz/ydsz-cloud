@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import java.lang.management.ManagementFactory;
 import java.util.List;
+import java.net.InetAddress;
 
 /**
  * P3-20: 智能路由（机房/CPU 负载感知）。
@@ -156,7 +157,7 @@ public class SmartRoutingSelector {
             return rack;
         }
         try {
-            String hostname = java.net.InetAddress.getLocalHost().getHostName();
+            String hostname = InetAddress.getLocalHost().getHostName();
             // hostname 前缀作为机房标识（如 bj-web-01 → bj）
             return hostname.contains("-") ? hostname.split("-")[0] : hostname;
         } catch (Exception e) {

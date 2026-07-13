@@ -4,6 +4,7 @@ import com.njydsz.pmis.common.file.callback.UploadProgressListener;
 import com.njydsz.pmis.common.file.domain.FileStorage;
 import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
+import java.time.Duration;
 
 /**
  * 文件上传器接口
@@ -177,7 +178,7 @@ public interface FileUploader {
      * @return 预签名上传 URL
      * @throws UnsupportedOperationException 如果当前存储后端不支持
      */
-    default String generatePresignedUploadUrl(String bucketName, String objectName, java.time.Duration expiryDuration) {
+    default String generatePresignedUploadUrl(String bucketName, String objectName, Duration expiryDuration) {
         throw new UnsupportedOperationException("Presigned upload URL not supported by this storage backend");
     }
 }

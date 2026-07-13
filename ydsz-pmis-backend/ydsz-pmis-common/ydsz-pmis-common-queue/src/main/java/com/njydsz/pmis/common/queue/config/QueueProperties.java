@@ -12,6 +12,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.util.List;
 import java.util.Map;
 import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 /**
  * 消息队列配置类
@@ -387,7 +389,7 @@ public class QueueProperties {
         return Arrays.stream(argsStr.split("&"))
                 .map(s -> s.split("="))
                 .filter(a -> a.length == 2)
-                .collect(java.util.stream.Collectors.toMap(
+                .collect(Collectors.toMap(
                         a -> a[0].trim(),
                         a -> a[1].trim()
                 ));
@@ -425,7 +427,7 @@ public class QueueProperties {
      * @return 消息队列工厂
      */
     public IMessageQueueProvider buildFactory(com.njydsz.pmis.common.redis.service.RedisService redisService,
-                                              java.util.concurrent.ExecutorService consumerExecutor) {
+                                              ExecutorService consumerExecutor) {
         log.info("构建消息队列工厂（复用 ydsz-pmis-common-redis 连接）");
         return new MessageQueueFactory(this, redisService, consumerExecutor);
     }

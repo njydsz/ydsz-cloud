@@ -597,7 +597,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
 
             String chunkObjectName = buildChunkObjectName(resolvedObjectName, uploadId, partNumber);
             doUploadPart(resolvedBucket, chunkObjectName, uploadId, partNumber,
-                    new java.io.ByteArrayInputStream(chunkData), file.getSize());
+                    new ByteArrayInputStream(chunkData), file.getSize());
 
             MultipartContextStore.MultipartContextData context = multipartContextStore.get(uploadId);
             if (context == null) {
@@ -815,7 +815,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
     /**
      * 检测文件的 MIME Type
      * <p>优先使用 MultipartFile.getContentType()，若为空则通过
-     * java.net.URLConnection.guessContentTypeFromStream() 基于文件头魔数检测。
+     * URLConnection.guessContentTypeFromStream() 基于文件头魔数检测。
      *
      * @param file 上传的文件
      * @return MIME Type，无法检测时返回 application/octet-stream

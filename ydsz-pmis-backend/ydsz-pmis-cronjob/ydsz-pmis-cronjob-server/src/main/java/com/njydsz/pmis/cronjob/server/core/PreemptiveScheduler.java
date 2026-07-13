@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.time.Duration;
 
 /**
  * P3-19: 优先级抢占式调度。
@@ -243,7 +244,7 @@ public class PreemptiveScheduler {
             String key = PREEMPT_COUNT_PREFIX + jobKey;
             redisTemplate.opsForValue().increment(key);
             // 设置 1 小时 TTL，超时后重置计数
-            redisTemplate.expire(key, java.time.Duration.ofHours(1));
+            redisTemplate.expire(key, Duration.ofHours(1));
         } catch (Exception e) {
             log.debug("[Preemptive] 递增抢占计数失败: reason={}", e.getMessage());
         }

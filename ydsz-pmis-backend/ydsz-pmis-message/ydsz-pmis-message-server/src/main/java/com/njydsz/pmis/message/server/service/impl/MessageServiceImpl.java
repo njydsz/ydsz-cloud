@@ -60,6 +60,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.math.BigDecimal;
+import java.time.Duration;
 
 /**
  * 消息发送核心编排服务实现。
@@ -238,7 +240,7 @@ public class MessageServiceImpl implements MessageService {
                     messageMetrics.recordSend(channel, "DND_SKIPPED", 0);
                     return MessageResult.fail(channel, "当前为免打扰时段");
                 }
-                long deferHours = java.time.Duration.between(LocalDateTime.now(), nextTime).toHours();
+                long deferHours = Duration.between(LocalDateTime.now(), nextTime).toHours();
                 if (deferHours > stc.getMaxDeferHours()) {
                     log.info("[Message] DND 延迟超过阈值,丢弃: receiver={} defer={}h max={}h",
                             receiver, deferHours, stc.getMaxDeferHours());
@@ -373,7 +375,7 @@ public class MessageServiceImpl implements MessageService {
         logDO.setTenantId(TenantContext.getTenantId());
         // ⑧-2 P0-3: 定时消息 —— scheduledAt 非空且在未来时,落库 SCHEDULED 不立即发送
         if (request.getScheduledAt() != null
-                && request.getScheduledAt().isAfter(java.time.LocalDateTime.now())) {
+                && request.getScheduledAt().isAfter(LocalDateTime.now())) {
             logDO.setStatus(MessageStatusEnum.SCHEDULED.name());
             msgLogMapper.insert(logDO);
             log.info("[Message] 定时消息已入库: msgId={} scheduledAt={} channel={}",
@@ -385,8 +387,8 @@ public class MessageServiceImpl implements MessageService {
         if (request.getScheduledAt() == null && StringUtils.hasText(receiver)
                 && !"URGENT".equals(resolvePriority(request))) {
             try {
-                java.time.LocalDateTime optimalTime = deliveryTimeOptimizer.getOptimalDeliveryTime(receiver, channel);
-                if (optimalTime != null && optimalTime.isAfter(java.time.LocalDateTime.now().plusMinutes(5))) {
+                LocalDateTime optimalTime = deliveryTimeOptimizer.getOptimalDeliveryTime(receiver, channel);
+                if (optimalTime != null && optimalTime.isAfter(LocalDateTime.now().plusMinutes(5))) {
                     request.setScheduledAt(optimalTime);
                     logDO.setScheduledAt(optimalTime);
                     logDO.setStatus(MessageStatusEnum.SCHEDULED.name());
@@ -702,10 +704,10 @@ public class MessageServiceImpl implements MessageService {
             }
             // P2-13: 时间范围
             if (StringUtils.hasText(query.getStartTime())) {
-                w.ge(MsgLogDO::getCreatedAt, java.time.LocalDateTime.parse(query.getStartTime()));
+                w.ge(MsgLogDO::getCreatedAt, LocalDateTime.parse(query.getStartTime()));
             }
             if (StringUtils.hasText(query.getEndTime())) {
-                w.le(MsgLogDO::getCreatedAt, java.time.LocalDateTime.parse(query.getEndTime()));
+                w.le(MsgLogDO::getCreatedAt, LocalDateTime.parse(query.getEndTime()));
             }
         }
         w.orderByDesc(MsgLogDO::getCreatedAt);
@@ -846,12 +848,12 @@ public class MessageServiceImpl implements MessageService {
      * @param channel 通道
      * @return 单条成本（元），未配置或关闭时返回 ZERO
      */
-    private java.math.BigDecimal calculateCost(String channel) {
+    private BigDecimal calculateCost(String channel) {
         MessageProperties.CostConfig cfg = messageProperties.getCost();
         if (cfg == null || !cfg.isEnabled() || cfg.getUnitPrices() == null) {
-            return java.math.BigDecimal.ZERO;
+            return BigDecimal.ZERO;
         }
-        return cfg.getUnitPrices().getOrDefault(channel, java.math.BigDecimal.ZERO);
+        return cfg.getUnitPrices().getOrDefault(channel, BigDecimal.ZERO);
     }
 
     private String buildDedupKey(MessageRequest request) {

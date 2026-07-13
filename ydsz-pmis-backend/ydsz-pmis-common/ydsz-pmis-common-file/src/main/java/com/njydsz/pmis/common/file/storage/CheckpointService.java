@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.file.storage;
 
 import com.njydsz.pmis.common.file.domain.UploadCheckpoint;
 import org.springframework.web.multipart.MultipartFile;
+import java.io.InputStream;
 
 /**
  * 分片上传检查点服务接口
@@ -91,7 +92,7 @@ public interface CheckpointService {
      */
     @FunctionalInterface
     interface Md5Computer {
-        String compute(java.io.InputStream inputStream);
+        String compute(InputStream inputStream);
     }
 
     /**
@@ -99,6 +100,6 @@ public interface CheckpointService {
      */
     @FunctionalInterface
     interface ObjectDownloader {
-        java.io.InputStream download(String bucketName, String objectName) throws Exception;
+        InputStream download(String bucketName, String objectName) throws Exception;
     }
 }

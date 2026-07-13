@@ -81,6 +81,30 @@ public class NotifyProperties {
 
 	/**
 	 * 邮件渠道配置
+	 *
+	 * <p><b>配置示例（application.yml）：</b>
+	 * <pre>{@code
+	 * ydsz:
+	 *   notify:
+	 *     email:
+	 *       enabled: true
+	 *       smtp-host: smtp.exmail.qq.com
+	 *       smtp-port: 465
+	 *       from-mail: noreply@ydsz.com
+	 *       from-name: ydsz项目管理平台
+	 *       password: your-password-or-auth-code
+	 *       auth: true
+	 *       starttls: false
+	 *       html-mode: true
+	 *       default-subject-prefix: "【ydsz项目管理】"
+	 *       cc: pmo@ydsz.com
+	 *       bcc: audit@ydsz.com
+	 *       reply-to: support@ydsz.com
+	 *       max-attachment-size-mb: 20
+	 *       ssl:
+	 *         enabled: true
+	 *         protocols: TLSv1.2
+	 * }</pre>
 	 */
 	@Data
 	public static class EmailConfig {
@@ -123,6 +147,27 @@ public class NotifyProperties {
 
 		/** 编码格式 */
 		private String encoding = "UTF-8";
+
+		/** 默认是否以 HTML 模式发送（false 时发送纯文本） */
+		private boolean htmlMode = true;
+
+		/** 默认邮件主题前缀，如 "【ydsz项目管理】" */
+		private String defaultSubjectPrefix = "";
+
+		/** 默认抄送地址（逗号分隔多个地址） */
+		private String cc;
+
+		/** 默认密送地址（逗号分隔多个地址） */
+		private String bcc;
+
+		/** 默认回复地址 */
+		private String replyTo;
+
+		/** 最大附件总大小（MB），超过则拒绝发送 */
+		private int maxAttachmentSizeMb = 20;
+
+		/** 额外 JavaMail 属性（如 mail.smtp.quitwait、mail.smtp.localhost 等） */
+		private Map<String, String> properties = new HashMap<>();
 
 		/** SSL 配置 */
 		private SslConfig ssl = new SslConfig();

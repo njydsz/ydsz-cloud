@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.lang.reflect.Proxy;
+import java.nio.charset.StandardCharsets;
 
 /**
  * ZooKeeper 规则数据源（P1-5）
@@ -69,7 +71,7 @@ public class ZookeeperRuleSource implements RuleSource {
             if (data == null || data.length == 0) {
                 return List.of();
             }
-            String json = new String(data, java.nio.charset.StandardCharsets.UTF_8);
+            String json = new String(data, StandardCharsets.UTF_8);
             return parseRulesFromJson(json);
         } catch (Exception e) {
             log.error("[ZookeeperRuleSource] 加载规则失败: {}", e.getMessage(), e);
@@ -145,7 +147,7 @@ public class ZookeeperRuleSource implements RuleSource {
             Class<?> listenerClass = Class.forName(
                     "org.apache.curator.framework.recipes.cache.NodeCacheListener");
 
-            Object listener = java.lang.reflect.Proxy.newProxyInstance(
+            Object listener = Proxy.newProxyInstance(
                     this.getClass().getClassLoader(),
                     new Class[]{listenerClass},
                     (proxy, method, args) -> {

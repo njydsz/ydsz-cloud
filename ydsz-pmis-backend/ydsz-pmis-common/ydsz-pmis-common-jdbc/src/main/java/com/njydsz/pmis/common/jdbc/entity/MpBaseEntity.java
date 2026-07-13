@@ -8,6 +8,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
+import java.io.Serializable;
 
 /**
  * MyBatis-Plus 增强版基础实体
@@ -46,7 +47,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(callSuper = true)
-public class MpBaseEntity<T extends java.io.Serializable> extends BaseEntity<T> {
+public class MpBaseEntity<T extends Serializable> extends BaseEntity<T> {
 
     private static final long serialVersionUID = 1L;
 

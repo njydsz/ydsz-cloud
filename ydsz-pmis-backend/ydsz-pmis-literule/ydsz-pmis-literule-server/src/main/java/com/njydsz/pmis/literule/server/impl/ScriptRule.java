@@ -26,6 +26,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.lang.Math;
+import java.lang.reflect.Field;
+import java.math.BigDecimal;
 
 /**
  * 脚本规则：基于 JSR-223 多语言脚本动态评估
@@ -375,7 +378,7 @@ public class ScriptRule implements Rule {
      * 限制：
      * <ul>
      *   <li>禁用 import 定制（脚本无法 import 危险包）</li>
-     *   <li>限制接收者白名单：仅允许 java.lang.Math/BigDecimal/String/ArrayList/HashMap 等</li>
+     *   <li>限制接收者白名单：仅允许 Math/BigDecimal/String/ArrayList/HashMap 等</li>
      *   <li>禁用方法调用黑名单：exec/exit/forName/loadClass/getRuntime 等</li>
      * </ul>
      *
@@ -396,7 +399,7 @@ public class ScriptRule implements Rule {
                     .invoke(customizer, Collections.emptyList());
             // 接收者白名单：仅允许安全类型
             List<Class<?>> receivers = List.of(
-                    Object.class, String.class, Math.class, java.math.BigDecimal.class,
+                    Object.class, String.class, Math.class, BigDecimal.class,
                     ArrayList.class, HashMap.class, LinkedHashMap.class,
                     Integer.class, Long.class, Double.class, Float.class,
                     Boolean.class, Number.class, List.class, Map.class);
@@ -404,7 +407,7 @@ public class ScriptRule implements Rule {
                     .invoke(customizer, receivers);
             // 应用到 GroovyScriptEngineImpl 的 CompilerConfiguration
             // GroovyScriptEngineImpl 暴露 CompilerConfiguration 通过 setConfiguration
-            java.lang.reflect.Field confField = engine.getClass().getDeclaredField("conf");
+            Field confField = engine.getClass().getDeclaredField("conf");
             confField.setAccessible(true);
             Object config = confField.get(engine);
             if (config == null) {

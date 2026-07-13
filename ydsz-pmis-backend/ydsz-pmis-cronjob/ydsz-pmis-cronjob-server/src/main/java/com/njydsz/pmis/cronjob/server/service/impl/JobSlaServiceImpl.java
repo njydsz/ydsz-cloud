@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * SLA 服务实现（P2-7 SLA 管理, P2-2-merge 重构）。
@@ -129,7 +130,7 @@ public class JobSlaServiceImpl implements JobSlaService {
                         .eq(JobAlertRuleDO::getSourceType, "SLA")
                         .eq(JobAlertRuleDO::getDeleted, 0));
         Map<String, List<JobAlertRuleDO>> grouped = allRules.stream()
-                .collect(java.util.stream.Collectors.groupingBy(JobAlertRuleDO::getJobId));
+                .collect(Collectors.groupingBy(JobAlertRuleDO::getJobId));
         List<JobSlaDO> result = new ArrayList<>();
         for (var entry : grouped.entrySet()) {
             result.add(aggregateSlaFromRules(entry.getKey(), entry.getValue()));

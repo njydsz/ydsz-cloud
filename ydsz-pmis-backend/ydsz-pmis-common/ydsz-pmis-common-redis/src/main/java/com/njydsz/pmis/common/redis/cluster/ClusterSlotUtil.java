@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.function.Function;
 
 /**
  * Redis Cluster 槽位计算工具类
@@ -67,7 +69,7 @@ public class ClusterSlotUtil {
      * @param <T>          元素类型
      * @return 槽位编号 → 该槽位下的元素列表，分组结果不可修改
      */
-    public static <T> Map<Integer, List<T>> groupBySlot(List<T> items, java.util.function.Function<T, String> keyExtractor) {
+    public static <T> Map<Integer, List<T>> groupBySlot(List<T> items, Function<T, String> keyExtractor) {
         Map<Integer, List<T>> groups = new HashMap<>();
         for (T item : items) {
             int slot = calculateSlot(keyExtractor.apply(item));
@@ -87,7 +89,7 @@ public class ClusterSlotUtil {
      */
     private static int crc16(String key) {
         int crc = 0x0000;
-        byte[] bytes = key.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        byte[] bytes = key.getBytes(StandardCharsets.UTF_8);
         for (byte b : bytes) {
             crc = ((crc << 8) & 0xFFFF) ^ CRC16_TABLE[(crc >>> 8) ^ (b & 0xFF)];
         }

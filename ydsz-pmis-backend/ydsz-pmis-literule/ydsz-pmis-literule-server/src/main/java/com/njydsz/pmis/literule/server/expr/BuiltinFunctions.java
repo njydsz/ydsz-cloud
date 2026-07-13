@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.LinkedHashSet;
+import java.lang.reflect.Array;
 
 /**
  * LiteExpr 内置函数库
@@ -83,7 +84,7 @@ public final class BuiltinFunctions {
             if (v instanceof CharSequence cs) return cs.length();
             if (v instanceof Collection<?> c) return c.size();
             if (v instanceof Map<?, ?> m) return m.size();
-            if (v.getClass().isArray()) return java.lang.reflect.Array.getLength(v);
+            if (v.getClass().isArray()) return Array.getLength(v);
             return String.valueOf(v).length();
         }, "length(str)", "长度");
         r.register("size", args -> {
@@ -92,7 +93,7 @@ public final class BuiltinFunctions {
             if (v instanceof Collection<?> c) return c.size();
             if (v instanceof Map<?, ?> m) return m.size();
             if (v instanceof CharSequence cs) return cs.length();
-            if (v.getClass().isArray()) return java.lang.reflect.Array.getLength(v);
+            if (v.getClass().isArray()) return Array.getLength(v);
             return 1;
         }, "size(coll)", "集合/字符串大小");
         r.register("upper", args -> str(args[0]).toUpperCase(), "upper(str)", "转大写");

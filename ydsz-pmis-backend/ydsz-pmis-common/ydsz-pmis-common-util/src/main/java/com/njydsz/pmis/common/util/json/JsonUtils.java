@@ -277,7 +277,7 @@ public final class JsonUtils {
     }
 
     /**
-     * JSON 字符串转对象（支持 java.lang.reflect.Type）
+     * JSON 字符串转对象（支持 Type）
      *
      * <p>适用于 Feign 解码器等需要动态类型反序列化的场景。
      *

@@ -268,7 +268,7 @@ public class YdszCacheableAspect {
         return PARSER.parseExpression(keyExpression).getValue(context, String.class);
     }
 
-    private long applyRandomJitter(long ttl, java.util.concurrent.TimeUnit timeUnit) {
+    private long applyRandomJitter(long ttl, TimeUnit timeUnit) {
         long ttlSeconds = timeUnit.toSeconds(ttl);
         double jitter = 1.0 + ThreadLocalRandom.current().nextDouble(-0.1, 0.1);
         return Math.max(1, (long) (ttlSeconds * jitter));

@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDateTime;
 
 /**
  * 规则 DSL 导出器
@@ -83,7 +84,7 @@ public final class RuleDslExporter {
         meta.put("name", name != null ? name : "exported-rules");
         meta.put("description", description != null ? description : "");
         meta.put("version", "2.0");
-        meta.put("exportedAt", java.time.LocalDateTime.now().toString());
+        meta.put("exportedAt", LocalDateTime.now().toString());
         meta.put("ruleCount", entries.size());
 
         return RuleDsl.builder()

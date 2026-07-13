@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.feign.monitor;
 import com.njydsz.pmis.common.feign.interceptor.FeignResponseInterceptor;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import java.time.Duration;
 
 /**
  * Feign 响应指标 Micrometer 适配器
@@ -45,7 +46,7 @@ public class FeignResponseMetricsAdapter implements FeignResponseInterceptor.Fei
                 .tag("method", method)
                 .description("Feign request latency")
                 .register(meterRegistry)
-                .record(java.time.Duration.ofMillis(duration));
+                .record(Duration.ofMillis(duration));
     }
 
     @Override
@@ -59,7 +60,7 @@ public class FeignResponseMetricsAdapter implements FeignResponseInterceptor.Fei
                 .tag("method", method)
                 .description("Feign request latency")
                 .register(meterRegistry)
-                .record(java.time.Duration.ofMillis(duration));
+                .record(Duration.ofMillis(duration));
     }
 
     @Override

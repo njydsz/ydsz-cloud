@@ -12,6 +12,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 基于 Redis + Lua 脚本的分布式信号量
@@ -69,7 +70,7 @@ public class RedisSemaphore implements DistributedLocker {
     /**
      * 初始化标志（使用 AtomicBoolean 保证线程安全的懒初始化）
      */
-    private final java.util.concurrent.atomic.AtomicBoolean initialized = new java.util.concurrent.atomic.AtomicBoolean(false);
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
 
     /**
      * 初始化信号量 Lua 脚本：原子性 NX 设置初始许可数量和过期时间

@@ -2,6 +2,8 @@ package com.njydsz.pmis.common.core.constant;
 
 import java.util.Collections;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 过滤器忽略常量类
@@ -102,10 +104,10 @@ public final class FilterIgnoreConstant {
      * @return 全部排除路径集合
      */
     public static Set<String> getAllExcludeUrls() {
-        return java.util.stream.Stream.concat(
+        return Stream.concat(
                 COMMON_IGNORE_URL.stream(),
                 SECURITY_EXCLUDE_URL.stream()
-        ).collect(java.util.stream.Collectors.toUnmodifiableSet());
+        ).collect(Collectors.toUnmodifiableSet());
     }
 
     /**

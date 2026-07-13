@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 
 /**
  * 异常抽象基类
@@ -36,7 +37,7 @@ public abstract class AbstractYdszException extends RuntimeException {
      * 由 I18nConfiguration 注入，用于异常消息国际化解析
      * <p>使用 AtomicReference 替代 volatile 字段，提供更好的线程安全性和性能
      */
-    private static final AtomicReference<java.util.function.BiFunction<String, Object[], String>> MESSAGE_RESOLVER_HOLDER =
+    private static final AtomicReference<BiFunction<String, Object[], String>> MESSAGE_RESOLVER_HOLDER =
         new AtomicReference<>();
 
     /**
@@ -44,7 +45,7 @@ public abstract class AbstractYdszException extends RuntimeException {
      *
      * @param resolver 消息解析函数 (key, params) -> resolved message
      */
-    public static void setMessageResolver(java.util.function.BiFunction<String, Object[], String> resolver) {
+    public static void setMessageResolver(BiFunction<String, Object[], String> resolver) {
         MESSAGE_RESOLVER_HOLDER.set(resolver);
     }
 
@@ -53,7 +54,7 @@ public abstract class AbstractYdszException extends RuntimeException {
      *
      * @return 当前消息解析函数
      */
-    public static java.util.function.BiFunction<String, Object[], String> getMessageResolver() {
+    public static BiFunction<String, Object[], String> getMessageResolver() {
         return MESSAGE_RESOLVER_HOLDER.get();
     }
 
@@ -144,7 +145,7 @@ public abstract class AbstractYdszException extends RuntimeException {
      */
     protected static String resolveMessage(String key, Object[] params) {
         try {
-            java.util.function.BiFunction<String, Object[], String> resolver = MESSAGE_RESOLVER_HOLDER.get();
+            BiFunction<String, Object[], String> resolver = MESSAGE_RESOLVER_HOLDER.get();
             if (resolver != null) {
                 return resolver.apply(key, params);
             }

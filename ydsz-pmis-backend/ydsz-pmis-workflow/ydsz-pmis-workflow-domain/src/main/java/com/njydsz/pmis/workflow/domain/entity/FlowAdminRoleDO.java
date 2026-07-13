@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
+import java.time.LocalDateTime;
 
 /**
  * 流程管理员角色映射 DO（P1-6）
@@ -52,8 +53,8 @@ public class FlowAdminRoleDO extends BaseDO {
     private String grantedBy;
 
     /** 授权时间 */
-    private java.time.LocalDateTime grantedAt;
+    private LocalDateTime grantedAt;
 
     /** 过期时间（null 表示永不过期） */
-    private java.time.LocalDateTime expireAt;
+    private LocalDateTime expireAt;
 }

@@ -11,6 +11,7 @@ import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
 import java.time.LocalDateTime;
+import java.math.BigDecimal;
 
 /**
  * 消息发送日志: 全通道发送全量记录,支持优先级/聚合/撤回/回执/路由/灰度/重试调度
@@ -107,7 +108,7 @@ public class MsgLogDO extends BaseDO {
     private Long costMs;
 
     /** P2-4: 发送成本(元),按通道单价计算,SMS/EMAIL/PUSH 有成本,IM/INAPP 免费 */
-    private java.math.BigDecimal cost;
+    private BigDecimal cost;
 
     /** 系统链路追踪 ID */
     private String traceId;

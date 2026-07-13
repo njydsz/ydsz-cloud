@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.lang.reflect.Method;
 
 /**
  *
@@ -92,7 +93,7 @@ final class DataPermissionHelper {
             String className = msId.substring(0, lastDot);
             String methodName = msId.substring(lastDot + 1);
             Class<?> mapperClass = Class.forName(className);
-            for (java.lang.reflect.Method method : mapperClass.getDeclaredMethods()) {
+            for (Method method : mapperClass.getDeclaredMethods()) {
                 if (method.getName().equals(methodName)) {
                     return method.isAnnotationPresent(DataPermissionIgnore.class);
                 }

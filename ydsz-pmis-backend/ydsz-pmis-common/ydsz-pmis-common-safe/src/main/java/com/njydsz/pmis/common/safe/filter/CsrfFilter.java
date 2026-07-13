@@ -17,6 +17,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * CSRF 防护过滤器
@@ -254,7 +256,7 @@ public class CsrfFilter extends OncePerRequestFilter {
     private boolean isSameOrigin(String origin, String requestHost, String scheme, String serverName, int serverPort) {
         // 解析 Origin：scheme://host:port
         try {
-            java.net.URI originUri = new java.net.URI(origin);
+            URI originUri = new URI(origin);
             String originHost = originUri.getHost();
             int originPort = originUri.getPort();
             if (originPort == -1) {
@@ -268,7 +270,7 @@ public class CsrfFilter extends OncePerRequestFilter {
             return originUri.getScheme().equalsIgnoreCase(scheme)
                     && originHost != null && originHost.equalsIgnoreCase(serverName)
                     && originPort == serverPort;
-        } catch (java.net.URISyntaxException e) {
+        } catch (URISyntaxException e) {
             logger.debug("Origin 解析失败: {}", origin);
             return false;
         }

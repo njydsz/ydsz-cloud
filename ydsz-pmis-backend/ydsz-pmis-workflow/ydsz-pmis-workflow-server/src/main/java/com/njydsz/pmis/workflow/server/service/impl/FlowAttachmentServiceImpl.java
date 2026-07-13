@@ -17,6 +17,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.List;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 /**
  * 自建工作流引擎 - 审批附件服务实现
@@ -190,7 +192,7 @@ public class FlowAttachmentServiceImpl implements FlowAttachmentService {
             }
             if (previewServerUrl.contains("{url}")) {
                 return previewServerUrl.replace("{url}",
-                        java.net.URLEncoder.encode(downloadUrl, java.nio.charset.StandardCharsets.UTF_8));
+                        URLEncoder.encode(downloadUrl, StandardCharsets.UTF_8));
             }
             return previewServerUrl + downloadUrl;
         }

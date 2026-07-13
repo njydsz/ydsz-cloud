@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import java.time.LocalDateTime;
+import java.time.Duration;
 
 /**
  * 密码策略校验器
@@ -176,7 +177,7 @@ public final class PasswordPolicy {
     public static long daysUntilExpiry(LocalDateTime lastChange, int maxDays) {
         if (lastChange == null) return 0;
         LocalDateTime expiry = lastChange.plusDays(maxDays);
-        long remaining = java.time.Duration.between(LocalDateTime.now(), expiry).toDays();
+        long remaining = Duration.between(LocalDateTime.now(), expiry).toDays();
         return Math.max(0, remaining);
     }
 

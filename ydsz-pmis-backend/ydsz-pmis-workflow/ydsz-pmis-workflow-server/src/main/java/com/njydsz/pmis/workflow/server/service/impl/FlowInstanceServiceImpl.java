@@ -61,6 +61,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.time.format.DateTimeFormatter;
+import java.util.function.Consumer;
 
 /**
  * 流程实例 Service 实现
@@ -928,9 +930,9 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         Object date = timer.get("date");
         if (date != null) {
             try {
-                java.time.LocalDateTime target = java.time.LocalDateTime.parse(date.toString(),
-                        java.time.format.DateTimeFormatter.ISO_DATE_TIME);
-                Duration d = Duration.between(java.time.LocalDateTime.now(), target);
+                LocalDateTime target = LocalDateTime.parse(date.toString(),
+                        DateTimeFormatter.ISO_DATE_TIME);
+                Duration d = Duration.between(LocalDateTime.now(), target);
                 return d.isNegative() ? null : d;
             } catch (Exception e) {
                 log.warn("[Flow] timer.date 解析失败: {} err={}", date, e.getMessage());
@@ -1217,7 +1219,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
     }
 
-    private void fireEvent(java.util.function.Consumer<FlowEventListener> action) {
+    private void fireEvent(Consumer<FlowEventListener> action) {
         if (eventListeners == null) return;
         for (FlowEventListener listener : eventListeners) {
             try {

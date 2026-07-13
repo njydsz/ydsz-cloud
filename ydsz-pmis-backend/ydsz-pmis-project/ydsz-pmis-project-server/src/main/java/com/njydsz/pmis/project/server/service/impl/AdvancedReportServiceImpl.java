@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import java.util.function.Function;
 
 /**
  * 高级报表 Service 实现
@@ -1088,7 +1089,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         return o == null ? null : o.toString();
     }
 
-    private <T, U> List<U> safeAll(T mapper, java.util.function.Function<T, List<U>> fn) {
+    private <T, U> List<U> safeAll(T mapper, Function<T, List<U>> fn) {
         try {
             return fn.apply(mapper);
         } catch (Exception e) {
@@ -1097,7 +1098,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         }
     }
 
-    private <T, U> U safeOne(T mapper, java.util.function.Function<T, U> fn) {
+    private <T, U> U safeOne(T mapper, Function<T, U> fn) {
         try {
             return fn.apply(mapper);
         } catch (Exception e) {

@@ -17,6 +17,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * WebHook 事件分发器（P3-13 WebHook 事件订阅）。
@@ -135,8 +137,8 @@ public class WebhookEventDispatcher {
      */
     private String computeSignature(String body, String secret) {
         try {
-            javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
-            mac.init(new javax.crypto.spec.SecretKeySpec(secret.getBytes(), "HmacSHA256"));
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(secret.getBytes(), "HmacSHA256"));
             byte[] hash = mac.doFinal(body.getBytes());
             StringBuilder sb = new StringBuilder();
             for (byte b : hash) {

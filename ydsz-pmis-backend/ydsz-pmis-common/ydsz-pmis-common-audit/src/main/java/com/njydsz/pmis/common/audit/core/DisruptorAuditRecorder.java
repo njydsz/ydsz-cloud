@@ -24,6 +24,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 基于 LMAX Disruptor 的高性能异步审计记录器
@@ -254,7 +255,7 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
      */
     private void flushBatchWithSharding(List<AuditLog> batch) {
         Map<String, List<AuditLog>> grouped = batch.stream()
-                .collect(java.util.stream.Collectors.groupingBy(this::resolveTableName));
+                .collect(Collectors.groupingBy(this::resolveTableName));
 
         for (Map.Entry<String, List<AuditLog>> entry : grouped.entrySet()) {
             List<AuditLog> slice = entry.getValue();

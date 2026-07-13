@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.Duration;
 
 /**
  * 规则生命周期管理服务（P3-1）
@@ -285,7 +286,7 @@ public class RuleLifecycleService {
         }
         try {
             LocalDateTime parsed = LocalDateTime.parse(timeStr.trim(), DATE_TIME_FORMATTER);
-            long daysSince = java.time.Duration.between(parsed, LocalDateTime.now()).toDays();
+            long daysSince = Duration.between(parsed, LocalDateTime.now()).toDays();
             return daysSince >= staleDisabledDays;
         } catch (DateTimeParseException e) {
             log.debug("[Lifecycle] 无法解析时间字符串: {}", timeStr);

@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 规则集 Service（P2-14）
@@ -375,9 +376,9 @@ public class RulePackService implements RulePackProvider {
         List<String> changed = new ArrayList<>();
         if (from.getRuleSnapshots() != null && to.getRuleSnapshots() != null) {
             var fromMap = parseSnapshots(from.getRuleSnapshots()).stream()
-                    .collect(java.util.stream.Collectors.toMap(RuleDefinition::getCode, d -> d, (a, b) -> a));
+                    .collect(Collectors.toMap(RuleDefinition::getCode, d -> d, (a, b) -> a));
             var toMap = parseSnapshots(to.getRuleSnapshots()).stream()
-                    .collect(java.util.stream.Collectors.toMap(RuleDefinition::getCode, d -> d, (a, b) -> a));
+                    .collect(Collectors.toMap(RuleDefinition::getCode, d -> d, (a, b) -> a));
             for (String code : common) {
                 RuleDefinition a = fromMap.get(code);
                 RuleDefinition b = toMap.get(code);

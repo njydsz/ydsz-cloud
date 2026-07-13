@@ -9,6 +9,7 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.InputStream;
 import java.security.KeyStore;
+import java.io.FileInputStream;
 
 /**
  * SSL/TLS 上下文工厂。
@@ -125,6 +126,6 @@ public class SslContextFactory {
             }
             return is;
         }
-        return new java.io.FileInputStream(path);
+        return new FileInputStream(path);
     }
 }

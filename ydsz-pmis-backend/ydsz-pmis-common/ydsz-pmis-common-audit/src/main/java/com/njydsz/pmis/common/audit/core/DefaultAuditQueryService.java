@@ -16,6 +16,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
+import java.util.regex.Pattern;
 
 /**
  * 基于 JDBC 的默认审计查询服务实现
@@ -38,8 +39,8 @@ public class DefaultAuditQueryService implements AuditQueryService {
     private static final String DEFAULT_BASE_TABLE_NAME = "sys_audit_log";
 
     /** 表名白名单正则：仅允许字母、数字、下划线 */
-    private static final java.util.regex.Pattern TABLE_NAME_PATTERN =
-            java.util.regex.Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
+    private static final Pattern TABLE_NAME_PATTERN =
+            Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
 
     /** JDBC 模板，用于执行数据库查询 */
     private final JdbcTemplate jdbcTemplate;

@@ -2,8 +2,11 @@ package com.njydsz.pmis.common.util;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.Base64;
 import java.util.regex.Pattern;
 
 /**
@@ -80,6 +83,61 @@ public final class CryptoUtil {
             return hexString.toString().equalsIgnoreCase(hashedPassword);
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    /**
+     * Base64 URL-safe 编码（无填充）。
+     *
+     * @param data 待编码的字节数组
+     * @return Base64 URL-safe 字符串
+     */
+    public static String base64UrlEncode(byte[] data) {
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(data);
+    }
+
+    /**
+     * Base64 URL-safe 解码。
+     *
+     * @param value Base64 URL-safe 字符串
+     * @return 解码后的字节数组
+     */
+    public static byte[] base64UrlDecode(String value) {
+        return Base64.getUrlDecoder().decode(value);
+    }
+
+    /**
+     * 恒定时间字符串比较（防止计时攻击）。
+     *
+     * @param a 字符串 a
+     * @param b 字符串 b
+     * @return 相等返回 true
+     */
+    public static boolean constantTimeEquals(String a, String b) {
+        if (a == null || b == null) {
+            return a == null && b == null;
+        }
+        byte[] aBytes = a.getBytes(StandardCharsets.UTF_8);
+        byte[] bBytes = b.getBytes(StandardCharsets.UTF_8);
+        return MessageDigest.isEqual(aBytes, bBytes);
+    }
+
+    /**
+     * HMAC-SHA256 签名（返回 Base64 URL-safe 编码）。
+     *
+     * @param data 待签名数据
+     * @param key  密钥字节数组
+     * @return Base64 URL-safe 编码的签名
+     */
+    public static String hmacSha256(String data, byte[] key) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            SecretKeySpec secretKeySpec = new SecretKeySpec(key, "HmacSHA256");
+            mac.init(secretKeySpec);
+            byte[] hmacBytes = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+            return base64UrlEncode(hmacBytes);
+        } catch (Exception e) {
+            throw new RuntimeException("HMAC-SHA256 签名失败: " + e.getMessage(), e);
         }
     }
 }

@@ -7,6 +7,7 @@ import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Objects;
+import java.nio.charset.StandardCharsets;
 
 /**
  * AES-GCM 加密器（带 Nonce 持久化）
@@ -76,7 +77,7 @@ public class AesGcmCrypto {
         try {
             Cipher cipher = Cipher.getInstance(TRANSFORM);
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, new GCMParameterSpec(GCM_TAG_LENGTH, iv));
-            byte[] ct = cipher.doFinal(plaintext.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            byte[] ct = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
             byte[] combined = ByteBuffer.allocate(iv.length + ct.length).put(iv).put(ct).array();
             return Base64.getEncoder().encodeToString(combined);
         } catch (Exception e) {
@@ -105,7 +106,7 @@ public class AesGcmCrypto {
             Cipher cipher = Cipher.getInstance(TRANSFORM);
             cipher.init(Cipher.DECRYPT_MODE, keySpec, new GCMParameterSpec(GCM_TAG_LENGTH, iv));
             byte[] pt = cipher.doFinal(ct);
-            return new String(pt, java.nio.charset.StandardCharsets.UTF_8);
+            return new String(pt, StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new IllegalStateException("AES-GCM decryption failed", e);
         }

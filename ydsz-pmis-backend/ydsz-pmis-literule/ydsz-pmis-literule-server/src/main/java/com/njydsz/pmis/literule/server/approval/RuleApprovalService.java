@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 /**
  * 规则审批流服务（P1-3 多级审批流）
@@ -832,7 +833,7 @@ public class RuleApprovalService {
      *
      * @param action 通知动作
      */
-    private void notifyWorkflowBridge(java.util.function.Consumer<RuleApprovalWorkflowBridge> action) {
+    private void notifyWorkflowBridge(Consumer<RuleApprovalWorkflowBridge> action) {
         if (workflowBridge == null) {
             return;
         }

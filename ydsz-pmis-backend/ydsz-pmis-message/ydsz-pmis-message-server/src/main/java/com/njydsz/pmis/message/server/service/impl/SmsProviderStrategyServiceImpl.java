@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * 多短信服务商策略服务实现。
@@ -135,7 +136,7 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
         int totalWeight = providers.stream()
                 .mapToInt(p -> weights.getOrDefault(p.providerType(), 1))
                 .sum();
-        int random = java.util.concurrent.ThreadLocalRandom.current().nextInt(totalWeight);
+        int random = ThreadLocalRandom.current().nextInt(totalWeight);
         int cumulative = 0;
         for (SmsProvider p : providers) {
             cumulative += weights.getOrDefault(p.providerType(), 1);

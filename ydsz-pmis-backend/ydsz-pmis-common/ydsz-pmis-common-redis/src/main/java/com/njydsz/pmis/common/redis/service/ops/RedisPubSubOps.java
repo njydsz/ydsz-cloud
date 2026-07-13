@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Redis Pub/Sub 操作组件
@@ -184,8 +185,8 @@ public class RedisPubSubOps {
     // ============================ 内部辅助方法 =============================
 
     private PubSubMessage toPubSubMessage(Message message, byte[] pattern) {
-        String channel = new String(message.getChannel(), java.nio.charset.StandardCharsets.UTF_8);
-        String patternStr = pattern != null ? new String(pattern, java.nio.charset.StandardCharsets.UTF_8) : null;
+        String channel = new String(message.getChannel(), StandardCharsets.UTF_8);
+        String patternStr = pattern != null ? new String(pattern, StandardCharsets.UTF_8) : null;
         Object body = redisTemplate.getValueSerializer().deserialize(message.getBody());
         return new PubSubMessage(channel, patternStr, body);
     }
