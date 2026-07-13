@@ -12,7 +12,7 @@ import com.njydsz.pmis.literule.domain.entity.RuleTemplateDO;
  * 规则模板 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Mapper
 public interface RuleTemplateMapper extends BaseMapper<RuleTemplateDO> {

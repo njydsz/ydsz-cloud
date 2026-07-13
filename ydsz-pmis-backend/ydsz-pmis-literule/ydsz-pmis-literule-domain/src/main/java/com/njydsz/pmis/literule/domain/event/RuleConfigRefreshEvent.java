@@ -7,7 +7,7 @@ package com.njydsz.pmis.literule.domain.event;
  * 引擎监听后重新加载规则定义并热刷新注册表。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public class RuleConfigRefreshEvent {
 

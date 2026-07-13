@@ -14,7 +14,7 @@ import lombok.Data;
  * <p>用于 {@code /rules/batch-category} 接口，批量调整规则分类。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @Schema(description = "规则批量分类调整请求体")

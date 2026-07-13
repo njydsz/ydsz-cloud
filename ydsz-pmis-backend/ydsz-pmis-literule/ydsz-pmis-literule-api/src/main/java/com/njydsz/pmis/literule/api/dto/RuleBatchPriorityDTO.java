@@ -15,7 +15,7 @@ import lombok.Data;
  * {@code delta} 为增量（可为负），最终优先级钳制在 0-100 范围。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @Schema(description = "规则批量优先级调整请求体")

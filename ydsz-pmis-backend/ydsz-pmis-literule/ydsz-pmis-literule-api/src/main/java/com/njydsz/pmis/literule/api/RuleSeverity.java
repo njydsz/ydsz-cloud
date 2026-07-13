@@ -7,7 +7,7 @@ package com.njydsz.pmis.literule.api;
  * 与 execution 模块 AlertSeverity 语义对齐，支持getCode/fromCode 互转。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public enum RuleSeverity {
     INFO("INFO", 1, "提示"),

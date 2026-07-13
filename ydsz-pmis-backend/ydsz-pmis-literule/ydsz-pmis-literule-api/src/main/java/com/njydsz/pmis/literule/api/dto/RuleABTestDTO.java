@@ -18,7 +18,7 @@ import lombok.Data;
  * <p>注意：{@code facts} 是动态事实数据（键名由业务自定义），保留 {@code Map<String, Object>}。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @Schema(description = "规则 A/B 测试请求体")

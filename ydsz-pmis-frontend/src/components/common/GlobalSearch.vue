@@ -1,4 +1,4 @@
-﻿﻿<!--
+﻿<!--
   @fileoverview 命令面板（Ctrl+K 唤起）
   @description P1-2: 从 GlobalSearch 升级为 Command Palette：
   - 空关键词：展示最近访问 + 快捷操作命令
@@ -9,7 +9,7 @@
   - 数据来源: @/api/search、@/api/favorite
   @module components/common/GlobalSearch
   @author ydsz-pmis-team
-  @since 1.1.0
+  @since 1.0.0
 -->
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue'

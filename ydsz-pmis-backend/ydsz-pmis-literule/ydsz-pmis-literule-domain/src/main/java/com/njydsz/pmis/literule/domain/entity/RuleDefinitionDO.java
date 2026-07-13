@@ -16,7 +16,7 @@ import lombok.Data;
  * <p>映射 pmis_rule_def 表，存储可配置规则的全部元信息。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @TableName("pmis_rule_def")

@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
  * 未触发时 {@link #triggered} = false。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @Builder

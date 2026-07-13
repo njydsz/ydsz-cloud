@@ -26,7 +26,7 @@ import lombok.Data;
  * 与通知中心紧耦合（事件最终通过 notify 通道发送），降低跨模块耦合度。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @Builder

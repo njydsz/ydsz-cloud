@@ -75,7 +75,7 @@ import lombok.extern.slf4j.Slf4j;
  * 当 classpath 中存在 RuleConfigProvider 实现时，自动启用动态规则加载和热刷新。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Configuration

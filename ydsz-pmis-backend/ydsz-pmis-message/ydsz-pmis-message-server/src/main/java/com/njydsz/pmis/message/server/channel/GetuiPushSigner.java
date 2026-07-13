@@ -10,7 +10,7 @@ import java.security.MessageDigest;
  * 纯静态方法，可独立单元测试，零外部依赖。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public final class GetuiPushSigner {
 

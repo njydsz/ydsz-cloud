@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 默认 "default"，向后兼容。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public final class RuleContext implements Serializable {
 

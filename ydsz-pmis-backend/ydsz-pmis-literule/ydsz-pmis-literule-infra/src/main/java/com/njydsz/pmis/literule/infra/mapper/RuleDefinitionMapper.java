@@ -10,7 +10,7 @@ import com.njydsz.pmis.literule.domain.entity.RuleDefinitionDO;
  * 规则定义 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Mapper
 public interface RuleDefinitionMapper extends BaseMapper<RuleDefinitionDO> {

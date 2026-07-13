@@ -16,7 +16,7 @@ import lombok.Data;
  * <p>映射 pmis_rule_version_history 表，存储规则变更的版本快照。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @TableName("pmis_rule_version_history")

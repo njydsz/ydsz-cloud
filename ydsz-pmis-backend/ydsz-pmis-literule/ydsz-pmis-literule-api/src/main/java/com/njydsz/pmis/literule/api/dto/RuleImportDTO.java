@@ -16,7 +16,7 @@ import lombok.Data;
  * {@link com.njydsz.pmis.literule.api.RuleDefinition}，且导入时容错（单条失败跳过）。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @Schema(description = "规则导入请求体")

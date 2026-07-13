@@ -8,7 +8,7 @@ import java.util.List;
  * <p>引擎负责管理规则注册、按优先级编排执行、收集评估结果、记录执行统计。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public interface RuleEngine {
 

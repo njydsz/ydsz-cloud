@@ -12,7 +12,7 @@ import lombok.Data;
  * （依赖另一条规则的执行结果，支持级联禁用）。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @Schema(description = "规则依赖新增请求体")

@@ -7,7 +7,7 @@ package com.njydsz.pmis.literule.api;
  * 引擎遍历已注册规则，调用 {@link #evaluate(RuleContext)} 进行评估。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public interface Rule {
 

@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
  * conditionExpression 为 LiteExpr 表达式，返回 boolean；actionExpression 可选，用于动态生成结果描述。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @Builder

@@ -12,7 +12,7 @@ import lombok.Data;
  * {@code ids} 为空时执行全部测试用例。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @Schema(description = "测试用例批量执行请求体")

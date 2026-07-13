@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
  * <p>记录每条规则的执行次数、触发次数、异常次数、平均耗时，用于规则效能监控。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @Builder

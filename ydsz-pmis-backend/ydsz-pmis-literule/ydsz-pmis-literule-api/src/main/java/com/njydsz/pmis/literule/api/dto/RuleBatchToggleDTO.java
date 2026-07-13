@@ -15,7 +15,7 @@ import lombok.Data;
  * 启用时校验 status=PUBLISHED，未发布的规则不能启用。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @Schema(description = "规则批量启停请求体")

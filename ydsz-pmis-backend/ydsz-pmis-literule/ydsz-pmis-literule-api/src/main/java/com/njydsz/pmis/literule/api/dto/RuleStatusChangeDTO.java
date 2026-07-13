@@ -12,7 +12,7 @@ import lombok.Data;
  * （DRAFT / REVIEW / PUBLISHED / ARCHIVED 等）。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @Schema(description = "规则状态变更请求体")

@@ -12,7 +12,7 @@ import com.njydsz.pmis.literule.domain.entity.RuleVersionHistoryDO;
  * 规则版本历史 Mapper
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Mapper
 public interface RuleVersionHistoryMapper extends BaseMapper<RuleVersionHistoryDO> {

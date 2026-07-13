@@ -17,7 +17,7 @@ import lombok.Data;
  * 用户可从模板一键导入生成规则定义。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @TableName("pmis_rule_template")

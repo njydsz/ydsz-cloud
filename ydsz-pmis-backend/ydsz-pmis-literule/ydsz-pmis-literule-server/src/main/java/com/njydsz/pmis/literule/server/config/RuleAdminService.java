@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  * 实现分布式热加载一致性。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 public class RuleAdminService {
