@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>实现 {@link RuleTemplateProvider} SPI，供 literule 模块的 Controller 反转依赖调用。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service

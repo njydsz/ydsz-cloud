@@ -25,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  * 严重度表达式可动态决定严重等级。支持 ${var} 模板渲染标题和描述。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 public class ExpressionRule implements Rule {

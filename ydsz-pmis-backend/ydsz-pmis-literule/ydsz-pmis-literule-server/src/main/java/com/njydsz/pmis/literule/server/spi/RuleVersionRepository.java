@@ -11,7 +11,7 @@ import com.njydsz.pmis.literule.api.RuleDefinition;
  * 采用"主表+历史表"设计，支持变更追踪、一键回滚。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public interface RuleVersionRepository {
 

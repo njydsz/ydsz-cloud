@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * 规则版本快照
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @Builder

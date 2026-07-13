@@ -12,7 +12,7 @@ import com.njydsz.pmis.literule.api.RuleEnvironment;
  * literule 模块本身不依赖任何持久层实现，通过此接口反转依赖。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public interface RuleConfigProvider {
 

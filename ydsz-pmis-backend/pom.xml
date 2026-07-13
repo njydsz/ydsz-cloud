@@ -110,6 +110,18 @@
         <!-- Maven Enforcer（P2-8：构建规则约束） -->
         <enforcer.version>3.5.0</enforcer.version>
         <skipEnforcer>false</skipEnforcer>
+
+        <!-- JaCoCo 覆盖率（P1-5：单元测试覆盖率采集与报告）
+             默认开启 prepare-agent + report，check 默认跳过（单测补齐后 CI 启用）
+             用法：
+               mvn verify                          — 生成各模块 target/site/jacoco 报告
+               mvn verify -DskipJacocoCheck=false  — 启用覆盖率阈值检查（CI 集成）
+        -->
+        <jacoco.version>0.8.13</jacoco.version>
+        <skipJacoco>false</skipJacoco>
+        <skipJacocoCheck>true</skipJacocoCheck>
+        <jacoco.line.coverage>0.60</jacoco.line.coverage>
+        <jacoco.branch.coverage>0.50</jacoco.branch.coverage>
     </properties>
 
     <dependencyManagement>
@@ -1332,10 +1344,65 @@
                         </execution>
                     </executions>
                 </plugin>
+                <!-- JaCoCo 覆盖率（P1-5：单元测试覆盖率采集与报告）
+                     - prepare-agent：注入 JaCoCo runtime agent 到 surefire/failsafe
+                     - report：生成 HTML/XML 覆盖率报告到 target/site/jacoco
+                     - check：覆盖率阈值检查，默认跳过，CI 通过 -DskipJacocoCheck=false 启用
+                -->
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco.version}</version>
+                    <configuration>
+                        <skip>${skipJacoco}</skip>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>prepare-agent</id>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>report</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>check-coverage</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                            <configuration>
+                                <skip>${skipJacocoCheck}</skip>
+                                <rules>
+                                    <rule>
+                                        <element>BUNDLE</element>
+                                        <limits>
+                                            <limit>
+                                                <counter>LINE</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>${jacoco.line.coverage}</minimum>
+                                            </limit>
+                                            <limit>
+                                                <counter>BRANCH</counter>
+                                                <value>COVEREDRATIO</value>
+                                                <minimum>${jacoco.branch.coverage}</minimum>
+                                            </limit>
+                                        </limits>
+                                    </rule>
+                                </rules>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
 
-        <!-- 显式启用 lombok/mapstruct 注解处理 + Maven Enforcer 规则 + Spotless 代码格式化（所有子模块继承生效） -->
+        <!-- 显式启用 lombok/mapstruct 注解处理 + Maven Enforcer 规则 + Spotless 代码格式化 + JaCoCo 覆盖率（所有子模块继承生效） -->
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -1344,6 +1411,11 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
+            </plugin>
+            <!-- JaCoCo 覆盖率采集（P1-5）：所有子模块自动继承，生成 target/site/jacoco 报告 -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
             </plugin>
             <!-- Spotless：import 管理（FQN 防线组成部分）
                  仅做未使用 import 清理和 import 排序，不改变代码缩进/格式。

@@ -14,7 +14,7 @@ import lombok.Data;
  * 不影响其他维度正常返回。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @Schema(description = "项目详情聚合数据")

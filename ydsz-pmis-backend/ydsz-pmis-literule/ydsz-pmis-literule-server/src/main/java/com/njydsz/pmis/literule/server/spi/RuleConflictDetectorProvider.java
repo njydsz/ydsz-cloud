@@ -13,7 +13,7 @@ import lombok.Data;
  * 避免 literule 模块直接依赖 project 模块。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 public interface RuleConflictDetectorProvider {
 

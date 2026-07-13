@@ -18,7 +18,7 @@ import lombok.Data;
  * <p>设计参考：{@code com.njydsz.pmis.project.domain.vo.RiskVO} 的 DO/VO 分离模式。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)

@@ -12,7 +12,7 @@ import com.njydsz.pmis.common.core.config.ThresholdProvider;
  * {@code ThresholdProvider} 同名冲突，避免在 {@link ThresholdProviderBridge} 中使用行内 FQN。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Component
 public class CommonThresholdHolder {
