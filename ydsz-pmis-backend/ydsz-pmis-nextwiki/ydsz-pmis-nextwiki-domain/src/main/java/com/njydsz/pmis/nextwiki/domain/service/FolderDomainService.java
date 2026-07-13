@@ -50,7 +50,7 @@ public class FolderDomainService {
         boolean nameExists = children.stream()
                 .anyMatch(c -> c.getName().equalsIgnoreCase(name) && c.isFolder());
         if (nameExists) {
-            throw new BusinessException("NW-FOLDER-001", "同名目录已存在: " + name);
+            throw BusinessException.builder().key("同名目录已存在: " + name).build();
         }
 
         String path = buildPath(parent.getPath(), name);

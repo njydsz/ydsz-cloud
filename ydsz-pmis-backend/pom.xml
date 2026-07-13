@@ -1356,10 +1356,11 @@
                             <include>src/main/java/**/*.java</include>
                             <include>src/test/java/**/*.java</include>
                         </includes>
-                        <!-- 剥离 UTF-8 BOM (\uFEFF)，防止 Google Java Format 解析报错 -->
+                        <!-- 剥离 UTF-8 BOM (U+FEFF)，防止 Google Java Format 解析报错 -->
+                        <!-- 注意：XML 中 \uFEFF 只是字面字符串，必须用数字字符引用 &#xFEFF; -->
                         <replace>
                             <name>stripBom</name>
-                            <search>\uFEFF</search>
+                            <search>&#xFEFF;</search>
                             <replacement></replacement>
                         </replace>
                         <!-- 仅清理未使用 import（FQN 修复后常产生冗余 import） -->
