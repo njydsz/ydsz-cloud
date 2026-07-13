@@ -1,0 +1,31 @@
+package com.njydsz.pmis.nextwiki.infra.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.nextwiki.domain.entity.ShareLink;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
+
+import java.util.List;
+
+/**
+ * 分享链接 MyBatis Mapper
+ *
+ * @author ydsz-pmis-team
+ * @since 1.4.0
+ */
+@Mapper
+public interface ShareLinkMapper extends BaseMapper<ShareLink> {
+
+    ShareLink selectByShareCode(@Param("shareCode") String shareCode);
+
+    List<ShareLink> selectByFileNodeId(@Param("fileNodeId") String fileNodeId);
+
+    List<ShareLink> selectActiveSharesByUserId(@Param("userId") String userId);
+
+    @Update("UPDATE nw_share_link SET status = 'revoked', updated_at = NOW() WHERE id = #{id}")
+    int revoke(@Param("id") String id);
+
+    @Update("UPDATE nw_share_link SET access_count = access_count + 1, updated_at = NOW() WHERE id = #{id}")
+    int incrementAccessCount(@Param("id") String id);
+}

@@ -38,7 +38,6 @@ import jakarta.validation.ValidatorFactory;
  * @email limw1888@126.com
  * @version 3.5.0
  */
-@SuppressWarnings("unchecked")
 public class ValidateUtils {
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
@@ -442,11 +441,11 @@ public class ValidateUtils {
      * 校验不是实例类型
      */
     
-    public static <T> T isNotInstanceOf(Object obj, Class<T> type, String message) {
+    public static Object isNotInstanceOf(Object obj, Class<?> type, String message) {
         if (type.isInstance(obj)) {
             throw new IllegalArgumentException(message);
         }
-        return (T) obj;
+        return obj;
     }
 
     /**
@@ -502,41 +501,41 @@ public class ValidateUtils {
     /**
      * 创建校验器
      */
-    public static Validator validate() {
-        return new Validator();
+    public static ValidatorBuilder validate() {
+        return new ValidatorBuilder();
     }
 
     /**
      * 创建带对象的校验器
      */
-    public static Validator validate(Object obj) {
-        return new Validator().target(obj);
+    public static ValidatorBuilder validate(Object obj) {
+        return new ValidatorBuilder().target(obj);
     }
 
     /**
      * 校验器（链式 API）
      */
-    public static class Validator {
+    public static class ValidatorBuilder {
         private final List<String> errors = new ArrayList<>();
 
         /**
          * 设置校验目标
          */
-        public Validator target(Object target) {
+        public ValidatorBuilder target(Object target) {
             return this;
         }
 
         /**
          * 设置字段名
          */
-        public Validator field(String fieldName) {
+        public ValidatorBuilder field(String fieldName) {
             return this;
         }
 
         /**
          * 校验不为 null
          */
-        public Validator notNull(Object obj, String fieldName) {
+        public ValidatorBuilder notNull(Object obj, String fieldName) {
             if (obj == null) {
                 errors.add(fieldName + " cannot be null");
             }
@@ -546,7 +545,7 @@ public class ValidateUtils {
         /**
          * 校验不为空
          */
-        public Validator notEmpty(String str, String fieldName) {
+        public ValidatorBuilder notEmpty(String str, String fieldName) {
             if (str == null || str.isEmpty()) {
                 errors.add(fieldName + " cannot be empty");
             }
@@ -556,7 +555,7 @@ public class ValidateUtils {
         /**
          * 校验不为空白
          */
-        public Validator notBlank(String str, String fieldName) {
+        public ValidatorBuilder notBlank(String str, String fieldName) {
             if (str == null || str.trim().isEmpty()) {
                 errors.add(fieldName + " cannot be blank");
             }
@@ -566,7 +565,7 @@ public class ValidateUtils {
         /**
          * 校验邮箱
          */
-        public Validator isEmail(String email, String fieldName) {
+        public ValidatorBuilder isEmail(String email, String fieldName) {
             if (!ValidateUtils.isEmail(email)) {
                 errors.add(fieldName + " is not a valid email");
             }
@@ -576,7 +575,7 @@ public class ValidateUtils {
         /**
          * 校验手机号
          */
-        public Validator isPhone(String phone, String fieldName) {
+        public ValidatorBuilder isPhone(String phone, String fieldName) {
             if (!ValidateUtils.isPhone(phone)) {
                 errors.add(fieldName + " is not a valid phone number");
             }
@@ -586,7 +585,7 @@ public class ValidateUtils {
         /**
          * 校验身份证
          */
-        public Validator isIdCard(String idCard, String fieldName) {
+        public ValidatorBuilder isIdCard(String idCard, String fieldName) {
             if (!ValidateUtils.isIdCard(idCard)) {
                 errors.add(fieldName + " is not a valid ID card");
             }
@@ -596,7 +595,7 @@ public class ValidateUtils {
         /**
          * 校验 URL
          */
-        public Validator isUrl(String url, String fieldName) {
+        public ValidatorBuilder isUrl(String url, String fieldName) {
             if (!ValidateUtils.isUrl(url)) {
                 errors.add(fieldName + " is not a valid URL");
             }
@@ -606,7 +605,7 @@ public class ValidateUtils {
         /**
          * 添加自定义错误
          */
-        public Validator addError(String error) {
+        public ValidatorBuilder addError(String error) {
             errors.add(error);
             return this;
         }
@@ -614,7 +613,7 @@ public class ValidateUtils {
         /**
          * 添加条件校验
          */
-        public Validator when(boolean condition, String error) {
+        public ValidatorBuilder when(boolean condition, String error) {
             if (!condition) {
                 errors.add(error);
             }

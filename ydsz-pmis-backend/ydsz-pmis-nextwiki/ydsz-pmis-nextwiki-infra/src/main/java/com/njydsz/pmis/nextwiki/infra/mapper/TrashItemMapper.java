@@ -1,0 +1,26 @@
+package com.njydsz.pmis.nextwiki.infra.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.nextwiki.domain.entity.TrashItem;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+
+/**
+ * 回收站 MyBatis Mapper
+ *
+ * @author ydsz-pmis-team
+ * @since 1.4.0
+ */
+@Mapper
+public interface TrashItemMapper extends BaseMapper<TrashItem> {
+
+    TrashItem findByFileNodeId(@Param("fileNodeId") String fileNodeId);
+
+    List<TrashItem> findActiveTrash(@Param("userId") String userId);
+
+    List<TrashItem> findExpiredItems(@Param("limit") int limit);
+
+    int countActiveTrash(@Param("userId") String userId);
+}
