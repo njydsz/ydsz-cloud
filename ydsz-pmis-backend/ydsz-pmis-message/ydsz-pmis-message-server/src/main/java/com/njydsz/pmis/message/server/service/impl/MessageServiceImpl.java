@@ -48,6 +48,10 @@ import com.njydsz.pmis.message.server.service.template.TemplateService;
 import com.njydsz.pmis.message.server.template.RichMediaRenderer;
 import com.njydsz.pmis.message.server.template.TemplateEngine;
 import com.njydsz.pmis.message.server.producer.MessageQueueOperations;
+import com.njydsz.pmis.message.server.service.impl.ChannelSuppressionEngine;
+import com.njydsz.pmis.message.server.service.impl.EmailBounceHandler;
+import com.njydsz.pmis.message.server.service.impl.SenderQuotaService;
+import com.njydsz.pmis.message.server.metrics.MessageServiceMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -124,6 +128,15 @@ public class MessageServiceImpl implements MessageService {
 
     /** P2-3: 消息队列操作（可选,未配置 MQ 时为 null） */
     private final ObjectProvider<MessageQueueOperations> mqProducerProvider;
+
+    /** P2-13: 跨渠道抑制引擎 */
+    private final ChannelSuppressionEngine channelSuppressionEngine;
+    /** P2-16: 邮件退信处理 */
+    private final EmailBounceHandler emailBounceHandler;
+    /** P2-20: Sender 配额管理 */
+    private final SenderQuotaService senderQuotaService;
+    /** P3-22~25: 消息服务可观测性指标 */
+    private final MessageServiceMetrics messageServiceMetrics;
 
     @Override
     public MessageResult send(MessageRequest request) {
@@ -268,6 +281,16 @@ public class MessageServiceImpl implements MessageService {
             return MessageResult.fail(channel, "消息重复,已忽略");
         }
 
+        // ⑤-3 P2-13: 跨渠道抑制 —— 同一 bizType+bizId+receiver 在抑制窗口内只允许首个渠道发送
+        if (StringUtils.hasText(bizType) && StringUtils.hasText(request.getBizId())
+                && StringUtils.hasText(receiver)
+                && channelSuppressionEngine.shouldSuppress(bizType, request.getBizId(), receiver, channel)) {
+            log.info("[Message] 跨渠道抑制,跳过发送: bizType={} bizId={} receiver={} channel={}",
+                    bizType, request.getBizId(), receiver, channel);
+            messageMetrics.recordSend(channel, "SUPPRESSED", 0);
+            return MessageResult.fail(channel, "跨渠道抑制: 已有其他渠道发送");
+        }
+
         // ⑥ 限流 + 频率
         // ⑥-1 通道+bizType 维度令牌桶（全局配额）
         if (!rateLimitService.tryAcquire(buildRateLimitKey(channel, bizType), 1)) {
@@ -285,6 +308,13 @@ public class MessageServiceImpl implements MessageService {
                 && !rateLimitService.checkFrequency(receiver, channel, bizType)) {
             messageMetrics.recordSend(channel, "FAILED", 0);
             throw new SysException(StandardResultCode.RATE_LIMIT, "发送频率超限");
+        }
+
+        // ⑥-4 P2-20: Sender 配额管理 —— 检查发送方日/小时配额（以 bizType 作为发送方标识）
+        String senderId = StringUtils.hasText(bizType) ? bizType : SystemConstants.SYSTEM_USER_ID;
+        if (!senderQuotaService.checkQuota(senderId, channel)) {
+            messageMetrics.recordSend(channel, "QUOTA_EXCEEDED", 0);
+            throw new SysException(StandardResultCode.RATE_LIMIT, "发送方配额已用尽: senderId=" + senderId);
         }
 
         // ⑦ 加载模板（有 templateCode 时，使用偏好 locale）
@@ -477,6 +507,21 @@ public class MessageServiceImpl implements MessageService {
         String channel = logDO.getChannel();
         long start = System.currentTimeMillis();
         try {
+            // P2-16: 邮件退信黑名单检查 —— EMAIL 通道发送前校验收信人是否在退信黑名单中
+            if ("EMAIL".equalsIgnoreCase(channel) && StringUtils.hasText(receiver)
+                    && emailBounceHandler.isBounced(receiver)) {
+                String bounceReason = emailBounceHandler.getBounceReason(receiver);
+                log.info("[Message] 邮件退信黑名单拦截: msgId={} receiver={} reason={}",
+                        logDO.getMsgId(), receiver, bounceReason);
+                logDO.setStatus(MessageStatusEnum.SKIPPED.name());
+                logDO.setErrorMessage("EMAIL_BOUNCED: " + bounceReason);
+                msgLogMapper.updateById(logDO);
+                messageMetrics.recordSend(channel, "BOUNCED", 0);
+                messageServiceMetrics.recordSendFailure(channel, logDO.getTemplateCode(),
+                        logDO.getTenantId(), "EMAIL_BOUNCED");
+                return MessageResult.fail(channel, "邮件地址在退信黑名单中: " + receiver);
+            }
+
             logDO.setStatus(MessageStatusEnum.SENDING.name());
             msgLogMapper.updateById(logDO);
             // P0-2: 记录分发开始轨迹
@@ -493,7 +538,13 @@ public class MessageServiceImpl implements MessageService {
             if (StringUtils.hasText(receiver)) {
                 rateLimitService.recordFrequency(receiver, channel, logDO.getBizType());
             }
+            // P2-20: 发送成功后记录配额计数
+            senderQuotaService.recordSend(logDO.getSenderId(), channel);
             messageMetrics.recordSend(channel, "SUCCESS", cost);
+            // P3-22: 记录发送耗时（Micrometer Timer P50/P90/P99）
+            messageServiceMetrics.recordSendDuration(channel, Duration.ofMillis(cost));
+            // P3-24: 记录发送成功（Counter）
+            messageServiceMetrics.recordSendSuccess(channel, logDO.getTemplateCode(), logDO.getTenantId());
             // P0-2: 记录分发成功轨迹
             messageTraceService.recordTrace(logDO.getMsgId(),
                     MsgTraceDO.Node.DISPATCH_SUCCESS,
@@ -502,9 +553,12 @@ public class MessageServiceImpl implements MessageService {
                     logDO.getMsgId(), channel, receiver, cost);
             return MessageResult.ok(channel, providerTraceId);
         } catch (Exception e) {
-            long cost = System.currentTimeMillis() - start;
-            logDO.setCostMs(cost);
+            long cost = System.currentTimeMillis() - start;\n            logDO.setCostMs(cost);
             logDO.setErrorMessage(e.getMessage());
+            // P3-24/P3-25: 记录发送失败 + 异常分类
+            messageServiceMetrics.recordSendFailure(channel, logDO.getTemplateCode(),
+                    logDO.getTenantId(), e.getClass().getSimpleName());
+            messageServiceMetrics.recordException(channel, e.getClass().getSimpleName());
             // P0-4 + P1-8: 多级降级链（优先）→ 单通道降级
             List<String> fallbackChannels = resolveFallbackChannels(matchedRule, channel);
             if (!fallbackChannels.isEmpty()) {
