@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.impl.notification;
+﻿package com.njydsz.pmis.workflow.server.service.impl.notification;
 
 import com.njydsz.pmis.common.core.constant.PageConstants;
 import com.njydsz.pmis.common.core.response.PageResponse;
@@ -162,7 +162,7 @@ public class FlowCcServiceImpl implements FlowCcService {
                                              String tenantId, int pageNo, int pageSize) {
         try {
             if (userId == null) {
-                return PageResponse.empty();
+                return PageResponse.success(null);
             }
             int page = Math.max(pageNo, 1);
             int size = (int) Math.min(Math.max(pageSize, 1), PageConstants.MAX_PAGE_SIZE);
@@ -174,7 +174,7 @@ public class FlowCcServiceImpl implements FlowCcService {
             return PageResponse.of(list, total, page, size);
         } catch (Exception e) {
             log.error("[FlowCc] 分页查询异常: userId={} err={}", userId, e.getMessage(), e);
-            return PageResponse.empty();
+            return PageResponse.success(null);
         }
     }
 

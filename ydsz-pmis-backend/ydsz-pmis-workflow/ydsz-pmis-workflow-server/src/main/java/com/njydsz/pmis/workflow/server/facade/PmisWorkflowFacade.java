@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.facade;
+﻿package com.njydsz.pmis.workflow.server.facade;
 
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.auth.context.AuthContext;
@@ -113,7 +113,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
         PageResponse<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), AuthContext.getTenantIdOrDefault("1"), page, size);
-        return pageResult.getList().stream().map(this::toMap).toList();
+        return pageResult.getData().stream().map(this::toMap).toList();
     }
 
     @Override
@@ -122,7 +122,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
         PageResponse<FlowRunTaskDO> pageResult = taskService.listDoneByAssigneePage(
                 String.valueOf(userId), AuthContext.getTenantIdOrDefault("1"), page, size);
-        return pageResult.getList().stream().map(this::toMap).toList();
+        return pageResult.getData().stream().map(this::toMap).toList();
     }
 
     // ============================== GAP-P0-1: 全部流程实例（管理员视图） ==============================
@@ -142,7 +142,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         PageResponse<FlowInstanceDO> pageResult = instanceService.page(
                 businessType, null, flowStatus, startTime, endTime,
                 AuthContext.getTenantIdOrDefault("1"), page, size);
-        List<Map<String, Object>> list = pageResult.getList().stream().map(this::instanceToMap).toList();
+        List<Map<String, Object>> list = pageResult.getData().stream().map(this::instanceToMap).toList();
         return PageResponse.of(list, pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize());
     }
 
@@ -220,7 +220,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         String tenantId = AuthContext.getTenantIdOrDefault("1");
         PageResponse<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), tenantId, 1, 100);
-        List<FlowRunTaskDO> todos = pageResult.getList();
+        List<FlowRunTaskDO> todos = pageResult.getData();
         if (todos.isEmpty()) {
             return 0;
         }

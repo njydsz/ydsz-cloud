@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.impl.delegate;
+﻿package com.njydsz.pmis.workflow.server.service.impl.delegate;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.core.response.PageResponse;
@@ -230,7 +230,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     @Transactional(readOnly = true)
     public PageResponse<?> listDelegateLog(String delegateUserId, int page, int size) {
         if (delegateUserId == null) {
-            return PageResponse.empty();
+            return PageResponse.success(null);
         }
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
@@ -247,7 +247,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     @Transactional(readOnly = true)
     public PageResponse<?> listOwnerLog(String ownerUserId, int page, int size) {
         if (ownerUserId == null) {
-            return PageResponse.empty();
+            return PageResponse.success(null);
         }
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;

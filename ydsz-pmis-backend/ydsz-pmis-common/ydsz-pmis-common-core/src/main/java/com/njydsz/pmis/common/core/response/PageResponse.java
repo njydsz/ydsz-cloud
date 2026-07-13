@@ -225,8 +225,8 @@ public class PageResponse<T> extends BaseResponse<T> {
      * @return 分页响应对象
      */
     @SuppressWarnings("unchecked")
-    public static <T> PageResponse<T> of(List<T> list, long total, int pageNum, int pageSize) {
-        return success(total, (long) pageNum, (long) pageSize, (T) list);
+    public static <T> PageResponse<T> of(List<T> list, long total, long pageNum, long pageSize) {
+        return success(total, pageNum, pageSize, (T) list);
     }
 
     /**
