@@ -85,4 +85,17 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
             "FROM nw_file_node WHERE created_by = #{userId} AND deleted = 0 AND node_type = 'file' " +
             "GROUP BY suffix ORDER BY total_size DESC")
     List<FileNodeRepository.FileTypeStat> statsBySuffixAndUser(@Param("userId") String userId);
+
+    /**
+     * 按文件哈希查询（用于秒传去重）
+     */
+    @Select("SELECT * FROM nw_file_node WHERE file_hash = #{fileHash} AND deleted = 0 AND node_type = 'file' LIMIT 1")
+    FileNode findByFileHash(@Param("fileHash") String fileHash);
+
+    /**
+     * 按 createdBy + parentId 查询同名文件
+     */
+    @Select("SELECT * FROM nw_file_node WHERE name = #{name} AND parent_id = #{parentId} " +
+            "AND created_by = #{createdBy} AND deleted = 0")
+    List<FileNode> findByNameAndParent(@Param("name") String name, @Param("parentId") String parentId, @Param("createdBy") String createdBy);
 }

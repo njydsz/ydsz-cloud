@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.search.provider;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Component;
@@ -13,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>
  * 管理所有 {@link SearchProvider} 实例，按类型查找。
  * 搜索引擎通过注册中心获取各业务模块的 Provider。
+ * <p>
+ * 支持自动发现：Spring 容器中所有 {@code SearchProvider} Bean 会在构造时自动注册。
  *
  * @author ydsz-pmis-team
  * @since 1.4.0
@@ -22,6 +25,28 @@ import lombok.extern.slf4j.Slf4j;
 public class SearchProviderRegistry {
 
     private final Map<String, SearchProvider<?>> providerMap = new ConcurrentHashMap<>();
+
+    /**
+     * 默认构造器（用于无 Provider 场景）
+     */
+    public SearchProviderRegistry() {
+        // 无操作
+    }
+
+    /**
+     * 自动注册构造器 — Spring 会注入所有 SearchProvider Bean
+     *
+     * @param providers Spring 容器中所有 SearchProvider 实例
+     */
+    public SearchProviderRegistry(List<SearchProvider<?>> providers) {
+        if (providers != null) {
+            for (SearchProvider<?> provider : providers) {
+                register(provider);
+            }
+        }
+        log.info("[SearchProviderRegistry] 自动注册完成: count={}, types={}",
+                providerMap.size(), providerMap.keySet());
+    }
 
     /**
      * 注册搜索提供者
@@ -54,13 +79,19 @@ public class SearchProviderRegistry {
 
     /**
      * 获取搜索提供者
+     * <p>
+     * 由于 Java 类型擦除，泛型类型参数 {@code <T>} 无法在运行时校验。
+     * 调用方需确保传入的类型与 Provider 实际泛型类型一致。
      *
      * @param type 实体类型
      * @return 提供者，不存在返回 null
      */
-    @SuppressWarnings("unchecked")
     public <T> SearchProvider<T> getProvider(String type) {
-        return (SearchProvider<T>) providerMap.get(type);
+        SearchProvider<?> provider = providerMap.get(type);
+        if (provider == null) {
+            return null;
+        }
+        return ProviderTypeBridge.cast(provider);
     }
 
     /**
@@ -103,7 +134,7 @@ public class SearchProviderRegistry {
         }
         return types.stream()
                 .map(providerMap::get)
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .toList();
     }
 }

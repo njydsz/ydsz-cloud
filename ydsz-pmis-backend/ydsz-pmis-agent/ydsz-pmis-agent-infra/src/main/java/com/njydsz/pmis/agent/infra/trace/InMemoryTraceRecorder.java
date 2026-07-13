@@ -80,4 +80,16 @@ public class InMemoryTraceRecorder implements TraceRecorder {
         traces.clear();
         traceStatus.clear();
     }
+
+    /**
+     * 列出最近的链路 ID
+     *
+     * @param limit 最大数量
+     * @return 链路 ID 列表（按插入顺序倒序）
+     */
+    public List<String> listRecentTraces(int limit) {
+        return traces.keySet().stream()
+                .limit(limit > 0 ? limit : 10)
+                .toList();
+    }
 }

@@ -1,9 +1,15 @@
 package com.njydsz.pmis.nextwiki.web.controller;
 
+import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 文件下载 REST API
  * <p>
- * 提供文件下载接口，集成下载限流与防盗链验证�?
+ * 提供文件下载接口，集成下载限流与防盗链验证。
  *
  * @author ydsz-pmis-team
  * @since 1.4.0
@@ -50,7 +56,7 @@ public class DownloadController {
      * 下载文件
      */
     @PostMapping("/{nodeId}")
-    @Operation(summary = "下载文件", description = "下载前校验限流和防盗�?)
+    @Operation(summary = "下载文件", description = "下载前校验限流和防盗链")
     public void download(
             @PathVariable String nodeId,
             @RequestHeader("X-User-Id") String userId,
@@ -66,15 +72,16 @@ public class DownloadController {
 
         DownloadRateLimitService.RateLimitResult rateResult =
                 rateLimitService.checkRateLimit(userId, ip, nodeId);
-        if (!rateBaseResponse.isAllowed()) {
-            throw BusinessException.builder().key(rateBaseResponse.getMessage()).build();
+        if (!rateResult.isAllowed()) {
+            throw BusinessException.builder().key(rateResult.getMessage()).build();
         }
 
         IFileStorage storage = resolveStorage();
         if (storage == null) {
-            throw BusinessException.builder().key("文件存储未配�?).build();
+            throw BusinessException.builder().key("文件存储未配置").build();
         }
 
+        setDownloadHeaders(response, fileNode.getName(), fileNode.getMimeType());
         storage.download(fileNode.getBucketName(), fileNode.getStorageKey(), response);
 
         log.info("[DownloadController] 文件下载: nodeId={}, userId={}, ip={}",
@@ -85,7 +92,7 @@ public class DownloadController {
      * 生成签名下载 URL
      */
     @PostMapping("/{nodeId}/signed-url")
-    @Operation(summary = "生成签名下载URL", description = "生成带时效性和IP绑定的签名下载链�?)
+    @Operation(summary = "生成签名下载URL", description = "生成带时效性和IP绑定的签名下载链接")
     public BaseResponse<String> generateSignedUrl(
             @PathVariable String nodeId,
             @RequestHeader("X-User-Id") String userId,
@@ -107,7 +114,7 @@ public class DownloadController {
     /**
      * 通过签名 URL 下载文件
      */
-    @GetMapping("/{sign}")
+    @GetMapping("/signed/{sign}")
     @Operation(summary = "通过签名URL下载文件")
     public void downloadBySignedUrl(
             @PathVariable String sign,
@@ -122,12 +129,24 @@ public class DownloadController {
 
         IFileStorage storage = resolveStorage();
         if (storage == null) {
-            throw BusinessException.builder().key("文件存储未配�?).build();
+            throw BusinessException.builder().key("文件存储未配置").build();
         }
 
-        storage.download(null, storageKey, response);
+        String fileName = extractFileNameFromStorageKey(storageKey);
+        setDownloadHeaders(response, fileName, MediaType.APPLICATION_OCTET_STREAM_VALUE);
+
+        try (InputStream is = storage.downloadAsStream(null, storageKey)) {
+            is.transferTo(response.getOutputStream());
+            response.getOutputStream().flush();
+        } catch (Exception e) {
+            log.error("[DownloadController] 签名URL下载失败: sign={}", sign, e);
+            throw BusinessException.builder().key("文件下载失败").build();
+        }
+
         log.info("[DownloadController] 签名URL下载: sign={}", sign);
     }
+
+    // ==================== 私有方法 ====================
 
     private IFileStorage resolveStorage() {
         if (fileStorageProvider != null) {
@@ -145,5 +164,28 @@ public class DownloadController {
             ip = request.getRemoteAddr();
         }
         return ip != null && ip.contains(",") ? ip.split(",")[0].trim() : ip;
+    }
+
+    /**
+     * 设置下载响应头（Content-Disposition + Content-Type）
+     */
+    private void setDownloadHeaders(HttpServletResponse response, String fileName, String mimeType) {
+        String encodedName = URLEncoder.encode(fileName != null ? fileName : "download",
+                StandardCharsets.UTF_8).replace("+", "%20");
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=\"" + encodedName + "\"; filename*=UTF-8''" + encodedName);
+        response.setContentType(mimeType != null ? mimeType : MediaType.APPLICATION_OCTET_STREAM_VALUE);
+    }
+
+    /**
+     * 从 storageKey 中提取文件名
+     */
+    private String extractFileNameFromStorageKey(String storageKey) {
+        if (storageKey == null || storageKey.isEmpty()) {
+            return "download";
+        }
+        int lastSlash = storageKey.lastIndexOf('/');
+        String name = lastSlash >= 0 ? storageKey.substring(lastSlash + 1) : storageKey;
+        return name.isEmpty() ? "download" : name;
     }
 }

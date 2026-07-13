@@ -100,6 +100,16 @@ public interface FileNodeRepository {
     FileNode findOrCreateRoot(String userId);
 
     /**
+     * 按文件哈希查询（用于秒传去重）
+     */
+    FileNode findByFileHash(String fileHash);
+
+    /**
+     * 按 createdBy + parentId 查询同名文件（防重复上传）
+     */
+    List<FileNode> findByNameAndParent(String name, String parentId, String createdBy);
+
+    /**
      * 文件类型统计结果
      */
     record FileTypeStat(String suffix, int fileCount, long totalSize) {

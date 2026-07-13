@@ -146,4 +146,17 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
         log.info("[FileNodeRepositoryImpl] 创建用户根目录: userId={}, rootId={}", userId, root.getId());
         return root;
     }
+
+    @Override
+    public FileNode findByFileHash(String fileHash) {
+        if (fileHash == null || fileHash.isEmpty()) {
+            return null;
+        }
+        return fileNodeMapper.findByFileHash(fileHash);
+    }
+
+    @Override
+    public List<FileNode> findByNameAndParent(String name, String parentId, String createdBy) {
+        return fileNodeMapper.findByNameAndParent(name, parentId, createdBy);
+    }
 }

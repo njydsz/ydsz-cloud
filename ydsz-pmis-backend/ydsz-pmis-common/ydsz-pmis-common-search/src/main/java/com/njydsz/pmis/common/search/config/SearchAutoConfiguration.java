@@ -11,12 +11,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.util.List;
+
 import com.njydsz.pmis.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.pmis.common.search.core.SearchEngine;
 import com.njydsz.pmis.common.search.engine.memory.InMemorySearchEngine;
 import com.njydsz.pmis.common.search.engine.pg.PgSearchEngine;
 import com.njydsz.pmis.common.search.health.SearchHealthIndicator;
 import com.njydsz.pmis.common.search.metrics.SearchMetrics;
+import com.njydsz.pmis.common.search.provider.SearchProvider;
 import com.njydsz.pmis.common.search.provider.SearchProviderRegistry;
 import com.njydsz.pmis.common.search.service.IndexRebuildService;
 import com.njydsz.pmis.common.search.service.IndexSyncService;
@@ -69,7 +72,8 @@ public class SearchAutoConfiguration {
         public SearchEngine pgSearchEngine(DataSource dataSource, SearchProperties properties) {
             log.info("[SearchAutoConfiguration] 初始化 PgSearchEngine: highlight={}, fuzzy={}",
                     properties.isHighlight(), properties.isFuzzy());
-            return new PgSearchEngine(dataSource);
+            PgSearchEngine engine = new PgSearchEngine(dataSource, properties);
+            return engine;
         }
     }
 
@@ -89,12 +93,13 @@ public class SearchAutoConfiguration {
     }
 
     /**
-     * 搜索提供者注册中心
+     * 搜索提供者注册中心 — 自动收集所有 SearchProvider Bean
      */
     @Bean
     @ConditionalOnMissingBean
-    public SearchProviderRegistry searchProviderRegistry() {
-        return new SearchProviderRegistry();
+    public SearchProviderRegistry searchProviderRegistry(
+            List<SearchProvider<?>> providers) {
+        return new SearchProviderRegistry(providers);
     }
 
     /**
@@ -104,8 +109,11 @@ public class SearchAutoConfiguration {
     @ConditionalOnMissingBean
     public UnifiedSearchService unifiedSearchService(SearchEngine searchEngine,
                                                       SearchProviderRegistry providerRegistry,
-                                                      SearchProperties properties) {
-        return new UnifiedSearchService(searchEngine, providerRegistry, properties);
+                                                      SearchProperties properties,
+                                                      SearchMetrics searchMetrics,
+                                                      SearchAnalyticsService searchAnalyticsService) {
+        return new UnifiedSearchService(searchEngine, providerRegistry, properties,
+                searchMetrics, searchAnalyticsService);
     }
 
     /**
@@ -115,8 +123,9 @@ public class SearchAutoConfiguration {
     @ConditionalOnMissingBean
     public IndexSyncService indexSyncService(SearchEngine searchEngine,
                                               SearchProviderRegistry providerRegistry,
-                                              SearchProperties properties) {
-        return new IndexSyncService(searchEngine, providerRegistry, properties);
+                                              SearchProperties properties,
+                                              SearchMetrics searchMetrics) {
+        return new IndexSyncService(searchEngine, providerRegistry, properties, searchMetrics);
     }
 
     /**
