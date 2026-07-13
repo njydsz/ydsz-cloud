@@ -63,7 +63,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>仅在 {@code pmis.cronjob.precise-scheduling.enabled=true} 时启用。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Configuration

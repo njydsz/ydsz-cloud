@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>预计算任务在未来时间段内的触发时间点，用于可视化调度日历。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Slf4j
 @Service
