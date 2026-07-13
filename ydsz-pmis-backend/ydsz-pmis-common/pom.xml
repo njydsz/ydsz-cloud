@@ -84,6 +84,7 @@
         <module>ydsz-pmis-common-socket</module>
         <module>ydsz-pmis-common-netty</module>
         <module>ydsz-pmis-common-docs</module>
+        <module>ydsz-pmis-common-json</module>
         <!-- L6 应用层 -->
         <module>ydsz-pmis-common-base</module>
         <module>ydsz-pmis-common-web</module>
@@ -181,6 +182,11 @@
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common-docs</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-json</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- L6 基础设施层（PMIS 特有） -->
