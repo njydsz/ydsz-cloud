@@ -33,4 +33,13 @@ public final class SnowflakeIdGenerator {
     public static long nextId() {
         return SnowflakeUtils.nextIdLong();
     }
+
+    /**
+     * 生成下一个追踪 ID（兼容别名，等价于 {@link #nextIdStr()}）。
+     *
+     * @return 唯一追踪 ID 字符串
+     */
+    public static String nextTraceId() {
+        return SnowflakeUtils.nextIdStr();
+    }
 }

@@ -3,7 +3,8 @@ package com.njydsz.pmis.message.server.realtime;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.json.JsonUtils;
-import com.njydsz.pmis.message.domain.constant.MessageConstants;
+import com.njydsz.pmis.common.websocket.constant.WebSocketConstants;
+import com.njydsz.pmis.common.websocket.offline.OfflineMessageStore;
 import com.njydsz.pmis.message.domain.entity.config.MsgOfflineDO;
 import com.njydsz.pmis.message.infra.mapper.config.MsgOfflineMapper;
 import lombok.RequiredArgsConstructor;
@@ -15,20 +16,23 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /**
- * P0-4: 离线消息补偿服务（Redis + DB 双层存储）。
+ * 离线消息补偿服务（Redis + DB 双层存储）。
+ *
+ * <p>实现 {@link OfflineMessageStore} 接口，由 common-websocket 的
+ * {@code WebSocketSessionEventListener} 自动调用。
  *
  * <p>用户离线时，将待推送消息缓存到 Redis List（{@code pmis:ws:offline:{userId}}），
- * FIFO 顺序保留最近 {@link MessageConstants#WS_OFFLINE_MAX_CACHE} 条。
+ * FIFO 顺序保留最近 100 条。
  *
- * <p>P0-3 增强：
+ * <p>增强特性：
  * <ul>
- *   <li>Redis 缓存 TTL 从 7 天升级到 30 天</li>
- *   <li>当 Redis 缓存数量超过 {@link MessageConstants#WS_OFFLINE_DB_PERSIST_THRESHOLD} 时，
- *       将溢出消息持久化到数据库表 {@code pmis_msg_offline}，防止 Redis 内存膨胀</li>
+ *   <li>Redis 缓存 TTL 30 天</li>
+ *   <li>当 Redis 缓存数量超过阈值时，将溢出消息持久化到数据库表 {@code pmis_msg_offline}，防止 Redis 内存膨胀</li>
  *   <li>用户上线时合并 Redis + DB 两层消息一并推送</li>
  *   <li>数据库消息保留 30 天后自动过期</li>
  * </ul>
@@ -39,41 +43,29 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class OfflineMessageService {
+public class OfflineMessageService implements OfflineMessageStore {
 
     private final StringRedisTemplate redisTemplate;
     private final MsgOfflineMapper msgOfflineMapper;
 
-    /**
-     * 缓存一条离线消息。
-     *
-     * <p>优先写入 Redis List；当 Redis 缓存数量超过阈值时，
-     * 异步将溢出消息持久化到数据库。
-     *
-     * @param userId  用户 ID
-     * @param type    消息类型标签（如 NOTIFICATION / ALERT）
-     * @param payload 消息内容（任意可序列化对象）
-     */
+    @Override
     public void cacheOffline(String userId, String type, Object payload) {
         if (userId == null) {
             return;
         }
         try {
-            String key = MessageConstants.WS_OFFLINE_KEY_PREFIX + userId;
+            String key = WebSocketConstants.WS_OFFLINE_KEY_PREFIX + userId;
             Map<String, Object> envelope = Map.of(
                     "type", type == null ? "UNKNOWN" : type,
                     "payload", payload,
                     "timestamp", System.currentTimeMillis());
             String json = JsonUtils.toJson(envelope);
             redisTemplate.opsForList().leftPush(key, json);
-            // 保留最近 maxCache 条（FIFO 淘汰）
-            redisTemplate.opsForList().trim(key, 0, MessageConstants.WS_OFFLINE_MAX_CACHE - 1);
-            // P0-3: TTL 升级到 30 天
-            redisTemplate.expire(key, Duration.ofSeconds(MessageConstants.WS_OFFLINE_TTL_SECONDS));
+            redisTemplate.opsForList().trim(key, 0, WebSocketConstants.WS_OFFLINE_MAX_CACHE - 1);
+            redisTemplate.expire(key, Duration.ofSeconds(WebSocketConstants.WS_OFFLINE_TTL_SECONDS));
 
-            // P0-3: 检查 Redis 缓存数量，超过阈值时溢出到数据库
             Long size = redisTemplate.opsForList().size(key);
-            if (size != null && size > MessageConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD) {
+            if (size != null && size > WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD) {
                 persistOverflowToDb(userId, key, size);
             }
 
@@ -83,22 +75,14 @@ public class OfflineMessageService {
         }
     }
 
-    /**
-     * 拉取并清空用户的所有离线消息（Redis + DB 合并，FIFO 顺序：最旧的消息在前）。
-     *
-     * <p>先从数据库拉取 PENDING 消息，再从 Redis 拉取缓存消息，
-     * 合并后标记数据库消息为已推送并清空 Redis 缓存。
-     *
-     * @param userId 用户 ID
-     * @return 离线消息 JSON 列表（最旧在前），无则返回空列表
-     */
+    @Override
     public List<String> drainOffline(String userId) {
         if (userId == null) {
             return List.of();
         }
         List<String> result = new ArrayList<>();
 
-        // P0-3: 先从数据库拉取持久化的离线消息
+        // 先从数据库拉取持久化的离线消息
         try {
             List<MsgOfflineDO> dbMessages = msgOfflineMapper.selectList(
                     new LambdaQueryWrapper<MsgOfflineDO>()
@@ -119,13 +103,12 @@ public class OfflineMessageService {
         }
 
         // 再从 Redis 拉取缓存消息
-        String key = MessageConstants.WS_OFFLINE_KEY_PREFIX + userId;
+        String key = WebSocketConstants.WS_OFFLINE_KEY_PREFIX + userId;
         List<String> raw = redisTemplate.opsForList().range(key, 0, -1);
         if (raw != null && !raw.isEmpty()) {
             redisTemplate.delete(key);
-            // LPUSH 入队导致顺序反转，反转为时间正序（最旧在前）
             List<String> redisResult = new ArrayList<>(raw);
-            java.util.Collections.reverse(redisResult);
+            Collections.reverse(redisResult);
             result.addAll(redisResult);
         }
 
@@ -133,12 +116,7 @@ public class OfflineMessageService {
         return result;
     }
 
-    /**
-     * 查询用户离线消息数量（Redis + DB 合并）。
-     *
-     * @param userId 用户 ID
-     * @return 离线消息数量
-     */
+    @Override
     public long countOffline(String userId) {
         if (userId == null) {
             return 0L;
@@ -146,7 +124,7 @@ public class OfflineMessageService {
         long redisCount = 0;
         long dbCount = 0;
         try {
-            String key = MessageConstants.WS_OFFLINE_KEY_PREFIX + userId;
+            String key = WebSocketConstants.WS_OFFLINE_KEY_PREFIX + userId;
             Long size = redisTemplate.opsForList().size(key);
             redisCount = size == null ? 0L : size;
         } catch (Exception e) {
@@ -165,21 +143,24 @@ public class OfflineMessageService {
     }
 
     /**
-     * P0-3: 异步将 Redis 溢出的离线消息持久化到数据库。
+     * 异步将 Redis 溢出的离线消息持久化到数据库。
      *
      * <p>当 Redis List 超过阈值时，将尾部（较旧）的消息写入数据库，
      * 然后从 Redis 中移除已持久化的部分，保持 Redis 缓存新鲜度。
+     *
+     * @param userId      用户 ID
+     * @param redisKey    Redis key
+     * @param currentSize 当前 Redis List 大小
      */
     @Async
     public void persistOverflowToDb(String userId, String redisKey, long currentSize) {
         try {
-            long overflowCount = currentSize - MessageConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD;
+            long overflowCount = currentSize - WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD;
             if (overflowCount <= 0) {
                 return;
             }
-            // 从 Redis List 尾部取出较旧的消息（RANGE 从尾部开始）
             List<String> overflowMessages = redisTemplate.opsForList()
-                    .range(redisKey, MessageConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD, -1);
+                    .range(redisKey, WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD, -1);
             if (overflowMessages == null || overflowMessages.isEmpty()) {
                 return;
             }
@@ -195,8 +176,7 @@ public class OfflineMessageService {
                 offline.setTenantId(TenantContext.getTenantId());
                 msgOfflineMapper.insert(offline);
             }
-            // 从 Redis 中移除已持久化的消息
-            redisTemplate.opsForList().trim(redisKey, 0, MessageConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD - 1);
+            redisTemplate.opsForList().trim(redisKey, 0, WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD - 1);
             log.info("[WS-Offline] 溢出消息持久化到数据库: userId={}, count={}", userId, overflowMessages.size());
         } catch (Exception e) {
             log.warn("[WS-Offline] 溢出消息持久化失败: userId={}, err={}", userId, e.getMessage());

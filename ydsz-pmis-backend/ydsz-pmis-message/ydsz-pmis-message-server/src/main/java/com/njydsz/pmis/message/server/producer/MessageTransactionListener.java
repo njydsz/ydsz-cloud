@@ -106,7 +106,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
         }
         if (arg != null) {
             try {
-                return JsonUtils.parseObject(JsonUtils.toJson(arg), MessageRequest.class);
+                return JsonUtils.fromJson(JsonUtils.toJson(arg), MessageRequest.class);
             } catch (Exception ignored) {
                 // fall through to payload parsing
             }
@@ -116,10 +116,10 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
         }
         Object payload = message.getPayload();
         if (payload instanceof String str) {
-            return JsonUtils.parseObject(str, MessageRequest.class);
+            return JsonUtils.fromJson(str, MessageRequest.class);
         }
         try {
-            return JsonUtils.parseObject(JsonUtils.toJson(payload), MessageRequest.class);
+            return JsonUtils.fromJson(JsonUtils.toJson(payload), MessageRequest.class);
         } catch (Exception e) {
             log.warn("[TxListener] resolveRequest: 解析失败: {}", e.getMessage());
             return null;

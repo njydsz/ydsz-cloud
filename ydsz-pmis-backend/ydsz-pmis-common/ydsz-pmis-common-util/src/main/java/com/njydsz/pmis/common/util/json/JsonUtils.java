@@ -225,6 +225,19 @@ public final class JsonUtils {
     // ==================== JSON 字符串 → 对象 ====================
 
     /**
+     * JSON 字符串转对象（兼容别名，等价于 {@link #fromJson}）
+     *
+     * @param json  JSON 字符串
+     * @param clazz 目标类型
+     * @param <T>   目标类型泛型
+     * @return 反序列化对象，json 为空时返回 null
+     * @throws JsonException 如果反序列化失败
+     */
+    public static <T> T parseObject(String json, Class<T> clazz) {
+        return fromJson(json, clazz);
+    }
+
+    /**
      * JSON 字符串转对象
      *
      * @param json  JSON 字符串

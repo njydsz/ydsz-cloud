@@ -37,7 +37,7 @@ public class WebSocketClusterSubscriber implements MessageListener {
         String body = new String(message.getBody());
         WebSocketClusterMessage clusterMsg;
         try {
-            clusterMsg = JsonUtils.parseObject(body, WebSocketClusterMessage.class);
+            clusterMsg = JsonUtils.fromJson(body, WebSocketClusterMessage.class);
         } catch (Exception e) {
             log.warn("[WS-Cluster] 消息解析失败,跳过: err={}", e.getMessage());
             return;

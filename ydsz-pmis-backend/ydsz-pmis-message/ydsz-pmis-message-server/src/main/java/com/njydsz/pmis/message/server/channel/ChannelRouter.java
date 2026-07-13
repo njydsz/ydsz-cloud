@@ -169,7 +169,7 @@ public class ChannelRouter {
         String templateParams = logDO.getTemplateParams();
         if (templateParams != null && !templateParams.isBlank()) {
             try {
-                request.setParams(JsonUtils.parseMap(templateParams));
+                request.setParams(JsonUtils.fromJsonToMap(templateParams, String.class, Object.class));
             } catch (Exception e) {
                 log.warn("[ChannelRouter] templateParams 解析失败,忽略: msgId={}, err={}",
                         logDO.getMsgId(), e.getMessage());

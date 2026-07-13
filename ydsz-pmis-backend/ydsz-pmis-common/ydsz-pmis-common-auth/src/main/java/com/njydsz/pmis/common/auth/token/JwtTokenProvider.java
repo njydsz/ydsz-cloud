@@ -118,6 +118,21 @@ public class JwtTokenProvider {
     }
 
     /**
+     * 从令牌中获取用户名（兼容旧 API）。
+     *
+     * @param token JWT 令牌
+     * @return 用户名，解析失败返回 null
+     */
+    public String getUsername(String token) {
+        UserInfo userInfo = jwtTokenService.parseAccessToken(token);
+        if (userInfo != null) {
+            return userInfo.getUsername();
+        }
+        userInfo = jwtTokenService.parseRefreshToken(token);
+        return userInfo != null ? userInfo.getUsername() : null;
+    }
+
+    /**
      * 获取令牌剩余有效时间（秒）。
      *
      * @param token JWT 令牌

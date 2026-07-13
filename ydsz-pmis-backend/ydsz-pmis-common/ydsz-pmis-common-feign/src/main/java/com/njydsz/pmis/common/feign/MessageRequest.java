@@ -46,4 +46,19 @@ public class MessageRequest implements Serializable {
 
     /** 附加参数（模板变量、Webhook 配置等） */
     private Map<String, Object> params;
+
+    /** 通道元数据（signName、providerKey、attachments 等） */
+    private Map<String, String> channelMeta;
+
+    /** 定时发送时间 */
+    private java.time.LocalDateTime scheduledAt;
+
+    /** 发送优先级（URGENT / HIGH / NORMAL / LOW） */
+    private String priority;
+
+    /** 父消息 ID（级联发送时使用） */
+    private String parentMsgId;
+
+    /** 级联子消息列表 */
+    private java.util.List<MessageRequest> cascadeTo;
 }

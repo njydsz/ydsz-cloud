@@ -51,11 +51,6 @@ public final class MessageConstants {
     public static final String FREQUENCY_DAILY_PREFIX = "pmis:msg:freq:daily:";
     public static final String FREQUENCY_HOURLY_PREFIX = "pmis:msg:freq:hourly:";
 
-    /** WebSocket 用户订阅前缀 */
-    public static final String WS_USER_DESTINATION_PREFIX = "/topic/user/";
-    public static final String WS_BROADCAST_DESTINATION = "/topic/broadcast";
-    public static final String WS_TOPIC_DESTINATION_PREFIX = "/topic/";
-
     /** 消息发送超时（毫秒） */
     public static final long SEND_TIMEOUT_MS = 5000L;
 
@@ -92,32 +87,5 @@ public final class MessageConstants {
     /** P2-9: 回执超时阈值(分钟): 超过此时间仍未收到回执则标记为 TIMEOUT */
     public static final long RECEIPT_TIMEOUT_MINUTES = 30L;
 
-    // ========== P0-4: WebSocket 鉴权 / 在线状态 / 离线消息补偿 ==========
-
-    /** P0-4: 在线用户 Redis key 前缀（Hash: pmis:ws:online:{userId} -> sessionId） */
-    public static final String WS_ONLINE_KEY_PREFIX = "pmis:ws:online:";
-
-    /** P0-4: 离线消息 Redis List key 前缀（pmis:ws:offline:{userId}） */
-    public static final String WS_OFFLINE_KEY_PREFIX = "pmis:ws:offline:";
-
-    /** P0-4: 离线消息缓存最大条数（防止内存溢出，FIFO 淘汰） */
-    public static final int WS_OFFLINE_MAX_CACHE = 100;
-
-    /** P0-4: 离线消息缓存 TTL（秒），默认 30 天（P0-3 从 7 天升级到 30 天） */
-    public static final long WS_OFFLINE_TTL_SECONDS = 30 * 24 * 3600L;
-
-    /** P0-3: Redis 离线消息溢出后的数据库持久化阈值（超过此数量时写入数据库） */
-    public static final int WS_OFFLINE_DB_PERSIST_THRESHOLD = 50;
-
-    /** P0-4: WebSocket 握手属性中的 userId key */
-    public static final String WS_ATTR_USER_ID = "userId";
-
-    /** P0-4: WebSocket 握手属性中的 username key */
-    public static final String WS_ATTR_USERNAME = "username";
-
-    /** P0-4: 握手请求中 JWT token 的查询参数名 */
-    public static final String WS_TOKEN_PARAM = "token";
-
-    /** P0-4: 握手请求中 JWT token 的请求头名 */
-    public static final String WS_TOKEN_HEADER = "Authorization";
+    // WebSocket 相关常量已迁移到 com.njydsz.pmis.common.websocket.constant.WebSocketConstants
 }

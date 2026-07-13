@@ -26,12 +26,34 @@ public class MessageResult implements Serializable {
     /** 消息追踪 ID */
     private String traceId;
 
+    /** 服务商追踪 ID（回执查询用） */
+    private String providerTraceId;
+
+    /** 发送状态（SUCCESS / FAILED / UNKNOWN） */
+    private String status;
+
     public boolean isSuccess() {
         return success;
     }
 
     public String getErrorMessage() {
         return errorMessage;
+    }
+
+    public String getProviderTraceId() {
+        return providerTraceId;
+    }
+
+    public void setProviderTraceId(String providerTraceId) {
+        this.providerTraceId = providerTraceId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     /**
@@ -45,6 +67,7 @@ public class MessageResult implements Serializable {
         MessageResult result = new MessageResult();
         result.success = true;
         result.traceId = traceId;
+        result.status = "SUCCESS";
         return result;
     }
 
@@ -59,6 +82,22 @@ public class MessageResult implements Serializable {
         MessageResult result = new MessageResult();
         result.success = false;
         result.errorMessage = errorMessage;
+        result.status = "FAILED";
         return result;
+    }
+
+    /**
+     * 全参数构造器（用于回执查询等场景）。
+     *
+     * @param channel         通道（保留参数，当前不使用）
+     * @param status          发送状态
+     * @param providerTraceId 服务商追踪 ID
+     * @param errorMessage    错误信息
+     */
+    public MessageResult(String channel, String status, String providerTraceId, String errorMessage) {
+        this.success = "SUCCESS".equals(status);
+        this.status = status;
+        this.providerTraceId = providerTraceId;
+        this.errorMessage = errorMessage;
     }
 }

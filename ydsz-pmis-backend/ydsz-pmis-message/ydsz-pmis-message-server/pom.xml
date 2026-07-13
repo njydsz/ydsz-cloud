@@ -92,6 +92,11 @@
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-websocket</artifactId>
         </dependency>
+        <!-- spring-boot-starter-websocket（common-websocket 声明为 optional，此处显式引入） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
         <!-- Redisson 分布式锁/限流（ydsz-pmis-common-lock 声明为 optional，此处显式引入） -->
         <dependency>
             <groupId>org.redisson</groupId>

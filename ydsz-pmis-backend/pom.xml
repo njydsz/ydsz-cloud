@@ -232,6 +232,16 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-websocket</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-netty</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-userinfo</artifactId>
                 <version>${project.version}</version>
             </dependency>

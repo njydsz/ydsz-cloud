@@ -1,6 +1,7 @@
 package com.njydsz.pmis.message.server.config;
 
-import com.njydsz.pmis.message.server.realtime.WebSocketAuthHandshakeInterceptor;
+import com.njydsz.pmis.common.websocket.auth.WebSocketAuthInterceptor;
+import com.njydsz.pmis.common.websocket.config.WebSocketProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -11,13 +12,12 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 /**
  * WebSocket 消息代理配置（STOMP 协议）。
  *
- * <p>客户端连接 {@code /ws} 后，订阅 {@code /topic/user/{userId}/notifications} 接收个人通知，
- * 订阅 {@code /topic/broadcast} 接收广播，订阅 {@code /topic/{topic}} 接收主题消息。
- * 心跳 10s/10s（服务端 / 客户端），由 STOMP 协议层自动保活。
+ * <p>P1.3.0 重构：鉴权拦截器、在线状态、离线补偿、集群广播等通用能力
+ * 已由 {@code ydsz-pmis-common-websocket} 自动装配提供，本类仅保留
+ * STOMP 端点和 Broker 前缀配置（因为 {@code @EnableWebSocketMessageBroker}
+ * 必须在业务 {@code @Configuration} 类上显式声明）。
  *
- * <p>P0-4 增强：注册 {@link WebSocketAuthHandshakeInterceptor}，握手时校验 JWT token，
- * 拒绝未认证连接；在线状态 / 离线消息补偿由 {@code OnlineUserService} /
- * {@code OfflineMessageService} / {@code WebSocketSessionListener} 协作完成。
+ * <p>配置参数从 {@link WebSocketProperties} 读取，支持 YAML 动态配置。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -27,25 +27,25 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
-    /** P0-4: 握手鉴权拦截器 */
-    private final WebSocketAuthHandshakeInterceptor authInterceptor;
+    private final WebSocketProperties properties;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        // 服务端推送目的地前缀，心跳 10s 间隔
         config.enableSimpleBroker("/topic", "/queue")
-                .setHeartbeatValue(new long[]{10000, 10000});
-        // 客户端发送目的地前缀
+                .setHeartbeatValue(new long[]{
+                        properties.getHeartbeat().getServerInterval(),
+                        properties.getHeartbeat().getClientInterval()});
         config.setApplicationDestinationPrefixes("/app");
-        // 用户私有频道前缀
         config.setUserDestinationPrefix("/user");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws")
-                .addInterceptors(authInterceptor)
-                .setAllowedOriginPatterns("*")
-                .withSockJS();
+        var registration = registry.addEndpoint(properties.getEndpoint())
+                .setAllowedOriginPatterns(
+                        properties.getAllowedOriginPatterns().toArray(new String[0]));
+        if (properties.isSockJsEnabled()) {
+            registration.withSockJS();
+        }
     }
 }
