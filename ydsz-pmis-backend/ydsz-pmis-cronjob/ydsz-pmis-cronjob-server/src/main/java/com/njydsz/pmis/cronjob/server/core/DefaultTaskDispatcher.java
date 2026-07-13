@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.core.dispatch;
+package com.njydsz.pmis.cronjob.server.core.dispatch;
 
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import com.alibaba.fastjson2.JSON;

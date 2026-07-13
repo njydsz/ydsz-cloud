@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.gateway.filter;
+package com.njydsz.pmis.gateway.filter;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.auth.model.UserInfo;

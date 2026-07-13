@@ -39,8 +39,8 @@ import com.njydsz.pmis.common.audit.aspect.AuditAspect;
  * @version 3.5.0
  * @since 1.0.0
  * @see AuditAspect
- * @see com.njydsz.pmis.common.audit.enums.AuditType
- * @see com.njydsz.pmis.common.audit.enums.AuditAction
+ * @see AuditType
+ * @see AuditAction
  */
 @Inherited
 @Documented

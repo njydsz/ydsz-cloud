@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.annotation;
+package com.njydsz.pmis.common.audit.annotation;
 
 import com.njydsz.pmis.common.audit.config.AuditAutoConfiguration;
 import org.springframework.context.annotation.Import;
@@ -28,7 +28,7 @@ import java.lang.annotation.*;
  * @email limw1888@126.com
  * @version 3.5.0
  * @since 1.0.0
- * @see com.njydsz.pmis.common.audit.config.AuditAutoConfiguration
+ * @see AuditAutoConfiguration
  */
 @Inherited
 @Documented

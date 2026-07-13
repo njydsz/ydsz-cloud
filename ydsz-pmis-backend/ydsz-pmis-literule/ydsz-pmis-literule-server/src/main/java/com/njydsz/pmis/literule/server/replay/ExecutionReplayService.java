@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.literule.server.replay;
+package com.njydsz.pmis.literule.server.replay;
 
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleExecutionTrace;

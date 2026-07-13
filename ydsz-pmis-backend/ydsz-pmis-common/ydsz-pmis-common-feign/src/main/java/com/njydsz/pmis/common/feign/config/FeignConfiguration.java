@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.feign.config;
+package com.njydsz.pmis.common.feign.config;
 
 import com.njydsz.pmis.common.feign.aspect.FeignRequestInterceptor;
 import com.njydsz.pmis.common.feign.aspect.YdszFeignErrorDecoder;

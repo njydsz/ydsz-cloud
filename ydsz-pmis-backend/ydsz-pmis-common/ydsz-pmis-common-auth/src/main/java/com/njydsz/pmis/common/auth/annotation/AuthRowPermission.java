@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.annotation;
+package com.njydsz.pmis.common.auth.annotation;
 
 import java.lang.annotation.*;
 import com.njydsz.pmis.common.auth.model.DataScopeAware;

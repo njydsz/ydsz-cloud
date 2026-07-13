@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.exception.custom;
+package com.njydsz.pmis.common.exception.custom;
 
 import org.springframework.http.HttpStatus;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
@@ -25,7 +25,7 @@ import lombok.ToString;
  * @email limw1888@126.com
  * @version 3.5.0
  * @since 3.0.0
- * @see com.njydsz.pmis.common.exception.code.UnifiedExceptionCode
+ * @see UnifiedExceptionCode
  * @see ExceptionCategory#SECURITY
  */
 @ToString(callSuper = true)

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.netty.config;
+package com.njydsz.pmis.common.netty.config;
 
 import com.njydsz.pmis.common.netty.metric.NettyChannelMetrics;
 import com.njydsz.pmis.common.netty.server.NettyServerLifecycle;

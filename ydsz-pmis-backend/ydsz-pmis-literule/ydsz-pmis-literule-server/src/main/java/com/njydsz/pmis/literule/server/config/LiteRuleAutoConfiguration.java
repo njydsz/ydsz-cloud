@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.literule.server.config;
+package com.njydsz.pmis.literule.server.config;
 
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.server.approval.ApprovalPermissionChecker;

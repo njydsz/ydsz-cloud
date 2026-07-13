@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.service;
+package com.njydsz.pmis.common.auth.service;
 
 import com.njydsz.pmis.common.auth.model.DataScopeInfo;
 import com.njydsz.pmis.common.auth.service.impl.RedisRoleDataPermissionResolver;
@@ -30,7 +30,7 @@ import com.njydsz.pmis.common.auth.service.impl.RedisRoleDataPermissionResolver;
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
- * @see com.njydsz.pmis.common.auth.model.DataScopeInfo
+ * @see DataScopeInfo
  * @see RedisRoleDataPermissionResolver
  */
 public interface DataPermissionResolver {

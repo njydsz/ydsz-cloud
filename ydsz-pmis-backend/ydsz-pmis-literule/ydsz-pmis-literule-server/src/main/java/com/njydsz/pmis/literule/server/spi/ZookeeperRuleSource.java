@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.literule.server.spi;
+package com.njydsz.pmis.literule.server.spi;
 
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import lombok.extern.slf4j.Slf4j;

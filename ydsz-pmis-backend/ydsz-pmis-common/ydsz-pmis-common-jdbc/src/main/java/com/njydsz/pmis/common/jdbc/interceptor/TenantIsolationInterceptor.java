@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.interceptor;
+package com.njydsz.pmis.common.jdbc.interceptor;
 
 import com.baomidou.mybatisplus.core.plugins.InterceptorIgnoreHelper;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;

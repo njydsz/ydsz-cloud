@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.server.producer;
+package com.njydsz.pmis.message.server.producer;
 
 import com.njydsz.pmis.common.constant.PmisMessageTopics;
 import com.njydsz.pmis.common.feign.MessageRequest;

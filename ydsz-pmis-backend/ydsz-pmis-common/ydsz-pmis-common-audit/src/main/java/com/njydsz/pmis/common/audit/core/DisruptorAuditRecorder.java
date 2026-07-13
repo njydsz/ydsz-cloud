@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.core;
+package com.njydsz.pmis.common.audit.core;
 
 import com.lmax.disruptor.SleepingWaitStrategy;
 import com.lmax.disruptor.EventFactory;
@@ -85,7 +85,7 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
     private final RingBuffer<AuditLogEvent> ringBuffer;
 
     /** JDBC 模板 */
-    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
 
     /** 异步批量写入配置 */
     private final AuditProperties.AsyncProperties asyncProps;

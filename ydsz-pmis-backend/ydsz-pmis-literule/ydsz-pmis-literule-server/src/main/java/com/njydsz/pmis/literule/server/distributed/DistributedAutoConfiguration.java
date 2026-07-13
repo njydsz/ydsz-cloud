@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.literule.server.distributed;
+package com.njydsz.pmis.literule.server.distributed;
 
 import com.njydsz.pmis.literule.server.config.LiteRuleProperties;
 import com.njydsz.pmis.literule.server.spi.RuleConfigBroadcaster;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.socket.auth;
+package com.njydsz.pmis.common.socket.auth;
 
 import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.auth.token.TokenService;

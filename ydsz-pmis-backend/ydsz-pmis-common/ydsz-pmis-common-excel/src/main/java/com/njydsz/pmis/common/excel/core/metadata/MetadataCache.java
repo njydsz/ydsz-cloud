@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.excel.core.metadata;
+package com.njydsz.pmis.common.excel.core.metadata;
 
 import com.njydsz.pmis.common.excel.annotation.ExcelProperty;
 import com.njydsz.pmis.common.excel.core.config.ExcelConfig;

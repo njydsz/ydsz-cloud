@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.web.controller.job;
+package com.njydsz.pmis.cronjob.web.controller.job;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.BaseResponse;

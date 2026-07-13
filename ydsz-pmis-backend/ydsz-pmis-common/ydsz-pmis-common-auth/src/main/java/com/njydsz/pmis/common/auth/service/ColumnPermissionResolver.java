@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.service;
+package com.njydsz.pmis.common.auth.service;
 
 import com.njydsz.pmis.common.auth.model.ColumnScopeInfo;
 import com.njydsz.pmis.common.auth.service.impl.RedisRoleColumnPermissionResolver;
@@ -19,7 +19,7 @@ import com.njydsz.pmis.common.auth.service.impl.RedisRoleColumnPermissionResolve
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
- * @see com.njydsz.pmis.common.auth.model.ColumnScopeInfo
+ * @see ColumnScopeInfo
  * @see RedisRoleColumnPermissionResolver
  */
 public interface ColumnPermissionResolver {

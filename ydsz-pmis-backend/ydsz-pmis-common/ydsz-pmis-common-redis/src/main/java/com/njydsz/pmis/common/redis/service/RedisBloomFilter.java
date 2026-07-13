@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.service;
+package com.njydsz.pmis.common.redis.service;
 
 import com.njydsz.pmis.common.redis.config.RedisProperties;
 import com.njydsz.pmis.common.redis.enums.FailOpenPolicy;
@@ -360,7 +360,7 @@ public class RedisBloomFilter {
             return -1;
         }
         try {
-            Long size = redisTemplate.execute((org.springframework.data.redis.core.RedisCallback<Long>) connection ->
+            Long size = redisTemplate.execute((RedisCallback<Long>) connection ->
                     connection.stringCommands().strLen(filterKey.getBytes(StandardCharsets.UTF_8)));
             return size != null ? size : -1;
         } catch (Exception e) {

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.json;
+package com.njydsz.pmis.common.util.json;
 
 import java.util.concurrent.atomic.LongAdder;
 import io.micrometer.core.instrument.MeterRegistry;

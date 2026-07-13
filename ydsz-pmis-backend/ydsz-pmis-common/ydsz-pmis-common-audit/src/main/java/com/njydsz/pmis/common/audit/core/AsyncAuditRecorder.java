@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.core;
+package com.njydsz.pmis.common.audit.core;
 
 import com.njydsz.pmis.common.audit.config.AuditProperties;
 import com.njydsz.pmis.common.audit.domain.AuditLog;
@@ -92,7 +92,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
     @SuppressWarnings("unused")
     private final DataSource dataSource;
     /** JDBC 模板，用于批量写入数据库 */
-    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbcTemplate;
     /** 审计配置属性 */
     private final AuditProperties properties;
     /** 异步批量写入配置 */

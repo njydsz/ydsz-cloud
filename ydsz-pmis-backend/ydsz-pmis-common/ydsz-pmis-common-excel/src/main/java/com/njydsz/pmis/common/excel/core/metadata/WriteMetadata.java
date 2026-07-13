@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.excel.core.metadata;
+package com.njydsz.pmis.common.excel.core.metadata;
 
 /**
  * WriteMetadata 类

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.file.storage.platform;
+package com.njydsz.pmis.common.file.storage.platform;
 
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;

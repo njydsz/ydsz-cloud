@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.context;
+package com.njydsz.pmis.common.auth.context;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
 import com.njydsz.pmis.common.auth.model.ColumnPermissionInfo;
@@ -19,7 +19,7 @@ import com.njydsz.pmis.common.auth.model.ColumnPermissionInfo;
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
- * @see com.njydsz.pmis.common.auth.model.ColumnPermissionInfo
+ * @see ColumnPermissionInfo
  */
 public class ColumnPermissionContext {
 

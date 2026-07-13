@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.annotation;
+package com.njydsz.pmis.common.notify.annotation;
 
 import com.njydsz.pmis.common.notify.config.NotifyConfiguration;
 import org.springframework.context.annotation.Import;
@@ -19,7 +19,7 @@ import java.lang.annotation.Target;
  * @email limw1888@126.com
  * @version 3.5.0
  * @since 1.0.0
- * @see com.njydsz.pmis.common.notify.config.NotifyConfiguration
+ * @see NotifyConfiguration
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)

@@ -218,6 +218,7 @@ public class WTinyLFUCache<K, V> extends AbstractCache<K, V> {
   }
 
   @Override
+  @SuppressWarnings("null")
   public Collection<V> values() {
     return cache.values().stream().filter(e -> !e.isExpired()).map(CacheEntry::getValue).toList();
   }

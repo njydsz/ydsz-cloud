@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.security;
+package com.njydsz.pmis.common.notify.security;
 
 import com.njydsz.pmis.common.notify.config.NotifyProperties;
 import jakarta.mail.Transport;

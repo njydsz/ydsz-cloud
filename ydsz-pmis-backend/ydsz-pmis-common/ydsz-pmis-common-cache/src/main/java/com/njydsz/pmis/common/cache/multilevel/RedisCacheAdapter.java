@@ -1,11 +1,11 @@
 package com.njydsz.pmis.common.cache.multilevel;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -128,7 +128,7 @@ public class RedisCacheAdapter<K, V> implements Cache<K, V> {
     try {
       String redisKey = buildKey(key);
       if (ttlSeconds > 0) {
-        redisTemplate.opsForValue().set(redisKey, value, ttlSeconds, TimeUnit.SECONDS);
+        redisTemplate.opsForValue().set(redisKey, value, Duration.ofSeconds(ttlSeconds));
       } else {
         redisTemplate.opsForValue().set(redisKey, value);
       }

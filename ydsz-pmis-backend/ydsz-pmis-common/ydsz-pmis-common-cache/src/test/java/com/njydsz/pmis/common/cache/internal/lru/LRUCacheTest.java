@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.cache.internal.lru;
+package com.njydsz.pmis.common.cache.internal.lru;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

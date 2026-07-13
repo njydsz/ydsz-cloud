@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.cache.export;
+package com.njydsz.pmis.common.cache.export;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.filter;
+package com.njydsz.pmis.common.safe.filter;
 
 import com.njydsz.pmis.common.safe.config.CsrfProperties;
 import com.njydsz.pmis.common.safe.csrf.CsrfToken;
@@ -331,7 +331,7 @@ public class CsrfFilter extends OncePerRequestFilter {
         return UrlPathUtils.matchAny(excludes, servletPath);
     }
 
-    private void setSameSiteAttribute(jakarta.servlet.http.Cookie cookie, String value) {
+    private void setSameSiteAttribute(Cookie cookie, String value) {
         try {
             cookie.setAttribute("SameSite", value);
         } catch (NoSuchMethodError e) {

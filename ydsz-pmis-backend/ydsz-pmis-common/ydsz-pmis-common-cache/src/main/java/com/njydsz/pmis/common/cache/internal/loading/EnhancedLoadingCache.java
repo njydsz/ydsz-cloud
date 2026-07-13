@@ -69,6 +69,9 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
 
   /** 获取共享异步执行器（懒加载，线程安全） */
   private static Executor getSharedExecutor() {
+    if (sharedResourcesShutdown) {
+      return Runnable::run;
+    }
     if (sharedExecutor == null) {
       synchronized (EnhancedLoadingCache.class) {
         if (sharedExecutor == null) {
@@ -86,6 +89,9 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
 
   /** 获取共享刷新调度器（懒加载，线程安全） */
   private static ScheduledExecutorService getSharedRefreshScheduler() {
+    if (sharedResourcesShutdown) {
+      return null;
+    }
     if (sharedRefreshScheduler == null) {
       synchronized (EnhancedLoadingCache.class) {
         if (sharedRefreshScheduler == null) {

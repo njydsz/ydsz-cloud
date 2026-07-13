@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.excel.annotation;
+package com.njydsz.pmis.common.excel.annotation;
 
 import java.lang.annotation.*;
 import com.njydsz.pmis.common.excel.core.ExcelWriter;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.core.tracing;
+package com.njydsz.pmis.cronjob.server.core.tracing;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

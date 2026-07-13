@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.socket.config;
+package com.njydsz.pmis.common.socket.config;
 
 import com.njydsz.pmis.common.auth.token.TokenService;
 import com.njydsz.pmis.common.socket.cluster.WebSocketClusterMessage;
@@ -213,7 +213,7 @@ public class WebSocketAutoConfiguration {
     /**
      * No-op 集群发布者（集群未启用时的降级实现，始终返回 false 触发本地推送）。
      */
-    private static class NoOpClusterPublisher extends com.njydsz.pmis.common.socket.cluster.WebSocketClusterPublisher {
+    private static class NoOpClusterPublisher extends WebSocketClusterPublisher {
         NoOpClusterPublisher() {
             super(null, null);
         }

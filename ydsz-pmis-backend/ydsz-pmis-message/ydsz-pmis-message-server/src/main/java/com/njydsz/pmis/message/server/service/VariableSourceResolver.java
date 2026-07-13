@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.server.service.config;
+package com.njydsz.pmis.message.server.service.config;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.security.TenantContext;

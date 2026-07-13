@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.service;
+package com.njydsz.pmis.common.auth.service;
 
 import com.njydsz.pmis.common.auth.model.RolePermissions;
 
@@ -39,7 +39,7 @@ import com.njydsz.pmis.common.auth.service.impl.RedisRolePermissionLoader;
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
- * @see com.njydsz.pmis.common.auth.model.RolePermissions
+ * @see RolePermissions
  * @see RedisRolePermissionLoader
  */
 public interface RolePermissionLoader {

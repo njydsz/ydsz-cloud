@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.core.healing;
+package com.njydsz.pmis.cronjob.server.core.healing;
 
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertContext;

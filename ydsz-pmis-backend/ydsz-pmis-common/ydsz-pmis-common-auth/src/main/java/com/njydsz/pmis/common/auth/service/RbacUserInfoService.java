@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.service;
+package com.njydsz.pmis.common.auth.service;
 
 import com.njydsz.pmis.common.auth.model.UserInfo;
 
@@ -37,7 +37,7 @@ import com.njydsz.pmis.common.auth.service.impl.RedisRbacUserInfoService;
  * @email limw1888@126.com
  * @version 3.5.0
  * @see RedisRbacUserInfoService
- * @see com.njydsz.pmis.common.auth.model.UserInfo
+ * @see UserInfo
  */
 public interface RbacUserInfoService {
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.core.handler;
+package com.njydsz.pmis.cronjob.server.core.handler;
 
 import com.njydsz.pmis.common.core.job.JobHandler;
 import com.njydsz.pmis.common.core.job.JobLoggerHolder;

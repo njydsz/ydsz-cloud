@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.excel.core.writer;
+package com.njydsz.pmis.common.excel.core.writer;
 
 /**
  * PrecomputedColumnProperties 类

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.literule.server.cep;
+package com.njydsz.pmis.literule.server.cep;
 
 import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
 import com.njydsz.pmis.literule.server.expr.liteexpr.LiteExprEvaluator;

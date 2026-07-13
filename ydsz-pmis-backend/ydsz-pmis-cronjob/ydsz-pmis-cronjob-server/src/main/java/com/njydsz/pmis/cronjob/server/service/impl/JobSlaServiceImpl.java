@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.service.impl.alert;
+package com.njydsz.pmis.cronjob.server.service.impl.alert;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;

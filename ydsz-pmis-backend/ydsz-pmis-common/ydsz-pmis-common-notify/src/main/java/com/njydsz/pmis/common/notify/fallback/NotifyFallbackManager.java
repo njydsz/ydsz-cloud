@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.fallback;
+package com.njydsz.pmis.common.notify.fallback;
 
 import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.pmis.common.notify.config.NotifyProperties;

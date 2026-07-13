@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.aspect;
+package com.njydsz.pmis.common.auth.aspect;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.auth.annotation.AuthColPermission;
@@ -397,13 +397,13 @@ public class AuthColPermissionAspect {
             return ColumnDesensitizationContext.empty();
         }
         try {
-            String accessToken = com.njydsz.pmis.common.util.auth.RequestHolder.getAuthInfo() != null
-                    ? com.njydsz.pmis.common.util.auth.RequestHolder.getAuthInfo().getAccessToken()
+            String accessToken = RequestHolder.getAuthInfo() != null
+                    ? RequestHolder.getAuthInfo().getAccessToken()
                     : null;
             if (accessToken == null) {
                 return ColumnDesensitizationContext.empty();
             }
-            String userId = com.njydsz.pmis.common.util.auth.AuthInfoUtils.getUniqueId();
+            String userId = AuthInfoUtils.getUniqueId();
             return desensitizationService.loadByToken(userId, accessToken);
         } catch (Exception e) {
             log.debug("构建脱敏上下文失败：{}", e.getMessage());

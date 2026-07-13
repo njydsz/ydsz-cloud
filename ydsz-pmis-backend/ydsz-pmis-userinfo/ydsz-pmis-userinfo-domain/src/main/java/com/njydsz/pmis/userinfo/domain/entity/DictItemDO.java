@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.domain.entity.org;
+package com.njydsz.pmis.userinfo.domain.entity.org;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

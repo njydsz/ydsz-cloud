@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.cache.builder;
+package com.njydsz.pmis.common.cache.builder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

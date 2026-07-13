@@ -133,8 +133,8 @@ public class SmartRoutingSelector {
      */
     private double getCpuUsage() {
         try {
-            com.sun.management.OperatingSystemMXBean osBean =
-                    (com.sun.management.OperatingSystemMXBean)
+            com.sun.management.OperatingSystemMXBean osBean = // FQN-OK: name conflict with java.lang.management.OperatingSystemMXBean
+                    (com.sun.management.OperatingSystemMXBean) // FQN-OK: name conflict with java.lang.management.OperatingSystemMXBean
                             ManagementFactory.getOperatingSystemMXBean();
             // getCpuLoad() 替代已弃用的 getSystemCpuLoad()（JDK 14+）
             double load = osBean.getCpuLoad();

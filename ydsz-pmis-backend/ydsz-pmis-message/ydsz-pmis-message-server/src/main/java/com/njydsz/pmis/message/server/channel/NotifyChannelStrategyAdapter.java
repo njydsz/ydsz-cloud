@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.server.channel;
+package com.njydsz.pmis.message.server.channel;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;

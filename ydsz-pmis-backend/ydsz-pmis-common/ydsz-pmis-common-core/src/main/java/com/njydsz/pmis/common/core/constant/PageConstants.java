@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.core.constant;
+package com.njydsz.pmis.common.core.constant;
 
 import com.njydsz.pmis.common.core.config.CoreProperties;
 

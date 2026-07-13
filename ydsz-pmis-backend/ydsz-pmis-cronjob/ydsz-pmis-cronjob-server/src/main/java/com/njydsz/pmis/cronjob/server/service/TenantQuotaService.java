@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.service.job;
+package com.njydsz.pmis.cronjob.server.service.job;
 
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.cronjob.domain.entity.job.TenantQuotaDO;

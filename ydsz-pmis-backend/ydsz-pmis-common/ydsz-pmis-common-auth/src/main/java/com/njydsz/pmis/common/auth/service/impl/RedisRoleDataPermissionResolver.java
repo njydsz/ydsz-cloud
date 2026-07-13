@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.service.impl;
+package com.njydsz.pmis.common.auth.service.impl;
 
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.model.DataScopeInfo;
@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
  * @email limw1888@126.com
  * @version 3.5.0
  * @see DataPermissionResolver
- * @see com.njydsz.pmis.common.auth.model.DataScopeInfo
+ * @see DataScopeInfo
  * @see Caffeine
  */
 public class RedisRoleDataPermissionResolver implements DataPermissionResolver {

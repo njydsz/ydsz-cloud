@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.naming;
+package com.njydsz.pmis.common.json.naming;
 
 import java.io.Serializable;
 
