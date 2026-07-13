@@ -181,7 +181,7 @@ public class CustomerCreditServiceImpl implements CustomerCreditService {
             m.put("level", l.getCode());
             m.put("desc", l.getDesc());
             m.put("count", creditMapper.selectByLevel(l.getCode()).size());
-            BaseResponse.add(m);
+            result.add(m);
         }
         return result;
     }

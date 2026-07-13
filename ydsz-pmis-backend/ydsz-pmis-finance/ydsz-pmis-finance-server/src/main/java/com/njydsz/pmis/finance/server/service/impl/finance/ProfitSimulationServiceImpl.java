@@ -170,7 +170,7 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
                     && s.getGrossMargin() != null
                     && s.getGrossMargin().compareTo(s.getTargetMargin()) >= 0);
             m.put("status", s.getStatus());
-            BaseResponse.add(m);
+            result.add(m);
         }
         return result;
     }

@@ -267,7 +267,7 @@ public class PaymentServiceImpl implements PaymentService {
             Map<String, Object> m = new HashMap<>();
             m.put("month", base.plusMonths(i).toString().substring(0, 7));
             m.put("forecastAmount", perMonth);
-            BaseResponse.add(m);
+            result.add(m);
         }
         return result;
     }
