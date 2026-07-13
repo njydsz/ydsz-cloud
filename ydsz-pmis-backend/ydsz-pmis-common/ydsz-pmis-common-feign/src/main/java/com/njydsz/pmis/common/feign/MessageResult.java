@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.feign;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -12,6 +13,7 @@ import java.io.Serializable;
  * @since 1.0.0
  */
 @Data
+@NoArgsConstructor
 public class MessageResult implements Serializable {
 
     @Serial

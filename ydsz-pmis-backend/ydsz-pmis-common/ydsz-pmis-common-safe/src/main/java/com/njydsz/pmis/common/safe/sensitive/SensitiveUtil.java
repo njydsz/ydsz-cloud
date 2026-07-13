@@ -1,5 +1,9 @@
 package com.njydsz.pmis.common.safe.sensitive;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
+
 /**
  * 敏感数据脱敏工具类
  *
@@ -21,7 +25,57 @@ public final class SensitiveUtil {
 
     private static final char ASTERISK = '*';
 
+    /** 自定义脱敏 handler 注册表（name → masker） */
+    private static final Map<String, Function<String, String>> CUSTOM_HANDLERS = new ConcurrentHashMap<>();
+
     private SensitiveUtil() {
+    }
+
+    /**
+     * 注册自定义脱敏 handler。
+     *
+     * @param name   handler 名称（如 "default"）
+     * @param masker 脱敏函数（输入原始值，返回脱敏后的值）
+     */
+    public static void register(String name, Function<String, String> masker) {
+        if (name != null && masker != null) {
+            CUSTOM_HANDLERS.put(name, masker);
+        }
+    }
+
+    /**
+     * 根据已注册的 handler 名称执行自定义脱敏。
+     *
+     * @param name  handler 名称
+     * @param value 原始值
+     * @return 脱敏后的值，未注册 handler 时返回原值
+     */
+    public static String maskCustom(String name, String value) {
+        if (name == null || value == null || value.isEmpty()) {
+            return value;
+        }
+        Function<String, String> handler = CUSTOM_HANDLERS.get(name);
+        return handler != null ? handler.apply(value) : value;
+    }
+
+    /**
+     * 手机号脱敏便捷方法（使用默认替换字符 *）。
+     *
+     * @param value 原手机号
+     * @return 脱敏后的手机号
+     */
+    public static String maskPhone(String value) {
+        return phone(value, ASTERISK);
+    }
+
+    /**
+     * 电子邮箱脱敏便捷方法（使用默认替换字符 *）。
+     *
+     * @param value 原邮箱
+     * @return 脱敏后的邮箱
+     */
+    public static String maskEmail(String value) {
+        return email(value, ASTERISK);
     }
 
     /**

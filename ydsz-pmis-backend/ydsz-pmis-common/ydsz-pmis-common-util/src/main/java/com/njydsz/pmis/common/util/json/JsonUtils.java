@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
@@ -326,6 +327,36 @@ public final class JsonUtils {
         }
         return recordDeserialize(() ->
                 MAPPER.readValue(json, MAPPER.getTypeFactory().constructMapType(java.util.HashMap.class, keyClass, valueClass)));
+    }
+
+    /**
+     * JSON 字符串转 Map&lt;String, Object&gt;（兼容别名）
+     *
+     * @param json JSON 字符串
+     * @return 反序列化 Map，json 为空时返回 null
+     * @throws JsonException 如果反序列化失败
+     */
+    public static Map<String, Object> parseMap(String json) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        return recordDeserialize(() ->
+                MAPPER.readValue(json, MAPPER.getTypeFactory().constructMapType(HashMap.class, String.class, Object.class)));
+    }
+
+    /**
+     * JSON 字符串转 List&lt;Object&gt;（兼容别名）
+     *
+     * @param json JSON 字符串
+     * @return 反序列化 List，json 为空时返回 null
+     * @throws JsonException 如果反序列化失败
+     */
+    public static List<Object> parseList(String json) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        return recordDeserialize(() ->
+                MAPPER.readValue(json, MAPPER.getTypeFactory().constructCollectionType(List.class, Object.class)));
     }
 
     // ==================== 对象 → 字节数组 ====================

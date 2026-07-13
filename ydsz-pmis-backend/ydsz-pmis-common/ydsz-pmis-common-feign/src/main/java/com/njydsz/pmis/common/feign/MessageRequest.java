@@ -4,6 +4,8 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -51,7 +53,7 @@ public class MessageRequest implements Serializable {
     private Map<String, String> channelMeta;
 
     /** 定时发送时间 */
-    private java.time.LocalDateTime scheduledAt;
+    private LocalDateTime scheduledAt;
 
     /** 发送优先级（URGENT / HIGH / NORMAL / LOW） */
     private String priority;
@@ -60,5 +62,5 @@ public class MessageRequest implements Serializable {
     private String parentMsgId;
 
     /** 级联子消息列表 */
-    private java.util.List<MessageRequest> cascadeTo;
+    private List<MessageRequest> cascadeTo;
 }
