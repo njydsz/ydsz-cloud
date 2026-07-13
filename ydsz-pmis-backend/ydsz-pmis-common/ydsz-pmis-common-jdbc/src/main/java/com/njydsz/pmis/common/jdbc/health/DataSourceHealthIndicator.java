@@ -29,7 +29,6 @@ import javax.sql.DataSource;
 @Component
 @ConditionalOnClass({HealthIndicator.class, HikariDataSource.class})
 @ConditionalOnProperty(prefix = "ydsz.jdbc", name = "enabled", matchIfMissing = true)
-@SuppressWarnings("resource")
 public class DataSourceHealthIndicator implements HealthIndicator {
 
     private final DataSource dataSource;

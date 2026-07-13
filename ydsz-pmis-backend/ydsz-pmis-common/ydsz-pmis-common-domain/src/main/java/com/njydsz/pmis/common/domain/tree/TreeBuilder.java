@@ -56,7 +56,6 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
             Comparator.nullsLast(Integer::compareTo)
     );
 
-    @SuppressWarnings("unchecked")
     private static <T extends TreeNode<T, ?>> Comparator<T> getSortComparator() {
         return (Comparator<T>) SORT_COMPARATOR;
     }

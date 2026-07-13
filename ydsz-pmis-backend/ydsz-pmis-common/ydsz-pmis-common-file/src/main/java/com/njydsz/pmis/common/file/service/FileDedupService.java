@@ -32,7 +32,7 @@ public class FileDedupService {
     private static final String DEDUP_KEY_PREFIX = "file:dedup:hash:";
 
     private final RedisStringOps redisStringOps;
-    @SuppressWarnings("unused")
+
     private final IFileStorage fileStorage;
 
     public FileDedupService(RedisStringOps redisStringOps, IFileStorage fileStorage) {

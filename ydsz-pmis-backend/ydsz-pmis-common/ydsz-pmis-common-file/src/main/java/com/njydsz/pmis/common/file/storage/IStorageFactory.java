@@ -28,7 +28,6 @@ import java.util.function.Function;
  * @see IFileStorageProvider
  */
 @Slf4j
-@SuppressWarnings("unused")
 public class IStorageFactory implements IFileStorageProvider {
 
     /** 文件存储基础配置 */

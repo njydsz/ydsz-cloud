@@ -77,7 +77,7 @@ public class CacheMeterBinder implements MeterBinder {
   }
 
   @Override
-  @SuppressWarnings({"null", "unchecked"})
+  @SuppressWarnings("null")
   public void bindTo(MeterRegistry registry) {
     Tag cacheNameTag = Tag.of(TAG_CACHE_NAME, cacheName);
     Tag cacheTypeTag = Tag.of(TAG_CACHE_TYPE, cacheType);

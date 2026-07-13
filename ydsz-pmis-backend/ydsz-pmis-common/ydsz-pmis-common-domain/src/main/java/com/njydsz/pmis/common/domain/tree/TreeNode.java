@@ -85,7 +85,6 @@ import java.util.Map;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@SuppressWarnings("unchecked")
 public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implements Serializable {
 
     private static final long serialVersionUID = 8676131899637805509L;

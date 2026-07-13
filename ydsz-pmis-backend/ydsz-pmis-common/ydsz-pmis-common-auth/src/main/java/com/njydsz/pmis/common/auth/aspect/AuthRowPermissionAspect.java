@@ -66,7 +66,6 @@ import java.util.stream.Collectors;
  */
 @Aspect
 @Order(11)
-@SuppressWarnings("unchecked")
 public class AuthRowPermissionAspect {
 
     private static final Logger log = LoggerFactory.getLogger(AuthRowPermissionAspect.class);

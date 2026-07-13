@@ -110,7 +110,6 @@ public class RedisService implements BatchRedisOperations {
     /**
      * 批量格式化 Keys（Collection 版本）
      */
-    @SuppressWarnings("unused")
     private List<String> formatKeys(Collection<String> keys) {
         if (keys == null) {
             return Collections.emptyList();
@@ -669,7 +668,6 @@ public class RedisService implements BatchRedisOperations {
                     if (entry.getKey() != null && entry.getValue() != null) {
                         String formattedKey = formatKey(entry.getKey());
                         byte[] rawKey = redisTemplate.getStringSerializer().serialize(formattedKey);
-                        @SuppressWarnings("unchecked")
                         byte[] rawValue = ((RedisSerializer<Object>) redisTemplate.getValueSerializer()).serialize(entry.getValue());
                         if (rawKey != null && rawValue != null) {
                             connection.stringCommands().set(rawKey, rawValue);

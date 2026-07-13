@@ -285,7 +285,6 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
     /**
      * 重试消息数据（序列化到 Redis）
      */
-    @SuppressWarnings("unused")
     private static class RetryMessage {
         /** 唯一消息 ID */
         String id;

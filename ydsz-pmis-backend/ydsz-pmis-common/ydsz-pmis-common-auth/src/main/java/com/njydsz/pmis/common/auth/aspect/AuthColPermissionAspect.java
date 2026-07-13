@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.aspect;
+﻿package com.njydsz.pmis.common.auth.aspect;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.auth.annotation.AuthColPermission;
@@ -73,7 +73,6 @@ import java.util.stream.Collectors;
  */
 @Aspect
 @Order(12)
-@SuppressWarnings("unchecked")
 public class AuthColPermissionAspect {
 
     private static final Logger log = LoggerFactory.getLogger(AuthColPermissionAspect.class);

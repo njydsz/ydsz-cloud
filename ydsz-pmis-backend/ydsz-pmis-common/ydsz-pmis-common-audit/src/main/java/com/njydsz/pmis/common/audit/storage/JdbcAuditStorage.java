@@ -218,7 +218,6 @@ public class JdbcAuditStorage implements AuditStorage {
     /**
      * 标准批量插入（适用于所有数据库方言）
      */
-    @SuppressWarnings("unchecked")
     private void saveBatchStandard(String tableName, List<AuditLog> batch) {
         String sql = buildInsertSql(tableName);
         Map<String, Object>[] batchParams = IntStream.range(0, batch.size())

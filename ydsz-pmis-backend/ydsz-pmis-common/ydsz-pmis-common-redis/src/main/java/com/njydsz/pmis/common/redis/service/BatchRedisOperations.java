@@ -152,7 +152,6 @@ public interface BatchRedisOperations {
      * @return true-设置成功
      * @throws RuntimeException 当 Pipeline 操作失败时抛出异常
      */
-    @SuppressWarnings("unchecked")
     default boolean msetWithExpire(Map<String, Object> keyValues, long expireSeconds) {
         if (CollectionUtils.isEmpty(keyValues) || expireSeconds <= 0) {
             return false;

@@ -9,11 +9,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.njydsz.pmis.common.cache.YdszCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.api.LoadingCache;
 import com.njydsz.pmis.common.cache.support.CacheLoader;
 import com.njydsz.pmis.common.cache.support.CacheWriter;
-import com.njydsz.pmis.common.cache.YdszCache;
 
 class CacheBuilderTest {
 

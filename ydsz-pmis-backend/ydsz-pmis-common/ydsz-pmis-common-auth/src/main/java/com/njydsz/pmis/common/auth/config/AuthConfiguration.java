@@ -69,7 +69,6 @@ public class AuthConfiguration {
     /**
      * 本地缓存健康检查间隔（秒）
      */
-    @SuppressWarnings("unused")
     private static final long HEALTH_CHECK_INTERVAL_SECONDS = 60;
 
     private final LocalPermissionCache<Object> localCache;
@@ -122,7 +121,6 @@ public class AuthConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnBean(RedisStringOps.class)
-    @SuppressWarnings("unchecked")
     public RolePermissionLoader rolePermissionLoader(RedisStringOps redisStringOps, AuthProperties properties,
                                                       PermissionChangeNotifier notifier) {
         LocalPermissionCache<RolePermissions> typedLocalCache = (LocalPermissionCache<RolePermissions>) (LocalPermissionCache<?>) localCache;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.jdbc.interceptor;
+﻿package com.njydsz.pmis.common.jdbc.interceptor;
 
 import com.baomidou.mybatisplus.core.plugins.InterceptorIgnoreHelper;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
@@ -91,7 +91,6 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
         }
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
     public void beforeQuery(Executor executor, MappedStatement ms, Object parameter,
                            RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {

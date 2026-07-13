@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.handler;
+﻿package com.njydsz.pmis.common.exception.handler;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
@@ -40,7 +40,6 @@ import org.springframework.context.support.DefaultMessageSourceResolvable;
 @ConditionalOnClass(ConstraintViolationException.class)
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)
 @RestControllerAdvice
-@SuppressWarnings("unused")
 public class ValidationExceptionHandler {
 
     private final MessageSource messageSource;

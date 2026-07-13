@@ -72,14 +72,12 @@ public class OrderedInnerInterceptor implements InnerInterceptor, Ordered {
         return delegate;
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
     public boolean willDoQuery(Executor executor, MappedStatement ms, Object parameter,
                                RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {
         return delegate.willDoQuery(executor, ms, parameter, rowBounds, resultHandler, boundSql);
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
     public void beforeQuery(Executor executor, MappedStatement ms, Object parameter,
                             RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {

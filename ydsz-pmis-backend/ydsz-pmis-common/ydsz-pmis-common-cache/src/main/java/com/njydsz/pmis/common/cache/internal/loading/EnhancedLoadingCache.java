@@ -68,6 +68,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
   private static volatile boolean sharedResourcesShutdown = false;
 
   /** 获取共享异步执行器（懒加载，线程安全） */
+  @SuppressWarnings("null")
   private static Executor getSharedExecutor() {
     if (sharedResourcesShutdown) {
       return Runnable::run;

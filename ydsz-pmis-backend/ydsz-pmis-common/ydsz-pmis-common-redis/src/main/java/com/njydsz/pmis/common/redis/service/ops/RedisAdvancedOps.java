@@ -166,7 +166,6 @@ public class RedisAdvancedOps {
         }
     }
 
-    @SuppressWarnings("unchecked")
     public <T> List<T> executePipelinedWithConsumer(Consumer<RedisTemplate<String, Object>> operations) {
         if (operations == null) {
             return Collections.emptyList();

@@ -81,7 +81,6 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
 
 	@Override
 	public NotifySendResult sendTemplate(String receiver, String templateCode, Object templateParams) {
-		@SuppressWarnings("unchecked")
 		Map<String, Object> params = templateParams instanceof Map ? (Map<String, Object>) templateParams : Map.of();
 		String content = templateEngine.render(templateCode, params);
 		return send(receiver, templateCode, content);

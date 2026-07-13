@@ -173,7 +173,6 @@ public class RedisConnectionFactoryConfigurer {
     /**
      * 构建 Jedis 客户端配置
      */
-    @SuppressWarnings("rawtypes")
     private JedisClientConfiguration buildJedisClientConfiguration(RedisClientProperties clientProperties,
                                                                     Duration timeout) {
         JedisClientConfiguration.JedisClientConfigurationBuilder builder =
@@ -198,7 +197,6 @@ public class RedisConnectionFactoryConfigurer {
     /**
      * 构建 Lettuce 客户端配置
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
     private LettuceClientConfiguration buildLettuceClientConfiguration(RedisProperties properties,
                                                                         RedisClientProperties clientProperties,
                                                                         Duration timeout) {
@@ -263,7 +261,6 @@ public class RedisConnectionFactoryConfigurer {
     /**
      * 构建通用连接池配置
      */
-    @SuppressWarnings("rawtypes")
     private GenericObjectPoolConfig buildGenericPoolConfig(RedisClientProperties.Pool poolConfig) {
         GenericObjectPoolConfig config = new GenericObjectPoolConfig();
         config.setMaxTotal(poolConfig.getMaxActive());

@@ -206,7 +206,6 @@ public class RedisRateLimiter {
      * @param window 时间窗口长度
      * @return true=允许，false=拒绝
      */
-    @SuppressWarnings("unchecked")
     public boolean tryAcquireSlidingWindow(String key, int limit, Duration window) {
         if (key == null || limit <= 0 || window == null || window.isZero() || window.isNegative()) {
             return false;

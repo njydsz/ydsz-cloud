@@ -59,7 +59,6 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 
 	private final SmsNotifyProperties smsProperties;
 	private final RestTemplate restTemplate;
-	@SuppressWarnings("unused")
 	private final TemplateEngine templateEngine; // 保留用于后续模板渲染扩展
 	private final ExecutorService virtualThreadExecutor;
 
@@ -121,7 +120,6 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 			return NotifySendResult.failure("手机号为空", channelName());
 		}
 		try {
-			@SuppressWarnings("unchecked")
 			Map<String, Object> params = templateParams instanceof Map
 					? (Map<String, Object>) templateParams
 					: Map.of();

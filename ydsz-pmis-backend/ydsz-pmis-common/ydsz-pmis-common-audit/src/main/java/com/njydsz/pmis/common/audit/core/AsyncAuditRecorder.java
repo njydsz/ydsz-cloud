@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.audit.core;
+﻿package com.njydsz.pmis.common.audit.core;
 
 import com.njydsz.pmis.common.audit.config.AuditProperties;
 import com.njydsz.pmis.common.audit.domain.AuditLog;
@@ -89,7 +89,6 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
     /** 异步缓冲队列，有界队列支持背压控制 */
     private final LinkedBlockingQueue<AuditLog> queue;
     /** 数据源引用 */
-    @SuppressWarnings("unused")
     private final DataSource dataSource;
     /** JDBC 模板，用于批量写入数据库 */
     private final JdbcTemplate jdbcTemplate;

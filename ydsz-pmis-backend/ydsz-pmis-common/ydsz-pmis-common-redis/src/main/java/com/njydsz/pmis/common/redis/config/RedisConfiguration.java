@@ -200,7 +200,6 @@ public class RedisConfiguration {
     @ConditionalOnBean(RedisRetryInterceptor.class)
     @ConditionalOnProperty(name = "ydsz.redis.retry.proxy-template", havingValue = "true")
     @ConditionalOnMissingBean(name = "retryableRedisTemplate")
-    @SuppressWarnings("unchecked")
     public RedisTemplate<String, Object> retryableRedisTemplate(RedisTemplate<String, Object> redisTemplate,
                                                                  RedisRetryInterceptor redisRetryInterceptor) {
         ProxyFactory proxyFactory = new ProxyFactory(redisTemplate);

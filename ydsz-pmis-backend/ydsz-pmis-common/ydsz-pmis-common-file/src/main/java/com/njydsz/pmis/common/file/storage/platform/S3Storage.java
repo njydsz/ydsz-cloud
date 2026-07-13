@@ -62,7 +62,6 @@ public class S3Storage extends AbstractFileStorage {
     /** S3 预签名器 */
     private final S3Presigner s3Presigner;
     /** 存储桶名称 */
-    @SuppressWarnings("unused")
     private final String bucket;
     /** AWS 区域 */
     private final String region;

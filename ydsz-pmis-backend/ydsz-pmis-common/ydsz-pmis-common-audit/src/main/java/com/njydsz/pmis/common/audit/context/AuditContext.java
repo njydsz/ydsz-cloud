@@ -24,7 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @version 3.5.0
  * @since 1.0.0
  */
-@SuppressWarnings("unchecked")
 public class AuditContext {
 
     /**

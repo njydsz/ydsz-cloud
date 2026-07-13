@@ -28,7 +28,6 @@ import java.util.function.Supplier;
  * @since 1.0.0
  */
 @Slf4j
-@SuppressWarnings("unchecked")
 public class NullValueCacheHelper {
 
     /**

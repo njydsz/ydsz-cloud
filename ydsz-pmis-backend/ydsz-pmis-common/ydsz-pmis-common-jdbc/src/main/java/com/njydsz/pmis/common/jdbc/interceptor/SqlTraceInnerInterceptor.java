@@ -118,7 +118,6 @@ public class SqlTraceInnerInterceptor implements InnerInterceptor, Ordered, Mete
         this.meterRegistry = registry;
     }
 
-    @SuppressWarnings("rawtypes")
     @Override
     public boolean willDoQuery(Executor executor, MappedStatement ms, Object parameter,
                                RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) throws SQLException {

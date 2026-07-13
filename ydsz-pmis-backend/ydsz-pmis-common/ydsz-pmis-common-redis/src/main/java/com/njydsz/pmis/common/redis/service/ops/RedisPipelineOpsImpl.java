@@ -29,12 +29,10 @@ public class RedisPipelineOpsImpl implements RedisPipelineOps {
         return redisTemplate.getStringSerializer().serialize(key);
     }
 
-    @SuppressWarnings({"unchecked"})
     private byte[] serializeValue(Object value) {
         return ((RedisSerializer<Object>) redisTemplate.getValueSerializer()).serialize(value);
     }
 
-    @SuppressWarnings({"unchecked"})
     private byte[] serializeField(Object field) {
         return ((RedisSerializer<Object>) redisTemplate.getHashValueSerializer()).serialize(field);
     }

@@ -178,7 +178,6 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
     /**
      * 从节点 ext JSON 中解析 customButtons
      */
-    @SuppressWarnings("unchecked")
     private List<Map<String, Object>> parseCustomButtons(String extJson) {
         if (!StringUtils.hasText(extJson)) {
             return List.of();

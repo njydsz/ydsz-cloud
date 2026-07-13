@@ -1,11 +1,11 @@
 package com.njydsz.pmis.common.json.autotype;
 
-import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
-import com.njydsz.pmis.common.json.exception.JsonDeserializationException;
-
 import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
+import com.njydsz.pmis.common.json.exception.JsonDeserializationException;
 
 /**
  * AutoType 白名单/黑名单检查器

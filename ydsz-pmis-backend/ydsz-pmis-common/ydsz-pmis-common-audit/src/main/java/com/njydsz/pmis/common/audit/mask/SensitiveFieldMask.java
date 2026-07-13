@@ -129,7 +129,6 @@ public final class SensitiveFieldMask {
      * @param obj 待拷贝对象
      * @return 深拷贝结果
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
     private static Object deepCopy(Object obj) {
         if (obj == null) {
             return null;
