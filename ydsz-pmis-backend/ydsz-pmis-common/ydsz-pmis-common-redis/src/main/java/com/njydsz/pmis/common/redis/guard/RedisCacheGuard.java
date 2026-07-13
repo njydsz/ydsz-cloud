@@ -1,14 +1,14 @@
 package com.njydsz.pmis.common.redis.guard;
 
-import com.njydsz.pmis.common.redis.ops.ValueOps;
+import java.time.Duration;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Supplier;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
-import java.util.Objects;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Supplier;
+import com.njydsz.pmis.common.redis.ops.ValueOps;
 
 /**
  * Redis 缓存防护组件 —— 防穿透 + 防击穿 + 防雪崩。

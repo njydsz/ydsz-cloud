@@ -1,12 +1,12 @@
 package com.njydsz.pmis.common.safe.annotation;
 
-import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
 
 /**
  * 敏感数据字段标记注解

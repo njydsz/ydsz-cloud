@@ -1,11 +1,5 @@
 package com.njydsz.pmis.common.queue.mq.kafka;
 
-import com.njydsz.pmis.common.exception.custom.BusinessException;
-import com.njydsz.pmis.common.queue.queue.AbstractMessageQueue;
-import com.njydsz.pmis.common.queue.service.IMessagePublisher;
-import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -18,6 +12,13 @@ import org.apache.kafka.clients.admin.ListTopicsOptions;
 import org.apache.kafka.clients.admin.ListTopicsResult;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
+
+import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.queue.queue.AbstractMessageQueue;
+import com.njydsz.pmis.common.queue.service.IMessagePublisher;
+import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Kafka 消息队列

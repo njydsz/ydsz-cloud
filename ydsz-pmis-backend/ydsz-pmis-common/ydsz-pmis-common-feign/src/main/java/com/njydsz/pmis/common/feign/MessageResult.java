@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.feign;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.io.Serial;
 import java.io.Serializable;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 消息发送结果 DTO（兼容旧 com.njydsz.pmis.common.feign.MessageResult）。

@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.queue.mq.kafka;
 
-import com.njydsz.pmis.common.exception.custom.InfrastructureException;
-import com.njydsz.pmis.common.queue.domain.QueueMessage;
-import com.njydsz.pmis.common.queue.service.IMessagePublisher;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Duration;
+import java.util.Properties;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -11,9 +11,11 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
 
-import java.time.Duration;
-import java.util.Properties;
-import java.util.concurrent.locks.ReentrantLock;
+import com.njydsz.pmis.common.exception.custom.InfrastructureException;
+import com.njydsz.pmis.common.queue.domain.QueueMessage;
+import com.njydsz.pmis.common.queue.service.IMessagePublisher;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Kafka 消息发布者

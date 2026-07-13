@@ -14,12 +14,14 @@ package com.njydsz.pmis.common.jdbc.config;
  * @since 1.0.0
  */
 
-import com.njydsz.pmis.common.jdbc.enums.InterceptTableStrategy;
-import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.util.HashSet;
 import java.util.Set;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import com.njydsz.pmis.common.jdbc.enums.InterceptTableStrategy;
+
+import lombok.Data;
 
 @Data
 @ConfigurationProperties(prefix = "ydsz.jdbc.data-permission")

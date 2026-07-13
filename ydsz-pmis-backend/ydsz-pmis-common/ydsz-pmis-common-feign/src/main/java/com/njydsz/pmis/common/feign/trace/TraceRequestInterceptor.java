@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.feign.trace;
 
 import com.njydsz.pmis.common.util.id.TracerUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
+
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 

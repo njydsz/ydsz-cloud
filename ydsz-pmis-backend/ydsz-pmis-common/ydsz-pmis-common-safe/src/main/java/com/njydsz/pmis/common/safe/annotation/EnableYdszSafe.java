@@ -1,13 +1,14 @@
 package com.njydsz.pmis.common.safe.annotation;
 
-import com.njydsz.pmis.common.safe.config.SafeConfiguration;
-import org.springframework.context.annotation.Import;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.springframework.context.annotation.Import;
+
+import com.njydsz.pmis.common.safe.config.SafeConfiguration;
 
 /**
  * 启用ydsz系统安全模块注解

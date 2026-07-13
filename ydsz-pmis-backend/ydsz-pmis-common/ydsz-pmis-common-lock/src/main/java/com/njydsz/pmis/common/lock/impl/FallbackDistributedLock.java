@@ -1,16 +1,17 @@
 package com.njydsz.pmis.common.lock.impl;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.njydsz.pmis.common.lock.core.DistributedLocker;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.njydsz.pmis.common.lock.core.DistributedLocker;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 锁降级策略实现 - Redis 不可用时自动降级为本地 ReentrantLock

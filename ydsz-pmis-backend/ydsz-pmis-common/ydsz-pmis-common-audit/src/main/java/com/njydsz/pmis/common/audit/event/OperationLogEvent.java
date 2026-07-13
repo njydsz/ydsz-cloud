@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.audit.event;
 
-import lombok.Data;
-
 import java.io.Serializable;
+
+import lombok.Data;
 
 /**
  * 操作日志事件。

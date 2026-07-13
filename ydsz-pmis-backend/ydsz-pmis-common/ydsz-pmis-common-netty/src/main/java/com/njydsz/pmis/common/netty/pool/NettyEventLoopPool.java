@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.netty.pool;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Netty EventLoopGroup 池化管理器。

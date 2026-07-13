@@ -1,10 +1,11 @@
 package com.njydsz.pmis.common.feign.dto;
 
-import lombok.Data;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import lombok.Data;
 
 /**
  * 通知发送 Feign DTO（跨模块传输专用）

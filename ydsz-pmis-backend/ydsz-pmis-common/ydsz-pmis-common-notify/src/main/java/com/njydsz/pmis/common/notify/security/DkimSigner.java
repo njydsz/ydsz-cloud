@@ -1,17 +1,19 @@
 package com.njydsz.pmis.common.notify.security;
 
-import com.njydsz.pmis.common.notify.config.NotifyProperties;
-import jakarta.mail.internet.InternetHeaders;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;
-
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
+
+import jakarta.mail.internet.InternetHeaders;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
+
+import com.njydsz.pmis.common.notify.config.NotifyProperties;
 
 /**
  * DKIM 邮件签名支持（P2-9）

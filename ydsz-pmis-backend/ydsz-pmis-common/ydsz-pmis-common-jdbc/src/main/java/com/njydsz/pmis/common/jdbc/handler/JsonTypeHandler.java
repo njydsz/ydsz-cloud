@@ -1,13 +1,14 @@
 package com.njydsz.pmis.common.jdbc.handler;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
-import org.apache.ibatis.type.BaseTypeHandler;
-import org.apache.ibatis.type.JdbcType;
-
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import org.apache.ibatis.type.BaseTypeHandler;
+import org.apache.ibatis.type.JdbcType;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 /**
  * JSON 类型转换处理器

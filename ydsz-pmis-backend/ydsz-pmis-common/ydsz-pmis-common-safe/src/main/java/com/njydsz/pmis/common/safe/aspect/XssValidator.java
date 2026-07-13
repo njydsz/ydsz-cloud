@@ -1,11 +1,12 @@
 package com.njydsz.pmis.common.safe.aspect;
 
-import com.njydsz.pmis.common.safe.annotation.Xss;
-import com.njydsz.pmis.common.util.string.StringUtils;
+import java.util.regex.Pattern;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import java.util.regex.Pattern;
+
+import com.njydsz.pmis.common.safe.annotation.Xss;
+import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
  * XSS 防护验证器

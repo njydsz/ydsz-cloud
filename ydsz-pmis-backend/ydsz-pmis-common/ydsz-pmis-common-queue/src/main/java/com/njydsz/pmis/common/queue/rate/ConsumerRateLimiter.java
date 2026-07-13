@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.queue.rate;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 基于令牌桶的消费者限流器

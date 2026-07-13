@@ -1,13 +1,13 @@
 package com.njydsz.pmis.common.feign.annotation;
 
-import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.core.annotation.AliasFor;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.core.annotation.AliasFor;
 
 /**
  * 自定义 Feign 客户端启用注解，封装了 {@link EnableFeignClients} 并提供默认配置。

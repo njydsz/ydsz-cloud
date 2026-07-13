@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.netty.config;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.time.Duration;
+import lombok.Data;
+
 
 /**
  * Netty 通用配置属性。

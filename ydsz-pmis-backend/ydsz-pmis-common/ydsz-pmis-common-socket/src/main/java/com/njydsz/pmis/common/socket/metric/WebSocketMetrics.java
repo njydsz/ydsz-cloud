@@ -1,11 +1,11 @@
 package com.njydsz.pmis.common.socket.metric;
 
+import java.time.Duration;
+
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
-
-import java.time.Duration;
 
 /**
  * WebSocket Micrometer 指标收集器。

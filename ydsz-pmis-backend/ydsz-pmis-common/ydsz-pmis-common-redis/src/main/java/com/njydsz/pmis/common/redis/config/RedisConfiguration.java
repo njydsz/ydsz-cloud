@@ -1,21 +1,15 @@
 package com.njydsz.pmis.common.redis.config;
 
-import com.njydsz.pmis.common.redis.annotation.YdszCacheableAspect;
-import com.njydsz.pmis.common.redis.health.RedisHealthIndicator;
-import com.njydsz.pmis.common.redis.interceptor.RedisRetryInterceptor;
-import com.njydsz.pmis.common.redis.serializer.JacksonRedisSerializer;
-import com.njydsz.pmis.common.redis.service.RedisService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.aop.framework.ProxyFactory;
-import org.springframework.boot.health.contributor.HealthIndicator;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.data.redis.autoconfigure.DataRedisAutoConfiguration;
+import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -23,7 +17,15 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.njydsz.pmis.common.redis.annotation.YdszCacheableAspect;
+import com.njydsz.pmis.common.redis.health.RedisHealthIndicator;
+import com.njydsz.pmis.common.redis.interceptor.RedisRetryInterceptor;
+import com.njydsz.pmis.common.redis.serializer.JacksonRedisSerializer;
+import com.njydsz.pmis.common.redis.service.RedisService;
+
+import lombok.RequiredArgsConstructor;
 
 /**
  * Redis 配置类

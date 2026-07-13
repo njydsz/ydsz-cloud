@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.file.domain;
 
-import lombok.Data;
-
 import java.util.List;
+
+import lombok.Data;
 
 /**
  * 目录树节点模型

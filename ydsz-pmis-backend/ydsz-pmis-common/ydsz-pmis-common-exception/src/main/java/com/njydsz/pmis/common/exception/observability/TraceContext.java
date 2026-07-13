@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.exception.observability;
 
-import org.slf4j.MDC;
-
 import java.util.UUID;
 import java.util.function.Supplier;
+
+import org.slf4j.MDC;
 
 /**
  * 分布式追踪上下文（基于 SLF4J MDC）

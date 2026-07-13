@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.docs.domain;
 
+import java.util.List;
+
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.List;
 
 /**
  * 文档内容模型

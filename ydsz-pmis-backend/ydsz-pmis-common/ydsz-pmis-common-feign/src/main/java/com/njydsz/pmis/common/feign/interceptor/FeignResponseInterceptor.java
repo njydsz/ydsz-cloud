@@ -1,8 +1,9 @@
 package com.njydsz.pmis.common.feign.interceptor;
 
+import org.jspecify.annotations.Nullable;
+
 import feign.Response;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.Nullable;
 
 /**
  * Feign 响应拦截器

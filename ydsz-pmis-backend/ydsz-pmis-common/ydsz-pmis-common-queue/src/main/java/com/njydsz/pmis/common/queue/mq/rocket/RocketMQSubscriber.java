@@ -1,19 +1,21 @@
 package com.njydsz.pmis.common.queue.mq.rocket;
 
-import com.njydsz.pmis.common.exception.custom.InfrastructureException;
-import com.njydsz.pmis.common.queue.domain.QueueMessage;
-import com.njydsz.pmis.common.queue.rate.ConsumerRateLimiter;
-import com.njydsz.pmis.common.queue.service.IMessageHandler;
-import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
-import lombok.extern.slf4j.Slf4j;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.common.message.MessageExt;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
+import com.njydsz.pmis.common.exception.custom.InfrastructureException;
+import com.njydsz.pmis.common.queue.domain.QueueMessage;
+import com.njydsz.pmis.common.queue.rate.ConsumerRateLimiter;
+import com.njydsz.pmis.common.queue.service.IMessageHandler;
+import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * RocketMQ 消息订阅者

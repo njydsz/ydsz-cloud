@@ -52,4 +52,3 @@ public interface DataScopeIdExpander {
      */
     Set<String> expandRegionIds(Set<String> regionIds);
 }
-

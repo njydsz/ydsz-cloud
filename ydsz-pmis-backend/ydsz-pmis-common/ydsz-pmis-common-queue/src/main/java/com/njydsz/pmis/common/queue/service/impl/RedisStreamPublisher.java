@@ -1,13 +1,14 @@
 package com.njydsz.pmis.common.queue.service.impl;
 
-import com.njydsz.pmis.common.queue.domain.QueueMessage;
-import com.njydsz.pmis.common.queue.service.IMessagePublisher;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.njydsz.pmis.common.queue.domain.QueueMessage;
+import com.njydsz.pmis.common.queue.service.IMessagePublisher;
 
 /**
  * 基于 Redis Stream 的消息发布者

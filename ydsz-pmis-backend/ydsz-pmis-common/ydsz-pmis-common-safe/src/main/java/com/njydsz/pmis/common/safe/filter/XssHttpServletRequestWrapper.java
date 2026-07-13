@@ -1,17 +1,19 @@
 package com.njydsz.pmis.common.safe.filter;
 
-import com.njydsz.pmis.common.safe.xss.EscapeUtils;
-import com.njydsz.pmis.common.util.string.StringUtils;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+
+import com.njydsz.pmis.common.safe.xss.EscapeUtils;
+import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
  * XSS 过滤请求包装器

@@ -1,7 +1,6 @@
 package com.njydsz.pmis.common.auth.model;
 
 import com.njydsz.pmis.common.auth.annotation.AuthColPermission;
-import com.njydsz.pmis.common.auth.model.ColumnScopeInfo;
 
 /**
  * 列权限信息可注入标记接口。

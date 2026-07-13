@@ -1,13 +1,14 @@
 package com.njydsz.pmis.common.feign;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.feign.dto.NotificationFeignDTO;
-import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
-import com.njydsz.pmis.common.feign.fallback.NotificationClientFallbackFactory;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.feign.dto.NotificationFeignDTO;
+import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
+import com.njydsz.pmis.common.feign.fallback.NotificationClientFallbackFactory;
 
 /**
  * 通知服务 Feign 客户端（兼容旧 com.njydsz.pmis.common.feign.NotificationClient）。

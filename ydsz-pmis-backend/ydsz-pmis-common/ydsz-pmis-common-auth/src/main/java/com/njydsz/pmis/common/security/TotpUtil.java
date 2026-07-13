@@ -1,12 +1,13 @@
 package com.njydsz.pmis.common.security;
 
-import lombok.extern.slf4j.Slf4j;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.time.Instant;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * TOTP（基于时间的一次性密码）工具

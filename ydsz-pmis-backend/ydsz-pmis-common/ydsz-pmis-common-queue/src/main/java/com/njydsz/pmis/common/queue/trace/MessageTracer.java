@@ -1,7 +1,8 @@
 package com.njydsz.pmis.common.queue.trace;
 
-import com.njydsz.pmis.common.core.context.RequestContext;
 import org.slf4j.MDC;
+
+import com.njydsz.pmis.common.core.context.RequestContext;
 
 /**
  * 消息链路追踪工具类

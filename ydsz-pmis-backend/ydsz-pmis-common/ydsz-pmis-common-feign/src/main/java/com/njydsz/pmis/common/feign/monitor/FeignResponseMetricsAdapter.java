@@ -1,9 +1,11 @@
 package com.njydsz.pmis.common.feign.monitor;
 
+import java.time.Duration;
+
 import com.njydsz.pmis.common.feign.interceptor.FeignResponseInterceptor;
+
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import java.time.Duration;
 
 /**
  * Feign 响应指标 Micrometer 适配器

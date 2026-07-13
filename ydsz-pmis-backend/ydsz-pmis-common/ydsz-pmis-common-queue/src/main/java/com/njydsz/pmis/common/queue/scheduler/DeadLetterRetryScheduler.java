@@ -1,9 +1,11 @@
 package com.njydsz.pmis.common.queue.scheduler;
 
+import org.springframework.scheduling.annotation.Scheduled;
+
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import com.njydsz.pmis.common.queue.service.DeadLetterQueueService;
+
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 
 /**
  * 死信队列自动重试调度器

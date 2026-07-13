@@ -1,8 +1,12 @@
 package com.njydsz.pmis.common.file.storage.platform;
 
-import com.obs.services.ObsClient;
-import com.obs.services.ObsConfiguration;
-import com.obs.services.model.*;
+import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.file.config.FileProperties;
 import com.njydsz.pmis.common.file.config.FileUploadProperties;
@@ -14,14 +18,11 @@ import com.njydsz.pmis.common.file.domain.PolicyResult;
 import com.njydsz.pmis.common.file.exception.FileExceptionCode;
 import com.njydsz.pmis.common.file.storage.AbstractFileStorage;
 import com.njydsz.pmis.common.util.string.StringUtils;
-import lombok.extern.slf4j.Slf4j;
+import com.obs.services.ObsClient;
+import com.obs.services.ObsConfiguration;
+import com.obs.services.model.*;
 
-import java.io.InputStream;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 华为云 OBS 对象存储实现

@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.docs.domain;
 
 import com.njydsz.pmis.common.docs.enums.PiiType;
+
 import lombok.Builder;
 import lombok.Data;
 

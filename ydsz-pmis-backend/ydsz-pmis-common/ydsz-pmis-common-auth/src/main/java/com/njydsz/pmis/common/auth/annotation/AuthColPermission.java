@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.auth.annotation;
 
 import java.lang.annotation.*;
+
 import com.njydsz.pmis.common.auth.model.ColumnScopeAware;
 import com.njydsz.pmis.common.auth.model.ColumnScopeInfo;
 

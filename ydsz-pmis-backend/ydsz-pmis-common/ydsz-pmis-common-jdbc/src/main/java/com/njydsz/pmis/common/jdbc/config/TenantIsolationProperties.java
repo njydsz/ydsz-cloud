@@ -1,13 +1,14 @@
 package com.njydsz.pmis.common.jdbc.config;
 
-import lombok.Data;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import lombok.Data;
 
 /**
  * 租户隔离配置属性。

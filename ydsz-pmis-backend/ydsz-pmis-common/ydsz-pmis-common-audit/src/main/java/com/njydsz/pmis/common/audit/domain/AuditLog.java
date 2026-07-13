@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.audit.domain;
 
-import lombok.Data;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import lombok.Data;
 
 /**
  * 审计日志实体

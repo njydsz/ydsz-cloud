@@ -1,14 +1,14 @@
 package com.njydsz.pmis.common.notify.preference;
 
-import com.njydsz.pmis.common.notify.enums.NotifyChannel;
-import com.njydsz.pmis.common.notify.enums.NotifyType;
-
 import java.time.LocalTime;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
+
+import com.njydsz.pmis.common.notify.enums.NotifyChannel;
+import com.njydsz.pmis.common.notify.enums.NotifyType;
 
 /**
  * 用户通知偏好配置（P3-12）

@@ -1,19 +1,20 @@
 package com.njydsz.pmis.common.audit.mask;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.njydsz.pmis.common.util.json.JsonUtils;
-import lombok.extern.slf4j.Slf4j;
-
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.ArrayList;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 敏感字段脱敏工具类

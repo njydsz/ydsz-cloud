@@ -1,13 +1,15 @@
 package com.njydsz.pmis.common.file.storage;
 
+import java.time.Duration;
+import java.util.List;
+
+import org.springframework.web.multipart.MultipartFile;
+
 import com.njydsz.pmis.common.file.callback.UploadProgressListener;
 import com.njydsz.pmis.common.file.domain.ChunkedUploadResult;
 import com.njydsz.pmis.common.file.domain.FileStorage;
 import com.njydsz.pmis.common.file.domain.PolicyResult;
 import com.njydsz.pmis.common.file.domain.UploadCheckpoint;
-import org.springframework.web.multipart.MultipartFile;
-import java.util.List;
-import java.time.Duration;
 
 /**
  * 文件上传器接口

@@ -1,10 +1,11 @@
 package com.njydsz.pmis.common.feign.fallback;
 
+import org.springframework.stereotype.Component;
+
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.feign.NotificationClient;
 import com.njydsz.pmis.common.feign.dto.NotificationFeignDTO;
 import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
-import org.springframework.stereotype.Component;
 
 /**
  * NotificationClient 降级工厂。

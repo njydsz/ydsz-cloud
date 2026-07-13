@@ -1,11 +1,11 @@
 package com.njydsz.pmis.common.auth.precheck;
 
+import java.util.Set;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.Set;
 
 /**
  * 权限预检结果。

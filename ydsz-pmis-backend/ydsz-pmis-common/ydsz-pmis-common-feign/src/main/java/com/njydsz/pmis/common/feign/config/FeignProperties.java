@@ -1,18 +1,21 @@
 package com.njydsz.pmis.common.feign.config;
 
-import com.njydsz.pmis.common.util.string.StringUtils;
-import feign.Logger;
-import jakarta.validation.constraints.Min;
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+
+import jakarta.validation.constraints.Min;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+
+import com.njydsz.pmis.common.util.string.StringUtils;
+
+import feign.Logger;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * YdszFeign 模块配置属性类。

@@ -1,12 +1,13 @@
 package com.njydsz.pmis.common.auth.model;
 
-import com.njydsz.pmis.common.core.enums.DataScopeType;
-import lombok.Getter;
-
 import java.util.Collections;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import com.njydsz.pmis.common.core.enums.DataScopeType;
+
+import lombok.Getter;
 
 /**
  * 数据权限信息载体。

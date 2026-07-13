@@ -1,17 +1,19 @@
 package com.njydsz.pmis.common.docs.parser.registry;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.stereotype.Component;
+
 import com.njydsz.pmis.common.docs.enums.DocumentFormat;
 import com.njydsz.pmis.common.docs.exception.DocumentException;
 import com.njydsz.pmis.common.docs.exception.DocumentExceptionCode;
 import com.njydsz.pmis.common.docs.parser.DocumentParser;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Collections;
-import java.util.concurrent.ConcurrentHashMap;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文档解析器注册表

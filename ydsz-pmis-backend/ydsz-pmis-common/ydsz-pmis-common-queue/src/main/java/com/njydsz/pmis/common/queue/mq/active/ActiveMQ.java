@@ -1,14 +1,17 @@
 package com.njydsz.pmis.common.queue.mq.active;
 
+import java.util.concurrent.ExecutorService;
+
+import jakarta.jms.Connection;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.queue.queue.AbstractMessageQueue;
 import com.njydsz.pmis.common.queue.service.IMessagePublisher;
 import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.activemq.ActiveMQConnectionFactory;
 
-import jakarta.jms.Connection;
-import java.util.concurrent.ExecutorService;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * ActiveMQ 消息队列

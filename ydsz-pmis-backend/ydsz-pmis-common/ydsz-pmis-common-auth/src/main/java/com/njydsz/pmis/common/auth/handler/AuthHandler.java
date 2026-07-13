@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.auth.handler;
 
-import com.njydsz.pmis.common.util.auth.AuthInfo;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import com.njydsz.pmis.common.util.auth.AuthInfo;
 
 /**
  * 认证信息处理接口

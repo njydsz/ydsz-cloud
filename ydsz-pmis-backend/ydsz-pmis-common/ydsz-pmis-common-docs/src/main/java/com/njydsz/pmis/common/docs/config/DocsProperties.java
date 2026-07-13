@@ -1,7 +1,8 @@
 package com.njydsz.pmis.common.docs.config;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import lombok.Data;
 
 /**
  * 文档处理模块配置属性

@@ -1,8 +1,10 @@
 package com.njydsz.pmis.common.jdbc.config;
 
-import com.njydsz.pmis.common.jdbc.interceptor.LogicalDeleteInterceptor;
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import com.njydsz.pmis.common.jdbc.interceptor.LogicalDeleteInterceptor;
+
+import lombok.Data;
 
 /**
  * 逻辑删除拦截器配置类

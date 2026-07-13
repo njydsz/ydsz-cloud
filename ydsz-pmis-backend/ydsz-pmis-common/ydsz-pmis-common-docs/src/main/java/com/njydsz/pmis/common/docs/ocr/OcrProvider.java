@@ -1,19 +1,5 @@
 package com.njydsz.pmis.common.docs.ocr;
 
-import com.njydsz.pmis.common.docs.domain.DocumentContent;
-import com.njydsz.pmis.common.docs.domain.DocumentMetadata;
-import com.njydsz.pmis.common.docs.domain.DocumentSection;
-import com.njydsz.pmis.common.docs.enums.DocumentFormat;
-import com.njydsz.pmis.common.docs.exception.DocumentException;
-import com.njydsz.pmis.common.docs.exception.DocumentExceptionCode;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.rendering.PDFRenderer;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.stereotype.Component;
-
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -22,6 +8,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.imageio.ImageIO;
+
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.docs.domain.DocumentContent;
+import com.njydsz.pmis.common.docs.domain.DocumentMetadata;
+import com.njydsz.pmis.common.docs.domain.DocumentSection;
+import com.njydsz.pmis.common.docs.exception.DocumentException;
+import com.njydsz.pmis.common.docs.exception.DocumentExceptionCode;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * OCR 服务提供者

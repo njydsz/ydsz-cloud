@@ -1,9 +1,24 @@
 package com.njydsz.pmis.common.auth.config;
 
-import com.njydsz.pmis.common.auth.cache.LocalPermissionCache;
-import com.njydsz.pmis.common.auth.aspect.AuthPermissionAspect;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.scheduling.annotation.Scheduled;
+
 import com.njydsz.pmis.common.auth.aspect.AuthColPermissionAspect;
+import com.njydsz.pmis.common.auth.aspect.AuthPermissionAspect;
 import com.njydsz.pmis.common.auth.aspect.AuthRowPermissionAspect;
+import com.njydsz.pmis.common.auth.cache.LocalPermissionCache;
 import com.njydsz.pmis.common.auth.desensitize.ColumnDesensitizationService;
 import com.njydsz.pmis.common.auth.event.PermissionCacheInvalidationListener;
 import com.njydsz.pmis.common.auth.event.PermissionChangeNotifier;
@@ -15,32 +30,18 @@ import com.njydsz.pmis.common.auth.service.RbacPermissionEvaluator;
 import com.njydsz.pmis.common.auth.service.RbacUserInfoService;
 import com.njydsz.pmis.common.auth.service.RolePermissionLoader;
 import com.njydsz.pmis.common.auth.service.TokenBlacklistService;
-import com.njydsz.pmis.common.auth.service.impl.RedisRoleColumnPermissionResolver;
 import com.njydsz.pmis.common.auth.service.impl.RedisRbacUserInfoService;
+import com.njydsz.pmis.common.auth.service.impl.RedisRoleColumnPermissionResolver;
 import com.njydsz.pmis.common.auth.service.impl.RedisRoleDataPermissionResolver;
 import com.njydsz.pmis.common.auth.service.impl.RedisRolePermissionLoader;
+import com.njydsz.pmis.common.auth.strategy.CacheKeyStrategy;
+import com.njydsz.pmis.common.auth.strategy.DefaultCacheKeyStrategy;
 import com.njydsz.pmis.common.auth.token.JwtTokenService;
 import com.njydsz.pmis.common.auth.token.TokenProperties;
 import com.njydsz.pmis.common.auth.token.TokenService;
-import com.njydsz.pmis.common.auth.strategy.CacheKeyStrategy;
-import com.njydsz.pmis.common.auth.strategy.DefaultCacheKeyStrategy;
 import com.njydsz.pmis.common.redis.service.RedisService;
 import com.njydsz.pmis.common.redis.service.ops.RedisHashOps;
 import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Bean;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import org.springframework.scheduling.annotation.Scheduled;
 
 /**
  * 认证授权模块配置类。

@@ -1,12 +1,12 @@
 package com.njydsz.pmis.common.feign;
 
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+
+import lombok.Data;
 
 /**
  * 消息发送请求 DTO（兼容旧 com.njydsz.pmis.common.feign.MessageRequest）。

@@ -1,13 +1,16 @@
 package com.njydsz.pmis.common.queue.mq.active;
 
+import java.util.concurrent.locks.ReentrantLock;
+
+import jakarta.jms.*;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+
 import com.njydsz.pmis.common.exception.custom.InfrastructureException;
 import com.njydsz.pmis.common.queue.domain.QueueMessage;
 import com.njydsz.pmis.common.queue.service.IMessagePublisher;
-import jakarta.jms.*;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.activemq.ActiveMQConnectionFactory;
 
-import java.util.concurrent.locks.ReentrantLock;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * ActiveMQ 消息发布者

@@ -1,11 +1,12 @@
 package com.njydsz.pmis.common.notify.security;
 
-import com.njydsz.pmis.common.notify.config.NotifyProperties;
 import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;
 import org.jasypt.encryption.pbe.config.SimpleStringPBEConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.pmis.common.notify.config.NotifyProperties;
 
 /**
  * 通知模块密码解析器（P0-1：敏感信息加密）

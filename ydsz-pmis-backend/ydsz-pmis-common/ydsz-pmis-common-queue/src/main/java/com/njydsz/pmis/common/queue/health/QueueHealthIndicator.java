@@ -1,20 +1,22 @@
 package com.njydsz.pmis.common.queue.health;
 
-import com.njydsz.pmis.common.queue.config.QueueProperties;
-import com.njydsz.pmis.common.queue.enums.QueueType;
-import com.njydsz.pmis.common.redis.service.RedisService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.health.contributor.Health;
-import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Configuration;
-
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
+import org.springframework.context.annotation.Configuration;
+
+import com.njydsz.pmis.common.queue.config.QueueProperties;
+import com.njydsz.pmis.common.queue.enums.QueueType;
+import com.njydsz.pmis.common.redis.service.RedisService;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 消息队列健康检查

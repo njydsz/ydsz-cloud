@@ -1,10 +1,8 @@
 package com.njydsz.pmis.common.socket.auth;
 
-import com.njydsz.pmis.common.auth.model.UserInfo;
-import com.njydsz.pmis.common.auth.token.TokenService;
-import com.njydsz.pmis.common.socket.constant.WebSocketConstants;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
@@ -12,8 +10,12 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
-import java.util.Map;
-import org.springframework.http.HttpStatus;
+import com.njydsz.pmis.common.auth.model.UserInfo;
+import com.njydsz.pmis.common.auth.token.TokenService;
+import com.njydsz.pmis.common.socket.constant.WebSocketConstants;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * WebSocket 握手鉴权拦截器（通用版）。

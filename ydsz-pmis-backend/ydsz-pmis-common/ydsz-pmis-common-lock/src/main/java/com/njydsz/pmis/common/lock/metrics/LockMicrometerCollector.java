@@ -1,12 +1,12 @@
 package com.njydsz.pmis.common.lock.metrics;
 
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Timer;
-import io.micrometer.core.instrument.Gauge;
-
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 
 /**
  * 分布式锁 Micrometer 指标收集器

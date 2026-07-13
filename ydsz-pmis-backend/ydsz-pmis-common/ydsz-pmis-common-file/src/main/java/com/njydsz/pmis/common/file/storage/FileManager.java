@@ -1,11 +1,11 @@
 package com.njydsz.pmis.common.file.storage;
 
+import java.time.Duration;
+import java.util.List;
+
 import com.njydsz.pmis.common.file.domain.BatchDeleteResult;
 import com.njydsz.pmis.common.file.domain.ListObjectsResult;
 import com.njydsz.pmis.common.file.domain.ObjectMetadata;
-
-import java.util.List;
-import java.time.Duration;
 
 /**
  * 文件管理器接口

@@ -1,22 +1,5 @@
 package com.njydsz.pmis.common.auth.service.impl;
 
-import com.njydsz.pmis.common.auth.cache.LocalPermissionCache;
-import com.njydsz.pmis.common.auth.config.AuthProperties;
-import com.njydsz.pmis.common.auth.event.PermissionChangeNotifier;
-import com.njydsz.pmis.common.auth.model.RolePermissions;
-import com.njydsz.pmis.common.auth.service.RolePermissionLoader;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.RemovalCause;
-import org.springframework.http.HttpStatus;
-import com.njydsz.pmis.common.util.json.JsonUtils;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.njydsz.pmis.common.exception.custom.BusinessException;
-import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
-import com.njydsz.pmis.common.util.string.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,6 +8,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.RemovalCause;
+import com.njydsz.pmis.common.auth.cache.LocalPermissionCache;
+import com.njydsz.pmis.common.auth.config.AuthProperties;
+import com.njydsz.pmis.common.auth.event.PermissionChangeNotifier;
+import com.njydsz.pmis.common.auth.model.RolePermissions;
+import com.njydsz.pmis.common.auth.service.RolePermissionLoader;
+import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
+import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
  * 基于 Redis 的角色权限加载器实现。

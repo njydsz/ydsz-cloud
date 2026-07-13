@@ -1,12 +1,5 @@
 package com.njydsz.pmis.common.lock.scheduler;
 
-import com.njydsz.pmis.common.lock.metrics.LockMetrics;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-
-import jakarta.annotation.PreDestroy;
-
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,7 +10,15 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantLock;
 
+import jakarta.annotation.PreDestroy;
+
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.TaskScheduler;
+
+import com.njydsz.pmis.common.lock.metrics.LockMetrics;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 锁续期看门狗

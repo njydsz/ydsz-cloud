@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.docs.domain;
 
-import lombok.Builder;
-import lombok.Data;
-
 import java.time.LocalDateTime;
 import java.util.Map;
+
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * 文档元数据模型

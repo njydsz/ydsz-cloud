@@ -1,11 +1,13 @@
 package com.njydsz.pmis.common.queue.mq.rocket;
 
+import org.apache.rocketmq.client.producer.DefaultMQProducer;
+
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.queue.queue.AbstractMessageQueue;
 import com.njydsz.pmis.common.queue.service.IMessagePublisher;
 import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
+
 import lombok.extern.slf4j.Slf4j;
-import org.apache.rocketmq.client.producer.DefaultMQProducer;
 
 /**
  * RocketMQ 消息队列

@@ -1,11 +1,11 @@
 package com.njydsz.pmis.common.notify.event;
 
-import lombok.Builder;
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * 统一告警事件 — 全局告警事件总线的标准事件载体。

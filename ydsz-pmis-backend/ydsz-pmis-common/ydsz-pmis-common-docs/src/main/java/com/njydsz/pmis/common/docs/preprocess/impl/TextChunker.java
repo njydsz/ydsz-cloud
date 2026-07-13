@@ -1,13 +1,15 @@
 package com.njydsz.pmis.common.docs.preprocess.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.stereotype.Component;
+
 import com.njydsz.pmis.common.docs.domain.DocumentContent;
 import com.njydsz.pmis.common.docs.domain.DocumentSection;
 import com.njydsz.pmis.common.docs.preprocess.DocumentPreprocessor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文本分块预处理器

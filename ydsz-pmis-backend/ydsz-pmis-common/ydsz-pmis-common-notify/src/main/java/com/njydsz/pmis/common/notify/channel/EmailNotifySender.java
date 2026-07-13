@@ -1,18 +1,18 @@
 package com.njydsz.pmis.common.notify.channel;
 
-import com.njydsz.pmis.common.notify.config.NotifyProperties;
-import com.njydsz.pmis.common.notify.core.NotifySendResult;
-import com.njydsz.pmis.common.notify.dedup.NotifyDedupService;
-import com.njydsz.pmis.common.notify.enums.NotifyChannel;
-import com.njydsz.pmis.common.notify.metrics.NotifyMetrics;
-import com.njydsz.pmis.common.notify.security.DkimSigner;
-import com.njydsz.pmis.common.notify.security.EmailContentSanitizer;
-import com.njydsz.pmis.common.notify.security.EmailSmtpHealthChecker;
-import com.njydsz.pmis.common.notify.template.TemplateEngine;
-import com.njydsz.pmis.common.notify.tracking.EmailTrackingService;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.regex.Pattern;
+
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetHeaders;
 import jakarta.mail.internet.MimeMessage;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -26,14 +26,16 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.regex.Pattern;
+import com.njydsz.pmis.common.notify.config.NotifyProperties;
+import com.njydsz.pmis.common.notify.core.NotifySendResult;
+import com.njydsz.pmis.common.notify.dedup.NotifyDedupService;
+import com.njydsz.pmis.common.notify.enums.NotifyChannel;
+import com.njydsz.pmis.common.notify.metrics.NotifyMetrics;
+import com.njydsz.pmis.common.notify.security.DkimSigner;
+import com.njydsz.pmis.common.notify.security.EmailContentSanitizer;
+import com.njydsz.pmis.common.notify.security.EmailSmtpHealthChecker;
+import com.njydsz.pmis.common.notify.template.TemplateEngine;
+import com.njydsz.pmis.common.notify.tracking.EmailTrackingService;
 
 /**
  * 邮件通知发送器

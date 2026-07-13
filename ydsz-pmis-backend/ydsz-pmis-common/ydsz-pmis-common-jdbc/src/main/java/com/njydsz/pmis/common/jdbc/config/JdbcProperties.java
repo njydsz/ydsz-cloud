@@ -1,12 +1,14 @@
 package com.njydsz.pmis.common.jdbc.config;
 
+import java.util.Arrays;
+import java.util.List;
+
 import jakarta.validation.constraints.Min;
-import lombok.Data;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.Arrays;
-import java.util.List;
+import lombok.Data;
 
 /**
  * JDBC 模块统一配置属性类

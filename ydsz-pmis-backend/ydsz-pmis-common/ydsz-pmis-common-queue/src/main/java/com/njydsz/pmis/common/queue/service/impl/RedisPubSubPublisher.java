@@ -1,7 +1,8 @@
 package com.njydsz.pmis.common.queue.service.impl;
 
-import com.njydsz.pmis.common.queue.service.IMessagePublisher;
 import org.springframework.data.redis.core.RedisTemplate;
+
+import com.njydsz.pmis.common.queue.service.IMessagePublisher;
 
 /**
  * 基于 Redis PubSub 的消息发布者

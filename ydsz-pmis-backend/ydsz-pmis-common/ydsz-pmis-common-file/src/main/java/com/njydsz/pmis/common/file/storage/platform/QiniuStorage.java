@@ -1,30 +1,5 @@
 package com.njydsz.pmis.common.file.storage.platform;
 
-import com.qiniu.common.QiniuException;
-import com.qiniu.http.Client;
-import com.qiniu.storage.ApiUploadV2AbortUpload;
-import com.qiniu.storage.ApiUploadV2CompleteUpload;
-import com.qiniu.storage.ApiUploadV2InitUpload;
-import com.qiniu.storage.ApiUploadV2UploadPart;
-import com.qiniu.storage.BucketManager;
-import com.qiniu.storage.Configuration;
-import com.qiniu.storage.Region;
-import com.qiniu.storage.UploadManager;
-import com.qiniu.storage.model.FileInfo;
-import com.qiniu.util.Auth;
-import com.njydsz.pmis.common.exception.custom.BusinessException;
-import com.njydsz.pmis.common.file.config.FileProperties;
-import com.njydsz.pmis.common.file.config.FileUploadProperties;
-import com.njydsz.pmis.common.file.constant.FileConstant;
-import com.njydsz.pmis.common.file.domain.ChunkedUploadResult;
-import com.njydsz.pmis.common.file.domain.ListObjectsResult;
-import com.njydsz.pmis.common.file.domain.ObjectMetadata;
-import com.njydsz.pmis.common.file.exception.FileExceptionCode;
-import com.njydsz.pmis.common.file.storage.AbstractFileStorage;
-import com.njydsz.pmis.common.file.storage.MultipartContextStore;
-import com.njydsz.pmis.common.util.string.StringUtils;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -41,6 +16,32 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.file.config.FileProperties;
+import com.njydsz.pmis.common.file.config.FileUploadProperties;
+import com.njydsz.pmis.common.file.constant.FileConstant;
+import com.njydsz.pmis.common.file.domain.ChunkedUploadResult;
+import com.njydsz.pmis.common.file.domain.ListObjectsResult;
+import com.njydsz.pmis.common.file.domain.ObjectMetadata;
+import com.njydsz.pmis.common.file.exception.FileExceptionCode;
+import com.njydsz.pmis.common.file.storage.AbstractFileStorage;
+import com.njydsz.pmis.common.file.storage.MultipartContextStore;
+import com.njydsz.pmis.common.util.string.StringUtils;
+import com.qiniu.common.QiniuException;
+import com.qiniu.http.Client;
+import com.qiniu.storage.ApiUploadV2AbortUpload;
+import com.qiniu.storage.ApiUploadV2CompleteUpload;
+import com.qiniu.storage.ApiUploadV2InitUpload;
+import com.qiniu.storage.ApiUploadV2UploadPart;
+import com.qiniu.storage.BucketManager;
+import com.qiniu.storage.Configuration;
+import com.qiniu.storage.Region;
+import com.qiniu.storage.UploadManager;
+import com.qiniu.storage.model.FileInfo;
+import com.qiniu.util.Auth;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 七牛云 Kodo 对象存储实现

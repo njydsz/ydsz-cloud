@@ -12,14 +12,15 @@ package com.njydsz.pmis.common.jdbc.permission;
  * @version 3.5.0
  */
 
-import com.njydsz.pmis.common.core.enums.DataScopeType;
-import lombok.Data;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+
+import com.njydsz.pmis.common.core.enums.DataScopeType;
+
+import lombok.Data;
 
 @Data
 public class DataPermissionContext {

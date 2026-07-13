@@ -1,5 +1,11 @@
 package com.njydsz.pmis.common.lock.strategy;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.TaskScheduler;
+
 import com.njydsz.pmis.common.lock.RedisReadWriteLock;
 import com.njydsz.pmis.common.lock.RedisSemaphore;
 import com.njydsz.pmis.common.lock.annotation.LockType;
@@ -10,12 +16,6 @@ import com.njydsz.pmis.common.lock.impl.RedisReentrantLock;
 import com.njydsz.pmis.common.lock.metrics.LockMetrics;
 import com.njydsz.pmis.common.lock.scheduler.LockWatchDog;
 import com.njydsz.pmis.common.redis.service.RedisService;
-import org.springframework.data.redis.core.StringRedisTemplate;
-
-import org.springframework.scheduling.TaskScheduler;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 默认锁策略实现

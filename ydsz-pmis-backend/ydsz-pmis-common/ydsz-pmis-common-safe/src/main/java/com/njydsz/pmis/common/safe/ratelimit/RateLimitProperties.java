@@ -1,11 +1,12 @@
 package com.njydsz.pmis.common.safe.ratelimit;
 
-import jakarta.validation.constraints.Min;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.validation.constraints.Min;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * 限流配置属性。

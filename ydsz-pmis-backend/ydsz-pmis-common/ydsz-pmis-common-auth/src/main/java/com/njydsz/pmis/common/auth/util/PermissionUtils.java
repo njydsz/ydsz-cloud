@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.auth.util;
 
-import com.njydsz.pmis.common.util.string.StringUtils;
-
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
  * 权限校验工具类。

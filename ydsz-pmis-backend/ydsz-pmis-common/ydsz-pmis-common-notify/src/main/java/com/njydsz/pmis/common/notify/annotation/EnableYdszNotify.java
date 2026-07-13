@@ -1,13 +1,14 @@
 package com.njydsz.pmis.common.notify.annotation;
 
-import com.njydsz.pmis.common.notify.config.NotifyConfiguration;
-import org.springframework.context.annotation.Import;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.springframework.context.annotation.Import;
+
+import com.njydsz.pmis.common.notify.config.NotifyConfiguration;
 
 /**
  * 启用ydsz统一消息通知模块

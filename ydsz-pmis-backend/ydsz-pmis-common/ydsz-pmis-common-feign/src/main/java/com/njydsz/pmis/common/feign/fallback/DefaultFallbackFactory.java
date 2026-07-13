@@ -1,15 +1,17 @@
 package com.njydsz.pmis.common.feign.fallback;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.util.id.TracerUtils;
-import feign.FeignException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.openfeign.FallbackFactory;
 
-import java.lang.reflect.Proxy;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.util.id.TracerUtils;
+
+import feign.FeignException;
 /**
  * Feign Client 降级工厂抽象基类。
  *

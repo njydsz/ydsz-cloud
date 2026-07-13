@@ -1,20 +1,23 @@
 package com.njydsz.pmis.common.queue.config;
 
-import com.njydsz.pmis.common.redis.service.RedisService;
-import com.njydsz.pmis.common.queue.enums.QueueType;
-import com.njydsz.pmis.common.queue.queue.MessageQueueFactory;
-import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
-import com.njydsz.pmis.common.queue.rate.ConsumerRateLimiter;
-import jakarta.validation.constraints.Min;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
+
+import jakarta.validation.constraints.Min;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import com.njydsz.pmis.common.queue.enums.QueueType;
+import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
+import com.njydsz.pmis.common.queue.queue.MessageQueueFactory;
+import com.njydsz.pmis.common.queue.rate.ConsumerRateLimiter;
+import com.njydsz.pmis.common.redis.service.RedisService;
+
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 消息队列配置类

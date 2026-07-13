@@ -1,11 +1,12 @@
 package com.njydsz.pmis.common.safe.captcha.store;
 
-import com.njydsz.pmis.common.safe.captcha.core.CaptchaStore;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import java.time.Duration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
-import java.time.Duration;
+import com.njydsz.pmis.common.safe.captcha.core.CaptchaStore;
 
 /**
  * Redis 分布式验证码存储器

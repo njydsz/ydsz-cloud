@@ -1,16 +1,18 @@
 package com.njydsz.pmis.common.feign.codec;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.core.response.IResponse;
-import feign.Response;
-import feign.codec.DecodeException;
-import feign.codec.Decoder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.core.response.IResponse;
+
+import feign.Response;
+import feign.codec.DecodeException;
+import feign.codec.Decoder;
 
 /**
  * Feign 响应自动解包解码器

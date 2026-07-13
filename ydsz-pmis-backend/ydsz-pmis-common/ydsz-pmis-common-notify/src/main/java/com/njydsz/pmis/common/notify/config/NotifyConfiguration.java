@@ -1,23 +1,11 @@
 package com.njydsz.pmis.common.notify.config;
 
-import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
-import com.njydsz.pmis.common.notify.core.NotifyService;
-import com.njydsz.pmis.common.notify.core.NotifyServiceImpl;
-import com.njydsz.pmis.common.notify.core.PersistentNotifyRetryQueue;
-import com.njydsz.pmis.common.notify.dedup.NotifyDedupService;
-import com.njydsz.pmis.common.notify.fallback.NotifyFallbackManager;
-import com.njydsz.pmis.common.notify.i18n.NotifyI18nService;
-import com.njydsz.pmis.common.notify.metrics.NotifyMetrics;
-import com.njydsz.pmis.common.notify.preference.NotifyPreferenceManager;
-import com.njydsz.pmis.common.notify.queue.EmailQueueService;
-import com.njydsz.pmis.common.notify.ratelimit.NotifyRateLimiterManager;
-import com.njydsz.pmis.common.notify.security.DkimSigner;
-import com.njydsz.pmis.common.notify.security.EmailSmtpHealthChecker;
-import com.njydsz.pmis.common.notify.security.NotifyPasswordResolver;
-import com.njydsz.pmis.common.notify.template.HtmlTemplateRegistry;
-import com.njydsz.pmis.common.notify.template.TemplateEngine;
-import com.njydsz.pmis.common.notify.tracking.EmailTrackingService;
-import io.micrometer.core.instrument.MeterRegistry;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
@@ -36,15 +24,29 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
+
+import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.pmis.common.notify.core.AsyncNotifyService;
 import com.njydsz.pmis.common.notify.core.NotifyRetryQueue;
+import com.njydsz.pmis.common.notify.core.NotifyService;
+import com.njydsz.pmis.common.notify.core.NotifyServiceImpl;
+import com.njydsz.pmis.common.notify.core.PersistentNotifyRetryQueue;
+import com.njydsz.pmis.common.notify.dedup.NotifyDedupService;
+import com.njydsz.pmis.common.notify.fallback.NotifyFallbackManager;
+import com.njydsz.pmis.common.notify.i18n.NotifyI18nService;
+import com.njydsz.pmis.common.notify.metrics.NotifyMetrics;
+import com.njydsz.pmis.common.notify.preference.NotifyPreferenceManager;
+import com.njydsz.pmis.common.notify.queue.EmailQueueService;
+import com.njydsz.pmis.common.notify.ratelimit.NotifyRateLimiterManager;
+import com.njydsz.pmis.common.notify.security.DkimSigner;
+import com.njydsz.pmis.common.notify.security.EmailSmtpHealthChecker;
+import com.njydsz.pmis.common.notify.security.NotifyPasswordResolver;
+import com.njydsz.pmis.common.notify.template.HtmlTemplateRegistry;
+import com.njydsz.pmis.common.notify.template.TemplateEngine;
+import com.njydsz.pmis.common.notify.tracking.EmailTrackingService;
 import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
 
-import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.ExecutorService;
+import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * 统一消息通知自动配置类

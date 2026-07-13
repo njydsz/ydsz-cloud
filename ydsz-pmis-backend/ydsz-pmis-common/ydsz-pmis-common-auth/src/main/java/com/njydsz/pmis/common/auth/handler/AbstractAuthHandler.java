@@ -1,11 +1,5 @@
 package com.njydsz.pmis.common.auth.handler;
 
-import com.njydsz.pmis.common.util.auth.AuthInfo;
-import com.njydsz.pmis.common.util.auth.YdszAuthInfo;
-import com.njydsz.pmis.common.util.string.StringUtils;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -16,6 +10,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import com.njydsz.pmis.common.util.auth.AuthInfo;
+import com.njydsz.pmis.common.util.auth.YdszAuthInfo;
+import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
  * 认证信息处理抽象基类

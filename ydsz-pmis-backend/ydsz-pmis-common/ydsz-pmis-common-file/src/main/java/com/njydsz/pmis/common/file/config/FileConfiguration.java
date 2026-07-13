@@ -1,22 +1,7 @@
 package com.njydsz.pmis.common.file.config;
 
-import com.njydsz.pmis.common.file.health.FileHealthIndicator;
-import com.njydsz.pmis.common.file.service.DedupCleanupScheduler;
-import com.njydsz.pmis.common.file.service.FileDedupService;
-import com.njydsz.pmis.common.file.storage.CheckpointService;
-import com.njydsz.pmis.common.file.storage.CheckpointStore;
-import com.njydsz.pmis.common.file.storage.DelegatingCheckpointStore;
-import com.njydsz.pmis.common.file.storage.DelegatingMultipartContextStore;
-import com.njydsz.pmis.common.file.storage.DefaultCheckpointService;
-import com.njydsz.pmis.common.file.storage.IFileStorageProvider;
-import com.njydsz.pmis.common.file.storage.IStorageFactory;
-import com.njydsz.pmis.common.file.storage.InMemoryMultipartContextStore;
-import com.njydsz.pmis.common.file.storage.LocalCheckpointStore;
-import com.njydsz.pmis.common.file.storage.MultipartContextStore;
-import com.njydsz.pmis.common.file.storage.RedisCheckpointStore;
-import com.njydsz.pmis.common.file.storage.RedisMultipartContextStore;
-import com.njydsz.pmis.common.file.storage.UploadConcurrencyGuard;
-import com.njydsz.pmis.common.file.util.FileTypeValidator;
+import java.util.Collections;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -29,7 +14,24 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
-import java.util.Collections;
+
+import com.njydsz.pmis.common.file.health.FileHealthIndicator;
+import com.njydsz.pmis.common.file.service.DedupCleanupScheduler;
+import com.njydsz.pmis.common.file.service.FileDedupService;
+import com.njydsz.pmis.common.file.storage.CheckpointService;
+import com.njydsz.pmis.common.file.storage.CheckpointStore;
+import com.njydsz.pmis.common.file.storage.DefaultCheckpointService;
+import com.njydsz.pmis.common.file.storage.DelegatingCheckpointStore;
+import com.njydsz.pmis.common.file.storage.DelegatingMultipartContextStore;
+import com.njydsz.pmis.common.file.storage.IFileStorageProvider;
+import com.njydsz.pmis.common.file.storage.IStorageFactory;
+import com.njydsz.pmis.common.file.storage.InMemoryMultipartContextStore;
+import com.njydsz.pmis.common.file.storage.LocalCheckpointStore;
+import com.njydsz.pmis.common.file.storage.MultipartContextStore;
+import com.njydsz.pmis.common.file.storage.RedisCheckpointStore;
+import com.njydsz.pmis.common.file.storage.RedisMultipartContextStore;
+import com.njydsz.pmis.common.file.storage.UploadConcurrencyGuard;
+import com.njydsz.pmis.common.file.util.FileTypeValidator;
 
 /**
  * 文件存储自动配置类

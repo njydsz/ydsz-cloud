@@ -1,20 +1,22 @@
 package com.njydsz.pmis.common.file.lifecycle;
 
-import com.njydsz.pmis.common.file.domain.ListObjectsResult;
-import com.njydsz.pmis.common.file.domain.ObjectMetadata;
-import com.njydsz.pmis.common.file.storage.IFileStorage;
-import com.njydsz.pmis.common.file.storage.IStorageFactory;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
+import com.njydsz.pmis.common.file.domain.ListObjectsResult;
+import com.njydsz.pmis.common.file.domain.ObjectMetadata;
+import com.njydsz.pmis.common.file.storage.IFileStorage;
+import com.njydsz.pmis.common.file.storage.IStorageFactory;
+
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文件生命周期管理器

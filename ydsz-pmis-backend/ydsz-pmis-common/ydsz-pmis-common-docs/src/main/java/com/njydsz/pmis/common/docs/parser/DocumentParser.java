@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.docs.parser;
 
+import java.io.InputStream;
+
 import com.njydsz.pmis.common.docs.domain.DocumentContent;
 import com.njydsz.pmis.common.docs.domain.ParseOptions;
 import com.njydsz.pmis.common.docs.enums.DocumentFormat;
-
-import java.io.InputStream;
 
 /**
  * 文档解析器 SPI 接口

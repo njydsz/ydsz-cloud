@@ -1,9 +1,11 @@
 package com.njydsz.pmis.common.jdbc.domain;
 
-import com.njydsz.pmis.common.jdbc.enums.InterceptTableStrategy;
-import lombok.Data;
 import java.util.HashSet;
 import java.util.Set;
+
+import com.njydsz.pmis.common.jdbc.enums.InterceptTableStrategy;
+
+import lombok.Data;
 /**
  * SQL 拦截器配置类
  *

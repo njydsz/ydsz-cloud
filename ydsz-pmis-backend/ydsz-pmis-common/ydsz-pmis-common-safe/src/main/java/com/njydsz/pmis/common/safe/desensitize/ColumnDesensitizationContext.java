@@ -1,11 +1,11 @@
 package com.njydsz.pmis.common.safe.desensitize;
 
-import lombok.Getter;
-
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import lombok.Getter;
 
 /**
  * 脱敏上下文。

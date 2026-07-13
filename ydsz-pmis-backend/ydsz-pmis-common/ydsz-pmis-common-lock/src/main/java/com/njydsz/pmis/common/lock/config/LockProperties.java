@@ -1,9 +1,11 @@
 package com.njydsz.pmis.common.lock.config;
 
 import jakarta.validation.constraints.Min;
-import lombok.Data;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
+
+import lombok.Data;
 
 /**
  * 分布式锁配置属性类

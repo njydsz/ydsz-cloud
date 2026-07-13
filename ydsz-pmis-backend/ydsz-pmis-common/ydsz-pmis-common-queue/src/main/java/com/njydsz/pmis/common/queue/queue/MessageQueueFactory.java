@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.queue.queue;
 
+import java.util.concurrent.ExecutorService;
+
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import com.njydsz.pmis.common.queue.enums.QueueType;
@@ -12,9 +14,8 @@ import com.njydsz.pmis.common.queue.mq.rabbit.RabbitMQProperties;
 import com.njydsz.pmis.common.queue.mq.rocket.RocketMQ;
 import com.njydsz.pmis.common.queue.mq.rocket.RocketMQProperties;
 import com.njydsz.pmis.common.redis.service.RedisService;
-import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.ExecutorService;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 消息队列工厂类

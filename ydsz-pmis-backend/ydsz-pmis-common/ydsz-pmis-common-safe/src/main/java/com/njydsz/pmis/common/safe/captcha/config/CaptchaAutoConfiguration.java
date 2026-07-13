@@ -1,13 +1,5 @@
 package com.njydsz.pmis.common.safe.captcha.config;
 
-import com.njydsz.pmis.common.safe.captcha.core.CaptchaGenerator;
-import com.njydsz.pmis.common.safe.captcha.core.CaptchaRateLimiter;
-import com.njydsz.pmis.common.safe.captcha.core.CaptchaStore;
-import com.njydsz.pmis.common.safe.captcha.generator.ArithmeticCaptchaGenerator;
-import com.njydsz.pmis.common.safe.captcha.generator.ImageCaptchaGenerator;
-import com.njydsz.pmis.common.safe.captcha.properties.CaptchaProperties;
-import com.njydsz.pmis.common.safe.captcha.store.LocalCaptchaStore;
-import com.njydsz.pmis.common.safe.captcha.validator.CaptchaValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -17,6 +9,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
+
+import com.njydsz.pmis.common.safe.captcha.core.CaptchaGenerator;
+import com.njydsz.pmis.common.safe.captcha.core.CaptchaRateLimiter;
+import com.njydsz.pmis.common.safe.captcha.core.CaptchaStore;
+import com.njydsz.pmis.common.safe.captcha.generator.ArithmeticCaptchaGenerator;
+import com.njydsz.pmis.common.safe.captcha.generator.ImageCaptchaGenerator;
+import com.njydsz.pmis.common.safe.captcha.properties.CaptchaProperties;
+import com.njydsz.pmis.common.safe.captcha.store.LocalCaptchaStore;
+import com.njydsz.pmis.common.safe.captcha.validator.CaptchaValidator;
 
 /**
  * 验证码自动配置类

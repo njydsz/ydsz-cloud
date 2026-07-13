@@ -1,23 +1,24 @@
 package com.njydsz.pmis.common.feign.config;
 
-import feign.Feign;
-import feign.Retryer;
-import feign.codec.Decoder;
-import feign.codec.Encoder;
-import feign.codec.ErrorDecoder;
-import feign.Logger;
-import feign.Request;
-import feign.RequestInterceptor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
+
+import feign.Feign;
+import feign.Logger;
+import feign.Request;
+import feign.RequestInterceptor;
+import feign.Retryer;
+import feign.codec.Decoder;
+import feign.codec.Encoder;
+import feign.codec.ErrorDecoder;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 动态 Feign 客户端工厂。

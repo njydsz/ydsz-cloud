@@ -1,19 +1,21 @@
 package com.njydsz.pmis.common.jdbc.interceptor;
 
-import com.njydsz.pmis.common.jdbc.config.DataPermissionConfiguration;
-import com.njydsz.pmis.common.jdbc.enums.InterceptTableStrategy;
-import com.njydsz.pmis.common.jdbc.permission.DataPermissionIgnore;
-import com.njydsz.pmis.common.util.string.StringUtils;
-import net.sf.jsqlparser.schema.Table;
-import org.apache.ibatis.mapping.MappedStatement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import java.lang.reflect.Method;
+
+import org.apache.ibatis.mapping.MappedStatement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.njydsz.pmis.common.jdbc.config.DataPermissionConfiguration;
+import com.njydsz.pmis.common.jdbc.enums.InterceptTableStrategy;
+import com.njydsz.pmis.common.jdbc.permission.DataPermissionIgnore;
+import com.njydsz.pmis.common.util.string.StringUtils;
+
+import net.sf.jsqlparser.schema.Table;
 
 /**
  *

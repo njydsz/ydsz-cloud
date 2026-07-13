@@ -1,19 +1,20 @@
 package com.njydsz.pmis.common.queue.domain;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
-import com.njydsz.pmis.common.util.id.TracerUtils;
-import com.njydsz.pmis.common.util.string.StringUtils;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import com.njydsz.pmis.common.util.id.TracerUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.util.string.StringUtils;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 统一消息模型

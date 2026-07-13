@@ -1,12 +1,15 @@
 package com.njydsz.pmis.common.audit.health;
 
-import com.njydsz.pmis.common.audit.config.AuditProperties;
-import lombok.extern.slf4j.Slf4j;
+import java.sql.Connection;
+
+import javax.sql.DataSource;
+
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
+import com.njydsz.pmis.common.audit.config.AuditProperties;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 审计模块健康检查指示器
@@ -84,4 +87,3 @@ public class AuditHealthIndicator implements HealthIndicator {
         }
     }
 }
-

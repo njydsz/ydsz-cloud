@@ -1,10 +1,12 @@
 package com.njydsz.pmis.common.jdbc.config;
 
-import com.njydsz.pmis.common.jdbc.interceptor.OptimisticLockInterceptor;
-import lombok.Data;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+
+import com.njydsz.pmis.common.jdbc.interceptor.OptimisticLockInterceptor;
+
+import lombok.Data;
 
 /**
  * 乐观锁拦截器配置类

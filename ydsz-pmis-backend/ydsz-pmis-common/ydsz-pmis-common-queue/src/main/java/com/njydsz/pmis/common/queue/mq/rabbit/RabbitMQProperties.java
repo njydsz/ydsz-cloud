@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.queue.mq.rabbit;
 
 import com.njydsz.pmis.common.queue.config.QueueProperties;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

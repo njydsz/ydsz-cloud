@@ -1,16 +1,19 @@
 package com.njydsz.pmis.common.redis.service;
 
-import com.njydsz.pmis.common.redis.config.RedisProperties;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.stereotype.Component;
-
-import jakarta.annotation.PreDestroy;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
+
+import jakarta.annotation.PreDestroy;
+
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.redis.config.RedisProperties;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 分布式雪花 ID 生成器

@@ -1,8 +1,9 @@
 package com.njydsz.pmis.common.safe.captcha.properties;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
 import com.njydsz.pmis.common.safe.captcha.enums.CaptchaStoreType;
 import com.njydsz.pmis.common.safe.captcha.enums.CaptchaType;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 验证码配置属性类

@@ -1,20 +1,20 @@
 package com.njydsz.pmis.common.auth.warmup;
 
-import com.njydsz.pmis.common.auth.config.AuthProperties;
-import com.njydsz.pmis.common.auth.model.RolePermissions;
-import com.njydsz.pmis.common.auth.service.RolePermissionLoader;
-import com.njydsz.pmis.common.util.string.StringUtils;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
-
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import com.njydsz.pmis.common.auth.config.AuthProperties;
+import com.njydsz.pmis.common.auth.model.RolePermissions;
+import com.njydsz.pmis.common.auth.service.RolePermissionLoader;
+import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
  * 权限预热初始化器。

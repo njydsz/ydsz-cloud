@@ -1,14 +1,16 @@
 package com.njydsz.pmis.common.auth.handler;
 
-import com.njydsz.pmis.common.core.enums.DataScopeType;
-import com.njydsz.pmis.common.core.constant.HeaderConstants;
-import com.njydsz.pmis.common.util.string.StringUtils;
+import java.util.Map;
+import java.util.Set;
+
 import jakarta.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-import java.util.Set;
+import com.njydsz.pmis.common.core.constant.HeaderConstants;
+import com.njydsz.pmis.common.core.enums.DataScopeType;
+import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
  * 公共请求头解析结果

@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.queue.service.impl;
 
-import com.njydsz.pmis.common.queue.service.DeadLetterQueueService;
-
 import java.util.List;
+
+import com.njydsz.pmis.common.queue.service.DeadLetterQueueService;
 
 /**
  * No-Op 死信队列服务实现

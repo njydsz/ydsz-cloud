@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.redis.metrics;
 
+import java.util.function.Supplier;
+
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-
-import java.util.function.Supplier;
 
 /**
  * Redis 操作指标收集器

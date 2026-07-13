@@ -1,19 +1,21 @@
 package com.njydsz.pmis.common.safe.captcha.generator;
 
-import com.njydsz.pmis.common.exception.custom.YdszSecurityException;
-import com.njydsz.pmis.common.safe.captcha.core.CaptchaGenerator;
-import com.njydsz.pmis.common.safe.captcha.core.CaptchaResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.awt.*;
 import java.awt.geom.CubicCurve2D;
 import java.awt.geom.QuadCurve2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
-import java.util.Base64;
 import java.security.SecureRandom;
+import java.util.Base64;
+
 import javax.imageio.ImageIO;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.njydsz.pmis.common.exception.custom.YdszSecurityException;
+import com.njydsz.pmis.common.safe.captcha.core.CaptchaGenerator;
+import com.njydsz.pmis.common.safe.captcha.core.CaptchaResult;
 
 /**
  * 图形验证码生成器。

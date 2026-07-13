@@ -1,17 +1,18 @@
 package com.njydsz.pmis.common.auth.service;
 
-import com.njydsz.pmis.common.auth.config.AuthProperties;
-import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.stereotype.Service;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.HexFormat;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.stereotype.Service;
+
+import com.njydsz.pmis.common.auth.config.AuthProperties;
+import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
 
 /**
  * Token 黑名单服务

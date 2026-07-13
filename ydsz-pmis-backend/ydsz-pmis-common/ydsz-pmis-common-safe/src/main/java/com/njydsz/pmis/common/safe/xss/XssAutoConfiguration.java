@@ -1,13 +1,15 @@
 package com.njydsz.pmis.common.safe.xss;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.njydsz.pmis.common.util.json.JsonUtils;
 import jakarta.annotation.PostConstruct;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 /**
  * XSS JSON 自动配置

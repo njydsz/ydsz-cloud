@@ -1,10 +1,11 @@
 package com.njydsz.pmis.common.feign.fallback;
 
+import org.springframework.stereotype.Component;
+
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.feign.MessageServiceClient;
-import org.springframework.stereotype.Component;
 
 /**
  * MessageServiceClient 降级工厂。

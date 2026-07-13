@@ -1,19 +1,7 @@
 package com.njydsz.pmis.common.socket.config;
 
-import com.njydsz.pmis.common.auth.token.TokenService;
-import com.njydsz.pmis.common.socket.cluster.WebSocketClusterMessage;
-import com.njydsz.pmis.common.socket.cluster.WebSocketClusterPublisher;
-import com.njydsz.pmis.common.socket.auth.WebSocketAuthInterceptor;
-import com.njydsz.pmis.common.socket.metric.WebSocketMetrics;
-import com.njydsz.pmis.common.socket.offline.OfflineMessageStore;
-import com.njydsz.pmis.common.socket.offline.RedisOfflineMessageStore;
-import com.njydsz.pmis.common.socket.push.DefaultRealtimePushTemplate;
-import com.njydsz.pmis.common.socket.push.RealtimePushTemplate;
-import com.njydsz.pmis.common.socket.ratelimit.WebSocketRateLimiter;
-import com.njydsz.pmis.common.socket.session.OnlineUserService;
-import com.njydsz.pmis.common.socket.session.WebSocketSessionEventListener;
-import io.micrometer.core.instrument.MeterRegistry;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -23,7 +11,22 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import java.util.List;
+
+import com.njydsz.pmis.common.auth.token.TokenService;
+import com.njydsz.pmis.common.socket.auth.WebSocketAuthInterceptor;
+import com.njydsz.pmis.common.socket.cluster.WebSocketClusterMessage;
+import com.njydsz.pmis.common.socket.cluster.WebSocketClusterPublisher;
+import com.njydsz.pmis.common.socket.metric.WebSocketMetrics;
+import com.njydsz.pmis.common.socket.offline.OfflineMessageStore;
+import com.njydsz.pmis.common.socket.offline.RedisOfflineMessageStore;
+import com.njydsz.pmis.common.socket.push.DefaultRealtimePushTemplate;
+import com.njydsz.pmis.common.socket.push.RealtimePushTemplate;
+import com.njydsz.pmis.common.socket.ratelimit.WebSocketRateLimiter;
+import com.njydsz.pmis.common.socket.session.OnlineUserService;
+import com.njydsz.pmis.common.socket.session.WebSocketSessionEventListener;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
 /**
  * WebSocket 自动装配配置。
  *

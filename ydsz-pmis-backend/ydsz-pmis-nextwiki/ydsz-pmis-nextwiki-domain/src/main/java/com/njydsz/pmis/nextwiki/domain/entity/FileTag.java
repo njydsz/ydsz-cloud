@@ -1,0 +1,30 @@
+package com.njydsz.pmis.nextwiki.domain.entity;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.domain.entity.BaseEntity;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.SuperBuilder;
+
+import java.io.Serializable;
+
+/**
+ * 文件-标签关联实体（多对多）
+ *
+ * @author ydsz-pmis-team
+ * @since 1.4.0
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
+@TableName("nw_file_tag")
+public class FileTag extends BaseEntity<String> implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    /** 文件节点ID */
+    private String fileNodeId;
+
+    /** 标签ID */
+    private String tagId;
+}

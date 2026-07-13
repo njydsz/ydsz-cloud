@@ -1,16 +1,17 @@
 package com.njydsz.pmis.common.notify.queue;
 
-import com.njydsz.pmis.common.notify.channel.EmailMessage;
-import com.njydsz.pmis.common.notify.channel.EmailNotifySender;
-import com.njydsz.pmis.common.notify.core.NotifySendResult;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicLong;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.njydsz.pmis.common.notify.channel.EmailMessage;
+import com.njydsz.pmis.common.notify.channel.EmailNotifySender;
+import com.njydsz.pmis.common.notify.core.NotifySendResult;
 
 /**
  * 邮件队列与削峰服务（P2-8）

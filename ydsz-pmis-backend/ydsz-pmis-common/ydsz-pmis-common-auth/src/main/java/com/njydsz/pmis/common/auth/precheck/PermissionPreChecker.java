@@ -1,17 +1,19 @@
 package com.njydsz.pmis.common.auth.precheck;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.model.RolePermissions;
 import com.njydsz.pmis.common.auth.service.RbacUserInfoService;
 import com.njydsz.pmis.common.auth.service.RolePermissionLoader;
 import com.njydsz.pmis.common.auth.util.PermissionUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 权限预检服务。

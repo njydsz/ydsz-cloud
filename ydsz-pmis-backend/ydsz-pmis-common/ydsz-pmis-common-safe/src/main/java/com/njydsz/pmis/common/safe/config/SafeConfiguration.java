@@ -1,18 +1,35 @@
 package com.njydsz.pmis.common.safe.config;
 
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
+import org.springframework.context.annotation.Primary;
+import org.springframework.core.Ordered;
+
 import com.njydsz.pmis.common.redis.service.RedisService;
+import com.njydsz.pmis.common.safe.advice.XssRequestBodyAdvice;
+import com.njydsz.pmis.common.safe.alert.SafeAlertProperties;
+import com.njydsz.pmis.common.safe.alert.SecurityEventPublisher;
+import com.njydsz.pmis.common.safe.config.condition.XssConverterModeCondition;
+import com.njydsz.pmis.common.safe.config.condition.XssFilterModeCondition;
+import com.njydsz.pmis.common.safe.converter.XssJsonMessageConverter;
+import com.njydsz.pmis.common.safe.core.JsonBodyXssCleaner;
 import com.njydsz.pmis.common.safe.csrf.CsrfTokenGenerator;
 import com.njydsz.pmis.common.safe.csrf.CsrfTokenRepository;
 import com.njydsz.pmis.common.safe.csrf.impl.DefaultCsrfTokenGenerator;
 import com.njydsz.pmis.common.safe.csrf.impl.InMemoryCsrfTokenRepository;
 import com.njydsz.pmis.common.safe.csrf.impl.RedisCsrfTokenRepository;
-import com.njydsz.pmis.common.safe.alert.SafeAlertProperties;
-import com.njydsz.pmis.common.safe.alert.SecurityEventPublisher;
-import com.njydsz.pmis.common.safe.converter.XssJsonMessageConverter;
-import com.njydsz.pmis.common.safe.core.JsonBodyXssCleaner;
-import com.njydsz.pmis.common.safe.advice.XssRequestBodyAdvice;
-import com.njydsz.pmis.common.safe.config.condition.XssConverterModeCondition;
-import com.njydsz.pmis.common.safe.config.condition.XssFilterModeCondition;
 import com.njydsz.pmis.common.safe.filter.CsrfFilter;
 import com.njydsz.pmis.common.safe.filter.SecurityHeaderFilter;
 import com.njydsz.pmis.common.safe.filter.SqlInjectionFilter;
@@ -21,22 +38,6 @@ import com.njydsz.pmis.common.safe.ratelimit.RateLimitFilter;
 import com.njydsz.pmis.common.safe.ratelimit.RateLimitProperties;
 import com.njydsz.pmis.common.safe.sensitive.SensitiveDataAdvice;
 import com.njydsz.pmis.common.safe.sensitive.SensitiveDataConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
-import org.springframework.context.annotation.Primary;
-import org.springframework.core.Ordered;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 /**
  * 安全模块自动配置

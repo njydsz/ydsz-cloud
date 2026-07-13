@@ -1,10 +1,11 @@
 package com.njydsz.pmis.common.docs.domain;
 
+import java.util.List;
+
 import com.njydsz.pmis.common.docs.enums.SecurityLevel;
+
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.List;
 
 /**
  * 安全扫描结果

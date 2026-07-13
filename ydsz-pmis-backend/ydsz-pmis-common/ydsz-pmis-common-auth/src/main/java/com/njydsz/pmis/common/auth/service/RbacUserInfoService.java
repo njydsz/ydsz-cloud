@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.auth.service;
 
-import com.njydsz.pmis.common.auth.model.UserInfo;
-
 import java.util.Map;
+
+import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.auth.service.impl.RedisRbacUserInfoService;
 
 /**

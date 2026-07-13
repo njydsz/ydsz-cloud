@@ -1,7 +1,8 @@
 package com.njydsz.pmis.common.auth.config;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import lombok.Data;
 
 /**
  * Redis Keyspace Notification 配置属性。

@@ -1,11 +1,5 @@
 package com.njydsz.pmis.common.lock;
 
-import com.njydsz.pmis.common.lock.core.DistributedLocker;
-import com.njydsz.pmis.common.redis.service.RedisService;
-import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.scheduling.TaskScheduler;
-
 import java.time.Instant;
 import java.util.Collections;
 import java.util.UUID;
@@ -13,6 +7,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.springframework.scheduling.TaskScheduler;
+
+import com.njydsz.pmis.common.lock.core.DistributedLocker;
+import com.njydsz.pmis.common.redis.service.RedisService;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 基于 Redis + Lua 脚本的分布式信号量

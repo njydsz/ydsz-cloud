@@ -1,14 +1,27 @@
 package com.njydsz.pmis.common.jdbc.interceptor;
 
-import com.njydsz.pmis.common.core.enums.DataScopeType;
+import java.sql.Connection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.apache.ibatis.executor.statement.StatementHandler;
+import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.SqlCommandType;
+
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
+import com.njydsz.pmis.common.core.enums.DataScopeType;
 import com.njydsz.pmis.common.jdbc.config.DataPermissionConfiguration;
 import com.njydsz.pmis.common.jdbc.config.TenantIsolationProperties;
 import com.njydsz.pmis.common.jdbc.permission.DataPermissionContext;
 import com.njydsz.pmis.common.jdbc.permission.DataPermissionContextResolver;
 import com.njydsz.pmis.common.util.string.StringUtils;
+
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
@@ -27,17 +40,6 @@ import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SetOperationList;
 import net.sf.jsqlparser.statement.update.Update;
-import org.apache.ibatis.executor.statement.StatementHandler;
-import org.apache.ibatis.mapping.MappedStatement;
-import org.apache.ibatis.mapping.SqlCommandType;
-
-import java.sql.Connection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 
 /**
  * 行级数据权限拦截器

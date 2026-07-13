@@ -1,12 +1,13 @@
 package com.njydsz.pmis.common.notify.core;
 
-import com.njydsz.pmis.common.notify.enums.NotifyChannel;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
+import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 
 /**
  * 持久化重试队列（优先 Redis，自动降级内存）

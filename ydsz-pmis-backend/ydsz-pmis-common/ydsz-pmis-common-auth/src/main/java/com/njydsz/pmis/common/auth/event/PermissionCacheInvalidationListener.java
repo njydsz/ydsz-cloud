@@ -1,8 +1,5 @@
 package com.njydsz.pmis.common.auth.event;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.njydsz.pmis.common.util.json.JsonUtils;
-import com.njydsz.pmis.common.auth.service.RbacPermissionEvaluator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
@@ -11,6 +8,10 @@ import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.njydsz.pmis.common.auth.service.RbacPermissionEvaluator;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 /**
  * 权限变更事件监听器

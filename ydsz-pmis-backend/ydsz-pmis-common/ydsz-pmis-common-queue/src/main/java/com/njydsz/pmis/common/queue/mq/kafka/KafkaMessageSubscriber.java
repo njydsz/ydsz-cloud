@@ -1,19 +1,5 @@
 package com.njydsz.pmis.common.queue.mq.kafka;
 
-import com.njydsz.pmis.common.queue.domain.QueueMessage;
-import com.njydsz.pmis.common.queue.rate.ConsumerRateLimiter;
-import com.njydsz.pmis.common.queue.recovery.ConsumerThreadGuard;
-import com.njydsz.pmis.common.queue.service.IMessageHandler;
-import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
-import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.serialization.StringDeserializer;
-
 import java.time.Duration;
 import java.util.ArrayDeque;
 import java.util.Collections;
@@ -22,6 +8,22 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.StringDeserializer;
+
+import com.njydsz.pmis.common.queue.domain.QueueMessage;
+import com.njydsz.pmis.common.queue.rate.ConsumerRateLimiter;
+import com.njydsz.pmis.common.queue.recovery.ConsumerThreadGuard;
+import com.njydsz.pmis.common.queue.service.IMessageHandler;
+import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Kafka 消息订阅者

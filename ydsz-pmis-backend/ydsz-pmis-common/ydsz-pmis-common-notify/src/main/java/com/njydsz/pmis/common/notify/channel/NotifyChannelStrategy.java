@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.notify.channel;
 
+import java.util.List;
+
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;
-
-import java.util.List;
 
 /**
  * 通知渠道策略接口。

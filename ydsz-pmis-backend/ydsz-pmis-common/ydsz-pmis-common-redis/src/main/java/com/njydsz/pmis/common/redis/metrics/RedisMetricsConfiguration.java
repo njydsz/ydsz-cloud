@@ -1,9 +1,10 @@
 package com.njydsz.pmis.common.redis.metrics;
 
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
+
+import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * Redis 指标自动配置

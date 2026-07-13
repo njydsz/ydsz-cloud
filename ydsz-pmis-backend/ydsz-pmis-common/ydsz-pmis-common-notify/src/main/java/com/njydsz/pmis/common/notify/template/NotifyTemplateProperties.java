@@ -1,7 +1,8 @@
 package com.njydsz.pmis.common.notify.template;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import lombok.Data;
 
 /**
  * 通知模板引擎配置属性

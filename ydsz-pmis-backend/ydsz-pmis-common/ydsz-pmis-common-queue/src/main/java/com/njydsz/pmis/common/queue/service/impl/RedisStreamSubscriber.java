@@ -1,23 +1,5 @@
 package com.njydsz.pmis.common.queue.service.impl;
 
-import com.njydsz.pmis.common.queue.config.QueueProperties;
-import com.njydsz.pmis.common.queue.domain.QueueMessage;
-import com.njydsz.pmis.common.queue.metrics.MessageMetrics;
-import com.njydsz.pmis.common.queue.rate.ConsumerRateLimiter;
-import com.njydsz.pmis.common.queue.recovery.ConsumerThreadGuard;
-import com.njydsz.pmis.common.queue.service.IMessageHandler;
-import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
-import com.njydsz.pmis.common.queue.trace.MessageTracer;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.connection.stream.Consumer;
-import org.springframework.data.redis.connection.stream.MapRecord;
-import org.springframework.data.redis.connection.stream.ReadOffset;
-import org.springframework.data.redis.connection.stream.StreamOffset;
-import org.springframework.data.redis.connection.stream.StreamReadOptions;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.connection.stream.ObjectRecord;
-import org.springframework.data.redis.connection.stream.StreamRecords;
-
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +9,26 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+
+import org.springframework.data.redis.connection.stream.Consumer;
+import org.springframework.data.redis.connection.stream.MapRecord;
+import org.springframework.data.redis.connection.stream.ObjectRecord;
+import org.springframework.data.redis.connection.stream.ReadOffset;
+import org.springframework.data.redis.connection.stream.StreamOffset;
+import org.springframework.data.redis.connection.stream.StreamReadOptions;
+import org.springframework.data.redis.connection.stream.StreamRecords;
+import org.springframework.data.redis.core.RedisTemplate;
+
+import com.njydsz.pmis.common.queue.config.QueueProperties;
+import com.njydsz.pmis.common.queue.domain.QueueMessage;
+import com.njydsz.pmis.common.queue.metrics.MessageMetrics;
+import com.njydsz.pmis.common.queue.rate.ConsumerRateLimiter;
+import com.njydsz.pmis.common.queue.recovery.ConsumerThreadGuard;
+import com.njydsz.pmis.common.queue.service.IMessageHandler;
+import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
+import com.njydsz.pmis.common.queue.trace.MessageTracer;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 基于 Redis Stream 的消息订阅者

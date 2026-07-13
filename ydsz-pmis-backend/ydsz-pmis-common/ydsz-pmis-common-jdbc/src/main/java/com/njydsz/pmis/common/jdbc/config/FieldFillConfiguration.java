@@ -1,9 +1,11 @@
 package com.njydsz.pmis.common.jdbc.config;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
 import com.njydsz.pmis.common.jdbc.domain.InterceptConfig;
+
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 字段填充配置类，控制自动填充字段的行为

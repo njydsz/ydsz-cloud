@@ -1,13 +1,15 @@
 package com.njydsz.pmis.common.auth.exception;
 
+import java.util.Collections;
+import java.util.Set;
+
 import org.springframework.http.HttpStatus;
+
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.exception.enums.ExceptionCategory;
 import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
-import lombok.Getter;
 
-import java.util.Collections;
-import java.util.Set;
+import lombok.Getter;
 
 /**
  * 权限校验拒绝异常。

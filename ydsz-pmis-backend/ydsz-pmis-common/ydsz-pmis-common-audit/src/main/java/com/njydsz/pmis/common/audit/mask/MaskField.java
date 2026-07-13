@@ -5,7 +5,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import com.njydsz.pmis.common.audit.mask.SensitiveFieldMask;
 
 /**
  * 字段级脱敏注解

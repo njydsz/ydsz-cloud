@@ -1,7 +1,8 @@
 package com.njydsz.pmis.common.safe.alert;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import lombok.Data;
 
 /**
  * 安全告警配置属性

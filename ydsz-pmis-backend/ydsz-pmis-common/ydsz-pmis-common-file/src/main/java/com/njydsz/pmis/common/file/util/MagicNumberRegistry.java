@@ -2,9 +2,9 @@ package com.njydsz.pmis.common.file.util;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashSet;
 
 /**
  * 文件 Magic Number 注册表

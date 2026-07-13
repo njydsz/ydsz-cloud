@@ -1,13 +1,15 @@
 package com.njydsz.pmis.common.feign.health;
 
-import com.njydsz.pmis.common.feign.circuitbreaker.FeignCircuitBreakerStrategy;
-import com.njydsz.pmis.common.feign.config.FeignProperties;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.health.contributor.Health;
-import org.springframework.boot.health.contributor.HealthIndicator;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
+
+import com.njydsz.pmis.common.feign.circuitbreaker.FeignCircuitBreakerStrategy;
+import com.njydsz.pmis.common.feign.config.FeignProperties;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Feign 模块健康检查指示器

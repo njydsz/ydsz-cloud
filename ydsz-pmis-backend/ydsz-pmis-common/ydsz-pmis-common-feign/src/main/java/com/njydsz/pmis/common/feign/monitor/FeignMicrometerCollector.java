@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.feign.monitor;
 
+import java.util.function.Supplier;
+
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-
-import java.util.function.Supplier;
 
 /**
  * Feign 调用 Micrometer 指标收集器

@@ -1,17 +1,5 @@
 package com.njydsz.pmis.common.file.storage;
 
-import com.njydsz.pmis.common.exception.custom.BusinessException;
-import com.njydsz.pmis.common.file.callback.UploadProgressListener;
-import com.njydsz.pmis.common.file.config.FileProperties;
-import com.njydsz.pmis.common.file.domain.ChunkedUploadResult;
-import com.njydsz.pmis.common.file.domain.FileStorage;
-import com.njydsz.pmis.common.file.domain.UploadCheckpoint;
-import com.njydsz.pmis.common.file.exception.FileExceptionCode;
-import com.njydsz.pmis.common.util.json.JsonUtils;
-import com.njydsz.pmis.common.util.string.StringUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -23,6 +11,20 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.file.callback.UploadProgressListener;
+import com.njydsz.pmis.common.file.config.FileProperties;
+import com.njydsz.pmis.common.file.domain.ChunkedUploadResult;
+import com.njydsz.pmis.common.file.domain.FileStorage;
+import com.njydsz.pmis.common.file.domain.UploadCheckpoint;
+import com.njydsz.pmis.common.file.exception.FileExceptionCode;
+import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.util.string.StringUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文件上传委托类

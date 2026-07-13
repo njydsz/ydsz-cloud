@@ -4,6 +4,7 @@ import com.njydsz.pmis.common.netty.config.NettyProperties;
 import com.njydsz.pmis.common.netty.handler.IdleStateHandlerFactory;
 import com.njydsz.pmis.common.netty.pool.NettyEventLoopPool;
 import com.njydsz.pmis.common.netty.ssl.SslContextFactory;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.socket.SocketChannel;
@@ -13,7 +14,6 @@ import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.TimeUnit;
 
 /**
  * Netty TCP Client 抽象基类。

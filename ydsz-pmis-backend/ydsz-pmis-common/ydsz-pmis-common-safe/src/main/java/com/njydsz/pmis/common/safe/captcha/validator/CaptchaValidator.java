@@ -1,9 +1,10 @@
 package com.njydsz.pmis.common.safe.captcha.validator;
 
-import com.njydsz.pmis.common.safe.captcha.core.CaptchaStore;
-import com.njydsz.pmis.common.safe.captcha.exception.CaptchaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.njydsz.pmis.common.safe.captcha.core.CaptchaStore;
+import com.njydsz.pmis.common.safe.captcha.exception.CaptchaException;
 
 /**
  * 验证码验证器

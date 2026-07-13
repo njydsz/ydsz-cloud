@@ -1,11 +1,11 @@
 package com.njydsz.pmis.common.queue.recovery;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 消费线程崩溃恢复守卫

@@ -1,12 +1,21 @@
 package com.njydsz.pmis.common.jdbc.interceptor;
 
+import java.sql.Connection;
+import java.util.List;
+import java.util.Properties;
+
+import org.apache.ibatis.executor.statement.StatementHandler;
+import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.SqlCommandType;
+
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
-import lombok.Getter;
+import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
+
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
@@ -22,13 +31,6 @@ import net.sf.jsqlparser.statement.select.SetOperationList;
 import net.sf.jsqlparser.statement.select.Values;
 import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.statement.update.UpdateSet;
-import org.apache.ibatis.executor.statement.StatementHandler;
-import org.apache.ibatis.mapping.MappedStatement;
-import org.apache.ibatis.mapping.SqlCommandType;
-
-import java.sql.Connection;
-import java.util.List;
-import java.util.Properties;
 
 /**
  * 自定义乐观锁拦截器 - 替代 MyBatis-Plus 的 @Version 注解

@@ -1,16 +1,19 @@
 package com.njydsz.pmis.common.notify.config;
 
-import com.njydsz.pmis.common.notify.enums.NotifyChannel;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import com.njydsz.pmis.common.notify.enums.NotifyChannel;
+
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * 通知模块配置属性类

@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.netty.metric;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Netty Channel 指标收集器。

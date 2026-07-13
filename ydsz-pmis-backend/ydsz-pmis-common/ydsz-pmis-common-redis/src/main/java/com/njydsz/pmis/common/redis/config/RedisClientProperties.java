@@ -1,7 +1,8 @@
 package com.njydsz.pmis.common.redis.config;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import lombok.Data;
 
 /**
  * Redis 客户端配置属性类

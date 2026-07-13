@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.queue.trace;
 
 import com.njydsz.pmis.common.queue.domain.QueueMessage;
 import com.njydsz.pmis.common.queue.service.IMessageHandler;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**

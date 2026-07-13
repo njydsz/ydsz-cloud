@@ -1,14 +1,15 @@
 package com.njydsz.pmis.common.feign.config;
 
-import lombok.extern.slf4j.Slf4j;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.jspecify.annotations.NonNull;
 import org.springframework.cloud.context.environment.EnvironmentChangeEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.Order;
-import org.jspecify.annotations.NonNull;
 
-import java.util.HashSet;
-import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Feign 配置刷新监听器。

@@ -1,11 +1,11 @@
 package com.njydsz.pmis.common.auth.service;
 
-import com.njydsz.pmis.common.auth.model.RolePermissions;
-
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.HashMap;
+
+import com.njydsz.pmis.common.auth.model.RolePermissions;
 import com.njydsz.pmis.common.auth.service.impl.RedisRolePermissionLoader;
 
 /**

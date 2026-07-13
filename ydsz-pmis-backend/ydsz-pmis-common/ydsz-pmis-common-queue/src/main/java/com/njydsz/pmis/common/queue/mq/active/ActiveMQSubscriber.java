@@ -1,19 +1,22 @@
 package com.njydsz.pmis.common.queue.mq.active;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+
+import jakarta.jms.*;
+
+import org.apache.activemq.ActiveMQConnectionFactory;
+
 import com.njydsz.pmis.common.exception.custom.InfrastructureException;
 import com.njydsz.pmis.common.queue.domain.QueueMessage;
 import com.njydsz.pmis.common.queue.rate.ConsumerRateLimiter;
 import com.njydsz.pmis.common.queue.recovery.ConsumerThreadGuard;
 import com.njydsz.pmis.common.queue.service.IMessageHandler;
 import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
-import jakarta.jms.*;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.activemq.ActiveMQConnectionFactory;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * ActiveMQ 消息订阅者

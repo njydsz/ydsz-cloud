@@ -1,10 +1,12 @@
 package com.njydsz.pmis.common.auth.token;
 
+import java.nio.charset.StandardCharsets;
+
 import jakarta.annotation.PostConstruct;
-import lombok.Data;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.nio.charset.StandardCharsets;
+import lombok.Data;
 
 /**
  * Token 配置属性

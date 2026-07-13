@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.queue.queue;
 
+import java.util.concurrent.locks.ReentrantLock;
+
 import com.njydsz.pmis.common.queue.service.IMessagePublisher;
 import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
-
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 消息队列抽象基类

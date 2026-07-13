@@ -1,14 +1,16 @@
 package com.njydsz.pmis.common.file.domain;
 
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+import org.springframework.web.multipart.MultipartFile;
+
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.file.constant.FileConstant;
 import com.njydsz.pmis.common.file.exception.FileExceptionCode;
 import com.njydsz.pmis.common.util.file.FileTypeUtils;
-import lombok.Data;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
+import lombok.Data;
 
 /**
  * 文件存储管理实体类

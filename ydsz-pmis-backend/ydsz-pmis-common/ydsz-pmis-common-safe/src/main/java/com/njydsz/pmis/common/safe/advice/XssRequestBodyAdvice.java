@@ -1,7 +1,12 @@
 package com.njydsz.pmis.common.safe.advice;
 
-import com.njydsz.pmis.common.safe.config.SafeXssProperties;
-import com.njydsz.pmis.common.safe.core.JsonBodyXssCleaner;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -11,14 +16,10 @@ import org.springframework.http.HttpInputMessage;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.stereotype.Component;
-import org.jspecify.annotations.NonNull;
 import org.springframework.web.servlet.mvc.method.annotation.RequestBodyAdviceAdapter;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
+import com.njydsz.pmis.common.safe.config.SafeXssProperties;
+import com.njydsz.pmis.common.safe.core.JsonBodyXssCleaner;
 
 /**
  * XSS 请求体拦截器

@@ -1,20 +1,23 @@
 package com.njydsz.pmis.common.redis.service;
 
-import com.njydsz.pmis.common.redis.config.RedisProperties;
-import com.njydsz.pmis.common.redis.enums.FailOpenPolicy;
-import lombok.extern.slf4j.Slf4j;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import jakarta.annotation.PostConstruct;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.PostConstruct;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import org.springframework.data.redis.connection.ReturnType;
+import com.njydsz.pmis.common.redis.config.RedisProperties;
+import com.njydsz.pmis.common.redis.enums.FailOpenPolicy;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Redis 布隆过滤器工具类

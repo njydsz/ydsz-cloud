@@ -1,15 +1,16 @@
 package com.njydsz.pmis.common.auth.util;
 
-import com.njydsz.pmis.common.core.constant.HeaderConstants;
-import com.njydsz.pmis.common.util.auth.AuthInfoUtils;
-import com.njydsz.pmis.common.util.string.StringUtils;
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import jakarta.servlet.http.HttpServletRequest;
+import com.njydsz.pmis.common.core.constant.HeaderConstants;
+import com.njydsz.pmis.common.util.auth.AuthInfoUtils;
+import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
  * AccessToken 获取工具类。

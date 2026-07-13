@@ -1,24 +1,9 @@
 package com.njydsz.pmis.common.jdbc.config;
 
-import com.baomidou.mybatisplus.annotation.DbType;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
-import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
-import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
-import com.njydsz.pmis.common.jdbc.handler.CreatedAtHandler;
-import com.njydsz.pmis.common.jdbc.handler.CreatedByHandler;
-import com.njydsz.pmis.common.jdbc.handler.FieldFillHandler;
-import com.njydsz.pmis.common.jdbc.handler.UpdatedAtHandler;
-import com.njydsz.pmis.common.jdbc.handler.UpdatedByHandler;
-import com.njydsz.pmis.common.jdbc.interceptor.CombinedFieldFillInterceptor;
-import com.njydsz.pmis.common.jdbc.interceptor.ColPermissionInnerInterceptor;
-import com.njydsz.pmis.common.jdbc.interceptor.LogicalDeleteInterceptor;
-import com.njydsz.pmis.common.jdbc.interceptor.OptimisticLockInterceptor;
-import com.njydsz.pmis.common.jdbc.interceptor.RowPermissionInnerInterceptor;
-import com.njydsz.pmis.common.jdbc.permission.DataPermissionContext;
-import com.njydsz.pmis.common.jdbc.permission.DataPermissionContextResolver;
-import com.njydsz.pmis.common.jdbc.permission.DataScopeIdExpander;
-import lombok.extern.slf4j.Slf4j;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -35,9 +20,26 @@ import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.util.ClassUtils;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
+import com.baomidou.mybatisplus.annotation.DbType;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.Version;
+import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import com.njydsz.pmis.common.jdbc.handler.CreatedAtHandler;
+import com.njydsz.pmis.common.jdbc.handler.CreatedByHandler;
+import com.njydsz.pmis.common.jdbc.handler.FieldFillHandler;
+import com.njydsz.pmis.common.jdbc.handler.UpdatedAtHandler;
+import com.njydsz.pmis.common.jdbc.handler.UpdatedByHandler;
+import com.njydsz.pmis.common.jdbc.interceptor.ColPermissionInnerInterceptor;
+import com.njydsz.pmis.common.jdbc.interceptor.CombinedFieldFillInterceptor;
+import com.njydsz.pmis.common.jdbc.interceptor.LogicalDeleteInterceptor;
+import com.njydsz.pmis.common.jdbc.interceptor.OptimisticLockInterceptor;
+import com.njydsz.pmis.common.jdbc.interceptor.RowPermissionInnerInterceptor;
+import com.njydsz.pmis.common.jdbc.permission.DataPermissionContext;
+import com.njydsz.pmis.common.jdbc.permission.DataPermissionContextResolver;
+import com.njydsz.pmis.common.jdbc.permission.DataScopeIdExpander;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * MyBatis Plus 配置类

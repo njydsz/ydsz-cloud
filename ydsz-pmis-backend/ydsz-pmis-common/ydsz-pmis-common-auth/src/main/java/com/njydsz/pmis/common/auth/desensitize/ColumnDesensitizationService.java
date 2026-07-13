@@ -1,23 +1,24 @@
 package com.njydsz.pmis.common.auth.desensitize;
 
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.auth.service.RbacUserInfoService;
+import com.njydsz.pmis.common.redis.service.RedisService;
 import com.njydsz.pmis.common.safe.desensitize.ColumnDesensitizationContext;
 import com.njydsz.pmis.common.safe.desensitize.ColumnDesensitizationRule;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.util.json.JsonUtils;
-import com.njydsz.pmis.common.redis.service.RedisService;
 import com.njydsz.pmis.common.util.string.StringUtils;
+
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-
-import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 字段脱敏服务。

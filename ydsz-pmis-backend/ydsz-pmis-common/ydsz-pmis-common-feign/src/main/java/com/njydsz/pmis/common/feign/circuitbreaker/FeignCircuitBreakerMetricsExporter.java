@@ -1,14 +1,15 @@
 package com.njydsz.pmis.common.feign.circuitbreaker;
 
-import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.MeterRegistry;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * 熔断器指标导出到 Spring Boot Actuator Metrics
@@ -162,4 +163,3 @@ public class FeignCircuitBreakerMetricsExporter {
         log.debug("[FeignCircuitBreakerMetricsExporter] 已注销服务指标: {}", serviceName);
     }
 }
-

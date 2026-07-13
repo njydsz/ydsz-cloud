@@ -1,12 +1,14 @@
 package com.njydsz.pmis.common.queue.trace;
 
-import com.njydsz.pmis.common.queue.domain.QueueMessage;
-import com.njydsz.pmis.common.queue.service.IMessagePublisher;
-import com.njydsz.pmis.common.util.id.TracerUtils;
-import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+
+import com.njydsz.pmis.common.queue.domain.QueueMessage;
+import com.njydsz.pmis.common.queue.service.IMessagePublisher;
+import com.njydsz.pmis.common.util.id.TracerUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 消息轨迹 AOP 切面

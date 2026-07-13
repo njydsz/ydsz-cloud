@@ -1,10 +1,11 @@
 package com.njydsz.pmis.common.docs.config;
 
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.ComponentScan;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文档处理模块自动配置类

@@ -1,12 +1,13 @@
 package com.njydsz.pmis.common.auth.model;
 
-import lombok.Getter;
-
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+
 import com.njydsz.pmis.common.auth.annotation.AuthColPermission;
 import com.njydsz.pmis.common.auth.service.ColumnPermissionResolver;
+
+import lombok.Getter;
 
 /**
  * 列权限信息载体。

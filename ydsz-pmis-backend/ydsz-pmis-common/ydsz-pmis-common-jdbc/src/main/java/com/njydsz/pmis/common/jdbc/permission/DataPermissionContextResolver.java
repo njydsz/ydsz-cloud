@@ -1,12 +1,5 @@
 package com.njydsz.pmis.common.jdbc.permission;
 
-import com.njydsz.pmis.common.core.constant.HeaderConstants;
-import com.njydsz.pmis.common.core.enums.DataScopeType;
-import com.njydsz.pmis.common.util.auth.RequestHolder;
-import com.njydsz.pmis.common.util.http.ServletUtils;
-import com.njydsz.pmis.common.util.string.StringUtils;
-
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,6 +7,14 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.njydsz.pmis.common.core.constant.HeaderConstants;
+import com.njydsz.pmis.common.core.enums.DataScopeType;
+import com.njydsz.pmis.common.util.auth.RequestHolder;
+import com.njydsz.pmis.common.util.http.ServletUtils;
+import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
  * 数据权限上下文解析器——SQL 拦截器的上游。

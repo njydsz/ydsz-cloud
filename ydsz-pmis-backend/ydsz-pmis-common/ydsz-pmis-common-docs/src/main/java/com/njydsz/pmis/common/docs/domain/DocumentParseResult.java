@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.docs.domain;
 
+import java.time.Duration;
+
 import lombok.Builder;
 import lombok.Data;
-
-import java.time.Duration;
 
 /**
  * 文档解析结果

@@ -1,5 +1,15 @@
 package com.njydsz.pmis.common.feign.aspect;
 
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
 import com.njydsz.pmis.common.core.enums.DataScopeType;
 import com.njydsz.pmis.common.core.enums.IdentityType;
@@ -9,16 +19,9 @@ import com.njydsz.pmis.common.util.auth.RequestHolder;
 import com.njydsz.pmis.common.util.http.ServletUtils;
 import com.njydsz.pmis.common.util.ip.IpAddrUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
+
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * YdszFeign 远程调用请求拦截器——数据权限全链路透传。

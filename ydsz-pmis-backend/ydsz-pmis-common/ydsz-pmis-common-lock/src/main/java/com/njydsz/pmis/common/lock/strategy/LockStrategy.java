@@ -2,8 +2,8 @@ package com.njydsz.pmis.common.lock.strategy;
 
 import com.njydsz.pmis.common.lock.RedisReadWriteLock;
 import com.njydsz.pmis.common.lock.RedisSemaphore;
-import com.njydsz.pmis.common.lock.core.DistributedLocker;
 import com.njydsz.pmis.common.lock.annotation.LockType;
+import com.njydsz.pmis.common.lock.core.DistributedLocker;
 
 /**
  * 锁策略工厂接口

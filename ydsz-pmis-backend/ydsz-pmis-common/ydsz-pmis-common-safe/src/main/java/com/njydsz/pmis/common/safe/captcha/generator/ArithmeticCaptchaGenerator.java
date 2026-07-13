@@ -1,11 +1,12 @@
 package com.njydsz.pmis.common.safe.captcha.generator;
 
-import com.njydsz.pmis.common.safe.captcha.core.CaptchaGenerator;
-import com.njydsz.pmis.common.safe.captcha.core.CaptchaResult;
+import java.security.SecureRandom;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.security.SecureRandom;
+import com.njydsz.pmis.common.safe.captcha.core.CaptchaGenerator;
+import com.njydsz.pmis.common.safe.captcha.core.CaptchaResult;
 
 /**
  * 算术验证码生成器

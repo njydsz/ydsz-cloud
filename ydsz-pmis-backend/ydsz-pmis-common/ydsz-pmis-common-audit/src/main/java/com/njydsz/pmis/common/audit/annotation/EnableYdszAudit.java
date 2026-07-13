@@ -1,9 +1,10 @@
 package com.njydsz.pmis.common.audit.annotation;
 
-import com.njydsz.pmis.common.audit.config.AuditAutoConfiguration;
+import java.lang.annotation.*;
+
 import org.springframework.context.annotation.Import;
 
-import java.lang.annotation.*;
+import com.njydsz.pmis.common.audit.config.AuditAutoConfiguration;
 
 /**
  * 启用审计模块的开关注解

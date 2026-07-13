@@ -1,12 +1,13 @@
 package com.njydsz.pmis.common.feign.circuitbreaker;
 
-import com.njydsz.pmis.common.redis.service.RedisService;
+import java.time.Duration;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 
-import java.time.Duration;
-import org.springframework.beans.factory.ObjectProvider;
+import com.njydsz.pmis.common.redis.service.RedisService;
 
 /**
  * 断路器状态持久化组件。

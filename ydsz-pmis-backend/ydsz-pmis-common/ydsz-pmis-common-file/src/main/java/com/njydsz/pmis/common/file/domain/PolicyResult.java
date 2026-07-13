@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.file.domain;
 
+import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Map;
 
 /**
  * 前端直传签名结果

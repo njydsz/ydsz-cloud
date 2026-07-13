@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.safe.captcha.exception;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
-import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
 import com.njydsz.pmis.common.exception.enums.ExceptionCategory;
+import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
 
 /**
  * 验证码异常

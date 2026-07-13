@@ -1,17 +1,19 @@
 package com.njydsz.pmis.common.queue.mq.rocket;
 
-import com.njydsz.pmis.common.exception.custom.BusinessException;
-import com.njydsz.pmis.common.queue.domain.QueueMessage;
-import com.njydsz.pmis.common.queue.service.IMessagePublisher;
-import lombok.extern.slf4j.Slf4j;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.common.message.Message;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.locks.ReentrantLock;
+import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.queue.domain.QueueMessage;
+import com.njydsz.pmis.common.queue.service.IMessagePublisher;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * RocketMQ 消息发布者

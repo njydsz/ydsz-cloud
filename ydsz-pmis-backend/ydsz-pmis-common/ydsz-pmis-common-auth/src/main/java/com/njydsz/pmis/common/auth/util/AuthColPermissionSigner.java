@@ -1,13 +1,15 @@
 package com.njydsz.pmis.common.auth.util;
 
-import com.njydsz.pmis.common.util.string.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.nio.charset.StandardCharsets;
+import java.util.HexFormat;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.util.HexFormat;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
  * 列权限 HMAC-SHA256 签名工具类。

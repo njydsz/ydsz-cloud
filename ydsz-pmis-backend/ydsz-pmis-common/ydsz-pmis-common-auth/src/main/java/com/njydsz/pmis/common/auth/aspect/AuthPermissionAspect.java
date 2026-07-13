@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.auth.aspect;
 
-import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
-import com.njydsz.pmis.common.auth.annotation.AuthMenuPermission;
-import com.njydsz.pmis.common.auth.service.RbacPermissionEvaluator;
+import java.lang.reflect.Method;
+import java.util.Map;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -11,8 +11,9 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.annotation.Order;
 
-import java.lang.reflect.Method;
-import java.util.Map;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
+import com.njydsz.pmis.common.auth.annotation.AuthMenuPermission;
+import com.njydsz.pmis.common.auth.service.RbacPermissionEvaluator;
 
 /**
  * 统一权限校验切面。

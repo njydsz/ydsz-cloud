@@ -1,27 +1,7 @@
 package com.njydsz.pmis.common.file.storage;
 
-import com.njydsz.pmis.common.exception.custom.BusinessException;
-import com.njydsz.pmis.common.file.callback.UploadProgressListener;
-import com.njydsz.pmis.common.file.config.FileProperties;
-import com.njydsz.pmis.common.file.config.FileUploadProperties;
-import com.njydsz.pmis.common.file.constant.FileConstant;
-import com.njydsz.pmis.common.file.domain.BatchDeleteResult;
-import com.njydsz.pmis.common.file.domain.ChunkedUploadResult;
-import com.njydsz.pmis.common.file.domain.FileStorage;
-import com.njydsz.pmis.common.file.domain.ListObjectsResult;
-import com.njydsz.pmis.common.file.domain.ObjectMetadata;
-import com.njydsz.pmis.common.file.domain.PolicyResult;
-import com.njydsz.pmis.common.file.domain.UploadCheckpoint;
-import com.njydsz.pmis.common.file.exception.FileExceptionCode;
-import com.njydsz.pmis.common.file.util.FileTypeValidator;
-import com.njydsz.pmis.common.util.string.StringUtils;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.multipart.MultipartFile;
-
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.ByteArrayInputStream;
 import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLConnection;
@@ -38,6 +18,29 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
+
+import jakarta.servlet.http.HttpServletResponse;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.file.callback.UploadProgressListener;
+import com.njydsz.pmis.common.file.config.FileProperties;
+import com.njydsz.pmis.common.file.config.FileUploadProperties;
+import com.njydsz.pmis.common.file.constant.FileConstant;
+import com.njydsz.pmis.common.file.domain.BatchDeleteResult;
+import com.njydsz.pmis.common.file.domain.ChunkedUploadResult;
+import com.njydsz.pmis.common.file.domain.FileStorage;
+import com.njydsz.pmis.common.file.domain.ListObjectsResult;
+import com.njydsz.pmis.common.file.domain.ObjectMetadata;
+import com.njydsz.pmis.common.file.domain.PolicyResult;
+import com.njydsz.pmis.common.file.domain.UploadCheckpoint;
+import com.njydsz.pmis.common.file.exception.FileExceptionCode;
+import com.njydsz.pmis.common.file.util.FileTypeValidator;
+import com.njydsz.pmis.common.util.string.StringUtils;
+
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文件存储抽象基类

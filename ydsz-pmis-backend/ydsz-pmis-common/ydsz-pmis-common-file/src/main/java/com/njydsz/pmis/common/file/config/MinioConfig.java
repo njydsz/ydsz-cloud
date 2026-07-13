@@ -1,8 +1,9 @@
 package com.njydsz.pmis.common.file.config;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+
+import lombok.Data;
 
 /**
  * MinIO 配置属性。

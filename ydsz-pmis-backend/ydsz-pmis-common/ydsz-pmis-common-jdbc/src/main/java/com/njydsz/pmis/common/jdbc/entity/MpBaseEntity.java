@@ -1,14 +1,15 @@
 package com.njydsz.pmis.common.jdbc.entity;
 
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
+import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.baomidou.mybatisplus.annotation.*;
 import com.njydsz.pmis.common.domain.entity.BaseEntity;
+
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-
-import java.time.LocalDateTime;
-import java.io.Serializable;
 
 /**
  * MyBatis-Plus 增强版基础实体

@@ -1,6 +1,5 @@
 package com.njydsz.pmis.common.safe.desensitize;
 
-import com.njydsz.pmis.common.safe.desensitize.ColumnDesensitizationExecutor;
 
 /**
  * 字段脱敏规则枚举。

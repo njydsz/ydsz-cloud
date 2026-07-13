@@ -1,9 +1,10 @@
 package com.njydsz.pmis.common.feign.dto;
 
-import lombok.Data;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Map;
+
+import lombok.Data;
 
 /**
  * 实时推送 Feign DTO（WebSocket 消息体）

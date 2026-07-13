@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.jdbc.handler;
 
+import java.util.Set;
+
 import com.njydsz.pmis.common.jdbc.domain.InterceptConfig;
 import com.njydsz.pmis.common.jdbc.enums.InterceptTableStrategy;
-
-import java.util.Set;
 
 /**
  * SQL 拦截器抽象基类

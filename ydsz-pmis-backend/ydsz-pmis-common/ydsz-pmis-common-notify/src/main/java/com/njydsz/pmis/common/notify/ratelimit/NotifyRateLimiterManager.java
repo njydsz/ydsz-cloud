@@ -1,11 +1,12 @@
 package com.njydsz.pmis.common.notify.ratelimit;
 
-import com.njydsz.pmis.common.notify.config.NotifyProperties;
-import com.njydsz.pmis.common.notify.enums.NotifyChannel;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.njydsz.pmis.common.notify.config.NotifyProperties;
+import com.njydsz.pmis.common.notify.enums.NotifyChannel;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 通知渠道限流管理器

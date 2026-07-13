@@ -1,15 +1,17 @@
 package com.njydsz.pmis.common.notify.health;
 
-import com.njydsz.pmis.common.notify.config.NotifyProperties;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.health.contributor.Health;
-import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
+import org.springframework.stereotype.Component;
+
+import com.njydsz.pmis.common.notify.config.NotifyProperties;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 通知模块健康检查指示器

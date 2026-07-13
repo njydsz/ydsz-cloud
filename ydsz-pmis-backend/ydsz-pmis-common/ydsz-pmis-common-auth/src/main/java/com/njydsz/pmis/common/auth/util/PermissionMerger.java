@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.auth.util;
 
-import com.njydsz.pmis.common.auth.model.RolePermissions;
-
 import java.util.*;
+
+import com.njydsz.pmis.common.auth.model.RolePermissions;
 
 /**
  * 权限合并工具类

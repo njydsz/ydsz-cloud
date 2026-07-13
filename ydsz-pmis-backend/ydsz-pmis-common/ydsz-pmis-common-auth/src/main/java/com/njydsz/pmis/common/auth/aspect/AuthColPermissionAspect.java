@@ -1,11 +1,28 @@
 package com.njydsz.pmis.common.auth.aspect;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.annotation.Order;
+import org.springframework.util.ReflectionUtils;
+
 import com.njydsz.pmis.common.auth.annotation.AuthColPermission;
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.common.safe.desensitize.ColumnDesensitizationContext;
-import com.njydsz.pmis.common.safe.desensitize.ColumnDesensitizationExecutor;
 import com.njydsz.pmis.common.auth.desensitize.ColumnDesensitizationService;
 import com.njydsz.pmis.common.auth.model.ColumnPermission;
 import com.njydsz.pmis.common.auth.model.ColumnPermissionInfo;
@@ -14,28 +31,12 @@ import com.njydsz.pmis.common.auth.model.ColumnScopeInfo;
 import com.njydsz.pmis.common.auth.service.ColumnPermissionResolver;
 import com.njydsz.pmis.common.auth.util.AuthColPermissionSigner;
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
+import com.njydsz.pmis.common.safe.desensitize.ColumnDesensitizationContext;
+import com.njydsz.pmis.common.safe.desensitize.ColumnDesensitizationExecutor;
 import com.njydsz.pmis.common.util.auth.AuthInfoUtils;
 import com.njydsz.pmis.common.util.auth.RequestHolder;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.annotation.Pointcut;
-import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.util.ReflectionUtils;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.core.annotation.Order;
-
-import java.lang.reflect.Array;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.lang.reflect.Modifier;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * 列级数据权限过滤切面。

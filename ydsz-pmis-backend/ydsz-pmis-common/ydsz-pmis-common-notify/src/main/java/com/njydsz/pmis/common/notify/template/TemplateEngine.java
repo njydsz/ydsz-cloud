@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.notify.template;
 
-import java.util.Map;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 
 /**
  * 通知模板引擎接口

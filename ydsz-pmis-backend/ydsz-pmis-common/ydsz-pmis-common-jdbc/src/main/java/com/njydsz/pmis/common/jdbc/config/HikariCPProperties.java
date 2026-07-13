@@ -1,7 +1,8 @@
 package com.njydsz.pmis.common.jdbc.config;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import lombok.Data;
 
 /**
  * HikariCP 连接池配置属性类

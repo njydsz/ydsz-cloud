@@ -1,12 +1,12 @@
 package com.njydsz.pmis.common.security;
 
-import lombok.Builder;
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDateTime;
+
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * 账号锁定策略结果

@@ -1,11 +1,11 @@
 package com.njydsz.pmis.common.queue.manager;
 
-import com.njydsz.pmis.common.queue.metrics.MessageMetrics;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.njydsz.pmis.common.queue.metrics.MessageMetrics;
 
 /**
  * 消息队列管理器

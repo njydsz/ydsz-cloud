@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.audit.annotation;
 
+import java.lang.annotation.*;
+
+import com.njydsz.pmis.common.audit.aspect.AuditAspect;
 import com.njydsz.pmis.common.audit.enums.AuditAction;
 import com.njydsz.pmis.common.audit.enums.AuditType;
-
-import java.lang.annotation.*;
-import com.njydsz.pmis.common.audit.aspect.AuditAspect;
 
 /**
  * 审计日志方法标记注解

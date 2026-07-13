@@ -1,5 +1,16 @@
 package com.njydsz.pmis.common.auth.service;
 
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+import jakarta.annotation.PreDestroy;
+import jakarta.servlet.http.HttpServletRequest;
+
+import org.springframework.http.HttpStatus;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.auth.annotation.AuthMenuPermission;
 import com.njydsz.pmis.common.auth.config.AuthProperties;
@@ -10,20 +21,12 @@ import com.njydsz.pmis.common.auth.exception.PermissionDeniedException.Permissio
 import com.njydsz.pmis.common.auth.model.RolePermissions;
 import com.njydsz.pmis.common.auth.strategy.CacheKeyStrategy;
 import com.njydsz.pmis.common.auth.strategy.DefaultCacheKeyStrategy;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import com.njydsz.pmis.common.auth.util.PermissionUtils;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.util.auth.RequestHolder;
-import com.njydsz.pmis.common.auth.util.PermissionUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
-import jakarta.servlet.http.HttpServletRequest;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import jakarta.annotation.PreDestroy;
 
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * RBAC 权限校验器。

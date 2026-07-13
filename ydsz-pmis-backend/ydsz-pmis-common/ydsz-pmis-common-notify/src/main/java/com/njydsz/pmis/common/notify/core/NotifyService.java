@@ -1,8 +1,9 @@
 package com.njydsz.pmis.common.notify.core;
 
-import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+
+import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 /**
  * 统一消息通知服务接口
  * <p>支持邮件、短信、站内信、企业微信、钉钉、飞书等全渠道消息发送</p>

@@ -1,11 +1,5 @@
 package com.njydsz.pmis.common.notify.tracking;
 
-import com.njydsz.pmis.common.notify.config.NotifyProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.util.StringUtils;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
@@ -13,6 +7,13 @@ import java.util.HexFormat;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.util.StringUtils;
+
+import com.njydsz.pmis.common.notify.config.NotifyProperties;
 
 /**
  * 邮件追踪与已读回执服务（P1-5）

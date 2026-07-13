@@ -1,12 +1,12 @@
 package com.njydsz.pmis.common.lock.config;
 
-import com.njydsz.pmis.common.lock.aspect.YdszDistributedLockAspect;
-import com.njydsz.pmis.common.lock.metrics.LockMetrics;
-import com.njydsz.pmis.common.lock.metrics.LockMetricsExporter;
-import com.njydsz.pmis.common.lock.scheduler.LockWatchDog;
-import com.njydsz.pmis.common.lock.strategy.DefaultLockStrategy;
-import com.njydsz.pmis.common.lock.strategy.LockStrategy;
-import com.njydsz.pmis.common.redis.service.RedisService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -15,16 +15,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
-
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import org.springframework.beans.factory.ObjectProvider;
+import com.njydsz.pmis.common.lock.aspect.YdszDistributedLockAspect;
+import com.njydsz.pmis.common.lock.metrics.LockMetrics;
+import com.njydsz.pmis.common.lock.metrics.LockMetricsExporter;
+import com.njydsz.pmis.common.lock.scheduler.LockWatchDog;
+import com.njydsz.pmis.common.lock.strategy.DefaultLockStrategy;
+import com.njydsz.pmis.common.lock.strategy.LockStrategy;
+import com.njydsz.pmis.common.redis.service.RedisService;
 
 /**
  * 分布式锁自动配置类

@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.security;
 
-import lombok.Builder;
-import lombok.Data;
-
 import java.io.Serial;
 import java.io.Serializable;
+
+import lombok.Builder;
+import lombok.Data;
 
 /**
  * 登录审计事件

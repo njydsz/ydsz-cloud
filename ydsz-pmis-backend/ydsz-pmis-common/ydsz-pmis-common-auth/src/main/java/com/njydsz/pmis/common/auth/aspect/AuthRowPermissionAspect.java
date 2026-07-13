@@ -1,15 +1,12 @@
 package com.njydsz.pmis.common.auth.aspect;
 
-import com.njydsz.pmis.common.auth.annotation.AuthRowPermission;
-import com.njydsz.pmis.common.auth.model.DataScopeAware;
-import com.njydsz.pmis.common.auth.model.DataScopeInfo;
-import com.njydsz.pmis.common.auth.service.DataPermissionResolver;
-import org.springframework.http.HttpStatus;
-import com.njydsz.pmis.common.core.constant.HeaderConstants;
-import com.njydsz.pmis.common.exception.custom.BusinessException;
-import com.njydsz.pmis.common.util.auth.AuthInfoUtils;
-import com.njydsz.pmis.common.util.auth.RequestHolder;
-import com.njydsz.pmis.common.util.string.StringUtils;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -19,13 +16,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
+import com.njydsz.pmis.common.auth.annotation.AuthRowPermission;
+import com.njydsz.pmis.common.auth.model.DataScopeAware;
+import com.njydsz.pmis.common.auth.model.DataScopeInfo;
+import com.njydsz.pmis.common.auth.service.DataPermissionResolver;
+import com.njydsz.pmis.common.core.constant.HeaderConstants;
+import com.njydsz.pmis.common.exception.custom.BusinessException;
+import com.njydsz.pmis.common.util.auth.AuthInfoUtils;
+import com.njydsz.pmis.common.util.auth.RequestHolder;
+import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
  * 行级数据权限注入切面。
