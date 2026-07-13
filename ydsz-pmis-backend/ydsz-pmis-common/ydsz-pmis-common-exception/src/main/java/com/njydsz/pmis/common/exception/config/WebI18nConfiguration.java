@@ -1,6 +1,9 @@
 package com.njydsz.pmis.common.exception.config;
 
-import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -10,9 +13,7 @@ import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Web MVC 场景下的 i18n 配置

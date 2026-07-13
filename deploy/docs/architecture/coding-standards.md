@@ -72,9 +72,63 @@ new com.njydsz.pmis.literule.server.replay.ExecutionReplayService(...);
 
 ---
 
+## 2. 禁止使用 @SuppressWarnings 注解
+
+**级别**：强制（P0）  
+**生效范围**：所有 Java 源文件（`src/main/java`、`src/test/java`）  
+**规则文件**：[`.trae/rules/no-inline-fqn.md`](../../../.trae/rules/no-inline-fqn.md)
+
+### 2.1 规则定义
+
+代码中不允许出现 `@SuppressWarnings` 注解。该注解会压制编译器警告，掩盖潜在的类型安全、未使用代码、弃用 API 等问题，违反项目「零警告」原则。所有警告必须从根源修复，而非压制。
+
+### 2.2 违规示例与正确写法
+
+| # | 违规写法 | 正确写法 |
+|---|----------|----------|
+| 1 | `@SuppressWarnings("unchecked")` 后裸类型转换 | 使用 `TypeReference`、泛型方法签名、或重设计 API 避免 unchecked 转换 |
+| 2 | `@SuppressWarnings("unused")` 标注未使用的方法/字段 | 删除死代码 |
+| 3 | `@SuppressWarnings("rawtypes")` 使用裸泛型类型 | 始终指定泛型参数，如 `Map<String, Object>` |
+| 4 | `@SuppressWarnings("deprecation")` 使用弃用 API | 迁移到推荐的新 API |
+| 5 | `@SuppressWarnings("all")` 一刀切压制所有警告 | 逐个分析和修复每个警告 |
+
+### 2.3 代码示例
+
+```java
+// ❌ 违规：压制 unchecked 警告
+@SuppressWarnings("unchecked")
+List<String> list = (List<String>) obj;
+
+// ❌ 违规：压制 unused 警告
+@SuppressWarnings("unused")
+private void unusedMethod() { ... }
+
+// ❌ 违规：同时压制多种警告
+@SuppressWarnings({"unchecked", "rawtypes"})
+Map map = (Map) obj;
+
+// ✅ 正确：使用泛型安全转换
+List<String> list = JSON.parseObject(json, new TypeReference<List<String>>() {});
+
+// ✅ 正确：移除未使用的方法/字段
+// （直接删除 unusedMethod）
+
+// ✅ 正确：使用类型安全的集合
+Map<String, Object> map = new HashMap<>();
+```
+
+### 2.4 执行机制
+
+1. **IDE 规则**：`.trae/rules/no-inline-fqn.md` 设置 `alwaysApply: true`，AI 代码生成阶段自动遵守。
+2. **Code Review**：PR 审查必须检查 `@SuppressWarnings`，发现即打回。
+3. **CI 检测（强制）**：CI 流水线 `backend-ci.yml` 的 `build` job 中集成 `deploy/scripts/check-inline-fqn.sh --strict`，同时检测 `@SuppressWarnings` 违规，有违规即 `exit 1` 阻断 PR 合并。
+
+---
+
 ## 变更记录
 
 | 日期 | 版本 | 变更内容 | 作者 |
 |------|------|----------|------|
 | 2026-07-12 | 1.0 | 初始创建，收录「禁止行内 FQN」规范 | ydsz-pmis-team |
 | 2026-07-13 | 1.1 | 修复例外描述矛盾：@throws/@see/@param/@return 中的 FQN 均属违规（仅 {@link} 可保留）；新增 @ConditionalOnClass 例外；更新执行机制（CI 强制 + Spotless 自动修复） | ydsz-pmis-team |
+| 2026-07-13 | 1.2 | 新增「禁止使用 @SuppressWarnings 注解」规范（Section 2） | ydsz-pmis-team |

@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.core.response;
 
+import java.util.Locale;
+
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Component;
-
-import java.util.Locale;
 
 /**
  * 基于 Spring {@link MessageSource} 的消息解析器实现

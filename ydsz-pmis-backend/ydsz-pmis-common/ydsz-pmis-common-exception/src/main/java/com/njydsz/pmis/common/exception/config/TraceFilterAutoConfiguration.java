@@ -1,12 +1,13 @@
 package com.njydsz.pmis.common.exception.config;
 
-import com.njydsz.pmis.common.exception.observability.TraceContextFilter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.Ordered;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+
+import com.njydsz.pmis.common.exception.observability.TraceContextFilter;
 
 /**
  * TraceId 过滤器自动配置

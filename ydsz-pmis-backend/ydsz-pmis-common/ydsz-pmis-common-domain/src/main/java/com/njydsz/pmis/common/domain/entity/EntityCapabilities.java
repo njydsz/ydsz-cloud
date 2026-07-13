@@ -1,11 +1,12 @@
 package com.njydsz.pmis.common.domain.entity;
 
-import com.njydsz.pmis.common.domain.annotation.*;
-import org.springframework.util.ReflectionUtils;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Optional;
+
+import org.springframework.util.ReflectionUtils;
+
+import com.njydsz.pmis.common.domain.annotation.*;
 
 /**
  * 实体能力检测工具类

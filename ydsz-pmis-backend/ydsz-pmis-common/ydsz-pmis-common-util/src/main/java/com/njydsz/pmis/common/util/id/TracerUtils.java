@@ -2,8 +2,8 @@ package com.njydsz.pmis.common.util.id;
 
 import org.apache.skywalking.apm.toolkit.trace.TraceContext;
 import org.slf4j.MDC;
+
 import com.njydsz.pmis.common.util.string.StringUtils;
-import com.njydsz.pmis.common.util.id.RandomUtils;
 
 /**
  * 链路追踪工具类

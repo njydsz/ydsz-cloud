@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.util.security;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+
 import com.njydsz.pmis.common.util.bytes.HexUtils;
 /**
  *

@@ -1,11 +1,12 @@
 package com.njydsz.pmis.common.core.context;
 
-import com.alibaba.ttl.threadpool.TtlExecutors;
-import lombok.extern.slf4j.Slf4j;
-
-import java.util.concurrent.*;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.*;
+
+import com.alibaba.ttl.threadpool.TtlExecutors;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 请求上下文自动传播线程池执行器

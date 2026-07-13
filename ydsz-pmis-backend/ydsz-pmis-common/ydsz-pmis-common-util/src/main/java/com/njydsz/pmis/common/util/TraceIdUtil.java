@@ -1,7 +1,8 @@
 package com.njydsz.pmis.common.util;
 
-import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
 import org.slf4j.MDC;
+
+import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
 
 /**
  * TraceId 工具类（兼容旧 com.njydsz.pmis.common.util.TraceIdUtil）。

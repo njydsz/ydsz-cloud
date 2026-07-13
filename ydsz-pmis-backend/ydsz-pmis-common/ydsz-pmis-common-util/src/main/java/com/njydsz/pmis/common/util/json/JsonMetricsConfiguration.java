@@ -1,10 +1,11 @@
 package com.njydsz.pmis.common.util.json;
 
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+
+import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * JSON 处理 Micrometer 指标自动配置

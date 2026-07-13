@@ -162,3 +162,60 @@ return new QLExpressExpressionEvaluator();
 - **IDE 检查**：Trae / CatPaw 规则文件 `alwaysApply: true`，在代码生成阶段自动遵守。
 - **Code Review**：PR 审查必须检查行内 FQN，发现即打回。
 - **CI 可选**：可在 CI 流水线中加入 `grep` 检测脚本（见 `deploy/scripts/check-inline-fqn.sh`）。
+
+---
+
+# 禁止使用 @SuppressWarnings 注解
+
+> **公司代码规范（强制）** — 适用于所有 Java 源文件，不可豁免。
+
+代码中不允许出现 `@SuppressWarnings` 注解。该注解会压制编译器警告，掩盖潜在的类型安全、未使用代码、弃用 API 等问题，违反项目"零警告"原则。
+
+## 违规案例
+
+```java
+// ❌ 压制 unchecked 警告
+@SuppressWarnings("unchecked")
+List<String> list = (List<String>) obj;
+
+// ❌ 压制 unused 警告
+@SuppressWarnings("unused")
+private void unusedMethod() { ... }
+
+// ❌ 同时压制多种警告
+@SuppressWarnings({"unchecked", "rawtypes"})
+Map map = (Map) obj;
+```
+
+正确做法：从根源修复警告，而不是压制它。
+
+```java
+// ✅ 使用泛型安全转换（如 Gson/FastJSON 的 TypeReference）
+List<String> list = JSON.parseObject(json, new TypeReference<List<String>>() {});
+
+// ✅ 移除未使用的方法/字段
+// （直接删除 unusedMethod）
+
+// ✅ 使用类型安全的集合
+Map<String, Object> map = new HashMap<>();
+```
+
+## 常见场景的修复指引
+
+| 警告类型 | 根因 | 正确修复方式 |
+|----------|------|-------------|
+| `unchecked` | 裸类型转换或未参数化的泛型 | 使用 `TypeReference`、泛型方法签名、或重设计 API 避免 unchecked 转换 |
+| `unused` | 未使用的字段/方法/参数 | 删除死代码，或添加 `@SuppressWarnings` 以外的标注（如 `@Deprecated`） |
+| `rawtypes` | 使用裸泛型类型（如 `Map` 而非 `Map<K,V>`） | 始终指定泛型参数 |
+| `deprecation` | 使用了 `@Deprecated` 的 API | 迁移到推荐的新 API |
+| `all` | 一刀切压制所有警告 | 逐个分析和修复每个警告 |
+
+## 覆盖范围
+
+本规则适用于所有 `src/main/java` 和 `src/test/java` 下的 Java 源文件，无例外。
+
+## 执行机制
+
+- **IDE 检查**：Trae / CatPaw 规则文件 `alwaysApply: true`，在代码生成阶段自动遵守。
+- **Code Review**：PR 审查必须检查 `@SuppressWarnings`，发现即打回。
+- **CI 检测**：`deploy/scripts/check-inline-fqn.sh` 同时检测 `@SuppressWarnings`，`--strict` 模式阻断 PR。

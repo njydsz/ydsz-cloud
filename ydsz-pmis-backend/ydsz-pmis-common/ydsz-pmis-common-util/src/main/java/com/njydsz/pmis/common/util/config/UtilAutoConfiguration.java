@@ -1,20 +1,22 @@
 package com.njydsz.pmis.common.util.config;
 
-import com.njydsz.pmis.common.util.http.OkHttpProperties;
-import com.njydsz.pmis.common.util.http.OkHttpUtils;
-import com.njydsz.pmis.common.util.id.SnowflakeProperties;
-import com.njydsz.pmis.common.util.json.JsonMetrics;
-import com.njydsz.pmis.common.util.json.JsonUtils;
-import com.njydsz.pmis.common.util.spring.SpringContextHolder;
-import okhttp3.ConnectionPool;
-import okhttp3.OkHttpClient;
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
-import java.util.concurrent.TimeUnit;
+import com.njydsz.pmis.common.util.http.OkHttpProperties;
+import com.njydsz.pmis.common.util.http.OkHttpUtils;
+import com.njydsz.pmis.common.util.id.SnowflakeProperties;
+import com.njydsz.pmis.common.util.json.JsonMetrics;
+import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.util.spring.SpringContextHolder;
+
+import okhttp3.ConnectionPool;
+import okhttp3.OkHttpClient;
 
 /**
  * Util 模块自动配置类

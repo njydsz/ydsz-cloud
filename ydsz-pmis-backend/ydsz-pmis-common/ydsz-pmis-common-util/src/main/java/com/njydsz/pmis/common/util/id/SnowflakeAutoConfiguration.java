@@ -1,14 +1,16 @@
 package com.njydsz.pmis.common.util.id;
 
-import com.njydsz.pmis.common.util.id.SnowflakeProperties.WorkerIdSource;
-import lombok.extern.slf4j.Slf4j;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.concurrent.ThreadLocalRandom;
+
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.core.env.Environment;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.concurrent.ThreadLocalRandom;
+import com.njydsz.pmis.common.util.id.SnowflakeProperties.WorkerIdSource;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Snowflake ID 生成器自动配置类

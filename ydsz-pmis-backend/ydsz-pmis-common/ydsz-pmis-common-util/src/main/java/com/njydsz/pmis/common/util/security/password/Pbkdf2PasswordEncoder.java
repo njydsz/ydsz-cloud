@@ -3,8 +3,9 @@ package com.njydsz.pmis.common.util.security.password;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.Base64;
 import java.security.spec.InvalidKeySpecException;
+import java.util.Base64;
+
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 

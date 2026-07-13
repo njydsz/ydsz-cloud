@@ -1,13 +1,15 @@
 package com.njydsz.pmis.common.exception.config;
 
-import com.njydsz.pmis.common.exception.metrics.ExceptionMetrics;
-import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+
+import com.njydsz.pmis.common.exception.metrics.ExceptionMetrics;
+
+import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * 异常指标自动配置

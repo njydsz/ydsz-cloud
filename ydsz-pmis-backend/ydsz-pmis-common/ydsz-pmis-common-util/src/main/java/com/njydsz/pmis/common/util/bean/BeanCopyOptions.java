@@ -1,11 +1,11 @@
 package com.njydsz.pmis.common.util.bean;
 
+import java.util.function.BiConsumer;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.function.BiConsumer;
 
 /**
  * Bean 拷贝选项配置类

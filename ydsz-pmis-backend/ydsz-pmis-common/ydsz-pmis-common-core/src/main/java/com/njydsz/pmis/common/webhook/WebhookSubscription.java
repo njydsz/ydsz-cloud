@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.webhook;
 
+import java.io.Serializable;
+
 import lombok.Builder;
 import lombok.Data;
-
-import java.io.Serializable;
 
 /**
  * Webhook 订阅信息。

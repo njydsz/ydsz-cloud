@@ -1,16 +1,18 @@
 package com.njydsz.pmis.common.core.request;
 
-import com.njydsz.pmis.common.core.constant.PageConstants;
+import java.util.regex.Pattern;
+
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+
+import com.njydsz.pmis.common.core.constant.PageConstants;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
-import java.util.regex.Pattern;
 
 /**
  * 分页请求封装类

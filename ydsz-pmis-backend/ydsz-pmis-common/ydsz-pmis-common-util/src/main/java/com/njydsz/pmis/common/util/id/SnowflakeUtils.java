@@ -1,14 +1,15 @@
 package com.njydsz.pmis.common.util.id;
 
-import lombok.extern.slf4j.Slf4j;
-import com.njydsz.pmis.common.util.security.DigestUtils;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.Instant;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
+
+import com.njydsz.pmis.common.util.security.DigestUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 高性能分布式 ID 生成器

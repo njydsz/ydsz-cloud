@@ -2,9 +2,11 @@ package com.njydsz.pmis.common.util.id;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Snowflake ID 生成器配置属性

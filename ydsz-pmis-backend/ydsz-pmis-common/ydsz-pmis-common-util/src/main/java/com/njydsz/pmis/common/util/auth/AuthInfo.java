@@ -1,11 +1,11 @@
 package com.njydsz.pmis.common.util.auth;
 
 
-import com.njydsz.pmis.common.core.enums.DataScopeType;
-import com.njydsz.pmis.common.core.enums.IdentityType;
-
 import java.util.Map;
 import java.util.Set;
+
+import com.njydsz.pmis.common.core.enums.DataScopeType;
+import com.njydsz.pmis.common.core.enums.IdentityType;
 
 /**
  * 认证信息统一接口

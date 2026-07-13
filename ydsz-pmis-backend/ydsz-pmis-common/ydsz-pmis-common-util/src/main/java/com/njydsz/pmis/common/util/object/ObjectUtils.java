@@ -1,12 +1,12 @@
 package com.njydsz.pmis.common.util.object;
 
-import com.njydsz.pmis.common.util.string.StringUtils;
-
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.function.Supplier;
+
+import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
  * 对象工具类

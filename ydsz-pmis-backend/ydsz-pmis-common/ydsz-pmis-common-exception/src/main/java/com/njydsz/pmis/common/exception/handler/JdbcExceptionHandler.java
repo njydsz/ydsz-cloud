@@ -1,10 +1,7 @@
 package com.njydsz.pmis.common.exception.handler;
 
-import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.exception.core.ExceptionInfo;
-import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -12,7 +9,13 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.pmis.common.exception.core.ExceptionInfo;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * JDBC 数据访问异常处理器

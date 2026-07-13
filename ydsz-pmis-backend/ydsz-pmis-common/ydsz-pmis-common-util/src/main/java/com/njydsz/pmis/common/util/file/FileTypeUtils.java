@@ -1,9 +1,5 @@
 package com.njydsz.pmis.common.util.file;
 
-import lombok.extern.slf4j.Slf4j;
-import com.njydsz.pmis.common.util.string.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +15,12 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.njydsz.pmis.common.util.string.StringUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * FileTypeUtils - 增强版文件类型检测工具类

@@ -1,12 +1,12 @@
 package com.njydsz.pmis.common.domain.query;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 游标分页结果（兼容旧 com.njydsz.pmis.common.entity.CursorPageResult）。

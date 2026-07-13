@@ -1,7 +1,7 @@
 package com.njydsz.pmis.common.core.constant;
 
-import com.njydsz.pmis.common.core.enums.IdentityType;
 import com.njydsz.pmis.common.core.enums.DataScopeType;
+import com.njydsz.pmis.common.core.enums.IdentityType;
 import com.njydsz.pmis.common.core.enums.ServiceType;
 
 /**

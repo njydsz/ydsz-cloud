@@ -4,7 +4,8 @@
 #
 # 在 git commit 前自动执行以下检查：
 #   1. 行内 FQN 违规检测（deploy/scripts/check-inline-fqn.sh --strict）
-#   2. 未使用 import 检测（简易 grep 方案）
+#   2. @SuppressWarnings 注解检测
+#   3. 未使用 import 检测（简易 grep 方案）
 #
 # 安装方式：
 #   方式一（推荐）：运行 deploy/scripts/install-hooks.sh
@@ -35,7 +36,8 @@ echo "🔍 Pre-commit: 正在检查暂存的 Java 文件..."
 # 1. 行内 FQN 违规检测（仅检查暂存文件）
 # -----------------------------------------------------------------------------
 TMPFILE=$(mktemp)
-trap 'rm -f "$TMPFILE"' EXIT
+SUPPRESSFILE=$(mktemp)
+trap 'rm -f "$TMPFILE" "$SUPPRESSFILE"' EXIT
 
 VIOLATION_COUNT=0
 
@@ -100,12 +102,44 @@ if [ -f "$TMPFILE" ]; then
     VIOLATION_COUNT=$((VIOLATION_COUNT / 2))
 fi
 
-if [ "$VIOLATION_COUNT" -gt 0 ]; then
+# -----------------------------------------------------------------------------
+# 2. @SuppressWarnings 注解检测（仅检查暂存文件）
+# -----------------------------------------------------------------------------
+SUPPRESS_COUNT=0
+
+for file in $STAGED_JAVA_FILES; do
+    if [ ! -f "$REPO_ROOT/$file" ]; then
+        continue
+    fi
+
+    grep -n '@SuppressWarnings' "$REPO_ROOT/$file" 2>/dev/null | while IFS=':' read -r line_num line_content; do
+        echo "  ❌ $file:$line_num" >> "$SUPPRESSFILE"
+        echo "     $line_content" >> "$SUPPRESSFILE"
+    done
+done
+
+if [ -f "$SUPPRESSFILE" ]; then
+    SUPPRESS_COUNT=$(wc -l < "$SUPPRESSFILE")
+    SUPPRESS_COUNT=$((SUPPRESS_COUNT / 2))
+fi
+
+TOTAL_COUNT=$((VIOLATION_COUNT + SUPPRESS_COUNT))
+
+if [ "$TOTAL_COUNT" -gt 0 ]; then
     echo ""
-    echo "❌ Pre-commit 检测到 $VIOLATION_COUNT 处行内 FQN 违规："
-    cat "$TMPFILE"
-    echo ""
-    echo "修复方式：将行内全限定类名改为 import + 简单类名引用。"
+    if [ "$VIOLATION_COUNT" -gt 0 ]; then
+        echo "❌ Pre-commit 检测到 $VIOLATION_COUNT 处行内 FQN 违规："
+        cat "$TMPFILE"
+        echo ""
+        echo "修复方式：将行内全限定类名改为 import + 简单类名引用。"
+    fi
+    if [ "$SUPPRESS_COUNT" -gt 0 ]; then
+        echo ""
+        echo "❌ Pre-commit 检测到 $SUPPRESS_COUNT 处 @SuppressWarnings 违规："
+        cat "$SUPPRESSFILE"
+        echo ""
+        echo "修复方式：从根源修复警告（如使用 TypeReference、删除死代码、指定泛型参数），而非压制。"
+    fi
     echo "跳过检查（不推荐）：git commit --no-verify"
     exit 1
 fi

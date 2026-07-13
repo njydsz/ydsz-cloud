@@ -1,8 +1,27 @@
 package com.njydsz.pmis.common.exception.handler;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import com.njydsz.pmis.common.core.response.BaseResponse;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.NoHandlerFoundException;
+
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
+import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.pmis.common.exception.core.ExceptionInfo;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.exception.custom.ConcurrencyException;
@@ -10,29 +29,12 @@ import com.njydsz.pmis.common.exception.custom.DuplicateException;
 import com.njydsz.pmis.common.exception.custom.ExternalException;
 import com.njydsz.pmis.common.exception.custom.InfrastructureException;
 import com.njydsz.pmis.common.exception.custom.RateLimitException;
-import com.njydsz.pmis.common.exception.custom.YdszSecurityException;
-import com.njydsz.pmis.common.exception.custom.YdszTimeoutException;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.exception.custom.ValidationException;
-import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.pmis.common.exception.custom.YdszSecurityException;
+import com.njydsz.pmis.common.exception.custom.YdszTimeoutException;
 import com.njydsz.pmis.common.exception.metrics.ExceptionMetrics;
 import com.njydsz.pmis.common.exception.observability.TraceContext;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
-import org.springframework.web.bind.MissingRequestHeaderException;
-import org.springframework.web.bind.MissingServletRequestParameterException;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.multipart.MaxUploadSizeExceededException;
-import org.springframework.web.servlet.NoHandlerFoundException;
 
 import lombok.extern.slf4j.Slf4j;
 

@@ -1,16 +1,14 @@
 package com.njydsz.pmis.common.util.auth;
 
-import com.njydsz.pmis.common.core.enums.ServiceType;
-import com.njydsz.pmis.common.core.enums.DataScopeType;
-import com.njydsz.pmis.common.core.enums.DataScopeType;
-import com.njydsz.pmis.common.core.enums.IdentityType;
-import lombok.Data;
-
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-import com.njydsz.pmis.common.app.auth.AppAuthInfo;
-import com.njydsz.pmis.common.web.auth.WebAuthInfo;
+
+import com.njydsz.pmis.common.core.enums.DataScopeType;
+import com.njydsz.pmis.common.core.enums.IdentityType;
+import com.njydsz.pmis.common.core.enums.ServiceType;
+
+import lombok.Data;
 
 /**
  * ydsz系统统一认证上下文信息抽象基类。

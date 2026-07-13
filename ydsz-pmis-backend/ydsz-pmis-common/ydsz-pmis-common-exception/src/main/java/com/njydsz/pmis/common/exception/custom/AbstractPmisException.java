@@ -1,14 +1,15 @@
 package com.njydsz.pmis.common.exception.custom;
 
+import java.io.Serial;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.njydsz.pmis.common.exception.code.ExceptionCode;
 import com.njydsz.pmis.common.exception.enums.ExceptionCategory;
 import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
 import com.njydsz.pmis.common.exception.i18n.MessageResolverHolder;
-import lombok.Getter;
 
-import java.io.Serial;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import lombok.Getter;
 
 /**
  * 抽象异常基类

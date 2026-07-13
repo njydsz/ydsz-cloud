@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.exception.custom;
 
+import java.io.Serial;
+
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.pmis.common.exception.enums.ExceptionCategory;
 import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
-
-import java.io.Serial;
 
 /**
  * 安全异常（越权/注入/认证失败）

@@ -1,6 +1,12 @@
 package com.njydsz.pmis.common.exception.config;
 
-import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -14,16 +20,11 @@ import org.springframework.validation.Validator;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.pmis.common.exception.custom.AbstractYdszException;
 import com.njydsz.pmis.common.exception.enums.ExceptionCode;
 import com.njydsz.pmis.common.exception.enums.ExceptionCodeRegistry;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import com.njydsz.pmis.common.exception.custom.AbstractYdszException;
-import org.springframework.beans.factory.ObjectProvider;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 国际化核心配置（不依赖 Spring MVC）

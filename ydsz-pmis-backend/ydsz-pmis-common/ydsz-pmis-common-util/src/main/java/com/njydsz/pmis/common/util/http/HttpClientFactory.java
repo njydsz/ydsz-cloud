@@ -1,14 +1,16 @@
 package com.njydsz.pmis.common.util.http;
 
-import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
-import okhttp3.ConnectionPool;
-import okhttp3.Dispatcher;
-import okhttp3.OkHttpClient;
-import org.springframework.beans.factory.ObjectProvider;
-
 import java.time.Duration;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import org.springframework.beans.factory.ObjectProvider;
+
+import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
+
+import okhttp3.ConnectionPool;
+import okhttp3.Dispatcher;
+import okhttp3.OkHttpClient;
 
 /**
  * OkHttpClient 单例工厂

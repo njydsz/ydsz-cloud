@@ -1,13 +1,13 @@
 package com.njydsz.pmis.common.domain.query;
 
+import static lombok.AccessLevel.PROTECTED;
+
+import java.io.Serializable;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
-import java.io.Serializable;
-
-import static lombok.AccessLevel.PROTECTED;
 
 /**
  * 查询对象基类。

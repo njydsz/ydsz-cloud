@@ -1,10 +1,11 @@
 package com.njydsz.pmis.common.util;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HexFormat;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * 签名验证工具类（兼容旧 com.njydsz.pmis.common.util.CryptoSignUtil）。

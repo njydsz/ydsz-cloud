@@ -1,18 +1,20 @@
 package com.njydsz.pmis.common.util.http;
 
-import com.njydsz.pmis.common.util.classloader.ClassUtils;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.*;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import com.njydsz.pmis.common.util.classloader.ClassUtils;
+
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.*;
 
 /**
  * 高性能 OkHttp 工具类

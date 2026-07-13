@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.util.function;
 
-import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
-
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.*;
+
+import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
 
 /**
  * 函数式编程工具类

@@ -1,15 +1,16 @@
 package com.njydsz.pmis.common.core.enums;
 
-import com.njydsz.pmis.common.core.constant.HeaderConstants;
-import com.njydsz.pmis.common.core.constant.TokenConstants;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import com.njydsz.pmis.common.core.constant.HeaderConstants;
+import com.njydsz.pmis.common.core.constant.TokenConstants;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 /**
  * 数据权限范围类型枚举

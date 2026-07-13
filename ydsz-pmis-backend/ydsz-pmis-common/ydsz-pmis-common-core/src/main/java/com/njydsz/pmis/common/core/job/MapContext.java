@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.core.job;
 
-import lombok.Data;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.Data;
 
 /**
  * MapReduce Map 阶段上下文。

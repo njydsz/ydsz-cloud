@@ -1,15 +1,5 @@
 package com.njydsz.pmis.common.util.http;
 
-import com.njydsz.pmis.common.core.constant.TokenConstants;
-import com.njydsz.pmis.common.util.string.StringUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -17,7 +7,20 @@ import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+import com.njydsz.pmis.common.core.constant.TokenConstants;
 import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.util.string.StringUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Servlet 环境下的 HTTP 工具类

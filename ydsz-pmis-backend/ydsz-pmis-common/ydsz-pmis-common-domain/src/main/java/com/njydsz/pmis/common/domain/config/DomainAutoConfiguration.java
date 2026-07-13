@@ -1,9 +1,10 @@
 package com.njydsz.pmis.common.domain.config;
 
-import com.njydsz.pmis.common.domain.tree.TreeLazyConfig;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+
+import com.njydsz.pmis.common.domain.tree.TreeLazyConfig;
 
 /**
  * Domain 模块自动配置

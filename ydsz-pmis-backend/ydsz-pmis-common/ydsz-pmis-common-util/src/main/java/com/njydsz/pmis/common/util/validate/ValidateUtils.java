@@ -5,8 +5,8 @@ import java.util.regex.Pattern;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
-import jakarta.validation.ValidatorFactory;
 import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 
 /**
  * 校验工具类（hibernate-validator 快捷方法封装）

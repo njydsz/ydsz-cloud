@@ -1,11 +1,13 @@
 package com.njydsz.pmis.common.core.config;
 
-import com.njydsz.pmis.common.core.trace.TraceIdSupplier;
+import java.util.UUID;
+
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import java.util.UUID;
+
+import com.njydsz.pmis.common.core.trace.TraceIdSupplier;
 
 /**
  * Trace 模块自动配置类

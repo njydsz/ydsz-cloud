@@ -1,13 +1,14 @@
 package com.njydsz.pmis.common.util;
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.regex.Pattern;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
  * 密码加密工具类（兼容旧 com.njydsz.pmis.common.util.CryptoUtil）。

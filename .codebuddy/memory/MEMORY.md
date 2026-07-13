@@ -54,3 +54,17 @@
   4. Spotless（`pom.xml`，Google Java Format，`mvn validate` 阶段执行）
   5. CI 流水线（`backend-ci.yml`，`check-inline-fqn.sh --strict` 阻断 PR 合并）
 - **同名类冲突处理**：当两个类简单名相同（如 `com.sun.management.OperatingSystemMXBean` 与 `java.lang.management.OperatingSystemMXBean`，或云存储 SDK 的 `ObjectMetadata` 与项目域模型 `ObjectMetadata`），对其中一个使用 FQN 并在行尾添加 `// FQN-OK: name conflict with <ClassName>` 注释。检测脚本自动跳过带 `FQN-OK` 注释的行。
+
+### 禁止使用 @SuppressWarnings 注解
+- **规则**：Java 代码中不允许出现 `@SuppressWarnings` 注解。该注解会压制编译器警告，掩盖潜在的类型安全、未使用代码、弃用 API 等问题，违反项目「零警告」原则。所有警告必须从根源修复，而非压制。
+- **覆盖范围**：所有 `src/main/java` 和 `src/test/java` 下的 Java 源文件，无例外。
+- **常见修复指引**：
+  - `unchecked`：使用 `TypeReference`、泛型方法签名、或重设计 API 避免 unchecked 转换。
+  - `unused`：删除死代码（字段/方法/参数）。
+  - `rawtypes`：始终指定泛型参数（如 `Map<String, Object>` 而非 `Map`）。
+  - `deprecation`：迁移到推荐的新 API。
+  - `all`：逐个分析和修复每个警告。
+- **规则文件**：`.trae/rules/no-inline-fqn.md`（`alwaysApply: true`，与 FQN 规则同一文件）。
+- **详细文档**：`deploy/docs/architecture/coding-standards.md`（Section 2）。
+- **检测脚本**：`deploy/scripts/check-inline-fqn.sh` 同时检测 `@SuppressWarnings`，`--strict` 模式阻断 PR。
+- **现有存量**：截至 2026-07-13，项目中存在约 208 处 `@SuppressWarnings` 用法，分布在 workflow、common-util、message、project 等模块，待后续批量修复。

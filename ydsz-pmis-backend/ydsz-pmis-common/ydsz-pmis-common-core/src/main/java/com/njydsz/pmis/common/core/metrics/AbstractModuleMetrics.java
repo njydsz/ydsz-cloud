@@ -1,11 +1,11 @@
 package com.njydsz.pmis.common.core.metrics;
 
+import java.time.Duration;
+
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.Tags;
-
-import java.time.Duration;
+import io.micrometer.core.instrument.Timer;
 
 /**
  * 模块级 Prometheus 指标抽象基类。

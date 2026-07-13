@@ -1,11 +1,11 @@
 package com.njydsz.pmis.common.domain.event;
 
+import java.util.Objects;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
-
-import java.util.Objects;
 
 /**
  * 领域事件发布器

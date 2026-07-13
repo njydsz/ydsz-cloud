@@ -1,14 +1,14 @@
 package com.njydsz.pmis.common.domain.repository;
 
-import com.njydsz.pmis.common.domain.entity.AggregateRoot;
-import com.njydsz.pmis.common.domain.query.PageQuery;
-import com.njydsz.pmis.common.domain.query.PageResult;
-import com.njydsz.pmis.common.domain.specification.Specification;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+
+import com.njydsz.pmis.common.domain.entity.AggregateRoot;
+import com.njydsz.pmis.common.domain.query.PageQuery;
+import com.njydsz.pmis.common.domain.query.PageResult;
+import com.njydsz.pmis.common.domain.specification.Specification;
 
 /**
  * 仓储接口

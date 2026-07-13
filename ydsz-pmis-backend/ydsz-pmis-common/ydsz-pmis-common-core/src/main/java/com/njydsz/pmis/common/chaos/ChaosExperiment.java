@@ -1,9 +1,10 @@
 package com.njydsz.pmis.common.chaos;
 
-import jakarta.validation.constraints.NotBlank;
-import lombok.Data;
-
 import java.io.Serializable;
+
+import jakarta.validation.constraints.NotBlank;
+
+import lombok.Data;
 
 /**
  * 混沌实验配置。

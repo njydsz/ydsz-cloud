@@ -1,14 +1,15 @@
 package com.njydsz.pmis.common.util.file;
 
-import com.njydsz.pmis.common.util.string.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
  * FileValidator - 文件上传验证器

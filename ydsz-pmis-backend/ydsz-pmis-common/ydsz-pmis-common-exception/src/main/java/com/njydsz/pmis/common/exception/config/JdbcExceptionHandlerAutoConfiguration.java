@@ -1,11 +1,12 @@
 package com.njydsz.pmis.common.exception.config;
 
-import com.njydsz.pmis.common.exception.handler.JdbcExceptionHandler;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
+
+import com.njydsz.pmis.common.exception.handler.JdbcExceptionHandler;
 
 /**
  * JDBC 异常处理器自动配置

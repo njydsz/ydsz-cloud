@@ -1,13 +1,14 @@
 package com.njydsz.pmis.common.util.message;
 
-import com.njydsz.pmis.common.util.auth.AuthInfoUtils;
-import com.njydsz.pmis.common.util.spring.SpringBeanUtils;
-import com.njydsz.pmis.common.util.string.StringUtils;
+import java.util.Locale;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 
-import java.util.Locale;
+import com.njydsz.pmis.common.util.auth.AuthInfoUtils;
+import com.njydsz.pmis.common.util.spring.SpringBeanUtils;
+import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
  * 消息工具类

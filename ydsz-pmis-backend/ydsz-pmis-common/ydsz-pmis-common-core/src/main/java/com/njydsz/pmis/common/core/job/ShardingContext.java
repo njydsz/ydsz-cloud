@@ -1,8 +1,8 @@
 package com.njydsz.pmis.common.core.job;
 
-import lombok.Data;
-
 import java.util.List;
+
+import lombok.Data;
 
 /**
  * 分片上下文。

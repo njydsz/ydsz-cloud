@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.util.system;
 
 import java.io.File;
-import java.util.Properties;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 /**
  * 系统工具类
  *

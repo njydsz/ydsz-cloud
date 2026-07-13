@@ -8,10 +8,6 @@ package com.njydsz.pmis.common.util.ip;
  * @version 3.5.0
  */
 
-import com.njydsz.pmis.common.util.string.StringUtils;
-import lombok.extern.slf4j.Slf4j;
-
-import jakarta.servlet.http.HttpServletRequest;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -20,6 +16,12 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.njydsz.pmis.common.util.string.StringUtils;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class IpAddrUtils {

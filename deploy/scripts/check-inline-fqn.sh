@@ -1,8 +1,10 @@
 #!/bin/bash
 # =============================================================================
-# check-inline-fqn.sh — 检测 Java 源文件中的行内全限定类名（FQN）违规
+# check-inline-fqn.sh — 检测 Java 源文件中的行内全限定类名（FQN）违规 + @SuppressWarnings 违规
 #
-# 公司代码规范（强制）：禁止行内 FQN 用法，必须使用标准 import 语句后引用简单类名。
+# 公司代码规范（强制）：
+#   1. 禁止行内 FQN 用法，必须使用标准 import 语句后引用简单类名。
+#   2. 禁止使用 @SuppressWarnings 注解，所有警告必须从根源修复。
 # 规则文件：.trae/rules/no-inline-fqn.md
 # 详细文档：deploy/docs/architecture/coding-standards.md
 #
@@ -17,6 +19,9 @@
 #   3. 无法检测注解 FQN：增加 @FQN 模式检测
 #   4. 字符串检测逻辑漏洞：改用更精确的引号内 FQN 排除
 #   5. 未检测 catch/instanceof：增加对应模式
+#
+# v3.0 新增：
+#   - 增加 @SuppressWarnings 注解检测
 #
 # 例外（不报违规）：
 #   - import 语句
@@ -36,9 +41,10 @@ SRC_DIR="${1:-ydsz-pmis-backend}"
 STRICT="${2:-}"
 
 TMPFILE=$(mktemp)
-trap 'rm -f "$TMPFILE"' EXIT
+SUPPRESSFILE=$(mktemp)
+trap 'rm -f "$TMPFILE" "$SUPPRESSFILE"' EXIT
 
-echo "🔍 扫描行内 FQN 违规: $SRC_DIR"
+echo "🔍 扫描行内 FQN + @SuppressWarnings 违规: $SRC_DIR"
 echo "-----------------------------------"
 
 # FQN 正则模式：匹配 com.xxx.YyyClass / org.xxx.YyyClass / java.xxx.YyyClass / javax.xxx.YyyClass / jakarta.xxx.YyyClass
@@ -106,6 +112,30 @@ find "$SRC_DIR" -name '*.java' -type f | while read -r file; do
     done
 done
 
+# ========== @SuppressWarnings 检测 ==========
+echo ""
+echo "🔍 扫描 @SuppressWarnings 违规: $SRC_DIR"
+echo "-----------------------------------"
+
+find "$SRC_DIR" -name '*.java' -type f | while read -r file; do
+    grep -n '@SuppressWarnings' "$file" 2>/dev/null | while IFS=':' read -r line_num line_content; do
+        echo "$file:$line_num" >> "$SUPPRESSFILE"
+        echo "   $line_content" >> "$SUPPRESSFILE"
+    done
+done
+
+# 读取 suppressfile 统计违规数
+SUPPRESS_COUNT=0
+if [ -f "$SUPPRESSFILE" ]; then
+    SUPPRESS_COUNT=$(wc -l < "$SUPPRESSFILE")
+    SUPPRESS_COUNT=$((SUPPRESS_COUNT / 2))
+fi
+
+# 输出 @SuppressWarnings 违规详情
+if [ "$SUPPRESS_COUNT" -gt 0 ]; then
+    cat "$SUPPRESSFILE"
+fi
+
 # 读取 tmpfile 统计违规数
 VIOLATION_COUNT=0
 if [ -f "$TMPFILE" ]; then
@@ -114,16 +144,18 @@ if [ -f "$TMPFILE" ]; then
     VIOLATION_COUNT=$((VIOLATION_COUNT / 2))
 fi
 
-# 输出违规详情
+# 输出 FQN 违规详情
 if [ "$VIOLATION_COUNT" -gt 0 ]; then
     cat "$TMPFILE"
 fi
 
+TOTAL_COUNT=$((VIOLATION_COUNT + SUPPRESS_COUNT))
+
 echo "-----------------------------------"
-if [ "$VIOLATION_COUNT" -eq 0 ]; then
-    echo "✅ 检测完成，无行内 FQN 违规。"
+if [ "$TOTAL_COUNT" -eq 0 ]; then
+    echo "✅ 检测完成，无行内 FQN 违规，无 @SuppressWarnings 违规。"
 else
-    echo "⚠️  检测完成，发现 $VIOLATION_COUNT 处行内 FQN 违规。"
+    echo "⚠️  检测完成，发现 $VIOLATION_COUNT 处行内 FQN 违规，$SUPPRESS_COUNT 处 @SuppressWarnings 违规（共 $TOTAL_COUNT 处）。"
     if [ "$STRICT" = "--strict" ]; then
         echo "❌ 严格模式：CI 阻断。请修复上述违规后重新提交。"
         exit 1

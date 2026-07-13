@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.domain.dto;
 
+import java.io.Serializable;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
-import java.io.Serializable;
 
 /**
  * 数据传输对象基类

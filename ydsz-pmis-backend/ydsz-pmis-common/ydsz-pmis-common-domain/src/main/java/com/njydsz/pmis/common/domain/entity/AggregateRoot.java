@@ -1,9 +1,9 @@
 package com.njydsz.pmis.common.domain.entity;
 
-import com.njydsz.pmis.common.domain.event.DomainEvent;
-
 import java.io.Serializable;
 import java.util.List;
+
+import com.njydsz.pmis.common.domain.event.DomainEvent;
 
 /**
  * 聚合根标记接口

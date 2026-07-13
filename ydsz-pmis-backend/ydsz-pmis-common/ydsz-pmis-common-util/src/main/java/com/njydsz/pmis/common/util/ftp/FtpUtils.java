@@ -16,17 +16,18 @@ package com.njydsz.pmis.common.util.ftp;
  * @version 3.5.0
  */
 
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.net.ftp.FTP;
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
-import org.apache.commons.net.ftp.FTPReply;
-
 import java.io.*;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+
+import org.apache.commons.net.ftp.FTP;
+import org.apache.commons.net.ftp.FTPClient;
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.commons.net.ftp.FTPReply;
+
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class FtpUtils {
