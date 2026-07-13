@@ -233,7 +233,7 @@ public class BeanCopyUtils {
         }
 
         try {
-            T target = (T) clazz.getDeclaredConstructor().newInstance();
+            T target = castToT(clazz.getDeclaredConstructor().newInstance());
             visited.put(source, target);
 
             PropertyDescriptor[] props = computeIfAbsentBounded(PROPERTY_CACHE, clazz, BeanUtils::getPropertyDescriptors);
@@ -288,6 +288,11 @@ public class BeanCopyUtils {
         return new ArrayList<>();
     }
 
+    /** 内部辅助方法：安全转换对象到泛型类型 T（深拷贝场景使用） */
+    private static <T> T castToT(Object obj) {
+        return (T) obj;
+    }
+
     private static Map<Object, Object> createMap(Class<?> clazz) {
         if (LinkedHashMap.class.isAssignableFrom(clazz)) {
             return new LinkedHashMap<>();
@@ -306,7 +311,7 @@ public class BeanCopyUtils {
         }
 
         if (visited.containsKey(source)) {
-            return (T) visited.get(source);
+            return castToT(visited.get(source));
         }
 
         Class<?> componentType = source.getClass().getComponentType();
@@ -327,7 +332,7 @@ public class BeanCopyUtils {
             }
         }
 
-        return (T) newArray;
+        return castToT(newArray);
     }
 
     // ==================== Lambda 表达式支持 ====================

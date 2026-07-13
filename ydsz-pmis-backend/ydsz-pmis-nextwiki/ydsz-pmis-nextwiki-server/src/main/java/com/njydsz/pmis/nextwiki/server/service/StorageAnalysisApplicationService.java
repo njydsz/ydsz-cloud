@@ -47,14 +47,16 @@ public class StorageAnalysisApplicationService {
      * 获取用户存储概览
      */
     public StorageOverview getUserOverview(String userId) {
-        // 通过 repository 查询用户文件
-        // 简化实现：返回基本结构
+        int fileCount = fileNodeRepository.countByUser(userId);
+        long totalSize = fileNodeRepository.sumSizeByUser(userId);
+        int trashCount = trashItemRepository.countActiveTrash(userId);
+
         return StorageOverview.builder()
                 .userId(userId)
-                .totalSize(0L)
-                .fileCount(0)
+                .totalSize(totalSize)
+                .fileCount(fileCount)
                 .folderCount(0)
-                .trashCount(trashItemRepository.countActiveTrash(userId))
+                .trashCount(trashCount)
                 .build();
     }
 
@@ -62,16 +64,34 @@ public class StorageAnalysisApplicationService {
      * 按文件类型统计
      */
     public Map<String, TypeStats> statsByType(String userId) {
-        // 实际实现：通过 mapper 聚合查询
-        return new HashMap<>();
+        List<FileNodeRepository.FileTypeStat> stats = fileNodeRepository.statsBySuffixAndUser(userId);
+        Map<String, TypeStats> result = new HashMap<>();
+
+        long grandTotal = stats.stream()
+                .mapToLong(FileNodeRepository.FileTypeStat::totalSize)
+                .sum();
+
+        for (FileNodeRepository.FileTypeStat stat : stats) {
+            double percentage = grandTotal > 0
+                    ? (double) stat.totalSize() / grandTotal * 100
+                    : 0.0;
+            String key = stat.suffix() != null ? stat.suffix() : "unknown";
+            result.put(key, TypeStats.builder()
+                    .suffix(key)
+                    .fileCount(stat.fileCount())
+                    .totalSize(stat.totalSize())
+                    .percentage(Math.round(percentage * 100.0) / 100.0)
+                    .build());
+        }
+
+        return result;
     }
 
     /**
      * 大文件 Top-N
      */
     public List<FileNode> topLargeFiles(String userId, int limit) {
-        // 实际实现：通过 mapper 查询
-        return List.of();
+        return fileNodeRepository.findTopLargeFilesByUser(userId, limit);
     }
 
     /**

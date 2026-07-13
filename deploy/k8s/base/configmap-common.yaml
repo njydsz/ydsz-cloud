@@ -18,8 +18,10 @@ data:
   LOGGING_LEVEL_COM_NJYDSZ_PMIS: "INFO"
 
   # P1-4: 全链路追踪上报配置（K8s 环境默认开启，对接 SkyWalking OAP）
+  # TRACING_ENDPOINT 必须与 skywalking-oap.yaml Service 暴露的 zipkin 端口(9412)一致
+  # namespace=observability(K8s 部署),开发环境 docker-compose 用 monitoring
   TRACING_EXPORT_ENABLED: "true"
-  TRACING_ENDPOINT: "http://skywalking-oap.monitoring:9411/api/v2/spans"
+  TRACING_ENDPOINT: "http://skywalking-oap.observability.svc.cluster.local:9412/api/v2/spans"
   # P2-12: 环境差异化采样率
   #   dev:  1.0 (100% 全量采样，便于调试)
   #   sit:  0.5 (50% 采样)

@@ -7,6 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.pmis.common.core.response.Result;
 import com.njydsz.pmis.nextwiki.api.dto.NextwikiDTOs;
+import com.njydsz.pmis.nextwiki.domain.entity.FileVersion;
 import com.njydsz.pmis.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.pmis.nextwiki.server.service.FileApplicationService;
 
@@ -97,10 +98,8 @@ public class FileController {
 
     @GetMapping("/{nodeId}/versions")
     @Operation(summary = "获取版本历史")
-    public Result<List<Object>> getVersionHistory(@PathVariable String nodeId) {
-        return Result.ok(fileApplicationService.getVersionHistory(nodeId).stream()
-                .map(v -> (Object) v)
-                .toList());
+    public Result<List<FileVersion>> getVersionHistory(@PathVariable String nodeId) {
+        return Result.ok(fileApplicationService.getVersionHistory(nodeId));
     }
 
     @PostMapping("/{nodeId}/versions/{version}/rollback")

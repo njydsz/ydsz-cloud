@@ -187,22 +187,22 @@ public class ClassUtils {
      * 原始类型转包装类型
      */
     
-    public static <T> Class<T> primitiveToWrapper(Class<?> clazz) {
+    public static Class<?> primitiveToWrapper(Class<?> clazz) {
         if (clazz == null || !clazz.isPrimitive()) {
-            return (Class<T>) clazz;
+            return clazz;
         }
 
-        if (boolean.class == clazz) return (Class<T>) Boolean.class;
-        if (byte.class == clazz) return (Class<T>) Byte.class;
-        if (char.class == clazz) return (Class<T>) Character.class;
-        if (short.class == clazz) return (Class<T>) Short.class;
-        if (int.class == clazz) return (Class<T>) Integer.class;
-        if (long.class == clazz) return (Class<T>) Long.class;
-        if (float.class == clazz) return (Class<T>) Float.class;
-        if (double.class == clazz) return (Class<T>) Double.class;
-        if (void.class == clazz) return (Class<T>) Void.class;
+        if (boolean.class == clazz) return Boolean.class;
+        if (byte.class == clazz) return Byte.class;
+        if (char.class == clazz) return Character.class;
+        if (short.class == clazz) return Short.class;
+        if (int.class == clazz) return Integer.class;
+        if (long.class == clazz) return Long.class;
+        if (float.class == clazz) return Float.class;
+        if (double.class == clazz) return Double.class;
+        if (void.class == clazz) return Void.class;
 
-        return (Class<T>) clazz;
+        return clazz;
     }
 
     /**

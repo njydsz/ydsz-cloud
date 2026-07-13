@@ -339,7 +339,6 @@ public class ObjectUtils {
     /**
      * 获取对象的大小（适用于数组、集合、Map、字符串）
      */
-    @SuppressWarnings("unused")
     public static int getSize(Object obj) {
         if (obj == null) {
             return 0;

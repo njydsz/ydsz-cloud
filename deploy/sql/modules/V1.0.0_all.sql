@@ -13,10 +13,8 @@
 \i V1.0.0_message.sql
 \i V1.0.0_workflow.sql
 \i V1.0.0_agent.sql
+\i V1.0.0_nextwiki.sql    -- NextWiki 网盘知识库服务 (9 张表, 2026-07-13 规范化命名)
 \i V1.0.0_literule.sql    -- 规则引擎服务 (含 8 张业务表, 2026-07-12 从 project 迁移)
 
--- V1.1.0 架构优化：废弃重复表清理与数据迁移
-\i V1.1.0_refactor_deprecated_tables.sql
-
--- V1.1.0 架构优化：统一 DAG 引擎表
-\i V1.1.0_unified_dag.sql
+-- V1.0.0 架构优化：废弃重复表清理与数据迁移（已合并至各模块 DDL）
+-- V1.0.0 架构优化：统一 DAG 引擎表（已合并至 V1.0.0_cronjob.sql）

@@ -7,7 +7,7 @@
 #    2. 加载 deploy/.env
 #    3. 启动基础设施容器（Nacos / PG / Redis / MinIO）
 #    4. 等待基础设施健康
-#    5. 编译并后台启动 7 个后端微服务
+#    5. 编译并后台启动 11 个后端微服务
 #    6. 启动前端开发服务器
 #
 #  用法：
@@ -111,13 +111,15 @@ if [[ "$1" != "--frontend" && "$1" != "--infra" ]]; then
 fi
 
 # -----------------------------------------------------------------------------
-#  5. 启动 7 个后端服务（后台）
+#  5. 启动 11 个后端服务（后台）
 # -----------------------------------------------------------------------------
 if [[ "$1" != "--frontend" && "$1" != "--infra" ]]; then
-  log "步骤 5/6 - 启动 7 个后端微服务（后台）"
+  log "步骤 5/6 - 启动 11 个后端微服务（后台）"
 
   # 启动顺序：依赖在前
-  # gateway(9000) → userinfo(9001) / system(9002) / project(9003) / message(9004) → cronjob(9005) / workflow(9006) / agent(9007)
+  # gateway(9000) → userinfo(9001) / system(9002) / project(9003) / message(9004)
+  #            → cronjob(9005) / workflow(9006) / agent(9007) / nextwiki(8800)
+  #            → sales(9010) / finance(9011)
   declare -A SERVICES=(
     ["ydsz-pmis-gateway"]="9000"
     ["ydsz-pmis-userinfo"]="9001"
@@ -127,6 +129,9 @@ if [[ "$1" != "--frontend" && "$1" != "--infra" ]]; then
     ["ydsz-pmis-cronjob"]="9005"
     ["ydsz-pmis-workflow"]="9006"
     ["ydsz-pmis-agent"]="9007"
+    ["ydsz-pmis-nextwiki"]="8800"
+    ["ydsz-pmis-sales"]="9010"
+    ["ydsz-pmis-finance"]="9011"
   )
 
   for module in "${!SERVICES[@]}"; do
@@ -139,7 +144,7 @@ if [[ "$1" != "--frontend" && "$1" != "--infra" ]]; then
     echo $! > "$LOG_DIR/${module}.pid"
   done
 
-  ok "8 个后端服务已在后台启动，日志：$LOG_DIR/{module}.log"
+  ok "11 个后端服务已在后台启动，日志：$LOG_DIR/{module}.log"
 
   log "等待所有服务健康（约 60-120s）..."
   for i in {1..24}; do
@@ -151,11 +156,11 @@ if [[ "$1" != "--frontend" && "$1" != "--infra" ]]; then
         HEALTHY=$((HEALTHY+1))
       fi
     done
-    if [[ "$HEALTHY" -ge 7 ]]; then
-      ok "全部 7 个后端服务健康"
+    if [[ "$HEALTHY" -ge 11 ]]; then
+      ok "全部 11 个后端服务健康"
       break
     fi
-    log "  当前健康: $HEALTHY/7"
+    log "  当前健康: $HEALTHY/11"
   done
 fi
 

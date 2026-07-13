@@ -175,9 +175,13 @@ spec:
             # gRPC(Agent / OTLP 上报)
             - name: grpc
               containerPort: 11800
-            # HTTP(UI 查询 / Zipkin 兼容 API / 健康检查)
+            # HTTP(UI 查询 / 健康检查)
             - name: http
               containerPort: 12800
+            # Zipkin 兼容 API(接收 Brave/Micrometer Zipkin exporter 上报 /api/v2/spans)
+            # 与 configmap-common.yaml / patch-tracing.yaml 中 TRACING_ENDPOINT 端口保持一致
+            - name: zipkin
+              containerPort: 9412
           env:
             - name: TZ
               value: Asia/Shanghai
@@ -228,7 +232,8 @@ spec:
 # =============================================================================
 # 4. SkyWalking OAP Service
 #    - 11800 gRPC: Agent/OTLP 上报
-#    - 12800 HTTP: UI 查询 + Zipkin 兼容 API(/api/v2/spans)
+#    - 12800 HTTP: UI 查询 + 健康检查
+#    - 9412  HTTP: Zipkin 兼容 API(/api/v2/spans,接收 Brave/Micrometer 上报)
 # =============================================================================
 ---
 apiVersion: v1
@@ -250,6 +255,9 @@ spec:
     - name: http
       port: 12800
       targetPort: http
+    - name: zipkin
+      port: 9412
+      targetPort: zipkin
 
 # =============================================================================
 # 5. SkyWalking UI Deployment

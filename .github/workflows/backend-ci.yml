@@ -104,9 +104,17 @@ jobs:
             find deploy/sql -type d -name 'migration'
             exit 1
           fi
+          # 检测 Flyway 命名增量脚本 V*__*.sql（双下划线）和 V1.0.1_*.sql（单下划线增量）
           if find deploy/sql -type f -name 'V*__*.sql' | grep -q . ; then
             echo "::error::检测到 V*__*.sql Flyway 命名增量脚本，违反项目规范"
             find deploy/sql -type f -name 'V*__*.sql'
+            exit 1
+          fi
+          # 检测非 V1.0.0_*.sql 命名的版本化脚本（如 V1.0.1_*.sql / V1.1.0_*.sql 增量脚本）
+          # 仅允许 V1.0.0.sql / V1.0.0_*.sql（架构优化已合并至各模块 DDL，不再使用独立增量脚本）
+          if find deploy/sql -type f -name 'V[0-9]*.sql' ! -name 'V1.0.0.sql' ! -name 'V1.0.0_*' | grep -q . ; then
+            echo "::error::检测到非规范 SQL 脚本（仅允许 V1.0.0.sql / V1.0.0_*.sql）"
+            find deploy/sql -type f -name 'V[0-9]*.sql' ! -name 'V1.0.0.sql' ! -name 'V1.0.0_*'
             exit 1
           fi
           # 4) 业务模块 db/migration 目录扫描

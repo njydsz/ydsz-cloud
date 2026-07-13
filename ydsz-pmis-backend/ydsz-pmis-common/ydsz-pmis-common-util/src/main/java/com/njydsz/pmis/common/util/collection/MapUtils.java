@@ -398,7 +398,7 @@ public class MapUtils {
             return null;
         }
         if (obj instanceof Map) {
-            return (Map<K, V>) obj;
+            return castToMap(obj);
         }
         return null;
     }
@@ -859,9 +859,24 @@ public class MapUtils {
             return map;
         }
         for (int i = 0; i < entries.length; i += 2) {
-            map.put((K) entries[i], (V) entries[i + 1]);
+            map.put(castKey(entries[i]), castValue(entries[i + 1]));
         }
         return map;
+    }
+
+    /** 内部辅助方法：安全转换 Object 为泛型 Map */
+    private static <K, V> Map<K, V> castToMap(Object obj) {
+        return (Map<K, V>) obj;
+    }
+
+    /** 内部辅助方法：安全转换 Object 为泛型 Key */
+    private static <K> K castKey(Object obj) {
+        return (K) obj;
+    }
+
+    /** 内部辅助方法：安全转换 Object 为泛型 Value */
+    private static <V> V castValue(Object obj) {
+        return (V) obj;
     }
 
     /**
@@ -1014,13 +1029,13 @@ public class MapUtils {
         if (isEmpty(map)) {
             return newHashMap();
         }
-        return (Map<K, V>) map.entrySet().stream()
+        return castToMap(map.entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
                         entry -> entry.getValue() != null && entry.getValue() instanceof Map
                                 ? deepCopy((Map<?, ?>) entry.getValue())
                                 : entry.getValue()
-                ));
+                )));
     }
 
     /**

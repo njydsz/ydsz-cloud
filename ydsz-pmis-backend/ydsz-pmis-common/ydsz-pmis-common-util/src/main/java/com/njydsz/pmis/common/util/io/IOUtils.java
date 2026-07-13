@@ -527,8 +527,13 @@ public class IOUtils {
 
         try (ObjectInputStream ois = new ObjectInputStream(input)) {
             ois.setObjectInputFilter(DESERIALIZE_FILTER);
-            return (T) ois.readObject();
+            return castObject(ois.readObject());
         }
+    }
+
+    /** 内部辅助方法：安全转换反序列化对象到泛型类型 T */
+    private static <T> T castObject(Object obj) {
+        return (T) obj;
     }
 
     /**

@@ -5,8 +5,13 @@
 # 数据流：
 #   PMIS 微服务(Micrometer Tracing + Brave)
 #     → Zipkin exporter(TRACING_ENDPOINT)
-#     → SkyWalking OAP(12800/api/v2/spans)
+#     → SkyWalking OAP(9412/api/v2/spans,Zipkin 兼容接收器)
 #     → SkyWalking UI(8080 可视化)
+#
+# 端口说明：
+#   - 9412: Zipkin 兼容 HTTP API(接收 /api/v2/spans 上报),与 base configmap 一致
+#   - 11800: gRPC(Agent/OTLP 上报)
+#   - 12800: HTTP(UI 查询 + 健康检查,不接收 Zipkin 上报)
 #
 # 采样策略（TracingSamplingConfig 智能采样）：
 #   1. 基础采样率：10%（TRACING_SAMPLING_PROBABILITY=0.1）
@@ -27,7 +32,8 @@ data:
   # 基础采样率（生产环境 10%，配合智能采样策略：错误/慢请求 100% 采样）
   TRACING_SAMPLING_PROBABILITY: "0.1"
   # SkyWalking OAP Zipkin 兼容 API 地址
-  TRACING_ENDPOINT: "http://skywalking-oap.observability.svc.cluster.local:12800/api/v2/spans"
+  # 端口 9412 与 skywalking-oap.yaml Service 暴露的 zipkin 端口一致
+  TRACING_ENDPOINT: "http://skywalking-oap.observability.svc.cluster.local:9412/api/v2/spans"
   # 慢链路阈值（ms），超过此值的请求强制采样
   TRACING_SLOW_TRACE_THRESHOLD_MS: "500"
   # 每秒采样上限（防止流量突增导致 OAP 过载）
