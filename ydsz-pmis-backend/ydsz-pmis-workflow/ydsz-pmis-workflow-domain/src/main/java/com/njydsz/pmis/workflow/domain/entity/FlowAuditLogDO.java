@@ -17,7 +17,7 @@ import lombok.EqualsAndHashCode;
  * <p>记录流程全生命周期的操作轨迹：谁在何时对哪个实例/任务做了什么操作。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

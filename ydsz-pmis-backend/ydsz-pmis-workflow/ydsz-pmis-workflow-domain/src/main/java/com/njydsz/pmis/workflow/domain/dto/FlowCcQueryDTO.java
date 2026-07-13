@@ -15,7 +15,7 @@ import lombok.EqualsAndHashCode;
  * P1-7a: 继承 {@link PageQuery} 复用分页安全校验（@Min/@Max/@Pattern + safeOrderBy）。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

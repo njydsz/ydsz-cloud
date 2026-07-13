@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
  * <p>提供 WebHook 订阅的增删改查接口，支持按事件类型和任务 KEY 订阅。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Tag(name = "WebHook 事件订阅")
 @RestController

@@ -8,7 +8,7 @@ import lombok.Getter;
  * <p>P0-2: 三方审批 SDK（钉钉/飞书/企微）平台标识，与 pmis_flow_third_party_account.platform 对应。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Getter
 public enum ThirdPartyPlatform {

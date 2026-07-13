@@ -18,7 +18,7 @@ import lombok.EqualsAndHashCode;
  * <p>CC 节点触发或人工抄送都会写入本表，区别于 pmis_flow_run_task（无需办理动作）。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

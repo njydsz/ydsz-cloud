@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
  * <p>提供调度日历可视化接口，预计算任务在未来时间段内的触发时间点。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Tag(name = "调度日历")
 @RestController

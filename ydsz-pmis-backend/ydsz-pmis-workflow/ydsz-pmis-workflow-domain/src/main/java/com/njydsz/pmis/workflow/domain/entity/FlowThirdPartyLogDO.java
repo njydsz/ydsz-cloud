@@ -19,7 +19,7 @@ import lombok.EqualsAndHashCode;
  * 因此不继承 BaseDO，独立实现 Serializable。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = false)

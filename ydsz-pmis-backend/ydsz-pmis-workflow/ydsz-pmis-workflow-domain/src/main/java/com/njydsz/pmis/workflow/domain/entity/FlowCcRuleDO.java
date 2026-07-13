@@ -16,7 +16,7 @@ import lombok.EqualsAndHashCode;
  * <p>P0-3: 自动抄送规则配置（如：变更金额>1万自动抄送 CEO）。
  *
  * @author ydsz-pmis-team
- * @since 1.1.0
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
