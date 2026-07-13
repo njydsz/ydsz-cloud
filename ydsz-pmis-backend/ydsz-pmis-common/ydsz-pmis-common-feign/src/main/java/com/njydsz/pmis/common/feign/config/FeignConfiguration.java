@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.config;
+﻿package com.njydsz.pmis.common.feign.config;
 
 import com.njydsz.pmis.common.feign.aspect.FeignRequestInterceptor;
 import com.njydsz.pmis.common.feign.aspect.YdszFeignErrorDecoder;
@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import feign.Feign;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hc.client5.http.config.RequestConfig;
 
 /**
  * YdszFeign 自动配置类。
@@ -309,7 +310,7 @@ public class FeignConfiguration {
                 .setConnectionManager(connectionManager)
                 .evictIdleConnections(TimeValue.ofMilliseconds(clientConfig.getKeepAlive()))
                 .evictExpiredConnections()
-                .setDefaultRequestConfig(org.apache.hc.client5.http.config.RequestConfig.custom()
+                .setDefaultRequestConfig(RequestConfig.custom()
                         // 连接获取超时 5s
                         .setConnectionRequestTimeout(5, TimeUnit.SECONDS)
                         .build())

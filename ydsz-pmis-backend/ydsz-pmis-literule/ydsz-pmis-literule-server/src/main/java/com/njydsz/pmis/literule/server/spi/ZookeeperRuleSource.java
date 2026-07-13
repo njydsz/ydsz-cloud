@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.spi;
+﻿package com.njydsz.pmis.literule.server.spi;
 
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import lombok.extern.slf4j.Slf4j;
@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
+import com.alibaba.fastjson2.JSON;
 
 /**
  * ZooKeeper 规则数据源（P1-5）
@@ -190,7 +191,7 @@ public class ZookeeperRuleSource implements RuleSource {
             return List.of();
         }
         try {
-            return com.alibaba.fastjson2.JSON.parseArray(json, RuleDefinition.class);
+            return JSON.parseArray(json, RuleDefinition.class);
         } catch (Exception e) {
             log.error("[ZookeeperRuleSource] JSON 解析失败: {}", e.getMessage());
             return List.of();

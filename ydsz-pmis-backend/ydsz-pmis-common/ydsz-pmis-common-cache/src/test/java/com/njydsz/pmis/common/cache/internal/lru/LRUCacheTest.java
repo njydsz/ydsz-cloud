@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.cache.internal.lru;
+﻿package com.njydsz.pmis.common.cache.internal.lru;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.assertj.core.data.Offset;
 
 class LRUCacheTest {
 
@@ -149,7 +150,7 @@ class LRUCacheTest {
       cache.getIfPresent("a"); // hit
       cache.getIfPresent("a"); // hit
       cache.getIfPresent("b"); // miss
-      assertThat(cache.getHitRate()).isCloseTo(2.0 / 3, org.assertj.core.data.Offset.offset(0.001));
+      assertThat(cache.getHitRate()).isCloseTo(2.0 / 3, Offset.offset(0.001));
     }
   }
 

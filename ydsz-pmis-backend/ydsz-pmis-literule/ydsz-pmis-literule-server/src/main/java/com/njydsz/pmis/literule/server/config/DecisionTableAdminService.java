@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.config;
+﻿package com.njydsz.pmis.literule.server.config;
 
 import com.njydsz.pmis.literule.api.DecisionTableDefinition;
 import com.njydsz.pmis.literule.api.HitPolicy;
@@ -16,6 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import com.njydsz.pmis.literule.api.RuleResult;
 
 /**
  * 决策表管理服务
@@ -106,7 +107,7 @@ public class DecisionTableAdminService {
     /**
      * dry-run：构建临时 DecisionTableRule 评估（不注册到引擎）
      */
-    public com.njydsz.pmis.literule.api.RuleResult dryRun(String tableCode,
+    public RuleResult dryRun(String tableCode,
                                                            Map<String, Object> facts) {
         DecisionTableDefinition def = configProvider.findByCode(tableCode);
         if (def == null) {

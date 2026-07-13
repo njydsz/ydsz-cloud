@@ -1,10 +1,11 @@
-package com.njydsz.pmis.common.audit.mask;
+﻿package com.njydsz.pmis.common.audit.mask;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import com.njydsz.pmis.common.audit.mask.SensitiveFieldMask;
 
 /**
  * 字段级脱敏注解
@@ -36,7 +37,7 @@ import java.lang.annotation.Target;
  * @email limw1888@126.com
  * @version 3.5.0
  * @since 1.0.0
- * @see com.njydsz.pmis.common.audit.mask.SensitiveFieldMask
+ * @see SensitiveFieldMask
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)

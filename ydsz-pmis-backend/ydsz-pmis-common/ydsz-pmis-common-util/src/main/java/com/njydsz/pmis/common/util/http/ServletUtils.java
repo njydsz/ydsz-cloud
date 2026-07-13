@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.http;
+﻿package com.njydsz.pmis.common.util.http;
 
 import com.njydsz.pmis.common.core.constant.TokenConstants;
 import com.njydsz.pmis.common.util.string.StringUtils;
@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 /**
  * Servlet 环境下的 HTTP 工具类
@@ -100,7 +101,7 @@ public final class ServletUtils {
         if (object == null) {
             return;
         }
-        renderString(response, com.njydsz.pmis.common.util.json.JsonUtils.toJson(object));
+        renderString(response, JsonUtils.toJson(object));
     }
 
     /**

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.excel.core.writer;
+﻿package com.njydsz.pmis.common.excel.core.writer;
 
 import com.njydsz.pmis.common.excel.core.config.ExcelConfig;
 import org.apache.poi.ss.usermodel.Cell;
@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.sql.Timestamp;
+import java.sql.Date;
 
 /**
  * 值格式化器 - 负责单元格值设置和日期格式化
@@ -95,11 +96,11 @@ public class ValueFormatter {
     }
 
     /**
-     * 检测值是否为 java.sql.Date 类型
-     * <p>使用类名检测避免 FQN 引用（Java 无法同时 import java.util.Date 和 java.sql.Date）</p>
+     * 检测值是否为 Date 类型
+     * <p>使用类名检测避免 FQN 引用（Java 无法同时 import java.util.Date 和 Date）</p>
      *
      * @param value 待检测的值
-     * @return 如果是 java.sql.Date 返回 true
+     * @return 如果是 Date 返回 true
      */
     private static boolean isSqlDate(Object value) {
         return value != null && "java.sql.Date".equals(value.getClass().getName());
@@ -216,7 +217,7 @@ public class ValueFormatter {
     public String formatSqlDate(Object sqlDateObj, String pattern) {
         String fmt = pattern != null ? pattern : "yyyy-MM-dd";
         DateTimeFormatter formatter = getDateTimeFormatter(fmt);
-        // java.sql.Date extends java.util.Date, use toInstant() for formatting
+        // Date extends java.util.Date, use toInstant() for formatting
         return ((Date) sqlDateObj).toInstant().atZone(ZoneId.systemDefault()).toLocalDate().format(formatter);
     }
 

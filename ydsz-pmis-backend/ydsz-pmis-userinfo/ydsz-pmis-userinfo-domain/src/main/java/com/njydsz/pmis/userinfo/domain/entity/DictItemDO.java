@@ -1,4 +1,4 @@
-package com.njydsz.pmis.userinfo.domain.entity.org;
+﻿package com.njydsz.pmis.userinfo.domain.entity.org;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
+import org.apache.ibatis.type.JdbcType;
 
 /**
  * 字典项实体
@@ -47,7 +48,7 @@ public class DictItemDO extends BaseDO {
     private String description;
 
     /** 扩展属性 JSON */
-    @TableField(jdbcType = org.apache.ibatis.type.JdbcType.OTHER)
+    @TableField(jdbcType = JdbcType.OTHER)
     private String extJson;
 
     /** 状态：ENABLED/DISABLED */

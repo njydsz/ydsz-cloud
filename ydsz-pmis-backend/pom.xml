@@ -1259,10 +1259,11 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
             </plugin>
-            <!-- Spotless：代码格式化（Google Java Format）
+            <!-- Spotless：import 管理（FQN 防线组成部分）
+                 仅做未使用 import 清理和 import 排序，不改变代码缩进/格式。
                  用法：
-                   mvn spotless:check   — 检查格式违规（CI 集成）
-                   mvn spotless:apply   — 自动修复格式问题（本地开发）
+                   mvn spotless:check   — 检查 import 违规（CI 集成）
+                   mvn spotless:apply   — 自动修复 import 问题（本地开发）
             -->
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
@@ -1274,23 +1275,13 @@
                             <include>src/main/java/**/*.java</include>
                             <include>src/test/java/**/*.java</include>
                         </includes>
-                        <googleJavaFormat>
-                            <version>1.22.0</version>
-                            <style>GOOGLE</style>
-                        </googleJavaFormat>
+                        <!-- 仅清理未使用 import（FQN 修复后常产生冗余 import） -->
                         <removeUnusedImports/>
+                        <!-- import 排序：java → javax → jakarta → org → com → 其他 -->
                         <importOrder>
                             <order>java,javax,jakarta,org,com,</order>
                         </importOrder>
                     </java>
-                    <pom>
-                        <includes>
-                            <include>pom.xml</include>
-                        </includes>
-                        <sortPom>
-                            <expandEmptyElements>false</expandEmptyElements>
-                        </sortPom>
-                    </pom>
                 </configuration>
                 <executions>
                     <execution>

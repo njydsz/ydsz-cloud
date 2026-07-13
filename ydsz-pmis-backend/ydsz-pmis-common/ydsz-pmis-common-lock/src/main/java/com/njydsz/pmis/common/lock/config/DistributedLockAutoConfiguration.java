@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.lock.config;
+﻿package com.njydsz.pmis.common.lock.config;
 
 import com.njydsz.pmis.common.lock.aspect.YdszDistributedLockAspect;
 import com.njydsz.pmis.common.lock.metrics.LockMetrics;
@@ -24,6 +24,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.springframework.beans.factory.ObjectProvider;
 
 /**
  * 分布式锁自动配置类
@@ -103,8 +104,8 @@ public class DistributedLockAutoConfiguration {
     @ConditionalOnMissingBean
     public LockStrategy lockStrategy(StringRedisTemplate stringRedisTemplate, LockWatchDog lockWatchDog,
                                      LockMetrics lockMetrics, LockProperties lockProperties,
-                                     org.springframework.beans.factory.ObjectProvider<RedisService> redisServiceProvider,
-                                     org.springframework.beans.factory.ObjectProvider<TaskScheduler> schedulerProvider) {
+                                     ObjectProvider<RedisService> redisServiceProvider,
+                                     ObjectProvider<TaskScheduler> schedulerProvider) {
         RedisService redisService = redisServiceProvider.getIfAvailable();
         TaskScheduler scheduler = schedulerProvider.getIfAvailable();
         String namespace = lockProperties.getNamespace();

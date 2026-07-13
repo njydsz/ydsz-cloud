@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.circuitbreaker;
+﻿package com.njydsz.pmis.common.feign.circuitbreaker;
 
 import com.njydsz.pmis.common.redis.service.RedisService;
 import org.slf4j.Logger;
@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 
 import java.time.Duration;
+import org.springframework.beans.factory.ObjectProvider;
 
 /**
  * 断路器状态持久化组件。
@@ -34,7 +35,7 @@ public class CircuitBreakerStatePersistence {
     private final RedisService redisService;
     private final Duration ttl;
 
-    public CircuitBreakerStatePersistence(org.springframework.beans.factory.ObjectProvider<RedisService> redisServiceProvider) {
+    public CircuitBreakerStatePersistence(ObjectProvider<RedisService> redisServiceProvider) {
         this.redisService = redisServiceProvider.getIfAvailable();
         this.ttl = DEFAULT_TTL;
     }

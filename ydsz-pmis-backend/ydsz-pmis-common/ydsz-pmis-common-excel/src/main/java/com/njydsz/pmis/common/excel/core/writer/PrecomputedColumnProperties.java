@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.excel.core.writer;
+﻿package com.njydsz.pmis.common.excel.core.writer;
 
 /**
  * PrecomputedColumnProperties 类
@@ -11,6 +11,7 @@ import com.njydsz.pmis.common.excel.core.metadata.WriteMetadata.WriteHeaderPrope
 import org.apache.poi.ss.usermodel.CellStyle;
 
 import java.util.List;
+import com.njydsz.pmis.common.excel.core.style.WriteStyleHandler;
 
 /**
  * 预计算列属性缓存 - 避免运行时重复计算
@@ -54,7 +55,7 @@ public class PrecomputedColumnProperties {
      * @param styleHandler 样式处理器
      */
     public PrecomputedColumnProperties(List<WriteHeaderProperty> properties, 
-                                       com.njydsz.pmis.common.excel.core.style.WriteStyleHandler styleHandler) {
+                                       WriteStyleHandler styleHandler) {
         this.columnCount = properties.size();
         this.precomputedStyles = new CellStyle[columnCount];
         this.columnIndices = new int[columnCount];

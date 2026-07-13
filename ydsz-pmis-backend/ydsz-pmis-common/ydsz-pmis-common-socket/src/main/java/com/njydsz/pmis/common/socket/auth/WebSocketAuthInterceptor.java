@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.socket.auth;
+﻿package com.njydsz.pmis.common.socket.auth;
 
 import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.auth.token.TokenService;
@@ -13,6 +13,7 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import java.util.Map;
+import org.springframework.http.HttpStatus;
 
 /**
  * WebSocket 握手鉴权拦截器（通用版）。
@@ -42,13 +43,13 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
         String token = extractToken(request);
         if (!StringUtils.hasText(token)) {
             log.warn("[WS-Auth] 握手拒绝: 缺少 token, remote={}", request.getRemoteAddress());
-            response.setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
+            response.setStatusCode(HttpStatus.UNAUTHORIZED);
             return false;
         }
         UserInfo userInfo = tokenService.parseAccessToken(token);
         if (userInfo == null || !StringUtils.hasText(userInfo.getUserId())) {
             log.warn("[WS-Auth] 握手拒绝: token 无效或过期, remote={}", request.getRemoteAddress());
-            response.setStatusCode(org.springframework.http.HttpStatus.UNAUTHORIZED);
+            response.setStatusCode(HttpStatus.UNAUTHORIZED);
             return false;
         }
         attributes.put(WebSocketConstants.WS_ATTR_USER_ID, userInfo.getUserId());

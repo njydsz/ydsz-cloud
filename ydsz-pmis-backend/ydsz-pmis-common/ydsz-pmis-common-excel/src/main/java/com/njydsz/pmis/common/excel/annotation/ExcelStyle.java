@@ -1,6 +1,7 @@
-package com.njydsz.pmis.common.excel.annotation;
+﻿package com.njydsz.pmis.common.excel.annotation;
 
 import java.lang.annotation.*;
+import com.njydsz.pmis.common.excel.core.ExcelWriter;
 
 /**
  * Excel样式注解 - 用于自定义单元格样式
@@ -24,7 +25,7 @@ import java.lang.annotation.*;
  * @author ydsz-pmis-team
  * @email pmis-dev@njydsz.com
  * @version 1.0.0
- * @see com.njydsz.pmis.common.excel.core.ExcelWriter
+ * @see ExcelWriter
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

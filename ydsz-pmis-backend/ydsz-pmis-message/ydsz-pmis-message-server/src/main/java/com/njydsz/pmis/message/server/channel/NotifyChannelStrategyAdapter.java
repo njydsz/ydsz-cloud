@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.channel;
+﻿package com.njydsz.pmis.message.server.channel;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -9,6 +9,7 @@ import com.njydsz.pmis.common.notify.template.TemplateEngine;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 通道策略适配器：将消息服务的 {@link MessageChannel} 适配为
@@ -80,9 +81,9 @@ public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {
         request.setChannel(delegate.channelType());
         request.setReceiver(receiver);
         request.setTemplateCode(templateCode);
-        if (templateParams instanceof java.util.Map<?, ?> map) {
+        if (templateParams instanceof Map<?, ?> map) {
             @SuppressWarnings("unchecked")
-            java.util.Map<String, Object> params = (java.util.Map<String, Object>) map;
+            Map<String, Object> params = (Map<String, Object>) map;
             request.setParams(params);
         }
         try {

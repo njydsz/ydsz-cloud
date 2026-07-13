@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -48,7 +47,6 @@ public class Resilience4jCacheDecorator<K, V> implements Cache<K, V> {
 
   private final Cache<K, V> delegate;
   private final CircuitBreaker circuitBreaker;
-  private final AtomicLong fallbackCount = new AtomicLong(0);
 
   /**
    * 创建熔断降级缓存装饰器（使用默认熔断配置）

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.expr;
+﻿package com.njydsz.pmis.literule.server.expr;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import com.njydsz.pmis.literule.api.RuleContext;
 
 /**
  * 表达式校验服务
@@ -275,8 +276,8 @@ public class ExpressionValidationService {
         }
         // 求值
         try {
-            com.njydsz.pmis.literule.api.RuleContext ctx =
-                    com.njydsz.pmis.literule.api.RuleContext.of(facts != null ? facts : Map.of());
+            RuleContext ctx =
+                    RuleContext.of(facts != null ? facts : Map.of());
             Object value = evaluator.eval(expression, ctx);
             result.setValue(value == null ? "null" : String.valueOf(value));
             result.setJavaType(value == null ? "null" : value.getClass().getSimpleName());

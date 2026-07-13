@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.replay;
+﻿package com.njydsz.pmis.literule.server.replay;
 
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleExecutionTrace;
@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import com.njydsz.pmis.literule.api.RuleContext;
 
 /**
  * 执行回放服务（P3-4）
@@ -266,8 +267,8 @@ public class ExecutionReplayService {
 
         // 用目标版本重新评估
         ExpressionRule versionRule = new ExpressionRule(versionDef, evaluator);
-        com.njydsz.pmis.literule.api.RuleContext context =
-                com.njydsz.pmis.literule.api.RuleContext.of(facts, "REPLAY", "MANUAL");
+        RuleContext context =
+                RuleContext.of(facts, "REPLAY", "MANUAL");
         RuleResult versionResult = versionRule.evaluate(context);
 
         // 同时用当前规则评估

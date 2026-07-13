@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.jdbc.interceptor;
+﻿package com.njydsz.pmis.common.jdbc.interceptor;
 
 import com.njydsz.pmis.common.core.enums.DataScopeType;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 
 /**
  * 行级数据权限拦截器
@@ -244,7 +245,7 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
         }
         if (select instanceof SetOperationList) {
             SetOperationList setOperationList = (SetOperationList) select;
-            if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isNotEmpty(setOperationList.getSelects())) {
+            if (CollectionUtils.isNotEmpty(setOperationList.getSelects())) {
                 setOperationList.getSelects().forEach(it -> processSelectBody(it, context));
             }
         }
@@ -278,7 +279,7 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
      * @param context 数据权限上下文
      */
     private void applyRowScopeToJoins(PlainSelect plain, DataPermissionContext context) {
-        if (com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isEmpty(plain.getJoins())) {
+        if (CollectionUtils.isEmpty(plain.getJoins())) {
             return;
         }
         for (Join join : plain.getJoins()) {
@@ -465,7 +466,7 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
      * @return IN 条件表达式，列名为空、值集合为空或无安全值时返回 null
      */
     private Expression in(Table table, String columnName, Set<String> values) {
-        if (StringUtils.isBlank(columnName) || com.baomidou.mybatisplus.core.toolkit.CollectionUtils.isEmpty(values)) {
+        if (StringUtils.isBlank(columnName) || CollectionUtils.isEmpty(values)) {
             return null;
         }
         List<StringValue> safeValues = values.stream()

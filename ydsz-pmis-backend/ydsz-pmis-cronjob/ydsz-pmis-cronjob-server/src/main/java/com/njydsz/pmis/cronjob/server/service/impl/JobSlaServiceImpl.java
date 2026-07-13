@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.service.impl.alert;
+﻿package com.njydsz.pmis.cronjob.server.service.impl.alert;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 
 /**
  * SLA 服务实现（P2-7 SLA 管理, P2-2-merge 重构）。
@@ -126,7 +127,7 @@ public class JobSlaServiceImpl implements JobSlaService {
     public List<JobSlaDO> listSla() {
         // 查询所有 source_type='SLA' 的规则，按 jobId 分组聚合
         List<JobAlertRuleDO> allRules = jobAlertRuleMapper.selectList(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobAlertRuleDO>()
+                new LambdaQueryWrapper<JobAlertRuleDO>()
                         .eq(JobAlertRuleDO::getSourceType, "SLA")
                         .eq(JobAlertRuleDO::getDeleted, 0));
         Map<String, List<JobAlertRuleDO>> grouped = allRules.stream()

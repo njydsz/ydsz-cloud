@@ -1,9 +1,10 @@
-package com.njydsz.pmis.common.core.response;
+﻿package com.njydsz.pmis.common.core.response;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 import java.util.List;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 /**
  * 分页响应结果封装类
@@ -185,7 +186,7 @@ public class PageResponse<T> extends BaseResponse<T> {
      * @param <T>  数据类型
      * @return 分页响应对象
      */
-    public static <T> PageResponse<T> ofPage(com.baomidou.mybatisplus.extension.plugins.pagination.Page<T> page) {
+    public static <T> PageResponse<T> ofPage(Page<T> page) {
         if (page == null) {
             return success(0L, 1L, 10L, null);
         }

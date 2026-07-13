@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.security;
+﻿package com.njydsz.pmis.common.notify.security;
 
 import com.njydsz.pmis.common.notify.config.NotifyProperties;
 import jakarta.mail.Transport;
@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
 
 import java.util.Properties;
+import jakarta.mail.Session;
 
 /**
  * SMTP 连接池预热与健康探活（P0-2）
@@ -98,7 +99,7 @@ public class EmailSmtpHealthChecker {
 		JavaMailSenderImpl sender = createSender(email);
 		try {
 			// 通过 Transport.isConnected() 探测 SMTP 连通性
-			jakarta.mail.Session session = sender.getSession();
+			Session session = sender.getSession();
 			Transport transport = session.getTransport(sender.getProtocol());
 			transport.connect(sender.getHost(), sender.getPort(),
 					sender.getUsername(), sender.getPassword());

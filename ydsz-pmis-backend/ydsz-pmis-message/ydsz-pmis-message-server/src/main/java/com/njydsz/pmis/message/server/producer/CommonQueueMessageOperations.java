@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.producer;
+﻿package com.njydsz.pmis.message.server.producer;
 
 import com.njydsz.pmis.common.constant.PmisMessageTopics;
 import com.njydsz.pmis.common.feign.MessageRequest;
@@ -15,6 +15,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import com.njydsz.pmis.common.queue.enums.QueueType;
 
 
 /**
@@ -49,7 +50,7 @@ public class CommonQueueMessageOperations implements MessageQueueOperations {
             throw new IllegalStateException("IMessageQueueProvider 未配置，无法使用 common-queue 抽象");
         }
         IMessageQueue queue = provider.createMessageQueue(
-                com.njydsz.pmis.common.queue.enums.QueueType.ROCKET);
+                QueueType.ROCKET);
         this.publisher = queue.createPublisher(PmisMessageTopics.TOPIC_MESSAGE);
         log.info("[CommonQueueMQ] 使用 common-queue 抽象发送消息, topic={}", PmisMessageTopics.TOPIC_MESSAGE);
     }

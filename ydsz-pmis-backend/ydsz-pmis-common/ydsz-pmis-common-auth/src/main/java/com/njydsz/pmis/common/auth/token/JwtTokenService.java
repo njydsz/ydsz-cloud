@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.token;
+﻿package com.njydsz.pmis.common.auth.token;
 
 import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.auth.service.TokenBlacklistService;
@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import io.jsonwebtoken.JwtParserBuilder;
 
 /**
  * JWT Token 服务实现
@@ -203,7 +204,7 @@ public class JwtTokenService implements TokenService {
      * <p>校验签名 + issuer + subject，防止跨服务令牌混淆攻击
      */
     private Claims parseClaims(String token) {
-        io.jsonwebtoken.JwtParserBuilder parserBuilder = Jwts.parser()
+        JwtParserBuilder parserBuilder = Jwts.parser()
                 .verifyWith(secretKey);
         // 校验 issuer 防止跨服务令牌混淆
         String issuer = tokenProperties.getIssuer();

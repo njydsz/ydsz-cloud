@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.handler;
+﻿package com.njydsz.pmis.common.exception.handler;
 
 import com.njydsz.pmis.common.exception.metrics.ExceptionMetrics;
 import org.springframework.beans.factory.ObjectProvider;
@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
+import com.njydsz.pmis.common.exception.config.I18nConfiguration;
 
 /**
  * WebFlux 全局异常处理器自动配置
@@ -25,7 +26,7 @@ import org.springframework.web.reactive.config.WebFluxConfigurer;
  * @since 3.0.0
  * @see WebFluxExceptionHandler
  */
-@AutoConfiguration(after = com.njydsz.pmis.common.exception.config.I18nConfiguration.class)
+@AutoConfiguration(after = I18nConfiguration.class)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
 @ConditionalOnClass({WebFluxConfigurer.class, WebFluxExceptionHandler.class})
 @ConditionalOnProperty(prefix = "ydsz.exception", name = "global-handler-enabled", havingValue = "true", matchIfMissing = true)

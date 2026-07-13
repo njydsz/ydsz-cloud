@@ -1,4 +1,6 @@
-package com.njydsz.pmis.common.excel.core.security;
+﻿package com.njydsz.pmis.common.excel.core.security;
+
+import com.njydsz.pmis.common.excel.core.config.ExcelConfig;
 
 /**
  * 公式注入防护工具类
@@ -9,7 +11,7 @@ package com.njydsz.pmis.common.excel.core.security;
  *
  * <p>防护方式：在危险值前添加单引号前缀({@code '})，使Excel将其识别为文本而非公式。</p>
  *
- * @see com.njydsz.pmis.common.excel.core.config.ExcelConfig#isFormulaInjectionProtection()
+ * @see ExcelConfig#isFormulaInjectionProtection()
  */
 public final class FormulaInjectionGuard {
 

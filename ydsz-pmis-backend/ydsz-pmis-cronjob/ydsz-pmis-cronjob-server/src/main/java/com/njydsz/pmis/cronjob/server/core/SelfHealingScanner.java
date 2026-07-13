@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.core.healing;
+﻿package com.njydsz.pmis.cronjob.server.core.healing;
 
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertContext;
@@ -28,6 +28,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 
 /**
  * 自愈扫描器（P3-2）。
@@ -131,7 +132,7 @@ public class SelfHealingScanner {
 
         // 查询卡死的 RUNNING 日志
         List<JobLogDO> stuckLogs = jobLogMapper.selectList(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobLogDO>()
+                new LambdaQueryWrapper<JobLogDO>()
                         .eq(JobLogDO::getStatus, "RUNNING")
                         .lt(JobLogDO::getStartTime, threshold)
                         .last("LIMIT " + config.getMaxHealPerScan()));
@@ -251,7 +252,7 @@ public class SelfHealingScanner {
         // 查询 AUTO_PAUSED 状态且 lastFireTime 超过 1 小时的任务（给足够冷却时间）
         LocalDateTime threshold = LocalDateTime.now().minusHours(1);
         List<JobDO> autoPausedJobs = jobMapper.selectList(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobDO>()
+                new LambdaQueryWrapper<JobDO>()
                         .eq(JobDO::getStatus, "AUTO_PAUSED")
                         .lt(JobDO::getLastFireTime, threshold)
                         .last("LIMIT " + cronjobProperties.getSelfHealing().getMaxHealPerScan()));

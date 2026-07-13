@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.config;
+﻿package com.njydsz.pmis.common.redis.config;
 
 import com.njydsz.pmis.common.redis.annotation.YdszCacheableAspect;
 import com.njydsz.pmis.common.redis.health.RedisHealthIndicator;
@@ -23,6 +23,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Redis 配置类
@@ -133,7 +134,7 @@ public class RedisConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnClass(com.fasterxml.jackson.databind.ObjectMapper.class)
+    @ConditionalOnClass(ObjectMapper.class)
     @ConditionalOnProperty(name = "ydsz.redis.serializer", havingValue = "jackson", matchIfMissing = true)
     public JacksonRedisSerializer jacksonRedisSerializer() {
         return new JacksonRedisSerializer(Object.class);

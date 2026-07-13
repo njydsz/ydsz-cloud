@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.circuitbreaker;
+﻿package com.njydsz.pmis.common.feign.circuitbreaker;
 
 import com.njydsz.pmis.common.feign.config.FeignProperties;
 import com.njydsz.pmis.common.feign.config.FeignConfiguration;
@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 
 /**
  * Resilience4j 熔断器自动配置类。
@@ -18,7 +19,7 @@ import org.springframework.context.annotation.Bean;
  *
  * <p><b>生效条件：</b>
  * <ul>
- *   <li>classpath 中存在 {@code io.github.resilience4j.circuitbreaker.CircuitBreaker}</li>
+ *   <li>classpath 中存在 {@code CircuitBreaker}</li>
  *   <li>{@code ydsz.feign.circuit-breaker.enabled=true}</li>
  *   <li>尚未注册其他 {@link FeignCircuitBreakerStrategy} Bean</li>
  * </ul>
@@ -49,7 +50,7 @@ import org.springframework.context.annotation.Bean;
  * @see FeignProperties.CircuitBreaker
  */
 @AutoConfiguration(after = FeignConfiguration.class)
-@ConditionalOnClass(io.github.resilience4j.circuitbreaker.CircuitBreaker.class)
+@ConditionalOnClass(CircuitBreaker.class)
 @ConditionalOnProperty(prefix = "ydsz.feign.circuit-breaker", name = "enabled", havingValue = "true")
 public class Resilience4jFeignConfiguration {
 

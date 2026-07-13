@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.excel.core.metadata;
+﻿package com.njydsz.pmis.common.excel.core.metadata;
 
 /**
  * WriteMetadata 类
@@ -14,6 +14,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import com.njydsz.pmis.common.excel.annotation.ExcelStyle;
 /**
  * 写入元数据 - 封装Excel写入配置信息
  *
@@ -399,7 +400,7 @@ public class WriteMetadata {
         private Boolean needHandler;
 
         /** 样式注解 */
-        private com.njydsz.pmis.common.excel.annotation.ExcelStyle style;
+        private ExcelStyle style;
 
         /** 公式表达式 */
         private String formula;
@@ -512,11 +513,11 @@ public class WriteMetadata {
             this.needHandler = needHandler;
         }
 
-        public com.njydsz.pmis.common.excel.annotation.ExcelStyle getStyle() {
+        public ExcelStyle getStyle() {
             return style;
         }
 
-        public void setStyle(com.njydsz.pmis.common.excel.annotation.ExcelStyle style) {
+        public void setStyle(ExcelStyle style) {
             this.style = style;
         }
 

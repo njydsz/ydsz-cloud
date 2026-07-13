@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.server.service.impl;
+﻿package com.njydsz.pmis.project.server.service.impl;
 
 import com.njydsz.pmis.project.server.service.AdvancedReportService;
 import com.njydsz.pmis.project.server.service.ReportExportService;
@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.commons.csv.QuoteMode;
 
 /**
  * 报表导出实现
@@ -372,7 +373,7 @@ public class ReportExportServiceImpl implements ReportExportService {
         baos.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
         try (CSVPrinter printer = new CSVPrinter(
                 new OutputStreamWriter(baos, StandardCharsets.UTF_8),
-                CSVFormat.Builder.create(CSVFormat.DEFAULT).setQuoteMode(org.apache.commons.csv.QuoteMode.MINIMAL).build())) {
+                CSVFormat.Builder.create(CSVFormat.DEFAULT).setQuoteMode(QuoteMode.MINIMAL).build())) {
             String[] headers = cols.stream().map(ColumnDef::header).toArray(String[]::new);
             printer.printRecord((Object[]) headers);
             for (Map<String, Object> data : rows) {

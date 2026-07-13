@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.service.impl.canary;
+﻿package com.njydsz.pmis.message.server.service.impl.canary;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -18,6 +18,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import com.alibaba.fastjson2.JSON;
 
 /**
  * 灰度桶服务实现。
@@ -134,6 +135,6 @@ public class CanaryServiceImpl implements CanaryService {
         for (int i = 0; i < count; i++) {
             buckets.add(i);
         }
-        return com.alibaba.fastjson2.JSON.toJSONString(buckets);
+        return JSON.toJSONString(buckets);
     }
 }

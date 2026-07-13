@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.core.dag;
+﻿package com.njydsz.pmis.cronjob.server.core.dag;
 
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobRelationDO;
@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import com.njydsz.pmis.cronjob.server.core.dispatch.TaskDispatcher;
 
 /**
  * DAG 依赖触发执行器（P4-3 DAG 工作流）。
@@ -39,7 +40,7 @@ public class DagExecutor {
 
     private final JobRelationMapper jobRelationMapper;
     private final JobMapper jobMapper;
-    private final com.njydsz.pmis.cronjob.server.core.dispatch.TaskDispatcher taskDispatcher;
+    private final TaskDispatcher taskDispatcher;
 
     /**
      * 监听任务完成事件，异步触发后继任务。

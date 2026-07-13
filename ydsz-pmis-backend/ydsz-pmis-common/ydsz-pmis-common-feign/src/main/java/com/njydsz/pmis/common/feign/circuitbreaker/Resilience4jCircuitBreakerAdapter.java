@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.circuitbreaker;
+﻿package com.njydsz.pmis.common.feign.circuitbreaker;
 
 import com.njydsz.pmis.common.feign.config.FeignProperties;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
@@ -10,11 +10,12 @@ import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 
 /**
  * 基于 Resilience4j 的 Feign 熔断器适配器。
  *
- * <p>将 Resilience4j 的 {@link io.github.resilience4j.circuitbreaker.CircuitBreaker}
+ * <p>将 Resilience4j 的 {@link CircuitBreaker}
  * 适配到 {@link FeignCircuitBreakerStrategy} 接口，提供：
  * <ul>
  *   <li>按服务维度隔离的熔断器实例</li>
@@ -59,7 +60,7 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
     /** Resilience4j 资源名前缀 */
     private static final String RESOURCE_PREFIX = "feign:";
 
-    private final ConcurrentHashMap<String, io.github.resilience4j.circuitbreaker.CircuitBreaker> circuitBreakers =
+    private final ConcurrentHashMap<String, CircuitBreaker> circuitBreakers =
             new ConcurrentHashMap<>();
 
     private final ConcurrentHashMap<String, CircuitBreakerState> stateCache = new ConcurrentHashMap<>();
@@ -106,7 +107,7 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
 
     @Override
     public boolean allowRequest(String serviceName) {
-        io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreateCircuitBreaker(serviceName);
+        CircuitBreaker cb = getOrCreateCircuitBreaker(serviceName);
         CircuitBreakerState state = toState(cb.getState());
         stateCache.put(serviceName, state);
         return cb.tryAcquirePermission();
@@ -114,7 +115,7 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
 
     @Override
     public void recordSuccess(String serviceName, long elapsedTime) {
-        io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreateCircuitBreaker(serviceName);
+        CircuitBreaker cb = getOrCreateCircuitBreaker(serviceName);
         cb.onSuccess(elapsedTime, TimeUnit.MILLISECONDS);
         stateCache.put(serviceName, toState(cb.getState()));
         updateMetrics(serviceName, true, elapsedTime);
@@ -122,7 +123,7 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
 
     @Override
     public void recordFailure(String serviceName, long elapsedTime, Throwable throwable) {
-        io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreateCircuitBreaker(serviceName);
+        CircuitBreaker cb = getOrCreateCircuitBreaker(serviceName);
         cb.onError(elapsedTime, TimeUnit.MILLISECONDS, throwable);
         stateCache.put(serviceName, toState(cb.getState()));
         log.warn("[Resilience4jCircuitBreaker] 调用失败, service={}, cause={}", serviceName, throwable.getMessage());
@@ -131,7 +132,7 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
 
     @Override
     public CircuitBreakerState getState(String serviceName) {
-        io.github.resilience4j.circuitbreaker.CircuitBreaker cb = circuitBreakers.get(serviceName);
+        CircuitBreaker cb = circuitBreakers.get(serviceName);
         if (cb == null) {
             return CircuitBreakerState.CLOSED;
         }
@@ -145,7 +146,7 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
 
     @Override
     public void reset(String serviceName) {
-        io.github.resilience4j.circuitbreaker.CircuitBreaker cb = circuitBreakers.get(serviceName);
+        CircuitBreaker cb = circuitBreakers.get(serviceName);
         if (cb != null) {
             cb.reset();
         }
@@ -163,8 +164,8 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
      * @return 调用结果
      */
     public <T> T execute(String serviceName, Supplier<T> supplier) {
-        io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreateCircuitBreaker(serviceName);
-        return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateSupplier(cb, supplier).get();
+        CircuitBreaker cb = getOrCreateCircuitBreaker(serviceName);
+        return CircuitBreaker.decorateSupplier(cb, supplier).get();
     }
 
     /**
@@ -177,9 +178,9 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
      * @return 调用结果或降级结果
      */
     public <T> T executeWithFallback(String serviceName, Supplier<T> supplier, Supplier<T> fallback) {
-        io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreateCircuitBreaker(serviceName);
+        CircuitBreaker cb = getOrCreateCircuitBreaker(serviceName);
         try {
-            return io.github.resilience4j.circuitbreaker.CircuitBreaker.decorateSupplier(cb, supplier).get();
+            return CircuitBreaker.decorateSupplier(cb, supplier).get();
         } catch (Exception e) {
             log.warn("[Resilience4jCircuitBreaker] 调用失败, service={}, 使用降级逻辑, cause={}", serviceName, e.getMessage());
             return fallback.get();
@@ -189,9 +190,9 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
     /**
      * 获取或创建指定服务的 Resilience4j CircuitBreaker 实例。
      */
-    private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreateCircuitBreaker(String serviceName) {
+    private CircuitBreaker getOrCreateCircuitBreaker(String serviceName) {
         return circuitBreakers.computeIfAbsent(serviceName, name ->
-                io.github.resilience4j.circuitbreaker.CircuitBreaker.of(toResource(name), config));
+                CircuitBreaker.of(toResource(name), config));
     }
 
     /**
@@ -223,7 +224,7 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
     /**
      * 将 Resilience4j CircuitBreaker.State 转换为内部状态枚举。
      */
-    private CircuitBreakerState toState(io.github.resilience4j.circuitbreaker.CircuitBreaker.State state) {
+    private CircuitBreakerState toState(CircuitBreaker.State state) {
         return switch (state) {
             case CLOSED -> CircuitBreakerState.CLOSED;
             case OPEN -> CircuitBreakerState.OPEN;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.core.dispatch;
+﻿package com.njydsz.pmis.cronjob.server.core.dispatch;
 
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.discovery.NodeDiscoveryStrategy;
@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Collections;
+import com.njydsz.pmis.cronjob.server.core.executor.JobNodeHeartbeat;
 
 /**
  * P0-1: Worker 节点选择器（调度器-执行器分离）。
@@ -39,14 +40,14 @@ public class WorkerNodeSelector {
 
     private final CronjobProperties cronjobProperties;
     private final ObjectProvider<NodeDiscoveryStrategy> nodeDiscoveryStrategyProvider;
-    private final ObjectProvider<com.njydsz.pmis.cronjob.server.core.executor.JobNodeHeartbeat> heartbeatProvider;
+    private final ObjectProvider<JobNodeHeartbeat> heartbeatProvider;
 
     /** 轮询计数器（round_robin 策略使用） */
     private final AtomicInteger roundRobinCounter = new AtomicInteger(0);
 
     public WorkerNodeSelector(CronjobProperties cronjobProperties,
                                ObjectProvider<NodeDiscoveryStrategy> nodeDiscoveryStrategyProvider,
-                               ObjectProvider<com.njydsz.pmis.cronjob.server.core.executor.JobNodeHeartbeat> heartbeatProvider) {
+                               ObjectProvider<JobNodeHeartbeat> heartbeatProvider) {
         this.cronjobProperties = cronjobProperties;
         this.nodeDiscoveryStrategyProvider = nodeDiscoveryStrategyProvider;
         this.heartbeatProvider = heartbeatProvider;
@@ -134,7 +135,7 @@ public class WorkerNodeSelector {
         if (strategy != null) {
             return strategy.getLocalNodeId();
         }
-        com.njydsz.pmis.cronjob.server.core.executor.JobNodeHeartbeat heartbeat = heartbeatProvider.getIfAvailable();
+        JobNodeHeartbeat heartbeat = heartbeatProvider.getIfAvailable();
         return heartbeat != null ? heartbeat.getNodeId() : null;
     }
 }

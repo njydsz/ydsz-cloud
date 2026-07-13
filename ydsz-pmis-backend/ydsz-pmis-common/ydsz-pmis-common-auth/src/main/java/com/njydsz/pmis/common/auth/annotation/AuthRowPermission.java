@@ -1,12 +1,15 @@
-package com.njydsz.pmis.common.auth.annotation;
+﻿package com.njydsz.pmis.common.auth.annotation;
 
 import java.lang.annotation.*;
+import com.njydsz.pmis.common.auth.model.DataScopeAware;
+import com.njydsz.pmis.common.auth.model.DataScopeInfo;
+import com.njydsz.pmis.common.core.enums.DataScopeType;
 
 /**
  * 行级数据权限校验与注入注解。
  *
  * <p>用于控制接口方法的数据权限范围，会将当前用户可访问的数据范围注入到方法参数中。
- * 与 {@link com.njydsz.pmis.common.auth.model.DataScopeAware} 或 Map 类型参数配合使用，
+ * 与 {@link DataScopeAware} 或 Map 类型参数配合使用，
  * 实现行级数据权限的动态过滤。
  *
  * <p><b>工作原理：</b>
@@ -14,7 +17,7 @@ import java.lang.annotation.*;
  *   <li>切面拦截标注了本注解的方法</li>
  *   <li>从请求上下文解析当前用户的行级数据权限（来自 Redis role-row-key）</li>
  *   <li>根据用户角色合并多角色的数据权限范围</li>
- *   <li>将数据权限信息 {@link com.njydsz.pmis.common.auth.model.DataScopeInfo} 注入到方法参数</li>
+ *   <li>将数据权限信息 {@link DataScopeInfo} 注入到方法参数</li>
  *   <li>同时将数据范围信息以 header 形式透传给下游服务（如 SQL 拦截器）</li>
  * </ol>
  *
@@ -67,9 +70,9 @@ import java.lang.annotation.*;
  * @email limw1888@126.com
  * @version 3.5.0
  * @since 1.0.0
- * @see com.njydsz.pmis.common.auth.model.DataScopeInfo
- * @see com.njydsz.pmis.common.auth.model.DataScopeAware
- * @see com.njydsz.pmis.common.core.enums.DataScopeType
+ * @see DataScopeInfo
+ * @see DataScopeAware
+ * @see DataScopeType
  */
 @Inherited
 @Target({ElementType.TYPE, ElementType.METHOD})
@@ -104,7 +107,7 @@ public @interface AuthRowPermission {
      * 目标方法参数名称。
      *
      * <p>用于精确指定需要注入数据权限信息的参数名称。
-     * 若方法中存在多个可注入参数（实现 {@link com.njydsz.pmis.common.auth.model.DataScopeAware} 或 Map），
+     * 若方法中存在多个可注入参数（实现 {@link DataScopeAware} 或 Map），
      * 通过此属性定位目标参数。
      *
      * @return 方法参数名称

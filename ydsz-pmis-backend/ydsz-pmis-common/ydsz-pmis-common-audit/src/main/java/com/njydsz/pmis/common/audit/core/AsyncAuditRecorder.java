@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.audit.core;
+﻿package com.njydsz.pmis.common.audit.core;
 
 import com.njydsz.pmis.common.audit.config.AuditProperties;
 import com.njydsz.pmis.common.audit.domain.AuditLog;
@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.springframework.jdbc.core.PreparedStatementSetter;
 
 /**
  * 异步批量审计记录器
@@ -627,7 +628,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
      * @param auditLog 审计日志
      * @return PreparedStatementSetter
      */
-    private org.springframework.jdbc.core.PreparedStatementSetter createPreparedStatementSetter(AuditLog auditLog) {
+    private PreparedStatementSetter createPreparedStatementSetter(AuditLog auditLog) {
         return ps -> setPreparedStatementParams(ps, auditLog);
     }
 

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.cache.export;
+﻿package com.njydsz.pmis.common.cache.export;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,6 +14,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.internal.concurrent.StripedConcurrentCache;
+import java.nio.file.Files;
 
 @DisplayName("CacheExportImport 单元测试")
 class CacheExportImportTest {
@@ -82,7 +83,7 @@ class CacheExportImportTest {
       Cache<String, Integer> cache = new StripedConcurrentCache<>(100);
 
       File exportFile = tempDir.resolve("cache_custom.txt").toFile();
-      java.nio.file.Files.write(exportFile.toPath(), List.of("a\t1", "b\t2"));
+      Files.write(exportFile.toPath(), List.of("a\t1", "b\t2"));
 
       CacheExportImport.TextParser<String, Integer> parser =
           new CacheExportImport.TextParser<>() {

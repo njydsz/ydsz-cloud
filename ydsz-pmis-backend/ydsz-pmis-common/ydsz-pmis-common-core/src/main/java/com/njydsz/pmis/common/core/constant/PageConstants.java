@@ -1,10 +1,12 @@
-package com.njydsz.pmis.common.core.constant;
+﻿package com.njydsz.pmis.common.core.constant;
+
+import com.njydsz.pmis.common.core.config.CoreProperties;
 
 /**
  * 分页参数常量
  *
  * <p>定义分页请求的参数名和默认值。
- * 默认值与 {@link com.njydsz.pmis.common.core.config.CoreProperties} 保持一致，
+ * 默认值与 {@link CoreProperties} 保持一致，
  * 运行时以 CoreProperties 配置为准，此处常量仅作为编译时兜底默认值。
  *
  * <p><b>配置覆盖：</b>
@@ -16,7 +18,7 @@ package com.njydsz.pmis.common.core.constant;
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
- * @see com.njydsz.pmis.common.core.config.CoreProperties
+ * @see CoreProperties
  */
 public final class PageConstants {
 

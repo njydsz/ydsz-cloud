@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.core.dispatch;
+﻿package com.njydsz.pmis.cronjob.server.core.dispatch;
 
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
@@ -28,6 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import com.njydsz.pmis.cronjob.server.core.scheduler.AdaptiveBatchScheduler;
 
 /**
  * 任务扫描器（P1-7 Leader 模式专用）。
@@ -74,7 +75,7 @@ public class JobScanner {
     /** P2-9: 分区 Leader 管理器（可选注入，仅分区调度启用时存在） */
     private final ObjectProvider<PartitionLeaderManager> partitionLeaderManagerProvider;
     /** P1-1: 自适应批量调度器（可选注入，启用时动态调整 batchSize） */
-    private final ObjectProvider<com.njydsz.pmis.cronjob.server.core.scheduler.AdaptiveBatchScheduler> adaptiveBatchSchedulerProvider;
+    private final ObjectProvider<AdaptiveBatchScheduler> adaptiveBatchSchedulerProvider;
 
     /** 扫描执行中标志（避免上次扫描未完成时重叠触发） */
     private final AtomicBoolean scanning = new AtomicBoolean(false);
@@ -391,7 +392,7 @@ public class JobScanner {
      * @return 当前扫描使用的 batchSize
      */
     private int resolveBatchSize() {
-        com.njydsz.pmis.cronjob.server.core.scheduler.AdaptiveBatchScheduler adaptive =
+        AdaptiveBatchScheduler adaptive =
                 adaptiveBatchSchedulerProvider.getIfAvailable();
         if (adaptive != null) {
             return adaptive.getCurrentBatchSize();

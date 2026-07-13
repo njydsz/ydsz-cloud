@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.audit.core;
+﻿package com.njydsz.pmis.common.audit.core;
 
 import com.lmax.disruptor.SleepingWaitStrategy;
 import com.lmax.disruptor.EventFactory;
@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.jdbc.core.PreparedStatementSetter;
 
 /**
  * 基于 LMAX Disruptor 的高性能异步审计记录器
@@ -333,7 +334,7 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
     /**
      * 创建 PreparedStatement 设置器
      */
-    private org.springframework.jdbc.core.PreparedStatementSetter createPreparedStatementSetter(AuditLog auditLog) {
+    private PreparedStatementSetter createPreparedStatementSetter(AuditLog auditLog) {
         return ps -> setPreparedStatementParams(ps, auditLog);
     }
 

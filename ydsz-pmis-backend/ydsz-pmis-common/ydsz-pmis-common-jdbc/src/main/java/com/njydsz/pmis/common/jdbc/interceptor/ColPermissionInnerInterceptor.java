@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.jdbc.interceptor;
+﻿package com.njydsz.pmis.common.jdbc.interceptor;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import net.sf.jsqlparser.expression.NullValue;
 
 /**
  * 列级数据权限拦截器
@@ -390,8 +391,8 @@ public class ColPermissionInnerInterceptor extends JsqlParserSupport implements 
             } else {
                 // fail-closed：所有表均有可见列规则但允许列集合为空，替换为 NULL 占位避免泄露全部列
                 log.warn("所有表均无可见列，已将 SELECT 列表替换为 NULL 占位避免数据泄露");
-                SelectItem<net.sf.jsqlparser.expression.NullValue> nullItem =
-                    new SelectItem<>(new net.sf.jsqlparser.expression.NullValue());
+                SelectItem<NullValue> nullItem =
+                    new SelectItem<>(new NullValue());
                 plain.setSelectItems(Collections.singletonList(nullItem));
             }
             return;

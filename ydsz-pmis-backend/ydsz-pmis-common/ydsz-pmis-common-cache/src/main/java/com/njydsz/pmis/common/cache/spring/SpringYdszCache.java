@@ -5,8 +5,6 @@ import java.util.concurrent.Callable;
 import org.springframework.cache.Cache.ValueRetrievalException;
 import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.support.AbstractValueAdaptingCache;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 
 import com.njydsz.pmis.common.cache.api.Cache;
 
@@ -23,8 +21,8 @@ import com.njydsz.pmis.common.cache.api.Cache;
 @SuppressWarnings("unchecked")
 public class SpringYdszCache extends AbstractValueAdaptingCache {
 
-  @NonNull private final String name;
-  @NonNull private final Cache<Object, Object> delegate;
+  private final String name;
+  private final Cache<Object, Object> delegate;
 
   /**
    * 创建 Spring YdszCache 适配器
@@ -33,32 +31,29 @@ public class SpringYdszCache extends AbstractValueAdaptingCache {
    * @param delegate YdszCache 实例
    * @param allowNullValues 是否允许 null 值
    */
-  public SpringYdszCache(
-      @NonNull String name, @NonNull Cache<Object, Object> delegate, boolean allowNullValues) {
+  public SpringYdszCache(String name, Cache<Object, Object> delegate, boolean allowNullValues) {
     super(allowNullValues);
     this.name = name;
     this.delegate = delegate;
   }
 
   @Override
-  @NonNull
   public String getName() {
     return this.name;
   }
 
   @Override
-  @NonNull
   public Cache<Object, Object> getNativeCache() {
     return this.delegate;
   }
 
   @Override
-  protected Object lookup(@NonNull Object key) {
+  protected Object lookup(Object key) {
     return this.delegate.getIfPresent(key);
   }
 
   @Override
-  public <T> T get(@NonNull Object key, @Nullable Class<T> type) {
+  public <T> T get(Object key, Class<T> type) {
     if (type == null) {
       return super.get(key, type);
     }
@@ -71,7 +66,7 @@ public class SpringYdszCache extends AbstractValueAdaptingCache {
   }
 
   @Override
-  public <T> T get(@NonNull Object key, @NonNull Callable<T> valueLoader) {
+  public <T> T get(Object key, Callable<T> valueLoader) {
     Object storeValue = lookup(key);
     if (storeValue != null) {
       return (T) fromStoreValue(storeValue);
@@ -86,7 +81,7 @@ public class SpringYdszCache extends AbstractValueAdaptingCache {
   }
 
   @Override
-  public void put(@NonNull Object key, @Nullable Object value) {
+  public void put(Object key, Object value) {
     if (!isAllowNullValues() && value == null) {
       return;
     }
@@ -95,7 +90,7 @@ public class SpringYdszCache extends AbstractValueAdaptingCache {
   }
 
   @Override
-  public ValueWrapper putIfAbsent(@NonNull Object key, @Nullable Object value) {
+  public ValueWrapper putIfAbsent(Object key, Object value) {
     if (!isAllowNullValues() && value == null) {
       return null;
     }
@@ -105,12 +100,12 @@ public class SpringYdszCache extends AbstractValueAdaptingCache {
   }
 
   @Override
-  public void evict(@NonNull Object key) {
+  public void evict(Object key) {
     this.delegate.invalidate(key);
   }
 
   @Override
-  public boolean evictIfPresent(@NonNull Object key) {
+  public boolean evictIfPresent(Object key) {
     if (key != null && this.delegate.getIfPresent(key) != null) {
       this.delegate.invalidate(key);
       return true;

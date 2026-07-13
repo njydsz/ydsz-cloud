@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.file.storage.platform;
+﻿package com.njydsz.pmis.common.file.storage.platform;
 
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.qcloud.cos.model.ObjectMetadata;
 /**
  * 腾讯云 COS 对象存储实现
  * <p>继承 {@link AbstractFileStorage}，
@@ -132,7 +133,7 @@ public class CosStorage extends AbstractFileStorage {
         try {
             String key = folderName.endsWith(FileConstant.DIR_SPLIT)
                     ? folderName : folderName + FileConstant.DIR_SPLIT;
-            com.qcloud.cos.model.ObjectMetadata metadata = cosClient.getObjectMetadata(bucketName, key); // FQN-OK: name conflict with ObjectMetadata
+            ObjectMetadata metadata = cosClient.getObjectMetadata(bucketName, key); // FQN-OK: name conflict with ObjectMetadata
             return metadata != null;
         } catch (Exception e) {
             log.debug("[COS] folderExists failed, bucket={}, folder={}, message={}",
@@ -148,7 +149,7 @@ public class CosStorage extends AbstractFileStorage {
                     ? folderName : folderName + FileConstant.DIR_SPLIT;
             if (!doFolderExists(bucketName, key)) {
                 InputStream emptyStream = new ByteArrayInputStream(new byte[]{});
-                com.qcloud.cos.model.ObjectMetadata objectMetadata = new com.qcloud.cos.model.ObjectMetadata(); // FQN-OK: name conflict with ObjectMetadata
+                ObjectMetadata objectMetadata = new ObjectMetadata(); // FQN-OK: name conflict with ObjectMetadata
                 objectMetadata.setContentLength(0);
                 PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, key, emptyStream, objectMetadata);
                 cosClient.putObject(putObjectRequest);
@@ -165,7 +166,7 @@ public class CosStorage extends AbstractFileStorage {
     protected void doPutObject(String bucketName, String objectName,
                                InputStream inputStream, long size, String contentType) {
         try {
-            com.qcloud.cos.model.ObjectMetadata objectMetadata = new com.qcloud.cos.model.ObjectMetadata(); // FQN-OK: name conflict with ObjectMetadata
+            ObjectMetadata objectMetadata = new ObjectMetadata(); // FQN-OK: name conflict with ObjectMetadata
             objectMetadata.setContentLength(size);
             if (contentType != null) {
                 objectMetadata.setContentType(contentType);
@@ -245,7 +246,7 @@ public class CosStorage extends AbstractFileStorage {
                                String uploadId, int partNumber,
                                InputStream inputStream, long size) {
         try {
-            com.qcloud.cos.model.ObjectMetadata metadata = new com.qcloud.cos.model.ObjectMetadata();
+            ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentLength(size);
             UploadPartRequest uploadPartRequest = new UploadPartRequest();
             uploadPartRequest.setBucketName(bucketName);
@@ -335,7 +336,7 @@ public class CosStorage extends AbstractFileStorage {
     @Override
     protected ObjectMetadata doGetMetadata(String bucketName, String objectName) {
         try {
-            com.qcloud.cos.model.ObjectMetadata cosMetadata = cosClient.getObjectMetadata(bucketName, objectName); // FQN-OK: name conflict with ObjectMetadata
+            ObjectMetadata cosMetadata = cosClient.getObjectMetadata(bucketName, objectName); // FQN-OK: name conflict with ObjectMetadata
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setObjectName(objectName);
             metadata.setBucketName(bucketName);

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.channel.impl;
+﻿package com.njydsz.pmis.message.server.channel.impl;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -18,6 +18,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.Map;
 import java.util.Base64;
+import com.alibaba.fastjson2.JSON;
 
 /**
  * 邮件通道实现。
@@ -147,7 +148,7 @@ public class EmailChannel implements MessageChannel {
      */
     private void addAttachments(MimeMessageHelper helper, String attachmentsJson) {
         try {
-            var attachments = com.alibaba.fastjson2.JSON.parseArray(attachmentsJson);
+            var attachments = JSON.parseArray(attachmentsJson);
             for (int i = 0; i < attachments.size(); i++) {
                 var item = attachments.getJSONObject(i);
                 String name = item.getString("name");
@@ -172,7 +173,7 @@ public class EmailChannel implements MessageChannel {
      */
     private void addInlineImages(MimeMessageHelper helper, String inlineJson) {
         try {
-            var images = com.alibaba.fastjson2.JSON.parseArray(inlineJson);
+            var images = JSON.parseArray(inlineJson);
             for (int i = 0; i < images.size(); i++) {
                 var item = images.getJSONObject(i);
                 String cid = item.getString("cid");

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.aspect;
+﻿package com.njydsz.pmis.common.feign.aspect;
 
 import feign.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
 
 /**
  * YdszFeign 日志增强处理器。
@@ -29,7 +30,7 @@ import java.util.regex.Pattern;
  */
 public class YdszFeignLogger extends Logger {
 
-    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger("com.njydsz.pmis.feign");
+    private static final Logger LOG = LoggerFactory.getLogger("com.njydsz.pmis.feign");
 
     /**
      * 需要脱敏的敏感字段名称集合（不区分大小写匹配）

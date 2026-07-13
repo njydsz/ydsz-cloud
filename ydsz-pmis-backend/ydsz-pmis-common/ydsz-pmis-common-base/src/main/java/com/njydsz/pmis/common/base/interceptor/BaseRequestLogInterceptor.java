@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.base.interceptor;
+﻿package com.njydsz.pmis.common.base.interceptor;
 
 import com.njydsz.pmis.common.base.config.BaseTraceProperties;
 import com.njydsz.pmis.common.util.string.StringUtils;
@@ -11,6 +11,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.concurrent.ThreadLocalRandom;
+import com.njydsz.pmis.common.util.http.ServletUtils;
 
 /**
  * 请求日志拦截器（Web/App 共享）
@@ -125,7 +126,7 @@ public abstract class BaseRequestLogInterceptor implements HandlerInterceptor {
     protected abstract Logger getLogger();
 
     protected String getClientIp(HttpServletRequest request) {
-        return com.njydsz.pmis.common.util.http.ServletUtils.getClientIp(request);
+        return ServletUtils.getClientIp(request);
     }
 
     protected String truncateUserAgent(String userAgent) {

@@ -1,10 +1,12 @@
-package com.njydsz.pmis.common.auth.model;
+﻿package com.njydsz.pmis.common.auth.model;
 
 import lombok.Getter;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import com.njydsz.pmis.common.auth.annotation.AuthColPermission;
+import com.njydsz.pmis.common.auth.service.ColumnPermissionResolver;
 
 /**
  * 列权限信息载体。
@@ -24,8 +26,8 @@ import java.util.Set;
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
- * @see com.njydsz.pmis.common.auth.annotation.AuthColPermission
- * @see com.njydsz.pmis.common.auth.service.ColumnPermissionResolver
+ * @see AuthColPermission
+ * @see ColumnPermissionResolver
  */
 @Getter
 public class ColumnScopeInfo {

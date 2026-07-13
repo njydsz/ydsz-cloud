@@ -1,4 +1,4 @@
-package com.njydsz.pmis.gateway.filter;
+﻿package com.njydsz.pmis.gateway.filter;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.core.response.BaseResponse;
@@ -23,6 +23,7 @@ import reactor.core.publisher.Mono;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import org.springframework.core.io.ByteArrayResource;
 
 /**
  * P2-15: 精细化限流全局过滤器
@@ -118,7 +119,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     /** 预编译 Lua 脚本 */
     @SuppressWarnings("unchecked")
     private final RedisScript<List<Long>> tokenBucketScript = RedisScript.of(
-            new org.springframework.core.io.ByteArrayResource(TOKEN_BUCKET_SCRIPT.getBytes(StandardCharsets.UTF_8)),
+            new ByteArrayResource(TOKEN_BUCKET_SCRIPT.getBytes(StandardCharsets.UTF_8)),
             (Class<List<Long>>) (Class<?>) List.class
     );
 

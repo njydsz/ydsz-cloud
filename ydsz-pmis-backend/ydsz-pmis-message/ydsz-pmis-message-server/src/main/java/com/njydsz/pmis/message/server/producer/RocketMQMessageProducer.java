@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.producer;
+﻿package com.njydsz.pmis.message.server.producer;
 
 import com.njydsz.pmis.common.constant.PmisMessageTopics;
 import com.njydsz.pmis.common.feign.MessageRequest;
@@ -16,6 +16,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.apache.rocketmq.client.producer.TransactionSendResult;
 
 /**
  * RocketMQ 消息生产者封装。
@@ -168,7 +169,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
         ensureMessageId(req);
         String payload = MessageCompressor.compressIfNeeded(JsonUtils.toJson(req));
         try {
-            org.apache.rocketmq.client.producer.TransactionSendResult result =
+            TransactionSendResult result =
                     rocketMQTemplate.sendMessageInTransaction(
                             buildDestination(req),
                             MessageBuilder.withPayload(payload).build(),

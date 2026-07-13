@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.excel.api.result;
+﻿package com.njydsz.pmis.common.excel.api.result;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +9,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import com.njydsz.pmis.common.excel.ExcelFacade;
 
 /**
  * Excel读取结果封装类 - 结果模式实现
@@ -53,7 +54,7 @@ import java.util.function.Predicate;
  * }</pre>
  *
  * @param <T> 泛型参数,表示读取的数据类型
- * @see com.njydsz.pmis.common.excel.ExcelFacade#asyncRead
+ * @see ExcelFacade#asyncRead
  * @author ydsz-pmis-team
  * @email pmis-dev@njydsz.com
  * @version 1.0.0

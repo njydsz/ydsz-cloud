@@ -1,6 +1,7 @@
-package com.njydsz.pmis.common.util.json;
+﻿package com.njydsz.pmis.common.util.json;
 
 import java.util.concurrent.atomic.LongAdder;
+import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * JSON 处理指标收集器
@@ -120,7 +121,7 @@ public class JsonMetrics {
      */
     public void bindMeterRegistry(Object meterRegistry) {
         this.micrometerCollector = new JsonMicrometerCollector(
-                (io.micrometer.core.instrument.MeterRegistry) meterRegistry);
+                (MeterRegistry) meterRegistry);
     }
 
     /**

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.gateway.filter;
+﻿package com.njydsz.pmis.gateway.filter;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.auth.model.UserInfo;
@@ -27,6 +27,7 @@ import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
+import org.springframework.http.HttpHeaders;
 
 /**
  * 认证全局过滤器（P0-C5 安全加固）
@@ -206,7 +207,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
      *
      * @param headers HttpHeaders builder
      */
-    private void stripInternalHeaders(org.springframework.http.HttpHeaders headers) {
+    private void stripInternalHeaders(HttpHeaders headers) {
         for (String name : PathGuard.internalHeaders()) {
             headers.remove(name);
         }

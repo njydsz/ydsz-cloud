@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.core.dispatch;
+﻿package com.njydsz.pmis.cronjob.server.core.dispatch;
 
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import com.alibaba.fastjson2.JSON;
@@ -71,6 +71,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import com.njydsz.pmis.cronjob.server.core.handler.GlueJobHandler;
+import com.njydsz.pmis.cronjob.server.core.handler.HttpJobHandler;
+import com.njydsz.pmis.cronjob.server.core.handler.ScriptJobHandler;
+import com.njydsz.pmis.cronjob.server.core.logger.LogStreamManager;
 
 /**
  * 默认任务派发器：本地执行 + 分布式锁。
@@ -121,11 +125,11 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     /** P7-3: 租户级配额服务（可选注入，未配置时跳过配额检查与计数） */
     private final ObjectProvider<TenantQuotaService> tenantQuotaServiceProvider;
     /** P1-5: HTTP 任务处理器（可选注入，未配置时 HTTP 类型任务降级到 BEAN 模式） */
-    private final ObjectProvider<com.njydsz.pmis.cronjob.server.core.handler.HttpJobHandler> httpJobHandlerProvider;
+    private final ObjectProvider<HttpJobHandler> httpJobHandlerProvider;
     /** P1-2: GLUE 在线编码处理器（可选注入，未配置时 GLUE 类型任务降级到 BEAN 模式） */
-    private final ObjectProvider<com.njydsz.pmis.cronjob.server.core.handler.GlueJobHandler> glueJobHandlerProvider;
+    private final ObjectProvider<GlueJobHandler> glueJobHandlerProvider;
     /** P1-3: SHELL/Python 脚本处理器（可选注入，未配置时 SHELL 类型任务降级到 BEAN 模式） */
-    private final ObjectProvider<com.njydsz.pmis.cronjob.server.core.handler.ScriptJobHandler> scriptJobHandlerProvider;
+    private final ObjectProvider<ScriptJobHandler> scriptJobHandlerProvider;
     /** P1-4: 远程派发客户端（可选注入，未配置时分片任务仅本地执行） */
     private final ObjectProvider<RemoteTaskClient> remoteTaskClientProvider;
     /** P0-2: 在线日志内容 Service（可选注入，未配置时日志写入降级丢弃） */
@@ -141,7 +145,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     /** P0-1: Worker 节点选择器（调度器-执行器分离模式，可选注入） */
     private final ObjectProvider<WorkerNodeSelector> workerNodeSelectorProvider;
     /** P0-2: SSE 实时日志推送管理器（可选注入，未配置时仅写 DB） */
-    private final ObjectProvider<com.njydsz.pmis.cronjob.server.core.logger.LogStreamManager> logStreamManagerProvider;
+    private final ObjectProvider<LogStreamManager> logStreamManagerProvider;
 
     /** 任务锁 key 前缀 */
     private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
@@ -731,10 +735,10 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      *
      * <p>路由规则：
      * <ul>
-     *   <li>{@code jobType=HTTP}: 返回 {@link com.njydsz.pmis.cronjob.server.core.handler.HttpJobHandler}</li>
-     *   <li>{@code jobType=GLUE}: 返回 {@link com.njydsz.pmis.cronjob.server.core.handler.GlueJobHandler}
+     *   <li>{@code jobType=HTTP}: 返回 {@link HttpJobHandler}</li>
+     *   <li>{@code jobType=GLUE}: 返回 {@link GlueJobHandler}
      *       （通过 {@link JobContextHolder} 获取当前 jobId 加载 GLUE 代码）</li>
-     *   <li>{@code jobType=SHELL}: 返回 {@link com.njydsz.pmis.cronjob.server.core.handler.ScriptJobHandler}
+     *   <li>{@code jobType=SHELL}: 返回 {@link ScriptJobHandler}
      *       （从 paramsJson 解析 language/script/args）</li>
      *   <li>{@code jobType=BEAN} 或 null: 按 handler 字段查找 Spring Bean（默认行为）</li>
      *   <li>其他类型: 暂不支持，降级到 BEAN 模式查找</li>
@@ -749,7 +753,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private JobHandler resolveHandler(JobDO job) {
         String jobType = job.getJobType();
         if ("HTTP".equals(jobType)) {
-            com.njydsz.pmis.cronjob.server.core.handler.HttpJobHandler httpHandler =
+            HttpJobHandler httpHandler =
                     httpJobHandlerProvider.getIfAvailable();
             if (httpHandler != null) {
                 return httpHandler;
@@ -758,7 +762,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                     job.getJobKey(), job.getHandler());
         }
         if ("GLUE".equals(jobType)) {
-            com.njydsz.pmis.cronjob.server.core.handler.GlueJobHandler glueHandler =
+            GlueJobHandler glueHandler =
                     glueJobHandlerProvider.getIfAvailable();
             if (glueHandler != null) {
                 // GLUE 任务从 JobContextHolder 读取 jobId 以加载对应代码
@@ -768,7 +772,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                     job.getJobKey(), job.getHandler());
         }
         if ("SHELL".equals(jobType)) {
-            com.njydsz.pmis.cronjob.server.core.handler.ScriptJobHandler scriptHandler =
+            ScriptJobHandler scriptHandler =
                     scriptJobHandlerProvider.getIfAvailable();
             if (scriptHandler != null) {
                 return scriptHandler;

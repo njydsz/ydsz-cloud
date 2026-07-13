@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.impl.instance;
+﻿package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.lock.annotation.YdszDistributedLock;
@@ -13,16 +13,20 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskBatchServiceImpl;
+import com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskCompleteServiceImpl;
+import com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskQueryServiceImpl;
+import com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskSignServiceImpl;
 
 /**
  * 待办任务 Service 门面（Facade）
  *
  * <p>原 {@code FlowTaskServiceImpl} 单体实现已按职责拆分为 4 个子 Service + 1 个共享辅助：
  * <ul>
- *   <li>{@link com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskQueryServiceImpl} — 查询类（待办/已办/详情/统计/视图）</li>
- *   <li>{@link com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskCompleteServiceImpl} — 完成类（创建/签收/通过/驳回/转办/委派/跳转/超时/取消/催办）</li>
- *   <li>{@link com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskSignServiceImpl} — 加签减签类（前/后加签、减签、追加处理人、已阅、沟通、暂存）</li>
- *   <li>{@link com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskBatchServiceImpl} — 批量操作（批量审批）</li>
+ *   <li>{@link FlowTaskQueryServiceImpl} — 查询类（待办/已办/详情/统计/视图）</li>
+ *   <li>{@link FlowTaskCompleteServiceImpl} — 完成类（创建/签收/通过/驳回/转办/委派/跳转/超时/取消/催办）</li>
+ *   <li>{@link FlowTaskSignServiceImpl} — 加签减签类（前/后加签、减签、追加处理人、已阅、沟通、暂存）</li>
+ *   <li>{@link FlowTaskBatchServiceImpl} — 批量操作（批量审批）</li>
  *   <li>{@link com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskSupport} — 跨子 Service 共享的任务校验/审计/事件辅助</li>
  * </ul>
  *
@@ -41,13 +45,13 @@ import java.util.Map;
 public class FlowTaskServiceImpl implements FlowTaskService {
 
     /** 查询子服务，处理待办/已办/详情/统计等只读查询 */
-    private final com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskQueryServiceImpl queryService;
+    private final FlowTaskQueryServiceImpl queryService;
     /** 完成子服务门面，协调创建/签收/通过/驳回/转办/委派等写操作 */
-    private final com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskCompleteServiceImpl completeService;
+    private final FlowTaskCompleteServiceImpl completeService;
     /** 加签减签子服务，处理前/后加签、减签、追加处理人等 */
-    private final com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskSignServiceImpl signService;
+    private final FlowTaskSignServiceImpl signService;
     /** 批量操作子服务，处理批量审批 */
-    private final com.njydsz.pmis.workflow.server.service.impl.instance.FlowTaskBatchServiceImpl batchService;
+    private final FlowTaskBatchServiceImpl batchService;
 
     // ============================== 创建任务 ==============================
 

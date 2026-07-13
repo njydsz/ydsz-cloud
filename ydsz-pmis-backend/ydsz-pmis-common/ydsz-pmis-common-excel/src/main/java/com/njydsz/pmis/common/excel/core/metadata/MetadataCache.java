@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.excel.core.metadata;
+﻿package com.njydsz.pmis.common.excel.core.metadata;
 
 import com.njydsz.pmis.common.excel.annotation.ExcelProperty;
 import com.njydsz.pmis.common.excel.core.config.ExcelConfig;
@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import com.njydsz.pmis.common.excel.annotation.ExcelStyle;
 
 /**
  * 元数据预计算缓存 - 避免重复解析注解
@@ -100,7 +101,7 @@ public class MetadataCache {
                 : ann.dateFormat();
             prop.width = ann.width() > 0 ? (short) ann.width() : null;
             prop.formula = ann.formula().isEmpty() ? null : ann.formula();
-            prop.hasStyle = field.isAnnotationPresent(com.njydsz.pmis.common.excel.annotation.ExcelStyle.class);
+            prop.hasStyle = field.isAnnotationPresent(ExcelStyle.class);
             cached.properties[i] = prop;
         }
 

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.service;
+﻿package com.njydsz.pmis.common.redis.service;
 
 import com.njydsz.pmis.common.redis.config.RedisProperties;
 import com.njydsz.pmis.common.redis.enums.FailOpenPolicy;
@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import org.springframework.data.redis.connection.ReturnType;
 
 /**
  * Redis 布隆过滤器工具类
@@ -208,7 +209,7 @@ public class RedisBloomFilter {
                     }
                     connection.scriptingCommands().eval(
                             scriptBytes,
-                            org.springframework.data.redis.connection.ReturnType.BOOLEAN,
+                            ReturnType.BOOLEAN,
                             1,
                             allArgs
                     );
@@ -298,7 +299,7 @@ public class RedisBloomFilter {
                 for (byte[][] allArgs : allArgsList) {
                     connection.scriptingCommands().eval(
                             scriptBytes,
-                            org.springframework.data.redis.connection.ReturnType.BOOLEAN,
+                            ReturnType.BOOLEAN,
                             1,
                             allArgs
                     );

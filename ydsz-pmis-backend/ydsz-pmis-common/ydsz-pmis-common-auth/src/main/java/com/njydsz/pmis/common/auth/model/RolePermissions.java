@@ -1,7 +1,9 @@
-package com.njydsz.pmis.common.auth.model;
+﻿package com.njydsz.pmis.common.auth.model;
 
 import java.util.Collections;
 import java.util.Set;
+import com.njydsz.pmis.common.auth.service.RbacPermissionEvaluator;
+import com.njydsz.pmis.common.auth.service.RolePermissionLoader;
 
 /**
  * 角色权限聚合类。
@@ -25,8 +27,8 @@ import java.util.Set;
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
- * @see com.njydsz.pmis.common.auth.service.RolePermissionLoader
- * @see com.njydsz.pmis.common.auth.service.RbacPermissionEvaluator
+ * @see RolePermissionLoader
+ * @see RbacPermissionEvaluator
  */
 public final class RolePermissions {
 

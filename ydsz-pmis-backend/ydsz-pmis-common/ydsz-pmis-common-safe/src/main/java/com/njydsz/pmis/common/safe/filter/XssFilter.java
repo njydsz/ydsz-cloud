@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.filter;
+﻿package com.njydsz.pmis.common.safe.filter;
 
 import com.njydsz.pmis.common.safe.alert.SafeAlertProperties;
 import com.njydsz.pmis.common.safe.alert.SecurityEvent;
@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import jakarta.servlet.FilterChain;
 import java.nio.charset.StandardCharsets;
+import com.njydsz.pmis.common.util.http.ServletUtils;
 
 /**
  * XSS 安全防护过滤器
@@ -259,7 +260,7 @@ public class XssFilter extends OncePerRequestFilter {
      * @return 客户端 IP
      */
     private String getClientIp(HttpServletRequest request) {
-        return com.njydsz.pmis.common.util.http.ServletUtils.getClientIp(request);
+        return ServletUtils.getClientIp(request);
     }
 
     /**

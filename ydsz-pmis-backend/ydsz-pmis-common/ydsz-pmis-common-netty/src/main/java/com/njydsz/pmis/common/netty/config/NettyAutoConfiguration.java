@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.netty.config;
+﻿package com.njydsz.pmis.common.netty.config;
 
 import com.njydsz.pmis.common.netty.metric.NettyChannelMetrics;
 import com.njydsz.pmis.common.netty.server.NettyServerLifecycle;
@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 
 import java.util.Collections;
 import java.util.List;
+import com.njydsz.pmis.common.netty.server.AbstractNettyServer;
 
 /**
  * Netty 自动装配配置。
@@ -62,8 +63,8 @@ public class NettyAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(NettyServerLifecycle.class)
     public NettyServerLifecycle nettyServerLifecycle(
-            @Autowired(required = false) List<com.njydsz.pmis.common.netty.server.AbstractNettyServer> servers) {
-        List<com.njydsz.pmis.common.netty.server.AbstractNettyServer> serverList =
+            @Autowired(required = false) List<AbstractNettyServer> servers) {
+        List<AbstractNettyServer> serverList =
                 servers != null ? servers : Collections.emptyList();
         log.info("[Netty] 注册 NettyServerLifecycle, servers={}", serverList.size());
         return new NettyServerLifecycle(serverList);

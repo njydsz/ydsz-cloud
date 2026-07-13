@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.service.impl.core;
+﻿package com.njydsz.pmis.message.server.service.impl.core;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -69,6 +69,8 @@ import java.util.Map;
 import java.util.HashMap;
 import java.math.BigDecimal;
 import java.time.Duration;
+import com.njydsz.pmis.message.server.service.config.VariableSourceResolver;
+import com.njydsz.pmis.message.server.template.TemplateVariableValidator;
 
 /**
  * 消息发送核心编排服务实现。
@@ -124,9 +126,9 @@ public class MessageServiceImpl implements MessageService {
     /** P0-1: 用户通道绑定服务（userId → 通道联系方式解析） */
     private final UserChannelBindingService userChannelBindingService;
     /** P0-3: 模板变量校验器 */
-    private final com.njydsz.pmis.message.server.template.TemplateVariableValidator templateVariableValidator;
+    private final TemplateVariableValidator templateVariableValidator;
     /** P0-4: 变量数据源解析器 */
-    private final com.njydsz.pmis.message.server.service.config.VariableSourceResolver variableSourceResolver;
+    private final VariableSourceResolver variableSourceResolver;
 
     /** P2-3: 消息队列操作（可选,未配置 MQ 时为 null） */
     private final ObjectProvider<MessageQueueOperations> mqProducerProvider;

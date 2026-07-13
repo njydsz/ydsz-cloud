@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.service.config;
+﻿package com.njydsz.pmis.message.server.service.config;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.lang.reflect.Method;
 import java.time.Duration;
+import org.springframework.context.ApplicationContext;
+import org.springframework.web.client.RestClient;
 
 /**
  * 消息变量数据源解析器（P0-4）。
@@ -42,7 +44,7 @@ public class VariableSourceResolver {
     private final MsgVariableSourceMapper variableSourceMapper;
     private final StringRedisTemplate redisTemplate;
     private final JdbcTemplate jdbcTemplate;
-    private final org.springframework.context.ApplicationContext applicationContext;
+    private final ApplicationContext applicationContext;
 
     /** Bean 数据源方法缓存: key=beanName.methodName, value=Method */
     private final Map<String, Method> methodCache = new ConcurrentHashMap<>();
@@ -196,7 +198,7 @@ public class VariableSourceResolver {
     private Object resolveHttp(String url, Map<String, Object> context) {
         try {
             String resolvedUrl = resolvePlaceholders(url, context);
-            org.springframework.web.client.RestClient client = org.springframework.web.client.RestClient.create();
+            RestClient client = RestClient.create();
             String body = client.get().uri(resolvedUrl).retrieve().body(String.class);
             if (StringUtils.hasText(body)) {
                 return JsonUtils.fromJson(body, Object.class);

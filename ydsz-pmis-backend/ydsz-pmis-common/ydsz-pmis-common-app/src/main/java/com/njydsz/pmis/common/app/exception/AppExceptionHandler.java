@@ -1,5 +1,6 @@
-package com.njydsz.pmis.common.app.exception;
+﻿package com.njydsz.pmis.common.app.exception;
 
+import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.exception.handler.BaseExceptionHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
@@ -42,7 +43,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * @version 3.5.0
  * @since 1.0.0
  * @see BaseExceptionHandler
- * @see com.njydsz.pmis.common.exception.custom.BusinessException
+ * @see BusinessException
  */
 @Slf4j
 @RestControllerAdvice

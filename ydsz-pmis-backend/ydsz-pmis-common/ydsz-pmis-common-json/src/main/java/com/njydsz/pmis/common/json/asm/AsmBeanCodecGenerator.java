@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.json.asm;
+﻿package com.njydsz.pmis.common.json.asm;
 
 import org.objectweb.asm.*;
 import com.njydsz.pmis.common.json.writer.JSONWriter;
@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.objectweb.asm.Opcodes.*;
+import org.objectweb.asm.Type;
 
 /**
  * ASM Bean 序列化器/反序列化器生成器
@@ -327,7 +328,7 @@ public final class AsmBeanCodecGenerator {
 
         for (FieldCacheInfo info : cachedFields) {
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitLdcInsn(org.objectweb.asm.Type.getType(getTypeDescriptorForClass(info.cachedType)));
+            mv.visitLdcInsn(Type.getType(getTypeDescriptorForClass(info.cachedType)));
             mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/pmis/common/json/asm/AsmBeanCodecGenerator", 
                 "safeGetSerializer", "(Ljava/lang/Class;)Lcom/njydsz/pmis/common/json/asm/AsmSerializer;", false);
             mv.visitFieldInsn(PUTFIELD, classInternalName, info.fieldName, 
@@ -1248,7 +1249,7 @@ public final class AsmBeanCodecGenerator {
 
         for (FieldCacheInfo info : cachedDeserFields) {
             mv.visitVarInsn(ALOAD, 0);
-            mv.visitLdcInsn(org.objectweb.asm.Type.getType(getTypeDescriptorForClass(info.cachedType)));
+            mv.visitLdcInsn(Type.getType(getTypeDescriptorForClass(info.cachedType)));
             mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/pmis/common/json/asm/AsmBeanCodecGenerator", 
                 "safeGetDeserializer", "(Ljava/lang/Class;)Lcom/njydsz/pmis/common/json/asm/AsmDeserializer;", false);
             mv.visitFieldInsn(PUTFIELD, classInternalName, info.fieldName, 
@@ -1412,7 +1413,7 @@ public final class AsmBeanCodecGenerator {
                 String cachedDeserFieldName = "_list_deser_" + field.getName();
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 1);
-                mv.visitLdcInsn(org.objectweb.asm.Type.getType(getTypeDescriptorForClass(elementType)));
+                mv.visitLdcInsn(Type.getType(getTypeDescriptorForClass(elementType)));
                 mv.visitVarInsn(ALOAD, 0);
                 mv.visitFieldInsn(GETFIELD, classInternalName, cachedDeserFieldName, 
                     "Lcom/njydsz/pmis/common/json/asm/AsmDeserializer;");
@@ -1441,7 +1442,7 @@ public final class AsmBeanCodecGenerator {
 
                 mv.visitVarInsn(ALOAD, 2);
                 mv.visitVarInsn(ALOAD, 1);
-                mv.visitLdcInsn(org.objectweb.asm.Type.getType(getTypeDescriptorForClass(nestedType)));
+                mv.visitLdcInsn(Type.getType(getTypeDescriptorForClass(nestedType)));
                 mv.visitMethodInsn(INVOKESTATIC, "com/njydsz/pmis/common/json/asm/AsmBeanCodecGenerator", 
                     "deserializeNestedField", "(Lcom/njydsz/pmis/common/json/reader/JSONReader;Ljava/lang/Class;)Ljava/lang/Object;", false);
                 mv.visitTypeInsn(CHECKCAST, nestedTypeInternalName);

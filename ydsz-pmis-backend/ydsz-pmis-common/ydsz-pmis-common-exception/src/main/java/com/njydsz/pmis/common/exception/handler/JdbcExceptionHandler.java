@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.handler;
+﻿package com.njydsz.pmis.common.exception.handler;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.core.ExceptionInfo;
@@ -12,6 +12,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import com.njydsz.pmis.common.core.constant.HeaderConstants;
 
 /**
  * JDBC 数据访问异常处理器
@@ -70,7 +71,7 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
     private String extractTraceId(HttpServletRequest request) {
         String traceId = request.getHeader("X-Trace-Id");
         if (traceId == null) {
-            traceId = request.getHeader(com.njydsz.pmis.common.core.constant.HeaderConstants.X_REQUEST_ID);
+            traceId = request.getHeader(HeaderConstants.X_REQUEST_ID);
         }
         return traceId;
     }

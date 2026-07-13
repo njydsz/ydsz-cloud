@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.jdbc.interceptor;
+﻿package com.njydsz.pmis.common.jdbc.interceptor;
 
 import com.baomidou.mybatisplus.core.plugins.InterceptorIgnoreHelper;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
@@ -35,6 +35,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Set;
+import com.njydsz.pmis.common.core.context.RequestContext;
+import net.sf.jsqlparser.statement.select.SelectItem;
 
 /**
  * 多租户隔离拦截器
@@ -48,7 +50,7 @@ import java.util.Set;
  *   <li>INSERT 语句自动填充 tenant_id 字段</li>
  *   <li>UPDATE/DELETE 语句自动添加 WHERE tenant_id = ? 条件</li>
  *   <li>支持忽略特定表（如系统配置表）</li>
- *   <li>从 {@link AuthInfoUtils}/{@link com.njydsz.pmis.common.core.context.RequestContext} 获取当前租户 ID</li>
+ *   <li>从 {@link AuthInfoUtils}/{@link RequestContext} 获取当前租户 ID</li>
  *   <li>fail-closed：无法获取租户 ID 时抛异常拒绝执行，避免数据泄露</li>
  *   <li>JOIN 场景自动追加表别名前缀，避免列名歧义</li>
  * </ul>
@@ -196,7 +198,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
                 if (insert.getSelect() != null
                     && insert.getSelect().getPlainSelect() != null
                     && insert.getSelect().getPlainSelect().getSelectItems() != null) {
-                    insert.getSelect().getPlainSelect().getSelectItems().add(new net.sf.jsqlparser.statement.select.SelectItem<>(new StringValue(tenantId)));
+                    insert.getSelect().getPlainSelect().getSelectItems().add(new SelectItem<>(new StringValue(tenantId)));
                 } else {
                     log.warn("INSERT 语句结构不支持自动注入 tenant_id，table={}, sql={}", table.getName(), sql);
                 }
@@ -276,7 +278,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
 
     /**
      * 获取当前租户 ID，优先从 {@link AuthInfoUtils} 获取，回退到
-     * {@link com.njydsz.pmis.common.core.context.RequestContext}。
+     * {@link RequestContext}。
      *
      * @return 租户 ID；若上下文未设置返回 null
      */
@@ -287,7 +289,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
             return tenantId;
         }
         // 回退到 RequestContext（TTL 上下文，支持线程池透传）
-        return com.njydsz.pmis.common.core.context.RequestContext.getTenantId();
+        return RequestContext.getTenantId();
     }
 
     /**

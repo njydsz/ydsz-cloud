@@ -1,9 +1,12 @@
-package com.njydsz.pmis.common.auth.model;
+﻿package com.njydsz.pmis.common.auth.model;
+
+import com.njydsz.pmis.common.auth.annotation.AuthColPermission;
+import com.njydsz.pmis.common.auth.model.ColumnScopeInfo;
 
 /**
  * 列权限信息可注入标记接口。
  *
- * <p>当方法参数实现此接口并标注了 {@link com.njydsz.pmis.common.auth.annotation.AuthColPermission} 时，
+ * <p>当方法参数实现此接口并标注了 {@link AuthColPermission} 时，
  * 切面会在方法调用前将 {@link ColumnScopeInfo} 注入到该参数中。
  *
  * <p><b>实现示例：</b>
@@ -25,8 +28,8 @@ package com.njydsz.pmis.common.auth.model;
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
- * @see com.njydsz.pmis.common.auth.annotation.AuthColPermission
- * @see com.njydsz.pmis.common.auth.model.ColumnScopeInfo
+ * @see AuthColPermission
+ * @see ColumnScopeInfo
  */
 public interface ColumnScopeAware {
 

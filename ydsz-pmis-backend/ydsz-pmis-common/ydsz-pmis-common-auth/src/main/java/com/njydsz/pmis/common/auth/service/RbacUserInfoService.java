@@ -1,8 +1,9 @@
-package com.njydsz.pmis.common.auth.service;
+﻿package com.njydsz.pmis.common.auth.service;
 
 import com.njydsz.pmis.common.auth.model.UserInfo;
 
 import java.util.Map;
+import com.njydsz.pmis.common.auth.service.impl.RedisRbacUserInfoService;
 
 /**
  * RBAC 用户信息加载器接口。
@@ -35,7 +36,7 @@ import java.util.Map;
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
- * @see com.njydsz.pmis.common.auth.service.impl.RedisRbacUserInfoService
+ * @see RedisRbacUserInfoService
  * @see com.njydsz.pmis.common.auth.model.UserInfo
  */
 public interface RbacUserInfoService {

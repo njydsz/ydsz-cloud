@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.config;
+﻿package com.njydsz.pmis.literule.server.config;
 
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.server.approval.ApprovalPermissionChecker;
@@ -63,6 +63,8 @@ import org.springframework.context.annotation.Primary;
 import java.util.List;
 import java.util.Map;
 import java.lang.reflect.Constructor;
+import com.njydsz.pmis.cronjob.api.client.CronjobServiceClient;
+import com.njydsz.pmis.workflow.api.client.WorkflowServiceClient;
 
 /**
  * LiteRule 自动配置
@@ -799,7 +801,7 @@ public class LiteRuleAutoConfiguration {
     @ConditionalOnProperty(prefix = "pmis.literule.action", name = "cronjob-trigger-enabled",
             havingValue = "true", matchIfMissing = true)
     public CronjobTriggerActionHandler cronjobTriggerActionHandler(
-            com.njydsz.pmis.cronjob.api.client.CronjobServiceClient cronjobClient) {
+            CronjobServiceClient cronjobClient) {
         log.info("[LiteRule-Action] 定时任务触发处理器已初始化");
         return new CronjobTriggerActionHandler(cronjobClient);
     }
@@ -821,7 +823,7 @@ public class LiteRuleAutoConfiguration {
     @ConditionalOnProperty(prefix = "pmis.literule.action", name = "workflow-trigger-enabled",
             havingValue = "true", matchIfMissing = true)
     public WorkflowTriggerActionHandler workflowTriggerActionHandler(
-            com.njydsz.pmis.workflow.api.client.WorkflowServiceClient workflowClient) {
+            WorkflowServiceClient workflowClient) {
         log.info("[LiteRule-Action] 工作流触发处理器已初始化");
         return new WorkflowTriggerActionHandler(workflowClient);
     }

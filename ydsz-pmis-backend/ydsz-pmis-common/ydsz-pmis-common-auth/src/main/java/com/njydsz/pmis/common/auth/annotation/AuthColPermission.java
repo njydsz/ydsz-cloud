@@ -1,6 +1,8 @@
-package com.njydsz.pmis.common.auth.annotation;
+﻿package com.njydsz.pmis.common.auth.annotation;
 
 import java.lang.annotation.*;
+import com.njydsz.pmis.common.auth.model.ColumnScopeAware;
+import com.njydsz.pmis.common.auth.model.ColumnScopeInfo;
 
 /**
  * 列级数据权限校验与过滤注解。
@@ -12,7 +14,7 @@ import java.lang.annotation.*;
  * <ol>
  *   <li>切面拦截标注了本注解的方法</li>
  *   <li>从请求上下文解析当前用户的列权限规则（来自 Redis role-col-key）</li>
- *   <li>将列权限信息注入到方法参数（支持 {@link com.njydsz.pmis.common.auth.model.ColumnScopeAware} 或 Map）</li>
+ *   <li>将列权限信息注入到方法参数（支持 {@link ColumnScopeAware} 或 Map）</li>
  *   <li>方法执行完成后，对返回值中的对象字段进行过滤（无权限字段置为 null）</li>
  *   <li>同时将列权限规则以 header 形式透传给下游服务（如 SQL 拦截器）</li>
  * </ol>
@@ -54,8 +56,8 @@ import java.lang.annotation.*;
  * @email limw1888@126.com
  * @version 3.5.0
  * @since 1.0.0
- * @see com.njydsz.pmis.common.auth.model.ColumnScopeInfo
- * @see com.njydsz.pmis.common.auth.model.ColumnScopeAware
+ * @see ColumnScopeInfo
+ * @see ColumnScopeAware
  */
 @Inherited
 @Target({ElementType.TYPE, ElementType.METHOD})
@@ -99,7 +101,7 @@ public @interface AuthColPermission {
      * 目标方法参数名称。
      *
      * <p>用于精确指定需要注入列权限信息的参数名称。
-     * 若方法中存在多个可注入参数（实现 {@link com.njydsz.pmis.common.auth.model.ColumnScopeAware} 或 Map），
+     * 若方法中存在多个可注入参数（实现 {@link ColumnScopeAware} 或 Map），
      * 通过此属性定位目标参数。
      *
      * @return 方法参数名称

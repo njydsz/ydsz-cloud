@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.distributed;
+﻿package com.njydsz.pmis.literule.server.distributed;
 
 import com.njydsz.pmis.literule.server.config.LiteRuleProperties;
 import com.njydsz.pmis.literule.server.spi.RuleConfigBroadcaster;
@@ -16,6 +16,8 @@ import java.net.InetAddress;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import com.njydsz.pmis.literule.api.RuleEngine;
+import org.redisson.api.RedissonClient;
 
 /**
  * 分布式执行自动配置（P2-16）
@@ -73,7 +75,7 @@ public class DistributedAutoConfiguration {
     @ConditionalOnClass(name = "org.redisson.api.RedissonClient")
     @ConditionalOnMissingBean(NodeRegistry.class)
     public NodeRegistry redisNodeRegistry(
-            org.redisson.api.RedissonClient redissonClient,
+            RedissonClient redissonClient,
             String nodeId,
             LiteRuleProperties properties) {
         RedisNodeRegistry registry = new RedisNodeRegistry(
@@ -109,7 +111,7 @@ public class DistributedAutoConfiguration {
     @ConditionalOnClass(name = "org.redisson.api.RedissonClient")
     @ConditionalOnMissingBean(RuleConfigBroadcaster.class)
     public RuleConfigBroadcaster redisRuleConfigBroadcaster(
-            org.redisson.api.RedissonClient redissonClient,
+            RedissonClient redissonClient,
             String nodeId,
             ApplicationEventPublisher eventPublisher) {
         RedisRuleConfigBroadcaster broadcaster = new RedisRuleConfigBroadcaster(
@@ -140,7 +142,7 @@ public class DistributedAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public ShardAwareRuleEngine shardAwareRuleEngine(
-            com.njydsz.pmis.literule.api.RuleEngine ruleEngine,
+            RuleEngine ruleEngine,
             NodeRegistry nodeRegistry,
             ConsistentHashSharder sharder,
             String nodeId,

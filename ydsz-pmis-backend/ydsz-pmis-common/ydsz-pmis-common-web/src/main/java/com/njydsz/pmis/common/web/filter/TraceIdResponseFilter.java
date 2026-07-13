@@ -1,9 +1,10 @@
-package com.njydsz.pmis.common.web.filter;
+﻿package com.njydsz.pmis.common.web.filter;
 
 import com.njydsz.pmis.common.base.filter.BaseRequestIdResponseFilter;
 import com.njydsz.pmis.common.util.id.TracerUtils;
 import com.njydsz.pmis.common.web.config.WebTraceProperties;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Web 端 Trace ID 响应头过滤器
@@ -48,7 +49,7 @@ public class TraceIdResponseFilter extends BaseRequestIdResponseFilter {
      * @param response HTTP 响应
      */
     @Override
-    protected void afterFilter(HttpServletRequest request, jakarta.servlet.http.HttpServletResponse response) {
+    protected void afterFilter(HttpServletRequest request, HttpServletResponse response) {
         TracerUtils.clear();
     }
 }

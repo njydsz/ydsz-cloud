@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.orchestrator;
+﻿package com.njydsz.pmis.literule.server.orchestrator;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import com.njydsz.pmis.literule.api.RuleStatus;
 
 /**
  * 可视化规则链编排画布图 DTO（P2-1）
@@ -77,7 +78,7 @@ public class RuleChainGraph implements Serializable {
     /** 画布版本号（语义化版本，如 1.0.0、1.1.0-SNAPSHOT） */
     private String version;
 
-    /** 画布状态：DRAFT / PUBLISHED / ARCHIVED（与 {@link com.njydsz.pmis.literule.api.RuleStatus} 对齐） */
+    /** 画布状态：DRAFT / PUBLISHED / ARCHIVED（与 {@link RuleStatus} 对齐） */
     @Builder.Default
     private String status = "DRAFT";
 

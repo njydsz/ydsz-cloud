@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.queue.health;
+﻿package com.njydsz.pmis.common.queue.health;
 
 import com.njydsz.pmis.common.queue.config.QueueProperties;
 import com.njydsz.pmis.common.queue.enums.QueueType;
@@ -14,6 +14,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.beans.factory.ObjectProvider;
 
 /**
  * 消息队列健康检查
@@ -38,7 +39,7 @@ public class QueueHealthIndicator implements HealthIndicator {
     private final QueueProperties queueProperties;
 
     public QueueHealthIndicator(QueueProperties queueProperties,
-                                org.springframework.beans.factory.ObjectProvider<RedisService> redisServiceProvider) {
+                                ObjectProvider<RedisService> redisServiceProvider) {
         this.queueProperties = queueProperties;
         this.redisService = redisServiceProvider.getIfAvailable();
     }

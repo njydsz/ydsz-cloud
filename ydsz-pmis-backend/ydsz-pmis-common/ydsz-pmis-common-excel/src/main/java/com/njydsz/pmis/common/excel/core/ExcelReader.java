@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.excel.core;
+﻿package com.njydsz.pmis.common.excel.core;
 
 import com.njydsz.pmis.common.excel.core.config.ExcelConfig;
 import com.njydsz.pmis.common.excel.core.context.AnalysisContext;
@@ -20,6 +20,7 @@ import java.lang.reflect.Field;
 import java.util.*;
 
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import com.njydsz.pmis.common.excel.support.asm.ASMFieldAccessor;
 
 /**
  * Excel读取器 - 核心读取组件
@@ -450,7 +451,7 @@ public class ExcelReader {
                         SuperFastExcelReader superFastReader = new SuperFastExcelReader();
                         superFastReader.setColumnMetadataArray(columnMetadataArray);
                         superFastReader.setInstantiator(
-                            com.njydsz.pmis.common.excel.support.asm.ASMFieldAccessor.getInstantiator(metadata.getClazz()));
+                            ASMFieldAccessor.getInstantiator(metadata.getClazz()));
                         superFastReader.setContext(context);
                         superFastReader.setListeners(listeners);
                         superFastReader.setHeadRowNumber(metadata.getHeadRowNumber());

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.web.controller.job;
+﻿package com.njydsz.pmis.cronjob.web.controller.job;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.BaseResponse;
@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 
 /**
  * MapReduce 子任务查询 Controller（P0-4）。
@@ -63,8 +64,8 @@ public class JobTaskController {
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size) {
         Page<JobTaskDO> pageObj = new Page<>(page, size);
-        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<JobTaskDO> wrapper =
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        LambdaQueryWrapper<JobTaskDO> wrapper =
+                new LambdaQueryWrapper<>();
         wrapper.eq(JobTaskDO::getLogId, logId)
                 .eq(JobTaskDO::getDeleted, 0)
                 .orderByAsc(JobTaskDO::getCreatedAt);

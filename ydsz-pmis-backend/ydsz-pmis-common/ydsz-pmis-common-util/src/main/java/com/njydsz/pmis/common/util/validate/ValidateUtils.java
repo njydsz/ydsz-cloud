@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.validate;
+﻿package com.njydsz.pmis.common.util.validate;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
+import jakarta.validation.Validator;
 
 /**
  * 校验工具类（hibernate-validator 快捷方法封装）
@@ -64,7 +65,7 @@ public class ValidateUtils {
      * 懒加载的 hibernate-validator 实例
      */
     private static class ValidatorHolder {
-        static final jakarta.validation.Validator VALIDATOR;
+        static final Validator VALIDATOR;
         static {
             try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
                 VALIDATOR = factory.getValidator();
@@ -125,9 +126,9 @@ public class ValidateUtils {
     /**
      * 获取 hibernate-validator 实例，供高级用法
      *
-     * @return jakarta.validation.Validator 实例
+     * @return Validator 实例
      */
-    public static jakarta.validation.Validator getValidator() {
+    public static Validator getValidator() {
         return ValidatorHolder.VALIDATOR;
     }
 

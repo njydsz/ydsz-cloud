@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.service.ops;
+﻿package com.njydsz.pmis.common.redis.service.ops;
 
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.redis.config.RedisProperties;
@@ -15,6 +15,8 @@ import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.nio.charset.StandardCharsets;
+import org.springframework.data.redis.connection.ReturnType;
+import org.springframework.data.redis.core.RedisCallback;
 
 /**
  * Redis Stream 操作组件
@@ -392,7 +394,7 @@ public class RedisStreamOps {
                     args.add(entry.getValue() != null ? JsonUtils.toJson(entry.getValue()) : "");
                 }
 
-                redisTemplate.execute((org.springframework.data.redis.core.RedisCallback<Long>) connection -> {
+                redisTemplate.execute((RedisCallback<Long>) connection -> {
                     byte[][] keysArray = keys.stream()
                             .map(k -> k.getBytes(StandardCharsets.UTF_8))
                             .toArray(byte[][]::new);
@@ -405,7 +407,7 @@ public class RedisStreamOps {
                     System.arraycopy(argsArray, 0, allArgs, keysArray.length, argsArray.length);
                     Object result = connection.scriptingCommands().eval(
                             DEAD_LETTER_ATOMIC_SCRIPT.getBytes(StandardCharsets.UTF_8),
-                            org.springframework.data.redis.connection.ReturnType.INTEGER,
+                            ReturnType.INTEGER,
                             keysArray.length,
                             allArgs);
                     return result != null ? ((Number) result).longValue() : 0L;

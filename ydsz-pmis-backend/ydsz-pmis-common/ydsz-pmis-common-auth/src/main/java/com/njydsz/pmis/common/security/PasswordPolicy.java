@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.security;
+﻿package com.njydsz.pmis.common.security;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -7,6 +7,7 @@ import java.util.regex.Pattern;
 
 import java.time.LocalDateTime;
 import java.time.Duration;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 /**
  * 密码策略校验器
@@ -247,8 +248,8 @@ public final class PasswordPolicy {
         // 如果是 BCrypt 格式，使用 BCrypt 校验
         if (isBCryptFormat(historicHash)) {
             try {
-                org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder encoder =
-                        new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
+                BCryptPasswordEncoder encoder =
+                        new BCryptPasswordEncoder();
                 return encoder.matches(password, historicHash);
             } catch (Exception e) {
                 return false;

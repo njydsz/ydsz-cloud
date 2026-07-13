@@ -1,14 +1,15 @@
-package com.njydsz.pmis.common.audit.annotation;
+﻿package com.njydsz.pmis.common.audit.annotation;
 
 import com.njydsz.pmis.common.audit.enums.AuditAction;
 import com.njydsz.pmis.common.audit.enums.AuditType;
 
 import java.lang.annotation.*;
+import com.njydsz.pmis.common.audit.aspect.AuditAspect;
 
 /**
  * 审计日志方法标记注解
  * <p>
- * 标记在 Controller / Service 方法上，配合 {@link com.njydsz.pmis.common.audit.aspect.AuditAspect}
+ * 标记在 Controller / Service 方法上，配合 {@link AuditAspect}
  * 完成对方法调用的全链路审计记录。注解本身只声明元数据，真正拦截由 AOP 完成。
  * </p>
  *
@@ -37,7 +38,7 @@ import java.lang.annotation.*;
  * @email limw1888@126.com
  * @version 3.5.0
  * @since 1.0.0
- * @see com.njydsz.pmis.common.audit.aspect.AuditAspect
+ * @see AuditAspect
  * @see com.njydsz.pmis.common.audit.enums.AuditType
  * @see com.njydsz.pmis.common.audit.enums.AuditAction
  */

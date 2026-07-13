@@ -1,10 +1,11 @@
-package com.njydsz.pmis.cronjob.server.core.tracing;
+﻿package com.njydsz.pmis.cronjob.server.core.tracing;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import org.slf4j.MDC;
 
 /**
  * P2-12: 全链路追踪集成（SkyWalking / OpenTelemetry）。
@@ -93,7 +94,7 @@ public class TraceIntegrationHelper {
             }
 
             // 写入 MDC（兼容无 agent 场景）
-            tags.forEach((k, v) -> org.slf4j.MDC.put(k, v));
+            tags.forEach((k, v) -> MDC.put(k, v));
 
             if (log.isDebugEnabled()) {
                 log.debug("[Trace] 任务执行完成: key={} trigger={} success={} duration={}ms",
@@ -111,12 +112,12 @@ public class TraceIntegrationHelper {
      */
     public void clearJobTags() {
         try {
-            org.slf4j.MDC.remove("job.key");
-            org.slf4j.MDC.remove("job.trigger");
-            org.slf4j.MDC.remove("job.shard");
-            org.slf4j.MDC.remove("job.duration_ms");
-            org.slf4j.MDC.remove("job.status");
-            org.slf4j.MDC.remove("job.error");
+            MDC.remove("job.key");
+            MDC.remove("job.trigger");
+            MDC.remove("job.shard");
+            MDC.remove("job.duration_ms");
+            MDC.remove("job.status");
+            MDC.remove("job.error");
         } catch (Exception e) {
             // 静默忽略
         }

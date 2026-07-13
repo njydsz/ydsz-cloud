@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.handler;
+﻿package com.njydsz.pmis.common.exception.handler;
 
 import com.njydsz.pmis.common.exception.metrics.ExceptionMetrics;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
+import com.njydsz.pmis.common.exception.config.I18nConfiguration;
 
 /**
  * MVC 全局异常处理器自动配置
@@ -25,7 +26,7 @@ import org.springframework.context.annotation.Bean;
  * @since 3.0.0
  * @see MvcExceptionHandler
  */
-@AutoConfiguration(after = com.njydsz.pmis.common.exception.config.I18nConfiguration.class)
+@AutoConfiguration(after = I18nConfiguration.class)
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnClass({HttpServletRequest.class, MvcExceptionHandler.class})
 @ConditionalOnProperty(prefix = "ydsz.exception", name = "global-handler-enabled", havingValue = "true", matchIfMissing = true)

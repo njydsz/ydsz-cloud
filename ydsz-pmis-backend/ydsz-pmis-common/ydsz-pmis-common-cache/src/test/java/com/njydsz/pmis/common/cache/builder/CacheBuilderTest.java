@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.cache.builder;
+﻿package com.njydsz.pmis.common.cache.builder;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -13,6 +13,7 @@ import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.api.LoadingCache;
 import com.njydsz.pmis.common.cache.support.CacheLoader;
 import com.njydsz.pmis.common.cache.support.CacheWriter;
+import com.njydsz.pmis.common.cache.YdszCache;
 
 class CacheBuilderTest {
 
@@ -24,7 +25,7 @@ class CacheBuilderTest {
     @DisplayName("默认构建 TINYLFU 类型")
     void defaultType() {
       Cache<String, Integer> cache =
-          com.njydsz.pmis.common.cache.YdszCache.<String, Integer>newBuilder()
+          YdszCache.<String, Integer>newBuilder()
               .maximumSize(100)
               .build();
       assertThat(cache).isNotNull();
@@ -35,7 +36,7 @@ class CacheBuilderTest {
     @DisplayName("构建 LRU 缓存")
     void lruCache() {
       Cache<String, Integer> cache =
-          com.njydsz.pmis.common.cache.YdszCache.<String, Integer>newBuilder()
+          YdszCache.<String, Integer>newBuilder()
               .type(CacheType.LRU)
               .maximumSize(100)
               .build();
@@ -46,7 +47,7 @@ class CacheBuilderTest {
     @DisplayName("构建 STRIPED 缓存")
     void stripedCache() {
       Cache<String, Integer> cache =
-          com.njydsz.pmis.common.cache.YdszCache.<String, Integer>newBuilder()
+          YdszCache.<String, Integer>newBuilder()
               .type(CacheType.STRIPED)
               .maximumSize(100)
               .build();
@@ -57,7 +58,7 @@ class CacheBuilderTest {
     @DisplayName("maximumSize=0 抛出异常")
     void maximumSizeZero() {
       assertThatThrownBy(
-              () -> com.njydsz.pmis.common.cache.YdszCache.newBuilder().maximumSize(0).build())
+              () -> YdszCache.newBuilder().maximumSize(0).build())
           .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -66,7 +67,7 @@ class CacheBuilderTest {
     void weightedCacheWithoutWeigher() {
       assertThatThrownBy(
               () ->
-                  com.njydsz.pmis.common.cache.YdszCache.<String, Integer>newBuilder()
+                  YdszCache.<String, Integer>newBuilder()
                       .type(CacheType.WEIGHTED)
                       .maximumWeight(1000, null)
                       .build())
@@ -83,7 +84,7 @@ class CacheBuilderTest {
     void missingLoader() {
       assertThatThrownBy(
               () ->
-                  com.njydsz.pmis.common.cache.YdszCache.<String, Integer>newBuilder()
+                  YdszCache.<String, Integer>newBuilder()
                       .type(CacheType.ENHANCED_LOADING)
                       .maximumSize(100)
                       .buildLoadingCache())
@@ -94,7 +95,7 @@ class CacheBuilderTest {
     @DisplayName("构建 LoadingCache 正常工作")
     void loadingCacheWorks() {
       LoadingCache<String, Integer> cache =
-          com.njydsz.pmis.common.cache.YdszCache.<String, Integer>newBuilder()
+          YdszCache.<String, Integer>newBuilder()
               .type(CacheType.ENHANCED_LOADING)
               .maximumSize(100)
               .loader(CacheLoader.from(key -> key.length()))
@@ -106,7 +107,7 @@ class CacheBuilderTest {
     @DisplayName("loaderFrom 方法正常工作")
     void loaderFromWorks() {
       LoadingCache<String, Integer> cache =
-          com.njydsz.pmis.common.cache.YdszCache.<String, Integer>newBuilder()
+          YdszCache.<String, Integer>newBuilder()
               .type(CacheType.ENHANCED_LOADING)
               .maximumSize(100)
               .loaderFrom(key -> key.length())
@@ -123,7 +124,7 @@ class CacheBuilderTest {
     @DisplayName("TTL 缓存支持过期配置")
     void ttlCacheWithExpiry() {
       Cache<String, Integer> cache =
-          com.njydsz.pmis.common.cache.YdszCache.<String, Integer>newBuilder()
+          YdszCache.<String, Integer>newBuilder()
               .type(CacheType.TTL)
               .expireAfterWrite(1, TimeUnit.SECONDS)
               .maximumSize(100)
@@ -148,7 +149,7 @@ class CacheBuilderTest {
             }
           };
       Cache<String, Integer> cache =
-          com.njydsz.pmis.common.cache.YdszCache.<String, Integer>newBuilder()
+          YdszCache.<String, Integer>newBuilder()
               .type(CacheType.STRIPED)
               .maximumSize(100)
               .writer(writer)

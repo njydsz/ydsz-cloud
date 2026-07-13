@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.fallback;
+﻿package com.njydsz.pmis.common.notify.fallback;
 
 import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.pmis.common.notify.config.NotifyProperties;
@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 渠道降级管理器（P1-6）
@@ -57,7 +58,7 @@ public class NotifyFallbackManager {
 	public NotifyFallbackManager(NotifyProperties properties,
 								 List<NotifyChannelStrategy> strategies) {
 		this.properties = properties;
-		this.strategyMap = new java.util.concurrent.ConcurrentHashMap<>();
+		this.strategyMap = new ConcurrentHashMap<>();
 		for (NotifyChannelStrategy strategy : strategies) {
 			strategyMap.put(strategy.getChannel(), strategy);
 		}

@@ -1,8 +1,9 @@
-package com.njydsz.pmis.common.util.id;
+﻿package com.njydsz.pmis.common.util.id;
 
 import org.apache.skywalking.apm.toolkit.trace.TraceContext;
 import org.slf4j.MDC;
 import com.njydsz.pmis.common.util.string.StringUtils;
+import com.njydsz.pmis.common.util.id.RandomUtils;
 
 /**
  * 链路追踪工具类
@@ -170,7 +171,7 @@ public final class TracerUtils {
      * @return Span ID
      */
     public static String generateSpanId() {
-        return com.njydsz.pmis.common.util.id.RandomUtils.generateNumberString(4);
+        return RandomUtils.generateNumberString(4);
     }
 
     /**

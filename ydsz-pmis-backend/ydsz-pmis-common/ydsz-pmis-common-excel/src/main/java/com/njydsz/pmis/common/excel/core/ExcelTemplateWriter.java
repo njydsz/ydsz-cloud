@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.excel.core;
+﻿package com.njydsz.pmis.common.excel.core;
 
 import com.njydsz.pmis.common.excel.annotation.ExcelProperty;
 import com.njydsz.pmis.common.excel.exception.ExcelWriteException;
@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.util.*;
+import com.njydsz.pmis.common.excel.annotation.ExcelIgnore;
 
 /**
  * Excel模板写入器 - 基于模板文件写入数据
@@ -123,7 +124,7 @@ public class ExcelTemplateWriter {
         Map<String, Field> nameToField = new HashMap<>();
         for (Field field : fields) {
             ExcelProperty prop = field.getAnnotation(ExcelProperty.class);
-            if (prop != null && !field.isAnnotationPresent(com.njydsz.pmis.common.excel.annotation.ExcelIgnore.class)) {
+            if (prop != null && !field.isAnnotationPresent(ExcelIgnore.class)) {
                 String name = prop.value().isEmpty() ? field.getName() : prop.value();
                 nameToField.put(name, field);
             }

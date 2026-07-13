@@ -1,4 +1,6 @@
-package com.njydsz.pmis.common.json.naming;
+﻿package com.njydsz.pmis.common.json.naming;
+
+import java.io.Serializable;
 
 /**
  * 命名策略接口（参考 Jackson 的 PropertyNamingStrategy）
@@ -31,7 +33,7 @@ package com.njydsz.pmis.common.json.naming;
  * @email limw1888@126.com
  * @version 3.5.0
  */
-public interface PropertyNamingStrategy extends java.io.Serializable {
+public interface PropertyNamingStrategy extends Serializable {
     
     /**
      * 转换属性名为 JSON 字段名

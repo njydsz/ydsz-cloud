@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.core.enums;
+﻿package com.njydsz.pmis.common.core.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import com.njydsz.pmis.common.core.constant.HeaderConstants;
 
 /**
  * 身份类型枚举
@@ -25,7 +26,7 @@ import java.util.stream.Collectors;
  * @author Marvin Lee
  * @email limw1888@126.com
  * @version 3.5.0
- * @see com.njydsz.pmis.common.core.constant.HeaderConstants
+ * @see HeaderConstants
  */
 @Getter
 @AllArgsConstructor

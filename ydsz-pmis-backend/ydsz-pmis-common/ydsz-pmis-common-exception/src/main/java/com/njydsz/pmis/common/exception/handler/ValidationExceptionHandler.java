@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.handler;
+﻿package com.njydsz.pmis.common.exception.handler;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 
 /**
  * Validation 相关异常处理器
@@ -63,7 +64,7 @@ public class ValidationExceptionHandler {
      */
     private String extractBindingResultMessages(BindingResult bindingResult) {
         return bindingResult.getAllErrors().stream()
-                .map(org.springframework.context.support.DefaultMessageSourceResolvable::getDefaultMessage)
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .collect(Collectors.joining(", "));
     }
 

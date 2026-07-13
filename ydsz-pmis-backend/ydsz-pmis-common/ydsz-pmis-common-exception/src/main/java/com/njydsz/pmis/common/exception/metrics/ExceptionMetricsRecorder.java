@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.metrics;
+﻿package com.njydsz.pmis.common.exception.metrics;
 
 import com.njydsz.pmis.common.exception.custom.AbstractYdszException;
 import io.micrometer.core.instrument.Counter;
@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 import java.util.Map;
+import org.slf4j.MDC;
 
 /**
  * 异常处理器装饰器（增强可观测性）
@@ -188,7 +189,7 @@ public class ExceptionMetricsRecorder {
      */
     private String readTraceId() {
         try {
-            Map<String, String> mdc = org.slf4j.MDC.getCopyOfContextMap();
+            Map<String, String> mdc = MDC.getCopyOfContextMap();
             if (mdc != null) {
                 String traceId = mdc.get("traceId");
                 if (traceId == null) {

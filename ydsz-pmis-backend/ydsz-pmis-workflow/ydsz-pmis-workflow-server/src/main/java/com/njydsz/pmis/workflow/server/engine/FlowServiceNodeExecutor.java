@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.engine;
+﻿package com.njydsz.pmis.workflow.server.engine;
 
 import com.googlecode.aviator.AviatorEvaluator;
 import com.googlecode.aviator.Expression;
@@ -19,6 +19,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import com.googlecode.aviator.AviatorEvaluatorInstance;
 
 /**
  * P1-4: 服务节点执行器
@@ -70,7 +71,7 @@ public class FlowServiceNodeExecutor {
      * <p>禁用 NewInstance/Module 等危险 Feature，防止脚本创建任意对象或加载模块。
      * 表达式编译结果自带缓存（AviatorEvaluatorInstance 内部 ConcurrentHashMap）。
      */
-    private final com.googlecode.aviator.AviatorEvaluatorInstance aviatorInstance;
+    private final AviatorEvaluatorInstance aviatorInstance;
 
     /**
      * 构造器：初始化 Aviator 沙箱实例。

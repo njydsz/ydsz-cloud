@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.exception.config;
+﻿package com.njydsz.pmis.common.exception.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import com.njydsz.pmis.common.exception.custom.AbstractYdszException;
+import org.springframework.beans.factory.ObjectProvider;
 
 /**
  * 国际化核心配置（不依赖 Spring MVC）
@@ -30,7 +32,7 @@ import java.util.Map;
  * <ul>
  *   <li>{@link MessageSource} 多环境适配：开发环境实时加载，生产环境缓存</li>
  *   <li>{@link Validator} 关联 Hibernate Validator 与 i18n 消息</li>
- *   <li>异常模块的 {@link com.njydsz.pmis.common.exception.custom.AbstractYdszException#setMessageResolver} 注入</li>
+ *   <li>异常模块的 {@link AbstractYdszException#setMessageResolver} 注入</li>
  * </ul>
  *
  * <p>Web MVC 相关（LocaleResolver/LocaleChangeInterceptor）由 {@link WebI18nConfiguration} 条件装配，
@@ -67,7 +69,7 @@ public class I18nConfiguration {
     private final Environment environment;
 
     public I18nConfiguration(I18nProperties properties,
-                             org.springframework.beans.factory.ObjectProvider<Environment> environmentProvider) {
+                             ObjectProvider<Environment> environmentProvider) {
         this.properties = properties;
         this.environment = environmentProvider.getIfAvailable();
     }
@@ -163,7 +165,7 @@ public class I18nConfiguration {
     }
 
     public void setExceptionMessageResolver(MessageSource messageSource) {
-        com.njydsz.pmis.common.exception.custom.AbstractYdszException.setMessageResolver(
+        AbstractYdszException.setMessageResolver(
                 (key, params) -> messageSource.getMessage(key, params, key, LocaleContextHolder.getLocale())
         );
     }

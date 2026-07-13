@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.socket.config;
+﻿package com.njydsz.pmis.common.socket.config;
 
 import com.njydsz.pmis.common.auth.token.TokenService;
 import com.njydsz.pmis.common.socket.cluster.WebSocketClusterMessage;

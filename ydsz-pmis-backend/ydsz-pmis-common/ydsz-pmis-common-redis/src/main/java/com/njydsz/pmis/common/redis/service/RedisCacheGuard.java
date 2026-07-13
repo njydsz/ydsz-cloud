@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.service;
+﻿package com.njydsz.pmis.common.redis.service;
 
 import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +18,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
+import org.springframework.data.redis.connection.ReturnType;
 
 /**
  * Redis 缓存防护工具类
@@ -533,7 +534,7 @@ public class RedisCacheGuard {
                 byte[] scriptBytes = RELEASE_LOCK_LUA.getBytes(StandardCharsets.UTF_8);
                 String sha = connection.scriptingCommands().scriptLoad(scriptBytes);
                 connection.scriptingCommands().evalSha(sha,
-                        org.springframework.data.redis.connection.ReturnType.INTEGER,
+                        ReturnType.INTEGER,
                         1, keyBytes, valueBytes);
                 return null;
             });
@@ -613,7 +614,7 @@ public class RedisCacheGuard {
                 byte[] scriptBytes = RENEW_LOCK_LUA.getBytes(StandardCharsets.UTF_8);
                 String sha = connection.scriptingCommands().scriptLoad(scriptBytes);
                 Long result = connection.scriptingCommands().evalSha(sha,
-                        org.springframework.data.redis.connection.ReturnType.INTEGER,
+                        ReturnType.INTEGER,
                         1, keyBytes, valueBytes, leaseBytes);
                 return Long.valueOf(1L).equals(result);
             });

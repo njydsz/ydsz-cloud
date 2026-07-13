@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.service;
+﻿package com.njydsz.pmis.common.auth.service;
 
 import com.njydsz.pmis.common.auth.model.RolePermissions;
 
@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashMap;
+import com.njydsz.pmis.common.auth.service.impl.RedisRolePermissionLoader;
 
 /**
  * 角色权限加载器接口。
@@ -39,7 +40,7 @@ import java.util.HashMap;
  * @email limw1888@126.com
  * @version 3.5.0
  * @see com.njydsz.pmis.common.auth.model.RolePermissions
- * @see com.njydsz.pmis.common.auth.service.impl.RedisRolePermissionLoader
+ * @see RedisRolePermissionLoader
  */
 public interface RolePermissionLoader {
 

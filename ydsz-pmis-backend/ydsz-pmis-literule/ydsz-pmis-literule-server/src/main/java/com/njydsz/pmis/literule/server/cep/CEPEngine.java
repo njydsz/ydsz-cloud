@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.cep;
+﻿package com.njydsz.pmis.literule.server.cep;
 
 import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
 import com.njydsz.pmis.literule.server.expr.liteexpr.LiteExprEvaluator;
@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+import com.njydsz.pmis.literule.api.RuleContext;
 
 /**
  * CEP 引擎（P2-13）
@@ -464,8 +465,8 @@ public class CEPEngine implements Serializable {
             if (event.getAttributes() != null) {
                 ctx.putAll(event.getAttributes());
             }
-            com.njydsz.pmis.literule.api.RuleContext ruleContext =
-                    com.njydsz.pmis.literule.api.RuleContext.of(ctx);
+            RuleContext ruleContext =
+                    RuleContext.of(ctx);
             return expressionEvaluator.evalBoolean(filter, ruleContext);
         } catch (Exception e) {
             log.debug("[CEP] 过滤器评估失败: filter={}, error={}", filter, e.getMessage());

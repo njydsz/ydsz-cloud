@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.auth;
+﻿package com.njydsz.pmis.common.util.auth;
 
 import com.njydsz.pmis.common.core.enums.ServiceType;
 import com.njydsz.pmis.common.core.enums.DataScopeType;
@@ -9,6 +9,8 @@ import lombok.Data;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import com.njydsz.pmis.common.app.auth.AppAuthInfo;
+import com.njydsz.pmis.common.web.auth.WebAuthInfo;
 
 /**
  * ydsz系统统一认证上下文信息抽象基类。
@@ -44,8 +46,8 @@ import java.util.Set;
  *   <tr><td>editableColumnsByTable</td><td>X-Editable-Columns</td></tr>
  * </table>
  *
- * @see {@link com.njydsz.pmis.common.web.auth.WebAuthInfo}
- * @see {@link com.njydsz.pmis.common.app.auth.AppAuthInfo}
+ * @see {@link WebAuthInfo}
+ * @see {@link AppAuthInfo}
  * @see RequestHolder
  * @see AuthInfoUtils
   *

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.json;
+﻿package com.njydsz.pmis.common.json;
 
 import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
 import com.njydsz.pmis.common.json.annotation.YdszJsonField;
@@ -6,6 +6,7 @@ import com.njydsz.pmis.common.json.exception.YdszJsonException;
 import org.junit.jupiter.api.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.List;
 
 @DisplayName("错误处理集成测试")
 class ErrorHandlingIntegrationTest {
@@ -250,7 +251,7 @@ class ErrorHandlingIntegrationTest {
     void deserializeObjectIntoListShouldFail() {
         String jsonObject = "{\"id\":1,\"name\":\"test\"}";
         try {
-            java.util.List<SimplePojo> result = YdszJson.parseArray(jsonObject, SimplePojo.class);
+            List<SimplePojo> result = YdszJson.parseArray(jsonObject, SimplePojo.class);
             // 如果不抛异常，应返回空列表
             assertNotNull(result);
         } catch (Exception e) {
@@ -304,7 +305,7 @@ class ErrorHandlingIntegrationTest {
     void malformedJsonParseArray() {
         String malformedJson = "not valid json";
         try {
-            java.util.List<Object> result = YdszJson.parseArray(malformedJson);
+            List<Object> result = YdszJson.parseArray(malformedJson);
             // 如果不抛异常，应返回空列表
             assertNotNull(result);
         } catch (Exception e) {

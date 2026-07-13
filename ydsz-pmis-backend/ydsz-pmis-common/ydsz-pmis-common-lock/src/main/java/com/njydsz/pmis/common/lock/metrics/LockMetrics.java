@@ -1,8 +1,9 @@
-package com.njydsz.pmis.common.lock.metrics;
+﻿package com.njydsz.pmis.common.lock.metrics;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
+import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * 分布式锁指标收集器
@@ -290,7 +291,7 @@ public class LockMetrics {
      */
     public void bindMeterRegistry(Object meterRegistry) {
         this.micrometerCollector = new LockMicrometerCollector(
-                (io.micrometer.core.instrument.MeterRegistry) meterRegistry);
+                (MeterRegistry) meterRegistry);
     }
 
     /**

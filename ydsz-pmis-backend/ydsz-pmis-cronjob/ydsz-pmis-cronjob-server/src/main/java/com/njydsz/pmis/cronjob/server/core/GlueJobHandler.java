@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.core.handler;
+﻿package com.njydsz.pmis.cronjob.server.core.handler;
 
 import com.njydsz.pmis.common.core.job.JobHandler;
 import com.njydsz.pmis.common.core.job.JobLoggerHolder;
@@ -18,6 +18,7 @@ import javax.script.ScriptEngineManager;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+import com.njydsz.pmis.common.core.job.JobContextHolder;
 
 /**
  * GLUE 在线编码任务处理器（P1-2 GLUE 在线编码，P1-7 多语言支持扩展）。
@@ -104,7 +105,7 @@ public class GlueJobHandler implements JobHandler {
     @Override
     public Object execute(String paramsJson) throws Exception {
         // 从 JobContextHolder 获取当前 jobId
-        String jobId = com.njydsz.pmis.common.core.job.JobContextHolder.getJobId();
+        String jobId = JobContextHolder.getJobId();
         if (!StringUtils.hasText(jobId)) {
             throw new IllegalStateException("GLUE 任务执行上下文缺少 jobId，请确认 JobContextHolder 已正确设置");
         }
