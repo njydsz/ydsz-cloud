@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
@@ -44,4 +45,9 @@ public interface TagMapper extends BaseMapper<Tag> {
 
     @Update("UPDATE nw_tag SET usage_count = GREATEST(usage_count - 1, 0) WHERE id = #{tagId}")
     int decrementUsage(@Param("tagId") String tagId);
+
+    @Select("SELECT ft.file_node_id FROM nw_file_tag ft " +
+            "INNER JOIN nw_tag t ON ft.tag_id = t.id " +
+            "WHERE t.name LIKE CONCAT('%', #{tagName}, '%') AND ft.deleted = 0 AND t.deleted = 0")
+    List<String> findFileNodeIdsByTagName(@Param("tagName") String tagName);
 }

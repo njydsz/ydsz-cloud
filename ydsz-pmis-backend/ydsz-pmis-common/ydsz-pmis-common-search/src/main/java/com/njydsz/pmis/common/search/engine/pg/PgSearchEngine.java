@@ -22,6 +22,7 @@ import com.njydsz.pmis.common.search.api.SearchResponse;
 import com.njydsz.pmis.common.search.api.SearchSuggestion;
 import com.njydsz.pmis.common.search.core.IndexDocument;
 import com.njydsz.pmis.common.search.core.SearchEngine;
+import com.njydsz.pmis.common.search.core.SearchField;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -126,9 +127,13 @@ public class PgSearchEngine implements SearchEngine {
                 }
             }
 
-            // 模糊匹配增强（pg_trgm）
+            // 模糊匹配增强（pg_trgm）- 必须在当前过滤条件下 OR，不能绕过权限控制
             if (request.isFuzzy()) {
-                where.append(" OR searchable_text % ?");
+                where.append(" AND (to_tsvector(?, searchable_text) @@ plainto_tsquery(?, ?)");
+                params.add(searchConfig);
+                params.add(searchConfig);
+                params.add(keyword);
+                where.append(" OR searchable_text % ?)");
                 params.add(keyword);
             }
 
@@ -151,16 +156,27 @@ public class PgSearchEngine implements SearchEngine {
             List<Object> queryParams = new ArrayList<>(params);
 
             StringBuilder selectSql = new StringBuilder("SELECT id, doc_type, title, subtitle, snippet, status, ");
-            selectSql.append("ts_rank(to_tsvector(?, searchable_text), plainto_tsquery(?, ?)) AS rank");
+
+            // 使用 setweight 按字段权重计算相关性 (P0-3: SearchField weight生效)
+            selectSql.append("ts_rank(");
+            selectSql.append("setweight(to_tsvector(?, title), 'A') || ");
+            selectSql.append("setweight(to_tsvector(?, subtitle), 'B') || ");
+            selectSql.append("setweight(to_tsvector(?, content), 'C') || ");
+            selectSql.append("setweight(to_tsvector(?, array_to_string(tags, ', ')), 'D'), ");
+            selectSql.append("plainto_tsquery(?, ?)) AS rank");
 
             // 高亮
             if (request.isHighlight()) {
                 selectSql.append(", ts_headline(?, searchable_text, plainto_tsquery(?, ?), 'MaxWords=60, MinWords=20, ShortWord=3, HighlightAll=FALSE, StartSel=?, StopSel=?') AS highlight");
             }
 
-            queryParams.add(0, searchConfig); // for ts_rank to_tsvector
-            queryParams.add(1, searchConfig); // for ts_rank plainto_tsquery
-            queryParams.add(2, keyword);       // for ts_rank plainto_tsquery
+            // 为每个 setweight 添加配置参数
+            queryParams.add(0, searchConfig); // title
+            queryParams.add(1, searchConfig); // subtitle
+            queryParams.add(2, searchConfig); // content
+            queryParams.add(3, searchConfig); // tags
+            queryParams.add(4, searchConfig); // plainto_tsquery config
+            queryParams.add(5, keyword);       // plainto_tsquery keyword
 
             if (request.isHighlight()) {
                 queryParams.add(searchConfig); // for ts_headline to_tsvector

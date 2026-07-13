@@ -1,7 +1,5 @@
 package com.njydsz.pmis.common.sentry.tracing;
 
-import java.util.UUID;
-
 import com.njydsz.pmis.common.sentry.spi.TraceContext;
 
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +49,7 @@ public class SkyWalkingTraceContext implements TraceContext {
     @Override
     public boolean isTracing() {
         try {
-            return org.apache.skywalking.apm.toolkit.trace.TraceContext.isActive();
+            return org.apache.skywalking.apm.toolkit.trace.TraceContext.traceId() != null;
         } catch (Exception e) {
             return false;
         }
@@ -60,8 +58,7 @@ public class SkyWalkingTraceContext implements TraceContext {
     @Override
     public void tag(String key, String value) {
         try {
-            org.apache.skywalking.apm.toolkit.trace.Tag.TagKey tagKey = new org.apache.skywalking.apm.toolkit.trace.Tag.TagKey(key);
-            org.apache.skywalking.apm.toolkit.trace.ActiveSpan.tag(tagKey, value);
+            org.apache.skywalking.apm.toolkit.trace.ActiveSpan.tag(key, value);
         } catch (Exception e) {
             log.debug("[Sentry] SkyWalking tag 注入失败: key={}, err={}", key, e.getMessage());
         }

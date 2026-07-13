@@ -77,7 +77,7 @@ public class RuleChainGraph implements Serializable {
     /** 租户 ID（多租户隔离，P1-3） */
     private String tenantId;
 
-    /** 画布版本号（语义化版本，如 1.0.0、1.1.0-SNAPSHOT） */
+    /** 画布版本号（语义化版本，如 1.0.0、1.0.0-SNAPSHOT） */
     private String version;
 
     /** 画布状态：DRAFT / PUBLISHED / ARCHIVED（与 {@link RuleStatus} 对齐） */

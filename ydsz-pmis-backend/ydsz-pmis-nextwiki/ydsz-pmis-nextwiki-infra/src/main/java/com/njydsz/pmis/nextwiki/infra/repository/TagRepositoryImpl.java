@@ -86,4 +86,9 @@ public class TagRepositoryImpl implements TagRepository {
     public void decrementUsage(String tagId) {
         tagMapper.decrementUsage(tagId);
     }
+
+    @Override
+    public List<String> findFileNodeIdsByTagName(String tagName) {
+        return tagMapper.findFileNodeIdsByTagName(tagName);
+    }
 }

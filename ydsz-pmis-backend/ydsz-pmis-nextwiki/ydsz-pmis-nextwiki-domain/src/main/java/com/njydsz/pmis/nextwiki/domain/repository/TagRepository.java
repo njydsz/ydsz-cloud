@@ -34,4 +34,9 @@ public interface TagRepository {
     void incrementUsage(String tagId);
 
     void decrementUsage(String tagId);
+
+    /**
+     * 按标签名搜索关联的文件节点ID
+     */
+    List<String> findFileNodeIdsByTagName(String tagName);
 }

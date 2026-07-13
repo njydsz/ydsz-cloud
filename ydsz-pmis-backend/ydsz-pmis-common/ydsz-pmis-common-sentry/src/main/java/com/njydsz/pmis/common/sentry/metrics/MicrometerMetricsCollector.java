@@ -7,10 +7,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.njydsz.pmis.common.sentry.spi.MetricsCollector;
 
 import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.DistributionSummary;
-
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -49,7 +50,7 @@ public class MicrometerMetricsCollector implements MetricsCollector {
             Counter counter = counterCache.computeIfAbsent(cacheKey, k ->
                     Counter.builder(name)
                             .description(description)
-                            .tags(tags != null ? tags : Map.of())
+                            .tags(toTags(tags))
                             .register(meterRegistry));
             counter.increment(amount);
         } catch (Exception e) {
@@ -65,11 +66,7 @@ public class MicrometerMetricsCollector implements MetricsCollector {
             return;
         }
         try {
-            meterRegistry.gauge(name, io.micrometer.core.instrument.Tags.of(
-                            tags != null ? tags.entrySet().stream()
-                                    .map(e -> io.micrometer.core.instrument.Tag.of(e.getKey(), e.getValue()))
-                                    .toList() : java.util.List.<io.micrometer.core.instrument.Tag>of()),
-                    value);
+            meterRegistry.gauge(name, toTags(tags), value);
         } catch (Exception e) {
             log.debug("[Sentry] Micrometer Gauge 记录失败, 降级到内存: name={}, err={}", name, e.getMessage());
             fallback.setGauge(name, description, tags, value);
@@ -87,7 +84,7 @@ public class MicrometerMetricsCollector implements MetricsCollector {
             Timer timer = timerCache.computeIfAbsent(cacheKey, k ->
                     Timer.builder(name)
                             .description(description)
-                            .tags(tags != null ? tags : Map.of())
+                            .tags(toTags(tags))
                             .register(meterRegistry));
             timer.record(duration);
         } catch (Exception e) {
@@ -107,7 +104,7 @@ public class MicrometerMetricsCollector implements MetricsCollector {
             DistributionSummary summary = histogramCache.computeIfAbsent(cacheKey, k ->
                     DistributionSummary.builder(name)
                             .description(description)
-                            .tags(tags != null ? tags : Map.of())
+                            .tags(toTags(tags))
                             .register(meterRegistry));
             summary.record(value);
         } catch (Exception e) {
@@ -131,6 +128,18 @@ public class MicrometerMetricsCollector implements MetricsCollector {
      */
     public InMemoryMetricsCollector getFallback() {
         return fallback;
+    }
+
+    /**
+     * 将 Map<String,String> 转换为 Micrometer Tags
+     */
+    private Tags toTags(Map<String, String> tags) {
+        if (tags == null || tags.isEmpty()) {
+            return Tags.empty();
+        }
+        return Tags.of(tags.entrySet().stream()
+                .map(e -> Tag.of(e.getKey(), e.getValue()))
+                .toList());
     }
 
     /**

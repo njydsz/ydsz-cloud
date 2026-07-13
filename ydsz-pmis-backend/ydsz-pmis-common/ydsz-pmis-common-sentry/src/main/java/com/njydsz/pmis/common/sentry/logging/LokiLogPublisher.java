@@ -5,7 +5,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.Map;
 
 import com.njydsz.pmis.common.sentry.domain.LogEvent;
 import com.njydsz.pmis.common.sentry.spi.LogPublisher;

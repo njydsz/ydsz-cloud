@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>所有操作落 pmis_flow_* 表，对外暴露的 WorkflowFacade 统一接口实现。
  *
- * <p>1.1.0 新增能力：加签 / 撤回 / 催办 / 审计轨迹查询。
+ * <p>1.0.0 新增能力：加签 / 撤回 / 催办 / 审计轨迹查询。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

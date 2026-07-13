@@ -44,6 +44,13 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
+        <!-- AspectJ Weaver（@Aspect / @Around 注解支持） -->
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjweaver</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
         <!-- Spring Web（LogEvent HTTP 上报，可选） -->
         <dependency>
             <groupId>org.springframework</groupId>
@@ -81,6 +88,13 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <!-- Logback（结构化日志 Layout，可选） -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>

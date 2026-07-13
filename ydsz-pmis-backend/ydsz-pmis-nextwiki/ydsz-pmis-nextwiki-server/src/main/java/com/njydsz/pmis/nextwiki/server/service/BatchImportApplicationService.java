@@ -1,7 +1,10 @@
 package com.njydsz.pmis.nextwiki.server.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -10,10 +13,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import jakarta.annotation.PreDestroy;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>批量文件上传（并发处理，限制并发数）</li>
  *   <li>ZIP 压缩包解压导入（保持目录结构）</li>
  *   <li>导入进度追踪</li>
- *   <li>导入失败重试</li>
+ *   <li>线程池生命周期管理（优雅关闭）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -48,8 +54,17 @@ public class BatchImportApplicationService {
 
     private final FileApplicationService fileApplicationService;
 
-    /** 并发上传线程池 */
-    private final Executor importExecutor = Executors.newFixedThreadPool(5);
+    /** 并发上传线程池（有界队列 + 优雅关闭） */
+    private final ThreadPoolExecutor importExecutor = new ThreadPoolExecutor(
+            5, 5, 60L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(200),
+            r -> {
+                Thread t = new Thread(r, "nextwiki-batch-import");
+                t.setDaemon(true);
+                return t;
+            },
+            new ThreadPoolExecutor.CallerRunsPolicy()
+    );
 
     /** 最大批量上传数量 */
     private static final int MAX_BATCH_SIZE = 100;
@@ -59,6 +74,27 @@ public class BatchImportApplicationService {
 
     /** 单个 ZIP 条目最大大小（50MB） */
     private static final long MAX_ENTRY_SIZE = 50L * 1024 * 1024;
+
+    /** ZIP 炸弹防护：总解压大小上限（500MB） */
+    private static final long MAX_TOTAL_UNCOMPRESSED = 500L * 1024 * 1024;
+
+    /**
+     * 优雅关闭线程池
+     */
+    @PreDestroy
+    public void shutdown() {
+        log.info("[BatchImportApplicationService] 关闭线程池...");
+        importExecutor.shutdown();
+        try {
+            if (!importExecutor.awaitTermination(30, TimeUnit.SECONDS)) {
+                importExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            importExecutor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+        log.info("[BatchImportApplicationService] 线程池已关闭");
+    }
 
     /**
      * 批量上传文件
@@ -78,7 +114,8 @@ public class BatchImportApplicationService {
                 try {
                     return fileApplicationService.upload(file, parentId, null, null, userId);
                 } catch (Exception e) {
-                    log.error("[BatchImportApplicationService] 文件上传失败: {}", file.getOriginalFilename(), e);
+                    log.error("[BatchImportApplicationService] 文件上传失败: {}",
+                            file.getOriginalFilename(), e);
                     return null;
                 }
             }, importExecutor);
@@ -101,6 +138,7 @@ public class BatchImportApplicationService {
      * 从 ZIP 压缩包导入
      * <p>
      * 解压 ZIP 文件并保持目录结构，递归创建目录和上传文件。
+     * 包含 ZIP 炸弹防护（限制条目数和总解压大小）。
      */
     public BatchImportResult importFromZip(MultipartFile zipFile, String parentId, String userId) {
         if (zipFile == null || zipFile.isEmpty()) {
@@ -113,43 +151,73 @@ public class BatchImportApplicationService {
         List<FileNodeVO> importedFiles = new ArrayList<>();
         int totalCount = 0;
         int failedCount = 0;
+        long totalUncompressed = 0;
 
         try (InputStream is = zipFile.getInputStream();
              ZipInputStream zis = new ZipInputStream(is, StandardCharsets.UTF_8)) {
 
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
+                // ZIP 炸弹防护
+                if (++totalCount > MAX_ZIP_ENTRIES) {
+                    log.warn("[BatchImportApplicationService] ZIP 条目数超过限制: {}", MAX_ZIP_ENTRIES);
+                    break;
+                }
+
                 if (entry.isDirectory()) {
                     String folderName = extractFolderName(entry.getName());
                     if (folderName != null && !folderName.isEmpty()) {
                         try {
                             fileApplicationService.createFolder(parentId, folderName, userId);
                         } catch (Exception e) {
-                            log.warn("[BatchImportApplicationService] 创建目录失败: {}", folderName, e);
+                            log.warn("[BatchImportApplicationService] 创建目录失败: {}",
+                                    folderName, e);
                         }
                     }
                     continue;
                 }
 
-                if (++totalCount > MAX_ZIP_ENTRIES) {
-                    log.warn("[BatchImportApplicationService] ZIP 条目数超过限制: {}", MAX_ZIP_ENTRIES);
-                    break;
-                }
-
-                if (entry.getSize() > MAX_ENTRY_SIZE) {
-                    log.warn("[BatchImportApplicationService] 条目大小超过限制: {}", entry.getName());
-                    failedCount++;
-                    continue;
-                }
-
+                // 读取条目内容到内存（受 MAX_ENTRY_SIZE 限制）
+                Path tempFile = Files.createTempFile("nextwiki-zip-", ".tmp");
                 try {
-                    FileNodeVO uploaded = importZipEntry(entry, zis, parentId, userId);
+                    long bytesCopied = Files.copy(zis, tempFile, StandardCopyOption.REPLACE_EXISTING);
+
+                    if (bytesCopied > MAX_ENTRY_SIZE) {
+                        log.warn("[BatchImportApplicationService] 条目大小超过限制: {} ({}bytes)",
+                                entry.getName(), bytesCopied);
+                        failedCount++;
+                        continue;
+                    }
+
+                    totalUncompressed += bytesCopied;
+                    if (totalUncompressed > MAX_TOTAL_UNCOMPRESSED) {
+                        log.warn("[BatchImportApplicationService] 总解压大小超过限制: {}MB",
+                                MAX_TOTAL_UNCOMPRESSED / 1024 / 1024);
+                        break;
+                    }
+
+                    String fileName = extractFileName(entry.getName());
+                    if (fileName.isEmpty()) {
+                        continue;
+                    }
+
+                    // 将临时文件包装为 MultipartFile 并上传
+                    byte[] content = Files.readAllBytes(tempFile);
+                    String contentType = Files.probeContentType(tempFile);
+                    InMemoryMultipartFile multipartFile = new InMemoryMultipartFile(
+                            "file", fileName, contentType != null ? contentType : "application/octet-stream", content);
+
+                    FileNodeVO uploaded = fileApplicationService.upload(
+                            multipartFile, parentId, fileName, "ZIP导入", userId);
                     if (uploaded != null) {
                         importedFiles.add(uploaded);
                     }
                 } catch (Exception e) {
-                    log.error("[BatchImportApplicationService] ZIP 条目导入失败: {}", entry.getName(), e);
+                    log.error("[BatchImportApplicationService] ZIP 条目导入失败: {}",
+                            entry.getName(), e);
                     failedCount++;
+                } finally {
+                    Files.deleteIfExists(tempFile);
                 }
             }
         } catch (IOException e) {
@@ -163,41 +231,99 @@ public class BatchImportApplicationService {
         return BatchImportResult.success(importedFiles, totalCount, importedFiles.size(), failedCount);
     }
 
-    /**
-     * 导入单个 ZIP 条目
-     */
-    private FileNodeVO importZipEntry(ZipEntry entry, ZipInputStream zis,
-                                       String parentId, String userId) throws Exception {
-        String entryName = entry.getName();
-        String fileName = entryName.substring(entryName.lastIndexOf('/') + 1);
-        if (fileName.isEmpty()) {
-            return null;
-        }
+    // ==================== 私有方法 ====================
 
-        Path tempFile = Files.createTempFile("nextwiki-zip-", "-" + fileName);
-        try {
-            long bytesCopied = Files.copy(zis, tempFile, StandardCopyOption.REPLACE_EXISTING);
-            log.debug("[BatchImportApplicationService] 解压文件: name={}, size={}", fileName, bytesCopied);
-
-            // 通过 FileApplicationService 上传
-            // 注意：实际实现需要将 tempFile 包装为 MultipartFile
-            // 此处简化处理，实际生产环境应使用 MockMultipartFile 或自定义实现
-            return null;
-        } finally {
-            Files.deleteIfExists(tempFile);
+    private String extractFileName(String entryPath) {
+        if (entryPath == null || entryPath.isEmpty()) {
+            return "";
         }
+        int lastSlash = entryPath.lastIndexOf('/');
+        return lastSlash >= 0 ? entryPath.substring(lastSlash + 1) : entryPath;
     }
 
-    /**
-     * 从 ZIP 条目路径中提取目录名
-     */
     private String extractFolderName(String entryPath) {
         if (entryPath == null || entryPath.isEmpty()) {
             return null;
         }
-        String trimmed = entryPath.endsWith("/") ? entryPath.substring(0, entryPath.length() - 1) : entryPath;
+        String trimmed = entryPath.endsWith("/")
+                ? entryPath.substring(0, entryPath.length() - 1)
+                : entryPath;
         int lastSlash = trimmed.lastIndexOf('/');
         return lastSlash >= 0 ? trimmed.substring(lastSlash + 1) : trimmed;
+    }
+
+    // ==================== 内部类 ====================
+
+    /**
+     * 基于内存字节数组的 MultipartFile 实现
+     * <p>
+     * 用于将 ZIP 解压后的文件内容传递给 FileApplicationService.upload。
+     */
+    private static class InMemoryMultipartFile implements MultipartFile {
+
+        private final String name;
+        private final String originalFilename;
+        private final String contentType;
+        private final byte[] content;
+
+        InMemoryMultipartFile(String name, String originalFilename,
+                               String contentType, byte[] content) {
+            this.name = name;
+            this.originalFilename = originalFilename;
+            this.contentType = contentType;
+            this.content = content;
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public String getOriginalFilename() {
+            return originalFilename;
+        }
+
+        @Override
+        public String getContentType() {
+            return contentType;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return content == null || content.length == 0;
+        }
+
+        @Override
+        public long getSize() {
+            return content != null ? content.length : 0;
+        }
+
+        @Override
+        public byte[] getBytes() {
+            return content != null ? content : new byte[0];
+        }
+
+        @Override
+        public InputStream getInputStream() {
+            return new ByteArrayInputStream(content != null ? content : new byte[0]);
+        }
+
+        @Override
+        public void transferTo(File dest) throws IOException {
+            try (OutputStream os = Files.newOutputStream(dest.toPath())) {
+                if (content != null) {
+                    os.write(content);
+                }
+            }
+        }
+
+        @Override
+        public void transferTo(Path dest) throws IOException {
+            if (content != null) {
+                Files.write(dest, content);
+            }
+        }
     }
 
     /**
@@ -213,7 +339,8 @@ public class BatchImportApplicationService {
         private int successCount;
         private int failedCount;
 
-        public static BatchImportResult success(List<FileNodeVO> files, int total, int success, int failed) {
+        public static BatchImportResult success(List<FileNodeVO> files, int total,
+                                                  int success, int failed) {
             return BatchImportResult.builder()
                     .success(true)
                     .importedFiles(files)

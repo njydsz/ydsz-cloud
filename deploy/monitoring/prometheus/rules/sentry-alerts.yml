@@ -1,0 +1,207 @@
+# =============================================================================
+# Prometheus 告警规则 - Sentry 自监控
+# -----------------------------------------------------------------------------
+# 部署:
+#   kubectl apply -f deploy/monitoring/prometheus/rules/sentry-alerts.yml -n monitoring
+#
+# 监控对象:
+#   - 指标采集器健康（Micrometer / 内存降级）
+#   - 日志发布器健康（ELK / Loki / 双发）
+#   - 系统资源水位（CPU / 内存 / 磁盘 / GC）
+#   - SLA 违反率
+#   - 慢追踪
+#   - 告警收敛器
+# =============================================================================
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: sentry-alerts
+  namespace: monitoring
+  labels:
+    prometheus: k8s
+    app.kubernetes.io/name: pmis
+spec:
+  groups:
+    # =========================================================================
+    #  1. Sentry 组件健康告警
+    # =========================================================================
+    - name: sentry-component
+      interval: 30s
+      rules:
+        # 指标采集器不可用（P1）
+        - alert: SentryMetricsCollectorDown
+          expr: |
+            ydsz_sentry_metrics_available{job=~"pmis-.*"} == 0
+          for: 2m
+          labels:
+            severity: P1
+            category: monitoring
+          annotations:
+            summary: "{{ $labels.job }} 指标采集器不可用"
+            description: "MetricsCollector 已降级为内存模式超过 2 分钟，请检查 Micrometer/Prometheus 依赖。"
+
+        # 日志发布器不可用（P1）
+        - alert: SentryLogPublisherDown
+          expr: |
+            ydsz_sentry_logging_available{job=~"pmis-.*"} == 0
+          for: 2m
+          labels:
+            severity: P1
+            category: monitoring
+          annotations:
+            summary: "{{ $labels.job }} 日志发布器不可用"
+            description: "LogPublisher 所有实例不可用超过 2 分钟，日志可能丢失，请检查 ELK/Loki 连接。"
+
+        # 告警发布器不可用（P2）
+        - alert: SentryAlertPublisherDown
+          expr: |
+            ydsz_sentry_alerting_available{job=~"pmis-.*"} == 0
+          for: 5m
+          labels:
+            severity: P2
+            category: monitoring
+          annotations:
+            summary: "{{ $labels.job }} 告警发布器不可用"
+            description: "AlertPublisher 不可用超过 5 分钟，告警可能丢失。"
+
+    # =========================================================================
+    #  2. 系统资源告警（补充现有 pmis-alerts.yml）
+    # =========================================================================
+    - name: sentry-system
+      interval: 30s
+      rules:
+        # CPU 使用率过高（P1）
+        - alert: SentryCpuUsageHigh
+          expr: |
+            ydsz_system_cpu_usage{job=~"pmis-.*"} > 0.8
+          for: 5m
+          labels:
+            severity: P1
+            category: resource
+          annotations:
+            summary: "{{ $labels.job }} CPU 使用率 > 80%"
+            description: "进程 CPU 使用率 {{ $value | humanizePercentage }}，持续 5 分钟超过 80%，请检查是否存在 CPU 密集计算或死循环。"
+
+        # 堆内存使用率过高（P1，补充 jvm_memory 指标）
+        - alert: SentryHeapMemoryHigh
+          expr: |
+            (ydsz_system_memory_heap_used{job=~"pmis-.*"}
+             / ydsz_system_memory_heap_max{job=~"pmis-.*"}) > 0.85
+          for: 5m
+          labels:
+            severity: P1
+            category: resource
+          annotations:
+            summary: "{{ $labels.job }} 堆内存使用率 > 85%"
+            description: "堆内存使用率 {{ $value | humanizePercentage }}，存在 OOM 风险。"
+
+        # 磁盘空间不足（P0）
+        - alert: SentryDiskSpaceLow
+          expr: |
+            (ydsz_system_disk_free{job=~"pmis-.*"}
+             / ydsz_system_disk_total{job=~"pmis-.*"}) < 0.1
+          for: 1m
+          labels:
+            severity: P0
+            category: resource
+          annotations:
+            summary: "{{ $labels.job }} 磁盘可用空间 < 10%"
+            description: "磁盘 {{ $labels.mount }} 可用空间不足 10%，日志/数据可能无法写入，请立即清理。"
+
+        # 线程数过多（P2）
+        - alert: SentryThreadCountHigh
+          expr: |
+            ydsz_system_process_thread_count{job=~"pmis-.*"} > 800
+          for: 5m
+          labels:
+            severity: P2
+            category: resource
+          annotations:
+            summary: "{{ $labels.job }} 线程数 > 800"
+            description: "JVM 线程数 {{ $value }}，可能存在线程泄漏。"
+
+        # GC 耗时占比过高（P1）
+        - alert: SentryGcTimeRatioHigh
+          expr: |
+            rate(ydsz_system_process_gc_time_delta{job=~"pmis-.*"}[5m]) > 1000
+          for: 5m
+          labels:
+            severity: P1
+            category: resource
+          annotations:
+            summary: "{{ $labels.job }} GC 耗时过高"
+            description: "5 分钟内 GC 增量耗时超过 1000ms，影响吞吐量，请检查 GC 配置。"
+
+    # =========================================================================
+    #  3. SLA 违反告警
+    # =========================================================================
+    - name: sentry-sla
+      interval: 60s
+      rules:
+        # SLA 违反率 > 5%（P1）
+        - alert: SentrySlaViolationRateHigh
+          expr: |
+            sum(rate(ydsz_sla_violation_total{job=~"pmis-.*"}[5m]))
+            by (sla, job)
+            /
+            sum(rate(ydsz_sla_total_count_total{job=~"pmis-.*"}[5m]))
+            by (sla, job)
+            > 0.05
+          for: 5m
+          labels:
+            severity: P1
+            category: sla
+          annotations:
+            summary: "{{ $labels.sla }} SLA 违反率 > 5%"
+            description: "SLA {{ $labels.sla }} 在 {{ $labels.job }} 上的违反率 {{ $value | humanizePercentage }}，超过 5% 阈值。"
+
+        # SLA P99 延迟超阈值（P2）
+        - alert: SentrySlaLatencyHigh
+          expr: |
+            histogram_quantile(0.99,
+              sum(rate(ydsz_sla_total_duration_seconds_bucket{job=~"pmis-.*"}[5m]))
+              by (le, sla, job)
+            ) > 0.5
+          for: 5m
+          labels:
+            severity: P2
+            category: sla
+          annotations:
+            summary: "{{ $labels.sla }} P99 延迟 > 500ms"
+            description: "SLA {{ $labels.sla }} P99 延迟 {{ $value }}s，超过 500ms 阈值。"
+
+    # =========================================================================
+    #  4. 慢追踪告警
+    # =========================================================================
+    - name: sentry-tracing
+      interval: 60s
+      rules:
+        # 慢追踪次数激增（P2）
+        - alert: SentrySlowTraceSpike
+          expr: |
+            increase(ydsz_trace_slow_total{job=~"pmis-.*"}[5m]) > 10
+          for: 5m
+          labels:
+            severity: P2
+            category: tracing
+          annotations:
+            summary: "{{ $labels.job }} 慢追踪次数 > 10"
+            description: "5 分钟内慢追踪次数 {{ $value }}，操作 {{ $labels.operation }} 平均耗时超过 3s。"
+
+    # =========================================================================
+    #  5. 告警收敛器自监控
+    # =========================================================================
+    - name: sentry-converger
+      interval: 60s
+      rules:
+        # 告警抑制率过高（P3，仅记录）
+        - alert: SentryAlertSuppressionRateHigh
+          expr: |
+            ydsz_sentry_alert_suppression_rate > 0.9
+          for: 10m
+          labels:
+            severity: P3
+            category: monitoring
+          annotations:
+            summary: "告警抑制率 > 90%"
+            description: "告警收敛器抑制率 {{ $value | humanizePercentage }}，可能存在告警风暴或静默期过长。"

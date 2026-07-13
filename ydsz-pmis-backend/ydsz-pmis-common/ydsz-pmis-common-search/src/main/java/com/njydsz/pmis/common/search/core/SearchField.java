@@ -1,47 +1,56 @@
 package com.njydsz.pmis.common.search.core;
 
-import java.io.Serializable;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 /**
- * 可搜索字段定义
- * <p>
- * 描述一个参与搜索的字段及其属性（权重、是否高亮、是否分词等）。
+ * 搜索字段配置
+ * 定义不同字段在全文检索中的权重影响
  *
  * @author ydsz-pmis-team
  * @since 1.4.0
  */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class SearchField implements Serializable {
+public enum SearchField {
 
-    private static final long serialVersionUID = 1L;
+    /**
+     * 标题字段 - 权重A (最重要)
+     */
+    TITLE('A'),
+    /**
+     * 副标题字段 - 权重B
+     */
+    SUBTITLE('B'),
+    /**
+     * 内容字段 - 权重C
+     */
+    CONTENT('C'),
+    /**
+     * 标签字段 - 权重D (最次要)
+     */
+    TAG('D'),
+    /**
+     * 默认为C权重
+     */
+    DEFAULT('C');
 
-    /** 字段名 */
-    private String name;
+    private final char weight;
 
-    /** 字段标签（中文显示名） */
-    private String label;
+    SearchField(char weight) {
+        this.weight = weight;
+    }
 
-    /** 搜索权重（越高越优先，默认 1.0） */
-    @Builder.Default
-    private float weight = 1.0f;
+    public char getWeight() {
+        return weight;
+    }
 
-    /** 是否参与高亮 */
-    @Builder.Default
-    private boolean highlightable = true;
-
-    /** 是否参与搜索 */
-    @Builder.Default
-    private boolean searchable = true;
-
-    /** 是否参与聚合 */
-    @Builder.Default
-    private boolean aggregatable = false;
+    /**
+     * 将Char类型的权重转换为PostgreSQL ts_rank可识别的浮点值
+     * @see <a href="https://www.postgresql.org/docs/current/textsearch-controls.html#TEXTSEARCH-RANKING">PostgreSQL ts_rank文档</a>
+     */
+    public static float getWeightValue(char weight) {
+        return switch (weight) {
+            case 'A' -> 1.0f;   // 最重要
+            case 'B' -> 0.4f;   // 重要
+            case 'C' -> 0.2f;   // 普通
+            case 'D' -> 0.1f;   // 次要
+            default -> 0.2f;    // 默认
+        };
+    }
 }

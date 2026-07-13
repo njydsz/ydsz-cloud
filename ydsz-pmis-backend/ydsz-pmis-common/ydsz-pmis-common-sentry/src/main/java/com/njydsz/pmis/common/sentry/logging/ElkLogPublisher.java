@@ -5,7 +5,6 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 
 import com.njydsz.pmis.common.sentry.domain.LogEvent;
 import com.njydsz.pmis.common.sentry.spi.LogPublisher;

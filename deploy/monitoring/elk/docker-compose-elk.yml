@@ -1,0 +1,75 @@
+# =============================================================================
+# ELK Stack docker-compose 配置 - PMIS 日志方案一
+# -----------------------------------------------------------------------------
+# 启动:
+#   docker-compose -f deploy/monitoring/elk/docker-compose-elk.yml up -d
+#
+# 组件:
+#   - Elasticsearch 8.x (单节点, 开发环境)
+#   - Logstash 8.x (TCP 5044 输入)
+#   - Kibana 8.x (5601 端口)
+#
+# 注意:
+#   - 生产环境请修改为集群模式
+#   - Elasticsearch 需要调整 vm.max_map_count=262144
+# =============================================================================
+version: "3.8"
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
+    container_name: pmis-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+      - cluster.name=pmis-elk
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - pmis-monitoring
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.17.0
+    container_name: pmis-logstash
+    volumes:
+      - ./logstash-pipeline.conf:/usr/share/logstash/pipeline/pmis.conf:ro
+      - ./pmis-index-template.json:/usr/share/logstash/config/pmis-index-template.json:ro
+    ports:
+      - "5044:5044"
+    environment:
+      - LS_JAVA_OPTS=-Xms256m -Xmx256m
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - pmis-monitoring
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.17.0
+    container_name: pmis-kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - KIBANA_SYSTEM_PASSWORD=changeme
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - pmis-monitoring
+
+volumes:
+  es-data:
+
+networks:
+  pmis-monitoring:
+    external: true
+    name: pmis-monitoring
