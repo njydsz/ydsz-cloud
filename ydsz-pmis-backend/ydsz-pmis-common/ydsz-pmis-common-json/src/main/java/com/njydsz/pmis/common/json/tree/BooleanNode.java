@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.tree;
+package com.njydsz.pmis.common.json.tree;
 
 /**
  * JSON 布尔节点

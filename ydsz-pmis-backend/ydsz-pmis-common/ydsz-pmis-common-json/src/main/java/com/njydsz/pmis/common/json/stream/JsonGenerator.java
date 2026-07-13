@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.stream;
+package com.njydsz.pmis.common.json.stream;
 
 import java.io.Closeable;
 import java.io.IOException;

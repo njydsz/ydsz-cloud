@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.cache;
+package com.njydsz.pmis.common.json.cache;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;

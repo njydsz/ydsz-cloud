@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json;
+package com.njydsz.pmis.common.json;
 
 import com.njydsz.pmis.common.json.engine.YdszSerializerEngine;
 import com.njydsz.pmis.common.json.engine.YdszDeserializerEngine;
@@ -24,7 +24,7 @@ import java.lang.reflect.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import com.njydsz.pmis.common.json.deserializer.JsonDeserializer;
-import com.njydsz.pmis.common.json.parser.YdszJsonParser.parse;
+import com.njydsz.pmis.common.json.parser.YdszJsonParser;
 import com.njydsz.pmis.common.json.serializer.JsonSerializer;
 
 /**
@@ -152,6 +152,7 @@ public class YdszJson {
      * @return 反序列化后的对象
      */
     public static <T> T toObject(String json, Class<T> clazz) {
+        validateJsonSize(json);
         return YdszDeserializerEngine.deserialize(json, clazz);
     }
     
@@ -164,6 +165,7 @@ public class YdszJson {
      * @return 反序列化后的对象
      */
     public static <T> T toObject(String json, Type type) {
+        validateJsonSize(json);
         return YdszDeserializerEngine.deserialize(json, type);
     }
     
@@ -176,6 +178,7 @@ public class YdszJson {
      * @return 反序列化后的对象
      */
     public static <T> T toObject(String json, YdszJsonType<T> typeRef) {
+        validateJsonSize(json);
         return YdszDeserializerEngine.deserialize(json, typeRef);
     }
     
@@ -480,7 +483,7 @@ public class YdszJson {
      * @return JsonNode 树
      */
     public static JsonNode readTree(String json) {
-        Object parsed = parse(json);
+        Object parsed = YdszJsonParser.parse(json);
         return TreeConverter.convertToJsonNode(parsed);
     }
 
@@ -568,7 +571,7 @@ public class YdszJson {
             return false;
         }
         try {
-            parse(json);
+            YdszJsonParser.parse(json);
             return true;
         } catch (Exception e) {
             return false;
@@ -625,6 +628,25 @@ public class YdszJson {
     public static void ensureValid(ValidationResult result) {
         if (!result.isValid()) {
             throw new IllegalArgumentException("Validation failed: " + result.getErrors());
+        }
+    }
+
+    // ==================== 安全检查 ====================
+
+    /**
+     * 校验 JSON 字符串大小是否超过全局限制。
+     *
+     * @param json JSON 字符串
+     * @throws YdszJsonException 如果超过最大 JSON 大小限制
+     */
+    static void validateJsonSize(String json) {
+        if (json == null) {
+            return;
+        }
+        long maxSize = YdszJsonConfig.getInstance().getMaxJsonSize();
+        if (json.length() > maxSize) {
+            throw new YdszJsonException(
+                    "JSON size exceeds limit: " + json.length() + " > " + maxSize);
         }
     }
 }

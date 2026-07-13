@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.type;
+package com.njydsz.pmis.common.json.type;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

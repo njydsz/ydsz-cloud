@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.reader;
+package com.njydsz.pmis.common.json.reader;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Constructor;

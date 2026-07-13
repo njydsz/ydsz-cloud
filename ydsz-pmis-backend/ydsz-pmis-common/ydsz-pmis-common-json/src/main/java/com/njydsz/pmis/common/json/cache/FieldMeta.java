@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.cache;
+package com.njydsz.pmis.common.json.cache;
 
 import com.njydsz.pmis.common.json.annotation.YdszJsonField;
 

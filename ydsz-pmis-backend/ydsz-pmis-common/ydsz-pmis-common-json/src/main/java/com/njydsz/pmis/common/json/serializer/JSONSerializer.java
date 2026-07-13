@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.serializer;
+package com.njydsz.pmis.common.json.serializer;
 
 /**
  * 自定义序列化器接口

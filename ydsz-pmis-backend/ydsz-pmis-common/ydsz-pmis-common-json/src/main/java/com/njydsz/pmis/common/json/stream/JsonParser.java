@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.stream;
+package com.njydsz.pmis.common.json.stream;
 
 import com.njydsz.pmis.common.json.exception.JsonDeserializationException;
 import com.njydsz.pmis.common.json.util.StringInterner;

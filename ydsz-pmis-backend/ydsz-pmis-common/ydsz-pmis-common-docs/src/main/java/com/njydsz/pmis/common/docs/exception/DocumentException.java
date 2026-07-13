@@ -27,23 +27,26 @@ public class DocumentException extends BusinessException {
     }
 
     /**
-     * 构造文档处理异常（带自定义消息）
-     *
-     * @param exceptionCode 异常码
-     * @param message       自定义异常消息
-     */
-    public DocumentException(ExceptionCode exceptionCode, String message) {
-        super(exceptionCode, message);
-    }
-
-    /**
      * 构造文档处理异常（带原因）
      *
      * @param exceptionCode 异常码
      * @param cause         导致此异常的原始原因
      */
     public DocumentException(ExceptionCode exceptionCode, Throwable cause) {
-        super(exceptionCode, cause);
+        super(cause);
+        this.setCode(exceptionCode.getCode());
+        this.setMessageKey(exceptionCode.getKey());
+    }
+
+    /**
+     * 构造文档处理异常（带自定义消息）
+     *
+     * @param exceptionCode 异常码
+     * @param message       自定义异常消息
+     */
+    public DocumentException(ExceptionCode exceptionCode, String message) {
+        super(exceptionCode);
+        this.setMessage(message);
     }
 
     /**
@@ -54,6 +57,9 @@ public class DocumentException extends BusinessException {
      * @param cause         导致此异常的原始原因
      */
     public DocumentException(ExceptionCode exceptionCode, String message, Throwable cause) {
-        super(exceptionCode, message, cause);
+        super(cause);
+        this.setCode(exceptionCode.getCode());
+        this.setMessageKey(exceptionCode.getKey());
+        this.setMessage(message);
     }
 }

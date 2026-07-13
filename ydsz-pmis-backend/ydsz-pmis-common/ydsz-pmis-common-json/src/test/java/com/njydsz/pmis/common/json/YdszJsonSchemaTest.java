@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json;
+package com.njydsz.pmis.common.json;
 
 import com.njydsz.pmis.common.json.schema.YdszJsonSchema;
 import com.njydsz.pmis.common.json.schema.SchemaValidator;

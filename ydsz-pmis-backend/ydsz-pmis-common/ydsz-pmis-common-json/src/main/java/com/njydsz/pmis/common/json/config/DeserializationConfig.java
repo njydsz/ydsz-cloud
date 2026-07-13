@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.config;
+package com.njydsz.pmis.common.json.config;
 
 import java.util.Collections;
 import java.util.Set;

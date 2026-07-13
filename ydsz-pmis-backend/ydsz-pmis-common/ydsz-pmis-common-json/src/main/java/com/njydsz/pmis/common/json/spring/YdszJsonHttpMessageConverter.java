@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.spring;
+package com.njydsz.pmis.common.json.spring;
 
 import com.njydsz.pmis.common.json.YdszJson;
 import org.springframework.http.HttpInputMessage;

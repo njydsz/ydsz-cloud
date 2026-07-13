@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.writer;
+package com.njydsz.pmis.common.json.writer;
 
 import com.njydsz.pmis.common.json.asm.AsmSerializer;
 import com.njydsz.pmis.common.json.cache.AsmCodecCache;

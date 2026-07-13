@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.jsonpath;
+package com.njydsz.pmis.common.json.jsonpath;
 
 import com.njydsz.pmis.common.json.YdszJson;
 import java.util.*;

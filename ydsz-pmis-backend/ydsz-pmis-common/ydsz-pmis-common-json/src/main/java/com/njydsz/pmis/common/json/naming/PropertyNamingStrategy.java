@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.naming;
+package com.njydsz.pmis.common.json.naming;
 
 /**
  * 命名策略接口（参考 Jackson 的 PropertyNamingStrategy）

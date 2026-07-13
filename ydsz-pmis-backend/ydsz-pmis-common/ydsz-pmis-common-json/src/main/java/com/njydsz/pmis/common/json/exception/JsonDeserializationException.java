@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.exception;
+package com.njydsz.pmis.common.json.exception;
 
 /**
  * JSON 反序列化异常（参考 Jackson 的 JsonMappingException）

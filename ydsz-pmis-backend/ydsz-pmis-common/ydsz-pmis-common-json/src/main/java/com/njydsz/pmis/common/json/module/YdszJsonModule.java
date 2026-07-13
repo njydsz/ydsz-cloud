@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.module;
+package com.njydsz.pmis.common.json.module;
 
 /**
  * YdszJson 模块接口

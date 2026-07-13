@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.bytecode;
+package com.njydsz.pmis.common.json.bytecode;
 
 /**
  * SIMD 向量化工具类（JDK 21 Vector API 实现）

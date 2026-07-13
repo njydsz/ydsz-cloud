@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.type;
+package com.njydsz.pmis.common.json.type;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

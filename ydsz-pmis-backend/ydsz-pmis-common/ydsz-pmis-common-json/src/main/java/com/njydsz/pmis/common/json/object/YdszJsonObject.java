@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.object;
+package com.njydsz.pmis.common.json.object;
 
 import com.njydsz.pmis.common.json.YdszJson;
 

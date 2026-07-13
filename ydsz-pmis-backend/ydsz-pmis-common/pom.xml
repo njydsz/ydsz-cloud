@@ -59,6 +59,7 @@
         <error-prone-annotations.version>2.41.0</error-prone-annotations.version>
         <fastjson2.version>2.0.62</fastjson2.version>
         <caffeine.version>3.2.4</caffeine.version>
+        <asm.version>9.7.1</asm.version>
     </properties>
 
     <modules>
@@ -73,6 +74,7 @@
         <module>ydsz-pmis-common-jdbc</module>
         <module>ydsz-pmis-common-redis</module>
         <module>ydsz-pmis-common-lock</module>
+        <module>ydsz-pmis-common-cache</module>
         <!-- L5 业务服务层 -->
         <module>ydsz-pmis-common-auth</module>
         <module>ydsz-pmis-common-safe</module>
@@ -85,6 +87,7 @@
         <module>ydsz-pmis-common-netty</module>
         <module>ydsz-pmis-common-docs</module>
         <module>ydsz-pmis-common-json</module>
+        <module>ydsz-pmis-common-excel</module>
         <!-- L6 应用层 -->
         <module>ydsz-pmis-common-base</module>
         <module>ydsz-pmis-common-web</module>
@@ -131,6 +134,11 @@
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common-lock</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-cache</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- L5 -->
@@ -206,6 +214,25 @@
                 <version>${project.version}</version>
             </dependency>
             <!-- ==================== 第三方依赖（父 POM 未管理部分） ==================== -->
+
+            <!-- ASM 字节码库 -->
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm</artifactId>
+                <version>${asm.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm-commons</artifactId>
+                <version>${asm.version}</version>
+            </dependency>
+
+            <!-- ydsz-pmis-common-excel -->
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-excel</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- MyBatis（版本覆盖声明，必须在 Spring Boot BOM 之后声明才能生效） -->
             <dependency>

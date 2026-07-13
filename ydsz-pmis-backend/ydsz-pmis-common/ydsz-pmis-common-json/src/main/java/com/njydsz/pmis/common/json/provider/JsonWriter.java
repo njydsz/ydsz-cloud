@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.provider;
+package com.njydsz.pmis.common.json.provider;
 
 /**
  * 轻量级 JSON 写入器（FastJSON2 架构级优化）

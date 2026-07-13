@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.merge;
+package com.njydsz.pmis.common.json.merge;
 
 import com.njydsz.pmis.common.json.parser.YdszJsonParser;
 

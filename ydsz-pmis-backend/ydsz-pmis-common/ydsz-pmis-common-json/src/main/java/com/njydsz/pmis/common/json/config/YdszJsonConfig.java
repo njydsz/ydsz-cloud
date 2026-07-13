@@ -65,6 +65,10 @@ public final class YdszJsonConfig implements Serializable {
 
     private String defaultDateFormat = "yyyy-MM-dd'T'HH:mm:ss";
 
+    private volatile long maxJsonSize = 10L * 1024 * 1024;
+
+    private volatile int maxDepth = 256;
+
     private YdszJsonConfig() {
     }
 
@@ -232,6 +236,36 @@ public final class YdszJsonConfig implements Serializable {
     }
 
     /**
+     * 获取最大 JSON 大小限制（字节）
+     */
+    public long getMaxJsonSize() {
+        return maxJsonSize;
+    }
+
+    /**
+     * 设置最大 JSON 大小限制（字节）
+     */
+    public YdszJsonConfig setMaxJsonSize(long maxJsonSize) {
+        this.maxJsonSize = maxJsonSize;
+        return this;
+    }
+
+    /**
+     * 获取最大序列化深度
+     */
+    public int getMaxDepth() {
+        return maxDepth;
+    }
+
+    /**
+     * 设置最大序列化深度
+     */
+    public YdszJsonConfig setMaxDepth(int maxDepth) {
+        this.maxDepth = maxDepth;
+        return this;
+    }
+
+    /**
      * 应用配置到序列化提供者
      *
      * <p>将当前配置应用到 YdszSerializationProvider</p>
@@ -259,6 +293,8 @@ public final class YdszJsonConfig implements Serializable {
         this.failOnError = false;
         this.asmThreshold = 10000;
         this.defaultDateFormat = "yyyy-MM-dd'T'HH:mm:ss";
+        this.maxJsonSize = 10L * 1024 * 1024;
+        this.maxDepth = 256;
         return this;
     }
 
@@ -279,6 +315,8 @@ public final class YdszJsonConfig implements Serializable {
             this.failOnError = other.failOnError;
             this.asmThreshold = other.asmThreshold;
             this.defaultDateFormat = other.defaultDateFormat;
+            this.maxJsonSize = other.maxJsonSize;
+            this.maxDepth = other.maxDepth;
         }
         return this;
     }

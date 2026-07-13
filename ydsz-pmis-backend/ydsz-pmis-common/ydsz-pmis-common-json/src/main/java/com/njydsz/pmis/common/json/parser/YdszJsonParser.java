@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.parser;
+package com.njydsz.pmis.common.json.parser;
 
 import com.njydsz.pmis.common.json.exception.JsonDeserializationException;
 
@@ -59,6 +59,16 @@ public final class YdszJsonParser {
 
     private YdszJsonParser() {
         throw new UnsupportedOperationException("YdszJsonParser is a utility class");
+    }
+
+    /**
+     * 清理所有 ThreadLocal 变量（防止线程池环境内存泄漏）。
+     */
+    public static void clearThreadLocals() {
+        CHAR_BUFFER.remove();
+        TEMP_MAP.remove();
+        TEMP_LIST.remove();
+        SB_POOL.remove();
     }
     
     /**

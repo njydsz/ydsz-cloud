@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.provider;
+package com.njydsz.pmis.common.json.provider;
 
 import com.njydsz.pmis.common.json.autotype.AutoTypeChecker;
 import com.njydsz.pmis.common.json.config.DeserializationConfig;

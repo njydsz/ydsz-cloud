@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.schema;
+package com.njydsz.pmis.common.json.schema;
 
 import java.util.*;
 import java.util.regex.Pattern;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.engine;
+package com.njydsz.pmis.common.json.engine;
 
 import com.njydsz.pmis.common.json.provider.YdszDeserializationProvider;
 import com.njydsz.pmis.common.json.type.YdszJsonType;

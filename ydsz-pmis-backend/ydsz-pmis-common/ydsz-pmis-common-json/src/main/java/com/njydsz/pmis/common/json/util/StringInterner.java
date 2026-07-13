@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.util;
+package com.njydsz.pmis.common.json.util;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.pointer;
+package com.njydsz.pmis.common.json.pointer;
 
 import com.njydsz.pmis.common.json.exception.YdszJsonException;
 import com.njydsz.pmis.common.json.parser.YdszJsonParser;

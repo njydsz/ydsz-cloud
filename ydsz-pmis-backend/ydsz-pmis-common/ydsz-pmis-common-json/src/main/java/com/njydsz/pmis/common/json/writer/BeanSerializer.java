@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.writer;
+package com.njydsz.pmis.common.json.writer;
 
 import com.njydsz.pmis.common.json.cache.FieldMeta;
 import com.njydsz.pmis.common.json.number.NumberUtils;

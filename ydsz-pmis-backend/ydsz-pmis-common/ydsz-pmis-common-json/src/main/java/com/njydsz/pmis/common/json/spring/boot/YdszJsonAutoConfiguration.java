@@ -1,18 +1,22 @@
-﻿package com.njydsz.pmis.common.json.spring.boot;
+package com.njydsz.pmis.common.json.spring.boot;
 
+import com.njydsz.pmis.common.json.autotype.AutoTypeChecker;
 import com.njydsz.pmis.common.json.config.YdszJsonConfig;
+import com.njydsz.pmis.common.json.health.YdszJsonHealthIndicator;
+import com.njydsz.pmis.common.json.metric.YdszJsonMetrics;
+import com.njydsz.pmis.common.json.module.YdszJsonModule;
 import com.njydsz.pmis.common.json.spring.YdszJsonHttpMessageConverter;
 import com.njydsz.pmis.common.json.spring.YdszJsonModuleRegistrar;
 import com.njydsz.pmis.common.json.spring.YdszJsonProperties;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.http.converter.HttpMessageConverter;
+
+import io.micrometer.core.instrument.MeterRegistry;
 
 import java.util.List;
 
@@ -45,7 +49,7 @@ public class YdszJsonAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public YdszJsonConfigBean ydszJsonConfigBean(YdszJsonProperties properties,
-                                                  List<com.njydsz.pmis.common.json.module.YdszJsonModule> springModules) {
+                                                  List<YdszJsonModule> springModules) {
         return new YdszJsonConfigBean(properties, springModules);
     }
 
@@ -62,15 +66,36 @@ public class YdszJsonAutoConfiguration {
     }
 
     /**
+     * YdszJson 指标监控（Micrometer）。
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")
+    public YdszJsonMetrics ydszJsonMetrics(
+            ObjectProvider<MeterRegistry> meterRegistryProvider) {
+        return new YdszJsonMetrics(meterRegistryProvider.getIfAvailable());
+    }
+
+    /**
+     * YdszJson 健康检查指标。
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(name = "org.springframework.boot.actuate.health.HealthIndicator")
+    public YdszJsonHealthIndicator ydszJsonHealthIndicator() {
+        return new YdszJsonHealthIndicator();
+    }
+
+    /**
      * YdszJson 配置 Bean（替代 @PostConstruct 初始化逻辑）。
      */
     public static class YdszJsonConfigBean {
 
         private final YdszJsonProperties properties;
-        private final List<com.njydsz.pmis.common.json.module.YdszJsonModule> springModules;
+        private final List<YdszJsonModule> springModules;
 
         public YdszJsonConfigBean(YdszJsonProperties properties,
-                                   List<com.njydsz.pmis.common.json.module.YdszJsonModule> springModules) {
+                                   List<YdszJsonModule> springModules) {
             this.properties = properties;
             this.springModules = springModules;
             init();
@@ -90,7 +115,12 @@ public class YdszJsonAutoConfiguration {
             } catch (IllegalArgumentException e) {
                 config.setCircularReferenceStrategy(YdszJsonConfig.CircularReferenceStrategy.REF);
             }
+            config.setMaxJsonSize(properties.getMaxJsonSize());
+            config.setMaxDepth(properties.getMaxDepth());
             config.apply();
+
+            // 安全模式设置
+            AutoTypeChecker.setSafeMode(properties.isSafeMode());
 
             // 注册 Spring Factory 模块
             YdszJsonModuleRegistrar registrar = new YdszJsonModuleRegistrar(springModules);

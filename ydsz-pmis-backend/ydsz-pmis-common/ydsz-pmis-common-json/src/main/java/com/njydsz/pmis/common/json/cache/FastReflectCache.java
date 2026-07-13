@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.cache;
+package com.njydsz.pmis.common.json.cache;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.asm;
+package com.njydsz.pmis.common.json.asm;
 
 import com.njydsz.pmis.common.json.writer.JSONWriter;
 

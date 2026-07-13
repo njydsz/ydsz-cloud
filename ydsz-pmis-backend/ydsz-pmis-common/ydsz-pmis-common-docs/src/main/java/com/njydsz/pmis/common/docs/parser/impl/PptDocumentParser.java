@@ -15,7 +15,6 @@ import org.apache.poi.xslf.usermodel.XSLFShape;
 import org.apache.poi.xslf.usermodel.XSLFSlide;
 import org.apache.poi.xslf.usermodel.XSLFTable;
 import org.apache.poi.xslf.usermodel.XSLFTableCell;
-import org.apache.poi.xslf.usermodel.XSLFTableShape;
 import org.apache.poi.xslf.usermodel.XSLFTextShape;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
@@ -72,7 +71,7 @@ public class PptDocumentParser implements DocumentParser {
                         }
                     }
                     // 表格形状
-                    else if (shape instanceof XSLFTableShape tableShape) {
+                    else if (shape instanceof XSLFTable tableShape) {
                         List<List<String>> rows = new ArrayList<>();
                         int numRows = tableShape.getNumberOfRows();
                         int maxCols = 0;

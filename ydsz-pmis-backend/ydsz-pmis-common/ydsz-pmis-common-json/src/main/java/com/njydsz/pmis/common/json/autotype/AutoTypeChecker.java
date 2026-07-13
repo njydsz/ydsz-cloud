@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.autotype;
+package com.njydsz.pmis.common.json.autotype;
 
 import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
 import com.njydsz.pmis.common.json.exception.JsonDeserializationException;

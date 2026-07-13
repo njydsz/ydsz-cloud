@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json;
+package com.njydsz.pmis.common.json;
 
 import com.njydsz.pmis.common.json.tree.*;
 import org.junit.jupiter.api.*;

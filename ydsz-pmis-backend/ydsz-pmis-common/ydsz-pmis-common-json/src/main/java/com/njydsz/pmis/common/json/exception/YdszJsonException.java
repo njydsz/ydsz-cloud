@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.exception;
+package com.njydsz.pmis.common.json.exception;
 
 /**
  * YdszJson 异常基类（参考 Jackson 的 JsonProcessingException）

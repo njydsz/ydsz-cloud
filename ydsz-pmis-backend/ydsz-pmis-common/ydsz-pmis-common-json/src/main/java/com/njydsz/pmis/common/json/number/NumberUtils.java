@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.number;
+package com.njydsz.pmis.common.json.number;
 
 /**
  * 高性能数字编码工具类

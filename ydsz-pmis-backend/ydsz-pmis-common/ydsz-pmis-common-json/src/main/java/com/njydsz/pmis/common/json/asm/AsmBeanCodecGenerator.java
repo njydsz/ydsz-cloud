@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.asm;
+package com.njydsz.pmis.common.json.asm;
 
 import org.objectweb.asm.*;
 import com.njydsz.pmis.common.json.writer.JSONWriter;
@@ -1688,6 +1688,59 @@ public final class AsmBeanCodecGenerator {
         } catch (Exception e) {
             return ClassLoader.getSystemClassLoader();
         }
+    }
+
+    /**
+     * ASM 降级阈值分级
+     */
+    private static final int ASM_WARN_THRESHOLD = 5000;
+    private static final int ASM_DEGRADE_THRESHOLD = 8000;
+
+    /**
+     * ASM 降级级别
+     */
+    public enum AsmLevel {
+        /** ASM 字节码生成（最优性能） */
+        ASM,
+        /** ASM 生效但接近阈值，输出告警 */
+        ASM_WARN,
+        /** 接近阈值，仅对新类降级到反射 */
+        DEGRADED,
+        /** 完全降级到反射模式 */
+        REFLECTION
+    }
+
+    /**
+     * 获取当前 ASM 降级级别。
+     *
+     * @return 降级级别
+     */
+    public static AsmLevel getAsmLevel() {
+        if (degradedToReflection) {
+            return AsmLevel.REFLECTION;
+        }
+        int count = GENERATED_CLASS_COUNT.get();
+        if (count >= ASM_CLASS_THRESHOLD) {
+            return AsmLevel.REFLECTION;
+        }
+        if (count >= ASM_DEGRADE_THRESHOLD) {
+            return AsmLevel.DEGRADED;
+        }
+        if (count >= ASM_WARN_THRESHOLD) {
+            return AsmLevel.ASM_WARN;
+        }
+        return AsmLevel.ASM;
+    }
+
+    /**
+     * 获取 ASM 统计信息。
+     *
+     * @return 统计信息字符串
+     */
+    public static String getAsmStats() {
+        return String.format(
+            "ASM Level: %s, Generated: %d/%d, Degraded: %b",
+            getAsmLevel(), GENERATED_CLASS_COUNT.get(), ASM_CLASS_THRESHOLD, degradedToReflection);
     }
 
     /**

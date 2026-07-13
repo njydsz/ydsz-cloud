@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.provider;
+package com.njydsz.pmis.common.json.provider;
 
 import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
 import com.njydsz.pmis.common.json.asm.AsmSerializer;
@@ -14,7 +14,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import com.njydsz.pmis.common.json.writer.BeanSerializer;
-import com.njydsz.pmis.common.json.writer.JSONWriter.Feature.PrettyPrint.isEnabled;
 
 /**
  * Remi 序列化提供者（架构层）

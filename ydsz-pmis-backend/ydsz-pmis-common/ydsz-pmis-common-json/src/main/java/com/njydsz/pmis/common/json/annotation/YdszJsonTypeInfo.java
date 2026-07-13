@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.annotation;
+package com.njydsz.pmis.common.json.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

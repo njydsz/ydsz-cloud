@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.provider;
+package com.njydsz.pmis.common.json.provider;
 
 /**
  * 类型转换与值解析工具

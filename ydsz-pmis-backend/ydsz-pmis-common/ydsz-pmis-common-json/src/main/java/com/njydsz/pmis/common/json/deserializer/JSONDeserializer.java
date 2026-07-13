@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.deserializer;
+package com.njydsz.pmis.common.json.deserializer;
 
 /**
  * 自定义反序列化器接口

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.bytecode;
+package com.njydsz.pmis.common.json.bytecode;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

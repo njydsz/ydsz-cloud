@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.module;
+package com.njydsz.pmis.common.json.module;
 
 import com.njydsz.pmis.common.json.deserializer.JsonDeserializer;
 import com.njydsz.pmis.common.json.serializer.JsonSerializer;

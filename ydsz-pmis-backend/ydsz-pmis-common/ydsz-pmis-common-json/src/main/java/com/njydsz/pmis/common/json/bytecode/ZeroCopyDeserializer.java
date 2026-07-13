@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.json.bytecode;
+package com.njydsz.pmis.common.json.bytecode;
 
 import com.njydsz.pmis.common.json.autotype.AutoTypeChecker;
 import com.njydsz.pmis.common.json.exception.JsonDeserializationException;
