@@ -6,6 +6,9 @@ import com.njydsz.pmis.common.notify.core.NotifyServiceImpl;
 import com.njydsz.pmis.common.notify.core.PersistentNotifyRetryQueue;
 import com.njydsz.pmis.common.notify.ratelimit.NotifyRateLimiterManager;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
@@ -27,15 +30,17 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
 
 /**
  * 统一消息通知自动配置类
  *
- * <p>注意：邮件发送 Bean 由 {@code ydsz-pmis-common-email} 模块的 {@code EmailConfiguration} 负责创建，
- * 各渠道 Sender（WeCom/DingTalk/Feishu）通过实现 {@link NotifyChannelStrategy} 接口自动注册。
- * 本配置类仅负责统一 {@code NotifyService} 的组装。
+ * <p>各渠道 Sender（Email/SMS/WeCom/DingTalk/Feishu）通过实现 {@link NotifyChannelStrategy} 接口自动注册。
+ * 邮件渠道的 {@link JavaMailSender} Bean 由本配置类根据 {@code ydsz.notify.email} 配置自动创建。
+ * 若容器中已存在 {@link JavaMailSender} Bean（如由 spring-boot-starter-mail 自动配置），则不重复创建。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -55,6 +60,66 @@ public class NotifyConfiguration {
 	private NotifyService notifyServiceInstance;
 	/** 通知重试队列实例，供定时任务消费重试队列时使用 */
 	private NotifyRetryQueue retryQueueInstance;
+
+	/**
+	 * 创建邮件发送器 {@link JavaMailSender}。
+	 *
+	 * <p>根据 {@code ydsz.notify.email} 配置构建 SMTP 连接参数，支持 SSL/TLS 加密、STARTTLS 升级、
+	 * 自定义 JavaMail 属性等。当邮件渠道未启用或 SMTP 主机未配置时，不创建该 Bean。
+	 *
+	 * <p>若容器中已存在 {@link JavaMailSender} Bean（如通过 spring.mail.* 标准配置自动装配），
+	 * 则不重复创建，使用已有 Bean。
+	 *
+	 * @param properties 通知配置属性
+	 * @return JavaMailSender 实例
+	 */
+	@Bean
+	@ConditionalOnMissingBean(JavaMailSender.class)
+	@ConditionalOnClass(JavaMailSender.class)
+	@ConditionalOnProperty(prefix = "ydsz.notify.email", name = "enabled", havingValue = "true")
+	public JavaMailSender notifyJavaMailSender(NotifyProperties properties) {
+		NotifyProperties.EmailConfig email = properties.getEmail();
+		JavaMailSenderImpl sender = new JavaMailSenderImpl();
+		sender.setHost(email.getSmtpHost());
+		sender.setPort(email.getSmtpPort());
+		sender.setUsername(email.getFromMail());
+		sender.setPassword(email.getPassword());
+		sender.setDefaultEncoding(email.getEncoding());
+		sender.setProtocol(email.getSsl().isEnabled() ? "smtps" : "smtp");
+
+		Properties props = sender.getJavaMailProperties();
+		props.put("mail.smtp.auth", String.valueOf(email.isAuth()));
+		props.put("mail.smtp.connectiontimeout", String.valueOf(email.getConnectionTimeout()));
+		props.put("mail.smtp.timeout", String.valueOf(email.getTimeout()));
+		props.put("mail.smtp.writetimeout", String.valueOf(email.getWriteTimeout()));
+		props.put("mail.smtp.debug", String.valueOf(email.isDebug()));
+
+		if (email.getSsl().isEnabled()) {
+			props.put("mail.smtp.ssl.enable", "true");
+			props.put("mail.smtp.ssl.protocols", email.getSsl().getProtocols());
+			props.put("mail.smtp.ssl.checkserveridentity",
+					String.valueOf(email.getSsl().isCheckServerIdentity()));
+			if (StringUtils.hasText(email.getSsl().getTrustStorePath())) {
+				props.put("mail.smtp.ssl.trust", email.getSsl().getTrustStorePath());
+			}
+		}
+
+		if (email.isStarttls()) {
+			props.put("mail.smtp.starttls.enable", "true");
+			props.put("mail.smtp.starttls.required", "true");
+		}
+
+		// 注入额外 JavaMail 属性
+		if (email.getProperties() != null) {
+			for (Map.Entry<String, String> entry : email.getProperties().entrySet()) {
+				props.put(entry.getKey(), entry.getValue());
+			}
+		}
+
+		log.info("[NotifyConfiguration] JavaMailSender bean registered, host={}, port={}, ssl={}, starttls={}",
+				email.getSmtpHost(), email.getSmtpPort(), email.getSsl().isEnabled(), email.isStarttls());
+		return sender;
+	}
 
 	/**
 	 * 创建用于通知渠道 HTTP 调用的 {@link RestTemplate}。

@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.notify.channel;
 
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
+import com.njydsz.pmis.common.notify.template.TemplateEngine;
 
 import java.util.List;
 
@@ -64,14 +65,14 @@ public interface NotifyChannelStrategy {
     /**
      * 设置模板引擎（可选）。
      *
-     * <p>通过此方法注入 {@link com.njydsz.pmis.common.notify.template.TemplateEngine} 实例后，
+     * <p>通过此方法注入 {@link TemplateEngine} 实例后，
      * {@link #sendTemplate} 可使用新模板引擎按模板 ID 渲染内容。
-     * 未设置时，各实现可使用默认的 {@link com.njydsz.pmis.common.notify.template.TemplateEngine}。
+     * 未设置时，各实现可使用默认的 {@link TemplateEngine}。
      *
      * @param templateEngine 模板引擎实例
-     * @see com.njydsz.pmis.common.notify.template.TemplateEngine
+     * @see TemplateEngine
      */
-    default void setTemplateEngine(com.njydsz.pmis.common.notify.template.TemplateEngine templateEngine) {
+    default void setTemplateEngine(TemplateEngine templateEngine) {
         // 默认空实现，按需覆盖
     }
 }

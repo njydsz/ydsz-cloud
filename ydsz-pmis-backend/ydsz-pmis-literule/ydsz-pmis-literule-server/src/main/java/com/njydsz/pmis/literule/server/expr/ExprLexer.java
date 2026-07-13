@@ -1,5 +1,6 @@
 package com.njydsz.pmis.literule.server.expr.liteexpr;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -272,11 +273,11 @@ public class ExprLexer {
         String lexeme = sb.toString();
         Object literal;
         if (isBigDecimal) {
-            literal = new java.math.BigDecimal(lexeme);
+            literal = new BigDecimal(lexeme);
         } else if (isHex) {
             literal = isLong ? Long.parseLong(lexeme.substring(2), 16) : Integer.parseInt(lexeme.substring(2), 16);
         } else if (isDecimal) {
-            literal = new java.math.BigDecimal(lexeme);
+            literal = new BigDecimal(lexeme);
         } else if (isLong) {
             literal = Long.parseLong(lexeme);
         } else {

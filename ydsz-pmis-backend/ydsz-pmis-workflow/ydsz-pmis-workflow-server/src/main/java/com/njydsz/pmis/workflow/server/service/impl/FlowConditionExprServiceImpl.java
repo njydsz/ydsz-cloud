@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.definition;
 
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
 import com.njydsz.pmis.workflow.infra.mapper.definition.FlowNodeMapper;
 import com.njydsz.pmis.workflow.server.service.definition.FlowConditionExprService;

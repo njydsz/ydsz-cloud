@@ -63,8 +63,8 @@ public class TemplatePreviewController {
         }
 
         Map<String, String> result = new HashMap<>();
-        BaseResponse.put("content", templateEngine.render(template.getContent(), params));
-        BaseResponse.put("subject", templateEngine.render(
+        result.put("content", templateEngine.render(template.getContent(), params));
+        result.put("subject", templateEngine.render(
                 template.getSubject() == null ? "" : template.getSubject(), params));
         return BaseResponse.ok(result);
     }

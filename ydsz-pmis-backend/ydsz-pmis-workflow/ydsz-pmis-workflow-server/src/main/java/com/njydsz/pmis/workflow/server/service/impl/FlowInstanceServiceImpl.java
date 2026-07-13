@@ -9,7 +9,7 @@ import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.LoginUser;
 import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.server.engine.FlowAdvancer;

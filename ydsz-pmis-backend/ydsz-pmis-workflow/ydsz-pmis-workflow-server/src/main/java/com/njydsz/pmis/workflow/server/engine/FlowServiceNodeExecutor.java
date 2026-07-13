@@ -4,7 +4,7 @@ import com.googlecode.aviator.AviatorEvaluator;
 import com.googlecode.aviator.Expression;
 import com.googlecode.aviator.Feature;
 import com.googlecode.aviator.Options;
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.workflow.domain.entity.definition.FlowNodeDO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;

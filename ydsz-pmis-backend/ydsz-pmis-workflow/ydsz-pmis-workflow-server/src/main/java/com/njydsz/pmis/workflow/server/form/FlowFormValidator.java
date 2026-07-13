@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.form;
 
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;

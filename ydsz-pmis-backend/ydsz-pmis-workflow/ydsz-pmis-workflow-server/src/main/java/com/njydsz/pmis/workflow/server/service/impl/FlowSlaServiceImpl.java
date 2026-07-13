@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.service.impl.analytics;
 
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.server.engine.FlowClusterLockHelper;
 import com.njydsz.pmis.workflow.server.engine.FlowNotificationHelper;

@@ -108,8 +108,9 @@ public class MessageController {
             producer.asyncSend(request);
             // 异步投递成功,返回 messageId 供追踪
             MessageResult result = MessageResult.ok(request.getChannel(), request.getMessageId());
-            BaseResponse.setErrorMessage("ASYNC_QUEUED");
-            return BaseResponse.ok(result);
+            BaseResponse<MessageResult> response = BaseResponse.ok(result);
+            response.setMsg("ASYNC_QUEUED");
+            return response;
         } catch (Exception e) {
             log.error("[MessageController] 异步投递失败,降级同步: err={}", e.getMessage());
             return BaseResponse.ok(messageService.send(request));
@@ -181,8 +182,8 @@ public class MessageController {
                                                 @RequestParam(defaultValue = "20") long size) {
         MessageLogQueryDTO query = new MessageLogQueryDTO();
         query.setBizId(batchId);
-        query.setPage(page);
-        query.setSize(size);
+        query.setPageNum((int) page);
+        query.setPageSize((int) size);
         return BaseResponse.ok(messageService.pageLog(query));
     }
 }

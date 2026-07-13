@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.auth.context.AuthContext;
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.workflow.server.engine.FlowAdvancer;
 import com.njydsz.pmis.workflow.server.engine.JsonHelper;
 import com.njydsz.pmis.workflow.domain.entity.integration.FlowEventSubscriptionDO;

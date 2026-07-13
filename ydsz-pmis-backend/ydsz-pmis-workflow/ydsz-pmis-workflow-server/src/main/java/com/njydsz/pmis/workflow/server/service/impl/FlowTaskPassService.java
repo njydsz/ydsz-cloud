@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.workflow.domain.dto.instance.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.server.engine.FlowAdvancer;
 import com.njydsz.pmis.workflow.domain.entity.instance.FlowInstanceDO;
