@@ -158,7 +158,7 @@ public class FlowTaskQueryServiceImpl {
         int offset = (safePage - 1) * safeSize;
         List<FlowRunTaskDO> list = taskMapper.selectTodoByAssigneePage(assigneeId, tid, offset, safeSize);
         long total = taskMapper.countTodoByAssignee(assigneeId, tid);
-        return PageResponse.of(list, total, safePage, safeSize);
+        return PageResponse.success(total, (long) safePage, (long) safeSize, list);
     }
 
     /**
@@ -177,7 +177,7 @@ public class FlowTaskQueryServiceImpl {
             list.add(hisToTask(his));
         }
         long total = hisTaskMapper.countDoneByAssignee(assigneeId, tid);
-        return PageResponse.of(list, total, safePage, safeSize);
+        return PageResponse.success(total, (long) safePage, (long) safeSize, list);
     }
 
     /**
@@ -199,7 +199,7 @@ public class FlowTaskQueryServiceImpl {
         }
         long total = hisTaskMapper.countDone(assigneeId, businessType, flowCode,
                 startTime, endTime, tid);
-        return PageResponse.of(list, total, safePage, safeSize);
+        return PageResponse.success(total, (long) safePage, (long) safeSize, list);
     }
 
     // ============================== 统计查询 ==============================

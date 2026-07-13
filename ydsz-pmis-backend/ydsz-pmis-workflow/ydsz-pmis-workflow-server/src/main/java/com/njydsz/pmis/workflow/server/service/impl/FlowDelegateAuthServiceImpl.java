@@ -240,7 +240,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
                .orderByDesc(FlowAuditLogDO::getCreatedAt)
                .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
         List<FlowAuditLogDO> list = auditLogMapper.selectList(wrapper);
-        return PageResponse.of(list, list.size(), safePage, safeSize);
+        return PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
     }
 
     @Override
@@ -257,7 +257,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
                .orderByDesc(FlowAuditLogDO::getCreatedAt)
                .last("LIMIT " + safeSize + " OFFSET " + (safePage - 1) * safeSize);
         List<FlowAuditLogDO> list = auditLogMapper.selectList(wrapper);
-        return PageResponse.of(list, list.size(), safePage, safeSize);
+        return PageResponse.success((long) list.size(), (long) safePage, (long) safeSize, list);
     }
 
     // ==================== P1-7: 链式解析代理人 ====================

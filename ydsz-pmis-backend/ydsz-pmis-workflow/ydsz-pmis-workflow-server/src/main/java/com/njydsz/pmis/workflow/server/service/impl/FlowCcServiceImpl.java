@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.workflow.server.service.impl.notification;
+package com.njydsz.pmis.workflow.server.service.impl.notification;
 
 import com.njydsz.pmis.common.core.constant.PageConstants;
 import com.njydsz.pmis.common.core.response.PageResponse;
@@ -171,7 +171,7 @@ public class FlowCcServiceImpl implements FlowCcService {
             List<FlowCcDO> list = ccMapper.selectCcByUserPage(tenantId, userId,
                     readStatus, flowCode, offset, size);
             long total = ccMapper.countCcByUser(tenantId, userId, readStatus, flowCode);
-            return PageResponse.of(list, total, page, size);
+            return PageResponse.success(total, (long) page, (long) size, list);
         } catch (Exception e) {
             log.error("[FlowCc] 分页查询异常: userId={} err={}", userId, e.getMessage(), e);
             return PageResponse.success(null);

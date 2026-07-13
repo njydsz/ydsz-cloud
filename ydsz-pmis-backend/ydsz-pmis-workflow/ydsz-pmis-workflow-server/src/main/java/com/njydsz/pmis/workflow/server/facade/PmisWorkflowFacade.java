@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.workflow.server.facade;
+package com.njydsz.pmis.workflow.server.facade;
 
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.auth.context.AuthContext;
@@ -143,7 +143,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
                 businessType, null, flowStatus, startTime, endTime,
                 AuthContext.getTenantIdOrDefault("1"), page, size);
         List<Map<String, Object>> list = pageResult.getData().stream().map(this::instanceToMap).toList();
-        return PageResponse.of(list, pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize());
+        return PageResponse.success(pageResult.getTotal(), pageResult.getPageNum(), pageResult.getPageSize(), list);
     }
 
     @Override

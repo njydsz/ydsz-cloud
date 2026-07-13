@@ -694,7 +694,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 dataScopeFilter, offset, safeSize);
         long total = instanceMapper.countPage(
                 businessType, initiatorId, flowStatus, startTime, endTime, tenantId, dataScopeFilter);
-        return PageResponse.of(list, total, safePage, safeSize);
+        return PageResponse.success(total, (long) safePage, (long) safeSize, list);
     }
 
     // ============================== P2-24: 流程变量读写 ==============================
