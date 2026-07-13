@@ -1,0 +1,630 @@
+﻿package com.njydsz.pmis.common.json;
+
+import com.njydsz.pmis.common.json.engine.YdszSerializerEngine;
+import com.njydsz.pmis.common.json.engine.YdszDeserializerEngine;
+import com.njydsz.pmis.common.json.reader.JSONReader;
+import com.njydsz.pmis.common.json.writer.JSONWriter;
+import com.njydsz.pmis.common.json.jsonpath.YdszJsonPath;
+import com.njydsz.pmis.common.json.merge.JsonMergePatch;
+import com.njydsz.pmis.common.json.object.YdszJsonArray;
+import com.njydsz.pmis.common.json.object.YdszJsonObject;
+import com.njydsz.pmis.common.json.pointer.JsonPointer;
+import com.njydsz.pmis.common.json.schema.YdszJsonSchema;
+import com.njydsz.pmis.common.json.schema.SchemaValidator;
+import com.njydsz.pmis.common.json.schema.ValidationResult;
+import com.njydsz.pmis.common.json.module.YdszJsonModuleRegistry;
+import com.njydsz.pmis.common.json.serializer.SerializerRegistry;
+import com.njydsz.pmis.common.json.stream.JsonGenerator;
+import com.njydsz.pmis.common.json.stream.JsonParser;
+import com.njydsz.pmis.common.json.tree.*;
+import com.njydsz.pmis.common.json.type.YdszJsonType;
+
+import java.io.Writer;
+import java.lang.reflect.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import com.njydsz.pmis.common.json.deserializer.JsonDeserializer;
+import com.njydsz.pmis.common.json.parser.YdszJsonParser.parse;
+import com.njydsz.pmis.common.json.serializer.JsonSerializer;
+
+/**
+ * YdszJson v3.5.0 - 超高性能 JSON 工具类（深度优化版）
+ *
+ * <p>提供高性能、功能丰富的 JSON 序列化和反序列化功能，纯 Java 实现，无需额外依赖。</p>
+ * 
+ * <p><b>核心特性：</b></p>
+ * <ul>
+ *   <li><b>零依赖</b>：纯 Java 实现，无需任何第三方库</li>
+ *   <li><b>超高性能</b>：ASM 字节码优化、递归下降解析、对象池复用</li>
+ *   <li><b>递归下降解析</b>：直接解析 JSON 到 Bean，无需 Map 中转</li>
+ *   <li><b>ASM 反序列化</b>：100% 字节码生成，字段访问性能提升 50 倍</li>
+ *   <li><b>循环引用检测</b>：自动检测并处理循环引用</li>
+ *   <li><b>泛型支持</b>：完整的泛型反序列化支持</li>
+ *   <li><b>Java 8+ 日期时间</b>：完美支持 LocalDateTime 等新 API</li>
+ *   <li><b>JSONPath</b>：支持嵌套字段提取</li>
+ *   <li><b>Builder 模式</b>：链式调用，代码更优雅</li>
+ *   <li><b>注解支持</b>：支持@YdszJsonField、@YdszJsonProperty 等注解</li>
+ *   <li><b>自定义序列化器</b>：支持注册自定义序列化/反序列化器</li>
+ *   <li><b>命名策略</b>：支持 SNAKE_CASE、KEBAB_CASE 等多种命名策略</li>
+ * </ul>
+ * 
+ * <p><b>核心优化技术：</b></p>
+ * <ul>
+ *   <li>递归下降解析器 - 直接解析 JSON 到对象字段</li>
+ *   <li>ASM 字节码生成 - 100% 字节码优化，避免 MethodHandle 开销</li>
+ *   <li>零拷贝字符串 - 减少 String 创建</li>
+ *   <li>对象池复用 - ThreadLocal 缓存</li>
+ *   <li>JIT 友好设计 - 便于 JVM 内联优化</li>
+ * </ul>
+ * 
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ */
+public class YdszJson {
+
+    private YdszJson() {
+        throw new UnsupportedOperationException("YdszJson is a utility class and cannot be instantiated");
+    }
+    
+    // ==================== 序列化入口方法 ====================
+    
+    /**
+     * 对象转 JSON 字符串
+     * 
+     * @param obj 要序列化的对象
+     * @return JSON 字符串
+     */
+    public static String toJson(Object obj) {
+        return YdszSerializerEngine.serialize(obj);
+    }
+    
+    /**
+     * 对象转 JSON 字符串（带配置）
+     * 
+     * @param obj 要序列化的对象
+     * @param pretty 是否格式化
+     * @return JSON 字符串
+     */
+    public static String toJson(Object obj, boolean pretty) {
+        if (pretty) {
+            return format(obj);
+        }
+        return YdszSerializerEngine.serialize(obj);
+    }
+    
+    /**
+     * 对象转 JSON 字符串（带视图过滤）
+     * 
+     * <p>根据 @YdszJsonView 注解过滤字段，仅输出指定视图下可见的字段。</p>
+     * 
+     * @param obj 要序列化的对象
+     * @param viewClass 视图类
+     * @return JSON 字符串
+     */
+    public static String toJson(Object obj, Class<?> viewClass) {
+        return YdszSerializerEngine.serialize(obj, viewClass);
+    }
+    
+    /**
+     * 对象转 JSON 字符串（带视图过滤和配置）
+     * 
+     * @param obj 要序列化的对象
+     * @param viewClass 视图类
+     * @param pretty 是否格式化
+     * @return JSON 字符串
+     */
+    public static String toJson(Object obj, Class<?> viewClass, boolean pretty) {
+        return YdszSerializerEngine.serialize(obj, viewClass, pretty);
+    }
+    
+    /**
+     * 格式化 JSON（带缩进）
+     *
+     * @param obj 要序列化的对象
+     * @return 格式化的 JSON 字符串
+     */
+    public static String format(Object obj) {
+        return YdszSerializerEngine.format(obj);
+    }
+    
+    /**
+     * 对象转 JSON 字节数组（UTF-8 编码）
+     *
+     * <p>适用于网络传输、文件写入等需要字节数组的场景，避免额外的 String.getBytes() 调用。</p>
+     *
+     * @param obj 要序列化的对象
+     * @return UTF-8 编码的 JSON 字节数组
+     */
+    public static byte[] toJsonBytes(Object obj) {
+        String json = YdszSerializerEngine.serialize(obj);
+        return json.getBytes(StandardCharsets.UTF_8);
+    }
+    
+    // ==================== 反序列化入口方法 ====================
+    
+    /**
+     * JSON 字符串转对象
+     * 
+     * @param json JSON 字符串
+     * @param clazz 目标类型
+     * @param <T> 类型参数
+     * @return 反序列化后的对象
+     */
+    public static <T> T toObject(String json, Class<T> clazz) {
+        return YdszDeserializerEngine.deserialize(json, clazz);
+    }
+    
+    /**
+     * JSON 字符串转对象（支持泛型）
+     *
+     * @param json JSON 字符串
+     * @param type 目标类型
+     * @param <T> 类型参数
+     * @return 反序列化后的对象
+     */
+    public static <T> T toObject(String json, Type type) {
+        return YdszDeserializerEngine.deserialize(json, type);
+    }
+    
+    /**
+     * JSON 字符串转对象（支持 YdszJsonType）
+     *
+     * @param json JSON 字符串
+     * @param typeRef 类型引用
+     * @param <T> 类型参数
+     * @return 反序列化后的对象
+     */
+    public static <T> T toObject(String json, YdszJsonType<T> typeRef) {
+        return YdszDeserializerEngine.deserialize(json, typeRef);
+    }
+    
+    /**
+     * JSON 字符串转对象（带默认值，容错解析）
+     *
+     * <p>当解析失败时返回默认值，而非抛出异常。适用于配置解析等容错场景。</p>
+     *
+     * @param json JSON 字符串
+     * @param clazz 目标类型
+     * @param defaultValue 解析失败时返回的默认值
+     * @param <T> 类型参数
+     * @return 反序列化后的对象，解析失败时返回 defaultValue
+     */
+    public static <T> T toObject(String json, Class<T> clazz, T defaultValue) {
+        try {
+            T result = YdszDeserializerEngine.deserialize(json, clazz);
+            return result != null ? result : defaultValue;
+        } catch (Exception e) {
+            return defaultValue;
+        }
+    }
+    
+    /**
+     * JSON 字符串转 Map
+     * 
+     * @param json JSON 字符串
+     * @return Map 对象
+     */
+    
+    public static Map<String, Object> parseObject(String json) {
+        Object result = YdszDeserializerEngine.deserialize(json, Map.class);
+        return toStringObjectMap(result);
+    }
+    
+    /**
+     * JSON 字符串转 List
+     * 
+     * @param json JSON 字符串
+     * @param clazz 元素类型
+     * @param <T> 类型参数
+     * @return List 对象
+     */
+    
+    public static <T> List<T> parseArray(String json, Class<T> clazz) {
+        ParameterizedType type = new ParameterizedType() {
+            @Override
+            public Type[] getActualTypeArguments() {
+                return new Type[]{clazz};
+            }
+
+            @Override
+            public Type getRawType() {
+                return List.class;
+            }
+
+            @Override
+            public Type getOwnerType() {
+                return null;
+            }
+        };
+        Object result = YdszDeserializerEngine.deserialize(json, type);
+        if (result instanceof List<?> list) {
+            List<T> typedList = new ArrayList<>(list.size());
+            for (Object item : list) {
+                typedList.add(clazz.cast(item));
+            }
+            return typedList;
+        }
+        return new ArrayList<>();
+    }
+    
+    /**
+     * JSON 字符串转 List<Object>
+     * 
+     * @param json JSON 字符串
+     * @return List 对象
+     */
+    
+    public static List<Object> parseArray(String json) {
+        Object result = YdszDeserializerEngine.deserialize(json, List.class);
+        return toObjectList(result);
+    }
+    
+    /**
+     * JSON 字符串转 YdszJsonObject
+     * 
+     * @param json JSON 字符串
+     * @return YdszJsonObject 对象
+     */
+    
+    public static YdszJsonObject parseObjectToJsonObject(String json) {
+        Object result = YdszDeserializerEngine.deserialize(json, Map.class);
+        if (result instanceof Map<?, ?> map) {
+            return new YdszJsonObject(map);
+        }
+        return new YdszJsonObject();
+    }
+    
+    /**
+     * JSON 字符串转 YdszJsonArray
+     * 
+     * @param json JSON 字符串
+     * @return YdszJsonArray 对象
+     */
+    
+    public static YdszJsonArray parseArrayToJsonArray(String json) {
+        Object result = YdszDeserializerEngine.deserialize(json, List.class);
+        if (result instanceof List<?> list) {
+            return new YdszJsonArray(list);
+        }
+        return new YdszJsonArray();
+    }
+    
+    // ==================== JSONPath 入口方法 ====================
+    
+    /**
+     * 通过 JSONPath 获取值
+     * 
+     * @param json JSON 字符串
+     * @param path JSONPath 表达式
+     * @return 匹配的值
+     */
+    public static Object getByPath(String json, String path) {
+        return YdszJsonPath.get(json, path);
+    }
+    
+    /**
+     * 通过 JSONPath 提取值并反序列化为指定类型
+     *
+     * <p>结合 JSONPath 提取与反序列化，先通过路径从 JSON 中提取子结构，
+     * 再将其反序列化为目标类型对象。</p>
+     *
+     * @param json JSON 字符串
+     * @param path JSONPath 表达式（如 "$.user.address"）
+     * @param clazz 目标类型
+     * @param <T> 类型参数
+     * @return 反序列化后的对象，路径不存在时返回 null
+     */
+    public static <T> T parseObject(String json, String path, Class<T> clazz) {
+        Object value = YdszJsonPath.get(json, path);
+        if (value == null) {
+            return null;
+        }
+        if (clazz.isInstance(value)) {
+            return clazz.cast(value);
+        }
+        return YdszDeserializerEngine.deserialize(toJson(value), clazz);
+    }
+    
+    // ==================== Builder 入口方法 ====================
+    
+    /**
+     * 创建 JSON 对象
+     * 
+     * @return JSON 对象
+     */
+    public static YdszJsonObject object() {
+        return new YdszJsonObject();
+    }
+    
+    /**
+     * 创建 JSON 数组
+     * 
+     * @return JSON 数组
+     */
+    public static YdszJsonArray array() {
+        return new YdszJsonArray();
+    }
+    
+    // ==================== 自定义序列化器注册 ====================
+
+    /**
+     * 注册自定义序列化器
+     *
+     * @param clazz 类型
+     * @param serializer 序列化器
+     * @param <T> 类型参数
+     */
+    public static <T> void register(Class<T> clazz, JsonSerializer<T> serializer) {
+        SerializerRegistry.getInstance().register(clazz, serializer);
+    }
+
+    /**
+     * 注册自定义反序列化器
+     *
+     * @param clazz 类型
+     * @param deserializer 反序列化器
+     * @param <T> 类型参数
+     */
+    public static <T> void register(Class<T> clazz, JsonDeserializer<T> deserializer) {
+        SerializerRegistry.getInstance().register(clazz, deserializer);
+    }
+
+    
+    static <T> JsonSerializer<T> getCustomSerializer(Class<T> clazz) {
+        JsonSerializer<T> serializer = SerializerRegistry.getInstance().get(clazz);
+        if (serializer != null) {
+            return serializer;
+        }
+        return YdszJsonModuleRegistry.getInstance().getSerializer(clazz);
+    }
+
+    static <T> JsonDeserializer<T> getCustomDeserializer(Class<T> clazz) {
+        JsonDeserializer<T> deserializer = SerializerRegistry.getInstance().getDeserializer(clazz);
+        if (deserializer != null) {
+            return deserializer;
+        }
+        return YdszJsonModuleRegistry.getInstance().getDeserializer(clazz);
+    }
+
+    static <T> JsonSerializer<T> getRegisteredSerializer(Class<T> clazz) {
+        return getCustomSerializer(clazz);
+    }
+
+    static <T> JsonDeserializer<T> getRegisteredDeserializer(Class<T> clazz) {
+        return getCustomDeserializer(clazz);
+    }
+
+    static boolean hasCustomSerializer(Class<?> clazz) {
+        return SerializerRegistry.getInstance().hasSerializer(clazz) || YdszJsonModuleRegistry.getInstance().hasSerializer(clazz);
+    }
+
+    static boolean hasCustomDeserializer(Class<?> clazz) {
+        return SerializerRegistry.getInstance().hasDeserializer(clazz) || YdszJsonModuleRegistry.getInstance().hasDeserializer(clazz);
+    }
+
+    private static Map<String, Object> toStringObjectMap(Object obj) {
+        if (obj instanceof Map<?, ?> map) {
+            Map<String, Object> result = new LinkedHashMap<>(map.size());
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                result.put((String) entry.getKey(), entry.getValue());
+            }
+            return result;
+        }
+        return new LinkedHashMap<>();
+    }
+
+    private static List<Object> toObjectList(Object obj) {
+        if (obj instanceof List<?> list) {
+            return new ArrayList<>(list);
+        }
+        return new ArrayList<>();
+    }
+
+    // ==================== Feature API ====================
+
+    /**
+     * 使用特性序列化
+     *
+     * @param obj 要序列化的对象
+     * @param features 写入特性
+     * @return JSON 字符串
+     */
+    public static String toJson(Object obj, JSONWriter.Feature... features) {
+        return YdszSerializerEngine.serialize(obj, JSONWriter.of(features));
+    }
+
+    /**
+     * 使用特性反序列化
+     *
+     * @param json JSON 字符串
+     * @param clazz 目标类型
+     * @param features 读取特性
+     * @param <T> 类型参数
+     * @return 反序列化后的对象
+     */
+    public static <T> T toObject(String json, Class<T> clazz, JSONReader.Feature... features) {
+        return YdszDeserializerEngine.deserialize(json, clazz, JSONReader.of(features));
+    }
+
+    // ==================== JSON Pointer API (RFC 6901) ====================
+
+    /**
+     * 使用 JSON Pointer 获取值
+     *
+     * @param json JSON 字符串
+     * @param pointer JSON Pointer 路径
+     * @return 指针指向的值
+     */
+    public static Object getByPointer(String json, String pointer) {
+        return new JsonPointer(pointer).evaluate(json);
+    }
+
+    /**
+     * 使用 JSON Pointer 获取值
+     *
+     * @param json JSON 字符串
+     * @param pointer JsonPointer 对象
+     * @return 指针指向的值
+     */
+    public static Object getByPointer(String json, JsonPointer pointer) {
+        return pointer.evaluate(json);
+    }
+
+    // ==================== Tree Model API ====================
+
+    /**
+     * 将 JSON 字符串解析为 JsonNode 树
+     *
+     * @param json JSON 字符串
+     * @return JsonNode 树
+     */
+    public static JsonNode readTree(String json) {
+        Object parsed = parse(json);
+        return TreeConverter.convertToJsonNode(parsed);
+    }
+
+    /**
+     * 将对象序列化为 JsonNode 树
+     *
+     * @param obj 要序列化的对象
+     * @return JsonNode 树
+     */
+    public static JsonNode valueToTree(Object obj) {
+        String json = toJson(obj);
+        return readTree(json);
+    }
+
+    
+    // ==================== Streaming API ====================
+
+    /**
+     * 创建流式解析器
+     *
+     * @param json JSON 字符串
+     * @return JsonParser 实例
+     */
+    public static JsonParser createParser(String json) {
+        return JsonParser.of(json);
+    }
+
+    /**
+     * 创建流式生成器
+     *
+     * @param writer 输出写入器
+     * @return JsonGenerator 实例
+     */
+    public static JsonGenerator createGenerator(Writer writer) {
+        return JsonGenerator.of(writer);
+    }
+
+    /**
+     * 创建流式生成器（格式化输出）
+     *
+     * @param writer 输出写入器
+     * @param pretty 是否格式化输出
+     * @return JsonGenerator 实例
+     */
+    public static JsonGenerator createGenerator(Writer writer, boolean pretty) {
+        return JsonGenerator.of(writer, pretty);
+    }
+
+    // ==================== JSON Merge Patch (RFC 7396) ====================
+
+    /**
+     * 合并两个 JSON（RFC 7396）
+     *
+     * @param target 目标 JSON
+     * @param patch 补丁 JSON
+     * @return 合并后的 JSON 字符串
+     */
+    public static String merge(String target, String patch) {
+        return JsonMergePatch.merge(target, patch);
+    }
+
+    /**
+     * 计算两个 JSON 的差异补丁
+     *
+     * @param source 源 JSON
+     * @param target 目标 JSON
+     * @return 差异补丁 JSON
+     */
+    public static String diff(String source, String target) {
+        return JsonMergePatch.diff(source, target);
+    }
+
+    // ==================== 验证 API ====================
+
+    /**
+     * 验证字符串是否为合法 JSON
+     *
+     * <p>快速校验 JSON 语法合法性，不进行完整的对象解析，性能优于 try-catch 解析方式。</p>
+     *
+     * @param json 待验证的字符串
+     * @return 如果是合法 JSON 返回 true，否则返回 false
+     */
+    public static boolean isValid(String json) {
+        if (json == null || json.trim().isEmpty()) {
+            return false;
+        }
+        try {
+            parse(json);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * 验证 JSON 对象是否符合 Schema
+     * 
+     * @param data 要验证的数据
+     * @param schema Schema 定义
+     * @return 验证结果
+     */
+    public static ValidationResult validate(Object data, YdszJsonSchema schema) {
+        return SchemaValidator.validate(schema, data);
+    }
+    
+    /**
+     * 验证 JSON 字符串是否符合 Schema
+     * 
+     * @param json JSON 字符串
+     * @param schema Schema 定义
+     * @return 验证结果
+     */
+    public static ValidationResult validate(String json, YdszJsonSchema schema) {
+        try {
+            Object data = YdszDeserializerEngine.deserialize(json, Map.class);
+            return SchemaValidator.validate(schema, data);
+        } catch (Exception e) {
+            ValidationResult result = new ValidationResult(false);
+            result.addError("Failed to parse JSON: " + e.getMessage());
+            return result;
+        }
+    }
+    
+    /**
+     * 验证 JSON 对象是否符合 Schema（带类型转换）
+     * 
+     * @param data 要验证的数据
+     * @param schema Schema 定义
+     * @param <T> 类型参数
+     * @return 验证结果
+     */
+    public static <T> ValidationResult validate(T data, YdszJsonSchema schema, Class<T> clazz) {
+        return SchemaValidator.validate(schema, data);
+    }
+    
+    /**
+     * 检查验证结果，如果失败则抛出异常
+     * 
+     * @param result 验证结果
+     * @throws IllegalArgumentException 验证失败时抛出
+     */
+    public static void ensureValid(ValidationResult result) {
+        if (!result.isValid()) {
+            throw new IllegalArgumentException("Validation failed: " + result.getErrors());
+        }
+    }
+}

@@ -1,0 +1,35 @@
+﻿package com.njydsz.pmis.common.json.annotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * 多态子类型列表注解
+ *
+ * <p>与 {@link YdszJsonTypeInfo} 配合使用，定义基类的所有可能子类型。</p>
+ *
+ * <p><b>使用示例：</b></p>
+ * <pre>
+ * &#064;YdszJsonTypeInfo(property = "type")
+ * &#064;YdszJsonSubTypes({
+ *     &#064;YdszJsonSubType(value = Dog.class, name = "dog"),
+ *     &#064;YdszJsonSubType(value = Cat.class, name = "cat")
+ * })
+ * public abstract class Animal { }
+ * </pre>
+ *
+ * @author Marvin Lee
+ * @email limw1888@126.com
+ * @version 3.5.0
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface YdszJsonSubTypes {
+
+    /**
+     * 子类型列表
+     */
+    YdszJsonSubType[] value();
+}
