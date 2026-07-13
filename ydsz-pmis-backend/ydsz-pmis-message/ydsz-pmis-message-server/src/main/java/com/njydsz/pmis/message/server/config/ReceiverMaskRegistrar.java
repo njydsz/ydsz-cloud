@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.server.config;
 
-import com.njydsz.pmis.common.sensitive.SensitiveUtil;
+import com.njydsz.pmis.common.safe.sensitive.SensitiveUtil;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

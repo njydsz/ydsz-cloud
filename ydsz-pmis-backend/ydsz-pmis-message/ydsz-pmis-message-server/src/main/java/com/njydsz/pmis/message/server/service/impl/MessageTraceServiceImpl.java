@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.impl.core;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.message.domain.entity.config.MsgTraceDO;
 import com.njydsz.pmis.message.domain.entity.config.MsgTraceDO.Node;

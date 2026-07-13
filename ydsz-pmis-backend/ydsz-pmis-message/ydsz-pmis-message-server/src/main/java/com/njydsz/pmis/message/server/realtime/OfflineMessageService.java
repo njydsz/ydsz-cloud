@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.realtime;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.message.domain.constant.MessageConstants;
 import com.njydsz.pmis.message.domain.entity.config.MsgOfflineDO;
 import com.njydsz.pmis.message.infra.mapper.config.MsgOfflineMapper;

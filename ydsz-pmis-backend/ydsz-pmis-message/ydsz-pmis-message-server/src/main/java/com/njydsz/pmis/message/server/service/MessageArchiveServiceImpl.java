@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.archive.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.pmis.message.server.service.archive.MessageArchiveService;

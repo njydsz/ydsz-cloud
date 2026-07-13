@@ -36,7 +36,7 @@ public interface TemplateEngine {
      * P0-3: 渲染模板并校验必填参数。
      *
      * <p>在渲染前校验 {@code requiredKeys} 中的 key 是否存在于 {@code params} 且非 null / 非空白字符串，
-     * 任一缺失抛 {@link com.njydsz.pmis.common.exception.SysException}（错误码 MISSING_PARAMETER）。
+     * 任一缺失抛 {@link com.njydsz.pmis.common.exception.custom.SysException}（错误码 MISSING_PARAMETER）。
      *
      * @param template     模板内容
      * @param params       参数映射，可为 null（此时若有 requiredKeys 则必抛异常）

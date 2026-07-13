@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.server.template;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;

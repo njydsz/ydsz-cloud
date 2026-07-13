@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.lock.annotation.Idempotent;
 
 import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.util.SortBy;
+import org.springframework.data.domain.Sort;
 import com.njydsz.pmis.project.domain.query.ProjectSearchVO;
 import com.njydsz.pmis.project.domain.query.UniversalSearchVO;
 import com.njydsz.pmis.project.server.service.SearchService;
@@ -57,7 +57,7 @@ public class SearchController {
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.execution.msg_9aaebb77}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.execution.msg_15154512}") @Max(100) int size) {
         return BaseResponse.ok(searchService.searchProjects(keyword,
-                PageRequest.of(page - 1, size, SortBy.desc(ProjectSearchVO::getCreatedAt))));
+                PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "createdAt"))));
     }
 
     /**

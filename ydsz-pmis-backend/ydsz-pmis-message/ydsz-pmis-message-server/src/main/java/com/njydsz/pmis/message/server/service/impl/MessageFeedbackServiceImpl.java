@@ -3,7 +3,7 @@ package com.njydsz.pmis.message.server.service.impl.core;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.dto.core.MessageFeedbackDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgFeedbackDO;

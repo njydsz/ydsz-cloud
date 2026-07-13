@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.config;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.message.domain.entity.config.MsgVariableSourceDO;
 import com.njydsz.pmis.message.infra.mapper.config.MsgVariableSourceMapper;
 import lombok.RequiredArgsConstructor;

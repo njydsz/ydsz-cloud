@@ -1,6 +1,6 @@
 package com.njydsz.pmis.message.server.realtime;
 
-import com.njydsz.pmis.common.token.JwtTokenProvider;
+import com.njydsz.pmis.common.auth.token.JwtTokenProvider;
 import com.njydsz.pmis.message.domain.constant.MessageConstants;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

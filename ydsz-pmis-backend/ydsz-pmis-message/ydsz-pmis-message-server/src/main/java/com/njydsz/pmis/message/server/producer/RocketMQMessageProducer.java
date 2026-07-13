@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.producer;
 
 import com.njydsz.pmis.common.constant.PmisMessageTopics;
 import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.util.JsonUtils;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.impl.receipt;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.message.domain.dto.receipt.ReceiptCallbackDTO;
 import com.njydsz.pmis.message.domain.entity.receipt.MsgReceiptDO;

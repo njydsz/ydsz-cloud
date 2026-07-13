@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.service.impl.canary;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
-import com.njydsz.pmis.common.exception.SysException;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.message.domain.dto.canary.CanaryReportVO;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 import com.njydsz.pmis.message.domain.enums.core.MessageStatusEnum;
