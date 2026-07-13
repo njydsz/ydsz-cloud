@@ -73,6 +73,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- EasyExcel（ExcelTemplate / ExcelUtil） -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>easyexcel</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>

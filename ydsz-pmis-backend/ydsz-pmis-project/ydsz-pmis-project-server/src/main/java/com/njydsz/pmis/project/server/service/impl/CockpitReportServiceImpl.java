@@ -1,9 +1,9 @@
 package com.njydsz.pmis.project.server.service.impl;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
+import com.njydsz.pmis.common.core.constant.CacheConstants;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.constant.CacheConstants;
-import com.njydsz.pmis.common.datasource.DataSourceConstants;
+import com.njydsz.pmis.common.jdbc.constant.DataSourceConstants;
 import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
 import com.njydsz.pmis.project.domain.dto.CockpitAlertSummaryVO;
 import com.njydsz.pmis.project.domain.dto.CockpitDrillDownDTO;
@@ -916,9 +916,9 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         if (b != null) dedup.addAll(b);
         if (c != null) dedup.addAll(c);
         List<String> result = new ArrayList<>(dedup);
-        BaseResponse.sort((x, y) -> y.compareTo(x));
-        if (BaseResponse.size() > limit) {
-            result = BaseResponse.subList(0, limit);
+        result.sort((x, y) -> y.compareTo(x));
+        if (result.size() > limit) {
+            result = result.subList(0, limit);
         }
         return result;
     }

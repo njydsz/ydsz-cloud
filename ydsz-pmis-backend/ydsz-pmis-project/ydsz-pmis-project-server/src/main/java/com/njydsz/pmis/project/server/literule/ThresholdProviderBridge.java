@@ -29,7 +29,7 @@ public class ThresholdProviderBridge implements ThresholdProvider {
 
     /** common 模块阈值提供器（委托目标） */
     @Qualifier("thresholdProvider")
-    private final com.njydsz.pmis.common.config.ThresholdProvider delegate; // FQN-OK: name conflict with literule ThresholdProvider
+    private final com.njydsz.pmis.common.core.config.ThresholdProvider delegate; // FQN: name conflict with literule ThresholdProvider
 
     @Override
     public String getString(String key, String defaultValue) {

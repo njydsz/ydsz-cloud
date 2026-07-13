@@ -1,6 +1,6 @@
 package com.njydsz.pmis.project.server.listener;
 
-import com.njydsz.pmis.common.event.ProjectChangeExecutedEvent;
+import com.njydsz.pmis.project.domain.event.ProjectChangeExecutedEvent;
 import com.njydsz.pmis.project.domain.dto.AlertDispatchDTO;
 import com.njydsz.pmis.project.server.service.AlertDispatchService;
 import com.njydsz.pmis.project.server.service.EvmMeasureService;

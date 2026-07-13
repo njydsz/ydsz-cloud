@@ -1,10 +1,10 @@
-﻿package com.njydsz.pmis.project.server.service.impl;
+package com.njydsz.pmis.project.server.service.impl;
 
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
-import com.njydsz.pmis.common.config.ThresholdProvider;
+import com.njydsz.pmis.common.core.config.ThresholdProvider;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
@@ -212,20 +212,20 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
     public Map<String, Object> recalculateBaseline(String initiationId, String reason) {
         Map<String, Object> result = new HashMap<>();
         if (initiationId == null) {
-            BaseResponse.put("ok", false);
-            BaseResponse.put("reason", "initiationId 不能为空");
+            result.put("ok", false);
+            result.put("reason", "initiationId 不能为空");
             return result;
         }
         int affected = (int) countByInitiation(initiationId);
         int version = baselineVersions
                 .computeIfAbsent(initiationId, k -> new AtomicInteger(0))
                 .incrementAndGet();
-        BaseResponse.put("ok", true);
-        BaseResponse.put("initiationId", initiationId);
-        BaseResponse.put("baselineVersion", version);
-        BaseResponse.put("affectedMeasures", affected);
-        BaseResponse.put("recalcReason", reason);
-        BaseResponse.put("recalcAt", System.currentTimeMillis());
+        result.put("ok", true);
+        result.put("initiationId", initiationId);
+        result.put("baselineVersion", version);
+        result.put("affectedMeasures", affected);
+        result.put("recalcReason", reason);
+        result.put("recalcAt", System.currentTimeMillis());
         log.info("[EVM] 基线重算: initiation={} version={} affected={} reason={}",
                 initiationId, version, affected, reason);
         return result;

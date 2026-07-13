@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.server.service.impl;
 
 import com.baomidou.dynamic.datasource.annotation.DS;
-import com.njydsz.pmis.common.datasource.DataSourceConstants;
+import com.njydsz.pmis.common.jdbc.constant.DataSourceConstants;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.project.infra.mapper.InitiationMapper;
 import com.njydsz.pmis.project.domain.query.ProjectSearchVO;

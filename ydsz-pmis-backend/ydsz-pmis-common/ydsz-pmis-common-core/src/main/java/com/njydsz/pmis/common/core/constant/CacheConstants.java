@@ -27,4 +27,7 @@ public final class CacheConstants {
 
     /** 用户按 ID 查询缓存名称 */
     public static final String USER_BY_ID_CACHE = "user:id";
+
+    /** 经营驾驶舱缓存名称 */
+    public static final String COCKPIT_CACHE = "cockpit";
 }
