@@ -73,9 +73,9 @@ public enum BaseResultCode implements ResultCode {
 
     // ==================== B3xxxx 用户/组织/人员 ====================
     USER_NOT_FOUND("B30001", "用户不存在"),
-    PASSWORD_INCORRECT("A30002", "密码错误"),
-    USER_DISABLED("A30003", "用户已停用"),
-    USER_LOCKED("A30004", "用户已被锁定"),
+    PASSWORD_INCORRECT("B30002", "密码错误"),
+    USER_DISABLED("B30003", "用户已停用"),
+    USER_LOCKED("B30004", "用户已被锁定"),
     USERNAME_DUPLICATE("B30005", "用户名已存在"),
     DEPARTMENT_NOT_FOUND("B30101", "部门不存在"),
     EMPLOYEE_NOT_FOUND("B30201", "员工不存在"),

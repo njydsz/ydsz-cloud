@@ -57,6 +57,18 @@ public class CacheThreadPoolManager implements DisposableBean {
     return instance;
   }
 
+  /**
+   * 设置全局单例实例（由 Spring 自动配置调用）
+   *
+   * <p>当 Spring 容器创建 CacheThreadPoolManager Bean 时，通过此方法替换静态单例，
+   * 使 Spring 的生命周期管理（DisposableBean）生效。
+   *
+   * @param manager Spring 管理的 CacheThreadPoolManager 实例
+   */
+  public static void setInstance(CacheThreadPoolManager manager) {
+    instance = manager;
+  }
+
   private final ConcurrentHashMap<String, ExecutorService> pools = new ConcurrentHashMap<>();
 
   /** 定时调度线程池映射 */

@@ -91,7 +91,8 @@ public class ContextKey<T> {
      * @return 值；若不存在且默认值非空返回默认值
      */
     public T get() {
-        return RequestContext.get(this);
+        T value = RequestContext.get(this);
+        return value != null ? value : defaultValue;
     }
 
     /**

@@ -5,9 +5,12 @@ package com.njydsz.pmis.common.core.constant;
  *
  * <p>定义系统中使用的协议前缀常量，包括 RMI/LDAP 查找协议和 HTTP/HTTPS 网络协议。
  *
+ * <p><b>预期用途：</b>主要用于安全防护场景（如 Log4j JNDI 注入防护），
+ * 通过校验用户输入是否包含 {@link #LOOKUP_RMI}、{@link #LOOKUP_LDAP}、{@link #LOOKUP_LDAPS}
+ * 等危险协议前缀来阻断 JNDI 注入攻击。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  */
 public final class ProtocolConstants {
 

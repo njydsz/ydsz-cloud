@@ -46,12 +46,12 @@ class TreeNodeTest {
     }
 
     @Test
-    @DisplayName("isLeafNode 在 children 为空时返回 true")
+    @DisplayName("isLeaf 在 children 为空时返回 true")
     void shouldReturnTrueForLeafNode() {
         TestNode node = new TestNode();
         node.setId("1");
         node.setChildren(new ArrayList<>());
-        assertTrue(node.isLeafNode());
+        assertTrue(node.isLeaf());
     }
 
     @Test
@@ -62,11 +62,11 @@ class TreeNodeTest {
     }
 
     @Test
-    @DisplayName("getDepth 应返回节点层级深度")
-    void shouldReturnDepth() {
+    @DisplayName("getLevel 应返回节点层级深度")
+    void shouldReturnLevel() {
         TestNode root = buildTestTree();
         TestNode grandChild = root.getChildren().get(0).getChildren().get(0);
-        assertEquals(3, grandChild.getDepth());
+        assertEquals(3, grandChild.getLevel());
     }
 
     @Test

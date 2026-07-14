@@ -10,7 +10,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiConsumer;
@@ -25,6 +24,7 @@ import com.njydsz.pmis.common.cache.api.CachePolicy;
 import com.njydsz.pmis.common.cache.listener.RemovalListener;
 import com.njydsz.pmis.common.cache.stats.CacheStats;
 import com.njydsz.pmis.common.cache.support.AsyncFunction;
+import com.njydsz.pmis.common.cache.support.CacheThreadPoolManager;
 import com.njydsz.pmis.common.cache.support.CacheWriter;
 
 /**
@@ -127,11 +127,8 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
     this.batchSize = batchSize;
     this.maxQueueSize = maxQueueSize;
 
-    this.batchExecutor = new ScheduledThreadPoolExecutor(1, r -> {
-      Thread t = new Thread(r, "WriteBehind-Flusher");
-      t.setDaemon(true);
-      return t;
-    });
+    this.batchExecutor =
+        CacheThreadPoolManager.getInstance().getOrCreateScheduledPool("write-behind-flusher", 1);
     this.batchExecutor.scheduleWithFixedDelay(
         this::flushBatch, flushIntervalMs, flushIntervalMs, TimeUnit.MILLISECONDS);
 
@@ -239,12 +236,7 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
   public void close() {
     // 刷新剩余操作
     flushBatch();
-    batchExecutor.shutdown();
-    try {
-      batchExecutor.awaitTermination(10, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
+    // 线程池由 CacheThreadPoolManager 统一管理，不单独关闭
     log.info("WriteBehindCache 已关闭");
   }
 

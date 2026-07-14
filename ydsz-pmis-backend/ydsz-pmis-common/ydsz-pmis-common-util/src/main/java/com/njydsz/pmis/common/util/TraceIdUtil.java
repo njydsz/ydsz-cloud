@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.util;
 
 import org.slf4j.MDC;
 
+import com.njydsz.pmis.common.core.constant.TraceConstants;
 import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
 
 /**
@@ -20,7 +21,7 @@ import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
 public final class TraceIdUtil {
 
     /** MDC 中 TraceId 的键名 */
-    public static final String TRACE_ID_KEY = "traceId";
+    public static final String TRACE_ID_KEY = TraceConstants.MDC_TRACE_ID_KEY;
 
     private TraceIdUtil() {
         throw new UnsupportedOperationException("Utility class");

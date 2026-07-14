@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -23,6 +22,7 @@ import com.njydsz.pmis.common.cache.api.CachePolicy;
 import com.njydsz.pmis.common.cache.listener.RemovalListener;
 import com.njydsz.pmis.common.cache.stats.CacheStats;
 import com.njydsz.pmis.common.cache.support.AsyncFunction;
+import com.njydsz.pmis.common.cache.support.CacheThreadPoolManager;
 
 /**
  * 内存感知淘汰装饰器 — 根据 JVM 堆内存使用率自动淘汰缓存条目
@@ -77,12 +77,7 @@ public class MemoryAwareEvictionCache<K, V> implements Cache<K, V>, AutoCloseabl
     this.evictThreshold = evictThreshold;
     this.criticalThreshold = criticalThreshold;
     this.monitor =
-        Executors.newSingleThreadScheduledExecutor(
-            r -> {
-              Thread t = new Thread(r, "MemoryAwareEviction-Monitor");
-              t.setDaemon(true);
-              return t;
-            });
+        CacheThreadPoolManager.getInstance().getOrCreateScheduledPool("memory-aware-monitor", 1);
     this.monitor.scheduleAtFixedRate(
         this::checkMemory, checkIntervalSeconds, checkIntervalSeconds, TimeUnit.SECONDS);
     log.info(
@@ -281,7 +276,7 @@ public class MemoryAwareEvictionCache<K, V> implements Cache<K, V>, AutoCloseabl
 
   @Override
   public void close() {
-    monitor.shutdownNow();
+    // 线程池由 CacheThreadPoolManager 统一管理，不单独关闭
     log.info("MemoryAwareEvictionCache 已关闭");
   }
 }

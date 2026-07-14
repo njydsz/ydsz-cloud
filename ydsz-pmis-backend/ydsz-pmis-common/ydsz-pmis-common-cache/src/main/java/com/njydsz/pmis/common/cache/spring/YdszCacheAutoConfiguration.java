@@ -87,7 +87,10 @@ public class YdszCacheAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean
   public CacheThreadPoolManager cacheThreadPoolManager() {
-    return new CacheThreadPoolManager();
+    CacheThreadPoolManager manager = new CacheThreadPoolManager();
+    // 将 Spring 管理的实例设置为全局单例，使 DisposableBean 生命周期管理生效
+    CacheThreadPoolManager.setInstance(manager);
+    return manager;
   }
 
   @Bean
