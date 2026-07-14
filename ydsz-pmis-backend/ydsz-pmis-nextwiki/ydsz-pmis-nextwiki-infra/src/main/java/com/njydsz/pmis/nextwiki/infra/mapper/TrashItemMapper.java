@@ -24,4 +24,9 @@ public interface TrashItemMapper extends BaseMapper<TrashItem> {
     List<TrashItem> findExpiredItems(@Param("limit") int limit);
 
     int countActiveTrash(@Param("userId") String userId);
+
+    /**
+     * 带 revision 乐观锁的更新（更新失败返回 0）
+     */
+    int updateWithRevision(@Param("trashItem") TrashItem trashItem);
 }

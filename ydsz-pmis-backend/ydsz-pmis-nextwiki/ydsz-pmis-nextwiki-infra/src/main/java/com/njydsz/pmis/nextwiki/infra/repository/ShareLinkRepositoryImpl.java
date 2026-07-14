@@ -2,6 +2,7 @@ package com.njydsz.pmis.nextwiki.infra.repository;
 
 import java.util.List;
 
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.pmis.nextwiki.domain.entity.ShareLink;
@@ -50,7 +51,18 @@ public class ShareLinkRepositoryImpl implements ShareLinkRepository {
 
     @Override
     public void update(ShareLink shareLink) {
-        shareLinkMapper.updateById(shareLink);
+        if (shareLink.getRevision() == null) {
+            // 兜底：未携带 revision 时退化为普通更新，避免业务阻断
+            shareLinkMapper.updateById(shareLink);
+            return;
+        }
+        int affected = shareLinkMapper.updateWithRevision(shareLink);
+        if (affected == 0) {
+            throw new OptimisticLockingFailureException(
+                    "ShareLink 乐观锁更新失败，id=" + shareLink.getId()
+                            + ", revision=" + shareLink.getRevision());
+        }
+        shareLink.setRevision(shareLink.getRevision() + 1);
     }
 
     @Override

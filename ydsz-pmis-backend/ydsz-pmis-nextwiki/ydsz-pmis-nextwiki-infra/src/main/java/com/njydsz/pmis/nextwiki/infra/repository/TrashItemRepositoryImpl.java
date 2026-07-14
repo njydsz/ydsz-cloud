@@ -2,6 +2,7 @@ package com.njydsz.pmis.nextwiki.infra.repository;
 
 import java.util.List;
 
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.pmis.nextwiki.domain.entity.TrashItem;
@@ -50,7 +51,18 @@ public class TrashItemRepositoryImpl implements TrashItemRepository {
 
     @Override
     public void update(TrashItem trashItem) {
-        trashItemMapper.updateById(trashItem);
+        if (trashItem.getRevision() == null) {
+            // 兜底：未携带 revision 时退化为普通更新，避免业务阻断
+            trashItemMapper.updateById(trashItem);
+            return;
+        }
+        int affected = trashItemMapper.updateWithRevision(trashItem);
+        if (affected == 0) {
+            throw new OptimisticLockingFailureException(
+                    "TrashItem 乐观锁更新失败，id=" + trashItem.getId()
+                            + ", revision=" + trashItem.getRevision());
+        }
+        trashItem.setRevision(trashItem.getRevision() + 1);
     }
 
     @Override

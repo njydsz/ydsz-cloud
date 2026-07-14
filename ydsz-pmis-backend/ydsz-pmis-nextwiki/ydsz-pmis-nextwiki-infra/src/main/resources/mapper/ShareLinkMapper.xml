@@ -39,4 +39,24 @@
         ORDER BY created_at DESC
     </select>
 
+    <update id="updateWithRevision">
+        UPDATE nw_share_link
+        SET
+            file_node_id = #{shareLink.fileNodeId},
+            share_code = #{shareLink.shareCode},
+            extract_code = #{shareLink.extractCode},
+            share_type = #{shareLink.shareType},
+            expire_time = #{shareLink.expireTime},
+            max_access_count = #{shareLink.maxAccessCount},
+            access_count = #{shareLink.accessCount},
+            status = #{shareLink.status},
+            password = #{shareLink.password},
+            updated_by = #{shareLink.updatedBy},
+            updated_at = #{shareLink.updatedAt},
+            revision = revision + 1
+        WHERE id = #{shareLink.id}
+          AND deleted = 0
+          AND revision = #{shareLink.revision}
+    </update>
+
 </mapper>

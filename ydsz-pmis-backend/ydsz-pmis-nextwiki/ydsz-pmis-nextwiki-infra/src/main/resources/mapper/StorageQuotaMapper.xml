@@ -26,4 +26,22 @@
         LIMIT 1
     </select>
 
+    <update id="updateWithRevision">
+        UPDATE nw_storage_quota
+        SET
+            scope_type = #{quota.scopeType},
+            scope_id = #{quota.scopeId},
+            quota_limit = #{quota.quotaLimit},
+            quota_used = #{quota.quotaUsed},
+            file_count_limit = #{quota.fileCountLimit},
+            file_count_used = #{quota.fileCountUsed},
+            status = #{quota.status},
+            updated_by = #{quota.updatedBy},
+            updated_at = #{quota.updatedAt},
+            revision = revision + 1
+        WHERE id = #{quota.id}
+          AND deleted = 0
+          AND revision = #{quota.revision}
+    </update>
+
 </mapper>

@@ -46,4 +46,24 @@
         WHERE created_by = #{userId} AND deleted = 0 AND status = 'in_trash'
     </select>
 
+    <update id="updateWithRevision">
+        UPDATE nw_trash_item
+        SET
+            file_node_id = #{trashItem.fileNodeId},
+            original_name = #{trashItem.originalName},
+            original_path = #{trashItem.originalPath},
+            original_parent_id = #{trashItem.originalParentId},
+            node_type = #{trashItem.nodeType},
+            size = #{trashItem.size},
+            deleted_time = #{trashItem.deletedTime},
+            purge_time = #{trashItem.purgeTime},
+            status = #{trashItem.status},
+            updated_by = #{trashItem.updatedBy},
+            updated_at = #{trashItem.updatedAt},
+            revision = revision + 1
+        WHERE id = #{trashItem.id}
+          AND deleted = 0
+          AND revision = #{trashItem.revision}
+    </update>
+
 </mapper>

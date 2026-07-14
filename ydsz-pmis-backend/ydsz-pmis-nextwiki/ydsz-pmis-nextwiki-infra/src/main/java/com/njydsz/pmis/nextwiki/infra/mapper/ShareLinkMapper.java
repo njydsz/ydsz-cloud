@@ -29,4 +29,9 @@ public interface ShareLinkMapper extends BaseMapper<ShareLink> {
 
     @Update("UPDATE nw_share_link SET access_count = access_count + 1, updated_at = NOW() WHERE id = #{id}")
     int incrementAccessCount(@Param("id") String id);
+
+    /**
+     * 带 revision 乐观锁的更新（更新失败返回 0）
+     */
+    int updateWithRevision(@Param("shareLink") ShareLink shareLink);
 }

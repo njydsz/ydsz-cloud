@@ -18,6 +18,11 @@ public interface FileVersionRepository {
     FileVersion save(FileVersion version);
 
     /**
+     * 更新版本记录（带 revision 乐观锁）
+     */
+    void update(FileVersion version);
+
+    /**
      * 查询文件的版本历史
      */
     List<FileVersion> findByFileNodeId(String fileNodeId);

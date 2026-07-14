@@ -2,6 +2,7 @@ package com.njydsz.pmis.nextwiki.infra.repository;
 
 import java.util.List;
 
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.pmis.nextwiki.domain.entity.FileVersion;
@@ -26,6 +27,22 @@ public class FileVersionRepositoryImpl implements FileVersionRepository {
     public FileVersion save(FileVersion version) {
         fileVersionMapper.insert(version);
         return version;
+    }
+
+    @Override
+    public void update(FileVersion version) {
+        if (version.getRevision() == null) {
+            // 兜底：未携带 revision 时退化为普通更新，避免业务阻断
+            fileVersionMapper.updateById(version);
+            return;
+        }
+        int affected = fileVersionMapper.updateWithRevision(version);
+        if (affected == 0) {
+            throw new OptimisticLockingFailureException(
+                    "FileVersion 乐观锁更新失败，id=" + version.getId()
+                            + ", revision=" + version.getRevision());
+        }
+        version.setRevision(version.getRevision() + 1);
     }
 
     @Override

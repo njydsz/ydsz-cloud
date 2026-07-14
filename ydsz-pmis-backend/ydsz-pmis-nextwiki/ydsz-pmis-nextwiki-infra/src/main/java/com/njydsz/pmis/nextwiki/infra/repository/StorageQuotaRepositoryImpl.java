@@ -1,5 +1,6 @@
 package com.njydsz.pmis.nextwiki.infra.repository;
 
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.pmis.nextwiki.domain.entity.StorageQuota;
@@ -25,7 +26,18 @@ public class StorageQuotaRepositoryImpl implements StorageQuotaRepository {
         if (quota.getId() == null) {
             storageQuotaMapper.insert(quota);
         } else {
-            storageQuotaMapper.updateById(quota);
+            if (quota.getRevision() == null) {
+                // 兜底：未携带 revision 时退化为普通更新，避免业务阻断
+                storageQuotaMapper.updateById(quota);
+            } else {
+                int affected = storageQuotaMapper.updateWithRevision(quota);
+                if (affected == 0) {
+                    throw new OptimisticLockingFailureException(
+                            "StorageQuota 乐观锁更新失败，id=" + quota.getId()
+                                    + ", revision=" + quota.getRevision());
+                }
+                quota.setRevision(quota.getRevision() + 1);
+            }
         }
         return quota;
     }

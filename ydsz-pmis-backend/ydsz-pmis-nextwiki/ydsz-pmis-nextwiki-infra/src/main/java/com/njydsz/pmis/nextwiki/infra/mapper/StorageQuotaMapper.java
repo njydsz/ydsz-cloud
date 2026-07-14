@@ -31,4 +31,9 @@ public interface StorageQuotaMapper extends BaseMapper<StorageQuota> {
             "WHERE scope_type = #{scopeType} AND scope_id = #{scopeId}")
     int subtractUsage(@Param("scopeType") String scopeType, @Param("scopeId") String scopeId,
                       @Param("bytesDelta") long bytesDelta, @Param("fileCountDelta") int fileCountDelta);
+
+    /**
+     * 带 revision 乐观锁的更新（更新失败返回 0）
+     */
+    int updateWithRevision(@Param("quota") StorageQuota quota);
 }

@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.pmis.common.json.metric.JsonMetricsCallback;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -24,6 +23,7 @@ import io.micrometer.core.instrument.Timer;
  *   <li>{@code pmis.json.deserialize.duration} — 反序列化耗时（P50/P90/P99）</li>
  *   <li>{@code pmis.json.serialize.success} — 序列化成功次数</li>
  *   <li>{@code pmis.json.serialize.failure} — 序列化失败次数</li>
+ *   <li>{@code pmis.json.deserialize.failure} — 反序列化失败次数</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -41,6 +41,7 @@ public class YdszJsonMetrics implements JsonMetricsCallback {
     private final Timer deserializeTimer;
     private final Counter serializeSuccessCounter;
     private final Counter serializeFailureCounter;
+    private final Counter deserializeFailureCounter;
 
     /**
      * 构造函数，初始化 Micrometer 指标。
@@ -64,21 +65,20 @@ public class YdszJsonMetrics implements JsonMetricsCallback {
             this.serializeFailureCounter = Counter.builder("pmis.json.serialize.failure")
                     .description("YdszJson serialization failure count")
                     .register(meterRegistry);
+            this.deserializeFailureCounter = Counter.builder("pmis.json.deserialize.failure")
+                    .description("YdszJson deserialization failure count")
+                    .register(meterRegistry);
             log.info("[YdszJson] 注册 Micrometer 指标监控");
         } else {
             this.serializeTimer = null;
             this.deserializeTimer = null;
             this.serializeSuccessCounter = null;
             this.serializeFailureCounter = null;
+            this.deserializeFailureCounter = null;
             log.debug("[YdszJson] MeterRegistry 不存在，跳过指标监控注册");
         }
     }
 
-    /**
-     * 记录序列化成功。
-     *
-     * @param durationNanos 序列化耗时（纳秒）
-     */
     @Override
     public void onSerializeSuccess(long durationNanos) {
         if (serializeTimer != null) {
@@ -87,9 +87,6 @@ public class YdszJsonMetrics implements JsonMetricsCallback {
         }
     }
 
-    /**
-     * 记录序列化失败。
-     */
     @Override
     public void onSerializeFailure() {
         if (serializeFailureCounter != null) {
@@ -97,15 +94,17 @@ public class YdszJsonMetrics implements JsonMetricsCallback {
         }
     }
 
-    /**
-     * 记录反序列化成功。
-     *
-     * @param durationNanos 反序列化耗时（纳秒）
-     */
     @Override
     public void onDeserializeSuccess(long durationNanos) {
         if (deserializeTimer != null) {
             deserializeTimer.record(Duration.ofNanos(durationNanos));
+        }
+    }
+
+    @Override
+    public void onDeserializeFailure() {
+        if (deserializeFailureCounter != null) {
+            deserializeFailureCounter.increment();
         }
     }
 

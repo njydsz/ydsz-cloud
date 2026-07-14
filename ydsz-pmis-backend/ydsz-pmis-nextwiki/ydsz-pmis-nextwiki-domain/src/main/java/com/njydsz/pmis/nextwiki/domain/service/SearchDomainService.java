@@ -199,45 +199,33 @@ public class SearchDomainService {
     // ==================== 私有方法 ====================
 
     /**
-     * 构建相关度比较器：文件名完全匹配 > 文件名前缀匹配 > 文件名包含 > 路径包含
-     */
-    private Comparator<FileNode> buildRelevanceComparator(String keyword) {
-        String lowerKeyword = keyword != null ? keyword.toLowerCase() : "";
-        return Comparator.comparing((FileNode n) -> {
-            String name = n.getName() != null ? n.getName().toLowerCase() : "";
-            if (name.equals(lowerKeyword)) return 0;
-            if (name.startsWith(lowerKeyword)) return 1;
-            if (name.contains(lowerKeyword)) return 2;
-            return 3;
-        });
-    }
-
-    /**
      * 计算搜索得分（0-1 之间，越高越相关）
      */
-    private float calculateScore(FileNode node, String keyword) {
+    private float calculateScore(SearchIndex index, String keyword) {
         if (keyword == null || keyword.isEmpty()) {
             return 1.0f;
         }
-        String name = node.getName() != null ? node.getName().toLowerCase() : "";
+        String name = index.getName() != null ? index.getName().toLowerCase() : "";
         String lowerKeyword = keyword.toLowerCase();
 
         if (name.equals(lowerKeyword)) return 1.0f;
         if (name.startsWith(lowerKeyword)) return 0.8f;
         if (name.contains(lowerKeyword)) return 0.6f;
 
-        String path = node.getPath() != null ? node.getPath().toLowerCase() : "";
+        String path = index.getPath() != null ? index.getPath().toLowerCase() : "";
         if (path.contains(lowerKeyword)) return 0.3f;
 
         return 0.1f;
     }
 
-    private String buildHighlight(FileNode node, String keyword) {
-        if (keyword == null || keyword.isEmpty()) {
+    /**
+     * 构建高亮片段（基于文件名匹配关键词的位置）
+     */
+    private String buildHighlight(String name, String keyword) {
+        if (keyword == null || keyword.isEmpty() || name == null) {
             return null;
         }
-        String name = node.getName();
-        if (name != null && name.toLowerCase().contains(keyword.toLowerCase())) {
+        if (name.toLowerCase().contains(keyword.toLowerCase())) {
             int idx = name.toLowerCase().indexOf(keyword.toLowerCase());
             int start = Math.max(0, idx - 20);
             int end = Math.min(name.length(), idx + keyword.length() + 20);
@@ -246,5 +234,18 @@ public class SearchDomainService {
             return prefix + name.substring(start, end) + suffix;
         }
         return null;
+    }
+
+    /**
+     * 解析逗号分隔的标签字符串为列表
+     */
+    private List<String> parseTags(String tags) {
+        if (tags == null || tags.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(tags.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
     }
 }
