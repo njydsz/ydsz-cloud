@@ -113,6 +113,7 @@ public final class EntityCapabilities {
         } catch (ClassNotFoundException e) {
             return false;
         }
+    }
 
     /**
      *
