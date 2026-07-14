@@ -72,7 +72,6 @@ public class VariableSourceResolver {
      * @param params       当前参数（将被补充）
      * @param context      上下文（bizId/bizType 等，用于数据源表达式取值）
      */
-    @SuppressWarnings("unchecked")
     public void resolveVariables(String templateCode, Map<String, Object> params,
                                  Map<String, Object> context) {
         if (params == null || !StringUtils.hasText(templateCode)) {

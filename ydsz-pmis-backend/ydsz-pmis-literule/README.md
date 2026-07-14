@@ -310,4 +310,136 @@ pmis:
 
 ### 规则 + 模型融合
 
-| 配置 |
+| 配置 | 默认值 | 说明 |
+|---|---|---|
+| `pmis.literule.model.enabled` | `false` | 启用模型融合 |
+| `pmis.literule.model.timeout-ms` | `100` | 单模型调用超时 |
+| `pmis.literule.model.fallback-on-error` | `true` | 模型异常降级为纯规则 |
+| `pmis.literule.model.mock-enabled` | `false` | Mock 模型 |
+| `pmis.literule.model.mock-outputs` | 空 | Mock 输出 Map |
+
+### 动态事实采集
+
+| 配置 | 默认值 | 说明 |
+|---|---|---|
+| `pmis.literule.fact.enabled` | `false` | 启用动态事实采集 |
+| `pmis.literule.fact.timeout-ms` | `200` | 单 provider 超时 |
+| `pmis.literule.fact.fallback-on-error` | `true` | provider 异常降级 |
+
+### 高性能优化
+
+| 配置 | 默认值 | 说明 |
+|---|---|---|
+| `pmis.literule.performance.cache-enabled` | `false` | 评估结果缓存 |
+| `pmis.literule.performance.cache-ttl-seconds` | `300` | 缓存 TTL |
+| `pmis.literule.performance.cache-max-size` | `10000` | 缓存最大条目 |
+| `pmis.literule.performance.parallel-enabled` | `false` | 规则分组并行评估 |
+| `pmis.literule.performance.parallel-pool-size` | CPU 核数 | 并行池大小 |
+
+### 生命周期管理
+
+| 配置 | 默认值 | 说明 |
+|---|---|---|
+| `pmis.literule.lifecycle.enabled` | `true` | 启用退役检测 |
+| `pmis.literule.lifecycle.dormant-min-evaluations` | `1000` | 休眠规则最小评估次数 |
+| `pmis.literule.lifecycle.high-error-rate-threshold` | `0.30` | 高错误率阈值 |
+| `pmis.literule.lifecycle.stale-disabled-days` | `90` | 长期停用天数 |
+| `pmis.literule.lifecycle.low-impact-trigger-rate` | `0.001` | 低影响触发率 |
+| `pmis.literule.lifecycle.min-sample-size` | `500` | 最小样本量 |
+
+> **废弃配置**：`pmis.literule.evaluator`（2.1.0 起 `@Deprecated`，仅保留 LiteExpr，不再支持引擎切换）
+
+## 数据库
+
+SQL 归属见项目级硬约束。本模块相关表分布在两个文件：
+
+- [V1.0.0_literule.sql](../../deploy/sql/modules/V1.0.0_literule.sql) — `pmis_rule_def` / `pmis_rule_version_history` / `pmis_rule_template` / `pmis_rule_test_case` / `pmis_rule_chain_graph` / `pmis_rule_dependency` / `pmis_rule_pack` / `pmis_rule_pack_install` / `pmis_rule_variable_def`
+- [V1.0.0_project.sql](../../deploy/sql/modules/V1.0.0_project.sql) — `pmis_rule_execution_trace` / `pmis_rule_decision_table` / `pmis_rule_canary_bucket` / `pmis_rule_scorecard` / `pmis_rule_decision_tree` / `pmis_rule_script` / `pmis_rule_ab_policy` / `pmis_rule_ab_rollback`（物理 Mapper 在 project 模块，DDL 按硬约束归 literule.sql）
+
+## 前端集成
+
+前端页面位于 `ydsz-pmis-frontend/src/views/execution/rule-engine/`，共 14 个页面：
+
+| 页面 | 功能 |
+|---|---|
+| `index.vue` | 规则列表 + 编辑 + Dry-run + 模板市场 + AI 生成 + 版本历史 |
+| `designer.vue` | 规则链可视化编排画布（SVG + dagre 自动布局） |
+| `decision-table-editor.vue` | 决策表编辑器 |
+| `decision-tree-editor.vue` | 决策树编辑器 |
+| `scorecard-editor.vue` | 评分卡编辑器 |
+| `cep-pattern-editor.vue` | CEP 模式编辑器 |
+| `dsl-manager.vue` | DSL 管理器 |
+| `dependency-graph.vue` | 依赖关系图 |
+| `dashboard.vue` | 监控大盘 |
+| `traces.vue` | 执行轨迹 |
+| `replay.vue` | 执行回放 |
+| `audit-log.vue` | 审计日志 |
+| `pack-market.vue` | 规则包市场 |
+| `variables/index.vue` | 变量管理 |
+
+前端 API 定义在 `ydsz-pmis-frontend/src/api/rule-engine/index.ts`，60+ 端点对应后端 7 个 Controller。
+
+## SPI 扩展点
+
+本模块通过 SPI 反转依赖，避免直接依赖 project / cronjob / workflow 等业务模块。核心 SPI：
+
+| SPI 接口 | 作用 | 默认实现 |
+|---|---|---|
+| `RuleConfigProvider` | 规则配置源 | `DbRuleSource` + `CachingRuleConfigProvider` 装饰 |
+| `RuleVersionRepository` | 版本仓库 | 由消费方提供 |
+| `RuleTemplateProvider` | 模板市场 | 由消费方提供 |
+| `RuleConflictDetectorProvider` | 冲突检测 | 由消费方提供 |
+| `DecisionTableEvalProvider` | 决策表评估 | 由消费方提供 |
+| `RuleChainGraphProvider` | 规则链画布 | 由消费方提供 |
+| `GraphExecutionProvider` | 画布执行 | 由消费方提供 |
+| `RuleDependencyProvider` | 规则依赖 | 由消费方提供 |
+| `RuleCategoryProvider` | 目录树 | 由消费方提供 |
+| `ABTestAutoRollbackProvider` | A/B 自动回滚 | 由消费方提供 |
+| `RulePackProvider` | 规则包 | 由消费方提供 |
+| `FactProvider` | 动态事实采集 | 业务方实现 |
+| `ModelInputProvider` | 模型输入 | 业务方实现 |
+| `RuleActionHandler` | 动作处理器 | `DefaultAlertActionHandler` / `CronjobTriggerActionHandler`（optional）/ `WorkflowTriggerActionHandler`（optional） |
+| `TraceRecorder` | Trace 持久化 | `AsyncTraceRecorder`（委托模式） |
+| `DashboardDataProvider` | 大盘数据 | 由消费方提供 |
+| `ThresholdProvider` | 自适应阈值 | 由消费方提供 |
+| `ReconcileDataProvider` | 对账 | 由消费方提供 |
+| `BudgetSnapshotProvider` | 预算快照 | 由消费方提供 |
+| `ApprovalRecordRepository` | 审批记录 | 由消费方提供 |
+
+## 可选联动
+
+server 模块通过 optional 依赖实现按需联动：
+
+- `ydsz-pmis-cronjob-api`（optional）— classpath 存在时装配 `CronjobTriggerActionHandler`
+- `ydsz-pmis-workflow-api`（optional）— classpath 存在时装配 `WorkflowTriggerActionHandler`
+- `micrometer-registry-prometheus`（optional）— classpath 存在时反射装配 `MicrometerRuleMetrics`
+
+## 测试
+
+当前测试覆盖情况：
+
+```bash
+mvn -pl ydsz-pmis-backend/ydsz-pmis-literule -am test
+```
+
+| 子模块 | 测试类数 | 覆盖范围 |
+|---|---|---|
+| `ydsz-pmis-literule-api` | 0 | — |
+| `ydsz-pmis-literule-domain` | 0 | — |
+| `ydsz-pmis-literule-infra` | 0 | — |
+| `ydsz-pmis-literule-server` | 2 | `calc/DualRateProfitCalculatorTest`（双费率利润计算）、`calc/CreditScoreEvaluatorTest`（信用评分） |
+| `ydsz-pmis-literule-web` | 0 | — |
+
+> **现状说明**：核心引擎（DefaultRuleEngine / 熔断 / 超时 / 灰度）、6 种规则类型、LiteExpr 表达式、规则链、DSL、缓存、分布式等模块的单元测试**尚未补齐**，是后续优化的重点。
+
+## 版本与变更
+
+- **首发版本**：v1.0.0（2026-06-30）
+- **当前版本**：`1.0.0-SNAPSHOT`
+- **变更需走 PR + Code Review**
+- **跨服务回归**：任何修改需回归 project / userinfo / agent 等依赖服务
+
+---
+
+> 本模块是**纯库**，不包含 `@SpringBootApplication` 启动类，不独立部署。
+> 自动装配入口：`META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 注册 `LiteRuleAutoConfiguration`。

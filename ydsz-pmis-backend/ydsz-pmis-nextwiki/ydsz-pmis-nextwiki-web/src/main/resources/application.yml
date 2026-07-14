@@ -1,5 +1,5 @@
 # NextWiki 网盘知识库服务本地配置
-# Nacos 配置中心覆盖以下配置
+# Nacos 配置中心覆盖以下配置（ydsz-pmis-nextwiki.yml）
 
 server:
   port: 8800
@@ -15,46 +15,42 @@ mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
   global-config:
     db-config:
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
 
-# NextWiki 配置
+# NextWiki 配置（生产环境由 Nacos ydsz-pmis-nextwiki.yml 覆盖）
 nextwiki:
-  # 文档预览
+  upload:
+    max-file-size: 524288000
+    allowed-types: ""
   preview:
     libreoffice-path: ${LIBREOFFICE_PATH:soffice}
     temp-dir: ${java.io.tmpdir}/nextwiki-preview
-  # 缩略图
   thumbnail:
     temp-dir: ${java.io.tmpdir}/nextwiki-thumbnail
-  # AI 摘要
   ai:
     llm-enabled: false
     llm-api-url: ${LLM_API_URL:}
     llm-api-key: ${LLM_API_KEY:}
-  # CDN
   cdn:
     enabled: false
     provider: aliyun
     domain: ${CDN_DOMAIN:}
     access-key: ${CDN_ACCESS_KEY:}
     secret-key: ${CDN_SECRET_KEY:}
-  # 病毒扫描
   virus-scan:
     enabled: false
     host: ${CLAMAV_HOST:localhost}
     port: ${CLAMAV_PORT:3310}
-  # OCR
   ocr:
     enabled: false
     provider: tesseract
     tesseract-path: ${TESSERACT_PATH:tesseract}
     language: chi_sim+eng
-  # 下载限流
   download:
     rate-limit-per-minute: 30
     ip-rate-limit-per-minute: 100

@@ -572,7 +572,7 @@ export interface FlowVersionDTO {
   /** 版本号 */
   version: number
   /** 流程定义 ID */
-  definitionId: number
+  definitionId: string
   /** 流程编码 */
   flowCode: string
   /** 流程名称 */
@@ -586,7 +586,7 @@ export interface FlowVersionDTO {
   /** 部署时间 */
   deployTime?: string
   /** 创建人 */
-  createBy?: number
+  createBy?: string
   createTime?: string
 }
 
@@ -642,18 +642,18 @@ export interface SimulateResultDTO {
 
 /** P2-3: 任务评论 */
 export interface TaskCommentDTO {
-  id: number
-  tenantId?: number
-  instanceId: number
-  taskId?: number
+  id: string
+  tenantId?: string
+  instanceId: string
+  taskId?: string
   nodeCode?: string
-  userId: number
+  userId: string
   userName?: string
   content: string
   /** 评论类型：COMMENT / QUESTION / REPLY */
   type: string
   /** 父评论 ID（楼中楼回复） */
-  parentId?: number
+  parentId?: string
   createdAt?: string
   updatedAt?: string
 }
@@ -674,9 +674,9 @@ export interface FlowTemplateDTO {
 
 /** P3-3: 实例迁移入参 */
 export interface InstanceMigrationDTO {
-  sourceDefinitionId: number
-  targetDefinitionId: number
-  tenantId?: number
+  sourceDefinitionId: string
+  targetDefinitionId: string
+  tenantId?: string
   /** 旧节点编码 → 新节点编码 映射 */
   nodeMapping?: Record<string, string>
   /** true=仅预览，false=执行迁移 */
@@ -685,7 +685,7 @@ export interface InstanceMigrationDTO {
 
 /** P3-3: 迁移明细 */
 export interface MigrationDetail {
-  instanceId: number
+  instanceId: string
   instanceTitle?: string
   oldNodeCode?: string
   newNodeCode?: string

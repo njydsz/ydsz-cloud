@@ -386,14 +386,13 @@ public class DefaultTemplateEngine implements TemplateEngine {
      * @param key    占位符 key（如 {@code user.name} / {@code this} / {@code @index}）
      * @return 解析到的值，未命中返回 null
      */
-    @SuppressWarnings("unchecked")
     private Object resolve(Map<String, Object> params, String key) {
         if (key.contains(".")) {
             String[] parts = key.split("\\.");
             Object cur = params;
             for (String p : parts) {
-                if (cur instanceof Map) {
-                    cur = ((Map<String, Object>) cur).get(p);
+                if (cur instanceof Map<?, ?> map) {
+                    cur = map.get(p);
                 } else {
                     return null;
                 }

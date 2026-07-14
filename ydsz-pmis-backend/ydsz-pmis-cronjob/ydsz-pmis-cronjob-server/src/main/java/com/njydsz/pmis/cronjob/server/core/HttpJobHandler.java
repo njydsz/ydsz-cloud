@@ -11,7 +11,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Configuration;
 
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.core.job.JobHandler;
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
@@ -219,13 +218,5 @@ public class HttpJobHandler implements JobHandler {
             return "";
         }
         return s.length() > 500 ? s.substring(0, 500) + "..." : s;
-    }
-
-    /**
-     * 抑制未使用警告（headers JSONArray 可能用于未来扩展）。
-     */
-    @SuppressWarnings("unused")
-    private void parseHeadersArray(JSONArray headers) {
-        // 预留：未来支持 headers 为数组的格式 [{"name":"X","value":"Y"}]
     }
 }

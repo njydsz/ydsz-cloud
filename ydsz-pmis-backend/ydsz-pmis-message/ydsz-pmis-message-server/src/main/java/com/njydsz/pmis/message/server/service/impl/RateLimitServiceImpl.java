@@ -3,10 +3,8 @@ package com.njydsz.pmis.message.server.service.impl.core;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.concurrent.TimeUnit;
 
 import org.redisson.api.RRateLimiter;
-import org.redisson.api.RateIntervalUnit;
 import org.redisson.api.RateType;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -55,7 +53,6 @@ public class RateLimitServiceImpl implements RateLimitService {
     private final MessageProperties messageProperties;
 
     @Override
-    @SuppressWarnings("deprecation")
     public boolean tryAcquire(String key, int permits) {
         if (key == null || key.isBlank() || permits <= 0) {
             return true;
@@ -63,7 +60,7 @@ public class RateLimitServiceImpl implements RateLimitService {
         try {
             RRateLimiter limiter = redissonClient.getRateLimiter(MessageConstants.RATE_LIMIT_KEY_PREFIX + key);
             // 令牌桶：每秒补充 permits 个令牌（首次初始化时设置）
-            limiter.trySetRate(RateType.OVERALL, permits, 1, RateIntervalUnit.SECONDS);
+            limiter.trySetRate(RateType.OVERALL, permits, Duration.ofSeconds(1));
             return limiter.tryAcquire(1);
         } catch (Exception e) {
             // 限流器异常降级为放行，避免 Redis 故障阻断业务
@@ -203,14 +200,13 @@ public class RateLimitServiceImpl implements RateLimitService {
         }
     }
 
-    @SuppressWarnings("deprecation")
     private void incrCounter(String prefix, String userId, String channel, String bizType, String suffix, long ttlSeconds) {
         String key = prefix + userId + ":" + (channel == null ? SystemConstants.SYSTEM_USER_ID : channel)
                 + ":" + (bizType == null ? SystemConstants.SYSTEM_USER_ID : bizType) + ":" + suffix;
         try {
             Long count = stringRedisTemplate.opsForValue().increment(key);
             if (count != null && count == 1L) {
-                stringRedisTemplate.expire(key, ttlSeconds, TimeUnit.SECONDS);
+                stringRedisTemplate.expire(key, Duration.ofSeconds(ttlSeconds));
             }
         } catch (Exception e) {
             log.warn("[RateLimit] 计数失败(降级忽略): key={} err={}", key, e.getMessage());

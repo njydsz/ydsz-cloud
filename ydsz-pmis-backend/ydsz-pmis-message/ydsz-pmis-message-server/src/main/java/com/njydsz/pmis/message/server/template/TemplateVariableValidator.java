@@ -64,7 +64,6 @@ public class TemplateVariableValidator {
      * @param varDefs    变量定义列表
      * @param templateCode 模板编码（日志用）
      */
-    @SuppressWarnings("unchecked")
     public void validateAndFill(Map<String, Object> params, List<TemplateVariableDef> varDefs,
                                 String templateCode) {
         if (varDefs == null || varDefs.isEmpty()) {

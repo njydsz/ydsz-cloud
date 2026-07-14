@@ -236,3 +236,12 @@ COMMENT ON TABLE nw_search_index IS '文件搜索索引（数据库 fallback）'
 CREATE INDEX IF NOT EXISTS idx_search_name ON nw_search_index USING gin (to_tsvector('simple', name));
 CREATE INDEX IF NOT EXISTS idx_search_content ON nw_search_index USING gin (to_tsvector('simple', content));
 CREATE INDEX IF NOT EXISTS idx_search_user ON nw_search_index (created_by) WHERE deleted = 0;
+
+-- ============================================================
+-- 种子数据
+-- ============================================================
+
+-- 默认租户配额（10GB / 10000 文件）
+INSERT INTO nw_storage_quota (id, scope_type, scope_id, quota_limit, quota_used, file_count_limit, file_count_used, status, created_by, updated_by)
+SELECT '0', 'tenant', 'default', 10737418240, 0, 10000, 0, 'active', 'SYSTEM', 'SYSTEM'
+WHERE NOT EXISTS (SELECT 1 FROM nw_storage_quota WHERE scope_type = 'tenant' AND scope_id = 'default');
