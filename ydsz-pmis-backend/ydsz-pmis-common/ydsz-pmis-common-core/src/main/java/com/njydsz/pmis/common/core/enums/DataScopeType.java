@@ -1,10 +1,6 @@
 package com.njydsz.pmis.common.core.enums;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
 import com.njydsz.pmis.common.core.constant.TokenConstants;
@@ -38,7 +34,6 @@ import lombok.Getter;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  * @see HeaderConstants
  * @see TokenConstants
  */
@@ -111,14 +106,7 @@ public enum DataScopeType implements TypeEnum<String> {
     private final int priority;
 
     /** 按维度编码索引的不可变映射，用于通过编码快速查找枚举值 */
-    private static final Map<String, DataScopeType> CODE_MAP;
-
-    static {
-        CODE_MAP = Collections.unmodifiableMap(
-                Arrays.stream(values())
-                        .collect(Collectors.toMap(DataScopeType::getCode, Function.identity()))
-        );
-    }
+    private static final Map<String, DataScopeType> CODE_MAP = TypeEnum.buildCodeMap(DataScopeType.class);
 
     /**
      * 根据编码获取数据权限范围类型
@@ -128,14 +116,7 @@ public enum DataScopeType implements TypeEnum<String> {
      * @throws IllegalArgumentException 当编码不存在或为 null 时抛出
      */
     public static DataScopeType codeOf(String code) {
-        if (code == null) {
-            throw new IllegalArgumentException("code must not be null");
-        }
-        DataScopeType result = CODE_MAP.get(code);
-        if (result == null) {
-            throw new IllegalArgumentException("No DataScopeType constant with code: " + code);
-        }
-        return result;
+        return TypeEnum.codeOf(CODE_MAP, code);
     }
 
     /**

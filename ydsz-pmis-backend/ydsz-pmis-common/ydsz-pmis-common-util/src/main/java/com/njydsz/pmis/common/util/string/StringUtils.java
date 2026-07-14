@@ -3,12 +3,17 @@ package com.njydsz.pmis.common.util.string;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Pattern 缓存 - 简单的 LRU 缓存，用于缓存编译后的正则表达式
+ * Pattern 缓存 - 基于 ConcurrentHashMap 的线程安全缓存，用于缓存编译后的正则表达式
+ *
+ * <p>使用 ConcurrentHashMap 替代 synchronized LinkedHashMap，
+ * 利用 computeIfAbsent 的原子性实现无锁并发读、细粒度并发写。
+ * 采用简单的大小限制策略：超过上限时清空全量缓存（适用于 pattern 种类有限的场景）。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -16,14 +21,9 @@ import java.util.stream.Collectors;
  */
 final class PatternCache {
 
-    private static final int MAX_CACHE_SIZE = 128;
+    private static final int MAX_CACHE_SIZE = 256;
 
-    private static final LinkedHashMap<String, Pattern> CACHE = new LinkedHashMap<>(MAX_CACHE_SIZE, 0.75f, true) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<String, Pattern> eldest) {
-            return size() > MAX_CACHE_SIZE;
-        }
-    };
+    private static final ConcurrentHashMap<String, Pattern> CACHE = new ConcurrentHashMap<>(MAX_CACHE_SIZE);
 
     private PatternCache() {
         throw new UnsupportedOperationException("PatternCache is a utility class and cannot be instantiated");
@@ -31,11 +31,19 @@ final class PatternCache {
 
     /**
      * 获取编译后的 Pattern，优先从缓存中获取
+     *
+     * @param regex 正则表达式
+     * @return 编译后的 Pattern
      */
     static Pattern compile(String regex) {
-        synchronized (CACHE) {
-            return CACHE.computeIfAbsent(regex, Pattern::compile);
+        Pattern cached = CACHE.get(regex);
+        if (cached != null) {
+            return cached;
         }
+        if (CACHE.size() >= MAX_CACHE_SIZE) {
+            CACHE.clear();
+        }
+        return CACHE.computeIfAbsent(regex, Pattern::compile);
     }
 }
 

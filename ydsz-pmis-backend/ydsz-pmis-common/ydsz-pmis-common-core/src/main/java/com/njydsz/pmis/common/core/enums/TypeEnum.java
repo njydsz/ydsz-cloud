@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  */
 public interface TypeEnum<T> {
 

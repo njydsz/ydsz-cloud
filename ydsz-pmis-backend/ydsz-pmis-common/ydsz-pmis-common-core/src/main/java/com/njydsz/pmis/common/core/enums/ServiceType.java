@@ -10,7 +10,6 @@ import com.njydsz.pmis.common.core.constant.HeaderConstants;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
 /**
  * 服务类型枚举定义
  *
@@ -26,7 +25,6 @@ import lombok.Getter;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  * @see HeaderConstants
  */
 @Getter
@@ -61,15 +59,11 @@ public enum ServiceType implements TypeEnum<String> {
     private final String desc;
 
     /** 按服务类型编码索引的不可变映射，用于通过编码快速查找枚举值 */
-    private static final Map<String, ServiceType> CODE_MAP;
+    private static final Map<String, ServiceType> CODE_MAP = TypeEnum.buildCodeMap(ServiceType.class);
     /** 按路径前缀索引的不可变映射，用于通过路径前缀快速查找枚举值 */
     private static final Map<String, ServiceType> PATH_PREFIX_MAP;
 
     static {
-        CODE_MAP = Collections.unmodifiableMap(
-                Arrays.stream(values())
-                        .collect(Collectors.toMap(ServiceType::getCode, Function.identity()))
-        );
         PATH_PREFIX_MAP = Collections.unmodifiableMap(
                 Arrays.stream(values())
                         .collect(Collectors.toMap(ServiceType::getPathPrefix, Function.identity()))
@@ -97,11 +91,7 @@ public enum ServiceType implements TypeEnum<String> {
      * @throws IllegalArgumentException 当编码不存在时抛出
      */
     public static ServiceType codeOf(String code) {
-        ServiceType value = of(code);
-        if (value == null) {
-            throw new IllegalArgumentException("Unknown ServiceType code: " + code);
-        }
-        return value;
+        return TypeEnum.codeOf(CODE_MAP, code);
     }
 
     /**

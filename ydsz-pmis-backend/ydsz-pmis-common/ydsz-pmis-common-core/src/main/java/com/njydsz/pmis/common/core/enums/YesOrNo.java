@@ -1,13 +1,9 @@
 package com.njydsz.pmis.common.core.enums;
 
+import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * 是/否枚举定义
@@ -30,7 +26,6 @@ import java.util.stream.Collectors;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  */
 @Getter
 @AllArgsConstructor
@@ -57,14 +52,7 @@ public enum YesOrNo implements TypeEnum<Integer> {
     private final String desc;
 
     /** 按枚举编码索引的不可变映射，用于通过编码快速查找枚举值 */
-    private static final Map<Integer, YesOrNo> CODE_MAP;
-
-    static {
-        CODE_MAP = Collections.unmodifiableMap(
-                Arrays.stream(values())
-                        .collect(Collectors.toMap(YesOrNo::getCode, Function.identity()))
-        );
-    }
+    private static final Map<Integer, YesOrNo> CODE_MAP = TypeEnum.buildCodeMap(YesOrNo.class);
 
     /**
      * 根据 Integer 编码获取是/否枚举（安全版本）
@@ -87,10 +75,7 @@ public enum YesOrNo implements TypeEnum<Integer> {
      * @throws IllegalArgumentException 当编码为 null 时抛出
      */
     public static YesOrNo codeOf(Integer code) {
-        if (code == null) {
-            throw new IllegalArgumentException("code must not be null");
-        }
-        return CODE_MAP.get(code);
+        return TypeEnum.codeOf(CODE_MAP, code);
     }
 
     /**

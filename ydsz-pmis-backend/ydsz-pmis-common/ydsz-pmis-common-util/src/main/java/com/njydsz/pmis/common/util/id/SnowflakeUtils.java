@@ -291,6 +291,9 @@ public final class SnowflakeUtils {
     /**
      * 获取单例实例（自动计算节点 ID）
      *
+     * <p>若未通过 {@link #init(long, long)} 显式初始化，则自动计算 workerId 和 datacenterId 并创建实例。
+     * 已初始化则直接返回单例。
+     *
      * @return SnowflakeUtils 单例实例
      */
     public static SnowflakeUtils getInstance() {

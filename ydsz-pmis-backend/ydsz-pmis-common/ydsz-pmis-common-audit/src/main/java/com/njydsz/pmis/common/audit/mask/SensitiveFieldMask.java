@@ -185,7 +185,7 @@ public final class SensitiveFieldMask {
 
         if (obj instanceof ObjectNode) {
             ObjectNode jsonObj = (ObjectNode) obj;
-            for (Map.Entry<String, JsonNode> entry : jsonObj.properties()) {
+            for (Map.Entry<String, JsonNode> entry : jsonObj.asMap().entrySet()) {
                 String key = entry.getKey();
                 JsonNode value = entry.getValue();
                 if (isSensitiveKey(key, patterns)) {

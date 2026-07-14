@@ -44,6 +44,20 @@
       <artifactId>spring-context</artifactId>
       <scope>provided</scope>
     </dependency>
+    <!-- Spring AOP（@Cached 注解切面） -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-aop</artifactId>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
+    <!-- AspectJ Weaver（@Aspect / @Around 注解支持） -->
+    <dependency>
+      <groupId>org.aspectj</groupId>
+      <artifactId>aspectjweaver</artifactId>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
     <!-- Spring Boot Autoconfigure -->
     <dependency>
       <groupId>org.springframework.boot</groupId>

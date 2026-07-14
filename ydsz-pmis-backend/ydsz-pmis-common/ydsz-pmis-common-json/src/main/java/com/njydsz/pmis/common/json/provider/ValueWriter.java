@@ -4,6 +4,7 @@ import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.*;
+import java.time.temporal.TemporalAccessor;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -73,9 +74,17 @@ public final class ValueWriter {
         TYPE_CODE_CACHE.put(Byte.class, TYPE_CODE_BYTE);
         TYPE_CODE_CACHE.put(LocalDateTime.class, TYPE_CODE_DATE);
         TYPE_CODE_CACHE.put(LocalDate.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(LocalTime.class, TYPE_CODE_DATE);
         TYPE_CODE_CACHE.put(ZonedDateTime.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(OffsetDateTime.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(OffsetTime.class, TYPE_CODE_DATE);
         TYPE_CODE_CACHE.put(Instant.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(Year.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(YearMonth.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(MonthDay.class, TYPE_CODE_DATE);
         TYPE_CODE_CACHE.put(Date.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(java.sql.Date.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(java.sql.Timestamp.class, TYPE_CODE_DATE);
         TYPE_CODE_CACHE.put(BigDecimal.class, TYPE_CODE_BIGDECIMAL);
         TYPE_CODE_CACHE.put(BigInteger.class, TYPE_CODE_BIGINTEGER);
     }
@@ -930,16 +939,31 @@ public final class ValueWriter {
         if (value == null) return null;
         try {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
-            if (value instanceof LocalDateTime) {
-                return ((LocalDateTime) value).format(formatter);
-            } else if (value instanceof LocalDate) {
-                return ((LocalDate) value).format(formatter);
-            } else if (value instanceof Date) {
-                return ((Date) value).toInstant()
+            if (value instanceof TemporalAccessor temporal) {
+                return formatter.format(temporal);
+            } else if (value instanceof Date date) {
+                return date.toInstant()
                         .atZone(ZoneId.systemDefault())
                         .toLocalDateTime().format(formatter);
             }
         } catch (Exception e) {
+        }
+        return value.toString();
+    }
+
+    /**
+     * 格式化日期/时间值为字符串（ISO 格式，支持所有日期/时间类型）。
+     *
+     * @param value 日期/时间值
+     * @return ISO 格式字符串
+     * @since 1.4.0
+     */
+    public static String formatDateValue(Object value) {
+        if (value == null) return null;
+        if (value instanceof TemporalAccessor temporal) {
+            return temporal.toString();
+        } else if (value instanceof Date date) {
+            return date.toInstant().toString();
         }
         return value.toString();
     }
@@ -1036,6 +1060,8 @@ public final class ValueWriter {
             writeMapOptimized((Map<?, ?>) obj, sb);
         } else if (clazz.isArray()) {
             writeArray(obj, sb);
+        } else if (obj instanceof TemporalAccessor || obj instanceof Date) {
+            writeString(formatDateValue(obj), sb);
         } else {
             writeBeanWithCycleDetection(obj, sb);
         }

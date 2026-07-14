@@ -1,10 +1,6 @@
 package com.njydsz.pmis.common.core.enums;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
 
@@ -26,7 +22,6 @@ import lombok.Getter;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  * @see HeaderConstants
  */
 @Getter
@@ -42,14 +37,7 @@ public enum IdentityType implements TypeEnum<String> {
     /** 身份类型描述 */
     private final String desc;
 
-    private static final Map<String, IdentityType> CODE_MAP;
-
-    static {
-        CODE_MAP = Collections.unmodifiableMap(
-                Arrays.stream(values())
-                        .collect(Collectors.toMap(IdentityType::getCode, Function.identity()))
-        );
-    }
+    private static final Map<String, IdentityType> CODE_MAP = TypeEnum.buildCodeMap(IdentityType.class);
 
     /**
      * 根据编码获取身份类型（安全版本）
@@ -72,11 +60,7 @@ public enum IdentityType implements TypeEnum<String> {
      * @throws IllegalArgumentException 当编码不存在时抛出
      */
     public static IdentityType codeOf(String code) {
-        IdentityType value = of(code);
-        if (value == null) {
-            throw new IllegalArgumentException("Unknown IdentityType code: " + code);
-        }
-        return value;
+        return TypeEnum.codeOf(CODE_MAP, code);
     }
 
     /**

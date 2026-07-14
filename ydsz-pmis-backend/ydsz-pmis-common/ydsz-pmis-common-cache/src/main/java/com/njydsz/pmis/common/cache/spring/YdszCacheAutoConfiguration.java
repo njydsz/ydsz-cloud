@@ -5,8 +5,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 
+import com.njydsz.pmis.common.cache.annotation.CacheAnnotationAspect;
 import com.njydsz.pmis.common.cache.health.CacheHealthIndicator;
 import com.njydsz.pmis.common.cache.support.CacheThreadPoolManager;
 import com.njydsz.pmis.common.cache.support.CacheWarmer;
@@ -82,5 +84,21 @@ public class YdszCacheAutoConfiguration {
   @ConditionalOnProperty(name = "ydsz.cache.warmup.enabled", havingValue = "true")
   public CacheWarmer cacheWarmer() {
     return new CacheWarmer();
+  }
+
+  /**
+   * 注册缓存注解 AOP 切面（@Cached / @CacheInvalidate）
+   *
+   * <p>需要 classpath 中存在 AspectJ Weaver。当使用 @Cached 注解时自动生效。
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  @ConditionalOnClass(name = "org.aspectj.lang.annotation.Aspect")
+  @ConditionalOnProperty(
+      name = "ydsz.cache.annotation.enabled",
+      havingValue = "true",
+      matchIfMissing = true)
+  public CacheAnnotationAspect cacheAnnotationAspect(CacheManager cacheManager) {
+    return new CacheAnnotationAspect(cacheManager);
   }
 }
