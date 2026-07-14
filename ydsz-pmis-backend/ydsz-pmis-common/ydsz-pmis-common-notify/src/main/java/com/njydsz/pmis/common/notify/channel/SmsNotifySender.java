@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.channel;
+ackage com.njydsz.pmis.common.notify.channel;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -26,7 +26,7 @@ import org.springframework.web.client.RestTemplate;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import lombok.Data;
 
@@ -96,7 +96,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 			body.put("templateCode", smsProperties.getTemplateCode());
 			body.put("templateParam", Map.of("title", title != null ? title : "", "content", content != null ? content : ""));
 
-			String json = JsonUtils.toJson(body);
+			String json = YdszJson.toJson(body);
 			HttpHeaders headers = jsonHeaders();
 			headers.set("Authorization", buildAuthorization(json));
 
@@ -133,7 +133,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 			body.put("templateCode", templateCode);
 			body.put("templateParam", params);
 
-			String json = JsonUtils.toJson(body);
+			String json = YdszJson.toJson(body);
 			HttpHeaders headers = jsonHeaders();
 			headers.set("Authorization", buildAuthorization(json));
 

@@ -3,7 +3,7 @@
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import jakarta.validation.Valid;
 
@@ -75,7 +75,7 @@ public class FlowDesignerController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Void> saveDesignerData(@PathVariable String id,
                                           @Valid @RequestBody FlowDesignerDataDTO dto) {
-        Map<String, Object> designerData = JsonUtils.parseMap(dto.getDesignerData());
+        Map<String, Object> designerData = YdszJson.parseMap(dto.getDesignerData());
         definitionService.saveDesignerData(id, designerData);
         return BaseResponse.ok();
     }
@@ -210,7 +210,7 @@ public class FlowDesignerController {
     public BaseResponse<Void> saveSlaConfig(@PathVariable String id,
                                         @PathVariable String nodeCode,
                                         @RequestBody Map<String, Object> slaConfig) {
-        String json = slaConfig == null ? null : JsonUtils.toJson(slaConfig);
+        String json = slaConfig == null ? null : YdszJson.toJson(slaConfig);
         definitionService.saveSlaConfig(id, nodeCode, json);
         return BaseResponse.ok();
     }

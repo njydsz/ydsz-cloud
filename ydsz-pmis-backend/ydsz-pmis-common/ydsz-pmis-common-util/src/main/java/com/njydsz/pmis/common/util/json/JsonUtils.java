@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.json;
+ackage com.njydsz.pmis.common.util.json;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -64,7 +64,7 @@ public final class JsonUtils {
      * @param jsonMetrics 指标收集器
      */
     public static void setMetrics(JsonMetrics jsonMetrics) {
-        JsonUtils.metrics = jsonMetrics;
+        YdszJson.metrics = jsonMetrics;
     }
 
     /**
@@ -211,8 +211,8 @@ public final class JsonUtils {
      *
      * <p>示例：
      * <pre>
-     * Map&lt;String, Object&gt; map = JsonUtils.fromJson(json, new YdszJsonType&lt;Map&lt;String, Object&gt;&gt;() {});
-     * List&lt;UserDTO&gt; list = JsonUtils.fromJson(json, new YdszJsonType&lt;List&lt;UserDTO&gt;&gt;() {});
+     * Map&lt;String, Object&gt; map = YdszJson.toObject(json, new YdszJsonType&lt;Map&lt;String, Object&gt;&gt;() {});
+     * List&lt;UserDTO&gt; list = YdszJson.toObject(json, new YdszJsonType&lt;List&lt;UserDTO&gt;&gt;() {});
      * </pre>
      */
     public static <T> T fromJson(String json, YdszJsonType<T> typeReference) {

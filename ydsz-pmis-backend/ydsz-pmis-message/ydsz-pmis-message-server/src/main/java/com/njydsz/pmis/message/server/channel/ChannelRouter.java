@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.channel;
+ackage com.njydsz.pmis.message.server.channel;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -15,7 +15,7 @@ import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 import com.njydsz.pmis.message.server.config.MessageProperties;
 import com.njydsz.pmis.message.server.metric.MessageMetrics;
@@ -210,7 +210,7 @@ public class ChannelRouter {
         String templateParams = logDO.getTemplateParams();
         if (templateParams != null && !templateParams.isBlank()) {
             try {
-                request.setParams(JsonUtils.fromJsonToMap(templateParams, String.class, Object.class));
+                request.setParams(YdszJson.fromJsonToMap(templateParams, String.class, Object.class));
             } catch (Exception e) {
                 log.warn("[ChannelRouter] templateParams 解析失败,忽略: msgId={}, err={}",
                         logDO.getMsgId(), e.getMessage());

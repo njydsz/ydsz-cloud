@@ -1,10 +1,10 @@
-﻿package com.njydsz.pmis.literule.server.cep;
+ackage com.njydsz.pmis.literule.server.cep;
 
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.List;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -99,7 +99,7 @@ public class CEPPatternFactory implements Serializable {
      */
     public static CEPPattern fromJson(String json) {
         try {
-            return JsonUtils.fromJson(json, CEPPattern.class);
+            return YdszJson.toObject(json, CEPPattern.class);
         } catch (Exception e) {
             log.warn("[CEP] JSON 反序列化失败: {}", e.getMessage());
             return null;
@@ -111,7 +111,7 @@ public class CEPPatternFactory implements Serializable {
      */
     public static String toJson(CEPPattern pattern) {
         try {
-            return JsonUtils.toJson(pattern);
+            return YdszJson.toJson(pattern);
         } catch (Exception e) {
             log.warn("[CEP] JSON 序列化失败: {}", e.getMessage());
             return "{}";

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.channel.impl;
+ackage com.njydsz.pmis.message.server.channel.impl;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -17,7 +17,7 @@ import org.springframework.web.client.RestClient;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 import com.njydsz.pmis.message.server.config.ChannelProperties;
 
@@ -97,13 +97,13 @@ public class WeComAppChannel implements MessageChannel {
             ResponseEntity<String> response = restClient.post()
                     .uri(url)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(JsonUtils.toJson(payload))
+                    .body(YdszJson.toJson(payload))
                     .retrieve()
                     .toEntity(String.class);
             String traceId = CHANNEL_TYPE + "-" + SnowflakeIdGenerator.nextTraceId();
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> body = JsonUtils.parseMap(response.getBody());
+                Map<String, Object> body = YdszJson.parseMap(response.getBody());
                 int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
                 if (errcode == 0) {
                     log.info("[WECOM_APP] 发送成功: receiver={}", receiver);
@@ -135,7 +135,7 @@ public class WeComAppChannel implements MessageChannel {
                     + "&corpsecret=" + cfg.getCorpSecret();
             ResponseEntity<String> response = restClient.get().uri(url).retrieve().toEntity(String.class);
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> body = JsonUtils.parseMap(response.getBody());
+                Map<String, Object> body = YdszJson.parseMap(response.getBody());
                 int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
                 if (errcode == 0) {
                     String token = (String) body.get("access_token");

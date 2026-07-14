@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.literule.web;
+ackage com.njydsz.pmis.literule.web;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -14,7 +14,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -274,8 +274,8 @@ public class RuleAdminController {
         }
 
         try {
-            RuleDefinition oldDef = JsonUtils.fromJson(oldV.getDefinitionJson(), RuleDefinition.class);
-            RuleDefinition newDef = JsonUtils.fromJson(newV.getDefinitionJson(), RuleDefinition.class);
+            RuleDefinition oldDef = YdszJson.toObject(oldV.getDefinitionJson(), RuleDefinition.class);
+            RuleDefinition newDef = YdszJson.toObject(newV.getDefinitionJson(), RuleDefinition.class);
             RuleVersionDiffService diffService = new RuleVersionDiffService();
             return BaseResponse.ok(diffService.diff(oldDef, newDef));
         } catch (Exception e) {

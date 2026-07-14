@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.service.impl.core;
+ackage com.njydsz.pmis.message.server.service.impl.core;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -26,7 +26,7 @@ import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.common.util.TraceIdUtil;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.message.domain.constant.MessageConstants;
 import com.njydsz.pmis.message.domain.dto.batch.BatchSendResult;
 import com.njydsz.pmis.message.domain.dto.core.MessageLogQueryDTO;
@@ -459,7 +459,7 @@ public class MessageServiceImpl implements MessageService {
         logDO.setBizId(request.getBizId());
         logDO.setReceiver(ctx.receiver);
         logDO.setTemplateCode(ctx.templateCode);
-        logDO.setTemplateParams(JsonUtils.toJson(request.getParams()));
+        logDO.setTemplateParams(YdszJson.toJson(request.getParams()));
         logDO.setContent(rendered.content);
         logDO.setStatus(MessageStatusEnum.PENDING.name());
         logDO.setPriority(resolvePriority(request));

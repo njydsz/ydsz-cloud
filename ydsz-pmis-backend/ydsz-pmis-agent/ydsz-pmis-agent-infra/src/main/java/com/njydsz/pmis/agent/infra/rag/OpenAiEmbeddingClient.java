@@ -1,11 +1,11 @@
-﻿package com.njydsz.pmis.agent.infra.rag;
+ackage com.njydsz.pmis.agent.infra.rag;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +59,7 @@ public class OpenAiEmbeddingClient implements EmbeddingClient {
         try {
             String responseJson = restClient.post()
                     .uri("/embeddings")
-                    .body(JsonUtils.toJson(body))
+                    .body(YdszJson.toJson(body))
                     .retrieve()
                     .body(String.class);
             return parseEmbeddings(responseJson);
@@ -81,7 +81,7 @@ public class OpenAiEmbeddingClient implements EmbeddingClient {
     }
 
     private List<List<Float>> parseEmbeddings(String json) {
-        Map<String, Object> obj = JsonUtils.parseMap(json);
+        Map<String, Object> obj = YdszJson.parseMap(json);
         List<Object> data = obj.getJSONArray("data");
         if (data == null || data.isEmpty()) {
             throw new LlmException("Embedding 响应无 data", LlmException.ErrorType.INVALID_RESPONSE);

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.impl.integration;
+﻿package com.njydsz.pmis.workflow.server.service.impl.integration;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.workflow.server.service.FlowFormFieldPermService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ public class FlowFormFieldPermServiceImpl implements FlowFormFieldPermService {
             return Collections.emptyMap();
         }
         try {
-            Map<String, Object> raw = JsonUtils.parseMap(formFieldsConfig);
+            Map<String, Object> raw = YdszJson.parseMap(formFieldsConfig);
             if (raw == null || raw.isEmpty()) {
                 return Collections.emptyMap();
             }

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.audit.aspect;
+ackage com.njydsz.pmis.common.audit.aspect;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
@@ -36,7 +36,7 @@ import com.njydsz.pmis.common.audit.mask.SensitiveFieldMask;
 import com.njydsz.pmis.common.audit.template.AuditTemplateProcessor;
 import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.common.util.ip.IpAddrUtils;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.common.util.string.StringUtils;
 /**
  * 审计日志切面
@@ -312,7 +312,7 @@ public class AuditAspect {
 
         if (audit.recordResponse() && properties.isRecordResponse() && result != null) {
             try {
-                String responseJson = JsonUtils.toJson(result);
+                String responseJson = YdszJson.toJson(result);
                 responseJson = truncateWithWarning(responseJson, DEFAULT_MAX_SERIALIZE_LENGTH, "响应结果");
                 String maskedResponse = maskSensitiveJson(responseJson, sensitiveParams);
                 auditLog.setResponseResult(maskedResponse);
@@ -434,7 +434,7 @@ public class AuditAspect {
      */
     private String serializeWithDepthLimit(Object obj) {
         try {
-            return JsonUtils.toJson(obj);
+            return YdszJson.toJson(obj);
         } catch (StackOverflowError e) {
             log.warn("【审计切面】参数序列化深度超过限制（{}层），已截断", DEFAULT_MAX_SERIALIZE_DEPTH);
             return "{\"_truncated\": true, \"_reason\": \"depth limit exceeded (" + DEFAULT_MAX_SERIALIZE_DEPTH + " levels)\"}";

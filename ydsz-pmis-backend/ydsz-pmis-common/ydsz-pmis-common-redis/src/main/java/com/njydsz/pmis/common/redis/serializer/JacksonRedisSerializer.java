@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.serializer;
+ackage com.njydsz.pmis.common.redis.serializer;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -7,7 +7,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.SerializationException;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 /**
  * Jackson 版本的 Redis 序列化工具类
@@ -17,8 +17,8 @@ import com.njydsz.pmis.common.util.json.JsonUtils;
  *
  * <p><b>主要功能：</b>
  * <ul>
- *   <li>对象序列化为 JSON 字节数组（通过 JsonUtils.toJsonBytes）</li>
- *   <li>JSON 字节数组反序列化为对象（通过 JsonUtils.fromJsonBytes）</li>
+ *   <li>对象序列化为 JSON 字节数组（通过 YdszJson.toJsonBytes）</li>
+ *   <li>JSON 字节数组反序列化为对象（通过 YdszJson.fromJsonBytes）</li>
  *   <li>支持 Java 8 时间类型（由 JsonUtils 内部 JavaTimeModule 处理）</li>
  *   <li>支持复杂对象嵌套</li>
  * </ul>
@@ -79,7 +79,7 @@ public class JacksonRedisSerializer implements RedisSerializer<Object> {
             return new byte[0];
         }
         try {
-            return JsonUtils.toJsonBytes(t);
+            return YdszJson.toJsonBytes(t);
         } catch (Exception e) {
             throw new SerializationException("Redis对象序列化失败（Jackson）", e);
         }
@@ -101,7 +101,7 @@ public class JacksonRedisSerializer implements RedisSerializer<Object> {
             return null;
         }
         try {
-            return JsonUtils.fromJsonBytes(bytes, clazz);
+            return YdszJson.fromJsonBytes(bytes, clazz);
         } catch (Exception e) {
             throw new SerializationException("Redis对象反序列化失败（Jackson）", e);
         }

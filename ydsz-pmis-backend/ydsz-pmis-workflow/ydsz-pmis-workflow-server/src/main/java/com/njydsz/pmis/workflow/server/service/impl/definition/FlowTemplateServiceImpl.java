@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -661,7 +661,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             return null;
         }
         try {
-            Map<String, Object> extJson = JsonUtils.parseMap(ext);
+            Map<String, Object> extJson = YdszJson.parseMap(ext);
             if (extJson != null) {
                 String sourceRef = extJson.getString("sourceRef");
                 if (sourceRef != null && !sourceRef.isBlank()) {

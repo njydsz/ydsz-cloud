@@ -17,7 +17,7 @@ import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.nextwiki.api.dto.NextwikiDTOs;
 import com.njydsz.pmis.nextwiki.domain.entity.ShareLink;
-import com.njydsz.pmis.nextwiki.domain.service.ShareDomainService;
+import com.njydsz.pmis.nextwiki.server.service.ShareApplicationService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "文件分享", description = "创建分享链接、验证访问、撤销分享")
 public class ShareController {
 
-    private final ShareDomainService shareDomainService;
+    private final ShareApplicationService shareApplicationService;
 
     @PostMapping
     @Operation(summary = "创建分享链接")
@@ -47,7 +47,7 @@ public class ShareController {
             @RequestBody NextwikiDTOs.CreateShareRequest request,
             @RequestHeader("X-User-Id") String userId) {
 
-        ShareLink result = shareDomainService.createShare(
+        ShareLink result = shareApplicationService.createShare(
                 request.getFileNodeId(),
                 request.getShareType(),
                 request.getPassword(),
@@ -61,7 +61,7 @@ public class ShareController {
     @Operation(summary = "验证分享链接访问权限")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_VERIFY)
     public BaseResponse<ShareLink> verifyAccess(@RequestBody NextwikiDTOs.VerifyShareRequest request) {
-        ShareLink result = shareDomainService.verifyAccess(
+        ShareLink result = shareApplicationService.verifyAccess(
                 request.getShareCode(),
                 request.getExtractCode(),
                 request.getPassword());
@@ -76,7 +76,7 @@ public class ShareController {
             @PathVariable String shareId,
             @RequestHeader("X-User-Id") String userId) {
 
-        shareDomainService.revoke(shareId, userId);
+        shareApplicationService.revoke(shareId, userId);
         return BaseResponse.ok();
     }
 
@@ -84,6 +84,6 @@ public class ShareController {
     @Operation(summary = "查询我的分享列表")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_LIST)
     public BaseResponse<List<ShareLink>> myShares(@RequestHeader("X-User-Id") String userId) {
-        return BaseResponse.ok(shareDomainService.findByUserId(userId));
+        return BaseResponse.ok(shareApplicationService.findByUserId(userId));
     }
 }

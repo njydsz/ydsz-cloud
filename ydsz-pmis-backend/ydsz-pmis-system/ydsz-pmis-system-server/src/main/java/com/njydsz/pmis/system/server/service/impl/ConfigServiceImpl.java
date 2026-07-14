@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheEvict;
@@ -119,11 +119,11 @@ public class ConfigServiceImpl implements ConfigService {
         String cacheKey = CACHE_PREFIX + group + ":" + key;
         String cached = redisTemplate.opsForValue().get(cacheKey);
         if (cached != null) {
-            return JsonUtils.fromJson(cached, ConfigDO.class);
+            return YdszJson.toObject(cached, ConfigDO.class);
         }
         ConfigDO c = configMapper.selectByGroupAndKey(group, key);
         if (c != null) {
-            redisTemplate.opsForValue().set(cacheKey, JsonUtils.toJson(c), CACHE_TTL);
+            redisTemplate.opsForValue().set(cacheKey, YdszJson.toJson(c), CACHE_TTL);
         }
         return c;
     }
@@ -147,7 +147,7 @@ public class ConfigServiceImpl implements ConfigService {
         for (ConfigDO c : list) {
             map.put(c.getConfigKey(), c.getConfigValue());
         }
-        redisTemplate.opsForValue().set(cacheKey, JsonUtils.toJson(map), CACHE_TTL);
+        redisTemplate.opsForValue().set(cacheKey, YdszJson.toJson(map), CACHE_TTL);
         return map;
     }
 

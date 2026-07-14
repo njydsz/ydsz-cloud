@@ -2,7 +2,7 @@
 
 import java.util.*;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +55,7 @@ public class DiffCalculator {
     private static Map<String, Object> parseJson(String json) {
         if (json == null || json.isBlank()) return null;
         try {
-            return JsonUtils.fromJson(json, Map.class);
+            return YdszJson.toObject(json, Map.class);
         } catch (Exception e) {
             log.warn("[DiffCalculator] JSON 解析失败: {}", e.getMessage());
             return null;

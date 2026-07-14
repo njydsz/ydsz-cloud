@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.json.jsonpath;
+ackage com.njydsz.pmis.common.json.jsonpath;
 
 import java.util.*;
 import java.util.regex.*;
@@ -71,7 +71,7 @@ public class YdszJsonPath {
      * 从 JSON 字符串中获取值
      */
     public Object getValue(String json) {
-        Object obj = YdszJson.parseObject(json);
+        Object obj = YdszJson.parseObjectToJsonObject(json);
         return getValue(obj);
     }
 
@@ -88,7 +88,7 @@ public class YdszJsonPath {
      * 获取所有匹配的值（从 JSON 字符串）
      */
     public List<Object> getAllValues(String json) {
-        Object obj = YdszJson.parseObject(json);
+        Object obj = YdszJson.parseObjectToJsonObject(json);
         return getAllValues(obj);
     }
 

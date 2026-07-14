@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.core;
+ackage com.njydsz.pmis.literule.server.core;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -128,6 +128,14 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
 
     /** 并行评估触发阈值（候选规则数 ≥ 此值时启用并行），默认 50 */
     private volatile int parallelThreshold = 50;
+
+    /**
+     * 慢规则阈值（毫秒，P2-4）
+     *
+     * <p>单规则评估耗时超过此值时记录慢规则告警（{@link RuleMetrics#recordSlowRule}）。
+     * 0 表示不启用慢规则检测（默认）。
+     */
+    private volatile long slowRuleThresholdMs = 0L;
 
     /** 统计计数器 */
     private final AtomicLong totalEvaluations = new AtomicLong(0);
@@ -1048,6 +1056,19 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     }
 
     /**
+     * 设置慢规则告警阈值（P2-4）
+     *
+     * @param thresholdMs 单规则评估耗时阈值（毫秒）；≤ 0 表示关闭慢规则检测
+     * @since 2.2.0
+     */
+    public void setSlowRuleThresholdMs(long thresholdMs) {
+        this.slowRuleThresholdMs = thresholdMs;
+        if (thresholdMs > 0) {
+            log.info("[LiteRule-Performance] 慢规则告警已启用 (threshold={}ms)", thresholdMs);
+        }
+    }
+
+    /**
      * 判断是否应使用并行评估（P2-2）
      *
      * <p>同时满足以下条件时返回 true：
@@ -1350,6 +1371,14 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             v.setTotalElapsedMs(v.getTotalElapsedMs() + elapsedMs);
             return v;
         });
+        // P2-4 慢规则告警：超过阈值时上报监控指标 + WARN 日志
+        if (slowRuleThresholdMs > 0 && elapsedMs >= slowRuleThresholdMs) {
+            if (metrics != null) {
+                metrics.recordSlowRule(ruleCode, elapsedMs, slowRuleThresholdMs);
+            }
+            log.warn("[LiteRule-SlowRule] rule={}, elapsed={}ms, threshold={}ms",
+                    ruleCode, elapsedMs, slowRuleThresholdMs);
+        }
     }
 
     /**

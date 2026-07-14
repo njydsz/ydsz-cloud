@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.service.impl.job;
+ackage com.njydsz.pmis.cronjob.server.service.impl.job;
 
 import java.lang.management.ManagementFactory;
 import java.time.Duration;
@@ -11,7 +11,7 @@ import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -880,7 +880,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             JobHandler handler = applicationContext.getBean(job.getHandler(), JobHandler.class);
             result = handler.execute(job.getParamsJson());
             success = true;
-            log0.setResultJson(result == null ? null : JsonUtils.toJson(result));
+            log0.setResultJson(result == null ? null : YdszJson.toJson(result));
         } catch (Exception e) {
             log.error("[Cronjob] 任务执行失败: key={} handler={} reason={}",
                     job.getJobKey(), job.getHandler(), e.getMessage(), e);

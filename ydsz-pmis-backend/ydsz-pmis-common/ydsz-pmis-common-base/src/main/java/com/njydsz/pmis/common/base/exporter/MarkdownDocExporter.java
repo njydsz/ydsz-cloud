@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.base.exporter;
+ackage com.njydsz.pmis.common.base.exporter;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.common.json.type.YdszJsonType;
 import com.njydsz.pmis.common.base.config.DocProperties;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.common.util.json.YamlUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -249,7 +249,7 @@ public class MarkdownDocExporter implements DocExporter {
         String description = docProperties.getInfo().getDescription();
 
         try {
-            Map<String, Object> root = JsonUtils.fromJson(apiDocs, new YdszJsonType<Map<String, Object>>() {});
+            Map<String, Object> root = YdszJson.toObject(apiDocs, new YdszJsonType<Map<String, Object>>() {});
             Map<String, Object> info = (Map<String, Object>) root.get("info");
             if (info != null) {
                 if (info.containsKey("title")) {
@@ -328,7 +328,7 @@ public class MarkdownDocExporter implements DocExporter {
         md.append("---\n\n");
 
         try {
-            Map<String, Object> root = JsonUtils.fromJson(apiDocs, new YdszJsonType<Map<String, Object>>() {});
+            Map<String, Object> root = YdszJson.toObject(apiDocs, new YdszJsonType<Map<String, Object>>() {});
 
             // 服务器信息
             List<Map<String, Object>> servers = (List<Map<String, Object>>) root.get("servers");
@@ -455,7 +455,7 @@ public class MarkdownDocExporter implements DocExporter {
                 Map<String, Object> schema = (Map<String, Object>) jsonContent.get("schema");
                 if (schema != null) {
                     md.append("```json\n");
-                    md.append(JsonUtils.toPrettyJson(schema));
+                    md.append(YdszJson.format(schema));
                     md.append("\n```\n\n");
                 }
             }

@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -259,7 +259,7 @@ public class FlowDefinitionCacheService {
             return null;
         }
         try {
-            Map<String, Object> extJson = JsonUtils.parseMap(skip.getExt());
+            Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
             return extJson == null ? null : extJson.getString("sourceRef");
         } catch (Exception e) {
             log.warn("[FlowCache] 解析 skip.ext 失败: skipId={} err={}",

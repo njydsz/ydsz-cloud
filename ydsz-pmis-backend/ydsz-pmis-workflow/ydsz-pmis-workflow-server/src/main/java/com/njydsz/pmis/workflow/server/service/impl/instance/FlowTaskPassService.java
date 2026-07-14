@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.impl.instance;
+﻿package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
@@ -243,7 +243,7 @@ public class FlowTaskPassService {
             return extra == null ? Collections.emptyMap() : extra;
         }
         try {
-            Map<String, Object> base = JsonUtils.parseMap(instance.getVariable());
+            Map<String, Object> base = YdszJson.parseMap(instance.getVariable());
             if (extra != null && !extra.isEmpty()) {
                 base.putAll(extra);
             }

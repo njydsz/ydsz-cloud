@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.service.ops;
+ackage com.njydsz.pmis.common.redis.service.ops;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -16,7 +16,7 @@ import org.springframework.data.redis.core.StreamOperations;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.common.redis.config.RedisProperties;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -392,7 +392,7 @@ public class RedisStreamOps {
                 Map<Object, Object> value = record.getValue();
                 for (Map.Entry<Object, Object> entry : value.entrySet()) {
                     args.add(entry.getKey() != null ? entry.getKey().toString() : "");
-                    args.add(entry.getValue() != null ? JsonUtils.toJson(entry.getValue()) : "");
+                    args.add(entry.getValue() != null ? YdszJson.toJson(entry.getValue()) : "");
                 }
 
                 redisTemplate.execute((RedisCallback<Long>) connection -> {
@@ -535,7 +535,7 @@ public class RedisStreamOps {
     private Map<String, String> convertToStringMap(Map<String, Object> message) {
         Map<String, String> result = new LinkedHashMap<>(message.size());
         for (Map.Entry<String, Object> entry : message.entrySet()) {
-            result.put(entry.getKey(), entry.getValue() != null ? JsonUtils.toJson(entry.getValue()) : null);
+            result.put(entry.getKey(), entry.getValue() != null ? YdszJson.toJson(entry.getValue()) : null);
         }
         return result;
     }

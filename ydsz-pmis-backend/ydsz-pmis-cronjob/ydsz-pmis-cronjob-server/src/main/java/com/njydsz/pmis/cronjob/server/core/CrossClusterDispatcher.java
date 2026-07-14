@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.core.dispatch;
+ackage com.njydsz.pmis.cronjob.server.core.dispatch;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -8,7 +8,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.springframework.stereotype.Component;
 
@@ -65,7 +65,7 @@ public class CrossClusterDispatcher {
             return null;
         }
         String url = baseUrl + "/cronjob/internal/execute";
-        String requestBody = JsonUtils.toJson(request);
+        String requestBody = YdszJson.toJson(request);
         try {
             HttpRequest httpRequest = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -76,7 +76,7 @@ public class CrossClusterDispatcher {
                     .build();
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
-                Map<String, Object> json = JsonUtils.parseMap(response.body());
+                Map<String, Object> json = YdszJson.parseMap(response.body());
                 int code = json.getIntValue("code", -1);
                 if (code == 0) {
                     String logId = json.getString("data");

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.impl.instance;
+﻿package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
@@ -335,7 +335,7 @@ public class FlowTaskOperateService {
             return extra == null ? Collections.emptyMap() : extra;
         }
         try {
-            Map<String, Object> base = JsonUtils.parseMap(instance.getVariable());
+            Map<String, Object> base = YdszJson.parseMap(instance.getVariable());
             if (extra != null && !extra.isEmpty()) {
                 base.putAll(extra);
             }
@@ -353,7 +353,7 @@ public class FlowTaskOperateService {
             return Collections.emptyMap();
         }
         try {
-            return JsonUtils.parseMap(ext);
+            return YdszJson.parseMap(ext);
         } catch (Exception e) {
             log.warn("[Flow] 解析节点 ext 配置失败: err={}", e.getMessage());
             return Collections.emptyMap();

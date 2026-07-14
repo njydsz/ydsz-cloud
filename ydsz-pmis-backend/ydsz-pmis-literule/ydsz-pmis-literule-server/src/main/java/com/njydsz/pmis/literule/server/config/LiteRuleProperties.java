@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.config;
+ackage com.njydsz.pmis.literule.server.config;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -559,6 +559,22 @@ public class LiteRuleProperties {
          * 默认 50，适用于规则数较大的场景。
          */
         private int parallelThreshold = 50;
+
+        /**
+         * 慢规则告警阈值（毫秒，P2-4）
+         *
+         * <p>单规则评估耗时 ≥ 此值时记录慢规则告警：
+         * <ul>
+         *   <li>输出 WARN 日志 {@code [LiteRule-SlowRule] rule=,elapsed=,threshold=}</li>
+         *   <li>当 Micrometer 可用时，递增 Prometheus 计数器
+         *       {@code literule_slow_rule_total{rule_code,}}</li>
+         * </ul>
+         * 0（默认）表示关闭慢规则检测。
+         * 推荐生产环境设置为 100~500ms，对标在线风控引擎性能要求。
+         *
+         * @since 2.2.0
+         */
+        private long slowRuleThresholdMs = 0L;
     }
 
     /**

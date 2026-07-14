@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.channel.impl;
+ackage com.njydsz.pmis.message.server.channel.impl;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -20,7 +20,7 @@ import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.json.type.YdszJsonType;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 import com.njydsz.pmis.message.server.config.MessageProperties;
 
@@ -86,7 +86,7 @@ public class AlipayMiniChannel implements MessageChannel {
                     data.put(entry.getKey(),
                             entry.getValue() == null ? "" : String.valueOf(entry.getValue()));
                 }
-                bizContent.put("data", JsonUtils.toJson(data));
+                bizContent.put("data", YdszJson.toJson(data));
             }
 
             Map<String, Object> params = new HashMap<>();
@@ -97,7 +97,7 @@ public class AlipayMiniChannel implements MessageChannel {
             params.put("timestamp", LocalDateTime.now()
                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
             params.put("version", "1.0");
-            params.put("biz_content", JsonUtils.toJson(bizContent));
+            params.put("biz_content", YdszJson.toJson(bizContent));
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -119,7 +119,7 @@ public class AlipayMiniChannel implements MessageChannel {
             String respBody = resp.getBody();
 
             // 解析响应（支付宝返回 JSON）
-            Map<String, Object> result = JsonUtils.fromJson(respBody, new YdszJsonType<Map<String, Object>>() {});
+            Map<String, Object> result = YdszJson.toObject(respBody, new YdszJsonType<Map<String, Object>>() {});
             if (result != null) {
                 Map<?, ?> alipayResp = (Map<?, ?>) result.get("alipay_open_app_mini_templatemessage_send_response");
                 if (alipayResp != null && "10000".equals(String.valueOf(alipayResp.get("code")))) {

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.channel.sms;
+ackage com.njydsz.pmis.message.server.channel.sms;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -18,7 +18,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
 import com.njydsz.pmis.message.server.config.MessageProperties;
 
@@ -106,13 +106,13 @@ public class AliyunSmsProvider implements SmsProvider {
             params.put("PhoneNumbers", phone);
             params.put("SignName", signName);
             params.put("TemplateCode", templateCode);
-            params.put("TemplateParam", JsonUtils.toJson(request.getParams()));
+            params.put("TemplateParam", YdszJson.toJson(request.getParams()));
             String signature = AliyunSmsSigner.sign(params, config.getAccessKeySecret());
             params.put("Signature", signature);
             String url = "https://" + config.getEndpoint() + "/?"
                     + AliyunSmsSigner.buildQuery(params);
             ResponseEntity<String> resp = restTemplate.getForEntity(url, String.class);
-            Map<String, Object> json = JsonUtils.parseMap(resp.getBody());
+            Map<String, Object> json = YdszJson.parseMap(resp.getBody());
             String code = json.getString("Code");
             if ("OK".equals(code)) {
                 String bizId = json.getString("BizId");
@@ -196,19 +196,19 @@ public class AliyunSmsProvider implements SmsProvider {
             for (MessageRequest req : requests) {
                 phones.add(req.getReceiver());
                 signNames.add(signName);
-                templateParams.add(JsonUtils.toJson(req.getParams()));
+                templateParams.add(YdszJson.toJson(req.getParams()));
             }
             Map<String, String> params = buildCommonParams();
             params.put("Action", "SendBatchSms");
-            params.put("PhoneNumberJson", JsonUtils.toJson(phones));
-            params.put("SignNameJson", JsonUtils.toJson(signNames));
+            params.put("PhoneNumberJson", YdszJson.toJson(phones));
+            params.put("SignNameJson", YdszJson.toJson(signNames));
             params.put("TemplateCode", templateCode);
-            params.put("TemplateParamJson", JsonUtils.toJson(templateParams));
+            params.put("TemplateParamJson", YdszJson.toJson(templateParams));
             String signature = AliyunSmsSigner.sign(params, config.getAccessKeySecret());
             params.put("Signature", signature);
             String url = "https://" + config.getEndpoint() + "/?" + AliyunSmsSigner.buildQuery(params);
             ResponseEntity<String> resp = restTemplate.getForEntity(url, String.class);
-            Map<String, Object> json = JsonUtils.parseMap(resp.getBody());
+            Map<String, Object> json = YdszJson.parseMap(resp.getBody());
             String code = json.getString("Code");
             if ("OK".equals(code)) {
                 String bizId = json.getString("BizId");
@@ -261,7 +261,7 @@ public class AliyunSmsProvider implements SmsProvider {
             params.put("Signature", signature);
             String url = "https://" + config.getEndpoint() + "/?" + AliyunSmsSigner.buildQuery(params);
             ResponseEntity<String> resp = restTemplate.getForEntity(url, String.class);
-            Map<String, Object> json = JsonUtils.parseMap(resp.getBody());
+            Map<String, Object> json = YdszJson.parseMap(resp.getBody());
             String code = json.getString("Code");
             if ("OK".equals(code)) {
                 Map<String, Object> detail = json.getJSONObject("SmsSendDetailDTOs");

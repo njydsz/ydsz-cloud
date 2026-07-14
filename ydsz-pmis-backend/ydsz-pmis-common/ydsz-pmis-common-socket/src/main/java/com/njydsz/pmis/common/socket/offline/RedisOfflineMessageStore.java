@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.socket.offline;
+ackage com.njydsz.pmis.common.socket.offline;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,7 +9,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 
 import com.njydsz.pmis.common.socket.config.WebSocketProperties;
 import com.njydsz.pmis.common.socket.constant.WebSocketConstants;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +46,7 @@ public class RedisOfflineMessageStore implements OfflineMessageStore {
                     "type", type == null ? "UNKNOWN" : type,
                     "payload", payload,
                     "timestamp", System.currentTimeMillis());
-            String json = JsonUtils.toJson(envelope);
+            String json = YdszJson.toJson(envelope);
             redisTemplate.opsForList().leftPush(key, json);
             redisTemplate.opsForList().trim(key, 0, properties.getOffline().getMaxCache() - 1);
             redisTemplate.expire(key, properties.getOffline().getTtl());

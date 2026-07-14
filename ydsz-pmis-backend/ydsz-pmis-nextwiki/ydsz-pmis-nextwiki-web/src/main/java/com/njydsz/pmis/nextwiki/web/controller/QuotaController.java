@@ -16,7 +16,7 @@ import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.nextwiki.api.dto.NextwikiDTOs;
 import com.njydsz.pmis.nextwiki.domain.entity.StorageQuota;
-import com.njydsz.pmis.nextwiki.domain.service.QuotaDomainService;
+import com.njydsz.pmis.nextwiki.server.service.QuotaApplicationService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "存储配额", description = "配额查询、设置、校验")
 public class QuotaController {
 
-    private final QuotaDomainService quotaDomainService;
+    private final QuotaApplicationService quotaApplicationService;
 
     @GetMapping("/info")
     @Operation(summary = "查询配额使用情况")
@@ -44,7 +44,7 @@ public class QuotaController {
     public BaseResponse<StorageQuota> getQuota(
             @RequestParam(defaultValue = "user") String scopeType,
             @RequestParam String scopeId) {
-        return BaseResponse.ok(quotaDomainService.getQuotaInfo(scopeType, scopeId));
+        return BaseResponse.ok(quotaApplicationService.getQuotaInfo(scopeType, scopeId));
     }
 
     @PostMapping("/set")
@@ -54,7 +54,7 @@ public class QuotaController {
     public BaseResponse<StorageQuota> setQuota(
             @Valid @RequestBody NextwikiDTOs.SetQuotaRequest request,
             @RequestHeader("X-User-Id") String userId) {
-        StorageQuota quota = quotaDomainService.setQuota(
+        StorageQuota quota = quotaApplicationService.setQuota(
                 request.getScopeType(),
                 request.getScopeId(),
                 request.getQuotaLimit(),

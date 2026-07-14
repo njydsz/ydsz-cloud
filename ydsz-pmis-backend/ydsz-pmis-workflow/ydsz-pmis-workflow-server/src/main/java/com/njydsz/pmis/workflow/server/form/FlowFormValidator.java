@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.form;
+﻿package com.njydsz.pmis.workflow.server.form;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,7 +7,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -467,7 +467,7 @@ public class FlowFormValidator {
             return null;
         }
         try {
-            return JsonUtils.fromJson(json, FlowFormSchema.class);
+            return YdszJson.toObject(json, FlowFormSchema.class);
         } catch (Exception e) {
             log.warn("[FormValidator] 解析表单 Schema 失败: {} err={}", json, e.getMessage());
             return null;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.core.dispatch;
+ackage com.njydsz.pmis.cronjob.server.core.dispatch;
 
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -587,7 +587,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                     Collections.emptyList(), job.getJobKey(), log0.getId());
             result = handler.execute(job.getParamsJson(), ctx);
             success = true;
-            log0.setResultJson(result == null ? null : JsonUtils.toJson(result));
+            log0.setResultJson(result == null ? null : YdszJson.toJson(result));
         } catch (Exception e) {
             log.error("[Dispatcher] 分片任务执行失败: key={} shard={} reason={}",
                     job.getJobKey(), shardIndex, e.getMessage(), e);
@@ -908,7 +908,7 @@ try {
                     ProcessResult mapResult = mapExecutor.executeMapJob(job, log0, triggerType);
                     success = mapResult.isSuccess();
                     result = mapResult.isSuccess() ? mapResult.getResult() : null;
-                    log0.setResultJson(result == null ? null : JsonUtils.toJson(result));
+                    log0.setResultJson(result == null ? null : YdszJson.toJson(result));
                     if (!success) {
                         log0.setErrorMessage(mapResult.getErrorMessage());
                     }
@@ -918,13 +918,13 @@ try {
                     JobHandler handler = resolveHandler(job);
                     result = handler.execute(job.getParamsJson());
                     success = true;
-                    log0.setResultJson(result == null ? null : JsonUtils.toJson(result));
+                    log0.setResultJson(result == null ? null : YdszJson.toJson(result));
                 }
             } else {
                 JobHandler handler = resolveHandler(job);
                 result = handler.execute(job.getParamsJson());
                 success = true;
-                log0.setResultJson(result == null ? null : JsonUtils.toJson(result));
+                log0.setResultJson(result == null ? null : YdszJson.toJson(result));
             }
         } catch (Exception e) {
             log.error("[Dispatcher] 任务执行失败: key={} handler={} reason={}",

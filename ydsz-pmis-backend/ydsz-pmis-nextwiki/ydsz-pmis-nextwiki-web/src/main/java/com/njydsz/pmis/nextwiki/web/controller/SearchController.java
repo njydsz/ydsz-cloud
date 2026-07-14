@@ -12,8 +12,8 @@ import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.nextwiki.api.dto.NextwikiDTOs;
-import com.njydsz.pmis.nextwiki.domain.service.SearchDomainService;
 import com.njydsz.pmis.nextwiki.domain.vo.SearchResultVO;
+import com.njydsz.pmis.nextwiki.server.service.SearchApplicationService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "全文搜索", description = "文件名/内容/标签搜索")
 public class SearchController {
 
-    private final SearchDomainService searchDomainService;
+    private final SearchApplicationService searchApplicationService;
 
     @PostMapping
     @Operation(summary = "综合搜索")
@@ -46,7 +46,7 @@ public class SearchController {
         int pageSize = request.getPageSize() != null ? request.getPageSize() : 20;
         String scope = request.getScope() != null ? request.getScope() : "all";
 
-        SearchResultVO result = searchDomainService.search(
+        SearchResultVO result = searchApplicationService.search(
                 request.getKeyword(), userId, scope, page, pageSize);
         return BaseResponse.ok(result);
     }
@@ -55,7 +55,7 @@ public class SearchController {
     @Operation(summary = "重建全量索引")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH_REBUILD)
     public BaseResponse<Void> rebuildIndices(@RequestHeader("X-User-Id") String userId) {
-        searchDomainService.rebuildAllIndices();
+        searchApplicationService.rebuildAllIndices();
         return BaseResponse.ok();
     }
 }

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.json;
+ackage com.njydsz.pmis.common.json;
 
 import java.io.Writer;
 import java.lang.reflect.*;
@@ -7,12 +7,12 @@ import java.util.*;
 
 import com.njydsz.pmis.common.json.config.YdszJsonConfig;
 import com.njydsz.pmis.common.json.deserializer.JsonDeserializer;
-import com.njydsz.pmis.common.json.metric.JsonMetricsCallback;
 import com.njydsz.pmis.common.json.engine.YdszDeserializerEngine;
 import com.njydsz.pmis.common.json.engine.YdszSerializerEngine;
 import com.njydsz.pmis.common.json.exception.YdszJsonException;
 import com.njydsz.pmis.common.json.jsonpath.YdszJsonPath;
 import com.njydsz.pmis.common.json.merge.JsonMergePatch;
+import com.njydsz.pmis.common.json.metric.JsonMetricsCallback;
 import com.njydsz.pmis.common.json.module.YdszJsonModuleRegistry;
 import com.njydsz.pmis.common.json.object.YdszJsonArray;
 import com.njydsz.pmis.common.json.object.YdszJsonObject;
@@ -755,6 +755,84 @@ public class YdszJson {
         if (!result.isValid()) {
             throw new IllegalArgumentException("Validation failed: " + result.getErrors());
         }
+    }
+
+    // ==================== 便捷方法（字节数组 / 类型安全 Map） ====================
+
+    /**
+     * 字节数组转对象（UTF-8 编码）
+     *
+     * @param bytes JSON 字节数组
+     * @param clazz 目标类型
+     * @param <T>   目标类型泛型
+     * @return 反序列化对象，bytes 为空时返回 null
+     */
+    public static <T> T fromJsonBytes(byte[] bytes, Class<T> clazz) {
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
+        String json = new String(bytes, StandardCharsets.UTF_8);
+        return toObject(json, clazz);
+    }
+
+    /**
+     * 字节数组转泛型对象（UTF-8 编码）
+     *
+     * @param bytes   JSON 字节数组
+     * @param typeRef 类型引用
+     * @param <T>     目标类型泛型
+     * @return 反序列化对象，bytes 为空时返回 null
+     */
+    public static <T> T fromJsonBytes(byte[] bytes, YdszJsonType<T> typeRef) {
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
+        String json = new String(bytes, StandardCharsets.UTF_8);
+        return toObject(json, typeRef);
+    }
+
+    /**
+     * JSON 字符串转类型安全 Map
+     *
+     * @param json       JSON 字符串
+     * @param keyClass   Map key 类型
+     * @param valueClass Map value 类型
+     * @param <K>        key 类型泛型
+     * @param <V>        value 类型泛型
+     * @return 反序列化 Map，json 为空时返回 null
+     */
+    public static <K, V> Map<K, V> fromJsonToMap(String json, Class<K> keyClass, Class<V> valueClass) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        validateJsonSize(json);
+        return recordDeserialize(() -> {
+            ParameterizedType mapType = new ParameterizedType() {
+                @Override
+                public Type[] getActualTypeArguments() {
+                    return new Type[]{keyClass, valueClass};
+                }
+
+                @Override
+                public Type getRawType() {
+                    return Map.class;
+                }
+
+                @Override
+                public Type getOwnerType() {
+                    return null;
+                }
+            };
+            Object result = YdszDeserializerEngine.deserialize(json, mapType);
+            if (result instanceof Map<?, ?> map) {
+                Map<K, V> typedMap = new LinkedHashMap<>(map.size());
+                for (Map.Entry<?, ?> entry : map.entrySet()) {
+                    typedMap.put(keyClass.cast(entry.getKey()), valueClass.cast(entry.getValue()));
+                }
+                return typedMap;
+            }
+            return new LinkedHashMap<>();
+        });
     }
 
     // ==================== 安全检查 ====================

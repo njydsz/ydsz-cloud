@@ -93,17 +93,22 @@ public class FlowDefinitionController {
     }
 
     /**
-     * 发布流程定义
+     * 发布流程定义（带版本兼容性校验）。
      *
-     * @param id 流程定义 ID
+     * <p>P1-4: 发布前自动检测同 flowCode 激活版本的在途实例是否会因节点删除而卡死。
+     * HIGH 风险时默认阻断，可通过 {@code force=true} 强制发布（需管理员权限）。
+     *
+     * @param id    流程定义 ID
+     * @param force 是否强制发布（跳过 HIGH 风险阻断），默认 false
      * @return 统一响应结果
      */
     @Idempotent(key = "flowDefinition:publish", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/definition/{id}/publish")
-    @Operation(summary = "发布流程定义")
+    @Operation(summary = "发布流程定义（带版本兼容性校验）")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
-    public BaseResponse<Void> publish(@PathVariable String id) {
-        definitionService.publish(id);
+    public BaseResponse<Void> publish(@PathVariable String id,
+                                      @RequestParam(defaultValue = "false") boolean force) {
+        definitionService.publish(id, force);
         return BaseResponse.ok();
     }
 

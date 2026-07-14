@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.mask;
+ackage com.njydsz.pmis.common.audit.mask;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import com.njydsz.pmis.common.json.YdszJson;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -136,15 +136,15 @@ public final class SensitiveFieldMask {
             return obj;
         }
         try {
-            String json = JsonUtils.toJson(obj);
+            String json = YdszJson.toJson(obj);
             Class<?> clazz = obj.getClass();
             // Collection/Map 类型使用 parseArray/parseObject 保持泛型兼容
             if (Collection.class.isAssignableFrom(clazz)) {
-                return JsonUtils.fromJsonToList(json, Object.class);
+                return YdszJson.parseArray(json, Object.class);
             } else if (Map.class.isAssignableFrom(clazz)) {
-                return JsonUtils.fromJson(json, HashMap.class);
+                return YdszJson.toObject(json, HashMap.class);
             }
-            return JsonUtils.fromJson(json, (Class) clazz);
+            return YdszJson.toObject(json, (Class) clazz);
         } catch (Exception e) {
             // 深拷贝失败时降级返回原对象
             log.debug("[SensitiveFieldMask] 深拷贝失败，降级返回原对象: {}", e.getMessage());
@@ -167,7 +167,7 @@ public final class SensitiveFieldMask {
             // Use JsonUtils static methods (YdszJson engine)
             JsonNode parsed = YdszJson.readTree(json);
             maskJsonObject(parsed, patterns, new HashSet<>());
-            return JsonUtils.toJson(parsed);
+            return YdszJson.toJson(parsed);
         } catch (Exception e) {
             // 解析失败时降级返回原始 JSON
             log.debug("[SensitiveFieldMask] JSON解析失败，降级返回原始JSON: {}", e.getMessage());

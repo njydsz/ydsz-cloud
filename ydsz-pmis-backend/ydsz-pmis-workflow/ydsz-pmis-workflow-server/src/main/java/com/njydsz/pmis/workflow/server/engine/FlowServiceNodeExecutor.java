@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.engine;
+﻿package com.njydsz.pmis.workflow.server.engine;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,7 +18,7 @@ import com.googlecode.aviator.AviatorEvaluatorInstance;
 import com.googlecode.aviator.Expression;
 import com.googlecode.aviator.Feature;
 import com.googlecode.aviator.Options;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
 
 import lombok.extern.slf4j.Slf4j;
@@ -251,7 +251,7 @@ public class FlowServiceNodeExecutor {
             return Collections.emptyMap();
         }
         try {
-            Map<String, Object> map = JsonUtils.parseMap(ext);
+            Map<String, Object> map = YdszJson.parseMap(ext);
             return map == null ? Collections.emptyMap() : map;
         } catch (Exception e) {
             log.warn("[Flow-Service] 解析 ext JSON 失败: {} err={}", ext, e.getMessage());

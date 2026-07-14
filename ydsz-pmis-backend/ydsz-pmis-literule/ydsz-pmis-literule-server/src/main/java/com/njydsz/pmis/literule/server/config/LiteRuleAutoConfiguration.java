@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.config;
+ackage com.njydsz.pmis.literule.server.config;
 
 import java.lang.reflect.Constructor;
 import java.util.List;
@@ -156,6 +156,12 @@ public class LiteRuleAutoConfiguration {
             engine.setParallelThreshold(properties.getPerformance().getParallelThreshold());
         }
 
+        // P2-4 慢规则告警：阈值 > 0 时启用
+        long slowRuleThresholdMs = properties.getPerformance().getSlowRuleThresholdMs();
+        if (slowRuleThresholdMs > 0) {
+            engine.setSlowRuleThresholdMs(slowRuleThresholdMs);
+        }
+
         // P3-1 规则+模型融合：可选注入模型注册表
         ModelInputRegistry modelRegistry = modelRegistryProvider.getIfAvailable();
         if (modelRegistry != null) {
@@ -212,11 +218,12 @@ public class LiteRuleAutoConfiguration {
         // Micrometer 桥接（仅当 classpath 存在 MeterRegistry 时启用）
         bindMicrometerIfAvailable(engine, applicationContext);
 
-        log.info("[LiteRule] 默认规则引擎已初始化（statsEnabled={}, traceEnabled={}, timeoutMs={}, breaker={}, metrics={}, canary={}, breakpoint={}, model={}）",
+        log.info("[LiteRule] 默认规则引擎已初始化（statsEnabled={}, traceEnabled={}, timeoutMs={}, breaker={}, metrics={}, canary={}, breakpoint={}, model={}, slowRuleThreshold={}ms）",
                 properties.isStatsEnabled(), properties.isTraceEnabled(),
                 properties.getRuleTimeoutMs(), properties.getCircuitBreakerMinEvaluations() > 0,
                 engine.getMetrics() != null, engine.getCanaryRouter() != null,
-                engine.getBreakpointHook() != null, engine.getModelInputRegistry() != null);
+                engine.getBreakpointHook() != null, engine.getModelInputRegistry() != null,
+                properties.getPerformance().getSlowRuleThresholdMs());
         return engine;
     }
 

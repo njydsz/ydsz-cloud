@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,13 +21,13 @@ import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.file.storage.IFileStorage;
-import com.njydsz.pmis.common.file.storage.IFileStorageProvider;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 import com.njydsz.pmis.nextwiki.domain.enums.NextwikiExceptionCode;
-import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.pmis.nextwiki.server.health.NextwikiHealthIndicator;
-import com.njydsz.pmis.nextwiki.server.service.DownloadRateLimitService;
+import com.njydsz.pmis.nextwiki.server.service.DownloadApplicationService;
+import com.njydsz.pmis.nextwiki.server.service.DownloadApplicationService.DownloadContext;
+import com.njydsz.pmis.nextwiki.server.service.DownloadApplicationService.SignedDownloadContext;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -50,12 +49,8 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "文件下载", description = "文件下载、签名URL生成、限流防盗链")
 public class DownloadController {
 
-    private final FileNodeRepository fileNodeRepository;
-    private final DownloadRateLimitService rateLimitService;
+    private final DownloadApplicationService downloadApplicationService;
     private final NextwikiHealthIndicator healthIndicator;
-
-    @Autowired(required = false)
-    private IFileStorageProvider fileStorageProvider;
 
     /**
      * 下载文件
@@ -69,25 +64,15 @@ public class DownloadController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        FileNode fileNode = fileNodeRepository.findById(nodeId);
-        if (fileNode == null || !fileNode.isFile()) {
-            throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
-        }
-
         String ip = getClientIp(request);
 
-        DownloadRateLimitService.RateLimitResult rateResult =
-                rateLimitService.checkRateLimit(userId, ip, nodeId);
-        if (!rateResult.isAllowed()) {
-            throw BusinessException.of(NextwikiExceptionCode.RATE_LIMIT_EXCEEDED)
-                    .data("message", rateResult.getMessage());
-        }
-
-        IFileStorage storage = resolveStorage();
+        DownloadContext context = downloadApplicationService.prepareDownload(nodeId, userId, ip);
+        IFileStorage storage = context.getStorage();
         if (storage == null) {
             throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
         }
 
+        FileNode fileNode = context.getFileNode();
         setDownloadHeaders(response, fileNode.getName(), fileNode.getMimeType());
         storage.download(fileNode.getBucketName(), fileNode.getStorageKey(), response);
 
@@ -107,14 +92,8 @@ public class DownloadController {
             @RequestHeader("X-User-Id") String userId,
             HttpServletRequest request) {
 
-        FileNode fileNode = fileNodeRepository.findById(nodeId);
-        if (fileNode == null || !fileNode.isFile()) {
-            throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
-        }
-
         String ip = getClientIp(request);
-        String signedUrl = rateLimitService.generateSignedDownloadUrl(
-                fileNode.getStorageKey(), userId, ip);
+        String signedUrl = downloadApplicationService.generateSignedUrl(nodeId, userId, ip);
 
         log.info("[DownloadController] 生成签名URL: nodeId={}, userId={}", nodeId, userId);
         return BaseResponse.ok(signedUrl);
@@ -132,16 +111,14 @@ public class DownloadController {
             HttpServletRequest request,
             HttpServletResponse response) {
 
-        String storageKey = rateLimitService.verifySignedUrl(sign, expireTime);
-        if (storageKey == null) {
-            throw new BusinessException(NextwikiExceptionCode.SIGN_URL_EXPIRED);
-        }
-
-        IFileStorage storage = resolveStorage();
+        SignedDownloadContext context =
+                downloadApplicationService.resolveSignedDownload(sign, expireTime);
+        IFileStorage storage = context.getStorage();
         if (storage == null) {
             throw new BusinessException(NextwikiExceptionCode.FILE_STORAGE_NOT_CONFIGURED);
         }
 
+        String storageKey = context.getStorageKey();
         String fileName = extractFileNameFromStorageKey(storageKey);
         setDownloadHeaders(response, fileName, MediaType.APPLICATION_OCTET_STREAM_VALUE);
 
@@ -156,14 +133,7 @@ public class DownloadController {
         log.info("[DownloadController] 签名URL下载: sign={}", sign);
     }
 
-    // ==================== 私有方法 ====================
-
-    private IFileStorage resolveStorage() {
-        if (fileStorageProvider != null) {
-            return fileStorageProvider.getStorage();
-        }
-        return null;
-    }
+    // ==================== 私有方法（HTTP 层处理） ====================
 
     private String getClientIp(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");

@@ -1,7 +1,7 @@
-package com.njydsz.pmis.common.safe.sensitive.ydsz;
+ackage com.njydsz.pmis.common.safe.sensitive.ydsz;
 
 import com.njydsz.pmis.common.safe.sensitive.SensitiveDataProcessor;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 /**
  * YdszJson 脱敏序列化器
@@ -37,7 +37,7 @@ public final class YdszSensitiveSerializer {
             return "null";
         }
         Object desensitized = SensitiveDataProcessor.process(obj);
-        return JsonUtils.toJson(desensitized);
+        return YdszJson.toJson(desensitized);
     }
 
     /**
@@ -53,9 +53,9 @@ public final class YdszSensitiveSerializer {
         }
         Object desensitized = SensitiveDataProcessor.process(obj);
         if (pretty) {
-            return JsonUtils.toPrettyJson(desensitized);
+            return YdszJson.format(desensitized);
         }
-        return JsonUtils.toJson(desensitized);
+        return YdszJson.toJson(desensitized);
     }
 
     /**
@@ -71,7 +71,7 @@ public final class YdszSensitiveSerializer {
             return "null";
         }
         Object desensitized = SensitiveDataProcessor.process(obj);
-        return JsonUtils.toJson(desensitized);
+        return YdszJson.toJson(desensitized);
     }
 
     /**
@@ -83,6 +83,6 @@ public final class YdszSensitiveSerializer {
      * @return 对象
      */
     public static <T> T deserialize(String json, Class<T> clazz) {
-        return JsonUtils.fromJson(json, clazz);
+        return YdszJson.toObject(json, clazz);
     }
 }

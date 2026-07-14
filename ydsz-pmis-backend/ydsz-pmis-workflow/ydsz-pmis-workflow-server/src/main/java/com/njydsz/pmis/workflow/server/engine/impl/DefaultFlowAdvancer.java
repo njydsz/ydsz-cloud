@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.engine.impl;
+﻿package com.njydsz.pmis.workflow.server.engine.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.lock.annotation.YdszDistributedLock;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
@@ -439,7 +439,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             return null;
         }
         try {
-            Map<String, Object> nodeExt = JsonUtils.parseMap(gatewayNode.getExt());
+            Map<String, Object> nodeExt = YdszJson.parseMap(gatewayNode.getExt());
             if (nodeExt == null) {
                 return null;
             }
@@ -472,7 +472,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             return null;
         }
         try {
-            Map<String, Object> ext = JsonUtils.parseMap(skip.getExt());
+            Map<String, Object> ext = YdszJson.parseMap(skip.getExt());
             if (ext == null) {
                 return null;
             }
@@ -494,7 +494,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             return null;
         }
         try {
-            Map<String, Object> ext = JsonUtils.parseMap(skip.getExt());
+            Map<String, Object> ext = YdszJson.parseMap(skip.getExt());
             if (ext == null) {
                 return null;
             }
@@ -556,7 +556,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             return incomingCount;
         }
         try {
-            Map<String, Object> ext = JsonUtils.parseMap(node.getExt());
+            Map<String, Object> ext = YdszJson.parseMap(node.getExt());
             if (ext == null) {
                 return incomingCount;
             }
@@ -599,7 +599,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             return Collections.emptyMap();
         }
         try {
-            return JsonUtils.parseMap(json);
+            return YdszJson.parseMap(json);
         } catch (Exception e) {
             log.warn("[Flow] 变量解析失败: {}", e.getMessage());
             return Collections.emptyMap();

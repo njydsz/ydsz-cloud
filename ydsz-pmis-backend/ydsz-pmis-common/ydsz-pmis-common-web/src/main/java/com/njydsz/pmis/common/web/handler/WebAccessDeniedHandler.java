@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.web.handler;
+ackage com.njydsz.pmis.common.web.handler;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -14,7 +14,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.pmis.common.exception.enums.ExceptionCode;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.common.util.message.MessageUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +53,6 @@ public class WebAccessDeniedHandler implements AccessDeniedHandler {
         String message = MessageUtils.getMessage(errorCode.getKey(), errorCode.getKey());
 
         BaseResponse<?> body = BaseResponse.error(errorCode.getCode(), message);
-        response.getWriter().write(JsonUtils.toJson(body));
+        response.getWriter().write(YdszJson.toJson(body));
     }
 }

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.server.queue;
+﻿package com.njydsz.pmis.project.server.queue;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -12,7 +12,7 @@ import com.njydsz.pmis.common.queue.enums.QueueType;
 import com.njydsz.pmis.common.queue.queue.IMessageQueue;
 import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.pmis.common.queue.service.IMessagePublisher;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.project.server.engine.BudgetAlertEvent;
 
 import lombok.RequiredArgsConstructor;
@@ -68,7 +68,7 @@ public class ProjectQueuePublisher {
             return;
         }
         try {
-            String json = JsonUtils.toJson(event);
+            String json = YdszJson.toJson(event);
             QueueMessage message = QueueMessage.of(json);
             message.addHeader("alertLevel", event.getLevel() == null ? "UNKNOWN" : event.getLevel().name());
             message.addHeader("initiationId", event.getInitiationId());

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.channel;
+ackage com.njydsz.pmis.common.notify.channel;
 
 import java.util.List;
 import java.util.Map;
@@ -17,7 +17,7 @@ import org.springframework.web.client.RestTemplate;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 /**
  * 企业微信通知发送器
@@ -65,7 +65,7 @@ public class WeComNotifySender implements NotifyChannelStrategy {
 							"content", "### " + title + "\n" + content
 					)
 			);
-			String json = JsonUtils.toJson(body);
+			String json = YdszJson.toJson(body);
 			String response = restTemplate.postForObject(webhook, new HttpEntity<>(json, jsonHeaders()), String.class);
 
 			// 校验企业微信响应 errcode

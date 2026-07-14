@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.nextwiki.domain.vo;
+ackage com.njydsz.pmis.nextwiki.domain.vo;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

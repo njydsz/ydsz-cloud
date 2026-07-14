@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.service.config;
+ackage com.njydsz.pmis.message.server.service.config;
 
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -15,7 +15,7 @@ import org.springframework.web.client.RestClient;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.message.domain.entity.config.MsgVariableSourceDO;
 import com.njydsz.pmis.message.infra.mapper.config.MsgVariableSourceMapper;
 
@@ -116,7 +116,7 @@ public class VariableSourceResolver {
                     + ":" + (context == null ? "" : context.hashCode());
             String cached = redisTemplate.opsForValue().get(cacheKey);
             if (StringUtils.hasText(cached)) {
-                return JsonUtils.fromJson(cached, Object.class);
+                return YdszJson.toObject(cached, Object.class);
             }
         }
 
@@ -133,7 +133,7 @@ public class VariableSourceResolver {
 
         // 缓存写入
         if (value != null && cacheKey != null) {
-            redisTemplate.opsForValue().set(cacheKey, JsonUtils.toJson(value),
+            redisTemplate.opsForValue().set(cacheKey, YdszJson.toJson(value),
                     Duration.ofSeconds(source.getCacheTtl()));
         }
         return value;
@@ -201,7 +201,7 @@ public class VariableSourceResolver {
             RestClient client = RestClient.create();
             String body = client.get().uri(resolvedUrl).retrieve().body(String.class);
             if (StringUtils.hasText(body)) {
-                return JsonUtils.fromJson(body, Object.class);
+                return YdszJson.toObject(body, Object.class);
             }
         } catch (Exception e) {
             log.warn("[VariableSource] HTTP 解析失败: url={} err={}", url, e.getMessage(), e);

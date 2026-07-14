@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.jdbc.entity;
+ackage com.njydsz.pmis.common.jdbc.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

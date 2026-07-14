@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.consumer;
+ackage com.njydsz.pmis.message.server.consumer;
 
 import java.time.Duration;
 import java.util.List;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.common.constant.PmisMessageTopics;
 import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.message.server.service.core.MessageService;
 
 import lombok.RequiredArgsConstructor;
@@ -70,12 +70,12 @@ public class BatchMessageConsumer implements RocketMQListener<String> {
         }
         List<MessageRequest> requests;
         try {
-            requests = JsonUtils.fromJsonToList(body, MessageRequest.class);
+            requests = YdszJson.parseArray(body, MessageRequest.class);
         } catch (Exception e) {
             log.error("[BatchConsumer] 批量消息解析失败,尝试单条解析: err={}", e.getMessage(), e);
             // 降级：尝试作为单条消息处理
             try {
-                MessageRequest single = JsonUtils.fromJson(body, MessageRequest.class);
+                MessageRequest single = YdszJson.toObject(body, MessageRequest.class);
                 if (single != null) {
                     requests = List.of(single);
                 } else {

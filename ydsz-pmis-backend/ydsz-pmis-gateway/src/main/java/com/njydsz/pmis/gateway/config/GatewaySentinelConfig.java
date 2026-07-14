@@ -1,8 +1,8 @@
-﻿package com.njydsz.pmis.gateway.config;
+ackage com.njydsz.pmis.gateway.config;
 
 import java.nio.charset.StandardCharsets;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import jakarta.annotation.PostConstruct;
 
@@ -92,7 +92,7 @@ public class GatewaySentinelConfig {
                     .contentType(MediaType.APPLICATION_JSON)
                     .header("Content-Type", MediaType.APPLICATION_JSON_VALUE + ";charset=" + StandardCharsets.UTF_8)
                     .header(GatewayConstants.HEADER_TRACE_ID, traceId)
-                    .bodyValue(JsonUtils.toJson(body));
+                    .bodyValue(YdszJson.toJson(body));
         };
         GatewayCallbackManager.setBlockHandler(handler);
 

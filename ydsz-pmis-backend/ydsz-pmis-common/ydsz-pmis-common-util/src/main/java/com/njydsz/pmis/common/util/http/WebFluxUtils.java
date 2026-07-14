@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.http;
+ackage com.njydsz.pmis.common.util.http;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
@@ -12,7 +12,7 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 
 import com.njydsz.pmis.common.core.constant.TokenConstants;
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 import reactor.core.publisher.Mono;
@@ -59,7 +59,7 @@ public final class WebFluxUtils {
         response.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         BaseResponse<Serializable> result = BaseResponse.success(toSerializable(data));
         DataBuffer dataBuffer = response.bufferFactory()
-                .wrap(JsonUtils.toJson(result).getBytes(StandardCharsets.UTF_8));
+                .wrap(YdszJson.toJson(result).getBytes(StandardCharsets.UTF_8));
         return response.writeWith(Mono.just(dataBuffer));
     }
 
@@ -76,7 +76,7 @@ public final class WebFluxUtils {
         response.getHeaders().add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         BaseResponse<Serializable> result = BaseResponse.error(String.valueOf(code), msg);
         DataBuffer dataBuffer = response.bufferFactory()
-                .wrap(JsonUtils.toJson(result).getBytes(StandardCharsets.UTF_8));
+                .wrap(YdszJson.toJson(result).getBytes(StandardCharsets.UTF_8));
         return response.writeWith(Mono.just(dataBuffer));
     }
 
@@ -87,7 +87,7 @@ public final class WebFluxUtils {
         if (data instanceof Serializable) {
             return (Serializable) data;
         }
-        return JsonUtils.toJson(data);
+        return YdszJson.toJson(data);
     }
 
     private static String replaceTokenPrefix(String token) {

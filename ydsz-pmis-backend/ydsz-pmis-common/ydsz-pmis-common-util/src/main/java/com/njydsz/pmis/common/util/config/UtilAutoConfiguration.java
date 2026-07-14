@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.config;
+ackage com.njydsz.pmis.common.util.config;
 
 import java.util.concurrent.TimeUnit;
 
@@ -12,7 +12,7 @@ import com.njydsz.pmis.common.util.http.OkHttpProperties;
 import com.njydsz.pmis.common.util.http.OkHttpUtils;
 import com.njydsz.pmis.common.util.id.SnowflakeProperties;
 import com.njydsz.pmis.common.util.json.JsonMetrics;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.common.util.spring.SpringContextHolder;
 
 import okhttp3.ConnectionPool;
@@ -59,7 +59,7 @@ public class UtilAutoConfiguration {
     @ConditionalOnMissingBean(JsonMetrics.class)
     public JsonMetrics jsonMetrics() {
         JsonMetrics jsonMetrics = new JsonMetrics();
-        JsonUtils.setMetrics(jsonMetrics);
+        YdszJson.setMetricsCallback(jsonMetrics);
         return jsonMetrics;
     }
 

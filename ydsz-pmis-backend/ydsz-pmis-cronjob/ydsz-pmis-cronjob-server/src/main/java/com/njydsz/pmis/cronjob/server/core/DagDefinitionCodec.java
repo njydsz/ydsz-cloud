@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.core.dag;
+ackage com.njydsz.pmis.cronjob.server.core.dag;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.Map;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.springframework.stereotype.Component;
 
@@ -89,7 +89,7 @@ public class DagDefinitionCodec {
         }
         JSONObject root;
         try {
-            root = JsonUtils.parseMap(json);
+            root = YdszJson.parseMap(json);
         } catch (Exception e) {
             throw new SysException(StandardResultCode.BAD_REQUEST, "error.cronjob.msg_dag_definition_invalid");
         }

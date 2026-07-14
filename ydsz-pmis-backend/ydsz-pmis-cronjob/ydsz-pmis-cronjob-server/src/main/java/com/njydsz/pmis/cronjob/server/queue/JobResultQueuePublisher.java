@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.queue;
+ackage com.njydsz.pmis.cronjob.server.queue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +15,7 @@ import com.njydsz.pmis.common.queue.enums.QueueType;
 import com.njydsz.pmis.common.queue.queue.IMessageQueue;
 import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.pmis.common.queue.service.IMessagePublisher;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.cronjob.server.core.TaskCompletedEvent;
 
 import lombok.RequiredArgsConstructor;
@@ -86,7 +86,7 @@ public class JobResultQueuePublisher {
             payload.put("success", event.success());
             payload.put("logId", event.logId());
 
-            QueueMessage message = QueueMessage.of(JsonUtils.toJson(payload));
+            QueueMessage message = QueueMessage.of(YdszJson.toJson(payload));
             message.addHeader("jobKey", event.jobKey());
             message.addHeader("success", String.valueOf(event.success()));
             message.addHeader("source", "cronjob");

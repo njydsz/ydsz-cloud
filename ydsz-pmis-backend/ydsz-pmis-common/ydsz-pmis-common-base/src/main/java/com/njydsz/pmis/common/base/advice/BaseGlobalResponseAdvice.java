@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.base.advice;
+ackage com.njydsz.pmis.common.base.advice;
 
 import java.io.Serializable;
 
@@ -12,7 +12,7 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 /**
  * 全局响应包装基类（Web/App 共享）
@@ -70,8 +70,8 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
         if (body instanceof String) {
             BaseResponse<String> result = wrapStringBody((String) body);
             try {
-                ObjectMapper mapper = objectMapper != null ? objectMapper : JsonUtils.getMapper();
-                return JsonUtils.toJson(result);
+                ObjectMapper mapper = objectMapper != null ? objectMapper : YdszJson.getMapper();
+                return YdszJson.toJson(result);
             } catch (Exception e) {
                 return result;
             }

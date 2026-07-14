@@ -1,8 +1,8 @@
-package com.njydsz.pmis.workflow.server.engine;
+﻿package com.njydsz.pmis.workflow.server.engine;
 
 import java.util.Map;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 /**
  * 工作流引擎 JSON 工具（基于 YdszJson 引擎，统一使用 JsonUtils）
@@ -22,7 +22,7 @@ public final class JsonHelper {
         if (obj == null) {
             return null;
         }
-        return JsonUtils.toJson(obj);
+        return YdszJson.toJson(obj);
     }
 
     /**
@@ -35,6 +35,6 @@ public final class JsonHelper {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return JsonUtils.parseMap(json);
+        return YdszJson.parseMap(json);
     }
 }

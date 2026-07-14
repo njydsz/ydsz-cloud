@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.agent.infra.memory;
+ackage com.njydsz.pmis.agent.infra.memory;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,12 +124,12 @@ public class RedisConversationMemory implements ConversationMemory {
             sm.promptTokens = message.getTokenUsage().getPromptTokens();
             sm.completionTokens = message.getTokenUsage().getCompletionTokens();
         }
-        return JsonUtils.toJson(sm);
+        return YdszJson.toJson(sm);
     }
 
     private ChatMessage deserializeMessage(String json) {
         try {
-            SerializedMessage sm = JsonUtils.fromJson(json, SerializedMessage.class);
+            SerializedMessage sm = YdszJson.toObject(json, SerializedMessage.class);
             MessageRole role = MessageRole.valueOf(sm.role);
             TokenUsage usage = null;
             if (sm.promptTokens > 0 || sm.completionTokens > 0) {

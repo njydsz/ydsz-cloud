@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.springframework.stereotype.Component;
 
@@ -42,7 +42,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
         RuleVersionHistoryDO DO = new RuleVersionHistoryDO();
         DO.setRuleCode(definition.getCode());
         DO.setVersion(definition.getVersion());
-        DO.setDefinitionJson(JsonUtils.toJson(definition));
+        DO.setDefinitionJson(YdszJson.toJson(definition));
         DO.setChangeDesc(changeDesc);
         DO.setOperator(operator);
         DO.setCreatedAt(LocalDateTime.now());
@@ -68,7 +68,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
         }
 
         // 从快照恢复规则定义
-        RuleDefinition restored = JsonUtils.parseMap(targetVersion.getDefinitionJson(), RuleDefinition.class);
+        RuleDefinition restored = YdszJson.parseMap(targetVersion.getDefinitionJson(), RuleDefinition.class);
 
         // 更新主表（版本号+1，因为回滚也是一次变更）
         RuleDefinitionDO existing = ruleDefinitionMapper.selectByCode(ruleCode);

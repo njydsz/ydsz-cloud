@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.queue;
+﻿package com.njydsz.pmis.workflow.server.queue;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +15,7 @@ import com.njydsz.pmis.common.queue.enums.QueueType;
 import com.njydsz.pmis.common.queue.queue.IMessageQueue;
 import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.pmis.common.queue.service.IMessagePublisher;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.workflow.server.engine.FlowEventContext;
 import com.njydsz.pmis.workflow.server.engine.FlowWorkflowEvent;
 
@@ -89,7 +89,7 @@ public class FlowQueuePublisher {
             payload.put("taskId", event.getTaskId());
             payload.put("data", event.getData());
 
-            QueueMessage message = QueueMessage.of(JsonUtils.toJson(payload));
+            QueueMessage message = QueueMessage.of(YdszJson.toJson(payload));
             message.addHeader("eventType", event.getEventType());
             message.addHeader("instanceId", event.getInstanceId());
             message.addHeader("source", "workflow");
@@ -126,7 +126,7 @@ public class FlowQueuePublisher {
             payload.put("tenantId", ctx.getTenantId());
             payload.put("traceId", ctx.getTraceId());
 
-            QueueMessage message = QueueMessage.of(JsonUtils.toJson(payload));
+            QueueMessage message = QueueMessage.of(YdszJson.toJson(payload));
             message.addHeader("eventType", eventType);
             message.addHeader("instanceId", ctx.getInstanceId());
             message.addHeader("operatorId", ctx.getOperatorId());

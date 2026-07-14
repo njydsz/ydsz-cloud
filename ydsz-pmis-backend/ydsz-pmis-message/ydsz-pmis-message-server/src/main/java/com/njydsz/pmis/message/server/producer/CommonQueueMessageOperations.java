@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.producer;
+ackage com.njydsz.pmis.message.server.producer;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -15,7 +15,7 @@ import com.njydsz.pmis.common.queue.queue.IMessageQueue;
 import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.pmis.common.queue.service.IMessagePublisher;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,7 +63,7 @@ public class CommonQueueMessageOperations implements MessageQueueOperations {
             throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
-        String payload = JsonUtils.toJson(req);
+        String payload = YdszJson.toJson(req);
         QueueMessage message = QueueMessage.of(payload);
         message.addHeader("messageId", req.getMessageId());
         message.addHeader("channel", req.getChannel());

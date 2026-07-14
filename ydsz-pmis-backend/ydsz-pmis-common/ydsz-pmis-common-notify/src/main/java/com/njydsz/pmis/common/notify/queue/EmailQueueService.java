@@ -1,9 +1,9 @@
-﻿package com.njydsz.pmis.common.notify.queue;
+ackage com.njydsz.pmis.common.notify.queue;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,7 +71,7 @@ public class EmailQueueService {
 			return false;
 		}
 		try {
-			String json = JsonUtils.toJson(message);
+			String json = YdszJson.toJson(message);
 			redisTemplate.opsForList().rightPush(QUEUE_KEY, json);
 			totalEnqueued.incrementAndGet();
 			log.debug("[EmailQueueService] 邮件已入队: to={}", message.getTo());
@@ -116,7 +116,7 @@ public class EmailQueueService {
 					Thread.sleep(1000);
 					continue;
 				}
-				EmailMessage message = JsonUtils.fromJson(json, EmailMessage.class);
+				EmailMessage message = YdszJson.toObject(json, EmailMessage.class);
 				NotifySendResult result = emailSender.sendEmail(message);
 				totalConsumed.incrementAndGet();
 				if (!result.isSuccess()) {
@@ -145,7 +145,7 @@ public class EmailQueueService {
 		int retryCount = getRetryCount(message);
 		if (retryCount >= MAX_RETRY) {
 			try {
-				redisTemplate.opsForList().rightPush(DEAD_LETTER_KEY, JsonUtils.toJson(message));
+				redisTemplate.opsForList().rightPush(DEAD_LETTER_KEY, YdszJson.toJson(message));
 				log.error("[EmailQueueService] 邮件超过最大重试次数({}), 进入死信队列: to={}",
 						MAX_RETRY, message.getTo());
 			} catch (Exception e) {

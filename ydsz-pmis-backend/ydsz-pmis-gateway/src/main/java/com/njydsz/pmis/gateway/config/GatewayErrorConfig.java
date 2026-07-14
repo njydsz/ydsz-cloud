@@ -1,10 +1,10 @@
-﻿package com.njydsz.pmis.gateway.config;
+ackage com.njydsz.pmis.gateway.config;
 
 import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeoutException;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -99,7 +99,7 @@ public class GatewayErrorConfig {
             exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
             exchange.getResponse().getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
-            byte[] bytes = JsonUtils.toJson(body).getBytes(StandardCharsets.UTF_8);
+            byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
             DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
             return exchange.getResponse().writeWith(Mono.just(buffer));
         }

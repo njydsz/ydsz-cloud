@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.queue;
+ackage com.njydsz.pmis.cronjob.server.queue;
 
 import java.util.Map;
 
@@ -12,7 +12,7 @@ import com.njydsz.pmis.common.queue.enums.QueueType;
 import com.njydsz.pmis.common.queue.queue.IMessageQueue;
 import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.cronjob.server.core.EventDrivenScheduler;
 
 import lombok.RequiredArgsConstructor;
@@ -73,7 +73,7 @@ public class JobEventQueueSubscriber {
             return;
         }
         try {
-            Map<String, Object> payload = JsonUtils.fromJsonToMap(message.getBody(), String.class, Object.class);
+            Map<String, Object> payload = YdszJson.fromJsonToMap(message.getBody(), String.class, Object.class);
             String jobKey = payload.get("jobKey") == null ? null : String.valueOf(payload.get("jobKey"));
             String msgId = payload.get("msgId") == null ? null : String.valueOf(payload.get("msgId"));
             String payloadStr = payload.get("payload") == null ? null : String.valueOf(payload.get("payload"));

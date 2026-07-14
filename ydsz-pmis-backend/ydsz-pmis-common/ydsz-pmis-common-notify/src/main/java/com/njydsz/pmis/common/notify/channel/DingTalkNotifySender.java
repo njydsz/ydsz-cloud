@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.channel;
+ackage com.njydsz.pmis.common.notify.channel;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -21,7 +21,7 @@ import org.springframework.web.client.RestTemplate;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 /**
  * 钉钉通知发送器
@@ -74,7 +74,7 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
 							"text", "## " + title + "\n\n" + content
 					)
 			);
-			String json = JsonUtils.toJson(body);
+			String json = YdszJson.toJson(body);
 			String signedUrl = signWebhookUrl(webhook);
 			String response = restTemplate.postForObject(signedUrl, new HttpEntity<>(json, jsonHeaders()), String.class);
 			log.debug("钉钉通知发送成功: {}", title);

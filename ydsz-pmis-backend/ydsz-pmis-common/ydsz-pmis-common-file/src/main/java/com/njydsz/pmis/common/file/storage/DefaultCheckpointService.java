@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.file.storage;
+ackage com.njydsz.pmis.common.file.storage;
 
 import java.io.InputStream;
 import java.time.LocalDateTime;
@@ -11,7 +11,7 @@ import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.file.domain.UploadCheckpoint;
 import com.njydsz.pmis.common.file.exception.FileExceptionCode;
 import com.njydsz.pmis.common.file.storage.IFileStorage.PartInfo;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -66,7 +66,7 @@ public class DefaultCheckpointService implements CheckpointService {
             return;
         }
         try {
-            String json = JsonUtils.toJson(checkpoint);
+            String json = YdszJson.toJson(checkpoint);
             checkpointStore.save(checkpoint.getBucketName(), checkpoint.getObjectName(), json, checkpointTtlSeconds);
         } catch (Exception e) {
             log.warn("[Storage] saveCheckpoint failed, bucket={}, object={}, message={}",
@@ -79,7 +79,7 @@ public class DefaultCheckpointService implements CheckpointService {
         try {
             String json = checkpointStore.get(bucketName, objectName);
             if (json != null) {
-                return JsonUtils.fromJson(json, UploadCheckpoint.class);
+                return YdszJson.toObject(json, UploadCheckpoint.class);
             }
         } catch (Exception e) {
             log.warn("[Storage] loadCheckpoint failed, bucket={}, object={}, message={}",

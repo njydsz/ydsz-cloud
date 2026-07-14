@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.audit.core;
+ackage com.njydsz.pmis.common.audit.core;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -32,7 +32,7 @@ import com.njydsz.pmis.common.audit.config.AuditProperties;
 import com.njydsz.pmis.common.audit.domain.AuditLog;
 import com.njydsz.pmis.common.audit.sharding.TableShardingStrategy;
 import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 /**
  * 异步批量审计记录器
@@ -319,7 +319,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
             String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
             Path logFile = dir.resolve("audit_fallback_" + dateStr + ".json");
 
-            String jsonLine = JsonUtils.toJson(auditLog) + "\n";
+            String jsonLine = YdszJson.toJson(auditLog) + "\n";
 
             Files.write(logFile, jsonLine.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 
@@ -369,7 +369,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
                     }
 
                     try {
-                        AuditLog auditLog = JsonUtils.fromJson(line.trim(), AuditLog.class);
+                        AuditLog auditLog = YdszJson.toObject(line.trim(), AuditLog.class);
                         if (auditLog != null) {
                             boolean offered = queue.offer(auditLog);
                             if (offered) {

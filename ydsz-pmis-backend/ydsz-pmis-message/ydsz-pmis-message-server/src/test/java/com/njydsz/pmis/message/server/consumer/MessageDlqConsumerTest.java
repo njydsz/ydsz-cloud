@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.consumer;
+ackage com.njydsz.pmis.message.server.consumer;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -23,7 +23,7 @@ import org.springframework.data.redis.core.ValueOperations;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.pmis.message.server.metric.MessageMetrics;
@@ -72,7 +72,7 @@ class MessageDlqConsumerTest {
             when(valueOps.setIfAbsent(eq("pmis:msg:dlq:idempotent:mq-1"), eq("1"),
                     any(Duration.class))).thenReturn(true);
             when(msgLogMapper.update(eq(null), any(LambdaUpdateWrapper.class))).thenReturn(0);
-            MessageExt msg = buildMessage("mq-1", 3, JsonUtils.toJson(new MessageRequest()));
+            MessageExt msg = buildMessage("mq-1", 3, YdszJson.toJson(new MessageRequest()));
 
             consumer.onMessage(msg);
 
@@ -118,7 +118,7 @@ class MessageDlqConsumerTest {
             MessageRequest req = new MessageRequest();
             req.setMessageId("biz-msg-001");
             req.setChannel("SMS");
-            MessageExt msg = buildMessage("mq-1", 3, JsonUtils.toJson(req));
+            MessageExt msg = buildMessage("mq-1", 3, YdszJson.toJson(req));
 
             consumer.onMessage(msg);
 
@@ -136,7 +136,7 @@ class MessageDlqConsumerTest {
             MessageRequest req = new MessageRequest();
             req.setMessageId("biz-msg-002");
             req.setChannel("EMAIL");
-            MessageExt msg = buildMessage("mq-2", 5, JsonUtils.toJson(req));
+            MessageExt msg = buildMessage("mq-2", 5, YdszJson.toJson(req));
 
             consumer.onMessage(msg);
 

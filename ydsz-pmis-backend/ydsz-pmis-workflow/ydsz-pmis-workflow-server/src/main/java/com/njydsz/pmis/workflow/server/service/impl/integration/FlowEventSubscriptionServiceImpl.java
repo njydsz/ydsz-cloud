@@ -14,7 +14,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.workflow.domain.entity.FlowEventSubscriptionDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
@@ -247,10 +247,10 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
         Map<String, Object> variables = parseVariables(instance.getVariable());
         if (StringUtils.hasText(payload)) {
             try {
-                Map<String, Object> payloadMap = JsonUtils.parseMap(payload);
+                Map<String, Object> payloadMap = YdszJson.parseMap(payload);
                 if (payloadMap != null) {
                     variables.putAll(payloadMap);
-                    instanceMapper.updateVariable(instance.getId(), JsonUtils.toJson(variables));
+                    instanceMapper.updateVariable(instance.getId(), YdszJson.toJson(variables));
                 }
             } catch (Exception e) {
                 log.warn("[Flow] payload 解析失败，忽略: subId={} err={}", sub.getId(), e.getMessage());
@@ -306,7 +306,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
             return Collections.emptyMap();
         }
         try {
-            return JsonUtils.parseMap(node.getExt());
+            return YdszJson.parseMap(node.getExt());
         } catch (Exception e) {
             return Collections.emptyMap();
         }
@@ -331,7 +331,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
             return new HashMap<>();
         }
         try {
-            Map<String, Object> m = JsonUtils.parseMap(variableJson);
+            Map<String, Object> m = YdszJson.parseMap(variableJson);
             return m != null ? m : new HashMap<>();
         } catch (Exception e) {
             return new HashMap<>();

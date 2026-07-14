@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.file.storage;
+ackage com.njydsz.pmis.common.file.storage;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -12,7 +12,7 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +59,7 @@ public class RedisMultipartContextStore implements MultipartContextStore {
         }
         try {
             String key = buildKey(uploadId);
-            String json = JsonUtils.toJson(context);
+            String json = YdszJson.toJson(context);
             stringRedisTemplate.opsForValue().set(key, json, Duration.ofSeconds(ttlSeconds));
         } catch (Exception e) {
             log.warn("[Storage] RedisMultipartContextStore save failed, uploadId={}, message={}",
@@ -84,7 +84,7 @@ public class RedisMultipartContextStore implements MultipartContextStore {
             if (json == null) {
                 return null;
             }
-            return JsonUtils.fromJson(json, MultipartContextData.class);
+            return YdszJson.toObject(json, MultipartContextData.class);
         } catch (Exception e) {
             log.warn("[Storage] RedisMultipartContextStore get failed, uploadId={}, message={}",
                     uploadId, e.getMessage());
@@ -130,7 +130,7 @@ public class RedisMultipartContextStore implements MultipartContextStore {
                     String json = values.get(i);
                     if (json != null) {
                         String uploadId = extractUploadId(keys.get(i));
-                        MultipartContextData context = JsonUtils.fromJson(json, MultipartContextData.class);
+                        MultipartContextData context = YdszJson.toObject(json, MultipartContextData.class);
                         result.put(uploadId, context);
                     }
                 }
@@ -164,7 +164,7 @@ public class RedisMultipartContextStore implements MultipartContextStore {
                 String json = values.get(i);
                 if (json != null) {
                     try {
-                        MultipartContextData context = JsonUtils.fromJson(json, MultipartContextData.class);
+                        MultipartContextData context = YdszJson.toObject(json, MultipartContextData.class);
                         if (context != null && context.lastAccessTime() < cutoffTime) {
                             expiredKeys.add(keys.get(i));
                         }

@@ -15,7 +15,7 @@ import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.nextwiki.api.dto.NextwikiDTOs;
 import com.njydsz.pmis.nextwiki.domain.entity.Tag;
-import com.njydsz.pmis.nextwiki.domain.service.TagDomainService;
+import com.njydsz.pmis.nextwiki.server.service.TagApplicationService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 // FQN-OK: name conflict with Tag entity
 public class TagController {
 
-    private final TagDomainService tagDomainService;
+    private final TagApplicationService tagApplicationService;
 
     @PostMapping
     @Operation(summary = "创建标签")
@@ -43,7 +43,7 @@ public class TagController {
     public BaseResponse<Tag> createTag(
             @RequestBody NextwikiDTOs.CreateTagRequest request,
             @RequestHeader("X-User-Id") String userId) {
-        Tag tag = tagDomainService.createTag(request.getName(), request.getColor(), userId);
+        Tag tag = tagApplicationService.createTag(request.getName(), request.getColor(), userId);
         return BaseResponse.ok(tag);
     }
 
@@ -51,7 +51,7 @@ public class TagController {
     @Operation(summary = "查询所有标签")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
     public BaseResponse<List<Tag>> listTags() {
-        return BaseResponse.ok(tagDomainService.getAllTags());
+        return BaseResponse.ok(tagApplicationService.getAllTags());
     }
 
     @PostMapping("/bind")
@@ -60,7 +60,7 @@ public class TagController {
     public BaseResponse<Void> bindTag(
             @RequestBody NextwikiDTOs.BindTagRequest request,
             @RequestHeader("X-User-Id") String userId) {
-        tagDomainService.batchBindTags(request.getFileNodeId(), request.getTagIds(), userId);
+        tagApplicationService.batchBindTags(request.getFileNodeId(), request.getTagIds(), userId);
         return BaseResponse.ok();
     }
 
@@ -68,13 +68,13 @@ public class TagController {
     @Operation(summary = "查询文件的标签")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
     public BaseResponse<List<Tag>> getFileTags(@PathVariable String fileNodeId) {
-        return BaseResponse.ok(tagDomainService.getFileTags(fileNodeId));
+        return BaseResponse.ok(tagApplicationService.getFileTags(fileNodeId));
     }
 
     @GetMapping("/recommend/{fileNodeId}")
     @Operation(summary = "推荐标签")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
     public BaseResponse<List<Tag>> recommendTags(@PathVariable String fileNodeId) {
-        return BaseResponse.ok(tagDomainService.recommendTags(fileNodeId));
+        return BaseResponse.ok(tagApplicationService.recommendTags(fileNodeId));
     }
 }

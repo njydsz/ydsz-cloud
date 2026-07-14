@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.gateway.filter;
+ackage com.njydsz.pmis.gateway.filter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -6,7 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -177,7 +177,7 @@ public class IpWhitelistFilter implements GlobalFilter, Ordered {
 
         BaseResponse<Void> body = BaseResponse.failed("403", "error.IP_FORBIDDEN");
         body.setTraceId(traceId);
-        byte[] bytes = JsonUtils.toJson(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));
     }

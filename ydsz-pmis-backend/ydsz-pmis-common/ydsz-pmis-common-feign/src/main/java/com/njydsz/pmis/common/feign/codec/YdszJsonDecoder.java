@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.codec;
+ackage com.njydsz.pmis.common.feign.codec;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import feign.Response;
 import feign.codec.DecodeException;
@@ -146,7 +146,7 @@ public class YdszJsonDecoder implements Decoder {
      */
     private Object decodeBody(String body, Type type, Response response) {
         try {
-            return JsonUtils.fromJson(body, type);
+            return YdszJson.toObject(body, type);
         } catch (Exception e) {
             LOG.warn("JSON 解码失败, 类型: {}, 错误: {}", type, e.getMessage());
             throw new DecodeException(500, "JSON 解码失败: " + e.getMessage(), response.request(), e);

@@ -1,11 +1,11 @@
-package com.njydsz.pmis.cronjob.server.handler;
+ackage com.njydsz.pmis.cronjob.server.handler;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.springframework.stereotype.Component;
 
@@ -59,7 +59,7 @@ public class BillableUtilizationJobHandler implements JobHandler {
 
         if (paramsJson != null && !paramsJson.isBlank()) {
             try {
-                Map<String, Object> obj = JsonUtils.parseMap(paramsJson);
+                Map<String, Object> obj = YdszJson.parseMap(paramsJson);
                 if (obj != null) {
                     period = obj.getString("period");
                     recomputeAll = Boolean.TRUE.equals(obj.getBoolean("recomputeAll"));

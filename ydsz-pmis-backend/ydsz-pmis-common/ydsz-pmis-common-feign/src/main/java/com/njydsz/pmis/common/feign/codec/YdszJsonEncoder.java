@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.feign.codec;
+ackage com.njydsz.pmis.common.feign.codec;
 
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
@@ -42,7 +42,7 @@ public class YdszJsonEncoder implements Encoder {
         }
 
         try {
-            String json = JsonUtils.toJson(object);
+            String json = YdszJson.toJson(object);
             requestTemplate.body(json.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
             requestTemplate.header("Content-Type", CONTENT_TYPE);
         } catch (Exception e) {

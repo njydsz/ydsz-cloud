@@ -3,7 +3,7 @@
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -48,7 +48,7 @@ public class FlowFormEngineService {
             return null;
         }
         try {
-            Map<String, Object> extJson = JsonUtils.parseMap(nodeExt);
+            Map<String, Object> extJson = YdszJson.parseMap(nodeExt);
             if (extJson == null) {
                 return null;
             }

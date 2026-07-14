@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.impl.dmn;
+﻿package com.njydsz.pmis.workflow.server.service.impl.dmn;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -14,7 +14,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.workflow.domain.entity.FlowDmnDecisionDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowDmnRuleDO;
 import com.njydsz.pmis.workflow.infra.mapper.FlowDmnDecisionMapper;
@@ -382,7 +382,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
             return Collections.emptyList();
         }
         try {
-            List<?> list = JsonUtils.parseList(json);
+            List<?> list = YdszJson.parseArray(json);
             if (list == null) {
                 return Collections.emptyList();
             }
@@ -405,7 +405,7 @@ public class FlowDmnDecisionServiceImpl implements FlowDmnDecisionService {
             return Collections.emptyList();
         }
         try {
-            List<?> list = JsonUtils.parseList(json);
+            List<?> list = YdszJson.parseArray(json);
             if (list == null) {
                 return Collections.emptyList();
             }

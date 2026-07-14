@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.channel.impl;
+ackage com.njydsz.pmis.message.server.channel.impl;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +15,7 @@ import com.njydsz.pmis.common.netty.codec.LengthFieldFrameDecoder;
 import com.njydsz.pmis.common.netty.config.NettyProperties;
 import com.njydsz.pmis.common.netty.server.AbstractNettyServer;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 
 import io.netty.buffer.ByteBuf;
@@ -114,7 +114,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
             pushData.put("bizId", request.getBizId());
             pushData.put("traceId", traceId);
             pushData.put("timestamp", System.currentTimeMillis());
-            String json = JsonUtils.toJson(pushData);
+            String json = YdszJson.toJson(pushData);
             ByteBuf buf = Unpooled.copiedBuffer(json, CharsetUtil.UTF_8);
             ctx.writeAndFlush(buf);
             log.info("[TCP-PUSH] 推送成功: userId={} traceId={} subject={}",
@@ -219,7 +219,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
                         ack.put("type", "AUTH_ACK");
                         ack.put("success", true);
                         ctx.writeAndFlush(Unpooled.copiedBuffer(
-                                JsonUtils.toJson(ack), CharsetUtil.UTF_8));
+                                YdszJson.toJson(ack), CharsetUtil.UTF_8));
                     }
                 } else if ("PING".equals(type)) {
                     // 心跳响应
@@ -227,7 +227,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
                     pong.put("type", "PONG");
                     pong.put("timestamp", System.currentTimeMillis());
                     ctx.writeAndFlush(Unpooled.copiedBuffer(
-                            JsonUtils.toJson(pong), CharsetUtil.UTF_8));
+                            YdszJson.toJson(pong), CharsetUtil.UTF_8));
                 }
             } catch (Exception e) {
                 log.warn("[TCP-PUSH] 消息解析失败: {}", e.getMessage(), e);

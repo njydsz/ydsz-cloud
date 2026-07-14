@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.event.repository;
+ackage com.njydsz.pmis.common.event.repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -155,7 +155,7 @@ public class OutboxRepository {
             return null;
         }
         try {
-            return JsonUtils.toJson(headers);
+            return YdszJson.toJson(headers);
         } catch (JsonProcessingException e) {
             return null;
         }

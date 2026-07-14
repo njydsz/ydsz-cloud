@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.service.impl.config;
+ackage com.njydsz.pmis.message.server.service.impl.config;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -20,7 +20,7 @@ import com.njydsz.pmis.common.domain.query.PageQuery;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.message.domain.constant.MessageConstants;
 import com.njydsz.pmis.message.domain.dto.config.RouteRuleUpsertDTO;
 import com.njydsz.pmis.message.domain.entity.config.MsgRouteRuleDO;
@@ -185,7 +185,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
         try {
             String json = stringRedisTemplate.opsForValue().get(MessageConstants.ROUTE_RULE_CACHE_KEY);
             if (StringUtils.hasText(json)) {
-                List<MsgRouteRuleDO> cached = JsonUtils.fromJsonToList(json, MsgRouteRuleDO.class);
+                List<MsgRouteRuleDO> cached = YdszJson.parseArray(json, MsgRouteRuleDO.class);
                 if (cached != null) {
                     return cached;
                 }
@@ -199,7 +199,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
         try {
             stringRedisTemplate.opsForValue().set(
                     MessageConstants.ROUTE_RULE_CACHE_KEY,
-                    JsonUtils.toJson(rules),
+                    YdszJson.toJson(rules),
                     CACHE_TTL);
         } catch (Exception e) {
             log.warn("[RouteRule] 缓存回填失败: {}", e.getMessage(), e);

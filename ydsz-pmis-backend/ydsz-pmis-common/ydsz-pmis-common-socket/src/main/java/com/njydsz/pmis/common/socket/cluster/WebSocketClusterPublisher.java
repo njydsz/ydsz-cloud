@@ -1,9 +1,9 @@
-package com.njydsz.pmis.common.socket.cluster;
+ackage com.njydsz.pmis.common.socket.cluster;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import com.njydsz.pmis.common.socket.config.WebSocketProperties;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +38,7 @@ public class WebSocketClusterPublisher {
             return false;
         }
         try {
-            String json = JsonUtils.toJson(message);
+            String json = YdszJson.toJson(message);
             String channel = properties.getCluster().getChannel();
             redisTemplate.convertAndSend(channel, json);
             log.debug("[WS-Cluster] 发布集群推送: type={} userId={} topic={}",

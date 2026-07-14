@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.core;
+ackage com.njydsz.pmis.common.safe.core;
 
 import java.util.Iterator;
 
@@ -8,7 +8,7 @@ import com.njydsz.pmis.common.json.tree.JsonNode;
 import com.njydsz.pmis.common.json.tree.ObjectNode;
 import com.njydsz.pmis.common.json.tree.TextNode;
 import com.njydsz.pmis.common.safe.xss.EscapeUtils;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,7 +38,7 @@ public class JsonBodyXssCleaner {
         try {
             JsonNode parsed = YdszJson.readTree(json);
             JsonNode cleaned = cleanNode(parsed);
-            return JsonUtils.toJson(cleaned);
+            return YdszJson.toJson(cleaned);
         } catch (Exception e) {
             log.debug("[JsonBodyXssCleaner] JSON解析失败，返回原始字符串: {}", e.getMessage());
             return json;

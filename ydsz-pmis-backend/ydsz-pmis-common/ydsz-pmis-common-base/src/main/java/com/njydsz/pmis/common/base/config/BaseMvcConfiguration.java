@@ -1,4 +1,4 @@
-﻿﻿package com.njydsz.pmis.common.base.config;
+ackage com.njydsz.pmis.common.base.config;
 
 import java.util.List;
 

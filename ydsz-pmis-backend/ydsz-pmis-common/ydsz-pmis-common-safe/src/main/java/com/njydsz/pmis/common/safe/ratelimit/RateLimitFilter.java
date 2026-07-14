@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.ratelimit;
+ackage com.njydsz.pmis.common.safe.ratelimit;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ import com.njydsz.pmis.common.safe.alert.SafeAlertProperties;
 import com.njydsz.pmis.common.safe.alert.SecurityEvent;
 import com.njydsz.pmis.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.pmis.common.safe.alert.SecurityEventType;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.common.util.url.UrlPathUtils;
 
 /**
@@ -151,7 +151,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         response.setContentType("application/json;charset=UTF-8");
         BaseResponse<Void> body = BaseResponse.error(
                 UnifiedExceptionCode.RATE_LIMIT.getCode(), properties.getMessage());
-        response.getWriter().write(JsonUtils.toJson(body));
+        response.getWriter().write(YdszJson.toJson(body));
     }
 
     /**

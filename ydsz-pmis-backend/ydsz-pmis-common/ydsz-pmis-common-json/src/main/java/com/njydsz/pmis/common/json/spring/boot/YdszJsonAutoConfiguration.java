@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.json.spring.boot;
+ackage com.njydsz.pmis.common.json.spring.boot;
 
 import java.util.List;
 
@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.common.json.autotype.AutoTypeChecker;
 import com.njydsz.pmis.common.json.config.YdszJsonConfig;
 import com.njydsz.pmis.common.json.health.YdszJsonHealthIndicator;
@@ -67,14 +68,16 @@ public class YdszJsonAutoConfiguration {
     }
 
     /**
-     * YdszJson 指标监控（Micrometer）。
+     * YdszJson 指标监控（Micrometer），并绑定到 YdszJson 引擎。
      */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnClass(name = "io.micrometer.core.instrument.MeterRegistry")
     public YdszJsonMetrics ydszJsonMetrics(
             ObjectProvider<MeterRegistry> meterRegistryProvider) {
-        return new YdszJsonMetrics(meterRegistryProvider.getIfAvailable());
+        YdszJsonMetrics metrics = new YdszJsonMetrics(meterRegistryProvider.getIfAvailable());
+        YdszJson.setMetricsCallback(metrics);
+        return metrics;
     }
 
     /**

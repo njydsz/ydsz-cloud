@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -94,9 +94,9 @@ public class RulePackService implements RulePackProvider {
         entity.setTags(pack.getTags() == null ? null : String.join(",", pack.getTags()));
         entity.setPreviousVersion(previousVersion);
         try {
-            entity.setRuleCodes(JsonUtils.toJson(pack.getRuleCodes() == null ? Collections.emptyList() : pack.getRuleCodes()));
+            entity.setRuleCodes(YdszJson.toJson(pack.getRuleCodes() == null ? Collections.emptyList() : pack.getRuleCodes()));
             // P2-8：发布时固化规则定义快照，保证版本内容可复现
-            entity.setRuleSnapshots(JsonUtils.toJson(buildSnapshots(pack.getRuleCodes())));
+            entity.setRuleSnapshots(YdszJson.toJson(buildSnapshots(pack.getRuleCodes())));
         } catch (Exception e) {
             throw new IllegalArgumentException("ruleCodes 序列化失败: " + e.getMessage());
         }
@@ -421,7 +421,7 @@ public class RulePackService implements RulePackProvider {
     private List<RuleDefinition> parseSnapshots(String json) {
         if (json == null || json.isBlank()) return Collections.emptyList();
         try {
-            return JsonUtils.fromJsonToList(json, RuleDefinition.class);
+            return YdszJson.parseArray(json, RuleDefinition.class);
         } catch (Exception e) {
             log.warn("[RulePack] 解析 ruleSnapshots 失败: {}", e.getMessage());
             return Collections.emptyList();

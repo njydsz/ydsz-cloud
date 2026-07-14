@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.socket.push;
+ackage com.njydsz.pmis.common.socket.push;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
@@ -8,7 +8,7 @@ import com.njydsz.pmis.common.socket.constant.WebSocketConstants;
 import com.njydsz.pmis.common.socket.metric.WebSocketMetrics;
 import com.njydsz.pmis.common.socket.offline.OfflineMessageStore;
 import com.njydsz.pmis.common.socket.session.OnlineUserService;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -141,7 +141,7 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
             return s;
         }
         try {
-            return JsonUtils.toJson(payload);
+            return YdszJson.toJson(payload);
         } catch (Exception e) {
             log.warn("[WebSocket] payload 序列化失败,降级 toString: {}", e.getMessage());
             return String.valueOf(payload);

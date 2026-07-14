@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.core;
+ackage com.njydsz.pmis.common.notify.core;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -11,7 +11,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 /**
  * 基于 Redis 的持久化重试队列实现
@@ -97,7 +97,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
             RetryMessage msg = new RetryMessage(
                     channel, receiver, title, content, 1, lastError,
                     System.currentTimeMillis());
-            String msgJson = JsonUtils.toJson(msg);
+            String msgJson = YdszJson.toJson(msg);
             String msgKey = hashKeyPrefix + msg.id;
 
             // 使用 Lua 脚本保证 ZADD + SET + INCR 原子性
@@ -152,7 +152,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
                     continue;
                 }
 
-                RetryMessage msg = JsonUtils.fromJson(msgJson, RetryMessage.class);
+                RetryMessage msg = YdszJson.toObject(msgJson, RetryMessage.class);
                 if (msg == null) {
                     stringRedisTemplate.delete(msgKey);
                     continue;
@@ -209,7 +209,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
         msg.nextRetryTime = System.currentTimeMillis() + backoffMs;
 
         try {
-            String msgJson = JsonUtils.toJson(msg);
+            String msgJson = YdszJson.toJson(msg);
             // 使用 Lua 脚本保证 SET + ZADD 原子性
             stringRedisTemplate.execute(
                     new DefaultRedisScript<>(LUA_REQUEUE_SCRIPT, Long.class),

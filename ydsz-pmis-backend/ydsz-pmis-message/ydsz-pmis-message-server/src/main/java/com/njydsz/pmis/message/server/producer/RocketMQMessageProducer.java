@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.producer;
+ackage com.njydsz.pmis.message.server.producer;
 
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -14,7 +14,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.pmis.common.constant.PmisMessageTopics;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.message.server.util.MessageCompressor;
 
 import lombok.RequiredArgsConstructor;
@@ -56,7 +56,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
             throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
-        String payload = MessageCompressor.compressIfNeeded(JsonUtils.toJson(req));
+        String payload = MessageCompressor.compressIfNeeded(YdszJson.toJson(req));
         String destination = buildDestination(req);
         SendResult result;
         try {
@@ -86,7 +86,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
             throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
-        String payload = MessageCompressor.compressIfNeeded(JsonUtils.toJson(req));
+        String payload = MessageCompressor.compressIfNeeded(YdszJson.toJson(req));
         String destination = buildDestination(req);
         try {
             rocketMQTemplate.asyncSend(destination, payload, new SendCallback() {
@@ -169,7 +169,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
             throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
-        String payload = MessageCompressor.compressIfNeeded(JsonUtils.toJson(req));
+        String payload = MessageCompressor.compressIfNeeded(YdszJson.toJson(req));
         try {
             TransactionSendResult result =
                     rocketMQTemplate.sendMessageInTransaction(

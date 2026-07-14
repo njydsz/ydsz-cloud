@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.jdbc.handler;
+ackage com.njydsz.pmis.common.jdbc.handler;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -9,7 +9,7 @@ import java.util.List;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 /**
  * List 类型 JSON 转换处理器
@@ -73,7 +73,7 @@ public class ListTypeHandler extends BaseTypeHandler<List<Object>> {
      */
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, List<Object> parameter, JdbcType jdbcType) throws SQLException {
-        ps.setString(i, JsonUtils.toJson(parameter));
+        ps.setString(i, YdszJson.toJson(parameter));
     }
 
     /**
@@ -126,6 +126,6 @@ public class ListTypeHandler extends BaseTypeHandler<List<Object>> {
         if (json == null || json.isEmpty()) {
             return null;
         }
-        return JsonUtils.fromJsonToList(json, Object.class);
+        return YdszJson.parseArray(json, Object.class);
     }
 }

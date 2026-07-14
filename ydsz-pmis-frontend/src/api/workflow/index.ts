@@ -76,9 +76,11 @@ export function batchDeployByZip(file: File) {
   )
 }
 
-/** 发布流程定义（启用） */
-export function publishDefinition(id: string) {
-  return http.post<ApiResponse<null>>(`/workflow/engine/definition/${id}/publish`)
+/** 发布流程定义（启用，带版本兼容性校验） */
+export function publishDefinition(id: string, force: boolean = false) {
+  return http.post<ApiResponse<null>>(`/workflow/engine/definition/${id}/publish`, null, {
+    params: { force },
+  })
 }
 
 /** 停用流程定义 */

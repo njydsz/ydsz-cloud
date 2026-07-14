@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.impl.instance;
+﻿package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.workflow.domain.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.infra.mapper.FlowHisTaskMapper;
@@ -178,7 +178,7 @@ public class FlowExportServiceImpl implements FlowExportService {
             return new LinkedHashMap<>();
         }
         try {
-            Map<String, Object> map = JsonUtils.parseMap(json);
+            Map<String, Object> map = YdszJson.parseMap(json);
             return map != null ? map : new LinkedHashMap<>();
         } catch (Exception e) {
             log.warn("[Export] 变量解析失败: {}", e.getMessage());

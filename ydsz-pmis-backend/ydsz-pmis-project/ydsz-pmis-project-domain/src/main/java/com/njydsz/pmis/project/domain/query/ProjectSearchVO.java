@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.domain.query;
+package com.njydsz.pmis.project.domain.query;
 
 import java.io.Serial;
 import java.io.Serializable;

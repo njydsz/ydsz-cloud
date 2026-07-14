@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.impl.instance;
+﻿package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -18,7 +18,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.workflow.domain.dto.FlowAssigneeDTO;
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO;
@@ -380,7 +380,7 @@ public class FlowTaskCreateService {
         }
         Map<String, Object> extConfig;
         try {
-            extConfig = JsonUtils.parseMap(node.getExt());
+            extConfig = YdszJson.parseMap(node.getExt());
         } catch (Exception e) {
             return;
         }
@@ -1028,7 +1028,7 @@ public class FlowTaskCreateService {
     private FlowPerformType resolvePerformType(FlowNodeDO node) {
         if (node.getExt() != null) {
             try {
-                Map<?, ?> ext = JsonUtils.parseMap(node.getExt());
+                Map<?, ?> ext = YdszJson.parseMap(node.getExt());
                 Object ptObj = ext.get("performType");
                 if (ptObj instanceof String pt) {
                     return FlowPerformType.valueOf(pt);
@@ -1395,7 +1395,7 @@ public class FlowTaskCreateService {
             return Collections.emptyMap();
         }
         try {
-            Map<String, Object> map = JsonUtils.parseMap(ext);
+            Map<String, Object> map = YdszJson.parseMap(ext);
             return map == null ? Collections.emptyMap() : map;
         } catch (Exception e) {
             log.warn("[Flow] 解析 node.ext JSON 失败: err={}", e.getMessage());

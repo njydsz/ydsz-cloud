@@ -1,9 +1,9 @@
-package com.njydsz.pmis.cronjob.server.handler;
+ackage com.njydsz.pmis.cronjob.server.handler;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 import org.springframework.stereotype.Component;
 
@@ -86,7 +86,7 @@ public class ReportScheduleJobHandler implements JobHandler {
         // 尝试 JSON 解析 {"type":"DAILY"}
         if (trimmed.startsWith("{")) {
             try {
-                Map<String, Object> obj = JsonUtils.parseMap(trimmed);
+                Map<String, Object> obj = YdszJson.parseMap(trimmed);
                 if (obj != null && obj.containsKey("type")) {
                     return obj.getString("type");
                 }

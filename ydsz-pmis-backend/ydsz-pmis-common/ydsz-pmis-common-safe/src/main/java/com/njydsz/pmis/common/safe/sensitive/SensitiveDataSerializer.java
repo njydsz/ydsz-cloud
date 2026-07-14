@@ -1,9 +1,9 @@
-package com.njydsz.pmis.common.safe.sensitive;
+ackage com.njydsz.pmis.common.safe.sensitive;
 
 import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.common.json.serializer.JsonSerializer;
 import com.njydsz.pmis.common.json.writer.JSONWriter;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 /**
  * 敏感数据脱敏序列化器（基于 YdszJson 引擎）
@@ -67,7 +67,7 @@ public class SensitiveDataSerializer implements JsonSerializer<Object> {
             return "null";
         }
         Object desensitized = SensitiveDataProcessor.process(obj);
-        return JsonUtils.toJson(desensitized);
+        return YdszJson.toJson(desensitized);
     }
 
     /**
@@ -83,9 +83,9 @@ public class SensitiveDataSerializer implements JsonSerializer<Object> {
         }
         Object desensitized = SensitiveDataProcessor.process(obj);
         if (pretty) {
-            return JsonUtils.toPrettyJson(desensitized);
+            return YdszJson.format(desensitized);
         }
-        return JsonUtils.toJson(desensitized);
+        return YdszJson.toJson(desensitized);
     }
 
     /**
@@ -97,6 +97,6 @@ public class SensitiveDataSerializer implements JsonSerializer<Object> {
      * @return 对象
      */
     public static <T> T deserialize(String json, Class<T> clazz) {
-        return JsonUtils.fromJson(json, clazz);
+        return YdszJson.toObject(json, clazz);
     }
 }

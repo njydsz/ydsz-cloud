@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.util.json;
+ackage com.njydsz.pmis.common.util.json;
 
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -38,7 +38,7 @@ public final class YamlUtils {
      *
      * @param json JSON 字符串
      * @return YAML 字符串，json 为 null 或空白时返回 null
-     * @throws JsonUtils.JsonException 如果转换失败
+     * @throws YdszJsonException 如果转换失败
      */
     public static String jsonToYaml(String json) {
         if (json == null || json.isBlank()) {
@@ -48,7 +48,7 @@ public final class YamlUtils {
             Object parsed = YdszJson.parseObject(json);
             return YAML.dump(parsed);
         } catch (Exception e) {
-            throw new JsonUtils.JsonException("JSON转YAML失败: " + e.getMessage(), e);
+            throw new YdszJsonException("JSON转YAML失败: " + e.getMessage(), e);
         }
     }
 
@@ -57,7 +57,7 @@ public final class YamlUtils {
      *
      * @param yaml YAML 字符串
      * @return JSON 字符串，yaml 为 null 或空白时返回 null
-     * @throws JsonUtils.JsonException 如果转换失败
+     * @throws YdszJsonException 如果转换失败
      */
     public static String yamlToJson(String yaml) {
         if (yaml == null || yaml.isBlank()) {
@@ -67,7 +67,7 @@ public final class YamlUtils {
             Object parsed = YAML.load(yaml);
             return YdszJson.toJson(parsed);
         } catch (Exception e) {
-            throw new JsonUtils.JsonException("YAML转JSON失败: " + e.getMessage(), e);
+            throw new YdszJsonException("YAML转JSON失败: " + e.getMessage(), e);
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.service;
+ackage com.njydsz.pmis.common.redis.service;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -13,7 +13,7 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 
 import com.njydsz.pmis.common.redis.cluster.ClusterSlotUtil;
 import com.njydsz.pmis.common.util.collection.CollectionUtils;
-import com.njydsz.pmis.common.util.json.JsonUtils;
+import com.njydsz.pmis.common.json.YdszJson;
 
 /**
  * 批量 Redis 操作接口
@@ -109,8 +109,8 @@ public interface BatchRedisOperations {
                 result.add(clazz.cast(value));
             } else {
                     try {
-                        String json = JsonUtils.toJson(value);
-                        T converted = JsonUtils.fromJson(json, clazz);
+                        String json = YdszJson.toJson(value);
+                        T converted = YdszJson.toObject(json, clazz);
                         result.add(converted);
                     } catch (Exception e) {
                         log.error("mgetObjects JSON转换失败, key index: {}", result.size(), e);
