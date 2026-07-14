@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -303,21 +304,22 @@ public class FileApplicationService {
     }
 
     /**
-     * 批量删除
+     * 批量删除（允许部分成功，不使用整体事务）
      */
-    @Transactional(rollbackFor = Exception.class)
-    public int batchDelete(List<String> nodeIds, String userId) {
+    public BatchResult batchDelete(List<String> nodeIds, String userId) {
         int success = 0;
+        List<BatchResult.FailedItem> failedItems = new ArrayList<>();
         for (String nodeId : nodeIds) {
             try {
                 delete(nodeId, userId);
                 success++;
             } catch (Exception e) {
                 log.error("[FileApplicationService] 批量删除失败: nodeId={}", nodeId, e);
+                failedItems.add(new BatchResult.FailedItem(nodeId, e.getMessage()));
             }
         }
         log.info("[FileApplicationService] 批量删除: total={}, success={}", nodeIds.size(), success);
-        return success;
+        return new BatchResult(success, failedItems);
     }
 
     /**

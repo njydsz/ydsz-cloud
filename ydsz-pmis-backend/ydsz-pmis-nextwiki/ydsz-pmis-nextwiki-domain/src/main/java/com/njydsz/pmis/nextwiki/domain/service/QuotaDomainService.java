@@ -3,7 +3,9 @@ package com.njydsz.pmis.nextwiki.domain.service;
 import java.time.LocalDateTime;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.pmis.common.constant.SystemConstants;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.nextwiki.domain.entity.StorageQuota;
 import com.njydsz.pmis.nextwiki.domain.repository.StorageQuotaRepository;
@@ -53,6 +55,7 @@ public class QuotaDomainService {
     /**
      * 增加已使用量（上传成功后调用）
      */
+    @Transactional(rollbackFor = Exception.class)
     public void addUsage(String scopeType, String scopeId, long bytes, int fileCount) {
         int affected = quotaRepository.addUsage(scopeType, scopeId, bytes, fileCount);
         if (affected == 0) {
@@ -67,6 +70,7 @@ public class QuotaDomainService {
     /**
      * 减少已使用量（删除后调用）
      */
+    @Transactional(rollbackFor = Exception.class)
     public void subtractUsage(String scopeType, String scopeId, long bytes, int fileCount) {
         quotaRepository.subtractUsage(scopeType, scopeId, bytes, fileCount);
         log.info("[QuotaDomainService] 减少用量: scope={}, bytes={}, fileCount={}",
@@ -76,6 +80,7 @@ public class QuotaDomainService {
     /**
      * 设置配额
      */
+    @Transactional(rollbackFor = Exception.class)
     public StorageQuota setQuota(String scopeType, String scopeId, Long limit, Integer fileCountLimit, String userId) {
         StorageQuota quota = quotaRepository.findByScope(scopeType, scopeId);
         if (quota == null) {
@@ -129,9 +134,9 @@ public class QuotaDomainService {
                     .revision(0)
                     .deleted(0)
                     .build();
-            quota.setCreatedBy("system");
+            quota.setCreatedBy(SystemConstants.SYSTEM_USER_ID);
             quota.setCreatedAt(LocalDateTime.now());
-            quota.setUpdatedBy("system");
+            quota.setUpdatedBy(SystemConstants.SYSTEM_USER_ID);
             quota.setUpdatedAt(LocalDateTime.now());
             quota = quotaRepository.save(quota);
         }

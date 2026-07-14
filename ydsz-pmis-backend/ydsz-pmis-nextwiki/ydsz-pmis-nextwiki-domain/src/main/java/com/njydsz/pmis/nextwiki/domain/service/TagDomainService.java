@@ -7,6 +7,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
@@ -38,6 +39,7 @@ public class TagDomainService {
     /**
      * 创建标签
      */
+    @Transactional(rollbackFor = Exception.class)
     public Tag createTag(String name, String color, String userId) {
         if (name == null || name.trim().isEmpty()) {
             throw BusinessException.builder().key("标签名称不能为空").build();
@@ -85,6 +87,7 @@ public class TagDomainService {
     /**
      * 批量绑定标签到文件
      */
+    @Transactional(rollbackFor = Exception.class)
     public void batchBindTags(String fileNodeId, List<String> tagIds, String userId) {
         if (tagIds == null || tagIds.isEmpty()) {
             return;
@@ -118,6 +121,7 @@ public class TagDomainService {
     /**
      * 解绑标签
      */
+    @Transactional(rollbackFor = Exception.class)
     public void unbindTag(String fileNodeId, String tagId) {
         tagRepository.unbindTag(fileNodeId, tagId);
         tagRepository.decrementUsage(tagId);

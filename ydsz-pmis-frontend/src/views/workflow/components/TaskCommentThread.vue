@@ -37,7 +37,7 @@ const loading = ref(false)
 const comments = ref<TaskCommentDTO[]>([])
 const newComment = ref('')
 const commentType = ref<'COMMENT' | 'QUESTION'>('COMMENT')
-const replyingTo = ref<number | null>(null)
+const replyingTo = ref<string | null>(null)
 const replyContent = ref('')
 const submitting = ref(false)
 
@@ -89,7 +89,7 @@ async function submitComment() {
   }
 }
 
-function startReply(commentId: number) {
+function startReply(commentId: string) {
   replyingTo.value = commentId
   replyContent.value = ''
 }

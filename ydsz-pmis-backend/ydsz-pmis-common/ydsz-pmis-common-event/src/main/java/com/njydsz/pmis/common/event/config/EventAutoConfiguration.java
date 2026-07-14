@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.event.config;
 
+import jakarta.annotation.PreDestroy;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -21,7 +23,6 @@ import com.njydsz.pmis.common.event.repository.OutboxRepository;
 import com.njydsz.pmis.common.event.service.OutboxService;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import jakarta.annotation.PreDestroy;
 
 /**
  * Outbox 事件模块自动配置

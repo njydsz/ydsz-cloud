@@ -3,7 +3,6 @@ package com.njydsz.pmis.common.event.repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;

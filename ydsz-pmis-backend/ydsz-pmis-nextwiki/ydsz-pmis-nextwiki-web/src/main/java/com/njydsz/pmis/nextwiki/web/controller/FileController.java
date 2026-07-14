@@ -128,7 +128,7 @@ public class FileController {
 
     @PostMapping("/batch/delete")
     @Operation(summary = "批量删除")
-    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_BATCH_DELETE)
     public BaseResponse<Integer> batchDelete(
             @RequestBody List<String> nodeIds,
             @RequestHeader("X-User-Id") String userId) {
@@ -139,7 +139,7 @@ public class FileController {
 
     @PostMapping("/batch/move")
     @Operation(summary = "批量移动")
-    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_BATCH_MOVE)
     public BaseResponse<Integer> batchMove(
             @RequestBody BatchMoveRequest request,
             @RequestHeader("X-User-Id") String userId) {
@@ -163,14 +163,14 @@ public class FileController {
 
     @GetMapping("/{nodeId}/versions")
     @Operation(summary = "获取版本历史")
-    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VERSION)
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VERSION_VIEW)
     public BaseResponse<List<FileVersion>> getVersionHistory(@PathVariable String nodeId) {
         return BaseResponse.ok(fileApplicationService.getVersionHistory(nodeId));
     }
 
     @PostMapping("/{nodeId}/versions/{version}/rollback")
     @Operation(summary = "回滚到指定版本")
-    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_ROLLBACK)
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VERSION_ROLLBACK)
     public BaseResponse<FileNodeVO> rollbackVersion(
             @PathVariable String nodeId,
             @PathVariable Integer version,

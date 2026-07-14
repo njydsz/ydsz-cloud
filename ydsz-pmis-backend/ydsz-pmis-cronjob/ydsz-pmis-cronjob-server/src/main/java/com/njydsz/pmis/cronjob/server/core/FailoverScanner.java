@@ -10,6 +10,8 @@ import jakarta.annotation.PostConstruct;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -19,6 +21,7 @@ import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.core.LockKeyUtil;
 import com.njydsz.pmis.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.pmis.cronjob.server.metrics.CronjobMetrics;
@@ -88,6 +91,18 @@ public class FailoverScanner {
     private final ObjectProvider<NodeDiscoveryStrategy> nodeDiscoveryStrategyProvider;
     /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
     private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
+    /** P0-10: Redis 模板，用于故障转移时安全释放死节点持有的任务锁 */
+    private final StringRedisTemplate redisTemplate;
+
+    /** P0-10: Lua 脚本: 安全释放锁（仅当 value 匹配时才 delete），避免误删其他节点持有的锁 */
+    private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT;
+
+    static {
+        RELEASE_LOCK_SCRIPT = new DefaultRedisScript<>();
+        RELEASE_LOCK_SCRIPT.setScriptText(
+                "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end");
+        RELEASE_LOCK_SCRIPT.setResultType(Long.class);
+    }
 
     private String leaderRole;
 
@@ -241,7 +256,21 @@ public class FailoverScanner {
         log.warn("[FailoverScanner] 节点故障转移开始: nodeId={} runningTasks={} taskLimit={}",
                 nodeId, runningLogs.size(), taskLimit);
 
-        // 1. 标记为 FAILED（批量，CAS 语义仅更新 status='RUNNING' 的记录）
+        // 1. P0-10: 先逐条释放死节点持有的任务锁（必须先于 markFailed，
+        //    否则新派发的任务会因旧锁未释放而 tryAcquire 失败，故障转移无效）
+        //    使用 Lua 安全释放脚本：仅当 lockHolder 匹配时才 del，避免误删其他节点持有的锁
+        int releasedLocks = 0;
+        for (JobLogDO logEntry : runningLogs) {
+            if (releaseLockSafe(logEntry)) {
+                releasedLocks++;
+            }
+        }
+        if (releasedLocks > 0) {
+            log.info("[FailoverScanner] 已释放死节点任务锁: nodeId={} releasedLocks={}/{}",
+                    nodeId, releasedLocks, runningLogs.size());
+        }
+
+        // 2. 标记为 FAILED（批量，CAS 语义仅更新 status='RUNNING' 的记录）
         int markedFailed = 0;
         try {
             markedFailed = jobLogMapper.markFailedByNodeOffline(nodeId, now);
@@ -251,7 +280,7 @@ public class FailoverScanner {
             // 标记失败仍尝试重新派发（日志状态可能已被其他流程标记）
         }
 
-        // 2. 重新派发任务
+        // 3. 重新派发任务
         int redispatched = 0;
         CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
         for (JobLogDO logEntry : runningLogs) {
@@ -286,8 +315,45 @@ public class FailoverScanner {
             }
         }
 
-        log.warn("[FailoverScanner] 节点故障转移完成: nodeId={} runningTasks={} markedFailed={} redispatched={}",
-                nodeId, runningLogs.size(), markedFailed, redispatched);
+        log.warn("[FailoverScanner] 节点故障转移完成: nodeId={} runningTasks={} releasedLocks={} markedFailed={} redispatched={}",
+                nodeId, runningLogs.size(), releasedLocks, markedFailed, redispatched);
         return redispatched;
+    }
+
+    /**
+     * 安全释放死节点持有的任务锁（P0-10）。
+     *
+     * <p>使用 Lua 脚本保证"检查 lockHolder 匹配 + delete"的原子性，
+     * 避免误删其他节点（如新派发任务的执行器）持有的锁。
+     *
+     * <p>分片任务（shardIndex >= 0）使用 {@code :shard:{shardIndex}} 后缀的锁 key，
+     * 通过 {@link LockKeyUtil#buildJobLockKey(String, Integer)} 统一构造。
+     *
+     * @param logEntry 死节点上的 RUNNING 日志（含 jobKey / shardIndex / lockHolder）
+     * @return true 表示锁释放成功；false 表示锁不存在、holder 不匹配或释放异常
+     */
+    private boolean releaseLockSafe(JobLogDO logEntry) {
+        String lockHolder = logEntry.getLockHolder();
+        if (lockHolder == null || lockHolder.isBlank()) {
+            return false;
+        }
+        // P0-11: 通过 LockKeyUtil 统一构造 lockKey（含分片感知）
+        String lockKey = LockKeyUtil.buildJobLockKey(logEntry.getJobKey(), logEntry.getShardIndex());
+        try {
+            Long result = redisTemplate.execute(RELEASE_LOCK_SCRIPT,
+                    Collections.singletonList(lockKey), lockHolder);
+            if (result != null && result > 0) {
+                log.debug("[FailoverScanner] 释放死节点锁成功: lockKey={} holder={}",
+                        lockKey, lockHolder);
+                return true;
+            }
+            log.debug("[FailoverScanner] 锁 holder 不匹配或已过期, 跳过释放: lockKey={} holder={}",
+                    lockKey, lockHolder);
+            return false;
+        } catch (Exception e) {
+            log.warn("[FailoverScanner] 释放锁失败(将等待 TTL 自动过期): lockKey={} reason={}",
+                    lockKey, e.getMessage());
+            return false;
+        }
     }
 }

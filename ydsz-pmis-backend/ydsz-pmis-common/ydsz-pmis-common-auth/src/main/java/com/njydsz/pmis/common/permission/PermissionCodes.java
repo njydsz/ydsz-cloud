@@ -504,6 +504,15 @@ public final class PermissionCodes {
     public static final String NEXTWIKI_QUOTA_VIEW = "nextwiki:quota:view";
     public static final String NEXTWIKI_QUOTA_SET = "nextwiki:quota:set";
     public static final String NEXTWIKI_BATCH_IMPORT = "nextwiki:batch:import";
+    public static final String NEXTWIKI_BATCH_DELETE = "nextwiki:batch:delete";
+    public static final String NEXTWIKI_BATCH_MOVE = "nextwiki:batch:move";
     public static final String NEXTWIKI_ANALYSIS = "nextwiki:analysis:query";
+    public static final String NEXTWIKI_FILE_VERSION_VIEW = "nextwiki:file:version-view";
+    public static final String NEXTWIKI_FILE_VERSION_ROLLBACK = "nextwiki:file:version-rollback";
+    public static final String NEXTWIKI_SHARE_VERIFY = "nextwiki:share:verify";
+    public static final String NEXTWIKI_DOWNLOAD = "nextwiki:file:download";
+    public static final String NEXTWIKI_TAG_CREATE = "nextwiki:tag:create";
+    public static final String NEXTWIKI_TAG_DELETE = "nextwiki:tag:delete";
+    public static final String NEXTWIKI_TAG_LIST = "nextwiki:tag:list";
 
     }
