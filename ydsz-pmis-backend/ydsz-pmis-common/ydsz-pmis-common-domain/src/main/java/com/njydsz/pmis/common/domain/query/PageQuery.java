@@ -22,7 +22,7 @@ import lombok.experimental.SuperBuilder;
 /**
  * 分页查询参数封装类
  *
- * <p>用于封装分页查询的请求参数，包括页码、页大小、排序信息和通用搜索条件。
+ * <p>用于封装分页查询的请求参数，包括页码、页大小、排序信息和通用搜索条件
  * 支持通过 validation 注解进行参数校验，防止非法参数传入。
  *
  * <p><b>设计原则：</b>
@@ -105,7 +105,7 @@ public class PageQuery extends BaseQuery {
     /**
      * 每页显示条数
      *
-     * <p>控制每页返回的记录数量。
+     * <p>控制每页返回的记录数量
      * 建议设置上限，防止查询数据量过大。
      * 最大值为 {@link PageConstants#MAX_PAGE_SIZE}。
      */
@@ -379,7 +379,7 @@ public class PageQuery extends BaseQuery {
      * <p>用于超大分页场景，避免int 溢出问题。
      * 计算公式：offset = (pageNum - 1) * pageSize
      *
-     * @return 偏移量（long 类型。
+     * @return 偏移量（long 类型
      */
     public long getOffsetLong() {
         if (pageNum == null || pageSize == null) {
@@ -402,7 +402,7 @@ public class PageQuery extends BaseQuery {
     /**
      * 获取实际页码
      *
-     * <p>返回在有效范围内的页码。
+     * <p>返回在有效范围内的页码
      *
      * @return 实际页码
      */

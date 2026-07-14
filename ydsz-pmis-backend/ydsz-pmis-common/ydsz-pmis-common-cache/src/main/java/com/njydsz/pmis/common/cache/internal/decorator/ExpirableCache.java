@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.api.CachePolicy;
+import com.njydsz.pmis.common.cache.listener.RemovalCause;
 import com.njydsz.pmis.common.cache.listener.RemovalListener;
 import com.njydsz.pmis.common.cache.stats.CacheStats;
 import com.njydsz.pmis.common.cache.support.AsyncFunction;
@@ -86,11 +87,8 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   /** 自定义过期策略（可选） */
   private final Expiry<? super K, ? super V> expiry;
 
-  /** 过期时间戳映射：key -> 过期时间戳（纳秒） */
-  private final ConcurrentMap<K, Long> expirationMap = new ConcurrentHashMap<>();
-
-  /** 是否使用访问后过期 */
-  private final boolean accessMode;
+  /** 过期时间戳映射：key -> 过期时间戳持有者（纳秒） */
+  private final ConcurrentMap<K, ExpiryHolder> expirationMap = new ConcurrentHashMap<>();
 
   /** 清理任务 Future */
   private final ScheduledFuture<?> cleanupFuture;
@@ -103,6 +101,31 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
 
   /** 未命中计数 */
   private final AtomicLong missCount = new AtomicLong(0);
+
+  /**
+   * 可变过期时间戳持有者 — 避免每次更新都创建新的 Long 对象
+   *
+   * <p>对于 expireAfterAccess 模式，每次访问都需要更新过期时间戳。 使用可变持有者替代不可变 Long，避免 Map 条目替换开销和 GC 压力。
+   */
+  private static final class ExpiryHolder {
+    volatile long expireAtNanos;
+
+    ExpiryHolder(long expireAtNanos) {
+      this.expireAtNanos = expireAtNanos;
+    }
+  }
+
+  /**
+   * 底层缓存淘汰监听器 — 清理 expirationMap 中已被底层淘汰的条目
+   *
+   * <p>解决内存泄漏：当底层缓存因容量限制淘汰条目时， expirationMap 中对应的条目不会自动清除。 通过 RemovalListener 监听淘汰事件，同步清理过期映射。
+   */
+  private final RemovalListener<K, V> evictionListener =
+      (key, value, cause) -> {
+        if (cause != RemovalCause.EXPLICIT) {
+          expirationMap.remove(key);
+        }
+      };
 
   /**
    * 创建过期缓存装饰器
@@ -143,8 +166,9 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     this.expireAfterWriteNanos = expireAfterWriteNanos;
     this.expireAfterAccessNanos = expireAfterAccessNanos;
     this.expiry = expiry;
-    this.accessMode = expireAfterAccessNanos > 0;
     this.jitterRatio = Math.max(0, Math.min(1, jitterRatio));
+    // 注册淘汰监听器，防止 expirationMap 内存泄漏
+    delegate.addListener(evictionListener);
     this.cleanupFuture =
         SHARED_CLEANER.scheduleAtFixedRate(
             this::cleanupExpired, cleanupIntervalSeconds, cleanupIntervalSeconds, TimeUnit.SECONDS);
@@ -188,20 +212,31 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     if (expiry != null) {
       long ttlNanos = expiry.expireAfterRead(key, value, now);
       if (ttlNanos != Long.MAX_VALUE) {
-        expirationMap.put(key, now + ttlNanos);
+        ExpiryHolder holder = expirationMap.get(key);
+        if (holder != null) {
+          holder.expireAtNanos = now + applyJitter(ttlNanos);
+        } else {
+          expirationMap.put(key, new ExpiryHolder(now + applyJitter(ttlNanos)));
+        }
       }
     } else if (expireAfterAccessNanos > 0) {
-      expirationMap.put(key, now + expireAfterAccessNanos);
+      ExpiryHolder holder = expirationMap.get(key);
+      if (holder != null) {
+        // 可变更新，避免 Map 条目替换
+        holder.expireAtNanos = now + applyJitter(expireAfterAccessNanos);
+      } else {
+        expirationMap.put(key, new ExpiryHolder(now + applyJitter(expireAfterAccessNanos)));
+      }
     }
   }
 
   /** 检查条目是否已过期 */
   private boolean isExpired(K key) {
-    Long expiration = expirationMap.get(key);
-    if (expiration == null) {
+    ExpiryHolder holder = expirationMap.get(key);
+    if (holder == null) {
       return false;
     }
-    return System.nanoTime() > expiration;
+    return System.nanoTime() > holder.expireAtNanos;
   }
 
   /** 从底层缓存和过期映射中移除已过期条目 */
@@ -215,8 +250,8 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     try {
       long now = System.nanoTime();
       int removed = 0;
-      for (Map.Entry<K, Long> entry : expirationMap.entrySet()) {
-        if (entry.getValue() < now) {
+      for (Map.Entry<K, ExpiryHolder> entry : expirationMap.entrySet()) {
+        if (entry.getValue().expireAtNanos < now) {
           K key = entry.getKey();
           expirationMap.remove(key);
           delegate.remove(key);
@@ -280,7 +315,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   @Override
   public void put(K key, V value) {
     delegate.put(key, value);
-    expirationMap.put(key, computeExpiration(key, value));
+    expirationMap.put(key, new ExpiryHolder(computeExpiration(key, value)));
   }
 
   @Override

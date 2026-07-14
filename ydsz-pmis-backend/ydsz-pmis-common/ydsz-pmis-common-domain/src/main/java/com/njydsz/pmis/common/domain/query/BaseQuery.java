@@ -91,7 +91,7 @@ public class BaseQuery implements Serializable {
     /**
      * 开始时间（类型安全版本）
      *
-     * <p>用于时间范围查询的起始时间，使用 {@link LocalDateTime} 类型。
+     * <p>用于时间范围查询的起始时间，使用 {@link LocalDateTime} 类型
      * 替代 {@link #startTime} 字符串版本，避免手动解析和格式问题。
      */
     private transient LocalDateTime startDateTime;
@@ -99,7 +99,7 @@ public class BaseQuery implements Serializable {
     /**
      * 结束时间（类型安全版本）
      *
-     * <p>用于时间范围查询的结束时间，使用 {@link LocalDateTime} 类型。
+     * <p>用于时间范围查询的结束时间，使用 {@link LocalDateTime} 类型
      * 替代 {@link #endTime} 字符串版本，避免手动解析和格式问题。
      */
     private transient LocalDateTime endDateTime;

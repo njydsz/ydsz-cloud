@@ -7,10 +7,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import com.njydsz.pmis.common.cache.annotation.CacheAnnotationAspect;
 import com.njydsz.pmis.common.cache.health.CacheHealthIndicator;
 import com.njydsz.pmis.common.cache.health.SpringCacheHealthIndicator;
+import com.njydsz.pmis.common.cache.multilevel.DistributedRebuildLock;
 import com.njydsz.pmis.common.cache.support.CacheThreadPoolManager;
 import com.njydsz.pmis.common.cache.support.CacheWarmer;
 
@@ -93,6 +95,23 @@ public class YdszCacheAutoConfiguration {
   @ConditionalOnProperty(name = "ydsz.cache.warmup.enabled", havingValue = "true")
   public CacheWarmer cacheWarmer() {
     return new CacheWarmer();
+  }
+
+  /**
+   * 注册分布式缓存重建锁（防止多节点同时重建缓存）
+   *
+   * <p>需要 classpath 中存在 RedisTemplate。当使用多级缓存的分布式重建功能时自动生效。
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  @ConditionalOnClass(name = "org.springframework.data.redis.core.RedisTemplate")
+  @ConditionalOnProperty(
+      name = "ydsz.cache.multilevel.rebuild-lock.enabled",
+      havingValue = "true",
+      matchIfMissing = false)
+  public DistributedRebuildLock distributedRebuildLock(
+      RedisTemplate<String, Object> redisTemplate) {
+    return new DistributedRebuildLock(redisTemplate);
   }
 
   /**

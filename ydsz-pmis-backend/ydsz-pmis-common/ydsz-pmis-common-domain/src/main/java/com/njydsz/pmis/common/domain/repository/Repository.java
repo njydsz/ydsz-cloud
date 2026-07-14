@@ -14,7 +14,7 @@ import com.njydsz.pmis.common.domain.specification.Specification;
  * 仓储接口
  *
  * <p>在领域驱动设计（DDD）中，仓储（Repository）是聚合根的持久化抽象。
- * 它对外提供类似集合的接口，屏蔽底层持久化技术细节。
+ * 它对外提供类似集合的接口，屏蔽底层持久化技术细节点
  *
  * <p><b>核心语义：</b>
  * <ul>

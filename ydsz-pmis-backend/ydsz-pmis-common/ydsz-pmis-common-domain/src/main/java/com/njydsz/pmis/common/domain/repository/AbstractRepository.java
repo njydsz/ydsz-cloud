@@ -235,7 +235,7 @@ public abstract class AbstractRepository<T extends AggregateRoot<ID>, ID extends
     /**
      * 发布聚合根注册的领域事件
      *
-     * <p>发布后自动清空聚合根中的领域事件列表。
+     * <p>发布后自动清空聚合根中的领域事件列表
      * 子类可覆写此方法以自定义事件发布策略。
      *
      * @param aggregate 聚合根

@@ -4,6 +4,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.Writer;
 
+import com.njydsz.pmis.common.json.Json;
+
 /**
  * 流式 JSON 生成器
  *
@@ -273,6 +275,30 @@ public final class JsonGenerator implements Closeable {
         ensureOpen();
         writeCommaIfNeeded();
         writer.write(json);
+        firstElement = false;
+        return this;
+    }
+
+    /**
+     * 写入一个完整的 Java 对象（使用 Json 引擎序列化）。
+     *
+     * <p>适用于在流式生成过程中嵌入复杂对象的场景，
+     * 内部使用 {@link Json#toJson(Object)} 序列化。</p>
+     *
+     * @param obj 要写入的对象
+     * @return 本生成器（链式调用）
+     * @throws IOException 如果写入失败
+     * @since 1.4.0
+     */
+    public JsonGenerator writeObject(Object obj) throws IOException {
+        ensureOpen();
+        writeCommaIfNeeded();
+        if (obj == null) {
+            writer.write("null");
+        } else {
+            String json = Json.toJson(obj);
+            writer.write(json);
+        }
         firstElement = false;
         return this;
     }

@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  *
  * <p>标注在实体类上，表明该实体支持逻辑删除。
  * 配合 SQL 拦截器可在删除时执行 UPDATE 而非 DELETE。
- * 查询时自动追加 {@code WHERE deleted = 0} 条件。
+ * 查询时自动追加 {@code WHERE deleted = 0} 条件
  *
  * <p><b>使用示例：</b>
  * <pre>{@code

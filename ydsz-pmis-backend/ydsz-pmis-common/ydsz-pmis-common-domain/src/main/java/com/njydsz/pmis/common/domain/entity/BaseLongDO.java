@@ -11,7 +11,7 @@ import lombok.experimental.SuperBuilder;
  * Long 主键数据库实体基类
  *
  * <p>继承 {@link BaseEntity}，主键类型固定为 {@link Long}，
- * 适用于使用雪花算法（Snowflake）或自增 BIGINT 主键的数据库表。
+ * 适用于使用雪花算法（Snowflake）或自增 BIGINT 主键的数据库表
  *
  * <p>与 {@link BaseDO}（String 主键）的区别：
  * <ul>

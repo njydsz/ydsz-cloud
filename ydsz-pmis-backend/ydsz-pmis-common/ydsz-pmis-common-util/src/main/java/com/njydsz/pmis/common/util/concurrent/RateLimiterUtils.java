@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 限流工具类
@@ -16,6 +17,7 @@ import java.util.concurrent.TimeUnit;
  *   <li>令牌桶限流：固定速率控制（适用于 API 限流、QPS 控制）</li>
  *   <li>支持按 key 隔离限流器实例</li>
  *   <li>支持 tryAcquire（非阻塞）和 acquire（阻塞等待）两种获取模式</li>
+ *   <li>注册表自动淘汰：超过阈值时自动清理空闲限流器</li>
  * </ul>
  *
  * <p><b>使用示例：</b>
@@ -42,6 +44,12 @@ import java.util.concurrent.TimeUnit;
  */
 public class RateLimiterUtils {
 
+    /** 注册表最大容量，超过后触发空闲清理 */
+    private static final int MAX_REGISTRY_SIZE = 10_000;
+
+    /** 默认空闲超时时间（毫秒），超过此时间未访问的限流器将被清理 */
+    private static final long DEFAULT_MAX_IDLE_MILLIS = 30 * 60 * 1000L;
+
     private static final ConcurrentHashMap<String, SemaphoreLimiter> SEMAPHORE_REGISTRY = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, TokenBucketLimiter> TOKEN_BUCKET_REGISTRY = new ConcurrentHashMap<>();
 
@@ -59,6 +67,7 @@ public class RateLimiterUtils {
      * @return 信号量限流器实例
      */
     public static SemaphoreLimiter createSemaphoreLimiter(String key, int maxPermits) {
+        evictIfNeeded();
         return SEMAPHORE_REGISTRY.computeIfAbsent(key, k -> new SemaphoreLimiter(k, maxPermits));
     }
 
@@ -71,10 +80,12 @@ public class RateLimiterUtils {
     public static class SemaphoreLimiter {
         private final String key;
         private final Semaphore semaphore;
+        private final AtomicLong lastAccessTime;
 
         SemaphoreLimiter(String key, int maxPermits) {
             this.key = key;
             this.semaphore = new Semaphore(maxPermits, true);
+            this.lastAccessTime = new AtomicLong(System.currentTimeMillis());
         }
 
         /**
@@ -83,6 +94,7 @@ public class RateLimiterUtils {
          * @return 获取成功返回 true，否则返回 false
          */
         public boolean tryAcquire() {
+            touch();
             return semaphore.tryAcquire();
         }
 
@@ -95,6 +107,7 @@ public class RateLimiterUtils {
          * @throws InterruptedException 等待过程中被中断
          */
         public boolean tryAcquire(long timeout, TimeUnit unit) throws InterruptedException {
+            touch();
             return semaphore.tryAcquire(timeout, unit);
         }
 
@@ -104,6 +117,7 @@ public class RateLimiterUtils {
          * @throws InterruptedException 等待过程中被中断
          */
         public void acquire() throws InterruptedException {
+            touch();
             semaphore.acquire();
         }
 
@@ -131,6 +145,19 @@ public class RateLimiterUtils {
         public String getKey() {
             return key;
         }
+
+        /**
+         * 获取最后访问时间
+         *
+         * @return 最后访问时间戳（毫秒）
+         */
+        public long getLastAccessTime() {
+            return lastAccessTime.get();
+        }
+
+        private void touch() {
+            lastAccessTime.set(System.currentTimeMillis());
+        }
     }
 
     // ==================== 令牌桶限流器 ====================
@@ -144,6 +171,7 @@ public class RateLimiterUtils {
      * @return 令牌桶限流器实例
      */
     public static TokenBucketLimiter createTokenBucketLimiter(String key, int maxTokens, Duration refillInterval) {
+        evictIfNeeded();
         return TOKEN_BUCKET_REGISTRY.computeIfAbsent(key, k -> new TokenBucketLimiter(k, maxTokens, refillInterval));
     }
 
@@ -159,6 +187,7 @@ public class RateLimiterUtils {
         private final long refillIntervalNanos;
         private long availableTokens;
         private long lastRefillNanos;
+        private final AtomicLong lastAccessTime;
 
         TokenBucketLimiter(String key, int maxTokens, Duration refillInterval) {
             this.key = key;
@@ -166,6 +195,7 @@ public class RateLimiterUtils {
             this.refillIntervalNanos = refillInterval.toNanos();
             this.availableTokens = maxTokens;
             this.lastRefillNanos = System.nanoTime();
+            this.lastAccessTime = new AtomicLong(System.currentTimeMillis());
         }
 
         /**
@@ -174,6 +204,7 @@ public class RateLimiterUtils {
          * @return 获取成功返回 true，令牌不足返回 false
          */
         public synchronized boolean tryAcquire() {
+            touch();
             refill();
             if (availableTokens >= 1) {
                 availableTokens--;
@@ -192,6 +223,7 @@ public class RateLimiterUtils {
             if (tokens <= 0 || tokens > maxTokens) {
                 throw new IllegalArgumentException("tokens must be between 1 and " + maxTokens);
             }
+            touch();
             refill();
             if (availableTokens >= tokens) {
                 availableTokens -= tokens;
@@ -231,6 +263,19 @@ public class RateLimiterUtils {
         public String getKey() {
             return key;
         }
+
+        /**
+         * 获取最后访问时间
+         *
+         * @return 最后访问时间戳（毫秒）
+         */
+        public long getLastAccessTime() {
+            return lastAccessTime.get();
+        }
+
+        private void touch() {
+            lastAccessTime.set(System.currentTimeMillis());
+        }
     }
 
     // ==================== 便捷方法 ====================
@@ -259,5 +304,88 @@ public class RateLimiterUtils {
     public static void clearAll() {
         SEMAPHORE_REGISTRY.clear();
         TOKEN_BUCKET_REGISTRY.clear();
+    }
+
+    /**
+     * 清理空闲超过指定时间的限流器
+     *
+     * <p>建议在定时任务中调用此方法，防止 per-user/per-key 场景下的注册表无限增长。
+     *
+     * @param maxIdleMillis 最大空闲时间（毫秒），超过此时间未访问的限流器将被移除
+     * @return 清理的限流器总数
+     */
+    public static int cleanupStale(long maxIdleMillis) {
+        long now = System.currentTimeMillis();
+        int semaphoreRemoved = cleanupStaleMap(SEMAPHORE_REGISTRY, now, maxIdleMillis);
+        int tokenBucketRemoved = cleanupStaleMap(TOKEN_BUCKET_REGISTRY, now, maxIdleMillis);
+        return semaphoreRemoved + tokenBucketRemoved;
+    }
+
+    /**
+     * 使用默认空闲超时（30 分钟）清理空闲限流器
+     *
+     * @return 清理的限流器总数
+     */
+    public static int cleanupStale() {
+        return cleanupStale(DEFAULT_MAX_IDLE_MILLIS);
+    }
+
+    /**
+     * 获取信号量限流器注册表大小
+     *
+     * @return 注册表大小
+     */
+    public static int getSemaphoreRegistrySize() {
+        return SEMAPHORE_REGISTRY.size();
+    }
+
+    /**
+     * 获取令牌桶限流器注册表大小
+     *
+     * @return 注册表大小
+     */
+    public static int getTokenBucketRegistrySize() {
+        return TOKEN_BUCKET_REGISTRY.size();
+    }
+
+    /**
+     * 当注册表大小超过阈值时自动清理空闲限流器
+     */
+    private static void evictIfNeeded() {
+        int totalSize = SEMAPHORE_REGISTRY.size() + TOKEN_BUCKET_REGISTRY.size();
+        if (totalSize >= MAX_REGISTRY_SIZE) {
+            cleanupStale(DEFAULT_MAX_IDLE_MILLIS);
+        }
+    }
+
+    /**
+     * 清理单个注册表中的空闲条目
+     */
+    private static <V> int cleanupStaleMap(ConcurrentHashMap<String, V> map, long now, long maxIdleMillis) {
+        int removed = 0;
+        var iterator = map.entrySet().iterator();
+        while (iterator.hasNext()) {
+            var entry = iterator.next();
+            V value = entry.getValue();
+            long lastAccess = getLastAccessTime(value);
+            if (now - lastAccess > maxIdleMillis) {
+                iterator.remove();
+                removed++;
+            }
+        }
+        return removed;
+    }
+
+    /**
+     * 反射获取限流器的最后访问时间
+     */
+    private static long getLastAccessTime(Object limiter) {
+        if (limiter instanceof SemaphoreLimiter sl) {
+            return sl.getLastAccessTime();
+        }
+        if (limiter instanceof TokenBucketLimiter tbl) {
+            return tbl.getLastAccessTime();
+        }
+        return System.currentTimeMillis();
     }
 }

@@ -375,7 +375,32 @@ public final class JSONWriter {
 
         write(Double.toString(value));
     }
-    
+
+    /**
+     * 写入 BigDecimal（直接写入 toPlainString，避免精度丢失）。
+     *
+     * <p>使用 {@link BigDecimal#toPlainString()} 而非 {@link BigDecimal#toString()}，
+     * 避免科学计数法输出（如 1E+2），保证 JSON 数字格式合法。</p>
+     *
+     * <p>当 {@link Feature#WriteBigDecimalAsString} 启用时，
+     * BigDecimal 将作为 JSON 字符串（带引号）写入，避免 JavaScript 精度丢失。</p>
+     *
+     * @param value BigDecimal 值
+     * @since 1.4.0
+     */
+    public void writeBigDecimal(java.math.BigDecimal value) {
+        if (value == null) {
+            write("null");
+            return;
+        }
+        String str = value.toPlainString();
+        if (Feature.WriteBigDecimalAsString.isEnabled(features)) {
+            writeString(str);
+        } else {
+            write(str);
+        }
+    }
+
     /**
      * 写入字符串（带引号，快速路径）
      *

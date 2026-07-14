@@ -89,13 +89,6 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Jackson Annotations (provided: compile-time only, resolves Spring JAR enum constants, not bundled at runtime) -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <scope>provided</scope>
-        </dependency>
-
         <!-- Jakarta Annotation -->
         <dependency>
             <groupId>jakarta.annotation</groupId>

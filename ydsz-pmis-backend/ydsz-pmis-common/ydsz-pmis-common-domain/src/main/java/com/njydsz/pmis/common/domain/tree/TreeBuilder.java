@@ -17,8 +17,8 @@ import org.slf4j.LoggerFactory;
  * <p><b>核心能力：</b>
  * <ul>
  *   <li>父子关系绑定、层级计算、路径生成</li>
- *   <li>。ID 查找、获取后代祖先节。</li>
- *   <li>节。统计（总数、叶子数、深度）</li>
+ *   <li>。ID 查找、获取后代祖先节点</li>
+ *   <li>节点统计（总数、叶子数、深度）</li>
  *   <li>扁平化、按层级筛。</li>
  *   <li>循环引用检测</li>
  *   <li>懒加载树构建</li>
@@ -47,7 +47,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
     private static final Logger log = LoggerFactory.getLogger(TreeBuilder.class);
 
-    /** 节。数量阈值，超过此值时使用迭代模式替代递归以防止栈溢出 */
+    /** 节点数量阈值，超过此值时使用迭代模式替代递归以防止栈溢出 */
     private static final int ITERATIVE_MODE_THRESHOLD = 10000;
 
     /** 排序比较器，。sort 字段升序排列，null 值排在最。*/
@@ -72,11 +72,11 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
     // ── 缓存字段 ────────────────────────────────────────────────────────────────
 
-    /** 缓存的根节。列表 */
+    /** 缓存的根节点列表 */
     private volatile List<T> cachedRoots;
-    /** 缓存的节。映射（ID -> Node。*/
+    /** 缓存的节点映射（ID -> Node。*/
     private volatile Map<ID, T> cachedNodeMap;
-    /** 缓存的全量扁平节。列表*/
+    /** 缓存的全量扁平节点列表*/
     private volatile List<T> cachedAllNodes;
     /** 脏标记：true 表示需要重新构建*/
     private volatile boolean dirty = true;
@@ -157,7 +157,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
      * <p>使用双重检查锁（DCL）确保多线程环境下的缓存安全。
      * 每次调用返回独立的列表副本，防止外部篡改内部缓存。
      *
-     * @return 构建完成的根节。列表
+     * @return 构建完成的根节点列表
      */
     public List<T> build() {
         if (!dirty && cachedRoots != null) {
@@ -185,7 +185,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
             return;
         }
 
-        // 1. 初始化节。映射
+        // 1. 初始化节点映射
         Map<ID, T> nodeMap = new HashMap<>(nodeList.size());
         for (T node : nodeList) {
             ID id = idExtractor.apply(node);
@@ -199,12 +199,12 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
         // 3. 构建父子关系
         if (nodeList.size() > ITERATIVE_MODE_THRESHOLD) {
-            log.warn("节。数量 {} 超过阈。{}，切换到迭代模式构建树形结构",
+            log.warn("节点数量 {} 超过阈。{}，切换到迭代模式构建树形结构",
                     nodeList.size(), ITERATIVE_MODE_THRESHOLD);
         }
         buildRelations(nodeList, nodeMap);
 
-        // 4. 筛选根节。并排序
+        // 4. 筛选根节点并排序
         List<T> roots = nodeList.stream()
                 .filter(this::isRootNode)
                 .toList();
@@ -257,7 +257,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         }
     }
 
-    /** 判断节。是否为根节。 */
+    /** 判断节点是否为根节点 */
     private boolean isRootNode(T node) {
         ID parentId = parentIdExtractor.apply(node);
         if (multiRoot) {
@@ -281,19 +281,19 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         }
     }
 
-    /** 获取节。映射的不可变视图 */
+    /** 获取节点映射的不可变视图 */
     public Map<ID, T> getNodeMap() {
         ensureBuilt();
         return cachedNodeMap != null ? Collections.unmodifiableMap(cachedNodeMap) : Collections.emptyMap();
     }
 
-    /** 根据ID查找节。 */
+    /** 根据ID查找节点 */
     public T findById(ID id) {
         ensureBuilt();
         return cachedNodeMap != null ? cachedNodeMap.get(id) : null;
     }
 
-    /** 获取指定节。的所有后代节。*/
+    /** 获取指定节点的所有后代节点*/
     public List<T> getDescendants(T node) {
         ensureBuilt();
         List<T> descendants = new ArrayList<>();
@@ -312,7 +312,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         return descendants;
     }
 
-    /** 获取指定节。的所有祖先节。*/
+    /** 获取指定节点的所有祖先节点*/
     public List<T> getAncestors(T node) {
         ensureBuilt();
         List<T> ancestors = new ArrayList<>();
@@ -329,7 +329,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         return ancestors;
     }
 
-    /** 判断节。是否为根节。 */
+    /** 判断节点是否为根节点 */
     public boolean isRoot(T node, ID rootId) {
         ensureBuilt();
         return isRootNode(node);
@@ -337,13 +337,13 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
     // ── 统计能力 ────────────────────────────────────────────────────────────────
 
-    /** 统计节。总数 */
+    /** 统计节点总数 */
     public int countNodes() {
         ensureBuilt();
         return cachedAllNodes != null ? cachedAllNodes.size() : 0;
     }
 
-    /** 统计根节。数量*/
+    /** 统计根节点数量*/
     public int countRootNodes() {
         ensureBuilt();
         return cachedRoots != null ? cachedRoots.size() : 0;
@@ -361,7 +361,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
                 .orElse(0);
     }
 
-    /** 计算指定节。的深度（从该节。到根节。的路径长度） */
+    /** 计算指定节点的深度（从该节点到根节点的路径长度） */
     private int getNodeDepth(T node) {
         int depth = 1;
         T current = node;
@@ -377,7 +377,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         return depth;
     }
 
-    /** 统计叶子节。数量 */
+    /** 统计叶子节点数量 */
     public int countLeafNodes() {
         ensureBuilt();
         return (int) cachedAllNodes.stream()
@@ -388,7 +388,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
                 .count();
     }
 
-    /** 获取所有叶子节。*/
+    /** 获取所有叶子节点*/
     public List<T> getLeafNodes() {
         ensureBuilt();
         return cachedAllNodes.stream()
@@ -425,7 +425,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         return result;
     }
 
-    /** 根据层级筛选节。*/
+    /** 根据层级筛选节点*/
     public List<T> filterByLevel(int level) {
         ensureBuilt();
         return cachedAllNodes.stream()
@@ -438,7 +438,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
     // ── 排序 ────────────────────────────────────────────────────────────────────
 
-    /** 对节。列表进行排序，并递归排序子树 */
+    /** 对节点列表进行排序，并递归排序子树 */
     private static <T extends TreeNode<T, ?>> void sortSubTree(List<T> nodes) {
         for (T node : nodes) {
             List<T> children = node.getChildren();
@@ -451,7 +451,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
     // ── 校验 ────────────────────────────────────────────────────────────────────
 
-    /** 检测节。间是否存在循环引用 */
+    /** 检测节点间是否存在循环引用 */
     private static <T extends TreeNode<T, ID>, ID extends Serializable> void detectCyclicReference(
             List<T> nodeList,
             Function<T, ID> idExtractor,
@@ -472,11 +472,11 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
                 depth++;
                 if (depth > maxDepth) {
                     throw new IllegalStateException(
-                            "检测到树中存在循环引用，涉及节。 " + nodeId);
+                            "检测到树中存在循环引用，涉及节点 " + nodeId);
                 }
                 if (!visited.add(parentId)) {
                     throw new IllegalStateException(
-                            "检测到树中存在循环引用，涉及节。 " + nodeId);
+                            "检测到树中存在循环引用，涉及节点 " + nodeId);
                 }
                 T parent = nodeMap.get(parentId);
                 parentId = parent != null ? parentIdExtractor.apply(parent) : null;
@@ -486,7 +486,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
     // ── 路径生成 ────────────────────────────────────────────────────────────────
 
-    /** 自动构建所有节。的路径 */
+    /** 自动构建所有节点的路径 */
     private void generatePaths(List<T> nodeList, Map<ID, T> nodeMap) {
         for (T node : nodeList) {
             ID parentId = parentIdExtractor.apply(node);
@@ -508,24 +508,55 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         }
     }
 
-    // ── 懒加。──────────────────────────────────────────────────────────────────
+    // ── 懒加载 ──────────────────────────────────────────────────────────────────
 
-    /** 构建懒加载树（使用默认最大深度10。*/
+    /**
+     * 构建懒加载树（使用默认配置）
+     *
+     * @param provider 节点提供者
+     * @return 懒加载根节点列表
+     */
     public static <T extends TreeNode<T, ID>, ID extends Serializable>
     List<LazyTreeNode<T, ID>> buildLazy(TreeNodeProvider<T, ID> provider) {
-        return buildLazy(provider, new TreeLazyConfig().getMaxLazyDepth());
+        TreeLazyConfig defaultConfig = new TreeLazyConfig();
+        return buildLazy(provider, defaultConfig.getMaxLazyDepth(), defaultConfig.getBatchSize());
     }
 
-    /** 构建懒加载树（使用配置对象） */
+    /**
+     * 构建懒加载树（使用配置对象）
+     *
+     * @param provider 节点提供者
+     * @param config   懒加载配置
+     * @return 懒加载根节点列表
+     */
     public static <T extends TreeNode<T, ID>, ID extends Serializable>
     List<LazyTreeNode<T, ID>> buildLazy(TreeNodeProvider<T, ID> provider, TreeLazyConfig config) {
         Objects.requireNonNull(config, "config不能为null");
-        return buildLazy(provider, config.getMaxLazyDepth());
+        return buildLazy(provider, config.getMaxLazyDepth(), config.getBatchSize());
     }
 
-    /** 构建懒加载树（指定最大深度） */
+    /**
+     * 构建懒加载树（指定最大深度）
+     *
+     * @param provider 节点提供者
+     * @param maxDepth 最大深度
+     * @return 懒加载根节点列表
+     */
     public static <T extends TreeNode<T, ID>, ID extends Serializable>
     List<LazyTreeNode<T, ID>> buildLazy(TreeNodeProvider<T, ID> provider, int maxDepth) {
+        return buildLazy(provider, maxDepth, 0);
+    }
+
+    /**
+     * 构建懒加载树（指定最大深度和批量大小）
+     *
+     * @param provider  节点提供者
+     * @param maxDepth  最大深度
+     * @param batchSize 每批加载的子节点数量（0 表示全量加载）
+     * @return 懒加载根节点列表
+     */
+    public static <T extends TreeNode<T, ID>, ID extends Serializable>
+    List<LazyTreeNode<T, ID>> buildLazy(TreeNodeProvider<T, ID> provider, int maxDepth, int batchSize) {
         Objects.requireNonNull(provider, "provider不能为null");
         if (maxDepth <= 0) {
             throw new IllegalArgumentException("maxDepth必须大于0");
@@ -539,7 +570,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         Function<T, ID> idExtractor = TreeNode::getId;
         List<LazyTreeNode<T, ID>> lazyRoots = new ArrayList<>(rootNodes.size());
         for (T node : rootNodes) {
-            lazyRoots.add(new LazyTreeNode<>(node, provider, maxDepth, idExtractor));
+            lazyRoots.add(new LazyTreeNode<>(node, provider, maxDepth, idExtractor, batchSize));
         }
 
         return lazyRoots;

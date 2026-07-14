@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.api.CachePolicy;
 import com.njydsz.pmis.common.cache.listener.RemovalListener;
 import com.njydsz.pmis.common.cache.stats.CacheStats;
 import com.njydsz.pmis.common.cache.support.AsyncFunction;
@@ -282,7 +283,7 @@ public class SwrCacheDecorator<K, V> implements Cache<K, V> {
   }
 
   @Override
-  public com.njydsz.pmis.common.cache.api.CachePolicy policy() {
+  public CachePolicy policy() {
     return delegate.policy();
   }
 

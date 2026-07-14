@@ -2,7 +2,7 @@ package com.njydsz.pmis.common.cache.health;
 
 import java.util.Map;
 
-import org.springframework.boot.health.Health;
+import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.pmis.common.cache.spring.YdszCacheManager;

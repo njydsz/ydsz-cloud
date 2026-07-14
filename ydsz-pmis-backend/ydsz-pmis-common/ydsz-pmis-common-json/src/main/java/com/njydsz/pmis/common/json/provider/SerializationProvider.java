@@ -3,6 +3,8 @@ package com.njydsz.pmis.common.json.provider;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Logger;
 
 import com.njydsz.pmis.common.json.annotation.JsonClass;
 import com.njydsz.pmis.common.json.asm.AsmSerializer;
@@ -39,6 +41,10 @@ import com.njydsz.pmis.common.json.writer.JSONWriter;
  */
 public final class SerializationProvider {
 
+    private static final Logger LOGGER = Logger.getLogger(SerializationProvider.class.getName());
+
+    /** ASM 序列化降级计数器 */
+    private static final AtomicLong ASM_DOWNGRADE_COUNT = new AtomicLong(0);
     /** StringBuilder 池最大容量*/
     private static final int MAX_SB_CAPACITY = 65536;
 
@@ -159,6 +165,16 @@ public final class SerializationProvider {
     }
 
     /**
+     * 获取 ASM 降级总次数。
+     *
+     * @return ASM 序列化降级总次数
+     * @since 1.4.0
+     */
+    public static long getAsmDowngradeCount() {
+        return ASM_DOWNGRADE_COUNT.get();
+    }
+
+    /**
      * 获取适合指定预估大小的 StringBuilder（大小分级策略）
      *
      * <p>根据预估的 JSON 大小选择合适容量的 StringBuilder，避免：
@@ -225,6 +241,13 @@ public final class SerializationProvider {
                     return writer.toString();
                 }
             } catch (Exception e) {
+                // ASM 序列化失败，记录日志和计数器，回退到常规序列化
+                long count = ASM_DOWNGRADE_COUNT.incrementAndGet();
+                if (count <= 10 || count % 100 == 0) {
+                    LOGGER.fine("ASM serialization failed for " + clazz.getName()
+                            + ", falling back to reflection. Total downgrades: " + count
+                            + ", error: " + e.getMessage());
+                }
             }
         }
 
@@ -482,6 +505,12 @@ public final class SerializationProvider {
                 return true;
             }
         } catch (Exception e) {
+            long count = ASM_DOWNGRADE_COUNT.incrementAndGet();
+            if (count <= 10 || count % 100 == 0) {
+                LOGGER.fine("ASM fast-serialize failed for " + clazz.getName()
+                        + ", falling back. Total downgrades: " + count
+                        + ", error: " + e.getMessage());
+            }
         }
 
         // 获取或创建 BeanSerializer

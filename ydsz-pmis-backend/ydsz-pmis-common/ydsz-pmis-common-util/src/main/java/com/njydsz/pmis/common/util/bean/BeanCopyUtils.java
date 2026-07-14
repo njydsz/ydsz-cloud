@@ -40,13 +40,30 @@ public class BeanCopyUtils {
 
     /**
      * PropertyDescriptor 缓存，提升属性拷贝性能
+     *
+     * <p>使用 synchronized LinkedHashMap（accessOrder=true）实现 LRU 淘汰策略，
+     * 避免全量清空导致缓存命中率骤降。
      */
-    private static final Map<Class<?>, PropertyDescriptor[]> PROPERTY_CACHE = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, PropertyDescriptor[]> PROPERTY_CACHE =
+            Collections.synchronizedMap(new LinkedHashMap<>(128, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<Class<?>, PropertyDescriptor[]> eldest) {
+                    return size() > MAX_CACHE_SIZE;
+                }
+            });
 
     /**
      * 字段缓存，提升 entityToMap 性能
+     *
+     * <p>使用 synchronized LinkedHashMap（accessOrder=true）实现 LRU 淘汰策略。
      */
-    private static final Map<Class<?>, Field[]> FIELD_CACHE = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, Field[]> FIELD_CACHE =
+            Collections.synchronizedMap(new LinkedHashMap<>(128, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<Class<?>, Field[]> eldest) {
+                    return size() > MAX_CACHE_SIZE;
+                }
+            });
 
     /**
      * 缓存最大容量，超过后触发全量清空（防止内存泄漏）
@@ -541,10 +558,30 @@ public class BeanCopyUtils {
 
     /**
      * 忽略 null 值的拷贝实现
+     *
+     * <p>使用缓存的 PropertyDescriptor 直接读写属性值，避免创建 Map 中间层和 BeanWrapper 实例。
      */
     private static void copyPropertiesWithIgnoreNull(Object source, Object target) {
-        Map<String, Object> sourceMap = entityToMap(source, true);
-        copyMapToProperties(sourceMap, target);
+        Class<?> sourceClass = source.getClass();
+        PropertyDescriptor[] props = computeIfAbsentBounded(PROPERTY_CACHE, sourceClass, BeanUtils::getPropertyDescriptors);
+        for (PropertyDescriptor pd : props) {
+            if (pd.getReadMethod() == null || pd.getWriteMethod() == null) {
+                continue;
+            }
+            String name = pd.getName();
+            if ("class".equals(name) || DEFAULT_IGNORE_FIELDS.contains(name)) {
+                continue;
+            }
+            try {
+                Object value = pd.getReadMethod().invoke(source);
+                if (value != null) {
+                    pd.getWriteMethod().invoke(target, value);
+                }
+            } catch (Exception e) {
+                log.warn("【BeanCopyUtils】属性拷贝失败 | property={} | error={}",
+                        name, e.getMessage());
+            }
+        }
     }
 
     /**
@@ -586,11 +623,7 @@ public class BeanCopyUtils {
     }
 
     /**
-     * 带容量限制的 computeIfAbsent，超过 {@link #MAX_CACHE_SIZE} 时全量清空后重新写入
-     *
-     * <p>防止动态类加载场景下缓存无限增长导致内存泄漏。
-     * 使用先检查后清空策略，在并发场景下 ConcurrentHashMap.computeIfAbsent 本身保证原子性。
-     * 清空操作虽然不是原子的，但 ConcurrentHashMap 的线程安全性确保不会抛出 ConcurrentModificationException。
+     * 从缓存获取或计算值（LRU 淘汰策略已由 LinkedHashMap 自动管理）
      *
      * @param cache  缓存 Map
      * @param key    缓存 key
@@ -604,11 +637,9 @@ public class BeanCopyUtils {
         if (existing != null) {
             return existing;
         }
-        if (cache.size() >= MAX_CACHE_SIZE) {
-            log.debug("BeanCopyUtils 缓存达到上限 {}，执行全量清空", MAX_CACHE_SIZE);
-            cache.clear();
-        }
-        return cache.computeIfAbsent(key, mapper);
+        V value = mapper.apply(key);
+        cache.put(key, value);
+        return value;
     }
 
     /**
