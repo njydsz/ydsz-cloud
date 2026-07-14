@@ -14,16 +14,20 @@
 
 ## L1-L6 分层架构
 
-本模块按 DDD 分层组织 **18+ 个子模块**，依赖方向严格自下而上（上层依赖下层，不可反向）：
+本模块按 DDD 分层组织 **27 个子模块**，依赖方向严格自下而上（上层依赖下层，不可反向）：
 
 ```
 L1 基础设施层  → ydsz-pmis-common-core
-L2 工具模块层  → ydsz-pmis-common-util
+L2 工具模块层  → ydsz-pmis-common-util, ydsz-pmis-common-json
 L3 基础服务层  → ydsz-pmis-common-domain, ydsz-pmis-common-exception
-L4 基础数据层  → ydsz-pmis-common-jdbc, ydsz-pmis-common-redis, ydsz-pmis-common-lock
+L4 基础数据层  → ydsz-pmis-common-jdbc, ydsz-pmis-common-redis, ydsz-pmis-common-lock,
+                 ydsz-pmis-common-cache
 L5 业务服务层  → ydsz-pmis-common-auth, ydsz-pmis-common-safe, ydsz-pmis-common-feign,
-                ydsz-pmis-common-audit, ydsz-pmis-common-file, ydsz-pmis-common-notify,
-                ydsz-pmis-common-queue, ydsz-pmis-common-docs
+                 ydsz-pmis-common-audit, ydsz-pmis-common-file, ydsz-pmis-common-notify,
+                 ydsz-pmis-common-queue, ydsz-pmis-common-docs, ydsz-pmis-common-excel,
+                 ydsz-pmis-common-netty, ydsz-pmis-common-socket,
+                 ydsz-pmis-common-search, ydsz-pmis-common-event,
+                 ydsz-pmis-common-config, ydsz-pmis-common-seata, ydsz-pmis-common-sentry
 L6 应用层     → ydsz-pmis-common-base, ydsz-pmis-common-web, ydsz-pmis-common-app
 ```
 
@@ -31,31 +35,40 @@ L6 应用层     → ydsz-pmis-common-base, ydsz-pmis-common-web, ydsz-pmis-comm
 
 | 层级 | 模块 | 职责 |
 |---|---|---|
-| L1 | common-core | 统一响应/请求模型、TraceId、请求上下文、JobHandler |
-| L2 | common-util | 80+ 工具类（JSON/加密/HTTP/IP/Spring/雪花 ID 等） |
-| L3 | common-domain | DDD 基类（BaseEntity/AggregateRoot）、领域事件、规范模式、分页、树 |
-| L3 | common-exception | 15+ 异常类、统一错误码、ProblemDetail (RFC 7807)、i18n、双栈异常处理器 |
-| L4 | common-jdbc | MyBatis-Plus 增强、动态数据源、行/列权限、逻辑删除、乐观锁、租户隔离 |
-| L4 | common-redis | Redis 6 种 ops + 9 种高级 ops、布隆过滤器、延迟队列、限流、缓存击穿防护 |
-| L4 | common-lock | 分布式锁（4 种实现）、@Idempotent 幂等、@YdszDistributedLock、WatchDog、读写锁、信号量 |
-| L5 | common-auth | JWT、RBAC 4 注解 + 3 切面、@DataScope 数据权限、TOTP 2FA |
-| L5 | common-safe | @Sensitive 7 种脱敏、@Xss、@RateLimit、CSRF、SQL 注入防护、验证码、安全事件总线 |
-| L5 | common-feign | OpenFeign 增强、统一编解码、ResponseUnwrapDecoder、DefaultFallbackFactory、Resilience4j 熔断 |
-| L5 | common-audit | @OperationLog + @Audit、AuditAspect、事件驱动异步落库、Disruptor 高性能批写、4 种分片策略 |
-| L5 | common-file | 7 种存储平台（Local/OSS/Minio/S3/COS/OBS/Qiniu）、分片上传、断点续传、文件去重、Tika 类型检测 |
-| L5 | common-notify | 5 种通知渠道（邮件/短信/企微/钉钉/飞书）、SpEL 模板引擎、重试队列、滑动窗口限流 |
-| L5 | common-queue | 5 种 MQ（Redis×3/Kafka/RocketMQ/RabbitMQ/ActiveMQ）、死信队列、消息轨迹、消费者限流 |
-| L5 | common-docs | 8 种格式解析（PDF/Word/Excel/PPT/HTML/Markdown/TXT/CSV）、预处理 Pipeline、安全扫描（宏/PDF JS/嵌入对象）、PII 检测（5 种）、文本水印、PDF 脱敏、异步解析、OCR 集成 |
-| L5 | common-doc | OpenAPI 3.0 + SpringDoc + Knife4j UI 增强 + Markdown 文档导出 |
-| L6 | common-base | HTTP 公共基座（CORS/时区/I18n/安全头/TraceId/请求日志/全局响应包装） |
-| L6 | common-web | **PC Web 端基座**（继承 base，叠加 Spring Security/WebAuthFilter/Session） |
-| L6 | common-app | **移动端 App 基座**（继承 base，叠加 AppSignatureFilter 防重放/AppAuthHandler） |
+| L1 | [common-core](ydsz-pmis-common-core/README.md) | 统一响应/请求模型、TraceId、请求上下文、JobHandler、DAG、特性开关、重试模板、线程池监控 |
+| L2 | [common-util](ydsz-pmis-common-util/README.md) | 99 个工具类（JSON/加密/HTTP/IP/Spring/雪花 ID/Bean 拷贝 等） |
+| L2 | [common-json](ydsz-pmis-common-json/README.md) | 高性能 JSON 引擎（ASM 字节码、SIMD 向量化、Schema 校验、JsonPath、树模型） |
+| L3 | [common-domain](ydsz-pmis-common-domain/README.md) | DDD 基类（BaseEntity/AggregateRoot）、领域事件、规范模式、分页、树形结构 |
+| L3 | [common-exception](ydsz-pmis-common-exception/README.md) | 统一异常体系、错误码管理、ProblemDetail (RFC 7807)、i18n、异常构建器 |
+| L4 | [common-jdbc](ydsz-pmis-common-jdbc/README.md) | MyBatis-Plus 增强、动态数据源、行/列权限、逻辑删除、乐观锁、租户隔离、字段填充 |
+| L4 | [common-redis](ydsz-pmis-common-redis/README.md) | Redis 6 种 ops + 9 种高级 ops、布隆过滤器、延迟队列、限流、缓存击穿防护 |
+| L4 | [common-lock](ydsz-pmis-common-lock/README.md) | 分布式锁（4 种实现）、@Idempotent 幂等、@YdszDistributedLock、WatchDog、读写锁、信号量 |
+| L4 | [common-cache](ydsz-pmis-common-cache/README.md) | 高性能多策略本地缓存框架（Window-TinyLFU/LRU/LFU/TTL/MultiLevel）、三防、熔断降级 |
+| L5 | [common-auth](ydsz-pmis-common-auth/README.md) | JWT、RBAC 4 注解 + 3 切面、@DataScope 数据权限、TOTP 2FA、权限缓存热更新 |
+| L5 | [common-safe](ydsz-pmis-common-safe/README.md) | @Sensitive 7 种脱敏、@Xss、@RateLimit、CSRF、SQL 注入防护、验证码、安全事件告警 |
+| L5 | [common-feign](ydsz-pmis-common-feign/README.md) | OpenFeign 增强、统一编解码、ResponseUnwrapDecoder、Resilience4j 熔断、动态客户端 |
+| L5 | [common-audit](ydsz-pmis-common-audit/README.md) | @OperationLog + @Audit、事件驱动异步落库、Disruptor 高性能批写、4 种分片策略 |
+| L5 | [common-file](ydsz-pmis-common-file/README.md) | 7 种存储平台、分片上传、断点续传、文件去重（秒传）、文件类型安全检测 |
+| L5 | [common-notify](ydsz-pmis-common-notify/README.md) | 5 种通知渠道（邮件/短信/企微/钉钉/飞书）、SpEL 模板引擎、重试队列、DKIM 签名 |
+| L5 | [common-queue](ydsz-pmis-common-queue/README.md) | 5 种 MQ（Redis×3/Kafka/RocketMQ/RabbitMQ/ActiveMQ）、死信队列、消息轨迹、去重 |
+| L5 | [common-docs](ydsz-pmis-common-docs/README.md) | 8 种格式解析、预处理 Pipeline、安全扫描、PII 检测（5 种）、文本水印、PDF 脱敏、OCR |
+| L5 | [common-excel](ydsz-pmis-common-excel/README.md) | 高性能 Excel 读写（SAX 流式/SXSSF 大文件）、并发写入、模板填充、公式注入防护 |
+| L5 | [common-netty](ydsz-pmis-common-netty/README.md) | Netty TCP Server/Client 抽象、断线重连、心跳检测、SSL/TLS、LengthField 编解码 |
+| L5 | [common-socket](ydsz-pmis-common-socket/README.md) | WebSocket 实时推送、集群广播、离线消息存储、认证拦截、消息限流 |
+| L5 | [common-search](ydsz-pmis-common-search/README.md) | 统一搜索引擎（PG 全文检索/ES）、多 Provider 架构、搜索缓存、蓝绿重建、游标分页 |
+| L5 | [common-event](ydsz-pmis-common-event/README.md) | 事务性 Outbox 模式、可靠事件投递、Outbox 处理器、健康检查 |
+| L5 | [common-config](ydsz-pmis-common-config/README.md) | 敏感配置加密（AES-256-GCM、SHA-256 密钥派生、ENC() 格式） |
+| L5 | [common-seata](ydsz-pmis-common-seata/README.md) | Seata 分布式事务集成（AT/TCC/SAGA 模式） |
+| L5 | [common-sentry](ydsz-pmis-common-sentry/README.md) | 统一系统指标监控（ELK+Logstash / Loki+Alloy 双方案、SLA、告警收敛、Grafana 仪表盘） |
+| L6 | [common-base](ydsz-pmis-common-base/README.md) | HTTP 公共基座（CORS/时区/I18n/安全头/TraceId/请求日志/全局响应包装/OpenAPI） |
+| L6 | [common-web](ydsz-pmis-common-web/README.md) | **PC Web 端基座**（继承 base，叠加 Spring Security/WebAuthFilter/Session） |
+| L6 | [common-app](ydsz-pmis-common-app/README.md) | **移动端 App 基座**（继承 base，叠加 API 签名验证/AppAuthHandler） |
 
 > **注意**：`common-web` 与 `common-app` 是两个**平行**的应用层入口，分别面向 PC Web 服务和移动端 App。后端微服务统一使用 `common-web`，`common-app` 仅用于未来移动端项目。
 
 ## 自动配置机制
 
-所有 18+ 个子模块统一使用 Spring Boot 3+ 的 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 机制自动装配（**不使用** `spring.factories`）。
+所有 27 个子模块统一使用 Spring Boot 3+ 的 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 机制自动装配（**不使用** `spring.factories`）。
 
 各服务的启动类通过 `@SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.{service}", "com.njydsz.pmis.common"})` 扫描 common 包，激活自动配置。
 
@@ -121,11 +134,13 @@ ydsz-pmis-common/
 ├── pom.xml                    # 聚合 POM（packaging=pom）
 ├── ydsz-pmis-common-core/     # L1 基础设施层
 ├── ydsz-pmis-common-util/     # L2 工具模块层
+├── ydsz-pmis-common-json/     # L2 工具模块层（高性能 JSON 引擎）
 ├── ydsz-pmis-common-domain/   # L3 基础服务层
 ├── ydsz-pmis-common-exception/# L3 基础服务层
 ├── ydsz-pmis-common-jdbc/     # L4 基础数据层
 ├── ydsz-pmis-common-redis/    # L4 基础数据层
-├── ydsz-pmis-common-lock/     # L4 基基础数据层
+├── ydsz-pmis-common-lock/     # L4 基础数据层
+├── ydsz-pmis-common-cache/    # L4 基础数据层（高性能多策略本地缓存）
 ├── ydsz-pmis-common-auth/     # L5 业务服务层
 ├── ydsz-pmis-common-safe/     # L5 业务服务层
 ├── ydsz-pmis-common-feign/    # L5 业务服务层
@@ -133,7 +148,15 @@ ydsz-pmis-common/
 ├── ydsz-pmis-common-file/     # L5 业务服务层
 ├── ydsz-pmis-common-notify/   # L5 业务服务层
 ├── ydsz-pmis-common-queue/    # L5 业务服务层
-├── ydsz-pmis-common-docs/    # L5 业务服务层（文档解析/预处理/安全/PII/水印/脱敏/OCR）
+├── ydsz-pmis-common-docs/     # L5 业务服务层（文档解析/安全/PII/水印/脱敏/OCR）
+├── ydsz-pmis-common-excel/    # L5 业务服务层（高性能 Excel 读写）
+├── ydsz-pmis-common-netty/    # L5 业务服务层（Netty TCP 通信）
+├── ydsz-pmis-common-socket/   # L5 业务服务层（WebSocket 实时推送）
+├── ydsz-pmis-common-search/   # L5 业务服务层（统一搜索引擎）
+├── ydsz-pmis-common-event/    # L5 业务服务层（事务性 Outbox）
+├── ydsz-pmis-common-config/   # L5 业务服务层（敏感配置加密）
+├── ydsz-pmis-common-seata/    # L5 业务服务层（Seata 分布式事务）
+├── ydsz-pmis-common-sentry/   # L5 业务服务层（统一系统指标监控）
 ├── ydsz-pmis-common-base/     # L6 应用层（HTTP 公共基座）
 ├── ydsz-pmis-common-web/      # L6 应用层（PC Web 端基座）
 └── ydsz-pmis-common-app/      # L6 应用层（移动端 App 基座）
@@ -142,7 +165,7 @@ ydsz-pmis-common/
 ## 构建
 
 ```bash
-# 仅构建 common 模块（含所有 18+ 个子模块）
+# 仅构建 common 模块（含所有 27 个子模块）
 cd ydsz-pmis-backend
 mvn -pl ydsz-pmis-common -am clean install
 

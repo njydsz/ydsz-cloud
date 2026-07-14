@@ -17,12 +17,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.nextwiki.api.dto.NextwikiDTOs;
 import com.njydsz.pmis.nextwiki.domain.entity.FileVersion;
 import com.njydsz.pmis.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.pmis.nextwiki.server.health.NextwikiHealthIndicator;
 import com.njydsz.pmis.nextwiki.server.service.FileApplicationService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,10 +49,12 @@ import lombok.extern.slf4j.Slf4j;
 public class FileController {
 
     private final FileApplicationService fileApplicationService;
+    private final NextwikiHealthIndicator healthIndicator;
 
     @PostMapping("/upload")
     @Operation(summary = "上传文件", description = "支持单文件上传，自动创建版本记录")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
+    @OperationLog(module = "网盘", action = "上传文件", bizType = "FILE", saveResult = true)
     public BaseResponse<FileNodeVO> upload(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "parentId", required = false) String parentId,
@@ -59,6 +63,7 @@ public class FileController {
             @RequestHeader("X-User-Id") String userId) {
 
         FileNodeVO result = fileApplicationService.upload(file, parentId, rename, versionRemark, userId);
+        healthIndicator.recordUpload();
         return BaseResponse.ok(result);
     }
 
@@ -94,6 +99,7 @@ public class FileController {
     @PutMapping("/{nodeId}/move")
     @Operation(summary = "移动文件/文件夹")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
+    @OperationLog(module = "网盘", action = "移动文件", bizType = "FILE")
     public BaseResponse<FileNodeVO> move(
             @PathVariable String nodeId,
             @Valid @RequestBody NextwikiDTOs.MoveRequest request,
@@ -106,6 +112,7 @@ public class FileController {
     @PutMapping("/{nodeId}/rename")
     @Operation(summary = "重命名文件/文件夹")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_RENAME)
+    @OperationLog(module = "网盘", action = "重命名文件", bizType = "FILE")
     public BaseResponse<FileNodeVO> rename(
             @PathVariable String nodeId,
             @Valid @RequestBody NextwikiDTOs.RenameRequest request,
@@ -118,11 +125,13 @@ public class FileController {
     @DeleteMapping("/{nodeId}")
     @Operation(summary = "删除文件/文件夹（移入回收站）")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
+    @OperationLog(module = "网盘", action = "删除文件", bizType = "FILE")
     public BaseResponse<Void> delete(
             @PathVariable String nodeId,
             @RequestHeader("X-User-Id") String userId) {
 
         fileApplicationService.delete(nodeId, userId);
+        healthIndicator.recordDelete();
         return BaseResponse.ok();
     }
 

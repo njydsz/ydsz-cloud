@@ -26,6 +26,7 @@ import com.njydsz.pmis.common.file.storage.IFileStorageProvider;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.pmis.nextwiki.server.health.NextwikiHealthIndicator;
 import com.njydsz.pmis.nextwiki.server.service.DownloadRateLimitService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -50,6 +51,7 @@ public class DownloadController {
 
     private final FileNodeRepository fileNodeRepository;
     private final DownloadRateLimitService rateLimitService;
+    private final NextwikiHealthIndicator healthIndicator;
 
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
@@ -87,6 +89,7 @@ public class DownloadController {
         setDownloadHeaders(response, fileNode.getName(), fileNode.getMimeType());
         storage.download(fileNode.getBucketName(), fileNode.getStorageKey(), response);
 
+        healthIndicator.recordDownload();
         log.info("[DownloadController] 文件下载: nodeId={}, userId={}, ip={}",
                 nodeId, userId, ip);
     }

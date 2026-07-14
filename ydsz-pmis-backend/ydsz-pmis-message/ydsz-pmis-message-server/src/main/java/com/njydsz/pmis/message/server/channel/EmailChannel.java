@@ -162,7 +162,7 @@ public class EmailChannel implements MessageChannel {
                 }
             }
         } catch (Exception e) {
-            log.warn("[EMAIL] 附件添加失败: {}", e.getMessage());
+            log.warn("[EMAIL] 附件添加失败: {}", e.getMessage(), e);
         }
     }
 
@@ -187,7 +187,7 @@ public class EmailChannel implements MessageChannel {
                 }
             }
         } catch (Exception e) {
-            log.warn("[EMAIL] 内嵌图片添加失败: {}", e.getMessage());
+            log.warn("[EMAIL] 内嵌图片添加失败: {}", e.getMessage(), e);
         }
     }
 }

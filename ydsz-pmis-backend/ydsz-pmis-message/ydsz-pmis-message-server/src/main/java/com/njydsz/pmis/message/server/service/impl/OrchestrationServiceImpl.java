@@ -106,7 +106,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                         continue;
                     }
                 } catch (Exception e) {
-                    log.warn("[Orchestration] 条件表达式求值失败: nodeId={} err={}", nodeId, e.getMessage());
+                    log.warn("[Orchestration] 条件表达式求值失败: nodeId={} err={}", nodeId, e.getMessage(), e);
                 }
             }
             // 执行节点

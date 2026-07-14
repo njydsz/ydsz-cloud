@@ -111,7 +111,7 @@ public class MsgLogArchiveServiceImpl implements MsgLogArchiveService {
                         supportsDetachConcurrently() ? " CONCURRENTLY" : ""));
                 log.info("[MsgLogArchive] DETACH 成功: {}", partitionName);
             } catch (Exception e) {
-                log.warn("[MsgLogArchive] DETACH 失败,跳过该分区: {} - {}", partitionName, e.getMessage());
+                log.warn("[MsgLogArchive] DETACH 失败,跳过该分区: {} - {}", partitionName, e.getMessage(), e);
                 continue;
             }
 
@@ -187,7 +187,7 @@ public class MsgLogArchiveServiceImpl implements MsgLogArchiveService {
                     "SELECT split_part(version(), ' ', 2)::int", Integer.class);
             return major != null && major >= 14;
         } catch (Exception e) {
-            log.warn("[MsgLogArchive] 获取 PG 版本失败,默认使用非 CONCURRENTLY DETACH: {}", e.getMessage());
+            log.warn("[MsgLogArchive] 获取 PG 版本失败,默认使用非 CONCURRENTLY DETACH: {}", e.getMessage(), e);
             return false;
         }
     }

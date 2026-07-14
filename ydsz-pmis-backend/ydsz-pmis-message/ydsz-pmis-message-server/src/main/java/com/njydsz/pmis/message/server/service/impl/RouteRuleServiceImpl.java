@@ -192,7 +192,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
                 }
             }
         } catch (Exception e) {
-            log.warn("[RouteRule] 缓存读取失败,回退 DB: {}", e.getMessage());
+            log.warn("[RouteRule] 缓存读取失败,回退 DB: {}", e.getMessage(), e);
         }
         List<MsgRouteRuleDO> rules = msgRouteRuleMapper.selectList(new LambdaQueryWrapper<MsgRouteRuleDO>()
                 .eq(MsgRouteRuleDO::getStatus, "ENABLED")
@@ -203,7 +203,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
                     JsonUtils.toJson(rules),
                     CACHE_TTL);
         } catch (Exception e) {
-            log.warn("[RouteRule] 缓存回填失败: {}", e.getMessage());
+            log.warn("[RouteRule] 缓存回填失败: {}", e.getMessage(), e);
         }
         return rules == null ? Collections.emptyList() : rules;
     }
@@ -215,7 +215,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
         try {
             stringRedisTemplate.delete(MessageConstants.ROUTE_RULE_CACHE_KEY);
         } catch (Exception e) {
-            log.warn("[RouteRule] 缓存失效失败: {}", e.getMessage());
+            log.warn("[RouteRule] 缓存失效失败: {}", e.getMessage(), e);
         }
     }
 

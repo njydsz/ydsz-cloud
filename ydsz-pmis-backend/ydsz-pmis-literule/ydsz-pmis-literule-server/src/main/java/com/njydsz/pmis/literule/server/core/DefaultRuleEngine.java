@@ -14,8 +14,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.annotation.PreDestroy;
 
-import org.slf4j.MDC;
-
 import com.njydsz.pmis.common.exception.observability.TraceContext;
 import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
@@ -217,6 +215,8 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      *
      * <p>执行流程：
      * <ol>
+     *   <li>设置 MDC traceId（优先 context.traceId，回退当前线程 MDC，最后生成新值）</li>
+     *   <li>（可选）注入外部事实数据到 context（P0-2 动态事实采集）</li>
      *   <li>（可选）注入模型输出到 context（P3-1 规则+模型融合）</li>
      *   <li>索引模式下按租户+环境+场景+互斥组+字段过滤候选规则；
      *       非索引模式线性遍历并逐条过滤</li>
@@ -232,11 +232,19 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * <p>结果按严重度倒序排列（RED → YELLOW → INFO）。
      * 单规则异常不影响其他规则评估（异常隔离）。
      *
+     * <p>评估期间 MDC 中设置 traceId，确保全链路日志可追踪；
+     * 评估结束后恢复原有 MDC 状态（由 {@link TraceContext#withContext} 保证）。
+     *
      * @param context 规则上下文（包含 facts、场景、租户、环境等）
      * @return 已触发的规则结果列表（按严重度倒序）；无触发时返回空列表
      */
     @Override
     public List<RuleResult> evaluate(RuleContext context) {
+        String traceId = resolveTraceId(context);
+        return TraceContext.withContext(traceId, () -> doEvaluate(context));
+    }
+
+    private List<RuleResult> doEvaluate(RuleContext context) {
         // P0-2 动态事实采集：评估前注入外部数据源事实
         context = injectFactsIfNeeded(context);
         // P3-1 规则+模型融合：评估前注入模型输出
@@ -619,6 +627,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      *   <li>不记录执行统计、监控指标和执行轨迹</li>
      *   <li>不执行熔断、灰度、断点调试逻辑</li>
      *   <li>同样遵循租户隔离和环境隔离</li>
+     *   <li>同样设置 MDC traceId，确保仿真日志可追踪</li>
      * </ul>
      *
      * <p>适用于规则调试、预检和仿真测试场景。
@@ -628,6 +637,11 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      */
     @Override
     public List<RuleResult> dryRun(RuleContext context) {
+        String traceId = resolveTraceId(context);
+        return TraceContext.withContext(traceId, () -> doDryRun(context));
+    }
+
+    private List<RuleResult> doDryRun(RuleContext context) {
         // P0-2 动态事实采集：dry-run 同样注入外部数据源事实
         context = injectFactsIfNeeded(context);
         // P3-1 规则+模型融合：dry-run 同样注入模型输出
@@ -659,6 +673,28 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             }
         }
         return all;
+    }
+
+    /**
+     * 解析规则评估的 traceId
+     *
+     * <p>优先级：
+     * <ol>
+     *   <li>{@link RuleContext#getTraceId()} — 调用方显式传入的 traceId</li>
+     *   <li>当前线程 MDC 中的 traceId — 继承上游链路（如 Web 请求过滤器设置的）</li>
+     *   <li>自动生成新 UUID — 确保评估期间日志始终有 traceId</li>
+     * </ol>
+     *
+     * @param context 规则上下文
+     * @return 有效 traceId（非 null、非空）
+     * @since 2.2.0
+     */
+    private String resolveTraceId(RuleContext context) {
+        String traceId = context.getTraceId();
+        if (traceId != null && !traceId.isBlank()) {
+            return traceId;
+        }
+        return TraceContext.extractOrGenerate(null);
     }
 
     /**

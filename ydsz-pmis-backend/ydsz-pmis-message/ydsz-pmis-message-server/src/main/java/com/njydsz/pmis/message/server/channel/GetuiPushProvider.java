@@ -113,7 +113,7 @@ public class GetuiPushProvider implements PushProvider {
             log.warn("[GetuiPush] 推送失败: cid={} code={} msg={}", cid, code, json.getString("msg"));
             return MessageResult.fail("PUSH", code + ": " + json.getString("msg"));
         } catch (Exception e) {
-            log.error("[GetuiPush] 推送异常: cid={} err={}", cid, e.getMessage());
+            log.error("[GetuiPush] 推送异常: cid={} err={}", cid, e.getMessage(), e);
             return MessageResult.fail("PUSH", e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }

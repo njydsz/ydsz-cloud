@@ -57,7 +57,7 @@ public class MessageAlertService {
             checkErrorRate();
             checkLatency();
         } catch (Exception e) {
-            log.warn("[Alert] 告警检查异常: {}", e.getMessage());
+            log.warn("[Alert] 告警检查异常: {}", e.getMessage(), e);
         }
     }
 
@@ -138,10 +138,10 @@ public class MessageAlertService {
                     log.warn("[Alert] 告警发送失败: {}", result.getErrorMessage());
                 }
             } catch (Exception e) {
-                log.warn("[Alert] 告警发送异常: {}", e.getMessage());
+                log.warn("[Alert] 告警发送异常: {}", e.getMessage(), e);
             }
         } catch (Exception e) {
-            log.warn("[Alert] 告警流程异常: {}", e.getMessage());
+            log.warn("[Alert] 告警流程异常: {}", e.getMessage(), e);
         }
     }
 }

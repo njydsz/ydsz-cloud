@@ -125,7 +125,7 @@ public class AliyunSmsProvider implements SmsProvider {
                     phone, code, json.getString("Message"));
             return MessageResult.fail("SMS", code + ": " + json.getString("Message"));
         } catch (Exception e) {
-            log.error("[AliyunSms] 发送异常: phone={} err={}", phone, e.getMessage());
+            log.error("[AliyunSms] 发送异常: phone={} err={}", phone, e.getMessage(), e);
             return MessageResult.fail("SMS", e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }
@@ -225,7 +225,7 @@ public class AliyunSmsProvider implements SmsProvider {
                 }
             }
         } catch (Exception e) {
-            log.error("[AliyunSms] 批量发送异常: count={} err={}", requests.size(), e.getMessage());
+            log.error("[AliyunSms] 批量发送异常: count={} err={}", requests.size(), e.getMessage(), e);
             for (int i = 0; i < requests.size(); i++) {
                 results.add(MessageResult.fail("SMS", e.getClass().getSimpleName() + ": " + e.getMessage()));
             }
@@ -288,7 +288,7 @@ public class AliyunSmsProvider implements SmsProvider {
             }
             return MessageResult.fail("SMS", code + ": " + json.getString("Message"));
         } catch (Exception e) {
-            log.error("[AliyunSms] 回执查询异常: bizId={} err={}", bizId, e.getMessage());
+            log.error("[AliyunSms] 回执查询异常: bizId={} err={}", bizId, e.getMessage(), e);
             return MessageResult.fail("SMS", e.getClass().getSimpleName() + ": " + e.getMessage());
         }
     }

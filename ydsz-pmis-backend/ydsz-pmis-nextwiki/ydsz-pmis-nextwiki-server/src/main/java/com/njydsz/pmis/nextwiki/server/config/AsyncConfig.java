@@ -2,6 +2,7 @@ package com.njydsz.pmis.nextwiki.server.config;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -11,13 +12,14 @@ import org.springframework.web.client.RestTemplate;
 /**
  * NextWiki 异步任务与基础设施配置
  * <p>
- * 统一管理 @Async 线程池与外部 HTTP 客户端 Bean。
+ * 统一管理 @Async 线程池、缓存开关与外部 HTTP 客户端 Bean。
  *
  * @author ydsz-pmis-team
  * @since 1.4.0
  */
 @Configuration
 @EnableAsync
+@EnableCaching
 public class AsyncConfig {
 
     /**

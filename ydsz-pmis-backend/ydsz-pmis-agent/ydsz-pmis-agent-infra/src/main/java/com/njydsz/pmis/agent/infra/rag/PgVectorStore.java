@@ -1,17 +1,14 @@
 package com.njydsz.pmis.agent.infra.rag;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.agent.domain.gateway.LlmException;
 import com.njydsz.pmis.agent.domain.rag.TextChunk;
 
 /**

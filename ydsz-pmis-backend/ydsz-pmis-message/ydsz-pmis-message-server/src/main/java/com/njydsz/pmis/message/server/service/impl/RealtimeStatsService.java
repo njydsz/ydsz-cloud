@@ -104,7 +104,7 @@ public class RealtimeStatsService {
             double p99 = getPercentile(latencyKey, size, 0.99);
             return new double[]{p50, p95, p99};
         } catch (Exception e) {
-            log.warn("[RealtimeStats] 延迟分位数查询失败: channel={} err={}", channel, e.getMessage());
+            log.warn("[RealtimeStats] 延迟分位数查询失败: channel={} err={}", channel, e.getMessage(), e);
             return new double[]{0, 0, 0};
         }
     }

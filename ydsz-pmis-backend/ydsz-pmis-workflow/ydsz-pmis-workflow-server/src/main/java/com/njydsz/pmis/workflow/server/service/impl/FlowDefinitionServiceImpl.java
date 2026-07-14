@@ -282,6 +282,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             throw new SysException(StandardResultCode.NOT_FOUND, "流程定义不存在: " + definitionId);
         }
         definitionMapper.publish(definitionId, 1);
+        // P0-3: 失效本地 + 集群缓存
+        flowDefinitionCacheService.evict(definitionId);
         log.info("[Flow] 发布流程: defId={}", definitionId);
     }
 
@@ -290,6 +292,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             CacheConstants.FLOW_DEF_LATEST_CACHE}, allEntries = true)
     public void deprecate(String definitionId) {
         definitionMapper.publish(definitionId, 9);
+        // P0-3: 失效本地 + 集群缓存
+        flowDefinitionCacheService.evict(definitionId);
         log.info("[Flow] 停用流程: defId={}", definitionId);
     }
 
@@ -370,6 +374,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         definitionMapper.deactivateByFlowCode(flowCode, definitionId, tid);
         // 激活目标版本
         definitionMapper.publish(definitionId, 1);
+        // P0-3: 失效本地 + 集群缓存（目标版本 + 同 flowCode 旧版本）
+        flowDefinitionCacheService.evict(definitionId);
         log.info("[Flow] 切换流程定义版本: flowCode={} → defId={} tenantId={}",
                 flowCode, definitionId, tid);
     }
@@ -379,12 +385,16 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Override
     public void enable(String definitionId) {
         definitionMapper.updateActivityStatus(definitionId, 1);
+        // P0-3: 失效本地 + 集群缓存
+        flowDefinitionCacheService.evict(definitionId);
         log.info("[Flow] 启用流程定义: defId={}", definitionId);
     }
 
     @Override
     public void disable(String definitionId) {
         definitionMapper.updateActivityStatus(definitionId, 0);
+        // P0-3: 失效本地 + 集群缓存
+        flowDefinitionCacheService.evict(definitionId);
         log.info("[Flow] 停用流程定义: defId={}", definitionId);
     }
 

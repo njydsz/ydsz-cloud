@@ -10,6 +10,7 @@ import com.njydsz.pmis.common.search.core.SearchField;
 import com.njydsz.pmis.common.search.provider.SearchProvider;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.pmis.nextwiki.domain.repository.SearchIndexRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 public class WikiSearchProvider implements SearchProvider<FileNode> {
 
     private final FileNodeRepository fileNodeRepository;
+    private final SearchIndexRepository searchIndexRepository;
 
     @Override
     public String getType() {
@@ -85,11 +87,9 @@ public class WikiSearchProvider implements SearchProvider<FileNode> {
 
     @Override
     public List<String> getAllDocumentIds(String tenantId) {
-        // 返回所有未删除的文件节点 ID
-        // 注意：实际实现需要 FileNodeRepository 提供 listAllIds 方法
-        // 当前返回空列表，索引重建需要业务侧补充
+        // 返回所有未删除的文件节点 ID，供搜索框架全量索引重建使用
         log.info("[WikiSearchProvider] 获取全部文件 ID: tenantId={}", tenantId);
-        return List.of();
+        return searchIndexRepository.findAllFileNodeIds(tenantId);
     }
 
     @Override

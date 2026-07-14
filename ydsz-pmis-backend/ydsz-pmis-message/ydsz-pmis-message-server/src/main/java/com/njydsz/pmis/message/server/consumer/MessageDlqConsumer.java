@@ -84,7 +84,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
             try {
                 request = JsonUtils.fromJson(body, MessageRequest.class);
             } catch (Exception e) {
-                log.error("[MessageDlqConsumer] 死信消息体解析失败: msgId={} err={}", msgId, e.getMessage());
+                log.error("[MessageDlqConsumer] 死信消息体解析失败: msgId={} err={}", msgId, e.getMessage(), e);
             }
 
             try {

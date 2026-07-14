@@ -72,7 +72,7 @@ public class BatchMessageConsumer implements RocketMQListener<String> {
         try {
             requests = JsonUtils.fromJsonToList(body, MessageRequest.class);
         } catch (Exception e) {
-            log.error("[BatchConsumer] 批量消息解析失败,尝试单条解析: err={}", e.getMessage());
+            log.error("[BatchConsumer] 批量消息解析失败,尝试单条解析: err={}", e.getMessage(), e);
             // 降级：尝试作为单条消息处理
             try {
                 MessageRequest single = JsonUtils.fromJson(body, MessageRequest.class);

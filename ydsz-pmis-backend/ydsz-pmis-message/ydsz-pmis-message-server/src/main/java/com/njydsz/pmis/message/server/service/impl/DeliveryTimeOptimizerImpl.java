@@ -71,7 +71,7 @@ public class DeliveryTimeOptimizerImpl implements DeliveryTimeOptimizer {
 
             log.debug("[DeliveryTime] 记录活跃: userId={} hour={} channel={}", userId, now.getHour(), channel);
         } catch (Exception e) {
-            log.warn("[DeliveryTime] 记录活跃失败,降级忽略: userId={} err={}", userId, e.getMessage());
+            log.warn("[DeliveryTime] 记录活跃失败,降级忽略: userId={} err={}", userId, e.getMessage(), e);
         }
     }
 
@@ -125,7 +125,7 @@ public class DeliveryTimeOptimizerImpl implements DeliveryTimeOptimizer {
             // 否则返回明天的最佳时段
             return now.toLocalDate().plusDays(1).atTime(bestHour, 0);
         } catch (Exception e) {
-            log.warn("[DeliveryTime] 获取最佳推送时间失败: userId={} err={}", userId, e.getMessage());
+            log.warn("[DeliveryTime] 获取最佳推送时间失败: userId={} err={}", userId, e.getMessage(), e);
             return null;
         }
     }
@@ -145,7 +145,7 @@ public class DeliveryTimeOptimizerImpl implements DeliveryTimeOptimizer {
             // 活跃度评分公式：min(count * 5, 100)，即 20 次活跃即满分
             return (int) Math.min(count * 5, 100);
         } catch (Exception e) {
-            log.warn("[DeliveryTime] 获取活跃度评分失败: userId={} err={}", userId, e.getMessage());
+            log.warn("[DeliveryTime] 获取活跃度评分失败: userId={} err={}", userId, e.getMessage(), e);
             return 0;
         }
     }

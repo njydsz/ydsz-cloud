@@ -62,7 +62,7 @@ public class BatchProgressPusher {
             log.debug("[BatchProgress] 推送进度: batchId={} progress={}%",
                     batch.getBatchId(), Math.round(progress));
         } catch (Exception e) {
-            log.warn("[BatchProgress] 推送失败: batchId={} err={}", batch.getBatchId(), e.getMessage());
+            log.warn("[BatchProgress] 推送失败: batchId={} err={}", batch.getBatchId(), e.getMessage(), e);
         }
     }
 

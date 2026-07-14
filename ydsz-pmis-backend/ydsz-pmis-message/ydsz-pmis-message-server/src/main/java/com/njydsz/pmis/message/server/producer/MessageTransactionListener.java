@@ -121,7 +121,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
         try {
             return JsonUtils.fromJson(JsonUtils.toJson(payload), MessageRequest.class);
         } catch (Exception e) {
-            log.warn("[TxListener] resolveRequest: 解析失败: {}", e.getMessage());
+            log.warn("[TxListener] resolveRequest: 解析失败: {}", e.getMessage(), e);
             return null;
         }
     }

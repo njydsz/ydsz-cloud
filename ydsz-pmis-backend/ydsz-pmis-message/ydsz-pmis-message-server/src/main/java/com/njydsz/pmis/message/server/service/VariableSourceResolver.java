@@ -148,7 +148,7 @@ public class VariableSourceResolver {
             String resolvedSql = resolvePlaceholders(sql, context);
             return jdbcTemplate.queryForObject(resolvedSql, Object.class);
         } catch (Exception e) {
-            log.warn("[VariableSource] SQL 解析失败: sql={} err={}", sql, e.getMessage());
+            log.warn("[VariableSource] SQL 解析失败: sql={} err={}", sql, e.getMessage(), e);
             return null;
         }
     }
@@ -187,7 +187,7 @@ public class VariableSourceResolver {
             }
             return method.invoke(bean, args);
         } catch (Exception e) {
-            log.warn("[VariableSource] BEAN 解析失败: expr={} err={}", expr, e.getMessage());
+            log.warn("[VariableSource] BEAN 解析失败: expr={} err={}", expr, e.getMessage(), e);
             return null;
         }
     }
@@ -204,7 +204,7 @@ public class VariableSourceResolver {
                 return JsonUtils.fromJson(body, Object.class);
             }
         } catch (Exception e) {
-            log.warn("[VariableSource] HTTP 解析失败: url={} err={}", url, e.getMessage());
+            log.warn("[VariableSource] HTTP 解析失败: url={} err={}", url, e.getMessage(), e);
         }
         return null;
     }

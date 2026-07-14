@@ -97,7 +97,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
             }
             log.debug("[ReadReceipt] 短链生成: code={} url={} msgId={}", code, originalUrl, msgId);
         } catch (Exception e) {
-            log.warn("[ReadReceipt] 短链生成失败,返回原始 URL: {}", e.getMessage());
+            log.warn("[ReadReceipt] 短链生成失败,返回原始 URL: {}", e.getMessage(), e);
             return originalUrl;
         }
         return shortUrl;
@@ -112,7 +112,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
             redisTemplate.opsForValue().set(READ_STATUS_PREFIX + "email:" + msgId, "1", Duration.ofDays(30));
             log.info("[ReadReceipt] 邮件已读: msgId={}", msgId);
         } catch (Exception e) {
-            log.warn("[ReadReceipt] 邮件已读标记失败: msgId={} err={}", msgId, e.getMessage());
+            log.warn("[ReadReceipt] 邮件已读标记失败: msgId={} err={}", msgId, e.getMessage(), e);
         }
     }
 
@@ -135,7 +135,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
             }
             return originalUrl;
         } catch (Exception e) {
-            log.warn("[ReadReceipt] 短链点击处理失败: code={} err={}", shortCode, e.getMessage());
+            log.warn("[ReadReceipt] 短链点击处理失败: code={} err={}", shortCode, e.getMessage(), e);
             return null;
         }
     }

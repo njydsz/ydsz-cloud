@@ -102,6 +102,9 @@ public class FileOperatedEventListener {
      * 移动事件：更新索引路径 + CDN 刷新
      */
     private void handleMove(FileOperatedEvent event) {
+        if (!"folder".equals(event.getNodeType())) {
+            searchDomainService.indexFile(event.getFileNodeId(), null, event.getOperatorId());
+        }
         log.info("[FileOperatedEventListener] 移动后处理完成: fileNodeId={}, extra={}",
                 event.getFileNodeId(), event.getExtra());
     }
@@ -110,6 +113,9 @@ public class FileOperatedEventListener {
      * 重命名事件：更新索引名称
      */
     private void handleRename(FileOperatedEvent event) {
+        if (!"folder".equals(event.getNodeType())) {
+            searchDomainService.indexFile(event.getFileNodeId(), null, event.getOperatorId());
+        }
         log.info("[FileOperatedEventListener] 重命名后处理完成: fileNodeId={}, extra={}",
                 event.getFileNodeId(), event.getExtra());
     }

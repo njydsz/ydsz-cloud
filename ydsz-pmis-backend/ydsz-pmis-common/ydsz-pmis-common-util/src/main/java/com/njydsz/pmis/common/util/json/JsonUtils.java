@@ -1,14 +1,10 @@
 package com.njydsz.pmis.common.util.json;
 
 import java.lang.reflect.Type;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -16,69 +12,43 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
+import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.config.YdszJsonConfig;
+import com.njydsz.pmis.common.json.tree.JsonNode;
 
 /**
- * 统一 JSON 序列化工具类（基于 Jackson）
+ * 统一 JSON 序列化工具类（基于 YdszJson，保持 Jackson 兼容性）
  *
  * <p>提供对象与 JSON 字符串/字节数组之间的双向转换。
- * 遵循大厂标准，全项目统一使用 Jackson 作为 JSON 引擎。
+ * 内部委托 {@link YdszJson} 高性能引擎，同时保留 Jackson ObjectMapper 用于向后兼容。
  *
- * <p><b>默认行为：</b>
+ * <p><b>默认行为（YdszJson 引擎）：</b>
  * <ul>
- *   <li>输出 null 值字段（WriteMapNullValue）</li>
+ *   <li>ASM 字节码加速 + LRU 字段缓存</li>
+ *   <li>零拷贝反序列化</li>
  *   <li>日期格式：yyyy-MM-dd HH:mm:ss（Java 8 时间 API）</li>
- *   <li>忽略未知字段（FAIL_ON_UNKNOWN_PROPERTIES = false）</li>
- *   <li>忽略空 Bean 序列化错误（FAIL_ON_EMPTY_BEANS = false）</li>
- *   <li>序列化失败抛出 {@link JsonException}，不吞错误</li>
+ *   <li>忽略未知字段（容错解析）</li>
+ *   <li>序列化失败抛出 {@link JsonException}</li>
+ * </ul>
+ *
+ * <p><b>保留 Jackson ObjectMapper 用于：</b>
+ * <ul>
+ *   <li>Spring MVC HttpMessageConverter 集成（@JsonProperty, @JsonFormat 注解）</li>
+ *   <li>XSS 安全模块的自定义序列化器</li>
+ *   <li>向后兼容 {@link #getMapper()} 调用方</li>
  * </ul>
  *
  * @author Marvin Lee
  * @email limw1888@126.com
- * @version 4.0.0
+ * @version 5.0.0（迁移到 YdszJson 引擎）
  */
 public final class JsonUtils {
 
-    private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
-    private static final String DATE_PATTERN = "yyyy-MM-dd";
-    private static final String TIME_PATTERN = "HH:mm:ss";
-
     /**
-     * 全局共享的 ObjectMapper 单例（线程安全）
+     * Jackson ObjectMapper（保留用于框架集成和向后兼容）
+     * <p>注意：此类仅用于 getMapper() 返回，实际序列化/反序列化使用 YdszJson</p>
      */
-    private static final ObjectMapper MAPPER;
-
-    static {
-        MAPPER = new ObjectMapper();
-        MAPPER.setTimeZone(TimeZone.getDefault());
-        MAPPER.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        MAPPER.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-        MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        MAPPER.setDefaultPropertyInclusion(JsonInclude.Include.ALWAYS);
-
-        // 安全加固：明确禁用全局默认类型（多态反序列化），防止反序列化漏洞
-        MAPPER.deactivateDefaultTyping();
-
-        JavaTimeModule javaTimeModule = new JavaTimeModule();
-        javaTimeModule.addSerializer(LocalDateTime.class,
-                new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)));
-        javaTimeModule.addSerializer(LocalDate.class,
-                new LocalDateSerializer(DateTimeFormatter.ofPattern(DATE_PATTERN)));
-        javaTimeModule.addSerializer(LocalTime.class,
-                new LocalTimeSerializer(DateTimeFormatter.ofPattern(TIME_PATTERN)));
-        javaTimeModule.addDeserializer(LocalDateTime.class,
-                new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)));
-        javaTimeModule.addDeserializer(LocalDate.class,
-                new LocalDateDeserializer(DateTimeFormatter.ofPattern(DATE_PATTERN)));
-        javaTimeModule.addDeserializer(LocalTime.class,
-                new LocalTimeDeserializer(DateTimeFormatter.ofPattern(TIME_PATTERN)));
-        MAPPER.registerModule(javaTimeModule);
-    }
+    private static final ObjectMapper JACKSON_MAPPER;
 
     /**
      * JSON 处理指标（内部计数器 + 可选 Micrometer）
@@ -94,6 +64,25 @@ public final class JsonUtils {
         public JsonException(String message, Throwable cause) {
             super(message, cause);
         }
+    }
+
+    static {
+        // 初始化 Jackson ObjectMapper（保留用于框架集成）
+        JACKSON_MAPPER = new ObjectMapper();
+        JACKSON_MAPPER.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        JACKSON_MAPPER.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        JACKSON_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        JACKSON_MAPPER.setDefaultPropertyInclusion(JsonInclude.Include.ALWAYS);
+        JACKSON_MAPPER.deactivateDefaultTyping();
+        JACKSON_MAPPER.registerModule(new JavaTimeModule());
+
+        // 初始化 YdszJson 配置（日期格式与 Jackson 保持一致）
+        YdszJsonConfig config = YdszJsonConfig.getInstance();
+        config.setWriteNulls(true);
+        config.setDateFormat("yyyy-MM-dd HH:mm:ss");
+        config.setMaxJsonSize(10L * 1024 * 1024);
+        config.setMaxDepth(256);
+        config.apply();
     }
 
     private JsonUtils() {
@@ -118,85 +107,29 @@ public final class JsonUtils {
         return metrics;
     }
 
-    @FunctionalInterface
-    private interface ThrowingSupplier<T> {
-        T get() throws Exception;
-    }
-
-    private static <T> T recordSerialize(ThrowingSupplier<T> supplier) {
-        long start = System.nanoTime();
-        try {
-            T result = supplier.get();
-            recordSerializeSuccess(System.nanoTime() - start);
-            return result;
-        } catch (JsonException e) {
-            recordSerializeFail();
-            throw e;
-        } catch (Exception e) {
-            recordSerializeFail();
-            throw new JsonException("JSON序列化失败: " + e.getMessage(), e);
-        }
-    }
-
-    private static <T> T recordDeserialize(ThrowingSupplier<T> supplier) {
-        long start = System.nanoTime();
-        try {
-            T result = supplier.get();
-            recordDeserializeSuccess(System.nanoTime() - start);
-            return result;
-        } catch (JsonException e) {
-            recordDeserializeFail();
-            throw e;
-        } catch (Exception e) {
-            recordDeserializeFail();
-            throw new JsonException("JSON反序列化失败: " + e.getMessage(), e);
-        }
-    }
-
-    private static void recordSerializeSuccess(long nanos) {
-        JsonMetrics m = metrics;
-        if (m != null) {
-            m.recordSerializeSuccess(nanos);
-        }
-    }
-
-    private static void recordSerializeFail() {
-        JsonMetrics m = metrics;
-        if (m != null) {
-            m.recordSerializeFail();
-        }
-    }
-
-    private static void recordDeserializeSuccess(long nanos) {
-        JsonMetrics m = metrics;
-        if (m != null) {
-            m.recordDeserializeSuccess(nanos);
-        }
-    }
-
-    private static void recordDeserializeFail() {
-        JsonMetrics m = metrics;
-        if (m != null) {
-            m.recordDeserializeFail();
-        }
-    }
-
     /**
-     * 获取全局共享的 ObjectMapper 实例
+     * 获取 Jackson ObjectMapper 实例（向后兼容）
      *
-     * <p>注意：此 ObjectMapper 是全局共享的，不应修改其配置。
-     * 如需自定义配置，请通过 {@link ObjectMapper#copy()} 创建副本后修改。
+     * <p><b>注意：</b>此方法返回的 Jackson ObjectMapper 仅用于：
+     * <ul>
+     *   <li>Spring MVC HttpMessageConverter 集成（XSS 安全、注解处理）</li>
+     *   <li>树操作：readTree, createObjectNode, createArrayNode</li>
+     *   <li>向后兼容现有调用方</li>
+     * </ul>
      *
-     * @return 全局 ObjectMapper 实例
+     * <p>新的序列化/反序列化代码请直接使用 {@link #toJson(Object)} 和 {@link #fromJson} 方法，
+     * 这些方法内部使用高性能的 {@link YdszJson} 引擎。
+     *
+     * @return Jackson ObjectMapper 实例
      */
     public static ObjectMapper getMapper() {
-        return MAPPER;
+        return JACKSON_MAPPER;
     }
 
     // ==================== 对象 → JSON 字符串 ====================
 
     /**
-     * 对象转 JSON 字符串
+     * 对象转 JSON 字符串（使用 YdszJson 引擎）
      *
      * @param obj 待序列化对象
      * @return JSON 字符串，对象为 null 时返回 null
@@ -206,11 +139,16 @@ public final class JsonUtils {
         if (obj == null) {
             return null;
         }
-        return recordSerialize(() -> MAPPER.writeValueAsString(obj));
+        try {
+            return YdszJson.toJson(obj);
+        } catch (Exception e) {
+            recordSerializeFail();
+            throw new JsonException("JSON序列化失败: " + e.getMessage(), e);
+        }
     }
 
     /**
-     * 对象转美化格式的 JSON 字符串
+     * 对象转美化格式的 JSON 字符串（使用 YdszJson 引擎）
      *
      * @param obj 待序列化对象
      * @return 美化格式的 JSON 字符串
@@ -220,13 +158,18 @@ public final class JsonUtils {
         if (obj == null) {
             return null;
         }
-        return recordSerialize(() -> MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(obj));
+        try {
+            return YdszJson.format(obj);
+        } catch (Exception e) {
+            recordSerializeFail();
+            throw new JsonException("JSON序列化失败: " + e.getMessage(), e);
+        }
     }
 
     // ==================== JSON 字符串 → 对象 ====================
 
     /**
-     * JSON 字符串转对象（兼容别名，等价于 {@link #fromJson}）
+     * JSON 字符串转对象（使用 YdszJson 引擎，兼容别名）
      *
      * @param json  JSON 字符串
      * @param clazz 目标类型
@@ -239,7 +182,7 @@ public final class JsonUtils {
     }
 
     /**
-     * JSON 字符串转对象
+     * JSON 字符串转对象（使用 YdszJson 引擎）
      *
      * @param json  JSON 字符串
      * @param clazz 目标类型
@@ -251,11 +194,18 @@ public final class JsonUtils {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return recordDeserialize(() -> MAPPER.readValue(json, clazz));
+        try {
+            return YdszJson.toObject(json, clazz);
+        } catch (Exception e) {
+            recordDeserializeFail();
+            throw new JsonException("JSON反序列化失败: " + e.getMessage(), e);
+        }
     }
 
     /**
-     * JSON 字符串转泛型对象
+     * JSON 字符串转泛型对象（使用 YdszJson 引擎）
+     *
+     * <p>兼容 Jackson 的 TypeReference API，内部自动转换为 YdszJsonType。</p>
      *
      * @param json          JSON 字符串
      * @param typeReference 类型引用（用于泛型擦除场景）
@@ -273,13 +223,19 @@ public final class JsonUtils {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return recordDeserialize(() -> MAPPER.readValue(json, typeReference));
+        try {
+            Type type = typeReference.getType();
+            return YdszJson.toObject(json, type);
+        } catch (Exception e) {
+            recordDeserializeFail();
+            throw new JsonException("JSON反序列化失败: " + e.getMessage(), e);
+        }
     }
 
     /**
-     * JSON 字符串转对象（支持 Type）
+     * JSON 字符串转对象（使用 YdszJson 引擎，支持 Type）
      *
-     * <p>适用于 Feign 解码器等需要动态类型反序列化的场景。
+     * <p>适用于 Feign 解码器等需要动态类型反序列化的场景。</p>
      *
      * @param json JSON 字符串
      * @param type 目标类型（支持 Class、ParameterizedType 等）
@@ -290,11 +246,16 @@ public final class JsonUtils {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return recordDeserialize(() -> MAPPER.readValue(json, MAPPER.constructType(type)));
+        try {
+            return YdszJson.toObject(json, type);
+        } catch (Exception e) {
+            recordDeserializeFail();
+            throw new JsonException("JSON反序列化失败: " + e.getMessage(), e);
+        }
     }
 
     /**
-     * JSON 字符串转 List
+     * JSON 字符串转 List（使用 YdszJson 引擎）
      *
      * @param json  JSON 字符串
      * @param clazz 列表元素类型
@@ -306,12 +267,16 @@ public final class JsonUtils {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return recordDeserialize(() ->
-                MAPPER.readValue(json, MAPPER.getTypeFactory().constructCollectionType(List.class, clazz)));
+        try {
+            return YdszJson.parseArray(json, clazz);
+        } catch (Exception e) {
+            recordDeserializeFail();
+            throw new JsonException("JSON反序列化失败: " + e.getMessage(), e);
+        }
     }
 
     /**
-     * JSON 字符串转 Map
+     * JSON 字符串转 Map（使用 YdszJson 引擎）
      *
      * @param json      JSON 字符串
      * @param keyClass  Map key 类型
@@ -325,12 +290,24 @@ public final class JsonUtils {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return recordDeserialize(() ->
-                MAPPER.readValue(json, MAPPER.getTypeFactory().constructMapType(HashMap.class, keyClass, valueClass)));
+        try {
+            // YdszJson 返回原始 Map，需要类型转换
+            Map<?, ?> rawMap = YdszJson.parseObject(json);
+            Map<K, V> result = new HashMap<>();
+            for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
+                K key = keyClass.cast(entry.getKey());
+                V value = valueClass.cast(entry.getValue());
+                result.put(key, value);
+            }
+            return result;
+        } catch (Exception e) {
+            recordDeserializeFail();
+            throw new JsonException("JSON反序列化失败: " + e.getMessage(), e);
+        }
     }
 
     /**
-     * JSON 字符串转 Map&lt;String, Object&gt;（兼容别名）
+     * JSON 字符串转 Map&lt;String, Object&gt;（使用 YdszJson 引擎，兼容别名）
      *
      * @param json JSON 字符串
      * @return 反序列化 Map，json 为空时返回 null
@@ -340,12 +317,16 @@ public final class JsonUtils {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return recordDeserialize(() ->
-                MAPPER.readValue(json, MAPPER.getTypeFactory().constructMapType(HashMap.class, String.class, Object.class)));
+        try {
+            return YdszJson.parseObject(json);
+        } catch (Exception e) {
+            recordDeserializeFail();
+            throw new JsonException("JSON反序列化失败: " + e.getMessage(), e);
+        }
     }
 
     /**
-     * JSON 字符串转 List&lt;Object&gt;（兼容别名）
+     * JSON 字符串转 List&lt;Object&gt;（使用 YdszJson 引擎，兼容别名）
      *
      * @param json JSON 字符串
      * @return 反序列化 List，json 为空时返回 null
@@ -355,14 +336,18 @@ public final class JsonUtils {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return recordDeserialize(() ->
-                MAPPER.readValue(json, MAPPER.getTypeFactory().constructCollectionType(List.class, Object.class)));
+        try {
+            return YdszJson.parseArray(json);
+        } catch (Exception e) {
+            recordDeserializeFail();
+            throw new JsonException("JSON反序列化失败: " + e.getMessage(), e);
+        }
     }
 
     // ==================== 对象 → 字节数组 ====================
 
     /**
-     * 对象转 JSON 字节数组（UTF-8 编码）
+     * 对象转 JSON 字节数组（UTF-8 编码，使用 YdszJson 引擎）
      *
      * @param obj 待序列化对象
      * @return JSON 字节数组
@@ -372,13 +357,18 @@ public final class JsonUtils {
         if (obj == null) {
             return new byte[0];
         }
-        return recordSerialize(() -> MAPPER.writeValueAsBytes(obj));
+        try {
+            return YdszJson.toJsonBytes(obj);
+        } catch (Exception e) {
+            recordSerializeFail();
+            throw new JsonException("JSON序列化失败: " + e.getMessage(), e);
+        }
     }
 
     // ==================== 字节数组 → 对象 ====================
 
     /**
-     * 字节数组转对象（UTF-8 编码）
+     * 字节数组转对象（UTF-8 编码，使用 YdszJson 引擎）
      *
      * @param bytes JSON 字节数组
      * @param clazz 目标类型
@@ -390,11 +380,17 @@ public final class JsonUtils {
         if (bytes == null || bytes.length == 0) {
             return null;
         }
-        return recordDeserialize(() -> MAPPER.readValue(bytes, clazz));
+        try {
+            String json = new String(bytes, StandardCharsets.UTF_8);
+            return YdszJson.toObject(json, clazz);
+        } catch (Exception e) {
+            recordDeserializeFail();
+            throw new JsonException("JSON反序列化失败: " + e.getMessage(), e);
+        }
     }
 
     /**
-     * 字节数组转泛型对象（UTF-8 编码）
+     * 字节数组转泛型对象（UTF-8 编码，使用 YdszJson 引擎）
      *
      * @param bytes         JSON 字节数组
      * @param typeReference 类型引用
@@ -406,6 +402,70 @@ public final class JsonUtils {
         if (bytes == null || bytes.length == 0) {
             return null;
         }
-        return recordDeserialize(() -> MAPPER.readValue(bytes, typeReference));
+        try {
+            String json = new String(bytes, StandardCharsets.UTF_8);
+            Type type = typeReference.getType();
+            return YdszJson.toObject(json, type);
+        } catch (Exception e) {
+            recordDeserializeFail();
+            throw new JsonException("JSON反序列化失败: " + e.getMessage(), e);
+        }
+    }
+
+    // ==================== 树模型支持（YdszJson 引擎） ====================
+
+    /**
+     * 将 JSON 字符串解析为 YdszJson JsonNode 树
+     *
+     * <p>使用 YdszJson 引擎，对标 Jackson 的 readTree()。</p>
+     *
+     * @param json JSON 字符串
+     * @return JsonNode 树
+     * @throws JsonException 如果解析失败
+     */
+    public static JsonNode readTree(String json) {
+        if (json == null || json.isBlank()) {
+            return com.njydsz.pmis.common.json.tree.MissingNode.getInstance();
+        }
+        try {
+            return YdszJson.readTree(json);
+        } catch (Exception e) {
+            throw new JsonException("JSON树解析失败: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 将对象转换为 YdszJson JsonNode 树
+     *
+     * @param obj 待转换对象
+     * @return JsonNode 树
+     * @throws JsonException 如果转换失败
+     */
+    public static JsonNode valueToTree(Object obj) {
+        if (obj == null) {
+            return com.njydsz.pmis.common.json.tree.NullNode.getInstance();
+        }
+        try {
+            String json = YdszJson.toJson(obj);
+            return YdszJson.readTree(json);
+        } catch (Exception e) {
+            throw new JsonException("对象转JSON树失败: " + e.getMessage(), e);
+        }
+    }
+
+    // ==================== 指标记录 ====================
+
+    private static void recordSerializeFail() {
+        JsonMetrics m = metrics;
+        if (m != null) {
+            m.recordSerializeFail();
+        }
+    }
+
+    private static void recordDeserializeFail() {
+        JsonMetrics m = metrics;
+        if (m != null) {
+            m.recordDeserializeFail();
+        }
     }
 }

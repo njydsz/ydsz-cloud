@@ -185,7 +185,7 @@ public class BatchServiceImpl implements BatchService {
                     failed++;
                 }
             } catch (Exception e) {
-                log.warn("[Batch] 单条发送失败: batchId={} idx={} err={}", batchId, i, e.getMessage());
+                log.warn("[Batch] 单条发送失败: batchId={} idx={} err={}", batchId, i, e.getMessage(), e);
                 failed++;
             }
             // 每 100 条更新一次进度

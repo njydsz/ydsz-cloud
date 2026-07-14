@@ -45,7 +45,7 @@ public class TemplateVariableValidator {
         try {
             return JSON.parseArray(variableDefs, TemplateVariableDef.class);
         } catch (Exception e) {
-            log.warn("[VariableValidator] 变量定义解析失败,跳过校验: {}", e.getMessage());
+            log.warn("[VariableValidator] 变量定义解析失败,跳过校验: {}", e.getMessage(), e);
             return List.of();
         }
     }

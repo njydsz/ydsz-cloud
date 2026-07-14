@@ -531,18 +531,19 @@ private final SpELConditionEvaluator spELConditionEvaluator;
 
     /**
      * 查询 PENDING/RUNNING 状态的节点实例。
+     *
+     * <p>P0-4 修复：使用 {@link JobDagNodeInstanceMapper#selectAllByDagInstanceAndJob}
+     * 返回 ALL 匹配实例（含 LOOP iter 实例），避免 LOOP 场景下同一 jobId 的多个实例
+     * 仅返回一条导致部分 iter 完成事件丢失。
      */
     private List<JobDagNodeInstanceDO> findRunningNodesByJobId(String jobId) {
-        // 通过 BaseMapper 的 selectList + LambdaQueryWrapper 查询
-        // 但为了简化，直接遍历所有 RUNNING DAG 实例的节点
-        // 优化：添加专门的 Mapper 方法
         List<JobDagInstanceDO> runningInstances = dagInstanceMapper.selectByStatus(
                 DagInstanceStatus.RUNNING.name());
         if (runningInstances.isEmpty()) {
             return List.of();
         }
         return runningInstances.stream()
-                .map(inst -> dagNodeInstanceMapper.selectByDagInstanceAndJob(inst.getId(), jobId))
+                .flatMap(inst -> dagNodeInstanceMapper.selectAllByDagInstanceAndJob(inst.getId(), jobId).stream())
                 .filter(ni -> ni != null && (DagNodeStatus.PENDING.name().equals(ni.getNodeStatus())
                         || DagNodeStatus.RUNNING.name().equals(ni.getNodeStatus())))
                 .toList();
@@ -570,9 +571,18 @@ private final SpELConditionEvaluator spELConditionEvaluator;
         }
 
         // 更新节点状态（含 resultJson）
-        dagNodeInstanceMapper.markFinished(nodeInstance.getId(),
+        int updated = dagNodeInstanceMapper.markFinished(nodeInstance.getId(),
                 finalStatus.name(), now, durationMs, nodeResultJson,
                 event.success() ? null : "任务执行失败", event.logId());
+
+        // P0-4: markFinished 返回 0 表示节点状态非 RUNNING（CAS 失败）。
+        // 典型场景：LOOP 原始 body 节点处于 PENDING（doExecute 创建但从未 dispatch），
+        // 被 findRunningNodesByJobId 选中后进入本方法。此时跳过后续处理，避免误触发后继。
+        if (updated == 0) {
+            log.debug("[DagInstance] 节点状态非 RUNNING, CAS 失败跳过完成处理: instanceId={} jobKey={} currentStatus={}",
+                    dagInstanceId, nodeInstance.getJobKey(), nodeInstance.getNodeStatus());
+            return;
+        }
 
         log.info("[DagInstance] 节点完成: instanceId={} jobKey={} status={}",
                 dagInstanceId, nodeInstance.getJobKey(), finalStatus);
@@ -580,6 +590,14 @@ private final SpELConditionEvaluator spELConditionEvaluator;
         // P2-5: 节点成功时，将结果合并到 DAG 实例级上下文
         if (event.success() && nodeResultJson != null) {
             mergeNodeResultToContext(dagInstanceId, nodeInstance.getJobKey(), nodeResultJson);
+        }
+
+        // P0-4: LOOP iter 实例完成后，不直接触发后继（iter jobKey 带 #loop 后缀，DAG 定义中无对应边）。
+        // 而是等所有 iter 完成后，标记原始 body 节点并触发其后继（使用原始 jobKey 查 DAG 定义边）。
+        if (isLoopIterJobKey(nodeInstance.getJobKey())) {
+            handleLoopIterCompletion(nodeInstance, finalStatus);
+            finalizeInstance(dagInstanceId);
+            return;
         }
 
         // 加载 DAG 实例和定义
@@ -607,6 +625,121 @@ private final SpELConditionEvaluator spELConditionEvaluator;
 
         // 检查是否所有节点完成
         finalizeInstance(dagInstanceId);
+    }
+
+    /**
+     * P0-4: LOOP iter 实例完成处理。
+     *
+     * <p>当 LOOP 循环体的某个 iter 实例完成时，不直接触发后继（因为 iter 实例的 jobKey
+     * 带 {@code #loop<i>} 后缀，DAG 定义中无对应边）。而是检查同一 body 节点的所有 iter
+     * 实例是否全部完成：
+     * <ul>
+     *   <li>全部完成且全部成功 → 标记原始 body 节点 SUCCESS，触发其后继（使用原始 jobKey）</li>
+     *   <li>全部完成但有失败 → 标记原始 body 节点 FAILED，按 DAG 级失败策略处理</li>
+     *   <li>仍有未完成 iter → 不做处理，等待最后一个 iter 完成时再聚合</li>
+     * </ul>
+     *
+     * <p>并发安全：使用 {@code markRunning} 的 CAS 语义（PENDING → RUNNING）确保
+     * 多个 iter 同时完成时，原始 body 节点只被一个线程标记。
+     *
+     * @param iterInstance   完成的 iter 实例（jobKey 含 {@code #loop} 后缀）
+     * @param iterFinalStatus iter 实例的终态（SUCCESS/FAILED）
+     */
+    private void handleLoopIterCompletion(JobDagNodeInstanceDO iterInstance, DagNodeStatus iterFinalStatus) {
+        String dagInstanceId = iterInstance.getDagInstanceId();
+        String originalJobKey = stripLoopSuffix(iterInstance.getJobKey());
+
+        // 查询同一 jobId 的所有实例（原始 body + 所有 iter）
+        List<JobDagNodeInstanceDO> allInstances = dagNodeInstanceMapper.selectAllByDagInstanceAndJob(
+                dagInstanceId, iterInstance.getJobId());
+
+        // 分离原始 body 节点实例和 iter 实例
+        JobDagNodeInstanceDO originalBody = null;
+        List<JobDagNodeInstanceDO> iterInstances = new ArrayList<>();
+        for (JobDagNodeInstanceDO inst : allInstances) {
+            if (isLoopIterJobKey(inst.getJobKey())) {
+                iterInstances.add(inst);
+            } else {
+                originalBody = inst;
+            }
+        }
+
+        if (originalBody == null) {
+            log.warn("[DagInstance] LOOP 原始 body 节点实例不存在: instanceId={} jobKey={}",
+                    dagInstanceId, originalJobKey);
+            return;
+        }
+
+        // 检查是否所有 iter 实例都已终态（非 PENDING/RUNNING）
+        long pendingCount = iterInstances.stream()
+                .filter(inst -> DagNodeStatus.PENDING.name().equals(inst.getNodeStatus())
+                        || DagNodeStatus.RUNNING.name().equals(inst.getNodeStatus()))
+                .count();
+        if (pendingCount > 0) {
+            log.debug("[DagInstance] LOOP iter 未全部完成, 等待: instanceId={} jobKey={} pending={} total={}",
+                    dagInstanceId, originalJobKey, pendingCount, iterInstances.size());
+            return;
+        }
+
+        // 所有 iter 完成，聚合状态
+        boolean allSuccess = iterInstances.stream()
+                .allMatch(inst -> DagNodeStatus.SUCCESS.name().equals(inst.getNodeStatus()));
+
+        // CAS 标记原始 body 节点（PENDING → RUNNING → SUCCESS/FAILED）
+        // 使用 markRunning 的 CAS 语义（PENDING → RUNNING）确保只被一个线程标记
+        LocalDateTime now = LocalDateTime.now();
+        int runningUpdated = dagNodeInstanceMapper.markRunning(originalBody.getId(), now);
+        if (runningUpdated == 0) {
+            log.debug("[DagInstance] LOOP body 节点已被其他线程处理, 跳过: instanceId={} jobKey={}",
+                    dagInstanceId, originalJobKey);
+            return;
+        }
+
+        DagNodeStatus bodyFinalStatus = allSuccess ? DagNodeStatus.SUCCESS : DagNodeStatus.FAILED;
+        String errorMessage = allSuccess ? null : "LOOP 循环体存在失败迭代";
+        dagNodeInstanceMapper.markFinished(originalBody.getId(),
+                bodyFinalStatus.name(), now, 0, null, errorMessage, null);
+
+        log.info("[DagInstance] LOOP body 全部 iter 完成: instanceId={} jobKey={} iterCount={} bodyStatus={}",
+                dagInstanceId, originalJobKey, iterInstances.size(), bodyFinalStatus);
+
+        // 加载 DAG 实例和定义，触发后继或处理失败
+        JobDagInstanceDO instance = dagInstanceMapper.selectById(dagInstanceId);
+        if (instance == null || !DagInstanceStatus.RUNNING.name().equals(instance.getStatus())) {
+            return;
+        }
+        JobDagDO dag = dagMapper.selectById(instance.getDagId());
+        if (dag == null) {
+            return;
+        }
+        DagDefinition definition = dagDefinitionCodec.fromJson(dag.getDagDefinition());
+
+        if (allSuccess) {
+            // 触发原始 body 节点的后继（使用原始 jobKey 查 DAG 定义中的边）
+            triggerSuccessors(dagInstanceId, instance.getDagId(), originalJobKey, definition);
+        } else {
+            // 按 DAG 级失败策略处理（对原始 body 节点）
+            FailStrategy dagStrategy = FailStrategy.parse(dag.getFailStrategy());
+            handleNodeFailure(dagInstanceId, instance.getDagId(), originalBody, definition, dagStrategy);
+        }
+    }
+
+    /**
+     * P0-4: 判断 jobKey 是否为 LOOP iter 实例（带 {@code #loop<i>} 后缀）。
+     */
+    private boolean isLoopIterJobKey(String jobKey) {
+        return jobKey != null && jobKey.contains("#loop");
+    }
+
+    /**
+     * P0-4: 去除 LOOP iter 后缀，得到原始 jobKey。
+     */
+    private String stripLoopSuffix(String jobKey) {
+        if (jobKey == null) {
+            return null;
+        }
+        int idx = jobKey.indexOf("#loop");
+        return idx > 0 ? jobKey.substring(0, idx) : jobKey;
     }
 
     /**
@@ -656,6 +789,12 @@ private final SpELConditionEvaluator spELConditionEvaluator;
     /**
      * P2-6: 尝试重试节点。
      *
+     * <p>P0-3 修复：当节点实例的 jobKey 带 LOOP iter 后缀（{@code #loop<i>}）时，
+     * {@link DagDefinition#findNode} 无法匹配（DAG 定义中只有原始 jobKey）。
+     * 修复方案：先尝试原始 jobKey 查找；若失败则去除 {@code #loop} 后缀后重试。
+     * 这样即使 LOOP iter 实例意外进入重试路径（理论上 P0-4 修复后不会发生），
+     * 也能正确找到 DagNode 并重新派发，避免 markRetry 成功但节点卡死在 PENDING。
+     *
      * @return true 表示重试已触发；false 表示重试次数用尽
      */
     private boolean tryRetryNode(JobDagNodeInstanceDO nodeInstance, DagDefinition definition) {
@@ -668,9 +807,18 @@ private final SpELConditionEvaluator spELConditionEvaluator;
         if (refreshed == null) {
             return false;
         }
-        // 重新派发该节点
+        // P0-3: 优先使用原始 jobKey 查找 DagNode；LOOP iter 后缀场景下去缀后重试
         DagNode node = definition.findNode(refreshed.getJobKey());
+        if (node == null && isLoopIterJobKey(refreshed.getJobKey())) {
+            String strippedKey = stripLoopSuffix(refreshed.getJobKey());
+            node = definition.findNode(strippedKey);
+            log.debug("[DagInstance] RETRY 使用去缀 jobKey 查找 DagNode: original={} stripped={}",
+                    refreshed.getJobKey(), strippedKey);
+        }
         if (node == null) {
+            // markRetry 已成功但 findNode 失败，回滚节点状态避免卡死 PENDING
+            log.warn("[DagInstance] RETRY findNode 失败, 节点状态异常: instanceId={} jobKey={}",
+                    refreshed.getDagInstanceId(), refreshed.getJobKey());
             return false;
         }
         dispatchNode(refreshed.getDagInstanceId(), refreshed.getDagId(), node, definition);

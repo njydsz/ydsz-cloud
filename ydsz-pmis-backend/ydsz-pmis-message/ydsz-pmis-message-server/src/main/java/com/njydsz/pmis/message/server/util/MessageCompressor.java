@@ -61,7 +61,7 @@ public final class MessageCompressor {
                     bytes.length, result.length(), result.length() * 100 / bytes.length);
             return result;
         } catch (IOException e) {
-            log.warn("[Compressor] 压缩失败,返回原始消息体: err={}", e.getMessage());
+            log.warn("[Compressor] 压缩失败,返回原始消息体: err={}", e.getMessage(), e);
             return body;
         }
     }
@@ -89,7 +89,7 @@ public final class MessageCompressor {
                 return baos.toString(StandardCharsets.UTF_8);
             }
         } catch (IOException e) {
-            log.warn("[Compressor] 解压失败,返回原始消息体: err={}", e.getMessage());
+            log.warn("[Compressor] 解压失败,返回原始消息体: err={}", e.getMessage(), e);
             return body;
         }
     }

@@ -1,6 +1,7 @@
 package com.njydsz.pmis.nextwiki.server.service;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.file.domain.FileStorage;
@@ -277,23 +279,15 @@ public class PreviewApplicationService {
 
     /**
      * 上传文件到存储
+     * <p>
+     * 将本地临时文件通过 {@link IFileStorage#upload} 上传到存储后端。
      */
     private void uploadFileToStorage(IFileStorage storage, Path filePath,
                                        String storageKey, String contentType) throws Exception {
-        // 使用 FileUploader.upload 需要传 MultipartFile，这里使用 copyObject 或直接操作
-        // 当前实现：读取文件字节，通过 storage.copyObject 复制
-        // 注意：如果存储后端支持 copyObject，可以直接用；
-        // 如果不支持，需要通过其他方式上传
-        // 这里使用 FileStorage.build 构建元信息
-        FileStorage meta = new FileStorage();
-        meta.setUuidName(storageKey);
-        meta.setMimeType(contentType);
-        meta.setSize(Files.size(filePath));
-
-        // 标记上传成功（实际上传由 IFileStorage 实现类完成）
-        // 如果存储不可用，此方法不会调用
+        MultipartFile multipartFile = new PathBackedMultipartFile(filePath, storageKey, contentType);
+        FileStorage uploaded = storage.upload(null, storageKey, multipartFile);
         log.debug("[PreviewApplicationService] 上传到存储: key={}, size={}",
-                storageKey, Files.size(filePath));
+                storageKey, uploaded.getSize());
     }
 
     private IFileStorage resolveStorage() {
@@ -301,5 +295,67 @@ public class PreviewApplicationService {
             return fileStorageProvider.getStorage();
         }
         return null;
+    }
+
+    /**
+     * 基于 Path 的 MultipartFile 简单实现
+     * <p>
+     * 用于将本地临时文件通过 {@code IFileStorage.upload} 上传到存储后端。
+     * 仅实现 MultipartFile 接口必要方法，不做额外校验。
+     */
+    private static class PathBackedMultipartFile implements MultipartFile {
+
+        private final Path filePath;
+        private final String name;
+        private final String contentType;
+        private final long size;
+
+        PathBackedMultipartFile(Path filePath, String name, String contentType) throws IOException {
+            this.filePath = filePath;
+            this.name = name;
+            this.contentType = contentType;
+            this.size = Files.size(filePath);
+        }
+
+        @Override
+        public String getName() {
+            return name;
+        }
+
+        @Override
+        public String getOriginalFilename() {
+            Path fileName = filePath.getFileName();
+            return fileName != null ? fileName.toString() : name;
+        }
+
+        @Override
+        public String getContentType() {
+            return contentType;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return size == 0;
+        }
+
+        @Override
+        public long getSize() {
+            return size;
+        }
+
+        @Override
+        public byte[] getBytes() throws IOException {
+            return Files.readAllBytes(filePath);
+        }
+
+        @Override
+        public InputStream getInputStream() throws IOException {
+            return Files.newInputStream(filePath);
+        }
+
+        @Override
+        public void transferTo(File dest) throws IOException, IllegalStateException {
+            Files.copy(filePath, dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 }

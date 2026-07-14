@@ -55,7 +55,7 @@ public class CrossChannelDedupService {
             redisTemplate.opsForValue().set(key, channel, Duration.ofSeconds(DEDUP_TTL_SECONDS));
             return false;
         } catch (Exception e) {
-            log.warn("[CrossChannelDedup] Redis 异常,降级放行: {}", e.getMessage());
+            log.warn("[CrossChannelDedup] Redis 异常,降级放行: {}", e.getMessage(), e);
             return false;
         }
     }
@@ -73,7 +73,7 @@ public class CrossChannelDedupService {
         try {
             redisTemplate.delete(buildKey(bizType, bizId));
         } catch (Exception e) {
-            log.warn("[CrossChannelDedup] 清除去重标记失败: {}", e.getMessage());
+            log.warn("[CrossChannelDedup] 清除去重标记失败: {}", e.getMessage(), e);
         }
     }
 

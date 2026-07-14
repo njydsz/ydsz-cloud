@@ -154,8 +154,34 @@ public class ChannelRouter {
             messageMetrics.recordChannelError(channel, "EXCEPTION");
             log.error("[ChannelRouter] channel={} 发送异常 costMs={} cbState={}",
                     channel, cost, breaker == null ? "N/A" : breaker.getState(), e);
-            return MessageResult.fail(channel, e.getClass().getSimpleName() + ": " + e.getMessage());
+            // P3-2: 透传 root cause 链，避免包装异常掩盖真实错误原因
+            return MessageResult.fail(channel, buildErrorMessageWithCause(e));
         }
+    }
+
+    /**
+     * P3-2: 构造包含 cause 链的错误消息。
+     *
+     * <p>遍历异常的 cause 链（最多 5 层防御性兜底），将每层异常的
+     * {@code SimpleName: message} 拼接，避免 Spring/HTTP 客户端等包装异常
+     * 掩盖真实的底层错误（如 SSLHandshakeException 被 ResourceAccessException 包装）。
+     *
+     * @param e 顶层异常
+     * @return 包含 cause 链的错误消息
+     */
+    private String buildErrorMessageWithCause(Throwable e) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(e.getClass().getSimpleName()).append(": ").append(e.getMessage());
+        Throwable cause = e.getCause();
+        int depth = 0;
+        while (cause != null && depth++ < 5) {
+            sb.append(" | caused by: ")
+              .append(cause.getClass().getSimpleName())
+              .append(": ")
+              .append(cause.getMessage());
+            cause = cause.getCause();
+        }
+        return sb.toString();
     }
 
     /**

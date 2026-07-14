@@ -59,7 +59,7 @@ public class DedupServiceImpl implements DedupService {
             log.info("[Dedup] 检测到重复消息,跳过发送: key={} ttl={}s", dedupKey, ttl);
             return false;
         } catch (Exception e) {
-            log.warn("[Dedup] Redis 异常,fail-open 放行: key={} err={}", dedupKey, e.getMessage());
+            log.warn("[Dedup] Redis 异常,fail-open 放行: key={} err={}", dedupKey, e.getMessage(), e);
             return true;
         }
     }

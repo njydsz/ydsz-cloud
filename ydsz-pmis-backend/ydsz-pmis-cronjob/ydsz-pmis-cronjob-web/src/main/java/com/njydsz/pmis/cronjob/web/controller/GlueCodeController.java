@@ -3,6 +3,11 @@ package com.njydsz.pmis.cronjob.web.controller.schedule;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -10,8 +15,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.pmis.common.audit.annotation.OperationLog;
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
+import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.common.safe.annotation.RateLimit;
 import com.njydsz.pmis.cronjob.domain.entity.schedule.GlueCodeDO;
 import com.njydsz.pmis.cronjob.server.service.schedule.GlueCodeService;
 
@@ -25,6 +34,14 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>提供 GLUE 代码的在线保存、查询最新版本、查询版本列表、按版本回滚等 API。
  *
+ * <p>P0-5：补齐全部接口的权限/审计/限流/校验注解：
+ * <ul>
+ *   <li>读接口（latest/versions/template/diff）统一 {@code CRONJOB_GLUE_VIEW} 权限</li>
+ *   <li>写接口（save/rollback）统一 {@code CRONJOB_GLUE_MANAGE} 权限 + 审计日志 + 幂等</li>
+ *   <li>测试接口（test）独立 {@code CRONJOB_GLUE_TEST} 权限 + 审计日志 + 限流（防止在线执行任意代码被滥用）</li>
+ *   <li>所有 {@code @RequestBody} 加 {@code @Valid}，字段加 {@code @NotBlank}/@NotNull 校验</li>
+ * </ul>
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -33,6 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/cronjob/glue")
 @RequiredArgsConstructor
+@Validated
 public class GlueCodeController {
 
     /** GLUE 在线编码服务 */
@@ -45,9 +63,11 @@ public class GlueCodeController {
      * @return 统一响应结果，包含新创建的 GLUE 代码版本
      */
     @Operation(summary = "保存 GLUE 代码（新版本）")
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_MANAGE)
+    @OperationLog(module = "GLUE 在线编码", action = "保存 GLUE 代码", bizType = "CRONJOB_GLUE", saveResult = true)
     @Idempotent(key = "glueCode:save", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/save")
-    public BaseResponse<GlueCodeDO> save(@RequestBody GlueCodeSaveRequest request) {
+    public BaseResponse<GlueCodeDO> save(@Valid @RequestBody GlueCodeSaveRequest request) {
         return BaseResponse.ok(glueCodeService.save(
                 request.getJobId(),
                 request.getSourceCode(),
@@ -62,6 +82,7 @@ public class GlueCodeController {
      * @return 统一响应结果，包含最新版本 GLUE 代码
      */
     @Operation(summary = "获取最新版本 GLUE 代码")
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_VIEW)
     @GetMapping("/latest")
     public BaseResponse<GlueCodeDO> latest(@RequestParam String jobId) {
         return BaseResponse.ok(glueCodeService.getLatest(jobId));
@@ -74,6 +95,7 @@ public class GlueCodeController {
      * @return 统一响应结果，包含版本列表
      */
     @Operation(summary = "获取 GLUE 代码版本列表")
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_VIEW)
     @GetMapping("/versions")
     public BaseResponse<List<GlueCodeDO>> versions(@RequestParam String jobId) {
         return BaseResponse.ok(glueCodeService.listVersions(jobId));
@@ -86,9 +108,11 @@ public class GlueCodeController {
      * @return 统一响应结果，包含新创建的回滚版本
      */
     @Operation(summary = "回滚到指定版本")
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_MANAGE)
+    @OperationLog(module = "GLUE 在线编码", action = "回滚 GLUE 代码", bizType = "CRONJOB_GLUE", saveResult = true)
     @Idempotent(key = "glueCode:rollback", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/rollback")
-    public BaseResponse<GlueCodeDO> rollback(@RequestBody GlueCodeRollbackRequest request) {
+    public BaseResponse<GlueCodeDO> rollback(@Valid @RequestBody GlueCodeRollbackRequest request) {
         return BaseResponse.ok(glueCodeService.rollback(request.getJobId(), request.getVersion()));
     }
 
@@ -98,12 +122,18 @@ public class GlueCodeController {
      * <p>业务侧在线编辑器中点击"测试运行"时调用此接口。
      * 代码不持久化，仅在内存中编译执行并返回结果。
      *
+     * <p>P0-5：该接口允许在服务端执行任意代码，属于高风险接口，独立分配 {@code CRONJOB_GLUE_TEST}
+     * 权限码，并加 {@code @RateLimit} 限流（60s 内最多 10 次），防止滥用导致 CPU/内存被打满。
+     *
      * @param request 测试请求体
      * @return 统一响应结果，包含执行结果或错误信息
      */
     @Operation(summary = "在线测试 GLUE 代码")
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_TEST)
+    @OperationLog(module = "GLUE 在线编码", action = "在线测试 GLUE 代码", bizType = "CRONJOB_GLUE", saveResult = true)
+    @RateLimit(key = "glue:test", qps = 10, windowSeconds = 60, message = "在线测试过于频繁，请稍后重试")
     @PostMapping("/test")
-    public BaseResponse<Map<String, Object>> test(@RequestBody GlueTestRequest request) {
+    public BaseResponse<Map<String, Object>> test(@Valid @RequestBody GlueTestRequest request) {
         return BaseResponse.ok(glueCodeService.testCode(
                 request.getSourceCode(),
                 request.getLanguage(),
@@ -119,6 +149,7 @@ public class GlueCodeController {
      * @return 统一响应结果，包含模板代码
      */
     @Operation(summary = "获取代码模板")
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_VIEW)
     @GetMapping("/template")
     public BaseResponse<Map<String, String>> template(@RequestParam(defaultValue = "GROOVY") String language) {
         return BaseResponse.ok(glueCodeService.getCodeTemplate(language));
@@ -133,6 +164,7 @@ public class GlueCodeController {
      * @return 统一响应结果，包含差异信息
      */
     @Operation(summary = "对比版本差异")
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_GLUE_VIEW)
     @GetMapping("/diff")
     public BaseResponse<Map<String, Object>> diff(@RequestParam String jobId,
                                              @RequestParam Integer versionA,
@@ -146,10 +178,13 @@ public class GlueCodeController {
     @lombok.Data
     public static class GlueCodeSaveRequest {
         /** 任务 ID */
+        @NotBlank(message = "任务 ID 不能为空")
         private String jobId;
         /** 源代码 */
+        @NotBlank(message = "源代码不能为空")
         private String sourceCode;
         /** 语言（GROOVY / JAVA） */
+        @NotBlank(message = "语言不能为空")
         private String language;
         /** 版本备注 */
         private String remark;
@@ -161,8 +196,10 @@ public class GlueCodeController {
     @lombok.Data
     public static class GlueCodeRollbackRequest {
         /** 任务 ID */
+        @NotBlank(message = "任务 ID 不能为空")
         private String jobId;
         /** 目标版本号 */
+        @NotNull(message = "目标版本号不能为空")
         private Integer version;
     }
 
@@ -172,8 +209,10 @@ public class GlueCodeController {
     @lombok.Data
     public static class GlueTestRequest {
         /** 源代码 */
+        @NotBlank(message = "源代码不能为空")
         private String sourceCode;
         /** 语言（GROOVY / PYTHON / SHELL / JAVASCRIPT） */
+        @NotBlank(message = "语言不能为空")
         private String language;
         /** 测试参数（JSON 字符串） */
         private String paramsJson;

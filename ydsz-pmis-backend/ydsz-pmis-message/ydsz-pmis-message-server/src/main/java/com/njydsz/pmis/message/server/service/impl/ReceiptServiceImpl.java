@@ -60,7 +60,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                 messageLogService.updateReceipt(dto.getLogId(), dto.getReceiptType(), entity.getReceiptTime());
             } catch (Exception e) {
                 // 日志不存在时仅记录，不影响回执落库
-                log.warn("[Receipt] 更新日志回执失败: logId={} err={}", dto.getLogId(), e.getMessage());
+                log.warn("[Receipt] 更新日志回执失败: logId={} err={}", dto.getLogId(), e.getMessage(), e);
             }
             log.info("[Receipt] 回执落库: logId={} type={}", dto.getLogId(), dto.getReceiptType());
         }

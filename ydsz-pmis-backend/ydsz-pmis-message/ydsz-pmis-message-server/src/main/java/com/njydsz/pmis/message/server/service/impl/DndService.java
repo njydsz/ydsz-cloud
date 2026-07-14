@@ -134,7 +134,7 @@ public class DndService {
                     tz
             );
         } catch (Exception e) {
-            log.warn("[DND] 配置解析失败: value={} err={}", value, e.getMessage());
+            log.warn("[DND] 配置解析失败: value={} err={}", value, e.getMessage(), e);
             return null;
         }
     }

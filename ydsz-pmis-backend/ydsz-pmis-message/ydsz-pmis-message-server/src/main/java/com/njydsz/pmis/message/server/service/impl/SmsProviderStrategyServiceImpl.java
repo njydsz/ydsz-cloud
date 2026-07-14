@@ -115,7 +115,7 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
                 stats.put(provider, new long[]{total, total - failed, failed});
             }
         } catch (Exception e) {
-            log.warn("[SmsStrategy] 统计查询失败: {}", e.getMessage());
+            log.warn("[SmsStrategy] 统计查询失败: {}", e.getMessage(), e);
         }
         return stats;
     }

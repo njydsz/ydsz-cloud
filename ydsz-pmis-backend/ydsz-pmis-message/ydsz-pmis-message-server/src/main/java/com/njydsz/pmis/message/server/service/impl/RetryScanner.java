@@ -108,7 +108,7 @@ public class RetryScanner {
                     retryAgain++;
                 }
             } catch (Exception e) {
-                log.error("[RetryScanner] 重试异常: logId={} err={}", logDO.getId(), e.getMessage());
+                log.error("[RetryScanner] 重试异常: logId={} err={}", logDO.getId(), e.getMessage(), e);
                 retryAgain++;
             }
         }

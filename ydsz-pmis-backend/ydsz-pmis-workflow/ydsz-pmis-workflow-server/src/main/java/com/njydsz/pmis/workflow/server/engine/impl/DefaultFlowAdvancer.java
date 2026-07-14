@@ -90,7 +90,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     }
 
     @Override
-    @YdszDistributedLock(key = "'flow:instance:op:#{#instanceId}'", waitTime = 5, leaseTime = 60,
+    @YdszDistributedLock(key = "'flow:instance:op:' + #{#instanceId}", waitTime = 5, leaseTime = 60,
             message = "流程正在处理中，请稍后重试")
     public FlowInstanceViewDTO start(String instanceId) {
         FlowInstanceDO instance = instanceService.getById(instanceId);
@@ -129,7 +129,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     }
 
     @Override
-    @YdszDistributedLock(key = "'flow:instance:op:#{#currentInstance.id}'", waitTime = 5, leaseTime = 60,
+    @YdszDistributedLock(key = "'flow:instance:op:' + #{#currentInstance.id}", waitTime = 5, leaseTime = 60,
             message = "流程正在处理中，请稍后重试")
     public List<FlowNodeDO> advance(FlowInstanceDO currentInstance,
                                      String currentNodeCode,
@@ -242,7 +242,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
      * 单节点退回（targetNodeCodes 为空或单元素）降级到原 advance 逻辑。
      */
     @Override
-    @YdszDistributedLock(key = "'flow:instance:op:#{#currentInstance.id}'", waitTime = 5, leaseTime = 60,
+    @YdszDistributedLock(key = "'flow:instance:op:' + #{#currentInstance.id}", waitTime = 5, leaseTime = 60,
             message = "流程正在处理中，请稍后重试")
     public List<FlowNodeDO> advanceMulti(FlowInstanceDO currentInstance,
                                           String currentNodeCode,

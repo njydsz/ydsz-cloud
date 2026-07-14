@@ -53,7 +53,7 @@ public class RichMediaRenderer {
             String json = raw instanceof String ? (String) raw : JsonUtils.toJson(raw);
             return JsonUtils.fromJson(json, RichMediaContent.class);
         } catch (Exception e) {
-            log.warn("[RichMediaRenderer] 解析富媒体内容失败: {}", e.getMessage());
+            log.warn("[RichMediaRenderer] 解析富媒体内容失败: {}", e.getMessage(), e);
             return null;
         }
     }

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.channel.impl;
+package com.njydsz.pmis.message.server.channel;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +23,8 @@ import static org.mockito.Mockito.when;
  * DingTalkChannel 钉钉通道单元测试。
  *
  * <p>P1-1: 验证 appendSign 失败快速失败 + resolveUrl 优先级。
+ *
+ * <p>P3-1: 从 channel.impl 包对齐到 channel 包（与被测类同包）。
  */
 @DisplayName("DingTalkChannel 钉钉通道测试")
 @ExtendWith(MockitoExtension.class)

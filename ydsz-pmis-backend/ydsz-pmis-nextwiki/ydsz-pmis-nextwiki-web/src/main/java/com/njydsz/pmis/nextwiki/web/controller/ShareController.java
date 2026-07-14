@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -41,6 +42,7 @@ public class ShareController {
     @PostMapping
     @Operation(summary = "创建分享链接")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_CREATE)
+    @OperationLog(module = "网盘", action = "创建分享", bizType = "SHARE", saveResult = true)
     public BaseResponse<ShareLink> createShare(
             @RequestBody NextwikiDTOs.CreateShareRequest request,
             @RequestHeader("X-User-Id") String userId) {
@@ -69,6 +71,7 @@ public class ShareController {
     @DeleteMapping("/{shareId}")
     @Operation(summary = "撤销分享")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_REVOKE)
+    @OperationLog(module = "网盘", action = "撤销分享", bizType = "SHARE")
     public BaseResponse<Void> revoke(
             @PathVariable String shareId,
             @RequestHeader("X-User-Id") String userId) {

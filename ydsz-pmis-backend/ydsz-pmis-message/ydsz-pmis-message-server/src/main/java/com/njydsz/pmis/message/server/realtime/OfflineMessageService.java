@@ -73,7 +73,7 @@ public class OfflineMessageService implements OfflineMessageStore {
 
             log.debug("[WS-Offline] 缓存离线消息: userId={}, type={}", userId, type);
         } catch (Exception e) {
-            log.warn("[WS-Offline] 缓存离线消息失败，降级忽略: userId={}, err={}", userId, e.getMessage());
+            log.warn("[WS-Offline] 缓存离线消息失败，降级忽略: userId={}, err={}", userId, e.getMessage(), e);
         }
     }
 
@@ -101,7 +101,7 @@ public class OfflineMessageService implements OfflineMessageStore {
                 log.info("[WS-Offline] 从数据库拉取离线消息: userId={}, count={}", userId, dbMessages.size());
             }
         } catch (Exception e) {
-            log.warn("[WS-Offline] 数据库离线消息拉取失败: userId={}, err={}", userId, e.getMessage());
+            log.warn("[WS-Offline] 数据库离线消息拉取失败: userId={}, err={}", userId, e.getMessage(), e);
         }
 
         // 再从 Redis 拉取缓存消息
@@ -181,7 +181,7 @@ public class OfflineMessageService implements OfflineMessageStore {
             redisTemplate.opsForList().trim(redisKey, 0, WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD - 1);
             log.info("[WS-Offline] 溢出消息持久化到数据库: userId={}, count={}", userId, overflowMessages.size());
         } catch (Exception e) {
-            log.warn("[WS-Offline] 溢出消息持久化失败: userId={}, err={}", userId, e.getMessage());
+            log.warn("[WS-Offline] 溢出消息持久化失败: userId={}, err={}", userId, e.getMessage(), e);
         }
     }
 }

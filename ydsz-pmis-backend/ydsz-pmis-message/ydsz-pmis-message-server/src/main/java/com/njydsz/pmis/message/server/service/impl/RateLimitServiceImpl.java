@@ -64,7 +64,7 @@ public class RateLimitServiceImpl implements RateLimitService {
             return limiter.tryAcquire(1);
         } catch (Exception e) {
             // 限流器异常降级为放行，避免 Redis 故障阻断业务
-            log.warn("[RateLimit] tryAcquire 降级放行: key={} err={}", key, e.getMessage());
+            log.warn("[RateLimit] tryAcquire 降级放行: key={} err={}", key, e.getMessage(), e);
             return true;
         }
     }
@@ -209,7 +209,7 @@ public class RateLimitServiceImpl implements RateLimitService {
                 stringRedisTemplate.expire(key, Duration.ofSeconds(ttlSeconds));
             }
         } catch (Exception e) {
-            log.warn("[RateLimit] 计数失败(降级忽略): key={} err={}", key, e.getMessage());
+            log.warn("[RateLimit] 计数失败(降级忽略): key={} err={}", key, e.getMessage(), e);
         }
     }
 }

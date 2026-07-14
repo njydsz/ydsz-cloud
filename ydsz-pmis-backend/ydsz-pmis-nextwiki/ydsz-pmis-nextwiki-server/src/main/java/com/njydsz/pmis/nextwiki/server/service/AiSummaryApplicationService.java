@@ -5,8 +5,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import lombok.Builder;
 import lombok.Data;
@@ -36,6 +43,12 @@ public class AiSummaryApplicationService {
 
     @Value("${nextwiki.ai.llm-api-key:}")
     private String llmApiKey;
+
+    @Value("${nextwiki.ai.llm-model:gpt-3.5-turbo}")
+    private String llmModel;
+
+    @Autowired
+    private RestTemplate nextwikiRestTemplate;
 
     /** 摘要最大句子数 */
     private static final int MAX_SENTENCES = 5;
@@ -239,17 +252,104 @@ public class AiSummaryApplicationService {
 
     // ==================== LLM 模式 ====================
 
+    /**
+     * 通过 LLM API 生成摘要
+     * <p>
+     * 调用 OpenAI 兼容接口（/v1/chat/completions），失败时降级到 TextRank。
+     */
     private String generateSummaryByLlm(String content) {
-        // LLM API 调用占位
-        // 实际实现：构造 HTTP 请求，调用大模型 API
         log.info("[AiSummaryApplicationService] LLM 摘要生成（API URL: {}）", llmApiUrl);
-        // 降级到 TextRank
-        return generateSummaryByTextRank(content);
+        try {
+            String prompt = "请总结以下文档的关键要点（不超过500字）：\n"
+                    + content.substring(0, Math.min(content.length(), 10000));
+            String response = callLlm(prompt);
+            if (response == null || response.isEmpty()) {
+                log.warn("[AiSummaryApplicationService] LLM 返回空结果，降级到 TextRank");
+                return generateSummaryByTextRank(content);
+            }
+            return response;
+        } catch (Exception e) {
+            log.warn("[AiSummaryApplicationService] LLM 摘要失败，降级到 TextRank: {}", e.getMessage());
+            return generateSummaryByTextRank(content);
+        }
     }
 
+    /**
+     * 通过 LLM API 提取关键词
+     * <p>
+     * 调用 OpenAI 兼容接口，失败时降级到 TextRank。
+     */
     private List<String> extractKeywordsByLlm(String content) {
         log.info("[AiSummaryApplicationService] LLM 关键词提取");
-        return extractKeywordsByTextRank(content);
+        try {
+            String prompt = "请从以下文档中提取 " + MAX_KEYWORDS
+                    + " 个关键词，以逗号分隔返回：\n"
+                    + content.substring(0, Math.min(content.length(), 10000));
+            String response = callLlm(prompt);
+            if (response == null || response.isEmpty()) {
+                log.warn("[AiSummaryApplicationService] LLM 返回空结果，降级到 TextRank");
+                return extractKeywordsByTextRank(content);
+            }
+            return Arrays.stream(response.split("[,，\\n]"))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .limit(MAX_KEYWORDS)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.warn("[AiSummaryApplicationService] LLM 关键词提取失败，降级到 TextRank: {}", e.getMessage());
+            return extractKeywordsByTextRank(content);
+        }
+    }
+
+    /**
+     * 调用 LLM Chat Completions 接口
+     *
+     * @param prompt 用户提示词
+     * @return 模型回复文本，失败返回 null
+     */
+    private String callLlm(String prompt) {
+        if (llmApiUrl == null || llmApiUrl.isEmpty()) {
+            log.warn("[AiSummaryApplicationService] LLM API URL 未配置");
+            return null;
+        }
+
+        Map<String, Object> request = Map.of(
+                "model", llmModel,
+                "messages", List.of(
+                        Map.of("role", "user", "content", prompt)
+                )
+        );
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        if (llmApiKey != null && !llmApiKey.isEmpty()) {
+            headers.setBearerAuth(llmApiKey);
+        }
+
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
+        ResponseEntity<Map> response = nextwikiRestTemplate.exchange(
+                llmApiUrl, HttpMethod.POST, entity, Map.class);
+
+        Map body = response.getBody();
+        if (body == null) {
+            return null;
+        }
+
+        Object choicesObj = body.get("choices");
+        if (!(choicesObj instanceof List<?> choices) || choices.isEmpty()) {
+            return null;
+        }
+
+        if (!(choices.get(0) instanceof Map<?, ?> choice)) {
+            return null;
+        }
+
+        if (!(choice.get("message") instanceof Map<?, ?> message)) {
+            return null;
+        }
+
+        Object contentObj = message.get("content");
+        return contentObj != null ? contentObj.toString().trim() : null;
     }
 
     /**

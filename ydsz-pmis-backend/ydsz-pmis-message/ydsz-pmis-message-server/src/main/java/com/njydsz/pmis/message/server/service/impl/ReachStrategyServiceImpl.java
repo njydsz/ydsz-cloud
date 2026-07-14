@@ -103,7 +103,7 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
             profile.setChannelActivityScores(scores);
             return profile;
         } catch (Exception e) {
-            log.warn("[ReachStrategy] 画像加载失败,使用默认: userId={} err={}", userId, e.getMessage());
+            log.warn("[ReachStrategy] 画像加载失败,使用默认: userId={} err={}", userId, e.getMessage(), e);
             return defaultProfile();
         }
     }
@@ -144,7 +144,7 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
                 return !currentTime.isBefore(start) || currentTime.isBefore(end);
             }
         } catch (Exception e) {
-            log.warn("[ReachStrategy] DND 判断异常: userId={} err={}", userId, e.getMessage());
+            log.warn("[ReachStrategy] DND 判断异常: userId={} err={}", userId, e.getMessage(), e);
             return false;
         }
     }

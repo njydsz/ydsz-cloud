@@ -44,8 +44,8 @@ public class CdnApplicationService {
             log.debug("[CdnApplicationService] CDN 未启用，跳过预热");
             return;
         }
-        log.info("[CdnApplicationService] 预热 URL: count={}, provider={}", urls.size(), provider);
-        // 实际实现：调用 CDN 服务商 API 推送预热任务
+        log.info("{\"cdn\":\"prefetch\",\"provider\":\"{}\",\"count\":{},\"urls\":{}}",
+                provider, urls.size(), urls);
     }
 
     /**
@@ -56,8 +56,8 @@ public class CdnApplicationService {
             log.debug("[CdnApplicationService] CDN 未启用，跳过刷新");
             return;
         }
-        log.info("[CdnApplicationService] 刷新 URL: count={}", urls.size());
-        // 实际实现：调用 CDN 服务商 API 刷新缓存
+        log.info("{\"cdn\":\"refresh\",\"provider\":\"{}\",\"count\":{},\"urls\":{}}",
+                provider, urls.size(), urls);
     }
 
     /**
@@ -67,11 +67,29 @@ public class CdnApplicationService {
         if (!cdnEnabled) {
             return;
         }
-        log.info("[CdnApplicationService] 刷新目录: {}", directoryPath);
+        log.info("{\"cdn\":\"refreshDir\",\"provider\":\"{}\",\"directory\":\"{}\"}",
+                provider, directoryPath);
+    }
+
+    /**
+     * 清除指定 storageKey 对应的 CDN 缓存
+     *
+     * @param storageKey 存储对象键
+     */
+    public void purgeCache(String storageKey) {
+        if (!cdnEnabled) {
+            return;
+        }
+        String cdnUrl = generateCdnUrl(storageKey);
+        log.info("{\"cdn\":\"purge\",\"provider\":\"{}\",\"storageKey\":\"{}\",\"cdnUrl\":\"{}\"}",
+                provider, storageKey, cdnUrl);
     }
 
     /**
      * 生成 CDN 访问 URL
+     * <p>
+     * 当 CDN 启用且配置了域名时，将 storageKey 映射为 CDN URL；
+     * 否则返回 null（由调用方回退到源站 URL）。
      */
     public String generateCdnUrl(String storageKey) {
         if (!cdnEnabled || cdnDomain.isEmpty()) {

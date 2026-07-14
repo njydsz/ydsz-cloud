@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson2.JSON;
@@ -46,6 +47,8 @@ public class FlowDefinitionCacheService {
 
     private final FlowNodeMapper flowNodeMapper;
     private final FlowSkipMapper flowSkipMapper;
+    /** P0-3: 集群缓存失效广播器（@Lazy 避免循环依赖） */
+    private final FlowDefinitionCacheBroadcaster broadcaster;
 
     private final Cache<String, List<FlowNodeDO>> nodeCache;
     private final Cache<String, List<FlowSkipDO>> skipCache;
@@ -54,8 +57,9 @@ public class FlowDefinitionCacheService {
      * Spring 注入构造器，使用系统时钟。
      */
     public FlowDefinitionCacheService(FlowNodeMapper flowNodeMapper,
-                                      FlowSkipMapper flowSkipMapper) {
-        this(flowNodeMapper, flowSkipMapper, Ticker.systemTicker());
+                                      FlowSkipMapper flowSkipMapper,
+                                      @Lazy FlowDefinitionCacheBroadcaster broadcaster) {
+        this(flowNodeMapper, flowSkipMapper, broadcaster, Ticker.systemTicker());
     }
 
     /**
@@ -63,9 +67,11 @@ public class FlowDefinitionCacheService {
      */
     FlowDefinitionCacheService(FlowNodeMapper flowNodeMapper,
                                FlowSkipMapper flowSkipMapper,
+                               FlowDefinitionCacheBroadcaster broadcaster,
                                Ticker ticker) {
         this.flowNodeMapper = flowNodeMapper;
         this.flowSkipMapper = flowSkipMapper;
+        this.broadcaster = broadcaster;
         this.nodeCache = Caffeine.newBuilder()
                 .expireAfterWrite(TTL)
                 .maximumSize(MAX_SIZE)
@@ -81,9 +87,12 @@ public class FlowDefinitionCacheService {
     // ============================== 主动失效 ==============================
 
     /**
-     * 清除指定流程定义的全部缓存（节点 + skip）。
+     * 清除指定流程定义的全部缓存（节点 + skip），并广播到集群。
      *
-     * <p>在流程部署新版本 / 编辑草稿 / 删除定义时调用。
+     * <p>在流程部署新版本 / 编辑草稿 / 删除定义 / 发布 / 停用 / 迁移时调用。
+     *
+     * <p>P0-3: 先执行本地 Caffeine 失效，再通过 Redis Pub/Sub 广播到集群其他节点，
+     * 确保集群环境下所有节点的本地缓存一致。
      *
      * @param definitionId 流程定义 ID
      */
@@ -91,14 +100,33 @@ public class FlowDefinitionCacheService {
         if (definitionId == null) {
             return;
         }
-        // P0-3: 按租户维度失效缓存（所有租户的同 definitionId 一并清除）
+        evictLocal(definitionId);
+        // P0-3: 广播到集群其他节点
+        if (broadcaster != null) {
+            broadcaster.broadcast(definitionId);
+        }
+    }
+
+    /**
+     * P0-3: 仅清除本地 Caffeine 缓存（不广播）
+     *
+     * <p>供 {@link FlowDefinitionCacheBroadcaster} 收到集群广播后调用，
+     * 避免收到远端消息后再次广播形成环路。
+     *
+     * @param definitionId 流程定义 ID
+     */
+    void evictLocal(String definitionId) {
+        if (definitionId == null) {
+            return;
+        }
+        // 按租户维度失效缓存（所有租户的同 definitionId 一并清除）
         nodeCache.asMap().keySet().stream()
                 .filter(k -> k.endsWith(":" + definitionId))
                 .forEach(nodeCache::invalidate);
         skipCache.asMap().keySet().stream()
                 .filter(k -> k.endsWith(":" + definitionId))
                 .forEach(skipCache::invalidate);
-        log.debug("[FlowCache] evict definitionId={}", definitionId);
+        log.debug("[FlowCache] evictLocal definitionId={}", definitionId);
     }
 
     // ============================== 节点查询 ==============================

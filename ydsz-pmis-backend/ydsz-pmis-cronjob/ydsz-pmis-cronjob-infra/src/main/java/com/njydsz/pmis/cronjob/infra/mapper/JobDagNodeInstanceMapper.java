@@ -34,6 +34,10 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstanceD
 
     /**
      * 根据 DAG 实例 ID 和任务 ID 查询节点实例（唯一）。
+     *
+     * <p>注意：LOOP 场景下同一 (dagInstanceId, jobId) 可能存在多个实例
+     * （原始 body 节点 + N 个 iter 实例），本方法仅返回其中一条（不确定）。
+     * LOOP 相关的批量查询请使用 {@link #selectAllByDagInstanceAndJob}。
      */
     @Select("SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
             + "       retry_count, max_retries, started_at, finished_at, duration_ms, "
@@ -43,6 +47,26 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstanceD
             + "WHERE dag_instance_id = #{dagInstanceId} AND job_id = #{jobId} AND deleted = 0")
     JobDagNodeInstanceDO selectByDagInstanceAndJob(@Param("dagInstanceId") String dagInstanceId,
                                                     @Param("jobId") String jobId);
+
+    /**
+     * P0-4: 根据 DAG 实例 ID 和任务 ID 查询全部节点实例（含 LOOP iter 实例）。
+     *
+     * <p>LOOP 场景下同一 (dagInstanceId, jobId) 会存在多个实例：
+     * <ul>
+     *   <li>原始 body 节点实例（jobKey 无后缀，由 doExecute 创建）</li>
+     *   <li>N 个 iter 实例（jobKey 带 {@code #loop<i>} 后缀，由 dispatchLoopNode 创建）</li>
+     * </ul>
+     * 本方法返回全部实例，供 LOOP iter 完成处理逻辑聚合判断使用。
+     */
+    @Select("SELECT id, dag_instance_id, dag_id, job_id, job_key, node_status, log_id, "
+            + "       retry_count, max_retries, started_at, finished_at, duration_ms, "
+            + "       result_json, error_message, "
+            + "       created_by, created_at, updated_by, updated_at, deleted, tenant_id "
+            + "FROM pmis_job_dag_node_instance "
+            + "WHERE dag_instance_id = #{dagInstanceId} AND job_id = #{jobId} AND deleted = 0 "
+            + "ORDER BY created_at ASC")
+    List<JobDagNodeInstanceDO> selectAllByDagInstanceAndJob(@Param("dagInstanceId") String dagInstanceId,
+                                                              @Param("jobId") String jobId);
 
     /**
      * 标记节点开始执行（PENDING → RUNNING）。

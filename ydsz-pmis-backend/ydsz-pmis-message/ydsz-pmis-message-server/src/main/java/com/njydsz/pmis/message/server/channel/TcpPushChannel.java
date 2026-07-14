@@ -121,7 +121,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
                     userId, traceId, request.getSubject());
             return MessageResult.ok(CHANNEL_TYPE, traceId);
         } catch (Exception e) {
-            log.error("[TCP-PUSH] 推送异常: userId={} err={}", userId, e.getMessage());
+            log.error("[TCP-PUSH] 推送异常: userId={} err={}", userId, e.getMessage(), e);
             return MessageResult.fail(CHANNEL_TYPE, "推送异常: " + e.getMessage());
         }
     }
@@ -230,7 +230,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
                             OBJECT_MAPPER.writeValueAsString(pong), CharsetUtil.UTF_8));
                 }
             } catch (Exception e) {
-                log.warn("[TCP-PUSH] 消息解析失败: {}", e.getMessage());
+                log.warn("[TCP-PUSH] 消息解析失败: {}", e.getMessage(), e);
             }
         }
 

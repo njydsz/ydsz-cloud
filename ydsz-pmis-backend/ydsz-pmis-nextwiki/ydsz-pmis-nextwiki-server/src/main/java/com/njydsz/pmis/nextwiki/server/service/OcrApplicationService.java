@@ -1,6 +1,8 @@
 package com.njydsz.pmis.nextwiki.server.service;
 
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -60,16 +62,33 @@ public class OcrApplicationService {
 
     /**
      * Tesseract 本地 OCR
+     * <p>
+     * 调用 tesseract 命令行工具识别图片中的文字。
+     * 流程：将输入流写入临时文件 -> 调用 tesseract 命令 -> 读取标准输出 -> 清理临时文件。
      */
     private OcrResult recognizeByTesseract(InputStream imageStream) throws Exception {
-        // 实际实现：
-        // 1. 将 InputStream 写入临时文件
-        // 2. 调用 tesseract 命令行：tesseract <input> <output> -l <language>
-        // 3. 读取输出文件获取识别结果
         log.info("[OcrApplicationService] Tesseract OCR（语言: {}）", language);
 
-        // 占位：返回空结果
-        return OcrResult.success("", List.of());
+        Path tempFile = Files.createTempFile("nextwiki-ocr-", ".tmp");
+        try {
+            imageStream.transferTo(Files.newOutputStream(tempFile));
+
+            ProcessBuilder pb = new ProcessBuilder(
+                    tesseractPath, tempFile.toString(), "-", "-l", language);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+
+            String result = new String(process.getInputStream().readAllBytes());
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                log.warn("[OcrApplicationService] Tesseract 退出码: {}", exitCode);
+                return OcrResult.success("", List.of());
+            }
+
+            return OcrResult.success(result.trim(), List.of());
+        } finally {
+            Files.deleteIfExists(tempFile);
+        }
     }
 
     /**

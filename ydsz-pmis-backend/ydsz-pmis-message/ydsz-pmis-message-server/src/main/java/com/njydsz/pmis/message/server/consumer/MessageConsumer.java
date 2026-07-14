@@ -109,7 +109,7 @@ public class MessageConsumer implements RocketMQListener<String> {
         try {
             request = JsonUtils.fromJson(body, MessageRequest.class);
         } catch (Exception e) {
-            log.error("[MessageConsumer] 解析失败: body={} err={}", body, e.getMessage());
+            log.error("[MessageConsumer] 解析失败: body={} err={}", body, e.getMessage(), e);
             return;
         }
         if (request == null) {
@@ -148,7 +148,7 @@ public class MessageConsumer implements RocketMQListener<String> {
                     request.getMessageId(), request.getChannel(), consumeDuration);
         } catch (SysException e) {
             // 业务异常:保留锁(防重投 spam),落库 FAILED 不抛出
-            log.error("[MessageConsumer] 业务异常: messageId={} err={}", request.getMessageId(), e.getMessage());
+            log.error("[MessageConsumer] 业务异常: messageId={} err={}", request.getMessageId(), e.getMessage(), e);
             recordFailedLog(request, e.getMessage());
         } catch (Exception e) {
             // 系统异常:释放锁(允许重投),抛出触发重试
@@ -226,7 +226,7 @@ public class MessageConsumer implements RocketMQListener<String> {
         try {
             redisTemplate.execute(RELEASE_SCRIPT, Collections.singletonList(lockKey), INSTANCE_ID);
         } catch (Exception e) {
-            log.warn("[MessageConsumer] 释放幂等锁失败(等待 TTL 过期): key={} err={}", lockKey, e.getMessage());
+            log.warn("[MessageConsumer] 释放幂等锁失败(等待 TTL 过期): key={} err={}", lockKey, e.getMessage(), e);
         }
     }
 
