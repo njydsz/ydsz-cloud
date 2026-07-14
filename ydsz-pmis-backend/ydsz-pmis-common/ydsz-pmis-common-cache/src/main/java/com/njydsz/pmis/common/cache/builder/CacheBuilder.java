@@ -389,7 +389,7 @@ public final class CacheBuilder<K, V> {
   /**
    * 使用弱引用键存储缓存键
    *
-   * <p>键如果没有被其他地方引用，可以被 GC 回收。 注意：这会覆盖 type 配置，将缓存类型设置为 WEAK_KEY。
+   * <p>键如果没有被其他地方引用，可以被 GC 回收。 过期策略通过 ExpirableCache 装饰器与引用缓存正交叠加。
    *
    * @return this
    */
@@ -401,7 +401,7 @@ public final class CacheBuilder<K, V> {
   /**
    * 使用弱引用值存储缓存值
    *
-   * <p>值如果没有被其他地方引用，可以被 GC 回收。 注意：这会覆盖 type 配置，将缓存类型设置为 WEAK_VALUE。
+   * <p>值如果没有被其他地方引用，可以被 GC 回收。 过期策略通过 ExpirableCache 装饰器与引用缓存正交叠加。
    *
    * @return this
    */
@@ -413,7 +413,7 @@ public final class CacheBuilder<K, V> {
   /**
    * 使用软引用值存储缓存值
    *
-   * <p>值在 JVM 内存不足时可以被 GC 回收。 注意：这会覆盖 type 配置，将缓存类型设置为 SOFT_VALUE。
+   * <p>值在 JVM 内存不足时可以被 GC 回收。 过期策略通过 ExpirableCache 装饰器与引用缓存正交叠加。
    *
    * @return this
    */
@@ -428,8 +428,7 @@ public final class CacheBuilder<K, V> {
    * <p>构建顺序（装饰器叠加，正交组合）：
    *
    * <ol>
-   *   <li>创建基础淘汰缓存（LRU/TINYLFU/STRIPED 等）
-   *   <li>叠加弱/软引用装饰器（如启用）
+   *   <li>创建基础淘汰缓存（LRU/TINYLFU/STRIPED 等）或引用缓存（WEAK/SOFT）
    *   <li>叠加过期装饰器 ExpirableCache（如启用了 expireAfterWrite/Access 或 Expiry）
    *   <li>叠加写穿透装饰器 WriteThroughCache（如启用）
    *   <li>添加删除监听器
@@ -440,17 +439,6 @@ public final class CacheBuilder<K, V> {
   public Cache<K, V> build() {
     validate();
     Cache<K, V> cache = createBaseCache();
-
-    // 弱/软引用装饰器叠加（与淘汰策略正交）
-    if (weakKeysFlag) {
-      cache = wrapWithWeakKeys(cache);
-    }
-    if (weakValuesFlag) {
-      cache = wrapWithWeakValues(cache);
-    }
-    if (softValuesFlag) {
-      cache = wrapWithSoftValues(cache);
-    }
 
     // 过期策略装饰器叠加（与淘汰策略正交）
     boolean hasExpiration =
@@ -477,30 +465,6 @@ public final class CacheBuilder<K, V> {
     }
 
     return cache;
-  }
-
-  /** 用 WeakKeyCache 包装底层缓存 */
-  @SuppressWarnings("unchecked")
-  private Cache<K, V> wrapWithWeakKeys(Cache<K, V> cache) {
-    WeakKeyCache<K, V> weakCache = new WeakKeyCache<>();
-    cache.forEach(weakCache::put);
-    return weakCache;
-  }
-
-  /** 用 WeakValueCache 包装底层缓存 */
-  @SuppressWarnings("unchecked")
-  private Cache<K, V> wrapWithWeakValues(Cache<K, V> cache) {
-    WeakValueCache<K, V> weakCache = new WeakValueCache<>();
-    cache.forEach(weakCache::put);
-    return weakCache;
-  }
-
-  /** 用 SoftValueCache 包装底层缓存 */
-  @SuppressWarnings("unchecked")
-  private Cache<K, V> wrapWithSoftValues(Cache<K, V> cache) {
-    SoftValueCache<K, V> softCache = new SoftValueCache<>();
-    cache.forEach(softCache::put);
-    return softCache;
   }
 
   public WTinyLFUCache<K, V> buildWTinyLFU() {
@@ -565,31 +529,23 @@ public final class CacheBuilder<K, V> {
   /**
    * 创建基础缓存实例
    *
+   * <p>如果设置了弱/软引用标志，优先创建引用缓存。 否则按 type 创建对应淘汰策略缓存。
+   * 过期策略不在本方法处理，由 build() 中的 ExpirableCache 装饰器叠加。
+   *
    * @return 基础缓存实例
    */
   private Cache<K, V> createBaseCache() {
     int effectiveSize = maximumSize > 0 ? (int) maximumSize : 1000;
 
-    boolean supportsExpire = (type == CacheType.TTL || type == CacheType.ENHANCED_LOADING);
-    if (!supportsExpire) {
-      if (expireAfterWriteDuration > 0) {
-        log.warn(
-            "缓存类型 {} 不支持 expireAfterWrite 配置，该参数将被忽略。"
-                + "如需过期策略，请使用 CacheType.TTL 或 CacheType.ENHANCED_LOADING",
-            type);
-      }
-      if (expireAfterAccessDuration > 0) {
-        log.warn(
-            "缓存类型 {} 不支持 expireAfterAccess 配置，该参数将被忽略。"
-                + "如需过期策略，请使用 CacheType.TTL 或 CacheType.ENHANCED_LOADING",
-            type);
-      }
-      if (refreshAfterWriteDuration > 0) {
-        log.warn(
-            "缓存类型 {} 不支持 refreshAfterWrite 配置，该参数将被忽略。"
-                + "如需自动刷新策略，请使用 CacheType.TTL 或 CacheType.ENHANCED_LOADING",
-            type);
-      }
+    // 引用缓存优先（如果设置了引用标志）
+    if (weakKeysFlag) {
+      return new WeakKeyCache<>();
+    }
+    if (weakValuesFlag) {
+      return new WeakValueCache<>();
+    }
+    if (softValuesFlag) {
+      return new SoftValueCache<>();
     }
 
     switch (type) {

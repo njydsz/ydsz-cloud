@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.util.config;
+package com.njydsz.pmis.common.util.config;
 
 import java.util.concurrent.TimeUnit;
 

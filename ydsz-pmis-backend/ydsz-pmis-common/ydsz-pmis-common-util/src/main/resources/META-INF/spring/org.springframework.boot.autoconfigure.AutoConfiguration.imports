@@ -1,3 +1,2 @@
 com.njydsz.pmis.common.util.config.UtilAutoConfiguration
 com.njydsz.pmis.common.util.id.SnowflakeAutoConfiguration
-com.njydsz.pmis.common.util.json.JsonMetricsConfiguration
