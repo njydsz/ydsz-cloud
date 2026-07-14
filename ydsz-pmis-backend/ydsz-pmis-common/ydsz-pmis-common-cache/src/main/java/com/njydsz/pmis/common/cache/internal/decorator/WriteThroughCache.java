@@ -121,6 +121,8 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
 
   @Override
   public void put(K key, V value) {
+    // Write-Through: 先写持久层，再写缓存
+    // 如果持久层写入失败，缓存不更新，保证一致性
     writer.write(key, value);
     delegate.put(key, value);
     writeCount.increment();
@@ -129,11 +131,17 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
   @Override
   public V remove(K key) {
     V value = delegate.getIfPresent(key);
-    delegate.remove(key);
+    // 先删除持久层，再删除缓存
+    // 如果持久层删除失败，缓存不删除，保证一致性
     if (value != null) {
       writer.delete(key, value);
+      delegate.remove(key);
       deleteCount.increment();
       notifyRemoval(key, value, RemovalCause.EXPLICIT);
+    } else {
+      // 缓存中不存在，仍尝试从持久层删除
+      writer.delete(key, null);
+      delegate.remove(key);
     }
     return value;
   }

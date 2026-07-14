@@ -60,9 +60,8 @@ import com.njydsz.pmis.common.json.writer.JSONWriter;
  *   <li>JIT 友好设计 - 便于 JVM 内联优化</li>
  * </ul>
  * 
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.3.0
  */
 public class YdszJson {
 
@@ -101,19 +100,25 @@ public class YdszJson {
     }
 
     private static <T> T recordSerialize(ThrowingSupplier<T> supplier) {
+        JsonMetricsCallback cb = metricsCallback;
+        if (cb == null) {
+            // 无监控回调时短路，避免 System.nanoTime() 和 lambda 捕获开销
+            try {
+                return supplier.get();
+            } catch (Exception e) {
+                if (e instanceof YdszJsonException) {
+                    throw (YdszJsonException) e;
+                }
+                throw new YdszJsonException("JSON serialize failed: " + e.getMessage(), e);
+            }
+        }
         long start = System.nanoTime();
         try {
             T result = supplier.get();
-            JsonMetricsCallback cb = metricsCallback;
-            if (cb != null) {
-                cb.onSerializeSuccess(System.nanoTime() - start);
-            }
+            cb.onSerializeSuccess(System.nanoTime() - start);
             return result;
         } catch (Exception e) {
-            JsonMetricsCallback cb = metricsCallback;
-            if (cb != null) {
-                cb.onSerializeFailure();
-            }
+            cb.onSerializeFailure();
             if (e instanceof YdszJsonException) {
                 throw (YdszJsonException) e;
             }
@@ -122,19 +127,25 @@ public class YdszJson {
     }
 
     private static <T> T recordDeserialize(ThrowingSupplier<T> supplier) {
+        JsonMetricsCallback cb = metricsCallback;
+        if (cb == null) {
+            // 无监控回调时短路，避免 System.nanoTime() 和 lambda 捕获开销
+            try {
+                return supplier.get();
+            } catch (Exception e) {
+                if (e instanceof YdszJsonException) {
+                    throw (YdszJsonException) e;
+                }
+                throw new YdszJsonException("JSON deserialize failed: " + e.getMessage(), e);
+            }
+        }
         long start = System.nanoTime();
         try {
             T result = supplier.get();
-            JsonMetricsCallback cb = metricsCallback;
-            if (cb != null) {
-                cb.onDeserializeSuccess(System.nanoTime() - start);
-            }
+            cb.onDeserializeSuccess(System.nanoTime() - start);
             return result;
         } catch (Exception e) {
-            JsonMetricsCallback cb = metricsCallback;
-            if (cb != null) {
-                cb.onDeserializeFailure();
-            }
+            cb.onDeserializeFailure();
             if (e instanceof YdszJsonException) {
                 throw (YdszJsonException) e;
             }
@@ -845,6 +856,144 @@ public class YdszJson {
             }
             return new LinkedHashMap<>();
         });
+    }
+
+    // ==================== 流式 API ====================
+
+    /**
+     * 将对象序列化为 JSON 并直接写入 OutputStream（UTF-8 编码）。
+     *
+     * <p>避免中间 String 分配，适用于大 JSON 输出场景。</p>
+     *
+     * @param obj 要序列化的对象
+     * @param out 输出流
+     * @since 1.4.0
+     */
+    public static void toJson(Object obj, java.io.OutputStream out) {
+        if (obj == null) {
+            try {
+                out.write("null".getBytes(StandardCharsets.UTF_8));
+            } catch (java.io.IOException e) {
+                throw new YdszJsonException("Failed to write to OutputStream", e);
+            }
+            return;
+        }
+        byte[] bytes = toJsonBytes(obj);
+        try {
+            out.write(bytes);
+        } catch (java.io.IOException e) {
+            throw new YdszJsonException("Failed to write to OutputStream", e);
+        }
+    }
+
+    /**
+     * 从 InputStream 读取 JSON 并反序列化为指定类型。
+     *
+     * <p>适用于大 JSON 输入场景，但仍需全量读入内存进行解析。</p>
+     *
+     * @param in 输入流
+     * @param clazz 目标类型
+     * @param <T> 类型参数
+     * @return 反序列化后的对象
+     * @since 1.4.0
+     */
+    public static <T> T toObject(java.io.InputStream in, Class<T> clazz) {
+        if (in == null) {
+            return null;
+        }
+        try {
+            byte[] bytes = in.readAllBytes();
+            if (bytes.length == 0) {
+                return null;
+            }
+            String json = new String(bytes, StandardCharsets.UTF_8);
+            return toObject(json, clazz);
+        } catch (java.io.IOException e) {
+            throw new YdszJsonException("Failed to read from InputStream", e);
+        }
+    }
+
+    /**
+     * 从 InputStream 读取 JSON 并反序列化为指定泛型类型。
+     *
+     * @param in 输入流
+     * @param typeRef 类型引用
+     * @param <T> 类型参数
+     * @return 反序列化后的对象
+     * @since 1.4.0
+     */
+    public static <T> T toObject(java.io.InputStream in, YdszJsonType<T> typeRef) {
+        if (in == null) {
+            return null;
+        }
+        try {
+            byte[] bytes = in.readAllBytes();
+            if (bytes.length == 0) {
+                return null;
+            }
+            String json = new String(bytes, StandardCharsets.UTF_8);
+            return toObject(json, typeRef);
+        } catch (java.io.IOException e) {
+            throw new YdszJsonException("Failed to read from InputStream", e);
+        }
+    }
+
+    // ==================== ASM 预热 ====================
+
+    /**
+     * 预热 ASM 序列化器/反序列化器。
+     *
+     * <p>在应用启动时调用，提前为指定类型生成 ASM 字节码，
+     * 避免首次请求时的延迟尖峰。</p>
+     *
+     * @param classes 需要预热的类型列表
+     * @since 1.4.0
+     */
+    public static void warmup(Class<?>... classes) {
+        if (classes == null || classes.length == 0) {
+            return;
+        }
+        for (Class<?> clazz : classes) {
+            if (clazz == null) {
+                continue;
+            }
+            try {
+                com.njydsz.pmis.common.json.cache.AsmCodecCache.getOrCreateSerializerForType(clazz);
+            } catch (Exception ignored) {
+                // 预热失败不影响启动
+            }
+        }
+    }
+
+    // ==================== 单次配置序列化 ====================
+
+    /**
+     * 使用指定配置序列化对象（不影响全局配置）。
+     *
+     * <p>创建临时配置快照，序列化完成后恢复原配置。
+     * 适用于需要为单次序列化指定不同配置的场景。</p>
+     *
+     * @param obj 要序列化的对象
+     * @param config 单次配置
+     * @return JSON 字符串
+     * @since 1.4.0
+     */
+    public static String toJson(Object obj, YdszJsonConfig config) {
+        if (obj == null) {
+            return null;
+        }
+        YdszJsonConfig globalConfig = YdszJsonConfig.getInstance();
+        // 保存当前全局配置快照
+        YdszJsonConfig snapshot = YdszJsonConfig.copyOf(globalConfig);
+        try {
+            // 应用临时配置
+            globalConfig.copyFrom(config).apply();
+            return toJson(obj);
+        } finally {
+            // 恢复原配置
+            globalConfig.copyFrom(snapshot);
+            snapshot.apply();
+        }
     }
 
     // ==================== 安全检查 ====================

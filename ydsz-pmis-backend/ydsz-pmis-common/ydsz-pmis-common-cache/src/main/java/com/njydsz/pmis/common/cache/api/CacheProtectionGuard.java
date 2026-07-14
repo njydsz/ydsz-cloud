@@ -1,6 +1,10 @@
 package com.njydsz.pmis.common.cache.api;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.CompletableFuture;
@@ -159,6 +163,66 @@ public final class CacheProtectionGuard {
   public static <K, V> V createNullPlaceholder(Cache<K, V> cache, K key) {
     NullValueGuard.registerNullKey(cache, key);
     return null;
+  }
+
+  /**
+   * 批量带防护的缓存获取（防穿透/击穿/雪崩）
+   *
+   * <p>对每个 key 独立应用防护逻辑，已缓存的 key 直接返回，未命中的 key 通过 loader 批量加载。
+   *
+   * @param cache 缓存实例
+   * @param keys 缓存键集合
+   * @param loader 批量加载器
+   * @param minExpireMs 空值占位符最小过期时间（毫秒）
+   * @param maxExpireMs 空值占位符最大过期时间（毫秒）
+   * @param <K> 键类型
+   * @param <V> 值类型
+   * @return 缓存值映射
+   */
+  public static <K, V> Map<K, V> getAllWithProtection(
+      Cache<K, V> cache,
+      Collection<K> keys,
+      Function<Collection<K>, Map<K, V>> loader,
+      long minExpireMs,
+      long maxExpireMs) {
+    if (keys == null || keys.isEmpty()) {
+      return Collections.emptyMap();
+    }
+    Map<K, V> result = new HashMap<>(keys.size());
+    List<K> missingKeys = new ArrayList<>();
+
+    // 先从缓存获取
+    for (K key : keys) {
+      V value = cache.getIfPresent(key);
+      if (value != null) {
+        result.put(key, value);
+      } else if (!NullValueGuard.isNullKeyRegistered(cache, key)) {
+        missingKeys.add(key);
+      }
+    }
+
+    // 批量加载缺失的 key
+    if (!missingKeys.isEmpty()) {
+      Map<K, V> loaded = loader.apply(missingKeys);
+      for (K key : missingKeys) {
+        V value = loaded != null ? loaded.get(key) : null;
+        if (value != null) {
+          cache.put(key, value);
+          result.put(key, value);
+        } else {
+          NullValueGuard.registerNullKey(cache, key);
+          if (maxExpireMs > 0) {
+            CacheProtectionGuard guard = forCache(cache);
+            long jitteredExpire =
+                minExpireMs > 0
+                    ? minExpireMs + ThreadLocalRandom.current().nextLong(maxExpireMs - minExpireMs + 1)
+                    : maxExpireMs;
+            guard.nullKeyExpirations.put(key, System.currentTimeMillis() + jitteredExpire);
+          }
+        }
+      }
+    }
+    return result;
   }
 
   /**

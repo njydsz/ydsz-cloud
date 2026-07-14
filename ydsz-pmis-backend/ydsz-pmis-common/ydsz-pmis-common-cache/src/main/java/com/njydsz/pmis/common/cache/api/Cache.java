@@ -211,6 +211,11 @@ public interface Cache<K, V> {
   /** 获取统计信息 */
   CacheStats getStats();
 
+  /** 重置统计计数器（命中/未命中归零） */
+  default void resetStats() {
+    // 默认空实现，由支持的缓存覆写
+  }
+
   /**
    * 获取缓存策略查询接口
    *

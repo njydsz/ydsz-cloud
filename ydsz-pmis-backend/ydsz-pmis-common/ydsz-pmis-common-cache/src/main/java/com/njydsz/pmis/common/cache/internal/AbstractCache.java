@@ -153,6 +153,12 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
     return new CacheStats(hitCount.sum(), missCount.sum());
   }
 
+  @Override
+  public void resetStats() {
+    hitCount.reset();
+    missCount.reset();
+  }
+
   /**
    * 获取缓存大小（估计值）。
    *

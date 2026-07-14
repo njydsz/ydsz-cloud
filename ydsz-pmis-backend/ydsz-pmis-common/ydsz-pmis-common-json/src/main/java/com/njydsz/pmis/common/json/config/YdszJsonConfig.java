@@ -73,6 +73,23 @@ public final class YdszJsonConfig implements Serializable {
     }
 
     /**
+     * 创建指定配置的不可变快照副本。
+     *
+     * <p>用于单次配置场景，不影响全局单例。</p>
+     *
+     * @param other 源配置
+     * @return 新的配置实例，包含与源配置相同的值
+     * @since 1.4.0
+     */
+    public static YdszJsonConfig copyOf(YdszJsonConfig other) {
+        YdszJsonConfig copy = new YdszJsonConfig();
+        if (other != null) {
+            copy.copyFrom(other);
+        }
+        return copy;
+    }
+
+    /**
      * 获取配置实例（单例）
      *
      * @return YdszJsonConfig 实例
