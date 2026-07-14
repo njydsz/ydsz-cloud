@@ -14,7 +14,7 @@ import org.springframework.web.client.RestClient;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 import com.njydsz.pmis.message.server.config.ChannelProperties;
@@ -103,7 +103,7 @@ public class WebhookChannel implements MessageChannel {
                     .toEntity(String.class);
             int statusCode = response.getStatusCode().value();
             if (response.getStatusCode().is2xxSuccessful()) {
-                String traceId = CHANNEL_TYPE + "-" + SnowflakeIdGenerator.nextTraceId();
+                String traceId = CHANNEL_TYPE + "-" + SnowflakeUtils.nextIdStr();
                 log.info("[WEBHOOK] 发送成功: url={} status={}", webhookUrl, statusCode);
                 return MessageResult.ok(CHANNEL_TYPE, traceId);
             }

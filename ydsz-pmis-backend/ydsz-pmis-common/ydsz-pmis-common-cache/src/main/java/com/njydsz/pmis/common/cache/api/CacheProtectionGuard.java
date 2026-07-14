@@ -59,9 +59,8 @@ public final class CacheProtectionGuard {
    * @return 对应的 CacheProtectionGuard 实例
    */
   private static CacheProtectionGuard forCache(Cache<?, ?> cache) {
-    synchronized (INSTANCES) {
-      return INSTANCES.computeIfAbsent(cache, c -> new CacheProtectionGuard());
-    }
+    // computeIfAbsent on synchronized WeakHashMap is thread-safe
+    return INSTANCES.computeIfAbsent(cache, c -> new CacheProtectionGuard());
   }
 
   /**

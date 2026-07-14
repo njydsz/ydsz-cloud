@@ -5,7 +5,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
 import com.njydsz.pmis.project.domain.enums.AlertSeverity;
 
@@ -100,7 +100,7 @@ public class UtilizationLowRule implements AlertRule {
         if (severity == null) return null;
         BigDecimal pct = util.multiply(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP);
         return AlertEventDTO.builder()
-                .eventId(SnowflakeIdGenerator.nextIdStr())
+                .eventId(SnowflakeUtils.nextIdStr())
                 .ruleCode(getCode())
                 .ruleName(getName())
                 .category(getCategory())

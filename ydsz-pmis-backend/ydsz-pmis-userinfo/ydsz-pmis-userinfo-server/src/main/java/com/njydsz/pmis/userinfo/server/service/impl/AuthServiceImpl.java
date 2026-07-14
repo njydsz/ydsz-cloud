@@ -17,8 +17,8 @@ import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.AccountLockedEvent;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.CryptoUtil;
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.common.util.id.TracerUtils;
+import com.njydsz.pmis.common.util.security.PwdUtils;
 import com.njydsz.pmis.userinfo.domain.dto.auth.CaptchaVO;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginContextDTO;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginDTO;
@@ -163,10 +163,10 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 5. 密码校验（兼容 BCrypt 与历史 MD5；MD5 校验通过后惰性升级为 BCrypt）
-        boolean oldHashWasBcrypt = CryptoUtil.isBCryptFormat(ctx.getPassword());
+        boolean oldHashWasBcrypt = PwdUtils.isBCryptFormat(ctx.getPassword());
         boolean passwordOk = oldHashWasBcrypt
-                ? CryptoUtil.verifyPasswordBCrypt(dto.getPassword(), ctx.getPassword())
-                : CryptoUtil.verifyPassword(dto.getPassword(), ctx.getPassword(), ctx.getSalt());
+                ? PwdUtils.verifyPasswordBCrypt(dto.getPassword(), ctx.getPassword())
+                : PwdUtils.verifyPasswordWithSha256Salt(dto.getPassword(), ctx.getPassword(), ctx.getSalt());
         if (!passwordOk) {
             recordLoginFailure(dto.getUsername());
             throw new SysException(BaseResultCode.PASSWORD_INCORRECT);
@@ -175,7 +175,7 @@ public class AuthServiceImpl implements AuthService {
         if (!oldHashWasBcrypt) {
             try {
                 userAccountService.upgradePasswordHash(ctx.getUserId(),
-                        CryptoUtil.hashPasswordBCrypt(dto.getPassword()));
+                        PwdUtils.hashPasswordBCrypt(dto.getPassword()));
             } catch (Exception ex) {
                 log.warn("[Auth] 密码哈希惰性升级失败 userId={} reason={}",
                         ctx.getUserId(), ex.getMessage());
@@ -450,7 +450,7 @@ public class AuthServiceImpl implements AuthService {
                         .lockedUntil(lockedUntil)
                         .failCount(count.intValue())
                         .lockMinutes((int) LOGIN_LOCK_MINUTES)
-                        .traceId(TraceIdUtil.get())
+                        .traceId(TracerUtils.getTraceId())
                         .tenantId(TenantContext.getTenantId())
                         .lockedAt(System.currentTimeMillis())
                         .build();

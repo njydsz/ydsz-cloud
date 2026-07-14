@@ -6,7 +6,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
 import com.njydsz.pmis.project.domain.enums.AlertSeverity;
 
@@ -79,7 +79,7 @@ public class EvmRedRule implements AlertRule {
         int red = toInt(raw);
         if (red < threshold) return null;
         return AlertEventDTO.builder()
-                .eventId(SnowflakeIdGenerator.nextIdStr())
+                .eventId(SnowflakeUtils.nextIdStr())
                 .ruleCode(getCode())
                 .ruleName(getName())
                 .category(getCategory())

@@ -45,7 +45,6 @@ import java.lang.reflect.Type;
  * </ol>
  *
  * @since 1.3.0
- * @since 1.3.0
  * @see Type
  * @see ParameterizedType
  */

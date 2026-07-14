@@ -31,7 +31,6 @@ import com.njydsz.pmis.common.json.parser.JsonParser;
  *
  * @see <a href="https://tools.ietf.org/html/rfc7396">RFC 7396</a>
  * @since 1.3.0
- * @since 1.3.0
  */
 public final class JsonMergePatch {
 

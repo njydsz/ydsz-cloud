@@ -4,16 +4,15 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * IdGenerator 工厂
+ * IdGenerator 工厂（已废弃）
  *
- * <p>业务方可通过 {@link #setDefault(IdGenerator)} 注入 ID 生成器。
- * 内部默认使用 {@link SnowflakeUtils} 单例。</p>
+ * <p>当前项目统一使用 {@link SnowflakeUtils}，此工厂无外部引用。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 3.5.0
+ * @deprecated 请直接使用 {@link SnowflakeUtils}
  */
+@Deprecated(since = "1.4.0", forRemoval = true)
 public final class IdGeneratorFactory {
 
     private static final AtomicReference<IdGenerator> DEFAULT = new AtomicReference<>(

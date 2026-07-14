@@ -16,8 +16,8 @@ import org.springframework.web.client.RestClient;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.CryptoSignUtil;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.security.DigestUtils;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 import com.njydsz.pmis.message.server.config.ChannelProperties;
@@ -116,7 +116,7 @@ public class DingTalkChannel implements MessageChannel {
                     .body(Json.toJson(payload))
                     .retrieve()
                     .toEntity(String.class);
-            String traceId = CHANNEL_TYPE + "-" + SnowflakeIdGenerator.nextTraceId();
+            String traceId = CHANNEL_TYPE + "-" + SnowflakeUtils.nextIdStr();
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Map<String, Object> body = Json.parseMap(response.getBody());
@@ -219,7 +219,7 @@ public class DingTalkChannel implements MessageChannel {
             long timestamp = System.currentTimeMillis();
             String stringToSign = timestamp + "\n" + secret;
             String sign = URLEncoder.encode(
-                    CryptoSignUtil.hmacSha256Base64(stringToSign, secret),
+                    DigestUtils.hmacSha256Base64(stringToSign, secret),
                     StandardCharsets.UTF_8);
             return url + "&timestamp=" + timestamp + "&sign=" + sign;
         } catch (Exception e) {

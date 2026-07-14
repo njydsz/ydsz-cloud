@@ -23,6 +23,15 @@ import com.njydsz.pmis.common.cache.support.TTLMode;
 /**
  * TTL（Time To Live）缓存实现 - 支持过期时间的缓存
  *
+ * @deprecated 使用 {@link com.njydsz.pmis.common.cache.internal.decorator.ExpirableCache} 装饰器替代。
+ *     通过 {@code builder.expireAfterWrite(duration, unit)} 配置过期策略，叠加在任意淘汰策略缓存上。
+ *     <pre>{@code
+ *     Cache<String, V> cache = YdszCache.newBuilder()
+ *         .maximumSize(1000)
+ *         .expireAfterWrite(5, TimeUnit.MINUTES)
+ *         .build();
+ *     }</pre>
+ *
  * <p>核心特性：
  *
  * <ul>
@@ -64,6 +73,7 @@ import com.njydsz.pmis.common.cache.support.TTLMode;
  * @since 1.0.0
  * 
  */
+@Deprecated
 public class TTLCache<K, V> extends AbstractCache<K, V> implements AutoCloseable {
 
   /** 日志记录器 */

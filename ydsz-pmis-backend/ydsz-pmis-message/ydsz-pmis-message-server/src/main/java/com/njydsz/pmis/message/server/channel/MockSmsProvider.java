@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
 
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ public class MockSmsProvider implements SmsProvider {
 
     @Override
     public MessageResult send(MessageRequest request, MsgTemplateDO template) {
-        String traceId = "MOCK-SMS-" + SnowflakeIdGenerator.nextTraceId();
+        String traceId = "MOCK-SMS-" + SnowflakeUtils.nextIdStr();
         log.info("[SMS-MOCK] 发送短信 receiver={} template={} content={}",
                 request.getReceiver(), request.getTemplateCode(), request.getContent());
         return MessageResult.ok("SMS", traceId);

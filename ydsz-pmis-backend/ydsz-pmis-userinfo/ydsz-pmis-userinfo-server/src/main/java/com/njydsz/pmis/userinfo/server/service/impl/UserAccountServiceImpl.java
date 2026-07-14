@@ -32,8 +32,8 @@ import com.njydsz.pmis.common.security.LoginStatus;
 import com.njydsz.pmis.common.security.PasswordPolicy;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.security.TotpUtil;
-import com.njydsz.pmis.common.util.CryptoUtil;
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.common.util.security.PwdUtils;
+import com.njydsz.pmis.common.util.id.TracerUtils;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginRequest;
 import com.njydsz.pmis.userinfo.domain.dto.auth.LoginResult;
 import com.njydsz.pmis.userinfo.domain.dto.user.UserQueryDTO;
@@ -212,7 +212,7 @@ public class UserAccountServiceImpl implements UserAccountService {
             throw new SysException(BaseResultCode.PASSWORD_WEAK, r.firstError());
         }
         // BCrypt 哈希存储在 password 字段，salt 字段留空（BCrypt 自带盐）
-        user.setPassword(CryptoUtil.hashPasswordBCrypt(rawPassword));
+        user.setPassword(PwdUtils.hashPasswordBCrypt(rawPassword));
         user.setSalt("");
         if (user.getStatus() == null) user.setStatus("ENABLED");
         user.setLoginFailCount(0);
@@ -281,7 +281,7 @@ public class UserAccountServiceImpl implements UserAccountService {
             throw new SysException(BaseResultCode.PASSWORD_WEAK, r.firstError());
         }
         // BCrypt 哈希存储在 password 字段，salt 字段留空（BCrypt 自带盐）
-        u.setPassword(CryptoUtil.hashPasswordBCrypt(newPassword));
+        u.setPassword(PwdUtils.hashPasswordBCrypt(newPassword));
         u.setSalt("");
         u.setLoginFailCount(0);
         u.setLockedUntil(null);
@@ -353,10 +353,10 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
 
         // 兼容 BCrypt 与历史 MD5：BCrypt 格式用 BCrypt 校验；MD5 校验通过后惰性升级为 BCrypt
-        boolean oldHashWasBcrypt = CryptoUtil.isBCryptFormat(u.getPassword());
+        boolean oldHashWasBcrypt = PwdUtils.isBCryptFormat(u.getPassword());
         boolean passwordOk = oldHashWasBcrypt
-                ? CryptoUtil.verifyPasswordBCrypt(request.getPassword(), u.getPassword())
-                : CryptoUtil.verifyPassword(request.getPassword(), u.getPassword(), u.getSalt());
+                ? PwdUtils.verifyPasswordBCrypt(request.getPassword(), u.getPassword())
+                : PwdUtils.verifyPasswordWithSha256Salt(request.getPassword(), u.getPassword(), u.getSalt());
         if (!passwordOk) {
             handleLoginFailure(u, "密码错误");
             throw new SysException(BaseResultCode.PASSWORD_INCORRECT);
@@ -364,7 +364,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         // 惰性升级：历史 MD5 密码登录成功后升级为 BCrypt（失败不影响登录流程）
         if (!oldHashWasBcrypt) {
             try {
-                upgradePasswordHash(u.getId(), CryptoUtil.hashPasswordBCrypt(request.getPassword()));
+                upgradePasswordHash(u.getId(), PwdUtils.hashPasswordBCrypt(request.getPassword()));
             } catch (Exception ex) {
                 log.warn("[User] 密码哈希惰性升级失败 userId={} reason={}", u.getId(), ex.getMessage());
             }
@@ -428,10 +428,10 @@ public class UserAccountServiceImpl implements UserAccountService {
             throw new SysException(BaseResultCode.USER_NOT_FOUND);
         }
         // 兼容 BCrypt 与历史 MD5：BCrypt 格式用 BCrypt 校验，否则用 MD5 校验
-        boolean oldHashWasBcrypt = CryptoUtil.isBCryptFormat(u.getPassword());
+        boolean oldHashWasBcrypt = PwdUtils.isBCryptFormat(u.getPassword());
         boolean oldPasswordOk = oldHashWasBcrypt
-                ? CryptoUtil.verifyPasswordBCrypt(oldPassword, u.getPassword())
-                : CryptoUtil.verifyPassword(oldPassword, u.getPassword(), u.getSalt());
+                ? PwdUtils.verifyPasswordBCrypt(oldPassword, u.getPassword())
+                : PwdUtils.verifyPasswordWithSha256Salt(oldPassword, u.getPassword(), u.getSalt());
         if (!oldPasswordOk) {
             throw new SysException(BaseResultCode.PASSWORD_INCORRECT, "error.user.msg_25562cd3");
         }
@@ -443,7 +443,7 @@ public class UserAccountServiceImpl implements UserAccountService {
             // 强制改密场景下直接放行
         }
         // 新密码统一使用 BCrypt 哈希（自带盐，salt 字段留空）
-        u.setPassword(CryptoUtil.hashPasswordBCrypt(newPassword));
+        u.setPassword(PwdUtils.hashPasswordBCrypt(newPassword));
         u.setSalt("");
         u.setLastPwdChangeAt(LocalDateTime.now());
         u.setPwdChangeCount((u.getPwdChangeCount() == null ? 0 : u.getPwdChangeCount()) + 1);
@@ -455,7 +455,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void upgradePasswordHash(String userId, String bcryptHash) {
-        if (userId == null || !CryptoUtil.isBCryptFormat(bcryptHash)) {
+        if (userId == null || !PwdUtils.isBCryptFormat(bcryptHash)) {
             log.warn("[User] 跳过密码哈希升级：参数非法 userId={} format={}",
                     userId, bcryptHash == null ? "null" : "invalid");
             return;
@@ -465,7 +465,7 @@ public class UserAccountServiceImpl implements UserAccountService {
             return;
         }
         // 仅当当前密码非 BCrypt 格式时才升级，避免重复覆盖
-        if (CryptoUtil.isBCryptFormat(u.getPassword())) {
+        if (PwdUtils.isBCryptFormat(u.getPassword())) {
             return;
         }
         u.setPassword(bcryptHash);
@@ -629,7 +629,7 @@ public class UserAccountServiceImpl implements UserAccountService {
                     .failReason(reason)
                     .mfaUsed(mfaUsed)
                     .mfaSuccess(mfaSuccess)
-                    .traceId(TraceIdUtil.get())
+                    .traceId(TracerUtils.getTraceId())
                     .tenantId(TenantContext.getTenantId())
                     .loginAt(System.currentTimeMillis())
                     .build();

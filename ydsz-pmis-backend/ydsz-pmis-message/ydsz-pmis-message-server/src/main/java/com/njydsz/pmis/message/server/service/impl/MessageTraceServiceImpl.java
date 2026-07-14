@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.common.util.id.TracerUtils;
 import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.message.domain.entity.config.MsgTraceDO;
 import com.njydsz.pmis.message.domain.entity.config.MsgTraceDO.Node;
@@ -47,7 +47,7 @@ public class MessageTraceServiceImpl implements MessageTraceService {
         try {
             MsgTraceDO trace = new MsgTraceDO();
             trace.setMsgId(msgId);
-            trace.setTraceId(TraceIdUtil.getOrCreate());
+            trace.setTraceId(TracerUtils.getOrCreateTraceId());
             trace.setNode(node.name());
             trace.setStatus(status == null ? "SUCCESS" : status);
             trace.setChannel(channel);

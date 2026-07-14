@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.OptionalLong;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,7 @@ public class CacheHealthIndicator {
   /** 告警阈值：容量使用率高于此值时状态为 WARN */
   private static final double CAPACITY_WARN_THRESHOLD = 0.9;
 
-  private final Map<String, Cache<?, ?>> monitoredCaches = new LinkedHashMap<>();
+  private final Map<String, Cache<?, ?>> monitoredCaches = new ConcurrentHashMap<>();
 
   /**
    * 注册需监控的缓存实例

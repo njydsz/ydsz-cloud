@@ -14,7 +14,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.message.domain.dto.core.OrchestrationFlowDTO;
 import com.njydsz.pmis.message.domain.dto.core.OrchestrationNodeDTO;
 import com.njydsz.pmis.message.domain.dto.core.OrchestrationResultVO;
@@ -58,7 +58,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
             return new OrchestrationResultVO(null, "FAILED", 0, 0, 0, 0, Map.of(), "流程或节点为空");
         }
         String flowId = StringUtils.hasText(flow.getFlowId())
-                ? flow.getFlowId() : SnowflakeIdGenerator.nextIdStr();
+                ? flow.getFlowId() : SnowflakeUtils.nextIdStr();
         log.info("[Orchestration] 流程开始: flowId={} nodes={}", flowId, flow.getNodes().size());
 
         // DAG 校验
@@ -146,7 +146,7 @@ public class OrchestrationServiceImpl implements OrchestrationService {
                 request.setParams(node.getParams());
                 request.setBizType(flow.getBizType());
                 request.setBizId(flow.getBizId());
-                request.setMessageId(SnowflakeIdGenerator.nextIdStr());
+                request.setMessageId(SnowflakeUtils.nextIdStr());
                 MessageResult result = messageService.send(request);
                 if (result != null && result.isSuccess()) {
                     nodeResults.put(node.getNodeId(), "SUCCESS: " + result.getProviderTraceId());

@@ -18,7 +18,7 @@ import org.springframework.web.client.RestTemplate;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 import com.njydsz.pmis.message.server.config.MessageProperties;
 
@@ -107,7 +107,7 @@ public class WxMiniChannel implements MessageChannel {
             Map<?, ?> resultBody = resp.getBody();
 
             if (resultBody != null && Integer.valueOf(0).equals(resultBody.get("errcode"))) {
-                String traceId = "WX_MINI-" + SnowflakeIdGenerator.nextTraceId();
+                String traceId = "WX_MINI-" + SnowflakeUtils.nextIdStr();
                 log.info("[WxMiniChannel] 发送成功: receiver={} template={}",
                         request.getReceiver(), request.getTemplateCode());
                 return MessageResult.ok(CHANNEL_TYPE, traceId);
@@ -177,7 +177,7 @@ public class WxMiniChannel implements MessageChannel {
      * Mock 发送（开发环境降级）。
      */
     private MessageResult mockSend(MessageRequest request) {
-        String traceId = "WX_MINI-MOCK-" + SnowflakeIdGenerator.nextTraceId();
+        String traceId = "WX_MINI-MOCK-" + SnowflakeUtils.nextIdStr();
         log.info("[WxMiniChannel][MOCK] 模拟发送: receiver={} template={} content={}",
                 request.getReceiver(), request.getTemplateCode(), request.getContent());
         return MessageResult.ok(CHANNEL_TYPE, traceId);

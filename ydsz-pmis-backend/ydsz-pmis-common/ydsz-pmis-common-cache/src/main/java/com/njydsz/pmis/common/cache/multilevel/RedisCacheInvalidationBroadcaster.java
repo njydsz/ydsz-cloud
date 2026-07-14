@@ -202,8 +202,19 @@ public class RedisCacheInvalidationBroadcaster implements CacheInvalidationBroad
   private void removeKeyFromCache(Cache<?, ?> cache, Object key) {
     // 广播消息中的 key 始终为 String（由 toString() 生成）。
     // 由于类型擦除，Cache.remove 在运行时接受 Object。
-    // 使用原始类型绕过编译期泛型检查，运行时类型安全由缓存实现保证。
-    Cache rawCache = cache;
-    rawCache.remove(key);
+    // 通过泛型捕获转换安全调用，运行时类型安全由缓存实现保证。
+    if (key != null) {
+      removeCaptured(cache, key);
+    }
+  }
+
+  /**
+   * 泛型捕获辅助方法
+   *
+   * <p>利用编译器的通配类型捕获机制，将 {@code Cache<?, ?>} 捕获为 {@code Cache<KK, VV>}， 然后在方法签名内安全地接受 Object 参数。由于类型擦除，运行时 remove
+   * 接受任意类型。
+   */
+  private <KK, VV> void removeCaptured(Cache<KK, VV> cache, Object key) {
+    cache.remove((KK) key);
   }
 }

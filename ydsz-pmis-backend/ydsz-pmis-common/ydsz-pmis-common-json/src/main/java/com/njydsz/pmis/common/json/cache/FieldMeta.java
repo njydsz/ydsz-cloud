@@ -13,10 +13,13 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Map;
 
 import com.njydsz.pmis.common.json.annotation.JsonAlias;
 import com.njydsz.pmis.common.json.annotation.JsonField;
+import com.njydsz.pmis.common.json.annotation.JsonInclude;
 
 /**
  * 字段元数据（用于缓存字段信息，MethodHandle 优化）
@@ -44,7 +47,6 @@ import com.njydsz.pmis.common.json.annotation.JsonField;
  *   <li>命令模式 - 自定义序列化/反序列化方法</li>
  * </ul>
  *
- * @since 1.3.0
  * @since 1.3.0
  */
 public final class FieldMeta {
@@ -111,6 +113,9 @@ public final class FieldMeta {
 
     /** 反序列化别名列表（来自 @JsonAlias 注解） */
     public final String[] aliases;
+
+    /** 包含策略（来自 @JsonInclude 注解，默认 ALWAYS） */
+    public final JsonInclude.Include includeStrategy;
 
     /** 自定义序列化方法名 */
     public final String serializeUsing;
@@ -196,6 +201,13 @@ public final class FieldMeta {
         // 加载 @JsonAlias 别名列表
         JsonAlias aliasAnnotation = field.getAnnotation(JsonAlias.class);
         this.aliases = aliasAnnotation != null ? aliasAnnotation.value() : new String[0];
+
+        // 加载 @JsonInclude 包含策略
+        JsonInclude includeAnnotation = field.getAnnotation(JsonInclude.class);
+        if (includeAnnotation == null) {
+            includeAnnotation = field.getDeclaringClass().getAnnotation(JsonInclude.class);
+        }
+        this.includeStrategy = includeAnnotation != null ? includeAnnotation.value() : JsonInclude.Include.ALWAYS;
 
         field.setAccessible(true);
 
@@ -533,7 +545,40 @@ public final class FieldMeta {
      * 检查是否应该跳过（null值且不输出null）
      */
     public boolean shouldSkipNull(Object value) {
-        return value == null && !writeNull && !notWriteNullValue;
+        if (value == null) {
+            return !writeNull && !notWriteNullValue
+                    && includeStrategy != JsonInclude.Include.ALWAYS;
+        }
+        return false;
+    }
+
+    /**
+     * 检查是否应该跳过值（根据 @JsonInclude 策略）。
+     *
+     * @param value 字段值
+     * @return true 表示应该跳过
+     */
+    public boolean shouldSkipValue(Object value) {
+        if (value == null) {
+            return includeStrategy == JsonInclude.Include.NON_NULL
+                    || includeStrategy == JsonInclude.Include.NON_EMPTY
+                    || includeStrategy == JsonInclude.Include.NON_DEFAULT;
+        }
+        switch (includeStrategy) {
+            case NON_EMPTY:
+                if (value instanceof String s) return s.isEmpty();
+                if (value instanceof Collection<?> c) return c.isEmpty();
+                if (value instanceof Map<?, ?> m) return m.isEmpty();
+                if (value.getClass().isArray()) return java.lang.reflect.Array.getLength(value) == 0;
+                break;
+            case NON_DEFAULT:
+                if (value instanceof Number n && n.doubleValue() == 0.0) return true;
+                if (value instanceof Boolean b && !b) return true;
+                break;
+            default:
+                break;
+        }
+        return false;
     }
 
     /**

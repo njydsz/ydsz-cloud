@@ -13,7 +13,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.pmis.common.constant.PmisMessageTopics;
 import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.message.server.util.MessageCompressor;
 
@@ -111,7 +111,7 @@ public class RocketMQMessageProducer implements MessageQueueOperations {
 
     private void ensureMessageId(MessageRequest req) {
         if (!StringUtils.hasText(req.getMessageId())) {
-            req.setMessageId(SnowflakeIdGenerator.nextIdStr());
+            req.setMessageId(SnowflakeUtils.nextIdStr());
         }
     }
 

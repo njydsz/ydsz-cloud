@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.message.domain.dto.core.NotificationSendDTO;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 import com.njydsz.pmis.message.server.service.core.NotificationService;
@@ -56,7 +56,7 @@ public class InAppChannel implements MessageChannel {
         if (request.getReceiver() == null || request.getReceiver().isBlank()) {
             return MessageResult.fail(CHANNEL_TYPE, "站内信接收人不能为空");
         }
-        String traceId = "INAPP-" + SnowflakeIdGenerator.nextTraceId();
+        String traceId = "INAPP-" + SnowflakeUtils.nextIdStr();
         try {
             NotificationSendDTO dto = buildNotificationDTO(request);
             int count = notificationService.send(dto);

@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.userinfo.domain.entity.user.UserSessionDO;
 import com.njydsz.pmis.userinfo.infra.mapper.user.UserSessionMapper;
 import com.njydsz.pmis.userinfo.server.service.auth.SessionService;
@@ -42,7 +42,7 @@ public class SessionServiceImpl implements SessionService {
 
         UserSessionDO s = new UserSessionDO();
         s.setUserId(userId);
-        s.setSessionId(SnowflakeIdGenerator.nextIdStr());
+        s.setSessionId(SnowflakeUtils.nextIdStr());
         s.setLoginAt(LocalDateTime.now());
         s.setLastActiveAt(LocalDateTime.now());
         s.setExpireAt(LocalDateTime.now().plusSeconds(expireSeconds));

@@ -654,6 +654,14 @@ public final class CacheBuilder<K, V> {
     return cache;
   }
 
+  /**
+   * 构建 WTinyLFU 缓存实例
+   *
+   * @deprecated 使用 {@link #build()} 配合默认的 TINYLFU 类型替代。此方法不应用装饰器、不校验参数，
+   *     建议使用 {@code YdszCache.newBuilder().type(CacheType.TINYLFU).maximumSize(n).build()}。
+   * @return WTinyLFU 缓存实例
+   */
+  @Deprecated
   public WTinyLFUCache<K, V> buildWTinyLFU() {
     int effectiveSize = maximumSize > 0 ? (int) maximumSize : 1000;
     WTinyLFUCache<K, V> cache = new WTinyLFUCache<>(effectiveSize);
@@ -708,6 +716,11 @@ public final class CacheBuilder<K, V> {
       throw new IllegalArgumentException("initialCapacity must be >= 0");
     }
     // 不允许同时设置 expireAfterWrite 和 expireAfterAccess（避免混淆）
+    if (expireAfterWriteDuration > 0 && expireAfterAccessDuration > 0) {
+      throw new IllegalArgumentException(
+          "Cannot set expireAfterWrite and expireAfterAccess simultaneously. "
+              + "Use only one expiration strategy, or use expireAfter(Expiry) for custom per-entry expiry.");
+    }
     if (expireAfterWriteDuration > 0 && expireAfterAccessDuration > 0 && expiry != null) {
       throw new IllegalArgumentException(
           "Cannot set expireAfterWrite, expireAfterAccess, and expiry simultaneously. "
@@ -792,35 +805,14 @@ public final class CacheBuilder<K, V> {
         }
 
       case TTL:
-        if (expireAfterWriteDuration > 0) {
-          return TTLCache.create(
-              expireAfterWriteDuration,
-              expireAfterWriteUnit,
-              TTLMode.WRITE,
-              recordStats,
-              true,
-              60,
-              refreshAfterWriteDuration > 0
-                  ? refreshAfterWriteUnit.toMillis(refreshAfterWriteDuration)
-                  : 0,
-              loader,
-              taskExecutor != null ? taskExecutor : listenerExecutor);
-        } else if (expireAfterAccessDuration > 0) {
-          return TTLCache.create(
-              expireAfterAccessDuration,
-              expireAfterAccessUnit,
-              TTLMode.ACCESS,
-              recordStats,
-              true,
-              60,
-              refreshAfterWriteDuration > 0
-                  ? refreshAfterWriteUnit.toMillis(refreshAfterWriteDuration)
-                  : 0,
-              loader,
-              taskExecutor != null ? taskExecutor : listenerExecutor);
-        } else {
-          return TTLCache.create(5, TimeUnit.MINUTES, TTLMode.WRITE);
+        // Deprecated: 重定向到 CONCURRENT + ExpirableCache 装饰器
+        // TTLCache 已废弃，使用 ExpirableCache 装饰器替代
+        // 如果未设置过期时间，默认 5 分钟 expireAfterWrite
+        if (expireAfterWriteDuration <= 0 && expireAfterAccessDuration <= 0) {
+          expireAfterWriteDuration = 5;
+          expireAfterWriteUnit = TimeUnit.MINUTES;
         }
+        return new ConcurrentCache<>(initialCapacity);
 
       case WEIGHTED:
         if (weigher == null) {

@@ -37,19 +37,39 @@ public enum CacheType {
   /** LFU（最不经常使用）缓存 适用场景：访问频率稳定的数据 */
   LFU,
 
-  /** TTL（基于过期时间）缓存 适用场景：需要精确控制过期时间的数据 */
+  /**
+   * TTL（基于过期时间）缓存
+   *
+   * @deprecated 使用 {@link #TINYLFU} 或 {@link #LRU} 配合 {@code expireAfterWrite} / {@code expireAfterAccess} 装饰器替代。
+   */
+  @Deprecated
   TTL,
 
   /** 基于权重的缓存 适用场景：内存敏感场景，按对象大小淘汰 */
   WEIGHTED,
 
-  /** 弱引用键缓存 适用场景：键对象可能被外部回收的场景 */
+  /**
+   * 弱引用键缓存
+   *
+   * @deprecated 使用 {@code builder.weakKeys()} 替代。
+   */
+  @Deprecated
   WEAK_KEY,
 
-  /** 弱引用值缓存 适用场景：值对象可能被 GC 回收的场景 */
+  /**
+   * 弱引用值缓存
+   *
+   * @deprecated 使用 {@code builder.weakValues()} 替代。
+   */
+  @Deprecated
   WEAK_VALUE,
 
-  /** 软引用值缓存 适用场景：值对象在内存不足时可被回收的场景 */
+  /**
+   * 软引用值缓存
+   *
+   * @deprecated 使用 {@code builder.softValues()} 替代。
+   */
+  @Deprecated
   SOFT_VALUE,
 
   /** 并发安全的 ConcurrentHashMap 缓存 适用场景：中等并发场景 */

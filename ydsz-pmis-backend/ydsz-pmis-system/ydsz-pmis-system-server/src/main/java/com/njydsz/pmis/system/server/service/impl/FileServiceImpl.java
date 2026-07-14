@@ -18,7 +18,7 @@ import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.file.config.MinioConfig;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.system.domain.dto.file.FileUploadDTO;
 import com.njydsz.pmis.system.domain.entity.file.FileDO;
 import com.njydsz.pmis.system.infra.mapper.file.FileMapper;
@@ -117,7 +117,7 @@ public class FileServiceImpl implements FileService {
         LocalDateTime now = LocalDateTime.now();
         String key = String.format("%04d%02d/%02d/%s-%s",
                 now.getYear(), now.getMonthValue(), now.getDayOfMonth(),
-                SnowflakeIdGenerator.nextIdStr().substring(0, 12),
+                SnowflakeUtils.nextIdStr().substring(0, 12),
                 sanitizeName(originalName));
 
         // 上传

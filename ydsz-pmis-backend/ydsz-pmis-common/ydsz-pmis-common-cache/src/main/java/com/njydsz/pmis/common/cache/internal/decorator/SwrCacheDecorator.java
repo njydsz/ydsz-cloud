@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -68,10 +68,10 @@ public class SwrCacheDecorator<K, V> implements Cache<K, V> {
       new ConcurrentHashMap<>();
 
   /** SWR 统计：陈旧返回次数 */
-  private final AtomicLong staleReturnCount = new AtomicLong(0);
+  private final LongAdder staleReturnCount = new LongAdder();
 
   /** SWR 统计：异步刷新触发次数 */
-  private final AtomicLong refreshTriggerCount = new AtomicLong(0);
+  private final LongAdder refreshTriggerCount = new LongAdder();
 
   /**
    * 创建 SWR 缓存装饰器
@@ -115,7 +115,7 @@ public class SwrCacheDecorator<K, V> implements Cache<K, V> {
       return value;
     } else if (elapsed < freshPeriodNanos + stalePeriodNanos) {
       // 陈旧期内，返回旧值 + 异步刷新
-      staleReturnCount.incrementAndGet();
+      staleReturnCount.increment();
       triggerAsyncRefresh(key);
       return value;
     } else {
@@ -143,7 +143,7 @@ public class SwrCacheDecorator<K, V> implements Cache<K, V> {
     refreshingKeys.computeIfAbsent(
         key,
         k -> {
-          refreshTriggerCount.incrementAndGet();
+          refreshTriggerCount.increment();
           return CompletableFuture.runAsync(
                   () -> {
                     try {
@@ -182,12 +182,12 @@ public class SwrCacheDecorator<K, V> implements Cache<K, V> {
 
   /** 获取陈旧返回次数 */
   public long getStaleReturnCount() {
-    return staleReturnCount.get();
+    return staleReturnCount.sum();
   }
 
   /** 获取刷新触发次数 */
   public long getRefreshTriggerCount() {
-    return refreshTriggerCount.get();
+    return refreshTriggerCount.sum();
   }
 
   // === 以下方法直接委托给底层缓存 ===

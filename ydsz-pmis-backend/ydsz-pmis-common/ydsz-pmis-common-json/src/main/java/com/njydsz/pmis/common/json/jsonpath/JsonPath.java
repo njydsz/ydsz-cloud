@@ -18,7 +18,6 @@ import com.njydsz.pmis.common.json.Json;
  * 7. 条件表达式：$.items[?(@.age >= 18 && @.status == 'active')]
  *
  * @since 1.3.0
- * @since 1.3.0
  */
 public class JsonPath {
 

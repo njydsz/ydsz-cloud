@@ -9,6 +9,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
+import java.util.UUID;
 
 import com.njydsz.pmis.common.json.annotation.JsonClass;
 import com.njydsz.pmis.common.json.annotation.JsonView;
@@ -56,6 +57,8 @@ public final class ValueWriter {
     static final byte TYPE_CODE_BIGDECIMAL = 14;
     static final byte TYPE_CODE_BIGINTEGER = 15;
     static final byte TYPE_CODE_BEAN = 16;
+    static final byte TYPE_CODE_OPTIONAL = 17;
+    static final byte TYPE_CODE_UUID = 18;
 
     /** 类型代码缓存（Class -> 类型代码） */
     static final ConcurrentHashMap<Class<?>, Byte> TYPE_CODE_CACHE = new ConcurrentHashMap<>(256);
@@ -90,6 +93,7 @@ public final class ValueWriter {
         TYPE_CODE_CACHE.put(java.sql.Timestamp.class, TYPE_CODE_DATE);
         TYPE_CODE_CACHE.put(BigDecimal.class, TYPE_CODE_BIGDECIMAL);
         TYPE_CODE_CACHE.put(BigInteger.class, TYPE_CODE_BIGINTEGER);
+        TYPE_CODE_CACHE.put(UUID.class, TYPE_CODE_UUID);
     }
 
     private ValueWriter() {
@@ -178,8 +182,19 @@ public final class ValueWriter {
             case TYPE_CODE_BIGINTEGER:
                 sb.append(((BigInteger) obj).toString());
                 break;
+            case TYPE_CODE_UUID:
+                writeString(obj.toString(), sb);
+                break;
             default:
-                writeBeanWithCycleDetection(obj, sb);
+                if (obj instanceof Optional<?> optional) {
+                    if (optional.isPresent()) {
+                        writeValue(optional.get(), sb);
+                    } else {
+                        sb.append("null");
+                    }
+                } else {
+                    writeBeanWithCycleDetection(obj, sb);
+                }
         }
     }
 
@@ -694,82 +709,6 @@ public final class ValueWriter {
     }
 
     /**
-     * Bean 无注解快速路径（超优化版本 - 使用 Fast 方法减少方法调用）
-     *
-     * <p>预留方法：保留用于框架扩展或特殊场景使用
-     */
-    public static void writeBeanNoAnnotation(Object obj, StringBuilder sb, Class<?> clazz, FieldMeta[] fields) {
-        sb.append('{');
-        boolean first = true;
-
-        for (FieldMeta field : fields) {
-            if (field.shouldSkip()) {
-                continue;
-            }
-
-            int typeCode = field.serializeTypeCode;
-
-            switch (typeCode) {
-                case 1:  // String
-                    String strVal = field.getStringValueFast(obj);
-                    if (strVal != null) {
-                        if (!first) sb.append(',');
-                        first = false;
-                        sb.append(field.jsonKey);
-                        writeStringInline(strVal, sb);
-                    }
-                    break;
-                case 2:  // int/Integer
-                    int intVal = field.getIntValueFast(obj);
-                    if (intVal != 0 || field.type == int.class) {
-                        if (!first) sb.append(',');
-                        first = false;
-                        sb.append(field.jsonKey);
-                        sb.append(intVal);
-                    }
-                    break;
-                case 3:  // long/Long
-                    long longVal = field.getLongValueFast(obj);
-                    if (longVal != 0L || field.type == long.class) {
-                        if (!first) sb.append(',');
-                        first = false;
-                        sb.append(field.jsonKey);
-                        sb.append(longVal);
-                    }
-                    break;
-                case 4:  // double/Double
-                    double doubleVal = field.getDoubleValueFast(obj);
-                    if (doubleVal != 0.0 || field.type == double.class) {
-                        if (!first) sb.append(',');
-                        first = false;
-                        sb.append(field.jsonKey);
-                        sb.append(doubleVal);
-                    }
-                    break;
-                case 6:  // boolean/Boolean
-                    boolean boolVal = field.getBooleanValueFast(obj);
-                    if (!first) sb.append(',');
-                    first = false;
-                    sb.append(field.jsonKey);
-                    sb.append(boolVal ? "true" : "false");
-                    break;
-                default:
-                    Object value = field.getValue(obj);
-                    if (value == null) {
-                        break;
-                    }
-                    if (!first) sb.append(',');
-                    first = false;
-                    sb.append(field.jsonKey);
-                    writeValueByTypeCodeFast(value, sb, (byte) typeCode);
-                    break;
-            }
-        }
-
-        sb.append('}');
-    }
-
-    /**
      * 根据类型代码快速写入值（FastJSON2 架构 - 处理所有类型包括 Bean/List/Map）
      *
      * @param value 值
@@ -821,8 +760,19 @@ public final class ValueWriter {
             case TYPE_CODE_BIGINTEGER:
                 sb.append(((BigInteger) value).toString());
                 break;
+            case TYPE_CODE_UUID:
+                writeString(value.toString(), sb);
+                break;
             default:
-                writeBeanWithCycleDetection(value, sb);
+                if (value instanceof Optional<?> optional) {
+                    if (optional.isPresent()) {
+                        writeValueByTypeCodeFast(optional.get(), sb, getTypeCode(optional.get()));
+                    } else {
+                        sb.append("null");
+                    }
+                } else {
+                    writeBeanWithCycleDetection(value, sb);
+                }
                 break;
         }
     }
@@ -1000,6 +950,14 @@ public final class ValueWriter {
             writeBoolean((Boolean) obj, sb);
         } else if (clazz == Character.class) {
             writeChar((Character) obj, sb);
+        } else if (clazz == UUID.class) {
+            writeString(obj.toString(), sb);
+        } else if (obj instanceof Optional<?> optional) {
+            if (optional.isPresent()) {
+                writeValueDirect(optional.get(), sb);
+            } else {
+                sb.append("null");
+            }
         } else if (obj instanceof List) {
             writeList((List<?>) obj, sb);
         } else if (obj instanceof Map) {

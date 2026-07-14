@@ -1,24 +1,16 @@
 package com.njydsz.pmis.common.util.id;
 
 /**
- * 分布式 ID 生成器抽象 SPI
+ * 分布式 ID 生成器抽象 SPI（已废弃）
  *
- * <p>支持多种 ID 生成策略：Snowflake（雪花算法）/ Segment（号段模式）/ UUID / NanoId。
- * 业务方通过 {@link IdGeneratorFactory} 选型。</p>
- *
- * <p>大厂实践：
- * <ul>
- *   <li>美团 Leaf：Snowflake + Segment 双模式</li>
- *   <li>百度 UidGenerator：Snowflake 变种</li>
- *   <li>Twitter Snowflake：经典算法</li>
- *   <li>滴滴 TinyID：号段模式</li>
- * </ul>
+ * <p>当前项目统一使用 {@link SnowflakeUtils}，此 SPI 层无外部实现和引用。
+ * 保留仅用于未来扩展预留。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 3.5.0
+ * @deprecated 此 SPI 层无实际使用，请直接使用 {@link SnowflakeUtils}
  */
+@Deprecated(since = "1.4.0", forRemoval = true)
 public interface IdGenerator {
 
     /**

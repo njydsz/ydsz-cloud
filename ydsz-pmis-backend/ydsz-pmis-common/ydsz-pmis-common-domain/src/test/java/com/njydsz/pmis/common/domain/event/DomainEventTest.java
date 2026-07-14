@@ -95,9 +95,9 @@ class DomainEventTest {
     }
 
     @Test
-    @DisplayName("of() 工厂方法应正确创建事件")
-    void shouldCreateEventWithOfFactory() {
-        DomainEvent event = DomainEvent.of("OrderCreated", "order-1", "Order");
+    @DisplayName("构造器应正确创建带聚合根信息的事件")
+    void shouldCreateEventWithAggregateInfo() {
+        DomainEvent event = new DomainEvent("OrderCreated", "order-1", "Order");
         assertEquals("OrderCreated", event.getEventType());
         assertEquals("order-1", event.getAggregateId());
         assertEquals("Order", event.getAggregateType());
@@ -106,7 +106,7 @@ class DomainEventTest {
     @Test
     @DisplayName("新事件的 metadata 应为空 Map 而非 null")
     void shouldHaveEmptyMetadataForNewEvent() {
-        DomainEvent event = DomainEvent.of("Test");
+        DomainEvent event = new DomainEvent("Test");
         assertNotNull(event.getMetadata());
         assertTrue(event.getMetadata().isEmpty());
     }
@@ -114,7 +114,7 @@ class DomainEventTest {
     @Test
     @DisplayName("新事件的 tenantId/userId/traceId 应为 null（无 RequestContext 时）")
     void shouldHaveNullContextFieldsWithoutRequestContext() {
-        DomainEvent event = DomainEvent.of("Test");
+        DomainEvent event = new DomainEvent("Test");
         assertNull(event.getTenantId());
         assertNull(event.getUserId());
         assertNull(event.getTraceId());

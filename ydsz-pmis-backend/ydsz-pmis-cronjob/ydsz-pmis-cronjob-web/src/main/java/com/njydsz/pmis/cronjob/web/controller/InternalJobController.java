@@ -11,7 +11,7 @@ import com.njydsz.pmis.common.core.job.MapProcessor;
 import com.njydsz.pmis.common.core.job.ProcessResult;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.lock.annotation.IdempotentExempt;
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.common.util.id.TracerUtils;
 import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteSubTaskRequest;
 import com.njydsz.pmis.cronjob.server.core.dispatch.RemoteTaskRequest;
 import com.njydsz.pmis.cronjob.server.core.dispatch.TaskDispatcher;
@@ -86,14 +86,14 @@ public class InternalJobController {
         // P1-4: 从请求中恢复 traceId 到 MDC，保证全链路追踪
         String traceId = request.getTraceId();
         if (traceId != null && !traceId.isBlank()) {
-            TraceIdUtil.set(traceId);
+            TracerUtils.setTraceId(traceId);
         } else {
-            TraceIdUtil.getOrCreate();
+            TracerUtils.getOrCreateTraceId();
         }
         try {
             log.info("[InternalJob] 接收远程派发: key={} triggerType={} shard={}/{} traceId={}",
                     request.getJob().getJobKey(), request.getTriggerType(),
-                    request.getShardIndex(), request.getShardTotal(), TraceIdUtil.get());
+                    request.getShardIndex(), request.getShardTotal(), TracerUtils.getTraceId());
             String logId = taskDispatcher.executeLocally(
                     request.getJob(), request.getTriggerType(),
                     request.getShardIndex(), request.getShardTotal());
@@ -104,7 +104,7 @@ public class InternalJobController {
             // 执行异常时返回 null（执行器端已记录 FAILED 日志，或锁被持有）
             return BaseResponse.ok(null);
         } finally {
-            TraceIdUtil.clear();
+            TracerUtils.clear();
         }
     }
 
@@ -132,13 +132,13 @@ public class InternalJobController {
         }
         String traceId = request.getTraceId();
         if (traceId != null && !traceId.isBlank()) {
-            TraceIdUtil.set(traceId);
+            TracerUtils.setTraceId(traceId);
         } else {
-            TraceIdUtil.getOrCreate();
+            TracerUtils.getOrCreateTraceId();
         }
         try {
             log.info("[InternalJob] 接收子任务派发: key={} taskName={} handler={} traceId={}",
-                    request.getJobKey(), request.getTaskName(), request.getHandler(), TraceIdUtil.get());
+                    request.getJobKey(), request.getTaskName(), request.getHandler(), TracerUtils.getTraceId());
             // 获取 MapProcessor Bean
             MapProcessor processor;
             try {
@@ -165,7 +165,7 @@ public class InternalJobController {
             }
             return BaseResponse.ok(result);
         } finally {
-            TraceIdUtil.clear();
+            TracerUtils.clear();
         }
     }
 }

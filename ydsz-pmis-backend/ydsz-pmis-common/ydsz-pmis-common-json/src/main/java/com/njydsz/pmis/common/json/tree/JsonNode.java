@@ -28,7 +28,6 @@ import java.util.Map;
  * </pre>
  *
  * @since 1.3.0
- * @since 1.3.0
  */
 public abstract class JsonNode {
 

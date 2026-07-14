@@ -219,7 +219,7 @@ ydsz:
 |---|---|---|
 | `I18nConfiguration` | `MessageSource` 在类路径 | `MessageSource`, `Validator`, i18n 解析器注入 |
 | `WebI18nConfiguration` | `LocaleResolver` 在类路径 | `LocaleResolver`, `LocaleChangeInterceptor` |
-| `ExceptionMetricsAutoConfiguration` | `MeterRegistry` Bean 存在 | `ExceptionMetrics`, `ExceptionMetricsRecorder` |
+| `ExceptionMetricsAutoConfiguration` | `MeterRegistry` Bean 存在 | `ExceptionMetrics` |
 | `TraceFilterAutoConfiguration` | `Filter` 在类路径 | `TraceContextFilter` |
 | `MvcExceptionHandlerAutoConfiguration` | Servlet Web 应用 | `MvcExceptionHandler` |
 | `ValidationExceptionHandlerAutoConfiguration` | Servlet Web 应用 + validation | `ValidationExceptionHandler` |

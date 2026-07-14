@@ -36,142 +36,64 @@ public class ExternalException extends AbstractYdszException {
 
     public ExternalException() {
         super();
-        this.httpStatus = HttpStatus.BAD_GATEWAY.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.EXTERNAL;
+        initDefaults(HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
     public ExternalException(String key) {
         super();
-        this.httpStatus = HttpStatus.BAD_GATEWAY.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.EXTERNAL;
-        this.code = UnifiedExceptionCode.FAIL.getCode();
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.FAIL.getCode(), key, new Object[]{}, HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
     public ExternalException(ExceptionCode exceptionCode) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.EXTERNAL;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
     public ExternalException(String key, Object[] params) {
         super();
-        this.httpStatus = HttpStatus.BAD_GATEWAY.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.EXTERNAL;
-        this.code = UnifiedExceptionCode.FAIL.getCode();
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.FAIL.getCode(), key, params, HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
     public ExternalException(ExceptionCode exceptionCode, Object[] params) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.EXTERNAL;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, params, ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
     public ExternalException(String code, String key) {
         super();
-        this.httpStatus = HttpStatus.BAD_GATEWAY.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.EXTERNAL;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, new Object[]{}, HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
     public ExternalException(String code, String key, Object[] params) {
         super();
-        this.httpStatus = HttpStatus.BAD_GATEWAY.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.EXTERNAL;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, params, HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
     public ExternalException(Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.BAD_GATEWAY.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.EXTERNAL;
+        initDefaults(HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
         this.code = UnifiedExceptionCode.FAIL.getCode();
     }
 
     public ExternalException(String code, Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.BAD_GATEWAY.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.EXTERNAL;
+        initDefaults(HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
         this.code = code;
     }
 
     public ExternalException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.EXTERNAL;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
     public ExternalException(String code, String key, Throwable cause) {
         super(null, cause);
-        this.httpStatus = HttpStatus.BAD_GATEWAY.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.EXTERNAL;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, new Object[]{}, HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
     public ExternalException(String code, String key, Object[] params, Throwable cause) {
         super(null, cause);
-        this.httpStatus = HttpStatus.BAD_GATEWAY.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.EXTERNAL;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, params, HttpStatus.BAD_GATEWAY.value(), ExceptionLevel.ERROR, ExceptionCategory.EXTERNAL);
     }
 
     public ExceptionInfo toExceptionInfo() {

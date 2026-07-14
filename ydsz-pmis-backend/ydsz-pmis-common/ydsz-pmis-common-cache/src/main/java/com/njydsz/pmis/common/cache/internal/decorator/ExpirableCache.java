@@ -16,7 +16,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -66,9 +66,14 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
 
   private static final Logger log = LoggerFactory.getLogger(ExpirableCache.class);
 
-  /** 全局共享过期清理调度器（通过 CacheThreadPoolManager 统一管理） */
-  private static final ScheduledExecutorService SHARED_CLEANER =
-      CacheThreadPoolManager.getInstance().getOrCreateScheduledPool("expirable-cleaner", 1);
+  /**
+   * 获取共享过期清理调度器
+   *
+   * <p>通过 CacheThreadPoolManager 统一管理，每次调用时获取最新实例， 避免静态初始化时序问题（Spring 后续替换全局单例时旧引用失效）。
+   */
+  private static ScheduledExecutorService getSharedCleaner() {
+    return CacheThreadPoolManager.getInstance().getOrCreateScheduledPool("expirable-cleaner", 1);
+  }
 
   /** 底层缓存（负责淘汰策略） */
   private final Cache<K, V> delegate;
@@ -92,10 +97,10 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   private final double jitterRatio;
 
   /** 命中计数 */
-  private final AtomicLong hitCount = new AtomicLong(0);
+  private final LongAdder hitCount = new LongAdder();
 
   /** 未命中计数 */
-  private final AtomicLong missCount = new AtomicLong(0);
+  private final LongAdder missCount = new LongAdder();
 
   /**
    * 可变过期时间戳持有者 — 避免每次更新都创建新的 Long 对象
@@ -165,7 +170,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     // 注册淘汰监听器，防止 expirationMap 内存泄漏
     delegate.addListener(evictionListener);
     this.cleanupFuture =
-        SHARED_CLEANER.scheduleAtFixedRate(
+        getSharedCleaner().scheduleAtFixedRate(
             this::cleanupExpired, cleanupIntervalSeconds, cleanupIntervalSeconds, TimeUnit.SECONDS);
     log.info(
         "ExpirableCache 已创建，delegate={}, expireAfterWrite={}ns, expireAfterAccess={}ns, expiry={}, jitter={}",
@@ -265,15 +270,15 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   public V getIfPresent(K key) {
     V value = delegate.getIfPresent(key);
     if (value == null) {
-      missCount.incrementAndGet();
+      missCount.increment();
       return null;
     }
     if (isExpired(key)) {
       removeExpired(key);
-      missCount.incrementAndGet();
+      missCount.increment();
       return null;
     }
-    hitCount.incrementAndGet();
+    hitCount.increment();
     refreshExpiration(key, value);
     return value;
   }
@@ -431,13 +436,13 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
 
   @Override
   public double getHitRate() {
-    long total = hitCount.get() + missCount.get();
-    return total == 0 ? 0.0 : (double) hitCount.get() / total;
+    long total = hitCount.sum() + missCount.sum();
+    return total == 0 ? 0.0 : (double) hitCount.sum() / total;
   }
 
   @Override
   public CacheStats getStats() {
-    return new CacheStats(hitCount.get(), missCount.get());
+    return new CacheStats(hitCount.sum(), missCount.sum());
   }
 
   @Override

@@ -39,7 +39,6 @@ import com.njydsz.pmis.common.json.serializer.JsonSerializer;
  * </pre>
  *
  * @since 1.3.0
- * @since 1.3.0
  */
 public final class JsonModuleRegistry {
 

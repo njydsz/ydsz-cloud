@@ -31,7 +31,6 @@ import java.util.concurrent.ConcurrentMap;
  * </ul>
  *
  * @since 1.3.0
- * @since 1.3.0
  * @see FieldMeta
  * @see BeanSerializerInfo
  */

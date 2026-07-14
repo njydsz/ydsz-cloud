@@ -36,142 +36,64 @@ public class InfrastructureException extends AbstractYdszException {
 
     public InfrastructureException() {
         super();
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
+        initDefaults(HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public InfrastructureException(String key) {
         super();
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = UnifiedExceptionCode.INTERNAL_ERROR.getCode();
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.INTERNAL_ERROR.getCode(), key, new Object[]{}, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public InfrastructureException(ExceptionCode exceptionCode) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public InfrastructureException(String key, Object[] params) {
         super();
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = UnifiedExceptionCode.INTERNAL_ERROR.getCode();
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.INTERNAL_ERROR.getCode(), key, params, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public InfrastructureException(ExceptionCode exceptionCode, Object[] params) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, params, ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public InfrastructureException(String code, String key) {
         super();
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, new Object[]{}, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public InfrastructureException(String code, String key, Object[] params) {
         super();
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, params, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public InfrastructureException(Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
+        initDefaults(HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
         this.code = UnifiedExceptionCode.INTERNAL_ERROR.getCode();
     }
 
     public InfrastructureException(String code, Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
+        initDefaults(HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
         this.code = code;
     }
 
     public InfrastructureException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public InfrastructureException(String code, String key, Throwable cause) {
         super(null, cause);
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, new Object[]{}, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public InfrastructureException(String code, String key, Object[] params, Throwable cause) {
         super(null, cause);
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, params, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public ExceptionInfo toExceptionInfo() {

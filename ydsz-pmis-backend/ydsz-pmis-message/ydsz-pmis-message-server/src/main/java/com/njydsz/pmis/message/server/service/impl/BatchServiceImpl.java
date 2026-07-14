@@ -15,7 +15,7 @@ import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.message.domain.dto.batch.BatchProgressVO;
 import com.njydsz.pmis.message.domain.dto.batch.BatchSendRequestDTO;
 import com.njydsz.pmis.message.domain.entity.batch.MsgBatchDO;
@@ -72,7 +72,7 @@ public class BatchServiceImpl implements BatchService {
         }
         // 创建批次记录
         String batchId = StringUtils.hasText(dto.getBatchId())
-                ? dto.getBatchId() : SnowflakeIdGenerator.nextIdStr();
+                ? dto.getBatchId() : SnowflakeUtils.nextIdStr();
         MsgBatchDO batch = new MsgBatchDO();
         batch.setBatchId(batchId);
         batch.setBatchName(dto.getBatchName());
@@ -227,7 +227,7 @@ public class BatchServiceImpl implements BatchService {
                 req.setReceiver(receiver.trim());
                 req.setParams(dto.getParams());
                 req.setBizType(dto.getBizType());
-                req.setMessageId(SnowflakeIdGenerator.nextIdStr());
+                req.setMessageId(SnowflakeUtils.nextIdStr());
                 requests.add(req);
             }
         }

@@ -35,142 +35,64 @@ public class ValidationException extends AbstractYdszException {
 
     public ValidationException() {
         super();
-        this.httpStatus = HttpStatus.BAD_REQUEST.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.VALIDATION;
+        initDefaults(HttpStatus.BAD_REQUEST.value(), ExceptionLevel.WARN, ExceptionCategory.VALIDATION);
     }
 
     public ValidationException(String key) {
         super();
-        this.httpStatus = HttpStatus.BAD_REQUEST.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.VALIDATION;
-        this.code = UnifiedExceptionCode.PARAM_ERROR.getCode();
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.PARAM_ERROR.getCode(), key, new Object[]{}, HttpStatus.BAD_REQUEST.value(), ExceptionLevel.WARN, ExceptionCategory.VALIDATION);
     }
 
     public ValidationException(ExceptionCode exceptionCode) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.VALIDATION;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.WARN, ExceptionCategory.VALIDATION);
     }
 
     public ValidationException(String key, Object[] params) {
         super();
-        this.httpStatus = HttpStatus.BAD_REQUEST.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.VALIDATION;
-        this.code = UnifiedExceptionCode.PARAM_ERROR.getCode();
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.PARAM_ERROR.getCode(), key, params, HttpStatus.BAD_REQUEST.value(), ExceptionLevel.WARN, ExceptionCategory.VALIDATION);
     }
 
     public ValidationException(ExceptionCode exceptionCode, Object[] params) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.VALIDATION;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, params, ExceptionLevel.WARN, ExceptionCategory.VALIDATION);
     }
 
     public ValidationException(String code, String key) {
         super();
-        this.httpStatus = HttpStatus.BAD_REQUEST.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.VALIDATION;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, new Object[]{}, HttpStatus.BAD_REQUEST.value(), ExceptionLevel.WARN, ExceptionCategory.VALIDATION);
     }
 
     public ValidationException(String code, String key, Object[] params) {
         super();
-        this.httpStatus = HttpStatus.BAD_REQUEST.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.VALIDATION;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, params, HttpStatus.BAD_REQUEST.value(), ExceptionLevel.WARN, ExceptionCategory.VALIDATION);
     }
 
     public ValidationException(Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.BAD_REQUEST.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.VALIDATION;
+        initDefaults(HttpStatus.BAD_REQUEST.value(), ExceptionLevel.WARN, ExceptionCategory.VALIDATION);
         this.code = UnifiedExceptionCode.PARAM_ERROR.getCode();
     }
 
     public ValidationException(String code, Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.BAD_REQUEST.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.VALIDATION;
+        initDefaults(HttpStatus.BAD_REQUEST.value(), ExceptionLevel.WARN, ExceptionCategory.VALIDATION);
         this.code = code;
     }
 
     public ValidationException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.VALIDATION;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.WARN, ExceptionCategory.VALIDATION);
     }
 
     public ValidationException(String code, String key, Throwable cause) {
         super(null, cause);
-        this.httpStatus = HttpStatus.BAD_REQUEST.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.VALIDATION;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, new Object[]{}, HttpStatus.BAD_REQUEST.value(), ExceptionLevel.WARN, ExceptionCategory.VALIDATION);
     }
 
     public ValidationException(String code, String key, Object[] params, Throwable cause) {
         super(null, cause);
-        this.httpStatus = HttpStatus.BAD_REQUEST.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.VALIDATION;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, params, HttpStatus.BAD_REQUEST.value(), ExceptionLevel.WARN, ExceptionCategory.VALIDATION);
     }
 
     public ExceptionInfo toExceptionInfo() {

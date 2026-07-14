@@ -3,7 +3,10 @@ package com.njydsz.pmis.common.cache.annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ForkJoinPool;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -62,6 +65,9 @@ public class CacheAnnotationAspect {
   private final DefaultParameterNameDiscoverer parameterNameDiscoverer =
       new DefaultParameterNameDiscoverer();
 
+  /** 缓存最后刷新时间戳（cacheName:key → nanoTime） */
+  private final ConcurrentHashMap<String, Long> refreshTimestamps = new ConcurrentHashMap<>();
+
   /**
    * 创建缓存注解切面
    *
@@ -99,19 +105,24 @@ public class CacheAnnotationAspect {
       }
     }
 
-    Cache springCache = getOrCreateCache(cached.name());
+    org.springframework.cache.Cache springCache = getOrCreateCache(cached.name());
     if (springCache == null) {
       log.warn("无法获取缓存实例: {}, 直接执行方法", cached.name());
       return joinPoint.proceed();
     }
 
     // 先查缓存
-    Cache.ValueWrapper valueWrapper = springCache.get(cacheKey);
+    org.springframework.cache.Cache.ValueWrapper valueWrapper = springCache.get(cacheKey);
     if (valueWrapper != null) {
       Object cachedValue = valueWrapper.get();
       if (cachedValue == null && cached.unlessNull()) {
         // 空值缓存标记，直接返回 null
         return null;
+      }
+      // 检查 @CacheRefresh 注解
+      CacheRefresh cacheRefresh = method.getAnnotation(CacheRefresh.class);
+      if (cacheRefresh != null && cacheRefresh.refreshAfterWrite() > 0) {
+        handleCacheRefresh(cacheRefresh, springCache, cached.name(), cacheKey, joinPoint, method, args);
       }
       return cachedValue;
     }
@@ -126,6 +137,11 @@ public class CacheAnnotationAspect {
 
     // 写入缓存
     springCache.put(cacheKey, result);
+    // 记录刷新时间戳
+    CacheRefresh cacheRefresh = method.getAnnotation(CacheRefresh.class);
+    if (cacheRefresh != null && cacheRefresh.refreshAfterWrite() > 0) {
+      refreshTimestamps.put(cached.name() + ":" + cacheKey, System.nanoTime());
+    }
     return result;
   }
 
@@ -144,7 +160,7 @@ public class CacheAnnotationAspect {
     Method method = signature.getMethod();
     Object[] args = joinPoint.getArgs();
 
-    Cache springCache = getOrCreateCache(invalidate.name());
+    org.springframework.cache.Cache springCache = getOrCreateCache(invalidate.name());
     if (springCache == null) {
       log.warn("无法获取缓存实例: {}, 跳过缓存失效", invalidate.name());
       return joinPoint.proceed();
@@ -176,7 +192,7 @@ public class CacheAnnotationAspect {
 
   /** 执行缓存清除操作 */
   private void evictCache(
-      Cache springCache, CacheInvalidate invalidate, Method method, Object[] args) {
+      org.springframework.cache.Cache springCache, CacheInvalidate invalidate, Method method, Object[] args) {
     if (invalidate.allEntries()) {
       springCache.clear();
       log.debug("清除全部缓存: name={}", invalidate.name());
@@ -190,7 +206,7 @@ public class CacheAnnotationAspect {
   }
 
   /** 获取或创建 Spring Cache 实例 */
-  private Cache getOrCreateCache(String cacheName) {
+  private org.springframework.cache.Cache getOrCreateCache(String cacheName) {
     try {
       return cacheManager.getCache(cacheName);
     } catch (Exception e) {
@@ -222,7 +238,68 @@ public class CacheAnnotationAspect {
     return exp.getValue(context, expectedResultType);
   }
 
-  /** 创建方法评估上下文 */
+  /**
+   * 处理 @CacheRefresh 逻辑
+   *
+   * <p>当缓存命中且超过刷新间隔时：
+   * <ul>
+   *   <li>SWR 模式：返回旧值 + 异步刷新
+   *   <li>非 SWR 模式：异步刷新（不阻塞当前请求）
+   * </ul>
+   */
+  private void handleCacheRefresh(
+      CacheRefresh cacheRefresh,
+      org.springframework.cache.Cache springCache,
+      String cacheName,
+      Object cacheKey,
+      ProceedingJoinPoint joinPoint,
+      Method method,
+      Object[] args) {
+    String refreshKey = cacheName + ":" + cacheKey;
+    Long lastRefresh = refreshTimestamps.get(refreshKey);
+    long now = System.nanoTime();
+    long refreshIntervalNanos = cacheRefresh.timeUnit().toNanos(cacheRefresh.refreshAfterWrite());
+
+    if (lastRefresh != null && (now - lastRefresh) < refreshIntervalNanos) {
+      // 未到刷新间隔，跳过
+      return;
+    }
+
+    // 更新刷新时间戳
+    refreshTimestamps.put(refreshKey, now);
+
+    if (cacheRefresh.staleWhileRevalidate()) {
+      // SWR 模式：异步刷新，不阻塞当前请求
+      CompletableFuture.runAsync(
+          () -> {
+            try {
+              Object freshValue = joinPoint.proceed();
+              if (freshValue != null) {
+                springCache.put(cacheKey, freshValue);
+                log.debug("SWR 异步刷新完成: cache={}, key={}", cacheName, cacheKey);
+              }
+            } catch (Throwable e) {
+              log.warn("SWR 异步刷新失败: cache={}, key={}", cacheName, cacheKey, e);
+            }
+          },
+          ForkJoinPool.commonPool());
+    } else {
+      // 非 SWR 模式：异步刷新
+      CompletableFuture.runAsync(
+          () -> {
+            try {
+              Object freshValue = joinPoint.proceed();
+              if (freshValue != null) {
+                springCache.put(cacheKey, freshValue);
+                log.debug("异步刷新完成: cache={}, key={}", cacheName, cacheKey);
+              }
+            } catch (Throwable e) {
+              log.warn("异步刷新失败: cache={}, key={}", cacheName, cacheKey, e);
+            }
+          },
+          ForkJoinPool.commonPool());
+    }
+  }
   private EvaluationContext createEvaluationContext(Method method, Object[] args) {
     MethodBasedEvaluationContext context =
         new MethodBasedEvaluationContext(null, method, args, parameterNameDiscoverer);

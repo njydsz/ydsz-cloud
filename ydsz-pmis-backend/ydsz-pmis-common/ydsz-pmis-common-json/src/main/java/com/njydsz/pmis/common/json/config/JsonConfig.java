@@ -38,7 +38,6 @@ import com.njydsz.pmis.common.json.provider.SerializationProvider;
  * </pre>
  *
  * @since 1.3.0
- * @since 1.3.0
  */
 public final class JsonConfig implements Serializable {
 
@@ -67,6 +66,8 @@ public final class JsonConfig implements Serializable {
     private volatile long maxJsonSize = 10L * 1024 * 1024;
 
     private volatile int maxDepth = 256;
+
+    private volatile boolean useBigDecimal = false;
 
     private JsonConfig() {
     }
@@ -282,6 +283,29 @@ public final class JsonConfig implements Serializable {
     }
 
     /**
+     * 是否使用 BigDecimal 解析浮点数。
+     *
+     * <p>启用后，包含小数点的数字将被解析为 {@link java.math.BigDecimal}，
+     * 避免精度丢失，适用于金融场景。</p>
+     *
+     * @return 是否使用 BigDecimal
+     */
+    public boolean isUseBigDecimal() {
+        return useBigDecimal;
+    }
+
+    /**
+     * 设置是否使用 BigDecimal 解析浮点数。
+     *
+     * @param useBigDecimal 是否使用 BigDecimal
+     * @return 当前配置实例（支持链式调用）
+     */
+    public JsonConfig setUseBigDecimal(boolean useBigDecimal) {
+        this.useBigDecimal = useBigDecimal;
+        return this;
+    }
+
+    /**
      * 应用配置到序列化提供者
      *
      * <p>将当前配置应用到 SerializationProvider</p>
@@ -292,6 +316,7 @@ public final class JsonConfig implements Serializable {
         SerializationProvider.setPrettyPrint(prettyPrint);
         SerializationProvider.setCircularReferenceStrategy(circularReferenceStrategy.name());
         SerializationProvider.setSerializeEnumUsingOrdinal(serializeEnumUsingOrdinal);
+        com.njydsz.pmis.common.json.parser.JsonParser.setUseBigDecimal(useBigDecimal);
     }
 
     /**
@@ -311,6 +336,7 @@ public final class JsonConfig implements Serializable {
         this.defaultDateFormat = "yyyy-MM-dd'T'HH:mm:ss";
         this.maxJsonSize = 10L * 1024 * 1024;
         this.maxDepth = 256;
+        this.useBigDecimal = false;
         return this;
     }
 
@@ -333,6 +359,7 @@ public final class JsonConfig implements Serializable {
             this.defaultDateFormat = other.defaultDateFormat;
             this.maxJsonSize = other.maxJsonSize;
             this.maxDepth = other.maxDepth;
+            this.useBigDecimal = other.useBigDecimal;
         }
         return this;
     }

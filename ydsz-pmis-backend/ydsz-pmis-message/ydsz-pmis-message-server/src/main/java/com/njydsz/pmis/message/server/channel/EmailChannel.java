@@ -16,7 +16,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 import com.njydsz.pmis.message.server.service.receipt.ReadReceiptService;
@@ -132,7 +132,7 @@ public class EmailChannel implements MessageChannel {
                 msg.setText(content);
                 mailSender.send(msg);
             }
-            String traceId = CHANNEL_TYPE + "-" + SnowflakeIdGenerator.nextTraceId();
+            String traceId = CHANNEL_TYPE + "-" + SnowflakeUtils.nextIdStr();
             log.info("[EMAIL] 发送成功: to={} subject={}", request.getReceiver(), subject);
             return MessageResult.ok(CHANNEL_TYPE, traceId);
         } catch (Exception e) {

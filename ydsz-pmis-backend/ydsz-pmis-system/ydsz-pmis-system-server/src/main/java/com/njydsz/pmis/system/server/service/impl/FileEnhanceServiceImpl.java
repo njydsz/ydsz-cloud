@@ -21,7 +21,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.pmis.common.file.config.MinioConfig;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.system.server.service.file.FileEnhanceService;
 
 import io.minio.GetObjectArgs;
@@ -140,7 +140,7 @@ public class FileEnhanceServiceImpl implements FileEnhanceService {
 
     @Override
     public String initMultipartUpload(String filename, long totalSize, int totalChunks) {
-        String uploadId = SnowflakeIdGenerator.nextIdStr();
+        String uploadId = SnowflakeUtils.nextIdStr();
         ChunkMeta meta = new ChunkMeta(filename, totalSize, totalChunks);
         try {
             stringRedisTemplate.opsForValue().set(metaKey(uploadId), Json.toJson(meta));

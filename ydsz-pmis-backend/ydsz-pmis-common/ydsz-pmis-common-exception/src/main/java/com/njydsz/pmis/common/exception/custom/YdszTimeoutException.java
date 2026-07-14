@@ -35,142 +35,64 @@ public class YdszTimeoutException extends AbstractYdszException {
 
     public YdszTimeoutException() {
         super();
-        this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.TIMEOUT;
+        initDefaults(HttpStatus.GATEWAY_TIMEOUT.value(), ExceptionLevel.ERROR, ExceptionCategory.TIMEOUT);
     }
 
     public YdszTimeoutException(String key) {
         super();
-        this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.TIMEOUT;
-        this.code = UnifiedExceptionCode.FAIL.getCode();
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.FAIL.getCode(), key, new Object[]{}, HttpStatus.GATEWAY_TIMEOUT.value(), ExceptionLevel.ERROR, ExceptionCategory.TIMEOUT);
     }
 
     public YdszTimeoutException(ExceptionCode exceptionCode) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.TIMEOUT;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.ERROR, ExceptionCategory.TIMEOUT);
     }
 
     public YdszTimeoutException(String key, Object[] params) {
         super();
-        this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.TIMEOUT;
-        this.code = UnifiedExceptionCode.FAIL.getCode();
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.FAIL.getCode(), key, params, HttpStatus.GATEWAY_TIMEOUT.value(), ExceptionLevel.ERROR, ExceptionCategory.TIMEOUT);
     }
 
     public YdszTimeoutException(ExceptionCode exceptionCode, Object[] params) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.TIMEOUT;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, params, ExceptionLevel.ERROR, ExceptionCategory.TIMEOUT);
     }
 
     public YdszTimeoutException(String code, String key) {
         super();
-        this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.TIMEOUT;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, new Object[]{}, HttpStatus.GATEWAY_TIMEOUT.value(), ExceptionLevel.ERROR, ExceptionCategory.TIMEOUT);
     }
 
     public YdszTimeoutException(String code, String key, Object[] params) {
         super();
-        this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.TIMEOUT;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, params, HttpStatus.GATEWAY_TIMEOUT.value(), ExceptionLevel.ERROR, ExceptionCategory.TIMEOUT);
     }
 
     public YdszTimeoutException(Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.TIMEOUT;
+        initDefaults(HttpStatus.GATEWAY_TIMEOUT.value(), ExceptionLevel.ERROR, ExceptionCategory.TIMEOUT);
         this.code = UnifiedExceptionCode.FAIL.getCode();
     }
 
     public YdszTimeoutException(String code, Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.TIMEOUT;
+        initDefaults(HttpStatus.GATEWAY_TIMEOUT.value(), ExceptionLevel.ERROR, ExceptionCategory.TIMEOUT);
         this.code = code;
     }
 
     public YdszTimeoutException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.TIMEOUT;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.ERROR, ExceptionCategory.TIMEOUT);
     }
 
     public YdszTimeoutException(String code, String key, Throwable cause) {
         super(null, cause);
-        this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.TIMEOUT;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, new Object[]{}, HttpStatus.GATEWAY_TIMEOUT.value(), ExceptionLevel.ERROR, ExceptionCategory.TIMEOUT);
     }
 
     public YdszTimeoutException(String code, String key, Object[] params, Throwable cause) {
         super(null, cause);
-        this.httpStatus = HttpStatus.GATEWAY_TIMEOUT.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.TIMEOUT;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, params, HttpStatus.GATEWAY_TIMEOUT.value(), ExceptionLevel.ERROR, ExceptionCategory.TIMEOUT);
     }
 
     public ExceptionInfo toExceptionInfo() {

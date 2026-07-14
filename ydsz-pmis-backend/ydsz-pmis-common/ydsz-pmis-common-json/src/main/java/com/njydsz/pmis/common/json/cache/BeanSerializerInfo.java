@@ -22,7 +22,6 @@ import java.lang.invoke.MethodHandle;
  * </ul>
  *
  * @since 1.3.0
- * @since 1.3.0
  */
 public final class BeanSerializerInfo {
 

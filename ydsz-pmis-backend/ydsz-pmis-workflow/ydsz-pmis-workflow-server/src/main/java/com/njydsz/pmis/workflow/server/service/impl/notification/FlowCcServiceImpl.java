@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.pmis.common.core.constant.PageConstants;
 import com.njydsz.pmis.common.core.response.PageResponse;
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.common.util.id.TracerUtils;
 import com.njydsz.pmis.workflow.domain.dto.FlowCcQueryDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowCcDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
@@ -106,7 +106,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
             // 4. 为每个 userId 写入 FlowCcDO
             LocalDateTime now = LocalDateTime.now();
-            String traceId = TraceIdUtil.getOrCreate();
+            String traceId = TracerUtils.getOrCreateTraceId();
             int insertCount = 0;
             for (String userId : userIds) {
                 FlowCcDO cc = buildCcDO(instance, node, userId, now, traceId);

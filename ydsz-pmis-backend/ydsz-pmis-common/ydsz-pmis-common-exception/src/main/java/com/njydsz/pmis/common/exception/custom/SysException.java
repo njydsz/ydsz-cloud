@@ -37,142 +37,64 @@ public class SysException extends AbstractYdszException {
 
     public SysException() {
         super();
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.SYSTEM;
+        initDefaults(HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
     }
 
     public SysException(String key) {
         super();
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.SYSTEM;
-        this.code = UnifiedExceptionCode.INTERNAL_ERROR.getCode();
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.INTERNAL_ERROR.getCode(), key, new Object[]{}, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
     }
 
     public SysException(ExceptionCode exceptionCode) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.SYSTEM;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
     }
 
     public SysException(String key, Object[] params) {
         super();
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.SYSTEM;
-        this.code = UnifiedExceptionCode.INTERNAL_ERROR.getCode();
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.INTERNAL_ERROR.getCode(), key, params, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
     }
 
     public SysException(ExceptionCode exceptionCode, Object[] params) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.SYSTEM;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, params, ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
     }
 
     public SysException(String code, String key) {
         super();
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.SYSTEM;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, new Object[]{}, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
     }
 
     public SysException(String code, String key, Object[] params) {
         super();
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.SYSTEM;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, params, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
     }
 
     public SysException(Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.SYSTEM;
+        initDefaults(HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
         this.code = UnifiedExceptionCode.INTERNAL_ERROR.getCode();
     }
 
     public SysException(String code, Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.SYSTEM;
+        initDefaults(HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
         this.code = code;
     }
 
     public SysException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.SYSTEM;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
     }
 
     public SysException(String code, String key, Throwable cause) {
         super(null, cause);
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.SYSTEM;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, new Object[]{}, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
     }
 
     public SysException(String code, String key, Object[] params, Throwable cause) {
         super(null, cause);
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.SYSTEM;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, params, HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
     }
 
     /**
@@ -184,15 +106,8 @@ public class SysException extends AbstractYdszException {
      */
     public SysException(ResultCode resultCode) {
         super();
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.SYSTEM;
-        this.code = resultCode.getCode();
-        this.key = resultCode.getMessageKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = resultCode.getMessageKey();
-        this.messageParams = this.params;
+        init(resultCode.getCode(), resultCode.getMessageKey(), new Object[]{},
+             HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
     }
 
     /**
@@ -205,15 +120,9 @@ public class SysException extends AbstractYdszException {
      */
     public SysException(ResultCode resultCode, String message) {
         super(message);
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.SYSTEM;
-        this.code = resultCode.getCode();
-        this.key = resultCode.getMessageKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = message;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(resultCode.getCode(), resultCode.getMessageKey(), new Object[]{},
+             HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
+        setMessage(message);
     }
 
     /**
@@ -228,15 +137,8 @@ public class SysException extends AbstractYdszException {
      */
     public SysException(ResultCode resultCode, String key, Object... params) {
         super();
-        this.httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.SYSTEM;
-        this.code = resultCode.getCode();
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(resultCode.getCode(), key, params,
+             HttpStatus.INTERNAL_SERVER_ERROR.value(), ExceptionLevel.ERROR, ExceptionCategory.SYSTEM);
     }
 
     public ExceptionInfo toExceptionInfo() {

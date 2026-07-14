@@ -24,8 +24,8 @@ import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
+import com.njydsz.pmis.common.util.id.TracerUtils;
 import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.message.domain.constant.MessageConstants;
 import com.njydsz.pmis.message.domain.dto.batch.BatchSendResult;
@@ -469,9 +469,9 @@ public class MessageServiceImpl implements MessageService {
         logDO.setRecallStatus(RecallStatusEnum.NONE.name());
         logDO.setReceiptStatus("NONE");
         logDO.setRetryCount(0);
-        logDO.setTraceId(TraceIdUtil.getOrCreate());
+        logDO.setTraceId(TracerUtils.getOrCreateTraceId());
         logDO.setMsgId(StringUtils.hasText(request.getMessageId()) ? request.getMessageId()
-                : SnowflakeIdGenerator.nextIdStr());
+                : SnowflakeUtils.nextIdStr());
         logDO.setDedupKey(ctx.dedupKey);
         logDO.setParentMsgId(request.getParentMsgId());
         logDO.setScheduledAt(request.getScheduledAt());
@@ -1083,7 +1083,7 @@ public class MessageServiceImpl implements MessageService {
         }
         // 确保有 messageId
         if (!StringUtils.hasText(request.getMessageId())) {
-            request.setMessageId(SnowflakeIdGenerator.nextIdStr());
+            request.setMessageId(SnowflakeUtils.nextIdStr());
         }
         // ① 先落库 PENDING（DB 是 Source of Truth）
         MsgLogDO logDO = new MsgLogDO();
@@ -1099,7 +1099,7 @@ public class MessageServiceImpl implements MessageService {
         logDO.setRetryCount(0);
         logDO.setReceiptStatus("NONE");
         logDO.setRecallStatus(RecallStatusEnum.NONE.name());
-        logDO.setTraceId(TraceIdUtil.getOrCreate());
+        logDO.setTraceId(TracerUtils.getOrCreateTraceId());
         logDO.setSenderId(SystemConstants.SYSTEM_USER_ID);
         logDO.setTenantId(TenantContext.getTenantId());
         logDO.setTopic(PmisMessageTopics.TOPIC_MESSAGE);

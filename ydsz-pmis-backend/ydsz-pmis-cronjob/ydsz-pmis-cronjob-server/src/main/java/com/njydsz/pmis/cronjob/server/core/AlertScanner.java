@@ -10,7 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.common.util.id.TracerUtils;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobAlertRuleDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobAlertRuleMapper;
 import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
@@ -178,7 +178,7 @@ public class AlertScanner {
                 null,
                 String.valueOf(failRate),
                 null,
-                TraceIdUtil.get(),
+                TracerUtils.getTraceId(),
                 rule.getTenantId()
         );
         alertTrigger.trigger(context);
@@ -217,7 +217,7 @@ public class AlertScanner {
                 null,
                 String.valueOf(p95Ms),
                 null,
-                TraceIdUtil.get(),
+                TracerUtils.getTraceId(),
                 rule.getTenantId()
         );
         alertTrigger.trigger(context);

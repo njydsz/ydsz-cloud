@@ -286,7 +286,22 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
   @Override
   public void putAll(Map<K, V> map) {
     delegate.putAll(map);
-    map.forEach((k, v) -> writeQueue.offer(new WriteOp<>(OpType.WRITE, k, v)));
+    long now = System.nanoTime();
+    for (Map.Entry<K, V> entry : map.entrySet()) {
+      if (writeQueue.size() >= maxQueueSize) {
+        // 队列满，降级为同步写入
+        queueOverflowCount.incrementAndGet();
+        syncFallbackCount.incrementAndGet();
+        try {
+          writer.write(entry.getKey(), entry.getValue());
+        } catch (Exception e) {
+          log.warn("Write-Behind 批量同步降级写入失败: key={}", entry.getKey(), e);
+        }
+      } else {
+        writeQueue.offer(new WriteOp<>(OpType.WRITE, entry.getKey(), entry.getValue()));
+        asyncWriteCount.incrementAndGet();
+      }
+    }
   }
 
   @Override

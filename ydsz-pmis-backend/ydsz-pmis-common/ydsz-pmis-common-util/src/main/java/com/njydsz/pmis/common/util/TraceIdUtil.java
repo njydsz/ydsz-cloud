@@ -1,27 +1,21 @@
 package com.njydsz.pmis.common.util;
 
-import org.slf4j.MDC;
-
-import com.njydsz.pmis.common.core.constant.TraceConstants;
-import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
+import com.njydsz.pmis.common.util.id.TracerUtils;
 
 /**
- * TraceId 工具类（兼容旧 com.njydsz.pmis.common.util.TraceIdUtil）。
+ * TraceId 工具类（已废弃，请使用 {@link TracerUtils}）。
  *
- * <p>提供基于 MDC 的 TraceId 获取与创建能力：
- * <ul>
- *   <li>{@link #get()} — 从 MDC 获取当前 TraceId，无则返回 null</li>
- *   <li>{@link #getOrCreate()} — 从 MDC 获取 TraceId，无则生成并写入 MDC</li>
- *   <li>{@link #generate()} — 生成新的 TraceId（委托给 {@link TraceIdGenerator}）</li>
- * </ul>
+ * <p>TracerUtils 提供更完整的链路追踪能力，包括 SkyWalking 集成、Span 管理等。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
+ * @deprecated 请使用 {@link TracerUtils}
  */
+@Deprecated(since = "1.4.0", forRemoval = true)
 public final class TraceIdUtil {
 
     /** MDC 中 TraceId 的键名 */
-    public static final String TRACE_ID_KEY = TraceConstants.MDC_TRACE_ID_KEY;
+    public static final String TRACE_ID_KEY = "traceId";
 
     private TraceIdUtil() {
         throw new UnsupportedOperationException("Utility class");
@@ -31,49 +25,54 @@ public final class TraceIdUtil {
      * 获取当前 MDC 中的 TraceId。
      *
      * @return TraceId，不存在时返回 null
+     * @deprecated 请使用 {@link TracerUtils#getTraceId()}
      */
+    @Deprecated(since = "1.4.0", forRemoval = true)
     public static String get() {
-        return MDC.get(TRACE_ID_KEY);
+        String traceId = TracerUtils.getTraceId();
+        return traceId.isEmpty() ? null : traceId;
     }
 
     /**
      * 获取当前 MDC 中的 TraceId，若不存在则生成新的并写入 MDC。
      *
      * @return TraceId
+     * @deprecated 请使用 {@link TracerUtils#getOrCreateTraceId()}
      */
+    @Deprecated(since = "1.4.0", forRemoval = true)
     public static String getOrCreate() {
-        String traceId = MDC.get(TRACE_ID_KEY);
-        if (traceId == null || traceId.isBlank()) {
-            traceId = TraceIdGenerator.generate();
-            MDC.put(TRACE_ID_KEY, traceId);
-        }
-        return traceId;
+        return TracerUtils.getOrCreateTraceId();
     }
 
     /**
      * 生成新的 TraceId（不写入 MDC）。
      *
      * @return 新的 TraceId
+     * @deprecated 请使用 {@link TracerUtils#generateTraceId()}
      */
+    @Deprecated(since = "1.4.0", forRemoval = true)
     public static String generate() {
-        return TraceIdGenerator.generate();
+        return TracerUtils.generateTraceId();
     }
 
     /**
      * 设置 TraceId 到 MDC。
      *
      * @param traceId TraceId
+     * @deprecated 请使用 {@link TracerUtils#setTraceId(String)}
      */
+    @Deprecated(since = "1.4.0", forRemoval = true)
     public static void set(String traceId) {
-        if (traceId != null && !traceId.isBlank()) {
-            MDC.put(TRACE_ID_KEY, traceId);
-        }
+        TracerUtils.setTraceId(traceId);
     }
 
     /**
      * 清除 MDC 中的 TraceId。
+     *
+     * @deprecated 请使用 {@link TracerUtils#clear()}
      */
+    @Deprecated(since = "1.4.0", forRemoval = true)
     public static void clear() {
-        MDC.remove(TRACE_ID_KEY);
+        TracerUtils.clear();
     }
 }

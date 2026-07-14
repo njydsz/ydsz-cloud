@@ -14,7 +14,7 @@ import com.njydsz.pmis.common.json.type.JsonType;
 import com.njydsz.pmis.common.netty.codec.LengthFieldFrameDecoder;
 import com.njydsz.pmis.common.netty.config.NettyProperties;
 import com.njydsz.pmis.common.netty.server.AbstractNettyServer;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 
@@ -96,7 +96,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
         if (request.getReceiver() == null || request.getReceiver().isBlank()) {
             return MessageResult.fail(CHANNEL_TYPE, "推送接收人不能为空");
         }
-        String traceId = "PUSH-" + SnowflakeIdGenerator.nextTraceId();
+        String traceId = "PUSH-" + SnowflakeUtils.nextIdStr();
         String userId = request.getReceiver();
         ChannelHandlerContext ctx = userChannelMap.get(userId);
         if (ctx == null || !ctx.channel().isActive()) {

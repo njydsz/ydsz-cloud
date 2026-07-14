@@ -23,7 +23,7 @@ import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.message.server.channel.MessageChannel;
 import com.njydsz.pmis.message.server.config.ChannelProperties;
@@ -114,7 +114,7 @@ public class FeishuChannel implements MessageChannel {
                     .body(Json.toJson(payload))
                     .retrieve()
                     .toEntity(String.class);
-            String traceId = CHANNEL_TYPE + "-" + SnowflakeIdGenerator.nextTraceId();
+            String traceId = CHANNEL_TYPE + "-" + SnowflakeUtils.nextIdStr();
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 Map<String, Object> body = Json.parseMap(response.getBody());

@@ -6,6 +6,7 @@ import java.util.*;
 
 import com.njydsz.pmis.common.json.annotation.JsonClass;
 import com.njydsz.pmis.common.json.annotation.JsonField;
+import com.njydsz.pmis.common.json.annotation.JsonIgnoreProperties;
 import com.njydsz.pmis.common.json.annotation.JsonPropertyOrder;
 import com.njydsz.pmis.common.json.annotation.JsonVisibility;
 import com.njydsz.pmis.common.json.cache.FieldMeta;
@@ -91,6 +92,14 @@ public final class FieldMetadataLoader {
                 }
             }
             alphabeticSort = propertyOrder.alphabetic();
+        }
+
+        // 处理 @JsonIgnoreProperties 注解
+        JsonIgnoreProperties ignoreProperties = clazz.getAnnotation(JsonIgnoreProperties.class);
+        if (ignoreProperties != null) {
+            for (String name : ignoreProperties.value()) {
+                ignores.add(name);
+            }
         }
 
         JsonVisibility visibilityAnnotation = clazz.getAnnotation(JsonVisibility.class);

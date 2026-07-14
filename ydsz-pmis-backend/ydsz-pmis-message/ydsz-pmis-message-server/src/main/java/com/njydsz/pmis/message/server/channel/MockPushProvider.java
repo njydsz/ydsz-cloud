@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
 
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ public class MockPushProvider implements PushProvider {
 
     @Override
     public MessageResult send(MessageRequest request, MsgTemplateDO template) {
-        String traceId = "MOCK-PUSH-" + SnowflakeIdGenerator.nextTraceId();
+        String traceId = "MOCK-PUSH-" + SnowflakeUtils.nextIdStr();
         log.info("[PUSH-MOCK] 推送 receiver={} content={}",
                 request.getReceiver(), request.getContent());
         return MessageResult.ok("PUSH", traceId);

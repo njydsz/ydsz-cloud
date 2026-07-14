@@ -36,142 +36,64 @@ public class YdszSecurityException extends AbstractYdszException {
     /** 默认构造函数，初始化为 403 Forbidden / WARN / SECURITY */
     public YdszSecurityException() {
         super();
-        this.httpStatus = HttpStatus.FORBIDDEN.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.SECURITY;
+        initDefaults(HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
     public YdszSecurityException(String key) {
         super();
-        this.httpStatus = HttpStatus.FORBIDDEN.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.SECURITY;
-        this.code = UnifiedExceptionCode.FORBIDDEN.getCode();
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.FORBIDDEN.getCode(), key, new Object[]{}, HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
     public YdszSecurityException(ExceptionCode exceptionCode) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.SECURITY;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
     public YdszSecurityException(String key, Object[] params) {
         super();
-        this.httpStatus = HttpStatus.FORBIDDEN.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.SECURITY;
-        this.code = UnifiedExceptionCode.FORBIDDEN.getCode();
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.FORBIDDEN.getCode(), key, params, HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
     public YdszSecurityException(ExceptionCode exceptionCode, Object[] params) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.SECURITY;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, params, ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
     public YdszSecurityException(String code, String key) {
         super();
-        this.httpStatus = HttpStatus.FORBIDDEN.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.SECURITY;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, new Object[]{}, HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
     public YdszSecurityException(String code, String key, Object[] params) {
         super();
-        this.httpStatus = HttpStatus.FORBIDDEN.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.SECURITY;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, params, HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
     public YdszSecurityException(Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.FORBIDDEN.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.SECURITY;
+        initDefaults(HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);
         this.code = UnifiedExceptionCode.FORBIDDEN.getCode();
     }
 
     public YdszSecurityException(String code, Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.FORBIDDEN.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.SECURITY;
+        initDefaults(HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);
         this.code = code;
     }
 
     public YdszSecurityException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.SECURITY;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
     public YdszSecurityException(String code, String key, Throwable cause) {
         super(null, cause);
-        this.httpStatus = HttpStatus.FORBIDDEN.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.SECURITY;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, new Object[]{}, HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
     public YdszSecurityException(String code, String key, Object[] params, Throwable cause) {
         super(null, cause);
-        this.httpStatus = HttpStatus.FORBIDDEN.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.SECURITY;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, params, HttpStatus.FORBIDDEN.value(), ExceptionLevel.WARN, ExceptionCategory.SECURITY);
     }
 
     public ExceptionInfo toExceptionInfo() {

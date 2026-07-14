@@ -41,7 +41,6 @@ package com.njydsz.pmis.common.json.module;
  * </pre>
  *
  * @since 1.3.0
- * @since 1.3.0
  */
 public interface JsonModule {
 

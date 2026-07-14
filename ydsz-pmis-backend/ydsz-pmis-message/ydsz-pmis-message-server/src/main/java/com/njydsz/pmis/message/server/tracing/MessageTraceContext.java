@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.server.tracing;
 
 import org.slf4j.MDC;
 
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.common.util.id.TracerUtils;
 
 /**
  * P1-3: 消息全链路追踪上下文（MDC traceId 自动管理）。
@@ -46,11 +46,11 @@ public final class MessageTraceContext implements AutoCloseable {
      */
     public static MessageTraceContext enter(String traceId) {
         // 仅读取 MDC（不含 Brave fallback），避免恢复时把 Brave traceId 当作 previous
-        String previous = MDC.get(TraceIdUtil.TRACE_ID_KEY);
+        String previous = MDC.get("traceId");
         if (traceId == null || traceId.isBlank()) {
-            TraceIdUtil.getOrCreate();
+            TracerUtils.getOrCreateTraceId();
         } else {
-            TraceIdUtil.set(traceId);
+            TracerUtils.setTraceId(traceId);
         }
         return new MessageTraceContext(previous);
     }
@@ -61,9 +61,9 @@ public final class MessageTraceContext implements AutoCloseable {
     @Override
     public void close() {
         if (previousTraceId != null && !previousTraceId.isEmpty()) {
-            TraceIdUtil.set(previousTraceId);
+            TracerUtils.setTraceId(previousTraceId);
         } else {
-            TraceIdUtil.clear();
+            TracerUtils.clear();
         }
     }
 }

@@ -25,22 +25,9 @@ import com.njydsz.pmis.common.core.context.RequestContext;
  *   <li><b>上下文感知：</b>自动携带租户、用户、追踪等上下文元数据</li>
  * </ul>
  *
- * <p><b>使用示例：</b>
+ * <p><b>创建方式：</b>
+ * 推荐使用 Builder 模式创建领域事件，自动填充 eventId、occurredAt 和上下文元数据：
  * <pre>{@code
- * public class OrderCreatedEvent extends DomainEvent {
- *     private final Long orderId;
- *     private final String orderNo;
- *     private final BigDecimal totalAmount;
- *
- *     public OrderCreatedEvent(Long orderId, String orderNo, BigDecimal totalAmount) {
- *         super("OrderCreated");
- *         this.orderId = orderId;
- *         this.orderNo = orderNo;
- *         this.totalAmount = totalAmount;
- *     }
- * }
- *
- * // 使用 Builder 创建（推荐，自动填充上下文元数据）
  * DomainEvent event = DomainEvent.builder()
  *     .eventType("OrderCreated")
  *     .aggregateId("order-123")
@@ -48,6 +35,20 @@ import com.njydsz.pmis.common.core.context.RequestContext;
  *     .version(1)
  *     .metadata("source", "API")
  *     .build();
+ * }</pre>
+ *
+ * <p>子类继承时，只需在构造器中调用 {@link #DomainEvent(String)} 即可：
+ * <pre>{@code
+ * public class OrderCreatedEvent extends DomainEvent {
+ *     private final Long orderId;
+ *     private final BigDecimal totalAmount;
+ *
+ *     public OrderCreatedEvent(Long orderId, BigDecimal totalAmount) {
+ *         super("OrderCreated");
+ *         this.orderId = orderId;
+ *         this.totalAmount = totalAmount;
+ *     }
+ * }
  * }</pre>
  *
  * @author ydsz-pmis-team
@@ -109,21 +110,23 @@ public class DomainEvent implements Serializable {
     private final Map<String, Object> metadata;
 
     /**
-     * 构造领域事件
+     * 构造领域事件（子类推荐使用）
      *
-     * <p>自动从 {@link RequestContext} 填充租户ID、用户ID和追踪ID。
+     * <p>自动生成 eventId 和 occurredAt，并从 {@link RequestContext} 填充上下文元数据。
      *
      * @param eventType 事件类型
      */
     public DomainEvent(String eventType) {
         this(UUID.randomUUID().toString(), LocalDateTime.now(), eventType,
-             null, null, 1);
+             null, null, 1,
+             RequestContext.getTenantId(), RequestContext.getUserId(), RequestContext.getTraceId(),
+             Collections.emptyMap());
     }
 
     /**
-     * 构造领域事件（包含聚合根关联信息）
+     * 构造领域事件（包含聚合根关联信息，子类可使用）
      *
-     * <p>自动从 {@link RequestContext} 填充租户ID、用户ID和追踪ID。
+     * <p>自动生成 eventId 和 occurredAt，并从 {@link RequestContext} 填充上下文元数据。
      *
      * @param eventType     事件类型
      * @param aggregateId   聚合根ID
@@ -131,35 +134,7 @@ public class DomainEvent implements Serializable {
      */
     public DomainEvent(String eventType, String aggregateId, String aggregateType) {
         this(UUID.randomUUID().toString(), LocalDateTime.now(), eventType,
-             aggregateId, aggregateType, 1);
-    }
-
-    /**
-     * 构造领域事件（指定事件ID和发生时间）
-     *
-     * @param eventId    事件唯一标识
-     * @param occurredAt 事件发生时间
-     * @param eventType  事件类型
-     */
-    public DomainEvent(String eventId, LocalDateTime occurredAt, String eventType) {
-        this(eventId, occurredAt, eventType, null, null, 1);
-    }
-
-    /**
-     * 构造领域事件（完整参数）
-     *
-     * <p>自动从 {@link RequestContext} 填充租户ID、用户ID和追踪ID。
-     *
-     * @param eventId       事件唯一标识
-     * @param occurredAt    事件发生时间
-     * @param eventType     事件类型
-     * @param aggregateId   聚合根ID
-     * @param aggregateType 聚合根类型
-     * @param version       事件版本号
-     */
-    public DomainEvent(String eventId, LocalDateTime occurredAt, String eventType,
-                       String aggregateId, String aggregateType, int version) {
-        this(eventId, occurredAt, eventType, aggregateId, aggregateType, version,
+             aggregateId, aggregateType, 1,
              RequestContext.getTenantId(), RequestContext.getUserId(), RequestContext.getTraceId(),
              Collections.emptyMap());
     }
@@ -192,28 +167,6 @@ public class DomainEvent implements Serializable {
         this.userId = userId;
         this.traceId = traceId;
         this.metadata = metadata != null ? Collections.unmodifiableMap(new HashMap<>(metadata)) : Collections.emptyMap();
-    }
-
-    /**
-     * 工厂方法：创建领域事件
-     *
-     * @param eventType 事件类型
-     * @return 领域事件实例
-     */
-    public static DomainEvent of(String eventType) {
-        return new DomainEvent(eventType);
-    }
-
-    /**
-     * 工厂方法：创建领域事件（包含聚合根关联信息）
-     *
-     * @param eventType     事件类型
-     * @param aggregateId   聚合根ID
-     * @param aggregateType 聚合根类型
-     * @return 领域事件实例
-     */
-    public static DomainEvent of(String eventType, String aggregateId, String aggregateType) {
-        return new DomainEvent(eventType, aggregateId, aggregateType);
     }
 
     /**

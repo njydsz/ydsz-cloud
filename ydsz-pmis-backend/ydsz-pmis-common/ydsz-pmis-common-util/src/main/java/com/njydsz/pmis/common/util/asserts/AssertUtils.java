@@ -11,59 +11,16 @@ import com.njydsz.pmis.common.util.object.ObjectUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
- * 断言工具类
+ * 断言工具类（已废弃，请使用 {@link com.njydsz.pmis.common.util.validate.ValidateUtils}）
  *
- * <p>提供全面的断言方法，功能对标 Spring Assert、Apache Commons Validate 和阿里巴巴 Assert，
- * 并进行了增强和优化。
- *
- * <p><b>核心特性：</b>
- * <ul>
- *   <li><b>双重消息模式</b>：支持静态消息字符串和 Supplier 函数式延迟消息</li>
- *   <li><b>自定义异常</b>：支持指定异常类型和自定义异常供应商</li>
- *   <li><b>全面类型支持</b>：支持 Object、String、Collection、Map、Array 等多种类型</li>
- *   <li><b>数值断言增强</b>：提供 int、long、double 类型的完整断言方法</li>
- *   <li><b>函数式断言</b>：支持 BooleanSupplier 和条件判断</li>
- *   <li><b>空值安全</b>：所有方法均进行空值检查，避免 NPE</li>
- * </ul>
- *
- * <p><b>主要功能：</b>
- * <ul>
- *   <li>基础断言：isTrue、isFalse</li>
- *   <li>空值断言：isNull、isNotNull、isEmpty、isNotEmpty（支持多种类型）</li>
- *   <li>字符串断言：isBlank、isNotBlank</li>
- *   <li>数值断言：isZero、isNotZero、isPositive、isNegative、isGreaterThan 等</li>
- *   <li>相等断言：equals、notEquals</li>
- *   <li>数组断言：isArrayEmpty、isArrayNotEmpty、isArrayLength、arrayContains</li>
- *   <li>范围断言：inRange、notInRange</li>
- *   <li>函数式断言：isTrue、satisfies（支持 BooleanSupplier）</li>
- *   <li>自定义异常：支持 Class 参数指定异常类型</li>
- * </ul>
- *
- * <p><b>使用示例：</b>
- * <pre>
- * // 基础断言
- * AssertUtils.isTrue(flag, "条件必须为真");
- * AssertUtils.notNull(obj, "对象不能为 null");
- *
- * // 空值断言
- * AssertUtils.isNotEmpty(list, "列表不能为空");
- * AssertUtils.isNotBlank(str, "字符串不能为空白");
- *
- * // 数值断言
- * AssertUtils.isPositive(age, "年龄必须为正数");
- * AssertUtils.inRange(score, 0, 100, "分数必须在 0-100 之间");
- *
- * // 函数式异常信息（延迟求值，避免不必要的字符串拼接）
- * AssertUtils.notNull(obj, () -> "对象不能为 null: " + objName);
- *
- * // 自定义异常
- * AssertUtils.isNotBlank(username, BusinessException.class, () -> new BusinessException("用户名不能为空"));
- * </pre>
+ * <p>ValidateUtils 提供更完整的校验能力，包括 Hibernate Validator 集成、
+ * 格式校验（邮箱/手机/身份证/URL/IP）和链式校验器 API。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
+ * @deprecated 请使用 {@link com.njydsz.pmis.common.util.validate.ValidateUtils}
  */
+@Deprecated(since = "1.4.0", forRemoval = true)
 public class AssertUtils {
 
     /**

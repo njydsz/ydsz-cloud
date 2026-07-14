@@ -36,11 +36,6 @@
     "allPublicConstructors": true
   },
   {
-    "name": "com.njydsz.pmis.common.exception.metrics.ExceptionMetricsRecorder",
-    "allDeclaredConstructors": true,
-    "allPublicConstructors": true
-  },
-  {
     "name": "com.njydsz.pmis.common.exception.observability.TraceContext",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true,
@@ -88,11 +83,6 @@
     "name": "com.njydsz.pmis.common.exception.alert.ExceptionAlertEvent",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true
-  },
-  {
-    "name": "com.njydsz.pmis.common.exception.context.ExceptionContextPropagator",
-    "allDeclaredMethods": true,
-    "allPublicMethods": true
   },
   {
     "name": "com.njydsz.pmis.common.exception.model.ProblemDetail",

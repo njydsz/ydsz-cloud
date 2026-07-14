@@ -36,7 +36,7 @@ import com.njydsz.pmis.common.core.job.JobHandler;
 import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.common.util.id.TracerUtils;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
 import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
@@ -868,7 +868,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         log0.setStartTime(LocalDateTime.now());
         log0.setStatus("RUNNING");
         log0.setParamsJson(job.getParamsJson());
-        log0.setTraceId(TraceIdUtil.get());
+        log0.setTraceId(TracerUtils.getTraceId());
         log0.setCreatedAt(LocalDateTime.now());
         log0.setDeleted(0);
         jobLogMapper.insert(log0);

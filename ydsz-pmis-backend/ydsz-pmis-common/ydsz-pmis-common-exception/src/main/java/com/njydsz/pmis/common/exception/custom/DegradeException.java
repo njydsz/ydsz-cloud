@@ -45,142 +45,64 @@ public class DegradeException extends AbstractYdszException {
 
     public DegradeException() {
         super();
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
+        initDefaults(HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.WARN, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public DegradeException(String key) {
         super();
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = UnifiedExceptionCode.SERVICE_DEGRADED.getCode();
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.SERVICE_DEGRADED.getCode(), key, new Object[]{}, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.WARN, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public DegradeException(ExceptionCode exceptionCode) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.WARN, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public DegradeException(String key, Object[] params) {
         super();
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = UnifiedExceptionCode.SERVICE_DEGRADED.getCode();
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.SERVICE_DEGRADED.getCode(), key, params, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.WARN, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public DegradeException(ExceptionCode exceptionCode, Object[] params) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, params, ExceptionLevel.WARN, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public DegradeException(String code, String key) {
         super();
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, new Object[]{}, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.WARN, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public DegradeException(String code, String key, Object[] params) {
         super();
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, params, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.WARN, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public DegradeException(Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
+        initDefaults(HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.WARN, ExceptionCategory.INFRASTRUCTURE);
         this.code = UnifiedExceptionCode.SERVICE_DEGRADED.getCode();
     }
 
     public DegradeException(String code, Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
+        initDefaults(HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.WARN, ExceptionCategory.INFRASTRUCTURE);
         this.code = code;
     }
 
     public DegradeException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.WARN, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public DegradeException(String code, String key, Throwable cause) {
         super(null, cause);
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, new Object[]{}, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.WARN, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public DegradeException(String code, String key, Object[] params, Throwable cause) {
         super(null, cause);
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, params, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.WARN, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public ExceptionInfo toExceptionInfo() {

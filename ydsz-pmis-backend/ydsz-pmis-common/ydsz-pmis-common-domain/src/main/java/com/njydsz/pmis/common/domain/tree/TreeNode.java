@@ -498,10 +498,15 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     /**
      * 将当前节点移动到新的父节点下
      *
-     * <p>更新父节点ID、层级、路径，并将当前节点从旧父节点的子列表移除，
-     * 添加到新父节点的子列表中。
+     * <p>更新父节点ID。当移动到根节点（newParentId 为 null）时，
+     * 自动设置 level 和 path；当移动到非根父节点时，level 和 path 标记为待重算（null），
+     * 调用方应通过 {@link TreeBuilder#build()} 重建树以刷新所有节点的层级和路径。
      *
-     * @param newParentId 新父节点ID
+     * <p><b>注意：</b>此方法不修改 {@code leaf} 字段，叶子状态由子节点列表实际决定。
+     * 此方法也不负责从旧父节点的子列表中移除或添加到新父节点的子列表，
+     * 这些操作应由调用方或 {@link TreeBuilder} 处理。
+     *
+     * @param newParentId 新父节点ID，null 表示移动到根节点
      */
     public void moveTo(ID newParentId) {
         this.parentId = newParentId;
@@ -512,7 +517,6 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
             this.level = null;
             this.path = null;
         }
-        this.leaf = false;
     }
 
     /**

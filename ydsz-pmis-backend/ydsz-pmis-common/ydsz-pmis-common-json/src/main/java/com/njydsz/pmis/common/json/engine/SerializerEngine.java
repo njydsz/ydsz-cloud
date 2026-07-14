@@ -20,7 +20,6 @@ import com.njydsz.pmis.common.json.provider.SerializationProvider;
  * 可通过 {@code -Dpmis.json.monitoring=true} 系统属性启用。</p>
  *
  * @since 1.3.0
- * @since 1.3.0
  */
 public final class SerializerEngine {
 

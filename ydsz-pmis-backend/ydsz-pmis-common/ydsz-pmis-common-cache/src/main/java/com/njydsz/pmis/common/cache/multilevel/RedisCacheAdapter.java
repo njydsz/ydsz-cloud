@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.cache.multilevel;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.types.Expiration;
+import org.springframework.data.redis.serializer.RedisSerializer;
 
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.listener.RemovalListener;
@@ -189,18 +191,26 @@ public class RedisCacheAdapter<K, V> implements Cache<K, V> {
    */
   private Set<String> scanKeys(String pattern, int count) {
     Set<String> keys = new HashSet<>();
+    ScanOptions options = ScanOptions.scanOptions().match(pattern).count(count).build();
+    Cursor<byte[]> cursor = null;
     try {
-      ScanOptions options = ScanOptions.scanOptions().match(pattern).count(count).build();
-      Cursor<byte[]> cursor =
+      cursor =
           redisTemplate.execute(
               (RedisCallback<Cursor<byte[]>>)
                   connection -> connection.keyCommands().scan(options));
       while (cursor.hasNext()) {
-        keys.add(new String(cursor.next()));
+        keys.add(new String(cursor.next(), StandardCharsets.UTF_8));
       }
-      cursor.close();
     } catch (Exception e) {
       log.warn("Redis SCAN 扫描失败, pattern={}", pattern, e);
+    } finally {
+      if (cursor != null) {
+        try {
+          cursor.close();
+        } catch (Exception e) {
+          log.debug("关闭 Redis Cursor 失败", e);
+        }
+      }
     }
     return keys;
   }
@@ -280,7 +290,7 @@ public class RedisCacheAdapter<K, V> implements Cache<K, V> {
                   String redisKey = entry.getKey();
                   Object value = entry.getValue();
                   byte[] keyBytes = redisTemplate.getStringSerializer().serialize(redisKey);
-                  byte[] valueBytes = redisTemplate.getValueSerializer().serialize(value);
+                  byte[] valueBytes = ((RedisSerializer<Object>) redisTemplate.getValueSerializer()).serialize(value);
                   if (ttlSeconds > 0) {
                     connection
                         .stringCommands()

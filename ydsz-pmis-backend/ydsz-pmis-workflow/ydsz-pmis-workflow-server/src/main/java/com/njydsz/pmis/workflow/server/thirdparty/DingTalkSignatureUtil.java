@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.server.thirdparty;
 
-import com.njydsz.pmis.common.util.CryptoSignUtil;
+import com.njydsz.pmis.common.util.security.DigestUtils;
 
 /**
  * 钉钉回调签名验证工具
@@ -36,8 +36,8 @@ public final class DingTalkSignatureUtil {
             return false;
         }
         String data = str(timestamp) + str(nonce) + str(encrypt);
-        return CryptoSignUtil.verifySignature(data, appSecret, signature,
-                CryptoSignUtil.SignatureEncoding.BASE64);
+        return DigestUtils.verifySignature(data, appSecret, signature,
+                DigestUtils.SignatureEncoding.BASE64);
     }
 
     private static String str(String s) {

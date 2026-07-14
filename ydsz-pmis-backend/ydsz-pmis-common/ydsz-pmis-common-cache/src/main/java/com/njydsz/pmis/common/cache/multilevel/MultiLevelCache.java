@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -195,6 +196,35 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
     if (value != null) {
       return CompletableFuture.completedFuture(value);
     }
+    if (loader == null) {
+      return CompletableFuture.completedFuture(null);
+    }
+    // 使用分布式锁防止缓存击穿（与同步 get() 方法一致）
+    if (rebuildLock != null && cacheName != null) {
+      return CompletableFuture.supplyAsync(
+          () ->
+              rebuildLock.executeWithLock(
+                  cacheName,
+                  key,
+                  () -> {
+                    // double-check：获取锁后再次检查缓存
+                    V cached = getIfPresent(key);
+                    if (cached != null) {
+                      return cached;
+                    }
+                    try {
+                      V loaded = loader.apply(key).join();
+                      if (loaded != null) {
+                        put(key, loaded);
+                      }
+                      return loaded;
+                    } catch (Exception e) {
+                      log.warn("MultiLevelCache 异步加载失败: key={}", key, e);
+                      return null;
+                    }
+                  }),
+          ForkJoinPool.commonPool());
+    }
     return loader
         .apply(key)
         .thenApply(
@@ -317,7 +347,19 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
 
   @Override
   public void removeAll(Collection<K> keys) {
-    keys.forEach(this::remove);
+    // 先删除 L1 和 L2
+    keys.forEach(k -> {
+      l1Cache.remove(k);
+      l2Cache.remove(k);
+    });
+    // 批量广播 L1 失效（合并为一条广播消息）
+    if (broadcaster != null && cacheName != null) {
+      broadcaster.broadcastInvalidationAll(cacheName, (Collection<Object>) (Collection<?>) keys);
+    }
+    // 通知监听器
+    for (K key : keys) {
+      notifyRemoval(key, null, RemovalCause.EXPLICIT);
+    }
   }
 
   @Override

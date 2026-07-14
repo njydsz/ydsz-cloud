@@ -3,13 +3,14 @@ package com.njydsz.pmis.message.server.token;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Base64;
 
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.util.CryptoUtil;
+import com.njydsz.pmis.common.util.security.DigestUtils;
 import com.njydsz.pmis.message.server.config.MessageProperties;
 
 import lombok.RequiredArgsConstructor;
@@ -65,7 +66,7 @@ public class UnsubscribeTokenUtil {
         long expiresAt = Instant.now().plus(ttlDays, ChronoUnit.DAYS).getEpochSecond();
         String payload = buildPayload(userId, topicCode, channel, expiresAt);
         String sig = sign(payload);
-        return CryptoUtil.base64UrlEncode(payload.getBytes(StandardCharsets.UTF_8)) + "." + sig;
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(payload.getBytes(StandardCharsets.UTF_8)) + "." + sig;
     }
 
     /**
@@ -94,12 +95,12 @@ public class UnsubscribeTokenUtil {
         String sig = parts[1];
         String payload;
         try {
-            payload = new String(CryptoUtil.base64UrlDecode(payloadB64), StandardCharsets.UTF_8);
+            payload = new String(Base64.getUrlDecoder().decode(payloadB64), StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "退订 token 解码失败");
         }
         String expectedSig = sign(payload);
-        if (!CryptoUtil.constantTimeEquals(expectedSig, sig)) {
+        if (!DigestUtils.constantTimeEquals(expectedSig, sig)) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "退订 token 签名校验失败");
         }
         UnsubscribeTokenPayload result = parsePayload(payload);
@@ -147,6 +148,6 @@ public class UnsubscribeTokenUtil {
     private String sign(String payload) {
         String configured = messageProperties.getUnsubscribe().getSecret();
         String secret = StringUtils.hasText(configured) ? configured : DEFAULT_SECRET;
-        return CryptoUtil.hmacSha256(payload, secret.getBytes(StandardCharsets.UTF_8));
+        return DigestUtils.hmacSha256UrlSafe(payload, secret.getBytes(StandardCharsets.UTF_8));
     }
 }

@@ -8,7 +8,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.message.server.service.receipt.ReadReceiptService;
 
 import lombok.RequiredArgsConstructor;
@@ -88,7 +88,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
         if (!StringUtils.hasText(originalUrl)) {
             return originalUrl;
         }
-        String code = SnowflakeIdGenerator.nextIdStr();
+        String code = SnowflakeUtils.nextIdStr();
         String shortUrl = shortlinkBaseUrl + "/s/" + code;
         try {
             redisTemplate.opsForValue().set(SHORTLINK_PREFIX + code, originalUrl, Duration.ofSeconds(SHORTLINK_TTL));

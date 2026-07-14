@@ -32,55 +32,27 @@ public class DuplicateException extends AbstractYdszException {
 
     public DuplicateException() {
         super();
-        this.httpStatus = HttpStatus.CONFLICT.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.DUPLICATE;
+        initDefaults(HttpStatus.CONFLICT.value(), ExceptionLevel.WARN, ExceptionCategory.DUPLICATE);
     }
 
     public DuplicateException(ExceptionCode exceptionCode) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.DUPLICATE;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.WARN, ExceptionCategory.DUPLICATE);
     }
 
     public DuplicateException(String key) {
         super();
-        this.httpStatus = HttpStatus.CONFLICT.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.DUPLICATE;
-        this.code = UnifiedExceptionCode.FAIL.getCode();
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.FAIL.getCode(), key, new Object[]{}, HttpStatus.CONFLICT.value(), ExceptionLevel.WARN, ExceptionCategory.DUPLICATE);
     }
 
     public DuplicateException(ExceptionCode exceptionCode, Object[] params) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.DUPLICATE;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, params, ExceptionLevel.WARN, ExceptionCategory.DUPLICATE);
     }
 
     public DuplicateException(Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.CONFLICT.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.DUPLICATE;
+        initDefaults(HttpStatus.CONFLICT.value(), ExceptionLevel.WARN, ExceptionCategory.DUPLICATE);
         this.code = UnifiedExceptionCode.FAIL.getCode();
     }
 

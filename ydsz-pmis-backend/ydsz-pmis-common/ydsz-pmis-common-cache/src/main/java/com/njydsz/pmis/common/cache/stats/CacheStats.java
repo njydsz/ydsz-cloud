@@ -50,6 +50,9 @@ public class CacheStats {
   /** 总加载时间（纳秒） */
   private final long totalLoadTimeNanos;
 
+  /** 空统计快照（零值） */
+  public static final CacheStats EMPTY = new CacheStats(0, 0, 0, 0, 0, 0, 0);
+
   /**
    * 创建基础统计信息
    *
@@ -58,6 +61,15 @@ public class CacheStats {
    */
   public CacheStats(long hitCount, long missCount) {
     this(hitCount, missCount, 0, 0, 0, 0, 0);
+  }
+
+  /**
+   * 创建 CacheStats Builder
+   *
+   * @return Builder 实例
+   */
+  public static Builder builder() {
+    return new Builder();
   }
 
   public CacheStats(
@@ -293,5 +305,127 @@ public class CacheStats {
         loadSuccessCount,
         loadExceptionCount,
         getAverageLoadPenalty() / 1_000_000.0);
+  }
+
+  /**
+   * CacheStats 构建器 — 链式构建统计快照
+   *
+   * <p>使用示例：
+   *
+   * <pre>{@code
+   * CacheStats stats = CacheStats.builder()
+   *     .hitCount(100)
+   *     .missCount(20)
+   *     .evictionCount(5)
+   *     .loadSuccessCount(15)
+   *     .totalLoadTimeNanos(3_000_000)
+   *     .build();
+   * }</pre>
+   *
+   * @since 1.3.0
+   */
+  public static final class Builder {
+    private long hitCount;
+    private long missCount;
+    private long evictionCount;
+    private long loadCount;
+    private long loadSuccessCount;
+    private long loadExceptionCount;
+    private long totalLoadTimeNanos;
+
+    private Builder() {}
+
+    /**
+     * 设置命中次数
+     *
+     * @param hitCount 命中次数
+     * @return this
+     */
+    public Builder hitCount(long hitCount) {
+      this.hitCount = hitCount;
+      return this;
+    }
+
+    /**
+     * 设置未命中次数
+     *
+     * @param missCount 未命中次数
+     * @return this
+     */
+    public Builder missCount(long missCount) {
+      this.missCount = missCount;
+      return this;
+    }
+
+    /**
+     * 设置淘汰次数
+     *
+     * @param evictionCount 淘汰次数
+     * @return this
+     */
+    public Builder evictionCount(long evictionCount) {
+      this.evictionCount = evictionCount;
+      return this;
+    }
+
+    /**
+     * 设置加载总次数
+     *
+     * @param loadCount 加载总次数
+     * @return this
+     */
+    public Builder loadCount(long loadCount) {
+      this.loadCount = loadCount;
+      return this;
+    }
+
+    /**
+     * 设置加载成功次数
+     *
+     * @param loadSuccessCount 加载成功次数
+     * @return this
+     */
+    public Builder loadSuccessCount(long loadSuccessCount) {
+      this.loadSuccessCount = loadSuccessCount;
+      return this;
+    }
+
+    /**
+     * 设置加载异常次数
+     *
+     * @param loadExceptionCount 加载异常次数
+     * @return this
+     */
+    public Builder loadExceptionCount(long loadExceptionCount) {
+      this.loadExceptionCount = loadExceptionCount;
+      return this;
+    }
+
+    /**
+     * 设置总加载时间
+     *
+     * @param totalLoadTimeNanos 总加载时间（纳秒）
+     * @return this
+     */
+    public Builder totalLoadTimeNanos(long totalLoadTimeNanos) {
+      this.totalLoadTimeNanos = totalLoadTimeNanos;
+      return this;
+    }
+
+    /**
+     * 构建统计快照
+     *
+     * @return 不可变统计快照
+     */
+    public CacheStats build() {
+      return new CacheStats(
+          hitCount,
+          missCount,
+          evictionCount,
+          loadCount,
+          loadSuccessCount,
+          loadExceptionCount,
+          totalLoadTimeNanos);
+    }
   }
 }

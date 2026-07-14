@@ -5,7 +5,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.project.domain.dto.AlertEventDTO;
 import com.njydsz.pmis.project.domain.enums.AlertSeverity;
 
@@ -93,7 +93,7 @@ public class MarginLowRule implements AlertRule {
         }
         if (severity == null) return null;
         return AlertEventDTO.builder()
-                .eventId(SnowflakeIdGenerator.nextIdStr())
+                .eventId(SnowflakeUtils.nextIdStr())
                 .ruleCode(getCode())
                 .ruleName(getName())
                 .category(getCategory())

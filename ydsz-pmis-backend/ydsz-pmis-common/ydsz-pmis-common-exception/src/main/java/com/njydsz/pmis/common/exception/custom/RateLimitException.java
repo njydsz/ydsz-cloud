@@ -32,55 +32,27 @@ public class RateLimitException extends AbstractYdszException {
 
     public RateLimitException() {
         super();
-        this.httpStatus = HttpStatus.TOO_MANY_REQUESTS.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.RATE_LIMIT;
+        initDefaults(HttpStatus.TOO_MANY_REQUESTS.value(), ExceptionLevel.WARN, ExceptionCategory.RATE_LIMIT);
     }
 
     public RateLimitException(ExceptionCode exceptionCode) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.RATE_LIMIT;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.WARN, ExceptionCategory.RATE_LIMIT);
     }
 
     public RateLimitException(String key) {
         super();
-        this.httpStatus = HttpStatus.TOO_MANY_REQUESTS.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.RATE_LIMIT;
-        this.code = UnifiedExceptionCode.FAIL.getCode();
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.FAIL.getCode(), key, new Object[]{}, HttpStatus.TOO_MANY_REQUESTS.value(), ExceptionLevel.WARN, ExceptionCategory.RATE_LIMIT);
     }
 
     public RateLimitException(ExceptionCode exceptionCode, Object[] params) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.RATE_LIMIT;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, params, ExceptionLevel.WARN, ExceptionCategory.RATE_LIMIT);
     }
 
     public RateLimitException(Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.TOO_MANY_REQUESTS.value();
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.RATE_LIMIT;
+        initDefaults(HttpStatus.TOO_MANY_REQUESTS.value(), ExceptionLevel.WARN, ExceptionCategory.RATE_LIMIT);
         this.code = UnifiedExceptionCode.FAIL.getCode();
     }
 

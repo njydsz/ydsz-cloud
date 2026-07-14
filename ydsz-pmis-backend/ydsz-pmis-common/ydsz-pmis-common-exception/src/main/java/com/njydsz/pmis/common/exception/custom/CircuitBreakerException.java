@@ -36,142 +36,64 @@ public class CircuitBreakerException extends AbstractYdszException {
 
     public CircuitBreakerException() {
         super();
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
+        initDefaults(HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public CircuitBreakerException(String key) {
         super();
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = UnifiedExceptionCode.CIRCUIT_BREAKER_OPEN.getCode();
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.CIRCUIT_BREAKER_OPEN.getCode(), key, new Object[]{}, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public CircuitBreakerException(ExceptionCode exceptionCode) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public CircuitBreakerException(String key, Object[] params) {
         super();
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = UnifiedExceptionCode.CIRCUIT_BREAKER_OPEN.getCode();
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(UnifiedExceptionCode.CIRCUIT_BREAKER_OPEN.getCode(), key, params, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public CircuitBreakerException(ExceptionCode exceptionCode, Object[] params) {
         super();
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, params, ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public CircuitBreakerException(String code, String key) {
         super();
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, new Object[]{}, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public CircuitBreakerException(String code, String key, Object[] params) {
         super();
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, params, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public CircuitBreakerException(Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
+        initDefaults(HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
         this.code = UnifiedExceptionCode.CIRCUIT_BREAKER_OPEN.getCode();
     }
 
     public CircuitBreakerException(String code, Throwable cause) {
         super(cause);
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
+        initDefaults(HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
         this.code = code;
     }
 
     public CircuitBreakerException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
-        this.httpStatus = exceptionCode.getHttpStatus();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = exceptionCode.getCode();
-        this.key = exceptionCode.getKey();
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = exceptionCode.getKey();
-        this.messageParams = this.params;
+        init(exceptionCode, new Object[]{}, ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public CircuitBreakerException(String code, String key, Throwable cause) {
         super(null, cause);
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(new Object[]{});
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, new Object[]{}, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public CircuitBreakerException(String code, String key, Object[] params, Throwable cause) {
         super(null, cause);
-        this.httpStatus = HttpStatus.SERVICE_UNAVAILABLE.value();
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.INFRASTRUCTURE;
-        this.code = code;
-        this.key = key;
-        this.params = normalizeParams(params);
-        this.message = null;
-        this.messageKey = key;
-        this.messageParams = this.params;
+        init(code, key, params, HttpStatus.SERVICE_UNAVAILABLE.value(), ExceptionLevel.ERROR, ExceptionCategory.INFRASTRUCTURE);
     }
 
     public ExceptionInfo toExceptionInfo() {

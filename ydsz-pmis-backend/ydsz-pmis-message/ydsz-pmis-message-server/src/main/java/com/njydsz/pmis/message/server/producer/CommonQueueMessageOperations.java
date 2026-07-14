@@ -14,7 +14,7 @@ import com.njydsz.pmis.common.queue.enums.QueueType;
 import com.njydsz.pmis.common.queue.queue.IMessageQueue;
 import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.pmis.common.queue.service.IMessagePublisher;
-import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
+import com.njydsz.pmis.common.util.id.SnowflakeUtils;
 import com.njydsz.pmis.common.json.Json;
 
 import lombok.extern.slf4j.Slf4j;
@@ -87,7 +87,7 @@ public class CommonQueueMessageOperations implements MessageQueueOperations {
 
     private void ensureMessageId(MessageRequest req) {
         if (!StringUtils.hasText(req.getMessageId())) {
-            req.setMessageId(SnowflakeIdGenerator.nextIdStr());
+            req.setMessageId(SnowflakeUtils.nextIdStr());
         }
     }
 }

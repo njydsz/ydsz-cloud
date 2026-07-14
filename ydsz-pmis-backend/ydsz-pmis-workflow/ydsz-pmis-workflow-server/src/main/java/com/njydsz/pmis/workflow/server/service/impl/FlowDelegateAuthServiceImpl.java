@@ -16,7 +16,7 @@ import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.core.response.PageResponse;
 import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.common.util.id.TracerUtils;
 import com.njydsz.pmis.workflow.domain.entity.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowDelegateAuthDO;
 import com.njydsz.pmis.workflow.infra.mapper.FlowAuditLogMapper;
@@ -104,7 +104,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         if (auth.getAuthStatus() == null) {
             auth.setAuthStatus("ENABLED");
         }
-        auth.setProviderTraceId(TraceIdUtil.getOrCreate());
+        auth.setProviderTraceId(TracerUtils.getOrCreateTraceId());
         auth.setCreatedAt(LocalDateTime.now());
         auth.setUpdatedAt(LocalDateTime.now());
 
