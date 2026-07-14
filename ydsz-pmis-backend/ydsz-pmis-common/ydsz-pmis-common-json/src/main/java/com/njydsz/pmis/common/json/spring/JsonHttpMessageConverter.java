@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
+import org.springframework.http.converter.json.MappingJacksonValue;
 
 import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.json.provider.SerializationProvider;
@@ -124,17 +125,8 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
      * @since 1.4.0
      */
     private Class<?> extractViewClass(Object obj) {
-        if (obj == null) {
-            return null;
-        }
-        // 检查是否是 Spring 的 MappingJacksonValue 包装
-        String className = obj.getClass().getName();
-        if ("org.springframework.http.converter.json.MappingJacksonValue".equals(className)) {
-            try {
-                return (Class<?>) obj.getClass().getMethod("getSerializationView").invoke(obj);
-            } catch (Exception ignored) {
-                return null;
-            }
+        if (obj instanceof MappingJacksonValue jacksonValue) {
+            return jacksonValue.getSerializationView();
         }
         return null;
     }
@@ -147,16 +139,8 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
      * @since 1.4.0
      */
     private Object extractValue(Object obj) {
-        if (obj == null) {
-            return null;
-        }
-        String className = obj.getClass().getName();
-        if ("org.springframework.http.converter.json.MappingJacksonValue".equals(className)) {
-            try {
-                return obj.getClass().getMethod("getValue").invoke(obj);
-            } catch (Exception ignored) {
-                return obj;
-            }
+        if (obj instanceof MappingJacksonValue jacksonValue) {
+            return jacksonValue.getValue();
         }
         return obj;
     }

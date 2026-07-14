@@ -74,7 +74,7 @@ public class BaseQuery implements Serializable {
      *
      * @deprecated 建议使用 {@link #startDateTime}（LocalDateTime 类型）替代
      */
-    @Deprecated
+    @Deprecated(since = "1.0.0", forRemoval = true)
     private transient String startTime;
 
     /**
@@ -85,7 +85,7 @@ public class BaseQuery implements Serializable {
      *
      * @deprecated 建议使用 {@link #endDateTime}（LocalDateTime 类型）替代
      */
-    @Deprecated
+    @Deprecated(since = "1.0.0", forRemoval = true)
     private transient String endTime;
 
     /**
@@ -111,7 +111,7 @@ public class BaseQuery implements Serializable {
      *
      * @deprecated 使用 {@link #searchKey} 替代
      */
-    @Deprecated
+    @Deprecated(since = "1.0.0", forRemoval = true)
     private String keyword;
 
     /**
