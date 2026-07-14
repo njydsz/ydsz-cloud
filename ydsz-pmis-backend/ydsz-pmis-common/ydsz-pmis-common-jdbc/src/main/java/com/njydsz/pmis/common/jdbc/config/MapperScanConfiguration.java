@@ -31,7 +31,7 @@ public class MapperScanConfiguration {
     public MapperScannerConfigurer mapperScannerConfigurer(JdbcProperties jdbcProperties) {
         MapperScannerConfigurer scannerConfigurer = new MapperScannerConfigurer();
         String basePpackages = String.join(",", jdbcProperties.getMapperScanPpackages());
-        scannerConfigurer.setBasePpackage(basePpackages);
+        scannerConfigurer.setBasePackage(basePpackages);
         return scannerConfigurer;
     }
 }
