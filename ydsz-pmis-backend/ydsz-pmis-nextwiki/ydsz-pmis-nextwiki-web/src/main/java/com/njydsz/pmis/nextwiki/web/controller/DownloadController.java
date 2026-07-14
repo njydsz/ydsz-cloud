@@ -59,6 +59,7 @@ public class DownloadController {
      */
     @PostMapping("/{nodeId}")
     @Operation(summary = "下载文件", description = "下载前校验限流和防盗链")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_DOWNLOAD)
     public void download(
             @PathVariable String nodeId,
             @RequestHeader("X-User-Id") String userId,

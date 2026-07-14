@@ -1,6 +1,7 @@
 package com.njydsz.pmis.agent.server.debug;
 
 import java.util.List;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import com.njydsz.pmis.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.pmis.agent.domain.agent.AgentExecutor;
 import com.njydsz.pmis.agent.domain.model.ChatResponse;
 import com.njydsz.pmis.agent.domain.trace.TraceRecorder;
+import com.njydsz.pmis.agent.infra.trace.InMemoryTraceRecorder;
 import com.njydsz.pmis.agent.server.agent.AgentFactory;
 
 /**
@@ -66,11 +68,11 @@ public class AgentDebuggerService {
         log.info("[Debugger] 重放: convId={}, agentType={}", conversationId, agentType);
 
         AgentDefinition def = new AgentDefinition(
-                java.util.UUID.randomUUID().toString(),
+                UUID.randomUUID().toString(),
                 "replay-" + conversationId,
                 "Replay Agent",
                 AgentDefinition.Type.valueOf(agentType.toUpperCase()),
-                null, java.util.List.of(),
+                null, List.of(),
                 0.7, 2048, 10,
                 null);
 
@@ -90,9 +92,35 @@ public class AgentDebuggerService {
      * @return 链路 ID 列表
      */
     public List<String> listTraces(int limit) {
-        if (traceRecorder instanceof com.njydsz.pmis.agent.infra.trace.InMemoryTraceRecorder inMem) {
+        if (traceRecorder instanceof InMemoryTraceRecorder inMem) {
             return inMem.listRecentTraces(limit);
         }
         return List.of();
+    }
+
+    /**
+     * 列出最近链路的元数据
+     *
+     * @param limit 最大数量
+     * @return 链路元数据列表，不支持时返回空列表
+     */
+    public List<InMemoryTraceRecorder.TraceMeta> listTraceMetas(int limit) {
+        if (traceRecorder instanceof InMemoryTraceRecorder inMem) {
+            return inMem.listRecentTraceMetas(limit);
+        }
+        return List.of();
+    }
+
+    /**
+     * 获取链路元数据
+     *
+     * @param traceId 链路 ID
+     * @return 元数据，不支持或不存在时返回 null
+     */
+    public InMemoryTraceRecorder.TraceMeta getTraceMeta(String traceId) {
+        if (traceRecorder instanceof InMemoryTraceRecorder inMem) {
+            return inMem.getTraceMeta(traceId);
+        }
+        return null;
     }
 }
