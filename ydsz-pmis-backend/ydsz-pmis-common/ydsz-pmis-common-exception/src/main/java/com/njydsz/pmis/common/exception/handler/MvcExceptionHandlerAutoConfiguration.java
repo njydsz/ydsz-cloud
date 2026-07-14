@@ -23,8 +23,6 @@ import com.njydsz.pmis.common.exception.metrics.ExceptionMetrics;
  * 避免在 Advice 类上叠加 Spring Boot 自动配置语义，提升可测试性与可读性。</p>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
- * 
  * @since 3.0.0
  * @see MvcExceptionHandler
  */

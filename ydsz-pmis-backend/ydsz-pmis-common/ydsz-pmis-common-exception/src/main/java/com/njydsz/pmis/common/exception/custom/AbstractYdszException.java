@@ -26,8 +26,6 @@ import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
  * 当前阶段作为前置准备，在 Javadoc 中记录迁移规划，待所有子类就绪后统一切换。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
- * 
  * @since 3.0.0
  */
 public abstract class AbstractYdszException extends RuntimeException {

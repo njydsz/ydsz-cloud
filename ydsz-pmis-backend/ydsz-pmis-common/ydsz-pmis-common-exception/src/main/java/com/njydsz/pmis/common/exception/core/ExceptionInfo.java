@@ -30,8 +30,6 @@ import lombok.Getter;
  * 由 {@code BaseExceptionHandler} 根据 Spring Environment 决定是否传入脱敏参数。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
- * 
  * @since 3.0.0
  */
 @Getter

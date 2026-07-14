@@ -32,8 +32,6 @@ import io.micrometer.core.instrument.Timer;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
- * 
  * @since 3.0.0
  */
 public class ExceptionMetrics {

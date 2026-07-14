@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.exception.config;
 
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 
 import com.njydsz.pmis.common.exception.observability.TraceContextFilter;
@@ -16,11 +16,9 @@ import com.njydsz.pmis.common.exception.observability.TraceContextFilter;
  * 过滤器顺序设为最高优先级，确保 traceId 在所有业务过滤器之前注入。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
- * 
  * @since 3.0.0
  */
-@Configuration(proxyBeanMethods = false)
+@AutoConfiguration
 @ConditionalOnClass(name = "jakarta.servlet.Filter")
 @ConditionalOnProperty(prefix = "ydsz.exception", name = "trace-enabled", havingValue = "true", matchIfMissing = true)
 public class TraceFilterAutoConfiguration {

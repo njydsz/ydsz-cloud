@@ -14,6 +14,7 @@ import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.json.autotype.AutoTypeChecker;
 import com.njydsz.pmis.common.json.config.JsonConfig;
 import com.njydsz.pmis.common.json.health.JsonHealthIndicator;
+import com.njydsz.pmis.common.json.metric.JsonCacheMetrics;
 import com.njydsz.pmis.common.json.metric.JsonMetrics;
 import com.njydsz.pmis.common.json.module.JsonModule;
 import com.njydsz.pmis.common.json.spring.JsonHttpMessageConverter;
@@ -78,6 +79,13 @@ return converter;
             ObjectProvider<MeterRegistry> meterRegistryProvider) {
         JsonMetrics metrics = new JsonMetrics(meterRegistryProvider.getIfAvailable());
         Json.setMetricsCallback(metrics);
+
+        // 绑定缓存统计指标到 MeterRegistry
+        MeterRegistry registry = meterRegistryProvider.getIfAvailable();
+        if (registry != null) {
+            JsonCacheMetrics.bindTo(registry);
+        }
+
         return metrics;
     }
 

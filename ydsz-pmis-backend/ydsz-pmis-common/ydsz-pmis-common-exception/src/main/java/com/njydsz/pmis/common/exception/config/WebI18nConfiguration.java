@@ -23,8 +23,6 @@ import lombok.extern.slf4j.Slf4j;
  * 这样 exception 模块可不依赖 spring-webmvc 编译期强引用。</p>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
- * 
  * @since 3.5.0
  */
 @Slf4j

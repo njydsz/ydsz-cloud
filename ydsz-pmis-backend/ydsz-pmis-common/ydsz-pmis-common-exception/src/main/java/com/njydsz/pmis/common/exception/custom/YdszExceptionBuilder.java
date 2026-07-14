@@ -39,8 +39,6 @@ import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
  * @param <B> 具体 Builder 类型（用于链式调用）
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
- * 
  * @since 3.0.0
  */
 public abstract class YdszExceptionBuilder<T extends AbstractYdszException, B extends YdszExceptionBuilder<T, B>> {

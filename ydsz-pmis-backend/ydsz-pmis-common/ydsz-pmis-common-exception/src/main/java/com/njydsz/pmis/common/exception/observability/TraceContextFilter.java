@@ -28,8 +28,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * 或在业务系统中通过 {@code @Component} 引入。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
- * 
  * @since 3.0.0
  */
 public class TraceContextFilter extends OncePerRequestFilter {

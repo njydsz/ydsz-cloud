@@ -23,8 +23,6 @@ import lombok.ToString;
  * }</pre>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
- * 
  * @since 3.0.0
  */
 @ToString(callSuper = true)

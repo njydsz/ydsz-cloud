@@ -29,8 +29,6 @@ package com.njydsz.pmis.common.exception.enums;
  * }</pre>
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
- * 
  * @since 3.0.0
  * @see UnifiedExceptionCode
  */

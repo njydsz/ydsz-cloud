@@ -21,6 +21,7 @@ import com.njydsz.pmis.common.cache.listener.RemovalCause;
 import com.njydsz.pmis.common.cache.listener.RemovalListener;
 import com.njydsz.pmis.common.cache.stats.CacheStats;
 import com.njydsz.pmis.common.cache.support.AsyncFunction;
+import com.njydsz.pmis.common.cache.support.CacheLoader;
 
 /**
  * 多级缓存 — L1 本地缓存 + L2 Redis 分布式缓存
@@ -66,6 +67,9 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
   /** 跨节点失效广播器（可选，null 表示不广播） */
   private final CacheInvalidationBroadcaster broadcaster;
 
+  /** 分布式重建锁（可选，null 表示不加锁） */
+  private final DistributedRebuildLock rebuildLock;
+
   /** 删除监听器列表 */
   private final List<RemovalListener<? super K, ? super V>> listeners =
       new CopyOnWriteArrayList<>();
@@ -85,7 +89,7 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
    * @param l2Cache L2 Redis 缓存
    */
   public MultiLevelCache(Cache<K, V> l1Cache, Cache<K, V> l2Cache) {
-    this(l1Cache, l2Cache, null, null);
+    this(l1Cache, l2Cache, null, null, null);
   }
 
   /**
@@ -101,10 +105,29 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
       Cache<K, V> l2Cache,
       String cacheName,
       CacheInvalidationBroadcaster broadcaster) {
+    this(l1Cache, l2Cache, cacheName, broadcaster, null);
+  }
+
+  /**
+   * 创建多级缓存（支持跨节点 L1 失效广播 + 分布式重建锁）
+   *
+   * @param l1Cache L1 本地缓存
+   * @param l2Cache L2 Redis 缓存
+   * @param cacheName 缓存名称（用于广播消息标识）
+   * @param broadcaster 失效广播器（null 表示不广播）
+   * @param rebuildLock 分布式重建锁（null 表示不加锁）
+   */
+  public MultiLevelCache(
+      Cache<K, V> l1Cache,
+      Cache<K, V> l2Cache,
+      String cacheName,
+      CacheInvalidationBroadcaster broadcaster,
+      DistributedRebuildLock rebuildLock) {
     this.l1Cache = l1Cache;
     this.l2Cache = l2Cache;
     this.cacheName = cacheName;
     this.broadcaster = broadcaster;
+    this.rebuildLock = rebuildLock;
     if (broadcaster instanceof RedisCacheInvalidationBroadcaster redisBroadcaster
         && cacheName != null) {
       redisBroadcaster.registerLocalCache(cacheName, l1Cache);
@@ -140,9 +163,28 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
   public V get(K key, Function<K, V> loader) {
     V value = getIfPresent(key);
     if (value == null && loader != null) {
-      value = loader.apply(key);
-      if (value != null) {
-        put(key, value);
+      if (rebuildLock != null && cacheName != null) {
+        // 使用分布式锁防止缓存击穿（thundering herd）
+        value = rebuildLock.executeWithLock(
+            cacheName,
+            key,
+            () -> {
+              // double-check：获取锁后再次检查缓存
+              V cached = getIfPresent(key);
+              if (cached != null) {
+                return cached;
+              }
+              V loaded = loader.apply(key);
+              if (loaded != null) {
+                put(key, loaded);
+              }
+              return loaded;
+            });
+      } else {
+        value = loader.apply(key);
+        if (value != null) {
+          put(key, value);
+        }
       }
     }
     return value;
