@@ -9,7 +9,8 @@ import java.util.function.Supplier;
 import org.redisson.api.RAtomicLong;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
-import org.springframework.context.event.EventListener;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
@@ -188,12 +189,17 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
     /**
      * 监听规则配置刷新事件，清除 L1 缓存
      *
+     * <p>使用 {@code @TransactionalEventListener(AFTER_COMMIT)} 确保仅在校验/持久化事务
+     * 成功提交后才清缓存，回滚时不清（避免回滚后缓存被清空导致额外 DB 回源）。
+     * {@code fallbackExecution=true} 确保非事务上下文（如 Redis 跨节点广播回调线程）
+     * 中发布的事件仍能正常触发。
+     *
      * <p>由 {@link com.njydsz.pmis.literule.server.config.RuleHotReloader} 同源事件触发，
      * 也可由分布式广播器（{@code RedisRuleConfigBroadcaster}）转发跨节点事件触发。
      *
      * @param event 刷新事件
      */
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void onConfigRefresh(RuleConfigRefreshEvent event) {
         log.info("[LiteRule-Cache] 收到刷新事件，清除 L1 缓存: type={}, ruleCode={}",
                 event.getChangeType(), event.getRuleCode());

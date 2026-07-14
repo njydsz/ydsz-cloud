@@ -23,6 +23,7 @@ resources:
   - cronjob.yaml
   - workflow.yaml
   - agent.yaml
+  - nextwiki.yaml
   # Prometheus Operator ServiceMonitor - 让 Prometheus 自动抓取 PMIS 微服务指标
   # 解决告警规则因无抓取目标而全部失效的 P0 问题
   - servicemonitor.yaml
@@ -50,6 +51,8 @@ images:
   - name: ydsz-pmis/workflow
     newTag: IMAGE_TAG
   - name: ydsz-pmis/agent
+    newTag: IMAGE_TAG
+  - name: ydsz-pmis/nextwiki
     newTag: IMAGE_TAG
 
 # 公共标签

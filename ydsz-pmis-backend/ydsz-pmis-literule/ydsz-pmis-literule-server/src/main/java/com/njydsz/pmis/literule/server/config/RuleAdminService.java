@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleDefinition;
@@ -284,11 +285,17 @@ public class RuleAdminService {
     /**
      * 新增/更新规则（自动保存版本快照）
      *
+     * <p>整个操作在单个事务内完成：规则定义持久化 + 版本快照保存原子提交。
+     * 版本快照保存失败将触发整体回滚（避免主表已提交但版本记录缺失的数据不一致）。
+     * 热刷新事件由 {@link RuleHotReloader} 通过 {@code @TransactionalEventListener(AFTER_COMMIT)}
+     * 在事务提交后异步触发，回滚时不触发热加载。
+     *
      * @param definition 规则定义
      * @param operator   操作人
      * @param changeDesc 变更描述
      * @return 保存后的规则定义
      */
+    @Transactional(rollbackFor = Exception.class)
     public RuleDefinition save(RuleDefinition definition, String operator, String changeDesc) {
         // 校验表达式语法
         if (!evaluator.validate(definition.getConditionExpression())) {
@@ -308,13 +315,9 @@ public class RuleAdminService {
 
         RuleDefinition saved = configProvider.save(definition, operator);
 
-        // 保存版本快照
+        // 保存版本快照（同一事务内，失败则整体回滚）
         if (versionRepository != null) {
-            try {
-                versionRepository.saveVersion(saved, operator, changeDesc);
-            } catch (Exception e) {
-                log.warn("[LiteRule] 规则版本快照保存失败: {}", e.getMessage());
-            }
+            versionRepository.saveVersion(saved, operator, changeDesc);
         }
 
         // 发布热刷新事件（基于持久化后的 version 判断 CREATE/UPDATE）
@@ -336,6 +339,7 @@ public class RuleAdminService {
      * @param enabled  是否启用
      * @param operator 操作人
      */
+    @Transactional(rollbackFor = Exception.class)
     public void toggle(String ruleCode, boolean enabled, String operator) {
         configProvider.toggleEnabled(ruleCode, enabled, operator);
         publishRefreshEvent(RuleConfigRefreshEvent.of(
@@ -354,6 +358,7 @@ public class RuleAdminService {
      * @param operator 操作人
      * @since 1.5.0
      */
+    @Transactional(rollbackFor = Exception.class)
     public void updateOwner(String ruleCode, String owner, String operator) {
         if (ruleCode == null || ruleCode.isBlank()) {
             throw new IllegalArgumentException("ruleCode 不能为空");
@@ -383,6 +388,7 @@ public class RuleAdminService {
      * @param operator 操作人
      * @since 1.5.0
      */
+    @Transactional(rollbackFor = Exception.class)
     public void updateCategoryPath(String ruleCode, String path, String operator) {
         if (ruleCode == null || ruleCode.isBlank()) {
             throw new IllegalArgumentException("ruleCode 不能为空");
@@ -450,6 +456,7 @@ public class RuleAdminService {
      * @param operator 操作人
      * @return 回滚后的规则定义
      */
+    @Transactional(rollbackFor = Exception.class)
     public RuleDefinition rollback(String ruleCode, int version, String operator) {
         if (versionRepository == null) {
             throw new IllegalStateException("版本仓库未配置，不支持回滚");

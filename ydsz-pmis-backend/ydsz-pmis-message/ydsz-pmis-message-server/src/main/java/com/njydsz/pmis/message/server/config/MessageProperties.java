@@ -40,6 +40,15 @@ public class MessageProperties {
     /** 重试扫描间隔（毫秒） */
     private long retryScanIntervalMs = 30000L;
 
+    /**
+     * P2-5: 消息 TTL（秒），超过此时间的消息自动丢弃。
+     *
+     * <p>用于消费者侧判断定时消息是否错过发送窗口：若 {@code scheduledAt} 距今
+     * 超过此阈值，则视为过期消息直接跳过（如服务宕机恢复后积压的定时消息）。
+     * 默认 3600s（1 小时），0 表示不检查 TTL。
+     */
+    private long messageTtlSeconds = 3600L;
+
     /** P2-9: 回执拉取开关（关闭后不再主动拉取回执，仅依赖服务商回调） */
     private boolean receiptPullEnabled = true;
 

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.pmis.literule.api.DecisionTableDefinition;
 import com.njydsz.pmis.literule.api.HitPolicy;
@@ -74,6 +75,7 @@ public class DecisionTableAdminService {
     /**
      * 新增/更新决策表
      */
+    @Transactional(rollbackFor = Exception.class)
     public DecisionTableDefinition save(DecisionTableDefinition definition, String operator, String changeDesc) {
         validate(definition);
         DecisionTableDefinition saved = configProvider.save(definition, operator);
@@ -87,6 +89,7 @@ public class DecisionTableAdminService {
     /**
      * 切换启停
      */
+    @Transactional(rollbackFor = Exception.class)
     public void toggle(String tableCode, boolean enabled, String operator) {
         configProvider.toggleEnabled(tableCode, enabled, operator);
         publishRefreshEvent(RuleConfigRefreshEvent.of(
@@ -98,6 +101,7 @@ public class DecisionTableAdminService {
     /**
      * 删除决策表
      */
+    @Transactional(rollbackFor = Exception.class)
     public void delete(String tableCode, String operator) {
         configProvider.delete(tableCode, operator);
         ruleEngine.unregister(tableCode);

@@ -61,6 +61,20 @@ public class MessageMetrics extends AbstractModuleMetrics {
     }
 
     /**
+     * P2-5: 记录一条过期丢弃消息。
+     *
+     * <p>消费者侧 TTL 检查命中（消息 scheduledAt 距今超过 {@code pmis.message.message-ttl-seconds}）
+     * 时调用，用于监控过期丢弃量。按 channel + reason 维度统计，
+     * reason 当前固定为 TTL_EXPIRED，便于后续扩展其它丢弃原因。
+     *
+     * @param channel 通道
+     * @param reason  丢弃原因（如 TTL_EXPIRED）
+     */
+    public void recordDropped(String channel, String reason) {
+        incrementCounter("dropped.total", "channel", safe(channel), "reason", safe(reason));
+    }
+
+    /**
      * 记录一次回执回调。
      *
      * @param channel     通道

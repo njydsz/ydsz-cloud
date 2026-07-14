@@ -27,6 +27,8 @@ import com.njydsz.pmis.message.domain.constant.MessageConstants;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 import com.njydsz.pmis.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.pmis.message.server.config.MessageProperties;
+import com.njydsz.pmis.message.server.metric.MessageMetrics;
 import com.njydsz.pmis.message.server.metrics.MessageServiceMetrics;
 import com.njydsz.pmis.message.server.service.core.MessageService;
 import com.njydsz.pmis.message.server.util.MessageCompressor;
@@ -61,6 +63,8 @@ public class MessageConsumer implements RocketMQListener<String> {
     private final StringRedisTemplate redisTemplate;
     private final MsgLogMapper msgLogMapper;
     private final MessageServiceMetrics messageServiceMetrics;
+    private final MessageProperties messageProperties;
+    private final MessageMetrics messageMetrics;
 
     /** 当前实例标识(hostname:pid),用于锁值与安全释放 */
     private static final String INSTANCE_ID = initInstanceId();
@@ -71,8 +75,8 @@ public class MessageConsumer implements RocketMQListener<String> {
     /** P1-10: 优雅停机标志 */
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
 
-    /** P1-12: 消息 TTL（秒），超过此时间的消息自动跳过 */
-    private static final long MESSAGE_TTL_SECONDS = 3600L;
+    /** P2-5: 丢弃原因常量 - TTL 过期 */
+    private static final String DROP_REASON_TTL_EXPIRED = "TTL_EXPIRED";
 
     private static String initInstanceId() {
         String name = ManagementFactory.getRuntimeMXBean().getName();
@@ -113,9 +117,11 @@ public class MessageConsumer implements RocketMQListener<String> {
         }
 
         // P1-12: 消息 TTL 检查，超时消息自动跳过
+        // P2-5: TTL 阈值抽配置 + 丢弃计数指标
         if (isMessageExpired(request)) {
             log.warn("[MessageConsumer] 消息已过期,跳过: messageId={} channel={}",
                     request.getMessageId(), request.getChannel());
+            messageMetrics.recordDropped(request.getChannel(), DROP_REASON_TTL_EXPIRED);
             return;
         }
 

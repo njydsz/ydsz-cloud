@@ -31,6 +31,8 @@ import com.njydsz.pmis.agent.infra.rag.SimpleTextChunker;
 import com.njydsz.pmis.agent.infra.tool.DefaultToolRegistry;
 import com.njydsz.pmis.agent.infra.trace.InMemoryTraceRecorder;
 import com.njydsz.pmis.agent.server.agent.AgentFactory;
+import com.njydsz.pmis.agent.server.agent.DagOrchestrationExecutor;
+import com.njydsz.pmis.agent.server.rag.RagService;
 
 /**
  * Agent 自动配置
@@ -76,7 +78,10 @@ public class AgentAutoConfiguration {
     @ConditionalOnMissingBean(ConversationMemory.class)
     public ConversationMemory conversationMemory(StringRedisTemplate redisTemplate,
                                                    AgentProperties properties) {
-        return new RedisConversationMemory(redisTemplate, properties.getMemory().getTtlHours());
+        int maxMessages = properties.getMemory().getMaxMessages();
+        int maxListSize = Math.max(maxMessages * 2, 50);
+        return new RedisConversationMemory(redisTemplate,
+                properties.getMemory().getTtlHours(), maxListSize);
     }
 
     @Bean
@@ -142,16 +147,15 @@ public class AgentAutoConfiguration {
                                      ToolRegistry toolRegistry, AgentProperties properties,
                                      List<InputGuardrail> inputGuardrails,
                                      List<OutputGuardrail> outputGuardrails,
-                                     com.njydsz.pmis.agent.server.rag.RagService ragService) {
+                                     RagService ragService) {
         return new AgentFactory(llmClient, memory, toolRegistry, properties,
                 inputGuardrails, outputGuardrails, ragService);
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public com.njydsz.pmis.agent.server.agent.DagOrchestrationExecutor dagOrchestrationExecutor(
+    public DagOrchestrationExecutor dagOrchestrationExecutor(
             LlmClient llmClient, AgentProperties properties, AgentFactory agentFactory) {
-        return new com.njydsz.pmis.agent.server.agent.DagOrchestrationExecutor(
-                llmClient, properties, agentFactory);
+        return new DagOrchestrationExecutor(llmClient, properties, agentFactory);
     }
 }

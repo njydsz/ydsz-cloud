@@ -19,9 +19,14 @@ import com.njydsz.pmis.agent.domain.model.TokenUsage;
 /**
  * Redis 对话记忆实现
  *
- * <p>使用 Redis List 存储对话消息（LPUSH + LRANGE 实现滑动窗口）。
+ * <p>使用 Redis List 存储对话消息（RPUSH + LTRIM 实现滑动窗口）。
  * 每个对话的 key 格式：{@code pmis:agent:memory:{conversationId}}
  * 默认 TTL 24 小时，可通过配置调整。
+ *
+ * <h3>防无限增长</h3>
+ * <p>每次 RPUSH 后执行 LTRIM，将 List 截断为 {@code maxListSize} 条，
+ * 避免单对话消息数无限膨胀。{@code maxListSize} 默认为 {@code maxMessages * 2}，
+ * 保留一定余量供滑动窗口检索。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -31,17 +36,24 @@ public class RedisConversationMemory implements ConversationMemory {
     private static final Logger log = LoggerFactory.getLogger(RedisConversationMemory.class);
     private static final String KEY_PREFIX = "pmis:agent:memory:";
     private static final int DEFAULT_TTL_HOURS = 24;
+    private static final int DEFAULT_MAX_LIST_SIZE = 50;
 
     private final StringRedisTemplate redisTemplate;
     private final int ttlHours;
+    private final int maxListSize;
 
     public RedisConversationMemory(StringRedisTemplate redisTemplate) {
-        this(redisTemplate, DEFAULT_TTL_HOURS);
+        this(redisTemplate, DEFAULT_TTL_HOURS, DEFAULT_MAX_LIST_SIZE);
     }
 
     public RedisConversationMemory(StringRedisTemplate redisTemplate, int ttlHours) {
+        this(redisTemplate, ttlHours, DEFAULT_MAX_LIST_SIZE);
+    }
+
+    public RedisConversationMemory(StringRedisTemplate redisTemplate, int ttlHours, int maxListSize) {
         this.redisTemplate = redisTemplate;
         this.ttlHours = ttlHours > 0 ? ttlHours : DEFAULT_TTL_HOURS;
+        this.maxListSize = maxListSize > 0 ? maxListSize : DEFAULT_MAX_LIST_SIZE;
     }
 
     @Override
@@ -49,6 +61,7 @@ public class RedisConversationMemory implements ConversationMemory {
         String key = KEY_PREFIX + conversationId;
         String json = serializeMessage(message);
         redisTemplate.opsForList().rightPush(key, json);
+        redisTemplate.opsForList().trim(key, -maxListSize, -1);
         redisTemplate.expire(key, ttlHours, TimeUnit.HOURS);
     }
 
@@ -83,6 +96,20 @@ public class RedisConversationMemory implements ConversationMemory {
     public long count(String conversationId) {
         Long size = redisTemplate.opsForList().size(KEY_PREFIX + conversationId);
         return size != null ? size : 0;
+    }
+
+    /**
+     * 检查 Redis 连接是否可用
+     *
+     * @return true 表示连接正常
+     */
+    public boolean isAvailable() {
+        try {
+            return Boolean.TRUE.equals(redisTemplate.hasKey(KEY_PREFIX + "health-check"));
+        } catch (Exception e) {
+            log.warn("[Memory] Redis 连接检查失败: {}", e.getMessage());
+            return false;
+        }
     }
 
     private String serializeMessage(ChatMessage message) {

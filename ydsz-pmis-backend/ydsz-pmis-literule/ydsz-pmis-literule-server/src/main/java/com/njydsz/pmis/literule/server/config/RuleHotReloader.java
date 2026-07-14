@@ -4,8 +4,9 @@ import java.util.List;
 
 import jakarta.annotation.PostConstruct;
 
-import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import com.njydsz.pmis.literule.api.DecisionTableDefinition;
 import com.njydsz.pmis.literule.api.DecisionTreeDefinition;
@@ -247,9 +248,14 @@ public class RuleHotReloader {
     /**
      * 监听规则配置变更事件
      *
+     * <p>使用 {@code @TransactionalEventListener(AFTER_COMMIT)} 确保仅在校验/持久化事务
+     * 成功提交后才执行热加载，回滚时不触发（避免从 DB 读取到未提交的脏数据）。
+     * {@code fallbackExecution=true} 确保非事务上下文（如 Redis 跨节点广播回调线程）
+     * 中发布的事件仍能正常触发。
+     *
      * @param event 刷新事件
      */
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     @Order(100)
     public void onConfigRefresh(RuleConfigRefreshEvent event) {
         if (!properties.isHotReloadEnabled()) return;

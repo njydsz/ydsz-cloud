@@ -830,3 +830,99 @@ spec:
               port: 9011
             initialDelaySeconds: 60
             periodSeconds: 20
+
+---
+# ============================================================
+# nextwiki 服务（端口 8800，知识文库服务）
+# ============================================================
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: ydsz-pmis-nextwiki
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-nextwiki
+    tier: service
+spec:
+  replicas: 2
+  strategy:
+    canary:
+      canaryService: ydsz-pmis-nextwiki-canary
+      stableService: ydsz-pmis-nextwiki-stable
+      trafficRouting:
+        nginx:
+          stableIngress: pmis-nextwiki-ingress
+      steps:
+        - setWeight: 5
+        - pause: { duration: 2m }
+        - setWeight: 25
+        - pause: { duration: 3m }
+        - setWeight: 50
+        - pause: { duration: 3m }
+        - setWeight: 75
+        - pause: {}
+      analysis:
+        templates:
+          - templateName: success-rate
+          - templateName: latency-p99
+          - templateName: db-pool-health
+          - templateName: jvm-memory
+        args:
+          - name: service-name
+            value: ydsz-pmis-nextwiki
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-nextwiki
+  template:
+    metadata:
+      labels:
+        app: ydsz-pmis-nextwiki
+        tier: service
+    spec:
+      containers:
+        - name: nextwiki
+          image: ydsz-pmis/nextwiki:IMAGE_TAG
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8800
+          envFrom:
+            - configMapRef:
+                name: pmis-common-config
+            - secretRef:
+                name: pmis-db-secret
+            - secretRef:
+                name: pmis-jasypt-secret
+          env:
+            - name: JAVA_TOOL_OPTIONS
+              value: >-
+                -XX:+UseContainerSupport
+                -XX:MaxRAMPercentage=75.0
+                -XX:InitialRAMPercentage=50.0
+                -XX:+UseG1GC
+                -XX:MaxGCPauseMillis=200
+                -XX:+HeapDumpOnOutOfMemoryError
+                -XX:HeapDumpPath=/app/logs/heapdump
+                -Dfile.encoding=UTF-8
+                -Duser.timezone=Asia/Shanghai
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8800
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8800
+            initialDelaySeconds: 60
+            periodSeconds: 20
