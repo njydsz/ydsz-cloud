@@ -1,13 +1,13 @@
 package com.njydsz.pmis.message.server.channel.push;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * GetuiPushSigner 个推推送签名工具单元测试

@@ -150,6 +150,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private final ObjectProvider<WorkerNodeSelector> workerNodeSelectorProvider;
     /** P0-2: SSE 实时日志推送管理器（可选注入，未配置时仅写 DB） */
     private final ObjectProvider<LogStreamManager> logStreamManagerProvider;
+    /** P0-8: 优先级抢占式调度器（可选注入，线程池满时抢占低优先级任务） */
+    private final ObjectProvider<PreemptiveScheduler> preemptiveSchedulerProvider;
 
 
     /** 当前实例标识（hostname:pid），用于锁值和安全释放 */
@@ -298,6 +300,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                 executor = taskExecutorPool;
             }
             final ExecutorService finalExecutor = executor;
+            // P0-8: 线程池满时尝试抢占低优先级任务
+            tryPreemptIfPoolFull(finalExecutor, job);
             // P0-3: 包装为 PriorityRunnable 实现优先级调度
             PriorityRunnable priorityTask = new PriorityRunnable(job.getPriority(), () -> {
                 try {
@@ -322,6 +326,41 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             return executeJob(job, holdLock, triggerType, retryCount);
         }
         return null;
+    }
+
+    /**
+     * P0-8: 线程池满时尝试抢占低优先级任务，为高优先级任务腾出执行资源。
+     *
+     * <p>仅当线程池为 {@link ThreadPoolExecutor} 且活跃线程数已达最大线程数时触发。
+     * 抢占成功后不保证立即有空闲线程（中断到线程释放有延迟），仅作为尽力而为的优化。
+     * 抢占失败不影响后续正常提交（可能排队等待）。
+     *
+     * @param executor 当前执行器
+     * @param job      待派发任务
+     */
+    private void tryPreemptIfPoolFull(ExecutorService executor, JobDO job) {
+        if (!(executor instanceof ThreadPoolExecutor tpe)) {
+            return;
+        }
+        // 线程池未满，无需抢占
+        if (tpe.getActiveCount() < tpe.getMaximumPoolSize()) {
+            return;
+        }
+        PreemptiveScheduler preemptiveScheduler = preemptiveSchedulerProvider.getIfAvailable();
+        if (preemptiveScheduler == null) {
+            return;
+        }
+        int priority = (job.getPriority() != null) ? job.getPriority() : 5;
+        try {
+            boolean preempted = preemptiveScheduler.tryPreempt(priority, nodeId);
+            if (preempted) {
+                log.info("[Dispatcher] 抢占成功, 高优先级任务即将提交: key={} priority={}",
+                        job.getJobKey(), priority);
+            }
+        } catch (Exception e) {
+            log.debug("[Dispatcher] 抢占尝试异常, 不影响正常派发: key={} reason={}",
+                    job.getJobKey(), e.getMessage());
+        }
     }
 
     /**

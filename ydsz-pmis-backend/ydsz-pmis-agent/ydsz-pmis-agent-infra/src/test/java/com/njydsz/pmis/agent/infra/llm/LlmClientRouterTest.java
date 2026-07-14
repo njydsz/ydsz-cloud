@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -200,17 +201,17 @@ class LlmClientRouterTest {
         @DisplayName("流式未开始 + NETWORK_TIMEOUT：触发 Fallback")
         void shouldFallbackWhenStreamNotStarted() {
             // primary.stream 抛异常前不回调 consumer → streamStarted=false
-            org.mockito.Mockito.doThrow(llmError(LlmException.ErrorType.NETWORK_TIMEOUT))
+            doThrow(llmError(LlmException.ErrorType.NETWORK_TIMEOUT))
                     .when(primary).stream(any(), any());
             // secondary.stream 正常回调
-            org.mockito.Mockito.doAnswer(invocation -> {
+            doAnswer(invocation -> {
                 Consumer<ChatChunk> consumer = invocation.getArgument(1);
                 consumer.accept(ChatChunk.content("s1", "model", "fallback-chunk"));
                 consumer.accept(ChatChunk.finish("s2", "model", "stop", new TokenUsage(1, 1)));
                 return null;
             }).when(secondary).stream(any(), any());
 
-            java.util.List<ChatChunk> received = new java.util.ArrayList<>();
+            List<ChatChunk> received = new ArrayList<>();
             router.stream(request(), received::add);
 
             assertThat(received).hasSize(2);
@@ -223,13 +224,13 @@ class LlmClientRouterTest {
         void shouldNotFallbackWhenStreamAlreadyStarted() {
             LlmException error = llmError(LlmException.ErrorType.NETWORK_TIMEOUT);
             // primary.stream 先回调一个 chunk，再抛异常
-            org.mockito.Mockito.doAnswer(invocation -> {
+            doAnswer(invocation -> {
                 Consumer<ChatChunk> consumer = invocation.getArgument(1);
                 consumer.accept(ChatChunk.content("s1", "model", "partial"));
                 throw error;
             }).when(primary).stream(any(), any());
 
-            java.util.List<ChatChunk> received = new java.util.ArrayList<>();
+            List<ChatChunk> received = new ArrayList<>();
             assertThatThrownBy(() -> router.stream(request(), received::add))
                     .isSameAs(error);
 
@@ -243,7 +244,7 @@ class LlmClientRouterTest {
         @DisplayName("流式 AUTH_FAILED：不触发 Fallback")
         void shouldNotFallbackOnAuthFailedStream() {
             LlmException authError = llmError(LlmException.ErrorType.AUTH_FAILED);
-            org.mockito.Mockito.doThrow(authError)
+            doThrow(authError)
                     .when(primary).stream(any(), any());
 
             assertThatThrownBy(() -> router.stream(request(), chunk -> {}))

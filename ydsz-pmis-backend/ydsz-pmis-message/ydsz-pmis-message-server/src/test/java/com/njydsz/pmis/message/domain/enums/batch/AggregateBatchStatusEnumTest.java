@@ -1,10 +1,10 @@
 package com.njydsz.pmis.message.domain.enums.batch;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * AggregateBatchStatusEnum 聚合批次状态机单元测试。

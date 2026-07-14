@@ -2,6 +2,7 @@ package com.njydsz.pmis.workflow.server.service.impl;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -250,7 +251,16 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     }
 
     /**
-     * 执行最终动作（AUTO_PASS / AUTO_REJECT / ESCALATE）
+     * 执行最终动作（NOTIFY / AUTO_PASS / AUTO_REJECT / ESCALATE）
+     *
+     * <p>P1-3 闭环语义：每个 action 必须有明确终态，禁止"标记 TIMEOUT 但流程卡死"。
+     * <ul>
+     *   <li>NOTIFY     — 通知管理员介入，任务保持 PENDING（人工处理）</li>
+     *   <li>ESCALATE   — 转办给 escalateUserId，任务保持 PENDING（新办理人处理）</li>
+     *   <li>AUTO_PASS  — 系统自动通过，流程推进到下一节点</li>
+     *   <li>AUTO_REJECT — 系统自动驳回，流程终止</li>
+     *   <li>REMIND     — 兼容旧配置，等同于 NOTIFY（不再标记 TIMEOUT）</li>
+     * </ul>
      */
     private boolean executeFinalAction(FlowRunTaskDO task, FlowNodeDO node,
                                         FlowSlaAction action, Map<String, Object> config,
@@ -258,8 +268,11 @@ public class FlowSlaServiceImpl implements FlowSlaService {
         log.info("[FlowSla] 触发最终动作: taskId={} action={}", task.getId(), action);
         switch (action) {
             case REMIND:
-                // 配置为 REMIND 但已超出 maxReminders：保持提醒并标记完成（视为超时未处理）
-                return doAutoTimeout(task, "SLA 提醒已达最大次数，未处理", now);
+                // P1-3: 兼容旧配置 — REMIND 作为最终动作时等同于 NOTIFY
+                // （不再调用 doAutoTimeout 标记任务为 TIMEOUT，那会让流程卡死）
+                return doNotify(task, config, now);
+            case NOTIFY:
+                return doNotify(task, config, now);
             case AUTO_PASS:
                 return doAutoPass(task, config, now);
             case AUTO_REJECT:
@@ -388,18 +401,76 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     }
 
     /**
-     * 默认超时处理：仅标记 TIMEOUT + 通知（无最终动作）
+     * P1-3: NOTIFY 最终动作 — 通知管理员/升级人介入，任务保持 PENDING（闭环：等人工处理）
+     *
+     * <p>通知目标解析顺序：
+     * <ol>
+     *   <li>{@code notifyUserIds} 配置（逗号分隔的多用户，最高优先级）</li>
+     *   <li>{@code escalateUserId} 配置（单用户，与 ESCALATE 共用字段）</li>
+     *   <li>默认管理员（{@link #DEFAULT_ADMIN_USER_ID}）</li>
+     * </ol>
+     *
+     * <p>任务状态不变（仍为 PENDING/CLAIMED），由人工处理后流程自然推进。
+     * 与原 {@code doAutoTimeout} 的区别：不标记 TIMEOUT 终态，避免流程卡死。
+     *
+     * @param task   超时任务
+     * @param config SLA 配置
+     * @param now    当前时间
+     * @return true=通知已发送；false=发送异常
      */
-    private boolean doAutoTimeout(FlowRunTaskDO task, String reason, LocalDateTime now) {
+    private boolean doNotify(FlowRunTaskDO task, Map<String, Object> config, LocalDateTime now) {
         try {
-            taskService.timeoutTask(task.getId(), reason);
-            taskMapper.markSlaAction(task.getId(), FlowSlaAction.REMIND.name(), 0);
-            log.info("[FlowSla] 标记超时: taskId={} reason={}", task.getId(), reason);
+            List<String> targets = resolveNotifyTargets(config);
+            String title = "审批任务 SLA 超时需人工介入";
+            String content = String.format(
+                    "【%s】%s 已超过 SLA 时限未处理（任务 ID=%s，办理人=%s），请尽快介入处理。",
+                    nullSafe(task.getFlowName()),
+                    nullSafe(task.getNodeName()),
+                    task.getId(),
+                    nullSafe(task.getAssigneeId()));
+            notificationHelper.notifyUrge(targets, title, content, task.getInstanceId());
+            // 标记 slaAction=NOTIFY（slaEscalated=0 表示任务仍活跃，未转办）
+            taskMapper.markSlaAction(task.getId(), FlowSlaAction.NOTIFY.name(), 0);
+            log.info("[FlowSla] NOTIFY 通知已发送: taskId={} targets={} flowCode={} nodeCode={}",
+                    task.getId(), targets, task.getFlowCode(), task.getNodeCode());
+            // P2-3: Prometheus 指标
+            if (flowMetrics != null) {
+                flowMetrics.incSlaTimeout(task.getFlowCode(), "NOTIFY");
+                flowMetrics.incTaskAutoHandled(task.getFlowCode(), task.getNodeCode(), "NOTIFY");
+            }
             return true;
         } catch (Exception e) {
-            log.error("[FlowSla] 标记超时失败: taskId={} err={}", task.getId(), e.getMessage(), e);
+            log.error("[FlowSla] NOTIFY 通知失败: taskId={} err={}",
+                    task.getId(), e.getMessage(), e);
             return false;
         }
+    }
+
+    /**
+     * 解析 NOTIFY 通知目标列表
+     *
+     * <p>优先级：notifyUserIds（逗号分隔）→ escalateUserId → 默认管理员
+     */
+    private List<String> resolveNotifyTargets(Map<String, Object> config) {
+        String notifyUserIds = readString(config, "notifyUserIds", null);
+        if (StringUtils.hasText(notifyUserIds)) {
+            String[] ids = notifyUserIds.split(",");
+            List<String> targets = new java.util.ArrayList<>(ids.length);
+            for (String id : ids) {
+                String trimmed = id.trim();
+                if (!trimmed.isEmpty()) {
+                    targets.add(trimmed);
+                }
+            }
+            if (!targets.isEmpty()) {
+                return targets;
+            }
+        }
+        String escalateUserId = readString(config, "escalateUserId", null);
+        if (StringUtils.hasText(escalateUserId)) {
+            return Collections.singletonList(escalateUserId);
+        }
+        return Collections.singletonList(DEFAULT_ADMIN_USER_ID);
     }
 
     /**

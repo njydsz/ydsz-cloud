@@ -1,5 +1,12 @@
 package com.njydsz.pmis.message.server.consumer;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
@@ -20,13 +27,6 @@ import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.pmis.message.server.metric.MessageMetrics;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * MessageDlqConsumer 死信消费者单元测试。

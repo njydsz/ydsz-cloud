@@ -1,5 +1,8 @@
 package com.njydsz.pmis.message.server.channel;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,13 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.message.server.config.ChannelProperties;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 /**
  * DingTalkChannel 钉钉通道单元测试。

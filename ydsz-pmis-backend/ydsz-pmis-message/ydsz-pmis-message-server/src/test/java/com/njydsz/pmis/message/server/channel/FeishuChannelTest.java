@@ -1,5 +1,8 @@
 package com.njydsz.pmis.message.server.channel;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,13 +15,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.message.server.config.ChannelProperties;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
 
 /**
  * FeishuChannel 飞书通道单元测试。

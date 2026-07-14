@@ -1,6 +1,12 @@
 package com.njydsz.pmis.message.server.service.impl.batch;
 
-import java.time.LocalDateTime;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
@@ -20,13 +26,6 @@ import com.njydsz.pmis.message.infra.mapper.batch.MsgAggregateMapper;
 import com.njydsz.pmis.message.server.service.core.MessageService;
 import com.njydsz.pmis.message.server.service.template.TemplateService;
 import com.njydsz.pmis.message.server.template.TemplateEngine;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 /**
  * AggregateServiceImpl 聚合批次服务单元测试。

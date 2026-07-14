@@ -154,6 +154,8 @@ public class OfflineMessageService implements OfflineMessageStore {
      * <p>当 Redis List 超过阈值时，将尾部（较旧）的消息写入数据库，
      * 然后从 Redis 中移除已持久化的部分，保持 Redis 缓存新鲜度。
      *
+     * <p>P3-6: 改为批量 INSERT，避免逐条 insert 的数据库往返开销。
+     *
      * @param userId      用户 ID
      * @param redisKey    Redis key
      * @param currentSize 当前 Redis List 大小
@@ -171,16 +173,25 @@ public class OfflineMessageService implements OfflineMessageStore {
                 return;
             }
             LocalDateTime now = LocalDateTime.now();
+            String tenantId = TenantContext.getTenantId();
+            // P3-6: 先构建全部实体（预生成 ID），再批量 insert
+            List<MsgOfflineDO> entities = new ArrayList<>(overflowMessages.size());
             for (String json : overflowMessages) {
                 MsgOfflineDO offline = new MsgOfflineDO();
+                offline.setId(IdWorker.getIdStr());
                 offline.setUserId(userId);
                 offline.setMsgType("OFFLINE_OVERFLOW");
                 offline.setPayload(json);
                 offline.setMsgTimestamp(System.currentTimeMillis());
                 offline.setStatus("PENDING");
                 offline.setExpiredAt(now.plusDays(30));
-                offline.setTenantId(TenantContext.getTenantId());
-                msgOfflineMapper.insert(offline);
+                offline.setTenantId(tenantId);
+                entities.add(offline);
+            }
+            // 分批批量 insert（防止单条 SQL 参数超过 PG 65535 上限）
+            for (int i = 0; i < entities.size(); i += INSERT_BATCH_SIZE) {
+                int to = Math.min(i + INSERT_BATCH_SIZE, entities.size());
+                msgOfflineMapper.insertBatch(entities.subList(i, to));
             }
             redisTemplate.opsForList().trim(redisKey, 0, WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD - 1);
             log.info("[WS-Offline] 溢出消息持久化到数据库: userId={}, count={}", userId, overflowMessages.size());
