@@ -5,6 +5,8 @@ import lombok.Getter;
 
 import java.util.List;
 
+import com.njydsz.pmis.common.core.constant.PageConstants;
+
 /**
  * 分页响应结果封装类
  *
@@ -192,7 +194,7 @@ public class PageResponse<T> extends BaseResponse<T> {
      * @return 空分页响应
      */
     public static <T> PageResponse<T> empty() {
-        return success(null);
+        return success(0L, 1L, (long) PageConstants.DEFAULT_PAGE_SIZE, null);
     }
 
     /**

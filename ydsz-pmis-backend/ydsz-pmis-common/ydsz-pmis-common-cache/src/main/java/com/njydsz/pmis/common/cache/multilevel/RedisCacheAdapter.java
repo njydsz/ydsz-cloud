@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.SessionCallback;
@@ -260,19 +261,27 @@ public class RedisCacheAdapter<K, V> implements Cache<K, V> {
     if (map == null || map.isEmpty()) {
       return;
     }
+    // 提前物化 entrySet 为 String/Object 键值对，避开 SessionCallback lambda 内
+    // RedisOperations<String, V> 的方法级 V 与外层类 V 冲突引发的函数描述符推断失败
+    java.util.List<java.util.Map.Entry<String, Object>> entries =
+        new java.util.ArrayList<>(map.size());
+    for (Map.Entry<K, V> e : map.entrySet()) {
+      entries.add(new java.util.AbstractMap.SimpleEntry<>(buildKey(e.getKey()), e.getValue()));
+    }
     // 使用 Pipeline 批量写入，减少网络往返
     try {
       redisTemplate.executePipelined(
           (SessionCallback<Object>)
-              operations -> {
-                for (Map.Entry<K, V> entry : map.entrySet()) {
-                  String redisKey = buildKey(entry.getKey());
+              (RedisOperations<String, Object> operations) -> {
+                for (java.util.Map.Entry<String, Object> entry : entries) {
+                  String redisKey = entry.getKey();
+                  Object value = entry.getValue();
                   if (ttlSeconds > 0) {
                     operations
                         .opsForValue()
-                        .set(redisKey, entry.getValue(), Duration.ofSeconds(ttlSeconds));
+                        .set(redisKey, value, Duration.ofSeconds(ttlSeconds));
                   } else {
-                    operations.opsForValue().set(redisKey, entry.getValue());
+                    operations.opsForValue().set(redisKey, value);
                   }
                 }
                 return null;

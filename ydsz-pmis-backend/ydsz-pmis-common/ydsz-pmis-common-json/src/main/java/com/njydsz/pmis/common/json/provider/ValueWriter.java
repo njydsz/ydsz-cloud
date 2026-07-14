@@ -14,6 +14,7 @@ import com.njydsz.pmis.common.json.annotation.JsonView;
 import com.njydsz.pmis.common.json.cache.AsmCodecCache;
 import com.njydsz.pmis.common.json.cache.FieldMeta;
 import com.njydsz.pmis.common.json.cache.SerializerCache;
+import com.njydsz.pmis.common.json.config.JsonConfig;
 import com.njydsz.pmis.common.json.writer.JSONWriter;
 
 /**
@@ -167,7 +168,7 @@ public final class ValueWriter {
                 writeMapOptimized((Map<?, ?>) obj, sb);
                 break;
             case TYPE_CODE_DATE:
-                writeString(obj.toString(), sb);
+                writeString(formatDateValue(obj), sb);
                 break;
             case TYPE_CODE_BIGDECIMAL:
                 sb.append(((BigDecimal) obj).toPlainString());
@@ -810,7 +811,7 @@ public final class ValueWriter {
                 writeMapOptimized((Map<?, ?>) value, sb);
                 break;
             case TYPE_CODE_DATE:
-                writeString(value.toString(), sb);
+                writeString(formatDateValue(value), sb);
                 break;
             case TYPE_CODE_BIGDECIMAL:
                 sb.append(((BigDecimal) value).toPlainString());
@@ -894,35 +895,35 @@ public final class ValueWriter {
      * 写入 Date
      */
     public static void writeDate(Date value, StringBuilder sb) {
-        sb.append('"').append(value.toInstant().toString()).append('"');
+        writeString(formatDateValue(value), sb);
     }
 
     /**
      * 写入 LocalDate
      */
     public static void writeLocalDate(LocalDate value, StringBuilder sb) {
-        sb.append('"').append(value.toString()).append('"');
+        writeString(formatDateValue(value), sb);
     }
 
     /**
      * 写入 LocalDateTime
      */
     public static void writeLocalDateTime(LocalDateTime value, StringBuilder sb) {
-        sb.append('"').append(value.toString()).append('"');
+        writeString(formatDateValue(value), sb);
     }
 
     /**
      * 写入 LocalTime
      */
     public static void writeLocalTime(LocalTime value, StringBuilder sb) {
-        sb.append('"').append(value.toString()).append('"');
+        writeString(formatDateValue(value), sb);
     }
 
     /**
      * 写入 Instant
      */
     public static void writeInstant(Instant value, StringBuilder sb) {
-        sb.append('"').append(value.toString()).append('"');
+        writeString(formatDateValue(value), sb);
     }
 
     /**
@@ -952,20 +953,70 @@ public final class ValueWriter {
     }
 
     /**
-     * 格式化日期/时间值为字符串（ISO 格式，支持所有日期/时间类型）。
+     * 日期格式化器缓存（避免每次调用 DateTimeFormatter.ofPattern）
+     */
+    private static volatile String cachedDateFormat = null;
+    private static volatile DateTimeFormatter cachedFormatter = null;
+
+    /**
+     * 格式化日期/时间值为字符串（统一入口，支持全局日期格式配置）。
+     *
+     * <p>格式化优先级：
+     * <ol>
+     *   <li>{@link JsonConfig#getDateFormat()} 全局日期格式（非空时优先）</li>
+     *   <li>ISO 默认格式（toString）</li>
+     * </ol>
+     * 支持所有 java.time.* 和 java.util.Date 类型。</p>
      *
      * @param value 日期/时间值
-     * @return ISO 格式字符串
+     * @return 格式化后的字符串
      * @since 1.4.0
      */
     public static String formatDateValue(Object value) {
         if (value == null) return null;
+
+        String globalFormat = JsonConfig.getInstance().getDateFormat();
+        if (globalFormat != null && !globalFormat.isEmpty()) {
+            DateTimeFormatter formatter = getCachedFormatter(globalFormat);
+            if (formatter != null) {
+                try {
+                    if (value instanceof TemporalAccessor temporal) {
+                        return formatter.format(temporal);
+                    } else if (value instanceof Date date) {
+                        return date.toInstant()
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDateTime()
+                                .format(formatter);
+                    }
+                } catch (Exception e) {
+                    // 格式化失败，回退到 toString
+                }
+            }
+        }
+
         if (value instanceof TemporalAccessor temporal) {
             return temporal.toString();
         } else if (value instanceof Date date) {
             return date.toInstant().toString();
         }
         return value.toString();
+    }
+
+    /**
+     * 获取缓存的 DateTimeFormatter（避免重复 ofPattern 调用）
+     */
+    private static DateTimeFormatter getCachedFormatter(String pattern) {
+        if (pattern.equals(cachedDateFormat)) {
+            return cachedFormatter;
+        }
+        try {
+            DateTimeFormatter newFormatter = DateTimeFormatter.ofPattern(pattern);
+            cachedDateFormat = pattern;
+            cachedFormatter = newFormatter;
+            return newFormatter;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**

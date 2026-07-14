@@ -504,7 +504,6 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
      * @param newParentId 新父节点ID
      */
     public void moveTo(ID newParentId) {
-        ID oldParentId = this.parentId;
         this.parentId = newParentId;
         if (newParentId == null) {
             this.level = ROOT_LEVEL;

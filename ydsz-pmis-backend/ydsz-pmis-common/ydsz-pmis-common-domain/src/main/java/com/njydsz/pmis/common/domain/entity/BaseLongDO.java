@@ -1,7 +1,5 @@
 package com.njydsz.pmis.common.domain.entity;
 
-import java.io.Serializable;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
