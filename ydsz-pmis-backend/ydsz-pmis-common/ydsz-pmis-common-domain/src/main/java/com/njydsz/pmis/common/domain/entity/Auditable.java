@@ -1,13 +1,13 @@
-ackage com.njydsz.pmis.common.domain.entity;
+package com.njydsz.pmis.common.domain.entity;
 
 import java.time.LocalDateTime;
 
 /**
- * 可审计实体接口
+ * 可审计实体接�?
  *
- * <p>提供创建人/时间、更新人/时间的标准访问方法。
- * 由 {@link BaseAuditEntity} 提供 JDBC 自动填充实现，
- * 也可由业务代码手动设置。
+ * <p>提供创建�?时间、更新人/时间的标准访问方法�?
+ * �?{@link BaseAuditEntity} 提供 JDBC 自动填充实现�?
+ * 也可由业务代码手动设置�?
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -16,16 +16,16 @@ import java.time.LocalDateTime;
 public interface Auditable {
 
     /**
-     * 获取创建人
+     * 获取创建�?
      *
-     * @return 创建人标识
+     * @return 创建人标�?
      */
     String getCreatedBy();
 
     /**
-     * 设置创建人
+     * 设置创建�?
      *
-     * @param createdBy 创建人标识
+     * @param createdBy 创建人标�?
      */
     void setCreatedBy(String createdBy);
 
@@ -44,16 +44,16 @@ public interface Auditable {
     void setCreatedAt(LocalDateTime createdAt);
 
     /**
-     * 获取更新人
+     * 获取更新�?
      *
-     * @return 更新人标识
+     * @return 更新人标�?
      */
     String getUpdatedBy();
 
     /**
-     * 设置更新人
+     * 设置更新�?
      *
-     * @param updatedBy 更新人标识
+     * @param updatedBy 更新人标�?
      */
     void setUpdatedBy(String updatedBy);
 

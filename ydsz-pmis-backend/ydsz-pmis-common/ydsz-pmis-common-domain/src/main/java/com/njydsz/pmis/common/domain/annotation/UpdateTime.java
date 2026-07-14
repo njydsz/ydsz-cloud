@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.domain.annotation;
+package com.njydsz.pmis.common.domain.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -9,10 +9,10 @@ import java.lang.annotation.Target;
 /**
  * 更新时间字段标记注解
  *
- * <p>标注在实体字段上，表明该字段用于记录数据更新时间。
- * 框架在 INSERT/UPDATE 操作时自动填充此字段。
+ * <p>标注在实体字段上，表明该字段用于记录数据更新时间�?
+ * 框架�?INSERT/UPDATE 操作时自动填充此字段�?
  *
- * <p><b>使用示例：</b>
+ * <p><b>使用示例�?/b>
  * <pre>{@code
  * public class Product extends BaseIdEntity<Long> {
  *

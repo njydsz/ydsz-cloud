@@ -4,6 +4,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Repository;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.domain.query.PageResult;
 import com.njydsz.pmis.nextwiki.domain.entity.SearchIndex;
 import com.njydsz.pmis.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.pmis.nextwiki.infra.mapper.SearchIndexMapper;
@@ -45,5 +48,15 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
     @Override
     public List<String> findAllFileNodeIds(String createdBy) {
         return searchIndexMapper.selectAllFileNodeIds(createdBy);
+    }
+
+    @Override
+    public PageResult<SearchIndex> searchPage(String keyword, String createdBy, String scope,
+                                               int page, int pageSize) {
+        Page<SearchIndex> pageParam = new Page<>(page, pageSize);
+        IPage<SearchIndex> result = searchIndexMapper.searchPage(
+                pageParam, keyword, createdBy, scope);
+        return PageResult.of(result.getRecords(), result.getTotal(),
+                (int) result.getCurrent(), (int) result.getSize());
     }
 }

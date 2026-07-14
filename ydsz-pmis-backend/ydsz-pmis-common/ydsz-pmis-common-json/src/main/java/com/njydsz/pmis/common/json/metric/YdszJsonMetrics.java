@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Configuration;
 
+import com.njydsz.pmis.common.json.metric.JsonMetricsCallback;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -30,7 +31,7 @@ import io.micrometer.core.instrument.Timer;
  */
 @Configuration
 @ConditionalOnClass(MeterRegistry.class)
-public class YdszJsonMetrics {
+public class YdszJsonMetrics implements JsonMetricsCallback {
 
     private static final Logger log = LoggerFactory.getLogger(YdszJsonMetrics.class);
 
@@ -78,7 +79,8 @@ public class YdszJsonMetrics {
      *
      * @param durationNanos 序列化耗时（纳秒）
      */
-    public void recordSerializeSuccess(long durationNanos) {
+    @Override
+    public void onSerializeSuccess(long durationNanos) {
         if (serializeTimer != null) {
             serializeTimer.record(Duration.ofNanos(durationNanos));
             serializeSuccessCounter.increment();
@@ -88,7 +90,8 @@ public class YdszJsonMetrics {
     /**
      * 记录序列化失败。
      */
-    public void recordSerializeFailure() {
+    @Override
+    public void onSerializeFailure() {
         if (serializeFailureCounter != null) {
             serializeFailureCounter.increment();
         }
@@ -99,7 +102,8 @@ public class YdszJsonMetrics {
      *
      * @param durationNanos 反序列化耗时（纳秒）
      */
-    public void recordDeserializeSuccess(long durationNanos) {
+    @Override
+    public void onDeserializeSuccess(long durationNanos) {
         if (deserializeTimer != null) {
             deserializeTimer.record(Duration.ofNanos(durationNanos));
         }

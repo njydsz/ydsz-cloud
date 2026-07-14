@@ -1,21 +1,21 @@
-ackage com.njydsz.pmis.common.domain.entity;
+package com.njydsz.pmis.common.domain.entity;
 
 import java.io.Serializable;
 
 /**
  * 区域维度标记接口
  *
- * <p>标识该实体支持区域维度数据隔离。业务实体可通过实现此接口替代继承 {@link RegionEntity}，
- * 配合 SQL 拦截器自动注入 region_id 条件。
+ * <p>标识该实体支持区域维度数据隔离。业务实体可通过实现此接口替代继�?{@link RegionEntity}�?
+ * 配合 SQL 拦截器自动注�?region_id 条件�?
  *
- * <p><b>迁移策略：</b>
+ * <p><b>迁移策略�?/b>
  * <pre>{@code
- * // 旧写法（继承）
+ * // 旧写法（继承�?
  * public class Store extends RegionEntity<Long> {
  *     private String storeName;
  * }
  *
- * // 新写法（接口 + 组合）
+ * // 新写法（接口 + 组合�?
  * public class Store extends BaseEntity<Long> implements RegionAware {
  *     @TableField("region_id")
  *     private Long regionId;

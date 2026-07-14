@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.domain.query;
+package com.njydsz.pmis.common.domain.query;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -11,9 +11,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 分页查询结果封装类
+ * 分页查询结果封装�?
  *
- * <p>用于封装分页查询的返回结果，包括数据列表和分页信息。
+ * <p>用于封装分页查询的返回结果，包括数据列表和分页信息�?
  *
  * @param <T> 数据类型
  *
@@ -29,7 +29,7 @@ public class PageResult<T> implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 当前页数据列表
+     * 当前页数据列�?
      */
     private transient List<T> records;
 
@@ -44,42 +44,42 @@ public class PageResult<T> implements Serializable {
     private int pageNum;
 
     /**
-     * 每页记录数
+     * 每页记录�?
      */
     private int pageSize;
 
     /**
-     * 总页数
+     * 总页�?
      */
     private int totalPages;
 
     /**
-     * 是否有上一页
+     * 是否有上一�?
      */
     private boolean hasPrevious;
 
     /**
-     * 是否有下一页
+     * 是否有下一�?
      */
     private boolean hasNext;
 
     /**
-     * 当前页起始行号（从1开始）
+     * 当前页起始行号（�?开始）
      */
     private int startRow;
 
     /**
-     * 当前页结束行号
+     * 当前页结束行�?
      */
     private int endRow;
 
     /**
      * 创建分页结果
      *
-     * @param records  当前页数据列表
+     * @param records  当前页数据列�?
      * @param total    总记录数
      * @param pageNum  当前页码
-     * @param pageSize 每页记录数
+     * @param pageSize 每页记录�?
      * @param <T>      数据类型
      * @return 分页结果
      */
@@ -107,7 +107,7 @@ public class PageResult<T> implements Serializable {
      * 创建空的分页结果
      *
      * @param pageNum  当前页码
-     * @param pageSize 每页记录数
+     * @param pageSize 每页记录�?
      * @param <T>      数据类型
      * @return 空的分页结果
      */
@@ -118,9 +118,9 @@ public class PageResult<T> implements Serializable {
     /**
      * 将当前分页结果的数据列表进行类型转换
      *
-     * <p>适用于 DO → VO 转换场景，避免手动重新构造分页对象。
+     * <p>适用�?DO �?VO 转换场景，避免手动重新构造分页对象�?
      *
-     * <p><b>使用示例：</b>
+     * <p><b>使用示例�?/b>
      * <pre>{@code
      * PageResult<UserDO> doPage = userService.page(query);
      * PageResult<UserVO> voPage = doPage.convert(user -> new UserVO(user));
@@ -138,7 +138,7 @@ public class PageResult<T> implements Serializable {
     }
 
     /**
-     * 判断当前页数据是否为空
+     * 判断当前页数据是否为�?
      *
      * @return 为空返回 true
      */

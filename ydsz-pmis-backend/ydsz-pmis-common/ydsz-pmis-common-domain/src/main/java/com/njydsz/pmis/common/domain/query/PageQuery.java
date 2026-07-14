@@ -1,4 +1,4 @@
-ackage com.njydsz.pmis.common.domain.query;
+package com.njydsz.pmis.common.domain.query;
 
 import static lombok.AccessLevel.PROTECTED;
 
@@ -20,35 +20,35 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 /**
- * 分页查询参数封装类
+ * 分页查询参数封装�?
  *
- * <p>用于封装分页查询的请求参数，包括页码、页大小、排序信息和通用搜索条件。
- * 支持通过 validation 注解进行参数校验，防止非法参数传入。
+ * <p>用于封装分页查询的请求参数，包括页码、页大小、排序信息和通用搜索条件�?
+ * 支持通过 validation 注解进行参数校验，防止非法参数传入�?
  *
- * <p><b>设计原则：</b>
+ * <p><b>设计原则�?/b>
  * <ul>
  *   <li>不可变模式：默认配置不可变，防止意外修改</li>
- *   <li>流式API：支持链式调用，提升代码可读性</li>
+ *   <li>流式API：支持链式调用，提升代码可读�?/li>
  *   <li>参数校验：内置参数校验，防止非法参数</li>
  * </ul>
  *
- * <p><b>与 {@link com.njydsz.pmis.common.core.request.PageRequest} 的区别：</b>
+ * <p><b>�?{@link com.njydsz.pmis.common.core.request.PageRequest} 的区别：</b>
  * <ul>
- *   <li>{@code PageRequest} 位于 core 模块，用于 HTTP API 层，分页字段为 {@code Long} 类型，与 MyBatis-Plus {@code Page<T>} 对齐</li>
- *   <li>{@code PageQuery} 位于 domain 模块，用于 Service/Repository 层，分页字段为 {@code Integer} 类型，并集成搜索/过滤/排序白名单等业务能力</li>
- *   <li>两者共用 {@link PageConstants} 中的默认值与上限，避免出现不一致的分页约束</li>
+ *   <li>{@code PageRequest} 位于 core 模块，用�?HTTP API 层，分页字段�?{@code Long} 类型，与 MyBatis-Plus {@code Page<T>} 对齐</li>
+ *   <li>{@code PageQuery} 位于 domain 模块，用�?Service/Repository 层，分页字段�?{@code Integer} 类型，并集成搜索/过滤/排序白名单等业务能力</li>
+ *   <li>两者共�?{@link PageConstants} 中的默认值与上限，避免出现不一致的分页约束</li>
  * </ul>
  *
- * <p><b>字段说明：</b>
+ * <p><b>字段说明�?/b>
  * <table>
- *   <tr><th>字段</th><th>类型</th><th>默认值</th><th>说明</th></tr>
- *   <tr><td>pageNum</td><td>Integer</td><td>1</td><td>当前页码，从1开始</td></tr>
- *   <tr><td>pageSize</td><td>Integer</td><td>{@link PageConstants#DEFAULT_PAGE_SIZE}</td><td>每页记录数</td></tr>
- *   <tr><td>orderItems</td><td>List&lt;String&gt;</td><td>[]</td><td>排序项列表</td></tr>
+ *   <tr><th>字段</th><th>类型</th><th>默认�?/th><th>说明</th></tr>
+ *   <tr><td>pageNum</td><td>Integer</td><td>1</td><td>当前页码，从1开�?/td></tr>
+ *   <tr><td>pageSize</td><td>Integer</td><td>{@link PageConstants#DEFAULT_PAGE_SIZE}</td><td>每页记录�?/td></tr>
+ *   <tr><td>orderItems</td><td>List&lt;String&gt;</td><td>[]</td><td>排序项列�?/td></tr>
  *   <tr><td>ascending</td><td>Boolean</td><td>true</td><td>是否升序</td></tr>
  * </table>
  *
- * <p><b>使用示例：</b>
+ * <p><b>使用示例�?/b>
  * <pre>{@code
  * // 基础用法
  * PageQuery query = PageQuery.of(1, 10);
@@ -63,7 +63,7 @@ import lombok.experimental.SuperBuilder;
  * // 添加排序
  * query.addOrder("created_at", true);
  *
- * // 获取偏移量
+ * // 获取偏移�?
  * int offset = query.getOffset();
  * }</pre>
  *
@@ -80,24 +80,24 @@ public class PageQuery extends BaseQuery {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 安全字段名校验正则
+     * 安全字段名校验正�?
      */
     private static final Pattern SAFE_COLUMN_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$");
 
     /**
-     * 搜索关键字最大长度
+     * 搜索关键字最大长�?
      *
-     * <p>防止超长关键字导致性能问题或潜在攻击。
+     * <p>防止超长关键字导致性能问题或潜在攻击�?
      */
     public static final int MAX_SEARCH_KEY_LENGTH = 200;
 
     /**
      * 当前页码
      *
-     * <p>从1开始计数，表示第几页数据。
-     * 最小值为1，小于1时自动修正为1。
+     * <p>�?开始计数，表示第几页数据�?
+     * 最小值为1，小�?时自动修正为1�?
      */
-    @NotNull(message = "pageNum当前页不能为空")
+    @NotNull(message = "pageNum当前页不能为�?)
     @Min(value = 1, message = "pageNum最小值为1")
     @Builder.Default
     private Integer pageNum = 1;
@@ -105,11 +105,11 @@ public class PageQuery extends BaseQuery {
     /**
      * 每页显示条数
      *
-     * <p>控制每页返回的记录数量。
-     * 建议设置上限，防止查询数据量过大。
-     * 最大值为 {@link PageConstants#MAX_PAGE_SIZE}。
+     * <p>控制每页返回的记录数量�?
+     * 建议设置上限，防止查询数据量过大�?
+     * 最大值为 {@link PageConstants#MAX_PAGE_SIZE}�?
      */
-    @NotNull(message = "pageSize页大小不能为空")
+    @NotNull(message = "pageSize页大小不能为�?)
     @Min(value = 1, message = "pageSize最小值为1")
     @Max(value = PageConstants.MAX_PAGE_SIZE, message = "pageSize最大值为" + PageConstants.MAX_PAGE_SIZE)
     @Builder.Default
@@ -119,12 +119,12 @@ public class PageQuery extends BaseQuery {
      * 排序字段列表
      *
      * <p>格式: column1 asc, column2 desc
-     * 支持多个排序项，按添加顺序依次排序。
+     * 支持多个排序项，按添加顺序依次排序�?
      * <p>注意：通过 {@link #addOrder(String, boolean)} 添加的排序项会经过安全校验，
-     * 直接通过 setter 设置的排序项在 {@link #getOrderSql()} 时也会进行二次校验。
+     * 直接通过 setter 设置的排序项�?{@link #getOrderSql()} 时也会进行二次校验�?
      *
-     * <p>orderBy 和 ascending 字段继承自 {@link BaseQuery}，
-     * 本类通过覆写 {@link #setOrderBy(String)} 和 {@link #getOrderBy()} 安全校验。
+     * <p>orderBy �?ascending 字段继承�?{@link BaseQuery}�?
+     * 本类通过覆写 {@link #setOrderBy(String)} �?{@link #getOrderBy()} 安全校验�?
      */
     @Builder.Default
     private transient List<String> orderItems = new ArrayList<>();
@@ -132,11 +132,11 @@ public class PageQuery extends BaseQuery {
     /**
      * 允许排序的字段白名单
      *
-     * <p>业务方继承 PageQuery 并重写此方法返回允许排序的字段列表，
-     * 不在白名单中的字段将被拒绝排序（即使通过正则校验也会被拦截）。
-     * 返回 null 或空集合表示不启用白名单校验（仅使用正则表达式校验）。
+     * <p>业务方继�?PageQuery 并重写此方法返回允许排序的字段列表，
+     * 不在白名单中的字段将被拒绝排序（即使通过正则校验也会被拦截）�?
+     * 返回 null 或空集合表示不启用白名单校验（仅使用正则表达式校验）�?
      *
-     * <p><b>使用示例：</b>
+     * <p><b>使用示例�?/b>
      * <pre>{@code
      * public class UserPageQuery extends PageQuery {
      *     @Override
@@ -146,22 +146,22 @@ public class PageQuery extends BaseQuery {
      * }
      * }</pre>
      *
-     * @return 允许排序的字段名集合，默认返回 null（不启用白名单）
+     * @return 允许排序的字段名集合，默认返�?null（不启用白名单）
      */
     protected Set<String> allowedOrderByFields() {
         return null;
     }
 
     /**
-     * 校验字段是否在白名单中
+     * 校验字段是否在白名单�?
      *
-     * @param column 字段名
+     * @param column 字段�?
      * @return 通过校验返回 true
      */
     private boolean isColumnAllowed(String column) {
         Set<String> allowed = allowedOrderByFields();
         if (allowed == null || allowed.isEmpty()) {
-            return true; // 未启用白名单，放行
+            return true; // 未启用白名单，放�?
         }
         return allowed.contains(column);
     }
@@ -170,7 +170,7 @@ public class PageQuery extends BaseQuery {
      * 创建分页查询对象
      *
      * @param pageNum  当前页码
-     * @param pageSize 每页记录数
+     * @param pageSize 每页记录�?
      * @return 分页查询对象
      */
     public static PageQuery of(Integer pageNum, Integer pageSize) {
@@ -181,7 +181,7 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 创建分页查询对象（默认页大小）
+     * 创建分页查询对象（默认页大小�?
      *
      * @param pageNum 当前页码
      * @return 分页查询对象
@@ -195,11 +195,11 @@ public class PageQuery extends BaseQuery {
      *
      * <p>确保页大小在有效范围内：
      * <ul>
-     *   <li>小于1修正为默认值</li>
-     *   <li>大于 {@link PageConstants#MAX_PAGE_SIZE} 修正为最大值</li>
+     *   <li>小于1修正为默认�?/li>
+     *   <li>大于 {@link PageConstants#MAX_PAGE_SIZE} 修正为最大�?/li>
      * </ul>
      *
-     * @param pageSize 原始页大小
+     * @param pageSize 原始页大�?
      * @return 标准化后的页大小
      */
     private static int normalizePageSize(Integer pageSize) {
@@ -210,13 +210,13 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 添加排序项
+     * 添加排序�?
      *
-     * <p>将排序字段和方向添加到排序列表中。
+     * <p>将排序字段和方向添加到排序列表中�?
      *
-     * @param column 字段名
+     * @param column 字段�?
      * @param isAsc  是否升序，true表示升序，false表示降序
-     * @return 当前对象，支持链式调用
+     * @return 当前对象，支持链式调�?
      */
     public PageQuery addOrder(String column, boolean isAsc) {
         if (orderItems == null) {
@@ -231,33 +231,33 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 添加升序排序项
+     * 添加升序排序�?
      *
-     * @param column 字段名
-     * @return 当前对象，支持链式调用
+     * @param column 字段�?
+     * @return 当前对象，支持链式调�?
      */
     public PageQuery addAscOrder(String column) {
         return addOrder(column, true);
     }
 
     /**
-     * 添加降序排序项
+     * 添加降序排序�?
      *
-     * @param column 字段名
-     * @return 当前对象，支持链式调用
+     * @param column 字段�?
+     * @return 当前对象，支持链式调�?
      */
     public PageQuery addDescOrder(String column) {
         return addOrder(column, false);
     }
 
     /**
-     * 设置排序项列表（覆盖Lombok生成的setter）
+     * 设置排序项列表（覆盖Lombok生成的setter�?
      *
-     * <p>对传入的每个排序项进行安全校验，仅保留通过 {@link #SAFE_COLUMN_PATTERN} 匹配的合法项，
-     * 防止绕过 {@link #addOrder(String, boolean)} 直接注入恶意排序字段。
-     * 如果启用了 {@link #allowedOrderByFields()} 白名单，不在白名单中的字段也会被过滤。
+     * <p>对传入的每个排序项进行安全校验，仅保留通过 {@link #SAFE_COLUMN_PATTERN} 匹配的合法项�?
+     * 防止绕过 {@link #addOrder(String, boolean)} 直接注入恶意排序字段�?
+     * 如果启用�?{@link #allowedOrderByFields()} 白名单，不在白名单中的字段也会被过滤�?
      *
-     * @param orderItems 排序项列表
+     * @param orderItems 排序项列�?
      */
     public void setOrderItems(List<String> orderItems) {
         if (orderItems == null || orderItems.isEmpty()) {
@@ -279,10 +279,10 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 设置排序字符串（覆盖 Lombok 生成的 setter）
+     * 设置排序字符串（覆盖 Lombok 生成�?setter�?
      *
-     * <p>对 orderBy 进行安全校验，仅保留通过 {@link #SAFE_COLUMN_PATTERN} 匹配的合法排序项，
-     * 防止直接注入恶意 SQL 排序字段。
+     * <p>�?orderBy 进行安全校验，仅保留通过 {@link #SAFE_COLUMN_PATTERN} 匹配的合法排序项�?
+     * 防止直接注入恶意 SQL 排序字段�?
      *
      * @param orderBy 原始排序字符串，格式：field1 ASC, field2 DESC
      */
@@ -304,9 +304,9 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 获取排序字符串（安全版本）
+     * 获取排序字符串（安全版本�?
      *
-     * <p>返回经过安全校验的 orderBy 值，若未通过校验则返回 null。
+     * <p>返回经过安全校验�?orderBy 值，若未通过校验则返�?null�?
      *
      * @return 安全的排序字符串
      */
@@ -329,15 +329,15 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 设置搜索关键字（覆盖Lombok生成的setter）
+     * 设置搜索关键字（覆盖Lombok生成的setter�?
      *
-     * <p>对搜索关键字进行安全处理：
+     * <p>对搜索关键字进行安全处理�?
      * <ul>
-     *   <li>截断超长关键字，最大长度 {@link #MAX_SEARCH_KEY_LENGTH}</li>
-     *   <li>转义SQL LIKE通配符（%、_、\），防止通配符注入</li>
+     *   <li>截断超长关键字，最大长�?{@link #MAX_SEARCH_KEY_LENGTH}</li>
+     *   <li>转义SQL LIKE通配符（%、_、\），防止通配符注�?/li>
      * </ul>
      *
-     * @param searchKey 原始搜索关键字
+     * @param searchKey 原始搜索关键�?
      */
     public void setSearchKey(String searchKey) {
         if (searchKey == null) {
@@ -355,13 +355,13 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 获取偏移量
+     * 获取偏移�?
      *
-     * <p>用于 MyBatis 分页查询的 LIMIT offset, size。
+     * <p>用于 MyBatis 分页查询�?LIMIT offset, size�?
      * 计算公式：offset = (pageNum - 1) * pageSize
      *
-     * @return 偏移量
-     * @throws ArithmeticException 当计算结果超过 Integer.MAX_VALUE 时抛出
+     * @return 偏移�?
+     * @throws ArithmeticException 当计算结果超�?Integer.MAX_VALUE 时抛�?
      */
     public int getOffset() {
         long offset = getOffsetLong();
@@ -374,12 +374,12 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 获取偏移量（long 类型，无溢出风险）
+     * 获取偏移量（long 类型，无溢出风险�?
      *
-     * <p>用于超大分页场景，避免 int 溢出问题。
+     * <p>用于超大分页场景，避�?int 溢出问题�?
      * 计算公式：offset = (pageNum - 1) * pageSize
      *
-     * @return 偏移量（long 类型）
+     * @return 偏移量（long 类型�?
      */
     public long getOffsetLong() {
         if (pageNum == null || pageSize == null) {
@@ -391,7 +391,7 @@ public class PageQuery extends BaseQuery {
     /**
      * 获取实际每页大小
      *
-     * <p>返回在有效范围内的页大小。
+     * <p>返回在有效范围内的页大小�?
      *
      * @return 实际每页大小
      */
@@ -402,7 +402,7 @@ public class PageQuery extends BaseQuery {
     /**
      * 获取实际页码
      *
-     * <p>返回在有效范围内的页码。
+     * <p>返回在有效范围内的页码�?
      *
      * @return 实际页码
      */
@@ -414,7 +414,7 @@ public class PageQuery extends BaseQuery {
     /**
      * 计算起始行号
      *
-     * <p>从1开始的行号，用于显示等场景。
+     * <p>�?开始的行号，用于显示等场景�?
      *
      * @return 起始行号
      */
@@ -432,7 +432,7 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 判断是否有上一页
+     * 判断是否有上一�?
      *
      * @return 有上一页返回true
      */
@@ -441,10 +441,10 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 判断是否有下一页
+     * 判断是否有下一�?
      *
-     * <p>此方法需要结合总记录数使用，
-     * 通常在 PageResponse 中配合 total 字段使用。
+     * <p>此方法需要结合总记录数使用�?
+     * 通常�?PageResponse 中配�?total 字段使用�?
      *
      * @param total 总记录数
      * @return 有下一页返回true
@@ -456,7 +456,7 @@ public class PageQuery extends BaseQuery {
     /**
      * 获取排序SQL片段
      *
-     * <p>生成可直接使用的 ORDER BY 子句。
+     * <p>生成可直接使用的 ORDER BY 子句�?
      *
      * @return ORDER BY 子句，如 "ORDER BY created_at DESC"
      */
@@ -480,9 +480,9 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 清空排序项
+     * 清空排序�?
      *
-     * @return 当前对象，支持链式调用
+     * @return 当前对象，支持链式调�?
      */
     public PageQuery clearOrders() {
         if (orderItems != null) {
@@ -492,9 +492,9 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 获取排序项数量
+     * 获取排序项数�?
      *
-     * @return 排序项数量
+     * @return 排序项数�?
      */
     @YdszJsonField(ignore = true)
     public int getOrderCount() {

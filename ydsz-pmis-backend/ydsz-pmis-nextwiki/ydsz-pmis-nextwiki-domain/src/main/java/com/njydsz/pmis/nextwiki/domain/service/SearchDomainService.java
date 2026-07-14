@@ -2,13 +2,15 @@ package com.njydsz.pmis.nextwiki.domain.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.njydsz.pmis.common.domain.query.PageResult;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 import com.njydsz.pmis.nextwiki.domain.entity.SearchIndex;
 import com.njydsz.pmis.nextwiki.domain.entity.Tag;
@@ -46,7 +48,10 @@ public class SearchDomainService {
     private final SearchIndexRepository searchIndexRepository;
 
     /**
-     * 综合搜索
+     * 综合搜索（数据库分页，避免全量加载后内存分页）
+     * <p>
+     * 通过 nw_search_index 表的 LIMIT/OFFSET 在 SQL 层面分页，
+     * 支持按 filename / content / tag / all 多维度搜索。
      *
      * @param keyword  搜索关键词
      * @param userId   用户ID（权限过滤）
@@ -62,72 +67,34 @@ public class SearchDomainService {
         log.info("[SearchDomainService] 搜索: keyword={}, userId={}, scope={}, page={}, pageSize={}",
                 keyword, userId, scope, page, pageSize);
 
-        List<FileNode> allResults = new ArrayList<>();
-
-        boolean searchFilename = scope == null || scope.isEmpty()
-                || "all".equals(scope) || "filename".equals(scope);
-        boolean searchTag = scope == null || scope.isEmpty()
-                || "all".equals(scope) || "tag".equals(scope);
-
-        // 文件名/路径搜索
-        if (searchFilename) {
-            List<FileNode> nameMatches = fileNodeRepository.searchByName(keyword, userId);
-            allResults.addAll(nameMatches);
-        }
-
-        // 标签搜索（修复 P0-4：原来错误地调用了 searchByName）
-        if (searchTag) {
-            List<String> fileNodeIds = tagRepository.findFileNodeIdsByTagName(keyword);
-            if (!fileNodeIds.isEmpty()) {
-                List<FileNode> tagMatches = fileNodeRepository.findByIds(fileNodeIds);
-                // 过滤：只返回当前用户的文件且未删除的
-                List<FileNode> filtered = tagMatches.stream()
-                        .filter(n -> userId.equals(n.getCreatedBy()))
-                        .filter(n -> n.getDeleted() == null || n.getDeleted() == 0)
-                        .collect(Collectors.toList());
-                allResults.addAll(filtered);
-            }
-        }
-
-        // 去重 + 过滤已删除
-        List<FileNode> filtered = allResults.stream()
-                .distinct()
-                .filter(n -> n.getDeleted() == null || n.getDeleted() == 0)
-                .collect(Collectors.toList());
-
-        // 相关度排序：文件名完全匹配 > 文件名包含 > 路径包含
-        filtered.sort(buildRelevanceComparator(keyword));
-
-        int total = filtered.size();
-        int fromIndex = (page - 1) * pageSize;
-        int toIndex = Math.min(fromIndex + pageSize, total);
+        // 数据库分页查询搜索索引，避免全量加载后内存 subList 分页
+        PageResult<SearchIndex> pageResult = searchIndexRepository.searchPage(
+                keyword, userId, scope, page, pageSize);
 
         List<SearchResultVO.SearchHitVO> hits = new ArrayList<>();
-        if (fromIndex < total) {
-            List<FileNode> pageResults = filtered.subList(fromIndex, toIndex);
-            for (FileNode node : pageResults) {
-                float score = calculateScore(node, keyword);
-                hits.add(SearchResultVO.SearchHitVO.builder()
-                        .fileNodeId(node.getId())
-                        .name(node.getName())
-                        .path(node.getPath())
-                        .nodeType(node.getNodeType())
-                        .suffix(node.getSuffix())
-                        .size(node.getSize())
-                        .highlight(buildHighlight(node, keyword))
-                        .score(score)
-                        .createdBy(node.getCreatedBy())
-                        .updatedAt(node.getUpdatedAt() != null
-                                ? node.getUpdatedAt().toString() : null)
-                        .build());
-            }
+        for (SearchIndex index : pageResult.getRecords()) {
+            float score = calculateScore(index, keyword);
+            hits.add(SearchResultVO.SearchHitVO.builder()
+                    .fileNodeId(index.getFileNodeId())
+                    .name(index.getName())
+                    .path(index.getPath())
+                    .nodeType(FileNode.TYPE_FILE)
+                    .suffix(index.getSuffix())
+                    .size(index.getSize())
+                    .highlight(buildHighlight(index.getName(), keyword))
+                    .score(score)
+                    .tags(parseTags(index.getTags()))
+                    .createdBy(index.getCreatedBy())
+                    .updatedAt(index.getUpdatedAt() != null
+                            ? index.getUpdatedAt().toString() : null)
+                    .build());
         }
 
         long tookMs = System.currentTimeMillis() - startTime;
 
         return SearchResultVO.builder()
                 .hits(hits)
-                .total((long) total)
+                .total(pageResult.getTotal())
                 .page(page)
                 .pageSize(pageSize)
                 .tookMs(tookMs)
