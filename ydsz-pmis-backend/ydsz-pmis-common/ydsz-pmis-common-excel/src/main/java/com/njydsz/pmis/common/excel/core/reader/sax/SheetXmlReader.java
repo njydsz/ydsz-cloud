@@ -26,7 +26,6 @@ public class SheetXmlReader {
         this.ssReader = ssReader;
     }
 
-    @SuppressWarnings("unchecked")
     void parse(InputStream is) throws IOException {
         byte[] data = readAllBytesDirect(is);
         int pos = 0;

@@ -575,8 +575,7 @@ public final class YdszJsonParser {
     /**
      * 解析字符串
      */
-    @SuppressWarnings("unused")
-    private static String parseString(char[] chars, int pos) {
+    /** package-private */ static String parseString(char[] chars, int pos) {
         int len = chars.length;
         
         if (chars[pos] != '"') {
@@ -631,8 +630,7 @@ public final class YdszJsonParser {
     /**
      * 解析数字
      */
-    @SuppressWarnings("unused")
-    private static Number parseNumber(char[] chars, int pos) {
+    /** package-private */ static Number parseNumber(char[] chars, int pos) {
         int len = chars.length;
         int start = pos;
         

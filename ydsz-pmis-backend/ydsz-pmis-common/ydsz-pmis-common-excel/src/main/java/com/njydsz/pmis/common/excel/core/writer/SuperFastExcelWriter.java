@@ -36,8 +36,7 @@ public class SuperFastExcelWriter {
 
     private static final int ROW_BUFFER_SIZE = 1024 * 1024;
     private static final int ZIP_BUFFER_SIZE = 1024 * 1024;
-    @SuppressWarnings("unused")
-    private static final int FLUSH_THRESHOLD = 5000;
+    /** package-private */ static final int FLUSH_THRESHOLD = 5000;
 
     private static final byte[] CONTENT_TYPES_BYTES;
     private static final byte[] RELS_BYTES;

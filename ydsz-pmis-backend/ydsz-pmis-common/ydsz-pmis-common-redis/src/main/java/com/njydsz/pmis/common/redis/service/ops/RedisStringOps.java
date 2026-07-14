@@ -594,7 +594,6 @@ public class RedisStringOps {
      * @param <T>      值类型
      * @return 缓存值
      */
-    @SuppressWarnings("unchecked")
     public <T> T getOrCompute(String key, long expire, Supplier<T> supplier, Class<T> clazz) {
         if (key == null) {
             return null;
@@ -617,7 +616,7 @@ public class RedisStringOps {
                     if (value != null) {
                         set(key, value, expire);
                     } else {
-                        set(key, (T) NullPlaceholder.INSTANCE, Math.min(expire, 60));
+                        set(key, NullPlaceholder.INSTANCE, Math.min(expire, 60));
                     }
                 }
             } finally {

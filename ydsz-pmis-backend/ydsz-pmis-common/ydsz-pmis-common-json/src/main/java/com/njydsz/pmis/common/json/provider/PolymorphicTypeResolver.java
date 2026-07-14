@@ -41,8 +41,7 @@ public final class PolymorphicTypeResolver {
     private static final ConcurrentHashMap<Class<?>, TypeMapping> TYPE_MAPPING_CACHE = new ConcurrentHashMap<>();
 
     /** 默认类型属性名（预留扩展） */
-    @SuppressWarnings("unused")
-    private static final String DEFAULT_TYPE_PROPERTY = "type";
+    static final String DEFAULT_TYPE_PROPERTY = "type";
 
     private PolymorphicTypeResolver() {
         throw new UnsupportedOperationException();
@@ -53,7 +52,6 @@ public final class PolymorphicTypeResolver {
      */
     private static final class TypeMapping {
         final String typeProperty;
-        @SuppressWarnings("unused")
         final boolean visible;
         final Map<String, Class<?>> nameToType;
 
@@ -61,6 +59,10 @@ public final class PolymorphicTypeResolver {
             this.typeProperty = typeProperty;
             this.visible = visible;
             this.nameToType = nameToType;
+        }
+
+        boolean isVisible() {
+            return visible;
         }
 
         Class<?> resolveType(String typeName) {

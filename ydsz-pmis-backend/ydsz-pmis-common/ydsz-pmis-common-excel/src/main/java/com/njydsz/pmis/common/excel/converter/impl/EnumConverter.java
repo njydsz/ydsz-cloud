@@ -26,15 +26,14 @@ public class EnumConverter implements CellValueConverter {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Object convert(Object rawValue, Class<?> targetType, ConvertContext context) {
         if (rawValue == null) {
             return null;
         }
 
         String strValue;
-        if (rawValue instanceof String) {
-            strValue = (String) rawValue;
+        if (rawValue instanceof String s) {
+            strValue = s;
         } else {
             strValue = rawValue.toString();
         }
@@ -49,9 +48,7 @@ public class EnumConverter implements CellValueConverter {
         }
 
         try {
-            @SuppressWarnings("rawtypes")
-            Class<Enum> enumClass = (Class<Enum>) targetType;
-            return Enum.valueOf(enumClass, strValue);
+            return Enum.valueOf(targetType.asSubclass(Enum.class), strValue);
         } catch (IllegalArgumentException e) {
             return null;
         }

@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.queue.config;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -481,9 +482,9 @@ public class QueueProperties {
 
         return yamlConfigs.stream()
                 .map(obj -> {
-                    if (obj instanceof Map) {
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> map = (Map<String, Object>) obj;
+                    if (obj instanceof Map<?, ?> rawMap) {
+                        Map<String, Object> map = new LinkedHashMap<>();
+                        rawMap.forEach((k, v) -> map.put(String.valueOf(k), v));
                         return fromMap(map);
                     }
                     throw new IllegalArgumentException("配置项必须是 Map 类型: " + obj);

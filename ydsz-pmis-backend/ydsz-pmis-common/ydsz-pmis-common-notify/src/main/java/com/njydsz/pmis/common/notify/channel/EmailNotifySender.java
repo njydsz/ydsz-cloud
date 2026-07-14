@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.notify.channel;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -199,10 +200,13 @@ public class EmailNotifySender implements NotifyChannelStrategy {
 			return NotifySendResult.failure("收件人邮箱地址无效: " + receiver, channelName());
 		}
 		try {
-			@SuppressWarnings("unchecked")
-			Map<String, Object> params = templateParams instanceof Map
-					? (Map<String, Object>) templateParams
-					: Map.of();
+			Map<String, Object> params;
+			if (templateParams instanceof Map<?, ?> rawMap) {
+				params = new LinkedHashMap<>();
+				rawMap.forEach((k, v) -> params.put(String.valueOf(k), v));
+			} else {
+				params = Map.of();
+			}
 
 			String content = templateEngine != null
 					? templateEngine.render(templateCode, params)

@@ -255,7 +255,6 @@ public class DeadLetterQueueServiceImpl implements DeadLetterQueueService {
     /**
      * 死信消息内部模型
      */
-    @SuppressWarnings("unused")
     private static class DeadLetterMessage {
         private String messageId;
         private String messageBody;

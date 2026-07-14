@@ -180,7 +180,6 @@ public final class RequestContext {
      * @param <T> 关联类型
      * @return 属性值；不存在时返回 null
      */
-    @SuppressWarnings("unchecked")
     public static <T> T get(ContextKey<T> key) {
         Object value = CONTEXT_HOLDER.get().get(key.getName());
         if (value == null) {
@@ -200,9 +199,9 @@ public final class RequestContext {
      * @param <T> 类型
      * @return Optional 包装的属性值
      */
-    @SuppressWarnings("unchecked")
     public static <T> Optional<T> getOptional(String key) {
-        return Optional.ofNullable((T) CONTEXT_HOLDER.get().get(key));
+        Object value = CONTEXT_HOLDER.get().get(key);
+        return Optional.ofNullable(value);
     }
 
     /**

@@ -303,8 +303,7 @@ public final class ZeroCopyDeserializer {
             }
         }
 
-        @SuppressWarnings("unused")
-        boolean matchesHashCode(int hash) {
+        /** package-private */ boolean matchesHashCode(int hash) {
             return nameHashCode == hash;
         }
     }

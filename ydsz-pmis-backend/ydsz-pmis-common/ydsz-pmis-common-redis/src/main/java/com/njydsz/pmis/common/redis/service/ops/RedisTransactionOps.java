@@ -68,8 +68,7 @@ public class RedisTransactionOps {
         try {
             return redisTemplate.execute(new SessionCallback<List<Object>>() {
                 @Override
-                @SuppressWarnings({"unchecked", "rawtypes"})
-                public List<Object> execute(@NonNull RedisOperations operations) {
+                public <K, V> List<Object> execute(@NonNull RedisOperations<K, V> operations) {
                     operations.multi();
                     try {
                         callback.apply(redisTemplate);
@@ -103,8 +102,7 @@ public class RedisTransactionOps {
         try {
             List<Object> results = redisTemplate.execute(new SessionCallback<List<Object>>() {
                 @Override
-                @SuppressWarnings({"unchecked", "rawtypes"})
-                public List<Object> execute(@NonNull RedisOperations operations) {
+                public <K, V> List<Object> execute(@NonNull RedisOperations<K, V> operations) {
                     operations.multi();
                     try {
                         callback.run();

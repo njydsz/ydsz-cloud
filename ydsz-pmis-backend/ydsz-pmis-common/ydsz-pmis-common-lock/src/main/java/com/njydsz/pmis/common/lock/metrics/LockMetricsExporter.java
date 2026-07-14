@@ -107,9 +107,9 @@ public class LockMetricsExporter {
         if (value instanceof Number || value instanceof Boolean) {
             return value.toString();
         }
-        if (value instanceof Map) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> map = (Map<String, Object>) value;
+        if (value instanceof Map<?, ?> rawMap) {
+            Map<String, Object> map = new LinkedHashMap<>();
+            rawMap.forEach((k, v) -> map.put(String.valueOf(k), v));
             return toJson(map);
         }
         return '"' + escapeJson(value.toString()) + '"';

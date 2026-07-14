@@ -524,8 +524,7 @@ public class ExcelWriter {
      *
      * @return true 如果可以写入，false 如果已经完成过写入
      */
-    @SuppressWarnings("unused")
-    private boolean canWrite() {
+    /** package-private */ boolean canWrite() {
         return !writeCompleted;
     }
 
@@ -1029,7 +1028,6 @@ public class ExcelWriter {
      *
      * @throws IOException 写入异常
      */
-    @SuppressWarnings("deprecation")
     public void finish() throws IOException {
         if (workbook == null) {
             return;

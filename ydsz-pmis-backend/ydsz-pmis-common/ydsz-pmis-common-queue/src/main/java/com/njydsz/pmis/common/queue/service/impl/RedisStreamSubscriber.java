@@ -152,7 +152,6 @@ public class RedisStreamSubscriber implements IMessageSubscriber {
         return lastError.get();
     }
 
-    @SuppressWarnings("unchecked")
     private void consumeLoop(IMessageHandler handler) {
         while (running.get()) {
             try {
@@ -184,7 +183,6 @@ public class RedisStreamSubscriber implements IMessageSubscriber {
         log.info("[RedisStream] 消费循环已退出，consumer={}", consumer);
     }
 
-    @SuppressWarnings("unchecked")
     private QueueMessage poll() {
         try {
             StreamReadOptions readOptions = StreamReadOptions.empty().count(1).block(Duration.ofMillis(blockMillis));

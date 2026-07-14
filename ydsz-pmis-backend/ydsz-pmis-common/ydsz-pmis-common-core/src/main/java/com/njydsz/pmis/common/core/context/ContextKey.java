@@ -33,7 +33,6 @@ import java.util.function.Function;
  * @version 3.5.0
  * @since 3.5.0
  */
-@SuppressWarnings("unused")
 public class ContextKey<T> {
 
     private final String name;
@@ -137,11 +136,18 @@ public class ContextKey<T> {
         Objects.requireNonNull(mapper, "mapper must not be null");
         T currentValue = this.get();
         R mappedValue = currentValue != null ? mapper.apply(currentValue) : null;
-        @SuppressWarnings("unchecked")
-        Class<R> targetType = mappedValue != null
-                ? (Class<R>) mappedValue.getClass()
-                : (Class<R>) Object.class;
+        Class<R> targetType = deduceType(mappedValue);
         return ContextKey.of(name + "_mapped", targetType, mappedValue);
+    }
+
+    /**
+     * 推导值类型，避免 unchecked cast
+     */
+    private static <R> Class<R> deduceType(R value) {
+        if (value == null) {
+            return (Class<R>) Object.class;
+        }
+        return (Class<R>) value.getClass();
     }
 
     @Override

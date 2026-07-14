@@ -179,7 +179,6 @@ public interface BatchRedisOperations {
     /**
      * 集群模式下按 slot 分组执行 MSET with expire
      */
-    @SuppressWarnings("unchecked")
     private boolean msetWithExpireInCluster(Map<String, Object> keyValues, long expireSeconds) {
         List<Map.Entry<String, Object>> entries = new ArrayList<>(keyValues.entrySet());
         Map<Integer, List<Map.Entry<String, Object>>> slotGroups = ClusterSlotUtil.groupBySlot(
@@ -189,7 +188,8 @@ public interface BatchRedisOperations {
             template.executePipelined((RedisCallback<Object>) connection -> {
                 for (Map.Entry<String, Object> entry : group) {
                     byte[] rawKey = template.getStringSerializer().serialize(entry.getKey());
-                    byte[] rawValue = ((RedisSerializer<Object>) template.getValueSerializer()).serialize(entry.getValue());
+                    RedisSerializer valueSerializer = template.getValueSerializer();
+                    byte[] rawValue = valueSerializer.serialize(entry.getValue());
                     if (rawKey != null && rawValue != null) {
                         long jitteredExpire = addJitterToExpire(expireSeconds);
                         connection.stringCommands().set(rawKey, rawValue);
@@ -363,12 +363,11 @@ public interface BatchRedisOperations {
      * @param fields 字段列表
      * @return 存在的字段列表
      */
-    @SuppressWarnings("unchecked")
     default List<Object> hmexists(String key, Object... fields) {
         if (key == null || fields == null || fields.length == 0) {
             return Collections.emptyList();
         }
-        RedisSerializer<Object> hashValueSerializer = (RedisSerializer<Object>) getRedisTemplate().getHashValueSerializer();
+        RedisSerializer hashValueSerializer = getRedisTemplate().getHashValueSerializer();
         List<Object> results = getRedisTemplate().executePipelined((RedisCallback<Object>) connection -> {
             for (Object field : fields) {
                 byte[] keyBytes = getRedisTemplate().getStringSerializer().serialize(key);
