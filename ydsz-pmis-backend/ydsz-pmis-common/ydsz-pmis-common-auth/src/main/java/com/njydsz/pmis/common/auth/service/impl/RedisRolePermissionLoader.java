@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -426,7 +427,9 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
         if (value == null || !value.isArray()) {
             return;
         }
-        for (JsonNode item : value) {
+        Iterator<JsonNode> itemIter = value.elements();
+        while (itemIter.hasNext()) {
+            JsonNode item = itemIter.next();
             String v = item.asText("").trim();
             if (StringUtils.isNotBlank(v)) {
                 target.add(v);

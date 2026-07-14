@@ -208,7 +208,9 @@ public class ColumnDesensitizationService {
     }
 
     private void parseColumnArray(String tableName, JsonNode columns, ColumnDesensitizationContext context) {
-        for (JsonNode item : columns) {
+        Iterator<JsonNode> itemIter = columns.elements();
+        while (itemIter.hasNext()) {
+            JsonNode item = itemIter.next();
             if (item == null || item.isNull()) {
                 continue;
             }

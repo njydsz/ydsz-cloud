@@ -9,6 +9,14 @@ import org.springframework.validation.annotation.Validated;
 import lombok.Data;
 
 /**
+ * Core configuration properties.
+ *
+ * <p>Only pagination-related config belongs in core.
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+/**
  * Core赅量
  * <p>内듉 core 模拜法为需爭意合并汇名作为涽
  * \o@author ydsz-pmis-team
