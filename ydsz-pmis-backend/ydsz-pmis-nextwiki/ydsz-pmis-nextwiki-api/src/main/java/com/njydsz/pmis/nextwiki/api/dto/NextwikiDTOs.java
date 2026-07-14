@@ -72,6 +72,24 @@ public final class NextwikiDTOs {
     }
 
     /**
+     * 批量移动请求
+     */
+    @Data
+    @Schema(description = "批量移动请求")
+    public static class BatchMoveRequest implements Serializable {
+        private static final long serialVersionUID = 1L;
+
+        @Schema(description = "待移动节点ID列表")
+        @NotNull(message = "节点ID列表不能为空")
+        @Size(min = 1, message = "至少选择一个节点")
+        private List<String> nodeIds;
+
+        @Schema(description = "目标父目录ID")
+        @NotBlank(message = "目标父目录ID不能为空")
+        private String targetParentId;
+    }
+
+    /**
      * 重命名请求
      */
     @Data

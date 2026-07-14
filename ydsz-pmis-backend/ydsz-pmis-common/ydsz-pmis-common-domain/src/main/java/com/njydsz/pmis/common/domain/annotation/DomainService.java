@@ -11,10 +11,10 @@ import org.springframework.stereotype.Component;
 /**
  * 领域服务标记注解
  *
- * <p>标注在领域服务类上，用于DDD架构约束和组件扫描�?
- * 继承�?Spring {@link Component}，被标注的类会被自动注册�?Spring Bean�?/p>
+ * <p>标注在领域服务类上，用于DDD架构约束和组件扫描。
+ * 继承自Spring {@link Component}，被标注的类会被自动注册为Spring Bean。</p>
  *
- * <p><b>使用示例�?/b>
+ * <p><b>使用示例：</b>
  * <pre>{@code
  * @DomainService
  * public class OrderDomainService {
@@ -40,7 +40,7 @@ import org.springframework.stereotype.Component;
 @Component
 public @interface DomainService {
     /**
-     * 领域服务�?Bean 名称，默认为空（使用 Spring 默认命名策略�?
+     * 领域服务的Bean名称，默认为空（使用Spring默认命名策略）。
      *
      * @return Bean 名称
      */

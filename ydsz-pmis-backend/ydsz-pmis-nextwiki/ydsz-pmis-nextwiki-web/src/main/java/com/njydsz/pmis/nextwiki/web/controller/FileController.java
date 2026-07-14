@@ -29,9 +29,7 @@ import com.njydsz.pmis.nextwiki.server.health.NextwikiHealthIndicator;
 import com.njydsz.pmis.nextwiki.server.service.FileApplicationService;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -151,7 +149,7 @@ public class FileController {
     @Operation(summary = "批量移动")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
     public BaseResponse<FileApplicationService.BatchResult> batchMove(
-            @RequestBody BatchMoveRequest request,
+            @Valid @RequestBody NextwikiDTOs.BatchMoveRequest request,
             @RequestHeader("X-User-Id") String userId) {
 
         FileApplicationService.BatchResult result = fileApplicationService.batchMove(
@@ -199,33 +197,5 @@ public class FileController {
 
         fileApplicationService.toggleStar(nodeId, userId);
         return BaseResponse.ok();
-    }
-
-    /**
-     * 批量移动请求
-     */
-    @Data
-    @Schema(description = "批量移动请求")
-    public static class BatchMoveRequest {
-        @Schema(description = "待移动节点ID列表")
-        private List<String> nodeIds;
-        @Schema(description = "目标父目录ID")
-        private String targetParentId;
-
-        public List<String> getNodeIds() {
-            return nodeIds;
-        }
-
-        public void setNodeIds(List<String> nodeIds) {
-            this.nodeIds = nodeIds;
-        }
-
-        public String getTargetParentId() {
-            return targetParentId;
-        }
-
-        public void setTargetParentId(String targetParentId) {
-            this.targetParentId = targetParentId;
-        }
     }
 }

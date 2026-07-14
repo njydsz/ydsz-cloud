@@ -9,10 +9,10 @@ import java.lang.annotation.Target;
 /**
  * 租户字段标记注解
  *
- * <p>标注在实体字段上，表明该字段用于多租户数据隔离�?
- * 配合 SQL 拦截器可自动注入 tenant_id 条件�?
+ * <p>标注在实体字段上，表明该字段用于多租户数据隔离。
+ * 配合 SQL 拦截器可自动注入 tenant_id 条件。
  *
- * <p><b>使用示例�?/b>
+ * <p><b>使用示例：</b>
  * <pre>{@code
  * public class Product extends BaseEntity<Long> {
  *

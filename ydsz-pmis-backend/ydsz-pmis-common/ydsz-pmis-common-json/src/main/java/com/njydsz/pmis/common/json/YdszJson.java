@@ -7,6 +7,7 @@ import java.util.*;
 
 import com.njydsz.pmis.common.json.config.YdszJsonConfig;
 import com.njydsz.pmis.common.json.deserializer.JsonDeserializer;
+import com.njydsz.pmis.common.json.metric.JsonMetricsCallback;
 import com.njydsz.pmis.common.json.engine.YdszDeserializerEngine;
 import com.njydsz.pmis.common.json.engine.YdszSerializerEngine;
 import com.njydsz.pmis.common.json.exception.YdszJsonException;
@@ -68,6 +69,78 @@ public class YdszJson {
     private YdszJson() {
         throw new UnsupportedOperationException("YdszJson is a utility class and cannot be instantiated");
     }
+
+    // ==================== 指标监控钩子 ====================
+
+    /**
+     * 指标回调（可选，由 YdszJsonAutoConfiguration 自动注入）
+     */
+    private static volatile JsonMetricsCallback metricsCallback;
+
+    /**
+     * 设置指标回调
+     *
+     * @param callback 指标回调实例，null 表示关闭监控
+     */
+    public static void setMetricsCallback(JsonMetricsCallback callback) {
+        YdszJson.metricsCallback = callback;
+    }
+
+    /**
+     * 获取当前指标回调
+     *
+     * @return 指标回调实例，未设置时返回 null
+     */
+    public static JsonMetricsCallback getMetricsCallback() {
+        return metricsCallback;
+    }
+
+    @FunctionalInterface
+    private interface ThrowingSupplier<T> {
+        T get() throws Exception;
+    }
+
+    private static <T> T recordSerialize(ThrowingSupplier<T> supplier) {
+        long start = System.nanoTime();
+        try {
+            T result = supplier.get();
+            JsonMetricsCallback cb = metricsCallback;
+            if (cb != null) {
+                cb.onSerializeSuccess(System.nanoTime() - start);
+            }
+            return result;
+        } catch (Exception e) {
+            JsonMetricsCallback cb = metricsCallback;
+            if (cb != null) {
+                cb.onSerializeFailure();
+            }
+            if (e instanceof YdszJsonException) {
+                throw (YdszJsonException) e;
+            }
+            throw new YdszJsonException("JSON serialize failed: " + e.getMessage(), e);
+        }
+    }
+
+    private static <T> T recordDeserialize(ThrowingSupplier<T> supplier) {
+        long start = System.nanoTime();
+        try {
+            T result = supplier.get();
+            JsonMetricsCallback cb = metricsCallback;
+            if (cb != null) {
+                cb.onDeserializeSuccess(System.nanoTime() - start);
+            }
+            return result;
+        } catch (Exception e) {
+            JsonMetricsCallback cb = metricsCallback;
+            if (cb != null) {
+                cb.onDeserializeFailure();
+            }
+            if (e instanceof YdszJsonException) {
+                throw (YdszJsonException) e;
+            }
+            throw new YdszJsonException("JSON deserialize failed: " + e.getMessage(), e);
+        }
+    }
     
     // ==================== 序列化入口方法 ====================
     
@@ -78,7 +151,10 @@ public class YdszJson {
      * @return JSON 字符串
      */
     public static String toJson(Object obj) {
-        return YdszSerializerEngine.serialize(obj);
+        if (obj == null) {
+            return null;
+        }
+        return recordSerialize(() -> YdszSerializerEngine.serialize(obj));
     }
     
     /**
@@ -89,10 +165,13 @@ public class YdszJson {
      * @return JSON 字符串
      */
     public static String toJson(Object obj, boolean pretty) {
+        if (obj == null) {
+            return null;
+        }
         if (pretty) {
             return format(obj);
         }
-        return YdszSerializerEngine.serialize(obj);
+        return recordSerialize(() -> YdszSerializerEngine.serialize(obj));
     }
     
     /**
@@ -105,7 +184,10 @@ public class YdszJson {
      * @return JSON 字符串
      */
     public static String toJson(Object obj, Class<?> viewClass) {
-        return YdszSerializerEngine.serialize(obj, viewClass);
+        if (obj == null) {
+            return null;
+        }
+        return recordSerialize(() -> YdszSerializerEngine.serialize(obj, viewClass));
     }
     
     /**
@@ -117,7 +199,10 @@ public class YdszJson {
      * @return JSON 字符串
      */
     public static String toJson(Object obj, Class<?> viewClass, boolean pretty) {
-        return YdszSerializerEngine.serialize(obj, viewClass, pretty);
+        if (obj == null) {
+            return null;
+        }
+        return recordSerialize(() -> YdszSerializerEngine.serialize(obj, viewClass, pretty));
     }
     
     /**
@@ -127,7 +212,10 @@ public class YdszJson {
      * @return 格式化的 JSON 字符串
      */
     public static String format(Object obj) {
-        return YdszSerializerEngine.format(obj);
+        if (obj == null) {
+            return null;
+        }
+        return recordSerialize(() -> YdszSerializerEngine.format(obj));
     }
     
     /**
@@ -139,8 +227,13 @@ public class YdszJson {
      * @return UTF-8 编码的 JSON 字节数组
      */
     public static byte[] toJsonBytes(Object obj) {
-        String json = YdszSerializerEngine.serialize(obj);
-        return json.getBytes(StandardCharsets.UTF_8);
+        if (obj == null) {
+            return new byte[0];
+        }
+        return recordSerialize(() -> {
+            String json = YdszSerializerEngine.serialize(obj);
+            return json.getBytes(StandardCharsets.UTF_8);
+        });
     }
     
     // ==================== 反序列化入口方法 ====================
@@ -154,8 +247,11 @@ public class YdszJson {
      * @return 反序列化后的对象
      */
     public static <T> T toObject(String json, Class<T> clazz) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
         validateJsonSize(json);
-        return YdszDeserializerEngine.deserialize(json, clazz);
+        return recordDeserialize(() -> YdszDeserializerEngine.deserialize(json, clazz));
     }
     
     /**
@@ -167,8 +263,11 @@ public class YdszJson {
      * @return 反序列化后的对象
      */
     public static <T> T toObject(String json, Type type) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
         validateJsonSize(json);
-        return YdszDeserializerEngine.deserialize(json, type);
+        return recordDeserialize(() -> YdszDeserializerEngine.deserialize(json, type));
     }
     
     /**
@@ -180,8 +279,11 @@ public class YdszJson {
      * @return 反序列化后的对象
      */
     public static <T> T toObject(String json, YdszJsonType<T> typeRef) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
         validateJsonSize(json);
-        return YdszDeserializerEngine.deserialize(json, typeRef);
+        return recordDeserialize(() -> YdszDeserializerEngine.deserialize(json, typeRef));
     }
     
     /**
@@ -211,9 +313,15 @@ public class YdszJson {
      * @return Map 对象
      */
     
-    public static Map<String, Object> parseObject(String json) {
-        Object result = YdszDeserializerEngine.deserialize(json, Map.class);
-        return toStringObjectMap(result);
+    public static Map<String, Object> parseMap(String json) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        validateJsonSize(json);
+        return recordDeserialize(() -> {
+            Object result = YdszDeserializerEngine.deserialize(json, Map.class);
+            return toStringObjectMap(result);
+        });
     }
     
     /**
@@ -226,6 +334,11 @@ public class YdszJson {
      */
     
     public static <T> List<T> parseArray(String json, Class<T> clazz) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        validateJsonSize(json);
+        return recordDeserialize(() -> {
         ParameterizedType type = new ParameterizedType() {
             @Override
             public Type[] getActualTypeArguments() {
@@ -251,8 +364,9 @@ public class YdszJson {
             return typedList;
         }
         return new ArrayList<>();
+        });
     }
-    
+
     /**
      * JSON 字符串转 List<Object>
      * 
@@ -261,8 +375,14 @@ public class YdszJson {
      */
     
     public static List<Object> parseArray(String json) {
-        Object result = YdszDeserializerEngine.deserialize(json, List.class);
-        return toObjectList(result);
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        validateJsonSize(json);
+        return recordDeserialize(() -> {
+            Object result = YdszDeserializerEngine.deserialize(json, List.class);
+            return toObjectList(result);
+        });
     }
     
     /**
@@ -449,7 +569,11 @@ public class YdszJson {
      * @return 反序列化后的对象
      */
     public static <T> T toObject(String json, Class<T> clazz, JSONReader.Feature... features) {
-        return YdszDeserializerEngine.deserialize(json, clazz, JSONReader.of(features));
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        validateJsonSize(json);
+        return recordDeserialize(() -> YdszDeserializerEngine.deserialize(json, clazz, JSONReader.of(features)));
     }
 
     // ==================== JSON Pointer API (RFC 6901) ====================

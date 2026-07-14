@@ -63,9 +63,9 @@
 
     <modules>
         <!-- L1 基础设施层 -->
+        <module>ydsz-pmis-common-json</module>
         <module>ydsz-pmis-common-core</module>
         <!-- L2 工具模块层 -->
-        <module>ydsz-pmis-common-json</module>
         <module>ydsz-pmis-common-util</module>
         <!-- L3 基础服务层 -->
         <module>ydsz-pmis-common-domain</module>
