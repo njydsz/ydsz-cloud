@@ -159,9 +159,16 @@ public final class SerializationProvider {
      */
     public static void clearThreadLocals() {
         SB_POOL.remove();
+        FAST_WRITER_POOL.remove();
         SERIALIZING_OBJECTS.remove();
-        FieldMetadataLoader.NAMING_STRATEGY.remove();
         CURRENT_VIEW_CLASS.remove();
+        CACHED_LIST_SERIALIZER.remove();
+        CACHED_LIST_ELEMENT_CLASS.remove();
+        WRITE_NULLS.remove();
+        PRETTY_PRINT.remove();
+        CIRCULAR_REFERENCE_STRATEGY.remove();
+        SERIALIZE_ENUM_USING_ORDINAL.remove();
+        FieldMetadataLoader.NAMING_STRATEGY.remove();
     }
 
     /**

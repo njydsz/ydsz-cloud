@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.cache.multilevel;
 
 import java.time.Duration;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -263,10 +264,9 @@ public class RedisCacheAdapter<K, V> implements Cache<K, V> {
     }
     // 提前物化 entrySet 为 String/Object 键值对（key 通过 buildKey() 序列化为 String，
     // value 上转为 Object 避开外层 K/V 在 lambda 内被引用）
-    java.util.List<java.util.Map.Entry<String, Object>> entries =
-        new java.util.ArrayList<>(map.size());
+    List<Map.Entry<String, Object>> entries = new ArrayList<>(map.size());
     for (Map.Entry<K, V> e : map.entrySet()) {
-      entries.add(new java.util.AbstractMap.SimpleEntry<>(buildKey(e.getKey()), e.getValue()));
+      entries.add(new AbstractMap.SimpleEntry<>(buildKey(e.getKey()), e.getValue()));
     }
     // 使用 Pipeline 批量写入，减少网络往返
     // 注：此处使用 RedisCallback（doInRedis(RedisConnection)）而非 SessionCallback，
@@ -276,7 +276,7 @@ public class RedisCacheAdapter<K, V> implements Cache<K, V> {
       redisTemplate.executePipelined(
           (RedisCallback<Object>)
               connection -> {
-                for (java.util.Map.Entry<String, Object> entry : entries) {
+                for (Map.Entry<String, Object> entry : entries) {
                   String redisKey = entry.getKey();
                   Object value = entry.getValue();
                   byte[] keyBytes = redisTemplate.getStringSerializer().serialize(redisKey);

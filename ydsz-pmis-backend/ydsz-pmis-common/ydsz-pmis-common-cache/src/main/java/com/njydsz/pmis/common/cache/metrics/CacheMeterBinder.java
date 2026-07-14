@@ -3,6 +3,10 @@ package com.njydsz.pmis.common.cache.metrics;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.pmis.common.cache.api.Cache;
 
@@ -45,6 +49,8 @@ import io.micrometer.core.instrument.binder.MeterBinder;
  */
 public class CacheMeterBinder implements MeterBinder {
 
+  private static final Logger log = LoggerFactory.getLogger(CacheMeterBinder.class);
+
   private static final String METRIC_PREFIX = "cache";
   private static final String TAG_CACHE_NAME = "cache_name";
   private static final String TAG_CACHE_TYPE = "cache_type";
@@ -53,8 +59,7 @@ public class CacheMeterBinder implements MeterBinder {
   private static final int MAX_CACHE_NAME_LENGTH = 64;
 
   /** 高基数保护：最多允许注册的不同 cacheName 数量 */
-  private static final java.util.concurrent.atomic.AtomicInteger REGISTERED_NAMES =
-      new java.util.concurrent.atomic.AtomicInteger(0);
+  private static final AtomicInteger REGISTERED_NAMES = new AtomicInteger(0);
   private static final int MAX_REGISTERED_NAMES = 500;
 
   private final Cache<?, ?> cache;
@@ -86,11 +91,10 @@ public class CacheMeterBinder implements MeterBinder {
             : cacheName;
     // 高基数保护：记录注册数量
     if (REGISTERED_NAMES.incrementAndGet() > MAX_REGISTERED_NAMES) {
-      org.slf4j.LoggerFactory.getLogger(CacheMeterBinder.class)
-          .warn(
-              "缓存指标注册数量超过阈值 {}，可能存在高基数问题。cacheName={}",
-              MAX_REGISTERED_NAMES,
-              this.cacheName);
+      log.warn(
+          "缓存指标注册数量超过阈值 {}，可能存在高基数问题。cacheName={}",
+          MAX_REGISTERED_NAMES,
+          this.cacheName);
     }
     this.cacheType = cacheType;
     this.extraTags = extraTags;

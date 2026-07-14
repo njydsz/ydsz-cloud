@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.json.cache;
 
 import com.njydsz.pmis.common.json.asm.AsmBeanCodecGenerator;
+import com.njydsz.pmis.common.json.provider.SerializationContext;
 
 /**
  * Json 缓存统计信息。
@@ -36,7 +37,7 @@ public final class JsonCacheStats {
         sb.append("  ASM: ").append(AsmBeanCodecGenerator.getAsmStats()).append('\n');
         sb.append("  ASM Codec Cache: ").append(AsmCodecCache.getCacheSize()).append('\n');
         sb.append("  BeanSerializer Cache: ").append(BeanSerializerCache.size()).append('\n');
-        sb.append("  ThreadLocal Memory (est): ").append(JsonContext.estimateThreadLocalMemory()).append(" bytes\n");
+        sb.append("  ThreadLocal Memory (est): ").append(SerializationContext.estimateThreadLocalMemory()).append(" bytes\n");
         sb.append("=============================");
         return sb.toString();
     }

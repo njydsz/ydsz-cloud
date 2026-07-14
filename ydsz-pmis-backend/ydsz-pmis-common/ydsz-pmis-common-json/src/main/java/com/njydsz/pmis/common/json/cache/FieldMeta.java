@@ -233,29 +233,31 @@ public final class FieldMeta {
     }
 
     /**
-     * 计算序列化类型代码（用于 switch 替代 instanceof）
+     * 计算序列化类型代码（用于 switch 替代 instanceof）。
+     *
+     * <p>类型代码必须与 {@link ValueWriter} 中的 TYPE_CODE_* 常量保持一致。</p>
      *
      * @param type 字段类型
      * @return 类型代码
      */
     private static int computeSerializeTypeCode(Class<?> type) {
-        if (type == String.class) return 1;
-        if (type == int.class || type == Integer.class) return 2;
-        if (type == long.class || type == Long.class) return 3;
-        if (type == double.class || type == Double.class) return 4;
-        if (type == float.class || type == Float.class) return 5;
-        if (type == boolean.class || type == Boolean.class) return 6;
-        if (type == short.class || type == Short.class) return 7;
-        if (type == byte.class || type == Byte.class) return 8;
-        if (type == char.class || type == Character.class) return 9;
-        if (type == BigDecimal.class) return 10;
-        if (type == BigInteger.class) return 11;
-        if (type == Date.class) return 12;
-        if (type == LocalDate.class) return 13;
-        if (type == LocalDateTime.class) return 14;
-        if (type == LocalTime.class) return 15;
-        if (type == Instant.class) return 16;
-        if (type.isEnum()) return 17;
+        if (type == String.class) return 1;          // TYPE_CODE_STRING
+        if (type == int.class || type == Integer.class) return 2;  // TYPE_CODE_INTEGER
+        if (type == long.class || type == Long.class) return 3;    // TYPE_CODE_LONG
+        if (type == double.class || type == Double.class) return 4; // TYPE_CODE_DOUBLE
+        if (type == float.class || type == Float.class) return 5;  // TYPE_CODE_FLOAT
+        if (type == boolean.class || type == Boolean.class) return 6; // TYPE_CODE_BOOLEAN
+        if (type == char.class || type == Character.class) return 7; // TYPE_CODE_CHARACTER
+        if (type == short.class || type == Short.class) return 8;  // TYPE_CODE_SHORT
+        if (type == byte.class || type == Byte.class) return 9;    // TYPE_CODE_BYTE
+        if (type == BigDecimal.class) return 14;     // TYPE_CODE_BIGDECIMAL
+        if (type == BigInteger.class) return 15;     // TYPE_CODE_BIGINTEGER
+        if (type == Date.class) return 13;           // TYPE_CODE_DATE
+        if (type == LocalDate.class) return 13;      // TYPE_CODE_DATE
+        if (type == LocalDateTime.class) return 13;  // TYPE_CODE_DATE
+        if (type == LocalTime.class) return 13;      // TYPE_CODE_DATE
+        if (type == Instant.class) return 13;        // TYPE_CODE_DATE
+        if (type.isEnum()) return 16;                // TYPE_CODE_BEAN (enum falls to bean path)
         return 0;
     }
 
@@ -499,6 +501,7 @@ public final class FieldMeta {
                         .toLocalDateTime().format(formatter);
             }
         } catch (Exception e) {
+            // 格式化失败，回退到 toString
         }
         return value.toString();
     }

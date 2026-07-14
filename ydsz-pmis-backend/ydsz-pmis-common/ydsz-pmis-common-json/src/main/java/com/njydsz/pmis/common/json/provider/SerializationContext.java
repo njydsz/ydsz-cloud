@@ -83,4 +83,33 @@ public final class SerializationContext {
         SerializationProvider.setCircularReferenceStrategy(circularRefStrategy);
         SerializationProvider.setSerializeEnumUsingOrdinal(serializeEnumUsingOrdinal);
     }
+
+    /**
+     * 估算当前线程的 ThreadLocal 内存占用（字节）。
+     *
+     * <p>包括 SerializationContext 本身 + SerializationProvider 中的
+     * StringBuilder 池、JSONWriter 池、IdentityHashMap 等开销。</p>
+     *
+     * @return 估算内存占用
+     * @since 1.4.0
+     */
+    public static long estimateThreadLocalMemory() {
+        long total = 0;
+        // SerializationContext 本身约 48 字节（5 个字段 + 对象头）
+        total += 48;
+        // SerializationProvider 中的 StringBuilder 池
+        total += 4096 * 2L; // DEFAULT capacity * 2 bytes/char
+        // SerializationProvider 中的 JSONWriter 池
+        total += 4096 * 2L;
+        // IdentityHashMap（循环引用检测）
+        total += 256;
+        return total;
+    }
+
+    /**
+     * 清理当前线程的 SerializationContext（防止线程池环境内存泄漏）。
+     */
+    public static void clear() {
+        CONTEXT.remove();
+    }
 }
