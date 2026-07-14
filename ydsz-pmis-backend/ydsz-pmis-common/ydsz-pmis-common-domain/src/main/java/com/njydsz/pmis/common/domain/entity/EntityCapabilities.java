@@ -6,7 +6,13 @@ import java.util.Optional;
 
 import org.springframework.util.ReflectionUtils;
 
-import com.njydsz.pmis.common.domain.annotation.*;
+import com.njydsz.pmis.common.domain.annotation.CreatedBy;
+import com.njydsz.pmis.common.domain.annotation.CreateTime;
+import com.njydsz.pmis.common.domain.annotation.SoftDelete;
+import com.njydsz.pmis.common.domain.annotation.TenantId;
+import com.njydsz.pmis.common.domain.annotation.UpdatedBy;
+import com.njydsz.pmis.common.domain.annotation.UpdateTime;
+import com.njydsz.pmis.common.domain.annotation.Version;
 
 /**
  * 实体能力检测工具类
@@ -99,9 +105,9 @@ public final class EntityCapabilities {
         }
         try {
             Class<?> mpVersionClass = Class.forName("com.baomidou.mybatisplus.annotation.Version");
-            Class<? extends Annotation> annotationClass =
-                    (Class<? extends Annotation>) mpVersionClass;
-            return getAnnotatedField(entityClass, annotationClass).isPresent();
+            if (!Annotation.class.isAssignableFrom(mpVersionClass)) {
+                return false;
+            }
         } catch (ClassNotFoundException e) {
             return false;
         }

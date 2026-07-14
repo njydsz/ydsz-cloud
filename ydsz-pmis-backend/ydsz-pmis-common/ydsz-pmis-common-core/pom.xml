@@ -102,6 +102,13 @@
             <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- Spring Boot Actuator（ThreadPoolEndpoint 使用 @Endpoint/@ReadOperation） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Micrometer (for AbstractModuleMetrics) -->
         <dependency>
             <groupId>io.micrometer</groupId>
