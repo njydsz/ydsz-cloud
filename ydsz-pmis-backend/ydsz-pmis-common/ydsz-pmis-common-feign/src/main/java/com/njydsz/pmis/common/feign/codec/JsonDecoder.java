@@ -1,18 +1,16 @@
 package com.njydsz.pmis.common.feign.codec;
 
+import com.njydsz.pmis.common.json.Json;
+import feign.Response;
+import feign.codec.DecodeException;
+import feign.codec.Decoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.njydsz.pmis.common.json.Json;
-
-import feign.Response;
-import feign.codec.DecodeException;
-import feign.codec.Decoder;
 
 /**
  * 基于 Jackson 的 Feign JSON 解码器。
