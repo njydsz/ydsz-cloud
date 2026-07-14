@@ -45,7 +45,7 @@ const props = defineProps<{
   /** 流程类别 */
   category?: string
   /** P0-3: 流程定义 ID（用于字段权限配置） */
-  definitionId?: number | null
+  definitionId?: string | null
 }>()
 
 const emit = defineEmits<{

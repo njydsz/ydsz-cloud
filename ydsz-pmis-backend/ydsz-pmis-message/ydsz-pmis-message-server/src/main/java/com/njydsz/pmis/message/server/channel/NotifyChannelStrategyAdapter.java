@@ -3,12 +3,14 @@ package com.njydsz.pmis.message.server.channel;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -83,8 +85,8 @@ public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {
         request.setReceiver(receiver);
         request.setTemplateCode(templateCode);
         if (templateParams instanceof Map<?, ?> map) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> params = (Map<String, Object>) map;
+            Map<String, Object> params = JsonUtils.fromJson(
+                    JsonUtils.toJson(map), new TypeReference<Map<String, Object>>() {});
             request.setParams(params);
         }
         try {

@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.pmis.agent.domain.agent.AgentDefinition;
 import com.njydsz.pmis.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.pmis.agent.domain.agent.AgentExecutor;
 import com.njydsz.pmis.agent.domain.gateway.LlmClient;
@@ -63,9 +64,9 @@ public class RouterAgentExecutor implements AgentExecutor {
         log.info("[Router] 路由到: {} Agent", agentType);
 
         AgentExecutor executor = agentFactory.getExecutor(
-                new com.njydsz.pmis.agent.domain.agent.AgentDefinition(
+                new AgentDefinition(
                         UUID.randomUUID().toString(), "router-dispatched", "Router",
-                        com.njydsz.pmis.agent.domain.agent.AgentDefinition.Type.valueOf(agentType),
+                        AgentDefinition.Type.valueOf(agentType),
                         request.getSystemPrompt(), List.of(),
                         properties.getLlm().getTemperature(),
                         properties.getLlm().getMaxTokens(),
@@ -121,8 +122,7 @@ public class RouterAgentExecutor implements AgentExecutor {
         try {
             ChatResponse response = llmClient.chat(routeRequest);
             String content = response.getContent() != null ? response.getContent().trim().toUpperCase() : "CHAT";
-            for (com.njydsz.pmis.agent.domain.agent.AgentDefinition.Type type :
-                    com.njydsz.pmis.agent.domain.agent.AgentDefinition.Type.values()) {
+            for (AgentDefinition.Type type : AgentDefinition.Type.values()) {
                 if (content.contains(type.name())) {
                     return type.name();
                 }

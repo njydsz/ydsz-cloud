@@ -2,9 +2,18 @@ package com.njydsz.pmis.nextwiki.web.controller;
 
 import java.util.List;
 
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.nextwiki.api.dto.NextwikiDTOs;
 import com.njydsz.pmis.nextwiki.domain.entity.ShareLink;
 import com.njydsz.pmis.nextwiki.domain.service.ShareDomainService;
@@ -31,6 +40,7 @@ public class ShareController {
 
     @PostMapping
     @Operation(summary = "创建分享链接")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_CREATE)
     public BaseResponse<ShareLink> createShare(
             @RequestBody NextwikiDTOs.CreateShareRequest request,
             @RequestHeader("X-User-Id") String userId) {
@@ -47,6 +57,7 @@ public class ShareController {
 
     @PostMapping("/verify")
     @Operation(summary = "验证分享链接访问权限")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_ACCESS)
     public BaseResponse<ShareLink> verifyAccess(@RequestBody NextwikiDTOs.VerifyShareRequest request) {
         ShareLink result = shareDomainService.verifyAccess(
                 request.getShareCode(),
@@ -57,6 +68,7 @@ public class ShareController {
 
     @DeleteMapping("/{shareId}")
     @Operation(summary = "撤销分享")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_REVOKE)
     public BaseResponse<Void> revoke(
             @PathVariable String shareId,
             @RequestHeader("X-User-Id") String userId) {

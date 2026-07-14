@@ -53,7 +53,7 @@ const { setDirty } = useFormGuard({ message: '流程设计器内容未保存，�
 // ==================== 流程定义选择 ====================
 const definitionList = ref<FlowDefinitionDTO[]>([])
 const definitionLoading = ref(false)
-const selectedDefinitionId = ref<number | undefined>(undefined)
+const selectedDefinitionId = ref<string | undefined>(undefined)
 const selectedDefinition = ref<FlowDefinitionDTO | undefined>(undefined)
 
 // 切换流程定义时重置 dirty（加载已有内容不算修改）
@@ -77,7 +77,7 @@ async function loadDefinitions() {
   }
 }
 
-function onDefinitionChange(id: number) {
+function onDefinitionChange(id: string) {
   selectedDefinition.value = definitionList.value.find((d) => d.id === id)
 }
 

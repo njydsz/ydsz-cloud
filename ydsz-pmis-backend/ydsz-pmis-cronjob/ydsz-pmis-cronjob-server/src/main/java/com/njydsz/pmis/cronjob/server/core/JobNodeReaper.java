@@ -17,6 +17,7 @@ import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobNodeMapper;
 import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.core.LockKeyUtil;
 import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
 
 import lombok.RequiredArgsConstructor;
@@ -69,9 +70,6 @@ public class JobNodeReaper {
 
     /** 离线节点记录保留时长（分钟），超过此时长才物理删除 */
     private static final long STALE_NODE_RETENTION_MINUTES = 30;
-
-    /** 任务锁 key 前缀（与 DefaultTaskDispatcher 保持一致） */
-    private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
 
     /** Lua 脚本: 安全释放锁（仅当 value 匹配时才 delete，避免误删其他节点持有的锁） */
     private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT;
@@ -186,14 +184,8 @@ public class JobNodeReaper {
         if (lockHolder == null || lockHolder.isBlank()) {
             return;
         }
-        // P1-4: 根据 shardIndex 重建 lockKey
-        String lockKey;
-        Integer shardIndex = logEntry.getShardIndex();
-        if (shardIndex != null && shardIndex >= 0) {
-            lockKey = JOB_LOCK_PREFIX + logEntry.getJobKey() + ":shard:" + shardIndex;
-        } else {
-            lockKey = JOB_LOCK_PREFIX + logEntry.getJobKey();
-        }
+        // P0-11: 统一通过 LockKeyUtil 构造 lockKey（含分片感知）
+        String lockKey = LockKeyUtil.buildJobLockKey(logEntry.getJobKey(), logEntry.getShardIndex());
         try {
             Long result = redisTemplate.execute(RELEASE_LOCK_SCRIPT,
                     Collections.singletonList(lockKey), lockHolder);

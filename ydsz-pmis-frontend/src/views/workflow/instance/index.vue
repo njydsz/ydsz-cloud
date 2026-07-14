@@ -70,15 +70,15 @@ const activeTab = ref<'diagram' | 'timeline' | 'replay' | 'form' | 'comment' | '
 const opDialog = ref(false)
 const opType = ref<'pass' | 'reject' | 'transfer' | 'terminate' | 'suspend' | 'activate' | 'recall' | 'urge'>('pass')
 const opForm = reactive({
-  taskId: undefined as number | undefined,
+  taskId: undefined as string | undefined,
   comment: '',
-  targetUserId: undefined as number | undefined,
+  targetUserId: undefined as string | undefined,
   targetUserName: '',
   targetNodeCode: '',
   reason: '',
 })
 
-const instanceId = computed(() => Number(route.query.id) || 0)
+const instanceId = computed(() => (route.query.id as string) || '')
 
 async function loadAll() {
   if (!instanceId.value) return
@@ -124,7 +124,7 @@ function onTransferUserPicked(user: UserVO | UserVO[] | null) {
     // 多选场景不应出现在转办，取第一个
     const u = user[0]
     if (u) {
-      opForm.targetUserId = u.id
+      opForm.targetUserId = String(u.id)
       opForm.targetUserName = u.realName || u.username || ''
     } else {
       opForm.targetUserId = undefined
@@ -133,7 +133,7 @@ function onTransferUserPicked(user: UserVO | UserVO[] | null) {
     return
   }
   if (user && typeof user === 'object') {
-    opForm.targetUserId = user.id
+    opForm.targetUserId = String(user.id)
     opForm.targetUserName = user.realName || user.username || ''
   } else {
     opForm.targetUserId = undefined

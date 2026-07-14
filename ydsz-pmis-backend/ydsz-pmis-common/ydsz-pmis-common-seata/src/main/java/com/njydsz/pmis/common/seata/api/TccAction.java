@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.tx.api;
+package com.njydsz.pmis.common.seata.api;
 
 /**
  * TCC 业务接口

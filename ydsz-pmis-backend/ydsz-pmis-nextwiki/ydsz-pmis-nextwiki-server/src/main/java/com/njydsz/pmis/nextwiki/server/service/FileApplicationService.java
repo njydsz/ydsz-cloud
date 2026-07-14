@@ -1,5 +1,6 @@
 package com.njydsz.pmis.nextwiki.server.service;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
@@ -61,6 +62,7 @@ public class FileApplicationService {
     private final ApplicationEventPublisher eventPublisher;
     private final FilePermissionService permissionService;
     private final DistributedLockService lockService;
+    private final VirusScanApplicationService virusScanApplicationService;
 
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
@@ -70,6 +72,10 @@ public class FileApplicationService {
 
     @Value("${nextwiki.upload.allowed-types:}")
     private String allowedTypes;
+
+    /** 是否启用病毒扫描 */
+    @Value("${nextwiki.virus-scan.enabled:false}")
+    private boolean virusScanEnabled;
 
     /** 禁止上传的文件扩展名（安全黑名单） */
     private static final Set<String> BLOCKED_EXTENSIONS = Set.of(
@@ -133,6 +139,27 @@ public class FileApplicationService {
         }
         String storageKey = generateStorageKey(userId, fileName);
         FileStorage uploaded = storage.upload(null, storageKey, file);
+
+        // 病毒扫描（如果启用）
+        if (virusScanEnabled) {
+            try {
+                var scanResult = virusScanApplicationService.scan(
+                        file.getInputStream(), file.getSize());
+                if (scanResult.isInfected() || scanResult.isError()) {
+                    // 扫描未通过，删除已上传的文件
+                    storage.delete(null, storageKey);
+                    throw BusinessException.builder()
+                            .key("文件病毒扫描未通过: " + scanResult.getMessage())
+                            .build();
+                }
+            } catch (IOException e) {
+                // 无法读取文件流进行扫描，删除已上传文件并报错
+                storage.delete(null, storageKey);
+                throw BusinessException.builder()
+                        .key("文件病毒扫描失败: " + e.getMessage())
+                        .build();
+            }
+        }
 
         // 7. 创建文件节点并持久化
         FileNode fileNode = buildFileNode(resolvedParentId, fileName, suffix, uploaded,
@@ -439,7 +466,7 @@ public class FileApplicationService {
             throw BusinessException.builder().key(
                     "文件大小超过限制: " + maxFileSize / 1024 / 1024 + "MB").build();
         }
-        String filename = file.getOriginalFilename();
+        String filename = sanitizeFileName(file.getOriginalFilename());
         if (filename == null || filename.isEmpty()) {
             throw BusinessException.builder().key("文件名为空").build();
         }
@@ -583,6 +610,30 @@ public class FileApplicationService {
         String uuid = UUID.randomUUID().toString().replace("-", "");
         String suffix = extractSuffix(originalFilename);
         return "wiki/" + userId + "/" + datePath + "/" + uuid + (suffix.isEmpty() ? "" : "." + suffix);
+    }
+
+    /**
+     * 净化文件名：去除路径穿越字符、特殊字符、超长名称
+     */
+    private String sanitizeFileName(String filename) {
+        if (filename == null || filename.isEmpty()) {
+            return filename;
+        }
+        // 仅取文件名部分（去除路径分隔符）
+        String name = filename;
+        // 统一替换正反斜杠为下划线，防止路径穿越
+        name = name.replace("/", "_").replace("\\", "_");
+        // 去除 ../ 和 ..\
+        name = name.replace("..", "_");
+        // 去除特殊字符（保留中文、字母、数字、点、下划线、短横线、空格、括号）
+        name = name.replaceAll("[^\\u4e00-\\u9fa5a-zA-Z0-9._\\- ()（）]", "_");
+        // 限制文件名长度（含扩展名，最大 255 字符）
+        if (name.length() > 255) {
+            String suffix = extractSuffix(name);
+            String baseName = suffix.isEmpty() ? name : name.substring(0, name.length() - suffix.length() - 1);
+            name = baseName.substring(0, 255 - suffix.length() - 1) + "." + suffix;
+        }
+        return name;
     }
 
     private String extractSuffix(String filename) {

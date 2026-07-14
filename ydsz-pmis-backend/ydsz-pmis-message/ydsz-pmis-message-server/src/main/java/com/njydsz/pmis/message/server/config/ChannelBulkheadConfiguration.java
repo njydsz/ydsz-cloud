@@ -55,6 +55,7 @@ public class ChannelBulkheadConfiguration {
         registerChannel("SMS", 10, 30, 200);
         registerChannel("DINGTALK", 5, 15, 100);
         registerChannel("WECOM", 5, 15, 100);
+        registerChannel("WECOM_APP", 5, 15, 100);
         registerChannel("FEISHU", 5, 15, 100);
         registerChannel("INAPP", 3, 10, 50);
         registerChannel("PUSH", 3, 10, 50);

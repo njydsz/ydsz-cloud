@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.tx.impl;
+package com.njydsz.pmis.common.seata.impl;
 
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -7,8 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.pmis.common.tx.api.DistributedTransactionManager;
-import com.njydsz.pmis.common.tx.api.TransactionType;
+import com.njydsz.pmis.common.seata.api.DistributedTransactionManager;
+import com.njydsz.pmis.common.seata.api.TransactionType;
 
 /**
  * 本地事务管理器（降级实现）

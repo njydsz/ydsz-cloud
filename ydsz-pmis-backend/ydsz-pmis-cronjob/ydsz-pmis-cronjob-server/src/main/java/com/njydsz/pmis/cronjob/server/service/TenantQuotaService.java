@@ -1,6 +1,5 @@
 package com.njydsz.pmis.cronjob.server.service.job;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.cronjob.domain.entity.job.TenantQuotaDO;
 
@@ -57,8 +56,7 @@ public interface TenantQuotaService {
      * 当租户配额记录不存在时，使用全局默认 {@code defaultMaxJobs}。
      *
      * @param tenantId 租户 ID
-     * @throws SysException 当超过任务数上限时抛出
-     *         {@link BizErrorCode#QUOTA_EXCEEDED}
+     * @throws SysException 当超过任务数上限时抛出（错误码 QUOTA_EXCEEDED）
      */
     void checkJobQuota(String tenantId);
 
@@ -69,8 +67,7 @@ public interface TenantQuotaService {
      * 与 {@link TenantQuotaDO#getMaxConcurrent()} 或全局默认比较。
      *
      * @param tenantId 租户 ID
-     * @throws SysException 当超过并发上限时抛出
-     *         {@link BizErrorCode#QUOTA_EXCEEDED}
+     * @throws SysException 当超过并发上限时抛出（错误码 QUOTA_EXCEEDED）
      */
     void checkConcurrentQuota(String tenantId);
 
@@ -81,8 +78,7 @@ public interface TenantQuotaService {
      * 与 {@link TenantQuotaDO#getMaxDailyExecutions()} 或全局默认比较。
      *
      * @param tenantId 租户 ID
-     * @throws SysException 当超过日执行量上限时抛出
-     *         {@link BizErrorCode#QUOTA_EXCEEDED}
+     * @throws SysException 当超过日执行量上限时抛出（错误码 QUOTA_EXCEEDED）
      */
     void checkDailyExecutionQuota(String tenantId);
 

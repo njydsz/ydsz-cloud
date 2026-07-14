@@ -84,7 +84,7 @@
         <module>ydsz-pmis-common-queue</module>
         <module>ydsz-pmis-common-event</module>
         <module>ydsz-pmis-common-config</module>
-        <module>ydsz-pmis-common-tx</module>
+        <module>ydsz-pmis-common-seata</module>
         <module>ydsz-pmis-common-socket</module>
         <module>ydsz-pmis-common-netty</module>
         <module>ydsz-pmis-common-file</module>
@@ -194,7 +194,7 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-common-tx</artifactId>
+                <artifactId>ydsz-pmis-common-seata</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -1,9 +1,15 @@
 package com.njydsz.pmis.agent.web.controller;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import jakarta.annotation.PreDestroy;
 import jakarta.validation.Valid;
 
 import org.slf4j.Logger;
@@ -44,13 +50,21 @@ public class AgentController {
 
     private static final Logger log = LoggerFactory.getLogger(AgentController.class);
     private static final long SSE_TIMEOUT = 120_000L;
+    private static final long HEARTBEAT_INTERVAL_SECONDS = 15L;
 
     private final AgentFactory agentFactory;
     private final ToolRegistry toolRegistry;
+    private final ScheduledExecutorService heartbeatScheduler =
+            Executors.newScheduledThreadPool(2, Thread.ofVirtual().factory());
 
     public AgentController(AgentFactory agentFactory, ToolRegistry toolRegistry) {
         this.agentFactory = agentFactory;
         this.toolRegistry = toolRegistry;
+    }
+
+    @PreDestroy
+    public void destroy() {
+        heartbeatScheduler.shutdownNow();
     }
 
     /**
@@ -68,33 +82,73 @@ public class AgentController {
 
     /**
      * 执行 Agent（SSE 流式）
+     *
+     * <p>每 {@value #HEARTBEAT_INTERVAL_SECONDS} 秒发送心跳保活事件。
+     * 客户端断开后自动中断执行，避免资源浪费。
      */
     @PostMapping(value = "/execute/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter executeStream(@Valid @RequestBody AgentExecutionRequestDTO request) {
         log.info("[Agent-API] 流式执行请求: agentCode={}", request.getAgentCode());
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
         AgentExecutionRequest execReq = toExecutionRequest(request);
+        AtomicBoolean active = new AtomicBoolean(true);
 
-        Thread.startVirtualThread(() -> {
+        var heartbeatFuture = heartbeatScheduler.scheduleAtFixedRate(() -> {
+            if (active.get()) {
+                try {
+                    emitter.send(SseEmitter.event().comment("keep-alive"));
+                } catch (IOException e) {
+                    active.set(false);
+                }
+            }
+        }, HEARTBEAT_INTERVAL_SECONDS, HEARTBEAT_INTERVAL_SECONDS, TimeUnit.SECONDS);
+
+        Thread virtualThread = Thread.startVirtualThread(() -> {
             try {
                 agentFactory.getDefaultExecutor().executeStream(execReq, chunk -> {
+                    if (!active.get()) {
+                        throw new RuntimeException("SSE 连接已断开，终止 Agent 执行");
+                    }
                     try {
                         emitter.send(SseEmitter.event()
                                 .data(Map.of(
                                         "content", chunk.getDeltaContent() != null ? chunk.getDeltaContent() : "",
                                         "finished", chunk.isFinished()))
                                 .name("chunk"));
-                    } catch (Exception e) {
-                        log.warn("[Agent-API] SSE 发送失败: {}", e.getMessage());
+                    } catch (IOException e) {
+                        active.set(false);
+                        log.warn("[Agent-API] SSE 发送失败，标记连接断开: {}", e.getMessage());
                     }
                 });
-                emitter.send(SseEmitter.event().data(Map.of("content", "", "finished", true)).name("done"));
-                emitter.complete();
+                if (active.get()) {
+                    emitter.send(SseEmitter.event().data(Map.of("content", "", "finished", true)).name("done"));
+                    emitter.complete();
+                }
             } catch (Exception e) {
                 log.error("[Agent-API] 流式执行异常: {}", e.getMessage(), e);
-                emitter.completeWithError(e);
+                if (active.get()) {
+                    try {
+                        emitter.send(SseEmitter.event()
+                                .data(Map.of("error", e.getMessage() != null ? e.getMessage() : "未知错误", "finished", true))
+                                .name("error"));
+                    } catch (IOException ignored) {
+                        // 客户端已断开，忽略
+                    }
+                    emitter.completeWithError(e);
+                }
             }
         });
+
+        Runnable cleanup = () -> {
+            active.set(false);
+            heartbeatFuture.cancel(true);
+            if (virtualThread.isAlive()) {
+                virtualThread.interrupt();
+            }
+        };
+        emitter.onTimeout(cleanup);
+        emitter.onError(e -> cleanup.run());
+        emitter.onCompletion(cleanup);
 
         return emitter;
     }

@@ -41,6 +41,7 @@ import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.core.LockKeyUtil;
 import com.njydsz.pmis.cronjob.server.core.dispatch.DefaultTaskDispatcher;
 import com.njydsz.pmis.cronjob.server.core.dispatch.TaskDispatcher;
 import com.njydsz.pmis.cronjob.server.core.scheduler.ScheduleType;
@@ -127,9 +128,6 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     private final Map<String, ScheduledFuture<?>> scheduledMap = new ConcurrentHashMap<>();
 
     // ==================== 分布式锁常量 ====================
-
-    /** 任务锁 key 前缀 */
-    private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
 
     /** 调度时区（多时区部署时统一为 Asia/Shanghai，避免触发时间漂移） */
     private static final TimeZone SCHEDULE_TIMEZONE = TimeZone.getTimeZone("Asia/Shanghai");
@@ -850,7 +848,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         // P0-4: TTL 支持任务级 override + 全局配置 + 上下限规整
         String lockKey = null;
         if (!manual) {
-            lockKey = JOB_LOCK_PREFIX + job.getJobKey();
+            lockKey = LockKeyUtil.buildJobLockKey(job.getJobKey());
             Duration ttl = resolveLockTtl(job);
             Boolean acquired = redisTemplate.opsForValue()
                     .setIfAbsent(lockKey, INSTANCE_ID, ttl);

@@ -46,9 +46,9 @@ public enum CommonErrorCode implements UnifiedErrorCode {
     DUPLICATE_KEY("PM06002", "common.data.duplicate_key", 409, "唯一键冲突"),
 
     // ===== 分布式事务错误（PM07xxx） =====
-    TRANSACTION_FAILED("PM07001", "common.tx.failed", 500, "事务执行失败"),
-    TRANSACTION_COMPENSATION_FAILED("PM07002", "common.tx.compensation_failed", 500, "事务补偿失败"),
-    TRANSACTION_TIMEOUT("PM07003", "common.tx.timeout", 504, "事务超时");
+    TRANSACTION_FAILED("PM07001", "common.seata.failed", 500, "事务执行失败"),
+    TRANSACTION_COMPENSATION_FAILED("PM07002", "common.seata.compensation_failed", 500, "事务补偿失败"),
+    TRANSACTION_TIMEOUT("PM07003", "common.seata.timeout", 504, "事务超时");
 
     private final String code;
     private final String key;

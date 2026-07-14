@@ -1,8 +1,8 @@
 package com.njydsz.pmis.agent.server.agent;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,7 +37,7 @@ public class AgentFactory {
     private final List<InputGuardrail> inputGuardrails;
     private final List<OutputGuardrail> outputGuardrails;
     private final RagService ragService;
-    private final Map<String, AgentExecutor> executorCache = new HashMap<>();
+    private final Map<String, AgentExecutor> executorCache = new ConcurrentHashMap<>();
 
     public AgentFactory(LlmClient llmClient, ConversationMemory memory,
                         ToolRegistry toolRegistry, AgentProperties properties,

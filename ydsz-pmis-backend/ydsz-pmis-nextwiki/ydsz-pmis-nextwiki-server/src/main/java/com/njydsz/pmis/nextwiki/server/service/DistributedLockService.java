@@ -1,8 +1,10 @@
 package com.njydsz.pmis.nextwiki.server.service;
 
 import java.time.Duration;
+import java.util.Collections;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
@@ -29,6 +31,19 @@ public class DistributedLockService {
     private static final String LOCK_PREFIX = "nextwiki:lock:";
     private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(30);
     private static final long DEFAULT_WAIT_MS = 3000L;
+
+    /**
+     * 释放锁的 Lua 脚本：仅当 key 对应的值等于 ownerId 时才删除，保证 check-and-del 的原子性。
+     */
+    private static final String RELEASE_LOCK_LUA =
+            "if redis.call('get', KEYS[1]) == ARGV[1] then " +
+            "    return redis.call('del', KEYS[1]) " +
+            "else " +
+            "    return 0 " +
+            "end";
+
+    private final DefaultRedisScript<Long> releaseLockScript =
+            new DefaultRedisScript<>(RELEASE_LOCK_LUA, Long.class);
 
     /**
      * 尝试获取锁（非阻塞）
@@ -96,9 +111,10 @@ public class DistributedLockService {
      */
     public void unlock(String lockKey, String ownerId) {
         String key = LOCK_PREFIX + lockKey;
-        String currentValue = redisTemplate.opsForValue().get(key);
-        if (ownerId.equals(currentValue)) {
-            redisTemplate.delete(key);
+        // 使用 Lua 脚本保证“比较-删除”原子性，避免 check-then-delete 竞态条件
+        Long released = redisTemplate.execute(releaseLockScript,
+                Collections.singletonList(key), ownerId);
+        if (released != null && released > 0) {
             log.debug("[DistributedLockService] 释放锁: key={}, owner={}", lockKey, ownerId);
         }
     }

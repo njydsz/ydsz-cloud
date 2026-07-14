@@ -87,7 +87,7 @@ interface FieldRow {
 }
 
 const props = defineProps<{
-  definitionId?: number | null
+  definitionId?: string | null
   nodeCode?: string | null
 }>()
 
@@ -99,7 +99,7 @@ watch(
   () => [props.definitionId, props.nodeCode],
   ([defId, code]) => {
     if (defId && code) {
-      loadConfig(Number(defId), String(code))
+      loadConfig(String(defId), String(code))
     } else {
       fieldList.value = []
       loaded.value = false
@@ -108,7 +108,7 @@ watch(
   { immediate: true },
 )
 
-async function loadConfig(defId: number, code: string) {
+async function loadConfig(defId: string, code: string) {
   try {
     const res = await getFormConfig(defId, code)
     const data = res.data?.data
@@ -150,7 +150,7 @@ async function save() {
   }
   saving.value = true
   try {
-    await saveFormConfig(Number(props.definitionId), String(props.nodeCode), {
+    await saveFormConfig(String(props.definitionId), String(props.nodeCode), {
       fieldPermissions: perms,
     })
     ElMessage.success('字段权限配置已保存')

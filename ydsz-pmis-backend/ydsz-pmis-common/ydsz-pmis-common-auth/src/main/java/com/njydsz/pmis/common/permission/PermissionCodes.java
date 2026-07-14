@@ -474,4 +474,36 @@ public final class PermissionCodes {
     /** 工作流模板导入 (管理员) */
     public static final String WORKFLOW_TEMPLATE_IMPORT = "workflow:template:import";
 
+    // ========== NextWiki 网盘知识库 ==========
+
+    public static final String NEXTWIKI_FILE_LIST = "nextwiki:file:list";
+    public static final String NEXTWIKI_FILE_UPLOAD = "nextwiki:file:upload";
+    public static final String NEXTWIKI_FILE_DOWNLOAD = "nextwiki:file:download";
+    public static final String NEXTWIKI_FILE_DELETE = "nextwiki:file:delete";
+    public static final String NEXTWIKI_FILE_MOVE = "nextwiki:file:move";
+    public static final String NEXTWIKI_FILE_RENAME = "nextwiki:file:rename";
+    public static final String NEXTWIKI_FILE_COPY = "nextwiki:file:copy";
+    public static final String NEXTWIKI_FILE_STAR = "nextwiki:file:star";
+    public static final String NEXTWIKI_FILE_VERSION = "nextwiki:file:version";
+    public static final String NEXTWIKI_FILE_ROLLBACK = "nextwiki:file:rollback";
+    public static final String NEXTWIKI_FOLDER_CREATE = "nextwiki:folder:create";
+    public static final String NEXTWIKI_SHARE_CREATE = "nextwiki:share:create";
+    public static final String NEXTWIKI_SHARE_REVOKE = "nextwiki:share:revoke";
+    public static final String NEXTWIKI_SHARE_ACCESS = "nextwiki:share:access";
+    public static final String NEXTWIKI_SHARE_LIST = "nextwiki:share:list";
+    public static final String NEXTWIKI_PREVIEW_GENERATE = "nextwiki:preview:generate";
+    public static final String NEXTWIKI_PREVIEW_VIEW = "nextwiki:preview:view";
+    public static final String NEXTWIKI_SEARCH = "nextwiki:search:query";
+    public static final String NEXTWIKI_SEARCH_REBUILD = "nextwiki:search:rebuild";
+    public static final String NEXTWIKI_TAG_MANAGE = "nextwiki:tag:manage";
+    public static final String NEXTWIKI_TAG_BIND = "nextwiki:tag:bind";
+    public static final String NEXTWIKI_TRASH_LIST = "nextwiki:trash:list";
+    public static final String NEXTWIKI_TRASH_RESTORE = "nextwiki:trash:restore";
+    public static final String NEXTWIKI_TRASH_PURGE = "nextwiki:trash:purge";
+    public static final String NEXTWIKI_TRASH_EMPTY = "nextwiki:trash:empty";
+    public static final String NEXTWIKI_QUOTA_VIEW = "nextwiki:quota:view";
+    public static final String NEXTWIKI_QUOTA_SET = "nextwiki:quota:set";
+    public static final String NEXTWIKI_BATCH_IMPORT = "nextwiki:batch:import";
+    public static final String NEXTWIKI_ANALYSIS = "nextwiki:analysis:query";
+
     }

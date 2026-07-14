@@ -5,9 +5,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -100,8 +102,8 @@ public class WxMiniChannel implements MessageChannel {
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
-            @SuppressWarnings("rawtypes")
-            ResponseEntity<Map> resp = restTemplate.postForEntity(url, entity, Map.class);
+            ResponseEntity<Map<String, Object>> resp = restTemplate.exchange(
+                    url, HttpMethod.POST, entity, new ParameterizedTypeReference<Map<String, Object>>() {});
             Map<?, ?> resultBody = resp.getBody();
 
             if (resultBody != null && Integer.valueOf(0).equals(resultBody.get("errcode"))) {
@@ -136,8 +138,8 @@ public class WxMiniChannel implements MessageChannel {
                     + "/cgi-bin/token?grant_type=client_credential"
                     + "&appid=" + config.getAppId()
                     + "&secret=" + config.getAppSecret();
-            @SuppressWarnings("rawtypes")
-            ResponseEntity<Map> resp = restTemplate.getForEntity(url, Map.class);
+            ResponseEntity<Map<String, Object>> resp = restTemplate.exchange(
+                    url, HttpMethod.GET, null, new ParameterizedTypeReference<Map<String, Object>>() {});
             Map<?, ?> body = resp.getBody();
             if (body != null && body.containsKey("access_token")) {
                 String token = (String) body.get("access_token");

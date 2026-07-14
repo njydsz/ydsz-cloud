@@ -45,7 +45,7 @@ interface NodeSlaRow {
   action?: SlaStrategy
   reminderIntervalMinutes?: number
   maxReminders?: number
-  escalateUserId?: number | null
+  escalateUserId?: string | null
   autoComment?: string
 }
 const nodeSlaRows = ref<NodeSlaRow[]>([])
@@ -61,7 +61,7 @@ async function loadFlowDefinitions() {
   }
 }
 
-async function loadNodeSlaConfig(defId: number) {
+async function loadNodeSlaConfig(defId: string) {
   ruleLoading.value = true
   try {
     const res = await getDefinition(defId)

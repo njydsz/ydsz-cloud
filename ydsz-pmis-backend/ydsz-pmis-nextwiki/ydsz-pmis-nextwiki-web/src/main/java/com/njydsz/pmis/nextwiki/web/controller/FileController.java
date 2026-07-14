@@ -17,14 +17,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.nextwiki.api.dto.NextwikiDTOs;
 import com.njydsz.pmis.nextwiki.domain.entity.FileVersion;
 import com.njydsz.pmis.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.pmis.nextwiki.server.service.FileApplicationService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,6 +50,7 @@ public class FileController {
 
     @PostMapping("/upload")
     @Operation(summary = "上传文件", description = "支持单文件上传，自动创建版本记录")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_UPLOAD)
     public BaseResponse<FileNodeVO> upload(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "parentId", required = false) String parentId,
@@ -59,6 +64,7 @@ public class FileController {
 
     @PostMapping("/folders")
     @Operation(summary = "创建目录")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FOLDER_CREATE)
     public BaseResponse<FileNodeVO> createFolder(
             @Valid @RequestBody NextwikiDTOs.CreateFolderRequest request,
             @RequestHeader("X-User-Id") String userId) {
@@ -70,6 +76,7 @@ public class FileController {
 
     @GetMapping("/list")
     @Operation(summary = "列出目录内容", description = "支持排序、过滤、分页")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_LIST)
     public BaseResponse<List<FileNodeVO>> listFiles(
             @RequestParam(value = "parentId", required = false) String parentId,
             @RequestParam(value = "sortBy", required = false) String sortBy,
@@ -86,6 +93,7 @@ public class FileController {
 
     @PutMapping("/{nodeId}/move")
     @Operation(summary = "移动文件/文件夹")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
     public BaseResponse<FileNodeVO> move(
             @PathVariable String nodeId,
             @Valid @RequestBody NextwikiDTOs.MoveRequest request,
@@ -97,6 +105,7 @@ public class FileController {
 
     @PutMapping("/{nodeId}/rename")
     @Operation(summary = "重命名文件/文件夹")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_RENAME)
     public BaseResponse<FileNodeVO> rename(
             @PathVariable String nodeId,
             @Valid @RequestBody NextwikiDTOs.RenameRequest request,
@@ -108,6 +117,7 @@ public class FileController {
 
     @DeleteMapping("/{nodeId}")
     @Operation(summary = "删除文件/文件夹（移入回收站）")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
     public BaseResponse<Void> delete(
             @PathVariable String nodeId,
             @RequestHeader("X-User-Id") String userId) {
@@ -118,6 +128,7 @@ public class FileController {
 
     @PostMapping("/batch/delete")
     @Operation(summary = "批量删除")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
     public BaseResponse<Integer> batchDelete(
             @RequestBody List<String> nodeIds,
             @RequestHeader("X-User-Id") String userId) {
@@ -128,6 +139,7 @@ public class FileController {
 
     @PostMapping("/batch/move")
     @Operation(summary = "批量移动")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
     public BaseResponse<Integer> batchMove(
             @RequestBody BatchMoveRequest request,
             @RequestHeader("X-User-Id") String userId) {
@@ -139,6 +151,7 @@ public class FileController {
 
     @PostMapping("/{nodeId}/copy")
     @Operation(summary = "复制文件")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_COPY)
     public BaseResponse<FileNodeVO> copy(
             @PathVariable String nodeId,
             @RequestParam("targetParentId") String targetParentId,
@@ -150,12 +163,14 @@ public class FileController {
 
     @GetMapping("/{nodeId}/versions")
     @Operation(summary = "获取版本历史")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_VERSION)
     public BaseResponse<List<FileVersion>> getVersionHistory(@PathVariable String nodeId) {
         return BaseResponse.ok(fileApplicationService.getVersionHistory(nodeId));
     }
 
     @PostMapping("/{nodeId}/versions/{version}/rollback")
     @Operation(summary = "回滚到指定版本")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_ROLLBACK)
     public BaseResponse<FileNodeVO> rollbackVersion(
             @PathVariable String nodeId,
             @PathVariable Integer version,
@@ -167,6 +182,7 @@ public class FileController {
 
     @PutMapping("/{nodeId}/star")
     @Operation(summary = "切换星标状态")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_STAR)
     public BaseResponse<Void> toggleStar(
             @PathVariable String nodeId,
             @RequestHeader("X-User-Id") String userId) {
@@ -178,8 +194,12 @@ public class FileController {
     /**
      * 批量移动请求
      */
+    @Data
+    @Schema(description = "批量移动请求")
     public static class BatchMoveRequest {
+        @Schema(description = "待移动节点ID列表")
         private List<String> nodeIds;
+        @Schema(description = "目标父目录ID")
         private String targetParentId;
 
         public List<String> getNodeIds() {

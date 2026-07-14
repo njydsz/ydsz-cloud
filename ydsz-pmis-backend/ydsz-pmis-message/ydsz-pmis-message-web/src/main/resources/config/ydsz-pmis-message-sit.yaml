@@ -44,6 +44,7 @@ pmis:
       WEBHOOK: true
       DINGTALK: true
       WECOM: true
+      WECOM_APP: true
       FEISHU: true
     default-priority: NORMAL
     aggregate-scan-interval-ms: 60000

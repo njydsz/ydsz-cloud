@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
@@ -118,8 +119,7 @@ public class AlipayMiniChannel implements MessageChannel {
             String respBody = resp.getBody();
 
             // 解析响应（支付宝返回 JSON）
-            @SuppressWarnings("unchecked")
-            Map<String, Object> result = (Map<String, Object>) JsonUtils.fromJson(respBody, Map.class);
+            Map<String, Object> result = JsonUtils.fromJson(respBody, new TypeReference<Map<String, Object>>() {});
             if (result != null) {
                 Map<?, ?> alipayResp = (Map<?, ?>) result.get("alipay_open_app_mini_templatemessage_send_response");
                 if (alipayResp != null && "10000".equals(String.valueOf(alipayResp.get("code")))) {

@@ -17,6 +17,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.pmis.common.constant.PmisMessageTopics;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
@@ -154,11 +155,28 @@ public class MessageConsumer implements RocketMQListener<String> {
     /**
      * 业务异常时记录 FAILED 日志(便于后续排查/补偿)。
      *
+     * <p>优先按 msgId 更新已有记录的状态(避免 sendInternal 已落库后产生重复 msgId 记录),
+     * 仅当未匹配到已有记录时才 insert 新记录。
+     *
      * @param request      原始消息请求
      * @param errorMessage 错误信息
      */
     private void recordFailedLog(MessageRequest request, String errorMessage) {
         try {
+            // 先尝试按 msgId 更新已有记录状态为 FAILED
+            String msgId = request.getMessageId();
+            if (msgId != null && !msgId.isBlank()) {
+                LambdaUpdateWrapper<MsgLogDO> updateWrapper = new LambdaUpdateWrapper<MsgLogDO>()
+                        .eq(MsgLogDO::getMsgId, msgId)
+                        .set(MsgLogDO::getStatus, MessageStatusEnum.FAILED.name())
+                        .set(MsgLogDO::getErrorMessage, errorMessage);
+                int updated = msgLogMapper.update(null, updateWrapper);
+                if (updated > 0) {
+                    log.info("[MessageConsumer] 已更新现有记录为 FAILED: messageId={}", msgId);
+                    return;
+                }
+            }
+            // 未匹配到已有记录,insert 新的 FAILED 记录
             MsgLogDO logDO = new MsgLogDO();
             logDO.setChannel(request.getChannel());
             logDO.setBizType(request.getBizType());
@@ -168,7 +186,7 @@ public class MessageConsumer implements RocketMQListener<String> {
             logDO.setContent(request.getContent());
             logDO.setStatus(MessageStatusEnum.FAILED.name());
             logDO.setErrorMessage(errorMessage);
-            logDO.setMsgId(request.getMessageId());
+            logDO.setMsgId(msgId);
             logDO.setTopic(PmisMessageTopics.TOPIC_MESSAGE);
             logDO.setReconsumeTimes(0);
             logDO.setTenantId(TenantContext.getTenantId());

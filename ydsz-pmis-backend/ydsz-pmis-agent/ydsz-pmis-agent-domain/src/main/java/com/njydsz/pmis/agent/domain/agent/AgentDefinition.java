@@ -22,6 +22,8 @@ public final class AgentDefinition implements Serializable {
         CHAT,
         /** ReAct 模式（Thought→Action→Observation） */
         REACT,
+        /** RAG 检索增强生成 */
+        RAG,
         /** Plan-and-Execute 模式 */
         PLAN_EXECUTE,
         /** 路由器（多 Agent 分发） */

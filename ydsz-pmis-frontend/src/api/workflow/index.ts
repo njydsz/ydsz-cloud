@@ -77,12 +77,12 @@ export function batchDeployByZip(file: File) {
 }
 
 /** 发布流程定义（启用） */
-export function publishDefinition(id: number) {
+export function publishDefinition(id: string) {
   return http.post<ApiResponse<null>>(`/workflow/engine/definition/${id}/publish`)
 }
 
 /** 停用流程定义 */
-export function deactivateDefinition(id: number) {
+export function deactivateDefinition(id: string) {
   return http.post<ApiResponse<null>>(`/workflow/engine/definition/${id}/deactivate`)
 }
 
@@ -102,7 +102,7 @@ export function pageDefinitions(params: {
 }
 
 /** 获取流程定义详情 */
-export function getDefinition(id: number) {
+export function getDefinition(id: string) {
   return http.get<ApiResponse<FlowDefinitionDTO>>(
     `/workflow/engine/definition/${id}`,
   )
@@ -132,7 +132,7 @@ export function pageMyInstances(params: {
 }
 
 /** 流程实例详情 */
-export function getInstance(id: number) {
+export function getInstance(id: string) {
   return http.get<ApiResponse<FlowInstanceDTO>>(
     `/workflow/engine/instance/${id}`,
   )
@@ -143,7 +143,7 @@ export function pageInstances(params: {
   flowCode?: string
   flowName?: string
   status?: string
-  initiatorId?: number
+  initiatorId?: string
   startTime?: string
   endTime?: string
   pageNum?: number
@@ -171,7 +171,7 @@ export function listAllInstances(params: {
 }
 
 /** 终止流程实例 */
-export function terminateInstance(id: number, reason: string) {
+export function terminateInstance(id: string, reason: string) {
   return http.post<ApiResponse<null>>(
     `/workflow/engine/instance/${id}/terminate`,
     { reason },
@@ -179,17 +179,17 @@ export function terminateInstance(id: number, reason: string) {
 }
 
 /** 挂起流程实例 */
-export function suspendInstance(id: number) {
+export function suspendInstance(id: string) {
   return http.post<ApiResponse<null>>(`/workflow/engine/instance/${id}/suspend`)
 }
 
 /** 激活流程实例 */
-export function activateInstance(id: number) {
+export function activateInstance(id: string) {
   return http.post<ApiResponse<null>>(`/workflow/engine/instance/${id}/activate`)
 }
 
 /** 撤回流程实例 */
-export function recallInstance(id: number) {
+export function recallInstance(id: string) {
   return http.post<ApiResponse<null>>(`/workflow/engine/instance/${id}/recall`)
 }
 
@@ -206,7 +206,7 @@ export function recallInstance(id: number) {
  * @param maxRollbackDays 允许回滚的最大天数（可选，默认 7）
  */
 export function rollbackInstance(
-  id: number,
+  id: string,
   reason: string,
   maxRollbackDays = 7,
 ) {
@@ -234,7 +234,7 @@ export function rejectTask(payload: FlowTaskOperateDTO) {
 /**
  * P1-1: 查询任务所属实例经过的历史节点（驳回候选目标）
  */
-export function rejectableNodes(taskId: number) {
+export function rejectableNodes(taskId: string) {
   return http.get<ApiResponse<Array<{
     nodeCode: string
     nodeName: string
@@ -289,7 +289,7 @@ export function countersignRemove(payload: FlowTaskOperateDTO) {
  * 签收任务
  * P0-1 修复：userId 由后端从 SecurityContext 取，前端只传 taskId
  */
-export function claimTask(taskId: number) {
+export function claimTask(taskId: string) {
   return http.post<ApiResponse<null>>(
     '/workflow/engine/task/claim',
     null,
@@ -321,7 +321,7 @@ export function freeJumpTask(payload: FlowTaskOperateDTO) {
  * 催办
  * P0-1 修复：operatorId 由后端从 SecurityContext 取；路径修正为 /instance/{id}/urge
  */
-export function urgeTask(instanceId: number, comment?: string) {
+export function urgeTask(instanceId: string, comment?: string) {
   return http.post<ApiResponse<string[]>>(
     `/workflow/engine/instance/${instanceId}/urge`,
     null,
@@ -333,7 +333,7 @@ export function urgeTask(instanceId: number, comment?: string) {
  * 批量审批
  * P0-1 修复：userId 由后端从 SecurityContext 取；后端为 @RequestParam，前端用 params
  */
-export function batchPass(taskIds: number[], comment?: string) {
+export function batchPass(taskIds: string[], comment?: string) {
   return http.post<ApiResponse<number>>(
     '/workflow/engine/task/batchPass',
     null,
@@ -361,7 +361,7 @@ export function addApprover(payload: FlowTaskOperateDTO) {
 }
 
 /** GAP-P0: 已阅 */
-export function markReadTask(payload: { taskId: number; userId: number }) {
+export function markReadTask(payload: { taskId: string; userId: string }) {
   return http.post<ApiResponse<null>>(`/workflow/engine/task/${payload.taskId}/read`, payload)
 }
 
@@ -412,7 +412,7 @@ export function ccUnreadCount() {
 }
 
 /** 抄送标记已读 */
-export function ccMarkRead(id: number) {
+export function ccMarkRead(id: string) {
   return http.post<ApiResponse<boolean>>(`/workflow/engine/cc/${id}/read`)
 }
 
@@ -426,21 +426,21 @@ export function ccMarkAllRead() {
 // ===========================================
 
 /** 流程图（高亮当前节点） */
-export function getDiagram(instanceId: number) {
+export function getDiagram(instanceId: string) {
   return http.get<ApiResponse<FlowDiagramDTO>>(
     `/workflow/engine/instance/${instanceId}/diagram`,
   )
 }
 
 /** 审批轨迹时间线 */
-export function getTimeline(instanceId: number) {
+export function getTimeline(instanceId: string) {
   return http.get<ApiResponse<FlowTimelineDTO>>(
     `/workflow/engine/instance/${instanceId}/timeline`,
   )
 }
 
 /** P2-4: 流程回放步骤序列 */
-export function getReplaySteps(instanceId: number) {
+export function getReplaySteps(instanceId: string) {
   return http.get<ApiResponse<FlowReplayStepDTO[]>>(
     `/workflow/engine/instance/${instanceId}/replay`,
   )
@@ -495,7 +495,7 @@ export interface EmbeddedApprovalView {
 }
 
 export interface EmbeddedCurrentTask {
-  taskId: number
+  taskId: string
   nodeCode: string
   nodeName: string
   nodeType: number
@@ -511,7 +511,7 @@ export interface EmbeddedCurrentTask {
 
 export interface EmbeddedHistoryItem {
   type: string
-  taskId?: number
+  taskId?: string
   nodeCode?: string
   nodeName?: string
   assigneeId?: string
@@ -526,7 +526,7 @@ export interface EmbeddedHistoryItem {
 export function loadEmbeddedPanel(params: {
   businessType: string
   businessId: string | number
-  userId?: number
+  userId?: string
 }) {
   return http.get<ApiResponse<EmbeddedApprovalView>>(
     '/workflow/embedded/panel',
@@ -539,11 +539,11 @@ export function embeddedQuickAction(payload: {
   businessType: string
   businessId: string | number
   action: 'PASS' | 'REJECT' | 'TRANSFER' | 'DELEGATE' | 'URGE' | 'WITHDRAW'
-  userId?: number
+  userId?: string
   userName?: string
   comment?: string
   commentType?: string
-  targetUserId?: number
+  targetUserId?: string
   targetUserName?: string
   variables?: Record<string, unknown>
 }) {
@@ -649,21 +649,21 @@ export function deleteFormSchema(formCode: string) {
 // ===========================================
 
 /** 获取表单渲染数据（含字段权限） */
-export function getFormRenderData(instanceId: number) {
+export function getFormRenderData(instanceId: string) {
   return http.get<ApiResponse<FormRenderDataDTO>>(
     `/workflow/engine/instance/${instanceId}/form-render`,
   )
 }
 
 /** 获取节点表单字段配置 */
-export function getFormConfig(definitionId: number, nodeCode: string) {
+export function getFormConfig(definitionId: string, nodeCode: string) {
   return http.get<ApiResponse<NodeFormConfigDTO>>(
     `/workflow/engine/definition/${definitionId}/form-config/${nodeCode}`,
   )
 }
 
 /** 保存节点表单字段配置 */
-export function saveFormConfig(definitionId: number, nodeCode: string, config: Partial<NodeFormConfigDTO>) {
+export function saveFormConfig(definitionId: string, nodeCode: string, config: Partial<NodeFormConfigDTO>) {
   return http.post<ApiResponse<null>>(
     `/workflow/engine/definition/${definitionId}/form-config/${nodeCode}`,
     config,
@@ -671,14 +671,14 @@ export function saveFormConfig(definitionId: number, nodeCode: string, config: P
 }
 
 /** P1-2: 获取节点 SLA 规则配置（返回原始 JSON 字符串，前端自行解析） */
-export function getSlaConfig(definitionId: number, nodeCode: string) {
+export function getSlaConfig(definitionId: string, nodeCode: string) {
   return http.get<ApiResponse<string | null>>(
     `/workflow/engine/definition/${definitionId}/sla-config/${nodeCode}`,
   )
 }
 
 /** P1-2: 保存节点 SLA 规则配置（传对象，后端序列化存储） */
-export function saveSlaConfig(definitionId: number, nodeCode: string, config: Partial<SlaRuleConfigDTO>) {
+export function saveSlaConfig(definitionId: string, nodeCode: string, config: Partial<SlaRuleConfigDTO>) {
   return http.post<ApiResponse<null>>(
     `/workflow/engine/definition/${definitionId}/sla-config/${nodeCode}`,
     config,
@@ -700,7 +700,7 @@ export function revokeDelegateAuth(id: number) {
 }
 
 /** 启停委托授权 */
-export function toggleDelegateAuth(id: number, enabled: boolean) {
+export function toggleDelegateAuth(id: string, enabled: boolean) {
   return http.post<ApiResponse<null>>(`/workflow/engine/delegate-auth/${id}/status`, { enabled })
 }
 
@@ -746,7 +746,7 @@ export function scanSla() {
 }
 
 /** 单任务 SLA 处理 */
-export function processSlaTask(taskId: number) {
+export function processSlaTask(taskId: string) {
   return http.post<ApiResponse<null>>(`/workflow/engine/sla/process/${taskId}`)
 }
 
@@ -758,7 +758,7 @@ export function processSlaTask(taskId: number) {
  * 启动灰度发布
  * P0-1 修复：operatorId/operatorName 由后端从 SecurityContext 取，前端不再传
  */
-export function publishCanary(definitionId: number, payload: PublishCanaryDTO) {
+export function publishCanary(definitionId: string, payload: PublishCanaryDTO) {
   return http.post<ApiResponse<null>>(
     `/workflow/engine/canary/${definitionId}/publish`,
     null,
@@ -770,7 +770,7 @@ export function publishCanary(definitionId: number, payload: PublishCanaryDTO) {
  * 调整灰度比例
  * P0-1 修复：operatorId/operatorName 由后端从 SecurityContext 取
  */
-export function adjustCanary(definitionId: number, newPercent: number, note?: string) {
+export function adjustCanary(definitionId: string, newPercent: number, note?: string) {
   return http.post<ApiResponse<null>>(
     `/workflow/engine/canary/${definitionId}/adjust`,
     null,
@@ -794,7 +794,7 @@ export function promoteCanary(definitionId: number, note?: string) {
  * 回滚灰度发布
  * P0-1 修复：operatorId/operatorName 由后端从 SecurityContext 取
  */
-export function rollbackCanary(definitionId: number, note?: string) {
+export function rollbackCanary(definitionId: string, note?: string) {
   return http.post<ApiResponse<null>>(
     `/workflow/engine/canary/${definitionId}/rollback`,
     null,
@@ -821,7 +821,7 @@ export function listVersions(definitionId: number) {
 }
 
 /** 版本差异对比 */
-export function diffVersions(definitionId: number, v1: number, v2: number) {
+export function diffVersions(definitionId: string, v1: number, v2: number) {
   return http.get<ApiResponse<VersionDiffDTO>>(
     `/workflow/engine/definition/${definitionId}/diff`,
     { params: { v1, v2 } },
@@ -864,21 +864,21 @@ export function addTaskComment(data: {
 }
 
 /** 按任务查询评论 */
-export function listTaskComments(taskId: number) {
+export function listTaskComments(taskId: string) {
   return http.get<ApiResponse<TaskCommentDTO[]>>(
     `/workflow/engine/task-comment/list/${taskId}`,
   )
 }
 
 /** 按实例查询评论 */
-export function listInstanceComments(instanceId: number) {
+export function listInstanceComments(instanceId: string) {
   return http.get<ApiResponse<TaskCommentDTO[]>>(
     `/workflow/engine/task-comment/list-by-instance/${instanceId}`,
   )
 }
 
 /** 删除评论 */
-export function deleteTaskComment(commentId: number) {
+export function deleteTaskComment(commentId: string) {
   return http.delete<ApiResponse<null>>(
     `/workflow/engine/task-comment/${commentId}`,
   )
@@ -912,7 +912,7 @@ export function importFlowTemplate(templateCode: string, flowName?: string) {
 
 /** 导出流程定义为模板 */
 export function exportAsTemplate(
-  definitionId: number,
+  definitionId: string,
   templateName: string,
   category?: string,
 ) {
@@ -942,7 +942,7 @@ export function executeInstanceMigration(data: InstanceMigrationDTO) {
 }
 
 /** 自动映射节点编码 */
-export function autoMapNodes(sourceDefinitionId: number, targetDefinitionId: number) {
+export function autoMapNodes(sourceDefinitionId: string, targetDefinitionId: string) {
   return http.get<ApiResponse<Record<string, string>>>(
     '/workflow/engine/instance/migrate/auto-map',
     { params: { sourceDefinitionId, targetDefinitionId } },

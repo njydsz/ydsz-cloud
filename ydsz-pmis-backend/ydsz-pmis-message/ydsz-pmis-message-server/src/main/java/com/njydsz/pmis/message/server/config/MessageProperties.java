@@ -136,6 +136,7 @@ public class MessageProperties {
             m.put("WEBHOOK", BigDecimal.ZERO);
             m.put("DINGTALK", BigDecimal.ZERO);
             m.put("WECOM", BigDecimal.ZERO);
+            m.put("WECOM_APP", BigDecimal.ZERO);
             m.put("FEISHU", BigDecimal.ZERO);
             m.put("WX_MINI", BigDecimal.ZERO);
             m.put("ALIPAY_MINI", BigDecimal.ZERO);

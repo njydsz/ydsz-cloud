@@ -33,7 +33,7 @@ import type { Rule, Options } from '@form-create/element-ui'
 // ==================== Props ====================
 const props = defineProps<{
   /** 流程实例 ID（用于获取字段权限） */
-  instanceId?: number
+  instanceId?: string
   /** 表单 schema（form-create rule JSON，字符串或对象） */
   formSchema?: Record<string, unknown> | string
   /** 是否只读模式（查看详情时整体只读） */

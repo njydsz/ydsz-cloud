@@ -27,10 +27,10 @@ import type { TaskCommentDTO } from '@/api/workflow/types'
 import type { ApiResponse } from '@/types/api'
 
 const props = defineProps<{
-  instanceId: number
-  taskId?: number
+  instanceId: string
+  taskId?: string
   nodeCode?: string
-  currentUserId?: number
+  currentUserId?: string
 }>()
 
 const loading = ref(false)
@@ -99,7 +99,7 @@ function cancelReply() {
   replyContent.value = ''
 }
 
-async function submitReply(parentId: number) {
+async function submitReply(parentId: string) {
   if (!replyContent.value.trim()) {
     ElMessage.warning('请输入回复内容')
     return
@@ -124,7 +124,7 @@ async function submitReply(parentId: number) {
   }
 }
 
-async function handleDelete(commentId: number) {
+async function handleDelete(commentId: string) {
   try {
     await deleteTaskComment(commentId)
     ElMessage.success('评论已删除')

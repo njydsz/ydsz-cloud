@@ -1,17 +1,19 @@
 # ydsz-pmis-literule
 
-> 轻量规则引擎（Library） — 基于 DDD 分层的自研规则引擎，对标 Drools + LiteFlow + 滴滴 Newton
+> 独立规则引擎微服务 — 基于 DDD 分层的自研规则引擎，对标 Drools + LiteFlow + 滴滴 Newton
 
 ## 模块定位
 
 | 属性 | 值 |
 |---|---|
-| **类型** | 库（**不独立部署**） |
-| **作用** | 被 `ydsz-pmis-project` / `ydsz-pmis-userinfo` 等业务服务依赖 |
+| **类型** | 独立微服务（**独立部署、独立 JVM 进程**） |
+| **作用** | PMIS 的规则引擎中心服务，提供规则定义、编排、评估、灰度、回放、审批全生命周期能力；通过 REST API 对内对外提供规则决策服务 |
 | **构建顺序** | 3/10（Maven 构建第 3 个） |
-| **JVM 进程** | 无（仅作为 jar 依赖） |
-| **启动方式** | 通过 `AutoConfiguration.imports` 被宿主服务自动装配，无 `@SpringBootApplication` |
+| **JVM 进程** | 独立 JVM 进程，独立端口，注册到 Nacos |
+| **服务注册** | Nacos Discovery（服务名 `ydsz-pmis-literule`） |
+| **配置中心** | Nacos Config（`spring-cloud-starter-alibaba-nacos-config`） |
 | **当前版本** | `1.0.0-SNAPSHOT`（与 parent `ydsz-pmis-parent` 对齐） |
+| **脚手架状态** | ⚠️ 当前缺少 `@SpringBootApplication` 启动类与 `application.yml` / `bootstrap.yml`，`ydsz-pmis-literule-web` 的 `spring-boot-maven-plugin` 配置了 `<skip>true</skip>`。**补齐独立部署脚手架是 P0 优化项**（见文末优化建议） |
 
 ## 分层结构（DDD 五层）
 
@@ -123,27 +125,21 @@ com.njydsz.pmis.literule.server
 
 ## 使用方式
 
-### 1. Maven 依赖
+### 1. 构建与部署
 
-宿主服务（如 `ydsz-pmis-project`）引入 server 子模块：
+本模块是独立微服务，构建产物为 `ydsz-pmis-literule-web` 可执行 jar：
 
-```xml
-<dependency>
-  <groupId>com.njydsz.pmis</groupId>
-  <artifactId>ydsz-pmis-literule-server</artifactId>
-  <version>${project.version}</version>
-</dependency>
-<!-- 如需 REST Controller，再引入 web 子模块 -->
-<dependency>
-  <groupId>com.njydsz.pmis</groupId>
-  <artifactId>ydsz-pmis-literule-web</artifactId>
-  <version>${project.version}</version>
-</dependency>
+```bash
+# 全量构建
+mvn -pl ydsz-pmis-backend/ydsz-pmis-literule -am clean package
+
+# 启动服务（补齐启动类后）
+java -jar ydsz-pmis-literule-web/target/ydsz-pmis-literule-web-1.0.0-SNAPSHOT.jar
 ```
 
-> **注意**：`ydsz-pmis-literule` 是父 pom（packaging=pom），不可直接作为依赖。需引用具体子模块。
+> **外部服务调用规则引擎**：通过 REST API（`/ruleEngine/**`）或 Feign Client（待补齐 `ydsz-pmis-literule-api` 的 Feign 接口）调用，不直接依赖 server/web 子模块。
 
-### 2. 声明式（注解方式）
+### 2. 声明式（注解方式，服务内部规则注册）
 
 在实现了 `Rule` 接口的 Spring Bean 上标注 `@LiteRule`，启动时自动注册到引擎：
 
@@ -164,7 +160,7 @@ public class OverdueRule implements Rule {
 }
 ```
 
-### 3. 编程式（API 方式）
+### 3. 编程式（API 方式，服务内部调用）
 
 ```java
 @Autowired
@@ -182,6 +178,24 @@ public void evaluate(Map<String, Object> facts) {
     RuleResult top = ruleEngine.topResult(context);
 }
 ```
+
+### 3.1 外部服务通过 REST API 调用（推荐）
+
+外部微服务（如 `ydsz-pmis-project`）通过 HTTP 调用规则引擎：
+
+```http
+POST /ruleEngine/rules/dryRun
+Content-Type: application/json
+
+{
+  "facts": { "margin": 0.08, "threshold": 0.15, "projectName": "XX项目" },
+  "scenario": "RISK_CHECK",
+  "tenantId": "1",
+  "traceId": "req-xxx"
+}
+```
+
+> **跨服务调用**：建议在 `ydsz-pmis-literule-api` 补齐 `@FeignClient` 接口（含 FallbackFactory），供 `ydsz-pmis-project` / `ydsz-pmis-userinfo` 等服务声明式调用。当前 api 模块仅含 DTO，尚无 Feign 客户端。
 
 ### 4. 表达式规则（LiteExpr）
 
@@ -237,7 +251,7 @@ pmis:
 
 ## 配置
 
-所有配置通过 `LiteRuleProperties` 定义，前缀 `pmis.literule`。本模块作为库，配置由宿主服务的 `application.yml` 提供。
+所有配置通过 `LiteRuleProperties` 定义，前缀 `pmis.literule`。配置文件位于 `ydsz-pmis-literule-web/src/main/resources/`（`application.yml` + `bootstrap.yml`，待补齐）。
 
 ### 核心开关
 
@@ -381,38 +395,40 @@ SQL 归属见项目级硬约束。本模块相关表分布在两个文件：
 
 ## SPI 扩展点
 
-本模块通过 SPI 反转依赖，避免直接依赖 project / cronjob / workflow 等业务模块。核心 SPI：
+本模块通过 SPI 反转依赖，避免直接依赖 project / cronjob / workflow 等业务模块。核心 SPI 由本服务自身实现（作为独立微服务，所有 Provider 的默认/DB 实现都在 server 层）：
 
-| SPI 接口 | 作用 | 默认实现 |
+| SPI 接口 | 作用 | 实现 |
 |---|---|---|
 | `RuleConfigProvider` | 规则配置源 | `DbRuleSource` + `CachingRuleConfigProvider` 装饰 |
-| `RuleVersionRepository` | 版本仓库 | 由消费方提供 |
-| `RuleTemplateProvider` | 模板市场 | 由消费方提供 |
-| `RuleConflictDetectorProvider` | 冲突检测 | 由消费方提供 |
-| `DecisionTableEvalProvider` | 决策表评估 | 由消费方提供 |
-| `RuleChainGraphProvider` | 规则链画布 | 由消费方提供 |
-| `GraphExecutionProvider` | 画布执行 | 由消费方提供 |
-| `RuleDependencyProvider` | 规则依赖 | 由消费方提供 |
-| `RuleCategoryProvider` | 目录树 | 由消费方提供 |
-| `ABTestAutoRollbackProvider` | A/B 自动回滚 | 由消费方提供 |
-| `RulePackProvider` | 规则包 | 由消费方提供 |
-| `FactProvider` | 动态事实采集 | 业务方实现 |
-| `ModelInputProvider` | 模型输入 | 业务方实现 |
+| `RuleVersionRepository` | 版本仓库 | server 层 DB 实现 |
+| `RuleTemplateProvider` | 模板市场 | server 层 DB 实现 |
+| `RuleConflictDetectorProvider` | 冲突检测 | server 层实现 |
+| `DecisionTableEvalProvider` | 决策表评估 | server 层实现 |
+| `RuleChainGraphProvider` | 规则链画布 | server 层 DB 实现 |
+| `GraphExecutionProvider` | 画布执行 | server 层实现 |
+| `RuleDependencyProvider` | 规则依赖 | server 层 DB 实现 |
+| `RuleCategoryProvider` | 目录树 | server 层实现 |
+| `ABTestAutoRollbackProvider` | A/B 自动回滚 | server 层实现 |
+| `RulePackProvider` | 规则包 | server 层 DB 实现 |
+| `FactProvider` | 动态事实采集 | 业务方实现（可跨服务 Feign 调用 project/userinfo） |
+| `ModelInputProvider` | 模型输入 | 业务方实现（可对接外部模型服务） |
 | `RuleActionHandler` | 动作处理器 | `DefaultAlertActionHandler` / `CronjobTriggerActionHandler`（optional）/ `WorkflowTriggerActionHandler`（optional） |
-| `TraceRecorder` | Trace 持久化 | `AsyncTraceRecorder`（委托模式） |
-| `DashboardDataProvider` | 大盘数据 | 由消费方提供 |
-| `ThresholdProvider` | 自适应阈值 | 由消费方提供 |
-| `ReconcileDataProvider` | 对账 | 由消费方提供 |
-| `BudgetSnapshotProvider` | 预算快照 | 由消费方提供 |
-| `ApprovalRecordRepository` | 审批记录 | 由消费方提供 |
+| `TraceRecorder` | Trace 持久化 | `AsyncTraceRecorder`（委托模式，DB 持久化） |
+| `DashboardDataProvider` | 大盘数据 | server 层实现 |
+| `ThresholdProvider` | 自适应阈值 | server 层实现 |
+| `ReconcileDataProvider` | 对账 | 业务方实现 |
+| `BudgetSnapshotProvider` | 预算快照 | 业务方实现（可跨服务 Feign 调用 finance/project） |
+| `ApprovalRecordRepository` | 审批记录 | server 层 DB 实现 |
 
 ## 可选联动
 
-server 模块通过 optional 依赖实现按需联动：
+server 模块通过 optional 依赖实现跨服务按需联动（规则触发后联动 cronjob / workflow）：
 
-- `ydsz-pmis-cronjob-api`（optional）— classpath 存在时装配 `CronjobTriggerActionHandler`
-- `ydsz-pmis-workflow-api`（optional）— classpath 存在时装配 `WorkflowTriggerActionHandler`
-- `micrometer-registry-prometheus`（optional）— classpath 存在时反射装配 `MicrometerRuleMetrics`
+- `ydsz-pmis-cronjob-api`（optional）— classpath 存在时装配 `CronjobTriggerActionHandler`，规则触发可联动定时任务
+- `ydsz-pmis-workflow-api`（optional）— classpath 存在时装配 `WorkflowTriggerActionHandler`，规则触发可联动工作流审批
+- `micrometer-registry-prometheus`（optional）— classpath 存在时反射装配 `MicrometerRuleMetrics`，对接 Prometheus 监控
+
+> 作为独立微服务，建议将 cronjob-api / workflow-api 从 optional 改为正式依赖（规则引擎服务本身需要触发定时任务和工作流），并补齐对应 Feign Client 配置。
 
 ## 测试
 
@@ -421,6 +437,8 @@ server 模块通过 optional 依赖实现按需联动：
 ```bash
 mvn -pl ydsz-pmis-backend/ydsz-pmis-literule -am test
 ```
+
+> 本服务构建产物为 `ydsz-pmis-literule-web` 可执行 jar，但目前 `spring-boot-maven-plugin` 配置了 `<skip>true</skip>`，需移除该配置后才能打包为可执行 jar。
 
 | 子模块 | 测试类数 | 覆盖范围 |
 |---|---|---|
@@ -437,9 +455,10 @@ mvn -pl ydsz-pmis-backend/ydsz-pmis-literule -am test
 - **首发版本**：v1.0.0（2026-06-30）
 - **当前版本**：`1.0.0-SNAPSHOT`
 - **变更需走 PR + Code Review**
-- **跨服务回归**：任何修改需回归 project / userinfo / agent 等依赖服务
+- **跨服务回归**：任何修改需回归依赖规则引擎的 project / userinfo / agent 等服务（通过 REST API 或 Feign 调用）
 
 ---
 
-> 本模块是**纯库**，不包含 `@SpringBootApplication` 启动类，不独立部署。
+> 本模块是**独立规则引擎微服务**，独立部署、独立 JVM 进程、注册到 Nacos。
+> 当前脚手架待补齐：`@SpringBootApplication` 启动类、`application.yml` / `bootstrap.yml`、移除 `spring-boot-maven-plugin` 的 `<skip>true</skip>`。
 > 自动装配入口：`META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 注册 `LiteRuleAutoConfiguration`。

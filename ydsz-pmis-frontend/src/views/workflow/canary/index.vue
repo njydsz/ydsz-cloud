@@ -126,8 +126,8 @@ function openPublishDialog(row: FlowDefinitionDTO) {
 function addWhitelist() {
   const ids = whitelistInput.value
     .split(/[,，\s]+/)
-    .map((s) => Number(s.trim()))
-    .filter((n) => !isNaN(n) && n > 0)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
   if (ids.length === 0) {
     ElMessage.warning(t('workflow.canary.msg.invalidUserId'))
     return
@@ -136,7 +136,7 @@ function addWhitelist() {
   whitelistInput.value = ''
 }
 
-function removeWhitelist(id: number) {
+function removeWhitelist(id: string) {
   publishForm.whitelist = (publishForm.whitelist || []).filter((w) => w !== id)
 }
 

@@ -107,31 +107,43 @@ public class ReceiptPuller {
         // 超时阈值：超过 timeoutMinutes 仍无回执则标记 TIMEOUT
         LocalDateTime timeoutThreshold = now.minusMinutes(messageProperties.getReceiptTimeoutMinutes());
 
+        // ① 先批量处理超时消息:createdAt < timeoutThreshold → 标记 TIMEOUT
+        List<MsgLogDO> timeoutMsgs = msgLogMapper.selectList(new LambdaQueryWrapper<MsgLogDO>()
+                .eq(MsgLogDO::getStatus, MessageStatusEnum.SUCCESS.name())
+                .eq(MsgLogDO::getReceiptStatus, ReceiptStatusEnum.NONE.name())
+                .lt(MsgLogDO::getCreatedAt, timeoutThreshold)
+                .last("LIMIT " + MessageConstants.RECEIPT_PULL_BATCH_SIZE));
+        int timeout = 0;
+        for (MsgLogDO logDO : timeoutMsgs) {
+            try {
+                messageLogService.updateReceipt(logDO.getId(),
+                        ReceiptStatusEnum.TIMEOUT.name(), LocalDateTime.now());
+                timeout++;
+            } catch (Exception e) {
+                log.warn("[ReceiptPuller] 标记超时异常: logId={} err={}",
+                        logDO.getId(), e.getMessage());
+            }
+        }
+
+        // ② 查询待主动拉取的消息:timeoutThreshold <= createdAt < pullThreshold
         List<MsgLogDO> pending = msgLogMapper.selectList(new LambdaQueryWrapper<MsgLogDO>()
                 .eq(MsgLogDO::getStatus, MessageStatusEnum.SUCCESS.name())
                 .eq(MsgLogDO::getReceiptStatus, ReceiptStatusEnum.NONE.name())
+                .ge(MsgLogDO::getCreatedAt, timeoutThreshold)
                 .lt(MsgLogDO::getCreatedAt, pullThreshold)
                 .last("LIMIT " + MessageConstants.RECEIPT_PULL_BATCH_SIZE));
-        if (pending.isEmpty()) {
+        if (pending.isEmpty() && timeoutMsgs.isEmpty()) {
             return;
         }
-        log.info("[ReceiptPuller] 待处理回执缺失消息 {} 条", pending.size());
+        log.info("[ReceiptPuller] 待处理回执: 主动拉取 {} 条, 超时标记 {} 条", pending.size(), timeoutMsgs.size());
 
         int pulled = 0;
         int updated = 0;
-        int timeout = 0;
         int skipped = 0;
         for (MsgLogDO logDO : pending) {
             try {
-                // ① 超时优先：超过超时阈值仍无回执 → 标记 TIMEOUT
-                if (logDO.getCreatedAt() != null && logDO.getCreatedAt().isBefore(timeoutThreshold)) {
-                    messageLogService.updateReceipt(logDO.getId(),
-                            ReceiptStatusEnum.TIMEOUT.name(), LocalDateTime.now());
-                    timeout++;
-                    continue;
-                }
                 pulled++;
-                // ② 主动拉取：调用渠道 queryReceipt
+                // 主动拉取：调用渠道 queryReceipt
                 MessageChannel channel = channelRouter.route(logDO.getChannel());
                 Optional<ReceiptResult> result = channel.queryReceipt(logDO);
                 if (result.isEmpty()) {
@@ -149,7 +161,7 @@ public class ReceiptPuller {
                 skipped++;
             }
         }
-        log.info("[ReceiptPuller] 扫描完成: total={} pulled={} updated={} timeout={} skipped={}",
-                pending.size(), pulled, updated, timeout, skipped);
+        log.info("[ReceiptPuller] 扫描完成: pulled={} updated={} timeout={} skipped={}",
+                pulled, updated, timeout, skipped);
     }
 }

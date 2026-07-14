@@ -604,14 +604,14 @@ CREATE TABLE IF NOT EXISTS pmis_msg_aggregate(
     deleted           SMALLINT     NOT NULL DEFAULT 0,
     tenant_id         VARCHAR(20)       NOT NULL DEFAULT '1',
     CONSTRAINT ck_pmag_chan_enum   CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'DINGTALK_WORK', 'WECOM', 'WECOM_APP', 'FEISHU', 'WX_MINI', 'ALIPAY_MINI')),
-    CONSTRAINT ck_pmag_status_enum CHECK (batch_status IN ('PENDING', 'READY', 'SENT', 'CANCELLED')),
+    CONSTRAINT ck_pmag_status_enum CHECK (batch_status IN ('PENDING', 'READY', 'SENDING', 'SENT', 'CANCELLED')),
     CONSTRAINT ck_pmag_count_nonneg CHECK (message_count >= 0),
     CONSTRAINT ck_pmag_deleted_enum CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE pmis_msg_aggregate IS '聚合批次表: 同 aggregate_group+receiver 的消息按频率合并为摘要发送';
 
-COMMENT ON COLUMN pmis_msg_aggregate.batch_status IS '批次状态: PENDING 攒批中 / READY 就绪待发 / SENT 已发送 / CANCELLED 已取消';
+COMMENT ON COLUMN pmis_msg_aggregate.batch_status IS '批次状态: PENDING 攒批中 / READY 就绪待发 / SENDING 发送中(CAS 占有) / SENT 已发送 / CANCELLED 已取消';
 
 COMMENT ON COLUMN pmis_msg_aggregate.scheduled_send_at IS '计划发送时间(到达后触发摘要发送)';
 
@@ -844,7 +844,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_user_channel(
     deleted           SMALLINT     NOT NULL DEFAULT 0,
     tenant_id         VARCHAR(20)       NOT NULL DEFAULT '1',
     CONSTRAINT uk_pmuc_user_chan UNIQUE (user_id, channel_type, tenant_id, deleted),
-    CONSTRAINT ck_pmuc_chan_enum  CHECK (channel_type IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU', 'WX_MINI', 'ALIPAY_MINI')),
+    CONSTRAINT ck_pmuc_chan_enum  CHECK (channel_type IN ('SMS', 'EMAIL', 'PUSH', 'INAPP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'WECOM_APP', 'FEISHU', 'WX_MINI', 'ALIPAY_MINI')),
     CONSTRAINT ck_pmuc_verified   CHECK (verified IN (0, 1)),
     CONSTRAINT ck_pmuc_primary    CHECK (is_primary IN (0, 1)),
     CONSTRAINT ck_pmuc_deleted    CHECK (deleted IN (0, 1))
@@ -905,4 +905,139 @@ COMMENT ON COLUMN pmis_msg_variable_source.source_expr IS '数据源表达式: B
 COMMENT ON COLUMN pmis_msg_variable_source.cache_ttl IS '缓存有效期(秒),0=不缓存';
 
 CREATE INDEX IF NOT EXISTS idx_pmvs_tpl ON pmis_msg_variable_source(template_code) WHERE deleted = 0;
+
+-- ====================================================================
+-- P1-4: 消息用户反馈表
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS pmis_msg_feedback(
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    msg_id            VARCHAR(64)   NOT NULL,
+    notification_id   VARCHAR(20),
+    user_id           VARCHAR(20)   NOT NULL,
+    channel           VARCHAR(32),
+    biz_type          VARCHAR(64),
+    rating            SMALLINT      NOT NULL,
+    feedback_type     VARCHAR(32),
+    content           TEXT,
+    created_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    created_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    updated_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT     NOT NULL DEFAULT 0,
+    tenant_id         VARCHAR(20)       NOT NULL DEFAULT '1',
+    CONSTRAINT ck_pmf_rating CHECK (rating BETWEEN 1 AND 5),
+    CONSTRAINT ck_pmf_deleted CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_msg_feedback IS 'P1-4: 消息用户反馈表,记录用户对消息质量的评分和反馈,用于推送质量评估和智能防骚扰';
+
+COMMENT ON COLUMN pmis_msg_feedback.msg_id IS '消息 ID(关联 pmis_msg_log.msg_id)';
+
+COMMENT ON COLUMN pmis_msg_feedback.notification_id IS '站内通知 ID(关联 pmis_msg_notification.id,可为 null)';
+
+COMMENT ON COLUMN pmis_msg_feedback.rating IS '评分: 1-5 分(1=非常不满意, 5=非常满意)';
+
+COMMENT ON COLUMN pmis_msg_feedback.feedback_type IS '反馈类型: TOO_FREQUENT 太频繁 / IRRELEVANT 不相关 / TOO_LONG 内容太长 / SPAM 垃圾信息 / GOOD 有用 / OTHER 其他';
+
+COMMENT ON COLUMN pmis_msg_feedback.content IS '反馈内容(用户自由文本输入)';
+
+CREATE INDEX IF NOT EXISTS idx_pmf_user ON pmis_msg_feedback(user_id) WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_pmf_msg ON pmis_msg_feedback(msg_id) WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_pmf_tenant_created ON pmis_msg_feedback(tenant_id, created_at DESC) WHERE deleted = 0;
+
+-- ====================================================================
+-- P0-3: 离线消息持久化表
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS pmis_msg_offline(
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    user_id           VARCHAR(20)   NOT NULL,
+    msg_type          VARCHAR(32),
+    payload           TEXT          NOT NULL,
+    msg_timestamp     BIGINT        NOT NULL,
+    status            VARCHAR(16)   NOT NULL DEFAULT 'PENDING',
+    pushed_at         TIMESTAMPTZ,
+    expired_at        TIMESTAMPTZ,
+    created_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    created_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    updated_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT     NOT NULL DEFAULT 0,
+    tenant_id         VARCHAR(20)       NOT NULL DEFAULT '1',
+    CONSTRAINT ck_pmo_status CHECK (status IN ('PENDING', 'PUSHED', 'EXPIRED')),
+    CONSTRAINT ck_pmo_deleted CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_msg_offline IS 'P0-3: 离线消息持久化表,Redis 离线缓存溢出时持久化到 DB,支持 30 天回溯';
+
+COMMENT ON COLUMN pmis_msg_offline.user_id IS '接收人用户 ID';
+
+COMMENT ON COLUMN pmis_msg_offline.msg_type IS '消息类型标签(如 NOTIFICATION / ALERT)';
+
+COMMENT ON COLUMN pmis_msg_offline.payload IS '消息内容 JSON';
+
+COMMENT ON COLUMN pmis_msg_offline.msg_timestamp IS '消息时间戳(毫秒)';
+
+COMMENT ON COLUMN pmis_msg_offline.status IS '推送状态: PENDING 待推送 / PUSHED 已推送 / EXPIRED 已过期';
+
+COMMENT ON COLUMN pmis_msg_offline.pushed_at IS '推送时间';
+
+COMMENT ON COLUMN pmis_msg_offline.expired_at IS '过期时间(默认 createdAt + 30 天)';
+
+CREATE INDEX IF NOT EXISTS idx_pmo_user_status ON pmis_msg_offline(user_id, status) WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_pmo_expired ON pmis_msg_offline(expired_at) WHERE deleted = 0 AND expired_at IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmo_tenant ON pmis_msg_offline(tenant_id);
+
+-- ====================================================================
+-- P0-2: 消息轨迹记录表
+-- ====================================================================
+CREATE TABLE IF NOT EXISTS pmis_msg_trace(
+    id                VARCHAR(20)      PRIMARY KEY DEFAULT left(replace(gen_random_uuid()::text,'-',''),20),
+    msg_id            VARCHAR(64)   NOT NULL,
+    trace_id          VARCHAR(64),
+    node              VARCHAR(32)   NOT NULL,
+    status            VARCHAR(16)   NOT NULL DEFAULT 'SUCCESS',
+    channel           VARCHAR(32),
+    receiver          VARCHAR(256),
+    biz_type          VARCHAR(64),
+    biz_id            VARCHAR(64),
+    template_code     VARCHAR(128),
+    cost_ms           BIGINT,
+    message           VARCHAR(1024),
+    extra             TEXT,
+    event_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    created_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    updated_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT     NOT NULL DEFAULT 0,
+    tenant_id         VARCHAR(20)       NOT NULL DEFAULT '1',
+    CONSTRAINT ck_pmt_status CHECK (status IN ('SUCCESS', 'FAILED', 'SKIPPED', 'PENDING')),
+    CONSTRAINT ck_pmt_deleted CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_msg_trace IS 'P0-2: 消息轨迹记录表,记录消息从接入到投递全链路的每个关键节点,通过 msgId 关联形成完整链路';
+
+COMMENT ON COLUMN pmis_msg_trace.msg_id IS '消息 ID(关联 pmis_msg_log.msg_id)';
+
+COMMENT ON COLUMN pmis_msg_trace.trace_id IS '链路追踪 ID(关联 pmis_msg_log.trace_id,用于跨服务链路串联)';
+
+COMMENT ON COLUMN pmis_msg_trace.node IS '轨迹节点类型: RECEIVED/CHANNEL_CHECK/ROUTE_MATCHED/CANARY_HIT/SUBSCRIPTION_CHECK/PREFERENCE_CHECK/DEDUP_CHECK/RATE_LIMIT_CHECK/TEMPLATE_LOADED/TEMPLATE_RENDERED/SENSITIVE_FILTERED/PERSISTED/SCHEDULED/AGGREGATED/DISPATCH_START/DISPATCH_SUCCESS/FALLBACK/RETRY/SEND_FAILED/RECEIPT_RECEIVED/RECALLED/CASCADE_SENT';
+
+COMMENT ON COLUMN pmis_msg_trace.status IS '节点状态: SUCCESS / FAILED / SKIPPED / PENDING';
+
+COMMENT ON COLUMN pmis_msg_trace.cost_ms IS '节点耗时(毫秒)';
+
+COMMENT ON COLUMN pmis_msg_trace.extra IS '扩展信息 JSON(节点附加数据,如路由规则 ID、降级链、灰度配置等)';
+
+COMMENT ON COLUMN pmis_msg_trace.event_at IS '节点发生时间';
+
+CREATE INDEX IF NOT EXISTS idx_pmt_msg ON pmis_msg_trace(msg_id, event_at) WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_pmt_trace ON pmis_msg_trace(trace_id) WHERE deleted = 0 AND trace_id IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS idx_pmt_tenant_event ON pmis_msg_trace(tenant_id, event_at DESC) WHERE deleted = 0;
 

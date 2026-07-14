@@ -20,6 +20,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
 import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.core.response.StandardResultCode;
+import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
@@ -104,9 +106,8 @@ public class FeishuChannel implements MessageChannel {
             return MessageResult.fail(CHANNEL_TYPE, "飞书 hook 未配置");
         }
 
-        Map<String, Object> payload = buildPayload(request);
-
         try {
+            Map<String, Object> payload = buildPayload(request);
             ResponseEntity<String> response = restClient.post()
                     .uri(webhookUrl)
                     .contentType(MediaType.APPLICATION_JSON)
@@ -184,6 +185,9 @@ public class FeishuChannel implements MessageChannel {
         String secret = channelProperties.getChannel().getFeishu().getSecret();
         if (StringUtils.hasText(secret)) {
             Map<String, String> sign = appendSign(secret);
+            if (sign == null) {
+                throw new SysException(StandardResultCode.INTERNAL_ERROR, "飞书加签失败,请检查 secret 配置");
+            }
             payload.put("timestamp", sign.get("timestamp"));
             payload.put("sign", sign.get("sign"));
         }
@@ -251,8 +255,8 @@ public class FeishuChannel implements MessageChannel {
             result.put("sign", sign);
             return result;
         } catch (Exception e) {
-            log.warn("[FEISHU] 加签失败，跳过签名: {}", e.getMessage());
-            return new HashMap<>();
+            log.error("[FEISHU] 加签失败,放弃发送: {}", e.getMessage(), e);
+            return null;
         }
     }
 }

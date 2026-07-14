@@ -53,6 +53,7 @@ public class NotifyChannelBridgeConfiguration {
             "SMS", NotifyChannel.SMS,
             "DINGTALK", NotifyChannel.DINGTALK,
             "WECOM", NotifyChannel.WECOM,
+            "WECOM_APP", NotifyChannel.WECOM,
             "FEISHU", NotifyChannel.FEISHU,
             "INAPP", NotifyChannel.INSITE
     );

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.tx.impl;
+package com.njydsz.pmis.common.seata.impl;
 
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -6,10 +6,10 @@ import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.pmis.common.tx.api.DistributedTransactionManager;
-import com.njydsz.pmis.common.tx.api.TccAction;
-import com.njydsz.pmis.common.tx.api.TccContext;
-import com.njydsz.pmis.common.tx.api.TransactionType;
+import com.njydsz.pmis.common.seata.api.DistributedTransactionManager;
+import com.njydsz.pmis.common.seata.api.TccAction;
+import com.njydsz.pmis.common.seata.api.TccContext;
+import com.njydsz.pmis.common.seata.api.TransactionType;
 
 /**
  * TCC 事务管理器

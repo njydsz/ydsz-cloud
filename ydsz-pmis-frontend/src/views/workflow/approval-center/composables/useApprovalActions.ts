@@ -63,10 +63,10 @@ export type ApprovalActionType =
 
 /** 操作执行上下文（弹窗表单数据 + 任务信息） */
 export interface ApprovalActionContext {
-  taskId: number
-  instanceId?: number
+  taskId: string
+  instanceId?: string
   comment?: string
-  targetUserId?: number
+  targetUserId?: string
   targetUserName?: string
   /** 单节点退回目标（向后兼容） */
   targetNodeCode?: string
@@ -224,7 +224,7 @@ class UrgeAction extends BaseAction {
   override readonly commentLabel = 'workflow.approval.actions.urgeCommentLabel'
   override readonly commentPlaceholder = 'workflow.approval.actions.urgePlaceholder'
   protected call(ctx: ApprovalActionContext) {
-    return urgeTask(ctx.instanceId as number, ctx.comment)
+    return urgeTask(ctx.instanceId as string, ctx.comment)
   }
 }
 
@@ -311,7 +311,7 @@ class MarkReadAction extends BaseAction {
   readonly type = 'MARK_READ' as const
   readonly title = 'workflow.approval.actions.markReadTitle'
   protected call(ctx: ApprovalActionContext) {
-    return markReadTask({ taskId: ctx.taskId, userId: 0 })
+    return markReadTask({ taskId: ctx.taskId, userId: '' })
   }
 }
 
@@ -392,7 +392,7 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
     comment: '',
     /** 目标用户对象（UserPicker 选择） */
     targetUser: null as UserModel,
-    targetUserId: undefined as number | undefined,
+    targetUserId: undefined as string | undefined,
     targetUserName: '' as string,
     targetNodeCode: '',
     /** GAP-P0-2: 多节点同退勾选的节点编码列表 */
@@ -402,7 +402,7 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
     /** 附件列表（CommentEditor 附件） */
     attachments: [] as Array<{ uid: string; fileId?: string | number; name: string; url: string }>,
     /** 提及列表（CommentEditor @人） */
-    mentions: [] as Array<{ userId: number; name: string }>,
+    mentions: [] as Array<{ userId: string; name: string }>,
   })
 
   /** 当前策略实例 */
@@ -462,7 +462,7 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
   /** UserPicker 变更同步 id/name */
   function onTargetUserChange(v: unknown) {
     if (v && typeof v === 'object') {
-      opForm.targetUserId = (v as { id: number }).id
+      opForm.targetUserId = String((v as { id: string | number }).id)
       opForm.targetUserName =
         (v as { realName?: string; username?: string }).realName ||
         (v as { username?: string }).username ||
@@ -479,7 +479,7 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
    * <p>当前仅记录被提及用户，待后端通知服务支持 @ 提及语义后补全推送逻辑。
    * 保留空实现以避免 UI 入口报错。
    */
-  function onOpMention(_m: { userId: number; name: string }) {
+  function onOpMention(_m: { userId: string; name: string }) {
     // P2 待实现：后端通知服务支持 @ 提及后，调用 notificationApi.mentionUser(_m.userId, _m.name)
   }
 
@@ -632,7 +632,7 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
   }
 
   /** 批量通过 */
-  async function quickBatchPass(taskIds: number[]) {
+  async function quickBatchPass(taskIds: string[]) {
     if (taskIds.length === 0) {
       ElMessage.warning(t('workflow.approval.messages.batchPassEmpty'))
       return

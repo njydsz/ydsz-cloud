@@ -19,6 +19,7 @@ import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.core.LockKeyUtil;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertContext;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertTrigger;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertType;
@@ -160,9 +161,9 @@ public class TimeoutMonitor {
         if (metrics != null) {
             metrics.incJobTimeout(log0.getJobKey());
         }
-        // P0-1: 释放任务锁（Lua 脚本安全释放，仅当 lockHolder 匹配时才 delete）
-        // 修复之前直接 redisTemplate.delete() 可能误删其他节点持有的锁的问题
-        String lockKey = JOB_LOCK_PREFIX + log0.getJobKey();
+        // P0-7: 释放任务锁（Lua 脚本安全释放，仅当 lockHolder 匹配时才 delete）
+        // P0-11: 通过 LockKeyUtil 统一构造，支持分片任务锁释放
+        String lockKey = LockKeyUtil.buildJobLockKey(log0.getJobKey(), log0.getShardIndex());
         String holder = log0.getLockHolder();
         if (holder != null && !holder.isBlank()) {
             try {

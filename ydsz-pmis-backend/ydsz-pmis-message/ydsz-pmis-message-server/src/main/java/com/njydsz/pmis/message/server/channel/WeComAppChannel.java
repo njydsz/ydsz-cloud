@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 public class WeComAppChannel implements MessageChannel {
 
     private static final String CHANNEL_TYPE = "WECOM_APP";
-    private static final String TOKEN_CACHE_KEY = "pmis:msg:wecom:app:access_token";
+    private static final String TOKEN_CACHE_KEY_PREFIX = "pmis:msg:wecom:app:access_token:";
     private static final Duration TOKEN_TTL = Duration.ofSeconds(7200);
 
     private final ChannelProperties channelProperties;
@@ -126,7 +126,8 @@ public class WeComAppChannel implements MessageChannel {
      */
     private String getAccessToken(ChannelProperties.WeComAppConfig cfg) {
         try {
-            String cached = redisTemplate.opsForValue().get(TOKEN_CACHE_KEY);
+            String cacheKey = TOKEN_CACHE_KEY_PREFIX + cfg.getCorpId();
+            String cached = redisTemplate.opsForValue().get(cacheKey);
             if (StringUtils.hasText(cached)) {
                 return cached;
             }
@@ -138,8 +139,8 @@ public class WeComAppChannel implements MessageChannel {
                 int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
                 if (errcode == 0) {
                     String token = (String) body.get("access_token");
-                    redisTemplate.opsForValue().set(TOKEN_CACHE_KEY, token, TOKEN_TTL.minusSeconds(300));
-                    log.info("[WECOM_APP] 刷新 access_token 成功");
+                    redisTemplate.opsForValue().set(cacheKey, token, TOKEN_TTL.minusSeconds(300));
+                    log.info("[WECOM_APP] 刷新 access_token 成功: corpId={}", cfg.getCorpId());
                     return token;
                 }
                 log.error("[WECOM_APP] 获取 access_token 失败: errcode={} errmsg={}",

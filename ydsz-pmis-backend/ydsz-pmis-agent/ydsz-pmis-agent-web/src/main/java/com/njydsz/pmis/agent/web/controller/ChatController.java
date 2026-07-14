@@ -1,10 +1,16 @@
 package com.njydsz.pmis.agent.web.controller;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
+import jakarta.annotation.PreDestroy;
 import jakarta.validation.Valid;
 
 import org.slf4j.Logger;
@@ -46,11 +52,19 @@ public class ChatController {
 
     private static final Logger log = LoggerFactory.getLogger(ChatController.class);
     private static final long SSE_TIMEOUT = 120_000L;
+    private static final long HEARTBEAT_INTERVAL_SECONDS = 15L;
 
     private final ChatService chatService;
+    private final ScheduledExecutorService heartbeatScheduler =
+            Executors.newScheduledThreadPool(2, Thread.ofVirtual().factory());
 
     public ChatController(ChatService chatService) {
         this.chatService = chatService;
+    }
+
+    @PreDestroy
+    public void destroy() {
+        heartbeatScheduler.shutdownNow();
     }
 
     /**
@@ -70,19 +84,36 @@ public class ChatController {
 
     /**
      * 流式对话（SSE）
+     *
+     * <p>每 {@value #HEARTBEAT_INTERVAL_SECONDS} 秒发送心跳保活事件，防止中间代理断连。
+     * 客户端断开后自动中断 LLM 调用，避免 Token 浪费。
      */
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter chatStream(@Valid @RequestBody ChatRequestDTO request) {
         log.info("[Chat-API] 流式对话请求: convId={}", request.getConversationId());
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
+        AtomicBoolean active = new AtomicBoolean(true);
 
-        Thread.startVirtualThread(() -> {
+        var heartbeatFuture = heartbeatScheduler.scheduleAtFixedRate(() -> {
+            if (active.get()) {
+                try {
+                    emitter.send(SseEmitter.event().comment("keep-alive"));
+                } catch (IOException e) {
+                    active.set(false);
+                }
+            }
+        }, HEARTBEAT_INTERVAL_SECONDS, HEARTBEAT_INTERVAL_SECONDS, TimeUnit.SECONDS);
+
+        Thread virtualThread = Thread.startVirtualThread(() -> {
             try {
                 chatService.stream(
                         request.getConversationId(),
                         request.getMessage(),
                         request.getSystemPrompt(),
                         chunk -> {
+                            if (!active.get()) {
+                                throw new RuntimeException("SSE 连接已断开，终止 LLM 调用");
+                            }
                             try {
                                 emitter.send(SseEmitter.event()
                                         .data(Map.of(
@@ -90,17 +121,40 @@ public class ChatController {
                                                 "finished", chunk.isFinished(),
                                                 "finishReason", chunk.getFinishReason() != null ? chunk.getFinishReason() : ""))
                                         .name("chunk"));
-                            } catch (Exception e) {
-                                log.warn("[Chat-API] SSE 发送失败: {}", e.getMessage());
+                            } catch (IOException e) {
+                                active.set(false);
+                                log.warn("[Chat-API] SSE 发送失败，标记连接断开: {}", e.getMessage());
                             }
                         });
-                emitter.send(SseEmitter.event().data(Map.of("content", "", "finished", true)).name("done"));
-                emitter.complete();
+                if (active.get()) {
+                    emitter.send(SseEmitter.event().data(Map.of("content", "", "finished", true)).name("done"));
+                    emitter.complete();
+                }
             } catch (Exception e) {
                 log.error("[Chat-API] 流式对话异常: {}", e.getMessage(), e);
-                emitter.completeWithError(e);
+                if (active.get()) {
+                    try {
+                        emitter.send(SseEmitter.event()
+                                .data(Map.of("error", e.getMessage() != null ? e.getMessage() : "未知错误", "finished", true))
+                                .name("error"));
+                    } catch (IOException ignored) {
+                        // 客户端已断开，忽略
+                    }
+                    emitter.completeWithError(e);
+                }
             }
         });
+
+        Runnable cleanup = () -> {
+            active.set(false);
+            heartbeatFuture.cancel(true);
+            if (virtualThread.isAlive()) {
+                virtualThread.interrupt();
+            }
+        };
+        emitter.onTimeout(cleanup);
+        emitter.onError(e -> cleanup.run());
+        emitter.onCompletion(cleanup);
 
         return emitter;
     }

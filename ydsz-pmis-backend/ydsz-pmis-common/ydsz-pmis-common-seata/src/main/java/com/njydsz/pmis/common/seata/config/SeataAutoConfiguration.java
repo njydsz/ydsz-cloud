@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.tx.config;
+package com.njydsz.pmis.common.seata.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -8,10 +8,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.njydsz.pmis.common.tx.api.DistributedTransactionManager;
-import com.njydsz.pmis.common.tx.api.TransactionType;
-import com.njydsz.pmis.common.tx.impl.LocalTransactionManager;
-import com.njydsz.pmis.common.tx.impl.TccTransactionManager;
+import com.njydsz.pmis.common.seata.api.DistributedTransactionManager;
+import com.njydsz.pmis.common.seata.api.TransactionType;
+import com.njydsz.pmis.common.seata.impl.LocalTransactionManager;
+import com.njydsz.pmis.common.seata.impl.TccTransactionManager;
 
 /**
  * 分布式事务自动配置
@@ -27,9 +27,9 @@ import com.njydsz.pmis.common.tx.impl.TccTransactionManager;
  * @since 3.5.0
  */
 @AutoConfiguration
-@EnableConfigurationProperties(TxProperties.class)
-@ConditionalOnProperty(prefix = "pmis.tx", name = "enabled", havingValue = "true", matchIfMissing = true)
-public class TxAutoConfiguration {
+@EnableConfigurationProperties(SeataProperties.class)
+@ConditionalOnProperty(prefix = "pmis.seata", name = "enabled", havingValue = "true", matchIfMissing = true)
+public class SeataAutoConfiguration {
 
     /**
      * TCC 事务管理器（始终注册）
@@ -43,12 +43,12 @@ public class TxAutoConfiguration {
     /**
      * 分布式事务管理器（默认 Local 降级）
      *
-     * <p>当 Seata 在类路径时，可通过 {@code pmis.tx.default-type=SEATA_AT}
+     * <p>当 Seata 在类路径时，可通过 {@code pmis.seata.default-type=SEATA_AT}
      * 切换为 Seata 实现。
      */
     @Configuration
     @ConditionalOnClass(name = "io.seata.spring.annotation.GlobalTransactional")
-    @ConditionalOnProperty(prefix = "pmis.tx", name = "default-type", havingValue = "SEATA_AT")
+    @ConditionalOnProperty(prefix = "pmis.seata", name = "default-type", havingValue = "SEATA_AT")
     public static class SeataConfiguration {
         // Seata 集成待实现
         // 当 Seata 在类路径时，注册 SeataTransactionManager
@@ -60,7 +60,7 @@ public class TxAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(DistributedTransactionManager.class)
-    public DistributedTransactionManager distributedTransactionManager(TxProperties properties) {
+    public DistributedTransactionManager distributedTransactionManager(SeataProperties properties) {
         if (properties.getDefaultType() == TransactionType.TCC) {
             return new TccTransactionManager();
         }

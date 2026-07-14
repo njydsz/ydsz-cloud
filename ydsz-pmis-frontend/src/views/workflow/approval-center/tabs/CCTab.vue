@@ -88,7 +88,7 @@ async function markAllCcRead() {
   }
 }
 
-function goInstance(instanceId: number) {
+function goInstance(instanceId: string) {
   router.push({ path: '/workflow/instance', query: { id: String(instanceId) } })
 }
 

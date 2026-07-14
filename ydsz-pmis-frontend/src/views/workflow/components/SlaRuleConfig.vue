@@ -86,14 +86,12 @@
       </el-form-item>
 
       <el-form-item v-if="form.action === 'ESCALATE'" label="升级给">
-        <el-input-number
+        <el-input
           v-model="form.escalateUserId"
-          :min="1"
-          controls-position="right"
           style="width: 160px"
           placeholder="用户 ID"
         />
-        <span class="sla__sub-hint">为空时升级给默认管理员（ID=1）</span>
+        <span class="sla__sub-hint">为空时升级给默认管理员</span>
       </el-form-item>
 
       <el-form-item
@@ -141,7 +139,7 @@ import { getSlaConfig, saveSlaConfig } from '@/api/workflow'
 import type { SlaRuleConfigDTO, SlaStrategy } from '@/api/workflow/types'
 
 const props = defineProps<{
-  definitionId?: number | null
+  definitionId?: string | null
   nodeCode?: string | null
 }>()
 
@@ -194,7 +192,7 @@ watch(
   () => [props.definitionId, props.nodeCode],
   ([defId, code]) => {
     if (defId && code) {
-      loadConfig(Number(defId), String(code))
+      loadConfig(String(defId), String(code))
     } else {
       enabled.value = false
       loaded.value = false
@@ -203,7 +201,7 @@ watch(
   { immediate: true },
 )
 
-async function loadConfig(defId: number, code: string) {
+async function loadConfig(defId: string, code: string) {
   try {
     const res = await getSlaConfig(defId, code)
     const jsonStr = res.data?.data
@@ -267,7 +265,7 @@ async function save() {
     if ((form.action === 'AUTO_PASS' || form.action === 'AUTO_REJECT') && form.autoComment) {
       payload.autoComment = form.autoComment
     }
-    await saveSlaConfig(Number(props.definitionId), String(props.nodeCode), payload)
+    await saveSlaConfig(String(props.definitionId), String(props.nodeCode), payload)
     ElMessage.success('SLA 配置已保存')
   } catch {
     ElMessage.error('保存失败')

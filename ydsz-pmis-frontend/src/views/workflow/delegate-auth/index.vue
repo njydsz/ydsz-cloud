@@ -53,7 +53,7 @@ const pageSize = ref(10)
 // ==================== 创建授权弹窗 ====================
 const createDialog = ref(false)
 const creating = ref(false)
-const createForm = reactive<Omit<CreateDelegateAuthDTO, 'delegateId'> & { delegateId?: number }>({
+const createForm = reactive<Omit<CreateDelegateAuthDTO, 'delegateId'> & { delegateId?: string }>({
   delegateId: undefined,
   delegateName: '',
   scopeType: 'ALL',
@@ -143,7 +143,7 @@ function onDelegateUserPicked(user: UserVO | UserVO[] | null) {
   if (Array.isArray(user)) {
     const u = user[0]
     if (u) {
-      createForm.delegateId = u.id
+      createForm.delegateId = String(u.id)
       createForm.delegateName = u.realName || u.username || ''
     } else {
       createForm.delegateId = undefined
@@ -152,7 +152,7 @@ function onDelegateUserPicked(user: UserVO | UserVO[] | null) {
     return
   }
   if (user && typeof user === 'object') {
-    createForm.delegateId = user.id
+    createForm.delegateId = String(user.id)
     createForm.delegateName = user.realName || user.username || ''
   } else {
     createForm.delegateId = undefined

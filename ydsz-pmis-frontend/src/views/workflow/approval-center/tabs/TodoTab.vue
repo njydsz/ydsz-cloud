@@ -175,13 +175,13 @@ async function loadFlowDefinitions() {
 // 待办置顶（localStorage）
 // ===========================================
 const PINNED_STORAGE_KEY = 'approval_center_pinned_tasks'
-const pinnedTaskIds = ref<Set<number>>(new Set())
+const pinnedTaskIds = ref<Set<string>>(new Set())
 
 function loadPinnedTasks() {
   try {
     const raw = localStorage.getItem(PINNED_STORAGE_KEY)
     if (raw) {
-      const arr: number[] = JSON.parse(raw)
+      const arr: string[] = JSON.parse(raw)
       pinnedTaskIds.value = new Set(arr)
     }
   } catch {
@@ -207,7 +207,7 @@ function togglePin(taskId: number) {
   sortTodoList()
 }
 
-function isPinned(taskId: number): boolean {
+function isPinned(taskId: string): boolean {
   return pinnedTaskIds.value.has(taskId)
 }
 
@@ -478,7 +478,7 @@ function clearSelection() {
 // ===========================================
 // 跳转
 // ===========================================
-function goInstance(instanceId: number) {
+function goInstance(instanceId: string) {
   router.push({ path: '/workflow/instance', query: { id: String(instanceId) } })
 }
 

@@ -13,6 +13,8 @@ public enum AggregateBatchStatusEnum {
     PENDING,
     /** 就绪待发 */
     READY,
+    /** 发送中(CAS 占有中间态,防止多实例并发重复发送) */
+    SENDING,
     /** 已发送 */
     SENT,
     /** 已取消 */
@@ -30,7 +32,8 @@ public enum AggregateBatchStatusEnum {
         }
         return switch (this) {
             case PENDING -> target == READY || target == CANCELLED;
-            case READY -> target == SENT || target == CANCELLED;
+            case READY -> target == SENDING || target == CANCELLED;
+            case SENDING -> target == SENT || target == READY || target == CANCELLED;
             case SENT, CANCELLED -> false;
         };
     }

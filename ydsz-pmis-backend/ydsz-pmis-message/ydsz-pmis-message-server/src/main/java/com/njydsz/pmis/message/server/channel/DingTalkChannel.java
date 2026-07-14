@@ -100,7 +100,11 @@ public class DingTalkChannel implements MessageChannel {
 
         String secret = channelProperties.getChannel().getDingtalk().getSecret();
         if (StringUtils.hasText(secret)) {
-            webhookUrl = appendSign(webhookUrl, secret);
+            String signedUrl = appendSign(webhookUrl, secret);
+            if (signedUrl == null) {
+                return MessageResult.fail(CHANNEL_TYPE, "钉钉加签失败,请检查 secret 配置");
+            }
+            webhookUrl = signedUrl;
         }
 
         Map<String, Object> payload = buildPayload(request);
@@ -219,8 +223,8 @@ public class DingTalkChannel implements MessageChannel {
                     StandardCharsets.UTF_8);
             return url + "&timestamp=" + timestamp + "&sign=" + sign;
         } catch (Exception e) {
-            log.warn("[DINGTALK] 加签失败，使用原始 URL: {}", e.getMessage());
-            return url;
+            log.error("[DINGTALK] 加签失败,放弃发送: {}", e.getMessage(), e);
+            return null;
         }
     }
 }

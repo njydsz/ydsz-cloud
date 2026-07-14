@@ -42,8 +42,8 @@ const active = ref(0)
 // ==================== 步骤 1：流程定义 ====================
 const definitionList = ref<FlowDefinitionDTO[]>([])
 const definitionLoading = ref(false)
-const sourceDefId = ref<number | undefined>(undefined)
-const targetDefId = ref<number | undefined>(undefined)
+const sourceDefId = ref<string | undefined>(undefined)
+const targetDefId = ref<string | undefined>(undefined)
 
 const sameDefinition = computed(
   () => sourceDefId.value !== undefined && sourceDefId.value === targetDefId.value,
@@ -173,8 +173,8 @@ function buildDto(): InstanceMigrationDTO {
     if (s && tg) nodeMapping[s] = tg
   }
   return {
-    sourceDefinitionId: sourceDefId.value as number,
-    targetDefinitionId: targetDefId.value as number,
+    sourceDefinitionId: sourceDefId.value as string,
+    targetDefinitionId: targetDefId.value as string,
     nodeMapping,
   }
 }

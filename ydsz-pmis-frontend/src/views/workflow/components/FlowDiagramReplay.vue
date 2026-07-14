@@ -40,7 +40,7 @@ import FlowDiagramViewer from './FlowDiagramViewer.vue'
 const props = withDefaults(
   defineProps<{
     /** 流程实例 ID */
-    instanceId: number
+    instanceId: string
     /** 是否自动开始播放 */
     autoPlay?: boolean
   }>(),

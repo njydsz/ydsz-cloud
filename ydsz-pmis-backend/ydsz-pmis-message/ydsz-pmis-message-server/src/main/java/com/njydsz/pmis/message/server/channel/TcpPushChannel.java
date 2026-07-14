@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -206,8 +207,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
             }
             String json = buf.toString(CharsetUtil.UTF_8);
             try {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> data = OBJECT_MAPPER.readValue(json, Map.class);
+                Map<String, Object> data = OBJECT_MAPPER.readValue(json, new TypeReference<Map<String, Object>>() {});
                 String type = (String) data.get("type");
                 if ("AUTH".equals(type)) {
                     // 认证消息：注册 userId

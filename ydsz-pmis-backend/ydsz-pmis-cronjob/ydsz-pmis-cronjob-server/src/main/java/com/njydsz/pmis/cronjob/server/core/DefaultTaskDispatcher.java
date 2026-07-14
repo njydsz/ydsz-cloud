@@ -57,6 +57,7 @@ import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobNodeMapper;
 import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.core.LockKeyUtil;
 import com.njydsz.pmis.cronjob.server.core.TaskCompletedEvent;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertContext;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertTrigger;
@@ -150,8 +151,6 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     /** P0-2: SSE 实时日志推送管理器（可选注入，未配置时仅写 DB） */
     private final ObjectProvider<LogStreamManager> logStreamManagerProvider;
 
-    /** 任务锁 key 前缀 */
-    private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
 
     /** 当前实例标识（hostname:pid），用于锁值和安全释放 */
     private static final String INSTANCE_ID = initInstanceId();
@@ -498,7 +497,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                                  boolean holdLock, String triggerType) {
         String lockKey = null;
         if (holdLock) {
-            lockKey = JOB_LOCK_PREFIX + job.getJobKey() + ":shard:" + shardIndex;
+            lockKey = LockKeyUtil.buildJobLockKey(job.getJobKey(), shardIndex);
             Duration ttl = resolveLockTtl(job);
             Boolean acquired = redisTemplate.opsForValue()
                     .setIfAbsent(lockKey, INSTANCE_ID, ttl);
@@ -798,7 +797,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private String executeJob(JobDO job, boolean holdLock, String triggerType, int retryCount) {
         String lockKey = null;
         if (holdLock) {
-            lockKey = JOB_LOCK_PREFIX + job.getJobKey();
+            lockKey = LockKeyUtil.buildJobLockKey(job.getJobKey());
             Duration ttl = resolveLockTtl(job);
             Boolean acquired = redisTemplate.opsForValue()
                     .setIfAbsent(lockKey, INSTANCE_ID, ttl);

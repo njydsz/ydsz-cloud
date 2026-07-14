@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.constant.PageConstants;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
@@ -141,12 +142,16 @@ public class AggregateServiceImpl implements AggregateService {
         if (!StringUtils.hasText(group) || !StringUtils.hasText(receiver)) {
             throw new SysException(StandardResultCode.BAD_REQUEST, "聚合组与接收人不能为空");
         }
+        // 先把 PENDING 批次流转为 READY,统一由 sendBatch 的 CAS 占有发送
+        msgAggregateMapper.update(null, new LambdaUpdateWrapper<MsgAggregateDO>()
+                .eq(MsgAggregateDO::getAggregateGroup, group)
+                .eq(MsgAggregateDO::getReceiver, receiver)
+                .eq(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
+                .set(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.READY.name()));
         List<MsgAggregateDO> batches = msgAggregateMapper.selectList(new LambdaQueryWrapper<MsgAggregateDO>()
                 .eq(MsgAggregateDO::getAggregateGroup, group)
                 .eq(MsgAggregateDO::getReceiver, receiver)
-                .in(MsgAggregateDO::getBatchStatus,
-                        AggregateBatchStatusEnum.PENDING.name(),
-                        AggregateBatchStatusEnum.READY.name()));
+                .eq(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.READY.name()));
         int sent = 0;
         for (MsgAggregateDO batch : batches) {
             if (sendBatch(batch)) {
@@ -167,12 +172,25 @@ public class AggregateServiceImpl implements AggregateService {
     }
 
     /**
-     * 发送单个聚合批次:渲染摘要 → 调 MessageService 发送 → 更新 SENT。
+     * 发送单个聚合批次:CAS 占有(READY→SENDING) → 渲染摘要 → 调 MessageService 发送 → 更新 SENT。
+     *
+     * <p>P1-2: 通过 CAS 占有 SENDING 中间态,保证多实例并发调用 flushDue/flushByGroup 时
+     * 同一批次只会被一个实例发送,避免重复发送。发送失败/异常时回退 READY 等待下一轮重试。
      *
      * @param batch 聚合批次
      * @return true 表示发送成功
      */
     private boolean sendBatch(MsgAggregateDO batch) {
+        // CAS 占有: READY → SENDING,updated=0 表示已被其他实例占有
+        int claimed = msgAggregateMapper.update(null, new LambdaUpdateWrapper<MsgAggregateDO>()
+                .eq(MsgAggregateDO::getId, batch.getId())
+                .eq(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.READY.name())
+                .set(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.SENDING.name()));
+        if (claimed == 0) {
+            log.debug("[Aggregate] 批次已被其他实例占有,跳过: id={}", batch.getId());
+            return false;
+        }
+        batch.setBatchStatus(AggregateBatchStatusEnum.SENDING.name());
         try {
             // 渲染摘要内容：优先按 bizType 查找摘要模板 DIGEST_{group},回退默认模板
             Map<String, Object> params = new HashMap<>();
@@ -195,12 +213,31 @@ public class AggregateServiceImpl implements AggregateService {
                 msgAggregateMapper.updateById(batch);
                 return true;
             }
-            log.warn("[Aggregate] 批次发送失败: id={} err={}", batch.getId(),
+            log.warn("[Aggregate] 批次发送失败,回退 READY: id={} err={}", batch.getId(),
                     result == null ? "无响应" : result.getErrorMessage());
+            revertToReady(batch.getId());
             return false;
         } catch (Exception e) {
-            log.error("[Aggregate] 批次发送异常: id={} err={}", batch.getId(), e.getMessage());
+            log.error("[Aggregate] 批次发送异常,回退 READY: id={} err={}", batch.getId(), e.getMessage(), e);
+            revertToReady(batch.getId());
             return false;
+        }
+    }
+
+    /**
+     * 发送失败时将批次状态从 SENDING 回退到 READY,等待下一轮重试。
+     *
+     * @param batchId 批次 ID
+     */
+    private void revertToReady(String batchId) {
+        try {
+            msgAggregateMapper.update(null, new LambdaUpdateWrapper<MsgAggregateDO>()
+                    .eq(MsgAggregateDO::getId, batchId)
+                    .eq(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.SENDING.name())
+                    .set(MsgAggregateDO::getBatchStatus, AggregateBatchStatusEnum.READY.name()));
+        } catch (Exception revertEx) {
+            log.error("[Aggregate] 回退 READY 失败,批次滞留 SENDING: id={} err={}",
+                    batchId, revertEx.getMessage());
         }
     }
 

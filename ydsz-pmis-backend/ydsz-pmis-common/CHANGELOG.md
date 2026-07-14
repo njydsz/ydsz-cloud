@@ -49,12 +49,12 @@
 - 支持 IP / USER / API / GLOBAL 四维自由组合
 - AND 语义：所有规则都通过才放行
 
-#### P1-9: 分布式事务抽象（新增 `ydsz-pmis-common-tx` 模块）
+#### P1-9: 分布式事务抽象（新增 `ydsz-pmis-common-seata` 模块）
 - 新增 `DistributedTransactionManager` 统一接口
 - 新增 `TccAction` / `TccContext` TCC 模式接口
 - 新增 `TccTransactionManager` TCC 协调器（Try→Confirm→Cancel）
 - 新增 `LocalTransactionManager` 本地降级实现
-- 新增 `TxProperties` 配置（支持 LOCAL / TCC / SEATA_AT / SAGA 切换）
+- 新增 `SeataProperties` 配置（支持 LOCAL / TCC / SEATA_AT / SAGA 切换）
 - Seata AT 模式预留集成接口
 
 ### P2 级完善
@@ -62,7 +62,7 @@
 #### P2-10: 模块文档补充
 - 新增 `ydsz-pmis-common-event` README
 - 新增 `ydsz-pmis-common-config` README
-- 新增 `ydsz-pmis-common-tx` README
+- 新增 `ydsz-pmis-common-seata` README
 
 #### P2-11: 错误码统一管理
 - 新增 `UnifiedErrorCode` 统一接口（code / key / httpStatus / description）

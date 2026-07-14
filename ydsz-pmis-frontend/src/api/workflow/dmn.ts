@@ -47,8 +47,8 @@ export interface DmnRule {
  * 前端在表单中以结构化对象编辑，保存前序列化为字符串。
  */
 export interface FlowDmnTableDTO {
-  id?: number
-  tenantId?: number
+  id?: string
+  tenantId?: string
   /** 决策表唯一标识 */
   tableKey: string
   /** 决策表名称 */

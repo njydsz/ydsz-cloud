@@ -47,7 +47,7 @@ export interface CommentAttachment {
 /** @ 提及项 */
 export interface CommentMention {
   /** 用户 ID */
-  userId: number
+  userId: string
   /** 用户名（显示用） */
   name: string
 }

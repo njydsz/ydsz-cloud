@@ -53,7 +53,7 @@ const formRef = ref<FormInstance>()
 const submitting = ref(false)
 
 const form = reactive({
-  id: undefined as number | undefined,
+  id: undefined as string | undefined,
   tableKey: '',
   tableName: '',
   description: '',

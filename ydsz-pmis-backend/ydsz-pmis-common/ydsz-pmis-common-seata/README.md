@@ -1,4 +1,4 @@
-# ydsz-pmis-common-tx
+# ydsz-pmis-common-seata
 
 PMIS 公共事务模块 — 分布式事务抽象（Seata/SAGA/TCC 统一接口）。
 
@@ -41,7 +41,7 @@ tccTransactionManager.executeTcc("createOrder", orderTccAction);
 ### SAGA 模式
 
 ```java
-txManager.executeWithCompensation("transfer", () -> {
+seataManager.executeWithCompensation("transfer", () -> {
     accountMapper.deduct(fromId, amount);
     accountMapper.add(toId, amount);
     return null;
@@ -56,7 +56,7 @@ txManager.executeWithCompensation("transfer", () -> {
 
 ```yaml
 pmis:
-  tx:
+  seata:
     enabled: true
     default-type: LOCAL  # LOCAL / TCC / SEATA_AT / SAGA
     tcc-retry-count: 3

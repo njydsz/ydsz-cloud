@@ -1,10 +1,11 @@
-package com.njydsz.pmis.common.tx.config;
+package com.njydsz.pmis.common.seata.config;
 
-import com.njydsz.pmis.common.tx.api.TransactionType;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import com.njydsz.pmis.common.seata.api.TransactionType;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 分布式事务配置属性
@@ -14,8 +15,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "pmis.tx")
-public class TxProperties {
+@ConfigurationProperties(prefix = "pmis.seata")
+public class SeataProperties {
 
     /** 是否启用分布式事务 */
     private boolean enabled = true;

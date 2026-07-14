@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -12,8 +13,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
@@ -27,7 +31,9 @@ import com.njydsz.pmis.agent.domain.model.ChatResponse;
 import com.njydsz.pmis.agent.domain.model.TokenUsage;
 import com.njydsz.pmis.agent.domain.model.ToolCall;
 
+import io.netty.channel.ChannelOption;
 import reactor.netty.http.client.HttpClient;
+import reactor.netty.resources.ConnectionProvider;
 
 /**
  * OpenAI 兼容 LLM 客户端实现
@@ -72,7 +78,13 @@ public class OpenAiCompatibleClient implements LlmClient {
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
-        HttpClient httpClient = HttpClient.create()
+        ConnectionProvider connectionProvider = ConnectionProvider.builder("agent-llm-" + this.provider)
+                .maxConnections(100)
+                .maxIdleTime(Duration.ofSeconds(30))
+                .pendingAcquireTimeout(Duration.ofSeconds(10))
+                .build();
+        HttpClient httpClient = HttpClient.create(connectionProvider)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
                 .responseTimeout(Duration.ofSeconds(this.timeoutSeconds));
         this.webClient = WebClient.builder()
                 .baseUrl(this.baseUrl)
@@ -92,6 +104,17 @@ public class OpenAiCompatibleClient implements LlmClient {
                     .retrieve()
                     .body(String.class);
             return parseResponse(responseJson);
+        } catch (LlmException e) {
+            throw e;
+        } catch (HttpClientErrorException e) {
+            LlmException.ErrorType errorType = mapHttpError(e.getStatusCode().value());
+            log.error("[LLM-{}] 同步调用 HTTP 错误: status={}", provider, e.getStatusCode().value());
+            throw new LlmException("LLM 调用失败 (HTTP " + e.getStatusCode().value() + ")",
+                    errorType, e);
+        } catch (ResourceAccessException e) {
+            log.error("[LLM-{}] 同步调用网络异常: {}", provider, e.getMessage());
+            throw new LlmException("LLM 网络超时或连接拒绝: " + e.getMessage(),
+                    LlmException.ErrorType.NETWORK_TIMEOUT, e);
         } catch (Exception e) {
             log.error("[LLM-{}] 同步调用失败: {}", provider, e.getMessage(), e);
             throw new LlmException("LLM 调用失败: " + e.getMessage(),
@@ -123,7 +146,19 @@ public class OpenAiCompatibleClient implements LlmClient {
                     .doOnError(e -> log.error("[LLM-{}] 流式调用失败: {}", provider, e.getMessage(), e))
                     .blockLast();
             chunkConsumer.accept(ChatChunk.finish("", request.getModel(), "stop", null));
+        } catch (LlmException e) {
+            throw e;
+        } catch (WebClientResponseException e) {
+            LlmException.ErrorType errorType = mapHttpError(e.getStatusCode().value());
+            log.error("[LLM-{}] 流式调用 HTTP 错误: status={}", provider, e.getStatusCode().value());
+            throw new LlmException("LLM 流式调用失败 (HTTP " + e.getStatusCode().value() + ")",
+                    errorType, e);
         } catch (Exception e) {
+            if (isTimeoutException(e)) {
+                log.error("[LLM-{}] 流式调用超时: {}", provider, e.getMessage());
+                throw new LlmException("LLM 流式调用超时",
+                        LlmException.ErrorType.NETWORK_TIMEOUT, e);
+            }
             log.error("[LLM-{}] 流式调用异常: {}", provider, e.getMessage(), e);
             throw new LlmException("LLM 流式调用失败: " + e.getMessage(),
                     LlmException.ErrorType.PROVIDER_ERROR, e);
@@ -147,6 +182,9 @@ public class OpenAiCompatibleClient implements LlmClient {
         body.put("max_tokens", request.getMaxTokens());
         body.put("top_p", request.getTopP());
         body.put("stream", stream);
+        if (stream) {
+            body.put("stream_options", Map.of("include_usage", true));
+        }
         if (!request.getStop().isEmpty()) {
             body.put("stop", request.getStop());
         }
@@ -270,5 +308,40 @@ public class OpenAiCompatibleClient implements LlmClient {
             log.warn("[LLM-{}] 解析 chunk 失败: {}", provider, e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * HTTP 状态码映射到 LLM 错误类型
+     */
+    private LlmException.ErrorType mapHttpError(int statusCode) {
+        if (statusCode == 401 || statusCode == 403) {
+            return LlmException.ErrorType.AUTH_FAILED;
+        }
+        if (statusCode == 404) {
+            return LlmException.ErrorType.MODEL_NOT_FOUND;
+        }
+        if (statusCode == 429) {
+            return LlmException.ErrorType.RATE_LIMITED;
+        }
+        if (statusCode >= 500) {
+            return LlmException.ErrorType.PROVIDER_ERROR;
+        }
+        return LlmException.ErrorType.INVALID_RESPONSE;
+    }
+
+    /**
+     * 判断异常链中是否包含超时异常
+     */
+    private boolean isTimeoutException(Throwable e) {
+        Throwable current = e;
+        int depth = 0;
+        while (current != null && depth < 10) {
+            if (current instanceof TimeoutException) {
+                return true;
+            }
+            current = current.getCause();
+            depth++;
+        }
+        return false;
     }
 }

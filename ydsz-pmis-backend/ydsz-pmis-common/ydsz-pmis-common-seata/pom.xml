@@ -3,9 +3,9 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>ydsz-pmis-common-tx</artifactId>
-    <name>ydsz-pmis-common-tx</name>
-    <description>PMIS Common TX - 分布式事务抽象（Seata/SAGA/TCC 统一接口）</description>
+    <artifactId>ydsz-pmis-common-seata</artifactId>
+    <name>ydsz-pmis-common-seata</name>
+    <description>PMIS Common Seata - 分布式事务抽象（Seata/SAGA/TCC 统一接口）</description>
 
     <parent>
         <groupId>com.njydsz.pmis</groupId>
