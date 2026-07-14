@@ -89,7 +89,7 @@ public class DomainEventPublisher {
      * 异步发布领域事件
      *
      * <p>通过 {@link TaskExecutor} 在独立线程中发布事件，不阻塞当前线程。
-     * 如果未配置 TaskExecutor，则退化为同步发布器
+     * 如果未配置 TaskExecutor，则退化为同步发布。
      *
      * @param event 领域事件，不能为 null
      */
@@ -117,7 +117,7 @@ public class DomainEventPublisher {
      * 在事务提交后发布领域事件
      *
      * <p>注册 Spring {@link TransactionSynchronization} 回调，
-     * 在当前事务成功提交后再发布事件。如果当前没有活跃的事务，则直接同步发布器
+     * 在当前事务成功提交后再发布事件。如果当前没有活跃的事务，则直接同步发布。
      *
      * <p><b>使用场景：</b>确保数据库变更和事件发布的一致性，
      * 避免事务回滚但事件已发出的问题。
@@ -151,7 +151,7 @@ public class DomainEventPublisher {
     /**
      * 批量发布领域事件（同步）
      *
-     * <p>按顺序逐个发布事件，任意事件发布失败将中断后续发布器
+     * <p>按顺序逐个发布事件，任意事件发布失败将中断后续发布。
      *
      * @param events 领域事件列表，不能为 null
      */
@@ -165,7 +165,7 @@ public class DomainEventPublisher {
     /**
      * 批量发布领域事件（事务提交后）
      *
-     * <p>将所有事件注册为事务后发布器如果当前没有活跃的事务，则直接同步发布器
+     * <p>将所有事件注册为事务后发布。如果当前没有活跃的事务，则直接同步发布。
      *
      * @param events 领域事件列表，不能为 null
      */

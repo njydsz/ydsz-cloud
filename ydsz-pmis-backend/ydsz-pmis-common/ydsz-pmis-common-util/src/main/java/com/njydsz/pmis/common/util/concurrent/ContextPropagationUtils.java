@@ -7,6 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+import org.slf4j.MDC;
+
 /**
  * 上下文传播工具类
  *
@@ -43,6 +45,83 @@ public final class ContextPropagationUtils {
 
     private ContextPropagationUtils() {
         throw new UnsupportedOperationException("ContextPropagationUtils is a utility class and cannot be instantiated");
+    }
+
+    /** MDC 上下文注册标识 */
+    private static final String MDC_CONTEXT_NAME = "__mdc__";
+
+    /** MDC 是否已注册 */
+    private static volatile boolean mdcRegistered = false;
+
+    /**
+     * 注册内置 MDC 上下文传播
+     *
+     * <p>将 SLF4J MDC 注册为上下文提供者，使 MDC 中的所键值对自动跨线程传播。
+     * 此方法使用 MDC 的 getCopyOfContextMap / setContextMap 实现整体快照传播，
+     * 无需为每个 MDC key 单独注册。
+     *
+     * <p>调用此方法后，通过 {@link #wrap(Runnable)} 或 {@link #wrap(Callable)} 提交的任务
+     * 将自动继承调用线程的 MDC 上下文。
+     *
+     * <pre>{@code
+     * // 在应用启动时注册
+     * ContextPropagationUtils.registerMdcContext();
+     *
+     * // 提交任务到线程池时自动传播 MDC
+     * executor.submit(ContextPropagationUtils.wrap(() -> {
+     *     // 此处可正常访问 MDC.get("traceId") 等
+     *     log.info("Processing in async thread");
+     * }));
+     * }</pre>
+     *
+     * @return true 表示首次注册成功，false 表示已注册过
+     */
+    public static synchronized boolean registerMdcContext() {
+        if (mdcRegistered) {
+            return false;
+        }
+        CONTEXT_ENTRIES.put(MDC_CONTEXT_NAME, new ContextEntry(
+            () -> {
+                Map<String, String> mdcMap = MDC.getCopyOfContextMap();
+                if (mdcMap == null || mdcMap.isEmpty()) {
+                    return null;
+                }
+                // 将 MDC map 序列化为 "key1=value1\u0001key2=value2" 格式
+                StringBuilder sb = new StringBuilder();
+                for (Map.Entry<String, String> entry : mdcMap.entrySet()) {
+                    if (sb.length() > 0) {
+                        sb.append('\u0001');
+                    }
+                    sb.append(entry.getKey()).append('=').append(entry.getValue());
+                }
+                return sb.toString();
+            },
+            (name, value) -> {
+                if (value == null) {
+                    MDC.clear();
+                } else {
+                    Map<String, String> mdcMap = new HashMap<>();
+                    String[] pairs = value.split("\u0001");
+                    for (String pair : pairs) {
+                        int idx = pair.indexOf('=');
+                        if (idx > 0) {
+                            mdcMap.put(pair.substring(0, idx), pair.substring(idx + 1));
+                        }
+                    }
+                    MDC.setContextMap(mdcMap);
+                }
+            }
+        ));
+        mdcRegistered = true;
+        return true;
+    }
+
+    /**
+     * 注销内置 MDC 上下文传播
+     */
+    public static synchronized void unregisterMdcContext() {
+        CONTEXT_ENTRIES.remove(MDC_CONTEXT_NAME);
+        mdcRegistered = false;
     }
 
     /**

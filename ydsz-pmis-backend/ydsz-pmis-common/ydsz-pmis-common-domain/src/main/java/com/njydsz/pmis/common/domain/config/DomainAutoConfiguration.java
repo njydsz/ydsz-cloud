@@ -22,6 +22,9 @@ import com.njydsz.pmis.common.domain.tree.TreeLazyConfig;
  *   <li>领域事件发布器（DomainEventPublisher）</li>
  * </ul>
  *
+ * <p><b>EventStore SPI：</b>{@link com.njydsz.pmis.common.domain.event.EventStore}
+ * 作为 SPI 接口保留，业务模块可按需实现并注册为 Bean。本模块不提供默认实现。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  *

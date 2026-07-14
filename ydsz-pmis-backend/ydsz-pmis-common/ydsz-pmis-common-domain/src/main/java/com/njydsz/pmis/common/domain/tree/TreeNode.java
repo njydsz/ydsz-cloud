@@ -90,7 +90,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
 
     private static final long serialVersionUID = 8676131899637805509L;
     /**
-     * 根节点层级深。
+     * 根节点层级深度
      */
     public static final int ROOT_LEVEL = 1;
 
@@ -111,7 +111,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
      * 父节点ID
      *
      * <p>顶级节点的父ID为null。
-     * 也可使用特定值（。。1）作为根节点标识。
+     * 也可使用特定值（。（如 0 或 -1）作为根节点标识。
      */
     @Setter
     private ID parentId;
@@ -162,7 +162,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     /**
      * 是否为叶子节点
      *
-     * <p>。TreeBuilder 自动计算法
+     * <p>由 TreeBuilder 自动计算法
      * <ul>
      *   <li>true：无子节点</li>
      *   <li>false：有子节点</li>
@@ -220,9 +220,9 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
 
     /**
-     * 判断是否为根节点（无参数版本号
+     * 判断是否为根节点（无参数版本
      *
-     * <p>判断 parentId 是否。null。
+     * <p>判断 parentId 是否为 null。
      *
      * @return parentId为null返回true
      */
@@ -320,12 +320,12 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
 
     /**
-     * 构建当前节点的路。
+     * 构建当前节点的路径
      *
      * <p>从根节点到当前节点的完整路径字符串。
      *
      * @param rootPath 根路径前缀
-     * @return 路径字符。
+     * @return 路径字符串
      */
     public String buildPath(String rootPath) {
         if (rootPath == null) {
@@ -361,7 +361,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
         if (children == null || children.isEmpty()) {
             return null;
         }
-        // 使用栈进行深度优先搜索，避免递归调用栈溢。
+        // 使用栈进行深度优先搜索，避免递归调用栈溢出
         Deque<T> stack = new ArrayDeque<>();
         stack.push((T) this);
         while (!stack.isEmpty()) {
@@ -385,7 +385,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
      *
      * <p>从父节点到根节点的ID列表
      *
-     * @param nodeList 所有节点列表（用于查找。
+     * @param nodeList 所有节点列表（用于查找父节点
      * @return 祖先节点ID列表
      */
     public List<ID> getAncestorIds(List<T> nodeList) {

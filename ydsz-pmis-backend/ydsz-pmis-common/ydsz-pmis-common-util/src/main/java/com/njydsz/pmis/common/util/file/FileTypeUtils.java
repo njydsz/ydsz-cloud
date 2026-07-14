@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author ydsz-pmis-team
  * @since 1.0.0
  * 
- * @desc 支持文件头魔法值检测、MIME 类型检测、扩展名检测
+ *
  */
 @Slf4j
 public class FileTypeUtils {

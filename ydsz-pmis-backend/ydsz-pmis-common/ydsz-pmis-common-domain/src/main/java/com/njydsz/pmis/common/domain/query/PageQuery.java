@@ -304,7 +304,7 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 获取排序字符串（安全版本号
+     * 获取排序字符串（安全版本
      *
      * <p>返回经过安全校验）orderBy 值，若未通过校验则返回null。
      *

@@ -125,7 +125,9 @@ public class CollectionUtils {
      *
      * @param array 待判断的数组
      * @return 如果为空返回 true，否则返回 false
+     * @deprecated 请使用 {@link com.njydsz.pmis.common.util.array.ArrayUtils#isEmpty(Object[])} 替代
      */
+    @Deprecated(since = "1.3.0", forRemoval = true)
     public static boolean isEmpty(Object[] array) {
         return array == null || array.length == 0;
     }
@@ -188,7 +190,9 @@ public class CollectionUtils {
      * @param array 待判断的数组
      * @return 如果不为空返回 true，否则返回 false
      * @see #isEmpty(Object[])
+     * @deprecated 请使用 {@link com.njydsz.pmis.common.util.array.ArrayUtils#isNotEmpty(Object[])} 替代
      */
+    @Deprecated(since = "1.3.0", forRemoval = true)
     public static boolean isNotEmpty(Object[] array) {
         return !isEmpty(array);
     }
@@ -509,7 +513,9 @@ public class CollectionUtils {
      * @param array 待转换的数组
      * @param <T>   元素类型
      * @return 转换后的 List，如果数组为空则返回空 List
+     * @deprecated 请使用 {@link com.njydsz.pmis.common.util.array.ArrayUtils#toList(Object[])} 替代
      */
+    @Deprecated(since = "1.3.0", forRemoval = true)
     public static <T> List<T> arrayToList(T[] array) {
         if (isEmpty(array)) {
             return Collections.emptyList();

@@ -18,13 +18,6 @@ import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
  * <p>封装所有异常的公共字段和逻辑，消除子类代码重复。
  * 子类只需通过构造函数传入各自的默认值即可。
  *
- * <p><b>⚠ 重构规划：</b>当前子类（如 BusinessException）使用手写 Builder 模式，
- * 未来计划统一迁移到 Lombok {@code @SuperBuilder} 模式，消除子类中重复的 Builder 代码。
- * 迁移后子类只需声明 {@code @SuperBuilder} 注解即可自动继承父类 Builder 字段。
- * 注意：由于 {@code RuntimeException} 本身不支持 {@code @SuperBuilder}，完整迁移需要
- * 确保项目 Lombok 版本 ≥ 1.18.16（支持与非 SuperBuilder 父类共存）。
- * 当前阶段作为前置准备，在 Javadoc 中记录迁移规划，待所有子类就绪后统一切换。
- *
  * @author ydsz-pmis-team
  * @since 3.0.0
  */

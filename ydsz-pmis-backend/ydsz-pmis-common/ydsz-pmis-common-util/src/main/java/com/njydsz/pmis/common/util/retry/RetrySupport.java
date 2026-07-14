@@ -128,6 +128,10 @@ public final class RetrySupport {
 
     /**
      * 重试构建器
+     *
+     * <p>遵循统一构造器模式：构造器为 private，通过静态工厂方法
+     * {@link #withExponentialBackoff(int, long, long)} 或 {@link #withFixedInterval(int, long)}
+     * 创建实例，链式配置后通过 {@link #execute(Callable)} 或 {@link #executeAsync(Callable)} 终止链式调用。
      */
     public static class RetryBuilder {
         private final RetryStrategy strategy;
@@ -135,6 +139,7 @@ public final class RetrySupport {
         private final long initialDelayMs;
         private final long maxDelayMs;
         private Predicate<Throwable> retryPredicate;
+        private Predicate<Object> resultPredicate;
         private boolean withJitter = false;
         private Consumer<RetryEvent> retryCallback;
 
@@ -146,13 +151,33 @@ public final class RetrySupport {
         }
 
         /**
-         * 设置重试条件
+         * 设置重试条件（基于异常）
          *
          * @param predicate 判断异常是否可重试的谓词
          * @return 重试构建器
          */
         public RetryBuilder retryOn(Predicate<Throwable> predicate) {
             this.retryPredicate = predicate;
+            return this;
+        }
+
+        /**
+         * 设置重试条件（基于结果）
+         *
+         * <p>当任务执行成功但结果不满足条件时触发重试。
+         * 常见场景：远程调用返回 null、空列表、状态码非 200 等。
+         *
+         * <pre>{@code
+         * RetrySupport.withFixedInterval(3, 1000)
+         *     .retryIfResult(r -> r == null || r.isEmpty())
+         *     .execute(() -> cache.get(key));
+         * }</pre>
+         *
+         * @param predicate 结果谓词，返回 true 表示需要重试
+         * @return 重试构建器
+         */
+        public RetryBuilder retryIfResult(Predicate<Object> predicate) {
+            this.resultPredicate = predicate;
             return this;
         }
 
@@ -209,12 +234,13 @@ public final class RetrySupport {
             Throwable lastException = null;
 
             while (attempt <= maxAttempts) {
+                T result;
                 try {
-                    return task.call();
+                    result = task.call();
                 } catch (Throwable e) {
                     lastException = e;
 
-                    // 检查是否可重试
+                    // 检查异常是否可重试
                     if (retryPredicate != null && !retryPredicate.test(e)) {
                         throw e;
                     }
@@ -236,7 +262,28 @@ public final class RetrySupport {
                     sleep(delay);
 
                     attempt++;
+                    continue;
                 }
+
+                // 检查结果是否需要重试
+                if (resultPredicate != null && resultPredicate.test(result)) {
+                    if (attempt >= maxAttempts) {
+                        // 重试次数耗尽，返回最后结果
+                        return result;
+                    }
+
+                    long delay = calculateDelay(attempt);
+
+                    if (retryCallback != null) {
+                        retryCallback.accept(new RetryEvent(attempt + 1, delay, null));
+                    }
+
+                    sleep(delay);
+                    attempt++;
+                    continue;
+                }
+
+                return result;
             }
 
             // 重试耗尽，抛出最后异常

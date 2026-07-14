@@ -20,15 +20,14 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
+ * 通用类型转换工具类
  *
- * @author ydsz-pmis-team
- * @since 1.0.0
- * 
- * @desc StringConvertUtils - 通用类型转换工具类 (标准化增强版)
- * 
- * <p>提供全面的类型转换方法，功能对标 Hutool Convert 和 Apache Commons BeanUtils，
- * 并进行了增强和优化。
- * 
+ * <p>提供全面的类型转换方法，功能对标 Hutool Convert 和 Apache Commons BeanUtils。
+ *
+ * <p><b>注意：</b>数字相关转换方法（toInt/toLong/toDouble/toBigDecimal 等）与
+ * {@link com.njydsz.pmis.common.util.number.NumberUtils} 存在重叠。
+ * 数字运算、比较、格式化请优先使用 {@link com.njydsz.pmis.common.util.number.NumberUtils}。
+ *
  * <p><b>主要功能：</b>
  * <ul>
  *   <li>基础类型转换：toStr、toInt、toLong、toByte、toChar、toBool、toBigDecimal</li>
@@ -43,14 +42,9 @@ import java.util.stream.Collectors;
  *   <li>数字格式化转换：toNumber</li>
  *   <li>金额转换：toMoney（分转元）</li>
  * </ul>
- * 
- * <p><b>相比 Hutool/Apache 的增强：</b>
- * <ul>
- *   <li>支持 Java 8 日期时间 API</li>
- *   <li>提供更多实用转换方法</li>
- *   <li>支持自定义日期格式</li>
- *   <li>所有方法 null 安全处理</li>
- * </ul>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 public class StringConvertUtils {
 

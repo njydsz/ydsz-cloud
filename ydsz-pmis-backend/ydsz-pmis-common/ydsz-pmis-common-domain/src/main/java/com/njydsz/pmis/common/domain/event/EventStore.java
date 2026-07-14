@@ -57,7 +57,7 @@ public interface EventStore {
      *
      * @param aggregateId   聚合根ID
      * @param aggregateType 聚合根类型
-     * @return 事件列表（按版本号升序）
+     * @return 事件列表（按版本升序）
      */
     List<DomainEvent> findByAggregate(String aggregateId, String aggregateType);
 
@@ -78,11 +78,11 @@ public interface EventStore {
     Optional<DomainEvent> findById(String eventId);
 
     /**
-     * 获取聚合根的最新版本号
+     * 获取聚合根的最新版本
      *
      * @param aggregateId   聚合根ID
      * @param aggregateType 聚合根类型
-     * @return 最新版本号，无事件返回 0
+     * @return 最新版本，无事件返回 0
      */
     int getLatestVersion(String aggregateId, String aggregateType);
 }

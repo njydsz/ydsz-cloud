@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.Nullable;
 
 import com.njydsz.pmis.common.domain.entity.AggregateRoot;
 import com.njydsz.pmis.common.domain.event.DomainEvent;
@@ -27,7 +26,7 @@ import com.njydsz.pmis.common.domain.specification.Specification;
  * <p><b>核心设计：</b>
  * <ul>
  *   <li>模板方法模式：定义 CRUD 流程骨架，子类实现具体持久化细节</li>
- *   <li>乐观锁感知：保存时自动检测版本号变更，抛出 {@link ConcurrencyConflictException}</li>
+ *   <li>乐观锁感知：保存时自动检测版本变更，抛出 {@link ConcurrencyConflictException}</li>
  *   <li>聚合根未找到感知：查询时自动封装 {@link AggregateNotFoundException}</li>
  *   <li>领域事件自动发布：保存后自动发布聚合根注册的领域事件</li>
  * </ul>
@@ -88,7 +87,6 @@ public abstract class AbstractRepository<T extends AggregateRoot<ID>, ID extends
      * <p>由 Spring 容器自动注入。当容器中存在 {@link DomainEventPublisher} Bean 时，
      * 保存聚合根后会自动发布领域事件；不存在时为 null，事件仅被清空。
      */
-    @Nullable
     private DomainEventPublisher domainEventPublisher;
 
     /**
@@ -280,9 +278,10 @@ public abstract class AbstractRepository<T extends AggregateRoot<ID>, ID extends
             return;
         }
         aggregate.clearDomainEvents();
-        if (domainEventPublisher != null) {
+        DomainEventPublisher publisher = domainEventPublisher;
+        if (publisher != null) {
             for (DomainEvent event : events) {
-                domainEventPublisher.publish(event);
+                publisher.publish(event);
             }
         }
     }

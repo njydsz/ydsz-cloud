@@ -7,12 +7,12 @@ import java.io.Serializable;
  *
  * <p>组合了三个职责单一的子接口，新代码推荐直接使用子接口而非本接口：
  * <ul>
- *   <li>{@link Persistable} —。ID + isNew()</li>
- *   <li>{@link Versionable} —。乐观锁版本号</li>
- *   <li>{@link SoftDeletable} —。逻辑删除</li>
+ *   <li>{@link Persistable} —— ID + isNew()</li>
+ *   <li>{@link Versionable} —— 乐观锁版本</li>
+ *   <li>{@link SoftDeletable} —— 逻辑删除</li>
  * </ul>
  *
- * <p><b>审计字段：</b>审计相关字段（创建人/时间、更新人/时间）已统一收敛。
+ * <p><b>审计字段：</b>审计相关字段（创建人/时间、更新人/时间）已统一收敛至
  * {@link BaseAuditEntity} 中，由该类实现 {@link Auditable} 接口。
  * RootEntity 不再组合 Auditable，避免接口默认方法与实体字段重复定义。
  *

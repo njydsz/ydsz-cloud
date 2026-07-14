@@ -8,9 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 缓存防护守卫 — 防穿透/防击穿/防雪崩
@@ -37,13 +41,19 @@ import java.util.function.Function;
  */
 public final class CacheProtectionGuard {
 
+  private static final Logger log = LoggerFactory.getLogger(CacheProtectionGuard.class);
+
   /**
    * Per-cache 实例注册表，使用 WeakHashMap 避免内存泄漏。 当 Cache 实例不再被引用时，对应的 CacheProtectionGuard 实例会被自动 GC 清理。
    */
   private static final Map<Cache<?, ?>, CacheProtectionGuard> INSTANCES =
       Collections.synchronizedMap(new WeakHashMap<>());
 
-  /** Per-cache Key 级加载 Future 映射（防击穿，替代 synchronized 锁） */
+  /**
+   * Per-cache Key 级加载信号映射（防击穿）
+   *
+   * <p>Future 仅用作完成信号（存储 null），不携带值。 等待线程通过 cache.getIfPresent(key) 读取结果，避免 unchecked cast。
+   */
   private final ConcurrentHashMap<Object, CompletableFuture<Object>> loadingFutures =
       new ConcurrentHashMap<>();
 
@@ -65,6 +75,9 @@ public final class CacheProtectionGuard {
 
   /**
    * 带防护的缓存获取（防穿透/击穿/雪崩）
+   *
+   * <p>防击穿实现：使用 putIfAbsent + 信号 Future 模式。 同一 key 的并发请求中，只有一个线程执行加载，其余线程等待完成后从缓存读取。
+   * Future 仅用作完成信号，不携带值，避免 unchecked cast。
    *
    * @param cache 缓存实例
    * @param key 缓存键
@@ -97,55 +110,71 @@ public final class CacheProtectionGuard {
 
     V value = cache.getIfPresent(key);
     if (value == null && loader != null) {
-      // 防击穿：使用 CompletableFuture + computeIfAbsent 实现无锁化
-      // 同一 key 的并发请求共享同一个 Future，只有一个线程执行加载
-      CompletableFuture<Object> future =
-          guard.loadingFutures.computeIfAbsent(
-              key,
-              k -> {
-                CompletableFuture<Object> f = new CompletableFuture<>();
-                try {
-                  // Double-check after acquiring compute slot
-                  if (NullValueGuard.isNullKeyRegistered(cache, (K) k)) {
-                    Long exp = guard.nullKeyExpirations.get(k);
-                    if (exp != null && System.currentTimeMillis() > exp) {
-                      NullValueGuard.unregisterNullKey(cache, (K) k);
-                      guard.nullKeyExpirations.remove(k);
-                    } else {
-                      f.complete(null);
-                      return f;
-                    }
-                  }
-                  V loaded = cache.getIfPresent((K) k);
-                  if (loaded == null) {
-                    loaded = loader.apply((K) k);
-                    if (loaded != null) {
-                      cache.put((K) k, loaded);
-                    } else {
-                      NullValueGuard.registerNullKey(cache, (K) k);
-                      if (maxExpireMs > 0) {
-                        long jitteredExpire =
-                            minExpireMs > 0
-                                ? minExpireMs
-                                    + ThreadLocalRandom.current()
-                                        .nextLong(maxExpireMs - minExpireMs + 1)
-                                : maxExpireMs;
-                        guard.nullKeyExpirations.put(
-                            k, System.currentTimeMillis() + jitteredExpire);
-                      }
-                    }
-                  }
-                  f.complete(loaded);
-                } catch (Exception e) {
-                  f.completeExceptionally(e);
-                }
-                return f;
-              });
-      try {
-        value = (V) future.join();
-      } finally {
-        guard.loadingFutures.remove(key, future);
+      // 防击穿：putIfAbsent + 信号 Future 模式
+      // Future 仅用作完成信号，不携带值，等待线程从缓存读取结果
+      CompletableFuture<Object> ourSignal = new CompletableFuture<>();
+      CompletableFuture<Object> existing = guard.loadingFutures.putIfAbsent(key, ourSignal);
+
+      if (existing == null) {
+        // 当前线程获得加载权
+        try {
+          // Double-check：防止在获取加载权前其他线程已完成加载
+          if (NullValueGuard.isNullKeyRegistered(cache, key)) {
+            Long exp = guard.nullKeyExpirations.get(key);
+            if (exp != null && System.currentTimeMillis() > exp) {
+              NullValueGuard.unregisterNullKey(cache, key);
+              guard.nullKeyExpirations.remove(key);
+            } else {
+              return null;
+            }
+          }
+          V loaded = cache.getIfPresent(key);
+          if (loaded == null) {
+            loaded = loader.apply(key);
+            if (loaded != null) {
+              cache.put(key, loaded);
+            } else {
+              NullValueGuard.registerNullKey(cache, key);
+              if (maxExpireMs > 0) {
+                long jitteredExpire =
+                    minExpireMs > 0
+                        ? minExpireMs
+                            + ThreadLocalRandom.current()
+                                .nextLong(maxExpireMs - minExpireMs + 1)
+                        : maxExpireMs;
+                guard.nullKeyExpirations.put(key, System.currentTimeMillis() + jitteredExpire);
+              }
+            }
+          }
+          return loaded;
+        } catch (Exception e) {
+          log.warn("Cache loading failed for key={}", key, e);
+          return null;
+        } finally {
+          guard.loadingFutures.remove(key, ourSignal);
+          ourSignal.complete(null);
+        }
       }
+
+      // 等待其他线程完成加载
+      try {
+        existing.join();
+      } catch (CompletionException e) {
+ // 加载失败，递归重试
+        return getWithProtection(cache, key, loader, minExpireMs, maxExpireMs);
+      }
+
+      // 从缓存读取结果（类型安全，无需 unchecked cast）
+      V loaded = cache.getIfPresent(key);
+      if (loaded != null) {
+        return loaded;
+      }
+      // 检查是否为空值占位符
+      if (NullValueGuard.isNullKeyRegistered(cache, key)) {
+        return null;
+      }
+      // 边界情况：加载完成后缓存条目被淘汰，递归重试
+      return getWithProtection(cache, key, loader, minExpireMs, maxExpireMs);
     }
     return value;
   }

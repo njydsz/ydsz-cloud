@@ -80,50 +80,6 @@ class ExceptionInfoTest {
     }
 
     @Test
-    @DisplayName("getSafeDetails(false) 返回原始详情的副本")
-    void testGetSafeDetailsNoSanitize() {
-        Map<String, Object> details = new LinkedHashMap<>();
-        details.put("userId", 123);
-        details.put("error", new RuntimeException("test"));
-        ExceptionInfo info = new ExceptionInfo("CODE", "key", "msg", details);
-
-        Map<String, Object> safe = info.getSafeDetails(false);
-        assertEquals(123, safe.get("userId"));
-        assertInstanceOf(RuntimeException.class, safe.get("error"));
-    }
-
-    @Test
-    @DisplayName("getSafeDetails(true) 将 Throwable 替换为类名")
-    void testGetSafeDetailsSanitize() {
-        Map<String, Object> details = new LinkedHashMap<>();
-        details.put("userId", 123);
-        details.put("error", new RuntimeException("sensitive stack trace"));
-        ExceptionInfo info = new ExceptionInfo("CODE", "key", "msg", details);
-
-        Map<String, Object> safe = info.getSafeDetails(true);
-        assertEquals(123, safe.get("userId"));
-        assertEquals("java.lang.RuntimeException", safe.get("error"));
-    }
-
-    @Test
-    @DisplayName("getSafeDetails() 在 details 为 null 时返回 null")
-    void testGetSafeDetailsNull() {
-        ExceptionInfo info = new ExceptionInfo();
-        assertNull(info.getSafeDetails(true));
-        assertNull(info.getSafeDetails(false));
-    }
-
-    @Test
-    @DisplayName("getSafeDetails() 在 details 为空 Map 时返回原 Map")
-    void testGetSafeDetailsEmpty() {
-        ExceptionInfo info = new ExceptionInfo();
-        info.setDetails(new LinkedHashMap<>());
-        Map<String, Object> safe = info.getSafeDetails(true);
-        assertNotNull(safe);
-        assertTrue(safe.isEmpty());
-    }
-
-    @Test
     @DisplayName("setter 方法链式调用")
     void testSetters() {
         ExceptionInfo info = new ExceptionInfo();

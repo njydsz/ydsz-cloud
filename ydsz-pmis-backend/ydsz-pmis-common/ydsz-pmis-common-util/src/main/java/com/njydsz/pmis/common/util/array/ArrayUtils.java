@@ -361,7 +361,11 @@ public class ArrayUtils {
 
     /**
      * 将 Collection 转换为数组
+     *
+     * @deprecated 请使用 {@link com.njydsz.pmis.common.util.collection.CollectionUtils#listToArray(Collection, Class)} 替代，
+     *             CollectionUtils 更专注于集合操作且类型安全签名更明确
      */
+    @Deprecated(since = "1.3.0", forRemoval = true)
     public static <T> T[] toArray(Collection<T> collection, Class<?> clazz) {
         Objects.requireNonNull(clazz, "clazz must not be null");
         if (collection == null || collection.isEmpty()) {

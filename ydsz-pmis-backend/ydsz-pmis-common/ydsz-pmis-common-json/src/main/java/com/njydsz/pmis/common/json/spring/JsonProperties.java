@@ -68,6 +68,9 @@ public class JsonProperties {
     /** 是否启用性能监控 */
     private boolean monitoringEnabled = false;
 
+    /** 是否使用 BigDecimal 解析浮点数（金融场景精度保护） */
+    private boolean useBigDecimal = false;
+
     // --- enabled ---
 
     public boolean isEnabled() {
@@ -186,5 +189,15 @@ public class JsonProperties {
 
     public void setMonitoringEnabled(boolean monitoringEnabled) {
         this.monitoringEnabled = monitoringEnabled;
+    }
+
+    // --- useBigDecimal ---
+
+    public boolean isUseBigDecimal() {
+        return useBigDecimal;
+    }
+
+    public void setUseBigDecimal(boolean useBigDecimal) {
+        this.useBigDecimal = useBigDecimal;
     }
 }

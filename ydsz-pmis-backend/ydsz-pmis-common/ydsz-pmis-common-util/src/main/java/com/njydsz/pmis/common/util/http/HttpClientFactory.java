@@ -35,8 +35,6 @@ import okhttp3.OkHttpClient;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 3.5.0
  */
 public final class HttpClientFactory {
 

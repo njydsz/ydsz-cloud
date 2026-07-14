@@ -15,7 +15,7 @@ import lombok.experimental.SuperBuilder;
 /**
  * 基础实体。
  *
- * <p>继承自 {@link BaseAuditEntity}，包含完整的审计字段、乐观锁版本号和逻辑删除标识（0
+ * <p>继承自 {@link BaseAuditEntity}，包含完整的审计字段、乐观锁版本和逻辑删除标识（0 表示未删除）
  * 这是系统中最常用的实体基类，适用于大多数业务实体。
  *
  * <p><b>设计原则：</b>
@@ -62,12 +62,12 @@ import lombok.experimental.SuperBuilder;
  *     created_at DATETIME COMMENT '创建时间',
  *     updated_by VARCHAR(64) COMMENT '更新人,
  *     updated_at DATETIME COMMENT '更新时间',
- *     revision INT DEFAULT 0 COMMENT '乐观锁版本号,
+ *     revision INT DEFAULT 0 COMMENT '乐观锁版本,
  *     deleted INT DEFAULT 0 COMMENT '逻辑删除'
  * );
  * }</pre>
  *
- * @param <T> 主键ID类型，支。Long、String、UUID 等
+ * @param <T> 主键ID类型，支持 Long、String、UUID 等
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -76,8 +76,8 @@ import lombok.experimental.SuperBuilder;
  * @see BaseIdEntity
  * @see RootEntity
  *
- * <p><b>。重构规划：</b>当前继承为 {@code RootEntity 。BaseIdEntity 。BaseAuditEntity 。BaseEntity} 。4 层，增加理解成本。
- * 长期建议：扁平化。2-3 层，或用 {@code @Embedded AuditInfo} 组合替代继承。
+ * <p><b>重构规划：</b>当前继承为 {@code RootEntity 。BaseIdEntity 。BaseAuditEntity 。BaseEntity} 。4 层，增加理解成本。
+ * 长期建议：扁平化为 2-3 层，或用 {@code @Embedded AuditInfo} 组合替代继承。
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -89,22 +89,22 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
     private static final long serialVersionUID = 1L;
 
     /**
-     * 乐观锁版本号
+     * 乐观锁版本
      *
      * <p>用于并发控制，原理：
      * <ul>
-     *   <li>每次更新时自动递增。1。</li>
+     *   <li>每次更新时自动递增（+1）。</li>
      *   <li>更新 SQL 包含 WHERE 条件：revision = oldRevision</li>
      *   <li>若影响行数为0，说明版本已变化，抛出乐观锁异常</li>
      * </ul>
      *
      * <p><b>配置方式：</b>
      * <pre>
-     * // 方式1：字段注解（推荐。
+     * // 方式1：字段注解（推荐）
      * &#64;Version
      * private Integer revision;
      *
-     * // 方式2：配置方式（参。ydsz-pmis-common-jdbc 模块。
+     * // 方式2：配置方式（参见 ydsz-pmis-common-jdbc 模块。
      * ydsz:
      *   sql-intercept:
      *     optimistic-lock:
@@ -129,11 +129,11 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
      *
      * <p><b>配置方式：</b>
      * <pre>
-     * // 方式1：字段注解（推荐。
+     * // 方式1：字段注解（推荐）
      * &#64;TableLogic
      * private Integer deleted;
      *
-     * // 方式2：配置方式（参。ydsz-pmis-common-jdbc 模块。
+     * // 方式2：配置方式（参见 ydsz-pmis-common-jdbc 模块。
      * ydsz:
      *   sql-intercept:
      *     logical-delete:

@@ -237,7 +237,12 @@ public final class ValueWriter {
                 case '\t': sb.append("\\t"); break;
                 default:
                     if (c < ' ') {
-                        sb.append("\\u").append(String.format("%04x", (int) c));
+                        // 快速 Unicode 转义（避免 String.format 开销）
+                        sb.append("\\u00");
+                        char h = (char)(c >> 4);
+                        char l = (char)(c & 0xf);
+                        sb.append((char)(h < 10 ? h + '0' : h - 10 + 'a'));
+                        sb.append((char)(l < 10 ? l + '0' : l - 10 + 'a'));
                     } else {
                         sb.append(c);
                     }

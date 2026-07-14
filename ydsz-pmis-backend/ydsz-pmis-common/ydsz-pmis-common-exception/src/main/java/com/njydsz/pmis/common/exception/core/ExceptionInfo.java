@@ -26,9 +26,6 @@ import lombok.Getter;
  *   <li>traceId：分布式追踪 ID</li>
  * </ul>
  *
- * <p><b>安全脱敏：</b>通过 {@link #getSafeDetails(boolean)} 方法控制是否脱敏，
- * 由 {@code BaseExceptionHandler} 根据 Spring Environment 决定是否传入脱敏参数。
- *
  * @author ydsz-pmis-team
  * @since 3.0.0
  */
@@ -86,34 +83,6 @@ public class ExceptionInfo implements Serializable {
     public ExceptionInfo(String code, String key, String message, Map<String, Object> details) {
         this(code, key, message);
         this.details = details;
-    }
-
-    /**
-     * 获取脱敏后的错误详情
-     *
-     * <p>当 {@code sanitize=true} 时，Map 中 Throwable 类型的值会被替换为异常类名，
-     * 避免堆栈信息等敏感数据泄露。
-     *
-     * @param sanitize 是否脱敏，由 Handler 层根据当前环境决定
-     * @return 脱敏后的详情Map，details为null时返回null
-     */
-    public Map<String, Object> getSafeDetails(boolean sanitize) {
-        if (details == null || details.isEmpty()) {
-            return details;
-        }
-        if (!sanitize) {
-            return new LinkedHashMap<>(details);
-        }
-        Map<String, Object> safeDetails = new LinkedHashMap<>(details.size());
-        for (Map.Entry<String, Object> entry : details.entrySet()) {
-            Object value = entry.getValue();
-            if (value instanceof Throwable) {
-                safeDetails.put(entry.getKey(), ((Throwable) value).getClass().getName());
-            } else {
-                safeDetails.put(entry.getKey(), value);
-            }
-        }
-        return safeDetails;
     }
 
     /**

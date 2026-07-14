@@ -27,7 +27,6 @@ import com.njydsz.pmis.common.core.enums.IdentityType;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * @since 1.0.0
  */
 public interface AuthInfo {
 

@@ -7,7 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 乐观锁版本号字段标记注解
+ * 乐观锁版本字段标记注解
  *
  * <p>标注在实体字段上，表明该字段用于乐观锁并发控制。
  * 配合 SQL 拦截器，每次更新时自动递增，并带上 {@code WHERE revision = oldRevision}

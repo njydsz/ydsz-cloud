@@ -27,7 +27,7 @@ public class CursorPageResult<T> implements Serializable {
     /** 当前页数据列表*/
     private List<T> records = Collections.emptyList();
 
-    /** 下一页游标（。null 表示无更多数据） */
+    /** 下一页游标（为 null 表示无更多数据） */
     private String nextCursor;
 
     /** 是否还有更多数据 */

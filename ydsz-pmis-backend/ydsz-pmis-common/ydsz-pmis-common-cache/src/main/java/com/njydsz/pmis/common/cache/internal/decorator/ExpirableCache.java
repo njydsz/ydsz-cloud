@@ -7,11 +7,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
@@ -90,6 +92,18 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   /** 过期时间戳映射：key -> 过期时间戳持有者（纳秒） */
   private final ConcurrentMap<K, ExpiryHolder> expirationMap = new ConcurrentHashMap<>();
 
+  /**
+   * 时间桶索引：桶时间戳（纳秒，向下取整到桶大小） -> 该桶内过期的 key 集合
+   *
+   * <p>用于高效清理：cleanupExpired() 只扫描已过期的桶，而非全量遍历 expirationMap。
+   * 对于 expireAfterAccess 场景，key 可能出现在多个桶中（刷新后旧桶残留），
+   * 清理时通过 double-check expirationMap 确认是否真正过期。
+   */
+  private final ConcurrentSkipListMap<Long, Set<K>> expiryBuckets = new ConcurrentSkipListMap<>();
+
+  /** 桶大小（纳秒），默认 1 秒 */
+  private final long bucketSizeNanos;
+
   /** 清理任务 Future */
   private final ScheduledFuture<?> cleanupFuture;
 
@@ -167,6 +181,8 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     this.expireAfterAccessNanos = expireAfterAccessNanos;
     this.expiry = expiry;
     this.jitterRatio = Math.max(0, Math.min(1, jitterRatio));
+    // 桶大小固定 1 秒（见字段 Javadoc），可后续通过构造器参数暴露以支持自定义
+    this.bucketSizeNanos = TimeUnit.SECONDS.toNanos(1);
     // 注册淘汰监听器，防止 expirationMap 内存泄漏
     delegate.addListener(evictionListener);
     this.cleanupFuture =
@@ -190,6 +206,12 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     double factor = 1.0 + (ThreadLocalRandom.current().nextDouble() * 2 - 1) * jitterRatio;
     return Math.max(1, (long) (ttlNanos * factor));
   }
+  /** 将 key 添加到对应过期时间的桶中 */
+  private void addToBucket(long expireAtNanos, K key) {
+    long bucketKey = expireAtNanos / bucketSizeNanos;
+    expiryBuckets.computeIfAbsent(bucketKey, k -> ConcurrentHashMap.newKeySet()).add(key);
+  }
+
   /** 计算条目的过期时间戳（纳秒） */
   private long computeExpiration(K key, V value) {
     long now = System.nanoTime();
@@ -212,21 +234,25 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     if (expiry != null) {
       long ttlNanos = expiry.expireAfterRead(key, value, now);
       if (ttlNanos != Long.MAX_VALUE) {
+        long newExpireAt = now + applyJitter(ttlNanos);
         ExpiryHolder holder = expirationMap.get(key);
         if (holder != null) {
-          holder.expireAtNanos = now + applyJitter(ttlNanos);
+          holder.expireAtNanos = newExpireAt;
         } else {
-          expirationMap.put(key, new ExpiryHolder(now + applyJitter(ttlNanos)));
+          expirationMap.put(key, new ExpiryHolder(newExpireAt));
         }
+        addToBucket(newExpireAt, key);
       }
     } else if (expireAfterAccessNanos > 0) {
+      long newExpireAt = now + applyJitter(expireAfterAccessNanos);
       ExpiryHolder holder = expirationMap.get(key);
       if (holder != null) {
         // 可变更新，避免 Map 条目替换
-        holder.expireAtNanos = now + applyJitter(expireAfterAccessNanos);
+        holder.expireAtNanos = newExpireAt;
       } else {
-        expirationMap.put(key, new ExpiryHolder(now + applyJitter(expireAfterAccessNanos)));
+        expirationMap.put(key, new ExpiryHolder(newExpireAt));
       }
+      addToBucket(newExpireAt, key);
     }
   }
 
@@ -245,18 +271,32 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     delegate.remove(key);
   }
 
-  /** 批量清理过期条目 */
+  /**
+   * 批量清理过期条目 — 基于时间桶索引高效扫描
+   *
+   * <p>优化：只扫描已过期桶中的 key，而非全量遍历 expirationMap。
+   * 对于 expireAfterAccess 场景的旧桶残留 key，通过 double-check 确认是否真正过期。
+   */
   private void cleanupExpired() {
     try {
       long now = System.nanoTime();
+      long currentBucket = now / bucketSizeNanos;
       int removed = 0;
-      for (Map.Entry<K, ExpiryHolder> entry : expirationMap.entrySet()) {
-        if (entry.getValue().expireAtNanos < now) {
-          K key = entry.getKey();
-          expirationMap.remove(key);
-          delegate.remove(key);
-          removed++;
+
+      // 只扫描 <= currentBucket 的桶（已过期或即将过期）
+      NavigableMap<Long, Set<K>> expiredBuckets = expiryBuckets.headMap(currentBucket, true);
+      for (Map.Entry<Long, Set<K>> bucket : expiredBuckets.entrySet()) {
+        for (K key : bucket.getValue()) {
+          ExpiryHolder holder = expirationMap.get(key);
+          // Double-check：确认 key 仍在 expirationMap 中且确实已过期
+          // （expireAfterAccess 可能已将过期时间刷新到更晚的桶）
+          if (holder != null && holder.expireAtNanos <= now) {
+            expirationMap.remove(key);
+            delegate.remove(key);
+            removed++;
+          }
         }
+        expiryBuckets.remove(bucket.getKey());
       }
       if (removed > 0) {
         log.debug("ExpirableCache 清理过期条目: removed={}", removed);
@@ -315,7 +355,9 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   @Override
   public void put(K key, V value) {
     delegate.put(key, value);
-    expirationMap.put(key, new ExpiryHolder(computeExpiration(key, value)));
+    long expireAt = computeExpiration(key, value);
+    expirationMap.put(key, new ExpiryHolder(expireAt));
+    addToBucket(expireAt, key);
   }
 
   @Override
@@ -367,6 +409,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   @Override
   public V remove(K key) {
     expirationMap.remove(key);
+    // 桶中的残留条目由 cleanupExpired 自动清理，无需主动移除
     return delegate.remove(key);
   }
 
@@ -388,6 +431,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   @Override
   public void clear() {
     expirationMap.clear();
+    expiryBuckets.clear();
     delegate.clear();
   }
 

@@ -1,10 +1,10 @@
 package com.njydsz.pmis.common.domain.entity;
 
 /**
- * 逻辑删除标识接口（软删除。
+ * 逻辑删除标识接口（软删除）
  *
- * <p>具备此接口的实体在执。delete 时改为 {@code SET deleted = 1}。
- * 查询时自动追为 {@code WHERE deleted = 0}。
+ * <p>具备此接口的实体在执行 delete 时改为 {@code SET deleted = 1}。
+ * 查询时自动追加 {@code WHERE deleted = 0}。
  * 配合 MyBatis-Plus {@code @TableLogic} 注解使用。
  *
  * @author ydsz-pmis-team

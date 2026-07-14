@@ -14,30 +14,19 @@ import java.util.Objects;
  *
  * @see Specification
  */
-public class NotSpecification<T> implements Specification<T> {
-
-    private final Specification<T> specification;
+public record NotSpecification<T>(Specification<T> specification) implements Specification<T> {
 
     /**
      * 构造取反规约
      *
      * @param specification 目标规约
      */
-    public NotSpecification(Specification<T> specification) {
-        this.specification = Objects.requireNonNull(specification, "specification must not be null");
+    public NotSpecification {
+        Objects.requireNonNull(specification, "specification must not be null");
     }
 
     @Override
     public boolean isSatisfiedBy(T candidate) {
         return !specification.isSatisfiedBy(candidate);
-    }
-
-    /**
-     * 获取被取反的规约
-     *
-     * @return 目标规约
-     */
-    public Specification<T> getSpecification() {
-        return specification;
     }
 }

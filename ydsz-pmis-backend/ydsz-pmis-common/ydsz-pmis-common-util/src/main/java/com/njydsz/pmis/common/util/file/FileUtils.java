@@ -48,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author ydsz-pmis-team
  * @since 1.0.0
  * 
- * @desc 支持高性能文件读写、文件安全检测、文件哈希计算、批量操作等
+ *
  */
 @Slf4j
 public class FileUtils {

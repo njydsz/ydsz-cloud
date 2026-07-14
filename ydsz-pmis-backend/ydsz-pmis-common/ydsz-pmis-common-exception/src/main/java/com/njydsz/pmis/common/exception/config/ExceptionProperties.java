@@ -75,11 +75,6 @@ public class ExceptionProperties {
     private int alertDedupWindowSeconds = 60;
 
     /**
-     * 告警全局静默期（秒，0=不静默）
-     */
-    private int alertSilencePeriodSeconds = 0;
-
-    /**
      * 响应格式枚举
      */
     public enum ResponseFormat {

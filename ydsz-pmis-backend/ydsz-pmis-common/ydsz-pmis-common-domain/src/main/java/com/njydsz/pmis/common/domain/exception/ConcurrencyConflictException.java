@@ -5,12 +5,12 @@ import java.io.Serializable;
 /**
  * 并发冲突异常
  *
- * <p>当乐观锁版本号校验失败时抛出此异常，表示在当前事务执行期间，
+ * <p>当乐观锁版本校验失败时抛出此异常，表示在当前事务执行期间，
  * 其他事务已经修改了同一聚合根的数据。
  *
  * <p><b>触发场景：</b>
  * <ul>
- *   <li>乐观锁版本号不匹配（{@code WHERE revision = oldRevision} 影响行数为 0）</li>
+ *   <li>乐观锁版本不匹配（{@code WHERE revision = oldRevision} 影响行数为 0）</li>
  *   <li>聚合根已被其他事务修改并提交</li>
  *   <li>并发更新同一资源</li>
  * </ul>
@@ -54,7 +54,7 @@ public class ConcurrencyConflictException extends DomainException {
     private final Serializable aggregateId;
 
     /**
-     * 期望的版本号
+     * 期望的版本
      */
     private final Integer expectedVersion;
 
@@ -63,7 +63,7 @@ public class ConcurrencyConflictException extends DomainException {
      *
      * @param aggregateType   聚合根类型名称
      * @param aggregateId     聚合根 ID
-     * @param expectedVersion 期望的版本号
+     * @param expectedVersion 期望的版本
      */
     public ConcurrencyConflictException(String aggregateType, Serializable aggregateId, Integer expectedVersion) {
         super(ERROR_CODE,
@@ -79,7 +79,7 @@ public class ConcurrencyConflictException extends DomainException {
      *
      * @param aggregateType   聚合根类型名称
      * @param aggregateId     聚合根 ID
-     * @param expectedVersion 期望的版本号
+     * @param expectedVersion 期望的版本
      * @param message         自定义错误信息
      */
     public ConcurrencyConflictException(String aggregateType, Serializable aggregateId,
@@ -109,9 +109,9 @@ public class ConcurrencyConflictException extends DomainException {
     }
 
     /**
-     * 获取期望的版本号
+     * 获取期望的版本
      *
-     * @return 期望的版本号
+     * @return 期望的版本
      */
     public Integer getExpectedVersion() {
         return expectedVersion;

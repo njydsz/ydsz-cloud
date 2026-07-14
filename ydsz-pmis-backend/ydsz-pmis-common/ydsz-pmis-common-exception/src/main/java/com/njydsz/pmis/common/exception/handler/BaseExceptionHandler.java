@@ -13,7 +13,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.exception.alert.ExceptionAlertPublisher;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.pmis.common.exception.config.ExceptionProperties;
 import com.njydsz.pmis.common.exception.core.ExceptionInfo;
 import com.njydsz.pmis.common.exception.custom.AbstractYdszException;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
@@ -54,13 +56,9 @@ public abstract class BaseExceptionHandler {
     @Value("${spring.profiles.active:prod}")
     private String activeProfile;
 
-    @Value("${ydsz.exception.response-format:base-response}")
-    private String responseFormat;
-
-    @Value("${ydsz.exception.include-stack-trace:false}")
-    private boolean includeStackTraceConfig;
-
+    private ExceptionProperties properties;
     private ExceptionMetrics exceptionMetrics;
+    private ExceptionAlertPublisher alertPublisher;
 
     /**
      * 获取日志前缀，由子类实现以定制不同端的日志前缀
@@ -70,12 +68,30 @@ public abstract class BaseExceptionHandler {
     protected abstract String getLogPrefix();
 
     /**
+     * 设置异常模块配置属性（由 AutoConfiguration 注入）
+     *
+     * @param properties 异常模块配置属性
+     */
+    protected void setExceptionProperties(ExceptionProperties properties) {
+        this.properties = properties;
+    }
+
+    /**
      * 设置异常指标统计器（由 AutoConfiguration 注入）
      *
      * @param exceptionMetrics 异常指标统计器
      */
     protected void setExceptionMetrics(ExceptionMetrics exceptionMetrics) {
         this.exceptionMetrics = exceptionMetrics;
+    }
+
+    /**
+     * 设置异常告警发布器（由 AutoConfiguration 注入）
+     *
+     * @param alertPublisher 异常告警发布器
+     */
+    protected void setAlertPublisher(ExceptionAlertPublisher alertPublisher) {
+        this.alertPublisher = alertPublisher;
     }
 
     /**
@@ -98,6 +114,9 @@ public abstract class BaseExceptionHandler {
         if (exceptionMetrics != null) {
             exceptionMetrics.recordException(throwable);
         }
+        if (alertPublisher != null) {
+            alertPublisher.publishAlert(throwable);
+        }
     }
 
     /**
@@ -109,7 +128,8 @@ public abstract class BaseExceptionHandler {
      * @return true-包含详细信息，false-不包含
      */
     protected boolean includeExceptionInfo() {
-        return includeStackTraceConfig
+        boolean configFlag = properties != null && properties.isIncludeStackTrace();
+        return configFlag
                 || "dev".equalsIgnoreCase(activeProfile)
                 || "test".equalsIgnoreCase(activeProfile);
     }
@@ -120,7 +140,10 @@ public abstract class BaseExceptionHandler {
      * @return true-使用 ProblemDetail 格式，false-使用 BaseResponse 格式
      */
     protected boolean useProblemDetail() {
-        return "problem-detail".equalsIgnoreCase(responseFormat);
+        if (properties != null) {
+            return properties.getResponseFormat() == ExceptionProperties.ResponseFormat.PROBLEM_DETAIL;
+        }
+        return false;
     }
 
     /**
@@ -205,6 +228,7 @@ public abstract class BaseExceptionHandler {
         ProblemDetail.ProblemDetailBuilder builder = ProblemDetail.builder()
                 .instance(path != null ? URI.create(path) : null)
                 .traceId(traceId)
+                .requestId(traceId)
                 .timestamp(Instant.now());
 
         if (throwable instanceof AbstractYdszException) {

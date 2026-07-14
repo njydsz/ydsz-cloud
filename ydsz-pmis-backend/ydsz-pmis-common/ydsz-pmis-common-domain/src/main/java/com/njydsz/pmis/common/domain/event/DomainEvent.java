@@ -85,7 +85,7 @@ public class DomainEvent implements Serializable {
     private final String aggregateType;
 
     /**
-     * 事件版本号（用于事件溯源）
+     * 事件版本（用于事件溯源）
      */
     private final int version;
 
@@ -147,7 +147,7 @@ public class DomainEvent implements Serializable {
      * @param eventType     事件类型
      * @param aggregateId   聚合根ID
      * @param aggregateType 聚合根类型
-     * @param version       事件版本号
+     * @param version       事件版本
      * @param tenantId      租户ID
      * @param userId        操作人ID
      * @param traceId       链路追踪ID

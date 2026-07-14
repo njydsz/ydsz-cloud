@@ -95,20 +95,30 @@ public final class JsonParser {
      * @return Map 对象
      */
     public static Map<String, Object> parseObject(String json) {
-        if (json == null || json.trim().isEmpty()) {
+        if (json == null || json.isEmpty()) {
             return new HashMap<>(8);
         }
 
-        json = json.trim();
-        if (json.length() < 2 || json.charAt(0) != '{') {
-            throw new JsonDeserializationException("Invalid JSON object: " + json);
+        char[] chars = getCharBuffer(json);
+        int len = json.length();
+
+        // 跳过前导空白
+        int startPos = 0;
+        while (startPos < len && chars[startPos] <= ' ') {
+            startPos++;
         }
 
-        Map<String, Object> result = new LinkedHashMap<>(64);
+        if (startPos >= len || chars[startPos] != '{') {
+            // 全空白或非对象
+            if (startPos >= len) {
+                return new HashMap<>(8);
+            }
+            throw new JsonDeserializationException("Invalid JSON object: expected '{' at position " + startPos, startPos);
+        }
 
-        char[] chars = getCharBuffer(json);
-        int len = chars.length;
-        int pos = 1; // 跳过起始的 '{'
+        Map<String, Object> result = new LinkedHashMap<>(16);
+
+        int pos = startPos + 1; // 跳过起始的 '{'
 
         while (pos < len) {
             // 跳过空白字符

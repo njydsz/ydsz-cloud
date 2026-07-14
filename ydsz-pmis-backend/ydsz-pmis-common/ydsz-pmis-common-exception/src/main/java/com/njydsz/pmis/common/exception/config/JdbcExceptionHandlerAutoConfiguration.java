@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 
+import com.njydsz.pmis.common.exception.alert.ExceptionAlertPublisher;
 import com.njydsz.pmis.common.exception.handler.JdbcExceptionHandler;
 import com.njydsz.pmis.common.exception.metrics.ExceptionMetrics;
 
@@ -25,7 +26,10 @@ public class JdbcExceptionHandlerAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(JdbcExceptionHandler.class)
     public JdbcExceptionHandler jdbcExceptionHandler(MessageSource messageSource,
-                                                       ObjectProvider<ExceptionMetrics> exceptionMetrics) {
-        return new JdbcExceptionHandler(messageSource, exceptionMetrics.getIfAvailable());
+                                                       ObjectProvider<ExceptionMetrics> exceptionMetrics,
+                                                       ObjectProvider<ExceptionProperties> properties,
+                                                       ObjectProvider<ExceptionAlertPublisher> alertPublisher) {
+        return new JdbcExceptionHandler(messageSource, exceptionMetrics.getIfAvailable(),
+                properties.getIfAvailable(), alertPublisher.getIfAvailable());
     }
 }

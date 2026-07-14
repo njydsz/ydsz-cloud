@@ -10,8 +10,8 @@ import lombok.experimental.SuperBuilder;
 /**
  * 数据传输对象基类
  *
- * <p>所。DTO 的公共基类，封装跨层传输时的通用上下文信息。
- * 典型子类应继承此类并添加业务字段，而非直接使用。/p>
+ * <p>所有 DTO 的公共基类，封装跨层传输时的通用上下文信息。
+ * 典型子类应继承此类并添加业务字段，而非直接使用。</p>
  *
  * <p><b>设计说明：</b>
  * <ul>
@@ -24,7 +24,7 @@ import lombok.experimental.SuperBuilder;
  * <table>
  *   <tr><th>字段</th><th>类型</th><th>说明</th></tr>
  *   <tr><td>operatorId</td><td>String</td><td>操作人ID</td></tr>
- *   <tr><td>operatorName</td><td>String</td><td>操作人姓。</td></tr>
+ *   <tr><td>operatorName</td><td>String</td><td>操作人姓名</td></tr>
  *   <tr><td>requestId</td><td>String</td><td>请求ID</td></tr>
  *   <tr><td>traceId</td><td>String</td><td>请求追踪ID</td></tr>
  *   <tr><td>tenantId</td><td>String</td><td>租户ID</td></tr>
@@ -52,17 +52,17 @@ public class BaseDTO implements Serializable {
     private String operatorId;
 
     /**
-     * 操作人姓。
+     * 操作人姓名
      *
      * <p>执行当前操作的用户姓名，用于日志记录和消息通知。
-     * 。operatorId 配合使用，提供更友好的显示信息。
+     * 与 operatorId 配合使用，提供更友好的显示信息。
      */
     private String operatorName;
 
     /**
      * 请求ID
      *
-     * <p>唯一标识一。HTTP 请求，用于请求追踪和日志关联。
+     * <p>唯一标识一次 HTTP 请求，用于请求追踪和日志关联。
      * 通常由网关或拦截器自动生成。
      */
     private String requestId;
@@ -79,7 +79,7 @@ public class BaseDTO implements Serializable {
      * 租户ID
      *
      * <p>多租户场景下的租户标识，用于数据隔离。
-     * 。SaaS 应用中确保不同租户的数据互不干扰。
+     * 在 SaaS 应用中确保不同租户的数据互不干扰。
      */
     private String tenantId;
 
@@ -101,7 +101,7 @@ public class BaseDTO implements Serializable {
      * <ul>
      *   <li>WEB - Web 。</li>
      *   <li>APP - 移动应用</li>
-     *   <li>API - 开始API</li>
+     *   <li>API - 开放 API</li>
      *   <li>SCHEDULE - 定时任务</li>
      *   <li>SYSTEM - 系统内部</li>
      * </ul>

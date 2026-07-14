@@ -13,7 +13,7 @@ import java.util.Set;
  * @author ydsz-pmis-team
  * @since 1.0.0
  * 
- * @desc 支持完整的 MIME 类型映射、扩展名互转、类型判断等
+ *
  */
 public class MediaType {
     

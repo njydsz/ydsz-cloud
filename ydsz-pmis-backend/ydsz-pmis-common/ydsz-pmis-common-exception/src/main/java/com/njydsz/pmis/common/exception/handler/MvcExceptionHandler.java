@@ -22,7 +22,9 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
 import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.exception.alert.ExceptionAlertPublisher;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.pmis.common.exception.config.ExceptionProperties;
 import com.njydsz.pmis.common.exception.core.ExceptionInfo;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.exception.custom.ConcurrencyException;
@@ -72,9 +74,13 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     private final MessageSource messageSource;
 
     public MvcExceptionHandler(MessageSource messageSource,
-                               ExceptionMetrics exceptionMetrics) {
+                               ExceptionMetrics exceptionMetrics,
+                               ExceptionProperties properties,
+                               ExceptionAlertPublisher alertPublisher) {
         this.messageSource = messageSource;
         setExceptionMetrics(exceptionMetrics);
+        setExceptionProperties(properties);
+        setAlertPublisher(alertPublisher);
     }
 
     @Override

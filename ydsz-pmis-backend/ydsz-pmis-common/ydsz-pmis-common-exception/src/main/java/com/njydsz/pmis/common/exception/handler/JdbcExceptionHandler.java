@@ -12,7 +12,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import com.njydsz.pmis.common.core.constant.HeaderConstants;
 import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.exception.alert.ExceptionAlertPublisher;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
+import com.njydsz.pmis.common.exception.config.ExceptionProperties;
 import com.njydsz.pmis.common.exception.core.ExceptionInfo;
 import com.njydsz.pmis.common.exception.metrics.ExceptionMetrics;
 
@@ -33,9 +35,12 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
 
     private final MessageSource messageSource;
 
-    public JdbcExceptionHandler(MessageSource messageSource, ExceptionMetrics exceptionMetrics) {
+    public JdbcExceptionHandler(MessageSource messageSource, ExceptionMetrics exceptionMetrics,
+                               ExceptionProperties properties, ExceptionAlertPublisher alertPublisher) {
         this.messageSource = messageSource;
         setExceptionMetrics(exceptionMetrics);
+        setExceptionProperties(properties);
+        setAlertPublisher(alertPublisher);
     }
 
     @Override

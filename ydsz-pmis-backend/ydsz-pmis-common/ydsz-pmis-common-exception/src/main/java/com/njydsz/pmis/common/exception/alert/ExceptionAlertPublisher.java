@@ -18,9 +18,9 @@ import com.njydsz.pmis.common.exception.observability.TraceContext;
  *
  * <p><b>告警收敛策略：</b>
  * <ul>
- *   <li>同一 errorCode 在 {@link #dedupWindowSeconds} 时间窗口内只告警一次</li>
+ *   <li>同一 errorCode 在去重时间窗口内只告警一次</li>
  *   <li>FATAL 级别忽略收敛策略，每次都告警</li>
- *   <li>支持静默期配置：{@link #silencePeriodSeconds}</li>
+ *   <li>支持运行时静默期：通过 {@link #enterSilencePeriod(int)} 动态设置</li>
  * </ul>
  *
  * <p><b>使用方式：</b>
@@ -56,9 +56,12 @@ public class ExceptionAlertPublisher {
     private final List<ExceptionAlertListener> listeners = new CopyOnWriteArrayList<>();
     private final long dedupWindowMillis;
 
-    /** 上次告警时间（按 errorCode 分组） */
+    /** 上次告警时间（按 errorCode 分组），有界缓存防止无界增长 */
     private final java.util.concurrent.ConcurrentHashMap<String, Long> lastAlertTime =
             new java.util.concurrent.ConcurrentHashMap<>();
+
+    /** 去重记录最大容量 */
+    private static final int MAX_DEDUP_ENTRIES = 10000;
 
     /** 静默期结束时间（全局） */
     private volatile long silenceUntil = 0;
@@ -66,8 +69,7 @@ public class ExceptionAlertPublisher {
     /**
      * 创建异常告警发布器
      *
-     * @param dedupWindowSeconds  去重时间窗口（秒），同一 errorCode 在此窗口内只告警一次
-     * @param silencePeriodSeconds 静默期（秒），设置后此期间内所有告警被抑制
+     * @param dedupWindowSeconds 去重时间窗口（秒），同一 errorCode 在此窗口内只告警一次
      */
     public ExceptionAlertPublisher(int dedupWindowSeconds) {
         this.dedupWindowMillis = dedupWindowSeconds * 1000L;
@@ -121,6 +123,10 @@ public class ExceptionAlertPublisher {
                 return;
             }
             lastAlertTime.put(dedupKey, now);
+            // 防止无界增长：超过容量时清理过期记录
+            if (lastAlertTime.size() > MAX_DEDUP_ENTRIES) {
+                cleanupExpiredDedupEntries();
+            }
         }
 
         ExceptionAlertEvent event = new ExceptionAlertEvent(

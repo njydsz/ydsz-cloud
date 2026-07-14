@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
  *   exception:
  *     alert-enabled: true
  *     alert-dedup-window-seconds: 60    # 同一 errorCode 去重时间窗口
- *     alert-silence-period-seconds: 0   # 全局静默期（0=不静默）
  * }</pre>
  *
  * @author ydsz-pmis-team

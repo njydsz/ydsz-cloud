@@ -9,17 +9,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 树形结构核心构建。
+ * 树形结构核心构建器
  *
- * <p>整合了构建、查询、扁平化、排序、校验、路径生成等全部能力，提供统一的对。API。
+ * <p>整合了构建、查询、扁平化、排序、校验、路径生成等全部能力，提供统一的对外 API。
  * 内部维护缓存机制（cachedRoots + dirty 标记），避免重复构建。
  *
  * <p><b>核心能力：</b>
  * <ul>
  *   <li>父子关系绑定、层级计算、路径生成</li>
- *   <li>。ID 查找、获取后代祖先节点</li>
+ *   <li>按 ID 查找、获取后代祖先节点</li>
  *   <li>节点统计（总数、叶子数、深度）</li>
- *   <li>扁平化、按层级筛。</li>
+ *   <li>扁平化、按层级筛选</li>
  *   <li>循环引用检测</li>
  *   <li>懒加载树构建</li>
  * </ul>
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * List<Menu> tree = new TreeBuilder<>(0L, allMenus).build();
  * // 查询
  * Menu node = treeBuilder.findById(1L);
- * // 扁平。
+ * // 扁平化
  * List<Menu> flat = treeBuilder.flatten();
  * }</pre>
  *
@@ -50,7 +50,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
     /** 节点数量阈值，超过此值时使用迭代模式替代递归以防止栈溢出 */
     private static final int ITERATIVE_MODE_THRESHOLD = 10000;
 
-    /** 排序比较器，。sort 字段升序排列，null 值排在最。*/
+    /** 排序比较器，。sort 字段升序排列，null 值排在最后*/
     private static final Comparator<TreeNode<?, ?>> SORT_COMPARATOR = Comparator.comparing(
             TreeNode::getSort,
             Comparator.nullsLast(Integer::compareTo)
@@ -74,7 +74,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
     /** 缓存的根节点列表 */
     private volatile List<T> cachedRoots;
-    /** 缓存的节点映射（ID -> Node。*/
+    /** 缓存的节点映射（ID -> Node）*/
     private volatile Map<ID, T> cachedNodeMap;
     /** 缓存的全量扁平节点列表*/
     private volatile List<T> cachedAllNodes;
@@ -329,10 +329,20 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         return ancestors;
     }
 
-    /** 判断节点是否为根节点 */
+    /**
+     * 判断节点是否为根节点
+     *
+     * @param node   待判断的节点
+     * @param rootId 根节点ID（为 null 时使用构建器配置的 rootId）
+     * @return 是根节点返回 true
+     */
     public boolean isRoot(T node, ID rootId) {
         ensureBuilt();
-        return isRootNode(node);
+        ID effectiveRootId = rootId != null ? rootId : this.rootId;
+        if (effectiveRootId == null) {
+            return node.getParentId() == null;
+        }
+        return Objects.equals(effectiveRootId, node.getParentId());
     }
 
     // ── 统计能力 ────────────────────────────────────────────────────────────────
@@ -399,7 +409,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
                 .toList();
     }
 
-    // ── 扁平化与筛。────────────────────────────────────────────────────────────
+    // ── 扁平化与筛选────────────────────────────────────────────────────────────
 
     /** 将当前缓存的树形结构扁平化为列表 */
     public List<T> flatten() {

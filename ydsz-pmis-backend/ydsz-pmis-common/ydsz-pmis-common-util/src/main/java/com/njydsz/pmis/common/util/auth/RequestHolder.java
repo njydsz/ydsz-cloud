@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author ydsz-pmis-team
  * @since 1.0.0
  * 
- * @desc RequestHolder - 请求上下文持有者 (支持线程池场景上下文透传)
+ *
  *
  * <p>除 AuthInfo 与 HttpServletRequest 外，还支持维护"额外请求头（virtual headers）"：
  * 当业务代码并不处于真实 HTTP 请求线程（如异步线程、AOP 注入的数据范围等）时，

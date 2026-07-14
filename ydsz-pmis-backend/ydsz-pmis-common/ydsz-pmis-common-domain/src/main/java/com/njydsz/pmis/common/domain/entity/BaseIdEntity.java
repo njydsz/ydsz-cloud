@@ -9,19 +9,19 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
- * 主键基础实体。
+ * 主键基础实体
  *
  * <p>仅包含主键ID的实体基类，适用于不需要审计字段和版本控制的简单场景。
  * 这是实体继承层次结构中的第二层（第一层是 {@link Persistable} 接口）。
  *
  * <p><b>注意：</b>此类仅实现 {@link Persistable} 而非 {@link RootEntity}。
- * 因为它不包含乐观锁版本号（{@code revision}）和逻辑删除标识（{@code deleted}）。
+ * 因为它不包含乐观锁版本（{@code revision}）和逻辑删除标识（{@code deleted}）。
  * 需要这些能力的实体应继承 {@link BaseEntity}。
  *
  * <p><b>设计原则：</b>
  * <ul>
  *   <li>最小化实体基类，仅包含最必要的字段</li>
- *   <li>使用 MyBatis-Plus 。ASSIGN_ID 雪花算法生成19位Long类型ID</li>
+ *   <li>使用 MyBatis-Plus 的 ASSIGN_ID 雪花算法生成19位Long类型ID</li>
  *   <li>支持泛型主键类型，可适配 Long、String、UUID 等</li>
  * </ul>
  *
@@ -42,7 +42,7 @@ import lombok.experimental.SuperBuilder;
  *     private String description;
  * }
  *
- * // 或使。String 类型主键
+ * // 或使用 String 类型主键
  * &#64;Data
  * &#64;EqualsAndHashCode(callSuper = true)
  * public class SysDict extends BaseIdEntity<String> {
@@ -61,7 +61,7 @@ import lombok.experimental.SuperBuilder;
  * );
  * }</pre>
  *
- * @param <T> 主键ID类型，支。Long、String、UUID 等
+ * @param <T> 主键ID类型，支持 Long、String、UUID 等
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

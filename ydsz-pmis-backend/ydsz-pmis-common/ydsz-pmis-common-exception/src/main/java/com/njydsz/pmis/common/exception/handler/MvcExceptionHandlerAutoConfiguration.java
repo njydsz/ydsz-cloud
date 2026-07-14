@@ -10,6 +10,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 
+import com.njydsz.pmis.common.exception.alert.ExceptionAlertPublisher;
+import com.njydsz.pmis.common.exception.config.ExceptionProperties;
 import com.njydsz.pmis.common.exception.config.I18nConfiguration;
 import com.njydsz.pmis.common.exception.metrics.ExceptionMetrics;
 
@@ -34,7 +36,10 @@ public class MvcExceptionHandlerAutoConfiguration {
 
     @Bean
     public MvcExceptionHandler mvcExceptionHandler(MessageSource messageSource,
-                                                    ObjectProvider<ExceptionMetrics> exceptionMetrics) {
-        return new MvcExceptionHandler(messageSource, exceptionMetrics.getIfAvailable());
+                                                    ObjectProvider<ExceptionMetrics> exceptionMetrics,
+                                                    ObjectProvider<ExceptionProperties> properties,
+                                                    ObjectProvider<ExceptionAlertPublisher> alertPublisher) {
+        return new MvcExceptionHandler(messageSource, exceptionMetrics.getIfAvailable(),
+                properties.getIfAvailable(), alertPublisher.getIfAvailable());
     }
 }

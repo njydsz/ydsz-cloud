@@ -14,10 +14,7 @@ import java.util.Objects;
  *
  * @see Specification
  */
-public class AndSpecification<T> implements Specification<T> {
-
-    private final Specification<T> left;
-    private final Specification<T> right;
+public record AndSpecification<T>(Specification<T> left, Specification<T> right) implements Specification<T> {
 
     /**
      * 构造 AND 规约
@@ -25,31 +22,13 @@ public class AndSpecification<T> implements Specification<T> {
      * @param left  左侧规约
      * @param right 右侧规约
      */
-    public AndSpecification(Specification<T> left, Specification<T> right) {
-        this.left = Objects.requireNonNull(left, "left specification must not be null");
-        this.right = Objects.requireNonNull(right, "right specification must not be null");
+    public AndSpecification {
+        Objects.requireNonNull(left, "left specification must not be null");
+        Objects.requireNonNull(right, "right specification must not be null");
     }
 
     @Override
     public boolean isSatisfiedBy(T candidate) {
         return left.isSatisfiedBy(candidate) && right.isSatisfiedBy(candidate);
-    }
-
-    /**
-     * 获取左侧规约
-     *
-     * @return 左侧规约
-     */
-    public Specification<T> getLeft() {
-        return left;
-    }
-
-    /**
-     * 获取右侧规约
-     *
-     * @return 右侧规约
-     */
-    public Specification<T> getRight() {
-        return right;
     }
 }

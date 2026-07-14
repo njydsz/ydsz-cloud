@@ -46,7 +46,7 @@ import lombok.experimental.SuperBuilder;
 public class BaseQuery implements Serializable {
 
     /**
-     * 序列化版本号
+     * 序列化版本
      */
     private static final long serialVersionUID = 1L;
 

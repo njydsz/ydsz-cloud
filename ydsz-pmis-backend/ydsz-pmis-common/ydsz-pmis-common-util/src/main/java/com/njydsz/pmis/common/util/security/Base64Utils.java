@@ -9,39 +9,17 @@ import java.nio.file.Paths;
 import java.util.Base64;
 
 /**
- * Base64 编码/解码工具类
+ * Base64 编码/解码工具类（已废弃）
  *
- * <p>提供 Base64 标准编码、URL 安全编码、MIME 编码等多种编码方式，
- * 以及文件与 Base64 字符串之间的相互转换。</p>
- *
- * <p><b>主要特性：</b>
- * <ul>
- *   <li>支持标准 Base64 编码/解码</li>
- *   <li>支持 URL 安全的 Base64 编码/解码（无填充）</li>
- *   <li>支持 MIME 格式的 Base64 编码/解码</li>
- *   <li>支持文件与 Base64 字符串互转（带大小限制和路径安全检查）</li>
- *   <li>提供编码/解码长度计算工具</li>
- *   <li>所有方法均进行 null 安全处理</li>
- * </ul>
- *
- * <p><b>使用示例：</b>
- * <pre>
- * // 标准编码
- * String encoded = Base64Utils.encode("Hello World");
- * String decoded = Base64Utils.decode(encoded);
- *
- * // URL 安全编码
- * String urlSafe = Base64Utils.encodeUrlSafe("data?param=value");
- *
- * // 文件转 Base64
- * String base64 = Base64Utils.convertFileToBase64("/path/to/file.txt");
- * </pre>
+ * <p>标准编码/解码请直接使用 {@link java.util.Base64}。
+ * 保留此类仅用于文件与 Base64 互转功能。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
+ * @deprecated 标准编码/解码请直接使用 {@link java.util.Base64}
  * @see Base64
  */
+@Deprecated(since = "1.4.0", forRemoval = true)
 public class Base64Utils {
 
     /**

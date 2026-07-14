@@ -1,9 +1,11 @@
 package com.njydsz.pmis.common.util.bytes;
 
+import java.util.HexFormat;
+
 /**
- * 十六进制编码/解码工具类（纯 JDK 实现，零第三方依赖）
+ * 十六进制编码/解码工具类
  *
- * <p>提供 byte[] 与 Hex 字符串之间的双向转换，是安全模块的公共基础工具。
+ * <p>基于 JDK {@link HexFormat} 实现，提供 byte[] 与 Hex 字符串之间的双向转换。
  *
  * <p><b>使用示例：</b>
  * <pre>
@@ -14,21 +16,17 @@ package com.njydsz.pmis.common.util.bytes;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  */
 public class HexUtils {
 
-    /**
-     * 十六进制字符表
-     */
-    private static final String HEX_CHARS = "0123456789abcdef";
+    private static final HexFormat HEX_FORMAT = HexFormat.of();
 
     private HexUtils() {
-        throw new UnsupportedOperationException("HexUtils 是工具类，不允许被实例化");
+        throw new UnsupportedOperationException("HexUtils is a utility class and cannot be instantiated");
     }
 
     /**
-     * 字节数组转十六进制字符串
+     * 字节数组转十六进制字符串（小写）
      *
      * @param bytes 待转换的字节数组
      * @return 十六进制字符串，输入为 null 时返回 null
@@ -37,12 +35,7 @@ public class HexUtils {
         if (bytes == null) {
             return null;
         }
-        StringBuilder hex = new StringBuilder(bytes.length * 2);
-        for (byte b : bytes) {
-            hex.append(HEX_CHARS.charAt((b >> 4) & 0x0F));
-            hex.append(HEX_CHARS.charAt(b & 0x0F));
-        }
-        return hex.toString();
+        return HEX_FORMAT.formatHex(bytes);
     }
 
     /**
@@ -56,16 +49,6 @@ public class HexUtils {
         if (hex == null || hex.length() % 2 != 0) {
             throw new IllegalArgumentException("Hex string must not be null and must have even length");
         }
-        int len = hex.length() / 2;
-        byte[] bytes = new byte[len];
-        for (int i = 0; i < len; i++) {
-            int high = Character.digit(hex.charAt(i * 2), 16);
-            int low = Character.digit(hex.charAt(i * 2 + 1), 16);
-            if (high < 0 || low < 0) {
-                throw new IllegalArgumentException("Invalid hex character in string");
-            }
-            bytes[i] = (byte) ((high << 4) | low);
-        }
-        return bytes;
+        return HEX_FORMAT.parseHex(hex);
     }
 }

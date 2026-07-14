@@ -10,11 +10,15 @@ import java.util.Map;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
- * UrlUtils - URL 处理工具类 (增强版)
+ * URL 处理工具类
+ *
+ * <p>提供 URL 协议检测、URL 编码解码、URL 校验等能力。
+ *
+ * <p>URL 路径匹配（Ant 风格）、路径变量提取请使用
+ * {@link com.njydsz.pmis.common.util.url.UrlPathUtils}。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  */
 public class UrlUtils {
 

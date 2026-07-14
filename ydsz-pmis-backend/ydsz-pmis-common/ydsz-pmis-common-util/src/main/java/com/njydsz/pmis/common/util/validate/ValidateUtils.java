@@ -520,10 +520,17 @@ public class ValidateUtils {
 
     /**
      * 校验器（链式 API）
+     *
+     * <p>遵循统一构造器模式：构造器为 private，通过静态工厂方法 {@link #validate()} 或
+     * {@link #validate(Object)} 创建实例，链式配置后通过 {@link #throwIfInvalid()} 或
+     * {@link #isValid()} 终止链式调用。
      */
     public static class ValidatorBuilder {
         private final List<String> errors = new ArrayList<>();
         private Object target;
+
+        private ValidatorBuilder() {
+        }
 
         /**
          * 设置校验目标对象
@@ -555,16 +562,6 @@ public class ValidateUtils {
             for (ConstraintViolation<Object> violation : violations) {
                 errors.add(violation.getPropertyPath() + " " + violation.getMessage());
             }
-            return this;
-        }
-
-        /**
-         * 设置字段名（当前为占位方法，保留 API 兼容性）
-         *
-         * @param fieldName 字段名
-         * @return 当前 Builder 实例
-         */
-        public ValidatorBuilder field(String fieldName) {
             return this;
         }
 

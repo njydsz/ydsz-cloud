@@ -130,10 +130,16 @@ return converter;
             }
             config.setMaxJsonSize(properties.getMaxJsonSize());
             config.setMaxDepth(properties.getMaxDepth());
+            config.setUseBigDecimal(properties.isUseBigDecimal());
             config.apply();
 
             // 安全模式设置
             AutoTypeChecker.setSafeMode(properties.isSafeMode());
+
+            // 监控设置
+            if (properties.isMonitoringEnabled()) {
+                System.setProperty("pmis.json.monitoring", "true");
+            }
 
             // 注册 Spring Factory 模块
             JsonModuleRegistrar registrar = new JsonModuleRegistrar(springModules);

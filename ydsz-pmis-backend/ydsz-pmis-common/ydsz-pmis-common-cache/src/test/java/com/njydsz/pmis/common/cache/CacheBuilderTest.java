@@ -13,9 +13,7 @@ import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheBuilder;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.cache.internal.decorator.ExpirableCache;
-import com.njydsz.pmis.common.cache.internal.decorator.MemoryAwareEvictionCache;
-import com.njydsz.pmis.common.cache.internal.decorator.SwrCacheDecorator;
-import com.njydsz.pmis.common.cache.internal.decorator.WriteBehindCache;
+import com.njydsz.pmis.common.cache.internal.reference.WeakKeyCache;
 import com.njydsz.pmis.common.cache.support.CacheLoader;
 import com.njydsz.pmis.common.cache.support.CacheWriter;
 
@@ -184,5 +182,89 @@ class CacheBuilderTest {
     assertThatThrownBy(
             () -> CacheBuilder.<String, String>newBuilder().stripes(0).build())
         .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  @DisplayName("参数校验：同时设置 expireAfterWrite 和 expireAfterAccess 应抛异常")
+  void shouldRejectSimultaneousWriteAndAccessExpiration() {
+    assertThatThrownBy(
+            () ->
+                CacheBuilder.<String, String>newBuilder()
+                    .maximumSize(100)
+                    .expireAfterWrite(1, TimeUnit.HOURS)
+                    .expireAfterAccess(1, TimeUnit.HOURS)
+                    .build())
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  @DisplayName("deprecated TTL 类型重定向到 CONCURRENT + ExpirableCache")
+  void shouldRedirectTtlTypeToExpirableCache() {
+    Cache<String, String> cache =
+        CacheBuilder.<String, String>newBuilder()
+            .type(CacheType.TTL)
+            .maximumSize(100)
+            .expireAfterWrite(1, TimeUnit.HOURS)
+            .build();
+
+    // TTL 类型应被重定向为 ExpirableCache 装饰器
+    assertThat(cache).isInstanceOf(ExpirableCache.class);
+    cache.put("key", "value");
+    assertThat(cache.getIfPresent("key")).isEqualTo("value");
+  }
+
+  @Test
+  @DisplayName("deprecated TTL 类型未设置过期时间时默认 5 分钟")
+  void shouldDefaultTtlExpirationTo5Minutes() {
+    Cache<String, String> cache =
+        CacheBuilder.<String, String>newBuilder()
+            .type(CacheType.TTL)
+            .maximumSize(100)
+            .build();
+
+    // 应使用默认 5 分钟过期时间
+    assertThat(cache).isInstanceOf(ExpirableCache.class);
+    cache.put("key", "value");
+    assertThat(cache.getIfPresent("key")).isEqualTo("value");
+  }
+
+  @Test
+  @DisplayName("weakKeys() flag API 创建弱引用键缓存")
+  void shouldBuildWeakKeysCacheWithFlag() {
+    Cache<String, String> cache =
+        CacheBuilder.<String, String>newBuilder()
+            .weakKeys()
+            .maximumSize(100)
+            .build();
+
+    assertThat(cache).isInstanceOf(WeakKeyCache.class);
+    cache.put("key", "value");
+    assertThat(cache.getIfPresent("key")).isEqualTo("value");
+  }
+
+  @Test
+  @DisplayName("构建 LoadingCache 并应用装饰器")
+  void shouldBuildLoadingCacheWithDecorators() {
+    AtomicInteger loadCount = new AtomicInteger(0);
+    CacheLoader<String, String> loader =
+        CacheLoader.from(key -> {
+          loadCount.incrementAndGet();
+          return "loaded-" + key;
+        });
+
+    var loadingCache =
+        CacheBuilder.<String, String>newBuilder()
+            .type(CacheType.STRIPED)
+            .maximumSize(100)
+            .expireAfterWrite(1, TimeUnit.HOURS)
+            .loader(loader)
+            .buildLoadingCache();
+
+    String result = loadingCache.get("key1");
+    assertThat(result).isEqualTo("loaded-key1");
+    assertThat(loadCount.get()).isEqualTo(1);
+    // 第二次应命中缓存
+    loadingCache.get("key1");
+    assertThat(loadCount.get()).isEqualTo(1);
   }
 }

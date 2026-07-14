@@ -29,7 +29,7 @@ import lombok.experimental.SuperBuilder;
  *   <tr><td>status</td><td>Integer</td><td>状态标识</td></tr>
  *   <tr><td>statusName</td><td>String</td><td>状态名称</td></tr>
  *   <tr><td>remark</td><td>String</td><td>备注信息</td></tr>
- *   <tr><td>version</td><td>Integer</td><td>乐观锁版本号</td></tr>
+ *   <tr><td>version</td><td>Integer</td><td>乐观锁版本</td></tr>
  * </table>
  *
  * @author ydsz-pmis-team
@@ -111,7 +111,7 @@ public class BaseVO implements Serializable {
     private String remark;
 
     /**
-     * 乐观锁版本号
+     * 乐观锁版本
      *
      * <p>与实体中 {@code revision} 字段对应，用于并发控制。
      * 保留 {@code version} 命名以兼容前端 API 契约。

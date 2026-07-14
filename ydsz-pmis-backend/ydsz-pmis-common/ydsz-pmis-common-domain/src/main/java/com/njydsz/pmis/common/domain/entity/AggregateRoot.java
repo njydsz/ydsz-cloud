@@ -32,7 +32,7 @@ import com.njydsz.pmis.common.domain.event.DomainEvent;
  *     public void addItem(Product product, int quantity) {
  *         // 通过聚合根维护业务规约
  *         if (this.items.size() >= 100) {
- *             throw new BusinessException("订单项不能超。00）;
+ *             throw new BusinessException("订单项不能超过100）;
  *         }
  *         this.items.add(new OrderItem(product, quantity));
  *         registerEvent(new OrderItemAddedEvent(this.getId(), product.getId(), quantity));

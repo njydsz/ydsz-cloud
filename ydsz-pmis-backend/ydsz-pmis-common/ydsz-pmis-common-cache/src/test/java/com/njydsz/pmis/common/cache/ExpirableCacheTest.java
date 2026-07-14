@@ -12,6 +12,7 @@ import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheBuilder;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.cache.internal.decorator.ExpirableCache;
+import com.njydsz.pmis.common.cache.support.Expiry;
 
 /**
  * ExpirableCache 单元测试
@@ -127,6 +128,8 @@ class ExpirableCacheTest {
     assertThat(cache.getIfPresent("key1")).isEqualTo("value1");
     assertThat(cache.getIfPresent("key2")).isEqualTo("value2");
     assertThat(cache.getIfPresent("key3")).isEqualTo("value3");
+
+    cache.close();
   }
 
   @Test
@@ -163,5 +166,115 @@ class ExpirableCacheTest {
     assertThat(cache.getIfPresent("a")).isNull();
     assertThat(cache.getIfPresent("b")).isNull();
     assertThat(cache.estimatedSize()).isEqualTo(0);
+  }
+
+  @Test
+  @DisplayName("桶化清理：批量过期条目被后台清理任务移除")
+  void shouldCleanupExpiredEntriesViaBucketing() {
+    // 使用短过期时间 + 短清理间隔
+    ExpirableCache<String, String> cache =
+        new ExpirableCache<>(
+            CacheBuilder.<String, String>newBuilder()
+                .type(CacheType.LRU)
+                .maximumSize(1000)
+                .build(),
+            TimeUnit.MILLISECONDS.toNanos(200),
+            0,
+            null,
+            1, // 1 秒清理间隔
+            0.0); // 无抖动
+
+    // 写入多个条目
+    for (int i = 0; i < 100; i++) {
+      cache.put("key-" + i, "value-" + i);
+    }
+    assertThat(cache.estimatedSize()).isEqualTo(100);
+
+    // 等待过期 + 清理
+    await().atMost(5, TimeUnit.SECONDS)
+        .untilAsserted(
+            () -> {
+              // 清理后底层缓存大小应小于 100
+              // （部分可能已被 getIfPresent 中的惰性过期移除）
+              assertThat(cache.estimatedSize()).isLessThan(100);
+            });
+
+    cache.close();
+  }
+
+  @Test
+  @DisplayName("自定义 Expiry 策略：每个条目独立过期时间")
+  void shouldSupportCustomExpiry() {
+    ExpirableCache<String, String> cache =
+        new ExpirableCache<>(
+            CacheBuilder.<String, String>newBuilder()
+                .type(CacheType.LRU)
+                .maximumSize(100)
+                .build(),
+            0,
+            0,
+            new Expiry<String, String>() {
+              @Override
+              public long expireAfterCreate(String key, String value, long currentTime) {
+                // "short" key 过期快，其他过期慢
+                return "short".equals(key)
+                    ? TimeUnit.MILLISECONDS.toNanos(100)
+                    : TimeUnit.HOURS.toNanos(1);
+              }
+
+              @Override
+              public long expireAfterRead(String key, String value, long currentTime) {
+                return expireAfterCreate(key, value, currentTime);
+              }
+            },
+            1,
+            0.0);
+
+    cache.put("short", "fast-expire");
+    cache.put("long", "slow-expire");
+
+    assertThat(cache.getIfPresent("short")).isEqualTo("fast-expire");
+    assertThat(cache.getIfPresent("long")).isEqualTo("slow-expire");
+
+    // "short" 应该先过期
+    await().atMost(3, TimeUnit.SECONDS)
+        .untilAsserted(
+            () -> assertThat(cache.getIfPresent("short")).isNull());
+
+    // "long" 应仍然存在
+    assertThat(cache.getIfPresent("long")).isEqualTo("slow-expire");
+
+    cache.close();
+  }
+
+  @Test
+  @DisplayName("computeIfAbsent：未命中时加载并写入")
+  void shouldComputeIfAbsentOnExpirableCache() {
+    Cache<String, String> cache =
+        CacheBuilder.<String, String>newBuilder()
+            .type(CacheType.LRU)
+            .maximumSize(100)
+            .expireAfterWrite(1, TimeUnit.HOURS)
+            .build();
+
+    String result = cache.computeIfAbsent("key", k -> "computed-" + k);
+    assertThat(result).isEqualTo("computed-key");
+    assertThat(cache.getIfPresent("key")).isEqualTo("computed-key");
+  }
+
+  @Test
+  @DisplayName("putIfAbsent：已存在时不覆盖")
+  void shouldPutIfAbsentNotOverwriteOnExpirableCache() {
+    Cache<String, String> cache =
+        CacheBuilder.<String, String>newBuilder()
+            .type(CacheType.LRU)
+            .maximumSize(100)
+            .expireAfterWrite(1, TimeUnit.HOURS)
+            .build();
+
+    cache.put("key", "original");
+    String existing = cache.putIfAbsent("key", "new");
+    assertThat(existing).isEqualTo("original");
+    assertThat(cache.getIfPresent("key")).isEqualTo("original");
   }
 }

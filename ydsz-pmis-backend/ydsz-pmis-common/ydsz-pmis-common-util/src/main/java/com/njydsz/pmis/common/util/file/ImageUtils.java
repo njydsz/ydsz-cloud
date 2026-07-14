@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author ydsz-pmis-team
  * @since 1.0.0
  * 
- * @desc 支持图片读取、缩放、裁剪、旋转、格式转换、水印、Base64 等
+ *
  */
 @Slf4j
 public class ImageUtils {

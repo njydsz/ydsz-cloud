@@ -2,6 +2,8 @@ package com.njydsz.pmis.common.util.concurrent;
 
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -50,11 +52,86 @@ public class RateLimiterUtils {
     /** 默认空闲超时时间（毫秒），超过此时间未访问的限流器将被清理 */
     private static final long DEFAULT_MAX_IDLE_MILLIS = 30 * 60 * 1000L;
 
+    /** 自动清理调度间隔（毫秒），默认 5 分钟 */
+    private static final long AUTO_CLEANUP_INTERVAL_MILLIS = 5 * 60 * 1000L;
+
     private static final ConcurrentHashMap<String, SemaphoreLimiter> SEMAPHORE_REGISTRY = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<String, TokenBucketLimiter> TOKEN_BUCKET_REGISTRY = new ConcurrentHashMap<>();
 
+    /** 自动清理调度器（daemon 线程，懒加载） */
+    private static volatile ScheduledExecutorService cleanupScheduler;
+
     private RateLimiterUtils() {
         throw new UnsupportedOperationException("RateLimiterUtils is a utility class and cannot be instantiated");
+    }
+
+    /**
+     * 启动自动清理调度器
+     *
+     * <p>使用 daemon 线程定期执行 {@link #cleanupStale()} 清理空闲限流器。
+     * 调度器为懒加载，首次调用 {@link #createSemaphoreLimiter} 或 {@link #createTokenBucketLimiter} 时自动启动。
+     * 也可通过此方法手动启动，支持自定义清理间隔。
+     *
+     * @param intervalMillis 清理间隔（毫秒）
+     * @param maxIdleMillis  最大空闲时间（毫秒）
+     */
+    public static synchronized void startAutoCleanup(long intervalMillis, long maxIdleMillis) {
+        if (cleanupScheduler != null && !cleanupScheduler.isShutdown()) {
+            return;
+        }
+        cleanupScheduler = new ScheduledThreadPoolExecutor(1, r -> {
+            Thread t = new Thread(r, "ratelimiter-cleanup");
+            t.setDaemon(true);
+            return t;
+        });
+        cleanupScheduler.scheduleAtFixedRate(() -> {
+            try {
+                cleanupStale(maxIdleMillis);
+            } catch (Exception e) {
+                // 清理异常不影响调度器运行
+            }
+        }, intervalMillis, intervalMillis, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * 使用默认参数启动自动清理调度器
+     *
+     * <p>清理间隔 5 分钟，空闲超时 30 分钟。
+     */
+    public static void startAutoCleanup() {
+        startAutoCleanup(AUTO_CLEANUP_INTERVAL_MILLIS, DEFAULT_MAX_IDLE_MILLIS);
+    }
+
+    /**
+     * 停止自动清理调度器
+     *
+     * <p>应用关闭时调用，执行优雅关闭。
+     */
+    public static synchronized void stopAutoCleanup() {
+        if (cleanupScheduler != null && !cleanupScheduler.isShutdown()) {
+            cleanupScheduler.shutdown();
+            try {
+                if (!cleanupScheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                    cleanupScheduler.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                cleanupScheduler.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
+
+    /**
+     * 确保自动清理调度器已启动（懒加载）
+     */
+    private static void ensureAutoCleanupStarted() {
+        if (cleanupScheduler == null || cleanupScheduler.isShutdown()) {
+            synchronized (RateLimiterUtils.class) {
+                if (cleanupScheduler == null || cleanupScheduler.isShutdown()) {
+                    startAutoCleanup(AUTO_CLEANUP_INTERVAL_MILLIS, DEFAULT_MAX_IDLE_MILLIS);
+                }
+            }
+        }
     }
 
     // ==================== 信号量限流器 ====================
@@ -67,6 +144,7 @@ public class RateLimiterUtils {
      * @return 信号量限流器实例
      */
     public static SemaphoreLimiter createSemaphoreLimiter(String key, int maxPermits) {
+        ensureAutoCleanupStarted();
         evictIfNeeded();
         return SEMAPHORE_REGISTRY.computeIfAbsent(key, k -> new SemaphoreLimiter(k, maxPermits));
     }
@@ -171,6 +249,7 @@ public class RateLimiterUtils {
      * @return 令牌桶限流器实例
      */
     public static TokenBucketLimiter createTokenBucketLimiter(String key, int maxTokens, Duration refillInterval) {
+        ensureAutoCleanupStarted();
         evictIfNeeded();
         return TOKEN_BUCKET_REGISTRY.computeIfAbsent(key, k -> new TokenBucketLimiter(k, maxTokens, refillInterval));
     }

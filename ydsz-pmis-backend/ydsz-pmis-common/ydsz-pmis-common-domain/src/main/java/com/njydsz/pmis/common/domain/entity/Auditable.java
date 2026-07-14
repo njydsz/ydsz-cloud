@@ -3,9 +3,9 @@ package com.njydsz.pmis.common.domain.entity;
 import java.time.LocalDateTime;
 
 /**
- * 可审计实体接。
+ * 可审计实体接口
  *
- * <p>提供创建人时间、更新人/时间的标准访问方法。
+ * <p>提供创建人/时间、更新人/时间的标准访问方法。
  * 和 {@link BaseAuditEntity} 提供 JDBC 自动填充实现。
  * 也可由业务代码手动设置。
  *

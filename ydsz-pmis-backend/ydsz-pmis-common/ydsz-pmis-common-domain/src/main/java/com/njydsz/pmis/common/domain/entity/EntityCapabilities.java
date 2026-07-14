@@ -147,20 +147,22 @@ public final class EntityCapabilities {
 
     /**
      * 实际执行反射扫描查找标注字段
+     *
+     * <p>手动遍历类层次结构，找到第一个标注字段后立即返回。
      */
     private static <A extends Annotation> Optional<Field> doFindAnnotatedField(
             Class<?> entityClass, Class<A> annotationClass) {
-        final Field[] found = {null};
-        final boolean[] stopped = {false};
-
-        ReflectionUtils.doWithFields(entityClass, field -> {
-            if (!stopped[0] && field.isAnnotationPresent(annotationClass)) {
-                found[0] = field;
-                stopped[0] = true;
+        Class<?> clazz = entityClass;
+        while (clazz != null && clazz != Object.class) {
+            for (Field field : clazz.getDeclaredFields()) {
+                if (field.isAnnotationPresent(annotationClass)) {
+                    ReflectionUtils.makeAccessible(field);
+                    return Optional.of(field);
+                }
             }
-        });
-
-        return Optional.ofNullable(found[0]);
+            clazz = clazz.getSuperclass();
+        }
+        return Optional.empty();
     }
 
     /**

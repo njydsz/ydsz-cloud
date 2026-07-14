@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author ydsz-pmis-team
  * @since 1.0.0
  * 
- * @desc Rsa2Utils - RSA (SHA256withRSA) 加解密与签名工具类（纯 JDK 实现，零第三方依赖）
+ *
  */
 @Slf4j
 public class Rsa2Utils {

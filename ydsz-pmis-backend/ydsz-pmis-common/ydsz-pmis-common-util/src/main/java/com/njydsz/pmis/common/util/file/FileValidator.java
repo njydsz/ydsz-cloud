@@ -22,7 +22,7 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  * @author ydsz-pmis-team
  * @since 1.0.0
  * 
- * @desc 支持文件非空验证、大小验证、后缀白名单验证
+ *
  */
 public class FileValidator {
 

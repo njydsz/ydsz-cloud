@@ -459,6 +459,25 @@ public final class SnowflakeUtils {
     }
 
     /**
+     * 重置单例实例（仅供测试使用）
+     *
+     * <p>清除已初始化的单例实例，使后续调用 {@link #getInstance()} 或 {@link #init(long, long)}
+     * 能够重新创建实例。此方法仅用于单元测试中确保测试隔离，生产环境严禁调用。
+     *
+     * <pre>{@code
+     * @AfterEach
+     * void tearDown() {
+     *     SnowflakeUtils.resetForTesting();
+     * }
+     * }</pre>
+     */
+    static void resetForTesting() {
+        synchronized (SnowflakeUtils.class) {
+            INSTANCE = null;
+        }
+    }
+
+    /**
      * 时钟回拨异常
      *
      * <p>当系统时钟发生回拨时抛出，调用方可捕获此异常进行特殊处理（如等待时钟同步、切换节点等）。

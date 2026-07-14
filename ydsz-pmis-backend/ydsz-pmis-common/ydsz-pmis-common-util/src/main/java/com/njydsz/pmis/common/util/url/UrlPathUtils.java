@@ -21,41 +21,14 @@ import com.njydsz.pmis.common.util.collection.CollectionUtils;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
- * URL 路径工具类 - 增强版
+ * URL 路径工具类
  *
- * <p>提供全面的 URL 路径处理方法，参考阿里巴巴、Apache Commons 等大厂工具类最佳实践，
- * 并进行了功能增强和性能优化。</p>
+ * <p>提供 URL 路径匹配（Ant 风格）、路径规范化、路径变量提取、查询参数解析等能力。
  *
- * <p><b>主要功能：</b>
- * <ul>
- *   <li>路径匹配：match、matchAny、matchAll（支持 Ant 风格通配符）</li>
- *   <li>忽略检查：isIgnoreUrl（判断路径是否在忽略列表中）</li>
- *   <li>路径规范化：normalize、removeLeadingSlash、removeTrailingSlash</li>
- *   <li>路径解析：parsePath、extractUriTemplateVariables</li>
- *   <li>路径拼接：join、combine</li>
- *   <li>路径比较：equals、equalsIgnoreSlash</li>
- *   <li>参数处理：parseParams、encodeParam、decodeParam</li>
- * </ul>
- *
- * <p><b>Ant 风格通配符说明：</b>
- * <ul>
- *   <li>? - 匹配一个字符</li>
- *   <li>* - 匹配零个或多个字符（不跨目录）</li>
- *   <li>** - 匹配零个或多个目录（跨目录）</li>
- *   <li>{var} - 路径变量占位符</li>
- * </ul>
- *
- * <p><b>相比 Spring/Apache 的增强：</b>
- * <ul>
- *   <li>统一的工具类，合并路径匹配和忽略功能</li>
- *   <li>提供更多路径操作方法（规范化、拼接、解析等）</li>
- *   <li>支持路径参数解析和提取</li>
- *   <li>所有方法 null 安全处理</li>
- * </ul>
+ * <p>URL 协议检测、编码解码请使用 {@link com.njydsz.pmis.common.util.http.UrlUtils}。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  */
 public class UrlPathUtils {
 
