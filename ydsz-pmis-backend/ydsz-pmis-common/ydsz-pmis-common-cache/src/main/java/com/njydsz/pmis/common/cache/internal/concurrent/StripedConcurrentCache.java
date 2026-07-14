@@ -3,7 +3,6 @@ package com.njydsz.pmis.common.cache.internal.concurrent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -207,7 +206,12 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
 
     V get(K key) {
       Node<K, V> node = map.get(key);
-      return node != null ? node.value : null;
+      if (node != null) {
+        // 更新访问时间（LRU 语义）
+        node.lastAccessNanos = System.nanoTime();
+        return node.value;
+      }
+      return null;
     }
 
     void put(K key, V value) {
@@ -230,6 +234,7 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
       }
       // Atomic value update using volatile write
       existing.value = value;
+      existing.lastAccessNanos = System.nanoTime();
     }
 
     V remove(K key) {
@@ -276,17 +281,21 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     }
 
     private void evict(int batchSize) {
-      int evicted = 0;
-      Iterator<Map.Entry<K, Node<K, V>>> iter = map.entrySet().iterator();
-      while (iter.hasNext() && evicted < batchSize) {
-        Map.Entry<K, Node<K, V>> entry = iter.next();
+      // LRU 淘汰：按访问时间排序，淘汰最旧的条目
+      List<Map.Entry<K, Node<K, V>>> entries =
+          new ArrayList<>(map.entrySet());
+      entries.sort(
+          (a, b) -> Long.compare(a.getValue().lastAccessNanos, b.getValue().lastAccessNanos));
+      int evictCount = Math.min(batchSize, entries.size());
+      for (int i = 0; i < evictCount; i++) {
+        Map.Entry<K, Node<K, V>> entry = entries.get(i);
+        K key = entry.getKey();
         Node<K, V> node = entry.getValue();
-        if (node != null) {
-          iter.remove();
+        // 使用 remove 确保 CAS 语义，避免并发删除
+        if (map.remove(key, node)) {
           size.decrementAndGet();
           parent.decrementSize();
-          parent.notifyRemoval(entry.getKey(), node.value, RemovalCause.SIZE);
-          evicted++;
+          parent.notifyRemoval(key, node.value, RemovalCause.SIZE);
         }
       }
     }
@@ -294,9 +303,11 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
 
   private static class Node<K, V> {
     volatile V value;
+    volatile long lastAccessNanos;
 
     Node(K key, V value) {
       this.value = value;
+      this.lastAccessNanos = System.nanoTime();
     }
   }
 }

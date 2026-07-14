@@ -152,7 +152,7 @@ public class YdszJson {
      */
     public static String toJson(Object obj) {
         if (obj == null) {
-            return null;
+            return "null";
         }
         return recordSerialize(() -> YdszSerializerEngine.serialize(obj));
     }
@@ -166,7 +166,7 @@ public class YdszJson {
      */
     public static String toJson(Object obj, boolean pretty) {
         if (obj == null) {
-            return null;
+            return "null";
         }
         if (pretty) {
             return format(obj);
@@ -185,7 +185,7 @@ public class YdszJson {
      */
     public static String toJson(Object obj, Class<?> viewClass) {
         if (obj == null) {
-            return null;
+            return "null";
         }
         return recordSerialize(() -> YdszSerializerEngine.serialize(obj, viewClass));
     }
@@ -200,7 +200,7 @@ public class YdszJson {
      */
     public static String toJson(Object obj, Class<?> viewClass, boolean pretty) {
         if (obj == null) {
-            return null;
+            return "null";
         }
         return recordSerialize(() -> YdszSerializerEngine.serialize(obj, viewClass, pretty));
     }
@@ -213,7 +213,7 @@ public class YdszJson {
      */
     public static String format(Object obj) {
         if (obj == null) {
-            return null;
+            return "null";
         }
         return recordSerialize(() -> YdszSerializerEngine.format(obj));
     }
@@ -228,7 +228,7 @@ public class YdszJson {
      */
     public static byte[] toJsonBytes(Object obj) {
         if (obj == null) {
-            return new byte[0];
+            return "null".getBytes(StandardCharsets.UTF_8);
         }
         return recordSerialize(() -> {
             String json = YdszSerializerEngine.serialize(obj);
