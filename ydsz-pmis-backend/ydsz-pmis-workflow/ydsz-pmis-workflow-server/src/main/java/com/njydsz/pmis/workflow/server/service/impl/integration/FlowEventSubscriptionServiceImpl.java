@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.impl.integration;
+﻿package com.njydsz.pmis.workflow.server.service.impl.integration;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
@@ -251,7 +250,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
                 Map<String, Object> payloadMap = JsonUtils.parseMap(payload);
                 if (payloadMap != null) {
                     variables.putAll(payloadMap);
-                    instanceMapper.updateVariable(instance.getId(), JSON.toJSONString(variables));
+                    instanceMapper.updateVariable(instance.getId(), JsonUtils.toJson(variables));
                 }
             } catch (Exception e) {
                 log.warn("[Flow] payload 解析失败，忽略: subId={} err={}", sub.getId(), e.getMessage());

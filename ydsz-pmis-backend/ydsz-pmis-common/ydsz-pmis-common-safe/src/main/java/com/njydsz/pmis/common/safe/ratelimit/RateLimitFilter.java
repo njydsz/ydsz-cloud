@@ -1,8 +1,10 @@
-package com.njydsz.pmis.common.safe.ratelimit;
+﻿package com.njydsz.pmis.common.safe.ratelimit;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,7 +19,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.pmis.common.redis.service.RedisService;
@@ -84,7 +85,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final SafeAlertProperties alertProperties;
 
     /** JSON 序列化器，用于生成限流响应体 */
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    // JsonUtils as JSON engine
 
     public RateLimitFilter(RateLimitProperties properties,
                            RedisService redisService,
@@ -151,7 +152,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         response.setContentType("application/json;charset=UTF-8");
         BaseResponse<Void> body = BaseResponse.error(
                 UnifiedExceptionCode.RATE_LIMIT.getCode(), properties.getMessage());
-        response.getWriter().write(OBJECT_MAPPER.writeValueAsString(body));
+        response.getWriter().write(JsonUtils.toJson(body));
     }
 
     /**

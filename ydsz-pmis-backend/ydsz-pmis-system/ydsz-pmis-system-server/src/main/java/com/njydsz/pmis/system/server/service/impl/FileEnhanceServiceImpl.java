@@ -1,4 +1,4 @@
-package com.njydsz.pmis.system.server.service.impl.file;
+﻿package com.njydsz.pmis.system.server.service.impl.file;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -12,13 +12,14 @@ import java.util.Base64;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.file.config.MinioConfig;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.system.server.service.file.FileEnhanceService;
@@ -142,7 +143,7 @@ public class FileEnhanceServiceImpl implements FileEnhanceService {
         String uploadId = SnowflakeIdGenerator.nextIdStr();
         ChunkMeta meta = new ChunkMeta(filename, totalSize, totalChunks);
         try {
-            stringRedisTemplate.opsForValue().set(metaKey(uploadId), JSON.toJSONString(meta));
+            stringRedisTemplate.opsForValue().set(metaKey(uploadId), JsonUtils.toJson(meta));
         } catch (Exception e) {
             log.warn("[MultipartUpload] 写入分片元数据到 Redis 失败, uploadId={}: {}", uploadId, e.getMessage());
         }
@@ -376,7 +377,7 @@ public class FileEnhanceServiceImpl implements FileEnhanceService {
             if (!StringUtils.hasText(json)) {
                 return null;
             }
-            return JSON.parseObject(json, ChunkMeta.class);
+            return JsonUtils.fromJson(json, ChunkMeta.class);
         } catch (Exception e) {
             log.warn("[MultipartUpload] 读取分片元数据失败: uploadId={}: {}", uploadId, e.getMessage());
             return null;

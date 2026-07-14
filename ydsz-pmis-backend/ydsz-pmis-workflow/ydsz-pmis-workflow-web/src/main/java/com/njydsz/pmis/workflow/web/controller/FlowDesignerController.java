@@ -1,14 +1,15 @@
-package com.njydsz.pmis.workflow.web.controller.definition;
+﻿package com.njydsz.pmis.workflow.web.controller.definition;
 
 import java.util.List;
 import java.util.Map;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import jakarta.validation.Valid;
 
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.core.response.BaseResponse;
@@ -74,7 +75,7 @@ public class FlowDesignerController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Void> saveDesignerData(@PathVariable String id,
                                           @Valid @RequestBody FlowDesignerDataDTO dto) {
-        Map<String, Object> designerData = JSON.parseObject(dto.getDesignerData());
+        Map<String, Object> designerData = JsonUtils.parseMap(dto.getDesignerData());
         definitionService.saveDesignerData(id, designerData);
         return BaseResponse.ok();
     }
@@ -209,7 +210,7 @@ public class FlowDesignerController {
     public BaseResponse<Void> saveSlaConfig(@PathVariable String id,
                                         @PathVariable String nodeCode,
                                         @RequestBody Map<String, Object> slaConfig) {
-        String json = slaConfig == null ? null : JSON.toJSONString(slaConfig);
+        String json = slaConfig == null ? null : JsonUtils.toJson(slaConfig);
         definitionService.saveSlaConfig(id, nodeCode, json);
         return BaseResponse.ok();
     }

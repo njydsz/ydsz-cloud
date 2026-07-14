@@ -1,14 +1,15 @@
-package com.njydsz.pmis.agent.infra.tool;
+﻿package com.njydsz.pmis.agent.infra.tool;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.agent.domain.model.ToolCall;
 import com.njydsz.pmis.agent.domain.model.ToolDefinition;
 import com.njydsz.pmis.agent.domain.tool.ToolExecutor;
@@ -57,7 +58,7 @@ public class DefaultToolRegistry implements ToolRegistry {
         ToolRegistration registration = registry.get(toolCall.getName());
         if (registration == null) {
             log.warn("[Tool-Registry] 工具未找到: {}", toolCall.getName());
-            return JSON.toJSONString(Map.of("error", "工具未找到: " + toolCall.getName()));
+            return JsonUtils.toJson(Map.of("error", "工具未找到: " + toolCall.getName()));
         }
         long startTime = System.currentTimeMillis();
         try {
@@ -69,7 +70,7 @@ public class DefaultToolRegistry implements ToolRegistry {
             long duration = System.currentTimeMillis() - startTime;
             log.error("[Tool-Registry] 工具执行失败: {} ({}ms): {}",
                     toolCall.getName(), duration, e.getMessage(), e);
-            return JSON.toJSONString(Map.of(
+            return JsonUtils.toJson(Map.of(
                     "error", "工具执行失败: " + e.getMessage(),
                     "tool", toolCall.getName()));
         }

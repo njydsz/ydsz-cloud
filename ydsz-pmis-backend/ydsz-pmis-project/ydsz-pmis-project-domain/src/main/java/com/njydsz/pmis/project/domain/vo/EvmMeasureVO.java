@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.domain.vo;
+﻿package com.njydsz.pmis.project.domain.vo;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.njydsz.pmis.common.json.annotation.YdszJsonField;
 
 import lombok.Data;
 
@@ -22,7 +22,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@YdszJsonField(notWriteNullValue = true)
 public class EvmMeasureVO implements Serializable {
 
     @Serial

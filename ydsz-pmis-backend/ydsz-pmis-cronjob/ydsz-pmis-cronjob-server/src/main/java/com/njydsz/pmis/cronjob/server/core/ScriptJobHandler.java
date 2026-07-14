@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.core.handler;
+﻿package com.njydsz.pmis.cronjob.server.core.handler;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -14,14 +14,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.core.job.JobHandler;
 import com.njydsz.pmis.common.core.job.JobLogger;
 import com.njydsz.pmis.common.core.job.JobLoggerHolder;
@@ -110,7 +109,7 @@ public class ScriptJobHandler implements JobHandler {
             throw new IllegalArgumentException("SHELL 任务参数(paramsJson)为空");
         }
 
-        JSONObject params = JSON.parseObject(paramsJson);
+        JSONObject params = JsonUtils.parseMap(paramsJson);
         String language = params.getString("language");
         if (!StringUtils.hasText(language)) {
             throw new IllegalArgumentException("SHELL 任务参数缺少 language（shell/python）");

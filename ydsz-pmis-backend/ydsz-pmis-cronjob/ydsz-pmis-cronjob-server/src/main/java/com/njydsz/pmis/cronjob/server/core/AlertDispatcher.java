@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.core.alert;
+﻿package com.njydsz.pmis.cronjob.server.core.alert;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -8,13 +8,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -80,7 +80,6 @@ public class AlertDispatcher {
 
     private static final DateTimeFormatter TIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
 
     /**
      * 监听告警事件，异步派发通知。
@@ -260,7 +259,7 @@ public class AlertDispatcher {
             return Collections.emptyList();
         }
         try {
-            JSONArray array = JSON.parseArray(channelsJson);
+            JSONArray array = JsonUtils.parseList(channelsJson);
             List<AlertChannel> channels = new ArrayList<>(array.size());
             for (int i = 0; i < array.size(); i++) {
                 AlertChannel channel = AlertChannel.parse(array.getString(i));
@@ -287,7 +286,7 @@ public class AlertDispatcher {
             return Collections.emptyList();
         }
         try {
-            JSONArray array = JSON.parseArray(receiversJson);
+            JSONArray array = JsonUtils.parseList(receiversJson);
             List<String> receivers = new ArrayList<>(array.size());
             for (int i = 0; i < array.size(); i++) {
                 String receiver = array.getString(i);
@@ -402,7 +401,6 @@ public class AlertDispatcher {
         return text.replace("|", "\\|").replace("\n", " ");
     }
 
-
     /**
      * 根据失败通道数量确定告警状态。
      *
@@ -491,7 +489,7 @@ public class AlertDispatcher {
             return "INAPP";
         }
         try {
-            JSONArray array = JSON.parseArray(channelsJson);
+            JSONArray array = JsonUtils.parseList(channelsJson);
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < array.size(); i++) {
                 if (i > 0) {

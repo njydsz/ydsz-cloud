@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.template;
+﻿package com.njydsz.pmis.message.server.template;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,7 +7,6 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.util.json.JsonUtils;
@@ -43,7 +42,7 @@ public class TemplateVariableValidator {
             return List.of();
         }
         try {
-            return JSON.parseArray(variableDefs, TemplateVariableDef.class);
+            return JsonUtils.fromJsonToList(variableDefs, TemplateVariableDef.class);
         } catch (Exception e) {
             log.warn("[VariableValidator] 变量定义解析失败,跳过校验: {}", e.getMessage(), e);
             return List.of();

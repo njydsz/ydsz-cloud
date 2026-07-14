@@ -1,4 +1,4 @@
-package com.njydsz.pmis.agent.infra.memory;
+﻿package com.njydsz.pmis.agent.infra.memory;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -6,11 +6,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.agent.domain.conversation.ConversationMemory;
 import com.njydsz.pmis.agent.domain.model.ChatMessage;
 import com.njydsz.pmis.agent.domain.model.MessageRole;
@@ -123,12 +124,12 @@ public class RedisConversationMemory implements ConversationMemory {
             sm.promptTokens = message.getTokenUsage().getPromptTokens();
             sm.completionTokens = message.getTokenUsage().getCompletionTokens();
         }
-        return JSON.toJSONString(sm);
+        return JsonUtils.toJson(sm);
     }
 
     private ChatMessage deserializeMessage(String json) {
         try {
-            SerializedMessage sm = JSON.parseObject(json, SerializedMessage.class);
+            SerializedMessage sm = JsonUtils.fromJson(json, SerializedMessage.class);
             MessageRole role = MessageRole.valueOf(sm.role);
             TokenUsage usage = null;
             if (sm.promptTokens > 0 || sm.completionTokens > 0) {

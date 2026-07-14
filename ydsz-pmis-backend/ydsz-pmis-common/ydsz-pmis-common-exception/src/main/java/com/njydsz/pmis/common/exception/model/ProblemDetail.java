@@ -1,10 +1,10 @@
-package com.njydsz.pmis.common.exception.model;
+﻿package com.njydsz.pmis.common.exception.model;
 
 import java.net.URI;
 import java.time.Instant;
 import java.util.Map;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.njydsz.pmis.common.json.annotation.YdszJsonField;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,7 +42,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@YdszJsonField(notWriteNullValue = true)
 public class ProblemDetail {
 
     /**

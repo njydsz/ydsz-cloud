@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.core.handler;
+﻿package com.njydsz.pmis.cronjob.server.core.handler;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -7,11 +7,11 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Map;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Configuration;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.core.job.JobHandler;
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 
@@ -81,7 +81,7 @@ public class HttpJobHandler implements JobHandler {
             throw new IllegalArgumentException("HTTP 任务参数(paramsJson)为空");
         }
 
-        JSONObject params = JSON.parseObject(paramsJson);
+        JSONObject params = JsonUtils.parseMap(paramsJson);
         String url = params.getString("url");
         if (url == null || url.isBlank()) {
             throw new IllegalArgumentException("HTTP 任务参数缺少 url");

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.service.impl.config;
+﻿package com.njydsz.pmis.message.server.service.impl.config;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -12,7 +12,6 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.constant.PageConstants;
@@ -186,7 +185,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
         try {
             String json = stringRedisTemplate.opsForValue().get(MessageConstants.ROUTE_RULE_CACHE_KEY);
             if (StringUtils.hasText(json)) {
-                List<MsgRouteRuleDO> cached = JSON.parseArray(json, MsgRouteRuleDO.class);
+                List<MsgRouteRuleDO> cached = JsonUtils.fromJsonToList(json, MsgRouteRuleDO.class);
                 if (cached != null) {
                     return cached;
                 }

@@ -1,15 +1,15 @@
-package com.njydsz.pmis.workflow.server.engine;
+﻿package com.njydsz.pmis.workflow.server.engine;
 
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Ticker;
@@ -257,7 +257,7 @@ public class FlowDefinitionCacheService {
             return null;
         }
         try {
-            JSONObject extJson = JSON.parseObject(skip.getExt());
+            JSONObject extJson = JsonUtils.parseMap(skip.getExt());
             return extJson == null ? null : extJson.getString("sourceRef");
         } catch (Exception e) {
             log.warn("[FlowCache] 解析 skip.ext 失败: skipId={} err={}",

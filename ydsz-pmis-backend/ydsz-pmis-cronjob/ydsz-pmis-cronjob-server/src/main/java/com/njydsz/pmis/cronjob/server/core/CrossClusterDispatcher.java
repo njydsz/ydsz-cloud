@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.core.dispatch;
+﻿package com.njydsz.pmis.cronjob.server.core.dispatch;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -8,10 +8,9 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.stereotype.Component;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
+import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -66,7 +65,7 @@ public class CrossClusterDispatcher {
             return null;
         }
         String url = baseUrl + "/cronjob/internal/execute";
-        String requestBody = JSON.toJSONString(request);
+        String requestBody = JsonUtils.toJson(request);
         try {
             HttpRequest httpRequest = HttpRequest.newBuilder()
                     .uri(URI.create(url))
@@ -77,7 +76,7 @@ public class CrossClusterDispatcher {
                     .build();
             HttpResponse<String> response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
-                JSONObject json = JSON.parseObject(response.body());
+                JSONObject json = JsonUtils.parseMap(response.body());
                 int code = json.getIntValue("code", -1);
                 if (code == 0) {
                     String logId = json.getString("data");

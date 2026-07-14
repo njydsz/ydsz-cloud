@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.core.dispatch;
+﻿package com.njydsz.pmis.cronjob.server.core.dispatch;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -9,14 +9,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobWebhookDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobWebhookMapper;
 
@@ -106,7 +106,7 @@ public class WebhookEventDispatcher {
 
             // 添加自定义请求头
             if (webhook.getHeaders() != null && !webhook.getHeaders().isBlank()) {
-                JSONObject headers = JSON.parseObject(webhook.getHeaders());
+                JSONObject headers = JsonUtils.parseMap(webhook.getHeaders());
                 for (String key : headers.keySet()) {
                     builder.header(key, headers.getString(key));
                 }

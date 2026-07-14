@@ -1,12 +1,13 @@
-package com.njydsz.pmis.message.server.service.impl.canary;
+﻿package com.njydsz.pmis.message.server.service.impl.canary;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.constant.PageConstants;
@@ -137,6 +138,6 @@ public class CanaryServiceImpl implements CanaryService {
         for (int i = 0; i < count; i++) {
             buckets.add(i);
         }
-        return JSON.toJSONString(buckets);
+        return JsonUtils.toJson(buckets);
     }
 }

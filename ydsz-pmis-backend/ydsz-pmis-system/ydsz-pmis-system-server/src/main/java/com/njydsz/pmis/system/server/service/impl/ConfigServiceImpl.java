@@ -1,4 +1,4 @@
-package com.njydsz.pmis.system.server.service.impl.config;
+﻿package com.njydsz.pmis.system.server.service.impl.config;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheEvict;
@@ -15,8 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.constant.PageConstants;
@@ -119,11 +119,11 @@ public class ConfigServiceImpl implements ConfigService {
         String cacheKey = CACHE_PREFIX + group + ":" + key;
         String cached = redisTemplate.opsForValue().get(cacheKey);
         if (cached != null) {
-            return JSON.parseObject(cached, ConfigDO.class);
+            return JsonUtils.fromJson(cached, ConfigDO.class);
         }
         ConfigDO c = configMapper.selectByGroupAndKey(group, key);
         if (c != null) {
-            redisTemplate.opsForValue().set(cacheKey, JSON.toJSONString(c), CACHE_TTL);
+            redisTemplate.opsForValue().set(cacheKey, JsonUtils.toJson(c), CACHE_TTL);
         }
         return c;
     }
@@ -140,14 +140,14 @@ public class ConfigServiceImpl implements ConfigService {
         String cacheKey = CACHE_GROUP_PREFIX + group;
         String cached = redisTemplate.opsForValue().get(cacheKey);
         if (cached != null) {
-            return JSON.parseObject(cached, new TypeReference<Map<String, String>>() {});
+            return JSON.parseObject(cached, new YdszJsonType<Map<String, String>>() {});
         }
         List<ConfigDO> list = configMapper.selectByGroup(group);
         Map<String, String> map = new HashMap<>();
         for (ConfigDO c : list) {
             map.put(c.getConfigKey(), c.getConfigValue());
         }
-        redisTemplate.opsForValue().set(cacheKey, JSON.toJSONString(map), CACHE_TTL);
+        redisTemplate.opsForValue().set(cacheKey, JsonUtils.toJson(map), CACHE_TTL);
         return map;
     }
 

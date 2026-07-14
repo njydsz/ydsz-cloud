@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.web;
+﻿package com.njydsz.pmis.literule.web;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -36,7 +38,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
@@ -273,8 +274,8 @@ public class RuleAdminController {
         }
 
         try {
-            RuleDefinition oldDef = objectMapper.readValue(oldV.getDefinitionJson(), RuleDefinition.class);
-            RuleDefinition newDef = objectMapper.readValue(newV.getDefinitionJson(), RuleDefinition.class);
+            RuleDefinition oldDef = JsonUtils.fromJson(oldV.getDefinitionJson(), RuleDefinition.class);
+            RuleDefinition newDef = JsonUtils.fromJson(newV.getDefinitionJson(), RuleDefinition.class);
             RuleVersionDiffService diffService = new RuleVersionDiffService();
             return BaseResponse.ok(diffService.diff(oldDef, newDef));
         } catch (Exception e) {

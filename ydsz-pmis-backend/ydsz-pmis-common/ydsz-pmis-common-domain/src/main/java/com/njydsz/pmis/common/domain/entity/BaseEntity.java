@@ -1,8 +1,8 @@
-package com.njydsz.pmis.common.domain.entity;
+﻿package com.njydsz.pmis.common.domain.entity;
 
 import java.io.Serializable;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.njydsz.pmis.common.json.annotation.YdszJsonField;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -143,7 +143,7 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
      *
      * @see TableLogic
      */
-    @JsonIgnore
+    @YdszJsonField(ignore = true)
     private Integer deleted;
 
     /**

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.spi;
+﻿package com.njydsz.pmis.literule.server.spi;
 
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
@@ -6,7 +6,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.function.Consumer;
 
-import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import com.njydsz.pmis.literule.api.RuleDefinition;
 
 import lombok.extern.slf4j.Slf4j;
@@ -187,7 +188,7 @@ public class NacosRuleSource implements RuleSource {
             return List.of();
         }
         try {
-            return JSON.parseArray(json, RuleDefinition.class);
+            return JsonUtils.fromJsonToList(json, RuleDefinition.class);
         } catch (Exception e) {
             log.error("[NacosRuleSource] JSON 解析失败: {}", e.getMessage());
             return List.of();

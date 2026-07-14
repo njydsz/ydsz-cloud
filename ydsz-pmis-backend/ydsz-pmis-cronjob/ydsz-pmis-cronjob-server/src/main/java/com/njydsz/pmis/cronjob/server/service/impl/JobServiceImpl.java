@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.service.impl.job;
+﻿package com.njydsz.pmis.cronjob.server.service.impl.job;
 
 import java.lang.management.ManagementFactory;
 import java.time.Duration;
@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -28,7 +30,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.core.job.JobHandler;
@@ -879,7 +880,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             JobHandler handler = applicationContext.getBean(job.getHandler(), JobHandler.class);
             result = handler.execute(job.getParamsJson());
             success = true;
-            log0.setResultJson(result == null ? null : JSON.toJSONString(result));
+            log0.setResultJson(result == null ? null : JsonUtils.toJson(result));
         } catch (Exception e) {
             log.error("[Cronjob] 任务执行失败: key={} handler={} reason={}",
                     job.getJobKey(), job.getHandler(), e.getMessage(), e);

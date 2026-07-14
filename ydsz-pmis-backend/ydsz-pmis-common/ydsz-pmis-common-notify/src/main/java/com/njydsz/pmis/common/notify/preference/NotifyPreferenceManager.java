@@ -1,15 +1,15 @@
-package com.njydsz.pmis.common.notify.preference;
+﻿package com.njydsz.pmis.common.notify.preference;
 
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import com.njydsz.pmis.common.notify.enums.NotifyType;
 
@@ -61,7 +61,7 @@ public class NotifyPreferenceManager {
 			try {
 				String json = redisTemplate.opsForValue().get(REDIS_KEY_PREFIX + userId);
 				if (json != null) {
-					NotifyPreference pref = objectMapper.readValue(json, NotifyPreference.class);
+					NotifyPreference pref = JsonUtils.fromJson(json, NotifyPreference.class);
 					localCache.put(userId, pref);
 					return pref;
 				}
@@ -87,7 +87,7 @@ public class NotifyPreferenceManager {
 		localCache.put(preference.getUserId(), preference);
 		if (redisTemplate != null) {
 			try {
-				String json = objectMapper.writeValueAsString(preference);
+				String json = JsonUtils.toJson(preference);
 				redisTemplate.opsForValue().set(REDIS_KEY_PREFIX + preference.getUserId(), json, CACHE_TTL);
 			} catch (Exception e) {
 				log.warn("[NotifyPreferenceManager] Redis 保存偏好失败: {}", e.getMessage());

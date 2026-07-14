@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.core.dispatch;
+﻿package com.njydsz.pmis.cronjob.server.core.dispatch;
 
 import java.net.ConnectException;
 import java.net.URI;
@@ -8,11 +8,11 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Configuration;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobNodeDO;
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 
@@ -91,7 +91,7 @@ public class RemoteTaskClient {
             return null;
         }
         String url = buildUrl(node.getHost(), node.getPort());
-        String requestBody = JSON.toJSONString(request);
+        String requestBody = JsonUtils.toJson(request);
         CronjobProperties.Remote remoteConfig = cronjobProperties.getRemote();
 
         try {
@@ -141,7 +141,7 @@ public class RemoteTaskClient {
             return null;
         }
         String url = buildSubTaskUrl(node.getHost(), node.getPort());
-        String requestBody = JSON.toJSONString(request);
+        String requestBody = JsonUtils.toJson(request);
         CronjobProperties.Remote remoteConfig = cronjobProperties.getRemote();
 
         try {
@@ -194,7 +194,7 @@ public class RemoteTaskClient {
             return null;
         }
         try {
-            JSONObject json = JSON.parseObject(body);
+            JSONObject json = JsonUtils.parseMap(body);
             int code = json.getIntValue("code", -1);
             if (code != 0) {
                 log.warn("[RemoteClient] 子任务远程执行业务失败: code={} message={}",
@@ -203,7 +203,7 @@ public class RemoteTaskClient {
             }
             // data 是子任务执行结果对象（含 success/result/errorMessage）
             Object data = json.get("data");
-            return data == null ? null : JSON.toJSONString(data);
+            return data == null ? null : JsonUtils.toJson(data);
         } catch (Exception e) {
             log.warn("[RemoteClient] 子任务响应解析失败: body={} reason={}",
                     body.length() > 200 ? body.substring(0, 200) : body, e.getMessage());
@@ -232,7 +232,7 @@ public class RemoteTaskClient {
             return null;
         }
         try {
-            JSONObject json = JSON.parseObject(body);
+            JSONObject json = JsonUtils.parseMap(body);
             int code = json.getIntValue("code", -1);
             if (code != 0) {
                 log.warn("[RemoteClient] 远程执行业务失败: code={} message={}", 

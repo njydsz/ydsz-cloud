@@ -1,7 +1,9 @@
-package com.njydsz.pmis.gateway.filter;
+﻿package com.njydsz.pmis.gateway.filter;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -15,7 +17,6 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
-import com.alibaba.fastjson2.JSON;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.njydsz.pmis.common.core.response.BaseResponse;
@@ -136,7 +137,7 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
 
         BaseResponse<Void> body = BaseResponse.failed("403", "error.IP_BLACKLISTED");
         body.setTraceId(traceId);
-        byte[] bytes = JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = JsonUtils.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));
     }

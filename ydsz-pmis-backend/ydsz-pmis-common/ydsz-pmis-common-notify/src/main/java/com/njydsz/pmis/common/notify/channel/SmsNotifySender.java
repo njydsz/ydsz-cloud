@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.channel;
+﻿package com.njydsz.pmis.common.notify.channel;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -22,7 +22,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;

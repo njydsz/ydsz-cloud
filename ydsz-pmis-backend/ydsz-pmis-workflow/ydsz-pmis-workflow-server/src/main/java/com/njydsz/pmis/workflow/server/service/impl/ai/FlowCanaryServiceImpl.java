@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.impl.ai;
+﻿package com.njydsz.pmis.workflow.server.service.impl.ai;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -8,13 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
@@ -190,7 +189,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
             }
             JSONArray arr;
             try {
-                arr = JSON.parseArray(d.getCanaryRolloutLog());
+                arr = JsonUtils.parseList(d.getCanaryRolloutLog());
             } catch (Exception ex) {
                 log.warn("[Flow][Canary] 解析 rollout_log 失败: defId={} raw={}", d.getId(), d.getCanaryRolloutLog());
                 continue;
@@ -246,7 +245,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         JSONArray arr;
         if (StringUtils.hasText(def.getCanaryRolloutLog())) {
             try {
-                arr = JSON.parseArray(def.getCanaryRolloutLog());
+                arr = JsonUtils.parseList(def.getCanaryRolloutLog());
             } catch (Exception ex) {
                 log.warn("[Flow][Canary] 解析 rollout_log 失败，重置为空: defId={}", def.getId());
                 arr = new JSONArray();
@@ -262,7 +261,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         o.put("operateAt", LocalDateTime.now().toString());
         o.put("note", note);
         arr.add(o);
-        def.setCanaryRolloutLog(JSON.toJSONString(arr));
+        def.setCanaryRolloutLog(JsonUtils.toJson(arr));
     }
 
     /**

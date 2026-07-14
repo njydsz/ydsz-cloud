@@ -1,12 +1,13 @@
-package com.njydsz.pmis.project.server.literule;
+﻿package com.njydsz.pmis.project.server.literule;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.stereotype.Component;
 
-import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleSeverity;
@@ -41,7 +42,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
         RuleVersionHistoryDO DO = new RuleVersionHistoryDO();
         DO.setRuleCode(definition.getCode());
         DO.setVersion(definition.getVersion());
-        DO.setDefinitionJson(JSON.toJSONString(definition));
+        DO.setDefinitionJson(JsonUtils.toJson(definition));
         DO.setChangeDesc(changeDesc);
         DO.setOperator(operator);
         DO.setCreatedAt(LocalDateTime.now());
@@ -67,7 +68,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
         }
 
         // 从快照恢复规则定义
-        RuleDefinition restored = JSON.parseObject(targetVersion.getDefinitionJson(), RuleDefinition.class);
+        RuleDefinition restored = JsonUtils.parseMap(targetVersion.getDefinitionJson(), RuleDefinition.class);
 
         // 更新主表（版本号+1，因为回滚也是一次变更）
         RuleDefinitionDO existing = ruleDefinitionMapper.selectByCode(ruleCode);

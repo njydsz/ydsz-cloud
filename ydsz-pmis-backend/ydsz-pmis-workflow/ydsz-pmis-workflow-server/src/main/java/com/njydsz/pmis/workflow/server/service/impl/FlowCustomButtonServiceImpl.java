@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.impl;
+﻿package com.njydsz.pmis.workflow.server.service.impl;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -6,12 +6,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
@@ -64,7 +64,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
         }
         // 读取现有 ext JSON
         JSONObject extJson = StringUtils.hasText(node.getExt())
-                ? JSON.parseObject(node.getExt()) : new JSONObject();
+                ? JsonUtils.parseMap(node.getExt()) : new JSONObject();
         // 写入 customButtons
         if (buttons == null || buttons.isEmpty()) {
             extJson.remove("customButtons");
@@ -184,7 +184,7 @@ public class FlowCustomButtonServiceImpl implements FlowCustomButtonService {
             return List.of();
         }
         try {
-            JSONObject ext = JSON.parseObject(extJson);
+            JSONObject ext = JsonUtils.parseMap(extJson);
             Object buttons = ext.get("customButtons");
             if (buttons == null) {
                 return List.of();

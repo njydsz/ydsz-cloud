@@ -1,9 +1,9 @@
-package com.njydsz.pmis.message.server.channel;
+﻿package com.njydsz.pmis.message.server.channel;
 
 import java.util.List;
 import java.util.Map;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.njydsz.pmis.common.json.type.YdszJsonType;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
@@ -86,7 +86,7 @@ public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {
         request.setTemplateCode(templateCode);
         if (templateParams instanceof Map<?, ?> map) {
             Map<String, Object> params = JsonUtils.fromJson(
-                    JsonUtils.toJson(map), new TypeReference<Map<String, Object>>() {});
+                    JsonUtils.toJson(map), new YdszJsonType<Map<String, Object>>() {});
             request.setParams(params);
         }
         try {

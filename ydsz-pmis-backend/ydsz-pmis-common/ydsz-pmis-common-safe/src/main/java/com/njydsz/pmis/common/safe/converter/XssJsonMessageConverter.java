@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.converter;
+﻿package com.njydsz.pmis.common.safe.converter;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -18,7 +18,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.safe.xss.EscapeUtils;
 
 /**

@@ -1,17 +1,16 @@
-package com.njydsz.pmis.agent.infra.rag;
+﻿package com.njydsz.pmis.agent.infra.rag;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.client.RestClient;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.agent.domain.gateway.LlmException;
 import com.njydsz.pmis.agent.domain.rag.EmbeddingClient;
 
@@ -60,7 +59,7 @@ public class OpenAiEmbeddingClient implements EmbeddingClient {
         try {
             String responseJson = restClient.post()
                     .uri("/embeddings")
-                    .body(JSON.toJSONString(body))
+                    .body(JsonUtils.toJson(body))
                     .retrieve()
                     .body(String.class);
             return parseEmbeddings(responseJson);
@@ -82,7 +81,7 @@ public class OpenAiEmbeddingClient implements EmbeddingClient {
     }
 
     private List<List<Float>> parseEmbeddings(String json) {
-        JSONObject obj = JSON.parseObject(json);
+        JSONObject obj = JsonUtils.parseMap(json);
         JSONArray data = obj.getJSONArray("data");
         if (data == null || data.isEmpty()) {
             throw new LlmException("Embedding 响应无 data", LlmException.ErrorType.INVALID_RESPONSE);

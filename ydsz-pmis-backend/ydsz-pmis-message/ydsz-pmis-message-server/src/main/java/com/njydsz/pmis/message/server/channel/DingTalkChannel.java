@@ -1,9 +1,11 @@
-package com.njydsz.pmis.message.server.channel.impl;
+﻿package com.njydsz.pmis.message.server.channel.impl;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import jakarta.annotation.PostConstruct;
 
@@ -14,7 +16,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.CryptoSignUtil;
@@ -113,13 +114,13 @@ public class DingTalkChannel implements MessageChannel {
             ResponseEntity<String> response = restClient.post()
                     .uri(webhookUrl)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(JSON.toJSONString(payload))
+                    .body(JsonUtils.toJson(payload))
                     .retrieve()
                     .toEntity(String.class);
             String traceId = CHANNEL_TYPE + "-" + SnowflakeIdGenerator.nextTraceId();
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> body = JSON.parseObject(response.getBody());
+                Map<String, Object> body = JsonUtils.parseMap(response.getBody());
                 int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
                 if (errcode == 0) {
                     log.info("[DINGTALK] 发送成功");

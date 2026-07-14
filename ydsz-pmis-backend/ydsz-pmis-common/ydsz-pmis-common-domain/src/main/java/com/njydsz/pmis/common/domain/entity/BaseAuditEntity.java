@@ -1,9 +1,9 @@
-package com.njydsz.pmis.common.domain.entity;
+﻿package com.njydsz.pmis.common.domain.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.njydsz.pmis.common.json.annotation.YdszJsonFormat;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -101,7 +101,7 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
      *
      * <p><b>字段映射：</b> created_at -> createdAt
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
     /**
@@ -123,7 +123,7 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
      *
      * <p><b>字段映射：</b> updated_at -> updatedAt
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 
     /**

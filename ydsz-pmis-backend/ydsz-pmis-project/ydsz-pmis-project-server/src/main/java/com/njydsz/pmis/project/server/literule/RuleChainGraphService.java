@@ -1,11 +1,12 @@
-package com.njydsz.pmis.project.server.literule;
+﻿package com.njydsz.pmis.project.server.literule;
 
 import java.time.LocalDateTime;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.literule.domain.entity.RuleChainGraphDO;
 import com.njydsz.pmis.literule.infra.mapper.RuleChainGraphMapper;
 import com.njydsz.pmis.literule.server.orchestrator.RuleChainGraph;
@@ -73,7 +74,7 @@ public class RuleChainGraphService implements RuleChainGraphProvider {
             DO.setTenantId(graph.getTenantId() != null ? graph.getTenantId() : "1");
             DO.setGraphVersion(1);
             DO.setStatus(graph.getStatus() != null ? graph.getStatus() : "DRAFT");
-            DO.setContentJson(JSON.toJSONString(graph));
+            DO.setContentJson(JsonUtils.toJson(graph));
             DO.setCreatedBy(operator);
             DO.setCreatedAt(now);
             DO.setUpdatedBy(operator);
@@ -86,7 +87,7 @@ public class RuleChainGraphService implements RuleChainGraphProvider {
         existing.setDescription(graph.getDescription());
         existing.setScenario(graph.getScenario());
         existing.setStatus(graph.getStatus() != null ? graph.getStatus() : existing.getStatus());
-        existing.setContentJson(JSON.toJSONString(graph));
+        existing.setContentJson(JsonUtils.toJson(graph));
         existing.setGraphVersion((existing.getGraphVersion() == null ? 1 : existing.getGraphVersion()) + 1);
         existing.setUpdatedBy(operator);
         existing.setUpdatedAt(now);
@@ -117,7 +118,7 @@ public class RuleChainGraphService implements RuleChainGraphProvider {
      */
     private RuleChainGraph toGraph(RuleChainGraphDO DO) {
         try {
-            return JSON.parseObject(DO.getContentJson(), RuleChainGraph.class);
+            return JsonUtils.parseMap(DO.getContentJson(), RuleChainGraph.class);
         } catch (Exception e) {
             log.warn("[RuleChainGraph] 画布 JSON 解析失败: ruleCode={}, err={}",
                     DO.getRuleCode(), e.getMessage());

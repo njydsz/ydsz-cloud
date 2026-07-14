@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.server.channel.impl;
+﻿package com.njydsz.pmis.message.server.channel.impl;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -6,6 +6,8 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -19,7 +21,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.feign.MessageRequest;
@@ -111,13 +112,13 @@ public class FeishuChannel implements MessageChannel {
             ResponseEntity<String> response = restClient.post()
                     .uri(webhookUrl)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(JSON.toJSONString(payload))
+                    .body(JsonUtils.toJson(payload))
                     .retrieve()
                     .toEntity(String.class);
             String traceId = CHANNEL_TYPE + "-" + SnowflakeIdGenerator.nextTraceId();
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> body = JSON.parseObject(response.getBody());
+                Map<String, Object> body = JsonUtils.parseMap(response.getBody());
                 // 飞书 v2 hook 返回 {"code":0,"msg":"success"}，0 表示成功
                 int code = ((Number) body.getOrDefault("code", -1)).intValue();
                 if (code == 0) {

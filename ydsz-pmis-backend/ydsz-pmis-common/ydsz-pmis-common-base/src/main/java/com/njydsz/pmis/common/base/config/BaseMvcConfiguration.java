@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.base.config;
+﻿package com.njydsz.pmis.common.base.config;
 
 import java.util.List;
 
@@ -12,7 +12,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 
 /**

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.agent.infra.llm;
+﻿package com.njydsz.pmis.agent.infra.llm;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,9 +21,6 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.agent.domain.gateway.LlmClient;
 import com.njydsz.pmis.agent.domain.gateway.LlmException;
 import com.njydsz.pmis.agent.domain.model.ChatChunk;
@@ -100,7 +99,7 @@ public class OpenAiCompatibleClient implements LlmClient {
         try {
             String responseJson = restClient.post()
                     .uri("/chat/completions")
-                    .body(JSON.toJSONString(requestBody))
+                    .body(JsonUtils.toJson(requestBody))
                     .retrieve()
                     .body(String.class);
             return parseResponse(responseJson);
@@ -128,7 +127,7 @@ public class OpenAiCompatibleClient implements LlmClient {
         try {
             webClient.post()
                     .uri("/chat/completions")
-                    .bodyValue(JSON.toJSONString(requestBody))
+                    .bodyValue(JsonUtils.toJson(requestBody))
                     .retrieve()
                     .bodyToFlux(String.class)
                     .doOnNext(line -> {
@@ -200,7 +199,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                     call.put("id", tc.getId());
                     Map<String, Object> function = new HashMap<>();
                     function.put("name", tc.getName());
-                    function.put("arguments", JSON.toJSONString(tc.getArguments()));
+                    function.put("arguments", JsonUtils.toJson(tc.getArguments()));
                     call.put("type", "function");
                     call.put("function", function);
                     calls.add(call);
@@ -234,7 +233,7 @@ public class OpenAiCompatibleClient implements LlmClient {
     }
 
     private ChatResponse parseResponse(String json) {
-        JSONObject obj = JSON.parseObject(json);
+        JSONObject obj = JsonUtils.parseMap(json);
         String id = obj.getString("id");
         String model = obj.getString("model");
         JSONArray choices = obj.getJSONArray("choices");
@@ -255,7 +254,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                 JSONObject function = call.getJSONObject("function");
                 String name = function.getString("name");
                 String argsStr = function.getString("arguments");
-                Map<String, Object> args = JSON.parseObject(argsStr, Map.class);
+                Map<String, Object> args = JsonUtils.fromJson(argsStr, Map.class);
                 toolCalls.add(new ToolCall(callId, name, args));
             }
         }
@@ -277,7 +276,7 @@ public class OpenAiCompatibleClient implements LlmClient {
 
     private ChatChunk parseChunk(String data) {
         try {
-            JSONObject obj = JSON.parseObject(data);
+            JSONObject obj = JsonUtils.parseMap(data);
             String id = obj.getString("id");
             String model = obj.getString("model");
             JSONArray choices = obj.getJSONArray("choices");

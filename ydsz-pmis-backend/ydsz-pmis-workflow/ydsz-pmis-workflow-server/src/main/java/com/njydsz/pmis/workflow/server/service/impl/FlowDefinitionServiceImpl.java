@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.impl;
+﻿package com.njydsz.pmis.workflow.server.service.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -15,6 +15,8 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -23,9 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.auth.context.AuthContext;
@@ -529,7 +528,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         if (detail == null) {
             throw new SysException(StandardResultCode.NOT_FOUND, "流程定义不存在: " + definitionId);
         }
-        return JSON.toJSONString(detail);
+        return JsonUtils.toJson(detail);
     }
 
     @Override
@@ -540,7 +539,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
         JSONObject root;
         try {
-            root = JSON.parseObject(json);
+            root = JsonUtils.parseMap(json);
         } catch (Exception e) {
             throw new SysException(StandardResultCode.BAD_REQUEST, "JSON 解析失败: " + e.getMessage());
         }
@@ -602,7 +601,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 String ext = s.getString("ext");
                 if (StringUtils.hasText(ext)) {
                     try {
-                        JSONObject extJson = JSON.parseObject(ext);
+                        JSONObject extJson = JsonUtils.parseMap(ext);
                         if (extJson != null) {
                             skip.setFromNodeCode(extJson.getString("sourceRef"));
                         }
@@ -645,7 +644,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 String source = null;
                 if (StringUtils.hasText(skip.getExt())) {
                     try {
-                        JSONObject extJson = JSON.parseObject(skip.getExt());
+                        JSONObject extJson = JsonUtils.parseMap(skip.getExt());
                         source = extJson != null ? extJson.getString("sourceRef") : null;
                     } catch (Exception e) { log.warn("解析skip节点ext JSON失败: {}", e.getMessage(), e); }
                 }
@@ -685,7 +684,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 Object coord = nodeData.get("coordinate");
                 if (coord != null) {
                     String coordStr = coord instanceof String
-                            ? (String) coord : JSON.toJSONString(coord);
+                            ? (String) coord : JsonUtils.toJson(coord);
                     FlowNodeDO nodeForCoord = nodeMapper.selectByCode(definitionId, nodeCode);
                     if (nodeForCoord != null) {
                         nodeForCoord.setCoordinate(coordStr);
@@ -704,7 +703,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                         }
                         Object ext = nodeData.get("ext");
                         if (ext != null) {
-                            node.setExt(ext instanceof String ? (String) ext : JSON.toJSONString(ext));
+                            node.setExt(ext instanceof String ? (String) ext : JsonUtils.toJson(ext));
                         }
                         nodeMapper.updateById(node);
                     }
@@ -1002,7 +1001,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         String sourceRef = null;
         if (StringUtils.hasText(skip.getExt())) {
             try {
-                JSONObject extJson = JSON.parseObject(skip.getExt());
+                JSONObject extJson = JsonUtils.parseMap(skip.getExt());
                 sourceRef = extJson != null ? extJson.getString("sourceRef") : null;
             } catch (Exception ignored) {
                 // ignore parse error
@@ -1021,7 +1020,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         String sourceRef = null;
         if (StringUtils.hasText(skip.getExt())) {
             try {
-                JSONObject extJson = JSON.parseObject(skip.getExt());
+                JSONObject extJson = JsonUtils.parseMap(skip.getExt());
                 sourceRef = extJson != null ? extJson.getString("sourceRef") : null;
             } catch (Exception ignored) {
                 // ignore

@@ -1,14 +1,15 @@
-package com.njydsz.pmis.agent.infra.rag;
+﻿package com.njydsz.pmis.agent.infra.rag;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.agent.domain.rag.TextChunk;
 
 /**
@@ -67,7 +68,7 @@ public class PgVectorStore implements com.njydsz.pmis.agent.domain.rag.VectorSto
                     metadata = EXCLUDED.metadata
                 """;
         String embeddingStr = chunk.hasEmbedding() ? vectorToString(chunk.getEmbedding()) : null;
-        String metadataJson = JSON.toJSONString(chunk.getMetadata());
+        String metadataJson = JsonUtils.toJson(chunk.getMetadata());
         jdbcTemplate.update(sql,
                 chunk.getId(),
                 chunk.getDocumentId(),
@@ -120,7 +121,7 @@ public class PgVectorStore implements com.njydsz.pmis.agent.domain.rag.VectorSto
                         Map<String, Object> metadata = new HashMap<>();
                         String metadataJson = rs.getString("metadata");
                         if (metadataJson != null && !metadataJson.isBlank()) {
-                            metadata = JSON.parseObject(metadataJson, Map.class);
+                            metadata = JsonUtils.fromJson(metadataJson, Map.class);
                         }
                         return new TextChunk(
                                 rs.getString("id"),

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.dsl;
+﻿package com.njydsz.pmis.literule.server.dsl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,10 +12,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.yaml.snakeyaml.Yaml;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
+import org.yaml.snakeyaml.Yaml;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -96,7 +95,7 @@ public final class RuleDslParser {
         if (jsonContent == null || jsonContent.isBlank()) {
             return emptyDsl();
         }
-        JSONObject raw = JSON.parseObject(jsonContent);
+        JSONObject raw = JsonUtils.parseMap(jsonContent);
         if (raw == null || raw.isEmpty()) {
             return emptyDsl();
         }

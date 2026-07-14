@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.app.config;
+﻿package com.njydsz.pmis.common.app.config;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -13,8 +13,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 
-import com.fasterxml.jackson.core.StreamWriteFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.app.advice.AppGlobalResponseAdvice;
 import com.njydsz.pmis.common.app.exception.AppExceptionHandler;
 import com.njydsz.pmis.common.app.filter.AppAuthFilter;

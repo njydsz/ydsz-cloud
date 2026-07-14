@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.redis.config;
+﻿package com.njydsz.pmis.common.redis.config;
 
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -18,7 +18,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.redis.annotation.YdszCacheableAspect;
 import com.njydsz.pmis.common.redis.health.RedisHealthIndicator;
 import com.njydsz.pmis.common.redis.interceptor.RedisRetryInterceptor;

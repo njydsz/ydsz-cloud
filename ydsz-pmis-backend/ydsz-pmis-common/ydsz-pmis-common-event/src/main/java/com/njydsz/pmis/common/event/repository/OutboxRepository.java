@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.event.repository;
+﻿package com.njydsz.pmis.common.event.repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -7,13 +7,13 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.njydsz.pmis.common.json.type.YdszJsonType;
 import com.njydsz.pmis.common.event.model.OutboxMessage;
 import com.njydsz.pmis.common.event.model.OutboxStatus;
 
@@ -28,7 +28,7 @@ import com.njydsz.pmis.common.event.model.OutboxStatus;
  */
 public class OutboxRepository {
 
-    private static final TypeReference<Map<String, String>> MAP_TYPE = new TypeReference<>() {};
+    private static final YdszJsonType<Map<String, String>> MAP_TYPE = new YdszJsonType<>() {};
 
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper;
@@ -155,7 +155,7 @@ public class OutboxRepository {
             return null;
         }
         try {
-            return objectMapper.writeValueAsString(headers);
+            return JsonUtils.toJson(headers);
         } catch (JsonProcessingException e) {
             return null;
         }

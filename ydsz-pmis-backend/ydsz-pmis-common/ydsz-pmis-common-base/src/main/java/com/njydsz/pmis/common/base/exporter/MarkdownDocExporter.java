@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.base.exporter;
+﻿package com.njydsz.pmis.common.base.exporter;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.njydsz.pmis.common.json.type.YdszJsonType;
 import com.njydsz.pmis.common.base.config.DocProperties;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.common.util.json.YamlUtils;
@@ -249,7 +249,7 @@ public class MarkdownDocExporter implements DocExporter {
         String description = docProperties.getInfo().getDescription();
 
         try {
-            Map<String, Object> root = JsonUtils.fromJson(apiDocs, new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> root = JsonUtils.fromJson(apiDocs, new YdszJsonType<Map<String, Object>>() {});
             Map<String, Object> info = (Map<String, Object>) root.get("info");
             if (info != null) {
                 if (info.containsKey("title")) {
@@ -328,7 +328,7 @@ public class MarkdownDocExporter implements DocExporter {
         md.append("---\n\n");
 
         try {
-            Map<String, Object> root = JsonUtils.fromJson(apiDocs, new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> root = JsonUtils.fromJson(apiDocs, new YdszJsonType<Map<String, Object>>() {});
 
             // 服务器信息
             List<Map<String, Object>> servers = (List<Map<String, Object>>) root.get("servers");

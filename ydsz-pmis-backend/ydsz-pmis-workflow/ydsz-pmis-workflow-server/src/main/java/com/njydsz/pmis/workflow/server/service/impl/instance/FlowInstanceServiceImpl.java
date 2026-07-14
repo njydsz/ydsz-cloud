@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.impl.instance;
+﻿package com.njydsz.pmis.workflow.server.service.impl.instance;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.auth.annotation.DataScope;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.core.response.PageResponse;
@@ -201,7 +200,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 mergedVars.put("_selfSelect_" + entry.getKey(), entry.getValue());
             }
         }
-        instance.setVariable(mergedVars.isEmpty() ? null : JSON.toJSONString(mergedVars));
+        instance.setVariable(mergedVars.isEmpty() ? null : JsonUtils.toJson(mergedVars));
         instance.setTenantId(tenantId);
         instance.setProviderTraceId(dto.getProviderTraceId());
         // P1-3: 子流程场景：填充父实例信息
@@ -273,7 +272,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             try {
                 Map<String, Object> m = parseVariables(var);
                 m.put("_terminateReason", reason);
-                var = JSON.toJSONString(m);
+                var = JsonUtils.toJson(m);
                 // 修复 P2-18: 写回 DB（之前仅改局部变量未持久化）
                 instanceMapper.updateVariable(instanceId, var);
             } catch (Exception e) {
@@ -653,7 +652,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             rollbackInfo.put("rolledBackAt", now.toString());
             rollbackInfo.put("byAdmin", isAdmin && !isInitiator);
             vars.put("_rollback", rollbackInfo);
-            instanceMapper.updateVariable(instanceId, JSON.toJSONString(vars));
+            instanceMapper.updateVariable(instanceId, JsonUtils.toJson(vars));
         } catch (Exception e) {
             log.warn("[Flow] 回滚元信息持久化失败: instanceId={} err={}", instanceId, e.getMessage());
         }
@@ -736,7 +735,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
         Map<String, Object> map = parseVariables(instance.getVariable());
         map.put(key, value);
-        instanceMapper.updateVariable(instanceId, JSON.toJSONString(map));
+        instanceMapper.updateVariable(instanceId, JsonUtils.toJson(map));
         log.info("[Flow] 设置变量: instanceId={} key={}", instanceId, key);
     }
 
@@ -753,7 +752,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
         Map<String, Object> map = parseVariables(instance.getVariable());
         map.putAll(variables);
-        instanceMapper.updateVariable(instanceId, JSON.toJSONString(map));
+        instanceMapper.updateVariable(instanceId, JsonUtils.toJson(map));
         log.info("[Flow] 批量设置变量: instanceId={} keys={}", instanceId, variables.keySet());
     }
 
@@ -1409,7 +1408,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         instance.setStartAt(LocalDateTime.now());
         instance.setEndAt(null);
         instance.setRejectReason(null);
-        instance.setVariable(merged.isEmpty() ? null : JSON.toJSONString(merged));
+        instance.setVariable(merged.isEmpty() ? null : JsonUtils.toJson(merged));
         instanceMapper.updateById(instance);
         // 5. 记录重审审计（保留原轨迹，仅追加一条 RESUBMIT 记录）
         FlowAuditLogDO audit = new FlowAuditLogDO();

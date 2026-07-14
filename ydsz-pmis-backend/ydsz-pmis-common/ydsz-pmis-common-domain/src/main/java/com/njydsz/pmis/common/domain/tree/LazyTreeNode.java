@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.domain.tree;
+﻿package com.njydsz.pmis.common.domain.tree;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -8,7 +8,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.njydsz.pmis.common.json.annotation.YdszJsonField;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -62,7 +62,7 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     /**
      * 节点提供者，用于懒加载子节点
      */
-    @JsonIgnore
+    @YdszJsonField(ignore = true)
     private transient TreeNodeProvider<T, ID> provider;
 
     /**
@@ -83,19 +83,19 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     /**
      * 最大允许深度
      */
-    @JsonIgnore
+    @YdszJsonField(ignore = true)
     private transient Integer maxDepth;
 
     /**
      * ID提取器
      */
-    @JsonIgnore
+    @YdszJsonField(ignore = true)
     private transient Function<T, ID> idExtractor;
 
     /**
      * 加载锁，替代 synchronized(this) 以避免 JDK21 虚拟线程 Pinning
      */
-    @JsonIgnore
+    @YdszJsonField(ignore = true)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private transient ReentrantLock loadLock = new ReentrantLock();

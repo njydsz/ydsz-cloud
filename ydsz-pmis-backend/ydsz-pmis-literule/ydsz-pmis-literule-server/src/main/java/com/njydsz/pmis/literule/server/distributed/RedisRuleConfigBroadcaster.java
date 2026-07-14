@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.distributed;
+﻿package com.njydsz.pmis.literule.server.distributed;
 
 import org.redisson.api.RTopic;
 import org.redisson.api.RedissonClient;
@@ -7,7 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
-import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import com.njydsz.pmis.literule.domain.event.RuleConfigRefreshEvent;
 import com.njydsz.pmis.literule.server.spi.RuleConfigBroadcaster;
 
@@ -64,7 +65,7 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
         if (event == null) return;
         try {
             BroadcastMessage message = new BroadcastMessage(sourceId, event);
-            String json = JSON.toJSONString(message);
+            String json = JsonUtils.toJson(message);
             RTopic topic = redissonClient.getTopic(TOPIC_NAME);
             topic.publish(json);
             log.info("[Distributed-Redis] 规则变更事件已广播: ruleCode={}, changeType={}, source={}",
@@ -120,7 +121,7 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
     private void handleReceivedMessage(String msg) {
         if (msg == null || msg.isEmpty()) return;
         try {
-            BroadcastMessage message = JSON.parseObject(msg, BroadcastMessage.class);
+            BroadcastMessage message = JsonUtils.fromJson(msg, BroadcastMessage.class);
             if (message == null || message.getEvent() == null) {
                 return;
             }

@@ -1,14 +1,15 @@
-package com.njydsz.pmis.common.notify.queue;
+﻿package com.njydsz.pmis.common.notify.queue;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.notify.channel.EmailMessage;
 import com.njydsz.pmis.common.notify.channel.EmailNotifySender;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
@@ -70,7 +71,7 @@ public class EmailQueueService {
 			return false;
 		}
 		try {
-			String json = objectMapper.writeValueAsString(message);
+			String json = JsonUtils.toJson(message);
 			redisTemplate.opsForList().rightPush(QUEUE_KEY, json);
 			totalEnqueued.incrementAndGet();
 			log.debug("[EmailQueueService] 邮件已入队: to={}", message.getTo());
@@ -115,7 +116,7 @@ public class EmailQueueService {
 					Thread.sleep(1000);
 					continue;
 				}
-				EmailMessage message = objectMapper.readValue(json, EmailMessage.class);
+				EmailMessage message = JsonUtils.fromJson(json, EmailMessage.class);
 				NotifySendResult result = emailSender.sendEmail(message);
 				totalConsumed.incrementAndGet();
 				if (!result.isSuccess()) {
@@ -144,7 +145,7 @@ public class EmailQueueService {
 		int retryCount = getRetryCount(message);
 		if (retryCount >= MAX_RETRY) {
 			try {
-				redisTemplate.opsForList().rightPush(DEAD_LETTER_KEY, objectMapper.writeValueAsString(message));
+				redisTemplate.opsForList().rightPush(DEAD_LETTER_KEY, JsonUtils.toJson(message));
 				log.error("[EmailQueueService] 邮件超过最大重试次数({}), 进入死信队列: to={}",
 						MAX_RETRY, message.getTo());
 			} catch (Exception e) {

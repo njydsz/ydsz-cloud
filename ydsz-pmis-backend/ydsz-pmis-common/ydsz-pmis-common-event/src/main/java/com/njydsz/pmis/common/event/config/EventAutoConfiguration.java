@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.event.config;
+﻿package com.njydsz.pmis.common.event.config;
 
 import jakarta.annotation.PreDestroy;
 
@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.event.gateway.EventPublishGateway;
 import com.njydsz.pmis.common.event.gateway.NoopEventPublishGateway;
 import com.njydsz.pmis.common.event.health.OutboxHealthIndicator;

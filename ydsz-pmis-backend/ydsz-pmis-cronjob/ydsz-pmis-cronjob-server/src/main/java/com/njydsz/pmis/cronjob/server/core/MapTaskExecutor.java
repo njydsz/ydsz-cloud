@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.core.map;
+﻿package com.njydsz.pmis.cronjob.server.core.map;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -9,11 +9,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.core.job.JobLogger;
 import com.njydsz.pmis.common.core.job.JobLoggerHolder;
 import com.njydsz.pmis.common.core.job.MapContext;
@@ -366,7 +366,7 @@ public class MapTaskExecutor {
                 result = ProcessResult.failed("远程派发失败: 响应为空");
             } else {
                 // ProcessResult 使用 final 字段，手动解析避免反射问题
-                JSONObject jsonObj = JSON.parseObject(responseJson);
+                JSONObject jsonObj = JsonUtils.parseMap(responseJson);
                 boolean success = jsonObj.getBooleanValue("success");
                 String res = jsonObj.getString("result");
                 String errMsg = jsonObj.getString("errorMessage");

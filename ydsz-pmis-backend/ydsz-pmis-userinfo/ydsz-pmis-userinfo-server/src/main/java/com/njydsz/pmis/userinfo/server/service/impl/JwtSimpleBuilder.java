@@ -1,16 +1,16 @@
-package com.njydsz.pmis.userinfo.server.service.impl.auth;
+﻿package com.njydsz.pmis.userinfo.server.service.impl.auth;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.alibaba.fastjson2.JSON;
 
 /**
  * 简化版 Token 构造器（仅用于测试/演示；生产环境建议使用 JwtTokenProvider）
@@ -42,7 +42,7 @@ public final class JwtSimpleBuilder {
         claims.putIfAbsent("iat", now);
         claims.put("exp", now + expireSeconds);
         String headerB64 = b64(HEADER);
-        String payloadB64 = b64(JSON.toJSONString(claims));
+        String payloadB64 = b64(JsonUtils.toJson(claims));
         String signature = hmac(headerB64 + "." + payloadB64);
         return headerB64 + "." + payloadB64 + "." + signature;
     }

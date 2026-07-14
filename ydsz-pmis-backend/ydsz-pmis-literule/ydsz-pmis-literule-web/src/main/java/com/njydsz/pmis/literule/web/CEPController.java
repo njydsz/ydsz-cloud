@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.web;
+﻿package com.njydsz.pmis.literule.web;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.lock.annotation.Idempotent;
 import com.njydsz.pmis.literule.api.RuleContext;
@@ -66,7 +65,7 @@ public class CEPController {
     private final List<CEPHit> recentHits = new ArrayList<>();
 
     /** ObjectMapper 用于 CEP 模式反序列化（P2-7 测试模式端点使用） */
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final // JsonUtils as JSON engine
 
     /**
      * 启动时注册 CEP 命中监听器

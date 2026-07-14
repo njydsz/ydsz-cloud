@@ -1,10 +1,11 @@
-package com.njydsz.pmis.system.server.fallback;
+﻿package com.njydsz.pmis.system.server.fallback;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import com.njydsz.pmis.common.audit.event.OperationLogEvent;
 
 /**
@@ -50,7 +51,7 @@ public class OperationLogFallbackLogger {
                     event.getStatus(),
                     error == null ? "unknown" : error.getMessage()
             );
-            FALLBACK_LOGGER.info(JSON.toJSONString(record));
+            FALLBACK_LOGGER.info(JsonUtils.toJson(record));
         } catch (Exception ignored) {
             // 补偿记录本身失败，不应再抛出异常
         }

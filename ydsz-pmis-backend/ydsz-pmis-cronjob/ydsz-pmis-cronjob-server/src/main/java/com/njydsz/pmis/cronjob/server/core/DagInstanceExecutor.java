@@ -1,4 +1,4 @@
-package com.njydsz.pmis.cronjob.server.core.dag;
+﻿package com.njydsz.pmis.cronjob.server.core.dag;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.core.dag.DagInstanceStatus;
 import com.njydsz.pmis.common.core.dag.DagNodeStatus;
 import com.njydsz.pmis.common.core.dag.SpELConditionEvaluator;
@@ -1077,7 +1077,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             }
             JSONObject mergeFragment = new JSONObject();
             mergeFragment.put(jobKey, parsed);
-            String mergeJson = JSON.toJSONString(mergeFragment);
+            String mergeJson = JsonUtils.toJson(mergeFragment);
 
             // 使用 PostgreSQL jsonb || 原子合并，消除 read-modify-write 竞态
             dagInstanceMapper.mergeContextAtomic(dagInstanceId, mergeJson);

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.safe.xss;
+﻿package com.njydsz.pmis.common.safe.xss;
 
 import jakarta.annotation.PostConstruct;
 
@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 
 /**

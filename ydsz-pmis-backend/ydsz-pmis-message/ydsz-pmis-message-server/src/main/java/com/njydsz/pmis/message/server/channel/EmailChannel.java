@@ -1,7 +1,9 @@
-package com.njydsz.pmis.message.server.channel.impl;
+﻿package com.njydsz.pmis.message.server.channel.impl;
 
 import java.util.Base64;
 import java.util.Map;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import jakarta.mail.internet.MimeMessage;
 
@@ -14,7 +16,6 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
@@ -151,7 +152,7 @@ public class EmailChannel implements MessageChannel {
      */
     private void addAttachments(MimeMessageHelper helper, String attachmentsJson) {
         try {
-            var attachments = JSON.parseArray(attachmentsJson);
+            var attachments = JsonUtils.parseList(attachmentsJson);
             for (int i = 0; i < attachments.size(); i++) {
                 var item = attachments.getJSONObject(i);
                 String name = item.getString("name");
@@ -176,7 +177,7 @@ public class EmailChannel implements MessageChannel {
      */
     private void addInlineImages(MimeMessageHelper helper, String inlineJson) {
         try {
-            var images = JSON.parseArray(inlineJson);
+            var images = JsonUtils.parseList(inlineJson);
             for (int i = 0; i < images.size(); i++) {
                 var item = images.getJSONObject(i);
                 String cid = item.getString("cid");

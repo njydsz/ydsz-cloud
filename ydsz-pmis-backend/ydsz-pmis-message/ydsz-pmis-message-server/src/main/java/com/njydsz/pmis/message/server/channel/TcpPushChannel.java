@@ -1,15 +1,16 @@
-package com.njydsz.pmis.message.server.channel.impl;
+﻿package com.njydsz.pmis.message.server.channel.impl;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.njydsz.pmis.common.json.type.YdszJsonType;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.netty.codec.LengthFieldFrameDecoder;
@@ -57,7 +58,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
     private static final String CHANNEL_TYPE = "PUSH";
 
     /** JSON 序列化器 */
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    // JsonUtils as JSON engine
 
     /** userId → ChannelHandlerContext 映射（用于定向推送） */
     private final Map<String, ChannelHandlerContext> userChannelMap = new ConcurrentHashMap<>();
@@ -114,7 +115,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
             pushData.put("bizId", request.getBizId());
             pushData.put("traceId", traceId);
             pushData.put("timestamp", System.currentTimeMillis());
-            String json = OBJECT_MAPPER.writeValueAsString(pushData);
+            String json = JsonUtils.toJson(pushData);
             ByteBuf buf = Unpooled.copiedBuffer(json, CharsetUtil.UTF_8);
             ctx.writeAndFlush(buf);
             log.info("[TCP-PUSH] 推送成功: userId={} traceId={} subject={}",
@@ -207,7 +208,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
             }
             String json = buf.toString(CharsetUtil.UTF_8);
             try {
-                Map<String, Object> data = OBJECT_MAPPER.readValue(json, new TypeReference<Map<String, Object>>() {});
+                Map<String, Object> data = OBJECT_MAPPER.readValue(json, new YdszJsonType<Map<String, Object>>() {});
                 String type = (String) data.get("type");
                 if ("AUTH".equals(type)) {
                     // 认证消息：注册 userId
@@ -219,7 +220,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
                         ack.put("type", "AUTH_ACK");
                         ack.put("success", true);
                         ctx.writeAndFlush(Unpooled.copiedBuffer(
-                                OBJECT_MAPPER.writeValueAsString(ack), CharsetUtil.UTF_8));
+                                JsonUtils.toJson(ack), CharsetUtil.UTF_8));
                     }
                 } else if ("PING".equals(type)) {
                     // 心跳响应
@@ -227,7 +228,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
                     pong.put("type", "PONG");
                     pong.put("timestamp", System.currentTimeMillis());
                     ctx.writeAndFlush(Unpooled.copiedBuffer(
-                            OBJECT_MAPPER.writeValueAsString(pong), CharsetUtil.UTF_8));
+                            JsonUtils.toJson(pong), CharsetUtil.UTF_8));
                 }
             } catch (Exception e) {
                 log.warn("[TCP-PUSH] 消息解析失败: {}", e.getMessage(), e);

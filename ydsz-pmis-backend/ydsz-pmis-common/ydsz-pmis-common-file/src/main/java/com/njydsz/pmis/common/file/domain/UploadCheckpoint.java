@@ -1,10 +1,10 @@
-package com.njydsz.pmis.common.file.domain;
+﻿package com.njydsz.pmis.common.file.domain;
 
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.njydsz.pmis.common.json.annotation.YdszJsonField;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -113,7 +113,7 @@ public class UploadCheckpoint {
      *
      * @return 进度百分比（0-100）
      */
-    @JsonIgnore
+    @YdszJsonField(ignore = true)
     public int getProgressPercent() {
         if (totalSize == null || totalSize == 0) {
             return 0;

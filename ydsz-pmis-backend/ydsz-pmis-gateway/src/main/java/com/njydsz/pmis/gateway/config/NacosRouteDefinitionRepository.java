@@ -1,4 +1,4 @@
-package com.njydsz.pmis.gateway.config;
+﻿package com.njydsz.pmis.gateway.config;
 
 import java.util.Collections;
 import java.util.List;
@@ -11,8 +11,6 @@ import org.springframework.cloud.gateway.route.RouteDefinitionRepository;
 import org.springframework.context.ApplicationEventPublisher;
 
 import com.alibaba.cloud.nacos.NacosConfigManager;
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.TypeReference;
 import com.alibaba.nacos.api.config.listener.Listener;
 
 import lombok.extern.slf4j.Slf4j;
@@ -125,7 +123,7 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
             }
 
             List<RouteDefinition> routes = JSON.parseObject(config,
-                    new TypeReference<List<RouteDefinition>>() {});
+                    new YdszJsonType<List<RouteDefinition>>() {});
             if (routes == null) {
                 routes = Collections.emptyList();
             }

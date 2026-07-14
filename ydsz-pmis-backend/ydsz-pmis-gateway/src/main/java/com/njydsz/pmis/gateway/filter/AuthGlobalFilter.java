@@ -1,7 +1,9 @@
-package com.njydsz.pmis.gateway.filter;
+﻿package com.njydsz.pmis.gateway.filter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -17,7 +19,6 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
@@ -237,7 +238,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         response.setStatusCode(HttpStatus.BAD_REQUEST);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
         BaseResponse<Void> body = BaseResponse.failed("400", "error.BAD_REQUEST");
-        byte[] bytes = JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = JsonUtils.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));
     }
@@ -258,7 +259,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
         BaseResponse<Void> body = BaseResponse.failed("20001", msg);
         body.setTraceId(traceId);
-        byte[] bytes = JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = JsonUtils.toJson(body).getBytes(StandardCharsets.UTF_8);
 
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));

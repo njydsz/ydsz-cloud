@@ -1,8 +1,10 @@
-package com.njydsz.pmis.gateway.config;
+﻿package com.njydsz.pmis.gateway.config;
 
 import java.net.ConnectException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeoutException;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,7 +16,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebExceptionHandler;
 
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
 
@@ -98,7 +99,7 @@ public class GatewayErrorConfig {
             exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
             exchange.getResponse().getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
-            byte[] bytes = JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
+            byte[] bytes = JsonUtils.toJson(body).getBytes(StandardCharsets.UTF_8);
             DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
             return exchange.getResponse().writeWith(Mono.just(buffer));
         }

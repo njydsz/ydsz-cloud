@@ -1,7 +1,6 @@
-package com.njydsz.pmis.common.safe.xss;
+﻿package com.njydsz.pmis.common.safe.xss;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 /**
  * XSS 防护 Jackson 配置工具类
@@ -16,7 +15,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
  * XssJacksonConfig.registerModule(mapper);
  *
  * // 方式二：注册到自定义 ObjectMapper
- * ObjectMapper customMapper = new ObjectMapper();
+ * // JsonUtils as JSON engine
  * XssJacksonConfig.registerModule(customMapper);
  * </pre>
  *

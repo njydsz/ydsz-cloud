@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.notify.channel;
+﻿package com.njydsz.pmis.common.notify.channel;
 
 import java.util.List;
 import java.util.Map;
@@ -13,7 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;

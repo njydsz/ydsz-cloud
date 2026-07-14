@@ -1,10 +1,10 @@
-package com.njydsz.pmis.project.domain.vo;
+﻿package com.njydsz.pmis.project.domain.vo;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.njydsz.pmis.common.json.annotation.YdszJsonField;
 import com.njydsz.pmis.literule.server.spi.BudgetSnapshotProvider.BudgetSnapshot;
 
 import lombok.Data;
@@ -21,7 +21,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@YdszJsonField(notWriteNullValue = true)
 public class BudgetSnapshotVO implements Serializable {
 
     @Serial

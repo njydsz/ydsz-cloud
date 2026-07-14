@@ -1,8 +1,10 @@
-package com.njydsz.pmis.gateway.filter;
+﻿package com.njydsz.pmis.gateway.filter;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -18,7 +20,6 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.gateway.config.GatewayConstants;
 import com.njydsz.pmis.gateway.config.RateLimitProperties;
@@ -284,7 +285,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         }
 
         BaseResponse<Void> body = BaseResponse.failed("429", "请求过于频繁，请稍后重试 (" + dimension + "=" + maskIdentity(identity) + ")");
-        byte[] bytes = JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = JsonUtils.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
 
         log.info("[RateLimit] 限流触发: dimension={} identity={} path={}",

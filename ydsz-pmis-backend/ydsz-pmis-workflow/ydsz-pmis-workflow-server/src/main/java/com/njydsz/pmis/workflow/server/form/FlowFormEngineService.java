@@ -1,13 +1,13 @@
-package com.njydsz.pmis.workflow.server.form;
+﻿package com.njydsz.pmis.workflow.server.form;
 
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
 
@@ -48,7 +48,7 @@ public class FlowFormEngineService {
             return null;
         }
         try {
-            JSONObject extJson = JSON.parseObject(nodeExt);
+            JSONObject extJson = JsonUtils.parseMap(nodeExt);
             if (extJson == null) {
                 return null;
             }

@@ -1,12 +1,12 @@
-package com.njydsz.pmis.workflow.server.job;
+﻿package com.njydsz.pmis.workflow.server.job;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.stereotype.Component;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.core.job.JobHandler;
 import com.njydsz.pmis.workflow.server.config.FlowHistoryProperties;
 import com.njydsz.pmis.workflow.server.service.FlowHistoryArchiveService;
@@ -88,7 +88,7 @@ public class FlowHistoryArchiveJobHandler implements JobHandler {
     private Integer parseInteger(String json, String key) {
         if (json == null || json.isBlank()) return null;
         try {
-            JSONObject obj = JSON.parseObject(json);
+            JSONObject obj = JsonUtils.parseMap(json);
             if (obj == null) return null;
             Integer v = obj.getInteger(key);
             return v == null || v <= 0 ? null : v;
@@ -101,7 +101,7 @@ public class FlowHistoryArchiveJobHandler implements JobHandler {
     private Long parseLong(String json, String key) {
         if (json == null || json.isBlank()) return null;
         try {
-            JSONObject obj = JSON.parseObject(json);
+            JSONObject obj = JsonUtils.parseMap(json);
             if (obj == null) return null;
             Long v = obj.getLong(key);
             return v == null || v <= 0 ? null : v;

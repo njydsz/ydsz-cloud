@@ -1,4 +1,4 @@
-package com.njydsz.pmis.agent.infra.trace;
+﻿package com.njydsz.pmis.agent.infra.trace;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -8,10 +8,11 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.agent.domain.trace.TraceRecorder;
 
 /**
@@ -50,8 +51,8 @@ public class InMemoryTraceRecorder implements TraceRecorder {
             traces.put(traceId, steps);
         }
         int index = steps.size();
-        String inputJson = input != null ? JSON.toJSONString(input) : null;
-        String outputJson = output != null ? JSON.toJSONString(output) : null;
+        String inputJson = input != null ? JsonUtils.toJson(input) : null;
+        String outputJson = output != null ? JsonUtils.toJson(output) : null;
         steps.add(new TraceStep(traceId, index, stepType, content,
                 inputJson, outputJson, durationMs, LocalDateTime.now()));
         log.debug("[Trace] 记录步骤: traceId={}, step={}, type={}, {}ms",

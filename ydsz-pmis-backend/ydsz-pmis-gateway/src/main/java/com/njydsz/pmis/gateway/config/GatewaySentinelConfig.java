@@ -1,6 +1,8 @@
-package com.njydsz.pmis.gateway.config;
+﻿package com.njydsz.pmis.gateway.config;
 
 import java.nio.charset.StandardCharsets;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import jakarta.annotation.PostConstruct;
 
@@ -15,7 +17,6 @@ import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
 
@@ -91,7 +92,7 @@ public class GatewaySentinelConfig {
                     .contentType(MediaType.APPLICATION_JSON)
                     .header("Content-Type", MediaType.APPLICATION_JSON_VALUE + ";charset=" + StandardCharsets.UTF_8)
                     .header(GatewayConstants.HEADER_TRACE_ID, traceId)
-                    .bodyValue(JSON.toJSONString(body));
+                    .bodyValue(JsonUtils.toJson(body));
         };
         GatewayCallbackManager.setBlockHandler(handler);
 

@@ -1,8 +1,10 @@
-package com.njydsz.pmis.message.server.channel.impl;
+﻿package com.njydsz.pmis.message.server.channel.impl;
 
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import jakarta.annotation.PostConstruct;
 
@@ -14,7 +16,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
@@ -97,13 +98,13 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
             ResponseEntity<String> response = restClient.post()
                     .uri(url)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .body(JSON.toJSONString(payload))
+                    .body(JsonUtils.toJson(payload))
                     .retrieve()
                     .toEntity(String.class);
             String traceId = CHANNEL_TYPE + "-" + SnowflakeIdGenerator.nextTraceId();
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> body = JSON.parseObject(response.getBody());
+                Map<String, Object> body = JsonUtils.parseMap(response.getBody());
                 int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
                 if (errcode == 0) {
                     log.info("[DINGTALK_WORK] 发送成功: receiver={}", receiver);
@@ -134,7 +135,7 @@ public class DingTalkWorkNotificationChannel implements MessageChannel {
                     + "&appsecret=" + cfg.getAppSecret();
             ResponseEntity<String> response = restClient.get().uri(url).retrieve().toEntity(String.class);
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                Map<String, Object> body = JSON.parseObject(response.getBody());
+                Map<String, Object> body = JsonUtils.parseMap(response.getBody());
                 int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
                 if (errcode == 0) {
                     String token = (String) body.get("access_token");

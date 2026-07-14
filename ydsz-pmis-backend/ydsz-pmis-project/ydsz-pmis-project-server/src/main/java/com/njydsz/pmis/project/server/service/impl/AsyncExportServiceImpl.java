@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.server.service.impl;
+﻿package com.njydsz.pmis.project.server.service.impl;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -18,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.alibaba.excel.EasyExcel;
-import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.file.config.MinioConfig;
 import com.njydsz.pmis.project.domain.dto.CockpitDrillDownDTO;
 import com.njydsz.pmis.project.server.service.AsyncExportService;
@@ -201,7 +202,7 @@ public class AsyncExportServiceImpl implements AsyncExportService {
             map = new LinkedHashMap<>((Map<String, Object>) data);
         } else {
             // POJO → Map（保留字段顺序）
-            map = JSON.parseObject(JSON.toJSONString(data));
+            map = JsonUtils.parseMap(JsonUtils.toJson(data));
         }
         if (map.isEmpty()) {
             return new ReportData(List.of(), List.of());
@@ -275,7 +276,7 @@ public class AsyncExportServiceImpl implements AsyncExportService {
             return Map.of();
         }
         try {
-            Map<String, Object> parsed = JSON.parseObject(json);
+            Map<String, Object> parsed = JsonUtils.parseMap(json);
             return parsed == null ? Map.of() : parsed;
         } catch (Exception e) {
             log.warn("[AsyncExport] params 解析失败，按空参数处理: {}", json);
@@ -315,7 +316,7 @@ public class AsyncExportServiceImpl implements AsyncExportService {
         if (params == null || params.isEmpty()) {
             return "{}";
         }
-        return JSON.toJSONString(params);
+        return JsonUtils.toJson(params);
     }
 
     /**

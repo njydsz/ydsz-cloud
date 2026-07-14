@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.service.impl.integration;
+﻿package com.njydsz.pmis.workflow.server.service.impl.integration;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -6,11 +6,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
@@ -315,7 +316,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
         if (variableJson == null || variableJson.isBlank()) {
             return new HashMap<>();
         }
-        Map<String, Object> map = JSON.parseObject(variableJson);
+        Map<String, Object> map = JsonUtils.parseMap(variableJson);
         return map == null ? new HashMap<>() : map;
     }
 

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.base.advice;
+﻿package com.njydsz.pmis.common.base.advice;
 
 import java.io.Serializable;
 
@@ -11,7 +11,6 @@ import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 
@@ -72,7 +71,7 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
             BaseResponse<String> result = wrapStringBody((String) body);
             try {
                 ObjectMapper mapper = objectMapper != null ? objectMapper : JsonUtils.getMapper();
-                return mapper.writeValueAsString(result);
+                return JsonUtils.toJson(result);
             } catch (Exception e) {
                 return result;
             }

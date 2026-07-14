@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.domain.tree;
+﻿package com.njydsz.pmis.common.domain.tree;
 
 import java.io.Serializable;
 import java.util.ArrayDeque;
@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.njydsz.pmis.common.json.annotation.YdszJsonField;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -244,7 +244,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
      *
      * @return 直接子节点数量
      */
-    @JsonIgnore
+    @YdszJsonField(ignore = true)
     public int getChildCount() {
         return children != null ? children.size() : 0;
     }
@@ -256,7 +256,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
      *
      * @return 后代节点总数
      */
-    @JsonIgnore
+    @YdszJsonField(ignore = true)
     public int getDescendantCount() {
         int count = 0;
         if (children == null || children.isEmpty()) {

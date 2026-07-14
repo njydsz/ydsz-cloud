@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.audit.mask;
+﻿package com.njydsz.pmis.common.audit.mask;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -8,10 +8,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -170,7 +166,7 @@ public final class SensitiveFieldMask {
             ObjectMapper mapper = JsonUtils.getMapper();
             JsonNode parsed = mapper.readTree(json);
             maskJsonObject(parsed, patterns, new HashSet<>());
-            return mapper.writeValueAsString(parsed);
+            return JsonUtils.toJson(parsed);
         } catch (Exception e) {
             // 解析失败时降级返回原始 JSON
             log.debug("[SensitiveFieldMask] JSON解析失败，降级返回原始JSON: {}", e.getMessage());

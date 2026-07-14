@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.distributed;
+﻿package com.njydsz.pmis.literule.server.distributed;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,12 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.alibaba.fastjson2.JSON;
 
 /**
  * 基于 Redis 的集群节点注册表（生产环境实现）
@@ -65,7 +65,7 @@ public class RedisNodeRegistry implements NodeRegistry {
         node.setLastHeartbeatAt(System.currentTimeMillis());
         try {
             RMap<String, String> map = redissonClient.getMap(NODES_KEY);
-            map.put(node.getNodeId(), JSON.toJSONString(node));
+            map.put(node.getNodeId(), JsonUtils.toJson(node));
             log.info("[Distributed-Redis] 节点已注册: {}", node.getNodeId());
         } catch (Exception e) {
             log.warn("[Distributed-Redis] 节点注册失败: {}", e.getMessage());
@@ -91,10 +91,10 @@ public class RedisNodeRegistry implements NodeRegistry {
             RMap<String, String> map = redissonClient.getMap(NODES_KEY);
             String json = map.get(nodeId);
             if (json != null) {
-                ClusterNode node = JSON.parseObject(json, ClusterNode.class);
+                ClusterNode node = JsonUtils.fromJson(json, ClusterNode.class);
                 if (node != null) {
                     node.setLastHeartbeatAt(System.currentTimeMillis());
-                    map.put(nodeId, JSON.toJSONString(node));
+                    map.put(nodeId, JsonUtils.toJson(node));
                 }
             }
         } catch (Exception e) {
@@ -112,7 +112,7 @@ public class RedisNodeRegistry implements NodeRegistry {
 
             for (Map.Entry<String, String> entry : map.entrySet()) {
                 try {
-                    ClusterNode node = JSON.parseObject(entry.getValue(), ClusterNode.class);
+                    ClusterNode node = JsonUtils.parseMap(entry.getValue(), ClusterNode.class);
                     if (node == null || node.getNodeId() == null) {
                         deadNodeIds.add(entry.getKey());
                         continue;
@@ -166,7 +166,7 @@ public class RedisNodeRegistry implements NodeRegistry {
 
             for (Map.Entry<String, String> entry : map.entrySet()) {
                 try {
-                    ClusterNode node = JSON.parseObject(entry.getValue(), ClusterNode.class);
+                    ClusterNode node = JsonUtils.parseMap(entry.getValue(), ClusterNode.class);
                     if (node == null || !node.isAlive(now, heartbeatTimeoutMs)) {
                         deadNodeIds.add(entry.getKey());
                     }

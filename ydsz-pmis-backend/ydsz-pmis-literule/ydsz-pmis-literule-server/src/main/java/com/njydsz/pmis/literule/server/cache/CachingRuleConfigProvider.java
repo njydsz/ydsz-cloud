@@ -1,4 +1,4 @@
-package com.njydsz.pmis.literule.server.cache;
+﻿package com.njydsz.pmis.literule.server.cache;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -6,14 +6,14 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.redisson.api.RAtomicLong;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.TypeReference;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Ticker;
@@ -247,7 +247,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
                 RBucket<String> bucket = redissonClient.getBucket(l2Key);
                 String json = bucket.get();
                 if (json != null) {
-                    List<RuleDefinition> l2Value = JSON.parseObject(json, new TypeReference<List<RuleDefinition>>() {});
+                    List<RuleDefinition> l2Value = JSON.parseObject(json, new YdszJsonType<List<RuleDefinition>>() {});
                     if (l2Value != null) {
                         log.debug("[LiteRule-Cache] L2 命中: {}", l2Key);
                         return l2Value;
@@ -288,7 +288,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
                         log.debug("[LiteRule-Cache] L2 命中 NULL 标记: {}", l2Key);
                         return L1_NULL_MARKER;
                     }
-                    RuleDefinition l2Value = JSON.parseObject(json, RuleDefinition.class);
+                    RuleDefinition l2Value = JsonUtils.fromJson(json, RuleDefinition.class);
                     if (l2Value != null) {
                         log.debug("[LiteRule-Cache] L2 命中: {}", l2Key);
                         return l2Value;
@@ -325,7 +325,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
             if (value instanceof String) {
                 json = (String) value;
             } else {
-                json = JSON.toJSONString(value);
+                json = JsonUtils.toJson(value);
             }
             RBucket<String> bucket = redissonClient.getBucket(key);
             bucket.set(json, Duration.ofSeconds(cacheConfig.getL2TtlSeconds()));

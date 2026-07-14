@@ -1,12 +1,7 @@
-package com.njydsz.pmis.common.safe.core;
+﻿package com.njydsz.pmis.common.safe.core;
 
 import java.util.Map;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import com.njydsz.pmis.common.safe.xss.EscapeUtils;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 
@@ -39,7 +34,7 @@ public class JsonBodyXssCleaner {
             ObjectMapper mapper = JsonUtils.getMapper();
             JsonNode parsed = mapper.readTree(json);
             JsonNode cleaned = cleanNode(parsed);
-            return mapper.writeValueAsString(cleaned);
+            return JsonUtils.toJson(cleaned);
         } catch (Exception e) {
             // 如果 JSON 解析失败，返回原始字符串
             log.debug("[JsonBodyXssCleaner] JSON解析失败，返回原始字符串: {}", e.getMessage());

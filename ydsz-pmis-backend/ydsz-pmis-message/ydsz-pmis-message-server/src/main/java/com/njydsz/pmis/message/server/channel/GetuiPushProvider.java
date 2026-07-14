@@ -1,8 +1,10 @@
-package com.njydsz.pmis.message.server.channel.push;
+﻿package com.njydsz.pmis.message.server.channel.push;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpEntity;
@@ -14,8 +16,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
@@ -103,7 +103,7 @@ public class GetuiPushProvider implements PushProvider {
                     "body", request.getContent() == null ? "" : request.getContent())));
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
             ResponseEntity<String> resp = restTemplate.postForEntity(url, entity, String.class);
-            JSONObject json = JSON.parseObject(resp.getBody());
+            JSONObject json = JsonUtils.parseMap(resp.getBody());
             String code = json.getString("code");
             if ("10000".equals(code)) {
                 String taskId = json.getString("data");
@@ -153,7 +153,7 @@ public class GetuiPushProvider implements PushProvider {
             body.put("timestamp", timestamp);
             body.put("appkey", config.getAppKey());
             ResponseEntity<String> resp = restTemplate.postForEntity(url, body, String.class);
-            JSONObject json = JSON.parseObject(resp.getBody());
+            JSONObject json = JsonUtils.parseMap(resp.getBody());
             if ("10000".equals(json.getString("code"))) {
                 JSONObject data = json.getJSONObject("data");
                 cachedToken = data.getString("token");

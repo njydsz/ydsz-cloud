@@ -1,11 +1,11 @@
-package com.njydsz.pmis.userinfo.domain.vo;
+﻿package com.njydsz.pmis.userinfo.domain.vo;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.njydsz.pmis.common.json.annotation.YdszJsonField;
 import com.njydsz.pmis.common.safe.annotation.Sensitive;
 import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
 
@@ -21,7 +21,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@YdszJsonField(notWriteNullValue = true)
 public class UserVO implements Serializable {
 
     @Serial

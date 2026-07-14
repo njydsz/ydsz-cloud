@@ -1,16 +1,16 @@
-package com.njydsz.pmis.workflow.server.service.impl.definition;
+﻿package com.njydsz.pmis.workflow.server.service.impl.definition;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.auth.context.AuthContext;
 import com.njydsz.pmis.common.core.response.StandardResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
@@ -661,7 +661,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             return null;
         }
         try {
-            JSONObject extJson = JSON.parseObject(ext);
+            JSONObject extJson = JsonUtils.parseMap(ext);
             if (extJson != null) {
                 String sourceRef = extJson.getString("sourceRef");
                 if (sourceRef != null && !sourceRef.isBlank()) {

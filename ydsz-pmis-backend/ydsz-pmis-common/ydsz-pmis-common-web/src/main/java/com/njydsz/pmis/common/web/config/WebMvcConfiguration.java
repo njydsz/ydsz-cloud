@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.web.config;
+﻿package com.njydsz.pmis.common.web.config;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -11,8 +11,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 
-import com.fasterxml.jackson.core.StreamWriteFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.common.auth.config.AuthFilterConfiguration;
 import com.njydsz.pmis.common.auth.model.AuthenticationProvider;
 import com.njydsz.pmis.common.base.config.BaseAutoConfiguration;

@@ -1,15 +1,13 @@
-package com.njydsz.pmis.cronjob.server.core.scheduler;
+﻿package com.njydsz.pmis.cronjob.server.core.scheduler;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.springframework.stereotype.Component;
+import com.njydsz.pmis.common.util.json.JsonUtils;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONArray;
-import com.alibaba.fastjson2.JSONObject;
+import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -109,7 +107,7 @@ public class CalendarScheduleFilter {
             return Set.of();
         }
         try {
-            JSONObject params = JSON.parseObject(paramsJson);
+            JSONObject params = JsonUtils.parseMap(paramsJson);
             JSONArray holidaysArr = params.getJSONArray("holidays");
             if (holidaysArr == null || holidaysArr.isEmpty()) {
                 return Set.of();
@@ -140,7 +138,7 @@ public class CalendarScheduleFilter {
             return DEFAULT_CALENDAR_TYPE;
         }
         try {
-            JSONObject params = JSON.parseObject(paramsJson);
+            JSONObject params = JsonUtils.parseMap(paramsJson);
             String type = params.getString("calendarType");
             return type != null ? type.toUpperCase() : DEFAULT_CALENDAR_TYPE;
         } catch (Exception e) {

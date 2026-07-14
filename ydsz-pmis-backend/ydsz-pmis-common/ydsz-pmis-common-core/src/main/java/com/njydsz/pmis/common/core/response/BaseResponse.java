@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.core.response;
+﻿package com.njydsz.pmis.common.core.response;
 
 import java.io.Serializable;
 import java.time.Clock;
@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.MDC;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.njydsz.pmis.common.json.annotation.YdszJsonField;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import lombok.Data;
@@ -52,7 +52,7 @@ import lombok.experimental.SuperBuilder;
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @SuperBuilder
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@YdszJsonField(notWriteNullValue = true)
 @JsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp"})
 public class BaseResponse<T> implements IResponse<T>, Serializable {
 

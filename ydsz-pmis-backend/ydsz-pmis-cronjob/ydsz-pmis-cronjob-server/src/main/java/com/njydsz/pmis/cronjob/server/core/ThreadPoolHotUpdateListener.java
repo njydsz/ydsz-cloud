@@ -1,11 +1,11 @@
-package com.njydsz.pmis.cronjob.server.core.config;
+﻿package com.njydsz.pmis.cronjob.server.core.config;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.stereotype.Component;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.alibaba.nacos.api.config.annotation.NacosConfigListener;
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.dispatch.DefaultTaskDispatcher;
@@ -83,7 +83,7 @@ public class ThreadPoolHotUpdateListener {
      */
     private JSONObject parseConfig(String configInfo) {
         try {
-            JSONObject root = JSON.parseObject(configInfo);
+            JSONObject root = JsonUtils.parseMap(configInfo);
             // 尝试 pmis.cronjob.executor 路径
             JSONObject pmis = root.getJSONObject("pmis");
             if (pmis != null) {
