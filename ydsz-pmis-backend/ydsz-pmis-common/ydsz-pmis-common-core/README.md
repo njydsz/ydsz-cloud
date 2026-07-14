@@ -1,6 +1,6 @@
 # ydsz-pmis-common-core
 
-PMIS 公共底座核心模块 — 统一响应模型、请求上下文、TraceId、JobHandler、DAG 编排、特性开关、重试模板、线程池监控。
+PMIS 公共底座核心模块 — 统一响应模型、请求上下文、TraceId、常量与枚举。
 
 ## 模块定位
 
@@ -17,87 +17,85 @@ PMIS 公共底座核心模块 — 统一响应模型、请求上下文、TraceId
 
 | 类 | 说明 |
 |---|---|
-| `BaseResponse<T>` | 统一 API 响应体（code / message / data / traceId） |
-| `PageResponse<T>` | 分页响应体（继承 BaseResponse，含 total / pages / list） |
-| `ResultCode` / `StandardResultCode` | 错误码接口与标准实现 |
-| `IResponse` | 响应标记接口 |
-| `SpringMessageResolver` | Spring MessageSource 国际化解析 |
+| `BaseResponse<T>` | 统一 API 响应体（code / msg / data / traceId / timestamp） |
+| `PageResponse<T>` | 分页响应体（继承 BaseResponse，含 total / pages / pageNum / pageSize） |
+| `ResultCode` | 结果码接口，业务模块自定义错误码需实现此接口 |
+| `BaseResultCode` | 标准结果码枚举（A 类用户端错误 / B 类业务异常 / C 类第三方异常） |
+| `IResponse<T>` | 响应标记接口 |
 
 ### 请求上下文
 
 | 类 | 说明 |
 |---|---|
-| `RequestContext` | 基于 ThreadLocal 的请求上下文（traceId / userId / tenantId / authInfo） |
-| `ReactiveRequestContext` | WebFlux 响应式上下文（基于 Reactor Context） |
-| `ContextKey<T>` | 类型安全的上下文 Key 定义 |
-| `RequestContextExecutor` | 上下文传播的 ExecutorService（TTL 包装） |
-| `TtlTaskDecorator` | TTL 任务装饰器，异步线程上下文传播 |
-| `TtlAsyncAutoConfiguration` | TTL 异步上下文自动配置 |
+| `RequestContext` | 基于 TransmittableThreadLocal 的请求上下文（traceId / userId / tenantId / 自定义属性） |
+| `ContextKey<T>` | 类型安全的上下文 Key 定义，支持编译期类型检查 |
+| `RequestContext.CleanupGuard` | try-with-resources 模式的上下文清理守卫 |
+| `RequestContext.capture()` | 捕获上下文快照用于异步传播 |
+| `RequestContext.wrapCallable()` | 包装 Callable 自动传播上下文 |
 
-### 常量与枚举
-
-| 类 | 说明 |
-|---|---|
-| `HeaderConstants` / `TokenConstants` / `CacheConstants` | HTTP 头、Token、缓存 Key 常量 |
-| `SecurityConstants` / `ProtocolConstants` | 安全、协议常量 |
-| `PageConstants` / `FilterIgnoreConstant` | 分页默认值、过滤器忽略路径 |
-| `YesOrNo` / `TypeEnum` / `IdentityType` | 通用枚举 |
-| `DataScopeType` / `ServiceType` | 数据范围、服务类型枚举 |
-
-### DAG 有向无环图
+### 常量定义
 
 | 类 | 说明 |
 |---|---|
-| `DagGraph` | DAG 图定义（节点 + 边 + 依赖关系） |
-| `DagInstanceStatus` / `DagNodeStatus` | 实例/节点状态枚举 |
-| `DagFailureStrategy` | 失败策略（CONTINUE / ABORT / RETRY） |
-| `SpELConditionEvaluator` | SpEL 条件表达式求值器 |
+| `HeaderConstants` | HTTP 请求头常量（Token / 数据权限 / 链路追踪 / 安全头部） |
+| `TokenConstants` | Token 相关常量（标识 / 前缀 / 回调 URL） |
+| `SecurityConstants` | 安全常量（密钥属性名 / BCrypt 强度 / CSRF / 安全头部） |
+| `ProtocolConstants` | 协议前缀常量（RMI / LDAP / HTTP / HTTPS） |
+| `PageConstants` | 分页默认值与参数名 |
+| `FilterIgnoreConstant` | 过滤器忽略 URL 模式与服务名称 |
 
-### Job 调度框架
-
-| 类 | 说明 |
-|---|---|
-| `JobHandler` | Job 处理接口 |
-| `MapProcessor` / `MapReduceProcessor` | Map/MapReduce 分片处理 |
-| `ShardingContext` / `MapContext` | 分片上下文 |
-| `JobContextHolder` / `JobLoggerHolder` | Job 上下文与日志持有者 |
-| `JobRunRecorder` / `ProcessResult` | 运行记录与处理结果 |
-
-### 工程能力增强
+### 枚举
 
 | 类 | 说明 |
 |---|---|
-| `RetryTemplate` | 声明式重试模板（指数退避 + 异常过滤 + 最大重试次数） |
-| `BulkheadManager` | 舱壁隔离管理器（信号量限流保护资源） |
-| `FeatureFlagService` / `FeatureFlagManager` | 特性开关服务（静态配置 + 百分比灰度 + 白名单） |
-| `FeatureFlag` / `FeatureFlagSnapshot` | 特性开关模型与快照 |
-| `ThreadPoolRegistry` / `ThreadPoolRegistryAutoConfiguration` | 线程池注册中心（统一管理 + Micrometer 监控 + 优雅停机） |
-| `AbstractModuleMetrics` | 模块级 Micrometer 指标基类 |
-| `TraceIdGenerator` / `TraceIdSupplier` | TraceId 生成器 |
+| `TypeEnum<T>` | 通用枚举接口，提供 `getCode()` / `getDesc()` 及工具方法 |
+| `DataScopeType` | 数据权限范围类型（租户 / 集团 / 公司 / 部门 / 用户 / 项目 / 区域 / 自定义） |
+| `IdentityType` | 身份类型（ydsz 账号 / 公司账号 / 游客） |
+| `ServiceType` | 服务类型（Web 管理端 / App 移动端） |
+| `YesOrNo` | 是/否枚举（数据库布尔值表示） |
+
+### 请求模型
+
+| 类 | 说明 |
+|---|---|
+| `IRequest` | 请求标记接口（extends Serializable） |
+| `BaseRequest` | 基础请求对象（Lombok @SuperBuilder） |
+| `PageRequest` | 分页请求封装（pageNum / pageSize / orderBy / orderDir + 安全校验） |
+
+### TraceId
+
+| 类 | 说明 |
+|---|---|
+| `TraceIdSupplier` | TraceId 生成策略接口（@FunctionalInterface） |
+| `TraceIdGenerator` | 默认 TraceId 生成器（UUID 去连字符，32 位） |
+
+### 配置
+
+| 类 | 说明 |
+|---|---|
+| `CoreProperties` | 核心配置属性（分页 + 链路追踪） |
+| `CoreAutoConfiguration` | 核心自动配置（总是激活） |
+| `TraceAutoConfiguration` | TraceId 自动配置（注册 TraceIdSupplier Bean） |
 
 ## 自动配置
 
 | 配置类 | 激活条件 |
 |---|---|
-| `CoreAutoConfiguration` | 总是激活 |
-| `TraceAutoConfiguration` | 总是激活 |
-| `YdszSchedulingAutoConfiguration` | Spring Scheduling 可用时激活 |
-| `TtlAsyncAutoConfiguration` | TTL 可用时激活 |
-| `ThreadPoolRegistryAutoConfiguration` | Micrometer 可用时激活 |
+| `CoreAutoConfiguration` | `ydsz.core.enabled=true` 时激活（默认启用） |
+| `TraceAutoConfiguration` | `ydsz.core.trace.enabled=true` 时激活（默认启用） |
 
 ## 配置项
 
 ```yaml
-pmis:
+ydsz:
   core:
+    enabled: true                      # 模块总开关
+    max-page-size: 1000                # 最大每页记录数上限
+    default-page-size: 10              # 默认每页记录数
     trace:
-      header-name: X-Trace-Id        # TraceId 请求头名称
-      generate-if-missing: true       # 缺失时自动生成
-    thread-pool:
-      monitor-enabled: true           # 线程池监控开关
-      monitor-interval: 30s           # 采样间隔
-  feature-flag:
-    cache-ttl: 60s                    # 特性开关缓存过期时间
+      enabled: true                    # 链路追踪开关
+      header-name: X-Trace-Id          # TraceId 请求头名称
+      generate-if-missing: true         # 缺失时自动生成
 ```
 
 ## 依赖

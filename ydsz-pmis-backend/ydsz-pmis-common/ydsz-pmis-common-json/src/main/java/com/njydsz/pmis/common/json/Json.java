@@ -1,10 +1,14 @@
 package com.njydsz.pmis.common.json;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Writer;
 import java.lang.reflect.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
+import com.njydsz.pmis.common.json.cache.AsmCodecCache;
 import com.njydsz.pmis.common.json.config.JsonConfig;
 import com.njydsz.pmis.common.json.deserializer.JsonDeserializer;
 import com.njydsz.pmis.common.json.engine.DeserializerEngine;
@@ -872,11 +876,11 @@ public class Json {
      * @param out 输出流
      * @since 1.4.0
      */
-    public static void toJson(Object obj, java.io.OutputStream out) {
+    public static void toJson(Object obj, OutputStream out) {
         if (obj == null) {
             try {
                 out.write("null".getBytes(StandardCharsets.UTF_8));
-            } catch (java.io.IOException e) {
+            } catch (IOException e) {
                 throw new JsonException("Failed to write to OutputStream", e);
             }
             return;
@@ -884,7 +888,7 @@ public class Json {
         byte[] bytes = toJsonBytes(obj);
         try {
             out.write(bytes);
-        } catch (java.io.IOException e) {
+        } catch (IOException e) {
             throw new JsonException("Failed to write to OutputStream", e);
         }
     }
@@ -900,7 +904,7 @@ public class Json {
      * @return 反序列化后的对象
      * @since 1.4.0
      */
-    public static <T> T toObject(java.io.InputStream in, Class<T> clazz) {
+    public static <T> T toObject(InputStream in, Class<T> clazz) {
         if (in == null) {
             return null;
         }
@@ -911,7 +915,7 @@ public class Json {
             }
             String json = new String(bytes, StandardCharsets.UTF_8);
             return toObject(json, clazz);
-        } catch (java.io.IOException e) {
+        } catch (IOException e) {
             throw new JsonException("Failed to read from InputStream", e);
         }
     }
@@ -925,7 +929,7 @@ public class Json {
      * @return 反序列化后的对象
      * @since 1.4.0
      */
-    public static <T> T toObject(java.io.InputStream in, JsonType<T> typeRef) {
+    public static <T> T toObject(InputStream in, JsonType<T> typeRef) {
         if (in == null) {
             return null;
         }
@@ -936,7 +940,7 @@ public class Json {
             }
             String json = new String(bytes, StandardCharsets.UTF_8);
             return toObject(json, typeRef);
-        } catch (java.io.IOException e) {
+        } catch (IOException e) {
             throw new JsonException("Failed to read from InputStream", e);
         }
     }
@@ -961,7 +965,7 @@ public class Json {
                 continue;
             }
             try {
-                com.njydsz.pmis.common.json.cache.AsmCodecCache.getOrCreateSerializerForType(clazz);
+                AsmCodecCache.getOrCreateSerializerForType(clazz);
             } catch (Exception ignored) {
                 // 预热失败不影响启动
             }

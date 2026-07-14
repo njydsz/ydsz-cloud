@@ -49,6 +49,9 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
   /** 未命中计数器 */
   protected final LongAdder missCount = new LongAdder();
 
+  /** 淘汰计数器（因容量限制被驱逐的条目数） */
+  protected final LongAdder evictionCount = new LongAdder();
+
   /** 删除监听器列表 */
   protected final List<RemovalListener<? super K, ? super V>> listeners =
       new CopyOnWriteArrayList<>();
@@ -70,11 +73,16 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
    *
    * <p>监听器异常不会影响缓存正常操作，仅记录警告日志。
    *
+   * <p>当删除原因为 {@link RemovalCause#SIZE} 时，同时递增淘汰计数器。
+   *
    * @param key 被删除的键
    * @param value 被删除的值
    * @param cause 删除原因
    */
   protected void notifyRemoval(K key, V value, RemovalCause cause) {
+    if (cause == RemovalCause.SIZE) {
+      evictionCount.increment();
+    }
     if (listeners.isEmpty()) {
       return;
     }
@@ -150,7 +158,7 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
    */
   @Override
   public CacheStats getStats() {
-    return new CacheStats(hitCount.sum(), missCount.sum());
+    return new CacheStats(hitCount.sum(), missCount.sum(), evictionCount.sum(), 0, 0, 0, 0);
   }
 
   @Override
