@@ -106,7 +106,7 @@ function parseSlaConfig(jsonStr?: string | null): Partial<SlaRuleConfigDTO> | nu
   }
 }
 
-function onDefinitionChange(val: number | null) {
+function onDefinitionChange(val: string | null) {
   if (val) {
     loadNodeSlaConfig(val)
   } else {

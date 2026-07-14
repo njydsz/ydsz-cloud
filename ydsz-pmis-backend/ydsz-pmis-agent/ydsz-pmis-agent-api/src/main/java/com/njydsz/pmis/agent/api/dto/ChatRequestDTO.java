@@ -20,6 +20,9 @@ public class ChatRequestDTO implements Serializable {
     @Schema(description = "对话 ID（null 表示新建对话）")
     private String conversationId;
 
+    @Schema(description = "请求幂等键（可选，防止重复调用 LLM 扣费）")
+    private String requestId;
+
     @NotBlank(message = "消息内容不能为空")
     @Schema(description = "用户消息", requiredMode = Schema.RequiredMode.REQUIRED)
     private String message;
@@ -38,6 +41,8 @@ public class ChatRequestDTO implements Serializable {
 
     public String getConversationId() { return conversationId; }
     public void setConversationId(String conversationId) { this.conversationId = conversationId; }
+    public String getRequestId() { return requestId; }
+    public void setRequestId(String requestId) { this.requestId = requestId; }
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
     public String getSystemPrompt() { return systemPrompt; }

@@ -24,6 +24,9 @@ public class AgentExecutionRequestDTO implements Serializable {
     @Schema(description = "对话 ID（null 表示新建对话）")
     private String conversationId;
 
+    @Schema(description = "请求幂等键（可选，防止重复调用 LLM 扣费）")
+    private String requestId;
+
     @NotBlank(message = "用户输入不能为空")
     @Schema(description = "用户输入", requiredMode = Schema.RequiredMode.REQUIRED)
     private String userInput;
@@ -44,6 +47,8 @@ public class AgentExecutionRequestDTO implements Serializable {
     public void setAgentCode(String agentCode) { this.agentCode = agentCode; }
     public String getConversationId() { return conversationId; }
     public void setConversationId(String conversationId) { this.conversationId = conversationId; }
+    public String getRequestId() { return requestId; }
+    public void setRequestId(String requestId) { this.requestId = requestId; }
     public String getUserInput() { return userInput; }
     public void setUserInput(String userInput) { this.userInput = userInput; }
     public String getSystemPrompt() { return systemPrompt; }

@@ -76,9 +76,6 @@ public class TimeoutMonitor {
     /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
     private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
 
-    /** 任务锁 key 前缀（与 DefaultTaskDispatcher 保持一致） */
-    private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
-
     /** P0-1: Lua 脚本: 安全释放锁（仅当 value 匹配时才 delete），与 DefaultTaskDispatcher 一致 */
     private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT = initReleaseScript();
 

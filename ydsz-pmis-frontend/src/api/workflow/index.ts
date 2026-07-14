@@ -695,7 +695,7 @@ export function createDelegateAuth(payload: CreateDelegateAuthDTO) {
 }
 
 /** 撤回委托授权 */
-export function revokeDelegateAuth(id: number) {
+export function revokeDelegateAuth(id: string) {
   return http.post<ApiResponse<null>>(`/workflow/engine/delegate-auth/${id}/revoke`)
 }
 
@@ -782,7 +782,7 @@ export function adjustCanary(definitionId: string, newPercent: number, note?: st
  * 全量发布（灰度转正）
  * P0-1 修复：operatorId/operatorName 由后端从 SecurityContext 取
  */
-export function promoteCanary(definitionId: number, note?: string) {
+export function promoteCanary(definitionId: string, note?: string) {
   return http.post<ApiResponse<null>>(
     `/workflow/engine/canary/${definitionId}/promote`,
     null,
@@ -814,7 +814,7 @@ export function getCanaryRolloutLog(flowCode: string) {
 // ===========================================
 
 /** 获取流程定义版本列表 */
-export function listVersions(definitionId: number) {
+export function listVersions(definitionId: string) {
   return http.get<ApiResponse<FlowVersionDTO[]>>(
     `/workflow/engine/definition/${definitionId}/versions`,
   )
@@ -848,14 +848,14 @@ export function simulateFlow(flowCode: string, variables: Record<string, unknown
 
 /** 新增任务评论 */
 export function addTaskComment(data: {
-  instanceId: number
-  taskId?: number
+  instanceId: string
+  taskId?: string
   nodeCode?: string
-  userId?: number
+  userId?: string
   userName?: string
   content: string
   type?: string
-  parentId?: number
+  parentId?: string
 }) {
   return http.post<ApiResponse<TaskCommentDTO>>(
     '/workflow/engine/task-comment/add',

@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.nextwiki.domain.entity.FileAcl;
@@ -144,6 +145,7 @@ public class ShareDomainService {
     /**
      * 撤销分享
      */
+    @Transactional(rollbackFor = Exception.class)
     public void revoke(String shareId, String userId) {
         ShareLink shareLink = shareLinkRepository.findById(shareId);
         if (shareLink == null) {

@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
@@ -42,6 +43,7 @@ public class FolderDomainService {
     /**
      * 创建目录
      */
+    @Transactional(rollbackFor = Exception.class)
     public FileNode createFolder(String parentId, String name, String userId) {
         FileNode parent = resolveParent(parentId, userId);
 
@@ -97,6 +99,7 @@ public class FolderDomainService {
     /**
      * 移动文件/文件夹到目标目录
      */
+    @Transactional(rollbackFor = Exception.class)
     public FileNode move(String nodeId, String targetParentId, String userId) {
         FileNode node = fileNodeRepository.findById(nodeId);
         if (node == null) {
@@ -149,6 +152,7 @@ public class FolderDomainService {
     /**
      * 重命名文件/文件夹
      */
+    @Transactional(rollbackFor = Exception.class)
     public FileNode rename(String nodeId, String newName, String userId) {
         FileNode node = fileNodeRepository.findById(nodeId);
         if (node == null) {
@@ -188,6 +192,7 @@ public class FolderDomainService {
     /**
      * 逻辑删除（移入回收站）
      */
+    @Transactional(rollbackFor = Exception.class)
     public void softDelete(String nodeId, String userId) {
         FileNode node = fileNodeRepository.findById(nodeId);
         if (node == null) {
@@ -298,6 +303,7 @@ public class FolderDomainService {
                 && target.getPath().startsWith(node.getPath());
     }
 
+    @Transactional(rollbackFor = Exception.class)
     private void updateChildrenPaths(String parentId, String oldPathPrefix,
                                       String newPathPrefix, int newLevel, String userId) {
         List<FileNode> children = fileNodeRepository.findByPathPrefix(oldPathPrefix);

@@ -197,7 +197,7 @@ function savePinnedTasks() {
   }
 }
 
-function togglePin(taskId: number) {
+function togglePin(taskId: string) {
   if (pinnedTaskIds.value.has(taskId)) {
     pinnedTaskIds.value.delete(taskId)
   } else {

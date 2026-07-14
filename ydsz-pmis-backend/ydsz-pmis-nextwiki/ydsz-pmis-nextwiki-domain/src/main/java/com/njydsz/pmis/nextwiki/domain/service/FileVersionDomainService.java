@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
@@ -46,6 +47,7 @@ public class FileVersionDomainService {
     /**
      * 创建新版本（文件上传/更新时调用）
      */
+    @Transactional(rollbackFor = Exception.class)
     public FileVersion createVersion(String fileNodeId, String storageKey, Long size,
                                       String fileHash, String mimeType, String remark,
                                       String userId) {
@@ -108,6 +110,7 @@ public class FileVersionDomainService {
     /**
      * 回滚到指定版本
      */
+    @Transactional(rollbackFor = Exception.class)
     public FileVersion rollback(String fileNodeId, Integer targetVersion, String userId) {
         FileNode fileNode = fileNodeRepository.findById(fileNodeId);
         if (fileNode == null || !fileNode.isFile()) {
@@ -197,6 +200,7 @@ public class FileVersionDomainService {
     /**
      * 清理超出保留数量的旧版本
      */
+    @Transactional(rollbackFor = Exception.class)
     private void cleanupExcessVersions(String fileNodeId) {
         int count = versionRepository.countByFileNodeId(fileNodeId);
         if (count <= MAX_VERSIONS) {

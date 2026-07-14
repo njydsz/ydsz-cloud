@@ -114,8 +114,10 @@ public class DistributedLockService {
         // 使用 Lua 脚本保证“比较-删除”原子性，避免 check-then-delete 竞态条件
         Long released = redisTemplate.execute(releaseLockScript,
                 Collections.singletonList(key), ownerId);
-        if (released != null && released > 0) {
-            log.debug("[DistributedLockService] 释放锁: key={}, owner={}", lockKey, ownerId);
+        if (Long.valueOf(1L).equals(released)) {
+            log.debug("[DistributedLockService] 释放锁成功: key={}, owner={}", lockKey, ownerId);
+        } else {
+            log.warn("[DistributedLockService] 释放锁失败(锁已被其他线程获取或已过期): key={}, owner={}", lockKey, ownerId);
         }
     }
 

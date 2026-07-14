@@ -3,8 +3,8 @@ package com.njydsz.pmis.common.core.retry;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

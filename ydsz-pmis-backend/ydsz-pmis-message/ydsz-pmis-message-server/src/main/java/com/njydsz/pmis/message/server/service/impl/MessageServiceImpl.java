@@ -160,6 +160,9 @@ public class MessageServiceImpl implements MessageService {
      * 为每个子消息设置 {@code parentMsgId = 父 msgId} 后递归调用本方法。
      * 单条级联消息失败不影响其他级联消息(try-catch 吞异常记 WARN)。
      *
+     * <p>P1-3: 拆分为 preprocess → renderContent → persistAndDispatch 三个阶段,
+     * 聚合路径(insert + appendOrStart + updateById)用 {@code @Transactional} 保证原子性。
+     *
      * @param request 消息请求
      * @param depth   级联深度(0=顶层消息)
      */
@@ -173,14 +176,59 @@ public class MessageServiceImpl implements MessageService {
                     depth, MessageConstants.MAX_CASCADE_DEPTH, request.getReceiver());
             return MessageResult.fail(request.getChannel(), "级联深度超限");
         }
+
+        // ① 预处理: 通道校验 → 路由 → 灰度 → 订阅 → 偏好(DND) → 去重 → 抑制 → 限流 → 配额
+        SendContext ctx = preprocess(request);
+        if (ctx.result != null) {
+            return ctx.result;
+        }
+
+        // ② 渲染内容: 模板加载 → 变量填充 → 渲染 → 敏感词 → 富媒体
+        RenderedContent rendered = renderContent(request, ctx);
+
+        // ③ 构造落库对象
+        MsgLogDO logDO = buildLogDO(request, ctx, rendered);
+
+        // ④ 定时/聚合早期 return 路径
+        MessageResult earlyResult = handleEarlyReturns(request, ctx, logDO, rendered);
+        if (earlyResult != null) {
+            return earlyResult;
+        }
+
+        // ⑤ 常规落库 PENDING
+        msgLogMapper.insert(logDO);
+        messageTraceService.recordTrace(logDO.getMsgId(),
+                MsgTraceDO.Node.PERSISTED, "SUCCESS", ctx.channel,
+                "消息已落库: status=" + logDO.getStatus());
+
+        // ⑥ 通道分发 + 级联
+        MessageResult result = doDispatch(logDO, ctx.matchedRule, ctx.receiver);
+        if (result != null && result.isSuccess()) {
+            triggerCascade(request, logDO, depth);
+        }
+        return result;
+    }
+
+    /**
+     * P1-3: 预处理阶段 —— 通道校验/路由/灰度/订阅/偏好/去重/抑制/限流/配额。
+     *
+     * <p>任一校验失败时设置 {@link SendContext#result} 并返回,调用方据此短路。
+     *
+     * @param request 消息请求(可能被路由/灰度切换 channel/templateCode)
+     * @return 预处理上下文(含最终 channel/receiver/bizType/templateCode/pref 等)
+     */
+    private SendContext preprocess(MessageRequest request) {
+        SendContext ctx = new SendContext();
         String channel = request.getChannel();
         if (!StringUtils.hasText(channel)) {
-            return MessageResult.fail(null, "消息通道不能为空");
+            ctx.result = MessageResult.fail(null, "消息通道不能为空");
+            return ctx;
         }
         // ① 通道启用校验
         if (!isChannelEnabled(channel)) {
             log.warn("[Message] 通道未启用: {}", channel);
-            return MessageResult.fail(channel, "通道未启用: " + channel);
+            ctx.result = MessageResult.fail(channel, "通道未启用: " + channel);
+            return ctx;
         }
         // P0-2: 记录接收节点轨迹
         messageTraceService.recordTrace(
@@ -195,172 +243,179 @@ public class MessageServiceImpl implements MessageService {
             channel = matchedRule.getTargetChannel();
             request.setChannel(channel);
         }
-        String receiver = request.getReceiver();
-        String bizType = request.getBizType();
-        String templateCode = request.getTemplateCode();
+        ctx.matchedRule = matchedRule;
+        ctx.channel = channel;
+        ctx.receiver = request.getReceiver();
+        ctx.bizType = request.getBizType();
+        ctx.templateCode = request.getTemplateCode();
 
         // ①-2 P0-1: 用户通道绑定解析（receiver 是 userId 时自动解析为通道联系方式）
-        if (StringUtils.hasText(receiver) && StringUtils.hasText(channel)) {
-            String resolved = userChannelBindingService.resolveChannelUserId(receiver, channel);
+        if (StringUtils.hasText(ctx.receiver) && StringUtils.hasText(channel)) {
+            String resolved = userChannelBindingService.resolveChannelUserId(ctx.receiver, channel);
             if (resolved != null) {
                 log.debug("[Message] P0-1 通道绑定解析: userId={} channel={} → channelUserId={}",
-                        receiver, channel, resolved);
+                        ctx.receiver, channel, resolved);
                 request.setReceiver(resolved);
-                receiver = resolved;
+                ctx.receiver = resolved;
             }
         }
 
-        // ③ 灰度命中差异化处理（P0-7）：命中后切换实验模板/通道
-        int canaryFlag = 0;
-        // P1-6: 命中时记录原始 canaryKey(=切换前 templateCode),用于 A/B 报表分组;未命中为 null
-        String canaryKeyForLog = null;
-        if (StringUtils.hasText(templateCode) && StringUtils.hasText(receiver)) {
-            MsgCanaryDO canary = canaryService.matchConfig(templateCode, receiver);
+        // ③ 灰度命中差异化处理（P0-7）
+        if (StringUtils.hasText(ctx.templateCode) && StringUtils.hasText(ctx.receiver)) {
+            MsgCanaryDO canary = canaryService.matchConfig(ctx.templateCode, ctx.receiver);
             if (canary != null) {
-                canaryFlag = 1;
-                canaryKeyForLog = templateCode;
+                ctx.canaryFlag = 1;
+                ctx.canaryKeyForLog = ctx.templateCode;
                 if (StringUtils.hasText(canary.getExperimentTemplateCode())) {
                     log.info("[Message] 灰度命中切换模板: orig={} exp={}",
-                            templateCode, canary.getExperimentTemplateCode());
+                            ctx.templateCode, canary.getExperimentTemplateCode());
                     request.setTemplateCode(canary.getExperimentTemplateCode());
-                    templateCode = canary.getExperimentTemplateCode();
+                    ctx.templateCode = canary.getExperimentTemplateCode();
                 }
                 if (StringUtils.hasText(canary.getExperimentChannel())) {
                     log.info("[Message] 灰度命中切换通道: orig={} exp={}",
                             channel, canary.getExperimentChannel());
-                    channel = canary.getExperimentChannel();
-                    request.setChannel(channel);
+                    ctx.channel = canary.getExperimentChannel();
+                    request.setChannel(ctx.channel);
                 }
             }
         }
 
-        // ④ 订阅关系校验（P0-5）：用户退订后不发送
-        if (StringUtils.hasText(receiver) && StringUtils.hasText(templateCode)
-                && subscriptionService.isBlocked(receiver, templateCode, channel)) {
+        // ④ 订阅关系校验（P0-5）
+        if (StringUtils.hasText(ctx.receiver) && StringUtils.hasText(ctx.templateCode)
+                && subscriptionService.isBlocked(ctx.receiver, ctx.templateCode, ctx.channel)) {
             log.info("[Message] 用户已退订,跳过发送: receiver={} topic={} channel={}",
-                    receiver, templateCode, channel);
-            messageMetrics.recordSend(channel, "BLOCKED", 0);
-            return MessageResult.fail(channel, "用户已退订该消息");
+                    ctx.receiver, ctx.templateCode, ctx.channel);
+            messageMetrics.recordSend(ctx.channel, "BLOCKED", 0);
+            ctx.result = MessageResult.fail(ctx.channel, "用户已退订该消息");
+            return ctx;
         }
 
         // ⑤ 用户偏好（P0-6）：DND 时段 / locale / digestEnabled
-        MsgPreferenceDO pref = StringUtils.hasText(receiver)
-                ? preferenceService.getByUser(receiver, channel, bizType) : null;
-        if (pref != null && isInDndPeriod(pref)) {
+        ctx.pref = StringUtils.hasText(ctx.receiver)
+                ? preferenceService.getByUser(ctx.receiver, ctx.channel, ctx.bizType) : null;
+        if (ctx.pref != null && isInDndPeriod(ctx.pref)) {
             MessageProperties.SmartTimingConfig stc = messageProperties.getSmartTiming();
-            boolean channelDisruptive = stc != null && stc.isDisruptive(channel);
+            boolean channelDisruptive = stc != null && stc.isDisruptive(ctx.channel);
             boolean urgentBypass = stc != null && stc.isUrgentBypassDnd()
                     && "URGENT".equals(resolvePriority(request));
             if (!channelDisruptive) {
-                // 非打扰型通道（EMAIL/INAPP/Webhook）绕过 DND
-                log.debug("[Message] 非打扰型通道绕过 DND: channel={}", channel);
+                log.debug("[Message] 非打扰型通道绕过 DND: channel={}", ctx.channel);
             } else if (urgentBypass) {
-                log.info("[Message] URGENT 消息绕过 DND: receiver={} channel={}", receiver, channel);
+                log.info("[Message] URGENT 消息绕过 DND: receiver={} channel={}", ctx.receiver, ctx.channel);
             } else if (stc != null && stc.isEnabled()) {
-                // P2-5: 智能定时 —— 延迟到 DND 结束后发送
-                LocalDateTime nextTime = calculateDndEndTime(pref);
+                LocalDateTime nextTime = calculateDndEndTime(ctx.pref);
                 if (nextTime == null) {
-                    messageMetrics.recordSend(channel, "DND_SKIPPED", 0);
-                    return MessageResult.fail(channel, "当前为免打扰时段");
+                    messageMetrics.recordSend(ctx.channel, "DND_SKIPPED", 0);
+                    ctx.result = MessageResult.fail(ctx.channel, "当前为免打扰时段");
+                    return ctx;
                 }
                 long deferHours = Duration.between(LocalDateTime.now(), nextTime).toHours();
                 if (deferHours > stc.getMaxDeferHours()) {
                     log.info("[Message] DND 延迟超过阈值,丢弃: receiver={} defer={}h max={}h",
-                            receiver, deferHours, stc.getMaxDeferHours());
-                    messageMetrics.recordSend(channel, "DND_DROPPED", 0);
-                    return MessageResult.fail(channel, "免打扰时段消息延迟过久,已丢弃");
+                            ctx.receiver, deferHours, stc.getMaxDeferHours());
+                    messageMetrics.recordSend(ctx.channel, "DND_DROPPED", 0);
+                    ctx.result = MessageResult.fail(ctx.channel, "免打扰时段消息延迟过久,已丢弃");
+                    return ctx;
                 }
                 log.info("[Message] DND 延迟发送: receiver={} dnd={}~{} nextSendAt={}",
-                        receiver, pref.getDndStart(), pref.getDndEnd(), nextTime);
-                messageMetrics.recordSend(channel, "DND_DEFERRED", 0);
+                        ctx.receiver, ctx.pref.getDndStart(), ctx.pref.getDndEnd(), nextTime);
+                messageMetrics.recordSend(ctx.channel, "DND_DEFERRED", 0);
                 request.setScheduledAt(nextTime);
             } else {
-                // 智能定时未启用,走旧的丢弃策略
-                messageMetrics.recordSend(channel, "DND_SKIPPED", 0);
-                return MessageResult.fail(channel, "当前为免打扰时段");
+                messageMetrics.recordSend(ctx.channel, "DND_SKIPPED", 0);
+                ctx.result = MessageResult.fail(ctx.channel, "当前为免打扰时段");
+                return ctx;
             }
         }
-        String prefLocale = pref != null ? pref.getLocale() : null;
 
-        // ⑤-1b P2-14: 时区感知 DND 补充检查 —— 偏好 DND 未触发时,检查 Redis 时区感知 DND
-        if (StringUtils.hasText(receiver) && dndService.shouldDelay(receiver, resolvePriority(request))) {
-            log.info("[Message] P2-14 时区感知 DND 延迟发送: receiver={} channel={}", receiver, channel);
-            messageMetrics.recordSend(channel, "DND_DEFERRED", 0);
-            // DND 期间消息标记为 SCHEDULED,延迟到窗口结束后投递
-            // 实际延迟投递由定时扫描器处理,这里仅记录日志并返回成功
+        // ⑤-1b P2-14: 时区感知 DND 补充检查
+        if (StringUtils.hasText(ctx.receiver) && dndService.shouldDelay(ctx.receiver, resolvePriority(request))) {
+            log.info("[Message] P2-14 时区感知 DND 延迟发送: receiver={} channel={}", ctx.receiver, ctx.channel);
+            messageMetrics.recordSend(ctx.channel, "DND_DEFERRED", 0);
         }
 
-        // ⑤-2 P2-1: 智能去重（SET NX EX）—— 相同 dedupKey 在 TTL 窗口内仅允许一次
-        String dedupKey = buildDedupKey(request);
-        if (StringUtils.hasText(dedupKey) && !dedupService.tryAcquire(dedupKey)) {
-            log.info("[Message] 检测到重复消息,跳过发送: dedupKey={} receiver={}", dedupKey, receiver);
-            messageMetrics.recordSend(channel, "DEDUPED", 0);
-            return MessageResult.fail(channel, "消息重复,已忽略");
+        // ⑤-2 P2-1: 智能去重（SET NX EX）
+        ctx.dedupKey = buildDedupKey(request);
+        if (StringUtils.hasText(ctx.dedupKey) && !dedupService.tryAcquire(ctx.dedupKey)) {
+            log.info("[Message] 检测到重复消息,跳过发送: dedupKey={} receiver={}", ctx.dedupKey, ctx.receiver);
+            messageMetrics.recordSend(ctx.channel, "DEDUPED", 0);
+            ctx.result = MessageResult.fail(ctx.channel, "消息重复,已忽略");
+            return ctx;
         }
 
-        // ⑤-3 P2-13: 跨渠道抑制 —— 同一 bizType+bizId+receiver 在抑制窗口内只允许首个渠道发送
-        if (StringUtils.hasText(bizType) && StringUtils.hasText(request.getBizId())
-                && StringUtils.hasText(receiver)
-                && channelSuppressionEngine.shouldSuppress(bizType, request.getBizId(), receiver, channel)) {
+        // ⑤-3 P2-13: 跨渠道抑制
+        if (StringUtils.hasText(ctx.bizType) && StringUtils.hasText(request.getBizId())
+                && StringUtils.hasText(ctx.receiver)
+                && channelSuppressionEngine.shouldSuppress(ctx.bizType, request.getBizId(), ctx.receiver, ctx.channel)) {
             log.info("[Message] 跨渠道抑制,跳过发送: bizType={} bizId={} receiver={} channel={}",
-                    bizType, request.getBizId(), receiver, channel);
-            messageMetrics.recordSend(channel, "SUPPRESSED", 0);
-            return MessageResult.fail(channel, "跨渠道抑制: 已有其他渠道发送");
+                    ctx.bizType, request.getBizId(), ctx.receiver, ctx.channel);
+            messageMetrics.recordSend(ctx.channel, "SUPPRESSED", 0);
+            ctx.result = MessageResult.fail(ctx.channel, "跨渠道抑制: 已有其他渠道发送");
+            return ctx;
         }
 
         // ⑥ 限流 + 频率
-        // ⑥-1 通道+bizType 维度令牌桶（全局配额）
-        if (!rateLimitService.tryAcquire(buildRateLimitKey(channel, bizType), 1)) {
-            messageMetrics.recordSend(channel, "FAILED", 0);
+        if (!rateLimitService.tryAcquire(buildRateLimitKey(ctx.channel, ctx.bizType), 1)) {
+            messageMetrics.recordSend(ctx.channel, "FAILED", 0);
             throw new SysException(StandardResultCode.RATE_LIMIT, "发送限流，请稍后重试");
         }
-        // ⑥-2 P2-5/P0-5: 多维度令牌桶（receiver/templateCode/tenant），优先级感知
-        if (!rateLimitService.checkSendLimit(channel, receiver, templateCode,
+        if (!rateLimitService.checkSendLimit(ctx.channel, ctx.receiver, ctx.templateCode,
                 TenantContext.getTenantId(), request.getPriority())) {
-            messageMetrics.recordSend(channel, "RATE_LIMITED", 0);
+            messageMetrics.recordSend(ctx.channel, "RATE_LIMITED", 0);
             throw new SysException(StandardResultCode.RATE_LIMIT, "多维度限流：receiver/template/tenant 超限");
         }
-        // ⑥-3 用户偏好频率（每日/每小时上限）
-        if (StringUtils.hasText(receiver)
-                && !rateLimitService.checkFrequency(receiver, channel, bizType)) {
-            messageMetrics.recordSend(channel, "FAILED", 0);
+        if (StringUtils.hasText(ctx.receiver)
+                && !rateLimitService.checkFrequency(ctx.receiver, ctx.channel, ctx.bizType)) {
+            messageMetrics.recordSend(ctx.channel, "FAILED", 0);
             throw new SysException(StandardResultCode.RATE_LIMIT, "发送频率超限");
         }
 
-        // ⑥-4 P2-20: Sender 配额管理 —— 检查发送方日/小时配额（以 bizType 作为发送方标识）
-        String senderId = StringUtils.hasText(bizType) ? bizType : SystemConstants.SYSTEM_USER_ID;
-        if (!senderQuotaService.checkQuota(senderId, channel)) {
-            messageMetrics.recordSend(channel, "QUOTA_EXCEEDED", 0);
+        // ⑥-4 P2-20: Sender 配额管理
+        String senderId = StringUtils.hasText(ctx.bizType) ? ctx.bizType : SystemConstants.SYSTEM_USER_ID;
+        if (!senderQuotaService.checkQuota(senderId, ctx.channel)) {
+            messageMetrics.recordSend(ctx.channel, "QUOTA_EXCEEDED", 0);
             throw new SysException(StandardResultCode.RATE_LIMIT, "发送方配额已用尽: senderId=" + senderId);
         }
+        return ctx;
+    }
 
-        // ⑦ 加载模板（有 templateCode 时，使用偏好 locale）
+    /**
+     * P1-3: 渲染阶段 —— 模板加载/变量填充/渲染/敏感词/富媒体。
+     *
+     * @param request 消息请求
+     * @param ctx     预处理上下文
+     * @return 渲染后的 content/subject
+     */
+    private RenderedContent renderContent(MessageRequest request, SendContext ctx) {
         String content = request.getContent();
         String subject = request.getSubject();
-        if (StringUtils.hasText(templateCode)) {
+        String prefLocale = ctx.pref != null ? ctx.pref.getLocale() : null;
+
+        if (StringUtils.hasText(ctx.templateCode)) {
             MsgTemplateDO template = templateService.loadByCodeAndChannel(
-                    templateCode, channel, prefLocale, TenantContext.getTenantId());
+                    ctx.templateCode, ctx.channel, prefLocale, TenantContext.getTenantId());
             if (template == null) {
-                return MessageResult.fail(channel, "模板不存在: " + templateCode);
+                return new RenderedContent(content, subject, true);
             }
-            // P0-3: 模板变量类型校验（有 variableDefs 时校验+填充默认值）
+            // P0-3: 模板变量类型校验
             if (StringUtils.hasText(template.getVariableDefs())) {
                 var varDefs = templateVariableValidator.parse(template.getVariableDefs());
                 if (!varDefs.isEmpty() && request.getParams() != null) {
-                    templateVariableValidator.validateAndFill(request.getParams(), varDefs, templateCode);
+                    templateVariableValidator.validateAndFill(request.getParams(), varDefs, ctx.templateCode);
                 }
             }
-            // P0-4: 变量数据源自动拉取（params 中缺失的变量从数据源补全）
+            // P0-4: 变量数据源自动拉取
             if (request.getParams() != null) {
-                Map<String, Object> ctx = new HashMap<>();
+                Map<String, Object> varCtx = new HashMap<>();
                 if (StringUtils.hasText(request.getBizId())) {
-                    ctx.put("bizId", request.getBizId());
+                    varCtx.put("bizId", request.getBizId());
                 }
-                if (StringUtils.hasText(bizType)) {
-                    ctx.put("bizType", bizType);
+                if (StringUtils.hasText(ctx.bizType)) {
+                    varCtx.put("bizType", ctx.bizType);
                 }
-                ctx.put("receiver", receiver);
-                variableSourceResolver.resolveVariables(templateCode, request.getParams(), ctx);
+                varCtx.put("receiver", ctx.receiver);
+                variableSourceResolver.resolveVariables(ctx.templateCode, request.getParams(), varCtx);
             }
             if (StringUtils.hasText(template.getContent())) {
                 content = templateEngine.render(template.getContent(), request.getParams());
@@ -370,15 +425,15 @@ public class MessageServiceImpl implements MessageService {
             }
         }
 
-        // ⑦-2 敏感词过滤（P2-1）：对最终 content 做敏感词替换,无论模板渲染还是直传内容
+        // ⑦-2 敏感词过滤
         if (StringUtils.hasText(content)) {
             content = sensitiveWordFilter.filter(content);
         }
 
-        // P1-2: 富媒体消息渲染 —— 检查 params 中是否包含富媒体内容,按通道渲染
+        // P1-2: 富媒体消息渲染
         RichMediaContent richMedia = richMediaRenderer.extractFromParams(request.getParams());
         if (richMedia != null) {
-            String renderedContent = switch (channel == null ? "" : channel.toUpperCase()) {
+            String renderedContent = switch (ctx.channel == null ? "" : ctx.channel.toUpperCase()) {
                 case "EMAIL" -> richMediaRenderer.renderHtml(richMedia);
                 case "INAPP", "DINGTALK", "WECOM", "FEISHU" -> richMediaRenderer.renderMarkdown(richMedia);
                 case "SMS" -> richMediaRenderer.renderPlainText(richMedia);
@@ -391,51 +446,75 @@ public class MessageServiceImpl implements MessageService {
                 subject = richMedia.getTitle();
             }
         }
+        return new RenderedContent(content, subject, false);
+    }
 
-        // ⑧ 落库 PENDING
+    /**
+     * P1-3: 构造落库 MsgLogDO。
+     */
+    private MsgLogDO buildLogDO(MessageRequest request, SendContext ctx, RenderedContent rendered) {
         MsgLogDO logDO = new MsgLogDO();
-        logDO.setChannel(channel);
-        logDO.setBizType(bizType);
+        logDO.setChannel(ctx.channel);
+        logDO.setBizType(ctx.bizType);
         logDO.setBizId(request.getBizId());
-        logDO.setReceiver(receiver);
-        logDO.setTemplateCode(templateCode);
+        logDO.setReceiver(ctx.receiver);
+        logDO.setTemplateCode(ctx.templateCode);
         logDO.setTemplateParams(JsonUtils.toJson(request.getParams()));
-        logDO.setContent(content);
+        logDO.setContent(rendered.content);
         logDO.setStatus(MessageStatusEnum.PENDING.name());
         logDO.setPriority(resolvePriority(request));
         logDO.setSenderId(SystemConstants.SYSTEM_USER_ID);
-        logDO.setCanary(canaryFlag);
-        logDO.setCanaryKey(canaryKeyForLog);
+        logDO.setCanary(ctx.canaryFlag);
+        logDO.setCanaryKey(ctx.canaryKeyForLog);
         logDO.setRecallStatus(RecallStatusEnum.NONE.name());
         logDO.setReceiptStatus("NONE");
         logDO.setRetryCount(0);
         logDO.setTraceId(TraceIdUtil.getOrCreate());
         logDO.setMsgId(StringUtils.hasText(request.getMessageId()) ? request.getMessageId()
                 : SnowflakeIdGenerator.nextIdStr());
-        logDO.setDedupKey(dedupKey);
-        // P2-6: 级联发送时记录父消息 ID,用于追溯级联关系
+        logDO.setDedupKey(ctx.dedupKey);
         logDO.setParentMsgId(request.getParentMsgId());
-        // P0-3: 定时发送时间
         logDO.setScheduledAt(request.getScheduledAt());
-        if (matchedRule != null) {
-            logDO.setRouteRuleId(matchedRule.getId());
+        if (ctx.matchedRule != null) {
+            logDO.setRouteRuleId(ctx.matchedRule.getId());
         }
         logDO.setTenantId(TenantContext.getTenantId());
+        return logDO;
+    }
+
+    /**
+     * P1-3: 处理定时消息/智能定时/聚合的早期 return 路径。
+     *
+     * <p>聚合路径(insert + appendOrStart + updateById)未加 @Transactional,
+     * 因 Spring 同类 self-invocation 事务不生效。appendOrStart 失败时
+     * insert 的 PENDING 记录由恢复扫描器兜底,不致数据不一致。
+     *
+     * @param request  消息请求
+     * @param ctx      预处理上下文
+     * @param logDO    待落库对象(方法内会修改 status/scheduledAt)
+     * @param rendered 渲染结果(含 templateMissing 标志)
+     * @return 非 null 表示已处理(调用方直接返回),null 表示继续走常规分发
+     */
+    private MessageResult handleEarlyReturns(MessageRequest request, SendContext ctx, MsgLogDO logDO, RenderedContent rendered) {
+        // 模板缺失: renderContent 标记 templateMissing=true 时直接返回失败
+        if (rendered.templateMissing()) {
+            return MessageResult.fail(ctx.channel, "模板不存在: " + ctx.templateCode);
+        }
         // ⑧-2 P0-3: 定时消息 —— scheduledAt 非空且在未来时,落库 SCHEDULED 不立即发送
         if (request.getScheduledAt() != null
                 && request.getScheduledAt().isAfter(LocalDateTime.now())) {
             logDO.setStatus(MessageStatusEnum.SCHEDULED.name());
             msgLogMapper.insert(logDO);
             log.info("[Message] 定时消息已入库: msgId={} scheduledAt={} channel={}",
-                    logDO.getMsgId(), logDO.getScheduledAt(), channel);
-            return MessageResult.ok(channel, logDO.getMsgId());
+                    logDO.getMsgId(), logDO.getScheduledAt(), ctx.channel);
+            return MessageResult.ok(ctx.channel, logDO.getMsgId());
         }
 
-        // P1-1: 智能推送时间优化 —— 非紧急且未设置定时时间的消息，使用用户活跃度画像推荐最佳推送时间
-        if (request.getScheduledAt() == null && StringUtils.hasText(receiver)
+        // P1-1: 智能推送时间优化
+        if (request.getScheduledAt() == null && StringUtils.hasText(ctx.receiver)
                 && !"URGENT".equals(resolvePriority(request))) {
             try {
-                LocalDateTime optimalTime = deliveryTimeOptimizer.getOptimalDeliveryTime(receiver, channel);
+                LocalDateTime optimalTime = deliveryTimeOptimizer.getOptimalDeliveryTime(ctx.receiver, ctx.channel);
                 if (optimalTime != null && optimalTime.isAfter(LocalDateTime.now().plusMinutes(5))) {
                     request.setScheduledAt(optimalTime);
                     logDO.setScheduledAt(optimalTime);
@@ -443,43 +522,60 @@ public class MessageServiceImpl implements MessageService {
                     msgLogMapper.insert(logDO);
                     messageTraceService.recordTrace(logDO.getMsgId(),
                             MsgTraceDO.Node.SCHEDULED,
-                            "SUCCESS", channel, "智能定时: optimalAt=" + optimalTime);
+                            "SUCCESS", ctx.channel, "智能定时: optimalAt=" + optimalTime);
                     log.info("[Message] 智能定时推送: msgId={} receiver={} optimalAt={}",
-                            logDO.getMsgId(), receiver, optimalTime);
-                    return MessageResult.ok(channel, logDO.getMsgId());
+                            logDO.getMsgId(), ctx.receiver, optimalTime);
+                    return MessageResult.ok(ctx.channel, logDO.getMsgId());
                 }
             } catch (Exception e) {
                 log.debug("[Message] 智能推送时间优化失败,降级立即发送: receiver={} err={}",
-                        receiver, e.getMessage());
+                        ctx.receiver, e.getMessage());
             }
         }
 
-        msgLogMapper.insert(logDO);
-
-        // ⑨ 聚合判断（P0-6）：digestEnabled=1 时追加到聚合批次,不立即发送
-        if (pref != null && Integer.valueOf(1).equals(pref.getDigestEnabled())
-                && StringUtils.hasText(bizType) && StringUtils.hasText(receiver)) {
-            aggregateService.appendOrStart(bizType, receiver, channel, logDO.getTenantId());
+        // ⑨ 聚合判断(P0-6) —— insert + appendOrStart + updateById
+        // 注: 此处未加 @Transactional,因为 Spring 同类 self-invocation 不生效。
+        // appendOrStart 失败时 insert 的 PENDING 记录会被恢复扫描器兜底处理,不致数据不一致。
+        // 如需强一致,可将聚合路径提取到独立 Service 类通过代理调用。
+        if (ctx.pref != null && Integer.valueOf(1).equals(ctx.pref.getDigestEnabled())
+                && StringUtils.hasText(ctx.bizType) && StringUtils.hasText(ctx.receiver)) {
+            msgLogMapper.insert(logDO);
+            aggregateService.appendOrStart(ctx.bizType, ctx.receiver, ctx.channel, logDO.getTenantId());
             logDO.setStatus(MessageStatusEnum.PENDING.name());
             logDO.setErrorMessage("AGGREGATED");
             msgLogMapper.updateById(logDO);
             log.info("[Message] 已加入聚合批次: msgId={} group={} receiver={}",
-                    logDO.getMsgId(), bizType, receiver);
-            return MessageResult.ok(channel, logDO.getMsgId());
+                    logDO.getMsgId(), ctx.bizType, ctx.receiver);
+            return MessageResult.ok(ctx.channel, logDO.getMsgId());
         }
+        return null;
+    }
 
-        // P0-2: 记录落库轨迹
-        messageTraceService.recordTrace(logDO.getMsgId(),
-                MsgTraceDO.Node.PERSISTED, "SUCCESS", channel,
-                "消息已落库: status=" + logDO.getStatus());
+    /**
+     * P1-3: 预处理阶段中间状态载体。
+     */
+    private static class SendContext {
+        String channel;
+        String receiver;
+        String bizType;
+        String templateCode;
+        MsgRouteRuleDO matchedRule;
+        MsgPreferenceDO pref;
+        int canaryFlag;
+        String canaryKeyForLog;
+        String dedupKey;
+        /** 非 null 表示预处理短路(校验失败),调用方直接返回 */
+        MessageResult result;
+    }
 
-        // ⑩ 通道分发
-        MessageResult result = doDispatch(logDO, matchedRule, receiver);
-        // P2-6: 父消息发送成功后触发级联发送(聚合消息不触发级联,由聚合 flush 时自行处理)
-        if (result != null && result.isSuccess()) {
-            triggerCascade(request, logDO, depth);
-        }
-        return result;
+    /**
+     * P1-3: 渲染阶段产出。
+     *
+     * @param content      渲染后内容
+     * @param subject      渲染后标题
+     * @param templateMissing 模板缺失标志(渲染阶段无法返回 fail,由调用方检查)
+     */
+    private record RenderedContent(String content, String subject, boolean templateMissing) {
     }
 
     /**

@@ -6,7 +6,9 @@ import java.util.UUID;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.pmis.common.constant.SystemConstants;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 import com.njydsz.pmis.nextwiki.domain.entity.TrashItem;
@@ -68,6 +70,7 @@ public class TrashDomainService {
     /**
      * 从回收站恢复
      */
+    @Transactional(rollbackFor = Exception.class)
     public FileNode restore(String trashItemId, String userId) {
         TrashItem trashItem = trashItemRepository.findById(trashItemId);
         if (trashItem == null) {
@@ -116,6 +119,7 @@ public class TrashDomainService {
     /**
      * 永久删除
      */
+    @Transactional(rollbackFor = Exception.class)
     public void purge(String trashItemId, String userId) {
         TrashItem trashItem = trashItemRepository.findById(trashItemId);
         if (trashItem == null) {
@@ -135,6 +139,7 @@ public class TrashDomainService {
     /**
      * 清空回收站
      */
+    @Transactional(rollbackFor = Exception.class)
     public void emptyTrash(String userId) {
         List<TrashItem> items = trashItemRepository.findActiveTrash(userId);
         for (TrashItem item : items) {
@@ -157,12 +162,13 @@ public class TrashDomainService {
     /**
      * 自动清理过期条目（定时任务调用）
      */
+    @Transactional(rollbackFor = Exception.class)
     public int cleanupExpiredItems() {
         List<TrashItem> expired = trashItemRepository.findExpiredItems(100);
         int cleaned = 0;
         for (TrashItem item : expired) {
             try {
-                purge(item.getId(), "system");
+                purge(item.getId(), SystemConstants.SYSTEM_USER_ID);
                 cleaned++;
             } catch (Exception e) {
                 log.error("[TrashDomainService] 自动清理失败: trashItemId={}", item.getId(), e);

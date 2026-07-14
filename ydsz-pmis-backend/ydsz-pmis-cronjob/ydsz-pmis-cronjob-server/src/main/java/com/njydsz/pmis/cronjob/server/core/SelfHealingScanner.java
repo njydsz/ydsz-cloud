@@ -22,6 +22,7 @@ import com.njydsz.pmis.cronjob.domain.entity.log.JobLogDO;
 import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.pmis.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.server.core.LockKeyUtil;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertContext;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertTrigger;
 import com.njydsz.pmis.cronjob.server.core.alert.AlertType;
@@ -77,9 +78,6 @@ public class SelfHealingScanner {
     private final ObjectProvider<TaskDispatcher> taskDispatcherProvider;
     /** Prometheus 指标（可选注入） */
     private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
-
-    /** 任务锁 key 前缀 */
-    private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
 
     /** Lua 脚本: 安全释放锁 */
     private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT = initReleaseScript();
@@ -178,8 +176,8 @@ public class SelfHealingScanner {
             return;
         }
 
-        // 2. 释放分布式锁
-        releaseJobLock(stuckLog.getJobKey(), stuckLog.getLockHolder());
+        // 2. 释放分布式锁（P0-7: 传入 shardIndex 支持分片任务）
+        releaseJobLock(stuckLog.getJobKey(), stuckLog.getShardIndex(), stuckLog.getLockHolder());
 
         // 3. 更新任务统计
         try {
@@ -279,18 +277,24 @@ public class SelfHealingScanner {
     }
 
     /**
-     * 安全释放任务锁。
+     * 安全释放任务锁（P0-7: 支持分片任务锁）。
+     *
+     * @param jobKey 任务 key
+     * @param shardIndex 分片索引（null 或负数表示非分片任务）
+     * @param lockHolder 锁持有者标识
      */
-    private void releaseJobLock(String jobKey, String lockHolder) {
+    private void releaseJobLock(String jobKey, Integer shardIndex, String lockHolder) {
         if (lockHolder == null || lockHolder.isBlank()) {
             return;
         }
         try {
-            String lockKey = JOB_LOCK_PREFIX + jobKey;
+            // P0-11: 通过 LockKeyUtil 统一构造，支持分片任务锁释放
+            String lockKey = LockKeyUtil.buildJobLockKey(jobKey, shardIndex);
             Long released = redisTemplate.execute(RELEASE_LOCK_SCRIPT,
                     Collections.singletonList(lockKey), lockHolder);
             if (released != null && released > 0) {
-                log.info("[SelfHealing] 释放卡死任务锁成功: jobKey={}", jobKey);
+                log.info("[SelfHealing] 释放卡死任务锁成功: jobKey={} shardIndex={} lockKey={}",
+                        jobKey, shardIndex, lockKey);
             }
         } catch (Exception e) {
             log.warn("[SelfHealing] 释放锁失败: jobKey={} reason={}", jobKey, e.getMessage());

@@ -14,6 +14,7 @@ package com.njydsz.pmis.common.feign;
  *   <li>{@link #AGENT} — AI Agent 服务（编排/工具/知识库）</li>
  *   <li>{@link #CRONJOB} — 定时任务调度（DAG/告警/统计）</li>
  *   <li>{@link #GATEWAY} — API 网关（路由/限流/鉴权）</li>
+ *   <li>{@link #LITERULE} — 规则引擎（规则定义/编排/评估/灰度/回放）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -59,4 +60,7 @@ public final class FeignClientConstants {
 
     /** 系统管理服务名 */
     public static final String SYSTEM = "ydsz-pmis-system";
+
+    /** 规则引擎服务名（规则定义/编排/评估/灰度/回放/审批） */
+    public static final String LITERULE = "ydsz-pmis-literule";
 }

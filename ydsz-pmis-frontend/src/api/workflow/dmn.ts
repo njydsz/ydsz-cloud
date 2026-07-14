@@ -96,7 +96,7 @@ export function pageDmnTables(params: {
 }
 
 /** 按 ID 获取决策表详情 */
-export function getDmnTable(id: number) {
+export function getDmnTable(id: string) {
   return request<FlowDmnTableDTO>({
     url: `/workflow/dmn/${id}`,
     method: 'GET',
@@ -121,7 +121,7 @@ export function saveDmnTable(data: FlowDmnTableDTO) {
 }
 
 /** 发布决策表 */
-export function publishDmnTable(id: number) {
+export function publishDmnTable(id: string) {
   return request<void>({
     url: `/workflow/dmn/${id}/publish`,
     method: 'POST',
