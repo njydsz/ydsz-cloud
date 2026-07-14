@@ -75,6 +75,8 @@ public class AlertDispatcher {
     private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
     /** 实时推送客户端（WebSocket 广播告警到前端） */
     private final NotificationClient notificationClient;
+    /** P0-9: 告警智能降噪管理器（可选注入，仅 pmis.cronjob.alert-dedup.enabled=true 时启用） */
+    private final ObjectProvider<AlertDedupManager> alertDedupManagerProvider;
 
     private static final DateTimeFormatter TIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -117,8 +119,37 @@ public class AlertDispatcher {
             return;
         }
 
-        // 2. 解析通道与接收人
-        List<AlertChannel> channels = parseChannels(rule.getChannels());
+        // P0-9: 智能降噪（恢复通知跳过 dedup，确保 resolved 通知必达）
+        // 在冷却窗口通过后、通道解析前进行窗口聚合+频次升级判断
+        // 未启用 alert-dedup 时降级放行原始通道
+        String effectiveChannelsJson = rule.getChannels();
+        boolean escalated = false;
+        if (!recovery) {
+            AlertDedupManager dedupManager = alertDedupManagerProvider.getIfAvailable();
+            if (dedupManager != null) {
+                AlertDedupManager.DedupDecision decision = dedupManager.checkAndDedup(
+                        String.valueOf(rule.getId()),
+                        context.jobId(),
+                        rule.getAlertType(),
+                        rule.getChannels());
+                if (!decision.send()) {
+                    log.info("[AlertDispatcher] 智能降噪抑制告警: ruleId={} alertType={} jobId={}",
+                            rule.getId(), rule.getAlertType(), context.jobId());
+                    recordAlertMetrics(rule.getAlertType(), "SUPPRESSED");
+                    return;
+                }
+                // 升级时使用 dedup 合并后的通道（含追加的升级通道）
+                if (decision.escalated() && decision.channels() != null
+                        && !decision.channels().equals(rule.getChannels())) {
+                    // 转换为 JSON 数组格式供 parseChannels 使用
+                    effectiveChannelsJson = decisionChannelsToJson(decision.channels());
+                    escalated = true;
+                }
+            }
+        }
+
+        // 2. 解析通道与接收人（使用 dedup 决策后的通道）
+        List<AlertChannel> channels = parseChannels(effectiveChannelsJson);
         List<String> receivers = parseReceivers(rule.getReceivers());
 
         if (channels.isEmpty()) {
@@ -135,8 +166,8 @@ public class AlertDispatcher {
         for (AlertChannel channel : channels) {
             try {
                 sendViaMessageCenter(channel, context, rule, receivers);
-                log.info("[AlertDispatcher] 通道派发成功: channel={} ruleId={} jobId={} recovery={}",
-                        channel, rule.getId(), context.jobId(), recovery);
+                log.info("[AlertDispatcher] 通道派发成功: channel={} ruleId={} jobId={} recovery={} escalated={}",
+                        channel, rule.getId(), context.jobId(), recovery, escalated);
             } catch (AlertSendException e) {
                 log.warn("[AlertDispatcher] 通道派发失败: channel={} ruleId={} recovery={} reason={}",
                         channel, rule.getId(), recovery, e.getMessage());
@@ -472,5 +503,27 @@ public class AlertDispatcher {
         } catch (Exception e) {
             return "INAPP";
         }
+    }
+
+    /**
+     * P0-9: 将 dedup 决策的逗号分隔通道转换为 JSON 数组字符串。
+     * 反向操作 convertChannelsToCsv，便于复用 parseChannels。
+     *
+     * @param channelsCsv 逗号分隔通道，如 "EMAIL,DINGTALK,SMS"
+     * @return JSON 数组字符串，如 ["EMAIL","DINGTALK","SMS"]
+     */
+    private String decisionChannelsToJson(String channelsCsv) {
+        if (channelsCsv == null || channelsCsv.isBlank()) {
+            return "[]";
+        }
+        String[] parts = channelsCsv.split(",");
+        JSONArray array = new JSONArray();
+        for (String part : parts) {
+            String trimmed = part.trim();
+            if (!trimmed.isEmpty()) {
+                array.add(trimmed);
+            }
+        }
+        return array.toJSONString();
     }
 }

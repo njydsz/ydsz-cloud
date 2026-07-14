@@ -32,6 +32,7 @@ public class PreviewController {
 
     @PostMapping("/{fileNodeId}/generate")
     @Operation(summary = "生成预览（异步）")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_PREVIEW_GENERATE)
     public BaseResponse<Void> generatePreview(@PathVariable String fileNodeId) {
         previewService.generatePreview(fileNodeId);
         return BaseResponse.ok();
@@ -39,12 +40,14 @@ public class PreviewController {
 
     @GetMapping("/supported")
     @Operation(summary = "检查文件是否支持预览")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_PREVIEW_VIEW)
     public BaseResponse<Boolean> isSupported(@RequestParam String suffix) {
         return BaseResponse.ok(previewService.isPreviewSupported(suffix));
     }
 
     @GetMapping("/type")
     @Operation(summary = "获取预览类型")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_PREVIEW_VIEW)
     public BaseResponse<String> getPreviewType(@RequestParam String suffix) {
         return BaseResponse.ok(previewService.getPreviewType(suffix));
     }

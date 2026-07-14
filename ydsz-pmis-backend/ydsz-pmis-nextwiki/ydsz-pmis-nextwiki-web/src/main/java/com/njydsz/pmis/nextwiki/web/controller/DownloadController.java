@@ -18,10 +18,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.file.storage.IFileStorage;
 import com.njydsz.pmis.common.file.storage.IFileStorageProvider;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.pmis.nextwiki.server.service.DownloadRateLimitService;
@@ -93,6 +95,7 @@ public class DownloadController {
      */
     @PostMapping("/{nodeId}/signed-url")
     @Operation(summary = "生成签名下载URL", description = "生成带时效性和IP绑定的签名下载链接")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_DOWNLOAD)
     public BaseResponse<String> generateSignedUrl(
             @PathVariable String nodeId,
             @RequestHeader("X-User-Id") String userId,
@@ -116,6 +119,7 @@ public class DownloadController {
      */
     @GetMapping("/signed/{sign}")
     @Operation(summary = "通过签名URL下载文件")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_DOWNLOAD)
     public void downloadBySignedUrl(
             @PathVariable String sign,
             @RequestParam("expires") long expireTime,

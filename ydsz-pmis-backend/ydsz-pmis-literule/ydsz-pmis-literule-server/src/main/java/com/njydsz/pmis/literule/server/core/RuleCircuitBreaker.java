@@ -137,8 +137,9 @@ public class RuleCircuitBreaker {
                 if (errorRate >= errorRateThreshold) {
                     if (state.state.compareAndSet(State.CLOSED, State.OPEN)) {
                         state.openedAt.set(System.currentTimeMillis());
-                        log.warn("[LiteRule-Breaker] 规则 {} 熔断器 OPEN（错误率 {:.2f}%, {}/{})",
-                                ruleCode, errorRate * 100, state.totalErrors.get(), total);
+                        log.warn("[LiteRule-Breaker] 规则 {} 熔断器 OPEN（错误率 {}%, {}/{})",
+                                ruleCode, String.format("%.2f", errorRate * 100),
+                                state.totalErrors.get(), total);
                     }
                 }
             }

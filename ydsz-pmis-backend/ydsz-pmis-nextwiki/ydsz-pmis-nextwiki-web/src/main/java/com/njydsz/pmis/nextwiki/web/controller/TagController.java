@@ -2,9 +2,17 @@ package com.njydsz.pmis.nextwiki.web.controller;
 
 import java.util.List;
 
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.nextwiki.api.dto.NextwikiDTOs;
 import com.njydsz.pmis.nextwiki.domain.entity.Tag;
 import com.njydsz.pmis.nextwiki.domain.service.TagDomainService;
@@ -31,6 +39,7 @@ public class TagController {
 
     @PostMapping
     @Operation(summary = "创建标签")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_CREATE)
     public BaseResponse<Tag> createTag(
             @RequestBody NextwikiDTOs.CreateTagRequest request,
             @RequestHeader("X-User-Id") String userId) {
@@ -40,12 +49,14 @@ public class TagController {
 
     @GetMapping
     @Operation(summary = "查询所有标签")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
     public BaseResponse<List<Tag>> listTags() {
         return BaseResponse.ok(tagDomainService.getAllTags());
     }
 
     @PostMapping("/bind")
     @Operation(summary = "为文件绑定标签")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_BIND)
     public BaseResponse<Void> bindTag(
             @RequestBody NextwikiDTOs.BindTagRequest request,
             @RequestHeader("X-User-Id") String userId) {
@@ -55,12 +66,14 @@ public class TagController {
 
     @GetMapping("/file/{fileNodeId}")
     @Operation(summary = "查询文件的标签")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
     public BaseResponse<List<Tag>> getFileTags(@PathVariable String fileNodeId) {
         return BaseResponse.ok(tagDomainService.getFileTags(fileNodeId));
     }
 
     @GetMapping("/recommend/{fileNodeId}")
     @Operation(summary = "推荐标签")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TAG_LIST)
     public BaseResponse<List<Tag>> recommendTags(@PathVariable String fileNodeId) {
         return BaseResponse.ok(tagDomainService.recommendTags(fileNodeId));
     }

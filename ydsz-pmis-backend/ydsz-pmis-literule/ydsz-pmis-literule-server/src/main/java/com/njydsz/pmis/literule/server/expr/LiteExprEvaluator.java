@@ -85,8 +85,7 @@ public class LiteExprEvaluator implements ExpressionEvaluator {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public <T> T eval(String expression, RuleContext context) {
+    public Object eval(String expression, RuleContext context) {
         if (expression == null || expression.isBlank()) {
             return null;
         }
@@ -96,7 +95,7 @@ public class LiteExprEvaluator implements ExpressionEvaluator {
                 sandbox.syncFacts(context.getFacts());
             }
             Map<String, Object> facts = context != null ? context.getFacts() : Map.of();
-            return (T) interpreter.eval(ast, facts);
+            return interpreter.eval(ast, facts);
         } catch (SecurityException e) {
             log.warn("[LiteExpr] 安全拦截: {}", e.getMessage());
             return null;

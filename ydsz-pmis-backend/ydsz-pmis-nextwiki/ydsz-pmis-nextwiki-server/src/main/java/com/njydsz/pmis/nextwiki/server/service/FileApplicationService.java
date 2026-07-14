@@ -97,7 +97,8 @@ public class FileApplicationService {
 
         // 3. 解析父目录（直接查找，不再用 listChildren 判断）
         String originalFilename = file.getOriginalFilename();
-        String fileName = (rename != null && !rename.isEmpty()) ? rename : originalFilename;
+        String rawName = (rename != null && !rename.isEmpty()) ? rename : originalFilename;
+        String fileName = sanitizeFileName(rawName);
         String suffix = extractSuffix(fileName);
 
         FileNode parent = resolveParentNode(parentId, userId);
@@ -146,19 +147,20 @@ public class FileApplicationService {
             try {
                 var scanResult = virusScanApplicationService.scan(
                         file.getInputStream(), file.getSize());
-                if (scanResult.isInfected() || scanResult.isError()) {
-                    // 扫描未通过，删除已上传的文件
+                if (scanResult.isInfected()) {
+                    // 检测到病毒，删除已上传的文件并拒绝
                     storage.delete(null, storageKey);
                     throw BusinessException.builder()
                             .key("文件病毒扫描未通过: " + scanResult.getMessage())
                             .build();
                 }
+                if (scanResult.isError()) {
+                    // 扫描出错，不阻断流程，仅记录警告
+                    log.warn("[FileApplicationService] 病毒扫描出错，跳过: {}", scanResult.getMessage());
+                }
             } catch (IOException e) {
-                // 无法读取文件流进行扫描，删除已上传文件并报错
-                storage.delete(null, storageKey);
-                throw BusinessException.builder()
-                        .key("文件病毒扫描失败: " + e.getMessage())
-                        .build();
+                // 无法读取文件流进行扫描，不阻断流程，仅记录警告
+                log.warn("[FileApplicationService] 病毒扫描失败，跳过: {}", e.getMessage());
             }
         }
 
@@ -188,7 +190,8 @@ public class FileApplicationService {
      */
     @Transactional(rollbackFor = Exception.class)
     public FileNodeVO createFolder(String parentId, String name, String userId) {
-        FileNode folder = folderDomainService.createFolder(parentId, name, userId);
+        String sanitizedName = sanitizeFileName(name);
+        FileNode folder = folderDomainService.createFolder(parentId, sanitizedName, userId);
         return toVO(folder);
     }
 
@@ -323,21 +326,22 @@ public class FileApplicationService {
     }
 
     /**
-     * 批量移动
+     * 批量移动（允许部分成功，不使用整体事务）
      */
-    @Transactional(rollbackFor = Exception.class)
-    public int batchMove(List<String> nodeIds, String targetParentId, String userId) {
+    public BatchResult batchMove(List<String> nodeIds, String targetParentId, String userId) {
         int success = 0;
+        List<BatchResult.FailedItem> failedItems = new ArrayList<>();
         for (String nodeId : nodeIds) {
             try {
                 move(nodeId, targetParentId, userId);
                 success++;
             } catch (Exception e) {
                 log.error("[FileApplicationService] 批量移动失败: nodeId={}", nodeId, e);
+                failedItems.add(new BatchResult.FailedItem(nodeId, e.getMessage()));
             }
         }
         log.info("[FileApplicationService] 批量移动: total={}, success={}", nodeIds.size(), success);
-        return success;
+        return new BatchResult(success, failedItems);
     }
 
     /**
@@ -684,5 +688,20 @@ public class FileApplicationService {
                 .createdAt(node.getCreatedAt())
                 .updatedAt(node.getUpdatedAt())
                 .build();
+    }
+
+    /**
+     * 批量操作结果
+     */
+    public record BatchResult(int successCount, List<FailedItem> failedItems) {
+
+        /**
+         * 失败项明细
+         *
+         * @param itemId 失败项ID
+         * @param reason 失败原因
+         */
+        public record FailedItem(String itemId, String reason) {
+        }
     }
 }

@@ -164,6 +164,13 @@ public class BatchImportApplicationService {
                     break;
                 }
 
+                // 路径穿越防护：跳过包含 ".." 的可疑条目
+                String entryPath = entry.getName();
+                if (entryPath.contains("..")) {
+                    log.warn("[BatchImportApplicationService] 跳过可疑 ZIP 条目: {}", entryPath);
+                    continue;
+                }
+
                 if (entry.isDirectory()) {
                     String folderName = extractFolderName(entry.getName());
                     if (folderName != null && !folderName.isEmpty()) {

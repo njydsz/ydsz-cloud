@@ -29,6 +29,7 @@ import com.njydsz.pmis.agent.api.dto.ChatRequestDTO;
 import com.njydsz.pmis.agent.api.dto.ChatResponseDTO;
 import com.njydsz.pmis.agent.domain.model.ChatMessage;
 import com.njydsz.pmis.agent.domain.model.ChatResponse;
+import com.njydsz.pmis.agent.server.chat.AgentRequestGuard;
 import com.njydsz.pmis.agent.server.chat.ChatService;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 
@@ -55,11 +56,13 @@ public class ChatController {
     private static final long HEARTBEAT_INTERVAL_SECONDS = 15L;
 
     private final ChatService chatService;
+    private final AgentRequestGuard requestGuard;
     private final ScheduledExecutorService heartbeatScheduler =
             Executors.newScheduledThreadPool(2, Thread.ofVirtual().factory());
 
-    public ChatController(ChatService chatService) {
+    public ChatController(ChatService chatService, AgentRequestGuard requestGuard) {
         this.chatService = chatService;
+        this.requestGuard = requestGuard;
     }
 
     @PreDestroy
@@ -74,12 +77,18 @@ public class ChatController {
     public BaseResponse<ChatResponseDTO> chat(@Valid @RequestBody ChatRequestDTO request) {
         log.info("[Chat-API] 同步对话请求: convId={}, msgLen={}",
                 request.getConversationId(), request.getMessage().length());
-        ChatResponse response = chatService.chat(
-                request.getConversationId(),
-                request.getMessage(),
-                request.getSystemPrompt());
-        ChatResponseDTO dto = toDTO(response);
-        return BaseResponse.success(dto);
+        requestGuard.check(request.getRequestId(), null);
+        try {
+            ChatResponse response = chatService.chat(
+                    request.getConversationId(),
+                    request.getMessage(),
+                    request.getSystemPrompt());
+            ChatResponseDTO dto = toDTO(response);
+            return BaseResponse.success(dto);
+        } catch (Exception e) {
+            requestGuard.releaseIdempotent(request.getRequestId());
+            throw e;
+        }
     }
 
     /**
@@ -91,6 +100,7 @@ public class ChatController {
     @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter chatStream(@Valid @RequestBody ChatRequestDTO request) {
         log.info("[Chat-API] 流式对话请求: convId={}", request.getConversationId());
+        requestGuard.check(request.getRequestId(), null);
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
         AtomicBoolean active = new AtomicBoolean(true);
 

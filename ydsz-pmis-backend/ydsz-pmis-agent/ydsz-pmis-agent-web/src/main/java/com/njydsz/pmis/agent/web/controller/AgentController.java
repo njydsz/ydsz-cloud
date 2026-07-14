@@ -28,6 +28,7 @@ import com.njydsz.pmis.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.pmis.agent.domain.model.ChatResponse;
 import com.njydsz.pmis.agent.domain.tool.ToolRegistry;
 import com.njydsz.pmis.agent.server.agent.AgentFactory;
+import com.njydsz.pmis.agent.server.chat.AgentRequestGuard;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 
 /**
@@ -54,12 +55,15 @@ public class AgentController {
 
     private final AgentFactory agentFactory;
     private final ToolRegistry toolRegistry;
+    private final AgentRequestGuard requestGuard;
     private final ScheduledExecutorService heartbeatScheduler =
             Executors.newScheduledThreadPool(2, Thread.ofVirtual().factory());
 
-    public AgentController(AgentFactory agentFactory, ToolRegistry toolRegistry) {
+    public AgentController(AgentFactory agentFactory, ToolRegistry toolRegistry,
+                           AgentRequestGuard requestGuard) {
         this.agentFactory = agentFactory;
         this.toolRegistry = toolRegistry;
+        this.requestGuard = requestGuard;
     }
 
     @PreDestroy
@@ -75,9 +79,15 @@ public class AgentController {
             @Valid @RequestBody AgentExecutionRequestDTO request) {
         log.info("[Agent-API] 执行请求: agentCode={}, stream={}",
                 request.getAgentCode(), request.isStream());
+        requestGuard.check(request.getRequestId(), null);
         AgentExecutionRequest execReq = toExecutionRequest(request);
-        ChatResponse response = agentFactory.getDefaultExecutor().execute(execReq);
-        return BaseResponse.success(toDTO(response));
+        try {
+            ChatResponse response = agentFactory.getDefaultExecutor().execute(execReq);
+            return BaseResponse.success(toDTO(response));
+        } catch (Exception e) {
+            requestGuard.releaseIdempotent(request.getRequestId());
+            throw e;
+        }
     }
 
     /**
@@ -89,6 +99,7 @@ public class AgentController {
     @PostMapping(value = "/execute/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter executeStream(@Valid @RequestBody AgentExecutionRequestDTO request) {
         log.info("[Agent-API] 流式执行请求: agentCode={}", request.getAgentCode());
+        requestGuard.check(request.getRequestId(), null);
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
         AgentExecutionRequest execReq = toExecutionRequest(request);
         AtomicBoolean active = new AtomicBoolean(true);

@@ -57,7 +57,7 @@ public class ShareController {
 
     @PostMapping("/verify")
     @Operation(summary = "验证分享链接访问权限")
-    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_ACCESS)
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_VERIFY)
     public BaseResponse<ShareLink> verifyAccess(@RequestBody NextwikiDTOs.VerifyShareRequest request) {
         ShareLink result = shareDomainService.verifyAccess(
                 request.getShareCode(),
@@ -79,6 +79,7 @@ public class ShareController {
 
     @GetMapping("/my")
     @Operation(summary = "查询我的分享列表")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_LIST)
     public BaseResponse<List<ShareLink>> myShares(@RequestHeader("X-User-Id") String userId) {
         return BaseResponse.ok(shareDomainService.findByUserId(userId));
     }

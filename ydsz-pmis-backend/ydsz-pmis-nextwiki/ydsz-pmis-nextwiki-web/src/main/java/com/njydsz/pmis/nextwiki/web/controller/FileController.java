@@ -128,25 +128,25 @@ public class FileController {
 
     @PostMapping("/batch/delete")
     @Operation(summary = "批量删除")
-    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_BATCH_DELETE)
-    public BaseResponse<Integer> batchDelete(
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_DELETE)
+    public BaseResponse<FileApplicationService.BatchResult> batchDelete(
             @RequestBody List<String> nodeIds,
             @RequestHeader("X-User-Id") String userId) {
 
-        int success = fileApplicationService.batchDelete(nodeIds, userId);
-        return BaseResponse.ok(success);
+        FileApplicationService.BatchResult result = fileApplicationService.batchDelete(nodeIds, userId);
+        return BaseResponse.ok(result);
     }
 
     @PostMapping("/batch/move")
     @Operation(summary = "批量移动")
-    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_BATCH_MOVE)
-    public BaseResponse<Integer> batchMove(
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_MOVE)
+    public BaseResponse<FileApplicationService.BatchResult> batchMove(
             @RequestBody BatchMoveRequest request,
             @RequestHeader("X-User-Id") String userId) {
 
-        int success = fileApplicationService.batchMove(
+        FileApplicationService.BatchResult result = fileApplicationService.batchMove(
                 request.getNodeIds(), request.getTargetParentId(), userId);
-        return BaseResponse.ok(success);
+        return BaseResponse.ok(result);
     }
 
     @PostMapping("/{nodeId}/copy")

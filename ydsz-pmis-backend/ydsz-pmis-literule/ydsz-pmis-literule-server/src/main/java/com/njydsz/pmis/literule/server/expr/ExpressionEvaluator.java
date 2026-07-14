@@ -26,12 +26,15 @@ public interface ExpressionEvaluator {
     /**
      * 求值表达式（通用类型）
      *
+     * <p>返回 {@link Object}，由调用方根据业务语义自行类型转换。
+     * 早期版本使用 {@code <T> T eval(...)} 泛型签名，但表达式求值本质是动态类型，
+     * 强制泛型化会引入 unchecked 转换；改为 {@code Object} 后类型转换显式化，符合"零警告"规范。
+     *
      * @param expression 表达式字符串
      * @param context    规则上下文
-     * @param <T>        返回类型
-     * @return 表达式结果
+     * @return 表达式结果；求值异常返回 null
      */
-    <T> T eval(String expression, RuleContext context);
+    Object eval(String expression, RuleContext context);
 
     /**
      * 校验表达式语法是否合法
