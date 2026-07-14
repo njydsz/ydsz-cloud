@@ -19,7 +19,7 @@ import com.njydsz.pmis.common.json.serializer.JsonSerializer;
  * <ul>
  *   <li>模块化架。- 类似 Jackson Module，支持可插拔扩展</li>
  *   <li>优先级排。- 高优先级模块先注册，先注册的序列化器优先级更。</li>
- *   <li>Spring 集成 - 支持自动发现和注。Spring Bean 形式的模。</li>
+ *   <li>Spring 集成 - 支持自动发现和注入Spring Bean 形式的模。</li>
  *   <li>双重注册。- 分离序列化器和反序列化器注册。</li>
  * </ul>
  *
@@ -39,7 +39,7 @@ import com.njydsz.pmis.common.json.serializer.JsonSerializer;
  * </pre>
  *
  * @author ydsz-pmis-team
- * @email limw1888@126.com
+ * @since 1.3.0
  * @since 1.3.0
  */
 public final class YdszJsonModuleRegistry {
@@ -127,7 +127,7 @@ public final class YdszJsonModuleRegistry {
     /**
      * 初始化所有模。
      *
-     * <p>按优先级从高到低依次调用模块的注册方。/p>
+     * <p>按优先级从高到低依次调用模块的注册方向/p>
      */
     public void initialize() {
         if (initialized) {
@@ -224,7 +224,7 @@ public final class YdszJsonModuleRegistry {
      *
      * @param type 目标类型
      * @param <T> 类型参数
-     * @return 反序列化器，如果未找到返。null
+     * @return 反序列化器，如果未找到返回null
      */
     
     public <T> JsonDeserializer<T> getDeserializer(Class<T> type) {

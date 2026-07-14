@@ -164,7 +164,7 @@ public class DocProperties {
         /**
          * 联系人邮箱
          */
-        private String email = "limw1888@126.com";
+        private String email = "1.3.0";
 
         /**
          * 联系人 URL

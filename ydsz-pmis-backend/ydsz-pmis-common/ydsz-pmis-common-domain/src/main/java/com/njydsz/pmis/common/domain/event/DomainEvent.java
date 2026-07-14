@@ -72,7 +72,7 @@ public class DomainEvent implements Serializable {
     private final String aggregateId;
 
     /**
-     * 聚合根类。
+     * 聚合根类型
      */
     private final String aggregateType;
 
@@ -116,7 +116,7 @@ public class DomainEvent implements Serializable {
      *
      * @param eventType     事件类型
      * @param aggregateId   聚合根ID
-     * @param aggregateType 聚合根类。
+     * @param aggregateType 聚合根类型
      */
     public DomainEvent(String eventType, String aggregateId, String aggregateType) {
         this.eventId = UUID.randomUUID().toString();
@@ -134,7 +134,7 @@ public class DomainEvent implements Serializable {
      * @param occurredAt    事件发生时间
      * @param eventType     事件类型
      * @param aggregateId   聚合根ID
-     * @param aggregateType 聚合根类。
+     * @param aggregateType 聚合根类型
      * @param version       事件版本。
      */
     public DomainEvent(String eventId, LocalDateTime occurredAt, String eventType,
@@ -174,7 +174,7 @@ public class DomainEvent implements Serializable {
      *
      * @param eventType     事件类型
      * @param aggregateId   聚合根ID
-     * @param aggregateType 聚合根类。
+     * @param aggregateType 聚合根类型
      * @return 领域事件实例
      */
     public static DomainEvent of(String eventType, String aggregateId, String aggregateType) {
@@ -292,9 +292,9 @@ public class DomainEvent implements Serializable {
         }
 
         /**
-         * 设置聚合根类。
+         * 设置聚合根类型
          *
-         * @param aggregateType 聚合根类。
+         * @param aggregateType 聚合根类型
          * @return 当前 Builder
          */
         public Builder aggregateType(String aggregateType) {

@@ -46,7 +46,7 @@ public interface GroupAware extends Serializable {
     }
 
     /**
-     * 便捷方法：设置组ID，默认设。companyId
+     * 便捷方法：设置组ID，默认设计companyId
      *
      * <p>实现类可按需覆写此方法。
      */

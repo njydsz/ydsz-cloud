@@ -28,14 +28,14 @@ import com.njydsz.pmis.common.json.writer.JSONWriter;
  *
  * <p><b>FastJSON2 深度优化技术：</b></p>
  * <ul>
- *   <li>精确容量预分。- 基于对象结构预估 JSON 大小，避。StringBuilder 扩容</li>
+ *   <li>精确容量预分。- 基于对象结构预估 JSON 大小，避免StringBuilder 扩容</li>
  *   <li>快速数字编。- 直接写入字符数组，避免方法调用和边界检。</li>
  *   <li>UTF-8 编码优化 - 针对 ASCII 字符集优。</li>
  *   <li>热路径内。- 减少虚方法调用和方法调用。</li>
  * </ul>
  *
  * @author ydsz-pmis-team
- * @email limw1888@126.com
+ * @since 1.3.0
  * @since 1.3.0
  */
 public final class YdszSerializationProvider {
@@ -100,7 +100,7 @@ public final class YdszSerializationProvider {
     private static final ThreadLocal<Boolean> SERIALIZE_ENUM_USING_ORDINAL =
         ThreadLocal.withInitial(() -> false);
 
-    /** Bean 序列化信息缓。*/
+    /** Bean 序列化信息缓存*/
     private static final ConcurrentMap<Class<?>, BeanSerializerInfo> BEAN_SERIALIZER_INFO_CACHE = new ConcurrentHashMap<>(1024);
 
     private YdszSerializationProvider() {
@@ -164,8 +164,8 @@ public final class YdszSerializationProvider {
      *
      * <p>根据预估。JSON 大小选择合适容量的 StringBuilder，避免：
      * <ul>
-     *   <li>。JSON 使用。StringBuilder 浪费内存</li>
-     *   <li>。JSON 使用。StringBuilder 导致多次扩容</li>
+     *   <li>。JSON 使用于StringBuilder 浪费内存</li>
+     *   <li>。JSON 使用于StringBuilder 导致多次扩容</li>
      * </ul>
      * 分级阈值：
      * <ul>
@@ -443,7 +443,7 @@ public final class YdszSerializationProvider {
      * <p>当满足以下条件时使用快速路径：</p>
      * <ul>
      *   <li>无类级别注解</li>
-     *   <li>无字段级别注。</li>
+     *   <li>无字段级别注入</li>
      *   <li>无视图过。</li>
      * </ul>
      *
@@ -456,7 +456,7 @@ public final class YdszSerializationProvider {
 
         Class<?> clazz = obj.getClass();
 
-        // 排除集合、Map、数组类。
+        // 排除集合、Map、数组类型
         if (obj instanceof Collection ||
             obj instanceof Map ||
             clazz.isArray()) {
@@ -497,7 +497,7 @@ public final class YdszSerializationProvider {
             return false;
         }
 
-        // 使用 FastJSON2 JSONWriter 进行快速序列化（复。ThreadLocal 池）
+        // 使用 FastJSON2 JSONWriter 进行快速序列化（复用ThreadLocal 池）
         JSONWriter writer = FAST_WRITER_POOL.get();
         writer.reset();
 

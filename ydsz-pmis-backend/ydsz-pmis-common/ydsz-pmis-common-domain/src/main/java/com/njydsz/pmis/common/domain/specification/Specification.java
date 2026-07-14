@@ -4,7 +4,7 @@ package com.njydsz.pmis.common.domain.specification;
  * 规约模式接口
  * <p>用于封装业务规则，支持规约组合（AND/OR/NOT。
  *
- * @param <T> 规约适用的类。
+ * @param <T> 规约适用的类型
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

@@ -100,7 +100,7 @@ public class BaseDTO implements Serializable {
      * <ul>
      *   <li>WEB - Web 。</li>
      *   <li>APP - 移动应用</li>
-     *   <li>API - 开。API</li>
+     *   <li>API - 开始API</li>
      *   <li>SCHEDULE - 定时任务</li>
      *   <li>SYSTEM - 系统内部</li>
      * </ul>
@@ -116,10 +116,10 @@ public class BaseDTO implements Serializable {
     private String remark;
 
     /**
-     * 扩展属。
+     * 扩展属性
      *
-     * <p>用于传递业务特定的扩展信息，避免频繁修改基类。
-     * 子类可根据需要定义具体的扩展字段。
+     * <p>用于传递业务特定的扩展信息，避免频繁修改基类型
+     * 子类可根据需要定义具体的扩展字段名
      */
     private String extension;
 }

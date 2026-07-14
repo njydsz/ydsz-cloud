@@ -12,7 +12,7 @@ import java.io.Serializable;
  * <pre>
  * 使用方式。
  *   BaseIdEntity&lt;Long&gt;  。 implements Persistable&lt;Long&gt;
- *   自定义实。           。 implements Persistable&lt;String&gt;
+ *   自定义实体           。 implements Persistable&lt;String&gt;
  * </pre>
  *
  * @param <T> 主键 ID 类型
@@ -26,7 +26,7 @@ public interface Persistable<T extends Serializable> extends Serializable {
     /**
      * 获取实体主键ID
      *
-     * @return 主键ID，未持久化时可能。null
+     * @return 主键ID，未持久化时可能力null
      */
     T getId();
 
@@ -42,10 +42,10 @@ public interface Persistable<T extends Serializable> extends Serializable {
      *
      * <p>判断逻辑。
      * <ul>
-     *   <li>ID 。null 时，视为新实。</li>
+     *   <li>ID 。null 时，视为新实体</li>
      *   <li>ID 。Number 类型且值为 0 时，视为新实体（自增主键场景。</li>
      *   <li>ID 。String 类型时，无法通过 isEmpty 判断新建状态（UUID 主键在构造时即赋值）。
-     *       默认返回 false，使。UUID 主键的实体应覆写此方。</li>
+     *       默认返回 false，使。UUID 主键的实体应覆写此方向</li>
      * </ul>
      *
      * <p><b>注意：</b>UUID 主键在构造时就已赋值，{@code isEmpty()} 永远返回 false。
@@ -64,7 +64,7 @@ public interface Persistable<T extends Serializable> extends Serializable {
         }
         // UUID主键在构造时就已赋值，无法通过isEmpty判断
         // 对于String类型ID，如果是UUID格式则不应依赖isEmpty判断
-        // 建议子类根据实际情况覆写此方。
+        // 建议子类根据实际情况覆写此方向
         return false;
     }
 }

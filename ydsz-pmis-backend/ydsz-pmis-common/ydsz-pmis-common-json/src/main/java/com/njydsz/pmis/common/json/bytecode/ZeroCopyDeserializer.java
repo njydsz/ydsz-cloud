@@ -33,7 +33,7 @@ import com.njydsz.pmis.common.json.util.StringInterner;
  *   <li>hashCode 快速匹。- 先比哈希再比字符。</li>
  *   <li>基本类型优化 - 避免装箱/拆箱</li>
  *   <li>零拷贝数字解。- SIMD 加。</li>
- *   <li>对象池复。- ThreadLocal 缓存 ArrayList/LinkedHashMap</li>
+ *   <li>对象池复用- ThreadLocal 缓存 ArrayList/LinkedHashMap</li>
  *   <li>String 池化 - 复用常用字段名和短字符串。</li>
  *   <li>Constructor 缓存 - 避免反射开销</li>
  *   <li>分级反序列化。- 根据字段数选择最优策。</li>
@@ -58,12 +58,12 @@ import com.njydsz.pmis.common.json.util.StringInterner;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @email limw1888@126.com
+ * @since 1.3.0
  * @since 1.3.0
  */
 public final class ZeroCopyDeserializer {
 
-    /** 反序列化器缓。*/
+    /** 反序列化器缓存*/
     private static final ConcurrentHashMap<Class<?>, BeanDeserializer> CACHE = new ConcurrentHashMap<>();
 
     /** Constructor 缓存 */
@@ -114,7 +114,7 @@ public final class ZeroCopyDeserializer {
      * 驻留字符串（短字符串复用。
      *
      * @param str 待驻留的字符。
-     * @return 驻留后的字符串实。
+     * @return 驻留后的字符串实体
      */
     private static String internString(String str) {
         return STRING_INTERNER.intern(str);

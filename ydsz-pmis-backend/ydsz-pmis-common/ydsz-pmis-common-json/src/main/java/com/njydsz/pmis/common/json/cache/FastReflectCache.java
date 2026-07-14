@@ -52,7 +52,7 @@ public final class FastReflectCache {
         /** Bean 类型 */
         public final Class<T> beanType;
         
-        /** 默认构造函。*/
+        /** 默认构造函数*/
         public final Constructor<T> defaultConstructor;
         
         /** 字段缓存数组 */
@@ -67,7 +67,7 @@ public final class FastReflectCache {
         public BeanCache(Class<T> beanType) {
             this.beanType = beanType;
             
-            // 缓存默认构造函。
+            // 缓存默认构造函数
             try {
                 this.defaultConstructor = beanType.getDeclaredConstructor();
                 this.defaultConstructor.setAccessible(true);
@@ -124,7 +124,7 @@ public final class FastReflectCache {
      * 字段缓存（预计算 Getter/Setter。
      */
     public static final class FieldCache {
-        /** 字段。*/
+        /** 字段名*/
         public final String name;
         
         /** 字段类型 */
@@ -175,7 +175,7 @@ public final class FastReflectCache {
         }
 
         /**
-         * 获取字段。
+         * 获取字段名
          */
         public Object getValue(Object obj) {
             if (getter == null) return null;
@@ -187,7 +187,7 @@ public final class FastReflectCache {
         }
 
         /**
-         * 设置字段。
+         * 设置字段名
          */
         public void setValue(Object obj, Object value) {
             if (setter == null) return;
@@ -199,7 +199,7 @@ public final class FastReflectCache {
         }
 
         /**
-         * 设置 int 字段。
+         * 设置 int 字段名
          */
         public void setInt(Object obj, int value) {
             if (setter == null) return;
@@ -211,7 +211,7 @@ public final class FastReflectCache {
         }
 
         /**
-         * 设置 long 字段。
+         * 设置 long 字段名
          */
         public void setLong(Object obj, long value) {
             if (setter == null) return;
@@ -223,7 +223,7 @@ public final class FastReflectCache {
         }
 
         /**
-         * 设置 double 字段。
+         * 设置 double 字段名
          */
         public void setDouble(Object obj, double value) {
             if (setter == null) return;
@@ -235,7 +235,7 @@ public final class FastReflectCache {
         }
 
         /**
-         * 设置 boolean 字段。
+         * 设置 boolean 字段名
          */
         public void setBoolean(Object obj, boolean value) {
             if (setter == null) return;

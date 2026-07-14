@@ -11,7 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 分页查询结果封装。
+ * 分页查询结果封装类
  *
  * <p>用于封装分页查询的返回结果，包括数据列表和分页信息。
  *
@@ -44,7 +44,7 @@ public class PageResult<T> implements Serializable {
     private int pageNum;
 
     /**
-     * 每页记录。
+     * 每页记录数
      */
     private int pageSize;
 
@@ -54,17 +54,17 @@ public class PageResult<T> implements Serializable {
     private int totalPages;
 
     /**
-     * 是否有上一。
+     * 是否有上一页
      */
     private boolean hasPrevious;
 
     /**
-     * 是否有下一。
+     * 是否有下一页
      */
     private boolean hasNext;
 
     /**
-     * 当前页起始行号（。开始）
+     * 当前页起始行号（从1开始）
      */
     private int startRow;
 
@@ -79,7 +79,7 @@ public class PageResult<T> implements Serializable {
      * @param records  当前页数据列。
      * @param total    总记录数
      * @param pageNum  当前页码
-     * @param pageSize 每页记录。
+     * @param pageSize 每页记录数
      * @param <T>      数据类型
      * @return 分页结果
      */
@@ -107,7 +107,7 @@ public class PageResult<T> implements Serializable {
      * 创建空的分页结果
      *
      * @param pageNum  当前页码
-     * @param pageSize 每页记录。
+     * @param pageSize 每页记录数
      * @param <T>      数据类型
      * @return 空的分页结果
      */

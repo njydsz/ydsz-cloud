@@ -14,7 +14,7 @@ import com.njydsz.pmis.common.domain.specification.Specification;
  * 仓储接口
  *
  * <p>在领域驱动设计（DDD）中，仓储（Repository）是聚合根的持久化抽象。
- * 它对外提供类似集合的接口，屏蔽底层持久化技术细节。
+ * 它对外提供类似集合的接口，屏蔽底层持久化技术细节点
  *
  * <p><b>核心语义：</b>
  * <ul>
@@ -26,7 +26,7 @@ import com.njydsz.pmis.common.domain.specification.Specification;
  * <p><b>使用示例：</b>
  * <pre>{@code
  * public interface OrderRepository extends Repository<Order, Long> {
- *     // 可继承本接口提供的基础方法，也可定义业务特定方。
+ *     // 可继承本接口提供的基础方法，也可定义业务特定方向
  * }
  *
  * // 使用
@@ -57,7 +57,7 @@ public interface Repository<T extends AggregateRoot<ID>, ID extends Serializable
      *
      * <p>根据聚合根的ID是否存在，自动判断是新增还是更新操作。
      *
-     * @param aggregate 聚合根实。
+     * @param aggregate 聚合根实体
      * @return 保存后的聚合。
      */
     T save(T aggregate);
@@ -80,7 +80,7 @@ public interface Repository<T extends AggregateRoot<ID>, ID extends Serializable
     /**
      * 删除指定聚合。
      *
-     * @param aggregate 聚合根实。
+     * @param aggregate 聚合根实体
      */
     void delete(T aggregate);
 

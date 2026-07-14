@@ -22,7 +22,7 @@ import java.lang.invoke.MethodHandle;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @email limw1888@126.com
+ * @since 1.3.0
  * @since 1.3.0
  */
 public final class BeanSerializerInfo {

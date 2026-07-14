@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
- * 查询对象基类。
+ * 查询对象基类型
  *
- * <p>所有查询参数对象的顶层基类，提供序列化支持和通用查询字段。
+ * <p>所有查询参数对象的顶层基类，提供序列化支持和通用查询字段名
  * 子类可通过 {@link SuperBuilder} 继承 Builder 能力，实现链式构建查询参数。
  *
  * <p><b>继承体系：</b>
@@ -25,7 +25,7 @@ import lombok.experimental.SuperBuilder;
  * <p><b>通用字段说明：</b>
  * <table>
  *   <tr><th>字段</th><th>类型</th><th>说明</th></tr>
- *   <tr><td>searchKey</td><td>String</td><td>模糊搜索关键。</td></tr>
+ *   <tr><td>searchKey</td><td>String</td><td>模糊搜索关键字</td></tr>
  *   <tr><td>status</td><td>Integer</td><td>状态过滤（0-禁用。-启用。</td></tr>
  *   <tr><td>startTime</td><td>LocalDateTime</td><td>开始时。</td></tr>
  *   <tr><td>endTime</td><td>LocalDateTime</td><td>结束时间</td></tr>
@@ -47,9 +47,9 @@ public class BaseQuery implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 模糊搜索关键。
+     * 模糊搜索关键字
      *
-     * <p>用于对多个字段进行模糊匹配搜索。
+     * <p>用于对多个字段进行模糊匹配搜索引
      * 具体搜索字段由业务子类或 MyBatis XML 定义。
      */
     private String searchKey;
@@ -79,7 +79,7 @@ public class BaseQuery implements Serializable {
     private transient String endTime;
 
     /**
-     * 关键。
+     * 关键字
      *
      * <p>用于多字段搜索的关键字，。searchKey 类似但语义更明确。
      * 适用于需要区。模糊搜索"。精确搜索"的场景。

@@ -55,7 +55,7 @@ public class DomainEventPublisher {
      * 事件发布是同步的，监听器按顺序执行。
      *
      * @param event 领域事件，不能为 null
-     * @throws NullPointerException 。event 。null 时抛。
+     * @throws NullPointerException 。event 。null 时抛出
      */
     public void publish(DomainEvent event) {
         Objects.requireNonNull(event, "event must not be null");
@@ -70,7 +70,7 @@ public class DomainEventPublisher {
      * 适用于聚合根提交时一次性发布所有领域事件的场景。
      *
      * @param events 领域事件列表，不能为 null
-     * @throws NullPointerException 。events 。null 时抛。
+     * @throws NullPointerException 。events 。null 时抛出
      */
     public void publishAll(Iterable<DomainEvent> events) {
         Objects.requireNonNull(events, "events must not be null");

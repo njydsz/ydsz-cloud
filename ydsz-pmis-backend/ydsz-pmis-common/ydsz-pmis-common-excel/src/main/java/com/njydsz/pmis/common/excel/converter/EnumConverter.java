@@ -19,7 +19,7 @@ import java.util.Map;
  * @ExcelProperty(value = "性别", converterClass = EnumConverter.class)
  * private Gender gender;
  *
- * // 使用自定义映。
+ * // 使用自定义映射
  * EnumConverter.registerMapping(Gender.class, "。, Gender.MALE);
  * EnumConverter.registerMapping(Gender.class, "。, Gender.FEMALE);
  * }</pre>
@@ -72,7 +72,7 @@ public class EnumConverter<E extends Enum<E>> implements Converter<E, String> {
     }
 
     /**
-     * 注册自定义枚举映。
+     * 注册自定义枚举映射
      *
      * @param enumClass 枚举类型
      * @param stringValue 字符串。

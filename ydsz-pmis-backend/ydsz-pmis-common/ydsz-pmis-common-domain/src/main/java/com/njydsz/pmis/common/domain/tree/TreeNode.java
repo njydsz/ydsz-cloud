@@ -31,7 +31,7 @@ import lombok.experimental.SuperBuilder;
  * <ul>
  *   <li>组合优于继承：通过组合方式扩展功能</li>
  *   <li>不可变设计：核心属性通过 Builder 模式初始。</li>
- *   <li>流式API：支持链式调。</li>
+ *   <li>流式API：支持链式调用</li>
  * </ul>
  *
  * <p><b>字段说明：</b>
@@ -43,12 +43,12 @@ import lombok.experimental.SuperBuilder;
  *   <tr><td>sort</td><td>Integer</td><td>排序字段，同级节点排序用</td></tr>
  *   <tr><td>level</td><td>Integer</td><td>节点层级深度，根节点。</td></tr>
  *   <tr><td>path</td><td>String</td><td>节点路径，如 "/1/2/3/"</td></tr>
- *   <tr><td>leaf</td><td>Boolean</td><td>是否为叶子节。</td></tr>
+ *   <tr><td>leaf</td><td>Boolean</td><td>是否为叶子节点</td></tr>
  * </table>
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * // 定义菜单树节。
+ * // 定义菜单树节点
  * &#64;Data
  * &#64;EqualsAndHashCode(callSuper = true)
  * public class Menu extends TreeNode<Menu, Long> {
@@ -61,7 +61,7 @@ import lombok.experimental.SuperBuilder;
  * List<Menu> allMenus = menuMapper.selectList();
  * List<Menu> tree = new TreeBuilder<>(0L, allMenus).build();
  *
- * // 遍历树节。
+ * // 遍历树节点
  * tree.forEach(node -> {
  *     log.info("{} - {}", node.getLevel(), node.getMenuName());
  * });
@@ -73,7 +73,7 @@ import lombok.experimental.SuperBuilder;
  * 与具体子类类型一致，例如 {@code class Menu extends TreeNode<Menu, Long>} 是安全的。
  * 为 {@code class Menu extends TreeNode<OtherType, Long>} 将在运行时抛为 {@code ClassCastException}。
  *
- * @param <T>  继承自TreeNode的具体类。
+ * @param <T>  继承自TreeNode的具体类型
  * @param <ID> ID类型
  *
  * @author ydsz-pmis-team
@@ -160,12 +160,12 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     private String path;
 
     /**
-     * 是否为叶子节。
+     * 是否为叶子节点
      *
-     * <p>。TreeBuilder 自动计算。
+     * <p>。TreeBuilder 自动计算法
      * <ul>
-     *   <li>true：无子节。</li>
-     *   <li>false：有子节。</li>
+     *   <li>true：无子节点</li>
+     *   <li>false：有子节点</li>
      * </ul>
      */
     @Builder.Default
@@ -173,12 +173,12 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     private Boolean leaf = true;
 
     /**
-     * 添加子节。
+     * 添加子节点
      *
      * <p>将指定子节点添加到当前节点的子列表中。
      *
-     * @param child 子节点实。
-     * @return 当前节点，支持链式调。
+     * @param child 子节点实体
+     * @return 当前节点，支持链式调用
      */
     public T addChild(T child) {
         if (children == null) {
@@ -190,10 +190,10 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
 
     /**
-     * 添加多个子节。
+     * 添加多个子节点
      *
      * @param childList 子节点列。
-     * @return 当前节点，支持链式调。
+     * @return 当前节点，支持链式调用
      */
     public T addChildren(List<T> childList) {
         if (children == null) {
@@ -231,7 +231,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
 
     /**
-     * 判断是否为叶子节。
+     * 判断是否为叶子节点
      *
      * @return 如果没有子节点返回true
      */
@@ -279,7 +279,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
      *
      * <p>先访问当前节点，再遍历子节点。
      *
-     * @param visitor 访问者函。
+     * @param visitor 访问者函数
      */
     public void traverseDFS(Consumer<T> visitor) {
         Deque<T> stack = new ArrayDeque<>();
@@ -302,7 +302,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
      *
      * <p>先访问当前层级所有节点，再访问下一层级。
      *
-     * @param visitor 访问者函。
+     * @param visitor 访问者函数
      */
     public void traverseBFS(Consumer<T> visitor) {
         visitor.accept((T) this);
@@ -335,7 +335,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
 
     /**
-     * 判断是否包含指定子节。
+     * 判断是否包含指定子节点
      *
      * @param childId 子节点ID
      * @return 包含返回true
@@ -447,7 +447,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
      * 获取当前节点所在树的根节点
      *
      * @param nodeList 所有节点列。
-     * @return 根节。
+     * @return 根节点
      */
     public T getRoot(List<T> nodeList) {
         if (isRootNode()) {

@@ -20,7 +20,7 @@ import com.njydsz.pmis.common.json.provider.YdszSerializationProvider;
  * 可通过 {@code -Dpmis.json.monitoring=true} 系统属性启用。</p>
  *
  * @author ydsz-pmis-team
- * @email limw1888@126.com
+ * @since 1.3.0
  * @since 1.3.0
  */
 public final class YdszSerializerEngine {

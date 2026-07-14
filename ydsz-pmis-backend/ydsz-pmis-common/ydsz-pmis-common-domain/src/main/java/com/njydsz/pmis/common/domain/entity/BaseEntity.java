@@ -15,23 +15,23 @@ import lombok.experimental.SuperBuilder;
 /**
  * 基础实体。
  *
- * <p>继承与 {@link BaseAuditEntity}，包含完整的审计字段、乐观锁版本号和逻辑删除标识。
+ * <p>继承自 {@link BaseAuditEntity}，包含完整的审计字段、乐观锁版本号和逻辑删除标识。
  * 这是系统中最常用的实体基类，适用于大多数业务实体。
  *
  * <p><b>设计原则：</b>
  * <ul>
  *   <li>开闭原则：对扩展开放，对修改关。</li>
  *   <li>单一职责：每个字段有且只有一个职。</li>
- *   <li>依赖倒置：业务代码依赖抽象基类，不依赖具体实。</li>
+ *   <li>依赖倒置：业务代码依赖抽象基类，不依赖具体实体</li>
  * </ul>
  *
  * <p><b>核心特性：</b>
  * <table>
- *   <tr><th>特。</th><th>字段</th><th>说明</th></tr>
+ *   <tr><th>特性</th><th>字段</th><th>说明</th></tr>
  *   <tr><td>审计字段</td><td>createdBy/createdAt/updatedBy/updatedAt</td><td>追踪数据变更</td></tr>
  *   <tr><td>乐观。</td><td>revision</td><td>并发控制，防止更新冲。</td></tr>
  *   <tr><td>逻辑删除</td><td>deleted</td><td>软删除，数据可恢。</td></tr>
- *   <tr><td>状态标。</td><td>status</td><td>业务状态启。禁用</td></tr>
+ *   <tr><td>状态标识</td><td>status</td><td>业务状态启。禁用</td></tr>
  * </table>
  *
  * <p><b>使用示例：</b>
@@ -57,7 +57,7 @@ import lombok.experimental.SuperBuilder;
  *     username VARCHAR(50) COMMENT '用户。,
  *     email VARCHAR(100) COMMENT '邮箱',
  *     phone VARCHAR(20) COMMENT '手机。,
- *     status INT DEFAULT 0 COMMENT '状。,
+ *     status INT DEFAULT 0 COMMENT '状态,
  *     created_by VARCHAR(64) COMMENT '创建。,
  *     created_at DATETIME COMMENT '创建时间',
  *     updated_by VARCHAR(64) COMMENT '更新。,
@@ -147,7 +147,7 @@ public class BaseEntity<T extends Serializable> extends BaseAuditEntity<T> imple
     private Integer deleted;
 
     /**
-     * 状态标。
+     * 状态标识
      *
      * <p>用于标识实体的业务状态，子类可按需覆盖为具体业务状态枚举值。
      * 默认值为空，由各子类根据业务语义自行定义。

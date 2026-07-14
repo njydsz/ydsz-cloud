@@ -8,7 +8,7 @@ import java.util.*;
  * <p>包含验证是否通过以及错误信息列表。</p>
  * 
  * @author ydsz-pmis-team
- * @email limw1888@126.com
+ * @since 1.3.0
  * @since 1.3.0
  */
 public final class ValidationResult {

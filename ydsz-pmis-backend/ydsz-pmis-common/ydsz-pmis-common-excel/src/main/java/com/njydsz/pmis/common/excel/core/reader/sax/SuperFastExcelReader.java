@@ -100,7 +100,7 @@ public class SuperFastExcelReader {
                 String name = entry.getName();
 
                 if ("xl/sharedStrings.xml".equals(name)) {
-                    // SST 解析：流式读取，内存中只保留字符串索。
+                    // SST 解析：流式读取，内存中只保留字符串索引
                     ssReader = new SharedStringsReader();
                     ssReader.parse(zis);
                 } else if (name.startsWith("xl/worksheets/sheet") && name.endsWith(".xml")) {

@@ -27,7 +27,7 @@ import lombok.experimental.SuperBuilder;
  *
  * <p><b>使用场景：</b>
  * <ul>
- *   <li>字典表、配置表等简单实。</li>
+ *   <li>字典表、配置表等简单实体</li>
  *   <li>不需要追踪创建人和创建时间的场景</li>
  *   <li>历史数据表、日志流水表。</li>
  * </ul>

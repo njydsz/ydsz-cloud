@@ -26,7 +26,7 @@ import lombok.ToString;
  * <p><b>核心特性：</b>
  * <ul>
  *   <li>延迟加载：子节点仅在首次调用 {@code getChildren()} 时加。</li>
- *   <li>加载状态跟踪：可通过 {@code isChildrenLoaded()} 检查加载状。</li>
+ *   <li>加载状态跟踪：可通过 {@code isChildrenLoaded()} 检查加载状态</li>
  *   <li>深度限制：防止无限递归，支持配置最大深。</li>
  *   <li>线程安全：加载状态使。volatile 保证可见。</li>
  * </ul>
@@ -40,7 +40,7 @@ import lombok.ToString;
  * boolean loaded = node.isChildrenLoaded();
  * }</pre>
  *
- * @param <T>  继承自TreeNode的具体类。
+ * @param <T>  继承自TreeNode的具体类型
  * @param <ID> ID类型
  *
  * @author ydsz-pmis-team
@@ -93,7 +93,7 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     private transient Function<T, ID> idExtractor;
 
     /**
-     * 加载锁，替代 synchronized(this) 以避。JDK21 虚拟线程 Pinning
+     * 加载锁，替代 synchronized(this) 以避免JDK21 虚拟线程 Pinning
      */
     @YdszJsonField(ignore = true)
     @ToString.Exclude
@@ -150,7 +150,7 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     }
 
     /**
-     * 触发加载子节。
+     * 触发加载子节点
      *
      * <p>通过 provider 获取子节点并包装。LazyTreeNode。
      * 如果当前深度已达。maxDepth，则不会继续加载。
@@ -255,7 +255,7 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     }
 
     /**
-     * 判断是否为叶子节。
+     * 判断是否为叶子节点
      *
      * @return 叶子节点返回true
      */
@@ -266,7 +266,7 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     /**
      * 深度优先遍历（仅遍历已加载的节点。
      *
-     * @param visitor 访问者函。
+     * @param visitor 访问者函数
      */
     public void traverseDFS(Consumer<LazyTreeNode<T, ID>> visitor) {
         visitor.accept(this);
@@ -280,7 +280,7 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     /**
      * 深度优先遍历（自动加载子节点。
      *
-     * @param visitor 访问者函。
+     * @param visitor 访问者函数
      */
     public void traverseDFSWithLoad(Consumer<LazyTreeNode<T, ID>> visitor) {
         visitor.accept(this);

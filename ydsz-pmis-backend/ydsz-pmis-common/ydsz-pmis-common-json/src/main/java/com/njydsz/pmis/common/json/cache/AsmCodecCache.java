@@ -11,9 +11,9 @@ import com.njydsz.pmis.common.json.asm.AsmSerializer;
 import com.njydsz.pmis.common.json.writer.JSONWriter;
 
 /**
- * ASM 序列化器/反序列化器缓。
+ * ASM 序列化器/反序列化器缓存
  * 
- * <p>缓存 ASM 生成的专用序列化器和反序列化器，避免重复生成字节。/p>
+ * <p>缓存 ASM 生成的专用序列化器和反序列化器，避免重复生成字节点/p>
  * 
  * <p><b>工作原理：</b></p>
  * <ul>
@@ -241,7 +241,7 @@ public final class AsmCodecCache {
      * 获取或创。ASM 序列化器（非类型参数版本，接。Class<?>。
      *
      * @param beanType Bean 类型
-     * @return 序列化器实例，获取失败返。null
+     * @return 序列化器实例，获取失败返回null
      */
     public static AsmSerializer<?> getOrCreateSerializerForType(Class<?> beanType) {
         AsmSerializer<?> cached = SERIALIZER_CACHE.get(beanType);
@@ -306,7 +306,7 @@ public final class AsmCodecCache {
     /**
      * 泛型辅助方法：捕。AsmSerializer 的通配符类型，实现类型安全的序列化调用
      *
-     * <p>调用方通过此方法间接调。serializer.serialize()。
+     * <p>调用方通过此方法间接调用serializer.serialize()。
      * 。unchecked cast 隔离在此方法内部，避免在各调用点重复出现</p>
      */
     private static <T> void invokeSerializer(AsmSerializer<T> serializer, Object obj, JSONWriter writer) {
@@ -407,7 +407,7 @@ public final class AsmCodecCache {
     }
 
     /**
-     * 清理所有缓。
+     * 清理所有缓存
      */
     public static void clearCache() {
         SERIALIZER_CACHE.clear();

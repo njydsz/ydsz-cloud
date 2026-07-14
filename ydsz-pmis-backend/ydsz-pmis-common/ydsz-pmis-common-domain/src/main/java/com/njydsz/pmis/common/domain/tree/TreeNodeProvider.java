@@ -24,7 +24,7 @@ import java.util.List;
  * List<LazyTreeNode<Menu, Long>> tree = TreeBuilder.buildLazy(provider);
  * }</pre>
  *
- * @param <T>  继承自TreeNode的具体类。
+ * @param <T>  继承自TreeNode的具体类型
  * @param <ID> ID类型
  *
  * @author ydsz-pmis-team

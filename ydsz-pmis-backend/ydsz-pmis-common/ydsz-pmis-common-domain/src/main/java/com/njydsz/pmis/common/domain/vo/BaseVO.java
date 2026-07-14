@@ -28,7 +28,7 @@ import lombok.experimental.SuperBuilder;
  *   <tr><td>createdByName</td><td>String</td><td>创建人姓。</td></tr>
  *   <tr><td>updatedBy</td><td>String</td><td>更新人ID</td></tr>
  *   <tr><td>updatedByName</td><td>String</td><td>更新人姓。</td></tr>
- *   <tr><td>status</td><td>Integer</td><td>状态标。</td></tr>
+ *   <tr><td>status</td><td>Integer</td><td>状态标识</td></tr>
  *   <tr><td>statusName</td><td>String</td><td>状态名。</td></tr>
  *   <tr><td>remark</td><td>String</td><td>备注信息</td></tr>
  * </table>
@@ -100,13 +100,13 @@ public class BaseVO implements Serializable {
     private String updatedByName;
 
     /**
-     * 状态标。
+     * 状态标识
      *
      * <p>用于标识记录的业务状态：
      * <ul>
      *   <li>0 - 禁用/停用</li>
      *   <li>1 - 正常/启用</li>
-     *   <li>其他。- 业务自定义状。</li>
+     *   <li>其他。- 业务自定义状态</li>
      * </ul>
      */
     private Integer status;

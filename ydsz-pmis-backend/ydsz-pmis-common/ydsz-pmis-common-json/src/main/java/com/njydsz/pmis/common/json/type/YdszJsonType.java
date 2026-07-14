@@ -45,7 +45,7 @@ import java.lang.reflect.Type;
  * </ol>
  *
  * @author ydsz-pmis-team
- * @email limw1888@126.com
+ * @since 1.3.0
  * @since 1.3.0
  * @see Type
  * @see ParameterizedType

@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
  * 可审计实体接。
  *
  * <p>提供创建。时间、更新人/时间的标准访问方法。
- * 与 {@link BaseAuditEntity} 提供 JDBC 自动填充实现。
+ * 和 {@link BaseAuditEntity} 提供 JDBC 自动填充实现。
  * 也可由业务代码手动设置。
  *
  * @author ydsz-pmis-team
@@ -18,14 +18,14 @@ public interface Auditable {
     /**
      * 获取创建。
      *
-     * @return 创建人标。
+     * @return 创建人标识
      */
     String getCreatedBy();
 
     /**
      * 设置创建。
      *
-     * @param createdBy 创建人标。
+     * @param createdBy 创建人标识
      */
     void setCreatedBy(String createdBy);
 
@@ -46,14 +46,14 @@ public interface Auditable {
     /**
      * 获取更新。
      *
-     * @return 更新人标。
+     * @return 更新人标识
      */
     String getUpdatedBy();
 
     /**
      * 设置更新。
      *
-     * @param updatedBy 更新人标。
+     * @param updatedBy 更新人标识
      */
     void setUpdatedBy(String updatedBy);
 

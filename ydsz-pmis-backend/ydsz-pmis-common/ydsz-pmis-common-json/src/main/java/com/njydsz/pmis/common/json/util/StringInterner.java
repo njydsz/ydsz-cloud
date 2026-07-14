@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @email limw1888@126.com
+ * @since 1.3.0
  * @version 1.0.0
  */
 public final class StringInterner {

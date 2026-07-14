@@ -30,7 +30,7 @@ import java.io.Writer;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @email limw1888@126.com
+ * @since 1.3.0
  * @since 1.3.0
  */
 public final class JsonGenerator implements Closeable {

@@ -18,7 +18,7 @@ import com.njydsz.pmis.common.json.YdszJson;
  * 7. 条件表达式：$.items[?(@.age >= 18 && @.status == 'active')]
  *
  * @author ydsz-pmis-team
- * @email limw1888@126.com
+ * @since 1.3.0
  * @since 1.3.0
  */
 public class YdszJsonPath {

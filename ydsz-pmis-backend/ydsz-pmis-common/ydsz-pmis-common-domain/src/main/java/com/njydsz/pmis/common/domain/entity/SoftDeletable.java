@@ -16,7 +16,7 @@ public interface SoftDeletable {
     /**
      * 获取逻辑删除标识
      *
-     * @return 0=未删除，1=已删除，null=未设。
+     * @return 0=未删除，1=已删除，null=未设计
      */
     Integer getDeleted();
 

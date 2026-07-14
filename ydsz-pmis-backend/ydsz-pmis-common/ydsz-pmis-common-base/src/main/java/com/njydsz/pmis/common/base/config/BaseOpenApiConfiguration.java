@@ -85,7 +85,7 @@ public abstract class BaseOpenApiConfiguration {
                 .version("3.5.0")
                 .contact(new Contact()
                         .name("Marvin Lee")
-                        .email("limw1888@126.com")
+                        .email("1.3.0")
                         .url("https://njydsz.pmis.com.cn"));
     }
 

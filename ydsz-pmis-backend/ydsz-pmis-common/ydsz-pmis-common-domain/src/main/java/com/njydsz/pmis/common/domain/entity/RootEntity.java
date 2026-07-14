@@ -19,7 +19,7 @@ import java.io.Serializable;
  * <p><b>实体继承层级（v3.5.0 重构后）：</b>
  * <pre>
  * Persistable&lt;T&gt; ───────────── BaseIdEntity&lt;T&gt;      (。ID)
- *                                      └── BaseAuditEntity&lt;T&gt;  (+ 审计，实。Auditable)
+ *                                      └── BaseAuditEntity&lt;T&gt;  (+ 审计，实体Auditable)
  * Versionable  SoftDeletable                └── BaseEntity&lt;T&gt;        (实现 RootEntity: + 乐观。+ 逻辑删除 + status)
  *     └────── RootEntity&lt;T&gt; (组合接口，向后兼。 ────。
  *                                     ├── GroupEntity&lt;T&gt;   (+ companyId/deptId)

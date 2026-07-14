@@ -56,7 +56,7 @@ public class GlobalObjectPool {
     /** 每个类型池的最大容。*/
     private static final int POOL_SIZE = 1000;
 
-    /** 类型到对象池的映。*/
+    /** 类型到对象池的映射*/
     private static final Map<Class<?>, TypeObjectPool<?>> POOLS = new ConcurrentHashMap<>();
 
     /**
@@ -97,7 +97,7 @@ public class GlobalObjectPool {
     }
 
     /**
-     * 通用对象池实。
+     * 通用对象池实体
      *
      * <p>使用 ConcurrentLinkedQueue 管理可用对象列表，支持无锁借用与归。/p>
      *

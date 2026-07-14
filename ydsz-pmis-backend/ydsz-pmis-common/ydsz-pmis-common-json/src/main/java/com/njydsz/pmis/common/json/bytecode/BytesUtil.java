@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * 重命名为 BytesUtil 以准确反映功能定位。</p>
  *
  * @author ydsz-pmis-team
- * @email limw1888@126.com
+ * @since 1.3.0
  * @since 1.3.0
  */
 public final class BytesUtil {

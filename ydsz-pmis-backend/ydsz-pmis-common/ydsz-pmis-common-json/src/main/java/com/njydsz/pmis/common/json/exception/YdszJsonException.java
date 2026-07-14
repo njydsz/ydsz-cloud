@@ -6,7 +6,7 @@ package com.njydsz.pmis.common.json.exception;
  * <p>所有 YdszJson 相关异常的基类。</p>
  * 
  * @author ydsz-pmis-team
- * @email limw1888@126.com
+ * @since 1.3.0
  * @since 1.3.0
  */
 public class YdszJsonException extends RuntimeException {

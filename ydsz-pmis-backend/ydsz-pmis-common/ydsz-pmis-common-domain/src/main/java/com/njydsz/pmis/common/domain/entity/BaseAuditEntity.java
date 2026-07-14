@@ -15,8 +15,8 @@ import lombok.experimental.SuperBuilder;
 /**
  * 审计字段基础实体。
  *
- * <p>继承与 {@link BaseIdEntity}，额外包含创建人、创建时间、更新人、更新时间等审计字段。
- * 这些字段。MyBatis-Plus 的自动填充功能管理，对业务代码透明。
+ * <p>继承自 {@link BaseIdEntity}，额外包含创建人、创建时间、更新人、更新时间等审计字段名
+ * 这些字段名MyBatis-Plus 的自动填充功能管理，对业务代码透明。
  *
  * <p><b>设计原则：</b>
  * <ul>
@@ -86,7 +86,7 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
      * 创建人ID
      *
      * <p>记录创建该记录的用户ID，通常。SecurityContext 安全上下文中获取。
-     * 框架。INSERT 操作时自动填充此字段。
+     * 框架。INSERT 操作时自动填充此字段名
      *
      * <p><b>字段映射：</b> created_by -> createdBy
      */
@@ -96,7 +96,7 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
      * 创建时间
      *
      * <p>记录创建该记录的时间戳。
-     * 框架。INSERT 操作时自动填充此字段。
+     * 框架。INSERT 操作时自动填充此字段名
      * JSON 序列化时格式化为 "yyyy-MM-dd HH:mm:ss"。
      *
      * <p><b>字段映射：</b> created_at -> createdAt
@@ -108,7 +108,7 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
      * 更新人ID
      *
      * <p>记录最后一次更新该记录的用户ID。
-     * 框架。INSERT/UPDATE 操作时自动填充此字段。
+     * 框架。INSERT/UPDATE 操作时自动填充此字段名
      *
      * <p><b>字段映射：</b> updated_by -> updatedBy
      */
@@ -118,7 +118,7 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
      * 更新时间
      *
      * <p>记录最后一次更新该记录的时间戳。
-     * 框架。INSERT/UPDATE 操作时自动填充此字段。
+     * 框架。INSERT/UPDATE 操作时自动填充此字段名
      * JSON 序列化时格式化为 "yyyy-MM-dd HH:mm:ss"。
      *
      * <p><b>字段映射：</b> updated_at -> updatedAt
@@ -127,7 +127,7 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
     private LocalDateTime updatedAt;
 
     /**
-     * 判断是否为新建实。
+     * 判断是否为新建实体
      *
      * <p>根据 createdAt 是否。null 判断是否为新建实体。
      * 用于业务逻辑判断，通常用于审计日志等场景。

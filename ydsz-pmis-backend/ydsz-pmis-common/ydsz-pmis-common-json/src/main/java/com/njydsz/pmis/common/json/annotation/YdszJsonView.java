@@ -50,7 +50,7 @@ import java.lang.annotation.Target;
  * </pre>
  *
  * @author ydsz-pmis-team
- * @email limw1888@126.com
+ * @since 1.3.0
  * @since 1.3.0
  */
 @Retention(RetentionPolicy.RUNTIME)

@@ -8,7 +8,7 @@ import com.njydsz.pmis.common.json.deserializer.JsonDeserializer;
 /**
  * 自定义序列化器注册中。
  *
- * <p>支持用户注册和管理自定义序列化器，实现类。Jackson Module 的扩展机制。/p>
+ * <p>支持用户注册和管理自定义序列化器，实现类型Jackson Module 的扩展机制。/p>
  *
  * <p><b>使用示例：</b></p>
  * <pre>
@@ -26,7 +26,7 @@ import com.njydsz.pmis.common.json.deserializer.JsonDeserializer;
  * </ul>
  *
  * @author ydsz-pmis-team
- * @email limw1888@126.com
+ * @since 1.3.0
  * @since 1.3.0
  */
 public final class SerializerRegistry {
@@ -105,7 +105,7 @@ public final class SerializerRegistry {
      * 获取反序列化。
      *
      * @param type 目标类型
-     * @return 反序列化器，如果未注册返。null
+     * @return 反序列化器，如果未注册返回null
      */
     public <T> JsonDeserializer<T> getDeserializer(Class<T> type) {
         return castDeserializer(deserializers.get(type));
@@ -154,14 +154,14 @@ public final class SerializerRegistry {
      * 移除反序列化。
      *
      * @param type 目标类型
-     * @return 被移除的反序列化器，如果未注册返。null
+     * @return 被移除的反序列化器，如果未注册返回null
      */
     public JsonDeserializer<?> unregisterDeserializer(Class<?> type) {
         return deserializers.remove(type);
     }
 
     /**
-     * 清空所有注。
+     * 清空所有注入
      */
     public void clear() {
         serializers.clear();

@@ -26,19 +26,19 @@ import com.njydsz.pmis.common.json.reader.JSONReader;
  *   <li>YdszJsonType 支持 - 泛型类型推断</li>
  *   <li>Builder 模式支持 - 链式构建对象</li>
  *   <li>Creator 模式支持 - 自定义构造函数反序列。</li>
- *   <li>多态类型支。- @YdszJsonTypeInfo 自动识别子类。</li>
+ *   <li>多态类型支。- @YdszJsonTypeInfo 自动识别子类型</li>
  * </ul>
  *
  * <p><b>反序列化流程：</b></p>
  * <ol>
- *   <li>检查缓。- 查找已编译的反序列化。</li>
+ *   <li>检查缓存- 查找已编译的反序列化。</li>
  *   <li>选择策略 - 根据类型选择合适的反序列化方式</li>
  *   <li>执行解析 - 调用 ZeroCopyDeserializer 。YdszJsonParser</li>
  *   <li>类型转换 - 处理数字、字符串、日期等类型转换</li>
  * </ol>
  *
  * @author ydsz-pmis-team
- * @email limw1888@126.com
+ * @since 1.3.0
  * @since 1.3.0
  */
 public final class YdszDeserializationProvider {
@@ -113,7 +113,7 @@ public final class YdszDeserializationProvider {
         // 缓存路径：使用策略缓存避免每次反序列化都重新判断类型
         DeserializationStrategy strategy = STRATEGY_CACHE.get(type);
         if (strategy == null) {
-            // 首次遇到此类型，确定策略并缓。
+            // 首次遇到此类型，确定策略并缓存
             strategy = DeserializationStrategy.BEAN; // 。PRIMITIVE/OBJECT/MAP/LIST 的都。BEAN
             STRATEGY_CACHE.put(type, strategy);
         }
@@ -166,7 +166,7 @@ public final class YdszDeserializationProvider {
     }
 
     /**
-     * 解析多态类。
+     * 解析多态类型
      *
      * <p>如果目标类有 @YdszJsonTypeInfo 注解，则根据 JSON 中的类型属性。
      * 识别具体子类型并返回。/p>

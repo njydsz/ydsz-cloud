@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 
  * <p><b>性能优化：</b></p>
  * <ul>
- *   <li>构造函数缓。+ 直接 MethodHandle 调用</li>
+ *   <li>构造函数缓存+ 直接 MethodHandle 调用</li>
  *   <li>字段 setter 预计算，避免运行时查。</li>
  *   <li>类型代码分类，快速分发解析逻辑</li>
  *   <li>嵌套对象递归解析，支持任意深。</li>
@@ -134,7 +134,7 @@ public final class ObjectReader<T> {
                 continue;
             }
             
-            // 读取字段。
+            // 读取字段名
             if (buf[reader.pos] != '"') {
                 reader.pos++;
                 continue;
@@ -182,7 +182,7 @@ public final class ObjectReader<T> {
         public final boolean isCollection;
         public final boolean isMap;
         public final boolean isBean;
-        public final Class<?> componentType; // List/Map 的元素类。
+        public final Class<?> componentType; // List/Map 的元素类型
         
         public FieldReader(Field field) {
             this.fieldName = field.getName();
@@ -339,7 +339,7 @@ public final class ObjectReader<T> {
         }
         
         private static Class<?> getComponentType(Field field) {
-            // 尝试从泛型获取元素类。
+            // 尝试从泛型获取元素类型
             Type genericType = field.getGenericType();
             if (genericType instanceof ParameterizedType) {
                 ParameterizedType pt = (ParameterizedType) genericType;

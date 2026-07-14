@@ -35,19 +35,19 @@ public final class BeanReader<T> {
     /** 字段读取器数。*/
     public final FieldReader[] fieldReaders;
     
-    /** 字段名哈希缓。*/
+    /** 字段名哈希缓存*/
     public final int[] fieldNameHashes;
     
-    /** 默认构造函。*/
+    /** 默认构造函数*/
     public final Constructor<T> defaultConstructor;
     
     /**
-     * 构造函。
+     * 构造函数
      */
     public BeanReader(Class<T> beanType) {
         this.beanType = beanType;
         
-        // 缓存默认构造函。
+        // 缓存默认构造函数
         try {
             this.defaultConstructor = beanType.getDeclaredConstructor();
             this.defaultConstructor.setAccessible(true);

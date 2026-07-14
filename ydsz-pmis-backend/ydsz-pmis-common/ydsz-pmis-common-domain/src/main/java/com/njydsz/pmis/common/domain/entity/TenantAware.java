@@ -6,7 +6,7 @@ import java.io.Serializable;
  * 租户维度标记接口
  *
  * <p>标识该实体支持多租户数据隔离。业务实体可通过实现此接口替代继与 {@link TenantEntity}。
- * 配合 SQL 拦截器自动注。tenant_id 条件。
+ * 配合 SQL 拦截器自动注入tenant_id 条件。
  *
  * <p><b>迁移策略：</b>
  * <pre>{@code

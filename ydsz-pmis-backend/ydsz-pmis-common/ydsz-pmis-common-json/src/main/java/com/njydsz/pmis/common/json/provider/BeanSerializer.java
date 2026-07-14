@@ -24,7 +24,7 @@ import com.njydsz.pmis.common.json.cache.FieldMeta;
  * </ul>
  * 
  * @author ydsz-pmis-team
- * @email limw1888@126.com
+ * @since 1.3.0
  * @version 4.1.0
  */
 final class BeanSerializer {

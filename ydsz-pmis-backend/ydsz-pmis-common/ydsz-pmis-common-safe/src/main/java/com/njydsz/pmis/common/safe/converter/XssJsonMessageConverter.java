@@ -18,7 +18,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.njydsz.pmis.common.safe.xss.EscapeUtils;
 
 /**
@@ -82,7 +82,6 @@ public class XssJsonMessageConverter extends MappingJackson2HttpMessageConverter
      *
      * @param objectMapper 待使用的 ObjectMapper
      */
-    public XssJsonMessageConverter(ObjectMapper objectMapper) {
         super(objectMapper);
     }
 

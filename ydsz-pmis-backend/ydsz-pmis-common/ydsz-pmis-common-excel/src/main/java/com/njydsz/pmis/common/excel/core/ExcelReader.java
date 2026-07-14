@@ -33,7 +33,7 @@ import com.njydsz.pmis.common.excel.support.asm.ASMFieldAccessor;
  *   <li><b>格式识别</b> - 根据文件扩展名或输入流类型选择解析。</li>
  *   <li><b>Sheet定位</b> - 根据sheetName或sheetIndex获取目标Sheet</li>
  *   <li><b>表头解析</b> - 解析表头。建立列索引与字段的映射关。</li>
- *   <li><b>数据读取</b> - 遍历数据。通过反射设置对象属。</li>
+ *   <li><b>数据读取</b> - 遍历数据。通过反射设置对象属性</li>
  *   <li><b>回调通知</b> - 触发监听器回。通知每行数据的读取结。</li>
  * </ol>
  *
@@ -81,16 +81,16 @@ import com.njydsz.pmis.common.excel.support.asm.ASMFieldAccessor;
  */
 public class ExcelReader {
 
-    /** 日志记录。*/
+    /** 日志记录数*/
     private static final Logger log = LoggerFactory.getLogger(ExcelReader.class);
 
     /** 读取配置元数。包含文件路径、映射类型等配置信息 */
     private final ReadMetadata metadata;
 
-    /** 分析上下。用于在监听器回调中传递读取状。如当前行。 */
+    /** 分析上下。用于在监听器回调中传递读取状态如当前行。 */
     private final AnalysisContext context;
 
-    /** 已注册的监听器列。支持多个监听器链式调。*/
+    /** 已注册的监听器列。支持多个监听器链式调用*/
     private final List<ReadListener<?>> listeners;
 
     /** 高性能列元数据缓存 - 预计算的Setter/Type/Format，避免运行时反射 */
@@ -112,7 +112,7 @@ public class ExcelReader {
     private List<Object> batchBuffer;
 
     /**
-     * 构造函。- 根据元数据创建读取器
+     * 构造函数- 根据元数据创建读取器
      *
      * @param metadata 读取配置元数。包含文件路径、映射类型、Sheet信息。
      */
@@ -132,7 +132,7 @@ public class ExcelReader {
      *
      * <p>默认读取第一个Sheet(pageIndex=0),表头行号。(。。</p>
      *
-     * @return 当前读取器实。支持链式调用
+     * @return 当前读取器实体支持链式调用
      */
     public ExcelReader sheet() {
         return this;
@@ -145,7 +145,7 @@ public class ExcelReader {
      * 如果找不到对应名称的Sheet,会抛出异常。</p>
      *
      * @param sheetName Sheet名称(区分大小。
-     * @return 当前读取器实。
+     * @return 当前读取器实体
      * @throws IllegalArgumentException 当Sheet不存在时
      */
     public ExcelReader sheet(String sheetName) {
@@ -156,11 +156,11 @@ public class ExcelReader {
     /**
      * 指定要读取的Sheet序号
      *
-     * <p>Sheet序号。开。0表示第一个Sheet。
+     * <p>Sheet序号从1开始0表示第一个Sheet。
      * 如果序号超出范围,会读取最后一个Sheet。/p>
      *
-     * @param sheetNo Sheet序号(。开。
-     * @return 当前读取器实。
+     * @param sheetNo Sheet序号(从1开始
+     * @return 当前读取器实体
      */
     public ExcelReader sheet(int sheetNo) {
         metadata.setSheetIndex(sheetNo);
@@ -175,8 +175,8 @@ public class ExcelReader {
      * <p>表头行用于建立Excel列与Java字段的映射关系。
      * 默认表头行号。(。。因为第一行是index=0)。/p>
      *
-     * @param headRowNumber 表头行号(。开始计。
-     * @return 当前读取器实。
+     * @param headRowNumber 表头行号(从1开始计。
+     * @return 当前读取器实体
      */
     public ExcelReader headRowNumber(int headRowNumber) {
         metadata.setHeadRowNumber(headRowNumber);
@@ -197,7 +197,7 @@ public class ExcelReader {
      * </ul>
      *
      * @param listener 数据读取监听。不能为null
-     * @return 当前读取器实。
+     * @return 当前读取器实体
      */
     public ExcelReader registerReadListener(ReadListener<?> listener) {
         this.listeners.add(listener);
@@ -211,7 +211,7 @@ public class ExcelReader {
      * 注意:此方法仅适用于有密码保护的Sheet。/p>
      *
      * @param password Sheet保护密码
-     * @return 当前读取器实。
+     * @return 当前读取器实体
      */
     public ExcelReader password(String password) {
         metadata.setPassword(password);
@@ -231,7 +231,7 @@ public class ExcelReader {
      *     .doRead(listener);
      * }</pre>
      *
-     * @return 当前读取器实。
+     * @return 当前读取器实体
      */
     public ExcelReader skipEmptyRows() {
         metadata.setSkipEmptyRows(true);
@@ -242,7 +242,7 @@ public class ExcelReader {
      * 设置跳过空行(带参数版。
      *
      * @param skip 是否跳过空行
-     * @return 当前读取器实。
+     * @return 当前读取器实体
      */
     public ExcelReader skipEmptyRows(boolean skip) {
         metadata.setSkipEmptyRows(skip);
@@ -256,7 +256,7 @@ public class ExcelReader {
      * 如果不一致会在日志中输出警告。默认不校验。/p>
      *
      * @param expectedColumnCount 期望的列。
-     * @return 当前读取器实。
+     * @return 当前读取器实体
      */
     public ExcelReader checkColumnCount(int expectedColumnCount) {
         metadata.setCheckColumnCount(true);
@@ -276,7 +276,7 @@ public class ExcelReader {
      * 支持的格式如:"yyyy-MM-dd"。yyyy/MM/dd HH:mm:ss"等。/p>
      *
      * @param dateFormat 日期格式字符。
-     * @return 当前读取器实。
+     * @return 当前读取器实体
      */
     public ExcelReader dateFormat(String dateFormat) {
         metadata.setDateFormat(dateFormat);
@@ -287,9 +287,9 @@ public class ExcelReader {
      * 使用1904日期窗口
      *
      * <p>某些Mac版Excel使用1904日期窗口,与Windows。900窗口有差异。
-     * 如果读取的日期明显偏大或偏小,尝试调用此方法进行修正。/p>
+     * 如果读取的日期明显偏大或偏小,尝试调用此方法进行修正则/p>
      *
-     * @return 当前读取器实。
+     * @return 当前读取器实体
      */
     public ExcelReader use1904Windowing() {
         ExcelConfig.getInstance().setUse1904Windowing(true);
@@ -302,7 +302,7 @@ public class ExcelReader {
      * <p>某些特殊场景下需要强制从输入流读取而不是文件路。
      * 例如需要先下载文件再解析的场景。/p>
      *
-     * @return 当前读取器实。
+     * @return 当前读取器实体
      */
     public ExcelReader mandatoryUseInputStream() {
         metadata.setMandatoryUseInputStream(true);
@@ -312,11 +312,11 @@ public class ExcelReader {
     /**
      * 设置批量读取大小
      *
-     * <p>每读取指定数量的行后，触发一次onBatchData回调。
+     * <p>每读取指定数量的行后，触发一次onBatchData回调用
      * 适合需要批量入库的场景，减少数据库交互次数。/p>
      *
      * @param batchSize 批量大小
-     * @return 当前读取器实。
+     * @return 当前读取器实体
      */
     public ExcelReader batchSize(int batchSize) {
         this.batchSize = batchSize;
@@ -331,7 +331,7 @@ public class ExcelReader {
      * <p>排除后这些字段不会参与Excel读取,即便是实体类中定义了映射。/p>
      *
      * @param excludeColumnFiledNames 要排除的字段名集。
-     * @return 当前读取器实。
+     * @return 当前读取器实体
      */
     public ExcelReader excludeColumnFiledNames(Set<String> excludeColumnFiledNames) {
         metadata.setExcludeColumnFiledNames(excludeColumnFiledNames);
@@ -342,7 +342,7 @@ public class ExcelReader {
      * 排除指定字段
      *
      * @param excludeColumnFiledNames 要排除的字段名数。
-     * @return 当前读取器实。
+     * @return 当前读取器实体
      */
     public ExcelReader excludeColumnFiledNames(String... excludeColumnFiledNames) {
         Set<String> set = new HashSet<>(Arrays.asList(excludeColumnFiledNames));
@@ -355,7 +355,7 @@ public class ExcelReader {
      * <p>设置后只有指定的字段会被读取,其他字段会被忽略。/p>
      *
      * @param includeColumnFiledNames 要包含的字段名集。
-     * @return 当前读取器实。
+     * @return 当前读取器实体
      */
     public ExcelReader includeColumnFiledNames(Set<String> includeColumnFiledNames) {
         metadata.setIncludeColumnFiledNames(includeColumnFiledNames);
@@ -366,7 +366,7 @@ public class ExcelReader {
      * 只包含指定字。
      *
      * @param includeColumnFiledNames 要包含的字段名数。
-     * @return 当前读取器实。
+     * @return 当前读取器实体
      */
     public ExcelReader includeColumnFiledNames(String... includeColumnFiledNames) {
         Set<String> set = new HashSet<>(Arrays.asList(includeColumnFiledNames));
@@ -404,7 +404,7 @@ public class ExcelReader {
      * </ol>
      *
      * @param listener 数据监听。可为null(使用前请先调用registerReadListener)
-     * @param <T> 泛型参数,表示映射的数据类。
+     * @param <T> 泛型参数,表示映射的数据类型
      * @throws RuntimeException 读取过程中发生错误时抛出
      */
     public <T> void doRead(ReadListener<T> listener) {
@@ -669,9 +669,9 @@ public class ExcelReader {
     // ==================== 监听器通知方法 ====================
 
     /**
-     * 通知所有监听器读取开。
+     * 通知所有监听器读取开始
      *
-     * <p>在开始解析之前调。让监听器进行初始化操。/p>
+     * <p>在开始解析之前调用让监听器进行初始化操。/p>
      */
     private void notifyStart() {
         for (ReadListener<?> listener : listeners) {
@@ -682,7 +682,7 @@ public class ExcelReader {
     /**
      * 通知所有监听器读取结束
      *
-     * <p>读取完成后调。无论是否发生异常。。
+     * <p>读取完成后调用无论是否发生异常。。
      * 用于资源清理和统计汇总。/p>
      */
     private void notifyEnd() {

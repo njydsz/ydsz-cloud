@@ -12,7 +12,7 @@ import java.util.Arrays;
  * <p><b>核心语义：</b>
  * <ul>
  *   <li><b>无独立标识：</b>值对象的身份由其属性值决定，而非唯一ID</li>
- *   <li><b>不可变性：</b>值对象一旦创建，其状态不可改变，修改操作应返回新的实。</li>
+ *   <li><b>不可变性：</b>值对象一旦创建，其状态不可改变，修改操作应返回新的实体</li>
  *   <li><b>相等性：</b>两个值对象的所有属性值都相等时，它们就是相等。</li>
  *   <li><b>可替换性：</b>相等的值对象可以互相替换，不影响业务逻辑</li>
  * </ul>
@@ -64,7 +64,7 @@ import java.util.Arrays;
 public interface ValueObject extends Serializable {
 
     /**
-     * 获取值对象的所有属性值，用于默认。equals/hashCode 计算
+     * 获取值对象的所有属性值，用于默认值equals/hashCode 计算
      *
      * <p>实现类应返回包含所有业务属性值的数组。
      * 默认实现返回空数组，建议实现类覆盖此方法。

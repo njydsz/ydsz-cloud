@@ -44,9 +44,9 @@ public final class EntityCapabilities {
     }
 
     /**
-     * 检查实体是否启用租户隔离能。
+     * 检查实体是否启用租户隔离能力
      *
-     * <p>判断依据：实体中存在与 {@link TenantId} 注解标记的字段。
+     * <p>判断依据：实体中存在与 {@link TenantId} 注解标记的字段名
      *
      * @param entityClass 实体。
      * @return 启用租户隔离返回 true，否则返。false
@@ -68,10 +68,10 @@ public final class EntityCapabilities {
     }
 
     /**
-     * 检查实体是否具备审计字段能。
+     * 检查实体是否具备审计字段能力
      *
      * <p>判断依据：实体中同时存在与 {@link CreatedBy}、{@link CreateTime}。
-     * {@link UpdatedBy}、{@link UpdateTime} 注解标记的字段。
+     * {@link UpdatedBy}、{@link UpdateTime} 注解标记的字段名
      *
      * @param entityClass 实体。
      * @return 具备完整审计字段返回 true，否则返。false
@@ -87,7 +87,7 @@ public final class EntityCapabilities {
      * 检查实体是否启用乐观锁能力
      *
      * <p>判断依据：实体中存在与 {@link Version} 。MyBatis-Plus
-     * {@code com.baomidou.mybatisplus.annotation.Version} 注解标记的字段。
+     * {@code com.baomidou.mybatisplus.annotation.Version} 注解标记的字段名
      * 优先检查自定义注解，若未找到再检。MyBatis-Plus 注解。
      *
      * @param entityClass 实体。
@@ -111,12 +111,12 @@ public final class EntityCapabilities {
      * 获取实体中被指定注解标记的字。
      *
      * <p>递归扫描实体类及其所有父类（直到 {@link Object}），
-     * 返回第一个匹配的字段。
+     * 返回第一个匹配的字段名
      *
      * @param entityClass     实体。
      * @param annotationClass 目标注解类型
      * @param <A>             注解类型
-     * @return 包含匹配字段。Optional，未找到返回。Optional
+     * @return 包含匹配字段名Optional，未找到返回。Optional
      */
     public static <A extends Annotation> Optional<Field> getAnnotatedField(Class<?> entityClass, Class<A> annotationClass) {
         final Field[] found = {null};

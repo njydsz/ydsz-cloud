@@ -22,7 +22,7 @@ import com.njydsz.pmis.common.json.reader.JSONReader;
  *
  * @param <T> 反序列化的目标类型
  * @author ydsz-pmis-team
- * @email limw1888@126.com
+ * @since 1.3.0
  * @since 1.3.0
  */
 public interface JsonDeserializer<T> {
