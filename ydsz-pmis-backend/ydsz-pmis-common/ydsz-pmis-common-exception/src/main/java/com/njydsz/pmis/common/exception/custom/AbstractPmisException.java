@@ -1,7 +1,6 @@
 package com.njydsz.pmis.common.exception.custom;
 
 import java.io.Serial;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.pmis.common.exception.code.ExceptionCode;
