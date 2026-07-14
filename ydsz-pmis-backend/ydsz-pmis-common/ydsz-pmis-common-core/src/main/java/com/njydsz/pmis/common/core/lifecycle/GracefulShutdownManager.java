@@ -1,7 +1,7 @@
 package com.njydsz.pmis.common.core.lifecycle;
 
 import java.util.List;
-import java.util.copyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

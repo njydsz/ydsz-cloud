@@ -3,7 +3,7 @@ package com.njydsz.pmis.common.core.context;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.alaiba.ttl.TransmittableThreadLocal;
+import com.alibaba.ttl.TransmittableThreadLocal;
 
 public final class CrossProtocolContextPropagator {
 

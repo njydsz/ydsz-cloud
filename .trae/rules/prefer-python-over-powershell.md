@@ -17,7 +17,7 @@ PowerShell 在处理文件编码时存在严重问题：
 
 1. **编码损坏**：PowerShell 默认使用 UTF-16 LE BOM 或系统 ANSI 编码读写文件，在处理 UTF-8 无 BOM 的源代码文件时，会将文件内容转换为乱码。
 2. **BOM 污染**：PowerShell 的 Out-File、Set-Content 等 cmdlet 默认添加 BOM 前缀，导致 Java 编译器、Git diff、Spotless 等工具出现兼容性问题。
-3. **转义陷阵**：PowerShell 的引号转义规则与正则表达式交互混乱，容易在文本替换中引入意外修改。
+3. **转义陷阱**：PowerShell 的引号转义规则与正则表达式交互混乱，容易在文本替换中引入意外修改。
 4. **跨平台不一致**：Windows PowerShell 5.x 与 PowerShell 7+ 行为差异大，脚本可移植性差。
 
 Python 的 pathlib、io 模块默认使用 UTF-8 编码，且 encoding=utf-8 参数行为明确、跨平台一致，不会损坏源代码文件。
@@ -50,7 +50,7 @@ for f in pathlib.Path("ydsz-pmis-backend").rglob("*.java"):
 ```powershell
 # ❌ PowerShell 会损坏文件编码
 Get-ChildItem -Recurse -Filter "*.java" | ForEach-Object {
-    (Get-Content .FullName) -replace 'oldText', 'newText' | Set-Content .FullName
+    (Get-Content $_.FullName) -replace 'oldText', 'newText' | Set-Content $_.FullName
 }
 
 # ❌ Out-File 默认添加 BOM
