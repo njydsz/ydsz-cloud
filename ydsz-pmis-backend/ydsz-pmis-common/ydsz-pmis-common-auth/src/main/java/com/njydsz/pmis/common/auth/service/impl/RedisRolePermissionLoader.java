@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.service.impl;
+﻿package com.njydsz.pmis.common.auth.service.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,15 +13,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.RemovalCause;
 import com.njydsz.pmis.common.auth.cache.LocalPermissionCache;
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.pmis.common.auth.model.RolePermissions;
 import com.njydsz.pmis.common.auth.service.RolePermissionLoader;
+import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.builder.CacheType;
+import com.njydsz.pmis.common.cache.listener.RemovalCause;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
 import com.njydsz.pmis.common.util.json.JsonUtils;
@@ -40,8 +40,8 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  *
  * <p><b>缓存策略：</b>
  * <ul>
- *   <li>使用 Caffeine 做本地缓存，防止内存溢出</li>
- *   <li>缓存时间由 {@code rolePermissionCacheSeconds} 配置</li>
+ * <li>使用 ydsz-pmis-common-cache 做本地缓存，防止内存溢出</li>
+     * <li>缓存时间由 {@code rolePermissionCacheSeconds} 配置</li>
  *   <li>缓存失效后自动重新加载</li>
  *   <li>记录缓存命中率统计，支持 JMX/Actuator 监控</li>
  *   <li>支持 Redis Pub/Sub 跨实例缓存失效通知</li>
@@ -52,7 +52,7 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  * @email limw1888@126.com
  * @version 3.5.0
  * @see RolePermissionLoader
- * @see Caffeine
+ * @see YdszCache
  */
 public class RedisRolePermissionLoader implements RolePermissionLoader {
 
@@ -112,9 +112,10 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
     private Cache<String, RolePermissions> buildCache() {
         Integer ttlSeconds = properties.getRolePermissionCacheSeconds();
         if (ttlSeconds == null || ttlSeconds <= 0) {
-            return Caffeine.newBuilder().build();
+            return YdszCache.<String, RolePermissions>newBuilder().build();
         }
-        return Caffeine.newBuilder()
+        return YdszCache.<String, RolePermissions>newBuilder()
+                .type(CacheType.TTL)
                 .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
                 .removalListener((String key, RolePermissions value, RemovalCause cause) -> {
                     if (log.isDebugEnabled()) {
@@ -453,7 +454,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
     /**
      * 获取权限本地缓存实例。
      *
-     * @return Caffeine 缓存实例
+     * @return 本地缓存实例
      */
     public Cache<String, RolePermissions> getCache() {
         return cache;

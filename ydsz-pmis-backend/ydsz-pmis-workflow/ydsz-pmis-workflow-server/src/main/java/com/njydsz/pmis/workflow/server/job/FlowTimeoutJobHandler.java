@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.server.job;
+﻿package com.njydsz.pmis.workflow.server.job;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -6,10 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.pmis.common.util.json.JsonUtils;
+
 import org.springframework.stereotype.Component;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.core.job.JobHandler;
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
@@ -75,11 +75,6 @@ public class FlowTimeoutJobHandler implements JobHandler {
 
     private final FlowRunTaskMapper taskMapper;
     private final FlowInstanceMapper instanceMapper;
-    private final FlowNodeMapper nodeMapper;
-    /** P0-1/P0-2: 任务服务（AUTO_PASS 真正推进流程） */
-    private final FlowTaskService taskService;
-    /** P0-2: 通知服务（REMIND 真实触达） */
-    private final FlowNotificationService notificationService;
     /**
      * P1-3: SLA 服务 — 单任务 SLA 处理委托给 FlowSlaService，统一闭环语义
      *
@@ -274,7 +269,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
             return null;
         }
         try {
-            JSONObject obj = JSON.parseObject(paramsJson);
+            JSONObject obj = JsonUtils.parseMap(paramsJson);
             if (obj == null) {
                 return null;
             }

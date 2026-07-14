@@ -9,8 +9,9 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.http.HttpStatus;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
+import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.auth.annotation.AuthMenuPermission;
 import com.njydsz.pmis.common.auth.config.AuthProperties;
@@ -39,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>按注解要求（AND/OR、权限类型）进行校验</li>
  * </ul>
  *
- * <p><b>注意：</b>本模块使用 Caffeine 做角色权限本地缓存（TTL 可配置，默认 30 分钟），
+ * <p><b>注意：</b>本模块使用 ydsz-pmis-common-cache 做角色权限本地缓存（TTL 可配置，默认 30 分钟），
  * 当 Redis 不可用时降级到本地缓存。仅对通配符权限的正则 Pattern 做轻量缓存以避免重复编译。
  *
  * <p><b>异常说明：</b>
@@ -85,7 +86,8 @@ public class RbacPermissionEvaluator {
         this.properties = properties;
         this.userInfoService = userInfoService;
         this.rolePermissionLoader = rolePermissionLoader;
-        this.rolePermissionsCache = Caffeine.newBuilder()
+        this.rolePermissionsCache = YdszCache.<String, RolePermissions>newBuilder()
+                .type(CacheType.TTL)
                 .maximumSize(1000)
                 .expireAfterWrite(resolvePermissionCacheTtlSeconds(), TimeUnit.SECONDS)
                 .build();

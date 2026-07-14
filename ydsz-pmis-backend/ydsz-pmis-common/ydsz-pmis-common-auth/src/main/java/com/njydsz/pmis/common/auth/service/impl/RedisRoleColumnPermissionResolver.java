@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.auth.service.impl;
+﻿package com.njydsz.pmis.common.auth.service.impl;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -7,11 +7,10 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.RemovalCause;
+import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.builder.CacheType;
+import com.njydsz.pmis.common.cache.listener.RemovalCause;
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.model.ColumnScopeInfo;
 import com.njydsz.pmis.common.auth.service.ColumnPermissionResolver;
@@ -33,8 +32,8 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  *
  * <p><b>缓存策略：</b>
  * <ul>
- *   <li>使用 Caffeine 做本地缓存，防止内存溢出</li>
- *   <li>缓存时间由 {@code roleColumnCacheSeconds} 配置</li>
+ * <li>使用 ydsz-pmis-common-cache 做本地缓存，防止内存溢出</li>
+     * <li>缓存时间由 {@code roleColumnCacheSeconds} 配置</li>
  *   <li>记录缓存命中率统计，支持 JMX/Actuator 监控</li>
  * </ul>
  *
@@ -42,7 +41,7 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  * @email limw1888@126.com
  * @version 3.5.0
  * @see ColumnPermissionResolver
- * @see Caffeine
+ * @see YdszCache
  */
 public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolver {
 
@@ -63,9 +62,10 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
     private Cache<String, ColumnScopeInfo> buildCache() {
         Integer ttlSeconds = properties.getRoleColumnCacheSeconds();
         if (ttlSeconds == null || ttlSeconds <= 0) {
-            return Caffeine.newBuilder().build();
+            return YdszCache.<String, ColumnScopeInfo>newBuilder().build();
         }
-        return Caffeine.newBuilder()
+        return YdszCache.<String, ColumnScopeInfo>newBuilder()
+                .type(CacheType.TTL)
                 .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
                 .removalListener((String key, ColumnScopeInfo value, RemovalCause cause) -> {
                     if (log.isDebugEnabled()) {
@@ -268,7 +268,7 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
     /**
      * 获取列权限本地缓存实例。
      *
-     * @return Caffeine 缓存实例
+     * @return 本地缓存实例
      */
     public Cache<String, ColumnScopeInfo> getCache() {
         return cache;

@@ -1,14 +1,13 @@
-package com.njydsz.pmis.common.auth.desensitize;
+﻿package com.njydsz.pmis.common.auth.desensitize;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
+import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.auth.config.AuthProperties;
 import com.njydsz.pmis.common.auth.model.UserInfo;
 import com.njydsz.pmis.common.auth.service.RbacUserInfoService;
@@ -63,7 +62,8 @@ public class ColumnDesensitizationService {
         this.redisService = redisService;
         this.properties = properties;
         this.userInfoService = userInfoService;
-        this.cache = Caffeine.newBuilder()
+        this.cache = YdszCache.<String, ColumnDesensitizationContext>newBuilder()
+                .type(CacheType.TTL)
                 .maximumSize(properties.getDesensitizeCacheMaxSize())
                 .expireAfterWrite(properties.getDesensitizeCacheTtlSeconds(), TimeUnit.SECONDS)
                 .build();

@@ -37,7 +37,7 @@ class FeishuChannelTest {
 
     @BeforeEach
     void setUp() {
-        ChannelProperties.Channel ch = new ChannelProperties.Channel();
+        ChannelProperties.ChannelGroup ch = new ChannelProperties.ChannelGroup();
         ChannelProperties.FeishuConfig cfg = new ChannelProperties.FeishuConfig();
         ch.setFeishu(cfg);
         when(channelProperties.getChannel()).thenReturn(ch);

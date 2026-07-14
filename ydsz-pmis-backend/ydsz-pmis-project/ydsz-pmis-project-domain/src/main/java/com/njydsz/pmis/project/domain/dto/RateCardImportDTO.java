@@ -6,9 +6,7 @@ import java.math.BigDecimal;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-import com.alibaba.excel.annotation.ExcelProperty;
-import com.alibaba.excel.annotation.format.NumberFormat;
-import com.alibaba.excel.annotation.write.style.ColumnWidth;
+import com.njydsz.pmis.common.excel.annotation.ExcelProperty;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,54 +28,44 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @NoArgsConstructor
-@ColumnWidth(20)
 public class RateCardImportDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     /** 职级 L1-L18 */
     @NotBlank(message = "{validation.execution.msg_11653d4c}")
-    @ExcelProperty(value = "职级", index = 0)
-    @ColumnWidth(12)
+    @ExcelProperty(value = "职级", index = 0, width = 12)
     private String level;
 
     /** 客户类型：GOV/ENT/SMB/INDIVIDUAL */
     @NotBlank(message = "{validation.execution.msg_d5cd6e50}")
-    @ExcelProperty(value = "客户类型", index = 1)
-    @ColumnWidth(16)
+    @ExcelProperty(value = "客户类型", index = 1, width = 16)
     private String customerType;
 
     /** 项目类型：FIXED_PRICE/T&M/MILESTONE/RETAINER/LICENSE/SaaS/MAINTENANCE/OTHER */
     @NotBlank(message = "{validation.execution.msg_40dfe929}")
-    @ExcelProperty(value = "项目类型", index = 2)
-    @ColumnWidth(20)
+    @ExcelProperty(value = "项目类型", index = 2, width = 20)
     private String projectType;
 
     /** 单价（元/人天） */
     @NotNull(message = "{validation.execution.msg_d1b0b464}")
-    @ExcelProperty(value = "单价(元/人天)", index = 3)
-    @NumberFormat("#.##")
-    @ColumnWidth(18)
+    @ExcelProperty(value = "单价(元/人天)", index = 3, numberFormat = "#.##", width = 18)
     private BigDecimal unitPrice;
 
     /** 生效日期 yyyy-MM-dd */
     @NotBlank(message = "{validation.execution.msg_c10e0b62}")
-    @ExcelProperty(value = "生效日期", index = 4)
-    @ColumnWidth(16)
+    @ExcelProperty(value = "生效日期", index = 4, width = 16)
     private String effectiveDate;
 
     /** 失效日期 yyyy-MM-dd（可空=长期） */
-    @ExcelProperty(value = "失效日期", index = 5)
-    @ColumnWidth(16)
+    @ExcelProperty(value = "失效日期", index = 5, width = 16)
     private String expiryDate;
 
     /** 币种，默认 CNY */
-    @ExcelProperty(value = "币种", index = 6)
-    @ColumnWidth(10)
+    @ExcelProperty(value = "币种", index = 6, width = 10)
     private String currency = "CNY";
 
     /** 备注 */
-    @ExcelProperty(value = "备注", index = 7)
-    @ColumnWidth(30)
+    @ExcelProperty(value = "备注", index = 7, width = 30)
     private String remark;
 }

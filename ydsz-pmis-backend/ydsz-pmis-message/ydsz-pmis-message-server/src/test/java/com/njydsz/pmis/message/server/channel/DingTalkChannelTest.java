@@ -37,7 +37,7 @@ class DingTalkChannelTest {
 
     @BeforeEach
     void setUp() {
-        ChannelProperties.Channel ch = new ChannelProperties.Channel();
+        ChannelProperties.ChannelGroup ch = new ChannelProperties.ChannelGroup();
         ChannelProperties.DingTalkConfig cfg = new ChannelProperties.DingTalkConfig();
         ch.setDingtalk(cfg);
         when(channelProperties.getChannel()).thenReturn(ch);

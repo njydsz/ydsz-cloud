@@ -90,7 +90,7 @@ class MessageDlqConsumerTest {
             consumer.onMessage(msg);
 
             verify(msgLogMapper, never()).update(any(), any());
-            verify(msgLogMapper, never()).insert(any());
+            verify(msgLogMapper, never()).insert(any(MsgLogDO.class));
             verify(messageMetrics, never()).recordDead(any());
         }
 
@@ -100,7 +100,7 @@ class MessageDlqConsumerTest {
             consumer.onMessage(null);
 
             verify(redisTemplate, never()).opsForValue();
-            verify(msgLogMapper, never()).insert(any());
+            verify(msgLogMapper, never()).insert(any(MsgLogDO.class));
         }
     }
 

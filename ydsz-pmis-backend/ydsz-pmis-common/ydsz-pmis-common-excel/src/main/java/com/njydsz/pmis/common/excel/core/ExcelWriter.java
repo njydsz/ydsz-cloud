@@ -428,12 +428,46 @@ public class ExcelWriter {
     }
 
     /**
+     * 设置动态表头（无需映射类）
+     *
+     * <p>当不使用注解映射类时，可通过此方法设置表头列表。
+     * 配合 {@link #doWrite(Object)} 写入 {@code List<List<?>>} 或 {@code List<Map<String, Object>>} 数据。
+     *
+     * <h3>使用示例</h3>
+     * <pre>{@code
+     * List<String> headers = List.of("姓名", "年龄", "邮箱");
+     * List<List<Object>> rows = List.of(
+     *     List.of("张三", 25, "zs@example.com"),
+     *     List.of("李四", 30, "ls@example.com")
+     * );
+     * ExcelFacade.write(baos)
+     *     .head(headers)
+     *     .sheet("用户列表")
+     *     .doWrite(rows);
+     * }</pre>
+     *
+     * @param headers 表头名称列表
+     * @return 当前写入器实例
+     */
+    public ExcelWriter head(List<String> headers) {
+        List<WriteHeaderProperty> headList = new ArrayList<>();
+        for (int i = 0; i < headers.size(); i++) {
+            WriteHeaderProperty property = new WriteHeaderProperty();
+            property.setName(headers.get(i));
+            property.setColumnIndex(i);
+            headList.add(property);
+        }
+        metadata.setHeadList(headList);
+        return this;
+    }
+
+    /**
      * 执行写入(写入到指定Sheet序号)
      *
      * <p>核心写入方法,会依次执行:
      * <ol>
      *   <li>初始化工作簿</li>
-     *   <li>解析类注解构建表头</li>
+     *   <li>解析类注解构建表头（或使用动态表头）</li>
      *   <li>写入表头和数据</li>
      *   <li>刷写缓冲并释放资源</li>
      * </ol>
@@ -478,7 +512,12 @@ public class ExcelWriter {
                 currentRowIndex = metadata.getHeadRowNumber();
             }
 
-            List<WriteHeaderProperty> headProperties = analyzeClass();
+            List<WriteHeaderProperty> headProperties;
+            if (metadata.getClazz() == null && !metadata.getHeadList().isEmpty()) {
+                headProperties = metadata.getHeadList();
+            } else {
+                headProperties = analyzeClass();
+            }
 
             if (!append) {
                 writeHead(headProperties);
@@ -826,14 +865,27 @@ public class ExcelWriter {
             return;
         }
 
-        if (precomputedProps != null && ultraFastCellWriter != null) {
+        if (precomputedProps != null && ultraFastCellWriter != null && metadata.getClazz() != null) {
             writeRowUltraFast(row, rowData);
             return;
         }
 
         List<WriteHeaderProperty> properties = metadata.getHeadList();
         if (properties.isEmpty()) {
-            writeMapRow(row, (Map<?, ?>) rowData);
+            if (rowData instanceof Map) {
+                writeMapRow(row, (Map<?, ?>) rowData);
+            } else if (rowData instanceof List) {
+                writeListRow(row, (List<?>) rowData);
+            }
+            return;
+        }
+
+        if (metadata.getClazz() == null) {
+            if (rowData instanceof List) {
+                writeListRow(row, (List<?>) rowData);
+            } else if (rowData instanceof Map) {
+                writeMapRowWithHead(row, (Map<?, ?>) rowData, properties);
+            }
             return;
         }
 
@@ -994,6 +1046,31 @@ public class ExcelWriter {
      * @param row Excel行对象
      * @param data Map类型数据
      */
+    private void writeListRow(Row row, List<?> data) {
+        if (data == null) {
+            return;
+        }
+
+        int colIndex = 0;
+        for (Object value : data) {
+            Cell cell = row.createCell(colIndex++);
+            valueFormatter.setCellValueFast(cell, value, null);
+        }
+    }
+
+    private void writeMapRowWithHead(Row row, Map<?, ?> data, List<WriteHeaderProperty> properties) {
+        if (data == null) {
+            return;
+        }
+
+        for (WriteHeaderProperty property : properties) {
+            int colIndex = property.getColumnIndex();
+            Cell cell = row.createCell(colIndex);
+            Object value = data.get(property.getName());
+            valueFormatter.setCellValueFast(cell, value, null);
+        }
+    }
+
     private void writeMapRow(Row row, Map<?, ?> data) {
         if (data == null) {
             return;
