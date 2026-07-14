@@ -9,9 +9,9 @@ import lombok.Data;
  * <p>
  * 所有配置统一前缀 {@code ydsz.docs.*}。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 @Data

@@ -7,9 +7,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * <p>控制签名验证的开关、密钥和时间戳容差。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @ConfigurationProperties(prefix = "ydsz.app.signature")

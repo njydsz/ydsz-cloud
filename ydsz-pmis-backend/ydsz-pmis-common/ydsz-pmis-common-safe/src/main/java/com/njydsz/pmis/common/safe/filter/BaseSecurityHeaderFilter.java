@@ -20,8 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 安全响应头过滤器（Web/App 共享抽象基类）
  *
- * @author Marvin Lee
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * 
  */
 @Slf4j
 @RequiredArgsConstructor

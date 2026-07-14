@@ -31,9 +31,9 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  * <p><b>配置要求：</b>
  * Redis 需要开启 keyspace notification，配置: notify-keyspace-events KEA
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class PermissionKeyspaceNotificationListener {
 

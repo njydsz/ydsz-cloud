@@ -6,9 +6,9 @@ package com.njydsz.pmis.common.base.constant;
  * <p>所有数字必须与 {@code docs/BASE_INTERCEPTOR_ORDER.md} 保持一致。
  * 修改任何数字前请先更新文档。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.5.0
  */
 public final class BaseFilterOrders {

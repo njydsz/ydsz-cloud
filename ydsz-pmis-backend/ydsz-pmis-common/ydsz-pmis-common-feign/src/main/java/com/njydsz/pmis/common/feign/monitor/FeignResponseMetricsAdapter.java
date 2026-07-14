@@ -20,9 +20,9 @@ import io.micrometer.core.instrument.Timer;
  *   <li>{@code feign.request.slow} - 慢调用 Counter（标签: client, method）</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 4.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.5.0
  */
 public class FeignResponseMetricsAdapter implements FeignResponseInterceptor.FeignResponseMetrics {

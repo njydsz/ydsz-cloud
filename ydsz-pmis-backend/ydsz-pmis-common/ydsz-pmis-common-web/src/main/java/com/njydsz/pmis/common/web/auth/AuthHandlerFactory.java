@@ -22,9 +22,9 @@ import com.njydsz.pmis.common.core.enums.ServiceType;
  *   <li>未匹配 → 回退到 {@code webAuthHandler}，再回退到任意可用实现</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see AuthHandler
  * @see ServiceType
  */

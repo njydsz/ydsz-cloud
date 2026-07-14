@@ -12,9 +12,9 @@ import java.util.concurrent.locks.ReentrantLock;
  * <p>技术原理： - 将单一锁拆分为多个锁段，每个锁段保护一部分数据 - 不同 key 的操作可以并行执行，只要它们不在同一个锁段 - 锁段数量 = 2 的幂次，便于使用位运算快速定位
  *
  * @param <K> 键类型
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public final class StripedLock<K> {
 

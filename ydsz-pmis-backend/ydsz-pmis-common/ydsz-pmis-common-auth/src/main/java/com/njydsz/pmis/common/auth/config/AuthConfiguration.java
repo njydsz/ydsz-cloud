@@ -56,9 +56,9 @@ import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
  *   <li>Redis 不可用时自动降级到本地缓存</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "ydsz.auth", name = "enabled", havingValue = "true", matchIfMissing = true)

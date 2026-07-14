@@ -5,9 +5,9 @@ package com.njydsz.pmis.common.safe.csrf;
  *
  * <p>定义 CSRF 令牌生成策略，支持自定义实现。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public interface CsrfTokenGenerator {
 

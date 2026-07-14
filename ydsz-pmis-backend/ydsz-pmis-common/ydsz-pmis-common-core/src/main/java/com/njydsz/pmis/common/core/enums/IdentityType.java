@@ -24,9 +24,9 @@ import lombok.Getter;
  *   <li>用户注册和登录时的身份验证</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see HeaderConstants
  */
 @Getter

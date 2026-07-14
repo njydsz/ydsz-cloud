@@ -14,9 +14,9 @@ import java.util.stream.Collectors;
  *
  * @param <T> 编码类型，支持 String、Integer 等类型
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public interface TypeEnum<T> {
 

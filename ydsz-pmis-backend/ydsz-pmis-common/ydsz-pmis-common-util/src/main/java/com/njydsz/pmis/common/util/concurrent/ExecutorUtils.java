@@ -19,9 +19,9 @@ import lombok.extern.slf4j.Slf4j;
  * 4. 自定义命名、守护线程、拒绝策略
  * </p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Slf4j
 public class ExecutorUtils {

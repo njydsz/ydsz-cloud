@@ -23,9 +23,8 @@ import lombok.extern.slf4j.Slf4j;
  * 死信队列服务实现类
  * <p>基于 Redis Hash 存储死信消息，提供重试、查询和统计能力
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

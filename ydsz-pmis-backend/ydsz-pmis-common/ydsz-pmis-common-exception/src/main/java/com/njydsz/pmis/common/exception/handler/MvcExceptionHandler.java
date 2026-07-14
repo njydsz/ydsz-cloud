@@ -53,9 +53,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>装配：</b>本类已不再直接标注 {@code @AutoConfiguration}，
  * 改由 {@link MvcExceptionHandlerAutoConfiguration} 负责条件装配与 Bean 注入。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.0.0
  * @see BaseExceptionHandler
  * @see ValidationExceptionHandler

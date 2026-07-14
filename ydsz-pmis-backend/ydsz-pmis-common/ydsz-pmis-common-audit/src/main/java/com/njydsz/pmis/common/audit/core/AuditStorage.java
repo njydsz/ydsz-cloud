@@ -14,9 +14,8 @@ import com.njydsz.pmis.common.audit.domain.AuditLog;
  *
  * <p>业务方可实现该接口对接 ELK、消息队列、远程审计中心等自定义存储后端。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public interface AuditStorage {

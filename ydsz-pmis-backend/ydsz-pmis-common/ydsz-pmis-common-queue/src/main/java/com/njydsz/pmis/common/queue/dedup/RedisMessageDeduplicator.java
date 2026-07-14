@@ -7,9 +7,8 @@ import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
  * <p>适用于分布式场景，可跨实例去重。
  * <p>使用 Redis 的 SETNX 命令实现原子性去重判断，配合 TTL 自动过期清理。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see MessageDeduplicator
  */

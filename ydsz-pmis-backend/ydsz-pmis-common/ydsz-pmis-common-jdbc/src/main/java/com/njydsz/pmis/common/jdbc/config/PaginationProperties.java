@@ -28,9 +28,8 @@ import lombok.Data;
  *   <li>设置 maxLimit 可防止恶意或误操作导致的全表扫描（安全加固）</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see PaginationInnerInterceptor
  */

@@ -9,9 +9,9 @@ import com.njydsz.pmis.common.core.enums.ServiceType;
  * <p>继承 {@link BaseAuthInfo}，为 Web 端（管理端）提供服务类型标识。
  * 解析逻辑由基类 {@link BaseAuthInfo} 统一处理。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see BaseAuthInfo
  * @see ServiceType#WEB_SERVICE
  */

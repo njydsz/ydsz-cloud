@@ -1,7 +1,7 @@
 package com.njydsz.pmis.common.excel.core.strategy;
 
 /**
- * UserModelReadStrategy 。?
+ * UserModelReadStrategy 。
  *
  * @author ydsz-pmis-team
  * @email pmis-dev@njydsz.com
@@ -26,23 +26,23 @@ import com.njydsz.pmis.common.excel.core.metadata.ReadMetadata;
 /**
  * 用户模式读取策略 - POI对象模型
  *
- * <p>使用Apache POI的用户模。?UserModel)进行Excel读取。?
- * 将每个单元格映射为Cell对象,适合中小型文件的读取。?/p>
+ * <p>使用Apache POI的用户模。UserModel)进行Excel读取。
+ * 将每个单元格映射为Cell对象,适合中小型文件的读取。/p>
  *
  * <h3>特点</h3>
  * <ul>
  *   <li>兼容性好 - 使用POI标准API</li>
- *   <li>功能完整 - 支持所有POI支持的格。?/li>
+ *   <li>功能完整 - 支持所有POI支持的格。</li>
  *   <li>内存占用中等 - 需要在内存中保持Cell对象</li>
- *   <li>适合文件大小 - 建议100MB以下的文。?/li>
+ *   <li>适合文件大小 - 建议100MB以下的文。</li>
  * </ul>
  *
- * <h3>性能数据(参。?</h3>
+ * <h3>性能数据(参。</h3>
  * <table border="1">
- *   <tr><th>文件大小</th><th>行数</th><th>耗时</th><th>内存峰。?/th></tr>
- *   <tr><td>1MB</td><td>5。?/td><td>~1s</td><td>~50MB</td></tr>
- *   <tr><td>10MB</td><td>50。?/td><td>~10s</td><td>~200MB</td></tr>
- *   <tr><td>50MB</td><td>250。?/td><td>~60s</td><td>~500MB</td></tr>
+ *   <tr><th>文件大小</th><th>行数</th><th>耗时</th><th>内存峰。</th></tr>
+ *   <tr><td>1MB</td><td>5。</td><td>~1s</td><td>~50MB</td></tr>
+ *   <tr><td>10MB</td><td>50。</td><td>~10s</td><td>~200MB</td></tr>
+ *   <tr><td>50MB</td><td>250。</td><td>~60s</td><td>~500MB</td></tr>
  * </table>
  *
  * @see ReadStrategy
@@ -212,7 +212,7 @@ public class UserModelReadStrategy implements ReadStrategy {
 
             return instance;
         } catch (Exception e) {
-            log.warn("解析行数据异。?, e);
+            log.warn("解析行数据异。, e);
             return null;
         }
     }

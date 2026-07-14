@@ -18,9 +18,9 @@ package com.njydsz.pmis.common.util.id;
  * @param datacenterId 数据中心 ID，范围 0-31
  * @param sequence     序列号，范围 0-4095
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.0.0
  */
 public record IdMeta(long timestamp, long workerId, long datacenterId, long sequence) {

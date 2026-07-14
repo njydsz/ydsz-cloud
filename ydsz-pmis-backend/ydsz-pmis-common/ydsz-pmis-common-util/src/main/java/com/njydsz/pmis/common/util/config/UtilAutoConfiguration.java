@@ -22,9 +22,9 @@ import okhttp3.OkHttpClient;
  * <p>通过 Spring Boot AutoConfiguration 机制，自动装配工具类所需的 Bean，
  * 包括 SpringContextHolder、OkHttpClient 等。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @AutoConfiguration
 @EnableConfigurationProperties({OkHttpProperties.class, SnowflakeProperties.class})

@@ -10,9 +10,9 @@ import lombok.Data;
 /**
  * 认证过滤器配置属性
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.auth.filter")

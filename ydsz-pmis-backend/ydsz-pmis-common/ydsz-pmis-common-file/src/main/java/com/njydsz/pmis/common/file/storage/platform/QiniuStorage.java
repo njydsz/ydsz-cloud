@@ -51,9 +51,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p>分片上传使用 Upload V2 协议：
  * ApiUploadV2InitUpload / ApiUploadV2UploadPart / ApiUploadV2CompleteUpload / ApiUploadV2AbortUpload
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Slf4j
 public class QiniuStorage extends AbstractFileStorage {

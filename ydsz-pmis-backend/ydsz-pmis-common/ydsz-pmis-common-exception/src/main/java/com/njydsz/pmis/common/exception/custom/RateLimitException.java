@@ -22,9 +22,9 @@ import lombok.ToString;
  * throw RateLimitException.of(UnifiedExceptionCode.RATE_LIMIT_EXCEEDED).build();
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.0.0
  */
 @ToString(callSuper = true)

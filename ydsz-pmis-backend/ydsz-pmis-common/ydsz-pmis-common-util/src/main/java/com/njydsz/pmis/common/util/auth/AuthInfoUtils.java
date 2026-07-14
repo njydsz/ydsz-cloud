@@ -37,9 +37,9 @@ import com.njydsz.pmis.common.core.enums.IdentityType;
  * @see YdszAuthInfo
  * @see RequestHolder
   *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class AuthInfoUtils {
 
@@ -52,9 +52,9 @@ public class AuthInfoUtils {
      * @return AuthInfo 实例；若未写入则返回 null
      * @see RequestHolder#getAuthInfo()
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     public static AuthInfo getAuthInfo() {
         return RequestHolder.getAuthInfo();
@@ -65,9 +65,9 @@ public class AuthInfoUtils {
      *
      * @return 语言码；无上下文时返回 null
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     public static String getUserLanguage() {
         AuthInfo auth = getAuthInfo();
@@ -79,9 +79,9 @@ public class AuthInfoUtils {
      *
      * @return AccessToken；无上下文时返回 null
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     public static String getAccessToken() {
         AuthInfo auth = getAuthInfo();
@@ -93,9 +93,9 @@ public class AuthInfoUtils {
      *
      * @return 用户ID；无上下文时返回 null
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     public static String getUniqueId() {
         AuthInfo auth = getAuthInfo();
@@ -108,9 +108,9 @@ public class AuthInfoUtils {
      * @return IdentityType；无上下文时返回 null
      * @see IdentityType
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     public static IdentityType getIdentityTypeEnum() {
         AuthInfo auth = getAuthInfo();
@@ -122,9 +122,9 @@ public class AuthInfoUtils {
      *
      * @return 服务类型码；无上下文时返回 null
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     public static String getServiceTypeCode() {
         AuthInfo auth = getAuthInfo();
@@ -139,9 +139,9 @@ public class AuthInfoUtils {
      * @return DataScopeType；无上下文时返回 null
      * @see DataScopeType
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     public static DataScopeType getDataScopeEnum() {
         AuthInfo auth = getAuthInfo();
@@ -155,9 +155,9 @@ public class AuthInfoUtils {
      *
      * @return 租户ID；无上下文时返回 null
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     public static String getTenantId() {
         AuthInfo auth = getAuthInfo();
@@ -169,9 +169,9 @@ public class AuthInfoUtils {
      *
      * @return 设备ID；无上下文时返回 null
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     public static String getDistinctId() {
         AuthInfo auth = getAuthInfo();
@@ -183,9 +183,9 @@ public class AuthInfoUtils {
      *
      * @return 请求来源；无上下文时返回 null
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     public static String getRequestSource() {
         AuthInfo auth = getAuthInfo();
@@ -198,9 +198,9 @@ public class AuthInfoUtils {
      * <p>当 {@link #getDataScopeEnum()} 返回 {@code GROUP} 时，SQL 拦截器使用此集合过滤 company_id。
      *
      * @return 公司ID集合；无上下文或未设置时返回空 Set
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static Set<String> getHasPermissionCompanyIds() {
         YdszAuthInfo auth = getYdszAuthInfo();
@@ -214,9 +214,9 @@ public class AuthInfoUtils {
      * <p>当 {@link #getDataScopeEnum()} 返回 {@code COMPANY} 或 {@code DEPT} 时，SQL 拦截器使用此集合过滤 dept_id。
      *
      * @return 部门ID集合；无上下文或未设置时返回空 Set
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static Set<String> getHasPermissionDeptIds() {
         YdszAuthInfo auth = getYdszAuthInfo();
@@ -230,9 +230,9 @@ public class AuthInfoUtils {
      * <p>当 {@link #getDataScopeEnum()} 返回 {@code PROJECT} 时，SQL 拦截器使用此集合过滤 project_id。
      *
      * @return 项目ID集合；无上下文或未设置时返回空 Set
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static Set<String> getHasPermissionProjectIds() {
         YdszAuthInfo auth = getYdszAuthInfo();
@@ -246,9 +246,9 @@ public class AuthInfoUtils {
      * <p>当 {@link #getDataScopeEnum()} 返回 {@code REGION} 时，SQL 拦截器使用此集合过滤 region_id。
      *
      * @return 区域ID集合；无上下文或未设置时返回空 Set
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static Set<String> getHasPermissionRegionIds() {
         YdszAuthInfo auth = getYdszAuthInfo();
@@ -263,9 +263,9 @@ public class AuthInfoUtils {
      *
      * @return YdszAuthInfo；若非该类型或未写入则返回 null
      * @see YdszAuthInfo
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static YdszAuthInfo getYdszAuthInfo() {
         return RequestHolder.getYdszAuthInfo();
@@ -281,9 +281,9 @@ public class AuthInfoUtils {
      * @return 表名到可见列集合的映射；无上下文时返回空 Map
      * @see AuthInfo#getVisibleColumnsByTable()
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     public static Map<String, Set<String>> getVisibleColumnsByTable() {
         AuthInfo auth = getAuthInfo();
@@ -301,9 +301,9 @@ public class AuthInfoUtils {
      * @return 表名到可编辑列集合的映射；无上下文时返回空 Map
      * @see AuthInfo#getEditableColumnsByTable()
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     public static Map<String, Set<String>> getEditableColumnsByTable() {
         AuthInfo auth = getAuthInfo();

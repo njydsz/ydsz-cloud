@@ -31,9 +31,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p>
  * 基于 Apache POI XSLF 解析 PowerPoint 文档，提取每页幻灯片的文本内容和表格。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 @Slf4j

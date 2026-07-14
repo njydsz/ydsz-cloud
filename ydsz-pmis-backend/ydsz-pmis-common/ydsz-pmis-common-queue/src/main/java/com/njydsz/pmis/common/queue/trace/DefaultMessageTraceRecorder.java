@@ -11,9 +11,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>使用 ConcurrentHashMap 存储轨迹数据，LRU 策略控制最大容量（默认1000条）。
  * 内置 TTL 过期机制，默认30分钟自动清理过期轨迹。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

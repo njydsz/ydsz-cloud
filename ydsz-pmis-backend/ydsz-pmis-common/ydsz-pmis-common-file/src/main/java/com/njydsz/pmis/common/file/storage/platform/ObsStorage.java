@@ -32,9 +32,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p>分片上传使用原生 multipart upload 协议：
  * initiateMultipartUpload / uploadPart / listParts / completeMultipartUpload / abortMultipartUpload
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Slf4j
 public class ObsStorage extends AbstractFileStorage implements AutoCloseable {

@@ -74,9 +74,9 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>分片上传上下文和检查点使用分布式存储（Redis），支持多实例共享</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see IFileStorage
  */
 @Slf4j

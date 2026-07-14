@@ -26,9 +26,9 @@ import lombok.extern.slf4j.Slf4j;
  * FileTypeUtils - 增强版文件类型检测工具类
  * 参考：Apache Tika, Google File Type Detection
  * 
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @desc 支持文件头魔法值检测、MIME 类型检测、扩展名检测
  */
 @Slf4j

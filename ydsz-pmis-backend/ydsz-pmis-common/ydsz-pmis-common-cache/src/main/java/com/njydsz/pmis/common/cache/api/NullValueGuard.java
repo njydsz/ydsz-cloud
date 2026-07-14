@@ -20,8 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>外层 {@link WeakHashMap} 确保缓存实例 GC 后状态自动清理
  * </ul>
  *
- * @author Marvin Lee
- * @version 4.0.0
+ * @author ydsz-pmis-team
+ * 
  */
 public final class NullValueGuard {
 

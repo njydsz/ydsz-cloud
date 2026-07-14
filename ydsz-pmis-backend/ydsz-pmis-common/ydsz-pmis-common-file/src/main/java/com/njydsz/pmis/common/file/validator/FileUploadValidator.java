@@ -23,9 +23,9 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  * 校验失败时抛出 {@link FileValidationException}。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Slf4j
 public class FileUploadValidator {

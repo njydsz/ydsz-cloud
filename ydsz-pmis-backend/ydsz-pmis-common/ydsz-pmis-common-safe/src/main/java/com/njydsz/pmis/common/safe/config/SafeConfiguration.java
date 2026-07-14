@@ -59,9 +59,8 @@ import com.njydsz.pmis.common.safe.sensitive.SensitiveDataConfiguration;
  *
  * <p><b>注意：</b>防重复提交/幂等性功能由本模块的 Redis 限流能力提供。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @AutoConfiguration

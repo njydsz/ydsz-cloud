@@ -24,8 +24,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>提取 Web 端和 App 端认证过滤器的公共逻辑。</p>
  *
- * @author Marvin Lee
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * 
  */
 @Slf4j
 public abstract class BaseAuthFilter extends OncePerRequestFilter {

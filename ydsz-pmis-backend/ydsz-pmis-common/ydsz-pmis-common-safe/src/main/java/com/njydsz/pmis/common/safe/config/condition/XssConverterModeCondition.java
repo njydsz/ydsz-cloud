@@ -8,9 +8,9 @@ import org.springframework.context.annotation.ConfigurationCondition;
  * XSS Converter 模式条件
  * <p>当 ydsz.safe.xss.enabled=true（或未配置）且 ydsz.safe.xss.mode=converter（或未配置）时生效
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class XssConverterModeCondition extends AllNestedConditions {
 

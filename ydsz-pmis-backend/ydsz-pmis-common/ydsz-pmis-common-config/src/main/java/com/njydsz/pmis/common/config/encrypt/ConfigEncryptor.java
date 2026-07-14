@@ -27,7 +27,7 @@ import java.util.Base64;
  * PMIS_CONFIG_ENCRYPT_KEY=my-secret-key
  * }</pre>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public class ConfigEncryptor {

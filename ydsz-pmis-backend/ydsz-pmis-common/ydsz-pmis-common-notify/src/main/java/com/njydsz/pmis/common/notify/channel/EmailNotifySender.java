@@ -62,9 +62,8 @@ import com.njydsz.pmis.common.notify.tracking.EmailTrackingService;
  *   <li>P3-13 邮件去重与幂等</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Component

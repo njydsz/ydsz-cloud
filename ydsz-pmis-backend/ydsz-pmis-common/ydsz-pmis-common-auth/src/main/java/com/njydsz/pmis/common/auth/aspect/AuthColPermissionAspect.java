@@ -63,9 +63,9 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  * <p><b>切面顺序：</b>
  * <p>本切面 Order 为 12，在行级权限注入之后执行。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see AuthColPermission
  * @see ColumnScopeInfo
  * @see ColumnScopeAware

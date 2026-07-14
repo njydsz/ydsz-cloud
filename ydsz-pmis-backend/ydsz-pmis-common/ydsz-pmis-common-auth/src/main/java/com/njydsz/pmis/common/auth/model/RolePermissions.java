@@ -25,9 +25,9 @@ import com.njydsz.pmis.common.auth.service.RolePermissionLoader;
  *   <li>RbacPermissionEvaluator 合并多角色权限时创建新的 RolePermissions</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see RolePermissionLoader
  * @see RbacPermissionEvaluator
  */

@@ -23,9 +23,8 @@ import com.njydsz.pmis.common.file.domain.ObjectMetadata;
  * <p><b>分页列举：</b>{@link #listObjects} 通过 cursor（而非 offset）实现分页，
  * 在大数据量下无 OFFSET 性能回退问题。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public interface FileManager {

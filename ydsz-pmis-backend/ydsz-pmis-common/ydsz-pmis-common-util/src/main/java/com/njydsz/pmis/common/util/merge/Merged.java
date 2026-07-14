@@ -54,9 +54,9 @@ import java.util.stream.Collectors;
  * @param <R> 返回值的对象类型（目标对象类型）
  * @param <T> 需要被合并的类型（源对象类型）
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see MergeUtils
  * @see BiConsumer
  * @see BiFunction

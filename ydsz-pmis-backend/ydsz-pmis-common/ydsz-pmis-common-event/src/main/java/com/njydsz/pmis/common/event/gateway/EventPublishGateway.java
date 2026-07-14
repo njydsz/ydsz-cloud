@@ -11,7 +11,7 @@ import com.njydsz.pmis.common.event.model.OutboxMessage;
  * <p>实现类应在 {@code AutoConfiguration} 中注册为 Bean，
  * 当容器中不存在此接口的 Bean 时，Outbox 模块使用 NoopEventPublishGateway 降级。
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public interface EventPublishGateway {

@@ -36,9 +36,8 @@ import lombok.Data;
  *   <li>对于需要查询已删除记录的场景，提供单独的方法并手动排除条件</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see LogicalDeleteInterceptor
  */

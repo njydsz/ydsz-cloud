@@ -48,9 +48,8 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>FieldFillInterceptor：基于 SQL 拦截器填充，适合使用 Map/DTO 进行更新的场景</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see MetaObjectHandler
  */

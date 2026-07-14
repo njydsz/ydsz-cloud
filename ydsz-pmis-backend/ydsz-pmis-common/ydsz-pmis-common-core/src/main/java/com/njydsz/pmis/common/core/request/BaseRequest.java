@@ -23,9 +23,9 @@ import lombok.experimental.SuperBuilder;
  *   <li>如需分页功能，请使用 {@link PageRequest}</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see IRequest
  * @see PageRequest
  */

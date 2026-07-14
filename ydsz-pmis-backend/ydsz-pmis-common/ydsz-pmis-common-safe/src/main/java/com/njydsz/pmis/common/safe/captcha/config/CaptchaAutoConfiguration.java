@@ -23,9 +23,9 @@ import com.njydsz.pmis.common.safe.captcha.validator.CaptchaValidator;
  * 验证码自动配置类
  * 根据配置自动注册验证码生成器、存储器和验证器
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @AutoConfiguration
 @EnableConfigurationProperties(CaptchaProperties.class)

@@ -40,9 +40,9 @@ import okhttp3.OkHttpClient;
  * <p>分片上传使用分片对象暂存 + composeObject 合并策略，
  * 失败时清理临时分片对象。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Slf4j
 public class MinioStorage extends AbstractFileStorage {

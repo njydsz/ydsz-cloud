@@ -12,9 +12,9 @@ import com.njydsz.pmis.common.jdbc.interceptor.TenantIsolationInterceptor;
  *
  * <p>对应异常码 {@link UnifiedExceptionCode#ACCESS_DENIED}，HTTP 状态码 403。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see TenantIsolationInterceptor
  */
 public class TenantIsolationException extends YdszSecurityException {

@@ -3,9 +3,8 @@ package com.njydsz.pmis.common.notify.core;
 /**
  * 消息发送结果统一封装
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public interface NotifySendResult {

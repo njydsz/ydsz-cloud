@@ -16,9 +16,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>配置开关：</b>
  * {@code ydsz.docs.enabled=true}（默认启用）
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 @Slf4j

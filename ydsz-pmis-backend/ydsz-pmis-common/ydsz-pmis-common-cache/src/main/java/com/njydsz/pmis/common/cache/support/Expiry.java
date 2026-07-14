@@ -21,8 +21,8 @@ package com.njydsz.pmis.common.cache.support;
  *
  * @param <K> 键类型
  * @param <V> 值类型
- * @author Marvin Lee
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * 
  */
 @FunctionalInterface
 public interface Expiry<K, V> {

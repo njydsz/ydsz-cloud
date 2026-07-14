@@ -42,9 +42,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p>过滤器优先级设置为 3，在 CORS 过滤器（优先级 0）之后执行。
  * 确保跨域预检请求可以正常通过，而认证逻辑在跨域处理之后执行。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see AuthHandlerFactory
  * @see AuthenticationProvider
  * @see RequestHolder

@@ -14,9 +14,9 @@ import com.njydsz.pmis.common.base.filter.AbstractContentCachingFilter;
  * <p>通过配置 {@code ydsz.web.content-cache.max-size} 控制最大缓存大小（字节），
  * 默认 2MB，防止大文件上传场景下的 OOM。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see AbstractContentCachingFilter
  */
 public class ContentCachingFilter extends AbstractContentCachingFilter {

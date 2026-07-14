@@ -19,9 +19,8 @@ import java.util.Set;
  *   <li>单表归档/清理粒度粗，删除可能引起长时间锁表</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class YearlyShardingStrategy implements TableShardingStrategy {

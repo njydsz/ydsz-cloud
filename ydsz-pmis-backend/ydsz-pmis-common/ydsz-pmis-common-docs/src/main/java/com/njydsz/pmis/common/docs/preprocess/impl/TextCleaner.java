@@ -20,9 +20,9 @@ import com.njydsz.pmis.common.docs.preprocess.DocumentPreprocessor;
  *   <li>移除不可见的零宽字符</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 @Component

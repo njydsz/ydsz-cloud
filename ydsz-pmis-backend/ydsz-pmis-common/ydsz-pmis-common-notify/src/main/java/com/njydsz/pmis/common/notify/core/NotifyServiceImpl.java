@@ -24,9 +24,8 @@ import com.njydsz.pmis.common.notify.ratelimit.NotifyRateLimiterManager;
  *   <li>限流触发时返回失败结果，不阻塞调用方</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class NotifyServiceImpl implements NotifyService {

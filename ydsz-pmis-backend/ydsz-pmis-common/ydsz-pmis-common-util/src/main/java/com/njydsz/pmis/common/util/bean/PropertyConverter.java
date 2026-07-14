@@ -10,9 +10,9 @@ package com.njydsz.pmis.common.util.bean;
  * @param <S> 源类型
  * @param <T> 目标类型
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @FunctionalInterface
 public interface PropertyConverter<S, T> {

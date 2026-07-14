@@ -43,9 +43,9 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>ROLE_DELETED：清除以上所有相关缓存</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see PermissionChangedEvent
  * @see PermissionChangePublisher
  */

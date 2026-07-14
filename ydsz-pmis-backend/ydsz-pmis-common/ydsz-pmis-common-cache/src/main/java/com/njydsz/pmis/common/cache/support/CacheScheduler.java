@@ -41,9 +41,9 @@ import com.njydsz.pmis.common.cache.stats.CacheStats;
  * scheduler.shutdown();
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class CacheScheduler {
 

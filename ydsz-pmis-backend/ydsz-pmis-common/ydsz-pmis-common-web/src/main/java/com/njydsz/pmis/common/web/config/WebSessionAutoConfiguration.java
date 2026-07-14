@@ -35,9 +35,9 @@ import org.springframework.context.annotation.Import;
  *       flush-mode: on_save
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @AutoConfiguration
 @ConditionalOnClass(name = "org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession")

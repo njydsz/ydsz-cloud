@@ -23,9 +23,9 @@ import lombok.ToString;
  * throw YdszSecurityException.of(UnifiedExceptionCode.ACCESS_DENIED).build();
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.0.0
  * @see UnifiedExceptionCode
  * @see ExceptionCategory#SECURITY

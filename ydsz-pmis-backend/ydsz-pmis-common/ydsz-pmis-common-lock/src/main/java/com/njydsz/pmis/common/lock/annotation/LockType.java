@@ -5,9 +5,8 @@ package com.njydsz.pmis.common.lock.annotation;
  *
  * <p>定义支持的分布式锁类型，不同锁类型适用于不同场景。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public enum LockType {

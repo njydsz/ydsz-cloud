@@ -24,9 +24,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>根据实际队列类型（Kafka/RabbitMQ/RocketMQ/Redis）检查对应中间件连通性。
  * Redis 类型复用 ydsz-pmis-common-redis 连接进行检查，非 Redis 类型通过 TCP 端口连通性检查。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

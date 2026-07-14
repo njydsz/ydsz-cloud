@@ -14,9 +14,9 @@ package com.njydsz.pmis.common.core.constant;
  *   <li>Token过期时间：AccessToken 24小时，RefreshToken 7天</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see SecurityConstants
  */
 public final class TokenConstants {

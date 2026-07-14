@@ -26,9 +26,9 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>返回存储类型与响应耗时</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Slf4j
 @Configuration

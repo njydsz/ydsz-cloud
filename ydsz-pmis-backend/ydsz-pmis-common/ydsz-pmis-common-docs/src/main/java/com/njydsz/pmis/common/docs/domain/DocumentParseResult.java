@@ -10,9 +10,9 @@ import lombok.Data;
  * <p>
  * 封装解析操作的完整输出，包括文档内容、解析耗时和解析状态。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 @Data

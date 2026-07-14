@@ -40,9 +40,8 @@ import net.sf.jsqlparser.expression.StringValue;
  * <p>该处理器依赖 {@link AuthInfoUtils} 获取当前用户上下文，
  * 需要确保请求链路中已正确设置用户认证信息。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see CreatedByHandler 创建人处理器
  * @see FieldFillConfiguration 字段填充配置

@@ -21,8 +21,8 @@ import java.util.concurrent.TimeUnit;
  * }
  * }</pre>
  *
- * @author Marvin Lee
- * @version 4.1.0
+ * @author ydsz-pmis-team
+ * 
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

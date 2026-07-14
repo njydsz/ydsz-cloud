@@ -54,9 +54,8 @@ import com.njydsz.pmis.common.util.url.UrlPathUtils;
  * <p><b>性能影响：</b>每次请求都会执行参数遍历和字符串替换，对高 QPS 接口需评估
  * 性能开销。JSON Body 在内存中缓存（10MB 上限），不应作为大文件上传接口的兜底。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see XssHttpServletRequestWrapper
  */

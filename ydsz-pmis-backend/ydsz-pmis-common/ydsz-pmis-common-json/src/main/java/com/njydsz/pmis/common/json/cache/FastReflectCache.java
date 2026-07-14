@@ -9,16 +9,16 @@ import java.lang.reflect.Modifier;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 高性能反射缓存（替。?ASM 字节码生成）
+ * 高性能反射缓存（替。ASM 字节码生成）
  * 
- * <p>预计。?MethodHandle/Constructor，消除运行时反射查找开销</p>
+ * <p>预计。MethodHandle/Constructor，消除运行时反射查找开销</p>
  * 
- * <p><b>性能优势。?/b></p>
+ * <p><b>性能优势：</b></p>
  * <ul>
- *   <li>MethodHandle 缓存，避免重复查找（~1-2ns vs 反射 ~50-100ns。?/li>
+ *   <li>MethodHandle 缓存，避免重复查找（~1-2ns vs 反射 ~50-100ns。</li>
  *   <li>构造函数缓存，快速实例化对象</li>
  *   <li>Getter/Setter 预编译，JIT 内联优化</li>
- *   <li>。?ASM 字节码生成更稳定，易于维。?/li>
+ *   <li>。ASM 字节码生成更稳定，易于维。</li>
  * </ul>
  * 
  * @author YdszJson Team
@@ -29,7 +29,7 @@ public final class FastReflectCache {
     private static final ConcurrentHashMap<Class<?>, BeanCache<?>> CACHE = new ConcurrentHashMap<>(2048);
 
     /**
-     * 获取或创。?Bean 缓存
+     * 获取或创。Bean 缓存
      */
     
     public static <T> BeanCache<T> getOrCreate(Class<T> beanType) {
@@ -46,13 +46,13 @@ public final class FastReflectCache {
     }
 
     /**
-     * Bean 缓存（预计算所。?MethodHandle。?
+     * Bean 缓存（预计算所。MethodHandle。
      */
     public static final class BeanCache<T> {
         /** Bean 类型 */
         public final Class<T> beanType;
         
-        /** 默认构造函。?*/
+        /** 默认构造函。*/
         public final Constructor<T> defaultConstructor;
         
         /** 字段缓存数组 */
@@ -61,13 +61,13 @@ public final class FastReflectCache {
         /** 字段名哈希数组（用于快速匹配） */
         public final int[] fieldNameHashes;
         
-        /** 字段名数。?*/
+        /** 字段名数。*/
         public final String[] fieldNames;
 
         public BeanCache(Class<T> beanType) {
             this.beanType = beanType;
             
-            // 缓存默认构造函。?
+            // 缓存默认构造函。
             try {
                 this.defaultConstructor = beanType.getDeclaredConstructor();
                 this.defaultConstructor.setAccessible(true);
@@ -75,7 +75,7 @@ public final class FastReflectCache {
                 throw new RuntimeException("No default constructor: " + beanType.getName(), e);
             }
             
-            // 预计算字段信。?
+            // 预计算字段信。
             Field[] declaredFields = beanType.getDeclaredFields();
             int count = 0;
             for (Field f : declaredFields) {
@@ -121,10 +121,10 @@ public final class FastReflectCache {
     }
 
     /**
-     * 字段缓存（预计算 Getter/Setter。?
+     * 字段缓存（预计算 Getter/Setter。
      */
     public static final class FieldCache {
-        /** 字段。?*/
+        /** 字段。*/
         public final String name;
         
         /** 字段类型 */
@@ -175,7 +175,7 @@ public final class FastReflectCache {
         }
 
         /**
-         * 获取字段。?
+         * 获取字段。
          */
         public Object getValue(Object obj) {
             if (getter == null) return null;
@@ -187,7 +187,7 @@ public final class FastReflectCache {
         }
 
         /**
-         * 设置字段。?
+         * 设置字段。
          */
         public void setValue(Object obj, Object value) {
             if (setter == null) return;
@@ -199,7 +199,7 @@ public final class FastReflectCache {
         }
 
         /**
-         * 设置 int 字段。?
+         * 设置 int 字段。
          */
         public void setInt(Object obj, int value) {
             if (setter == null) return;
@@ -211,7 +211,7 @@ public final class FastReflectCache {
         }
 
         /**
-         * 设置 long 字段。?
+         * 设置 long 字段。
          */
         public void setLong(Object obj, long value) {
             if (setter == null) return;
@@ -223,7 +223,7 @@ public final class FastReflectCache {
         }
 
         /**
-         * 设置 double 字段。?
+         * 设置 double 字段。
          */
         public void setDouble(Object obj, double value) {
             if (setter == null) return;
@@ -235,7 +235,7 @@ public final class FastReflectCache {
         }
 
         /**
-         * 设置 boolean 字段。?
+         * 设置 boolean 字段。
          */
         public void setBoolean(Object obj, boolean value) {
             if (setter == null) return;

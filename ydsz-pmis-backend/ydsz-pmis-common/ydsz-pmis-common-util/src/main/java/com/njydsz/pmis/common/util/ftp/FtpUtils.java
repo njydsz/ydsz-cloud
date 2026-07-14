@@ -11,9 +11,9 @@ package com.njydsz.pmis.common.util.ftp;
  * FtpUtils.uploadFile("192.168.1.1", 21, "admin", "password", "/remote/path/file.txt", localFile);
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 
 import java.io.*;

@@ -51,9 +51,8 @@ import com.njydsz.pmis.common.safe.config.SecurityHeaderProperties;
  *
  * <p><b>线程安全性：</b>本配置类为无状态配置类，注册的 Filter / Interceptor 均为线程安全实现。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @AutoConfiguration

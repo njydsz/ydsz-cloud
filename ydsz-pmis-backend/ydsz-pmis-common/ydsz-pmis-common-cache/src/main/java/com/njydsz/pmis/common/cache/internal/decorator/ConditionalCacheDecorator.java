@@ -37,8 +37,8 @@ import com.njydsz.pmis.common.cache.support.AsyncFunction;
  *
  * @param <K> 键类型
  * @param <V> 值类型
- * @author Marvin Lee
- * @version 4.1.0
+ * @author ydsz-pmis-team
+ * 
  */
 public class ConditionalCacheDecorator<K, V> implements Cache<K, V> {
 

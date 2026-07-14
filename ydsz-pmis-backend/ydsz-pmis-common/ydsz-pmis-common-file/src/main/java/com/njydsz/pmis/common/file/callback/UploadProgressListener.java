@@ -4,9 +4,9 @@ package com.njydsz.pmis.common.file.callback;
  * 文件上传进度回调接口
  * <p>监听上传过程中的关键节点，使业务层能够获取实时进度（用于进度条、弱网重试等场景）。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public interface UploadProgressListener {
 

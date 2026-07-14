@@ -40,9 +40,9 @@ import com.njydsz.pmis.common.safe.xss.EscapeUtils;
  * 当 {@code ydsz.safe.xss.mode=converter} 时，此转换器会替换默认的 JSON 转换器，
  * 在反序列化阶段完成 XSS 过滤，与 Filter 模式和 Advice 模式互斥。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 4.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see MappingJackson2HttpMessageConverter
  * @see EscapeUtils
  */

@@ -35,9 +35,9 @@ import com.njydsz.pmis.common.util.url.UrlPathUtils;
  * 本过滤器为 base 模块的兜底实现，仅在未引入 safe/web/app 模块时生效。
  * 当项目中存在 web/app 模块时，安全响应头由 safe 模块的 {@code SecurityHeaderFilter} 统一管理。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.5.0
  */
 public class SecurityHeadersFilter extends OncePerRequestFilter {

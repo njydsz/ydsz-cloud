@@ -41,8 +41,8 @@ import com.njydsz.pmis.common.cache.builder.CacheType;
  *         expire-after-write: 0
  * </pre>
  *
- * @author Marvin Lee
- * @version 4.0.0
+ * @author ydsz-pmis-team
+ * 
  */
 @ConfigurationProperties(prefix = "ydsz.cache")
 public class YdszCacheProperties {

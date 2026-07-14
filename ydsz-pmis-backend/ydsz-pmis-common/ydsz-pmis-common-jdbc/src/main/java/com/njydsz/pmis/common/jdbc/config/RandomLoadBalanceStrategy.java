@@ -8,9 +8,8 @@ import java.util.concurrent.ThreadLocalRandom;
  *
  * <p>从候选从库中随机选择一个，适用于从库配置差异不大的场景。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class RandomLoadBalanceStrategy implements DataSourceLoadBalanceStrategy {

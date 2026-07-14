@@ -8,9 +8,8 @@ import java.util.List;
  * <p>定义消息轨迹的存储和查询标准操作。
  * 支持基于内存和 Redis 两种后端实现。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public interface MessageTraceRecorder {

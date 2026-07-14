@@ -67,9 +67,8 @@ import com.njydsz.pmis.common.core.enums.DataScopeType;
  * <p>行级数据权限会自动透传到 SQL 拦截层，实现自动的数据过滤。
  * 详见 {@link com.njydsz.pmis.common.jdbc.permission.DataPermissionContext}
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see DataScopeInfo
  * @see DataScopeAware

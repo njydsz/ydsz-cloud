@@ -46,9 +46,8 @@ import lombok.NoArgsConstructor;
  *   <li>priority: 消息优先级，数值越小优先级越高</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see TracerUtils
  */

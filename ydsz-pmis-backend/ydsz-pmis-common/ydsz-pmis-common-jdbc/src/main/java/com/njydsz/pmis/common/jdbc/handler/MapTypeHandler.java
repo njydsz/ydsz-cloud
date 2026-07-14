@@ -45,9 +45,8 @@ import com.njydsz.pmis.common.json.YdszJson;
  * <h2>数据库存储形式</h2>
  * <p>Map 对象会被序列化为 JSON 对象字符串，例如：{@code {"key1":"value1","key2":123}}</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see JsonTypeHandler 通用 JSON 类型处理器
  */

@@ -9,9 +9,9 @@ import java.util.concurrent.atomic.AtomicReference;
  * <p>业务方可通过 {@link #setDefault(IdGenerator)} 注入 ID 生成器。
  * 内部默认使用 {@link SnowflakeUtils} 单例。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.5.0
  */
 public final class IdGeneratorFactory {

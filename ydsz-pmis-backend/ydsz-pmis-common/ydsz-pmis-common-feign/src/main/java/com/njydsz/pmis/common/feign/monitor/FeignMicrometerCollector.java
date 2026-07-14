@@ -37,9 +37,9 @@ import io.micrometer.core.instrument.Timer;
  * collector.recordError("UserService", "POST", "500");
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class FeignMicrometerCollector {
 

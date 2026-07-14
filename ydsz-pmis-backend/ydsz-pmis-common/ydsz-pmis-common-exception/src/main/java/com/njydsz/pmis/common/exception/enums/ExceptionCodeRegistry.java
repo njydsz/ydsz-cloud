@@ -33,9 +33,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * ExceptionCode ec = ExceptionCodeRegistry.lookup("A01001");
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.0.0
  */
 public final class ExceptionCodeRegistry {

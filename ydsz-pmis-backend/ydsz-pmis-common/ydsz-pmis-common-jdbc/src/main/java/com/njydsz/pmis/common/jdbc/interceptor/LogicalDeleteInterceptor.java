@@ -86,9 +86,8 @@ import net.sf.jsqlparser.statement.update.Update;
  *   <li>不支持多表删除（DELETE t1, t2 FROM ...），遇到时会抛出异常以防止物理删除</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see OptimisticLockInterceptor 乐观锁拦截器
  * @see InnerInterceptor MyBatis-Plus 内部拦截器接口

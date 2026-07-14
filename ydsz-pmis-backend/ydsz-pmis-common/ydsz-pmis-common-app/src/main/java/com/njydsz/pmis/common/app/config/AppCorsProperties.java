@@ -12,9 +12,8 @@ import com.njydsz.pmis.common.base.config.BaseCorsProperties;
  *
  * <p><b>线程安全性：</b>由 Spring Boot 配置属性绑定机制管理，绑定完成后通常视为只读。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @ConfigurationProperties(prefix = "ydsz.app.cors")

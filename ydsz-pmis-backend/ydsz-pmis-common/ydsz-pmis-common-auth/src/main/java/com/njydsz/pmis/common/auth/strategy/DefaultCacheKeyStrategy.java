@@ -9,9 +9,9 @@ import java.util.TreeSet;
  * <p>使用 {@code tenantId:role1,role2} 格式生成缓存 Key。
  * 如果租户 ID 为空，使用 {@code __default__} 作为前缀。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class DefaultCacheKeyStrategy implements CacheKeyStrategy {
 

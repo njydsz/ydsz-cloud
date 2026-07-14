@@ -30,9 +30,8 @@ import lombok.Data;
  * NotifySendResult result = emailNotifySender.sendEmail(message);
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Data
@@ -74,9 +73,9 @@ public class EmailMessage implements Serializable {
 	/**
 	 * 邮件附件
 	 *
-	 * @author Marvin Lee
-	 * @email limw1888@126.com
-	 * @version 3.5.0
+	 * @author ydsz-pmis-team
+	 * @since 1.0.0
+	 * 
 	 * @since 1.0.0
 	 */
 	@Data
@@ -98,9 +97,9 @@ public class EmailMessage implements Serializable {
 	/**
 	 * 内联资源（用于 HTML 邮件中通过 cid: 引用）
 	 *
-	 * @author Marvin Lee
-	 * @email limw1888@126.com
-	 * @version 3.5.0
+	 * @author ydsz-pmis-team
+	 * @since 1.0.0
+	 * 
 	 * @since 1.0.0
 	 */
 	@Data

@@ -10,9 +10,8 @@ import com.njydsz.pmis.common.queue.service.IMessagePublisher;
  * <p>使用 Redis PUBLISH 命令将消息广播到指定频道。
  * 通过 {@link RedisTemplate} 复用 ydsz-pmis-common-redis 的连接。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class RedisPubSubPublisher implements IMessagePublisher {

@@ -69,9 +69,8 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>本切面：接口幂等，业务异常自动释放锁，Redis 故障降级放行</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

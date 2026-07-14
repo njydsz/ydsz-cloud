@@ -7,9 +7,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * 分片上传上下文存储接口
  * <p>支持多实例部署时分片上下文共享。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public interface MultipartContextStore {
 

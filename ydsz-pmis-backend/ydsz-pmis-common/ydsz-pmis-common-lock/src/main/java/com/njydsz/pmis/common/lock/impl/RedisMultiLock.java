@@ -36,9 +36,8 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>防止多资源操作中的部分成功/部分失败问题</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

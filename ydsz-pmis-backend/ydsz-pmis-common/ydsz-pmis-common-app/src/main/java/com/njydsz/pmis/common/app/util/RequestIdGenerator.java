@@ -11,9 +11,8 @@ import com.njydsz.pmis.common.util.id.SnowflakeUtils;
  * <p><b>线程安全性：</b>仅包含静态方法，无共享状态，线程安全；
  * 底层 {@link SnowflakeUtils} 在分布式部署中应正确配置 workerId 以避免 ID 冲突。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public final class RequestIdGenerator {

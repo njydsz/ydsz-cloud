@@ -16,9 +16,8 @@ import com.njydsz.pmis.common.core.response.PageResponse;
  * <p>内置实现见 {@link com.njydsz.pmis.common.audit.core.DefaultAuditQueryService}，
  * 支持分表场景下的 UNION ALL 合并查询。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public interface AuditQueryService {

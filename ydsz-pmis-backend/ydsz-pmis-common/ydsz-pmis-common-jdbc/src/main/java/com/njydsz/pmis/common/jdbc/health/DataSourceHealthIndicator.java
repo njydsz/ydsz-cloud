@@ -22,9 +22,8 @@ import com.zaxxer.hikari.HikariDataSource;
  *   <li>最小空闲连接数（min）</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Component

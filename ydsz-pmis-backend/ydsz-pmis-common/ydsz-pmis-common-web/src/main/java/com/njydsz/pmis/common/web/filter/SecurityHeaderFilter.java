@@ -17,9 +17,9 @@ import com.njydsz.pmis.common.safe.filter.BaseSecurityHeaderFilter;
  *   <li>X-Frame-Options: SAMEORIGIN</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see BaseSecurityHeaderFilter
  * @see SecurityHeaderProperties
  */

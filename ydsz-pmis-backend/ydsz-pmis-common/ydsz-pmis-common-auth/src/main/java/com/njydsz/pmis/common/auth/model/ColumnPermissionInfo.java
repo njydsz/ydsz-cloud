@@ -14,9 +14,9 @@ import java.util.*;
  *   <li>{@link ColumnPermissionInfo}：按字段组织，关注的是"某个字段是否可读/可写"</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see ColumnPermission
  * @see ColumnScopeInfo
  */

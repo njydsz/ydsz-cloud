@@ -16,9 +16,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>拦截 {@link IMessagePublisher#publish(QueueMessage)} 方法，
  * 自动注入 traceId 到消息头，记录消息发送时间戳和轨迹。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

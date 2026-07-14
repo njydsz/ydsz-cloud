@@ -54,9 +54,8 @@ import java.lang.annotation.*;
  *   <li>示例：{@code sys:user:*} 可匹配 {@code sys:user:add}、{@code sys:user:edit} 等</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see AuthApiPermission
  * @see AuthRowPermission
@@ -116,9 +115,9 @@ public @interface AuthMenuPermission {
     /**
      * 权限类型枚举。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     enum PermissionType {
         /**
@@ -137,9 +136,9 @@ public @interface AuthMenuPermission {
     /**
      * 多权限码校验模式枚举。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     enum Mode {
         /**

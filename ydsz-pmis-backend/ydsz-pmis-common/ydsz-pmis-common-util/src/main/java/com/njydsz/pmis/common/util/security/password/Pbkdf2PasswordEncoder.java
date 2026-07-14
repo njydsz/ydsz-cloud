@@ -16,9 +16,9 @@ import javax.crypto.spec.PBEKeySpec;
  *
  * <p><b>编码格式：</b>{@code pbkdf2_sha256$<iterations>$<base64-salt>$<base64-hash>}</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.5.0
  */
 public class Pbkdf2PasswordEncoder implements PasswordEncoder {

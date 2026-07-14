@@ -37,7 +37,7 @@ import com.njydsz.pmis.common.event.repository.OutboxRepository;
  * }
  * }</pre>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public class OutboxService {

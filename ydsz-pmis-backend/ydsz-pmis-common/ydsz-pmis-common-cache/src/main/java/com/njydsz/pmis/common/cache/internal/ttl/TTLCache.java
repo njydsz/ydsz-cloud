@@ -60,9 +60,9 @@ import com.njydsz.pmis.common.cache.support.TTLMode;
  *
  * @param <K> 键类型
  * @param <V> 值类型
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class TTLCache<K, V> extends AbstractCache<K, V> implements AutoCloseable {
 

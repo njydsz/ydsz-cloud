@@ -57,9 +57,8 @@ import lombok.RequiredArgsConstructor;
  * <p>优先级与覆盖规则：所有 Bean 均标注 {@code @ConditionalOnMissingBean}，
  * 业务方可提供同名 Bean 进行覆盖。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @AutoConfiguration

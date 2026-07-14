@@ -20,9 +20,9 @@ import com.njydsz.pmis.common.docs.enums.DocumentFormat;
  *   <li>解析失败时应抛出 {@link com.njydsz.pmis.common.docs.exception.DocumentException}</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 public interface DocumentParser {

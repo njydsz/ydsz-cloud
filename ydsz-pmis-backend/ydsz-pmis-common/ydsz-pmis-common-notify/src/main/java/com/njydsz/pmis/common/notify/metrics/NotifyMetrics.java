@@ -25,9 +25,8 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
  *
  * <p>当 micrometer-core 依赖不存在时，自动降级为 no-op（不影响功能）。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class NotifyMetrics {

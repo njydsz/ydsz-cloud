@@ -21,9 +21,8 @@ import lombok.Setter;
  * <p>绑定 application.yml 中 ydsz.notify 前缀的配置项，
  * 支持邮件、短信、企业微信、钉钉、飞书、站内信等多种通知渠道的配置。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Data

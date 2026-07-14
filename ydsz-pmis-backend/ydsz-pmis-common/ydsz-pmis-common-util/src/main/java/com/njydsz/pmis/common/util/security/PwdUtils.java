@@ -7,9 +7,9 @@ import java.security.SecureRandom;
 import com.njydsz.pmis.common.util.bytes.HexUtils;
 /**
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @desc PwdUtils - 用户密码安全工具类（增强安全性，纯 JDK 实现）
  * 支持多种密码加密方式：MD5、SHA-256、PBKDF2（推荐）
  */

@@ -20,7 +20,7 @@ import com.njydsz.pmis.common.event.repository.OutboxRepository;
  *   <li>PENDING 消息数超过阈值时标记为 DEGRADED（自定义 Status）</li>
  * </ul>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Component

@@ -10,9 +10,9 @@ import lombok.Data;
  * <p>
  * 文档解析后的完整结果，包含文本内容、结构化分节、表格、图片等。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 @Data

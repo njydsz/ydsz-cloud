@@ -29,9 +29,8 @@ import org.springframework.util.StringUtils;
  * String html = registry.renderHtml("project-approval", Map.of("projectName", "PMIS", "applicant", "张三"));
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class HtmlTemplateRegistry {

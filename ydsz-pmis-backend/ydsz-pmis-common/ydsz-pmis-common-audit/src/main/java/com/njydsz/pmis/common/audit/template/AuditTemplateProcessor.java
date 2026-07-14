@@ -28,9 +28,8 @@ import org.springframework.expression.spel.support.SimpleEvaluationContext;
  *   <li>SpEL 解析失败时降级返回原模板字符串，不影响审计主流程</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class AuditTemplateProcessor {

@@ -45,9 +45,9 @@ import com.njydsz.pmis.common.util.url.UrlPathUtils;
  * 使用 Redis ZSet 实现滑动窗口算法，将每个请求的时间戳作为 score 存入 ZSet，
  * 通过统计窗口内的请求数判断是否超限。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Order(Ordered.HIGHEST_PRECEDENCE + 1)
 public class RateLimitFilter extends OncePerRequestFilter {

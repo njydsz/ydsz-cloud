@@ -27,9 +27,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * <p><b>激活条件：</b>需在 {@code AutoConfiguration.imports} 中注册，
  * 或在业务系统中通过 {@code @Component} 引入。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.0.0
  */
 public class TraceContextFilter extends OncePerRequestFilter {

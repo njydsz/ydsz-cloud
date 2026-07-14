@@ -12,9 +12,8 @@ import com.njydsz.pmis.common.base.config.BaseTimezoneConfiguration;
  *
  * <p><b>线程安全性：</b>{@code TimeZone.setDefault} 属于全局副作用，本类应仅在应用启动时执行一次。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see BaseTimezoneConfiguration
  */

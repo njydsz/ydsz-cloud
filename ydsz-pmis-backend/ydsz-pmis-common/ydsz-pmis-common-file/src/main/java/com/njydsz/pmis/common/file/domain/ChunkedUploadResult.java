@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
  *
  * <p>业务层需要保存 uploadId，并在后续 uploadChunk / completeChunkedUpload 时传入。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Data
 @NoArgsConstructor

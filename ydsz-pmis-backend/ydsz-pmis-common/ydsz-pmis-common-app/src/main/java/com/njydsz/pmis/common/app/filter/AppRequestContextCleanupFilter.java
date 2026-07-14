@@ -11,9 +11,8 @@ import com.njydsz.pmis.common.base.filter.RequestContextCleanupFilter;
  *
  * <p><b>线程安全性：</b>依赖于基类实现，本身无状态。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class AppRequestContextCleanupFilter extends RequestContextCleanupFilter {

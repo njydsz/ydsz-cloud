@@ -23,9 +23,9 @@ package com.njydsz.pmis.common.cache.stats;
  *   <li>averageLoadPenalty：平均加载耗时 = 总加载时间 / 加载成功次数
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class CacheStats {
 

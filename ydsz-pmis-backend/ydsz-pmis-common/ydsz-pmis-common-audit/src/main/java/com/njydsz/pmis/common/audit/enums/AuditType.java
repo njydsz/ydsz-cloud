@@ -13,9 +13,8 @@ package com.njydsz.pmis.common.audit.enums;
  * <p><b>编码规范：</b>1-99 为内置通用类型，99 为自定义兜底。
  * 业务方可定义 100+ 的扩展类型并存入同一张表（不建议）或单独的物理表。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public enum AuditType {

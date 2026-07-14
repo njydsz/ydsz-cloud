@@ -49,9 +49,9 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowT
  *       wait-duration-in-open-state: 60
  * </pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see FeignCircuitBreaker
  * @see FeignCircuitBreakerStrategy
  */

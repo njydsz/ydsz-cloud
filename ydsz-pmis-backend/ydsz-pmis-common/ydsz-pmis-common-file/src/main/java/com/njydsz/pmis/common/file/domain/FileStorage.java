@@ -41,9 +41,8 @@ import lombok.Data;
  * <p><b>安全约束：</b>{@link #uuidName} 应基于 UUID/雪花 ID 重新生成，
  * 不使用用户输入的原始文件名作为存储 Key，避免路径遍历攻击。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Data

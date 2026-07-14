@@ -34,9 +34,9 @@ import lombok.extern.slf4j.Slf4j;
  * FileUtils - 增强版文件操作工具类
  * 参考：Apache Commons IO, Google Guava Files, Spring FileSystemResource
  * 
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @desc 支持高性能文件读写、文件安全检测、文件哈希计算、批量操作等
  */
 @Slf4j

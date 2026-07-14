@@ -15,9 +15,8 @@ import com.njydsz.pmis.common.audit.domain.AuditLog;
  * 如需异步落盘，可通过 {@code @Async("auditAsyncExecutor")} 或
  * 由 {@link com.njydsz.pmis.common.audit.core.AsyncAuditRecorder} 内部异步化处理。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class AuditEvent extends ApplicationEvent {

@@ -26,7 +26,7 @@ import lombok.ToString;
  *   <li>{@code nextRetryAt} - 下次重试时间（指数退避）</li>
  * </ul>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Getter

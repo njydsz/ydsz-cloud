@@ -12,7 +12,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 /**
  * 线程池注册中心自动配置
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 3.5.0
  */
 @AutoConfiguration

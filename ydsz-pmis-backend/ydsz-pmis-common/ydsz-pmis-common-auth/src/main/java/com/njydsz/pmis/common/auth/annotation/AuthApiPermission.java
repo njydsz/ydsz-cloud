@@ -38,9 +38,8 @@ import java.lang.annotation.*;
  *   <li>示例：{@code sys:user:*} 可匹配 {@code sys:user:add}、{@code sys:user:delete} 等</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see AuthMenuPermission
  * @see AuthRowPermission
@@ -88,9 +87,9 @@ public @interface AuthApiPermission {
     /**
      * 多权限码校验模式枚举。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     enum Mode {
         /**

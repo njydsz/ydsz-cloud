@@ -5,9 +5,9 @@ package com.njydsz.pmis.common.docs.enums;
  * <p>
  * 定义系统支持的所有文档格式类型，用于解析器路由和格式检测。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 public enum DocumentFormat {

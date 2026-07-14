@@ -47,9 +47,9 @@ import feign.codec.ErrorDecoder;
  *   {@code ydsz.feign.error.include-body=false} - 不包含响应体</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see BadRequestException
  * @see NotFoundException
  * @see OpenFeignException

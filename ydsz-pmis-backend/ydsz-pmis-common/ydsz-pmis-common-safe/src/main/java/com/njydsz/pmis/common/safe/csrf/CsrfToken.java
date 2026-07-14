@@ -7,9 +7,9 @@ import java.time.Instant;
  *
  * <p>存储 CSRF 令牌的相关信息。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class CsrfToken {
 

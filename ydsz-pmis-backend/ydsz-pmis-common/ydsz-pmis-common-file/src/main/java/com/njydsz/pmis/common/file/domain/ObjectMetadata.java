@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
  * 对象元信息
  * <p>封装文件对象在存储层的元数据，包括大小、类型、ETag、最后修改时间等。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Data
 @NoArgsConstructor

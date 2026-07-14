@@ -34,9 +34,8 @@ import com.njydsz.pmis.common.file.domain.UploadCheckpoint;
  * <p><b>前端直传 Policy：</b>{@link #generateUploadPolicy} 生成临时上传凭证，
  * 前端可绕过服务端直接上传至云存储，减轻服务端带宽压力。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public interface FileUploader {

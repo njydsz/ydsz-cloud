@@ -43,9 +43,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p>通过 Nginx/网关将 domain 配置的访问域名映射到本地目录，实现类似对象存储的公开访问。
  * 分片上传使用本地文件系统暂存 + 按序合并策略，失败后自动清理临时分片目录。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Slf4j
 public class LocalStorage extends AbstractFileStorage {

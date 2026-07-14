@@ -8,9 +8,9 @@ import lombok.Data;
  * <p>
  * 表示文档中的一个逻辑段落，如标题段落、正文段落、列表等。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 @Data

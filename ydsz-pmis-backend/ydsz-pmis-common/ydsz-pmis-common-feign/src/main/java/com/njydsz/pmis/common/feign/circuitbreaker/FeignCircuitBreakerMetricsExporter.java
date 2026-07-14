@@ -36,9 +36,9 @@ import io.micrometer.core.instrument.MeterRegistry;
  * <p><b>使用方式：</b></p>
  * 当 {@link FeignCircuitBreakerStrategy} 和 {@link MeterRegistry} 同时存在时自动启用。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @ConditionalOnClass({MeterRegistry.class, FeignCircuitBreakerStrategy.class})
 @ConditionalOnBean({FeignCircuitBreakerStrategy.class, MeterRegistry.class})

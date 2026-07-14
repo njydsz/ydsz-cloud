@@ -15,9 +15,9 @@ import com.njydsz.pmis.common.exception.observability.TraceContextFilter;
  * <p>通过 {@code ydsz.exception.trace-enabled=true}（默认启用）控制是否注册。
  * 过滤器顺序设为最高优先级，确保 traceId 在所有业务过滤器之前注入。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.0.0
  */
 @Configuration(proxyBeanMethods = false)

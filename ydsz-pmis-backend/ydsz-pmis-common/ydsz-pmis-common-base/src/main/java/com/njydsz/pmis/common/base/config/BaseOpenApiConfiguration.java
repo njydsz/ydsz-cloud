@@ -33,9 +33,9 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
  *
  * <p><b>激活条件：</b>需要通过配置 {@code ydsz.doc.enabled=true} 显式开启。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.5.0
  */
 public abstract class BaseOpenApiConfiguration {

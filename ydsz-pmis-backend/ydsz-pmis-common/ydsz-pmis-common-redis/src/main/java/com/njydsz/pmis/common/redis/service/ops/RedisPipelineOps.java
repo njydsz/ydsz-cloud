@@ -9,9 +9,8 @@ package com.njydsz.pmis.common.redis.service.ops;
  * <p><b>注意：</b>所有操作都在 Pipeline 上下文中执行，不会立即返回结果。
  * 结果将在 Pipeline 执行完毕后统一返回。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public interface RedisPipelineOps {

@@ -30,7 +30,7 @@ import java.util.concurrent.Callable;
  * }
  * }</pre>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 3.5.0
  */
 public interface DistributedTransactionManager {

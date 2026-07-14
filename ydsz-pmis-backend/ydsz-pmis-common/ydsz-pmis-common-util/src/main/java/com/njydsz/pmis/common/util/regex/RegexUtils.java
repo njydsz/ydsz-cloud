@@ -10,9 +10,9 @@ import java.util.regex.Pattern;
  * RegexUtils 正则表达式工具类 - 高性能预编译版
  * 参考阿里巴巴、Apache Commons、Hutool 等大厂工具类实现
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class RegexUtils {
 

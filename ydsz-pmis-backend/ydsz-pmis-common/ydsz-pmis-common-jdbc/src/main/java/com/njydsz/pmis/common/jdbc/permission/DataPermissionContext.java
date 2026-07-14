@@ -7,9 +7,9 @@ package com.njydsz.pmis.common.jdbc.permission;
  * 公司ID列表、部门ID列表、项目ID列表、区域ID列表等，
  * 用于 SQL 拦截器自动拼接数据权限过滤条件。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 
 import java.util.Collections;

@@ -13,9 +13,9 @@ import org.springframework.validation.annotation.Validated;
  *
  * <p>配置前缀 {@code ydsz.safe.ratelimit}，支持按 IP/用户/全局维度进行限流。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Validated
 @ConfigurationProperties(prefix = "ydsz.safe.ratelimit")

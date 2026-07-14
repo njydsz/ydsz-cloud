@@ -12,9 +12,8 @@ import io.micrometer.core.instrument.MeterRegistry;
  * <p>当 classpath 中存在 Micrometer 时，自动创建 Redis 指标收集器。
  * 指标采集是可选的，仅在实际使用时产生开销。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @AutoConfiguration

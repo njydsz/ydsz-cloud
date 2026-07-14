@@ -59,9 +59,9 @@ import com.njydsz.pmis.common.json.YdszJson;
  *   <li>CALLER_RUNS：调用者线程阻塞等待队列有空位（带超时）</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
 

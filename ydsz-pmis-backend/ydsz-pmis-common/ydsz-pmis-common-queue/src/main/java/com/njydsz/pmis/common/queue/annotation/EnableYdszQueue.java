@@ -14,9 +14,8 @@ import com.njydsz.pmis.common.queue.config.QueueConfiguration;
  * 启用ydsz消息队列模块
  * <p>在Spring Boot应用主类上添加此注解，启用多消息中间件适配能力
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see QueueConfiguration
  */

@@ -29,9 +29,8 @@ import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
  * mp.addInnerInterceptor(new OrderedInnerInterceptor(new PaginationInnerInterceptor(), Ordered.LOWEST_PRECEDENCE - 100));
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see Ordered
  * @see InnerInterceptor

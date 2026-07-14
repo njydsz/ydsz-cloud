@@ -21,9 +21,9 @@ import java.util.concurrent.ThreadLocalRandom;
  * 4. 支持 Base64 编码压缩
  * </p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public final class UUIDUtils {
 

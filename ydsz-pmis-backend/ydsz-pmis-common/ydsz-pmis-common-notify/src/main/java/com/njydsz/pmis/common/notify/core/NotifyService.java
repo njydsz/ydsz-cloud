@@ -8,9 +8,8 @@ import com.njydsz.pmis.common.notify.enums.NotifyChannel;
  * 统一消息通知服务接口
  * <p>支持邮件、短信、站内信、企业微信、钉钉、飞书等全渠道消息发送</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public interface NotifyService {

@@ -49,9 +49,9 @@ import lombok.Data;
  * @see RequestHolder
  * @see AuthInfoUtils
   *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Data
 public abstract class YdszAuthInfo implements AuthInfo {
@@ -62,9 +62,9 @@ public abstract class YdszAuthInfo implements AuthInfo {
      * <p>格式示例：{@code zh-CN}、{@code en-US}。
      * 用于前端国际化展示与后端返回数据格式适配。
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     private String userLanguage;
 
@@ -73,9 +73,9 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * <p>对应平台用户体系中的主键 ID，非 Token。
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     private String uniqueId;
 
@@ -84,9 +84,9 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * <p>每次登录后由认证服务签发，用于下游服务实时验证。
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     private String accessToken;
 
@@ -97,9 +97,9 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * @see DataScopeType
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     private DataScopeType dataScope;
 
@@ -109,9 +109,9 @@ public abstract class YdszAuthInfo implements AuthInfo {
      * <p>多值时以 CSV 格式存储（{@code id1,id2,id3}）。
      * 用于 SQL 拦截器自动改写 WHERE 条件。
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     private Set<String> hasPermissionCompanyIds;
 
@@ -121,9 +121,9 @@ public abstract class YdszAuthInfo implements AuthInfo {
      * <p>多值时以 CSV 格式存储。
      * 与 companyIds 共同构成组织维度权限过滤条件。
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     private Set<String> hasPermissionDeptIds;
 
@@ -133,9 +133,9 @@ public abstract class YdszAuthInfo implements AuthInfo {
      * <p>多值时以 CSV 格式存储。
      * 项目级数据隔离场景使用。
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     private Set<String> hasPermissionProjectIds;
 
@@ -145,9 +145,9 @@ public abstract class YdszAuthInfo implements AuthInfo {
      * <p>多值时以 CSV 格式存储。
      * 区域级数据隔离场景使用。
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     private Set<String> hasPermissionRegionIds;
 
@@ -156,9 +156,9 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * <p>用于多租户场景下的数据隔离。
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     private String tenantId;
 
@@ -167,9 +167,9 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * <p>用于设备追踪、埋点分析等场景。
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     private String distinctId;
 
@@ -178,9 +178,9 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * <p>记录发起请求的来源系统或模块。
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     private String requestSource;
 
@@ -195,9 +195,9 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * @see <a href="https://confluence.njydsz.pmis.com.cn/pages/viewpage.action?pageId=123456">列权限设计文档</a>
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     private Map<String, Set<String>> visibleColumnsByTable = Collections.emptyMap();
 
@@ -207,9 +207,9 @@ public abstract class YdszAuthInfo implements AuthInfo {
      * <p>格式同 {@link #visibleColumnsByTable}。
      * 仅控制列是否可编辑，与可见性独立。
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     private Map<String, Set<String>> editableColumnsByTable = Collections.emptyMap();
 
@@ -218,9 +218,9 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * @return {@link IdentityType#COMPANY}
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     @Override
     public IdentityType getIdentityTypeEnum() {
@@ -238,9 +238,9 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * @return 服务类型码，非空字符串
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     @Override
     public abstract String getServiceTypeCode();
@@ -250,9 +250,9 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * @return 表名→列集合的映射，若无规则返回空 Map
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     @Override
     public Map<String, Set<String>> getVisibleColumnsByTable() {
@@ -264,9 +264,9 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * @return 表名→列集合的映射，若无规则返回空 Map
       *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
     @Override
     public Map<String, Set<String>> getEditableColumnsByTable() {

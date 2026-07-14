@@ -22,9 +22,9 @@ import org.springframework.stereotype.Component;
  *   <li>业务代码调用 {@link BaseResponse#success()} 等方法时自动应用国际化</li>
  * </ol>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.0.0
  * @see BaseResponse.MessageResolver
  * @see BaseResponse#setResolver(BaseResponse.MessageResolver)

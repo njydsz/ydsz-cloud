@@ -6,9 +6,8 @@ import java.util.List;
  * 死信队列服务接口
  * <p>处理消费失败的消息，提供重试和转储能力
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public interface DeadLetterQueueService {

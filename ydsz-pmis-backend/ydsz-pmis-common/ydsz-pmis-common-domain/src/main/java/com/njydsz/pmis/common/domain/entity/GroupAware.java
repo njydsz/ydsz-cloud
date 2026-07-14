@@ -5,14 +5,14 @@ import java.io.Serializable;
 /**
  * 组织维度标记接口
  *
- * <p>标识该实体支持组织维度数据隔离。业务实体可通过实现此接口替代继。?{@link GroupEntity}。?
+ * <p>标识该实体支持组织维度数据隔离。业务实体可通过实现此接口替代继与 {@link GroupEntity}。
  *
- * <p>接口定义了公司ID和部门ID。?getter/setter，与 {@link GroupEntity} 的字段对齐；
- * {@link #getGroupId()} / {@link #setGroupId(Long)} 作为便捷方法，默认返。?/ 设置 companyId。?
+ * <p>接口定义了公司ID和部门ID。getter/setter，与 {@link GroupEntity} 的字段对齐；
+ * {@link #getGroupId()} / {@link #setGroupId(Long)} 作为便捷方法，默认返。/ 设置 companyId。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public interface GroupAware extends Serializable {
 
@@ -37,18 +37,18 @@ public interface GroupAware extends Serializable {
     void setDeptId(Long deptId);
 
     /**
-     * 便捷方法：获取组ID，默认返。?companyId
+     * 便捷方法：获取组ID，默认返。companyId
      *
-     * <p>实现类可按需覆写此方法以返回组合值。?
+     * <p>实现类可按需覆写此方法以返回组合值。
      */
     default Long getGroupId() {
         return getCompanyId();
     }
 
     /**
-     * 便捷方法：设置组ID，默认设。?companyId
+     * 便捷方法：设置组ID，默认设。companyId
      *
-     * <p>实现类可按需覆写此方法。?
+     * <p>实现类可按需覆写此方法。
      */
     default void setGroupId(Long groupId) {
         setCompanyId(groupId);

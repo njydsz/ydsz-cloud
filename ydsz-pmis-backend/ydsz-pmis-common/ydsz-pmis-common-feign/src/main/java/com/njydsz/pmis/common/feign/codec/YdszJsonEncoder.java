@@ -17,9 +17,9 @@ import feign.codec.Encoder;
  *
  * <p>使用 {@link YdszJson} 作为 JSON 序列化实现，提供统一的 JSON 编码能力。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class YdszJsonEncoder implements Encoder {
 

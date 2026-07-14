@@ -19,9 +19,8 @@ import com.njydsz.pmis.common.notify.enums.NotifyType;
  * <p>管理用户通知偏好的存储、查询和缓存。
  * Redis 持久化 + 本地缓存双层架构。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class NotifyPreferenceManager {

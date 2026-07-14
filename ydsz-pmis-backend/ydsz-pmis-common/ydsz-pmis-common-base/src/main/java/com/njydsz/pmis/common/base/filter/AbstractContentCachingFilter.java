@@ -21,9 +21,9 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
  *
  * <p>Web 端和 App 端继承此基类即可，无需重复实现。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public abstract class AbstractContentCachingFilter extends OncePerRequestFilter {
 

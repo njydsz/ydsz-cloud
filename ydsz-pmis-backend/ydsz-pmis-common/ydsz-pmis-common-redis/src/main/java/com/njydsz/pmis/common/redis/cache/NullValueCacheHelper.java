@@ -24,9 +24,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>与 {@link com.njydsz.pmis.common.redis.config.RedisProperties#getKeyPrefix()} 配合使用：
  * 如果配置了 keyPrefix，所有缓存的 key 都会自动加上前缀。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

@@ -22,9 +22,9 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>仅在 spring-jdbc 存在时注册，处理 DataAccessException 及其子类异常。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.0.0
  */
 @Slf4j

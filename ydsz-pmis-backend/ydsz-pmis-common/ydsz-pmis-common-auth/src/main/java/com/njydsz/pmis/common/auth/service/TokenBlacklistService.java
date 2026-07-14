@@ -23,9 +23,9 @@ import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
  * <p><b>优化：</b>使用 SHA-256 摘要后的 token 作为 Redis key，避免完整 JWT（500+ 字节）
  * 作为 key 浪费内存且可能超过 key 长度限制。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Service
 @ConditionalOnBean(RedisStringOps.class)

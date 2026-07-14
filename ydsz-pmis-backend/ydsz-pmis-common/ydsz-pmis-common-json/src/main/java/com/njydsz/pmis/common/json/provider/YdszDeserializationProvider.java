@@ -13,27 +13,27 @@ import com.njydsz.pmis.common.json.exception.JsonDeserializationException;
 import com.njydsz.pmis.common.json.parser.YdszJsonParser;
 import com.njydsz.pmis.common.json.reader.JSONReader;
 /**
- * YdszJson 反序列化提供者（零拷贝优化版。?
+ * YdszJson 反序列化提供者（零拷贝优化版。
  *
  * <p>架构层级：YdszJson => Engine => Provider => Parser</p>
  *
- * <p><b>核心优化。?/b></p>
+ * <p><b>核心优化：</b></p>
  * <ul>
- *   <li>零拷贝反序列。?- 直接解析 JSON 到对象字段，消除 Map 中转</li>
+ *   <li>零拷贝反序列。- 直接解析 JSON 到对象字段，消除 Map 中转</li>
  *   <li>Constructor 缓存 - 避免每次反射获取</li>
  *   <li>HashMap 字段查找 - O(1) 替代 O(n)</li>
- *   <li>快速路。?- 简单对象（。? 字段）直接内联解。?/li>
+ *   <li>快速路。- 简单对象（。 字段）直接内联解。</li>
  *   <li>YdszJsonType 支持 - 泛型类型推断</li>
  *   <li>Builder 模式支持 - 链式构建对象</li>
- *   <li>Creator 模式支持 - 自定义构造函数反序列。?/li>
- *   <li>多态类型支。?- @YdszJsonTypeInfo 自动识别子类。?/li>
+ *   <li>Creator 模式支持 - 自定义构造函数反序列。</li>
+ *   <li>多态类型支。- @YdszJsonTypeInfo 自动识别子类。</li>
  * </ul>
  *
- * <p><b>反序列化流程。?/b></p>
+ * <p><b>反序列化流程：</b></p>
  * <ol>
- *   <li>检查缓。?- 查找已编译的反序列化。?/li>
+ *   <li>检查缓。- 查找已编译的反序列化。</li>
  *   <li>选择策略 - 根据类型选择合适的反序列化方式</li>
- *   <li>执行解析 - 调用 ZeroCopyDeserializer 。?YdszJsonParser</li>
+ *   <li>执行解析 - 调用 ZeroCopyDeserializer 。YdszJsonParser</li>
  *   <li>类型转换 - 处理数字、字符串、日期等类型转换</li>
  * </ol>
  *
@@ -44,18 +44,18 @@ import com.njydsz.pmis.common.json.reader.JSONReader;
 public final class YdszDeserializationProvider {
 
     /**
-     * 反序列化策略缓存（线程安全，避免每次反序列化都重新查找策略链。?
+     * 反序列化策略缓存（线程安全，避免每次反序列化都重新查找策略链。
      *
-     * <p>缓存 Class -> DeserializationStrategy 的映射，类似于序列化端的 ASM 序列化器缓存。?
+     * <p>缓存 Class -> DeserializationStrategy 的映射，类似于序列化端的 ASM 序列化器缓存。
      * 首次反序列化某类型时，会遍历策略链（ASM -> BeanReader -> Creator -> Builder -> ZeroCopy），
-     * 找到可用策略后缓存，后续直接使用缓存策略，跳过策略选择开销。?/p>
+     * 找到可用策略后缓存，后续直接使用缓存策略，跳过策略选择开销。/p>
      */
     private static final ConcurrentHashMap<Class<?>, DeserializationStrategy> STRATEGY_CACHE =
         new ConcurrentHashMap<>(256);
 
     /** 反序列化策略枚举 */
     private enum DeserializationStrategy {
-        /** 基本类型（String/Integer/Long/Double/Float/Boolean。?*/
+        /** 基本类型（String/Integer/Long/Double/Float/Boolean。*/
         PRIMITIVE,
         /** Object 类型 */
         OBJECT,
@@ -63,7 +63,7 @@ public final class YdszDeserializationProvider {
         MAP,
         /** List 类型 */
         LIST,
-        /** Bean 类型 - 。?BeanDeserializerEngine */
+        /** Bean 类型 - 。BeanDeserializerEngine */
         BEAN
     }
 
@@ -72,7 +72,7 @@ public final class YdszDeserializationProvider {
     }
 
     /**
-     * 反序列化 JSON 字符串（零拷贝优化版。?
+     * 反序列化 JSON 字符串（零拷贝优化版。
      */
     
     public static <T> T deserialize(String json, Class<T> clazz) {
@@ -99,7 +99,7 @@ public final class YdszDeserializationProvider {
     }
 
     private static Object deserializeValue(String json, Class<?> type) {
-        // 快速路径：基本类型直接判断（无需缓存查找开销。?
+        // 快速路径：基本类型直接判断（无需缓存查找开销。
         if (type == String.class) return TypeConverter.parseStringValue(json);
         if (type == Integer.class || type == int.class) return TypeConverter.parseIntValue(json);
         if (type == Long.class || type == long.class) return TypeConverter.parseLongValue(json);
@@ -113,8 +113,8 @@ public final class YdszDeserializationProvider {
         // 缓存路径：使用策略缓存避免每次反序列化都重新判断类型
         DeserializationStrategy strategy = STRATEGY_CACHE.get(type);
         if (strategy == null) {
-            // 首次遇到此类型，确定策略并缓。?
-            strategy = DeserializationStrategy.BEAN; // 。?PRIMITIVE/OBJECT/MAP/LIST 的都。?BEAN
+            // 首次遇到此类型，确定策略并缓。
+            strategy = DeserializationStrategy.BEAN; // 。PRIMITIVE/OBJECT/MAP/LIST 的都。BEAN
             STRATEGY_CACHE.put(type, strategy);
         }
 
@@ -129,7 +129,7 @@ public final class YdszDeserializationProvider {
             return null;
         }
 
-        // 安全检查：最大长度限制（防止 DoS 攻击。?
+        // 安全检查：最大长度限制（防止 DoS 攻击。
         if (json.length() > JSONReader.DEFAULT_MAX_JSON_LENGTH) {
             throw new JsonDeserializationException(
                 JsonDeserializationException.PARSE_ERROR,
@@ -145,7 +145,7 @@ public final class YdszDeserializationProvider {
     }
 
     /**
-     * 验证 JSON 深度（防止栈溢出攻击。?
+     * 验证 JSON 深度（防止栈溢出攻击。
      */
     private static void validateDepth(String json, int maxDepth) {
         int depth = 0;
@@ -166,14 +166,14 @@ public final class YdszDeserializationProvider {
     }
 
     /**
-     * 解析多态类。?
+     * 解析多态类。
      *
-     * <p>如果目标类有 @YdszJsonTypeInfo 注解，则根据 JSON 中的类型属性。?
-     * 识别具体子类型并返回。?/p>
+     * <p>如果目标类有 @YdszJsonTypeInfo 注解，则根据 JSON 中的类型属性。
+     * 识别具体子类型并返回。/p>
      *
-     * @param json JSON 字符。?
+     * @param json JSON 字符。
      * @param baseType 基类
-     * @return 解析后的具体类型，如果不支持多态返回基。?
+     * @return 解析后的具体类型，如果不支持多态返回基。
      */
     
     private static Class<?> resolvePolymorphicType(String json, Class<?> baseType) {
@@ -211,7 +211,7 @@ public final class YdszDeserializationProvider {
     }
 
     /**
-     * 反序列化 JSON 字符串（支持 Type。?
+     * 反序列化 JSON 字符串（支持 Type。
      */
     
     public static <T> T deserialize(String json, Type type) {

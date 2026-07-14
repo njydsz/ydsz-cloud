@@ -75,9 +75,8 @@ import net.sf.jsqlparser.statement.update.UpdateSet;
  *   <li>建议在业务层捕获更新 0 条记录的情况，抛出乐观锁冲突异常</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see LogicalDeleteInterceptor 逻辑删除拦截器
  * @see InnerInterceptor MyBatis-Plus 内部拦截器接口

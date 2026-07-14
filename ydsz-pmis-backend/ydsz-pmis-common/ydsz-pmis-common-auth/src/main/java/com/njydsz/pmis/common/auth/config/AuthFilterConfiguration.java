@@ -14,9 +14,9 @@ import com.njydsz.pmis.common.util.url.UrlPathUtils;
  * 认证过滤器配置类
  * 用于配置不同层级的 URL 忽略规则
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @AutoConfiguration
 @EnableConfigurationProperties(AuthFilterProperties.class)

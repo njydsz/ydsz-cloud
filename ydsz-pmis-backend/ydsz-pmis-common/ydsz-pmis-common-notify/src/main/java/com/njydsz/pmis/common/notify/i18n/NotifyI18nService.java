@@ -29,9 +29,8 @@ import org.slf4j.LoggerFactory;
  * i18nService.getMessage("email.content.greeting", "en_US", Map.of("name", "John"));
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class NotifyI18nService {

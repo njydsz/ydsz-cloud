@@ -44,9 +44,9 @@ import java.lang.annotation.*;
  * UserVO sanitized = SensitiveDataProcessor.process(userVO);
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see SensitiveType
  * @see SensitiveDataSerializer
  * @see SensitiveDataProcessor

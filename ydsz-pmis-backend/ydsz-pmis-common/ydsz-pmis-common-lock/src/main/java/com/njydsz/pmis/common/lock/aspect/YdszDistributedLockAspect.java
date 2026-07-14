@@ -39,9 +39,8 @@ import lombok.extern.slf4j.Slf4j;
  * 5. 执行目标方法
  * 6. 方法执行完成后释放锁
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

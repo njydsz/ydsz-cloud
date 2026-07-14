@@ -18,7 +18,7 @@ import org.springframework.core.env.MapPropertySource;
  *
  * <p>支持属性名模式匹配：仅对敏感属性（password, secret, key, token, credential）进行解密。
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public class EncryptablePropertyResolver {

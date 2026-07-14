@@ -22,9 +22,9 @@ import lombok.extern.slf4j.Slf4j;
  * 仅在类路径存在 {@code org.springframework.web.servlet.LocaleResolver} 时生效。
  * 这样 exception 模块可不依赖 spring-webmvc 编译期强引用。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.5.0
  */
 @Slf4j

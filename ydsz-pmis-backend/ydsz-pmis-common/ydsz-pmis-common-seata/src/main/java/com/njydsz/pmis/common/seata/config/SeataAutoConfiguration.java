@@ -23,7 +23,7 @@ import com.njydsz.pmis.common.seata.impl.TccTransactionManager;
  *   <li>TccTransactionManager 始终注册（供 executeTcc 方法使用）</li>
  * </ul>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 3.5.0
  */
 @AutoConfiguration

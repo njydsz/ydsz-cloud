@@ -21,9 +21,9 @@ import lombok.extern.slf4j.Slf4j;
  * 基于 Redis 的分片上传上下文存储实现
  * <p>支持多实例部署时分片上下文共享。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Slf4j
 public class RedisMultipartContextStore implements MultipartContextStore {

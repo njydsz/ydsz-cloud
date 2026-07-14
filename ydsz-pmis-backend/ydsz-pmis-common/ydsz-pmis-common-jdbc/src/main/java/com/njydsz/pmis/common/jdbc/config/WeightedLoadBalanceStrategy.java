@@ -11,9 +11,8 @@ import java.util.concurrent.ThreadLocalRandom;
  * <p>根据配置的权重分配请求量，权重越高的从库承担越多的读请求。
  * 适用于从库硬件配置不一致的场景。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class WeightedLoadBalanceStrategy implements DataSourceLoadBalanceStrategy {

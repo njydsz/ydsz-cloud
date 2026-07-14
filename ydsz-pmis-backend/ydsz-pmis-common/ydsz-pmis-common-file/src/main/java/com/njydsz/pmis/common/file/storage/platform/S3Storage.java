@@ -52,9 +52,9 @@ import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequ
  * <p>分片上传使用原生 multipart upload 协议：
  * CreateMultipartUpload / UploadPart / ListParts / CompleteMultipartUpload / AbortMultipartUpload
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Slf4j
 public class S3Storage extends AbstractFileStorage {

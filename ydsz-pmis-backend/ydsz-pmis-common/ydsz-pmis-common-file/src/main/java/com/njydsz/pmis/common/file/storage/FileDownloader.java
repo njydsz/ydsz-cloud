@@ -27,9 +27,8 @@ import jakarta.servlet.http.HttpServletResponse;
  *   <li>大文件下载应在响应头中显式设置 {@code Content-Length}，避免客户端按 chunk 解析</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public interface FileDownloader {

@@ -34,9 +34,9 @@ import lombok.extern.slf4j.Slf4j;
  * P2 功能：当前仅支持 Office→TXT 转换，
  * Office→PDF 转换需要 LibreOffice/OpenOffice 服务，留作后续扩展。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 @Slf4j

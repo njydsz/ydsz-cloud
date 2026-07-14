@@ -16,9 +16,9 @@ import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
  * 基于 ConcurrentHashMap 实现,适用于单机环境
  * 支持自动过期清理
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class LocalCaptchaStore implements CaptchaStore {
 

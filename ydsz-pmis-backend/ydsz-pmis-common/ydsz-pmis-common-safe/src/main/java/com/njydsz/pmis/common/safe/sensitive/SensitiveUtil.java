@@ -16,9 +16,9 @@ import java.util.function.Function;
  *   <li>地址、护照、军官证等</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see SensitiveType
  */
 public final class SensitiveUtil {

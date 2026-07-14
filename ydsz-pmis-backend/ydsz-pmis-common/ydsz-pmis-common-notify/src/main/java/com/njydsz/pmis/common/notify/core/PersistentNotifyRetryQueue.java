@@ -14,9 +14,8 @@ import com.njydsz.pmis.common.notify.enums.NotifyChannel;
  *
  * <p>内部优先使用 Redis；当 Redis 不可用时自动降级到内置内存队列，保障服务可用性。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class PersistentNotifyRetryQueue implements NotifyRetryQueue {

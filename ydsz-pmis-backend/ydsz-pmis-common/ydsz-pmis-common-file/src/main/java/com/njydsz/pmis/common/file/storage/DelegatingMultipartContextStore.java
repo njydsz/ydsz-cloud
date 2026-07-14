@@ -9,9 +9,9 @@ import lombok.extern.slf4j.Slf4j;
  * 分片上传上下文存储委托实现
  * <p>优先使用 Redis 存储，当 Redis 不可用时降级到内存 Map。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Slf4j
 public class DelegatingMultipartContextStore implements MultipartContextStore {

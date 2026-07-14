@@ -9,9 +9,9 @@ import com.njydsz.pmis.common.safe.captcha.enums.CaptchaType;
  * 验证码配置属性类
  * 用于读取 application.yml 中的 ydsz.safe.captcha.* 配置项
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @ConfigurationProperties(prefix = "ydsz.safe.captcha")
 public class CaptchaProperties {

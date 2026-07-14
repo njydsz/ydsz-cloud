@@ -39,9 +39,8 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>解析失败时降级返回原值而非异常，保证审计主流程不受影响</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

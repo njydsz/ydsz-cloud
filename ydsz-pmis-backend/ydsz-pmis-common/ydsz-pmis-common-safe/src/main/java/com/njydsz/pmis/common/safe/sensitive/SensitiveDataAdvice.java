@@ -71,9 +71,9 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
  *           type: ID_CARD
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see SensitiveData
  * @see SensitiveDataProcessor
  * @see SensitiveDataConfiguration

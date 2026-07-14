@@ -14,7 +14,7 @@ package com.njydsz.pmis.common.exception.code;
  *
  * <p>示例：PM01001 = 项目管理-用户模块-参数校验失败
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 3.5.0
  */
 public interface UnifiedErrorCode {

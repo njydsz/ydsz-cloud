@@ -8,9 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * <p>按顺序轮流选择从库，保证每个从库的请求量均匀分布。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class RoundRobinLoadBalanceStrategy implements DataSourceLoadBalanceStrategy {

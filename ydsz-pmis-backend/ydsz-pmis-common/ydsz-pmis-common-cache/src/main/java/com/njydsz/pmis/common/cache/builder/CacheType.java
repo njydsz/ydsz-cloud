@@ -19,9 +19,9 @@ package com.njydsz.pmis.common.cache.builder;
  *   <li>EnhancedLoading：增强版自动加载缓存
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public enum CacheType {
 

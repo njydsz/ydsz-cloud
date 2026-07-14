@@ -24,7 +24,7 @@ import com.njydsz.pmis.common.seata.api.TransactionType;
  * <p>注意：此实现为本地 TCC 协调器，适用于单服务内的多资源操作。
  * 跨服务的 TCC 需要配合 Seata TCC 模式使用。
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 3.5.0
  */
 public class TccTransactionManager implements DistributedTransactionManager {

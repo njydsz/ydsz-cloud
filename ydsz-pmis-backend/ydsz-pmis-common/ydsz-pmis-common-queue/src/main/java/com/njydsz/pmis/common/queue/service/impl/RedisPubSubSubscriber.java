@@ -25,9 +25,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>使用 Redis SUBSCRIBE 命令订阅指定频道，接收发布者广播的消息。
  * 通过 {@link RedisTemplate} 复用 ydsz-pmis-common-redis 的连接。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

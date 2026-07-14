@@ -24,9 +24,9 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>如果是，则通过 {@link DynamicFeignClientFactory} 重建客户端</li>
  * </ol>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see DynamicFeignClientFactory
  * @see FeignProperties
  */

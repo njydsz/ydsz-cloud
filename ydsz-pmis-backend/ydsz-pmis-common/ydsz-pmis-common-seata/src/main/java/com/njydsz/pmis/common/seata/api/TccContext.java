@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>在 Try/Confirm/Cancel 三个阶段之间传递业务数据。
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 3.5.0
  */
 public class TccContext {

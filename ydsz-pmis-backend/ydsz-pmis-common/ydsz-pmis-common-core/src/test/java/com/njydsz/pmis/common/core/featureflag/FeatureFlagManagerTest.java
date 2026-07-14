@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 /**
  * FeatureFlagManager 单元测试
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 3.5.0
  */
 @DisplayName("FeatureFlagManager 特性开关测试")

@@ -6,9 +6,9 @@ package com.njydsz.pmis.common.safe.captcha.core;
  * <p>封装验证码生成后的数据，包括验证码 ID、明文、图片 Base64 等信息。
  * 适用于图形验证码、滑块验证码等多种验证码类型的数据传输。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class CaptchaResult {
 

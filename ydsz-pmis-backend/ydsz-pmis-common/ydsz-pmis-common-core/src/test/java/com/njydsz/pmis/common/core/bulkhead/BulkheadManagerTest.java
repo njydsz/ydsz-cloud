@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 /**
  * BulkheadManager 单元测试
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 3.5.0
  */
 @DisplayName("BulkheadManager 舱壁隔离测试")

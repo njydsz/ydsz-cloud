@@ -8,9 +8,9 @@ import lombok.Data;
  * <p>
  * 从文档中提取的嵌入图片信息。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 @Data

@@ -46,9 +46,8 @@ import java.util.concurrent.locks.ReentrantLock;
  *   <li>去重窗口应根据业务场景合理设置</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see RedisMessageDeduplicator
  */

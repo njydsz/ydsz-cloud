@@ -14,9 +14,9 @@ import com.njydsz.pmis.common.audit.domain.AuditLog;
  * 默认审计日志存储实现
  * 通过内存队列缓存审计日志，适用于开发和测试环境
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class DefaultAuditStorage implements AuditStorage {
 

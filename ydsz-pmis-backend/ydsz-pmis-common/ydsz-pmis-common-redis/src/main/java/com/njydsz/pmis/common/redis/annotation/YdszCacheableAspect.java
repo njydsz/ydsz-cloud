@@ -38,9 +38,9 @@ import com.njydsz.pmis.common.redis.service.RedisService;
  *   <li>超时后降级执行数据加载（不缓存结果）</li>
  * </ol>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.0.0
  */
 @Aspect

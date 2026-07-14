@@ -46,9 +46,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p>
  * 参考业界最佳实践（Spring Security、Apache Santuario 等）设计
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Slf4j
 public class SAMLUtils {

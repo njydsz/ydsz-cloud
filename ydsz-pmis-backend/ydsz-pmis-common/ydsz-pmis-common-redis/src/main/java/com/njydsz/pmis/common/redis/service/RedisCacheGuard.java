@@ -65,9 +65,8 @@ import lombok.extern.slf4j.Slf4j;
  * 因此本类内嵌实现 WatchDog 续期机制（与 {@code LockWatchDog} 相同的设计模式），
  * 确保锁在缓存重建期间不会因业务执行时间超过 leaseTime 而自动释放。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

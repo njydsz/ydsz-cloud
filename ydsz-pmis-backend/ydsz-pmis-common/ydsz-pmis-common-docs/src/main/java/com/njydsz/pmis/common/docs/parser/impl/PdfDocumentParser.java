@@ -35,9 +35,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>大文件处理：</b>使用临时文件方式加载，避免内存溢出。
  * 当 {@link ParseMode#FAST} 模式时跳过图片提取。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 @Slf4j

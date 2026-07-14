@@ -11,9 +11,9 @@ import com.njydsz.pmis.common.file.domain.UploadCheckpoint;
  * <p>封装检查点的序列化、反序列化、校验、MD5 累积计算等上层业务逻辑，
  * 与底层 {@link CheckpointStore} 分离，使 {@link AbstractFileStorage} 职责更清晰。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public interface CheckpointService {
 

@@ -50,9 +50,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p><b>线程安全：</b>所有方法均为线程安全，底层基于 Redis 单线程 + Lua 原子性保证。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

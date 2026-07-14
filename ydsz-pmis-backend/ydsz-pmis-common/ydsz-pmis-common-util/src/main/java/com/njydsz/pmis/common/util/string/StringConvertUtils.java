@@ -12,9 +12,9 @@ import java.util.stream.Collectors;
 
 /**
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @desc StringConvertUtils - 通用类型转换工具类 (标准化增强版)
  * 
  * <p>提供全面的类型转换方法，功能对标 Hutool Convert 和 Apache Commons BeanUtils，

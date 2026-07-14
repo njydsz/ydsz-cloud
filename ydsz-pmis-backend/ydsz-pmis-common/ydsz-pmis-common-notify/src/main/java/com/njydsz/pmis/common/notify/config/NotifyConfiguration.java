@@ -57,9 +57,8 @@ import io.micrometer.core.instrument.MeterRegistry;
  * 追踪像素（P1-5）、渠道降级（P1-6）、HTML 模板注册（P2-7）、邮件队列（P2-8）、
  * DKIM 签名（P2-9）、多提供商抽象（P2-10）、通知偏好（P3-12）、去重（P3-13）、国际化（P3-14）。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @AutoConfiguration

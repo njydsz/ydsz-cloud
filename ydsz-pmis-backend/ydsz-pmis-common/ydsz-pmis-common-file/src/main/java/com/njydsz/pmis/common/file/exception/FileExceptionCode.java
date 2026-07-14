@@ -20,9 +20,8 @@ import com.njydsz.pmis.common.exception.enums.ExceptionCode;
  * <p><b>稳定性：</b>错误码是业务契约，修改/废弃必须保留向前兼容的 alias，
  * 避免错误码硬编码在客户端代码中后无法平滑升级。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public enum FileExceptionCode implements ExceptionCode {

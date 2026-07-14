@@ -54,10 +54,10 @@ public final class JsonPatch {
             }
             
             
-            String opType = String.valueOf(rawOp.get("op");
-            String path = String.valueOf(rawOp.get("path");
+            String opType = String.valueOf(rawOp.get("op"));
+            String path = String.valueOf(rawOp.get("path"));
             Object value = rawOp.get("value");
-            String from = String.valueOf(rawOp.get("from");
+            String from = String.valueOf(rawOp.get("from"));
 
             if (opType == null || path == null) {
                 throw new IllegalArgumentException("Patch operation must have 'op' and 'path'");
@@ -111,7 +111,7 @@ public final class JsonPatch {
         Object current = target;
         for (int i = 1; i < parts.length; i++) {
             String part = unescapeToken(parts[i]);
-            if (current instanceof Map<?, ?> map) {
+            if (current instanceof Map<?, ?>) {
                 current = map.get(part);
             } else if (current instanceof List<?> list) {
                 int idx = Integer.parseInt(part);
@@ -133,12 +133,11 @@ public final class JsonPatch {
         Object current = target;
         for (int i = 1; i < parts.length - 1; i++) {
             String part = unescapeToken(parts[i]);
-            if (current instanceof Map<?, ?> map) {
-                Map<?, ?> map = (Map<?, ?>) current;
-                Object next = map.get(part);
+            if (current instanceof Map<?, ?>) {
+                Object next = cast(current).get(part);
                 if (next == null) {
                     next = new java.util.LinkedHashMap<>();
-                    map.put(part, next);
+                    cast(current).put(part, next);
                 }
                 current = next;
             } else if (current instanceof List<?> list) {
@@ -147,11 +146,11 @@ public final class JsonPatch {
             }
         }
         String lastPart = unescapeToken(parts[parts.length - 1]);
-        if (current instanceof Map<?, ?> map) {
-            map.put(lastPart, value);
+        if (current instanceof Map<?, ?>) {
+            cast(current).put(lastPart, value);
         } else if (current instanceof List<?> list) {
             int idx = Integer.parseInt(lastPart);
-            list.add(idx, value);
+            cast(current).add(idx, value);
         }
     }
 
@@ -164,23 +163,25 @@ public final class JsonPatch {
         Object current = target;
         for (int i = 1; i < parts.length - 1; i++) {
             String part = unescapeToken(parts[i]);
-            if (current instanceof Map<?, ?> map) {
+            if (current instanceof Map<?, ?>) {
                 current = map.get(part);
             } else if (current instanceof List<?> list) {
                 current = list.get(Integer.parseInt(part));
             }
         }
         String lastPart = unescapeToken(parts[parts.length - 1]);
-        if (current instanceof Map<?, ?> map) {
-            map.remove(lastPart);
+        if (current instanceof Map<?, ?>) {
+            cast(current).remove(lastPart);
         } else if (current instanceof List<?> list) {
-            list.remove(Integer.parseInt(lastPart));
+            cast(current).remove(Integer.parseInt(lastPart));
         }
     }
 
     /**
      * 反转 JSON Pointer 转义（~1 → /，~0 → ~）。
      */
+    private static <T> T cast(Object o) { return (T) o; }
+
     private static String unescapeToken(String token) {
         return token.replace("~1", "/").replace("~0", "~");
     }

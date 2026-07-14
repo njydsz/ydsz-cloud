@@ -11,9 +11,9 @@ import lombok.Data;
  * <p>
  * 描述文档的属性信息，包括作者、创建时间、修改时间、页数、字数等。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 @Data

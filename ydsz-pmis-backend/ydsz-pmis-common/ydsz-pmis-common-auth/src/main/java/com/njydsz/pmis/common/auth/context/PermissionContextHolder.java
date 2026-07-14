@@ -13,9 +13,9 @@ import com.alibaba.ttl.TransmittableThreadLocal;
  * 请求结束后必须调用 {@link #clear()} 清理。
  * 相比原生 {@link ThreadLocal}，TTL 解决了线程池复用时上下文泄露的问题。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public final class PermissionContextHolder {
 

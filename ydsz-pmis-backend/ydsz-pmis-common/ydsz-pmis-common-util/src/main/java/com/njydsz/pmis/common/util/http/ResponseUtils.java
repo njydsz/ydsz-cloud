@@ -12,9 +12,9 @@ import jakarta.servlet.http.HttpServletResponse;
  * HTTP 响应工具类
  * <p>提供文件流导出到客户端的工具方法。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class ResponseUtils {
 

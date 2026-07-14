@@ -33,9 +33,9 @@ import lombok.extern.slf4j.Slf4j;
  * 当前实现仅支持页面渲染，实际的 OCR 识别需要业务方对接外部 OCR 服务
  * （如阿里云 OCR / 百度 OCR / Tesseract），通过实现 {@link OcrEngine} 接口集成。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 @Slf4j

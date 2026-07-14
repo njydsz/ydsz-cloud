@@ -16,9 +16,9 @@ import com.njydsz.pmis.common.cache.listener.RemovalCause;
  * <p>当 Redis 不可用时，提供本地缓存作为降级方案。
  * 使用 ydsz-pmis-common-cache 实现，支持 5 分钟过期。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class LocalPermissionCache<V> {
 

@@ -30,9 +30,9 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  *   <li>XssFilter：用于全局请求过滤，基于 Servlet Filter</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see Xss
  */
 public class XssValidator implements ConstraintValidator<Xss, String> {

@@ -6,9 +6,9 @@ package com.njydsz.pmis.common.redis.enums;
  * <p>当 {@link RedisFailurePolicy#FAIL_THROW} 策略生效时，Redis 操作失败会抛出此异常。
  * 封装了操作的 key、操作名称和原始异常，便于上层统一处理。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.5.0
  */
 public class RedisOperationException extends RuntimeException {

@@ -19,9 +19,8 @@ import com.njydsz.pmis.common.json.YdszJson;
  * <p>支持多实例部署时重试数据共享，服务重启后数据不丢失。
  * 使用 ZSET 按重试时间排序，Hash 存储消息详情。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class RedisNotifyRetryQueue implements NotifyRetryQueue {

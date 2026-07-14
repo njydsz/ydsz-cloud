@@ -5,9 +5,9 @@ package com.njydsz.pmis.common.file.exception;
  * <p>
  * 当文件上传校验失败时（如文件大小超限、扩展名不允许、Content-Type 不匹配等）抛出此异常。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class FileValidationException extends RuntimeException {
 

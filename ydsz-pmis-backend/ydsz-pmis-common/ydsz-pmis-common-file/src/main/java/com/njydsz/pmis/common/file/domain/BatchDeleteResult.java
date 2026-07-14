@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
  *
  * <p>包含成功删除的对象路径列表和失败的对象路径列表（含失败原因）。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public record BatchDeleteResult(
         List<String> successList,

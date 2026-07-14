@@ -23,9 +23,8 @@ import org.springframework.scheduling.annotation.Scheduled;
  *   <li>清理间隔可通过 spring.task.scheduling 配置调整</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class DedupCleanupScheduler {

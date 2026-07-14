@@ -5,7 +5,7 @@ package com.njydsz.pmis.common.exception.code;
  *
  * <p>定义系统级通用错误码，各业务模块可扩展自己的错误码枚举。
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 3.5.0
  */
 public enum CommonErrorCode implements UnifiedErrorCode {

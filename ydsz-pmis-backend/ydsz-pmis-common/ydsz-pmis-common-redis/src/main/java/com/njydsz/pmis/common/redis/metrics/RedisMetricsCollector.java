@@ -39,9 +39,8 @@ import io.micrometer.core.instrument.Timer;
  * RedisMetricsCollector slowCollector = RedisMetricsCollector.getOrCreate(registry, 100);
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 4.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class RedisMetricsCollector {

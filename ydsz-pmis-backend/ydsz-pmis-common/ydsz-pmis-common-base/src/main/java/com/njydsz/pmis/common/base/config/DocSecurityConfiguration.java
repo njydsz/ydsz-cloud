@@ -42,9 +42,8 @@ import org.springframework.context.annotation.Bean;
  * ydsz.doc.basic-auth.password: your-secure-password
  * </pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @AutoConfiguration
@@ -144,7 +143,7 @@ public class DocSecurityConfiguration {
      *
      * <p><b>线程安全性：</b>无状态，线程安全。
      *
-     * @author Marvin Lee
+     * @author ydsz-pmis-team
      * @since 1.0.0
      */
     private static class DocBasicAuthFilter implements Filter {

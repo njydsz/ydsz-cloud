@@ -10,9 +10,8 @@ import org.springframework.data.redis.serializer.RedisSerializer;
  * <p>基于底层 RedisConnection 实现 RedisPipelineOps 接口，
  * 提供 Pipeline 模式下的简化操作。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class RedisPipelineOpsImpl implements RedisPipelineOps {

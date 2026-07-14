@@ -35,7 +35,7 @@ import io.micrometer.core.instrument.MeterRegistry;
  * }
  * }</pre>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 3.5.0
  */
 public class ThreadPoolRegistry implements DisposableBean {

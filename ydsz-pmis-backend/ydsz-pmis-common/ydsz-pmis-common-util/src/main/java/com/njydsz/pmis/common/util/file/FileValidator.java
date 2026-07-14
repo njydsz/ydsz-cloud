@@ -15,9 +15,9 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  * FileValidator - 文件上传验证器
  * 参考：Spring MultipartValidator, Apache Commons FileUpload
  * 
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @desc 支持文件非空验证、大小验证、后缀白名单验证
  */
 public class FileValidator {

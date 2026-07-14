@@ -18,9 +18,8 @@ import com.njydsz.pmis.common.notify.enums.NotifyChannel;
  *
  * <p>发送失败自动重试 3 次，指数退避
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class AsyncNotifyService {

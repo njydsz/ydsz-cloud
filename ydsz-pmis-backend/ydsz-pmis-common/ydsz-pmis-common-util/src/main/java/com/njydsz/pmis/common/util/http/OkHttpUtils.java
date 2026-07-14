@@ -29,9 +29,9 @@ import okhttp3.*;
  * <p><b>注意：</b>本工具类依赖 okhttp3，该依赖在 ydsz-pmis-common-util 中为 optional。
  * 使用本工具类前需确保项目已引入 okhttp 依赖，否则会抛出 UnsupportedOperationException。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Slf4j
 public class OkHttpUtils {

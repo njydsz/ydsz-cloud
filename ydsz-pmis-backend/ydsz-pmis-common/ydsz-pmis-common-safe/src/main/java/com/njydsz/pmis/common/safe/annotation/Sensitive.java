@@ -39,9 +39,8 @@ import com.njydsz.pmis.common.safe.sensitive.SensitiveType;
  * <p><b>安全约束：</b>仅在展示层和日志层脱敏，数据库中应保留原始数据，
  * 以便业务追溯、客服查询。脱敏不是加密，不应代替真正的安全存储。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Documented

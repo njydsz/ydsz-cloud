@@ -58,9 +58,9 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>配置项 {@code ydsz.feign.enabled=true}（默认为 true）</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see FeignProperties
  * @see FeignRequestInterceptor
  * @see YdszFeignErrorDecoder

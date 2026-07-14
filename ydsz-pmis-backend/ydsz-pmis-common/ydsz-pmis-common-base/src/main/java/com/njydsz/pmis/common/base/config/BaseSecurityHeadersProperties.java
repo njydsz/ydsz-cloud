@@ -34,9 +34,9 @@ import lombok.Data;
  * 当项目中同时存在 safe/web/app 模块时，本配置不会被使用，
  * 安全响应头由 safe 模块的 {@code SecurityHeaderProperties}（前缀 {@code ydsz.safe.security-headers}）统一管理。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.5.0
  */
 @Data

@@ -19,9 +19,8 @@ import java.util.Set;
  *   <li>不适合高 QPS 大数据量场景（建议改用 {@link DailyShardingStrategy}）</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class MonthlyShardingStrategy implements TableShardingStrategy {

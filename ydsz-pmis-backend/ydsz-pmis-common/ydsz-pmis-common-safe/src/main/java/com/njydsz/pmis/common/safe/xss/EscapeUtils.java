@@ -22,9 +22,9 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  * 6. 危险协议过滤 - 禁止 javascript:、data:、vbscript: 等危险 URL 协议
  * </p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class EscapeUtils {
 

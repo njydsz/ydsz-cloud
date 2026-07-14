@@ -23,9 +23,9 @@ package com.njydsz.pmis.common.core.constant;
  *   <li>DEFAULT_EXCLUDE_PATHS 可考虑外部化配置</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see TokenConstants
  */
 public final class SecurityConstants {

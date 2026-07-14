@@ -16,9 +16,9 @@ import com.njydsz.pmis.common.audit.event.AuditEvent;
  * 又由功能更完善的 {@link AuditRecorder} 统一处理异步批量写入、
  * 队列满兜底、磁盘降级、优雅停机等机制。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class AuditEventListener {
 

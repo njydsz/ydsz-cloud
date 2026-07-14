@@ -21,9 +21,9 @@ import com.njydsz.pmis.common.redis.service.RedisService;
  * ydsz:feign:circuit:ttl -> 3600（秒）
  * </pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @ConditionalOnClass(RedisService.class)
 public class CircuitBreakerStatePersistence {

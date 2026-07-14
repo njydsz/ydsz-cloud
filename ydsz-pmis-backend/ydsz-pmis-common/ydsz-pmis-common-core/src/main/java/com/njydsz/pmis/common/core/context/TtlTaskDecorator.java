@@ -19,7 +19,7 @@ import org.springframework.core.task.TaskDecorator;
  * 手动创建的 {@code CompletableFuture.supplyAsync()} 需使用
  * {@link RequestContextExecutor} 提供的线程池。
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 3.5.0
  */
 public class TtlTaskDecorator implements TaskDecorator {

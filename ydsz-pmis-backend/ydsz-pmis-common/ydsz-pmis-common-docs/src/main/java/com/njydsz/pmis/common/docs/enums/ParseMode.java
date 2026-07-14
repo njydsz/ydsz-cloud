@@ -5,9 +5,9 @@ package com.njydsz.pmis.common.docs.enums;
  * <p>
  * 控制解析器的行为粒度，平衡解析精度与性能开销。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 public enum ParseMode {

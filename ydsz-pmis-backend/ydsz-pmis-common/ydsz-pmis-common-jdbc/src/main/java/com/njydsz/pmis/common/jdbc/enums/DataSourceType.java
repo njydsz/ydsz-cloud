@@ -25,9 +25,8 @@ package com.njydsz.pmis.common.jdbc.enums;
  * <p><b>注意：</b>dynamic-datasource 为 optional 依赖，需在业务项目中显式引入
  * {@code dynamic-datasource-spring-boot3-starter} 才能启用多数据源功能。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public enum DataSourceType {

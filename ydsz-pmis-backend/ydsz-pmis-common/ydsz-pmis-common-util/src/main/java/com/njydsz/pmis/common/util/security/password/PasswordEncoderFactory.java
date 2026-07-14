@@ -9,9 +9,9 @@ import java.util.concurrent.atomic.AtomicReference;
  * <p>提供全局 PasswordEncoder 实例管理，业务方可通过 {@link #setDefault(PasswordEncoder)}
  * 替换实现（如 BCrypt/Argon2id/PBKDF2），不修改业务代码。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.5.0
  */
 public final class PasswordEncoderFactory {

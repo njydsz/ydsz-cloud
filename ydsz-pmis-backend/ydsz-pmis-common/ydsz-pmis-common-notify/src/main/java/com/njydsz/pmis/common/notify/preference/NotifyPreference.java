@@ -21,9 +21,8 @@ import com.njydsz.pmis.common.notify.enums.NotifyType;
  *   <li>聚合策略配置（如多条消息聚合为一条摘要）</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class NotifyPreference {

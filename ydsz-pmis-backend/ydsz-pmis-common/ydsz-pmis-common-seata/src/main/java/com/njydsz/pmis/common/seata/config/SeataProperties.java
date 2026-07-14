@@ -10,7 +10,7 @@ import lombok.Setter;
 /**
  * 分布式事务配置属性
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 3.5.0
  */
 @Getter

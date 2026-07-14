@@ -8,7 +8,7 @@ import lombok.Setter;
 /**
  * Outbox 事件模块配置属性
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Getter

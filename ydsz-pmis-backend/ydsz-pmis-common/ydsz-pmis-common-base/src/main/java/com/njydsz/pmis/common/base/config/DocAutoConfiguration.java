@@ -27,9 +27,8 @@ import com.njydsz.pmis.common.base.exporter.MarkdownDocExporter;
  *
  * <p><b>线程安全性：</b>本类仅包含 Spring 注解与导入语句，无可变状态，线程安全。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @AutoConfiguration

@@ -21,9 +21,9 @@ import com.njydsz.pmis.common.redis.service.ops.RedisStringOps;
  * 如果相同大小且相同 SHA-256 的文件已存在，直接返回已有文件信息。
  * 采用文件大小 + SHA-256 双重校验，避免单一哈希碰撞导致的内容替换风险。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Service
 @ConditionalOnBean({RedisStringOps.class, IFileStorage.class})

@@ -38,9 +38,9 @@ import lombok.Data;
  *   <li>Content-Security-Policy：内容安全策略</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.safe.security-headers")

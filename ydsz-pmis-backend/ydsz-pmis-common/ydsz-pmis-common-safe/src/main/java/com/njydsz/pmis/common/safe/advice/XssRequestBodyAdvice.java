@@ -27,9 +27,9 @@ import com.njydsz.pmis.common.safe.core.JsonBodyXssCleaner;
  * 在 JSON 反序列化前，对请求体中的字符串值进行 XSS 清理。
  * 适用于非 FastJson 转换器场景，作为补充防护层。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Component
 @ConditionalOnProperty(prefix = "ydsz.safe.xss", name = "enabled", havingValue = "true", matchIfMissing = true)

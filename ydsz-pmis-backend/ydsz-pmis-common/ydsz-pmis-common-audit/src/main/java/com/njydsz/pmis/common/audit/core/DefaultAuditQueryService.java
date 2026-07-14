@@ -28,9 +28,9 @@ import com.njydsz.pmis.common.core.response.PageResponse;
  * <p><b>分表支持：</b>当启用分表策略时，查询会自动根据时间范围路由到对应分表，
  * 跨分表查询使用 UNION ALL 合并结果。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class DefaultAuditQueryService implements AuditQueryService {
 

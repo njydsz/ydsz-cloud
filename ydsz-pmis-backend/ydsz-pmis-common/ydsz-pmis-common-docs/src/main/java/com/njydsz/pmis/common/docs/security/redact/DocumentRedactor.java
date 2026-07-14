@@ -11,9 +11,9 @@ import com.njydsz.pmis.common.docs.enums.DocumentFormat;
  * <p>
  * 对文档中检测到的 PII 进行遮挡或替换脱敏。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 public interface DocumentRedactor {

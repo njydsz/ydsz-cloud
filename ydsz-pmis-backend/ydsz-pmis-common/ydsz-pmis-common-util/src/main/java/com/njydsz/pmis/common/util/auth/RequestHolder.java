@@ -12,9 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @desc RequestHolder - 请求上下文持有者 (支持线程池场景上下文透传)
  *
  * <p>除 AuthInfo 与 HttpServletRequest 外，还支持维护"额外请求头（virtual headers）"：

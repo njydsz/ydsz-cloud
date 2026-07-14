@@ -10,7 +10,7 @@ package com.njydsz.pmis.common.event.model;
  *   <li>{@link #PENDING} → {@link #DEAD_LETTER}（超过最大重试次数）</li>
  * </ul>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public enum OutboxStatus {

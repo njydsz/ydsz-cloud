@@ -28,9 +28,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p>
  * 解析 .txt 文件，支持自动编码检测（UTF-8 / GBK）。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 @Slf4j

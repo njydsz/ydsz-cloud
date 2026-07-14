@@ -10,9 +10,9 @@ package com.njydsz.pmis.common.util.security.password;
  *   <li>字符集复杂度：大小写字母 + 数字 + 特殊字符</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.5.0
  */
 public final class PasswordStrengthEvaluator {

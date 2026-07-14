@@ -23,9 +23,9 @@ import reactor.core.publisher.Mono;
  * <p>提供 Spring WebFlux 响应式编程模型下的常用工具方法，
  * 仅在 classpath 中存在 WebFlux 依赖时可用。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public final class WebFluxUtils {
 

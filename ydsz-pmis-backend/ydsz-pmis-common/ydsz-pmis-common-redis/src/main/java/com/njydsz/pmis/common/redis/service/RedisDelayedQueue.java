@@ -61,9 +61,8 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>消费者侧去重通过 Redis SETNX 实现，默认去重窗口为 24 小时</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

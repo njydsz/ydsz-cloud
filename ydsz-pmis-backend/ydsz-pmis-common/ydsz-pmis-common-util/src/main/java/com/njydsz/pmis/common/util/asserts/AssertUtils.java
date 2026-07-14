@@ -60,9 +60,9 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  * AssertUtils.isNotBlank(username, BusinessException.class, () -> new BusinessException("用户名不能为空"));
  * </pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class AssertUtils {
 

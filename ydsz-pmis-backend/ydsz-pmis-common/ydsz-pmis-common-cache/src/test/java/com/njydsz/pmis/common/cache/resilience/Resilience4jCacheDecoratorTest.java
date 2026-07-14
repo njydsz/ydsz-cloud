@@ -17,7 +17,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 /**
  * Resilience4jCacheDecorator 熔断降级测试
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  */
 @DisplayName("Resilience4jCacheDecorator 熔断降级测试")
 class Resilience4jCacheDecoratorTest {

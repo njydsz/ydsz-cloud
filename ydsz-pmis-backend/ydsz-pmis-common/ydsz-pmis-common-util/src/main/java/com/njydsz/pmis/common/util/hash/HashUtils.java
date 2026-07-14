@@ -36,9 +36,9 @@ import java.util.zip.CRC32;
  *   <li>更好的性能和更小的包体积</li>
  * </ul>
  * 
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class HashUtils {
 

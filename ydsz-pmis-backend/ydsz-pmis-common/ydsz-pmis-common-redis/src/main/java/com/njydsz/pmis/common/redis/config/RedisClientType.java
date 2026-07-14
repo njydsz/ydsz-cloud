@@ -9,9 +9,8 @@ package com.njydsz.pmis.common.redis.config;
  *   <li>LETTUCE - 异步非阻塞客户端，基于 Netty，支持响应式编程</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public enum RedisClientType {

@@ -29,9 +29,9 @@ import lombok.Getter;
  * <p><b>安全脱敏：</b>通过 {@link #getSafeDetails(boolean)} 方法控制是否脱敏，
  * 由 {@code BaseExceptionHandler} 根据 Spring Environment 决定是否传入脱敏参数。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.0.0
  */
 @Getter

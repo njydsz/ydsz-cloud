@@ -25,9 +25,8 @@ import net.sf.jsqlparser.statement.update.UpdateSet;
  *   <li>JOIN 语句 ON 表达式操作</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public final class JSqlParserHelper {

@@ -48,9 +48,8 @@ import lombok.extern.slf4j.Slf4j;
  * bloomFilter.addAll("user:bloom:1", Arrays.asList("user1", "user2"));
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

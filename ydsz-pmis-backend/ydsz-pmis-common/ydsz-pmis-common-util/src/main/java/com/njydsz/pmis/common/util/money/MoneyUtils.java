@@ -9,9 +9,9 @@ import java.util.stream.Collectors;
 
 /**
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @desc MoneyUtils - 金钱处理工具类 (支持大写转换与格式化)
  *       参考互联网大厂实现，提供更强大、更精准的金额处理功能
  *       遵循《中华人民共和国国家标准 GB/T 15835-2011》数字用法规定

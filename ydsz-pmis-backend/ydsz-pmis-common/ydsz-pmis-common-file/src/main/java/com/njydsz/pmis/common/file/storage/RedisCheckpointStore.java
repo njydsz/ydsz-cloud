@@ -14,9 +14,9 @@ import lombok.extern.slf4j.Slf4j;
  * 基于 Redis 的检查点存储实现
  * <p>支持多实例部署时断点续传检查点共享。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Slf4j
 public class RedisCheckpointStore implements CheckpointStore {

@@ -16,9 +16,8 @@ import java.io.IOException;
  *   <li>IO 异常应原样上抛，由调用方决定是否重试</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public interface DocExporter {

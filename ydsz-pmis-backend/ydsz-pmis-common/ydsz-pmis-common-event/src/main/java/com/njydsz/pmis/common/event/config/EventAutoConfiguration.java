@@ -29,7 +29,7 @@ import io.micrometer.core.instrument.MeterRegistry;
  * <p>当 {@code pmis.event.outbox.enabled=true}（默认）且容器中存在
  * {@link JdbcTemplate} 时自动装配。
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @AutoConfiguration

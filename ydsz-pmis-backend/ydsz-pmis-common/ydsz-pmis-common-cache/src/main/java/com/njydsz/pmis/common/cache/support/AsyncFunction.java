@@ -7,9 +7,9 @@ import java.util.concurrent.CompletableFuture;
  *
  * @param <K> 键类型
  * @param <V> 值类型
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @FunctionalInterface
 public interface AsyncFunction<K, V> {

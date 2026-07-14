@@ -6,9 +6,9 @@ package com.njydsz.pmis.common.safe.captcha.enums;
  * <p>定义系统支持的验证码类型，包括图形验证码、算术验证码、滑块验证码、
  * 点选验证码、短信验证码和邮件验证码等。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public enum CaptchaType {
 

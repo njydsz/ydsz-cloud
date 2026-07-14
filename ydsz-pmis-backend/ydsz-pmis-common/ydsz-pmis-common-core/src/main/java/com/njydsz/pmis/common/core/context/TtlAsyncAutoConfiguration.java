@@ -30,7 +30,7 @@ import com.alibaba.ttl.TtlRunnable;
  *     enabled: false
  * }</pre>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 3.5.0
  */
 @AutoConfiguration

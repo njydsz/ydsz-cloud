@@ -26,9 +26,9 @@ import java.util.concurrent.atomic.LongAdder;
  *   <li>通过 JMX 暴露实时指标</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class FeignMetricsCollector {
 

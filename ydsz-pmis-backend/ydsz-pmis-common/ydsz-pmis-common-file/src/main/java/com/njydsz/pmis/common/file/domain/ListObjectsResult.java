@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
  * 对象列表结果
  * <p>封装分页列举对象的返回结果，包含对象列表和分页信息。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Data
 @NoArgsConstructor

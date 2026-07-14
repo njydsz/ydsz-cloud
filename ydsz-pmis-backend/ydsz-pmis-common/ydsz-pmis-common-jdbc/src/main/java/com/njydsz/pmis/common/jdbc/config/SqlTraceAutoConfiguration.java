@@ -37,9 +37,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p>配置项沿用 {@link JdbcProperties.SlowSql} 与 {@link JdbcProperties.SqlAudit}，
  * 对已有 {@code ydsz.jdbc.slow-sql.*} 和 {@code ydsz.jdbc.sql-audit.*} 配置完全兼容。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see SqlTraceInnerInterceptor
  * @see MybatisPlusConfiguration
  * @since 1.0.0

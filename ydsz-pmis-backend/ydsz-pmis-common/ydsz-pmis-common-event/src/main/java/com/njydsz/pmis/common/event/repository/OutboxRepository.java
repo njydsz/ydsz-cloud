@@ -23,7 +23,7 @@ import com.njydsz.pmis.common.event.model.OutboxStatus;
  * <p>使用 {@link JdbcTemplate} 直接操作数据库，不依赖 ORM 框架。
  * 所有多写操作在调用方的数据库事务中执行。
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public class OutboxRepository {

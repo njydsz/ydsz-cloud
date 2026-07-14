@@ -36,9 +36,9 @@ import lombok.Getter;
  *   <li>配合 @RbacDataScope 注解在AOP切面中控制数据访问</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see HeaderConstants
  * @see TokenConstants
  */

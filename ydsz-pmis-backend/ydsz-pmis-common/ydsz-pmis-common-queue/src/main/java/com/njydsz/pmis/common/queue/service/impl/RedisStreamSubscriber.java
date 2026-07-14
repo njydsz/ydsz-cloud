@@ -36,9 +36,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>使用 Redis XREADGROUP 命令以消费组模式读取消息，支持消息确认、重试和死信队列。
  * 通过 {@link RedisTemplate} 复用 ydsz-pmis-common-redis 的连接。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

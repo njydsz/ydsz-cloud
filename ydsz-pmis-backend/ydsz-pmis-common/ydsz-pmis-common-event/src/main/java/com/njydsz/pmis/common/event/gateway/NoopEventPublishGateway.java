@@ -8,7 +8,7 @@ import com.njydsz.pmis.common.event.model.OutboxMessage;
  * <p>当容器中不存在其他 {@link EventPublishGateway} 实现时使用。
  * 仅记录日志，不实际投递消息。
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public class NoopEventPublishGateway implements EventPublishGateway {

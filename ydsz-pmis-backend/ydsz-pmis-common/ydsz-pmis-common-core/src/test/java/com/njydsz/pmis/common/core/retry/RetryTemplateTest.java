@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 /**
  * RetryTemplate 单元测试
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 3.5.0
  */
 @DisplayName("RetryTemplate 重试模板测试")

@@ -27,9 +27,9 @@ import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
  *
  * <p>执行顺序：HIGH_PRECEDENCE + 10，确保在业务逻辑之前执行
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class TraceFilter extends OncePerRequestFilter {
 

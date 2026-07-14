@@ -46,9 +46,8 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>REJECT：拒绝消息，不重新入队</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

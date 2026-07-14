@@ -12,9 +12,9 @@ package com.njydsz.pmis.common.util.bytes;
  * byte[] decoded = HexUtils.hexToBytes(hex); // {0x01, 0x02, (byte) 0xFF}
  * </pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class HexUtils {
 

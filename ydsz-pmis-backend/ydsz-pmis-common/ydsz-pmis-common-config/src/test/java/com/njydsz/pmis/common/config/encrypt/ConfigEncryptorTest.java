@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 /**
  * ConfigEncryptor 单元测试
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @DisplayName("ConfigEncryptor 加解密测试")

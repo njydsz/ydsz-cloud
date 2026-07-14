@@ -28,9 +28,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * 集成 {@link RedisMetricsCollector} 进行操作指标采集，与 {@link RedisStringOps} 保持一致。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

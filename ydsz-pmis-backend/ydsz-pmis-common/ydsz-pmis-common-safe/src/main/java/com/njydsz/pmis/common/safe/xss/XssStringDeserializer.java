@@ -17,9 +17,9 @@ import com.njydsz.pmis.common.json.reader.JSONReader;
  *   <li>HTML 实体编码特殊字符：{@code < > " ' &}</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 5.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class XssStringDeserializer implements JsonDeserializer<String> {
 

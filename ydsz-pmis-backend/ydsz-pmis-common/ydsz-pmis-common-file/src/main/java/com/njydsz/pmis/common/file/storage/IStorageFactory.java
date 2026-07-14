@@ -22,9 +22,9 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>支持通过 {@link #register(String, IFileStorage)} 动态注册自定义存储类型。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see StorageType
  * @see IFileStorageProvider
  */

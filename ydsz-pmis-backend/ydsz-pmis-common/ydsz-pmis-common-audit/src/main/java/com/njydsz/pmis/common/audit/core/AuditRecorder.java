@@ -10,9 +10,8 @@ import com.njydsz.pmis.common.audit.domain.AuditLog;
  * 实现类可基于 BlockingQueue、Disruptor、消息队列等不同技术实现。
  * </p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public interface AuditRecorder {

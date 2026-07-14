@@ -8,9 +8,9 @@ import com.njydsz.pmis.common.exception.enums.ExceptionCode;
  * <p>
  * 文档解析、预处理、安全扫描、PII 检测、脱敏、水印等操作失败时抛出。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 public class DocumentException extends BusinessException {

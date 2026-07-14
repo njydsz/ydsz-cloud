@@ -12,8 +12,8 @@ import com.njydsz.pmis.common.json.exception.YdszJsonException;
  * <p>提供 JSON 与 YAML 格式之间的双向转换，复用 {@link YdszJson} 的 JSON
  * 解析/序列化能力，保持日期格式、未知字段处理等行为一致。
  *
- * @author Marvin Lee
- * @version 4.0.0
+ * @author ydsz-pmis-team
+ * 
  */
 public final class YamlUtils {
 

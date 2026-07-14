@@ -18,9 +18,9 @@ import com.njydsz.pmis.common.auth.model.RolePermissions;
  *   <li>权限类型分离：菜单权限、按钮权限、API 权限分别管理</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public final class PermissionMerger {
 

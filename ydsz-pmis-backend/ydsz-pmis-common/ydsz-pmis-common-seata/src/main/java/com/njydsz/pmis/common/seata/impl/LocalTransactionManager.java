@@ -16,7 +16,7 @@ import com.njydsz.pmis.common.seata.api.TransactionType;
  * <p>当 Seata 不可用时使用，仅提供本地 {@code @Transactional} 语义。
  * 不提供跨服务事务保证，适用于单机模式或开发环境。
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 3.5.0
  */
 public class LocalTransactionManager implements DistributedTransactionManager {

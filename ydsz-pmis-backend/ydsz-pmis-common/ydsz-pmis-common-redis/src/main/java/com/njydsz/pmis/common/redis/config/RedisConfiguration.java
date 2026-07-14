@@ -65,9 +65,8 @@ import lombok.RequiredArgsConstructor;
  * {@link DataRedisAutoConfiguration} 之前加载，避免与自动配置产生冲突。
  * 所有 Bean 均添加了 {@code @ConditionalOnMissingBean}，允许用户自定义覆盖。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @AutoConfiguration

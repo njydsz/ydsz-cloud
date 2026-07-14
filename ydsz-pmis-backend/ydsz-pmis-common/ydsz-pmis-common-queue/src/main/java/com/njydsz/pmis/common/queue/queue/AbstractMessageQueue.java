@@ -22,9 +22,8 @@ import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
  *   <li>{@link #doClose()} - 执行实际的关闭操作</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public abstract class AbstractMessageQueue implements IMessageQueue {

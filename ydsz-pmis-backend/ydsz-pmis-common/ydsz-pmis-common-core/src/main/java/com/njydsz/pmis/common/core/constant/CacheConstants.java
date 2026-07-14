@@ -6,9 +6,9 @@ package com.njydsz.pmis.common.core.constant;
  * <p>定义系统中缓存相关的键前缀常量，所有缓存键统一使用 {@code ydsz:} 前缀，
  * 便于在 Redis 等缓存系统中统一管理和清理。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public final class CacheConstants {
 

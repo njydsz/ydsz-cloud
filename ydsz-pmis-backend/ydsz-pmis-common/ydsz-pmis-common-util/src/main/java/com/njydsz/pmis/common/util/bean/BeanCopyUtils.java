@@ -27,9 +27,9 @@ import lombok.extern.slf4j.Slf4j;
  * 6. 异常统一抛出 BeanCopyException
  * </p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Slf4j
 public class BeanCopyUtils {

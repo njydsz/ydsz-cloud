@@ -46,9 +46,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>执行顺序：</b>{@link Ordered#HIGHEST_PRECEDENCE} + 20，
  * 在 {@code GlobalResponseAdvice} 之后、参数校验 Advice 之前执行。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see BaseExceptionHandler
  * @see BusinessException
  * @see BaseResponse

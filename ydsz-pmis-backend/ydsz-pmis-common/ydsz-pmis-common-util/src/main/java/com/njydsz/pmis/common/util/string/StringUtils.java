@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 /**
  * Pattern 缓存 - 简单的 LRU 缓存，用于缓存编译后的正则表达式
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 final class PatternCache {
 
@@ -92,9 +92,9 @@ final class PatternCache {
  *   <li>所有方法 null 安全处理</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class StringUtils {
 

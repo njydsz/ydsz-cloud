@@ -20,9 +20,9 @@ package com.njydsz.pmis.common.auth.event;
  *   <li>实现 {@code onPermissionChanged} 方法处理权限变更事件</li>
  * </ol>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see PermissionChangedEvent
  * @see PermissionChangeNotifier
  */

@@ -10,9 +10,9 @@ import org.springframework.core.type.AnnotationMetadata;
  * <p>通过字符串引用避免编译期依赖 spring-session-data-redis，
  * 仅在运行时 classpath 中存在对应类时生效。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 class RedisHttpSessionImportSelector implements ImportSelector {
 

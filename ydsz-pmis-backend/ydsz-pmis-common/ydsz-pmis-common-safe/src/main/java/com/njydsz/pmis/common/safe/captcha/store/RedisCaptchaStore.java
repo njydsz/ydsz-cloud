@@ -13,9 +13,9 @@ import com.njydsz.pmis.common.safe.captcha.core.CaptchaStore;
  * 基于 Redis 实现，适用于集群环境
  * 支持自动过期，由 Redis TTL 机制管理，无需定时任务
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class RedisCaptchaStore implements CaptchaStore {
 

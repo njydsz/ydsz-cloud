@@ -49,8 +49,8 @@ import com.njydsz.pmis.common.cache.internal.loading.EnhancedLoadingCache;
  * }
  * }</pre>
  *
- * @author Marvin Lee
- * @version 4.0.0
+ * @author ydsz-pmis-team
+ * 
  */
 public class YdszCacheManager implements CacheManager, DisposableBean {
 

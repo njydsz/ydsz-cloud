@@ -21,9 +21,9 @@ import java.util.Set;
  *
  * <p><b>默认实现：</b>{@link DefaultCacheKeyStrategy} 使用 {@code tenantId:roleCodes} 格式。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @FunctionalInterface
 public interface CacheKeyStrategy {

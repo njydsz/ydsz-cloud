@@ -15,9 +15,9 @@ import java.util.Map;
  *   <li>扩展数据通过 typed extras 访问，避免类型转换错误</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class UserInfo implements Serializable {
 

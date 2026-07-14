@@ -64,9 +64,8 @@ import net.sf.jsqlparser.statement.update.Update;
  *   <li>支持 SetOperationList（UNION/UNION ALL）复杂查询</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

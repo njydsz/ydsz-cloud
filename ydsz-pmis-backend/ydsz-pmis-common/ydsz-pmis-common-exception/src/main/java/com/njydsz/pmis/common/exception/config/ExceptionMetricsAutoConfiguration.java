@@ -17,9 +17,9 @@ import io.micrometer.core.instrument.MeterRegistry;
  * <p>当项目中存在 Micrometer MeterRegistry 时，自动注册 {@link ExceptionMetrics} Bean。
  * 通过 {@code ydsz.exception.metrics-enabled=true}（默认启用）控制是否注册。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.0.0
  */
 @AutoConfiguration

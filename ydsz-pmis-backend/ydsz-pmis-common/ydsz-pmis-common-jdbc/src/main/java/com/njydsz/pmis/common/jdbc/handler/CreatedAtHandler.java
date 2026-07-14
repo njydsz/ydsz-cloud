@@ -31,9 +31,9 @@ import net.sf.jsqlparser.expression.TimestampValue;
  * INSERT INTO sys_user (name, email, created_at) VALUES ('张三', 'zhangsan@example.com', '2026-04-09 10:30:00');
  * </pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see UpdatedAtHandler 更新时间处理器
  * @see FieldFillConfiguration 字段填充配置
  * @since 1.0.0

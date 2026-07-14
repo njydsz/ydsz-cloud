@@ -35,9 +35,9 @@ import net.sf.jsqlparser.expression.TimestampValue;
  * UPDATE sys_user SET email = 'new@example.com', updated_at = '2026-04-09 11:00:00' WHERE id = 1;
  * </pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see CreatedAtHandler 创建时间处理器
  * @see FieldFillConfiguration 字段填充配置
  * @since 1.0.0

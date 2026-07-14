@@ -24,9 +24,9 @@ import com.njydsz.pmis.common.safe.csrf.CsrfTokenRepository;
  *
  * <p><b>注意：</b>此实现适用于单机部署。分布式环境下建议使用 Redis 实现。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see CsrfTokenRepository
  */
 public class InMemoryCsrfTokenRepository implements CsrfTokenRepository {

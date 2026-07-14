@@ -14,9 +14,9 @@ import com.njydsz.pmis.common.util.auth.YdszAuthInfo;
  * @see AbstractAuthHandler
  * @see WebAuthInfo
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Component("webAuthHandler")
 public class WebAuthHandler extends AbstractAuthHandler {

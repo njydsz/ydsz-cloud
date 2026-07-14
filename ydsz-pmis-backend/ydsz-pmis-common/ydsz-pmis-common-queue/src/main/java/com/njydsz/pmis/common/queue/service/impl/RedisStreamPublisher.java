@@ -16,9 +16,8 @@ import com.njydsz.pmis.common.queue.service.IMessagePublisher;
  * <p>使用 Redis XADD 命令将消息写入 Stream，实现可靠的消息发布。
  * 通过 {@link RedisTemplate} 复用 ydsz-pmis-common-redis 的连接。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class RedisStreamPublisher implements IMessagePublisher {

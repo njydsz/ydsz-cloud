@@ -10,9 +10,9 @@ import java.util.Set;
  * MediaType - 增强版媒体类型工具类
  * 参考：Spring MediaType, Apache Tika, IANA Media Types
  * 
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @desc 支持完整的 MIME 类型映射、扩展名互转、类型判断等
  */
 public class MediaType {

@@ -40,9 +40,9 @@ import nl.basjes.parse.useragent.UserAgentAnalyzer;
  *   <li>增量加载规则文件，避免启动时全量加载</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see <a href="https://github.com/nickbe/NickBot">UserAgentAnalyzer 项目</a>
  */
 @AutoConfiguration

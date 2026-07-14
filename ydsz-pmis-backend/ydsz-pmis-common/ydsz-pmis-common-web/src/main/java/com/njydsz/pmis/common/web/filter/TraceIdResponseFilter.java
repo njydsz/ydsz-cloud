@@ -20,9 +20,9 @@ import com.njydsz.pmis.common.web.config.WebTraceProperties;
  *   <li>过滤器结束后清理 ThreadLocal 中的 TraceId</li>
  * </ol>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see BaseRequestIdResponseFilter
  * @see TracerUtils
  */

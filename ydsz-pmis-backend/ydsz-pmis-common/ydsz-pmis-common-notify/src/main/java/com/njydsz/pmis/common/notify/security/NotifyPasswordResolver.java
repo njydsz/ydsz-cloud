@@ -17,9 +17,8 @@ import com.njydsz.pmis.common.notify.config.NotifyProperties;
  *
  * <p><b>安全建议：</b>生产环境通过环境变量或 KMS 注入 jasyptKey，不要硬编码在配置文件中。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class NotifyPasswordResolver {

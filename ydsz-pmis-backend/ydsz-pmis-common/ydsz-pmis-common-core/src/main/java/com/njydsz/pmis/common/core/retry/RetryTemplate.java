@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
  * });
  * }</pre>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 3.5.0
  */
 public class RetryTemplate {

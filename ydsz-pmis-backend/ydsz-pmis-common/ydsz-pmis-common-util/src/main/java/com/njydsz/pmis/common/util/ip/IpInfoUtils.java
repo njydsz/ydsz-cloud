@@ -12,9 +12,9 @@ package com.njydsz.pmis.common.util.ip;
  * log.info("Country: {}", ipInfo.getCountry());  // 美国
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 
 import java.io.ByteArrayOutputStream;

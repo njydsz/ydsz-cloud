@@ -10,9 +10,9 @@ import com.njydsz.pmis.common.docs.enums.DocumentFormat;
  * <p>
  * 对文档进行安全风险检测，包括 Office 宏、嵌入对象、PDF JavaScript、外部链接等。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 public interface DocumentSecurityScanner {

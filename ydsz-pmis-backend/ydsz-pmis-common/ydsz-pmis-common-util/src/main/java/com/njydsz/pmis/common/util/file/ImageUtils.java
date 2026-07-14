@@ -31,9 +31,9 @@ import lombok.extern.slf4j.Slf4j;
  * ImageUtils - 增强版图片处理工具类
  * 参考：Apache Commons Imaging, Thumbnailator, imgscalr
  * 
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @desc 支持图片读取、缩放、裁剪、旋转、格式转换、水印、Base64 等
  */
 @Slf4j

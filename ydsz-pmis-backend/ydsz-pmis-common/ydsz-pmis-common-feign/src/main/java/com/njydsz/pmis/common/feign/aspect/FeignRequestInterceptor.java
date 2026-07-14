@@ -46,9 +46,9 @@ import feign.RequestTemplate;
  *
  * <p><b>配置项：</b>通过 {@link FeignProperties.Propagation} 配置透传的 header 白名单。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see FeignProperties
  * @see AuthInfoUtils
  */

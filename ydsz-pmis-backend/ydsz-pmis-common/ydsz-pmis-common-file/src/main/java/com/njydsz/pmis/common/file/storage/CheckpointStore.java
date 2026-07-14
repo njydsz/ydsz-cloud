@@ -4,9 +4,9 @@ package com.njydsz.pmis.common.file.storage;
  * 检查点存储接口
  * <p>支持多实例部署时断点续传检查点共享。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public interface CheckpointStore {
 

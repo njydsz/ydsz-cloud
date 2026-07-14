@@ -37,8 +37,8 @@ import com.njydsz.pmis.common.cache.api.Cache;
  *   <li>限制导入 Map 大小，防止 OOM 攻击
  * </ul>
  *
- * @author Marvin Lee
- * @version 4.0.0
+ * @author ydsz-pmis-team
+ * 
  */
 public class CacheExportImport {
 

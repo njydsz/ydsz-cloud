@@ -50,9 +50,8 @@ import com.njydsz.pmis.common.util.url.UrlPathUtils;
  * <p><b>性能影响：</b>每次非 GET 请求都会调用一次 Redis 校验。建议生产环境
  * 启用 Redis 存储而非内存存储，否则多实例下 Token 不一致。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see CsrfProperties
  * @see CsrfTokenRepository

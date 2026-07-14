@@ -48,9 +48,9 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  *   <li>支持定时刷新缓存，保证数据最终一致性</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see RolePermissionLoader
  * @see YdszCache
  */

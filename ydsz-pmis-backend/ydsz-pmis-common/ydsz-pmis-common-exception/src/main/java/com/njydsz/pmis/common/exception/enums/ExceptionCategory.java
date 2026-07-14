@@ -20,9 +20,9 @@ package com.njydsz.pmis.common.exception.enums;
  *   <li>{@link #DUPLICATE} - 数据唯一约束冲突、重复提交</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.0.0
  * @see ExceptionLevel
  */

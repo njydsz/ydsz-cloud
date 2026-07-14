@@ -35,8 +35,8 @@ import com.njydsz.pmis.common.cache.support.CacheWarmer;
  *         maximum-size: 20000
  * </pre>
  *
- * @author Marvin Lee
- * @version 4.0.0
+ * @author ydsz-pmis-team
+ * 
  */
 @AutoConfiguration
 @ConditionalOnClass(YdszCacheManager.class)

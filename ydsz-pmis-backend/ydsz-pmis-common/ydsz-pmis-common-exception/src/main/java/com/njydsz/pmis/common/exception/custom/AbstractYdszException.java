@@ -24,9 +24,9 @@ import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
  * 确保项目 Lombok 版本 ≥ 1.18.16（支持与非 SuperBuilder 父类共存）。
  * 当前阶段作为前置准备，在 Javadoc 中记录迁移规划，待所有子类就绪后统一切换。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.0.0
  */
 public abstract class AbstractYdszException extends RuntimeException {

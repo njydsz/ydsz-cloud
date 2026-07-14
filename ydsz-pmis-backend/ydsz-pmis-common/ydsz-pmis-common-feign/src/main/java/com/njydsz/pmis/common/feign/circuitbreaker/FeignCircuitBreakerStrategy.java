@@ -23,9 +23,9 @@ import java.util.concurrent.atomic.LongAdder;
  * HALF_OPEN（半开） → 失败 → OPEN（重新熔断）
  * </pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public interface FeignCircuitBreakerStrategy {
 

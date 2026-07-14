@@ -30,9 +30,8 @@ import com.njydsz.pmis.common.json.YdszJson;
  * <p>支持安全设置：当配置了 secret 时，自动使用 HMAC-SHA256 签名校验，
  * 将 {@code timestamp} 和 {@code sign} 参数拼接到 webhook URL 中。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Component

@@ -30,9 +30,8 @@ import lombok.Data;
  * 当前配置前缀为 {@code ydsz.lock}，历史版本曾使用 {@code ydsz.distributed-lock} 前缀，
  * 已统一迁移至 {@code ydsz.lock}，旧前缀不再支持。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Data

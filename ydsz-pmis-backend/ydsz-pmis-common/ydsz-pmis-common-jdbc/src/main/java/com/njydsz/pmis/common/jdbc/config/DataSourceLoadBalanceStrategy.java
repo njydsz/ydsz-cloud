@@ -8,9 +8,8 @@ import java.util.List;
  * <p>在读写分离场景下，用于从多个从库中选择一个进行读操作。
  * 提供多种策略实现：轮询、随机、权重。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public interface DataSourceLoadBalanceStrategy {

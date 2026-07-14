@@ -62,9 +62,9 @@ import net.sf.jsqlparser.statement.update.Update;
  * 避免因上下文缺失导致跨租户数据泄露。对于确需跨租户的场景（如系统初始化、数据迁移），
  * 请将相关表加入 {@code ydsz.jdbc.tenant-isolation.ignore-tables} 配置。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see TenantIsolationProperties
  */
 @Slf4j

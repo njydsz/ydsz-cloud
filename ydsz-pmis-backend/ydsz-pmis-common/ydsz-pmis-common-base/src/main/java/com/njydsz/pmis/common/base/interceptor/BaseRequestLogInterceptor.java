@@ -21,9 +21,9 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  * <p>子类覆盖 {@link #resolveRequestId(HttpServletRequest)} 提供不同的 ID 来源，
  * 覆盖 {@link #getLogger()} 提供不同的日志实例。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public abstract class BaseRequestLogInterceptor implements HandlerInterceptor {
 

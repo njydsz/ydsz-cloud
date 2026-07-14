@@ -37,9 +37,9 @@ import java.util.Base64;
  * String base64 = Base64Utils.convertFileToBase64("/path/to/file.txt");
  * </pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see Base64
  */
 public class Base64Utils {

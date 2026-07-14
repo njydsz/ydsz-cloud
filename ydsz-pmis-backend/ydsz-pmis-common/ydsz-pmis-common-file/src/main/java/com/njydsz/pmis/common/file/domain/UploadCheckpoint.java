@@ -15,9 +15,9 @@ import lombok.NoArgsConstructor;
  * <p>记录分片上传的进度，支持断点续传。
  * 当上传中断后，可通过读取检查点信息恢复上传进度。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Data
 @NoArgsConstructor

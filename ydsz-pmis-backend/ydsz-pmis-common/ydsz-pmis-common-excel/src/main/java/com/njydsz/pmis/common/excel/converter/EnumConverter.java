@@ -4,10 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 枚举转换。?
+ * 枚举转换。
  *
- * <p>用于将枚举值与字符串之间的转换。?
- * 支持自定义映射关系。?/p>
+ * <p>用于将枚举值与字符串之间的转换。
+ * 支持自定义映射关系。/p>
  *
  * <h3>使用示例</h3>
  * <pre>{@code
@@ -19,9 +19,9 @@ import java.util.Map;
  * @ExcelProperty(value = "性别", converterClass = EnumConverter.class)
  * private Gender gender;
  *
- * // 使用自定义映。?
- * EnumConverter.registerMapping(Gender.class, "。?, Gender.MALE);
- * EnumConverter.registerMapping(Gender.class, "。?, Gender.FEMALE);
+ * // 使用自定义映。
+ * EnumConverter.registerMapping(Gender.class, "。, Gender.MALE);
+ * EnumConverter.registerMapping(Gender.class, "。, Gender.FEMALE);
  * }</pre>
  *
  * @param <E> 枚举类型
@@ -72,11 +72,11 @@ public class EnumConverter<E extends Enum<E>> implements Converter<E, String> {
     }
 
     /**
-     * 注册自定义枚举映。?
+     * 注册自定义枚举映。
      *
      * @param enumClass 枚举类型
-     * @param stringValue 字符串。?
-     * @param enumValue 枚举。?
+     * @param stringValue 字符串。
+     * @param enumValue 枚举。
      */
     public static void registerMapping(Class<?> enumClass, String stringValue, Enum<?> enumValue) {
         CUSTOM_MAPPINGS.computeIfAbsent(enumClass, k -> new HashMap<>())

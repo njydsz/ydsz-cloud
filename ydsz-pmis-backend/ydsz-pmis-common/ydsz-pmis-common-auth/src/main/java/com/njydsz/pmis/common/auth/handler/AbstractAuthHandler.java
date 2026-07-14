@@ -27,9 +27,9 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  * <p>从 {@code com.njydsz.pmis.common.util.auth.AbstractAuthHandler} 迁移而来，
  * 已移除对旧版弃用类的继承依赖，新代码应继承本类。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see AuthHandler
  */
 public abstract class AbstractAuthHandler implements AuthHandler {

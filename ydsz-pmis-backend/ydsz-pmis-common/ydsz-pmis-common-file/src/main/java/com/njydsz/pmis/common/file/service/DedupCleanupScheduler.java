@@ -11,9 +11,9 @@ import org.springframework.scheduling.annotation.Scheduled;
  * 由 {@link com.njydsz.pmis.common.file.config.FileConfiguration} 通过 @Bean 注册，
  * 仅当 {@link FileDedupService} 存在时生效。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class DedupCleanupScheduler {
 

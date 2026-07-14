@@ -24,7 +24,7 @@ import io.micrometer.core.instrument.MeterRegistry;
  *
  * <p>退避策略：baseDelay * 2^retryCount，最大不超过 maxBackoffSeconds。
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 1.0.0
  */
 public class OutboxProcessor {

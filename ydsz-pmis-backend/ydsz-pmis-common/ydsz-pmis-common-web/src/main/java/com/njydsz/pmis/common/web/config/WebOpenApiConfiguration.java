@@ -10,9 +10,9 @@ import com.njydsz.pmis.common.base.config.BaseOpenApiConfiguration;
  * <p>继承 {@link BaseOpenApiConfiguration}，为 Web 端配置 Knife4j/Swagger 文档信息。
  * 包括文档标题、描述、分组等。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see BaseOpenApiConfiguration
  */
 @AutoConfiguration

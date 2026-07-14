@@ -27,7 +27,7 @@ import com.njydsz.pmis.common.config.encrypt.EncryptablePropertyResolver;
  *   <li>默认开发密钥（仅当 enabled=true 且未设置密钥时警告）</li>
  * </ol>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @AutoConfiguration

@@ -9,9 +9,9 @@ import org.slf4j.LoggerFactory;
  * <p>提取分片上传初始化、断点续传、进度管理的通用逻辑，
  * 具体存储实现只需实现断点检查点保存/加载的抽象方法。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public abstract class AbstractChunkedUploadTemplate {
 

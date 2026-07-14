@@ -8,9 +8,9 @@ import com.njydsz.pmis.common.docs.domain.DocumentContent;
  * 定义文档预处理的标准规范。预处理器按链式调用，
  * 前一个处理器的输出作为下一个处理器的输入。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 public interface DocumentPreprocessor {

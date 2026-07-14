@@ -3,9 +3,9 @@ package com.njydsz.pmis.common.file.constant;
 /**
  * 全局公共常量
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @date 2024/6/7 11:12
  */
 public interface FileConstant {

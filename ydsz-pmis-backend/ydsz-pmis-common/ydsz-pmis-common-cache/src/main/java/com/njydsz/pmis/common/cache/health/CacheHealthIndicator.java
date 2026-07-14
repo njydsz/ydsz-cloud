@@ -25,8 +25,8 @@ import com.njydsz.pmis.common.cache.stats.CacheStats;
  *
  * <p>可适配为 Spring Boot Actuator HealthIndicator（如 spring-boot-health 在 classpath 中）。
  *
- * @author Marvin Lee
- * @version 4.1.0
+ * @author ydsz-pmis-team
+ * 
  */
 public class CacheHealthIndicator {
 

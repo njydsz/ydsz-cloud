@@ -40,9 +40,8 @@ import com.njydsz.pmis.common.queue.domain.QueueMessage;
  *   <li>subscribeMessage() 的同步消费应设置合理的超时时间</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public interface IMessageSubscriber {

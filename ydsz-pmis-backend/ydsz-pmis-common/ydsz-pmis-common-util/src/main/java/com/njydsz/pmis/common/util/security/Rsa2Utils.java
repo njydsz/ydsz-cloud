@@ -21,9 +21,9 @@ import javax.crypto.Cipher;
 import lombok.extern.slf4j.Slf4j;
 /**
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @desc Rsa2Utils - RSA (SHA256withRSA) 加解密与签名工具类（纯 JDK 实现，零第三方依赖）
  */
 @Slf4j

@@ -25,9 +25,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>提供 SCAN、Lua 脚本执行、Pipeline 高级用法等操作。
  * SCAN 是替代 KEYS 命令的安全遍历方式，不会阻塞 Redis 服务器。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

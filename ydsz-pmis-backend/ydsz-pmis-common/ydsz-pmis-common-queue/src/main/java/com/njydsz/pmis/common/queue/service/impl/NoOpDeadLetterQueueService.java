@@ -10,9 +10,8 @@ import com.njydsz.pmis.common.queue.service.DeadLetterQueueService;
  * <p>当 RedisService 不可用时使用的空实现，避免返回 null Bean。
  * 所有方法均为空操作，确保依赖注入不会失败。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class NoOpDeadLetterQueueService implements DeadLetterQueueService {

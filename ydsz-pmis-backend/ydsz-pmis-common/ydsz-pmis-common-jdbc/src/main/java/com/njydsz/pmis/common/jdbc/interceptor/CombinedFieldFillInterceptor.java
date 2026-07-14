@@ -46,9 +46,8 @@ import net.sf.jsqlparser.statement.update.Update;
  *   <li>每个 handler 独立判断 createIgnore / updateIgnore</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see FieldFillInterceptor
  */

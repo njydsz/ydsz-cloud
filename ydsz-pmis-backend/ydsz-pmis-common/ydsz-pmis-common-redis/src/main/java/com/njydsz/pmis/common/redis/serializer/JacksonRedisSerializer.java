@@ -29,9 +29,8 @@ import com.njydsz.pmis.common.json.YdszJson;
  *   <li>序列化/反序列化逻辑统一委托给 YdszJson，保持全项目一致</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 4.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class JacksonRedisSerializer implements RedisSerializer<Object> {

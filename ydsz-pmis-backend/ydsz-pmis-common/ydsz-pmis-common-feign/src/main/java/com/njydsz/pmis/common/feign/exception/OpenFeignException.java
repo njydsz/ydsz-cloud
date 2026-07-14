@@ -23,9 +23,9 @@ import lombok.Getter;
  * status: 500, reason: Internal Server Error, body: {"code":"100500","msg":"系统内部错误"}
  * </pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Getter
 public class OpenFeignException extends RuntimeException {

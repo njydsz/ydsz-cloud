@@ -15,9 +15,9 @@ import com.njydsz.pmis.common.core.config.CoreProperties;
  *   <li>{@code ydsz.core.default-page-size} 覆盖 {@link #DEFAULT_PAGE_SIZE}</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see CoreProperties
  */
 public final class PageConstants {

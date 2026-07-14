@@ -37,9 +37,8 @@ import com.njydsz.pmis.common.queue.domain.QueueMessage;
  *   <li>避免在处理器中抛出检查异常，建议转换为运行时异常</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @FunctionalInterface

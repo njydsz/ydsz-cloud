@@ -22,9 +22,8 @@ import com.njydsz.pmis.common.queue.domain.QueueMessage;
  * <p><b>线程安全性：</b>
  * 实现类应该是线程安全的，可以被多个线程共享使用。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public interface IMessagePublisher {

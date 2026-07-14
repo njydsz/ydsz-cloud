@@ -30,9 +30,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>当提供 {@link com.njydsz.pmis.common.redis.service.RedisService} 时，Redis 队列
  * 优先复用 ydsz-pmis-common-redis 的连接，避免重复创建 JedisPool。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

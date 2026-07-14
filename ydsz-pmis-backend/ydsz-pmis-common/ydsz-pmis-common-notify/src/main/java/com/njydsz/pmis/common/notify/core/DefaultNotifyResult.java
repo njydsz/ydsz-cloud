@@ -7,9 +7,8 @@ import lombok.NoArgsConstructor;
 /**
  * 默认的消息发送结果实现
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Data

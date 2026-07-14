@@ -30,9 +30,9 @@ import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
  * messages_en_US.properties    // 美式英语
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.5.0
  */
 public abstract class BaseI18nConfiguration {

@@ -31,9 +31,8 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>仅适用于轻量级任务队列、临时缓冲等非关键场景</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

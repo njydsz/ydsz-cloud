@@ -46,9 +46,9 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>支持 ScheduledExecutorService 的 TTL 包装</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Slf4j
 public final class RequestContextExecutor {

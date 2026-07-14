@@ -14,9 +14,9 @@ import com.njydsz.pmis.common.json.YdszJson;
  * XssJacksonConfig.registerXssProtection();
  * </pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 5.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class XssJacksonConfig {
 

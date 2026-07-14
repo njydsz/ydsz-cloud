@@ -27,9 +27,9 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>.docx/.xlsx/.pptx 中检测是否存在 vbaProject.bin</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 @Slf4j

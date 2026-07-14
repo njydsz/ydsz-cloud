@@ -32,9 +32,9 @@ import com.njydsz.pmis.common.base.filter.TraceFilter;
  *
  * <p>横切点执行顺序参考 {@code docs/BASE_INTERCEPTOR_ORDER.md}。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.5.0
  */
 @AutoConfiguration

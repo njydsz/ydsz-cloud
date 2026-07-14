@@ -14,9 +14,9 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  * 消息工具类
  * 提供国际化消息处理的相关方法
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class MessageUtils {
     private static final Logger logger = LoggerFactory.getLogger(MessageUtils.class);

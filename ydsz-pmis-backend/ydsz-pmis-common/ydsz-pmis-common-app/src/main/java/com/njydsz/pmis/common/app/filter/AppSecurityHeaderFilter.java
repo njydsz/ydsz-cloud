@@ -12,9 +12,8 @@ import com.njydsz.pmis.common.safe.filter.BaseSecurityHeaderFilter;
  *
  * <p><b>线程安全性：</b>无状态过滤器，线程安全。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see SecurityHeaderProperties
  */

@@ -37,9 +37,9 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  *   <li>记录缓存命中率统计，支持 JMX/Actuator 监控</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see ColumnPermissionResolver
  * @see YdszCache
  */

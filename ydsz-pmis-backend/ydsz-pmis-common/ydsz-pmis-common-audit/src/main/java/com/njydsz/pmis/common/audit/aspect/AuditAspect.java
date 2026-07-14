@@ -62,9 +62,8 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  *   <li>审计本身异常被 try-catch 隔离，绝不污染业务主链路</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Aspect

@@ -3,9 +3,9 @@ package com.njydsz.pmis.common.util.ip;
 /**
  * IP 地址工具类 - 支持 IPv4/IPv6 地址解析、校验、范围判断、本地 IP 枚举等
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 
 import java.net.Inet6Address;

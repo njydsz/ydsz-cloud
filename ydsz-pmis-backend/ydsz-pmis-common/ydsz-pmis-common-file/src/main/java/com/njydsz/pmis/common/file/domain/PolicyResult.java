@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
  * 前端直传签名结果
  * <p>封装服务端生成的直传凭证，前端可直接使用该凭证上传文件到云存储。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Data
 @NoArgsConstructor

@@ -10,9 +10,8 @@ import java.util.Objects;
  * 通过 {@link Object#equals} 和 {@link Object#hashCode} 区分不同任务，
  * 避免反序列化时不同实例的 member 重复。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class DelayedTask implements Serializable {

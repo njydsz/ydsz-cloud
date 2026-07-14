@@ -29,9 +29,9 @@ import org.slf4j.MDC;
  *
  * <p><b>注意：</b>所有方法均为线程局部状态，线程池场景下需要手动透传。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.0.0
  */
 public final class TraceContext {

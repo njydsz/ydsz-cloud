@@ -3,7 +3,7 @@ package com.njydsz.pmis.common.seata.api;
 /**
  * 分布式事务类型枚举
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @since 3.5.0
  */
 public enum TransactionType {

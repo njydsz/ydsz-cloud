@@ -28,9 +28,8 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>释放锁：原子性递减计数，计数为 0 时删除整个 Hash</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Slf4j

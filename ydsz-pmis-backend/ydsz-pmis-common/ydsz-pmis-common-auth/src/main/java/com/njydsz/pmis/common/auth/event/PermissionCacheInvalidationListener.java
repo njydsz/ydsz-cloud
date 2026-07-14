@@ -28,9 +28,9 @@ import com.njydsz.pmis.common.json.YdszJson;
  *   <li>用户角色被分配后自动清理缓存</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class PermissionCacheInvalidationListener {
 

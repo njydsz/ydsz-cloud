@@ -18,9 +18,9 @@ import org.springframework.context.annotation.Bean;
  * <p><b>设计说明：</b>将 {@code @AutoConfiguration} 与 {@code @RestControllerAdvice} 解耦，
  * 与 {@link MvcExceptionHandlerAutoConfiguration} 配合使用。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.0.0
  * @see ValidationExceptionHandler
  */

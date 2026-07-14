@@ -47,9 +47,9 @@ import com.njydsz.pmis.common.file.util.FileTypeValidator;
  *   <li>定时清理：每小时自动清理过期的分片上传上下文</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @AutoConfiguration
 @EnableConfigurationProperties({FileProperties.class, FileUploadProperties.class})

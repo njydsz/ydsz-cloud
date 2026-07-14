@@ -23,9 +23,8 @@ package com.njydsz.pmis.common.file.storage;
  * {@link com.njydsz.pmis.common.file.storage.platform.S3Storage}，
  * 通过修改 endpoint/region 即可对接 MinIO、Ceph、腾讯云 COS 等。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public final class StorageType {

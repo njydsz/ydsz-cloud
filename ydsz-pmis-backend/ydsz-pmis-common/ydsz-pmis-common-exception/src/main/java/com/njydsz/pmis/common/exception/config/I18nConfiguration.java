@@ -52,9 +52,9 @@ import lombok.extern.slf4j.Slf4j;
  *     i18nBaseNames: i18n/messages
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 3.0.0
  * @see MessageSource
  * @see I18nProperties

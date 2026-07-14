@@ -22,8 +22,8 @@ import java.util.OptionalLong;
  * });
  * }</pre>
  *
- * @author Marvin Lee
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * 
  */
 public interface CachePolicy {
 

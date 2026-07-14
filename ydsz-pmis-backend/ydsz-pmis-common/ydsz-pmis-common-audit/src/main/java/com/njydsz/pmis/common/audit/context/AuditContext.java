@@ -19,9 +19,8 @@ import com.njydsz.pmis.common.core.context.RequestContext;
  * <p>通用字段（如 operatorId/operatorName）已从 {@link RequestContext} 获取，
  * 避免重复存储，保持数据一致性。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public class AuditContext {

@@ -31,9 +31,8 @@ import lombok.Data;
  *   <li>本配置：纯 SQL 层拦截，不依赖实体字段值，更适合 DTO 更新场景</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see OptimisticLockInterceptor
  */

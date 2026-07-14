@@ -41,9 +41,8 @@ import lombok.Data;
  * <p><b>安全约束：</b>{@code accessKey} / {@code secretKey} 强烈建议通过
  * 环境变量或 Vault 注入，不要硬编码在配置文件中。</p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see StorageType
  */

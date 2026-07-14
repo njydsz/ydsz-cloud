@@ -29,9 +29,9 @@ import com.njydsz.pmis.common.safe.captcha.core.CaptchaResult;
  *   <li>安全随机数生成器</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class ImageCaptchaGenerator implements CaptchaGenerator {
 

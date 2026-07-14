@@ -25,9 +25,9 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>块间有 overlap 字符的重叠（默认 200），保证上下文连续性</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 @Slf4j

@@ -71,9 +71,9 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>自定义乐观锁拦截器（ydsz.jdbc.optimistic-lock.enable=true）与 @Version 注解互斥；默认使用内置 OptimisticLockerInnerInterceptor 处理 @Version 实体</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see MybatisPlusInterceptor
  * @see OptimisticLockInterceptor
  * @see LogicalDeleteInterceptor

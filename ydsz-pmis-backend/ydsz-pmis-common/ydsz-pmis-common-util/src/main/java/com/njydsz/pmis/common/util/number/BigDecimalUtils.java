@@ -23,9 +23,9 @@ import java.util.stream.Collectors;
  * 6. 百分比计算
  * 7. 批量处理与 Stream 支持
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class BigDecimalUtils {
 

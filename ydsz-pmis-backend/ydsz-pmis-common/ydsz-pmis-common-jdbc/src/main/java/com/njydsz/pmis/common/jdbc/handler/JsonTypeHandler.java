@@ -42,9 +42,8 @@ import com.njydsz.pmis.common.json.YdszJson;
  *
  * @param <T> Java 对象类型
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @see <a href="https://mybatis.org/mybatis-3/zh/configuration.html#typeHandlers">MyBatis TypeHandler</a>
  */

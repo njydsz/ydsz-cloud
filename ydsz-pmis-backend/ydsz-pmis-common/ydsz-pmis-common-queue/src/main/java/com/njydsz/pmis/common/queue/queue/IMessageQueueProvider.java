@@ -5,9 +5,8 @@ import com.njydsz.pmis.common.queue.enums.QueueType;
 /**
  * 消息队列对象工厂
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  * @Date: 2024/1/25 14:23
  */

@@ -5,9 +5,9 @@ package com.njydsz.pmis.common.core.constant;
  *
  * <p>定义系统中使用的协议前缀常量，包括 RMI/LDAP 查找协议和 HTTP/HTTPS 网络协议。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public final class ProtocolConstants {
 

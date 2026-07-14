@@ -18,7 +18,7 @@ import com.njydsz.pmis.common.cache.internal.concurrent.StripedConcurrentCache;
 /**
  * CacheProtectionGuard 防穿透/防击穿/防雪崩测试
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  */
 @DisplayName("CacheProtectionGuard 缓存防护测试")
 class CacheProtectionGuardTest {

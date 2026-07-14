@@ -23,9 +23,9 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  *
  * <p>提供 Token 格式校验能力，支持 JWT 和 Bearer Token 格式验证。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public class AccessTokenUtils {
 

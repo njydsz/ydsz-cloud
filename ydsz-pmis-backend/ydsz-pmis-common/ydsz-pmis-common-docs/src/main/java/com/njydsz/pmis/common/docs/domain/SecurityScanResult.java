@@ -12,9 +12,9 @@ import lombok.Data;
  * <p>
  * 文档安全扫描的完整输出，包含安全等级和风险项列表。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 @Data

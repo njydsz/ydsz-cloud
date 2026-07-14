@@ -25,9 +25,9 @@ import com.njydsz.pmis.common.docs.security.pii.PiiDetector;
  *   <li>JWT 格式（header.payload.signature）</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 @Component

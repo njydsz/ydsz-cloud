@@ -42,9 +42,8 @@ import lombok.RequiredArgsConstructor;
  * <p><b>线程安全性：</b>无状态 Bean，{@link DocProperties} 与 {@code applicationVersion}
  * 在初始化后即视为只读，因此导出器本身线程安全。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Component
@@ -380,7 +379,7 @@ public class DefaultDocExporter implements DocExporter {
      *   <li>{@code ydsz.doc.exporter=default}（默认 default）</li>
      * </ul>
      *
-     * @author Marvin Lee
+     * @author ydsz-pmis-team
      * @since 1.0.0
      */
     static class DefaultDocExporterCondition extends AllNestedConditions {

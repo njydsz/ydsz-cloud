@@ -25,9 +25,8 @@ import lombok.Data;
  *
  * <p><b>默认值说明：</b> 所有默认值均参考互联网大厂连接池最佳实践。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 @Data

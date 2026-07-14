@@ -30,9 +30,9 @@ import com.njydsz.pmis.common.util.string.StringUtils;
  * <p><b>使用方式：</b>
  * 通常由 {@link XssFilter} 创建并传递给 FilterChain。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see XssFilter
  * @see EscapeUtils
  */

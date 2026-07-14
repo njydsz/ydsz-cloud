@@ -22,9 +22,9 @@ import com.njydsz.pmis.common.core.enums.ServiceType;
  *   <li>ydsz-pmis-common-jdbc：SQL 拦截器读取并改写 SQL</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public final class HeaderConstants {
 
@@ -37,9 +37,9 @@ public final class HeaderConstants {
      *
      * <p>用于区分请求来源服务类型（WEB_SERVICE / APP_SERVICE 等）。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      * @see ServiceType
      */
     public static final String X_SERVICE_TYPE = "X-Service-Type";
@@ -49,9 +49,9 @@ public final class HeaderConstants {
      *
      * <p>格式示例：{@code zh-CN}、{@code en-US}。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_USER_LANGUAGE = "X-User-Language";
 
@@ -60,9 +60,9 @@ public final class HeaderConstants {
      *
      * <p>用于设备追踪与多端识别。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_DISTINCT_ID = "X-Distinct-Id";
 
@@ -71,9 +71,9 @@ public final class HeaderConstants {
      *
      * <p>用于区分公司用户、访客用户、ydsz用户等身份类型。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      * @see IdentityType
      */
     public static final String X_IDENTITY_TYPE = "X-Identity-Type";
@@ -83,9 +83,9 @@ public final class HeaderConstants {
      *
      * <p>用户登录后颁发的 AccessToken，用于身份认证与用户信息加载。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_ACCESS_TOKEN = "X-Access-Token";
 
@@ -107,9 +107,9 @@ public final class HeaderConstants {
      * <p>当此 header 存在时，SQL 拦截器优先按该 scope 对应维度过滤；
      * 当不携带时，拦截器会按所有非空维度叠加（取交集）。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      * @see DataScopeType
      */
     public static final String X_DATA_SCOPE = "X-Data-Scope";
@@ -123,9 +123,9 @@ public final class HeaderConstants {
      *
      * <p>对应 scope：{@link DataScopeType#GROUP}
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_COMPANY_IDS = "X-Company-Ids";
 
@@ -139,9 +139,9 @@ public final class HeaderConstants {
      * <p>对应 scope：{@link DataScopeType#COMPANY}、
      * {@link DataScopeType#DEPT}
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_DEPT_IDS = "X-Dept-Ids";
 
@@ -152,9 +152,9 @@ public final class HeaderConstants {
      *
      * <p>对应 scope：{@link DataScopeType#USER}
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_UNIQUE_ID = "X-Unique-Id";
 
@@ -165,9 +165,9 @@ public final class HeaderConstants {
      *
      * <p>对应 scope：{@link DataScopeType#TENANT}
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_TENANT_ID = "X-Tenant-Id";
 
@@ -180,9 +180,9 @@ public final class HeaderConstants {
      *
      * <p>对应 scope：{@link DataScopeType#PROJECT}
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_PROJECT_IDS = "X-Project-Ids";
 
@@ -195,9 +195,9 @@ public final class HeaderConstants {
      *
      * <p>对应 scope：{@link DataScopeType#REGION}
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_REGION_IDS = "X-Region-Ids";
 
@@ -215,18 +215,18 @@ public final class HeaderConstants {
      *
      * <p>对应 scope：{@link DataScopeType#CUSTOM}
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_CUSTOM_SQL_CONDITION = "X-Custom-Sql-Condition";
 
     /**
      * 请求/响应头报文类型。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String CONTENT_TYPE = "Content-Type";
 
@@ -252,9 +252,9 @@ public final class HeaderConstants {
      *
      * <p>示例：{@code sys_user:id,name,email;sys_role:id,role_name}
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_VISIBLE_COLUMNS = "X-Visible-Columns";
 
@@ -274,9 +274,9 @@ public final class HeaderConstants {
      *
      * <p>示例：{@code sys_user:name,email,phone;sys_role:role_name,description}
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_EDITABLE_COLUMNS = "X-Editable-Columns";
 
@@ -291,9 +291,9 @@ public final class HeaderConstants {
      * <p>服务端收到请求后，会使用相同的 AppSecret 重新计算签名并与此 Header 值对比，
      * 签名不匹配时将拒绝请求并记录安全审计日志。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_COL_PERMISSION_SIGN = "X-Col-Permission-Sign";
 
@@ -302,9 +302,9 @@ public final class HeaderConstants {
      *
      * <p>用于标识请求的来源渠道（如 PC Web / H5 / APP / 小程序）。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_REQUEST_SOURCE = "X-Request-Source";
 
@@ -317,9 +317,9 @@ public final class HeaderConstants {
      * <p>区别于标准的 {@code X-Forwarded-For}（支持多段链路 IP），
      * 本系统约定使用单值，作为"客户端 IP"的透传载体。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_FORWARDED_FOR = "X-Forwarded-For";
 
@@ -329,9 +329,9 @@ public final class HeaderConstants {
      * <p>用于全链路请求追踪，贯穿网关、服务间调用、日志记录等场景。
      * 若请求未携带，由服务端自动生成并写入响应头。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_REQUEST_ID = "X-Request-Id";
 
@@ -340,9 +340,9 @@ public final class HeaderConstants {
      *
      * <p>用于 HTTP/2 协议下的流标识，支持多路复用场景的请求追踪。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String HTTP2_STREAM_ID = "X-Http2-Stream-Id";
 
@@ -351,9 +351,9 @@ public final class HeaderConstants {
      *
      * <p>用于 gRPC 服务间调用的追踪标识，与 HTTP 请求追踪体系保持一致。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String GRPC_TRACE_HEADER = "grpc-trace-bin";
 
@@ -362,9 +362,9 @@ public final class HeaderConstants {
      *
      * <p>用于分布式链路追踪，标识当前请求的父 Span ID。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_TRACE_PARENT = "traceparent";
 
@@ -373,9 +373,9 @@ public final class HeaderConstants {
      *
      * <p>W3C Trace Context 标准头部，标识追踪状态标志位。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_TRACE_STATE = "tracestate";
 
@@ -384,9 +384,9 @@ public final class HeaderConstants {
      *
      * <p>W3C Baggage 标准头部，用于在分布式链路中传递自定义键值对。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_BAGGAGE = "baggage";
 
@@ -395,9 +395,9 @@ public final class HeaderConstants {
      *
      * <p>标识客户端类型、操作系统、浏览器等信息。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String USER_AGENT = "User-Agent";
 
@@ -406,9 +406,9 @@ public final class HeaderConstants {
      *
      * <p>用于传递认证凭据，如 Bearer Token、Basic Auth 等。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String AUTHORIZATION = "Authorization";
 
@@ -417,9 +417,9 @@ public final class HeaderConstants {
      *
      * <p>请求或响应体的字节长度。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String CONTENT_LENGTH = "Content-Length";
 
@@ -428,9 +428,9 @@ public final class HeaderConstants {
      *
      * <p>客户端支持的响应内容编码方式（如 gzip、deflate）。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String ACCEPT_ENCODING = "Accept-Encoding";
 
@@ -439,9 +439,9 @@ public final class HeaderConstants {
      *
      * <p>响应体使用的内容编码方式。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String CONTENT_ENCODING = "Content-Encoding";
 
@@ -450,9 +450,9 @@ public final class HeaderConstants {
      *
      * <p>控制缓存行为，如 no-cache、max-age 等。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String CACHE_CONTROL = "Cache-Control";
 
@@ -461,9 +461,9 @@ public final class HeaderConstants {
      *
      * <p>标识请求来源的源（scheme、host、port）。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String ORIGIN = "Origin";
 
@@ -472,9 +472,9 @@ public final class HeaderConstants {
      *
      * <p>响应头，指定允许访问该资源的外部域。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
 
@@ -483,9 +483,9 @@ public final class HeaderConstants {
      *
      * <p>响应头，指定允许的 HTTP 方法。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String ACCESS_CONTROL_ALLOW_METHODS = "Access-Control-Allow-Methods";
 
@@ -494,9 +494,9 @@ public final class HeaderConstants {
      *
      * <p>响应头，指定允许的请求头。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String ACCESS_CONTROL_ALLOW_HEADERS = "Access-Control-Allow-Headers";
 
@@ -505,9 +505,9 @@ public final class HeaderConstants {
      *
      * <p>用于防止 XSS 攻击，控制页面可以加载哪些资源。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String CONTENT_SECURITY_POLICY = "Content-Security-Policy";
 
@@ -516,9 +516,9 @@ public final class HeaderConstants {
      *
      * <p>强制浏览器使用 HTTPS 访问站点。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String STRICT_TRANSPORT_SECURITY = "Strict-Transport-Security";
 
@@ -527,9 +527,9 @@ public final class HeaderConstants {
      *
      * <p>防止浏览器进行 MIME 类型嗅探。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_CONTENT_TYPE_OPTIONS = "X-Content-Type-Options";
 
@@ -538,9 +538,9 @@ public final class HeaderConstants {
      *
      * <p>控制页面是否可以被嵌入到 frame/iframe 中，防止点击劫持。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_FRAME_OPTIONS = "X-Frame-Options";
 
@@ -549,9 +549,9 @@ public final class HeaderConstants {
      *
      * <p>启用浏览器的 XSS 过滤器。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String X_XSS_PROTECTION = "X-XSS-Protection";
 
@@ -560,9 +560,9 @@ public final class HeaderConstants {
      *
      * <p>控制 Referer 头的发送策略。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String REFERRER_POLICY = "Referrer-Policy";
 
@@ -571,9 +571,9 @@ public final class HeaderConstants {
      *
      * <p>控制浏览器特性（如摄像头、麦克风）的访问权限。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String PERMISSIONS_POLICY = "Permissions-Policy";
 
@@ -582,9 +582,9 @@ public final class HeaderConstants {
      *
      * <p>控制页面是否可以嵌入跨域资源。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String CROSS_ORIGIN_EMBEDDER_POLICY = "Cross-Origin-Embedder-Policy";
 
@@ -593,9 +593,9 @@ public final class HeaderConstants {
      *
      * <p>控制跨域窗口的打开行为。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String CROSS_ORIGIN_OPENER_POLICY = "Cross-Origin-Opener-Policy";
 
@@ -604,9 +604,9 @@ public final class HeaderConstants {
      *
      * <p>控制跨域资源的访问策略。
      *
-     * @author Marvin Lee
-     * @email limw1888@126.com
-     * @version 3.5.0
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     * 
      */
     public static final String CROSS_ORIGIN_RESOURCE_POLICY = "Cross-Origin-Resource-Policy";
 }

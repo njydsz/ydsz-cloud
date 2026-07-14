@@ -24,9 +24,9 @@ import feign.RequestTemplate;
  * 2. 配合 FeignTraceHandler 实现完整的追踪能力
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see FeignTraceHandler
  */
 public class TraceRequestInterceptor implements RequestInterceptor {

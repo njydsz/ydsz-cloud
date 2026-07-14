@@ -7,9 +7,8 @@ package com.njydsz.pmis.common.audit.enums;
  * 拒绝率等指标）。与 HTTP 状态码解耦，仅描述业务方法的执行结果。
  * </p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public enum AuditStatus {

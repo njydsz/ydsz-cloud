@@ -31,8 +31,8 @@ import com.njydsz.pmis.common.cache.api.Cache;
  * <p>注意：本类需要 Spring Data Redis 在 classpath 中。 如果 Redis 不可用，应降级为
  * NoopCacheInvalidationBroadcaster。
  *
- * @author Marvin Lee
- * @version 4.1.0
+ * @author ydsz-pmis-team
+ * 
  */
 public class RedisCacheInvalidationBroadcaster implements CacheInvalidationBroadcaster {
 

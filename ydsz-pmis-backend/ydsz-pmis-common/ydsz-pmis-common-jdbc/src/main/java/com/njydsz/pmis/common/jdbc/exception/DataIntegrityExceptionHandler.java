@@ -32,9 +32,9 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>其他数据完整性异常 - 返回通用冲突提示</li>
  * </ul>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Slf4j
 @RestControllerAdvice

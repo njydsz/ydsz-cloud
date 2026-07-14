@@ -11,9 +11,8 @@ import com.njydsz.pmis.common.notify.template.TemplateEngine;
  *
  * <p>每种通知渠道实现该接口，通过策略模式实现渠道自动分发。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  * @since 1.0.0
  */
 public interface NotifyChannelStrategy {

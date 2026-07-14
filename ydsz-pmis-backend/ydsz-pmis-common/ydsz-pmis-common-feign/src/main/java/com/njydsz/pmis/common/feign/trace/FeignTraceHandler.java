@@ -19,9 +19,9 @@ package com.njydsz.pmis.common.feign.trace;
  * 3. 在 application.yml 中配置使用
  * }</pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public interface FeignTraceHandler {
 

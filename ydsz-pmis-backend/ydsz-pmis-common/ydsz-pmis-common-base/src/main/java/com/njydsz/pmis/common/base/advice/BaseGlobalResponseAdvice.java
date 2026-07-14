@@ -26,9 +26,9 @@ import com.njydsz.pmis.common.json.YdszJson;
  * <p>支持通过构造器注入自定义 ObjectMapper，提升可测试性和灵活性。
  * 若未注入，则使用 YdszJson 的默认 ObjectMapper。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Object> {
 

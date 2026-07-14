@@ -5,9 +5,9 @@ package com.njydsz.pmis.common.docs.enums;
  * <p>
  * 表示文档安全扫描结果的严重程度。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 public enum SecurityLevel {

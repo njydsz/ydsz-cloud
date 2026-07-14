@@ -5,9 +5,9 @@ package com.njydsz.pmis.common.docs.ocr;
  * <p>
  * 业务方实现此接口对接外部 OCR 服务（如阿里云 OCR / 百度 OCR / Tesseract）。
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 1.0.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @since 1.3.0
  */
 public interface OcrEngine {

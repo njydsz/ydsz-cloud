@@ -23,9 +23,9 @@ import lombok.extern.slf4j.Slf4j;
  * 4. 支持解析流水号信息
  * </p>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  */
 @Slf4j
 public final class SequenceUtils {

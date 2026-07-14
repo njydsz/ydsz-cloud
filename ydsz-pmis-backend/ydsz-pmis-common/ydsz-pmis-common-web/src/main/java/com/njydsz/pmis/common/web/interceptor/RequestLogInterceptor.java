@@ -25,9 +25,9 @@ import lombok.extern.slf4j.Slf4j;
  * 【Web端】请求结束 | GET /api/users | 状态: 200 | 耗时: 45ms
  * </pre>
  *
- * @author Marvin Lee
- * @email limw1888@126.com
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ * 
  * @see BaseRequestLogInterceptor
  */
 @Slf4j
