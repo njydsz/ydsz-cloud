@@ -159,7 +159,7 @@ public final class AuthContext {
                     .code(BaseResultCode.FORBIDDEN.getCode())
                     .key("error.common.msg_1e40057e")
                     .params(perm)
-                    .httpStatus(BaseResultCode.FORBIDDEN.getHttpStatus().value())
+                    .httpStatus(BaseResultCode.FORBIDDEN.getHttpStatusCode())
                     .build();
         }
     }
