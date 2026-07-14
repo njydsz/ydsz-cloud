@@ -23,7 +23,6 @@ import com.njydsz.pmis.common.json.writer.JSONWriter;
  *
  * @param <T> 要序列化的类型
  * @since 1.3.0
- * @since 1.3.0
  */
 public interface JsonSerializer<T> {
 

@@ -126,24 +126,4 @@ public class BaseVO implements Serializable {
     @JsonField(ignore = true)
     private Integer deleted;
 
-    /**
-     * 获取乐观锁版本号（revision 别名）
-     *
-     * <p>与实体层 {@code revision} 字段对齐的别名方法。
-     * 内部委托至 {@link #version} 字段。
-     *
-     * @return 乐观锁版本号
-     */
-    public Integer getRevision() {
-        return version;
-    }
-
-    /**
-     * 设置乐观锁版本号（revision 别名）
-     *
-     * @param revision 乐观锁版本号
-     */
-    public void setRevision(Integer revision) {
-        this.version = revision;
-    }
 }

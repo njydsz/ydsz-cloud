@@ -27,7 +27,6 @@ import com.njydsz.pmis.common.cache.listener.RemovalListener;
 import com.njydsz.pmis.common.cache.support.CacheLoader;
 import com.njydsz.pmis.common.cache.support.CacheWriter;
 import com.njydsz.pmis.common.cache.support.Expiry;
-import com.njydsz.pmis.common.cache.support.TTLMode;
 import com.njydsz.pmis.common.cache.support.Weigher;
 
 /**
