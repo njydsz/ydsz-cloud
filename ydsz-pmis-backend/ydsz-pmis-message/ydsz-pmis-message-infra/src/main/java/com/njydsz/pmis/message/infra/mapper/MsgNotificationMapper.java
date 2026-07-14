@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.infra.mapper.core;
 
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -17,6 +19,17 @@ import com.njydsz.pmis.message.domain.entity.core.MsgNotificationDO;
  */
 @Mapper
 public interface MsgNotificationMapper extends BaseMapper<MsgNotificationDO> {
+
+    /**
+     * P3-6: 批量插入站内通知（XML foreach 单条 INSERT VALUES (...), (...)）。
+     *
+     * <p>调用方需在传入前用 {@code IdWorker.getIdStr()} 预生成 ID 赋给每个 entity，
+     * 以保证批量 insert 后能拿到主键。
+     *
+     * @param list 通知实体列表
+     * @return 影响行数
+     */
+    int insertBatch(@Param("list") List<MsgNotificationDO> list);
 
     /**
      * 标记单条通知为已读(XML 定义)

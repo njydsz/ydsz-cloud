@@ -35,7 +35,12 @@ import com.njydsz.pmis.common.feign.annotation.EnableYdszFeign;
 @SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.literule", "com.njydsz.pmis.common"})
 @EnableDiscoveryClient
 @EnableYdszAuth
-@EnableYdszFeign(basePackages = {"com.njydsz.pmis.literule.api", "com.njydsz.pmis.common.feign"})
+@EnableYdszFeign(basePackages = {
+        "com.njydsz.pmis.literule.api",
+        "com.njydsz.pmis.common.feign",
+        "com.njydsz.pmis.cronjob.api",
+        "com.njydsz.pmis.workflow.api"
+})
 @EnableScheduling
 @MapperScan("com.njydsz.pmis.literule.infra.mapper")
 public class LiteruleApplication {

@@ -1,9 +1,11 @@
 package com.njydsz.pmis.cronjob.server.core.dispatch;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,6 +30,7 @@ import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.pmis.cronjob.server.core.leader.PartitionLeaderManager;
 import com.njydsz.pmis.cronjob.server.core.scheduler.AdaptiveBatchScheduler;
+import com.njydsz.pmis.cronjob.server.core.scheduler.CalendarScheduleFilter;
 import com.njydsz.pmis.cronjob.server.metrics.CronjobMetrics;
 
 import lombok.RequiredArgsConstructor;
@@ -79,6 +82,8 @@ public class JobScanner {
     private final ObjectProvider<PartitionLeaderManager> partitionLeaderManagerProvider;
     /** P1-1: 自适应批量调度器（可选注入，启用时动态调整 batchSize） */
     private final ObjectProvider<AdaptiveBatchScheduler> adaptiveBatchSchedulerProvider;
+    /** P0-7b: 日历调度过滤器（可选注入，启用时按工作日/节假日过滤派发） */
+    private final ObjectProvider<CalendarScheduleFilter> calendarScheduleFilterProvider;
 
     /** 扫描执行中标志（避免上次扫描未完成时重叠触发） */
     private final AtomicBoolean scanning = new AtomicBoolean(false);
@@ -245,6 +250,24 @@ public class JobScanner {
         // P6-1: 为每个任务派发生成独立 traceId，保证任务间链路隔离
         TraceIdUtil.getOrCreate();
         try {
+            // P0-7b: 日历调度过滤 — 按工作日/节假日过滤派发
+            CalendarScheduleFilter calendarFilter = calendarScheduleFilterProvider.getIfAvailable();
+            if (calendarFilter != null) {
+                String calendarType = calendarFilter.parseCalendarType(job.getParamsJson());
+                Set<LocalDate> holidays = calendarFilter.parseHolidays(job.getParamsJson());
+                if (!calendarFilter.shouldExecute(calendarType, holidays, LocalDate.now())) {
+                    // 日历过滤跳过：仅推进 next_fire_time，不派发
+                    LocalDateTime newNext = nextFireTime(job.getCronExpression());
+                    boolean advanced = advanceNextFireTime(job, job.getNextFireTime(), newNext, now);
+                    if (metrics != null) {
+                        metrics.incMisfire("CALENDAR_SKIP");
+                    }
+                    log.info("[JobScanner] 日历过滤跳过派发: key={} calendarType={} advanced={}",
+                            job.getJobKey(), calendarType, advanced);
+                    if (skipCount != null) skipCount.incrementAndGet();
+                    return;
+                }
+            }
             // P2-2: Misfire 判定
             MisfirePolicy policy = MisfirePolicy.parse(job.getMisfirePolicy());
             boolean misfired = isMisfired(job, now);

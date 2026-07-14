@@ -738,13 +738,29 @@ WHERE NOT EXISTS (SELECT 1 FROM pmis_msg_template WHERE template_code = 'ALERT_O
 --     ON pmis_voucher (period, status, created_at DESC);
 
 -- =====================================================================
---  7) 时区/时间相关 BRIN 索引（日志/审计表 100w+ 行）
+--  7) 索引评估与优化
 -- =====================================================================
 -- P1-4: pmis_operation_log 的 BRIN 索引已上移到父表定义处(分区自动传播),此处跳过
---       pmis_msg_log 仍非分区表,保留原 BRIN
-CREATE INDEX IF NOT EXISTS idx_pmis_message_log_brin_sent
-    ON pmis_msg_log USING BRIN (created_at)
-    WITH (pages_per_range = 32);
+--
+-- P3-4: pmis_msg_log 的 BRIN 索引评估结论 - 删除
+--   原因: ① pmis_msg_log 已改为月度分区表(非注释所述"仍非分区表"),每个分区
+--            数据量可控(单月),BRIN 的 block-range 过滤优势不明显;
+--         ② 已有 B-tree 部分索引 idx_pmis_message_log_tenant_created
+--            (tenant_id, created_at DESC) WHERE deleted = 0 覆盖时间范围查询,
+--            BRIN 索引冗余;
+--         ③ BRIN 虽写入开销低,但在已有 B-tree 覆盖的场景下不提供额外查询加速。
+--   决策: 删除 BRIN 索引,依赖 B-tree 部分索引。上线后如 EXPLAIN 显示全表扫描
+--         再考虑补充索引。
+--
+-- P3-5: scheduled_at 部分索引 - 优化 ScheduledMessageScanner 定时扫描
+--   查询模式: WHERE status = 'SCHEDULED' AND scheduled_at <= now LIMIT 200
+--   原有问题: 无专门索引,扫描器每 30s 查询时可能走 idx_pmis_message_log_status
+--             (status WHERE deleted=0) 后再过滤 scheduled_at,效率不高。
+--   解决方案: 创建 (scheduled_at) WHERE status = 'SCHEDULED' AND deleted = 0
+--             部分索引,仅索引待调度的消息(活跃数据量小,索引体积小)。
+CREATE INDEX IF NOT EXISTS idx_pmis_message_log_scheduled
+    ON pmis_msg_log (scheduled_at)
+    WHERE status = 'SCHEDULED' AND deleted = 0 AND scheduled_at IS NOT NULL;
 
 -- 15. 通知
 ALTER TABLE pmis_msg_notification ADD COLUMN IF NOT EXISTS tenant_id VARCHAR(20) NOT NULL DEFAULT '1';

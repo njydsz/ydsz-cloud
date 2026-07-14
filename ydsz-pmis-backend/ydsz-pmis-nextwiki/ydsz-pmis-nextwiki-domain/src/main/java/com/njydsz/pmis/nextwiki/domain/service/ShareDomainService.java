@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -158,7 +159,12 @@ public class ShareDomainService {
 
     /**
      * 授予文件 ACL 权限
+     * <p>
+     * 授予后清除 {@code nextwiki:file:acl} 缓存中该 (fileNodeId, granteeId) 维度的条目，
+     * 避免校验逻辑继续读到旧的 ACL 列表。{@code allEntries = true} 是因为 ACL 变更可能
+     * 影响多个用户对该节点的有效权限（例如继承传播），简单全量清除最稳妥。
      */
+    @CacheEvict(cacheNames = "nextwiki:file:acl", allEntries = true)
     public FileAcl grantPermission(String fileNodeId, String granteeType, String granteeId,
                                     int permissionMask, String userId) {
         FileAcl acl = FileAcl.builder()
@@ -202,6 +208,20 @@ public class ShareDomainService {
             }
         }
         return false;
+    }
+
+    /**
+     * 查询用户对文件节点的有效 ACL 列表（不含所有者短路判断）
+     * <p>
+     * 该方法仅做数据库查询，缓存由调用方 {@code FilePermissionService.getEffectiveAcls} 通过
+     * {@code @Cacheable} 控制。这里保持纯粹的领域查询职责。
+     *
+     * @param fileNodeId 文件节点ID
+     * @param userId     用户ID
+     * @return 有效 ACL 列表（含继承），可能为空
+     */
+    public List<FileAcl> checkPermissionAcls(String fileNodeId, String userId) {
+        return fileAclRepository.findEffectivePermissions(fileNodeId, userId, List.of());
     }
 
     /**

@@ -11,6 +11,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.constant.SystemConstants;
 import com.njydsz.pmis.common.core.constant.PageConstants;
@@ -45,6 +46,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
+    /** P3-6: 批量 insert 单批最大条数（pmis_msg_notification 28 列，500 条 ≈ 1.4 万参数，远低于 PG 65535 上限） */
+    private static final int INSERT_BATCH_SIZE = 500;
+
     /** 站内通知 Mapper */
     private final MsgNotificationMapper msgNotificationMapper;
     /** 实时推送服务（WebSocket / 离线缓存） */
@@ -63,16 +67,28 @@ public class NotificationServiceImpl implements NotificationService {
             throw new SysException(StandardResultCode.BAD_REQUEST, "通知参数不能为空");
         }
         List<String> receiverIds = resolveReceiverIds(dto);
-        int count = 0;
+        // P3-6: 先构建全部实体（预生成 ID），再批量 insert，避免逐条 INSERT 的数据库往返开销
+        List<MsgNotificationDO> entities = new ArrayList<>(receiverIds.size());
         for (String rid : receiverIds) {
             MsgNotificationDO entity = buildEntity(dto, rid);
-            msgNotificationMapper.insert(entity);
+            entity.setId(IdWorker.getIdStr());
+            entities.add(entity);
+        }
+        // 分批批量 insert（防止单条 SQL 参数超过 PG 65535 上限）
+        for (int i = 0; i < entities.size(); i += INSERT_BATCH_SIZE) {
+            int to = Math.min(i + INSERT_BATCH_SIZE, entities.size());
+            msgNotificationMapper.insertBatch(entities.subList(i, to));
+        }
+        // 批量 insert 完成后再循环做 index + push（entity.id 已有值）
+        for (int i = 0; i < entities.size(); i++) {
+            MsgNotificationDO entity = entities.get(i);
+            String rid = receiverIds.get(i);
             // P2-18: 构建全文搜索索引
             notificationSearchService.index(rid, entity.getId(), dto.getTitle(), entity.getContent());
             // 实时推送（P0-4: 离线时自动缓存到 Redis，上线时补偿）
             realtimePushService.pushToUserWithOffline(rid, "NOTIFICATION", entity);
-            count++;
         }
+        int count = entities.size();
         log.info("[Notification] 发送通知: title={} count={} bizType={}", dto.getTitle(), count, dto.getBizType());
         return count;
     }

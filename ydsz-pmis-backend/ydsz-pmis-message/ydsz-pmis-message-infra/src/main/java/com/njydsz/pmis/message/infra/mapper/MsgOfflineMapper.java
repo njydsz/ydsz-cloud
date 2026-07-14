@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.infra.mapper.config;
 
+import java.util.List;
+
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
@@ -15,6 +17,17 @@ import com.njydsz.pmis.message.domain.entity.config.MsgOfflineDO;
  */
 @Mapper
 public interface MsgOfflineMapper extends BaseMapper<MsgOfflineDO> {
+
+    /**
+     * P3-6: 批量插入离线消息（XML foreach 单条 INSERT VALUES (...), (...)）。
+     *
+     * <p>调用方需在传入前用 {@code IdWorker.getIdStr()} 预生成 ID 赋给每个 entity，
+     * 以保证批量 insert 后能拿到主键。
+     *
+     * @param list 离线消息实体列表
+     * @return 影响行数
+     */
+    int insertBatch(@Param("list") List<MsgOfflineDO> list);
 
     /**
      * 批量标记已推送。

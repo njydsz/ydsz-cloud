@@ -149,20 +149,22 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             throw new SysException(StandardResultCode.BAD_REQUEST, "error.workflow.msg_208e3c66");
         }
 
-        // 0. 幂等：同 business 已有 RUNNING 实例则直接返回
-        FlowInstanceDO existing = instanceMapper.selectByBusiness(
-                dto.getBusinessType(), dto.getBusinessId());
-        if (existing != null && FlowInstanceStatus.RUNNING.name().equals(existing.getFlowStatus())) {
-            log.info("[Flow] 实例已存在: businessType={} businessId={} id={}",
-                    dto.getBusinessType(), dto.getBusinessId(), existing.getId());
-            return existing.getId();
-        }
-
-        // 1. 查定义
+        // 0. 幂等：同 business 已有活跃实例（RUNNING/SUSPENDED）则直接返回
+        // P1-2: 增加 tenantId 过滤，防止跨租户串号；SQL 已过滤活跃状态
         // P2-16: 多租户上下文 - DTO 显式传入优先，否则从 SecurityContext 获取
         String tenantId = dto.getTenantId() != null
                 ? dto.getTenantId()
                 : AuthContext.getTenantIdOrDefault("1");
+        FlowInstanceDO existing = instanceMapper.selectByBusiness(
+                tenantId, dto.getBusinessType(), dto.getBusinessId());
+        if (existing != null) {
+            log.info("[Flow] 实例已存在: businessType={} businessId={} id={} status={}",
+                    dto.getBusinessType(), dto.getBusinessId(), existing.getId(),
+                    existing.getFlowStatus());
+            return existing.getId();
+        }
+
+        // 1. 查定义
         // P3-1: 灰度发布 - 启动时按 canary 配置切流到稳定版或灰度版
         FlowDefinitionDO def = canaryService.resolveEffectiveDefinition(
                 dto.getFlowCode(),
@@ -248,7 +250,9 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Override
     @Transactional(readOnly = true)
     public FlowInstanceDO getByBusiness(String businessType, String businessId) {
-        return instanceMapper.selectByBusiness(businessType, businessId);
+        // P1-2: 增加 tenantId 过滤，防止跨租户串号；仅返回活跃实例（RUNNING/SUSPENDED）
+        String tenantId = AuthContext.getTenantIdOrDefault("1");
+        return instanceMapper.selectByBusiness(tenantId, businessType, businessId);
     }
 
     @Override

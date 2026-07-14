@@ -8,10 +8,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import jakarta.annotation.PreDestroy;
 
@@ -102,10 +104,12 @@ public class DagOrchestrationExecutor {
             CompletableFuture.allOf(futureMap.values().toArray(new CompletableFuture[0]))
                     .orTimeout(300, TimeUnit.SECONDS)
                     .join();
-        } catch (java.util.concurrent.TimeoutException e) {
-            log.error("[DAG] 编排超时: id={}", executionId);
-        } catch (Exception e) {
-            log.error("[DAG] 编排异常: id={}, error={}", executionId, e.getMessage(), e);
+        } catch (CompletionException e) {
+            if (e.getCause() instanceof TimeoutException) {
+                log.error("[DAG] 编排超时: id={}", executionId);
+            } else {
+                log.error("[DAG] 编排异常: id={}, error={}", executionId, e.getMessage(), e);
+            }
         }
 
         boolean hasFailed = !failed.isEmpty();

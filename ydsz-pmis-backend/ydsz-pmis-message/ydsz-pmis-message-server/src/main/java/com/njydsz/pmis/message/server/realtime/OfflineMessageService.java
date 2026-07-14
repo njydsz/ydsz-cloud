@@ -12,6 +12,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.socket.constant.WebSocketConstants;
 import com.njydsz.pmis.common.socket.offline.OfflineMessageStore;
@@ -46,6 +47,9 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class OfflineMessageService implements OfflineMessageStore {
+
+    /** P3-6: 批量 insert 单批最大条数（pmis_msg_offline 14 列，500 条 ≈ 7000 参数，远低于 PG 65535 上限） */
+    private static final int INSERT_BATCH_SIZE = 500;
 
     private final StringRedisTemplate redisTemplate;
     private final MsgOfflineMapper msgOfflineMapper;

@@ -22,9 +22,10 @@ import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
 public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
 
     /**
-     * 根据业务关联查实例
+     * 根据业务关联查实例（P1-2: 含 tenant_id 过滤 + 仅活跃状态）
      */
-    FlowInstanceDO selectByBusiness(@Param("businessType") String businessType,
+    FlowInstanceDO selectByBusiness(@Param("tenantId") String tenantId,
+                                    @Param("businessType") String businessType,
                                     @Param("businessId") String businessId);
 
     /**

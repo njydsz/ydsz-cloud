@@ -40,6 +40,30 @@
         created_by, created_at, updated_by, updated_at, deleted, tenant_id
     </sql>
 
+    <!-- P3-6: 批量插入站内通知。ID 由调用方用 IdWorker.getIdStr() 预生成 -->
+    <insert id="insertBatch">
+        INSERT INTO pmis_msg_notification
+            (id, title, content, level, category, priority, sender_id, receiver_id,
+             biz_type, biz_id, message_group, batch_id, action_url, action_text, icon,
+             extra, source_module, read_status, recall_status, recall_at, expired_at,
+             mention_user_ids, created_by, created_at, updated_by, updated_at, deleted, tenant_id)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id}, #{item.title}, #{item.content}, #{item.level}, #{item.category},
+             #{item.priority}, #{item.senderId}, #{item.receiverId},
+             #{item.bizType}, #{item.bizId}, #{item.messageGroup}, #{item.batchId},
+             #{item.actionUrl}, #{item.actionText}, #{item.icon},
+             #{item.extra}, #{item.sourceModule},
+             COALESCE(#{item.readStatus}, 0),
+             COALESCE(#{item.recallStatus}, 'NONE'),
+             #{item.recallAt}, #{item.expiredAt}, #{item.mentionUserIds},
+             COALESCE(#{item.createdBy}, 'SYSTEM'), CURRENT_TIMESTAMP,
+             COALESCE(#{item.updatedBy}, 'SYSTEM'), CURRENT_TIMESTAMP,
+             COALESCE(#{item.deleted}, 0),
+             COALESCE(#{item.tenantId}, '1'))
+        </foreach>
+    </insert>
+
     <update id="markRead">
         UPDATE pmis_msg_notification
         SET read_status = 1, read_time = CURRENT_TIMESTAMP

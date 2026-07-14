@@ -397,9 +397,10 @@ COMMENT ON COLUMN pmis_flow_instance.version IS '乐观锁版本号（P1-2）';
 --      索引同名 (idx_pfi_status),触发"关系已存在"报错。改为
 --      flow_instance_ 前缀以彻底避免跨模块索引名冲突。
 -- 复合/部分索引(替代零散的单列索引)
+-- P1-2: 唯一约束仅覆盖活跃实例（RUNNING/SUSPENDED），允许已结束实例的业务重启新流程
 CREATE UNIQUE INDEX IF NOT EXISTS uk_flow_instance_tenant_biz
     ON pmis_flow_instance(tenant_id, business_type, business_id)
-    WHERE deleted = 0;
+    WHERE deleted = 0 AND flow_status IN ('RUNNING', 'SUSPENDED');
 
 CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_def
     ON pmis_flow_instance(tenant_id, definition_id)

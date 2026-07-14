@@ -1434,6 +1434,19 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
             </plugin>
+            <!-- Surefire 单元测试：解决 Windows + JDK 21 下 Boot Manifest-JAR 绝对路径校验失败
+                 报错：Boot Manifest-JAR contains absolute paths in classpath ... 'other' has different root
+                 根因：JDK 9+ 默认拒绝 Manifest Class-Path 中的绝对路径
+                 方案：通过 -Djdk.net.URLClassPath.disableClassPathURLCheck=true 关闭校验
+                 @{argLine} 占位符确保 JaCoCo prepare-agent 注入的 javaagent 参数不被覆盖
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true @{argLine}</argLine>
+                </configuration>
+            </plugin>
             <!-- JaCoCo 覆盖率采集（P1-5）：所有子模块自动继承，生成 target/site/jacoco 报告 -->
             <plugin>
                 <groupId>org.jacoco</groupId>

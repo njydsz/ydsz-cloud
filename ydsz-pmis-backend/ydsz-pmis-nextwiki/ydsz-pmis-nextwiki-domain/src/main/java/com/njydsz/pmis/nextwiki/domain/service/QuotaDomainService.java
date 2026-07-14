@@ -2,6 +2,7 @@ package com.njydsz.pmis.nextwiki.domain.service;
 
 import java.time.LocalDateTime;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -79,8 +80,12 @@ public class QuotaDomainService {
 
     /**
      * 设置配额
+     * <p>
+     * 配额变更可能影响后续上传/删除时的权限与容量校验链路，因此清除
+     * {@code nextwiki:file:acl} 全部缓存条目，强制下一次校验重新走数据库。
      */
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = "nextwiki:file:acl", allEntries = true)
     public StorageQuota setQuota(String scopeType, String scopeId, Long limit, Integer fileCountLimit, String userId) {
         StorageQuota quota = quotaRepository.findByScope(scopeType, scopeId);
         if (quota == null) {

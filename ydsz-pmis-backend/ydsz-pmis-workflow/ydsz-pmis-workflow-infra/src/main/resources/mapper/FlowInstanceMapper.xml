@@ -46,8 +46,10 @@
     <select id="selectByBusiness" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM pmis_flow_instance
-        WHERE business_type = #{businessType}
+        WHERE tenant_id = #{tenantId}
+          AND business_type = #{businessType}
           AND business_id = #{businessId}
+          AND flow_status IN ('RUNNING', 'SUSPENDED')
           AND status = 'ENABLED'
           AND deleted = 0
         LIMIT 1
