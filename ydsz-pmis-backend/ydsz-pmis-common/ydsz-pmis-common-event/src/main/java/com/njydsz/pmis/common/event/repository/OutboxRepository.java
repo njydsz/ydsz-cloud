@@ -54,19 +54,19 @@ public class OutboxRepository {
         SimpleJdbcInsert insert = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName(tableName);
 
-        Map<String, Object> params = Map.of(
-                "id", message.getId(),
-                "aggregate_id", message.getAggregateId(),
-                "aggregate_type", message.getAggregateType(),
-                "event_type", message.getEventType(),
-                "payload", message.getPayload(),
-                "headers", serializeHeaders(message.getHeaders()),
-                "status", message.getStatus().name(),
-                "retry_count", message.getRetryCount(),
-                "max_retries", message.getMaxRetries(),
-                "next_retry_at", Timestamp.from(message.getNextRetryAt()),
-                "created_at", Timestamp.from(message.getCreatedAt()),
-                "updated_at", Timestamp.from(message.getUpdatedAt())
+        Map<String, Object> params = Map.ofEntries(
+                Map.entry("id", message.getId()),
+                Map.entry("aggregate_id", message.getAggregateId()),
+                Map.entry("aggregate_type", message.getAggregateType()),
+                Map.entry("event_type", message.getEventType()),
+                Map.entry("payload", message.getPayload()),
+                Map.entry("headers", serializeHeaders(message.getHeaders())),
+                Map.entry("status", message.getStatus().name()),
+                Map.entry("retry_count", message.getRetryCount()),
+                Map.entry("max_retries", message.getMaxRetries()),
+                Map.entry("next_retry_at", Timestamp.from(message.getNextRetryAt())),
+                Map.entry("created_at", Timestamp.from(message.getCreatedAt())),
+                Map.entry("updated_at", Timestamp.from(message.getUpdatedAt()))
         );
         insert.execute(params);
     }

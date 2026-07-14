@@ -20,12 +20,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.CronExpression;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.cronjob.domain.entity.job.JobDO;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.pmis.cronjob.server.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.pmis.cronjob.server.core.leader.PartitionLeaderManager;
@@ -72,7 +70,7 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnBean(LeaderElector.class)
 public class JobScanner {
 
-    private final JobMapper jobMapper;
+    private final JobTransactionService jobTransactionService;
     private final LeaderElector leaderElector;
     private final TaskDispatcher taskDispatcher;
     private final CronjobProperties cronjobProperties;
@@ -174,7 +172,7 @@ public class JobScanner {
         LocalDateTime now = LocalDateTime.now();
         // P1-1: 支持自适应 batchSize（AdaptiveBatchScheduler 启用时动态调整）
         int batchSize = resolveBatchSize();
-        List<JobDO> dueJobs = acquireDueJobs(now, batchSize);
+        List<JobDO> dueJobs = jobTransactionService.acquireDueJobs(now, batchSize);
         // P6-2: 更新上次扫描到的待触发任务数指标
         CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
         if (metrics != null) {
@@ -258,7 +256,7 @@ public class JobScanner {
                 if (!calendarFilter.shouldExecute(calendarType, holidays, LocalDate.now())) {
                     // 日历过滤跳过：仅推进 next_fire_time，不派发
                     LocalDateTime newNext = nextFireTime(job.getCronExpression());
-                    boolean advanced = advanceNextFireTime(job, job.getNextFireTime(), newNext, now);
+                    boolean advanced = jobTransactionService.advanceNextFireTime(job, job.getNextFireTime(), newNext, now);
                     if (metrics != null) {
                         metrics.incMisfire("CALENDAR_SKIP");
                     }
@@ -274,8 +272,7 @@ public class JobScanner {
             if (misfired && policy == MisfirePolicy.SKIP) {
                 // 仅推进 next_fire_time，不派发
                 LocalDateTime newNext = nextFireTime(job.getCronExpression());
-                boolean advanced = advanceNextFireTime(job, job.getNextFireTime(), newNext, now);
-                // P6-2: Misfire SKIP 计数
+                boolean advanced = jobTransactionService.advanceNextFireTime(job, job.getNextFireTime(), newNext, now);
                 if (metrics != null) {
                     metrics.incMisfire("SKIP");
                 }
@@ -287,7 +284,7 @@ public class JobScanner {
             // 计算新的 next_fire_time 并 CAS 推进
             LocalDateTime oldNext = job.getNextFireTime();
             LocalDateTime newNext = nextFireTime(job.getCronExpression());
-            boolean advanced = advanceNextFireTime(job, oldNext, newNext, now);
+            boolean advanced = jobTransactionService.advanceNextFireTime(job, oldNext, newNext, now);
             if (!advanced) {
                 log.debug("[JobScanner] 任务 next_fire_time 已被其他节点推进, 跳过: key={}",
                         job.getJobKey());
@@ -344,28 +341,6 @@ public class JobScanner {
         Duration grace = Duration.ofMinutes(cronjobProperties.getScanner().getMisfireGraceMinutes());
         LocalDateTime threshold = now.minus(grace);
         return job.getNextFireTime().isBefore(threshold);
-    }
-
-    /**
-     * 抢占式扫描待触发任务（事务内）。
-     */
-    @Transactional(readOnly = true)
-    protected List<JobDO> acquireDueJobs(LocalDateTime now, int batchSize) {
-        return jobMapper.selectDueJobs(now, batchSize);
-    }
-
-    /**
-     * CAS 推进 next_fire_time（事务内，防止重复派发）。
-     */
-    @Transactional(rollbackFor = Exception.class)
-    protected boolean advanceNextFireTime(JobDO job, LocalDateTime oldNext,
-                                          LocalDateTime newNext, LocalDateTime lastFire) {
-        if (oldNext == null) {
-            log.warn("[JobScanner] next_fire_time 为 null, 跳过 CAS: key={}", job.getJobKey());
-            return false;
-        }
-        int affected = jobMapper.advanceNextFireTime(job.getId(), oldNext, newNext, lastFire);
-        return affected > 0;
     }
 
     /**

@@ -3,6 +3,8 @@ package com.njydsz.pmis.common.util.json;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
+import com.njydsz.pmis.common.json.YdszJson;
+
 /**
  * 统一 YAML 转换工具类（基于 SnakeYAML）
  *
@@ -43,7 +45,7 @@ public final class YamlUtils {
             return null;
         }
         try {
-            Object parsed = JsonUtils.getMapper().readValue(json, Object.class);
+            Object parsed = YdszJson.parseObject(json);
             return YAML.dump(parsed);
         } catch (Exception e) {
             throw new JsonUtils.JsonException("JSON转YAML失败: " + e.getMessage(), e);
@@ -63,7 +65,7 @@ public final class YamlUtils {
         }
         try {
             Object parsed = YAML.load(yaml);
-            return JsonUtils.getMapper().writeValueAsString(parsed);
+            return YdszJson.toJson(parsed);
         } catch (Exception e) {
             throw new JsonUtils.JsonException("YAML转JSON失败: " + e.getMessage(), e);
         }

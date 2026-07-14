@@ -39,10 +39,10 @@
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-safe</artifactId>
         </dependency>
-        <!--caffeine-->
+        <!--ydsz-pmis-common-cache（本地缓存框架，替代 Caffeine）-->
         <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-cache</artifactId>
         </dependency>
         <!--servlet-->
         <dependency>

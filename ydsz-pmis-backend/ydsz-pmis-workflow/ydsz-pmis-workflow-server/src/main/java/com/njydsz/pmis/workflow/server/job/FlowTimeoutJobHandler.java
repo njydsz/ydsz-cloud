@@ -22,6 +22,7 @@ import com.njydsz.pmis.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.server.service.FlowNotificationService;
+import com.njydsz.pmis.workflow.server.service.FlowSlaService;
 import com.njydsz.pmis.workflow.server.service.FlowTaskService;
 
 import lombok.RequiredArgsConstructor;
@@ -63,6 +64,8 @@ public class FlowTimeoutJobHandler implements JobHandler {
 
     /** SLA 动作：催办提醒 */
     private static final String ACTION_REMIND = "REMIND";
+    /** SLA 动作：通知管理员（P1-3 闭环：保持任务活跃，等人工处理） */
+    private static final String ACTION_NOTIFY = "NOTIFY";
     /** SLA 动作：升级办理人 */
     private static final String ACTION_ESCALATE = "ESCALATE";
     /** SLA 动作：自动通过 */
@@ -77,6 +80,14 @@ public class FlowTimeoutJobHandler implements JobHandler {
     private final FlowTaskService taskService;
     /** P0-2: 通知服务（REMIND 真实触达） */
     private final FlowNotificationService notificationService;
+    /**
+     * P1-3: SLA 服务 — 单任务 SLA 处理委托给 FlowSlaService，统一闭环语义
+     *
+     * <p>FlowSlaServiceImpl 已实现完整的 SLA 闭环（NOTIFY/ESCALATE/AUTO_PASS/AUTO_REJECT），
+     * 此处委托可避免两套实现不一致（如旧 markTimeout 会标记 TIMEOUT 终态导致流程卡死）。
+     * FlowTimeoutJobHandler 仅保留"子流程超时检测"独有职责。
+     */
+    private final FlowSlaService slaService;
 
     /**
      * 扫描并处理超期任务
@@ -148,183 +159,28 @@ public class FlowTimeoutJobHandler implements JobHandler {
     // ============================== 单任务处理 ==============================
 
     /**
-     * 处理单个超期任务：读取节点 sla_config，按 action 分发
+     * 处理单个超期任务：委托给 FlowSlaService 统一处理
+     *
+     * <p>P1-3 闭环重构：原先在 JobHandler 中重复实现 SLA 动作分发（doRemind/doEscalate/
+     * doAutoPass/doAutoReject/markTimeout），与 FlowSlaServiceImpl 存在两套实现，行为不一致。
+     * 尤其 markTimeout 会将任务标记为 TIMEOUT 终态（流程卡死），违反 SLA 闭环原则。
+     *
+     * <p>现统一委托给 {@link FlowSlaService#processOverdue(FlowRunTaskDO)}，由 FlowSlaServiceImpl
+     * 负责完整的 SLA 闭环处理（NOTIFY/ESCALATE/AUTO_PASS/AUTO_REJECT），包括：
+     * <ul>
+     *   <li>提醒计数与间隔控制（reminderCount / lastRemindedAt / maxReminders）</li>
+     *   <li>最终动作分发（NOTIFY 保持任务活跃 / ESCALATE 转办 / AUTO_PASS 推进 / AUTO_REJECT 终止）</li>
+     *   <li>REQUIRES_NEW 子事务隔离，单条失败不影响主循环</li>
+     * </ul>
      *
      * @param task 超期任务
      */
     private void handleOverdueTask(FlowRunTaskDO task) {
-        String taskId = task.getId();
-        String instanceId = task.getInstanceId();
-        FlowNodeDO node = safelySelectNode(task);
-
-        // 节点不存在或 sla_config 为空：仅标记超时
-        if (node == null || node.getSlaConfig() == null || node.getSlaConfig().isBlank()) {
-            markTimeout(task, "SLA超时，节点未配置 sla_config");
-            log.info("[FlowTimeout] 任务超时（无 SLA 配置）taskId={} instanceId={} node={}",
-                    taskId, instanceId, task.getNodeCode());
-            return;
+        boolean processed = slaService.processOverdue(task);
+        if (processed) {
+            log.debug("[FlowTimeout] SLA 处理完成: taskId={} instanceId={}",
+                    task.getId(), task.getInstanceId());
         }
-
-        JSONObject slaConfig;
-        try {
-            slaConfig = JSON.parseObject(node.getSlaConfig());
-        } catch (Exception e) {
-            log.warn("[FlowTimeout] sla_config JSON 解析失败 taskId={} node={} raw={} err={}",
-                    taskId, task.getNodeCode(), node.getSlaConfig(), e.getMessage());
-            markTimeout(task, "SLA超时，sla_config 解析失败");
-            return;
-        }
-        if (slaConfig == null) {
-            markTimeout(task, "SLA超时，sla_config 为空对象");
-            return;
-        }
-
-        String action = slaConfig.getString("action");
-        if (action == null || action.isBlank()) {
-            markTimeout(task, "SLA超时，未配置 action");
-            return;
-        }
-
-        switch (action.toUpperCase()) {
-            case ACTION_REMIND -> doRemind(task, slaConfig);
-            case ACTION_ESCALATE -> doEscalate(task, slaConfig);
-            case ACTION_AUTO_PASS -> doAutoPass(task, slaConfig);
-            case ACTION_AUTO_REJECT -> doAutoReject(task, slaConfig);
-            default -> {
-                log.warn("[FlowTimeout] 未知 SLA action={} taskId={} node={}，按默认超时处理",
-                        action, taskId, task.getNodeCode());
-                markTimeout(task, "SLA超时，未知 action=" + action);
-            }
-        }
-    }
-
-    // ============================== SLA 动作实现 ==============================
-
-    /**
-     * REMIND：发送催办通知（P0-2 修复：真实触达）
-     *
-     * <p>任务保持 PENDING/CLAIMED 不变，办理人仍可继续处理。
-     * 通过 FlowNotificationService 发送站内信 + 邮件通知，确保催办消息真实触达办理人。
-     * 同时更新任务的 reminder_count 和 last_reminded_at 字段。
-     */
-    private void doRemind(FlowRunTaskDO task, JSONObject slaConfig) {
-        int reminderCount = slaConfig.getIntValue("reminderCount", 1);
-        String assigneeId = task.getAssigneeId();
-
-        // P0-2: 真实发送催办通知（站内信 + 邮件），通知服务内部 try-catch 不会拖垮定时任务
-        try {
-            notificationService.notifySlaTimeout(
-                    task.getInstanceId(), task.getId(), assigneeId, ACTION_REMIND);
-        } catch (Exception e) {
-            log.warn("[FlowTimeout] 催办通知发送失败（不影响后续处理）taskId={} err={}",
-                    task.getId(), e.getMessage());
-        }
-
-        // 更新任务催办计数与最后催办时间
-        try {
-            taskMapper.incrementReminderCount(task.getId(),
-                    (task.getReminderCount() == null ? 0 : task.getReminderCount()) + 1,
-                    LocalDateTime.now());
-        } catch (Exception e) {
-            log.warn("[FlowTimeout] 更新催办计数失败 taskId={} err={}", task.getId(), e.getMessage());
-        }
-
-        log.info("[FlowTimeout] SLA 催办提醒已发送 taskId={} instanceId={} assignee={} reminderCount={}",
-                task.getId(), task.getInstanceId(), assigneeId, reminderCount);
-    }
-
-    /**
-     * ESCALATE：升级办理人
-     *
-     * <p>将任务办理人切换为 sla_config.adminUserId，任务保持活跃（PENDING/CLAIMED），
-     * 由升级后的办理人继续处理。
-     */
-    private void doEscalate(FlowRunTaskDO task, JSONObject slaConfig) {
-        Long adminUserId = slaConfig.getLong("adminUserId");
-        if (adminUserId == null) {
-            log.warn("[FlowTimeout] ESCALATE 未配置 adminUserId taskId={} node={}，降级为标记超时",
-                    task.getId(), task.getNodeCode());
-            markTimeout(task, "SLA超时，ESCALATE 缺少 adminUserId");
-            return;
-        }
-        String assigneeId = String.valueOf(adminUserId);
-        taskMapper.updateAssignee(task.getId(), assigneeId,
-                "SLA_ESCALATE", FlowAssigneeType.USER.name());
-        log.info("[FlowTimeout] SLA 升级办理人 taskId={} instanceId={} 原办理人={} → adminUserId={}",
-                task.getId(), task.getInstanceId(), task.getAssigneeId(), adminUserId);
-    }
-
-    /**
-     * AUTO_PASS：自动通过任务并推进流程（P0-1 修复：真正联动 FlowAdvancer）
-     *
-     * <p>通过 FlowTaskService.pass() 完成任务并推进到下一节点，
-     * 确保流程不会因 SLA 超时而卡死。使用系统用户身份执行，
-     * 审计日志中记录"SLA 超时自动通过"。
-     *
-     * <p>容错策略：pass() 失败时降级为仅标记 COMPLETED（不推进），避免定时任务异常中断。
-     */
-    private void doAutoPass(FlowRunTaskDO task, JSONObject slaConfig) {
-        // 二次校验：扫描窗口内任务可能已被人工处理
-        FlowRunTaskDO latest = taskMapper.selectById(task.getId());
-        if (latest == null) {
-            log.warn("[FlowTimeout] AUTO_PASS 任务不存在 taskId={}", task.getId());
-            return;
-        }
-        String status = latest.getTaskStatus();
-        if (!FlowTaskStatus.PENDING.name().equals(status)
-                && !FlowTaskStatus.CLAIMED.name().equals(status)) {
-            log.info("[FlowTimeout] 任务状态已变更，跳过 AUTO_PASS taskId={} status={}",
-                    task.getId(), status);
-            return;
-        }
-
-        // 构造系统用户操作 DTO，通过 taskService.pass() 完成任务 + 推进流程
-        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
-        dto.setTaskId(latest.getId());
-        dto.setUserId("0");
-        dto.setUserName("SLA系统自动通过");
-        dto.setAction("PASS");
-        dto.setComment("SLA 超时自动通过");
-        dto.setTenantId(latest.getTenantId());
-
-        try {
-            taskService.pass(dto);
-            log.info("[FlowTimeout] SLA 自动通过并推进成功 taskId={} instanceId={} node={}",
-                    latest.getId(), latest.getInstanceId(), latest.getNodeCode());
-        } catch (Exception e) {
-            log.error("[FlowTimeout] SLA 自动通过推进失败，降级为仅标记完成 taskId={} err={}",
-                    latest.getId(), e.getMessage(), e);
-            // 降级：至少标记为 COMPLETED，避免任务永久卡在 PENDING
-            LocalDateTime now = LocalDateTime.now();
-            Long durationMs = calcDuration(latest, now);
-            taskMapper.completeTask(latest.getId(), FlowTaskStatus.COMPLETED.name(),
-                    "SLA 超时自动通过(降级-推进失败)", now, durationMs);
-        }
-    }
-
-    /**
-     * AUTO_REJECT：自动驳回任务并终止流程实例
-     *
-     * <p>将当前任务标记为 REJECTED，取消实例下其余 PENDING 任务，
-     * 并将实例状态推进为 TERMINATED。
-     */
-    private void doAutoReject(FlowRunTaskDO task, JSONObject slaConfig) {
-        LocalDateTime now = LocalDateTime.now();
-        Long durationMs = calcDuration(task, now);
-        // 1. 驳回当前任务
-        taskMapper.completeTask(task.getId(), FlowTaskStatus.REJECTED.name(),
-                "SLA 超时自动驳回", now, durationMs);
-        // 2. 取消实例下其余活跃任务
-        taskMapper.cancelByInstance(task.getInstanceId(), FlowTaskStatus.CANCELLED.name());
-        // 3. 终止流程实例
-        FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
-        long instanceDurationMs = instance == null || instance.getStartAt() == null
-                ? 0L : Duration.between(instance.getStartAt(), now).toMillis();
-        instanceMapper.updateStatus(task.getInstanceId(),
-                FlowInstanceStatus.TERMINATED.name(),
-                null, null, now, instanceDurationMs);
-        log.info("[FlowTimeout] SLA 自动驳回并终止实例 taskId={} instanceId={} node={}",
-                task.getId(), task.getInstanceId(), task.getNodeCode());
     }
 
     // ============================== 子流程超时检测 ==============================
@@ -411,54 +267,6 @@ public class FlowTimeoutJobHandler implements JobHandler {
     }
 
     // ============================== 私有辅助 ==============================
-
-    /**
-     * 标记任务为 TIMEOUT（用于无 action / 解析失败等场景）
-     *
-     * <p>FlowRunTaskMapper 暂无 timeoutTask 专用方法，此处复用 completeTask
-     * 以 {@link FlowTaskStatus#TIMEOUT} 状态完成，等价于服务层 timeoutTask 的底层操作。
-     *
-     * @param task   任务
-     * @param reason 超时原因
-     */
-    private void markTimeout(FlowRunTaskDO task, String reason) {
-        // 再次校验状态，避免重复处理（扫描窗口内任务可能已被人工处理）
-        FlowRunTaskDO latest = taskMapper.selectById(task.getId());
-        if (latest == null) {
-            return;
-        }
-        String status = latest.getTaskStatus();
-        if (!FlowTaskStatus.PENDING.name().equals(status)
-                && !FlowTaskStatus.CLAIMED.name().equals(status)) {
-            log.info("[FlowTimeout] 任务状态已变更，跳过标记 taskId={} status={}",
-                    task.getId(), status);
-            return;
-        }
-        LocalDateTime now = LocalDateTime.now();
-        Long durationMs = calcDuration(latest, now);
-        taskMapper.completeTask(latest.getId(), FlowTaskStatus.TIMEOUT.name(),
-                reason, now, durationMs);
-    }
-
-    /** 计算任务耗时（毫秒），createdAt 缺失时返回 0 */
-    private Long calcDuration(FlowRunTaskDO task, LocalDateTime now) {
-        return task.getCreatedAt() == null ? 0L
-                : Duration.between(task.getCreatedAt(), now).toMillis();
-    }
-
-    /** 安全查询节点（防御 null） */
-    private FlowNodeDO safelySelectNode(FlowRunTaskDO task) {
-        if (task.getDefinitionId() == null || task.getNodeCode() == null) {
-            return null;
-        }
-        try {
-            return nodeMapper.selectByCode(task.getDefinitionId(), task.getNodeCode());
-        } catch (Exception e) {
-            log.warn("[FlowTimeout] 查询节点失败 definitionId={} nodeCode={} err={}",
-                    task.getDefinitionId(), task.getNodeCode(), e.getMessage());
-            return null;
-        }
-    }
 
     /** 从 paramsJson 解析 tenantId（可空） */
     private String parseTenantId(String paramsJson) {

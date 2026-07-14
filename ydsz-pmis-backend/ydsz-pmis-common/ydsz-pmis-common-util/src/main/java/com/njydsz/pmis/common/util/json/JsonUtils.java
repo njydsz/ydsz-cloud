@@ -3,15 +3,12 @@ package com.njydsz.pmis.common.util.json;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.common.json.config.YdszJsonConfig;
-import com.njydsz.pmis.common.json.exception.YdszJsonException;
 import com.njydsz.pmis.common.json.type.YdszJsonType;
 
 /**
@@ -38,7 +35,7 @@ public final class JsonUtils {
         // 初始化 YdszJson 全局配置
         YdszJsonConfig config = YdszJsonConfig.getInstance();
         config.setDateFormat("yyyy-MM-dd HH:mm:ss");
-        config.setIgnoreUnknownProperties(true);
+        config.apply();
     }
 
     /**

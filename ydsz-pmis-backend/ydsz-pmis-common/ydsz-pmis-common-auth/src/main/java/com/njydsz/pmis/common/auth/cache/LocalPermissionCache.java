@@ -5,15 +5,16 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.RemovalCause;
+import com.njydsz.pmis.common.cache.YdszCache;
+import com.njydsz.pmis.common.cache.api.Cache;
+import com.njydsz.pmis.common.cache.builder.CacheType;
+import com.njydsz.pmis.common.cache.listener.RemovalCause;
 
 /**
  * 本地权限缓存兜底实现。
  *
  * <p>当 Redis 不可用时，提供本地缓存作为降级方案。
- * 使用 Caffeine 实现，支持 5 分钟过期。
+ * 使用 ydsz-pmis-common-cache 实现，支持 5 分钟过期。
  *
  * @author Marvin Lee
  * @email limw1888@126.com
@@ -45,7 +46,8 @@ public class LocalPermissionCache<V> {
      * @param expireMinutes  过期时间（分钟）
      */
     public LocalPermissionCache(String cacheName, long expireMinutes) {
-        this.cache = Caffeine.newBuilder()
+        this.cache = YdszCache.<String, V>newBuilder()
+                .type(CacheType.TTL)
                 .expireAfterWrite(expireMinutes, TimeUnit.MINUTES)
                 .removalListener((String key, V value, RemovalCause cause) -> {
                     if (log.isDebugEnabled()) {
