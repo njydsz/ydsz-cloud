@@ -663,20 +663,19 @@ public class RuleChain {
      *
      * @since 1.3.0 修复 FOR 循环不可变 Map bug
      */
-    @SuppressWarnings("unchecked")
     private List<RuleResult> evaluateFor(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (iterableExpression == null || iterationVar == null) {
             return results;
         }
         Object iterable = context.getFacts().get(iterableExpression);
-        if (!(iterable instanceof Iterable)) {
+        if (!(iterable instanceof Iterable<?> iterableObj)) {
             log.warn("[LiteRule-Chain] FOR 遍历表达式 '{}' 不是可迭代对象: class={}", iterableExpression,
                     iterable != null ? iterable.getClass().getName() : "null");
             return results;
         }
         int count = 0;
-        for (Object item : (Iterable<Object>) iterable) {
+        for (Object item : iterableObj) {
             // 创建可变副本并注入迭代变量（避免修改不可变的 facts Map）
             Map<String, Object> mutableFacts = new HashMap<>(context.getFacts());
             mutableFacts.put(iterationVar, item);

@@ -340,7 +340,6 @@ public class TreeInterpreter implements ExprNodeVisitor<Object> {
         };
     }
 
-    @SuppressWarnings("unchecked")
     private boolean equals(Object a, Object b) {
         if (a == b) return true;
         if (a == null || b == null) return false;

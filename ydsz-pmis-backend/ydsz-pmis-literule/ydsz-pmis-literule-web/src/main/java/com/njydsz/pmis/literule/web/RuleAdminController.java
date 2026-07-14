@@ -346,8 +346,11 @@ public class RuleAdminController {
     @PostMapping("/exprTrace")
     public BaseResponse<ExpressionEvaluator.TraceResult> traceExpression(@RequestBody Map<String, Object> request) {
         String expression = (String) request.get("expression");
-        @SuppressWarnings("unchecked")
-        Map<String, Object> facts = (Map<String, Object>) request.get("facts");
+        Map<String, Object> facts = new HashMap<>();
+        Object raw = request.get("facts");
+        if (raw instanceof Map<?, ?> rawMap) {
+            rawMap.forEach((k, v) -> facts.put(String.valueOf(k), v));
+        }
         return BaseResponse.ok(ruleAdminService.traceExpression(expression, facts));
     }
 
@@ -2218,8 +2221,17 @@ public class RuleAdminController {
         }
         String ruleCode = (String) request.get("ruleCode");
         if (ruleCode != null && ruleCode.isBlank()) ruleCode = null;
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> factsList = (List<Map<String, Object>>) request.get("factsList");
+        List<Map<String, Object>> factsList = new ArrayList<>();
+        Object rawList = request.get("factsList");
+        if (rawList instanceof List<?> list) {
+            for (Object item : list) {
+                if (item instanceof Map<?, ?> rawMap) {
+                    Map<String, Object> facts = new HashMap<>();
+                    rawMap.forEach((k, v) -> facts.put(String.valueOf(k), v));
+                    factsList.add(facts);
+                }
+            }
+        }
         int threads = toInt(request.get("threads"), 10);
         int iterations = toInt(request.get("iterations"), 1000);
         int warmupIterations = toInt(request.get("warmupIterations"), 100);

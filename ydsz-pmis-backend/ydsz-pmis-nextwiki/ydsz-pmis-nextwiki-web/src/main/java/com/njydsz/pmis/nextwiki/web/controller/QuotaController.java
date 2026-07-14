@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.nextwiki.api.dto.NextwikiDTOs;
 import com.njydsz.pmis.nextwiki.domain.entity.StorageQuota;
 import com.njydsz.pmis.nextwiki.domain.service.QuotaDomainService;
@@ -37,6 +39,7 @@ public class QuotaController {
 
     @GetMapping("/info")
     @Operation(summary = "查询配额使用情况")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_QUOTA_VIEW)
     public BaseResponse<StorageQuota> getQuota(
             @RequestParam(defaultValue = "user") String scopeType,
             @RequestParam String scopeId) {
@@ -45,6 +48,7 @@ public class QuotaController {
 
     @PostMapping("/set")
     @Operation(summary = "设置配额（管理员）")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_QUOTA_SET)
     public BaseResponse<StorageQuota> setQuota(
             @Valid @RequestBody NextwikiDTOs.SetQuotaRequest request,
             @RequestHeader("X-User-Id") String userId) {

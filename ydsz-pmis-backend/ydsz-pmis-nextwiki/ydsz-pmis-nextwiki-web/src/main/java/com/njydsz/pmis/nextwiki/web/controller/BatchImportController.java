@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.nextwiki.server.service.BatchImportApplicationService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,6 +34,7 @@ public class BatchImportController {
 
     @PostMapping("/batch-upload")
     @Operation(summary = "批量上传文件")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_BATCH_IMPORT)
     public BaseResponse<BatchImportApplicationService.BatchImportResult> batchUpload(
             @RequestParam("files") MultipartFile[] files,
             @RequestParam(value = "parentId", required = false) String parentId,
@@ -41,6 +44,7 @@ public class BatchImportController {
 
     @PostMapping("/zip")
     @Operation(summary = "从 ZIP 压缩包导入")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_BATCH_IMPORT)
     public BaseResponse<BatchImportApplicationService.BatchImportResult> importZip(
             @RequestParam("file") MultipartFile zipFile,
             @RequestParam(value = "parentId", required = false) String parentId,

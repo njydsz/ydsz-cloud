@@ -258,7 +258,6 @@ public class CEPController {
     /**
      * Map → CEPEvent 转换
      */
-    @SuppressWarnings("unchecked")
     private CEPEvent toEvent(Map<String, Object> body) {
         CEPEvent.CEPEventBuilder b = CEPEvent.builder();
         if (body.get("type") != null) {
@@ -274,8 +273,11 @@ public class CEPController {
                 log.debug("[CEP] timestamp 解析失败，使用当前时间: {}", body.get("timestamp"));
             }
         }
-        if (body.get("attributes") instanceof Map) {
-            b.attributes(new HashMap<>((Map<String, Object>) body.get("attributes")));
+        Object attrs = body.get("attributes");
+        if (attrs instanceof Map<?, ?> rawMap) {
+            Map<String, Object> typed = new HashMap<>();
+            rawMap.forEach((k, v) -> typed.put(String.valueOf(k), v));
+            b.attributes(typed);
         }
         return b.build();
     }
@@ -335,8 +337,8 @@ public class CEPController {
                 // 投递测试事件
                 for (Object item : eventsList) {
                     if (item instanceof Map<?, ?> mp) {
-                        @SuppressWarnings("unchecked")
-                        Map<String, Object> eventBody = (Map<String, Object>) mp;
+                        Map<String, Object> eventBody = new HashMap<>();
+                        mp.forEach((k, v) -> eventBody.put(String.valueOf(k), v));
                         engine.feed(toEvent(eventBody));
                     }
                 }

@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.nextwiki.domain.entity.TrashItem;
 import com.njydsz.pmis.nextwiki.domain.service.TrashDomainService;
 
@@ -37,12 +39,14 @@ public class TrashController {
 
     @GetMapping("/list")
     @Operation(summary = "查询回收站列表")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_LIST)
     public BaseResponse<List<TrashItem>> list(@RequestHeader("X-User-Id") String userId) {
         return BaseResponse.ok(trashDomainService.listTrash(userId));
     }
 
     @PostMapping("/{trashItemId}/restore")
     @Operation(summary = "从回收站恢复")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_RESTORE)
     public BaseResponse<Void> restore(
             @PathVariable String trashItemId,
             @RequestHeader("X-User-Id") String userId) {
@@ -52,6 +56,7 @@ public class TrashController {
 
     @PostMapping("/batch-restore")
     @Operation(summary = "批量恢复")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_RESTORE)
     public BaseResponse<Void> batchRestore(
             @RequestBody List<String> trashItemIds,
             @RequestHeader("X-User-Id") String userId) {
@@ -61,6 +66,7 @@ public class TrashController {
 
     @DeleteMapping("/{trashItemId}")
     @Operation(summary = "永久删除")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_PURGE)
     public BaseResponse<Void> purge(
             @PathVariable String trashItemId,
             @RequestHeader("X-User-Id") String userId) {
@@ -70,6 +76,7 @@ public class TrashController {
 
     @DeleteMapping("/empty")
     @Operation(summary = "清空回收站")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_TRASH_EMPTY)
     public BaseResponse<Void> emptyTrash(@RequestHeader("X-User-Id") String userId) {
         trashDomainService.emptyTrash(userId);
         return BaseResponse.ok();

@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 import com.njydsz.pmis.nextwiki.server.service.AiSummaryApplicationService;
 import com.njydsz.pmis.nextwiki.server.service.StorageAnalysisApplicationService;
@@ -39,6 +41,7 @@ public class AnalysisController {
 
     @GetMapping("/overview")
     @Operation(summary = "获取存储概览")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)
     public BaseResponse<StorageAnalysisApplicationService.StorageOverview> getOverview(
             @RequestHeader("X-User-Id") String userId) {
         return BaseResponse.ok(storageAnalysisService.getUserOverview(userId));
@@ -46,6 +49,7 @@ public class AnalysisController {
 
     @GetMapping("/by-type")
     @Operation(summary = "按文件类型统计")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)
     public BaseResponse<Map<String, StorageAnalysisApplicationService.TypeStats>> statsByType(
             @RequestHeader("X-User-Id") String userId) {
         return BaseResponse.ok(storageAnalysisService.statsByType(userId));
@@ -53,6 +57,7 @@ public class AnalysisController {
 
     @GetMapping("/top-large-files")
     @Operation(summary = "大文件 Top-N")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)
     public BaseResponse<List<FileNode>> topLargeFiles(
             @RequestHeader("X-User-Id") String userId,
             @RequestParam(defaultValue = "10") int limit) {
@@ -61,6 +66,7 @@ public class AnalysisController {
 
     @PostMapping("/summary")
     @Operation(summary = "生成文档摘要")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_ANALYSIS)
     public BaseResponse<AiSummaryApplicationService.DocumentAnalysis> analyze(
             @RequestBody String content) {
         return BaseResponse.ok(aiSummaryService.analyze(content));

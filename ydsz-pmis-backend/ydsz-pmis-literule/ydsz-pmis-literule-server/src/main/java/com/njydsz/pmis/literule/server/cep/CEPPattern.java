@@ -156,9 +156,16 @@ public class CEPPattern implements Serializable {
     /**
      * 从 Map 反序列化（用于 SQL JSON 字段）
      */
-    @SuppressWarnings("unchecked")
     public static CEPPattern fromMap(Map<String, Object> map) {
         if (map == null) return null;
+        List<String> eventTypes = null;
+        Object raw = map.get("eventTypes");
+        if (raw instanceof List<?> list) {
+            eventTypes = list.stream()
+                    .filter(o -> o instanceof String)
+                    .map(o -> (String) o)
+                    .toList();
+        }
         return CEPPattern.builder()
                 .id((String) map.get("id"))
                 .type(map.get("type") != null ? PatternType.valueOf((String) map.get("type")) : null)
@@ -166,7 +173,7 @@ public class CEPPattern implements Serializable {
                 .name((String) map.get("name"))
                 .description((String) map.get("description"))
                 .eventType((String) map.get("eventType"))
-                .eventTypes((List<String>) map.get("eventTypes"))
+                .eventTypes(eventTypes)
                 .filter((String) map.get("filter"))
                 .aggregateFunction(map.get("aggregateFunction") != null
                         ? AggregateFunction.valueOf((String) map.get("aggregateFunction")) : null)

@@ -594,13 +594,10 @@ public class RuleChainDslParser {
      */
     private static final class ChainAsRule implements Rule {
         private static final AtomicLong SEQ = new AtomicLong();
-        /** 子链引用：保留便于未来在 evaluate 中委托执行；当前 evaluate 不消费（父链编排器递归触发） */
-        @SuppressWarnings("unused")
-        private final RuleChain chain;
         private final String code;
 
         ChainAsRule(RuleChain chain) {
-            this.chain = chain;
+            // chain 参数仅在 DSL 解析层用于类型适配，evaluate 不消费（父链编排器递归触发）
             this.code = "chain#" + SEQ.incrementAndGet();
         }
 

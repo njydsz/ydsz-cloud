@@ -44,6 +44,7 @@ public class ShareDomainService {
     /**
      * 创建分享链接
      */
+    @Transactional(rollbackFor = Exception.class)
     public ShareLink createShare(String fileNodeId, String shareType, String password,
                                   LocalDateTime expireTime, Integer maxAccessCount, String userId) {
         FileNode fileNode = fileNodeRepository.findById(fileNodeId);

@@ -89,6 +89,14 @@ pmis:
       secret: ${PMIS_FEISHU_SECRET:}
       connect-timeout: 5000
       read-timeout: 10000
+    wecom-app:
+      enabled: ${PMIS_WECOM_APP_ENABLED:false}
+      corp-id: ${PMIS_WECOM_APP_CORPID:}
+      corp-secret: ${PMIS_WECOM_APP_CORPSECRET:}
+      agent-id: ${PMIS_WECOM_APP_AGENTID:0}
+      base-url: https://qyapi.weixin.qq.com
+      connect-timeout: 5000
+      read-timeout: 10000
 
 # RocketMQ
 rocketmq:
