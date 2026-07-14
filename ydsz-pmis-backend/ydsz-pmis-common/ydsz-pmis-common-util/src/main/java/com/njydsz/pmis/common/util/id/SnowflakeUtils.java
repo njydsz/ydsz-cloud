@@ -185,11 +185,11 @@ public final class SnowflakeUtils {
                 if (timestamp < lastTimestamp) {
                     long remainingOffset = lastTimestamp - timestamp;
                     log.error("Clock still moved backwards after waiting, remaining offset: {} ms", remainingOffset);
-                    throw new RuntimeException(String.format("Clock moved backwards. Refusing to generate id, remaining offset: %d ms", remainingOffset));
+                    throw new ClockBackwardException(remainingOffset, lastTimestamp, timeGen());
                 }
             } else {
                 log.error("Clock moved backwards by {} ms, exceeds tolerance {} ms", offset, CLOCK_BACKWARD_TOLERANCE_MILLIS);
-                throw new RuntimeException(String.format("Clock moved backwards. Refusing to generate id for %d milliseconds", offset));
+                throw new ClockBackwardException(offset, lastTimestamp, timeGen());
             }
         }
         return timestamp;

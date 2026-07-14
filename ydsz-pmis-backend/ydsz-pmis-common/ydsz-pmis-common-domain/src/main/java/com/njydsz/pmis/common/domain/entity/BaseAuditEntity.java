@@ -15,14 +15,14 @@ import lombok.experimental.SuperBuilder;
 /**
  * 审计字段基础实体。
  *
- * <p>继承自 {@link BaseIdEntity}，额外包含创建人、创建时间、更新人、更新时间等审计字段名
- * 这些字段名MyBatis-Plus 的自动填充功能管理，对业务代码透明。
+ * <p>继承自 {@link BaseIdEntity}，额外包含创建人、创建时间、更新人、更新时间等审计字段
+ * 这些字段MyBatis-Plus 的自动填充功能管理，对业务代码透明。
  *
  * <p><b>设计原则：</b>
  * <ul>
  *   <li>审计字段对业务代码透明，由框架自动维护</li>
- *   <li>采用 LocalDateTime 作为时间类型，支持时区转。</li>
- *   <li>使用 {@code @JsonFormat} 注解支持 JSON 序列化时的格式控。</li>
+ *   <li>采用 LocalDateTime 作为时间类型，支持时区转换</li>
+ *   <li>使用 {@code @JsonFormat} 注解支持 JSON 序列化时的格式控制</li>
  * </ul>
  *
  * <p><b>审计字段说明：</b>
@@ -64,7 +64,7 @@ import lombok.experimental.SuperBuilder;
  * 这将降低继承链深度，提高实体类的组合灵活性，并使审计信息可独立复用。
  * 迁移路径：BaseAuditEntity 。BaseIdEntity + @Embedded AuditInfo
  *
- * @param <T> 主键ID类型，支。Long、String、UUID 。
+ * @param <T> 主键ID类型，支。Long、String、UUID 等
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -86,7 +86,7 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
      * 创建人ID
      *
      * <p>记录创建该记录的用户ID，通常。SecurityContext 安全上下文中获取。
-     * 框架。INSERT 操作时自动填充此字段名
+     * 框架。INSERT 操作时自动填充此字段
      *
      * <p><b>字段映射：</b> created_by -> createdBy
      */
@@ -96,7 +96,7 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
      * 创建时间
      *
      * <p>记录创建该记录的时间戳。
-     * 框架。INSERT 操作时自动填充此字段名
+     * 框架。INSERT 操作时自动填充此字段
      * JSON 序列化时格式化为 "yyyy-MM-dd HH:mm:ss"。
      *
      * <p><b>字段映射：</b> created_at -> createdAt
@@ -108,7 +108,7 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
      * 更新人ID
      *
      * <p>记录最后一次更新该记录的用户ID。
-     * 框架。INSERT/UPDATE 操作时自动填充此字段名
+     * 框架。INSERT/UPDATE 操作时自动填充此字段
      *
      * <p><b>字段映射：</b> updated_by -> updatedBy
      */
@@ -118,7 +118,7 @@ public class BaseAuditEntity<T extends Serializable> extends BaseIdEntity<T> imp
      * 更新时间
      *
      * <p>记录最后一次更新该记录的时间戳。
-     * 框架。INSERT/UPDATE 操作时自动填充此字段名
+     * 框架。INSERT/UPDATE 操作时自动填充此字段
      * JSON 序列化时格式化为 "yyyy-MM-dd HH:mm:ss"。
      *
      * <p><b>字段映射：</b> updated_at -> updatedAt

@@ -1,7 +1,10 @@
 package com.njydsz.pmis.common.util.regex;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,6 +20,44 @@ import java.util.regex.Pattern;
 public class RegexUtils {
 
     private static final String EMPTY = "";
+
+    /**
+     * Pattern LRU 缓存，避免重复编译正则表达式
+     *
+     * <p>使用 synchronized LinkedHashMap（accessOrder=true）实现 LRU 淘汰策略。
+     * 缓存上限 256 个 Pattern，超过后淘汰最久未使用的条目。
+     */
+    private static final int PATTERN_CACHE_MAX_SIZE = 256;
+    private static final Map<String, Pattern> PATTERN_CACHE =
+            Collections.synchronizedMap(new LinkedHashMap<>(64, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(Map.Entry<String, Pattern> eldest) {
+                    return size() > PATTERN_CACHE_MAX_SIZE;
+                }
+            });
+
+    /**
+     * 从缓存获取或编译 Pattern
+     *
+     * @param regex 正则表达式
+     * @return 编译后的 Pattern
+     */
+    private static Pattern getOrCompile(String regex) {
+        Pattern pattern = PATTERN_CACHE.get(regex);
+        if (pattern != null) {
+            return pattern;
+        }
+        pattern = Pattern.compile(regex);
+        PATTERN_CACHE.put(regex, pattern);
+        return pattern;
+    }
+
+    /**
+     * 清空 Pattern 缓存（用于测试或内存优化）
+     */
+    public static void clearPatternCache() {
+        PATTERN_CACHE.clear();
+    }
 
     private RegexUtils() {
         throw new UnsupportedOperationException("Utility class cannot be instantiated");
@@ -533,7 +574,7 @@ public class RegexUtils {
         if (regex == null || input == null) {
             return false;
         }
-        return Pattern.matches(regex, input);
+        return getOrCompile(regex).matcher(input).matches();
     }
 
     /**
@@ -558,7 +599,7 @@ public class RegexUtils {
         if (inputs == null || inputs.length == 0) {
             return false;
         }
-        Pattern pattern = Pattern.compile(regex);
+        Pattern pattern = getOrCompile(regex);
         for (String input : inputs) {
             if (!isMatch(pattern, input)) {
                 return false;
@@ -578,7 +619,7 @@ public class RegexUtils {
         if (inputs == null || inputs.length == 0) {
             return false;
         }
-        Pattern pattern = Pattern.compile(regex);
+        Pattern pattern = getOrCompile(regex);
         for (String input : inputs) {
             if (isMatch(pattern, input)) {
                 return true;
@@ -600,8 +641,7 @@ public class RegexUtils {
         if (regex == null || input == null) {
             return null;
         }
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(input);
+        Matcher matcher = getOrCompile(regex).matcher(input);
         if (matcher.find()) {
             return matcher.group();
         }
@@ -620,8 +660,7 @@ public class RegexUtils {
         if (regex == null || input == null) {
             return result;
         }
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(input);
+        Matcher matcher = getOrCompile(regex).matcher(input);
         while (matcher.find()) {
             result.add(matcher.group());
         }
@@ -640,8 +679,7 @@ public class RegexUtils {
         if (regex == null || input == null || group < 0) {
             return null;
         }
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(input);
+        Matcher matcher = getOrCompile(regex).matcher(input);
         if (matcher.find() && matcher.groupCount() >= group) {
             return matcher.group(group);
         }
@@ -661,8 +699,7 @@ public class RegexUtils {
         if (regex == null || input == null || group < 0) {
             return result;
         }
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(input);
+        Matcher matcher = getOrCompile(regex).matcher(input);
         while (matcher.find() && matcher.groupCount() >= group) {
             result.add(matcher.group(group));
         }
@@ -681,8 +718,7 @@ public class RegexUtils {
         if (regex == null || input == null || replacementTemplate == null) {
             return null;
         }
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(input);
+        Matcher matcher = getOrCompile(regex).matcher(input);
         if (matcher.find()) {
             return matcher.replaceAll(replacementTemplate);
         }
@@ -733,8 +769,7 @@ public class RegexUtils {
         if (regex == null || input == null || replacement == null) {
             return input;
         }
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(input);
+        Matcher matcher = getOrCompile(regex).matcher(input);
         if (matcher.find()) {
             return matcher.replaceFirst(replacement);
         }
@@ -753,7 +788,7 @@ public class RegexUtils {
         if (regex == null || input == null) {
             return input;
         }
-        return input.replaceAll(regex, Objects.toString(replacement, EMPTY));
+        return getOrCompile(regex).matcher(input).replaceAll(Objects.toString(replacement, EMPTY));
     }
 
     /**
@@ -814,8 +849,7 @@ public class RegexUtils {
         if (input == null) {
             return 0;
         }
-        Pattern pattern = Pattern.compile("[^\\x00-\\xff]");
-        Matcher matcher = pattern.matcher(input);
+        Matcher matcher = getOrCompile("[^\\x00-\\xff]").matcher(input);
         int count = 0;
         while (matcher.find()) {
             count++;
@@ -836,7 +870,7 @@ public class RegexUtils {
         if (regex == null || input == null) {
             return new String[0];
         }
-        return input.split(regex);
+        return getOrCompile(regex).split(input);
     }
 
     /**
@@ -851,7 +885,7 @@ public class RegexUtils {
         if (regex == null || input == null) {
             return new String[0];
         }
-        return input.split(regex, limit);
+        return getOrCompile(regex).split(input, limit);
     }
 
     // ==================== 统计方法 ====================
@@ -867,8 +901,7 @@ public class RegexUtils {
         if (regex == null || input == null) {
             return 0;
         }
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(input);
+        Matcher matcher = getOrCompile(regex).matcher(input);
         int count = 0;
         while (matcher.find()) {
             count++;

@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 /**
  * 可审计实体接。
  *
- * <p>提供创建。时间、更新人/时间的标准访问方法。
+ * <p>提供创建人时间、更新人/时间的标准访问方法。
  * 和 {@link BaseAuditEntity} 提供 JDBC 自动填充实现。
  * 也可由业务代码手动设置。
  *
@@ -16,14 +16,14 @@ import java.time.LocalDateTime;
 public interface Auditable {
 
     /**
-     * 获取创建。
+     * 获取创建人
      *
      * @return 创建人标识
      */
     String getCreatedBy();
 
     /**
-     * 设置创建。
+     * 设置创建人
      *
      * @param createdBy 创建人标识
      */
@@ -44,14 +44,14 @@ public interface Auditable {
     void setCreatedAt(LocalDateTime createdAt);
 
     /**
-     * 获取更新。
+     * 获取更新人
      *
      * @return 更新人标识
      */
     String getUpdatedBy();
 
     /**
-     * 设置更新。
+     * 设置更新人
      *
      * @param updatedBy 更新人标识
      */

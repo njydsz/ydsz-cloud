@@ -35,7 +35,7 @@ import java.lang.annotation.Target;
 public @interface SoftDelete {
 
     /**
-     * 删除标记字段名，默认 "deleted"
+     * 删除标记字段，默认 "deleted"
      */
     String value() default "deleted";
 }

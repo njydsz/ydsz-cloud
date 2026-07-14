@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * 项目维度标记接口
  *
- * <p>标识该实体支持项目维度数据隔离。业务实体可通过实现此接口替代继与 {@link ProjectEntity}。
+ * <p>标识该实体支持项目维度数据隔离。业务实体可通过实现此接口替代继承 {@link ProjectEntity}。
  * 配合 SQL 拦截器自动注入project_id 条件。
  *
  * <p><b>迁移策略：</b>

@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  *
  * <p>标注在实体字段上，表明该字段用于乐观锁并发控制。
  * 配合 SQL 拦截器，每次更新时自动递增，并带上 {@code WHERE revision = oldRevision}
- * 条件，防止并发覆盖更新。
+ * 条件，防止并发覆盖更新人
  *
  * <p><b>使用示例：</b>
  * <pre>{@code

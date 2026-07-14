@@ -24,7 +24,7 @@ public class CursorPageResult<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    /** 当前页数据列。*/
+    /** 当前页数据列表*/
     private List<T> records = Collections.emptyList();
 
     /** 下一页游标（。null 表示无更多数据） */
@@ -54,7 +54,7 @@ public class CursorPageResult<T> implements Serializable {
      * 如果列表长度大于 {@code pageSize}，则表示还有更多数据。
      * 下一页游标由最后一条记录编码生成。
      *
-     * @param records       查询结果列表（已多查 1 条用于判。hasMore。
+     * @param records       查询结果列表（已多查 1 条用于判断 hasMore。
      * @param cursorEncoder 游标编码函数
      * @param pageSize      每页大小
      * @param <T>           数据类型

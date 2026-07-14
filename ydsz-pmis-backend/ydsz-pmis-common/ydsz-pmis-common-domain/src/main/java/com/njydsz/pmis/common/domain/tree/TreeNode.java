@@ -22,10 +22,10 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 /**
- * 树节点基础。
+ * 树节。基础类
  *
  * <p>用于构建树形结构数据，如组织架构、菜单分类、商品分类、区域管理等场景。
- * 支持泛型继承，允许自定义扩展节点属性。
+ * 支持泛型继承，允许自定义扩展节。属性。
  *
  * <p><b>设计原则：</b>
  * <ul>
@@ -37,18 +37,18 @@ import lombok.experimental.SuperBuilder;
  * <p><b>字段说明：</b>
  * <table>
  *   <tr><th>字段</th><th>类型</th><th>说明</th></tr>
- *   <tr><td>id</td><td>T</td><td>当前节点唯一标识</td></tr>
- *   <tr><td>parentId</td><td>T</td><td>父节点ID，顶级节点为null</td></tr>
- *   <tr><td>children</td><td>List&lt;T&gt;</td><td>子节点列。</td></tr>
- *   <tr><td>sort</td><td>Integer</td><td>排序字段，同级节点排序用</td></tr>
- *   <tr><td>level</td><td>Integer</td><td>节点层级深度，根节点。</td></tr>
- *   <tr><td>path</td><td>String</td><td>节点路径，如 "/1/2/3/"</td></tr>
- *   <tr><td>leaf</td><td>Boolean</td><td>是否为叶子节点</td></tr>
+ *   <tr><td>id</td><td>T</td><td>当前节。唯一标识</td></tr>
+ *   <tr><td>parentId</td><td>T</td><td>父节。ID，顶级节。为null</td></tr>
+ *   <tr><td>children</td><td>List&lt;T&gt;</td><td>子节。列表</td></tr>
+ *   <tr><td>sort</td><td>Integer</td><td>排序字段，同级节。排序用</td></tr>
+ *   <tr><td>level</td><td>Integer</td><td>节。层级深度，根节。为</td></tr>
+ *   <tr><td>path</td><td>String</td><td>节。路径，如 "/1/2/3/"</td></tr>
+ *   <tr><td>leaf</td><td>Boolean</td><td>是否为叶子节。</td></tr>
  * </table>
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * // 定义菜单树节点
+ * // 定义菜单树节。
  * &#64;Data
  * &#64;EqualsAndHashCode(callSuper = true)
  * public class Menu extends TreeNode<Menu, Long> {
@@ -61,7 +61,7 @@ import lombok.experimental.SuperBuilder;
  * List<Menu> allMenus = menuMapper.selectList();
  * List<Menu> tree = new TreeBuilder<>(0L, allMenus).build();
  *
- * // 遍历树节点
+ * // 遍历树节。
  * tree.forEach(node -> {
  *     log.info("{} - {}", node.getLevel(), node.getMenuName());
  * });
@@ -90,37 +90,37 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
 
     private static final long serialVersionUID = 8676131899637805509L;
     /**
-     * 根节点层级深。
+     * 根节。层级深。
      */
     public static final int ROOT_LEVEL = 1;
 
     /**
-     * 根节点路径前缀
+     * 根节。路径前缀
      */
     public static final String PATH_SEPARATOR = "/";
 
     /**
-     * 当前节点唯一标识
+     * 当前节。唯一标识
      *
-     * <p>唯一标识树中的一个节点。
+     * <p>唯一标识树中的一个节。。
      */
     @Setter
     private ID id;
 
     /**
-     * 父节点ID
+     * 父节。ID
      *
-     * <p>顶级节点的父ID为null。
-     * 也可使用特定值（。。1）作为根节点标识。
+     * <p>顶级节。的父ID为null。
+     * 也可使用特定值（。。1）作为根节。标识。
      */
     @Setter
     private ID parentId;
 
     /**
-     * 子节点列。
+     * 子节。列表
      *
-     * <p>存储属于当前节点的所有直接子节点。
-     * 空列表表示叶子节点。
+     * <p>存储属于当前节。的所有直接子节。。
+     * 空列表表示叶子节。。
      */
     @Builder.Default
     @Setter
@@ -129,19 +129,19 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     /**
      * 排序字段
      *
-     * <p>用于同级别节点的排序，数值越小排序越靠前。
+     * <p>用于同级别节。的排序，数值越小排序越靠前。
      * 支持 null 值，null 值排在最后。
      */
     @Setter
     private Integer sort;
 
     /**
-     * 节点层级深度
+     * 节。层级深度
      *
-     * <p>从根节点开始计算深度：
+     * <p>从根节。开始计算深度：
      * <ul>
-     *   <li>根节点：level = 1</li>
-     *   <li>二级节点：level = 2</li>
+     *   <li>根节。：level = 1</li>
+     *   <li>二级节。：level = 2</li>
      *   <li>以此类推...</li>
      * </ul>
      */
@@ -150,22 +150,22 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     private Integer level = ROOT_LEVEL;
 
     /**
-     * 节点路径
+     * 节。路径
      *
-     * <p>格式：从根节点到当前节点的完整路径。
-     * 例如。/1/2/3/" 表示 id=3 的节点，其父id=2，父父id=1。
-     * 可用于快速判断节点归属关系。
+     * <p>格式：从根节。到当前节。的完整路径。
+     * 例如。/1/2/3/" 表示 id=3 的节。，其父id=2，父父id=1。
+     * 可用于快速判断节。归属关系。
      */
     @Setter
     private String path;
 
     /**
-     * 是否为叶子节点
+     * 是否为叶子节。
      *
      * <p>。TreeBuilder 自动计算法
      * <ul>
-     *   <li>true：无子节点</li>
-     *   <li>false：有子节点</li>
+     *   <li>true：无子节。</li>
+     *   <li>false：有子节。</li>
      * </ul>
      */
     @Builder.Default
@@ -173,12 +173,12 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     private Boolean leaf = true;
 
     /**
-     * 添加子节点
+     * 添加子节。
      *
-     * <p>将指定子节点添加到当前节点的子列表中。
+     * <p>将指定子节。添加到当前节。的子列表中。
      *
-     * @param child 子节点实体
-     * @return 当前节点，支持链式调用
+     * @param child 子节。实体
+     * @return 当前节。，支持链式调用
      */
     public T addChild(T child) {
         if (children == null) {
@@ -190,10 +190,10 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
 
     /**
-     * 添加多个子节点
+     * 添加多个子节。
      *
-     * @param childList 子节点列。
-     * @return 当前节点，支持链式调用
+     * @param childList 子节。列表
+     * @return 当前节。，支持链式调用
      */
     public T addChildren(List<T> childList) {
         if (children == null) {
@@ -207,10 +207,10 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
 
     /**
-     * 判断是否为根节点
+     * 判断是否为根节。
      *
-     * @param rootId 根节点ID。
-     * @return 如果是根节点返回true
+     * @param rootId 根节。ID。
+     * @return 如果是根节。返回true
      */
     public boolean isRootNode(ID rootId) {
         if (rootId == null) {
@@ -220,7 +220,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
 
     /**
-     * 判断是否为根节点（无参数版本。
+     * 判断是否为根节。（无参数版本号
      *
      * <p>判断 parentId 是否。null。
      *
@@ -231,18 +231,18 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
 
     /**
-     * 判断是否为叶子节点
+     * 判断是否为叶子节。
      *
-     * @return 如果没有子节点返回true
+     * @return 如果没有子节。返回true
      */
     public boolean isLeaf() {
         return children == null || children.isEmpty();
     }
 
     /**
-     * 获取子节点数。
+     * 获取子节。数量
      *
-     * @return 直接子节点数。
+     * @return 直接子节。数量
      */
     @JsonField(ignore = true)
     public int getChildCount() {
@@ -250,11 +250,11 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
 
     /**
-     * 获取所有后代节点数。
+     * 获取所有后代节。数量
      *
-     * <p>包括所有层级的子节点数量总和。
+     * <p>包括所有层级的子节。数量总和。
      *
-     * @return 后代节点总数
+     * @return 后代节。总数
      */
     @JsonField(ignore = true)
     public int getDescendantCount() {
@@ -277,7 +277,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     /**
      * 深度优先遍历
      *
-     * <p>先访问当前节点，再遍历子节点。
+     * <p>先访问当前节。，再遍历子节。。
      *
      * @param visitor 访问者函数
      */
@@ -300,7 +300,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     /**
      * 广度优先遍历
      *
-     * <p>先访问当前层级所有节点，再访问下一层级。
+     * <p>先访问当前层级所有节。，再访问下一层级。
      *
      * @param visitor 访问者函数
      */
@@ -320,9 +320,9 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
 
     /**
-     * 构建当前节点的路。
+     * 构建当前节。的路。
      *
-     * <p>从根节点到当前节点的完整路径字符串。
+     * <p>从根节。到当前节。的完整路径字符串。
      *
      * @param rootPath 根路径前缀
      * @return 路径字符。
@@ -335,9 +335,9 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
 
     /**
-     * 判断是否包含指定子节点
+     * 判断是否包含指定子节。
      *
-     * @param childId 子节点ID
+     * @param childId 子节。ID
      * @return 包含返回true
      */
     public boolean containsChild(ID childId) {
@@ -349,10 +349,10 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
 
     /**
-     * 迭代查找指定节点（避免递归栈溢出）
+     * 迭代查找指定节。（避免递归栈溢出）
      *
-     * @param targetId 目标节点ID
-     * @return 找到返回节点，否则返回null
+     * @param targetId 目标节。ID
+     * @return 找到返回节。，否则返回null
      */
     public T findById(ID targetId) {
         if (Objects.equals(this.id, targetId)) {
@@ -371,7 +371,7 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
             }
             List<T> nodeChildren = node.getChildren();
             if (nodeChildren != null && !nodeChildren.isEmpty()) {
-                // 逆序压栈，保证左侧子节点先被处理
+                // 逆序压栈，保证左侧子节。先被处理
                 for (int i = nodeChildren.size() - 1; i >= 0; i--) {
                     stack.push(nodeChildren.get(i));
                 }
@@ -381,12 +381,12 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
 
     /**
-     * 获取所有祖先节点ID列表
+     * 获取所有祖先节。ID列表
      *
-     * <p>从父节点到根节点的ID列表。
+     * <p>从父节。到根节。的ID列表。
      *
-     * @param nodeList 所有节点列表（用于查找。
-     * @return 祖先节点ID列表
+     * @param nodeList 所有节。列表（用于查找。
+     * @return 祖先节。ID列表
      */
     public List<ID> getAncestorIds(List<T> nodeList) {
         // 构建 ID -> Node 索引，将 O(n²) 降为 O(n)
@@ -412,9 +412,9 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
 
     /**
-     * 复制当前节点（浅拷贝。
+     * 复制当前节。（浅拷贝。
      *
-     * @return 复制的新节点
+     * @return 复制的新节。
      */
     public T copy() {
         try {
@@ -429,9 +429,9 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
     
     /**
-     * 复制字段到目标节点（浅拷贝辅助方法）
+     * 复制字段到目标节。（浅拷贝辅助方法）
      *
-     * @param target 目标节点
+     * @param target 目标节。
      */
     protected void copyFieldsTo(T target) {
         target.setId(this.id);
@@ -444,10 +444,10 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
 
     /**
-     * 获取当前节点所在树的根节点
+     * 获取当前节。所在树的根节。
      *
-     * @param nodeList 所有节点列。
-     * @return 根节点
+     * @param nodeList 所有节。列表
+     * @return 根节。
      */
     public T getRoot(List<T> nodeList) {
         if (isRootNode()) {

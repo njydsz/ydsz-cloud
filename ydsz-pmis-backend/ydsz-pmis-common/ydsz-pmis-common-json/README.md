@@ -52,7 +52,7 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 | `BeanSerializerCache` / `BeanSerializerInfo` | Bean 序列化器缓存 |
 | `SerializerCache` / `SerializerRegistry` | 序列化器注册表 |
 | `FieldMeta` | 字段元数据 |
-| `JsonContext` / `JsonCacheStats` | 上下文 / 缓存统计 |
+| `JsonContext` / `SerializationContext` / `JsonCacheStats` | 上下文 / 缓存统计 |
 
 ### 字节码优化
 
@@ -82,7 +82,8 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 
 | 注解 | 说明 |
 |---|---|
-| `@JsonProperty` / `@JsonField` | 字段映射 |
+| `@JsonField` | 字段映射（名称 / 格式 / 序列化控制） |
+| `@JsonAlias` | 反序列化别名 |
 | `@JsonFormat` | 格式化（日期 / 数字） |
 | `@JsonView` | 视图过滤 |
 | `@JsonPropertyOrder` | 字段排序 |
@@ -98,6 +99,7 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 | `JsonPointer` | JSON Pointer（RFC 6901） |
 | `JsonPath` | JSONPath 查询 |
 | `JsonMergePatch` | JSON Merge Patch（RFC 7396） |
+| `JsonPatch` | JSON Patch（RFC 6902） |
 | `JsonSchema` / `SchemaValidator` / `ValidationResult` | JSON Schema 校验 |
 | `AutoTypeChecker` | AutoType 安全检查（防反序列化漏洞） |
 
@@ -117,7 +119,8 @@ PMIS 高性能 JSON 引擎 — ASM 字节码加速、LRU 字段缓存、零拷�
 
 | 类 | 说明 |
 |---|---|
-| `JsonHttpMessageConverter` | Spring MVC HttpMessageConverter |
+| `JsonHttpMessageConverter` | Spring MVC HttpMessageConverter（支持 @JsonView） |
+| `JsonReactiveUtils` | WebFlux 响应式编码工具 |
 | `JsonAutoConfiguration` | 自动配置 |
 | `JsonProperties` / `JsonModuleRegistrar` | 配置属性 / 模块注册器 |
 
@@ -143,17 +146,23 @@ import com.njydsz.pmis.common.json.tree.ObjectNode;
 import com.njydsz.pmis.common.json.jsonpath.JsonPath;
 
 // 序列化
-String json = Json.toJSONString(obj);
+String json = Json.toJson(obj);
 
 // 反序列化
-User user = Json.parseObject(json, User.class);
+User user = Json.toObject(json, User.class);
 
 // 树操作
-ObjectNode root = Json.parseObject(json);
-String name = root.getString("name");
+Map<String, Object> root = Json.parseMap(json);
+String name = (String) root.get("name");
 
 // JSONPath 查询
 List<String> emails = JsonPath.read(json, "$.users[*].email");
+
+// 流式序列化（写入 Writer，避免中间 String）
+Json.toJson(obj, new StringWriter());
+
+// 从 InputStream 反序列化
+User user2 = Json.toObject(inputStream, User.class);
 ```
 
 ## Spring Boot 自动装配

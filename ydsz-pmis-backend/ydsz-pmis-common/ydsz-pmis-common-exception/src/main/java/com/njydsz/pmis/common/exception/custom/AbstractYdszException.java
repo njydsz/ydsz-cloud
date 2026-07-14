@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.pmis.common.exception.core.ExceptionInfo;
 import com.njydsz.pmis.common.exception.enums.ExceptionCategory;
+import com.njydsz.pmis.common.exception.enums.ExceptionCode;
 import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
 
 /**
@@ -128,6 +129,38 @@ public abstract class AbstractYdszException extends RuntimeException {
         // 存储懒加载所需的消息 key 和 params
         this.messageKey = key;
         this.messageParams = this.params;
+    }
+
+    /**
+     * 便捷初始化方法：一次性设置所有字段（消除子类构造函数重复代码）
+     *
+     * <p>子类构造函数中调用此方法，替代分别调用 {@link #initDefaults} 和 {@link #initFields}。
+     *
+     * @param exceptionCode 异常码枚举（提供 code/key/httpStatus）
+     * @param params        消息参数
+     * @param level         异常级别
+     * @param category      异常分类
+     */
+    protected final void init(ExceptionCode exceptionCode, Object[] params,
+                               ExceptionLevel level, ExceptionCategory category) {
+        initDefaults(exceptionCode.getHttpStatus(), level, category);
+        initFields(exceptionCode.getCode(), exceptionCode.getKey(), params);
+    }
+
+    /**
+     * 便捷初始化方法：一次性设置所有字段（使用默认 HTTP 状态码）
+     *
+     * @param code        异常码字符串
+     * @param key         国际化消息键
+     * @param params      消息参数
+     * @param httpStatus  HTTP 状态码
+     * @param level       异常级别
+     * @param category    异常分类
+     */
+    protected final void init(String code, String key, Object[] params,
+                               int httpStatus, ExceptionLevel level, ExceptionCategory category) {
+        initDefaults(httpStatus, level, category);
+        initFields(code, key, params);
     }
 
     protected ExceptionInfo buildExceptionInfo() {

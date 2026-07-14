@@ -29,7 +29,7 @@ public class PageResult<T> implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 当前页数据列。
+     * 当前页数据列表
      */
     private transient List<T> records;
 
@@ -76,7 +76,7 @@ public class PageResult<T> implements Serializable {
     /**
      * 创建分页结果
      *
-     * @param records  当前页数据列。
+     * @param records  当前页数据列表
      * @param total    总记录数
      * @param pageNum  当前页码
      * @param pageSize 每页记录数

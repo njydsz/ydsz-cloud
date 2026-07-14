@@ -14,7 +14,7 @@ import lombok.experimental.SuperBuilder;
  * 查询对象基类型
  *
  * <p>所有查询参数对象的顶层基类，提供序列化支持和通用查询字段。
- * 子类可通过 {@link SuperBuilder} 继承 Builder 能力，实现链式构建查询参数。
+ * 子类可通过 {@link SuperBuilder} 继承 Builder 能力，实现链式构建查询参数量
  *
  * <p><b>继承体系：</b>
  * <pre>

@@ -4,6 +4,9 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * 异常码注册中心
  *
@@ -40,6 +43,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class ExceptionCodeRegistry {
 
+    private static final Logger log = LoggerFactory.getLogger(ExceptionCodeRegistry.class);
+
     /** 存储 code → ExceptionCode 映射的全局注册表 */
     private static final Map<String, ExceptionCode> REGISTRY = new ConcurrentHashMap<>();
 
@@ -62,7 +67,11 @@ public final class ExceptionCodeRegistry {
         }
         // 使用 putIfAbsent 循环实现增量注册，首次注册生效
         for (Map.Entry<String, ExceptionCode> entry : codeMap.entrySet()) {
-            REGISTRY.putIfAbsent(entry.getKey(), entry.getValue());
+            ExceptionCode existing = REGISTRY.putIfAbsent(entry.getKey(), entry.getValue());
+            if (existing != null && existing != entry.getValue()) {
+                log.warn("异常码重复注册被忽略 | code={} | 已注册: {} | 新注册: {}",
+                        entry.getKey(), existing.getClass().getName(), entry.getValue().getClass().getName());
+            }
         }
     }
 

@@ -5,7 +5,7 @@ import java.io.Serializable;
 /**
  * 区域维度标记接口
  *
- * <p>标识该实体支持区域维度数据隔离。业务实体可通过实现此接口替代继与 {@link RegionEntity}。
+ * <p>标识该实体支持区域维度数据隔离。业务实体可通过实现此接口替代继承 {@link RegionEntity}。
  * 配合 SQL 拦截器自动注入region_id 条件。
  *
  * <p><b>迁移策略：</b>

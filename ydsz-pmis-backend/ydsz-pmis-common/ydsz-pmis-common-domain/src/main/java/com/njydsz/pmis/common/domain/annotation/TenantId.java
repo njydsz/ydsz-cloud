@@ -33,7 +33,7 @@ import java.lang.annotation.Target;
 public @interface TenantId {
 
     /**
-     * 租户字段名，默认 "tenant_id"
+     * 租户字段，默认 "tenant_id"
      */
     String value() default "tenant_id";
 }

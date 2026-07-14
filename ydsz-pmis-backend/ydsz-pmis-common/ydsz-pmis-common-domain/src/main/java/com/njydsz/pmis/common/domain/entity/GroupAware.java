@@ -5,10 +5,10 @@ import java.io.Serializable;
 /**
  * 组织维度标记接口
  *
- * <p>标识该实体支持组织维度数据隔离。业务实体可通过实现此接口替代继与 {@link GroupEntity}。
+ * <p>标识该实体支持组织维度数据隔离。业务实体可通过实现此接口替代继承 {@link GroupEntity}。
  *
  * <p>接口定义了公司ID和部门ID。getter/setter，与 {@link GroupEntity} 的字段对齐；
- * {@link #getGroupId()} / {@link #setGroupId(Long)} 作为便捷方法，默认返。/ 设置 companyId。
+ * {@link #getGroupId()} / {@link #setGroupId(Long)} 作为便捷方法，默认返回/ 设置 companyId。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -37,7 +37,7 @@ public interface GroupAware extends Serializable {
     void setDeptId(Long deptId);
 
     /**
-     * 便捷方法：获取组ID，默认返。companyId
+     * 便捷方法：获取组ID，默认返回companyId
      *
      * <p>实现类可按需覆写此方法以返回组合值。
      */
@@ -46,7 +46,7 @@ public interface GroupAware extends Serializable {
     }
 
     /**
-     * 便捷方法：设置组ID，默认设计companyId
+     * 便捷方法：设置组ID，默认设置 companyId
      *
      * <p>实现类可按需覆写此方法。
      */

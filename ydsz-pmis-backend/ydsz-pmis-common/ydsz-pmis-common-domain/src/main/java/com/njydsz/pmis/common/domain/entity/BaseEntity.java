@@ -15,13 +15,13 @@ import lombok.experimental.SuperBuilder;
 /**
  * 基础实体。
  *
- * <p>继承自 {@link BaseAuditEntity}，包含完整的审计字段、乐观锁版本号和逻辑删除标识。
+ * <p>继承自 {@link BaseAuditEntity}，包含完整的审计字段、乐观锁版本号和逻辑删除标识（0
  * 这是系统中最常用的实体基类，适用于大多数业务实体。
  *
  * <p><b>设计原则：</b>
  * <ul>
- *   <li>开闭原则：对扩展开放，对修改关。</li>
- *   <li>单一职责：每个字段有且只有一个职。</li>
+ *   <li>开闭原则：对扩展开放，对修改关闭</li>
+ *   <li>单一职责：每个字段有且只有一个职责</li>
  *   <li>依赖倒置：业务代码依赖抽象基类，不依赖具体实体</li>
  * </ul>
  *
@@ -29,9 +29,9 @@ import lombok.experimental.SuperBuilder;
  * <table>
  *   <tr><th>特性</th><th>字段</th><th>说明</th></tr>
  *   <tr><td>审计字段</td><td>createdBy/createdAt/updatedBy/updatedAt</td><td>追踪数据变更</td></tr>
- *   <tr><td>乐观。</td><td>revision</td><td>并发控制，防止更新冲。</td></tr>
- *   <tr><td>逻辑删除</td><td>deleted</td><td>软删除，数据可恢。</td></tr>
- *   <tr><td>状态标识</td><td>status</td><td>业务状态启。禁用</td></tr>
+ *   <tr><td>乐观锁</td><td>revision</td><td>并发控制，防止更新冲突</td></tr>
+ *   <tr><td>逻辑删除</td><td>deleted</td><td>软删除，数据可恢复</td></tr>
+ *   <tr><td>状态标识</td><td>status</td><td>业务状态启用/禁用</td></tr>
  * </table>
  *
  * <p><b>使用示例：</b>
@@ -54,20 +54,20 @@ import lombok.experimental.SuperBuilder;
  * <pre>{@code
  * CREATE TABLE sys_user (
  *     id BIGINT PRIMARY KEY COMMENT '主键ID',
- *     username VARCHAR(50) COMMENT '用户。,
+ *     username VARCHAR(50) COMMENT '用户名,
  *     email VARCHAR(100) COMMENT '邮箱',
- *     phone VARCHAR(20) COMMENT '手机。,
- *     status INT DEFAULT 0 COMMENT '状态,
- *     created_by VARCHAR(64) COMMENT '创建。,
+ *     phone VARCHAR(20) COMMENT '手机号,
+ *     status INT DEFAULT 0 COMMENT '状态
+ *     created_by VARCHAR(64) COMMENT '创建人,
  *     created_at DATETIME COMMENT '创建时间',
- *     updated_by VARCHAR(64) COMMENT '更新。,
+ *     updated_by VARCHAR(64) COMMENT '更新人,
  *     updated_at DATETIME COMMENT '更新时间',
- *     revision INT DEFAULT 0 COMMENT '乐观锁版。,
+ *     revision INT DEFAULT 0 COMMENT '乐观锁版本号,
  *     deleted INT DEFAULT 0 COMMENT '逻辑删除'
  * );
  * }</pre>
  *
- * @param <T> 主键ID类型，支。Long、String、UUID 。
+ * @param <T> 主键ID类型，支。Long、String、UUID 等
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

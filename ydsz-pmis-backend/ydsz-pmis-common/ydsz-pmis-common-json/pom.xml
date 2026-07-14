@@ -62,6 +62,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Reactive Streams API（WebFlux 响应式场景 JsonReactiveEncoder 使用，版本由 Spring Boot BOM 管理） -->
+        <dependency>
+            <groupId>org.reactivestreams</groupId>
+            <artifactId>reactive-streams</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Spring Boot Actuator（健康检查，optional） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

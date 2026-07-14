@@ -18,17 +18,17 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
- * 懒加载树节点包装。
+ * 懒加载树节。包装。
  *
- * <p>包装实际的树节点，提供按需加载子节点的能力。
- * 适用于数据量较大、不适合一次性加载全部节点的场景。
+ * <p>包装实际的树节。，提供按需加载子节。的能力。
+ * 适用于数据量较大、不适合一次性加载全部节。的场景。
  *
  * <p><b>核心特性：</b>
  * <ul>
- *   <li>延迟加载：子节点仅在首次调用 {@code getChildren()} 时加。</li>
+ *   <li>延迟加载：子节。仅在首次调用 {@code getChildren()} 时加。</li>
  *   <li>加载状态跟踪：可通过 {@code isChildrenLoaded()} 检查加载状态</li>
- *   <li>深度限制：防止无限递归，支持配置最大深。</li>
- *   <li>线程安全：加载状态使。volatile 保证可见。</li>
+ *   <li>深度限制：防止无限递归，支持配置最大深度</li>
+ *   <li>线程安全：加载状态使。volatile 保证可见性</li>
  * </ul>
  *
  * <p><b>使用示例：</b>
@@ -55,28 +55,28 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     private static final long serialVersionUID = 1L;
 
     /**
-     * 被包装的实际节点
+     * 被包装的实际节。
      */
     private T node;
 
     /**
-     * 节点提供者，用于懒加载子节点
+     * 节。提供者，用于懒加载子节。
      */
     @JsonField(ignore = true)
     private transient TreeNodeProvider<T, ID> provider;
 
     /**
-     * 子节点懒加载列表
+     * 子节。懒加载列表
      */
     private transient volatile List<LazyTreeNode<T, ID>> lazyChildren;
 
     /**
-     * 子节点是否已加载
+     * 子节。是否已加载
      */
     private volatile boolean childrenLoaded = false;
 
     /**
-     * 当前节点深度（从1开始）
+     * 当前节。深度（从1开始）
      */
     private Integer depth;
 
@@ -101,11 +101,11 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     private transient ReentrantLock loadLock = new ReentrantLock();
 
     /**
-     * 创建懒加载节点（根节点版本）
+     * 创建懒加载节。（根节。版本）
      *
-     * @param node       实际节点
-     * @param provider   节点提供。
-     * @param maxDepth   最大深。
+     * @param node       实际节。
+     * @param provider   节。提供。
+     * @param maxDepth   最大深度
      * @param idExtractor ID提取。
      */
     public LazyTreeNode(T node, TreeNodeProvider<T, ID> provider, int maxDepth, Function<T, ID> idExtractor) {
@@ -118,12 +118,12 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     }
 
     /**
-     * 获取子节点（触发懒加载）
+     * 获取子节。（触发懒加载）
      *
-     * <p>首次调用时会通过 {@link TreeNodeProvider#getChildren(Object)} 加载子节点。
+     * <p>首次调用时会通过 {@link TreeNodeProvider#getChildren(Object)} 加载子节。。
      * 后续调用直接返回已加载的缓存结果。
      *
-     * @return 子节点列。
+     * @return 子节。列表
      */
     public List<LazyTreeNode<T, ID>> getChildren() {
         if (!childrenLoaded) {
@@ -141,7 +141,7 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     }
 
     /**
-     * 检查子节点是否已加。
+     * 检查子节。是否已加。
      *
      * @return 已加载返回true
      */
@@ -150,10 +150,10 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     }
 
     /**
-     * 触发加载子节点
+     * 触发加载子节。
      *
-     * <p>通过 provider 获取子节点并包装。LazyTreeNode。
-     * 如果当前深度已达。maxDepth，则不会继续加载。
+     * <p>通过 provider 获取子节。并包装。LazyTreeNode。
+     * 如果当前深度已达。maxDepth，则不会继续加载
      */
     public void loadChildren() {
         ReentrantLock lock = getLoadLock();
@@ -166,7 +166,7 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     }
 
     /**
-     * 实际加载子节点的逻辑（调用方需持有 loadLock。
+     * 实际加载子节。的逻辑（调用方需持有 loadLock）
      */
     private void doLoadChildren() {
         if (childrenLoaded) {
@@ -180,7 +180,7 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
             return;
         }
 
-        // 检查是否达到最大深。
+        // 检查是否达到最大深度
         if (depth != null && maxDepth != null && depth >= maxDepth) {
             childrenLoaded = true;
             lazyChildren = Collections.emptyList();
@@ -219,27 +219,27 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     }
 
     /**
-     * 获取被包装的实际节点
+     * 获取被包装的实际节。
      *
-     * @return 实际节点
+     * @return 实际节。
      */
     public T getNode() {
         return node;
     }
 
     /**
-     * 获取节点ID
+     * 获取节。ID
      *
-     * @return 节点ID
+     * @return 节。ID
      */
     public ID getId() {
         return node.getId();
     }
 
     /**
-     * 获取父节点ID
+     * 获取父节。ID
      *
-     * @return 父节点ID
+     * @return 父节。ID
      */
     public ID getParentId() {
         return node.getParentId();
@@ -248,23 +248,23 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     /**
      * 获取当前深度
      *
-     * @return 节点深度
+     * @return 节。深度
      */
     public Integer getDepth() {
         return depth;
     }
 
     /**
-     * 判断是否为叶子节点
+     * 判断是否为叶子节。
      *
-     * @return 叶子节点返回true
+     * @return 叶子节。返回true
      */
     public boolean isLeaf() {
         return node.isLeaf();
     }
 
     /**
-     * 深度优先遍历（仅遍历已加载的节点。
+     * 深度优先遍历（仅遍历已加载的节。。
      *
      * @param visitor 访问者函数
      */
@@ -278,7 +278,7 @@ public class LazyTreeNode<T extends TreeNode<T, ID>, ID extends Serializable> im
     }
 
     /**
-     * 深度优先遍历（自动加载子节点。
+     * 深度优先遍历（自动加载子节。。
      *
      * @param visitor 访问者函数
      */

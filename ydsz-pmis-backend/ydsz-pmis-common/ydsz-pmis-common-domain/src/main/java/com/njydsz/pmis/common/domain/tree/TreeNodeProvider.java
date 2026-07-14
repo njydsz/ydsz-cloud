@@ -4,10 +4,10 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * 树节点懒加载提供者接。
+ * 树节。懒加载提供者接。
  *
- * <p>定义了懒加载树节点子节点的契约，用于按需加载树结构数据。
- * 适用于数据量较大、不适合一次性加载全部节点的场景。
+ * <p>定义了懒加载树节。子节。的契约，用于按需加载树结构数据。
+ * 适用于数据量较大、不适合一次性加载全部节。的场景。
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
@@ -34,21 +34,21 @@ import java.util.List;
 public interface TreeNodeProvider<T extends TreeNode<T, ID>, ID extends Serializable> {
 
     /**
-     * 获取根节点列。
+     * 获取根节。列表
      *
-     * <p>返回树的最顶层节点（即没有父节点的节点）。
+     * <p>返回树的最顶层节。（即没有父节。的节。）。
      *
-     * @return 根节点列。
+     * @return 根节。列表
      */
     List<T> getRootNodes();
 
     /**
-     * 根据父节点ID获取子节点列。
+     * 根据父节。ID获取子节。列表
      *
-     * <p>按需加载指定父节点的直接子节点。
+     * <p>按需加载指定父节。的直接子节。。
      *
-     * @param parentId 父节点ID
-     * @return 子节点列表，如果没有子节点返回空列表
+     * @param parentId 父节。ID
+     * @return 子节。列表，如果没有子节。返回空列表
      */
     List<T> getChildren(ID parentId);
 }

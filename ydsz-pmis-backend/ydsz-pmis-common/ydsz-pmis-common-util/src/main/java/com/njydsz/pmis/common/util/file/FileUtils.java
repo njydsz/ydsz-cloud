@@ -187,8 +187,12 @@ public class FileUtils {
      * 追加文本到文件 (指定编码)
      */
     public static void appendString(String filePath, String content, Charset charset) throws IOException {
+        String data = content;
+        if (content != null && !content.endsWith(System.lineSeparator())) {
+            data = content + System.lineSeparator();
+        }
         Path path = Paths.get(filePath);
-        Files.writeString(path, content + System.lineSeparator(), charset, StandardOpenOption.APPEND);
+        Files.writeString(path, data, charset, StandardOpenOption.APPEND);
     }
 
     /**

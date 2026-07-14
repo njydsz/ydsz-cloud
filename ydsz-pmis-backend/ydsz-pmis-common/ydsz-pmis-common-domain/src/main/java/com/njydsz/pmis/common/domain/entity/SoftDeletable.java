@@ -23,14 +23,14 @@ public interface SoftDeletable {
     /**
      * 设置逻辑删除标识
      *
-     * @param deleted 删除标识。=未删除，1=已删除）
+     * @param deleted 删除标识（0=未删除，1=已删除）
      */
     void setDeleted(Integer deleted);
 
     /**
      * 判断是否已被逻辑删除
      *
-     * @return 已删除返。true，否则返。false
+     * @return 已删除返回true，否则返回false
      */
     default boolean isDeleted() {
         Integer d = getDeleted();

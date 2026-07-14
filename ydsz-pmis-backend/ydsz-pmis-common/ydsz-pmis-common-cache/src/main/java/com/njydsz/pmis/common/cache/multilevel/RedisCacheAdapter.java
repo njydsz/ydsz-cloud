@@ -22,6 +22,7 @@ import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
+import org.springframework.data.redis.core.SessionCallback;
 
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.listener.RemovalListener;
@@ -262,21 +263,16 @@ public class RedisCacheAdapter<K, V> implements Cache<K, V> {
     // 使用 Pipeline 批量写入，减少网络往返
     try {
       redisTemplate.executePipelined(
-          (RedisCallback<Object>)
-              connection -> {
+          (SessionCallback<Object>)
+              operations -> {
                 for (Map.Entry<K, V> entry : map.entrySet()) {
                   String redisKey = buildKey(entry.getKey());
-                  byte[] keyBytes = redisTemplate.getStringSerializer().serialize(redisKey);
-                  byte[] valueBytes =
-                      redisTemplate.getValueSerializer().serialize((Object) entry.getValue());
                   if (ttlSeconds > 0) {
-                    connection.stringCommands().set(
-                        keyBytes,
-                        valueBytes,
-                        Expiration.from(ttlSeconds, TimeUnit.SECONDS),
-                        RedisStringCommands.SetOption.UPSERT);
+                    operations
+                        .opsForValue()
+                        .set(redisKey, entry.getValue(), Duration.ofSeconds(ttlSeconds));
                   } else {
-                    connection.stringCommands().set(keyBytes, valueBytes);
+                    operations.opsForValue().set(redisKey, entry.getValue());
                   }
                 }
                 return null;

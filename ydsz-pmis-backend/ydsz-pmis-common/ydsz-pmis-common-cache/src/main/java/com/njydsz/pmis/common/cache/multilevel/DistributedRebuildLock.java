@@ -1,16 +1,16 @@
 package com.njydsz.pmis.common.cache.multilevel;
 
+import java.util.Collections;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-
-import java.util.Collections;
 
 /**
  * 分布式缓存重建锁 — 防止多节点同时重建缓存
@@ -154,7 +154,7 @@ public class DistributedRebuildLock {
    * @param <T> 返回类型
    * @return 重建结果，null 表示未获取到锁
    */
-  public <T> T executeWithLock(String cacheName, Object key, java.util.function.Supplier<T> rebuildAction) {
+  public <T> T executeWithLock(String cacheName, Object key, Supplier<T> rebuildAction) {
     String lockToken = tryLock(cacheName, key);
     if (lockToken == null) {
       return null;

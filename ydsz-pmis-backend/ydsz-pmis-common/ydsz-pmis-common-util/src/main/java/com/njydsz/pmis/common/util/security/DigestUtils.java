@@ -21,6 +21,7 @@ import com.njydsz.pmis.common.util.bytes.HexUtils;
 public class DigestUtils {
 
     private DigestUtils() {
+        throw new UnsupportedOperationException("DigestUtils is a utility class and cannot be instantiated");
     }
 
     /**
@@ -62,19 +63,34 @@ public class DigestUtils {
 
     /**
      * 优化的散列方法（支持 salt 和多次迭代）
- */
+     *
+     * <p>每次迭代均混入 salt，确保 salt 对最终哈希值的充分影响。
+     * 迭代公式：H_0 = H(salt || input)，H_i = H(salt || H_{i-1})
+     *
+     * @param input      待散列的数据
+     * @param algorithm  散列算法（如 SHA-256）
+     * @param salt       盐值（可为 null）
+     * @param iterations 迭代次数（\u22651）
+     * @return 散列结果
+     */
     public static byte[] digest(byte[] input, String algorithm, byte[] salt, int iterations) {
         try {
             final MessageDigest digest = MessageDigest.getInstance(algorithm);
-
+            byte[] currentHash;
             if (salt != null) {
                 digest.update(salt);
-            }
-
-            byte[] currentHash = digest.digest(input);
-            for (int i = 1; i < iterations; i++) {
-                digest.update(currentHash);
-                currentHash = digest.digest();
+                currentHash = digest.digest(input);
+                for (int i = 1; i < iterations; i++) {
+                    digest.update(salt);
+                    digest.update(currentHash);
+                    currentHash = digest.digest();
+                }
+            } else {
+                currentHash = digest.digest(input);
+                for (int i = 1; i < iterations; i++) {
+                    digest.update(currentHash);
+                    currentHash = digest.digest();
+                }
             }
             return currentHash;
         } catch (NoSuchAlgorithmException e) {

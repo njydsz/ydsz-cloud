@@ -129,7 +129,7 @@ public class BaseVO implements Serializable {
     /**
      * 获取乐观锁版本号（revision 别名）
      *
-     * <p>与实体层 {@code revision} 字段名对齐的别名方法。
+     * <p>与实体层 {@code revision} 字段对齐的别名方法。
      * 内部委托至 {@link #version} 字段。
      *
      * @return 乐观锁版本号

@@ -13,15 +13,15 @@ import java.io.Serializable;
  * </ul>
  *
  * <p><b>审计字段：</b>审计相关字段（创建人/时间、更新人/时间）已统一收敛。
- * {@link BaseAuditEntity} 中，由该类实与 {@link Auditable} 接口。
+ * {@link BaseAuditEntity} 中，由该类实现 {@link Auditable} 接口。
  * RootEntity 不再组合 Auditable，避免接口默认方法与实体字段重复定义。
  *
  * <p><b>实体继承层级（v3.5.0 重构后）：</b>
  * <pre>
  * Persistable&lt;T&gt; ───────────── BaseIdEntity&lt;T&gt;      (。ID)
  *                                      └── BaseAuditEntity&lt;T&gt;  (+ 审计，实体Auditable)
- * Versionable  SoftDeletable                └── BaseEntity&lt;T&gt;        (实现 RootEntity: + 乐观。+ 逻辑删除 + status)
- *     └────── RootEntity&lt;T&gt; (组合接口，向后兼。 ────。
+ * Versionable  SoftDeletable                └── BaseEntity&lt;T&gt;        (实现 RootEntity: + 乐观锁+ 逻辑删除 + status)
+ *     └────── RootEntity&lt;T&gt; (组合接口，向后兼容 ────。
  *                                     ├── GroupEntity&lt;T&gt;   (+ companyId/deptId)
  *                                     ├── RegionEntity&lt;T&gt;  (+ regionId)
  *                                     ├── TenantEntity&lt;T&gt;  (+ tenantId)

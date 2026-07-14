@@ -26,7 +26,7 @@ public interface Persistable<T extends Serializable> extends Serializable {
     /**
      * 获取实体主键ID
      *
-     * @return 主键ID，未持久化时可能力null
+     * @return 主键ID，未持久化时可能为 null
      */
     T getId();
 
@@ -45,7 +45,7 @@ public interface Persistable<T extends Serializable> extends Serializable {
      *   <li>ID 。null 时，视为新实体</li>
      *   <li>ID 。Number 类型且值为 0 时，视为新实体（自增主键场景。</li>
      *   <li>ID 。String 类型时，无法通过 isEmpty 判断新建状态（UUID 主键在构造时即赋值）。
-     *       默认返回 false，使。UUID 主键的实体应覆写此方向</li>
+     *       默认返回 false，使。UUID 主键的实体应覆写此方法</li>
      * </ul>
      *
      * <p><b>注意：</b>UUID 主键在构造时就已赋值，{@code isEmpty()} 永远返回 false。
@@ -64,7 +64,7 @@ public interface Persistable<T extends Serializable> extends Serializable {
         }
         // UUID主键在构造时就已赋值，无法通过isEmpty判断
         // 对于String类型ID，如果是UUID格式则不应依赖isEmpty判断
-        // 建议子类根据实际情况覆写此方向
+        // 建议子类根据实际情况覆写此方法
         return false;
     }
 }

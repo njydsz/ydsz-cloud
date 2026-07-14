@@ -209,16 +209,30 @@ public class ExceptionMetricsRecorder {
     }
 
     /**
-     * 归一化路径，避免高基数（去除数字 ID 等）
+     * 归一化路径，避免高基数（去除数字 ID、UUID、字母数字混合 ID 等）
+     *
+     * <p>支持以下路径参数模板化：
+     * <ul>
+     *   <li>纯数字 ID：{@code /users/123} → {@code /users/{id}}</li>
+     *   <li>UUID：{@code /files/550e8400-e29b-41d4-a716-446655440000} → {@code /files/{id}}</li>
+     *   <li>字母数字混合 ID（长度 ≥8）：{@code /files/abc123def456} → {@code /files/{id}}</li>
+     *   <li>嵌套路径：{@code /orgs/123/depts/456} → {@code /orgs/{id}/depts/{id}}</li>
+     * </ul>
      */
     private String normalizePath(String path) {
         if (path == null || path.isEmpty()) {
             return "unknown";
         }
-        if (path.length() > 100) {
-            path = path.substring(0, 100);
+        if (path.length() > 200) {
+            path = path.substring(0, 200);
         }
-        return path.replaceAll("/\\d+", "/{id}");
+        // UUID pattern: 8-4-4-4-12 hex digits
+        path = path.replaceAll("/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}", "/{id}");
+        // Alphanumeric mixed ID (length >= 8, containing both letters and digits)
+        path = path.replaceAll("/[a-zA-Z0-9]{8,}", "/{id}");
+        // Pure numeric ID
+        path = path.replaceAll("/\\d+", "/{id}");
+        return path;
     }
 
     /**

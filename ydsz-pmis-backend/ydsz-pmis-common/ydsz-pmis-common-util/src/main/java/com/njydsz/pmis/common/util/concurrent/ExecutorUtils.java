@@ -163,8 +163,8 @@ public class ExecutorUtils {
             String name = threadNamePrefix != null ? threadNamePrefix : "virtual-";
             ThreadFactory factory = Thread.ofVirtual().name(name, 0).factory();
             return Executors.newThreadPerTaskExecutor(factory);
-        } catch (NoSuchMethodError | UnsupportedOperationException e) {
-            log.warn("VirtualThread not supported, fallback to cached thread pool");
+        } catch (Exception | Error e) {
+            log.warn("VirtualThread not supported, fallback to cached thread pool: {}", e.getMessage());
             return newCachedThreadPool(threadNamePrefix);
         }
     }
@@ -176,7 +176,7 @@ public class ExecutorUtils {
         try {
             Thread.ofVirtual();
             return true;
-        } catch (NoSuchMethodError | UnsupportedOperationException e) {
+        } catch (Exception | Error e) {
             return false;
         }
     }

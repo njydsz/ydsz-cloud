@@ -80,7 +80,7 @@ public class PageQuery extends BaseQuery {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 安全字段名校验正则
+     * 安全字段校验正则
      */
     private static final Pattern SAFE_COLUMN_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$");
 
@@ -121,10 +121,10 @@ public class PageQuery extends BaseQuery {
      * <p>格式: column1 asc, column2 desc
      * 支持多个排序项，按添加顺序依次排序。
      * <p>注意：通过 {@link #addOrder(String, boolean)} 添加的排序项会经过安全校验，
-     * 直接通过 setter 设置的排序项时 {@link #getOrderSql()} 时也会进行二次校验。
+     * 直接通过 setter 设置的排序项时 {@link #getOrderSql()} 时也会进行二次校验）
      *
      * <p>orderBy 。ascending 字段继承自 {@link BaseQuery}。
-     * 本类通过覆写 {@link #setOrderBy(String)} 和 {@link #getOrderBy()} 安全校验。
+     * 本类通过覆写 {@link #setOrderBy(String)} 和 {@link #getOrderBy()} 安全校验）
      */
     @Builder.Default
     private transient List<String> orderItems = new ArrayList<>();
@@ -146,7 +146,7 @@ public class PageQuery extends BaseQuery {
      * }
      * }</pre>
      *
-     * @return 允许排序的字段名集合，默认返回null（不启用白名单）
+     * @return 允许排序的字段集合，默认返回null（不启用白名单）
      */
     protected Set<String> allowedOrderByFields() {
         return null;
@@ -155,7 +155,7 @@ public class PageQuery extends BaseQuery {
     /**
      * 校验字段是否在白名单。
      *
-     * @param column 字段名
+     * @param column 字段
      * @return 通过校验返回 true
      */
     private boolean isColumnAllowed(String column) {
@@ -214,7 +214,7 @@ public class PageQuery extends BaseQuery {
      *
      * <p>将排序字段和方向添加到排序列表中。
      *
-     * @param column 字段名
+     * @param column 字段
      * @param isAsc  是否升序，true表示升序，false表示降序
      * @return 当前对象，支持链式调用
      */
@@ -233,7 +233,7 @@ public class PageQuery extends BaseQuery {
     /**
      * 添加升序排序项
      *
-     * @param column 字段名
+     * @param column 字段
      * @return 当前对象，支持链式调用
      */
     public PageQuery addAscOrder(String column) {
@@ -243,7 +243,7 @@ public class PageQuery extends BaseQuery {
     /**
      * 添加降序排序项
      *
-     * @param column 字段名
+     * @param column 字段
      * @return 当前对象，支持链式调用
      */
     public PageQuery addDescOrder(String column) {
@@ -251,10 +251,10 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 设置排序项列表（覆盖Lombok生成的setter。
+     * 设置排序项列表（覆盖Lombok生成的setter）
      *
      * <p>对传入的每个排序项进行安全校验，仅保留通过 {@link #SAFE_COLUMN_PATTERN} 匹配的合法项。
-     * 防止绕过 {@link #addOrder(String, boolean)} 直接注入恶意排序字段名
+     * 防止绕过 {@link #addOrder(String, boolean)} 直接注入恶意排序字段
      * 如果启用与 {@link #allowedOrderByFields()} 白名单，不在白名单中的字段也会被过滤。
      *
      * @param orderItems 排序项列表
@@ -279,10 +279,10 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 设置排序字符串（覆盖 Lombok 生成。setter。
+     * 设置排序字符串（覆盖 Lombok 生成。setter）
      *
      * <p>。orderBy 进行安全校验，仅保留通过 {@link #SAFE_COLUMN_PATTERN} 匹配的合法排序项。
-     * 防止直接注入恶意 SQL 排序字段名
+     * 防止直接注入恶意 SQL 排序字段
      *
      * @param orderBy 原始排序字符串，格式：field1 ASC, field2 DESC
      */
@@ -304,9 +304,9 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 获取排序字符串（安全版本。
+     * 获取排序字符串（安全版本号
      *
-     * <p>返回经过安全校验。orderBy 值，若未通过校验则返回null。
+     * <p>返回经过安全校验）orderBy 值，若未通过校验则返回null。
      *
      * @return 安全的排序字符串
      */
@@ -329,7 +329,7 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 设置搜索关键字（覆盖Lombok生成的setter。
+     * 设置搜索关键字（覆盖Lombok生成的setter）
      *
      * <p>对搜索关键字进行安全处理。
      * <ul>
@@ -492,9 +492,9 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 获取排序项数。
+     * 获取排序项数量
      *
-     * @return 排序项数。
+     * @return 排序项数量
      */
     @JsonField(ignore = true)
     public int getOrderCount() {
