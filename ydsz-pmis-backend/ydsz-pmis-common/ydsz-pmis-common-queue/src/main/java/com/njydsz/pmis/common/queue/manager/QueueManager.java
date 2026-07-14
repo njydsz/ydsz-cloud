@@ -178,9 +178,7 @@ public class QueueManager {
      * 队列注册表条目
      */
     private static class QueueEntry {
-        @SuppressWarnings("unused")
         private final String queueName;
-        @SuppressWarnings("unused")
         private final String queueType;
         private final AutoCloseable queue;
 
@@ -188,6 +186,14 @@ public class QueueManager {
             this.queueName = queueName;
             this.queueType = queueType;
             this.queue = queue;
+        }
+
+        public String getQueueName() {
+            return queueName;
+        }
+
+        public String getQueueType() {
+            return queueType;
         }
 
         public AutoCloseable getQueue() {

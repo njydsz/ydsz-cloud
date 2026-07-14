@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.redis.service;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -150,6 +151,27 @@ public class RedisRateLimiter {
     /** 编译后的 Lua 脚本缓存 */
     private final ConcurrentHashMap<String, DefaultRedisScript<?>> scriptCache = new ConcurrentHashMap<>();
 
+    /**
+     * 将 Redis 脚本执行结果安全转换为 List<Long>
+     *
+     * @param rawResult Redis 执行返回的原始对象
+     * @return 转换后的 Long 列表，无法转换时返回空列表
+     */
+    private static List<Long> castToLongList(Object rawResult) {
+        if (rawResult instanceof List<?> list) {
+            List<Long> result = new ArrayList<>(list.size());
+            for (Object item : list) {
+                if (item instanceof Number num) {
+                    result.add(num.longValue());
+                } else {
+                    result.add(0L);
+                }
+            }
+            return result;
+        }
+        return Collections.emptyList();
+    }
+
     public RedisRateLimiter(RedisTemplate<String, Object> redisTemplate,
                             RedisProperties redisProperties) {
         this(redisTemplate, redisProperties, redisProperties.getRateLimiter() != null 
@@ -183,12 +205,12 @@ public class RedisRateLimiter {
         try {
             String formattedKey = formatKey(key);
             long windowSeconds = Math.max(1, window.toSeconds());
-            DefaultRedisScript<Long> script = getOrCreateScript(
+            DefaultRedisScript<?> script = getOrCreateScript(
                     "fixed_window", FIXED_WINDOW_LUA, Long.class);
-            Long current = redisTemplate.execute(script,
+            Object rawResult = redisTemplate.execute(script,
                     Collections.singletonList(formattedKey),
                     String.valueOf(windowSeconds));
-            long count = current != null ? current : 0L;
+            long count = rawResult instanceof Number ? ((Number) rawResult).longValue() : 0L;
             return count <= limit;
         } catch (Exception e) {
             log.error("【RedisRateLimiter】固定窗口限流异常 | key={} | error={}", key, e);
@@ -217,16 +239,16 @@ public class RedisRateLimiter {
             long now = System.currentTimeMillis();
             long windowMs = window.toMillis();
             String member = now + ":" + Thread.currentThread().threadId() + ":" + Math.random();
-            @SuppressWarnings("rawtypes")
-            DefaultRedisScript<List> script = getOrCreateScript(
+            DefaultRedisScript<?> script = getOrCreateScript(
                     "sliding_window", SLIDING_WINDOW_LUA, List.class);
-            List<Long> result = (List<Long>) redisTemplate.execute(script,
+            Object rawResult = redisTemplate.execute(script,
                     Collections.singletonList(formattedKey),
                     String.valueOf(now),
                     String.valueOf(windowMs),
                     String.valueOf(limit),
                     member);
-            if (result == null || result.isEmpty()) {
+            List<Long> result = castToLongList(rawResult);
+            if (result.isEmpty()) {
                 return false;
             }
             return result.get(0) != null && result.get(0) == 1L;
@@ -275,7 +297,6 @@ public class RedisRateLimiter {
      * @param permits  本次请求消耗的令牌数
      * @return true=允许，false=拒绝
      */
-    @SuppressWarnings("unchecked")
     public boolean tryAcquireTokenBucket(String key, int rate, int capacity,
                                          Duration period, int permits) {
         if (key == null || rate <= 0 || capacity <= 0
@@ -287,17 +308,17 @@ public class RedisRateLimiter {
             String formattedKey = formatKey(key);
             long now = System.currentTimeMillis();
             long periodMs = period.toMillis();
-            @SuppressWarnings("rawtypes")
-            DefaultRedisScript<List> script = getOrCreateScript(
+            DefaultRedisScript<?> script = getOrCreateScript(
                     "token_bucket", TOKEN_BUCKET_LUA, List.class);
-            List<Long> result = (List<Long>) redisTemplate.execute(script,
+            Object rawResult = redisTemplate.execute(script,
                     Collections.singletonList(formattedKey),
                     String.valueOf(capacity),
                     String.valueOf(rate),
                     String.valueOf(periodMs),
                     String.valueOf(now),
                     String.valueOf(permits));
-            if (result == null || result.isEmpty()) {
+            List<Long> result = castToLongList(rawResult);
+            if (result.isEmpty()) {
                 return false;
             }
             return result.get(0) != null && result.get(0) == 1L;
@@ -351,12 +372,11 @@ public class RedisRateLimiter {
         return prefix + ":ratelimit:" + key;
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> DefaultRedisScript<T> getOrCreateScript(String name, String scriptText, Class<T> returnType) {
-        return (DefaultRedisScript<T>) scriptCache.computeIfAbsent(name, k -> {
-            DefaultRedisScript<T> script = new DefaultRedisScript<>();
+    private DefaultRedisScript<?> getOrCreateScript(String name, String scriptText, Class<?> returnType) {
+        return scriptCache.computeIfAbsent(name, k -> {
+            DefaultRedisScript<?> script = new DefaultRedisScript<>();
             script.setScriptText(scriptText);
-            script.setResultType(returnType);
+            ((DefaultRedisScript) script).setResultType(returnType);
             return script;
         });
     }

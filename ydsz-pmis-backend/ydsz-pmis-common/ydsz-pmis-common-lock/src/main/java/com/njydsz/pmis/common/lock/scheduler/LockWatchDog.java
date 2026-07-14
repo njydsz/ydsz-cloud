@@ -160,9 +160,7 @@ public class LockWatchDog {
      * 续期任务上下文
      */
     private static class WatchTask {
-        @SuppressWarnings("unused")
         final String clientId;
-        @SuppressWarnings("unused")
         final long leaseTime;
         final AtomicBoolean running;
         final ScheduledFuture<?> future;
@@ -179,6 +177,14 @@ public class LockWatchDog {
             this.running = running;
             this.future = future;
             this.renewCount = 0;
+        }
+
+        public String getClientId() {
+            return clientId;
+        }
+
+        public long getLeaseTime() {
+            return leaseTime;
         }
     }
 

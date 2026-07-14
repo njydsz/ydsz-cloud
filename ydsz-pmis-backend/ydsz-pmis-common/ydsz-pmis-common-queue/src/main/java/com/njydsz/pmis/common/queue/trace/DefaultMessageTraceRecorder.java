@@ -22,7 +22,6 @@ public class DefaultMessageTraceRecorder implements MessageTraceRecorder {
     /**
      * 最大缓存条目数（LRU）
      */
-    @SuppressWarnings("unused")
     private final int maxCapacity;
 
     /**

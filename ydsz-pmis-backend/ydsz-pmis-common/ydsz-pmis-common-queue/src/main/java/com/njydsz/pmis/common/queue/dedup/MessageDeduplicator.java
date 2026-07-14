@@ -56,7 +56,6 @@ public class MessageDeduplicator {
 
     private final ConcurrentHashMap<String, Long> processedRecords;
     private final long expireWindowMs;
-    @SuppressWarnings("unused")
     private final int maxCapacity;
     private volatile long lastCleanupTime;
     private final ReentrantLock cleanupLock = new ReentrantLock();
