@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.event;
+package com.njydsz.pmis.common.auth.event;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

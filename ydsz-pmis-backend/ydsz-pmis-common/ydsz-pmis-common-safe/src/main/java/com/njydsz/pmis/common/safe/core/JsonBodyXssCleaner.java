@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.core;
+package com.njydsz.pmis.common.safe.core;
 
 import java.util.Iterator;
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.literule.web;
+package com.njydsz.pmis.literule.web;
 
 import java.io.IOException;
 import java.net.URLEncoder;

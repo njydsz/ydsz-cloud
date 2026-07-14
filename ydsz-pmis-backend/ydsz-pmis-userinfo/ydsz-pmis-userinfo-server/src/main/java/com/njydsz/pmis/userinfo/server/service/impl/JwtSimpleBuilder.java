@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.server.service.impl.auth;
+package com.njydsz.pmis.userinfo.server.service.impl.auth;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;

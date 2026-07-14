@@ -24,7 +24,7 @@
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-json</artifactId>
         </dependency>
-        <!-- jackson-databind（兼容层：JsonUtils.getMapper() 遗留调用方依赖 Jackson ObjectMapper） -->
+        <!-- snakeyaml（YAML 解析，YamlUtils 使用） -->
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>

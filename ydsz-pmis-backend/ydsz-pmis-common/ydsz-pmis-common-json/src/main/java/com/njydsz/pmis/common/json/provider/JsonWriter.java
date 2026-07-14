@@ -17,7 +17,7 @@ package com.njydsz.pmis.common.json.provider;
  *   <li>char[] 直接写入: ~2ns/write</li>
  * </ul>
  * 
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @email limw1888@126.com
  * @version 4.1.0
  */

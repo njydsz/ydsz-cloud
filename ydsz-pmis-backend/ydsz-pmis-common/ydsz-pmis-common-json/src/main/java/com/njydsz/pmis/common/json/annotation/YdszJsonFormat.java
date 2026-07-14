@@ -31,9 +31,9 @@ import java.lang.annotation.Target;
  * }
  * </pre>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @email limw1888@126.com
- * @version 3.5.0
+ * @since 1.3.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})

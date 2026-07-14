@@ -49,9 +49,9 @@ import java.lang.annotation.Target;
  * // 输出：{"id":1,"name":"John","email":"john@example.com","phone":"1234567890"}
  * </pre>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @email limw1888@126.com
- * @version 3.5.0
+ * @since 1.3.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD})

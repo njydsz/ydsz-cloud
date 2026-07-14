@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.system.server.fallback;
+package com.njydsz.pmis.system.server.fallback;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

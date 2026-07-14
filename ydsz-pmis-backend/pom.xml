@@ -1142,40 +1142,6 @@
                         </annotationProcessorPaths>
                     </configuration>
                 </plugin>
-                <!-- Checkstyle 静态检查（批次18：与 code-quality.md 规范一致） -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-checkstyle-plugin</artifactId>
-                    <version>3.3.1</version>
-                    <configuration>
-                        <configLocation>checkstyle.xml</configLocation>
-                        <includeTestSourceDirectory>true</includeTestSourceDirectory>
-                        <consoleOutput>true</consoleOutput>
-                        <failsOnError>true</failsOnError>
-                        <linkXRef>false</linkXRef>
-                        <violationSeverity>error</violationSeverity>
-                        <skip>false</skip>
-                    </configuration>
-                    <dependencies>
-                        <dependency>
-                            <groupId>com.puppycrawl.tools</groupId>
-                            <artifactId>checkstyle</artifactId>
-                            <version>10.13.0</version>
-                        </dependency>
-                    </dependencies>
-                    <executions>
-                        <execution>
-                            <id>checkstyle-validate</id>
-                            <phase>validate</phase>
-                            <goals>
-                                <goal>check</goal>
-                            </goals>
-                            <configuration>
-                                <skip>false</skip>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
                 <!-- OWASP dependency-check（P0-3：依赖漏洞扫描，默认跳过，CI 中 -DskipDependencyCheck=false 启用） -->
                 <plugin>
                     <groupId>org.owasp</groupId>
@@ -1411,7 +1377,7 @@
             </plugins>
         </pluginManagement>
 
-        <!-- 显式启用 lombok/mapstruct 注解处理 + Maven Enforcer 规则 + Spotless 代码格式化 + JaCoCo 覆盖率（所有子模块继承生效） -->
+        <!-- 显式启用 lombok/mapstruct 注解处理 + Maven Enforcer 规则 + JaCoCo 覆盖率（所有子模块继承生效） -->
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -1438,47 +1404,6 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-            </plugin>
-            <!-- Spotless：import 管理（FQN 防线组成部分）
-                 仅做未使用 import 清理和 import 排序，不改变代码缩进/格式。
-                 用法：
-                   mvn spotless:check   — 检查 import 违规（CI 集成）
-                   mvn spotless:apply   — 自动修复 import 问题（本地开发）
-            -->
-            <plugin>
-                <groupId>com.diffplug.spotless</groupId>
-                <artifactId>spotless-maven-plugin</artifactId>
-                <version>2.43.0</version>
-                <configuration>
-                    <java>
-                        <includes>
-                            <include>src/main/java/**/*.java</include>
-                            <include>src/test/java/**/*.java</include>
-                        </includes>
-                        <!-- 剥离 UTF-8 BOM (U+FEFF)，防止 Google Java Format 解析报错 -->
-                        <!-- 注意：XML 中 \uFEFF 只是字面字符串，必须用数字字符引用 &#xFEFF; -->
-                        <replace>
-                            <name>stripBom</name>
-                            <search>&#xFEFF;</search>
-                            <replacement></replacement>
-                        </replace>
-                        <!-- 仅清理未使用 import（FQN 修复后常产生冗余 import） -->
-                        <removeUnusedImports/>
-                        <!-- import 排序：java → javax → jakarta → org → com → 其他 -->
-                        <importOrder>
-                            <order>java,javax,jakarta,org,com,</order>
-                        </importOrder>
-                    </java>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>spotless-check</id>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

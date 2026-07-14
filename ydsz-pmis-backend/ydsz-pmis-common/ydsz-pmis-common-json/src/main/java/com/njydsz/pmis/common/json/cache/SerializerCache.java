@@ -30,9 +30,9 @@ import java.util.concurrent.ConcurrentMap;
  *   <li>字段排序和过滤</li>
  * </ul>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @email limw1888@126.com
- * @version 3.5.0
+ * @since 1.3.0
  * @see FieldMeta
  * @see BeanSerializerInfo
  */

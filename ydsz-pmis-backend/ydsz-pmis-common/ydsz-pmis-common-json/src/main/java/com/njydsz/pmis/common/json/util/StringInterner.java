@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *   <li>对于高频重复字段名、枚举值等场景效果显著</li>
  * </ul>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @email limw1888@126.com
  * @version 1.0.0
  */

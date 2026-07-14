@@ -33,9 +33,9 @@ import java.util.concurrent.ConcurrentMap;
  * List&lt;User&gt; users = YdszJson.toObject(json, listType);
  * </pre>
  * 
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @email limw1888@126.com
- * @version 3.5.0
+ * @since 1.3.0
  */
 public class TypeFactory {
     

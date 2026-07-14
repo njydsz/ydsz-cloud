@@ -44,9 +44,9 @@ import java.lang.reflect.Type;
  *   <li>提取 actualTypeArguments[0] 获取泛型类型</li>
  * </ol>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @email limw1888@126.com
- * @version 3.5.0
+ * @since 1.3.0
  * @see Type
  * @see ParameterizedType
  */

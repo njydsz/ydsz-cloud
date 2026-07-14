@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.core.map;
+package com.njydsz.pmis.cronjob.server.core.map;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

@@ -21,8 +21,8 @@ import com.njydsz.pmis.common.json.reader.JSONReader;
  * <p>负责 Bean 对象的反序列化策略选择与执行，包括零拷贝、ASM、
  * BeanReader 等多种优化路径。</p>
  *
- * @author Marvin Lee
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.3.0
  */
 final class BeanDeserializerEngine {
 

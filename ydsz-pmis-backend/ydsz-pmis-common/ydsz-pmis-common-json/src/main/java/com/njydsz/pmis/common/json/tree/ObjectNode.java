@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
  *
  * <p>对标 Jackson ObjectNode，支持动态添加/删除字段。</p>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @email limw1888@126.com
- * @version 3.5.0
+ * @since 1.3.0
  */
 public final class ObjectNode extends JsonNode {
 

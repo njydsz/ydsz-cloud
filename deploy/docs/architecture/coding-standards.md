@@ -42,8 +42,6 @@
 1. **IDE 规则**：`.trae/rules/no-inline-fqn.md` 设置 `alwaysApply: true`，AI 代码生成阶段自动遵守。
 2. **Code Review**：PR 审查必须检查行内 FQN，发现即打回。
 3. **CI 检测（强制）**：CI 流水线 `backend-ci.yml` 的 `build` job 中集成 `deploy/scripts/check-inline-fqn.sh --strict`，有违规即 `exit 1` 阻断 PR 合并。
-4. **Checkstyle（辅助）**：`checkstyle.xml` 已配置 `IllegalImport` 等规则，与 shell 脚本形成双重防线。
-5. **Spotless（自动修复）**：引入 Spotless + Google Java Format 插件，`mvn spotless:apply` 可自动将行内 FQN 转为 import 语句。
 
 ### 1.5 真实违规案例
 
@@ -130,5 +128,5 @@ Map<String, Object> map = new HashMap<>();
 | 日期 | 版本 | 变更内容 | 作者 |
 |------|------|----------|------|
 | 2026-07-12 | 1.0 | 初始创建，收录「禁止行内 FQN」规范 | ydsz-pmis-team |
-| 2026-07-13 | 1.1 | 修复例外描述矛盾：@throws/@see/@param/@return 中的 FQN 均属违规（仅 {@link} 可保留）；新增 @ConditionalOnClass 例外；更新执行机制（CI 强制 + Spotless 自动修复） | ydsz-pmis-team |
+| 2026-07-13 | 1.1 | 修复例外描述矛盾：@throws/@see/@param/@return 中的 FQN 均属违规（仅 {@link} 可保留）；新增 @ConditionalOnClass 例外；更新执行机制（CI 强制） | ydsz-pmis-team |
 | 2026-07-13 | 1.2 | 新增「禁止使用 @SuppressWarnings 注解」规范（Section 2） | ydsz-pmis-team |

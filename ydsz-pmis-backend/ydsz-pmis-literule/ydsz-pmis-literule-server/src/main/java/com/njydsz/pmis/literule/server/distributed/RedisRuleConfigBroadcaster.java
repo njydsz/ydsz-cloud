@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.literule.server.distributed;
+package com.njydsz.pmis.literule.server.distributed;
 
 import org.redisson.api.RTopic;
 import org.redisson.api.RedissonClient;

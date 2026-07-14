@@ -27,9 +27,9 @@ package com.njydsz.pmis.common.json.bytecode;
  *   <li>不支持时回退到传统循环实现</li>
  * </ul>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @email limw1888@126.com
- * @version 3.5.0
+ * @since 1.3.0
  */
 public final class VectorSimdUtil {
 

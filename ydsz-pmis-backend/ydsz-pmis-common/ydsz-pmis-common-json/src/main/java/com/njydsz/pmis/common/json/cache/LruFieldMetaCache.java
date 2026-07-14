@@ -23,9 +23,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  *   <li>淘汰操作 - 写锁保护</li>
  * </ul>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @email limw1888@126.com
- * @version 3.5.0
+ * @since 1.3.0
  */
 public final class LruFieldMetaCache {
 

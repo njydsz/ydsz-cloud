@@ -335,16 +335,31 @@ public class YdszJson {
         });
     }
 
+
     /**
-     * JSON 字符串转 Map（{@link #parseMap} 的别名）
-     *
-     * <p>与 {@link #parseArray(String)} 对称，提供更直观的 API 命名。</p>
+     * 从 JSON 字符串反序列化为指定类型（与 {@link #toJson(Object)} 对称的 API）。
      *
      * @param json JSON 字符串
-     * @return Map 对象，json 为空时返回 null
+     * @param clazz 目标类型
+     * @param <T> 类型参数
+     * @return 反序列化后的对象
+     * @since 1.4.0
      */
-    public static Map<String, Object> parseObject(String json) {
-        return parseMap(json);
+    public static <T> T fromJson(String json, Class<T> clazz) {
+        return toObject(json, clazz);
+    }
+
+    /**
+     * 从 JSON 字符串反序列化为指定泛型类型（与 {@link #toJson(Object)} 对称的 API）。
+     *
+     * @param json JSON 字符串
+     * @param typeRef 类型引用
+     * @param <T> 类型参数
+     * @return 反序列化后的对象
+     * @since 1.4.0
+     */
+    public static <T> T fromJson(String json, YdszJsonType<T> typeRef) {
+        return toObject(json, typeRef);
     }
     
     /**

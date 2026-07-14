@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.notify.core;
+package com.njydsz.pmis.common.notify.core;
 
 import java.util.Arrays;
 import java.util.Set;

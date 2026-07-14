@@ -10,9 +10,9 @@ import com.njydsz.pmis.common.json.type.YdszJsonType;
  *
  * <p>架构层级：YdszJson => Engine => Provider => Parser</p>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @email limw1888@126.com
- * @version 3.5.0
+ * @since 1.3.0
  */
 public final class YdszDeserializerEngine {
 

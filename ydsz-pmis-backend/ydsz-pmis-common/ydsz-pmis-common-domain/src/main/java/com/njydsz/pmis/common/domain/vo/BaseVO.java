@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.domain.vo;
+package com.njydsz.pmis.common.domain.vo;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

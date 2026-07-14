@@ -71,4 +71,22 @@ public class YdszJsonProperties {
 
     /** 是否启用性能监控 */
     private boolean monitoringEnabled = false;
+
+    /**
+     * 获取安全模式状态。
+     *
+     * @return 是否启用安全模式
+     */
+    public boolean isSafeMode() {
+        return safeMode;
+    }
+
+    /**
+     * 设置安全模式（显式 setter 确保 Lombok 生成）。
+     *
+     * @param safeMode 是否启用安全模式
+     */
+    public void setSafeMode(boolean safeMode) {
+        this.safeMode = safeMode;
+    }
 }

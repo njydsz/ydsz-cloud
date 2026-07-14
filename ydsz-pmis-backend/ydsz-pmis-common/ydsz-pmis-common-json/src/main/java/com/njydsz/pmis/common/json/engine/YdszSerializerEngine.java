@@ -19,9 +19,9 @@ import com.njydsz.pmis.common.json.provider.YdszSerializationProvider;
  * <p>默认关闭内置性能监控（消除 System.nanoTime + volatile 写入开销，约 60-120ns/次）。
  * 可通过 {@code -Dpmis.json.monitoring=true} 系统属性启用。</p>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @email limw1888@126.com
- * @version 3.5.0
+ * @since 1.3.0
  */
 public final class YdszSerializerEngine {
 

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.literule.server.spi;
+package com.njydsz.pmis.literule.server.spi;
 
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;

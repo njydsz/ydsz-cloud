@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.json;
+package com.njydsz.pmis.common.util.json;
 
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -46,7 +46,7 @@ public final class YamlUtils {
             return null;
         }
         try {
-            Object parsed = YdszJson.parseObject(json);
+            Object parsed = YdszJson.parseMap(json);
             return YAML.dump(parsed);
         } catch (Exception e) {
             throw new YdszJsonException("JSON转YAML失败: " + e.getMessage(), e);

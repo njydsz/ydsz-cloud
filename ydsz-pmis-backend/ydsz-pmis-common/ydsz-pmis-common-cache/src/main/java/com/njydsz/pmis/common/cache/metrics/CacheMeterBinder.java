@@ -49,6 +49,14 @@ public class CacheMeterBinder implements MeterBinder {
   private static final String TAG_CACHE_NAME = "cache_name";
   private static final String TAG_CACHE_TYPE = "cache_type";
 
+  /** 高基数保护：cacheName 最大长度（超过截断） */
+  private static final int MAX_CACHE_NAME_LENGTH = 64;
+
+  /** 高基数保护：最多允许注册的不同 cacheName 数量 */
+  private static final java.util.concurrent.atomic.AtomicInteger REGISTERED_NAMES =
+      new java.util.concurrent.atomic.AtomicInteger(0);
+  private static final int MAX_REGISTERED_NAMES = 500;
+
   private final Cache<?, ?> cache;
   private final String cacheName;
   private final String cacheType;
@@ -71,7 +79,19 @@ public class CacheMeterBinder implements MeterBinder {
   public CacheMeterBinder(
       Cache<?, ?> cache, String cacheName, String cacheType, Iterable<Tag> extraTags) {
     this.cache = cache;
-    this.cacheName = cacheName;
+    // 高基数保护：截断过长的 cacheName
+    this.cacheName =
+        cacheName != null && cacheName.length() > MAX_CACHE_NAME_LENGTH
+            ? cacheName.substring(0, MAX_CACHE_NAME_LENGTH) + "~"
+            : cacheName;
+    // 高基数保护：记录注册数量
+    if (REGISTERED_NAMES.incrementAndGet() > MAX_REGISTERED_NAMES) {
+      org.slf4j.LoggerFactory.getLogger(CacheMeterBinder.class)
+          .warn(
+              "缓存指标注册数量超过阈值 {}，可能存在高基数问题。cacheName={}",
+              MAX_REGISTERED_NAMES,
+              this.cacheName);
+    }
     this.cacheType = cacheType;
     this.extraTags = extraTags;
   }

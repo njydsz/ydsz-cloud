@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.domain.entity.user;
+package com.njydsz.pmis.userinfo.domain.entity.user;
 
 import java.io.Serial;
 import java.time.LocalDateTime;

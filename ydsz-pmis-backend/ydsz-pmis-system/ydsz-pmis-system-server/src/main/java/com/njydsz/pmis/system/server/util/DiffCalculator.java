@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.system.server.util;
+package com.njydsz.pmis.system.server.util;
 
 import java.util.*;
 

@@ -668,7 +668,7 @@ public final class JSONWriter {
         }
     }
     
-  /**
+    /**
      * 转换为字符串（使用 JDK 9+ 优化的 String 构造）
      */
     @Override
@@ -680,6 +680,43 @@ public final class JSONWriter {
             return "";
         }
         return new String(buf, 0, pos);
+    }
+
+    /**
+     * 直接将内部 char[] 缓冲区编码为 UTF-8 字节数组。
+     *
+     * <p>避免 {@code new String(buf).getBytes(UTF_8)} 的双重分配：
+     * 先创建 String 再创建 byte[]。本方法对于纯 ASCII 内容直接 1:1 拷贝，
+     * 跳过 String 中间层。</p>
+     *
+     * @return UTF-8 编码的字节数组
+     * @since 1.4.0
+     */
+    public byte[] toUtf8Bytes() {
+        if (externalSb != null) {
+            return externalSb.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        }
+        if (pos == 0) {
+            return new byte[0];
+        }
+        // 快速路径：检查是否纯 ASCII
+        boolean allAscii = true;
+        for (int i = 0; i < pos; i++) {
+            if (buf[i] > 127) {
+                allAscii = false;
+                break;
+            }
+        }
+        if (allAscii) {
+            // 纯 ASCII：char → byte 直接拷贝，1:1 映射
+            byte[] bytes = new byte[pos];
+            for (int i = 0; i < pos; i++) {
+                bytes[i] = (byte) buf[i];
+            }
+            return bytes;
+        }
+        // 非 ASCII：回退到标准 UTF-8 编码
+        return new String(buf, 0, pos).getBytes(java.nio.charset.StandardCharsets.UTF_8);
     }
     
     /**

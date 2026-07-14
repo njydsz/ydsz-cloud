@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.server.channel.impl;
+package com.njydsz.pmis.message.server.channel.impl;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;

@@ -20,9 +20,9 @@ import java.lang.annotation.Target;
  * public abstract class Animal { }
  * </pre>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @email limw1888@126.com
- * @version 3.5.0
+ * @since 1.3.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)

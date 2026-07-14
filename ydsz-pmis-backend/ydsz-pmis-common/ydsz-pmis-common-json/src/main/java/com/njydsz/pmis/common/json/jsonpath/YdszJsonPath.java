@@ -17,9 +17,9 @@ import com.njydsz.pmis.common.json.YdszJson;
  * 6. 多选择器：$.items[*].name
  * 7. 条件表达式：$.items[?(@.age >= 18 && @.status == 'active')]
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @email limw1888@126.com
- * @version 3.5.0
+ * @since 1.3.0
  */
 public class YdszJsonPath {
 

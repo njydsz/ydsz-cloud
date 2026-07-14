@@ -38,9 +38,9 @@ import com.njydsz.pmis.common.json.serializer.JsonSerializer;
  * JsonSerializer serializer = registry.getSerializer(User.class);
  * </pre>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @email limw1888@126.com
- * @version 3.5.0
+ * @since 1.3.0
  */
 public final class YdszJsonModuleRegistry {
 
@@ -84,7 +84,7 @@ public final class YdszJsonModuleRegistry {
         if (module == null) {
             throw new IllegalArgumentException("Module cannot be null");
         }
-        synchronized (modules) {
+        synchronized (this) {
             if (modules.contains(module)) {
                 log.warn("Module {} already registered, skipping", module.getModuleName());
                 return;
@@ -266,7 +266,7 @@ public final class YdszJsonModuleRegistry {
         if (module == null) {
             return false;
         }
-        synchronized (modules) {
+        synchronized (this) {
             boolean removed = modules.remove(module);
             if (removed) {
                 reinitialize();
@@ -279,7 +279,7 @@ public final class YdszJsonModuleRegistry {
      * 清空所有模块和注册
      */
     public void clear() {
-        synchronized (modules) {
+        synchronized (this) {
             modules.clear();
             serializers.clear();
             deserializers.clear();

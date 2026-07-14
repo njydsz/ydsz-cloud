@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.app.config;
+package com.njydsz.pmis.common.app.config;
 
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;

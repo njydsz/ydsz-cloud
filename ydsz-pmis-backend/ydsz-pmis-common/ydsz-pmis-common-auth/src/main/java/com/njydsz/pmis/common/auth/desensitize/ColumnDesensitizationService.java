@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.auth.desensitize;
+package com.njydsz.pmis.common.auth.desensitize;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;

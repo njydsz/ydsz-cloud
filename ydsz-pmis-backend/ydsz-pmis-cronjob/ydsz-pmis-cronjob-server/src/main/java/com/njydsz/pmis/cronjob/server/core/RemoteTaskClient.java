@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.core.dispatch;
+package com.njydsz.pmis.cronjob.server.core.dispatch;
 
 import java.net.ConnectException;
 import java.net.URI;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.safe.sensitive;
+package com.njydsz.pmis.common.safe.sensitive;
 
 import com.njydsz.pmis.common.json.YdszJson;
 import com.njydsz.pmis.common.json.serializer.JsonSerializer;

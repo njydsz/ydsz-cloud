@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.agent.infra.tool;
+package com.njydsz.pmis.agent.infra.tool;
 
 import java.util.ArrayList;
 import java.util.List;

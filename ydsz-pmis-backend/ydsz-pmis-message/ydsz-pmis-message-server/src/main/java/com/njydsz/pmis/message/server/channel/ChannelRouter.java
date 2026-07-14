@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.message.server.channel;
+package com.njydsz.pmis.message.server.channel;
 
 import java.time.Duration;
 import java.util.Collections;

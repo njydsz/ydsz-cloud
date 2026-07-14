@@ -34,9 +34,9 @@ import com.njydsz.pmis.common.json.writer.JSONWriter;
  *   <li>热路径内�?- 减少虚方法调用和方法调用�?/li>
  * </ul>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @email limw1888@126.com
- * @version 3.5.0
+ * @since 1.3.0
  */
 public final class YdszSerializationProvider {
 

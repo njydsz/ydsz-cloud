@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.redis.serializer;
+package com.njydsz.pmis.common.redis.serializer;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;

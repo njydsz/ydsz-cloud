@@ -13,8 +13,8 @@ import com.njydsz.pmis.common.json.parser.YdszJsonParser;
  *
  * <p>负责处理带 @YdszJsonCreator 注解的构造函数反序列化逻辑。</p>
  *
- * @author Marvin Lee
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.3.0
  */
 final class CreatorResolver {
 

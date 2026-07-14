@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.server.core.config;
+package com.njydsz.pmis.cronjob.server.core.config;
 
 import java.util.concurrent.ThreadPoolExecutor;
 

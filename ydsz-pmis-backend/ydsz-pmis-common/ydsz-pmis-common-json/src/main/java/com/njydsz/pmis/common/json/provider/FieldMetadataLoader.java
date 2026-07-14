@@ -23,8 +23,8 @@ import com.njydsz.pmis.common.json.naming.PropertyNamingStrategy;
  *   <li>判断字段可见性（isFieldVisible）</li>
  * </ul>
  *
- * @author Marvin Lee
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.3.0
  */
 public final class FieldMetadataLoader {
 

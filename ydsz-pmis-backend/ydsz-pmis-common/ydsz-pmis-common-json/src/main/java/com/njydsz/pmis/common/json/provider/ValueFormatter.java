@@ -16,8 +16,8 @@ import com.njydsz.pmis.common.json.cache.SerializerCache;
  *
  * <p>提供带缩进的 JSON 格式化输出，调用 ValueWriter 进行值写入。</p>
  *
- * @author Marvin Lee
- * @version 3.5.0
+ * @author ydsz-pmis-team
+ * @since 1.3.0
  */
 public final class ValueFormatter {
 

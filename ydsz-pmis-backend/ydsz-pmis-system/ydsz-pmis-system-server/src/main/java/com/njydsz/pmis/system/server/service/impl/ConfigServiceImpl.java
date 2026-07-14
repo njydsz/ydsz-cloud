@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.system.server.service.impl.config;
+package com.njydsz.pmis.system.server.service.impl.config;
 
 import java.math.BigDecimal;
 import java.time.Duration;

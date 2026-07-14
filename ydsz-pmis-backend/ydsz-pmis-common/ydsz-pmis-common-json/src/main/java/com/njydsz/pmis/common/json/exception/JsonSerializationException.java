@@ -5,9 +5,9 @@ package com.njydsz.pmis.common.json.exception;
  *
  * <p>在 JSON 序列化过程中抛出的异常。</p>
  *
- * @author Marvin Lee
+ * @author ydsz-pmis-team
  * @email limw1888@126.com
- * @version 3.5.0
+ * @since 1.3.0
  */
 public class JsonSerializationException extends YdszJsonException {
 

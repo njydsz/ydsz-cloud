@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.audit.core;
+package com.njydsz.pmis.common.audit.core;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.gateway.config;
+package com.njydsz.pmis.gateway.config;
 
 import java.util.Collections;
 import java.util.List;
