@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import jakarta.annotation.PostConstruct;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -23,6 +25,7 @@ import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.pmis.common.exception.custom.AbstractYdszException;
 import com.njydsz.pmis.common.exception.enums.ExceptionCode;
 import com.njydsz.pmis.common.exception.enums.ExceptionCodeRegistry;
+import com.njydsz.pmis.common.exception.i18n.MessageResolverHolder;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,8 +57,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 3.0.0
  * @see MessageSource
  * @see I18nProperties
  * @see WebI18nConfiguration
@@ -68,11 +69,39 @@ public class I18nConfiguration {
 
     private final I18nProperties properties;
     private final Environment environment;
+    private final ObjectProvider<MessageSource> messageSourceProvider;
 
     public I18nConfiguration(I18nProperties properties,
-                             ObjectProvider<Environment> environmentProvider) {
+                             ObjectProvider<Environment> environmentProvider,
+                             ObjectProvider<MessageSource> messageSourceProvider) {
         this.properties = properties;
         this.environment = environmentProvider.getIfAvailable();
+        this.messageSourceProvider = messageSourceProvider;
+    }
+
+    /**
+     * 在 Bean 初始化完成后注入异常消息国际化解析器。
+     *
+     * <p>将 Spring {@link MessageSource} 桥接到 {@link AbstractYdszException} 和
+     * {@link MessageResolverHolder}，使异常被抛出时只存储 i18n key + 参数，
+     * 在 {@code getMessage()} 被调用时才懒加载解析为本地化消息。
+     *
+     * <p>无论 {@code MessageSource} 是由本类创建还是由外部提供，此方法都会执行注入。
+     */
+    @PostConstruct
+    public void injectMessageResolver() {
+        MessageSource messageSource = messageSourceProvider.getIfAvailable();
+        if (messageSource == null) {
+            log.warn("MessageSource 未找到，异常消息将降级为返回 i18n key");
+            return;
+        }
+        AbstractYdszException.setMessageResolver(
+                (key, params) -> messageSource.getMessage(key, params, key, LocaleContextHolder.getLocale())
+        );
+        MessageResolverHolder.setResolver((key, args, locale) ->
+                messageSource.getMessage(key, args, key, locale != null ? locale : LocaleContextHolder.getLocale())
+        );
+        log.info("异常消息国际化解析器已注入 | MessageSource: {}", messageSource.getClass().getSimpleName());
     }
 
     @Bean(name = "messageSource")
@@ -163,12 +192,6 @@ public class I18nConfiguration {
         } catch (Exception e) {
             missingKeys.add(key + " (code=" + code.getCode() + ", error=" + e.getMessage() + ")");
         }
-    }
-
-    public void setExceptionMessageResolver(MessageSource messageSource) {
-        AbstractYdszException.setMessageResolver(
-                (key, params) -> messageSource.getMessage(key, params, key, LocaleContextHolder.getLocale())
-        );
     }
 
     private boolean isProdEnvironment() {

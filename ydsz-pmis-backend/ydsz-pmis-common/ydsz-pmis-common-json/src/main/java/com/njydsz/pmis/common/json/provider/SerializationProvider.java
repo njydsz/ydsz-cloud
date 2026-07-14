@@ -563,38 +563,28 @@ public final class SerializationProvider {
     /**
      * ThreadLocal 快照（用于单次配置序列化的线程安全保存/恢复）。
      *
-     * <p>构造时捕获当前线程所有 ThreadLocal 序列化参数，
+     * <p>使用 {@link SerializationContext} 合并多个 ThreadLocal 为单一实例，
+     * 构造时捕获当前线程的 SerializationContext 快照，
      * 调用 {@link #restore()} 恢复原始值。避免修改全局单例。</p>
      *
      * @since 1.4.0
      */
     public static final class ThreadLocalSnapshot {
-        private final PropertyNamingStrategy namingStrategy;
-        private final boolean writeNulls;
-        private final boolean prettyPrint;
-        private final String circularRefStrategy;
-        private final boolean serializeEnumUsingOrdinal;
+        private final SerializationContext snapshot;
 
         /**
          * 捕获当前线程的 ThreadLocal 序列化参数快照。
          */
         public ThreadLocalSnapshot() {
-            this.namingStrategy = SerializationProvider.getNamingStrategy();
-            this.writeNulls = SerializationProvider.isWriteNulls();
-            this.prettyPrint = SerializationProvider.isPrettyPrint();
-            this.circularRefStrategy = SerializationProvider.getCircularReferenceStrategy();
-            this.serializeEnumUsingOrdinal = SerializationProvider.isSerializeEnumUsingOrdinal();
+            this.snapshot = new SerializationContext();
+            this.snapshot.captureFromProvider();
         }
 
         /**
          * 恢复快照中保存的 ThreadLocal 序列化参数。
          */
         public void restore() {
-            SerializationProvider.setNamingStrategy(namingStrategy);
-            SerializationProvider.setWriteNulls(writeNulls);
-            SerializationProvider.setPrettyPrint(prettyPrint);
-            SerializationProvider.setCircularReferenceStrategy(circularRefStrategy);
-            SerializationProvider.setSerializeEnumUsingOrdinal(serializeEnumUsingOrdinal);
+            this.snapshot.applyToProvider();
         }
     }
 }

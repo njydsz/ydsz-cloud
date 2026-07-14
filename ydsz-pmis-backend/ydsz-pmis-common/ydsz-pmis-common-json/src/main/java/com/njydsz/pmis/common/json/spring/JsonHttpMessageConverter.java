@@ -12,6 +12,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 
 import com.njydsz.pmis.common.json.Json;
+import com.njydsz.pmis.common.json.provider.SerializationProvider;
 
 /**
  * Json HTTP 消息转换器。
@@ -35,6 +36,9 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
     /** 默认最大请求体大小（10MB），超过此值的请求将被拒绝 */
     private static final long MAX_REQUEST_BODY_SIZE = 10L * 1024 * 1024;
 
+    /** 可配置的最大请求体大小（默认与 MAX_REQUEST_BODY_SIZE 相同） */
+    private long maxRequestBodySize = MAX_REQUEST_BODY_SIZE;
+
     /**
      * 构造函数，注册支持的媒体类型。
      */
@@ -50,15 +54,25 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
         return !CharSequence.class.isAssignableFrom(clazz);
     }
 
+    /**
+     * 设置最大请求体大小。
+     *
+     * @param maxRequestBodySize 最大请求体大小（字节）
+     * @since 1.4.0
+     */
+    public void setMaxRequestBodySize(long maxRequestBodySize) {
+        this.maxRequestBodySize = maxRequestBodySize;
+    }
+
     @Override
     protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage)
             throws IOException, HttpMessageNotReadableException {
         try {
             // 读取前校验 Content-Length，防止超大 payload DoS
             long contentLength = inputMessage.getHeaders().getContentLength();
-            if (contentLength > MAX_REQUEST_BODY_SIZE) {
+            if (contentLength > maxRequestBodySize) {
                 throw new IOException("Request body too large: " + contentLength
-                        + " > " + MAX_REQUEST_BODY_SIZE);
+                        + " > " + maxRequestBodySize);
             }
 
             byte[] body = inputMessage.getBody().readAllBytes();
@@ -76,7 +90,18 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
     protected void writeInternal(Object o, HttpOutputMessage outputMessage)
             throws IOException, HttpMessageNotWritableException {
         try {
-            byte[] bytes = Json.toJsonBytes(o);
+            // 检查是否带有 @JsonView 视图过滤
+            Class<?> viewClass = extractViewClass(o);
+            Object value = extractValue(o);
+
+            byte[] bytes;
+            if (viewClass != null) {
+                // 使用视图过滤序列化
+                bytes = SerializationProvider.serializeWithView(value, viewClass)
+                        .getBytes(StandardCharsets.UTF_8);
+            } else {
+                bytes = Json.toJsonBytes(value);
+            }
             // 设置 Content-Length，避免 HTTP chunked 编码开销
             outputMessage.getHeaders().setContentLength(bytes.length);
             OutputStream out = outputMessage.getBody();
@@ -85,6 +110,55 @@ public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Objec
         } catch (Exception e) {
             throw new HttpMessageNotWritableException("JSON 序列化失败：" + e.getMessage(), e);
         }
+    }
+
+    /**
+     * 从对象中提取 @JsonView 视图类。
+     *
+     * <p>支持 Spring 的 {@code MappingJacksonValue} 包装类，
+     * 当控制器方法使用 {@code @JsonView} 注解时，Spring 会将返回值
+     * 包装在 {@code MappingJacksonValue} 中，其中包含视图类信息。</p>
+     *
+     * @param obj 待序列化对象
+     * @return 视图类，如果没有视图过滤则返回 null
+     * @since 1.4.0
+     */
+    private Class<?> extractViewClass(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        // 检查是否是 Spring 的 MappingJacksonValue 包装
+        String className = obj.getClass().getName();
+        if ("org.springframework.http.converter.json.MappingJacksonValue".equals(className)) {
+            try {
+                return (Class<?>) obj.getClass().getMethod("getSerializationView").invoke(obj);
+            } catch (Exception ignored) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 从对象中提取实际值（解包 MappingJacksonValue）。
+     *
+     * @param obj 待序列化对象
+     * @return 实际值
+     * @since 1.4.0
+     */
+    private Object extractValue(Object obj) {
+        if (obj == null) {
+            return null;
+        }
+        String className = obj.getClass().getName();
+        if ("org.springframework.http.converter.json.MappingJacksonValue".equals(className)) {
+            try {
+                return obj.getClass().getMethod("getValue").invoke(obj);
+            } catch (Exception ignored) {
+                return obj;
+            }
+        }
+        return obj;
     }
 
 }

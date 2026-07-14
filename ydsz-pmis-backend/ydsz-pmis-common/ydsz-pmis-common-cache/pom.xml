@@ -77,6 +77,13 @@
       <scope>provided</scope>
       <optional>true</optional>
     </dependency>
+    <!-- Spring Boot Health（HealthIndicator，Spring Boot 4.x 独立模块） -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-health</artifactId>
+      <scope>provided</scope>
+      <optional>true</optional>
+    </dependency>
     <!-- Resilience4j 降级/熔断（可选） -->
     <dependency>
       <groupId>io.github.resilience4j</groupId>

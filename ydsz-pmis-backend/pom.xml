@@ -126,6 +126,8 @@
              用法：继承 AbstractIntegrationTest，自动启动 PG/Redis 容器
         -->
         <testcontainers.version>1.20.6</testcontainers.version>
+        <!-- JMH 基准测试（UtilBenchmark 等） -->
+        <jmh.version>1.37</jmh.version>
     </properties>
 
     <dependencyManagement>

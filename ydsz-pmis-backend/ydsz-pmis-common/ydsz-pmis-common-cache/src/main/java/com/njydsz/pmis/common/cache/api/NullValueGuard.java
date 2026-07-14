@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 空值占位符守卫 — 缓存穿透防护
@@ -18,6 +19,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>从全局静态 {@code Map<Cache, Set>} 改为 per-cache {@code Set<Object>}， 消除跨缓存实例的状态共享
  *   <li>使用 {@link ConcurrentHashMap} 支持高并发读写
  *   <li>外层 {@link WeakHashMap} 确保缓存实例 GC 后状态自动清理
+ *   <li>有界化：每个缓存的空值键集合上限为 {@link #MAX_NULL_KEYS}（默认 10000），
+ *       超过时自动清空重建，防止单缓存穿透攻击导致内存溢出
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -32,8 +35,14 @@ public final class NullValueGuard {
   private static final Map<Cache<?, ?>, NullValueGuard> INSTANCES =
       Collections.synchronizedMap(new WeakHashMap<>());
 
+  /** 每个缓存实例允许注册的最大空值键数量 */
+  private static final int MAX_NULL_KEYS = 10_000;
+
   /** Per-cache 空值键集合（线程安全） */
   private final Set<Object> nullKeys = ConcurrentHashMap.newKeySet();
+
+  /** 空值键计数器（用于有界化检查，避免频繁调用 nullKeys.size()） */
+  private final AtomicInteger nullKeyCount = new AtomicInteger(0);
 
   private NullValueGuard() {}
 
@@ -56,7 +65,15 @@ public final class NullValueGuard {
    * @param key 缓存键
    */
   public static void registerNullKey(Cache<?, ?> cache, Object key) {
-    forCache(cache).nullKeys.add(key);
+    NullValueGuard guard = forCache(cache);
+    // 有界化：超过上限时清空重建，防止内存溢出
+    if (guard.nullKeyCount.get() >= MAX_NULL_KEYS) {
+      guard.nullKeys.clear();
+      guard.nullKeyCount.set(0);
+    }
+    if (guard.nullKeys.add(key)) {
+      guard.nullKeyCount.incrementAndGet();
+    }
   }
 
   /**
@@ -79,6 +96,8 @@ public final class NullValueGuard {
    */
   public static void unregisterNullKey(Cache<?, ?> cache, Object key) {
     NullValueGuard guard = forCache(cache);
-    guard.nullKeys.remove(key);
+    if (guard.nullKeys.remove(key)) {
+      guard.nullKeyCount.decrementAndGet();
+    }
   }
 }

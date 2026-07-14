@@ -1,11 +1,14 @@
 package com.njydsz.pmis.common.domain.config;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Bean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Bean;
+import org.springframework.core.task.TaskExecutor;
 
 import com.njydsz.pmis.common.domain.event.DomainEventPublisher;
 import com.njydsz.pmis.common.domain.tree.TreeLazyConfig;
@@ -13,23 +16,37 @@ import com.njydsz.pmis.common.domain.tree.TreeLazyConfig;
 /**
  * Domain 模块自动配置
  *
- * <p>激活领域模型层的配置属性绑定，包括。
+ * <p>激活领域模型层的配置属性绑定，包括：
  * <ul>
- *   <li>树形结构懒加载配置（TreeLazyConfig。</li>
+ *   <li>树形结构懒加载配置（TreeLazyConfig）</li>
+ *   <li>领域事件发布器（DomainEventPublisher）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
+ *
  */
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "ydsz.domain", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(TreeLazyConfig.class)
 public class DomainAutoConfiguration {
 
+    /**
+     * 注册领域事件发布器
+     *
+     * <p>如果容器中存在 {@link TaskExecutor}，则注入以支持异步发布能力；
+     * 否则退化为仅同步发布模式。
+     *
+     * @param eventPublisher      Spring 应用事件发布器
+     * @param taskExecutorProvider 异步任务执行器提供者（可选）
+     * @return 领域事件发布器实例
+     */
     @Bean
     @ConditionalOnBean(ApplicationEventPublisher.class)
-    public DomainEventPublisher domainEventPublisher(ApplicationEventPublisher eventPublisher) {
-        return new DomainEventPublisher(eventPublisher);
+    @ConditionalOnMissingBean(DomainEventPublisher.class)
+    public DomainEventPublisher domainEventPublisher(ApplicationEventPublisher eventPublisher,
+                                                      ObjectProvider<TaskExecutor> taskExecutorProvider) {
+        TaskExecutor taskExecutor = taskExecutorProvider.getIfAvailable();
+        return new DomainEventPublisher(eventPublisher, taskExecutor);
     }
 }

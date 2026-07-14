@@ -19,6 +19,8 @@ import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.pmis.common.json.annotation.JsonAlias;
+import com.njydsz.pmis.common.json.annotation.JsonField;
 import com.njydsz.pmis.common.json.autotype.AutoTypeChecker;
 import com.njydsz.pmis.common.json.exception.JsonDeserializationException;
 import com.njydsz.pmis.common.json.util.StringInterner;
@@ -115,9 +117,23 @@ public final class ZeroCopyDeserializer {
      * @param str 待驻留的字符。
      * @return 驻留后的字符串实体
      */
-    private static String internString(String str) {
-        return STRING_INTERNER.intern(str);
-    }
+private static String internString(String str) {
+return STRING_INTERNER.intern(str);
+}
+
+/**
+ * 获取字段的 JSON 名称（优先从 @JsonField 注解获取，回退到 Java 字段名）。
+ *
+ * @param field Java 字段
+ * @return JSON 名称
+ */
+private static String getJsonName(Field field) {
+JsonField jsonField = field.getAnnotation(JsonField.class);
+if (jsonField != null && !jsonField.value().isEmpty()) {
+    return jsonField.value();
+}
+return field.getName();
+}
 
     /**
      * 获取反序列化。
@@ -210,24 +226,29 @@ public final class ZeroCopyDeserializer {
         return fieldList.toArray(new FieldInfo[0]);
     }
 
-    private static class FieldInfo {
-        final String name;
-        final Class<?> type;
-        final Field field;
-        final MethodHandle setter;
-        final int nameHashCode;
-        final int typeCode;
-        final Class<?> elementType;
+private static class FieldInfo {
+final String name;
+final String[] aliases;
+final Class<?> type;
+final Field field;
+final MethodHandle setter;
+final int nameHashCode;
+final int typeCode;
+final Class<?> elementType;
 
-        FieldInfo(Field field) {
-            this.field = field;
-            this.name = internString(field.getName());
-            this.type = field.getType();
-            this.nameHashCode = name.hashCode();
-            this.typeCode = computeTypeCode(this.type);
-            this.elementType = extractElementType(field.getGenericType());
+FieldInfo(Field field) {
+this.field = field;
+this.name = internString(getJsonName(field));
+this.type = field.getType();
+this.nameHashCode = name.hashCode();
+this.typeCode = computeTypeCode(this.type);
+this.elementType = extractElementType(field.getGenericType());
 
-            field.setAccessible(true);
+// 加载 @JsonAlias 别名列表
+JsonAlias aliasAnnotation = field.getAnnotation(JsonAlias.class);
+this.aliases = aliasAnnotation != null ? aliasAnnotation.value() : new String[0];
+
+field.setAccessible(true);
 
             MethodHandle s = null;
             try {
@@ -632,18 +653,21 @@ public final class ZeroCopyDeserializer {
             this.fieldNames = new String[fields.length];
             this.fieldNameCharsArray = new char[fields.length][];
             this.fieldNameHashes = new int[fields.length];
-            for (int i = 0; i < fields.length; i++) {
-                fieldMap.put(fields[i].name, fields[i]);
-                fieldNames[i] = fields[i].name;
-                fieldNameCharsArray[i] = fields[i].name.toCharArray();
-                fieldNameHashes[i] = fields[i].nameHashCode;
-            }
-        }
+for (int i = 0; i < fields.length; i++) {
+fieldMap.put(fields[i].name, fields[i]);
+for (String alias : fields[i].aliases) {
+    fieldMap.putIfAbsent(alias, fields[i]);
+}
+fieldNames[i] = fields[i].name;
+fieldNameCharsArray[i] = fields[i].name.toCharArray();
+fieldNameHashes[i] = fields[i].nameHashCode;
+}
+}
 
-        @Override
-        public Object deserialize(String json) throws Exception {
-            char[] chars = json.toCharArray();
-            return deserialize(chars, 0, chars.length);
+@Override
+public Object deserialize(String json) throws Exception {
+char[] chars = json.toCharArray();
+return deserialize(chars, 0, chars.length);
         }
 
         @Override
@@ -776,14 +800,17 @@ public final class ZeroCopyDeserializer {
             this.fieldNames = new String[fields.length];
             this.fieldNameCharsArray = new char[fields.length][];
             this.fieldNameHashes = new int[fields.length];
-            for (int i = 0; i < fields.length; i++) {
-                String name = fields[i].name;
-                fieldMap.put(name, fields[i]);
-                fieldNames[i] = name;
-                fieldNameCharsArray[i] = name.toCharArray();
-                fieldNameHashes[i] = fields[i].nameHashCode;
-            }
-        }
+for (int i = 0; i < fields.length; i++) {
+String name = fields[i].name;
+fieldMap.put(name, fields[i]);
+for (String alias : fields[i].aliases) {
+    fieldMap.putIfAbsent(alias, fields[i]);
+}
+fieldNames[i] = name;
+fieldNameCharsArray[i] = name.toCharArray();
+fieldNameHashes[i] = fields[i].nameHashCode;
+}
+}
 
         @Override
         public Object deserialize(String json) throws Exception {
