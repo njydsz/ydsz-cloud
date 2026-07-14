@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.domain.vo;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import com.njydsz.pmis.common.json.annotation.JsonField;
 import com.njydsz.pmis.common.json.annotation.JsonFormat;
 
 import lombok.Data;
@@ -12,11 +13,8 @@ import lombok.experimental.SuperBuilder;
 /**
  * 视图对象基类
  *
- * <p>字段命名与 {@link com.njydsz.pmis.common.domain.entity.BaseAuditEntity} 保持一致：
- * <ul>
- *   <li>createdAt：创建时间，对应数据。created_at</li>
- *   <li>updatedAt：更新时间，对应数据。updated_at</li>
- * </ul>
+ * <p>用于前端展示的数据对象基类，包含通用的审计字段和状态信息。
+ * 逻辑删除标识通过 {@code @JsonField(ignore = true)} 对前端透明。
  *
  * <p><b>通用字段说明：</b>
  * <table>
@@ -25,17 +23,18 @@ import lombok.experimental.SuperBuilder;
  *   <tr><td>createdAt</td><td>LocalDateTime</td><td>创建时间</td></tr>
  *   <tr><td>updatedAt</td><td>LocalDateTime</td><td>更新时间</td></tr>
  *   <tr><td>createdBy</td><td>String</td><td>创建人ID</td></tr>
- *   <tr><td>createdByName</td><td>String</td><td>创建人姓。</td></tr>
+ *   <tr><td>createdByName</td><td>String</td><td>创建人姓名</td></tr>
  *   <tr><td>updatedBy</td><td>String</td><td>更新人ID</td></tr>
- *   <tr><td>updatedByName</td><td>String</td><td>更新人姓。</td></tr>
+ *   <tr><td>updatedByName</td><td>String</td><td>更新人姓名</td></tr>
  *   <tr><td>status</td><td>Integer</td><td>状态标识</td></tr>
- *   <tr><td>statusName</td><td>String</td><td>状态名。</td></tr>
+ *   <tr><td>statusName</td><td>String</td><td>状态名称</td></tr>
  *   <tr><td>remark</td><td>String</td><td>备注信息</td></tr>
+ *   <tr><td>version</td><td>Integer</td><td>乐观锁版本号</td></tr>
  * </table>
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
+ *
  */
 @Data
 @SuperBuilder
@@ -54,8 +53,7 @@ public class BaseVO implements Serializable {
     /**
      * 创建时间
      *
-     * <p>与 {@link com.njydsz.pmis.common.domain.entity.BaseAuditEntity#getCreatedAt()} 命名对齐。
-     * JSON 序列化时格式化为 "yyyy-MM-dd HH:mm:ss"。
+     * <p>JSON 序列化时格式化为 "yyyy-MM-dd HH:mm:ss"。
      */
     @JsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
@@ -63,39 +61,28 @@ public class BaseVO implements Serializable {
     /**
      * 更新时间
      *
-     * <p>与 {@link com.njydsz.pmis.common.domain.entity.BaseAuditEntity#getUpdatedAt()} 命名对齐。
-     * JSON 序列化时格式化为 "yyyy-MM-dd HH:mm:ss"。
+     * <p>JSON 序列化时格式化为 "yyyy-MM-dd HH:mm:ss"。
      */
     @JsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 
     /**
      * 创建人ID
-     *
-     * <p>创建该记录的用户ID，用于追溯数据来源。
      */
     private String createdBy;
 
     /**
-     * 创建人姓。
-     *
-     * <p>创建该记录的用户姓名，提供更友好的显示信息。
-     * 。createdBy 配合使用，避免前端二次查询用户信息。
+     * 创建人姓名
      */
     private String createdByName;
 
     /**
      * 更新人ID
-     *
-     * <p>最后更新该记录的用户ID。
      */
     private String updatedBy;
 
     /**
-     * 更新人姓。
-     *
-     * <p>最后更新该记录的用户姓名。
-     * 。updatedBy 配合使用。
+     * 更新人姓名
      */
     private String updatedByName;
 
@@ -106,42 +93,57 @@ public class BaseVO implements Serializable {
      * <ul>
      *   <li>0 - 禁用/停用</li>
      *   <li>1 - 正常/启用</li>
-     *   <li>其他。- 业务自定义状态</li>
+     *   <li>其他 - 业务自定义状态</li>
      * </ul>
      */
     private Integer status;
 
     /**
-     * 状态名。
+     * 状态名称
      *
-     * <p>状态的可读名称，如"启用"。禁用"等。
-     * 。status 配合使用，避免前端维护状态映射。
+     * <p>状态的可读名称，如"启用"、"禁用"等。
      */
     private String statusName;
 
     /**
      * 备注信息
-     *
-     * <p>用于存储额外的说明信息。
      */
     private String remark;
 
     /**
-     * 版本。
+     * 乐观锁版本号
      *
-     * <p>乐观锁版本号，用于并发控制。
-     * 与实体中。revision 字段对应。
+     * <p>与实体中 {@code revision} 字段对应，用于并发控制。
+     * 保留 {@code version} 命名以兼容前端 API 契约。
      */
     private Integer version;
 
     /**
-     * 是否删除
+     * 逻辑删除标识（对前端透明）
      *
-     * <p>逻辑删除标识。
-     * <ul>
-     *   <li>0 - 未删。</li>
-     *   <li>1 - 已删。</li>
-     * </ul>
+     * <p>JSON 序列化时忽略此字段，不返回给前端。
      */
+    @JsonField(ignore = true)
     private Integer deleted;
+
+    /**
+     * 获取乐观锁版本号（revision 别名）
+     *
+     * <p>与实体层 {@code revision} 字段名对齐的别名方法。
+     * 内部委托至 {@link #version} 字段。
+     *
+     * @return 乐观锁版本号
+     */
+    public Integer getRevision() {
+        return version;
+    }
+
+    /**
+     * 设置乐观锁版本号（revision 别名）
+     *
+     * @param revision 乐观锁版本号
+     */
+    public void setRevision(Integer revision) {
+        this.version = revision;
+    }
 }

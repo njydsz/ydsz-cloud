@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.exception.handler;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.MessageSource;
@@ -50,13 +51,14 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@link ValidationExceptionHandler}：处理参数校验异常</li>
  * </ul>
  *
- * <p><b>装配：</b>本类已不再直接标注 {@code @AutoConfiguration}，
- * 改由 {@link MvcExceptionHandlerAutoConfiguration} 负责条件装配与 Bean 注入。
+ * <p><b>指标记录：</b>所有 handler 方法统一调用 {@link #recordMetrics(Throwable)} 记录异常指标，
+ * 确保所有异常类型都被纳入监控。
+ *
+ * <p><b>HTTP 状态码：</b>使用 {@link HttpServletResponse#setStatus(int)} 动态设置
+ * 与异常对象中声明的 HTTP 状态码一致的响应状态码。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 3.0.0
  * @see BaseExceptionHandler
  * @see ValidationExceptionHandler
  * @see MvcExceptionHandlerAutoConfiguration
@@ -68,21 +70,11 @@ import lombok.extern.slf4j.Slf4j;
 public class MvcExceptionHandler extends BaseExceptionHandler {
 
     private final MessageSource messageSource;
-    private final ExceptionMetrics exceptionMetrics;
 
     public MvcExceptionHandler(MessageSource messageSource,
                                ExceptionMetrics exceptionMetrics) {
         this.messageSource = messageSource;
-        this.exceptionMetrics = exceptionMetrics;
-    }
-
-    /**
-     * 记录异常指标
-     */
-    private void recordExceptionMetrics(Throwable throwable) {
-        if (exceptionMetrics != null) {
-            exceptionMetrics.recordException(throwable);
-        }
+        setExceptionMetrics(exceptionMetrics);
     }
 
     @Override
@@ -106,18 +98,33 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         return traceId;
     }
 
+    /**
+     * 设置 HTTP 响应状态码（与异常对象中的 httpStatus 一致）
+     */
+    private void setResponseStatus(HttpServletResponse response, int httpStatus) {
+        if (response != null) {
+            response.setStatus(httpStatus);
+        }
+    }
+
     // ============================ 异常处理方法 ============================
 
     /**
-     * 处理业务异常
+     * 处理业务异常（动态 HTTP 状态码）
      */
     @ExceptionHandler(BusinessException.class)
-    public BaseResponse<?> handleBusinessException(BusinessException e, HttpServletRequest request) {
-        recordExceptionMetrics(e);
+    public Object handleBusinessException(BusinessException e, HttpServletRequest request,
+                                           HttpServletResponse response) {
+        recordMetrics(e);
         log.warn("{}业务异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
+        setResponseStatus(response, e.getHttpStatus());
+        String traceId = extractTraceId(request);
+        if (useProblemDetail()) {
+            return buildResponseEntity(buildProblemDetail(e, request.getRequestURI(), traceId), e);
+        }
+        ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), traceId);
         return BaseResponse.error(e.getCode(), e.getMessage(), info);
     }
 
@@ -126,12 +133,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      */
     @ExceptionHandler(ConcurrencyException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public BaseResponse<?> handleConcurrencyException(ConcurrencyException e, HttpServletRequest request) {
+    public Object handleConcurrencyException(ConcurrencyException e, HttpServletRequest request) {
+        recordMetrics(e);
         log.warn("{}并发冲突异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
-        return BaseResponse.error(e.getCode(), e.getMessage(), info);
+        return buildResponse(e, request.getRequestURI(), extractTraceId(request));
     }
 
     /**
@@ -139,12 +146,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      */
     @ExceptionHandler(DuplicateException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public BaseResponse<?> handleDuplicateException(DuplicateException e, HttpServletRequest request) {
+    public Object handleDuplicateException(DuplicateException e, HttpServletRequest request) {
+        recordMetrics(e);
         log.warn("{}重复提交异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
-        return BaseResponse.error(e.getCode(), e.getMessage(), info);
+        return buildResponse(e, request.getRequestURI(), extractTraceId(request));
     }
 
     /**
@@ -152,23 +159,22 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      */
     @ExceptionHandler(RateLimitException.class)
     @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
-    public BaseResponse<?> handleRateLimitException(RateLimitException e, HttpServletRequest request) {
+    public Object handleRateLimitException(RateLimitException e, HttpServletRequest request) {
+        recordMetrics(e);
         log.warn("{}限流异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
-        return BaseResponse.error(e.getCode(), e.getMessage(), info);
+        return buildResponse(e, request.getRequestURI(), extractTraceId(request));
     }
-
-    // Validation 相关异常处理已移至 ValidationExceptionHandler
 
     /**
      * 处理请求体解析异常
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public BaseResponse<?> handleHttpMessageNotReadableException(
+    public Object handleHttpMessageNotReadableException(
             HttpMessageNotReadableException e, HttpServletRequest request) {
+        recordMetrics(e);
         log.error("{}请求体解析异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
         String message = messageSource.getMessage("invalid.request.format", null,
@@ -195,6 +201,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public BaseResponse<?> handleMissingServletRequestParameterException(
             MissingServletRequestParameterException e, HttpServletRequest request) {
+        recordMetrics(e);
         String message = messageSource.getMessage("missing.request.parameter",
                 new Object[]{e.getParameterName()}, "缺少请求参数", LocaleContextHolder.getLocale());
         return buildValidationErrorResponse(
@@ -209,6 +216,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public BaseResponse<?> handleMethodArgumentTypeMismatchException(
             MethodArgumentTypeMismatchException e, HttpServletRequest request) {
+        recordMetrics(e);
         Class<?> requiredType = e.getRequiredType();
         String message = messageSource.getMessage("type.mismatch",
                 new Object[]{e.getName(), requiredType != null ? requiredType.getSimpleName() : "未知"},
@@ -225,6 +233,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public BaseResponse<?> handleMissingRequestHeaderException(
             MissingRequestHeaderException e, HttpServletRequest request) {
+        recordMetrics(e);
         String message = messageSource.getMessage("missing.request.header",
                 new Object[]{e.getHeaderName()}, "缺少请求头", LocaleContextHolder.getLocale());
         return buildValidationErrorResponse(
@@ -239,6 +248,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     public BaseResponse<?> handleHttpRequestMethodNotSupportedException(
             HttpRequestMethodNotSupportedException e, HttpServletRequest request) {
+        recordMetrics(e);
         String message = messageSource.getMessage("method.not.supported",
                 new Object[]{e.getMethod()}, "不支持的请求方法", LocaleContextHolder.getLocale());
         return buildValidationErrorResponse(
@@ -251,8 +261,9 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     @ResponseStatus(HttpStatus.CONTENT_TOO_LARGE)
-    public BaseResponse<?> handleMaxUploadSizeExceededException(
+    public Object handleMaxUploadSizeExceededException(
             MaxUploadSizeExceededException e, HttpServletRequest request) {
+        recordMetrics(e);
         String message = messageSource.getMessage("file.size.exceeded.message", null,
                 "上传文件大小超出限制", LocaleContextHolder.getLocale());
         log.error("{}文件上传超限 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), message, e);
@@ -276,8 +287,9 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      */
     @ExceptionHandler(NoHandlerFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public BaseResponse<?> handleNoHandlerFoundException(
+    public Object handleNoHandlerFoundException(
             NoHandlerFoundException e, HttpServletRequest request) {
+        recordMetrics(e);
         String message = messageSource.getMessage("resource.not.found.detail",
                 new Object[]{request.getRequestURI()}, "资源不存在", LocaleContextHolder.getLocale());
         log.error("{}资源不存在 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), message, e);
@@ -301,8 +313,9 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      */
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public BaseResponse<?> handleIllegalArgumentException(
+    public Object handleIllegalArgumentException(
             IllegalArgumentException e, HttpServletRequest request) {
+        recordMetrics(e);
         log.error("{}非法参数异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
         ExceptionInfo info = new ExceptionInfo(
@@ -324,13 +337,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      */
     @ExceptionHandler(SysException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public BaseResponse<?> handleSysException(SysException e, HttpServletRequest request) {
+    public Object handleSysException(SysException e, HttpServletRequest request) {
+        recordMetrics(e);
         log.error("{}系统异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
-        return BaseResponse.error(e.getCode(), e.getMessage(),
-                includeExceptionInfo() ? info : null);
+        return buildResponse(e, request.getRequestURI(), extractTraceId(request));
     }
 
     /**
@@ -338,13 +350,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      */
     @ExceptionHandler(YdszSecurityException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public BaseResponse<?> handleSecurityException(YdszSecurityException e, HttpServletRequest request) {
+    public Object handleSecurityException(YdszSecurityException e, HttpServletRequest request) {
+        recordMetrics(e);
         log.warn("{}安全异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
-        return BaseResponse.error(e.getCode(), e.getMessage(),
-                includeExceptionInfo() ? info : null);
+        return buildResponse(e, request.getRequestURI(), extractTraceId(request));
     }
 
     /**
@@ -352,13 +363,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      */
     @ExceptionHandler(ValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public BaseResponse<?> handleValidationException(ValidationException e, HttpServletRequest request) {
+    public Object handleValidationException(ValidationException e, HttpServletRequest request) {
+        recordMetrics(e);
         log.warn("{}校验异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
-        return BaseResponse.error(e.getCode(), e.getMessage(),
-                includeExceptionInfo() ? info : null);
+        return buildResponse(e, request.getRequestURI(), extractTraceId(request));
     }
 
     /**
@@ -366,13 +376,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      */
     @ExceptionHandler(YdszTimeoutException.class)
     @ResponseStatus(HttpStatus.GATEWAY_TIMEOUT)
-    public BaseResponse<?> handleTimeoutException(YdszTimeoutException e, HttpServletRequest request) {
+    public Object handleTimeoutException(YdszTimeoutException e, HttpServletRequest request) {
+        recordMetrics(e);
         log.error("{}超时异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
-        return BaseResponse.error(e.getCode(), e.getMessage(),
-                includeExceptionInfo() ? info : null);
+        return buildResponse(e, request.getRequestURI(), extractTraceId(request));
     }
 
     /**
@@ -380,13 +389,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      */
     @ExceptionHandler(ExternalException.class)
     @ResponseStatus(HttpStatus.BAD_GATEWAY)
-    public BaseResponse<?> handleExternalException(ExternalException e, HttpServletRequest request) {
+    public Object handleExternalException(ExternalException e, HttpServletRequest request) {
+        recordMetrics(e);
         log.error("{}外部服务异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
-        return BaseResponse.error(e.getCode(), e.getMessage(),
-                includeExceptionInfo() ? info : null);
+        return buildResponse(e, request.getRequestURI(), extractTraceId(request));
     }
 
     /**
@@ -394,13 +402,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      */
     @ExceptionHandler(InfrastructureException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public BaseResponse<?> handleInfrastructureException(InfrastructureException e, HttpServletRequest request) {
+    public Object handleInfrastructureException(InfrastructureException e, HttpServletRequest request) {
+        recordMetrics(e);
         log.error("{}基础设施异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
-        return BaseResponse.error(e.getCode(), e.getMessage(),
-                includeExceptionInfo() ? info : null);
+        return buildResponse(e, request.getRequestURI(), extractTraceId(request));
     }
 
     /**
@@ -411,8 +418,9 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      */
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public BaseResponse<?> handleIllegalStateException(
+    public Object handleIllegalStateException(
             IllegalStateException e, HttpServletRequest request) {
+        recordMetrics(e);
         log.error("{}非法状态异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
         String message = messageSource.getMessage("system.error", null,
@@ -434,8 +442,9 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      */
     @ExceptionHandler(NullPointerException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public BaseResponse<?> handleNullPointerException(
+    public Object handleNullPointerException(
             NullPointerException e, HttpServletRequest request) {
+        recordMetrics(e);
         log.error("{}空指针异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
         String message = messageSource.getMessage("system.error", null,
@@ -457,7 +466,8 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public BaseResponse<?> handleException(Exception e, HttpServletRequest request) {
+    public Object handleException(Exception e, HttpServletRequest request) {
+        recordMetrics(e);
         log.error("{}系统异常 | 路径: {} | 类型: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getClass().getName(), e.getMessage(), e);
 

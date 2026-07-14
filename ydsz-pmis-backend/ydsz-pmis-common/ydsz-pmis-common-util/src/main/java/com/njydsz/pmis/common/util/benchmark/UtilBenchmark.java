@@ -1,5 +1,8 @@
 package com.njydsz.pmis.common.util.benchmark;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.openjdk.jmh.annotations.Benchmark;
@@ -81,12 +84,12 @@ public class UtilBenchmark {
 
     @Benchmark
     public void benchmarkIsEmpty(Blackhole bh) {
-        bh.consume(CollectionUtils.isEmpty(java.util.Arrays.asList("a", "b", "c")));
+        bh.consume(CollectionUtils.isEmpty(Arrays.asList("a", "b", "c")));
     }
 
     @Benchmark
     public void benchmarkCollectionIsEmpty(Blackhole bh) {
-        java.util.List<String> list = new java.util.ArrayList<>();
+        List<String> list = new ArrayList<>();
         list.add("a");
         list.add("b");
         bh.consume(CollectionUtils.isEmpty(list));

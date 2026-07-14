@@ -45,7 +45,6 @@ public class EmailQueueService {
 
 	private final StringRedisTemplate redisTemplate;
 	private final ExecutorService executor;
-	private final ObjectMapper objectMapper;
 
 	private volatile boolean consumerRunning = false;
 	private final AtomicLong totalEnqueued = new AtomicLong(0);
@@ -55,7 +54,6 @@ public class EmailQueueService {
 	public EmailQueueService(StringRedisTemplate redisTemplate, ExecutorService executor) {
 		this.redisTemplate = redisTemplate;
 		this.executor = executor;
-		this.objectMapper = new ObjectMapper();
 	}
 
 	/**

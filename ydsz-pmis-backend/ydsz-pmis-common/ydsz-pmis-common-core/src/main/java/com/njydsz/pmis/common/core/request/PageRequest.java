@@ -64,7 +64,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 public class PageRequest extends BaseRequest {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 1L;
 
     /**
      * 校验排序字段安全性，防止 SQL 注入

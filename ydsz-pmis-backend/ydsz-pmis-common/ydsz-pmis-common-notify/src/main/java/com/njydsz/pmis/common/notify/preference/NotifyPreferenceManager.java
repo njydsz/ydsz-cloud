@@ -1,17 +1,15 @@
 package com.njydsz.pmis.common.notify.preference;
 
-import java.time.Duration;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-
 import com.njydsz.pmis.common.json.Json;
-
+import com.njydsz.pmis.common.notify.enums.NotifyChannel;
+import com.njydsz.pmis.common.notify.enums.NotifyType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import com.njydsz.pmis.common.notify.enums.NotifyChannel;
-import com.njydsz.pmis.common.notify.enums.NotifyType;
+import java.time.Duration;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * 通知偏好管理器（P3-12）
@@ -31,13 +29,10 @@ public class NotifyPreferenceManager {
 	private static final Duration CACHE_TTL = Duration.ofHours(24);
 
 	private final StringRedisTemplate redisTemplate;
-	private final ObjectMapper objectMapper;
 	private final ConcurrentMap<String, NotifyPreference> localCache = new ConcurrentHashMap<>();
 
 	public NotifyPreferenceManager(StringRedisTemplate redisTemplate) {
 		this.redisTemplate = redisTemplate;
-		this.objectMapper = new ObjectMapper();
-		this.objectMapper.registerModule(new JavaTimeModule());
 	}
 
 	/**

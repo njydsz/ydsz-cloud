@@ -2,12 +2,15 @@ package com.njydsz.pmis.common.exception.handler;
 
 import jakarta.validation.ConstraintViolationException;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
+
+import com.njydsz.pmis.common.exception.metrics.ExceptionMetrics;
 
 /**
  * Validation 异常处理器自动配置
@@ -20,8 +23,6 @@ import org.springframework.context.annotation.Bean;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 3.0.0
  * @see ValidationExceptionHandler
  */
 @AutoConfiguration(after = MvcExceptionHandlerAutoConfiguration.class)
@@ -31,7 +32,8 @@ import org.springframework.context.annotation.Bean;
 public class ValidationExceptionHandlerAutoConfiguration {
 
     @Bean
-    public ValidationExceptionHandler validationExceptionHandler(MessageSource messageSource) {
-        return new ValidationExceptionHandler(messageSource);
+    public ValidationExceptionHandler validationExceptionHandler(MessageSource messageSource,
+                                                                   ObjectProvider<ExceptionMetrics> exceptionMetrics) {
+        return new ValidationExceptionHandler(messageSource, exceptionMetrics.getIfAvailable());
     }
 }

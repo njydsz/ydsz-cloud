@@ -59,12 +59,14 @@ public class JsonAutoConfiguration {
      *
      * @return Json HTTP 消息转换器
      */
-    @Bean
-    @ConditionalOnMissingBean(JsonHttpMessageConverter.class)
-    @ConditionalOnClass(name = "org.springframework.http.converter.HttpMessageConverter")
-    public JsonHttpMessageConverter ydszJsonHttpMessageConverter() {
-        return new JsonHttpMessageConverter();
-    }
+@Bean
+@ConditionalOnMissingBean(JsonHttpMessageConverter.class)
+@ConditionalOnClass(name = "org.springframework.http.converter.HttpMessageConverter")
+public JsonHttpMessageConverter ydszJsonHttpMessageConverter(JsonProperties properties) {
+JsonHttpMessageConverter converter = new JsonHttpMessageConverter();
+converter.setMaxRequestBodySize(properties.getMaxJsonSize());
+return converter;
+}
 
     /**
      * Json 指标监控（Micrometer），并绑定到 Json 引擎。

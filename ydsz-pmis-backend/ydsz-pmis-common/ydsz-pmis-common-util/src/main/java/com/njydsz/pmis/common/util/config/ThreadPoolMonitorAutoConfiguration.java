@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.util.config;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -53,7 +54,7 @@ public class ThreadPoolMonitorAutoConfiguration {
      */
     public static class ThreadPoolMonitor {
 
-        private final Map<String, ThreadPoolExecutor> registeredPools = new java.util.concurrent.ConcurrentHashMap<>();
+        private final Map<String, ThreadPoolExecutor> registeredPools = new ConcurrentHashMap<>();
 
         /**
          * 注册线程池实例

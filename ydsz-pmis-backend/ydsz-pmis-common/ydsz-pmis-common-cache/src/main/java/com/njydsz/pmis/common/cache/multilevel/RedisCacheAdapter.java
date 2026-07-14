@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -255,7 +256,36 @@ public class RedisCacheAdapter<K, V> implements Cache<K, V> {
 
   @Override
   public void putAll(Map<K, V> map) {
-    map.forEach(this::put);
+    if (map == null || map.isEmpty()) {
+      return;
+    }
+    // 使用 Pipeline 批量写入，减少网络往返
+    try {
+      redisTemplate.executePipelined(
+          (RedisCallback<Object>)
+              connection -> {
+                for (Map.Entry<K, V> entry : map.entrySet()) {
+                  String redisKey = buildKey(entry.getKey());
+                  byte[] keyBytes = redisTemplate.getStringSerializer().serialize(redisKey);
+                  byte[] valueBytes =
+                      redisTemplate.getValueSerializer().serialize((Object) entry.getValue());
+                  if (ttlSeconds > 0) {
+                    connection.stringCommands().set(
+                        keyBytes,
+                        valueBytes,
+                        Expiration.from(ttlSeconds, TimeUnit.SECONDS),
+                        RedisStringCommands.SetOption.UPSERT);
+                  } else {
+                    connection.stringCommands().set(keyBytes, valueBytes);
+                  }
+                }
+                return null;
+              });
+      writeCount.add(map.size());
+    } catch (Exception e) {
+      log.warn("Redis Pipeline 批量写入失败，降级为逐个写入", e);
+      map.forEach(this::put);
+    }
   }
 
   @Override

@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import com.njydsz.pmis.common.util.http.OkHttpProperties;
 import com.njydsz.pmis.common.util.http.OkHttpUtils;
 import com.njydsz.pmis.common.util.id.SnowflakeProperties;
+import com.njydsz.pmis.common.util.retry.RetrySupport;
 import com.njydsz.pmis.common.util.spring.SpringContextHolder;
 
 import okhttp3.ConnectionPool;
@@ -79,12 +80,30 @@ public class UtilAutoConfiguration {
     }
 
     /**
+     * 提供清理 Bean，用于应用关闭时关闭 RetrySupport 异步线程池
+     */
+    @Bean
+    public RetryCleanupBean retryCleanupBean() {
+        return new RetryCleanupBean();
+    }
+
+    /**
      * OkHttp 资源清理 Bean
      */
     public static class OkHttpCleanupBean implements DisposableBean {
         @Override
         public void destroy() {
             OkHttpUtils.close();
+        }
+    }
+
+    /**
+     * RetrySupport 资源清理 Bean
+     */
+    public static class RetryCleanupBean implements DisposableBean {
+        @Override
+        public void destroy() {
+            RetrySupport.shutdown();
         }
     }
 }

@@ -654,7 +654,7 @@ public class FileUtils {
      * @return 编码后的文件名
      */
     public static String setFileDownloadHeader(String fileName) {
-        return URLEncoder.encode(fileName, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
+        return URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
     /**

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.OptionalLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -126,7 +127,7 @@ public class CacheHealthIndicator {
       var policy = cache.policy();
       if (policy.eviction().isPresent()) {
         var eviction = policy.eviction().get();
-        java.util.OptionalLong maxOpt = eviction.getMaximum();
+        OptionalLong maxOpt = eviction.getMaximum();
         if (maxOpt.isPresent() && maxOpt.getAsLong() > 0) {
           long maxSize = maxOpt.getAsLong();
           double usage = (double) size / maxSize;

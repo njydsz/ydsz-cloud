@@ -46,7 +46,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class PageResponse<T> extends BaseResponse<T> {
 
-    private static final long serialVersionUID = 4L;
+    private static final long serialVersionUID = 1L;
 
     /**
      * 总记录数

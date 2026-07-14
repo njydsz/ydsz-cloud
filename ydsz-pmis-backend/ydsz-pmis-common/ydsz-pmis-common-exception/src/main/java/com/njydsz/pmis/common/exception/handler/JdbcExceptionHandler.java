@@ -14,6 +14,7 @@ import com.njydsz.pmis.common.core.constant.HeaderConstants;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.pmis.common.exception.core.ExceptionInfo;
+import com.njydsz.pmis.common.exception.metrics.ExceptionMetrics;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,8 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 3.0.0
+ * @see BaseExceptionHandler
  */
 @Slf4j
 @ConditionalOnClass(name = "org.springframework.dao.DataAccessException")
@@ -33,8 +33,9 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
 
     private final MessageSource messageSource;
 
-    public JdbcExceptionHandler(MessageSource messageSource) {
+    public JdbcExceptionHandler(MessageSource messageSource, ExceptionMetrics exceptionMetrics) {
         this.messageSource = messageSource;
+        setExceptionMetrics(exceptionMetrics);
     }
 
     @Override
@@ -53,6 +54,7 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public BaseResponse<?> handleDataAccessException(
             DataAccessException e, HttpServletRequest request) {
+        recordMetrics(e);
         log.error("{}数据访问异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));

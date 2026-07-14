@@ -1,9 +1,10 @@
 package com.njydsz.pmis.common.util.retry;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -47,13 +48,46 @@ import java.util.function.Predicate;
 public final class RetrySupport {
 
     /**
-     * 异步重试默认线程池
+     * 异步重试默认线程池（有界，防止 OOM）
+     *
+     * <p>核心线程数 = CPU 核心数，最大线程数 = CPU 核心数 * 4，
+     * 队列容量 512，拒绝策略为 CallerRunsPolicy（回退到同步执行）。
      */
-    private static final ExecutorService ASYNC_EXECUTOR = Executors.newCachedThreadPool(r -> {
-        Thread t = new Thread(r, "retry-async");
-        t.setDaemon(true);
-        return t;
-    });
+    private static final ExecutorService ASYNC_EXECUTOR = createAsyncExecutor();
+
+    private static ExecutorService createAsyncExecutor() {
+        int cpuCores = Runtime.getRuntime().availableProcessors();
+        return new ThreadPoolExecutor(
+                cpuCores,
+                Math.max(cpuCores * 4, 16),
+                60L,
+                TimeUnit.SECONDS,
+                new ArrayBlockingQueue<>(512),
+                r -> {
+                    Thread t = new Thread(r, "retry-async");
+                    t.setDaemon(true);
+                    return t;
+                },
+                new ThreadPoolExecutor.CallerRunsPolicy()
+        );
+    }
+
+    /**
+     * 关闭异步重试线程池（应用关闭时调用）
+     *
+     * <p>执行优雅关闭：先 shutdown，等待 5 秒，未完成则 shutdownNow。
+     */
+    public static void shutdown() {
+        ASYNC_EXECUTOR.shutdown();
+        try {
+            if (!ASYNC_EXECUTOR.awaitTermination(5, TimeUnit.SECONDS)) {
+                ASYNC_EXECUTOR.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            ASYNC_EXECUTOR.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+    }
 
     private RetrySupport() {
         throw new UnsupportedOperationException("Utility class");

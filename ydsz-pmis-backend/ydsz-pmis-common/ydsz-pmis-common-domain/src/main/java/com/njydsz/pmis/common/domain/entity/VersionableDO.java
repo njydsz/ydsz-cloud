@@ -6,14 +6,19 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
 /**
- * 可版本化数据库实体基类（兼容。com.njydsz.pmis.common.entity.VersionableDO）。
+ * 可版本化数据库实体基类（已废弃）。
  *
- * <p>继承 {@link BaseDO}，自带乐观锁版本号字段（revision），
- * 配合 MyBatis-Plus {@code @Version} 注解使用。
+ * <p>继承 {@link BaseDO}，但 {@code BaseDO} 已经继承了 {@link BaseEntity}，
+ * 而 {@link BaseEntity} 已包含乐观锁版本号字段（{@code revision}）并实现了 {@link Versionable} 接口。
+ * 因此此类无任何额外字段或方法，仅为历史兼容保留。
+ *
+ * <p><b>建议：</b>新代码直接继承 {@link BaseDO} 或 {@link BaseLongDO}，不要使用此类。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
+ * @deprecated {@link BaseDO} 已包含乐观锁版本号，直接使用 {@link BaseDO} 即可
  */
+@Deprecated
 @Data
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder

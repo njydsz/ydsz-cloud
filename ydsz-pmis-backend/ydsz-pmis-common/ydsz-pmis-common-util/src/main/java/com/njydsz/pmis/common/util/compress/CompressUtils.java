@@ -3,7 +3,6 @@ package com.njydsz.pmis.common.util.compress;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.*;
@@ -72,7 +71,7 @@ public class CompressUtils {
         }
 
         try (FileOutputStream fos = new FileOutputStream(zipFile);
-             ZipOutputStream zos = new ZipOutputStream(fos)) {
+             ZipOutputStream zos = new ZipOutputStream(fos, StandardCharsets.UTF_8)) {
             zip(sourceFile, sourceFile.getName(), zos);
         }
     }
@@ -86,7 +85,7 @@ public class CompressUtils {
         }
 
         try (FileOutputStream fos = new FileOutputStream(zipFile);
-             ZipOutputStream zos = new ZipOutputStream(fos)) {
+             ZipOutputStream zos = new ZipOutputStream(fos, StandardCharsets.UTF_8)) {
             for (File file : files) {
                 if (file != null && file.exists()) {
                     zip(file, file.getName(), zos);
@@ -104,7 +103,7 @@ public class CompressUtils {
         }
 
         try (FileOutputStream fos = new FileOutputStream(zipFile);
-             ZipOutputStream zos = new ZipOutputStream(fos)) {
+             ZipOutputStream zos = new ZipOutputStream(fos, StandardCharsets.UTF_8)) {
             zipDirectory(directory, "", zos);
         }
     }
@@ -135,9 +134,8 @@ public class CompressUtils {
         Path destDirPath = destDirectory.getCanonicalFile().toPath();
         long totalUncompressedSize = 0L;
         int entryCount = 0;
-        long zipFileSize = zipFile.length();
 
-        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile), StandardCharsets.UTF_8)) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 // ZIP 炸弹防护：条目数检查
@@ -197,13 +195,15 @@ public class CompressUtils {
                         }
                     }
 
-                    // ZIP 炸弹防护：压缩比检查
-                    if (zipFileSize > 0 && entryBytesWritten > 0) {
-                        long compressionRatio = entryBytesWritten / Math.max(zipFileSize / entryCount, 1);
+                    // ZIP 炸弹防护：压缩比检查（使用条目实际压缩大小）
+                    long compressedSize = entry.getCompressedSize();
+                    if (compressedSize > 0 && entryBytesWritten > 0) {
+                        long compressionRatio = entryBytesWritten / compressedSize;
                         if (compressionRatio > MAX_COMPRESSION_RATIO) {
                             throw new SecurityException(
                                     "ZIP bomb detected: compression ratio " + compressionRatio
-                                    + " exceeds limit " + MAX_COMPRESSION_RATIO);
+                                    + " exceeds limit " + MAX_COMPRESSION_RATIO
+                                    + " for entry '" + entry.getName() + "'");
                         }
                     }
                 }
@@ -359,7 +359,7 @@ public class CompressUtils {
             return entries;
         }
 
-        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile))) {
+        try (ZipInputStream zis = new ZipInputStream(new FileInputStream(zipFile), StandardCharsets.UTF_8)) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 entries.add(entry.getName());
@@ -380,6 +380,13 @@ public class CompressUtils {
 
     /**
      * 检查文件是否为 ZIP 格式
+     *
+     * <p>通过读取文件头前 4 字节，与 ZIP Local File Header 签名
+     * {@code 0x504B0304}（即 ASCII {@code PK\x03\x04}）比较。
+     *
+     * @param file 待检查的文件
+     * @return 是否为 ZIP 格式
+     * @throws IOException 读取文件时发生 IO 异常
      */
     public static boolean isZipFormat(File file) throws IOException {
         if (file == null || !file.exists()) {
@@ -387,8 +394,15 @@ public class CompressUtils {
         }
 
         try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
-            int magic = raf.read() & 0xff | (raf.read() & 0xff) << 8;
-            return magic == ZipEntry.LOCFLG;
+            if (raf.length() < 4) {
+                return false;
+            }
+            int b0 = raf.read() & 0xff;
+            int b1 = raf.read() & 0xff;
+            int b2 = raf.read() & 0xff;
+            int b3 = raf.read() & 0xff;
+            // ZIP Local File Header signature: 0x04034b50 (little-endian: PK\x03\x04)
+            return b0 == 0x50 && b1 == 0x4B && b2 == 0x03 && b3 == 0x04;
         }
     }
 }

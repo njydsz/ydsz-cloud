@@ -2,7 +2,7 @@ package com.njydsz.pmis.common.util.hash;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.BitSet;
+import java.util.concurrent.atomic.AtomicLongArray;
 import java.util.function.Function;
 
 /**
@@ -10,6 +10,9 @@ import java.util.function.Function;
  *
  * <p>纯 JDK 实现的布隆过滤器，适用于海量数据的去重判断。
  * 特点：空间效率高、查询时间 O(k)、存在误判率（假阳性）但无假阴性。
+ *
+ * <p><b>线程安全：</b>内部使用 {@link AtomicLongArray} 实现无锁并发读写，
+ * 支持多线程同时调用 {@link #add} 和 {@link #mightContain}。
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
@@ -34,16 +37,19 @@ public class BloomFilterUtils<T> implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private final BitSet bitSet;
+    /** 位数组，使用 AtomicLongArray 实现无锁并发读写 */
+    private final AtomicLongArray bits;
+
     private final int bitSetSize;
     private final int numHashFunctions;
     private final Function<T, byte[]> serializer;
-    private int elementCount;
+    private volatile int elementCount;
 
     private BloomFilterUtils(int bitSetSize, int numHashFunctions, Function<T, byte[]> serializer) {
         this.bitSetSize = bitSetSize;
         this.numHashFunctions = numHashFunctions;
-        this.bitSet = new BitSet(bitSetSize);
+        int longArrayLength = (bitSetSize + 63) >>> 6;
+        this.bits = new AtomicLongArray(longArrayLength);
         this.serializer = serializer;
         this.elementCount = 0;
     }
@@ -89,7 +95,7 @@ public class BloomFilterUtils<T> implements Serializable {
     }
 
     /**
-     * 添加元素到布隆过滤器
+     * 添加元素到布隆过滤器（线程安全）
      *
      * @param element 要添加的元素
      */
@@ -100,13 +106,13 @@ public class BloomFilterUtils<T> implements Serializable {
         byte[] data = serializer.apply(element);
         int[] positions = getBitPositions(data);
         for (int position : positions) {
-            bitSet.set(position);
+            setBit(position);
         }
         elementCount++;
     }
 
     /**
-     * 判断元素是否可能存在
+     * 判断元素是否可能存在（线程安全）
      *
      * @param element 要查询的元素
      * @return 如果返回 false，则元素一定不存在；如果返回 true，元素可能存在（有误判率）
@@ -118,11 +124,42 @@ public class BloomFilterUtils<T> implements Serializable {
         byte[] data = serializer.apply(element);
         int[] positions = getBitPositions(data);
         for (int position : positions) {
-            if (!bitSet.get(position)) {
+            if (!getBit(position)) {
                 return false;
             }
         }
         return true;
+    }
+
+    /**
+     * 原子地设置指定位为 1
+     *
+     * @param bitIndex 位索引
+     */
+    private void setBit(int bitIndex) {
+        int longIndex = bitIndex >>> 6;
+        long bitMask = 1L << bitIndex;
+        long oldValue;
+        long newValue;
+        do {
+            oldValue = bits.get(longIndex);
+            if ((oldValue & bitMask) != 0) {
+                return; // 已经设置了，无需 CAS
+            }
+            newValue = oldValue | bitMask;
+        } while (!bits.compareAndSet(longIndex, oldValue, newValue));
+    }
+
+    /**
+     * 原子地读取指定位
+     *
+     * @param bitIndex 位索引
+     * @return 该位是否为 1
+     */
+    private boolean getBit(int bitIndex) {
+        int longIndex = bitIndex >>> 6;
+        long bitMask = 1L << bitIndex;
+        return (bits.get(longIndex) & bitMask) != 0;
     }
 
     /**
@@ -151,16 +188,66 @@ public class BloomFilterUtils<T> implements Serializable {
     }
 
     /**
-     * 简化版 MurmurHash3 实现
+     * MurmurHash3 x86_32 实现
+     *
+     * <p>参考 Google Guava Hashing.murmur3_32 实现，
+     * 提供高质量的哈希分布，确保布隆过滤器 bit 位均匀分布。
+     *
+     * @param data 待哈希的字节数组
+     * @param seed 哈希种子
+     * @return 32 位哈希值
      */
     private static int murmurHash3(byte[] data, int seed) {
-        int h = seed;
-        for (byte b : data) {
-            h ^= b;
-            h *= 0x5bd1e995;
-            h ^= h >>> 15;
+        int h1 = seed;
+        int len = data.length;
+        int nblocks = len >> 2;
+
+        // body
+        for (int i = 0; i < nblocks; i++) {
+            int k1 = (data[i << 2] & 0xff)
+                    | ((data[(i << 2) + 1] & 0xff) << 8)
+                    | ((data[(i << 2) + 2] & 0xff) << 16)
+                    | ((data[(i << 2) + 3] & 0xff) << 24);
+
+            k1 *= 0xcc9e2d51;
+            k1 = Integer.rotateLeft(k1, 15);
+            k1 *= 0x1b873593;
+
+            h1 ^= k1;
+            h1 = Integer.rotateLeft(h1, 13);
+            h1 = h1 * 5 + 0xe6546b64;
         }
-        return h;
+
+        // tail
+        int offset = nblocks << 2;
+        int k1 = 0;
+        switch (len - offset) {
+            case 3:
+                k1 ^= (data[offset + 2] & 0xff) << 16;
+                // fall through
+            case 2:
+                k1 ^= (data[offset + 1] & 0xff) << 8;
+                // fall through
+            case 1:
+                k1 ^= (data[offset] & 0xff);
+                k1 *= 0xcc9e2d51;
+                k1 = Integer.rotateLeft(k1, 15);
+                k1 *= 0x1b873593;
+                h1 ^= k1;
+                break;
+            default:
+                // no tail bytes
+        }
+
+        // finalization
+        h1 ^= len;
+        h1 ^= h1 >>> 16;
+        h1 *= 0x85ebca6b;
+        h1 ^= h1 >>> 13;
+        h1 *= 0xc2b2ae35;
+        h1 ^= h1 >>> 16;
+
+        return h1;
     }
 
     /**
@@ -203,7 +290,9 @@ public class BloomFilterUtils<T> implements Serializable {
      * 清空布隆过滤器
      */
     public void clear() {
-        bitSet.clear();
+        for (int i = 0; i < bits.length(); i++) {
+            bits.set(i, 0L);
+        }
         elementCount = 0;
     }
 }

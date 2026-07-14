@@ -35,6 +35,30 @@
       "type": "java.lang.Boolean",
       "description": "请求头中缺失 TraceId 时是否自动生成。",
       "defaultValue": true
+    },
+    {
+      "name": "ydsz.core.trace.id-type",
+      "type": "java.lang.String",
+      "description": "TraceId 生成策略：uuid（无序，默认）或 snowflake（有序，可排序日志）。",
+      "defaultValue": "uuid"
+    },
+    {
+      "name": "ydsz.core.filter-ignore.common-ignore-urls",
+      "type": "java.util.List<java.lang.String>",
+      "description": "公共忽略 URL 模式列表（与内置默认值合并）。",
+      "defaultValue": []
+    },
+    {
+      "name": "ydsz.core.filter-ignore.auth-filter-ignore-service-names",
+      "type": "java.util.List<java.lang.String>",
+      "description": "认证过滤器忽略服务名称列表（覆盖内置默认值）。",
+      "defaultValue": []
+    },
+    {
+      "name": "ydsz.core.filter-ignore.security-exclude-urls",
+      "type": "java.util.List<java.lang.String>",
+      "description": "安全排除 URL 模式列表（与内置默认值合并）。",
+      "defaultValue": []
     }
   ]
 }

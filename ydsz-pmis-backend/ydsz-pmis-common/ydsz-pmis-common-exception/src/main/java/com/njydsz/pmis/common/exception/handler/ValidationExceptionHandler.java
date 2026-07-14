@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.pmis.common.exception.core.ExceptionInfo;
+import com.njydsz.pmis.common.exception.metrics.ExceptionMetrics;
 
 /**
  * Validation 相关异常处理器
@@ -34,8 +35,6 @@ import com.njydsz.pmis.common.exception.core.ExceptionInfo;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @since 3.0.0
  * @see MvcExceptionHandler
  * @see ValidationExceptionHandlerAutoConfiguration
  */
@@ -45,9 +44,20 @@ import com.njydsz.pmis.common.exception.core.ExceptionInfo;
 public class ValidationExceptionHandler {
 
     private final MessageSource messageSource;
+    private final ExceptionMetrics exceptionMetrics;
 
-    public ValidationExceptionHandler(MessageSource messageSource) {
+    public ValidationExceptionHandler(MessageSource messageSource, ExceptionMetrics exceptionMetrics) {
         this.messageSource = messageSource;
+        this.exceptionMetrics = exceptionMetrics;
+    }
+
+    /**
+     * 记录异常指标
+     */
+    private void recordMetrics(Throwable throwable) {
+        if (exceptionMetrics != null) {
+            exceptionMetrics.recordException(throwable);
+        }
     }
 
     /**
@@ -93,6 +103,7 @@ public class ValidationExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public BaseResponse<?> handleConstraintViolationException(ConstraintViolationException e) {
+        recordMetrics(e);
         String message = extractConstraintViolationMessages(e);
         return buildValidationErrorResponse(message, "");
     }
@@ -103,6 +114,7 @@ public class ValidationExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public BaseResponse<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        recordMetrics(e);
         String message = extractBindingResultMessages(e.getBindingResult());
         return buildValidationErrorResponse(message, "");
     }
@@ -113,6 +125,7 @@ public class ValidationExceptionHandler {
     @ExceptionHandler(BindException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public BaseResponse<?> handleBindException(BindException e) {
+        recordMetrics(e);
         String message = extractBindingResultMessages(e.getBindingResult());
         return buildValidationErrorResponse(message, "");
     }

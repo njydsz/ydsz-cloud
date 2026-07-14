@@ -57,7 +57,7 @@ import lombok.experimental.SuperBuilder;
 @JsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp"})
 public class BaseResponse<T> implements IResponse<T>, Serializable {
 
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 1L;
 
     /**
      * 成功状态码

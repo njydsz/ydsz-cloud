@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 
 import com.njydsz.pmis.common.cache.annotation.CacheAnnotationAspect;
 import com.njydsz.pmis.common.cache.health.CacheHealthIndicator;
+import com.njydsz.pmis.common.cache.health.SpringCacheHealthIndicator;
 import com.njydsz.pmis.common.cache.support.CacheThreadPoolManager;
 import com.njydsz.pmis.common.cache.support.CacheWarmer;
 
@@ -68,6 +69,14 @@ public class YdszCacheAutoConfiguration {
 
   @Bean
   @ConditionalOnMissingBean
+  @ConditionalOnProperty(name = "ydsz.cache.health-check.enabled", havingValue = "true", matchIfMissing = true)
+  @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+  public SpringCacheHealthIndicator springCacheHealthIndicator(YdszCacheManager cacheManager) {
+    return new SpringCacheHealthIndicator(cacheManager);
+  }
+
+  @Bean
+  @ConditionalOnMissingBean(value = {SpringCacheHealthIndicator.class, CacheHealthIndicator.class})
   @ConditionalOnProperty(name = "ydsz.cache.health-check.enabled", havingValue = "true", matchIfMissing = true)
   public CacheHealthIndicator cacheHealthIndicator() {
     return new CacheHealthIndicator();
