@@ -323,6 +323,18 @@ public class YdszJson {
             return toStringObjectMap(result);
         });
     }
+
+    /**
+     * JSON 字符串转 Map（{@link #parseMap} 的别名）
+     *
+     * <p>与 {@link #parseArray(String)} 对称，提供更直观的 API 命名。</p>
+     *
+     * @param json JSON 字符串
+     * @return Map 对象，json 为空时返回 null
+     */
+    public static Map<String, Object> parseObject(String json) {
+        return parseMap(json);
+    }
     
     /**
      * JSON 字符串转 List

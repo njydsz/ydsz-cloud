@@ -59,6 +59,12 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
   /** L2 Redis 缓存 */
   private final Cache<K, V> l2Cache;
 
+  /** 缓存名称（用于广播失效消息） */
+  private final String cacheName;
+
+  /** 跨节点失效广播器（可选，null 表示不广播） */
+  private final CacheInvalidationBroadcaster broadcaster;
+
   /** 删除监听器列表 */
   private final List<RemovalListener<? super K, ? super V>> listeners =
       new CopyOnWriteArrayList<>();
@@ -72,14 +78,36 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
   private final LongAdder writeCount = new LongAdder();
 
   /**
-   * 创建多级缓存
+   * 创建多级缓存（无跨节点广播）
    *
    * @param l1Cache L1 本地缓存
    * @param l2Cache L2 Redis 缓存
    */
   public MultiLevelCache(Cache<K, V> l1Cache, Cache<K, V> l2Cache) {
+    this(l1Cache, l2Cache, null, null);
+  }
+
+  /**
+   * 创建多级缓存（支持跨节点 L1 失效广播）
+   *
+   * @param l1Cache L1 本地缓存
+   * @param l2Cache L2 Redis 缓存
+   * @param cacheName 缓存名称（用于广播消息标识）
+   * @param broadcaster 失效广播器（null 表示不广播）
+   */
+  public MultiLevelCache(
+      Cache<K, V> l1Cache,
+      Cache<K, V> l2Cache,
+      String cacheName,
+      CacheInvalidationBroadcaster broadcaster) {
     this.l1Cache = l1Cache;
     this.l2Cache = l2Cache;
+    this.cacheName = cacheName;
+    this.broadcaster = broadcaster;
+    if (broadcaster instanceof RedisCacheInvalidationBroadcaster redisBroadcaster
+        && cacheName != null) {
+      redisBroadcaster.registerLocalCache(cacheName, l1Cache);
+    }
   }
 
   @Override
@@ -142,6 +170,10 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
     l1Cache.put(key, value);
     l2Cache.put(key, value);
     writeCount.increment();
+    // 广播 L1 失效（通知其他节点清除旧值）
+    if (broadcaster != null && cacheName != null) {
+      broadcaster.broadcastInvalidation(cacheName, key);
+    }
   }
 
   @Override
@@ -155,6 +187,10 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
     if (value != null) {
       notifyRemoval(key, value, RemovalCause.EXPLICIT);
     }
+    // 广播 L1 失效
+    if (broadcaster != null && cacheName != null) {
+      broadcaster.broadcastInvalidation(cacheName, key);
+    }
     return value;
   }
 
@@ -162,6 +198,10 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
   public void clear() {
     l1Cache.clear();
     l2Cache.clear();
+    // 广播全量清除
+    if (broadcaster != null && cacheName != null) {
+      broadcaster.broadcastClearAll(cacheName);
+    }
   }
 
   @Override

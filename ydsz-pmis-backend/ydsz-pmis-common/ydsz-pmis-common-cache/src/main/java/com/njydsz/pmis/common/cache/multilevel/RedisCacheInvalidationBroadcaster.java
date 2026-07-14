@@ -186,4 +186,20 @@ public class RedisCacheInvalidationBroadcaster implements CacheInvalidationBroad
   public void unregisterLocalCache(String cacheName) {
     localCaches.remove(cacheName);
   }
+
+  /** 类型安全地从通配类型缓存中移除 key */
+  private <K, V> void removeKeyFromCache(Cache<K, V> cache, Object key) {
+    K typedKey = castKey(key);
+    cache.remove(typedKey);
+  }
+
+  /** 将 Object key 安全转型为缓存所需的 key 类型 */
+  private <K> K castKey(Object key) {
+    Class<?> keyClass = key.getClass();
+    try {
+      return (K) keyClass.cast(key);
+    } catch (ClassCastException e) {
+      return (K) key;
+    }
+  }
 }

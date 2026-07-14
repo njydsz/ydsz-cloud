@@ -169,6 +169,8 @@ public class CacheMeterBinder implements MeterBinder {
   /**
    * 记录 GET 操作耗时
    *
+   * <p>由 {@link TimedCacheDecorator} 装饰器自动调用， 或由外部监控代码手动调用。
+   *
    * @param nanos 耗时（纳秒）
    */
   public void recordGetDuration(long nanos) {
@@ -180,11 +182,31 @@ public class CacheMeterBinder implements MeterBinder {
   /**
    * 记录 PUT 操作耗时
    *
+   * <p>由 {@link TimedCacheDecorator} 装饰器自动调用， 或由外部监控代码手动调用。
+   *
    * @param nanos 耗时（纳秒）
    */
   public void recordPutDuration(long nanos) {
     if (putTimer != null) {
       putTimer.record(nanos, TimeUnit.NANOSECONDS);
     }
+  }
+
+  /**
+   * 获取 GET Timer 实例（供装饰器直接使用）
+   *
+   * @return GET Timer，如果未绑定则返回 null
+   */
+  public Timer getGetTimer() {
+    return getTimer;
+  }
+
+  /**
+   * 获取 PUT Timer 实例（供装饰器直接使用）
+   *
+   * @return PUT Timer，如果未绑定则返回 null
+   */
+  public Timer getPutTimer() {
+    return putTimer;
   }
 }
