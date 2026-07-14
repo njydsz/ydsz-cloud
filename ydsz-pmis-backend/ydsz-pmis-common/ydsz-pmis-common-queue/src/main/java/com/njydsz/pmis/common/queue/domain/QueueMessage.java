@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.njydsz.pmis.common.util.id.TracerUtils;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 import lombok.AllArgsConstructor;
@@ -216,7 +216,7 @@ public class QueueMessage implements Serializable {
         if (message.getExpireMillis() == null) {
             message.setExpireMillis(0L);
         }
-        return YdszJson.toJson(message);
+        return Json.toJson(message);
     }
 
     /**
@@ -233,7 +233,7 @@ public class QueueMessage implements Serializable {
             return null;
         }
         try {
-            QueueMessage message = YdszJson.toObject(payload, QueueMessage.class);
+            QueueMessage message = Json.toObject(payload, QueueMessage.class);
             if (message == null) {
                 return QueueMessage.of(payload);
             }

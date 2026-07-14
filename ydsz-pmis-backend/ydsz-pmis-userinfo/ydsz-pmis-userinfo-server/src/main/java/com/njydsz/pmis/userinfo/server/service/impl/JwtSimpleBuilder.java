@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -42,7 +42,7 @@ public final class JwtSimpleBuilder {
         claims.putIfAbsent("iat", now);
         claims.put("exp", now + expireSeconds);
         String headerB64 = b64(HEADER);
-        String payloadB64 = b64(YdszJson.toJson(claims));
+        String payloadB64 = b64(Json.toJson(claims));
         String signature = hmac(headerB64 + "." + payloadB64);
         return headerB64 + "." + payloadB64 + "." + signature;
     }

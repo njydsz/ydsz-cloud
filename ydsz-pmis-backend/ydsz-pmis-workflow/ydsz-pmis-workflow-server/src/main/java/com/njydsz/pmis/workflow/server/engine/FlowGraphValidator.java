@@ -12,7 +12,7 @@ import java.util.Set;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowSkipDO;
 import com.njydsz.pmis.workflow.domain.enums.FlowNodeType;
@@ -204,7 +204,7 @@ public class FlowGraphValidator {
         // 优先从 ext JSON 的 sourceRef 字段获取
         if (StringUtils.hasText(skip.getExt())) {
             try {
-                Map<String, Object> ext = YdszJson.parseMap(skip.getExt());
+                Map<String, Object> ext = Json.parseMap(skip.getExt());
                 if (ext != null) {
                     Object src = ext.get("sourceRef");
                     if (src != null) {

@@ -3,7 +3,7 @@ package com.njydsz.pmis.workflow.server.form;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -48,7 +48,7 @@ public class FlowFormEngineService {
             return null;
         }
         try {
-            Map<String, Object> extJson = YdszJson.parseMap(nodeExt);
+            Map<String, Object> extJson = Json.parseMap(nodeExt);
             if (extJson == null) {
                 return null;
             }

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +58,7 @@ public class DefaultToolRegistry implements ToolRegistry {
         ToolRegistration registration = registry.get(toolCall.getName());
         if (registration == null) {
             log.warn("[Tool-Registry] 工具未找到: {}", toolCall.getName());
-            return YdszJson.toJson(Map.of("error", "工具未找到: " + toolCall.getName()));
+            return Json.toJson(Map.of("error", "工具未找到: " + toolCall.getName()));
         }
         long startTime = System.currentTimeMillis();
         try {
@@ -70,7 +70,7 @@ public class DefaultToolRegistry implements ToolRegistry {
             long duration = System.currentTimeMillis() - startTime;
             log.error("[Tool-Registry] 工具执行失败: {} ({}ms): {}",
                     toolCall.getName(), duration, e.getMessage(), e);
-            return YdszJson.toJson(Map.of(
+            return Json.toJson(Map.of(
                     "error", "工具执行失败: " + e.getMessage(),
                     "tool", toolCall.getName()));
         }

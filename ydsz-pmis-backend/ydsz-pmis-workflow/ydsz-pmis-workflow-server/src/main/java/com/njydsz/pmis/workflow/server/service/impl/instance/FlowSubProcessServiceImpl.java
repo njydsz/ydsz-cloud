@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.core.response.BaseResultCode;
 import com.njydsz.pmis.common.exception.custom.SysException;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.workflow.WorkflowFacade;
 import com.njydsz.pmis.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowDefinitionDO;
@@ -441,7 +441,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
             return new HashMap<>();
         }
         try {
-            Map<String, Object> map = YdszJson.parseMap(variableJson);
+            Map<String, Object> map = Json.parseMap(variableJson);
             return map == null ? new HashMap<>() : map;
         } catch (Exception e) {
             return new HashMap<>();

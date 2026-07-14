@@ -14,7 +14,7 @@ import com.njydsz.pmis.common.json.autotype.AutoTypeChecker;
  * <ul>
  *   <li>类型白名单: 通过 {@link AutoTypeChecker#addToWhitelist(String)} 管理</li>
  *   <li>类型黑名单: 通过 {@link AutoTypeChecker#addToBlacklist(String)} 管理</li>
- *   <li>解析深度限制: 委托至 {@link com.njydsz.pmis.common.json.config.YdszJsonConfig#getMaxDepth()}</li>
+ *   <li>解析深度限制: 委托至 {@link com.njydsz.pmis.common.json.config.JsonConfig#getMaxDepth()}</li>
  * </ul>
  *
  * @author ydsz-pmis-team

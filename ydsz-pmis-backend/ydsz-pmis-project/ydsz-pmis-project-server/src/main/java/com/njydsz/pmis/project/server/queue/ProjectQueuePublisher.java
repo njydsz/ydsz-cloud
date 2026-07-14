@@ -12,7 +12,7 @@ import com.njydsz.pmis.common.queue.enums.QueueType;
 import com.njydsz.pmis.common.queue.queue.IMessageQueue;
 import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.pmis.common.queue.service.IMessagePublisher;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.project.server.engine.BudgetAlertEvent;
 
 import lombok.RequiredArgsConstructor;
@@ -68,7 +68,7 @@ public class ProjectQueuePublisher {
             return;
         }
         try {
-            String json = YdszJson.toJson(event);
+            String json = Json.toJson(event);
             QueueMessage message = QueueMessage.of(json);
             message.addHeader("alertLevel", event.getLevel() == null ? "UNKNOWN" : event.getLevel().name());
             message.addHeader("initiationId", event.getInitiationId());

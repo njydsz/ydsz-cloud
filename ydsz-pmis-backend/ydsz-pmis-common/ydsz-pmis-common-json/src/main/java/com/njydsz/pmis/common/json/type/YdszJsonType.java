@@ -25,21 +25,21 @@ import java.lang.reflect.Type;
  * <p><b>使用示例：</b></p>
  * <pre>
  * // 传统方式（不安全）
- * List&lt;User&gt; users = (List&lt;User&gt;) YdszJson.toObject(json, List.class);
+ * List&lt;User&gt; users = (List&lt;User&gt;) Json.toObject(json, List.class);
  *
- * // 使用 YdszJsonType（类型安全）
- * List&lt;User&gt; users = YdszJson.toObject(json, new YdszJsonType&lt;List&lt;User&gt;&gt;() {});
+ * // 使用 JsonType（类型安全）
+ * List&lt;User&gt; users = Json.toObject(json, new JsonType&lt;List&lt;User&gt;&gt;() {});
  *
  * // Map 泛型
- * Map&lt;String, User&gt; map = YdszJson.toObject(json, new YdszJsonType&lt;Map&lt;String, User&gt;&gt;() {});
+ * Map&lt;String, User&gt; map = Json.toObject(json, new JsonType&lt;Map&lt;String, User&gt;&gt;() {});
  *
  * // 嵌套泛型
- * List&lt;Map&lt;String, List&lt;User&gt;&gt;&gt; complex = YdszJson.toObject(json, new YdszJsonType&lt;List&lt;Map&lt;String, List&lt;User&gt;&gt;&gt;&gt;() {});
+ * List&lt;Map&lt;String, List&lt;User&gt;&gt;&gt; complex = Json.toObject(json, new JsonType&lt;List&lt;Map&lt;String, List&lt;User&gt;&gt;&gt;&gt;() {});
  * </pre>
  *
  * <p><b>实现原理：</b></p>
  * <ol>
- *   <li>创建匿名内部类继承 YdszJsonType</li>
+ *   <li>创建匿名内部类继承 JsonType</li>
  *   <li>获取子类的 genericSuperclass（即 ParameterizedType）</li>
  *   <li>提取 actualTypeArguments[0] 获取泛型类型</li>
  * </ol>
@@ -50,7 +50,7 @@ import java.lang.reflect.Type;
  * @see Type
  * @see ParameterizedType
  */
-public abstract class YdszJsonType<T> implements Comparable<YdszJsonType<T>> {
+public abstract class JsonType<T> implements Comparable<JsonType<T>> {
 
     /** 泛型类型 */
     protected final Type type;
@@ -60,10 +60,10 @@ public abstract class YdszJsonType<T> implements Comparable<YdszJsonType<T>> {
      *
      * <p>通过反射获取泛型父类的类型参数。</p>
      *
-     * <p>示例：new YdszJsonType&lt;List&lt;User&gt;&gt;() {}</p>
+     * <p>示例：new JsonType&lt;List&lt;User&gt;&gt;() {}</p>
      * <p>则 type = List&lt;User&gt;</p>
      */
-    protected YdszJsonType() {
+    protected JsonType() {
         Class<?> superClass = getClass();
         Type type = getClass().getGenericSuperclass();
 
@@ -75,7 +75,7 @@ public abstract class YdszJsonType<T> implements Comparable<YdszJsonType<T>> {
                 if (actualTypeArguments.length > 0) {
                     Type firstArg = actualTypeArguments[0];
                     if (firstArg instanceof Class) {
-                        if (YdszJsonType.class.equals(firstArg)) {
+                        if (JsonType.class.equals(firstArg)) {
                             superClass = superClass.getSuperclass();
                             type = superClass.getGenericSuperclass();
                             continue;
@@ -90,8 +90,8 @@ public abstract class YdszJsonType<T> implements Comparable<YdszJsonType<T>> {
         }
 
         throw new IllegalArgumentException(
-            "YdszJsonType must be created with an actual type parameter. " +
-            "Example: new YdszJsonType<List<User>>() {}"
+            "JsonType must be created with an actual type parameter. " +
+            "Example: new JsonType<List<User>>() {}"
         );
     }
 
@@ -105,7 +105,7 @@ public abstract class YdszJsonType<T> implements Comparable<YdszJsonType<T>> {
     }
 
     @Override
-    public int compareTo(YdszJsonType<T> other) {
+    public int compareTo(JsonType<T> other) {
         if (this == other) {
             return 0;
         }
@@ -123,10 +123,10 @@ public abstract class YdszJsonType<T> implements Comparable<YdszJsonType<T>> {
         if (obj == null) {
             return false;
         }
-        if (!(obj instanceof YdszJsonType)) {
+        if (!(obj instanceof JsonType)) {
             return false;
         }
-        YdszJsonType<?> other = (YdszJsonType<?>) obj;
+        JsonType<?> other = (JsonType<?>) obj;
         return this.getType().equals(other.getType());
     }
 
@@ -137,6 +137,6 @@ public abstract class YdszJsonType<T> implements Comparable<YdszJsonType<T>> {
 
     @Override
     public String toString() {
-        return "YdszJsonType<" + type.getTypeName() + ">";
+        return "JsonType<" + type.getTypeName() + ">";
     }
 }

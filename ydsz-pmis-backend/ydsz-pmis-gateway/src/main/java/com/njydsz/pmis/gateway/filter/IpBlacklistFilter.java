@@ -20,7 +20,7 @@ import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.common.core.trace.TraceIdGenerator;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.gateway.config.GatewayConstants;
 import com.njydsz.pmis.gateway.config.GatewayIpUtils;
 
@@ -138,7 +138,7 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
 
         BaseResponse<Void> body = BaseResponse.failed("403", "error.IP_BLACKLISTED");
         body.setTraceId(traceId);
-        byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = Json.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));
     }

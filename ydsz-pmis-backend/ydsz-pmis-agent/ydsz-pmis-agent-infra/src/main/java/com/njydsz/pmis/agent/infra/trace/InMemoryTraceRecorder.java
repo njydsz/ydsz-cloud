@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,8 +51,8 @@ public class InMemoryTraceRecorder implements TraceRecorder {
             traces.put(traceId, steps);
         }
         int index = steps.size();
-        String inputJson = input != null ? YdszJson.toJson(input) : null;
-        String outputJson = output != null ? YdszJson.toJson(output) : null;
+        String inputJson = input != null ? Json.toJson(input) : null;
+        String outputJson = output != null ? Json.toJson(output) : null;
         steps.add(new TraceStep(traceId, index, stepType, content,
                 inputJson, outputJson, durationMs, LocalDateTime.now()));
         log.debug("[Trace] 记录步骤: traceId={}, step={}, type={}, {}ms",

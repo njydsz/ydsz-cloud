@@ -12,7 +12,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 
 /**
- * YdszJson 指标监控配置。
+ * Json 指标监控配置。
  *
  * <p>当 classpath 存在 Micrometer {@link MeterRegistry} 时自动生效，
  * 提供序列化/反序列化的性能指标收集。
@@ -31,9 +31,9 @@ import io.micrometer.core.instrument.Timer;
  */
 @Configuration
 @ConditionalOnClass(MeterRegistry.class)
-public class YdszJsonMetrics implements JsonMetricsCallback {
+public class JsonMetrics implements JsonMetricsCallback {
 
-    private static final Logger log = LoggerFactory.getLogger(YdszJsonMetrics.class);
+    private static final Logger log = LoggerFactory.getLogger(JsonMetrics.class);
 
     private final MeterRegistry meterRegistry;
 
@@ -48,34 +48,34 @@ public class YdszJsonMetrics implements JsonMetricsCallback {
      *
      * @param meterRegistry MeterRegistry（可为 null）
      */
-    public YdszJsonMetrics(MeterRegistry meterRegistry) {
+    public JsonMetrics(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
         if (meterRegistry != null) {
             this.serializeTimer = Timer.builder("pmis.json.serialize.duration")
-                    .description("YdszJson serialization duration")
+                    .description("Json serialization duration")
                     .publishPercentiles(0.5, 0.9, 0.99)
                     .register(meterRegistry);
             this.deserializeTimer = Timer.builder("pmis.json.deserialize.duration")
-                    .description("YdszJson deserialization duration")
+                    .description("Json deserialization duration")
                     .publishPercentiles(0.5, 0.9, 0.99)
                     .register(meterRegistry);
             this.serializeSuccessCounter = Counter.builder("pmis.json.serialize.success")
-                    .description("YdszJson serialization success count")
+                    .description("Json serialization success count")
                     .register(meterRegistry);
             this.serializeFailureCounter = Counter.builder("pmis.json.serialize.failure")
-                    .description("YdszJson serialization failure count")
+                    .description("Json serialization failure count")
                     .register(meterRegistry);
             this.deserializeFailureCounter = Counter.builder("pmis.json.deserialize.failure")
-                    .description("YdszJson deserialization failure count")
+                    .description("Json deserialization failure count")
                     .register(meterRegistry);
-            log.info("[YdszJson] 注册 Micrometer 指标监控");
+            log.info("[Json] 注册 Micrometer 指标监控");
         } else {
             this.serializeTimer = null;
             this.deserializeTimer = null;
             this.serializeSuccessCounter = null;
             this.serializeFailureCounter = null;
             this.deserializeFailureCounter = null;
-            log.debug("[YdszJson] MeterRegistry 不存在，跳过指标监控注册");
+            log.debug("[Json] MeterRegistry 不存在，跳过指标监控注册");
         }
     }
 

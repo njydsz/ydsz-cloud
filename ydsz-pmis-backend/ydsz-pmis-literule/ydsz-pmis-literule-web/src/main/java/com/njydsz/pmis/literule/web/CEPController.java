@@ -65,7 +65,7 @@ public class CEPController {
     private final List<CEPHit> recentHits = new ArrayList<>();
 
     /** ObjectMapper 用于 CEP 模式反序列化（P2-7 测试模式端点使用） */
-    private final // YdszJson as JSON engine
+    private final // Json as JSON engine
 
     /**
      * 启动时注册 CEP 命中监听器

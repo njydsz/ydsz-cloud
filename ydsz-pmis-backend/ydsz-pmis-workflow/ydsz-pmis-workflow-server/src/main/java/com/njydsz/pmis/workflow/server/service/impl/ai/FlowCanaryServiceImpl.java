@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -189,7 +189,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
             }
             JSONArray arr;
             try {
-                arr = YdszJson.parseArray(d.getCanaryRolloutLog());
+                arr = Json.parseArray(d.getCanaryRolloutLog());
             } catch (Exception ex) {
                 log.warn("[Flow][Canary] 解析 rollout_log 失败: defId={} raw={}", d.getId(), d.getCanaryRolloutLog());
                 continue;
@@ -245,7 +245,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         JSONArray arr;
         if (StringUtils.hasText(def.getCanaryRolloutLog())) {
             try {
-                arr = YdszJson.parseArray(def.getCanaryRolloutLog());
+                arr = Json.parseArray(def.getCanaryRolloutLog());
             } catch (Exception ex) {
                 log.warn("[Flow][Canary] 解析 rollout_log 失败，重置为空: defId={}", def.getId());
                 arr = new JSONArray();
@@ -261,7 +261,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         o.put("operateAt", LocalDateTime.now().toString());
         o.put("note", note);
         arr.add(o);
-        def.setCanaryRolloutLog(YdszJson.toJson(arr));
+        def.setCanaryRolloutLog(Json.toJson(arr));
     }
 
     /**

@@ -2,7 +2,7 @@ package com.njydsz.pmis.system.server.util;
 
 import java.util.*;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 public class DiffCalculator {
 
     private static final Logger log = LoggerFactory.getLogger(DiffCalculator.class);
-    // YdszJson as JSON engine
+    // Json as JSON engine
 
     /**
      * 计算两个 JSON 对象的字段级差异。
@@ -55,7 +55,7 @@ public class DiffCalculator {
     private static Map<String, Object> parseJson(String json) {
         if (json == null || json.isBlank()) return null;
         try {
-            return YdszJson.toObject(json, Map.class);
+            return Json.toObject(json, Map.class);
         } catch (Exception e) {
             log.warn("[DiffCalculator] JSON 解析失败: {}", e.getMessage());
             return null;

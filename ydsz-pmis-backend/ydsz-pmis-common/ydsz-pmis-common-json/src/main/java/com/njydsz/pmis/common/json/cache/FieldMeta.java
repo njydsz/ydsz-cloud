@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Date;
 
-import com.njydsz.pmis.common.json.annotation.YdszJsonField;
+import com.njydsz.pmis.common.json.annotation.JsonField;
 
 /**
  * 字段元数据（用于缓存字段信息，MethodHandle 优化）
@@ -146,7 +146,7 @@ public final class FieldMeta {
     /**
      * 构造函数（带注解版本）
      */
-    public FieldMeta(Field field, String jsonName, int ordinal, YdszJsonField annotation) {
+    public FieldMeta(Field field, String jsonName, int ordinal, JsonField annotation) {
         this.field = field;
         this.name = field.getName();
         this.type = field.getType();

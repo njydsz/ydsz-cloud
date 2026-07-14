@@ -15,7 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 /**
  * 飞书通知发送器
@@ -69,7 +69,7 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
 							"elements", List.of(Map.of("tag", "div", "text", Map.of("content", content, "tag", "lark_md")))
 					)
 			);
-			String json = YdszJson.toJson(body);
+			String json = Json.toJson(body);
 			String response = restTemplate.postForObject(webhook, new HttpEntity<>(json, jsonHeaders()), String.class);
 			log.debug("飞书通知发送成功: {}", title);
 			return NotifySendResult.success(response, channelName());

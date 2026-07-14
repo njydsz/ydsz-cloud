@@ -20,13 +20,13 @@ import java.lang.annotation.Target;
  * <p><b>使用示例：</b></p>
  * <pre>
  * public class User {
- *     &#064;YdszJsonFormat("yyyy-MM-dd")
+ *     &#064;JsonFormat("yyyy-MM-dd")
  *     private LocalDate birthday;
  *
- *     &#064;YdszJsonFormat("0.00")
+ *     &#064;JsonFormat("0.00")
  *     private double score;
  *
- *     &#064;YdszJsonFormat("yes/no")
+ *     &#064;JsonFormat("yes/no")
  *     private boolean active;
  * }
  * </pre>
@@ -37,7 +37,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER})
-public @interface YdszJsonFormat {
+public @interface JsonFormat {
 
     /**
      * 格式字符串

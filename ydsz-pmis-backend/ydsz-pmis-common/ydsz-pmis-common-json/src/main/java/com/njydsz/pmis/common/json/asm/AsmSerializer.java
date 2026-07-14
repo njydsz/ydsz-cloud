@@ -14,7 +14,7 @@ import com.njydsz.pmis.common.json.writer.JSONWriter;
  *   <li>类型特化，避免运行时类型检查</li>
  * </ul>
  *
- * @author YdszJson Team
+ * @author Json Team
  */
 public interface AsmSerializer<T> {
 

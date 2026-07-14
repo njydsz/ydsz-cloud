@@ -16,7 +16,7 @@ import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
 import com.njydsz.pmis.common.cache.listener.RemovalCause;
 import com.njydsz.pmis.common.core.enums.DataScopeType;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.json.tree.ArrayNode;
 import com.njydsz.pmis.common.json.tree.JsonNode;
 import com.njydsz.pmis.common.json.tree.ObjectNode;
@@ -206,7 +206,7 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
             return null;
         }
         try {
-            JsonNode node = YdszJson.readTree(json);
+            JsonNode node = Json.readTree(json);
             if (node == null || node.isNull()) {
                 return null;
             }

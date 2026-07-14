@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,7 +72,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
         JobHistoryDO history = new JobHistoryDO();
         history.setJobId(job.getId());
         history.setVersion(job.getVersion());
-        history.setSnapshot(YdszJson.toJson(job));
+        history.setSnapshot(Json.toJson(job));
         history.setChangeType("UPDATE");
         history.setJobName(job.getJobName());
         history.setJobKey(job.getJobKey());
@@ -100,8 +100,8 @@ public class JobHistoryServiceImpl implements JobHistoryService {
             history.setJobId(referenceJob.getId());
             history.setVersion(referenceJob.getVersion() != null ? referenceJob.getVersion() : 1);
             history.setChangeType(changeType);
-            history.setSnapshot(afterJob != null ? YdszJson.toJson(afterJob) : null);
-            history.setBeforeSnapshot(beforeJob != null ? YdszJson.toJson(beforeJob) : null);
+            history.setSnapshot(afterJob != null ? Json.toJson(afterJob) : null);
+            history.setBeforeSnapshot(beforeJob != null ? Json.toJson(beforeJob) : null);
             history.setChangeRemark(changeRemark);
             // 冗余字段从 afterJob 取（DELETE 时从 beforeJob 取；referenceJob 已保证非 null）
             JobDO displayJob = referenceJob;
@@ -156,7 +156,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
             throw new SysException(BaseResultCode.NOT_FOUND, "error.cronjob.msg_history_version_not_found");
         }
         // 反序列化快照为 JobDO
-        JobDO snapshotJob = YdszJson.parseMap(targetHistory.getSnapshot(), JobDO.class);
+        JobDO snapshotJob = Json.parseMap(targetHistory.getSnapshot(), JobDO.class);
         // 查询当前任务（用于保留统计字段等）
         JobDO currentJob = jobMapper.selectById(jobId);
         if (currentJob == null) {
@@ -198,8 +198,8 @@ public class JobHistoryServiceImpl implements JobHistoryService {
         if (h1 == null || h2 == null) {
             return Collections.emptyList();
         }
-        JobDO job1 = YdszJson.parseMap(h1.getSnapshot(), JobDO.class);
-        JobDO job2 = YdszJson.parseMap(h2.getSnapshot(), JobDO.class);
+        JobDO job1 = Json.parseMap(h1.getSnapshot(), JobDO.class);
+        JobDO job2 = Json.parseMap(h2.getSnapshot(), JobDO.class);
         return diffFields(job1, job2);
     }
 
@@ -227,8 +227,8 @@ public class JobHistoryServiceImpl implements JobHistoryService {
      */
     private List<Map<String, Object>> diffFields(JobDO job1, JobDO job2) {
         List<Map<String, Object>> diffs = new ArrayList<>();
-        Map<String, Object> snapshot1 = YdszJson.parseMap(YdszJson.toJson(job1));
-        Map<String, Object> snapshot2 = YdszJson.parseMap(YdszJson.toJson(job2));
+        Map<String, Object> snapshot1 = Json.parseMap(Json.toJson(job1));
+        Map<String, Object> snapshot2 = Json.parseMap(Json.toJson(job2));
         for (String field : COMPARE_FIELDS) {
             Object oldValue = snapshot1.get(field);
             Object newValue = snapshot2.get(field);

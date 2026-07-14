@@ -49,7 +49,7 @@ import feign.codec.Decoder;
  * @author ydsz-pmis-team
  * @since 1.0.0
  * 
- * @see YdszJsonDecoder
+ * @see JsonDecoder
  */
 public class ResponseUnwrapDecoder implements Decoder {
 
@@ -71,10 +71,10 @@ public class ResponseUnwrapDecoder implements Decoder {
     }
 
     /**
-     * 使用默认的 {@link YdszJsonDecoder} 构造
+     * 使用默认的 {@link JsonDecoder} 构造
      */
     public ResponseUnwrapDecoder() {
-        this(new YdszJsonDecoder());
+        this(new JsonDecoder());
     }
 
     @Override

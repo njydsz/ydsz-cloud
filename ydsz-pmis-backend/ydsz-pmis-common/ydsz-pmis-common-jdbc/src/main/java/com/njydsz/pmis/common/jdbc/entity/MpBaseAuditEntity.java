@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.njydsz.pmis.common.json.annotation.YdszJsonFormat;
+import com.njydsz.pmis.common.json.annotation.JsonFormat;
 import com.njydsz.pmis.common.domain.entity.BaseAuditEntity;
 
 import lombok.AccessLevel;
@@ -49,7 +49,7 @@ public class MpBaseAuditEntity<T extends Serializable> extends BaseAuditEntity<T
      * <p>框架在 INSERT 操作时自动填充。
      */
     @TableField(value = "created_at", fill = FieldFill.INSERT)
-    @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
+    @JsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
     /**
@@ -64,7 +64,7 @@ public class MpBaseAuditEntity<T extends Serializable> extends BaseAuditEntity<T
      * <p>框架在 INSERT/UPDATE 操作时自动填充。
      */
     @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
-    @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
+    @JsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 
 }

@@ -3,9 +3,9 @@ package com.njydsz.pmis.common.json.cache;
 import com.njydsz.pmis.common.json.asm.AsmBeanCodecGenerator;
 
 /**
- * YdszJson 缓存统计信息。
+ * Json 缓存统计信息。
  *
- * <p>统一暴露 YdszJson 内部各缓存的运行时统计信息，
+ * <p>统一暴露 Json 内部各缓存的运行时统计信息，
  * 供 Actuator HealthIndicator / Metrics / 日志诊断使用。
  *
  * <p><b>统计范围：</b>
@@ -20,10 +20,10 @@ import com.njydsz.pmis.common.json.asm.AsmBeanCodecGenerator;
  * @author ydsz-pmis-team
  * @since 1.3.0
  */
-public final class YdszJsonCacheStats {
+public final class JsonCacheStats {
 
-    private YdszJsonCacheStats() {
-        throw new UnsupportedOperationException("YdszJsonCacheStats is a utility class");
+    private JsonCacheStats() {
+        throw new UnsupportedOperationException("JsonCacheStats is a utility class");
     }
 
     /**
@@ -33,11 +33,11 @@ public final class YdszJsonCacheStats {
      */
     public static String getStats() {
         StringBuilder sb = new StringBuilder(512);
-        sb.append("=== YdszJson Cache Stats ===\n");
+        sb.append("=== Json Cache Stats ===\n");
         sb.append("  ASM: ").append(AsmBeanCodecGenerator.getAsmStats()).append('\n');
         sb.append("  ASM Codec Cache: ").append(AsmCodecCache.getCacheSize()).append('\n');
         sb.append("  BeanSerializer Cache: ").append(BeanSerializerCache.size()).append('\n');
-        sb.append("  ThreadLocal Memory (est): ").append(YdszJsonContext.estimateThreadLocalMemory()).append(" bytes\n");
+        sb.append("  ThreadLocal Memory (est): ").append(JsonContext.estimateThreadLocalMemory()).append(" bytes\n");
         sb.append("=============================");
         return sb.toString();
     }

@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 /**
  * JSON 类型转换处理器
@@ -126,7 +126,7 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
         if (parameter == null) {
             return null;
         }
-        return YdszJson.toJson(parameter);
+        return Json.toJson(parameter);
     }
 
     /**
@@ -139,6 +139,6 @@ public class JsonTypeHandler<T> extends BaseTypeHandler<T> {
         if (json == null || json.isEmpty()) {
             return null;
         }
-        return YdszJson.toObject(json, type);
+        return Json.toObject(json, type);
     }
 }

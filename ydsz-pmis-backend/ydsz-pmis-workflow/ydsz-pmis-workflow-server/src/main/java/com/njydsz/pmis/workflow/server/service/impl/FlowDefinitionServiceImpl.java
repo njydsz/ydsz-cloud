@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
@@ -669,7 +669,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         if (detail == null) {
             throw new SysException(BaseResultCode.NOT_FOUND, "流程定义不存在: " + definitionId);
         }
-        return YdszJson.toJson(detail);
+        return Json.toJson(detail);
     }
 
     @Override
@@ -680,7 +680,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
         JSONObject root;
         try {
-            root = YdszJson.parseMap(json);
+            root = Json.parseMap(json);
         } catch (Exception e) {
             throw new SysException(BaseResultCode.BAD_REQUEST, "JSON 解析失败: " + e.getMessage());
         }
@@ -742,7 +742,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 String ext = s.getString("ext");
                 if (StringUtils.hasText(ext)) {
                     try {
-                        Map<String, Object> extJson = YdszJson.parseMap(ext);
+                        Map<String, Object> extJson = Json.parseMap(ext);
                         if (extJson != null) {
                             skip.setFromNodeCode(extJson.getString("sourceRef"));
                         }
@@ -785,7 +785,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 String source = null;
                 if (StringUtils.hasText(skip.getExt())) {
                     try {
-                        Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
+                        Map<String, Object> extJson = Json.parseMap(skip.getExt());
                         source = extJson != null ? extJson.getString("sourceRef") : null;
                     } catch (Exception e) { log.warn("解析skip节点ext JSON失败: {}", e.getMessage(), e); }
                 }
@@ -825,7 +825,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 Object coord = nodeData.get("coordinate");
                 if (coord != null) {
                     String coordStr = coord instanceof String
-                            ? (String) coord : YdszJson.toJson(coord);
+                            ? (String) coord : Json.toJson(coord);
                     FlowNodeDO nodeForCoord = nodeMapper.selectByCode(definitionId, nodeCode);
                     if (nodeForCoord != null) {
                         nodeForCoord.setCoordinate(coordStr);
@@ -844,7 +844,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                         }
                         Object ext = nodeData.get("ext");
                         if (ext != null) {
-                            node.setExt(ext instanceof String ? (String) ext : YdszJson.toJson(ext));
+                            node.setExt(ext instanceof String ? (String) ext : Json.toJson(ext));
                         }
                         nodeMapper.updateById(node);
                     }
@@ -1142,7 +1142,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         String sourceRef = null;
         if (StringUtils.hasText(skip.getExt())) {
             try {
-                Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
+                Map<String, Object> extJson = Json.parseMap(skip.getExt());
                 sourceRef = extJson != null ? extJson.getString("sourceRef") : null;
             } catch (Exception ignored) {
                 // ignore parse error
@@ -1161,7 +1161,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         String sourceRef = null;
         if (StringUtils.hasText(skip.getExt())) {
             try {
-                Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
+                Map<String, Object> extJson = Json.parseMap(skip.getExt());
                 sourceRef = extJson != null ? extJson.getString("sourceRef") : null;
             } catch (Exception ignored) {
                 // ignore

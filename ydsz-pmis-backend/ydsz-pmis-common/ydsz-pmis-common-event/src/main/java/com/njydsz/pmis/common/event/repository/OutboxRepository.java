@@ -7,13 +7,13 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
-import com.njydsz.pmis.common.json.type.YdszJsonType;
+import com.njydsz.pmis.common.json.type.JsonType;
 import com.njydsz.pmis.common.event.model.OutboxMessage;
 import com.njydsz.pmis.common.event.model.OutboxStatus;
 
@@ -28,7 +28,7 @@ import com.njydsz.pmis.common.event.model.OutboxStatus;
  */
 public class OutboxRepository {
 
-    private static final YdszJsonType<Map<String, String>> MAP_TYPE = new YdszJsonType<>() {};
+    private static final JsonType<Map<String, String>> MAP_TYPE = new JsonType<>() {};
 
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper;
@@ -155,7 +155,7 @@ public class OutboxRepository {
             return null;
         }
         try {
-            return YdszJson.toJson(headers);
+            return Json.toJson(headers);
         } catch (JsonProcessingException e) {
             return null;
         }

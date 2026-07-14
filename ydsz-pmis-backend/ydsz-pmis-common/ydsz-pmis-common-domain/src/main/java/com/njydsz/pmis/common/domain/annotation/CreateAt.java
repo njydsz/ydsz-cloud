@@ -7,17 +7,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 更新时间字段标记注解
+ * 创建时间字段标记注解
  *
- * <p>标注在实体字段上，表明该字段用于记录数据更新时间。
- * 框架在 INSERT/UPDATE 操作时自动填充此字段。
+ * <p>标注在实体字段上，表明该字段用于记录数据创建时间。
+ * 框架在 INSERT 操作时自动填充此字段。
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
  * public class Product extends BaseIdEntity<Long> {
  *
- *     @UpdateTime
- *     private LocalDateTime updatedAt;
+ *     @CreateTime
+ *     private LocalDateTime createdAt;
  * }
  * }</pre>
  *
@@ -28,5 +28,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface UpdateTime {
+public @interface CreateAt {
 }

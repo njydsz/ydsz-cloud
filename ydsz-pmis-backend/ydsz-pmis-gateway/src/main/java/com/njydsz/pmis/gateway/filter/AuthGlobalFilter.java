@@ -3,7 +3,7 @@ package com.njydsz.pmis.gateway.filter;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -238,7 +238,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         response.setStatusCode(HttpStatus.BAD_REQUEST);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
         BaseResponse<Void> body = BaseResponse.failed("400", "error.BAD_REQUEST");
-        byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = Json.toJson(body).getBytes(StandardCharsets.UTF_8);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));
     }
@@ -259,7 +259,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
         BaseResponse<Void> body = BaseResponse.failed("20001", msg);
         body.setTraceId(traceId);
-        byte[] bytes = YdszJson.toJson(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = Json.toJson(body).getBytes(StandardCharsets.UTF_8);
 
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));

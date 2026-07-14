@@ -2,7 +2,7 @@ package com.njydsz.pmis.gateway.config;
 
 import java.nio.charset.StandardCharsets;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import jakarta.annotation.PostConstruct;
 
@@ -92,7 +92,7 @@ public class GatewaySentinelConfig {
                     .contentType(MediaType.APPLICATION_JSON)
                     .header("Content-Type", MediaType.APPLICATION_JSON_VALUE + ";charset=" + StandardCharsets.UTF_8)
                     .header(GatewayConstants.HEADER_TRACE_ID, traceId)
-                    .bodyValue(YdszJson.toJson(body));
+                    .bodyValue(Json.toJson(body));
         };
         GatewayCallbackManager.setBlockHandler(handler);
 

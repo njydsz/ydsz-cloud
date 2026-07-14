@@ -2,7 +2,7 @@ package com.njydsz.pmis.cronjob.server.core.config;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import org.springframework.stereotype.Component;
 
@@ -83,7 +83,7 @@ public class ThreadPoolHotUpdateListener {
      */
     private JSONObject parseConfig(String configInfo) {
         try {
-            JSONObject root = JSONObject.from(YdszJson.parseMap(configInfo));
+            JSONObject root = JSONObject.from(Json.parseMap(configInfo));
             // 尝试 pmis.cronjob.executor 路径
             JSONObject pmis = root.getJSONObject("pmis");
             if (pmis != null) {

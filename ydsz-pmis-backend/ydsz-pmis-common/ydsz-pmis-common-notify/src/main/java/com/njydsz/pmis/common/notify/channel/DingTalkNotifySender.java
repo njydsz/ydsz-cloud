@@ -21,7 +21,7 @@ import org.springframework.web.client.RestTemplate;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 /**
  * 钉钉通知发送器
@@ -73,7 +73,7 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
 							"text", "## " + title + "\n\n" + content
 					)
 			);
-			String json = YdszJson.toJson(body);
+			String json = Json.toJson(body);
 			String signedUrl = signWebhookUrl(webhook);
 			String response = restTemplate.postForObject(signedUrl, new HttpEntity<>(json, jsonHeaders()), String.class);
 			log.debug("钉钉通知发送成功: {}", title);

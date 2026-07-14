@@ -16,7 +16,7 @@ import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.socket.constant.WebSocketConstants;
 import com.njydsz.pmis.common.socket.offline.OfflineMessageStore;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.message.domain.entity.config.MsgOfflineDO;
 import com.njydsz.pmis.message.infra.mapper.config.MsgOfflineMapper;
 
@@ -65,7 +65,7 @@ public class OfflineMessageService implements OfflineMessageStore {
                     "type", type == null ? "UNKNOWN" : type,
                     "payload", payload,
                     "timestamp", System.currentTimeMillis());
-            String json = YdszJson.toJson(envelope);
+            String json = Json.toJson(envelope);
             redisTemplate.opsForList().leftPush(key, json);
             redisTemplate.opsForList().trim(key, 0, WebSocketConstants.WS_OFFLINE_MAX_CACHE - 1);
             redisTemplate.expire(key, Duration.ofSeconds(WebSocketConstants.WS_OFFLINE_TTL_SECONDS));

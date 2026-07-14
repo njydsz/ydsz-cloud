@@ -10,7 +10,7 @@ import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 import com.njydsz.pmis.common.auth.service.RbacPermissionEvaluator;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 /**
  * 权限变更事件监听器
@@ -128,7 +128,7 @@ public class PermissionCacheInvalidationListener {
         public void onMessage(Message message, byte[] pattern) {
             try {
                 String body = new String(message.getBody());
-                JsonNode json = YdszJson.readTree(body);
+                JsonNode json = Json.readTree(body);
                 String changeTypeName = json.has("changeType") ? json.get("changeType").asText(null) : null;
                 String roleCode = json.has("roleCode") ? json.get("roleCode").asText(null) : null;
 

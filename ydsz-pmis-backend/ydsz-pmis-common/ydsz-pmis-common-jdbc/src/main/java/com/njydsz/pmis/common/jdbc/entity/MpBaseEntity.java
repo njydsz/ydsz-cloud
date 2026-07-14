@@ -4,8 +4,8 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.njydsz.pmis.common.json.annotation.YdszJsonFormat;
-import com.njydsz.pmis.common.json.annotation.YdszJsonField;
+import com.njydsz.pmis.common.json.annotation.JsonFormat;
+import com.njydsz.pmis.common.json.annotation.JsonField;
 import com.njydsz.pmis.common.domain.entity.BaseEntity;
 
 import lombok.*;
@@ -69,7 +69,7 @@ public class MpBaseEntity<T extends Serializable> extends BaseEntity<T> {
      * <p>框架在 INSERT 操作时自动填充。
      */
     @TableField(value = "created_at", fill = FieldFill.INSERT)
-    @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
+    @JsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
     /**
@@ -84,7 +84,7 @@ public class MpBaseEntity<T extends Serializable> extends BaseEntity<T> {
      * <p>框架在 INSERT/UPDATE 操作时自动填充。
      */
     @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
-    @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
+    @JsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 
     /**
@@ -102,7 +102,7 @@ public class MpBaseEntity<T extends Serializable> extends BaseEntity<T> {
      */
     @TableField("deleted")
     @TableLogic
-    @YdszJsonField(ignore = true)
+    @JsonField(ignore = true)
     private Integer deleted;
 
     /**

@@ -8,7 +8,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import com.googlecode.aviator.AviatorEvaluator;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.server.service.FlowConditionExprService;
@@ -58,7 +58,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
             return "";
         }
         try {
-            Map<String, Object> root = YdszJson.parseMap(conditionJson);
+            Map<String, Object> root = Json.parseMap(conditionJson);
             if (root == null) {
                 return "";
             }
@@ -123,7 +123,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
                 }
             }
             result.put("groups", groups);
-            return YdszJson.toJson(result);
+            return Json.toJson(result);
         } catch (Exception e) {
             log.warn("[CondExpr] 解析表达式失败: expr={} err={}", expression, e.getMessage());
             return "{}";
@@ -460,7 +460,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
             if (ext == null || ext.isBlank()) {
                 return;
             }
-            Map<String, Object> extMap = YdszJson.parseMap(ext);
+            Map<String, Object> extMap = Json.parseMap(ext);
             if (extMap == null) {
                 return;
             }

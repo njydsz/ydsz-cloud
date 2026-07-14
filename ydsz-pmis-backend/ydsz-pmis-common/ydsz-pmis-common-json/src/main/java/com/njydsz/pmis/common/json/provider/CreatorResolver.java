@@ -4,14 +4,14 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import com.njydsz.pmis.common.json.annotation.YdszJsonCreator;
-import com.njydsz.pmis.common.json.annotation.YdszJsonField;
-import com.njydsz.pmis.common.json.parser.YdszJsonParser;
+import com.njydsz.pmis.common.json.annotation.JsonCreator;
+import com.njydsz.pmis.common.json.annotation.JsonField;
+import com.njydsz.pmis.common.json.parser.JsonParser;
 
 /**
- * @YdszJsonCreator 注解处理器
+ * @JsonCreator 注解处理器
  *
- * <p>负责处理带 @YdszJsonCreator 注解的构造函数反序列化逻辑。</p>
+ * <p>负责处理带 @JsonCreator 注解的构造函数反序列化逻辑。</p>
  *
  * @author ydsz-pmis-team
  * @since 1.3.0
@@ -27,7 +27,7 @@ final class CreatorResolver {
         Constructor<?> annotatedConstructor = null;
 
         for (Constructor<?> ctor : constructors) {
-            YdszJsonCreator annotation = ctor.getAnnotation(YdszJsonCreator.class);
+            JsonCreator annotation = ctor.getAnnotation(JsonCreator.class);
             if (annotation != null && annotation.enable()) {
                 if (annotation.defaultCreator() || annotatedConstructor == null) {
                     annotatedConstructor = ctor;
@@ -39,7 +39,7 @@ final class CreatorResolver {
     }
 
     static Object deserializeWithCreator(String json, Constructor<?> constructor) {
-        Map<String, Object> map = YdszJsonParser.parseObject(json);
+        Map<String, Object> map = JsonParser.parseObject(json);
         if (map == null || map.isEmpty()) {
             try {
                 return constructor.newInstance();
@@ -48,7 +48,7 @@ final class CreatorResolver {
             }
         }
 
-        YdszJsonCreator annotation = constructor.getAnnotation(YdszJsonCreator.class);
+        JsonCreator annotation = constructor.getAnnotation(JsonCreator.class);
         String[] parameterNames = annotation != null && annotation.parameterNames().length > 0
                 ? annotation.parameterNames() : null;
 
@@ -65,7 +65,7 @@ final class CreatorResolver {
             Field[] fields = constructor.getDeclaringClass().getDeclaredFields();
             for (Field field : fields) {
                 String fieldName = field.getName();
-                YdszJsonField fieldAnnotation = field.getAnnotation(YdszJsonField.class);
+                JsonField fieldAnnotation = field.getAnnotation(JsonField.class);
                 if (fieldAnnotation != null && !fieldAnnotation.name().isEmpty()) {
                     fieldName = fieldAnnotation.name();
                 } else if (fieldAnnotation != null && !fieldAnnotation.value().isEmpty()) {
@@ -98,7 +98,7 @@ final class CreatorResolver {
             Field[] fields = clazz.getDeclaredFields();
             for (Field field : fields) {
                 String fieldName = field.getName();
-                YdszJsonField fieldAnnotation = field.getAnnotation(YdszJsonField.class);
+                JsonField fieldAnnotation = field.getAnnotation(JsonField.class);
                 if (fieldAnnotation != null && !fieldAnnotation.name().isEmpty()) {
                     fieldName = fieldAnnotation.name();
                 } else if (fieldAnnotation != null && !fieldAnnotation.value().isEmpty()) {
@@ -119,7 +119,7 @@ final class CreatorResolver {
             T instance = clazz.getDeclaredConstructor().newInstance();
             for (Field field : fields) {
                 String fieldName = field.getName();
-                YdszJsonField fieldAnnotation = field.getAnnotation(YdszJsonField.class);
+                JsonField fieldAnnotation = field.getAnnotation(JsonField.class);
                 if (fieldAnnotation != null && !fieldAnnotation.name().isEmpty()) {
                     fieldName = fieldAnnotation.name();
                 } else if (fieldAnnotation != null && !fieldAnnotation.value().isEmpty()) {

@@ -2,7 +2,7 @@ package com.njydsz.pmis.common.notify.channel;
 
 import java.util.List;
 import java.util.Map;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +17,7 @@ import org.springframework.web.client.RestTemplate;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 /**
  * 企业微信通知发送器
@@ -64,13 +64,13 @@ public class WeComNotifySender implements NotifyChannelStrategy {
 							"content", "### " + title + "\n" + content
 					)
 			);
-			String json = YdszJson.toJson(body);
+			String json = Json.toJson(body);
 			String response = restTemplate.postForObject(webhook, new HttpEntity<>(json, jsonHeaders()), String.class);
 
 			// 校验企业微信响应 errcode
 			if (response != null && !response.isEmpty()) {
 				try {
-					JsonNode respJson = YdszJson.readTree(response);
+					JsonNode respJson = Json.readTree(response);
 					int errcode = respJson.has("errcode") ? respJson.get("errcode").asInt(-1) : -1;
 					if (errcode != 0) {
 						String errmsg = respJson.has("errmsg") ? respJson.get("errmsg").asText() : "";

@@ -12,7 +12,7 @@ import com.njydsz.pmis.common.queue.enums.QueueType;
 import com.njydsz.pmis.common.queue.queue.IMessageQueue;
 import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.pmis.common.queue.service.IMessageSubscriber;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.project.server.service.InitiationService;
 
 import lombok.RequiredArgsConstructor;
@@ -87,7 +87,7 @@ public class WorkflowEventQueueSubscriber {
             return;
         }
         try {
-            Map<String, Object> payload = YdszJson.fromJsonToMap(message.getBody(), String.class, Object.class);
+            Map<String, Object> payload = Json.fromJsonToMap(message.getBody(), String.class, Object.class);
             String eventType = payload.get("eventType") == null ? null : String.valueOf(payload.get("eventType"));
             String instanceId = payload.get("instanceId") == null ? null : String.valueOf(payload.get("instanceId"));
 

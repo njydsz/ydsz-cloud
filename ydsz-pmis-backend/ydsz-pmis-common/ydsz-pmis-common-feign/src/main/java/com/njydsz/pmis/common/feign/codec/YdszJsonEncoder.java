@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
@@ -15,15 +15,15 @@ import feign.codec.Encoder;
 /**
  * 基于 Jackson 的 Feign JSON 编码器。
  *
- * <p>使用 {@link YdszJson} 作为 JSON 序列化实现，提供统一的 JSON 编码能力。
+ * <p>使用 {@link Json} 作为 JSON 序列化实现，提供统一的 JSON 编码能力。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  * 
  */
-public class YdszJsonEncoder implements Encoder {
+public class JsonEncoder implements Encoder {
 
-    private static final Logger LOG = LoggerFactory.getLogger(YdszJsonEncoder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JsonEncoder.class);
 
     private static final String CONTENT_TYPE = "application/json;charset=UTF-8";
 
@@ -42,7 +42,7 @@ public class YdszJsonEncoder implements Encoder {
         }
 
         try {
-            String json = YdszJson.toJson(object);
+            String json = Json.toJson(object);
             requestTemplate.body(json.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
             requestTemplate.header("Content-Type", CONTENT_TYPE);
         } catch (Exception e) {

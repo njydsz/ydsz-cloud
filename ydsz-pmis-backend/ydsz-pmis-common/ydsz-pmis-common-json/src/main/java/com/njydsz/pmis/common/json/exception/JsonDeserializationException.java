@@ -8,7 +8,7 @@ package com.njydsz.pmis.common.json.exception;
  * @author ydsz-pmis-team
  * @since 1.3.0
  */
-public class JsonDeserializationException extends YdszJsonException {
+public class JsonDeserializationException extends JsonException {
 
     private static final long serialVersionUID = 1L;
 

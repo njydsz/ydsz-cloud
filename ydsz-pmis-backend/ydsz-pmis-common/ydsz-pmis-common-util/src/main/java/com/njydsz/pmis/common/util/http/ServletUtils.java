@@ -17,7 +17,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.njydsz.pmis.common.core.constant.TokenConstants;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -104,7 +104,7 @@ public final class ServletUtils {
         if (object == null) {
             return;
         }
-        renderString(response, YdszJson.toJson(object));
+        renderString(response, Json.toJson(object));
     }
 
     /**

@@ -5,12 +5,12 @@ import java.util.Map;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.common.json.type.YdszJsonType;
+import com.njydsz.pmis.common.json.type.JsonType;
 import com.njydsz.pmis.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,8 +85,8 @@ public class NotifyChannelStrategyAdapter implements NotifyChannelStrategy {
         request.setReceiver(receiver);
         request.setTemplateCode(templateCode);
         if (templateParams instanceof Map<?, ?> map) {
-            Map<String, Object> params = YdszJson.toObject(
-                    YdszJson.toJson(map), new YdszJsonType<Map<String, Object>>() {});
+            Map<String, Object> params = Json.toObject(
+                    Json.toJson(map), new JsonType<Map<String, Object>>() {});
             request.setParams(params);
         }
         try {

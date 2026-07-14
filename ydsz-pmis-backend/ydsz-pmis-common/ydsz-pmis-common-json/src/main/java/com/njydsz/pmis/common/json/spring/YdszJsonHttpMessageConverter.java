@@ -11,10 +11,10 @@ import org.springframework.http.converter.AbstractHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 /**
- * YdszJson HTTP 消息转换器。
+ * Json HTTP 消息转换器。
  *
  * <p>通用 JSON 消息转换器，支持所有 Java 对象类型的 JSON 序列化/反序列化。
  * 自动注册到 Spring MVC 的 {@code HttpMessageConverter} 链中。
@@ -31,7 +31,7 @@ import com.njydsz.pmis.common.json.YdszJson;
  * @author ydsz-pmis-team
  * @since 1.3.0
  */
-public class YdszJsonHttpMessageConverter extends AbstractHttpMessageConverter<Object> {
+public class JsonHttpMessageConverter extends AbstractHttpMessageConverter<Object> {
 
     /** 默认最大请求体大小（10MB），超过此值的请求将被拒绝 */
     private static final long MAX_REQUEST_BODY_SIZE = 10L * 1024 * 1024;
@@ -39,7 +39,7 @@ public class YdszJsonHttpMessageConverter extends AbstractHttpMessageConverter<O
     /**
      * 构造函数，注册支持的媒体类型。
      */
-    public YdszJsonHttpMessageConverter() {
+    public JsonHttpMessageConverter() {
         super(StandardCharsets.UTF_8,
                 MediaType.APPLICATION_JSON,
                 new MediaType("application", "*+json"));
@@ -67,7 +67,7 @@ public class YdszJsonHttpMessageConverter extends AbstractHttpMessageConverter<O
                 return null;
             }
             String json = new String(body, getDefaultCharset());
-            return YdszJson.toObject(json, clazz);
+            return Json.toObject(json, clazz);
         } catch (Exception e) {
             throw new HttpMessageNotReadableException("JSON 解析失败：" + e.getMessage(), e, inputMessage);
         }
@@ -77,7 +77,7 @@ public class YdszJsonHttpMessageConverter extends AbstractHttpMessageConverter<O
     protected void writeInternal(Object o, HttpOutputMessage outputMessage)
             throws IOException, HttpMessageNotWritableException {
         try {
-            byte[] bytes = YdszJson.toJsonBytes(o);
+            byte[] bytes = Json.toJsonBytes(o);
             // 设置 Content-Length，避免 HTTP chunked 编码开销
             outputMessage.getHeaders().setContentLength(bytes.length);
             OutputStream out = outputMessage.getBody();

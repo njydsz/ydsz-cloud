@@ -7,8 +7,8 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.njydsz.pmis.common.json.YdszJson;
-import com.njydsz.pmis.common.json.type.YdszJsonType;
+import com.njydsz.pmis.common.json.Json;
+import com.njydsz.pmis.common.json.type.JsonType;
 
 /**
  * 游标分页工具类。
@@ -20,7 +20,7 @@ import com.njydsz.pmis.common.json.type.YdszJsonType;
  */
 public final class CursorHelper {
 
-    // YdszJson 作为 JSON 引擎（底层 YdszJson）
+    // Json 作为 JSON 引擎（底层 Json）
     private static final DateTimeFormatter DT_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     private CursorHelper() {
@@ -40,7 +40,7 @@ public final class CursorHelper {
         cursor.put("sv", sortValue);
         cursor.put("id", id);
         try {
-            String json = YdszJson.toJson(cursor);
+            String json = Json.toJson(cursor);
             return Base64.getUrlEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             throw new IllegalArgumentException("创建游标失败", e);
@@ -60,7 +60,7 @@ public final class CursorHelper {
         try {
             byte[] decoded = Base64.getUrlDecoder().decode(cursor);
             String json = new String(decoded, StandardCharsets.UTF_8);
-            return YdszJson.toObject(json, new YdszJsonType<Map<String, String>>() {});
+            return Json.toObject(json, new JsonType<Map<String, String>>() {});
         } catch (Exception e) {
             return null;
         }
@@ -114,7 +114,7 @@ public final class CursorHelper {
         cursor.put("sv", sortValue != null ? sortValue.format(DT_FORMATTER) : null);
         cursor.put("id", id);
         try {
-            String json = YdszJson.toJson(cursor);
+            String json = Json.toJson(cursor);
             return Base64.getUrlEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             throw new IllegalArgumentException("编码游标失败", e);

@@ -14,7 +14,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.pmis.common.constant.PmisMessageTopics;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 import com.njydsz.pmis.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.pmis.message.infra.mapper.core.MsgLogMapper;
@@ -82,7 +82,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
         try (MessageTraceContext ctx = MessageTraceContext.enter(null)) {
             MessageRequest request = null;
             try {
-                request = YdszJson.toObject(body, MessageRequest.class);
+                request = Json.toObject(body, MessageRequest.class);
             } catch (Exception e) {
                 log.error("[MessageDlqConsumer] 死信消息体解析失败: msgId={} err={}", msgId, e.getMessage(), e);
             }

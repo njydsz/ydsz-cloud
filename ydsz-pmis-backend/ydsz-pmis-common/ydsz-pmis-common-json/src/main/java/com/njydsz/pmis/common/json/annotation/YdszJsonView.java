@@ -27,25 +27,25 @@ import java.lang.annotation.Target;
  *
  * // 使用注解
  * public class User {
- *     &#064;YdszJsonView(UserViews.List.class)
+ *     &#064;JsonView(UserViews.List.class)
  *     private Long id;
  *
- *     &#064;YdszJsonView(UserViews.List.class)
+ *     &#064;JsonView(UserViews.List.class)
  *     private String name;
  *
- *     &#064;YdszJsonView(UserViews.Detail.class)
+ *     &#064;JsonView(UserViews.Detail.class)
  *     private String email;
  *
- *     &#064;YdszJsonView(UserViews.Detail.class)
+ *     &#064;JsonView(UserViews.Detail.class)
  *     private String phone;
  * }
  *
  * // 序列化 - 列表视图
- * String json = YdszJson.toJson(user, UserViews.List.class);
+ * String json = Json.toJson(user, UserViews.List.class);
  * // 输出：{"id":1,"name":"John"}
  *
  * // 序列化 - 详情视图
- * String json = YdszJson.toJson(user, UserViews.Detail.class);
+ * String json = Json.toJson(user, UserViews.Detail.class);
  * // 输出：{"id":1,"name":"John","email":"john@example.com","phone":"1234567890"}
  * </pre>
  *
@@ -55,7 +55,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD, ElementType.METHOD})
-public @interface YdszJsonView {
+public @interface JsonView {
 
     /**
      * 视图类

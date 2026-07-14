@@ -16,7 +16,7 @@ import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 import org.dom4j.tree.DefaultDocument;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.util.collection.MapUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -513,7 +513,7 @@ public class DOMUtils {
             return null;
         }
         Map<String, Object> map = xml2Map(xml);
-        return YdszJson.toJson(map);
+        return Json.toJson(map);
     }
 
     /**
@@ -525,7 +525,7 @@ public class DOMUtils {
             return null;
         }
         try {
-            Map<String, Object> map = YdszJson.toObject(json, Map.class);
+            Map<String, Object> map = Json.toObject(json, Map.class);
             return map2Xml(map, rootName);
         } catch (Exception e) {
             log.error("DOMUtils -> JSON 转 XML 失败：{}", e.getMessage(), e);
@@ -542,7 +542,7 @@ public class DOMUtils {
         }
         try {
             Map<String, Object> map = xml2Map(xml);
-            return YdszJson.toObject(YdszJson.toJson(map), clazz);
+            return Json.toObject(Json.toJson(map), clazz);
         } catch (Exception e) {
             log.error("DOMUtils -> XML 转 Bean 失败：{}", e.getMessage(), e);
             return null;
@@ -558,8 +558,8 @@ public class DOMUtils {
             return null;
         }
         try {
-            String json = YdszJson.toJson(bean);
-            Map<String, Object> map = YdszJson.toObject(json, Map.class);
+            String json = Json.toJson(bean);
+            Map<String, Object> map = Json.toObject(json, Map.class);
             return map2Xml(map, rootName);
         } catch (Exception e) {
             log.error("DOMUtils -> Bean 转 XML 失败：{}", e.getMessage(), e);

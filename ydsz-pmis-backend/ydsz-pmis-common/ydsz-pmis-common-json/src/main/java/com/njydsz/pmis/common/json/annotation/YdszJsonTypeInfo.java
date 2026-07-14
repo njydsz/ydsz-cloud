@@ -13,13 +13,13 @@ import java.lang.annotation.Target;
  * <p><b>使用示例：</b></p>
  * <pre>
  * // 基类
- * &#064;YdszJsonTypeInfo(
+ * &#064;JsonTypeInfo(
  *     property = "type",
  *     visible = true
  * )
- * &#064;YdszJsonSubTypes({
- *     &#064;YdszJsonSubType(value = Dog.class, name = "dog"),
- *     &#064;YdszJsonSubType(value = Cat.class, name = "cat")
+ * &#064;JsonSubTypes({
+ *     &#064;JsonSubType(value = Dog.class, name = "dog"),
+ *     &#064;JsonSubType(value = Cat.class, name = "cat")
  * })
  * public abstract class Animal {
  *     private String name;
@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
  * {"type":"dog","name":"Buddy","breed":"Labrador"}
  *
  * // 反序列化自动识别类型
- * Animal animal = YdszJson.toObject(json, Animal.class);
+ * Animal animal = Json.toObject(json, Animal.class);
  * // 返回 Dog 实例
  * </pre>
  *
@@ -39,7 +39,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface YdszJsonTypeInfo {
+public @interface JsonTypeInfo {
 
     /**
      * 类型标识属性名

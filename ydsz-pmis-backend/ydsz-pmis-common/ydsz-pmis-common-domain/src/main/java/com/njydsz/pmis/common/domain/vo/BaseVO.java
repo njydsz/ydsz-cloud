@@ -3,7 +3,7 @@ package com.njydsz.pmis.common.domain.vo;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.njydsz.pmis.common.json.annotation.YdszJsonFormat;
+import com.njydsz.pmis.common.json.annotation.JsonFormat;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -57,7 +57,7 @@ public class BaseVO implements Serializable {
      * <p>与 {@link com.njydsz.pmis.common.domain.entity.BaseAuditEntity#getCreatedAt()} 命名对齐。
      * JSON 序列化时格式化为 "yyyy-MM-dd HH:mm:ss"。
      */
-    @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
+    @JsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdAt;
 
     /**
@@ -66,7 +66,7 @@ public class BaseVO implements Serializable {
      * <p>与 {@link com.njydsz.pmis.common.domain.entity.BaseAuditEntity#getUpdatedAt()} 命名对齐。
      * JSON 序列化时格式化为 "yyyy-MM-dd HH:mm:ss"。
      */
-    @YdszJsonFormat("yyyy-MM-dd HH:mm:ss")
+    @JsonFormat("yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedAt;
 
     /**

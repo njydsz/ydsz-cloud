@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import com.njydsz.pmis.common.redis.service.RedisService;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,7 +59,7 @@ public class RedisMessageTraceRecorder implements MessageTraceRecorder {
 
         try {
             String hashKey = TRACE_KEY_PREFIX + traceId;
-            String value = YdszJson.toJson(trace);
+            String value = Json.toJson(trace);
             redisTemplate.opsForHash().put(hashKey, trace.getMessageId(), value);
             redisTemplate.expire(hashKey, ttlMinutes, TimeUnit.MINUTES);
 
@@ -96,7 +96,7 @@ public class RedisMessageTraceRecorder implements MessageTraceRecorder {
                 Object value = redisTemplate.opsForHash().get(hashKey, messageId);
                 if (value != null) {
                     try {
-                        MessageTrace trace = YdszJson.toObject(String.valueOf(value), MessageTrace.class);
+                        MessageTrace trace = Json.toObject(String.valueOf(value), MessageTrace.class);
                         if (trace != null) {
                             result.add(trace);
                         }
@@ -128,7 +128,7 @@ public class RedisMessageTraceRecorder implements MessageTraceRecorder {
             return entries.values().stream()
                     .map(v -> {
                         try {
-                            return YdszJson.toObject(String.valueOf(v), MessageTrace.class);
+                            return Json.toObject(String.valueOf(v), MessageTrace.class);
                         } catch (Exception e) {
                             log.warn("[MessageTrace] Redis 轨迹解析失败，traceId={}", traceId, e);
                             return null;

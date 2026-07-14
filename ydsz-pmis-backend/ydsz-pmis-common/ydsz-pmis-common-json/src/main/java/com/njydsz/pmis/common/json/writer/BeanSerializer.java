@@ -10,7 +10,7 @@ import com.njydsz.pmis.common.json.number.NumberUtils;
  * 
  * <p>为每个 Bean 类预计算字段元数据，使用 char[] 直接写入，消除运行时类型检查</p>
  * 
- * @author YdszJson Team
+ * @author Json Team
  */
 public final class BeanSerializer {
     

@@ -123,7 +123,7 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
             }
 
             List<RouteDefinition> routes = JSON.parseObject(config,
-                    new YdszJsonType<List<RouteDefinition>>() {});
+                    new JsonType<List<RouteDefinition>>() {});
             if (routes == null) {
                 routes = Collections.emptyList();
             }

@@ -4,7 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
-import com.njydsz.pmis.common.json.annotation.YdszJsonField;
+import com.njydsz.pmis.common.json.annotation.JsonField;
 import com.njydsz.pmis.literule.server.spi.BudgetSnapshotProvider.BudgetSnapshot;
 
 import lombok.Data;
@@ -21,7 +21,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-@YdszJsonField(notWriteNullValue = true)
+@JsonField(notWriteNullValue = true)
 public class BudgetSnapshotVO implements Serializable {
 
     @Serial

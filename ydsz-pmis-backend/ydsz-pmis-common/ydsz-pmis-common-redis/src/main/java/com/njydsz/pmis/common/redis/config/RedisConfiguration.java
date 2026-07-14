@@ -39,7 +39,7 @@ import lombok.RequiredArgsConstructor;
  *
  * <p><b>主要功能：</b>
  * <ul>
- *   <li>使用 YdszJson 作为高性能序列化器</li>
+ *   <li>使用 Json 作为高性能序列化器</li>
  *   <li>支持连接池配置（commons-pool2）</li>
  *   <li>支持 SSL 配置</li>
  *   <li>客户端自动选择（通过 ydsz.redis.client.type 配置）</li>
@@ -120,7 +120,7 @@ public class RedisConfiguration {
      * 创建 Jackson 序列化器（默认）
      *
      * <p>当 {@code ydsz.redis.serializer=jackson} 或未配置时启用。
-     * 使用 YdszJson 作为 Redis 值的序列化引擎，
+     * 使用 Json 作为 Redis 值的序列化引擎，
      * 支持 Java 8 时间类型。
      *
      * <p><b>配置示例：</b>

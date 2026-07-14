@@ -1,6 +1,5 @@
 package com.njydsz.pmis.common.core.response;
 
-import org.springframework.http.HttpStatus;
 
 /**
  * 标准结果码枚举

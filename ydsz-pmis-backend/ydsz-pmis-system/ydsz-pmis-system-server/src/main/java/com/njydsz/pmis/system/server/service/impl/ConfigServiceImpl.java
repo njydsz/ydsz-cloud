@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheEvict;
@@ -119,11 +119,11 @@ public class ConfigServiceImpl implements ConfigService {
         String cacheKey = CACHE_PREFIX + group + ":" + key;
         String cached = redisTemplate.opsForValue().get(cacheKey);
         if (cached != null) {
-            return YdszJson.toObject(cached, ConfigDO.class);
+            return Json.toObject(cached, ConfigDO.class);
         }
         ConfigDO c = configMapper.selectByGroupAndKey(group, key);
         if (c != null) {
-            redisTemplate.opsForValue().set(cacheKey, YdszJson.toJson(c), CACHE_TTL);
+            redisTemplate.opsForValue().set(cacheKey, Json.toJson(c), CACHE_TTL);
         }
         return c;
     }
@@ -140,14 +140,14 @@ public class ConfigServiceImpl implements ConfigService {
         String cacheKey = CACHE_GROUP_PREFIX + group;
         String cached = redisTemplate.opsForValue().get(cacheKey);
         if (cached != null) {
-            return JSON.parseObject(cached, new YdszJsonType<Map<String, String>>() {});
+            return JSON.parseObject(cached, new JsonType<Map<String, String>>() {});
         }
         List<ConfigDO> list = configMapper.selectByGroup(group);
         Map<String, String> map = new HashMap<>();
         for (ConfigDO c : list) {
             map.put(c.getConfigKey(), c.getConfigValue());
         }
-        redisTemplate.opsForValue().set(cacheKey, YdszJson.toJson(map), CACHE_TTL);
+        redisTemplate.opsForValue().set(cacheKey, Json.toJson(map), CACHE_TTL);
         return map;
     }
 

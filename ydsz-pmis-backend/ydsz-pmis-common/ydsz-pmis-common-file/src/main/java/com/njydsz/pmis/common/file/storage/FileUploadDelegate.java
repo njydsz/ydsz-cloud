@@ -21,7 +21,7 @@ import com.njydsz.pmis.common.file.domain.ChunkedUploadResult;
 import com.njydsz.pmis.common.file.domain.FileStorage;
 import com.njydsz.pmis.common.file.domain.UploadCheckpoint;
 import com.njydsz.pmis.common.file.exception.FileExceptionCode;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -453,7 +453,7 @@ public class FileUploadDelegate {
         try {
             String json = checkpointStore.get(bucketName, objectName);
             if (json != null) {
-                return YdszJson.toObject(json, UploadCheckpoint.class);
+                return Json.toObject(json, UploadCheckpoint.class);
             }
         } catch (Exception e) {
             log.warn("[Storage] loadCheckpoint failed, bucket={}, object={}, error={}",
@@ -470,7 +470,7 @@ public class FileUploadDelegate {
             return;
         }
         try {
-            String json = YdszJson.toJson(checkpoint);
+            String json = Json.toJson(checkpoint);
             checkpointStore.save(checkpoint.getBucketName(), checkpoint.getObjectName(), json, CHECKPOINT_TTL_SECONDS);
         } catch (Exception e) {
             log.warn("[Storage] saveCheckpoint failed, bucket={}, object={}, error={}",

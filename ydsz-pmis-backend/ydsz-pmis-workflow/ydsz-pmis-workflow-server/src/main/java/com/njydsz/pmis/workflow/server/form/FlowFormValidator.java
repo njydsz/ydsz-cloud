@@ -7,7 +7,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -467,7 +467,7 @@ public class FlowFormValidator {
             return null;
         }
         try {
-            return YdszJson.toObject(json, FlowFormSchema.class);
+            return Json.toObject(json, FlowFormSchema.class);
         } catch (Exception e) {
             log.warn("[FormValidator] 解析表单 Schema 失败: {} err={}", json, e.getMessage());
             return null;

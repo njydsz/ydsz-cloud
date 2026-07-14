@@ -1,14 +1,14 @@
 package com.njydsz.pmis.common.safe.sensitive;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.json.serializer.JsonSerializer;
 import com.njydsz.pmis.common.json.writer.JSONWriter;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 /**
- * 敏感数据脱敏序列化器（基于 YdszJson 引擎）
+ * 敏感数据脱敏序列化器（基于 Json 引擎）
  *
- * <p>实现 YdszJson {@link JsonSerializer}，在序列化 JSON 时自动对
+ * <p>实现 Json {@link JsonSerializer}，在序列化 JSON 时自动对
  * 标注了 {@link SensitiveData} 注解的字段进行脱敏处理。
  *
  * <p><b>使用方式：</b>
@@ -18,8 +18,8 @@ import com.njydsz.pmis.common.json.YdszJson;
  *     private String phone;
  * }
  *
- * // 注册到 YdszJson 全局序列化器
- * YdszJson.register(Object.class, SensitiveDataSerializer.INSTANCE);
+ * // 注册到 Json 全局序列化器
+ * Json.register(Object.class, SensitiveDataSerializer.INSTANCE);
  * }</pre>
  *
  * <p><b>注意事项：</b>
@@ -53,7 +53,7 @@ public class SensitiveDataSerializer implements JsonSerializer<Object> {
 
         // 先脱敏处理，再序列化
         Object desensitized = SensitiveDataProcessor.process(value);
-        out.write(YdszJson.toJson(desensitized));
+        out.write(Json.toJson(desensitized));
     }
 
     /**
@@ -67,7 +67,7 @@ public class SensitiveDataSerializer implements JsonSerializer<Object> {
             return "null";
         }
         Object desensitized = SensitiveDataProcessor.process(obj);
-        return YdszJson.toJson(desensitized);
+        return Json.toJson(desensitized);
     }
 
     /**
@@ -83,9 +83,9 @@ public class SensitiveDataSerializer implements JsonSerializer<Object> {
         }
         Object desensitized = SensitiveDataProcessor.process(obj);
         if (pretty) {
-            return YdszJson.format(desensitized);
+            return Json.format(desensitized);
         }
-        return YdszJson.toJson(desensitized);
+        return Json.toJson(desensitized);
     }
 
     /**
@@ -97,6 +97,6 @@ public class SensitiveDataSerializer implements JsonSerializer<Object> {
      * @return 对象
      */
     public static <T> T deserialize(String json, Class<T> clazz) {
-        return YdszJson.toObject(json, clazz);
+        return Json.toObject(json, clazz);
     }
 }

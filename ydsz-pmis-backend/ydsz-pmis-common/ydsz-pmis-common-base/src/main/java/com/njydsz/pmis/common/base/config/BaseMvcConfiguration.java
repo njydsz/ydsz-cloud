@@ -17,7 +17,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * <p>子类提供具体的 {@link BaseCorsProperties} 和 {@link BaseTraceProperties} 实现，
  * 以及注册自己的拦截器和过滤器 Bean。
  *
- * <p>JSON 序列化统一使用 YdszJson 引擎（通过 ydsz-pmis-common-json 的 YdszJsonHttpMessageConverter 自动注册）。
+ * <p>JSON 序列化统一使用 Json 引擎（通过 ydsz-pmis-common-json 的 JsonHttpMessageConverter 自动注册）。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

@@ -12,14 +12,14 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpInputMessage;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 
-import com.njydsz.pmis.common.json.spring.YdszJsonHttpMessageConverter;
+import com.njydsz.pmis.common.json.spring.JsonHttpMessageConverter;
 import com.njydsz.pmis.common.safe.xss.EscapeUtils;
 
 /**
- * 带 XSS 防护的 YdszJson HTTP 消息转换器
+ * 带 XSS 防护的 Json HTTP 消息转换器
  *
- * <p>继承 {@link YdszJsonHttpMessageConverter}，在反序列化 JSON 请求体时对字符串值进行 XSS 过滤。
- * 通过重写 {@link #readInternal} 方法，在 YdszJson 反序列化前对原始 JSON 字符串进行清洗，
+ * <p>继承 {@link JsonHttpMessageConverter}，在反序列化 JSON 请求体时对字符串值进行 XSS 过滤。
+ * 通过重写 {@link #readInternal} 方法，在 Json 反序列化前对原始 JSON 字符串进行清洗，
  * 确保所有字符串类型的值都经过 XSS 过滤。
  *
  * <p><b>过滤规则：</b>
@@ -37,10 +37,10 @@ import com.njydsz.pmis.common.safe.xss.EscapeUtils;
  * @author ydsz-pmis-team
  * @since 1.0.0
  *
- * @see YdszJsonHttpMessageConverter
+ * @see JsonHttpMessageConverter
  * @see EscapeUtils
  */
-public class XssJsonMessageConverter extends YdszJsonHttpMessageConverter implements Ordered {
+public class XssJsonMessageConverter extends JsonHttpMessageConverter implements Ordered {
 
     private static final Logger log = LoggerFactory.getLogger(XssJsonMessageConverter.class);
 
@@ -101,7 +101,7 @@ public class XssJsonMessageConverter extends YdszJsonHttpMessageConverter implem
     /**
      * 基于 ByteArrayInputStream 的 HttpInputMessage 实现
      *
-     * <p>用于包装清洗后的 JSON 字节数组，供 YdszJson 反序列化使用。
+     * <p>用于包装清洗后的 JSON 字节数组，供 Json 反序列化使用。
      */
     private static class XssByteArrayInputMessage implements HttpInputMessage {
 

@@ -3,12 +3,12 @@ package com.njydsz.pmis.common.json.engine;
 import java.lang.reflect.Type;
 
 import com.njydsz.pmis.common.json.provider.YdszDeserializationProvider;
-import com.njydsz.pmis.common.json.type.YdszJsonType;
+import com.njydsz.pmis.common.json.type.JsonType;
 
 /**
- * YdszJson 反序列化引擎（Facade 模式）
+ * Json 反序列化引擎（Facade 模式）
  *
- * <p>架构层级：YdszJson => Engine => Provider => Parser</p>
+ * <p>架构层级：Json => Engine => Provider => Parser</p>
  *
  * @author ydsz-pmis-team
  * @since 1.3.0
@@ -49,10 +49,10 @@ public final class YdszDeserializerEngine {
     }
 
     /**
-     * 反序列化 JSON 字符串（支持 YdszJsonType）
+     * 反序列化 JSON 字符串（支持 JsonType）
      */
     
-    public static <T> T deserialize(String json, YdszJsonType<T> typeRef) {
+    public static <T> T deserialize(String json, JsonType<T> typeRef) {
         return YdszDeserializationProvider.deserialize(json, typeRef.getType());
     }
 

@@ -3,8 +3,8 @@ package com.njydsz.pmis.common.json.pointer;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.pmis.common.json.exception.YdszJsonException;
-import com.njydsz.pmis.common.json.parser.YdszJsonParser;
+import com.njydsz.pmis.common.json.exception.JsonException;
+import com.njydsz.pmis.common.json.parser.JsonParser;
 
 /**
  * JSON Pointer 实现（RFC 6901）
@@ -42,14 +42,14 @@ public final class JsonPointer {
      * 创建 JSON Pointer
      *
      * @param pointer JSON Pointer 字符串（必须以 "/" 开头或为空）
-     * @throws YdszJsonException 如果格式无效
+     * @throws JsonException 如果格式无效
      */
     public JsonPointer(String pointer) {
         if (pointer == null) {
-            throw new YdszJsonException("JSON Pointer cannot be null");
+            throw new JsonException("JSON Pointer cannot be null");
         }
         if (!pointer.isEmpty() && !pointer.startsWith("/")) {
-            throw new YdszJsonException("JSON Pointer must start with '/' or be empty, but got: " + pointer);
+            throw new JsonException("JSON Pointer must start with '/' or be empty, but got: " + pointer);
         }
         this.pointer = pointer;
         this.tokens = parseTokens(pointer);
@@ -75,14 +75,14 @@ public final class JsonPointer {
      *
      * @param json JSON 文档字符串
      * @return 指针指向的值
-     * @throws YdszJsonException 如果路径不存在或格式错误
+     * @throws JsonException 如果路径不存在或格式错误
      */
     public Object evaluate(String json) {
         if (pointer.isEmpty()) {
             return json;
         }
 
-        Object parsedValue = YdszJsonParser.parse(json);
+        Object parsedValue = JsonParser.parse(json);
         return evaluateInternal(parsedValue, 0);
     }
 
@@ -96,7 +96,7 @@ public final class JsonPointer {
         if (currentNode instanceof Map) {
             Map<?, ?> map = (Map<?, ?>) currentNode;
             if (!map.containsKey(currentToken)) {
-                throw new YdszJsonException("JSON Pointer path not found: " + currentToken + " in " + pointer);
+                throw new JsonException("JSON Pointer path not found: " + currentToken + " in " + pointer);
             }
             return evaluateInternal(map.get(currentToken), tokenIndex + 1);
         } else if (currentNode instanceof List) {
@@ -104,14 +104,14 @@ public final class JsonPointer {
             try {
                 int index = Integer.parseInt(currentToken);
                 if (index < 0 || index >= list.size()) {
-                    throw new YdszJsonException("JSON Pointer array index out of bounds: " + currentToken);
+                    throw new JsonException("JSON Pointer array index out of bounds: " + currentToken);
                 }
                 return evaluateInternal(list.get(index), tokenIndex + 1);
             } catch (NumberFormatException e) {
-                throw new YdszJsonException("JSON Pointer array index must be integer: " + currentToken);
+                throw new JsonException("JSON Pointer array index must be integer: " + currentToken);
             }
         } else {
-            throw new YdszJsonException("JSON Pointer cannot traverse through non-object/array at: " + currentToken);
+            throw new JsonException("JSON Pointer cannot traverse through non-object/array at: " + currentToken);
         }
     }
 

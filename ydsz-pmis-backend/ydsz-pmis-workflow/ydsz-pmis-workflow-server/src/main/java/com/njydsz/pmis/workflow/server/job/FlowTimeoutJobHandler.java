@@ -9,7 +9,7 @@ import java.util.Map;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.common.core.job.JobHandler;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.workflow.domain.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.domain.enums.FlowInstanceStatus;
@@ -242,7 +242,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
             return null;
         }
         try {
-            Map<String, Object> obj = YdszJson.parseMap(paramsJson);
+            Map<String, Object> obj = Json.parseMap(paramsJson);
             if (obj == null) {
                 return null;
             }

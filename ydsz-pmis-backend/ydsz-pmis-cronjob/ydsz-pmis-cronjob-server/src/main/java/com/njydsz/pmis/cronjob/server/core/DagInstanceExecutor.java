@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -1077,7 +1077,7 @@ private final SpELConditionEvaluator spELConditionEvaluator;
             }
             Map<String, Object> mergeFragment = new JSONObject();
             mergeFragment.put(jobKey, parsed);
-            String mergeJson = YdszJson.toJson(mergeFragment);
+            String mergeJson = Json.toJson(mergeFragment);
 
             // 使用 PostgreSQL jsonb || 原子合并，消除 read-modify-write 竞态
             dagInstanceMapper.mergeContextAtomic(dagInstanceId, mergeJson);

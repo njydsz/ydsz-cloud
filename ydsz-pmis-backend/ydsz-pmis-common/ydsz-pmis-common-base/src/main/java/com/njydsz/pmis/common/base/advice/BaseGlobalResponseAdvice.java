@@ -12,7 +12,7 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 /**
  * 全局响应包装基类（Web/App 共享）
@@ -24,7 +24,7 @@ import com.njydsz.pmis.common.json.YdszJson;
  *
  * <p><b>优化说明：</b>
  * <p>支持通过构造器注入自定义 ObjectMapper，提升可测试性和灵活性。
- * 若未注入，则使用 YdszJson 的默认 ObjectMapper。
+ * 若未注入，则使用 Json 的默认 ObjectMapper。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -38,7 +38,7 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
     private final ObjectMapper objectMapper;
 
     /**
-     * 默认构造器（使用 YdszJson 的默认 ObjectMapper）
+     * 默认构造器（使用 Json 的默认 ObjectMapper）
      */
     protected BaseGlobalResponseAdvice() {
         this.objectMapper = null;
@@ -70,8 +70,8 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
         if (body instanceof String) {
             BaseResponse<String> result = wrapStringBody((String) body);
             try {
-                ObjectMapper mapper = objectMapper != null ? objectMapper : YdszJson.getMapper();
-                return YdszJson.toJson(result);
+                ObjectMapper mapper = objectMapper != null ? objectMapper : Json.getMapper();
+                return Json.toJson(result);
             } catch (Exception e) {
                 return result;
             }

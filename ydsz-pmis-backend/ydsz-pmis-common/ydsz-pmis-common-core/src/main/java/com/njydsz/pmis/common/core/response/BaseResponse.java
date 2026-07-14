@@ -6,8 +6,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.MDC;
 
-import com.njydsz.pmis.common.json.annotation.YdszJsonField;
-import com.njydsz.pmis.common.json.annotation.YdszJsonPropertyOrder;
+import com.njydsz.pmis.common.json.annotation.JsonField;
+import com.njydsz.pmis.common.json.annotation.JsonPropertyOrder;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -52,8 +52,8 @@ import lombok.experimental.SuperBuilder;
 @Data
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @SuperBuilder
-@YdszJsonField(notWriteNullValue = true)
-@YdszJsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp"})
+@JsonField(notWriteNullValue = true)
+@JsonPropertyOrder({"code", "msg", "data", "traceId", "timestamp"})
 public class BaseResponse<T> implements IResponse<T>, Serializable {
 
     private static final long serialVersionUID = 3L;

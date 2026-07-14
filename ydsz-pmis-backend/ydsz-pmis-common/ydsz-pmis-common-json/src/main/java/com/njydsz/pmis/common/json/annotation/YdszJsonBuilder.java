@@ -3,7 +3,7 @@ package com.njydsz.pmis.common.json.annotation;
 import java.lang.annotation.*;
 
 /**
- * YdszJson Builder 模式注解（参考 fastjson2 的@JSONPOJOBuilder）
+ * Json Builder 模式注解（参考 fastjson2 的@JSONPOJOBuilder）
  *
  * <p>用于标注 Builder 类，支持使用 Builder 模式进行反序列化。</p>
  *
@@ -17,7 +17,7 @@ import java.lang.annotation.*;
  *
  * <p><b>使用示例：</b></p>
  * <pre>
- * {@literal @}YdszJsonBuilder
+ * {@literal @}JsonBuilder
  * public class User {
  *     private Long id;
  *     private String name;
@@ -33,7 +33,7 @@ import java.lang.annotation.*;
  *         return new Builder();
  *     }
  *
- *     {@literal @}YdszJsonBuilder(builderClass = Builder.class)
+ *     {@literal @}JsonBuilder(builderClass = Builder.class)
  *     public static class Builder {
  *         private Long id;
  *         private String name;
@@ -55,13 +55,13 @@ import java.lang.annotation.*;
  * }
  *
  * // 自定义构建方法名
- * {@literal @}YdszJsonBuilder(buildMethod = "create")
+ * {@literal @}JsonBuilder(buildMethod = "create")
  * public class Product {
  *     // ...
  * }
  *
  * // 自定义 with 前缀
- * {@literal @}YdszJsonBuilder(withPrefix = "set")
+ * {@literal @}JsonBuilder(withPrefix = "set")
  * public class Order {
  *     // ...
  * }
@@ -70,12 +70,12 @@ import java.lang.annotation.*;
  * @author ydsz-pmis-team
  * @since 1.3.0
  * @since 1.3.0
- * @see YdszJsonCreator
+ * @see JsonCreator
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface YdszJsonBuilder {
+public @interface JsonBuilder {
 
     /**
      * Builder 类

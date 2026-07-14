@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,7 +99,7 @@ public class OpenAiCompatibleClient implements LlmClient {
         try {
             String responseJson = restClient.post()
                     .uri("/chat/completions")
-                    .body(YdszJson.toJson(requestBody))
+                    .body(Json.toJson(requestBody))
                     .retrieve()
                     .body(String.class);
             return parseResponse(responseJson);
@@ -127,7 +127,7 @@ public class OpenAiCompatibleClient implements LlmClient {
         try {
             webClient.post()
                     .uri("/chat/completions")
-                    .bodyValue(YdszJson.toJson(requestBody))
+                    .bodyValue(Json.toJson(requestBody))
                     .retrieve()
                     .bodyToFlux(String.class)
                     .doOnNext(line -> {
@@ -199,7 +199,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                     call.put("id", tc.getId());
                     Map<String, Object> function = new HashMap<>();
                     function.put("name", tc.getName());
-                    function.put("arguments", YdszJson.toJson(tc.getArguments()));
+                    function.put("arguments", Json.toJson(tc.getArguments()));
                     call.put("type", "function");
                     call.put("function", function);
                     calls.add(call);
@@ -233,7 +233,7 @@ public class OpenAiCompatibleClient implements LlmClient {
     }
 
     private ChatResponse parseResponse(String json) {
-        Map<String, Object> obj = YdszJson.parseMap(json);
+        Map<String, Object> obj = Json.parseMap(json);
         String id = obj.getString("id");
         String model = obj.getString("model");
         List<Object> choices = obj.getJSONArray("choices");
@@ -254,7 +254,7 @@ public class OpenAiCompatibleClient implements LlmClient {
                 Map<String, Object> function = call.getJSONObject("function");
                 String name = function.getString("name");
                 String argsStr = function.getString("arguments");
-                Map<String, Object> args = YdszJson.toObject(argsStr, Map.class);
+                Map<String, Object> args = Json.toObject(argsStr, Map.class);
                 toolCalls.add(new ToolCall(callId, name, args));
             }
         }
@@ -276,7 +276,7 @@ public class OpenAiCompatibleClient implements LlmClient {
 
     private ChatChunk parseChunk(String data) {
         try {
-            Map<String, Object> obj = YdszJson.parseMap(data);
+            Map<String, Object> obj = Json.parseMap(data);
             String id = obj.getString("id");
             String model = obj.getString("model");
             List<Object> choices = obj.getJSONArray("choices");

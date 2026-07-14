@@ -35,7 +35,7 @@ import com.njydsz.pmis.common.safe.desensitize.ColumnDesensitizationContext;
 import com.njydsz.pmis.common.safe.desensitize.ColumnDesensitizationExecutor;
 import com.njydsz.pmis.common.util.auth.AuthInfoUtils;
 import com.njydsz.pmis.common.util.auth.RequestHolder;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.util.string.StringUtils;
 
 /**
@@ -251,9 +251,9 @@ public class AuthColPermissionAspect {
         // 深拷贝原始对象，避免反射修改影响调用方原始数据
         Object copy;
         try {
-            String json = YdszJson.toJson(bean);
+            String json = Json.toJson(bean);
             Class<Object> clazz = (Class<Object>) bean.getClass();
-            copy = YdszJson.toObject(json, clazz);
+            copy = Json.toObject(json, clazz);
         } catch (Exception e) {
             log.warn("列权限过滤深拷贝失败，降级到原始对象: {}", e.getMessage());
             copy = bean;

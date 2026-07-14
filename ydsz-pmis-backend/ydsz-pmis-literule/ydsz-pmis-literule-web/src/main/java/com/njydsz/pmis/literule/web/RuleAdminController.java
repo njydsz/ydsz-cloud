@@ -14,7 +14,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -274,8 +274,8 @@ public class RuleAdminController {
         }
 
         try {
-            RuleDefinition oldDef = YdszJson.toObject(oldV.getDefinitionJson(), RuleDefinition.class);
-            RuleDefinition newDef = YdszJson.toObject(newV.getDefinitionJson(), RuleDefinition.class);
+            RuleDefinition oldDef = Json.toObject(oldV.getDefinitionJson(), RuleDefinition.class);
+            RuleDefinition newDef = Json.toObject(newV.getDefinitionJson(), RuleDefinition.class);
             RuleVersionDiffService diffService = new RuleVersionDiffService();
             return BaseResponse.ok(diffService.diff(oldDef, newDef));
         } catch (Exception e) {

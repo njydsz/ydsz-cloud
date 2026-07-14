@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.Map;
 import java.util.List;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import org.springframework.stereotype.Component;
 
@@ -109,7 +109,7 @@ public class CalendarScheduleFilter {
             return Set.of();
         }
         try {
-            Map<String, Object> params = YdszJson.parseMap(paramsJson);
+            Map<String, Object> params = Json.parseMap(paramsJson);
             List<Object> holidaysArr = params.getJSONArray("holidays");
             if (holidaysArr == null || holidaysArr.isEmpty()) {
                 return Set.of();
@@ -140,7 +140,7 @@ public class CalendarScheduleFilter {
             return DEFAULT_CALENDAR_TYPE;
         }
         try {
-            Map<String, Object> params = YdszJson.parseMap(paramsJson);
+            Map<String, Object> params = Json.parseMap(paramsJson);
             String type = params.getString("calendarType");
             return type != null ? type.toUpperCase() : DEFAULT_CALENDAR_TYPE;
         } catch (Exception e) {

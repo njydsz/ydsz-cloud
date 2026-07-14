@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import feign.Response;
 import feign.codec.DecodeException;
@@ -17,7 +17,7 @@ import feign.codec.Decoder;
 /**
  * 基于 Jackson 的 Feign JSON 解码器。
  *
- * <p>使用 {@link YdszJson} 作为 JSON 反序列化实现，提供统一的 JSON 解码能力。
+ * <p>使用 {@link Json} 作为 JSON 反序列化实现，提供统一的 JSON 解码能力。
  *
  * <p>支持的返回类型：
  * <ul>
@@ -32,11 +32,11 @@ import feign.codec.Decoder;
  * @author ydsz-pmis-team
  * @since 1.0.0
  * 
- * @see YdszJsonEncoder
+ * @see JsonEncoder
  */
-public class YdszJsonDecoder implements Decoder {
+public class JsonDecoder implements Decoder {
 
-    private static final Logger LOG = LoggerFactory.getLogger(YdszJsonDecoder.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JsonDecoder.class);
 
     /** 默认最大响应体字节数（10MB） */
     private static final int DEFAULT_MAX_BODY_BYTES = 10 * 1024 * 1024;
@@ -47,7 +47,7 @@ public class YdszJsonDecoder implements Decoder {
     /**
      * 使用默认最大响应体大小（10MB）构造解码器。
      */
-    public YdszJsonDecoder() {
+    public JsonDecoder() {
         this(DEFAULT_MAX_BODY_BYTES);
     }
 
@@ -56,7 +56,7 @@ public class YdszJsonDecoder implements Decoder {
      *
      * @param maxBodyBytes 最大响应体字节数，小于等于 0 时使用默认值
      */
-    public YdszJsonDecoder(int maxBodyBytes) {
+    public JsonDecoder(int maxBodyBytes) {
         this.maxBodyBytes = maxBodyBytes > 0 ? maxBodyBytes : DEFAULT_MAX_BODY_BYTES;
     }
 
@@ -146,7 +146,7 @@ public class YdszJsonDecoder implements Decoder {
      */
     private Object decodeBody(String body, Type type, Response response) {
         try {
-            return YdszJson.toObject(body, type);
+            return Json.toObject(body, type);
         } catch (Exception e) {
             LOG.warn("JSON 解码失败, 类型: {}, 错误: {}", type, e.getMessage());
             throw new DecodeException(500, "JSON 解码失败: " + e.getMessage(), response.request(), e);

@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.domain.entity.FlowRunTaskDO;
@@ -78,7 +78,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
             return Collections.emptyMap();
         }
         try {
-            Map<String, Object> map = YdszJson.parseMap(slaConfigJson);
+            Map<String, Object> map = Json.parseMap(slaConfigJson);
             return map == null ? Collections.emptyMap() : map;
         } catch (Exception e) {
             log.warn("[FlowSla] 解析 slaConfig 失败: {} err={}", slaConfigJson, e.getMessage());

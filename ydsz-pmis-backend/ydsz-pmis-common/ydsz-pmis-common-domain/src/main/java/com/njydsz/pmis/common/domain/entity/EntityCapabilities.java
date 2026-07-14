@@ -7,11 +7,11 @@ import java.util.Optional;
 import org.springframework.util.ReflectionUtils;
 
 import com.njydsz.pmis.common.domain.annotation.CreatedBy;
-import com.njydsz.pmis.common.domain.annotation.CreateTime;
+import com.njydsz.pmis.common.domain.annotation.CreateAt;
 import com.njydsz.pmis.common.domain.annotation.SoftDelete;
 import com.njydsz.pmis.common.domain.annotation.TenantId;
 import com.njydsz.pmis.common.domain.annotation.UpdatedBy;
-import com.njydsz.pmis.common.domain.annotation.UpdateTime;
+import com.njydsz.pmis.common.domain.annotation.UpdateAt;
 import com.njydsz.pmis.common.domain.annotation.Version;
 
 /**
@@ -76,17 +76,17 @@ public final class EntityCapabilities {
     /**
      * 检查实体是否具备审计字段能力
      *
-     * <p>判断依据：实体中同时存在与 {@link CreatedBy}、{@link CreateTime}。
-     * {@link UpdatedBy}、{@link UpdateTime} 注解标记的字段名
+     * <p>判断依据：实体中同时存在与 {@link CreatedBy}、{@link CreateAt}。
+     * {@link UpdatedBy}、{@link UpdateAt} 注解标记的字段名
      *
      * @param entityClass 实体。
      * @return 具备完整审计字段返回 true，否则返。false
      */
     public static boolean hasAuditableFields(Class<?> entityClass) {
         return getAnnotatedField(entityClass, CreatedBy.class).isPresent()
-                && getAnnotatedField(entityClass, CreateTime.class).isPresent()
+                && getAnnotatedField(entityClass, CreateAt.class).isPresent()
                 && getAnnotatedField(entityClass, UpdatedBy.class).isPresent()
-                && getAnnotatedField(entityClass, UpdateTime.class).isPresent();
+                && getAnnotatedField(entityClass, UpdateAt.class).isPresent();
     }
 
     /**

@@ -3,7 +3,7 @@ package com.njydsz.pmis.common.json.annotation;
 import java.lang.annotation.*;
 
 /**
- * YdszJson 类级别注解（参考 Jackson 的@JsonIgnoreProperties 和 FastJSON2 的@JSONType）
+ * Json 类级别注解（参考 Jackson 的@JsonIgnoreProperties 和 FastJSON2 的@JSONType）
  * 
  * <p>用于标注 Java 类，控制整体序列化和反序列化行为。</p>
  * 
@@ -19,7 +19,7 @@ import java.lang.annotation.*;
  * 
  * <p><b>使用示例：</b></p>
  * <pre>
- * {@literal @}YdszJsonClass(
+ * {@literal @}JsonClass(
  *     ordering = {"id", "name", "email"},
  *     ignores = {"password", "secretKey"},
  *     typeKey = "@type",
@@ -40,7 +40,7 @@ import java.lang.annotation.*;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE})
-public @interface YdszJsonClass {
+public @interface JsonClass {
     
     /**
      * 字段排序（指定字段的输出顺序）

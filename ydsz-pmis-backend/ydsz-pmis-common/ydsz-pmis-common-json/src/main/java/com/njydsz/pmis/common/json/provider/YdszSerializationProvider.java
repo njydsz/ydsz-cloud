@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
+import com.njydsz.pmis.common.json.annotation.JsonClass;
 import com.njydsz.pmis.common.json.asm.AsmSerializer;
 import com.njydsz.pmis.common.json.cache.AsmCodecCache;
 import com.njydsz.pmis.common.json.cache.BeanSerializerCache;
@@ -16,9 +16,9 @@ import com.njydsz.pmis.common.json.writer.BeanSerializer;
 import com.njydsz.pmis.common.json.writer.JSONWriter;
 
 /**
- * YdszJson 序列化提供者（架构层）
+ * Json 序列化提供者（架构层）
  *
- * <p>架构层级：YdszJson => Engine => Provider => Parser</p>
+ * <p>架构层级：Json => Engine => Provider => Parser</p>
  *
  * <p><b>ThreadLocal 清理机制：</b></p>
  * <ul>
@@ -464,7 +464,7 @@ public final class YdszSerializationProvider {
         }
 
         // 检查是否可以使用快速路。
-        YdszJsonClass classAnnotation = clazz.getAnnotation(YdszJsonClass.class);
+        JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);
         if (classAnnotation != null) {
             return false;
         }

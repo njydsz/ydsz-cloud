@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>。ASM 字节码生成更稳定，易于维。</li>
  * </ul>
  * 
- * @author YdszJson Team
+ * @author Json Team
  */
 public final class FastReflectCache {
 

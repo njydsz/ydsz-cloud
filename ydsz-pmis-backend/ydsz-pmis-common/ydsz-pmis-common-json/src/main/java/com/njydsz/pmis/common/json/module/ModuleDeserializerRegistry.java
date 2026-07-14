@@ -17,7 +17,7 @@ public final class ModuleDeserializerRegistry {
 
     private final Map<Class<?>, JsonDeserializer<?>> deserializers = new LinkedHashMap<>();
 
-    private final List<YdszJsonModule> orderedModules = new ArrayList<>();
+    private final List<JsonModule> orderedModules = new ArrayList<>();
 
     ModuleDeserializerRegistry() {
     }
@@ -47,7 +47,7 @@ public final class ModuleDeserializerRegistry {
      * @param module 来源模块
      * @param <T> 类型参数
      */
-    <T> void register(Class<T> type, JsonDeserializer<T> deserializer, YdszJsonModule module) {
+    <T> void register(Class<T> type, JsonDeserializer<T> deserializer, JsonModule module) {
         register(type, deserializer);
         if (!orderedModules.contains(module)) {
             orderedModules.add(module);
@@ -68,7 +68,7 @@ public final class ModuleDeserializerRegistry {
      *
      * @return 只读列表
      */
-    List<YdszJsonModule> getOrderedModules() {
+    List<JsonModule> getOrderedModules() {
         return Collections.unmodifiableList(orderedModules);
     }
 

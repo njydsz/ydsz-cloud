@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.json.asm.AsmSerializer;
 import com.njydsz.pmis.common.json.cache.AsmCodecCache;
 import com.njydsz.pmis.common.json.number.NumberUtils;
@@ -27,7 +27,7 @@ import com.njydsz.pmis.common.json.number.NumberUtils;
  * <p>通过 {@link Feature} 枚举控制序列化行为，参考 FastJSON2 和 Jackson 的 Feature 设计。
  * 使用 {@link #of(Feature...)} 或 {@link #of(Set)} 计算特性标志位。</p>
  * 
- * @author YdszJson Team
+ * @author Json Team
  */
 public final class JSONWriter {
 
@@ -975,7 +975,7 @@ public final class JSONWriter {
                         cachedSerializer = serializer;
                         AsmCodecCache.serializeWithSerializer(serializer, item, this);
                     } else {
-                        write(YdszJson.toJson(item));
+                        write(Json.toJson(item));
                     }
                 }
             }
@@ -1021,7 +1021,7 @@ public final class JSONWriter {
                         cachedSerializer = serializer;
                         AsmCodecCache.serializeWithSerializer(serializer, item, this);
                     } else {
-                        write(YdszJson.toJson(item));
+                        write(Json.toJson(item));
                     }
                 }
             }
@@ -1121,7 +1121,7 @@ public final class JSONWriter {
     }
 
     /**
-     * 内联写入对象值（不调用 YdszJson.toJson）
+     * 内联写入对象值（不调用 Json.toJson）
      */
     /**
      * 内联写入对象值（使用类型代码缓存，避免重复 instanceof 检查）
@@ -1145,12 +1145,12 @@ public final class JSONWriter {
         } else if (obj instanceof Map) {
             writeMap((Map<?, ?>) obj);
         } else {
-            write(YdszJson.toJson(obj));
+            write(Json.toJson(obj));
         }
     }
 
     /**
-     * 内联写入值（不调用 YdszJson.toJson）
+     * 内联写入值（不调用 Json.toJson）
      */
     private void writeValueInline(Object value) {
         if (value == null) {

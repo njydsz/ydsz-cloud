@@ -9,7 +9,7 @@ import com.njydsz.pmis.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.pmis.common.json.writer.JSONWriter;
 
 /**
- * YdszJson 绾跨▼涓婁笅鏂?鈥?鍚堝苟澶氫釜 ThreadLocal 涓哄崟涓€瀹炰緥銆?
+ * Json 绾跨▼涓婁笅鏂?鈥?鍚堝苟澶氫釜 ThreadLocal 涓哄崟涓€瀹炰緥銆?
  *
  * <p>鍘熸灦鏋勫湪 {@code YdszSerializationProvider} 涓娇鐢ㄤ簡 9+ 涓?ThreadLocal锛?
  * 鍦?200 绾跨▼鐨勭嚎绋嬫睜涓害鍗犵敤 50KB/绾跨▼ = ~10MB 鍐呭瓨銆?
@@ -32,7 +32,7 @@ import com.njydsz.pmis.common.json.writer.JSONWriter;
  * @author ydsz-pmis-team
  * @since 1.4.0
  */
-public final class YdszJsonContext {
+public final class JsonContext {
 
     /** 榛樿 StringBuilder 鍒濆瀹归噺 */
     private static final int DEFAULT_SB_CAPACITY = 4096;
@@ -41,8 +41,8 @@ public final class YdszJsonContext {
     private static final int DEFAULT_WRITER_CAPACITY = 4096;
 
     /** ThreadLocal 鍞竴瀹炰緥 */
-    private static final ThreadLocal<YdszJsonContext> CONTEXT =
-        ThreadLocal.withInitial(YdszJsonContext::new);
+    private static final ThreadLocal<JsonContext> CONTEXT =
+        ThreadLocal.withInitial(JsonContext::new);
 
     /** 澶嶇敤鐨?StringBuilder */
     public final StringBuilder stringBuilder;
@@ -77,23 +77,23 @@ public final class YdszJsonContext {
     /** 列表元素类型缓存（配合 cachedListSerializer 使用） */
     public Class<?> cachedListElementClass = null;
 
-    private YdszJsonContext() {
+    private JsonContext() {
         this.stringBuilder = new StringBuilder(DEFAULT_SB_CAPACITY);
         this.jsonWriter = new JSONWriter(DEFAULT_WRITER_CAPACITY);
         this.serializingObjects = Collections.newSetFromMap(new IdentityHashMap<>(64));
     }
 
     /**
-     * 鑾峰彇褰撳墠绾跨▼鐨?YdszJsonContext銆?
+     * 鑾峰彇褰撳墠绾跨▼鐨?JsonContext銆?
      *
      * @return 绾跨▼涓婁笅鏂囧疄渚?
      */
-    public static YdszJsonContext get() {
+    public static JsonContext get() {
         return CONTEXT.get();
     }
 
     /**
-     * 娓呯悊褰撳墠绾跨▼鐨?YdszJsonContext锛堥槻姝㈢嚎绋嬫睜鐜鍐呭瓨娉勬紡锛夈€?
+     * 娓呯悊褰撳墠绾跨▼鐨?JsonContext锛堥槻姝㈢嚎绋嬫睜鐜鍐呭瓨娉勬紡锛夈€?
      */
     public static void clear() {
         CONTEXT.remove();
@@ -105,7 +105,7 @@ public final class YdszJsonContext {
      * @return 浼扮畻鍐呭瓨鍗犵敤
      */
     public static long estimateThreadLocalMemory() {
-        YdszJsonContext ctx = get();
+        JsonContext ctx = get();
         long total = 0;
         if (ctx.stringBuilder != null) {
             total += ctx.stringBuilder.capacity() * 2L; // char = 2 bytes

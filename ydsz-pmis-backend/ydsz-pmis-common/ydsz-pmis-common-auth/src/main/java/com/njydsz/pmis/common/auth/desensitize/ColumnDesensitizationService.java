@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.auth.desensitize;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import com.njydsz.pmis.common.json.tree.JsonNode;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.pmis.common.auth.config.AuthProperties;
@@ -11,7 +12,7 @@ import com.njydsz.pmis.common.auth.service.RbacUserInfoService;
 import com.njydsz.pmis.common.cache.YdszCache;
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.builder.CacheType;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.redis.service.RedisService;
 import com.njydsz.pmis.common.safe.desensitize.ColumnDesensitizationContext;
 import com.njydsz.pmis.common.safe.desensitize.ColumnDesensitizationRule;
@@ -164,8 +165,8 @@ public class ColumnDesensitizationService {
 
     private void parseAndMergeRules(String json, ColumnDesensitizationContext context) {
         try {
-            // Use YdszJson static methods (YdszJson engine)
-            JsonNode root = YdszJson.readTree(json);
+            // Use Json static methods (Json engine)
+            JsonNode root = Json.readTree(json);
             if (root == null || root.isMissing()) {
                 return;
             }

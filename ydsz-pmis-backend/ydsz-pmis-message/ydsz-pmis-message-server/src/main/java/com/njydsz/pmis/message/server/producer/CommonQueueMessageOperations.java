@@ -15,7 +15,7 @@ import com.njydsz.pmis.common.queue.queue.IMessageQueue;
 import com.njydsz.pmis.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.pmis.common.queue.service.IMessagePublisher;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,7 +63,7 @@ public class CommonQueueMessageOperations implements MessageQueueOperations {
             throw new IllegalArgumentException("MessageRequest must not be null");
         }
         ensureMessageId(req);
-        String payload = YdszJson.toJson(req);
+        String payload = Json.toJson(req);
         QueueMessage message = QueueMessage.of(payload);
         message.addHeader("messageId", req.getMessageId());
         message.addHeader("channel", req.getChannel());

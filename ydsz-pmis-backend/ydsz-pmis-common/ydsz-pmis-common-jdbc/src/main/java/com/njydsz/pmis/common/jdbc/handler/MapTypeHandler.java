@@ -9,7 +9,7 @@ import java.util.Map;
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 /**
  * Map 类型 JSON 转换处理器
@@ -69,7 +69,7 @@ public class MapTypeHandler extends BaseTypeHandler<Map<String, Object>> {
      */
     @Override
     public void setNonNullParameter(PreparedStatement ps, int i, Map<String, Object> parameter, JdbcType jdbcType) throws SQLException {
-        ps.setString(i, YdszJson.toJson(parameter));
+        ps.setString(i, Json.toJson(parameter));
     }
 
     /**
@@ -122,6 +122,6 @@ public class MapTypeHandler extends BaseTypeHandler<Map<String, Object>> {
         if (json == null || json.isEmpty()) {
             return null;
         }
-        return YdszJson.fromJsonToMap(json, String.class, Object.class);
+        return Json.fromJsonToMap(json, String.class, Object.class);
     }
 }

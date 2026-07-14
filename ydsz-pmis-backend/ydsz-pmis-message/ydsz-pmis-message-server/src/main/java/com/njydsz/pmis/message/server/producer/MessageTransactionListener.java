@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.message.domain.entity.template.MsgTemplateDO;
 import com.njydsz.pmis.message.server.channel.ChannelRouter;
 import com.njydsz.pmis.message.server.service.template.TemplateService;
@@ -106,7 +106,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
         }
         if (arg != null) {
             try {
-                return YdszJson.toObject(YdszJson.toJson(arg), MessageRequest.class);
+                return Json.toObject(Json.toJson(arg), MessageRequest.class);
             } catch (Exception ignored) {
                 // fall through to payload parsing
             }
@@ -116,10 +116,10 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
         }
         Object payload = message.getPayload();
         if (payload instanceof String str) {
-            return YdszJson.toObject(str, MessageRequest.class);
+            return Json.toObject(str, MessageRequest.class);
         }
         try {
-            return YdszJson.toObject(YdszJson.toJson(payload), MessageRequest.class);
+            return Json.toObject(Json.toJson(payload), MessageRequest.class);
         } catch (Exception e) {
             log.warn("[TxListener] resolveRequest: 解析失败: {}", e.getMessage(), e);
             return null;

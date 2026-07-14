@@ -24,7 +24,7 @@ import com.njydsz.pmis.common.safe.alert.SafeAlertProperties;
 import com.njydsz.pmis.common.safe.alert.SecurityEvent;
 import com.njydsz.pmis.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.pmis.common.safe.alert.SecurityEventType;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.common.util.url.UrlPathUtils;
 
 /**
@@ -84,7 +84,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final SafeAlertProperties alertProperties;
 
     /** JSON 序列化器，用于生成限流响应体 */
-    // YdszJson as JSON engine
+    // Json as JSON engine
 
     public RateLimitFilter(RateLimitProperties properties,
                            RedisService redisService,
@@ -151,7 +151,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
         response.setContentType("application/json;charset=UTF-8");
         BaseResponse<Void> body = BaseResponse.error(
                 UnifiedExceptionCode.RATE_LIMIT.getCode(), properties.getMessage());
-        response.getWriter().write(YdszJson.toJson(body));
+        response.getWriter().write(Json.toJson(body));
     }
 
     /**

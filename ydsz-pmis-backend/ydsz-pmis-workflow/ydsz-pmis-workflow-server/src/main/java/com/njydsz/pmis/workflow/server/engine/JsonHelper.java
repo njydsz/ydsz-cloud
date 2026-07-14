@@ -2,10 +2,10 @@ package com.njydsz.pmis.workflow.server.engine;
 
 import java.util.Map;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 /**
- * 工作流引擎 JSON 工具（基于 YdszJson 引擎，统一使用 YdszJson）
+ * 工作流引擎 JSON 工具（基于 Json 引擎，统一使用 Json）
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -22,7 +22,7 @@ public final class JsonHelper {
         if (obj == null) {
             return null;
         }
-        return YdszJson.toJson(obj);
+        return Json.toJson(obj);
     }
 
     /**
@@ -35,6 +35,6 @@ public final class JsonHelper {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return YdszJson.parseMap(json);
+        return Json.parseMap(json);
     }
 }

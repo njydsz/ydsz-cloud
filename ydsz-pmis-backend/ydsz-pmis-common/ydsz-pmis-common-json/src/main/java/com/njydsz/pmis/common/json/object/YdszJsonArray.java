@@ -10,24 +10,24 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 /**
- * YdszJson 数组实现
+ * Json 数组实现
  * 对应 fastjson2 的 JSONArray，提供动态 JSON 数组操作
  *
  * @author ydsz-pmis-team
  * @since 1.3.0
  * @since 1.3.0
  */
-public class YdszJsonArray extends ArrayList<Object> {
+public class JsonArray extends ArrayList<Object> {
 
     private static final long serialVersionUID = 1L;
 
     /**
      * 默认构造函数
      */
-    public YdszJsonArray() {
+    public JsonArray() {
         super();
     }
 
@@ -36,16 +36,16 @@ public class YdszJsonArray extends ArrayList<Object> {
      *
      * @param initialCapacity 初始容量
      */
-    public YdszJsonArray(int initialCapacity) {
+    public JsonArray(int initialCapacity) {
         super(initialCapacity);
     }
 
     /**
-     * 从 List 创建 YdszJsonArray
+     * 从 List 创建 JsonArray
      *
      * @param list 源 List
      */
-    public YdszJsonArray(Collection<?> list) {
+    public JsonArray(Collection<?> list) {
         super(list != null ? new ArrayList<>(list) : new ArrayList<>());
     }
 
@@ -521,35 +521,35 @@ public class YdszJsonArray extends ArrayList<Object> {
     // ==================== 嵌套对象 getter ====================
 
     /**
-     * 获取 YdszJsonObject
+     * 获取 JsonObject
      *
      * @param index 索引
-     * @return YdszJsonObject
+     * @return JsonObject
      */
-    public YdszJsonObject getJSONObject(int index) {
+    public JsonObject getJSONObject(int index) {
         Object value = get(index);
-        if (value instanceof YdszJsonObject) {
-            return (YdszJsonObject) value;
+        if (value instanceof JsonObject) {
+            return (JsonObject) value;
         }
         if (value instanceof Map) {
-            return new YdszJsonObject((Map<?, ?>) value);
+            return new JsonObject((Map<?, ?>) value);
         }
         return null;
     }
 
     /**
-     * 获取 YdszJsonArray
+     * 获取 JsonArray
      *
      * @param index 索引
-     * @return YdszJsonArray
+     * @return JsonArray
      */
-    public YdszJsonArray getJSONArray(int index) {
+    public JsonArray getJSONArray(int index) {
         Object value = get(index);
-        if (value instanceof YdszJsonArray) {
-            return (YdszJsonArray) value;
+        if (value instanceof JsonArray) {
+            return (JsonArray) value;
         }
         if (value instanceof List) {
-            return new YdszJsonArray((List<?>) value);
+            return new JsonArray((List<?>) value);
         }
         return null;
     }
@@ -570,9 +570,9 @@ public class YdszJsonArray extends ArrayList<Object> {
         if (clazz.isInstance(value)) {
             return clazz.cast(value);
         }
-        // 使用 YdszJson 进行转换
-        String json = YdszJson.toJson(value);
-        return YdszJson.toObject(json, clazz);
+        // 使用 Json 进行转换
+        String json = Json.toJson(value);
+        return Json.toObject(json, clazz);
     }
 
     // ==================== setter ====================
@@ -686,39 +686,39 @@ public class YdszJsonArray extends ArrayList<Object> {
      * @return JSON 字符串
      */
     public String toJsonString() {
-        return YdszJson.toJson(this);
+        return Json.toJson(this);
     }
 
     /**
      * 从 JSON 字符串解析
      *
      * @param json JSON 字符串
-     * @return YdszJsonArray
+     * @return JsonArray
      */
-    public static YdszJsonArray parse(String json) {
-        return YdszJson.toObject(json, YdszJsonArray.class);
+    public static JsonArray parse(String json) {
+        return Json.toObject(json, JsonArray.class);
     }
 
     /**
      * 从 List 创建
      *
      * @param list List 对象
-     * @return YdszJsonArray
+     * @return JsonArray
      */
-    public static YdszJsonArray of(List<?> list) {
+    public static JsonArray of(List<?> list) {
         if (list == null) {
-            return new YdszJsonArray();
+            return new JsonArray();
         }
-        return new YdszJsonArray(list);
+        return new JsonArray(list);
     }
 
     /**
-     * 创建空的 YdszJsonArray
+     * 创建空的 JsonArray
      *
-     * @return YdszJsonArray
+     * @return JsonArray
      */
-    public static YdszJsonArray create() {
-        return new YdszJsonArray();
+    public static JsonArray create() {
+        return new JsonArray();
     }
 
     @Override

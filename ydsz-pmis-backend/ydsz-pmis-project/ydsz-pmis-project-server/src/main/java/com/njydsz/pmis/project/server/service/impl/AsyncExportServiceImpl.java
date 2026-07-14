@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -199,7 +199,7 @@ public class AsyncExportServiceImpl implements AsyncExportService {
             map = new LinkedHashMap<>((Map<String, Object>) data);
         } else {
             // POJO → Map（保留字段顺序）
-            map = YdszJson.parseMap(YdszJson.toJson(data));
+            map = Json.parseMap(Json.toJson(data));
         }
         if (map.isEmpty()) {
             return new ReportData(List.of(), List.of());
@@ -271,7 +271,7 @@ public class AsyncExportServiceImpl implements AsyncExportService {
             return Map.of();
         }
         try {
-            Map<String, Object> parsed = YdszJson.parseMap(json);
+            Map<String, Object> parsed = Json.parseMap(json);
             return parsed == null ? Map.of() : parsed;
         } catch (Exception e) {
             log.warn("[AsyncExport] params 解析失败，按空参数处理: {}", json);
@@ -311,7 +311,7 @@ public class AsyncExportServiceImpl implements AsyncExportService {
         if (params == null || params.isEmpty()) {
             return "{}";
         }
-        return YdszJson.toJson(params);
+        return Json.toJson(params);
     }
 
     /**

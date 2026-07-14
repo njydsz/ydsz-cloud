@@ -27,7 +27,7 @@ import java.util.Set;
  *   <li>{@link Feature#SafeMode} - 安全模式，启用所有安全限制</li>
  * </ul>
  *
- * @author YdszJson Team
+ * @author Json Team
  */
 public final class JSONReader {
 

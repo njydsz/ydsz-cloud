@@ -7,26 +7,26 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.SerializationException;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 /**
  * Jackson 版本的 Redis 序列化工具类
  *
- * <p>提供基于 {@link YdszJson} 的高性能序列化实现，用于 Redis 值的序列化/反序列化。
- * 统一使用 ydsz-pmis-common-util 中的 YdszJson 工具类，确保全项目 JSON 处理的一致性。
+ * <p>提供基于 {@link Json} 的高性能序列化实现，用于 Redis 值的序列化/反序列化。
+ * 统一使用 ydsz-pmis-common-util 中的 Json 工具类，确保全项目 JSON 处理的一致性。
  *
  * <p><b>主要功能：</b>
  * <ul>
- *   <li>对象序列化为 JSON 字节数组（通过 YdszJson.toJsonBytes）</li>
- *   <li>JSON 字节数组反序列化为对象（通过 YdszJson.fromJsonBytes）</li>
- *   <li>支持 Java 8 时间类型（由 YdszJson 内部 JavaTimeModule 处理）</li>
+ *   <li>对象序列化为 JSON 字节数组（通过 Json.toJsonBytes）</li>
+ *   <li>JSON 字节数组反序列化为对象（通过 Json.fromJsonBytes）</li>
+ *   <li>支持 Java 8 时间类型（由 Json 内部 JavaTimeModule 处理）</li>
  *   <li>支持复杂对象嵌套</li>
  * </ul>
  *
  * <p><b>依赖说明：</b>
  * <ul>
  *   <li>Jackson 由 ydsz-pmis-common-util 传递依赖引入，无需显式声明</li>
- *   <li>序列化/反序列化逻辑统一委托给 YdszJson，保持全项目一致</li>
+ *   <li>序列化/反序列化逻辑统一委托给 Json，保持全项目一致</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -66,7 +66,7 @@ public class JacksonRedisSerializer implements RedisSerializer<Object> {
     /**
      * 序列化对象
      *
-     * <p>使用 {@link YdszJson#toJsonBytes(Object)} 将对象转换为 JSON 字节数组。
+     * <p>使用 {@link Json#toJsonBytes(Object)} 将对象转换为 JSON 字节数组。
      *
      * @param t 要序列化的对象
      * @return 序列化后的字节数组
@@ -78,7 +78,7 @@ public class JacksonRedisSerializer implements RedisSerializer<Object> {
             return new byte[0];
         }
         try {
-            return YdszJson.toJsonBytes(t);
+            return Json.toJsonBytes(t);
         } catch (Exception e) {
             throw new SerializationException("Redis对象序列化失败（Jackson）", e);
         }
@@ -87,7 +87,7 @@ public class JacksonRedisSerializer implements RedisSerializer<Object> {
     /**
      * 反序列化字节数组
      *
-     * <p>使用 {@link YdszJson#fromJsonBytes(byte[], Class)} 将字节数组反序列化为对象。
+     * <p>使用 {@link Json#fromJsonBytes(byte[], Class)} 将字节数组反序列化为对象。
      *
      * @param bytes 序列化后的字节数组
      * @return 反序列化后的对象
@@ -100,7 +100,7 @@ public class JacksonRedisSerializer implements RedisSerializer<Object> {
             return null;
         }
         try {
-            return YdszJson.fromJsonBytes(bytes, clazz);
+            return Json.fromJsonBytes(bytes, clazz);
         } catch (Exception e) {
             throw new SerializationException("Redis对象反序列化失败（Jackson）", e);
         }

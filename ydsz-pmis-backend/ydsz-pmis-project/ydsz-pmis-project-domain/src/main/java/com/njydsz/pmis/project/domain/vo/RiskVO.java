@@ -4,7 +4,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import com.njydsz.pmis.common.json.annotation.YdszJsonField;
+import com.njydsz.pmis.common.json.annotation.JsonField;
 
 import lombok.Data;
 
@@ -20,7 +20,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
-@YdszJsonField(notWriteNullValue = true)
+@JsonField(notWriteNullValue = true)
 public class RiskVO implements Serializable {
 
     @Serial

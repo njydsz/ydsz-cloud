@@ -10,7 +10,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Map;
 
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -367,7 +367,7 @@ public class MapTaskExecutor {
                 result = ProcessResult.failed("远程派发失败: 响应为空");
             } else {
                 // ProcessResult 使用 final 字段，手动解析避免反射问题
-                Map<String, Object> jsonObj = YdszJson.parseMap(responseJson);
+                Map<String, Object> jsonObj = Json.parseMap(responseJson);
                 boolean success = jsonObj.getBooleanValue("success");
                 String res = jsonObj.getString("result");
                 String errMsg = jsonObj.getString("errorMessage");

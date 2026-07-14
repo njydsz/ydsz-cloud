@@ -27,7 +27,7 @@ import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.lock.annotation.YdszDistributedLock;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.LoginUser;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.domain.entity.FlowAuditLogDO;
@@ -200,7 +200,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 mergedVars.put("_selfSelect_" + entry.getKey(), entry.getValue());
             }
         }
-        instance.setVariable(mergedVars.isEmpty() ? null : YdszJson.toJson(mergedVars));
+        instance.setVariable(mergedVars.isEmpty() ? null : Json.toJson(mergedVars));
         instance.setTenantId(tenantId);
         instance.setProviderTraceId(dto.getProviderTraceId());
         // P1-3: 子流程场景：填充父实例信息
@@ -272,7 +272,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             try {
                 Map<String, Object> m = parseVariables(var);
                 m.put("_terminateReason", reason);
-                var = YdszJson.toJson(m);
+                var = Json.toJson(m);
                 // 修复 P2-18: 写回 DB（之前仅改局部变量未持久化）
                 instanceMapper.updateVariable(instanceId, var);
             } catch (Exception e) {
@@ -652,7 +652,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             rollbackInfo.put("rolledBackAt", now.toString());
             rollbackInfo.put("byAdmin", isAdmin && !isInitiator);
             vars.put("_rollback", rollbackInfo);
-            instanceMapper.updateVariable(instanceId, YdszJson.toJson(vars));
+            instanceMapper.updateVariable(instanceId, Json.toJson(vars));
         } catch (Exception e) {
             log.warn("[Flow] 回滚元信息持久化失败: instanceId={} err={}", instanceId, e.getMessage());
         }
@@ -713,7 +713,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             return Collections.emptyMap();
         }
         try {
-            Map<String, Object> map = YdszJson.parseMap(instance.getVariable());
+            Map<String, Object> map = Json.parseMap(instance.getVariable());
             return map == null ? Collections.emptyMap() : map;
         } catch (Exception e) {
             log.warn("[Flow] 解析 variable JSON 失败: instanceId={} err={}",
@@ -735,7 +735,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
         Map<String, Object> map = parseVariables(instance.getVariable());
         map.put(key, value);
-        instanceMapper.updateVariable(instanceId, YdszJson.toJson(map));
+        instanceMapper.updateVariable(instanceId, Json.toJson(map));
         log.info("[Flow] 设置变量: instanceId={} key={}", instanceId, key);
     }
 
@@ -752,7 +752,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
         Map<String, Object> map = parseVariables(instance.getVariable());
         map.putAll(variables);
-        instanceMapper.updateVariable(instanceId, YdszJson.toJson(map));
+        instanceMapper.updateVariable(instanceId, Json.toJson(map));
         log.info("[Flow] 批量设置变量: instanceId={} keys={}", instanceId, variables.keySet());
     }
 
@@ -762,7 +762,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             return new HashMap<>();
         }
         try {
-            Map<String, Object> map = YdszJson.parseMap(variable);
+            Map<String, Object> map = Json.parseMap(variable);
             return map == null ? new HashMap<>() : map;
         } catch (Exception e) {
             log.warn("[Flow] 解析 variable JSON 失败，返回空 Map: {}", e.getMessage());
@@ -968,7 +968,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             return null;
         }
         try {
-            return YdszJson.parseMap(node.getExt());
+            return Json.parseMap(node.getExt());
         } catch (Exception e) {
             log.warn("[Flow] 节点 ext 解析失败: nodeCode={} err={}",
                     node.getNodeCode(), e.getMessage());
@@ -988,7 +988,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             return null;
         }
         try {
-            Map<String, Object> ext = YdszJson.parseMap(node.getExt());
+            Map<String, Object> ext = Json.parseMap(node.getExt());
             if (ext == null) return null;
             String attachedToRef = (String) ext.get("attachedToRef");
             if (!StringUtils.hasText(attachedToRef)) {
@@ -1013,7 +1013,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             return false;
         }
         try {
-            Map<String, Object> ext = YdszJson.parseMap(node.getExt());
+            Map<String, Object> ext = Json.parseMap(node.getExt());
             if (ext == null) return false;
             return ext.containsKey("callActivityFlowCode")
                     || ext.containsKey("subProcessFlowCode");
@@ -1200,7 +1200,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             return null;
         }
         try {
-            Map<String, Object> ext = YdszJson.parseMap(skip.getExt());
+            Map<String, Object> ext = Json.parseMap(skip.getExt());
             if (ext != null && ext.containsKey("sourceRef")) {
                 return (String) ext.get("sourceRef");
             }
@@ -1327,7 +1327,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 // P1-4: 从 ext JSON 解析字段权限和审批意见配置
                 if (node.getExt() != null && !node.getExt().isBlank()) {
                     try {
-                        Map<String, Object> ext = YdszJson.parseMap(node.getExt());
+                        Map<String, Object> ext = Json.parseMap(node.getExt());
                         if (ext != null) {
                             Object fp = ext.get("formFieldPermissions");
                             if (fp instanceof Map<?, ?> m) {
@@ -1408,7 +1408,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         instance.setStartAt(LocalDateTime.now());
         instance.setEndAt(null);
         instance.setRejectReason(null);
-        instance.setVariable(merged.isEmpty() ? null : YdszJson.toJson(merged));
+        instance.setVariable(merged.isEmpty() ? null : Json.toJson(merged));
         instanceMapper.updateById(instance);
         // 5. 记录重审审计（保留原轨迹，仅追加一条 RESUBMIT 记录）
         FlowAuditLogDO audit = new FlowAuditLogDO();

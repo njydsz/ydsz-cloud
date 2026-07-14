@@ -8,7 +8,7 @@ import com.njydsz.pmis.common.socket.constant.WebSocketConstants;
 import com.njydsz.pmis.common.socket.metric.WebSocketMetrics;
 import com.njydsz.pmis.common.socket.offline.OfflineMessageStore;
 import com.njydsz.pmis.common.socket.session.OnlineUserService;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -141,7 +141,7 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
             return s;
         }
         try {
-            return YdszJson.toJson(payload);
+            return Json.toJson(payload);
         } catch (Exception e) {
             log.warn("[WebSocket] payload 序列化失败,降级 toString: {}", e.getMessage());
             return String.valueOf(payload);

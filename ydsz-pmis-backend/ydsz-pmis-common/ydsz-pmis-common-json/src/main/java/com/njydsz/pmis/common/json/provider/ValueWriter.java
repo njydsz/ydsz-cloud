@@ -8,8 +8,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.pmis.common.json.annotation.YdszJsonClass;
-import com.njydsz.pmis.common.json.annotation.YdszJsonView;
+import com.njydsz.pmis.common.json.annotation.JsonClass;
+import com.njydsz.pmis.common.json.annotation.JsonView;
 import com.njydsz.pmis.common.json.cache.AsmCodecCache;
 import com.njydsz.pmis.common.json.cache.FieldMeta;
 import com.njydsz.pmis.common.json.cache.SerializerCache;
@@ -430,7 +430,7 @@ public final class ValueWriter {
      */
     public static void writeBean(Object obj, StringBuilder sb) {
         Class<?> clazz = obj.getClass();
-        YdszJsonClass classAnnotation = clazz.getAnnotation(YdszJsonClass.class);
+        JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);
 
         FieldMeta[] fields = SerializerCache.getFieldMeta(clazz);
         if (fields == null) {
@@ -467,7 +467,7 @@ public final class ValueWriter {
 
             Class<?> currentView = YdszSerializationProvider.CURRENT_VIEW_CLASS.get();
             if (currentView != null) {
-                YdszJsonView viewAnnotation = field.field.getAnnotation(YdszJsonView.class);
+                JsonView viewAnnotation = field.field.getAnnotation(JsonView.class);
                 if (viewAnnotation == null) {
                     continue;
                 }

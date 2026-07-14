@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -26,7 +26,7 @@ import org.springframework.web.client.RestTemplate;
 import com.njydsz.pmis.common.notify.core.NotifySendResult;
 import com.njydsz.pmis.common.notify.enums.NotifyChannel;
 import com.njydsz.pmis.common.notify.template.TemplateEngine;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 
 import lombok.Data;
 
@@ -95,7 +95,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 			body.put("templateCode", smsProperties.getTemplateCode());
 			body.put("templateParam", Map.of("title", title != null ? title : "", "content", content != null ? content : ""));
 
-			String json = YdszJson.toJson(body);
+			String json = Json.toJson(body);
 			HttpHeaders headers = jsonHeaders();
 			headers.set("Authorization", buildAuthorization(json));
 
@@ -132,7 +132,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 			body.put("templateCode", templateCode);
 			body.put("templateParam", params);
 
-			String json = YdszJson.toJson(body);
+			String json = Json.toJson(body);
 			HttpHeaders headers = jsonHeaders();
 			headers.set("Authorization", buildAuthorization(json));
 
@@ -237,7 +237,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
 			return NotifySendResult.success("sent", channelName());
 		}
 		try {
-			JsonNode json = YdszJson.readTree(response);
+			JsonNode json = Json.readTree(response);
 			String code = json.has("code") ? json.get("code").asText() : null;
 			if ("0".equals(code) || "OK".equals(code) || "SUCCESS".equals(code)) {
 				String messageId = json.has("messageId") ? json.get("messageId").asText() : null;

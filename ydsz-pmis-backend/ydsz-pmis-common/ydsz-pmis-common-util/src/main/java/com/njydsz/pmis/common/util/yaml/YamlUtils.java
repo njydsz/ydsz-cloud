@@ -3,13 +3,13 @@ package com.njydsz.pmis.common.util.yaml;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
-import com.njydsz.pmis.common.json.YdszJson;
-import com.njydsz.pmis.common.json.exception.YdszJsonException;
+import com.njydsz.pmis.common.json.Json;
+import com.njydsz.pmis.common.json.exception.JsonException;
 
 /**
  * 统一 YAML 转换工具类（基于 SnakeYAML）
  *
- * <p>提供 JSON 与 YAML 格式之间的双向转换，复用 {@link YdszJson} 的 JSON
+ * <p>提供 JSON 与 YAML 格式之间的双向转换，复用 {@link Json} 的 JSON
  * 解析/序列化能力，保持日期格式、未知字段处理等行为一致。
  *
  * @author ydsz-pmis-team
@@ -39,17 +39,17 @@ public final class YamlUtils {
      *
      * @param json JSON 字符串
      * @return YAML 字符串，json 为 null 或空白时返回 null
-     * @throws YdszJsonException 如果转换失败
+     * @throws JsonException 如果转换失败
      */
     public static String jsonToYaml(String json) {
         if (json == null || json.isBlank()) {
             return null;
         }
         try {
-            Object parsed = YdszJson.parseMap(json);
+            Object parsed = Json.parseMap(json);
             return YAML.dump(parsed);
         } catch (Exception e) {
-            throw new YdszJsonException("JSON转YAML失败: " + e.getMessage(), e);
+            throw new JsonException("JSON转YAML失败: " + e.getMessage(), e);
         }
     }
 
@@ -58,7 +58,7 @@ public final class YamlUtils {
      *
      * @param yaml YAML 字符串
      * @return JSON 字符串，yaml 为 null 或空白时返回 null
-     * @throws YdszJsonException 如果转换失败
+     * @throws JsonException 如果转换失败
      */
     public static String yamlToJson(String yaml) {
         if (yaml == null || yaml.isBlank()) {
@@ -66,9 +66,9 @@ public final class YamlUtils {
         }
         try {
             Object parsed = YAML.load(yaml);
-            return YdszJson.toJson(parsed);
+            return Json.toJson(parsed);
         } catch (Exception e) {
-            throw new YdszJsonException("YAML转JSON失败: " + e.getMessage(), e);
+            throw new JsonException("YAML转JSON失败: " + e.getMessage(), e);
         }
     }
 }

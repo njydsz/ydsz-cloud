@@ -263,7 +263,7 @@ public class NotifyConfiguration {
 	 */
 	@Bean
 	@ConditionalOnMissingBean(EmailQueueService.class)
-	@ConditionalOnClass(name = "com.njydsz.pmis.common.json.YdszJson")
+	@ConditionalOnClass(name = "com.njydsz.pmis.common.json.Json")
 	public EmailQueueService emailQueueService(ObjectProvider<StringRedisTemplate> redisTemplateProvider,
 											   @Qualifier("notifyVirtualThreadExecutor") ExecutorService executor) {
 		StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();

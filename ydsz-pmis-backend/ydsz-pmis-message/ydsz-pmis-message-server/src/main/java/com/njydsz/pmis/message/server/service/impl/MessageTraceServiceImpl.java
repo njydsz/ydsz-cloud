@@ -11,7 +11,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.TraceIdUtil;
-import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.Json;
 import com.njydsz.pmis.message.domain.entity.config.MsgTraceDO;
 import com.njydsz.pmis.message.domain.entity.config.MsgTraceDO.Node;
 import com.njydsz.pmis.message.infra.mapper.config.MsgTraceMapper;
@@ -55,7 +55,7 @@ public class MessageTraceServiceImpl implements MessageTraceService {
             trace.setEventAt(LocalDateTime.now());
             trace.setTenantId(TenantContext.getTenantId());
             if (extra != null && !extra.isEmpty()) {
-                trace.setExtra(YdszJson.toJson(extra));
+                trace.setExtra(Json.toJson(extra));
             }
             msgTraceMapper.insert(trace);
             log.debug("[Trace] 记录轨迹: msgId={} node={} status={}", msgId, node, status);

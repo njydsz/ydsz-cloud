@@ -7,11 +7,11 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.njydsz.pmis.common.json.annotation.YdszJsonBuilder;
-import com.njydsz.pmis.common.json.parser.YdszJsonParser;
+import com.njydsz.pmis.common.json.annotation.JsonBuilder;
+import com.njydsz.pmis.common.json.parser.JsonParser;
 
 /**
- * @YdszJsonBuilder 注解处理器
+ * @JsonBuilder 注解处理器
  *
  * <p>负责处理 Builder 模式的反序列化逻辑。</p>
  *
@@ -26,8 +26,8 @@ final class BuilderResolver {
         throw new UnsupportedOperationException();
     }
 
-    static <T> T deserializeWithBuilder(String json, Class<T> clazz, YdszJsonBuilder annotation) {
-        Map<String, Object> map = YdszJsonParser.parseObject(json);
+    static <T> T deserializeWithBuilder(String json, Class<T> clazz, JsonBuilder annotation) {
+        Map<String, Object> map = JsonParser.parseObject(json);
         if (map == null || map.isEmpty()) {
             return CreatorResolver.createInstanceWithDefaultConstructor(clazz);
         }
@@ -72,8 +72,8 @@ final class BuilderResolver {
         }
     }
 
-    static <T> T deserializeWithInnerBuilder(String json, Class<T> clazz, Class<?> builderClass, YdszJsonBuilder annotation) {
-        Map<String, Object> map = YdszJsonParser.parseObject(json);
+    static <T> T deserializeWithInnerBuilder(String json, Class<T> clazz, Class<?> builderClass, JsonBuilder annotation) {
+        Map<String, Object> map = JsonParser.parseObject(json);
         if (map == null || map.isEmpty()) {
             return CreatorResolver.createInstanceWithDefaultConstructor(clazz);
         }
@@ -119,7 +119,7 @@ final class BuilderResolver {
         return clazz.cast(map);
     }
 
-    static Class<?> findBuilderClass(Class<?> targetClass, YdszJsonBuilder annotation) {
+    static Class<?> findBuilderClass(Class<?> targetClass, JsonBuilder annotation) {
         if (annotation.builderClass() != void.class) {
             return annotation.builderClass();
         }
@@ -137,7 +137,7 @@ final class BuilderResolver {
 
     static Class<?> findInnerBuilderClass(Class<?> targetClass) {
         for (Class<?> innerClass : targetClass.getDeclaredClasses()) {
-            YdszJsonBuilder annotation = innerClass.getAnnotation(YdszJsonBuilder.class);
+            JsonBuilder annotation = innerClass.getAnnotation(JsonBuilder.class);
             if (annotation != null) {
                 return innerClass;
             }
@@ -174,8 +174,8 @@ final class BuilderResolver {
         return null;
     }
 
-    static YdszJsonBuilder createDefaultBuilderAnnotation() {
-        return new YdszJsonBuilder() {
+    static JsonBuilder createDefaultBuilderAnnotation() {
+        return new JsonBuilder() {
             @Override
             public Class<?> builderClass() { return void.class; }
             @Override
@@ -193,7 +193,7 @@ final class BuilderResolver {
             @Override
             public String[] ignoreMethods() { return new String[0]; }
             @Override
-            public Class<? extends Annotation> annotationType() { return YdszJsonBuilder.class; }
+            public Class<? extends Annotation> annotationType() { return JsonBuilder.class; }
         };
     }
 
