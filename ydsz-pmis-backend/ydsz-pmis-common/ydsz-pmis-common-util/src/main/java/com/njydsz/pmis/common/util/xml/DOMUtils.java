@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.xml;
+package com.njydsz.pmis.common.util.xml;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -16,8 +16,8 @@ import org.dom4j.io.SAXReader;
 import org.dom4j.io.XMLWriter;
 import org.dom4j.tree.DefaultDocument;
 
-import com.njydsz.pmis.common.util.collection.MapUtils;
 import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.util.collection.MapUtils;
 
 import lombok.extern.slf4j.Slf4j;
 

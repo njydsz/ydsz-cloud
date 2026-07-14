@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util.http;
+package com.njydsz.pmis.common.util.http;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;

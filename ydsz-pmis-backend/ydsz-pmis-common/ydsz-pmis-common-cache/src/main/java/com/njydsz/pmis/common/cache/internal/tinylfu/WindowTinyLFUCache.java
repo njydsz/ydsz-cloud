@@ -24,8 +24,11 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
   private final int maxSize;
   private final ConcurrentHashMap<K, Node<K, V>> data;
   private final Node<K, V> windowHead;
+  private Node<K, V> windowTail;
   private final Node<K, V> probationHead;
+  private Node<K, V> probationTail;
   private final Node<K, V> protectedHead;
+  private Node<K, V> protectedTail;
   private final FrequencySketch frequencySketch;
   private final AtomicLong sizeCounter;
   private final AtomicLong protectedSize;
@@ -42,8 +45,11 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     this.maxSize = maxCapacity;
     this.data = new ConcurrentHashMap<>(Math.max(16, maxCapacity / 2));
     this.windowHead = new Node<>(null, null, 0);
+    this.windowTail = this.windowHead;
     this.probationHead = new Node<>(null, null, 1);
+    this.probationTail = this.probationHead;
     this.protectedHead = new Node<>(null, null, 2);
+    this.protectedTail = this.protectedHead;
     this.frequencySketch = new FrequencySketch();
     this.frequencySketch.ensureCapacity(maxCapacity);
     this.sizeCounter = new AtomicLong(0);
@@ -221,8 +227,22 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     node.next = head.next;
     if (head.next != null) {
       head.next.prev = node;
+    } else {
+      // 列表之前为空，更新 tail
+      updateTail(head, null, node);
     }
     head.next = node;
+  }
+
+  /** 更新指定头节点对应的 tail 指针 */
+  private void updateTail(Node<K, V> head, Node<K, V> expectedTail, Node<K, V> newTail) {
+    if (head == windowHead) {
+      windowTail = newTail;
+    } else if (head == probationHead) {
+      probationTail = newTail;
+    } else if (head == protectedHead) {
+      protectedTail = newTail;
+    }
   }
 
   private void remove(Node<K, V> node) {
@@ -231,6 +251,22 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     }
     if (node.next != null) {
       node.next.prev = node.prev;
+    }
+    // 更新 tail 指针（如果删除的是尾节点）
+    if (node == windowTail && node.prev != windowHead) {
+      windowTail = node.prev;
+    } else if (node == windowTail && node.prev == windowHead) {
+      windowTail = windowHead;
+    }
+    if (node == probationTail && node.prev != probationHead) {
+      probationTail = node.prev;
+    } else if (node == probationTail && node.prev == probationHead) {
+      probationTail = probationHead;
+    }
+    if (node == protectedTail && node.prev != protectedHead) {
+      protectedTail = node.prev;
+    } else if (node == protectedTail && node.prev == protectedHead) {
+      protectedTail = protectedHead;
     }
     node.prev = null;
     node.next = null;
@@ -242,6 +278,9 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
       head.next = first.next;
       if (first.next != null) {
         first.next.prev = head;
+      } else {
+        // 列表变空，重置 tail
+        updateTail(head, null, head);
       }
       first.prev = null;
       first.next = null;
@@ -249,20 +288,27 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     return first;
   }
 
+  /** O(1) 尾删除（使用 tail 指针） */
   private Node<K, V> removeLast(Node<K, V> head) {
-    Node<K, V> last = head;
-    while (last.next != null) {
-      last = last.next;
-    }
-    if (last == head) {
+    Node<K, V> tail = getTail(head);
+    if (tail == head || tail == null) {
       return null;
     }
-    if (last.prev != null) {
-      last.prev.next = null;
-    }
-    last.prev = null;
-    last.next = null;
-    return last;
+    // 从链表中移除尾节点
+    tail.prev.next = null;
+    Node<K, V> newTail = (tail.prev == head) ? head : tail.prev;
+    updateTail(head, tail, newTail);
+    tail.prev = null;
+    tail.next = null;
+    return tail;
+  }
+
+  /** 获取指定头节点对应的 tail 指针 */
+  private Node<K, V> getTail(Node<K, V> head) {
+    if (head == windowHead) return windowTail;
+    if (head == probationHead) return probationTail;
+    if (head == protectedHead) return protectedTail;
+    return null;
   }
 
   private boolean isEmpty(Node<K, V> head) {
@@ -271,6 +317,7 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
 
   private void clearAll(Node<K, V> head) {
     head.next = null;
+    updateTail(head, null, head);
   }
 
   @Override

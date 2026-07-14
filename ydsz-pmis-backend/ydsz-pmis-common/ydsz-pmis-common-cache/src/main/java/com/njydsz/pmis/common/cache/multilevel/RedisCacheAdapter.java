@@ -1,8 +1,11 @@
 package com.njydsz.pmis.common.cache.multilevel;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -10,10 +13,14 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 
 import com.njydsz.pmis.common.cache.api.Cache;
 import com.njydsz.pmis.common.cache.listener.RemovalListener;
@@ -152,25 +159,46 @@ public class RedisCacheAdapter<K, V> implements Cache<K, V> {
 
   @Override
   public void clear() {
-    try {
-      Set<String> keys = redisTemplate.keys(keyPrefix + "*");
-      if (keys != null && !keys.isEmpty()) {
+    // 使用 SCAN 替代 KEYS，避免阻塞 Redis
+    Set<String> keys = scanKeys(keyPrefix + "*", 1000);
+    if (!keys.isEmpty()) {
+      try {
         redisTemplate.delete(keys);
+      } catch (Exception e) {
+        log.warn("Redis 缓存清空失败, prefix={}", keyPrefix, e);
       }
-    } catch (Exception e) {
-      log.warn("Redis 缓存清空失败, prefix={}", keyPrefix, e);
     }
   }
 
   @Override
   public long estimatedSize() {
+    // 使用 SCAN 替代 KEYS 计数
+    return scanKeys(keyPrefix + "*", 1000).size();
+  }
+
+  /**
+   * 使用 SCAN 命令扫描匹配的 key（非阻塞，替代 KEYS）
+   *
+   * @param pattern key 匹配模式
+   * @param count 每次扫描的建议数量
+   * @return 匹配的 key 集合
+   */
+  private Set<String> scanKeys(String pattern, int count) {
+    Set<String> keys = new HashSet<>();
     try {
-      Set<String> keys = redisTemplate.keys(keyPrefix + "*");
-      return keys != null ? keys.size() : 0;
+      ScanOptions options = ScanOptions.scanOptions().match(pattern).count(count).build();
+      Cursor<byte[]> cursor =
+          redisTemplate.execute(
+              (RedisCallback<Cursor<byte[]>>)
+                  connection -> connection.keyCommands().scan(options));
+      while (cursor.hasNext()) {
+        keys.add(new String(cursor.next()));
+      }
+      cursor.close();
     } catch (Exception e) {
-      log.warn("Redis 缓存大小估算失败", e);
-      return 0;
+      log.warn("Redis SCAN 扫描失败, pattern={}", pattern, e);
     }
+    return keys;
   }
 
   @Override
@@ -197,14 +225,32 @@ public class RedisCacheAdapter<K, V> implements Cache<K, V> {
 
   @Override
   public Map<K, V> getAll(Collection<K> keys) {
-    Map<K, V> result = new HashMap<>();
-    for (K key : keys) {
-      V value = getIfPresent(key);
-      if (value != null) {
-        result.put(key, value);
-      }
+    if (keys == null || keys.isEmpty()) {
+      return new HashMap<>();
     }
-    return result;
+    // 使用 multiGet 批量查询，替代逐个 getIfPresent
+    List<K> keyList = new ArrayList<>(keys);
+    List<String> redisKeys =
+        keyList.stream().map(this::buildKey).collect(Collectors.toList());
+    try {
+      List<Object> values = redisTemplate.opsForValue().multiGet(redisKeys);
+      Map<K, V> result = new HashMap<>(keys.size());
+      if (values != null) {
+        for (int i = 0; i < values.size(); i++) {
+          Object value = values.get(i);
+          if (value != null && valueClass.isInstance(value)) {
+            result.put(keyList.get(i), valueClass.cast(value));
+            hitCount.increment();
+          } else {
+            missCount.increment();
+          }
+        }
+      }
+      return result;
+    } catch (Exception e) {
+      log.warn("Redis 批量缓存读取失败", e);
+      return new HashMap<>();
+    }
   }
 
   @Override

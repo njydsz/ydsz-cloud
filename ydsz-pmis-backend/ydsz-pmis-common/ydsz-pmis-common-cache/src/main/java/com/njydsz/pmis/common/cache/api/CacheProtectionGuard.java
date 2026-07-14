@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.cache.api;
 import java.util.Collections;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
@@ -38,8 +39,9 @@ public final class CacheProtectionGuard {
   private static final Map<Cache<?, ?>, CacheProtectionGuard> INSTANCES =
       Collections.synchronizedMap(new WeakHashMap<>());
 
-  /** Per-cache Key 级锁映射（防击穿） */
-  private final ConcurrentHashMap<Object, Object> keyLocks = new ConcurrentHashMap<>();
+  /** Per-cache Key 级加载 Future 映射（防击穿，替代 synchronized 锁） */
+  private final ConcurrentHashMap<Object, CompletableFuture<Object>> loadingFutures =
+      new ConcurrentHashMap<>();
 
   /** Per-cache 空值占位符过期时间（防雪崩：随机过期） key -> expireTimestamp */
   private final ConcurrentHashMap<Object, Long> nullKeyExpirations = new ConcurrentHashMap<>();
@@ -83,7 +85,6 @@ public final class CacheProtectionGuard {
     if (NullValueGuard.isNullKeyRegistered(cache, key)) {
       Long expiration = guard.nullKeyExpirations.get(key);
       if (expiration != null && System.currentTimeMillis() > expiration) {
-        // 空值占位已过期，清除并重新加载
         NullValueGuard.unregisterNullKey(cache, key);
         guard.nullKeyExpirations.remove(key);
       } else {
@@ -93,40 +94,54 @@ public final class CacheProtectionGuard {
 
     V value = cache.getIfPresent(key);
     if (value == null && loader != null) {
-      Object lock = guard.keyLocks.computeIfAbsent(key, k -> new Object());
+      // 防击穿：使用 CompletableFuture + computeIfAbsent 实现无锁化
+      // 同一 key 的并发请求共享同一个 Future，只有一个线程执行加载
+      CompletableFuture<Object> future =
+          guard.loadingFutures.computeIfAbsent(
+              key,
+              k -> {
+                CompletableFuture<Object> f = new CompletableFuture<>();
+                try {
+                  // Double-check after acquiring compute slot
+                  if (NullValueGuard.isNullKeyRegistered(cache, (K) k)) {
+                    Long exp = guard.nullKeyExpirations.get(k);
+                    if (exp != null && System.currentTimeMillis() > exp) {
+                      NullValueGuard.unregisterNullKey(cache, (K) k);
+                      guard.nullKeyExpirations.remove(k);
+                    } else {
+                      f.complete(null);
+                      return f;
+                    }
+                  }
+                  V loaded = cache.getIfPresent((K) k);
+                  if (loaded == null) {
+                    loaded = loader.apply((K) k);
+                    if (loaded != null) {
+                      cache.put((K) k, loaded);
+                    } else {
+                      NullValueGuard.registerNullKey(cache, (K) k);
+                      if (maxExpireMs > 0) {
+                        long jitteredExpire =
+                            minExpireMs > 0
+                                ? minExpireMs
+                                    + ThreadLocalRandom.current()
+                                        .nextLong(maxExpireMs - minExpireMs + 1)
+                                : maxExpireMs;
+                        guard.nullKeyExpirations.put(
+                            k, System.currentTimeMillis() + jitteredExpire);
+                      }
+                    }
+                  }
+                  f.complete(loaded);
+                } catch (Exception e) {
+                  f.completeExceptionally(e);
+                }
+                return f;
+              });
       try {
-        synchronized (lock) {
-          // Double-check after acquiring lock
-          if (NullValueGuard.isNullKeyRegistered(cache, key)) {
-            Long expiration = guard.nullKeyExpirations.get(key);
-            if (expiration != null && System.currentTimeMillis() > expiration) {
-              NullValueGuard.unregisterNullKey(cache, key);
-              guard.nullKeyExpirations.remove(key);
-            } else {
-              return null;
-            }
-          }
-          value = cache.getIfPresent(key);
-          if (value == null) {
-            value = loader.apply(key);
-            if (value != null) {
-              cache.put(key, value);
-            } else {
-              NullValueGuard.registerNullKey(cache, key);
-              // 防雪崩：为空值占位符设置随机过期时间
-              if (maxExpireMs > 0) {
-                long jitteredExpire =
-                    minExpireMs > 0
-                        ? minExpireMs
-                            + ThreadLocalRandom.current().nextLong(maxExpireMs - minExpireMs + 1)
-                        : maxExpireMs;
-                guard.nullKeyExpirations.put(key, System.currentTimeMillis() + jitteredExpire);
-              }
-            }
-          }
-        }
+        value = (V) future.join();
       } finally {
-        guard.keyLocks.remove(key, lock);
+        guard.loadingFutures.remove(key, future);
       }
     }
     return value;

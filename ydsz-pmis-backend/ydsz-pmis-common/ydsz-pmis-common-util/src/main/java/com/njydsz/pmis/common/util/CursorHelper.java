@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.util;
+package com.njydsz.pmis.common.util;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
@@ -7,8 +7,8 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.njydsz.pmis.common.json.type.YdszJsonType;
 import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.type.YdszJsonType;
 
 /**
  * 游标分页工具类。

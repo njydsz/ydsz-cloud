@@ -45,14 +45,6 @@ public final class YdszJsonParser {
     /** 字符数组缓存（ThreadLocal 复用） */
     private static final ThreadLocal<char[]> CHAR_BUFFER = ThreadLocal.withInitial(() -> new char[8192]);
     
-    /** Map 对象池（ThreadLocal 复用） */
-    private static final ThreadLocal<Map<String, Object>> TEMP_MAP = 
-        ThreadLocal.withInitial(() -> new HashMap<>(64));
-    
-    /** List 对象池（ThreadLocal 复用） */
-    private static final ThreadLocal<List<Object>> TEMP_LIST =
-        ThreadLocal.withInitial(() -> new ArrayList<>(64));
-
     /** StringBuilder 对象池（ThreadLocal 复用） */
     private static final ThreadLocal<StringBuilder> SB_POOL =
         ThreadLocal.withInitial(() -> new StringBuilder(256));
@@ -66,8 +58,6 @@ public final class YdszJsonParser {
      */
     public static void clearThreadLocals() {
         CHAR_BUFFER.remove();
-        TEMP_MAP.remove();
-        TEMP_LIST.remove();
         SB_POOL.remove();
     }
     
@@ -93,10 +83,11 @@ public final class YdszJsonParser {
     }
     
     /**
-     * 解析 JSON 对象（对象池优化 - 零拷贝版）
+     * 解析 JSON 对象
      *
-     * <p>优化策略：直接返回池中的 Map 对象，避免 new HashMap<>(pool) 的拷贝开销。
-     * 解析完成后为池创建新的空 Map，保证下次解析的数据隔离。</p>
+     * <p>直接创建结果 Map，不再使用 ThreadLocal 对象池。
+     * 原对象池实现每次解析都会 new HashMap(64) 赋值给 ThreadLocal，
+     * 与直接创建结果 Map 产生相同的 GC 压力，还额外增加 ThreadLocal 开销。</p>
      *
      * @param json JSON 字符串
      * @return Map 对象
@@ -107,13 +98,11 @@ public final class YdszJsonParser {
         }
 
         json = json.trim();
-        if (json.length() < 2 || !json.startsWith("{") || !json.endsWith("}")) {
+        if (json.length() < 2 || json.charAt(0) != '{') {
             throw new JsonDeserializationException("Invalid JSON object: " + json);
         }
 
-        // 使用对象池复用 Map，直接返回池对象避免拷贝
-        Map<String, Object> pool = TEMP_MAP.get();
-        pool.clear();
+        Map<String, Object> result = new LinkedHashMap<>(64);
 
         char[] chars = getCharBuffer(json);
         int len = chars.length;
@@ -177,23 +166,19 @@ public final class YdszJsonParser {
 
             // 解析值
             Object value = parseValue(chars, pos);
-            pool.put(fieldName, value);
+            result.put(fieldName, value);
 
             // 移动到值的结束位置
             pos = getValueEndPosition(chars, valueStart);
         }
 
-        // 零拷贝优化：直接返回池中的 Map，为池创建新的空 Map
-        Map<String, Object> result = pool;
-        TEMP_MAP.set(new HashMap<>(64));
         return result;
     }
     
     /**
-     * 解析 JSON 数组（对象池优化 - 零拷贝版）
+     * 解析 JSON 数组
      *
-     * <p>优化策略：直接返回池中的 List 对象，避免 new ArrayList<>(pool) 的拷贝开销。
-     * 解析完成后为池创建新的空 List，保证下次解析的数据隔离。</p>
+     * <p>直接创建结果 List，不再使用 ThreadLocal 对象池。</p>
      *
      * @param json JSON 字符串
      * @return List 对象
@@ -204,13 +189,11 @@ public final class YdszJsonParser {
         }
 
         json = json.trim();
-        if (json.length() < 2 || !json.startsWith("[") || !json.endsWith("]")) {
+        if (json.length() < 2 || json.charAt(0) != '[') {
             throw new JsonDeserializationException("Invalid JSON array: " + json);
         }
 
-        // 使用对象池复用 List，直接返回池对象避免拷贝
-        List<Object> pool = TEMP_LIST.get();
-        pool.clear();
+        List<Object> result = new ArrayList<>(64);
 
         char[] chars = getCharBuffer(json);
         int len = chars.length;
@@ -242,15 +225,12 @@ public final class YdszJsonParser {
 
             // 解析值
             Object value = parseValue(chars, pos);
-            pool.add(value);
+            result.add(value);
 
             // 移动到值的结束位置
             pos = getValueEndPosition(chars, valueStart);
         }
 
-        // 零拷贝优化：直接返回池中的 List，为池创建新的空 List
-        List<Object> result = pool;
-        TEMP_LIST.set(new ArrayList<>(64));
         return result;
     }
     
@@ -807,11 +787,47 @@ public final class YdszJsonParser {
     // ==================== ASM 反序列化器专用快速解析方法 ====================
     
     /**
+     * 在 JSON 中查找字段名的位置（跳过字符串值内部的文本）。
+     *
+     * <p>使用此方法替代 {@code json.indexOf(fieldJson)}，
+     * 避免 JSON 字符串值中包含类似字段名格式的文本时误匹配。</p>
+     *
+     * @param json JSON 字符串
+     * @param fieldJson 字段 JSON 片段（如 {@code "name":}）
+     * @return 字段位置，未找到返回 -1
+     */
+    static int findFieldPosition(String json, String fieldJson) {
+        int len = json.length();
+        int fieldLen = fieldJson.length();
+        boolean inString = false;
+        boolean escaped = false;
+        for (int i = 0; i <= len - fieldLen; i++) {
+            char c = json.charAt(i);
+            if (inString) {
+                if (escaped) {
+                    escaped = false;
+                } else if (c == '\\') {
+                    escaped = true;
+                } else if (c == '"') {
+                    inString = false;
+                }
+            } else {
+                if (c == '"') {
+                    inString = true;
+                } else if (c == fieldJson.charAt(0) && json.regionMatches(i, fieldJson, 0, fieldLen)) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
+    /**
      * 解析 int 字段（ASM 直接调用）
      */
     public static int parseIntField(String json, String fieldName) {
         String fieldJson = "\"" + fieldName + "\":";
-        int fieldPos = json.indexOf(fieldJson);
+        int fieldPos = findFieldPosition(json, fieldJson);
         if (fieldPos == -1) return 0;
         
         int valueStart = fieldPos + fieldJson.length();
@@ -836,7 +852,7 @@ public final class YdszJsonParser {
      */
     public static long parseLongField(String json, String fieldName) {
         String fieldJson = "\"" + fieldName + "\":";
-        int fieldPos = json.indexOf(fieldJson);
+        int fieldPos = findFieldPosition(json, fieldJson);
         if (fieldPos == -1) return 0L;
         
         int valueStart = fieldPos + fieldJson.length();
@@ -861,7 +877,7 @@ public final class YdszJsonParser {
      */
     public static double parseDoubleField(String json, String fieldName) {
         String fieldJson = "\"" + fieldName + "\":";
-        int fieldPos = json.indexOf(fieldJson);
+        int fieldPos = findFieldPosition(json, fieldJson);
         if (fieldPos == -1) return 0.0;
         
         int valueStart = fieldPos + fieldJson.length();
@@ -886,7 +902,7 @@ public final class YdszJsonParser {
      */
     public static String parseStringField(String json, String fieldName) {
         String fieldJson = "\"" + fieldName + "\":";
-        int fieldPos = json.indexOf(fieldJson);
+        int fieldPos = findFieldPosition(json, fieldJson);
         if (fieldPos == -1) return null;
         
         int valueStart = fieldPos + fieldJson.length();
@@ -915,7 +931,7 @@ public final class YdszJsonParser {
      */
     public static boolean parseBooleanField(String json, String fieldName) {
         String fieldJson = "\"" + fieldName + "\":";
-        int fieldPos = json.indexOf(fieldJson);
+        int fieldPos = findFieldPosition(json, fieldJson);
         if (fieldPos == -1) return false;
         
         int valueStart = fieldPos + fieldJson.length();
