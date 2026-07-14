@@ -2,7 +2,7 @@ spring:
   application:
     name: ydsz-pmis-agent
   profiles:
-    active: dev
+    active: ${SPRING_PROFILES_ACTIVE:dev}
   cloud:
     nacos:
       discovery:
@@ -17,7 +17,7 @@ spring:
             refresh: true
 
 server:
-  port: 9010
+  port: 9007
 
 pmis:
   agent:

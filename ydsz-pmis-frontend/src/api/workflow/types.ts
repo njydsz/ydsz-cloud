@@ -5,7 +5,7 @@
 
 /** 流程定义 */
 export interface FlowDefinitionDTO {
-  id: number
+  id: string
   flowCode: string
   flowName: string
   version: number
@@ -14,23 +14,23 @@ export interface FlowDefinitionDTO {
   formPath?: string
   bpmnXml?: string
   jsonModel?: string
-  createBy?: number
+  createBy?: string
   createTime?: string
-  updateBy?: number
+  updateBy?: string
   updateTime?: string
 }
 
 /** 流程实例 */
 export interface FlowInstanceDTO {
-  id: number
+  id: string
   flowCode: string
   flowName?: string
-  definitionId?: number
+  definitionId?: string
   businessType?: string
   businessKey?: string
   businessNo?: string
   title?: string
-  initiatorId?: number
+  initiatorId?: string
   initiatorName?: string
   status: 'RUNNING' | 'SUSPENDED' | 'COMPLETED' | 'TERMINATED' | 'REJECTED'
   currentNodeCode?: string
@@ -39,14 +39,14 @@ export interface FlowInstanceDTO {
   startTime?: string
   endTime?: string
   durationMs?: number
-  tenantId?: number
+  tenantId?: string
   providerTraceId?: string
 }
 
 /** 任务 */
 export interface FlowTaskDTO {
-  id: number
-  instanceId: number
+  id: string
+  instanceId: string
   flowCode: string
   flowName?: string
   nodeCode: string
@@ -56,7 +56,7 @@ export interface FlowTaskDTO {
   businessId?: string
   businessNo?: string
   title?: string
-  assignorId?: number
+  assignorId?: string
   assignorName?: string
   assigneeType?: string
   assigneeId?: string
@@ -77,18 +77,18 @@ export interface FlowTaskDTO {
 
 /** 抄送 */
 export interface FlowCcDTO {
-  id: number
-  instanceId: number
-  taskId?: number
+  id: string
+  instanceId: string
+  taskId?: string
   nodeCode: string
   nodeName?: string
   flowCode: string
   flowName?: string
   businessKey?: string
-  ccUserId: number
+  ccUserId: string
   ccUserName?: string
   ccType: 'CC_NODE' | 'MANUAL_CC' | 'AUTO_CC'
-  triggerUserId?: number
+  triggerUserId?: string
   triggerUserName?: string
   title?: string
   content?: string
@@ -107,7 +107,7 @@ export interface FlowCcQuery {
 
 /** 任务查询 */
 export interface FlowTaskQuery {
-  assigneeId?: number
+  assigneeId?: string
   businessType?: string
   flowCode?: string
   startTime?: string
@@ -124,14 +124,14 @@ export interface FlowStartProcessDTO {
   businessNo?: string
   title?: string
   variables?: Record<string, unknown>
-  initiatorId?: number
+  initiatorId?: string
 }
 
 /** 任务操作 DTO */
 export interface FlowTaskOperateDTO {
-  taskId: number
+  taskId: string
   comment?: string
-  targetUserId?: number
+  targetUserId?: string
   targetUserName?: string
   /**
    * 目标节点编码
@@ -159,7 +159,7 @@ export interface FlowDeployDTO {
 
 /** 流程图 DTO */
 export interface FlowDiagramDTO {
-  instanceId: number
+  instanceId: string
   flowCode: string
   flowName?: string
   status?: string
@@ -192,18 +192,18 @@ export interface FlowDiagramSkipDTO {
 
 /** 时间线 DTO */
 export interface FlowTimelineDTO {
-  instanceId: number
+  instanceId: string
   events: FlowTimelineEventDTO[]
 }
 
 export interface FlowTimelineEventDTO {
-  id?: number
+  id?: string
   eventType: 'START' | 'TASK_CREATED' | 'TASK_COMPLETED' | 'URGE' | 'TRANSFER' | 'DELEGATE' | 'COUNTERSIGN' | 'TIMEOUT' | 'TERMINATE' | 'COMPLETE' | 'REJECT' | 'SUSPEND' | 'ACTIVATE' | 'RECALL' | 'JUMP' | 'CC'
   nodeCode?: string
   nodeName?: string
-  userId?: number
+  userId?: string
   userName?: string
-  targetUserId?: number
+  targetUserId?: string
   targetUserName?: string
   comment?: string
   action?: string
@@ -244,7 +244,7 @@ export interface MonitorOverviewDTO {
 
 /** 异常流程实例 */
 export interface AnomalyInstanceDTO {
-  id: number
+  id: string
   flowCode: string
   flowName?: string
   title?: string
@@ -268,7 +268,7 @@ export interface InstanceTrendItemDTO {
 
 /** 审批人效率统计 */
 export interface ApproverEfficiencyDTO {
-  userId: number
+  userId: string
   userName: string
   department?: string
   completedCount: number
@@ -370,7 +370,7 @@ export interface FormRenderDataDTO {
 /** 节点表单字段配置 */
 export interface NodeFormConfigDTO {
   /** 流程定义 ID */
-  definitionId: number
+  definitionId: string
   /** 节点编码 */
   nodeCode: string
   /** 字段权限配置：fieldName -> 权限 */
@@ -388,13 +388,13 @@ export type DelegateScopeType = 'ALL' | 'FLOW' | 'FLOW_NODE' | 'ROLE'
 
 /** 委托授权记录 */
 export interface DelegateAuthDTO {
-  id: number
+  id: string
   /** 授权人 ID */
-  ownerId: number
+  ownerId: string
   /** 授权人姓名 */
   ownerName?: string
   /** 代理人 ID */
-  delegateId: number
+  delegateId: string
   /** 代理人姓名 */
   delegateName?: string
   /** 授权范围类型 */
@@ -416,7 +416,7 @@ export interface DelegateAuthDTO {
 /** 创建委托授权请求 */
 export interface CreateDelegateAuthDTO {
   /** 代理人 ID */
-  delegateId: number
+  delegateId: string
   /** 代理人姓名 */
   delegateName?: string
   /** 授权范围类型 */
@@ -431,15 +431,15 @@ export interface CreateDelegateAuthDTO {
 
 /** 委托处理记录 */
 export interface DelegateLogDTO {
-  id: number
+  id: string
   /** 原授权人 ID */
-  ownerId: number
+  ownerId: string
   ownerName?: string
   /** 代理人 ID */
-  delegateId: number
+  delegateId: string
   delegateName?: string
   /** 任务 ID */
-  taskId?: number
+  taskId?: string
   /** 流程编码 */
   flowCode?: string
   /** 流程名称 */
@@ -461,8 +461,8 @@ export type SlaStrategy = 'REMIND' | 'ESCALATE' | 'AUTO_PASS' | 'AUTO_REJECT'
 
 /** SLA 超时任务 */
 export interface SlaOverdueTaskDTO {
-  taskId: number
-  instanceId: number
+  taskId: string
+  instanceId: string
   flowCode: string
   flowName?: string
   nodeCode: string
@@ -496,7 +496,7 @@ export interface SlaRuleConfigDTO {
   /** 最大提醒次数，达到后执行最终动作，默认 3 */
   maxReminders?: number
   /** 升级目标用户 ID（action=ESCALATE 时使用，可空默认管理员） */
-  escalateUserId?: number | null
+  escalateUserId?: string | null
   /** 自动操作备注（AUTO_PASS/AUTO_REJECT 时写入审批意见） */
   autoComment?: string
 }
@@ -513,9 +513,9 @@ export type CanaryStatus = 'DRAFT' | 'ROLLING_OUT' | 'PROMOTED' | 'ROLLED_BACK'
 
 /** 灰度发布记录 */
 export interface CanaryRolloutDTO {
-  id: number
+  id: string
   /** 流程定义 ID */
-  definitionId: number
+  definitionId: string
   /** 流程编码 */
   flowCode: string
   /** 流程名称 */
@@ -525,20 +525,20 @@ export interface CanaryRolloutDTO {
   /** 灰度比例（0-100） */
   percentage?: number
   /** 白名单用户 ID 列表 */
-  whitelist?: number[]
+  whitelist?: string[]
   /** 灰度状态 */
   status: CanaryStatus
   /** 开始时间 */
   startTime?: string
   /** 结束时间 */
   endTime?: string
-  createBy?: number
+  createBy?: string
   createTime?: string
 }
 
 /** 灰度发布日志 */
 export interface CanaryRolloutLogDTO {
-  id: number
+  id: string
   /** 流程编码 */
   flowCode: string
   /** 流程名称 */
@@ -548,7 +548,7 @@ export interface CanaryRolloutLogDTO {
   /** 灰度比例 */
   percentage?: number
   /** 操作人 */
-  operatorId?: number
+  operatorId?: string
   operatorName?: string
   /** 操作详情 */
   detail?: string
@@ -560,7 +560,7 @@ export interface CanaryRolloutLogDTO {
 export interface PublishCanaryDTO {
   strategy: CanaryStrategy
   percentage?: number
-  whitelist?: number[]
+  whitelist?: string[]
 }
 
 // ===========================================

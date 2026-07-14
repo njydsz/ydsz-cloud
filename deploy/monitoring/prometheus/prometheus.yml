@@ -105,6 +105,13 @@ scrape_configs:
         labels:
           service: pmis-workflow
 
+  - job_name: pmis-agent
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['host.docker.internal:9007']
+        labels:
+          service: pmis-agent
+
   # ----------------------------------------------------------------------
   # 3. 基础设施组件(可选,需组件自身开启 metrics 端点)
   # ----------------------------------------------------------------------

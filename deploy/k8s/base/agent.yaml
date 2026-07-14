@@ -46,11 +46,11 @@ spec:
                 -Duser.timezone=Asia/Shanghai
           resources:
             requests:
-              cpu: 500m
-              memory: 1Gi
+              cpu: 1000m
+              memory: 1536Mi
             limits:
-              cpu: 2000m
-              memory: 2Gi
+              cpu: 4000m
+              memory: 3Gi
           readinessProbe:
             httpGet:
               path: /actuator/health/readiness

@@ -20,7 +20,6 @@ import com.njydsz.pmis.cronjob.server.core.executor.SandboxScriptExecutor;
 import com.njydsz.pmis.cronjob.server.service.schedule.GlueCodeService;
 
 import groovy.lang.GroovyClassLoader;
-import groovy.lang.GroovyObject;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -324,16 +323,5 @@ public class GlueJobHandler implements JobHandler {
      */
     int cacheSizeForTest() {
         return compiledClassCache.size();
-    }
-
-    /**
-     * 抑制未使用警告（GroovyObject 接口可能用于未来扩展）。
-     */
-    @SuppressWarnings("unused")
-    private void checkGroovyObject(Object instance) {
-        // 预留：未来支持 GroovyObject 特性调用
-        if (instance instanceof GroovyObject) {
-            log.debug("[GlueJobHandler] 脚本实例为 GroovyObject");
-        }
     }
 }

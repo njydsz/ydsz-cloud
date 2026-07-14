@@ -131,15 +131,6 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     /** 任务锁 key 前缀 */
     private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
 
-    /**
-     * 任务锁默认 TTL: 5 分钟（防止节点宕机导致锁不释放）
-     *
-     * <p>P0-4: 此常量已被 {@link CronjobProperties#getJobLockTtl()} 取代，
-     * 保留为文档参考；实际 TTL 通过 {@link #resolveLockTtl(JobDO)} 解析。
-     */
-    @SuppressWarnings("unused")
-    private static final Duration JOB_LOCK_TTL_DEFAULT = Duration.ofMinutes(5);
-
     /** 调度时区（多时区部署时统一为 Asia/Shanghai，避免触发时间漂移） */
     private static final TimeZone SCHEDULE_TIMEZONE = TimeZone.getTimeZone("Asia/Shanghai");
 

@@ -183,12 +183,12 @@ services:
   agent:
     enabled: true
     name: agent
-    port: 9006
-    replicas: 1
+    port: 9007
+    replicas: 2
     tag: ""
     resources:
-      requests: { cpu: 250m, memory: 512Mi }
-      limits:   { cpu: 1000m, memory: 1Gi }
+      requests: { cpu: 1000m, memory: 1536Mi }
+      limits:   { cpu: 4000m, memory: 3Gi }
 
 # -----------------------------------------------------------------------------
 #  前端

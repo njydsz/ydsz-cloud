@@ -23,9 +23,7 @@ import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagInstanceDO;
 import com.njydsz.pmis.cronjob.domain.entity.dag.JobDagVersionDO;
 import com.njydsz.pmis.cronjob.infra.mapper.dag.JobDagInstanceMapper;
 import com.njydsz.pmis.cronjob.infra.mapper.dag.JobDagMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.dag.JobDagNodeInstanceMapper;
 import com.njydsz.pmis.cronjob.infra.mapper.dag.JobDagVersionMapper;
-import com.njydsz.pmis.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.pmis.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.pmis.cronjob.server.core.dag.DagDefinitionCodec;
 import com.njydsz.pmis.cronjob.server.core.dag.DagEdge;
@@ -63,18 +61,12 @@ public class JobDagServiceImpl implements JobDagService {
     private final JobDagMapper jobDagMapper;
     /** DAG 实例 Mapper */
     private final JobDagInstanceMapper jobDagInstanceMapper;
-    /** DAG 节点实例 Mapper（由 DagInstanceExecutor 通过 setter 注入使用） */
-    @SuppressWarnings("unused")
-    private final JobDagNodeInstanceMapper jobDagNodeInstanceMapper;
     /** P1-8: DAG 版本历史 Mapper */
     private final JobDagVersionMapper jobDagVersionMapper;
     /** DAG 定义编解码器 */
     private final DagDefinitionCodec dagDefinitionCodec;
     /** DAG 解析器（环检测） */
     private final DagParser dagParser;
-    /** 任务定义 Mapper（保留字段，用于后续校验节点引用的任务存在性） */
-    @SuppressWarnings("unused")
-    private final JobMapper jobMapper;
 
     /**
      * DAG 实例执行器（延迟注入）。

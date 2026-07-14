@@ -21,13 +21,13 @@ param(
 
 $services = @(
     @{name="gateway";  port=9000},
-    @{name="system";   port=9001},
-    @{name="userinfo"; port=9002},
+    @{name="userinfo"; port=9001},
+    @{name="system";   port=9002},
     @{name="project";  port=9003},
-    @{name="cronjob";  port=9004},
-    @{name="workflow"; port=9005},
-    @{name="agent";    port=9006},
-    @{name="message";  port=9007},
+    @{name="message";  port=9004},
+    @{name="cronjob";  port=9005},
+    @{name="workflow"; port=9006},
+    @{name="agent";    port=9007},
     @{name="finance";  port=9008},
     @{name="sales";    port=9009},
     @{name="nextwiki"; port=8800}

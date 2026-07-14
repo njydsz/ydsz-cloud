@@ -262,7 +262,7 @@ jobs:
         run: |
           # 错误率阈值：5 分钟窗口内 5xx 比例 > 1% 即判定失败并回滚
           ERROR_RATE_THRESHOLD=0.01
-          for svc in gateway userinfo system project message cronjob workflow agent frontend; do
+          for svc in gateway userinfo system project message cronjob workflow agent finance sales nextwiki frontend; do
             echo "==> 开始滚动更新: ydsz-pmis-${svc}"
 
             # 更新镜像触发滚动更新（P0-2 修复：Deployment 名为 ydsz-pmis-${svc}，容器名为 ${svc}）
@@ -337,7 +337,7 @@ jobs:
 
       - name: Rollback Production
         run: |
-          for svc in gateway userinfo system project message cronjob workflow agent frontend; do
+          for svc in gateway userinfo system project message cronjob workflow agent finance sales nextwiki frontend; do
             echo "==> 回滚 ydsz-pmis-${svc} 到上一版本"
             kubectl rollout undo deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
             kubectl rollout status deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s

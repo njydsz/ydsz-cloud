@@ -7,7 +7,6 @@ import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryUsage;
 import java.lang.reflect.*;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.security.CodeSource;
 import java.security.SecureClassLoader;
 import java.time.Instant;
@@ -56,7 +55,6 @@ import com.njydsz.pmis.common.json.writer.JSONWriter;
  * 
  * @author YdszJson Team
  */
-@SuppressWarnings("unchecked")
 public final class AsmBeanCodecGenerator {
 
     /** ASM ClassWriter 配置 */
@@ -1612,10 +1610,10 @@ public final class AsmBeanCodecGenerator {
      * 获取 List 字段的元素类型
      */
     private static Class<?> getListElementType(Field field) {
-        Type genericType = field.getGenericType();
+        java.lang.reflect.Type genericType = field.getGenericType(); // FQN-OK: name conflict with org.objectweb.asm.Type
         if (genericType instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) genericType;
-            Type[] typeArgs = pt.getActualTypeArguments();
+            java.lang.reflect.Type[] typeArgs = pt.getActualTypeArguments(); // FQN-OK: name conflict with org.objectweb.asm.Type
             if (typeArgs.length > 0 && typeArgs[0] instanceof Class) {
                 return (Class<?>) typeArgs[0];
             }
