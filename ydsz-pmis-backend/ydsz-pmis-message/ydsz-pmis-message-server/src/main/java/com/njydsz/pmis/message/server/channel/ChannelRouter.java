@@ -121,6 +121,7 @@ public class ChannelRouter {
         if (breaker != null && !breaker.tryAcquirePermission()) {
             log.warn("[ChannelRouter] 通道熔断中,快速失败: channel={} state={}",
                     channel, breaker.getState());
+            messageMetrics.recordChannelError(channel, "CIRCUIT_BREAKER");
             return MessageResult.fail(channel, "通道熔断中,请稍后重试");
         }
         long start = System.currentTimeMillis();
@@ -137,7 +138,11 @@ public class ChannelRouter {
                 } else {
                     breaker.onError(cost, TimeUnit.MILLISECONDS,
                             new RuntimeException(result.getErrorMessage()));
+                    // P2-4: 记录通道级业务错误指标
+                    messageMetrics.recordChannelError(channel, "BUSINESS_ERROR");
                 }
+            } else if (!result.isSuccess()) {
+                messageMetrics.recordChannelError(channel, "BUSINESS_ERROR");
             }
             return result;
         } catch (Exception e) {
@@ -145,6 +150,8 @@ public class ChannelRouter {
             if (breaker != null) {
                 breaker.onError(cost, TimeUnit.MILLISECONDS, e);
             }
+            // P2-4: 记录通道级异常指标
+            messageMetrics.recordChannelError(channel, "EXCEPTION");
             log.error("[ChannelRouter] channel={} 发送异常 costMs={} cbState={}",
                     channel, cost, breaker == null ? "N/A" : breaker.getState(), e);
             return MessageResult.fail(channel, e.getClass().getSimpleName() + ": " + e.getMessage());
