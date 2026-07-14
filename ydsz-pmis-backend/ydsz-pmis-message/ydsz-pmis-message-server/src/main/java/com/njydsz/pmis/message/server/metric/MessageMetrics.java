@@ -69,4 +69,18 @@ public class MessageMetrics extends AbstractModuleMetrics {
     public void recordReceipt(String channel, String receiptType) {
         incrementCounter("receipt.total", "channel", safe(channel), "receiptType", safe(receiptType));
     }
+
+    /**
+     * P2-4: 记录通道级错误(HTTP 状态码非 2xx / 业务 errcode 非 0 / 异常)。
+     *
+     * <p>与 {@link #recordSend} 的区别：recordSend 是业务级指标(由 MessageService 记录),
+     * recordChannelError 是通道级指标(由 ChannelRouter 记录),用于按 errorType 维度监控
+     * 各 HTTP 通道的失败原因(如 CIRCUIT_BREAKER/EXCEPTION/BUSINESS_ERROR)。
+     *
+     * @param channel   通道
+     * @param errorType 错误类型(CIRCUIT_BREAKER/EXCEPTION/BUSINESS_ERROR)
+     */
+    public void recordChannelError(String channel, String errorType) {
+        incrementCounter("channel.error", "channel", safe(channel), "errorType", safe(errorType));
+    }
 }

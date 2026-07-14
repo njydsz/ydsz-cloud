@@ -106,7 +106,7 @@ public class DebugController {
         }
         List<TraceStep> steps = agentDebuggerService.getTrace(traceId);
         if (steps.isEmpty()) {
-            return BaseResponse.fail("TRACE_EMPTY", "链路无步骤记录，无法提取重放输入: " + traceId);
+            return BaseResponse.failed("TRACE_EMPTY", "链路无步骤记录，无法提取重放输入: " + traceId);
         }
         String userInput = steps.get(0).getContent();
         String conversationId = meta.getConversationId();

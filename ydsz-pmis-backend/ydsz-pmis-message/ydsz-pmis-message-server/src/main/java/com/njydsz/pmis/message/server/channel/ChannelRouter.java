@@ -18,6 +18,7 @@ import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.util.json.JsonUtils;
 import com.njydsz.pmis.message.domain.entity.core.MsgLogDO;
 import com.njydsz.pmis.message.server.config.MessageProperties;
+import com.njydsz.pmis.message.server.metric.MessageMetrics;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
@@ -48,6 +49,9 @@ public class ChannelRouter {
 
     /** 消息配置，用于读取通道开关 */
     private final MessageProperties messageProperties;
+
+    /** P2-4: 通道级错误指标采集 */
+    private final MessageMetrics messageMetrics;
 
     /** 通道缓存：channelType(大写) -> MessageChannel */
     private final Map<String, MessageChannel> channelCache = new HashMap<>();
