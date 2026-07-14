@@ -136,8 +136,7 @@ public final class CacheBuilder<K, V> {
   private CacheWriter<? super K, ? super V> writer;
 
   /** 自定义过期策略 */
-  @SuppressWarnings("unused")
-  private Expiry<? super K, ? super V> expiry;
+    private Expiry<? super K, ? super V> expiry;
 
   /** 私有构造函数，通过 YdszCache.newBuilder() 创建 */
   private CacheBuilder() {}

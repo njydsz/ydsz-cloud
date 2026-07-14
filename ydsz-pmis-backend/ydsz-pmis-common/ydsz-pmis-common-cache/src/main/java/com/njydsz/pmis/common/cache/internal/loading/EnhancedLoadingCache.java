@@ -68,8 +68,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
   private static volatile boolean sharedResourcesShutdown = false;
 
   /** 获取共享异步执行器（懒加载，线程安全） */
-  @SuppressWarnings("null")
-  private static Executor getSharedExecutor() {
+    private static Executor getSharedExecutor() {
     if (sharedResourcesShutdown) {
       return Runnable::run;
     }
@@ -239,8 +238,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
    * @deprecated 使用 {@link #create(Cache, CacheLoader)} 替代
    */
   @Deprecated
-  @SuppressWarnings("this-escape")
-  public EnhancedLoadingCache(Cache<K, V> cache, CacheLoader<K, V> loader) {
+    public EnhancedLoadingCache(Cache<K, V> cache, CacheLoader<K, V> loader) {
     this(cache, loader, null, 0, TimeUnit.NANOSECONDS, null, true, true);
   }
 
@@ -258,8 +256,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
    *     替代
    */
   @Deprecated
-  @SuppressWarnings("this-escape")
-  public EnhancedLoadingCache(
+    public EnhancedLoadingCache(
       Cache<K, V> cache,
       CacheLoader<K, V> loader,
       Executor executor,

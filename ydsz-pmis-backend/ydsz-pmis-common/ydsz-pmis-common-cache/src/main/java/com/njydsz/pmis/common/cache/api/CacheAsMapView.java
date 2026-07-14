@@ -39,8 +39,7 @@ public class CacheAsMapView<K, V> implements Map<K, V> {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  public boolean containsKey(Object key) {
+    public boolean containsKey(Object key) {
     if (key == null) {
       return false;
     }
@@ -62,8 +61,7 @@ public class CacheAsMapView<K, V> implements Map<K, V> {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  public V get(Object key) {
+    public V get(Object key) {
     if (key == null) {
       return null;
     }
@@ -81,8 +79,7 @@ public class CacheAsMapView<K, V> implements Map<K, V> {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  public V remove(Object key) {
+    public V remove(Object key) {
     if (key == null) {
       return null;
     }
@@ -141,8 +138,7 @@ public class CacheAsMapView<K, V> implements Map<K, V> {
       }
 
       @Override
-      @SuppressWarnings("unchecked")
-      public boolean remove(Object o) {
+            public boolean remove(Object o) {
         if (!(o instanceof Entry)) {
           return false;
         }

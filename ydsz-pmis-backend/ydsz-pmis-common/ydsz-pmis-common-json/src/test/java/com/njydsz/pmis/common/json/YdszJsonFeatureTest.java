@@ -129,8 +129,7 @@ class YdszJsonFeatureTest {
         @DisplayName("使用 Feature 反序列化")
         void deserializeWithFeature() {
             String json = "{\"name\":\"John\",\"age\":30}";
-            @SuppressWarnings("unchecked")
-            Map<String, Object> result = (Map<String, Object>) YdszJson.toObject(json, Map.class, JSONReader.Feature.LimitDepth);
+                        Map<String, Object> result = (Map<String, Object>) YdszJson.toObject(json, Map.class, JSONReader.Feature.LimitDepth);
             assertNotNull(result);
             assertEquals("John", result.get("name"));
         }

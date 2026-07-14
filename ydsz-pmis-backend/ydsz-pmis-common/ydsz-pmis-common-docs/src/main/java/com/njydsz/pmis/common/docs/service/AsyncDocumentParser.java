@@ -139,8 +139,7 @@ public class AsyncDocumentParser {
      */
     public CompletableFuture<DocumentParseResult>[] parseBatch(
             List<BatchFile> files, ParseOptions options) {
-        @SuppressWarnings("unchecked")
-        CompletableFuture<DocumentParseResult>[] futures = files.stream()
+                CompletableFuture<DocumentParseResult>[] futures = files.stream()
                 .map(f -> parseAsync(f.inputStream(), f.fileName(), options))
                 .toArray(CompletableFuture[]::new);
         return futures;

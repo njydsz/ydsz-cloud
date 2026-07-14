@@ -95,8 +95,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * <p>泛型类型 T 无法限定为 Serializable（API 响应可携带任意类型数据），
      * Java 序列化非主要序列化方式（项目使用 Jackson JSON），此处抑制编译器警告。
      */
-    @SuppressWarnings("serial")
-    private T data;
+        private T data;
 
     /**
      * 时间戳

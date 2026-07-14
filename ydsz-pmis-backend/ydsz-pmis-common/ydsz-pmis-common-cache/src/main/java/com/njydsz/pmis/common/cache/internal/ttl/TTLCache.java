@@ -217,8 +217,7 @@ public class TTLCache<K, V> extends AbstractCache<K, V> implements AutoCloseable
    * @deprecated 使用 {@link #create(long, TimeUnit)} 替代
    */
   @Deprecated
-  @SuppressWarnings("this-escape")
-  public TTLCache(long duration, TimeUnit unit) {
+    public TTLCache(long duration, TimeUnit unit) {
     this(duration, unit, TTLMode.WRITE, true, true, DEFAULT_CLEANUP_INTERVAL_SECONDS);
   }
 
@@ -226,8 +225,7 @@ public class TTLCache<K, V> extends AbstractCache<K, V> implements AutoCloseable
    * @deprecated 使用 {@link #create(long, TimeUnit, TTLMode)} 替代
    */
   @Deprecated
-  @SuppressWarnings("this-escape")
-  public TTLCache(long duration, TimeUnit unit, TTLMode mode) {
+    public TTLCache(long duration, TimeUnit unit, TTLMode mode) {
     this(duration, unit, mode, true, true, DEFAULT_CLEANUP_INTERVAL_SECONDS);
   }
 
@@ -235,8 +233,7 @@ public class TTLCache<K, V> extends AbstractCache<K, V> implements AutoCloseable
    * @deprecated 使用对应的 {@code create} 工厂方法替代
    */
   @Deprecated
-  @SuppressWarnings("this-escape")
-  public TTLCache(long duration, TimeUnit unit, TTLMode mode, boolean recordStats) {
+    public TTLCache(long duration, TimeUnit unit, TTLMode mode, boolean recordStats) {
     this(duration, unit, mode, recordStats, true, DEFAULT_CLEANUP_INTERVAL_SECONDS);
   }
 
@@ -244,8 +241,7 @@ public class TTLCache<K, V> extends AbstractCache<K, V> implements AutoCloseable
    * @deprecated 使用对应的 {@code create} 工厂方法替代
    */
   @Deprecated
-  @SuppressWarnings("this-escape")
-  public TTLCache(
+    public TTLCache(
       long duration, TimeUnit unit, TTLMode mode, boolean recordStats, boolean useSharedCleaner) {
     this(duration, unit, mode, recordStats, useSharedCleaner, DEFAULT_CLEANUP_INTERVAL_SECONDS);
   }
@@ -254,8 +250,7 @@ public class TTLCache<K, V> extends AbstractCache<K, V> implements AutoCloseable
    * @deprecated 使用对应的 {@code create} 工厂方法替代
    */
   @Deprecated
-  @SuppressWarnings("this-escape")
-  public TTLCache(
+    public TTLCache(
       long duration,
       TimeUnit unit,
       TTLMode mode,
@@ -270,8 +265,7 @@ public class TTLCache<K, V> extends AbstractCache<K, V> implements AutoCloseable
    *     CacheLoader, Executor)} 替代
    */
   @Deprecated
-  @SuppressWarnings("this-escape")
-  public TTLCache(
+    public TTLCache(
       long duration,
       TimeUnit unit,
       TTLMode mode,

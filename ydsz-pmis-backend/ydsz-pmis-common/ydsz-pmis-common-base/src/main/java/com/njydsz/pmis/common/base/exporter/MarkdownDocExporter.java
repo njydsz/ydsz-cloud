@@ -243,8 +243,7 @@ public class MarkdownDocExporter implements DocExporter {
      * @param apiDocs OpenAPI 文档 JSON 字符串
      * @return 解析后的 API 文档基本信息
      */
-    @SuppressWarnings("unchecked")
-    private ApiDocInfo parseApiDocInfo(String apiDocs) {
+        private ApiDocInfo parseApiDocInfo(String apiDocs) {
         String title = docProperties.getInfo().getTitle();
         String version = resolveVersion();
         String description = docProperties.getInfo().getDescription();
@@ -318,8 +317,7 @@ public class MarkdownDocExporter implements DocExporter {
      * @param apiDocs OpenAPI 文档 JSON 字符串
      * @return Markdown 内容字符串
      */
-    @SuppressWarnings("unchecked")
-    private String generateRichMarkdownContent(String apiDocs) {
+        private String generateRichMarkdownContent(String apiDocs) {
         ApiDocInfo docInfo = parseApiDocInfo(apiDocs);
         StringBuilder md = new StringBuilder();
 
@@ -415,8 +413,7 @@ public class MarkdownDocExporter implements DocExporter {
      * @param path      接口路径
      * @param operation OpenAPI 操作对象
      */
-    @SuppressWarnings("unchecked")
-    private void appendEndpointMd(StringBuilder md, String method, String path, Map<String, Object> operation) {
+        private void appendEndpointMd(StringBuilder md, String method, String path, Map<String, Object> operation) {
         String summary = operation.containsKey("summary") ? String.valueOf(operation.get("summary")) : "";
         String description = operation.containsKey("description") ? String.valueOf(operation.get("description")) : "";
 
@@ -490,8 +487,7 @@ public class MarkdownDocExporter implements DocExporter {
      * @param schema OpenAPI Schema 对象
      * @param depth  当前递归深度（0 开始）
      */
-    @SuppressWarnings("unchecked")
-    private void appendSchemaMd(StringBuilder md, String name, Map<String, Object> schema, int depth) {
+        private void appendSchemaMd(StringBuilder md, String name, Map<String, Object> schema, int depth) {
         if (depth > 3) {
             return;
         }

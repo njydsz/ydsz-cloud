@@ -56,6 +56,9 @@ public abstract class AbstractPmisException extends RuntimeException {
     /** 懒加载解析后的消息（DCL 双重检查锁） */
     private volatile String resolvedMessage;
 
+    /** 类型安全的扩展数据 Map（与 extData 保持同步） */
+    private ConcurrentHashMap<String, Object> dataMap;
+
     /** 标记消息是否已解析（避免 null 消息重复解析） */
     private volatile boolean messageResolved;
 
@@ -172,14 +175,12 @@ public abstract class AbstractPmisException extends RuntimeException {
      * @param value 数据值
      * @return 当前异常对象
      */
-    @SuppressWarnings("unchecked")
     public AbstractPmisException data(String key, Object value) {
-        if (this.extData == null) {
-            this.extData = new ConcurrentHashMap<>();
+        if (this.dataMap == null) {
+            this.dataMap = new ConcurrentHashMap<>();
+            this.extData = this.dataMap;
         }
-        if (this.extData instanceof Map) {
-            ((Map<String, Object>) this.extData).put(key, value);
-        }
+        this.dataMap.put(key, value);
         return this;
     }
 

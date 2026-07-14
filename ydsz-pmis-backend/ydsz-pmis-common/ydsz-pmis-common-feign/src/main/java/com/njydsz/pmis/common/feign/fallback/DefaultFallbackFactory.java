@@ -102,8 +102,7 @@ public abstract class DefaultFallbackFactory<T> implements FallbackFactory<T> {
      * @param cause 触发降级的异常
      * @return 安全的降级实例
      */
-    @SuppressWarnings("unchecked")
-    protected T createSafeFallback(Throwable cause) {
+        protected T createSafeFallback(Throwable cause) {
         String errorMsg = cause != null ? cause.getMessage() : "服务降级（未知异常）";
         log.warn("Feign Client 降级实现返回 null, 使用安全降级: {}", errorMsg);
 

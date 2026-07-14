@@ -62,8 +62,7 @@ public final class PaddedStatsCounter {
   private final LongAdder hitCount = new LongAdder();
 
   /** 命中计数器填充字节（防止伪共享） */
-  @SuppressWarnings("unused")
-  private final long[] hitCountPadding = new long[PADDING_LONG_COUNT];
+    private final long[] hitCountPadding = new long[PADDING_LONG_COUNT];
 
   // ============================================================================
   // 未命中计数器 - 独占缓存行
@@ -73,8 +72,7 @@ public final class PaddedStatsCounter {
   private final LongAdder missCount = new LongAdder();
 
   /** 未命中计数器填充字节（防止伪共享） */
-  @SuppressWarnings("unused")
-  private final long[] missCountPadding = new long[PADDING_LONG_COUNT];
+    private final long[] missCountPadding = new long[PADDING_LONG_COUNT];
 
   // ============================================================================
   // 加载计数器 - 独占缓存行
@@ -84,8 +82,7 @@ public final class PaddedStatsCounter {
   private final LongAdder loadCount = new LongAdder();
 
   /** 加载计数器填充字节（防止伪共享） */
-  @SuppressWarnings("unused")
-  private final long[] loadCountPadding = new long[PADDING_LONG_COUNT];
+    private final long[] loadCountPadding = new long[PADDING_LONG_COUNT];
 
   // ============================================================================
   // 加载成功计数器 - 独占缓存行
@@ -95,8 +92,7 @@ public final class PaddedStatsCounter {
   private final LongAdder loadSuccessCount = new LongAdder();
 
   /** 加载成功计数器填充字节（防止伪共享） */
-  @SuppressWarnings("unused")
-  private final long[] loadSuccessCountPadding = new long[PADDING_LONG_COUNT];
+    private final long[] loadSuccessCountPadding = new long[PADDING_LONG_COUNT];
 
   // ============================================================================
   // 加载异常计数器 - 独占缓存行
@@ -106,8 +102,7 @@ public final class PaddedStatsCounter {
   private final LongAdder loadExceptionCount = new LongAdder();
 
   /** 加载异常计数器填充字节（防止伪共享） */
-  @SuppressWarnings("unused")
-  private final long[] loadExceptionCountPadding = new long[PADDING_LONG_COUNT];
+    private final long[] loadExceptionCountPadding = new long[PADDING_LONG_COUNT];
 
   // ============================================================================
   // 总加载时间计数器 - 独占缓存行
@@ -117,8 +112,7 @@ public final class PaddedStatsCounter {
   private final LongAdder totalLoadTimeNanos = new LongAdder();
 
   /** 总加载时间计数器填充字节（防止伪共享） */
-  @SuppressWarnings("unused")
-  private final long[] totalLoadTimeNanosPadding = new long[PADDING_LONG_COUNT];
+    private final long[] totalLoadTimeNanosPadding = new long[PADDING_LONG_COUNT];
 
   /** 记录缓存命中 */
   public void recordHit() {

@@ -283,8 +283,7 @@ public class DefaultDocExporter implements DocExporter {
      * @param apiDocs OpenAPI 文档 JSON 字符串
      * @return 解析后的 API 文档基本信息
      */
-    @SuppressWarnings("unchecked")
-    private ApiDocInfo parseApiDocInfo(String apiDocs) {
+        private ApiDocInfo parseApiDocInfo(String apiDocs) {
         String title = docProperties.getInfo().getTitle();
         String version = resolveVersion(apiDocs);
         String description = docProperties.getInfo().getDescription();

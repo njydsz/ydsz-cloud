@@ -152,8 +152,7 @@ class RoundTripIntegrationTest {
         assertNotNull(restored, "反序列化结果不应为null");
         assertEquals("TestUser", restored.get("name"), "name应一致");
 
-        @SuppressWarnings("unchecked")
-        Map<String, Object> restoredAddress = (Map<String, Object>) restored.get("address");
+                Map<String, Object> restoredAddress = (Map<String, Object>) restored.get("address");
         assertNotNull(restoredAddress, "address不应为null");
         assertEquals("Beijing", restoredAddress.get("city"), "city应一致");
         assertEquals("Chaoyang Road", restoredAddress.get("street"), "street应一致");

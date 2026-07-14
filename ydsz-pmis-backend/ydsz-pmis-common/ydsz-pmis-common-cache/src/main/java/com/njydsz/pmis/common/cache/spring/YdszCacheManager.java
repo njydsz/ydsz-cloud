@@ -182,16 +182,14 @@ public class YdszCacheManager implements CacheManager, DisposableBean {
 
     Cache<Object, Object> delegate = buildCache(name);
     createdCaches.add(delegate);
-    @SuppressWarnings("null")
-    SpringYdszCache newCache = new SpringYdszCache(name, delegate, this.allowNullValues);
+        SpringYdszCache newCache = new SpringYdszCache(name, delegate, this.allowNullValues);
 
     SpringYdszCache existing = this.cacheMap.putIfAbsent(name, newCache);
     return existing != null ? existing : newCache;
   }
 
   @Override
-  @SuppressWarnings("null")
-  public Collection<String> getCacheNames() {
+    public Collection<String> getCacheNames() {
     return Collections.unmodifiableSet(this.cacheMap.keySet());
   }
 

@@ -67,8 +67,7 @@ public final class LruFieldMetaCache {
         final FieldMeta[] value;
         final int hash;
         volatile Entry next;
-        @SuppressWarnings("unused")
-        volatile Entry prev;
+                volatile Entry prev;
         volatile Entry accessPrev;
         volatile Entry accessNext;
 

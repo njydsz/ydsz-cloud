@@ -236,8 +236,7 @@ class YdszJsonCoreTest {
             String json = "{\"id\":1,\"name\":\"John\"}";
             Object result = YdszJson.toObject(json, Map.class);
             assertNotNull(result);
-            @SuppressWarnings("unchecked")
-            Map<String, Object> map = (Map<String, Object>) result;
+                        Map<String, Object> map = (Map<String, Object>) result;
             assertEquals("John", map.get("name"));
         }
     }

@@ -47,8 +47,7 @@ public class YdszJsonObject extends LinkedHashMap<String, Object> {
      *
      * @param map 源 Map
      */
-    @SuppressWarnings("this-escape")
-    public YdszJsonObject(Map<?, ?> map) {
+        public YdszJsonObject(Map<?, ?> map) {
         super();
         if (map != null) {
             LinkedHashMap<String, Object> filtered = new LinkedHashMap<>(map.size());

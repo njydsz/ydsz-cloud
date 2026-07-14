@@ -226,8 +226,7 @@ public class PageResponse<T> extends BaseResponse<T> {
      * @param <T>      元素类型
      * @return 分页响应对象
      */
-    @SuppressWarnings("unchecked")
-    public static <T> PageResponse<T> of(List<T> list, long total, long pageNum, long pageSize) {
+        public static <T> PageResponse<T> of(List<T> list, long total, long pageNum, long pageSize) {
         return success(total, pageNum, pageSize, (T) list);
     }
 
@@ -239,8 +238,7 @@ public class PageResponse<T> extends BaseResponse<T> {
      *
      * @return 数据列表
      */
-    @SuppressWarnings("unchecked")
-    public List<T> getList() {
+        public List<T> getList() {
         Object data = getData();
         return data instanceof List ? (List<T>) data : List.of();
     }

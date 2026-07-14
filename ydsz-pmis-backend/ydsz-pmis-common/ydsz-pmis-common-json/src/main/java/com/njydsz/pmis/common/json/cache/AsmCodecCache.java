@@ -43,8 +43,7 @@ public final class AsmCodecCache {
         new LruCache<>(FAILED_CACHE_MAX_SIZE);
 
     static class LruSoftCache<T> {
-        @SuppressWarnings("unused")
-        private final int maxSize;
+                private final int maxSize;
         private final LinkedHashMap<Class<?>, SoftReference<T>> map;
         private final StampedLock lock = new StampedLock();
 
@@ -131,8 +130,7 @@ public final class AsmCodecCache {
     }
 
     static class LruCache<T> {
-        @SuppressWarnings("unused")
-        private final int maxSize;
+                private final int maxSize;
         private final LinkedHashMap<Class<?>, T> map;
         private final StampedLock lock = new StampedLock();
 

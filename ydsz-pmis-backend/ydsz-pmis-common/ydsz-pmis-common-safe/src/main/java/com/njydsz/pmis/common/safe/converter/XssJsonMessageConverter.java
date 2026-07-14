@@ -49,7 +49,6 @@ import com.njydsz.pmis.common.safe.xss.EscapeUtils;
 // NOTE: MappingJackson2HttpMessageConverter 在 Spring 7.0 已弃用并标记 forRemoval，
 // 待项目完成 Jackson 3.x 迁移后替换为 JacksonJsonHttpMessageConverter。
 // forRemoval=true 的弃用警告需要 "removal" 而非 "deprecation" 来抑制。
-@SuppressWarnings({"deprecation", "removal"})
 public class XssJsonMessageConverter extends MappingJackson2HttpMessageConverter implements Ordered {
 
     private static final Logger log = LoggerFactory.getLogger(XssJsonMessageConverter.class);
