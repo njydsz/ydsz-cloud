@@ -64,7 +64,7 @@ public final class JsonUtils {
      * @param jsonMetrics 指标收集器
      */
     public static void setMetrics(JsonMetrics jsonMetrics) {
-        YdszJson.metrics = jsonMetrics;
+        YdszJson.setMetrics(jsonMetrics);
     }
 
     /**

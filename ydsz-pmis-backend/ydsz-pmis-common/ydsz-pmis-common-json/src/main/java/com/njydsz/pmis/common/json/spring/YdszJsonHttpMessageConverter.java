@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.json.spring;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.springframework.http.HttpInputMessage;
@@ -20,10 +21,20 @@ import com.njydsz.pmis.common.json.YdszJson;
  *
  * <p>支持 {@code application/json} 和 {@code application/*+json} 媒体类型。
  *
+ * <p><b>优化：</b></p>
+ * <ul>
+ *   <li>写入时直接输出 UTF-8 字节并设置 Content-Length，避免 chunked 编码开销</li>
+ *   <li>读取时在读取前校验 Content-Length，防止超大 payload DoS 攻击</li>
+ *   <li>不手动 flush，由 Spring 框架统一管理输出流生命周期</li>
+ * </ul>
+ *
  * @author ydsz-pmis-team
  * @since 1.3.0
  */
 public class YdszJsonHttpMessageConverter extends AbstractHttpMessageConverter<Object> {
+
+    /** 默认最大请求体大小（10MB），超过此值的请求将被拒绝 */
+    private static final long MAX_REQUEST_BODY_SIZE = 10L * 1024 * 1024;
 
     /**
      * 构造函数，注册支持的媒体类型。
@@ -44,6 +55,13 @@ public class YdszJsonHttpMessageConverter extends AbstractHttpMessageConverter<O
     protected Object readInternal(Class<?> clazz, HttpInputMessage inputMessage)
             throws IOException, HttpMessageNotReadableException {
         try {
+            // 读取前校验 Content-Length，防止超大 payload DoS
+            long contentLength = inputMessage.getHeaders().getContentLength();
+            if (contentLength > MAX_REQUEST_BODY_SIZE) {
+                throw new IOException("Request body too large: " + contentLength
+                        + " > " + MAX_REQUEST_BODY_SIZE);
+            }
+
             byte[] body = inputMessage.getBody().readAllBytes();
             if (body.length == 0) {
                 return null;
@@ -60,10 +78,14 @@ public class YdszJsonHttpMessageConverter extends AbstractHttpMessageConverter<O
             throws IOException, HttpMessageNotWritableException {
         try {
             byte[] bytes = YdszJson.toJsonBytes(o);
-            outputMessage.getBody().write(bytes);
-            outputMessage.getBody().flush();
+            // 设置 Content-Length，避免 HTTP chunked 编码开销
+            outputMessage.getHeaders().setContentLength(bytes.length);
+            OutputStream out = outputMessage.getBody();
+            out.write(bytes);
+            // 不手动 flush，由 Spring 框架统一管理输出流生命周期
         } catch (Exception e) {
             throw new HttpMessageNotWritableException("JSON 序列化失败：" + e.getMessage(), e);
         }
     }
+
 }

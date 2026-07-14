@@ -279,7 +279,7 @@ public class ClassUtils {
             return null;
         }
 
-        Ppackage pkg = clazz.getPpackage();
+        Package pkg = clazz.getPackage();
         return pkg != null ? pkg.getName() : "";
     }
 

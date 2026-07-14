@@ -80,25 +80,16 @@ public final class YdszDeserializationProvider {
             return null;
         }
 
+        // 统一安全门控：AutoTypeChecker 作为唯一的类型安全检查入口
         AutoTypeChecker.checkType(clazz);
 
-        DeserializationConfig config = DeserializationConfig.getInstance();
-        if (config.isWhitelistEnabled() && !config.isTypeAllowed(clazz.getName())) {
-            throw new JsonDeserializationException(
-                JsonDeserializationException.PARSE_ERROR,
-                "Deserialization type not allowed: " + clazz.getName()
-            );
-        }
-
         Class<?> actualType = resolvePolymorphicType(json, clazz);
-
-        if (config.isWhitelistEnabled() && !config.isTypeAllowed(actualType.getName())) {
-            throw new JsonDeserializationException(
-                JsonDeserializationException.PARSE_ERROR,
-                "Resolved polymorphic type not allowed: " + actualType.getName()
-            );
+        if (actualType != clazz) {
+            AutoTypeChecker.checkType(actualType);
         }
 
+        // 深度检查（使用全局配置）
+        DeserializationConfig config = DeserializationConfig.getInstance();
         if (config.getMaxDepth() < DeserializationConfig.DEFAULT_MAX_DEPTH) {
             validateDepth(json, config.getMaxDepth());
         }

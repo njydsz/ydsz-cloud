@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.util.json;
 
+import com.njydsz.pmis.common.json.exception.YdszJsonException;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 

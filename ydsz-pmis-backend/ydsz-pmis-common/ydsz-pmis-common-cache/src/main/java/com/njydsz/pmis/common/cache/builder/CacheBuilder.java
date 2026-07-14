@@ -485,6 +485,9 @@ public final class CacheBuilder<K, V> {
     if (maximumSize == 0) {
       throw new IllegalArgumentException("maximumSize must be greater than 0, or -1 for unlimited");
     }
+    if (maximumSize > 0 && maximumSize < 2) {
+      throw new IllegalArgumentException("maximumSize must be at least 2 when bounded");
+    }
     if (expireAfterWriteDuration == 0) {
       throw new IllegalArgumentException(
           "expireAfterWrite duration must be greater than 0, or -1 for no expiration");
@@ -492,6 +495,36 @@ public final class CacheBuilder<K, V> {
     if (expireAfterAccessDuration == 0) {
       throw new IllegalArgumentException(
           "expireAfterAccess duration must be greater than 0, or -1 for no expiration");
+    }
+    if (expireAfterWriteDuration > 0 && expireAfterWriteUnit == null) {
+      throw new IllegalArgumentException("expireAfterWriteUnit must be set when expireAfterWrite > 0");
+    }
+    if (expireAfterAccessDuration > 0 && expireAfterAccessUnit == null) {
+      throw new IllegalArgumentException(
+          "expireAfterAccessUnit must be set when expireAfterAccess > 0");
+    }
+    if (refreshAfterWriteDuration > 0 && refreshAfterWriteUnit == null) {
+      throw new IllegalArgumentException(
+          "refreshAfterWriteUnit must be set when refreshAfterWrite > 0");
+    }
+    if (maximumWeight == 0) {
+      throw new IllegalArgumentException(
+          "maximumWeight must be greater than 0, or -1 for unlimited");
+    }
+    if (type == CacheType.WEIGHTED && weigher == null) {
+      throw new IllegalStateException("weigher must be set for WEIGHTED cache type");
+    }
+    if (stripes < 1) {
+      throw new IllegalArgumentException("stripes must be at least 1");
+    }
+    if (initialCapacity < 0) {
+      throw new IllegalArgumentException("initialCapacity must be >= 0");
+    }
+    // 不允许同时设置 expireAfterWrite 和 expireAfterAccess（避免混淆）
+    if (expireAfterWriteDuration > 0 && expireAfterAccessDuration > 0 && expiry != null) {
+      throw new IllegalArgumentException(
+          "Cannot set expireAfterWrite, expireAfterAccess, and expiry simultaneously. "
+              + "Use only one expiration strategy.");
     }
   }
 

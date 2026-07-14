@@ -412,6 +412,20 @@ public final class AutoTypeChecker {
     }
 
     /**
+     * 获取内置黑名单（只读副本）
+     */
+    public static Set<String> getBuiltinBlacklist() {
+        return Set.copyOf(BUILTIN_BLACKLIST);
+    }
+
+    /**
+     * 获取显式黑名单
+     */
+    public static Set<String> getExplicitBlacklist() {
+        return EXPLICIT_BLACKLIST;
+    }
+
+    /**
      * 清除所有缓存（用于测试）
      */
     public static void clearCache() {
