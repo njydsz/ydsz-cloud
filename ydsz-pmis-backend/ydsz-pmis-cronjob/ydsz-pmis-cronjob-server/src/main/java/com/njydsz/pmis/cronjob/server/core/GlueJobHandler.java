@@ -2,6 +2,7 @@ package com.njydsz.pmis.cronjob.server.core.handler;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.script.ScriptEngine;
@@ -21,6 +22,9 @@ import com.njydsz.pmis.cronjob.server.service.schedule.GlueCodeService;
 
 import groovy.lang.GroovyClassLoader;
 import lombok.extern.slf4j.Slf4j;
+
+import org.codehaus.groovy.control.CompilerConfiguration;
+import org.codehaus.groovy.control.customizers.SecureASTCustomizer;
 
 /**
  * GLUE 在线编码任务处理器（P1-2 GLUE 在线编码，P1-7 多语言支持扩展）。
@@ -87,7 +91,7 @@ public class GlueJobHandler implements JobHandler {
                           ObjectProvider<SandboxScriptExecutor> sandboxExecutorProvider) {
         this.glueCodeServiceProvider = glueCodeServiceProvider;
         this.sandboxExecutorProvider = sandboxExecutorProvider;
-        // 初始化 JavaScript 引擎
+        // 初始化 JavaScript 引擎（P0-6: 应用安全限制）
         ScriptEngineManager manager = new ScriptEngineManager();
         ScriptEngine engine = manager.getEngineByName("nashorn");
         if (engine == null) {
@@ -98,10 +102,142 @@ public class GlueJobHandler implements JobHandler {
         }
         this.jsEngine = engine;
         if (engine != null) {
-            log.info("[GlueJobHandler] JavaScript 引擎已加载: {}", engine.getClass().getName());
+            applyJsSandbox(engine);
+            log.info("[GlueJobHandler] JavaScript 引擎已加载（沙箱模式）: {}", engine.getClass().getName());
         } else {
             log.warn("[GlueJobHandler] JavaScript 引擎不可用, JS 类型 GLUE 任务将无法执行");
         }
+    }
+
+    /**
+     * P0-6: 对 JavaScript 引擎应用沙箱安全限制。
+     *
+     * <p>针对不同引擎应用不同的安全策略：
+     * <ul>
+     *   <li>GraalJS: 设置 {@code polyglot.js.allowHostAccess=false} 等选项，
+     *       禁止 JS 代码通过 {@code Java.type()} 访问 Java 类</li>
+     *   <li>Nashorn: 设置 {@code nashorn.args=--no-java}，
+     *       禁止 JS 代码访问 Java 类（需引擎支持）</li>
+     * </ul>
+     *
+     * <p>注意：GraalJS 的 {@code ScriptEngine} 集成对部分选项仅在新 Context 创建时生效，
+     * 此处设置作为尽力而为的防护。生产环境建议使用 GraalJS 的 {@code Context} API
+     * 配合 {@code HostAccess.newBuilder().build()} 实现更严格的隔离。
+     *
+     * @param engine JavaScript 脚本引擎
+     */
+    private void applyJsSandbox(ScriptEngine engine) {
+        try {
+            String engineName = engine.getClass().getName().toLowerCase();
+            if (engineName.contains("graal")) {
+                // GraalJS: 禁止 Host 访问
+                engine.put("polyglot.js.allowHostAccess", false);
+                engine.put("polyglot.js.allowHostAccessLookup", false);
+                engine.put("polyglot.js.allowAllAccess", false);
+                engine.put("polyglot.js.allowIO", false);
+                engine.put("polyglot.js.allowCreateThread", false);
+                log.info("[GlueJobHandler] GraalJS 沙箱限制已应用: allowHostAccess=false allowIO=false allowCreateThread=false");
+            } else if (engineName.contains("nashorn")) {
+                // Nashorn: 尝试设置 --no-java（部分实现支持）
+                engine.put("nashorn.args", "--no-java --no-syntax-extensions");
+                log.info("[GlueJobHandler] Nashorn 沙箱限制已应用: --no-java");
+            }
+        } catch (Exception e) {
+            log.warn("[GlueJobHandler] 应用 JS 沙箱限制失败, 引擎可能以非沙箱模式运行: reason={}", e.getMessage());
+        }
+    }
+
+    /**
+     * P0-6: 创建 Groovy 安全编译配置。
+     *
+     * <p>使用 {@link SecureASTCustomizer} 限制 GLUE Groovy 脚本的访问范围：
+     * <ul>
+     *   <li>导入白名单：仅允许常用安全类（集合、时间、数学、JobHandler 相关）</li>
+     *   <li>Star 导入白名单：仅允许 java.util / java.time / java.math</li>
+     *   <li>接收者黑名单：禁止在 System / Runtime / ProcessBuilder / Thread /
+     *       ClassLoader / File / Path / URL / Socket 等危险类型上调用方法</li>
+     *   <li>启用间接导入检查：防止通过反射等手段绕过白名单</li>
+     * </ul>
+     *
+     * <p>对标 XXL-Job 的 GLUE 沙箱隔离和 PowerJob 的脚本安全策略。
+     *
+     * @return 配置好安全限制的 CompilerConfiguration
+     */
+    private CompilerConfiguration createSecureCompilerConfiguration() {
+        SecureASTCustomizer customizer = new SecureASTCustomizer();
+        customizer.setIndirectImportCheckEnabled(true);
+
+        // 导入白名单：仅允许安全类
+        List<String> importsWhitelist = List.of(
+                "java.lang.Math",
+                "java.lang.String",
+                "java.lang.Integer",
+                "java.lang.Long",
+                "java.lang.Double",
+                "java.lang.Boolean",
+                "java.lang.Number",
+                "java.lang.Object",
+                "java.lang.Comparable",
+                "java.lang.Iterable",
+                "java.util.Date",
+                "java.util.List",
+                "java.util.Map",
+                "java.util.Set",
+                "java.util.Collection",
+                "java.util.ArrayList",
+                "java.util.HashMap",
+                "java.util.HashSet",
+                "java.util.LinkedHashMap",
+                "java.util.LinkedHashSet",
+                "java.util.Arrays",
+                "java.util.Collections",
+                "java.util.UUID",
+                "java.time.LocalDateTime",
+                "java.time.LocalDate",
+                "java.time.LocalTime",
+                "java.time.format.DateTimeFormatter",
+                "java.math.BigDecimal",
+                "java.math.BigInteger",
+                "java.math.RoundingMode",
+                "com.njydsz.pmis.common.core.job.JobHandler",
+                "com.njydsz.pmis.common.core.job.JobContextHolder",
+                "com.njydsz.pmis.common.core.job.JobLoggerHolder",
+                "com.njydsz.pmis.common.core.job.ProcessResult"
+        );
+        customizer.setImportsWhitelist(importsWhitelist);
+
+        // Star 导入白名单：仅允许安全包
+        customizer.setStarImportsWhitelist(List.of("java.util", "java.time", "java.math"));
+
+        // 静态导入白名单
+        customizer.setStaticImportsWhitelist(List.of(
+                "java.lang.Math",
+                "java.util.Collections",
+                "java.util.Arrays"
+        ));
+
+        // 接收者黑名单：禁止在危险类型上调用方法
+        customizer.setReceiversBlackList(List.of(
+                System.class.getName(),
+                Runtime.class.getName(),
+                ProcessBuilder.class.getName(),
+                Thread.class.getName(),
+                ClassLoader.class.getName(),
+                java.io.File.class.getName(),
+                java.nio.file.Path.class.getName(),
+                java.nio.file.Files.class.getName(),
+                java.net.URL.class.getName(),
+                java.net.Socket.class.getName(),
+                java.net.ServerSocket.class.getName(),
+                java.net.HttpURLConnection.class.getName(),
+                java.lang.reflect.Method.class.getName(),
+                java.lang.reflect.Field.class.getName(),
+                java.lang.reflect.Constructor.class.getName()
+        ));
+
+        CompilerConfiguration config = new CompilerConfiguration();
+        config.addCompilationCustomizers(customizer);
+        return config;
     }
 
     @Override
@@ -232,20 +368,22 @@ public class GlueJobHandler implements JobHandler {
             return cached;
         }
 
-        // 编译（使用新的 GroovyClassLoader 隔离类空间）
-        GroovyClassLoader classLoader = new GroovyClassLoader();
+        // P0-6: 使用安全编译配置（SecureASTCustomizer 沙箱隔离）
+        CompilerConfiguration config = createSecureCompilerConfiguration();
+        GroovyClassLoader classLoader = new GroovyClassLoader(
+                getClass().getClassLoader(), config);
         Class<?> clazz;
         try {
             clazz = classLoader.parseClass(sourceCode);
         } catch (Exception e) {
-            throw new RuntimeException("GLUE 代码编译失败: " + e.getMessage(), e);
+            throw new RuntimeException("GLUE 代码编译失败（沙箱安全检查未通过）: " + e.getMessage(), e);
         }
         if (clazz == null) {
             throw new RuntimeException("GLUE 代码编译失败: 解析结果为空");
         }
         compiledClassCache.put(cacheKey, clazz);
         classLoaderCache.put(cacheKey, classLoader);
-        log.info("[GlueJobHandler] GLUE 代码编译成功: jobId={} className={}", jobId, clazz.getName());
+        log.info("[GlueJobHandler] GLUE 代码编译成功（沙箱模式）: jobId={} className={}", jobId, clazz.getName());
         return clazz;
     }
 

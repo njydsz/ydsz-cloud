@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -327,10 +328,11 @@ public class AiSummaryApplicationService {
         }
 
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
-        ResponseEntity<Map> response = nextwikiRestTemplate.exchange(
-                llmApiUrl, HttpMethod.POST, entity, Map.class);
+        ParameterizedTypeReference<Map<String, Object>> typeRef = new ParameterizedTypeReference<>() {};
+        ResponseEntity<Map<String, Object>> response = nextwikiRestTemplate.exchange(
+                llmApiUrl, HttpMethod.POST, entity, typeRef);
 
-        Map body = response.getBody();
+        Map<String, Object> body = response.getBody();
         if (body == null) {
             return null;
         }

@@ -455,7 +455,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
         String notifyUserIds = readString(config, "notifyUserIds", null);
         if (StringUtils.hasText(notifyUserIds)) {
             String[] ids = notifyUserIds.split(",");
-            List<String> targets = new java.util.ArrayList<>(ids.length);
+            List<String> targets = new ArrayList<>(ids.length);
             for (String id : ids) {
                 String trimmed = id.trim();
                 if (!trimmed.isEmpty()) {

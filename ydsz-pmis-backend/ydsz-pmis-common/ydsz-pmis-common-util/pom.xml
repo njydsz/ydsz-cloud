@@ -19,14 +19,10 @@
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common-core</artifactId>
         </dependency>
-        <!-- Jackson（统一 JSON 引擎） -->
+        <!-- ydsz-pmis-common-json（统一 JSON 引擎，替代 Jackson/FastJSON2/Gson） -->
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-common-json</artifactId>
         </dependency>
         <dependency>
             <groupId>org.yaml</groupId>

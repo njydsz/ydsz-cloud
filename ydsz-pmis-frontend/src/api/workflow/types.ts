@@ -457,7 +457,7 @@ export interface DelegateLogDTO {
 // ===========================================
 
 /** SLA 策略类型 */
-export type SlaStrategy = 'REMIND' | 'ESCALATE' | 'AUTO_PASS' | 'AUTO_REJECT'
+export type SlaStrategy = 'REMIND' | 'NOTIFY' | 'ESCALATE' | 'AUTO_PASS' | 'AUTO_REJECT'
 
 /** SLA 超时任务 */
 export interface SlaOverdueTaskDTO {
@@ -485,6 +485,13 @@ export interface SlaOverdueTaskDTO {
  * P1-2: 节点级 SLA 规则配置
  *
  * 与后端 `FlowNodeDO.slaConfig` JSON 字段对应，由 `FlowSlaServiceImpl` 解析执行。
+ *
+ * P1-3 闭环语义：每个 action 都有明确终态，不允许"标记超时但流程卡死"。
+ * - REMIND     中间态：仅发送催办通知，达 maxReminders 后切换到 finalAction（默认 NOTIFY）
+ * - NOTIFY     最终态：通知管理员/升级人介入，任务保持活跃（等人工处理）
+ * - ESCALATE   最终态：转办给 escalateUserId，任务保持活跃
+ * - AUTO_PASS  最终态：系统自动通过，流程推进到下一节点
+ * - AUTO_REJECT 最终态：系统自动驳回，流程终止
  */
 export interface SlaRuleConfigDTO {
   /** 超时阈值（分钟）。必填，>0 才算开启 SLA */
@@ -499,6 +506,8 @@ export interface SlaRuleConfigDTO {
   escalateUserId?: string | null
   /** 自动操作备注（AUTO_PASS/AUTO_REJECT 时写入审批意见） */
   autoComment?: string
+  /** P1-3: NOTIFY 通知目标用户 ID 列表（逗号分隔，action=NOTIFY 时使用，可空则降级到 escalateUserId/默认管理员） */
+  notifyUserIds?: string | null
 }
 
 // ===========================================

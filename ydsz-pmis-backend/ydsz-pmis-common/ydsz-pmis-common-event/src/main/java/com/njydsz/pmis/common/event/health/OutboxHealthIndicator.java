@@ -2,7 +2,11 @@ package com.njydsz.pmis.common.event.health;
 
 import java.util.Map;
 
-import org.springframework.boot.health.healthcontributor.HealthIndicator;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
+import org.springframework.stereotype.Component;
 
 import com.njydsz.pmis.common.event.model.OutboxStatus;
 import com.njydsz.pmis.common.event.repository.OutboxRepository;
@@ -13,12 +17,15 @@ import com.njydsz.pmis.common.event.repository.OutboxRepository;
  * <p>检查 Outbox 表中的消息积压情况：
  * <ul>
  *   <li>DEAD_LETTER 消息数 > 0 时标记为 DOWN</li>
- *   <li>PENDING 消息数超过阈值时标记为 DEGRADED</li>
+ *   <li>PENDING 消息数超过阈值时标记为 DEGRADED（自定义 Status）</li>
  * </ul>
  *
  * @author Marvin Lee
  * @since 1.0.0
  */
+@Component
+@ConditionalOnClass(HealthIndicator.class)
+@ConditionalOnBean(OutboxRepository.class)
 public class OutboxHealthIndicator implements HealthIndicator {
 
     private static final long PENDING_WARNING_THRESHOLD = 1000;
@@ -30,20 +37,20 @@ public class OutboxHealthIndicator implements HealthIndicator {
     }
 
     @Override
-    public org.springframework.boot.health.Health health() {
+    public Health health() {
         try {
             Map<String, Long> statusCounts = outboxRepository.countByStatus();
             long pending = statusCounts.getOrDefault(OutboxStatus.PENDING.name(), 0L);
             long deadLetter = statusCounts.getOrDefault(OutboxStatus.DEAD_LETTER.name(), 0L);
             long sent = statusCounts.getOrDefault(OutboxStatus.SENT.name(), 0L);
 
-            org.springframework.boot.health.Health.Builder builder;
+            Health.Builder builder;
             if (deadLetter > 0) {
-                builder = org.springframework.boot.health.Health.down();
+                builder = Health.down();
             } else if (pending > PENDING_WARNING_THRESHOLD) {
-                builder = new org.springframework.boot.health.Health.Builder("DEGRADED");
+                builder = Health.status("DEGRADED");
             } else {
-                builder = org.springframework.boot.health.Health.up();
+                builder = Health.up();
             }
 
             return builder
@@ -53,7 +60,7 @@ public class OutboxHealthIndicator implements HealthIndicator {
                     .withDetail("threshold", PENDING_WARNING_THRESHOLD)
                     .build();
         } catch (Exception e) {
-            return org.springframework.boot.health.Health.down(e).build();
+            return Health.down(e).build();
         }
     }
 }

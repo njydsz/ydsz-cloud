@@ -3,6 +3,7 @@ package com.njydsz.pmis.literule.server.core;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +21,7 @@ import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleSeverity;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -56,7 +58,7 @@ class DefaultRuleEngineTest {
         when(rule.getTenantId()).thenReturn("1");
         when(rule.getEnvironment()).thenReturn(RuleEnvironment.DEFAULT);
         // 默认返回未触发，测试用例可再次 stub evaluate
-        when(rule.evaluate(org.mockito.ArgumentMatchers.any(RuleContext.class)))
+        when(rule.evaluate(any(RuleContext.class)))
                 .thenReturn(RuleResult.notTriggered(code));
         return rule;
     }
@@ -142,7 +144,7 @@ class DefaultRuleEngineTest {
             facts.put("amount", 1000);
 
             Rule triggeredRule = mockRule("R001", "触发规则", 100);
-            when(triggeredRule.evaluate(org.mockito.ArgumentMatchers.any(RuleContext.class)))
+            when(triggeredRule.evaluate(any(RuleContext.class)))
                     .thenReturn(RuleResult.triggered("R001", "触发规则", "TEST",
                             RuleSeverity.RED, "金额超限", "金额超过阈值"));
 
@@ -165,10 +167,10 @@ class DefaultRuleEngineTest {
             facts.put("v", 1);
 
             // 执行顺序记录器
-            java.util.List<String> executionOrder = new java.util.concurrent.CopyOnWriteArrayList<>();
+            List<String> executionOrder = new CopyOnWriteArrayList<>();
 
             Rule lowPriorityRule = mockRule("R_LOW", "低优先级（先执行）", 10);
-            when(lowPriorityRule.evaluate(org.mockito.ArgumentMatchers.any(RuleContext.class)))
+            when(lowPriorityRule.evaluate(any(RuleContext.class)))
                     .thenAnswer(inv -> {
                         executionOrder.add("R_LOW");
                         return RuleResult.triggered("R_LOW", "低优先级", "TEST",
@@ -176,7 +178,7 @@ class DefaultRuleEngineTest {
                     });
 
             Rule highPriorityRule = mockRule("R_HIGH", "高优先级（后执行）", 200);
-            when(highPriorityRule.evaluate(org.mockito.ArgumentMatchers.any(RuleContext.class)))
+            when(highPriorityRule.evaluate(any(RuleContext.class)))
                     .thenAnswer(inv -> {
                         executionOrder.add("R_HIGH");
                         return RuleResult.triggered("R_HIGH", "高优先级", "TEST",
@@ -200,13 +202,13 @@ class DefaultRuleEngineTest {
 
             Rule firstInGroup = mockRule("R_FIRST", "组内首条", 10);
             when(firstInGroup.getMutexGroup()).thenReturn("MUTEX_A");
-            when(firstInGroup.evaluate(org.mockito.ArgumentMatchers.any(RuleContext.class)))
+            when(firstInGroup.evaluate(any(RuleContext.class)))
                     .thenReturn(RuleResult.triggered("R_FIRST", "组内首条", "TEST",
                             RuleSeverity.YELLOW, "首条命中", "首条命中"));
 
             Rule secondInGroup = mockRule("R_SECOND", "组内第二条", 20);
             when(secondInGroup.getMutexGroup()).thenReturn("MUTEX_A");
-            when(secondInGroup.evaluate(org.mockito.ArgumentMatchers.any(RuleContext.class)))
+            when(secondInGroup.evaluate(any(RuleContext.class)))
                     .thenReturn(RuleResult.triggered("R_SECOND", "组内第二条", "TEST",
                             RuleSeverity.RED, "第二条命中", "第二条命中"));
 
@@ -227,7 +229,7 @@ class DefaultRuleEngineTest {
             facts.put("v", 1);
 
             Rule sameTenantRule = mockRule("R_TENANT1", "租户1规则", 100);
-            when(sameTenantRule.evaluate(org.mockito.ArgumentMatchers.any(RuleContext.class)))
+            when(sameTenantRule.evaluate(any(RuleContext.class)))
                     .thenReturn(RuleResult.triggered("R_TENANT1", "租户1", "TEST",
                             RuleSeverity.INFO, "命中", "命中"));
 
@@ -238,7 +240,7 @@ class DefaultRuleEngineTest {
             when(otherTenantRule.getPriority()).thenReturn(100);
             when(otherTenantRule.getTenantId()).thenReturn("2");
             when(otherTenantRule.getEnvironment()).thenReturn(RuleEnvironment.DEFAULT);
-            when(otherTenantRule.evaluate(org.mockito.ArgumentMatchers.any(RuleContext.class)))
+            when(otherTenantRule.evaluate(any(RuleContext.class)))
                     .thenReturn(RuleResult.triggered("R_TENANT2", "租户2", "TEST",
                             RuleSeverity.INFO, "不应被评估", "不应被评估"));
 
@@ -261,7 +263,7 @@ class DefaultRuleEngineTest {
 
             // environment=default 匹配任何上下文环境
             Rule defaultEnvRule = mockRule("R_DEFAULT", "默认环境规则", 100);
-            when(defaultEnvRule.evaluate(org.mockito.ArgumentMatchers.any(RuleContext.class)))
+            when(defaultEnvRule.evaluate(any(RuleContext.class)))
                     .thenReturn(RuleResult.triggered("R_DEFAULT", "默认", "TEST",
                             RuleSeverity.INFO, "默认命中", "默认命中"));
 
@@ -273,7 +275,7 @@ class DefaultRuleEngineTest {
             when(prodEnvRule.getPriority()).thenReturn(100);
             when(prodEnvRule.getTenantId()).thenReturn("1");
             when(prodEnvRule.getEnvironment()).thenReturn("prod");
-            when(prodEnvRule.evaluate(org.mockito.ArgumentMatchers.any(RuleContext.class)))
+            when(prodEnvRule.evaluate(any(RuleContext.class)))
                     .thenReturn(RuleResult.triggered("R_PROD", "生产", "TEST",
                             RuleSeverity.INFO, "生产命中", "生产命中"));
 
@@ -301,7 +303,7 @@ class DefaultRuleEngineTest {
             when(prodRule.getPriority()).thenReturn(100);
             when(prodRule.getTenantId()).thenReturn("1");
             when(prodRule.getEnvironment()).thenReturn("prod");
-            when(prodRule.evaluate(org.mockito.ArgumentMatchers.any(RuleContext.class)))
+            when(prodRule.evaluate(any(RuleContext.class)))
                     .thenReturn(RuleResult.triggered("R_PROD", "生产", "TEST",
                             RuleSeverity.RED, "生产命中", "生产命中"));
 
@@ -321,11 +323,11 @@ class DefaultRuleEngineTest {
             facts.put("v", 1);
 
             Rule throwingRule = mockRule("R_THROW", "异常规则", 100);
-            when(throwingRule.evaluate(org.mockito.ArgumentMatchers.any(RuleContext.class)))
+            when(throwingRule.evaluate(any(RuleContext.class)))
                     .thenThrow(new RuntimeException("规则内部异常"));
 
             Rule normalRule = mockRule("R_NORMAL", "正常规则", 200);
-            when(normalRule.evaluate(org.mockito.ArgumentMatchers.any(RuleContext.class)))
+            when(normalRule.evaluate(any(RuleContext.class)))
                     .thenReturn(RuleResult.triggered("R_NORMAL", "正常", "TEST",
                             RuleSeverity.YELLOW, "正常命中", "正常命中"));
 
@@ -346,16 +348,299 @@ class DefaultRuleEngineTest {
             facts.put("v", 1);
 
             Rule infoRule = mockRule("R_INFO", "INFO规则", 100);
-            when(infoRule.evaluate(org.mockito.ArgumentMatchers.any(RuleContext.class)))
+            when(infoRule.evaluate(any(RuleContext.class)))
                     .thenReturn(RuleResult.triggered("R_INFO", "INFO", "TEST",
                             RuleSeverity.INFO, "信息", "信息"));
 
             Rule redRule = mockRule("R_RED", "RED规则", 200);
-            when(redRule.evaluate(org.mockito.ArgumentMatchers.any(RuleContext.class)))
+            when(redRule.evaluate(any(RuleContext.class)))
                     .thenReturn(RuleResult.triggered("R_RED", "RED", "TEST",
                             RuleSeverity.RED, "严重", "严重"));
 
             Rule yellowRule = mockRule("R_YELLOW", "YELLOW规则", 300);
-            when(yellowRule.evaluate(org.mockito.ArgumentMatchers.any(RuleContext.class)))
+            when(yellowRule.evaluate(any(RuleContext.class)))
                     .thenReturn(RuleResult.triggered("R_YELLOW", "YELLOW", "TEST",
-                            RuleSeverity.YELLOW, "预警
+                            RuleSeverity.YELLOW, "预警", "预警"));
+
+            engine.register(infoRule);
+            engine.register(redRule);
+            engine.register(yellowRule);
+
+            List<RuleResult> results = engine.evaluate(contextWithFacts(facts));
+
+            assertThat(results).hasSize(3);
+            assertThat(results.get(0).getSeverity()).isEqualTo(RuleSeverity.RED);
+            assertThat(results.get(1).getSeverity()).isEqualTo(RuleSeverity.YELLOW);
+            assertThat(results.get(2).getSeverity()).isEqualTo(RuleSeverity.INFO);
+        }
+    }
+
+    @Nested
+    @DisplayName("dryRun 仿真评估")
+    class DryRunCases {
+
+        @Test
+        @DisplayName("dryRun 返回全部匹配规则的结果（含未触发）")
+        void shouldReturnAllResultsIncludingNotTriggered() {
+            Map<String, Object> facts = new HashMap<>();
+            facts.put("v", 1);
+
+            Rule triggeredRule = mockRule("R001", "触发规则", 100);
+            when(triggeredRule.evaluate(any(RuleContext.class)))
+                    .thenReturn(RuleResult.triggered("R001", "触发", "TEST",
+                            RuleSeverity.INFO, "命中", "命中"));
+
+            Rule notTriggeredRule = mockRule("R002", "未触发规则", 200);
+
+            engine.register(triggeredRule);
+            engine.register(notTriggeredRule);
+
+            List<RuleResult> results = engine.dryRun(contextWithFacts(facts));
+
+            // dryRun 返回全部结果，含未触发
+            assertThat(results).hasSize(2);
+            assertThat(results).extracting(RuleResult::getRuleCode)
+                    .containsExactlyInAnyOrder("R001", "R002");
+        }
+
+        @Test
+        @DisplayName("dryRun 不记录统计：getStats 计数应保持为 0")
+        void shouldNotRecordStatsOnDryRun() {
+            Map<String, Object> facts = new HashMap<>();
+            facts.put("v", 1);
+
+            Rule rule = mockRule("R001", "规则", 100);
+            when(rule.evaluate(any(RuleContext.class)))
+                    .thenReturn(RuleResult.triggered("R001", "规则", "TEST",
+                            RuleSeverity.INFO, "命中", "命中"));
+
+            engine.register(rule);
+            engine.dryRun(contextWithFacts(facts));
+
+            RuleEngineStats stats = engine.getStats();
+            assertThat(stats.getTotalEvaluations()).isZero();
+            assertThat(stats.getTotalTriggered()).isZero();
+        }
+    }
+
+    @Nested
+    @DisplayName("topResult 取最高严重度结果")
+    class TopResultCases {
+
+        @Test
+        @DisplayName("topResult 返回最高严重度的结果")
+        void shouldReturnHighestSeverityResult() {
+            Map<String, Object> facts = new HashMap<>();
+            facts.put("v", 1);
+
+            Rule infoRule = mockRule("R_INFO", "INFO", 100);
+            when(infoRule.evaluate(any(RuleContext.class)))
+                    .thenReturn(RuleResult.triggered("R_INFO", "INFO", "TEST",
+                            RuleSeverity.INFO, "信息", "信息"));
+
+            Rule redRule = mockRule("R_RED", "RED", 200);
+            when(redRule.evaluate(any(RuleContext.class)))
+                    .thenReturn(RuleResult.triggered("R_RED", "RED", "TEST",
+                            RuleSeverity.RED, "严重", "严重"));
+
+            engine.register(infoRule);
+            engine.register(redRule);
+
+            RuleResult top = engine.topResult(contextWithFacts(facts));
+
+            assertThat(top).isNotNull();
+            assertThat(top.getSeverity()).isEqualTo(RuleSeverity.RED);
+        }
+
+        @Test
+        @DisplayName("无规则触发时 topResult 返回 null")
+        void shouldReturnNullWhenNoTriggered() {
+            Rule rule = mockRule("R001", "未触发规则", 100);
+            engine.register(rule);
+
+            Map<String, Object> facts = new HashMap<>();
+            facts.put("v", 1);
+
+            assertThat(engine.topResult(contextWithFacts(facts))).isNull();
+        }
+    }
+
+    @Nested
+    @DisplayName("getStats 统计计数")
+    class StatsCases {
+
+        @Test
+        @DisplayName("evaluate 后统计计数正确：评估次数、触发次数")
+        void shouldRecordCorrectCountsAfterEvaluate() {
+            Map<String, Object> facts = new HashMap<>();
+            facts.put("v", 1);
+
+            Rule triggeredRule = mockRule("R001", "触发", 100);
+            when(triggeredRule.evaluate(any(RuleContext.class)))
+                    .thenReturn(RuleResult.triggered("R001", "触发", "TEST",
+                            RuleSeverity.INFO, "命中", "命中"));
+
+            Rule notTriggeredRule = mockRule("R002", "未触发", 200);
+
+            engine.register(triggeredRule);
+            engine.register(notTriggeredRule);
+
+            engine.evaluate(contextWithFacts(facts));
+
+            RuleEngineStats stats = engine.getStats();
+            // 两条规则被评估
+            assertThat(stats.getTotalEvaluations()).isEqualTo(2);
+            // 一条规则触发
+            assertThat(stats.getTotalTriggered()).isEqualTo(1);
+            // 无异常
+            assertThat(stats.getTotalErrors()).isZero();
+            // 注册规则数
+            assertThat(stats.getRegisteredRules()).isEqualTo(2);
+            // 按规则明细：R001 触发 1 次
+            RuleEngineStats.RuleStat r001Stat = stats.getPerRuleStats().get("R001");
+            assertThat(r001Stat).isNotNull();
+            assertThat(r001Stat.getExecutions()).isEqualTo(1);
+            assertThat(r001Stat.getTriggered()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("规则抛异常时 totalErrors 递增，但其他规则仍记录执行次数")
+        void shouldRecordErrorsWhenRuleThrows() {
+            Map<String, Object> facts = new HashMap<>();
+            facts.put("v", 1);
+
+            Rule throwingRule = mockRule("R_THROW", "异常规则", 100);
+            doThrow(new RuntimeException("boom"))
+                    .when(throwingRule)
+                    .evaluate(any(RuleContext.class));
+
+            Rule normalRule = mockRule("R_NORMAL", "正常规则", 200);
+            when(normalRule.evaluate(any(RuleContext.class)))
+                    .thenReturn(RuleResult.triggered("R_NORMAL", "正常", "TEST",
+                            RuleSeverity.INFO, "命中", "命中"));
+
+            engine.register(throwingRule);
+            engine.register(normalRule);
+
+            engine.evaluate(contextWithFacts(facts));
+
+            RuleEngineStats stats = engine.getStats();
+            assertThat(stats.getTotalEvaluations()).isEqualTo(2);
+            assertThat(stats.getTotalErrors()).isEqualTo(1);
+            assertThat(stats.getTotalTriggered()).isEqualTo(1);
+        }
+
+        @Test
+        @DisplayName("resetStats 清空所有统计计数")
+        void shouldResetAllStats() {
+            Map<String, Object> facts = new HashMap<>();
+            facts.put("v", 1);
+
+            Rule rule = mockRule("R001", "规则", 100);
+            when(rule.evaluate(any(RuleContext.class)))
+                    .thenReturn(RuleResult.triggered("R001", "规则", "TEST",
+                            RuleSeverity.INFO, "命中", "命中"));
+
+            engine.register(rule);
+            engine.evaluate(contextWithFacts(facts));
+
+            engine.resetStats();
+
+            RuleEngineStats stats = engine.getStats();
+            assertThat(stats.getTotalEvaluations()).isZero();
+            assertThat(stats.getTotalTriggered()).isZero();
+            assertThat(stats.getTotalErrors()).isZero();
+            assertThat(stats.getPerRuleStats()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("setStatsEnabled(false) 关闭统计后不再记录计数")
+        void shouldNotRecordWhenStatsDisabled() {
+            Map<String, Object> facts = new HashMap<>();
+            facts.put("v", 1);
+
+            Rule rule = mockRule("R001", "规则", 100);
+            when(rule.evaluate(any(RuleContext.class)))
+                    .thenReturn(RuleResult.triggered("R001", "规则", "TEST",
+                            RuleSeverity.INFO, "命中", "命中"));
+
+            engine.register(rule);
+            engine.setStatsEnabled(false);
+
+            engine.evaluate(contextWithFacts(facts));
+
+            RuleEngineStats stats = engine.getStats();
+            assertThat(stats.getTotalEvaluations()).isZero();
+            assertThat(stats.getTotalTriggered()).isZero();
+        }
+    }
+
+    @Nested
+    @DisplayName("MDC traceId 传播")
+    class MdcTraceIdCases {
+
+        @Test
+        @DisplayName("evaluate 后 MDC 恢复为原状（原有 traceId 被还原）")
+        void shouldRestoreMdcAfterEvaluate() {
+            Map<String, Object> facts = new HashMap<>();
+            facts.put("v", 1);
+
+            // 预设 MDC 中已有 traceId
+            MDC.put(TraceContext.TRACE_ID_KEY, "previous-trace");
+
+            Rule rule = mockRule("R001", "规则", 100);
+            engine.register(rule);
+
+            // 上下文显式指定 traceId
+            RuleContext ctx = RuleContext.of(facts, "DEFAULT", "TEST", "evaluate-trace", "1");
+            engine.evaluate(ctx);
+
+            // evaluate 后 MDC 应恢复为原值
+            assertThat(MDC.get(TraceContext.TRACE_ID_KEY)).isEqualTo("previous-trace");
+        }
+
+        @Test
+        @DisplayName("evaluate 期间 MDC traceId 为上下文 traceId")
+        void shouldSetMdcTraceIdDuringEvaluate() {
+            Map<String, Object> facts = new HashMap<>();
+            facts.put("v", 1);
+
+            // 捕获 evaluate 期间的 MDC traceId
+            AtomicReference<String> capturedTraceId = new AtomicReference<>();
+
+            Rule rule = mockRule("R001", "规则", 100);
+            when(rule.evaluate(any(RuleContext.class)))
+                    .thenAnswer(inv -> {
+                        capturedTraceId.set(MDC.get(TraceContext.TRACE_ID_KEY));
+                        return RuleResult.notTriggered("R001");
+                    });
+
+            engine.register(rule);
+
+            RuleContext ctx = RuleContext.of(facts, "DEFAULT", "TEST", "in-eval-trace", "1");
+            engine.evaluate(ctx);
+
+            // evaluate 期间 MDC 应被设置为上下文 traceId
+            assertThat(capturedTraceId.get()).isEqualTo("in-eval-trace");
+        }
+
+        @Test
+        @DisplayName("evaluate 前未设置 MDC traceId，evaluate 后 MDC traceId 被清理")
+        void shouldClearMdcWhenNoPreviousTraceId() {
+            Map<String, Object> facts = new HashMap<>();
+            facts.put("v", 1);
+
+            // 确保初始 MDC 无 traceId
+            MDC.remove(TraceContext.TRACE_ID_KEY);
+
+            Rule rule = mockRule("R001", "规则", 100);
+            engine.register(rule);
+
+            RuleContext ctx = RuleContext.of(facts, "DEFAULT", "TEST", "trace-to-clear", "1");
+            engine.evaluate(ctx);
+
+            // evaluate 后 MDC traceId 应被清理（恢复为原状即 null）
+            assertThat(MDC.get(TraceContext.TRACE_ID_KEY)).isNull();
+        }
+    }
+}

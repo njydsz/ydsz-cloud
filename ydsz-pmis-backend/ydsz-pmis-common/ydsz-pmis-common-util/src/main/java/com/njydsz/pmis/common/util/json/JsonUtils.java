@@ -1,83 +1,44 @@
 package com.njydsz.pmis.common.util.json;
 
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalTimeSerializer;
+import com.njydsz.pmis.common.json.YdszJson;
+import com.njydsz.pmis.common.json.config.YdszJsonConfig;
+import com.njydsz.pmis.common.json.exception.YdszJsonException;
+import com.njydsz.pmis.common.json.type.YdszJsonType;
 
 /**
- * 统一 JSON 序列化工具类（基于 Jackson）
+ * 统一 JSON 序列化工具类（基于 YdszJson 引擎）
  *
  * <p>提供对象与 JSON 字符串/字节数组之间的双向转换。
- * 遵循大厂标准，全项目统一使用 Jackson 作为 JSON 引擎。
+ * 全项目统一使用 YdszJson 作为 JSON 引擎，零第三方 JSON 库依赖。
  *
  * <p><b>默认行为：</b>
  * <ul>
- *   <li>输出 null 值字段（WriteMapNullValue）</li>
  *   <li>日期格式：yyyy-MM-dd HH:mm:ss（Java 8 时间 API）</li>
- *   <li>忽略未知字段（FAIL_ON_UNKNOWN_PROPERTIES = false）</li>
- *   <li>忽略空 Bean 序列化错误（FAIL_ON_EMPTY_BEANS = false）</li>
+ *   <li>忽略未知字段</li>
+ *   <li>忽略空 Bean 序列化错误</li>
  *   <li>序列化失败抛出 {@link JsonException}，不吞错误</li>
  * </ul>
  *
  * @author Marvin Lee
  * @email limw1888@126.com
- * @version 4.0.0
+ * @version 5.0.0
  */
 public final class JsonUtils {
 
-    private static final String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
-    private static final String DATE_PATTERN = "yyyy-MM-dd";
-    private static final String TIME_PATTERN = "HH:mm:ss";
-
-    /**
-     * 全局共享的 ObjectMapper 单例（线程安全）
-     */
-    private static final ObjectMapper MAPPER;
-
     static {
-        MAPPER = new ObjectMapper();
-        MAPPER.setTimeZone(TimeZone.getDefault());
-        MAPPER.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-        MAPPER.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-        MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        MAPPER.setDefaultPropertyInclusion(JsonInclude.Include.ALWAYS);
-
-        // 安全加固：明确禁用全局默认类型（多态反序列化），防止反序列化漏洞
-        MAPPER.deactivateDefaultTyping();
-
-        JavaTimeModule javaTimeModule = new JavaTimeModule();
-        javaTimeModule.addSerializer(LocalDateTime.class,
-                new LocalDateTimeSerializer(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)));
-        javaTimeModule.addSerializer(LocalDate.class,
-                new LocalDateSerializer(DateTimeFormatter.ofPattern(DATE_PATTERN)));
-        javaTimeModule.addSerializer(LocalTime.class,
-                new LocalTimeSerializer(DateTimeFormatter.ofPattern(TIME_PATTERN)));
-        javaTimeModule.addDeserializer(LocalDateTime.class,
-                new LocalDateTimeDeserializer(DateTimeFormatter.ofPattern(DATE_TIME_PATTERN)));
-        javaTimeModule.addDeserializer(LocalDate.class,
-                new LocalDateDeserializer(DateTimeFormatter.ofPattern(DATE_PATTERN)));
-        javaTimeModule.addDeserializer(LocalTime.class,
-                new LocalTimeDeserializer(DateTimeFormatter.ofPattern(TIME_PATTERN)));
-        MAPPER.registerModule(javaTimeModule);
+        // 初始化 YdszJson 全局配置
+        YdszJsonConfig config = YdszJsonConfig.getInstance();
+        config.setDateFormat("yyyy-MM-dd HH:mm:ss");
+        config.setIgnoreUnknownProperties(true);
     }
 
     /**
@@ -181,18 +142,6 @@ public final class JsonUtils {
         }
     }
 
-    /**
-     * 获取全局共享的 ObjectMapper 实例
-     *
-     * <p>注意：此 ObjectMapper 是全局共享的，不应修改其配置。
-     * 如需自定义配置，请通过 {@link ObjectMapper#copy()} 创建副本后修改。
-     *
-     * @return 全局 ObjectMapper 实例
-     */
-    public static ObjectMapper getMapper() {
-        return MAPPER;
-    }
-
     // ==================== 对象 → JSON 字符串 ====================
 
     /**
@@ -206,7 +155,7 @@ public final class JsonUtils {
         if (obj == null) {
             return null;
         }
-        return recordSerialize(() -> MAPPER.writeValueAsString(obj));
+        return recordSerialize(() -> YdszJson.toJson(obj));
     }
 
     /**
@@ -220,7 +169,7 @@ public final class JsonUtils {
         if (obj == null) {
             return null;
         }
-        return recordSerialize(() -> MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(obj));
+        return recordSerialize(() -> YdszJson.format(obj));
     }
 
     // ==================== JSON 字符串 → 对象 ====================
@@ -251,7 +200,7 @@ public final class JsonUtils {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return recordDeserialize(() -> MAPPER.readValue(json, clazz));
+        return recordDeserialize(() -> YdszJson.toObject(json, clazz));
     }
 
     /**
@@ -265,15 +214,15 @@ public final class JsonUtils {
      *
      * <p>示例：
      * <pre>
-     * Map&lt;String, Object&gt; map = JsonUtils.fromJson(json, new TypeReference&lt;Map&lt;String, Object&gt;&gt;() {});
-     * List&lt;UserDTO&gt; list = JsonUtils.fromJson(json, new TypeReference&lt;List&lt;UserDTO&gt;&gt;() {});
+     * Map&lt;String, Object&gt; map = JsonUtils.fromJson(json, new YdszJsonType&lt;Map&lt;String, Object&gt;&gt;() {});
+     * List&lt;UserDTO&gt; list = JsonUtils.fromJson(json, new YdszJsonType&lt;List&lt;UserDTO&gt;&gt;() {});
      * </pre>
      */
-    public static <T> T fromJson(String json, TypeReference<T> typeReference) {
+    public static <T> T fromJson(String json, YdszJsonType<T> typeReference) {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return recordDeserialize(() -> MAPPER.readValue(json, typeReference));
+        return recordDeserialize(() -> YdszJson.toObject(json, typeReference));
     }
 
     /**
@@ -290,7 +239,7 @@ public final class JsonUtils {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return recordDeserialize(() -> MAPPER.readValue(json, MAPPER.constructType(type)));
+        return recordDeserialize(() -> YdszJson.toObject(json, type));
     }
 
     /**
@@ -306,8 +255,7 @@ public final class JsonUtils {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return recordDeserialize(() ->
-                MAPPER.readValue(json, MAPPER.getTypeFactory().constructCollectionType(List.class, clazz)));
+        return recordDeserialize(() -> YdszJson.parseArray(json, clazz));
     }
 
     /**
@@ -325,8 +273,33 @@ public final class JsonUtils {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return recordDeserialize(() ->
-                MAPPER.readValue(json, MAPPER.getTypeFactory().constructMapType(HashMap.class, keyClass, valueClass)));
+        return recordDeserialize(() -> {
+            ParameterizedType mapType = new ParameterizedType() {
+                @Override
+                public Type[] getActualTypeArguments() {
+                    return new Type[]{keyClass, valueClass};
+                }
+
+                @Override
+                public Type getRawType() {
+                    return Map.class;
+                }
+
+                @Override
+                public Type getOwnerType() {
+                    return null;
+                }
+            };
+            Object result = YdszJson.toObject(json, mapType);
+            if (result instanceof Map<?, ?> map) {
+                Map<K, V> typedMap = new LinkedHashMap<>(map.size());
+                for (Map.Entry<?, ?> entry : map.entrySet()) {
+                    typedMap.put(keyClass.cast(entry.getKey()), valueClass.cast(entry.getValue()));
+                }
+                return typedMap;
+            }
+            return new LinkedHashMap<>();
+        });
     }
 
     /**
@@ -340,8 +313,7 @@ public final class JsonUtils {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return recordDeserialize(() ->
-                MAPPER.readValue(json, MAPPER.getTypeFactory().constructMapType(HashMap.class, String.class, Object.class)));
+        return recordDeserialize(() -> YdszJson.parseObject(json));
     }
 
     /**
@@ -355,8 +327,7 @@ public final class JsonUtils {
         if (json == null || json.isBlank()) {
             return null;
         }
-        return recordDeserialize(() ->
-                MAPPER.readValue(json, MAPPER.getTypeFactory().constructCollectionType(List.class, Object.class)));
+        return recordDeserialize(() -> YdszJson.parseArray(json));
     }
 
     // ==================== 对象 → 字节数组 ====================
@@ -372,7 +343,7 @@ public final class JsonUtils {
         if (obj == null) {
             return new byte[0];
         }
-        return recordSerialize(() -> MAPPER.writeValueAsBytes(obj));
+        return recordSerialize(() -> YdszJson.toJsonBytes(obj));
     }
 
     // ==================== 字节数组 → 对象 ====================
@@ -390,7 +361,10 @@ public final class JsonUtils {
         if (bytes == null || bytes.length == 0) {
             return null;
         }
-        return recordDeserialize(() -> MAPPER.readValue(bytes, clazz));
+        return recordDeserialize(() -> {
+            String json = new String(bytes, StandardCharsets.UTF_8);
+            return YdszJson.toObject(json, clazz);
+        });
     }
 
     /**
@@ -402,10 +376,25 @@ public final class JsonUtils {
      * @return 反序列化对象
      * @throws JsonException 如果反序列化失败
      */
-    public static <T> T fromJsonBytes(byte[] bytes, TypeReference<T> typeReference) {
+    public static <T> T fromJsonBytes(byte[] bytes, YdszJsonType<T> typeReference) {
         if (bytes == null || bytes.length == 0) {
             return null;
         }
-        return recordDeserialize(() -> MAPPER.readValue(bytes, typeReference));
+        return recordDeserialize(() -> {
+            String json = new String(bytes, StandardCharsets.UTF_8);
+            return YdszJson.toObject(json, typeReference);
+        });
+    }
+
+    // ==================== 辅助方法 ====================
+
+    /**
+     * 验证字符串是否为合法 JSON
+     *
+     * @param json 待验证的字符串
+     * @return 如果是合法 JSON 返回 true，否则返回 false
+     */
+    public static boolean isValidJson(String json) {
+        return YdszJson.isValid(json);
     }
 }

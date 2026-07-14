@@ -94,6 +94,15 @@
         <span class="sla__sub-hint">为空时升级给默认管理员</span>
       </el-form-item>
 
+      <el-form-item v-if="form.action === 'NOTIFY'" label="通知用户">
+        <el-input
+          v-model="form.notifyUserIds"
+          style="width: 200px"
+          placeholder="用户 ID，多个用逗号分隔"
+        />
+        <span class="sla__sub-hint">为空时降级到默认管理员</span>
+      </el-form-item>
+
       <el-form-item
         v-if="form.action === 'AUTO_PASS' || form.action === 'AUTO_REJECT'"
         label="自动备注"
@@ -123,6 +132,9 @@
         <template v-if="form.action === 'ESCALATE' && form.escalateUserId">
           （转给用户 {{ form.escalateUserId }}）
         </template>
+        <template v-if="form.action === 'NOTIFY' && form.notifyUserIds">
+          （通知用户 {{ form.notifyUserIds }}）
+        </template>
       </div>
       <div v-else class="sla__preview-text sla__preview-text--muted">
         无超时策略
@@ -145,6 +157,7 @@ const props = defineProps<{
 
 const actionOptions: { label: string; value: SlaStrategy }[] = [
   { label: '提醒', value: 'REMIND' },
+  { label: '通知管理员', value: 'NOTIFY' },
   { label: '升级', value: 'ESCALATE' },
   { label: '自动通过', value: 'AUTO_PASS' },
   { label: '自动驳回', value: 'AUTO_REJECT' },
@@ -152,13 +165,15 @@ const actionOptions: { label: string; value: SlaStrategy }[] = [
 
 const actionLabelMap: Record<SlaStrategy, string> = {
   REMIND: '提醒',
+  NOTIFY: '通知管理员',
   ESCALATE: '升级',
   AUTO_PASS: '自动通过',
   AUTO_REJECT: '自动驳回',
 }
 
 const actionDescMap: Record<SlaStrategy, string> = {
-  REMIND: '超时后发提醒通知，达上限后仅标记超时',
+  REMIND: '超时后发提醒通知，达上限后通知管理员介入',
+  NOTIFY: '超时后通知管理员介入，任务保持活跃等人工处理',
   ESCALATE: '超时后转办给升级目标用户',
   AUTO_PASS: '超时后系统自动通过任务',
   AUTO_REJECT: '超时后系统自动驳回任务',
@@ -166,6 +181,7 @@ const actionDescMap: Record<SlaStrategy, string> = {
 
 const actionTagTypeMap: Record<SlaStrategy, 'warning' | 'danger' | 'success' | 'info'> = {
   REMIND: 'warning',
+  NOTIFY: 'info',
   ESCALATE: 'danger',
   AUTO_PASS: 'success',
   AUTO_REJECT: 'danger',
@@ -186,6 +202,7 @@ const form = reactive<Required<SlaRuleConfigDTO>>({
   maxReminders: 3,
   escalateUserId: null,
   autoComment: '',
+  notifyUserIds: null,
 })
 
 watch(
@@ -213,6 +230,7 @@ async function loadConfig(defId: string, code: string) {
       form.maxReminders = parsed.maxReminders ?? 3
       form.escalateUserId = parsed.escalateUserId ?? null
       form.autoComment = parsed.autoComment ?? ''
+      form.notifyUserIds = parsed.notifyUserIds ?? null
       enabled.value = true
     } else {
       resetForm()
@@ -233,6 +251,7 @@ function resetForm() {
   form.maxReminders = 3
   form.escalateUserId = null
   form.autoComment = ''
+  form.notifyUserIds = null
 }
 
 function onToggleEnabled(val: boolean | string | number) {
@@ -261,6 +280,9 @@ async function save() {
     }
     if (form.action === 'ESCALATE' && form.escalateUserId) {
       payload.escalateUserId = form.escalateUserId
+    }
+    if (form.action === 'NOTIFY' && form.notifyUserIds) {
+      payload.notifyUserIds = form.notifyUserIds
     }
     if ((form.action === 'AUTO_PASS' || form.action === 'AUTO_REJECT') && form.autoComment) {
       payload.autoComment = form.autoComment

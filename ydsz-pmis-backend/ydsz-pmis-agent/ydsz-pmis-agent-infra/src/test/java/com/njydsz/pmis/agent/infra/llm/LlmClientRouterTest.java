@@ -59,10 +59,13 @@ class LlmClientRouterTest {
     @BeforeEach
     void setUp() {
         router = new LlmClientRouter();
-        when(primary.getProvider()).thenReturn("openai");
-        when(secondary.getProvider()).thenReturn("deepseek");
-        when(primary.supports(any())).thenReturn(true);
-        when(secondary.supports(any())).thenReturn(true);
+        // 使用 lenient 避免 strict stubbing 报错（部分测试用例不会调用所有 stub）
+        // primary.supports=true 确保 resolveClient 总是返回 primary（ConcurrentHashMap 迭代顺序不确定）
+        // secondary.supports=false 确保 secondary 仅作为 Fallback 目标（findFallback 不检查 supports）
+        lenient().when(primary.getProvider()).thenReturn("openai");
+        lenient().when(secondary.getProvider()).thenReturn("deepseek");
+        lenient().when(primary.supports(any())).thenReturn(true);
+        lenient().when(secondary.supports(any())).thenReturn(false);
         router.register(primary);
         router.register(secondary);
     }
