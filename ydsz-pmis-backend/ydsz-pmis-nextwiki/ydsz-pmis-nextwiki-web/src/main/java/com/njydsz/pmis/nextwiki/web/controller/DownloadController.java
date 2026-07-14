@@ -41,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/nextwiki/download")
+@RequestMapping("/api/v1/nextwiki/download")
 @RequiredArgsConstructor
 @Tag(name = "文件下载", description = "文件下载、签名URL生成、限流防盗链")
 public class DownloadController {

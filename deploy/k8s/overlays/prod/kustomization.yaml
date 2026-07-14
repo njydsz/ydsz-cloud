@@ -8,12 +8,14 @@ namespace: pmis
 
 # P0-3 修复：原文件存在重复 resources 键（第 9 行 + 第 40 行），YAML 重复键会导致
 # kustomize 行为不可预期。修复：合并为单个 resources 列表。
-# 注意：patch-sentry.yaml 是独立 K8s 资源（ConfigMap + Secret），不是 strategic merge patch，
-#       必须放在 resources 中（与 ../../base 一起），不能放进 patches。
+# P2-9 修复：原 patch-sentry.yaml 同时包含 ConfigMap（与 base pmis-common-config 重名）
+#   和 Secret，放在 resources 导致 ConfigMap ID 冲突构建失败。
+#   拆分为：patch-sentry.yaml（ConfigMap strategic merge patch → patches）
+#          sentry-secret.yaml（Secret 独立资源 → resources）
 resources:
   - ../../base
-  # P1-3: 生产环境 Sentry 错误监控配置（独立 ConfigMap + Secret 资源）
-  - patch-sentry.yaml
+  # P1-3: 生产环境 Sentry DSN Secret（独立 Secret 资源）
+  - sentry-secret.yaml
   # P0-3: 生产环境 SkyWalking 全链路追踪配置（ConfigMap 资源）
   - patch-tracing.yaml
 
@@ -34,6 +36,11 @@ images:
     newTag: v1.3.0
   - name: ydsz-pmis/agent
     newTag: v1.3.0
+  # P2-9: 补齐 sales / finance 镜像 tag，避免部署时残留字面占位符 IMAGE_TAG
+  - name: ydsz-pmis/sales
+    newTag: v1.3.0
+  - name: ydsz-pmis/finance
+    newTag: v1.3.0
 
 patches:
   - path: patch-replicas.yaml
@@ -41,5 +48,7 @@ patches:
   - path: patch-affinity.yaml
   - path: patch-hpa.yaml
   - path: patch-pdb.yaml
+  # P2-9: Sentry ConfigMap strategic merge patch（向 pmis-common-config 追加 PMIS_SENTRY_* 键）
+  - path: patch-sentry.yaml
   # SkyWalking Java Agent 注入 (链路追踪，strategic merge patch 修改 base 中的 Deployment)
   - path: patch-skywalking.yaml

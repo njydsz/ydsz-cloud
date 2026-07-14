@@ -1,4 +1,4 @@
-﻿﻿<!--
+﻿<!--
   @file 决策树可视化编辑器（P1-4）
   @description 树形编辑器：条件节点（菱形/圆角矩形）与决策节点（按严重度着色）的增删改查、
                拖拽调整、表达式校验、dry-run 预览与 JSON 导出。
@@ -13,12 +13,12 @@
         <div class="card-header">
           <span class="title">决策树编辑器 · {{ treeData.ruleName || ruleCode }}</span>
           <div class="actions">
-            <el-button :icon="Refresh" @click="loadTree" :loading="loading">刷新</el-button>
-            <el-button :icon="CircleCheck" @click="validateTree" type="warning" plain>校验完整性</el-button>
-            <el-button :icon="VideoPlay" @click="dryRun" type="success" plain>命中预览</el-button>
-            <el-button :icon="Download" @click="exportJson">导出 JSON</el-button>
-            <el-button :icon="Check" @click="save" type="primary" :loading="saving">保存</el-button>
-            <el-button :icon="Close" @click="goBack">返回</el-button>
+            <el-button :icon="Refresh" @click="loadTree" :loading="loading">{{ t('common.refresh') }}</el-button>
+            <el-button :icon="CircleCheck" @click="validateTree" type="warning" plain>{{ t('common.validate') }}</el-button>
+            <el-button :icon="VideoPlay" @click="dryRun" type="success" plain>{{ t('execution.ruleEngine.hitPreview') }}</el-button>
+            <el-button :icon="Download" @click="exportJson">{{ t('execution.ruleEngine.exportJson') }}</el-button>
+            <el-button :icon="Check" @click="save" type="primary" :loading="saving">{{ t('common.save') }}</el-button>
+            <el-button :icon="Close" @click="goBack">{{ t('common.back') }}</el-button>
           </div>
         </div>
       </template>
@@ -51,8 +51,8 @@
         <el-button :icon="Plus" type="primary" plain size="small" @click="addRootCondition">
           初始化根条件
         </el-button>
-        <el-button :icon="Expand" size="small" @click="expandAll">全部展开</el-button>
-        <el-button :icon="Fold" size="small" @click="collapseAll">全部折叠</el-button>
+        <el-button :icon="Expand" size="small" @click="expandAll">{{ t('common.expand') }}</el-button>
+        <el-button :icon="Fold" size="small" @click="collapseAll">{{ t('common.collapse') }}</el-button>
         <el-tooltip content="条件节点（蓝色）含 true/false 两个分支；决策节点（叶子）按严重度着色" placement="right">
           <el-icon class="help-tip"><InfoFilled /></el-icon>
         </el-tooltip>
@@ -146,8 +146,8 @@
         </template>
       </el-form>
       <template #footer>
-        <el-button @click="editDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="confirmEdit">确定</el-button>
+        <el-button @click="editDialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="confirmEdit">{{ t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
 
@@ -242,7 +242,7 @@
         <el-table-column prop="nodePath" label="节点路径" width="140" show-overflow-tooltip />
       </el-table>
       <template #footer>
-        <el-button @click="validateResultVisible = false">关闭</el-button>
+        <el-button @click="validateResultVisible = false">{{ t('common.close') }}</el-button>
       </template>
     </el-dialog>
 
@@ -267,7 +267,7 @@
       <el-divider content-position="left">预览结果</el-divider>
       <pre class="json-view">{{ formatJson(previewResult) }}</pre>
       <template #footer>
-        <el-button @click="previewVisible = false">关闭</el-button>
+        <el-button @click="previewVisible = false">{{ t('common.close') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -276,6 +276,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { ElTree, AllowDropFunction } from 'element-plus'
 import {
@@ -293,6 +294,7 @@ defineOptions({ name: 'DecisionTreeEditor' })
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 
 const ruleCode = computed(() => route.params.ruleCode as string)
 const loading = ref(false)

@@ -105,6 +105,10 @@ public class SearchRequest implements Serializable {
     @Builder.Default
     private boolean titleOnly = false;
 
+    /** P3-21: 游标分页 cursor（base64 编码，为空表示从头开始） */
+    @Schema(description = "游标分页cursor")
+    private String cursor;
+
     /**
      * 快速构建搜索请求
      */

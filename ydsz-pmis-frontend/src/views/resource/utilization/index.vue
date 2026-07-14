@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   @file 人员利用率
   @description 可计费利用率统计与考核页面：支持团队整体均值(实时聚合+快照兜底)、等级分布、人效排行榜 TOP20、预警员工列表、快照重算(增量/强制)，对应路由 /execution/utilization
   @module views/execution/utilization
@@ -251,8 +251,8 @@ function fmtHours(v: number | undefined) {
           <el-input v-model="query.period" :placeholder="$t('execution.utilization.filter.periodPlaceholder')" style="width: 140px" aria-label="快照周期" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :loading="loading" aria-label="查询利用率" @click="refresh">查询</el-button>
-          <el-button aria-label="重置查询条件" @click="handleReset">重置</el-button>
+          <el-button type="primary" :loading="loading" aria-label="查询利用率" @click="refresh">{{ $t('common.query') }}</el-button>
+          <el-button aria-label="重置查询条件" @click="handleReset">{{ $t('common.reset') }}</el-button>
         </el-form-item>
         <el-form-item v-if="hasPerm(PC.EXECUTION_UTILIZATION_RECOMPUTE)">
           <el-button
@@ -262,7 +262,7 @@ function fmtHours(v: number | undefined) {
             aria-label="增量重算快照"
             @click="handleRecompute(false)"
           >
-            增量重算快照
+            {{ $t('common.incrementalRecompute') }}
           </el-button>
           <el-button
             type="danger"
@@ -271,7 +271,7 @@ function fmtHours(v: number | undefined) {
             aria-label="强制重算快照"
             @click="handleRecompute(true)"
           >
-            强制重算快照
+            {{ $t('common.forceRecompute') }}
           </el-button>
         </el-form-item>
       </el-form>
@@ -281,7 +281,7 @@ function fmtHours(v: number | undefined) {
     <el-row :gutter="16" class="kpi-row">
       <el-col :span="6">
         <el-card shadow="hover" class="kpi-card">
-          <div class="kpi-label">整体利用率</div>
+          <div class="kpi-label">{{ $t('common.overallUtilization') }}</div>
           <div class="kpi-value" :style="{ color: gradeColorMap[overallGrade] }">
             {{ fmtPct(overall?.utilizationPct) }}
           </div>
@@ -290,16 +290,16 @@ function fmtHours(v: number | undefined) {
       </el-col>
       <el-col :span="6">
         <el-card shadow="hover" class="kpi-card">
-          <div class="kpi-label">总工时 / 可计费工时</div>
+          <div class="kpi-label">{{ $t('common.totalHoursBillable') }}</div>
           <div class="kpi-value">{{ fmtHours(overall?.totalHours) }}h</div>
           <div class="kpi-foot">可计费：{{ fmtHours(overall?.billableHours) }}h</div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card shadow="hover" class="kpi-card">
-          <div class="kpi-label">参与员工数</div>
+          <div class="kpi-label">{{ $t('common.participatingEmployees') }}</div>
           <div class="kpi-value">{{ overall?.employeeCount ?? 0 }}</div>
-          <div class="kpi-foot">区间内提交工时人数</div>
+          <div class="kpi-foot">{{ $t('common.submittedCount') }}</div>
         </el-card>
       </el-col>
       <el-col :span="6">

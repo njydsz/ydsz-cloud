@@ -261,9 +261,9 @@ fetchData()
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleSearch">搜索</el-button>
-          <el-button @click="handleReset">重置</el-button>
-          <el-button type="success" @click="openCreate">新增员工</el-button>
+          <el-button type="primary" @click="handleSearch">{{ $t('common.search') }}</el-button>
+          <el-button @click="handleReset">{{ $t('common.reset') }}</el-button>
+          <el-button type="success" @click="openCreate">{{ $t('common.addEmployee') }}</el-button>
         </el-form-item>
       </el-form>
     </el-card>

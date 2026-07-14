@@ -1,6 +1,14 @@
 package com.njydsz.pmis.nextwiki.web.controller;
 
-import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.nextwiki.api.dto.NextwikiDTOs;
@@ -20,9 +28,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/nextwiki/quota")
+@RequestMapping("/api/v1/nextwiki/quota")
 @RequiredArgsConstructor
-@Tag(name = "存储配额", description = "配额查询、设置、校�?)
+@Tag(name = "存储配额", description = "配额查询、设置、校验")
 public class QuotaController {
 
     private final QuotaDomainService quotaDomainService;
@@ -36,9 +44,9 @@ public class QuotaController {
     }
 
     @PostMapping("/set")
-    @Operation(summary = "设置配额（管理员�?)
+    @Operation(summary = "设置配额（管理员）")
     public BaseResponse<StorageQuota> setQuota(
-            @RequestBody NextwikiDTOs.SetQuotaRequest request,
+            @Valid @RequestBody NextwikiDTOs.SetQuotaRequest request,
             @RequestHeader("X-User-Id") String userId) {
         StorageQuota quota = quotaDomainService.setQuota(
                 request.getScopeType(),

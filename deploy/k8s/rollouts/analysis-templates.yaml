@@ -1,0 +1,125 @@
+# ============================================================
+# PMIS Argo Rollouts — AnalysisTemplate 定义（P2-11）
+#
+# 基于 Prometheus 指标的自动化发布分析模板。
+# 金丝雀发布期间持续评估以下维度，任一指标超阈值 → 自动回滚：
+#   1. success-rate  — HTTP 5xx 错误率 < 5%
+#   2. latency-p99   — P99 延迟 < 1s（对齐 SLO）
+#   3. db-pool-health — DB 连接池使用率 < 90%
+#   4. jvm-memory     — JVM 堆内存使用率 < 90%
+#
+# 标签说明：
+#   Micrometer 通过 management.metrics.tags.application 注入 `application` 标签，
+#   值为 Spring 应用名（spring.application.name，如 ydsz-pmis-gateway）。
+#   AnalysisTemplate 的 args.service-name 应传入 Spring 应用名，而非 K8s Service 名。
+#
+# 使用方式：
+#   kubectl apply -f deploy/k8s/rollouts/analysis-templates.yaml
+#   Rollout 中通过 templateName 引用
+# ============================================================
+
+---
+# 1. HTTP 5xx 错误率分析（核心健康指标）
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: success-rate
+  namespace: pmis
+spec:
+  args:
+    - name: service-name
+  metrics:
+    - name: success-rate
+      # 查询过去 2 分钟内 HTTP 5xx 错误率
+      # 错误率 > 5% → 分析失败，连续 3 次失败自动回滚
+      interval: 30s
+      successCondition: result[0] < 0.05
+      failureLimit: 3
+      provider:
+        prometheus:
+          address: http://prometheus-server.monitoring.svc.cluster.local:9090
+          query: |
+            (
+              sum(rate(http_server_requests_seconds_count{application="{{args.service-name}}", status=~"5.."}[2m]))
+              /
+              clamp_min(sum(rate(http_server_requests_seconds_count{application="{{args.service-name}}"}[2m])), 1)
+            ) or vector(0)
+
+---
+# 2. P99 延迟分析（对齐 SLO：P99 < 1s）
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: latency-p99
+  namespace: pmis
+spec:
+  args:
+    - name: service-name
+  metrics:
+    - name: latency-p99
+      # 查询过去 2 分钟内 HTTP 请求 P99 延迟（秒）
+      # P99 > 1s → 分析失败，连续 3 次失败自动回滚
+      interval: 30s
+      successCondition: result[0] <= 1.0
+      failureLimit: 3
+      provider:
+        prometheus:
+          address: http://prometheus-server.monitoring.svc.cluster.local:9090
+          query: |
+            histogram_quantile(0.99,
+              sum(rate(http_server_requests_seconds_bucket{application="{{args.service-name}}"}[2m])) by (le)
+            )
+
+---
+# 3. DB 连接池健康分析（连接池使用率 < 90%）
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: db-pool-health
+  namespace: pmis
+spec:
+  args:
+    - name: service-name
+  metrics:
+    - name: db-pool-usage
+      # 查询 DB 连接池活跃连接 / 最大连接比率
+      # 使用率 > 90% → 分析失败，连续 2 次失败自动回滚
+      interval: 30s
+      successCondition: result[0] <= 0.9
+      failureLimit: 2
+      provider:
+        prometheus:
+          address: http://prometheus-server.monitoring.svc.cluster.local:9090
+          query: |
+            (
+              jdbc_connections_active{application="{{args.service-name}}"}
+              /
+              clamp_min(jdbc_connections_max{application="{{args.service-name}}"}, 1)
+            ) or vector(0)
+
+---
+# 4. JVM 堆内存使用率分析（< 90%）
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: jvm-memory
+  namespace: pmis
+spec:
+  args:
+    - name: service-name
+  metrics:
+    - name: jvm-heap-usage
+      # 查询 JVM 堆内存使用 / 最大堆内存比率
+      # 使用率 > 90% → 分析失败，连续 3 次失败自动回滚
+      interval: 30s
+      successCondition: result[0] <= 0.9
+      failureLimit: 3
+      provider:
+        prometheus:
+          address: http://prometheus-server.monitoring.svc.cluster.local:9090
+          query: |
+            (
+              jvm_memory_used_bytes{application="{{args.service-name}}", area="heap"}
+              /
+              clamp_min(jvm_memory_max_bytes{application="{{args.service-name}}", area="heap"}, 1)
+            ) or vector(0)

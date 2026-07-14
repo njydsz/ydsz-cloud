@@ -76,10 +76,10 @@ onMounted(() => {
   <PageLayout>
     <template #header>
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold">预算管理</h2>
+        <h2 class="text-lg font-semibold">{{ t('execution.ruleEngine.budgetManagement') }}</h2>
         <el-button type="primary" @click="handleAdd">
           <el-icon><Plus /></el-icon>
-          新增预算项
+          {{ t('execution.ruleEngine.addBudgetItem') }}
         </el-button>
       </div>
     </template>

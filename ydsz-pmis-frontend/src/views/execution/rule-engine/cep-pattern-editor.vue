@@ -1,4 +1,4 @@
-﻿﻿<!--
+﻿<!--
   @file CEP 模式可视化编辑器（P2-7）
   @description 提供复杂事件处理（CEP）模式的可视化编辑能力：
   1. 左侧模式列表：展示已注册的全部 CEP 模式，支持新增 / 选中 / 删除
@@ -14,6 +14,7 @@
  */
 import { ref, computed, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   ArrowLeft,
@@ -37,6 +38,7 @@ import type {
 } from '@/api/rule-engine'
 
 const router = useRouter()
+const { t } = useI18n()
 
 /** 模式类型选项 */
 const patternTypeOptions: { value: CEPPatternType; label: string; desc: string }[] = [
@@ -325,13 +327,13 @@ onMounted(loadPatterns)
   <div class="cep-editor" v-loading="loading">
     <!-- 顶部导航 -->
     <div class="cep-header">
-      <el-button :icon="ArrowLeft" link @click="goBack">返回规则引擎</el-button>
+      <el-button :icon="ArrowLeft" link @click="goBack">{{ t('execution.ruleEngine.backToRuleEngine') }}</el-button>
       <h2 class="cep-title">
         <el-icon><Cpu /></el-icon>
-        CEP 模式可视化编辑器
+        {{ t('execution.ruleEngine.cepPatternEditor') }}
       </h2>
       <div class="cep-header-actions">
-        <el-button type="primary" :icon="Plus" @click="handleCreate">新建模式</el-button>
+        <el-button type="primary" :icon="Plus" @click="handleCreate">{{ t('execution.ruleEngine.newPattern') }}</el-button>
       </div>
     </div>
 
@@ -340,7 +342,7 @@ onMounted(loadPatterns)
       <div class="cep-sidebar">
         <div class="sidebar-header">
           <el-icon><ListIcon /></el-icon>
-          <span>已注册模式</span>
+          <span>{{ t('execution.ruleEngine.registeredPatterns') }}</span>
           <el-badge :value="patternList.length" type="info" />
         </div>
         <div class="sidebar-list">
@@ -371,13 +373,13 @@ onMounted(loadPatterns)
             <div class="card-header">
               <span class="card-title">
                 <el-icon><Cpu /></el-icon>
-                模式编辑器
-                <el-tag v-if="selectedPatternId" size="small" type="success">编辑中</el-tag>
-                <el-tag v-else size="small" type="warning">新建</el-tag>
+                {{ t('execution.ruleEngine.patternEditor') }}
+                <el-tag v-if="selectedPatternId" size="small" type="success">{{ t('execution.ruleEngine.editing') }}</el-tag>
+                <el-tag v-else size="small" type="warning">{{ t('common.new') }}</el-tag>
               </span>
               <div class="card-actions">
-                <el-button type="primary" :icon="Check" :loading="saving" @click="handleSave">保存</el-button>
-                <el-button type="danger" :icon="Delete" plain @click="handleDelete">删除</el-button>
+                <el-button type="primary" :icon="Check" :loading="saving" @click="handleSave">{{ t('common.save') }}</el-button>
+                <el-button type="danger" :icon="Delete" plain @click="handleDelete">{{ t('common.delete') }}</el-button>
               </div>
             </div>
           </template>

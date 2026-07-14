@@ -54,7 +54,7 @@ onMounted(() => {
 <template>
   <PageLayout>
     <template #header>
-      <h2 class="text-lg font-semibold">高级报表</h2>
+      <h2 class="text-lg font-semibold">{{ t('common.advancedReport') }}</h2>
     </template>
 
     <div class="mb-4 flex flex-wrap gap-3">

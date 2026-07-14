@@ -1,4 +1,4 @@
-﻿﻿<!--
+﻿<!--
   @file 规则引擎可视化管理
   @description 规则引擎管理页面：支持规则列表查看、新建/编辑、启停切换、版本历史与回滚、
                Dry-run 仿真、表达式校验、模板市场导入及 AI 辅助生成，
@@ -1319,25 +1319,25 @@ onMounted(() => {
     <el-row :gutter="12" class="stats-row">
       <el-col :span="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">总评估次数</div>
+          <div class="stat-label">{{ $t('execution.ruleEngine.totalEvaluations') }}</div>
           <div class="stat-value">{{ stats?.totalEvaluations ?? 0 }}</div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">总触发次数</div>
+          <div class="stat-label">{{ $t('execution.ruleEngine.totalTriggers') }}</div>
           <div class="stat-value highlight-warning">{{ stats?.totalTriggered ?? 0 }}</div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">总错误次数</div>
+          <div class="stat-label">{{ $t('execution.ruleEngine.totalErrors') }}</div>
           <div class="stat-value highlight-danger">{{ stats?.totalErrors ?? 0 }}</div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card shadow="hover" class="stat-card">
-          <div class="stat-label">总耗时(ms)</div>
+          <div class="stat-label">{{ $t('execution.ruleEngine.totalDuration') }}</div>
           <div class="stat-value">{{ stats?.totalElapsedMs ?? 0 }}</div>
         </el-card>
       </el-col>
@@ -1370,46 +1370,46 @@ onMounted(() => {
                 {{ sidebarVisible ? '收起目录' : '展开目录' }}
               </el-button>
               <el-button type="primary" aria-label="创建规则" @click="openCreate">
-                <el-icon><Plus /></el-icon>新建规则
+                <el-icon><Plus /></el-icon>{{ $t('execution.ruleEngine.newRule') }}
               </el-button>
           <el-button type="success" aria-label="从模板导入规则" @click="openTemplateMarket">
-            <el-icon><Files /></el-icon>从模板导入
+            <el-icon><Files /></el-icon>{{ $t('execution.ruleEngine.importFromTemplate') }}
           </el-button>
           <el-button aria-label="规则仿真" @click="openDryRun()">
-            <el-icon><VideoPlay /></el-icon>Dry-run 仿真
+            <el-icon><VideoPlay /></el-icon>{{ $t('execution.ruleEngine.dryRunSimulate') }}
           </el-button>
           <el-button :loading="conflictLoading" aria-label="冲突检测" @click="detectConflicts">
-            <el-icon><WarningFilled /></el-icon>冲突检测
+            <el-icon><WarningFilled /></el-icon>{{ $t('execution.ruleEngine.conflictDetect') }}
           </el-button>
           <el-button type="info" aria-label="执行回放" @click="openTraceReplay">
-            <el-icon><View /></el-icon>执行回放
+            <el-icon><View /></el-icon>{{ $t('execution.ruleEngine.executionReplay') }}
           </el-button>
           <el-button type="primary" plain aria-label="回归测试" @click="openRegressionTest">
-            <el-icon><CircleCheck /></el-icon>回归测试
+            <el-icon><CircleCheck /></el-icon>{{ $t('execution.ruleEngine.regressionTest') }}
           </el-button>
           <el-button plain aria-label="测试用例管理" @click="openTestCases">
-            <el-icon><Document /></el-icon>测试用例
+            <el-icon><Document /></el-icon>{{ $t('execution.ruleEngine.testCase') }}
           </el-button>
           <el-button type="primary" plain aria-label="监控大盘" @click="openDashboard">
-            <el-icon><DataLine /></el-icon>监控大盘
+            <el-icon><DataLine /></el-icon>{{ $t('execution.ruleEngine.monitorDashboard') }}
           </el-button>
           <el-button type="info" plain aria-label="依赖拓扑图" @click="openDependencyGraph">
-            <el-icon><Connection /></el-icon>依赖拓扑图
+            <el-icon><Connection /></el-icon>{{ $t('execution.ruleEngine.dependencyTopology') }}
           </el-button>
           <el-button type="warning" plain aria-label="CEP 模式管理" @click="openCepPatternEditor">
-            <el-icon><Cpu /></el-icon>CEP 模式管理
+            <el-icon><Cpu /></el-icon>{{ $t('execution.ruleEngine.cepPatternManage') }}
           </el-button>
           <el-button type="danger" plain aria-label="规则压测" @click="openStressTest()">
-            <el-icon><Histogram /></el-icon>压测
+            <el-icon><Histogram /></el-icon>{{ $t('execution.ruleEngine.stressTest') }}
           </el-button>
           <el-button plain aria-label="DSL 管理" @click="openDslManager()">
-            <el-icon><Document /></el-icon>DSL 管理
+            <el-icon><Document /></el-icon>{{ $t('execution.ruleEngine.dslManagement') }}
           </el-button>
           <el-button plain aria-label="审计日志" @click="openAuditLog()">
-            <el-icon><Lock /></el-icon>审计日志
+            <el-icon><Lock /></el-icon>{{ $t('execution.ruleEngine.auditLog') }}
           </el-button>
           <el-button type="success" plain aria-label="执行回放" @click="openReplay()">
-            <el-icon><VideoPlay /></el-icon>执行回放
+            <el-icon><VideoPlay /></el-icon>{{ $t('execution.ruleEngine.executionReplay') }}
           </el-button>
         </div>
         <div class="toolbar-right">
@@ -1484,22 +1484,22 @@ onMounted(() => {
             <el-icon><Switch /></el-icon>A/B
           </el-button>
           <el-button link type="info" size="small" aria-label="查看版本历史" @click="openVersions(row as RuleDefinition)">
-            <el-icon><Clock /></el-icon>版本
+            <el-icon><Clock /></el-icon>{{ $t('common.version') }}
           </el-button>
           <el-button link type="success" size="small" aria-label="画布编辑" @click="openDesigner(row as RuleDefinition)">
-            <el-icon><Connection /></el-icon>画布
+            <el-icon><Connection /></el-icon>{{ $t('common.canvas') }}
           </el-button>
           <el-button link type="primary" size="small" aria-label="决策树编辑" @click="openDecisionTreeEditor(row as RuleDefinition)">
-            <el-icon><Share /></el-icon>决策树
+            <el-icon><Share /></el-icon>{{ $t('common.decisionTree') }}
           </el-button>
           <el-button link type="primary" size="small" aria-label="评分卡编辑" @click="openScorecardEditor(row as RuleDefinition)">
-            <el-icon><Histogram /></el-icon>评分卡
+            <el-icon><Histogram /></el-icon>{{ $t('common.scorecard') }}
           </el-button>
           <el-button link type="danger" size="small" aria-label="规则压测" @click="openStressTest(row as RuleDefinition)">
-            <el-icon><DataLine /></el-icon>压测
+            <el-icon><DataLine /></el-icon>{{ $t('execution.ruleEngine.stressTest') }}
           </el-button>
           <el-button link type="danger" size="small" aria-label="删除规则" @click="handleDelete(row as RuleDefinition)">
-            <el-icon><Delete /></el-icon>删除
+            <el-icon><Delete /></el-icon>{{ $t('common.delete') }}
           </el-button>
         </template>
       </VirtualTable>
@@ -1677,9 +1677,9 @@ onMounted(() => {
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="editDialogVisible = false">取消</el-button>
+        <el-button @click="editDialogVisible = false">{{ $t('common.cancel') }}</el-button>
         <el-button type="primary" @click="handleSave">
-          <el-icon><Check /></el-icon>保存
+          <el-icon><Check /></el-icon>{{ $t('common.save') }}
         </el-button>
       </template>
     </el-dialog>
@@ -2311,8 +2311,8 @@ onMounted(() => {
         <el-table-column prop="updatedAt" label="更新时间" width="160" />
         <el-table-column label="操作" width="140" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="openEditTestCase(row as RuleTestCase)">编辑</el-button>
-            <el-button link type="danger" size="small" @click="deleteTestCaseItem(row as RuleTestCase)">删除</el-button>
+            <el-button link type="primary" size="small" @click="openEditTestCase(row as RuleTestCase)">{{ $t('common.edit') }}</el-button>
+            <el-button link type="danger" size="small" @click="deleteTestCaseItem(row as RuleTestCase)">{{ $t('common.delete') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -2341,8 +2341,8 @@ onMounted(() => {
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="testCaseEditDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="saveTestCaseItem">保存</el-button>
+        <el-button @click="testCaseEditDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="saveTestCaseItem">{{ $t('common.save') }}</el-button>
       </template>
     </el-dialog>
 
@@ -2425,7 +2425,7 @@ onMounted(() => {
             </el-col>
             <el-col :span="8">
               <div class="metric-card">
-                <div class="metric-label">总耗时 (ms)</div>
+                <div class="metric-label">{{ $t('execution.ruleEngine.totalDuration') }}</div>
                 <div class="metric-value">{{ stressTestResult.totalTimeMs.toFixed(1) }}</div>
               </div>
             </el-col>
@@ -2449,8 +2449,8 @@ onMounted(() => {
         </div>
       </el-form>
       <template #footer>
-        <el-button @click="stressTestVisible = false">关闭</el-button>
-        <el-button type="primary" :loading="stressTestLoading" @click="runStressTest">开始压测</el-button>
+        <el-button @click="stressTestVisible = false">{{ $t('common.close') }}</el-button>
+        <el-button type="primary" :loading="stressTestLoading" @click="runStressTest">{{ $t('execution.ruleEngine.startStressTest') }}</el-button>
       </template>
     </el-dialog>
   </div>

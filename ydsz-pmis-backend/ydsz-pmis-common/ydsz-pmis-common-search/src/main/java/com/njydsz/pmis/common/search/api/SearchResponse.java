@@ -62,6 +62,10 @@ public class SearchResponse implements Serializable {
     @Builder.Default
     private boolean degraded = false;
 
+    /** P3-21: 下一页游标（为空表示无更多数据） */
+    @Schema(description = "下一页游标")
+    private String nextCursor;
+
     /**
      * 创建空响应
      */

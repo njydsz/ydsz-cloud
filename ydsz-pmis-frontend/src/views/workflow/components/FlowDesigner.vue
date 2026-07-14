@@ -510,7 +510,7 @@ const stats = computed(() => ({
     <!-- 左侧节点面板 -->
     <div class="flow-designer__panel">
       <div class="panel-section">
-        <div class="panel-section__title">节点</div>
+        <div class="panel-section__title">{{ $t('common.flowNode') }}</div>
         <div class="panel-section__content">
           <div
             v-for="t in NODE_TYPES"
@@ -525,7 +525,7 @@ const stats = computed(() => ({
         </div>
       </div>
       <div class="panel-section">
-        <div class="panel-section__title">流程模板</div>
+        <div class="panel-section__title">{{ $t('common.flowTemplate') }}</div>
         <div class="panel-section__content">
           <div
             v-for="t in TEMPLATES"
@@ -550,9 +550,9 @@ const stats = computed(() => ({
           <el-tag size="small" type="info">网关 {{ stats.gatewayCount }}</el-tag>
         </div>
         <div class="canvas-toolbar__actions">
-          <el-button size="small" @click="clearCanvas">清空</el-button>
-          <el-button size="small" @click="onExportJson">导出 JSON</el-button>
-          <el-button size="small" type="primary" @click="onDeploy">部署</el-button>
+          <el-button size="small" @click="clearCanvas">{{ $t('common.clear') }}</el-button>
+          <el-button size="small" @click="onExportJson">{{ $t('common.exportJson') }}</el-button>
+          <el-button size="small" type="primary" @click="onDeploy">{{ $t('common.deploy') }}</el-button>
         </div>
       </div>
       <svg
@@ -707,7 +707,7 @@ const stats = computed(() => ({
         </g>
       </svg>
       <div class="canvas-hint">
-        💡 单击节点选中编辑属性；按住 Shift 拖拽节点可创建连线；红色 × 删除边
+        {{ $t('common.nodeHint') }}
       </div>
     </div>
 
@@ -715,18 +715,18 @@ const stats = computed(() => ({
     <div class="flow-designer__properties">
       <div v-if="!selectedNode" class="empty-properties">
         <el-icon :size="48" color="#cbd5e1"><Position /></el-icon>
-        <p>选中节点编辑属性</p>
+        <p>{{ $t('common.selectNodeEdit') }}</p>
       </div>
       <div v-else class="property-form">
         <div class="property-form__title">
-          节点属性
+          {{ $t('common.nodeProperties') }}
           <el-button
             type="danger"
             size="small"
             text
             @click="deleteNode(selectedNode)"
           >
-            删除节点
+            {{ $t('common.deleteNode') }}
           </el-button>
         </div>
         <el-form label-position="top" size="small">

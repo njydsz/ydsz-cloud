@@ -259,13 +259,13 @@ defineExpose({
         </span>
       </div>
       <div class="form-designer-toolbar-right">
-        <el-button size="small" @click="handleImportJson">导入 JSON</el-button>
-        <el-button size="small" @click="handleExportJson">导出 JSON</el-button>
-        <el-button size="small" @click="handleJsonPreview">JSON 预览</el-button>
-        <el-button size="small" @click="handlePreview">预览</el-button>
-        <el-button size="small" @click="handleClear">清空</el-button>
+        <el-button size="small" @click="handleImportJson">{{ $t('common.importJson') }}</el-button>
+        <el-button size="small" @click="handleExportJson">{{ $t('common.exportJson') }}</el-button>
+        <el-button size="small" @click="handleJsonPreview">{{ $t('common.jsonPreview') }}</el-button>
+        <el-button size="small" @click="handlePreview">{{ $t('common.preview') }}</el-button>
+        <el-button size="small" @click="handleClear">{{ $t('common.clear') }}</el-button>
         <el-button size="small" type="primary" @click="handleSave" :loading="saving">
-          保存
+          {{ $t('common.save') }}
         </el-button>
       </div>
     </div>
@@ -305,8 +305,8 @@ defineExpose({
         />
       </div>
       <template #footer>
-        <el-button @click="jsonPreviewVisible = false">关闭</el-button>
-        <el-button type="primary" @click="handleCopyJson">复制 JSON</el-button>
+        <el-button @click="jsonPreviewVisible = false">{{ $t('common.close') }}</el-button>
+        <el-button type="primary" @click="handleCopyJson">{{ $t('common.copyJson') }}</el-button>
       </template>
     </el-dialog>
   </div>

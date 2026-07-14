@@ -1,142 +1,86 @@
-# PROD HPA:对流量大的服务做自动伸缩
+# PROD HPA:覆盖 base HPA 的 minReplicas / maxReplicas
+# 保留 base 的 CPU+memory 双指标和 scaleUp/scaleDown behavior（strategic merge patch 只覆盖标量字段）
+# 注意：HPA 名称必须与 base/hpa-pdb.yaml 一致（带 -hpa 后缀）
 # 需要集群安装 metrics-server
 
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-gateway
+  name: ydsz-pmis-gateway-hpa
   namespace: pmis
 spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: ydsz-pmis-gateway
   minReplicas: 3
   maxReplicas: 10
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-system
+  name: ydsz-pmis-system-hpa
   namespace: pmis
 spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: ydsz-pmis-system
   minReplicas: 3
   maxReplicas: 8
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-userinfo
+  name: ydsz-pmis-userinfo-hpa
   namespace: pmis
 spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: ydsz-pmis-userinfo
   minReplicas: 3
   maxReplicas: 8
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-project
+  name: ydsz-pmis-project-hpa
   namespace: pmis
 spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: ydsz-pmis-project
   minReplicas: 4
   maxReplicas: 12
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-message
+  name: ydsz-pmis-message-hpa
   namespace: pmis
 spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: ydsz-pmis-message
   minReplicas: 2
   maxReplicas: 8
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-workflow
+  name: ydsz-pmis-workflow-hpa
   namespace: pmis
 spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: ydsz-pmis-workflow
   minReplicas: 3
   maxReplicas: 8
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 70
 ---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: ydsz-pmis-agent
+  name: ydsz-pmis-agent-hpa
   namespace: pmis
 spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: ydsz-pmis-agent
   minReplicas: 2
   maxReplicas: 6
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        target:
-          type: Utilization
-          averageUtilization: 75
+---
+# P2-9: 补齐 sales / finance HPA（min 2 / max 8，保留 base 双指标）
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ydsz-pmis-sales-hpa
+  namespace: pmis
+spec:
+  minReplicas: 2
+  maxReplicas: 8
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ydsz-pmis-finance-hpa
+  namespace: pmis
+spec:
+  minReplicas: 2
+  maxReplicas: 8

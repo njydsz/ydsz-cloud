@@ -19,10 +19,10 @@ public interface StorageQuotaRepository {
     /**
      * 原子增加已使用量
      */
-    void addUsage(String scopeType, String scopeId, long bytesDelta, int fileCountDelta);
+    int addUsage(String scopeType, String scopeId, long bytesDelta, int fileCountDelta);
 
     /**
      * 原子减少已使用量
      */
-    void subtractUsage(String scopeType, String scopeId, long bytesDelta, int fileCountDelta);
+    int subtractUsage(String scopeType, String scopeId, long bytesDelta, int fileCountDelta);
 }

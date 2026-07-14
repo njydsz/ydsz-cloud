@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   @file 决策表可视化编辑器（P1-6）
   @description 表格化编辑器：HitPolicy 切换、行列增删、列类型显式声明、命中预览。
   @module views/execution/rule-engine/decision-table-editor
@@ -12,10 +12,10 @@
         <div class="card-header">
           <span class="title">决策表编辑器 · {{ tableName || ruleCode }}</span>
           <div class="actions">
-            <el-button :icon="Refresh" @click="loadTable" :loading="loading">刷新</el-button>
-            <el-button :icon="VideoPlay" @click="dryRun" type="success" plain>命中预览</el-button>
-            <el-button :icon="Check" @click="save" type="primary" :loading="saving">保存</el-button>
-            <el-button :icon="Close" @click="goBack">返回</el-button>
+            <el-button :icon="Refresh" @click="loadTable" :loading="loading">{{ t('common.refresh') }}</el-button>
+            <el-button :icon="VideoPlay" @click="dryRun" type="success" plain>{{ t('execution.ruleEngine.hitPreview') }}</el-button>
+            <el-button :icon="Check" @click="save" type="primary" :loading="saving">{{ t('common.save') }}</el-button>
+            <el-button :icon="Close" @click="goBack">{{ t('common.back') }}</el-button>
           </div>
         </div>
       </template>
@@ -149,6 +149,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { Plus, Delete, Refresh, Check, Close, VideoPlay } from '@element-plus/icons-vue'
 import * as ruleApi from '@/api/rule-engine'
@@ -158,6 +159,7 @@ defineOptions({ name: 'DecisionTableEditor' })
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 
 const ruleCode = computed(() => route.params.ruleCode as string)
 const tableName = ref('')

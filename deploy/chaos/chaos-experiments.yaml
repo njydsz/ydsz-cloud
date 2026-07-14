@@ -1,18 +1,28 @@
 # ============================================================
-# PMIS 混沌工程自动化流水线（P2-2）
+# PMIS 混沌工程 — 独立实验集（P2-2 / P2-13）
 # ------------------------------------------------------------
-# 使用 Chaos Mesh 进行自动化混沌实验，验证系统韧性。
-# 定期在 Staging 环境执行，验证服务可用性和故障恢复能力。
+# 使用 Chaos Mesh 进行自动化混沌实验,验证系统韧性。
+# 本文件包含 5 个独立实验,各自按 @every Xh 周期调度,用于
+# Staging 环境日常韧性回归。
 #
-# 前提条件：
-#   - 集群已安装 Chaos Mesh
+# 相关文件（P2-13 补充）:
+#   - chaos-workflow.yaml   : Chaos Mesh Workflow,串行编排 + 健康检查
+#                             (用于"Chaos Night / Game Day"事件)
+#   - chaos-schedule.yaml   : Schedule CRD,定期触发 Workflow
+#                             (周六 02:00 Asia/Shanghai)
+#                             + 3 个补充周期实验(userinfo/finance/system)
+#
+# 前提条件:
+#   - 集群已安装 Chaos Mesh (v2.7.0+)
 #   - 安装命令: kubectl apply -f https://mirrors.chaos-mesh.org/v2.7.0/chaos-mesh.yaml
 #   - chaos-mesh 命名空间已创建
 #
-# 使用方式：
+# 使用方式:
 #   kubectl apply -f deploy/chaos/chaos-experiments.yaml
 #   kubectl describe networkchaos -n chaos-mesh
 #   kubectl describe podchaos -n chaos-mesh
+#   # 手动触发 Chaos Night Workflow:
+#   kubectl apply -f deploy/chaos/chaos-workflow.yaml
 # ============================================================
 
 ---

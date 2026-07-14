@@ -247,10 +247,10 @@ onMounted(() => {
   <PageLayout>
     <template #header>
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold">报表订阅</h2>
+        <h2 class="text-lg font-semibold">{{ t('common.reportSubscription') }}</h2>
         <el-button type="primary" @click="handleCreate">
           <el-icon><Plus /></el-icon>
-          新建订阅
+          {{ t('common.newSubscription') }}
         </el-button>
       </div>
     </template>

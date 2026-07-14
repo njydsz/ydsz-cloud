@@ -278,20 +278,20 @@ const minimapViewBox = computed(() => {
         <el-button size="small" @click="zoomOut" title="缩小">
           <el-icon><Minus /></el-icon>
         </el-button>
-        <el-button size="small" @click="reset" title="重置">还原</el-button>
+        <el-button size="small" @click="reset" title="重置">{{ $t('common.restore') }}</el-button>
       </el-button-group>
       <div class="flow-diagram__legend">
         <span class="legend-item">
-          <span class="legend-dot" style="background: #94a3b8"></span>已完成
+          <span class="legend-dot" style="background: #94a3b8"></span>{{ $t('common.completed') }}
         </span>
         <span class="legend-item">
-          <span class="legend-dot" style="background: #1890ff"></span>当前
+          <span class="legend-dot" style="background: #1890ff"></span>{{ $t('common.currentStatus') }}
         </span>
         <span class="legend-item">
-          <span class="legend-dot" style="background: #cbd5e1"></span>未到达
+          <span class="legend-dot" style="background: #cbd5e1"></span>{{ $t('common.notReached') }}
         </span>
         <span class="legend-item">
-          <span class="legend-dot" style="background: #ef4444"></span>已驳回
+          <span class="legend-dot" style="background: #ef4444"></span>{{ $t('common.rejected') }}
         </span>
       </div>
     </div>
@@ -405,15 +405,15 @@ const minimapViewBox = computed(() => {
     <div v-if="hoveredNode" class="flow-diagram__tooltip">
       <div><b>{{ hoveredNode.nodeName || hoveredNode.nodeCode }}</b></div>
       <div class="tooltip-row">
-        <span class="tooltip-label">类型：</span>
+        <span class="tooltip-label">{{ $t('common.typeLabel') }}</span>
         <span>{{ nodeTypeLabel(hoveredNode.nodeType) }}</span>
       </div>
       <div class="tooltip-row">
-        <span class="tooltip-label">状态：</span>
+        <span class="tooltip-label">{{ $t('common.statusLabel') }}</span>
         <span>{{ getNodeStatus(hoveredNode.nodeCode) }}</span>
       </div>
       <div v-if="hoveredNode.permissionFlag" class="tooltip-row">
-        <span class="tooltip-label">办理人：</span>
+        <span class="tooltip-label">{{ $t('common.assigneeLabel') }}</span>
         <span>{{ hoveredNode.permissionFlag }}</span>
       </div>
     </div>
@@ -445,7 +445,7 @@ const minimapViewBox = computed(() => {
           opacity="0.8"
         />
       </svg>
-      <span class="minimap-label">缩略图</span>
+      <span class="minimap-label">{{ $t('common.thumbnail') }}</span>
     </div>
   </div>
 </template>

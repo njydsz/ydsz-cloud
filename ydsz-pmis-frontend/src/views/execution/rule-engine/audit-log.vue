@@ -16,10 +16,13 @@
  */
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import { Search, Document, Refresh, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
 import * as ruleApi from '@/api/rule-engine'
 import type { AuditLogEntry } from '@/api/rule-engine'
 import { logger } from '@/utils/logger'
+
+const { t } = useI18n()
 
 // ==================== 响应式状态 ====================
 
@@ -241,7 +244,7 @@ onMounted(() => {
     <!-- 页头 -->
     <el-page-header @back="$router.push('/execution/rule-engine')" class="mb-4">
       <template #content>
-        <span class="page-title">审计日志</span>
+        <span class="page-title">{{ t('execution.ruleEngine.auditLog') }}</span>
       </template>
     </el-page-header>
 

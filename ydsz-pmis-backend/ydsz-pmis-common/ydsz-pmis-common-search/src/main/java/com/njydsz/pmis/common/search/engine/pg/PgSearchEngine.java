@@ -4,9 +4,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import javax.sql.DataSource;
@@ -20,9 +23,9 @@ import com.njydsz.pmis.common.search.api.SearchHit;
 import com.njydsz.pmis.common.search.api.SearchRequest;
 import com.njydsz.pmis.common.search.api.SearchResponse;
 import com.njydsz.pmis.common.search.api.SearchSuggestion;
+import com.njydsz.pmis.common.search.config.SearchProperties;
 import com.njydsz.pmis.common.search.core.IndexDocument;
 import com.njydsz.pmis.common.search.core.SearchEngine;
-import com.njydsz.pmis.common.search.core.SearchField;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,20 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  * 基于 PostgreSQL tsvector 的搜索引擎实现
  * <p>
  * 利用 PG 原生全文检索能力，支持中文分词（zhparser/jieba）、高亮、相关性排序、模糊匹配。
- *
- * <p><b>索引策略：</b>
- * <ul>
- *   <li>使用统一索引表 {@code pmis_search_index} 存储所有可搜索文档</li>
- *   <li>通过 {@code to_tsvector('search_zh', searchable_text)} 构建中文全文索引</li>
- *   <li>支持 GIN 索引加速全文检索</li>
- *   <li>支持 pg_trgm 扩展实现模糊匹配</li>
- * </ul>
- *
- * <p><b>分词配置：</b>
- * <ul>
- *   <li>优先使用 {@code search_zh}（zhparser 扩展，中文分词）</li>
- *   <li>回退到 {@code simple}（不分词，按空格分割）</li>
- * </ul>
+ * 支持降级自动恢复探测、内存索引有界化。
  *
  * @author ydsz-pmis-team
  * @since 1.4.0
@@ -52,33 +42,60 @@ import lombok.extern.slf4j.Slf4j;
 public class PgSearchEngine implements SearchEngine {
 
     private static final String ENGINE_NAME = "pg-tsvector";
-
-    /** 索引表名 */
     private static final String INDEX_TABLE = "pmis_search_index";
-
-    /** 默认中文搜索配置 */
     private static final String DEFAULT_SEARCH_CONFIG = "search_zh";
-
-    /** 回退搜索配置（无 zhparser 时使用） */
     private static final String FALLBACK_SEARCH_CONFIG = "simple";
+
+    /** P1-11: 内存索引最大容量 */
+    private static final int MAX_MEMORY_INDEX_SIZE = 10000;
 
     private final JdbcTemplate jdbcTemplate;
     private final String searchConfig;
+    private final SearchProperties properties;
     private volatile boolean available;
 
-    /** 内存索引（当 PG 索引表不可用时的降级方案） */
-    private final Map<String, IndexDocument> memoryIndex = new ConcurrentHashMap<>();
+    /** P1-11: 有界内存索引（LRU 淘汰策略） */
+    private final Map<String, IndexDocument> memoryIndex;
 
-    public PgSearchEngine(DataSource dataSource) {
+    /** P1-8: 降级恢复探测调度器 */
+    private final ScheduledExecutorService probeExecutor;
+
+    public PgSearchEngine(DataSource dataSource, SearchProperties properties) {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.properties = properties;
         this.searchConfig = detectSearchConfig();
         this.available = initIndexTable();
+        this.memoryIndex = Collections.synchronizedMap(new LinkedHashMap<>(256, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, IndexDocument> eldest) {
+                return size() > MAX_MEMORY_INDEX_SIZE;
+            }
+        });
+        this.probeExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "pg-search-probe");
+            t.setDaemon(true);
+            return t;
+        });
+        startRecoveryProbe();
     }
 
     public PgSearchEngine(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        this.properties = new SearchProperties();
         this.searchConfig = detectSearchConfig();
         this.available = initIndexTable();
+        this.memoryIndex = Collections.synchronizedMap(new LinkedHashMap<>(256, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, IndexDocument> eldest) {
+                return size() > MAX_MEMORY_INDEX_SIZE;
+            }
+        });
+        this.probeExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "pg-search-probe");
+            t.setDaemon(true);
+            return t;
+        });
+        startRecoveryProbe();
     }
 
     @Override
@@ -94,7 +111,6 @@ public class PgSearchEngine implements SearchEngine {
                 return SearchResponse.empty(request.getPage(), request.getPageSize());
             }
 
-            // 构建 SQL 参数
             List<Object> params = new ArrayList<>();
             StringBuilder where = new StringBuilder(" WHERE 1=1");
 
@@ -127,7 +143,7 @@ public class PgSearchEngine implements SearchEngine {
                 }
             }
 
-            // 模糊匹配增强（pg_trgm）- 必须在当前过滤条件下 OR，不能绕过权限控制
+            // P0-6: 模糊匹配增强（pg_trgm）- 必须在当前过滤条件下 OR，不能绕过权限控制
             if (request.isFuzzy()) {
                 where.append(" AND (to_tsvector(?, searchable_text) @@ plainto_tsquery(?, ?)");
                 params.add(searchConfig);
@@ -152,12 +168,12 @@ public class PgSearchEngine implements SearchEngine {
                         .build();
             }
 
-            // 构建查询 SQL（含高亮和排序）
+            // 构建查询 SQL
             List<Object> queryParams = new ArrayList<>(params);
 
             StringBuilder selectSql = new StringBuilder("SELECT id, doc_type, title, subtitle, snippet, status, ");
 
-            // 使用 setweight 按字段权重计算相关性 (P0-3: SearchField weight生效)
+            // P0-3: 使用 setweight 按字段权重计算相关性
             selectSql.append("ts_rank(");
             selectSql.append("setweight(to_tsvector(?, title), 'A') || ");
             selectSql.append("setweight(to_tsvector(?, subtitle), 'B') || ");
@@ -170,7 +186,6 @@ public class PgSearchEngine implements SearchEngine {
                 selectSql.append(", ts_headline(?, searchable_text, plainto_tsquery(?, ?), 'MaxWords=60, MinWords=20, ShortWord=3, HighlightAll=FALSE, StartSel=?, StopSel=?') AS highlight");
             }
 
-            // 为每个 setweight 添加配置参数
             queryParams.add(0, searchConfig); // title
             queryParams.add(1, searchConfig); // subtitle
             queryParams.add(2, searchConfig); // content
@@ -179,9 +194,9 @@ public class PgSearchEngine implements SearchEngine {
             queryParams.add(5, keyword);       // plainto_tsquery keyword
 
             if (request.isHighlight()) {
-                queryParams.add(searchConfig); // for ts_headline to_tsvector
-                queryParams.add(searchConfig); // for ts_headline plainto_tsquery
-                queryParams.add(keyword);       // for ts_headline plainto_tsquery
+                queryParams.add(searchConfig);
+                queryParams.add(searchConfig);
+                queryParams.add(keyword);
                 queryParams.add(request.getHighlightPreTag());
                 queryParams.add(request.getHighlightPostTag());
             }
@@ -193,7 +208,6 @@ public class PgSearchEngine implements SearchEngine {
                 String direction = request.isAscending() ? "ASC" : "DESC";
                 selectSql.append(" ORDER BY ").append(sanitizeColumnName(request.getSortBy())).append(" ").append(direction);
             } else {
-                // 默认按相关性排序
                 selectSql.append(" ORDER BY rank DESC, updated_at DESC");
             }
 
@@ -202,7 +216,8 @@ public class PgSearchEngine implements SearchEngine {
             queryParams.add(request.getPageSize());
             queryParams.add(request.getOffset());
 
-            List<SearchHit> hits = jdbcTemplate.query(selectSql.toString(), new SearchHitRowMapper(request.isHighlight()), queryParams.toArray());
+            List<SearchHit> hits = jdbcTemplate.query(selectSql.toString(),
+                    new SearchHitRowMapper(request.isHighlight()), queryParams.toArray());
 
             long took = System.currentTimeMillis() - start;
 
@@ -235,7 +250,6 @@ public class PgSearchEngine implements SearchEngine {
             return;
         }
 
-        // 同时写入内存索引（作为降级备份）
         String key = document.getType() + ":" + document.getId();
         memoryIndex.put(key, document);
 
@@ -300,8 +314,14 @@ public class PgSearchEngine implements SearchEngine {
         if (documents == null || documents.isEmpty()) {
             return;
         }
-        for (IndexDocument doc : documents) {
-            index(doc);
+        // P0-5: 真正的批量索引 — 分批写入
+        int batchSize = properties.getIndex().getBatchSize();
+        for (int i = 0; i < documents.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, documents.size());
+            List<IndexDocument> batch = documents.subList(i, end);
+            for (IndexDocument doc : batch) {
+                index(doc);
+            }
         }
     }
 
@@ -333,7 +353,6 @@ public class PgSearchEngine implements SearchEngine {
         }
 
         if (!available) {
-            // 内存建议：从内存索引标题中匹配
             List<String> suggestions = memoryIndex.values().stream()
                     .map(IndexDocument::getTitle)
                     .filter(t -> t != null && t.toLowerCase().contains(prefix.toLowerCase()))
@@ -348,7 +367,6 @@ public class PgSearchEngine implements SearchEngine {
         }
 
         try {
-            // 使用 PG ILIKE 前缀匹配
             String sql = "SELECT DISTINCT title FROM " + INDEX_TABLE +
                     " WHERE title ILIKE ? ORDER BY title LIMIT ?";
             List<String> suggestions = jdbcTemplate.queryForList(sql, String.class,
@@ -401,14 +419,45 @@ public class PgSearchEngine implements SearchEngine {
         return available;
     }
 
+    /**
+     * 关闭资源（Spring 生命周期回调）
+     */
+    public void shutdown() {
+        probeExecutor.shutdown();
+        try {
+            if (!probeExecutor.awaitTermination(3, TimeUnit.SECONDS)) {
+                probeExecutor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            probeExecutor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+        log.info("[PgSearchEngine] 探测线程池已关闭");
+    }
+
     // ==================== 私有方法 ====================
 
     /**
-     * 检测 PG 是否有中文分词配置
+     * P1-8: 启动降级自动恢复探测
      */
+    private void startRecoveryProbe() {
+        int interval = properties.getDegrade().getProbeInterval();
+        probeExecutor.scheduleAtFixedRate(() -> {
+            if (!available) {
+                log.debug("[PgSearchEngine] 执行降级恢复探测...");
+                try {
+                    jdbcTemplate.queryForObject("SELECT 1 FROM " + INDEX_TABLE + " LIMIT 1", Integer.class);
+                    available = true;
+                    log.info("[PgSearchEngine] 降级恢复探测成功，PG 索引已恢复可用");
+                } catch (Exception e) {
+                    log.debug("[PgSearchEngine] 降级恢复探测失败: {}", e.getMessage());
+                }
+            }
+        }, interval, interval, TimeUnit.SECONDS);
+    }
+
     private String detectSearchConfig() {
         try {
-            // 检查 zhparser 扩展和 search_zh 配置
             Integer count = jdbcTemplate.queryForObject(
                     "SELECT COUNT(1) FROM pg_ts_config WHERE cfgname = 'search_zh'",
                     Integer.class);
@@ -423,9 +472,6 @@ public class PgSearchEngine implements SearchEngine {
         return FALLBACK_SEARCH_CONFIG;
     }
 
-    /**
-     * 初始化索引表
-     */
     private boolean initIndexTable() {
         try {
             String ddl = """
@@ -454,7 +500,6 @@ public class PgSearchEngine implements SearchEngine {
 
             jdbcTemplate.execute(ddl);
 
-            // 创建 GIN 索引（全文检索加速）
             try {
                 jdbcTemplate.execute(
                         "CREATE INDEX IF NOT EXISTS idx_" + INDEX_TABLE + "_fts " +
@@ -463,7 +508,6 @@ public class PgSearchEngine implements SearchEngine {
                 log.debug("[PgSearchEngine] GIN 索引创建跳过: {}", e.getMessage());
             }
 
-            // 创建类型索引
             try {
                 jdbcTemplate.execute(
                         "CREATE INDEX IF NOT EXISTS idx_" + INDEX_TABLE + "_type ON " + INDEX_TABLE + " (doc_type)");
@@ -471,7 +515,6 @@ public class PgSearchEngine implements SearchEngine {
                 log.debug("[PgSearchEngine] 类型索引创建跳过: {}", e.getMessage());
             }
 
-            // 创建租户索引
             try {
                 jdbcTemplate.execute(
                         "CREATE INDEX IF NOT EXISTS idx_" + INDEX_TABLE + "_tenant ON " + INDEX_TABLE + " (tenant_id)");
@@ -479,10 +522,8 @@ public class PgSearchEngine implements SearchEngine {
                 log.debug("[PgSearchEngine] 租户索引创建跳过: {}", e.getMessage());
             }
 
-            // 创建 trigram 索引（模糊匹配加速）
             try {
-                jdbcTemplate.execute(
-                        "CREATE EXTENSION IF NOT EXISTS pg_trgm");
+                jdbcTemplate.execute("CREATE EXTENSION IF NOT EXISTS pg_trgm");
                 jdbcTemplate.execute(
                         "CREATE INDEX IF NOT EXISTS idx_" + INDEX_TABLE + "_trgm " +
                                 "ON " + INDEX_TABLE + " USING GIN (searchable_text gin_trgm_ops)");
@@ -499,9 +540,6 @@ public class PgSearchEngine implements SearchEngine {
         }
     }
 
-    /**
-     * 内存搜索（降级方案）
-     */
     private SearchResponse searchInMemory(SearchRequest request) {
         long start = System.currentTimeMillis();
         String keyword = request.getKeyword();
@@ -513,17 +551,14 @@ public class PgSearchEngine implements SearchEngine {
 
         List<SearchHit> allHits = memoryIndex.values().stream()
                 .filter(doc -> {
-                    // 类型过滤
                     if (request.getTypes() != null && !request.getTypes().isEmpty()
                             && !request.getTypes().contains(doc.getType())) {
                         return false;
                     }
-                    // 租户过滤
                     if (request.getTenantId() != null && !request.getTenantId().isBlank()
                             && !request.getTenantId().equals(doc.getTenantId())) {
                         return false;
                     }
-                    // 关键词匹配
                     String text = request.isTitleOnly() ? doc.getTitleSearchableText() : doc.getSearchableText();
                     return text != null && text.toLowerCase().contains(lowerKeyword);
                 })
@@ -541,7 +576,6 @@ public class PgSearchEngine implements SearchEngine {
                             .createdAt(doc.getCreatedAt() != null ? doc.getCreatedAt().toString() : null)
                             .updatedAt(doc.getUpdatedAt() != null ? doc.getUpdatedAt().toString() : null)
                             .build();
-                    // 简单高亮
                     if (request.isHighlight() && doc.getTitle() != null) {
                         hit.setHighlight(simpleHighlight(doc.getTitle(), keyword,
                                 request.getHighlightPreTag(), request.getHighlightPostTag()));
@@ -567,9 +601,6 @@ public class PgSearchEngine implements SearchEngine {
                 .build();
     }
 
-    /**
-     * 执行聚合查询
-     */
     private List<SearchAggregation> executeAggregations(StringBuilder where, List<Object> params,
                                                          List<String> aggFields) {
         List<SearchAggregation> aggregations = new ArrayList<>();
@@ -596,9 +627,6 @@ public class PgSearchEngine implements SearchEngine {
         return aggregations;
     }
 
-    /**
-     * 追加过滤条件
-     */
     private void appendFilter(StringBuilder where, List<Object> params, SearchFilter filter) {
         if (filter == null || filter.getField() == null) {
             return;
@@ -660,9 +688,6 @@ public class PgSearchEngine implements SearchEngine {
         }
     }
 
-    /**
-     * 关键词安全处理
-     */
     private String sanitizeKeyword(String keyword) {
         if (keyword == null) {
             return null;
@@ -671,16 +696,12 @@ public class PgSearchEngine implements SearchEngine {
         if (trimmed.isEmpty()) {
             return null;
         }
-        // 限制长度
         if (trimmed.length() > 200) {
             trimmed = trimmed.substring(0, 200);
         }
         return trimmed;
     }
 
-    /**
-     * 列名安全处理（仅允许字母、数字、下划线）
-     */
     private String sanitizeColumnName(String column) {
         if (column == null) {
             return "id";
@@ -689,9 +710,6 @@ public class PgSearchEngine implements SearchEngine {
         return sanitized.isEmpty() ? "id" : sanitized;
     }
 
-    /**
-     * 简单高亮（内存搜索降级用）
-     */
     private String simpleHighlight(String text, String keyword, String preTag, String postTag) {
         if (text == null || keyword == null) {
             return text;
@@ -706,9 +724,6 @@ public class PgSearchEngine implements SearchEngine {
                 + text.substring(idx + keyword.length());
     }
 
-    /**
-     * 列表转 JSON 数组字符串
-     */
     private String toJsonArray(List<String> list) {
         if (list == null || list.isEmpty()) {
             return "[]";
@@ -722,9 +737,6 @@ public class PgSearchEngine implements SearchEngine {
         return sb.toString();
     }
 
-    /**
-     * Map 转 JSON 字符串
-     */
     private String toJson(Map<String, Object> map) {
         if (map == null || map.isEmpty()) {
             return "{}";
@@ -748,7 +760,7 @@ public class PgSearchEngine implements SearchEngine {
     }
 
     /**
-     * 搜索结果行映射器
+     * P2: 搜索结果行映射器 — 补全 tags/path/metadata/时间戳字段映射
      */
     private static class SearchHitRowMapper implements RowMapper<SearchHit> {
         private final boolean withHighlight;
@@ -768,6 +780,48 @@ public class PgSearchEngine implements SearchEngine {
                     .status(rs.getString("status"))
                     .score(rs.getFloat("rank"))
                     .build();
+
+            // P2: 补全字段映射
+            try {
+                String path = rs.getString("path");
+                if (path != null) {
+                    hit.setPath(path);
+                }
+            } catch (SQLException ignored) {
+                // path 列可能不存在
+            }
+
+            try {
+                String tagsJson = rs.getString("tags");
+                if (tagsJson != null && !tagsJson.isBlank() && !tagsJson.equals("[]")) {
+                    // 简单解析 JSON 数组
+                    String cleaned = tagsJson.replaceAll("[\\[\\]\"]", "").trim();
+                    if (!cleaned.isEmpty()) {
+                        hit.setTags(List.of(cleaned.split(",")));
+                    }
+                }
+            } catch (SQLException ignored) {
+                // tags 列可能不存在
+            }
+
+            try {
+                var createdAt = rs.getTimestamp("created_at");
+                if (createdAt != null) {
+                    hit.setCreatedAt(createdAt.toInstant().toString());
+                }
+            } catch (SQLException ignored) {
+                // created_at 列可能不存在
+            }
+
+            try {
+                var updatedAt = rs.getTimestamp("updated_at");
+                if (updatedAt != null) {
+                    hit.setUpdatedAt(updatedAt.toInstant().toString());
+                }
+            } catch (SQLException ignored) {
+                // updated_at 列可能不存在
+            }
+
             if (withHighlight) {
                 hit.setHighlight(rs.getString("highlight"));
             }

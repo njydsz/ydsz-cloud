@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/nextwiki/tags")
+@RequestMapping("/api/v1/nextwiki/tags")
 @RequiredArgsConstructor
 @io.swagger.v3.oas.annotations.tags.Tag(name = "标签管理", description = "标签创建、绑定、推荐")
 // FQN-OK: name conflict with Tag entity

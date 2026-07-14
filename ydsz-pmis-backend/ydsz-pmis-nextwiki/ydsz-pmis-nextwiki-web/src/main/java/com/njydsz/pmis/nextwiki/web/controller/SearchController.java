@@ -1,6 +1,12 @@
 package com.njydsz.pmis.nextwiki.web.controller;
 
-import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.nextwiki.api.dto.NextwikiDTOs;
@@ -20,9 +26,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/nextwiki/search")
+@RequestMapping("/api/v1/nextwiki/search")
 @RequiredArgsConstructor
-@Tag(name = "全文搜索", description = "文件�?内容/标签搜索")
+@Tag(name = "全文搜索", description = "文件名/内容/标签搜索")
 public class SearchController {
 
     private final SearchDomainService searchDomainService;
@@ -30,7 +36,7 @@ public class SearchController {
     @PostMapping
     @Operation(summary = "综合搜索")
     public BaseResponse<SearchResultVO> search(
-            @RequestBody NextwikiDTOs.SearchRequest request,
+            @Valid @RequestBody NextwikiDTOs.SearchRequest request,
             @RequestHeader("X-User-Id") String userId) {
 
         int page = request.getPage() != null ? request.getPage() : 1;

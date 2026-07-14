@@ -90,6 +90,20 @@ data:
       retention_delete_delay: 2h
       retention_delete_worker_count: 50
       delete_request_store: filesystem
+    # P2-12: 启用 Ruler,使 loki-rules.yaml 告警规则生效
+    # 告警链路: Loki Ruler → Alertmanager → 钉钉/企业微信/飞书 Webhook
+    ruler:
+      storage:
+        type: local
+        local:
+          directory: /loki/rules
+      rule_path: /loki/rules-temp
+      alertmanager_url: http://alertmanager.monitoring.svc.cluster.local:9093
+      ring:
+        kvstore:
+          store: inmemory
+      enable_api: true
+      enable_alertmanager_v2: true
     analytics:
       reporting_enabled: false
 
@@ -157,10 +171,21 @@ spec:
               readOnly: true
             - name: storage
               mountPath: /loki
+            # P2-12: 挂载 loki-rules,使 Ruler 能加载告警规则
+            - name: rules
+              mountPath: /loki/rules
+              readOnly: true
       volumes:
         - name: config
           configMap:
             name: loki-config
+        # P2-12: 告警规则 ConfigMap(内容见下方 loki-rules ConfigMap)
+        - name: rules
+          configMap:
+            name: loki-rules
+            items:
+              - key: loki-rules.yaml
+                path: pmis-log-alerts.yaml
   # PVC 模板:StatefulSet 自动创建 loki-storage-0(单节点)
   # 生产环境建议指定 StorageClass 并换 S3/OSS 存储
   volumeClaimTemplates:
@@ -237,6 +262,12 @@ data:
       # ------------------------------------------------------------------
       # 采集 K8s pod 日志(/var/log/pods/*,kubelet 标准输出)
       # kubernetes_sd_configs 自动发现所有 pod,按 namespace=pmis 过滤
+      #
+      # P2-12 修复:K8s pod 日志路径格式为
+      #   /var/log/pods/<namespace>_<pod-name>_<pod-uid>/<container-name>/<restart>.log
+      # 原 __path__ 只用 pod_uid + container_name,缺失 namespace 与 pod-name
+      # 拼接前缀,导致 Promtail 找不到日志文件、Loki 收不到任何 K8s 日志,
+      # 进而 loki-rules.yaml 中所有基于 {namespace="pmis"} 的告警全部失效。
       # ------------------------------------------------------------------
       - job_name: kubernetes-pods
         kubernetes_sd_configs:
@@ -246,7 +277,7 @@ data:
           - source_labels: [__meta_kubernetes_namespace]
             regex: pmis
             action: keep
-          # 提取 namespace 作为 label
+          # 提取 namespace 作为 label(Loki 检索 / 告警核心维度)
           - source_labels: [__meta_kubernetes_namespace]
             target_label: namespace
           # 提取 pod 名作为 label
@@ -258,11 +289,13 @@ data:
           # 提取 app 标签作为 service label(便于按服务筛选)
           - source_labels: [__meta_kubernetes_pod_label_app]
             target_label: app
-          # 提取 pod UID 与容器名拼接日志路径(CRI 日志格式)
-          - source_labels: [__meta_kubernetes_pod_uid, __meta_kubernetes_pod_container_name]
+          # 拼接 K8s 标准 pod 日志路径
+          # 格式: /var/log/pods/<namespace>_<pod-name>_<pod-uid>/<container-name>/*.log
+          - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_pod_name, __meta_kubernetes_pod_uid, __meta_kubernetes_pod_container_name]
+            separator: ";"
             target_label: __path__
-            regex: (.+);(.+)
-            replacement: /var/log/pods/$1/$2/*.log
+            regex: (.+);(.+);(.+);(.+)
+            replacement: /var/log/pods/$1_$2_$3/$4/*.log
         pipeline_stages:
           # CRI 日志格式:每行以时间戳 + stream(stdout/stderr) + flag + 日志内容
           # 示例: 2024-01-01T00:00:00.000000000Z stdout F {"message":"..."}
@@ -283,11 +316,19 @@ data:
                       traceId: traceId
                       message: message
                       appName: appName
+                      userId: userId
+                      username: username
                     on_missing: skip
+                # 仅低基数维度作为 Loki label(level / appName)
+                # traceId / userId / username 走 structured_metadata(Loki 3.x)
+                # 避免 label 基数爆炸导致索引膨胀 / Loki OOM
                 - labels:
                     level:
-                    traceId:
                     appName:
+                - structured_metadata:
+                    traceId:
+                    userId:
+                    username:
                 - output:
                     source: message
 
@@ -418,3 +459,112 @@ spec:
     - name: http-metrics
       port: 9080
       targetPort: http-metrics
+
+# =============================================================================
+# 8. Loki Ruler 告警规则 ConfigMap（P2-12）
+# -----------------------------------------------------------------------------
+# 内容来源: deploy/monitoring/loki/loki-rules.yaml
+# 此处以 ConfigMap 形式挂载到 Loki Pod 的 /loki/rules/pmis-log-alerts.yaml,
+# 由 Ruler 周期性评估,触发后推送告警至 Alertmanager。
+# 规则更新流程:
+#   1. 修改 deploy/monitoring/loki/loki-rules.yaml(权威源)
+#   2. 同步内容到本 ConfigMap(保持一致)
+#   3. kubectl rollout restart statefulset loki -n observability
+# =============================================================================
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loki-rules
+  namespace: observability
+  labels:
+    app.kubernetes.io/name: loki
+    app.kubernetes.io/part-of: ydsz-pmis
+data:
+  loki-rules.yaml: |
+    groups:
+      - name: pmis-log-alerts
+        interval: 1m
+        rules:
+          # 1. ERROR 日志突增告警(5 分钟内 > 10 条)
+          - alert: PmisErrorLogSpike
+            expr: |
+              sum by (appName) (
+                count_over_time(
+                  {namespace="pmis", level="ERROR"}[5m]
+                )
+              ) > 10
+            for: 2m
+            labels:
+              severity: warning
+              category: log
+            annotations:
+              summary: "ERROR 日志突增: {{ $labels.appName }}"
+              description: "服务 {{ $labels.appName }} 在过去 5 分钟内产生了超过 10 条 ERROR 日志,请检查日志排查问题。"
+
+          # 2. 单服务 ERROR 严重告警(5 分钟内 > 50 条)
+          - alert: PmisErrorLogCritical
+            expr: |
+              sum by (appName) (
+                count_over_time(
+                  {namespace="pmis", level="ERROR"}[5m]
+                )
+              ) > 50
+            for: 1m
+            labels:
+              severity: critical
+              category: log
+            annotations:
+              summary: "严重: 服务 {{ $labels.appName }} ERROR 日志暴增"
+              description: "服务 {{ $labels.appName }} 在过去 5 分钟内产生了超过 50 条 ERROR 日志,可能存在严重故障,请立即排查。"
+
+          # 3. JVM 严重错误(OOM / StackOverflow)
+          - alert: PmisJvmCriticalError
+            expr: |
+              sum by (appName) (
+                count_over_time(
+                  {namespace="pmis"} |~ "(?i)(OutOfMemoryError|StackOverflowError|GC overhead limit exceeded)"
+                  [1m]
+                )
+              ) > 0
+            for: 0s
+            labels:
+              severity: critical
+              category: jvm
+            annotations:
+              summary: "JVM 严重错误: {{ $labels.appName }}"
+              description: "服务 {{ $labels.appName }} 检测到 JVM 严重错误(OOM/StackOverflow),可能需要立即重启或扩容。"
+
+          # 4. 数据库连接异常
+          - alert: PmisDatabaseConnectionIssue
+            expr: |
+              sum by (appName) (
+                count_over_time(
+                  {namespace="pmis"} |~ "(?i)(connection refused|connection timeout|pool exhausted|cannot get a connection)"
+                  [3m]
+                )
+              ) > 5
+            for: 2m
+            labels:
+              severity: warning
+              category: database
+            annotations:
+              summary: "数据库连接异常: {{ $labels.appName }}"
+              description: "服务 {{ $labels.appName }} 检测到数据库连接异常,请检查连接池配置和数据库状态。"
+
+          # 5. P2-12 新增: 服务无日志输出(可能 Pod 假死)
+          # 10 分钟内某服务无任何日志 → warning
+          - alert: PmisNoLogOutput
+            expr: |
+              sum by (appName) (
+                count_over_time(
+                  {namespace="pmis"}[10m]
+                )
+              ) == 0
+            for: 5m
+            labels:
+              severity: warning
+              category: availability
+            annotations:
+              summary: "服务无日志输出: {{ $labels.appName }}"
+              description: "服务 {{ $labels.appName }} 已 10 分钟无日志输出,可能 Pod 假死或流量异常,请检查健康状态。"

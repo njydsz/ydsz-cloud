@@ -2,7 +2,19 @@ package com.njydsz.pmis.nextwiki.web.controller;
 
 import java.util.List;
 
-import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
@@ -24,8 +36,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/nextwiki/files")
+@RequestMapping("/api/v1/nextwiki/files")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "网盘文件管理", description = "文件上传、下载、移动、重命名、删除等操作")
 public class FileController {
 
@@ -47,28 +60,35 @@ public class FileController {
     @PostMapping("/folders")
     @Operation(summary = "创建目录")
     public BaseResponse<FileNodeVO> createFolder(
-            @RequestBody NextwikiDTOs.CreateFolderRequest request,
+            @Valid @RequestBody NextwikiDTOs.CreateFolderRequest request,
             @RequestHeader("X-User-Id") String userId) {
 
-        FileNodeVO result = fileApplicationService.createFolder(request.getParentId(), request.getName(), userId);
+        FileNodeVO result = fileApplicationService.createFolder(
+                request.getParentId(), request.getName(), userId);
         return BaseResponse.ok(result);
     }
 
     @GetMapping("/list")
-    @Operation(summary = "列出目录内容")
+    @Operation(summary = "列出目录内容", description = "支持排序、过滤、分页")
     public BaseResponse<List<FileNodeVO>> listFiles(
             @RequestParam(value = "parentId", required = false) String parentId,
+            @RequestParam(value = "sortBy", required = false) String sortBy,
+            @RequestParam(value = "sortDir", required = false) String sortDir,
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "pageSize", defaultValue = "50") int pageSize,
             @RequestHeader("X-User-Id") String userId) {
 
-        List<FileNodeVO> result = fileApplicationService.listFiles(parentId, userId);
+        List<FileNodeVO> result = fileApplicationService.listFiles(
+                parentId, userId, sortBy, sortDir, type, page, pageSize);
         return BaseResponse.ok(result);
     }
 
     @PutMapping("/{nodeId}/move")
-    @Operation(summary = "移动文件/文件�?)
+    @Operation(summary = "移动文件/文件夹")
     public BaseResponse<FileNodeVO> move(
             @PathVariable String nodeId,
-            @RequestBody NextwikiDTOs.MoveRequest request,
+            @Valid @RequestBody NextwikiDTOs.MoveRequest request,
             @RequestHeader("X-User-Id") String userId) {
 
         FileNodeVO result = fileApplicationService.move(nodeId, request.getTargetParentId(), userId);
@@ -76,10 +96,10 @@ public class FileController {
     }
 
     @PutMapping("/{nodeId}/rename")
-    @Operation(summary = "重命名文�?文件�?)
+    @Operation(summary = "重命名文件/文件夹")
     public BaseResponse<FileNodeVO> rename(
             @PathVariable String nodeId,
-            @RequestBody NextwikiDTOs.RenameRequest request,
+            @Valid @RequestBody NextwikiDTOs.RenameRequest request,
             @RequestHeader("X-User-Id") String userId) {
 
         FileNodeVO result = fileApplicationService.rename(nodeId, request.getNewName(), userId);
@@ -96,6 +116,38 @@ public class FileController {
         return BaseResponse.ok();
     }
 
+    @PostMapping("/batch/delete")
+    @Operation(summary = "批量删除")
+    public BaseResponse<Integer> batchDelete(
+            @RequestBody List<String> nodeIds,
+            @RequestHeader("X-User-Id") String userId) {
+
+        int success = fileApplicationService.batchDelete(nodeIds, userId);
+        return BaseResponse.ok(success);
+    }
+
+    @PostMapping("/batch/move")
+    @Operation(summary = "批量移动")
+    public BaseResponse<Integer> batchMove(
+            @RequestBody BatchMoveRequest request,
+            @RequestHeader("X-User-Id") String userId) {
+
+        int success = fileApplicationService.batchMove(
+                request.getNodeIds(), request.getTargetParentId(), userId);
+        return BaseResponse.ok(success);
+    }
+
+    @PostMapping("/{nodeId}/copy")
+    @Operation(summary = "复制文件")
+    public BaseResponse<FileNodeVO> copy(
+            @PathVariable String nodeId,
+            @RequestParam("targetParentId") String targetParentId,
+            @RequestHeader("X-User-Id") String userId) {
+
+        FileNodeVO result = fileApplicationService.copy(nodeId, targetParentId, userId);
+        return BaseResponse.ok(result);
+    }
+
     @GetMapping("/{nodeId}/versions")
     @Operation(summary = "获取版本历史")
     public BaseResponse<List<FileVersion>> getVersionHistory(@PathVariable String nodeId) {
@@ -103,7 +155,7 @@ public class FileController {
     }
 
     @PostMapping("/{nodeId}/versions/{version}/rollback")
-    @Operation(summary = "回滚到指定版�?)
+    @Operation(summary = "回滚到指定版本")
     public BaseResponse<FileNodeVO> rollbackVersion(
             @PathVariable String nodeId,
             @PathVariable Integer version,
@@ -114,12 +166,36 @@ public class FileController {
     }
 
     @PutMapping("/{nodeId}/star")
-    @Operation(summary = "切换星标状�?)
+    @Operation(summary = "切换星标状态")
     public BaseResponse<Void> toggleStar(
             @PathVariable String nodeId,
             @RequestHeader("X-User-Id") String userId) {
 
         fileApplicationService.toggleStar(nodeId, userId);
         return BaseResponse.ok();
+    }
+
+    /**
+     * 批量移动请求
+     */
+    public static class BatchMoveRequest {
+        private List<String> nodeIds;
+        private String targetParentId;
+
+        public List<String> getNodeIds() {
+            return nodeIds;
+        }
+
+        public void setNodeIds(List<String> nodeIds) {
+            this.nodeIds = nodeIds;
+        }
+
+        public String getTargetParentId() {
+            return targetParentId;
+        }
+
+        public void setTargetParentId(String targetParentId) {
+            this.targetParentId = targetParentId;
+        }
     }
 }

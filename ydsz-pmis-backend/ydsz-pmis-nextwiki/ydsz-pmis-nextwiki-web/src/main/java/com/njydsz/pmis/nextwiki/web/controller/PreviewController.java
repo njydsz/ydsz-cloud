@@ -1,6 +1,11 @@
 package com.njydsz.pmis.nextwiki.web.controller;
 
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.nextwiki.server.service.PreviewApplicationService;
@@ -18,9 +23,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/nextwiki/preview")
+@RequestMapping("/api/v1/nextwiki/preview")
 @RequiredArgsConstructor
-@Tag(name = "文档预览", description = "在线预览、缩略图、格式转�?)
+@Tag(name = "文档预览", description = "在线预览、缩略图、格式转换")
 public class PreviewController {
 
     private final PreviewApplicationService previewService;
@@ -33,7 +38,7 @@ public class PreviewController {
     }
 
     @GetMapping("/supported")
-    @Operation(summary = "检查文件是否支持预�?)
+    @Operation(summary = "检查文件是否支持预览")
     public BaseResponse<Boolean> isSupported(@RequestParam String suffix) {
         return BaseResponse.ok(previewService.isPreviewSupported(suffix));
     }

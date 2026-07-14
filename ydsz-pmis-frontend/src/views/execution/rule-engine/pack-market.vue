@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   @file 规则集市场
   @description 列出市场中的全部规则集（RulePack），支持搜索、按行业筛选、详情查看、一键安装。
   @module views/execution/rule-engine/pack-market
@@ -207,12 +207,12 @@ onMounted(() => {
     <div class="market-header">
       <h2 class="market-title">
         <el-icon><Document /></el-icon>
-        规则集市场
+        {{ $t('common.rulePackMarket') }}
       </h2>
       <div class="market-actions">
         <!-- P2-10 检查更新按钮（带徽标） -->
         <el-badge :value="updateCount" :hidden="updateCount === 0" :max="99" class="update-badge">
-          <el-button :icon="Refresh" :loading="updateChecking" @click="checkUpdates">检查更新</el-button>
+          <el-button :icon="Refresh" :loading="updateChecking" @click="checkUpdates">{{ $t('common.checkUpdate') }}</el-button>
         </el-badge>
         <!-- P2-10 批量更新按钮（仅当有更新时显示） -->
         <el-button

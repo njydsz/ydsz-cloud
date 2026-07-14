@@ -1,14 +1,18 @@
 # =============================================================================
-# Loki Ruler 告警规则 - 基于日志内容的告警（P0-4）
+# Loki Ruler 告警规则 - 基于日志内容的告警（P0-4 / P2-12 同步）
 # -----------------------------------------------------------------------------
 # 部署:
-#   kubectl apply -f deploy/monitoring/loki/loki-rules.yaml -n observability
-#   或挂载至 Loki Pod 的 /loki/rules/ 目录
+#   - K8s: 已封装为 ConfigMap 挂载到 Loki Pod /loki/rules/（见 loki-stack.yaml
+#     第 8 节 loki-rules ConfigMap）。修改本文件后需同步至 ConfigMap 并
+#     kubectl rollout restart statefulset loki -n observability。
+#   - Docker Compose: 直接挂载本文件至 Loki 容器 /loki/rules/pmis-log-alerts.yaml
 #
 # 告警策略:
-#   1. ERROR 日志突增：5 分钟内 ERROR 级别日志 > 10 条 → 告警
-#   2. 服务异常：5 分钟内某服务 ERROR 日志 > 5 条 → 告警
-#   3. OOM / StackOverflow：匹配关键字 → 立即告警
+#   1. ERROR 日志突增:5 分钟内 ERROR 级别日志 > 10 条 → 告警
+#   2. 服务异常:5 分钟内某服务 ERROR 日志 > 50 条 → critical
+#   3. OOM / StackOverflow:匹配关键字 → 立即告警
+#   4. 数据库连接异常:连接关键字 > 5 条 → 告警
+#   5. P2-12 新增:服务无日志输出(可能 Pod 假死) → 告警
 #
 # 告警链路:
 #   Loki Ruler → Alertmanager → 企业微信/钉钉/飞书 Webhook
@@ -94,3 +98,22 @@ groups:
         annotations:
           summary: "数据库连接异常: {{ $labels.appName }}"
           description: "服务 {{ $labels.appName }} 检测到数据库连接异常，请检查连接池配置和数据库状态。"
+
+      # ----------------------------------------------------------------------
+      # 5. P2-12 新增:服务无日志输出(可能 Pod 假死)
+      # 10 分钟内某服务无任何日志 → warning
+      # ----------------------------------------------------------------------
+      - alert: PmisNoLogOutput
+        expr: |
+          sum by (appName) (
+            count_over_time(
+              {namespace="pmis"}[10m]
+            )
+          ) == 0
+        for: 5m
+        labels:
+          severity: warning
+          category: availability
+        annotations:
+          summary: "服务无日志输出: {{ $labels.appName }}"
+          description: "服务 {{ $labels.appName }} 已 10 分钟无日志输出，可能 Pod 假死或流量异常，请检查健康状态。"

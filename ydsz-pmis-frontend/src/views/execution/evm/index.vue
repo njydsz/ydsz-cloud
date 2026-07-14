@@ -31,6 +31,7 @@ import { useUserStore } from '@/store/modules/user'
 
 /** 用户信息 store（用于权限判断） */
 const userStore = useUserStore()
+const { t } = useI18n()
 /** 权限判断快捷方法 */
 const hasPerm = (code: string) => userStore.hasPermission(code)
 
@@ -264,7 +265,7 @@ onMounted(() => {
     <el-card v-if="query.initiationId" shadow="never" class="dashboard-card">
       <template #header>
         <div class="card-header">
-          <span><el-icon><DataLine /></el-icon> 项目 EVM 健康仪表盘</span>
+          <span><el-icon><DataLine /></el-icon> {{ t('execution.ruleEngine.evmHealthDashboard') }}</span>
           <el-button
             v-if="hasPerm(PC.EXECUTION_EVM_DASHBOARD)"
             link
@@ -272,7 +273,7 @@ onMounted(() => {
             :loading="dashboardLoading"
             @click="fetchDashboard"
           >
-            刷新
+            {{ t('common.refresh') }}
           </el-button>
         </div>
       </template>

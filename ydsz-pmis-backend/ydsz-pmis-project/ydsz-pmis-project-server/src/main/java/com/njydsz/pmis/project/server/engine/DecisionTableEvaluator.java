@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.domain.entity.DecisionTableDO;
 import com.njydsz.pmis.literule.server.expr.ExpressionEvaluator;
-import com.njydsz.pmis.literule.server.expr.liteexpr.LiteExprEvaluator;
+import com.njydsz.pmis.literule.server.expr.LiteExprEvaluator;
 
 import lombok.extern.slf4j.Slf4j;
 

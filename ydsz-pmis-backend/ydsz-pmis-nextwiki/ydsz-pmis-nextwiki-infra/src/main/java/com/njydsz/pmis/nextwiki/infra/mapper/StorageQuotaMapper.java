@@ -20,7 +20,9 @@ public interface StorageQuotaMapper extends BaseMapper<StorageQuota> {
 
     @Update("UPDATE nw_storage_quota SET quota_used = quota_used + #{bytesDelta}, " +
             "file_count_used = file_count_used + #{fileCountDelta}, updated_at = NOW() " +
-            "WHERE scope_type = #{scopeType} AND scope_id = #{scopeId}")
+            "WHERE scope_type = #{scopeType} AND scope_id = #{scopeId} " +
+            "AND quota_used + #{bytesDelta} <= quota_limit " +
+            "AND file_count_used + #{fileCountDelta} <= file_count_limit")
     int addUsage(@Param("scopeType") String scopeType, @Param("scopeId") String scopeId,
                  @Param("bytesDelta") long bytesDelta, @Param("fileCountDelta") int fileCountDelta);
 

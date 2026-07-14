@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.sentry.logging;
 
+import java.net.InetAddress;
 import java.time.Instant;
 
 import com.njydsz.pmis.common.sentry.domain.LogEvent;
@@ -104,7 +105,7 @@ public class SentryLogbackLayout extends LayoutBase<ILoggingEvent> {
 
     private String detectHostname() {
         try {
-            return java.net.InetAddress.getLocalHost().getHostName();
+            return InetAddress.getLocalHost().getHostName();
         } catch (Exception e) {
             return "unknown";
         }

@@ -5,12 +5,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.njydsz.pmis.common.search.config.SearchProperties;
 import com.njydsz.pmis.common.search.core.IndexDocument;
 import com.njydsz.pmis.common.search.core.IndexOperation;
 import com.njydsz.pmis.common.search.core.SearchEngine;
+import com.njydsz.pmis.common.search.metrics.SearchMetrics;
+import com.njydsz.pmis.common.search.provider.ProviderTypeBridge;
 import com.njydsz.pmis.common.search.provider.SearchProvider;
 import com.njydsz.pmis.common.search.provider.SearchProviderRegistry;
 
@@ -20,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * 索引同步服务
  * <p>
  * 负责将业务实体的变更同步到搜索引擎索引。支持单文档索引、批量索引和全量重建。
+ * 支持索引同步重试和死信队列。
  *
  * @author ydsz-pmis-team
  * @since 1.4.0
@@ -30,14 +34,20 @@ public class IndexSyncService {
     private final SearchEngine searchEngine;
     private final SearchProviderRegistry providerRegistry;
     private final SearchProperties properties;
+    private final SearchMetrics metrics;
     private final ExecutorService executorService;
+
+    /** P2-15: 死信队列 — 存储重试失败的索引操作 */
+    private final List<IndexOperation> deadLetterQueue = Collections.synchronizedList(new ArrayList<>());
 
     public IndexSyncService(SearchEngine searchEngine,
                             SearchProviderRegistry providerRegistry,
-                            SearchProperties properties) {
+                            SearchProperties properties,
+                            SearchMetrics metrics) {
         this.searchEngine = searchEngine;
         this.providerRegistry = providerRegistry;
         this.properties = properties;
+        this.metrics = metrics;
         this.executorService = Executors.newFixedThreadPool(
                 Math.max(2, properties.getIndex().getThreadPoolSize()));
     }
@@ -47,7 +57,6 @@ public class IndexSyncService {
      *
      * @param operation 索引操作
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
     public void handleOperation(IndexOperation operation) {
         if (operation == null) {
             return;
@@ -56,19 +65,31 @@ public class IndexSyncService {
         switch (operation.getOperation()) {
             case UPSERT -> {
                 if (operation.getDocument() != null) {
-                    searchEngine.index(operation.getDocument());
-                    log.debug("[IndexSync] 索引更新: type={}, id={}",
-                            operation.getDocument().getType(), operation.getDocument().getId());
+                    executeWithRetry(() -> {
+                        searchEngine.index(operation.getDocument());
+                        log.debug("[IndexSync] 索引更新: type={}, id={}",
+                                operation.getDocument().getType(), operation.getDocument().getId());
+                    }, operation);
                 }
             }
             case DELETE -> {
                 if (operation.getType() != null && operation.getDocumentId() != null) {
-                    searchEngine.deleteIndex(operation.getType(), operation.getDocumentId());
-                    log.debug("[IndexSync] 索引删除: type={}, id={}",
-                            operation.getType(), operation.getDocumentId());
+                    executeWithRetry(() -> {
+                        searchEngine.deleteIndex(operation.getType(), operation.getDocumentId());
+                        log.debug("[IndexSync] 索引删除: type={}, id={}",
+                                operation.getType(), operation.getDocumentId());
+                    }, operation);
                 }
             }
-            case BULK -> log.debug("[IndexSync] 批量操作");
+            // P0-5: BULK 操作实际处理
+            case BULK -> {
+                if (operation.getDocuments() != null && !operation.getDocuments().isEmpty()) {
+                    executeWithRetry(() -> {
+                        searchEngine.bulkIndex(operation.getDocuments());
+                        log.debug("[IndexSync] 批量索引: count={}", operation.getDocuments().size());
+                    }, operation);
+                }
+            }
         }
     }
 
@@ -78,15 +99,16 @@ public class IndexSyncService {
      * @param entity   业务实体
      * @param provider 搜索提供者
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
     public <T> void indexAsync(T entity, SearchProvider<T> provider) {
         executorService.submit(() -> {
             try {
                 IndexDocument document = provider.toIndexDocument(entity);
                 searchEngine.index(document);
+                metrics.recordIndexOp(true);
                 log.debug("[IndexSync] 异步索引完成: type={}, id={}",
                         document.getType(), document.getId());
             } catch (Exception e) {
+                metrics.recordIndexOp(false);
                 log.error("[IndexSync] 异步索引失败: type={}, error={}",
                         provider.getType(), e.getMessage(), e);
             }
@@ -103,8 +125,10 @@ public class IndexSyncService {
         executorService.submit(() -> {
             try {
                 searchEngine.deleteIndex(type, documentId);
+                metrics.recordIndexOp(true);
                 log.debug("[IndexSync] 异步删除索引: type={}, id={}", type, documentId);
             } catch (Exception e) {
+                metrics.recordIndexOp(false);
                 log.error("[IndexSync] 异步删除索引失败: type={}, id={}, error={}",
                         type, documentId, e.getMessage(), e);
             }
@@ -120,7 +144,6 @@ public class IndexSyncService {
      * @param tenantId 租户 ID（为空表示全部）
      * @return 重建的文档总数
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
     public int rebuildAll(String type, String tenantId) {
         log.info("[IndexSync] 开始全量重建索引: type={}, tenantId={}", type, tenantId);
         AtomicInteger total = new AtomicInteger(0);
@@ -130,7 +153,7 @@ public class IndexSyncService {
 
         for (SearchProvider<?> provider : providers) {
             try {
-                rebuildProvider(provider, tenantId, total);
+                rebuildProvider(ProviderTypeBridge.cast(provider), tenantId, total);
             } catch (Exception e) {
                 log.error("[IndexSync] Provider {} 全量重建失败: {}",
                         provider.getType(), e.getMessage(), e);
@@ -141,7 +164,78 @@ public class IndexSyncService {
         return total.get();
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    /**
+     * P2-15: 获取死信队列中的操作
+     */
+    public List<IndexOperation> getDeadLetterQueue() {
+        return new ArrayList<>(deadLetterQueue);
+    }
+
+    /**
+     * P2-15: 重试死信队列中的操作
+     */
+    public void retryDeadLetterQueue() {
+        if (deadLetterQueue.isEmpty()) {
+            return;
+        }
+        List<IndexOperation> snapshot = new ArrayList<>(deadLetterQueue);
+        deadLetterQueue.clear();
+        log.info("[IndexSync] 重试死信队列: size={}", snapshot.size());
+        for (IndexOperation op : snapshot) {
+            handleOperation(op);
+        }
+    }
+
+    /**
+     * 关闭线程池（Spring 生命周期回调）
+     */
+    public void shutdown() {
+        executorService.shutdown();
+        try {
+            if (!executorService.awaitTermination(5, TimeUnit.SECONDS)) {
+                executorService.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executorService.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
+        log.info("[IndexSync] 线程池已关闭");
+    }
+
+    // ==================== 私有方法 ====================
+
+    /**
+     * P2-15: 带重试的索引操作执行
+     */
+    private void executeWithRetry(Runnable action, IndexOperation operation) {
+        int maxRetries = properties.getIndex().getMaxRetries();
+        long retryInterval = properties.getIndex().getRetryIntervalMs();
+
+        for (int attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                action.run();
+                metrics.recordIndexOp(true);
+                return;
+            } catch (Exception e) {
+                metrics.recordIndexOp(false);
+                if (attempt < maxRetries) {
+                    log.warn("[IndexSync] 索引操作失败，准备重试: attempt={}/{}, error={}",
+                            attempt + 1, maxRetries, e.getMessage());
+                    try {
+                        Thread.sleep(retryInterval * (attempt + 1));
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                } else {
+                    log.error("[IndexSync] 索引操作重试耗尽，加入死信队列: operation={}",
+                            operation.getOperation(), e);
+                    deadLetterQueue.add(operation);
+                }
+            }
+        }
+    }
+
     private <T> void rebuildProvider(SearchProvider<T> provider, String tenantId, AtomicInteger total) {
         List<String> ids = provider.getAllDocumentIds(tenantId);
         if (ids == null || ids.isEmpty()) {
@@ -181,13 +275,5 @@ public class IndexSyncService {
             log.debug("[IndexSync] Provider {} 重建进度: {}/{}",
                     provider.getType(), end, ids.size());
         }
-    }
-
-    /**
-     * 关闭线程池
-     */
-    public void shutdown() {
-        executorService.shutdown();
-        log.info("[IndexSync] 线程池已关闭");
     }
 }

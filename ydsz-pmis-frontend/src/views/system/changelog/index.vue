@@ -84,10 +84,10 @@ onMounted(() => {
   <PageLayout>
     <template #header>
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold">变更日志</h2>
+        <h2 class="text-lg font-semibold">{{ t('common.changelog') }}</h2>
         <el-button :loading="loading" @click="loadData">
           <el-icon><Refresh /></el-icon>
-          刷新
+          {{ t('common.refresh') }}
         </el-button>
       </div>
     </template>

@@ -12,13 +12,13 @@
 <template>
   <div class="form-field-permissions">
     <div class="ffp__header">
-      <span class="ffp__title">字段权限配置</span>
+      <span class="ffp__title">{{ $t('common.fieldPermissionConfig') }}</span>
       <div class="ffp__actions">
         <el-button size="small" plain @click="addField">
-          <el-icon><Plus /></el-icon> 添加字段
+          <el-icon><Plus /></el-icon> {{ $t('common.addField') }}
         </el-button>
         <el-button size="small" type="primary" :loading="saving" @click="save">
-          保存
+          {{ $t('common.save') }}
         </el-button>
       </div>
     </div>
@@ -56,7 +56,7 @@
             type="danger"
             @click="removeField($index)"
           >
-            删除
+            {{ $t('common.delete') }}
           </el-button>
         </template>
       </el-table-column>
@@ -69,7 +69,7 @@
     />
 
     <div class="ffp__tip">
-      权限说明：可编辑 = 审批人可修改；只读 = 审批人可见但不可改；隐藏 = 审批人不可见
+      {{ $t('common.fieldPermissionTip') }}
     </div>
   </div>
 </template>

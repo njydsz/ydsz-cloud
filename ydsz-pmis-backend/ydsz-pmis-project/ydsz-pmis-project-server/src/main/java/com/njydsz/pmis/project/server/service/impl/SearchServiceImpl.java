@@ -22,6 +22,7 @@ import com.njydsz.pmis.common.search.service.IndexRebuildService;
 import com.njydsz.pmis.common.search.service.UnifiedSearchService;
 import com.njydsz.pmis.common.search.sync.IndexSyncListener;
 import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.project.domain.entity.InitiationDO;
 import com.njydsz.pmis.project.domain.query.ProjectSearchVO;
 import com.njydsz.pmis.project.domain.query.UniversalSearchVO;
 import com.njydsz.pmis.project.infra.mapper.InitiationMapper;

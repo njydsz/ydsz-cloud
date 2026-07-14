@@ -1,8 +1,14 @@
 package com.njydsz.pmis.common.sentry.metrics;
 
+import java.io.File;
+import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
 import java.lang.management.OperatingSystemMXBean;
 import java.lang.management.RuntimeMXBean;
+import java.lang.management.ThreadMXBean;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.njydsz.pmis.common.sentry.spi.MetricsCollector;
@@ -39,9 +45,9 @@ public class SystemMetricsCollector {
     private final MetricsCollector metricsCollector;
     private final OperatingSystemMXBean osMxBean;
     private final RuntimeMXBean runtimeMxBean;
-    private final java.lang.management.MemoryMXBean memoryMxBean;
-    private final java.lang.management.ThreadMXBean threadMxBean;
-    private final java.lang.management.GarbageCollectorMXBean[] gcMxBeans;
+    private final MemoryMXBean memoryMxBean;
+    private final ThreadMXBean threadMxBean;
+    private final GarbageCollectorMXBean[] gcMxBeans;
 
     /** 上次 GC 时间，用于计算增量 */
     private final AtomicLong lastGcTime = new AtomicLong(0);
@@ -53,7 +59,7 @@ public class SystemMetricsCollector {
         this.memoryMxBean = ManagementFactory.getMemoryMXBean();
         this.threadMxBean = ManagementFactory.getThreadMXBean();
         this.gcMxBeans = ManagementFactory.getGarbageCollectorMXBeans()
-                .toArray(new java.lang.management.GarbageCollectorMXBean[0]);
+                .toArray(new GarbageCollectorMXBean[0]);
         log.info("[Sentry] SystemMetricsCollector 初始化完成");
     }
 
@@ -76,6 +82,7 @@ public class SystemMetricsCollector {
     }
 
     private void collectCpuMetrics() {
+        // FQN-OK: name conflict with java.lang.management.OperatingSystemMXBean
         if (osMxBean instanceof com.sun.management.OperatingSystemMXBean sunOs) {
             double cpuUsage = sunOs.getProcessCpuLoad();
             if (cpuUsage >= 0) {
@@ -95,7 +102,7 @@ public class SystemMetricsCollector {
     }
 
     private void collectMemoryMetrics() {
-        java.lang.management.MemoryUsage heapUsage = memoryMxBean.getHeapMemoryUsage();
+        MemoryUsage heapUsage = memoryMxBean.getHeapMemoryUsage();
         metricsCollector.setGauge("ydsz.system.memory.heap.used",
                 "堆内存已用", null, heapUsage.getUsed());
         metricsCollector.setGauge("ydsz.system.memory.heap.max",
@@ -103,7 +110,7 @@ public class SystemMetricsCollector {
         metricsCollector.setGauge("ydsz.system.memory.heap.committed",
                 "堆内存已分配", null, heapUsage.getCommitted());
 
-        java.lang.management.MemoryUsage nonHeapUsage = memoryMxBean.getNonHeapMemoryUsage();
+        MemoryUsage nonHeapUsage = memoryMxBean.getNonHeapMemoryUsage();
         metricsCollector.setGauge("ydsz.system.memory.non_heap.used",
                 "非堆内存已用", null, nonHeapUsage.getUsed());
         metricsCollector.setGauge("ydsz.system.memory.non_heap.committed",
@@ -111,19 +118,18 @@ public class SystemMetricsCollector {
     }
 
     private void collectDiskMetrics() {
-        java.io.File[] roots = java.io.File.listRoots();
+        File[] roots = File.listRoots();
         if (roots != null) {
             for (int i = 0; i < roots.length; i++) {
-                java.io.File root = roots[i];
-                String tag = "disk" + i;
+                File root = roots[i];
                 metricsCollector.setGauge("ydsz.system.disk.free",
-                        "磁盘可用空间", java.util.Map.of("mount", root.getAbsolutePath()),
+                        "磁盘可用空间", Map.of("mount", root.getAbsolutePath()),
                         root.getFreeSpace());
                 metricsCollector.setGauge("ydsz.system.disk.total",
-                        "磁盘总空间", java.util.Map.of("mount", root.getAbsolutePath()),
+                        "磁盘总空间", Map.of("mount", root.getAbsolutePath()),
                         root.getTotalSpace());
                 metricsCollector.setGauge("ydsz.system.disk.usable",
-                        "磁盘可用空间（含权限）", java.util.Map.of("mount", root.getAbsolutePath()),
+                        "磁盘可用空间（含权限）", Map.of("mount", root.getAbsolutePath()),
                         root.getUsableSpace());
             }
         }
@@ -143,7 +149,7 @@ public class SystemMetricsCollector {
     private void collectGcMetrics() {
         long totalGcCount = 0;
         long totalGcTime = 0;
-        for (java.lang.management.GarbageCollectorMXBean gc : gcMxBeans) {
+        for (GarbageCollectorMXBean gc : gcMxBeans) {
             totalGcCount += gc.getCollectionCount();
             totalGcTime += gc.getCollectionTime();
         }

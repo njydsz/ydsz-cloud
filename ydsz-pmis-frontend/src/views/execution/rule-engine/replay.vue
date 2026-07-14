@@ -180,7 +180,7 @@ function formatTime(time?: string) {
     <!-- 页头 -->
     <el-page-header @back="$router.push('/execution/rule-engine')" class="mb-4">
       <template #content>
-        <span class="page-title">执行回放</span>
+        <span class="page-title">{{ $t('execution.ruleEngine.executionReplay') }}</span>
       </template>
     </el-page-header>
 

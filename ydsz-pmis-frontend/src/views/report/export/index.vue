@@ -241,7 +241,7 @@ onUnmounted(() => {
         <h2 class="text-lg font-semibold">{{ t('route.reportExport') }}</h2>
         <el-button type="primary" @click="handleCreate">
           <el-icon><Download /></el-icon>
-          创建导出
+          {{ t('common.createExport') }}
         </el-button>
       </div>
     </template>

@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   @file 规则链可视化编排画布（P0-1）
   @description 节点拖拽 + 边连接 + 缩放/平移 + 撤销/重做 + dagre 自动布局
   @module views/execution/rule-engine/designer
@@ -10,17 +10,17 @@
     <!-- 顶部工具栏 -->
     <div class="designer-toolbar">
       <el-button-group>
-        <el-button :icon="Refresh" @click="autoLayout" title="自动布局 (dagre)">自动布局</el-button>
-        <el-button :icon="Plus" @click="addChainNode('THEN')" type="primary" plain>添加顺序节点</el-button>
-        <el-button :icon="Plus" @click="addChainNode('IF')" plain>添加条件节点</el-button>
-        <el-button :icon="Plus" @click="addChainNode('FOR')" plain>添加循环节点</el-button>
-        <el-button :icon="Plus" @click="addSingleNode" plain>引用规则</el-button>
+        <el-button :icon="Refresh" @click="autoLayout" title="自动布局 (dagre)">{{ t('execution.ruleEngine.autoLayout') }}</el-button>
+        <el-button :icon="Plus" @click="addChainNode('THEN')" type="primary" plain>{{ t('execution.ruleEngine.addSequenceNode') }}</el-button>
+        <el-button :icon="Plus" @click="addChainNode('IF')" plain>{{ t('execution.ruleEngine.addConditionNode') }}</el-button>
+        <el-button :icon="Plus" @click="addChainNode('FOR')" plain>{{ t('execution.ruleEngine.addLoopNode') }}</el-button>
+        <el-button :icon="Plus" @click="addSingleNode" plain>{{ t('execution.ruleEngine.referenceRule') }}</el-button>
       </el-button-group>
 
       <el-button-group>
-        <el-button :disabled="!canUndo" :icon="Back" @click="undo" title="撤销 (Ctrl+Z)">撤销</el-button>
-        <el-button :disabled="!canRedo" :icon="RefreshRight" @click="redo" title="重做 (Ctrl+Y)">重做</el-button>
-        <el-button :icon="Check" @click="validateGraph" type="warning" plain>校验</el-button>
+        <el-button :disabled="!canUndo" :icon="Back" @click="undo" title="撤销 (Ctrl+Z)">{{ t('common.undo') }}</el-button>
+        <el-button :disabled="!canRedo" :icon="RefreshRight" @click="redo" title="重做 (Ctrl+Y)">{{ t('common.redo') }}</el-button>
+        <el-button :icon="Check" @click="validateGraph" type="warning" plain>{{ t('common.validate') }}</el-button>
       </el-button-group>
 
       <div class="toolbar-spacer" />
@@ -31,9 +31,9 @@
         <el-button @click="resetView">{{ Math.round(viewport.zoom * 100) }}%</el-button>
       </el-button-group>
 
-      <el-button type="primary" :icon="Check" :loading="saving" @click="saveGraph">保存</el-button>
-      <el-button type="success" :icon="VideoPlay" :loading="runLoading" @click="openRunDialog">运行仿真</el-button>
-      <el-button :icon="Close" @click="goBack">返回</el-button>
+      <el-button type="primary" :icon="Check" :loading="saving" @click="saveGraph">{{ t('common.save') }}</el-button>
+      <el-button type="success" :icon="VideoPlay" :loading="runLoading" @click="openRunDialog">{{ t('execution.ruleEngine.runSimulation') }}</el-button>
+      <el-button :icon="Close" @click="goBack">{{ t('common.back') }}</el-button>
     </div>
 
     <!-- 画布主区 -->
@@ -156,7 +156,7 @@
       <div class="issue-header">
         <el-icon><Warning /></el-icon>
         <span>画布问题 ({{ issues.length }})</span>
-        <el-button text @click="issues = []">关闭</el-button>
+        <el-button text @click="issues = []">{{ t('common.close') }}</el-button>
       </div>
       <ul class="issue-list">
         <li v-for="(it, idx) in issues" :key="idx" :class="['issue-item', `issue-${it.level?.toLowerCase()}`]">
@@ -188,11 +188,11 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary" :loading="runLoading" @click="handleRun">
-            <el-icon><VideoPlay /></el-icon>执行仿真
+            <el-icon><VideoPlay /></el-icon>{{ t('execution.ruleEngine.runSimulation') }}
           </el-button>
         </el-form-item>
       </el-form>
-      <el-divider content-position="left">仿真结果</el-divider>
+      <el-divider content-position="left">{{ t('execution.ruleEngine.simulationResult') }}</el-divider>
       <el-table :data="runResults" border stripe size="small" empty-text="暂无仿真结果">
         <el-table-column prop="ruleCode" label="规则编码" width="160" show-overflow-tooltip />
         <el-table-column prop="ruleName" label="规则名称" min-width="160" show-overflow-tooltip />
@@ -212,7 +212,7 @@
         <el-table-column prop="elapsedMs" label="耗时(ms)" width="100" />
       </el-table>
       <template #footer>
-        <el-button @click="runDialogVisible = false">关闭</el-button>
+        <el-button @click="runDialogVisible = false">{{ t('common.close') }}</el-button>
       </template>
     </el-dialog>
 
@@ -271,8 +271,8 @@
         </template>
       </el-form>
       <template #footer>
-        <el-button @click="editDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="confirmEdit">确定</el-button>
+        <el-button @click="editDialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="confirmEdit">{{ t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
   </div>
@@ -281,6 +281,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Plus, Refresh, RefreshRight, Check, Close, Warning,
@@ -298,6 +299,7 @@ defineOptions({ name: 'RuleChainDesigner' })
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 
 // 节点常量
 const NODE_WIDTH = 180

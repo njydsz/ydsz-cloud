@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-gateway
+  namespace: pmis
 spec:
   replicas: 3
 ---
@@ -9,6 +10,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-system
+  namespace: pmis
 spec:
   replicas: 3
 ---
@@ -16,6 +18,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-userinfo
+  namespace: pmis
 spec:
   replicas: 3
 ---
@@ -23,6 +26,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-project
+  namespace: pmis
 spec:
   replicas: 4
 ---
@@ -30,6 +34,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-cronjob
+  namespace: pmis
 spec:
   replicas: 1
 ---
@@ -37,6 +42,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-workflow
+  namespace: pmis
 spec:
   replicas: 3
 ---
@@ -44,6 +50,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-agent
+  namespace: pmis
 spec:
   replicas: 2
 ---
@@ -51,5 +58,23 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-message
+  namespace: pmis
+spec:
+  replicas: 2
+---
+# P2-9: 补齐 sales / finance 副本数（与 message 对齐：2 副本起步，配合 HPA 扩容）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-sales
+  namespace: pmis
+spec:
+  replicas: 2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-finance
+  namespace: pmis
 spec:
   replicas: 2

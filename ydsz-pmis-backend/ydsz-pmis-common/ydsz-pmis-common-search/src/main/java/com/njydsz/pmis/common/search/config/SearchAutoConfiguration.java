@@ -1,6 +1,10 @@
 package com.njydsz.pmis.common.search.config;
 
+import java.util.List;
+
 import javax.sql.DataSource;
+
+import jakarta.annotation.PreDestroy;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -10,8 +14,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
-
-import java.util.List;
 
 import com.njydsz.pmis.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.pmis.common.search.core.SearchEngine;
@@ -23,6 +25,8 @@ import com.njydsz.pmis.common.search.provider.SearchProvider;
 import com.njydsz.pmis.common.search.provider.SearchProviderRegistry;
 import com.njydsz.pmis.common.search.service.IndexRebuildService;
 import com.njydsz.pmis.common.search.service.IndexSyncService;
+import com.njydsz.pmis.common.search.service.SearchCacheService;
+import com.njydsz.pmis.common.search.service.SearchTextProcessor;
 import com.njydsz.pmis.common.search.service.SuggestionService;
 import com.njydsz.pmis.common.search.service.UnifiedSearchService;
 import com.njydsz.pmis.common.search.sync.IndexSyncListener;
@@ -35,20 +39,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>配置前缀：{@code ydsz.search}
  *
- * <pre>
- * ydsz:
- *   search:
- *     engine: pg          # pg / memory / es
- *     highlight: true
- *     fuzzy: true
- *     cache:
- *       enabled: true
- *       ttl: 60
- *     index:
- *       sync-mode: event
- *       batch-size: 100
- * </pre>
- *
  * @author ydsz-pmis-team
  * @since 1.4.0
  */
@@ -58,6 +48,10 @@ import lombok.extern.slf4j.Slf4j;
 @EnableConfigurationProperties(SearchProperties.class)
 @ConditionalOnProperty(prefix = "ydsz.search", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class SearchAutoConfiguration {
+
+    private PgSearchEngine pgSearchEngineInstance;
+    private UnifiedSearchService unifiedSearchServiceInstance;
+    private IndexSyncService indexSyncServiceInstance;
 
     /**
      * PG 搜索引擎（默认引擎）
@@ -72,8 +66,7 @@ public class SearchAutoConfiguration {
         public SearchEngine pgSearchEngine(DataSource dataSource, SearchProperties properties) {
             log.info("[SearchAutoConfiguration] 初始化 PgSearchEngine: highlight={}, fuzzy={}",
                     properties.isHighlight(), properties.isFuzzy());
-            PgSearchEngine engine = new PgSearchEngine(dataSource, properties);
-            return engine;
+            return new PgSearchEngine(dataSource, properties);
         }
     }
 
@@ -103,6 +96,24 @@ public class SearchAutoConfiguration {
     }
 
     /**
+     * 搜索缓存服务
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public SearchCacheService searchCacheService(SearchProperties properties) {
+        return new SearchCacheService(properties);
+    }
+
+    /**
+     * P1-12: 搜索文本处理器（同义词/停用词/拼音）
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public SearchTextProcessor searchTextProcessor(SearchProperties properties) {
+        return new SearchTextProcessor(properties);
+    }
+
+    /**
      * 统一搜索服务
      */
     @Bean
@@ -112,8 +123,9 @@ public class SearchAutoConfiguration {
                                                       SearchProperties properties,
                                                       SearchMetrics searchMetrics,
                                                       SearchAnalyticsService searchAnalyticsService) {
-        return new UnifiedSearchService(searchEngine, providerRegistry, properties,
+        unifiedSearchServiceInstance = new UnifiedSearchService(searchEngine, providerRegistry, properties,
                 searchMetrics, searchAnalyticsService);
+        return unifiedSearchServiceInstance;
     }
 
     /**
@@ -125,7 +137,8 @@ public class SearchAutoConfiguration {
                                               SearchProviderRegistry providerRegistry,
                                               SearchProperties properties,
                                               SearchMetrics searchMetrics) {
-        return new IndexSyncService(searchEngine, providerRegistry, properties, searchMetrics);
+        indexSyncServiceInstance = new IndexSyncService(searchEngine, providerRegistry, properties, searchMetrics);
+        return indexSyncServiceInstance;
     }
 
     /**
@@ -185,5 +198,23 @@ public class SearchAutoConfiguration {
     @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
     public SearchHealthIndicator searchHealthIndicator(SearchEngine searchEngine) {
         return new SearchHealthIndicator(searchEngine);
+    }
+
+    /**
+     * P1-10: 线程池生命周期管理 — 关闭所有线程池
+     */
+    @PreDestroy
+    public void shutdown() {
+        log.info("[SearchAutoConfiguration] 开始关闭搜索服务资源...");
+        if (unifiedSearchServiceInstance != null) {
+            unifiedSearchServiceInstance.shutdown();
+        }
+        if (indexSyncServiceInstance != null) {
+            indexSyncServiceInstance.shutdown();
+        }
+        if (pgSearchEngineInstance != null) {
+            pgSearchEngineInstance.shutdown();
+        }
+        log.info("[SearchAutoConfiguration] 搜索服务资源已关闭");
     }
 }

@@ -1,7 +1,11 @@
+# DEV 环境：所有服务单实例
+# 注意：name/namespace 使用 base 原始值（namePrefix 和 namespace transformer 在 patch 之后执行）
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-gateway
+  namespace: pmis
 spec:
   replicas: 1
 ---
@@ -9,6 +13,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-system
+  namespace: pmis
 spec:
   replicas: 1
 ---
@@ -16,6 +21,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-userinfo
+  namespace: pmis
 spec:
   replicas: 1
 ---
@@ -23,6 +29,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-project
+  namespace: pmis
 spec:
   replicas: 1
 ---
@@ -30,6 +37,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-cronjob
+  namespace: pmis
 spec:
   replicas: 1
 ---
@@ -37,5 +45,39 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-workflow
+  namespace: pmis
+spec:
+  replicas: 1
+---
+# P2-9: 补齐 message/agent/sales/finance 副本数
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-message
+  namespace: pmis
+spec:
+  replicas: 1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-agent
+  namespace: pmis
+spec:
+  replicas: 1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-sales
+  namespace: pmis
+spec:
+  replicas: 1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-finance
+  namespace: pmis
 spec:
   replicas: 1

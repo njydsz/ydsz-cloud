@@ -1,0 +1,361 @@
+# ============================================================
+# PMIS Argo Rollouts — Canary / Stable Service 资源（P2-11 配套）
+#
+# Argo Rollouts 控制器要求每个 Rollout 的 canaryService / stableService
+# 指向已存在的 Service。本文件为 rollout-all-services.yaml 中 9 个服务
+# 补齐 18 个 Service（每服务 1 个 -canary + 1 个 -stable）。
+#
+# gateway 的 canary/stable Service 已在 rollout-gateway.yaml 中定义，
+# 本文件不再重复。
+#
+# Service 行为说明：
+#   - 初始 selector 为 app: ydsz-pmis-{svc}（与原 Service 一致）
+#   - Argo Rollouts 控制器会在发布过程中动态修改 selector 指向
+#     pod-template-hash，实现流量切分
+#   - 用户流量入口仍为 base/ 中的 ydsz-pmis-{svc} Service（不变）
+#
+# 使用方式：
+#   kubectl apply -f deploy/k8s/rollouts/rollout-services.yaml
+# ============================================================
+
+# ============================================================
+# userinfo (9001)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-userinfo-canary
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-userinfo
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-userinfo
+  ports:
+    - name: http
+      port: 9001
+      targetPort: 9001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-userinfo-stable
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-userinfo
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-userinfo
+  ports:
+    - name: http
+      port: 9001
+      targetPort: 9001
+
+# ============================================================
+# system (9002)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-system-canary
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-system
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-system
+  ports:
+    - name: http
+      port: 9002
+      targetPort: 9002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-system-stable
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-system
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-system
+  ports:
+    - name: http
+      port: 9002
+      targetPort: 9002
+
+# ============================================================
+# project (9003)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-project-canary
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-project
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-project
+  ports:
+    - name: http
+      port: 9003
+      targetPort: 9003
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-project-stable
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-project
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-project
+  ports:
+    - name: http
+      port: 9003
+      targetPort: 9003
+
+# ============================================================
+# message (9004)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-message-canary
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-message
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-message
+  ports:
+    - name: http
+      port: 9004
+      targetPort: 9004
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-message-stable
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-message
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-message
+  ports:
+    - name: http
+      port: 9004
+      targetPort: 9004
+
+# ============================================================
+# cronjob (9005)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-cronjob-canary
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-cronjob
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-cronjob
+  ports:
+    - name: http
+      port: 9005
+      targetPort: 9005
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-cronjob-stable
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-cronjob
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-cronjob
+  ports:
+    - name: http
+      port: 9005
+      targetPort: 9005
+
+# ============================================================
+# workflow (9006)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-workflow-canary
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-workflow
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-workflow
+  ports:
+    - name: http
+      port: 9006
+      targetPort: 9006
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-workflow-stable
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-workflow
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-workflow
+  ports:
+    - name: http
+      port: 9006
+      targetPort: 9006
+
+# ============================================================
+# agent (9007)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-agent-canary
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-agent
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-agent
+  ports:
+    - name: http
+      port: 9007
+      targetPort: 9007
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-agent-stable
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-agent
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-agent
+  ports:
+    - name: http
+      port: 9007
+      targetPort: 9007
+
+# ============================================================
+# sales (9010)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-sales-canary
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-sales
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-sales
+  ports:
+    - name: http
+      port: 9010
+      targetPort: 9010
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-sales-stable
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-sales
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-sales
+  ports:
+    - name: http
+      port: 9010
+      targetPort: 9010
+
+# ============================================================
+# finance (9011)
+# ============================================================
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-finance-canary
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-finance
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-finance
+  ports:
+    - name: http
+      port: 9011
+      targetPort: 9011
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-finance-stable
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-finance
+    tier: service
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-finance
+  ports:
+    - name: http
+      port: 9011
+      targetPort: 9011

@@ -128,25 +128,25 @@ function formatDuration(ms?: number): string {
           </div>
           <div class="timeline-card__body">
             <div v-if="e.userName" class="timeline-card__row">
-              <span class="row-label">操作人：</span>
+              <span class="row-label">{{ $t('common.operatorLabel') }}</span>
               <span>{{ e.userName }}</span>
             </div>
             <div v-if="e.targetUserName" class="timeline-card__row">
-              <span class="row-label">目标：</span>
+              <span class="row-label">{{ $t('common.targetLabel') }}</span>
               <span>{{ e.targetUserName }}</span>
             </div>
             <div v-if="e.action" class="timeline-card__row">
-              <span class="row-label">动作：</span>
+              <span class="row-label">{{ $t('common.actionLabel') }}</span>
               <el-tag size="small" :type="e.action === 'AGREE' ? 'success' : 'danger'">
                 {{ e.action }}
               </el-tag>
             </div>
             <div v-if="e.comment" class="timeline-card__row">
-              <span class="row-label">意见：</span>
+              <span class="row-label">{{ $t('common.commentLabel') }}</span>
               <span class="comment">{{ e.comment }}</span>
             </div>
             <div v-if="e.durationMs" class="timeline-card__row">
-              <span class="row-label">耗时：</span>
+              <span class="row-label">{{ $t('common.durationLabel') }}</span>
               <span class="duration">{{ formatDuration(e.durationMs) }}</span>
             </div>
           </div>

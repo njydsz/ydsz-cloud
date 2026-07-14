@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   @file 规则依赖拓扑图（P2-6）
   @description 可视化展示规则之间的依赖关系：
                - 力导向 / 环形 / 树形三种布局切换
@@ -14,7 +14,7 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <span class="title">规则依赖拓扑图</span>
+          <span class="title">{{ t('execution.ruleEngine.dependencyGraph') }}</span>
           <div class="actions">
             <el-select
               v-model="focusRuleCode"
@@ -32,12 +32,12 @@
               />
             </el-select>
             <el-radio-group v-model="layoutMode" size="small">
-              <el-radio-button value="force">力导向</el-radio-button>
-              <el-radio-button value="circular">环形</el-radio-button>
-              <el-radio-button value="tree">树形</el-radio-button>
+              <el-radio-button value="force">{{ t('execution.ruleEngine.forceDirected') }}</el-radio-button>
+              <el-radio-button value="circular">{{ t('execution.ruleEngine.circular') }}</el-radio-button>
+              <el-radio-button value="tree">{{ t('execution.ruleEngine.tree') }}</el-radio-button>
             </el-radio-group>
-            <el-button :icon="Refresh" :loading="loading" @click="fetchAll">刷新</el-button>
-            <el-button @click="goBack">返回</el-button>
+            <el-button :icon="Refresh" :loading="loading" @click="fetchAll">{{ t('common.refresh') }}</el-button>
+            <el-button @click="goBack">{{ t('common.back') }}</el-button>
           </div>
         </div>
       </template>
@@ -100,7 +100,7 @@
         </el-descriptions-item>
       </el-descriptions>
       <template #footer>
-        <el-button @click="detailVisible = false">关闭</el-button>
+        <el-button @click="detailVisible = false">{{ t('common.close') }}</el-button>
         <el-button type="primary" @click="goToRuleEngine">前往规则引擎编辑</el-button>
       </template>
     </el-dialog>
@@ -110,6 +110,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { Refresh } from '@element-plus/icons-vue'
 import dagre from 'dagre'
@@ -123,6 +124,7 @@ import {
 defineOptions({ name: 'RuleEngineDependencyGraph' })
 
 const router = useRouter()
+const { t } = useI18n()
 const loading = ref(false)
 
 /** 全部规则列表 */

@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   @file 评分卡可视化编辑器（P1-4）
   @description 表格化编辑器：评分因子（条件 + 分值 + 权重）增删改查、风险等级阈值/评级映射配置、
                实时总分预览与 dry-run 仿真、JSON 导出。
@@ -13,12 +13,12 @@
         <div class="card-header">
           <span class="title">评分卡编辑器 · {{ cardData.ruleName || ruleCode }}</span>
           <div class="actions">
-            <el-button :icon="Refresh" @click="loadScorecard" :loading="loading">刷新</el-button>
-            <el-button :icon="CircleCheck" @click="validateScorecard" type="warning" plain>校验完整性</el-button>
-            <el-button :icon="VideoPlay" @click="openPreview" type="success" plain>预览试算</el-button>
-            <el-button :icon="Download" @click="exportJson">导出 JSON</el-button>
-            <el-button :icon="Check" @click="save" type="primary" :loading="saving">保存</el-button>
-            <el-button :icon="Close" @click="goBack">返回</el-button>
+            <el-button :icon="Refresh" @click="loadScorecard" :loading="loading">{{ $t('common.refresh') }}</el-button>
+            <el-button :icon="CircleCheck" @click="validateScorecard" type="warning" plain>{{ $t('common.validate') }}</el-button>
+            <el-button :icon="VideoPlay" @click="openPreview" type="success" plain>{{ $t('execution.ruleEngine.hitPreview') }}</el-button>
+            <el-button :icon="Download" @click="exportJson">{{ $t('execution.ruleEngine.exportJson') }}</el-button>
+            <el-button :icon="Check" @click="save" type="primary" :loading="saving">{{ $t('common.save') }}</el-button>
+            <el-button :icon="Close" @click="goBack">{{ $t('common.back') }}</el-button>
           </div>
         </div>
       </template>

@@ -41,12 +41,12 @@ public class StorageQuotaRepositoryImpl implements StorageQuotaRepository {
     }
 
     @Override
-    public void addUsage(String scopeType, String scopeId, long bytesDelta, int fileCountDelta) {
-        storageQuotaMapper.addUsage(scopeType, scopeId, bytesDelta, fileCountDelta);
+    public int addUsage(String scopeType, String scopeId, long bytesDelta, int fileCountDelta) {
+        return storageQuotaMapper.addUsage(scopeType, scopeId, bytesDelta, fileCountDelta);
     }
 
     @Override
-    public void subtractUsage(String scopeType, String scopeId, long bytesDelta, int fileCountDelta) {
-        storageQuotaMapper.subtractUsage(scopeType, scopeId, bytesDelta, fileCountDelta);
+    public int subtractUsage(String scopeType, String scopeId, long bytesDelta, int fileCountDelta) {
+        return storageQuotaMapper.subtractUsage(scopeType, scopeId, bytesDelta, fileCountDelta);
     }
 }

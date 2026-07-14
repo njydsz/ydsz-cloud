@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/nextwiki/shares")
+@RequestMapping("/api/v1/nextwiki/shares")
 @RequiredArgsConstructor
 @Tag(name = "文件分享", description = "创建分享链接、验证访问、撤销分享")
 public class ShareController {

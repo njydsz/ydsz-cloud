@@ -82,7 +82,7 @@ onMounted(() => {
         <h2 class="text-lg font-semibold">{{ t('route.projectOpportunityFollow', '商机跟进') }}</h2>
         <el-button type="primary" @click="handleAdd">
           <el-icon><Plus /></el-icon>
-          记录跟进
+          {{ t('common.followUp') }}
         </el-button>
       </div>
     </template>

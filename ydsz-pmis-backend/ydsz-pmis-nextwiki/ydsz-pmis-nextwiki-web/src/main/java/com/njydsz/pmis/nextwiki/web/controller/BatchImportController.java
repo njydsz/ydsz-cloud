@@ -1,6 +1,10 @@
 package com.njydsz.pmis.nextwiki.web.controller;
 
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
@@ -19,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @RestController
-@RequestMapping("/nextwiki/import")
+@RequestMapping("/api/v1/nextwiki/import")
 @RequiredArgsConstructor
 @Tag(name = "批量导入", description = "批量文件上传、ZIP 导入")
 public class BatchImportController {
@@ -36,7 +40,7 @@ public class BatchImportController {
     }
 
     @PostMapping("/zip")
-    @Operation(summary = "�?ZIP 压缩包导�?)
+    @Operation(summary = "从 ZIP 压缩包导入")
     public BaseResponse<BatchImportApplicationService.BatchImportResult> importZip(
             @RequestParam("file") MultipartFile zipFile,
             @RequestParam(value = "parentId", required = false) String parentId,

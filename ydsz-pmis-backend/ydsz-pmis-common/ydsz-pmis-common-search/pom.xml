@@ -66,6 +66,13 @@
             <artifactId>spring-context</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- Spring Web（SearchController，可选） -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
         <!-- Spring JDBC（JdbcTemplate） -->
         <dependency>
             <groupId>org.springframework</groupId>

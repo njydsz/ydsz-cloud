@@ -2,6 +2,8 @@ package com.njydsz.pmis.common.sentry.logging;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -103,8 +105,8 @@ public class ElkLogPublisher implements LogPublisher {
     }
 
     private void sendUdp(byte[] bytes) throws IOException {
-        try (java.net.DatagramSocket socket = new java.net.DatagramSocket()) {
-            java.net.DatagramPacket packet = new java.net.DatagramPacket(
+        try (DatagramSocket socket = new DatagramSocket()) {
+            DatagramPacket packet = new DatagramPacket(
                     bytes, bytes.length, new InetSocketAddress(host, port));
             socket.send(packet);
         }

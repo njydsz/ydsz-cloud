@@ -38,7 +38,7 @@ public class ShareDomainService {
     private final FileNodeRepository fileNodeRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final BCryptPasswordEncoder passwordEncoder;
 
     /**
      * 创建分享链接

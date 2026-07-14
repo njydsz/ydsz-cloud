@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   @file 利润模拟
   @description 利润测算版本管理页面：支持测算版本分页查询、多版本对比(V1/V2/V3)、状态流转(DRAFT→SUBMITTED→APPROVED/REJECTED)，对应路由 /finance/profit-simulation
   @module views/finance/profit-simulation
@@ -268,7 +268,7 @@ onMounted(() => {
     <el-card v-if="query.initiationId && compareBars.length" shadow="never" class="compare-card">
       <template #header>
         <div class="card-header">
-          <span><el-icon><Histogram /></el-icon> 多版本对比</span>
+          <span><el-icon><Histogram /></el-icon> {{ $t('common.multiVersionCompare') }}</span>
           <el-tag type="info">项目 #{{ query.initiationId }} · {{ compareBars.length }} 个版本</el-tag>
         </div>
       </template>

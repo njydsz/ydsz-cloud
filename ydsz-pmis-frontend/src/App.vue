@@ -14,6 +14,8 @@ import i18n from '@/locales'
 import { logger } from '@/utils/logger'
 // P2-1: 全局水印（防截图，跟随登录用户信息）
 import { useWatermark } from '@/composables/useWatermark'
+// P1-8: 全局网络状态检测（离线/恢复提示）
+import { useNetworkStatus } from '@/composables/useNetworkStatus'
 // Element Plus 语言包（按当前 i18n locale 动态切换）
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import en from 'element-plus/es/locale/lang/en'
@@ -22,6 +24,8 @@ const appStore = useAppStore()
 
 // P2-1: 启用全局水印，登录后自动覆盖全屏
 useWatermark()
+// P1-8: 启用全局网络状态检测（离线时持久提示，恢复时自动关闭）
+useNetworkStatus()
 
 /**
  * 根据当前 vue-i18n locale 计算对应的 Element Plus 语言包

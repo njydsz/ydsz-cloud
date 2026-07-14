@@ -18,6 +18,7 @@
  */
 import { ref, reactive, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import { Download, Upload, Check, Close, Refresh, Document, View, Edit } from '@element-plus/icons-vue'
 import * as ruleApi from '@/api/rule-engine'
 import type {
@@ -27,6 +28,8 @@ import type {
   DslPreviewResult,
 } from '@/api/rule-engine'
 import { logger } from '@/utils/logger'
+
+const { t } = useI18n()
 
 // ==================== 响应式状态 ====================
 
@@ -245,7 +248,7 @@ function handleFormatChange() {
     <!-- 页头 -->
     <el-page-header @back="$router.push('/execution/rule-engine')" class="mb-4">
       <template #content>
-        <span class="page-title">DSL 管理</span>
+        <span class="page-title">{{ t('execution.ruleEngine.dslManagement') }}</span>
       </template>
       <template #extra>
         <el-radio-group v-model="format" @change="handleFormatChange" size="small">

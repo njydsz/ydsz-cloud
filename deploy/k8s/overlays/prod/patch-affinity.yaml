@@ -6,6 +6,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-gateway
+  namespace: pmis
 spec:
   template:
     spec:
@@ -40,6 +41,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-userinfo
+  namespace: pmis
 spec:
   template:
     spec:
@@ -74,6 +76,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-system
+  namespace: pmis
 spec:
   template:
     spec:
@@ -108,6 +111,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-project
+  namespace: pmis
 spec:
   template:
     spec:
@@ -142,6 +146,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-message
+  namespace: pmis
 spec:
   template:
     spec:
@@ -176,6 +181,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-cronjob
+  namespace: pmis
 spec:
   template:
     spec:
@@ -210,6 +216,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-workflow
+  namespace: pmis
 spec:
   template:
     spec:
@@ -244,6 +251,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ydsz-pmis-agent
+  namespace: pmis
 spec:
   template:
     spec:
@@ -269,6 +277,78 @@ spec:
             httpGet:
               path: /actuator/health/liveness
               port: 9007
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+---
+# P2-9: 补齐 sales（端口 9010）/ finance（端口 9011）HA 配置
+# 反亲和（跨节点）+ 拓扑分布（跨可用区）+ 启动探针（避免 Java 慢启动被 liveness 杀死）
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-sales
+  namespace: pmis
+spec:
+  template:
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: ydsz-pmis-sales
+                topologyKey: kubernetes.io/hostname
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: ydsz-pmis-sales
+      containers:
+        - name: sales
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9010
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-finance
+  namespace: pmis
+spec:
+  template:
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: ydsz-pmis-finance
+                topologyKey: kubernetes.io/hostname
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: ydsz-pmis-finance
+      containers:
+        - name: finance
+          startupProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 9011
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 5

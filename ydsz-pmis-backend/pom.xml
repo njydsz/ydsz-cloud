@@ -122,6 +122,12 @@
         <skipJacocoCheck>true</skipJacocoCheck>
         <jacoco.line.coverage>0.60</jacoco.line.coverage>
         <jacoco.branch.coverage>0.50</jacoco.branch.coverage>
+
+        <!-- Testcontainers（P1-7：集成测试容器化基础设施）
+             需要本地或 CI 有 Docker 环境
+             用法：继承 AbstractIntegrationTest，自动启动 PG/Redis 容器
+        -->
+        <testcontainers.version>1.20.6</testcontainers.version>
     </properties>
 
     <dependencyManagement>
@@ -150,6 +156,14 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <!-- Testcontainers BOM（P1-7：集成测试容器化） -->
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
             <!-- 内部模块：ydsz-pmis-common 多模块拆分 -->
             <dependency>
@@ -162,6 +176,14 @@
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common-core</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <!-- common-core test-jar（AbstractIntegrationTest 基类，P1-7） -->
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-core</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>

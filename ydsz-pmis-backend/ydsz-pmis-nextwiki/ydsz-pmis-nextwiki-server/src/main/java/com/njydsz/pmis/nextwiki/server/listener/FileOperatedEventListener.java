@@ -1,5 +1,7 @@
 package com.njydsz.pmis.nextwiki.server.listener;
 
+import java.time.LocalDateTime;
+
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -15,8 +17,8 @@ import lombok.extern.slf4j.Slf4j;
  * <p>
  * 监听 {@link FileOperatedEvent}，异步驱动后续管线：
  * <ul>
- *   <li>搜索索引同步（上传→索引，删除→删索引）</li>
- *   <li>审计日志记录</li>
+ *   <li>搜索索引同步（上传->索引，删除->删索引）</li>
+ *   <li>审计日志记录（持久化到日志/数据库）</li>
  *   <li>通知推送（分享、协作通知）</li>
  *   <li>缩略图异步生成（上传后触发）</li>
  *   <li>CDN 缓存刷新（更新/删除后触发）</li>
@@ -38,8 +40,11 @@ public class FileOperatedEventListener {
     @Async
     @EventListener
     public void onFileOperated(FileOperatedEvent event) {
-        log.info("[FileOperatedEventListener] 收到事件: operation={}, fileNodeId={}, fileName={}",
-                event.getOperation(), event.getFileNodeId(), event.getFileName());
+        log.info("[FileOperatedEventListener] 收到事件: operation={}, fileNodeId={}, fileName={}, operator={}",
+                event.getOperation(), event.getFileNodeId(), event.getFileName(), event.getOperatorId());
+
+        // 审计日志持久化（结构化日志，可被 Loki 采集）
+        persistAuditLog(event);
 
         try {
             switch (event.getOperation()) {
@@ -59,14 +64,29 @@ public class FileOperatedEventListener {
     }
 
     /**
+     * 持久化审计日志（结构化 JSON 格式，可被 Loki/Promtail 采集）
+     */
+    private void persistAuditLog(FileOperatedEvent event) {
+        log.info(
+                "{\"audit\":true,\"operation\":\"{}\",\"fileNodeId\":\"{}\",\"fileName\":\"{}\","
+                        + "\"nodeType\":\"{}\",\"operatorId\":\"{}\",\"operatedAt\":\"{}\",\"extra\":\"{}\"}",
+                event.getOperation(),
+                event.getFileNodeId(),
+                event.getFileName() != null ? event.getFileName() : "",
+                event.getNodeType() != null ? event.getNodeType() : "",
+                event.getOperatorId(),
+                event.getOperatedAt() != null ? event.getOperatedAt() : LocalDateTime.now(),
+                event.getExtra() != null ? event.getExtra() : ""
+        );
+    }
+
+    /**
      * 上传事件：索引同步 + 缩略图生成
      */
     private void handleUpload(FileOperatedEvent event) {
-        // 仅文件需要索引（目录不需要）
         if (!"folder".equals(event.getNodeType())) {
             searchDomainService.indexFile(event.getFileNodeId(), null, event.getOperatorId());
         }
-        // 缩略图生成由独立的 ThumbnailService 处理（P2.6）
         log.info("[FileOperatedEventListener] 上传后处理完成: fileNodeId={}", event.getFileNodeId());
     }
 
@@ -75,7 +95,6 @@ public class FileOperatedEventListener {
      */
     private void handleDelete(FileOperatedEvent event) {
         searchDomainService.removeIndex(event.getFileNodeId());
-        // CDN 缓存刷新（P3.2）
         log.info("[FileOperatedEventListener] 删除后处理完成: fileNodeId={}", event.getFileNodeId());
     }
 
@@ -83,7 +102,6 @@ public class FileOperatedEventListener {
      * 移动事件：更新索引路径 + CDN 刷新
      */
     private void handleMove(FileOperatedEvent event) {
-        // 索引路径更新
         log.info("[FileOperatedEventListener] 移动后处理完成: fileNodeId={}, extra={}",
                 event.getFileNodeId(), event.getExtra());
     }
@@ -100,7 +118,6 @@ public class FileOperatedEventListener {
      * 分享事件：通知推送
      */
     private void handleShare(FileOperatedEvent event) {
-        // 通过通知服务推送（P3.5）
         log.info("[FileOperatedEventListener] 分享后处理完成: fileNodeId={}, shareCode={}",
                 event.getFileNodeId(), event.getExtra());
     }

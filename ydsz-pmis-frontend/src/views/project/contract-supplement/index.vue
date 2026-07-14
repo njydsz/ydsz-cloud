@@ -70,10 +70,10 @@ onMounted(() => {
   <PageLayout>
     <template #header>
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold">合同补充协议</h2>
+        <h2 class="text-lg font-semibold">{{ t('common.contractSupplement') }}</h2>
         <el-button type="primary" @click="handleAdd">
           <el-icon><Plus /></el-icon>
-          新增补充协议
+          {{ t('common.addSupplement') }}
         </el-button>
       </div>
     </template>

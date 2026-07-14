@@ -42,7 +42,7 @@ onMounted(() => {
 <template>
   <PageLayout>
     <template #header>
-      <h2 class="text-lg font-semibold">经营驾驶舱</h2>
+      <h2 class="text-lg font-semibold">{{ t('common.cockpit') }}</h2>
     </template>
 
     <el-tabs v-model="activeTab" v-loading="loading">

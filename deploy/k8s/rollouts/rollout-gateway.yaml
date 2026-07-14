@@ -48,13 +48,16 @@ spec:
         # 第 4 步：手动确认门槛（如未确认则无限等待）
         - setWeight: 75
         - pause: {}  # 手动 promote: kubectl argo rollouts promote <name>
-      # 自动回滚：基于 Prometheus 指标分析
+      # 自动回滚：基于 Prometheus 多维度指标分析（P2-11）
       analysis:
         templates:
           - templateName: success-rate
+          - templateName: latency-p99
+          - templateName: db-pool-health
+          - templateName: jvm-memory
         args:
           - name: service-name
-            value: ydsz-pmis-gateway-canary
+            value: ydsz-pmis-gateway
       # 最大不可用副本数
       maxUnavailable: 1
       # 最大 surge 副本数
@@ -109,33 +112,6 @@ spec:
               port: 9000
             initialDelaySeconds: 60
             periodSeconds: 20
-
----
-# ============================================================
-# Analysis Template — 基于 Prometheus 成功率自动回滚
-# ============================================================
-apiVersion: argoproj.io/v1alpha1
-kind: AnalysisTemplate
-metadata:
-  name: success-rate
-  namespace: pmis
-spec:
-  args:
-    - name: service-name
-  metrics:
-    - name: success-rate
-      # 查询过去 2 分钟内 HTTP 5xx 错误率
-      # 如果错误率 > 5%，分析失败 → 自动回滚
-      interval: 30s
-      successCondition: result[0] < 0.05
-      failureLimit: 3  # 连续 3 次失败才回滚（避免瞬时抖动）
-      provider:
-        prometheus:
-          address: http://prometheus-server.monitoring.svc.cluster.local:9090
-          query: |
-            sum(rate(http_server_requests_seconds_count{service_name="{{args.service-name}}", status=~"5.."}[2m]))
-            /
-            sum(rate(http_server_requests_seconds_count{service_name="{{args.service-name}}"}[2m]))
 
 ---
 # ============================================================

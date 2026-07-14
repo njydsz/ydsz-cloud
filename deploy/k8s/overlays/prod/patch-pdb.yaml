@@ -1,12 +1,14 @@
-# PROD PodDisruptionBudget:确保滚动更新时至少有 1 个 Pod 在线
+# PROD PodDisruptionBudget:覆盖 base PDB 的中断策略
+# 注意：PDB 名称必须与 base/hpa-pdb.yaml 一致（带 -pdb 后缀）
+# 使用 maxUnavailable 与 base 策略一致（strategic merge patch 不会产生 minAvailable+maxUnavailable 冲突）
 
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-gateway
+  name: ydsz-pmis-gateway-pdb
   namespace: pmis
 spec:
-  minAvailable: 1
+  maxUnavailable: 1
   selector:
     matchLabels:
       app: ydsz-pmis-gateway
@@ -14,10 +16,10 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-system
+  name: ydsz-pmis-system-pdb
   namespace: pmis
 spec:
-  minAvailable: 1
+  maxUnavailable: 1
   selector:
     matchLabels:
       app: ydsz-pmis-system
@@ -25,21 +27,22 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-userinfo
+  name: ydsz-pmis-userinfo-pdb
   namespace: pmis
 spec:
-  minAvailable: 1
+  maxUnavailable: 1
   selector:
     matchLabels:
       app: ydsz-pmis-userinfo
 ---
+# Project 副本数 4，允许 2 个不可用（等价于原 minAvailable: 2）
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-project
+  name: ydsz-pmis-project-pdb
   namespace: pmis
 spec:
-  minAvailable: 2
+  maxUnavailable: 2
   selector:
     matchLabels:
       app: ydsz-pmis-project
@@ -47,10 +50,10 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-workflow
+  name: ydsz-pmis-workflow-pdb
   namespace: pmis
 spec:
-  minAvailable: 1
+  maxUnavailable: 1
   selector:
     matchLabels:
       app: ydsz-pmis-workflow
@@ -58,10 +61,33 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ydsz-pmis-message
+  name: ydsz-pmis-message-pdb
   namespace: pmis
 spec:
-  minAvailable: 1
+  maxUnavailable: 1
   selector:
     matchLabels:
       app: ydsz-pmis-message
+---
+# P2-9: 补齐 sales / finance PDB（maxUnavailable: 1，与 base 策略一致）
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ydsz-pmis-sales-pdb
+  namespace: pmis
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-sales
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ydsz-pmis-finance-pdb
+  namespace: pmis
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-finance

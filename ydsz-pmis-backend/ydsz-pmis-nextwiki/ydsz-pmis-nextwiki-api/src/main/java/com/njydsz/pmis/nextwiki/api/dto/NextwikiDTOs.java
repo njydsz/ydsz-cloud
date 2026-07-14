@@ -4,6 +4,11 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -30,6 +35,8 @@ public final class NextwikiDTOs {
         private String parentId;
 
         @Schema(description = "目录名称")
+        @NotBlank(message = "目录名称不能为空")
+        @Size(max = 255, message = "目录名称不能超过255个字符")
         private String name;
     }
 
@@ -60,6 +67,7 @@ public final class NextwikiDTOs {
         private static final long serialVersionUID = 1L;
 
         @Schema(description = "目标父目录ID")
+        @NotBlank(message = "目标父目录ID不能为空")
         private String targetParentId;
     }
 
@@ -72,6 +80,8 @@ public final class NextwikiDTOs {
         private static final long serialVersionUID = 1L;
 
         @Schema(description = "新名称")
+        @NotBlank(message = "新名称不能为空")
+        @Size(max = 255, message = "名称不能超过255个字符")
         private String newName;
     }
 
@@ -84,9 +94,11 @@ public final class NextwikiDTOs {
         private static final long serialVersionUID = 1L;
 
         @Schema(description = "文件节点ID")
+        @NotBlank(message = "文件节点ID不能为空")
         private String fileNodeId;
 
         @Schema(description = "分享类型: view / download / edit")
+        @NotBlank(message = "分享类型不能为空")
         private String shareType;
 
         @Schema(description = "密码（可选）")
@@ -147,15 +159,20 @@ public final class NextwikiDTOs {
         private static final long serialVersionUID = 1L;
 
         @Schema(description = "关键词")
+        @NotBlank(message = "关键词不能为空")
         private String keyword;
 
         @Schema(description = "搜索范围: all / filename / content / tag")
         private String scope;
 
         @Schema(description = "页码（从 1 开始）")
+        @NotNull(message = "页码不能为空")
+        @Positive(message = "页码必须大于0")
         private Integer page;
 
         @Schema(description = "每页大小")
+        @NotNull(message = "每页大小不能为空")
+        @Positive(message = "每页大小必须大于0")
         private Integer pageSize;
     }
 
@@ -204,6 +221,8 @@ public final class NextwikiDTOs {
         private static final long serialVersionUID = 1L;
 
         @Schema(description = "标签名称")
+        @NotBlank(message = "标签名称不能为空")
+        @Size(max = 100, message = "标签名称不能超过100个字符")
         private String name;
 
         @Schema(description = "标签颜色（如 #1890ff）")

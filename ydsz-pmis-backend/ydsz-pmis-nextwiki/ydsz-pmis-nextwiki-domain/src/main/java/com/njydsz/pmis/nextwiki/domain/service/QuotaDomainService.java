@@ -54,7 +54,12 @@ public class QuotaDomainService {
      * 增加已使用量（上传成功后调用）
      */
     public void addUsage(String scopeType, String scopeId, long bytes, int fileCount) {
-        quotaRepository.addUsage(scopeType, scopeId, bytes, fileCount);
+        int affected = quotaRepository.addUsage(scopeType, scopeId, bytes, fileCount);
+        if (affected == 0) {
+            throw BusinessException.builder().key(
+                    "存储空间不足或文件数量超限（并发竞争）: " + scopeType + ":" + scopeId
+            ).build();
+        }
         log.info("[QuotaDomainService] 增加用量: scope={}, bytes={}, fileCount={}",
                 scopeType + ":" + scopeId, formatSize(bytes), fileCount);
     }

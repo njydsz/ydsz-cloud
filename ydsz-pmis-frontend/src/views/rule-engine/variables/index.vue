@@ -73,10 +73,10 @@ onMounted(() => {
   <PageLayout>
     <template #header>
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-semibold">规则变量管理</h2>
+        <h2 class="text-lg font-semibold">{{ t('common.variableManagement') }}</h2>
         <el-button type="primary" @click="handleAdd">
           <el-icon><Plus /></el-icon>
-          新增变量
+          {{ t('common.addVariable') }}
         </el-button>
       </div>
     </template>

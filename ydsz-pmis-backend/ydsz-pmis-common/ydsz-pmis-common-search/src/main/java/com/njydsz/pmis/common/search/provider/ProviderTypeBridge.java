@@ -11,7 +11,7 @@ package com.njydsz.pmis.common.search.provider;
  * @author ydsz-pmis-team
  * @since 1.4.0
  */
-final class ProviderTypeBridge {
+public final class ProviderTypeBridge {
 
     private ProviderTypeBridge() {
     }
@@ -23,7 +23,7 @@ final class ProviderTypeBridge {
      * @param <T>      目标实体类型
      * @return 类型安全的 Provider
      */
-    static <T> SearchProvider<T> cast(SearchProvider<?> provider) {
+    public static <T> SearchProvider<T> cast(SearchProvider<?> provider) {
         return ProviderTypeBridge.<T>castImpl(provider);
     }
 

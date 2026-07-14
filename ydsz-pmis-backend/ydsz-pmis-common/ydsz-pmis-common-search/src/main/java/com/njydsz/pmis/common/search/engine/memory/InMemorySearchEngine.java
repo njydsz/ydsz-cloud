@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.search.engine.memory;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -93,7 +94,7 @@ public class InMemorySearchEngine implements SearchEngine {
     }
 
     @Override
-    public void bulkIndex(java.util.List<IndexDocument> documents) {
+    public void bulkIndex(List<IndexDocument> documents) {
         if (documents != null) {
             documents.forEach(this::index);
         }

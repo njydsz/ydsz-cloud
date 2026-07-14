@@ -34,7 +34,7 @@
     "lint:check": "eslint . --ext .vue,.js,.ts,.jsx,.tsx",
     "lint:scan-warnings": "node scripts/scan-any-warnings.mjs",
     "format": "prettier --write \"src/**/*.{vue,ts,js,scss,json,md}\"",
-    "i18n:check": "node scripts/check-i18n-coverage.mjs --threshold=50",
+    "i18n:check": "node scripts/check-i18n-coverage.mjs --threshold=90",
     "openapi:gen": "node scripts/openapi-gen.mjs",
     "openapi:gen:gateway": "node scripts/openapi-gen.mjs http://localhost:9000/v3/api-docs",
     "analyze": "ANALYZE=true vite build",

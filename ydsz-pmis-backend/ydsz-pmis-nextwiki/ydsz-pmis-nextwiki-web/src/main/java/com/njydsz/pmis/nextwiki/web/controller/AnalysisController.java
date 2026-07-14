@@ -3,7 +3,13 @@ package com.njydsz.pmis.nextwiki.web.controller;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.pmis.common.core.response.BaseResponse;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
@@ -16,16 +22,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 存储分析�?AI 摘要 REST API
+ * 存储分析与 AI 摘要 REST API
  *
  * @author ydsz-pmis-team
  * @since 1.4.0
  */
 @Slf4j
 @RestController
-@RequestMapping("/nextwiki/analysis")
+@RequestMapping("/api/v1/nextwiki/analysis")
 @RequiredArgsConstructor
-@Tag(name = "存储分析与AI摘要", description = "存储统计报表、文档智能摘�?)
+@Tag(name = "存储分析与AI摘要", description = "存储统计报表、文档智能摘要")
 public class AnalysisController {
 
     private final StorageAnalysisApplicationService storageAnalysisService;
@@ -39,14 +45,14 @@ public class AnalysisController {
     }
 
     @GetMapping("/by-type")
-    @Operation(summary = "按文件类型统�?)
+    @Operation(summary = "按文件类型统计")
     public BaseResponse<Map<String, StorageAnalysisApplicationService.TypeStats>> statsByType(
             @RequestHeader("X-User-Id") String userId) {
         return BaseResponse.ok(storageAnalysisService.statsByType(userId));
     }
 
     @GetMapping("/top-large-files")
-    @Operation(summary = "大文�?Top-N")
+    @Operation(summary = "大文件 Top-N")
     public BaseResponse<List<FileNode>> topLargeFiles(
             @RequestHeader("X-User-Id") String userId,
             @RequestParam(defaultValue = "10") int limit) {
@@ -55,7 +61,8 @@ public class AnalysisController {
 
     @PostMapping("/summary")
     @Operation(summary = "生成文档摘要")
-    public BaseResponse<AiSummaryApplicationService.DocumentAnalysis> analyze(@RequestBody String content) {
+    public BaseResponse<AiSummaryApplicationService.DocumentAnalysis> analyze(
+            @RequestBody String content) {
         return BaseResponse.ok(aiSummaryService.analyze(content));
     }
 }

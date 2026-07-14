@@ -59,6 +59,8 @@ public class FileApplicationService {
     private final TrashDomainService trashDomainService;
     private final FileNodeRepository fileNodeRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final FilePermissionService permissionService;
+    private final DistributedLockService lockService;
 
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
@@ -216,8 +218,16 @@ public class FileApplicationService {
      */
     @Transactional(rollbackFor = Exception.class)
     public FileNodeVO move(String nodeId, String targetParentId, String userId) {
-        FileNode node = folderDomainService.move(nodeId, targetParentId, userId);
-        return toVO(node);
+        permissionService.checkWrite(nodeId, userId);
+        String lockOwner = userId + ":" + System.nanoTime();
+        String lockKey = DistributedLockService.folderLockKey(nodeId);
+        lockService.acquireLock(lockKey, lockOwner);
+        try {
+            FileNode node = folderDomainService.move(nodeId, targetParentId, userId);
+            return toVO(node);
+        } finally {
+            lockService.unlock(lockKey, lockOwner);
+        }
     }
 
     /**
@@ -225,8 +235,16 @@ public class FileApplicationService {
      */
     @Transactional(rollbackFor = Exception.class)
     public FileNodeVO rename(String nodeId, String newName, String userId) {
-        FileNode node = folderDomainService.rename(nodeId, newName, userId);
-        return toVO(node);
+        permissionService.checkWrite(nodeId, userId);
+        String lockOwner = userId + ":" + System.nanoTime();
+        String lockKey = DistributedLockService.folderLockKey(nodeId);
+        lockService.acquireLock(lockKey, lockOwner);
+        try {
+            FileNode node = folderDomainService.rename(nodeId, newName, userId);
+            return toVO(node);
+        } finally {
+            lockService.unlock(lockKey, lockOwner);
+        }
     }
 
     /**
@@ -234,16 +252,24 @@ public class FileApplicationService {
      */
     @Transactional(rollbackFor = Exception.class)
     public void delete(String nodeId, String userId) {
+        permissionService.checkDelete(nodeId, userId);
         FileNode node = fileNodeRepository.findById(nodeId);
         if (node == null) {
             throw BusinessException.builder().key("文件节点不存在: " + nodeId).build();
         }
 
-        folderDomainService.softDelete(nodeId, userId);
-        trashDomainService.moveToTrash(node, userId);
+        String lockOwner = userId + ":" + System.nanoTime();
+        String lockKey = DistributedLockService.folderLockKey(nodeId);
+        lockService.acquireLock(lockKey, lockOwner);
+        try {
+            folderDomainService.softDelete(nodeId, userId);
+            trashDomainService.moveToTrash(node, userId);
 
-        if (node.isFile() && node.getSize() != null) {
-            quotaDomainService.subtractUsage("user", userId, node.getSize(), 1);
+            if (node.isFile() && node.getSize() != null) {
+                quotaDomainService.subtractUsage("user", userId, node.getSize(), 1);
+            }
+        } finally {
+            lockService.unlock(lockKey, lockOwner);
         }
 
         log.info("[FileApplicationService] 删除文件: nodeId={}, name={}", nodeId, node.getName());
@@ -290,6 +316,7 @@ public class FileApplicationService {
      */
     @Transactional(rollbackFor = Exception.class)
     public FileNodeVO copy(String nodeId, String targetParentId, String userId) {
+        permissionService.checkRead(nodeId, userId);
         FileNode source = fileNodeRepository.findById(nodeId);
         if (source == null) {
             throw BusinessException.builder().key("文件节点不存在: " + nodeId).build();
