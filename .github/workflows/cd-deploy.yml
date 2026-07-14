@@ -55,6 +55,7 @@ jobs:
           # 端口分配（2026-07-08 统一）: 9000 gateway / 9001 userinfo / 9002 system
           #                              9003 project / 9004 message / 9005 cronjob
           #                              9006 workflow / 9007 agent
+          #                              9008 finance / 9009 sales / 8800 nextwiki
           - { name: gateway,   port: 9000,  module: ydsz-pmis-gateway }
           - { name: userinfo,  port: 9001,  module: ydsz-pmis-userinfo }
           - { name: system,    port: 9002,  module: ydsz-pmis-system }
@@ -63,6 +64,9 @@ jobs:
           - { name: cronjob,   port: 9005,  module: ydsz-pmis-cronjob }
           - { name: workflow,  port: 9006,  module: ydsz-pmis-workflow }
           - { name: agent,     port: 9007,  module: ydsz-pmis-agent }
+          - { name: finance,   port: 9008,  module: ydsz-pmis-finance }
+          - { name: sales,     port: 9009,  module: ydsz-pmis-sales }
+          - { name: nextwiki,  port: 8800,  module: ydsz-pmis-nextwiki }
     steps:
       - uses: actions/checkout@v4
 
@@ -130,7 +134,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [gateway, userinfo, system, project, message, cronjob, workflow, agent, frontend]
+        service: [gateway, userinfo, system, project, message, cronjob, workflow, agent, finance, sales, nextwiki, frontend]
     steps:
       - uses: actions/checkout@v4
 
@@ -216,7 +220,7 @@ jobs:
           # 更新所有微服务镜像（命名空间统一为 pmis，与 deploy/k8s/base/namespace.yaml 一致）
           # Deployment 命名遵循 deploy/k8s/base/*.yaml 的 ydsz-pmis- 前缀（P0-2 修复命名一致性）
           # Container 命名遵循 deploy/k8s/base/*.yaml 的容器名（与 service 同名，无 ydsz-pmis- 前缀）
-          for svc in gateway userinfo system project message cronjob workflow agent; do
+          for svc in gateway userinfo system project message cronjob workflow agent finance sales nextwiki; do
             kubectl set image deployment/ydsz-pmis-${svc} \
               ${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
               -n ${{ env.K8S_NAMESPACE }}
@@ -228,7 +232,7 @@ jobs:
 
       - name: Wait for Rollout
         run: |
-          for svc in gateway userinfo system project message cronjob workflow agent frontend; do
+          for svc in gateway userinfo system project message cronjob workflow agent finance sales nextwiki frontend; do
             echo "Waiting for ydsz-pmis-${svc} rollout..."
             kubectl rollout status deployment/ydsz-pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
           done

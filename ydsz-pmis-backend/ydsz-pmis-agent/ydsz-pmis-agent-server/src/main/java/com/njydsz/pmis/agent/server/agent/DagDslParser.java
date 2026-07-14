@@ -3,11 +3,14 @@ package com.njydsz.pmis.agent.server.agent;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.SafeConstructor;
 
 import com.njydsz.pmis.agent.domain.agent.AgentDag;
 
@@ -39,7 +42,7 @@ import com.njydsz.pmis.agent.domain.agent.AgentDag;
 public class DagDslParser {
 
     private static final Logger log = LoggerFactory.getLogger(DagDslParser.class);
-    private final Yaml yaml = new Yaml();
+    private final Yaml yaml = new Yaml(new SafeConstructor(new LoaderOptions()));
 
     /**
      * 解析 YAML DSL
@@ -48,7 +51,6 @@ public class DagDslParser {
      * @return DAG 对象
      * @throws IllegalArgumentException DSL 格式错误
      */
-    @SuppressWarnings("unchecked")
     public AgentDag parse(String yamlContent) {
         Map<String, Object> root = yaml.load(yamlContent);
         if (root == null) {
@@ -83,7 +85,7 @@ public class DagDslParser {
             }
         }
 
-        AgentDag dag = new AgentDag(java.util.UUID.randomUUID().toString(), name, nodes, edges);
+        AgentDag dag = new AgentDag(UUID.randomUUID().toString(), name, nodes, edges);
         log.info("[DagDslParser] 解析完成: name={}, nodes={}", name, nodes.size());
         return dag;
     }

@@ -1,4 +1,4 @@
-﻿# =============================================================================
+# =============================================================================
 #  YDSZ PMIS · 批量构建 Docker 镜像（Windows PowerShell）
 # -----------------------------------------------------------------------------
 #  用法:
@@ -26,7 +26,11 @@ $services = @(
     @{name="project";  port=9003},
     @{name="cronjob";  port=9004},
     @{name="workflow"; port=9005},
-    @{name="agent";    port=9006}
+    @{name="agent";    port=9006},
+    @{name="message";  port=9007},
+    @{name="finance";  port=9008},
+    @{name="sales";    port=9009},
+    @{name="nextwiki"; port=8800}
 )
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path

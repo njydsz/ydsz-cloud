@@ -2,6 +2,7 @@
 #  YDSZ PMIS · 后端微服务统一 Dockerfile（多阶段构建）
 # -----------------------------------------------------------------------------
 #  适用模块: gateway / system / userinfo / project / workflow / agent / cronjob
+#            finance / sales / message / nextwiki
 #  构建示例:
 #    docker build -t ydsz-pmis/gateway:v1.3.0 \
 #      --build-arg MODULE_NAME=ydsz-pmis-gateway \
@@ -47,6 +48,10 @@ COPY ydsz-pmis-project/pom.xml       ydsz-pmis-project/
 COPY ydsz-pmis-cronjob/pom.xml       ydsz-pmis-cronjob/
 COPY ydsz-pmis-workflow/pom.xml      ydsz-pmis-workflow/
 COPY ydsz-pmis-agent/pom.xml         ydsz-pmis-agent/
+COPY ydsz-pmis-finance/pom.xml       ydsz-pmis-finance/
+COPY ydsz-pmis-sales/pom.xml         ydsz-pmis-sales/
+COPY ydsz-pmis-message/pom.xml      ydsz-pmis-message/
+COPY ydsz-pmis-nextwiki/pom.xml      ydsz-pmis-nextwiki/
 
 # 预下载依赖（仅当 pom 变化时重新执行，利用 BuildKit 缓存）
 RUN --mount=type=cache,target=/root/.m2 \
@@ -62,6 +67,10 @@ COPY ydsz-pmis-project/       ydsz-pmis-project/
 COPY ydsz-pmis-cronjob/       ydsz-pmis-cronjob/
 COPY ydsz-pmis-workflow/      ydsz-pmis-workflow/
 COPY ydsz-pmis-agent/         ydsz-pmis-agent/
+COPY ydsz-pmis-finance/       ydsz-pmis-finance/
+COPY ydsz-pmis-sales/         ydsz-pmis-sales/
+COPY ydsz-pmis-message/       ydsz-pmis-message/
+COPY ydsz-pmis-nextwiki/      ydsz-pmis-nextwiki/
 COPY checkstyle.xml spotbugs-exclude.xml ./
 
 # 构建指定模块及其依赖模块，跳过测试（CI 流水线已单独跑测试）

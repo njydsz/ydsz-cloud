@@ -84,6 +84,7 @@
         <module>ydsz-pmis-common-queue</module>
         <module>ydsz-pmis-common-event</module>
         <module>ydsz-pmis-common-config</module>
+        <module>ydsz-pmis-common-tx</module>
         <module>ydsz-pmis-common-socket</module>
         <module>ydsz-pmis-common-netty</module>
         <module>ydsz-pmis-common-file</module>
@@ -189,6 +190,11 @@
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common-config</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-common-tx</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

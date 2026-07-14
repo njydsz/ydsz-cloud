@@ -32,6 +32,10 @@ SERVICES=(
     "cronjob:9004"
     "workflow:9005"
     "agent:9006"
+    "message:9007"
+    "finance:9008"
+    "sales:9009"
+    "nextwiki:8800"
 )
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

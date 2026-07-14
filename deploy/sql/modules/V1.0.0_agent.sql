@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS pmis_agent_model_config (
     updated_at      TIMESTAMPTZ   DEFAULT NOW()
 );
 COMMENT ON TABLE pmis_agent_model_config IS 'LLM 模型配置表';
+COMMENT ON COLUMN pmis_agent_model_config.api_key IS 'Jasypt ENC() 加密存储，应用层解密，禁止明文';
 
 -- Token 用量记录表
 CREATE TABLE IF NOT EXISTS pmis_agent_token_usage (
