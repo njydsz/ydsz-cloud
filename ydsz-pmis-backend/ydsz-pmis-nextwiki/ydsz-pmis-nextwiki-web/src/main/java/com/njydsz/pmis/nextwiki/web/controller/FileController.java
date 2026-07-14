@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.njydsz.pmis.common.audit.annotation.OperationLog;
 import com.njydsz.pmis.common.auth.annotation.AuthApiPermission;
 import com.njydsz.pmis.common.core.response.BaseResponse;
+import com.njydsz.pmis.common.domain.query.PageResult;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.nextwiki.api.dto.NextwikiDTOs;
 import com.njydsz.pmis.nextwiki.domain.entity.FileVersion;
@@ -80,9 +81,9 @@ public class FileController {
     }
 
     @GetMapping("/list")
-    @Operation(summary = "列出目录内容", description = "支持排序、过滤、分页")
+    @Operation(summary = "列出目录内容", description = "支持排序、过滤、分页（数据库分页）")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_LIST)
-    public BaseResponse<List<FileNodeVO>> listFiles(
+    public BaseResponse<PageResult<FileNodeVO>> listFiles(
             @RequestParam(value = "parentId", required = false) String parentId,
             @RequestParam(value = "sortBy", required = false) String sortBy,
             @RequestParam(value = "sortDir", required = false) String sortDir,
@@ -91,7 +92,7 @@ public class FileController {
             @RequestParam(value = "pageSize", defaultValue = "50") int pageSize,
             @RequestHeader("X-User-Id") String userId) {
 
-        List<FileNodeVO> result = fileApplicationService.listFiles(
+        PageResult<FileNodeVO> result = fileApplicationService.listFiles(
                 parentId, userId, sortBy, sortDir, type, page, pageSize);
         return BaseResponse.ok(result);
     }

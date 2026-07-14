@@ -118,7 +118,7 @@ public class UserModelReadStrategy implements ReadStrategy {
         } else if (inputStream != null) {
             return WorkbookFactory.create(inputStream);
         } else {
-            throw new IllegalArgumentException("文件路径和输入流都不能为�?);
+            throw new IllegalArgumentException("文件路径和输入流都不能为空");
         }
     }
 

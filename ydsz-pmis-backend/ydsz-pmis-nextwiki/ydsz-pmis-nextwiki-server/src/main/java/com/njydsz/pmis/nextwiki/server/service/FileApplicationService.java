@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -18,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.njydsz.pmis.common.domain.query.PageResult;
 import com.njydsz.pmis.common.exception.custom.BusinessException;
 import com.njydsz.pmis.common.file.domain.FileStorage;
 import com.njydsz.pmis.common.file.storage.IFileStorage;
@@ -196,7 +196,7 @@ public class FileApplicationService {
     }
 
     /**
-     * 列出目录（支持排序、过滤、分页）
+     * 列出目录（支持排序、过滤、分页，使用数据库分页避免全量加载）
      *
      * @param parentId 父目录ID
      * @param userId   用户ID
@@ -205,43 +205,22 @@ public class FileApplicationService {
      * @param type     过滤类型：all / file / folder（默认 all）
      * @param page     页码（从 1 开始，默认 1）
      * @param pageSize 每页大小（默认 50）
+     * @return 分页结果（含 total/pageCount）
      */
-    public List<FileNodeVO> listFiles(String parentId, String userId,
-                                        String sortBy, String sortDir,
-                                        String type, int page, int pageSize) {
-        List<FileNode> nodes = folderDomainService.listChildren(parentId, userId);
+    public PageResult<FileNodeVO> listFiles(String parentId, String userId,
+                                              String sortBy, String sortDir,
+                                              String type, int page, int pageSize) {
+        // 解析父目录ID（与原 listChildren 保持一致：根目录自动解析）
+        FileNode parent = resolveParentNode(parentId, userId);
+        String resolvedParentId = parent.getId();
 
-        // 类型过滤
-        if (type != null && !type.isEmpty() && !"all".equals(type)) {
-            nodes = nodes.stream()
-                    .filter(n -> {
-                        if ("file".equals(type)) return n.isFile();
-                        if ("folder".equals(type)) return n.isFolder();
-                        return true;
-                    })
-                    .collect(Collectors.toList());
-        }
+        // 数据库分页查询（含类型过滤与排序）
+        PageResult<FileNode> pageResult = fileNodeRepository.findPageChildren(
+                resolvedParentId, type, normalizeSortBy(sortBy), normalizeSortDir(sortDir),
+                page, pageSize);
 
-        // 排序
-        Comparator<FileNode> comparator = buildComparator(sortBy);
-        if ("asc".equalsIgnoreCase(sortDir)) {
-            // asc 方向不需要反转
-        } else {
-            comparator = comparator.reversed();
-        }
-        nodes.sort(comparator);
-
-        // 分页
-        int total = nodes.size();
-        int fromIndex = (page - 1) * pageSize;
-        int toIndex = Math.min(fromIndex + pageSize, total);
-        if (fromIndex >= total) {
-            return List.of();
-        }
-
-        return nodes.subList(fromIndex, toIndex).stream()
-                .map(this::toVO)
-                .collect(Collectors.toList());
+        // DO → VO 转换
+        return pageResult.convert(this::toVO);
     }
 
     /**
@@ -521,15 +500,27 @@ public class FileApplicationService {
                 .build());
     }
 
-    private Comparator<FileNode> buildComparator(String sortBy) {
-        if (sortBy == null) sortBy = "time";
+    /**
+     * 规范化排序字段：name / size / time（默认 time）
+     */
+    private String normalizeSortBy(String sortBy) {
+        if (sortBy == null || sortBy.isEmpty()) {
+            return "time";
+        }
         return switch (sortBy) {
-            case "name" -> Comparator.comparing(n -> n.getName() != null ? n.getName() : "",
-                    String.CASE_INSENSITIVE_ORDER);
-            case "size" -> Comparator.comparing(n -> n.getSize() != null ? n.getSize() : 0L);
-            default -> Comparator.comparing(n -> n.getUpdatedAt() != null
-                    ? n.getUpdatedAt() : LocalDateTime.MIN);
+            case "name", "size", "time" -> sortBy;
+            default -> "time";
         };
+    }
+
+    /**
+     * 规范化排序方向：asc / desc（默认 desc）
+     */
+    private String normalizeSortDir(String sortDir) {
+        if ("asc".equalsIgnoreCase(sortDir)) {
+            return "asc";
+        }
+        return "desc";
     }
 
     private IFileStorage resolveStorage() {

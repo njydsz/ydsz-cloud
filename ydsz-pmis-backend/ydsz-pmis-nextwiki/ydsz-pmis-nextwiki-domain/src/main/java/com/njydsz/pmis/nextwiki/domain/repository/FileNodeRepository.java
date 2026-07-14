@@ -2,6 +2,7 @@ package com.njydsz.pmis.nextwiki.domain.repository;
 
 import java.util.List;
 
+import com.njydsz.pmis.common.domain.query.PageResult;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 
 /**
@@ -30,9 +31,45 @@ public interface FileNodeRepository {
     int countChildren(String parentId);
 
     /**
+     * 数据库分页查询子节点（支持类型过滤与排序）
+     *
+     * @param parentId 父目录ID
+     * @param nodeType 节点类型过滤（file/folder，null 或 all 表示不过滤）
+     * @param sortBy   排序字段：name / size / time
+     * @param sortDir  排序方向：asc / desc
+     * @param page     页码（从 1 开始）
+     * @param pageSize 每页大小
+     * @return 分页结果
+     */
+    PageResult<FileNode> findPageChildren(String parentId, String nodeType,
+                                           String sortBy, String sortDir,
+                                           int page, int pageSize);
+
+    /**
      * 根据路径前缀查询（用于递归操作）
      */
     List<FileNode> findByPathPrefix(String pathPrefix);
+
+    /**
+     * 批量更新路径前缀（用于目录移动/重命名时递归更新子节点路径）
+     *
+     * @param oldPathPrefix 原路径前缀
+     * @param newPathPrefix 新路径前缀
+     * @param levelDelta    层级变化量
+     * @param excludeId     排除的节点ID（目录自身）
+     * @return 受影响行数
+     */
+    int batchUpdatePathPrefix(String oldPathPrefix, String newPathPrefix,
+                              int levelDelta, String excludeId);
+
+    /**
+     * 批量逻辑删除路径前缀下的所有节点
+     *
+     * @param pathPrefix 路径前缀
+     * @param excludeId  排除的节点ID（目录自身）
+     * @return 受影响行数
+     */
+    int batchSoftDeleteByPathPrefix(String pathPrefix, String excludeId);
 
     /**
      * 保存文件节点
@@ -40,7 +77,9 @@ public interface FileNodeRepository {
     FileNode save(FileNode node);
 
     /**
-     * 更新文件节点
+     * 更新文件节点（带 revision 乐观锁）
+     *
+     * @throws org.springframework.dao.OptimisticLockingFailureException 乐观锁冲突时抛出
      */
     void update(FileNode node);
 

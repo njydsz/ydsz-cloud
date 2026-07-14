@@ -146,7 +146,7 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
         }
         try {
             JsonNode node = YdszJson.readTree(json);
-            if (node == null || node.isNull() || node.isEmpty()) {
+            if (node == null || node.isNull() || node.isMissing()) {
                 return ColumnScopeInfo.empty();
             }
             ObjectNode object = (ObjectNode) node;
@@ -164,11 +164,11 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
         if (rule == null && StringUtils.isNotBlank(fallbackKey)) {
             rule = object.get(fallbackKey);
         }
-        if (rule == null || rule.isNull() || rule.isEmpty()) {
+        if (rule == null || rule.isNull() || rule.isMissing()) {
             return Collections.emptyMap();
         }
         Map<String, Set<String>> out = new LinkedHashMap<>();
-        for (Map.Entry<String, JsonNode> entry : rule.properties()) {
+        for (Map.Entry<String, JsonNode> entry : rule.asMap().entrySet()) {
             String table = entry.getKey();
             if (StringUtils.isBlank(table)) {
                 continue;

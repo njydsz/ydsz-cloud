@@ -276,7 +276,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
 
                 // 解析 menu-key 数据（menus + buttons）
                 JsonNode menuNode = parseJsonSafe(menuData, role);
-                if (menuNode != null && !menuNode.isEmpty()) {
+                if (menuNode != null && !menuNode.isMissing()) {
                     readStringArray(menuNode.get("menus"), menuPerms);
                     readStringArray(menuNode.get("buttons"), buttonPerms);
                 }
@@ -284,7 +284,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
                 // 解析 api-key 数据
                 if (StringUtils.isNotBlank(apiData)) {
                     readApiPermissionsSafe(apiData, apiPerms);
-                } else if (menuNode != null && !menuNode.isEmpty()) {
+                } else if (menuNode != null && !menuNode.isMissing()) {
                     // api-key 不存在时，从 menu-key 的 apis 字段降级获取
                     readStringArray(menuNode.get("apis"), apiPerms);
                 }
@@ -341,13 +341,13 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
         try {
             JsonNode parsed = YdszJson.readTree(apiData);
             if (parsed != null && parsed.isObject()) {
-                if (!parsed.isEmpty()) {
+                if (!parsed.isMissing()) {
                     readStringArray(parsed.get("apis"), apiPerms);
                     return;
                 }
             }
             if (parsed != null && parsed.isArray()) {
-                if (!parsed.isEmpty()) {
+                if (!parsed.isMissing()) {
                     readStringArray(parsed, apiPerms);
                 }
             }
@@ -363,7 +363,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
                 return;
             }
             JsonNode obj = YdszJson.readTree(menuData);
-            if (obj != null && !obj.isEmpty()) {
+            if (obj != null && !obj.isMissing()) {
                 readStringArray(obj.get("menus"), menuPerms);
                 readStringArray(obj.get("buttons"), buttonPerms);
                 return;
@@ -389,7 +389,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
                 return;
             }
             JsonNode obj = YdszJson.readTree(menuData);
-            if (obj != null && !obj.isEmpty()) {
+            if (obj != null && !obj.isMissing()) {
                 readStringArray(obj.get("apis"), apiPerms);
             }
         } catch (BusinessException e) {
@@ -404,13 +404,13 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
         try {
             JsonNode parsed = YdszJson.readTree(apiData);
             if (parsed != null && parsed.isObject()) {
-                if (!parsed.isEmpty()) {
+                if (!parsed.isMissing()) {
                     readStringArray(parsed.get("apis"), apiPerms);
                     return;
                 }
             }
             if (parsed != null && parsed.isArray()) {
-                if (!parsed.isEmpty()) {
+                if (!parsed.isMissing()) {
                     readStringArray(parsed, apiPerms);
                     return;
                 }

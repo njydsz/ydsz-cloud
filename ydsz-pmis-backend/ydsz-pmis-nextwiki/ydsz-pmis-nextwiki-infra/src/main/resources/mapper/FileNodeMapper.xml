@@ -39,6 +39,64 @@
         ORDER BY node_type DESC, sort ASC, name ASC
     </select>
 
+    <update id="updateWithRevision">
+        UPDATE nw_file_node
+        SET
+            parent_id = #{node.parentId},
+            name = #{node.name},
+            node_type = #{node.nodeType},
+            suffix = #{node.suffix},
+            size = #{node.size},
+            storage_key = #{node.storageKey},
+            bucket_name = #{node.bucketName},
+            mime_type = #{node.mimeType},
+            path = #{node.path},
+            level = #{node.level},
+            sort = #{node.sort},
+            current_version = #{node.currentVersion},
+            file_hash = #{node.fileHash},
+            thumbnail_key = #{node.thumbnailKey},
+            preview_ready = #{node.previewReady},
+            starred = #{node.starred},
+            share_status = #{node.shareStatus},
+            status = #{node.status},
+            updated_by = #{node.updatedBy},
+            updated_at = #{node.updatedAt},
+            revision = revision + 1
+        WHERE id = #{node.id}
+          AND deleted = 0
+          AND revision = #{node.revision}
+    </update>
+
+    <select id="selectPageByParentId" resultMap="FileNodeResult">
+        SELECT * FROM nw_file_node
+        WHERE parent_id = #{parentId} AND deleted = 0
+        <if test="nodeType != null and nodeType != '' and nodeType != 'all'">
+            AND node_type = #{nodeType}
+        </if>
+        ORDER BY
+        <choose>
+            <when test="sortBy == 'name'">
+                name
+            </when>
+            <when test="sortBy == 'size'">
+                size
+            </when>
+            <otherwise>
+                updated_at
+            </otherwise>
+        </choose>
+        <choose>
+            <when test="sortDir == 'asc'">
+                ASC
+            </when>
+            <otherwise>
+                DESC
+            </otherwise>
+        </choose>
+        , node_type DESC, sort ASC
+    </select>
+
     <select id="selectByPathPrefix" resultMap="FileNodeResult">
         SELECT * FROM nw_file_node
         WHERE path LIKE CONCAT(#{pathPrefix}, '%') AND deleted = 0

@@ -4,8 +4,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.domain.query.PageResult;
 import com.njydsz.pmis.nextwiki.domain.entity.FileNode;
 import com.njydsz.pmis.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.pmis.nextwiki.infra.mapper.FileNodeMapper;
@@ -38,13 +42,35 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
     @Override
     public int countChildren(String parentId) {
-        List<FileNode> children = fileNodeMapper.selectChildren(parentId);
-        return children.size();
+        return fileNodeMapper.countChildren(parentId);
+    }
+
+    @Override
+    public PageResult<FileNode> findPageChildren(String parentId, String nodeType,
+                                                  String sortBy, String sortDir,
+                                                  int page, int pageSize) {
+        Page<FileNode> pageParam = new Page<>(page, pageSize);
+        IPage<FileNode> result = fileNodeMapper.selectPageByParentId(
+                pageParam, parentId, nodeType, sortBy, sortDir);
+        return PageResult.of(result.getRecords(), result.getTotal(),
+                (int) result.getCurrent(), (int) result.getSize());
     }
 
     @Override
     public List<FileNode> findByPathPrefix(String pathPrefix) {
         return fileNodeMapper.selectByPathPrefix(pathPrefix);
+    }
+
+    @Override
+    public int batchUpdatePathPrefix(String oldPathPrefix, String newPathPrefix,
+                                      int levelDelta, String excludeId) {
+        return fileNodeMapper.batchUpdatePathPrefix(oldPathPrefix, newPathPrefix,
+                levelDelta, excludeId);
+    }
+
+    @Override
+    public int batchSoftDeleteByPathPrefix(String pathPrefix, String excludeId) {
+        return fileNodeMapper.batchSoftDeleteByPathPrefix(pathPrefix, excludeId);
     }
 
     @Override
@@ -58,7 +84,19 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
     @Override
     public void update(FileNode node) {
-        fileNodeMapper.updateById(node);
+        if (node.getRevision() == null) {
+            // 兜底：未携带 revision 时退化为普通更新，避免业务阻断
+            fileNodeMapper.updateById(node);
+            return;
+        }
+        int affected = fileNodeMapper.updateWithRevision(node);
+        if (affected == 0) {
+            throw new OptimisticLockingFailureException(
+                    "FileNode 乐观锁更新失败，id=" + node.getId()
+                            + ", revision=" + node.getRevision());
+        }
+        // 更新成功后 revision +1，保持内存对象与数据库一致
+        node.setRevision(node.getRevision() + 1);
     }
 
     @Override

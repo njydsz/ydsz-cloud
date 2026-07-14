@@ -203,14 +203,10 @@ public class FolderDomainService {
         // 记录原始路径
         fileNodeRepository.softDelete(nodeId, node.getPath());
 
-        // 如果是目录，递归逻辑删除子节点
+        // 如果是目录，批量逻辑删除子节点（避免逐个 update 的 N+1 问题）
         if (node.isFolder()) {
-            List<FileNode> descendants = fileNodeRepository.findByPathPrefix(node.getPath());
-            for (FileNode desc : descendants) {
-                if (!desc.getId().equals(nodeId)) {
-                    fileNodeRepository.softDelete(desc.getId(), desc.getPath());
-                }
-            }
+            int affected = fileNodeRepository.batchSoftDeleteByPathPrefix(node.getPath(), nodeId);
+            log.info("[FolderDomainService] 批量逻辑删除子节点: nodeId={}, affected={}", nodeId, affected);
         }
 
         eventPublisher.publishEvent(FileOperatedEvent.builder()
@@ -307,23 +303,14 @@ public class FolderDomainService {
     @Transactional(rollbackFor = Exception.class)
     private void updateChildrenPaths(String parentId, String oldPathPrefix,
                                       String newPathPrefix, int newLevel, String userId) {
-        List<FileNode> children = fileNodeRepository.findByPathPrefix(oldPathPrefix);
-        for (FileNode child : children) {
-            if (child.getId().equals(parentId)) {
-                continue;
-            }
-            String childPath = child.getPath();
-            if (childPath != null && childPath.startsWith(oldPathPrefix)) {
-                String newPath = newPathPrefix + childPath.substring(oldPathPrefix.length());
-                child.setPath(newPath);
-                child.setLevel(newLevel + (child.getLevel() != null
-                        ? child.getLevel() - countPathSegments(oldPathPrefix)
-                        : 1));
-                child.setUpdatedBy(userId);
-                child.setUpdatedAt(LocalDateTime.now());
-                fileNodeRepository.update(child);
-            }
-        }
+        // 批量 UPDATE 子节点路径（避免逐个 update 的 N+1 问题）
+        // oldLevel = 旧前缀对应的层级深度，newLevel = 新前缀对应的层级深度
+        // levelDelta = newLevel - oldLevel，应用到所有子节点
+        int oldLevel = countPathSegments(oldPathPrefix);
+        int levelDelta = newLevel - oldLevel;
+        int affected = fileNodeRepository.batchUpdatePathPrefix(
+                oldPathPrefix, newPathPrefix, levelDelta, parentId);
+        log.info("[FolderDomainService] 批量更新子节点路径: parentId={}, affected={}", parentId, affected);
     }
 
     private int countPathSegments(String path) {
@@ -338,8 +325,8 @@ public class FolderDomainService {
     }
 
     private Integer getNextSort(String parentId) {
-        List<FileNode> children = fileNodeRepository.findChildren(parentId);
-        return children.size();
+        // 使用 COUNT 查询避免全量加载子节点
+        return fileNodeRepository.countChildren(parentId);
     }
 
     /**

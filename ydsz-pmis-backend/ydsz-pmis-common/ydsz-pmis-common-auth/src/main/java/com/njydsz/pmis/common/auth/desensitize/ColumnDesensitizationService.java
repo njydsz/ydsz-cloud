@@ -166,22 +166,22 @@ public class ColumnDesensitizationService {
         try {
             // Use JsonUtils static methods (YdszJson engine)
             JsonNode root = YdszJson.readTree(json);
-            if (root == null || root.isEmpty()) {
+            if (root == null || root.isMissing()) {
                 return;
             }
 
             JsonNode visibleColumns = root.get("visibleColumns");
-            if (visibleColumns != null && !visibleColumns.isEmpty()) {
+            if (visibleColumns != null && !visibleColumns.isMissing()) {
                 parseTableColumns(visibleColumns, context);
             }
 
             JsonNode editableColumns = root.get("editableColumns");
-            if (editableColumns != null && !editableColumns.isEmpty()) {
+            if (editableColumns != null && !editableColumns.isMissing()) {
                 parseTableColumns(editableColumns, context);
             }
 
             JsonNode desensitizeRules = root.get("desensitizeRules");
-            if (desensitizeRules != null && !desensitizeRules.isEmpty()) {
+            if (desensitizeRules != null && !desensitizeRules.isMissing()) {
                 parseTableColumns(desensitizeRules, context);
             }
 
@@ -191,7 +191,7 @@ public class ColumnDesensitizationService {
     }
 
     private void parseTableColumns(JsonNode tableColumns, ColumnDesensitizationContext context) {
-        for (Map.Entry<String, JsonNode> entry : tableColumns.properties()) {
+        for (Map.Entry<String, JsonNode> entry : tableColumns.asMap().entrySet()) {
             String tableName = entry.getKey();
             JsonNode columnValue = entry.getValue();
             if (columnValue == null || columnValue.isNull()) {
