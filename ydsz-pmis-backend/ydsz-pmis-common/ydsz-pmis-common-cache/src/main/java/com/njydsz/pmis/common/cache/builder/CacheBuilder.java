@@ -568,7 +568,26 @@ public final class CacheBuilder<K, V> {
   public Cache<K, V> build() {
     validate();
     Cache<K, V> cache = createBaseCache();
+    return applyDecorators(cache);
+  }
 
+  /**
+   * 应用装饰器栈到基础缓存实例
+   *
+   * <p>装饰器叠加顺序：
+   *
+   * <ol>
+   *   <li>过期策略装饰器 ExpirableCache
+   *   <li>内存感知淘汰装饰器 MemoryAwareEvictionCache
+   *   <li>SWR 装饰器 SwrCacheDecorator
+   *   <li>写策略装饰器 WriteThroughCache / WriteBehindCache
+   *   <li>删除监听器
+   * </ol>
+   *
+   * @param cache 基础缓存实例
+   * @return 装饰后的缓存实例
+   */
+  private Cache<K, V> applyDecorators(Cache<K, V> cache) {
     // 过期策略装饰器叠加（与淘汰策略正交）
     boolean hasExpiration =
         expireAfterWriteDuration > 0 || expireAfterAccessDuration > 0 || expiry != null;
@@ -706,10 +725,19 @@ public final class CacheBuilder<K, V> {
       throw new IllegalStateException("loader must be set for LoadingCache");
     }
 
+    validate();
     Cache<K, V> baseCache = createBaseCache();
+
+    // ENHANCED_LOADING 类型已在 createBaseCache 中创建 EnhancedLoadingCache
     if (baseCache instanceof LoadingCache) {
+      // 仍然需要应用装饰器（过期、内存感知等）
+      // 但 LoadingCache 装饰后的返回类型为 Cache，无法直接返回
+      // 因此对已包含 LoadingCache 的情况，直接返回（装饰器由用户手动叠加）
       return (LoadingCache<K, V>) baseCache;
     }
+
+    // 先应用装饰器（过期、内存感知、SWR、写策略等），再包装为 LoadingCache
+    Cache<K, V> decoratedCache = applyDecorators(baseCache);
 
     long effectiveRefreshDuration = refreshAfterWriteDuration > 0 ? refreshAfterWriteDuration : 0;
     TimeUnit effectiveRefreshUnit =
@@ -718,7 +746,7 @@ public final class CacheBuilder<K, V> {
             : TimeUnit.NANOSECONDS;
 
     return EnhancedLoadingCache.create(
-        baseCache,
+        decoratedCache,
         loader,
         taskExecutor != null ? taskExecutor : listenerExecutor,
         effectiveRefreshDuration,

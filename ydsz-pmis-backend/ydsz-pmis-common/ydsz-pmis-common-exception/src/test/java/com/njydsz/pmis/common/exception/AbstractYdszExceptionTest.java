@@ -22,8 +22,6 @@ import com.njydsz.pmis.common.exception.custom.SysException;
 import com.njydsz.pmis.common.exception.enums.ExceptionCategory;
 import com.njydsz.pmis.common.exception.enums.ExceptionCode;
 import com.njydsz.pmis.common.exception.enums.ExceptionLevel;
-import com.njydsz.pmis.common.exception.i18n.MessageResolverHolder;
-
 /**
  * {@link AbstractYdszException} 单元测试
  *
@@ -44,13 +42,11 @@ class AbstractYdszExceptionTest {
 
     @BeforeEach
     void setup() {
-        MessageResolverHolder.clear();
         AbstractYdszException.setMessageResolver(null);
     }
 
     @AfterEach
     void cleanup() {
-        MessageResolverHolder.clear();
         AbstractYdszException.setMessageResolver(null);
     }
 
@@ -249,34 +245,4 @@ class AbstractYdszExceptionTest {
         }
     }
 
-    @Nested
-    @DisplayName("MessageResolverHolder 桥接测试")
-    class MessageResolverHolderTest {
-
-        @Test
-        @DisplayName("resolve() 在 resolver 未注册时返回 key 本身")
-        void testResolveWithoutResolver() {
-            MessageResolverHolder.clear();
-            String result = MessageResolverHolder.resolve("test.key", null, Locale.CHINA);
-            assertEquals("test.key", result);
-        }
-
-        @Test
-        @DisplayName("resolve() 在 resolver 注册后返回解析后的消息")
-        void testResolveWithResolver() {
-            MessageResolverHolder.setResolver((key, args, locale) -> "resolved:" + key);
-            String result = MessageResolverHolder.resolve("test.key", null, Locale.CHINA);
-            assertEquals("resolved:test.key", result);
-        }
-
-        @Test
-        @DisplayName("resolve() 在 resolver 抛异常时降级返回 key")
-        void testResolveWithException() {
-            MessageResolverHolder.setResolver((key, args, locale) -> {
-                throw new RuntimeException("boom");
-            });
-            String result = MessageResolverHolder.resolve("test.key", null, Locale.CHINA);
-            assertEquals("test.key", result);
-        }
-    }
 }

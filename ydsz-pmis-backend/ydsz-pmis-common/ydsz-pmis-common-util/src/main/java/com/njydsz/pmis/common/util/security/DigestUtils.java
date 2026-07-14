@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Base64;
 
 import javax.crypto.Mac;
 import javax.crypto.SecretKeyFactory;
@@ -16,7 +17,9 @@ import com.njydsz.pmis.common.util.bytes.HexUtils;
 
 /**
  * 不可逆加密工具类（纯 JDK 实现，零第三方依赖）
- * 支持 MD5、SHA-1、SHA-256、SHA-512 等多种散列算法
+ *
+ * <p>提供 MD5、SHA-1、SHA-256、SHA-512 散列、HMAC-SHA256 签名、PBKDF2 密钥派生、
+ * 常量时间比较等安全能力。
  */
 public class DigestUtils {
 
@@ -279,7 +282,7 @@ public class DigestUtils {
 
     /**
      * 验证 Hex 格式的散列值是否匹配
- */
+     */
     public static boolean verifyDigestHex(String expectedHex, String actualHex) {
         if (expectedHex == null || actualHex == null) {
             return false;
@@ -291,5 +294,86 @@ public class DigestUtils {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /**
+     * 常量时间字符串比较（防止计时攻击）
+     *
+     * <p>使用 {@link MessageDigest#isEqual(byte[], byte[])} 进行恒定时间比较，
+     * 防止攻击者通过比较耗时推断字符串差异位置。
+     *
+     * @param a 字符串 a
+     * @param b 字符串 b
+     * @return 相等返回 true
+     */
+    public static boolean constantTimeEquals(String a, String b) {
+        if (a == null || b == null) {
+            return a == null && b == null;
+        }
+        byte[] aBytes = a.getBytes(StandardCharsets.UTF_8);
+        byte[] bBytes = b.getBytes(StandardCharsets.UTF_8);
+        return MessageDigest.isEqual(aBytes, bBytes);
+    }
+
+    /**
+     * 计算 HMAC-SHA256 并返回 Base64 标准编码的签名
+     *
+     * @param data   原始数据
+     * @param secret 密钥
+     * @return Base64 标准编码的签名
+     */
+    public static String hmacSha256Base64(String data, String secret) {
+        if (data == null || secret == null) {
+            return null;
+        }
+        byte[] hmac = hmacSha256(
+            data.getBytes(StandardCharsets.UTF_8),
+            secret.getBytes(StandardCharsets.UTF_8)
+        );
+        return Base64.getEncoder().encodeToString(hmac);
+    }
+
+    /**
+     * 计算 HMAC-SHA256 并返回 Base64 URL-safe 编码（无填充）的签名
+     *
+     * @param data 待签名数据
+     * @param key  密钥字节数组
+     * @return Base64 URL-safe 编码的签名
+     */
+    public static String hmacSha256UrlSafe(String data, byte[] key) {
+        if (data == null || key == null) {
+            return null;
+        }
+        byte[] hmac = hmacSha256(data.getBytes(StandardCharsets.UTF_8), key);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(hmac);
+    }
+
+    /**
+     * 签名编码格式
+     */
+    public enum SignatureEncoding {
+        /** Base64 编码 */
+        BASE64,
+        /** Hex 编码 */
+        HEX
+    }
+
+    /**
+     * 验证 HMAC-SHA256 签名（常量时间比较，防止时序攻击）
+     *
+     * @param data      原始数据
+     * @param secret    密钥
+     * @param signature 待验证的签名
+     * @param encoding  签名编码格式
+     * @return 验证通过返回 true
+     */
+    public static boolean verifySignature(String data, String secret, String signature, SignatureEncoding encoding) {
+        if (signature == null || signature.isBlank()) {
+            return false;
+        }
+        String computed = encoding == SignatureEncoding.BASE64
+                ? hmacSha256Base64(data, secret)
+                : hmacSha256Hex(data, secret);
+        return constantTimeEquals(computed, signature);
     }
 }

@@ -25,8 +25,6 @@ import com.njydsz.pmis.common.exception.code.UnifiedExceptionCode;
 import com.njydsz.pmis.common.exception.custom.AbstractYdszException;
 import com.njydsz.pmis.common.exception.enums.ExceptionCode;
 import com.njydsz.pmis.common.exception.enums.ExceptionCodeRegistry;
-import com.njydsz.pmis.common.exception.i18n.MessageResolverHolder;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -82,8 +80,8 @@ public class I18nConfiguration {
     /**
      * 在 Bean 初始化完成后注入异常消息国际化解析器。
      *
-     * <p>将 Spring {@link MessageSource} 桥接到 {@link AbstractYdszException} 和
-     * {@link MessageResolverHolder}，使异常被抛出时只存储 i18n key + 参数，
+     * <p>将 Spring {@link MessageSource} 桥接到 {@link AbstractYdszException}，
+     * 使异常被抛出时只存储 i18n key + 参数，
      * 在 {@code getMessage()} 被调用时才懒加载解析为本地化消息。
      *
      * <p>无论 {@code MessageSource} 是由本类创建还是由外部提供，此方法都会执行注入。
@@ -97,9 +95,6 @@ public class I18nConfiguration {
         }
         AbstractYdszException.setMessageResolver(
                 (key, params) -> messageSource.getMessage(key, params, key, LocaleContextHolder.getLocale())
-        );
-        MessageResolverHolder.setResolver((key, args, locale) ->
-                messageSource.getMessage(key, args, key, locale != null ? locale : LocaleContextHolder.getLocale())
         );
         log.info("异常消息国际化解析器已注入 | MessageSource: {}", messageSource.getClass().getSimpleName());
     }

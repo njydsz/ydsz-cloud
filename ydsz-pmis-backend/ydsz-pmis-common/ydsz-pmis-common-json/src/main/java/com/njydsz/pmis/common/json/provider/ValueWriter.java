@@ -685,7 +685,7 @@ public final class ValueWriter {
                     if (!first) sb.append(',');
                     first = false;
                     sb.append(field.jsonKey);
-                    writeValueByTypeCode(value, sb, typeCode);
+                    writeValueByTypeCodeFast(value, sb, (byte) typeCode);
                     break;
             }
         }
@@ -761,7 +761,7 @@ public final class ValueWriter {
                     if (!first) sb.append(',');
                     first = false;
                     sb.append(field.jsonKey);
-                    writeValueByTypeCode(value, sb, typeCode);
+                    writeValueByTypeCodeFast(value, sb, (byte) typeCode);
                     break;
             }
         }
@@ -828,114 +828,6 @@ public final class ValueWriter {
     }
 
     /**
-     * 根据类型代码快速写入值（替代 instanceof 链）
-     *
-     * @param value 值
-     * @param sb StringBuilder
-     * @param typeCode 类型代码
-     */
-    public static void writeValueByTypeCode(Object value, StringBuilder sb, int typeCode) {
-        switch (typeCode) {
-            case 1:  // String
-                writeString((String) value, sb);
-                break;
-            case 2:  // int/Integer
-                writeInt((Integer) value, sb);
-                break;
-            case 3:  // long/Long
-                writeLong((Long) value, sb);
-                break;
-            case 4:  // double/Double
-                writeDouble((Double) value, sb);
-                break;
-            case 5:  // float/Float
-                writeFloat((Float) value, sb);
-                break;
-            case 6:  // boolean/Boolean
-                writeBoolean((Boolean) value, sb);
-                break;
-            case 7:  // short/Short
-                sb.append(((Short) value).intValue());
-                break;
-            case 8:  // byte/Byte
-                sb.append(((Byte) value).intValue());
-                break;
-            case 9:  // char/Character
-                sb.append('"').append((Character) value).append('"');
-                break;
-            case 10: // BigDecimal
-                sb.append(value.toString());
-                break;
-            case 11: // BigInteger
-                sb.append(value.toString());
-                break;
-            case 12: // Date
-                writeDate((Date) value, sb);
-                break;
-            case 13: // LocalDate
-                writeLocalDate((LocalDate) value, sb);
-                break;
-            case 14: // LocalDateTime
-                writeLocalDateTime((LocalDateTime) value, sb);
-                break;
-            case 15: // LocalTime
-                writeLocalTime((LocalTime) value, sb);
-                break;
-            case 16: // Instant
-                writeInstant((Instant) value, sb);
-                break;
-            case 17: // Enum
-                writeEnum((Enum<?>) value, sb);
-                break;
-            default: // Object/Map/List/其他
-                writeValueDirect(value, sb);
-                break;
-        }
-    }
-
-    /**
-     * 写入 Date
-     */
-    public static void writeDate(Date value, StringBuilder sb) {
-        writeString(formatDateValue(value), sb);
-    }
-
-    /**
-     * 写入 LocalDate
-     */
-    public static void writeLocalDate(LocalDate value, StringBuilder sb) {
-        writeString(formatDateValue(value), sb);
-    }
-
-    /**
-     * 写入 LocalDateTime
-     */
-    public static void writeLocalDateTime(LocalDateTime value, StringBuilder sb) {
-        writeString(formatDateValue(value), sb);
-    }
-
-    /**
-     * 写入 LocalTime
-     */
-    public static void writeLocalTime(LocalTime value, StringBuilder sb) {
-        writeString(formatDateValue(value), sb);
-    }
-
-    /**
-     * 写入 Instant
-     */
-    public static void writeInstant(Instant value, StringBuilder sb) {
-        writeString(formatDateValue(value), sb);
-    }
-
-    /**
-     * 写入枚举
-     */
-    public static void writeEnum(Enum<?> value, StringBuilder sb) {
-        sb.append('"').append(value.name()).append('"');
-    }
-
-    /**
      * 格式化日期（带模式）
      */
     public static String formatDateWithPattern(Object value, String pattern) {
@@ -950,6 +842,7 @@ public final class ValueWriter {
                         .toLocalDateTime().format(formatter);
             }
         } catch (Exception e) {
+            LOGGER.fine("Failed to format date with pattern '" + pattern + "': " + e.getMessage());
         }
         return value.toString();
     }

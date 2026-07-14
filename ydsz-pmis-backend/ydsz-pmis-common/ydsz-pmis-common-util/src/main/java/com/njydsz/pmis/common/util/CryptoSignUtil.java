@@ -1,23 +1,18 @@
 package com.njydsz.pmis.common.util;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
-import java.util.HexFormat;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
+import com.njydsz.pmis.common.util.security.DigestUtils;
 
 /**
- * 签名验证工具类（兼容旧 com.njydsz.pmis.common.util.CryptoSignUtil）。
+ * 签名验证工具类（已废弃，请使用 {@link DigestUtils}）。
  *
- * <p>提供 HMAC-SHA256 签名计算与验签功能，用于第三方回调验签等场景。
+ * <p>HMAC-SHA256 签名计算与验签功能已统一到 {@link DigestUtils}。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
+ * @deprecated 请使用 {@link DigestUtils}（HMAC-SHA256 / 签名验证 / 常量时间比较）
  */
+@Deprecated(since = "1.4.0", forRemoval = true)
 public final class CryptoSignUtil {
-
-    private static final String HMAC_SHA256 = "HmacSHA256";
 
     private CryptoSignUtil() {
         throw new UnsupportedOperationException("Utility class");
@@ -25,7 +20,10 @@ public final class CryptoSignUtil {
 
     /**
      * 签名编码格式。
+     *
+     * @deprecated 请使用 {@link DigestUtils.SignatureEncoding}
      */
+    @Deprecated(since = "1.4.0", forRemoval = true)
     public enum SignatureEncoding {
         /** Base64 编码 */
         BASE64,
@@ -39,10 +37,11 @@ public final class CryptoSignUtil {
      * @param data   原始数据
      * @param secret 密钥
      * @return Base64 编码的签名
+     * @deprecated 请使用 {@link DigestUtils#hmacSha256Base64(String, String)}
      */
+    @Deprecated(since = "1.4.0", forRemoval = true)
     public static String hmacSha256Base64(String data, String secret) {
-        byte[] hmac = computeHmacSha256(data, secret);
-        return Base64.getEncoder().encodeToString(hmac);
+        return DigestUtils.hmacSha256Base64(data, secret);
     }
 
     /**
@@ -51,10 +50,11 @@ public final class CryptoSignUtil {
      * @param data   原始数据
      * @param secret 密钥
      * @return Hex 编码的签名
+     * @deprecated 请使用 {@link DigestUtils#hmacSha256Hex(String, String)}
      */
+    @Deprecated(since = "1.4.0", forRemoval = true)
     public static String hmacSha256Hex(String data, String secret) {
-        byte[] hmac = computeHmacSha256(data, secret);
-        return HexFormat.of().formatHex(hmac);
+        return DigestUtils.hmacSha256Hex(data, secret);
     }
 
     /**
@@ -65,48 +65,13 @@ public final class CryptoSignUtil {
      * @param signature 待验证的签名
      * @param encoding  签名编码格式
      * @return 验证通过返回 true
+     * @deprecated 请使用 {@link DigestUtils#verifySignature(String, String, String, DigestUtils.SignatureEncoding)}
      */
+    @Deprecated(since = "1.4.0", forRemoval = true)
     public static boolean verifySignature(String data, String secret, String signature, SignatureEncoding encoding) {
-        if (signature == null || signature.isBlank()) {
-            return false;
-        }
-        String computed = encoding == SignatureEncoding.BASE64
-                ? hmacSha256Base64(data, secret)
-                : hmacSha256Hex(data, secret);
-        return constantTimeEquals(computed, signature);
-    }
-
-    /**
-     * 计算 HMAC-SHA256。
-     */
-    private static byte[] computeHmacSha256(String data, String secret) {
-        try {
-            Mac mac = Mac.getInstance(HMAC_SHA256);
-            SecretKeySpec keySpec = new SecretKeySpec(
-                    secret.getBytes(StandardCharsets.UTF_8), HMAC_SHA256);
-            mac.init(keySpec);
-            return mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            throw new RuntimeException("HMAC-SHA256 computation failed", e);
-        }
-    }
-
-    /**
-     * 常量时间字符串比较（防止时序攻击）。
-     */
-    private static boolean constantTimeEquals(String a, String b) {
-        if (a == null || b == null) {
-            return false;
-        }
-        byte[] aBytes = a.getBytes(StandardCharsets.UTF_8);
-        byte[] bBytes = b.getBytes(StandardCharsets.UTF_8);
-        if (aBytes.length != bBytes.length) {
-            return false;
-        }
-        int result = 0;
-        for (int i = 0; i < aBytes.length; i++) {
-            result |= aBytes[i] ^ bBytes[i];
-        }
-        return result == 0;
+        DigestUtils.SignatureEncoding targetEncoding = encoding == SignatureEncoding.BASE64
+                ? DigestUtils.SignatureEncoding.BASE64
+                : DigestUtils.SignatureEncoding.HEX;
+        return DigestUtils.verifySignature(data, secret, signature, targetEncoding);
     }
 }

@@ -1,30 +1,22 @@
 package com.njydsz.pmis.common.util;
 
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.util.Base64;
-import java.util.regex.Pattern;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import com.njydsz.pmis.common.util.security.DigestUtils;
+import com.njydsz.pmis.common.util.security.PwdUtils;
 
 /**
- * 密码加密工具类（兼容旧 com.njydsz.pmis.common.util.CryptoUtil）。
+ * 密码加密工具类（已废弃，请使用 {@link PwdUtils} 和 {@link DigestUtils}）。
  *
- * <p>提供 BCrypt 和 SHA-256+Salt 两种密码哈希与验证功能。
+ * <p>BCrypt 相关方法请使用 {@link PwdUtils}，HMAC/签名相关方法请使用 {@link DigestUtils}。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
+ * @deprecated 请使用 {@link PwdUtils}（BCrypt/密码哈希）和 {@link DigestUtils}（HMAC/签名/常量时间比较）
  */
+@Deprecated(since = "1.4.0", forRemoval = true)
 public final class CryptoUtil {
-
-    /** BCrypt 格式前缀正则 */
-    private static final Pattern BCRYPT_PATTERN = Pattern.compile("^\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{53}$");
-
-    /** Spring Security BCrypt 编码器（线程安全） */
-    private static final BCryptPasswordEncoder BCRYPT_ENCODER = new BCryptPasswordEncoder(12);
 
     private CryptoUtil() {
         throw new UnsupportedOperationException("Utility class");
@@ -35,9 +27,11 @@ public final class CryptoUtil {
      *
      * @param rawPassword 原始密码
      * @return BCrypt 哈希值
+     * @deprecated 请使用 {@link PwdUtils#hashPasswordBCrypt(String)}
      */
+    @Deprecated(since = "1.4.0", forRemoval = true)
     public static String hashPasswordBCrypt(String rawPassword) {
-        return BCRYPT_ENCODER.encode(rawPassword);
+        return PwdUtils.hashPasswordBCrypt(rawPassword);
     }
 
     /**
@@ -46,9 +40,11 @@ public final class CryptoUtil {
      * @param rawPassword 原始密码
      * @param hashedPassword BCrypt 哈希值
      * @return 匹配返回 true
+     * @deprecated 请使用 {@link PwdUtils#verifyPasswordBCrypt(String, String)}
      */
+    @Deprecated(since = "1.4.0", forRemoval = true)
     public static boolean verifyPasswordBCrypt(String rawPassword, String hashedPassword) {
-        return BCRYPT_ENCODER.matches(rawPassword, hashedPassword);
+        return PwdUtils.verifyPasswordBCrypt(rawPassword, hashedPassword);
     }
 
     /**
@@ -56,9 +52,11 @@ public final class CryptoUtil {
      *
      * @param password 密码字符串
      * @return 是 BCrypt 格式返回 true
+     * @deprecated 请使用 {@link PwdUtils#isBCryptFormat(String)}
      */
+    @Deprecated(since = "1.4.0", forRemoval = true)
     public static boolean isBCryptFormat(String password) {
-        return password != null && BCRYPT_PATTERN.matcher(password).matches();
+        return PwdUtils.isBCryptFormat(password);
     }
 
     /**
@@ -68,23 +66,11 @@ public final class CryptoUtil {
      * @param hashedPassword 已存储的哈希值（Hex 编码）
      * @param salt 盐值
      * @return 匹配返回 true
+     * @deprecated 请使用 {@link PwdUtils#verifyPasswordWithSha256Salt(String, String, String)}
      */
+    @Deprecated(since = "1.4.0", forRemoval = true)
     public static boolean verifyPassword(String rawPassword, String hashedPassword, String salt) {
-        if (rawPassword == null || hashedPassword == null || salt == null) {
-            return false;
-        }
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(salt.getBytes(StandardCharsets.UTF_8));
-            byte[] hash = digest.digest(rawPassword.getBytes(StandardCharsets.UTF_8));
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hash) {
-                hexString.append(String.format("%02x", b));
-            }
-            return hexString.toString().equalsIgnoreCase(hashedPassword);
-        } catch (Exception e) {
-            return false;
-        }
+        return PwdUtils.verifyPasswordWithSha256Salt(rawPassword, hashedPassword, salt);
     }
 
     /**
@@ -92,7 +78,9 @@ public final class CryptoUtil {
      *
      * @param data 待编码的字节数组
      * @return Base64 URL-safe 字符串
+     * @deprecated 请直接使用 {@code Base64.getUrlEncoder().withoutPadding().encodeToString(data)}
      */
+    @Deprecated(since = "1.4.0", forRemoval = true)
     public static String base64UrlEncode(byte[] data) {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(data);
     }
@@ -102,7 +90,9 @@ public final class CryptoUtil {
      *
      * @param value Base64 URL-safe 字符串
      * @return 解码后的字节数组
+     * @deprecated 请直接使用 {@code Base64.getUrlDecoder().decode(value)}
      */
+    @Deprecated(since = "1.4.0", forRemoval = true)
     public static byte[] base64UrlDecode(String value) {
         return Base64.getUrlDecoder().decode(value);
     }
@@ -113,14 +103,11 @@ public final class CryptoUtil {
      * @param a 字符串 a
      * @param b 字符串 b
      * @return 相等返回 true
+     * @deprecated 请使用 {@link DigestUtils#constantTimeEquals(String, String)}
      */
+    @Deprecated(since = "1.4.0", forRemoval = true)
     public static boolean constantTimeEquals(String a, String b) {
-        if (a == null || b == null) {
-            return a == null && b == null;
-        }
-        byte[] aBytes = a.getBytes(StandardCharsets.UTF_8);
-        byte[] bBytes = b.getBytes(StandardCharsets.UTF_8);
-        return MessageDigest.isEqual(aBytes, bBytes);
+        return DigestUtils.constantTimeEquals(a, b);
     }
 
     /**
@@ -129,16 +116,10 @@ public final class CryptoUtil {
      * @param data 待签名数据
      * @param key  密钥字节数组
      * @return Base64 URL-safe 编码的签名
+     * @deprecated 请使用 {@link DigestUtils#hmacSha256UrlSafe(String, byte[])}
      */
+    @Deprecated(since = "1.4.0", forRemoval = true)
     public static String hmacSha256(String data, byte[] key) {
-        try {
-            Mac mac = Mac.getInstance("HmacSHA256");
-            SecretKeySpec secretKeySpec = new SecretKeySpec(key, "HmacSHA256");
-            mac.init(secretKeySpec);
-            byte[] hmacBytes = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
-            return base64UrlEncode(hmacBytes);
-        } catch (Exception e) {
-            throw new RuntimeException("HMAC-SHA256 签名失败: " + e.getMessage(), e);
-        }
+        return DigestUtils.hmacSha256UrlSafe(data, key);
     }
 }

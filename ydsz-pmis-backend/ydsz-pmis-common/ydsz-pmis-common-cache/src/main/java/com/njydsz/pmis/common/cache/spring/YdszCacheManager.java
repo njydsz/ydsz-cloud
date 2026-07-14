@@ -69,7 +69,7 @@ public class YdszCacheManager implements CacheManager, DisposableBean {
 
   private long expireAfterWrite = 0;
 
-  private TimeUnit expireTimeUnit = TimeUnit.MINUTES;
+  private TimeUnit expireAfterWriteTimeUnit = TimeUnit.MINUTES;
 
   private int initialCapacity = 64;
 
@@ -79,7 +79,11 @@ public class YdszCacheManager implements CacheManager, DisposableBean {
 
   private long expireAfterAccess = 0;
 
+  private TimeUnit expireAfterAccessTimeUnit = TimeUnit.MINUTES;
+
   private long refreshAfterWrite = 0;
+
+  private TimeUnit refreshAfterWriteTimeUnit = TimeUnit.MINUTES;
 
   private boolean weakKeys = false;
 
@@ -105,7 +109,7 @@ public class YdszCacheManager implements CacheManager, DisposableBean {
   /** 设置写入后过期时间 */
   public void setExpireAfterWrite(long duration, TimeUnit timeUnit) {
     this.expireAfterWrite = duration;
-    this.expireTimeUnit = timeUnit;
+    this.expireAfterWriteTimeUnit = timeUnit;
   }
 
   /** 设置初始容量 */
@@ -126,13 +130,13 @@ public class YdszCacheManager implements CacheManager, DisposableBean {
   /** 设置访问后过期时间 */
   public void setExpireAfterAccess(long duration, TimeUnit timeUnit) {
     this.expireAfterAccess = duration;
-    this.expireTimeUnit = timeUnit;
+    this.expireAfterAccessTimeUnit = timeUnit;
   }
 
   /** 设置刷新间隔 */
   public void setRefreshAfterWrite(long duration, TimeUnit timeUnit) {
     this.refreshAfterWrite = duration;
-    this.expireTimeUnit = timeUnit;
+    this.refreshAfterWriteTimeUnit = timeUnit;
   }
 
   /** 设置是否使用弱引用键 */
@@ -225,10 +229,18 @@ public class YdszCacheManager implements CacheManager, DisposableBean {
         perCache != null && perCache.getRefreshAfterWrite() != null
             ? perCache.getRefreshAfterWrite()
             : this.refreshAfterWrite;
-    TimeUnit effectiveTimeUnit =
+    TimeUnit effectiveWriteTimeUnit =
         perCache != null && perCache.getExpireTimeUnit() != null
             ? perCache.getExpireTimeUnit()
-            : this.expireTimeUnit;
+            : this.expireAfterWriteTimeUnit;
+    TimeUnit effectiveAccessTimeUnit =
+        perCache != null && perCache.getExpireTimeUnit() != null
+            ? perCache.getExpireTimeUnit()
+            : this.expireAfterAccessTimeUnit;
+    TimeUnit effectiveRefreshTimeUnit =
+        perCache != null && perCache.getExpireTimeUnit() != null
+            ? perCache.getExpireTimeUnit()
+            : this.refreshAfterWriteTimeUnit;
     boolean effectiveRecordStats =
         perCache != null && perCache.getRecordStats() != null
             ? perCache.getRecordStats()
@@ -262,13 +274,13 @@ public class YdszCacheManager implements CacheManager, DisposableBean {
     }
 
     if (effectiveExpireAfterWrite > 0) {
-      builder.expireAfterWrite(effectiveExpireAfterWrite, effectiveTimeUnit);
+      builder.expireAfterWrite(effectiveExpireAfterWrite, effectiveWriteTimeUnit);
     }
     if (effectiveExpireAfterAccess > 0) {
-      builder.expireAfterAccess(effectiveExpireAfterAccess, effectiveTimeUnit);
+      builder.expireAfterAccess(effectiveExpireAfterAccess, effectiveAccessTimeUnit);
     }
     if (effectiveRefreshAfterWrite > 0) {
-      builder.refreshAfterWrite(effectiveRefreshAfterWrite, effectiveTimeUnit);
+      builder.refreshAfterWrite(effectiveRefreshAfterWrite, effectiveRefreshTimeUnit);
     }
 
     log.debug(
@@ -277,7 +289,7 @@ public class YdszCacheManager implements CacheManager, DisposableBean {
         effectiveType,
         effectiveMaxSize,
         effectiveExpireAfterWrite,
-        effectiveTimeUnit);
+        effectiveWriteTimeUnit);
 
     return builder.build();
   }

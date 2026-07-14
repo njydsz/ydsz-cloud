@@ -5,9 +5,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 
 import com.njydsz.pmis.common.domain.entity.AggregateRoot;
+import com.njydsz.pmis.common.domain.event.DomainEvent;
+import com.njydsz.pmis.common.domain.event.DomainEventPublisher;
 import com.njydsz.pmis.common.domain.exception.AggregateNotFoundException;
 import com.njydsz.pmis.common.domain.exception.ConcurrencyConflictException;
 import com.njydsz.pmis.common.domain.query.PageQuery;
@@ -27,6 +31,11 @@ import com.njydsz.pmis.common.domain.specification.Specification;
  *   <li>聚合根未找到感知：查询时自动封装 {@link AggregateNotFoundException}</li>
  *   <li>领域事件自动发布：保存后自动发布聚合根注册的领域事件</li>
  * </ul>
+ *
+ * <p><b>领域事件发布：</b>
+ * 通过 Spring 依赖注入可选地注入 {@link DomainEventPublisher}。
+ * 当容器中存在 {@link DomainEventPublisher} Bean 时，保存聚合根后自动发布其注册的领域事件；
+ * 当不存在时（如单元测试场景），事件仅被清空而不发布。
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
@@ -68,9 +77,29 @@ import com.njydsz.pmis.common.domain.specification.Specification;
  *
  * @see Repository
  * @see AggregateRoot
+ * @see DomainEventPublisher
  */
 public abstract class AbstractRepository<T extends AggregateRoot<ID>, ID extends Serializable>
         implements Repository<T, ID> {
+
+    /**
+     * 领域事件发布器（可选依赖）
+     *
+     * <p>由 Spring 容器自动注入。当容器中存在 {@link DomainEventPublisher} Bean 时，
+     * 保存聚合根后会自动发布领域事件；不存在时为 null，事件仅被清空。
+     */
+    @Nullable
+    private DomainEventPublisher domainEventPublisher;
+
+    /**
+     * 注入领域事件发布器（由 Spring 自动装配）
+     *
+     * @param domainEventPublisher 领域事件发布器
+     */
+    @Autowired(required = false)
+    public void setDomainEventPublisher(DomainEventPublisher domainEventPublisher) {
+        this.domainEventPublisher = domainEventPublisher;
+    }
 
     /**
      * 根据ID查询聚合根（持久化实现）
@@ -130,6 +159,19 @@ public abstract class AbstractRepository<T extends AggregateRoot<ID>, ID extends
      * @return 匹配的记录数
      */
     protected abstract long doCount(Specification<T> spec);
+
+    /**
+     * 根据ID判断聚合根是否存在（持久化实现）
+     *
+     * <p>子类可覆写此方法以提供更高效的存在性检查（如 {@code SELECT EXISTS}）。
+     * 默认实现委托至 {@link #doFindById}，会加载完整实体。
+     *
+     * @param id 聚合根ID
+     * @return 存在返回 true
+     */
+    protected boolean doExistsById(ID id) {
+        return doFindById(id) != null;
+    }
 
     @Override
     public Optional<T> findById(ID id) {
@@ -198,23 +240,12 @@ public abstract class AbstractRepository<T extends AggregateRoot<ID>, ID extends
 
     @Override
     public boolean existsById(ID id) {
-        return findById(id).isPresent();
+        return doExistsById(id);
     }
 
     @Override
     public PageResult<T> findPage(PageQuery query, Specification<T> spec) {
         return doFindPage(query, spec);
-    }
-
-    @Override
-    public void batchSave(Collection<T> entities) {
-        if (entities == null || entities.isEmpty()) {
-            return;
-        }
-        List<T> saved = doSaveAll(entities);
-        for (T aggregate : saved) {
-            publishDomainEvents(aggregate);
-        }
     }
 
     @Override
@@ -235,17 +266,25 @@ public abstract class AbstractRepository<T extends AggregateRoot<ID>, ID extends
     /**
      * 发布聚合根注册的领域事件
      *
-     * <p>发布后自动清空聚合根中的领域事件列表
-     * 子类可覆写此方法以自定义事件发布策略。
+     * <p>将聚合根中注册的领域事件通过 {@link DomainEventPublisher} 发布，
+     * 发布后自动清空聚合根中的领域事件列表。
+     *
+     * <p>如果未注入 {@link DomainEventPublisher}（如单元测试场景），
+     * 则仅清空事件列表而不发布。
      *
      * @param aggregate 聚合根
      */
     protected void publishDomainEvents(T aggregate) {
-        List<?> events = aggregate.getDomainEvents();
+        List<DomainEvent> events = aggregate.getDomainEvents();
         if (events == null || events.isEmpty()) {
             return;
         }
         aggregate.clearDomainEvents();
+        if (domainEventPublisher != null) {
+            for (DomainEvent event : events) {
+                domainEventPublisher.publish(event);
+            }
+        }
     }
 
     /**

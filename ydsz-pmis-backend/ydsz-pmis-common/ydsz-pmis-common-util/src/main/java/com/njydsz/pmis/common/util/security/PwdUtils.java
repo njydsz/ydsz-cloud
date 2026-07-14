@@ -3,17 +3,27 @@ package com.njydsz.pmis.common.util.security;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.util.regex.Pattern;
+
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.njydsz.pmis.common.util.bytes.HexUtils;
+
 /**
+ * 用户密码安全工具类（纯 JDK 实现 + Spring Security BCrypt）
+ *
+ * <p>支持多种密码加密方式：BCrypt（推荐）、PBKDF2（推荐）、SHA-256+Salt（兼容旧版）。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
- * @desc PwdUtils - 用户密码安全工具类（增强安全性，纯 JDK 实现）
- * 支持多种密码加密方式：MD5、SHA-256、PBKDF2（推荐）
  */
 public class PwdUtils {
+
+    /** BCrypt 格式正则 */
+    private static final Pattern BCRYPT_PATTERN = Pattern.compile("^\\$2[aby]\\$\\d{2}\\$[./A-Za-z0-9]{53}$");
+
+    /** Spring Security BCrypt 编码器（线程安全） */
+    private static final BCryptPasswordEncoder BCRYPT_ENCODER = new BCryptPasswordEncoder(12);
 
     /**
      * 密码强度枚举
@@ -65,6 +75,66 @@ public class PwdUtils {
      * 默认盐值长度（16 字节）
      */
     private static final int DEFAULT_SALT_LENGTH = 16;
+
+    /**
+     * 使用 BCrypt 哈希密码
+     *
+     * @param rawPassword 原始密码
+     * @return BCrypt 哈希值
+     */
+    public static String hashPasswordBCrypt(String rawPassword) {
+        return BCRYPT_ENCODER.encode(rawPassword);
+    }
+
+    /**
+     * 验证 BCrypt 密码
+     *
+     * @param rawPassword 原始密码
+     * @param hashedPassword BCrypt 哈希值
+     * @return 匹配返回 true
+     */
+    public static boolean verifyPasswordBCrypt(String rawPassword, String hashedPassword) {
+        return BCRYPT_ENCODER.matches(rawPassword, hashedPassword);
+    }
+
+    /**
+     * 判断密码是否为 BCrypt 格式
+     *
+     * @param password 密码字符串
+     * @return 是 BCrypt 格式返回 true
+     */
+    public static boolean isBCryptFormat(String password) {
+        return password != null && BCRYPT_PATTERN.matcher(password).matches();
+    }
+
+    /**
+     * 使用 SHA-256 + Salt 验证密码（兼容旧版密码，单次迭代）
+     *
+     * <p>此方法仅用于验证历史遗留的单次 SHA-256 哈希密码。
+     * 新密码应使用 {@link #hashPasswordBCrypt(String)} 或 {@link #encodePBKDF2WithAutoSalt(char[])}。
+     *
+     * @param rawPassword 原始密码
+     * @param hashedPassword 已存储的哈希值（Hex 编码）
+     * @param salt 盐值
+     * @return 匹配返回 true
+     */
+    public static boolean verifyPasswordWithSha256Salt(String rawPassword, String hashedPassword, String salt) {
+        if (rawPassword == null || hashedPassword == null || salt == null) {
+            return false;
+        }
+        try {
+            byte[] saltBytes = salt.getBytes(StandardCharsets.UTF_8);
+            byte[] inputBytes = rawPassword.getBytes(StandardCharsets.UTF_8);
+            byte[] hash = DigestUtils.digest(inputBytes, "SHA-256", saltBytes, 1);
+            String computedHex = HexUtils.bytesToHex(hash);
+            return MessageDigest.isEqual(
+                computedHex.getBytes(StandardCharsets.UTF_8),
+                hashedPassword.getBytes(StandardCharsets.UTF_8)
+            );
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
     /**
      * 验证密码是否匹配（支持盐值）
