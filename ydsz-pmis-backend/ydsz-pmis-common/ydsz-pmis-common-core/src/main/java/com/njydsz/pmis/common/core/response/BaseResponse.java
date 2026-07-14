@@ -2,7 +2,6 @@ package com.njydsz.pmis.common.core.response;
 
 import java.io.Serializable;
 import java.time.Clock;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.MDC;
 
@@ -109,17 +108,15 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     private String traceId;
 
     /**
-     * 时钟提供者 - 使用 AtomicReference 保证线程安全和性能
-     * <p>相比 volatile 字段，AtomicReference 提供更好的内存可见性语义和更低的读取开销
+     * 时钟提供者 - 使用 volatile 保证线程安全和可见性
      */
-    private static final AtomicReference<Clock> CLOCK_HOLDER = 
-        new AtomicReference<>(Clock.systemDefaultZone());
+    private static volatile Clock CLOCK_HOLDER = Clock.systemDefaultZone();
 
     /**
      * 默认构造函数
      */
     public BaseResponse() {
-        this.timestamp = CLOCK_HOLDER.get().millis();
+        this.timestamp = CLOCK_HOLDER.millis();
         this.traceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
     }
 
@@ -134,7 +131,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         this.code = code;
         this.msg = msg;
         this.data = data;
-        this.timestamp = CLOCK_HOLDER.get().millis();
+        this.timestamp = CLOCK_HOLDER.millis();
         this.traceId = MDC.get(TraceConstants.MDC_TRACE_ID_KEY);
     }
 
@@ -147,7 +144,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
         if (clock == null) {
             throw new IllegalArgumentException("Clock cannot be null");
         }
-        CLOCK_HOLDER.set(clock);
+        CLOCK_HOLDER = clock;
     }
 
     /**
@@ -156,7 +153,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
      * @return 当前时钟实例
      */
     public static Clock getClock() {
-        return CLOCK_HOLDER.get();
+        return CLOCK_HOLDER;
     }
 
     /**

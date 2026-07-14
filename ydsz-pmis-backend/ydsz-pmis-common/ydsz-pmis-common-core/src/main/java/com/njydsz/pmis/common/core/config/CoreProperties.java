@@ -23,7 +23,6 @@ import lombok.Data;
  *     default-page-size: 10
  *     trace:
  *       enabled: true
- *       header-name: X-Trace-Id
  *       generate-if-missing: true
  *       id-type: snowflake   # uuid（默认）或 snowflake（有序）
  * }</pre>
@@ -50,15 +49,15 @@ public class CoreProperties {
 
     /**
      * 链路追踪配置属性。
+     *
+     * <p>TraceId 请求头名称由 {@link com.njydsz.pmis.common.core.constant.TraceConstants#TRACE_ID_HEADER}
+     * 统一定义，不支持配置覆盖，确保全项目一致。
      */
     @Data
     public static class TraceConfig {
 
         /** 是否启用链路追踪，默认启用 */
         private boolean enabled = true;
-
-        /** TraceId 请求头名称 */
-        private String headerName = "X-Trace-Id";
 
         /** 请求头中缺失 TraceId 时是否自动生成 */
         private boolean generateIfMissing = true;

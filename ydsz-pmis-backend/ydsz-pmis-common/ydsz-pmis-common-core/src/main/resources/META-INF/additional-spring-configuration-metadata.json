@@ -25,12 +25,6 @@
       "defaultValue": true
     },
     {
-      "name": "ydsz.core.trace.header-name",
-      "type": "java.lang.String",
-      "description": "TraceId 请求头名称。",
-      "defaultValue": "X-Trace-Id"
-    },
-    {
       "name": "ydsz.core.trace.generate-if-missing",
       "type": "java.lang.Boolean",
       "description": "请求头中缺失 TraceId 时是否自动生成。",

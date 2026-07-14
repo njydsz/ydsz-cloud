@@ -14,6 +14,23 @@
     "allPublicMethods": true
   },
   {
+    "name": "com.njydsz.pmis.common.exception.handler.JdbcExceptionHandler",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.exception.handler.WebFluxExceptionHandler",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.exception.handler.GrpcExceptionTranslator",
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
     "name": "com.njydsz.pmis.common.exception.metrics.ExceptionMetrics",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true
@@ -39,5 +56,79 @@
     "name": "com.njydsz.pmis.common.exception.config.TraceFilterAutoConfiguration",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.exception.config.ExceptionMetricsAutoConfiguration",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.exception.config.ExceptionAlertAutoConfiguration",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.exception.config.ExceptionCodeDocEndpointAutoConfiguration",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.exception.endpoint.ExceptionCodeDocEndpoint",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.exception.alert.ExceptionAlertPublisher",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.exception.alert.ExceptionAlertEvent",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.exception.context.ExceptionContextPropagator",
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.exception.model.ProblemDetail",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.exception.core.ExceptionInfo",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.exception.custom.AbstractYdszException",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.exception.custom.BusinessException",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.exception.custom.SysException",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.exception.code.UnifiedExceptionCode",
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.njydsz.pmis.common.exception.enums.ExceptionCodeRegistry",
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
   }
 ]

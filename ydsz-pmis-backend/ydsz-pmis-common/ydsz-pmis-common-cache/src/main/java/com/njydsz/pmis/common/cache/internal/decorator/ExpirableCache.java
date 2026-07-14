@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
@@ -31,6 +30,7 @@ import com.njydsz.pmis.common.cache.listener.RemovalCause;
 import com.njydsz.pmis.common.cache.listener.RemovalListener;
 import com.njydsz.pmis.common.cache.stats.CacheStats;
 import com.njydsz.pmis.common.cache.support.AsyncFunction;
+import com.njydsz.pmis.common.cache.support.CacheThreadPoolManager;
 import com.njydsz.pmis.common.cache.support.Expiry;
 
 /**
@@ -66,14 +66,9 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
 
   private static final Logger log = LoggerFactory.getLogger(ExpirableCache.class);
 
-  /** 全局共享过期清理调度器（守护线程） */
+  /** 全局共享过期清理调度器（通过 CacheThreadPoolManager 统一管理） */
   private static final ScheduledExecutorService SHARED_CLEANER =
-      Executors.newSingleThreadScheduledExecutor(
-          r -> {
-            Thread t = new Thread(r, "ExpirableCache-Cleaner");
-            t.setDaemon(true);
-            return t;
-          });
+      CacheThreadPoolManager.getInstance().getOrCreateScheduledPool("expirable-cleaner", 1);
 
   /** 底层缓存（负责淘汰策略） */
   private final Cache<K, V> delegate;

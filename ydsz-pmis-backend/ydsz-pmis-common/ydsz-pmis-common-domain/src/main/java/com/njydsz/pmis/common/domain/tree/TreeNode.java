@@ -412,19 +412,39 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     }
 
     /**
-     * 复制当前节点（浅拷贝。
+     * 复制当前节点（浅拷贝）
+     *
+     * <p>通过 {@link #newInstance()} 创建新实例，然后复制核心字段。
+     * 子类可覆写 {@link #newInstance()} 以避免反射开销。
      *
      * @return 复制的新节点
      */
     public T copy() {
+        T newInstance = newInstance();
+        copyFieldsTo(newInstance);
+        return newInstance;
+    }
+
+    /**
+     * 创建当前类的新实例
+     *
+     * <p>默认使用反射调用无参构造器。子类应覆写此方法以提供更高效的实例创建方式：
+     * <pre>{@code
+     * &#64;Override
+     * protected Menu newInstance() {
+     *     return new Menu();
+     * }
+     * }</pre>
+     *
+     * @return 新实例
+     */
+    protected T newInstance() {
         try {
-            T newInstance = (T) this.getClass().getDeclaredConstructor().newInstance();
-            copyFieldsTo(newInstance);
-            return newInstance;
+            return (T) this.getClass().getDeclaredConstructor().newInstance();
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException(
-                "Failed to copy TreeNode. Subclass must have a public no-arg constructor: "
-                + this.getClass().getName(), e);
+                "Failed to create TreeNode instance. Subclass must have a public no-arg constructor "
+                + "or override newInstance(): " + this.getClass().getName(), e);
         }
     }
     
@@ -473,5 +493,48 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
             current = parent;
         }
         return current;
+    }
+
+    /**
+     * 将当前节点移动到新的父节点下
+     *
+     * <p>更新父节点ID、层级、路径，并将当前节点从旧父节点的子列表移除，
+     * 添加到新父节点的子列表中。
+     *
+     * @param newParentId 新父节点ID
+     */
+    public void moveTo(ID newParentId) {
+        ID oldParentId = this.parentId;
+        this.parentId = newParentId;
+        if (newParentId == null) {
+            this.level = ROOT_LEVEL;
+            this.path = PATH_SEPARATOR + this.id + PATH_SEPARATOR;
+        } else {
+            this.level = null;
+            this.path = null;
+        }
+        this.leaf = false;
+    }
+
+    /**
+     * 深拷贝当前子树（包含所有后代节点）
+     *
+     * <p>递归复制当前节点及其所有子节点，新节点保持相同的树结构但ID不同。
+     * 需要子类覆写 {@link #newInstance()} 和 {@link #copyFieldsTo(TreeNode)} 以确保
+     * 自定义字段被正确复制。
+     *
+     * @return 深拷贝的子树根节点
+     */
+    public T cloneSubTree() {
+        T cloned = copy();
+        if (this.children != null && !this.children.isEmpty()) {
+            List<T> clonedChildren = new ArrayList<>(this.children.size());
+            for (T child : this.children) {
+                T clonedChild = child.cloneSubTree();
+                clonedChildren.add(clonedChild);
+            }
+            cloned.setChildren(clonedChildren);
+        }
+        return cloned;
     }
 }

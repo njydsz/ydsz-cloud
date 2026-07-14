@@ -24,7 +24,6 @@ import com.njydsz.pmis.common.core.enums.ServiceType;
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
  */
 public final class HeaderConstants {
 
@@ -37,9 +36,6 @@ public final class HeaderConstants {
      *
      * <p>用于区分请求来源服务类型（WEB_SERVICE / APP_SERVICE 等）。
      *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      * @see ServiceType
      */
     public static final String X_SERVICE_TYPE = "X-Service-Type";
@@ -48,10 +44,6 @@ public final class HeaderConstants {
      * 用户系统语言。
      *
      * <p>格式示例：{@code zh-CN}、{@code en-US}。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_USER_LANGUAGE = "X-User-Language";
 
@@ -59,10 +51,6 @@ public final class HeaderConstants {
      * 用户设备唯一标识。
      *
      * <p>用于设备追踪与多端识别。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_DISTINCT_ID = "X-Distinct-Id";
 
@@ -71,9 +59,6 @@ public final class HeaderConstants {
      *
      * <p>用于区分公司用户、访客用户、ydsz用户等身份类型。
      *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      * @see IdentityType
      */
     public static final String X_IDENTITY_TYPE = "X-Identity-Type";
@@ -82,10 +67,6 @@ public final class HeaderConstants {
      * 登录访问令牌。
      *
      * <p>用户登录后颁发的 AccessToken，用于身份认证与用户信息加载。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_ACCESS_TOKEN = "X-Access-Token";
 
@@ -107,9 +88,6 @@ public final class HeaderConstants {
      * <p>当此 header 存在时，SQL 拦截器优先按该 scope 对应维度过滤；
      * 当不携带时，拦截器会按所有非空维度叠加（取交集）。
      *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      * @see DataScopeType
      */
     public static final String X_DATA_SCOPE = "X-Data-Scope";
@@ -122,10 +100,6 @@ public final class HeaderConstants {
      * <p>格式：逗号分隔（如 {@code 1001,1002}），也允许多 header 值合并。
      *
      * <p>对应 scope：{@link DataScopeType#GROUP}
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_COMPANY_IDS = "X-Company-Ids";
 
@@ -138,10 +112,6 @@ public final class HeaderConstants {
      *
      * <p>对应 scope：{@link DataScopeType#COMPANY}、
      * {@link DataScopeType#DEPT}
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_DEPT_IDS = "X-Dept-Ids";
 
@@ -151,10 +121,6 @@ public final class HeaderConstants {
      * <p>当数据权限范围为用户类型（USER）时，此 header 作为行级过滤条件。
      *
      * <p>对应 scope：{@link DataScopeType#USER}
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_UNIQUE_ID = "X-Unique-Id";
 
@@ -164,10 +130,6 @@ public final class HeaderConstants {
      * <p>当数据权限范围为租户类型（TENANT）时，此 header 作为行级过滤条件。
      *
      * <p>对应 scope：{@link DataScopeType#TENANT}
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_TENANT_ID = "X-Tenant-Id";
 
@@ -179,10 +141,6 @@ public final class HeaderConstants {
      * <p>格式：逗号分隔，也允许多 header 值合并。
      *
      * <p>对应 scope：{@link DataScopeType#PROJECT}
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_PROJECT_IDS = "X-Project-Ids";
 
@@ -194,10 +152,6 @@ public final class HeaderConstants {
      * <p>格式：逗号分隔，也允许多 header 值合并。
      *
      * <p>对应 scope：{@link DataScopeType#REGION}
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_REGION_IDS = "X-Region-Ids";
 
@@ -214,19 +168,11 @@ public final class HeaderConstants {
      * <p>格式：标识键字符串（如 {@code project_member_scope}、{@code dept_tree_scope}）
      *
      * <p>对应 scope：{@link DataScopeType#CUSTOM}
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_CUSTOM_SQL_CONDITION = "X-Custom-Sql-Condition";
 
     /**
      * 请求/响应头报文类型。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String CONTENT_TYPE = "Content-Type";
 
@@ -251,10 +197,6 @@ public final class HeaderConstants {
      * </ul>
      *
      * <p>示例：{@code sys_user:id,name,email;sys_role:id,role_name}
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_VISIBLE_COLUMNS = "X-Visible-Columns";
 
@@ -273,10 +215,6 @@ public final class HeaderConstants {
      * </ul>
      *
      * <p>示例：{@code sys_user:name,email,phone;sys_role:role_name,description}
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_EDITABLE_COLUMNS = "X-Editable-Columns";
 
@@ -290,10 +228,6 @@ public final class HeaderConstants {
      *
      * <p>服务端收到请求后，会使用相同的 AppSecret 重新计算签名并与此 Header 值对比，
      * 签名不匹配时将拒绝请求并记录安全审计日志。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_COL_PERMISSION_SIGN = "X-Col-Permission-Sign";
 
@@ -301,10 +235,6 @@ public final class HeaderConstants {
      * 请求来源标识。
      *
      * <p>用于标识请求的来源渠道（如 PC Web / H5 / APP / 小程序）。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_REQUEST_SOURCE = "X-Request-Source";
 
@@ -316,10 +246,6 @@ public final class HeaderConstants {
      *
      * <p>区别于标准的 {@code X-Forwarded-For}（支持多段链路 IP），
      * 本系统约定使用单值，作为"客户端 IP"的透传载体。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_FORWARDED_FOR = "X-Forwarded-For";
 
@@ -333,8 +259,6 @@ public final class HeaderConstants {
      * 统一常量定义在 {@link TraceConstants#TRACE_ID_HEADER}，
      * 此处保留仅为向后兼容，推荐使用 {@link TraceConstants#TRACE_ID_HEADER}。</p>
      *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
      * @see TraceConstants#TRACE_ID_HEADER
      */
     public static final String X_REQUEST_ID = TraceConstants.TRACE_ID_HEADER;
@@ -343,10 +267,6 @@ public final class HeaderConstants {
      * HTTP/2 流 ID。
      *
      * <p>用于 HTTP/2 协议下的流标识，支持多路复用场景的请求追踪。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String HTTP2_STREAM_ID = "X-Http2-Stream-Id";
 
@@ -354,10 +274,6 @@ public final class HeaderConstants {
      * gRPC 追踪头。
      *
      * <p>用于 gRPC 服务间调用的追踪标识，与 HTTP 请求追踪体系保持一致。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String GRPC_TRACE_HEADER = "grpc-trace-bin";
 
@@ -365,10 +281,6 @@ public final class HeaderConstants {
      * 链路追踪父 ID。
      *
      * <p>用于分布式链路追踪，标识当前请求的父 Span ID。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_TRACE_PARENT = "traceparent";
 
@@ -376,10 +288,6 @@ public final class HeaderConstants {
      * 链路追踪状态。
      *
      * <p>W3C Trace Context 标准头部，标识追踪状态标志位。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_TRACE_STATE = "tracestate";
 
@@ -387,10 +295,6 @@ public final class HeaderConstants {
      * 链路追踪 Baggage。
      *
      * <p>W3C Baggage 标准头部，用于在分布式链路中传递自定义键值对。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_BAGGAGE = "baggage";
 
@@ -398,10 +302,6 @@ public final class HeaderConstants {
      * 用户代理。
      *
      * <p>标识客户端类型、操作系统、浏览器等信息。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String USER_AGENT = "User-Agent";
 
@@ -409,10 +309,6 @@ public final class HeaderConstants {
      * 授权头。
      *
      * <p>用于传递认证凭据，如 Bearer Token、Basic Auth 等。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String AUTHORIZATION = "Authorization";
 
@@ -420,10 +316,6 @@ public final class HeaderConstants {
      * 内容长度。
      *
      * <p>请求或响应体的字节长度。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String CONTENT_LENGTH = "Content-Length";
 
@@ -431,10 +323,6 @@ public final class HeaderConstants {
      * 接受编码。
      *
      * <p>客户端支持的响应内容编码方式（如 gzip、deflate）。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String ACCEPT_ENCODING = "Accept-Encoding";
 
@@ -442,10 +330,6 @@ public final class HeaderConstants {
      * 内容编码。
      *
      * <p>响应体使用的内容编码方式。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String CONTENT_ENCODING = "Content-Encoding";
 
@@ -453,10 +337,6 @@ public final class HeaderConstants {
      * 缓存控制。
      *
      * <p>控制缓存行为，如 no-cache、max-age 等。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String CACHE_CONTROL = "Cache-Control";
 
@@ -464,10 +344,6 @@ public final class HeaderConstants {
      * 跨域来源。
      *
      * <p>标识请求来源的源（scheme、host、port）。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String ORIGIN = "Origin";
 
@@ -475,10 +351,6 @@ public final class HeaderConstants {
      * 跨域资源共享允许源。
      *
      * <p>响应头，指定允许访问该资源的外部域。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String ACCESS_CONTROL_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
 
@@ -486,10 +358,6 @@ public final class HeaderConstants {
      * 跨域资源共享允许方法。
      *
      * <p>响应头，指定允许的 HTTP 方法。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String ACCESS_CONTROL_ALLOW_METHODS = "Access-Control-Allow-Methods";
 
@@ -497,10 +365,6 @@ public final class HeaderConstants {
      * 跨域资源共享允许头。
      *
      * <p>响应头，指定允许的请求头。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String ACCESS_CONTROL_ALLOW_HEADERS = "Access-Control-Allow-Headers";
 
@@ -508,10 +372,6 @@ public final class HeaderConstants {
      * 内容安全策略。
      *
      * <p>用于防止 XSS 攻击，控制页面可以加载哪些资源。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String CONTENT_SECURITY_POLICY = "Content-Security-Policy";
 
@@ -519,10 +379,6 @@ public final class HeaderConstants {
      * 严格传输安全。
      *
      * <p>强制浏览器使用 HTTPS 访问站点。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String STRICT_TRANSPORT_SECURITY = "Strict-Transport-Security";
 
@@ -530,10 +386,6 @@ public final class HeaderConstants {
      * X 内容类型选项。
      *
      * <p>防止浏览器进行 MIME 类型嗅探。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_CONTENT_TYPE_OPTIONS = "X-Content-Type-Options";
 
@@ -541,10 +393,6 @@ public final class HeaderConstants {
      * X 帧选项。
      *
      * <p>控制页面是否可以被嵌入到 frame/iframe 中，防止点击劫持。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_FRAME_OPTIONS = "X-Frame-Options";
 
@@ -552,10 +400,6 @@ public final class HeaderConstants {
      * X XSS 保护。
      *
      * <p>启用浏览器的 XSS 过滤器。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String X_XSS_PROTECTION = "X-XSS-Protection";
 
@@ -563,10 +407,6 @@ public final class HeaderConstants {
      * 引用策略。
      *
      * <p>控制 Referer 头的发送策略。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String REFERRER_POLICY = "Referrer-Policy";
 
@@ -574,10 +414,6 @@ public final class HeaderConstants {
      * 权限策略。
      *
      * <p>控制浏览器特性（如摄像头、麦克风）的访问权限。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String PERMISSIONS_POLICY = "Permissions-Policy";
 
@@ -585,10 +421,6 @@ public final class HeaderConstants {
      * 跨域嵌入策略。
      *
      * <p>控制页面是否可以嵌入跨域资源。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String CROSS_ORIGIN_EMBEDDER_POLICY = "Cross-Origin-Embedder-Policy";
 
@@ -596,10 +428,6 @@ public final class HeaderConstants {
      * 跨域打开策略。
      *
      * <p>控制跨域窗口的打开行为。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String CROSS_ORIGIN_OPENER_POLICY = "Cross-Origin-Opener-Policy";
 
@@ -607,10 +435,6 @@ public final class HeaderConstants {
      * 跨域资源策略。
      *
      * <p>控制跨域资源的访问策略。
-     *
-     * @author ydsz-pmis-team
-     * @since 1.0.0
-     * 
      */
     public static final String CROSS_ORIGIN_RESOURCE_POLICY = "Cross-Origin-Resource-Policy";
 }

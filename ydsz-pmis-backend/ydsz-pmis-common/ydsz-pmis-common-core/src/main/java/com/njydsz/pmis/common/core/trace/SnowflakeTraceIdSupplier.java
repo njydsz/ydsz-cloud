@@ -9,7 +9,7 @@ import java.util.Enumeration;
 /**
  * 基于 Snowflake 算法的有序 TraceId 生成器。
  *
- * <p>生成格式为 {@code 32 位十六进制字符串}，结构如下：
+ * <p>生成格式为 {@code 16 位十六进制字符串}，结构如下：
  * <ul>
  *   <li>时间戳（毫秒级，自定义纪元起算）— 41 bit，高 11 位十六进制字符</li>
  *   <li>工作节点 ID — 10 bit（5 bit datacenterId + 5 bit workerId）</li>

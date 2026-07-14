@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
@@ -73,7 +72,7 @@ public final class RequestContext {
             new TransmittableThreadLocal<Map<String, Object>>() {
                 @Override
                 protected Map<String, Object> initialValue() {
-                    return new ConcurrentHashMap<>();
+                    return new HashMap<>();
                 }
             };
 
@@ -195,10 +194,15 @@ public final class RequestContext {
     /**
      * 获取属性（Optional）
      *
+     * <p><b>注意：</b>此方法使用了 unchecked cast，存在类型安全风险。
+     * 推荐使用 {@link #getOptional(ContextKey)} 强类型版本。</p>
+     *
      * @param key 属性键
      * @param <T> 类型
      * @return Optional 包装的属性值
+     * @deprecated 使用 {@link #getOptional(ContextKey)} 替代，提供编译期类型安全
      */
+    @Deprecated
     public static <T> Optional<T> getOptional(String key) {
         Object value = CONTEXT_HOLDER.get().get(key);
         Optional<T> result = Optional.empty();
@@ -288,10 +292,13 @@ public final class RequestContext {
      * 恢复上下文执行。</p>
      *
      * @return 上下文 Map 的副本
+     * @deprecated 项目已使用 TransmittableThreadLocal，配合 TTL Agent 或 TtlExecutors
+     * 可自动传播上下文，无需手动捕获/恢复
      */
+    @Deprecated
     public static Map<String, Object> capture() {
         Map<String, Object> current = CONTEXT_HOLDER.get();
-        return current.isEmpty() ? new ConcurrentHashMap<>() : new ConcurrentHashMap<>(current);
+        return current.isEmpty() ? new HashMap<>() : new HashMap<>(current);
     }
 
     /**
@@ -304,7 +311,9 @@ public final class RequestContext {
      * @param supplier 要执行的逻辑
      * @param <T>      返回值类型
      * @return supplier 的返回值
+     * @deprecated 使用 TransmittableThreadLocal + TtlExecutors 自动传播替代
      */
+    @Deprecated
     public static <T> T runWithContext(Map<String, Object> context, Supplier<T> supplier) {
         try {
             restore(context);
@@ -322,7 +331,9 @@ public final class RequestContext {
      *
      * @param context  通过 {@link #capture()} 捕获的上下文
      * @param runnable 要执行的逻辑
+     * @deprecated 使用 TransmittableThreadLocal + TtlExecutors 自动传播替代
      */
+    @Deprecated
     public static void runWithContext(Map<String, Object> context, Runnable runnable) {
         try {
             restore(context);
@@ -347,7 +358,9 @@ public final class RequestContext {
      * @param context  通过 {@link #capture()} 捕获的上下文
      * @param <T>      返回值类型
      * @return 包装后的 Callable，执行时会自动恢复和清理上下文
+     * @deprecated 使用 TransmittableThreadLocal + TtlExecutors.getTtlExecutor() 自动传播替代
      */
+    @Deprecated
     public static <T> Callable<T> wrapCallable(Callable<T> callable, Map<String, Object> context) {
         return () -> {
             try {
@@ -379,7 +392,7 @@ public final class RequestContext {
     private static void restore(Map<String, Object> context) {
         CONTEXT_HOLDER.remove();
         if (context != null && !context.isEmpty()) {
-            CONTEXT_HOLDER.set(new ConcurrentHashMap<>(context));
+            CONTEXT_HOLDER.set(new HashMap<>(context));
         }
     }
 

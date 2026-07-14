@@ -13,19 +13,11 @@ package com.njydsz.pmis.common.core.constant;
  *   <li>登录限制：最大尝试次数、锁定时长</li>
  *   <li>安全头部：XSS防护、Content-TypeOptions、HSTS等</li>
  *   <li>CSRF防护：头部和参数名称</li>
- *   <li>默认排除路径：无需认证的路径模式</li>
- * </ul>
- *
- * <p><b>优化建议：</b>
- * <ul>
- *   <li>敏感配置（如 JWT_SECRET）应通过环境变量或加密配置中心管理，不应硬编码</li>
- *   <li>建议增加 OAuth2 相关的安全头部配置</li>
- *   <li>DEFAULT_EXCLUDE_PATHS 可考虑外部化配置</li>
  * </ul>
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
- * 
+ *
  * @see TokenConstants
  */
 public final class SecurityConstants {

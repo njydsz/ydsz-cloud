@@ -127,14 +127,6 @@ class RequestContextTest {
             assertThat(key1).isNotEqualTo(key3);
         }
 
-        @Test
-        @DisplayName("ContextKey map 方法映射类型")
-        void contextKeyMap() {
-            ContextKey<String> strKey = ContextKey.of("strVal", String.class);
-            RequestContext.put(strKey, "123");
-            ContextKey<Integer> intKey = strKey.map(Integer::parseInt, Integer.class);
-            assertThat(intKey.get()).isEqualTo(123);
-        }
     }
 
     @Nested
@@ -191,7 +183,7 @@ class RequestContextTest {
     }
 
     @Nested
-    @DisplayName("异步上下文传播")
+    @DisplayName("异步上下文传播（已废弃 API 的向后兼容测试）")
     class AsyncPropagation {
 
         @Test

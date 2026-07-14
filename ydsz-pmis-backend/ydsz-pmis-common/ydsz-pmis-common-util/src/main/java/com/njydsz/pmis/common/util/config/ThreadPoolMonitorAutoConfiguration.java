@@ -12,6 +12,10 @@ import org.springframework.context.annotation.Bean;
 
 import com.njydsz.pmis.common.util.concurrent.ExecutorUtils;
 
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -55,6 +59,7 @@ public class ThreadPoolMonitorAutoConfiguration {
     public static class ThreadPoolMonitor {
 
         private final Map<String, ThreadPoolExecutor> registeredPools = new ConcurrentHashMap<>();
+        private volatile boolean micrometerRegistered = false;
 
         /**
          * 注册线程池实例
@@ -65,6 +70,46 @@ public class ThreadPoolMonitorAutoConfiguration {
         public void register(String name, ThreadPoolExecutor executor) {
             registeredPools.put(name, executor);
             log.info("Thread pool registered for monitoring: {}", name);
+        }
+
+        /**
+         * 将所有已注册线程池的指标注册到 Micrometer MeterRegistry
+         *
+         * <p>注册以下 Gauge 指标（前缀 pmis.threadpool）：
+         * <ul>
+         *   <li>pool.size - 当前线程池大小</li>
+         *   <li>pool.active - 活跃线程数</li>
+         *   <li>pool.completed - 已完成任务数</li>
+         *   <li>pool.queue.size - 队列大小</li>
+         *   <li>pool.queue.capacity - 队列剩余容量</li>
+         * </ul>
+         *
+         * @param registry Micrometer MeterRegistry
+         */
+        public void registerWithMeterRegistry(MeterRegistry registry) {
+            if (registry == null || micrometerRegistered) {
+                return;
+            }
+            for (Map.Entry<String, ThreadPoolExecutor> entry : registeredPools.entrySet()) {
+                String poolName = entry.getKey();
+                ThreadPoolExecutor executor = entry.getValue();
+                Tags tags = Tags.of("pool", poolName);
+
+                Gauge.builder("pmis.threadpool.pool.size", executor, ThreadPoolExecutor::getPoolSize)
+                        .tags(tags).register(registry);
+                Gauge.builder("pmis.threadpool.pool.active", executor, ThreadPoolExecutor::getActiveCount)
+                        .tags(tags).register(registry);
+                Gauge.builder("pmis.threadpool.pool.completed", executor, ThreadPoolExecutor::getCompletedTaskCount)
+                        .tags(tags).register(registry);
+                Gauge.builder("pmis.threadpool.pool.queue.size", executor, e -> e.getQueue().size())
+                        .tags(tags).register(registry);
+                Gauge.builder("pmis.threadpool.pool.queue.capacity", executor, e -> e.getQueue().remainingCapacity())
+                        .tags(tags).register(registry);
+                Gauge.builder("pmis.threadpool.pool.largest.size", executor, ThreadPoolExecutor::getLargestPoolSize)
+                        .tags(tags).register(registry);
+            }
+            micrometerRegistered = true;
+            log.info("Thread pool metrics registered with Micrometer: {} pools", registeredPools.size());
         }
 
         /**
@@ -83,6 +128,9 @@ public class ThreadPoolMonitorAutoConfiguration {
                 status.put("taskCount", executor.getTaskCount());
                 status.put("queueSize", executor.getQueue().size());
                 status.put("queueRemainingCapacity", executor.getQueue().remainingCapacity());
+                status.put("largestPoolSize", executor.getLargestPoolSize());
+                status.put("maximumPoolSize", executor.getMaximumPoolSize());
+                status.put("corePoolSize", executor.getCorePoolSize());
                 status.put("isShutdown", executor.isShutdown() ? 1 : 0);
                 status.put("isTerminated", executor.isTerminated() ? 1 : 0);
                 statuses.put(entry.getKey(), status);
@@ -97,6 +145,15 @@ public class ThreadPoolMonitorAutoConfiguration {
          */
         public void unregister(String name) {
             registeredPools.remove(name);
+        }
+
+        /**
+         * 获取已注册线程池数量
+         *
+         * @return 线程池数量
+         */
+        public int getRegisteredPoolCount() {
+            return registeredPools.size();
         }
     }
 }
